@@ -30,6 +30,7 @@ generation, rendering, or any send.
 - WHEN the caseworker uses the create-from-email action targeting `correspondence`
 - THEN a correspondence record SHALL be created with the mapped fields pre-filled
 - AND no document SHALL be generated and no message SHALL be sent by the action
+- @e2e exclude NC Mail is not installed on the shared test instance, so the Mail sidebar this scenario drives does not exist there. The declaration it depends on is asserted live in tests/e2e/workflows/leaf-integrations.spec.ts, and the template keys in LeafIntegrationsConfigurationTest.
 
 #### Scenario: Linking mail leaves the audit record intact
 
@@ -37,6 +38,7 @@ generation, rendering, or any send.
 - WHEN a related NC Mail message is linked to it from the Mail sidebar
 - THEN the message SHALL appear on the record's leaf surface
 - AND `status`, `templateId`, `generatedAt`, and `generatedBy` SHALL be unchanged
+- @e2e exclude NC Mail is not installed on the shared test instance, so the Mail sidebar this scenario drives does not exist there. The declaration it depends on is asserted live in tests/e2e/workflows/leaf-integrations.spec.ts, and the template keys in LeafIntegrationsConfigurationTest.
 
 ### Requirement: Pipeline File Outputs Surface Through The Files Leaf
 
@@ -74,6 +76,7 @@ instead of an app-local task system. Card state SHALL NOT drive any dossier fiel
 - WHEN a review card is created via the deck leaf
 - THEN the card SHALL be linked to the dossier and visible on its leaf surface
 - AND `bases` and `checkedOn` SHALL be unchanged until a human edits them in-app
+- @e2e exclude NC Deck is not installed on the shared test instance, so the deck leaf has no surface to render there. The declaration it depends on is asserted live in tests/e2e/workflows/leaf-integrations.spec.ts.
 
 ### Requirement: Leaf Declarations Are Configuration-Only And Import Cleanly
 

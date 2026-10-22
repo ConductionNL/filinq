@@ -87,6 +87,41 @@ class LibreOfficeHeadlessBackend implements ConversionBackendInterface {
 	private const APP_ID = 'filinq';
 
 	/**
+	 * The file name (without extension) the source is written under; soffice
+	 * names its output after it.
+	 */
+	private const INPUT_STEM = 'input';
+
+	/**
+	 * How soffice opens a source for tagged export: HTML in Writer, not
+	 * Writer/Web, whose PDF export does not write the structure tree.
+	 */
+	private const INPUT_FILTERS = [
+		'html' => ['--infilter=HTML (StarWriter)'],
+		'htm' => ['--infilter=HTML (StarWriter)'],
+	];
+
+	/**
+	 * The --convert-to argument per editable output. HTML opened in Writer
+	 * (see INPUT_FILTERS) needs the named Writer export filter.
+	 */
+	private const EXPORT_FILTERS = [
+		'docx' => 'docx:MS Word 2007 XML',
+		'odt' => 'odt:writer8',
+	];
+
+	/**
+	 * Why an editable format cannot be made: the one sentence the format
+	 * matrix reports and a forced conversion fails with.
+	 */
+	public const UNAVAILABLE_REASON = 'LibreOffice is not available on this server';
+
+	/**
+	 * The --convert-to argument of the default (archival) conversion.
+	 */
+	private const FILTER_PDFA = 'pdf:writer_pdf_Export:UseTaggedPDF=true,SelectPdfVersion=2';
+
+	/**
 	 * MIME types LibreOffice can convert to PDF. Only common document
 	 * formats are listed; the Office-app backend handles these first
 	 * when present.
@@ -230,38 +265,9 @@ class LibreOfficeHeadlessBackend implements ConversionBackendInterface {
 		$binary = $this->resolveBinaryPath();
 		$timeout = $this->resolveTimeout();
 
-		// Acquire lock — serialise concurrent soffice processes.
-		try {
-			$this->lockingProvider->acquireLock(self::LOCK_KEY, ILockingProvider::LOCK_EXCLUSIVE);
-		} catch (LockedException $e) {
-			throw new ConversionFailedException(
-				message: 'LibreOffice headless lock contention; cascade falling through.',
-				attempts: [
-					[
-						'name' => $this->name(),
-						'available' => true,
-						'supports' => true,
-						'reason' => 'could not acquire soffice:headless:convert lock: ' . $e->getMessage(),
-					],
-				],
-				previous: $e
-			);
-		}
-
-		try {
-			return $this->runConversion(source: $source, binary: $binary, timeout: $timeout);
-		} finally {
-			try {
-				$this->lockingProvider->releaseLock(self::LOCK_KEY, ILockingProvider::LOCK_EXCLUSIVE);
-			} catch (Throwable $ignored) {
-				// Lock release failures are non-fatal; log but don't
-				// mask the real result/exception.
-				$this->logger->warning(
-					'[LibreOfficeHeadlessBackend] Failed to release lock after conversion',
-					['message' => $ignored->getMessage()]
-				);
-			}
-		}//end try
+		return $this->underLock(
+			work: fn (): File => $this->runConversion(source: $source, binary: $binary, timeout: $timeout)
+		);
 
 	}//end convert()
 
@@ -284,30 +290,204 @@ class LibreOfficeHeadlessBackend implements ConversionBackendInterface {
 		// observed returning trailing path segments. basename() makes us
 		// robust to that source of path traversal.
 		$name = basename($source->getName());
-		$ext = $this->extractExtension(name: $name);
 		$baseName = $this->stripExtension(name: $name);
 
-		// Write source bytes to a temp file for soffice.
+		$pdfBytes = $this->exportPdfBytes(
+			bytes: $this->sourceBytes(source: $source),
+			extension: $this->extractExtension(name: $name),
+			convertTo: self::FILTER_PDFA,
+			binary: $binary,
+			timeout: $timeout
+		);
+
+		$parent = $source->getParent();
+		$outputName = $baseName . '.pdf';
+		if ($parent->nodeExists($outputName) === true) {
+			$parent->get($outputName)->delete();
+		}
+
+		return $parent->newFile($outputName, $pdfBytes);
+
+	}//end runConversion()
+
+	/**
+	 * Tagged (PDF/UA) export of a document's bytes: the accessible mode.
+	 *
+	 * Asks LibreOffice for tagged PDF with PDF/UA compliance, keeping
+	 * PDF/A-3 when asked for. HTML is opened in Writer (not Writer/Web),
+	 * whose PDF export writes the structure tree. Without a usable soffice
+	 * this throws: nothing else in the cascade can tag, so there is no
+	 * fallback to an untagged PDF.
+	 *
+	 * @param string $bytes     The source document.
+	 * @param string $extension Its extension (html, docx, odt ...).
+	 * @param bool   $pdfa      Whether to keep PDF/A-3 conformance as well.
+	 *
+	 * @return string The PDF bytes.
+	 *
+	 * @throws ConversionFailedException When soffice is unavailable or fails.
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-pdfua-accessible-output/tasks.md#task-1.1
+	 */
+	public function convertTagged(string $bytes, string $extension, bool $pdfa): string {
+		if ($this->isAvailable() === false) {
+			throw new ConversionFailedException(
+				message: 'Accessible PDF output needs LibreOffice, which is not available; no untagged PDF is made instead.',
+				attempts: [
+					['name' => $this->name(), 'available' => false, 'supports' => true, 'reason' => 'backend disabled or soffice binary not found'],
+				],
+				code: 503
+			);
+		}
+
+		// SelectPdfVersion 3 is PDF/A-3b, 0 is plain PDF.
+		$pdfVersion = ['0', '3'][(int) $pdfa];
+		$filter = [
+			'UseTaggedPDF' => ['type' => 'boolean', 'value' => 'true'],
+			'PDFUACompliance' => ['type' => 'boolean', 'value' => 'true'],
+			'SelectPdfVersion' => ['type' => 'long', 'value' => $pdfVersion],
+		];
+		$ext = strtolower($extension);
+		$binary = $this->resolveBinaryPath();
+		$timeout = $this->resolveTimeout();
+
+		return $this->underLock(
+			work: fn (): string => $this->exportPdfBytes(
+				bytes: $bytes,
+				extension: $ext,
+				convertTo: 'pdf:writer_pdf_Export:' . json_encode($filter),
+				binary: $binary,
+				timeout: $timeout,
+				inputFilter: (self::INPUT_FILTERS[$ext] ?? [])
+			)
+		);
+
+	}//end convertTagged()
+
+	/**
+	 * Convert rendered HTML to an editable office format (DOCX or ODT), the
+	 * one soffice path every non-PDF generated output goes through.
+	 *
+	 * Same lock, temp-dir hygiene and timeout as the PDF conversion; the HTML
+	 * is opened in Writer. The caller checks {@see isAvailable()} first
+	 * ({@see HtmlToOfficeConverter} does, and fails with
+	 * {@see self::UNAVAILABLE_REASON}).
+	 *
+	 * @param string $html        The rendered HTML.
+	 * @param string $toExtension The output: docx or odt.
+	 *
+	 * @return string The output bytes.
+	 *
+	 * @throws ConversionFailedException When soffice fails.
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-multi-format-output/tasks.md#task-2.1
+	 */
+	public function convertHtml(string $html, string $toExtension): string {
+		$exportFilter = self::EXPORT_FILTERS[$toExtension];
+		$binary = $this->resolveBinaryPath();
+		$timeout = $this->resolveTimeout();
+
+		return $this->underLock(
+			work: fn (): string => $this->exportPdfBytes(
+				bytes: $html,
+				extension: 'html',
+				convertTo: $exportFilter,
+				binary: $binary,
+				timeout: $timeout,
+				inputFilter: self::INPUT_FILTERS['html'],
+				outputExtension: $toExtension
+			)
+		);
+
+	}//end convertHtml()
+
+	/**
+	 * Run work while holding the soffice lock, which serialises soffice
+	 * processes (they share a user profile).
+	 *
+	 * @param callable $work The work.
+	 *
+	 * @return mixed What the work returns.
+	 *
+	 * @throws ConversionFailedException When the lock is taken.
+	 */
+	private function underLock(callable $work): mixed {
+		try {
+			$this->lockingProvider->acquireLock(self::LOCK_KEY, ILockingProvider::LOCK_EXCLUSIVE);
+		} catch (LockedException $e) {
+			throw new ConversionFailedException(
+				message: 'LibreOffice headless lock contention; cascade falling through.',
+				attempts: [
+					[
+						'name' => $this->name(),
+						'available' => true,
+						'supports' => true,
+						'reason' => 'could not acquire soffice:headless:convert lock: ' . $e->getMessage(),
+					],
+				],
+				previous: $e
+			);
+		}
+
+		try {
+			return $work();
+		} finally {
+			try {
+				$this->lockingProvider->releaseLock(self::LOCK_KEY, ILockingProvider::LOCK_EXCLUSIVE);
+			} catch (Throwable $ignored) {
+				// Lock release failures are non-fatal; log but don't
+				// mask the real result/exception.
+				$this->logger->warning(
+					'[LibreOfficeHeadlessBackend] Failed to release lock after conversion',
+					['message' => $ignored->getMessage()]
+				);
+			}
+		}//end try
+
+	}//end underLock()
+
+	/**
+	 * Write bytes to a temp dir, run soffice on them and read back the PDF.
+	 *
+	 * The source is written as `input.<ext>`, so soffice emits `input.pdf`:
+	 * that is the name read back, whatever the original file was called.
+	 *
+	 * @param string $bytes        The source bytes.
+	 * @param string $extension    The source extension, '' for none.
+	 * @param string $convertTo    The --convert-to argument.
+	 * @param string $binary       Path to the soffice binary.
+	 * @param int    $timeout      Timeout in seconds.
+	 * @param array<int, string> $inputFilter Extra arguments that choose how soffice opens the source.
+	 * @param string $outputExtension The extension soffice gives its output (pdf, docx, odt).
+	 *
+	 * @return string The output bytes.
+	 *
+	 * @throws ConversionFailedException On soffice failure, timeout, or file I/O error.
+	 */
+	private function exportPdfBytes(
+		string $bytes,
+		string $extension,
+		string $convertTo,
+		string $binary,
+		int $timeout,
+		array $inputFilter = [],
+		string $outputExtension = 'pdf',
+	): string {
 		$tmpDir = sys_get_temp_dir() . '/filinq_libreoffice_' . bin2hex(random_bytes(8));
 		mkdir($tmpDir, 0700, true);
 
-		$extSuffix = '';
-		if ($ext !== '') {
-			$extSuffix = '.' . $ext;
-		}
-
-		$srcPath = $tmpDir . '/input' . $extSuffix;
+		$srcPath = $tmpDir . '/' . rtrim(self::INPUT_STEM . '.' . $extension, '.');
 
 		try {
-			$this->writeSourceBytes(source: $source, srcPath: $srcPath);
+			file_put_contents($srcPath, $bytes);
 
-			$exitCode = $this->processRunner->run(
-				argv: $this->buildArgv(binary: $binary, tmpDir: $tmpDir, srcPath: $srcPath),
-				timeout: $timeout,
-				tmpDir: $tmpDir,
-				backendName: $this->name()
-			);
+			// The array form of proc_open avoids the `/bin/sh -c` layer entirely.
+			// `--norestore` and `--nofirststartwizard` keep soffice from bringing
+			// up its on-disk profile UI under headless; the input filter, when
+			// there is one, chooses how soffice opens the source.
+			$argv = [$binary, '--headless', '--norestore', '--nofirststartwizard', ...$inputFilter, '--convert-to', $convertTo, '--outdir', $tmpDir, $srcPath];
 
+			$exitCode = $this->processRunner->run(argv: $argv, timeout: $timeout, tmpDir: $tmpDir, backendName: $this->name());
 			if ($exitCode !== 0) {
 				throw new ConversionFailedException(
 					message: sprintf('soffice exited with code %d.', $exitCode),
@@ -322,33 +502,24 @@ class LibreOfficeHeadlessBackend implements ConversionBackendInterface {
 				);
 			}
 
-			$pdfBytes = $this->readEmittedPdf(tmpDir: $tmpDir, baseName: $baseName);
-
-			$parent = $source->getParent();
-			$outputName = $baseName . '.pdf';
-			if ($parent->nodeExists($outputName) === true) {
-				$parent->get($outputName)->delete();
-			}
-
-			return $parent->newFile($outputName, $pdfBytes);
+			return $this->readEmittedPdf(tmpDir: $tmpDir, baseName: self::INPUT_STEM, extension: $outputExtension);
 		} finally {
 			// Clean up the temp directory regardless of outcome.
 			$this->cleanupDir(dir: $tmpDir);
 		}//end try
 
-	}//end runConversion()
+	}//end exportPdfBytes()
 
 	/**
-	 * Copy the node's bytes to the temp path soffice will read.
+	 * The node's bytes.
 	 *
 	 * @param File $source Source file node.
-	 * @param string $srcPath Temp path to write the source bytes to.
 	 *
-	 * @return void
+	 * @return string The bytes.
 	 *
 	 * @throws ConversionFailedException When the node yields no readable content.
 	 */
-	private function writeSourceBytes(File $source, string $srcPath): void {
+	private function sourceBytes(File $source): string {
 		$bytes = $source->getContent();
 		if (is_string($bytes) === false) {
 			throw new ConversionFailedException(
@@ -364,41 +535,9 @@ class LibreOfficeHeadlessBackend implements ConversionBackendInterface {
 			);
 		}
 
-		file_put_contents($srcPath, $bytes);
+		return $bytes;
 
-	}//end writeSourceBytes()
-
-	/**
-	 * Build the soffice argv for a PDF/A-3b conversion.
-	 *
-	 * The array form of proc_open avoids the `/bin/sh -c` layer entirely —
-	 * strictly safer than the string form even with escapeshellarg().
-	 * `--norestore` and `--nofirststartwizard` keep soffice from trying to
-	 * bring up its on-disk profile UI under headless.
-	 *
-	 * @param string $binary Path to the soffice binary.
-	 * @param string $tmpDir Temp directory soffice writes its output into.
-	 * @param string $srcPath Path of the materialised source document.
-	 *
-	 * @return array<int, string> Process argv (argv[0] = binary).
-	 */
-	private function buildArgv(string $binary, string $tmpDir, string $srcPath): array {
-		// PDF/A-3b via writer_pdf_Export filter options.
-		$filterArgs = 'pdf:writer_pdf_Export:UseTaggedPDF=true,SelectPdfVersion=2';
-
-		return [
-			$binary,
-			'--headless',
-			'--norestore',
-			'--nofirststartwizard',
-			'--convert-to',
-			$filterArgs,
-			'--outdir',
-			$tmpDir,
-			$srcPath,
-		];
-
-	}//end buildArgv()
+	}//end sourceBytes()
 
 	/**
 	 * Locate, containment-check, and read the PDF soffice emitted.
@@ -410,14 +549,15 @@ class LibreOfficeHeadlessBackend implements ConversionBackendInterface {
 	 *
 	 * @param string $tmpDir Temp directory soffice wrote its output into.
 	 * @param string $baseName Source basename without extension.
+	 * @param string $extension The output's extension.
 	 *
-	 * @return string Non-empty PDF bytes.
+	 * @return string Non-empty output bytes.
 	 *
 	 * @throws ConversionFailedException When the output is missing, escapes
 	 *                                   the sandbox, or is empty.
 	 */
-	private function readEmittedPdf(string $tmpDir, string $baseName): string {
-		$outputTmp = $tmpDir . '/' . $baseName . '.pdf';
+	private function readEmittedPdf(string $tmpDir, string $baseName, string $extension = 'pdf'): string {
+		$outputTmp = $tmpDir . '/' . $baseName . '.' . $extension;
 		if (file_exists($outputTmp) === false) {
 			throw new ConversionFailedException(
 				message: 'soffice reported success but output PDF was not found.',

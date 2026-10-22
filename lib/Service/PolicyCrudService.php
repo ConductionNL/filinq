@@ -89,11 +89,10 @@ class PolicyCrudService {
 	 * publicationConsent schema's RBAC cannot discriminate by `scope`, so the
 	 * scope-aware gate lives here.
 	 *
-	 * ⚠️ STILL `docudesk-`, DELIBERATELY, ACROSS THE FILINQ RENAME — see
-	 * PROHIBITION_GROUP below for the full reasoning; it applies to every
-	 * `docudesk-*` group id this app declares.
+	 * Renamed from `docudesk-*` with a membership migration; see
+	 * PROHIBITION_GROUP below.
 	 */
-	public const STANDING_CONSENT_GROUP = 'docudesk-standing-consent-admins';
+	public const STANDING_CONSENT_GROUP = 'filinq-standing-consent-admins';
 
 	/**
 	 * Group whose members may create/update/delete publication-prohibition
@@ -101,18 +100,13 @@ class PolicyCrudService {
 	 * the standard anonymise flow, so write authorisation requires either
 	 * admin role or membership in this group — never any authenticated user.
 	 *
-	 * ⚠️ STILL `docudesk-`, DELIBERATELY, ACROSS THE FILINQ RENAME. This is a
-	 * Nextcloud GROUP ID, declared in `lib/Settings/filinq_register.json` and
-	 * provisioned by OpenRegister CREATE-ONLY, then populated by admins.
-	 * Renaming the id therefore creates a NEW, EMPTY group while the existing
-	 * one keeps every member and nothing reads it any more. An empty group
-	 * denies everyone except admins and object owners, so the symptom is
-	 * prohibition writes starting to 403 for exactly the operators who were
-	 * granted them — no error at provisioning time, nothing in the log. Same
-	 * failure shape as renaming an OpenRegister register slug. Renaming these
-	 * groups needs its own membership migration, not a token substitution.
+	 * This is a Nextcloud GROUP ID, declared in `lib/Settings/filinq_register.json`
+	 * and provisioned by OpenRegister CREATE-ONLY, then populated by admins.
+	 * Renaming an id creates a NEW, EMPTY group, so the move from `docudesk-*`
+	 * to `filinq-*` is carried by the RenameRoleGroups repair step, which copies
+	 * every member of the old group into the new one and deletes nothing.
 	 */
-	public const PROHIBITION_GROUP = 'docudesk-prohibition-admins';
+	public const PROHIBITION_GROUP = 'filinq-prohibition-admins';
 
 	/**
 	 * Constructor.
@@ -447,7 +441,7 @@ class PolicyCrudService {
 	 * permission". A consent-officer with normal `publicationConsent` write
 	 * permission may write `scope: "document"` records, but writes to
 	 * `scope: "entity"` require explicit membership in
-	 * `docudesk-standing-consent-admins`.
+	 * `filinq-standing-consent-admins`.
 	 *
 	 * Admin users bypass this gate (NC convention — they implicitly belong to
 	 * every privileged group).

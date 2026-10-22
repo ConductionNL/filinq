@@ -16,7 +16,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/template-charts/specs/template-charts/spec.md
+ * @spec openspec/specs/template-charts/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -35,7 +35,7 @@ namespace OCA\Filinq\Service\Charts;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/template-charts/tasks.md#task-1.1
+ * @spec openspec/changes/archive/2026-09-28-template-charts/tasks.md#task-1.1
  */
 class SvgPrimitives {
 	/**
@@ -46,7 +46,7 @@ class SvgPrimitives {
 	 *
 	 * @return string SVG open tag + background rect.
 	 *
-	 * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-001
+	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-001
 	 */
 	public function svgOpenTag(int $width, int $height): string {
 		return '<svg xmlns="http://www.w3.org/2000/svg" width="' . $width . '" height="' . $height . '" '
@@ -68,7 +68,7 @@ class SvgPrimitives {
 	 *
 	 * @return string SVG markup.
 	 *
-	 * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-001
+	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-001
 	 */
 	public function textEl(
 		float $x,
@@ -98,7 +98,7 @@ class SvgPrimitives {
 	 *
 	 * @return string SVG markup.
 	 *
-	 * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-001
+	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-001
 	 */
 	public function rectEl(float $x, float $y, float $width, float $height, string $color): string {
 		return '<rect x="' . $this->num(value: $x) . '" y="' . $this->num(value: $y) . '" '
@@ -118,7 +118,7 @@ class SvgPrimitives {
 	 *
 	 * @return string SVG markup.
 	 *
-	 * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-001
+	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-001
 	 */
 	public function rectOutlineEl(float $x, float $y, float $width, float $height, string $color): string {
 		return '<rect x="' . $this->num(value: $x) . '" y="' . $this->num(value: $y) . '" '
@@ -139,7 +139,7 @@ class SvgPrimitives {
 	 *
 	 * @return string SVG markup.
 	 *
-	 * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-001
+	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-001
 	 */
 	public function lineEl(float $x1, float $y1, float $x2, float $y2, string $color, float $width): string {
 		return '<line x1="' . $this->num(value: $x1) . '" y1="' . $this->num(value: $y1) . '" '
@@ -158,7 +158,7 @@ class SvgPrimitives {
 	 *
 	 * @return string SVG markup.
 	 *
-	 * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-001
+	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-001
 	 */
 	public function circleEl(float $cx, float $cy, float $radius, string $color): string {
 		return '<circle cx="' . $this->num(value: $cx) . '" cy="' . $this->num(value: $cy) . '" '
@@ -174,7 +174,7 @@ class SvgPrimitives {
 	 *
 	 * @return string SVG markup.
 	 *
-	 * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-001
+	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-001
 	 */
 	public function polylineEl(array $points, string $color): string {
 		$pairs = [];
@@ -197,7 +197,7 @@ class SvgPrimitives {
 	 *
 	 * @return string SVG markup.
 	 *
-	 * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-001
+	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-001
 	 */
 	public function pieSliceEl(float $cx, float $cy, float $radius, float $startAngle, float $endAngle, string $color): string {
 		$startRad = deg2rad($startAngle);
@@ -229,7 +229,7 @@ class SvgPrimitives {
 	 *
 	 * @return string Formatted number.
 	 *
-	 * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-001
+	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-001
 	 */
 	public function num(float $value): string {
 		$formatted = sprintf('%.2f', $value);
@@ -251,7 +251,7 @@ class SvgPrimitives {
 	 *
 	 * @return string Escaped text.
 	 *
-	 * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-001
+	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-001
 	 */
 	public function escapeText(string $text): string {
 		return htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');

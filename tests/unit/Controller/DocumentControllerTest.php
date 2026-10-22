@@ -20,6 +20,7 @@
 namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\DocumentController;
+use OCA\Filinq\Exception\ConversionFailedException;
 use OCA\Filinq\Service\DocumentService;
 use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
@@ -171,6 +172,83 @@ class DocumentControllerTest extends TestCase {
 	}//end testGenerateReturnsFileRefsForFilesMode()
 
 	/**
+	 * A multi-format request answers with a manifest: one entry per format,
+	 * the WebDAV address to download it, and a failed format's error.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-multi-format-output/tasks.md#task-3.1
+	 */
+	public function testGenerateAnswersAManifestForSeveralFormats(): void {
+		$this->request->method('getParam')
+			->willReturnMap([
+				['templateId', null, 'tmpl-1'],
+				['dataRefs', [], []],
+				['options', [], ['formats' => ['pdf', 'docx']]],
+				['filename', 'document', 'besluit'],
+			]);
+		$this->documentSvc->expects($this->never())->method('generateDocument');
+		$producer = $this->createMock(\OCA\Filinq\Service\MultiFormatOutputProducer::class);
+		$producer->expects($this->once())->method('generate')
+			->with('tmpl-1', [], ['formats' => ['pdf', 'docx'], 'userId' => 'clerk', 'filename' => 'besluit'])
+			->willReturn([
+				'metadata' => ['id' => 'doc-1'],
+				'warnings' => ['w'],
+				'outputs' => [
+					['format' => 'pdf', 'status' => 'generated', 'fileId' => 7, 'fileName' => 'besluit.pdf', 'downloadUrl' => '/remote.php/dav/files/clerk/DocuDesk/b%20b/besluit.pdf', 'size' => 9],
+					['format' => 'docx', 'status' => 'failed', 'fileId' => null, 'fileName' => null, 'downloadUrl' => null, 'size' => null, 'error' => 'LibreOffice is not available on this server'],
+				],
+			]);
+
+		$user = $this->createMock(\OCP\IUser::class);
+		$user->method('getUID')->willReturn('clerk');
+		$session = $this->createMock(IUserSession::class);
+		$session->method('getUser')->willReturn($user);
+		$controller = new DocumentController('filinq', $this->request, $this->documentSvc, $session, $this->logger, $this->l10n, $producer);
+
+		$result = $controller->generate();
+
+		$this->assertInstanceOf(JSONResponse::class, $result);
+		$this->assertSame(200, $result->getStatus());
+		$data = $result->getData();
+		$this->assertSame(['w'], $data['warnings']);
+		$this->assertSame(
+			['format' => 'pdf', 'status' => 'generated', 'fileId' => 7, 'fileName' => 'besluit.pdf', 'downloadUrl' => '/remote.php/dav/files/clerk/DocuDesk/b%20b/besluit.pdf', 'size' => 9],
+			$data['outputs'][0]
+		);
+		$this->assertSame('failed', $data['outputs'][1]['status']);
+		$this->assertNull($data['outputs'][1]['downloadUrl']);
+		$this->assertSame('LibreOffice is not available on this server', $data['outputs'][1]['error']);
+
+	}//end testGenerateAnswersAManifestForSeveralFormats()
+
+	/**
+	 * A single DOCX is a Word download.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-multi-format-output/tasks.md#task-2.5
+	 */
+	public function testGenerateDownloadsADocx(): void {
+		$this->request->method('getParam')
+			->willReturnMap([
+				['templateId', null, 'tmpl-1'],
+				['dataRefs', [], []],
+				['options', [], ['format' => 'docx']],
+				['filename', 'document', 'besluit'],
+			]);
+		$this->documentSvc->method('generateDocument')
+			->willReturn(['content' => 'PK', 'format' => 'docx', 'metadata' => [], 'warnings' => [], 'output' => ['mode' => 'return']]);
+
+		$result = $this->controller->generate();
+
+		$this->assertInstanceOf(DataDownloadResponse::class, $result);
+		$this->assertSame('application/vnd.openxmlformats-officedocument.wordprocessingml.document', $result->getHeaders()['Content-Type']);
+		$this->assertStringContainsString('besluit.docx', $result->getHeaders()['Content-Disposition']);
+
+	}//end testGenerateDownloadsADocx()
+
+	/**
 	 * Test generate returns the binary download PLUS storage headers for
 	 * output.mode "both" (REQ-DDOB-001).
 	 *
@@ -296,6 +374,34 @@ class DocumentControllerTest extends TestCase {
 		$this->assertInstanceOf(DataDownloadResponse::class, $result);
 
 	}//end testGenerateReturnsPdfDownload()
+
+	/**
+	 * An accessible request that cannot be met answers with the status and
+	 * every backend's attempt, not a bare 500.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-pdfua-accessible-output/tasks.md#task-1.1
+	 */
+	public function testAnAccessibleRequestThatCannotBeMetNamesTheAttempts(): void {
+		$this->request->method('getParam')
+			->willReturnMap([
+				['templateId', null, 'tmpl-1'],
+				['dataRefs', [], []],
+				['options', [], ['pdfOptions' => ['accessible' => true]]],
+				['filename', 'document', 'besluit'],
+			]);
+		$attempts = [['name' => 'libreoffice_headless', 'available' => false, 'supports' => true, 'reason' => 'backend disabled or soffice binary not found']];
+		$this->documentSvc->method('generateDocument')
+			->willThrowException(new ConversionFailedException(message: 'Accessible PDF output needs LibreOffice.', attempts: $attempts, code: 503));
+
+		$result = $this->controller->generate();
+
+		$this->assertInstanceOf(JSONResponse::class, $result);
+		$this->assertSame(503, $result->getStatus());
+		$this->assertSame($attempts, $result->getData()['attempts']);
+
+	}//end testAnAccessibleRequestThatCannotBeMetNamesTheAttempts()
 
 	/**
 	 * Test generate returns ODF download for odf format.

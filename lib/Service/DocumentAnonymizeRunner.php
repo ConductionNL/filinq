@@ -63,8 +63,12 @@ class DocumentAnonymizeRunner {
 	 *                                                     publication consents.
 	 * @param GrondslagenSummaryAttacher $summaryAttacher Renders and attaches the per-document
 	 *                                                    grondslagen summary.
+	 * @param AnonymisationRunRecords $runRecords The verdict, the anonymisation link and the
+	 *                                            reversible-pseudonymisation key of a finished run.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-2.2
 	 */
 	public function __construct(
 		private readonly LoggerInterface $logger,
@@ -75,6 +79,7 @@ class DocumentAnonymizeRunner {
 		private readonly ReplacementVerificationService $replacementVerifier,
 		private readonly AnonymizationPersistenceService $persistence,
 		private readonly GrondslagenSummaryAttacher $summaryAttacher,
+		private readonly AnonymisationRunRecords $runRecords,
 	) {
 
 	}//end __construct()
@@ -121,6 +126,7 @@ class DocumentAnonymizeRunner {
 	 * @spec openspec/specs/anonymization/spec.md
 	 * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-2
 	 * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-3
+	 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-2.2
 	 */
 	public function run(int $fileId, array $entities, array $options): array {
 		try {
@@ -132,6 +138,11 @@ class DocumentAnonymizeRunner {
 				'appendBasisSummary' => $options['appendBasisSummary'],
 				'sourceNode' => $node,
 				'fileId' => $fileId,
+				'redactedValues' => $mappedEntities,
+				'outputMode' => (string)($options['outputFormat'] ?? ''),
+				'reversible' => (($options['reversible'] ?? false) === true),
+				'scope' => (string)($options['scope'] ?? 'document'),
+				'userId' => (string)($options['userId'] ?? ''),
 			];
 
 			// EML branch (eml-pdf-assembly): OR's anonymizeDocument() THROWS on
@@ -208,12 +219,18 @@ class DocumentAnonymizeRunner {
 		$fileId = $context['fileId'];
 		$originalText = $this->replacementVerifier->readNodeText(node: $node);
 
+		// The fifth argument asks OpenRegister to keep the tag structure; an
+		// OpenRegister without it ignores the extra argument and reports nothing,
+		// which reads as unknown.
 		$result = $fileService->anonymizeDocument(
 			$node,
 			$mappedEntities,
 			$options['scope'],
-			$options['dossierKey']
+			$options['dossierKey'],
+			$this->runRecords->preserveStructure()
 		);
+		$context['structureReport'] = $this->locator->lastStructurePreservation(fileService: $fileService);
+		$context['sanitizationReport'] = $this->locator->lastSanitizationReport(fileService: $fileService);
 
 		$residualEntities = $this->locator->lastResidualEntities(fileService: $fileService);
 		$context['placeholderMap'] = $this->locator->lastPlaceholderMap(fileService: $fileService);
@@ -306,6 +323,7 @@ class DocumentAnonymizeRunner {
 	 * @return array<string, mixed> The finalised result info.
 	 *
 	 * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-2.2
 	 */
 	private function finaliseResult(array $resultInfo, array $context): array {
 		if ($context['appendBasisSummary'] === true) {
@@ -317,14 +335,8 @@ class DocumentAnonymizeRunner {
 			);
 		}
 
-		if (empty($resultInfo['anonymizedFileId']) === false) {
-			$resultInfo = $this->persistence->recordAnonymizationLink(
-				fileId: $context['fileId'],
-				sourceNode: $context['sourceNode'],
-				resultInfo: $resultInfo
-			);
-		}
-
-		return $resultInfo;
+		// LAST, after the summary: the verdict is about the bytes actually
+		// written, and the link and the key follow it (AnonymisationRunRecords).
+		return $this->runRecords->record(resultInfo: $resultInfo, context: $context);
 	}//end finaliseResult()
 }//end class

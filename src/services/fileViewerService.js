@@ -79,7 +79,7 @@ export async function fetchUrlAsArrayBuffer(url) {
  *
  * @param {number} fileId Nextcloud file id of the source .eml.
  * @return {string} App-relative URL of the preview endpoint.
- * @spec openspec/changes/eml-viewer-preview/specs/eml-preview/spec.md#requirement-the-file-viewer-must-render-eml-via-the-server-rendered-preview
+ * @spec openspec/changes/archive/2026-10-09-eml-viewer-preview/specs/eml-preview/spec.md#requirement-the-file-viewer-must-render-eml-via-the-server-rendered-preview
  */
 export function emlPreviewUrl(fileId) {
 	return generateUrl('/apps/filinq/api/anonymization/eml-preview/{fileId}', {
@@ -95,6 +95,18 @@ export function emlPreviewUrl(fileId) {
  */
 export async function fetchFileAsText(path) {
 	const url = buildWebdavUrl(path)
+	const response = await axios.get(url, { responseType: 'text' })
+	return response.data
+}
+
+/**
+ * Fetch an arbitrary same-origin URL as plain text.
+ *
+ * @param {string} url Absolute or app-relative URL returning text.
+ * @return {Promise<string>}
+ * @spec openspec/changes/anonymization-review-workbench/specs/anonymization-review-workbench/spec.md#requirement-the-split-view-is-mountable-by-another-app-req-ddarw-014
+ */
+export async function fetchUrlAsText(url) {
 	const response = await axios.get(url, { responseType: 'text' })
 	return response.data
 }

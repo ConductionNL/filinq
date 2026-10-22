@@ -33,6 +33,12 @@ import { generateRemoteUrl, generateUrl } from '@nextcloud/router'
  */
 import { defineStore } from 'pinia'
 import { extractDocumentText } from '../../services/fileViewerService.js'
+import { applyOcrFlags } from '../../services/ocr.js'
+import {
+	markChecked,
+	redactionPayload,
+	reviewIsCurrent,
+} from '../../services/reviewMark.js'
 
 let fileCounter = 0
 
@@ -341,6 +347,29 @@ function parseFileIdFromPropfind(xmlText) {
 	}
 }
 
+/**
+ * The entities an anonymise call for this entry sends, and a check covers.
+ *
+ * @param {object} entry Queue entry.
+ * @return {Array<{type: string, value: string, confidence: number}>}
+ */
+function entryPayload(entry) {
+	return redactionPayload(
+		(entry.entities || []).filter((e) => e.included !== false),
+	)
+}
+
+/**
+ * Whether a person checked exactly what this entry would send now.
+ *
+ * @param {object} entry Queue entry.
+ * @return {boolean}
+ * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
+ */
+export function entryIsChecked(entry) {
+	return !!entry && reviewIsCurrent(entry.reviewMark, entryPayload(entry))
+}
+
 export const useAnonymizationStore = defineStore('anonymization', {
 	state: () => ({
 		files: [],
@@ -358,9 +387,12 @@ export const useAnonymizationStore = defineStore('anonymization', {
 		 * `running` gates the dossier nav button; `done`/`failed` drive the
 		 * "Anonymizing X/N…" label and the completion summary.
 		 *
-		 * @type {{running: boolean, total: number, done: number, failed: number}}
+		 * `unreviewed` lists the files the run left alone because nobody
+		 * checked them.
+		 *
+		 * @type {{running: boolean, total: number, done: number, failed: number, unreviewed: Array<{fileId: number, name: string}>}}
 		 */
-		batch: { running: false, total: 0, done: 0, failed: 0 },
+		batch: { running: false, total: 0, done: 0, failed: 0, unreviewed: [] },
 	}),
 	getters: {
 		hasFiles: (state) => state.files.length > 0,
@@ -591,8 +623,10 @@ export const useAnonymizationStore = defineStore('anonymization', {
 					extractResponse.data.confidentialityLabel ?? null
 				entry.confidentialityLevel =
 					extractResponse.data.confidentialityLevel ?? null
+				// A scan detection could not read is not "nothing to anonymise".
+				const unseen = applyOcrFlags(entry, extractResponse.data)
 
-				if (entities.length === 0) {
+				if (entities.length === 0 && !unseen) {
 					// Nothing to anonymise; skip review and mark done.
 					entry.status = 'completed'
 					return
@@ -620,14 +654,22 @@ export const useAnonymizationStore = defineStore('anonymization', {
 		 *   both flags before it generates and appends the summary.
 		 * @param {string} [options.outputFormat] Output document format
 		 *   (e.g. `pdf`). Required alongside `appendBasisSummary`.
+		 * @param {boolean} [options.reversible] Keep an encrypted key so a
+		 *   permitted user can restore the names later.
 		 * @return {Promise<void>}
 		 * @spec openspec/specs/anonymization-entity-review/spec.md#requirement-entity-toggle-in-review
+		 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-4.1
 		 */
 		async anonymiseEntry(entry, options = {}) {
 			if (entry.status !== 'extracted') {
 				return
 			}
+			if (!entryIsChecked(entry)) {
+				entry.reviewRequired = true
+				return
+			}
 
+			entry.reviewRequired = false
 			entry.status = 'anonymising'
 			try {
 				// Step 1 — PATCH decisions for entities the user modified.
@@ -689,26 +731,10 @@ export const useAnonymizationStore = defineStore('anonymization', {
 				// review checkbox in EntityReviewTable controls inclusion.
 				// The OR side additionally filters skipAnonymization=true
 				// relations, so an explicit skip still takes effect even
-				// when the entity was left included.
-				//
-				// Longest value first: OpenRegister replaces matches in
-				// payload order via str_ireplace. If a shorter span runs
-				// first it eats its own text out of an overlapping longer
-				// span — e.g. redacting "Claudia Fischer" before "Mevrouw
-				// Claudia Fischer" leaves a dangling "Mevrouw". Sorting by
-				// descending length makes the longest overlap redact first.
+				// when the entity was left included. The list is the one the
+				// review mark was recorded over (see markEntryChecked).
 				const anonymizePayload = {
-					entities: entry.entities
-						.filter((e) => e.included !== false)
-						.map((e) => ({
-							type: e.type,
-							value: e.value,
-							confidence: e.confidence,
-						}))
-						.sort(
-							(a, b) =>
-								(b.value || '').length - (a.value || '').length,
-						),
+					entities: entryPayload(entry),
 					// Placeholder-numbering scope: a single-document anonymise
 					// numbers entities locally to this file. Folder/dossier
 					// consistency is handled by the batch path (scope=dossier).
@@ -721,6 +747,11 @@ export const useAnonymizationStore = defineStore('anonymization', {
 				if (options.appendBasisSummary && options.outputFormat) {
 					anonymizePayload.appendBasisSummary = true
 					anonymizePayload.outputFormat = options.outputFormat
+				}
+				// Reversible pseudonymisation: only sent when chosen, so the
+				// default run stays irreversible and keeps no key.
+				if (options.reversible === true) {
+					anonymizePayload.reversible = true
 				}
 				const anonymizeResponse = await axios.post(
 					generateUrl(
@@ -740,6 +771,16 @@ export const useAnonymizationStore = defineStore('anonymization', {
 				entry.residualCount = anonymizeResponse.data.residualCount || 0
 				entry.residualEntities =
 					anonymizeResponse.data.residualEntities || []
+				// Whether a reversible run kept its key (and why not), so the
+				// sidebar can warn instead of implying the names can come back.
+				entry.pseudonymisation =
+					anonymizeResponse.data.pseudonymisation || null
+				// Whether the redaction kept the tag structure a screen reader reads.
+				entry.structurePreservation =
+					anonymizeResponse.data.structurePreservation || null
+				// What OpenRegister's office sanitiser removed during the run.
+				entry.sanitizationReport =
+					anonymizeResponse.data.sanitizationReport || null
 				// The re-anonymise sub-flow (if any) is done — clear the marker
 				// so the dossier footer returns to its batch state.
 				entry.reanonymize = false
@@ -777,7 +818,46 @@ export const useAnonymizationStore = defineStore('anonymization', {
 			} catch (err) {
 				console.error(`Failed to anonymise ${entry.name}:`, err)
 				entry.error = err.response?.data?.error || err.message
+				if (err.response?.data?.reviewRequired) {
+					// The server holds no mark for this run: back to review,
+					// so the person can check it and try again.
+					entry.reviewMark = null
+					entry.reviewRequired = true
+					entry.status = 'extracted'
+					return
+				}
 				entry.status = 'error'
+			}
+		},
+
+		/**
+		 * Record that the signed-in person checked this entry's findings.
+		 *
+		 * Called only from the reviewer's own click. The mark covers the
+		 * entities the next anonymise call sends; changing the selection
+		 * afterwards makes it stale and asks for a new check.
+		 *
+		 * @param {object} entry Queue entry in the `extracted` state.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 */
+		async markEntryChecked(entry) {
+			if (!entry || entry.status !== 'extracted') {
+				return
+			}
+			entry.reviewing = true
+			entry.reviewError = null
+			try {
+				entry.reviewMark = await markChecked(
+					entry.fileId,
+					entryPayload(entry),
+				)
+				entry.reviewRequired = false
+				entry.error = null
+			} catch (err) {
+				entry.reviewError = err.response?.data?.error || err.message
+			} finally {
+				entry.reviewing = false
 			}
 		},
 
@@ -794,6 +874,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 		 *   before anonymising — covers dossier files the user never opened,
 		 *   which are otherwise missing from the queue.
 		 * @return {Promise<void>}
+		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
 		 */
 		async anonymiseAllExtracted(options = {}) {
 			const { fileIds, files, ...entryOptions } = options
@@ -804,7 +885,13 @@ export const useAnonymizationStore = defineStore('anonymization', {
 			// run silently skips every un-opened file. ensureExtracted is a
 			// no-op for files already in the queue, so this is idempotent.
 			if (Array.isArray(files) && files.length > 0) {
-				this.batch = { running: true, total: 0, done: 0, failed: 0 }
+				this.batch = {
+					running: true,
+					total: 0,
+					done: 0,
+					failed: 0,
+					unreviewed: [],
+				}
 				for (const meta of files) {
 					await this.ensureExtracted(meta)
 				}
@@ -815,13 +902,24 @@ export const useAnonymizationStore = defineStore('anonymization', {
 			// Snapshot the targets up-front: anonymiseEntry mutates each
 			// entry's status to 'completed'/'error', so iterating live
 			// would be order-sensitive.
-			const targets = this.files.filter(
+			const inScope = this.files.filter(
 				(entry) =>
 					entry.status === 'extracted'
 					&& (!scope || scope.has(Number(entry.fileId))),
 			)
+			// Only what a person checked is written; the rest is reported.
+			const targets = inScope.filter((entry) => entryIsChecked(entry))
+			const unreviewed = inScope
+				.filter((entry) => !entryIsChecked(entry))
+				.map((entry) => ({ fileId: entry.fileId, name: entry.name }))
 
-			this.batch = { running: true, total: targets.length, done: 0, failed: 0 }
+			this.batch = {
+				running: true,
+				total: targets.length,
+				done: 0,
+				failed: 0,
+				unreviewed,
+			}
 			try {
 				for (const entry of targets) {
 					try {
@@ -889,7 +987,9 @@ export const useAnonymizationStore = defineStore('anonymization', {
 					extractResponse.data.confidentialityLabel ?? null
 				entry.confidentialityLevel =
 					extractResponse.data.confidentialityLevel ?? null
-				entry.status = entities.length === 0 ? 'completed' : 'extracted'
+				const unseen = applyOcrFlags(entry, extractResponse.data)
+				entry.status =
+					entities.length === 0 && !unseen ? 'completed' : 'extracted'
 			} catch (err) {
 				console.error(`Failed to load entities for ${entry.name}:`, err)
 				entry.error = err.response?.data?.error || err.message
@@ -926,7 +1026,9 @@ export const useAnonymizationStore = defineStore('anonymization', {
 				entry.entityCount = entry.entities.length
 				entry.confidentialityLabel = res.data.confidentialityLabel ?? null
 				entry.confidentialityLevel = res.data.confidentialityLevel ?? null
-				entry.status = entities.length === 0 ? 'completed' : 'extracted'
+				const unseen = applyOcrFlags(entry, res.data)
+				entry.status =
+					entities.length === 0 && !unseen ? 'completed' : 'extracted'
 			} catch (err) {
 				entry.error = err.response?.data?.error || err.message
 				entry.status = 'error'
@@ -997,10 +1099,13 @@ export const useAnonymizationStore = defineStore('anonymization', {
 				}
 				entry.entities = entities
 				entry.entityCount = entities.length
+				// A new detection run needs a new check.
+				entry.reviewMark = null
 				entry.confidentialityLabel =
 					extractResponse.data.confidentialityLabel ?? null
 				entry.confidentialityLevel =
 					extractResponse.data.confidentialityLevel ?? null
+				applyOcrFlags(entry, extractResponse.data)
 				// Drop the read-only anonymised view so the editable review
 				// list + "Anonymize" button take over. Keep anonymizedFile*
 				// so the viewer toggle can still show the current result until
@@ -1665,12 +1770,20 @@ export const useAnonymizationStore = defineStore('anonymization', {
 
 		/**
 		 * Reset the queue, processing flag and dossier records completely.
+		 *
+		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
 		 */
 		reset() {
 			this.files = []
 			this.processing = false
 			this.dossiers = []
-			this.batch = { running: false, total: 0, done: 0, failed: 0 }
+			this.batch = {
+				running: false,
+				total: 0,
+				done: 0,
+				failed: 0,
+				unreviewed: [],
+			}
 		},
 	},
 })

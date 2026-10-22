@@ -130,7 +130,6 @@ class PolicyController extends Controller {
 	 * @return JSONResponse
 	 *
 	 * @NoAdminRequired
-	 * @NoCSRFRequired
 	 */
 	public function createProhibition(): JSONResponse {
 		if ($this->userSession->getUser() === null) {
@@ -160,7 +159,6 @@ class PolicyController extends Controller {
 	 * @return JSONResponse
 	 *
 	 * @NoAdminRequired
-	 * @NoCSRFRequired
 	 */
 	public function updateProhibition(string $id): JSONResponse {
 		if ($this->userSession->getUser() === null) {
@@ -205,7 +203,6 @@ class PolicyController extends Controller {
 	 * @return JSONResponse 409 while the schema declares archival retention
 	 *
 	 * @NoAdminRequired
-	 * @NoCSRFRequired
 	 *
 	 * @spec openspec/specs/entity-publication-policies/spec.md
 	 */

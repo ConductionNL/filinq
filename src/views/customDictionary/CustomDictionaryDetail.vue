@@ -21,7 +21,10 @@
 				}}
 			</h2>
 			<div class="custom-dictionary-detail__header-actions">
-				<NcButton variant="secondary" @click="openEditDialog">
+				<NcButton
+					v-if="customDictionaryStore.canMaintain"
+					variant="secondary"
+					@click="openEditDialog">
 					{{ t('filinq', 'Edit') }}
 				</NcButton>
 			</div>
@@ -58,7 +61,9 @@
 			<div class="custom-dictionary-detail__terms-panel">
 				<div class="custom-dictionary-detail__terms-header">
 					<h3>{{ t('filinq', 'Terms') }}</h3>
-					<div class="custom-dictionary-detail__terms-actions">
+					<div
+						v-if="customDictionaryStore.canMaintain"
+						class="custom-dictionary-detail__terms-actions">
 						<NcButton
 							variant="secondary"
 							@click="importDialogOpen = true">
@@ -67,7 +72,9 @@
 					</div>
 				</div>
 
-				<div class="custom-dictionary-detail__add-term">
+				<div
+					v-if="customDictionaryStore.canMaintain"
+					class="custom-dictionary-detail__add-term">
 					<NcTextField
 						v-model="newTermValue"
 						:label="t('filinq', 'New term value')"
@@ -101,7 +108,9 @@
 						<tr>
 							<th scope="col">{{ t('filinq', 'Value') }}</th>
 							<th scope="col">{{ t('filinq', 'Label') }}</th>
-							<th scope="col">{{ t('filinq', 'Actions') }}</th>
+							<th v-if="customDictionaryStore.canMaintain" scope="col">
+								{{ t('filinq', 'Actions') }}
+							</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -110,7 +119,7 @@
 							:key="term['@self']?.id || term.id">
 							<td>{{ term.value }}</td>
 							<td>{{ displayValue(term.label, '-') }}</td>
-							<td>
+							<td v-if="customDictionaryStore.canMaintain">
 								<NcButton
 									variant="tertiary"
 									@click="removeTerm(term)">
@@ -159,14 +168,14 @@
 </template>
 
 <script>
+import { CnStatusBadge } from '@conduction/nextcloud-vue'
+import { translate as t } from '@nextcloud/l10n'
 import {
-	CnStatusBadge,
 	NcButton,
 	NcEmptyContent,
 	NcLoadingIcon,
 	NcTextField,
-} from '@conduction/nextcloud-vue'
-import { translate as t } from '@nextcloud/l10n'
+} from '@nextcloud/vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
 import ConfirmActionDialog from '../../dialogs/ConfirmActionDialog.vue'
 import CustomDictionaryFormDialog from '../../dialogs/CustomDictionaryFormDialog.vue'
@@ -245,6 +254,7 @@ export default {
 	},
 
 	async mounted() {
+		customDictionaryStore.fetchCapabilities()
 		await customDictionaryStore.fetchDictionary(this.dictionaryId)
 		await customDictionaryStore.fetchTerms(this.dictionaryId)
 	},

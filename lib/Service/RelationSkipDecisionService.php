@@ -59,6 +59,8 @@ class RelationSkipDecisionService {
 	 * @param OpenRegisterServiceLocator $locator Resolver for OpenRegister services and mappers.
 	 * @param IUserSession $userSession The acting session, for the ownership guard + audit actor.
 	 * @param IRootFolder $rootFolder Root folder, used to resolve the acting user's own file tree.
+	 * @param ProhibitionOverrideAuthority $authority Who may release a prohibition match.
+	 * @param ProhibitionOverrideCommitter $committer Records a release in prohibitionOverrideAudit.
 	 *
 	 * @return void
 	 */
@@ -68,6 +70,8 @@ class RelationSkipDecisionService {
 		private readonly OpenRegisterServiceLocator $locator,
 		private readonly IUserSession $userSession,
 		private readonly IRootFolder $rootFolder,
+		private readonly ProhibitionOverrideAuthority $authority,
+		private readonly ProhibitionOverrideCommitter $committer,
 	) {
 		$this->tier = new ProhibitionSkipTier();
 
@@ -130,7 +134,8 @@ class RelationSkipDecisionService {
 				mapper: $mapper,
 				relation: $relation,
 				relationId: $relationId,
-				force: $force
+				force: $force,
+				userId: $user->getUID()
 			);
 			if ($block !== null) {
 				return ['status' => 422, 'body' => $block];
@@ -194,12 +199,13 @@ class RelationSkipDecisionService {
 	 * @param mixed $relation The EntityRelation being decided.
 	 * @param int $relationId The relation id (for the file-join lookup + logs).
 	 * @param bool $force Whether the request set force.
+	 * @param string $userId The acting user; only an override role may release a match.
 	 *
 	 * @return array<string, mixed>|null The 422 body when blocked, else null.
 	 *
 	 * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-6
 	 */
-	private function evaluateProhibitionSkip(mixed $mapper, mixed $relation, int $relationId, bool $force): ?array {
+	private function evaluateProhibitionSkip(mixed $mapper, mixed $relation, int $relationId, bool $force, string $userId): ?array {
 		$row = $this->findRelationRow(
 			mapper: $mapper,
 			fileId: (int)$relation->getFileId(),
@@ -232,8 +238,19 @@ class RelationSkipDecisionService {
 		$confidence = (float)($row['confidence'] ?? 0.0);
 		$threshold = (float)$matcher->highConfidenceThreshold();
 		$decision = $this->tier->classify(confidence: $confidence, threshold: $threshold, force: $force);
-		if ($decision === 'allow') {
+		if ($decision === 'allow' && $this->authority->mayOverride(userId: $userId) === true) {
+			$this->committer->recordRelease(
+				ruleId: (string)$match['uuid'],
+				relationId: $relationId,
+				fileId: (int)$relation->getFileId(),
+				reason: 'Released below the high-confidence threshold in the review',
+				userId: $userId
+			);
 			return null;
+		}
+
+		if ($decision === 'allow') {
+			$decision = 'block_releasable';
 		}
 
 		$this->logger->warning(

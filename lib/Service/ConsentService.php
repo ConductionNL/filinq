@@ -42,8 +42,10 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use DateTimeImmutable;
 use Exception;
 use OCA\Filinq\Exception\PolicyRejectedException;
+use OCA\Filinq\Service\Publication\ConsentClearance;
 use OCP\IUser;
 use Psr\Log\LoggerInterface;
 
@@ -333,7 +335,8 @@ class ConsentService {
 			consentId: $consentId,
 			register: $register,
 			schema: $schema,
-			data: $data
+			data: $data,
+			actor: (string) $user?->getUID()
 		);
 
 	}//end validateAndUpdateConsent()
@@ -345,6 +348,7 @@ class ConsentService {
 	 * @param string $register The register ID
 	 * @param string $schema The schema ID
 	 * @param array<string, mixed> $data The data to update
+	 * @param string $actor The user making the change, recorded on each status event
 	 *
 	 * @return array<string, mixed> The updated consent record
 	 *
@@ -357,12 +361,14 @@ class ConsentService {
 		string $register,
 		string $schema,
 		array $data,
+		string $actor = '',
 	): array {
 		return $this->updateHandler->updateConsentStatus(
 			consentId: $consentId,
 			register: $register,
 			schema: $schema,
-			data: $data
+			data: $data,
+			actor: $actor
 		);
 
 	}//end updateConsentStatus()
@@ -437,4 +443,26 @@ class ConsentService {
 		$this->recordWriter->validatePublicationConsentData(data: $data);
 
 	}//end validatePublicationConsentData()
+	/**
+	 * Whether a document's consent requests allow publication. Reads only.
+	 *
+	 * Reads every record for the document, not only the caller's: the verdict
+	 * names record ids and never personal data, and a clearance that skipped
+	 * someone else's objection would clear too much.
+	 *
+	 * @param string            $documentId The document
+	 * @param string            $register   The consent register
+	 * @param string            $schema     The consent schema
+	 * @param DateTimeImmutable $now        The moment deadlines are judged at
+	 *
+	 * @return array{clear: bool, reasons: list<string>} The verdict.
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-2.1
+	 */
+	public function isDocumentConsentClear(string $documentId, string $register, string $schema, DateTimeImmutable $now): array {
+		$consents = $this->updateHandler->getConsentsByDocument(documentId: $documentId, register: $register, schema: $schema);
+
+		return (new ConsentClearance())->evaluate(consents: $consents, now: $now);
+
+	}//end isDocumentConsentClear()
 }//end class

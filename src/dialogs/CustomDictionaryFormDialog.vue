@@ -7,6 +7,7 @@
 	CustomDictionaryDetail (edit) — ADR-004 gate-13, own file, not inline.
 -->
 <script>
+import { translate as t } from '@nextcloud/l10n'
 import {
 	NcButton,
 	NcCheckboxRadioSwitch,
@@ -14,8 +15,7 @@ import {
 	NcLoadingIcon,
 	NcSelect,
 	NcTextField,
-} from '@conduction/nextcloud-vue'
-import { translate as t } from '@nextcloud/l10n'
+} from '@nextcloud/vue'
 
 /**
  *

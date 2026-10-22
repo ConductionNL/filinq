@@ -3,9 +3,10 @@
 /**
  * Print Job Service
  *
- * Manages print job lifecycle: creation, queuing, batch dispatch, and manifest
- * generation. Uses IAppConfig for transient job status persistence, following
- * the same pattern as CorrespondenceService.
+ * Manages the print job lifecycle: creation, rendering, batch dispatch, the
+ * status a print service reports back, and the download. A job is a
+ * `printJob` object in OpenRegister and its PDFs are files in the app data
+ * folder; neither lives in app configuration any more.
  *
  * @category Service
  * @package  OCA\Filinq\Service
@@ -18,7 +19,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/print-functionality/tasks.md#task-3
+ * @spec openspec/specs/print-preview/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -28,16 +29,16 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use DateTimeImmutable;
+use DateTimeInterface;
 use Exception;
+use InvalidArgumentException;
+use OCA\Filinq\BackgroundJob\BatchPrintJob;
 use OCP\BackgroundJob\IJobList;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
- * Service for managing print jobs and batch print generation
- *
- * Handles job creation, status tracking via IAppConfig, and dispatching
- * large batches to the BatchPrintJob background job.
+ * Service for managing print jobs and batch print generation.
  *
  * @category Service
  * @package  OCA\Filinq\Service
@@ -45,39 +46,48 @@ use Psr\Log\LoggerInterface;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/print-functionality/tasks.md#task-3
+ * @spec openspec/specs/print-preview/spec.md
  */
 class PrintJobService {
 
 	/**
-	 * Maximum items for synchronous batch processing.
+	 * Maximum items rendered during the request; larger batches go to a background job.
 	 *
 	 * @var int
 	 */
 	private const SYNC_BATCH_LIMIT = 10;
 
 	/**
-	 * App config key prefix for print jobs.
+	 * What a print service may report, and the job status each one means.
 	 *
-	 * @var string
+	 * @var array<string, string>
 	 */
-	private const JOB_KEY_PREFIX = 'print_job_';
+	public const EXTERNAL_STATUSES = [
+		'printing' => 'sent',
+		'sent' => 'sent',
+		'printed' => 'printed',
+		'failed' => 'failed',
+	];
 
 	/**
 	 * Constructor for PrintJobService
 	 *
-	 * @param PdfService $pdfService Service for PDF generation
-	 * @param TemplateService $templateSvc Service for template retrieval
-	 * @param ContainerInterface $container DI container for IAppConfig access
-	 * @param IJobList $jobList Nextcloud job list for async dispatch
-	 * @param LoggerInterface $logger Logger for error reporting
+	 * @param PdfService          $pdfService   Service for PDF generation
+	 * @param TemplateService     $templateSvc  Service for template retrieval
+	 * @param DataResolverService $dataResolver Resolves an item's dataRefs into template data
+	 * @param PrintJobRepository  $jobs         The printJob rows
+	 * @param PrintJobFileStore   $files        The PDFs in app data
+	 * @param IJobList            $jobList      Nextcloud job list for async dispatch
+	 * @param LoggerInterface     $logger       Logger for error reporting
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		private readonly PdfService $pdfService,
 		private readonly TemplateService $templateSvc,
-		private readonly ContainerInterface $container,
+		private readonly DataResolverService $dataResolver,
+		private readonly PrintJobRepository $jobs,
+		private readonly PrintJobFileStore $files,
 		private readonly IJobList $jobList,
 		private readonly LoggerInterface $logger,
 	) {
@@ -85,45 +95,19 @@ class PrintJobService {
 	}//end __construct()
 
 	/**
-	 * Generate a unique job ID
-	 *
-	 * @return string UUID v4 format job identifier
-	 *
-	 * @spec openspec/changes/print-functionality/tasks.md#task-3
-	 */
-	public function generateJobId(): string {
-		return sprintf(
-			'%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
-			mt_rand(0, 0xffff),
-			mt_rand(0, 0xffff),
-			mt_rand(0, 0xffff),
-			mt_rand(0, 0x0fff) | 0x4000,
-			mt_rand(0, 0x3fff) | 0x8000,
-			mt_rand(0, 0xffff),
-			mt_rand(0, 0xffff),
-			mt_rand(0, 0xffff)
-		);
-
-	}//end generateJobId()
-
-	/**
-	 * Create a single-document print job
-	 *
-	 * Generates the PDF immediately (synchronous), stores the result and
-	 * returns job info including the print configuration.
+	 * Create a single-document print job.
 	 *
 	 * @param string $templateId Template UUID to render
-	 * @param array $data Data context for template rendering
-	 * @param array $options Print options: format, orientation, pdfa, cropMarks,
-	 *                       duplex, color, paperTray, stapling, author, caseReference
-	 * @param string $userId UID of the requesting user (for ownership check)
-	 * @param string $filename Desired download filename
+	 * @param array  $data       Data context for template rendering
+	 * @param array  $options    Print options: format, orientation, pdfa, duplex, color, paperTray, stapling
+	 * @param string $userId     UID of the requesting user
+	 * @param string $filename   Desired download filename
 	 *
-	 * @return array{jobId: string, status: string, printConfig: array}
+	 * @return array{jobId: string, status: string, total: int, printConfig: array}
 	 *
-	 * @throws Exception If template retrieval or PDF generation fails
+	 * @throws Exception If template retrieval or storing the job fails
 	 *
-	 * @spec openspec/changes/print-functionality/tasks.md#task-3
+	 * @spec openspec/changes/archive/2026-09-29-print-jobs-in-the-app/tasks.md#task-1.2
 	 */
 	public function createJob(
 		string $templateId,
@@ -132,272 +116,230 @@ class PrintJobService {
 		string $userId = '',
 		string $filename = 'document.pdf',
 	): array {
-		$jobId = $this->generateJobId();
-		$template = $this->templateSvc->getTemplate(id: $templateId);
-
-		$pdfOptions = array_merge(
-			[
-				'format' => $template['format'] ?? 'A4',
-				'orientation' => $template['orientation'] ?? 'P',
-				'duplex' => $template['duplex'] ?? false,
-				'color' => $template['color'] ?? true,
-				'paperTray' => $template['paperTray'] ?? 'default',
-				'stapling' => $template['stapling'] ?? false,
-			],
-			$options
+		return $this->createBatchJob(
+			templateId: $templateId,
+			items: [['data' => $data, 'filename' => $filename]],
+			options: $options,
+			userId: $userId,
+			filename: $filename
 		);
-
-		$pdfOptions['title'] = $template['name'] ?? 'document';
-		$pdfOptions['pdfa'] = ($options['pdfa'] ?? false) === true;
-
-		$pdfContent = $this->pdfService->renderPdf(
-			templateContent: $template['content'] ?? '',
-			data: $data,
-			options: $pdfOptions
-		);
-		$printConfig = $this->buildPrintConfig(options: $pdfOptions);
-
-		$jobData = [
-			'status' => 'completed',
-			'total' => 1,
-			'completed' => 1,
-			'errors' => 0,
-			'filename' => $filename,
-			'ownerUserId' => $userId,
-			'printConfig' => $printConfig,
-			'manifest' => $this->buildManifest(
-				items: [['filename' => $filename, 'status' => 'success']],
-				printConfig: $printConfig
-			),
-		];
-
-		$this->storeJobStatus(jobId: $jobId, data: $jobData);
-		$this->storeJobPdf(jobId: $jobId, content: $pdfContent);
-
-		return [
-			'jobId' => $jobId,
-			'status' => 'completed',
-			'printConfig' => $printConfig,
-		];
 
 	}//end createJob()
 
 	/**
-	 * Create and dispatch a batch print job
+	 * Create a print job for one or more letters.
 	 *
-	 * For batches of SYNC_BATCH_LIMIT or fewer items, generates PDFs synchronously.
-	 * For larger batches, dispatches a BatchPrintJob background job.
+	 * Each item carries `data`, `dataRefs` (resolved like a generation) or
+	 * both, and an optional `filename`. Up to SYNC_BATCH_LIMIT items are
+	 * rendered now; a larger batch is rendered by BatchPrintJob.
 	 *
 	 * @param string $templateId Template UUID to render
-	 * @param array $items Array of items, each with optional 'data' and 'filename' keys
-	 * @param array $options Print options (same as createJob)
-	 * @param string $userId UID of the requesting user
+	 * @param array  $items      The letters
+	 * @param array  $options    Print options (same as createJob)
+	 * @param string $userId     UID of the requesting user
+	 * @param string $filename   Name of the download
 	 *
 	 * @return array{jobId: string, status: string, total: int, printConfig: array}
 	 *
-	 * @throws Exception If template retrieval fails
+	 * @throws Exception If storing the job fails
 	 *
-	 * @spec openspec/changes/print-functionality/tasks.md#task-3
+	 * @spec openspec/changes/archive/2026-09-29-print-jobs-in-the-app/tasks.md#task-1.2
 	 */
 	public function createBatchJob(
 		string $templateId,
 		array $items = [],
 		array $options = [],
 		string $userId = '',
+		string $filename = 'print-job.pdf',
 	): array {
-		$count = count($items);
+		$items = array_values($items);
+		$now = $this->now();
+		$job = $this->jobs->save(
+			job: [
+				'status' => 'rendering',
+				'requestedBy' => $userId,
+				'requestedAt' => $now,
+				'templateId' => $templateId,
+				'filename' => $filename,
+				'total' => count($items),
+				'rendered' => 0,
+				'errors' => 0,
+				'files' => [],
+				'printConfig' => $this->buildPrintConfig(options: $options),
+				'manifest' => [],
+				'statusChangedAt' => $now,
+			]
+		);
 
-		if ($count <= self::SYNC_BATCH_LIMIT) {
-			return $this->processBatchSync(
-				templateId: $templateId,
-				items: $items,
-				options: $options,
-				userId: $userId
+		if (count($items) <= self::SYNC_BATCH_LIMIT) {
+			$job = $this->renderJob(jobId: $job['uuid'], templateId: $templateId, items: $items, options: $options);
+		}
+
+		if (count($items) > self::SYNC_BATCH_LIMIT) {
+			$this->jobList->add(
+				BatchPrintJob::class,
+				['jobId' => $job['uuid'], 'templateId' => $templateId, 'items' => $items, 'options' => $options]
 			);
 		}
 
-		return $this->dispatchBatchJob(
-			templateId: $templateId,
-			items: $items,
-			options: $options,
-			userId: $userId
-		);
+		return [
+			'jobId' => (string) $job['uuid'],
+			'status' => (string) $job['status'],
+			'total' => count($items),
+			'printConfig' => $job['printConfig'],
+		];
 
 	}//end createBatchJob()
 
 	/**
-	 * Process a batch synchronously
+	 * Render every letter of a job into app data and move it to queued.
 	 *
+	 * A job whose template cannot be loaded, or whose letters all fail, is
+	 * failed; a job with some failed letters is queued with the rest.
+	 *
+	 * @param string $jobId      The job uuid
 	 * @param string $templateId Template UUID
-	 * @param array $items Array of items to process
-	 * @param array $options Print options
-	 * @param string $userId Requesting user UID
+	 * @param array  $items      The letters
+	 * @param array  $options    Print options
 	 *
-	 * @return array{jobId: string, status: string, total: int, printConfig: array}
+	 * @return array<string, mixed> The stored job.
 	 *
-	 * @spec openspec/changes/print-functionality/tasks.md#task-3
+	 * @throws Exception If the job cannot be read or stored
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-print-jobs-in-the-app/tasks.md#task-1.2
 	 */
-	private function processBatchSync(
-		string $templateId,
-		array $items,
-		array $options,
-		string $userId,
-	): array {
-		$jobId = $this->generateJobId();
-		$template = $this->templateSvc->getTemplate(id: $templateId);
+	public function renderJob(string $jobId, string $templateId, array $items, array $options): array {
+		$job = $this->jobs->find(uuid: $jobId);
+		if ($job === null) {
+			throw new InvalidArgumentException('Print job not found: ' . $jobId);
+		}
 
-		$pdfOptions = array_merge(
-			[
-				'format' => $template['format'] ?? 'A4',
-				'orientation' => $template['orientation'] ?? 'P',
-				'duplex' => $template['duplex'] ?? false,
-				'color' => $template['color'] ?? true,
-				'paperTray' => $template['paperTray'] ?? 'default',
-				'stapling' => $template['stapling'] ?? false,
-			],
-			$options
-		);
-		$pdfOptions['title'] = $template['name'] ?? 'document';
-		$pdfOptions['pdfa'] = ($options['pdfa'] ?? false) === true;
+		try {
+			$template = $this->templateSvc->getTemplate(id: $templateId);
+		} catch (Exception $e) {
+			$this->logger->error(
+				message: 'Print job template could not be loaded: ' . $e->getMessage(),
+				context: ['jobId' => $jobId, 'templateId' => $templateId]
+			);
+			return $this->changeStatus(job: $job, status: 'failed', details: 'Template not found');
+		}
 
-		$printConfig = $this->buildPrintConfig(options: $pdfOptions);
-		$manifestItems = [];
-		$completed = 0;
-		$errors = 0;
+		$outcome = $this->renderItems(jobId: $jobId, template: $template, items: array_values($items), options: $options);
 
-		foreach ($items as $item) {
-			$itemData = $item['data'] ?? [];
-			$itemFilename = $item['filename'] ?? ('document-' . $completed . '.pdf');
+		$job['files'] = $outcome['files'];
+		$job['rendered'] = count($outcome['files']);
+		$job['errors'] = $outcome['errors'];
+		$job['manifest'] = $this->buildManifest(items: $outcome['manifest'], printConfig: (array) ($job['printConfig'] ?? []));
 
-			try {
-				$pdfContent = $this->pdfService->renderPdf(
-					templateContent: $template['content'] ?? '',
-					data: $itemData,
-					options: $pdfOptions
-				);
-				$manifestItems[] = [
-					'filename' => $itemFilename,
-					'status' => 'success',
-				];
-				$this->storeJobPdf(jobId: $jobId . '-' . $completed, content: $pdfContent);
-				$completed++;
-			} catch (Exception $e) {
-				$manifestItems[] = [
-					'filename' => $itemFilename,
-					'status' => 'error',
-					'error' => $e->getMessage(),
-				];
-				$errors++;
-				$this->logger->warning(
-					message: 'Batch print failed for item: ' . $e->getMessage(),
-					context: ['jobId' => $jobId, 'filename' => $itemFilename]
-				);
-			}//end try
-		}//end foreach
+		$status = 'queued';
+		if ($outcome['files'] === []) {
+			$status = 'failed';
+		}
 
-		$manifest = $this->buildManifest(items: $manifestItems, printConfig: $printConfig);
+		return $this->changeStatus(job: $job, status: $status, details: null);
 
-		$this->storeJobStatus(
-			jobId: $jobId,
-			data: [
-				'status' => 'completed',
-				'total' => count($items),
-				'completed' => $completed,
-				'errors' => $errors,
-				'ownerUserId' => $userId,
-				'printConfig' => $printConfig,
-				'manifest' => $manifest,
-			]
-		);
-
-		return [
-			'jobId' => $jobId,
-			'status' => 'completed',
-			'total' => count($items),
-			'printConfig' => $printConfig,
-		];
-
-	}//end processBatchSync()
+	}//end renderJob()
 
 	/**
-	 * Dispatch a large batch to a background job
+	 * Retrieve one job.
 	 *
-	 * @param string $templateId Template UUID
-	 * @param array $items Array of items
-	 * @param array $options Print options
-	 * @param string $userId Requesting user UID
-	 *
-	 * @return array{jobId: string, status: string, total: int, printConfig: array}
-	 *
-	 * @spec openspec/changes/print-functionality/tasks.md#task-3
-	 */
-	private function dispatchBatchJob(
-		string $templateId,
-		array $items,
-		array $options,
-		string $userId,
-	): array {
-		$jobId = $this->generateJobId();
-		$printConfig = $this->buildPrintConfig(options: $options);
-
-		$this->storeJobStatus(
-			jobId: $jobId,
-			data: [
-				'status' => 'queued',
-				'total' => count($items),
-				'completed' => 0,
-				'errors' => 0,
-				'ownerUserId' => $userId,
-				'printConfig' => $printConfig,
-				'manifest' => [],
-			]
-		);
-
-		$this->jobList->add(
-			\OCA\Filinq\BackgroundJob\BatchPrintJob::class,
-			[
-				'jobId' => $jobId,
-				'templateId' => $templateId,
-				'items' => $items,
-				'options' => $options,
-				'userId' => $userId,
-			]
-		);
-
-		return [
-			'jobId' => $jobId,
-			'status' => 'queued',
-			'total' => count($items),
-			'printConfig' => $printConfig,
-		];
-
-	}//end dispatchBatchJob()
-
-	/**
-	 * Retrieve job info including manifest and print config
-	 *
-	 * @param string $jobId Job UUID
+	 * @param string $jobId Job uuid
 	 *
 	 * @return array|null Job data or null if not found
 	 *
-	 * @spec openspec/changes/print-functionality/tasks.md#task-3
+	 * @spec openspec/changes/archive/2026-09-29-print-jobs-in-the-app/tasks.md#task-1.2
 	 */
 	public function getJob(string $jobId): ?array {
-		return $this->loadJobStatus(jobId: $jobId);
+		return $this->jobs->find(uuid: $jobId);
+
 	}//end getJob()
 
 	/**
-	 * Build a manifest listing all documents with metadata
+	 * Every job one user sent, newest first.
 	 *
-	 * Per acceptance criterion 2: each entry includes filename, status, and
-	 * print configuration metadata.
+	 * @param string $userId The user
 	 *
-	 * @param array $items Array of items with 'filename' and 'status' keys
+	 * @return array<int, array<string, mixed>> The jobs.
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-print-jobs-in-the-app/tasks.md#task-1.3
+	 */
+	public function listJobs(string $userId): array {
+		return $this->jobs->findForUser(userId: $userId);
+
+	}//end listJobs()
+
+	/**
+	 * Record what the print service reported.
+	 *
+	 * @param array       $job            The job as read
+	 * @param string      $externalStatus One of the keys of EXTERNAL_STATUSES
+	 * @param string|null $details        What the service said, if anything
+	 *
+	 * @return array<string, mixed> The stored job.
+	 *
+	 * @throws InvalidArgumentException When the status is not one a print service may report
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-print-jobs-in-the-app/tasks.md#task-1.2
+	 */
+	public function recordExternalStatus(array $job, string $externalStatus, ?string $details): array {
+		if (isset(self::EXTERNAL_STATUSES[$externalStatus]) === false) {
+			throw new InvalidArgumentException('Invalid status. Valid values: ' . implode(', ', array_keys(self::EXTERNAL_STATUSES)));
+		}
+
+		return $this->changeStatus(job: $job, status: self::EXTERNAL_STATUSES[$externalStatus], details: $details);
+
+	}//end recordExternalStatus()
+
+	/**
+	 * The download of a job: the PDF of a one-letter job, a ZIP of all PDFs
+	 * and the manifest otherwise, or one letter when an index is given.
+	 *
+	 * @param array    $job  The job
+	 * @param int|null $item The letter to download, or null for the whole job
+	 *
+	 * @return array{content: string, filename: string, contentType: string}|null
+	 *         The download, or null when there is nothing to download.
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-print-jobs-in-the-app/tasks.md#task-1.2
+	 */
+	public function download(array $job, ?int $item = null): ?array {
+		$names = array_values((array) ($job['files'] ?? []));
+		$filename = (string) ($job['filename'] ?? 'print-job.pdf');
+
+		if ($item !== null) {
+			$names = array_slice($names, $item, 1);
+		}
+
+		if (count($names) === 1) {
+			$content = $this->files->get(name: (string) $names[0]);
+			if ($content === null) {
+				return null;
+			}
+
+			return ['content' => $content, 'filename' => $filename, 'contentType' => 'application/pdf'];
+		}
+
+		if ($names === []) {
+			return null;
+		}
+
+		return [
+			'content' => $this->files->zip(names: $names, manifest: (array) ($job['manifest'] ?? [])),
+			'filename' => preg_replace('/\.pdf$/i', '', $filename) . '.zip',
+			'contentType' => 'application/zip',
+		];
+
+	}//end download()
+
+	/**
+	 * Build a manifest listing all documents with metadata.
+	 *
+	 * @param array $items       Array of items with 'filename' and 'status' keys
 	 * @param array $printConfig Print configuration for all items in the batch
 	 *
 	 * @return array Manifest array
 	 *
-	 * @spec openspec/changes/print-functionality/tasks.md#task-3
+	 * @spec openspec/changes/archive/2026-09-29-print-jobs-in-the-app/tasks.md#task-1.2
 	 */
 	public function buildManifest(array $items, array $printConfig = []): array {
 		$manifest = [];
@@ -412,148 +354,146 @@ class PrintJobService {
 		}
 
 		return $manifest;
+
 	}//end buildManifest()
 
 	/**
-	 * Extract print configuration keys from options array
+	 * Extract print configuration keys from options array.
 	 *
 	 * @param array $options Full options array
 	 *
 	 * @return array{duplex: bool, color: bool, paperTray: string, stapling: bool}
 	 *
-	 * @spec openspec/changes/print-functionality/tasks.md#task-3
+	 * @spec openspec/changes/archive/2026-09-29-print-jobs-in-the-app/tasks.md#task-1.2
 	 */
 	public function buildPrintConfig(array $options): array {
 		return [
-			'duplex' => (bool)($options['duplex'] ?? false),
-			'color' => (bool)($options['color'] ?? true),
-			'paperTray' => (string)($options['paperTray'] ?? 'default'),
-			'stapling' => (bool)($options['stapling'] ?? false),
+			'duplex' => (bool) ($options['duplex'] ?? false),
+			'color' => (bool) ($options['color'] ?? true),
+			'paperTray' => (string) ($options['paperTray'] ?? 'default'),
+			'stapling' => (bool) ($options['stapling'] ?? false),
 		];
 
 	}//end buildPrintConfig()
 
 	/**
-	 * Store job status in IAppConfig
+	 * Render the letters of a job, storing each PDF.
 	 *
-	 * @param string $jobId Job UUID
-	 * @param array $data Status data to persist
+	 * @param string $jobId    The job uuid
+	 * @param array  $template The template
+	 * @param array  $items    The letters
+	 * @param array  $options  Print options
 	 *
-	 * @return void
-	 *
-	 * @spec openspec/changes/print-functionality/tasks.md#task-3
+	 * @return array{files: array<int, string>, errors: int, manifest: array<int, array<string, mixed>>}
 	 */
-	public function storeJobStatus(string $jobId, array $data): void {
-		try {
-			$config = $this->container->get(\OCP\IAppConfig::class);
-			$config->setValueString(
-				'filinq',
-				self::JOB_KEY_PREFIX . $jobId,
-				json_encode($data)
-			);
-		} catch (Exception $e) {
-			$this->logger->error(
-				message: 'Failed to store print job status: ' . $e->getMessage(),
-				context: ['jobId' => $jobId]
-			);
+	private function renderItems(string $jobId, array $template, array $items, array $options): array {
+		$pdfOptions = $this->buildPdfOptions(template: $template, options: $options);
+		$files = [];
+		$manifest = [];
+		$errors = 0;
+
+		foreach ($items as $index => $item) {
+			$itemFilename = (string) ($item['filename'] ?? ('document-' . $index . '.pdf'));
+			try {
+				$content = $this->pdfService->renderPdf(
+					templateContent: $template['content'] ?? '',
+					data: $this->itemData(item: $item),
+					options: $pdfOptions
+				);
+				$files[] = $this->files->put(jobId: $jobId, index: $index, content: $content);
+				$manifest[] = ['filename' => $itemFilename, 'status' => 'success'];
+			} catch (Exception $e) {
+				$errors++;
+				$manifest[] = ['filename' => $itemFilename, 'status' => 'error', 'error' => $e->getMessage()];
+				$this->logger->warning(
+					message: 'Print job letter failed: ' . $e->getMessage(),
+					context: ['jobId' => $jobId, 'index' => $index]
+				);
+			}
+		}//end foreach
+
+		return ['files' => $files, 'errors' => $errors, 'manifest' => $manifest];
+
+	}//end renderItems()
+
+	/**
+	 * The template data of one letter: its resolved dataRefs with its data on top.
+	 *
+	 * @param array $item The letter
+	 *
+	 * @return array<string, mixed> The data.
+	 */
+	private function itemData(array $item): array {
+		$data = (array) ($item['data'] ?? []);
+		$refs = (array) ($item['dataRefs'] ?? []);
+		if ($refs === []) {
+			return $data;
 		}
 
-	}//end storeJobStatus()
-
-	/**
-	 * Store generated PDF binary for a job
-	 *
-	 * PDF content is stored as base64 in IAppConfig to avoid filesystem
-	 * dependencies. For large batches the BatchPrintJob stores per-item
-	 * PDFs with suffixed keys (jobId-0, jobId-1, …).
-	 *
-	 * @param string $jobId Job UUID (may include item index suffix)
-	 * @param string $content PDF binary content
-	 *
-	 * @return void
-	 *
-	 * @spec openspec/changes/print-functionality/tasks.md#task-3
-	 */
-	public function storeJobPdf(string $jobId, string $content): void {
-		try {
-			$config = $this->container->get(\OCP\IAppConfig::class);
-			$config->setValueString(
-				'filinq',
-				self::JOB_KEY_PREFIX . 'pdf_' . $jobId,
-				base64_encode($content)
-			);
-		} catch (Exception $e) {
-			$this->logger->error(
-				message: 'Failed to store print job PDF: ' . $e->getMessage(),
-				context: ['jobId' => $jobId]
-			);
+		$resolution = $this->dataResolver->resolve(dataRefs: $refs, adHocData: $data);
+		if ($resolution['errors'] !== []) {
+			throw new InvalidArgumentException('Data could not be resolved: ' . (string) ($resolution['errors'][0]['message'] ?? ''));
 		}
 
-	}//end storeJobPdf()
+		return $resolution['data'];
+
+	}//end itemData()
 
 	/**
-	 * Load a stored job PDF from IAppConfig
+	 * The PDF options from the template and the request.
 	 *
-	 * @param string $jobId Job UUID
+	 * @param array $template The template
+	 * @param array $options  The request options
 	 *
-	 * @return string|null Base64-decoded PDF binary or null if not found
-	 *
-	 * @spec openspec/changes/print-functionality/tasks.md#task-3
+	 * @return array<string, mixed> The options for PdfService.
 	 */
-	public function loadJobPdf(string $jobId): ?string {
-		try {
-			$config = $this->container->get(\OCP\IAppConfig::class);
-			$encoded = $config->getValueString(
-				'filinq',
-				self::JOB_KEY_PREFIX . 'pdf_' . $jobId,
-				''
-			);
+	private function buildPdfOptions(array $template, array $options): array {
+		$pdfOptions = array_merge(
+			[
+				'format' => $template['format'] ?? 'A4',
+				'orientation' => $template['orientation'] ?? 'P',
+				'duplex' => $template['duplex'] ?? false,
+				'color' => $template['color'] ?? true,
+				'paperTray' => $template['paperTray'] ?? 'default',
+				'stapling' => $template['stapling'] ?? false,
+			],
+			$options
+		);
+		$pdfOptions['title'] = $template['name'] ?? 'document';
+		$pdfOptions['pdfa'] = ($options['pdfa'] ?? false) === true;
 
-			if (empty($encoded) === true) {
-				return null;
-			}
+		return $pdfOptions;
 
-			return base64_decode($encoded);
-		} catch (Exception $e) {
-			$this->logger->error(
-				message: 'Failed to load print job PDF: ' . $e->getMessage(),
-				context: ['jobId' => $jobId]
-			);
-			return null;
-		}//end try
-
-	}//end loadJobPdf()
+	}//end buildPdfOptions()
 
 	/**
-	 * Load job status from IAppConfig
+	 * Set a job's status and when it changed, and store it.
 	 *
-	 * @param string $jobId Job UUID
+	 * @param array       $job     The job
+	 * @param string      $status  The new status
+	 * @param string|null $details What the print service said, or why the job failed
 	 *
-	 * @return array|null Decoded job data or null if not found
-	 *
-	 * @spec openspec/changes/print-functionality/tasks.md#task-3
+	 * @return array<string, mixed> The stored job.
 	 */
-	private function loadJobStatus(string $jobId): ?array {
-		try {
-			$config = $this->container->get(\OCP\IAppConfig::class);
-			$value = $config->getValueString(
-				'filinq',
-				self::JOB_KEY_PREFIX . $jobId,
-				''
-			);
+	private function changeStatus(array $job, string $status, ?string $details): array {
+		$uuid = (string) ($job['uuid'] ?? '');
+		$job['status'] = $status;
+		$job['statusChangedAt'] = $this->now();
+		if ($details !== null) {
+			$job['statusDetails'] = mb_substr($details, 0, 4096);
+		}
 
-			if (empty($value) === true) {
-				return null;
-			}
+		return $this->jobs->save(job: $job, uuid: $uuid);
 
-			return json_decode($value, true);
-		} catch (Exception $e) {
-			$this->logger->error(
-				message: 'Failed to load print job status: ' . $e->getMessage(),
-				context: ['jobId' => $jobId]
-			);
-			return null;
-		}//end try
+	}//end changeStatus()
 
-	}//end loadJobStatus()
+	/**
+	 * The current time as the register stores it.
+	 *
+	 * @return string An ISO 8601 date-time.
+	 */
+	private function now(): string {
+		return (new DateTimeImmutable())->format(DateTimeInterface::ATOM);
+
+	}//end now()
 }//end class

@@ -51,6 +51,13 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/specs/consent-endpoint-hardening/spec.md
  */
 class ConsentController extends Controller {
+
+	/**
+	 * Groups that handle consent records, besides admins.
+	 *
+	 * @var list<string>
+	 */
+	private const OFFICER_GROUPS = ['filinq-woo-officers', 'filinq-policy-admins'];
 	/**
 	 * Constructor for ConsentController
 	 *
@@ -95,7 +102,7 @@ class ConsentController extends Controller {
 			return false;
 		}
 
-		if ($this->groupManager->isAdmin($user->getUID()) === true) {
+		if ($this->isConsentOfficer(uid: $user->getUID()) === true) {
 			return true;
 		}
 
@@ -106,6 +113,33 @@ class ConsentController extends Controller {
 
 		return $owner !== null && (string)$owner === $user->getUID();
 	}//end canAccessConsent()
+
+	/**
+	 * Whether the user handles consent: an admin, a consent officer or a policy admin.
+	 *
+	 * Only they may change a consent record; the person who opened a request
+	 * may read it but not record its outcome.
+	 *
+	 * @param string $uid The user.
+	 *
+	 * @return bool True when the user may change any consent record.
+	 *
+	 * @spec openspec/changes/consent-changes-are-recorded-events/specs/consent-management/spec.md
+	 */
+	private function isConsentOfficer(string $uid): bool {
+		if ($this->groupManager->isAdmin($uid) === true) {
+			return true;
+		}
+
+		foreach (self::OFFICER_GROUPS as $group) {
+			if ($this->groupManager->isInGroup($uid, $group) === true) {
+				return true;
+			}
+		}
+
+		return false;
+
+	}//end isConsentOfficer()
 
 	/**
 	 * Build an error JSON response with logging
@@ -186,10 +220,8 @@ class ConsentController extends Controller {
 			// makes the non-null provable to every analyser and drops a redundant
 			// session lookup.
 			$uid = $user->getUID();
-			$isAdmin = ($this->groupManager->isAdmin($uid) === true);
-
 			$filterUid = $uid;
-			if ($isAdmin === true) {
+			if ($this->isConsentOfficer(uid: $uid) === true) {
 				$filterUid = null;
 			}
 
@@ -407,6 +439,13 @@ class ConsentController extends Controller {
 				);
 			}
 
+			if ($this->isConsentOfficer(uid: $this->userSession->getUser()->getUID()) === false) {
+				return new JSONResponse(
+					['error' => $this->l10n->t('Only a consent officer can record the outcome of a consent request.')],
+					Http::STATUS_FORBIDDEN
+				);
+			}
+
 			$result = $this->crudService->updateConsentStatus(
 				$id,
 				$config['register'],
@@ -419,6 +458,9 @@ class ConsentController extends Controller {
 			);
 
 			return new JSONResponse($result);
+		} catch (\InvalidArgumentException $e) {
+			// An undeclared status move or missing evidence: say which.
+			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_BAD_REQUEST);
 		} catch (\OCP\AppFramework\OCS\OCSForbiddenException $e) {
 			return new JSONResponse(
 				['error' => $this->l10n->t('You are not allowed to revoke or modify standing consents.')],
@@ -460,10 +502,8 @@ class ConsentController extends Controller {
 			// Same as index(): bound once by the guard above, so no second
 			// getUser() and no re-check.
 			$uid = $user->getUID();
-			$isAdmin = ($this->groupManager->isAdmin($uid) === true);
-
 			$filterUid = $uid;
-			if ($isAdmin === true) {
+			if ($this->isConsentOfficer(uid: $uid) === true) {
 				$filterUid = null;
 			}
 

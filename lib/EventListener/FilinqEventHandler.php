@@ -46,19 +46,30 @@ use Psr\Log\LoggerInterface;
  */
 class FilinqEventHandler {
 	/**
+	 * The enrichment runner.
+	 *
+	 * @var EnrichmentRunner
+	 */
+	private readonly EnrichmentRunner $enrichmentRunner;
+
+	/**
 	 * Constructor for FilinqEventHandler
 	 *
 	 * @param ContainerInterface $container App container the legal-bases summary service is resolved from.
-	 * @param EnrichmentRunner $enrichmentRunner The enrichment runner. Defaults to a
-	 *                                           fresh stateless instance; injectable
-	 *                                           so tests can substitute a double.
+	 * @param EnrichmentRunner|null $enrichmentRunner The enrichment runner. Defaults to a
+	 *                                                fresh instance that also classifies
+	 *                                                inbound documents; injectable so
+	 *                                                tests can substitute a double.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/changes/inbound-auto-classification/tasks.md#2-3
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
-		private readonly EnrichmentRunner $enrichmentRunner = new EnrichmentRunner(),
+		?EnrichmentRunner $enrichmentRunner = null,
 	) {
+		$this->enrichmentRunner = $enrichmentRunner ?? (new EnrichmentRunner())->withClassificationFrom(container: $container);
 
 	}//end __construct()
 
@@ -160,6 +171,10 @@ class FilinqEventHandler {
 		);
 
 		if ($this->hasContentChanged(objectData: $objectData, oldObjectData: $oldObjectData) === false) {
+			// An intake document gets its OCR text (contentText) by an update,
+			// which is not an enrichment content field: offer it to
+			// classification anyway. A file with a suggestion is skipped there.
+			$this->enrichmentRunner->classify(object: $object, logger: $logger);
 			$logger->debug(
 				'Filinq: No content change detected, skipping re-enrichment',
 				['objectId' => $object->getUuid()]

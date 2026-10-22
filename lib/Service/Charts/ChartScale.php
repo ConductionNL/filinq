@@ -15,7 +15,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/template-charts/specs/template-charts/spec.md
+ * @spec openspec/specs/template-charts/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -34,7 +34,7 @@ namespace OCA\Filinq\Service\Charts;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/template-charts/tasks.md#task-1.1
+ * @spec openspec/changes/archive/2026-09-28-template-charts/tasks.md#task-1.1
  */
 class ChartScale {
 	/**
@@ -44,7 +44,7 @@ class ChartScale {
 	 *
 	 * @return float Maximum value, or 0.0 when no numeric value is present.
 	 *
-	 * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-001
+	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-001
 	 */
 	public function seriesMax(array $series): float {
 		$max = 0.0;
@@ -67,7 +67,7 @@ class ChartScale {
 	 *
 	 * @return float Nice ceiling value (always >= 1.0).
 	 *
-	 * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-001
+	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-001
 	 */
 	public function axisCeiling(float $value): float {
 		$ceiling = $this->niceCeiling(value: $value);

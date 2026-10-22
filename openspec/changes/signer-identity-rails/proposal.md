@@ -40,6 +40,37 @@ Depends on `signing-trust-rebuild`: identity evidence is only worth recording
 once the artifact MAC binds identity fields (REQ-DDSTR-001) and the pipeline
 is honest (REQ-DDSTR-002/003).
 
+### Amendment, 2026-09-27: signers under the age of consent (decision D11)
+
+Learniq round 1 planned a separate filinq change, `filinq-esignature-opp-consent`
+(change-plan row: code, MUST, size L, feeds learniq findings 8.3 and L-new-4).
+Ruben decided on 27 September (D11 in
+`market-intelligence/learniq/_round1/compare/decisions.md`) that e-signature
+with parental consent folds into this change instead: a guardian is one more
+signer whose identity the rails must establish, so the consent rules are
+requirements of the rails, not a second signing path.
+
+The evidence sits in `market-intelligence/learniq/_round1/compare/findings.md`.
+Row 8.3 (rung 1, tier A, MUST): "OPP: create within 6 weeks, evaluate, parent
+signature". ParnasSys takes an OPP from concept to akkoord through
+"Handelingsdeel > Ondertekenen", and Somtoday ships "Digitaal ondertekenen" of
+OPPs. Every Dutch incumbent in the round signs an OPP digitally. Learniq's MBO
+dataset review found the same gap on the praktijkovereenkomst: `PokSignature`
+has no role for the parent who co-signs a minor's POK
+(learniq `openspec/changes/segment-example-datasets-mbo/design.md`, finding 4).
+
+Filinq has no guardian concept today. Its signer entry is `{userId,
+displayName, email, order}`, with no role and no on-behalf-of link, and no age
+rule exists anywhere in filinq, learniq or portaliq. The dedupe on 27 September
+found three neighbouring requirements, none of which gates a signature on age:
+learniq "Guardian consent gates a minor's subject-choice submission"
+(school-structure), learniq "Parent co-signs are verified against the
+learner's profile found on ncUserId" (learner-lookup-and-learnerrefs-fixes),
+and portaliq "An activity MUST be able to require a guardian's consent,
+recorded on the sign-up" (activity-parental-consent). The word "consent
+record" already names Woo `publicationConsent` in filinq, so this amendment
+speaks of a guardian's consent act instead.
+
 ## What Changes
 
 - **`SignerAuthenticationProviderInterface`** — a new pluggable seam, distinct
@@ -67,6 +98,18 @@ is honest (REQ-DDSTR-002/003).
   code ships in this change, and the readiness claim is anchored to a
   conformance test suite a wallet plugin must pass — avoiding the
   orphaned-capability trap by proving the seam with the two shipped providers.
+- **Guardian consent for signers under the age of consent (D11)**: a signer
+  whose birth date puts them under the guardian consent age (admin setting,
+  default 16, UAVG article 5) signs only with a guardian on the same request,
+  who co-signs or consents. A request can raise the age for its own signers
+  (18 on a POK) and never lower it. The guardian is a signer record with
+  `role: guardian`, acts through the same `sign()` path and identity
+  resolution as every signer, and cannot be the minor or a minor. The guard
+  refuses the minor's act when no guardian is named, and refuses completion
+  when no guardian acted. The completed request and the signed artifact (inside
+  the v2 MAC) carry a `consentBasis` naming both signers, the age, the basis
+  and the guardian's identity tuple, and never the birth date. The consumer
+  contract names learniq's OPP and POK and portaliq's toestemmingsformulieren.
 
 ## Capabilities
 
@@ -75,7 +118,8 @@ is honest (REQ-DDSTR-002/003).
 - `signer-identity-rails`: pluggable signer-authentication provider seam with
   DigiD/eHerkenning/iDIN assurance mapping to eIDAS SES/AdES/QES, identity
   evidence on the signing request, ADR-064 credential custody, and EUDI-wallet
-  QES declared as a provider plugin target.
+  QES declared as a provider plugin target; plus guardian consent for signers
+  under the age of consent (REQ-DDSIR-008 to 011).
 
 ### Modified Capabilities
 
@@ -98,6 +142,18 @@ is honest (REQ-DDSTR-002/003).
 - Qualified-certificate artifact production (QES artifact itself) — remains
   the signing provider's job (`document-signing`); identity rails gate WHO may
   trigger it, not how the artifact is made.
+- A standing guardian consent given outside the request (a toestemming given
+  once at enrolment and reused for later documents). Decision D1 puts consent
+  state in learniq and portaliq; a consumer holding such a consent raises the
+  request with the guardian as a `consent` signer. Filinq cannot verify how a
+  guardian was identified in another app's record, so it accepts only a
+  guardian act made through its own rails.
+- Switching learniq's OPP and POK flows onto the delegated signing event.
+  They write their own `Signature` and `PokSignature` records today; the switch
+  is a learniq change.
+- Per-child parental authority (gezag). Filinq checks that a guardian acted,
+  not that the guardian holds gezag over this child; the consumer decides who
+  it names as guardian, the way learniq already checks `parentIds`.
 
 ## Success Criteria
 
@@ -112,3 +168,9 @@ is honest (REQ-DDSTR-002/003).
   grep of schemas, config dumps and logs finds no secret material (ADR-064).
 - A third provider can be added by implementing the interface + registering
   it — proven by the test-fixture provider used in the conformance suite.
+- A signer 14 years old cannot sign a request that names no guardian (403,
+  nothing mutated); with a guardian who co-signs, both acts succeed and the
+  completed request and artifact carry one `consentBasis` entry naming both
+  signer records, with no birth date in it. Proven by tests written red first
+  (`tests/unit/Service/Signing/GuardianConsentGuardTest.php`,
+  `tests/unit/Service/SigningServiceGuardianConsentTest.php`).

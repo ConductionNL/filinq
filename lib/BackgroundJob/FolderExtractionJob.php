@@ -30,11 +30,10 @@ namespace OCA\Filinq\BackgroundJob;
 use Exception;
 use OCA\Filinq\Service\AnonymizationService;
 use OCA\Filinq\Service\BatchStateService;
+use OCA\Filinq\Service\Conversion\OutputLayoutMover;
 use OCA\Filinq\Service\Conversion\OutputLayoutResolver;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\QueuedJob;
-use OCP\Files\File;
-use OCP\Files\IRootFolder;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -68,7 +67,7 @@ class FolderExtractionJob extends QueuedJob {
 	 * @param BatchStateService $stateService Batch state management.
 	 * @param LoggerInterface $logger Logger for error reporting.
 	 * @param OutputLayoutResolver $layoutResolver Output-folder layout resolver.
-	 * @param IRootFolder $rootFolder Root folder for file lookups.
+	 * @param OutputLayoutMover $layoutMover Moves each output into the output subfolder.
 	 *
 	 * @return void
 	 */
@@ -78,7 +77,7 @@ class FolderExtractionJob extends QueuedJob {
 		private readonly BatchStateService $stateService,
 		private readonly LoggerInterface $logger,
 		private readonly OutputLayoutResolver $layoutResolver,
-		private readonly IRootFolder $rootFolder,
+		private readonly OutputLayoutMover $layoutMover,
 	) {
 		parent::__construct(time: $time);
 
@@ -157,6 +156,7 @@ class FolderExtractionJob extends QueuedJob {
 	 * @return array<string, mixed> The updated file entry.
 	 *
 	 * @spec openspec/changes/anonymisation-folder-output-folder-layout/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-09-29-anonymisation-fails-closed-without-a-detector/tasks.md#task-3
 	 */
 	private function processFileEntry(array $fileEntry, string $batchId, string $userId): array {
 		$fileName = ($fileEntry['fileName'] ?? '');
@@ -196,6 +196,7 @@ class FolderExtractionJob extends QueuedJob {
 
 		$fileEntry['status'] = 'anonymized';
 		$fileEntry['anonymizedFilePath'] = ($anonResult['anonymizedFilePath'] ?? null);
+		$fileEntry['detection'] = ($anonResult['detection'] ?? null);
 
 		// Apply the output-folder layout: move the redacted copy into the
 		// configured subfolder, recording the new path or a move-failure
@@ -268,11 +269,9 @@ class FolderExtractionJob extends QueuedJob {
 	/**
 	 * Move the anonymized output into the configured output subfolder.
 	 *
-	 * Looks the anonymized node up via the user's root folder, resolves the
-	 * canonical destination via {@see OutputLayoutResolver}, and moves the
-	 * node there. On success the returned file entry records the new target
-	 * path; on any failure it keeps the legacy path and attaches a
-	 * `MOVE_FAILED` warning so the reviewer sees the truth.
+	 * Delegates to {@see OutputLayoutMover}, the same mover the batch-upload
+	 * flow uses. On success the entry records the new target path; on any
+	 * failure it keeps the legacy path and a `MOVE_FAILED` warning.
 	 *
 	 * @param array<string,mixed> $fileEntry The file entry to update.
 	 * @param string $userId Owning user id.
@@ -287,58 +286,16 @@ class FolderExtractionJob extends QueuedJob {
 		int $anonymizedFileId,
 		string $legacyPath,
 	): array {
-		try {
-			$userFolder = $this->rootFolder->getUserFolder($userId);
-			$nodes = $userFolder->getById($anonymizedFileId);
-
-			$anonFile = null;
-			foreach ($nodes as $node) {
-				if ($node instanceof File) {
-					$anonFile = $node;
-					break;
-				}
-			}
-
-			if ($anonFile === null) {
-				$fileEntry['anonymizedFilePath'] = $legacyPath;
-				$fileEntry['warning'] = [
-					'code' => 'MOVE_FAILED',
-					'message' => 'Anonymized output node could not be located; left at legacy path.',
-				];
-				return $fileEntry;
-			}
-
-			$sourceFolder = $anonFile->getParent();
-			$sourceName = $anonFile->getName();
-			$sourceBaseName = pathinfo($sourceName, PATHINFO_FILENAME);
-			$extension = pathinfo($sourceName, PATHINFO_EXTENSION);
-			$subfolderName = $this->layoutResolver->readSubfolderName();
-			$targetPath = $this->layoutResolver->resolveBatchDestination(
-				$sourceFolder->getPath(),
-				$sourceBaseName,
-				$extension
-			);
-
-			// Create the destination subfolder if missing.
-			if ($sourceFolder->nodeExists($subfolderName) === false) {
-				$sourceFolder->newFolder($subfolderName);
-			}
-
-			$anonFile->move($targetPath);
-
-			$fileEntry['anonymizedFilePath'] = $targetPath;
-			unset($fileEntry['warning']);
-		} catch (Exception $e) {
-			$this->logger->warning(
-				'FolderExtractionJob: output-layout move failed; keeping legacy path',
-				['fileId' => ($fileEntry['fileId'] ?? null), 'error' => $e->getMessage()]
-			);
-			$fileEntry['anonymizedFilePath'] = $legacyPath;
-			$fileEntry['warning'] = [
-				'code' => 'MOVE_FAILED',
-				'message' => $e->getMessage(),
-			];
-		}//end try
+		$moved = $this->layoutMover->relocate(
+			userId: $userId,
+			anonymizedFileId: $anonymizedFileId,
+			legacyPath: $legacyPath
+		);
+		$fileEntry['anonymizedFilePath'] = $moved['path'];
+		unset($fileEntry['warning']);
+		if ($moved['warning'] !== null) {
+			$fileEntry['warning'] = $moved['warning'];
+		}
 
 		return $fileEntry;
 	}//end applyOutputLayout()

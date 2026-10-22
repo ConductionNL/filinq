@@ -8,13 +8,13 @@
 	it never trims/dedupes/splits client-side.
 -->
 <script>
+import { translate as t } from '@nextcloud/l10n'
 import {
 	NcButton,
 	NcDialog,
 	NcLoadingIcon,
 	NcTextArea,
-} from '@conduction/nextcloud-vue'
-import { translate as t } from '@nextcloud/l10n'
+} from '@nextcloud/vue'
 
 export default {
 	name: 'CustomDictionaryImportDialog',

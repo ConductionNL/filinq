@@ -475,29 +475,13 @@ class OcrService {
 				return $noOcrResult;
 			}
 
-			$languages = $this->getOcrLanguages();
-			$dpi = $this->getOcrDpi();
+			$result = $this->processNode(file: $file);
 
-			// Write file to temp location for Tesseract processing.
-			$tempFile = $this->writeToTemp(file: $file);
-
-			try {
-				$result = $this->extractTextFromPdf(filePath: $tempFile, languages: $languages, dpi: $dpi);
-				if (in_array($mimeType, self::IMAGE_MIME_TYPES, true) === true) {
-					$result = $this->extractTextFromImage(filePath: $tempFile, languages: $languages, dpi: $dpi);
-				}
-
-				return [
-					'text' => $result['text'],
-					'confidence' => $result['confidence'],
-					'ocrProcessed' => empty($result['text']) === false,
-				];
-			} finally {
-				// Clean up temp file.
-				if (file_exists($tempFile) === true) {
-					unlink($tempFile);
-				}
-			}
+			return [
+				'text' => $result['text'],
+				'confidence' => $result['confidence'],
+				'ocrProcessed' => empty($result['text']) === false,
+			];
 		} catch (Exception $e) {
 			$this->logger->error(
 				'OCR processing failed',
@@ -510,6 +494,50 @@ class OcrService {
 		}//end try
 
 	}//end processFile()
+
+	/**
+	 * Run Tesseract on one file node with the admin's languages and DPI.
+	 *
+	 * The node is resolved by the caller, so a background job with no user
+	 * session can run it too. An image goes straight to Tesseract; a PDF is
+	 * rasterised page by page first. The caller checks that OCR is enabled,
+	 * that Tesseract is installed and that the MIME type is a candidate.
+	 *
+	 * @param File $file The file to recognise.
+	 *
+	 * @return array{text: string, confidence: float, languages: string, dpi: int} What was recovered,
+	 *                                                                            and with which settings.
+	 *
+	 * @throws Exception When the file cannot be copied to a temporary location or recognition fails.
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-2.1
+	 */
+	public function processNode(File $file): array {
+		$languages = $this->getOcrLanguages();
+		$dpi = $this->getOcrDpi();
+		$tempFile = $this->writeToTemp(file: $file);
+
+		$isImage = in_array($file->getMimeType(), self::IMAGE_MIME_TYPES, true);
+
+		try {
+			$result = match ($isImage) {
+				true => $this->extractTextFromImage(filePath: $tempFile, languages: $languages, dpi: $dpi),
+				false => $this->extractTextFromPdf(filePath: $tempFile, languages: $languages, dpi: $dpi),
+			};
+		} finally {
+			if (file_exists($tempFile) === true) {
+				unlink($tempFile);
+			}
+		}
+
+		return [
+			'text' => (string) $result['text'],
+			'confidence' => (float) $result['confidence'],
+			'languages' => $languages,
+			'dpi' => $dpi,
+		];
+
+	}//end processNode()
 
 	/**
 	 * Get a file by its Nextcloud file ID

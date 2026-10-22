@@ -92,8 +92,7 @@ class TemplatePreviewController extends Controller {
 				throw new Exception(message: 'Content is required for preview', code: 400);
 			}
 
-			$html = $this->previewService->preview(content: $content, data: $context);
-			return new JSONResponse(data: ['html' => $html]);
+			return new JSONResponse(data: $this->previewService->previewWithLint(content: $content, data: $context));
 		} catch (Exception $e) {
 			return $this->requestHandler->buildErrorResponse($e, 'Failed to preview template: ');
 		}//end try
