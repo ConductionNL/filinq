@@ -36,8 +36,24 @@ export const useCustomDictionaryStore = defineStore('customDictionary', {
 		termsLoading: false,
 		error: null,
 		importResult: null,
+		canMaintain: false,
 	}),
 	actions: {
+		/**
+		 * Ask the server whether the caller may change dictionaries, so the
+		 * pages offer only what the server allows. Any failure leaves them
+		 * read-only.
+		 *
+		 * @return {Promise<void>}
+		 */
+		async fetchCapabilities() {
+			try {
+				const response = await axios.get(generateUrl(`${baseUrl}/capabilities`))
+				this.canMaintain = response.data?.canMaintain === true
+			} catch {
+				this.canMaintain = false
+			}
+		},
 		async fetchDictionaries() {
 			this.loading = true
 			this.error = null

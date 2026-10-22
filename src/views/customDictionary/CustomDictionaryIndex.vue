@@ -38,7 +38,7 @@ import { resolveI18nValue } from '../../utils/registerI18n.js'
 			:showMassCopy="false"
 			:showMassDelete="false"
 			:showViewToggle="false"
-			:showAdd="true"
+			:showAdd="customDictionaryStore.canMaintain"
 			rowKey="id"
 			:emptyText="emptyText"
 			:refreshing="isRefreshing"
@@ -87,7 +87,10 @@ import { resolveI18nValue } from '../../utils/registerI18n.js'
 						</template>
 						{{ t('filinq', 'Manage terms') }}
 					</NcActionButton>
-					<NcActionButton closeAfterClick @click="confirmDelete(row)">
+					<NcActionButton
+						v-if="customDictionaryStore.canMaintain"
+						closeAfterClick
+						@click="confirmDelete(row)">
 						<template #icon>
 							<Delete :size="20" />
 						</template>
@@ -224,6 +227,7 @@ export default {
 
 	mounted() {
 		customDictionaryStore.fetchDictionaries()
+		customDictionaryStore.fetchCapabilities()
 	},
 
 	methods: {

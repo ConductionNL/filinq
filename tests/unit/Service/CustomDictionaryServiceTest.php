@@ -392,4 +392,5 @@ class CustomDictionaryServiceTest extends TestCase {
 		}
 
 	}//end testANonMaintainerCannotChangeDictionaries()
+
 }//end class
