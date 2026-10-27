@@ -256,6 +256,39 @@ class DocumentServiceTest extends TestCase {
 	}//end testGeneratePreviewReturnsHtml()
 
 	/**
+	 * The merge preview returns the preview and the fields the data fills.
+	 *
+	 * @spec openspec/changes/template-merge-preview/specs/document-creatie-sjablonen/spec.md
+	 *
+	 * @return void
+	 */
+	public function testMergePreviewNamesTheFieldsItFills(): void {
+		$this->templateSvc->method('getTemplate')
+			->willReturn([
+				'id' => 'tmpl-1',
+				'name' => 'Uitnodiging',
+				'content' => '<p>{{ aanhef }}</p><p>{{ client.address }}</p>',
+				'mergeFields' => [['path' => 'aanhef', 'label' => 'Aanhef', 'source' => 'op basis van het opgegeven geslacht']],
+			]);
+		$this->dataResolver->method('resolve')
+			->willReturn([
+				'data' => ['aanhef' => 'Geachte mevrouw De Vries,', 'client' => ['address' => '']],
+				'errors' => [],
+				'warnings' => [],
+			]);
+		$this->renderer->method('renderTemplate')->willReturn('<p>Geachte mevrouw De Vries,</p>');
+
+		$result = $this->service->generateMergePreview(templateId: 'tmpl-1', dataRefs: [], options: []);
+
+		$this->assertSame(expected: '<p>Geachte mevrouw De Vries,</p>', actual: $result['html']);
+		$this->assertSame(expected: ['aanhef', 'client.address'], actual: array_column($result['fields'], 'path'));
+		$this->assertSame(expected: 'Aanhef', actual: $result['fields'][0]['label']);
+		$this->assertTrue(condition: $result['fields'][0]['filled']);
+		$this->assertFalse(condition: $result['fields'][1]['filled']);
+		$this->assertFalse(condition: $result['complete']);
+	}//end testMergePreviewNamesTheFieldsItFills()
+
+	/**
 	 * Test that generateDocument() forwards options.listRefs to
 	 * DataResolverService::resolve() unchanged.
 	 *

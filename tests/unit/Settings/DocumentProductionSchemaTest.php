@@ -156,9 +156,10 @@ class DocumentProductionSchemaTest extends TestCase {
 		$this->assertIsArray($declaration, 'a template must be able to declare a plain-language counterpart.');
 		// 1.4.0 since filinq-configurable-report-templates, which added `slug`
 		// and `tenantId`; 1.4.1 since both moved inside `properties` (see
-		// SchemaSlugIntegrityTest). An importer skips an unchanged version, so
-		// this pin moves whenever the schema actually does.
-		$this->assertSame('1.4.1', $schemas['template']['version']);
+		// SchemaSlugIntegrityTest); 1.5.0 since template-merge-preview added
+		// `mergeFields`. An importer skips an unchanged version, so this pin
+		// moves whenever the schema actually does.
+		$this->assertSame(expected: '1.5.0', actual: $schemas['template']['version']);
 
 		foreach (['templateId', 'requiredStatements', 'source'] as $part) {
 			$this->assertArrayHasKey(
