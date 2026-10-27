@@ -227,6 +227,67 @@ class DocumentController extends Controller {
 	}//end preview()
 
 	/**
+	 * Preview a template and name the fields it fills.
+	 *
+	 * POST /api/documents/generate/merge-preview
+	 *
+	 * The same request body as preview(). The response adds the template's
+	 * merge fields (path, label, source, value, filled) and whether all are
+	 * filled. Nothing is stored or logged.
+	 *
+	 * @return JSONResponse The preview and its fields, or an error
+	 *
+	 * @NoAdminRequired
+	 *
+	 * @spec openspec/changes/template-merge-preview/specs/document-creatie-sjablonen/spec.md
+	 *
+	 * @no-admin-idor-exempt object access runs under OpenRegister's RBAC, as
+	 * for preview(): no `_rbac: false` on this path, so an id belonging to
+	 * another tenant resolves to nothing.
+	 */
+	public function mergePreview(): JSONResponse {
+		try {
+			$user = $this->userSession->getUser();
+			if ($user === null) {
+				return new JSONResponse(
+					data: ['error' => $this->l10n->t('Not authenticated')],
+					statusCode: Http::STATUS_UNAUTHORIZED
+				);
+			}
+
+			$templateId = $this->request->getParam('templateId');
+			if (empty($templateId) === true) {
+				return new JSONResponse(
+					data: ['error' => $this->l10n->t('templateId is required')],
+					statusCode: Http::STATUS_BAD_REQUEST
+				);
+			}
+
+			$dataRefs = $this->request->getParam('dataRefs', []);
+			if (is_array($dataRefs) === false) {
+				$dataRefs = [];
+			}
+
+			$options = $this->request->getParam('options', []);
+			if (is_array($options) === false) {
+				$options = [];
+			}
+
+			return new JSONResponse(
+				data: $this->documentSvc->generateMergePreview(
+					templateId: $templateId,
+					dataRefs: $dataRefs,
+					options: $options
+				),
+				statusCode: Http::STATUS_OK
+			);
+		} catch (Exception $e) {
+			return $this->handleException(exception: $e);
+		}//end try
+
+	}//end mergePreview()
+
+	/**
 	 * Generate documents for multiple objects in bulk.
 	 *
 	 * POST /api/documents/generate/bulk

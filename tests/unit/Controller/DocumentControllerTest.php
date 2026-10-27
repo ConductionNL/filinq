@@ -490,6 +490,43 @@ class DocumentControllerTest extends TestCase {
 	}//end testPreviewReturnsHtmlAndWarnings()
 
 	/**
+	 * The merge preview answers with the preview, its fields and whether all are filled.
+	 *
+	 * @spec openspec/changes/template-merge-preview/specs/document-creatie-sjablonen/spec.md
+	 *
+	 * @return void
+	 */
+	public function testMergePreviewReturnsTheFields(): void {
+		$this->request->method('getParam')
+			->willReturnMap([
+				['templateId', null, 'tmpl-1'],
+				['dataRefs', [], [['register' => 'pipelinq', 'schema' => 'client', 'id' => 'c1']]],
+				['options', [], []],
+			]);
+		$fields = [['path' => 'aanhef', 'label' => 'Aanhef', 'source' => '', 'value' => 'Geachte heer,', 'filled' => true]];
+		$this->documentSvc->expects($this->once())->method('generateMergePreview')
+			->with('tmpl-1', [['register' => 'pipelinq', 'schema' => 'client', 'id' => 'c1']], [])
+			->willReturn(['html' => '<p>x</p>', 'warnings' => [], 'fields' => $fields, 'complete' => true]);
+
+		$result = $this->controller->mergePreview();
+
+		$this->assertSame(expected: 200, actual: $result->getStatus());
+		$this->assertSame(expected: $fields, actual: $result->getData()['fields']);
+		$this->assertTrue(condition: $result->getData()['complete']);
+	}//end testMergePreviewReturnsTheFields()
+
+	/**
+	 * Without a template id the merge preview is refused.
+	 *
+	 * @return void
+	 */
+	public function testMergePreviewNeedsATemplate(): void {
+		$this->request->method('getParam')->willReturnMap([['templateId', null, null]]);
+
+		$this->assertSame(expected: 400, actual: $this->controller->mergePreview()->getStatus());
+	}//end testMergePreviewNeedsATemplate()
+
+	/**
 	 * Test that preview() forwards options.listRefs through to
 	 * DocumentService::generatePreview() unchanged.
 	 *

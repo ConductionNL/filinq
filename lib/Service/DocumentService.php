@@ -111,6 +111,7 @@ class DocumentService {
 	 * @param LoggerInterface $logger Logger for error reporting
 	 * @param PlainLanguageRenditionService|null $plainRendition The plain-language counterpart, when a template declares one
 	 * @param WizardGenerationGate|null $wizardGate Checks a wizard run before it renders (options.wizardContext)
+	 * @param TemplateMergeFieldService|null $mergeFields Names the fields a template fills, for the merge preview
 	 *
 	 * @return void
 	 */
@@ -124,6 +125,7 @@ class DocumentService {
 		private readonly LoggerInterface $logger,
 		private readonly ?PlainLanguageRenditionService $plainRendition = null,
 		private readonly ?WizardGenerationGate $wizardGate = null,
+		private readonly ?TemplateMergeFieldService $mergeFields = null,
 	) {
 
 	}//end __construct()
@@ -378,7 +380,64 @@ class DocumentService {
 		array $options = [],
 	): array {
 		$template = $this->templateService->getTemplate(id: $templateId);
+		$preview = $this->renderPreview(template: $template, dataRefs: $dataRefs, options: $options);
 
+		return [
+			'html' => $preview['html'],
+			'warnings' => $preview['warnings'],
+		];
+
+	}//end generatePreview()
+
+	/**
+	 * Preview a template and name the fields it fills.
+	 *
+	 * The preview of generatePreview(), plus the template's merge fields in
+	 * the resolved data: each with its path, label, source, value and whether
+	 * it is filled, and whether all are. Like the preview it stores nothing
+	 * and logs nothing.
+	 *
+	 * @param string $templateId The UUID of the template to preview
+	 * @param array  $dataRefs   Data references: [{register, schema, id}, ...]
+	 * @param array  $options    Options: huisstijlId, adHocData, listRefs.
+	 *
+	 * @return array{html: string, warnings: string[], fields: array<int, array<string, string|bool>>, complete: bool}
+	 *
+	 * @throws Exception If rendering fails
+	 *
+	 * @spec openspec/changes/template-merge-preview/specs/document-creatie-sjablonen/spec.md
+	 */
+	public function generateMergePreview(
+		string $templateId,
+		array $dataRefs,
+		array $options = [],
+	): array {
+		$template = $this->templateService->getTemplate(id: $templateId);
+		$preview = $this->renderPreview(template: $template, dataRefs: $dataRefs, options: $options);
+		$mergeFields = ($this->mergeFields ?? new TemplateMergeFieldService());
+		$merge = $mergeFields->resolve(template: $template, data: $preview['data']);
+
+		return [
+			'html' => $preview['html'],
+			'warnings' => $preview['warnings'],
+			'fields' => $merge['fields'],
+			'complete' => $merge['complete'],
+		];
+
+	}//end generateMergePreview()
+
+	/**
+	 * Resolve a template's data and render it with the house style, without output.
+	 *
+	 * @param array $template The template.
+	 * @param array $dataRefs Data references: [{register, schema, id}, ...]
+	 * @param array $options  Options: huisstijlId, adHocData, listRefs.
+	 *
+	 * @return array{html: string, warnings: string[], data: array}
+	 *
+	 * @throws Exception If rendering fails
+	 */
+	private function renderPreview(array $template, array $dataRefs, array $options): array {
 		$resolution = $this->dataResolver->resolve(
 			dataRefs: $dataRefs,
 			listRefs: ($options['listRefs'] ?? []),
@@ -398,14 +457,14 @@ class DocumentService {
 			data: $data,
 			huisstijl: $huisstijl
 		);
-		$warnings = array_merge($warnings, $renderResult['warnings']);
 
 		return [
 			'html' => $renderResult['html'],
-			'warnings' => $warnings,
+			'warnings' => array_merge($warnings, $renderResult['warnings']),
+			'data' => $data,
 		];
 
-	}//end generatePreview()
+	}//end renderPreview()
 
 	/**
 	 * Generate documents for multiple objects in a single request.
