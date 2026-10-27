@@ -20,6 +20,8 @@
         "No scan profile is set up yet. An administrator adds one in the settings.": "No scan profile is set up yet. An administrator adds one in the settings.",
         "Scan profile": "Scan profile",
         "Case numbers, one per line": "Case numbers, one per line",
+        "Dossier \"{name}\" (%n document)": ["Dossier \"{name}\" (%n document)", "Dossier \"{name}\" (%n documents)"],
+        "Dossier \"{name}\" (%n documents)": "Dossier \"{name}\" (%n documents)",
         "Print %n sheet": ["Print %n sheet", "Print %n sheets"],
         "Print %n sheets": "Print %n sheets",
         "The scan profiles could not be read.": "The scan profiles could not be read.",

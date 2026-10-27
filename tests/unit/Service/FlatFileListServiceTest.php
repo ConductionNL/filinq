@@ -51,12 +51,21 @@ class FlatFileListServiceTest extends TestCase {
 	 *
 	 * @param array<int, array<string, mixed>> $records The stored document records.
 	 * @param array<int, string> $files File id to file name, for the files this user can see.
+	 * @param array<int, array<string, mixed>> $dossiers The stored dossiers.
 	 *
 	 * @return FlatFileListService The service under test.
 	 */
-	private function service(array $records, array $files): FlatFileListService {
+	private function service(array $records, array $files, array $dossiers=[]): FlatFileListService {
 		$objectService = $this->createMock(ObjectService::class);
-		$objectService->method('searchObjectsBySlug')->willReturn($records);
+		$objectService->method('searchObjectsBySlug')->willReturnCallback(
+			function (string $registerSlug, string $schemaSlug) use ($records, $dossiers): array {
+				if ($schemaSlug === 'dossier') {
+					return $dossiers;
+				}
+
+				return $records;
+			}
+		);
 		$resolver = $this->createMock(DocumentObjectServiceResolver::class);
 		$resolver->method('resolve')->willReturn($objectService);
 
@@ -223,4 +232,37 @@ class FlatFileListServiceTest extends TestCase {
 		$this->assertSame('hoorzitting.pdf', $page['results'][0]['name']);
 
 	}//end testTheListFiltersOnTheFileName()
+
+	/**
+	 * A file in a dossier's folder names that dossier; a loose file names none.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
+	 */
+	public function testAFileNamesTheDossierItIsIn(): void {
+		$dossier = [
+			'uuid' => 'dossier-1',
+			'name' => 'Fietspad Lindelaan',
+			'bases' => [],
+			'documents' => ['4713'],
+			'@self' => ['files' => [4711, 4712]],
+		];
+		$page = $this->service(
+			records: [
+				$this->record(uuid: 'record-1', fileId: 4711),
+				$this->record(uuid: 'record-3', fileId: 4713),
+				$this->record(uuid: 'record-4', fileId: 4714),
+			],
+			files: [4711 => 'advies.pdf', 4713 => 'raadsvoorstel.pdf', 4714 => 'los.pdf'],
+			dossiers: [$dossier]
+		)->listFor(domain: ['register' => 'zaken', 'schema' => 'zaak', 'id' => 'zaak-1']);
+
+		$byName = array_column(array: $page['results'], column_key: 'dossier', index_key: 'name');
+		$named  = ['id' => 'dossier-1', 'name' => 'Fietspad Lindelaan'];
+		$this->assertSame(expected: $named, actual: $byName['advies.pdf']);
+		$this->assertSame(expected: $named, actual: $byName['raadsvoorstel.pdf']);
+		$this->assertNull(actual: $byName['los.pdf']);
+
+	}//end testAFileNamesTheDossierItIsIn()
 }//end class
