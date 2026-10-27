@@ -66,6 +66,13 @@ class FinalDocumentRepository {
 	public const SCHEMA = 'documentVersion';
 
 	/**
+	 * The schema holding the dossiers.
+	 *
+	 * @var string
+	 */
+	public const DOSSIER_SCHEMA = 'dossier';
+
+	/**
 	 * The final state. Terminal: there is no transition out of it.
 	 *
 	 * @var string
@@ -232,6 +239,65 @@ class FinalDocumentRepository {
 		return $records;
 
 	}//end findByCreator()
+
+	/**
+	 * The dossier each file belongs to, by file id.
+	 *
+	 * A dossier's members are the files in its own folder (`@self.files`) and
+	 * the file references in `documents`. A file in more than one dossier is
+	 * named by the first one read. An unreadable register answers an empty map:
+	 * the files are then listed on their own, which is what they were before.
+	 *
+	 * @return array<int, array{id: string, name: string}> The dossier by file id.
+	 *
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
+	 */
+	public function dossiersByFile(): array {
+		try {
+			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
+				registerSlug: self::REGISTER,
+				schemaSlug: self::DOSSIER_SCHEMA,
+				filters: []
+			);
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				message: '[FinalDocumentRepository] could not read the dossiers',
+				context: ['file' => __FILE__, 'line' => __LINE__, 'error' => $e->getMessage()]
+			);
+
+			return [];
+		}
+
+		$byFile = [];
+		foreach ((array) $results as $result) {
+			$data = $result;
+			if (is_object($result) === true && method_exists($result, 'jsonSerialize') === true) {
+				$data = $result->jsonSerialize();
+			}
+
+			$fields = $this->normalise(row: $result);
+			if (is_array($data) === false || is_string($fields['name'] ?? null) === false || $fields['name'] === '') {
+				continue;
+			}
+
+			$dossier = ['id' => (string) $fields['uuid'], 'name' => $fields['name']];
+			$self    = (array) ($data['@self'] ?? []);
+			$members = array_merge((array) ($self['files'] ?? []), (array) ($fields['documents'] ?? []));
+			foreach ($members as $member) {
+				$fileId = (int) $member;
+				if (is_array($member) === true) {
+					$fileId = (int) ($member['id'] ?? 0);
+				}
+
+				if ($fileId > 0 && isset($byFile[$fileId]) === false && $dossier['id'] !== '') {
+					$byFile[$fileId] = $dossier;
+				}
+			}
+		}
+
+		return $byFile;
+
+	}//end dossiersByFile()
 
 	/**
 	 * Every document record linked to one domain.

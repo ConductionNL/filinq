@@ -80,9 +80,11 @@ class FlatFileListService {
 	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	public function listFor(array $domain, int $page = 1, int $limit = 50, string $search = ''): array {
-		$rows = [];
+		$rows     = [];
+		$dossiers = null;
 		foreach ($this->repository->findByDomain(domain: $domain) as $record) {
-			$row = $this->row(record: $record);
+			$dossiers ??= $this->repository->dossiersByFile();
+			$row        = $this->row(record: $record, dossiers: $dossiers);
 			if ($row === null) {
 				continue;
 			}
@@ -140,12 +142,13 @@ class FlatFileListService {
 	 * permissions as the folder it flattens.
 	 *
 	 * @param array<string, mixed> $record The document record.
+	 * @param array<int, array{id: string, name: string}> $dossiers The dossier by file id.
 	 *
-	 * @return array<string, mixed>|null The row, or null when there is no readable file.
+	 * @return array<string, mixed>|null The row, or null when there is no readable file; `dossier` names the dossier the file is in, or is null.
 	 *
 	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
-	private function row(array $record): ?array {
+	private function row(array $record, array $dossiers=[]): ?array {
 		$fileId = (int)($record['fileId'] ?? 0);
 		if ($fileId <= 0) {
 			return null;
@@ -168,6 +171,7 @@ class FlatFileListService {
 				'name' => (string)($record['documentName'] ?? $node->getName()),
 				'status' => (string)($record['status'] ?? ''),
 			],
+			'dossier' => ($dossiers[$fileId] ?? null),
 		];
 
 	}//end row()

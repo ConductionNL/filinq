@@ -36,6 +36,7 @@
 <script>
 import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
+import { documentLinkRows } from './documentLinkRows.js'
 import { leafReportMixin } from './leafReport.js'
 
 /**
@@ -79,7 +80,7 @@ export default {
 				count: this.rows.length,
 				emptyLabel: t('filinq', 'No documents yet'),
 				noun: t('filinq', 'documents'),
-				rows: this.rows.map((row) => ({ label: row.name, href: this.fileLink(row), icon: 'FileDocumentOutline' })),
+				rows: documentLinkRows(this.rows),
 			}
 		},
 	},

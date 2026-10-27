@@ -19,6 +19,8 @@
         "No scan profile is set up yet. An administrator adds one in the settings.": "Er is nog geen scanprofiel ingesteld. Een beheerder voegt er een toe in de instellingen.",
         "Scan profile": "Scanprofiel",
         "Case numbers, one per line": "Zaaknummers, één per regel",
+        "Dossier \"{name}\" (%n stuk)": ["Dossier \"{name}\" (%n stuk)", "Dossier \"{name}\" (%n stukken)"],
+        "Dossier \"{name}\" (%n documents)": "Dossier \"{name}\" (%n stukken)",
         "Print %n sheet": ["%n vel afdrukken", "%n vellen afdrukken"],
         "The scan profiles could not be read.": "De scanprofielen konden niet worden gelezen.",
         "The separator sheets could not be made. Check the case numbers and try again.": "De scheidingsvellen konden niet worden gemaakt. Controleer de zaaknummers en probeer het opnieuw.",
