@@ -45,7 +45,15 @@ class ZuiddrechtOfferteTemplateTest extends TestCase {
 		$this->assertSame(expected: 'Offerte', actual: $template['data']['name']);
 		$this->assertSame(expected: 'offerte', actual: $template['data']['slug']);
 		$this->assertSame(expected: 'pipelinq', actual: $template['data']['namespace']);
-		$fields = ['salesQuote.number', 'salesQuote.client.name', 'for line in lines', 'line.total', 'salesQuote.vatAmount', 'salesQuote.total'];
+		$fields = [
+			'salesQuote.number',
+			'salesQuote.client.name',
+			'for line in lines',
+			'line.name ?: line.product.name',
+			'line.total',
+			'Btw {{ salesQuote.vatRate }}%',
+			'salesQuote.total',
+		];
 		foreach ($fields as $needle) {
 			$this->assertStringContainsString(needle: $needle, haystack: $template['data']['content']);
 		}
