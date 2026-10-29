@@ -158,11 +158,9 @@ class DocumentGenerationRequestService {
 	public function generate(array $request, string $requestingApp): array {
 		$this->validate(request: $request);
 
-		$storeFile = $this->rules->storesFile(request: $request);
 		$targetField = $this->rules->text(value: ($request['targetField'] ?? null));
 		$object = $this->rules->objectRef(value: ($request['object'] ?? null));
 		$data = (array)($request['data'] ?? []);
-		$metadata = (array)($request['metadata'] ?? []);
 
 		if ($targetField !== '' && $object === null) {
 			throw new RuntimeException(
@@ -170,17 +168,7 @@ class DocumentGenerationRequestService {
 			);
 		}
 
-		// A field-only request files nothing, so it has no use for a PDF: the
-		// source format is what is written, and 'return' keeps it off disk.
-		$format = 'html';
-		$mode = 'return';
-		if ($storeFile === true) {
-			$format = $this->rules->text(value: ($request['format'] ?? 'pdf'));
-			$mode = 'files';
-		}
-
 		$resolved = $this->resolveTemplate(request: $request);
-		$template = $resolved['template'];
 
 		// The item's own fields at the top level, so `{{ title }}` works; the
 		// whole item under `item` as well, so a template can reach a field
@@ -188,56 +176,16 @@ class DocumentGenerationRequestService {
 		// is ALSO passed as a dataRef: that puts the stored object under its
 		// schema key and, more to the point, names it in the audit record.
 		$adHocData = array_merge($data, ['item' => $data]);
-		$dataRefs = [];
-		if ($object !== null) {
-			$dataRefs[] = $object;
-		}
-
-		$options = [
-			'format' => $format,
-			'adHocData' => $adHocData,
-			'huisstijlId' => $this->rules->orNull(value: $this->rules->text(value: ($request['huisstijlId'] ?? null))),
-			'filename' => $this->filename(request: $request, template: $template, data: $adHocData),
-			'output' => ['mode' => $mode],
-		];
-
-		if ($storeFile === true) {
-			$options['userId'] = $this->userId(request: $request);
-			$options['output']['targetPath'] = $this->targetPath(
-				request: $request,
-				templateId: $resolved['id'],
-				template: $template,
-				object: $object
-			);
-		}
-
 		$generated = $this->documents->generateFromTemplate(
 			templateId: $resolved['id'],
-			template: $template,
-			dataRefs: $dataRefs,
-			options: $options
+			template: $resolved['template'],
+			dataRefs: array_filter([$object]),
+			options: $this->generationOptions(request: $request, resolved: $resolved, adHocData: $adHocData, object: $object)
 		);
 
-		$document = [
-			'fileId' => ($generated['output']['fileId'] ?? null),
-			'path' => ($generated['output']['path'] ?? null),
-			'name' => ($generated['output']['name'] ?? null),
-			'mime' => DocumentGenerationRequestRules::FORMATS[$format],
-			'size' => ($generated['output']['size'] ?? null),
-			'format' => $format,
-			'template' => $resolved['summary'],
-			'object' => $object,
-			'targetField' => null,
-			'metadata' => $metadata,
-			'requestingApp' => $requestingApp,
-			'warnings' => (array)($generated['warnings'] ?? []),
-		];
-
+		$document = $this->documentResult(generated: $generated, request: $request, resolved: $resolved, requestingApp: $requestingApp);
 		if ($targetField !== '' && $object !== null) {
-			$text = (string)($generated['html'] ?? $generated['content'] ?? '');
-			$this->writeField(object: $object, field: $targetField, text: $text);
-			$document['targetField'] = $targetField;
-			$document['text'] = $text;
+			$document = $this->withTargetField(document: $document, targetField: $targetField, object: $object, generated: $generated);
 		}
 
 		$this->eventDispatcher->dispatchTyped(
@@ -246,6 +194,117 @@ class DocumentGenerationRequestService {
 
 		return $document;
 	}//end generate()
+
+	/**
+	 * The format to render in. A field-only request files nothing, so it has
+	 * no use for a PDF: the source format (html) is what is written.
+	 *
+	 * @param array<string, mixed> $request The validated request.
+	 *
+	 * @return string The format.
+	 *
+	 * @spec openspec/changes/flow-generate-document-node/specs/flow-document-generation/spec.md#requirement-one-generation-path-for-the-flow-node-the-command-event-and-the-api
+	 */
+	private function outputFormat(array $request): string {
+		if ($this->rules->storesFile(request: $request) === true) {
+			return $this->rules->text(value: ($request['format'] ?? 'pdf'));
+		}
+
+		return 'html';
+
+	}//end outputFormat()
+
+	/**
+	 * The options for the template engine. A request that stores a file gets
+	 * an owner and a target path; one that does not keeps the result off disk.
+	 *
+	 * @param array<string, mixed> $request The validated request.
+	 * @param array<string, mixed> $resolved The resolved template (id, template, summary).
+	 * @param array<string, mixed> $adHocData The render context.
+	 * @param array<string, mixed>|null $object The object reference, if any.
+	 *
+	 * @return array<string, mixed> The options.
+	 *
+	 * @spec openspec/changes/flow-generate-document-node/specs/flow-document-generation/spec.md#requirement-one-generation-path-for-the-flow-node-the-command-event-and-the-api
+	 */
+	private function generationOptions(array $request, array $resolved, array $adHocData, ?array $object): array {
+		$storeFile = $this->rules->storesFile(request: $request);
+		$options = [
+			'format' => $this->outputFormat(request: $request),
+			'adHocData' => $adHocData,
+			'huisstijlId' => $this->rules->orNull(value: $this->rules->text(value: ($request['huisstijlId'] ?? null))),
+			'filename' => $this->filename(request: $request, template: $resolved['template'], data: $adHocData),
+			'output' => ['mode' => 'return'],
+		];
+
+		if ($storeFile === true) {
+			$options['output']['mode'] = 'files';
+			$options['userId'] = $this->userId(request: $request);
+			$options['output']['targetPath'] = $this->targetPath(
+				request: $request,
+				templateId: $resolved['id'],
+				template: $resolved['template'],
+				object: $object
+			);
+		}
+
+		return $options;
+
+	}//end generationOptions()
+
+	/**
+	 * The document a generation answers with and announces.
+	 *
+	 * @param array<string, mixed> $generated The template engine's result.
+	 * @param array<string, mixed> $request The validated request.
+	 * @param array<string, mixed> $resolved The resolved template (id, template, summary).
+	 * @param string $requestingApp The app asking.
+	 *
+	 * @return array<string, mixed> The document.
+	 *
+	 * @spec openspec/changes/flow-generate-document-node/specs/flow-document-generation/spec.md#requirement-one-generation-path-for-the-flow-node-the-command-event-and-the-api
+	 */
+	private function documentResult(array $generated, array $request, array $resolved, string $requestingApp): array {
+		$format = $this->outputFormat(request: $request);
+
+		return [
+			'fileId' => ($generated['output']['fileId'] ?? null),
+			'path' => ($generated['output']['path'] ?? null),
+			'name' => ($generated['output']['name'] ?? null),
+			'mime' => DocumentGenerationRequestRules::FORMATS[$format],
+			'size' => ($generated['output']['size'] ?? null),
+			'format' => $format,
+			'template' => $resolved['summary'],
+			'object' => $this->rules->objectRef(value: ($request['object'] ?? null)),
+			'targetField' => null,
+			'metadata' => (array)($request['metadata'] ?? []),
+			'requestingApp' => $requestingApp,
+			'warnings' => (array)($generated['warnings'] ?? []),
+		];
+
+	}//end documentResult()
+
+	/**
+	 * Write the rendered text into the object's field and note it on the document.
+	 *
+	 * @param array<string, mixed> $document The document so far.
+	 * @param string $targetField The field to write.
+	 * @param array<string, mixed> $object The object reference.
+	 * @param array<string, mixed> $generated The template engine's result.
+	 *
+	 * @return array<string, mixed> The document with `targetField` and `text`.
+	 *
+	 * @spec openspec/changes/flow-generate-document-node/specs/flow-document-generation/spec.md#requirement-one-generation-path-for-the-flow-node-the-command-event-and-the-api
+	 */
+	private function withTargetField(array $document, string $targetField, array $object, array $generated): array {
+		$text = (string)($generated['html'] ?? $generated['content'] ?? '');
+		$this->writeField(object: $object, field: $targetField, text: $text);
+		$document['targetField'] = $targetField;
+		$document['text'] = $text;
+
+		return $document;
+
+	}//end withTargetField()
 
 	/**
 	 * Find the template the request names.
