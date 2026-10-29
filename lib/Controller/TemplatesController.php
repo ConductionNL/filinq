@@ -143,6 +143,9 @@ class TemplatesController extends Controller {
 	 * @NoCSRFRequired
 	 *
 	 * @spec openspec/specs/template-management/spec.md
+	 *
+	 * @no-admin-idor-exempt the read goes through OpenRegister with RBAC and multitenancy on
+	 * (TemplateService::getTemplate()), and the template schema grants read to authenticated users.
 	 */
 	public function show(string $id): JSONResponse {
 		try {
@@ -200,6 +203,10 @@ class TemplatesController extends Controller {
 	 * @NoAdminRequired
 	 *
 	 * @spec openspec/specs/template-management/spec.md
+	 *
+	 * @no-admin-idor-exempt the save goes through OpenRegister saveObject() with RBAC on
+	 * (TemplateService::updateTemplate()), and the template schema grants update to filinq-template-
+	 * editors only.
 	 */
 	public function update(string $id): JSONResponse {
 		try {
@@ -230,6 +237,9 @@ class TemplatesController extends Controller {
 	 * @NoAdminRequired
 	 *
 	 * @spec openspec/specs/template-management/spec.md
+	 *
+	 * @no-admin-idor-exempt deleteObject() runs with RBAC on and is checked against the stored object's
+	 * own schema (template delete: filinq-template-editors).
 	 */
 	public function destroy(string $id): JSONResponse {
 		try {
@@ -259,6 +269,9 @@ class TemplatesController extends Controller {
 	 * @NoAdminRequired
 	 *
 	 * @spec openspec/specs/template-management/spec.md
+	 *
+	 * @no-admin-idor-exempt the source is read with OpenRegister RBAC on and the copy is saved as a new
+	 * template, which authenticated users may create anyway.
 	 */
 	public function duplicate(string $id): JSONResponse {
 		try {
