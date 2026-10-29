@@ -146,6 +146,8 @@ class EmlPdfAssemblyService {
 	 * @return string PDF/A-3b binary content.
 	 *
 	 * @throws ConversionFailedException When no output can be produced.
+	 *
+	 * @spec openspec/changes/archive/2026-06-14-eml-pdf-assembly/tasks.md
 	 */
 	public function assemble(object $result, ?string $sourceFilename = null): string {
 		$options = [
@@ -176,6 +178,8 @@ class EmlPdfAssemblyService {
 	 * @return \Mpdf\Mpdf The engine.
 	 *
 	 * @throws ConversionFailedException When the engine cannot be created.
+	 *
+	 * @spec openspec/changes/archive/2026-06-14-eml-pdf-assembly/tasks.md
 	 */
 	private function createEngine(array $options): \Mpdf\Mpdf {
 		try {
@@ -200,6 +204,8 @@ class EmlPdfAssemblyService {
 	 * @return string PDF/A-3b binary content.
 	 *
 	 * @throws ConversionFailedException When the output fails or is empty.
+	 *
+	 * @spec openspec/changes/archive/2026-06-14-eml-pdf-assembly/tasks.md
 	 */
 	private function emit(\Mpdf\Mpdf $mpdf): string {
 		try {
@@ -227,11 +233,13 @@ class EmlPdfAssemblyService {
 	/**
 	 * The failure of the one eml attempt, logged when it has a cause.
 	 *
-	 * @param array{message: string, reason: string, log?: string} $text     The exception message, the attempt
-	 *                                                                        reason and the log line.
+	 * @param array{message: string, reason: string, log?: string} $text     The exception message, the
+	 *                                                                       attempt reason and the log line.
 	 * @param Throwable|null                                         $previous The cause, if any.
 	 *
 	 * @return ConversionFailedException The exception to throw.
+	 *
+	 * @spec openspec/changes/archive/2026-06-14-eml-pdf-assembly/tasks.md
 	 */
 	private function assemblyFailure(array $text, ?Throwable $previous = null): ConversionFailedException {
 		if ($previous !== null) {
