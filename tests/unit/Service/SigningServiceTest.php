@@ -1567,6 +1567,42 @@ class SigningServiceTest extends TestCase {
 	}//end testDeclineByAnotherUserDoesNotRevealWhetherTheRequestExists()
 
 	/**
+	 * Someone who is not the signer cannot learn a request's status by trying
+	 * to sign it: the signer check runs before the status check.
+	 *
+	 * @return void
+	 */
+	public function testSignByAnotherUserDoesNotRevealTheRequestStatus(): void {
+		$requestData = ['id' => 'req-001', 'status' => 'COMPLETED'];
+		$signerData = ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'bob', 'status' => 'PENDING'];
+		$this->stubFindById(rows: ['req-001' => $requestData, 'signer-001' => $signerData]);
+		$this->objectService->expects($this->never())->method('saveObject');
+
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessage('Not authorized to sign as this signer');
+
+		$this->service->sign(requestId: 'req-001', signerId: 'signer-001');
+
+	}//end testSignByAnotherUserDoesNotRevealTheRequestStatus()
+
+	/**
+	 * Someone who is not the signer cannot learn whether a request id exists
+	 * by trying to sign it.
+	 *
+	 * @return void
+	 */
+	public function testSignByAnotherUserDoesNotRevealWhetherTheRequestExists(): void {
+		$signerData = ['id' => 'signer-001', 'signingRequestId' => 'req-404', 'userId' => 'bob', 'status' => 'PENDING'];
+		$this->stubFindById(rows: ['signer-001' => $signerData]);
+
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessage('Not authorized to sign as this signer');
+
+		$this->service->sign(requestId: 'req-404', signerId: 'signer-001');
+
+	}//end testSignByAnotherUserDoesNotRevealWhetherTheRequestExists()
+
+	/**
 	 * Answer find() by object id, whatever order the service looks objects up in.
 	 *
 	 * @param array<string, array<string, mixed>> $rows The objects by id.
