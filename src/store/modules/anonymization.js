@@ -348,6 +348,121 @@ function parseFileIdFromPropfind(xmlText) {
 }
 
 /**
+ * An operator-facing input error for `addManualEntity`.
+ *
+ * @param {string} message The message to show.
+ * @return {Error}
+ * @spec openspec/specs/anonymization-entity-review/spec.md#requirement-entity-toggle-in-review
+ */
+function manualEntityInputError(message) {
+	const err = new Error(message)
+	err.status = 0
+	return err
+}
+
+/**
+ * Validate a manual-entity request and build its POST body.
+ *
+ * @param {object} entry Queue entry (must have fileId).
+ * @param {object} payload Manual-entity input (see `addManualEntity`).
+ * @return {{value: string, type: string, wholeWord: boolean, caseSensitive: boolean}}
+ * @throws {Error} On a missing fileId, value or type.
+ * @spec openspec/specs/anonymization-entity-review/spec.md#requirement-entity-toggle-in-review
+ */
+function manualEntityBody(entry, payload) {
+	if (!entry?.fileId) {
+		throw manualEntityInputError('Entry has no fileId yet.')
+	}
+	const value = (payload?.value || '').trim()
+	const type = payload?.type || ''
+	if (!value || !type) {
+		throw manualEntityInputError('A value and a type are required.')
+	}
+	return {
+		value,
+		type,
+		wholeWord: payload?.wholeWord ?? true,
+		caseSensitive: payload?.caseSensitive ?? true,
+	}
+}
+
+/**
+ * The relation ids a manual-entities response created.
+ *
+ * @param {object} data Response body of the manual-entities call.
+ * @return {Array<number>}
+ * @spec openspec/specs/anonymization-entity-review/spec.md#requirement-entity-toggle-in-review
+ */
+function manualRelationIds(data) {
+	const relations = Array.isArray(data.relations) ? data.relations : []
+	return relations.map((r) => r.id).filter((id) => id != null)
+}
+
+/**
+ * PATCH the chosen grondslagen onto the relations of a new manual entity,
+ * so they survive a reopen. On failure nothing counts as persisted, so
+ * `anonymiseEntry` retries the PATCH when the user anonymises.
+ *
+ * @param {Array<number>} relationIds The new relation ids.
+ * @param {Array<string>} bases The chosen grondslagen.
+ * @return {Promise<Array<string>>} The bases that were persisted.
+ * @spec openspec/specs/anonymization-entity-review/spec.md#requirement-entity-toggle-in-review
+ */
+async function persistManualBases(relationIds, bases) {
+	if (bases.length === 0 || relationIds.length === 0) {
+		return []
+	}
+	try {
+		await Promise.all(
+			relationIds.map((rid) =>
+				axios.patch(
+					generateUrl(`/apps/openregister/api/entity-relations/${rid}`),
+					{ bases, skipAnonymization: false },
+				),
+			),
+		)
+		return bases
+	} catch (err) {
+		console.error(
+			'[anonymization] failed to set grondslagen on manual entity:',
+			err,
+		)
+		return []
+	}
+}
+
+/**
+ * A review row for a manual entity, in the shape `decorateEntities`
+ * produces, grouping every matched relation under one card.
+ *
+ * @param {object} data Response body of the manual-entities call.
+ * @param {{value: string, type: string}} body The request body.
+ * @param {Array<string>} bases The chosen grondslagen.
+ * @param {Array<string>} persistedBases The grondslagen that were persisted.
+ * @return {object}
+ * @spec openspec/specs/anonymization-entity-review/spec.md#requirement-entity-toggle-in-review
+ */
+function manualReviewRow(data, body, bases, persistedBases) {
+	const relationIds = manualRelationIds(data)
+	return {
+		type: data?.entity?.type ?? body.type,
+		value: data?.entity?.value ?? body.value,
+		included: true,
+		confidence: 1.0,
+		highestConfidence: 1.0,
+		fileCount: 1,
+		count: relationIds.length || 1,
+		relationId: relationIds[0] ?? null,
+		relationIds,
+		bases: [...persistedBases],
+		_decisionBases: [...bases],
+		_decisionSkip: false,
+		skipAnonymization: false,
+		_patchError: null,
+	}
+}
+
+/**
  * The entities an anonymise call for this entry sends, and a check covers.
  *
  * @param {object} entry Queue entry.
@@ -1712,26 +1827,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 		 * @throws {Error} With `.message` operator-facing; on missing fileId/value/type or HTTP error.
 		 */
 		async addManualEntity(entry, payload) {
-			if (!entry?.fileId) {
-				const err = new Error('Entry has no fileId yet.')
-				err.status = 0
-				throw err
-			}
-			const value = (payload?.value || '').trim()
-			const type = payload?.type || ''
-			if (!value || !type) {
-				const err = new Error('A value and a type are required.')
-				err.status = 0
-				throw err
-			}
-
-			const body = {
-				value,
-				type,
-				wholeWord: payload?.wholeWord ?? true,
-				caseSensitive: payload?.caseSensitive ?? true,
-			}
-
+			const body = manualEntityBody(entry, payload)
 			const response = await axios.post(
 				generateUrl(
 					`/apps/openregister/api/files/${entry.fileId}/manual-entities`,
@@ -1740,56 +1836,17 @@ export const useAnonymizationStore = defineStore('anonymization', {
 			)
 			const data = response.data || {}
 
-			const relations = Array.isArray(data.relations) ? data.relations : []
-			const relationIds = relations.map((r) => r.id).filter((id) => id != null)
 			const bases = Array.isArray(payload?.bases) ? payload.bases : []
-
-			// Persist the chosen grondslagen immediately (mirrors the PATCH in
-			// anonymiseEntry). On failure leave `bases` empty so anonymiseEntry
-			// retries the PATCH when the user anonymises.
-			let persistedBases = []
-			if (bases.length > 0 && relationIds.length > 0) {
-				try {
-					await Promise.all(
-						relationIds.map((rid) =>
-							axios.patch(
-								generateUrl(
-									`/apps/openregister/api/entity-relations/${rid}`,
-								),
-								{ bases, skipAnonymization: false },
-							),
-						),
-					)
-					persistedBases = bases
-				} catch (err) {
-					console.error(
-						'[anonymization] failed to set grondslagen on manual entity:',
-						err,
-					)
-				}
-			}
-
-			// Build a review row in the same shape decorateEntities produces,
-			// grouping every matched relation under one card.
-			const newRow = {
-				type: data?.entity?.type ?? type,
-				value: data?.entity?.value ?? value,
-				included: true,
-				confidence: 1.0,
-				highestConfidence: 1.0,
-				fileCount: 1,
-				count: relationIds.length || 1,
-				relationId: relationIds[0] ?? null,
-				relationIds,
-				bases: [...persistedBases],
-				_decisionBases: [...bases],
-				_decisionSkip: false,
-				skipAnonymization: false,
-				_patchError: null,
-			}
+			const persistedBases = await persistManualBases(
+				manualRelationIds(data),
+				bases,
+			)
 
 			// Prepend so the newest addition sits at the top of the list.
-			entry.entities = [newRow, ...entry.entities]
+			entry.entities = [
+				manualReviewRow(data, body, bases, persistedBases),
+				...entry.entities,
+			]
 			entry.entityCount = entry.entities.length
 
 			return data
