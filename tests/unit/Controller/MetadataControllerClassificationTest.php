@@ -88,13 +88,29 @@ class MetadataControllerClassificationTest extends TestCase {
 	}//end testOnDemandEnrichDoesNotSuggestForAnotherUsersFile()
 
 	/**
+	 * A caller who can only read the file, such as a read-only share
+	 * recipient, cannot replace its classification suggestion.
+	 *
+	 * @return void
+	 */
+	public function testOnDemandEnrichDoesNotSuggestForAReadOnlyFile(): void {
+		$response = $this->controller(reachable: [812010], writable: false)->enrich();
+
+		$this->assertSame(200, $response->getStatus());
+		$this->assertSame('skipped', $response->getData()['classification']);
+		$this->assertSame([], $this->store->saves);
+
+	}//end testOnDemandEnrichDoesNotSuggestForAReadOnlyFile()
+
+	/**
 	 * The controller over the real classification service.
 	 *
 	 * @param int[] $reachable The file ids the caller's folder holds.
+	 * @param bool $writable Whether the caller may update those files.
 	 *
 	 * @return MetadataController The controller.
 	 */
-	private function controller(array $reachable): MetadataController {
+	private function controller(array $reachable, bool $writable = true): MetadataController {
 		$request = $this->createMock(IRequest::class);
 		$request->method('getParams')->willReturn(['objectId' => 'intake-1', 'register' => 'filinq', 'schema' => 'intakeDocument', 'objectData' => $this->intake()]);
 
@@ -110,7 +126,9 @@ class MetadataControllerClassificationTest extends TestCase {
 		$session->method('getUser')->willReturn($user);
 
 		$userFolder = $this->createMock(Folder::class);
-		$userFolder->method('getFirstNodeById')->willReturnCallback(fn (int $id): ?File => (in_array($id, $reachable, true) === true ? $this->createMock(File::class) : null));
+		$file = $this->createMock(File::class);
+		$file->method('isUpdateable')->willReturn($writable);
+		$userFolder->method('getFirstNodeById')->willReturnCallback(fn (int $id): ?File => (in_array($id, $reachable, true) === true ? $file : null));
 		$root = $this->createMock(IRootFolder::class);
 		$root->method('getUserFolder')->with('annemarie')->willReturn($userFolder);
 
