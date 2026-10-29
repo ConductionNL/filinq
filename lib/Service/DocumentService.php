@@ -940,71 +940,13 @@ class DocumentService implements DocumentServiceInterface {
 		array $objectIds,
 		array $options,
 	): array {
-		$register = $options['register'] ?? '';
-		$schema = $options['schema'] ?? '';
 		$results = [];
-
 		foreach ($objectIds as $objectId) {
-			$dataRefs = [
-				[
-					'register' => $register,
-					'schema' => $schema,
-					'id' => $objectId,
-				],
-			];
-
-			try {
-				$result = $this->generateDocument(
-					templateId: $templateId,
-					dataRefs: $dataRefs,
-					options: $options
-				);
-				$item = [
-					'objectId' => $objectId,
-					'status' => 'success',
-					'warnings' => $result['warnings'],
-				];
-
-				$mode = $result['output']['mode'] ?? 'return';
-				if ($mode === 'return' || $mode === 'both') {
-					$item['content'] = $result['content'];
-				}
-
-				if ($mode === 'files' || $mode === 'both') {
-					$item['fileId'] = $result['output']['fileId'];
-					$item['path'] = $result['output']['path'];
-					$item['name'] = $result['output']['name'];
-					$item['size'] = $result['output']['size'];
-				}
-
-				$results[] = $item;
-			} catch (Exception $e) {
-				$results[] = [
-					'objectId' => $objectId,
-					'status' => 'error',
-					'error' => $e->getMessage(),
-				];
-
-				$this->documentLogger->log(
-					template: [
-						'id' => $templateId,
-						'version' => null,
-						'name' => '',
-					],
-					dataRefs: $dataRefs,
-					format: ($options['format'] ?? self::DEFAULT_FORMAT),
-					outcome: [
-						'status' => 'failed',
-						'warnings' => [],
-						'caseId' => null,
-						'errorMessage' => $e->getMessage(),
-						'fileId' => null,
-						'filePath' => null,
-					],
-					userId: (string)($options['userId'] ?? '')
-				);
-			}//end try
-		}//end foreach
+			$results[] = $this->generateBulkItem(
+				bulk: ['templateId' => $templateId, 'options' => $options],
+				objectId: $objectId
+			);
+		}
 
 		$errorCount = count(
 			array_filter(
@@ -1023,6 +965,50 @@ class DocumentService implements DocumentServiceInterface {
 		];
 
 	}//end generateBulkSync()
+
+	/**
+	 * Generate one object of a sync bulk run; a failure becomes an error item
+	 * and a failed audit entry instead of aborting the run.
+	 *
+	 * @param array<string, mixed> $bulk     The run: templateId and options (register, schema, format, userId, output).
+	 * @param mixed                $objectId The object UUID.
+	 *
+	 * @return array<string, mixed> The success or error item.
+	 *
+	 * @spec openspec/changes/document-output-destinations-and-bulk-retention/specs/document-creatie-sjablonen/spec.md#req-ddob-007
+	 */
+	private function generateBulkItem(array $bulk, mixed $objectId): array {
+		$options  = $bulk['options'];
+		$dataRefs = [['register' => ($options['register'] ?? ''), 'schema' => ($options['schema'] ?? ''), 'id' => $objectId]];
+
+		try {
+			$result = $this->generateDocument(templateId: $bulk['templateId'], dataRefs: $dataRefs, options: $options);
+		} catch (Exception $e) {
+			$this->documentLogger->logFailure(
+				attempt: [
+					'templateId' => $bulk['templateId'],
+					'dataRefs' => $dataRefs,
+					'format' => ($options['format'] ?? self::DEFAULT_FORMAT),
+					'userId' => (string)($options['userId'] ?? ''),
+				],
+				errorMessage: $e->getMessage()
+			);
+
+			return ['objectId' => $objectId, 'status' => 'error', 'error' => $e->getMessage()];
+		}
+
+		$item = ['objectId' => $objectId, 'status' => 'success', 'warnings' => $result['warnings']];
+		$mode = $result['output']['mode'] ?? 'return';
+		if ($mode === 'return' || $mode === 'both') {
+			$item['content'] = $result['content'];
+		}
+
+		if ($mode === 'files' || $mode === 'both') {
+			$item += array_intersect_key($result['output'], array_flip(['fileId', 'path', 'name', 'size']));
+		}
+
+		return $item;
+	}//end generateBulkItem()
 
 	/**
 	 * Dispatch an async bulk generation background job.
