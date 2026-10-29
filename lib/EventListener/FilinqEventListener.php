@@ -22,9 +22,9 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\EventListener;
 
+use OCA\Filinq\Kernel\Contracts\SettingsServiceInterface;
 use OCA\Filinq\Service\MetadataService;
 use OCA\Filinq\Service\PolicyRetroactiveService;
-use OCA\Filinq\Service\SettingsService;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectDeletedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
@@ -65,7 +65,7 @@ class FilinqEventListener implements IEventListener {
 		try {
 			$logger = $this->container->get(LoggerInterface::class);
 			$metadataService = $this->container->get(MetadataService::class);
-			$settingsService = $this->container->get(SettingsService::class);
+			$settingsService = $this->container->get(SettingsServiceInterface::class);
 			$retroactive = $this->container->get(PolicyRetroactiveService::class);
 			$eventHandler = new FilinqEventHandler(container: $this->container);
 
@@ -116,7 +116,7 @@ class FilinqEventListener implements IEventListener {
 	 *
 	 * @param Event $event The event to dispatch
 	 * @param MetadataService $metadataService The metadata service
-	 * @param SettingsService $settingsService The settings service
+	 * @param SettingsServiceInterface $settingsService The settings service
 	 * @param LoggerInterface $logger The logger instance
 	 * @param FilinqEventHandler $eventHandler The event handler
 	 * @param PolicyRetroactiveService $retroactive Retroactive policy applicator.
@@ -128,7 +128,7 @@ class FilinqEventListener implements IEventListener {
 	private function dispatchEvent(
 		Event $event,
 		MetadataService $metadataService,
-		SettingsService $settingsService,
+		SettingsServiceInterface $settingsService,
 		LoggerInterface $logger,
 		FilinqEventHandler $eventHandler,
 		PolicyRetroactiveService $retroactive,
