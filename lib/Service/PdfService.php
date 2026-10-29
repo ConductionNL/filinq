@@ -34,6 +34,7 @@ use Exception;
 use Mpdf\Mpdf;
 use Mpdf\MpdfException;
 use OCA\Filinq\Exception\ConversionFailedException;
+use OCA\Filinq\Kernel\Contracts\PdfServiceInterface;
 use OCA\Filinq\Service\Conversion\AccessiblePdfRenderer;
 use Psr\Log\LoggerInterface;
 
@@ -52,7 +53,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/pdfa3-conversion/spec.md
  */
-class PdfService {
+class PdfService implements PdfServiceInterface {
 	/**
 	 * Constructor for PdfService
 	 *

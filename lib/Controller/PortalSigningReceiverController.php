@@ -39,11 +39,11 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
+use OCA\Filinq\Kernel\Contracts\SettingsServiceInterface;
+use OCA\Filinq\Kernel\Contracts\SigningServiceInterface;
 use OCA\Filinq\Portal\PortalAssertionVerifier;
 use OCA\Filinq\Service\OpenRegisterResolver;
 use OCA\Filinq\Service\PortalSigningDocumentResolver;
-use OCA\Filinq\Service\SettingsService;
-use OCA\Filinq\Service\SigningService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
@@ -98,8 +98,8 @@ class PortalSigningReceiverController extends Controller {
 	 * @param string $appName App name.
 	 * @param IRequest $request Request object.
 	 * @param PortalAssertionVerifier $verifier Verifies the X-Portal-Subject assertion.
-	 * @param SigningService $signingService The honest signing primitive.
-	 * @param SettingsService $settingsService Settings service (resolves OR's ObjectService).
+	 * @param SigningServiceInterface $signingService The honest signing primitive.
+	 * @param SettingsServiceInterface $settingsService Settings service (resolves OR's ObjectService).
 	 * @param OpenRegisterResolver $registerResolver Resolves register/schema bindings, failing closed.
 	 * @param LoggerInterface $logger Logger.
 	 * @param PortalSigningDocumentResolver $documentResolver Resolves the target document for viewDocument.
@@ -111,8 +111,8 @@ class PortalSigningReceiverController extends Controller {
 		string $appName,
 		IRequest $request,
 		private readonly PortalAssertionVerifier $verifier,
-		private readonly SigningService $signingService,
-		private readonly SettingsService $settingsService,
+		private readonly SigningServiceInterface $signingService,
+		private readonly SettingsServiceInterface $settingsService,
 		private readonly OpenRegisterResolver $registerResolver,
 		private readonly LoggerInterface $logger,
 		private readonly PortalSigningDocumentResolver $documentResolver,

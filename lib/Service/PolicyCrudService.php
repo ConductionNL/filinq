@@ -33,6 +33,7 @@ namespace OCA\Filinq\Service;
 
 use Exception;
 use InvalidArgumentException;
+use OCA\Filinq\Kernel\Contracts\PolicyCrudServiceInterface;
 use OCP\IGroupManager;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
@@ -47,66 +48,7 @@ use RuntimeException;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  */
-class PolicyCrudService {
-
-	/**
-	 * Register slug shared by both policy surfaces.
-	 *
-	 * `filinq`, not `consent`: this app declares ONE register holding all 23
-	 * schemas. The five it used to declare are retired.
-	 */
-	public const REGISTER = 'filinq';
-
-	/**
-	 * Schema slug for the deny-list surface.
-	 */
-	public const SCHEMA_PROHIBITION = 'publicationProhibition';
-
-	/**
-	 * Schema slug shared between standing consents and per-document records.
-	 */
-	public const SCHEMA_CONSENT = 'publicationConsent';
-
-	/**
-	 * Policy surface selector for the entity-level deny-list.
-	 *
-	 * Used as the `$surface` argument to {@see self::requirePolicyPermission()}.
-	 */
-	public const SURFACE_PROHIBITION = 'prohibition';
-
-	/**
-	 * Policy surface selector for standing consents (scope=entity records).
-	 *
-	 * Used as the `$surface` argument to {@see self::requirePolicyPermission()}.
-	 */
-	public const SURFACE_STANDING_CONSENT = 'standingConsent';
-
-	/**
-	 * Group whose members may create/update/delete standing-consent records.
-	 *
-	 * Enforced at service level per spec §RBAC scenario "Standing-consent
-	 * write requires standing-consent permission" — the underlying
-	 * publicationConsent schema's RBAC cannot discriminate by `scope`, so the
-	 * scope-aware gate lives here.
-	 *
-	 * Renamed from `docudesk-*` with a membership migration; see
-	 * PROHIBITION_GROUP below.
-	 */
-	public const STANDING_CONSENT_GROUP = 'filinq-standing-consent-admins';
-
-	/**
-	 * Group whose members may create/update/delete publication-prohibition
-	 * records. Prohibitions are operator-level blocking rules that override
-	 * the standard anonymise flow, so write authorisation requires either
-	 * admin role or membership in this group — never any authenticated user.
-	 *
-	 * This is a Nextcloud GROUP ID, declared in `lib/Settings/filinq_register.json`
-	 * and provisioned by OpenRegister CREATE-ONLY, then populated by admins.
-	 * Renaming an id creates a NEW, EMPTY group, so the move from `docudesk-*`
-	 * to `filinq-*` is carried by the RenameRoleGroups repair step, which copies
-	 * every member of the old group into the new one and deletes nothing.
-	 */
-	public const PROHIBITION_GROUP = 'filinq-prohibition-admins';
+class PolicyCrudService implements PolicyCrudServiceInterface {
 
 	/**
 	 * Constructor.

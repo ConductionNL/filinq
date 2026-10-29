@@ -25,7 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
-use OCA\Filinq\AppInfo\Application;
+use OCA\Filinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
 
@@ -83,7 +83,7 @@ class ProhibitionOverrideAuthority {
 			return true;
 		}
 
-		$groups = json_decode($this->appConfig->getValueString(Application::APP_ID, self::CONFIG_KEY, self::DEFAULT_GROUPS), true);
+		$groups = json_decode($this->appConfig->getValueString(AppIdentity::APP_ID, self::CONFIG_KEY, self::DEFAULT_GROUPS), true);
 		if (is_array($groups) === false) {
 			return false;
 		}

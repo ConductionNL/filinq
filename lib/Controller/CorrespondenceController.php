@@ -27,7 +27,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use Exception;
-use OCA\Filinq\Service\CorrespondenceService;
+use OCA\Filinq\Kernel\Contracts\CorrespondenceServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataDownloadResponse;
@@ -54,7 +54,7 @@ class CorrespondenceController extends Controller {
 	 *
 	 * @param string $appName The application name
 	 * @param IRequest $request The request object
-	 * @param CorrespondenceService $corrSvc Correspondence generation service
+	 * @param CorrespondenceServiceInterface $corrSvc Correspondence generation service
 	 * @param IUserSession $userSession User session for auth info
 	 * @param LoggerInterface $logger Logger for error reporting
 	 * @param IL10N $l10n The localization service
@@ -64,7 +64,7 @@ class CorrespondenceController extends Controller {
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly CorrespondenceService $corrSvc,
+		private readonly CorrespondenceServiceInterface $corrSvc,
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
 		private readonly IL10N $l10n,

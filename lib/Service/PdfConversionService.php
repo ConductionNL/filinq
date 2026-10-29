@@ -133,71 +133,17 @@ class PdfConversionService {
 				continue;
 			}
 
-			$backendName = $backend->name();
-
-			$available = $backend->isAvailable();
-			if ($available === false) {
-				$attempts[] = [
-					'name' => $backendName,
-					'available' => false,
-					'supports' => false,
-					'reason' => 'backend disabled or prerequisites not present',
-				];
-				continue;
-			}
-
-			$supports = $backend->canHandle($mimeType, $ext);
-			if ($supports === false) {
-				$extLabel = $ext;
-				if ($ext === '') {
-					$extLabel = '(none)';
-				}
-
-				$attempts[] = [
-					'name' => $backendName,
-					'available' => true,
-					'supports' => false,
-					'reason' => sprintf(
-						'backend does not support MIME %s / extension %s',
-						$mimeType,
-						$extLabel
-					),
-				];
+			$skipped = $this->unusableBackendAttempt(backend: $backend, mimeType: $mimeType, ext: $ext);
+			if ($skipped !== null) {
+				$attempts[] = $skipped;
 				continue;
 			}
 
 			try {
-				$result = $backend->convert($source);
-				$this->logger->info(
-					'[PdfConversionService] Conversion succeeded',
-					[
-						'backend' => $backendName,
-						'source' => $source->getPath(),
-						'output' => $result->getPath(),
-					]
-				);
-				return [
-					'file' => $result,
-					'backend' => $backendName,
-				];
+				return $this->convertWith(backend: $backend, source: $source);
 			} catch (Throwable $e) {
-				$attempts[] = [
-					'name' => $backendName,
-					'available' => true,
-					'supports' => true,
-					'reason' => $e->getMessage(),
-				];
-				$this->logger->warning(
-					'[PdfConversionService] Backend failed; falling through',
-					[
-						'backend' => $backendName,
-						'source' => $source->getPath(),
-						'exception' => get_class($e),
-						'message' => $e->getMessage(),
-					]
-				);
-				continue;
-			}//end try
+				$attempts[] = $this->failedBackendAttempt(backendName: $backend->name(), source: $source, exception: $e);
+			}
 		}//end foreach
 
 		// No backend succeeded — emit a structured failure.
@@ -207,6 +153,106 @@ class PdfConversionService {
 		);
 
 	}//end convertToPdfReporting()
+
+	/**
+	 * The attempt record of a backend that cannot take this file, or null
+	 * when it is available and supports the type.
+	 *
+	 * @param ConversionBackendInterface $backend The backend.
+	 * @param string $mimeType The source MIME type.
+	 * @param string $ext The source extension, or an empty string.
+	 *
+	 * @return array{name: string, available: bool, supports: bool, reason: string}|null The skip record.
+	 *
+	 * @spec openspec/specs/document-editing/spec.md#requirement-conversion-routes-through-the-nextcloud-conversion-broker
+	 */
+	private function unusableBackendAttempt(ConversionBackendInterface $backend, string $mimeType, string $ext): ?array {
+		if ($backend->isAvailable() === false) {
+			return [
+				'name' => $backend->name(),
+				'available' => false,
+				'supports' => false,
+				'reason' => 'backend disabled or prerequisites not present',
+			];
+		}
+
+		if ($backend->canHandle($mimeType, $ext) === true) {
+			return null;
+		}
+
+		$extLabel = $ext;
+		if ($ext === '') {
+			$extLabel = '(none)';
+		}
+
+		return [
+			'name' => $backend->name(),
+			'available' => true,
+			'supports' => false,
+			'reason' => sprintf('backend does not support MIME %s / extension %s', $mimeType, $extLabel),
+		];
+
+	}//end unusableBackendAttempt()
+
+	/**
+	 * Convert with one backend and log which one produced the PDF.
+	 *
+	 * @param ConversionBackendInterface $backend The backend.
+	 * @param File $source The source file.
+	 *
+	 * @return array{file: File, backend: string} The PDF and the backend that produced it.
+	 *
+	 * @spec openspec/specs/document-editing/spec.md#requirement-conversion-routes-through-the-nextcloud-conversion-broker
+	 */
+	private function convertWith(ConversionBackendInterface $backend, File $source): array {
+		$result = $backend->convert($source);
+		$this->logger->info(
+			'[PdfConversionService] Conversion succeeded',
+			[
+				'backend' => $backend->name(),
+				'source' => $source->getPath(),
+				'output' => $result->getPath(),
+			]
+		);
+
+		return [
+			'file' => $result,
+			'backend' => $backend->name(),
+		];
+
+	}//end convertWith()
+
+	/**
+	 * Log a failed backend and return its attempt record; the cascade falls
+	 * through to the next backend.
+	 *
+	 * @param string $backendName The backend name.
+	 * @param File $source The source file.
+	 * @param Throwable $exception The failure.
+	 *
+	 * @return array{name: string, available: bool, supports: bool, reason: string} The attempt record.
+	 *
+	 * @spec openspec/specs/document-editing/spec.md#requirement-conversion-routes-through-the-nextcloud-conversion-broker
+	 */
+	private function failedBackendAttempt(string $backendName, File $source, Throwable $exception): array {
+		$this->logger->warning(
+			'[PdfConversionService] Backend failed; falling through',
+			[
+				'backend' => $backendName,
+				'source' => $source->getPath(),
+				'exception' => get_class($exception),
+				'message' => $exception->getMessage(),
+			]
+		);
+
+		return [
+			'name' => $backendName,
+			'available' => true,
+			'supports' => true,
+			'reason' => $exception->getMessage(),
+		];
+
+	}//end failedBackendAttempt()
 
 	/**
 	 * What each backend could do right now, without converting anything.

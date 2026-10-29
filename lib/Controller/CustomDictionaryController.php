@@ -30,7 +30,7 @@ namespace OCA\Filinq\Controller;
 
 use Exception;
 use InvalidArgumentException;
-use OCA\Filinq\Service\CustomDictionaryService;
+use OCA\Filinq\Kernel\Contracts\CustomDictionaryServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Http;
@@ -59,7 +59,7 @@ class CustomDictionaryController extends Controller {
 	 * @param string $appName App name.
 	 * @param IRequest $request Request abstraction.
 	 * @param LoggerInterface $logger Logger.
-	 * @param CustomDictionaryService $service Organisation-gated CRUD + import service.
+	 * @param CustomDictionaryServiceInterface $service Organisation-gated CRUD + import service.
 	 * @param IL10N $l10n Localisation.
 	 * @param IUserSession $userSession User session for authentication.
 	 */
@@ -67,7 +67,7 @@ class CustomDictionaryController extends Controller {
 		string $appName,
 		IRequest $request,
 		private readonly LoggerInterface $logger,
-		private readonly CustomDictionaryService $service,
+		private readonly CustomDictionaryServiceInterface $service,
 		private readonly IL10N $l10n,
 		private readonly IUserSession $userSession,
 	) {

@@ -40,6 +40,8 @@ namespace OCA\Filinq\Service;
 use Exception;
 use OCA\Filinq\Exception\DetectionUnavailableException;
 use OCA\Filinq\Exception\ProhibitionGateException;
+use OCA\Filinq\Kernel\Contracts\AnonymizationServiceInterface;
+use OCA\Filinq\Kernel\Contracts\AnonymizeRequestServiceInterface;
 use OCP\AppFramework\Http;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
@@ -58,7 +60,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/anonymization/spec.md
  */
-class AnonymizeRequestService {
+class AnonymizeRequestService implements AnonymizeRequestServiceInterface {
 
 	/**
 	 * Validator for the anonymize request body.
@@ -71,7 +73,7 @@ class AnonymizeRequestService {
 	 * Constructor for AnonymizeRequestService
 	 *
 	 * @param LoggerInterface $logger Logger for gate failure reporting.
-	 * @param AnonymizationService $anonymizationService Service for anonymization operations.
+	 * @param AnonymizationServiceInterface $anonymizationService Service for anonymization operations.
 	 * @param IL10N $l10n The localization service.
 	 * @param IRootFolder $rootFolder Root folder for per-user file access checks.
 	 * @param IUserSession $userSession User session for authentication.
@@ -80,7 +82,7 @@ class AnonymizeRequestService {
 	 */
 	public function __construct(
 		private readonly LoggerInterface $logger,
-		private readonly AnonymizationService $anonymizationService,
+		private readonly AnonymizationServiceInterface $anonymizationService,
 		private readonly IL10N $l10n,
 		private readonly IRootFolder $rootFolder,
 		private readonly IUserSession $userSession,

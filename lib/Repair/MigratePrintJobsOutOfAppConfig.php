@@ -34,9 +34,9 @@ namespace OCA\Filinq\Repair;
 
 use DateTimeImmutable;
 use DateTimeInterface;
+use OCA\Filinq\Kernel\Contracts\PrintJobServiceInterface;
 use OCA\Filinq\Service\PrintJobFileStore;
 use OCA\Filinq\Service\PrintJobRepository;
-use OCA\Filinq\Service\PrintJobService;
 use OCP\IAppConfig;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
@@ -245,8 +245,8 @@ class MigratePrintJobsOutOfAppConfig implements IRepairStep {
 	 */
 	private function status(array $legacy, bool $hasFiles): string {
 		$external = (string) ($legacy['externalStatus'] ?? '');
-		if (isset(PrintJobService::EXTERNAL_STATUSES[$external]) === true) {
-			return PrintJobService::EXTERNAL_STATUSES[$external];
+		if (isset(PrintJobServiceInterface::EXTERNAL_STATUSES[$external]) === true) {
+			return PrintJobServiceInterface::EXTERNAL_STATUSES[$external];
 		}
 
 		$legacyStatus = (string) ($legacy['status'] ?? '');

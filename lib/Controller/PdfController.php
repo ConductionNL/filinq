@@ -29,7 +29,7 @@ namespace OCA\Filinq\Controller;
 use Exception;
 use OCA\Filinq\Exception\Pdfa3ConversionException;
 use OCA\Filinq\Service\Pdfa3ConversionService;
-use OCA\Filinq\Service\PdfService;
+use OCA\Filinq\Kernel\Contracts\PdfServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataDownloadResponse;
@@ -57,7 +57,7 @@ class PdfController extends Controller {
 	 * @param string $appName The application name
 	 * @param IRequest $request The request object
 	 * @param LoggerInterface $logger Logger for error reporting
-	 * @param PdfService $pdfService Service for PDF generation
+	 * @param PdfServiceInterface $pdfService Service for PDF generation
 	 * @param Pdfa3ConversionService $pdfa3Service Service for archival PDF/A-3
 	 *                                             generation (attachments +
 	 *                                             MDTO metadata)
@@ -70,7 +70,7 @@ class PdfController extends Controller {
 		string $appName,
 		IRequest $request,
 		private readonly LoggerInterface $logger,
-		private readonly PdfService $pdfService,
+		private readonly PdfServiceInterface $pdfService,
 		private readonly Pdfa3ConversionService $pdfa3Service,
 		private readonly IL10N $l10n,
 		private readonly IUserSession $userSession,

@@ -25,10 +25,10 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
+use OCA\Filinq\Kernel\Contracts\PeriodicDocumentServiceInterface;
 use OCA\Filinq\Service\CaseArchiveService;
 use OCA\Filinq\Service\DocumentReviewService;
 use OCA\Filinq\Service\PageLayoutService;
-use OCA\Filinq\Service\PeriodicDocumentService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -57,7 +57,7 @@ class DocumentProductionController extends Controller {
 	 * @param IRequest $request The request.
 	 * @param PageLayoutService $layouts The paper.
 	 * @param CaseArchiveService $archives The bundle.
-	 * @param PeriodicDocumentService $periodic The documents that make themselves.
+	 * @param PeriodicDocumentServiceInterface $periodic The documents that make themselves.
 	 * @param DocumentReviewService $reviews The ones that come back.
 	 * @param IUserSession $userSession The current session.
 	 *
@@ -68,7 +68,7 @@ class DocumentProductionController extends Controller {
 		IRequest $request,
 		private readonly PageLayoutService $layouts,
 		private readonly CaseArchiveService $archives,
-		private readonly PeriodicDocumentService $periodic,
+		private readonly PeriodicDocumentServiceInterface $periodic,
 		private readonly DocumentReviewService $reviews,
 		private readonly IUserSession $userSession,
 	) {

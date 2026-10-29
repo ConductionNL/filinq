@@ -28,7 +28,7 @@ namespace OCA\Filinq\Controller;
 
 use Exception;
 use OCA\Filinq\Exception\RegisterNotConfiguredException;
-use OCA\Filinq\Service\TemplateService;
+use OCA\Filinq\Kernel\Contracts\TemplateServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -51,7 +51,7 @@ class TemplatesController extends Controller {
 	 *
 	 * @param string $appName The application name
 	 * @param IRequest $request The request object
-	 * @param TemplateService $templateService Service for template operations
+	 * @param TemplateServiceInterface $templateService Service for template operations
 	 * @param TemplateRequestHandler $requestHandler Request param parser and error handler
 	 * @param IUserSession $userSession User session for current user
 	 * @param LoggerInterface $logger Logger for not-configured info messages
@@ -61,7 +61,7 @@ class TemplatesController extends Controller {
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly TemplateService $templateService,
+		private readonly TemplateServiceInterface $templateService,
 		private readonly TemplateRequestHandler $requestHandler,
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,

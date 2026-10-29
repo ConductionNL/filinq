@@ -37,6 +37,7 @@ namespace OCA\Filinq\Service;
 
 use OCA\Filinq\Exception\MergeRefusedException;
 use OCA\Filinq\Exception\MergeStepFailedException;
+use OCA\Filinq\Kernel\Contracts\DocumentMergeServiceInterface;
 use OCP\Files\File;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
@@ -61,42 +62,7 @@ use Throwable;
  *
  * @spec openspec/specs/document-merge/spec.md
  */
-class DocumentMergeService {
-
-	/**
-	 * The schema holding the jobs.
-	 *
-	 * @var string
-	 */
-	public const SCHEMA = 'mergeJob';
-
-	/**
-	 * Queued, not started.
-	 *
-	 * @var string
-	 */
-	public const STATUS_QUEUED = 'queued';
-
-	/**
-	 * Running.
-	 *
-	 * @var string
-	 */
-	public const STATUS_RUNNING = 'running';
-
-	/**
-	 * Finished, with a result file.
-	 *
-	 * @var string
-	 */
-	public const STATUS_DONE = 'done';
-
-	/**
-	 * Stopped, with a reason and no result file.
-	 *
-	 * @var string
-	 */
-	public const STATUS_FAILED = 'failed';
+class DocumentMergeService implements DocumentMergeServiceInterface {
 
 	/**
 	 * Constructor.

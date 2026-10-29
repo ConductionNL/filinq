@@ -29,10 +29,10 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
+use OCA\Filinq\Kernel\Contracts\FinalDocumentServiceInterface;
 use OCA\Filinq\Service\DocumentFinalityRuleService;
 use OCA\Filinq\Service\FinalDocumentCorrectionService;
 use OCA\Filinq\Service\FinalDocumentFailureMapper;
-use OCA\Filinq\Service\FinalDocumentService;
 use OCA\Filinq\Service\FinalDocumentUnfreezeService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -61,7 +61,7 @@ class FinalDocumentController extends Controller {
 	 *
 	 * @param string $appName The app name.
 	 * @param IRequest $request The request.
-	 * @param FinalDocumentService $finalDocuments The finalisation service.
+	 * @param FinalDocumentServiceInterface $finalDocuments The finalisation service.
 	 * @param FinalDocumentCorrectionService $corrections The correction service.
 	 * @param FinalDocumentUnfreezeService $unfreeze The recorded exception.
 	 * @param DocumentFinalityRuleService $rules The declaration store.
@@ -74,7 +74,7 @@ class FinalDocumentController extends Controller {
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly FinalDocumentService $finalDocuments,
+		private readonly FinalDocumentServiceInterface $finalDocuments,
 		private readonly FinalDocumentCorrectionService $corrections,
 		private readonly FinalDocumentUnfreezeService $unfreeze,
 		private readonly DocumentFinalityRuleService $rules,

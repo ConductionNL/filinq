@@ -19,6 +19,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\Signing;
 
+use OCA\Filinq\Kernel\Contracts\LibreSignCompletionInterface;
 use OCA\Filinq\Service\SettingsService;
 use OCA\Filinq\Service\SignedArtifactProducer;
 use OCA\Filinq\Service\SigningAuditService;
@@ -44,7 +45,7 @@ use Throwable;
  *
  * @spec openspec/specs/libresign-signing-provider/spec.md
  */
-class LibreSignCompletion {
+class LibreSignCompletion implements LibreSignCompletionInterface {
 
 	/**
 	 * Constructor

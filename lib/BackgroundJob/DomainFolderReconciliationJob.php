@@ -22,7 +22,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\BackgroundJob;
 
-use OCA\Filinq\Service\DomainFolderReconciler;
+use OCA\Filinq\Kernel\Contracts\DomainFolderReconcilerInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use Psr\Log\LoggerInterface;
@@ -50,14 +50,14 @@ class DomainFolderReconciliationJob extends TimedJob {
 	 * Collaborators.
 	 *
 	 * @param ITimeFactory           $time       The clock the scheduler reads.
-	 * @param DomainFolderReconciler $reconciler Does the night's work.
+	 * @param DomainFolderReconcilerInterface $reconciler Does the night's work.
 	 * @param LoggerInterface        $logger     Structured logger.
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		ITimeFactory $time,
-		private readonly DomainFolderReconciler $reconciler,
+		private readonly DomainFolderReconcilerInterface $reconciler,
 		private readonly LoggerInterface $logger,
 	) {
 		parent::__construct(time: $time);

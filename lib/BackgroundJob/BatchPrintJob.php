@@ -30,7 +30,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\BackgroundJob;
 
 use Exception;
-use OCA\Filinq\Service\PrintJobService;
+use OCA\Filinq\Kernel\Contracts\PrintJobServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\QueuedJob;
 use Psr\Log\LoggerInterface;
@@ -52,14 +52,14 @@ class BatchPrintJob extends QueuedJob {
 	 * Constructor.
 	 *
 	 * @param ITimeFactory    $time        Time factory
-	 * @param PrintJobService $printJobSvc The print job service
+	 * @param PrintJobServiceInterface $printJobSvc The print job service
 	 * @param LoggerInterface $logger      Logger
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		ITimeFactory $time,
-		private readonly PrintJobService $printJobSvc,
+		private readonly PrintJobServiceInterface $printJobSvc,
 		private readonly LoggerInterface $logger,
 	) {
 		parent::__construct(time: $time);

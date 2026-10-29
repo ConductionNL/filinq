@@ -28,6 +28,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\EventListener;
 
+use OCA\Filinq\Kernel\Contracts\DocumentValidationServiceInterface;
 use OCA\Filinq\Service\DocumentValidationService;
 use OCA\Filinq\Service\MetadataService;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
@@ -114,7 +115,7 @@ class ValidationRunner {
 	 * metadata save path. Best-effort: failures are logged, never thrown.
 	 *
 	 * @param mixed $object The OpenRegister object.
-	 * @param DocumentValidationService $validationService The validation service.
+	 * @param DocumentValidationServiceInterface $validationService The validation service.
 	 * @param MetadataService $metadataService The metadata save path.
 	 * @param IRootFolder $rootFolder Root folder for file access.
 	 * @param LoggerInterface $logger Logger.
@@ -126,7 +127,7 @@ class ValidationRunner {
 	 */
 	public function validateObject(
 		mixed $object,
-		DocumentValidationService $validationService,
+		DocumentValidationServiceInterface $validationService,
 		MetadataService $metadataService,
 		IRootFolder $rootFolder,
 		LoggerInterface $logger,

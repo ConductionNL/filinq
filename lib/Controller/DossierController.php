@@ -47,7 +47,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use Exception;
-use OCA\Filinq\Service\LegalBasesSummaryService;
+use OCA\Filinq\Kernel\Contracts\LegalBasesSummaryServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Http;
@@ -73,7 +73,7 @@ class DossierController extends Controller {
 	 * @param string $appName The application name.
 	 * @param IRequest $request The current HTTP request.
 	 * @param LoggerInterface $logger Logger for error reporting.
-	 * @param LegalBasesSummaryService $grondslagenSummary Per-dossier renderer.
+	 * @param LegalBasesSummaryServiceInterface $grondslagenSummary Per-dossier renderer.
 	 * @param IL10N $l10n Localisation service.
 	 * @param IUserSession $userSession User session for auth check.
 	 */
@@ -81,7 +81,7 @@ class DossierController extends Controller {
 		string $appName,
 		IRequest $request,
 		private readonly LoggerInterface $logger,
-		private readonly LegalBasesSummaryService $grondslagenSummary,
+		private readonly LegalBasesSummaryServiceInterface $grondslagenSummary,
 		private readonly IL10N $l10n,
 		private readonly IUserSession $userSession,
 	) {
