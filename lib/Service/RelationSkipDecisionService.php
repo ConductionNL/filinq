@@ -130,10 +130,11 @@ class RelationSkipDecisionService {
 		}
 
 		if ($skip === true) {
-			$match = $this->findProhibitionMatch(mapper: $mapper, fileId: (int)$relation->getFileId(), relationId: $relationId);
-			$block = null;
+			$decision = ['relationId' => $relationId, 'fileId' => (int)$relation->getFileId(), 'force' => $force, 'userId' => $user->getUID()];
+			$match    = $this->findProhibitionMatch(mapper: $mapper, decision: $decision);
+			$block    = null;
 			if ($match !== null) {
-				$block = $this->evaluateProhibitionSkip(match: $match, force: $force, userId: $user->getUID());
+				$block = $this->evaluateProhibitionSkip(match: $match, decision: $decision);
 			}
 
 			if ($block !== null) {
@@ -194,15 +195,14 @@ class RelationSkipDecisionService {
 	 * or it cannot be resolved (no row, no value, no policy matcher).
 	 *
 	 * @param mixed $mapper OpenRegister EntityRelationMapper (DI).
-	 * @param int $fileId The relation's file id.
-	 * @param int $relationId The relation id (for the file-join lookup + logs).
+	 * @param array{relationId: int, fileId: int, force: bool, userId: string} $decision The skip decision being made.
 	 *
-	 * @return array{row: array<string, mixed>, rule: array<string, mixed>, threshold: float, relationId: int, fileId: int}|null The match, else null.
+	 * @return array{row: array<string, mixed>, rule: array<string, mixed>, threshold: float}|null The match, else null.
 	 *
 	 * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-6
 	 */
-	private function findProhibitionMatch(mixed $mapper, int $fileId, int $relationId): ?array {
-		$row = $this->findRelationRow(mapper: $mapper, fileId: $fileId, relationId: $relationId);
+	private function findProhibitionMatch(mixed $mapper, array $decision): ?array {
+		$row = $this->findRelationRow(mapper: $mapper, decision: $decision);
 		$value = (string)($row['entity_value'] ?? '');
 		if ($row === null || $value === '') {
 			return null;
@@ -224,8 +224,6 @@ class RelationSkipDecisionService {
 			'row' => $row,
 			'rule' => $rule,
 			'threshold' => (float)$matcher->highConfidenceThreshold(),
-			'relationId' => $relationId,
-			'fileId' => $fileId,
 		];
 	}//end findProhibitionMatch()
 
@@ -235,24 +233,23 @@ class RelationSkipDecisionService {
 	 * Classifies the skip by confidence and force. A releasable match forced by
 	 * a user with the override role is recorded as a release and allowed.
 	 *
-	 * @param array<string, mixed> $match The match from findProhibitionMatch().
-	 * @param bool $force Whether the request set force.
-	 * @param string $userId The acting user; only an override role may release a match.
+	 * @param array{row: array<string, mixed>, rule: array<string, mixed>, threshold: float} $match The match from findProhibitionMatch().
+	 * @param array{relationId: int, fileId: int, force: bool, userId: string} $decision The skip decision; only an override role may release a match.
 	 *
 	 * @return array<string, mixed>|null The 422 body when blocked, else null.
 	 *
 	 * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-6
 	 */
-	private function evaluateProhibitionSkip(array $match, bool $force, string $userId): ?array {
+	private function evaluateProhibitionSkip(array $match, array $decision): ?array {
 		$confidence = (float)($match['row']['confidence'] ?? 0.0);
-		$decision = $this->tier->classify(confidence: $confidence, threshold: $match['threshold'], force: $force);
-		if ($decision === 'allow' && $this->authority->mayOverride(userId: $userId) === true) {
+		$tier       = $this->tier->classify(confidence: $confidence, threshold: $match['threshold'], force: $decision['force']);
+		if ($tier === 'allow' && $this->authority->mayOverride(userId: $decision['userId']) === true) {
 			$this->committer->recordRelease(
 				ruleId: (string)$match['rule']['uuid'],
-				relationId: $match['relationId'],
-				fileId: $match['fileId'],
+				relationId: $decision['relationId'],
+				fileId: $decision['fileId'],
 				reason: 'Released below the high-confidence threshold in the review',
-				userId: $userId
+				userId: $decision['userId']
 			);
 			return null;
 		}
@@ -260,7 +257,7 @@ class RelationSkipDecisionService {
 		$entityId = (int)($match['row']['entity_id'] ?? 0);
 		$this->logger->warning(
 			'Prohibition guard blocked a skip decision',
-			['ruleId' => $match['rule']['uuid'], 'entityId' => $entityId, 'relationId' => $match['relationId']]
+			['ruleId' => $match['rule']['uuid'], 'entityId' => $entityId, 'relationId' => $decision['relationId']]
 		);
 
 		return [
@@ -272,7 +269,7 @@ class RelationSkipDecisionService {
 				'ruleId' => $match['rule']['uuid'],
 				'ruleName' => $match['rule']['primaryName'],
 				'confidence' => $confidence,
-				'absolute' => ($decision === 'block_absolute'),
+				'absolute' => ($tier === 'block_absolute'),
 			],
 		];
 	}//end evaluateProhibitionSkip()
@@ -281,16 +278,15 @@ class RelationSkipDecisionService {
 	 * Find the file-join row that belongs to one relation id.
 	 *
 	 * @param mixed $mapper OpenRegister EntityRelationMapper (DI).
-	 * @param int $fileId The relation's file id.
-	 * @param int $relationId The relation id being looked up.
+	 * @param array{relationId: int, fileId: int} $decision The relation id being looked up and its file id.
 	 *
 	 * @return array<string, mixed>|null The joined row, or null when it cannot be resolved.
 	 *
 	 * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-6
 	 */
-	private function findRelationRow(mixed $mapper, int $fileId, int $relationId): ?array {
-		foreach ($mapper->findEntitiesForFile($fileId) as $candidate) {
-			if ((int)($candidate['relation_id'] ?? 0) === $relationId) {
+	private function findRelationRow(mixed $mapper, array $decision): ?array {
+		foreach ($mapper->findEntitiesForFile($decision['fileId']) as $candidate) {
+			if ((int)($candidate['relation_id'] ?? 0) === $decision['relationId']) {
 				return $candidate;
 			}
 		}
