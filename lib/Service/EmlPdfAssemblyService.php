@@ -146,6 +146,8 @@ class EmlPdfAssemblyService {
 	 * @return string PDF/A-3b binary content.
 	 *
 	 * @throws ConversionFailedException When no output can be produced.
+	 *
+	 * @spec openspec/changes/archive/2026-06-14-eml-pdf-assembly/tasks.md
 	 */
 	public function assemble(object $result, ?string $sourceFilename = null): string {
 		$options = [
@@ -154,76 +156,105 @@ class EmlPdfAssemblyService {
 			'title' => $this->deriveTitle(result: $result, sourceFilename: $sourceFilename),
 		];
 
-		try {
-			$mpdf = $this->pdfService->createMpdfInstance(options: $options);
-		} catch (Throwable $e) {
-			$this->logger->error(
-				'[EmlPdfAssemblyService] Failed to create mPDF instance',
-				['exception' => get_class($e), 'message' => $e->getMessage()]
-			);
-			throw new ConversionFailedException(
-				message: 'EML assembly could not initialise the PDF engine: ' . $e->getMessage(),
-				attempts: [
-					[
-						'name' => 'eml',
-						'available' => true,
-						'supports' => true,
-						'reason' => 'mPDF init failed: ' . $e->getMessage(),
-					],
-				],
-				previous: $e
-			);
-		}//end try
-
-		$appendPages = $this->shouldAppendPages();
-		$maxSize = $this->maxAttachmentSize();
+		$mpdf = $this->createEngine(options: $options);
 
 		$this->renderStructure(
 			mpdf: $mpdf,
 			result: $result,
 			options: $options,
-			appendPages: $appendPages,
-			maxSize: $maxSize,
+			appendPages: $this->shouldAppendPages(),
+			maxSize: $this->maxAttachmentSize(),
 			isRoot: true
 		);
 
+		return $this->emit(mpdf: $mpdf);
+	}//end assemble()
+
+	/**
+	 * Create the mPDF instance the whole structure renders into.
+	 *
+	 * @param array<string, mixed> $options PDF/A, page format and title.
+	 *
+	 * @return \Mpdf\Mpdf The engine.
+	 *
+	 * @throws ConversionFailedException When the engine cannot be created.
+	 *
+	 * @spec openspec/changes/archive/2026-06-14-eml-pdf-assembly/tasks.md
+	 */
+	private function createEngine(array $options): \Mpdf\Mpdf {
 		try {
-			$bytes = $mpdf->Output(name: '', dest: \Mpdf\Output\Destination::STRING_RETURN);
+			return $this->pdfService->createMpdfInstance(options: $options);
 		} catch (Throwable $e) {
-			$this->logger->error(
-				'[EmlPdfAssemblyService] mPDF Output failed',
-				['exception' => get_class($e), 'message' => $e->getMessage()]
-			);
-			throw new ConversionFailedException(
-				message: 'EML assembly failed to emit the PDF: ' . $e->getMessage(),
-				attempts: [
-					[
-						'name' => 'eml',
-						'available' => true,
-						'supports' => true,
-						'reason' => 'mPDF Output failed: ' . $e->getMessage(),
-					],
+			throw $this->assemblyFailure(
+				text: [
+					'log' => '[EmlPdfAssemblyService] Failed to create mPDF instance',
+					'message' => 'EML assembly could not initialise the PDF engine: ' . $e->getMessage(),
+					'reason' => 'mPDF init failed: ' . $e->getMessage(),
 				],
 				previous: $e
 			);
-		}//end try
+		}
+	}//end createEngine()
+
+	/**
+	 * The assembled PDF bytes.
+	 *
+	 * @param \Mpdf\Mpdf $mpdf The engine holding the rendered structure.
+	 *
+	 * @return string PDF/A-3b binary content.
+	 *
+	 * @throws ConversionFailedException When the output fails or is empty.
+	 *
+	 * @spec openspec/changes/archive/2026-06-14-eml-pdf-assembly/tasks.md
+	 */
+	private function emit(\Mpdf\Mpdf $mpdf): string {
+		try {
+			$bytes = $mpdf->Output(name: '', dest: \Mpdf\Output\Destination::STRING_RETURN);
+		} catch (Throwable $e) {
+			throw $this->assemblyFailure(
+				text: [
+					'log' => '[EmlPdfAssemblyService] mPDF Output failed',
+					'message' => 'EML assembly failed to emit the PDF: ' . $e->getMessage(),
+					'reason' => 'mPDF Output failed: ' . $e->getMessage(),
+				],
+				previous: $e
+			);
+		}
 
 		if (is_string($bytes) === false || $bytes === '') {
-			throw new ConversionFailedException(
-				message: 'EML assembly produced empty PDF output.',
-				attempts: [
-					[
-						'name' => 'eml',
-						'available' => true,
-						'supports' => true,
-						'reason' => 'mPDF Output returned empty',
-					],
-				]
+			throw $this->assemblyFailure(
+				text: ['message' => 'EML assembly produced empty PDF output.', 'reason' => 'mPDF Output returned empty']
 			);
 		}
 
 		return $bytes;
-	}//end assemble()
+	}//end emit()
+
+	/**
+	 * The failure of the one eml attempt, logged when it has a cause.
+	 *
+	 * @param array{message: string, reason: string, log?: string} $text     The exception message, the
+	 *                                                                       attempt reason and the log line.
+	 * @param Throwable|null                                         $previous The cause, if any.
+	 *
+	 * @return ConversionFailedException The exception to throw.
+	 *
+	 * @spec openspec/changes/archive/2026-06-14-eml-pdf-assembly/tasks.md
+	 */
+	private function assemblyFailure(array $text, ?Throwable $previous = null): ConversionFailedException {
+		if ($previous !== null) {
+			$this->logger->error(
+				(string)($text['log'] ?? ''),
+				['exception' => get_class($previous), 'message' => $previous->getMessage()]
+			);
+		}
+
+		return new ConversionFailedException(
+			message: $text['message'],
+			attempts: [['name' => 'eml', 'available' => true, 'supports' => true, 'reason' => $text['reason']]],
+			previous: $previous
+		);
+	}//end assemblyFailure()
 
 	/**
 	 * Render one EML structure (envelope + attachments) into the shared mPDF

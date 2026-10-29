@@ -2215,4 +2215,134 @@ class SigningServiceTest extends TestCase {
 		$this->assertSame(['Bob Smit', 'Alice Jansen'], $context['signerLabels'] ?? null);
 
 	}//end testCompletionHandsThePlacementsAndSignerNamesToTheProvider()
+	/**
+	 * sign() refuses a request that does not exist, before any write.
+	 *
+	 * @return void
+	 */
+	public function testSignRefusesAMissingRequest(): void {
+		$this->objectService->method('find')->willReturn(null);
+		$this->objectService->expects($this->never())->method('saveObject');
+		$this->auditService->expects($this->never())->method('logEvent');
+
+		$this->expectException(exception: RuntimeException::class);
+		$this->expectExceptionMessage(message: 'Signing request not found: req-404');
+
+		$this->service->sign(requestId: 'req-404', signerId: 'signer-001');
+
+	}//end testSignRefusesAMissingRequest()
+
+	/**
+	 * sign() refuses a request that is no longer PENDING or IN_PROGRESS.
+	 *
+	 * @return void
+	 */
+	public function testSignRefusesARequestThatIsNotSignable(): void {
+		$this->objectService->method('find')->willReturn(['id' => 'req-001', 'status' => 'COMPLETED']);
+		$this->objectService->expects($this->never())->method('saveObject');
+
+		$this->expectException(exception: RuntimeException::class);
+		$this->expectExceptionMessage(message: 'Signing request is not in a signable state: COMPLETED');
+
+		$this->service->sign(requestId: 'req-001', signerId: 'signer-001');
+
+	}//end testSignRefusesARequestThatIsNotSignable()
+
+	/**
+	 * sign() refuses a signer that already responded, before any write.
+	 *
+	 * @return void
+	 */
+	public function testSignRefusesASignerThatAlreadyResponded(): void {
+		$requestData = ['id' => 'req-001', 'status' => 'IN_PROGRESS'];
+		$signerData = [
+			'id' => 'signer-001',
+			'signingRequestId' => 'req-001',
+			'userId' => 'alice',
+			'status' => 'SIGNED',
+		];
+		$this->objectService->method('find')->willReturnOnConsecutiveCalls($requestData, $signerData);
+		$this->objectService->expects($this->never())->method('saveObject');
+		$this->auditService->expects($this->never())->method('logEvent');
+
+		$this->expectException(exception: RuntimeException::class);
+		$this->expectExceptionMessage(message: 'Signer has already responded to this request');
+
+		$this->service->sign(requestId: 'req-001', signerId: 'signer-001');
+
+	}//end testSignRefusesASignerThatAlreadyResponded()
+
+	/**
+	 * sign() saves the signer with its evidence and logs the SIGNED event with
+	 * the default level and provider when the request names none.
+	 *
+	 * @return void
+	 */
+	public function testSignRecordsSignatureDataAndAuditDefaults(): void {
+		$requestData = [
+			'id' => 'req-001',
+			'status' => 'IN_PROGRESS',
+			'initiatorUserId' => 'bob',
+			'signerIds' => ['signer-001'],
+		];
+		$signerData = [
+			'id' => 'signer-001',
+			'signingRequestId' => 'req-001',
+			'userId' => 'alice',
+			'status' => 'PENDING',
+		];
+		$this->objectService->method('find')->willReturnOnConsecutiveCalls(
+			$requestData,
+			$signerData,
+			$requestData,
+			$signerData
+		);
+
+		$saved = [];
+		$this->objectService->method('saveObject')->willReturnCallback(
+			function (array $object, string $register, string $schema) use (&$saved): array {
+				$saved[] = [$object, $register, $schema];
+				return $object;
+			}
+		);
+
+		$audit = [];
+		$this->auditService->expects($this->once())->method('logEvent')->willReturnCallback(
+			function (
+				string $signingRequestId,
+				string $action,
+				string $actorUserId,
+				string $actorDisplayName,
+				string $ipAddress,
+				string $signatureLevel='',
+				string $provider='',
+				array $metadata=[]
+			) use (&$audit): array {
+				$audit = compact('signingRequestId', 'action', 'actorUserId', 'actorDisplayName', 'ipAddress', 'signatureLevel', 'provider', 'metadata');
+				return $audit;
+			}
+		);
+
+		$evidence = ['consent' => true, 'drawn' => 'data:image/png;base64,AAAA'];
+		$result = $this->service->sign(requestId: 'req-001', signerId: 'signer-001', signatureData: $evidence);
+
+		$this->assertSame(expected: 'SIGNED', actual: $result['status']);
+		$this->assertSame(expected: $evidence, actual: $result['signatureData']);
+		$this->assertSame(expected: '127.0.0.1', actual: $result['ipAddress']);
+		$this->assertArrayHasKey(key: 'identityEvidence', array: $result);
+		$this->assertSame(expected: 'filinq', actual: $saved[0][1]);
+		$this->assertSame(expected: 'signerRecord', actual: $saved[0][2]);
+		$this->assertSame(expected: 'SIGNED', actual: $saved[0][0]['status']);
+
+		$this->assertSame(expected: 'req-001', actual: $audit['signingRequestId']);
+		$this->assertSame(expected: 'SIGNED', actual: $audit['action']);
+		$this->assertSame(expected: 'alice', actual: $audit['actorUserId']);
+		$this->assertSame(expected: 'Alice', actual: $audit['actorDisplayName']);
+		$this->assertSame(expected: '127.0.0.1', actual: $audit['ipAddress']);
+		$this->assertSame(expected: 'SES', actual: $audit['signatureLevel']);
+		$this->assertSame(expected: 'native', actual: $audit['provider']);
+		$this->assertSame(expected: $result['identityEvidence'], actual: $audit['metadata']['identityEvidence']);
+
+	}//end testSignRecordsSignatureDataAndAuditDefaults()
+
 }//end class
