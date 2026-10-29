@@ -637,6 +637,132 @@ class AnonymizationServiceTest extends TestCase {
 	}//end testSkipSubThresholdProhibitedNeedsForce()
 
 	/**
+	 * A blocked skip answers the whole prohibition body: error, threshold and
+	 * the matched entity, rule and confidence.
+	 *
+	 * @return void
+	 */
+	public function testBlockedSkipAnswersTheFullProhibitionBody(): void {
+		$result = $this->makeServiceWithMatcher(matcher: $this->prohibitionMatcher(), mapper: $this->mapperWithProhibitedRelation(confidence: 0.62))
+			->applyRelationSkipDecision(relationId: 7, skip: true, bases: null, force: false);
+
+		$this->assertSame(
+			expected: [
+				'status' => 422,
+				'body' => [
+					'error' => 'Entity is on the publication prohibition list; skipping is not allowed.',
+					'threshold' => 0.85,
+					'prohibitionMatch' => [
+						'entityId' => 42,
+						'entityName' => 'Jansen',
+						'ruleId' => 'R-X',
+						'ruleName' => 'Undercover',
+						'confidence' => 0.62,
+						'absolute' => false,
+					],
+				],
+			],
+			actual: $result
+		);
+
+	}//end testBlockedSkipAnswersTheFullProhibitionBody()
+
+	/**
+	 * A forced release below the threshold records the rule, relation, file and reason.
+	 *
+	 * @return void
+	 */
+	public function testForcedReleaseRecordsTheRuleRelationAndFile(): void {
+		$this->makeServiceWithMatcher(matcher: $this->prohibitionMatcher(), mapper: $this->mapperWithProhibitedRelation(confidence: 0.62))
+			->applyRelationSkipDecision(relationId: 7, skip: true, bases: null, force: true);
+
+		$this->assertSame(expected: 'R-X', actual: $this->overrideAudits[0]['ruleId']);
+		$this->assertSame(expected: 7, actual: $this->overrideAudits[0]['entityRelationId']);
+		$this->assertSame(expected: self::RELATION_FILE_ID, actual: $this->overrideAudits[0]['fileId']);
+		$this->assertSame(expected: 'Released below the high-confidence threshold in the review', actual: $this->overrideAudits[0]['reason']);
+
+	}//end testForcedReleaseRecordsTheRuleRelationAndFile()
+
+	/**
+	 * The skip goes through when the guard cannot resolve a prohibition match:
+	 * no row for the relation, an empty value, or no matching rule.
+	 *
+	 * @return void
+	 */
+	public function testSkipIsForwardedWhenNoProhibitionMatchResolves(): void {
+		$rows = [
+			'no row for the relation' => [['relation_id' => 8, 'entity_value' => 'Jansen', 'confidence' => 0.97]],
+			'empty value' => [['relation_id' => 7, 'entity_value' => '', 'confidence' => 0.97]],
+			'no matching rule' => [['relation_id' => 7, 'entity_value' => 'Pietersen', 'confidence' => 0.97]],
+		];
+		foreach ($rows as $label => $entities) {
+			$relation = new EntityRelation();
+			$relation->setFileId(self::RELATION_FILE_ID);
+			$mapper = $this->createMock(originalClassName: EntityRelationMapper::class);
+			$mapper->method('find')->willReturn($relation);
+			$mapper->method('findEntitiesForFile')->willReturn($entities);
+			$mapper->expects($this->once())->method('updateDecisionMetadata');
+
+			$matcher = $this->createMock(originalClassName: PolicyMatchService::class);
+			$matcher->method('highConfidenceThreshold')->willReturn(0.85);
+			$matcher->method('matchProhibition')->willReturnCallback(
+				static function (string $entityText): ?array {
+					if (in_array($entityText, ['Jansen', ''], true) === true) {
+						return ['uuid' => 'R-X', 'primaryName' => 'Undercover'];
+					}
+
+					return null;
+				}
+			);
+
+			$result = $this->makeServiceWithMatcher(matcher: $matcher, mapper: $mapper)
+				->applyRelationSkipDecision(relationId: 7, skip: true, bases: null, force: false);
+
+			$this->assertSame(expected: 200, actual: $result['status'], message: $label);
+		}
+
+		$this->assertSame(expected: [], actual: $this->overrideAudits);
+
+	}//end testSkipIsForwardedWhenNoProhibitionMatchResolves()
+
+	/**
+	 * Without a policy matcher the guard is a no-op and the skip is forwarded.
+	 *
+	 * @return void
+	 */
+	public function testSkipIsForwardedWhenThePolicyMatcherIsUnavailable(): void {
+		$mapper = $this->mapperWithProhibitedRelation(confidence: 0.97);
+		$mapper->expects($this->once())->method('updateDecisionMetadata');
+		$container = $this->createMock(originalClassName: ContainerInterface::class);
+		$container->method('get')->willReturnCallback(
+			static function (string $id) use ($mapper) {
+				if ($id === 'OCA\Filinq\Service\PolicyMatchService') {
+					throw new \Exception('not registered');
+				}
+
+				if ($id === 'OCA\OpenRegister\Db\EntityRelationMapper') {
+					return $mapper;
+				}
+
+				return null;
+			}
+		);
+
+		$result = $this->makeAnonymizationServiceFrom(
+			deps: [
+				'logger' => $this->createMock(originalClassName: LoggerInterface::class),
+				'container' => $container,
+				'appManager' => $this->openRegisterAppManager(),
+				'userSession' => $this->grantingSession(),
+				'rootFolder' => $this->rootFolderResolving(resolvableFileId: self::RELATION_FILE_ID),
+			]
+		)->applyRelationSkipDecision(relationId: 7, skip: true, bases: null, force: false);
+
+		$this->assertSame(expected: 200, actual: $result['status']);
+
+	}//end testSkipIsForwardedWhenThePolicyMatcherIsUnavailable()
+
+	/**
 	 * Forcing past a prohibition needs the override role: file access is not enough.
 	 *
 	 * @return void

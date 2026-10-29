@@ -145,6 +145,8 @@ class MpdfBackend implements ConversionBackendInterface {
 	 * @return File Newly written PDF file node.
 	 *
 	 * @throws ConversionFailedException When the PDF emission fails.
+	 *
+	 * @spec openspec/specs/pdf-conversion/spec.md
 	 */
 	public function convert(File $source): File {
 		$name = $source->getName();
@@ -153,7 +155,7 @@ class MpdfBackend implements ConversionBackendInterface {
 		$rawContent = $source->getContent();
 		if (is_string($rawContent) === false) {
 			throw new ConversionFailedException(
-				message: 'mPDF backend could not read source content.',
+				message: $this->name() . ' backend could not read source content.',
 				attempts: [
 					[
 						'name' => $this->name(),
@@ -177,17 +179,10 @@ class MpdfBackend implements ConversionBackendInterface {
 		}
 
 		try {
-			$pdfBinary = $this->pdfService->generatePdfFromHtml(
-				html: $html,
-				options: [
-					'pdfa' => true,
-					'format' => 'A4',
-					'title' => $this->stripExtension(name: $name),
-				]
-			);
+			$pdfBinary = $this->renderPdf(html: $html, title: $this->stripExtension(name: $name));
 		} catch (Throwable $e) {
 			$this->logger->error(
-				'[MpdfBackend] mPDF rendering failed',
+				'[' . $this->name() . '] PDF rendering failed',
 				[
 					'source' => $source->getPath(),
 					'exception' => get_class($e),
@@ -195,13 +190,13 @@ class MpdfBackend implements ConversionBackendInterface {
 				]
 			);
 			throw new ConversionFailedException(
-				message: 'mPDF rendering threw: ' . $e->getMessage(),
+				message: $this->name() . ' rendering threw: ' . $e->getMessage(),
 				attempts: [
 					[
 						'name' => $this->name(),
 						'available' => true,
 						'supports' => true,
-						'reason' => 'mPDF render exception: ' . $e->getMessage(),
+						'reason' => $this->name() . ' render exception: ' . $e->getMessage(),
 					],
 				],
 				previous: $e
@@ -219,6 +214,27 @@ class MpdfBackend implements ConversionBackendInterface {
 
 		return $parent->newFile($outputName, $pdfBinary);
 	}//end convert()
+
+	/**
+	 * Render HTML to PDF/A-3b bytes through the shared PdfService.
+	 *
+	 * @param string $html  HTML document.
+	 * @param string $title Document title.
+	 *
+	 * @return string PDF bytes.
+	 *
+	 * @spec openspec/specs/pdf-conversion/spec.md
+	 */
+	protected function renderPdf(string $html, string $title): string {
+		return $this->pdfService->generatePdfFromHtml(
+			html: $html,
+			options: [
+				'pdfa' => true,
+				'format' => 'A4',
+				'title' => $title,
+			]
+		);
+	}//end renderPdf()
 
 	/**
 	 * Wrap a plain-text body in a minimal HTML envelope so mPDF emits
