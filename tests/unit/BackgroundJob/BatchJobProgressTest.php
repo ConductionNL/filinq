@@ -212,7 +212,9 @@ class BatchJobProgressTest extends TestCase {
 		$this->runJob(job: $this->documentJob(), argument: ['jobId' => 'j-3', 'objectIds' => ['o1']]);
 
 		$this->assertSame(
-			expected: [['log error' => 'BatchDocumentJob: missing required arguments', 'context' => ['argument' => ['jobId' => 'j-3', 'objectIds' => ['o1']]]]],
+			expected: [
+				['log error' => 'BatchDocumentJob: missing required arguments', 'context' => ['argument' => ['jobId' => 'j-3', 'objectIds' => ['o1']]]],
+			],
 			actual: $this->calls
 		);
 	}//end testDocumentJobWithoutTemplate()
