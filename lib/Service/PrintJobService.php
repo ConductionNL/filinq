@@ -33,9 +33,8 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use Exception;
 use InvalidArgumentException;
-use OCA\Filinq\BackgroundJob\BatchPrintJob;
 use OCA\Filinq\Kernel\Contracts\PrintJobServiceInterface;
-use OCP\BackgroundJob\IJobList;
+use OCA\Filinq\Kernel\JobQueueInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -66,7 +65,7 @@ class PrintJobService implements PrintJobServiceInterface {
 	 * @param DataResolverService $dataResolver Resolves an item's dataRefs into template data
 	 * @param PrintJobRepository  $jobs         The printJob rows
 	 * @param PrintJobFileStore   $files        The PDFs in app data
-	 * @param IJobList            $jobList      Nextcloud job list for async dispatch
+	 * @param JobQueueInterface            $jobList      Nextcloud job list for async dispatch
 	 * @param LoggerInterface     $logger       Logger for error reporting
 	 *
 	 * @return void
@@ -77,7 +76,7 @@ class PrintJobService implements PrintJobServiceInterface {
 		private readonly DataResolverService $dataResolver,
 		private readonly PrintJobRepository $jobs,
 		private readonly PrintJobFileStore $files,
-		private readonly IJobList $jobList,
+		private readonly JobQueueInterface $jobList,
 		private readonly LoggerInterface $logger,
 	) {
 
@@ -166,7 +165,7 @@ class PrintJobService implements PrintJobServiceInterface {
 
 		if (count($items) > self::SYNC_BATCH_LIMIT) {
 			$this->jobList->add(
-				BatchPrintJob::class,
+				JobQueueInterface::BATCH_PRINT,
 				['jobId' => $job['uuid'], 'templateId' => $templateId, 'items' => $items, 'options' => $options]
 			);
 		}

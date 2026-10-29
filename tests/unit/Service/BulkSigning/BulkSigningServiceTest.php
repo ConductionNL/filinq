@@ -25,6 +25,7 @@ namespace OCA\Filinq\Tests\Unit\Service\BulkSigning;
 require_once __DIR__ . '/BulkSigningDoubles.php';
 
 use OCA\Filinq\BackgroundJob\BulkSigningJob;
+use OCA\Filinq\BackgroundJob\JobQueue;
 use OCA\Filinq\Service\BulkSigning\BulkSigningRecipientParser;
 use OCA\Filinq\Service\BulkSigning\BulkSigningRowValidator;
 use OCA\Filinq\Service\BulkSigning\BulkSigningRunner;
@@ -125,7 +126,7 @@ class BulkSigningServiceTest extends TestCase {
 			requestValidator: new SigningRequestValidator(providerFactory: $this->providerFactory()),
 			settings: $settings,
 			repository: $this->batchRepository(),
-			jobList: $this->jobs,
+			jobList: new JobQueue(jobList: $this->jobs),
 			signing: $this->signing
 		);
 
