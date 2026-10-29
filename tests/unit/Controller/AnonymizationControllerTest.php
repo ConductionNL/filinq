@@ -784,6 +784,41 @@ class AnonymizationControllerTest extends TestCase {
 	}//end testAnonymizeReturns401WithoutASession()
 
 	/**
+	 * files() answers 401 without a session and never lists files.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/anonymization/spec.md
+	 */
+	public function testFilesReturns401WithoutASession(): void {
+		$session = $this->createMock(originalClassName: IUserSession::class);
+		$session->method('getUser')->willReturn(null);
+		$this->mockFileService->expects($this->never())->method('listProcessedFiles');
+		$controller = new AnonymizationController(
+			appName: 'filinq',
+			request: $this->mockRequest,
+			logger: $this->mockLogger,
+			anonymizationService: $this->mockAnonService,
+			fileListingService: $this->mockFileService,
+			l10n: $this->mockL10n,
+			appConfig: $this->createMock(originalClassName: \OCP\IAppConfig::class),
+			anonymizeRequest: new AnonymizeRequestService(
+				logger: $this->mockLogger,
+				anonymizationService: $this->mockAnonService,
+				l10n: $this->mockL10n,
+				rootFolder: $this->mockRootFolder,
+				userSession: $session
+			)
+		);
+
+		$response = $controller->files();
+
+		$this->assertSame(expected: 401, actual: $response->getStatus());
+		$this->assertSame(expected: ['error' => 'Not authenticated'], actual: $response->getData());
+
+	}//end testFilesReturns401WithoutASession()
+
+	/**
 	 * An unexpected failure during the run answers 500 with its message.
 	 *
 	 * @return void
