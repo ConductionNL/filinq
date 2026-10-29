@@ -111,7 +111,14 @@ class MultiFormatOutputProducerTest extends TestCase {
 
 		$pipeline = new DocumentRenderPipeline($renderer, $pdf, $objectResolver, new NullLogger(), $rasterizer, null, $office);
 		$logger = new GeneratedDocumentLogger($objectResolver, new NullLogger());
-		$documents = new DocumentService($templates, $resolver, $pipeline, $storage, $logger, $this->createMock(DocumentJobStore::class), new NullLogger());
+		$documents = new DocumentService(
+			templateService: $templates,
+			dataResolver: $resolver,
+			renderPipeline: $pipeline,
+			storageService: $storage,
+			documentLogger: $logger,
+			jobs: $this->createMock(originalClassName: DocumentJobStore::class)
+		);
 
 		return new MultiFormatOutputProducer($documents, $templates, $pipeline, $storage, $logger);
 	}

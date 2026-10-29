@@ -164,8 +164,7 @@ class DocumentServiceTest extends TestCase {
 				$objectResolver,
 				$logger
 			),
-			new DocumentJobStore($appConfig, $this->jobList, $logger),
-			$logger
+			new DocumentJobStore(appConfig: $appConfig, jobList: $this->jobList, logger: $logger)
 		);
 
 	}//end setUp()
@@ -1173,4 +1172,170 @@ class DocumentServiceTest extends TestCase {
 		return $rasterizer;
 
 	}//end passThroughRasterizer()
+	/**
+	 * Golden: generateFromTemplate's full answer and audit entry in files mode,
+	 * with resolution warnings, a failed data reference and a case id.
+	 *
+	 * @return void
+	 */
+	public function testGenerateFromTemplateAnswerAndAuditEntryGolden(): void {
+		$this->dataResolver->method('resolve')->willReturn(
+			[
+				'data' => ['zaak' => ['naam' => 'Jan']],
+				'errors' => [['register' => 'zaken', 'schema' => 'zaak', 'id' => 'z-9', 'message' => 'gone']],
+				'warnings' => ['list truncated'],
+			]
+		);
+		$this->renderer->method('renderTemplate')->willReturn('<h1>Jan</h1>');
+		$this->pdfService->method('renderPdf')->willReturn('%PDF-golden%');
+		$this->storageService->method('store')->willReturn(
+			['fileId' => 77, 'path' => '/u1/files/DocuDesk/ns/brief.pdf', 'name' => 'brief.pdf', 'size' => 12]
+		);
+
+		$entries   = [];
+		$logEntity = $this->createMock(originalClassName: ObjectEntity::class);
+		$logEntity->method('jsonSerialize')->willReturn(['id' => 'log-9']);
+		$this->objectSvc->method('saveObject')->willReturnCallback(
+			function (array $object) use (&$entries, $logEntity) {
+				$entries[] = $object;
+				return $logEntity;
+			}
+		);
+
+		$dataRefs = [['register' => 'zaken', 'schema' => 'zaak', 'id' => 'z-1']];
+		$result   = $this->service->generateFromTemplate(
+			templateId: 'tmpl-g',
+			template: ['content' => '<h1>{{ zaak.naam }}</h1>', 'name' => 'Brief', 'namespace' => 'ns', 'version' => 3],
+			dataRefs: $dataRefs,
+			options: ['userId' => 'u1', 'caseId' => 'case-1', 'filename' => 'brief', 'output' => ['mode' => 'files']],
+			recordFields: ['view' => 'v-1']
+		);
+
+		$warnings = ['list truncated', 'Data resolution failed for zaken/zaak/z-9: gone'];
+		$this->assertSame(
+			expected: [
+				'content' => '%PDF-golden%',
+				'html' => '<h1>Jan</h1>',
+				'format' => 'pdf',
+				'metadata' => ['id' => 'log-9'],
+				'plainRendition' => null,
+				'templateVersion' => 3,
+				'warnings' => $warnings,
+				'output' => ['mode' => 'files', 'fileId' => 77, 'path' => '/u1/files/DocuDesk/ns/brief.pdf', 'name' => 'brief.pdf', 'size' => 12],
+			],
+			actual: array_intersect_key($result, array_flip(array_slice(array_keys($result), 0, 8)))
+		);
+		$this->assertSame(
+			expected: ['content', 'html', 'format', 'metadata', 'plainRendition', 'templateVersion', 'warnings', 'output'],
+			actual: array_slice(array_keys($result), 0, 8)
+		);
+
+		$this->assertCount(expectedCount: 1, haystack: $entries);
+		unset($entries[0]['generatedAt']);
+		$this->assertSame(
+			expected: [
+				'templateId' => 'tmpl-g',
+				'templateVersion' => 3,
+				'templateName' => 'Brief',
+				'dataRefs' => $dataRefs,
+				'format' => 'pdf',
+				'status' => 'generated',
+				'generatedBy' => 'u1',
+				'warnings' => $warnings,
+				'caseId' => 'case-1',
+				'errorMessage' => null,
+				'fileId' => 77,
+				'filePath' => '/u1/files/DocuDesk/ns/brief.pdf',
+				'view' => 'v-1',
+			],
+			actual: $entries[0]
+		);
+
+	}//end testGenerateFromTemplateAnswerAndAuditEntryGolden()
+
+	/**
+	 * Golden: a sync bulk run's items and the failed audit entry for the
+	 * object that could not be generated.
+	 *
+	 * @return void
+	 */
+	public function testSyncBulkItemsAndFailedEntryGolden(): void {
+		$this->templateSvc->method('getTemplate')->willReturn(
+			['id' => 'tmpl-1', 'name' => 'Brief', 'content' => '<p>x</p>', 'format' => 'A4', 'version' => 1, 'namespace' => 'ns']
+		);
+		$this->dataResolver->method('resolve')->willReturnCallback(
+			static function (array $dataRefs): array {
+				if ($dataRefs[0]['id'] === 'o2') {
+					throw new Exception('Data not found');
+				}
+
+				return ['data' => [], 'errors' => [], 'warnings' => ['w-' . $dataRefs[0]['id']]];
+			}
+		);
+		$this->renderer->method('renderTemplate')->willReturn('<p>x</p>');
+		$this->pdfService->method('renderPdf')->willReturn('%PDF%');
+		$this->storageService->method('store')->willReturn(
+			['fileId' => 5, 'path' => '/u1/files/x.pdf', 'name' => 'x.pdf', 'size' => 4]
+		);
+
+		$entries   = [];
+		$logEntity = $this->createMock(originalClassName: ObjectEntity::class);
+		$logEntity->method('jsonSerialize')->willReturn(['id' => 'log']);
+		$this->objectSvc->method('saveObject')->willReturnCallback(
+			function (array $object) use (&$entries, $logEntity) {
+				$entries[] = $object;
+				return $logEntity;
+			}
+		);
+
+		$result = $this->service->generateBulk(
+			templateId: 'tmpl-1',
+			objectIds: ['o1', 'o2'],
+			options: ['register' => 'brp', 'schema' => 'persoon', 'userId' => 'u1', 'format' => 'pdf', 'output' => ['mode' => 'both']]
+		);
+
+		$this->assertSame(
+			expected: [
+				'results' => [
+					[
+						'objectId' => 'o1',
+						'status' => 'success',
+						'warnings' => ['w-o1'],
+						'content' => '%PDF%',
+						'fileId' => 5,
+						'path' => '/u1/files/x.pdf',
+						'name' => 'x.pdf',
+						'size' => 4,
+					],
+					['objectId' => 'o2', 'status' => 'error', 'error' => 'Data not found'],
+				],
+				'total' => 2,
+				'completed' => 1,
+				'errors' => 1,
+			],
+			actual: $result
+		);
+
+		$failed = array_values(array_filter($entries, static fn (array $e): bool => $e['status'] === 'failed'));
+		$this->assertCount(expectedCount: 1, haystack: $failed);
+		unset($failed[0]['generatedAt']);
+		$this->assertSame(
+			expected: [
+				'templateId' => 'tmpl-1',
+				'templateName' => '',
+				'dataRefs' => [['register' => 'brp', 'schema' => 'persoon', 'id' => 'o2']],
+				'format' => 'pdf',
+				'status' => 'failed',
+				'generatedBy' => 'u1',
+				'warnings' => [],
+				'caseId' => null,
+				'errorMessage' => 'Data not found',
+				'fileId' => null,
+				'filePath' => null,
+			],
+			actual: $failed[0]
+		);
+
+	}//end testSyncBulkItemsAndFailedEntryGolden()
+
 }//end class

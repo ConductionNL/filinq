@@ -72,6 +72,7 @@ class PdfConversionRegistrar {
 						$c->get(OfficeAppBackend::class),
 						$c->get(LibreOfficeHeadlessBackend::class),
 						$c->get(PhpWordBackend::class),
+						$c->get(TcLibPdfBackend::class),
 						$c->get(MpdfBackend::class),
 						$c->get(EmlBackend::class),
 					],
