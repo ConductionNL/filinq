@@ -51,21 +51,21 @@ class FinalDocumentRepositoryReadTest extends TestCase {
 	 * @return FinalDocumentRepository The repository under test.
 	 */
 	private function repository(?array $rows): FinalDocumentRepository {
-		$objectService = $this->createMock(ObjectService::class);
+		$objectService = $this->createMock(originalClassName: ObjectService::class);
 		$objectService->method('searchObjectsBySlug')->willReturnCallback(
 			function () use ($rows): array {
 				$this->reads++;
 				if ($rows === null) {
-					throw new RuntimeException('register down');
+					throw new RuntimeException(message: 'register down');
 				}
 
 				return $rows;
 			}
 		);
-		$resolver = $this->createMock(DocumentObjectServiceResolver::class);
+		$resolver = $this->createMock(originalClassName: DocumentObjectServiceResolver::class);
 		$resolver->method('resolve')->willReturn($objectService);
 
-		return new FinalDocumentRepository($resolver, new NullLogger());
+		return new FinalDocumentRepository(objectResolver: $resolver, logger: new NullLogger());
 	}//end repository()
 
 	/**
