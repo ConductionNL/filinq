@@ -153,7 +153,6 @@ class DocumentServicePlainRenditionTest extends TestCase {
 			$this->storage,
 			new GeneratedDocumentLogger($objectResolver, new NullLogger()),
 			$this->createMock(DocumentJobStore::class),
-			new NullLogger(),
 			new PlainLanguageRenditionService(
 				$this->templates,
 				new PlainRenditionAcceptanceGate(),

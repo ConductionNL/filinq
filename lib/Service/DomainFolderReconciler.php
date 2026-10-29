@@ -86,96 +86,119 @@ class DomainFolderReconciler implements DomainFolderReconcilerInterface {
 			// nothing. See DomainDirectory for why those two must not collapse.
 			$this->logger->warning('filinq.domain-reconcile.skipped', ['reason' => $directory['reason']]);
 
-			return $this->report(skipped: true, reason: (string)$directory['reason']);
+			return $this->report(night: ['skipped' => true, 'reason' => (string)$directory['reason']]);
 		}
 
 		$owner = $this->directory->owner();
-		$corrected = [];
-		$refused = [];
-		$pinned = [];
-		$inStep = 0;
-
+		$night = ['corrected' => [], 'refused' => [], 'pinned' => [], 'inStep' => 0];
 		foreach ($directory['domains'] as $domain) {
-			// 🔴 THE FOLDER IS MADE BEFORE ITS ACCESS IS RECONCILED. reconcile()
-			// reads and writes group access on a PATH; it never creates one. A
-			// domain whose folder does not exist yet therefore had every grant
-			// refused, night after night, and the report said "refused" with a
-			// file-system message rather than "there is no folder here". This
-			// is the reconciler ensureFolder() was written for, and it had no
-			// caller at all: the folder was never made by anything.
-			$made = $this->folderService->ensureFolder(domain: $domain, owner: $owner);
-			if ($made['error'] !== null) {
-				// A folder that could not be made is a refusal with its reason,
-				// not a skip. Skipping would make it indistinguishable from a
-				// folder that needed nothing.
-				$refused[] = [
-					'domain' => (string)($domain['id'] ?? ''),
-					'path' => (string)$made['path'],
-					'refused' => [['group' => '*', 'action' => 'create', 'reason' => (string)$made['error']]],
-					'granted' => [],
-					'revoked' => [],
-				];
-				continue;
-			}
+			$night = $this->reconcileDomain(night: $night, target: ['domain' => $domain, 'owner' => $owner]);
+		}
 
-			try {
-				$outcome = $this->folderService->reconcile(domain: $domain, owner: $owner);
-			} catch (Throwable $e) {
-				// A throw is a refusal with the throw as its reason. Skipping
-				// would make an unreached folder indistinguishable from one
-				// that was already right.
-				$refused[] = [
-					'domain' => (string)($domain['id'] ?? ''),
-					'path' => $this->folderService->pathFor(domain: $domain),
-					'refused' => [['group' => '*', 'action' => 'reconcile', 'reason' => $e->getMessage()]],
-					'granted' => [],
-					'revoked' => [],
-				];
-				continue;
-			}
-
-			$entry = [
-				'domain' => (string)($domain['id'] ?? ''),
-				'path' => (string)$outcome['path'],
-				'granted' => $outcome['granted'],
-				'revoked' => $outcome['revoked'],
-				'refused' => $outcome['refused'],
-			];
-
-			switch ($outcome['state']) {
-				case DomainFolderService::STATE_REFUSED:
-					$refused[] = $entry;
-					break;
-				case DomainFolderService::STATE_CORRECTED:
-					$corrected[] = $entry;
-					break;
-				case DomainFolderService::STATE_PINNED:
-					// A pin is reported WITH its reason. Omitting it would make
-					// a folder nobody reconciles look like a folder that needed
-					// nothing, which is the reading pinning exists to prevent.
-					$pinned[] = [
-						'domain' => (string)($domain['id'] ?? ''),
-						'path' => (string)$outcome['path'],
-						'reason' => (string)$outcome['pinnedReason'],
-					];
-					break;
-				default:
-					$inStep++;
-			}
-		}//end foreach
-
-		$report = $this->report(
-			corrected: $corrected,
-			refused: $refused,
-			pinned: $pinned,
-			inStep: $inStep
-		);
-
+		$report = $this->report(night: $night);
 		$this->announce(report: $report);
 
 		return $report;
 
 	}//end run()
+
+	/**
+	 * Make one domain's folder, reconcile its access and add the result to the night.
+	 *
+	 * @param array<string, mixed>                                       $night  The night so far: corrected, refused, pinned, inStep.
+	 * @param array{domain: array<string, mixed>, owner: string|null}    $target The domain and the folder owner.
+	 *
+	 * @return array<string, mixed> The night with this domain added.
+	 *
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
+	 */
+	private function reconcileDomain(array $night, array $target): array {
+		$domain   = $target['domain'];
+		$domainId = (string)($domain['id'] ?? '');
+
+		// 🔴 THE FOLDER IS MADE BEFORE ITS ACCESS IS RECONCILED. reconcile()
+		// reads and writes group access on a PATH; it never creates one. A
+		// domain whose folder does not exist yet therefore had every grant
+		// refused, night after night, and the report said "refused" with a
+		// file-system message rather than "there is no folder here".
+		$made = $this->folderService->ensureFolder(domain: $domain, owner: $target['owner']);
+		if ($made['error'] !== null) {
+			// A folder that could not be made is a refusal with its reason,
+			// not a skip. Skipping would make it indistinguishable from a
+			// folder that needed nothing.
+			$night['refused'][] = [
+				'domain' => $domainId,
+				'path' => (string)$made['path'],
+				'refused' => [['group' => '*', 'action' => 'create', 'reason' => (string)$made['error']]],
+				'granted' => [],
+				'revoked' => [],
+			];
+			return $night;
+		}
+
+		try {
+			$outcome = $this->folderService->reconcile(domain: $domain, owner: $target['owner']);
+		} catch (Throwable $e) {
+			// A throw is a refusal with the throw as its reason. Skipping
+			// would make an unreached folder indistinguishable from one
+			// that was already right.
+			$night['refused'][] = [
+				'domain' => $domainId,
+				'path' => $this->folderService->pathFor(domain: $domain),
+				'refused' => [['group' => '*', 'action' => 'reconcile', 'reason' => $e->getMessage()]],
+				'granted' => [],
+				'revoked' => [],
+			];
+			return $night;
+		}
+
+		return $this->recordOutcome(night: $night, outcome: ['domain' => $domainId] + $outcome);
+
+	}//end reconcileDomain()
+
+	/**
+	 * File one folder's outcome under corrected, refused, pinned or in step.
+	 *
+	 * @param array<string, mixed> $night   The night so far.
+	 * @param array<string, mixed> $outcome DomainFolderService's outcome plus the domain id.
+	 *
+	 * @return array<string, mixed> The night with the outcome filed.
+	 *
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
+	 */
+	private function recordOutcome(array $night, array $outcome): array {
+		$entry = [
+			'domain' => $outcome['domain'],
+			'path' => (string)$outcome['path'],
+			'granted' => $outcome['granted'],
+			'revoked' => $outcome['revoked'],
+			'refused' => $outcome['refused'],
+		];
+
+		switch ($outcome['state']) {
+			case DomainFolderService::STATE_REFUSED:
+				$night['refused'][] = $entry;
+				break;
+			case DomainFolderService::STATE_CORRECTED:
+				$night['corrected'][] = $entry;
+				break;
+			case DomainFolderService::STATE_PINNED:
+				// A pin is reported WITH its reason. Omitting it would make
+				// a folder nobody reconciles look like a folder that needed
+				// nothing, which is the reading pinning exists to prevent.
+				$night['pinned'][] = [
+					'domain' => $outcome['domain'],
+					'path' => (string)$outcome['path'],
+					'reason' => (string)$outcome['pinnedReason'],
+				];
+				break;
+			default:
+				$night['inStep']++;
+		}
+
+		return $night;
+
+	}//end recordOutcome()
 
 	/**
 	 * Put the night in the log, loudly for the half that failed.
@@ -217,41 +240,28 @@ class DomainFolderReconciler implements DomainFolderReconcilerInterface {
 	/**
 	 * One report, in the one shape every caller reads.
 	 *
-	 * @param bool                                $skipped   Whether the run never started.
-	 * @param string                              $reason    Why it never started.
-	 * @param array<int, array<string, mixed>>    $corrected Folders brought back into step.
-	 * @param array<int, array<string, mixed>>    $refused   Folders that could not be, with the reason.
-	 * @param array<int, array<string, mixed>>    $pinned    Folders left alone on purpose, with the reason.
-	 * @param int                                 $inStep    How many needed nothing.
+	 * @param array<string, mixed> $night skipped and reason when the run never started; otherwise the
+	 *                                    corrected, refused and pinned folders and how many were in step.
 	 *
 	 * @return array<string, mixed> The report.
 	 *
 	 * @spec exclude Shape helper; the behaviour is in run().
-	 *
-	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) `$skipped` names the one report
-	 * that has no folders in it, because the run never started. It is a private
-	 * shape helper with one caller per branch, not a switch on behaviour, and a
-	 * second method would duplicate the eight-key shape this exists to keep in
-	 * one place.
 	 */
-	private function report(
-		bool $skipped = false,
-		string $reason = '',
-		array $corrected = [],
-		array $refused = [],
-		array $pinned = [],
-		int $inStep = 0,
-	): array {
+	private function report(array $night): array {
+		$corrected = ($night['corrected'] ?? []);
+		$refused   = ($night['refused'] ?? []);
+		$pinned    = ($night['pinned'] ?? []);
+
 		return [
-			'skipped' => $skipped,
-			'reason' => $reason,
+			'skipped' => ($night['skipped'] ?? false),
+			'reason' => ($night['reason'] ?? ''),
 			'corrected' => $corrected,
 			'correctedCount' => count($corrected),
 			'refused' => $refused,
 			'refusedCount' => count($refused),
 			'pinned' => $pinned,
 			'pinnedCount' => count($pinned),
-			'inStepCount' => $inStep,
+			'inStepCount' => ($night['inStep'] ?? 0),
 		];
 
 	}//end report()

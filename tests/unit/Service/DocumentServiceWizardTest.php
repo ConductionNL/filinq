@@ -111,7 +111,6 @@ class DocumentServiceWizardTest extends TestCase {
 			storageService: $this->createMock(DocumentStorageService::class),
 			documentLogger: new GeneratedDocumentLogger($logResolver, $logger),
 			jobs: $this->createMock(DocumentJobStore::class),
-			logger: $logger,
 			wizardGate: new WizardGenerationGate(
 				repository: new WizardRepository(objectResolver: $wizardResolver),
 				answers: new WizardAnswers(conditions: new WizardConditions())
