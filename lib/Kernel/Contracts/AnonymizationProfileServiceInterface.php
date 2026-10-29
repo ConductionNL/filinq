@@ -33,7 +33,7 @@ namespace OCA\Filinq\Kernel\Contracts;
  *
  * @spec exclude Structural contract, no functional requirement.
  */
-interface WooProfileServiceInterface {
+interface AnonymizationProfileServiceInterface {
 	/**
 	 * Return the active WOO anonymization profile.
 	 *
