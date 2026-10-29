@@ -29,6 +29,7 @@ use OCA\Filinq\Kernel\Contracts\SigningServiceInterface;
 use OCA\Filinq\Service\SignerAuth\SigningAssuranceGate;
 use OCA\Filinq\Service\Signing\GuardianConsentGuard;
 use OCA\Filinq\Service\Signing\PortalSignatureAssurance;
+use OCA\Filinq\Service\Signing\SigningAct;
 use RuntimeException;
 
 /**
@@ -505,41 +506,98 @@ class SigningService implements SigningServiceInterface {
 	 */
 	public function sign(string $requestId, string $signerId, ?array $verifiedActor = null, ?array $signatureData = null): array {
 		[$actorUserId, $actorDisplayName] = $this->actorResolver->resolveActingIdentity(verifiedActor: $verifiedActor);
-
-		$objectService = $this->settingsService->getObjectService();
-		$request = $this->getRequest(requestId: $requestId);
-		if ($request === null) {
-			// The getRequest() call returns null on not-found and access-denied
-			// (Wilco #6 fix, filinq#100). Internal sign() doesn't pass a
-			// callerUserId so access-denied is impossible from here — null
-			// means truly not-found. Throw to keep callers' existing
-			// exception contract.
-			throw new RuntimeException('Signing request not found: ' . $requestId);
-		}
-
-		$status = $request['status'] ?? '';
-
-		if (in_array($status, ['PENDING', 'IN_PROGRESS'], true) === false) {
-			throw new RuntimeException('Signing request is not in a signable state: ' . $status);
-		}
-
-		// Change signing-folder-across-cases, REQ-SFC-04: the folder leaves out what
-		// the signer has no mandate for, and the direct attempt on the same
-		// document is refused here, naming the rule. The guard applies to the
-		// in-app actor: a mandate is declared in Nextcloud groups, which an
-		// invited external portal signer is not a member of, and the portal
-		// path has its own verified-assertion gate.
-		if ($this->mandateService !== null && $verifiedActor === null) {
-			$this->mandateService->assertMaySign(request: $request, userId: $actorUserId);
-		}
-
-		['register' => $signerRegister, 'schema' => $signerSchema] = $this->requireSignerRecordBinding();
-
-		$signer = $this->actorResolver->loadAuthorisedSigner(
+		$act = new SigningAct(
 			requestId: $requestId,
 			signerId: $signerId,
 			verifiedActor: $verifiedActor,
 			actorUserId: $actorUserId,
+			actorDisplayName: $actorDisplayName,
+			now: new DateTimeImmutable()
+		);
+
+		$objectService = $this->settingsService->getObjectService();
+		$request       = $this->loadSignableRequest(act: $act);
+
+		['register' => $signerRegister, 'schema' => $signerSchema] = $this->requireSignerRecordBinding();
+
+		$signer  = $this->loadPendingSigner(act: $act);
+		$signer['identityEvidence'] = $this->assuranceGate->evidenceForAct(
+			request: $request + ['id' => $requestId],
+			signer: $signer + ['id' => $signerId],
+			verifiedActor: $verifiedActor,
+			actorUserId: $actorUserId,
+			now: $act->now
+		)->toArray();
+		$consent = $this->consentGuard->guardSigningAct(
+			requestId: $requestId,
+			request: $request,
+			signer: $signer + ['id' => $signerId],
+			verifiedActor: $verifiedActor,
+			now: $act->now
+		);
+
+		$signer = $this->markSigned(signer: array_merge($signer, $consent['record']), request: $request, act: $act, signatureData: $signatureData);
+		$objectService->saveObject(object: $signer, register: $signerRegister, schema: $signerSchema, _rbac: false);
+
+		$this->logSigned(act: $act, request: $request, metadata: array_merge($consent['audit'], ['identityEvidence' => $signer['identityEvidence']]));
+		$this->assuranceGate->consume(requestId: $requestId, signerId: $signerId);
+		$this->updateRequestStatus(requestId: $requestId, request: $request, verifiedActor: $verifiedActor);
+
+		return $signer;
+	}//end sign()
+
+	/**
+	 * Load a signing request that can still be signed, and hold the in-app
+	 * actor to the signing mandate.
+	 *
+	 * The mandate is declared in Nextcloud groups, which an invited external
+	 * portal signer is not a member of; the portal path has its own
+	 * verified-assertion gate (signing-folder-across-cases REQ-SFC-04).
+	 *
+	 * @param SigningAct $act The signing act
+	 *
+	 * @return array<string, mixed> The signing request
+	 *
+	 * @throws RuntimeException When the request does not exist or is not PENDING or IN_PROGRESS
+	 *
+	 * @spec openspec/changes/digital-signing-integration/tasks.md#3-3
+	 */
+	private function loadSignableRequest(SigningAct $act): array {
+		// Without a caller user ID access-denied is impossible, so null means not found.
+		$request = $this->getRequest(requestId: $act->requestId);
+		if ($request === null) {
+			throw new RuntimeException('Signing request not found: ' . $act->requestId);
+		}
+
+		$status = $request['status'] ?? '';
+		if (in_array($status, ['PENDING', 'IN_PROGRESS'], true) === false) {
+			throw new RuntimeException('Signing request is not in a signable state: ' . $status);
+		}
+
+		if ($this->mandateService !== null && $act->verifiedActor === null) {
+			$this->mandateService->assertMaySign(request: $request, userId: $act->actorUserId);
+		}
+
+		return $request;
+	}//end loadSignableRequest()
+
+	/**
+	 * Load the signer record the actor may sign as, refusing one that already responded.
+	 *
+	 * @param SigningAct $act The signing act
+	 *
+	 * @return array<string, mixed> The signer record
+	 *
+	 * @throws RuntimeException When the actor may not act as this signer or the signer is not PENDING
+	 *
+	 * @spec openspec/changes/digital-signing-integration/tasks.md#3-3
+	 */
+	private function loadPendingSigner(SigningAct $act): array {
+		$signer = $this->actorResolver->loadAuthorisedSigner(
+			requestId: $act->requestId,
+			signerId: $act->signerId,
+			verifiedActor: $act->verifiedActor,
+			actorUserId: $act->actorUserId,
 			action: 'sign'
 		);
 
@@ -547,61 +605,56 @@ class SigningService implements SigningServiceInterface {
 			throw new RuntimeException('Signer has already responded to this request');
 		}
 
-		// Guardian consent (signer-identity-rails REQ-DDSIR-008/009): a signer
-		// under the age of consent signs only with a guardian on this request,
-		// and a guardian may be neither the minor nor a minor. Refused here with
-		// a 403, before anything is written. The guardian reached this line
-		// through the same identity resolution and ownership check as anyone.
-		$now = new DateTimeImmutable();
-		$signer['identityEvidence'] = $this->assuranceGate->evidenceForAct(
-			request: $request + ['id' => $requestId],
-			signer: $signer + ['id' => $signerId],
-			verifiedActor: $verifiedActor,
-			actorUserId: $actorUserId,
-			now: $now
-		)->toArray();
+		return $signer;
+	}//end loadPendingSigner()
 
-		$consent = $this->consentGuard->guardSigningAct(
-			requestId: $requestId,
-			request: $request,
-			signer: $signer + ['id' => $signerId],
-			verifiedActor: $verifiedActor,
-			now: $now
-		);
-
-		$signer = array_merge($signer, $consent['record']);
-		$signer['status'] = 'SIGNED';
-		$signer['signedAt'] = $now->format(DateTimeInterface::ATOM);
+	/**
+	 * Mark a signer record SIGNED with the moment, the client address, the
+	 * optional evidence and the portal assurance level.
+	 *
+	 * @param array<string, mixed>      $signer        The signer record
+	 * @param array<string, mixed>      $request       The signing request
+	 * @param SigningAct                $act           The signing act
+	 * @param array<string, mixed>|null $signatureData Consent and optional drawn signature, never used for identity
+	 *
+	 * @return array<string, mixed> The signed record
+	 *
+	 * @spec openspec/specs/portal-signing-surface/spec.md
+	 */
+	private function markSigned(array $signer, array $request, SigningAct $act, ?array $signatureData): array {
+		$signer['status']    = 'SIGNED';
+		$signer['signedAt']  = $act->now->format(DateTimeInterface::ATOM);
 		$signer['ipAddress'] = $this->actorResolver->getClientIp();
 		if ($signatureData !== null) {
-			// Portal-signing-surface REQ-DDPSS-002: consent and an optional drawn
-			// signature, in the `visible:false` field, never used for identity.
 			$signer['signatureData'] = $signatureData;
 		}
-		$signer = (new PortalSignatureAssurance())->recordOn(signer: $signer, request: $request, verifiedActor: $verifiedActor);
 
-		$objectService->saveObject(object: $signer, register: $signerRegister, schema: $signerSchema, _rbac: false);
+		return (new PortalSignatureAssurance())->recordOn(signer: $signer, request: $request, verifiedActor: $act->verifiedActor);
+	}//end markSigned()
 
+	/**
+	 * Write the SIGNED audit entry.
+	 *
+	 * @param SigningAct           $act      The signing act
+	 * @param array<string, mixed> $request  The signing request
+	 * @param array<string, mixed> $metadata Consent and identity evidence for the entry
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/digital-signing-integration/tasks.md#3-3
+	 */
+	private function logSigned(SigningAct $act, array $request, array $metadata): void {
 		$this->auditService->logEvent(
-			signingRequestId: $requestId,
+			signingRequestId: $act->requestId,
 			action: 'SIGNED',
-			actorUserId: $actorUserId,
-			actorDisplayName: $actorDisplayName,
+			actorUserId: $act->actorUserId,
+			actorDisplayName: $act->actorDisplayName,
 			ipAddress: $this->actorResolver->getClientIp(),
 			signatureLevel: $request['signatureLevel'] ?? 'SES',
 			provider: $request['provider'] ?? 'native',
-			metadata: array_merge(
-				$this->actorResolver->actorAuditMetadata(verifiedActor: $verifiedActor),
-				$consent['audit'],
-				['identityEvidence' => $signer['identityEvidence']]
-			)
+			metadata: array_merge($this->actorResolver->actorAuditMetadata(verifiedActor: $act->verifiedActor), $metadata)
 		);
-		$this->assuranceGate->consume(requestId: $requestId, signerId: $signerId);
-
-		$this->updateRequestStatus(requestId: $requestId, request: $request, verifiedActor: $verifiedActor);
-
-		return $signer;
-	}//end sign()
+	}//end logSigned()
 
 	/**
 	 * Decline a signing request
