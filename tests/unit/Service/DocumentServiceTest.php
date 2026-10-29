@@ -164,8 +164,7 @@ class DocumentServiceTest extends TestCase {
 				$objectResolver,
 				$logger
 			),
-			new DocumentJobStore($appConfig, $this->jobList, $logger),
-			$logger
+			new DocumentJobStore($appConfig, $this->jobList, $logger)
 		);
 
 	}//end setUp()

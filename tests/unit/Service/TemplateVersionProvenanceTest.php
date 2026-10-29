@@ -187,7 +187,7 @@ class TemplateVersionProvenanceTest extends TestCase {
 		$objectResolver = new DocumentObjectServiceResolver($container, $appManager);
 		$pipeline = new DocumentRenderPipeline($renderer, $pdf, $objectResolver, new NullLogger(), $rasterizer);
 		$logger = new GeneratedDocumentLogger($objectResolver, new NullLogger());
-		$documents = new DocumentService($templates, $resolver, $pipeline, $storage, $logger, $this->createMock(DocumentJobStore::class), new NullLogger());
+		$documents = new DocumentService($templates, $resolver, $pipeline, $storage, $logger, $this->createMock(DocumentJobStore::class));
 
 		return ['documents' => $documents, 'templates' => $templates, 'versions' => $versions];
 	}
