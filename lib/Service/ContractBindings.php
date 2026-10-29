@@ -26,6 +26,7 @@ namespace OCA\Filinq\Service;
 
 use OCA\Filinq\Kernel\Contracts\ActiveSigningProviderInterface;
 use OCA\Filinq\Kernel\Contracts\AnonymiserBackendStateClientInterface;
+use OCA\Filinq\Kernel\Contracts\AnonymizationProfileServiceInterface;
 use OCA\Filinq\Kernel\Contracts\AnonymizationServiceInterface;
 use OCA\Filinq\Kernel\Contracts\AnonymizeRequestServiceInterface;
 use OCA\Filinq\Kernel\Contracts\BatchAnonymizeServiceInterface;
@@ -146,7 +147,6 @@ use OCA\Filinq\Kernel\Contracts\TemplateVersionServiceInterface;
 use OCA\Filinq\Kernel\Contracts\UploadFragmentReaperInterface;
 use OCA\Filinq\Kernel\Contracts\UploadPolicyServiceInterface;
 use OCA\Filinq\Kernel\Contracts\WizardServiceInterface;
-use OCA\Filinq\Kernel\Contracts\WooProfileServiceInterface;
 use OCA\Filinq\Service\BulkSigning\BulkSigningRunner;
 use OCA\Filinq\Service\BulkSigning\BulkSigningService;
 use OCA\Filinq\Service\Classification\ClassificationDecisionService;
@@ -212,6 +212,7 @@ final class ContractBindings {
 	public const BINDINGS = [
 		ActiveSigningProviderInterface::class          => SigningProviderFactory::class,
 		AnonymiserBackendStateClientInterface::class   => AnonymiserBackendStateClient::class,
+		AnonymizationProfileServiceInterface::class    => WooProfileService::class,
 		AnonymizationServiceInterface::class           => AnonymizationService::class,
 		AnonymizeRequestServiceInterface::class        => AnonymizeRequestService::class,
 		BatchAnonymizeServiceInterface::class          => BatchAnonymizeService::class,
@@ -332,7 +333,6 @@ final class ContractBindings {
 		UploadFragmentReaperInterface::class           => UploadFragmentReaper::class,
 		UploadPolicyServiceInterface::class            => UploadPolicyService::class,
 		WizardServiceInterface::class                  => WizardService::class,
-		WooProfileServiceInterface::class              => WooProfileService::class,
 	];
 
 	/**
