@@ -118,7 +118,12 @@ class SettingsInitializerFlowTest extends TestCase {
 		$configurationService = $this->createMock(originalClassName: ConfigurationService::class);
 		$configurationService->method('importFromApp')->willReturnCallback(
 			function (string $appId, array $data, string $version) use ($world): array {
-				$this->calls[] = 'importFromApp ' . $appId . ' ' . $version . ' ' . (isset($data['info']) === true ? 'settings' : 'other');
+				$shape = 'other';
+				if (isset($data['info']) === true) {
+					$shape = 'settings';
+				}
+
+				$this->calls[] = 'importFromApp ' . $appId . ' ' . $version . ' ' . $shape;
 				if ($world['importFails'] === true) {
 					throw new RuntimeException(message: 'import broke');
 				}
@@ -236,7 +241,13 @@ class SettingsInitializerFlowTest extends TestCase {
 			actual: $result['errors']
 		);
 		$this->assertSame(
-			expected: ['isInstalled', 'getAppVersion', 'isEnabledForUser', 'getInstalledApps', 'log error Failed to initialize Filinq: OpenRegister configuration service is not available: Configuration service is not available.'],
+			expected: [
+				'isInstalled',
+				'getAppVersion',
+				'isEnabledForUser',
+				'getInstalledApps',
+				'log error Failed to initialize Filinq: OpenRegister configuration service is not available: Configuration service is not available.',
+			],
 			actual: $this->calls
 		);
 	}//end testConfigurationServiceNotListed()
