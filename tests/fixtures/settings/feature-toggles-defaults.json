@@ -1,0 +1,86 @@
+{
+    "toggles": {
+        "publication_objection_period_days": 28,
+        "enable_language_detection": true,
+        "enable_keyword_extraction": true,
+        "enable_topic_classification": true,
+        "enable_contract_term_extraction": true,
+        "enable_inbound_classification": true,
+        "signing_enabled": false,
+        "signing_provider": "native",
+        "signing_default_level": "SES",
+        "libresign_qualified": false,
+        "signing_request_expiry_days": 30,
+        "signing_guardian_consent_age": "16",
+        "filinq.anonymisation.default_output_format": "pdf-only",
+        "ocr_enabled": true,
+        "ocr_languages": "nld+eng",
+        "ocr_dpi": 300,
+        "ocr_on_arrival": true,
+        "pseudonymisation_restore_allowed_groups": [],
+        "legal_hold_authority_groups": [],
+        "filinq.grondslagen.entity_type_bases": {
+            "person": [
+                "b-1"
+            ]
+        },
+        "filinq.anonymisation.enabled_entity_types": [
+            "person"
+        ],
+        "filinq.confidentiality.label_vocabulary": {
+            "Public": 0,
+            "Internal": 1,
+            "Confidential": 2,
+            "Secret": 3
+        },
+        "filinq.confidentiality.prioritise_analysis": false
+    },
+    "types": {
+        "publication_objection_period_days": "int",
+        "enable_language_detection": "bool",
+        "enable_keyword_extraction": "bool",
+        "enable_topic_classification": "bool",
+        "enable_contract_term_extraction": "bool",
+        "enable_inbound_classification": "bool",
+        "signing_enabled": "bool",
+        "signing_provider": "string",
+        "signing_default_level": "string",
+        "libresign_qualified": "bool",
+        "signing_request_expiry_days": "int",
+        "signing_guardian_consent_age": "string",
+        "filinq.anonymisation.default_output_format": "string",
+        "ocr_enabled": "bool",
+        "ocr_languages": "string",
+        "ocr_dpi": "int",
+        "ocr_on_arrival": "bool",
+        "pseudonymisation_restore_allowed_groups": "array",
+        "legal_hold_authority_groups": "array",
+        "filinq.grondslagen.entity_type_bases": "array",
+        "filinq.anonymisation.enabled_entity_types": "array",
+        "filinq.confidentiality.label_vocabulary": "array",
+        "filinq.confidentiality.prioritise_analysis": "bool"
+    },
+    "reads": [
+        "string publication_objection_period_days 28",
+        "string enable_language_detection 1",
+        "string enable_keyword_extraction 1",
+        "string enable_topic_classification 1",
+        "string enable_contract_term_extraction 1",
+        "string enable_inbound_classification 1",
+        "string signing_enabled 0",
+        "string signing_provider native",
+        "string signing_default_level SES",
+        "string libresign_qualified 0",
+        "string signing_request_expiry_days 30",
+        "string signing_guardian_consent_age 16",
+        "string filinq.anonymisation.default_output_format pdf-only",
+        "string ocr_enabled 1",
+        "string ocr_languages nld+eng",
+        "string ocr_dpi 300",
+        "string ocr_on_arrival 1",
+        "string pseudonymisation_restore_allowed_groups []",
+        "string legal_hold_authority_groups []",
+        "string filinq.confidentiality.label_vocabulary ",
+        "bool filinq.confidentiality.prioritise_analysis false"
+    ]
+}
