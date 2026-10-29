@@ -30,7 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\EventListener;
 
-use OCA\Filinq\AppInfo\Application;
+use OCA\Filinq\Kernel\AppIdentity;
 use OCA\OpenRegister\Event\RegisterLeafProvidersEvent;
 use OCA\OpenRegister\Service\Integration\LeafDescriptor;
 use OCP\EventDispatcher\Event;
@@ -110,7 +110,7 @@ class RegisterSigningFolderLeafListener implements IEventListener {
 				label: $this->l10n->t('Waiting for your signature'),
 				icon: self::ICON,
 				kinds: [LeafDescriptor::KIND_RENDER_SURFACE],
-				requiredApp: Application::APP_ID,
+				requiredApp: AppIdentity::APP_ID,
 				group: 'signing',
 				surfaces: self::SURFACES,
 				referenceType: self::LEAF_ID,

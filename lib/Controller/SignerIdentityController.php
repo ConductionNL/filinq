@@ -21,7 +21,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
-use OCA\Filinq\AppInfo\Application;
+use OCA\Filinq\Kernel\AppIdentity;
 use OCA\Filinq\Service\SignerAuth\SignerStepUpService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -69,7 +69,7 @@ class SignerIdentityController extends Controller {
 		private readonly IURLGenerator $urlGenerator,
 		private readonly LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 
 	}//end __construct()
 
