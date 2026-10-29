@@ -268,7 +268,7 @@ class FinalDocumentRepository {
 			return [];
 		}
 
-		$byFile = [];
+		$index = new DossierFileIndex();
 		foreach ((array) $results as $result) {
 			$data = $result;
 			if (is_object($result) === true && method_exists($result, 'jsonSerialize') === true) {
@@ -280,22 +280,14 @@ class FinalDocumentRepository {
 				continue;
 			}
 
-			$dossier = ['id' => (string) $fields['uuid'], 'name' => $fields['name']];
-			$self    = (array) ($data['@self'] ?? []);
-			$members = array_merge((array) ($self['files'] ?? []), (array) ($fields['documents'] ?? []));
-			foreach ($members as $member) {
-				$fileId = (int) $member;
-				if (is_array($member) === true) {
-					$fileId = (int) ($member['id'] ?? 0);
-				}
-
-				if ($fileId > 0 && isset($byFile[$fileId]) === false && $dossier['id'] !== '') {
-					$byFile[$fileId] = $dossier;
-				}
-			}
+			$self = (array) ($data['@self'] ?? []);
+			$index->add(
+				dossier: ['id' => (string) $fields['uuid'], 'name' => $fields['name']],
+				members: array_merge((array) ($self['files'] ?? []), (array) ($fields['documents'] ?? []))
+			);
 		}
 
-		return $byFile;
+		return $index->byFile();
 
 	}//end dossiersByFile()
 
@@ -315,13 +307,8 @@ class FinalDocumentRepository {
 	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	public function findByDomain(array $domain): array {
-		$reference = [
-			'register' => (string)($domain['register'] ?? ''),
-			'schema' => (string)($domain['schema'] ?? ''),
-			'id' => (string)($domain['id'] ?? ''),
-		];
-
-		if ($reference['register'] === '' || $reference['schema'] === '' || $reference['id'] === '') {
+		$reference = new DomainReference(domain: $domain);
+		if ($reference->isComplete() === false) {
 			return [];
 		}
 
@@ -349,7 +336,7 @@ class FinalDocumentRepository {
 		$records = [];
 		foreach ($results as $result) {
 			$record = $this->normalise(row: $result);
-			if ($this->sitsIn(record: $record, reference: $reference) === true) {
+			if ($reference->isNamedBy(record: $record) === true) {
 				$records[] = $record;
 			}
 		}
@@ -357,61 +344,6 @@ class FinalDocumentRepository {
 		return $records;
 
 	}//end findByDomain()
-
-	/**
-	 * Whether one record names the given domain among its own.
-	 *
-	 * A domain is matched on all three of register, schema and id. Matching on
-	 * fewer would put a record in a domain it only half belongs to, and the
-	 * domains are what decides who may read it.
-	 *
-	 * @param array<string, mixed> $record The record.
-	 * @param array<string, string> $reference The domain, as register, schema and id.
-	 *
-	 * @return bool True when the record names it.
-	 *
-	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
-	 */
-	private function sitsIn(array $record, array $reference): bool {
-		$domains = ($record['domains'] ?? []);
-		if (is_array($domains) === false) {
-			return false;
-		}
-
-		foreach ($domains as $candidate) {
-			if (is_array($candidate) === false) {
-				continue;
-			}
-
-			if ($this->sameDomain(candidate: $candidate, reference: $reference) === true) {
-				return true;
-			}
-		}
-
-		return false;
-
-	}//end sitsIn()
-
-	/**
-	 * Whether one domain entry is the domain asked for.
-	 *
-	 * @param array<string, mixed> $candidate The entry on the record.
-	 * @param array<string, string> $reference The domain asked for.
-	 *
-	 * @return bool True when all three fields match.
-	 *
-	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
-	 */
-	private function sameDomain(array $candidate, array $reference): bool {
-		foreach ($reference as $key => $value) {
-			if ((string)($candidate[$key] ?? '') !== $value) {
-				return false;
-			}
-		}
-
-		return true;
-
-	}//end sameDomain()
 
 	/**
 	 * Find one record by its uuid.
