@@ -7,8 +7,8 @@
  * task-sequence events into Filinq's typed Signer* events, and the cross-app
  * delegated-signing request contract. Extracted from `Application`.
  *
- * @category  AppInfo
- * @package   OCA\Filinq\AppInfo
+ * @category  EventListener
+ * @package   OCA\Filinq\EventListener
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
@@ -23,18 +23,16 @@
 
 declare(strict_types=1);
 
-namespace OCA\Filinq\AppInfo;
+namespace OCA\Filinq\EventListener;
 
 use OCA\Filinq\Event\DocumentSigningRequestedEvent;
-use OCA\Filinq\EventListener\DocumentSigningRequestedListener;
-use OCA\Filinq\EventListener\SigningTaskListener;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 
 /**
  * Registers the task-sequence bridge and the cross-app signing-request listener.
  *
- * @category AppInfo
- * @package  OCA\Filinq\AppInfo
+ * @category EventListener
+ * @package  OCA\Filinq\EventListener
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app

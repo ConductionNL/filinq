@@ -9,8 +9,8 @@
  * be declared from `boot()`. Extracted from `Application` so the bootstrap class
  * no longer references every collaborator in the app.
  *
- * @category  AppInfo
- * @package   OCA\Filinq\AppInfo
+ * @category  EventListener
+ * @package   OCA\Filinq\EventListener
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
@@ -23,13 +23,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\Filinq\AppInfo;
+namespace OCA\Filinq\EventListener;
 
 use OCA\Filinq\Dashboard\AnonymizationWidget;
 use OCA\Filinq\Dashboard\FileEntitiesWidget;
-use OCA\Filinq\EventListener\DossierCheckedOnListener;
-use OCA\Filinq\EventListener\DocumentRegistrationWriteGuard;
-use OCA\Filinq\EventListener\FilinqEventListener;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectDeletedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
@@ -42,8 +39,8 @@ use Psr\Log\LoggerInterface;
 /**
  * Registers dashboard widgets and OpenRegister object-lifecycle listeners.
  *
- * @category AppInfo
- * @package  OCA\Filinq\AppInfo
+ * @category EventListener
+ * @package  OCA\Filinq\EventListener
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
