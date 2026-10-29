@@ -22,9 +22,9 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\EventListener;
 
+use OCA\Filinq\Kernel\Contracts\MetadataServiceInterface;
+use OCA\Filinq\Kernel\Contracts\PolicyRetroactiveServiceInterface;
 use OCA\Filinq\Kernel\Contracts\SettingsServiceInterface;
-use OCA\Filinq\Service\MetadataService;
-use OCA\Filinq\Service\PolicyRetroactiveService;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectDeletedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
@@ -64,9 +64,9 @@ class FilinqEventListener implements IEventListener {
 	public function handle(Event $event): void {
 		try {
 			$logger = $this->container->get(LoggerInterface::class);
-			$metadataService = $this->container->get(MetadataService::class);
+			$metadataService = $this->container->get(MetadataServiceInterface::class);
 			$settingsService = $this->container->get(SettingsServiceInterface::class);
-			$retroactive = $this->container->get(PolicyRetroactiveService::class);
+			$retroactive = $this->container->get(PolicyRetroactiveServiceInterface::class);
 			$eventHandler = new FilinqEventHandler(container: $this->container);
 
 			$logger->info(
@@ -115,11 +115,11 @@ class FilinqEventListener implements IEventListener {
 	 * Dispatch the event to the appropriate handler
 	 *
 	 * @param Event $event The event to dispatch
-	 * @param MetadataService $metadataService The metadata service
+	 * @param MetadataServiceInterface $metadataService The metadata service
 	 * @param SettingsServiceInterface $settingsService The settings service
 	 * @param LoggerInterface $logger The logger instance
 	 * @param FilinqEventHandler $eventHandler The event handler
-	 * @param PolicyRetroactiveService $retroactive Retroactive policy applicator.
+	 * @param PolicyRetroactiveServiceInterface $retroactive Retroactive policy applicator.
 	 *
 	 * @return void
 	 *
@@ -127,11 +127,11 @@ class FilinqEventListener implements IEventListener {
 	 */
 	private function dispatchEvent(
 		Event $event,
-		MetadataService $metadataService,
+		MetadataServiceInterface $metadataService,
 		SettingsServiceInterface $settingsService,
 		LoggerInterface $logger,
 		FilinqEventHandler $eventHandler,
-		PolicyRetroactiveService $retroactive,
+		PolicyRetroactiveServiceInterface $retroactive,
 	): void {
 		if ($event instanceof ObjectCreatedEvent) {
 			$eventHandler->handleObjectCreated(

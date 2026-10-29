@@ -22,7 +22,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use OCA\Filinq\Kernel\AppIdentity;
-use OCA\Filinq\Service\SignerAuth\SignerStepUpService;
+use OCA\Filinq\Kernel\Contracts\SignerStepUpServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -57,7 +57,7 @@ class SignerIdentityController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param SignerStepUpService $stepUp The step-up flow.
+	 * @param SignerStepUpServiceInterface $stepUp The step-up flow.
 	 * @param IURLGenerator $urlGenerator Builds the return URL.
 	 * @param LoggerInterface $logger Logs why a step-up failed.
 	 *
@@ -65,7 +65,7 @@ class SignerIdentityController extends Controller {
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly SignerStepUpService $stepUp,
+		private readonly SignerStepUpServiceInterface $stepUp,
 		private readonly IURLGenerator $urlGenerator,
 		private readonly LoggerInterface $logger,
 	) {

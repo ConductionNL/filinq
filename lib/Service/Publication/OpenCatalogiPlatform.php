@@ -19,6 +19,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\Publication;
 
+use OCA\Filinq\Kernel\Contracts\OpenCatalogiPlatformInterface;
 use OCP\App\IAppManager;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
@@ -40,7 +41,7 @@ use Throwable;
  *
  * @spec openspec/specs/woo-publicatie-pipeline/spec.md
  */
-class OpenCatalogiPlatform {
+class OpenCatalogiPlatform implements OpenCatalogiPlatformInterface {
 
 	/**
 	 * OpenRegister's file service.

@@ -28,7 +28,7 @@ namespace OCA\Filinq\Controller;
 
 use Exception;
 use OCA\Filinq\Exception\Pdfa3ConversionException;
-use OCA\Filinq\Service\Pdfa3ConversionService;
+use OCA\Filinq\Kernel\Contracts\Pdfa3ConversionServiceInterface;
 use OCA\Filinq\Kernel\Contracts\PdfServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -58,7 +58,7 @@ class PdfController extends Controller {
 	 * @param IRequest $request The request object
 	 * @param LoggerInterface $logger Logger for error reporting
 	 * @param PdfServiceInterface $pdfService Service for PDF generation
-	 * @param Pdfa3ConversionService $pdfa3Service Service for archival PDF/A-3
+	 * @param Pdfa3ConversionServiceInterface $pdfa3Service Service for archival PDF/A-3
 	 *                                             generation (attachments +
 	 *                                             MDTO metadata)
 	 * @param IL10N $l10n The localization service
@@ -71,7 +71,7 @@ class PdfController extends Controller {
 		IRequest $request,
 		private readonly LoggerInterface $logger,
 		private readonly PdfServiceInterface $pdfService,
-		private readonly Pdfa3ConversionService $pdfa3Service,
+		private readonly Pdfa3ConversionServiceInterface $pdfa3Service,
 		private readonly IL10N $l10n,
 		private readonly IUserSession $userSession,
 	) {

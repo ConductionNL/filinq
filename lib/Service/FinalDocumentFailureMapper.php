@@ -31,6 +31,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use OCA\Filinq\Exception\DocumentFinalException;
+use OCA\Filinq\Kernel\Contracts\FinalDocumentFailureMapperInterface;
 use OCP\AppFramework\Http;
 use OCP\IL10N;
 use Psr\Log\LoggerInterface;
@@ -48,7 +49,7 @@ use Throwable;
  *
  * @spec openspec/changes/final-documents-frozen/specs/document-versions/spec.md
  */
-class FinalDocumentFailureMapper {
+class FinalDocumentFailureMapper implements FinalDocumentFailureMapperInterface {
 
 	/**
 	 * Constructor.
