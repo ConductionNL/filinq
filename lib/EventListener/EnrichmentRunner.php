@@ -26,9 +26,9 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\EventListener;
 
+use OCA\Filinq\Kernel\Contracts\InboundClassificationServiceInterface;
 use OCA\Filinq\Kernel\Contracts\MetadataServiceInterface;
 use OCA\Filinq\Kernel\Contracts\SettingsServiceInterface;
-use OCA\Filinq\Service\InboundClassificationService;
 use OCP\AppFramework\Db\DoesNotExistException;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -50,7 +50,7 @@ class EnrichmentRunner {
 	/**
 	 * Constructor.
 	 *
-	 * @param InboundClassificationService|null $classification Suggests a type, correspondent and dossier for an
+	 * @param InboundClassificationServiceInterface|null $classification Suggests a type, correspondent and dossier for an
 	 *                                                          inbound document; null leaves classification out.
 	 *
 	 * @return void
@@ -58,7 +58,7 @@ class EnrichmentRunner {
 	 * @spec openspec/changes/inbound-auto-classification/tasks.md#2-3
 	 */
 	public function __construct(
-		private readonly ?InboundClassificationService $classification = null,
+		private readonly ?InboundClassificationServiceInterface $classification = null,
 	) {
 
 	}//end __construct()
@@ -75,12 +75,12 @@ class EnrichmentRunner {
 	 */
 	public function withClassificationFrom(ContainerInterface $container): self {
 		try {
-			$service = $container->get(InboundClassificationService::class);
+			$service = $container->get(InboundClassificationServiceInterface::class);
 		} catch (Throwable) {
 			return $this;
 		}
 
-		if (($service instanceof InboundClassificationService) === false) {
+		if (($service instanceof InboundClassificationServiceInterface) === false) {
 			return $this;
 		}
 

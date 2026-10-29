@@ -27,6 +27,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\FormatMatrixServiceInterface;
 use OCA\Filinq\Service\Conversion\LibreOfficeHeadlessBackend;
 
 /**
@@ -40,20 +41,7 @@ use OCA\Filinq\Service\Conversion\LibreOfficeHeadlessBackend;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  */
-class FormatMatrixService {
-	/**
-	 * The formats document generation offers, in display order.
-	 *
-	 * @var string[]
-	 */
-	public const DOCUMENT_FORMATS = ['pdf', 'docx', 'odf', 'html'];
-
-	/**
-	 * The formats a letter can be made in, in display order.
-	 *
-	 * @var string[]
-	 */
-	public const CORRESPONDENCE_FORMATS = ['pdf', 'docx', 'html', 'email'];
+class FormatMatrixService implements FormatMatrixServiceInterface {
 
 	/**
 	 * Formats made by LibreOffice from rendered HTML.

@@ -193,6 +193,10 @@ class ScanIntakeController extends Controller {
 	 * @return JSONResponse The batch, split or failed.
 	 *
 	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 *
+	 * @no-admin-idor-exempt the batch file is resolved through the caller's own user folder in the method
+	 * body, and the segments are written with the Node API into its parent folder, which enforces create
+	 * permission.
 	 */
 	#[NoAdminRequired]
 	public function split(int $fileId, string $profileId = ''): JSONResponse {

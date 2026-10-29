@@ -86,6 +86,10 @@ class MetadataController extends Controller {
 	 * @NoAdminRequired
 	 *
 	 * @spec openspec/specs/metadata-enrichment/spec.md
+	 *
+	 * @no-admin-idor-exempt the object is read and saved through OpenRegister with RBAC and multitenancy
+	 * on (MetadataService::persistEnrichedMetadata()), so the write needs the caller's own update right on
+	 * that schema; classification runs only for a file in the caller's user folder.
 	 */
 	public function enrich(): JSONResponse {
 		try {

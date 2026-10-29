@@ -4,10 +4,9 @@
  * Filinq PDF Conversion Registrar
  *
  * Wires the ordered PDF-conversion backend cascade into the container.
- * Extracted from `Application`.
  *
- * @category  AppInfo
- * @package   OCA\Filinq\AppInfo
+ * @category  Service
+ * @package   OCA\Filinq\Service\Conversion
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
@@ -22,14 +21,8 @@
 
 declare(strict_types=1);
 
-namespace OCA\Filinq\AppInfo;
+namespace OCA\Filinq\Service\Conversion;
 
-use OCA\Filinq\Service\Conversion\EmlBackend;
-use OCA\Filinq\Service\Conversion\LibreOfficeHeadlessBackend;
-use OCA\Filinq\Service\Conversion\MpdfBackend;
-use OCA\Filinq\Service\Conversion\OfficeAppBackend;
-use OCA\Filinq\Service\Conversion\PhpWordBackend;
-use OCA\Filinq\Service\Conversion\TcLibPdfBackend;
 use OCA\Filinq\Service\PdfConversionService;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use Psr\Log\LoggerInterface;
@@ -37,8 +30,8 @@ use Psr\Log\LoggerInterface;
 /**
  * Registers the PdfConversionService backend cascade.
  *
- * @category AppInfo
- * @package  OCA\Filinq\AppInfo
+ * @category Service
+ * @package  OCA\Filinq\Service\Conversion
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app

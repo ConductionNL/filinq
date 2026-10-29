@@ -9,8 +9,8 @@
  * RegistrationBootstrap::register(), which Application::register() delegates
  * to.
  *
- * @category  AppInfo
- * @package   OCA\Filinq\AppInfo
+ * @category  EventListener
+ * @package   OCA\Filinq\EventListener
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
@@ -25,18 +25,17 @@
 
 declare(strict_types=1);
 
-namespace OCA\Filinq\AppInfo;
+namespace OCA\Filinq\EventListener;
 
 use OCA\Filinq\Event\DocumentGenerationRequestedEvent;
-use OCA\Filinq\EventListener\DocumentGenerationRequestedListener;
 use OCA\Filinq\Flow\FilinqFlowNodeListener;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 
 /**
  * Registers the flow-node listener and the generation command listener.
  *
- * @category AppInfo
- * @package  OCA\Filinq\AppInfo
+ * @category EventListener
+ * @package  OCA\Filinq\EventListener
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
