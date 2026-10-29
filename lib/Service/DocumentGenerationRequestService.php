@@ -158,11 +158,9 @@ class DocumentGenerationRequestService {
 	public function generate(array $request, string $requestingApp): array {
 		$this->validate(request: $request);
 
-		$storeFile = $this->rules->storesFile(request: $request);
 		$targetField = $this->rules->text(value: ($request['targetField'] ?? null));
 		$object = $this->rules->objectRef(value: ($request['object'] ?? null));
 		$data = (array)($request['data'] ?? []);
-		$metadata = (array)($request['metadata'] ?? []);
 
 		if ($targetField !== '' && $object === null) {
 			throw new RuntimeException(
@@ -170,74 +168,31 @@ class DocumentGenerationRequestService {
 			);
 		}
 
-		// A field-only request files nothing, so it has no use for a PDF: the
-		// source format is what is written, and 'return' keeps it off disk.
-		$format = 'html';
-		$mode = 'return';
-		if ($storeFile === true) {
-			$format = $this->rules->text(value: ($request['format'] ?? 'pdf'));
-			$mode = 'files';
-		}
-
 		$resolved = $this->resolveTemplate(request: $request);
-		$template = $resolved['template'];
 
 		// The item's own fields at the top level, so `{{ title }}` works; the
 		// whole item under `item` as well, so a template can reach a field
 		// whose name a top-level helper shadows. A resolved object reference
 		// is ALSO passed as a dataRef: that puts the stored object under its
 		// schema key and, more to the point, names it in the audit record.
-		$adHocData = array_merge($data, ['item' => $data]);
-		$dataRefs = [];
-		if ($object !== null) {
-			$dataRefs[] = $object;
-		}
-
-		$options = [
-			'format' => $format,
-			'adHocData' => $adHocData,
-			'huisstijlId' => $this->rules->orNull(value: $this->rules->text(value: ($request['huisstijlId'] ?? null))),
-			'filename' => $this->filename(request: $request, template: $template, data: $adHocData),
-			'output' => ['mode' => $mode],
+		$job = [
+			'request' => $request,
+			'resolved' => $resolved,
+			'object' => $object,
+			'targetField' => $targetField,
+			'adHocData' => array_merge($data, ['item' => $data]),
+			'requestingApp' => $requestingApp,
 		];
-
-		if ($storeFile === true) {
-			$options['userId'] = $this->userId(request: $request);
-			$options['output']['targetPath'] = $this->targetPath(
-				request: $request,
-				templateId: $resolved['id'],
-				template: $template,
-				object: $object
-			);
-		}
-
-		$generated = $this->documents->generateFromTemplate(
+		$job['generated'] = $this->documents->generateFromTemplate(
 			templateId: $resolved['id'],
-			template: $template,
-			dataRefs: $dataRefs,
-			options: $options
+			template: $resolved['template'],
+			dataRefs: array_filter([$object]),
+			options: $this->generationOptions(job: $job)
 		);
 
-		$document = [
-			'fileId' => ($generated['output']['fileId'] ?? null),
-			'path' => ($generated['output']['path'] ?? null),
-			'name' => ($generated['output']['name'] ?? null),
-			'mime' => DocumentGenerationRequestRules::FORMATS[$format],
-			'size' => ($generated['output']['size'] ?? null),
-			'format' => $format,
-			'template' => $resolved['summary'],
-			'object' => $object,
-			'targetField' => null,
-			'metadata' => $metadata,
-			'requestingApp' => $requestingApp,
-			'warnings' => (array)($generated['warnings'] ?? []),
-		];
-
+		$document = $this->documentResult(job: $job);
 		if ($targetField !== '' && $object !== null) {
-			$text = (string)($generated['html'] ?? $generated['content'] ?? '');
-			$this->writeField(object: $object, field: $targetField, text: $text);
-			$document['targetField'] = $targetField;
-			$document['text'] = $text;
+			$document = $this->withTargetField(job: $job, document: $document);
 		}
 
 		$this->eventDispatcher->dispatchTyped(
@@ -246,6 +201,120 @@ class DocumentGenerationRequestService {
 
 		return $document;
 	}//end generate()
+
+	/**
+	 * The format to render in. A field-only request files nothing, so it has
+	 * no use for a PDF: the source format (html) is what is written.
+	 *
+	 * @param array<string, mixed> $request The validated request.
+	 *
+	 * @return string The format.
+	 *
+	 * @spec openspec/changes/flow-generate-document-node/specs/flow-document-generation/spec.md#requirement-one-generation-path-for-the-flow-node-the-command-event-and-the-api
+	 */
+	private function outputFormat(array $request): string {
+		if ($this->rules->storesFile(request: $request) === true) {
+			return $this->rules->text(value: ($request['format'] ?? 'pdf'));
+		}
+
+		return 'html';
+
+	}//end outputFormat()
+
+	/**
+	 * The options for the template engine. A request that stores a file gets
+	 * an owner and a target path; one that does not keeps the result off disk.
+	 *
+	 * @param array<string, mixed> $job The generation job: request, resolved template (id, template, summary),
+	 *                                  object reference (or null) and render context (adHocData).
+	 *
+	 * @return array<string, mixed> The options.
+	 *
+	 * @spec openspec/changes/flow-generate-document-node/specs/flow-document-generation/spec.md#requirement-one-generation-path-for-the-flow-node-the-command-event-and-the-api
+	 */
+	private function generationOptions(array $job): array {
+		$request = $job['request'];
+		$options = [
+			'format' => $this->outputFormat(request: $request),
+			'adHocData' => $job['adHocData'],
+			'huisstijlId' => $this->rules->orNull(value: $this->rules->text(value: ($request['huisstijlId'] ?? null))),
+			'filename' => $this->filename(job: $job),
+			'output' => ['mode' => 'return'],
+		];
+
+		if ($this->rules->storesFile(request: $request) === true) {
+			$options['output']['mode'] = 'files';
+			$options['userId'] = $this->userId(request: $request);
+			$options['output']['targetPath'] = $this->targetPath(job: $job);
+		}
+
+		return $options;
+
+	}//end generationOptions()
+
+	/**
+	 * The document a generation answers with and announces.
+	 *
+	 * @param array<string, mixed> $job The generation job: request, resolved template, requesting app
+	 *                                  and the template engine's result (generated).
+	 *
+	 * @return array<string, mixed> The document.
+	 *
+	 * @spec openspec/changes/flow-generate-document-node/specs/flow-document-generation/spec.md#requirement-one-generation-path-for-the-flow-node-the-command-event-and-the-api
+	 */
+	private function documentResult(array $job): array {
+		$request   = $job['request'];
+		$generated = $job['generated'];
+		$format    = $this->outputFormat(request: $request);
+
+		return [
+			'fileId' => ($generated['output']['fileId'] ?? null),
+			'path' => ($generated['output']['path'] ?? null),
+			'name' => ($generated['output']['name'] ?? null),
+			'mime' => DocumentGenerationRequestRules::FORMATS[$format],
+			'size' => ($generated['output']['size'] ?? null),
+			'format' => $format,
+			'template' => $job['resolved']['summary'],
+			'object' => $this->rules->objectRef(value: ($request['object'] ?? null)),
+			'targetField' => null,
+			'metadata' => (array)($request['metadata'] ?? []),
+			'requestingApp' => $job['requestingApp'],
+			'warnings' => (array)($generated['warnings'] ?? []),
+		];
+
+	}//end documentResult()
+
+	/**
+	 * Write the rendered text into the object's field and note it on the document.
+	 *
+	 * The patch merges into the STORED object, so a flow item that is a
+	 * stale snapshot cannot overwrite what other writers stored since.
+	 *
+	 * @param array<string, mixed> $job      The generation job: object reference, targetField and the engine's result.
+	 * @param array<string, mixed> $document The document so far.
+	 *
+	 * @return array<string, mixed> The document with `targetField` and `text`.
+	 *
+	 * @throws \Exception When OpenRegister is absent or refuses the write.
+	 *
+	 * @spec openspec/changes/flow-generate-document-node/specs/flow-document-generation/spec.md#requirement-one-generation-path-for-the-flow-node-the-command-event-and-the-api
+	 */
+	private function withTargetField(array $job, array $document): array {
+		$generated = $job['generated'];
+		$object    = $job['object'];
+		$text      = (string)($generated['html'] ?? $generated['content'] ?? '');
+		$this->objectResolver->resolve()->patchObject(
+			objectId: $object['id'],
+			data: [$job['targetField'] => $text],
+			register: $object['register'],
+			schema: $object['schema']
+		);
+		$document['targetField'] = $job['targetField'];
+		$document['text'] = $text;
+
+		return $document;
+
+	}//end withTargetField()
 
 	/**
 	 * Find the template the request names.
@@ -361,50 +430,45 @@ class DocumentGenerationRequestService {
 	 * the template's namespace, with a folder per object under it, so every
 	 * document generated for one object sits together.
 	 *
-	 * @param array<string, mixed>                                   $request    The request.
-	 * @param string                                                 $templateId The template id.
-	 * @param array<string, mixed>                                   $template   The template.
-	 * @param array{register: string, schema: string, id: string}|null $object     The object, if any.
+	 * @param array<string, mixed> $job The generation job: request, resolved template (id, template) and object (or null).
 	 *
 	 * @return string The folder path.
 	 */
-	private function targetPath(array $request, string $templateId, array $template, ?array $object): string {
-		$explicit = $this->rules->text(value: ($request['targetPath'] ?? null));
+	private function targetPath(array $job): string {
+		$explicit = $this->rules->text(value: ($job['request']['targetPath'] ?? null));
 		if ($explicit !== '') {
 			return $explicit;
 		}
 
 		$base = $this->documents->buildOutputTargetPath(
-			templateId: $templateId,
+			templateId: $job['resolved']['id'],
 			explicitTargetPath: null,
-			template: $template
+			template: $job['resolved']['template']
 		);
 
-		if ($object === null) {
+		if ($job['object'] === null) {
 			return $base;
 		}
 
-		return $base . '/' . $object['id'];
+		return $base . '/' . $job['object']['id'];
 	}//end targetPath()
 
 	/**
 	 * The file name, rendered when it holds placeholders.
 	 *
-	 * @param array<string, mixed> $request  The request.
-	 * @param array<string, mixed> $template The template.
-	 * @param array<string, mixed> $data     The render context.
+	 * @param array<string, mixed> $job The generation job: request, resolved template and render context (adHocData).
 	 *
 	 * @return string The file name, without extension.
 	 */
-	private function filename(array $request, array $template, array $data): string {
-		$name = $this->rules->text(value: ($request['filename'] ?? null));
+	private function filename(array $job): string {
+		$name = $this->rules->text(value: ($job['request']['filename'] ?? null));
 		if ($name === '') {
-			$name = $this->rules->orDefault(value: $this->rules->text(value: ($template['name'] ?? null)), default: 'document');
+			$name = $this->rules->orDefault(value: $this->rules->text(value: ($job['resolved']['template']['name'] ?? null)), default: 'document');
 		}
 
 		if (str_contains($name, '{{') === true) {
 			$name = html_entity_decode(
-				trim(strip_tags($this->renderer->renderTemplate(templateContent: $name, data: $data))),
+				trim(strip_tags($this->renderer->renderTemplate(templateContent: $name, data: $job['adHocData']))),
 				ENT_QUOTES
 			);
 		}
@@ -415,28 +479,6 @@ class DocumentGenerationRequestService {
 		return $this->rules->orDefault(value: $name, default: 'document');
 	}//end filename()
 
-	/**
-	 * Write the rendered text into one field of the object, and nothing else.
-	 *
-	 * The patch merges into the STORED object, so a flow item that is a
-	 * stale snapshot cannot overwrite what other writers stored since.
-	 *
-	 * @param array{register: string, schema: string, id: string} $object The object.
-	 * @param string                                              $field  The field.
-	 * @param string                                              $text   The rendered text.
-	 *
-	 * @return void
-	 *
-	 * @throws \Exception When OpenRegister is absent or refuses the write.
-	 */
-	private function writeField(array $object, string $field, string $text): void {
-		$this->objectResolver->resolve()->patchObject(
-			objectId: $object['id'],
-			data: [$field => $text],
-			register: $object['register'],
-			schema: $object['schema']
-		);
-	}//end writeField()
 
 
 

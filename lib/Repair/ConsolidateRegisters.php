@@ -336,11 +336,13 @@ class ConsolidateRegisters implements IRepairStep {
 			}
 
 			$result = $this->movePair(
-				sourceTable: $sourceTable,
-				targetTable: $targetTable,
-				sourceId: $sourceId,
-				targetId: $targetId,
-				schemaId: $schemaId
+				pair: [
+					'sourceTable' => $sourceTable,
+					'targetTable' => $targetTable,
+					'sourceId' => $sourceId,
+					'targetId' => $targetId,
+					'schemaId' => $schemaId,
+				]
 			);
 
 			$tally['moved'] += $result['moved'];
@@ -352,58 +354,62 @@ class ConsolidateRegisters implements IRepairStep {
 	/**
 	 * Move one (register, schema) pair, insert-verify-delete, batch by batch.
 	 *
-	 * @param string $sourceTable The table rows leave.
-	 * @param string $targetTable The table rows arrive in.
-	 * @param int $sourceId The source register id.
-	 * @param int $targetId The target register id, written into `_register`.
-	 * @param int $schemaId The schema id both tables belong to.
+	 * @param array{sourceTable: string, targetTable: string, sourceId: int, targetId: int, schemaId: int} $pair The
+	 *        tables rows leave and arrive in, the source and target register ids (the target is written into
+	 *        `_register`) and the schema id both tables belong to.
 	 *
 	 * @return array{moved: int, conflicts: int, refused: int}
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Every branch here is a
-	 *  distinct refusal condition; collapsing them would collapse the reasons.
-	 * @SuppressWarnings(PHPMD.NPathComplexity) As above.
 	 */
-	private function movePair(
-		string $sourceTable,
-		string $targetTable,
-		int $sourceId,
-		int $targetId,
-		int $schemaId,
-	): array {
-		$none = ['moved' => 0, 'conflicts' => 0, 'refused' => 0];
+	private function movePair(array $pair): array {
 		$refused = ['moved' => 0, 'conflicts' => 0, 'refused' => 1];
 
-		if ($this->namesAreOurs(
-			sourceTable: $sourceTable,
-			targetTable: $targetTable,
-			sourceId: $sourceId,
-			targetId: $targetId,
-			schemaId: $schemaId
-		) === false
-		) {
+		if ($this->namesAreOurs(pair: $pair) === false) {
 			return $refused;
 		}
 
-		$columns = $this->agreedColumns(sourceTable: $sourceTable, targetTable: $targetTable);
+		$columns = $this->agreedColumns(sourceTable: $pair['sourceTable'], targetTable: $pair['targetTable']);
 		if ($columns === null) {
 			return $refused;
 		}
 
-		$sourceUuids = $this->gateway->uuidsIn(table: $sourceTable);
+		$split = $this->partitionSource(pair: $pair);
+		if ($split === null) {
+			return $refused;
+		}
+
+		$moved = $this->moveBatches(pair: $pair + ['columns' => $columns], uuids: $split['movable']);
+
+		return [
+			'moved' => $moved,
+			'conflicts' => count($split['conflicts']),
+			'refused' => 0,
+		];
+	}//end movePair()
+
+	/**
+	 * Split the source uuids into movable ones and ones the target already holds.
+	 *
+	 * An empty source is an empty split: a completed move emptied it, which is
+	 * where the step's idempotency lives.
+	 *
+	 * @param array{sourceTable: string, targetTable: string, sourceId: int, targetId: int, schemaId: int} $pair The pair.
+	 *
+	 * @return array{movable: array<int, string>, conflicts: array<int, string>}|null The split, or null when a read failed.
+	 */
+	private function partitionSource(array $pair): ?array {
+		$sourceUuids = $this->gateway->uuidsIn(table: $pair['sourceTable']);
 		if ($sourceUuids === null) {
 			// A failed read is not an empty table. Stop; do not delete.
-			return $refused;
+			return null;
 		}
 
 		if ($sourceUuids === []) {
-			// Idempotency lives here: a completed move emptied the source.
-			return $none;
+			return ['movable' => [], 'conflicts' => []];
 		}
 
-		$taken = $this->gateway->uuidsPresent(table: $targetTable, uuids: $sourceUuids);
+		$taken = $this->gateway->uuidsPresent(table: $pair['targetTable'], uuids: $sourceUuids);
 		if ($taken === null) {
-			return $refused;
+			return null;
 		}
 
 		$split = $this->decisions->partitionUuids(sourceUuids: $sourceUuids, targetUuids: $taken);
@@ -414,55 +420,33 @@ class ConsolidateRegisters implements IRepairStep {
 				. 'different objects sharing an identity. Those want opposite treatments and nothing here '
 				. 'tells them apart, so neither row is touched. Resolve by hand.',
 				[
-					'sourceTable' => $sourceTable,
-					'targetTable' => $targetTable,
+					'sourceTable' => $pair['sourceTable'],
+					'targetTable' => $pair['targetTable'],
 					'uuids' => $split['conflicts'],
 				]
 			);
 		}
 
-		$moved = $this->moveBatches(
-			sourceTable: $sourceTable,
-			targetTable: $targetTable,
-			targetId: $targetId,
-			columns: $columns,
-			uuids: $split['movable']
-		);
-
-		return [
-			'moved' => $moved,
-			'conflicts' => count($split['conflicts']),
-			'refused' => 0,
-		];
-	}//end movePair()
+		return $split;
+	}//end partitionSource()
 
 	/**
 	 * Both table names must survive the shape check against their own pair.
 	 *
-	 * @param string $sourceTable Source table name.
-	 * @param string $targetTable Target table name.
-	 * @param int $sourceId Source register id.
-	 * @param int $targetId Target register id.
-	 * @param int $schemaId Schema id.
+	 * @param array{sourceTable: string, targetTable: string, sourceId: int, targetId: int, schemaId: int} $pair The pair.
 	 *
 	 * @return bool True when both are safe to interpolate.
 	 */
-	private function namesAreOurs(
-		string $sourceTable,
-		string $targetTable,
-		int $sourceId,
-		int $targetId,
-		int $schemaId,
-	): bool {
+	private function namesAreOurs(array $pair): bool {
 		$sourceOk = $this->decisions->isSafeTableName(
-			name: $sourceTable,
-			registerId: $sourceId,
-			schemaId: $schemaId
+			name: $pair['sourceTable'],
+			registerId: $pair['sourceId'],
+			schemaId: $pair['schemaId']
 		);
 		$targetOk = $this->decisions->isSafeTableName(
-			name: $targetTable,
-			registerId: $targetId,
-			schemaId: $schemaId
+			name: $pair['targetTable'],
+			registerId: $pair['targetId'],
+			schemaId: $pair['schemaId']
 		);
 
 		if ($sourceOk === true && $targetOk === true) {
@@ -473,7 +457,7 @@ class ConsolidateRegisters implements IRepairStep {
 			'ConsolidateRegisters: a table name failed the shape check for its own (register, schema) pair; '
 			. 'refusing to touch it. A table name cannot be a bound parameter, so an unchecked name is an '
 			. 'injection point.',
-			['sourceTable' => $sourceTable, 'targetTable' => $targetTable, 'schemaId' => $schemaId]
+			['sourceTable' => $pair['sourceTable'], 'targetTable' => $pair['targetTable'], 'schemaId' => $pair['schemaId']]
 		);
 
 		return false;
@@ -537,29 +521,22 @@ class ConsolidateRegisters implements IRepairStep {
 	 * rows still in place: the migration is then INCOMPLETE, which is
 	 * recoverable, rather than PARTIAL, which is not.
 	 *
-	 * @param string $sourceTable The table rows leave.
-	 * @param string $targetTable The table rows arrive in.
-	 * @param int $targetId Written into `_register` on the way across.
-	 * @param array<int, string> $columns Columns to carry.
-	 * @param array<int, string> $uuids The movable uuids.
+	 * @param array<string, mixed> $pair  The pair plus the columns to carry; targetId is written into `_register`.
+	 * @param array<int, string>   $uuids The movable uuids.
 	 *
 	 * @return int How many rows were moved AND confirmed.
 	 */
-	private function moveBatches(
-		string $sourceTable,
-		string $targetTable,
-		int $targetId,
-		array $columns,
-		array $uuids,
-	): int {
-		$moved = 0;
+	private function moveBatches(array $pair, array $uuids): int {
+		$sourceTable = $pair['sourceTable'];
+		$targetTable = $pair['targetTable'];
+		$moved       = 0;
 
 		foreach ($this->decisions->chunk(items: $uuids) as $batch) {
 			$inserted = $this->gateway->insertBatch(
 				sourceTable: $sourceTable,
 				targetTable: $targetTable,
-				targetId: $targetId,
-				columns: $columns,
+				targetId: $pair['targetId'],
+				columns: $pair['columns'],
 				batch: $batch
 			);
 

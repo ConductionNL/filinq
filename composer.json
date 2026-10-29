@@ -75,6 +75,7 @@
         "setasign/fpdf": "^1.9",
         "symfony/uid": "^6.4",
         "symfony/yaml": "^6.4",
+        "tecnickcom/tc-lib-pdf": "^8.82",
         "thiagoalessio/tesseract_ocr": "^2.13",
         "twig/twig": "^3.27.0"
     },

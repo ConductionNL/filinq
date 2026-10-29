@@ -365,4 +365,91 @@ class DomainFolderReconcilerTest extends TestCase {
 			'a domain with no folder must not be counted as in step'
 		);
 	}//end testAFolderThatCouldNotBeMadeIsRefusedNotSkipped()
+	/**
+	 * Golden: the whole report of a night with every kind of folder, and the
+	 * log lines it writes.
+	 *
+	 * @return void
+	 */
+	public function testTheWholeReportOfAMixedNight(): void {
+		$logger = new class extends \Psr\Log\AbstractLogger {
+			/**
+			 * @var array<int, array<int, mixed>>
+			 */
+			public array $lines = [];
+
+			/**
+			 * @param mixed                $level   The level.
+			 * @param string|\Stringable   $message The message.
+			 * @param array<string, mixed> $context The context.
+			 *
+			 * @return void
+			 */
+			public function log($level, string|\Stringable $message, array $context = []): void {
+				$this->lines[] = [$level, (string)$message, $context];
+			}
+		};
+
+		$reconciler = new DomainFolderReconciler(
+			directory: $this->directory(domains: [['id' => 'a'], ['id' => 'b'], ['id' => 'c'], ['id' => 'd'], ['id' => 'e']]),
+			folderService: $this->folders(
+				outcomes: [
+					$this->outcome(state: DomainFolderService::STATE_CORRECTED, path: 'Filinq/a', granted: ['g1'], revoked: ['g2']),
+					$this->outcome(
+						state: DomainFolderService::STATE_REFUSED,
+						path: 'Filinq/b',
+						granted: ['g3'],
+						refused: [['group' => 'g4', 'action' => 'revoke', 'reason' => 'ro']]
+					),
+					$this->outcome(state: DomainFolderService::STATE_PINNED, path: 'Filinq/c', pinned: 'held'),
+					new RuntimeException('gone'),
+					$this->outcome(state: DomainFolderService::STATE_IN_STEP, path: 'Filinq/e'),
+				]
+			),
+			logger: $logger
+		);
+
+		$refusedB = [
+			'domain' => 'b',
+			'path' => 'Filinq/b',
+			'granted' => ['g3'],
+			'revoked' => [],
+			'refused' => [['group' => 'g4', 'action' => 'revoke', 'reason' => 'ro']],
+		];
+		$refusedD = [
+			'domain' => 'd',
+			'path' => 'Filinq/d',
+			'refused' => [['group' => '*', 'action' => 'reconcile', 'reason' => 'gone']],
+			'granted' => [],
+			'revoked' => [],
+		];
+		self::assertSame(
+			expected: [
+				'skipped' => false,
+				'reason' => '',
+				'corrected' => [['domain' => 'a', 'path' => 'Filinq/a', 'granted' => ['g1'], 'revoked' => ['g2'], 'refused' => []]],
+				'correctedCount' => 1,
+				'refused' => [$refusedB, $refusedD],
+				'refusedCount' => 2,
+				'pinned' => [['domain' => 'c', 'path' => 'Filinq/c', 'reason' => 'held']],
+				'pinnedCount' => 1,
+				'inStepCount' => 1,
+			],
+			actual: $reconciler->run()
+		);
+
+		self::assertSame(
+			expected: [
+				['info', 'filinq.domain-reconcile.finished', ['corrected' => 1, 'refused' => 2, 'pinned' => 1, 'inStep' => 1]],
+				[
+					'warning',
+					'filinq.domain-reconcile.refused',
+					['domain' => 'b', 'path' => 'Filinq/b', 'refused' => $refusedB['refused'], 'granted' => ['g3'], 'revoked' => []],
+				],
+				['warning', 'filinq.domain-reconcile.refused', $refusedD],
+			],
+			actual: $logger->lines
+		);
+	}//end testTheWholeReportOfAMixedNight()
+
 }//end class
