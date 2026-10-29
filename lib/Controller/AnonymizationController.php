@@ -307,7 +307,7 @@ class AnonymizationController extends Controller {
 		try {
 			$authError = $this->anonymizeRequest->requireAuthenticated();
 			if ($authError !== null) {
-				return new JSONResponse($authError['body'], $authError['status']);
+				return $this->payloadResponse(payload: $authError);
 			}
 
 			// Validate request body BEFORE file-access checks so that malformed
@@ -315,86 +315,177 @@ class AnonymizationController extends Controller {
 			$params = $this->request->getParams();
 			$validated = $this->anonymizeRequest->validateBody(params: $params);
 			if ($validated['error'] !== null) {
-				return new JSONResponse($validated['error']['body'], $validated['error']['status']);
+				return $this->payloadResponse(payload: $validated['error']);
 			}
 
-			// File access check MUST precede the prohibition oracle so that unauthenticated
-			// or unauthorized callers cannot probe prohibition rules by supplying arbitrary
-			// entity names without holding access to the target file (OWASP A01:2021).
-			$accessError = $this->anonymizeRequest->verifyFileAccess(fileId: $fileId);
-			if ($accessError !== null) {
-				return new JSONResponse($accessError['body'], $accessError['status']);
-			}
-
-			$prohibited = $this->anonymizeRequest->checkUnredactedProhibitions(
+			$refusal = $this->accessOrProhibitionRefusal(
+				fileId: $fileId,
 				unredactedEntities: $validated['request']['unredactedEntities']
 			);
-			if ($prohibited !== null) {
-				return new JSONResponse($prohibited['body'], $prohibited['status']);
+			if ($refusal !== null) {
+				return $this->payloadResponse(payload: $refusal);
 			}
 
-			// Anonymise-output-as-pdf-by-default: optional `outputFormat`
-			// selects PDF conversion vs native-format preservation.
-			// Per-call value overrides the tenant default; missing
-			// value falls back to the tenant default which itself
-			// defaults to 'pdf-only'.
+			// Optional `outputFormat`: the per-call value overrides the tenant
+			// default, which itself defaults to 'pdf-only'.
 			$outputFormat = $this->resolveOutputFormat(params: $params);
 			if ($outputFormat === null) {
-				return new JSONResponse(
-					[
-						'error' => $this->l10n->t(
-							'Invalid outputFormat: must be one of %s',
-							[implode(', ', self::VALID_OUTPUT_FORMATS)]
-						),
-						'allowedValues' => self::VALID_OUTPUT_FORMATS,
-					],
-					400
-				);
+				return $this->invalidOutputFormatResponse();
 			}
 
-			try {
-				$result = $this->anonymizeRequest->executeAnonymize(
-					fileId: $fileId,
-					userId: $this->anonymizeRequest->currentUserId(),
-					params: $params,
-					request: $validated['request'],
-					outputFormat: $outputFormat
-				);
-			} catch (ConversionFailedException $e) {
-				$this->logger->warning(
-					'PDF conversion cascade exhausted; returning 422.',
-					['attempts' => $e->getAttempts()]
-				);
-				return new JSONResponse(
-					[
-						'error' => $this->l10n->t(
-							'Conversion to PDF failed; anonymisation rolled back.'
-						),
-						'conversionAttempts' => $e->getAttempts(),
-						'outputFormat' => $outputFormat,
-						'fallback' => $this->l10n->t(
-							'Set outputFormat to "preserve" to bypass conversion if you must keep the native format.'
-						),
-					],
-					422
-				);
-			} catch (RedactionNotReviewedException $e) {
-				return $this->reviewRefusal(refusal: $e);
-			}//end try
-
-			return new JSONResponse($result['body'], $result['status']);
+			return $this->runAnonymize(fileId: $fileId, params: $params, request: $validated['request'], outputFormat: $outputFormat);
 		} catch (\Throwable $e) {
-			$this->logger->error(
-				'Failed to anonymize document: ' . $e->getMessage(),
-				['exception' => $e]
-			);
-			return new JSONResponse(
-				['error' => $this->l10n->t('Failed to anonymize document: %s', [$e->getMessage()])],
-				500
-			);
+			return $this->anonymizeFailedResponse(exception: $e);
 		}//end try
 
 	}//end anonymize()
+
+	/**
+	 * Log an unexpected failure of a run and answer 500 with its message.
+	 *
+	 * @param \Throwable $exception The failure.
+	 *
+	 * @return JSONResponse The response.
+	 *
+	 * @spec openspec/specs/anonymization/spec.md
+	 */
+	private function anonymizeFailedResponse(\Throwable $exception): JSONResponse {
+		$this->logger->error(
+			'Failed to anonymize document: ' . $exception->getMessage(),
+			['exception' => $exception]
+		);
+		return new JSONResponse(
+			['error' => $this->l10n->t('Failed to anonymize document: %s', [$exception->getMessage()])],
+			500
+		);
+
+	}//end anonymizeFailedResponse()
+
+	/**
+	 * A JSON response from a `{body, status}` pair of the request service.
+	 *
+	 * @param array{body: array<array-key, mixed>, status: int} $payload The response pair.
+	 *
+	 * @return JSONResponse The response.
+	 *
+	 * @spec openspec/specs/anonymization/spec.md
+	 */
+	private function payloadResponse(array $payload): JSONResponse {
+		return new JSONResponse($payload['body'], $payload['status']);
+
+	}//end payloadResponse()
+
+	/**
+	 * Refuse a run on a file the caller cannot reach, or one that leaves a
+	 * prohibited entity unredacted.
+	 *
+	 * The file access check MUST precede the prohibition oracle, so callers
+	 * without access to the file cannot probe prohibition rules by supplying
+	 * arbitrary entity names (OWASP A01:2021).
+	 *
+	 * @param int $fileId The Nextcloud file ID.
+	 * @param array<array-key, mixed> $unredactedEntities The entities the run leaves in place.
+	 *
+	 * @return array{body: array<array-key, mixed>, status: int}|null The refusal, or null to go on.
+	 *
+	 * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-4
+	 */
+	private function accessOrProhibitionRefusal(int $fileId, array $unredactedEntities): ?array {
+		$accessError = $this->anonymizeRequest->verifyFileAccess(fileId: $fileId);
+		if ($accessError !== null) {
+			return $accessError;
+		}
+
+		return $this->anonymizeRequest->checkUnredactedProhibitions(unredactedEntities: $unredactedEntities);
+
+	}//end accessOrProhibitionRefusal()
+
+	/**
+	 * The 400 answer for an `outputFormat` outside the allowed values.
+	 *
+	 * @return JSONResponse The response.
+	 *
+	 * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-1
+	 */
+	private function invalidOutputFormatResponse(): JSONResponse {
+		return new JSONResponse(
+			[
+				'error' => $this->l10n->t(
+					'Invalid outputFormat: must be one of %s',
+					[implode(', ', self::VALID_OUTPUT_FORMATS)]
+				),
+				'allowedValues' => self::VALID_OUTPUT_FORMATS,
+			],
+			400
+		);
+
+	}//end invalidOutputFormatResponse()
+
+	/**
+	 * Run a validated anonymisation and answer with its result.
+	 *
+	 * A failed PDF conversion answers 422 (the run is rolled back) and a run
+	 * nobody checked answers 409. Any other failure reaches the caller.
+	 *
+	 * @param int $fileId The Nextcloud file ID.
+	 * @param array<array-key, mixed> $params The request parameters.
+	 * @param array<array-key, mixed> $request The validated request.
+	 * @param string $outputFormat The resolved output format.
+	 *
+	 * @return JSONResponse The result.
+	 *
+	 * @spec openspec/specs/anonymization/spec.md
+	 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-1
+	 */
+	private function runAnonymize(int $fileId, array $params, array $request, string $outputFormat): JSONResponse {
+		try {
+			$result = $this->anonymizeRequest->executeAnonymize(
+				fileId: $fileId,
+				userId: $this->anonymizeRequest->currentUserId(),
+				params: $params,
+				request: $request,
+				outputFormat: $outputFormat
+			);
+		} catch (ConversionFailedException $e) {
+			return $this->conversionFailedResponse(exception: $e, outputFormat: $outputFormat);
+		} catch (RedactionNotReviewedException $e) {
+			return $this->reviewRefusal(refusal: $e);
+		}
+
+		return new JSONResponse($result['body'], $result['status']);
+
+	}//end runAnonymize()
+
+	/**
+	 * The 422 answer when the PDF conversion cascade is exhausted.
+	 *
+	 * @param ConversionFailedException $exception The conversion failure.
+	 * @param string $outputFormat The requested output format.
+	 *
+	 * @return JSONResponse The response.
+	 *
+	 * @spec openspec/specs/anonymization/spec.md
+	 */
+	private function conversionFailedResponse(ConversionFailedException $exception, string $outputFormat): JSONResponse {
+		$this->logger->warning(
+			'PDF conversion cascade exhausted; returning 422.',
+			['attempts' => $exception->getAttempts()]
+		);
+		return new JSONResponse(
+			[
+				'error' => $this->l10n->t(
+					'Conversion to PDF failed; anonymisation rolled back.'
+				),
+				'conversionAttempts' => $exception->getAttempts(),
+				'outputFormat' => $outputFormat,
+				'fallback' => $this->l10n->t(
+					'Set outputFormat to "preserve" to bypass conversion if you must keep the native format.'
+				),
+			],
+			422
+		);
+
+	}//end conversionFailedResponse()
 
 	/**
 	 * Answer a run nobody has checked with 409 and what to do about it.
