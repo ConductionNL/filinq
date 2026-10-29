@@ -520,7 +520,17 @@ class SigningService implements SigningServiceInterface {
 
 		['register' => $signerRegister, 'schema' => $signerSchema] = $this->requireSignerRecordBinding();
 
-		$signer  = $this->loadPendingSigner(act: $act);
+		$signer = $this->actorResolver->loadAuthorisedSigner(
+			requestId: $requestId,
+			signerId: $signerId,
+			verifiedActor: $verifiedActor,
+			actorUserId: $actorUserId,
+			action: 'sign'
+		);
+		if (($signer['status'] ?? '') !== 'PENDING') {
+			throw new RuntimeException('Signer has already responded to this request');
+		}
+
 		$signer['identityEvidence'] = $this->assuranceGate->evidenceForAct(
 			request: $request + ['id' => $requestId],
 			signer: $signer + ['id' => $signerId],
@@ -536,7 +546,12 @@ class SigningService implements SigningServiceInterface {
 			now: $act->now
 		);
 
-		$signer = $this->markSigned(signer: array_merge($signer, $consent['record']), request: $request, act: $act, signatureData: $signatureData);
+		$signer = $act->stampSigned(
+			signer: array_merge($signer, $consent['record']),
+			ipAddress: $this->actorResolver->getClientIp(),
+			signatureData: $signatureData
+		);
+		$signer = (new PortalSignatureAssurance())->recordOn(signer: $signer, request: $request, verifiedActor: $verifiedActor);
 		$objectService->saveObject(object: $signer, register: $signerRegister, schema: $signerSchema, _rbac: false);
 
 		$this->logSigned(act: $act, request: $request, metadata: array_merge($consent['audit'], ['identityEvidence' => $signer['identityEvidence']]));
@@ -548,11 +563,8 @@ class SigningService implements SigningServiceInterface {
 
 	/**
 	 * Load a signing request that can still be signed, and hold the in-app
-	 * actor to the signing mandate.
-	 *
-	 * The mandate is declared in Nextcloud groups, which an invited external
-	 * portal signer is not a member of; the portal path has its own
-	 * verified-assertion gate (signing-folder-across-cases REQ-SFC-04).
+	 * actor to the signing mandate (REQ-SFC-04; portal signers are not in
+	 * Nextcloud groups and pass their own verified-assertion gate).
 	 *
 	 * @param SigningAct $act The signing act
 	 *
@@ -580,57 +592,6 @@ class SigningService implements SigningServiceInterface {
 
 		return $request;
 	}//end loadSignableRequest()
-
-	/**
-	 * Load the signer record the actor may sign as, refusing one that already responded.
-	 *
-	 * @param SigningAct $act The signing act
-	 *
-	 * @return array<string, mixed> The signer record
-	 *
-	 * @throws RuntimeException When the actor may not act as this signer or the signer is not PENDING
-	 *
-	 * @spec openspec/changes/digital-signing-integration/tasks.md#3-3
-	 */
-	private function loadPendingSigner(SigningAct $act): array {
-		$signer = $this->actorResolver->loadAuthorisedSigner(
-			requestId: $act->requestId,
-			signerId: $act->signerId,
-			verifiedActor: $act->verifiedActor,
-			actorUserId: $act->actorUserId,
-			action: 'sign'
-		);
-
-		if (($signer['status'] ?? '') !== 'PENDING') {
-			throw new RuntimeException('Signer has already responded to this request');
-		}
-
-		return $signer;
-	}//end loadPendingSigner()
-
-	/**
-	 * Mark a signer record SIGNED with the moment, the client address, the
-	 * optional evidence and the portal assurance level.
-	 *
-	 * @param array<string, mixed>      $signer        The signer record
-	 * @param array<string, mixed>      $request       The signing request
-	 * @param SigningAct                $act           The signing act
-	 * @param array<string, mixed>|null $signatureData Consent and optional drawn signature, never used for identity
-	 *
-	 * @return array<string, mixed> The signed record
-	 *
-	 * @spec openspec/specs/portal-signing-surface/spec.md
-	 */
-	private function markSigned(array $signer, array $request, SigningAct $act, ?array $signatureData): array {
-		$signer['status']    = 'SIGNED';
-		$signer['signedAt']  = $act->now->format(DateTimeInterface::ATOM);
-		$signer['ipAddress'] = $this->actorResolver->getClientIp();
-		if ($signatureData !== null) {
-			$signer['signatureData'] = $signatureData;
-		}
-
-		return (new PortalSignatureAssurance())->recordOn(signer: $signer, request: $request, verifiedActor: $act->verifiedActor);
-	}//end markSigned()
 
 	/**
 	 * Write the SIGNED audit entry.

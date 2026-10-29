@@ -22,9 +22,10 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\Signing;
 
 use DateTimeImmutable;
+use DateTimeInterface;
 
 /**
- * The resolved actor and target of one signature.
+ * The resolved actor and target of one signature, and the stamp it puts on a signer record.
  *
  * @spec openspec/changes/digital-signing-integration/tasks.md#3-3
  */
@@ -47,4 +48,26 @@ class SigningAct {
 		public readonly DateTimeImmutable $now,
 	) {
 	}//end __construct()
+
+	/**
+	 * Mark a signer record SIGNED at this act's moment from the given address.
+	 *
+	 * @param array<string, mixed>      $signer        The signer record
+	 * @param string                    $ipAddress     The client address of the act
+	 * @param array<string, mixed>|null $signatureData Consent and optional drawn signature, never used for identity
+	 *
+	 * @return array<string, mixed> The signed record
+	 *
+	 * @spec openspec/specs/portal-signing-surface/spec.md
+	 */
+	public function stampSigned(array $signer, string $ipAddress, ?array $signatureData): array {
+		$signer['status']    = 'SIGNED';
+		$signer['signedAt']  = $this->now->format(DateTimeInterface::ATOM);
+		$signer['ipAddress'] = $ipAddress;
+		if ($signatureData !== null) {
+			$signer['signatureData'] = $signatureData;
+		}
+
+		return $signer;
+	}//end stampSigned()
 }//end class
