@@ -506,17 +506,25 @@ class SigningService implements SigningServiceInterface {
 	 */
 	public function sign(string $requestId, string $signerId, ?array $verifiedActor = null, ?array $signatureData = null): array {
 		[$actorUserId, $actorDisplayName] = $this->actorResolver->resolveActingIdentity(verifiedActor: $verifiedActor);
+
+		$objectService = $this->settingsService->getObjectService();
+		$request       = $this->loadSignableRequest(requestId: $requestId);
+
+		// The mandate is declared in Nextcloud groups, which an invited portal
+		// signer is not in; the portal path has its own verified-assertion gate.
+		if ($this->mandateService !== null && $verifiedActor === null) {
+			$this->mandateService->assertMaySign(request: $request, userId: $actorUserId);
+		}
+
 		$act = new SigningAct(
 			requestId: $requestId,
 			signerId: $signerId,
+			request: $request,
 			verifiedActor: $verifiedActor,
-			actorUserId: $actorUserId,
-			actorDisplayName: $actorDisplayName,
+			actor: ['userId' => $actorUserId, 'displayName' => $actorDisplayName],
+			signatureData: $signatureData,
 			now: new DateTimeImmutable()
 		);
-
-		$objectService = $this->settingsService->getObjectService();
-		$request       = $this->loadSignableRequest(act: $act);
 
 		['register' => $signerRegister, 'schema' => $signerSchema] = $this->requireSignerRecordBinding();
 
@@ -546,15 +554,11 @@ class SigningService implements SigningServiceInterface {
 			now: $act->now
 		);
 
-		$signer = $act->stampSigned(
-			signer: array_merge($signer, $consent['record']),
-			ipAddress: $this->actorResolver->getClientIp(),
-			signatureData: $signatureData
-		);
+		$signer = $act->stampSigned(signer: array_merge($signer, $consent['record']), ipAddress: $this->actorResolver->getClientIp());
 		$signer = (new PortalSignatureAssurance())->recordOn(signer: $signer, request: $request, verifiedActor: $verifiedActor);
 		$objectService->saveObject(object: $signer, register: $signerRegister, schema: $signerSchema, _rbac: false);
 
-		$this->logSigned(act: $act, request: $request, metadata: array_merge($consent['audit'], ['identityEvidence' => $signer['identityEvidence']]));
+		$this->logSigned(act: $act, metadata: array_merge($consent['audit'], ['identityEvidence' => $signer['identityEvidence']]));
 		$this->assuranceGate->consume(requestId: $requestId, signerId: $signerId);
 		$this->updateRequestStatus(requestId: $requestId, request: $request, verifiedActor: $verifiedActor);
 
@@ -562,11 +566,9 @@ class SigningService implements SigningServiceInterface {
 	}//end sign()
 
 	/**
-	 * Load a signing request that can still be signed, and hold the in-app
-	 * actor to the signing mandate (REQ-SFC-04; portal signers are not in
-	 * Nextcloud groups and pass their own verified-assertion gate).
+	 * Load a signing request that can still be signed.
 	 *
-	 * @param SigningAct $act The signing act
+	 * @param string $requestId The signing request ID
 	 *
 	 * @return array<string, mixed> The signing request
 	 *
@@ -574,20 +576,16 @@ class SigningService implements SigningServiceInterface {
 	 *
 	 * @spec openspec/changes/digital-signing-integration/tasks.md#3-3
 	 */
-	private function loadSignableRequest(SigningAct $act): array {
+	private function loadSignableRequest(string $requestId): array {
 		// Without a caller user ID access-denied is impossible, so null means not found.
-		$request = $this->getRequest(requestId: $act->requestId);
+		$request = $this->getRequest(requestId: $requestId);
 		if ($request === null) {
-			throw new RuntimeException('Signing request not found: ' . $act->requestId);
+			throw new RuntimeException('Signing request not found: ' . $requestId);
 		}
 
 		$status = $request['status'] ?? '';
 		if (in_array($status, ['PENDING', 'IN_PROGRESS'], true) === false) {
 			throw new RuntimeException('Signing request is not in a signable state: ' . $status);
-		}
-
-		if ($this->mandateService !== null && $act->verifiedActor === null) {
-			$this->mandateService->assertMaySign(request: $request, userId: $act->actorUserId);
 		}
 
 		return $request;
@@ -597,22 +595,21 @@ class SigningService implements SigningServiceInterface {
 	 * Write the SIGNED audit entry.
 	 *
 	 * @param SigningAct           $act      The signing act
-	 * @param array<string, mixed> $request  The signing request
 	 * @param array<string, mixed> $metadata Consent and identity evidence for the entry
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/changes/digital-signing-integration/tasks.md#3-3
 	 */
-	private function logSigned(SigningAct $act, array $request, array $metadata): void {
+	private function logSigned(SigningAct $act, array $metadata): void {
 		$this->auditService->logEvent(
 			signingRequestId: $act->requestId,
 			action: 'SIGNED',
-			actorUserId: $act->actorUserId,
-			actorDisplayName: $act->actorDisplayName,
+			actorUserId: $act->actor['userId'],
+			actorDisplayName: $act->actor['displayName'],
 			ipAddress: $this->actorResolver->getClientIp(),
-			signatureLevel: $request['signatureLevel'] ?? 'SES',
-			provider: $request['provider'] ?? 'native',
+			signatureLevel: $act->request['signatureLevel'] ?? 'SES',
+			provider: $act->request['provider'] ?? 'native',
 			metadata: array_merge($this->actorResolver->actorAuditMetadata(verifiedActor: $act->verifiedActor), $metadata)
 		);
 	}//end logSigned()

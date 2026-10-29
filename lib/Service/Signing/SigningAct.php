@@ -32,19 +32,21 @@ use DateTimeInterface;
 class SigningAct {
 
 	/**
-	 * @param string                    $requestId        The signing request ID
-	 * @param string                    $signerId         The signer record ID
-	 * @param array<string, mixed>|null $verifiedActor    The verified external actor, or null for the session user
-	 * @param string                    $actorUserId      The acting user ID
-	 * @param string                    $actorDisplayName The acting user's display name
-	 * @param DateTimeImmutable         $now              The moment of the act
+	 * @param string                    $requestId     The signing request ID
+	 * @param string                    $signerId      The signer record ID
+	 * @param array<string, mixed>      $request       The signing request
+	 * @param array<string, mixed>|null $verifiedActor The verified external actor, or null for the session user
+	 * @param array{userId: string, displayName: string} $actor The acting user
+	 * @param array<string, mixed>|null $signatureData Consent and optional drawn signature, never used for identity
+	 * @param DateTimeImmutable         $now           The moment of the act
 	 */
 	public function __construct(
 		public readonly string $requestId,
 		public readonly string $signerId,
+		public readonly array $request,
 		public readonly ?array $verifiedActor,
-		public readonly string $actorUserId,
-		public readonly string $actorDisplayName,
+		public readonly array $actor,
+		public readonly ?array $signatureData,
 		public readonly DateTimeImmutable $now,
 	) {
 	}//end __construct()
@@ -52,20 +54,19 @@ class SigningAct {
 	/**
 	 * Mark a signer record SIGNED at this act's moment from the given address.
 	 *
-	 * @param array<string, mixed>      $signer        The signer record
-	 * @param string                    $ipAddress     The client address of the act
-	 * @param array<string, mixed>|null $signatureData Consent and optional drawn signature, never used for identity
+	 * @param array<string, mixed> $signer    The signer record
+	 * @param string               $ipAddress The client address of the act
 	 *
 	 * @return array<string, mixed> The signed record
 	 *
 	 * @spec openspec/specs/portal-signing-surface/spec.md
 	 */
-	public function stampSigned(array $signer, string $ipAddress, ?array $signatureData): array {
+	public function stampSigned(array $signer, string $ipAddress): array {
 		$signer['status']    = 'SIGNED';
 		$signer['signedAt']  = $this->now->format(DateTimeInterface::ATOM);
 		$signer['ipAddress'] = $ipAddress;
-		if ($signatureData !== null) {
-			$signer['signatureData'] = $signatureData;
+		if ($this->signatureData !== null) {
+			$signer['signatureData'] = $this->signatureData;
 		}
 
 		return $signer;
