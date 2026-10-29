@@ -22,7 +22,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\EntitySearch;
 
-use OCA\Filinq\AppInfo\Application;
+use OCA\Filinq\Kernel\AppIdentity;
 use OCA\Filinq\Exception\EntitySearchRefusedException;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
@@ -123,7 +123,7 @@ class EntitySearchGate {
 	 */
 	private function groups(): ?array {
 		try {
-			$raw = $this->appConfig->getValueString(Application::APP_ID, self::CONFIG_KEY, '[]');
+			$raw = $this->appConfig->getValueString(AppIdentity::APP_ID, self::CONFIG_KEY, '[]');
 			$decoded = json_decode(json: $raw, associative: true, flags: JSON_THROW_ON_ERROR);
 		} catch (Throwable) {
 			return null;

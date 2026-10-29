@@ -19,7 +19,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\Publication;
 
-use OCA\Filinq\AppInfo\Application;
+use OCA\Filinq\Kernel\AppIdentity;
 use OCP\Files\IRootFolder;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
@@ -133,7 +133,7 @@ class PublicationAccess {
 	 * @return bool True when the user is in a publisher group.
 	 */
 	private function isPublisher(string $uid): bool {
-		$raw = $this->appConfig->getValueString(Application::APP_ID, self::PUBLISHER_GROUPS_KEY, self::DEFAULT_PUBLISHER_GROUPS);
+		$raw = $this->appConfig->getValueString(AppIdentity::APP_ID, self::PUBLISHER_GROUPS_KEY, self::DEFAULT_PUBLISHER_GROUPS);
 		$groups = json_decode($raw, true);
 		if (is_array($groups) === false) {
 			return false;

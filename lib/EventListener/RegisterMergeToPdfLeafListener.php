@@ -33,7 +33,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\EventListener;
 
-use OCA\Filinq\AppInfo\Application;
+use OCA\Filinq\Kernel\AppIdentity;
 use OCA\OpenRegister\Event\RegisterLeafProvidersEvent;
 use OCA\OpenRegister\Service\Integration\LeafDescriptor;
 use OCP\EventDispatcher\Event;
@@ -113,7 +113,7 @@ class RegisterMergeToPdfLeafListener implements IEventListener {
 				label: $this->l10n->t('Merge to PDF'),
 				icon: self::ICON,
 				kinds: [LeafDescriptor::KIND_RENDER_SURFACE],
-				requiredApp: Application::APP_ID,
+				requiredApp: AppIdentity::APP_ID,
 				group: 'documents',
 				surfaces: self::SURFACES,
 				referenceType: self::LEAF_ID,

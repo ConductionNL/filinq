@@ -30,7 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Repair;
 
-use OCA\Filinq\AppInfo\Application;
+use OCA\Filinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
 use OCP\Migration\IOutput;
@@ -118,7 +118,7 @@ class RenameRoleGroups implements IRepairStep {
 	 * @return void
 	 */
 	public function run(IOutput $output): void {
-		if ($this->appConfig->getValueString(Application::APP_ID, self::DONE_KEY, '') === '1') {
+		if ($this->appConfig->getValueString(AppIdentity::APP_ID, self::DONE_KEY, '') === '1') {
 			return;
 		}
 
@@ -131,7 +131,7 @@ class RenameRoleGroups implements IRepairStep {
 			$this->rewriteSetting(key: $key);
 		}
 
-		$this->appConfig->setValueString(Application::APP_ID, self::DONE_KEY, '1');
+		$this->appConfig->setValueString(AppIdentity::APP_ID, self::DONE_KEY, '1');
 
 	}//end run()
 
@@ -174,11 +174,11 @@ class RenameRoleGroups implements IRepairStep {
 	 * @return void
 	 */
 	private function rewriteSetting(string $key): void {
-		if ($this->appConfig->hasKey(Application::APP_ID, $key) === false) {
+		if ($this->appConfig->hasKey(AppIdentity::APP_ID, $key) === false) {
 			return;
 		}
 
-		$raw = $this->appConfig->getValueString(Application::APP_ID, $key, '');
+		$raw = $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
 		$groups = json_decode($raw, true);
 		if (is_array($groups) === false || array_is_list($groups) === false) {
 			return;
@@ -193,7 +193,7 @@ class RenameRoleGroups implements IRepairStep {
 		}
 
 		if ($renamed !== $groups) {
-			$this->appConfig->setValueString(Application::APP_ID, $key, (string) json_encode(array_values(array_unique($renamed, SORT_REGULAR))));
+			$this->appConfig->setValueString(AppIdentity::APP_ID, $key, (string) json_encode(array_values(array_unique($renamed, SORT_REGULAR))));
 		}
 
 	}//end rewriteSetting()

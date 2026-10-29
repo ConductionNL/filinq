@@ -22,7 +22,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use InvalidArgumentException;
-use OCA\Filinq\AppInfo\Application;
+use OCA\Filinq\Kernel\AppIdentity;
 use OCA\Filinq\Service\SignerAuth\OidcBrokerProvider;
 use OCA\Filinq\Service\SignerAuth\SignerAuthSettings;
 use OCA\Filinq\Settings\FilinqAdmin;
@@ -61,7 +61,7 @@ class SignerIdentitySettingsController extends Controller {
 		IRequest $request,
 		private readonly SignerAuthSettings $settings,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 
 	}//end __construct()
 
