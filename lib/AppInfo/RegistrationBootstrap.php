@@ -24,14 +24,11 @@ declare(strict_types=1);
 namespace OCA\Filinq\AppInfo;
 
 use Exception;
+use OCA\Filinq\EventListener\ListenerRegistrar;
 use OCA\Filinq\Mcp\FilinqScannableServices;
 use OCA\Filinq\Middleware\LanguageNegotiationMiddleware;
-use OCA\Filinq\Service\ContractBindings;
-use OCA\Filinq\Service\DomainFolderGateway;
-use OCA\Filinq\Service\MountCapabilityProbe;
-use OCA\Filinq\Service\NextcloudDomainFolderGateway;
-use OCA\Filinq\Service\NextcloudMountCapabilityProbe;
-use OCA\Filinq\Service\SettingsService;
+use OCA\Filinq\Kernel\Contracts\SettingsServiceInterface;
+use OCA\Filinq\Service\ServiceRegistrar;
 use OCA\OpenRegister\AppHost\Bootstrap;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
@@ -62,14 +59,18 @@ class RegistrationBootstrap {
 	 * @return void
 	 *
 	 * @spec openspec/changes/flow-generate-document-node/specs/flow-document-generation/spec.md#requirement-filinq-registers-its-node-and-still-boots-without-openregister
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) OpenRegisterAutoloader::register() is
+	 * the app's own static prelude; there is no container at the composition root
+	 * to resolve an adapter from.
 	 */
 	public function register(IRegistrationContext $context): void {
-		(new ObjectEventRegistrar())->register(context: $context);
-		(new SigningEventRegistrar())->register(context: $context);
-		(new PdfConversionRegistrar())->register(context: $context);
-		(new IntegrationLeafRegistrar())->register(context: $context);
-		(new DocumentGenerationRegistrar())->register(context: $context);
-		(new ContractBindings())->register(context: $context);
+		// The integration-leaf registrar probes for an OpenRegister event class,
+		// which only resolves once OpenRegister's prefix is on the autoloader.
+		// apphost-prelude exclude OpenRegisterAutoloader::register() below is the prelude.
+		OpenRegisterAutoloader::register();
+		(new ListenerRegistrar())->register(context: $context);
+		(new ServiceRegistrar())->register(context: $context);
 
 		$this->bindStoreController(context: $context);
 
@@ -88,24 +89,6 @@ class RegistrationBootstrap {
 		$context->registerServiceAlias(
 			ObjectServiceInterface::class,
 			'OCA\OpenRegister\Service\ObjectService'
-		);
-
-		// REQ-CDF-06: the one probe that talks to a real mount. Nextcloud
-		// autowires concrete classes but not interfaces, so without this binding
-		// anything asking for ExternalMountValidator fails to resolve -- and the
-		// validator is read from the setup wizard, so that would be a 500 on the
-		// first screen an administrator opens rather than a quiet gap.
-		$context->registerServiceAlias(
-			MountCapabilityProbe::class,
-			NextcloudMountCapabilityProbe::class
-		);
-
-		// REQ-CDF-02: the nightly DomainFolderReconciliationJob needs this seam;
-		// without the binding its constructor cannot be resolved and the
-		// instance's whole cron pass dies on it.
-		$context->registerServiceAlias(
-			DomainFolderGateway::class,
-			NextcloudDomainFolderGateway::class
 		);
 
 		// ADR-063 chain 3/3: the per-app opt-in telling OpenRegister which of our
@@ -171,11 +154,11 @@ class RegistrationBootstrap {
 	 * @return void
 	 */
 	public function boot(ContainerInterface $container, string $appName): void {
-		(new ObjectEventRegistrar())->boot(container: $container, appName: $appName);
+		(new ListenerRegistrar())->boot(container: $container, appName: $appName);
 
 		// Initialize OpenRegister configuration on boot.
 		try {
-			$settingsService = $container->get(SettingsService::class);
+			$settingsService = $container->get(SettingsServiceInterface::class);
 			$settingsService->initialize();
 		} catch (Exception $e) {
 			// Silently fail - initialization errors are logged by SettingsService.

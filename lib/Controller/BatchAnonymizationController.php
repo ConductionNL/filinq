@@ -36,13 +36,13 @@ namespace OCA\Filinq\Controller;
 
 use OCA\Filinq\Kernel\Contracts\BatchAnonymizeServiceInterface;
 use OCA\Filinq\Kernel\Contracts\BatchExtractionServiceInterface;
+use OCA\Filinq\Kernel\Contracts\BatchReportServiceInterface;
 use OCA\Filinq\Kernel\Contracts\BatchStateServiceInterface;
 use OCA\Filinq\Kernel\Contracts\BatchUploadServiceInterface;
 use OCA\Filinq\Kernel\Contracts\EntityConsolidationServiceInterface;
 use OCA\Filinq\Kernel\Contracts\FolderBatchServiceInterface;
-use OCA\Filinq\Service\BatchReportService;
+use OCA\Filinq\Kernel\Contracts\WooProfileServiceInterface;
 use OCA\Filinq\Service\BatchRequestService;
-use OCA\Filinq\Service\WooProfileService;
 use OCA\Filinq\Settings\FilinqAdmin;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -91,9 +91,9 @@ class BatchAnonymizationController extends Controller {
 	 * @param BatchUploadServiceInterface $uploadService Service that persists uploaded files into a new batch.
 	 * @param BatchExtractionServiceInterface $extractService Service that drives per-file entity extraction.
 	 * @param BatchAnonymizeServiceInterface $anonService Service that applies approved entities across a batch.
-	 * @param BatchReportService $reportService Service that produces the per-batch CSV report.
+	 * @param BatchReportServiceInterface $reportService Service that produces the per-batch CSV report.
 	 * @param EntityConsolidationServiceInterface $entityService Service that merges per-file entity detections into one list.
-	 * @param WooProfileService $profileService Service that stores the WOO entity profile.
+	 * @param WooProfileServiceInterface $profileService Service that stores the WOO entity profile.
 	 * @param FolderBatchServiceInterface $folderBatchService Service that turns an existing folder into a batch.
 	 * @param IL10N $l10n Translator for user-facing error messages.
 	 * @param IAppConfig $appConfig Tenant configuration provider (reads
@@ -110,9 +110,9 @@ class BatchAnonymizationController extends Controller {
 		private readonly BatchUploadServiceInterface $uploadService,
 		private readonly BatchExtractionServiceInterface $extractService,
 		private readonly BatchAnonymizeServiceInterface $anonService,
-		private readonly BatchReportService $reportService,
+		private readonly BatchReportServiceInterface $reportService,
 		private readonly EntityConsolidationServiceInterface $entityService,
-		private readonly WooProfileService $profileService,
+		private readonly WooProfileServiceInterface $profileService,
 		private readonly FolderBatchServiceInterface $folderBatchService,
 		private readonly IL10N $l10n,
 		private readonly IAppConfig $appConfig,
@@ -273,6 +273,9 @@ class BatchAnonymizationController extends Controller {
 	 * @NoCSRFRequired
 	 *
 	 * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-status-endpoint
+	 *
+	 * @no-admin-idor-exempt ownership is enforced one layer down. BatchStateService::getBatch() returns
+	 * null unless the batch's userId is the session user (admins excepted), and null answers 404.
 	 */
 	public function batchStatus(string $batchId): JSONResponse {
 		if ($this->userSession->getUser() === null) {
@@ -314,6 +317,9 @@ class BatchAnonymizationController extends Controller {
 	 * @NoCSRFRequired
 	 *
 	 * @spec openspec/specs/anonymization-entity-review/spec.md#requirement-consolidated-entity-list-endpoint
+	 *
+	 * @no-admin-idor-exempt ownership is enforced one layer down. BatchStateService::getBatch() returns
+	 * null unless the batch's userId is the session user (admins excepted), and null answers 404.
 	 */
 	public function batchEntities(string $batchId): JSONResponse {
 		try {

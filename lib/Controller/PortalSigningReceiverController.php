@@ -40,10 +40,10 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use OCA\Filinq\Kernel\Contracts\OpenRegisterResolverInterface;
+use OCA\Filinq\Kernel\Contracts\PortalSigningDocumentResolverInterface;
 use OCA\Filinq\Kernel\Contracts\SettingsServiceInterface;
 use OCA\Filinq\Kernel\Contracts\SigningServiceInterface;
 use OCA\Filinq\Portal\PortalAssertionVerifier;
-use OCA\Filinq\Service\PortalSigningDocumentResolver;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
@@ -102,7 +102,7 @@ class PortalSigningReceiverController extends Controller {
 	 * @param SettingsServiceInterface $settingsService Settings service (resolves OR's ObjectService).
 	 * @param OpenRegisterResolverInterface $registerResolver Resolves register/schema bindings, failing closed.
 	 * @param LoggerInterface $logger Logger.
-	 * @param PortalSigningDocumentResolver $documentResolver Resolves the target document for viewDocument.
+	 * @param PortalSigningDocumentResolverInterface $documentResolver Resolves the target document for viewDocument.
 	 * @param IThrottler $throttler Brute-force throttler; rejected portal assertions are registered against it.
 	 *
 	 * @return void
@@ -115,7 +115,7 @@ class PortalSigningReceiverController extends Controller {
 		private readonly SettingsServiceInterface $settingsService,
 		private readonly OpenRegisterResolverInterface $registerResolver,
 		private readonly LoggerInterface $logger,
-		private readonly PortalSigningDocumentResolver $documentResolver,
+		private readonly PortalSigningDocumentResolverInterface $documentResolver,
 		private readonly IThrottler $throttler,
 	) {
 		parent::__construct(appName: $appName, request: $request);

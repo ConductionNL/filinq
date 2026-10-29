@@ -31,9 +31,9 @@ namespace OCA\Filinq\Controller;
 
 use OCA\Filinq\Kernel\Contracts\DocumentFinalityRuleServiceInterface;
 use OCA\Filinq\Kernel\Contracts\FinalDocumentCorrectionServiceInterface;
+use OCA\Filinq\Kernel\Contracts\FinalDocumentFailureMapperInterface;
 use OCA\Filinq\Kernel\Contracts\FinalDocumentServiceInterface;
 use OCA\Filinq\Kernel\Contracts\FinalDocumentUnfreezeServiceInterface;
-use OCA\Filinq\Service\FinalDocumentFailureMapper;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -65,7 +65,7 @@ class FinalDocumentController extends Controller {
 	 * @param FinalDocumentCorrectionServiceInterface $corrections The correction service.
 	 * @param FinalDocumentUnfreezeServiceInterface $unfreeze The recorded exception.
 	 * @param DocumentFinalityRuleServiceInterface $rules The declaration store.
-	 * @param FinalDocumentFailureMapper $failures Failure shaping shared by every method here.
+	 * @param FinalDocumentFailureMapperInterface $failures Failure shaping shared by every method here.
 	 * @param IUserSession $userSession The current user session.
 	 * @param IL10N $l10n Localisation.
 	 *
@@ -78,7 +78,7 @@ class FinalDocumentController extends Controller {
 		private readonly FinalDocumentCorrectionServiceInterface $corrections,
 		private readonly FinalDocumentUnfreezeServiceInterface $unfreeze,
 		private readonly DocumentFinalityRuleServiceInterface $rules,
-		private readonly FinalDocumentFailureMapper $failures,
+		private readonly FinalDocumentFailureMapperInterface $failures,
 		private readonly IUserSession $userSession,
 		private readonly IL10N $l10n,
 	) {

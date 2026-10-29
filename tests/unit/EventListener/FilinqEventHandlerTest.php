@@ -29,6 +29,7 @@ namespace OCA\Filinq\Tests\Unit\EventListener;
 
 use OCA\Filinq\EventListener\EnrichmentRunner;
 use OCA\Filinq\EventListener\FilinqEventHandler;
+use OCA\Filinq\Kernel\Contracts\LegalBasesSummaryServiceInterface;
 use OCA\Filinq\Service\LegalBasesSummaryService;
 use OCA\Filinq\Service\MetadataService;
 use OCA\Filinq\Service\PolicyRetroactiveService;
@@ -674,7 +675,7 @@ class FilinqEventHandlerTest extends TestCase {
 		$summaryService->expects($this->once())
 			->method('renderDossierSummary')
 			->with($this->identicalTo('dossier-uuid'));
-		$this->installContainer(LegalBasesSummaryService::class, $summaryService);
+		$this->installContainer(LegalBasesSummaryServiceInterface::class, $summaryService);
 
 		$this->handler->handleObjectUpdated(
 			new ObjectUpdatedEvent(
@@ -697,7 +698,7 @@ class FilinqEventHandlerTest extends TestCase {
 	public function testRegenSkippedWhenAutoRegenOnReviewIsDisabled(): void {
 		$summaryService = $this->createMock(originalClassName: LegalBasesSummaryService::class);
 		$summaryService->expects($this->never())->method('renderDossierSummary');
-		$this->installContainer(LegalBasesSummaryService::class, $summaryService);
+		$this->installContainer(LegalBasesSummaryServiceInterface::class, $summaryService);
 
 		$payload = $this->dossierPayload(
 			extra: ['configuration' => ['grondslagen' => ['autoRegenOnReview' => false]]]
@@ -728,7 +729,7 @@ class FilinqEventHandlerTest extends TestCase {
 	public function testAutoRegenDefaultsToEnabled(array $extra): void {
 		$summaryService = $this->createMock(originalClassName: LegalBasesSummaryService::class);
 		$summaryService->expects($this->once())->method('renderDossierSummary');
-		$this->installContainer(LegalBasesSummaryService::class, $summaryService);
+		$this->installContainer(LegalBasesSummaryServiceInterface::class, $summaryService);
 
 		$this->handler->handleObjectUpdated(
 			new ObjectUpdatedEvent(
@@ -774,7 +775,7 @@ class FilinqEventHandlerTest extends TestCase {
 	): void {
 		$summaryService = $this->createMock(originalClassName: LegalBasesSummaryService::class);
 		$summaryService->expects($this->never())->method('renderDossierSummary');
-		$this->installContainer(LegalBasesSummaryService::class, $summaryService);
+		$this->installContainer(LegalBasesSummaryServiceInterface::class, $summaryService);
 
 		$this->handler->handleObjectUpdated(
 			new ObjectUpdatedEvent(
@@ -813,7 +814,7 @@ class FilinqEventHandlerTest extends TestCase {
 	public function testRegenSkippedForNonDossierShapes(array $payload): void {
 		$summaryService = $this->createMock(originalClassName: LegalBasesSummaryService::class);
 		$summaryService->expects($this->never())->method('renderDossierSummary');
-		$this->installContainer(LegalBasesSummaryService::class, $summaryService);
+		$this->installContainer(LegalBasesSummaryServiceInterface::class, $summaryService);
 
 		$this->handler->handleObjectUpdated(
 			new ObjectUpdatedEvent($this->makeObject($payload), $this->makeObject([])),
@@ -853,7 +854,7 @@ class FilinqEventHandlerTest extends TestCase {
 		$summaryService->expects($this->once())
 			->method('renderDossierSummary')
 			->with($this->identicalTo($expected));
-		$this->installContainer(LegalBasesSummaryService::class, $summaryService);
+		$this->installContainer(LegalBasesSummaryServiceInterface::class, $summaryService);
 
 		$payload = [
 			'name' => 'Dossier A',
@@ -896,7 +897,7 @@ class FilinqEventHandlerTest extends TestCase {
 	public function testDossierWithoutAUuidWarnsAndSkipsRegen(): void {
 		$summaryService = $this->createMock(originalClassName: LegalBasesSummaryService::class);
 		$summaryService->expects($this->never())->method('renderDossierSummary');
-		$this->installContainer(LegalBasesSummaryService::class, $summaryService);
+		$this->installContainer(LegalBasesSummaryServiceInterface::class, $summaryService);
 
 		$this->logger->expects($this->once())
 			->method('warning')
@@ -924,7 +925,7 @@ class FilinqEventHandlerTest extends TestCase {
 		$summaryService->expects($this->once())
 			->method('renderDossierSummary')
 			->willThrowException(new \RuntimeException('render failed'));
-		$this->installContainer(LegalBasesSummaryService::class, $summaryService);
+		$this->installContainer(LegalBasesSummaryServiceInterface::class, $summaryService);
 
 		$this->logger->expects($this->once())
 			->method('warning')
