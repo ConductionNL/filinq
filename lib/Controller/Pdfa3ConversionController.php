@@ -28,7 +28,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use OCA\Filinq\Exception\Pdfa3ConversionException;
-use OCA\Filinq\Service\Pdfa3ConversionService;
+use OCA\Filinq\Kernel\Contracts\Pdfa3ConversionServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -60,7 +60,7 @@ class Pdfa3ConversionController extends Controller {
 	 * @param string $appName The application name.
 	 * @param IRequest $request The request object.
 	 * @param LoggerInterface $logger Logger for error reporting.
-	 * @param Pdfa3ConversionService $service The PDF/A-3 conversion service.
+	 * @param Pdfa3ConversionServiceInterface $service The PDF/A-3 conversion service.
 	 * @param IRootFolder $rootFolder Root folder, for IDOR-safe file resolution.
 	 * @param IL10N $l10n The localization service.
 	 * @param IUserSession $userSession User session for authentication.
@@ -71,7 +71,7 @@ class Pdfa3ConversionController extends Controller {
 		string $appName,
 		IRequest $request,
 		private readonly LoggerInterface $logger,
-		private readonly Pdfa3ConversionService $service,
+		private readonly Pdfa3ConversionServiceInterface $service,
 		private readonly IRootFolder $rootFolder,
 		private readonly IL10N $l10n,
 		private readonly IUserSession $userSession,

@@ -26,6 +26,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use Exception;
+use OCA\Filinq\Kernel\Contracts\TemplatePreviewServiceInterface;
 use OCA\Filinq\Service\Validation\TemplateAccessibilityLint;
 use OCP\IConfig;
 
@@ -38,7 +39,7 @@ use OCP\IConfig;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  */
-class TemplatePreviewService {
+class TemplatePreviewService implements TemplatePreviewServiceInterface {
 	/**
 	 * Constructor for TemplatePreviewService
 	 *

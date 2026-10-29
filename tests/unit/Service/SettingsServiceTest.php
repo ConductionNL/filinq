@@ -455,4 +455,105 @@ class SettingsServiceTest extends TestCase {
 
 	}//end testUpdateSettingsSkipsEmptyKeys()
 
+	/**
+	 * With OpenRegister installed the available registers are listed; when
+	 * listing them fails the settings still load with none.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/admin-settings/spec.md
+	 */
+	public function testGetAllSettingsListsRegistersAndSurvivesADiscoveryFailure(): void {
+		$this->mockOpenRegister->method('isInstalled')->willReturn(true);
+		$this->mockConfig->method('getValueString')->willReturn('1');
+		$this->mockDiscoveryService->method('fetchAvailableRegisters')
+			->willReturnOnConsecutiveCalls(
+				[['id' => 1]],
+				$this->throwException(new RuntimeException('down'))
+			);
+
+		$listed = $this->settingsService->getAllSettings();
+		$this->assertTrue($listed['openRegisters']);
+		$this->assertSame([['id' => 1]], $listed['availableRegisters']);
+
+		$this->mockLogger->expects($this->once())->method('info');
+		$failed = $this->settingsService->getAllSettings();
+		$this->assertTrue($failed['openRegisters']);
+		$this->assertSame([], $failed['availableRegisters']);
+
+	}//end testGetAllSettingsListsRegistersAndSurvivesADiscoveryFailure()
+
+	/**
+	 * A failure while loading the settings surfaces as a RuntimeException.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/admin-settings/spec.md
+	 */
+	public function testGetAllSettingsWrapsALoadFailure(): void {
+		$this->mockOpenRegister->method('isInstalled')->willReturn(false);
+		$this->mockDiscoveryService->method('loadObjectTypeConfiguration')
+			->willThrowException(new \Exception('broken'));
+
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessage('Failed to retrieve settings: broken');
+		$this->settingsService->getAllSettings();
+
+	}//end testGetAllSettingsWrapsALoadFailure()
+
+	/**
+	 * A stored confidentiality vocabulary replaces the default one.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/files-confidential-labels/specs/files-confidential-labels/spec.md#requirement-read-a-files-confidentiality-label-availability-guarded-req-ddfcl-001
+	 */
+	public function testAStoredConfidentialityVocabularyIsReturned(): void {
+		$this->mockConfig->method('getValueString')->willReturnCallback(
+			static function (string $app, string $key, string $default = ''): string {
+				if ($key === 'filinq.confidentiality.label_vocabulary') {
+					return '{"Open":0,"Closed":1}';
+				}
+
+				return $default;
+			}
+		);
+
+		$toggles = $this->settingsService->getFeatureToggles();
+		$this->assertSame(['Open' => 0, 'Closed' => 1], $toggles['filinq.confidentiality.label_vocabulary']);
+
+	}//end testAStoredConfidentialityVocabularyIsReturned()
+
+	/**
+	 * An array value is stored as JSON.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/admin-settings/spec.md
+	 */
+	public function testUpdateSettingsStoresAnArrayAsJson(): void {
+		$this->mockConfig->expects($this->once())
+			->method('setValueString')
+			->with('filinq', 'filinq.confidentiality.label_vocabulary', '{"Open":0}');
+
+		$this->settingsService->updateSettings(['filinq.confidentiality.label_vocabulary' => ['Open' => 0]]);
+
+	}//end testUpdateSettingsStoresAnArrayAsJson()
+
+	/**
+	 * A failure while writing surfaces as a RuntimeException.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/admin-settings/spec.md
+	 */
+	public function testUpdateSettingsWrapsAWriteFailure(): void {
+		$this->mockConfig->method('setValueString')->willThrowException(new \Exception('readonly'));
+
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessage('Failed to update settings: readonly');
+		$this->settingsService->updateSettings(['signing_provider' => 'docusign']);
+
+	}//end testUpdateSettingsWrapsAWriteFailure()
+
 }//end class

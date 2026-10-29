@@ -26,7 +26,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use Exception;
-use OCA\Filinq\Service\TemplatePreviewService;
+use OCA\Filinq\Kernel\Contracts\TemplatePreviewServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -49,7 +49,7 @@ class TemplatePreviewController extends Controller {
 	 * @param string $appName The application name
 	 * @param IRequest $request The request object
 	 * @param TemplateRequestHandler $requestHandler Request param parser and error handler
-	 * @param TemplatePreviewService $previewService Service for preview rendering
+	 * @param TemplatePreviewServiceInterface $previewService Service for preview rendering
 	 * @param IUserSession $userSession User session for current user
 	 *
 	 * @return void
@@ -58,7 +58,7 @@ class TemplatePreviewController extends Controller {
 		string $appName,
 		IRequest $request,
 		private readonly TemplateRequestHandler $requestHandler,
-		private readonly TemplatePreviewService $previewService,
+		private readonly TemplatePreviewServiceInterface $previewService,
 		private readonly IUserSession $userSession,
 	) {
 		parent::__construct(appName: $appName, request: $request);

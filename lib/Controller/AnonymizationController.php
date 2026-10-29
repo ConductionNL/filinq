@@ -33,8 +33,8 @@ namespace OCA\Filinq\Controller;
 use OCA\Filinq\Exception\ConversionFailedException;
 use OCA\Filinq\Exception\RedactionNotReviewedException;
 use OCA\Filinq\Kernel\Contracts\AnonymizationServiceInterface;
+use OCA\Filinq\Kernel\Contracts\FileListingServiceInterface;
 use OCA\Filinq\Service\AnonymizeRequestService;
-use OCA\Filinq\Service\FileListingService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\Files\IRootFolder;
@@ -78,7 +78,7 @@ class AnonymizationController extends Controller {
 	 * @param IRequest $request The request object
 	 * @param LoggerInterface $logger Logger for error reporting
 	 * @param AnonymizationServiceInterface $anonymizationService Service for anonymization operations
-	 * @param FileListingService $fileListingService Service for file listing operations
+	 * @param FileListingServiceInterface $fileListingService Service for file listing operations
 	 * @param IL10N $l10n The localization service
 	 * @param IAppConfig $appConfig Tenant configuration provider (reads
 	 *                              filinq.anonymisation.default_output_format)
@@ -92,7 +92,7 @@ class AnonymizationController extends Controller {
 		IRequest $request,
 		private readonly LoggerInterface $logger,
 		private readonly AnonymizationServiceInterface $anonymizationService,
-		private readonly FileListingService $fileListingService,
+		private readonly FileListingServiceInterface $fileListingService,
 		private readonly IL10N $l10n,
 		private readonly IAppConfig $appConfig,
 		private readonly IUserSession $userSession,

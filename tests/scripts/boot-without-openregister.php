@@ -87,7 +87,7 @@ foreach ($retired as $retiredClass) {
 //    class_exists(..., true) forces autoload + link, so a signature, parent
 //    or interface that needs a missing class fatals here.
 $signingSurface = [
-	'OCA\\Filinq\\AppInfo\\SigningEventRegistrar',
+	'OCA\\Filinq\\EventListener\\SigningEventRegistrar',
 	'OCA\\Filinq\\EventListener\\SigningTaskListener',
 	'OCA\\Filinq\\EventListener\\SignerEventTranslator',
 	'OCA\\Filinq\\Event\\SignerStepPendingEvent',
@@ -128,7 +128,7 @@ $context = new class implements \OCP\AppFramework\Bootstrap\IRegistrationContext
 	}
 };
 
-(new \OCA\Filinq\AppInfo\SigningEventRegistrar())->register(context: $context);
+(new \OCA\Filinq\EventListener\SigningEventRegistrar())->register(context: $context);
 
 $expected = [
 	'OCA\\OpenRegister\\Event\\TaskTransitionedEvent',
@@ -155,7 +155,7 @@ if (interface_exists('OCA\\OpenRegister\\Service\\Flow\\IFlowNode') === true) {
 }
 
 $generationSurface = [
-	'OCA\\Filinq\\AppInfo\\DocumentGenerationRegistrar',
+	'OCA\\Filinq\\EventListener\\DocumentGenerationRegistrar',
 	'OCA\\Filinq\\Flow\\FilinqFlowNodeListener',
 	'OCA\\Filinq\\EventListener\\DocumentGenerationRequestedListener',
 	'OCA\\Filinq\\Event\\DocumentGenerationRequestedEvent',
@@ -168,7 +168,7 @@ foreach ($generationSurface as $surfaceClass) {
 }
 
 $context->events = [];
-(new \OCA\Filinq\AppInfo\DocumentGenerationRegistrar())->register(context: $context);
+(new \OCA\Filinq\EventListener\DocumentGenerationRegistrar())->register(context: $context);
 $expectedGeneration = [
 	'OCA\\OpenRegister\\Service\\Flow\\RegisterFlowNodesEvent',
 	'OCA\\Filinq\\Event\\DocumentGenerationRequestedEvent',

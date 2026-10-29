@@ -251,6 +251,9 @@ class PrintController extends Controller {
 	 * @psalm-suppress InvalidArgument $statusCode is clamped to int<400, 599>; Psalm wants the literal HTTP status union.
 	 *
 	 * @spec openspec/specs/print-preview/spec.md
+	 *
+	 * @no-admin-idor-exempt a templateId is read through TemplateService::getTemplate() with OpenRegister
+	 * RBAC on (template read: authenticated); otherwise the caller's own posted template is rendered.
 	 */
 	public function downloadPdfA(): DataDownloadResponse|JSONResponse {
 		try {

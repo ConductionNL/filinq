@@ -3488,7 +3488,7 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/AppInfo/ObjectEventRegistrar.php:85-86 registers FilinqEventListener on ObjectCreatedEvent/ObjectUpdatedEvent for EVERY object on the instance; lib/EventListener/FilinqEventListener.php:67 resolves MetadataService, whose lib/Service/MetadataService.php:91-120 fills language (detectLanguage), keywords (extractKeywords) and topic (classifyTopic) when absent. src/views/settings/Settings.vue:200/961 exposes the 'Document metadata enrichment' admin toggle.",
+				"evidence": "lib/EventListener/ObjectEventRegistrar.php:85-86 registers FilinqEventListener on ObjectCreatedEvent/ObjectUpdatedEvent for EVERY object on the instance; lib/EventListener/FilinqEventListener.php:67 resolves MetadataService, whose lib/Service/MetadataService.php:91-120 fills language (detectLanguage), keywords (extractKeywords) and topic (classifyTopic) when absent. src/views/settings/Settings.vue:200/961 exposes the 'Document metadata enrichment' admin toggle.",
 				"change": "openspec/changes/archive/2026-03-21-metadata-enrichment"
 			},
 			"reachedOn": "event-driven (any document object create/update); toggle at /settings (Settings.vue)",
@@ -7085,7 +7085,7 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/AppInfo/ObjectEventRegistrar.php and lib/EventListener/DocumentRegistrationWriteGuard.php, ValidationRunner.php, DossierCheckedOnListener.php, FilinqEventListener.php, FilinqEventHandler.php all listen to OpenRegister's ObjectCreatingEvent/ObjectUpdatingEvent/ObjectTransitionedEvent and react automatically (e.g. DocumentRegistrationWriteGuard refuses an update that changes an issued registration number; the register comment documents validationStatus/validationFindings as x-openregister-calculations with 'the event-listener fallback dispatches the same service' automatically on change).",
+				"evidence": "lib/EventListener/ObjectEventRegistrar.php and lib/EventListener/DocumentRegistrationWriteGuard.php, ValidationRunner.php, DossierCheckedOnListener.php, FilinqEventListener.php, FilinqEventHandler.php all listen to OpenRegister's ObjectCreatingEvent/ObjectUpdatingEvent/ObjectTransitionedEvent and react automatically (e.g. DocumentRegistrationWriteGuard refuses an update that changes an issued registration number; the register comment documents validationStatus/validationFindings as x-openregister-calculations with 'the event-listener fallback dispatches the same service' automatically on change).",
 				"change": "openspec/changes/archive/2026-03-21-document-register"
 			},
 			"reachedOn": "internal, not a manifest page - fires automatically whenever a document register object is created/updated/transitioned",
@@ -7374,7 +7374,7 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/AppInfo/ObjectEventRegistrar.php:72-73 calls $context->registerDashboardWidget(AnonymizationWidget::class) and registerDashboardWidget(FileEntitiesWidget::class); lib/Dashboard/AnonymizationWidget.php and lib/Dashboard/FileEntitiesWidget.php implement Nextcloud's dashboard IWidget contract (@spec openspec/specs/dashboard/spec.md).",
+				"evidence": "lib/EventListener/ObjectEventRegistrar.php:72-73 calls $context->registerDashboardWidget(AnonymizationWidget::class) and registerDashboardWidget(FileEntitiesWidget::class); lib/Dashboard/AnonymizationWidget.php and lib/Dashboard/FileEntitiesWidget.php implement Nextcloud's dashboard IWidget contract (@spec openspec/specs/dashboard/spec.md).",
 				"change": "openspec/changes/archive/2026-03-21-dashboard"
 			},
 			"reachedOn": "Nextcloud's own /apps/dashboard home screen (AnonymizationWidget, FileEntitiesWidget panels)",

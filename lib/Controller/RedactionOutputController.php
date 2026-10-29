@@ -102,6 +102,10 @@ class RedactionOutputController extends Controller {
 	 *
 	 * @spec openspec/changes/redaction-and-what-leaves-the-building/specs/redaction-output-guarantee/spec.md
 	 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-2
+	 *
+	 * @no-admin-idor-exempt AnonymizeRequestService::verifyFileAccess() refuses a file outside the
+	 * caller's user folder before anything is written, and the mark is saved with OpenRegister RBAC on
+	 * (redactionReviewMark create: filinq-woo-officers, filinq-policy-admins).
 	 */
 	#[NoAdminRequired]
 	public function markChecked(int $fileId, array $entities = [], string $note = ''): JSONResponse {
@@ -151,6 +155,9 @@ class RedactionOutputController extends Controller {
 	 * @return JSONResponse `{marks: {fileId: {checkedBy, checkedAt, entityCount}}}`.
 	 *
 	 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-3
+	 *
+	 * @no-admin-idor-exempt every requested id passes AnonymizeRequestService::verifyFileAccess() (the
+	 * caller's user folder) before its mark is read; ids the caller cannot read are dropped.
 	 */
 	#[NoAdminRequired]
 	public function checkedStatus(string $fileIds = ''): JSONResponse {
@@ -189,6 +196,9 @@ class RedactionOutputController extends Controller {
 	 * @return JSONResponse The list, or what is not ready.
 	 *
 	 * @spec openspec/changes/redaction-and-what-leaves-the-building/specs/redaction-output-guarantee/spec.md
+	 *
+	 * @no-admin-idor-exempt the view is resolved by OpenRegister ViewService::find() with the session user
+	 * as owner (own or public views only), and its records are read with RBAC on (SavedViewReader).
 	 */
 	#[NoAdminRequired]
 	public function composeList(string $view, string $title = ''): JSONResponse {
@@ -210,6 +220,9 @@ class RedactionOutputController extends Controller {
 	 * @return JSONResponse The decision and the terms.
 	 *
 	 * @spec openspec/changes/redaction-and-what-leaves-the-building/specs/redaction-output-guarantee/spec.md
+	 *
+	 * @no-admin-idor-exempt caller-scoped. The acceptance is looked up for the session user only
+	 * (personAsking()), and the terms come from the downloadAgreement schema with OpenRegister RBAC on.
 	 */
 	#[NoAdminRequired]
 	public function agreement(string $document): JSONResponse {
@@ -228,6 +241,9 @@ class RedactionOutputController extends Controller {
 	 * @return JSONResponse The decision.
 	 *
 	 * @spec openspec/changes/redaction-and-what-leaves-the-building/specs/redaction-output-guarantee/spec.md
+	 *
+	 * @no-admin-idor-exempt caller-scoped. It records an acceptance for the session user only
+	 * (personAsking()) and cannot act for anybody else.
 	 */
 	#[NoAdminRequired]
 	public function acceptAgreement(string $document, string $version): JSONResponse {

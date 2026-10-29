@@ -80,6 +80,10 @@ class TemplateVersionsController extends Controller {
 	 * @NoCSRFRequired
 	 *
 	 * @spec openspec/specs/template-management/spec.md
+	 *
+	 * @no-admin-idor-exempt reads go through OpenRegister with RBAC and multitenancy on
+	 * (TemplateVersionService::getVersions()), and the templateVersion schema grants read to authenticated
+	 * users.
 	 */
 	public function versions(string $id): JSONResponse {
 		try {
@@ -153,6 +157,10 @@ class TemplateVersionsController extends Controller {
 	 * @NoCSRFRequired
 	 *
 	 * @spec openspec/specs/template-management/spec.md
+	 *
+	 * @no-admin-idor-exempt reads go through OpenRegister with RBAC and multitenancy on
+	 * (TemplateVersionService::getVersion()), and the templateVersion schema grants read to authenticated
+	 * users.
 	 */
 	public function diffVersions(): JSONResponse {
 		try {

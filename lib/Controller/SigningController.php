@@ -90,6 +90,10 @@ class SigningController extends Controller {
 	 * @NoAdminRequired
 	 *
 	 * @spec openspec/changes/digital-signing-integration/tasks.md#6-1
+	 *
+	 * @no-admin-idor-exempt SignedArtifactProducer::initiatorDocument() resolves documentFileId through
+	 * the session user's own folder and refuses a file they cannot read; the initiator is always the
+	 * session user.
 	 */
 	public function createRequest(): JSONResponse {
 		try {
@@ -297,6 +301,9 @@ class SigningController extends Controller {
 	 * @NoAdminRequired
 	 *
 	 * @spec openspec/changes/digital-signing-integration/tasks.md#6-1
+	 *
+	 * @no-admin-idor-exempt SigningActorResolver::loadAuthorisedSigner() refuses unless the signer record
+	 * belongs to this request and its userId is the session user.
 	 */
 	public function sign(string $id): JSONResponse {
 		try {
@@ -327,6 +334,9 @@ class SigningController extends Controller {
 	 * @NoAdminRequired
 	 *
 	 * @spec openspec/changes/digital-signing-integration/tasks.md#6-1
+	 *
+	 * @no-admin-idor-exempt SigningActorResolver::loadAuthorisedSigner() refuses unless the signer record
+	 * belongs to this request and its userId is the session user.
 	 */
 	public function decline(string $id): JSONResponse {
 		try {
@@ -356,6 +366,9 @@ class SigningController extends Controller {
 	 * @NoAdminRequired
 	 *
 	 * @spec openspec/changes/digital-signing-integration/tasks.md#6-1
+	 *
+	 * @no-admin-idor-exempt each id is read with getRequest(callerUserId: session user), which hides
+	 * requests the caller neither initiated nor signs, and only the caller's own signer record is signed.
 	 */
 	public function bulkSign(): JSONResponse {
 		try {
