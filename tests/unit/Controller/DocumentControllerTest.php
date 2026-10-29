@@ -804,4 +804,124 @@ class DocumentControllerTest extends TestCase {
 
 	}//end controllerAnswering()
 
+
+	/**
+	 * Every endpoint refuses a caller without a session.
+	 *
+	 * @return void
+	 */
+	public function testEveryEndpointAnswers401WithoutASession(): void {
+		$session = $this->createMock(originalClassName: IUserSession::class);
+		$session->method('getUser')->willReturn(null);
+		$this->documentSvc->expects($this->never())->method($this->anything());
+
+		$controller = new DocumentController(
+			appName: 'filinq',
+			request: $this->request,
+			documentSvc: $this->documentSvc,
+			userSession: $session,
+			logger: $this->logger,
+			l10n: $this->l10n
+		);
+
+		$this->assertSame(expected: 401, actual: $controller->preview()->getStatus());
+		$this->assertSame(expected: 401, actual: $controller->mergePreview()->getStatus());
+		$this->assertSame(expected: 401, actual: $controller->generateBulk()->getStatus());
+		$this->assertSame(expected: 401, actual: $controller->jobStatus(jobId: 'job-1')->getStatus());
+
+	}//end testEveryEndpointAnswers401WithoutASession()
+
+	/**
+	 * Data references and options that are not arrays are read as empty.
+	 *
+	 * @return void
+	 */
+	public function testNonArrayDataRefsAndOptionsAreReadAsEmpty(): void {
+		$this->request->method('getParam')
+			->willReturnMap([
+				['templateId', null, 'tmpl-1'],
+				['dataRefs', [], 'not-a-list'],
+				['options', [], 'not-a-map'],
+				['filename', 'document', 'document'],
+			]);
+		$this->documentSvc->expects($this->once())->method('generatePreview')
+			->with('tmpl-1', [], [])
+			->willReturn(['html' => '<p>x</p>', 'warnings' => []]);
+		$this->documentSvc->expects($this->once())->method('generateMergePreview')
+			->with('tmpl-1', [], [])
+			->willReturn(['html' => '<p>x</p>', 'fields' => []]);
+		$this->documentSvc->expects($this->once())->method('generateDocument')
+			->with('tmpl-1', [], ['userId' => 'test-user', 'filename' => 'document'])
+			->willReturn(['content' => '<p>x</p>', 'format' => 'html', 'metadata' => [], 'warnings' => []]);
+
+		$this->assertSame(expected: 200, actual: $this->controller->preview()->getStatus());
+		$this->assertSame(expected: 200, actual: $this->controller->mergePreview()->getStatus());
+		$this->assertSame(expected: 200, actual: $this->controller->generate()->getStatus());
+
+	}//end testNonArrayDataRefsAndOptionsAreReadAsEmpty()
+
+	/**
+	 * A service failure becomes an error response carrying the exception's HTTP code.
+	 *
+	 * @return void
+	 */
+	public function testServiceFailuresBecomeErrorResponses(): void {
+		$this->request->method('getParam')
+			->willReturnMap([
+				['templateId', null, 'tmpl-1'],
+				['dataRefs', [], []],
+				['options', [], []],
+			]);
+		$this->documentSvc->method('generatePreview')->willThrowException(new \Exception('Template not found', 404));
+		$this->documentSvc->method('generateMergePreview')->willThrowException(new \Exception('Template broken'));
+		$this->documentSvc->method('getJobStatus')->willThrowException(new \Exception('Job store down', 503));
+
+		$preview = $this->controller->preview();
+		$this->assertSame(expected: 404, actual: $preview->getStatus());
+		$this->assertSame(expected: ['error' => 'Template not found'], actual: $preview->getData());
+		$this->assertSame(expected: 500, actual: $this->controller->mergePreview()->getStatus());
+		$this->assertSame(expected: 503, actual: $this->controller->jobStatus(jobId: 'job-1')->getStatus());
+
+	}//end testServiceFailuresBecomeErrorResponses()
+
+	/**
+	 * A bulk request without a template is refused; one with non-array options
+	 * runs synchronously for the caller and a small batch answers 200.
+	 *
+	 * @return void
+	 */
+	public function testGenerateBulkNeedsATemplateAndAnswers200ForASmallBatch(): void {
+		$request = $this->createMock(originalClassName: IRequest::class);
+		$request->method('getParam')
+			->willReturnMap([
+				['templateId', null, null],
+				['objectIds', [], ['obj-1']],
+				['options', [], []],
+			]);
+		$controller = new DocumentController(
+			appName: 'filinq',
+			request: $request,
+			documentSvc: $this->documentSvc,
+			userSession: $this->userSession,
+			logger: $this->logger,
+			l10n: $this->l10n
+		);
+		$this->assertSame(expected: 400, actual: $controller->generateBulk()->getStatus());
+
+		$this->request->method('getParam')
+			->willReturnMap([
+				['templateId', null, 'tmpl-1'],
+				['objectIds', [], ['obj-1', 'obj-2']],
+				['options', [], 'not-a-map'],
+			]);
+		$this->documentSvc->expects($this->once())->method('generateBulk')
+			->with('tmpl-1', ['obj-1', 'obj-2'], ['userId' => 'test-user'])
+			->willReturn(['results' => [], 'total' => 2]);
+
+		$result = $this->controller->generateBulk();
+		$this->assertSame(expected: 200, actual: $result->getStatus());
+		$this->assertSame(expected: ['results' => [], 'total' => 2], actual: $result->getData());
+
+	}//end testGenerateBulkNeedsATemplateAndAnswers200ForASmallBatch()
+
 }//end class
