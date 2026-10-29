@@ -201,6 +201,8 @@ class OfficeAppBackend implements ConversionBackendInterface {
 	 * @return File Newly written PDF file node.
 	 *
 	 * @throws ConversionFailedException On manager failure or path resolution failure.
+	 *
+	 * @spec openspec/specs/pdf-conversion/spec.md
 	 */
 	public function convert(File $source): File {
 		if ($this->conversionManager === null) {
