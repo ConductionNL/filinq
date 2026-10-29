@@ -1,0 +1,29 @@
+# Maps the identities one person or bot used over time onto a single name and
+# address, so `git shortlog`, `git blame` and history-based tools count each
+# contributor once. Only identities that are clearly the same person are merged.
+# Format: https://git-scm.com/docs/gitmailmap
+Ruben van der Linde <ruben@conduction.nl> <rubenvdlinde@gmail.com>
+Ruben van der Linde <ruben@conduction.nl> <rubenvdlinde@noreply.codeberg.org>
+Ruben van der Linde <ruben@conduction.nl> <juan.claude@conduction.nl>
+Ruben van der Linde <ruben@conduction.nl> Ruben van der Linde <info@conduction.nl>
+Ruben van der Linde <ruben@conduction.nl> Ruben van der Linde <release-bot@conduction.nl>
+Robert Zondervan <robert@conduction.nl> <rjzondervan@noreply.codeberg.org>
+Remko Huisman <remko@conduction.nl> <remko@conduction.nl>
+Remko Huisman <remko@conduction.nl> <43807324+remko48@users.noreply.github.com>
+Thijn Douwma <thijn@conduction.nl> <thijn@conduction.nl>
+Thijn Douwma <thijn@conduction.nl> <Thijn@conduction.nl>
+Thijn Douwma <thijn@conduction.nl> <sudothijn@noreply.codeberg.org>
+Mark Westerweel <markwesterweel@conduction.nl> <66728126+MWest2020@users.noreply.github.com>
+Mark Westerweel <markwesterweel@conduction.nl> <mwesterweel@hotmail.com>
+Al Gorithm (Hydra Builder) <builder@hydra.conduction.nl> <builder@hydra.conduction.nl>
+Al Gorithm (Hydra Builder) <builder@hydra.conduction.nl> <builder@conduction.nl>
+Al Gorithm (Hydra Builder) <builder@hydra.conduction.nl> <hydra-builder@conduction.nl>
+Al Gorithm (Hydra Builder) <builder@hydra.conduction.nl> <builder@hydra.local>
+Al Gorithm (Hydra Builder) <builder@hydra.conduction.nl> <al-gorithm-con@noreply.codeberg.org>
+Al Gorithm (Hydra Builder) <builder@hydra.conduction.nl> Al Gorithm <info@conduction.nl>
+Al Gorithm (Hydra Builder) <builder@hydra.conduction.nl> Al Gorithm (Hydra Builder) <info@conduction.nl>
+Al Gorithm (Hydra Builder) <builder@hydra.conduction.nl> Hydra Builder <info@conduction.nl>
+Al Gorithm (Hydra Builder) <builder@hydra.conduction.nl> Hydra Builder <hydra@conduction.nl>
+Hydra Pipeline <hydra-pipeline@conduction.nl> Hydra Pipeline <hydra@conduction.nl>
+github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> <github-actions[bot]@users.noreply.github.com>
+github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> <action@github.com>
