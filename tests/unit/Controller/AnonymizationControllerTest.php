@@ -25,6 +25,7 @@ namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\AnonymizationController;
 use OCA\Filinq\Service\AnonymizationService;
+use OCA\Filinq\Service\AnonymizeRequestService;
 use OCA\Filinq\Service\FileListingService;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\Files\File;
@@ -148,8 +149,7 @@ class AnonymizationControllerTest extends TestCase {
 			fileListingService: $this->mockFileService,
 			l10n: $this->mockL10n,
 			appConfig: $this->createMock(\OCP\IAppConfig::class),
-			userSession: $this->mockUserSession,
-			rootFolder: $this->mockRootFolder
+			anonymizeRequest: new AnonymizeRequestService(logger: $this->mockLogger, anonymizationService: $this->mockAnonService, l10n: $this->mockL10n, rootFolder: $this->mockRootFolder, userSession: $this->mockUserSession)
 		);
 
 	}//end setUp()
@@ -329,8 +329,7 @@ class AnonymizationControllerTest extends TestCase {
 			fileListingService: $this->mockFileService,
 			l10n: $this->mockL10n,
 			appConfig: $this->createMock(\OCP\IAppConfig::class),
-			userSession: $this->mockUserSession,
-			rootFolder: $emptyRootFolder
+			anonymizeRequest: new AnonymizeRequestService(logger: $this->mockLogger, anonymizationService: $this->mockAnonService, l10n: $this->mockL10n, rootFolder: $emptyRootFolder, userSession: $this->mockUserSession)
 		);
 
 		$response = $controller->extract(fileId: 999);
@@ -420,8 +419,7 @@ class AnonymizationControllerTest extends TestCase {
 			fileListingService: $this->mockFileService,
 			l10n: $this->mockL10n,
 			appConfig: $this->createMock(\OCP\IAppConfig::class),
-			userSession: $this->mockUserSession,
-			rootFolder: $emptyRootFolder
+			anonymizeRequest: new AnonymizeRequestService(logger: $this->mockLogger, anonymizationService: $this->mockAnonService, l10n: $this->mockL10n, rootFolder: $emptyRootFolder, userSession: $this->mockUserSession)
 		);
 
 		$response = $controller->anonymize(fileId: 999);
@@ -775,8 +773,7 @@ class AnonymizationControllerTest extends TestCase {
 			fileListingService: $this->mockFileService,
 			l10n: $this->mockL10n,
 			appConfig: $this->createMock(originalClassName: \OCP\IAppConfig::class),
-			userSession: $session,
-			rootFolder: $this->mockRootFolder
+			anonymizeRequest: new AnonymizeRequestService(logger: $this->mockLogger, anonymizationService: $this->mockAnonService, l10n: $this->mockL10n, rootFolder: $this->mockRootFolder, userSession: $session)
 		);
 
 		$response = $controller->anonymize(fileId: 1);

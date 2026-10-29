@@ -24,6 +24,7 @@ use OCA\Filinq\Controller\BatchAnonymizationController;
 use OCA\Filinq\Service\BatchAnonymizeService;
 use OCA\Filinq\Service\BatchExtractionService;
 use OCA\Filinq\Service\BatchReportService;
+use OCA\Filinq\Service\BatchRequestService;
 use OCA\Filinq\Service\BatchStateService;
 use OCA\Filinq\Service\BatchUploadService;
 use OCA\Filinq\Service\EntityConsolidationService;
@@ -109,7 +110,8 @@ class BatchAnonymizationControllerBasesTest extends TestCase {
 			folderBatchService: $this->createMock(FolderBatchService::class),
 			l10n: $this->mockL10n,
 			appConfig: $this->createMock(\OCP\IAppConfig::class),
-			userSession: $this->mockUserSession
+			userSession: $this->mockUserSession,
+			batchRequest: new BatchRequestService(l10n: $this->mockL10n)
 		);
 
 	}//end setUp()

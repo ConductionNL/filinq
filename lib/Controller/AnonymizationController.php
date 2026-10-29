@@ -33,15 +33,13 @@ namespace OCA\Filinq\Controller;
 use OCA\Filinq\Exception\ConversionFailedException;
 use OCA\Filinq\Exception\RedactionNotReviewedException;
 use OCA\Filinq\Kernel\Contracts\AnonymizationServiceInterface;
+use OCA\Filinq\Kernel\Contracts\AnonymizeRequestServiceInterface;
 use OCA\Filinq\Kernel\Contracts\FileListingServiceInterface;
-use OCA\Filinq\Service\AnonymizeRequestService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\JSONResponse;
-use OCP\Files\IRootFolder;
 use OCP\IAppConfig;
 use OCP\IL10N;
 use OCP\IRequest;
-use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -63,15 +61,6 @@ use Psr\Log\LoggerInterface;
 class AnonymizationController extends Controller {
 
 	/**
-	 * Workflow behind the anonymize endpoints: authentication, per-user file
-	 * access verification, body validation, the prohibition guards and the
-	 * anonymisation call itself.
-	 *
-	 * @var AnonymizeRequestService
-	 */
-	private readonly AnonymizeRequestService $anonymizeRequest;
-
-	/**
 	 * Constructor for AnonymizationController
 	 *
 	 * @param string $appName The application name
@@ -82,8 +71,9 @@ class AnonymizationController extends Controller {
 	 * @param IL10N $l10n The localization service
 	 * @param IAppConfig $appConfig Tenant configuration provider (reads
 	 *                              filinq.anonymisation.default_output_format)
-	 * @param IUserSession $userSession User session for authentication
-	 * @param IRootFolder $rootFolder Root folder for file access checks
+	 * @param AnonymizeRequestServiceInterface $anonymizeRequest Workflow behind the anonymize endpoints:
+	 *                                                          authentication, file access, body validation,
+	 *                                                          the prohibition guards and the anonymisation call.
 	 *
 	 * @return void
 	 */
@@ -95,18 +85,9 @@ class AnonymizationController extends Controller {
 		private readonly FileListingServiceInterface $fileListingService,
 		private readonly IL10N $l10n,
 		private readonly IAppConfig $appConfig,
-		private readonly IUserSession $userSession,
-		private readonly IRootFolder $rootFolder,
+		private readonly AnonymizeRequestServiceInterface $anonymizeRequest,
 	) {
 		parent::__construct(appName: $appName, request: $request);
-
-		$this->anonymizeRequest = new AnonymizeRequestService(
-			logger: $this->logger,
-			anonymizationService: $this->anonymizationService,
-			l10n: $this->l10n,
-			rootFolder: $this->rootFolder,
-			userSession: $this->userSession
-		);
 
 	}//end __construct()
 

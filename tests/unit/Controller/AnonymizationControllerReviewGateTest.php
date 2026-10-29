@@ -30,6 +30,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\AnonymizationController;
+use OCA\Filinq\Service\AnonymizeRequestService;
 use OCA\Filinq\Service\DocumentAnonymizeRunner;
 use OCA\Filinq\Service\FileListingService;
 use OCA\Filinq\Service\Redaction\DetectionRunIdentity;
@@ -203,22 +204,24 @@ class AnonymizationControllerReviewGateTest extends TestCase {
 		$rootFolder = $this->createMock(IRootFolder::class);
 		$rootFolder->method('getUserFolder')->willReturn($folder);
 
+		$logger = new NullLogger();
+		$anonymizationService = $this->makeAnonymizationServiceFrom(
+			deps: [
+				'container' => $container,
+				'anonymizeRunner' => $runner,
+				'reviewGuard' => $this->guardOver(marks: $marks),
+			]
+		);
+
 		return new AnonymizationController(
 			appName: 'filinq',
 			request: $request,
-			logger: new NullLogger(),
-			anonymizationService: $this->makeAnonymizationServiceFrom(
-				deps: [
-					'container' => $container,
-					'anonymizeRunner' => $runner,
-					'reviewGuard' => $this->guardOver(marks: $marks),
-				]
-			),
+			logger: $logger,
+			anonymizationService: $anonymizationService,
 			fileListingService: $this->createMock(FileListingService::class),
 			l10n: $l10n,
 			appConfig: $this->createMock(IAppConfig::class),
-			userSession: $session,
-			rootFolder: $rootFolder
+			anonymizeRequest: new AnonymizeRequestService(logger: $logger, anonymizationService: $anonymizationService, l10n: $l10n, rootFolder: $rootFolder, userSession: $session)
 		);
 
 	}//end controllerOver()

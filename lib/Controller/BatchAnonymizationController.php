@@ -37,12 +37,12 @@ namespace OCA\Filinq\Controller;
 use OCA\Filinq\Kernel\Contracts\BatchAnonymizeServiceInterface;
 use OCA\Filinq\Kernel\Contracts\BatchExtractionServiceInterface;
 use OCA\Filinq\Kernel\Contracts\BatchReportServiceInterface;
+use OCA\Filinq\Kernel\Contracts\BatchRequestServiceInterface;
 use OCA\Filinq\Kernel\Contracts\BatchStateServiceInterface;
 use OCA\Filinq\Kernel\Contracts\BatchUploadServiceInterface;
 use OCA\Filinq\Kernel\Contracts\EntityConsolidationServiceInterface;
 use OCA\Filinq\Kernel\Contracts\FolderBatchServiceInterface;
 use OCA\Filinq\Kernel\Contracts\WooProfileServiceInterface;
-use OCA\Filinq\Service\BatchRequestService;
 use OCA\Filinq\Settings\FilinqAdmin;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -73,15 +73,6 @@ use Psr\Log\LoggerInterface;
 class BatchAnonymizationController extends Controller {
 
 	/**
-	 * Request/response shaping helpers for the batch endpoints: body
-	 * validation, folder-parameter coercion, progress aggregation and the
-	 * multi-status mapping.
-	 *
-	 * @var BatchRequestService
-	 */
-	private readonly BatchRequestService $batchRequest;
-
-	/**
 	 * Constructor for BatchAnonymizationController
 	 *
 	 * @param string $appName App name passed through to the base Controller.
@@ -99,6 +90,9 @@ class BatchAnonymizationController extends Controller {
 	 * @param IAppConfig $appConfig Tenant configuration provider (reads
 	 *                              filinq.anonymisation.default_output_format).
 	 * @param IUserSession $userSession User session for authentication.
+	 * @param BatchRequestServiceInterface $batchRequest Request/response shaping for the batch endpoints: body
+	 *                                                   validation, folder-parameter coercion, progress
+	 *                                                   aggregation and the multi-status mapping.
 	 *
 	 * @return void
 	 */
@@ -117,10 +111,9 @@ class BatchAnonymizationController extends Controller {
 		private readonly IL10N $l10n,
 		private readonly IAppConfig $appConfig,
 		private readonly IUserSession $userSession,
+		private readonly BatchRequestServiceInterface $batchRequest,
 	) {
 		parent::__construct(appName: $appName, request: $request);
-
-		$this->batchRequest = new BatchRequestService(l10n: $this->l10n);
 
 	}//end __construct()
 
