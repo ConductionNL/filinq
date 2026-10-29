@@ -235,7 +235,7 @@ class RelationSkipDecisionService {
 	 * Classifies the skip by confidence and force. A releasable match forced by
 	 * a user with the override role is recorded as a release and allowed.
 	 *
-	 * @param array{row: array<string, mixed>, rule: array<string, mixed>, threshold: float, relationId: int, fileId: int} $match The match from findProhibitionMatch().
+	 * @param array<string, mixed> $match The match from findProhibitionMatch().
 	 * @param bool $force Whether the request set force.
 	 * @param string $userId The acting user; only an override role may release a match.
 	 *

@@ -643,7 +643,7 @@ class AnonymizationServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testBlockedSkipAnswersTheFullProhibitionBody(): void {
-		$result = $this->makeServiceWithMatcher($this->prohibitionMatcher(), $this->mapperWithProhibitedRelation(0.62))
+		$result = $this->makeServiceWithMatcher(matcher: $this->prohibitionMatcher(), mapper: $this->mapperWithProhibitedRelation(confidence: 0.62))
 			->applyRelationSkipDecision(relationId: 7, skip: true, bases: null, force: false);
 
 		$this->assertSame(
@@ -673,7 +673,7 @@ class AnonymizationServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testForcedReleaseRecordsTheRuleRelationAndFile(): void {
-		$this->makeServiceWithMatcher($this->prohibitionMatcher(), $this->mapperWithProhibitedRelation(0.62))
+		$this->makeServiceWithMatcher(matcher: $this->prohibitionMatcher(), mapper: $this->mapperWithProhibitedRelation(confidence: 0.62))
 			->applyRelationSkipDecision(relationId: 7, skip: true, bases: null, force: true);
 
 		$this->assertSame(expected: 'R-X', actual: $this->overrideAudits[0]['ruleId']);
@@ -698,18 +698,24 @@ class AnonymizationServiceTest extends TestCase {
 		foreach ($rows as $label => $entities) {
 			$relation = new EntityRelation();
 			$relation->setFileId(self::RELATION_FILE_ID);
-			$mapper = $this->createMock(EntityRelationMapper::class);
+			$mapper = $this->createMock(originalClassName: EntityRelationMapper::class);
 			$mapper->method('find')->willReturn($relation);
 			$mapper->method('findEntitiesForFile')->willReturn($entities);
 			$mapper->expects($this->once())->method('updateDecisionMetadata');
 
-			$matcher = $this->createMock(PolicyMatchService::class);
+			$matcher = $this->createMock(originalClassName: PolicyMatchService::class);
 			$matcher->method('highConfidenceThreshold')->willReturn(0.85);
 			$matcher->method('matchProhibition')->willReturnCallback(
-				static fn (string $entityText): ?array => (in_array($entityText, ['Jansen', ''], true) === true ? ['uuid' => 'R-X', 'primaryName' => 'Undercover'] : null)
+				static function (string $entityText): ?array {
+					if (in_array($entityText, ['Jansen', ''], true) === true) {
+						return ['uuid' => 'R-X', 'primaryName' => 'Undercover'];
+					}
+
+					return null;
+				}
 			);
 
-			$result = $this->makeServiceWithMatcher($matcher, $mapper)
+			$result = $this->makeServiceWithMatcher(matcher: $matcher, mapper: $mapper)
 				->applyRelationSkipDecision(relationId: 7, skip: true, bases: null, force: false);
 
 			$this->assertSame(expected: 200, actual: $result['status'], message: $label);
@@ -725,25 +731,30 @@ class AnonymizationServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testSkipIsForwardedWhenThePolicyMatcherIsUnavailable(): void {
-		$mapper = $this->mapperWithProhibitedRelation(0.97);
+		$mapper = $this->mapperWithProhibitedRelation(confidence: 0.97);
 		$mapper->expects($this->once())->method('updateDecisionMetadata');
-		$container = $this->createMock(ContainerInterface::class);
+		$container = $this->createMock(originalClassName: ContainerInterface::class);
 		$container->method('get')->willReturnCallback(
 			static function (string $id) use ($mapper) {
 				if ($id === 'OCA\Filinq\Service\PolicyMatchService') {
 					throw new \Exception('not registered');
 				}
-				return ($id === 'OCA\OpenRegister\Db\EntityRelationMapper' ? $mapper : null);
+
+				if ($id === 'OCA\OpenRegister\Db\EntityRelationMapper') {
+					return $mapper;
+				}
+
+				return null;
 			}
 		);
 
 		$result = $this->makeAnonymizationServiceFrom(
-			[
-				'logger' => $this->createMock(LoggerInterface::class),
+			deps: [
+				'logger' => $this->createMock(originalClassName: LoggerInterface::class),
 				'container' => $container,
 				'appManager' => $this->openRegisterAppManager(),
 				'userSession' => $this->grantingSession(),
-				'rootFolder' => $this->rootFolderResolving(self::RELATION_FILE_ID),
+				'rootFolder' => $this->rootFolderResolving(resolvableFileId: self::RELATION_FILE_ID),
 			]
 		)->applyRelationSkipDecision(relationId: 7, skip: true, bases: null, force: false);
 
