@@ -154,11 +154,11 @@ class MetadataController extends Controller {
 	}//end enrich()
 
 	/**
-	 * Offer the document to classification when the caller can open its file.
+	 * Offer the document to classification when the caller may update its file.
 	 *
 	 * The body's objectData is the caller's word, so the file is resolved in
-	 * the caller's own folder first: nobody makes a suggestion appear on a
-	 * file they cannot open.
+	 * the caller's own folder first and must carry update permission: nobody
+	 * makes or replaces a suggestion on a file they cannot change.
 	 *
 	 * @param array<string, mixed> $objectData The object's fields.
 	 * @param array<string, mixed> $data       The request: objectId, register, schema.
@@ -171,7 +171,14 @@ class MetadataController extends Controller {
 		$fileId = (int) ($objectData['file'] ?? ($objectData['fileId'] ?? 0));
 		try {
 			$uid = (string) $this->userSession->getUser()?->getUID();
-			if ($fileId <= 0 || $this->rootFolder->getUserFolder($uid)->getFirstNodeById($fileId) === null) {
+			// The suggestion is saved with RBAC off, so only a caller who may
+			// change the file may replace it; reading it is not enough.
+			$node = null;
+			if ($fileId > 0) {
+				$node = $this->rootFolder->getUserFolder($uid)->getFirstNodeById($fileId);
+			}
+
+			if ($node === null || $node->isUpdateable() === false) {
 				return 'skipped';
 			}
 
