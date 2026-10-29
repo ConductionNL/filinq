@@ -62,3 +62,6 @@ Thumbs.db
 .stale/
 /.e2e-state/
 .phpunit.cache
+
+# Agent work files. They belong in an issue or a PR, not in the tree.
+/task-audit.json
