@@ -26,7 +26,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use OCA\Filinq\Kernel\Contracts\AnonymizeRequestServiceInterface;
-use OCA\Filinq\Service\Redaction\DownloadAgreementGate;
+use OCA\Filinq\Kernel\Contracts\DownloadAgreementGateInterface;
 use OCA\Filinq\Service\Redaction\PublicationListComposer;
 use OCA\Filinq\Service\Redaction\RedactionOutputGuard;
 use OCP\AppFramework\Controller;
@@ -64,7 +64,7 @@ class RedactionOutputController extends Controller {
 	 * @param IRequest                $request     The request.
 	 * @param RedactionOutputGuard    $guard       The human review gate.
 	 * @param PublicationListComposer $composer    The publication list.
-	 * @param DownloadAgreementGate   $agreements  The download conditions.
+	 * @param DownloadAgreementGateInterface   $agreements  The download conditions.
 	 * @param IUserSession            $userSession The current session.
 	 * @param AnonymizeRequestServiceInterface $access      The per-file access check.
 	 * @param IL10N                   $l10n        The translator.
@@ -77,7 +77,7 @@ class RedactionOutputController extends Controller {
 		IRequest $request,
 		private readonly RedactionOutputGuard $guard,
 		private readonly PublicationListComposer $composer,
-		private readonly DownloadAgreementGate $agreements,
+		private readonly DownloadAgreementGateInterface $agreements,
 		private readonly IUserSession $userSession,
 		private readonly AnonymizeRequestServiceInterface $access,
 		private readonly IL10N $l10n,

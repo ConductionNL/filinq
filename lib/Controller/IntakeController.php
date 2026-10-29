@@ -28,10 +28,10 @@ namespace OCA\Filinq\Controller;
 
 use OCA\Filinq\Exception\IntakeRefusedException;
 use OCA\Filinq\Kernel\Contracts\IntakeServiceInterface;
+use OCA\Filinq\Kernel\Contracts\PartySuggestionServiceInterface;
 use OCA\Filinq\Service\Intake\IntakeNotificationReach;
 use OCA\Filinq\Service\IntakeDetachmentService;
 use OCA\Filinq\Service\IntakeRoutingService;
-use OCA\Filinq\Service\PartySuggestionService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -62,7 +62,7 @@ class IntakeController extends Controller {
 	 * @param IntakeServiceInterface $intake The intake inbox.
 	 * @param IntakeDetachmentService $detachment Returns a filed document to the worklist.
 	 * @param IntakeRoutingService $routing What a consuming app declared per record type.
-	 * @param PartySuggestionService $parties Party suggestions and the corrections corpus.
+	 * @param PartySuggestionServiceInterface $parties Party suggestions and the corrections corpus.
 	 * @param IUserSession $userSession The current session.
 	 * @param IntakeNotificationReach $reach Whether a failed reading reaches anybody.
 	 * @param IGroupManager $groups Counts the people in the notified group.
@@ -75,7 +75,7 @@ class IntakeController extends Controller {
 		private readonly IntakeServiceInterface $intake,
 		private readonly IntakeDetachmentService $detachment,
 		private readonly IntakeRoutingService $routing,
-		private readonly PartySuggestionService $parties,
+		private readonly PartySuggestionServiceInterface $parties,
 		private readonly IUserSession $userSession,
 		private readonly IntakeNotificationReach $reach,
 		private readonly IGroupManager $groups,

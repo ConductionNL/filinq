@@ -44,41 +44,14 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\Redaction;
 
 use OCA\Filinq\Exception\AgreementStoreUnreadableException;
+use OCA\Filinq\Kernel\Contracts\DownloadAgreementGateInterface;
 use OCP\IL10N;
 use RuntimeException;
 
 /**
  * Decides whether a gated file may be served, and records the acceptance.
  */
-class DownloadAgreementGate {
-
-	/**
-	 * Nobody has accepted anything for this file.
-	 *
-	 * @var string
-	 */
-	public const NOT_ACCEPTED = 'not_accepted';
-
-	/**
-	 * An older version was accepted, and the terms have changed since.
-	 *
-	 * @var string
-	 */
-	public const VERSION_MOVED_ON = 'version_moved_on';
-
-	/**
-	 * The acceptance could not be written, so nothing is served.
-	 *
-	 * @var string
-	 */
-	public const NOT_RECORDED = 'not_recorded';
-
-	/**
-	 * The conditions could not be read, so it is not known whether any apply.
-	 *
-	 * @var string
-	 */
-	public const NOT_KNOWN = 'not_known';
+class DownloadAgreementGate implements DownloadAgreementGateInterface {
 
 	/**
 	 * Constructor.

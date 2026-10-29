@@ -29,8 +29,8 @@ declare(strict_types=1);
 namespace OCA\Filinq\EventListener;
 
 use OCA\Filinq\Kernel\Contracts\DocumentValidationServiceInterface;
+use OCA\Filinq\Kernel\Contracts\MetadataServiceInterface;
 use OCA\Filinq\Service\DocumentValidationService;
-use OCA\Filinq\Service\MetadataService;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCP\EventDispatcher\Event;
@@ -72,7 +72,7 @@ class ValidationRunner {
 	 * debug level and swallowed, so the fallback can never break the event flow.
 	 *
 	 * @param Event $event The dispatched OpenRegister event.
-	 * @param MetadataService $metadataService The metadata save path.
+	 * @param MetadataServiceInterface $metadataService The metadata save path.
 	 * @param LoggerInterface $logger Logger.
 	 *
 	 * @return void
@@ -80,7 +80,7 @@ class ValidationRunner {
 	 * @psalm-suppress TypeDoesNotContainType OpenRegister is an optional dep; event classes may not be loaded.
 	 * @spec           openspec/specs/document-validation-checks/spec.md
 	 */
-	public function runFallbackForEvent(Event $event, MetadataService $metadataService, LoggerInterface $logger): void {
+	public function runFallbackForEvent(Event $event, MetadataServiceInterface $metadataService, LoggerInterface $logger): void {
 		$object = null;
 		if ($event instanceof ObjectCreatedEvent) {
 			$object = $event->getObject();
@@ -116,7 +116,7 @@ class ValidationRunner {
 	 *
 	 * @param mixed $object The OpenRegister object.
 	 * @param DocumentValidationServiceInterface $validationService The validation service.
-	 * @param MetadataService $metadataService The metadata save path.
+	 * @param MetadataServiceInterface $metadataService The metadata save path.
 	 * @param IRootFolder $rootFolder Root folder for file access.
 	 * @param LoggerInterface $logger Logger.
 	 * @param string $logContext Log context.
@@ -128,7 +128,7 @@ class ValidationRunner {
 	public function validateObject(
 		mixed $object,
 		DocumentValidationServiceInterface $validationService,
-		MetadataService $metadataService,
+		MetadataServiceInterface $metadataService,
 		IRootFolder $rootFolder,
 		LoggerInterface $logger,
 		string $logContext,

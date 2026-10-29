@@ -34,6 +34,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\InboundClassificationServiceInterface;
 use OCA\Filinq\Service\Classification\ClassificationResultRepository;
 use OCA\Filinq\Service\Classification\ClassificationSources;
 use OCA\Filinq\Service\Classification\CorrespondentRanker;
@@ -46,14 +47,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/inbound-auto-classification/tasks.md#2-2
  */
-class InboundClassificationService {
-
-	/**
-	 * The admin toggle; on unless set to "0".
-	 *
-	 * @var string
-	 */
-	public const TOGGLE = 'enable_inbound_classification';
+class InboundClassificationService implements InboundClassificationServiceInterface {
 
 	/**
 	 * Constructor.

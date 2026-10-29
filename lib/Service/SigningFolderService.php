@@ -25,6 +25,7 @@ namespace OCA\Filinq\Service;
 
 use Exception;
 use OCA\Filinq\Exception\StepUpRequiredException;
+use OCA\Filinq\Kernel\Contracts\SigningFolderServiceInterface;
 use RuntimeException;
 
 /**
@@ -48,7 +49,7 @@ use RuntimeException;
  *
  * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
  */
-class SigningFolderService {
+class SigningFolderService implements SigningFolderServiceInterface {
 
 	/**
 	 * The statuses a request must be in to hold a signature still to be given.

@@ -26,6 +26,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\EntityConsolidationServiceInterface;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -43,7 +44,7 @@ use RuntimeException;
  *
  * @spec openspec/changes/anonymisation-entity-review-prohibition-hints/tasks.md#task-1
  */
-class EntityConsolidationService {
+class EntityConsolidationService implements EntityConsolidationServiceInterface {
 	/**
 	 * App config key for the high-confidence threshold.
 	 *

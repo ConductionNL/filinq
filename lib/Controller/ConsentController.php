@@ -29,7 +29,7 @@ namespace OCA\Filinq\Controller;
 
 use Exception;
 use OCA\Filinq\Exception\PolicyRejectedException;
-use OCA\Filinq\Service\ConsentCrudService;
+use OCA\Filinq\Kernel\Contracts\ConsentCrudServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -64,7 +64,7 @@ class ConsentController extends Controller {
 	 * @param string $appName The application name
 	 * @param IRequest $request The request object
 	 * @param LoggerInterface $logger Logger for error reporting
-	 * @param ConsentCrudService $crudService CRUD service for consent records
+	 * @param ConsentCrudServiceInterface $crudService CRUD service for consent records
 	 * @param IL10N $l10n The localization service
 	 * @param IUserSession $userSession User session for authentication
 	 * @param IGroupManager $groupManager Group manager for admin checks
@@ -75,7 +75,7 @@ class ConsentController extends Controller {
 		string $appName,
 		IRequest $request,
 		private readonly LoggerInterface $logger,
-		private readonly ConsentCrudService $crudService,
+		private readonly ConsentCrudServiceInterface $crudService,
 		private readonly IL10N $l10n,
 		private readonly IUserSession $userSession,
 		private readonly IGroupManager $groupManager,

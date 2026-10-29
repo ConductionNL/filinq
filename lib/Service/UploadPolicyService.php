@@ -31,6 +31,7 @@ namespace OCA\Filinq\Service;
 
 use finfo;
 use OCA\Filinq\Exception\UploadRefusedException;
+use OCA\Filinq\Kernel\Contracts\UploadPolicyServiceInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -45,14 +46,7 @@ use Throwable;
  *
  * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
  */
-class UploadPolicyService {
-
-	/**
-	 * The schema holding the policies.
-	 *
-	 * @var string
-	 */
-	public const SCHEMA = 'uploadPolicy';
+class UploadPolicyService implements UploadPolicyServiceInterface {
 
 	/**
 	 * Constructor.

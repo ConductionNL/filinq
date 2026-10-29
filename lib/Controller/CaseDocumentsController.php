@@ -24,9 +24,9 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
+use OCA\Filinq\Kernel\Contracts\UploadPolicyServiceInterface;
 use OCA\Filinq\Service\DocumentDomainService;
 use OCA\Filinq\Service\FlatFileListService;
-use OCA\Filinq\Service\UploadPolicyService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -55,7 +55,7 @@ class CaseDocumentsController extends Controller {
 	 * @param IRequest $request The request.
 	 * @param FlatFileListService $flatList Every file on every record of an object.
 	 * @param DocumentDomainService $domains The domains a record serves.
-	 * @param UploadPolicyService $policy What may be uploaded.
+	 * @param UploadPolicyServiceInterface $policy What may be uploaded.
 	 * @param IUserSession $userSession The current session.
 	 *
 	 * @return void
@@ -65,7 +65,7 @@ class CaseDocumentsController extends Controller {
 		IRequest $request,
 		private readonly FlatFileListService $flatList,
 		private readonly DocumentDomainService $domains,
-		private readonly UploadPolicyService $policy,
+		private readonly UploadPolicyServiceInterface $policy,
 		private readonly IUserSession $userSession,
 	) {
 		parent::__construct(appName: $appName, request: $request);

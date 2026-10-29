@@ -25,10 +25,10 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
+use OCA\Filinq\Kernel\Contracts\CaseArchiveServiceInterface;
+use OCA\Filinq\Kernel\Contracts\DocumentReviewServiceInterface;
+use OCA\Filinq\Kernel\Contracts\PageLayoutServiceInterface;
 use OCA\Filinq\Kernel\Contracts\PeriodicDocumentServiceInterface;
-use OCA\Filinq\Service\CaseArchiveService;
-use OCA\Filinq\Service\DocumentReviewService;
-use OCA\Filinq\Service\PageLayoutService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -55,10 +55,10 @@ class DocumentProductionController extends Controller {
 	 *
 	 * @param string $appName The app name.
 	 * @param IRequest $request The request.
-	 * @param PageLayoutService $layouts The paper.
-	 * @param CaseArchiveService $archives The bundle.
+	 * @param PageLayoutServiceInterface $layouts The paper.
+	 * @param CaseArchiveServiceInterface $archives The bundle.
 	 * @param PeriodicDocumentServiceInterface $periodic The documents that make themselves.
-	 * @param DocumentReviewService $reviews The ones that come back.
+	 * @param DocumentReviewServiceInterface $reviews The ones that come back.
 	 * @param IUserSession $userSession The current session.
 	 *
 	 * @return void
@@ -66,10 +66,10 @@ class DocumentProductionController extends Controller {
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly PageLayoutService $layouts,
-		private readonly CaseArchiveService $archives,
+		private readonly PageLayoutServiceInterface $layouts,
+		private readonly CaseArchiveServiceInterface $archives,
 		private readonly PeriodicDocumentServiceInterface $periodic,
-		private readonly DocumentReviewService $reviews,
+		private readonly DocumentReviewServiceInterface $reviews,
 		private readonly IUserSession $userSession,
 	) {
 		parent::__construct(appName: $appName, request: $request);

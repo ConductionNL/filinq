@@ -31,6 +31,7 @@ use DateInterval;
 use DateTimeImmutable;
 use DateTimeInterface;
 use Exception;
+use OCA\Filinq\Kernel\Contracts\DocumentReviewServiceInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
@@ -46,14 +47,7 @@ use Throwable;
  *
  * @spec openspec/specs/document-creatie-sjablonen/spec.md
  */
-class DocumentReviewService {
-
-	/**
-	 * The schema holding the generated documents.
-	 *
-	 * @var string
-	 */
-	public const SCHEMA = 'generatedDocument';
+class DocumentReviewService implements DocumentReviewServiceInterface {
 
 	/**
 	 * Constructor.

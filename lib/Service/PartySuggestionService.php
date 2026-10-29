@@ -37,6 +37,7 @@ namespace OCA\Filinq\Service;
 
 use DateTimeImmutable;
 use DateTimeInterface;
+use OCA\Filinq\Kernel\Contracts\PartySuggestionServiceInterface;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -52,14 +53,7 @@ use Throwable;
  *
  * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
  */
-class PartySuggestionService {
-
-	/**
-	 * The schema holding the corrections corpus.
-	 *
-	 * @var string
-	 */
-	public const CORRECTION_SCHEMA = 'intakePartyCorrection';
+class PartySuggestionService implements PartySuggestionServiceInterface {
 
 	/**
 	 * The entity types a party is read out of, in the order they are asked for.

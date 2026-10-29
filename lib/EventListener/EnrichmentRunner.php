@@ -26,9 +26,9 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\EventListener;
 
+use OCA\Filinq\Kernel\Contracts\MetadataServiceInterface;
 use OCA\Filinq\Kernel\Contracts\SettingsServiceInterface;
 use OCA\Filinq\Service\InboundClassificationService;
-use OCA\Filinq\Service\MetadataService;
 use OCP\AppFramework\Db\DoesNotExistException;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -152,7 +152,7 @@ class EnrichmentRunner {
 	 * Enrich an object with metadata if enrichment is enabled
 	 *
 	 * @param mixed $object The OpenRegister object
-	 * @param MetadataService $metadataService The metadata service
+	 * @param MetadataServiceInterface $metadataService The metadata service
 	 * @param SettingsServiceInterface $settingsService The settings service
 	 * @param LoggerInterface $logger The logger instance
 	 * @param string $logContext Context string for logging
@@ -163,7 +163,7 @@ class EnrichmentRunner {
 	 */
 	public function enrichObject(
 		mixed $object,
-		MetadataService $metadataService,
+		MetadataServiceInterface $metadataService,
 		SettingsServiceInterface $settingsService,
 		LoggerInterface $logger,
 		string $logContext,

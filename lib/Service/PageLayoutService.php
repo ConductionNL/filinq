@@ -30,6 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\PageLayoutServiceInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
@@ -45,14 +46,7 @@ use Throwable;
  *
  * @spec openspec/specs/document-creatie-sjablonen/spec.md
  */
-class PageLayoutService {
-
-	/**
-	 * The schema holding the layouts.
-	 *
-	 * @var string
-	 */
-	public const SCHEMA = 'pageLayout';
+class PageLayoutService implements PageLayoutServiceInterface {
 
 	/**
 	 * Constructor.
@@ -347,7 +341,6 @@ class PageLayoutService {
 		return $versions;
 
 	}//end search()
-
 
 	/**
 	 * Write one layout.

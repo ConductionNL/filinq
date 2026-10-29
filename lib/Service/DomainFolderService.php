@@ -22,6 +22,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\DomainFolderServiceInterface;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
 use Psr\Log\LoggerInterface;
@@ -46,37 +47,7 @@ use Throwable;
  *
  * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
  */
-class DomainFolderService {
-
-	/**
-	 * Where a domain's folder lives.
-	 */
-	public const ROOT = 'Filinq';
-
-	/**
-	 * The key a domain carries to opt out of reconciliation.
-	 */
-	public const PIN_KEY = 'reconciliationPinnedReason';
-
-	/**
-	 * The folder matched what the domain declares.
-	 */
-	public const STATE_IN_STEP = 'inStep';
-
-	/**
-	 * The folder differed and was corrected.
-	 */
-	public const STATE_CORRECTED = 'corrected';
-
-	/**
-	 * The folder differed and could not be corrected.
-	 */
-	public const STATE_REFUSED = 'refused';
-
-	/**
-	 * The folder was left alone because somebody pinned it, with a reason.
-	 */
-	public const STATE_PINNED = 'pinned';
+class DomainFolderService implements DomainFolderServiceInterface {
 
 	/**
 	 * Collaborators.
