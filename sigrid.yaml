@@ -1,0 +1,135 @@
+# Sigrid analysis scope for Filinq.
+#
+# Every key below is documented at
+# https://docs.sigrid-says.com/reference/analysis-scope-configuration.html
+# Sigrid's default excludes (node_modules, vendor, build output, docs, migrations,
+# mocks and stubs) still apply on top of this file. ARCHITECTURE.md explains the
+# component map and the directory roles in prose.
+
+# Pin the maintainability model, so a yearly recalibration never changes the
+# rating without a deliberate change to this file.
+model: "2026"
+
+# The technologies we write. Listing them switches off automatic detection, so
+# shell and Python helper scripts under scripts/ are not analysed.
+languages:
+  - name: php
+    production:
+    test:
+      include:
+        - ".*/tests/.*[.]php"
+  - name: javascript
+    production:
+    test:
+      include:
+        - ".*/tests/.*"
+        - ".*/__tests__/.*"
+        - ".*/__mocks__/.*"
+        - ".*[.](spec|test)[.](js|mjs|cjs|ts)"
+        - ".*[.]mock[.](js|ts)"
+  - name: typescript
+    production:
+    test:
+      include:
+        - ".*/tests/.*"
+        - ".*/__tests__/.*"
+        - ".*/__mocks__/.*"
+        - ".*[.](spec|test)[.](js|mjs|cjs|ts)"
+        - ".*[.]mock[.](js|ts)"
+  - name: vue
+    production:
+    test:
+      include:
+        - ".*/tests/.*[.]vue"
+
+# Only code that is not ours, or that a tool writes, is excluded.
+exclude:
+  # Translation catalogues. l10n/<locale>.js is generated from l10n/<locale>.json
+  # (an OC.L10N.register() call around the same key/value pairs); neither holds logic.
+  - ".*/l10n/.*"
+
+# Functional components instead of the technical layers (Controller, Service, Db).
+# A file belongs to the first component whose pattern matches its class name or
+# directory; each component excludes the patterns of the components above it.
+components:
+  # Electronic signatures, signing envelopes, signer authentication and seals.
+  - name: "Signing"
+    include:
+      - ".*/lib/.*(Sign|Envelope|Seal|Certificate|Pades|Timestamp).*[.]php"
+  # Anonymisation, redaction, pseudonymisation, entity search and subject erasure.
+  - name: "Anonymisation and erasure"
+    include:
+      - ".*/lib/.*(Anonymi|Redact|Pseudonym|Entity|Sanitiz|Sanitis|SubjectErasure|Erasure|Presidio|Gdpr|Dsar|Privacy|Dictionary).*[.]php"
+    exclude:
+      - ".*/lib/.*(Sign|Envelope|Seal|Certificate|Pades|Timestamp).*[.]php"
+  # Document conversion, office editing, OCR, PDF/A validation, comparison, charts and templates.
+  - name: "Conversion and editing"
+    include:
+      - ".*/lib/.*(Conversion|Convert|Editing|Office|Ocr|Pdf|VeraPdf|Comparison|Font|Chart|Template|Render|Extraction|Text).*[.]php"
+    exclude:
+      - ".*/lib/.*(Sign|Envelope|Seal|Certificate|Pades|Timestamp).*[.]php"
+      - ".*/lib/.*(Anonymi|Redact|Pseudonym|Entity|Sanitiz|Sanitis|SubjectErasure|Erasure|Presidio|Gdpr|Dsar|Privacy|Dictionary).*[.]php"
+  # Publication consent, legal bases, publication policies, legal holds, contracts and retention.
+  - name: "Publication and retention"
+    include:
+      - ".*/lib/.*(Publication|Consent|Woo|Grondslag|Disclosure|Contract|LegalHold|Retention|Archiv|LegalBas|Bases|Policy|Prohibition).*[.]php"
+    exclude:
+      - ".*/lib/.*(Sign|Envelope|Seal|Certificate|Pades|Timestamp).*[.]php"
+      - ".*/lib/.*(Anonymi|Redact|Pseudonym|Entity|Sanitiz|Sanitis|SubjectErasure|Erasure|Presidio|Gdpr|Dsar|Privacy|Dictionary).*[.]php"
+      - ".*/lib/.*(Conversion|Convert|Editing|Office|Ocr|Pdf|VeraPdf|Comparison|Font|Chart|Template|Render|Extraction|Text).*[.]php"
+  # Document intake, email ingestion, classification, suggestions, validation and the setup wizard.
+  - name: "Intake and classification"
+    include:
+      - ".*/lib/.*(Intake|Email|Classification|Suggestion|Validation|Wizard|Metadata|Enrich|Flow).*[.]php"
+    exclude:
+      - ".*/lib/.*(Sign|Envelope|Seal|Certificate|Pades|Timestamp).*[.]php"
+      - ".*/lib/.*(Anonymi|Redact|Pseudonym|Entity|Sanitiz|Sanitis|SubjectErasure|Erasure|Presidio|Gdpr|Dsar|Privacy|Dictionary).*[.]php"
+      - ".*/lib/.*(Conversion|Convert|Editing|Office|Ocr|Pdf|VeraPdf|Comparison|Font|Chart|Template|Render|Extraction|Text).*[.]php"
+      - ".*/lib/.*(Publication|Consent|Woo|Grondslag|Disclosure|Contract|LegalHold|Retention|Archiv|LegalBas|Bases|Policy|Prohibition).*[.]php"
+  # Documents, dossiers, versions, correspondence, print jobs and batch generation.
+  - name: "Documents and dossiers"
+    include:
+      - ".*/lib/.*(Document|Dossier|Correspondence|Print|PageLayout|Periodic|Scan|Batch|Version|Merge|ListReference|PostRegister).*[.]php"
+    exclude:
+      - ".*/lib/.*(Sign|Envelope|Seal|Certificate|Pades|Timestamp).*[.]php"
+      - ".*/lib/.*(Anonymi|Redact|Pseudonym|Entity|Sanitiz|Sanitis|SubjectErasure|Erasure|Presidio|Gdpr|Dsar|Privacy|Dictionary).*[.]php"
+      - ".*/lib/.*(Conversion|Convert|Editing|Office|Ocr|Pdf|VeraPdf|Comparison|Font|Chart|Template|Render|Extraction|Text).*[.]php"
+      - ".*/lib/.*(Publication|Consent|Woo|Grondslag|Disclosure|Contract|LegalHold|Retention|Archiv|LegalBas|Bases|Policy|Prohibition).*[.]php"
+      - ".*/lib/.*(Intake|Email|Classification|Suggestion|Validation|Wizard|Metadata|Enrich|Flow).*[.]php"
+  # Bootstrap, settings, repair steps, commands, shared exceptions and helpers.
+  - name: "Application wiring"
+    include:
+      - ".*/lib/.*[.]php"
+      - ".*/appinfo/.*"
+      - ".*/templates/.*[.]php"
+    exclude:
+      - ".*/lib/.*(Sign|Envelope|Seal|Certificate|Pades|Timestamp).*[.]php"
+      - ".*/lib/.*(Anonymi|Redact|Pseudonym|Entity|Sanitiz|Sanitis|SubjectErasure|Erasure|Presidio|Gdpr|Dsar|Privacy|Dictionary).*[.]php"
+      - ".*/lib/.*(Conversion|Convert|Editing|Office|Ocr|Pdf|VeraPdf|Comparison|Font|Chart|Template|Render|Extraction|Text).*[.]php"
+      - ".*/lib/.*(Publication|Consent|Woo|Grondslag|Disclosure|Contract|LegalHold|Retention|Archiv|LegalBas|Bases|Policy|Prohibition).*[.]php"
+      - ".*/lib/.*(Intake|Email|Classification|Suggestion|Validation|Wizard|Metadata|Enrich|Flow).*[.]php"
+      - ".*/lib/.*(Document|Dossier|Correspondence|Print|PageLayout|Periodic|Scan|Batch|Version|Merge|ListReference|PostRegister).*[.]php"
+  # The Vue front end.
+  - name: "Web interface"
+    include:
+      - ".*/src/.*"
+    exclude:
+      - ".*/lib/.*(Sign|Envelope|Seal|Certificate|Pades|Timestamp).*[.]php"
+      - ".*/lib/.*(Anonymi|Redact|Pseudonym|Entity|Sanitiz|Sanitis|SubjectErasure|Erasure|Presidio|Gdpr|Dsar|Privacy|Dictionary).*[.]php"
+      - ".*/lib/.*(Conversion|Convert|Editing|Office|Ocr|Pdf|VeraPdf|Comparison|Font|Chart|Template|Render|Extraction|Text).*[.]php"
+      - ".*/lib/.*(Publication|Consent|Woo|Grondslag|Disclosure|Contract|LegalHold|Retention|Archiv|LegalBas|Bases|Policy|Prohibition).*[.]php"
+      - ".*/lib/.*(Intake|Email|Classification|Suggestion|Validation|Wizard|Metadata|Enrich|Flow).*[.]php"
+      - ".*/lib/.*(Document|Dossier|Correspondence|Print|PageLayout|Periodic|Scan|Batch|Version|Merge|ListReference|PostRegister).*[.]php"
+      - ".*/lib/.*[.]php"
+  # Build, quality and release tooling: helper scripts and root-level tool configuration.
+  - name: "Developer tooling"
+    include:
+      - ".*/scripts/.*"
+      - ".*/tools/.*"
+      - ".*/vendor-bin/.*"
+      - ".*/[^/]*[.]config[.]m?[jt]s"
+      - ".*/phpstan-bootstrap[.]php"
+      - ".*/[.]php-cs-fixer[.]dist[.]php"
+    exclude:
+      - ".*/lib/.*[.]php"
+      - ".*/src/.*"
