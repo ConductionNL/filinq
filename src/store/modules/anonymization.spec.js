@@ -479,6 +479,123 @@ describe('addManualEntity — add selected text as a new entity', () => {
 	})
 })
 
+describe('addManualEntity: characterization of the review row', () => {
+	beforeEach(() => {
+		setActivePinia(createPinia())
+		jest.clearAllMocks()
+		axios.post.mockReset()
+		axios.patch.mockReset()
+	})
+
+	it('builds the full review row and returns the response body', async () => {
+		const data = {
+			entity: { value: 'Kuipers', type: 'PERSON' },
+			relations: [{ id: 5 }, { id: null }, { id: 6 }],
+		}
+		axios.post.mockResolvedValue({ data })
+		axios.patch.mockResolvedValue({ data: {} })
+		const store = useAnonymizationStore()
+		const entry = { fileId: 42, entities: [] }
+
+		const result = await store.addManualEntity(entry, {
+			value: 'kuipers',
+			type: 'NAME',
+			bases: ['b1'],
+		})
+
+		expect(result).toBe(data)
+		expect(axios.patch).toHaveBeenCalledTimes(2)
+		expect(entry.entities[0]).toEqual({
+			type: 'PERSON',
+			value: 'Kuipers',
+			included: true,
+			confidence: 1.0,
+			highestConfidence: 1.0,
+			fileCount: 1,
+			count: 2,
+			relationId: 5,
+			relationIds: [5, 6],
+			bases: ['b1'],
+			_decisionBases: ['b1'],
+			_decisionSkip: false,
+			skipAnonymization: false,
+			_patchError: null,
+		})
+		expect(entry.entityCount).toBe(1)
+	})
+
+	it('keeps the input value and type and counts one when nothing matched', async () => {
+		axios.post.mockResolvedValue({ data: null })
+		const store = useAnonymizationStore()
+		const entry = { fileId: 42, entities: [] }
+
+		const result = await store.addManualEntity(entry, {
+			value: 'Kuipers',
+			type: 'PERSON',
+			bases: ['b1'],
+			wholeWord: false,
+			caseSensitive: false,
+		})
+
+		expect(result).toEqual({})
+		expect(axios.post.mock.calls[0][1]).toEqual({
+			value: 'Kuipers',
+			type: 'PERSON',
+			wholeWord: false,
+			caseSensitive: false,
+		})
+		expect(axios.patch).not.toHaveBeenCalled()
+		expect(entry.entities[0]).toMatchObject({
+			type: 'PERSON',
+			value: 'Kuipers',
+			count: 1,
+			relationId: null,
+			relationIds: [],
+			bases: [],
+			_decisionBases: ['b1'],
+		})
+	})
+
+	it('leaves the bases empty when persisting them fails, so anonymise retries', async () => {
+		axios.post.mockResolvedValue({ data: { relations: [{ id: 5 }] } })
+		axios.patch.mockRejectedValue(new Error('denied'))
+		const spy = jest.spyOn(console, 'error').mockImplementation(() => {})
+		const store = useAnonymizationStore()
+		const entry = { fileId: 42, entities: [] }
+
+		await store.addManualEntity(entry, { value: 'x', type: 'PERSON', bases: ['b1'] })
+
+		expect(entry.entities[0].bases).toEqual([])
+		expect(entry.entities[0]._decisionBases).toEqual(['b1'])
+		spy.mockRestore()
+	})
+
+	it('names the missing input with status 0', async () => {
+		const store = useAnonymizationStore()
+
+		await expect(
+			store.addManualEntity({ entities: [] }, { value: 'x', type: 'PERSON' }),
+		).rejects.toMatchObject({ message: 'Entry has no fileId yet.', status: 0 })
+		await expect(
+			store.addManualEntity({ fileId: 1, entities: [] }, { value: '   ', type: 'PERSON' }),
+		).rejects.toMatchObject({ message: 'A value and a type are required.', status: 0 })
+		await expect(store.addManualEntity({ fileId: 1, entities: [] })).rejects.toMatchObject({
+			message: 'A value and a type are required.',
+		})
+	})
+
+	it('lets a failing manual-entities call reject', async () => {
+		axios.post.mockRejectedValue(new Error('server'))
+		const store = useAnonymizationStore()
+		const entry = { fileId: 42, entities: [] }
+
+		await expect(
+			store.addManualEntity(entry, { value: 'x', type: 'PERSON' }),
+		).rejects.toThrow('server')
+		expect(entry.entities).toEqual([])
+	})
+})
+
 describe('anonymiseAllExtracted — batch run over a dossier', () => {
 	beforeEach(() => {
 		setActivePinia(createPinia())
