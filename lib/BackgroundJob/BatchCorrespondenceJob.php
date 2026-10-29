@@ -92,138 +92,105 @@ class BatchCorrespondenceJob extends QueuedJob {
 			return;
 		}
 
-		$this->initializeJobStatus(jobId: $jobId, total: count($recipientIds), ownerUserId: $ownerUserId);
 		$this->processRecipients(
-			jobId: $jobId,
-			templateId: $templateId,
-			recipientIds: $recipientIds,
-			options: $options,
-			ownerUserId: $ownerUserId
+			job: ['jobId' => $jobId, 'templateId' => $templateId, 'options' => $options, 'ownerUserId' => $ownerUserId],
+			recipientIds: $recipientIds
 		);
 
 	}//end run()
 
 	/**
-	 * Initialize job status to processing
+	 * Generate a letter per recipient and report the progress after each one.
 	 *
-	 * @param string $jobId The job UUID
-	 * @param int $total Total number of recipients
-	 * @param string $ownerUserId UID of the user who dispatched the job (SB1 fix)
-	 *
-	 * @return void
-	 *
-	 * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-batch-correspondence-generation
-	 */
-	private function initializeJobStatus(string $jobId, int $total, string $ownerUserId = ''): void {
-		$this->corrSvc->storeJobStatus(
-			jobId: $jobId,
-			data: [
-				'status' => 'processing',
-				'total' => $total,
-				'completed' => 0,
-				'errors' => 0,
-				'results' => [],
-				'ownerUserId' => $ownerUserId,
-			]
-		);
-
-	}//end initializeJobStatus()
-
-	/**
-	 * Process all recipients in the batch
-	 *
-	 * @param string $jobId The job UUID
-	 * @param string $templateId The template UUID
-	 * @param array $recipientIds Array of recipient UUIDs
-	 * @param array $options Generation options
-	 * @param string $ownerUserId UID of the user who dispatched the job (SB1 fix)
+	 * @param array{jobId: string, templateId: string, options: array, ownerUserId: string} $job          The job.
+	 * @param array                                                                         $recipientIds Array of recipient UUIDs
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-batch-correspondence-generation
 	 */
-	private function processRecipients(
-		string $jobId,
-		string $templateId,
-		array $recipientIds,
-		array $options,
-		string $ownerUserId = '',
-	): void {
-		$total = count($recipientIds);
-		$completed = 0;
-		$errors = 0;
-		$results = [];
-		$register = $options['register'] ?? '';
-		$schema = $options['schema'] ?? '';
+	private function processRecipients(array $job, array $recipientIds): void {
+		$tally = new BatchTally(total: count($recipientIds));
+		$this->storeProgress(job: $job, progress: $tally->progress(status: 'processing'));
 
 		foreach ($recipientIds as $recipientId) {
-			$dataRefs = [
-				[
-					'register' => $register,
-					'schema' => $schema,
-					'id' => $recipientId,
-				],
-			];
+			$tally->record(result: $this->generateFor(job: $job, recipientId: $recipientId));
+			$this->storeProgress(job: $job, progress: $tally->progress(status: 'processing'));
+		}
 
-			try {
-				$this->corrSvc->generate(
-					templateId: $templateId,
-					dataRefs: $dataRefs,
-					options: $options
-				);
-				$results[] = [
-					'recipientId' => $recipientId,
-					'status' => 'success',
-				];
-				$completed++;
-			} catch (Exception $e) {
-				$results[] = [
-					'recipientId' => $recipientId,
-					'status' => 'error',
-					'error' => $e->getMessage(),
-				];
-				$errors++;
-
-				$this->logger->warning(
-					message: 'Batch correspondence failed for recipient: ' . $e->getMessage(),
-					context: [
-						'jobId' => $jobId,
-						'recipientId' => $recipientId,
-					]
-				);
-			}//end try
-
-			// Update progress after each recipient (retain ownerUserId so ownership check holds).
-			$this->corrSvc->storeJobStatus(
-				jobId: $jobId,
-				data: [
-					'status' => 'processing',
-					'total' => $total,
-					'completed' => $completed,
-					'errors' => $errors,
-					'results' => $results,
-					'ownerUserId' => $ownerUserId,
-				]
-			);
-		}//end foreach
-
-		// Mark job as complete (retain ownerUserId so ownership check holds).
-		$this->corrSvc->storeJobStatus(
-			jobId: $jobId,
-			data: [
-				'status' => 'completed',
-				'total' => $total,
-				'completed' => $completed,
-				'errors' => $errors,
-				'results' => $results,
-				'ownerUserId' => $ownerUserId,
-			]
-		);
+		$final = $tally->progress(status: 'completed');
+		$this->storeProgress(job: $job, progress: $final);
 
 		$this->logger->info(
-			message: "BatchCorrespondenceJob completed: {$completed}/{$total} successful, {$errors} errors",
-			context: ['jobId' => $jobId]
+			message: "BatchCorrespondenceJob completed: {$final['completed']}/{$final['total']} successful, {$final['errors']} errors",
+			context: ['jobId' => $job['jobId']]
 		);
 
 	}//end processRecipients()
+
+	/**
+	 * Generate the letter for one recipient.
+	 *
+	 * @param array{jobId: string, templateId: string, options: array, ownerUserId: string} $job         The job.
+	 * @param mixed                                                                         $recipientId The recipient UUID.
+	 *
+	 * @return array<string, mixed> The recipient's result row.
+	 *
+	 * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-batch-correspondence-generation
+	 */
+	private function generateFor(array $job, mixed $recipientId): array {
+		$dataRefs = [
+			[
+				'register' => $job['options']['register'] ?? '',
+				'schema' => $job['options']['schema'] ?? '',
+				'id' => $recipientId,
+			],
+		];
+
+		try {
+			$this->corrSvc->generate(
+				templateId: $job['templateId'],
+				dataRefs: $dataRefs,
+				options: $job['options']
+			);
+		} catch (Exception $e) {
+			$this->logger->warning(
+				message: 'Batch correspondence failed for recipient: ' . $e->getMessage(),
+				context: [
+					'jobId' => $job['jobId'],
+					'recipientId' => $recipientId,
+				]
+			);
+
+			return [
+				'recipientId' => $recipientId,
+				'status' => 'error',
+				'error' => $e->getMessage(),
+			];
+		}//end try
+
+		return [
+			'recipientId' => $recipientId,
+			'status' => 'success',
+		];
+
+	}//end generateFor()
+
+	/**
+	 * Store the job's progress, keeping the owner so the ownership check holds.
+	 *
+	 * @param array{jobId: string, templateId: string, options: array, ownerUserId: string} $job      The job.
+	 * @param array<string, mixed>                                                          $progress The tally's progress.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-batch-correspondence-generation
+	 */
+	private function storeProgress(array $job, array $progress): void {
+		$this->corrSvc->storeJobStatus(
+			jobId: $job['jobId'],
+			data: $progress + ['ownerUserId' => $job['ownerUserId']]
+		);
+
+	}//end storeProgress()
 }//end class
