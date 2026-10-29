@@ -34,8 +34,8 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
+use OCA\Filinq\Kernel\Contracts\BatchAnonymizeServiceInterface;
 use OCA\Filinq\Kernel\Contracts\BatchStateServiceInterface;
-use OCA\Filinq\Service\BatchAnonymizeService;
 use OCA\Filinq\Service\BatchExtractionService;
 use OCA\Filinq\Service\BatchReportService;
 use OCA\Filinq\Service\BatchRequestService;
@@ -90,7 +90,7 @@ class BatchAnonymizationController extends Controller {
 	 * @param BatchStateServiceInterface $stateService Service that stores and loads batch records.
 	 * @param BatchUploadService $uploadService Service that persists uploaded files into a new batch.
 	 * @param BatchExtractionService $extractService Service that drives per-file entity extraction.
-	 * @param BatchAnonymizeService $anonService Service that applies approved entities across a batch.
+	 * @param BatchAnonymizeServiceInterface $anonService Service that applies approved entities across a batch.
 	 * @param BatchReportService $reportService Service that produces the per-batch CSV report.
 	 * @param EntityConsolidationService $entityService Service that merges per-file entity detections into one list.
 	 * @param WooProfileService $profileService Service that stores the WOO entity profile.
@@ -109,7 +109,7 @@ class BatchAnonymizationController extends Controller {
 		private readonly BatchStateServiceInterface $stateService,
 		private readonly BatchUploadService $uploadService,
 		private readonly BatchExtractionService $extractService,
-		private readonly BatchAnonymizeService $anonService,
+		private readonly BatchAnonymizeServiceInterface $anonService,
 		private readonly BatchReportService $reportService,
 		private readonly EntityConsolidationService $entityService,
 		private readonly WooProfileService $profileService,

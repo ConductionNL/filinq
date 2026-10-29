@@ -28,7 +28,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\EventListener;
 
 use OCA\Filinq\Event\IntakeDocumentReceivedEvent;
-use OCA\Filinq\Service\IntakeService;
+use OCA\Filinq\Kernel\Contracts\IntakeServiceInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use Psr\Log\LoggerInterface;
@@ -52,13 +52,13 @@ class IntakeDocumentReceivedListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param IntakeService $intake The intake inbox.
+	 * @param IntakeServiceInterface $intake The intake inbox.
 	 * @param LoggerInterface $logger Logger for diagnostics.
 	 *
 	 * @return void
 	 */
 	public function __construct(
-		private readonly IntakeService $intake,
+		private readonly IntakeServiceInterface $intake,
 		private readonly LoggerInterface $logger,
 	) {
 

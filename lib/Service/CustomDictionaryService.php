@@ -31,6 +31,7 @@ namespace OCA\Filinq\Service;
 
 use Exception;
 use InvalidArgumentException;
+use OCA\Filinq\Kernel\Contracts\CustomDictionaryServiceInterface;
 use OCP\AppFramework\Db\DoesNotExistException;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -47,31 +48,7 @@ use Throwable;
  *
  * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
  */
-class CustomDictionaryService {
-
-	/**
-	 * Register slug both schemas live in.
-	 *
-	 * `filinq`, not `document`: this app declares ONE register holding all 23
-	 * schemas. The five it used to declare are retired.
-	 *
-	 * @var string
-	 */
-	public const REGISTER = 'filinq';
-
-	/**
-	 * Dictionary schema slug.
-	 *
-	 * @var string
-	 */
-	public const SCHEMA_DICTIONARY = 'customDictionary';
-
-	/**
-	 * Term schema slug.
-	 *
-	 * @var string
-	 */
-	public const SCHEMA_TERM = 'customDictionaryTerm';
+class CustomDictionaryService implements CustomDictionaryServiceInterface {
 
 	/**
 	 * Maximum number of term rows accepted in a single import call —

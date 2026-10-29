@@ -28,7 +28,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use OCA\Filinq\Exception\ComparisonException;
-use OCA\Filinq\Service\DocumentVersionService;
+use OCA\Filinq\Kernel\Contracts\DocumentVersionServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -58,7 +58,7 @@ class VersionController extends Controller {
 	 * @param string $appName The app name.
 	 * @param IRequest $request The request.
 	 * @param LoggerInterface $logger Logger.
-	 * @param DocumentVersionService $service The version service.
+	 * @param DocumentVersionServiceInterface $service The version service.
 	 * @param IL10N $l10n Localisation.
 	 * @param IUserSession $userSession User session.
 	 *
@@ -68,7 +68,7 @@ class VersionController extends Controller {
 		string $appName,
 		IRequest $request,
 		private readonly LoggerInterface $logger,
-		private readonly DocumentVersionService $service,
+		private readonly DocumentVersionServiceInterface $service,
 		private readonly IL10N $l10n,
 		private readonly IUserSession $userSession,
 	) {

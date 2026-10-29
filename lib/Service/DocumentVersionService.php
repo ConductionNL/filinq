@@ -29,6 +29,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use OCA\Filinq\Exception\ComparisonException;
+use OCA\Filinq\Kernel\Contracts\DocumentVersionServiceInterface;
 use OCP\App\IAppManager;
 use OCP\Constants;
 use OCP\Files\File;
@@ -49,7 +50,7 @@ use Throwable;
  *
  * @spec openspec/specs/document-versions/spec.md
  */
-class DocumentVersionService {
+class DocumentVersionService implements DocumentVersionServiceInterface {
 	/**
 	 * Fully-qualified IVersionManager class (resolved lazily so the app
 	 * degrades gracefully when files_versions is disabled).
