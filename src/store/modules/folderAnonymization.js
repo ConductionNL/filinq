@@ -27,6 +27,163 @@ function folderPayload(entities) {
 	)
 }
 
+/**
+ * The PATCH body for a consolidated entity's review decision, or null when
+ * the entity is excluded or carries no decision.
+ *
+ * @param {object} entity Consolidated folder entity.
+ * @return {{bases: Array<string>, skipAnonymization: boolean}|null}
+ * @spec openspec/specs/folder-batch-analysis/spec.md#requirement-anonymized-output-in-source-folder
+ */
+function folderDecisionPayload(entity) {
+	if (!entity.included) {
+		return null
+	}
+	const hasBases =
+		Array.isArray(entity._decisionBases) && entity._decisionBases.length > 0
+	const hasSkip = !!entity._decisionSkip
+	if (!hasBases && !hasSkip) {
+		return null
+	}
+	return {
+		bases: hasBases ? [...entity._decisionBases] : [],
+		skipAnonymization: hasSkip,
+	}
+}
+
+/**
+ * PATCH a consolidated entity's decision onto every relation row it spans,
+ * through filinq's route so the publish-never check runs on a skip. A
+ * failure is kept on the entity and the other relations still go through.
+ *
+ * @param {object} entity Consolidated folder entity.
+ * @return {Promise<void>}
+ * @spec openspec/specs/folder-batch-analysis/spec.md#requirement-anonymized-output-in-source-folder
+ */
+async function patchFolderEntityDecision(entity) {
+	const payload = folderDecisionPayload(entity)
+	if (payload === null) {
+		return
+	}
+	const relationIds = Array.isArray(entity.relationIds) ? entity.relationIds : []
+	if (relationIds.length === 0) {
+		entity._patchError = 'No relation ids — decisions cannot persist.'
+		return
+	}
+	for (const relationId of relationIds) {
+		try {
+			await axios.patch(
+				generateUrl(
+					`/apps/filinq/api/anonymization/relations/${relationId}`,
+				),
+				payload,
+			)
+		} catch (err) {
+			entity._patchError = err.response?.data?.error || err.message
+		}
+	}
+}
+
+/**
+ * The body every per-file anonymise call of a folder sends.
+ *
+ * Dossier scope with the folder id as key keeps placeholder numbering
+ * consistent across the separate calls; without a folder id OpenRegister
+ * falls back to the parent folder. The summary is only produced when
+ * `appendBasisSummary` and `outputFormat` travel together.
+ *
+ * @param {Array<object>} entities The checked entity payload.
+ * @param {number|string|null} folderId The analysed folder's id.
+ * @param {boolean} appendBasisSummary Whether to append the grondslagen summary.
+ * @return {object}
+ * @spec openspec/specs/folder-batch-analysis/spec.md#requirement-anonymized-output-in-source-folder
+ */
+function folderAnonymizeBody(entities, folderId, appendBasisSummary) {
+	return {
+		entities,
+		scope: 'dossier',
+		...(folderId ? { dossierKey: String(folderId) } : {}),
+		...(appendBasisSummary
+			? { appendBasisSummary: true, outputFormat: 'pdf-only' }
+			: {}),
+	}
+}
+
+/**
+ * Anonymise one file of a folder through the single-file endpoint and
+ * record the result on it.
+ *
+ * @param {object} file A checked file of the batch.
+ * @param {object} body The folder's anonymise body.
+ * @return {Promise<string|null>} The error message, or null on success.
+ * @spec openspec/specs/folder-batch-analysis/spec.md#requirement-anonymized-output-in-source-folder
+ */
+async function anonymizeFolderFile(file, body) {
+	try {
+		const r = await axios.post(
+			generateUrl(`/apps/filinq/api/anonymization/anonymize/${file.fileId}`),
+			body,
+		)
+		file.status = 'completed'
+		file.anonymizedFileId = r.data.anonymizedFileId
+		file.replacementCount = r.data.replacementCount || 0
+		file.complete = r.data.complete !== false
+		file.residualCount = r.data.residualCount || 0
+		file.anonymizeError = null
+		return null
+	} catch (err) {
+		file.status = 'error'
+		file.anonymizeError = err.response?.data?.error || err.message
+		return file.anonymizeError
+	}
+}
+
+/**
+ * The batch status and message after the per-file calls of a folder run.
+ *
+ * @param {number} succeeded Number of files anonymised.
+ * @param {string|null} lastError The last per-file error, if any.
+ * @return {{batchStatus: string, error: string|null}}
+ * @spec openspec/specs/folder-batch-analysis/spec.md#requirement-anonymized-output-in-source-folder
+ */
+function folderRunOutcome(succeeded, lastError) {
+	if (succeeded > 0) {
+		return {
+			batchStatus: 'completed',
+			error: lastError ? `Some files failed: ${lastError}` : null,
+		}
+	}
+	return {
+		batchStatus: 'error',
+		error: lastError || 'No files could be anonymised.',
+	}
+}
+
+/**
+ * Anonymise every checked file of a folder in turn, keeping the store's
+ * progress current. A failing file does not stop the others.
+ *
+ * @param {object} store The folder anonymisation store.
+ * @param {Array<object>} targets The checked files.
+ * @param {object} body The folder's anonymise body.
+ * @return {Promise<{batchStatus: string, error: string|null}>}
+ * @spec openspec/specs/folder-batch-analysis/spec.md#requirement-anonymized-output-in-source-folder
+ */
+async function anonymizeFolderFiles(store, targets, body) {
+	let succeeded = 0
+	let lastError = null
+	for (const file of targets) {
+		const fileError = await anonymizeFolderFile(file, body)
+		if (fileError === null) {
+			succeeded++
+		} else {
+			lastError = fileError
+		}
+		store.progress = Math.round((succeeded / targets.length) * 100)
+	}
+	return folderRunOutcome(succeeded, lastError)
+}
+
 export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 	state: () => ({
 		folderPath: '',
@@ -357,124 +514,18 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 			this.error = null
 			this.batchStatus = 'anonymizing'
 			try {
-				// Step 1 — PATCH per-entity grondslagen / skip decisions onto
-				// every underlying EntityRelation row, through filinq's route so
-				// the publish-never check runs on a skip. Each consolidated entity
-				// may span many files; the relationIds array carries one id
-				// per occurrence. Decisions are applied to every relation so a
-				// single picker selection covers all instances of the value.
-				// Failures are surfaced per-entity but do not abort the batch.
 				for (const entity of this.entities) {
-					if (!entity.included) {
-						continue
-					}
-
-					const hasBases =
-						Array.isArray(entity._decisionBases)
-						&& entity._decisionBases.length > 0
-					const hasSkip = !!entity._decisionSkip
-					if (!hasBases && !hasSkip) {
-						continue
-					}
-
-					const relationIds = Array.isArray(entity.relationIds)
-						? entity.relationIds
-						: []
-					if (relationIds.length === 0) {
-						entity._patchError =
-							'No relation ids — decisions cannot persist.'
-						continue
-					}
-
-					const payload = {
-						bases: hasBases ? [...entity._decisionBases] : [],
-						skipAnonymization: hasSkip,
-					}
-					for (const relationId of relationIds) {
-						try {
-							await axios.patch(
-								generateUrl(
-									`/apps/filinq/api/anonymization/relations/${relationId}`,
-								),
-								payload,
-							)
-						} catch (err) {
-							entity._patchError =
-								err.response?.data?.error || err.message
-							// Continue with other relations + entities — partial
-							// application beats all-or-nothing in a review flow.
-						}
-					}
+					await patchFolderEntityDecision(entity)
 				}
 
-				// Step 2: anonymise each checked file individually through the
-				// tested single-file endpoint. The same approved entity list is
-				// sent to every file, and it is the list each file's check was
-				// recorded over; OR honours the skipAnonymization flag we just
-				// PATCHed, so skipped entities stay unredacted in the output.
-				const selected = folderPayload(this.entities)
-
-				let succeeded = 0
-				let lastError = null
-				for (const file of targets) {
-					try {
-						const r = await axios.post(
-							generateUrl(
-								`/apps/filinq/api/anonymization/anonymize/${file.fileId}`,
-							),
-							{
-								entities: selected,
-								// Dossier scope keeps placeholder numbering consistent
-								// across every single-file call in this folder.
-								scope: 'dossier',
-								// Stable folder id names the dossier so numbering stays
-								// consistent across these separate single-file calls.
-								// Aligns with the @self.folder used in createDossier().
-								// Omit when unknown → OR falls back to the parent folder.
-								...(this.folderId
-									? { dossierKey: String(this.folderId) }
-									: {}),
-								// Wave 4a flag — when true, each per-file anonymise call
-								// gets a grondslagen-summary page appended to its output.
-								// The summary is only produced when appendBasisSummary
-								// and outputFormat travel together, so send the format
-								// alongside the flag (omit both when summarising is off).
-								...(this.appendBasisSummary
-									? {
-											appendBasisSummary: true,
-											outputFormat: 'pdf-only',
-										}
-									: {}),
-							},
-						)
-						file.status = 'completed'
-						file.anonymizedFileId = r.data.anonymizedFileId
-						file.replacementCount = r.data.replacementCount || 0
-						file.complete = r.data.complete !== false
-						file.residualCount = r.data.residualCount || 0
-						file.anonymizeError = null
-						succeeded++
-					} catch (err) {
-						// Continue with the remaining files — partial application
-						// beats all-or-nothing in a review flow.
-						file.status = 'error'
-						file.anonymizeError =
-							err.response?.data?.error || err.message
-						lastError = file.anonymizeError
-					}
-					this.progress =
-						targets.length > 0
-							? Math.round((succeeded / targets.length) * 100)
-							: 100
-				}
-
-				if (succeeded > 0) {
-					this.batchStatus = 'completed'
-					this.error = lastError ? `Some files failed: ${lastError}` : null
-				} else {
-					this.batchStatus = 'error'
-					this.error = lastError || 'No files could be anonymised.'
-				}
+				const body = folderAnonymizeBody(
+					folderPayload(this.entities),
+					this.folderId,
+					this.appendBasisSummary,
+				)
+				const outcome = await anonymizeFolderFiles(this, targets, body)
+				this.batchStatus = outcome.batchStatus
+				this.error = outcome.error
 			} catch (e) {
 				this.error = e.response?.data?.error || e.message
 				this.batchStatus = 'error'
