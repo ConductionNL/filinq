@@ -145,4 +145,31 @@ class GeneratedDocumentLogger {
 		}//end try
 
 	}//end log()
+
+	/**
+	 * Write the audit entry of a generation that failed before it produced a document.
+	 *
+	 * @param array{templateId: string, dataRefs: array, format: string, userId: string} $attempt      What was attempted.
+	 * @param string                                                                      $errorMessage Why it failed.
+	 *
+	 * @return array The created document register entry
+	 *
+	 * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
+	 */
+	public function logFailure(array $attempt, string $errorMessage): array {
+		return $this->log(
+			template: ['id' => $attempt['templateId'], 'version' => null, 'name' => ''],
+			dataRefs: $attempt['dataRefs'],
+			format: $attempt['format'],
+			outcome: [
+				'status' => 'failed',
+				'warnings' => [],
+				'caseId' => null,
+				'errorMessage' => $errorMessage,
+				'fileId' => null,
+				'filePath' => null,
+			],
+			userId: $attempt['userId']
+		);
+	}//end logFailure()
 }//end class
