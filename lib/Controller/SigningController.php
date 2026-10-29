@@ -26,7 +26,7 @@ use OCA\Filinq\Exception\RegisterNotConfiguredException;
 use OCA\Filinq\Exception\StepUpRequiredException;
 use OCA\Filinq\Kernel\Contracts\SigningAuditServiceInterface;
 use OCA\Filinq\Kernel\Contracts\SigningServiceInterface;
-use OCA\Filinq\Service\SigningVerificationService;
+use OCA\Filinq\Kernel\Contracts\SigningVerificationServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -59,7 +59,7 @@ class SigningController extends Controller {
 	 * @param IRequest $request Request object
 	 * @param SigningServiceInterface $signingService Signing service
 	 * @param SigningAuditServiceInterface $auditService Audit service
-	 * @param SigningVerificationService $verificationService Verification service
+	 * @param SigningVerificationServiceInterface $verificationService Verification service
 	 * @param IUserSession $userSession User session
 	 * @param LoggerInterface $logger Logger
 	 * @param IL10N $l10n Localization
@@ -72,7 +72,7 @@ class SigningController extends Controller {
 		IRequest $request,
 		private readonly SigningServiceInterface $signingService,
 		private readonly SigningAuditServiceInterface $auditService,
-		private readonly SigningVerificationService $verificationService,
+		private readonly SigningVerificationServiceInterface $verificationService,
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
 		private readonly IL10N $l10n,

@@ -26,8 +26,8 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use Exception;
+use OCA\Filinq\Kernel\Contracts\TemplateServiceInterface;
 use OCA\Filinq\Service\FormatMatrixService;
-use OCA\Filinq\Service\TemplateService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -53,14 +53,14 @@ class FormatController extends Controller {
 	 * @param string              $appName     The app name.
 	 * @param IRequest            $request     The request.
 	 * @param FormatMatrixService $matrix      Computes the matrix.
-	 * @param TemplateService     $templates   Reads the template, under OpenRegister's access rules.
+	 * @param TemplateServiceInterface     $templates   Reads the template, under OpenRegister's access rules.
 	 * @param IUserSession        $userSession Who is asking.
 	 */
 	public function __construct(
 		string $appName,
 		IRequest $request,
 		private readonly FormatMatrixService $matrix,
-		private readonly TemplateService $templates,
+		private readonly TemplateServiceInterface $templates,
 		private readonly IUserSession $userSession,
 	) {
 		parent::__construct(appName: $appName, request: $request);

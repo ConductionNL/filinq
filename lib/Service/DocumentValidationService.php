@@ -35,6 +35,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\DocumentValidationServiceInterface;
 use OCA\Filinq\Service\Validation\AccessibilityChecks;
 use OCA\Filinq\Service\Validation\ArchivalChecks;
 use OCA\Filinq\Service\Validation\DocumentFileInspector;
@@ -56,70 +57,14 @@ use Throwable;
  *
  * @spec openspec/specs/document-validation-checks/spec.md
  */
-class DocumentValidationService {
-	/**
-	 * Check identifiers.
-	 */
-	public const CHECK_FORMAT_NOT_ALLOWED = 'format-not-allowed';
+class DocumentValidationService implements DocumentValidationServiceInterface {
 	public const CHECK_EXTENSION_MIME = 'extension-mime-mismatch';
-	public const CHECK_FILE_UNREADABLE = 'file-unreadable';
 	public const CHECK_PDF_ENCRYPTED = 'pdf-encrypted';
-	public const CHECK_TEXT_LAYER_MISSING = 'text-layer-missing';
 	public const CHECK_METADATA_INCOMPLETE = 'metadata-incomplete';
 
-	/**
-	 * Archival: veraPDF finds the PDF does not meet its PDF/A level.
-	 */
-	public const CHECK_PDFA_CONFORMANCE = 'pdfa-conformance-failed';
-
-	/**
-	 * Archival: veraPDF finds fonts that are used but not embedded.
-	 */
-	public const CHECK_PDFA_FONTS = 'pdfa-font-not-embedded';
-
-	/**
-	 * Archival: an archival check is on but veraPDF cannot answer.
-	 */
-	public const CHECK_ARCHIVAL_UNAVAILABLE = 'archival-validator-unavailable';
-
-	/**
-	 * Accessibility: the PDF has no structure tags.
-	 */
-	public const CHECK_PDF_NOT_TAGGED = 'pdf-not-tagged';
-
-	/**
-	 * Accessibility: the PDF catalog names no language.
-	 */
-	public const CHECK_PDF_LANGUAGE_MISSING = 'pdf-language-missing';
-
-	/**
-	 * Accessibility: the PDF has no title.
-	 */
-	public const CHECK_PDF_TITLE_MISSING = 'pdf-title-missing';
-
-	/**
-	 * Accessibility: a tagged PDF does not say it follows PDF/UA.
-	 */
-	public const CHECK_PDFUA_IDENTIFIER_MISSING = 'pdfua-identifier-missing';
-
-	/**
-	 * The category of the content and metadata checks.
-	 */
-	public const CATEGORY_DOCUMENT = 'document';
-
-	/**
-	 * Severity values.
-	 */
-	public const SEVERITY_OFF = 'off';
 	public const SEVERITY_WARNING = 'warning';
-	public const SEVERITY_BLOCKING = 'blocking';
 
-	/**
-	 * Verdict values.
-	 */
-	public const STATUS_PASSED = 'passed';
 	public const STATUS_WARNINGS = 'warnings';
-	public const STATUS_FAILED = 'failed';
 
 	/**
 	 * Resolves the effective profile for a document type.

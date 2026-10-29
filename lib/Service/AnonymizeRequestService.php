@@ -41,6 +41,7 @@ use Exception;
 use OCA\Filinq\Exception\DetectionUnavailableException;
 use OCA\Filinq\Exception\ProhibitionGateException;
 use OCA\Filinq\Kernel\Contracts\AnonymizationServiceInterface;
+use OCA\Filinq\Kernel\Contracts\AnonymizeRequestServiceInterface;
 use OCP\AppFramework\Http;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
@@ -59,7 +60,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/anonymization/spec.md
  */
-class AnonymizeRequestService {
+class AnonymizeRequestService implements AnonymizeRequestServiceInterface {
 
 	/**
 	 * Validator for the anonymize request body.

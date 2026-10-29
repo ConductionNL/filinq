@@ -45,6 +45,7 @@ namespace OCA\Filinq\Service;
 use DateTimeImmutable;
 use Exception;
 use OCA\Filinq\Exception\PolicyRejectedException;
+use OCA\Filinq\Kernel\Contracts\ConsentServiceInterface;
 use OCA\Filinq\Service\Publication\ConsentClearance;
 use OCP\IUser;
 use Psr\Log\LoggerInterface;
@@ -61,7 +62,7 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/specs/consent-management/spec.md
  * @spec openspec/changes/consent-create-idempotency-and-notes/tasks.md#task-1
  */
-class ConsentService {
+class ConsentService implements ConsentServiceInterface {
 	/**
 	 * Constructor for ConsentService
 	 *

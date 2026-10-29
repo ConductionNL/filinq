@@ -31,6 +31,7 @@ namespace OCA\Filinq\Service;
 
 use OCA\Filinq\Event\IntakeDocumentReceivedEvent;
 use OCA\Filinq\Exception\IntakeRefusedException;
+use OCA\Filinq\Kernel\Contracts\IntakeServiceInterface;
 use OCA\Filinq\Service\Intake\IntakeOcrQueue;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
@@ -46,7 +47,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
  */
-class IntakeService {
+class IntakeService implements IntakeServiceInterface {
 
 	/**
 	 * Constructor.

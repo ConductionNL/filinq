@@ -25,7 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
-use OCA\Filinq\Service\DocumentValidationService;
+use OCA\Filinq\Kernel\Contracts\DocumentValidationServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -54,7 +54,7 @@ class ValidationController extends Controller {
 	 * @param string $appName The app name.
 	 * @param IRequest $request The request.
 	 * @param LoggerInterface $logger Logger.
-	 * @param DocumentValidationService $service The validation service.
+	 * @param DocumentValidationServiceInterface $service The validation service.
 	 * @param IRootFolder $rootFolder Root folder.
 	 * @param IL10N $l10n Localisation.
 	 * @param IUserSession $userSession User session.
@@ -65,7 +65,7 @@ class ValidationController extends Controller {
 		string $appName,
 		IRequest $request,
 		private readonly LoggerInterface $logger,
-		private readonly DocumentValidationService $service,
+		private readonly DocumentValidationServiceInterface $service,
 		private readonly IRootFolder $rootFolder,
 		private readonly IL10N $l10n,
 		private readonly IUserSession $userSession,

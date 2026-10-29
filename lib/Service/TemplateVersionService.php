@@ -26,6 +26,7 @@ namespace OCA\Filinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use Exception;
+use OCA\Filinq\Kernel\Contracts\TemplateServiceInterface;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
@@ -356,7 +357,7 @@ class TemplateVersionService {
 	 * @param string $templateId The UUID of the template to restore
 	 * @param string $versionId The UUID of the version to restore to
 	 * @param string $editor The Nextcloud user ID performing the restore
-	 * @param TemplateService $service The template service for updating the template
+	 * @param TemplateServiceInterface $service The template service for updating the template
 	 *
 	 * @return array The restored template object
 	 *
@@ -368,7 +369,7 @@ class TemplateVersionService {
 		string $templateId,
 		string $versionId,
 		string $editor,
-		TemplateService $service,
+		TemplateServiceInterface $service,
 	): array {
 		$targetVersion = $this->getVersion(versionId: $versionId);
 		$currentState = $service->getTemplate(id: $templateId);

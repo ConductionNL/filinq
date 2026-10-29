@@ -25,6 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\SigningEnvelope;
 
+use OCA\Filinq\Kernel\Contracts\SigningEnvelopeServiceInterface;
 use OCA\Filinq\Service\SigningService;
 use RuntimeException;
 use Symfony\Component\Uid\UuidV4;
@@ -47,12 +48,7 @@ use Throwable;
  *
  * @spec openspec/specs/bulk-signing-field-builder/spec.md#requirement-envelopes-group-documents-into-one-ceremony-with-per-document-records-req-ddbsf-004
  */
-class SigningEnvelopeService {
-
-	/**
-	 * Most documents one envelope may hold.
-	 */
-	public const MAX_DOCUMENTS = 25;
+class SigningEnvelopeService implements SigningEnvelopeServiceInterface {
 
 	/**
 	 * Constructor.

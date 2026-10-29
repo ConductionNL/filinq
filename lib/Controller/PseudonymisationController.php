@@ -27,7 +27,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use OCA\Filinq\Exception\PseudonymRestoreRefusedException;
-use OCA\Filinq\Service\Pseudonymisation\PseudonymRestoreService;
+use OCA\Filinq\Kernel\Contracts\PseudonymRestoreServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -68,14 +68,14 @@ class PseudonymisationController extends Controller {
 	 *
 	 * @param string $appName The app name.
 	 * @param IRequest $request The request.
-	 * @param PseudonymRestoreService $restores Status and restore.
+	 * @param PseudonymRestoreServiceInterface $restores Status and restore.
 	 * @param IUserSession $userSession The signed-in user.
 	 * @param IL10N $l10n Translations.
 	 */
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly PseudonymRestoreService $restores,
+		private readonly PseudonymRestoreServiceInterface $restores,
 		private readonly IUserSession $userSession,
 		private readonly IL10N $l10n,
 	) {

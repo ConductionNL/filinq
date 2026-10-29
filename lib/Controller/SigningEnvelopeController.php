@@ -24,7 +24,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
-use OCA\Filinq\Service\SigningEnvelope\SigningEnvelopeService;
+use OCA\Filinq\Kernel\Contracts\SigningEnvelopeServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -56,7 +56,7 @@ class SigningEnvelopeController extends Controller {
 	 *
 	 * @param string                 $appName      App name
 	 * @param IRequest               $request      The request
-	 * @param SigningEnvelopeService $envelopes    Envelopes
+	 * @param SigningEnvelopeServiceInterface $envelopes    Envelopes
 	 * @param IUserSession           $userSession  The caller
 	 * @param IGroupManager          $groupManager Admin check
 	 * @param LoggerInterface        $logger       Logger
@@ -66,7 +66,7 @@ class SigningEnvelopeController extends Controller {
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly SigningEnvelopeService $envelopes,
+		private readonly SigningEnvelopeServiceInterface $envelopes,
 		private readonly IUserSession $userSession,
 		private readonly IGroupManager $groupManager,
 		private readonly LoggerInterface $logger,

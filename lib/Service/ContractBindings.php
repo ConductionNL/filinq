@@ -25,26 +25,45 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use OCA\Filinq\Kernel\Contracts\AnonymizationServiceInterface;
+use OCA\Filinq\Kernel\Contracts\AnonymizeRequestServiceInterface;
+use OCA\Filinq\Kernel\Contracts\BatchAnonymizeServiceInterface;
 use OCA\Filinq\Kernel\Contracts\BatchStateServiceInterface;
 use OCA\Filinq\Kernel\Contracts\BulkSigningRunnerInterface;
+use OCA\Filinq\Kernel\Contracts\ConsentServiceInterface;
 use OCA\Filinq\Kernel\Contracts\CorrespondenceServiceInterface;
+use OCA\Filinq\Kernel\Contracts\CustomDictionaryServiceInterface;
 use OCA\Filinq\Kernel\Contracts\DocumentMergeServiceInterface;
 use OCA\Filinq\Kernel\Contracts\DocumentServiceInterface;
+use OCA\Filinq\Kernel\Contracts\DocumentValidationServiceInterface;
+use OCA\Filinq\Kernel\Contracts\DocumentVersionServiceInterface;
 use OCA\Filinq\Kernel\Contracts\DomainFolderReconcilerInterface;
 use OCA\Filinq\Kernel\Contracts\EmailIngestionServiceInterface;
 use OCA\Filinq\Kernel\Contracts\EmailIngestionSettingsInterface;
+use OCA\Filinq\Kernel\Contracts\FinalDocumentServiceInterface;
+use OCA\Filinq\Kernel\Contracts\FinancialExtractionServiceInterface;
+use OCA\Filinq\Kernel\Contracts\GlAccountSuggestionServiceInterface;
 use OCA\Filinq\Kernel\Contracts\IntakeReadingProgressInterface;
 use OCA\Filinq\Kernel\Contracts\IntakeRepositoryInterface;
+use OCA\Filinq\Kernel\Contracts\IntakeServiceInterface;
+use OCA\Filinq\Kernel\Contracts\LegalBasesSummaryServiceInterface;
 use OCA\Filinq\Kernel\Contracts\LibreSignCompletionInterface;
 use OCA\Filinq\Kernel\Contracts\MergeJobRepositoryInterface;
 use OCA\Filinq\Kernel\Contracts\OcrServiceInterface;
 use OCA\Filinq\Kernel\Contracts\OutputLayoutMoverInterface;
 use OCA\Filinq\Kernel\Contracts\OutputLayoutResolverInterface;
+use OCA\Filinq\Kernel\Contracts\PdfServiceInterface;
 use OCA\Filinq\Kernel\Contracts\PeriodicDocumentServiceInterface;
+use OCA\Filinq\Kernel\Contracts\PolicyCrudServiceInterface;
+use OCA\Filinq\Kernel\Contracts\PolicyRetroactiveServiceInterface;
 use OCA\Filinq\Kernel\Contracts\PrintJobServiceInterface;
+use OCA\Filinq\Kernel\Contracts\PseudonymRestoreServiceInterface;
+use OCA\Filinq\Kernel\Contracts\ScanBatchServiceInterface;
 use OCA\Filinq\Kernel\Contracts\SettingsServiceInterface;
 use OCA\Filinq\Kernel\Contracts\SigningAuditServiceInterface;
+use OCA\Filinq\Kernel\Contracts\SigningEnvelopeServiceInterface;
 use OCA\Filinq\Kernel\Contracts\SigningServiceInterface;
+use OCA\Filinq\Kernel\Contracts\SigningVerificationServiceInterface;
+use OCA\Filinq\Kernel\Contracts\TemplateServiceInterface;
 use OCA\Filinq\Kernel\Contracts\UploadFragmentReaperInterface;
 use OCA\Filinq\Service\BulkSigning\BulkSigningRunner;
 use OCA\Filinq\Service\Conversion\OutputLayoutMover;
@@ -52,7 +71,9 @@ use OCA\Filinq\Service\Conversion\OutputLayoutResolver;
 use OCA\Filinq\Service\EmailIngestion\EmailIngestionService;
 use OCA\Filinq\Service\EmailIngestion\EmailIngestionSettings;
 use OCA\Filinq\Service\Intake\IntakeReadingProgress;
+use OCA\Filinq\Service\Pseudonymisation\PseudonymRestoreService;
 use OCA\Filinq\Service\Signing\LibreSignCompletion;
+use OCA\Filinq\Service\SigningEnvelope\SigningEnvelopeService;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 
 /**
@@ -74,28 +95,47 @@ final class ContractBindings {
 	 * @var array<class-string, class-string>
 	 */
 	public const BINDINGS = [
-		AnonymizationServiceInterface::class    => AnonymizationService::class,
-		BatchStateServiceInterface::class       => BatchStateService::class,
-		BulkSigningRunnerInterface::class       => BulkSigningRunner::class,
-		CorrespondenceServiceInterface::class   => CorrespondenceService::class,
-		DocumentMergeServiceInterface::class    => DocumentMergeService::class,
-		DocumentServiceInterface::class         => DocumentService::class,
-		DomainFolderReconcilerInterface::class  => DomainFolderReconciler::class,
-		EmailIngestionServiceInterface::class   => EmailIngestionService::class,
-		EmailIngestionSettingsInterface::class  => EmailIngestionSettings::class,
-		IntakeReadingProgressInterface::class   => IntakeReadingProgress::class,
-		IntakeRepositoryInterface::class        => IntakeRepository::class,
-		LibreSignCompletionInterface::class     => LibreSignCompletion::class,
-		MergeJobRepositoryInterface::class      => MergeJobRepository::class,
-		OcrServiceInterface::class              => OcrService::class,
-		OutputLayoutMoverInterface::class       => OutputLayoutMover::class,
-		OutputLayoutResolverInterface::class    => OutputLayoutResolver::class,
-		PeriodicDocumentServiceInterface::class => PeriodicDocumentService::class,
-		PrintJobServiceInterface::class         => PrintJobService::class,
-		SettingsServiceInterface::class         => SettingsService::class,
-		SigningAuditServiceInterface::class     => SigningAuditService::class,
-		SigningServiceInterface::class          => SigningService::class,
-		UploadFragmentReaperInterface::class    => UploadFragmentReaper::class,
+		AnonymizationServiceInterface::class       => AnonymizationService::class,
+		AnonymizeRequestServiceInterface::class    => AnonymizeRequestService::class,
+		BatchAnonymizeServiceInterface::class      => BatchAnonymizeService::class,
+		BatchStateServiceInterface::class          => BatchStateService::class,
+		BulkSigningRunnerInterface::class          => BulkSigningRunner::class,
+		ConsentServiceInterface::class             => ConsentService::class,
+		CorrespondenceServiceInterface::class      => CorrespondenceService::class,
+		CustomDictionaryServiceInterface::class    => CustomDictionaryService::class,
+		DocumentMergeServiceInterface::class       => DocumentMergeService::class,
+		DocumentServiceInterface::class            => DocumentService::class,
+		DocumentValidationServiceInterface::class  => DocumentValidationService::class,
+		DocumentVersionServiceInterface::class     => DocumentVersionService::class,
+		DomainFolderReconcilerInterface::class     => DomainFolderReconciler::class,
+		EmailIngestionServiceInterface::class      => EmailIngestionService::class,
+		EmailIngestionSettingsInterface::class     => EmailIngestionSettings::class,
+		FinalDocumentServiceInterface::class       => FinalDocumentService::class,
+		FinancialExtractionServiceInterface::class => FinancialExtractionService::class,
+		GlAccountSuggestionServiceInterface::class => GlAccountSuggestionService::class,
+		IntakeReadingProgressInterface::class      => IntakeReadingProgress::class,
+		IntakeRepositoryInterface::class           => IntakeRepository::class,
+		IntakeServiceInterface::class              => IntakeService::class,
+		LegalBasesSummaryServiceInterface::class   => LegalBasesSummaryService::class,
+		LibreSignCompletionInterface::class        => LibreSignCompletion::class,
+		MergeJobRepositoryInterface::class         => MergeJobRepository::class,
+		OcrServiceInterface::class                 => OcrService::class,
+		OutputLayoutMoverInterface::class          => OutputLayoutMover::class,
+		OutputLayoutResolverInterface::class       => OutputLayoutResolver::class,
+		PdfServiceInterface::class                 => PdfService::class,
+		PeriodicDocumentServiceInterface::class    => PeriodicDocumentService::class,
+		PolicyCrudServiceInterface::class          => PolicyCrudService::class,
+		PolicyRetroactiveServiceInterface::class   => PolicyRetroactiveService::class,
+		PrintJobServiceInterface::class            => PrintJobService::class,
+		PseudonymRestoreServiceInterface::class    => PseudonymRestoreService::class,
+		ScanBatchServiceInterface::class           => ScanBatchService::class,
+		SettingsServiceInterface::class            => SettingsService::class,
+		SigningAuditServiceInterface::class        => SigningAuditService::class,
+		SigningEnvelopeServiceInterface::class     => SigningEnvelopeService::class,
+		SigningServiceInterface::class             => SigningService::class,
+		SigningVerificationServiceInterface::class => SigningVerificationService::class,
+		TemplateServiceInterface::class            => TemplateService::class,
+		UploadFragmentReaperInterface::class       => UploadFragmentReaper::class,
 	];
 
 	/**

@@ -27,10 +27,10 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use OCA\Filinq\Exception\IntakeRefusedException;
+use OCA\Filinq\Kernel\Contracts\IntakeServiceInterface;
 use OCA\Filinq\Service\Intake\IntakeNotificationReach;
 use OCA\Filinq\Service\IntakeDetachmentService;
 use OCA\Filinq\Service\IntakeRoutingService;
-use OCA\Filinq\Service\IntakeService;
 use OCA\Filinq\Service\PartySuggestionService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -59,7 +59,7 @@ class IntakeController extends Controller {
 	 *
 	 * @param string $appName The app name.
 	 * @param IRequest $request The request.
-	 * @param IntakeService $intake The intake inbox.
+	 * @param IntakeServiceInterface $intake The intake inbox.
 	 * @param IntakeDetachmentService $detachment Returns a filed document to the worklist.
 	 * @param IntakeRoutingService $routing What a consuming app declared per record type.
 	 * @param PartySuggestionService $parties Party suggestions and the corrections corpus.
@@ -72,7 +72,7 @@ class IntakeController extends Controller {
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly IntakeService $intake,
+		private readonly IntakeServiceInterface $intake,
 		private readonly IntakeDetachmentService $detachment,
 		private readonly IntakeRoutingService $routing,
 		private readonly PartySuggestionService $parties,

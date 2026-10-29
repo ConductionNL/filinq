@@ -30,7 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\EventListener;
 
-use OCA\Filinq\Service\LegalBasesSummaryService;
+use OCA\Filinq\Kernel\Contracts\LegalBasesSummaryServiceInterface;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
@@ -69,7 +69,7 @@ class DossierCheckedOnListener implements IEventListener {
 	 * Constructor for DossierCheckedOnListener.
 	 *
 	 * @param LoggerInterface $logger Logger for diagnostics
-	 * @param LegalBasesSummaryService $summaryService Dossier grondslagen summary renderer
+	 * @param LegalBasesSummaryServiceInterface $summaryService Dossier grondslagen summary renderer
 	 *
 	 * @return void
 	 *
@@ -77,7 +77,7 @@ class DossierCheckedOnListener implements IEventListener {
 	 */
 	public function __construct(
 		private readonly LoggerInterface $logger,
-		private readonly LegalBasesSummaryService $summaryService,
+		private readonly LegalBasesSummaryServiceInterface $summaryService,
 	) {
 
 	}//end __construct()
