@@ -27,7 +27,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use Exception;
-use OCA\Filinq\Service\TemplateService;
+use OCA\Filinq\Kernel\Contracts\TemplateServiceInterface;
 use OCA\Filinq\Service\TemplateVersionService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -50,7 +50,7 @@ class TemplateVersionsController extends Controller {
 	 *
 	 * @param string $appName The application name
 	 * @param IRequest $request The request object
-	 * @param TemplateService $templateService Service for template operations
+	 * @param TemplateServiceInterface $templateService Service for template operations
 	 * @param TemplateRequestHandler $requestHandler Request param parser and error handler
 	 * @param TemplateVersionService $versionService Service for version operations
 	 * @param IUserSession $userSession User session for current user
@@ -60,7 +60,7 @@ class TemplateVersionsController extends Controller {
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly TemplateService $templateService,
+		private readonly TemplateServiceInterface $templateService,
 		private readonly TemplateRequestHandler $requestHandler,
 		private readonly TemplateVersionService $versionService,
 		private readonly IUserSession $userSession,

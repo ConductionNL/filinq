@@ -33,7 +33,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\BackgroundJob;
 
 use Exception;
-use OCA\Filinq\Service\DocumentService;
+use OCA\Filinq\Kernel\Contracts\DocumentServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\QueuedJob;
 use Psr\Log\LoggerInterface;
@@ -54,14 +54,14 @@ class BatchDocumentJob extends QueuedJob {
 	 * Constructor for BatchDocumentJob.
 	 *
 	 * @param ITimeFactory $time Time factory
-	 * @param DocumentService $documentSvc Document generation service
+	 * @param DocumentServiceInterface $documentSvc Document generation service
 	 * @param LoggerInterface $logger Logger for error reporting
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		ITimeFactory $time,
-		private readonly DocumentService $documentSvc,
+		private readonly DocumentServiceInterface $documentSvc,
 		private readonly LoggerInterface $logger,
 	) {
 		parent::__construct(time: $time);

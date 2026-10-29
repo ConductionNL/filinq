@@ -25,6 +25,7 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use Exception;
 use OCA\Filinq\Exception\RegisterNotConfiguredException;
+use OCA\Filinq\Kernel\Contracts\SigningServiceInterface;
 use OCA\Filinq\Service\SignerAuth\SigningAssuranceGate;
 use OCA\Filinq\Service\Signing\GuardianConsentGuard;
 use OCA\Filinq\Service\Signing\PortalSignatureAssurance;
@@ -57,7 +58,7 @@ use RuntimeException;
  * @spec openspec/specs/document-signing/spec.md
  * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
  */
-class SigningService {
+class SigningService implements SigningServiceInterface {
 
 	/**
 	 * Valid status transitions for signing requests

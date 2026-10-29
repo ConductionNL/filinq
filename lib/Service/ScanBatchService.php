@@ -33,6 +33,7 @@ namespace OCA\Filinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\Filinq\Event\IntakeDocumentReceivedEvent;
+use OCA\Filinq\Kernel\Contracts\ScanBatchServiceInterface;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Files\File;
 use OCP\Files\Folder;
@@ -57,49 +58,7 @@ use Throwable;
  * class doing several jobs; splitting it further would only move the same five
  * collaborators behind a sixth.
  */
-class ScanBatchService {
-
-	/**
-	 * The schema holding the batches.
-	 *
-	 * @var string
-	 */
-	public const SCHEMA = 'scanBatch';
-
-	/**
-	 * Cut on the QR separator sheets filinq printed.
-	 *
-	 * @var string
-	 */
-	public const MODE_QR = 'qr';
-
-	/**
-	 * Cut on blank pages.
-	 *
-	 * @var string
-	 */
-	public const MODE_BLANK = 'blankPage';
-
-	/**
-	 * A batch as it arrived, not yet cut.
-	 *
-	 * @var string
-	 */
-	public const STATUS_RECEIVED = 'received';
-
-	/**
-	 * Cut into documents.
-	 *
-	 * @var string
-	 */
-	public const STATUS_SPLIT = 'split';
-
-	/**
-	 * Could not be cut, and delivered nothing.
-	 *
-	 * @var string
-	 */
-	public const STATUS_FAILED = 'failed';
+class ScanBatchService implements ScanBatchServiceInterface {
 
 	/**
 	 * Constructor.

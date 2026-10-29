@@ -30,6 +30,7 @@ namespace OCA\Filinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\Filinq\Event\FinancialExtractionCompletedEvent;
+use OCA\Filinq\Kernel\Contracts\FinancialExtractionServiceInterface;
 use OCA\Filinq\Service\Extraction\AmountExtractor;
 use OCA\Filinq\Service\Extraction\DateExtractor;
 use OCA\Filinq\Service\Extraction\IbanExtractor;
@@ -66,7 +67,7 @@ use Throwable;
  *
  * @spec openspec/specs/financial-document-field-extraction/spec.md
  */
-class FinancialExtractionService {
+class FinancialExtractionService implements FinancialExtractionServiceInterface {
 
 	/**
 	 * Valid `docType` values accepted by the extraction endpoint.

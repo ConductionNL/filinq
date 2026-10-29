@@ -23,6 +23,7 @@ namespace OCA\Filinq\Service;
 
 use DateTimeImmutable;
 use DateTimeInterface;
+use OCA\Filinq\Kernel\Contracts\SigningVerificationServiceInterface;
 use OCA\Filinq\Service\Signing\AssertionCanonicalizer;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
@@ -40,7 +41,7 @@ use RuntimeException;
  *
  * @spec openspec/changes/digital-signing-integration/tasks.md#5-1
  */
-class SigningVerificationService {
+class SigningVerificationService implements SigningVerificationServiceInterface {
 	/**
 	 * Constructor
 	 *

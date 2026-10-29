@@ -756,4 +756,55 @@ class AnonymizationControllerTest extends TestCase {
 
 	}//end testAnonymizeRejectsNonBooleanFlag()
 
+	/**
+	 * Without a session the run answers 401 before reading the body.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/anonymization/spec.md
+	 */
+	public function testAnonymizeReturns401WithoutASession(): void {
+		$session = $this->createMock(originalClassName: IUserSession::class);
+		$session->method('getUser')->willReturn(null);
+		$this->mockRequest->expects($this->never())->method('getParams');
+		$controller = new AnonymizationController(
+			appName: 'filinq',
+			request: $this->mockRequest,
+			logger: $this->mockLogger,
+			anonymizationService: $this->mockAnonService,
+			fileListingService: $this->mockFileService,
+			l10n: $this->mockL10n,
+			appConfig: $this->createMock(originalClassName: \OCP\IAppConfig::class),
+			userSession: $session,
+			rootFolder: $this->mockRootFolder
+		);
+
+		$response = $controller->anonymize(fileId: 1);
+
+		$this->assertSame(expected: 401, actual: $response->getStatus());
+		$this->assertSame(expected: ['error' => 'Not authenticated'], actual: $response->getData());
+
+	}//end testAnonymizeReturns401WithoutASession()
+
+	/**
+	 * An unexpected failure during the run answers 500 with its message.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/anonymization/spec.md
+	 */
+	public function testAnonymizeReturns500OnAnUnexpectedFailure(): void {
+		$this->mockRequest->method('getParams')->willReturn(
+			['entities' => [['text' => 'Amsterdam', 'type' => 'LOCATION']]]
+		);
+		$this->mockAnonService->method('anonymizeDocument')
+			->willThrowException(exception: new \RuntimeException(message: 'disk full'));
+
+		$response = $this->controller->anonymize(fileId: 1);
+
+		$this->assertSame(expected: 500, actual: $response->getStatus());
+		$this->assertSame(expected: ['error' => 'Failed to anonymize document: %s'], actual: $response->getData());
+
+	}//end testAnonymizeReturns500OnAnUnexpectedFailure()
+
 }//end class

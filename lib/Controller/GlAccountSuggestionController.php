@@ -25,7 +25,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use Exception;
-use OCA\Filinq\Service\GlAccountSuggestionService;
+use OCA\Filinq\Kernel\Contracts\GlAccountSuggestionServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -51,7 +51,7 @@ class GlAccountSuggestionController extends Controller {
 	 *
 	 * @param string $appName The application name.
 	 * @param IRequest $request The request object.
-	 * @param GlAccountSuggestionService $suggestionService Suggestion orchestration service.
+	 * @param GlAccountSuggestionServiceInterface $suggestionService Suggestion orchestration service.
 	 * @param IUserSession $userSession User session for authentication.
 	 * @param IL10N $l10n Localization service.
 	 * @param LoggerInterface $logger Logger.
@@ -61,7 +61,7 @@ class GlAccountSuggestionController extends Controller {
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly GlAccountSuggestionService $suggestionService,
+		private readonly GlAccountSuggestionServiceInterface $suggestionService,
 		private readonly IUserSession $userSession,
 		private readonly IL10N $l10n,
 		private readonly LoggerInterface $logger,

@@ -27,7 +27,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Repair;
 
-use OCA\Filinq\Service\IntakeRepository;
+use OCA\Filinq\Kernel\Contracts\IntakeRepositoryInterface;
 use OCP\IAppConfig;
 use OCP\IDBConnection;
 use OCP\Migration\IOutput;
@@ -140,7 +140,7 @@ class UnownEvidenceRecords implements IRepairStep {
 
 		$register = $this->db->executeQuery(
 			'SELECT id FROM `*PREFIX*openregister_registers` WHERE slug = ?',
-			[IntakeRepository::REGISTER]
+			[IntakeRepositoryInterface::REGISTER]
 		)->fetch();
 		if (is_array($register) === false || isset($register['id']) === false) {
 			return [];

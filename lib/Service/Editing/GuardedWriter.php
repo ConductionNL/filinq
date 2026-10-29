@@ -33,7 +33,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\Editing;
 
-use OCA\Filinq\AppInfo\Application;
+use OCA\Filinq\Kernel\AppIdentity;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
 use OCP\Files\Lock\ILock;
@@ -141,7 +141,7 @@ class GuardedWriter {
 	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#task-1.1
 	 */
 	public function runSession(string $uid, File $file, callable $transform, string $version, string $mode): array {
-		$lock = new LockContext($file, ILock::TYPE_APP, Application::APP_ID);
+		$lock = new LockContext($file, ILock::TYPE_APP, AppIdentity::APP_ID);
 		$held = $this->acquire(lock: $lock, file: $file);
 		$warnings = [];
 

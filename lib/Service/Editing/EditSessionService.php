@@ -49,7 +49,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\Editing;
 
-use OCA\Filinq\AppInfo\Application;
+use OCA\Filinq\Kernel\AppIdentity;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
 use OCP\IAppConfig;
@@ -618,7 +618,7 @@ class EditSessionService {
 	 */
 	private function resolveMode(?string $requested): string {
 		$ceiling = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			self::CONFIG_OUTPUT_MODE,
 			self::MODE_IN_PLACE
 		);

@@ -21,7 +21,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\BackgroundJob;
 
-use OCA\Filinq\Service\Signing\LibreSignCompletion;
+use OCA\Filinq\Kernel\Contracts\LibreSignCompletionInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use Psr\Log\LoggerInterface;
@@ -48,14 +48,14 @@ class LibreSignCompletionJob extends TimedJob {
 	 * Constructor.
 	 *
 	 * @param ITimeFactory        $clock      The clock.
-	 * @param LibreSignCompletion $completion Concludes the finished requests.
+	 * @param LibreSignCompletionInterface $completion Concludes the finished requests.
 	 * @param LoggerInterface     $logger     Logs what the run did.
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		ITimeFactory $clock,
-		private readonly LibreSignCompletion $completion,
+		private readonly LibreSignCompletionInterface $completion,
 		private readonly LoggerInterface $logger,
 	) {
 		parent::__construct(time: $clock);

@@ -479,6 +479,123 @@ describe('addManualEntity — add selected text as a new entity', () => {
 	})
 })
 
+describe('addManualEntity: characterization of the review row', () => {
+	beforeEach(() => {
+		setActivePinia(createPinia())
+		jest.clearAllMocks()
+		axios.post.mockReset()
+		axios.patch.mockReset()
+	})
+
+	it('builds the full review row and returns the response body', async () => {
+		const data = {
+			entity: { value: 'Kuipers', type: 'PERSON' },
+			relations: [{ id: 5 }, { id: null }, { id: 6 }],
+		}
+		axios.post.mockResolvedValue({ data })
+		axios.patch.mockResolvedValue({ data: {} })
+		const store = useAnonymizationStore()
+		const entry = { fileId: 42, entities: [] }
+
+		const result = await store.addManualEntity(entry, {
+			value: 'kuipers',
+			type: 'NAME',
+			bases: ['b1'],
+		})
+
+		expect(result).toBe(data)
+		expect(axios.patch).toHaveBeenCalledTimes(2)
+		expect(entry.entities[0]).toEqual({
+			type: 'PERSON',
+			value: 'Kuipers',
+			included: true,
+			confidence: 1.0,
+			highestConfidence: 1.0,
+			fileCount: 1,
+			count: 2,
+			relationId: 5,
+			relationIds: [5, 6],
+			bases: ['b1'],
+			_decisionBases: ['b1'],
+			_decisionSkip: false,
+			skipAnonymization: false,
+			_patchError: null,
+		})
+		expect(entry.entityCount).toBe(1)
+	})
+
+	it('keeps the input value and type and counts one when nothing matched', async () => {
+		axios.post.mockResolvedValue({ data: null })
+		const store = useAnonymizationStore()
+		const entry = { fileId: 42, entities: [] }
+
+		const result = await store.addManualEntity(entry, {
+			value: 'Kuipers',
+			type: 'PERSON',
+			bases: ['b1'],
+			wholeWord: false,
+			caseSensitive: false,
+		})
+
+		expect(result).toEqual({})
+		expect(axios.post.mock.calls[0][1]).toEqual({
+			value: 'Kuipers',
+			type: 'PERSON',
+			wholeWord: false,
+			caseSensitive: false,
+		})
+		expect(axios.patch).not.toHaveBeenCalled()
+		expect(entry.entities[0]).toMatchObject({
+			type: 'PERSON',
+			value: 'Kuipers',
+			count: 1,
+			relationId: null,
+			relationIds: [],
+			bases: [],
+			_decisionBases: ['b1'],
+		})
+	})
+
+	it('leaves the bases empty when persisting them fails, so anonymise retries', async () => {
+		axios.post.mockResolvedValue({ data: { relations: [{ id: 5 }] } })
+		axios.patch.mockRejectedValue(new Error('denied'))
+		const spy = jest.spyOn(console, 'error').mockImplementation(() => {})
+		const store = useAnonymizationStore()
+		const entry = { fileId: 42, entities: [] }
+
+		await store.addManualEntity(entry, { value: 'x', type: 'PERSON', bases: ['b1'] })
+
+		expect(entry.entities[0].bases).toEqual([])
+		expect(entry.entities[0]._decisionBases).toEqual(['b1'])
+		spy.mockRestore()
+	})
+
+	it('names the missing input with status 0', async () => {
+		const store = useAnonymizationStore()
+
+		await expect(
+			store.addManualEntity({ entities: [] }, { value: 'x', type: 'PERSON' }),
+		).rejects.toMatchObject({ message: 'Entry has no fileId yet.', status: 0 })
+		await expect(
+			store.addManualEntity({ fileId: 1, entities: [] }, { value: '   ', type: 'PERSON' }),
+		).rejects.toMatchObject({ message: 'A value and a type are required.', status: 0 })
+		await expect(store.addManualEntity({ fileId: 1, entities: [] })).rejects.toMatchObject({
+			message: 'A value and a type are required.',
+		})
+	})
+
+	it('lets a failing manual-entities call reject', async () => {
+		axios.post.mockRejectedValue(new Error('server'))
+		const store = useAnonymizationStore()
+		const entry = { fileId: 42, entities: [] }
+
+		await expect(
+			store.addManualEntity(entry, { value: 'x', type: 'PERSON' }),
+		).rejects.toThrow('server')
+		expect(entry.entities).toEqual([])
+	})
+})
+
 describe('anonymiseAllExtracted — batch run over a dossier', () => {
 	beforeEach(() => {
 		setActivePinia(createPinia())
@@ -844,5 +961,212 @@ describe('reanalyseEntry — a scan detection could not read', () => {
 
 		expect(entry.status).toBe('completed')
 		expect(entry.ocrWarning).toBeNull()
+	})
+})
+
+describe('anonymiseEntry: characterization of the full run', () => {
+	beforeEach(() => {
+		setActivePinia(createPinia())
+		jest.clearAllMocks()
+		axios.post.mockReset()
+		axios.patch.mockReset()
+	})
+
+	it('does nothing for an entry that is not extracted', async () => {
+		const store = useAnonymizationStore()
+		const entry = makeEntry()
+		entry.status = 'pending'
+
+		await store.anonymiseEntry(entry)
+
+		expect(axios.post).not.toHaveBeenCalled()
+		expect(entry.status).toBe('pending')
+		expect(entry.reviewRequired).toBeUndefined()
+	})
+
+	it('falls back to the single relationId and patches a changed skip', async () => {
+		axios.patch.mockResolvedValue({ data: {} })
+		axios.post.mockResolvedValue({ data: { anonymizedFileId: 99 } })
+		const store = useAnonymizationStore()
+		const entry = makeEntry({ relationIds: [], relationId: 7, _decisionSkip: true })
+
+		await store.anonymiseEntry(entry)
+
+		expect(axios.patch).toHaveBeenCalledWith(
+			'/apps/filinq/api/anonymization/relations/7',
+			{ bases: [], skipAnonymization: true },
+		)
+		expect(entry.entities[0].skipAnonymization).toBe(true)
+		expect(entry.entities[0].bases).toEqual([])
+		expect(entry.entities[0]._patchError).toBeNull()
+	})
+
+	it('patches every duplicate relation of a grouped row', async () => {
+		axios.patch.mockResolvedValue({ data: {} })
+		axios.post.mockResolvedValue({ data: { anonymizedFileId: 99 } })
+		const store = useAnonymizationStore()
+		const entry = makeEntry({ relationIds: [1, 2], _decisionSkip: true })
+
+		await store.anonymiseEntry(entry)
+
+		expect(axios.patch).toHaveBeenCalledTimes(2)
+		expect(axios.patch.mock.calls.map((c) => c[0])).toEqual([
+			'/apps/filinq/api/anonymization/relations/1',
+			'/apps/filinq/api/anonymization/relations/2',
+		])
+	})
+
+	it('skips the patch for an entity without any relation id', async () => {
+		axios.post.mockResolvedValue({ data: { anonymizedFileId: 99 } })
+		const store = useAnonymizationStore()
+		const entry = makeEntry({ relationIds: undefined, relationId: null, _decisionSkip: true })
+
+		await store.anonymiseEntry(entry)
+
+		expect(axios.patch).not.toHaveBeenCalled()
+		expect(entry.entities[0].skipAnonymization).toBe(false)
+		expect(entry.status).toBe('completed')
+	})
+
+	it('records a failed patch on the entity and still anonymises', async () => {
+		const failure = new Error('boom')
+		failure.response = { data: { error: 'Verboden' } }
+		axios.patch.mockRejectedValue(failure)
+		axios.post.mockResolvedValue({ data: { anonymizedFileId: 99 } })
+		const store = useAnonymizationStore()
+		const entry = makeEntry({ _decisionSkip: true })
+
+		await store.anonymiseEntry(entry)
+
+		expect(entry.entities[0]._patchError).toBe('Verboden')
+		expect(entry.entities[0].skipAnonymization).toBe(false)
+		expect(axios.post).toHaveBeenCalledTimes(1)
+		expect(entry.status).toBe('completed')
+	})
+
+	it('falls back to the error message when a patch failure has no body', async () => {
+		axios.patch.mockRejectedValue(new Error('network down'))
+		axios.post.mockResolvedValue({ data: { anonymizedFileId: 99 } })
+		const store = useAnonymizationStore()
+		const entry = makeEntry({ _decisionSkip: true })
+
+		await store.anonymiseEntry(entry)
+
+		expect(entry.entities[0]._patchError).toBe('network down')
+	})
+
+	it('sends the reversible flag only when it is exactly true', async () => {
+		axios.post.mockResolvedValue({ data: { anonymizedFileId: 99 } })
+		const store = useAnonymizationStore()
+
+		await store.anonymiseEntry(makeEntry(), { reversible: true })
+		await store.anonymiseEntry(makeEntry(), { reversible: 'yes' })
+
+		expect(axios.post.mock.calls[0][1].reversible).toBe(true)
+		expect(axios.post.mock.calls[1][1].reversible).toBeUndefined()
+	})
+
+	it('copies every result field of the anonymise response onto the entry', async () => {
+		axios.post.mockResolvedValue({
+			data: {
+				anonymizedFileId: 99,
+				anonymizedFileName: 'doc-anon.pdf',
+				anonymizedFilePath: '/files/doc-anon.pdf',
+				replacementCount: 3,
+				complete: false,
+				residualCount: 2,
+				residualEntities: [{ value: 'x' }],
+				pseudonymisation: { kept: false },
+				structurePreservation: { tagged: true },
+				sanitizationReport: { removed: 1 },
+			},
+		})
+		const store = useAnonymizationStore()
+		store.loadAnonymizedEntities = jest.fn().mockResolvedValue(null)
+		const entry = makeEntry()
+
+		await store.anonymiseEntry(entry)
+
+		expect(entry).toMatchObject({
+			anonymizedFileId: 99,
+			anonymizedFileName: 'doc-anon.pdf',
+			anonymizedFilePath: '/files/doc-anon.pdf',
+			replacementCount: 3,
+			complete: false,
+			residualCount: 2,
+			residualEntities: [{ value: 'x' }],
+			pseudonymisation: { kept: false },
+			structurePreservation: { tagged: true },
+			sanitizationReport: { removed: 1 },
+			reanonymize: false,
+			status: 'completed',
+		})
+		expect(store.loadAnonymizedEntities).toHaveBeenCalledWith(
+			{ fileId: 99, fileName: 'doc-anon.pdf', path: '/files/doc-anon.pdf' },
+			{ push: false },
+		)
+		expect(entry.resolvedEntities).toBeUndefined()
+	})
+
+	it('defaults the optional result fields when the response omits them', async () => {
+		axios.post.mockResolvedValue({ data: { anonymizedFileId: 99 } })
+		const store = useAnonymizationStore()
+		store.loadAnonymizedEntities = jest.fn().mockResolvedValue({ entities: [] })
+		const entry = makeEntry()
+
+		await store.anonymiseEntry(entry)
+
+		expect(entry).toMatchObject({
+			replacementCount: 0,
+			complete: true,
+			residualCount: 0,
+			residualEntities: [],
+			pseudonymisation: null,
+			structurePreservation: null,
+			sanitizationReport: null,
+		})
+		expect(entry.resolvedEntities).toBeUndefined()
+	})
+
+	it('keeps the resolved placeholders of the produced file', async () => {
+		axios.post.mockResolvedValue({ data: { anonymizedFileId: 99 } })
+		const store = useAnonymizationStore()
+		const resolved = [{ type: 'PERSON', value: '[Persoon: 1]' }]
+		store.loadAnonymizedEntities = jest.fn().mockResolvedValue({ entities: resolved })
+		const entry = makeEntry()
+
+		await store.anonymiseEntry(entry)
+
+		expect(entry.resolvedEntities).toEqual(resolved)
+	})
+
+	it('stays completed when resolving the placeholders fails', async () => {
+		axios.post.mockResolvedValue({ data: { anonymizedFileId: 99 } })
+		const store = useAnonymizationStore()
+		store.loadAnonymizedEntities = jest.fn().mockRejectedValue(new Error('parse'))
+		const spy = jest.spyOn(console, 'error').mockImplementation(() => {})
+		const entry = makeEntry()
+
+		await store.anonymiseEntry(entry)
+
+		expect(entry.status).toBe('completed')
+		expect(entry.resolvedEntities).toBeUndefined()
+		spy.mockRestore()
+	})
+
+	it('marks the entry as failed when the anonymise call fails', async () => {
+		const failure = new Error('server down')
+		axios.post.mockRejectedValue(failure)
+		const spy = jest.spyOn(console, 'error').mockImplementation(() => {})
+		const store = useAnonymizationStore()
+		const entry = makeEntry()
+
+		await store.anonymiseEntry(entry)
+
+		expect(entry.status).toBe('error')
+		expect(entry.error).toBe('server down')
+		expect(entry.reviewMark).not.toBeNull()
+		expect(entry.reviewRequired).toBe(false)
+		spy.mockRestore()
 	})
 })

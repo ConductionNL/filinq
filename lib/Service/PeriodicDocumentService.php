@@ -32,6 +32,7 @@ namespace OCA\Filinq\Service;
 
 use DateTimeImmutable;
 use DateTimeInterface;
+use OCA\Filinq\Kernel\Contracts\PeriodicDocumentServiceInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
@@ -47,14 +48,7 @@ use Throwable;
  *
  * @spec openspec/specs/document-creatie-sjablonen/spec.md
  */
-class PeriodicDocumentService {
-
-	/**
-	 * The schema a schedule lives in.
-	 *
-	 * @var string
-	 */
-	public const SCHEMA = 'periodicDocument';
+class PeriodicDocumentService implements PeriodicDocumentServiceInterface {
 
 	/**
 	 * Constructor.

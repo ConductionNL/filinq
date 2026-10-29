@@ -21,6 +21,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\SigningAuditServiceInterface;
 use OCA\OpenRegister\Db\AuditTrail;
 use OCA\OpenRegister\Db\AuditTrailMapper;
 use OCA\OpenRegister\Db\ObjectEntity;
@@ -40,7 +41,7 @@ use Throwable;
  *
  * @spec openspec/changes/migrate-signing-audit-to-or-audit/tasks.md#D-1
  */
-class SigningAuditService {
+class SigningAuditService implements SigningAuditServiceInterface {
 
 	/**
 	 * Valid audit action types.

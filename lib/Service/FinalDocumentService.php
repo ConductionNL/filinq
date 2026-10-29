@@ -34,6 +34,7 @@ namespace OCA\Filinq\Service;
 
 use DateTimeImmutable;
 use OCA\Filinq\Exception\DocumentFinalException;
+use OCA\Filinq\Kernel\Contracts\FinalDocumentServiceInterface;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
 use OCP\IUserSession;
@@ -52,7 +53,7 @@ use Throwable;
  *
  * @spec openspec/changes/final-documents-frozen/specs/document-versions/spec.md
  */
-class FinalDocumentService {
+class FinalDocumentService implements FinalDocumentServiceInterface {
 
 	/**
 	 * Constructor.

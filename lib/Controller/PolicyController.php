@@ -25,7 +25,7 @@ namespace OCA\Filinq\Controller;
 
 use Exception;
 use InvalidArgumentException;
-use OCA\Filinq\Service\PolicyCrudService;
+use OCA\Filinq\Kernel\Contracts\PolicyCrudServiceInterface;
 use OCA\OpenRegister\Exception\ArchivalImmutableException;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -51,7 +51,7 @@ class PolicyController extends Controller {
 	 * @param string $appName App name.
 	 * @param IRequest $request Request abstraction.
 	 * @param LoggerInterface $logger Logger.
-	 * @param PolicyCrudService $crudService CRUD wrapper.
+	 * @param PolicyCrudServiceInterface $crudService CRUD wrapper.
 	 * @param IL10N $l10n Localisation.
 	 * @param IUserSession $userSession User session for authentication.
 	 */
@@ -59,7 +59,7 @@ class PolicyController extends Controller {
 		string $appName,
 		IRequest $request,
 		private readonly LoggerInterface $logger,
-		private readonly PolicyCrudService $crudService,
+		private readonly PolicyCrudServiceInterface $crudService,
 		private readonly IL10N $l10n,
 		private readonly IUserSession $userSession,
 	) {
@@ -82,7 +82,7 @@ class PolicyController extends Controller {
 
 		try {
 			$this->crudService->requirePolicyPermission(
-				surface: PolicyCrudService::SURFACE_PROHIBITION,
+				surface: PolicyCrudServiceInterface::SURFACE_PROHIBITION,
 				action: 'read'
 			);
 			return new JSONResponse($this->crudService->listProhibitions());
@@ -109,7 +109,7 @@ class PolicyController extends Controller {
 
 		try {
 			$this->crudService->requirePolicyPermission(
-				surface: PolicyCrudService::SURFACE_PROHIBITION,
+				surface: PolicyCrudServiceInterface::SURFACE_PROHIBITION,
 				action: 'read'
 			);
 			$record = $this->crudService->getProhibition(uuid: $id);
@@ -138,7 +138,7 @@ class PolicyController extends Controller {
 
 		try {
 			$this->crudService->requirePolicyPermission(
-				surface: PolicyCrudService::SURFACE_PROHIBITION,
+				surface: PolicyCrudServiceInterface::SURFACE_PROHIBITION,
 				action: 'create'
 			);
 			$data = $this->request->getParams();
@@ -167,7 +167,7 @@ class PolicyController extends Controller {
 
 		try {
 			$this->crudService->requirePolicyPermission(
-				surface: PolicyCrudService::SURFACE_PROHIBITION,
+				surface: PolicyCrudServiceInterface::SURFACE_PROHIBITION,
 				action: 'update'
 			);
 			$data = $this->request->getParams();
@@ -213,7 +213,7 @@ class PolicyController extends Controller {
 
 		try {
 			$this->crudService->requirePolicyPermission(
-				surface: PolicyCrudService::SURFACE_PROHIBITION,
+				surface: PolicyCrudServiceInterface::SURFACE_PROHIBITION,
 				action: 'delete'
 			);
 			$this->crudService->deleteProhibition(uuid: $id);

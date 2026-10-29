@@ -29,6 +29,7 @@ namespace OCA\Filinq\Service;
 
 use Exception;
 use OCA\Filinq\Exception\ConversionFailedException;
+use OCA\Filinq\Kernel\Contracts\BatchAnonymizeServiceInterface;
 use OCA\Filinq\Service\Conversion\OutputLayoutMover;
 
 /**
@@ -42,7 +43,7 @@ use OCA\Filinq\Service\Conversion\OutputLayoutMover;
  *
  * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-5
  */
-class BatchAnonymizeService {
+class BatchAnonymizeService implements BatchAnonymizeServiceInterface {
 	/**
 	 * Constructor for BatchAnonymizeService
 	 *

@@ -31,6 +31,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\EmailIngestion;
 
 use InvalidArgumentException;
+use OCA\Filinq\Kernel\Contracts\EmailIngestionServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\Files\File;
 use OCP\Files\Folder;
@@ -41,19 +42,7 @@ use Throwable;
 /**
  * Watched-folder email ingestion.
  */
-class EmailIngestionService {
-
-	public const REASON_UNSUPPORTED_FORMAT = 'unsupported-format';
-
-	public const REASON_UNPARSEABLE = 'unparseable';
-
-	public const REASON_NO_DOSSIER_FOLDER = 'dossier-folder-unavailable';
-
-	public const REASON_FILING_FAILED = 'filing-failed';
-
-	public const SOURCE_WATCHED_FOLDER = 'watched-folder';
-
-	public const SOURCE_MANUAL = 'manual';
+class EmailIngestionService implements EmailIngestionServiceInterface {
 
 	private const EXTENSIONS = ['eml', 'msg'];
 

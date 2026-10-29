@@ -31,6 +31,7 @@ namespace OCA\Filinq\Service;
 
 use DateTime;
 use Exception;
+use OCA\Filinq\Kernel\Contracts\TemplateServiceInterface;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\IUserSession;
@@ -46,7 +47,7 @@ use RuntimeException;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  */
-class TemplateService {
+class TemplateService implements TemplateServiceInterface {
 
 	/**
 	 * Lock timeout in minutes
@@ -460,7 +461,6 @@ class TemplateService {
 
 		return $result['results'];
 	}//end getTemplatesByNamespace()
-
 
 	/**
 	 * Duplicate a template

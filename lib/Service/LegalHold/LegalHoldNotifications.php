@@ -20,7 +20,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\LegalHold;
 
-use OCA\Filinq\AppInfo\Application;
+use OCA\Filinq\Kernel\AppIdentity;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IUserManager;
 use OCP\Notification\IManager;
@@ -89,7 +89,7 @@ class LegalHoldNotifications {
 
 			try {
 				$notification = $this->notifications->createNotification();
-				$notification->setApp(Application::APP_ID)
+				$notification->setApp(AppIdentity::APP_ID)
 					->setUser($userId)
 					->setDateTime($this->time->getDateTime())
 					->setObject('legalHoldCase', (string) $case['uuid'])

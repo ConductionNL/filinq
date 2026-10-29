@@ -46,6 +46,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\LegalBasesSummaryServiceInterface;
 use OCP\App\IAppManager;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
@@ -63,7 +64,7 @@ use Psr\Log\LoggerInterface;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  */
-class LegalBasesSummaryService {
+class LegalBasesSummaryService implements LegalBasesSummaryServiceInterface {
 
 	/**
 	 * Suffix applied to the source file's base name when the per-document

@@ -25,10 +25,10 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\EventListener;
 
+use OCA\Filinq\Kernel\Contracts\PolicyRetroactiveServiceInterface;
+use OCA\Filinq\Kernel\Contracts\SettingsServiceInterface;
 use OCA\Filinq\Service\LegalBasesSummaryService;
 use OCA\Filinq\Service\MetadataService;
-use OCA\Filinq\Service\PolicyRetroactiveService;
-use OCA\Filinq\Service\SettingsService;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectDeletedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
@@ -78,9 +78,9 @@ class FilinqEventHandler {
 	 *
 	 * @param ObjectCreatedEvent $event The creation event
 	 * @param MetadataService $metadataService The metadata service
-	 * @param SettingsService $settingsService The settings service
+	 * @param SettingsServiceInterface $settingsService The settings service
 	 * @param LoggerInterface $logger The logger instance
-	 * @param PolicyRetroactiveService $retroactive Retroactive policy applicator
+	 * @param PolicyRetroactiveServiceInterface $retroactive Retroactive policy applicator
 	 *                                              (injected here, not via
 	 *                                              service-locator).
 	 *
@@ -91,9 +91,9 @@ class FilinqEventHandler {
 	public function handleObjectCreated(
 		ObjectCreatedEvent $event,
 		MetadataService $metadataService,
-		SettingsService $settingsService,
+		SettingsServiceInterface $settingsService,
 		LoggerInterface $logger,
-		PolicyRetroactiveService $retroactive,
+		PolicyRetroactiveServiceInterface $retroactive,
 	): void {
 		$object = $event->getObject();
 		if ($object === null) {
@@ -123,9 +123,9 @@ class FilinqEventHandler {
 	 *
 	 * @param ObjectUpdatedEvent $event The update event
 	 * @param MetadataService $metadataService The metadata service
-	 * @param SettingsService $settingsService The settings service
+	 * @param SettingsServiceInterface $settingsService The settings service
 	 * @param LoggerInterface $logger The logger instance
-	 * @param PolicyRetroactiveService $retroactive Retroactive policy applicator.
+	 * @param PolicyRetroactiveServiceInterface $retroactive Retroactive policy applicator.
 	 *
 	 * @return void
 	 *
@@ -134,9 +134,9 @@ class FilinqEventHandler {
 	public function handleObjectUpdated(
 		ObjectUpdatedEvent $event,
 		MetadataService $metadataService,
-		SettingsService $settingsService,
+		SettingsServiceInterface $settingsService,
 		LoggerInterface $logger,
-		PolicyRetroactiveService $retroactive,
+		PolicyRetroactiveServiceInterface $retroactive,
 	): void {
 		$object = $event->getNewObject();
 		$oldObject = $event->getOldObject();
@@ -328,14 +328,14 @@ class FilinqEventHandler {
 	 *
 	 * @param ObjectDeletedEvent $event The deletion event
 	 * @param LoggerInterface $logger The logger instance
-	 * @param PolicyRetroactiveService $retroactive Retroactive policy applicator.
+	 * @param PolicyRetroactiveServiceInterface $retroactive Retroactive policy applicator.
 	 *
 	 * @return void
 	 */
 	public function handleObjectDeleted(
 		ObjectDeletedEvent $event,
 		LoggerInterface $logger,
-		PolicyRetroactiveService $retroactive,
+		PolicyRetroactiveServiceInterface $retroactive,
 	): void {
 		$object = $event->getObject();
 		if ($object === null) {
@@ -377,7 +377,7 @@ class FilinqEventHandler {
 	 * @param array<string, mixed> $objectData The changed object's payload.
 	 * @param LoggerInterface $logger Structured log sink.
 	 * @param string $reason 'created' | 'updated' | 'deleted'.
-	 * @param PolicyRetroactiveService $retroactive Retroactive policy applicator
+	 * @param PolicyRetroactiveServiceInterface $retroactive Retroactive policy applicator
 	 *                                              (constructor/method-injected at
 	 *                                              the calling public handler).
 	 *
@@ -390,7 +390,7 @@ class FilinqEventHandler {
 		array $objectData,
 		LoggerInterface $logger,
 		string $reason,
-		PolicyRetroactiveService $retroactive,
+		PolicyRetroactiveServiceInterface $retroactive,
 	): void {
 		$shape = $this->detectPolicyShape(objectData: $objectData);
 		if ($shape === null) {

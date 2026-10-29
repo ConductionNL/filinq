@@ -24,8 +24,8 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
+use OCA\Filinq\Kernel\Contracts\ScanBatchServiceInterface;
 use OCA\Filinq\Service\ScanBatchRepository;
-use OCA\Filinq\Service\ScanBatchService;
 use OCA\Filinq\Service\ScanProfileService;
 use OCA\Filinq\Service\SeparatorSheetService;
 use OCP\AppFramework\Controller;
@@ -65,7 +65,7 @@ class ScanIntakeController extends Controller {
 	 * @param IRequest $request The request.
 	 * @param SeparatorSheetService $sheets The sheets filinq prints and reads.
 	 * @param ScanProfileService $profiles The declared scan profiles.
-	 * @param ScanBatchService $batches The splitter.
+	 * @param ScanBatchServiceInterface $batches The splitter.
 	 * @param ScanBatchRepository $store The batch store.
 	 * @param IRootFolder $rootFolder The file tree.
 	 * @param IUserSession $userSession The current session.
@@ -77,7 +77,7 @@ class ScanIntakeController extends Controller {
 		IRequest $request,
 		private readonly SeparatorSheetService $sheets,
 		private readonly ScanProfileService $profiles,
-		private readonly ScanBatchService $batches,
+		private readonly ScanBatchServiceInterface $batches,
 		private readonly ScanBatchRepository $store,
 		private readonly IRootFolder $rootFolder,
 		private readonly IUserSession $userSession,

@@ -26,9 +26,9 @@ namespace OCA\Filinq\BackgroundJob;
 use DateTimeImmutable;
 use DateTimeInterface;
 use Exception;
-use OCA\Filinq\Service\SettingsService;
-use OCA\Filinq\Service\SigningAuditService;
-use OCA\Filinq\Service\SigningService;
+use OCA\Filinq\Kernel\Contracts\SettingsServiceInterface;
+use OCA\Filinq\Kernel\Contracts\SigningAuditServiceInterface;
+use OCA\Filinq\Kernel\Contracts\SigningServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use OCP\IAppConfig;
@@ -54,21 +54,21 @@ class SigningExpirationJob extends TimedJob {
 	 * Constructor
 	 *
 	 * @param ITimeFactory $time Time factory
-	 * @param SettingsService $settingsService Settings service
-	 * @param SigningAuditService $auditService Audit service
+	 * @param SettingsServiceInterface $settingsService Settings service
+	 * @param SigningAuditServiceInterface $auditService Audit service
 	 * @param IAppConfig $config App config
 	 * @param LoggerInterface $logger Logger
-	 * @param SigningService $signingService Signing service (emits the cross-app conclusion event)
+	 * @param SigningServiceInterface $signingService Signing service (emits the cross-app conclusion event)
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		ITimeFactory $time,
-		private readonly SettingsService $settingsService,
-		private readonly SigningAuditService $auditService,
+		private readonly SettingsServiceInterface $settingsService,
+		private readonly SigningAuditServiceInterface $auditService,
 		private readonly IAppConfig $config,
 		private readonly LoggerInterface $logger,
-		private readonly SigningService $signingService,
+		private readonly SigningServiceInterface $signingService,
 	) {
 		parent::__construct(time: $time);
 		// Run every hour to enforce deadline expiry.
