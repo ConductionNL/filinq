@@ -25,7 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
-use OCA\Filinq\Service\PostRegisterReader;
+use OCA\Filinq\Kernel\Contracts\PostRegisterReaderInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -63,7 +63,7 @@ class PostRegisterController extends Controller {
 	 *
 	 * @param string             $appName     The app name.
 	 * @param IRequest           $request     The request.
-	 * @param PostRegisterReader $reader      The post register's derived reads.
+	 * @param PostRegisterReaderInterface $reader      The post register's derived reads.
 	 * @param IUserSession       $userSession The current session.
 	 *
 	 * @return void
@@ -71,7 +71,7 @@ class PostRegisterController extends Controller {
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly PostRegisterReader $reader,
+		private readonly PostRegisterReaderInterface $reader,
 		private readonly IUserSession $userSession,
 	) {
 		parent::__construct(appName: $appName, request: $request);

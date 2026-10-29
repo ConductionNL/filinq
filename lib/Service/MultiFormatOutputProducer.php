@@ -28,6 +28,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use Exception;
+use OCA\Filinq\Kernel\Contracts\MultiFormatOutputProducerInterface;
 use OCP\IURLGenerator;
 use Throwable;
 
@@ -42,13 +43,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  */
-class MultiFormatOutputProducer {
-	/**
-	 * The formats generation can make.
-	 *
-	 * @var string[]
-	 */
-	public const FORMATS = ['pdf', 'odf', 'docx', 'html'];
+class MultiFormatOutputProducer implements MultiFormatOutputProducerInterface {
 
 	/**
 	 * File extension per output format.

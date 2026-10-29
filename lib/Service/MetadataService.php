@@ -28,6 +28,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use Exception;
+use OCA\Filinq\Kernel\Contracts\MetadataServiceInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Db\DoesNotExistException;
@@ -46,7 +47,7 @@ use RuntimeException;
  *
  * @spec openspec/specs/metadata-enrichment/spec.md
  */
-class MetadataService {
+class MetadataService implements MetadataServiceInterface {
 	/**
 	 * Constructor for MetadataService
 	 *

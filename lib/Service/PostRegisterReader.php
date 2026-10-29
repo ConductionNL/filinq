@@ -22,6 +22,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\PostRegisterReaderInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -44,28 +45,7 @@ use Throwable;
  *
  * @spec openspec/changes/documents-in-and-out-of-the-building/specs/document-register/spec.md
  */
-class PostRegisterReader {
-
-	/**
-	 * The register the entries live in.
-	 */
-	public const REGISTER = 'filinq';
-
-	/**
-	 * The schema the entries live in.
-	 */
-	public const SCHEMA = 'documentRegistration';
-
-	/**
-	 * The direction of a document that came in.
-	 *
-	 * 🔴 THE VALUE IS THE SCHEMA'S, NOT THE PROSE'S. `documentRegistration`
-	 * declares `enum: [inbound, outbound]`, and OpenRegister refuses anything
-	 * else on save, so no row can ever carry `incoming`. Filtering on the word
-	 * the proposal uses returned an empty open-post list on every unit, with
-	 * no error and nothing in the log to say the filter matched nothing.
-	 */
-	public const DIRECTION_INBOUND = 'inbound';
+class PostRegisterReader implements PostRegisterReaderInterface {
 
 	/**
 	 * Collaborators.

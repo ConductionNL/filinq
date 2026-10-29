@@ -28,7 +28,7 @@ namespace OCA\Filinq\Controller;
 
 use Exception;
 use OCA\Filinq\Kernel\Contracts\TemplateServiceInterface;
-use OCA\Filinq\Service\TemplateVersionService;
+use OCA\Filinq\Kernel\Contracts\TemplateVersionServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -52,7 +52,7 @@ class TemplateVersionsController extends Controller {
 	 * @param IRequest $request The request object
 	 * @param TemplateServiceInterface $templateService Service for template operations
 	 * @param TemplateRequestHandler $requestHandler Request param parser and error handler
-	 * @param TemplateVersionService $versionService Service for version operations
+	 * @param TemplateVersionServiceInterface $versionService Service for version operations
 	 * @param IUserSession $userSession User session for current user
 	 *
 	 * @return void
@@ -62,7 +62,7 @@ class TemplateVersionsController extends Controller {
 		IRequest $request,
 		private readonly TemplateServiceInterface $templateService,
 		private readonly TemplateRequestHandler $requestHandler,
-		private readonly TemplateVersionService $versionService,
+		private readonly TemplateVersionServiceInterface $versionService,
 		private readonly IUserSession $userSession,
 	) {
 		parent::__construct(appName: $appName, request: $request);
