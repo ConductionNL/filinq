@@ -32,24 +32,51 @@ use DateTimeInterface;
 class SigningAct {
 
 	/**
-	 * @param string                    $requestId     The signing request ID
-	 * @param string                    $signerId      The signer record ID
-	 * @param array<string, mixed>      $request       The signing request
-	 * @param array<string, mixed>|null $verifiedActor The verified external actor, or null for the session user
-	 * @param array{userId: string, displayName: string} $actor The acting user
-	 * @param array<string, mixed>|null $signatureData Consent and optional drawn signature, never used for identity
-	 * @param DateTimeImmutable         $now           The moment of the act
+	 * The signing request ID.
+	 *
+	 * @var string
+	 */
+	public readonly string $requestId;
+
+	/**
+	 * The signer record ID.
+	 *
+	 * @var string
+	 */
+	public readonly string $signerId;
+
+	/**
+	 * The verified external actor, or null for the session user.
+	 *
+	 * @var array<string, mixed>|null
+	 */
+	public readonly ?array $verifiedActor;
+
+	/**
+	 * The moment of the act.
+	 *
+	 * @var DateTimeImmutable
+	 */
+	public readonly DateTimeImmutable $now;
+
+	/**
+	 * @param array<string, mixed>                       $request       The signing request
+	 * @param array{requestId: string, signerId: string} $target        The request and signer record IDs
+	 * @param array<string, mixed>                       $actor         userId, displayName and the verified external actor (verified, or null)
+	 * @param array<string, mixed>|null                  $signatureData Consent and optional drawn signature, never used for identity
 	 */
 	public function __construct(
-		public readonly string $requestId,
-		public readonly string $signerId,
 		public readonly array $request,
-		public readonly ?array $verifiedActor,
+		array $target,
 		public readonly array $actor,
 		public readonly ?array $signatureData,
-		public readonly DateTimeImmutable $now,
 	) {
+		$this->requestId     = $target['requestId'];
+		$this->signerId      = $target['signerId'];
+		$this->verifiedActor = $actor['verified'];
+		$this->now           = new DateTimeImmutable();
 	}//end __construct()
+
 
 	/**
 	 * Mark a signer record SIGNED at this act's moment from the given address.

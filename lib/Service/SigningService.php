@@ -517,13 +517,10 @@ class SigningService implements SigningServiceInterface {
 		}
 
 		$act = new SigningAct(
-			requestId: $requestId,
-			signerId: $signerId,
 			request: $request,
-			verifiedActor: $verifiedActor,
-			actor: ['userId' => $actorUserId, 'displayName' => $actorDisplayName],
-			signatureData: $signatureData,
-			now: new DateTimeImmutable()
+			target: ['requestId' => $requestId, 'signerId' => $signerId],
+			actor: ['userId' => $actorUserId, 'displayName' => $actorDisplayName, 'verified' => $verifiedActor],
+			signatureData: $signatureData
 		);
 
 		['register' => $signerRegister, 'schema' => $signerSchema] = $this->requireSignerRecordBinding();
