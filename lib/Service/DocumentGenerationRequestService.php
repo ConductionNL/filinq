@@ -39,6 +39,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use OCA\Filinq\Event\DocumentGeneratedEvent;
+use OCA\Filinq\Kernel\Contracts\GenerationRequestServiceInterface;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\IUserSession;
 use RuntimeException;
@@ -55,7 +56,7 @@ use UnexpectedValueException;
  *
  * @spec openspec/changes/flow-generate-document-node/specs/flow-document-generation/spec.md#requirement-one-generation-path-for-the-flow-node-the-command-event-and-the-api
  */
-class DocumentGenerationRequestService {
+class DocumentGenerationRequestService implements GenerationRequestServiceInterface {
 
 	/**
 	 * The output formats and their mime types ({@see DocumentGenerationRequestRules::FORMATS}).
@@ -124,9 +125,6 @@ class DocumentGenerationRequestService {
 	public function validate(array $request): void {
 		$this->rules->validate(request: $request);
 	}//end validate()
-
-
-
 
 	/**
 	 * Generate one document and announce it.
@@ -324,8 +322,6 @@ class DocumentGenerationRequestService {
 		];
 	}//end summary()
 
-
-
 	/**
 	 * The user whose Files receive the document.
 	 *
@@ -437,7 +433,5 @@ class DocumentGenerationRequestService {
 			schema: $object['schema']
 		);
 	}//end writeField()
-
-
 
 }//end class

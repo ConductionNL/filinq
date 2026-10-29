@@ -29,7 +29,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\EventListener;
 
 use OCA\Filinq\Event\DocumentGenerationRequestedEvent;
-use OCA\Filinq\Service\DocumentGenerationRequestService;
+use OCA\Filinq\Kernel\Contracts\GenerationRequestServiceInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use Psr\Log\LoggerInterface;
@@ -57,13 +57,13 @@ class DocumentGenerationRequestedListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param DocumentGenerationRequestService $generator The shared generation service.
+	 * @param GenerationRequestServiceInterface $generator The shared generation service.
 	 * @param LoggerInterface                  $logger    The logger.
 	 *
 	 * @return void
 	 */
 	public function __construct(
-		private readonly DocumentGenerationRequestService $generator,
+		private readonly GenerationRequestServiceInterface $generator,
 		private readonly LoggerInterface $logger,
 	) {
 

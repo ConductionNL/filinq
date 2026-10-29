@@ -40,7 +40,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
-use OCA\Filinq\Service\DossierManagementService;
+use OCA\Filinq\Kernel\Contracts\DossierManagementServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -64,7 +64,7 @@ class DossierManagementController extends Controller {
 	 *
 	 * @param string $appName The application name.
 	 * @param IRequest $request The current HTTP request.
-	 * @param DossierManagementService $dossiers Dossier aggregation and membership.
+	 * @param DossierManagementServiceInterface $dossiers Dossier aggregation and membership.
 	 * @param IUserSession $userSession The current session.
 	 * @param IL10N $l10n Localisation.
 	 * @param LoggerInterface $logger Logger.
@@ -72,7 +72,7 @@ class DossierManagementController extends Controller {
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly DossierManagementService $dossiers,
+		private readonly DossierManagementServiceInterface $dossiers,
 		private readonly IUserSession $userSession,
 		private readonly IL10N $l10n,
 		private readonly LoggerInterface $logger,

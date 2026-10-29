@@ -22,6 +22,8 @@ namespace OCA\Filinq\Service\Publication;
 use DateTimeImmutable;
 use DateTimeInterface;
 use InvalidArgumentException;
+use OCA\Filinq\Exception\PublicationNotReadyException;
+use OCA\Filinq\Kernel\Contracts\PublicationPipelineServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use RuntimeException;
 
@@ -40,7 +42,7 @@ use RuntimeException;
  *
  * @spec openspec/specs/woo-publicatie-pipeline/spec.md
  */
-class PublicationPipelineService {
+class PublicationPipelineService implements PublicationPipelineServiceInterface {
 
 	/**
 	 * The Woo metadata an operator may set.

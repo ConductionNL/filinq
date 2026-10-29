@@ -37,6 +37,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\DossierManagementServiceInterface;
 use OCA\Filinq\Service\LegalHold\LegalHoldFanOut;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -51,7 +52,7 @@ use Throwable;
  *     wires existing capabilities (bases, folder enumeration, batch state,
  *     anonymisation links) rather than reimplementing any of them.
  */
-class DossierManagementService {
+class DossierManagementService implements DossierManagementServiceInterface {
 
 	/**
 	 * The register every filinq schema lives in.

@@ -30,9 +30,9 @@ namespace OCA\Filinq\Controller;
 use InvalidArgumentException;
 use OCA\Filinq\Kernel\Contracts\ContractPartiesInterface;
 use OCA\Filinq\Kernel\Contracts\ContractTermSuggestionServiceInterface;
-use OCA\Filinq\Service\Contract\ContractNotFoundException;
-use OCA\Filinq\Service\Contract\ContractService;
-use OCA\Filinq\Service\Contract\ContractSigningLink;
+use OCA\Filinq\Exception\ContractNotFoundException;
+use OCA\Filinq\Kernel\Contracts\ContractServiceInterface;
+use OCA\Filinq\Kernel\Contracts\ContractSigningLinkInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -60,11 +60,11 @@ class ContractController extends Controller {
 	 *
 	 * @param string                        $appName     The app id.
 	 * @param IRequest                      $request     The request.
-	 * @param ContractService               $contracts   The contract actions.
+	 * @param ContractServiceInterface               $contracts   The contract actions.
 	 * @param ContractTermSuggestionServiceInterface $suggestions The key-term suggestions.
 	 * @param IUserSession                  $userSession The session.
 	 * @param LoggerInterface               $logger      The logger.
-	 * @param ContractSigningLink           $signingLink The signing request link.
+	 * @param ContractSigningLinkInterface           $signingLink The signing request link.
 	 * @param ContractPartiesInterface               $parties     The parties, from their contacts.
 	 *
 	 * @return void
@@ -72,11 +72,11 @@ class ContractController extends Controller {
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly ContractService $contracts,
+		private readonly ContractServiceInterface $contracts,
 		private readonly ContractTermSuggestionServiceInterface $suggestions,
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
-		private readonly ContractSigningLink $signingLink,
+		private readonly ContractSigningLinkInterface $signingLink,
 		private readonly ContractPartiesInterface $parties,
 	) {
 		parent::__construct(appName: $appName, request: $request);
