@@ -470,4 +470,53 @@ class DocumentGenerationRequestServiceTest extends TestCase {
 
 		$this->assertSame(['pdf', 'odf', 'html'], array_keys(DocumentGenerationRequestService::FORMATS));
 	}//end testSupportedFormatsValidate()
+	/**
+	 * The whole document a stored generation answers with, key for key, and
+	 * the house style that reaches the engine.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/flow-generate-document-node/specs/flow-document-generation/spec.md#requirement-one-generation-path-for-the-flow-node-the-command-event-and-the-api
+	 */
+	public function testTheStoredDocumentKeyForKey(): void {
+		$stored = $this->storedResult();
+		$stored['warnings'] = ['font substituted'];
+		$this->documents->expects($this->once())
+			->method('generateFromTemplate')
+			->with(
+				'inline',
+				$this->anything(),
+				[],
+				$this->callback(
+					callback: static fn (array $options): bool => $options['huisstijlId'] === 'hs-1'
+						&& $options['format'] === 'odf'
+				)
+			)
+			->willReturn($stored);
+
+		$result = $this->service->generate(
+			request: ['template' => 'x', 'format' => 'odf', 'huisstijlId' => 'hs-1', 'filename' => 'Brief'],
+			requestingApp: 'pipelinq'
+		);
+
+		$this->assertSame(
+			expected: [
+				'fileId' => 314,
+				'path' => '/alice/files/DocuDesk/flow/obj-1/Letter.pdf',
+				'name' => 'Letter.pdf',
+				'mime' => 'application/vnd.oasis.opendocument.text',
+				'size' => 1200,
+				'format' => 'odf',
+				'template' => $result['template'],
+				'object' => null,
+				'targetField' => null,
+				'metadata' => [],
+				'requestingApp' => 'pipelinq',
+				'warnings' => ['font substituted'],
+			],
+			actual: $result
+		);
+
+	}//end testTheStoredDocumentKeyForKey()
+
 }//end class
