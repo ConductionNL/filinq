@@ -130,13 +130,12 @@ class RelationSkipDecisionService {
 		}
 
 		if ($skip === true) {
-			$block = $this->evaluateProhibitionSkip(
-				mapper: $mapper,
-				relation: $relation,
-				relationId: $relationId,
-				force: $force,
-				userId: $user->getUID()
-			);
+			$match = $this->findProhibitionMatch(mapper: $mapper, fileId: (int)$relation->getFileId(), relationId: $relationId);
+			$block = null;
+			if ($match !== null) {
+				$block = $this->evaluateProhibitionSkip(match: $match, force: $force, userId: $user->getUID());
+			}
+
 			if ($block !== null) {
 				return ['status' => 422, 'body' => $block];
 			}
@@ -188,35 +187,24 @@ class RelationSkipDecisionService {
 	}//end requireRelationAccess()
 
 	/**
-	 * Evaluate the prohibition guard for a skip on one relation.
+	 * Find the prohibition rule the occurrence behind one relation matches.
 	 *
-	 * Resolves the occurrence's entity value/type/confidence via the file join,
-	 * matches it against the prohibition cache, and classifies the skip. Returns
-	 * the 422 body when the skip is blocked, or null when it is allowed (not a
-	 * prohibition match, released by force, or the match cannot be resolved).
+	 * Resolves the occurrence's entity value/type/confidence via the file join
+	 * and matches it against the prohibition cache. Null when there is no match
+	 * or it cannot be resolved (no row, no value, no policy matcher).
 	 *
 	 * @param mixed $mapper OpenRegister EntityRelationMapper (DI).
-	 * @param mixed $relation The EntityRelation being decided.
+	 * @param int $fileId The relation's file id.
 	 * @param int $relationId The relation id (for the file-join lookup + logs).
-	 * @param bool $force Whether the request set force.
-	 * @param string $userId The acting user; only an override role may release a match.
 	 *
-	 * @return array<string, mixed>|null The 422 body when blocked, else null.
+	 * @return array{row: array<string, mixed>, rule: array<string, mixed>, threshold: float, relationId: int, fileId: int}|null The match, else null.
 	 *
 	 * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-6
 	 */
-	private function evaluateProhibitionSkip(mixed $mapper, mixed $relation, int $relationId, bool $force, string $userId): ?array {
-		$row = $this->findRelationRow(
-			mapper: $mapper,
-			fileId: (int)$relation->getFileId(),
-			relationId: $relationId
-		);
-		if ($row === null) {
-			return null;
-		}
-
+	private function findProhibitionMatch(mixed $mapper, int $fileId, int $relationId): ?array {
+		$row = $this->findRelationRow(mapper: $mapper, fileId: $fileId, relationId: $relationId);
 		$value = (string)($row['entity_value'] ?? '');
-		if ($value === '') {
+		if ($row === null || $value === '') {
 			return null;
 		}
 
@@ -227,54 +215,66 @@ class RelationSkipDecisionService {
 			return null;
 		}
 
-		$match = $matcher->matchProhibition(
-			entityText: $value,
-			entityType: (string)($row['entity_type'] ?? 'OTHER')
-		);
-		if ($match === null) {
+		$rule = $matcher->matchProhibition(entityText: $value, entityType: (string)($row['entity_type'] ?? 'OTHER'));
+		if ($rule === null) {
 			return null;
 		}
 
-		$confidence = (float)($row['confidence'] ?? 0.0);
-		$threshold = (float)$matcher->highConfidenceThreshold();
-		$decision = $this->tier->classify(confidence: $confidence, threshold: $threshold, force: $force);
+		return [
+			'row' => $row,
+			'rule' => $rule,
+			'threshold' => (float)$matcher->highConfidenceThreshold(),
+			'relationId' => $relationId,
+			'fileId' => $fileId,
+		];
+	}//end findProhibitionMatch()
+
+	/**
+	 * Evaluate the prohibition guard for a skip on a matched occurrence.
+	 *
+	 * Classifies the skip by confidence and force. A releasable match forced by
+	 * a user with the override role is recorded as a release and allowed.
+	 *
+	 * @param array{row: array<string, mixed>, rule: array<string, mixed>, threshold: float, relationId: int, fileId: int} $match The match from findProhibitionMatch().
+	 * @param bool $force Whether the request set force.
+	 * @param string $userId The acting user; only an override role may release a match.
+	 *
+	 * @return array<string, mixed>|null The 422 body when blocked, else null.
+	 *
+	 * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-6
+	 */
+	private function evaluateProhibitionSkip(array $match, bool $force, string $userId): ?array {
+		$confidence = (float)($match['row']['confidence'] ?? 0.0);
+		$decision = $this->tier->classify(confidence: $confidence, threshold: $match['threshold'], force: $force);
 		if ($decision === 'allow' && $this->authority->mayOverride(userId: $userId) === true) {
 			$this->committer->recordRelease(
-				ruleId: (string)$match['uuid'],
-				relationId: $relationId,
-				fileId: (int)$relation->getFileId(),
+				ruleId: (string)$match['rule']['uuid'],
+				relationId: $match['relationId'],
+				fileId: $match['fileId'],
 				reason: 'Released below the high-confidence threshold in the review',
 				userId: $userId
 			);
 			return null;
 		}
 
-		if ($decision === 'allow') {
-			$decision = 'block_releasable';
-		}
-
+		$entityId = (int)($match['row']['entity_id'] ?? 0);
 		$this->logger->warning(
 			'Prohibition guard blocked a skip decision',
-			[
-				'ruleId' => $match['uuid'],
-				'entityId' => (int)($row['entity_id'] ?? 0),
-				'relationId' => $relationId,
-			]
+			['ruleId' => $match['rule']['uuid'], 'entityId' => $entityId, 'relationId' => $match['relationId']]
 		);
 
 		return [
 			'error' => 'Entity is on the publication prohibition list; skipping is not allowed.',
-			'threshold' => $threshold,
+			'threshold' => $match['threshold'],
 			'prohibitionMatch' => [
-				'entityId' => (int)($row['entity_id'] ?? 0),
-				'entityName' => $value,
-				'ruleId' => $match['uuid'],
-				'ruleName' => $match['primaryName'],
+				'entityId' => $entityId,
+				'entityName' => (string)$match['row']['entity_value'],
+				'ruleId' => $match['rule']['uuid'],
+				'ruleName' => $match['rule']['primaryName'],
 				'confidence' => $confidence,
 				'absolute' => ($decision === 'block_absolute'),
 			],
 		];
-
 	}//end evaluateProhibitionSkip()
 
 	/**
