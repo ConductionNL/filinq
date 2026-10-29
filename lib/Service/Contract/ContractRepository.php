@@ -25,6 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\Contract;
 
+use OCA\Filinq\Kernel\Contracts\ContractRepositoryInterface;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\IntakeRepository;
 use RuntimeException;
@@ -41,9 +42,7 @@ use Throwable;
  *
  * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/specs/contract-lifecycle-management/spec.md#requirement-contract-is-a-first-class-openregister-object-req-ddclm-001
  */
-class ContractRepository {
-
-	public const SCHEMA = 'documentContract';
+class ContractRepository implements ContractRepositoryInterface {
 
 	/**
 	 * Constructor.

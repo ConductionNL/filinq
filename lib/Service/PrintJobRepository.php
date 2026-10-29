@@ -25,6 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\PrintJobRepositoryInterface;
 use RuntimeException;
 use Throwable;
 
@@ -39,12 +40,7 @@ use Throwable;
  *
  * @spec openspec/specs/print-preview/spec.md
  */
-class PrintJobRepository {
-
-	/**
-	 * The schema slug of a print job.
-	 */
-	public const SCHEMA = 'printJob';
+class PrintJobRepository implements PrintJobRepositoryInterface {
 
 	/**
 	 * Constructor.

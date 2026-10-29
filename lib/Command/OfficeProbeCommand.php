@@ -24,7 +24,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Command;
 
-use OCA\Filinq\Service\Office\OfficeSuiteCapabilityService;
+use OCA\Filinq\Kernel\Contracts\OfficeSuiteCapabilityServiceInterface;
 use OCP\IAppConfig;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -96,13 +96,13 @@ class OfficeProbeCommand extends Command {
 	/**
 	 * Constructor.
 	 *
-	 * @param OfficeSuiteCapabilityService $capability The WOPI capability probe.
+	 * @param OfficeSuiteCapabilityServiceInterface $capability The WOPI capability probe.
 	 * @param IAppConfig $appConfig App configuration.
 	 *
 	 * @return void
 	 */
 	public function __construct(
-		private readonly OfficeSuiteCapabilityService $capability,
+		private readonly OfficeSuiteCapabilityServiceInterface $capability,
 		private readonly IAppConfig $appConfig,
 	) {
 		parent::__construct();

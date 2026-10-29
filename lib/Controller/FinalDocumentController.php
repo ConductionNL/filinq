@@ -30,10 +30,10 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use OCA\Filinq\Kernel\Contracts\DocumentFinalityRuleServiceInterface;
+use OCA\Filinq\Kernel\Contracts\FinalDocumentCorrectionServiceInterface;
 use OCA\Filinq\Kernel\Contracts\FinalDocumentServiceInterface;
-use OCA\Filinq\Service\FinalDocumentCorrectionService;
+use OCA\Filinq\Kernel\Contracts\FinalDocumentUnfreezeServiceInterface;
 use OCA\Filinq\Service\FinalDocumentFailureMapper;
-use OCA\Filinq\Service\FinalDocumentUnfreezeService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -62,8 +62,8 @@ class FinalDocumentController extends Controller {
 	 * @param string $appName The app name.
 	 * @param IRequest $request The request.
 	 * @param FinalDocumentServiceInterface $finalDocuments The finalisation service.
-	 * @param FinalDocumentCorrectionService $corrections The correction service.
-	 * @param FinalDocumentUnfreezeService $unfreeze The recorded exception.
+	 * @param FinalDocumentCorrectionServiceInterface $corrections The correction service.
+	 * @param FinalDocumentUnfreezeServiceInterface $unfreeze The recorded exception.
 	 * @param DocumentFinalityRuleServiceInterface $rules The declaration store.
 	 * @param FinalDocumentFailureMapper $failures Failure shaping shared by every method here.
 	 * @param IUserSession $userSession The current user session.
@@ -75,8 +75,8 @@ class FinalDocumentController extends Controller {
 		string $appName,
 		IRequest $request,
 		private readonly FinalDocumentServiceInterface $finalDocuments,
-		private readonly FinalDocumentCorrectionService $corrections,
-		private readonly FinalDocumentUnfreezeService $unfreeze,
+		private readonly FinalDocumentCorrectionServiceInterface $corrections,
+		private readonly FinalDocumentUnfreezeServiceInterface $unfreeze,
 		private readonly DocumentFinalityRuleServiceInterface $rules,
 		private readonly FinalDocumentFailureMapper $failures,
 		private readonly IUserSession $userSession,

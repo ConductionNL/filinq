@@ -24,10 +24,10 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
+use OCA\Filinq\Kernel\Contracts\ScanBatchRepositoryInterface;
 use OCA\Filinq\Kernel\Contracts\ScanBatchServiceInterface;
-use OCA\Filinq\Service\ScanBatchRepository;
-use OCA\Filinq\Service\ScanProfileService;
-use OCA\Filinq\Service\SeparatorSheetService;
+use OCA\Filinq\Kernel\Contracts\ScanProfileServiceInterface;
+use OCA\Filinq\Kernel\Contracts\SeparatorSheetServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -63,10 +63,10 @@ class ScanIntakeController extends Controller {
 	 *
 	 * @param string $appName The app name.
 	 * @param IRequest $request The request.
-	 * @param SeparatorSheetService $sheets The sheets filinq prints and reads.
-	 * @param ScanProfileService $profiles The declared scan profiles.
+	 * @param SeparatorSheetServiceInterface $sheets The sheets filinq prints and reads.
+	 * @param ScanProfileServiceInterface $profiles The declared scan profiles.
 	 * @param ScanBatchServiceInterface $batches The splitter.
-	 * @param ScanBatchRepository $store The batch store.
+	 * @param ScanBatchRepositoryInterface $store The batch store.
 	 * @param IRootFolder $rootFolder The file tree.
 	 * @param IUserSession $userSession The current session.
 	 *
@@ -75,10 +75,10 @@ class ScanIntakeController extends Controller {
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly SeparatorSheetService $sheets,
-		private readonly ScanProfileService $profiles,
+		private readonly SeparatorSheetServiceInterface $sheets,
+		private readonly ScanProfileServiceInterface $profiles,
 		private readonly ScanBatchServiceInterface $batches,
-		private readonly ScanBatchRepository $store,
+		private readonly ScanBatchRepositoryInterface $store,
 		private readonly IRootFolder $rootFolder,
 		private readonly IUserSession $userSession,
 	) {

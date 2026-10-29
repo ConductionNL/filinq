@@ -35,26 +35,13 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\Redaction;
 
+use OCA\Filinq\Kernel\Contracts\PublicationListComposerInterface;
 use OCA\Filinq\Service\SavedViewReader;
 
 /**
  * Composes one publishable document over the records a saved view returns.
  */
-class PublicationListComposer {
-
-	/**
-	 * The view does not resolve at all.
-	 *
-	 * @var string
-	 */
-	public const NO_SUCH_VIEW = 'no_such_view';
-
-	/**
-	 * One or more records have no redacted copy yet.
-	 *
-	 * @var string
-	 */
-	public const NOT_READY = 'not_ready';
+class PublicationListComposer implements PublicationListComposerInterface {
 
 	/**
 	 * Constructor.

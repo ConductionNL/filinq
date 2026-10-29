@@ -29,6 +29,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\FlatFileListServiceInterface;
 use OCP\Files\IRootFolder;
 use OCP\Files\Node;
 use OCP\IUserSession;
@@ -46,7 +47,7 @@ use Throwable;
  *
  * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
  */
-class FlatFileListService {
+class FlatFileListService implements FlatFileListServiceInterface {
 
 	/**
 	 * Constructor.

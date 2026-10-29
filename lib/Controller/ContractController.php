@@ -28,8 +28,8 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use InvalidArgumentException;
+use OCA\Filinq\Kernel\Contracts\ContractPartiesInterface;
 use OCA\Filinq\Service\Contract\ContractNotFoundException;
-use OCA\Filinq\Service\Contract\ContractParties;
 use OCA\Filinq\Service\Contract\ContractService;
 use OCA\Filinq\Service\Contract\ContractSigningLink;
 use OCA\Filinq\Service\Contract\ContractTermSuggestionService;
@@ -65,7 +65,7 @@ class ContractController extends Controller {
 	 * @param IUserSession                  $userSession The session.
 	 * @param LoggerInterface               $logger      The logger.
 	 * @param ContractSigningLink           $signingLink The signing request link.
-	 * @param ContractParties               $parties     The parties, from their contacts.
+	 * @param ContractPartiesInterface               $parties     The parties, from their contacts.
 	 *
 	 * @return void
 	 */
@@ -77,7 +77,7 @@ class ContractController extends Controller {
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
 		private readonly ContractSigningLink $signingLink,
-		private readonly ContractParties $parties,
+		private readonly ContractPartiesInterface $parties,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 

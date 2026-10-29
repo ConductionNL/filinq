@@ -27,8 +27,8 @@ namespace OCA\Filinq\Controller;
 
 use OCA\Filinq\Kernel\Contracts\AnonymizeRequestServiceInterface;
 use OCA\Filinq\Kernel\Contracts\DownloadAgreementGateInterface;
-use OCA\Filinq\Service\Redaction\PublicationListComposer;
-use OCA\Filinq\Service\Redaction\RedactionOutputGuard;
+use OCA\Filinq\Kernel\Contracts\PublicationListComposerInterface;
+use OCA\Filinq\Kernel\Contracts\RedactionOutputGuardInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -62,8 +62,8 @@ class RedactionOutputController extends Controller {
 	 *
 	 * @param string                  $appName     The app name.
 	 * @param IRequest                $request     The request.
-	 * @param RedactionOutputGuard    $guard       The human review gate.
-	 * @param PublicationListComposer $composer    The publication list.
+	 * @param RedactionOutputGuardInterface    $guard       The human review gate.
+	 * @param PublicationListComposerInterface $composer    The publication list.
 	 * @param DownloadAgreementGateInterface   $agreements  The download conditions.
 	 * @param IUserSession            $userSession The current session.
 	 * @param AnonymizeRequestServiceInterface $access      The per-file access check.
@@ -75,8 +75,8 @@ class RedactionOutputController extends Controller {
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly RedactionOutputGuard $guard,
-		private readonly PublicationListComposer $composer,
+		private readonly RedactionOutputGuardInterface $guard,
+		private readonly PublicationListComposerInterface $composer,
 		private readonly DownloadAgreementGateInterface $agreements,
 		private readonly IUserSession $userSession,
 		private readonly AnonymizeRequestServiceInterface $access,

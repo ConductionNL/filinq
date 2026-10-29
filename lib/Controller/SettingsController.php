@@ -26,8 +26,8 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use Exception;
+use OCA\Filinq\Kernel\Contracts\AnonymiserBackendStateClientInterface;
 use OCA\Filinq\Kernel\Contracts\SettingsServiceInterface;
-use OCA\Filinq\Service\AnonymiserBackendStateClient;
 use OCA\Filinq\Settings\FilinqAdmin;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
@@ -62,7 +62,7 @@ class SettingsController extends Controller {
 	 * @param IUserSession $userSession The user session
 	 * @param LoggerInterface $logger Logger for error reporting
 	 * @param SettingsServiceInterface $settingsService Service for settings operations
-	 * @param AnonymiserBackendStateClient $anonymiserClient Backend state client
+	 * @param AnonymiserBackendStateClientInterface $anonymiserClient Backend state client
 	 * @param IConfig $config Nextcloud config for user values
 	 *
 	 * @return void
@@ -75,7 +75,7 @@ class SettingsController extends Controller {
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
 		private readonly SettingsServiceInterface $settingsService,
-		private readonly AnonymiserBackendStateClient $anonymiserClient,
+		private readonly AnonymiserBackendStateClientInterface $anonymiserClient,
 		private readonly IConfig $config,
 	) {
 		parent::__construct(appName: $appName, request: $request);
