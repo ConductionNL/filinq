@@ -51,6 +51,17 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
  */
 class DocumentController extends Controller {
+
+	/**
+	 * File extension and content type per download format; anything else downloads as PDF.
+	 *
+	 * @var array<string, array{0: string, 1: string}>
+	 */
+	private const DOWNLOAD_TYPES = [
+		'pdf' => ['.pdf', 'application/pdf'],
+		'odf' => ['.odt', 'application/vnd.oasis.opendocument.text'],
+		'docx' => ['.docx', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+	];
 	/**
 	 * Constructor for DocumentController.
 	 *
@@ -133,7 +144,10 @@ class DocumentController extends Controller {
 					dataRefs: $params['dataRefs'],
 					options: $params['options']
 				);
-				return $this->buildDocumentResponse(result: $result, filename: $params['filename']);
+				return new JSONResponse(
+					data: ['outputs' => $result['outputs'], 'metadata' => $result['metadata'], 'warnings' => $result['warnings']],
+					statusCode: Http::STATUS_OK
+				);
 			}
 
 			$result = $this->documentSvc->generateDocument(
@@ -470,36 +484,40 @@ class DocumentController extends Controller {
 		array $result,
 		string $filename,
 	): DataDownloadResponse|JSONResponse {
-		if (isset($result['outputs']) === true) {
-			return new JSONResponse(
-				data: [
-					'outputs' => $result['outputs'],
-					'metadata' => $result['metadata'],
-					'warnings' => $result['warnings'],
-				],
-				statusCode: Http::STATUS_OK
-			);
-		}
-
-		$format = $result['format'];
 		$output = $result['output'] ?? ['mode' => 'return'];
-		$mode = $output['mode'] ?? 'return';
-
-		if ($mode === 'files') {
+		if (($output['mode'] ?? 'return') === 'files') {
 			return new JSONResponse(
 				data: [
 					'fileId' => $output['fileId'] ?? null,
 					'path' => $output['path'] ?? null,
 					'name' => $output['name'] ?? null,
 					'size' => $output['size'] ?? null,
-					'format' => $format,
+					'format' => $result['format'],
 				],
 				statusCode: Http::STATUS_OK
 			);
 		}
 
+		$response = $this->inlineDocumentResponse(result: $result, filename: $filename);
+		$this->addStoredFileHeaders(response: $response, output: $output);
+
+		return $response;
+	}//end buildDocumentResponse()
+
+	/**
+	 * The document itself: JSON with the content for html, a download otherwise.
+	 *
+	 * @param array  $result   The generation result
+	 * @param string $filename The requested filename (without extension)
+	 *
+	 * @return DataDownloadResponse|JSONResponse The response carrying the document
+	 *
+	 * @spec openspec/changes/document-output-destinations-and-bulk-retention/specs/document-creatie-sjablonen/spec.md#req-ddob-001
+	 */
+	private function inlineDocumentResponse(array $result, string $filename): DataDownloadResponse|JSONResponse {
+		$format = $result['format'];
 		if ($format === 'html') {
-			$response = new JSONResponse(
+			return new JSONResponse(
 				data: [
 					'content' => $result['content'],
 					'format' => $format,
@@ -508,34 +526,21 @@ class DocumentController extends Controller {
 				],
 				statusCode: Http::STATUS_OK
 			);
-			$this->addStoredFileHeaders(response: $response, mode: $mode, output: $output);
-			return $response;
 		}
 
-		$extension = '.pdf';
-		$contentType = 'application/pdf';
-		if ($format === 'odf') {
-			$extension = '.odt';
-			$contentType = 'application/vnd.oasis.opendocument.text';
-		} elseif ($format === 'docx') {
-			$extension = '.docx';
-			$contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-		}
+		[$extension, $contentType] = self::DOWNLOAD_TYPES[$format] ?? self::DOWNLOAD_TYPES['pdf'];
 
 		$basename = pathinfo($filename, PATHINFO_FILENAME);
 		if (empty($basename) === true) {
 			$basename = 'document';
 		}
 
-		$response = new DataDownloadResponse(
+		return new DataDownloadResponse(
 			data: $result['content'],
 			filename: $basename . $extension,
 			contentType: $contentType
 		);
-		$this->addStoredFileHeaders(response: $response, mode: $mode, output: $output);
-
-		return $response;
-	}//end buildDocumentResponse()
+	}//end inlineDocumentResponse()
 
 	/**
 	 * Attach X-Docudesk-File-Id/X-Docudesk-File-Path headers when the
@@ -543,19 +548,14 @@ class DocumentController extends Controller {
 	 * fail-open storage failure leaves no fileId, so no headers are added).
 	 *
 	 * @param Response $response The response to annotate
-	 * @param string $mode The resolved output mode
-	 * @param array $output The generation result's output sub-array
+	 * @param array    $output   The generation result's output sub-array
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/changes/document-output-destinations-and-bulk-retention/specs/document-creatie-sjablonen/spec.md#req-ddob-001
 	 */
-	private function addStoredFileHeaders(Response $response, string $mode, array $output): void {
-		if ($mode !== 'both') {
-			return;
-		}
-
-		if (isset($output['fileId']) === false) {
+	private function addStoredFileHeaders(Response $response, array $output): void {
+		if (($output['mode'] ?? 'return') !== 'both' || isset($output['fileId']) === false) {
 			return;
 		}
 
