@@ -39,7 +39,8 @@
 					"register": "dossiq",
 					"schema": "case",
 					"where": {
-						"title": "Verlichting fietspad Lindelaan"
+						"title": "Verlichting fietspad Lindelaan",
+						"externalReference": "MZ-ZDR-2026-0412"
 					}
 				}
 			},
@@ -66,7 +67,8 @@
 					"register": "dossiq",
 					"schema": "case",
 					"where": {
-						"title": "Verlichting fietspad Lindelaan"
+						"title": "Verlichting fietspad Lindelaan",
+						"externalReference": "MZ-ZDR-2026-0412"
 					}
 				}
 			},
@@ -93,7 +95,8 @@
 					"register": "dossiq",
 					"schema": "case",
 					"where": {
-						"title": "Verlichting fietspad Lindelaan"
+						"title": "Verlichting fietspad Lindelaan",
+						"externalReference": "MZ-ZDR-2026-0412"
 					}
 				}
 			},
