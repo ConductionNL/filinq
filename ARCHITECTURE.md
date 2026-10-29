@@ -33,7 +33,7 @@ Filinq runs inside a Nextcloud server, in PHP on the server and Vue in the brows
 
 ## Functional components
 
-We group the code by what it does, not by technical layer. The class name or its directory decides the component; `sigrid.yaml` holds the exact patterns.
+We group the code by what it does, not by technical layer. The class name or its directory decides the component.
 
 | Component | What it covers | PHP lines |
 |---|---|---|
@@ -46,11 +46,11 @@ We group the code by what it does, not by technical layer. The class name or its
 | Application wiring | Bootstrap, settings, repair steps, commands, shared exceptions and helpers | 7.1k |
 | Web interface | The Vue front end in `src/` | |
 
-### Boundaries and known coupling
+### Boundaries
 
 Every component uses **Application wiring** for shared exceptions and helpers. That dependency is intended.
 
-Measured on `lib/` in October 2026, about 72% of the PHP code is hidden inside its own component. The rest is called from elsewhere, and many pairs of components call each other both ways. Most incoming calls land in **Documents and dossiers** and **Conversion and editing**, which nearly every other component uses. Giving those two a small shared interface is the main architectural work ahead.
+Decoupling between components is in progress. The aim is that the other components reach documents and conversion through a small shared interface.
 
 ## How a request flows
 
@@ -71,7 +71,7 @@ SIG's Sigrid excludes `vendor/`, `node_modules/`, `docs/`, migrations, mocks and
 - `l10n/*.js`: generated translation catalogues that would count as JavaScript.
 - `scripts/`: developer tooling that would count as production code.
 
-`sigrid.yaml` handles both. It also pins the model version and maps the components above.
+`sigrid.yaml` excludes both and pins the model version. Components are left to Sigrid's automatic detection.
 
 ## Licence
 
