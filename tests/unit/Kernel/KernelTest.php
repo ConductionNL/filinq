@@ -51,7 +51,8 @@ class KernelTest extends TestCase {
 	}//end testTheAppIdMatchesTheBootstrapAndInfoXml()
 
 	/**
-	 * No Kernel file names a Filinq class outside the Kernel, Exception and Event leaves.
+	 * No Kernel code names a Filinq class outside the Kernel, Exception and Event leaves.
+	 * Comments are not dependencies and are skipped.
 	 *
 	 * @return void
 	 */
@@ -65,7 +66,15 @@ class KernelTest extends TestCase {
 				continue;
 			}
 
-			$source = (string)file_get_contents($file->getPathname());
+			$source = '';
+			foreach (token_get_all((string)file_get_contents($file->getPathname())) as $token) {
+				if (is_array($token) === true && in_array(needle: $token[0], haystack: [T_COMMENT, T_DOC_COMMENT], strict: true) === true) {
+					continue;
+				}
+
+				$source .= is_array($token) === true ? $token[1] : $token;
+			}
+
 			preg_match_all('/OCA\\\\Filinq\\\\(?!(?:Kernel|Exception|Event)\\b)[A-Za-z0-9_\\\\]+/', $source, $matches);
 			foreach ($matches[0] as $name) {
 				$outgoing[] = $file->getFilename() . ' -> ' . $name;

@@ -30,7 +30,7 @@ namespace OCA\Filinq\Controller;
 
 use Exception;
 use InvalidArgumentException;
-use OCA\Filinq\Service\PrintJobService;
+use OCA\Filinq\Kernel\Contracts\PrintJobServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataDownloadResponse;
@@ -63,7 +63,7 @@ class PrintJobController extends Controller {
 	 *
 	 * @param string $appName The application name
 	 * @param IRequest $request The request object
-	 * @param PrintJobService $printJobSvc Print job service
+	 * @param PrintJobServiceInterface $printJobSvc Print job service
 	 * @param IUserSession $userSession User session for authentication
 	 * @param IGroupManager $groupManager Group manager for admin check
 	 * @param LoggerInterface $logger Logger for error reporting
@@ -73,7 +73,7 @@ class PrintJobController extends Controller {
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly PrintJobService $printJobSvc,
+		private readonly PrintJobServiceInterface $printJobSvc,
 		private readonly IUserSession $userSession,
 		private readonly IGroupManager $groupManager,
 		private readonly LoggerInterface $logger,

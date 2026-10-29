@@ -34,6 +34,7 @@ use DateTimeInterface;
 use Exception;
 use InvalidArgumentException;
 use OCA\Filinq\BackgroundJob\BatchPrintJob;
+use OCA\Filinq\Kernel\Contracts\PrintJobServiceInterface;
 use OCP\BackgroundJob\IJobList;
 use Psr\Log\LoggerInterface;
 
@@ -48,7 +49,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/print-preview/spec.md
  */
-class PrintJobService {
+class PrintJobService implements PrintJobServiceInterface {
 
 	/**
 	 * Maximum items rendered during the request; larger batches go to a background job.
@@ -56,18 +57,6 @@ class PrintJobService {
 	 * @var int
 	 */
 	private const SYNC_BATCH_LIMIT = 10;
-
-	/**
-	 * What a print service may report, and the job status each one means.
-	 *
-	 * @var array<string, string>
-	 */
-	public const EXTERNAL_STATUSES = [
-		'printing' => 'sent',
-		'sent' => 'sent',
-		'printed' => 'printed',
-		'failed' => 'failed',
-	];
 
 	/**
 	 * Constructor for PrintJobService

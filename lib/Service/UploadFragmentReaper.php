@@ -22,6 +22,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\UploadFragmentReaperInterface;
 use OCP\Files\File;
 use OCP\Files\Folder;
 use OCP\Files\Node;
@@ -63,14 +64,7 @@ use Throwable;
  *
  * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
  */
-class UploadFragmentReaper {
-
-	/**
-	 * The suffixes an in-flight upload carries.
-	 *
-	 * @var array<int, string>
-	 */
-	public const FRAGMENT_SUFFIXES = ['.part', '.filepart', '.ocTransferId'];
+class UploadFragmentReaper implements UploadFragmentReaperInterface {
 
 	/**
 	 * Collaborators.

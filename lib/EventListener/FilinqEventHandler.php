@@ -25,10 +25,10 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\EventListener;
 
+use OCA\Filinq\Kernel\Contracts\SettingsServiceInterface;
 use OCA\Filinq\Service\LegalBasesSummaryService;
 use OCA\Filinq\Service\MetadataService;
 use OCA\Filinq\Service\PolicyRetroactiveService;
-use OCA\Filinq\Service\SettingsService;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectDeletedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
@@ -78,7 +78,7 @@ class FilinqEventHandler {
 	 *
 	 * @param ObjectCreatedEvent $event The creation event
 	 * @param MetadataService $metadataService The metadata service
-	 * @param SettingsService $settingsService The settings service
+	 * @param SettingsServiceInterface $settingsService The settings service
 	 * @param LoggerInterface $logger The logger instance
 	 * @param PolicyRetroactiveService $retroactive Retroactive policy applicator
 	 *                                              (injected here, not via
@@ -91,7 +91,7 @@ class FilinqEventHandler {
 	public function handleObjectCreated(
 		ObjectCreatedEvent $event,
 		MetadataService $metadataService,
-		SettingsService $settingsService,
+		SettingsServiceInterface $settingsService,
 		LoggerInterface $logger,
 		PolicyRetroactiveService $retroactive,
 	): void {
@@ -123,7 +123,7 @@ class FilinqEventHandler {
 	 *
 	 * @param ObjectUpdatedEvent $event The update event
 	 * @param MetadataService $metadataService The metadata service
-	 * @param SettingsService $settingsService The settings service
+	 * @param SettingsServiceInterface $settingsService The settings service
 	 * @param LoggerInterface $logger The logger instance
 	 * @param PolicyRetroactiveService $retroactive Retroactive policy applicator.
 	 *
@@ -134,7 +134,7 @@ class FilinqEventHandler {
 	public function handleObjectUpdated(
 		ObjectUpdatedEvent $event,
 		MetadataService $metadataService,
-		SettingsService $settingsService,
+		SettingsServiceInterface $settingsService,
 		LoggerInterface $logger,
 		PolicyRetroactiveService $retroactive,
 	): void {

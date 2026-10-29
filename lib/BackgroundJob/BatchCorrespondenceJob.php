@@ -26,7 +26,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\BackgroundJob;
 
 use Exception;
-use OCA\Filinq\Service\CorrespondenceService;
+use OCA\Filinq\Kernel\Contracts\CorrespondenceServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\QueuedJob;
 use Psr\Log\LoggerInterface;
@@ -47,14 +47,14 @@ class BatchCorrespondenceJob extends QueuedJob {
 	 * Constructor for BatchCorrespondenceJob
 	 *
 	 * @param ITimeFactory $time Time factory
-	 * @param CorrespondenceService $corrSvc Correspondence generation service
+	 * @param CorrespondenceServiceInterface $corrSvc Correspondence generation service
 	 * @param LoggerInterface $logger Logger for error reporting
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		ITimeFactory $time,
-		private readonly CorrespondenceService $corrSvc,
+		private readonly CorrespondenceServiceInterface $corrSvc,
 		private readonly LoggerInterface $logger,
 	) {
 		parent::__construct(time: $time);

@@ -31,6 +31,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use Exception;
+use OCA\Filinq\Kernel\Contracts\DocumentServiceInterface;
 use OCA\Filinq\Service\Wizard\WizardGenerationGate;
 use Psr\Log\LoggerInterface;
 
@@ -45,7 +46,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
  */
-class DocumentService {
+class DocumentService implements DocumentServiceInterface {
 
 	/**
 	 * Maximum number of objects for synchronous bulk processing.

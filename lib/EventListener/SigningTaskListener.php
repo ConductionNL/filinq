@@ -47,7 +47,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\EventListener;
 
-use OCA\Filinq\Service\SettingsService;
+use OCA\Filinq\Kernel\Contracts\SettingsServiceInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use Psr\Log\LoggerInterface;
@@ -129,7 +129,7 @@ class SigningTaskListener implements IEventListener {
 	 * @param SignerEventTranslator $translator Translates the extracted
 	 *                                          scalars into filinq signer
 	 *                                          events and notifies the provider.
-	 * @param SettingsService $settingsService Resolves the signingRequest
+	 * @param SettingsServiceInterface $settingsService Resolves the signingRequest
 	 *                                         binding and the object service
 	 *                                         for the ownership check.
 	 * @param LoggerInterface $logger Logger.
@@ -138,7 +138,7 @@ class SigningTaskListener implements IEventListener {
 	 */
 	public function __construct(
 		private readonly SignerEventTranslator $translator,
-		private readonly SettingsService $settingsService,
+		private readonly SettingsServiceInterface $settingsService,
 		private readonly LoggerInterface $logger,
 	) {
 
