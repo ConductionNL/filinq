@@ -24,7 +24,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
-use OCA\Filinq\Service\BulkSigning\BulkSigningService;
+use OCA\Filinq\Kernel\Contracts\BulkSigningServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -55,7 +55,7 @@ class BulkSigningController extends Controller {
 	 *
 	 * @param string             $appName      App name
 	 * @param IRequest           $request      The request
-	 * @param BulkSigningService $bulkSigning  Bulk send
+	 * @param BulkSigningServiceInterface $bulkSigning  Bulk send
 	 * @param IUserSession       $userSession  The caller
 	 * @param IGroupManager      $groupManager Admin check
 	 * @param LoggerInterface    $logger       Logger
@@ -65,7 +65,7 @@ class BulkSigningController extends Controller {
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly BulkSigningService $bulkSigning,
+		private readonly BulkSigningServiceInterface $bulkSigning,
 		private readonly IUserSession $userSession,
 		private readonly IGroupManager $groupManager,
 		private readonly LoggerInterface $logger,

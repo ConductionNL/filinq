@@ -27,6 +27,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\Pseudonymisation;
 
 use OCA\Filinq\Exception\PseudonymRestoreRefusedException;
+use OCA\Filinq\Kernel\Contracts\PseudonymMapServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\Security\ICrypto;
 use RuntimeException;
@@ -41,14 +42,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  */
-class PseudonymMapService {
-
-	/**
-	 * What encrypted the mapping. The schema enum lists exactly this value.
-	 *
-	 * @var string
-	 */
-	public const ALGORITHM = 'nextcloud-icrypto-v1';
+class PseudonymMapService implements PseudonymMapServiceInterface {
 
 	/**
 	 * Constructor.

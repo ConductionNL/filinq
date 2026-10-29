@@ -25,7 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\EventListener;
 
-use OCA\Filinq\Service\Pseudonymisation\PseudonymMapService;
+use OCA\Filinq\Kernel\Contracts\PseudonymMapServiceInterface;
 use OCA\OpenRegister\Event\ObjectDeletedEvent;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
@@ -48,11 +48,11 @@ class PseudonymMapLinkDeletedListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param PseudonymMapService $maps The key store.
+	 * @param PseudonymMapServiceInterface $maps The key store.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
-		private readonly PseudonymMapService $maps,
+		private readonly PseudonymMapServiceInterface $maps,
 		private readonly LoggerInterface $logger,
 	) {
 

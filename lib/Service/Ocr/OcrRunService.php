@@ -26,6 +26,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\Ocr;
 
+use OCA\Filinq\Kernel\Contracts\OcrRunServiceInterface;
 use OCA\Filinq\Service\OcrService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\Files\File;
@@ -35,17 +36,7 @@ use Throwable;
 /**
  * One OCR run on one file node.
  */
-class OcrRunService {
-
-	public const SKIP_DISABLED = 'ocr_disabled';
-
-	public const SKIP_NO_TESSERACT = 'tesseract_unavailable';
-
-	public const SKIP_NOT_CANDIDATE = 'not_candidate';
-
-	public const SKIP_NO_TEXT = 'no_text_recovered';
-
-	public const SKIP_FAILED = 'ocr_failed';
+class OcrRunService implements OcrRunServiceInterface {
 
 	/**
 	 * Constructor.

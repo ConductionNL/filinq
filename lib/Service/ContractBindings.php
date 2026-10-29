@@ -24,19 +24,28 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\AnonymiserBackendStateClientInterface;
 use OCA\Filinq\Kernel\Contracts\AnonymizationServiceInterface;
 use OCA\Filinq\Kernel\Contracts\AnonymizeRequestServiceInterface;
 use OCA\Filinq\Kernel\Contracts\BatchAnonymizeServiceInterface;
+use OCA\Filinq\Kernel\Contracts\BatchExtractionServiceInterface;
 use OCA\Filinq\Kernel\Contracts\BatchRequestServiceInterface;
 use OCA\Filinq\Kernel\Contracts\BatchStateServiceInterface;
+use OCA\Filinq\Kernel\Contracts\BatchUploadServiceInterface;
 use OCA\Filinq\Kernel\Contracts\BulkSigningRunnerInterface;
+use OCA\Filinq\Kernel\Contracts\BulkSigningServiceInterface;
 use OCA\Filinq\Kernel\Contracts\CaseArchiveServiceInterface;
+use OCA\Filinq\Kernel\Contracts\ConformanceServiceInterface;
 use OCA\Filinq\Kernel\Contracts\ConsentCrudServiceInterface;
 use OCA\Filinq\Kernel\Contracts\ConsentServiceInterface;
+use OCA\Filinq\Kernel\Contracts\ContractPartiesInterface;
+use OCA\Filinq\Kernel\Contracts\ContractRepositoryInterface;
 use OCA\Filinq\Kernel\Contracts\CorrespondenceServiceInterface;
+use OCA\Filinq\Kernel\Contracts\CustomDictionaryAccessGateInterface;
 use OCA\Filinq\Kernel\Contracts\CustomDictionaryServiceInterface;
 use OCA\Filinq\Kernel\Contracts\DemoDataServiceInterface;
 use OCA\Filinq\Kernel\Contracts\DocumentComparisonServiceInterface;
+use OCA\Filinq\Kernel\Contracts\DocumentDomainServiceInterface;
 use OCA\Filinq\Kernel\Contracts\DocumentFinalityRuleServiceInterface;
 use OCA\Filinq\Kernel\Contracts\DocumentMergeServiceInterface;
 use OCA\Filinq\Kernel\Contracts\DocumentReviewServiceInterface;
@@ -47,23 +56,35 @@ use OCA\Filinq\Kernel\Contracts\DocumentVersionServiceInterface;
 use OCA\Filinq\Kernel\Contracts\DomainFolderReconcilerInterface;
 use OCA\Filinq\Kernel\Contracts\DomainFolderServiceInterface;
 use OCA\Filinq\Kernel\Contracts\DownloadAgreementGateInterface;
+use OCA\Filinq\Kernel\Contracts\EmailDocumentRepositoryInterface;
 use OCA\Filinq\Kernel\Contracts\EmailIngestionServiceInterface;
 use OCA\Filinq\Kernel\Contracts\EmailIngestionSettingsInterface;
 use OCA\Filinq\Kernel\Contracts\EntityConsolidationServiceInterface;
+use OCA\Filinq\Kernel\Contracts\ExternalMountValidatorInterface;
+use OCA\Filinq\Kernel\Contracts\FileListingServiceInterface;
+use OCA\Filinq\Kernel\Contracts\FinalDocumentCorrectionServiceInterface;
 use OCA\Filinq\Kernel\Contracts\FinalDocumentServiceInterface;
+use OCA\Filinq\Kernel\Contracts\FinalDocumentUnfreezeServiceInterface;
 use OCA\Filinq\Kernel\Contracts\FinancialExtractionServiceInterface;
+use OCA\Filinq\Kernel\Contracts\FlatFileListServiceInterface;
 use OCA\Filinq\Kernel\Contracts\FolderBatchServiceInterface;
 use OCA\Filinq\Kernel\Contracts\GlAccountSuggestionServiceInterface;
 use OCA\Filinq\Kernel\Contracts\InboundClassificationServiceInterface;
+use OCA\Filinq\Kernel\Contracts\IntakeDetachmentServiceInterface;
 use OCA\Filinq\Kernel\Contracts\IntakeReadingProgressInterface;
 use OCA\Filinq\Kernel\Contracts\IntakeRepositoryInterface;
+use OCA\Filinq\Kernel\Contracts\IntakeRoutingServiceInterface;
 use OCA\Filinq\Kernel\Contracts\IntakeServiceInterface;
 use OCA\Filinq\Kernel\Contracts\LegalBasesSummaryServiceInterface;
 use OCA\Filinq\Kernel\Contracts\LibreSignCompletionInterface;
 use OCA\Filinq\Kernel\Contracts\MergeJobRepositoryInterface;
 use OCA\Filinq\Kernel\Contracts\MetadataServiceInterface;
 use OCA\Filinq\Kernel\Contracts\MultiFormatOutputProducerInterface;
+use OCA\Filinq\Kernel\Contracts\OcrResultRepositoryInterface;
+use OCA\Filinq\Kernel\Contracts\OcrRunServiceInterface;
 use OCA\Filinq\Kernel\Contracts\OcrServiceInterface;
+use OCA\Filinq\Kernel\Contracts\OfficeSuiteCapabilityServiceInterface;
+use OCA\Filinq\Kernel\Contracts\OpenRegisterResolverInterface;
 use OCA\Filinq\Kernel\Contracts\OutputLayoutMoverInterface;
 use OCA\Filinq\Kernel\Contracts\OutputLayoutResolverInterface;
 use OCA\Filinq\Kernel\Contracts\PageLayoutServiceInterface;
@@ -73,37 +94,58 @@ use OCA\Filinq\Kernel\Contracts\PeriodicDocumentServiceInterface;
 use OCA\Filinq\Kernel\Contracts\PolicyCrudServiceInterface;
 use OCA\Filinq\Kernel\Contracts\PolicyRetroactiveServiceInterface;
 use OCA\Filinq\Kernel\Contracts\PostRegisterReaderInterface;
+use OCA\Filinq\Kernel\Contracts\PrintJobRepositoryInterface;
 use OCA\Filinq\Kernel\Contracts\PrintJobServiceInterface;
+use OCA\Filinq\Kernel\Contracts\PseudonymMapServiceInterface;
 use OCA\Filinq\Kernel\Contracts\PseudonymRestoreServiceInterface;
+use OCA\Filinq\Kernel\Contracts\PublicationListComposerInterface;
 use OCA\Filinq\Kernel\Contracts\PublicationStoreInterface;
+use OCA\Filinq\Kernel\Contracts\RedactionOutputGuardInterface;
 use OCA\Filinq\Kernel\Contracts\ReportRenderServiceInterface;
+use OCA\Filinq\Kernel\Contracts\ScanBatchRepositoryInterface;
 use OCA\Filinq\Kernel\Contracts\ScanBatchServiceInterface;
+use OCA\Filinq\Kernel\Contracts\ScanProfileServiceInterface;
+use OCA\Filinq\Kernel\Contracts\SeparatorSheetServiceInterface;
 use OCA\Filinq\Kernel\Contracts\SettingsServiceInterface;
 use OCA\Filinq\Kernel\Contracts\SignerAuthSettingsInterface;
 use OCA\Filinq\Kernel\Contracts\SigningAuditServiceInterface;
 use OCA\Filinq\Kernel\Contracts\SigningEnvelopeServiceInterface;
 use OCA\Filinq\Kernel\Contracts\SigningFolderServiceInterface;
+use OCA\Filinq\Kernel\Contracts\SigningMandateServiceInterface;
 use OCA\Filinq\Kernel\Contracts\SigningServiceInterface;
 use OCA\Filinq\Kernel\Contracts\SigningVerificationServiceInterface;
+use OCA\Filinq\Kernel\Contracts\SubjectErasureRunInterface;
 use OCA\Filinq\Kernel\Contracts\SubjectErasureServiceInterface;
 use OCA\Filinq\Kernel\Contracts\TemplateServiceInterface;
 use OCA\Filinq\Kernel\Contracts\TemplateVersionServiceInterface;
 use OCA\Filinq\Kernel\Contracts\UploadFragmentReaperInterface;
 use OCA\Filinq\Kernel\Contracts\UploadPolicyServiceInterface;
 use OCA\Filinq\Service\BulkSigning\BulkSigningRunner;
+use OCA\Filinq\Service\BulkSigning\BulkSigningService;
+use OCA\Filinq\Service\Contract\ContractParties;
+use OCA\Filinq\Service\Contract\ContractRepository;
 use OCA\Filinq\Service\Conversion\OutputLayoutMover;
 use OCA\Filinq\Service\Conversion\OutputLayoutResolver;
+use OCA\Filinq\Service\EmailIngestion\EmailDocumentRepository;
 use OCA\Filinq\Service\EmailIngestion\EmailIngestionService;
 use OCA\Filinq\Service\EmailIngestion\EmailIngestionSettings;
 use OCA\Filinq\Service\Intake\IntakeReadingProgress;
+use OCA\Filinq\Service\Ocr\OcrResultRepository;
+use OCA\Filinq\Service\Ocr\OcrRunService;
+use OCA\Filinq\Service\Office\OfficeSuiteCapabilityService;
+use OCA\Filinq\Service\Pseudonymisation\PseudonymMapService;
 use OCA\Filinq\Service\Pseudonymisation\PseudonymRestoreService;
 use OCA\Filinq\Service\Publication\PublicationStore;
 use OCA\Filinq\Service\Redaction\DownloadAgreementGate;
+use OCA\Filinq\Service\Redaction\PublicationListComposer;
+use OCA\Filinq\Service\Redaction\RedactionOutputGuard;
 use OCA\Filinq\Service\Sanitization\DocumentSanitizationService;
 use OCA\Filinq\Service\SignerAuth\SignerAuthSettings;
 use OCA\Filinq\Service\Signing\LibreSignCompletion;
 use OCA\Filinq\Service\SigningEnvelope\SigningEnvelopeService;
+use OCA\Filinq\Service\SubjectErasure\SubjectErasureRun;
 use OCA\Filinq\Service\SubjectErasure\SubjectErasureService;
+use OCA\Filinq\Service\VeraPdf\ConformanceService;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 
 /**
@@ -125,72 +167,102 @@ final class ContractBindings {
 	 * @var array<class-string, class-string>
 	 */
 	public const BINDINGS = [
-		AnonymizationServiceInterface::class         => AnonymizationService::class,
-		AnonymizeRequestServiceInterface::class      => AnonymizeRequestService::class,
-		BatchAnonymizeServiceInterface::class        => BatchAnonymizeService::class,
-		BatchRequestServiceInterface::class          => BatchRequestService::class,
-		BatchStateServiceInterface::class            => BatchStateService::class,
-		BulkSigningRunnerInterface::class            => BulkSigningRunner::class,
-		CaseArchiveServiceInterface::class           => CaseArchiveService::class,
-		ConsentCrudServiceInterface::class           => ConsentCrudService::class,
-		ConsentServiceInterface::class               => ConsentService::class,
-		CorrespondenceServiceInterface::class        => CorrespondenceService::class,
-		CustomDictionaryServiceInterface::class      => CustomDictionaryService::class,
-		DemoDataServiceInterface::class              => DemoDataService::class,
-		DocumentComparisonServiceInterface::class    => DocumentComparisonService::class,
-		DocumentFinalityRuleServiceInterface::class  => DocumentFinalityRuleService::class,
-		DocumentMergeServiceInterface::class         => DocumentMergeService::class,
-		DocumentReviewServiceInterface::class        => DocumentReviewService::class,
-		DocumentSanitizationServiceInterface::class  => DocumentSanitizationService::class,
-		DocumentServiceInterface::class              => DocumentService::class,
-		DocumentValidationServiceInterface::class    => DocumentValidationService::class,
-		DocumentVersionServiceInterface::class       => DocumentVersionService::class,
-		DomainFolderReconcilerInterface::class       => DomainFolderReconciler::class,
-		DomainFolderServiceInterface::class          => DomainFolderService::class,
-		DownloadAgreementGateInterface::class        => DownloadAgreementGate::class,
-		EmailIngestionServiceInterface::class        => EmailIngestionService::class,
-		EmailIngestionSettingsInterface::class       => EmailIngestionSettings::class,
-		EntityConsolidationServiceInterface::class   => EntityConsolidationService::class,
-		FinalDocumentServiceInterface::class         => FinalDocumentService::class,
-		FinancialExtractionServiceInterface::class   => FinancialExtractionService::class,
-		FolderBatchServiceInterface::class           => FolderBatchService::class,
-		GlAccountSuggestionServiceInterface::class   => GlAccountSuggestionService::class,
-		InboundClassificationServiceInterface::class => InboundClassificationService::class,
-		IntakeReadingProgressInterface::class        => IntakeReadingProgress::class,
-		IntakeRepositoryInterface::class             => IntakeRepository::class,
-		IntakeServiceInterface::class                => IntakeService::class,
-		LegalBasesSummaryServiceInterface::class     => LegalBasesSummaryService::class,
-		LibreSignCompletionInterface::class          => LibreSignCompletion::class,
-		MergeJobRepositoryInterface::class           => MergeJobRepository::class,
-		MetadataServiceInterface::class              => MetadataService::class,
-		MultiFormatOutputProducerInterface::class    => MultiFormatOutputProducer::class,
-		OcrServiceInterface::class                   => OcrService::class,
-		OutputLayoutMoverInterface::class            => OutputLayoutMover::class,
-		OutputLayoutResolverInterface::class         => OutputLayoutResolver::class,
-		PageLayoutServiceInterface::class            => PageLayoutService::class,
-		PartySuggestionServiceInterface::class       => PartySuggestionService::class,
-		PdfServiceInterface::class                   => PdfService::class,
-		PeriodicDocumentServiceInterface::class      => PeriodicDocumentService::class,
-		PolicyCrudServiceInterface::class            => PolicyCrudService::class,
-		PolicyRetroactiveServiceInterface::class     => PolicyRetroactiveService::class,
-		PostRegisterReaderInterface::class           => PostRegisterReader::class,
-		PrintJobServiceInterface::class              => PrintJobService::class,
-		PseudonymRestoreServiceInterface::class      => PseudonymRestoreService::class,
-		PublicationStoreInterface::class             => PublicationStore::class,
-		ReportRenderServiceInterface::class          => ReportRenderService::class,
-		ScanBatchServiceInterface::class             => ScanBatchService::class,
-		SettingsServiceInterface::class              => SettingsService::class,
-		SignerAuthSettingsInterface::class           => SignerAuthSettings::class,
-		SigningAuditServiceInterface::class          => SigningAuditService::class,
-		SigningEnvelopeServiceInterface::class       => SigningEnvelopeService::class,
-		SigningFolderServiceInterface::class         => SigningFolderService::class,
-		SigningServiceInterface::class               => SigningService::class,
-		SigningVerificationServiceInterface::class   => SigningVerificationService::class,
-		SubjectErasureServiceInterface::class        => SubjectErasureService::class,
-		TemplateServiceInterface::class              => TemplateService::class,
-		TemplateVersionServiceInterface::class       => TemplateVersionService::class,
-		UploadFragmentReaperInterface::class         => UploadFragmentReaper::class,
-		UploadPolicyServiceInterface::class          => UploadPolicyService::class,
+		AnonymiserBackendStateClientInterface::class   => AnonymiserBackendStateClient::class,
+		AnonymizationServiceInterface::class           => AnonymizationService::class,
+		AnonymizeRequestServiceInterface::class        => AnonymizeRequestService::class,
+		BatchAnonymizeServiceInterface::class          => BatchAnonymizeService::class,
+		BatchExtractionServiceInterface::class         => BatchExtractionService::class,
+		BatchRequestServiceInterface::class            => BatchRequestService::class,
+		BatchStateServiceInterface::class              => BatchStateService::class,
+		BatchUploadServiceInterface::class             => BatchUploadService::class,
+		BulkSigningRunnerInterface::class              => BulkSigningRunner::class,
+		BulkSigningServiceInterface::class             => BulkSigningService::class,
+		CaseArchiveServiceInterface::class             => CaseArchiveService::class,
+		ConformanceServiceInterface::class             => ConformanceService::class,
+		ConsentCrudServiceInterface::class             => ConsentCrudService::class,
+		ConsentServiceInterface::class                 => ConsentService::class,
+		ContractPartiesInterface::class                => ContractParties::class,
+		ContractRepositoryInterface::class             => ContractRepository::class,
+		CorrespondenceServiceInterface::class          => CorrespondenceService::class,
+		CustomDictionaryAccessGateInterface::class     => CustomDictionaryAccessGate::class,
+		CustomDictionaryServiceInterface::class        => CustomDictionaryService::class,
+		DemoDataServiceInterface::class                => DemoDataService::class,
+		DocumentComparisonServiceInterface::class      => DocumentComparisonService::class,
+		DocumentDomainServiceInterface::class          => DocumentDomainService::class,
+		DocumentFinalityRuleServiceInterface::class    => DocumentFinalityRuleService::class,
+		DocumentMergeServiceInterface::class           => DocumentMergeService::class,
+		DocumentReviewServiceInterface::class          => DocumentReviewService::class,
+		DocumentSanitizationServiceInterface::class    => DocumentSanitizationService::class,
+		DocumentServiceInterface::class                => DocumentService::class,
+		DocumentValidationServiceInterface::class      => DocumentValidationService::class,
+		DocumentVersionServiceInterface::class         => DocumentVersionService::class,
+		DomainFolderReconcilerInterface::class         => DomainFolderReconciler::class,
+		DomainFolderServiceInterface::class            => DomainFolderService::class,
+		DownloadAgreementGateInterface::class          => DownloadAgreementGate::class,
+		EmailDocumentRepositoryInterface::class        => EmailDocumentRepository::class,
+		EmailIngestionServiceInterface::class          => EmailIngestionService::class,
+		EmailIngestionSettingsInterface::class         => EmailIngestionSettings::class,
+		EntityConsolidationServiceInterface::class     => EntityConsolidationService::class,
+		ExternalMountValidatorInterface::class         => ExternalMountValidator::class,
+		FileListingServiceInterface::class             => FileListingService::class,
+		FinalDocumentCorrectionServiceInterface::class => FinalDocumentCorrectionService::class,
+		FinalDocumentServiceInterface::class           => FinalDocumentService::class,
+		FinalDocumentUnfreezeServiceInterface::class   => FinalDocumentUnfreezeService::class,
+		FinancialExtractionServiceInterface::class     => FinancialExtractionService::class,
+		FlatFileListServiceInterface::class            => FlatFileListService::class,
+		FolderBatchServiceInterface::class             => FolderBatchService::class,
+		GlAccountSuggestionServiceInterface::class     => GlAccountSuggestionService::class,
+		InboundClassificationServiceInterface::class   => InboundClassificationService::class,
+		IntakeDetachmentServiceInterface::class        => IntakeDetachmentService::class,
+		IntakeReadingProgressInterface::class          => IntakeReadingProgress::class,
+		IntakeRepositoryInterface::class               => IntakeRepository::class,
+		IntakeRoutingServiceInterface::class           => IntakeRoutingService::class,
+		IntakeServiceInterface::class                  => IntakeService::class,
+		LegalBasesSummaryServiceInterface::class       => LegalBasesSummaryService::class,
+		LibreSignCompletionInterface::class            => LibreSignCompletion::class,
+		MergeJobRepositoryInterface::class             => MergeJobRepository::class,
+		MetadataServiceInterface::class                => MetadataService::class,
+		MultiFormatOutputProducerInterface::class      => MultiFormatOutputProducer::class,
+		OcrResultRepositoryInterface::class            => OcrResultRepository::class,
+		OcrRunServiceInterface::class                  => OcrRunService::class,
+		OcrServiceInterface::class                     => OcrService::class,
+		OfficeSuiteCapabilityServiceInterface::class   => OfficeSuiteCapabilityService::class,
+		OpenRegisterResolverInterface::class           => OpenRegisterResolver::class,
+		OutputLayoutMoverInterface::class              => OutputLayoutMover::class,
+		OutputLayoutResolverInterface::class           => OutputLayoutResolver::class,
+		PageLayoutServiceInterface::class              => PageLayoutService::class,
+		PartySuggestionServiceInterface::class         => PartySuggestionService::class,
+		PdfServiceInterface::class                     => PdfService::class,
+		PeriodicDocumentServiceInterface::class        => PeriodicDocumentService::class,
+		PolicyCrudServiceInterface::class              => PolicyCrudService::class,
+		PolicyRetroactiveServiceInterface::class       => PolicyRetroactiveService::class,
+		PostRegisterReaderInterface::class             => PostRegisterReader::class,
+		PrintJobRepositoryInterface::class             => PrintJobRepository::class,
+		PrintJobServiceInterface::class                => PrintJobService::class,
+		PseudonymMapServiceInterface::class            => PseudonymMapService::class,
+		PseudonymRestoreServiceInterface::class        => PseudonymRestoreService::class,
+		PublicationListComposerInterface::class        => PublicationListComposer::class,
+		PublicationStoreInterface::class               => PublicationStore::class,
+		RedactionOutputGuardInterface::class           => RedactionOutputGuard::class,
+		ReportRenderServiceInterface::class            => ReportRenderService::class,
+		ScanBatchRepositoryInterface::class            => ScanBatchRepository::class,
+		ScanBatchServiceInterface::class               => ScanBatchService::class,
+		ScanProfileServiceInterface::class             => ScanProfileService::class,
+		SeparatorSheetServiceInterface::class          => SeparatorSheetService::class,
+		SettingsServiceInterface::class                => SettingsService::class,
+		SignerAuthSettingsInterface::class             => SignerAuthSettings::class,
+		SigningAuditServiceInterface::class            => SigningAuditService::class,
+		SigningEnvelopeServiceInterface::class         => SigningEnvelopeService::class,
+		SigningFolderServiceInterface::class           => SigningFolderService::class,
+		SigningMandateServiceInterface::class          => SigningMandateService::class,
+		SigningServiceInterface::class                 => SigningService::class,
+		SigningVerificationServiceInterface::class     => SigningVerificationService::class,
+		SubjectErasureRunInterface::class              => SubjectErasureRun::class,
+		SubjectErasureServiceInterface::class          => SubjectErasureService::class,
+		TemplateServiceInterface::class                => TemplateService::class,
+		TemplateVersionServiceInterface::class         => TemplateVersionService::class,
+		UploadFragmentReaperInterface::class           => UploadFragmentReaper::class,
+		UploadPolicyServiceInterface::class            => UploadPolicyService::class,
 	];
 
 	/**

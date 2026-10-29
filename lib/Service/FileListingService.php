@@ -28,6 +28,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use Exception;
+use OCA\Filinq\Kernel\Contracts\FileListingServiceInterface;
 use OCA\Filinq\Service\Ocr\OcrResultRepository;
 use OCA\Filinq\Service\Ocr\OcrRunService;
 use Psr\Log\LoggerInterface;
@@ -43,7 +44,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/ocr-document-scanning/tasks.md#task-3.5
  */
-class FileListingService {
+class FileListingService implements FileListingServiceInterface {
 	/**
 	 * Constructor for FileListingService
 	 *

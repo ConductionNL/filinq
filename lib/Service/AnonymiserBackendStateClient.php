@@ -30,6 +30,7 @@ namespace OCA\Filinq\Service;
 
 use JsonSerializable;
 use OCA\Filinq\Exception\DetectionUnavailableException;
+use OCA\Filinq\Kernel\Contracts\AnonymiserBackendStateClientInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -44,35 +45,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/archive/2026-09-29-anonymisation-fails-closed-without-a-detector/tasks.md#task-1
  */
-class AnonymiserBackendStateClient {
-
-	/**
-	 * The class OpenRegister declares, under its Anonymisation namespace.
-	 *
-	 * @var string
-	 */
-	public const OR_SERVICE = 'OCA\OpenRegister\Service\Anonymisation\AnonymisationBackendService';
-
-	/**
-	 * Refusal: filinq could not read which detector is live.
-	 *
-	 * @var string
-	 */
-	public const REFUSE_UNKNOWN = DetectionUnavailableException::REASON_UNKNOWN;
-
-	/**
-	 * Refusal: entity recognition is switched off on this instance.
-	 *
-	 * @var string
-	 */
-	public const REFUSE_DISABLED = DetectionUnavailableException::REASON_DISABLED;
-
-	/**
-	 * Refusal: the backend OpenRegister would use says it is unavailable.
-	 *
-	 * @var string
-	 */
-	public const REFUSE_UNAVAILABLE = DetectionUnavailableException::REASON_UNAVAILABLE;
+class AnonymiserBackendStateClient implements AnonymiserBackendStateClientInterface {
 
 	/**
 	 * Constructor.

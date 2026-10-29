@@ -25,7 +25,7 @@ namespace OCA\Filinq\Controller;
 use Exception;
 use InvalidArgumentException;
 use OCA\Filinq\Kernel\Contracts\SigningFolderServiceInterface;
-use OCA\Filinq\Service\SigningMandateService;
+use OCA\Filinq\Kernel\Contracts\SigningMandateServiceInterface;
 use OCA\Filinq\Settings\FilinqAdmin;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -56,7 +56,7 @@ class SigningFolderController extends Controller {
 	 * @param string $appName App name.
 	 * @param IRequest $request Request object.
 	 * @param SigningFolderServiceInterface $folderService The folder query and the pass.
-	 * @param SigningMandateService $mandateService The mandate declarations.
+	 * @param SigningMandateServiceInterface $mandateService The mandate declarations.
 	 * @param IUserSession $userSession User session.
 	 * @param LoggerInterface $logger Logger.
 	 * @param IL10N $l10n Localisation.
@@ -67,7 +67,7 @@ class SigningFolderController extends Controller {
 		string $appName,
 		IRequest $request,
 		private readonly SigningFolderServiceInterface $folderService,
-		private readonly SigningMandateService $mandateService,
+		private readonly SigningMandateServiceInterface $mandateService,
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
 		private readonly IL10N $l10n,

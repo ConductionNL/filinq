@@ -25,8 +25,8 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
-use OCA\Filinq\Service\Ocr\OcrResultRepository;
-use OCA\Filinq\Service\Ocr\OcrRunService;
+use OCA\Filinq\Kernel\Contracts\OcrResultRepositoryInterface;
+use OCA\Filinq\Kernel\Contracts\OcrRunServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -58,8 +58,8 @@ class OcrController extends Controller {
 	 *
 	 * @param string $appName The app id.
 	 * @param IRequest $request The request.
-	 * @param OcrRunService $runs Runs OCR and records the result.
-	 * @param OcrResultRepository $results The ocrResult rows.
+	 * @param OcrRunServiceInterface $runs Runs OCR and records the result.
+	 * @param OcrResultRepositoryInterface $results The ocrResult rows.
 	 * @param IRootFolder $rootFolder Resolves files in the caller's own folder.
 	 * @param IUserSession $userSession The caller.
 	 * @param IL10N $l10n Translations.
@@ -68,8 +68,8 @@ class OcrController extends Controller {
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly OcrRunService $runs,
-		private readonly OcrResultRepository $results,
+		private readonly OcrRunServiceInterface $runs,
+		private readonly OcrResultRepositoryInterface $results,
 		private readonly IRootFolder $rootFolder,
 		private readonly IUserSession $userSession,
 		private readonly IL10N $l10n,
@@ -247,22 +247,22 @@ class OcrController extends Controller {
 	 * A run that did not happen, with the status its reason calls for.
 	 *
 	 * @param int $fileId The file id.
-	 * @param string $reason One of OcrRunService::SKIP_*.
+	 * @param string $reason One of OcrRunServiceInterface::SKIP_*.
 	 *
 	 * @return JSONResponse The refusal.
 	 */
 	private function refused(int $fileId, string $reason): JSONResponse {
 		$answers = [
-			OcrRunService::SKIP_DISABLED => [Http::STATUS_CONFLICT, $this->l10n->t('OCR is switched off by an administrator.')],
-			OcrRunService::SKIP_NO_TESSERACT => [
+			OcrRunServiceInterface::SKIP_DISABLED => [Http::STATUS_CONFLICT, $this->l10n->t('OCR is switched off by an administrator.')],
+			OcrRunServiceInterface::SKIP_NO_TESSERACT => [
 				Http::STATUS_SERVICE_UNAVAILABLE,
 				$this->l10n->t('OCR is not available: Tesseract is not installed on the server.'),
 			],
-			OcrRunService::SKIP_NOT_CANDIDATE => [Http::STATUS_BAD_REQUEST, $this->l10n->t('OCR reads images and PDF files only.')],
-			OcrRunService::SKIP_NO_TEXT => [Http::STATUS_OK, $this->l10n->t('OCR found no text in this file.')],
-			OcrRunService::SKIP_FAILED => [Http::STATUS_INTERNAL_SERVER_ERROR, $this->l10n->t('OCR failed on this file.')],
+			OcrRunServiceInterface::SKIP_NOT_CANDIDATE => [Http::STATUS_BAD_REQUEST, $this->l10n->t('OCR reads images and PDF files only.')],
+			OcrRunServiceInterface::SKIP_NO_TEXT => [Http::STATUS_OK, $this->l10n->t('OCR found no text in this file.')],
+			OcrRunServiceInterface::SKIP_FAILED => [Http::STATUS_INTERNAL_SERVER_ERROR, $this->l10n->t('OCR failed on this file.')],
 		];
-		[$status, $message] = ($answers[$reason] ?? $answers[OcrRunService::SKIP_FAILED]);
+		[$status, $message] = ($answers[$reason] ?? $answers[OcrRunServiceInterface::SKIP_FAILED]);
 
 		return new JSONResponse(
 			['fileId' => $fileId, 'ocrProcessed' => false, 'reason' => $reason, 'error' => $message, 'textLength' => 0],

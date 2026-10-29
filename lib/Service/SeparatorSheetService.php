@@ -32,6 +32,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\SeparatorSheetServiceInterface;
 use RuntimeException;
 use Throwable;
 
@@ -46,18 +47,7 @@ use Throwable;
  *
  * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
  */
-class SeparatorSheetService {
-
-	/**
-	 * The payload every separator sheet carries.
-	 *
-	 * Versioned on purpose: a sheet printed today is still in a drawer next
-	 * year, and a splitter that changed its mind about the format would cut
-	 * batches in the wrong place rather than refuse to.
-	 *
-	 * @var string
-	 */
-	public const PAYLOAD_PREFIX = 'filinq:sep:v1:';
+class SeparatorSheetService implements SeparatorSheetServiceInterface {
 
 	/**
 	 * Constructor.

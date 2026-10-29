@@ -33,6 +33,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\DocumentDomainServiceInterface;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -48,7 +49,7 @@ use RuntimeException;
  *
  * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
  */
-class DocumentDomainService {
+class DocumentDomainService implements DocumentDomainServiceInterface {
 
 	/**
 	 * Constructor.

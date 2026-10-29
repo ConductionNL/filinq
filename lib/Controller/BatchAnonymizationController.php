@@ -35,13 +35,13 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use OCA\Filinq\Kernel\Contracts\BatchAnonymizeServiceInterface;
+use OCA\Filinq\Kernel\Contracts\BatchExtractionServiceInterface;
 use OCA\Filinq\Kernel\Contracts\BatchStateServiceInterface;
+use OCA\Filinq\Kernel\Contracts\BatchUploadServiceInterface;
 use OCA\Filinq\Kernel\Contracts\EntityConsolidationServiceInterface;
 use OCA\Filinq\Kernel\Contracts\FolderBatchServiceInterface;
-use OCA\Filinq\Service\BatchExtractionService;
 use OCA\Filinq\Service\BatchReportService;
 use OCA\Filinq\Service\BatchRequestService;
-use OCA\Filinq\Service\BatchUploadService;
 use OCA\Filinq\Service\WooProfileService;
 use OCA\Filinq\Settings\FilinqAdmin;
 use OCP\AppFramework\Controller;
@@ -88,8 +88,8 @@ class BatchAnonymizationController extends Controller {
 	 * @param IRequest $request Current HTTP request.
 	 * @param LoggerInterface $logger Logger used by the err() helper for failure reporting.
 	 * @param BatchStateServiceInterface $stateService Service that stores and loads batch records.
-	 * @param BatchUploadService $uploadService Service that persists uploaded files into a new batch.
-	 * @param BatchExtractionService $extractService Service that drives per-file entity extraction.
+	 * @param BatchUploadServiceInterface $uploadService Service that persists uploaded files into a new batch.
+	 * @param BatchExtractionServiceInterface $extractService Service that drives per-file entity extraction.
 	 * @param BatchAnonymizeServiceInterface $anonService Service that applies approved entities across a batch.
 	 * @param BatchReportService $reportService Service that produces the per-batch CSV report.
 	 * @param EntityConsolidationServiceInterface $entityService Service that merges per-file entity detections into one list.
@@ -107,8 +107,8 @@ class BatchAnonymizationController extends Controller {
 		IRequest $request,
 		private readonly LoggerInterface $logger,
 		private readonly BatchStateServiceInterface $stateService,
-		private readonly BatchUploadService $uploadService,
-		private readonly BatchExtractionService $extractService,
+		private readonly BatchUploadServiceInterface $uploadService,
+		private readonly BatchExtractionServiceInterface $extractService,
 		private readonly BatchAnonymizeServiceInterface $anonService,
 		private readonly BatchReportService $reportService,
 		private readonly EntityConsolidationServiceInterface $entityService,

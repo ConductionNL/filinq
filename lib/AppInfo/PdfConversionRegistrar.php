@@ -29,6 +29,7 @@ use OCA\Filinq\Service\Conversion\LibreOfficeHeadlessBackend;
 use OCA\Filinq\Service\Conversion\MpdfBackend;
 use OCA\Filinq\Service\Conversion\OfficeAppBackend;
 use OCA\Filinq\Service\Conversion\PhpWordBackend;
+use OCA\Filinq\Service\Conversion\TcLibPdfBackend;
 use OCA\Filinq\Service\PdfConversionService;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use Psr\Log\LoggerInterface;
@@ -78,6 +79,7 @@ class PdfConversionRegistrar {
 						$c->get(OfficeAppBackend::class),
 						$c->get(LibreOfficeHeadlessBackend::class),
 						$c->get(PhpWordBackend::class),
+						$c->get(TcLibPdfBackend::class),
 						$c->get(MpdfBackend::class),
 						$c->get(EmlBackend::class),
 					],

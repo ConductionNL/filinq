@@ -24,6 +24,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\Ocr;
 
+use OCA\Filinq\Kernel\Contracts\OcrResultRepositoryInterface;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\IntakeRepository;
 use RuntimeException;
@@ -32,9 +33,7 @@ use Throwable;
 /**
  * The `ocrResult` rows, keyed by file id.
  */
-class OcrResultRepository {
-
-	public const SCHEMA = 'ocrResult';
+class OcrResultRepository implements OcrResultRepositoryInterface {
 
 	/**
 	 * Constructor.
