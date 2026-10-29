@@ -26,9 +26,9 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\EventListener;
 
+use OCA\Filinq\Kernel\Contracts\SettingsServiceInterface;
 use OCA\Filinq\Service\InboundClassificationService;
 use OCA\Filinq\Service\MetadataService;
-use OCA\Filinq\Service\SettingsService;
 use OCP\AppFramework\Db\DoesNotExistException;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -133,13 +133,13 @@ class EnrichmentRunner {
 	 * create — 96% of all schema reads during an OpenRegister create, measured
 	 * 2026-07-29, on a code path whose entire job is to answer a boolean.
 	 *
-	 * @param SettingsService $settingsService The settings service
+	 * @param SettingsServiceInterface $settingsService The settings service
 	 *
 	 * @return bool True if at least one enrichment feature is enabled
 	 *
 	 * @spec openspec/specs/metadata-enrichment/spec.md
 	 */
-	public function isEnrichmentEnabled(SettingsService $settingsService): bool {
+	public function isEnrichmentEnabled(SettingsServiceInterface $settingsService): bool {
 		$settings = $settingsService->getFeatureToggles();
 		$enableLanguage = $settings['enable_language_detection'] ?? true;
 		$enableKeywords = $settings['enable_keyword_extraction'] ?? true;
@@ -153,7 +153,7 @@ class EnrichmentRunner {
 	 *
 	 * @param mixed $object The OpenRegister object
 	 * @param MetadataService $metadataService The metadata service
-	 * @param SettingsService $settingsService The settings service
+	 * @param SettingsServiceInterface $settingsService The settings service
 	 * @param LoggerInterface $logger The logger instance
 	 * @param string $logContext Context string for logging
 	 *
@@ -164,7 +164,7 @@ class EnrichmentRunner {
 	public function enrichObject(
 		mixed $object,
 		MetadataService $metadataService,
-		SettingsService $settingsService,
+		SettingsServiceInterface $settingsService,
 		LoggerInterface $logger,
 		string $logContext,
 	): void {

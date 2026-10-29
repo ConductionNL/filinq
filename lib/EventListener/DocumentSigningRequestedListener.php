@@ -30,7 +30,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\EventListener;
 
 use OCA\Filinq\Event\DocumentSigningRequestedEvent;
-use OCA\Filinq\Service\SigningService;
+use OCA\Filinq\Kernel\Contracts\SigningServiceInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use Psr\Log\LoggerInterface;
@@ -59,13 +59,13 @@ class DocumentSigningRequestedListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param SigningService $signingService The reused create-request service
+	 * @param SigningServiceInterface $signingService The reused create-request service
 	 * @param LoggerInterface $logger Logger
 	 *
 	 * @return void
 	 */
 	public function __construct(
-		private readonly SigningService $signingService,
+		private readonly SigningServiceInterface $signingService,
 		private readonly LoggerInterface $logger,
 	) {
 

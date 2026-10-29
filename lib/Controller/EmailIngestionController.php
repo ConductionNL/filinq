@@ -27,9 +27,9 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use InvalidArgumentException;
+use OCA\Filinq\Kernel\Contracts\EmailIngestionServiceInterface;
+use OCA\Filinq\Kernel\Contracts\EmailIngestionSettingsInterface;
 use OCA\Filinq\Service\EmailIngestion\EmailDocumentRepository;
-use OCA\Filinq\Service\EmailIngestion\EmailIngestionService;
-use OCA\Filinq\Service\EmailIngestion\EmailIngestionSettings;
 use OCA\Filinq\Settings\FilinqAdmin;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -49,9 +49,9 @@ class EmailIngestionController extends Controller {
 	 *
 	 * @param string                  $appName    The app id.
 	 * @param IRequest                $request    The request.
-	 * @param EmailIngestionService   $ingestion  The ingestion.
+	 * @param EmailIngestionServiceInterface   $ingestion  The ingestion.
 	 * @param EmailDocumentRepository $repository The records.
-	 * @param EmailIngestionSettings  $settings   The mapping.
+	 * @param EmailIngestionSettingsInterface  $settings   The mapping.
 	 * @param LoggerInterface         $logger     The logger.
 	 *
 	 * @return void
@@ -59,9 +59,9 @@ class EmailIngestionController extends Controller {
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly EmailIngestionService $ingestion,
+		private readonly EmailIngestionServiceInterface $ingestion,
 		private readonly EmailDocumentRepository $repository,
-		private readonly EmailIngestionSettings $settings,
+		private readonly EmailIngestionSettingsInterface $settings,
 		private readonly LoggerInterface $logger,
 	) {
 		parent::__construct(appName: $appName, request: $request);
@@ -103,7 +103,7 @@ class EmailIngestionController extends Controller {
 	#[AuthorizedAdminSetting(settings: FilinqAdmin::class)]
 	public function scan(): JSONResponse {
 		return $this->answer(
-			action: fn (): array => $this->ingestion->scan(limit: $this->settings->filesPerTick(), source: EmailIngestionService::SOURCE_MANUAL)
+			action: fn (): array => $this->ingestion->scan(limit: $this->settings->filesPerTick(), source: EmailIngestionServiceInterface::SOURCE_MANUAL)
 		);
 
 	}//end scan()
@@ -147,7 +147,7 @@ class EmailIngestionController extends Controller {
 	 * @spec openspec/changes/archive/2026-10-01-email-ingestion/tasks.md#2-5
 	 */
 	#[AuthorizedAdminSetting(settings: FilinqAdmin::class)]
-	public function updateSettings(array $inboxes = [], int $filesPerTick = EmailIngestionSettings::DEFAULT_FILES_PER_TICK): JSONResponse {
+	public function updateSettings(array $inboxes = [], int $filesPerTick = EmailIngestionSettingsInterface::DEFAULT_FILES_PER_TICK): JSONResponse {
 		return $this->answer(action: fn (): array => $this->settings->update(inboxes: $inboxes, filesPerTick: $filesPerTick));
 
 	}//end updateSettings()

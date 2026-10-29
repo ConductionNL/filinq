@@ -27,7 +27,7 @@ namespace OCA\Filinq\Controller;
 
 use Exception;
 use OCA\Filinq\Exception\ErrorDetailsInterface;
-use OCA\Filinq\Service\DocumentService;
+use OCA\Filinq\Kernel\Contracts\DocumentServiceInterface;
 use OCA\Filinq\Service\MultiFormatOutputProducer;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -56,7 +56,7 @@ class DocumentController extends Controller {
 	 *
 	 * @param string $appName The application name
 	 * @param IRequest $request The request object
-	 * @param DocumentService $documentSvc Document generation service
+	 * @param DocumentServiceInterface $documentSvc Document generation service
 	 * @param IUserSession $userSession User session for authentication
 	 * @param LoggerInterface $logger Logger for error reporting
 	 * @param IL10N $l10n The localization service
@@ -67,7 +67,7 @@ class DocumentController extends Controller {
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly DocumentService $documentSvc,
+		private readonly DocumentServiceInterface $documentSvc,
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
 		private readonly IL10N $l10n,

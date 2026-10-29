@@ -42,6 +42,7 @@ use OCA\Filinq\Exception\ConversionFailedException;
 use OCA\Filinq\Exception\DetectionUnavailableException;
 use OCA\Filinq\Exception\ProhibitionGateException;
 use OCA\Filinq\Exception\RedactionNotReviewedException;
+use OCA\Filinq\Kernel\Contracts\AnonymizationServiceInterface;
 use OCA\Filinq\Service\Ocr\OcrExtractionFallback;
 use OCA\Filinq\Service\Redaction\RedactionOutputGuard;
 use Psr\Container\ContainerInterface;
@@ -70,7 +71,7 @@ use Psr\Log\LoggerInterface;
  * constructor. Every parameter is an injected service, and grouping them behind
  * a bag would hide which of them a given instance actually needs.
  */
-class AnonymizationService {
+class AnonymizationService implements AnonymizationServiceInterface {
 	/**
 	 * Constructor for AnonymizationService
 	 *

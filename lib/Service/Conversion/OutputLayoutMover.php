@@ -37,6 +37,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\Conversion;
 
 use Exception;
+use OCA\Filinq\Kernel\Contracts\OutputLayoutMoverInterface;
 use OCP\Files\File;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
@@ -53,12 +54,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-3
  */
-class OutputLayoutMover {
-
-	/**
-	 * Warning code recorded when the output stayed at its legacy path.
-	 */
-	public const MOVE_FAILED = 'MOVE_FAILED';
+class OutputLayoutMover implements OutputLayoutMoverInterface {
 
 	/**
 	 * Constructor for OutputLayoutMover.

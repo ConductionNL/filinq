@@ -22,6 +22,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\DomainFolderReconcilerInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -51,7 +52,7 @@ use Throwable;
  *
  * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
  */
-class DomainFolderReconciler {
+class DomainFolderReconciler implements DomainFolderReconcilerInterface {
 
 	/**
 	 * Collaborators.

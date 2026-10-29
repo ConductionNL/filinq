@@ -28,10 +28,10 @@ declare(strict_types=1);
 namespace OCA\Filinq\BackgroundJob;
 
 use Exception;
-use OCA\Filinq\Service\AnonymizationService;
-use OCA\Filinq\Service\BatchStateService;
-use OCA\Filinq\Service\Conversion\OutputLayoutMover;
-use OCA\Filinq\Service\Conversion\OutputLayoutResolver;
+use OCA\Filinq\Kernel\Contracts\AnonymizationServiceInterface;
+use OCA\Filinq\Kernel\Contracts\BatchStateServiceInterface;
+use OCA\Filinq\Kernel\Contracts\OutputLayoutMoverInterface;
+use OCA\Filinq\Kernel\Contracts\OutputLayoutResolverInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\QueuedJob;
 use Psr\Log\LoggerInterface;
@@ -63,21 +63,21 @@ class FolderExtractionJob extends QueuedJob {
 	 * Constructor for FolderExtractionJob.
 	 *
 	 * @param ITimeFactory $time Time factory.
-	 * @param AnonymizationService $anonService Anonymization/extraction service.
-	 * @param BatchStateService $stateService Batch state management.
+	 * @param AnonymizationServiceInterface $anonService Anonymization/extraction service.
+	 * @param BatchStateServiceInterface $stateService Batch state management.
 	 * @param LoggerInterface $logger Logger for error reporting.
-	 * @param OutputLayoutResolver $layoutResolver Output-folder layout resolver.
-	 * @param OutputLayoutMover $layoutMover Moves each output into the output subfolder.
+	 * @param OutputLayoutResolverInterface $layoutResolver Output-folder layout resolver.
+	 * @param OutputLayoutMoverInterface $layoutMover Moves each output into the output subfolder.
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		ITimeFactory $time,
-		private readonly AnonymizationService $anonService,
-		private readonly BatchStateService $stateService,
+		private readonly AnonymizationServiceInterface $anonService,
+		private readonly BatchStateServiceInterface $stateService,
 		private readonly LoggerInterface $logger,
-		private readonly OutputLayoutResolver $layoutResolver,
-		private readonly OutputLayoutMover $layoutMover,
+		private readonly OutputLayoutResolverInterface $layoutResolver,
+		private readonly OutputLayoutMoverInterface $layoutMover,
 	) {
 		parent::__construct(time: $time);
 

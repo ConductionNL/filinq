@@ -26,6 +26,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use OCA\Filinq\Exception\MergeJobStoreUnreadableException;
+use OCA\Filinq\Kernel\Contracts\MergeJobRepositoryInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
@@ -41,7 +42,7 @@ use Throwable;
  *
  * @spec openspec/specs/document-merge/spec.md
  */
-class MergeJobRepository {
+class MergeJobRepository implements MergeJobRepositoryInterface {
 
 	/**
 	 * Constructor.

@@ -35,6 +35,7 @@ namespace OCA\Filinq\Service;
 
 use Exception;
 use Imagick;
+use OCA\Filinq\Kernel\Contracts\OcrServiceInterface;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
 use OCP\IAppConfig;
@@ -51,7 +52,7 @@ use thiagoalessio\TesseractOCR\TesseractOCR;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  */
-class OcrService {
+class OcrService implements OcrServiceInterface {
 
 	/**
 	 * MIME types that always require OCR processing

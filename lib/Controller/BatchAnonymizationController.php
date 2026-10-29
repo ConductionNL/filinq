@@ -34,11 +34,11 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
+use OCA\Filinq\Kernel\Contracts\BatchStateServiceInterface;
 use OCA\Filinq\Service\BatchAnonymizeService;
 use OCA\Filinq\Service\BatchExtractionService;
 use OCA\Filinq\Service\BatchReportService;
 use OCA\Filinq\Service\BatchRequestService;
-use OCA\Filinq\Service\BatchStateService;
 use OCA\Filinq\Service\BatchUploadService;
 use OCA\Filinq\Service\EntityConsolidationService;
 use OCA\Filinq\Service\FolderBatchService;
@@ -87,7 +87,7 @@ class BatchAnonymizationController extends Controller {
 	 * @param string $appName App name passed through to the base Controller.
 	 * @param IRequest $request Current HTTP request.
 	 * @param LoggerInterface $logger Logger used by the err() helper for failure reporting.
-	 * @param BatchStateService $stateService Service that stores and loads batch records.
+	 * @param BatchStateServiceInterface $stateService Service that stores and loads batch records.
 	 * @param BatchUploadService $uploadService Service that persists uploaded files into a new batch.
 	 * @param BatchExtractionService $extractService Service that drives per-file entity extraction.
 	 * @param BatchAnonymizeService $anonService Service that applies approved entities across a batch.
@@ -106,7 +106,7 @@ class BatchAnonymizationController extends Controller {
 		string $appName,
 		IRequest $request,
 		private readonly LoggerInterface $logger,
-		private readonly BatchStateService $stateService,
+		private readonly BatchStateServiceInterface $stateService,
 		private readonly BatchUploadService $uploadService,
 		private readonly BatchExtractionService $extractService,
 		private readonly BatchAnonymizeService $anonService,

@@ -28,20 +28,13 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\EmailIngestion;
 
 use InvalidArgumentException;
+use OCA\Filinq\Kernel\Contracts\EmailIngestionSettingsInterface;
 use OCP\IAppConfig;
 
 /**
  * The inbox to dossier mapping and the per-tick budget.
  */
-class EmailIngestionSettings {
-
-	public const KEY_INBOXES = 'filinq.email_ingestion.inbox_folders';
-
-	public const KEY_FILES_PER_TICK = 'filinq.email_ingestion.files_per_tick';
-
-	public const DEFAULT_FILES_PER_TICK = 25;
-
-	public const MAX_FILES_PER_TICK = 500;
+class EmailIngestionSettings implements EmailIngestionSettingsInterface {
 
 	private const APP_ID = 'filinq';
 

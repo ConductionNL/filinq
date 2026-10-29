@@ -32,6 +32,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use Exception;
+use OCA\Filinq\Kernel\Contracts\CorrespondenceServiceInterface;
 use OCA\Filinq\Service\Charts\SvgRasterizer;
 use OCA\Filinq\Service\Conversion\HtmlToOfficeConverter;
 use OCA\Filinq\Service\Conversion\LibreOfficeHeadlessBackend;
@@ -57,7 +58,7 @@ use RuntimeException;
  *
  * @spec openspec/changes/letter-correspondence-generation/tasks.md#task-2
  */
-class CorrespondenceService {
+class CorrespondenceService implements CorrespondenceServiceInterface {
 
 	/**
 	 * Maximum number of recipients for synchronous batch processing

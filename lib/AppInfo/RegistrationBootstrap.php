@@ -26,6 +26,7 @@ namespace OCA\Filinq\AppInfo;
 use Exception;
 use OCA\Filinq\Mcp\FilinqScannableServices;
 use OCA\Filinq\Middleware\LanguageNegotiationMiddleware;
+use OCA\Filinq\Service\ContractBindings;
 use OCA\Filinq\Service\DomainFolderGateway;
 use OCA\Filinq\Service\MountCapabilityProbe;
 use OCA\Filinq\Service\NextcloudDomainFolderGateway;
@@ -68,6 +69,7 @@ class RegistrationBootstrap {
 		(new PdfConversionRegistrar())->register(context: $context);
 		(new IntegrationLeafRegistrar())->register(context: $context);
 		(new DocumentGenerationRegistrar())->register(context: $context);
+		(new ContractBindings())->register(context: $context);
 
 		$this->bindStoreController(context: $context);
 
