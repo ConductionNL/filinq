@@ -513,4 +513,77 @@ class EmlPdfAssemblyServiceTest extends TestCase {
 
 	}//end testConversionFailedExceptionIsAvailable()
 
+	/**
+	 * Characterization: each way assemble() fails names the step in the
+	 * message and in the one eml attempt, and keeps the cause.
+	 *
+	 * @return void
+	 */
+	public function testAssemblyFailuresNameTheStep(): void {
+		$cause    = new \RuntimeException('boom');
+		$minimal  = (object)['headers' => [], 'body' => ['plain' => null, 'html' => null], 'attachments' => [], 'inlineImages' => []];
+		$failures = [
+			'engine' => [
+				'throws' => $cause,
+				'output' => null,
+				'message' => 'EML assembly could not initialise the PDF engine: boom',
+				'reason' => 'mPDF init failed: boom',
+				'previous' => $cause,
+			],
+			'output' => [
+				'throws' => null,
+				'output' => $cause,
+				'message' => 'EML assembly failed to emit the PDF: boom',
+				'reason' => 'mPDF Output failed: boom',
+				'previous' => $cause,
+			],
+			'empty' => [
+				'throws' => null,
+				'output' => '',
+				'message' => 'EML assembly produced empty PDF output.',
+				'reason' => 'mPDF Output returned empty',
+				'previous' => null,
+			],
+		];
+
+		foreach ($failures as $label => $case) {
+			$mpdf = $this->createMock(originalClassName: \Mpdf\Mpdf::class);
+			if ($case['output'] instanceof \Throwable) {
+				$mpdf->method('Output')->willThrowException($case['output']);
+			} else {
+				$mpdf->method('Output')->willReturn($case['output']);
+			}
+
+			$pdfService = $this->createMock(originalClassName: PdfService::class);
+			if ($case['throws'] !== null) {
+				$pdfService->method('createMpdfInstance')->willThrowException($case['throws']);
+			} else {
+				$pdfService->method('createMpdfInstance')->willReturn($mpdf);
+			}
+
+			$service = new EmlPdfAssemblyService(
+				pdfService: $pdfService,
+				templateRenderer: $this->createMock(originalClassName: TemplateRenderer::class),
+				appConfig: $this->createMock(originalClassName: IAppConfig::class),
+				logger: $this->createMock(originalClassName: LoggerInterface::class),
+				envelopeRenderer: $this->createMock(originalClassName: \OCA\Filinq\Service\EmlEnvelopeRenderer::class),
+				attachmentRenderer: $this->createMock(originalClassName: \OCA\Filinq\Service\EmlAttachmentRenderer::class)
+			);
+
+			try {
+				$service->assemble(result: $minimal);
+				$this->fail(message: $label . ': no exception');
+			} catch (ConversionFailedException $e) {
+				$this->assertSame(expected: $case['message'], actual: $e->getMessage(), message: $label);
+				$this->assertSame(
+					expected: [['name' => 'eml', 'available' => true, 'supports' => true, 'reason' => $case['reason']]],
+					actual: $e->getAttempts(),
+					message: $label
+				);
+				$this->assertSame(expected: $case['previous'], actual: $e->getPrevious(), message: $label);
+			}
+		}//end foreach
+
+	}//end testAssemblyFailuresNameTheStep()
+
 }//end class
