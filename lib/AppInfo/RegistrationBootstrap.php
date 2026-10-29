@@ -24,6 +24,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\AppInfo;
 
 use Exception;
+use OCA\Filinq\EventListener\ListenerRegistrar;
 use OCA\Filinq\Mcp\FilinqScannableServices;
 use OCA\Filinq\Middleware\LanguageNegotiationMiddleware;
 use OCA\Filinq\Kernel\Contracts\SettingsServiceInterface;
@@ -58,12 +59,17 @@ class RegistrationBootstrap {
 	 * @return void
 	 *
 	 * @spec openspec/changes/flow-generate-document-node/specs/flow-document-generation/spec.md#requirement-filinq-registers-its-node-and-still-boots-without-openregister
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) OpenRegisterAutoloader::register() is
+	 * the app's own static prelude; there is no container at the composition root
+	 * to resolve an adapter from.
 	 */
 	public function register(IRegistrationContext $context): void {
-		(new ObjectEventRegistrar())->register(context: $context);
-		(new SigningEventRegistrar())->register(context: $context);
-		(new IntegrationLeafRegistrar())->register(context: $context);
-		(new DocumentGenerationRegistrar())->register(context: $context);
+		// The integration-leaf registrar probes for an OpenRegister event class,
+		// which only resolves once OpenRegister's prefix is on the autoloader.
+		// apphost-prelude exclude OpenRegisterAutoloader::register() below is the prelude.
+		OpenRegisterAutoloader::register();
+		(new ListenerRegistrar())->register(context: $context);
 		(new ServiceRegistrar())->register(context: $context);
 
 		$this->bindStoreController(context: $context);
@@ -148,7 +154,7 @@ class RegistrationBootstrap {
 	 * @return void
 	 */
 	public function boot(ContainerInterface $container, string $appName): void {
-		(new ObjectEventRegistrar())->boot(container: $container, appName: $appName);
+		(new ListenerRegistrar())->boot(container: $container, appName: $appName);
 
 		// Initialize OpenRegister configuration on boot.
 		try {
