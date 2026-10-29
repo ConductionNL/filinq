@@ -178,6 +178,7 @@ class BootstrapOrderIndependenceTest extends TestCase {
 			'DocumentGenerationRegistrar' => ['OCA\\Filinq\\EventListener\\DocumentGenerationRegistrar'],
 			'PdfConversionRegistrar' => ['OCA\\Filinq\\Service\\Conversion\\PdfConversionRegistrar'],
 			'ServiceRegistrar' => ['OCA\\Filinq\\Service\\ServiceRegistrar'],
+			'DashboardRegistrar' => ['OCA\\Filinq\\Dashboard\\DashboardRegistrar'],
 			'ListenerRegistrar' => ['OCA\\Filinq\\EventListener\\ListenerRegistrar'],
 			'ObservabilityRegistrar' => ['OCA\\Filinq\\AppInfo\\ObservabilityRegistrar'],
 			'RegistrationBootstrap' => ['OCA\\Filinq\\AppInfo\\RegistrationBootstrap'],

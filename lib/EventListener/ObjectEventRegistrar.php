@@ -3,7 +3,7 @@
 /**
  * Filinq Object Event Registrar
  *
- * Wires Filinq's dashboard widgets and its OpenRegister object-lifecycle
+ * Wires Filinq's OpenRegister object-lifecycle
  * listeners — both the unfiltered create/update/delete registrations made at
  * `register()` time and the register/schema-filtered dossier listener that must
  * be declared from `boot()`. Extracted from `Application` so the bootstrap class
@@ -25,8 +25,6 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\EventListener;
 
-use OCA\Filinq\Dashboard\AnonymizationWidget;
-use OCA\Filinq\Dashboard\FileEntitiesWidget;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectDeletedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
@@ -37,7 +35,7 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
- * Registers dashboard widgets and OpenRegister object-lifecycle listeners.
+ * Registers OpenRegister object-lifecycle listeners.
  *
  * @category EventListener
  * @package  OCA\Filinq\EventListener
@@ -52,7 +50,7 @@ use Psr\Log\LoggerInterface;
  */
 class ObjectEventRegistrar {
 	/**
-	 * Register dashboard widgets and the unfiltered object-lifecycle listeners.
+	 * Register the unfiltered object-lifecycle listeners.
 	 *
 	 * Deliberately NOT narrowed to a register/schema set: FilinqEventHandler
 	 * identifies its work by PAYLOAD SHAPE (`looksLikeDossier()`,
@@ -67,10 +65,6 @@ class ObjectEventRegistrar {
 	 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-2.2
 	 */
 	public function register(IRegistrationContext $context): void {
-		// Register dashboard widgets.
-		$context->registerDashboardWidget(AnonymizationWidget::class);
-		$context->registerDashboardWidget(FileEntitiesWidget::class);
-
 		// The intake inbox listens to its own event. A channel says a document
 		// arrived; only this app turns that into a document waiting for a clerk.
 		$context->registerEventListener(

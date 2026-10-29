@@ -162,6 +162,33 @@ class SigningProviderFactoryTest extends TestCase {
 	}//end testGetActiveProviderFallsBackToNativeForUnknown()
 
 	/**
+	 * getActiveProviderIdentifier() names the configured provider.
+	 *
+	 * @return void
+	 */
+	public function testActiveProviderIdentifierNamesTheConfiguredProvider(): void {
+		$factory = $this->buildFactory(configuredProvider: 'validsign');
+
+		$this->assertSame('validsign', $factory->getActiveProviderIdentifier());
+
+	}//end testActiveProviderIdentifierNamesTheConfiguredProvider()
+
+	/**
+	 * getActiveProviderIdentifier() fails closed like getActiveProvider() when
+	 * LibreSign is configured but not enabled.
+	 *
+	 * @return void
+	 */
+	public function testActiveProviderIdentifierFailsClosedWithoutLibreSign(): void {
+		$factory = $this->buildFactory(configuredProvider: 'libresign', libreSignEnabled: false);
+
+		$this->expectException(RuntimeException::class);
+
+		$factory->getActiveProviderIdentifier();
+
+	}//end testActiveProviderIdentifierFailsClosedWithoutLibreSign()
+
+	/**
 	 * getProvider('validsign') returns the ValidSign provider instance.
 	 *
 	 * @return void
