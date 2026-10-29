@@ -132,7 +132,10 @@ class ConsentUpdateFlowTest extends TestCase {
 						false,
 					],
 				],
-				['log info' => 'Consent status updated', 'context' => ['consentId' => 'c-1', 'updatedKeys' => ['notificationStatus', 'objectionReason', 'statusEvents']]],
+				[
+					'log info' => 'Consent status updated',
+					'context'  => ['consentId' => 'c-1', 'updatedKeys' => ['notificationStatus', 'objectionReason', 'statusEvents']],
+				],
 			],
 			actual: $this->calls
 		);
