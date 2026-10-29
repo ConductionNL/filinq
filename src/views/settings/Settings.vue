@@ -1024,6 +1024,12 @@ import {
 	disallowedSubfolderCharacters,
 	isValidSubfolderName,
 } from '../../services/outputSubfolder.js'
+import {
+	defaultOcrLanguages,
+	defaultSettings,
+	emptyOcrStatus,
+	emptyVeraPdfStatus,
+} from '../../services/settingsDefaults.js'
 import { initialSections } from '../../services/settingsSections.js'
 
 /** The object types whose register and schema this page binds. */
@@ -1076,56 +1082,16 @@ export default {
 			// Entity types enabled for automatic detection (all-on by default).
 			// An empty or complete selection means "detect all types".
 			enabledEntityTypes: [],
-			settings: {
-				publication_objection_period_days: 28,
-				enable_language_detection: true,
-				enable_keyword_extraction: true,
-				enable_topic_classification: true,
-				enable_contract_term_extraction: true,
-				enable_inbound_classification: true,
-				ocr_enabled: true,
-				ocr_on_arrival: true,
-				ocr_dpi: 300,
-				signing_enabled: false,
-				signing_provider: 'native',
-				libresign_qualified: false,
-				signing_default_level: 'SES',
-				signing_request_expiry_days: 30,
-				signing_guardian_consent_age: 16,
-				'filinq.anonymisation.default_output_format': 'pdf-only',
-				'anonymisation.output_subfolder_name': 'anonymised',
-				// files-confidential-labels — off by default (design.md D3).
-				'filinq.confidentiality.prioritise_analysis': false,
-				'filinq.confidentiality.label_vocabulary': {
-					Public: 0,
-					Internal: 1,
-					Confidential: 2,
-					Secret: 3,
-				},
-			},
+			settings: defaultSettings(),
 
 			// Editable JSON text backing 'filinq.confidentiality.label_vocabulary'
 			// — kept separate from `settings` so an in-progress edit can be
 			// invalid JSON without corrupting the object that gets submitted.
 			confidentialityVocabularyText: '',
 			confidentialityVocabularyError: null,
-			ocrLanguages: {
-				nld: true,
-				eng: true,
-				deu: false,
-				fra: false,
-			},
-
-			ocrStatus: {
-				tesseractAvailable: false,
-				tesseractVersion: null,
-			},
-
-			veraPdfStatus: {
-				enabled: true,
-				available: false,
-				version: '',
-			},
+			ocrLanguages: defaultOcrLanguages(),
+			ocrStatus: emptyOcrStatus(),
+			veraPdfStatus: emptyVeraPdfStatus(),
 		}
 	},
 
