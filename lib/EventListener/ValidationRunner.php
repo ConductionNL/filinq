@@ -30,7 +30,6 @@ namespace OCA\Filinq\EventListener;
 
 use OCA\Filinq\Kernel\Contracts\DocumentValidationServiceInterface;
 use OCA\Filinq\Kernel\Contracts\MetadataServiceInterface;
-use OCA\Filinq\Service\DocumentValidationService;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCP\EventDispatcher\Event;
@@ -95,7 +94,7 @@ class ValidationRunner {
 		try {
 			$this->validateObject(
 				object: $object,
-				validationService: $this->container->get(DocumentValidationService::class),
+				validationService: $this->container->get(DocumentValidationServiceInterface::class),
 				metadataService: $metadataService,
 				rootFolder: $this->container->get(IRootFolder::class),
 				logger: $logger,

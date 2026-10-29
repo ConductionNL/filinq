@@ -86,6 +86,10 @@ class PostRegisterController extends Controller {
 	 * @return JSONResponse The undischarged inbound entries.
 	 *
 	 * @spec openspec/changes/documents-in-and-out-of-the-building/specs/document-register/spec.md
+	 *
+	 * @no-admin-idor-exempt read-only. PostRegisterReader queries the documentRegistration schema through
+	 * searchObjectsBySlug() with RBAC and multitenancy on, so the caller sees only rows OpenRegister lets
+	 * them read.
 	 */
 	#[NoAdminRequired]
 	public function openPost(string $unit = ''): JSONResponse {
@@ -101,6 +105,10 @@ class PostRegisterController extends Controller {
 	 * @return JSONResponse The answers, and whether there are any.
 	 *
 	 * @spec openspec/changes/documents-in-and-out-of-the-building/specs/document-register/spec.md
+	 *
+	 * @no-admin-idor-exempt read-only. PostRegisterReader queries the documentRegistration schema through
+	 * searchObjectsBySlug() with RBAC and multitenancy on, so the caller sees only rows OpenRegister lets
+	 * them read.
 	 */
 	#[NoAdminRequired]
 	public function answers(string $uuid = ''): JSONResponse {
@@ -126,6 +134,10 @@ class PostRegisterController extends Controller {
 	 * @return JSONResponse The series.
 	 *
 	 * @spec openspec/changes/documents-in-and-out-of-the-building/specs/document-register/spec.md
+	 *
+	 * @no-admin-idor-exempt read-only. PostRegisterReader queries the documentRegistration schema through
+	 * searchObjectsBySlug() with RBAC and multitenancy on, so the caller sees only rows OpenRegister lets
+	 * them read.
 	 */
 	#[NoAdminRequired]
 	public function series(string $unit = ''): JSONResponse {
