@@ -370,6 +370,184 @@ export function entryIsChecked(entry) {
 	return !!entry && reviewIsCurrent(entry.reviewMark, entryPayload(entry))
 }
 
+/**
+ * The relation rows a reviewed entity owns. A grouped row may own several
+ * (append bug); older entries carry a single `relationId`.
+ *
+ * @param {object} entity Decorated entity row.
+ * @return {Array<number|string>}
+ * @spec openspec/specs/anonymization-entity-review/spec.md#requirement-entity-toggle-in-review
+ */
+function relationIdsOf(entity) {
+	if (Array.isArray(entity.relationIds) && entity.relationIds.length > 0) {
+		return entity.relationIds
+	}
+	return entity.relationId != null ? [entity.relationId] : []
+}
+
+/**
+ * Whether the reviewer changed the bases or the skip flag of an entity.
+ *
+ * @param {object} entity Decorated entity row.
+ * @param {Array<string>} newBases The bases the reviewer chose.
+ * @return {boolean}
+ * @spec openspec/specs/anonymization-entity-review/spec.md#requirement-entity-toggle-in-review
+ */
+function decisionChanged(entity, newBases) {
+	const originalBases = Array.isArray(entity.bases) ? entity.bases : []
+	const basesChanged = JSON.stringify(originalBases) !== JSON.stringify(newBases)
+	return basesChanged || !!entity.skipAnonymization !== !!entity._decisionSkip
+}
+
+/**
+ * PATCH a changed review decision onto every relation row of an entity.
+ * Unchanged decisions are skipped to avoid no-op writes. A failure is kept
+ * on the entity so the other entities still go through.
+ *
+ * @param {object} entity Decorated entity row.
+ * @return {Promise<void>}
+ * @spec openspec/specs/anonymization-entity-review/spec.md#requirement-entity-toggle-in-review
+ */
+async function patchEntityDecision(entity) {
+	const relationIds = relationIdsOf(entity)
+	const newBases = Array.isArray(entity._decisionBases)
+		? entity._decisionBases
+		: []
+	if (relationIds.length === 0 || !decisionChanged(entity, newBases)) {
+		return
+	}
+
+	const skipAnonymization = !!entity._decisionSkip
+	try {
+		// Every duplicate relation gets the decision, so a re-extracted copy
+		// cannot slip through unredacted.
+		await Promise.all(
+			relationIds.map((rid) =>
+				axios.patch(
+					generateUrl(`/apps/filinq/api/anonymization/relations/${rid}`),
+					{ bases: newBases, skipAnonymization },
+				),
+			),
+		)
+		entity.bases = newBases
+		entity.skipAnonymization = skipAnonymization
+		entity._patchError = null
+	} catch (err) {
+		entity._patchError = err.response?.data?.error || err.message
+	}
+}
+
+/**
+ * The body of a single-document anonymise call.
+ *
+ * Only `included` entities are sent, the list the review mark was recorded
+ * over. The grondslagen summary flags go as a pair or not at all, because
+ * the backend ignores a lone flag. `reversible` is only sent when chosen,
+ * so the default run stays irreversible and keeps no key.
+ *
+ * @param {object} entry Queue entry.
+ * @param {object} options Anonymisation options (see `anonymiseEntry`).
+ * @return {object}
+ * @spec openspec/specs/anonymization-entity-review/spec.md#requirement-entity-toggle-in-review
+ */
+function anonymizePayloadFor(entry, options) {
+	const payload = {
+		entities: entryPayload(entry),
+		// Placeholder numbering is local to this file; the batch path
+		// handles dossier-wide numbering.
+		scope: 'document',
+	}
+	if (options.appendBasisSummary && options.outputFormat) {
+		payload.appendBasisSummary = true
+		payload.outputFormat = options.outputFormat
+	}
+	if (options.reversible === true) {
+		payload.reversible = true
+	}
+	return payload
+}
+
+/**
+ * Copy an anonymise response onto its queue entry and mark it completed.
+ *
+ * `complete === false` means the file was produced but some entities could
+ * not be fully removed; the sidebar warns so the operator can refine and
+ * re-run.
+ *
+ * @param {object} entry Queue entry.
+ * @param {object} data Response body of the anonymise call.
+ * @return {void}
+ * @spec openspec/specs/anonymization-entity-review/spec.md#requirement-entity-toggle-in-review
+ */
+function applyAnonymizeResult(entry, data) {
+	entry.anonymizedFileId = data.anonymizedFileId
+	entry.anonymizedFileName = data.anonymizedFileName
+	entry.anonymizedFilePath = data.anonymizedFilePath
+	entry.replacementCount = data.replacementCount || 0
+	entry.complete = data.complete !== false
+	entry.residualCount = data.residualCount || 0
+	entry.residualEntities = data.residualEntities || []
+	entry.pseudonymisation = data.pseudonymisation || null
+	entry.structurePreservation = data.structurePreservation || null
+	entry.sanitizationReport = data.sanitizationReport || null
+	entry.reanonymize = false
+	entry.status = 'completed'
+}
+
+/**
+ * Resolve the produced file so the result cards show the placeholder the
+ * document carries (`[<localized-TYPE>: <number>]`) instead of the
+ * reconstructed `[<TYPE>]`. Best-effort: on failure the cards keep the
+ * reconstructed fallback.
+ *
+ * @param {object} store The anonymization store.
+ * @param {object} entry Completed queue entry.
+ * @return {Promise<void>}
+ * @spec openspec/specs/anonymization-entity-review/spec.md#requirement-entity-toggle-in-review
+ */
+async function resolveFaithfulMarkers(store, entry) {
+	try {
+		const resolved = await store.loadAnonymizedEntities(
+			{
+				fileId: entry.anonymizedFileId,
+				fileName: entry.anonymizedFileName,
+				path: entry.anonymizedFilePath,
+			},
+			{ push: false },
+		)
+		if (Array.isArray(resolved?.entities) && resolved.entities.length > 0) {
+			entry.resolvedEntities = resolved.entities
+		}
+	} catch (err) {
+		console.error(
+			`Failed to resolve anonymised placeholders for ${entry.name}:`,
+			err,
+		)
+	}
+}
+
+/**
+ * Record a failed anonymise call on its entry. When the server holds no
+ * review mark for this run the entry goes back to review, so the person can
+ * check it and try again.
+ *
+ * @param {object} entry Queue entry.
+ * @param {Error} err The failure.
+ * @return {void}
+ * @spec openspec/specs/anonymization-entity-review/spec.md#requirement-entity-toggle-in-review
+ */
+function applyAnonymizeFailure(entry, err) {
+	console.error(`Failed to anonymise ${entry.name}:`, err)
+	entry.error = err.response?.data?.error || err.message
+	if (err.response?.data?.reviewRequired) {
+		entry.reviewMark = null
+		entry.reviewRequired = true
+		entry.status = 'extracted'
+		return
+	}
+	entry.status = 'error'
+}
+
 export const useAnonymizationStore = defineStore('anonymization', {
 	state: () => ({
 		files: [],
@@ -672,161 +850,20 @@ export const useAnonymizationStore = defineStore('anonymization', {
 			entry.reviewRequired = false
 			entry.status = 'anonymising'
 			try {
-				// Step 1 — PATCH decisions for entities the user modified.
 				for (const entity of entry.entities) {
-					// A grouped row may own several relation rows (append bug);
-					// fall back to the single id for older entries.
-					const relationIds =
-						Array.isArray(entity.relationIds)
-						&& entity.relationIds.length > 0
-							? entity.relationIds
-							: entity.relationId != null
-								? [entity.relationId]
-								: []
-					if (relationIds.length === 0) {
-						continue
-					}
-
-					const originalBases = Array.isArray(entity.bases)
-						? entity.bases
-						: []
-					const newBases = Array.isArray(entity._decisionBases)
-						? entity._decisionBases
-						: []
-					const basesChanged =
-						JSON.stringify(originalBases) !== JSON.stringify(newBases)
-					const skipChanged =
-						!!entity.skipAnonymization !== !!entity._decisionSkip
-					if (!basesChanged && !skipChanged) {
-						continue
-					}
-
-					try {
-						// Apply the decision to every duplicate relation so a
-						// re-extracted copy can't slip through unredacted.
-						await Promise.all(
-							relationIds.map((rid) =>
-								axios.patch(
-									generateUrl(
-										`/apps/filinq/api/anonymization/relations/${rid}`,
-									),
-									{
-										bases: newBases,
-										skipAnonymization: !!entity._decisionSkip,
-									},
-								),
-							),
-						)
-						entity.bases = newBases
-						entity.skipAnonymization = !!entity._decisionSkip
-						entity._patchError = null
-					} catch (err) {
-						entity._patchError = err.response?.data?.error || err.message
-						// Continue with other entities — partial application is preferable
-						// to all-or-nothing in a smoke-test surface.
-					}
+					await patchEntityDecision(entity)
 				}
 
-				// Step 2 — anonymise. Only `included` entities are sent; the
-				// review checkbox in EntityReviewTable controls inclusion.
-				// The OR side additionally filters skipAnonymization=true
-				// relations, so an explicit skip still takes effect even
-				// when the entity was left included. The list is the one the
-				// review mark was recorded over (see markEntryChecked).
-				const anonymizePayload = {
-					entities: entryPayload(entry),
-					// Placeholder-numbering scope: a single-document anonymise
-					// numbers entities locally to this file. Folder/dossier
-					// consistency is handled by the batch path (scope=dossier).
-					scope: 'document',
-				}
-
-				// Grondslagen summary. The backend only generates and appends
-				// it when BOTH flags are present, so send them as a pair or
-				// not at all — a lone flag is a silent no-op.
-				if (options.appendBasisSummary && options.outputFormat) {
-					anonymizePayload.appendBasisSummary = true
-					anonymizePayload.outputFormat = options.outputFormat
-				}
-				// Reversible pseudonymisation: only sent when chosen, so the
-				// default run stays irreversible and keeps no key.
-				if (options.reversible === true) {
-					anonymizePayload.reversible = true
-				}
 				const anonymizeResponse = await axios.post(
 					generateUrl(
 						`/apps/filinq/api/anonymization/anonymize/${entry.fileId}`,
 					),
-					anonymizePayload,
+					anonymizePayloadFor(entry, options),
 				)
-
-				entry.anonymizedFileId = anonymizeResponse.data.anonymizedFileId
-				entry.anonymizedFileName = anonymizeResponse.data.anonymizedFileName
-				entry.anonymizedFilePath = anonymizeResponse.data.anonymizedFilePath
-				entry.replacementCount = anonymizeResponse.data.replacementCount || 0
-				// Best-effort: the file is produced even if some entities could not
-				// be fully removed. `complete === false` drives a warning so the
-				// operator can refine entities (manual / skip unselected) and re-run.
-				entry.complete = anonymizeResponse.data.complete !== false
-				entry.residualCount = anonymizeResponse.data.residualCount || 0
-				entry.residualEntities =
-					anonymizeResponse.data.residualEntities || []
-				// Whether a reversible run kept its key (and why not), so the
-				// sidebar can warn instead of implying the names can come back.
-				entry.pseudonymisation =
-					anonymizeResponse.data.pseudonymisation || null
-				// Whether the redaction kept the tag structure a screen reader reads.
-				entry.structurePreservation =
-					anonymizeResponse.data.structurePreservation || null
-				// What OpenRegister's office sanitiser removed during the run.
-				entry.sanitizationReport =
-					anonymizeResponse.data.sanitizationReport || null
-				// The re-anonymise sub-flow (if any) is done — clear the marker
-				// so the dossier footer returns to its batch state.
-				entry.reanonymize = false
-				entry.status = 'completed'
-
-				// Faithful markers: resolve the produced file so the finished
-				// result cards show the SAME placeholder the document carries
-				// (`[<localized-TYPE>: <scope-local-number>]`) rather than the
-				// reconstructed `[<TYPE>]`. Reuse the anonymised-document
-				// resolver on the output file, but with push:false so it does
-				// not append a second card for this entry. Best-effort — on a
-				// read/parse failure the cards keep the reconstructed fallback.
-				try {
-					const resolved = await this.loadAnonymizedEntities(
-						{
-							fileId: entry.anonymizedFileId,
-							fileName: entry.anonymizedFileName,
-							path: entry.anonymizedFilePath,
-						},
-						{ push: false },
-					)
-					if (
-						resolved
-						&& Array.isArray(resolved.entities)
-						&& resolved.entities.length > 0
-					) {
-						entry.resolvedEntities = resolved.entities
-					}
-				} catch (err) {
-					console.error(
-						`Failed to resolve anonymised placeholders for ${entry.name}:`,
-						err,
-					)
-				}
+				applyAnonymizeResult(entry, anonymizeResponse.data)
+				await resolveFaithfulMarkers(this, entry)
 			} catch (err) {
-				console.error(`Failed to anonymise ${entry.name}:`, err)
-				entry.error = err.response?.data?.error || err.message
-				if (err.response?.data?.reviewRequired) {
-					// The server holds no mark for this run: back to review,
-					// so the person can check it and try again.
-					entry.reviewMark = null
-					entry.reviewRequired = true
-					entry.status = 'extracted'
-					return
-				}
-				entry.status = 'error'
+				applyAnonymizeFailure(entry, err)
 			}
 		},
 
