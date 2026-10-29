@@ -40,6 +40,7 @@ use OCA\Filinq\Kernel\Contracts\ClassificationDecisionServiceInterface;
 use OCA\Filinq\Kernel\Contracts\ConformanceServiceInterface;
 use OCA\Filinq\Kernel\Contracts\ConsentCrudServiceInterface;
 use OCA\Filinq\Kernel\Contracts\ConsentServiceInterface;
+use OCA\Filinq\Kernel\Contracts\ContractDatesInterface;
 use OCA\Filinq\Kernel\Contracts\ContractPartiesInterface;
 use OCA\Filinq\Kernel\Contracts\ContractRepositoryInterface;
 use OCA\Filinq\Kernel\Contracts\ContractServiceInterface;
@@ -148,6 +149,7 @@ use OCA\Filinq\Kernel\Contracts\WooProfileServiceInterface;
 use OCA\Filinq\Service\BulkSigning\BulkSigningRunner;
 use OCA\Filinq\Service\BulkSigning\BulkSigningService;
 use OCA\Filinq\Service\Classification\ClassificationDecisionService;
+use OCA\Filinq\Service\Contract\ContractDates;
 use OCA\Filinq\Service\Contract\ContractParties;
 use OCA\Filinq\Service\Contract\ContractRepository;
 use OCA\Filinq\Service\Contract\ContractService;
@@ -222,6 +224,7 @@ final class ContractBindings {
 		ConformanceServiceInterface::class             => ConformanceService::class,
 		ConsentCrudServiceInterface::class             => ConsentCrudService::class,
 		ConsentServiceInterface::class                 => ConsentService::class,
+		ContractDatesInterface::class                  => ContractDates::class,
 		ContractPartiesInterface::class                => ContractParties::class,
 		ContractRepositoryInterface::class             => ContractRepository::class,
 		ContractServiceInterface::class                => ContractService::class,
