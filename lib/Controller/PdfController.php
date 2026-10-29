@@ -93,6 +93,9 @@ class PdfController extends Controller {
 	 * @NoAdminRequired
 	 *
 	 * @spec openspec/specs/pdf-generation/spec.md
+	 *
+	 * @no-admin-idor-exempt no stored object is addressed. The template and data come from the request
+	 * body and the PDF goes back to the caller, so there is no id to steer.
 	 */
 	public function render(): DataDownloadResponse|JSONResponse {
 		try {
