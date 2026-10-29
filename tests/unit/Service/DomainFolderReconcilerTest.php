@@ -395,7 +395,12 @@ class DomainFolderReconcilerTest extends TestCase {
 			folderService: $this->folders(
 				outcomes: [
 					$this->outcome(state: DomainFolderService::STATE_CORRECTED, path: 'Filinq/a', granted: ['g1'], revoked: ['g2']),
-					$this->outcome(state: DomainFolderService::STATE_REFUSED, path: 'Filinq/b', granted: ['g3'], refused: [['group' => 'g4', 'action' => 'revoke', 'reason' => 'ro']]),
+					$this->outcome(
+						state: DomainFolderService::STATE_REFUSED,
+						path: 'Filinq/b',
+						granted: ['g3'],
+						refused: [['group' => 'g4', 'action' => 'revoke', 'reason' => 'ro']]
+					),
 					$this->outcome(state: DomainFolderService::STATE_PINNED, path: 'Filinq/c', pinned: 'held'),
 					new RuntimeException('gone'),
 					$this->outcome(state: DomainFolderService::STATE_IN_STEP, path: 'Filinq/e'),
@@ -404,8 +409,20 @@ class DomainFolderReconcilerTest extends TestCase {
 			logger: $logger
 		);
 
-		$refusedB = ['domain' => 'b', 'path' => 'Filinq/b', 'granted' => ['g3'], 'revoked' => [], 'refused' => [['group' => 'g4', 'action' => 'revoke', 'reason' => 'ro']]];
-		$refusedD = ['domain' => 'd', 'path' => 'Filinq/d', 'refused' => [['group' => '*', 'action' => 'reconcile', 'reason' => 'gone']], 'granted' => [], 'revoked' => []];
+		$refusedB = [
+			'domain' => 'b',
+			'path' => 'Filinq/b',
+			'granted' => ['g3'],
+			'revoked' => [],
+			'refused' => [['group' => 'g4', 'action' => 'revoke', 'reason' => 'ro']],
+		];
+		$refusedD = [
+			'domain' => 'd',
+			'path' => 'Filinq/d',
+			'refused' => [['group' => '*', 'action' => 'reconcile', 'reason' => 'gone']],
+			'granted' => [],
+			'revoked' => [],
+		];
 		self::assertSame(
 			expected: [
 				'skipped' => false,
@@ -424,8 +441,12 @@ class DomainFolderReconcilerTest extends TestCase {
 		self::assertSame(
 			expected: [
 				['info', 'filinq.domain-reconcile.finished', ['corrected' => 1, 'refused' => 2, 'pinned' => 1, 'inStep' => 1]],
-				['warning', 'filinq.domain-reconcile.refused', ['domain' => 'b', 'path' => 'Filinq/b', 'refused' => $refusedB['refused'], 'granted' => ['g3'], 'revoked' => []]],
-				['warning', 'filinq.domain-reconcile.refused', ['domain' => 'd', 'path' => 'Filinq/d', 'refused' => $refusedD['refused'], 'granted' => [], 'revoked' => []]],
+				[
+					'warning',
+					'filinq.domain-reconcile.refused',
+					['domain' => 'b', 'path' => 'Filinq/b', 'refused' => $refusedB['refused'], 'granted' => ['g3'], 'revoked' => []],
+				],
+				['warning', 'filinq.domain-reconcile.refused', $refusedD],
 			],
 			actual: $logger->lines
 		);
