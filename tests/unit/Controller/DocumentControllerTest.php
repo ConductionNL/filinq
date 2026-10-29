@@ -718,4 +718,90 @@ class DocumentControllerTest extends TestCase {
 		$this->assertEquals(401, $result->getStatus());
 
 	}//end testGenerateReturns401WhenNotAuthenticated()
+	/**
+	 * Characterization: the download name and type for an unknown format, a
+	 * path-like filename and an empty one, and the storage headers on an HTML
+	 * answer in both mode.
+	 *
+	 * @return void
+	 */
+	public function testDocumentResponseNamesTypesAndHeaders(): void {
+		$cases = [
+			'unknown format downloads as pdf' => ['xyz', 'map/brief.txt', 'application/pdf', 'brief.pdf'],
+			'empty filename is document' => ['odf', '', 'application/vnd.oasis.opendocument.text', 'document.odt'],
+		];
+		foreach ($cases as $label => [$format, $filename, $type, $name]) {
+			$controller = $this->controllerAnswering(
+				filename: $filename,
+				result: ['content' => 'bytes', 'format' => $format, 'metadata' => [], 'warnings' => [], 'output' => ['mode' => 'return']]
+			);
+			$result     = $controller->generate();
+			$this->assertInstanceOf(expected: DataDownloadResponse::class, actual: $result, message: $label);
+			$this->assertSame(expected: $type, actual: $result->getHeaders()['Content-Type'], message: $label);
+			$this->assertStringContainsString(needle: '"' . $name . '"', haystack: $result->getHeaders()['Content-Disposition'], message: $label);
+			$this->assertArrayNotHasKey(key: 'X-Docudesk-File-Id', array: $result->getHeaders(), message: $label);
+		}
+
+		$controller = $this->controllerAnswering(
+			filename: 'brief',
+			result: [
+				'content' => '<p>x</p>',
+				'format' => 'html',
+				'metadata' => ['id' => 'm'],
+				'warnings' => ['w'],
+				'output' => ['mode' => 'both', 'fileId' => 9, 'path' => '/u/files/brief.html'],
+			]
+		);
+		$result     = $controller->generate();
+		$this->assertInstanceOf(expected: JSONResponse::class, actual: $result);
+		$this->assertSame(
+			expected: ['content' => '<p>x</p>', 'format' => 'html', 'metadata' => ['id' => 'm'], 'warnings' => ['w']],
+			actual: $result->getData()
+		);
+		$this->assertSame(expected: '9', actual: $result->getHeaders()['X-Docudesk-File-Id']);
+		$this->assertSame(expected: '/u/files/brief.html', actual: $result->getHeaders()['X-Docudesk-File-Path']);
+
+		$controller = $this->controllerAnswering(
+			filename: 'brief',
+			result: ['content' => 'x', 'format' => 'pdf', 'metadata' => [], 'warnings' => [], 'output' => ['mode' => 'files', 'fileId' => 3]]
+		);
+		$this->assertSame(
+			expected: ['fileId' => 3, 'path' => null, 'name' => null, 'size' => null, 'format' => 'pdf'],
+			actual: $controller->generate()->getData()
+		);
+
+	}//end testDocumentResponseNamesTypesAndHeaders()
+
+	/**
+	 * A controller whose generation answers the given result.
+	 *
+	 * @param string               $filename The requested filename.
+	 * @param array<string, mixed> $result   The generation result.
+	 *
+	 * @return DocumentController
+	 */
+	private function controllerAnswering(string $filename, array $result): DocumentController {
+		$request = $this->createMock(originalClassName: IRequest::class);
+		$request->method('getParam')->willReturnMap(
+			[
+				['templateId', null, 'tmpl-1'],
+				['dataRefs', [], []],
+				['options', [], []],
+				['filename', 'document', $filename],
+			]
+		);
+		$documents = $this->createMock(originalClassName: DocumentService::class);
+		$documents->method('generateDocument')->willReturn($result);
+
+		return new DocumentController(
+			appName: 'filinq',
+			request: $request,
+			documentSvc: $documents,
+			userSession: $this->userSession,
+			logger: $this->createMock(originalClassName: LoggerInterface::class),
+			l10n: $this->l10n
+		);
+
+	}//end controllerAnswering()
+
 }//end class
