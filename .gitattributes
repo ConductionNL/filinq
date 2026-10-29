@@ -21,3 +21,11 @@ bin/console text eol=lf
 LICENSE export-ignore
 README.md export-ignore
 update-deps.sh export-ignore
+
+# Generated files. GitHub collapses them in diffs and leaves them out of the
+# language statistics.
+l10n/*.js linguist-generated=true
+openapi.json linguist-generated=true
+
+# Third-party files we ship unchanged.
+lib/Fonts/** linguist-vendored=true
