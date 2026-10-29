@@ -100,7 +100,12 @@ class OfficeAppBackendConvertTest extends TestCase {
 		$manager = $this->createMock(originalClassName: IConversionManager::class);
 		$manager->method('convert')->willReturnCallback(
 			function (File $file, string $mime, ?string $destination) use ($world, $source): string {
-				$this->calls[] = 'convert ' . ($file === $source ? 'source' : 'other') . ' ' . $mime . ' ' . $destination;
+				$which = 'other';
+				if ($file === $source) {
+					$which = 'source';
+				}
+
+				$this->calls[] = 'convert ' . $which . ' ' . $mime . ' ' . $destination;
 				if ($world['managerFails'] === true) {
 					throw new RuntimeException(message: 'provider down');
 				}
@@ -109,8 +114,13 @@ class OfficeAppBackendConvertTest extends TestCase {
 			}
 		);
 
+		$user = null;
+		if ($world['user'] === true) {
+			$user = $this->createMock(originalClassName: IUser::class);
+		}
+
 		$session = $this->createMock(originalClassName: IUserSession::class);
-		$session->method('getUser')->willReturn($world['user'] === true ? $this->createMock(originalClassName: IUser::class) : null);
+		$session->method('getUser')->willReturn($user);
 
 		$logger = $this->createMock(originalClassName: LoggerInterface::class);
 		$logger->method('warning')->willReturnCallback(
@@ -119,8 +129,12 @@ class OfficeAppBackendConvertTest extends TestCase {
 			}
 		);
 
+		if ($world['manager'] === false) {
+			$manager = null;
+		}
+
 		$backend = new OfficeAppBackend(
-			conversionManager: $world['manager'] === true ? $manager : null,
+			conversionManager: $manager,
 			rootFolder: $this->createMock(originalClassName: IRootFolder::class),
 			userSession: $session,
 			appConfig: $this->createMock(originalClassName: IAppConfig::class),
@@ -171,10 +185,14 @@ class OfficeAppBackendConvertTest extends TestCase {
 	 */
 	private function describe(ConversionFailedException $failure): array {
 		$previous = $failure->getPrevious();
+		if ($previous instanceof Throwable) {
+			$previous = $previous->getMessage();
+		}
+
 		return [
 			'message'  => $failure->getMessage(),
 			'attempts' => $failure->getAttempts(),
-			'previous' => $previous instanceof Throwable ? $previous->getMessage() : null,
+			'previous' => $previous,
 		];
 	}//end describe()
 

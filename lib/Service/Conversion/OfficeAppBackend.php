@@ -206,7 +206,12 @@ class OfficeAppBackend implements ConversionBackendInterface {
 		if ($this->conversionManager === null) {
 			throw new ConversionFailedException(
 				message: 'OfficeAppBackend reached convert() without IConversionManager bound.',
-				attempts: [$this->attempt(reason: 'IConversionManager not present (NC < 31?)', reached: false)]
+				attempts: [
+					array_merge(
+						$this->attempt(reason: 'IConversionManager not present (NC < 31?)'),
+						['available' => false, 'supports' => false]
+					),
+				]
 			);
 		}
 
@@ -323,18 +328,18 @@ class OfficeAppBackend implements ConversionBackendInterface {
 	}//end resolveConvertedFile()
 
 	/**
-	 * One attempt row for a ConversionFailedException.
+	 * One attempt row for a ConversionFailedException, from a backend that
+	 * was available and supported the file.
 	 *
-	 * @param string $reason  Why this backend did not convert.
-	 * @param bool   $reached Whether the backend was available and supported the file.
+	 * @param string $reason Why this backend did not convert.
 	 *
 	 * @return array{name: string, available: bool, supports: bool, reason: string} The attempt.
 	 */
-	private function attempt(string $reason, bool $reached=true): array {
+	private function attempt(string $reason): array {
 		return [
 			'name' => $this->name(),
-			'available' => $reached,
-			'supports' => $reached,
+			'available' => true,
+			'supports' => true,
 			'reason' => $reason,
 		];
 
