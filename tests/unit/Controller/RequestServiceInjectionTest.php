@@ -22,6 +22,7 @@ namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\AnonymizationController;
 use OCA\Filinq\Controller\BatchAnonymizationController;
+use OCA\Filinq\Kernel\Contracts\AnonymizationProfileServiceInterface;
 use OCA\Filinq\Kernel\Contracts\AnonymizationServiceInterface;
 use OCA\Filinq\Kernel\Contracts\AnonymizeRequestServiceInterface;
 use OCA\Filinq\Kernel\Contracts\BatchAnonymizeServiceInterface;
@@ -33,7 +34,6 @@ use OCA\Filinq\Kernel\Contracts\BatchUploadServiceInterface;
 use OCA\Filinq\Kernel\Contracts\EntityConsolidationServiceInterface;
 use OCA\Filinq\Kernel\Contracts\FileListingServiceInterface;
 use OCA\Filinq\Kernel\Contracts\FolderBatchServiceInterface;
-use OCA\Filinq\Kernel\Contracts\WooProfileServiceInterface;
 use OCP\IAppConfig;
 use OCP\IL10N;
 use OCP\IRequest;
@@ -98,7 +98,7 @@ class RequestServiceInjectionTest extends TestCase {
 			anonService: $this->createMock(originalClassName: BatchAnonymizeServiceInterface::class),
 			reportService: $this->createMock(originalClassName: BatchReportServiceInterface::class),
 			entityService: $this->createMock(originalClassName: EntityConsolidationServiceInterface::class),
-			profileService: $this->createMock(originalClassName: WooProfileServiceInterface::class),
+			profileService: $this->createMock(originalClassName: AnonymizationProfileServiceInterface::class),
 			folderBatchService: $this->createMock(originalClassName: FolderBatchServiceInterface::class),
 			l10n: $this->createMock(originalClassName: IL10N::class),
 			appConfig: $this->createMock(originalClassName: IAppConfig::class),
