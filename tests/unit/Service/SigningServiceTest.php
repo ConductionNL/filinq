@@ -954,8 +954,8 @@ class SigningServiceTest extends TestCase {
 		];
 
 		$this->objectService->method('find')->willReturnOnConsecutiveCalls(
-			$requestData,
 			$signerData,
+			$requestData,
 			$requestData,
 			$signerData
 		);
@@ -995,8 +995,8 @@ class SigningServiceTest extends TestCase {
 		];
 
 		$this->objectService->method('find')->willReturnOnConsecutiveCalls(
-			$requestData,
 			$signerData,
+			$requestData,
 			$requestData,
 			$signerData
 		);
@@ -1049,8 +1049,8 @@ class SigningServiceTest extends TestCase {
 		];
 
 		$this->objectService->method('find')->willReturnOnConsecutiveCalls(
-			$requestData,
 			$signerData,
+			$requestData,
 			$requestData,
 			$signerData
 		);
@@ -1082,8 +1082,8 @@ class SigningServiceTest extends TestCase {
 		$signerSigned = ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'alice', 'status' => 'SIGNED'];
 
 		$this->objectService->method('find')->willReturnOnConsecutiveCalls(
-			$request,
 			$signerPending,
+			$request,
 			$signerSigned,
 			$request
 		);
@@ -1147,8 +1147,8 @@ class SigningServiceTest extends TestCase {
 		$signerSigned = ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'alice', 'status' => 'SIGNED'];
 
 		$this->objectService->method('find')->willReturnOnConsecutiveCalls(
-			$request,
 			$signerPending,
+			$request,
 			$signerSigned,
 			$request
 		);
@@ -1206,7 +1206,7 @@ class SigningServiceTest extends TestCase {
 			'status' => 'PENDING',
 		];
 
-		$this->objectService->method('find')->willReturnOnConsecutiveCalls($requestData, $signerData);
+		$this->objectService->method('find')->willReturnOnConsecutiveCalls($signerData, $requestData);
 
 		$this->expectException(RuntimeException::class);
 		$this->expectExceptionMessage('does not belong to this signing request');
@@ -1232,7 +1232,7 @@ class SigningServiceTest extends TestCase {
 			'status' => 'PENDING',
 		];
 
-		$this->objectService->method('find')->willReturnOnConsecutiveCalls($requestData, $signerData);
+		$this->objectService->method('find')->willReturnOnConsecutiveCalls($signerData, $requestData);
 
 		$this->expectException(RuntimeException::class);
 		$this->expectExceptionMessage('Not authorized to sign as this signer');
@@ -1637,8 +1637,8 @@ class SigningServiceTest extends TestCase {
 		$signerSigned = ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'alice', 'status' => 'SIGNED'];
 
 		$this->objectService->method('find')->willReturnOnConsecutiveCalls(
-			$request,
 			$signerPending,
+			$request,
 			$signerSigned,
 			$request
 		);
@@ -1709,7 +1709,7 @@ class SigningServiceTest extends TestCase {
 	public function testASubstantialRequestRefusesASessionOnlySignerWithoutMutation(): void {
 		$request = ['id' => 'req-001', 'status' => 'PENDING', 'signatureLevel' => 'SES', 'requiredAssurance' => 'substantial', 'signerIds' => ['signer-001']];
 		$signer = ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'alice', 'status' => 'PENDING'];
-		$this->objectService->method('find')->willReturnOnConsecutiveCalls($request, $signer);
+		$this->objectService->method('find')->willReturnOnConsecutiveCalls($signer, $request);
 		$this->objectService->expects($this->never())->method('saveObject');
 		$this->auditService->expects($this->never())->method('logEvent');
 
@@ -1732,7 +1732,7 @@ class SigningServiceTest extends TestCase {
 		$this->keepStepUpEvidence(assurance: 'substantial', ageSeconds: 20 * 60);
 		$request = ['id' => 'req-001', 'status' => 'PENDING', 'signatureLevel' => 'SES', 'requiredAssurance' => 'substantial', 'signerIds' => ['signer-001']];
 		$signer = ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'alice', 'status' => 'PENDING'];
-		$this->objectService->method('find')->willReturnOnConsecutiveCalls($request, $signer);
+		$this->objectService->method('find')->willReturnOnConsecutiveCalls($signer, $request);
 		$this->objectService->expects($this->never())->method('saveObject');
 
 		$this->expectException(StepUpRequiredException::class);
@@ -1751,7 +1751,7 @@ class SigningServiceTest extends TestCase {
 		$request = ['id' => 'req-001', 'status' => 'PENDING', 'signatureLevel' => 'SES', 'requiredAssurance' => 'substantial', 'signerIds' => ['signer-001', 'signer-002']];
 		$signer = ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'alice', 'status' => 'PENDING'];
 		$other = ['id' => 'signer-002', 'signingRequestId' => 'req-001', 'userId' => 'bob', 'status' => 'PENDING'];
-		$this->objectService->method('find')->willReturnOnConsecutiveCalls($request, $signer, $signer + ['status' => 'SIGNED'], $other, $request);
+		$this->objectService->method('find')->willReturnOnConsecutiveCalls($signer, $request, $signer + ['status' => 'SIGNED'], $other, $request);
 		$this->objectService->method('saveObject')->willReturnArgument(0);
 
 		$metadata = null;
@@ -2308,7 +2308,7 @@ class SigningServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testSignRefusesAMissingRequest(): void {
-		$this->objectService->method('find')->willReturn(null);
+		$this->stubFindById(rows: ['signer-001' => ['id' => 'signer-001', 'signingRequestId' => 'req-404', 'userId' => 'alice', 'status' => 'PENDING']]);
 		$this->objectService->expects($this->never())->method('saveObject');
 		$this->auditService->expects($this->never())->method('logEvent');
 
@@ -2325,7 +2325,7 @@ class SigningServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testSignRefusesARequestThatIsNotSignable(): void {
-		$this->objectService->method('find')->willReturn(['id' => 'req-001', 'status' => 'COMPLETED']);
+		$this->stubFindById(rows: ['req-001' => ['id' => 'req-001', 'status' => 'COMPLETED'], 'signer-001' => ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'alice', 'status' => 'PENDING']]);
 		$this->objectService->expects($this->never())->method('saveObject');
 
 		$this->expectException(exception: RuntimeException::class);
@@ -2348,7 +2348,7 @@ class SigningServiceTest extends TestCase {
 			'userId' => 'alice',
 			'status' => 'SIGNED',
 		];
-		$this->objectService->method('find')->willReturnOnConsecutiveCalls($requestData, $signerData);
+		$this->objectService->method('find')->willReturnOnConsecutiveCalls($signerData, $requestData);
 		$this->objectService->expects($this->never())->method('saveObject');
 		$this->auditService->expects($this->never())->method('logEvent');
 
@@ -2379,8 +2379,8 @@ class SigningServiceTest extends TestCase {
 			'status' => 'PENDING',
 		];
 		$this->objectService->method('find')->willReturnOnConsecutiveCalls(
-			$requestData,
 			$signerData,
+			$requestData,
 			$requestData,
 			$signerData
 		);

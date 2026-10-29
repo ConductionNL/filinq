@@ -45,9 +45,9 @@ use RuntimeException;
  * The direct signing attempt is refused outside the declared mandate.
  *
  * Both tests drive the real SigningService against a real
- * SigningMandateService, and stop at loadAuthorisedSigner(): a sentinel
- * thrown there says the guard let the caller through, and its absence says
- * the guard refused before anything was written.
+ * SigningMandateService. The caller is the authorised signer, whose record
+ * has already responded: reaching that refusal says the guard let the caller
+ * through, and its absence says the guard refused before anything was written.
  *
  * @category Tests
  * @package  OCA\Filinq\Tests\Unit\Service
@@ -62,11 +62,16 @@ class SigningServiceMandateGuardTest extends TestCase {
 
 
 	/**
-	 * The sentinel thrown where the signer record would be loaded.
+	 * The refusal that comes after the mandate guard.
 	 *
 	 * @var string
 	 */
-	private const REACHED_THE_SIGNER_PATH = 'REACHED THE SIGNER PATH';
+	private const REACHED_THE_SIGNER_PATH = 'Signer has already responded to this request';
+
+	/**
+	 * @var ObjectService|MockObject
+	 */
+	private ObjectService|MockObject $objectService;
 
 	/**
 	 * @var SigningActorResolver|MockObject
@@ -115,6 +120,7 @@ class SigningServiceMandateGuardTest extends TestCase {
 			->onlyMethods(['find', 'saveObject'])
 			->getMock();
 		$objectService->method('find')->willReturn($request);
+		$this->objectService = $objectService;
 
 		$settingsService = $this->createMock(SettingsService::class);
 		$settingsService->method('getObjectService')->willReturn($objectService);
@@ -131,7 +137,7 @@ class SigningServiceMandateGuardTest extends TestCase {
 			->willReturn(['beleidsmedewerker', 'Bea Beleidsmedewerker']);
 		$this->actorResolver->method('getClientIp')->willReturn('192.0.2.10');
 		$this->actorResolver->method('loadAuthorisedSigner')
-			->willThrowException(new RuntimeException(self::REACHED_THE_SIGNER_PATH));
+			->willReturn(['id' => 'signer-001', 'signingRequestId' => 'req-001', 'status' => 'SIGNED']);
 
 		$config = $this->createMock(IAppConfig::class);
 		$config->method('getValueString')->willReturn(
@@ -172,7 +178,7 @@ class SigningServiceMandateGuardTest extends TestCase {
 	 */
 	public function testTheDirectAttemptOutsideTheMandateIsRefusedNamingTheRule(): void {
 		$this->groupManager->method('isInGroup')->willReturn(false);
-		$this->actorResolver->expects($this->never())->method('loadAuthorisedSigner');
+		$this->objectService->expects($this->never())->method('saveObject');
 
 		$this->expectException(RuntimeException::class);
 		$this->expectExceptionMessage('Only the portefeuillehouder signs a besluit');
