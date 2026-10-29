@@ -164,7 +164,7 @@ class DocumentServiceTest extends TestCase {
 				$objectResolver,
 				$logger
 			),
-			new DocumentJobStore($appConfig, $this->jobList, $logger)
+			new DocumentJobStore(appConfig: $appConfig, jobList: $this->jobList, logger: $logger)
 		);
 
 	}//end setUp()
@@ -1223,7 +1223,7 @@ class DocumentServiceTest extends TestCase {
 				'warnings' => $warnings,
 				'output' => ['mode' => 'files', 'fileId' => 77, 'path' => '/u1/files/DocuDesk/ns/brief.pdf', 'name' => 'brief.pdf', 'size' => 12],
 			],
-			actual: array_intersect_key($result, array_flip(['content', 'html', 'format', 'metadata', 'plainRendition', 'templateVersion', 'warnings', 'output']))
+			actual: array_intersect_key($result, array_flip(array_slice(array_keys($result), 0, 8)))
 		);
 		$this->assertSame(
 			expected: ['content', 'html', 'format', 'metadata', 'plainRendition', 'templateVersion', 'warnings', 'output'],
