@@ -42,24 +42,12 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\Intake;
 
+use OCA\Filinq\Kernel\Contracts\IntakeNotificationReachInterface;
+
 /**
  * Says, on the inbox, whether the failure notification can reach anybody.
  */
-class IntakeNotificationReach {
-
-	/**
-	 * The rule declared on `intakeDocument`.
-	 *
-	 * @var string
-	 */
-	public const RULE = 'readingFailed';
-
-	/**
-	 * The group the rule addresses.
-	 *
-	 * @var string
-	 */
-	public const GROUP = 'filinq-woo-officers';
+class IntakeNotificationReach implements IntakeNotificationReachInterface {
 
 	/**
 	 * What the inbox shows about who will be told.
