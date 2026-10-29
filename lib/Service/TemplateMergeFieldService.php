@@ -52,6 +52,29 @@ class TemplateMergeFieldService {
 	 * @spec openspec/changes/template-merge-preview/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function paths(string $content): array {
+		$tokens = $this->tokens(content: $content);
+		$bound = $this->boundNames(tokens: $tokens);
+		$paths = [];
+		foreach ($this->printedPaths(tokens: $tokens) as $path) {
+			$root = explode('.', $path)[0];
+			if (isset($bound[$root]) === true || in_array($path, $paths, true) === true) {
+				continue;
+			}
+
+			$paths[] = $path;
+		}
+
+		return $paths;
+	}//end paths()
+
+	/**
+	 * The tokens of a template; none when it does not lex.
+	 *
+	 * @param string $content The Twig template content.
+	 *
+	 * @return array<int, Token> The tokens.
+	 */
+	private function tokens(string $content): array {
 		try {
 			$twig = new Environment(loader: new ArrayLoader(templates: []));
 			$stream = $twig->tokenize(source: new Source(code: $content, name: 'merge-fields'));
@@ -64,48 +87,62 @@ class TemplateMergeFieldService {
 			$tokens[] = $stream->next();
 		}
 
-		$bound = $this->boundNames(tokens: $tokens);
+		return $tokens;
+	}//end tokens()
+
+	/**
+	 * Every variable path inside `{{ … }}` tags, in order and with repeats.
+	 *
+	 * Filters, attributes after a filter and function or method calls are
+	 * left out.
+	 *
+	 * @param array<int, Token> $tokens The template's tokens.
+	 *
+	 * @return array<int, string> The paths.
+	 */
+	private function printedPaths(array $tokens): array {
 		$paths = [];
 		$inPrint = false;
 		$count = count($tokens);
 		for ($i = 0; $i < $count; $i++) {
 			$token = $tokens[$i];
-			if ($token->test(type: Token::VAR_START_TYPE) === true) {
-				$inPrint = true;
+			if ($token->test(type: Token::VAR_START_TYPE) === true || $token->test(type: Token::VAR_END_TYPE) === true) {
+				$inPrint = $token->test(type: Token::VAR_START_TYPE);
 				continue;
 			}
 
-			if ($token->test(type: Token::VAR_END_TYPE) === true) {
-				$inPrint = false;
-				continue;
-			}
-
-			if ($inPrint === false || $token->test(type: Token::NAME_TYPE) === false) {
-				continue;
-			}
-
-			$previous = $tokens[$i - 1] ?? null;
-			if ($previous !== null && $this->isSymbol(token: $previous, symbols: ['|', '.']) === true) {
+			if ($inPrint === false || $this->startsPath(tokens: $tokens, index: $i) === false) {
 				continue;
 			}
 
 			[$path, $next] = $this->readPath(tokens: $tokens, start: $i);
 			$i = $next - 1;
 			$following = $tokens[$next] ?? null;
-			if ($following !== null && $this->isSymbol(token: $following, symbols: ['(']) === true) {
-				continue;
+			if ($following === null || $this->isSymbol(token: $following, symbols: ['(']) === false) {
+				$paths[] = $path;
 			}
-
-			$root = explode('.', $path)[0];
-			if (isset($bound[$root]) === true || in_array($path, $paths, true) === true) {
-				continue;
-			}
-
-			$paths[] = $path;
-		}//end for
+		}
 
 		return $paths;
-	}//end paths()
+	}//end printedPaths()
+
+	/**
+	 * Whether a path starts at this token: a name that no filter bar or
+	 * attribute dot precedes.
+	 *
+	 * @param array<int, Token> $tokens The template's tokens.
+	 * @param int               $index  The index of the token.
+	 *
+	 * @return bool True when a path starts here.
+	 */
+	private function startsPath(array $tokens, int $index): bool {
+		if ($tokens[$index]->test(type: Token::NAME_TYPE) === false) {
+			return false;
+		}
+
+		$previous = $tokens[$index - 1] ?? null;
+		return $previous === null || $this->isSymbol(token: $previous, symbols: ['|', '.']) === false;
+	}//end startsPath()
 
 	/**
 	 * The merge fields of a template in a data context.
@@ -211,16 +248,16 @@ class TemplateMergeFieldService {
 	 */
 	private function readPath(array $tokens, int $start): array {
 		$parts = [(string)$tokens[$start]->getValue()];
-		$i = $start + 1;
-		while (isset($tokens[$i], $tokens[$i + 1]) === true
-			&& $this->isSymbol(token: $tokens[$i], symbols: ['.']) === true
-			&& $tokens[$i + 1]->test(type: Token::NAME_TYPE) === true
+		$index = $start + 1;
+		while (isset($tokens[$index], $tokens[$index + 1]) === true
+			&& $this->isSymbol(token: $tokens[$index], symbols: ['.']) === true
+			&& $tokens[$index + 1]->test(type: Token::NAME_TYPE) === true
 		) {
-			$parts[] = (string)$tokens[$i + 1]->getValue();
-			$i += 2;
+			$parts[] = (string)$tokens[$index + 1]->getValue();
+			$index += 2;
 		}
 
-		return [implode('.', $parts), $i];
+		return [implode('.', $parts), $index];
 	}//end readPath()
 
 	/**
