@@ -26,6 +26,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\FinalDocumentCorrectionServiceInterface;
 use OCP\Files\File;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -42,7 +43,7 @@ use Throwable;
  *
  * @spec openspec/changes/final-documents-frozen/specs/document-versions/spec.md
  */
-class FinalDocumentCorrectionService {
+class FinalDocumentCorrectionService implements FinalDocumentCorrectionServiceInterface {
 
 	/**
 	 * Constructor.

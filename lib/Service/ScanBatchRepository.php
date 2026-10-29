@@ -23,6 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\ScanBatchRepositoryInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
@@ -38,7 +39,7 @@ use Throwable;
  *
  * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
  */
-class ScanBatchRepository {
+class ScanBatchRepository implements ScanBatchRepositoryInterface {
 
 	/**
 	 * Constructor.

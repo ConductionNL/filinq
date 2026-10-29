@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\BulkSigning;
 
 use OCA\Filinq\BackgroundJob\BulkSigningJob;
+use OCA\Filinq\Kernel\Contracts\BulkSigningServiceInterface;
 use OCA\Filinq\Service\SettingsService;
 use OCA\Filinq\Service\SigningRequestValidator;
 use OCA\Filinq\Service\SigningService;
@@ -49,7 +50,7 @@ use Throwable;
  *
  * @spec openspec/specs/bulk-signing-field-builder/spec.md#requirement-bulk-send-validates-first-then-creates-isolated-ordinary-requests-req-ddbsf-002
  */
-class BulkSigningService {
+class BulkSigningService implements BulkSigningServiceInterface {
 
 	/**
 	 * States a batch can no longer move out of, except by cancel.

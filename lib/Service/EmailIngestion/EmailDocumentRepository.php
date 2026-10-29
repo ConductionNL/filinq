@@ -27,14 +27,13 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\EmailIngestion;
 
+use OCA\Filinq\Kernel\Contracts\EmailDocumentRepositoryInterface;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 
 /**
  * Email documents in OpenRegister.
  */
-class EmailDocumentRepository {
-
-	public const SCHEMA = 'emailDocument';
+class EmailDocumentRepository implements EmailDocumentRepositoryInterface {
 
 	private const REGISTER = 'filinq';
 

@@ -26,8 +26,8 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\EventListener;
 
+use OCA\Filinq\Kernel\Contracts\ContractRepositoryInterface;
 use OCA\Filinq\Service\Contract\ContractDates;
-use OCA\Filinq\Service\Contract\ContractRepository;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use Psr\Container\ContainerInterface;
@@ -111,7 +111,7 @@ class ContractNoticeDeadlineListener implements IEventListener {
 	 * @return bool True for the contract schema.
 	 */
 	private function isContract(string $schema): bool {
-		if ($schema === ContractRepository::SCHEMA) {
+		if ($schema === ContractRepositoryInterface::SCHEMA) {
 			return true;
 		}
 
@@ -121,7 +121,7 @@ class ContractNoticeDeadlineListener implements IEventListener {
 
 		try {
 			$found = $this->container->get('OCA\OpenRegister\Db\SchemaMapper')->find($schema);
-			return $found->getSlug() === ContractRepository::SCHEMA;
+			return $found->getSlug() === ContractRepositoryInterface::SCHEMA;
 		} catch (Throwable) {
 			return false;
 		}

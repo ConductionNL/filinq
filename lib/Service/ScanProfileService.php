@@ -29,6 +29,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\ScanProfileServiceInterface;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -45,7 +46,7 @@ use Throwable;
  *
  * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
  */
-class ScanProfileService {
+class ScanProfileService implements ScanProfileServiceInterface {
 
 	/**
 	 * The app id these profiles belong to.
@@ -53,13 +54,6 @@ class ScanProfileService {
 	 * @var string
 	 */
 	private const APP_ID = 'filinq';
-
-	/**
-	 * The configuration key the profiles live under.
-	 *
-	 * @var string
-	 */
-	public const CONFIG_KEY = 'scanProfiles';
 
 	/**
 	 * Constructor.

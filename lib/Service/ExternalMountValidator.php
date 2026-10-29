@@ -22,6 +22,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\ExternalMountValidatorInterface;
 use Throwable;
 
 /**
@@ -58,21 +59,7 @@ use Throwable;
  *
  * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
  */
-class ExternalMountValidator {
-
-	/**
-	 * A requirement the mount cannot meet.
-	 *
-	 * @var string
-	 */
-	public const CANNOT = 'cannot';
-
-	/**
-	 * A requirement nobody could find out about.
-	 *
-	 * @var string
-	 */
-	public const UNKNOWN = 'unknown';
+class ExternalMountValidator implements ExternalMountValidatorInterface {
 
 	/**
 	 * Collaborators.
