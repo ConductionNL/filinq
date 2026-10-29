@@ -477,6 +477,8 @@ class TemplateServiceTest extends TestCase {
 			->method('deleteObject');
 
 		$this->setUpWithOpenRegister($mockObjectService);
+		$this->mockRegisterResolver->method('getRegisterAndSchema')
+			->willReturn(['register' => 'reg-1', 'schema' => 'schema-1']);
 
 		$result = $this->templateService->deleteTemplate('uuid-to-delete');
 
