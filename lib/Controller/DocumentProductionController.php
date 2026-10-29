@@ -84,6 +84,9 @@ class DocumentProductionController extends Controller {
 	 * @return JSONResponse The versions.
 	 *
 	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
+	 *
+	 * @no-admin-idor-exempt read-only through OpenRegister with RBAC on (PageLayoutService), and the
+	 * pageLayout schema grants read to authenticated users.
 	 */
 	#[NoAdminRequired]
 	public function layoutVersions(string $name = ''): JSONResponse {
@@ -108,6 +111,9 @@ class DocumentProductionController extends Controller {
 	 * @return JSONResponse The new version 1, or the refusal.
 	 *
 	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
+	 *
+	 * @no-admin-idor-exempt the write goes through OpenRegister saveObject() with RBAC on
+	 * (PageLayoutService::save()), and the pageLayout schema grants create to admin only.
 	 */
 	#[NoAdminRequired]
 	public function createLayout(string $name = '', array $fields = []): JSONResponse {
@@ -124,6 +130,9 @@ class DocumentProductionController extends Controller {
 	 * @return JSONResponse The new version.
 	 *
 	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
+	 *
+	 * @no-admin-idor-exempt the write goes through OpenRegister saveObject() with RBAC on
+	 * (PageLayoutService::save()), and the pageLayout schema grants update to admin only.
 	 */
 	#[NoAdminRequired]
 	public function editLayout(string $name = '', array $changes = []): JSONResponse {
@@ -145,6 +154,9 @@ class DocumentProductionController extends Controller {
 	 * @return JSONResponse The preflight, including whether it exceeds the ceiling.
 	 *
 	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
+	 *
+	 * @no-admin-idor-exempt files are listed through the caller's own user folder
+	 * (FlatFileListService::node()), and the document records are read with OpenRegister RBAC on.
 	 */
 	#[NoAdminRequired]
 	public function archivePreflight(
@@ -175,6 +187,10 @@ class DocumentProductionController extends Controller {
 	 * @return JSONResponse The manifest, with `archive` naming the written file.
 	 *
 	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
+	 *
+	 * @no-admin-idor-exempt files are listed and copied through the caller's own user folder
+	 * (FlatFileListService, CaseArchiveWriter), records are read with OpenRegister RBAC on, and the bundle
+	 * lands in the caller's own Files.
 	 */
 	#[NoAdminRequired]
 	public function archiveManifest(
@@ -201,6 +217,10 @@ class DocumentProductionController extends Controller {
 	 *
 	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
+	 *
+	 * @no-admin-idor-exempt the view is resolved for the session user (SavedViewReader, own or public
+	 * views), the PDF lands in the caller's own Files, and the schedule write goes through OpenRegister
+	 * RBAC (periodicDocument update: admin).
 	 */
 	#[NoAdminRequired]
 	public function runPeriodic(array $schedule = []): JSONResponse {
@@ -220,6 +240,10 @@ class DocumentProductionController extends Controller {
 	 * @return JSONResponse The due documents.
 	 *
 	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
+	 *
+	 * @no-admin-idor-exempt read-only through OpenRegister with RBAC on
+	 * (DocumentReviewService::listDue()), and the generatedDocument schema grants read to authenticated
+	 * users.
 	 */
 	#[NoAdminRequired]
 	public function dueForReview(string $day = ''): JSONResponse {
@@ -241,6 +265,10 @@ class DocumentProductionController extends Controller {
 	 * @return JSONResponse The document, no longer due.
 	 *
 	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
+	 *
+	 * @no-admin-idor-exempt the read and the save go through OpenRegister with RBAC on
+	 * (DocumentReviewService::markReviewed()), and the generatedDocument schema grants update to filinq-
+	 * template-editors only.
 	 */
 	#[NoAdminRequired]
 	public function markReviewed(string $uuid): JSONResponse {

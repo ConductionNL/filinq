@@ -84,6 +84,10 @@ class SignerIdentityController extends Controller {
 	 * @return JSONResponse The challenge and the assurance needed, or a generic 404.
 	 *
 	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 *
+	 * @no-admin-idor-exempt SignerStepUpService::start() calls
+	 * SigningActorResolver::loadAuthorisedSigner(), which refuses unless the signer record belongs to the
+	 * request and its userId is the session user.
 	 */
 	#[NoAdminRequired]
 	public function start(string $id): JSONResponse {

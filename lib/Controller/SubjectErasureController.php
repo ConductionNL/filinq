@@ -102,6 +102,10 @@ class SubjectErasureController extends Controller {
 	 * @return JSONResponse The request, or a refusal.
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-2.1
+	 *
+	 * @no-admin-idor-exempt role-guarded one layer down. Every service entry calls
+	 * SubjectErasureAuthority::assertMayErase(), which admits only admins and the configured subject-
+	 * erasure groups.
 	 */
 	#[NoAdminRequired]
 	public function show(string $id): JSONResponse {
@@ -133,6 +137,10 @@ class SubjectErasureController extends Controller {
 	 * @return JSONResponse The preview, or a refusal.
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-2.1
+	 *
+	 * @no-admin-idor-exempt role-guarded one layer down. Every service entry calls
+	 * SubjectErasureAuthority::assertMayErase(), which admits only admins and the configured subject-
+	 * erasure groups.
 	 */
 	#[NoAdminRequired]
 	public function preview(string $id): JSONResponse {
@@ -148,6 +156,10 @@ class SubjectErasureController extends Controller {
 	 * @return JSONResponse The request, or a refusal.
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-2.2
+	 *
+	 * @no-admin-idor-exempt role-guarded one layer down. Every service entry calls
+	 * SubjectErasureAuthority::assertMayErase(), which admits only admins and the configured subject-
+	 * erasure groups.
 	 */
 	#[NoAdminRequired]
 	public function exclude(string $id): JSONResponse {
@@ -169,6 +181,10 @@ class SubjectErasureController extends Controller {
 	 * @return JSONResponse The request and the certificate, or a refusal.
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-3.1
+	 *
+	 * @no-admin-idor-exempt role-guarded one layer down. Every service entry calls
+	 * SubjectErasureAuthority::assertMayErase(), which admits only admins and the configured subject-
+	 * erasure groups.
 	 */
 	#[NoAdminRequired]
 	public function run(string $id): JSONResponse {
@@ -184,6 +200,10 @@ class SubjectErasureController extends Controller {
 	 * @return JSONResponse The certificate, or a refusal.
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-4.2
+	 *
+	 * @no-admin-idor-exempt role-guarded one layer down. Every service entry calls
+	 * SubjectErasureAuthority::assertMayErase(), which admits only admins and the configured subject-
+	 * erasure groups.
 	 */
 	#[NoAdminRequired]
 	public function certificate(string $id): JSONResponse {

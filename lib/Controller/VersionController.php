@@ -86,6 +86,10 @@ class VersionController extends Controller {
 	 * @return JSONResponse The versions, or a localised error.
 	 *
 	 * @spec openspec/specs/document-versions/spec.md
+	 *
+	 * @no-admin-idor-exempt the file is resolved one layer down. DocumentVersionService::resolveFile()
+	 * looks $fileId up in the caller's own user folder and requires read permission, and answers 404
+	 * otherwise.
 	 */
 	#[NoAdminRequired]
 	public function index(int $fileId): JSONResponse {
@@ -120,6 +124,10 @@ class VersionController extends Controller {
 	 * @return DataDownloadResponse|JSONResponse The bytes, or a localised error.
 	 *
 	 * @spec openspec/specs/document-versions/spec.md
+	 *
+	 * @no-admin-idor-exempt the file is resolved one layer down. DocumentVersionService::resolveFile()
+	 * looks $fileId up in the caller's own user folder and requires read permission, and answers 404
+	 * otherwise.
 	 */
 	#[NoAdminRequired]
 	public function download(int $fileId, int $versionTimestamp): DataDownloadResponse|JSONResponse {
@@ -149,6 +157,10 @@ class VersionController extends Controller {
 	 * @return JSONResponse Success, or a localised error.
 	 *
 	 * @spec openspec/specs/document-versions/spec.md
+	 *
+	 * @no-admin-idor-exempt the file is resolved one layer down. DocumentVersionService::resolveFile()
+	 * looks $fileId up in the caller's own user folder and requires update permission, and answers 404
+	 * otherwise.
 	 */
 	#[NoAdminRequired]
 	public function restore(int $fileId, int $versionTimestamp): JSONResponse {

@@ -273,6 +273,9 @@ class BatchAnonymizationController extends Controller {
 	 * @NoCSRFRequired
 	 *
 	 * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-status-endpoint
+	 *
+	 * @no-admin-idor-exempt ownership is enforced one layer down. BatchStateService::getBatch() returns
+	 * null unless the batch's userId is the session user (admins excepted), and null answers 404.
 	 */
 	public function batchStatus(string $batchId): JSONResponse {
 		if ($this->userSession->getUser() === null) {
@@ -314,6 +317,9 @@ class BatchAnonymizationController extends Controller {
 	 * @NoCSRFRequired
 	 *
 	 * @spec openspec/specs/anonymization-entity-review/spec.md#requirement-consolidated-entity-list-endpoint
+	 *
+	 * @no-admin-idor-exempt ownership is enforced one layer down. BatchStateService::getBatch() returns
+	 * null unless the batch's userId is the session user (admins excepted), and null answers 404.
 	 */
 	public function batchEntities(string $batchId): JSONResponse {
 		try {

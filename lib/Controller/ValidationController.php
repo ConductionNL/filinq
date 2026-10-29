@@ -82,6 +82,9 @@ class ValidationController extends Controller {
 	 * @return JSONResponse The verdict + findings, or an error.
 	 *
 	 * @spec openspec/specs/document-validation-checks/spec.md
+	 *
+	 * @no-admin-idor-exempt the file is resolved through the caller's own user folder in the method body,
+	 * and an id the caller cannot read answers 404.
 	 */
 	#[NoAdminRequired]
 	public function validate(): JSONResponse {
