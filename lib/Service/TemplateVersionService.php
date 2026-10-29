@@ -27,6 +27,7 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use Exception;
 use OCA\Filinq\Kernel\Contracts\TemplateServiceInterface;
+use OCA\Filinq\Kernel\Contracts\TemplateVersionServiceInterface;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
@@ -40,7 +41,7 @@ use RuntimeException;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  */
-class TemplateVersionService {
+class TemplateVersionService implements TemplateVersionServiceInterface {
 	/**
 	 * Constructor for TemplateVersionService
 	 *

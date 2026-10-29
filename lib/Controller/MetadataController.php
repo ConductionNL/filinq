@@ -25,8 +25,8 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use Exception;
-use OCA\Filinq\Service\InboundClassificationService;
-use OCA\Filinq\Service\MetadataService;
+use OCA\Filinq\Kernel\Contracts\InboundClassificationServiceInterface;
+use OCA\Filinq\Kernel\Contracts\MetadataServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -53,10 +53,10 @@ class MetadataController extends Controller {
 	 * @param string $appName The application name
 	 * @param IRequest $request The request object
 	 * @param LoggerInterface $logger Logger for error reporting
-	 * @param MetadataService $metadataService Service for metadata operations
+	 * @param MetadataServiceInterface $metadataService Service for metadata operations
 	 * @param IL10N $l10n The localization service
 	 * @param IUserSession $userSession User session for authentication
-	 * @param InboundClassificationService $classification Suggests a type, correspondent and dossier
+	 * @param InboundClassificationServiceInterface $classification Suggests a type, correspondent and dossier
 	 * @param IRootFolder $rootFolder Resolves the caller's own files
 	 *
 	 * @return void
@@ -65,10 +65,10 @@ class MetadataController extends Controller {
 		string $appName,
 		IRequest $request,
 		private readonly LoggerInterface $logger,
-		private readonly MetadataService $metadataService,
+		private readonly MetadataServiceInterface $metadataService,
 		private readonly IL10N $l10n,
 		private readonly IUserSession $userSession,
-		private readonly InboundClassificationService $classification,
+		private readonly InboundClassificationServiceInterface $classification,
 		private readonly IRootFolder $rootFolder,
 	) {
 		parent::__construct(appName: $appName, request: $request);

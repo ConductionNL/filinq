@@ -31,7 +31,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use Exception;
-use OCA\Filinq\Service\ReportRenderService;
+use OCA\Filinq\Kernel\Contracts\ReportRenderServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
@@ -69,7 +69,7 @@ class ReportRenderController extends Controller {
 	 *
 	 * @param string $appName The application name.
 	 * @param IRequest $request The request object.
-	 * @param ReportRenderService $renderService Slug resolution + render + store.
+	 * @param ReportRenderServiceInterface $renderService Slug resolution + render + store.
 	 * @param IAppConfig $appConfig App-config reader for the shared-secret token.
 	 * @param LoggerInterface $logger Logger for rejected/failed calls.
 	 *
@@ -78,7 +78,7 @@ class ReportRenderController extends Controller {
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly ReportRenderService $renderService,
+		private readonly ReportRenderServiceInterface $renderService,
 		private readonly IAppConfig $appConfig,
 		private readonly LoggerInterface $logger,
 	) {

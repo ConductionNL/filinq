@@ -28,7 +28,7 @@ namespace OCA\Filinq\Controller;
 use Exception;
 use OCA\Filinq\Exception\ErrorDetailsInterface;
 use OCA\Filinq\Kernel\Contracts\DocumentServiceInterface;
-use OCA\Filinq\Service\MultiFormatOutputProducer;
+use OCA\Filinq\Kernel\Contracts\MultiFormatOutputProducerInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataDownloadResponse;
@@ -60,7 +60,7 @@ class DocumentController extends Controller {
 	 * @param IUserSession $userSession User session for authentication
 	 * @param LoggerInterface $logger Logger for error reporting
 	 * @param IL10N $l10n The localization service
-	 * @param MultiFormatOutputProducer|null $multiFormat Answers a request with options.formats
+	 * @param MultiFormatOutputProducerInterface|null $multiFormat Answers a request with options.formats
 	 *
 	 * @return void
 	 */
@@ -71,7 +71,7 @@ class DocumentController extends Controller {
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
 		private readonly IL10N $l10n,
-		private readonly ?MultiFormatOutputProducer $multiFormat = null,
+		private readonly ?MultiFormatOutputProducerInterface $multiFormat = null,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 

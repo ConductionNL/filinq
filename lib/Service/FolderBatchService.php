@@ -29,6 +29,7 @@ namespace OCA\Filinq\Service;
 
 use Exception;
 use OCA\Filinq\BackgroundJob\FolderExtractionJob;
+use OCA\Filinq\Kernel\Contracts\FolderBatchServiceInterface;
 use OCA\Filinq\Service\Conversion\OutputLayoutResolver;
 use OCP\BackgroundJob\IJobList;
 use OCP\Files\IRootFolder;
@@ -53,7 +54,7 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/changes/folder-batch-accept-folder-id/tasks.md#task-1
  * @spec openspec/changes/files-confidential-labels/specs/files-confidential-labels/spec.md
  */
-class FolderBatchService {
+class FolderBatchService implements FolderBatchServiceInterface {
 
 	/**
 	 * Resolves the source folder and enumerates its analysable files.

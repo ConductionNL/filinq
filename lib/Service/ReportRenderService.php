@@ -36,6 +36,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use Exception;
+use OCA\Filinq\Kernel\Contracts\ReportRenderServiceInterface;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -54,14 +55,7 @@ use ZipArchive;
  *
  * @spec openspec/changes/filinq-configurable-report-templates/specs/report-render-api/spec.md
  */
-class ReportRenderService {
-
-	/**
-	 * The namespace external render requests resolve templates under.
-	 *
-	 * @var string
-	 */
-	public const NAMESPACE = 'learniq';
+class ReportRenderService implements ReportRenderServiceInterface {
 
 	/**
 	 * App-config key for the fallback Files-storage owner used when a

@@ -25,10 +25,10 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\EventListener;
 
+use OCA\Filinq\Kernel\Contracts\MetadataServiceInterface;
 use OCA\Filinq\Kernel\Contracts\PolicyRetroactiveServiceInterface;
 use OCA\Filinq\Kernel\Contracts\SettingsServiceInterface;
 use OCA\Filinq\Service\LegalBasesSummaryService;
-use OCA\Filinq\Service\MetadataService;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectDeletedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
@@ -77,7 +77,7 @@ class FilinqEventHandler {
 	 * Handles object creation events
 	 *
 	 * @param ObjectCreatedEvent $event The creation event
-	 * @param MetadataService $metadataService The metadata service
+	 * @param MetadataServiceInterface $metadataService The metadata service
 	 * @param SettingsServiceInterface $settingsService The settings service
 	 * @param LoggerInterface $logger The logger instance
 	 * @param PolicyRetroactiveServiceInterface $retroactive Retroactive policy applicator
@@ -90,7 +90,7 @@ class FilinqEventHandler {
 	 */
 	public function handleObjectCreated(
 		ObjectCreatedEvent $event,
-		MetadataService $metadataService,
+		MetadataServiceInterface $metadataService,
 		SettingsServiceInterface $settingsService,
 		LoggerInterface $logger,
 		PolicyRetroactiveServiceInterface $retroactive,
@@ -122,7 +122,7 @@ class FilinqEventHandler {
 	 * Handles object update events
 	 *
 	 * @param ObjectUpdatedEvent $event The update event
-	 * @param MetadataService $metadataService The metadata service
+	 * @param MetadataServiceInterface $metadataService The metadata service
 	 * @param SettingsServiceInterface $settingsService The settings service
 	 * @param LoggerInterface $logger The logger instance
 	 * @param PolicyRetroactiveServiceInterface $retroactive Retroactive policy applicator.
@@ -133,7 +133,7 @@ class FilinqEventHandler {
 	 */
 	public function handleObjectUpdated(
 		ObjectUpdatedEvent $event,
-		MetadataService $metadataService,
+		MetadataServiceInterface $metadataService,
 		SettingsServiceInterface $settingsService,
 		LoggerInterface $logger,
 		PolicyRetroactiveServiceInterface $retroactive,

@@ -24,6 +24,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\SignerAuth;
 
 use InvalidArgumentException;
+use OCA\Filinq\Kernel\Contracts\SignerAuthSettingsInterface;
 use OCP\IAppConfig;
 
 /**
@@ -42,14 +43,7 @@ use OCP\IAppConfig;
  *
  * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
  */
-class SignerAuthSettings {
-
-	/**
-	 * The providers an admin can select.
-	 *
-	 * @var list<string>
-	 */
-	public const SELECTABLE_PROVIDERS = ['nextcloud-session', 'oidc-broker'];
+class SignerAuthSettings implements SignerAuthSettingsInterface {
 
 	/**
 	 * Settings field => app config key.

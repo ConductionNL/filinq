@@ -33,6 +33,7 @@ namespace OCA\Filinq\Service;
 
 use DateTimeImmutable;
 use OCA\Filinq\Exception\DocumentFinalException;
+use OCA\Filinq\Kernel\Contracts\DocumentFinalityRuleServiceInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
@@ -48,7 +49,7 @@ use Throwable;
  *
  * @spec openspec/changes/final-documents-frozen/specs/document-versions/spec.md
  */
-class DocumentFinalityRuleService {
+class DocumentFinalityRuleService implements DocumentFinalityRuleServiceInterface {
 
 	/**
 	 * The OpenRegister register holding Filinq's schemas.

@@ -17,8 +17,8 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\EventListener;
 
+use OCA\Filinq\Kernel\Contracts\ConsentCrudServiceInterface;
 use OCA\Filinq\Kernel\Contracts\ConsentServiceInterface;
-use OCA\Filinq\Service\ConsentCrudService;
 use OCP\App\IAppManager;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
@@ -72,14 +72,14 @@ class EntityRelationDecisionListener implements IEventListener {
 	 * Constructor.
 	 *
 	 * @param ConsentServiceInterface     $consentService Creates the consent request.
-	 * @param ConsentCrudService $consentCrud    Resolves the configured register/schema.
+	 * @param ConsentCrudServiceInterface $consentCrud    Resolves the configured register/schema.
 	 * @param IAppManager        $appManager     Tells us whether OpenRegister is installed.
 	 * @param ContainerInterface $container      Resolves OpenRegister classes by name.
 	 * @param LoggerInterface    $logger         Records every path that declines to act.
 	 */
 	public function __construct(
 		private readonly ConsentServiceInterface $consentService,
-		private readonly ConsentCrudService $consentCrud,
+		private readonly ConsentCrudServiceInterface $consentCrud,
 		private readonly IAppManager $appManager,
 		private readonly ContainerInterface $container,
 		private readonly LoggerInterface $logger,

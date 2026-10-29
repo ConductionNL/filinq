@@ -32,6 +32,7 @@ namespace OCA\Filinq\Service;
 
 use DateTimeImmutable;
 use DateTimeInterface;
+use OCA\Filinq\Kernel\Contracts\CaseArchiveServiceInterface;
 use OCP\IAppConfig;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
@@ -49,49 +50,7 @@ use Throwable;
  *
  * @spec openspec/specs/document-creatie-sjablonen/spec.md
  */
-class CaseArchiveService {
-
-	/**
-	 * The schema holding the jobs.
-	 *
-	 * @var string
-	 */
-	public const SCHEMA = 'archiveJob';
-
-	/**
-	 * The ceiling used when an instance declared none, in bytes.
-	 *
-	 * @var int
-	 */
-	public const DEFAULT_CEILING = 2147483648;
-
-	/**
-	 * A file left out because the bundle would go over the ceiling.
-	 *
-	 * @var string
-	 */
-	public const REASON_CEILING = 'ceiling';
-
-	/**
-	 * A file left out because the person asking may not read it.
-	 *
-	 * @var string
-	 */
-	public const REASON_PERMISSION = 'permission';
-
-	/**
-	 * A file left out because it could not be read when the archive was written.
-	 *
-	 * @var string
-	 */
-	public const REASON_MISSING = 'missing';
-
-	/**
-	 * The app config key holding the administered ceiling, in bytes.
-	 *
-	 * @var string
-	 */
-	public const CONFIG_CEILING = 'case_archive_ceiling_bytes';
+class CaseArchiveService implements CaseArchiveServiceInterface {
 
 	/**
 	 * Constructor.
