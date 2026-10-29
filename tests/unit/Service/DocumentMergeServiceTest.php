@@ -121,6 +121,8 @@ class DocumentMergeServiceTest extends TestCase {
 	 * @param bool $writable Whether the target folder accepts a new file.
 	 * @param bool $conversionFails Whether the conversion cascade refuses the second input.
 	 * @param bool $archivalWorks Whether the instance can produce PDF/A-3b.
+	 * @param MergeCoverRenderer|null $cover The cover renderer, a bare double when null.
+	 * @param bool $writeFails Whether writing the result file throws.
 	 *
 	 * @return DocumentMergeService The service under test.
 	 */
@@ -129,12 +131,18 @@ class DocumentMergeServiceTest extends TestCase {
 		bool $writable = true,
 		bool $conversionFails = false,
 		bool $archivalWorks = false,
+		?MergeCoverRenderer $cover = null,
+		bool $writeFails = false,
 	): DocumentMergeService {
 		$folder = $this->createMock(Folder::class);
 		$folder->method('isCreatable')->willReturn($writable);
 		$folder->method('getNonExistingName')->willReturnArgument(0);
 		$folder->method('newFile')->willReturnCallback(
-			function (string $name, string $content): File {
+			function (string $name, string $content) use ($writeFails): File {
+				if ($writeFails === true) {
+					throw new RuntimeException('disk full');
+				}
+
 				$this->written[$name] = $content;
 
 				return $this->file(fileId: 9001, name: $name, content: $content);
@@ -217,7 +225,7 @@ class DocumentMergeServiceTest extends TestCase {
 			$conversion,
 			$archival,
 			new PdfDocumentFactory(),
-			$this->createMock(MergeCoverRenderer::class),
+			($cover ?? $this->createMock(originalClassName: MergeCoverRenderer::class)),
 			$rootFolder,
 			$session,
 			$this->createMock(LoggerInterface::class)
@@ -487,4 +495,102 @@ class DocumentMergeServiceTest extends TestCase {
 		$this->assertArrayHasKey('later.pdf', $this->written);
 
 	}//end testAQueuedMergeIsStoredAndRunsLater()
+	/**
+	 * A cover page goes in front of the inputs and counts as a page.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/document-merge/spec.md
+	 */
+	public function testACoverPageGoesInFrontOfTheInputs(): void {
+		$cover = $this->createMock(originalClassName: MergeCoverRenderer::class);
+		$cover->expects($this->once())->method('render')->willReturnCallback(
+			function (string $templateRef, array $data): string {
+				$this->assertSame(expected: 'voorblad', actual: $templateRef);
+				$this->assertSame(expected: 'anna', actual: $data['requestedBy']);
+				$this->assertSame(expected: 2, actual: $data['documentCount']);
+
+				return $this->pdf(label: 'Voorblad', pages: 1);
+			}
+		);
+		$service = $this->service(files: $this->threeDocuments(), cover: $cover);
+
+		$job = $service->merge(
+			inputs: [['fileId' => 11, 'label' => 'Aanvraag'], ['fileId' => 13, 'label' => 'Besluit']],
+			options: ['name' => 'met-voorblad', 'coverTemplateRef' => ' voorblad ']
+		);
+
+		$this->assertSame(expected: 'done', actual: $job['status']);
+		$this->assertSame(expected: 6, actual: $job['pageCount'], message: 'The cover page counts.');
+		$this->assertStringContainsString(needle: 'Voorblad', haystack: $this->written['met-voorblad.pdf']);
+
+	}//end testACoverPageGoesInFrontOfTheInputs()
+
+	/**
+	 * A cover that does not render fails the merge and writes nothing.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/document-merge/spec.md
+	 */
+	public function testACoverThatDoesNotRenderFailsTheMerge(): void {
+		$cover = $this->createMock(originalClassName: MergeCoverRenderer::class);
+		$cover->method('render')->willThrowException(exception: new RuntimeException(message: 'template missing'));
+		$service = $this->service(files: $this->threeDocuments(), cover: $cover);
+
+		$job = $service->merge(
+			inputs: [['fileId' => 11, 'label' => 'Aanvraag']],
+			options: ['name' => 'geen-voorblad', 'coverTemplateRef' => 'voorblad']
+		);
+
+		$this->assertSame(expected: 'failed', actual: $job['status']);
+		$this->assertSame(expected: 'Could not render the cover page: template missing', actual: $job['lastError']);
+		$this->assertSame(expected: [], actual: $this->written);
+
+	}//end testACoverThatDoesNotRenderFailsTheMerge()
+
+	/**
+	 * An input whose bytes are no PDF fails the merge and names the input.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/document-merge/spec.md
+	 */
+	public function testAnInputThatCannotBeAddedFailsTheMerge(): void {
+		$files = $this->threeDocuments();
+		$files[12]['content'] = 'not a pdf';
+		$service = $this->service(files: $files);
+
+		$job = $service->merge(
+			inputs: [['fileId' => 11, 'label' => 'Aanvraag'], ['fileId' => 12, 'label' => 'Plattegrond']],
+			options: ['name' => 'kapot']
+		);
+
+		$this->assertSame(expected: 'failed', actual: $job['status']);
+		$this->assertStringStartsWith(prefix: 'Could not add Plattegrond to the merge: ', string: $job['lastError']);
+		$this->assertSame(expected: 50, actual: $job['progress'], message: 'The progress of the first input is kept.');
+		$this->assertSame(expected: [], actual: $this->written);
+
+	}//end testAnInputThatCannotBeAddedFailsTheMerge()
+
+	/**
+	 * A result that cannot be written fails the merge.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/document-merge/spec.md
+	 */
+	public function testAResultThatCannotBeWrittenFailsTheMerge(): void {
+		$service = $this->service(files: $this->threeDocuments(), writeFails: true);
+
+		$job = $service->merge(
+			inputs: [['fileId' => 11, 'label' => 'Aanvraag']],
+			options: ['name' => 'vol']
+		);
+
+		$this->assertSame(expected: 'failed', actual: $job['status']);
+		$this->assertSame(expected: 'Could not write the merged PDF: disk full', actual: $job['lastError']);
+
+	}//end testAResultThatCannotBeWrittenFailsTheMerge()
+
 }//end class

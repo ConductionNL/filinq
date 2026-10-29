@@ -36,6 +36,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use OCA\Filinq\Exception\MergeRefusedException;
+use OCA\Filinq\Exception\MergeStepFailedException;
 use OCA\Filinq\Kernel\Contracts\DocumentMergeServiceInterface;
 use OCP\Files\File;
 use OCP\Files\Folder;
@@ -52,6 +53,12 @@ use Throwable;
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
+ *
+ * The merge steps are small private methods that share one step exception,
+ * so the class total counts more methods and types than one long method did.
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  *
  * @spec openspec/specs/document-merge/spec.md
  */
@@ -240,98 +247,147 @@ class DocumentMergeService implements DocumentMergeServiceInterface {
 	private function run(array $job, array $resolved, Folder $folder, array $options): array {
 		$uuid = (string)($job['uuid'] ?? '');
 		$document = $this->documents->create();
-		$pages = 0;
 		$wantsBookmarks = (($options['bookmarks'] ?? true) === true);
 
-		$coverRef = trim((string)($options['coverTemplateRef'] ?? ''));
-		if ($coverRef !== '') {
-			try {
-				// The bookmark goes on with the pages, in the factory that owns
-				// the document. Deciding it here as well would put a second
-				// branch in a method already at its complexity ceiling.
-				$pages += $this->documents->appendCover(
+		try {
+			$pages = $this->appendCoverPage(document: $document, resolved: $resolved, options: $options);
+			foreach ($resolved as $index => $input) {
+				$pages += $this->appendInput(
 					document: $document,
-					pdf: $this->cover->render(
-						templateRef: $coverRef,
-						data: [
-							'inputs' => $this->inputSummary(resolved: $resolved),
-							'requestedBy' => $this->currentUserId(),
-							'documentCount' => count($resolved),
-						]
-					),
+					input: $input,
+					firstPage: ($pages + 1),
 					withBookmark: $wantsBookmarks
 				);
-			} catch (Throwable $e) {
-				// A bundle whose cover did not render says nothing about what
-				// it is, so this fails rather than quietly shipping the pages.
-				return $this->fail(
-					uuid: $uuid,
-					job: $job,
-					reason: 'Could not render the cover page: ' . $e->getMessage()
-				);
-			}
-		}//end if
-
-		foreach ($resolved as $index => $input) {
-			try {
-				$pdf = $this->conversion->convertToPdfReporting(source: $input['file']);
-			} catch (Throwable $e) {
-				// NOTHING has been written yet, and nothing will be: the file
-				// is only created after every input has converted.
-				return $this->fail(
-					uuid: $uuid,
-					job: $job,
-					reason: 'Could not convert ' . $input['label'] . ': ' . $e->getMessage()
-				);
+				$job['progress'] = (int)round(((($index + 1) / count($resolved)) * 100));
+				$this->jobs->save(job: $job, uuid: $uuid);
 			}
 
-			try {
-				$added = $this->documents->appendPages(
-					document: $document,
-					pdf: (string)$pdf['file']->getContent()
-				);
-			} catch (Throwable $e) {
-				return $this->fail(
-					uuid: $uuid,
-					job: $job,
-					reason: 'Could not add ' . $input['label'] . ' to the merge: ' . $e->getMessage()
-				);
-			}
-
-			if ($wantsBookmarks === true) {
-				$document->addBookmark($input['label'], ($pages + 1));
-			}
-
-			$pages += $added;
-			$job['progress'] = (int)round(((($index + 1) / count($resolved)) * 100));
-			$this->jobs->save(job: $job, uuid: $uuid);
-		}//end foreach
-
-		try {
-			$bytes = $this->documents->output(document: $document);
-		} catch (Throwable $e) {
-			return $this->fail(uuid: $uuid, job: $job, reason: 'Could not produce the merged PDF: ' . $e->getMessage());
+			$file = $this->writeResult(document: $document, folder: $folder, options: $options);
+		} catch (MergeStepFailedException $e) {
+			return $this->fail(uuid: $uuid, job: $job, reason: $e->getMessage());
 		}
-
-		$name = $this->resultName(options: $options);
-
-		try {
-			$file = $folder->newFile($folder->getNonExistingName($name), $bytes);
-		} catch (Throwable $e) {
-			return $this->fail(uuid: $uuid, job: $job, reason: 'Could not write the merged PDF: ' . $e->getMessage());
-		}
-
-		$conformance = $this->toArchival(file: $file);
 
 		$job['resultFileId'] = $file->getId();
 		$job['pageCount'] = $pages;
 		$job['progress'] = 100;
-		$job['conformance'] = $conformance;
+		$job['conformance'] = $this->toArchival(file: $file);
 		$job['status'] = self::STATUS_DONE;
 
 		return $this->jobs->save(job: $job, uuid: $uuid);
 
 	}//end run()
+
+	/**
+	 * Put the cover page in front of the merge, when one was asked for.
+	 *
+	 * A bundle whose cover did not render says nothing about what it is, so
+	 * this fails rather than quietly shipping the pages.
+	 *
+	 * @param MergedPdfDocument $document The document being built.
+	 * @param array<int, array<string, mixed>> $resolved The resolved inputs.
+	 * @param array<string, mixed> $options What was asked for.
+	 *
+	 * @return int The number of pages added, 0 without a cover.
+	 *
+	 * @throws MergeStepFailedException When the cover does not render.
+	 *
+	 * @spec openspec/specs/document-merge/spec.md
+	 */
+	private function appendCoverPage(MergedPdfDocument $document, array $resolved, array $options): int {
+		$coverRef = trim((string)($options['coverTemplateRef'] ?? ''));
+		if ($coverRef === '') {
+			return 0;
+		}
+
+		try {
+			return $this->documents->appendCover(
+				document: $document,
+				pdf: $this->cover->render(
+					templateRef: $coverRef,
+					data: [
+						'inputs' => $this->inputSummary(resolved: $resolved),
+						'requestedBy' => $this->currentUserId(),
+						'documentCount' => count($resolved),
+					]
+				),
+				withBookmark: (($options['bookmarks'] ?? true) === true)
+			);
+		} catch (Throwable $e) {
+			throw new MergeStepFailedException(message: 'Could not render the cover page: ' . $e->getMessage(), code: 0, previous: $e);
+		}
+
+	}//end appendCoverPage()
+
+	/**
+	 * Convert one input and add its pages, with a bookmark when asked for.
+	 *
+	 * Nothing is written while inputs are added: the file is only created
+	 * after every input has converted.
+	 *
+	 * @param MergedPdfDocument $document The document being built.
+	 * @param array<string, mixed> $input The resolved input.
+	 * @param int $firstPage The page number the input starts on.
+	 * @param bool $withBookmark Whether the input gets a bookmark.
+	 *
+	 * @return int The number of pages added.
+	 *
+	 * @throws MergeStepFailedException When the input cannot be converted or added.
+	 *
+	 * @spec openspec/specs/document-merge/spec.md
+	 */
+	private function appendInput(MergedPdfDocument $document, array $input, int $firstPage, bool $withBookmark): int {
+		try {
+			$pdf = $this->conversion->convertToPdfReporting(source: $input['file']);
+		} catch (Throwable $e) {
+			throw new MergeStepFailedException(message: 'Could not convert ' . $input['label'] . ': ' . $e->getMessage(), code: 0, previous: $e);
+		}
+
+		try {
+			$added = $this->documents->appendPages(
+				document: $document,
+				pdf: (string)$pdf['file']->getContent()
+			);
+		} catch (Throwable $e) {
+			throw new MergeStepFailedException(message: 'Could not add ' . $input['label'] . ' to the merge: ' . $e->getMessage(), code: 0, previous: $e);
+		}
+
+		if ($withBookmark === true) {
+			$document->addBookmark($input['label'], $firstPage);
+		}
+
+		return $added;
+
+	}//end appendInput()
+
+	/**
+	 * Produce the merged PDF and write it into the target folder.
+	 *
+	 * @param MergedPdfDocument $document The finished document.
+	 * @param Folder $folder The folder the result goes in.
+	 * @param array<string, mixed> $options What was asked for.
+	 *
+	 * @return File The written file.
+	 *
+	 * @throws MergeStepFailedException When the PDF cannot be produced or written.
+	 *
+	 * @spec openspec/specs/document-merge/spec.md
+	 */
+	private function writeResult(MergedPdfDocument $document, Folder $folder, array $options): File {
+		try {
+			$bytes = $this->documents->output(document: $document);
+		} catch (Throwable $e) {
+			throw new MergeStepFailedException(message: 'Could not produce the merged PDF: ' . $e->getMessage(), code: 0, previous: $e);
+		}
+
+		$name = $this->resultName(options: $options);
+
+		try {
+			return $folder->newFile($folder->getNonExistingName($name), $bytes);
+		} catch (Throwable $e) {
+			throw new MergeStepFailedException(message: 'Could not write the merged PDF: ' . $e->getMessage(), code: 0, previous: $e);
+		}
+
+	}//end writeResult()
 
 	/**
 	 * Turn the merged file into PDF/A-3b where the instance can.

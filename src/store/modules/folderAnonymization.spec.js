@@ -7,6 +7,7 @@
 
 import axios from '@nextcloud/axios'
 import { createPinia, setActivePinia } from 'pinia'
+import { reviewSignature } from '../../services/reviewMark.js'
 import { useFolderAnonymizationStore } from './folderAnonymization.js'
 
 jest.mock('@nextcloud/axios', () => ({
@@ -154,5 +155,202 @@ describe('folder anonymise: skip decisions go through filinq', () => {
 		await store.anonymizeFolder()
 
 		expect(store.entities[0]._patchError).toContain('prohibition list')
+	})
+})
+
+/**
+ * Give every extracted file of the store a check over the current selection.
+ *
+ * @param {object} store The folder store.
+ * @return {void}
+ */
+function checkAll(store) {
+	const signature = reviewSignature(
+		store.entities
+			.filter((e) => e.included)
+			.map((e) => ({ type: e.type, value: e.value, confidence: e.highestConfidence })),
+	)
+	for (const file of store.files) {
+		if (file.status === 'extracted') {
+			file.reviewMark = { checkedBy: 'ingrid', checkedAt: '2026-10-16T10:00:00+00:00', signature }
+		}
+	}
+}
+
+// @spec openspec/specs/folder-batch-analysis/spec.md#requirement-anonymized-output-in-source-folder
+describe('folder anonymise: characterization of the full run', () => {
+	beforeEach(() => {
+		setActivePinia(createPinia())
+		jest.clearAllMocks()
+		axios.post.mockReset()
+		axios.patch.mockReset()
+	})
+
+	it('sends the dossier key, the summary pair and the checked entities to every file', async () => {
+		const store = useFolderAnonymizationStore()
+		seedReview(store)
+		store.folderId = 77
+		store.appendBasisSummary = true
+		checkAll(store)
+		axios.post.mockResolvedValue({ data: { anonymizedFileId: 99 } })
+
+		await store.anonymizeFolder()
+
+		expect(axios.post.mock.calls.map(([url]) => url)).toEqual([
+			'/apps/filinq/api/anonymization/anonymize/1',
+			'/apps/filinq/api/anonymization/anonymize/2',
+		])
+		expect(axios.post.mock.calls[0][1]).toEqual({
+			entities: [{ type: 'PERSON', value: 'Jan de Wit', confidence: 0.9 }],
+			scope: 'dossier',
+			dossierKey: '77',
+			appendBasisSummary: true,
+			outputFormat: 'pdf-only',
+		})
+	})
+
+	it('omits the dossier key and the summary pair when neither applies', async () => {
+		const store = useFolderAnonymizationStore()
+		seedReview(store)
+		store.folderId = null
+		store.appendBasisSummary = false
+		checkAll(store)
+		axios.post.mockResolvedValue({ data: { anonymizedFileId: 99 } })
+
+		await store.anonymizeFolder()
+
+		expect(axios.post.mock.calls[0][1]).toEqual({
+			entities: [{ type: 'PERSON', value: 'Jan de Wit', confidence: 0.9 }],
+			scope: 'dossier',
+		})
+	})
+
+	it('copies the result onto each file and completes the batch', async () => {
+		const store = useFolderAnonymizationStore()
+		seedReview(store)
+		checkAll(store)
+		axios.post.mockResolvedValue({
+			data: { anonymizedFileId: 99, replacementCount: 4, complete: false, residualCount: 1 },
+		})
+
+		await store.anonymizeFolder()
+
+		expect(store.files[0]).toMatchObject({
+			status: 'completed',
+			anonymizedFileId: 99,
+			replacementCount: 4,
+			complete: false,
+			residualCount: 1,
+			anonymizeError: null,
+		})
+		expect(store.progress).toBe(100)
+		expect(store.batchStatus).toBe('completed')
+		expect(store.error).toBeNull()
+		expect(store.processing).toBe(false)
+		expect(store.reviewRequired).toBe(false)
+	})
+
+	it('defaults the optional result fields', async () => {
+		const store = useFolderAnonymizationStore()
+		seedReview(store)
+		checkAll(store)
+		axios.post.mockResolvedValue({ data: { anonymizedFileId: 5 } })
+
+		await store.anonymizeFolder()
+
+		expect(store.files[1]).toMatchObject({ replacementCount: 0, complete: true, residualCount: 0 })
+	})
+
+	it('completes with a warning when some files fail', async () => {
+		const store = useFolderAnonymizationStore()
+		seedReview(store)
+		checkAll(store)
+		axios.post
+			.mockResolvedValueOnce({ data: { anonymizedFileId: 99 } })
+			.mockRejectedValueOnce({ response: { data: { error: 'Te groot' } } })
+
+		await store.anonymizeFolder()
+
+		expect(store.files[1]).toMatchObject({ status: 'error', anonymizeError: 'Te groot' })
+		expect(store.progress).toBe(50)
+		expect(store.batchStatus).toBe('completed')
+		expect(store.error).toBe('Some files failed: Te groot')
+	})
+
+	it('fails the batch when every file fails', async () => {
+		const store = useFolderAnonymizationStore()
+		seedReview(store)
+		checkAll(store)
+		axios.post.mockRejectedValue(new Error('offline'))
+
+		await store.anonymizeFolder()
+
+		expect(store.progress).toBe(0)
+		expect(store.batchStatus).toBe('error')
+		expect(store.error).toBe('offline')
+		expect(store.processing).toBe(false)
+	})
+
+	it('patches the chosen bases onto every relation of an included entity', async () => {
+		const store = useFolderAnonymizationStore()
+		seedReview(store)
+		store.entities[0].relationIds = [11, 12]
+		store.entities[0]._decisionBases = ['art-5-1-2-e']
+		checkAll(store)
+		axios.patch.mockResolvedValue({ data: {} })
+		axios.post.mockResolvedValue({ data: { anonymizedFileId: 99 } })
+
+		await store.anonymizeFolder()
+
+		expect(axios.patch.mock.calls).toEqual([
+			['/apps/filinq/api/anonymization/relations/11', { bases: ['art-5-1-2-e'], skipAnonymization: false }],
+			['/apps/filinq/api/anonymization/relations/12', { bases: ['art-5-1-2-e'], skipAnonymization: false }],
+		])
+	})
+
+	it('keeps patching the other relations after one fails', async () => {
+		const store = useFolderAnonymizationStore()
+		seedReview(store)
+		store.entities[0].relationIds = [11, 12]
+		store.entities[0]._decisionSkip = true
+		checkAll(store)
+		axios.patch
+			.mockRejectedValueOnce(new Error('first failed'))
+			.mockResolvedValueOnce({ data: {} })
+		axios.post.mockResolvedValue({ data: { anonymizedFileId: 99 } })
+
+		await store.anonymizeFolder()
+
+		expect(axios.patch).toHaveBeenCalledTimes(2)
+		expect(store.entities[0]._patchError).toBe('first failed')
+	})
+
+	it('names an entity whose decision cannot persist for lack of relation ids', async () => {
+		const store = useFolderAnonymizationStore()
+		seedReview(store)
+		store.entities[0].relationIds = undefined
+		store.entities[0]._decisionSkip = true
+		checkAll(store)
+		axios.post.mockResolvedValue({ data: { anonymizedFileId: 99 } })
+
+		await store.anonymizeFolder()
+
+		expect(axios.patch).not.toHaveBeenCalled()
+		expect(store.entities[0]._patchError).toBe('No relation ids — decisions cannot persist.')
+	})
+
+	it('patches nothing for an excluded entity or one without a decision', async () => {
+		const store = useFolderAnonymizationStore()
+		seedReview(store)
+		store.entities.push({ ...store.entities[0], value: 'Piet', included: false, _decisionSkip: true })
+		checkAll(store)
+		axios.post.mockResolvedValue({ data: { anonymizedFileId: 99 } })
+
+		await store.anonymizeFolder()
+
+		expect(axios.patch).not.toHaveBeenCalled()
+		expect(axios.post.mock.calls[0][1].entities).toEqual([
+			{ type: 'PERSON', value: 'Jan de Wit', confidence: 0.9 },
+		])
 	})
 })
