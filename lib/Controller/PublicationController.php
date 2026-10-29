@@ -19,9 +19,9 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
+use OCA\Filinq\Kernel\Contracts\OpenCatalogiPlatformInterface;
+use OCA\Filinq\Kernel\Contracts\PublicationAccessInterface;
 use OCA\Filinq\Kernel\Contracts\PublicationStoreInterface;
-use OCA\Filinq\Service\Publication\OpenCatalogiPlatform;
-use OCA\Filinq\Service\Publication\PublicationAccess;
 use OCA\Filinq\Service\Publication\PublicationNotReadyException;
 use OCA\Filinq\Service\Publication\PublicationPipelineService;
 use OCP\AppFramework\Controller;
@@ -56,8 +56,8 @@ class PublicationController extends Controller {
 	 * @param IRequest                   $request  The request
 	 * @param PublicationPipelineService $pipeline The pipeline
 	 * @param PublicationStoreInterface           $store    The records and log
-	 * @param OpenCatalogiPlatform       $platform Whether OpenCatalogi is there, its categories
-	 * @param PublicationAccess          $access   Who may act
+	 * @param OpenCatalogiPlatformInterface       $platform Whether OpenCatalogi is there, its categories
+	 * @param PublicationAccessInterface          $access   Who may act
 	 * @param IUserSession               $session  The caller
 	 * @param LoggerInterface            $logger   Logger
 	 *
@@ -68,8 +68,8 @@ class PublicationController extends Controller {
 		IRequest $request,
 		private readonly PublicationPipelineService $pipeline,
 		private readonly PublicationStoreInterface $store,
-		private readonly OpenCatalogiPlatform $platform,
-		private readonly PublicationAccess $access,
+		private readonly OpenCatalogiPlatformInterface $platform,
+		private readonly PublicationAccessInterface $access,
 		private readonly IUserSession $session,
 		private readonly LoggerInterface $logger,
 	) {

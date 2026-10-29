@@ -25,10 +25,10 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\EventListener;
 
+use OCA\Filinq\Kernel\Contracts\LegalBasesSummaryServiceInterface;
 use OCA\Filinq\Kernel\Contracts\MetadataServiceInterface;
 use OCA\Filinq\Kernel\Contracts\PolicyRetroactiveServiceInterface;
 use OCA\Filinq\Kernel\Contracts\SettingsServiceInterface;
-use OCA\Filinq\Service\LegalBasesSummaryService;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectDeletedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
@@ -241,7 +241,7 @@ class FilinqEventHandler {
 		}
 
 		try {
-			$service = $this->container->get(LegalBasesSummaryService::class);
+			$service = $this->container->get(LegalBasesSummaryServiceInterface::class);
 			$service->renderDossierSummary(dossierUuid: $dossierUuid);
 		} catch (\Throwable $e) {
 			$logger->warning(

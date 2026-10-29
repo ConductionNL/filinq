@@ -48,6 +48,7 @@ use Mpdf\Mpdf;
 use Mpdf\MpdfException;
 use Mpdf\Output\Destination;
 use OCA\Filinq\Exception\Pdfa3ConversionException;
+use OCA\Filinq\Kernel\Contracts\Pdfa3ConversionServiceInterface;
 use OCA\Filinq\Service\VeraPdf\Pdfa3OutputVerifier;
 use OCP\Files\File;
 use OCP\IAppConfig;
@@ -66,7 +67,7 @@ use Throwable;
  *
  * @spec openspec/specs/pdfa3-conversion/spec.md
  */
-class Pdfa3ConversionService {
+class Pdfa3ConversionService implements Pdfa3ConversionServiceInterface {
 
 	/**
 	 * App identifier used for IAppConfig reads.
