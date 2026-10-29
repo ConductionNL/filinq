@@ -22,6 +22,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\ConformanceController;
+use OCA\Filinq\Kernel\Contracts\ConformanceServiceInterface;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\VeraPdf\ConformanceGuidance;
 use OCA\Filinq\Service\VeraPdf\ConformanceReportRepository;
@@ -38,6 +39,7 @@ use OCP\IUser;
 use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
+use RuntimeException;
 
 class ConformanceControllerTest extends TestCase {
 	use SubjectErasureDoubles;
@@ -54,11 +56,13 @@ class ConformanceControllerTest extends TestCase {
 	];
 
 	/**
-	 * The controller for alice, over the real conformance service.
+	 * The controller for alice, over the real conformance service unless one is given.
+	 *
+	 * @param ConformanceServiceInterface|null $conformance The service to use instead.
 	 *
 	 * @return ConformanceController The controller.
 	 */
-	private function controller(): ConformanceController {
+	private function controller(?ConformanceServiceInterface $conformance = null): ConformanceController {
 		$folder = $this->createMock(Folder::class);
 		$folder->method('getById')->willReturnCallback(
 			function (int $id): array {
@@ -84,7 +88,7 @@ class ConformanceControllerTest extends TestCase {
 		$session->method('getUser')->willReturn($user);
 		$l10n = $this->createMock(IL10N::class);
 		$l10n->method('t')->willReturnArgument(0);
-		$conformance = new ConformanceService(
+		$conformance ??= new ConformanceService(
 			$this->veraPdf(),
 			new ConformanceGuidance(),
 			new ConformanceReportRepository(new DocumentObjectServiceResolver($this->container(), $this->apps())),
@@ -154,4 +158,51 @@ class ConformanceControllerTest extends TestCase {
 		$this->assertSame(400, $this->controller()->check(fileId: 43)->getStatus());
 
 	}//end testANonPdfIsRefused()
+
+	/**
+	 * The admin status row is the service's status, unchanged.
+	 *
+	 * @return void
+	 */
+	public function testStatusIsTheServiceStatus(): void {
+		$conformance = $this->createMock(originalClassName: ConformanceServiceInterface::class);
+		$conformance->method('status')->willReturn(value: ['enabled' => true, 'available' => false, 'version' => null]);
+
+		$response = $this->controller(conformance: $conformance)->status();
+
+		$this->assertSame(expected: ['enabled' => true, 'available' => false, 'version' => null], actual: $response->getData());
+
+	}//end testStatusIsTheServiceStatus()
+
+	/**
+	 * Reports that cannot be read are a 500 with a message, not a crash.
+	 *
+	 * @return void
+	 */
+	public function testUnreadableReportsAre500(): void {
+		$conformance = $this->createMock(originalClassName: ConformanceServiceInterface::class);
+		$conformance->method('reportsFor')->willThrowException(exception: new RuntimeException(message: 'store down'));
+
+		$response = $this->controller(conformance: $conformance)->show(fileId: 42);
+
+		$this->assertSame(expected: 500, actual: $response->getStatus());
+		$this->assertSame(expected: 'The conformance report could not be read. Try again later.', actual: $response->getData()['error']);
+
+	}//end testUnreadableReportsAre500()
+
+	/**
+	 * A check whose report cannot be stored is a 500 with a message.
+	 *
+	 * @return void
+	 */
+	public function testAReportThatCannotBeStoredIs500(): void {
+		$conformance = $this->createMock(originalClassName: ConformanceServiceInterface::class);
+		$conformance->method('checkFile')->willThrowException(exception: new RuntimeException(message: 'store down'));
+
+		$response = $this->controller(conformance: $conformance)->check(fileId: 42);
+
+		$this->assertSame(expected: 500, actual: $response->getStatus());
+		$this->assertSame(expected: 'The check ran, but its report could not be stored. Try again later.', actual: $response->getData()['error']);
+
+	}//end testAReportThatCannotBeStoredIs500()
 }//end class

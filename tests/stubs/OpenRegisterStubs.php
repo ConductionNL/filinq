@@ -368,9 +368,15 @@ class ConfigurationService {
 	/**
 	 * Import from app
 	 *
-	 * @return void
+	 * @param string               $appId   The app id.
+	 * @param array<string, mixed> $data    The configuration data.
+	 * @param string               $version The configuration version.
+	 * @param bool                 $force   Whether to import an older or equal version.
+	 *
+	 * @return array<string, mixed>
 	 */
-	public function importFromApp() {
+	public function importFromApp(string $appId, array $data, string $version, bool $force=false): array {
+		return [];
 
 	}//end importFromApp()
 }//end class

@@ -28,6 +28,7 @@ namespace OCA\Filinq\Service\VeraPdf;
 
 use DateTimeInterface;
 use OCA\Filinq\Exception\VeraPdfException;
+use OCA\Filinq\Kernel\Contracts\ConformanceServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\Files\File;
 use RuntimeException;
@@ -36,13 +37,7 @@ use Throwable;
 /**
  * Validate, advise, store.
  */
-class ConformanceService {
-
-	public const TRIGGER_MANUAL = 'manual';
-
-	public const TRIGGER_VALIDATION = 'validation';
-
-	public const TRIGGER_CONVERSION = 'conversion';
+class ConformanceService implements ConformanceServiceInterface {
 
 	/**
 	 * Constructor.

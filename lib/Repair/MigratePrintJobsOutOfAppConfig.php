@@ -34,9 +34,9 @@ namespace OCA\Filinq\Repair;
 
 use DateTimeImmutable;
 use DateTimeInterface;
+use OCA\Filinq\Kernel\Contracts\PrintJobRepositoryInterface;
 use OCA\Filinq\Kernel\Contracts\PrintJobServiceInterface;
 use OCA\Filinq\Service\PrintJobFileStore;
-use OCA\Filinq\Service\PrintJobRepository;
 use OCP\IAppConfig;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
@@ -70,7 +70,7 @@ class MigratePrintJobsOutOfAppConfig implements IRepairStep {
 	 * Constructor.
 	 *
 	 * @param IAppConfig         $appConfig The app configuration holding the legacy entries
-	 * @param PrintJobRepository $jobs      The printJob rows
+	 * @param PrintJobRepositoryInterface $jobs      The printJob rows
 	 * @param PrintJobFileStore  $files     The PDFs in app data
 	 * @param LoggerInterface    $logger    Logger
 	 *
@@ -78,7 +78,7 @@ class MigratePrintJobsOutOfAppConfig implements IRepairStep {
 	 */
 	public function __construct(
 		private readonly IAppConfig $appConfig,
-		private readonly PrintJobRepository $jobs,
+		private readonly PrintJobRepositoryInterface $jobs,
 		private readonly PrintJobFileStore $files,
 		private readonly LoggerInterface $logger,
 	) {

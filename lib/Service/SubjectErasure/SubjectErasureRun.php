@@ -21,6 +21,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\SubjectErasure;
 
 use OCA\Filinq\Exception\SubjectErasureRefusedException;
+use OCA\Filinq\Kernel\Contracts\SubjectErasureRunInterface;
 use Throwable;
 
 /**
@@ -31,7 +32,7 @@ use Throwable;
  * that stops reads `partially_completed` and resumes at the document it was
  * on (SubjectErasureJob). No document record is deleted by any step.
  */
-class SubjectErasureRun {
+class SubjectErasureRun implements SubjectErasureRunInterface {
 
 	/**
 	 * Constructor.

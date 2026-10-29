@@ -30,6 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\IntakeRoutingServiceInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
@@ -45,14 +46,7 @@ use Throwable;
  *
  * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
  */
-class IntakeRoutingService {
-
-	/**
-	 * The schema holding the declarations.
-	 *
-	 * @var string
-	 */
-	public const SCHEMA = 'intakeRoutingRule';
+class IntakeRoutingService implements IntakeRoutingServiceInterface {
 
 	/**
 	 * Constructor.

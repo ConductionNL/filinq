@@ -25,6 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\Office;
 
+use OCA\Filinq\Kernel\Contracts\OfficeSuiteCapabilityServiceInterface;
 use OCP\Http\Client\IClientService;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -67,7 +68,7 @@ use Throwable;
  *
  * @spec openspec/specs/office-suite-portability/spec.md
  */
-class OfficeSuiteCapabilityService {
+class OfficeSuiteCapabilityService implements OfficeSuiteCapabilityServiceInterface {
 
 	/**
 	 * Fields a CheckFileInfo response must carry to be usable.

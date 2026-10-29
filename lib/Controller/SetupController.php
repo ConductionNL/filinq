@@ -38,7 +38,7 @@ use OCP\IRequest;
 use Psr\Log\LoggerInterface;
 use OCA\Filinq\Kernel\Contracts\DemoDataServiceInterface;
 use OCA\Filinq\Kernel\Contracts\DomainFolderServiceInterface;
-use OCA\Filinq\Service\ExternalMountValidator;
+use OCA\Filinq\Kernel\Contracts\ExternalMountValidatorInterface;
 
 /**
  * First-time setup wizard endpoints.
@@ -86,7 +86,7 @@ class SetupController extends Controller {
 	 * @param IAppConfig      $appConfig       Records the demo-data decision.
 	 * @param LoggerInterface $logger          Records a failed import.
 	 * @param DemoDataServiceInterface $demoDataService Imports the shipped demo dataset.
-	 * @param ExternalMountValidator $mountValidator Names what the domain store cannot keep.
+	 * @param ExternalMountValidatorInterface $mountValidator Names what the domain store cannot keep.
 	 *
 	 * @return void
 	 */
@@ -95,7 +95,7 @@ class SetupController extends Controller {
 		private readonly IAppConfig $appConfig,
 		private readonly LoggerInterface $logger,
 		private readonly DemoDataServiceInterface $demoDataService,
-		private readonly ExternalMountValidator $mountValidator,
+		private readonly ExternalMountValidatorInterface $mountValidator,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 
@@ -189,7 +189,7 @@ class SetupController extends Controller {
 				'findings' => [
 					[
 						'requirement' => 'check the store behind the domain folders',
-						'verdict' => ExternalMountValidator::UNKNOWN,
+						'verdict' => ExternalMountValidatorInterface::UNKNOWN,
 						'message' => 'The store behind the domain folders could not be checked: ' . $e->getMessage(),
 					],
 				],

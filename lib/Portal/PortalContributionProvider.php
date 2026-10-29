@@ -352,68 +352,105 @@ class PortalContributionProvider {
 		return [
 			'label' => self::LABEL,
 			'collections' => [
-				[
-					'id' => 'signerRecords',
-					'register' => self::REGISTER_SIGNING,
-					'schema' => 'signerRecord',
-					'scopeField' => 'email',
-					'scopeClaim' => 'signerEmail',
-					'label' => $this->translate(text: 'My signatures'),
-					'listable' => true,
-					'fields' => [
-						'displayName',
-						'status',
-						'order',
-						'signedAt',
-						'declineReason',
-					],
-				],
-				[
-					'id' => 'signerSigningRequests',
-					'register' => self::REGISTER_SIGNING,
-					'schema' => 'signingRequest',
-					'scopeField' => '',
-					'scopeClaim' => 'signerEmail',
-					'via' => [
-						'register' => self::REGISTER_SIGNING,
-						'schema' => 'signerRecord',
-						'scopeField' => 'email',
-						'targetField' => 'signingRequestId',
-					],
-					'label' => $this->translate(text: 'Documents awaiting my signature'),
-					'listable' => true,
-					'minTrust' => 'substantial',
-					'fields' => [
-						'documentName',
-						'signatureLevel',
-						'signingMode',
-						'status',
-						'deadline',
-						'provider',
-					],
-					'rowActions' => [
-						[
-							'id' => 'sign',
-							'label' => $this->translate(text: 'Sign'),
-							'endpoint' => self::SIGN_ENDPOINT,
-							'method' => 'POST',
-							'minTrust' => self::SIGNING_MIN_TRUST,
-						],
-						[
-							'id' => 'decline',
-							'label' => $this->translate(text: 'Decline to sign'),
-							'endpoint' => self::DECLINE_ENDPOINT,
-							'method' => 'POST',
-							'minTrust' => self::SIGNING_MIN_TRUST,
-						],
-					],
-				],
+				$this->signerRecordsCollection(),
+				$this->signerSigningRequestsCollection(),
 			],
 			'actions' => $this->signerActions(),
 			'notifications' => [],
 		];
 
 	}//end signerContribution()
+
+	/**
+	 * The signer's own `signerRecord` rows, scoped by the invited email.
+	 *
+	 * @return array<string, mixed> The collection.
+	 *
+	 * @spec openspec/specs/portal-signing-surface/spec.md
+	 */
+	private function signerRecordsCollection(): array {
+		return [
+			'id' => 'signerRecords',
+			'register' => self::REGISTER_SIGNING,
+			'schema' => 'signerRecord',
+			'scopeField' => 'email',
+			'scopeClaim' => 'signerEmail',
+			'label' => $this->translate(text: 'My signatures'),
+			'listable' => true,
+			'fields' => [
+				'displayName',
+				'status',
+				'order',
+				'signedAt',
+				'declineReason',
+			],
+		];
+
+	}//end signerRecordsCollection()
+
+	/**
+	 * The `signingRequest` rows awaiting the signer, reached through their
+	 * own `signerRecord` rows, with the sign and decline row actions.
+	 *
+	 * @return array<string, mixed> The collection.
+	 *
+	 * @spec openspec/specs/portal-signing-surface/spec.md
+	 */
+	private function signerSigningRequestsCollection(): array {
+		return [
+			'id' => 'signerSigningRequests',
+			'register' => self::REGISTER_SIGNING,
+			'schema' => 'signingRequest',
+			'scopeField' => '',
+			'scopeClaim' => 'signerEmail',
+			'via' => [
+				'register' => self::REGISTER_SIGNING,
+				'schema' => 'signerRecord',
+				'scopeField' => 'email',
+				'targetField' => 'signingRequestId',
+			],
+			'label' => $this->translate(text: 'Documents awaiting my signature'),
+			'listable' => true,
+			'minTrust' => 'substantial',
+			'fields' => [
+				'documentName',
+				'signatureLevel',
+				'signingMode',
+				'status',
+				'deadline',
+				'provider',
+			],
+			'rowActions' => $this->signingActs(),
+		];
+
+	}//end signerSigningRequestsCollection()
+
+	/**
+	 * The sign and decline acts: id, label, endpoint, method and minimum trust.
+	 *
+	 * @return array<int, array<string, string>> The two acts.
+	 *
+	 * @spec openspec/specs/portal-signing-surface/spec.md
+	 */
+	private function signingActs(): array {
+		return [
+			[
+				'id' => 'sign',
+				'label' => $this->translate(text: 'Sign'),
+				'endpoint' => self::SIGN_ENDPOINT,
+				'method' => 'POST',
+				'minTrust' => self::SIGNING_MIN_TRUST,
+			],
+			[
+				'id' => 'decline',
+				'label' => $this->translate(text: 'Decline to sign'),
+				'endpoint' => self::DECLINE_ENDPOINT,
+				'method' => 'POST',
+				'minTrust' => self::SIGNING_MIN_TRUST,
+			],
+		];
+
+	}//end signingActs()
 
 	/**
 	 * The actions on the `signer` manifest.
@@ -437,33 +474,20 @@ class PortalContributionProvider {
 	 * @spec openspec/specs/portal-signing-actions/spec.md
 	 */
 	private function signerActions(): array {
-		return [
-			[
-				'id' => 'sign',
-				'label' => $this->translate(text: 'Sign'),
-				'endpoint' => self::SIGN_ENDPOINT,
-				'method' => 'POST',
-				'minTrust' => self::SIGNING_MIN_TRUST,
-				'rowField' => 'signingRequestId',
-				'scopeClaim' => 'signerEmail',
-			],
-			[
-				'id' => 'decline',
-				'label' => $this->translate(text: 'Decline to sign'),
-				'endpoint' => self::DECLINE_ENDPOINT,
-				'method' => 'POST',
-				'minTrust' => self::SIGNING_MIN_TRUST,
-				'rowField' => 'signingRequestId',
-				'scopeClaim' => 'signerEmail',
-			],
-			[
-				'id' => 'viewDocument',
-				'label' => $this->translate(text: 'View document'),
-				'endpoint' => self::VIEW_DOCUMENT_ENDPOINT,
-				'method' => 'GET',
-				'minTrust' => self::SIGNING_MIN_TRUST,
-			],
+		$actions = [];
+		foreach ($this->signingActs() as $act) {
+			$actions[] = $act + ['rowField' => 'signingRequestId', 'scopeClaim' => 'signerEmail'];
+		}
+
+		$actions[] = [
+			'id' => 'viewDocument',
+			'label' => $this->translate(text: 'View document'),
+			'endpoint' => self::VIEW_DOCUMENT_ENDPOINT,
+			'method' => 'GET',
+			'minTrust' => self::SIGNING_MIN_TRUST,
 		];
+
+		return $actions;
 
 	}//end signerActions()
 

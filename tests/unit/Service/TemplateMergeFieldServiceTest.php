@@ -61,6 +61,44 @@ class TemplateMergeFieldServiceTest extends TestCase {
 	}//end testOnlyPrintedVariablesAreFields()
 
 	/**
+	 * Templates and the paths they print, one shape of print tag each.
+	 *
+	 * @return array<string, array{0: string, 1: array<int, string>}>
+	 */
+	public static function printedPathProvider(): array {
+		return [
+			'empty'                                   => ['', []],
+			'plain text'                              => ['Geen velden hier', []],
+			'nested path'                             => ['{{ a.b.c }} {{ a.b }}', ['a.b.c', 'a.b']],
+			'filter with argument'                    => ['{{ name|default(fallback) }}', ['name', 'fallback']],
+			'filter chain then attribute'             => ['{{ (x|first).y }}', ['x']],
+			'function call with attribute argument'   => ['{{ format(order.date, locale) }}', ['order.date', 'locale']],
+			'for binds key and value'                 => ['{% for key, value in items %}{{ key }}{{ value.x }}{% endfor %}{{ items }}', ['items']],
+			'set binds before use'                    => ['{{ total }}{% set total = 2 %}{{ total }}', []],
+			'names inside block tags are not printed' => ['{% if visible %}{{ shown }}{% endif %}', ['shown']],
+			'method call on path'                     => ['{{ user.name() }}{{ user.email }}', ['user.email']],
+			'repeated across prints'                  => ['{{ a }}{{ b }}{{ a }}{{ b.c }}', ['a', 'b', 'b.c']],
+			'subscript'                               => ["{{ list[0] }}{{ map['k'] }}", ['list', 'map']],
+			'arithmetic'                              => ['{{ price * qty + tax.rate }}', ['price', 'qty', 'tax.rate']],
+			'trailing dot'                            => ['{{ a. }}', ['a']],
+		];
+	}//end printedPathProvider()
+
+	/**
+	 * Each shape of print tag yields exactly these paths.
+	 *
+	 * @param string             $content  The template.
+	 * @param array<int, string> $expected The paths it prints.
+	 *
+	 * @dataProvider printedPathProvider
+	 *
+	 * @return void
+	 */
+	public function testPrintedPathsPerShape(string $content, array $expected): void {
+		$this->assertSame(expected: $expected, actual: $this->service->paths(content: $content));
+	}//end testPrintedPathsPerShape()
+
+	/**
 	 * A template that does not lex lists no fields instead of failing.
 	 *
 	 * @return void

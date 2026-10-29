@@ -21,8 +21,8 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use OCA\Filinq\Exception\SubjectErasureRefusedException;
+use OCA\Filinq\Kernel\Contracts\SubjectErasureRunInterface;
 use OCA\Filinq\Kernel\Contracts\SubjectErasureServiceInterface;
-use OCA\Filinq\Service\SubjectErasure\SubjectErasureRun;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -61,7 +61,7 @@ class SubjectErasureController extends Controller {
 	 * @param string                $appName     The app name.
 	 * @param IRequest              $request     The request.
 	 * @param SubjectErasureServiceInterface $requests    The request lifecycle.
-	 * @param SubjectErasureRun     $runs        The run and the certificate.
+	 * @param SubjectErasureRunInterface     $runs        The run and the certificate.
 	 * @param IUserSession          $userSession The signed-in user.
 	 * @param IL10N                 $l10n        Translations.
 	 * @param LoggerInterface       $logger      For failures that are not refusals.
@@ -72,7 +72,7 @@ class SubjectErasureController extends Controller {
 		string $appName,
 		IRequest $request,
 		private readonly SubjectErasureServiceInterface $requests,
-		private readonly SubjectErasureRun $runs,
+		private readonly SubjectErasureRunInterface $runs,
 		private readonly IUserSession $userSession,
 		private readonly IL10N $l10n,
 		private readonly LoggerInterface $logger,
