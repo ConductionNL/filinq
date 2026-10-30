@@ -33,6 +33,7 @@ use ReflectionMethod;
  *
  * @covers \OCA\Filinq\Service\LegalBasesSummaryService
  * @uses   \OCA\Filinq\Service\DossierSummaryDataService
+ * @uses   \OCA\Filinq\Service\DossierEntityTally
  */
 class DossierBasesAggregateGoldenTest extends TestCase {
 
