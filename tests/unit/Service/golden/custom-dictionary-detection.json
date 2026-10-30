@@ -1,0 +1,251 @@
+{
+    "two chunks with an overlap region": {
+        "warning": null,
+        "calls": [
+            [
+                "find",
+                "Operatie Zilverreiger",
+                "CUSTOM_DICTIONARY"
+            ],
+            [
+                "create",
+                "Operatie Zilverreiger",
+                "CUSTOM_DICTIONARY",
+                "contextual_data"
+            ],
+            [
+                "find",
+                "Ridderkerk",
+                "CUSTOM_DICTIONARY"
+            ],
+            [
+                "find",
+                "operatie zilverreiger",
+                "CUSTOM_DICTIONARY"
+            ],
+            [
+                "create",
+                "operatie zilverreiger",
+                "CUSTOM_DICTIONARY",
+                "contextual_data"
+            ],
+            [
+                "find",
+                "Barendrecht",
+                "CUSTOM_DICTIONARY"
+            ],
+            [
+                "create",
+                "Barendrecht",
+                "CUSTOM_DICTIONARY",
+                "contextual_data"
+            ],
+            [
+                "insert",
+                {
+                    "entityId": 900,
+                    "fileId": 77,
+                    "chunkId": 1,
+                    "positionStart": 0,
+                    "positionEnd": 21,
+                    "confidence": 1,
+                    "detectionMethod": "custom_dictionary",
+                    "context": "Codenaam",
+                    "anonymized": false,
+                    "skipAnonymization": false,
+                    "createdAt": true
+                }
+            ],
+            [
+                "insert",
+                {
+                    "entityId": 500,
+                    "fileId": 77,
+                    "chunkId": 1,
+                    "positionStart": 32,
+                    "positionEnd": 42,
+                    "confidence": 1,
+                    "detectionMethod": "custom_dictionary",
+                    "context": "Stad",
+                    "anonymized": false,
+                    "skipAnonymization": false,
+                    "createdAt": true
+                }
+            ],
+            [
+                "insert",
+                {
+                    "entityId": 901,
+                    "fileId": 77,
+                    "chunkId": 2,
+                    "positionStart": 36,
+                    "positionEnd": 57,
+                    "confidence": 1,
+                    "detectionMethod": "custom_dictionary",
+                    "context": "Codenaam",
+                    "anonymized": false,
+                    "skipAnonymization": false,
+                    "createdAt": true
+                }
+            ],
+            [
+                "insert",
+                {
+                    "entityId": 902,
+                    "fileId": 77,
+                    "chunkId": 2,
+                    "positionStart": 21,
+                    "positionEnd": 32,
+                    "confidence": 1,
+                    "detectionMethod": "custom_dictionary",
+                    "context": "Barendrecht",
+                    "anonymized": false,
+                    "skipAnonymization": false,
+                    "createdAt": true
+                }
+            ]
+        ]
+    },
+    "an empty chunk and a chunk without hits": {
+        "warning": null,
+        "calls": []
+    },
+    "a known and a new entity, each twice": {
+        "warning": null,
+        "calls": [
+            [
+                "find",
+                "Ridderkerk",
+                "CUSTOM_DICTIONARY"
+            ],
+            [
+                "find",
+                "Karekiet",
+                "CUSTOM_DICTIONARY"
+            ],
+            [
+                "create",
+                "Karekiet",
+                "CUSTOM_DICTIONARY",
+                "contextual_data"
+            ],
+            [
+                "insert",
+                {
+                    "entityId": 500,
+                    "fileId": 77,
+                    "chunkId": 5,
+                    "positionStart": 10,
+                    "positionEnd": 20,
+                    "confidence": 1,
+                    "detectionMethod": "custom_dictionary",
+                    "context": "Stad",
+                    "anonymized": false,
+                    "skipAnonymization": false,
+                    "createdAt": true
+                }
+            ],
+            [
+                "insert",
+                {
+                    "entityId": 500,
+                    "fileId": 77,
+                    "chunkId": 5,
+                    "positionStart": 34,
+                    "positionEnd": 44,
+                    "confidence": 1,
+                    "detectionMethod": "custom_dictionary",
+                    "context": "Stad",
+                    "anonymized": false,
+                    "skipAnonymization": false,
+                    "createdAt": true
+                }
+            ],
+            [
+                "insert",
+                {
+                    "entityId": 900,
+                    "fileId": 77,
+                    "chunkId": 5,
+                    "positionStart": 0,
+                    "positionEnd": 8,
+                    "confidence": 1,
+                    "detectionMethod": "custom_dictionary",
+                    "context": "Karekiet",
+                    "anonymized": false,
+                    "skipAnonymization": false,
+                    "createdAt": true
+                }
+            ],
+            [
+                "insert",
+                {
+                    "entityId": 900,
+                    "fileId": 77,
+                    "chunkId": 5,
+                    "positionStart": 22,
+                    "positionEnd": 30,
+                    "confidence": 1,
+                    "detectionMethod": "custom_dictionary",
+                    "context": "Karekiet",
+                    "anonymized": false,
+                    "skipAnonymization": false,
+                    "createdAt": true
+                }
+            ]
+        ]
+    },
+    "a longer term across two dictionaries": {
+        "warning": null,
+        "calls": [
+            [
+                "find",
+                "Dossier Karekiet",
+                "CUSTOM_DICTIONARY"
+            ],
+            [
+                "create",
+                "Dossier Karekiet",
+                "CUSTOM_DICTIONARY",
+                "contextual_data"
+            ],
+            [
+                "find",
+                "Ridderkerk",
+                "CUSTOM_DICTIONARY"
+            ],
+            [
+                "insert",
+                {
+                    "entityId": 900,
+                    "fileId": 77,
+                    "chunkId": 6,
+                    "positionStart": 0,
+                    "positionEnd": 16,
+                    "confidence": 1,
+                    "detectionMethod": "custom_dictionary",
+                    "context": "Dossier",
+                    "anonymized": false,
+                    "skipAnonymization": false,
+                    "createdAt": true
+                }
+            ],
+            [
+                "insert",
+                {
+                    "entityId": 500,
+                    "fileId": 77,
+                    "chunkId": 6,
+                    "positionStart": 25,
+                    "positionEnd": 35,
+                    "confidence": 1,
+                    "detectionMethod": "custom_dictionary",
+                    "context": "Stad",
+                    "anonymized": false,
+                    "skipAnonymization": false,
+                    "createdAt": true
+                }
+            ]
+        ]
+    }
+}
