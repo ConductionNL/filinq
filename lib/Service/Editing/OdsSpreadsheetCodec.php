@@ -97,9 +97,16 @@ class OdsSpreadsheetCodec implements SpreadsheetFamilyCodec {
 
 			$rowNumber = 0;
 			foreach ($rows as $row) {
-				$rowNumber++;
-				foreach ($this->rowCells(sheet: $sheet, rowNumber: $rowNumber, row: $row[2]) as $cell) {
-					$cells[] = $cell;
+				$repeat = $this->repeatCount(attributes: $row[1], axis: 'rows');
+				for ($i = 0; $i < $repeat; $i++) {
+					$rowNumber++;
+					$found = $this->rowCells(sheet: $sheet, rowNumber: $rowNumber, row: $row[2]);
+					if ($found === []) {
+						$rowNumber += ($repeat - $i - 1);
+						break;
+					}
+
+					array_push($cells, ...$found);
 				}
 			}
 		}//end foreach
@@ -150,14 +157,15 @@ class OdsSpreadsheetCodec implements SpreadsheetFamilyCodec {
 	}//end rowCells()
 
 	/**
-	 * How many columns one cell element stands for.
+	 * How many columns one cell element, or how many rows one row element, stands for.
 	 *
-	 * @param string $attributes The cell's attributes.
+	 * @param string $attributes The element's attributes.
+	 * @param string $axis       `columns` for a cell, `rows` for a row.
 	 *
 	 * @return int The repeat count, at least 1.
 	 */
-	private function repeatCount(string $attributes): int {
-		if (preg_match('/table:number-columns-repeated="(\\d+)"/', $attributes, $match) === 1) {
+	private function repeatCount(string $attributes, string $axis = 'columns'): int {
+		if (preg_match('/table:number-' . $axis . '-repeated="(\\d+)"/', $attributes, $match) === 1) {
 			return max(1, (int)$match[1]);
 		}
 
@@ -213,6 +221,8 @@ class OdsSpreadsheetCodec implements SpreadsheetFamilyCodec {
 			'value' => htmlspecialchars($value, ENT_QUOTES | ENT_XML1),
 			'rewritten' => false,
 		];
+		$write['targetRow'] = (int)preg_replace('/^.*?(\d*)$/', '$1', $write['target']);
+		$write['targetSheet'] = (string)substr($write['target'], 0, (int)strrpos($write['target'], '!'));
 
 		$xml = preg_replace_callback(
 			self::SHEET_PATTERN,
@@ -255,15 +265,45 @@ class OdsSpreadsheetCodec implements SpreadsheetFamilyCodec {
 	}//end writeIntoTable()
 
 	/**
-	 * Rewrite one row, counting its columns from 1.
+	 * Rewrite one row element, which stands for one row or for a run of identical rows.
+	 *
+	 * A run that holds the target row is SPLIT around it, or writing one row
+	 * would rewrite every row the element stood for.
+	 *
+	 * @param array<int, string>   $row   The row match: [whole, attributes, cells].
+	 * @param array<string, mixed> $write The write in progress.
+	 *
+	 * @return string The rewritten row or run.
+	 */
+	private function writeIntoRow(array $row, array &$write): string {
+		$repeat = $this->repeatCount(attributes: $row[1], axis: 'rows');
+		$first = ($write['row'] + 1);
+		$offset = ($write['targetRow'] - $first);
+		$write['row'] = $first;
+
+		if ($repeat === 1 || $write['sheet'] !== $write['targetSheet'] || $offset < 0 || $offset >= $repeat) {
+			$rewritten = $this->writeIntoRowCells(row: $row, write: $write);
+			$write['row'] = ($first + $repeat - 1);
+			return $rewritten;
+		}
+
+		$write['row'] = $write['targetRow'];
+		$single = [$row[0], $this->withRowRepeat(attributes: $row[1], count: 1), $row[2]];
+		$rewritten = $this->writeIntoRowCells(row: $single, write: $write);
+		$write['row'] = ($first + $repeat - 1);
+
+		return $this->rowRun(row: $row, count: $offset) . $rewritten . $this->rowRun(row: $row, count: ($repeat - $offset - 1));
+	}//end writeIntoRow()
+
+	/**
+	 * Rewrite the cells of one row, counting its columns from 1.
 	 *
 	 * @param array<int, string>   $row   The row match: [whole, attributes, cells].
 	 * @param array<string, mixed> $write The write in progress.
 	 *
 	 * @return string The rewritten row.
 	 */
-	private function writeIntoRow(array $row, array &$write): string {
-		$write['row']++;
+	private function writeIntoRowCells(array $row, array &$write): string {
 		$write['column'] = 0;
 
 		$cells = preg_replace_callback(
@@ -275,7 +315,40 @@ class OdsSpreadsheetCodec implements SpreadsheetFamilyCodec {
 		);
 
 		return '<table:table-row' . $row[1] . '>' . $cells . '</table:table-row>';
-	}//end writeIntoRow()
+	}//end writeIntoRowCells()
+
+	/**
+	 * A row element standing for $count copies of a row; empty for none.
+	 *
+	 * @param array<int, string> $row   The row match: [whole, attributes, cells].
+	 * @param int                $count How many rows it stands for.
+	 *
+	 * @return string The markup.
+	 */
+	private function rowRun(array $row, int $count): string {
+		if ($count < 1) {
+			return '';
+		}
+
+		return '<table:table-row' . $this->withRowRepeat(attributes: $row[1], count: $count) . '>' . $row[2] . '</table:table-row>';
+	}//end rowRun()
+
+	/**
+	 * Row attributes with their repeat count set; a count of 1 leaves the attribute out.
+	 *
+	 * @param string $attributes The row's attributes.
+	 * @param int    $count      The repeat count.
+	 *
+	 * @return string The attributes.
+	 */
+	private function withRowRepeat(string $attributes, int $count): string {
+		$attributes = (string)preg_replace('/\s*table:number-rows-repeated="\d+"/', '', $attributes);
+		if ($count === 1) {
+			return $attributes;
+		}
+
+		return $attributes . sprintf(' table:number-rows-repeated="%d"', $count);
+	}//end withRowRepeat()
 
 	/**
 	 * Rewrite one cell element when one of the columns it stands for is the target.
