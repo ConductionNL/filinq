@@ -46,6 +46,8 @@ use Psr\Log\LoggerInterface;
  * @link     https://www.filinq.app
  */
 class TemplatesController extends Controller {
+	use AnswersNotAuthenticated;
+
 	/**
 	 * Constructor for TemplatesController
 	 *
@@ -98,10 +100,7 @@ class TemplatesController extends Controller {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => 'Not authenticated'],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: 'Not authenticated');
 			}
 
 			$params = $this->requestHandler->parseListParams(request: $this->request);
@@ -151,10 +150,7 @@ class TemplatesController extends Controller {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => 'Not authenticated'],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: 'Not authenticated');
 			}
 
 			$result = $this->templateService->getTemplate(id: $id);
@@ -178,10 +174,7 @@ class TemplatesController extends Controller {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => 'Not authenticated'],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: 'Not authenticated');
 			}
 
 			$data = $this->requestHandler->parseBodyParams(request: $this->request);
@@ -212,10 +205,7 @@ class TemplatesController extends Controller {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => 'Not authenticated'],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: 'Not authenticated');
 			}
 
 			$data = $this->requestHandler->parseBodyParams(request: $this->request, stripKeys: ['id']);
@@ -245,10 +235,7 @@ class TemplatesController extends Controller {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => 'Not authenticated'],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: 'Not authenticated');
 			}
 
 			$this->templateService->deleteTemplate(id: $id);
@@ -277,10 +264,7 @@ class TemplatesController extends Controller {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => 'Not authenticated'],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: 'Not authenticated');
 			}
 
 			$result = $this->templateService->duplicateTemplate(id: $id);
@@ -306,10 +290,7 @@ class TemplatesController extends Controller {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => 'Not authenticated'],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: 'Not authenticated');
 			}
 
 			$userId = $this->getCurrentUserId();
@@ -345,10 +326,7 @@ class TemplatesController extends Controller {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => 'Not authenticated'],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: 'Not authenticated');
 			}
 
 			$userId = $this->getCurrentUserId();

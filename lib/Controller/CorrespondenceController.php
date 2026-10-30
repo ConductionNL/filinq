@@ -49,6 +49,8 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/changes/letter-correspondence-generation/tasks.md#task-1
  */
 class CorrespondenceController extends Controller {
+	use AnswersNotAuthenticated;
+
 	/**
 	 * Constructor for CorrespondenceController
 	 *
@@ -92,10 +94,7 @@ class CorrespondenceController extends Controller {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Not authenticated')],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 			}
 
 			$params = $this->parseGenerateParams();
@@ -251,10 +250,7 @@ class CorrespondenceController extends Controller {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Not authenticated')],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 			}
 
 			$templateId = $this->request->getParam('templateId');
@@ -318,10 +314,7 @@ class CorrespondenceController extends Controller {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Not authenticated')],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 			}
 
 			$status = $this->corrSvc->getJobStatus(jobId: $jobId);

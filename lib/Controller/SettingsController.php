@@ -52,6 +52,8 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/changes/anonymiser-backend-warning/tasks.md#task-3
  */
 class SettingsController extends Controller {
+	use AnswersNotAuthenticated;
+
 	/**
 	 * SettingsController constructor
 	 *
@@ -184,10 +186,7 @@ class SettingsController extends Controller {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => 'Not authenticated'],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: 'Not authenticated');
 			}
 
 			if ($this->groupManager->isAdmin($user->getUID()) === false) {
@@ -248,10 +247,7 @@ class SettingsController extends Controller {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => 'Not authenticated'],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: 'Not authenticated');
 			}
 
 			if ($this->groupManager->isAdmin($user->getUID()) === false) {

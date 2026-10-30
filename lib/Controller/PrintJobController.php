@@ -57,6 +57,7 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/changes/print-functionality/tasks.md#task-5
  */
 class PrintJobController extends Controller {
+	use AnswersNotAuthenticated;
 
 	/**
 	 * Constructor for PrintJobController
@@ -101,10 +102,7 @@ class PrintJobController extends Controller {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => 'Not authenticated'],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: 'Not authenticated');
 			}
 
 			$templateId = $this->request->getParam('templateId', '');
@@ -170,10 +168,7 @@ class PrintJobController extends Controller {
 	public function index(): JSONResponse {
 		$user = $this->userSession->getUser();
 		if ($user === null) {
-			return new JSONResponse(
-				data: ['error' => 'Not authenticated'],
-				statusCode: Http::STATUS_UNAUTHORIZED
-			);
+			return $this->notAuthenticated(message: 'Not authenticated');
 		}
 
 		try {
@@ -210,10 +205,7 @@ class PrintJobController extends Controller {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => 'Not authenticated'],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: 'Not authenticated');
 			}
 
 			$job = $this->printJobSvc->getJob(jobId: $id);
@@ -263,10 +255,7 @@ class PrintJobController extends Controller {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => 'Not authenticated'],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: 'Not authenticated');
 			}
 
 			$job = $this->printJobSvc->getJob(jobId: $id);
@@ -338,10 +327,7 @@ class PrintJobController extends Controller {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => 'Not authenticated'],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: 'Not authenticated');
 			}
 
 			$job = $this->printJobSvc->getJob(jobId: $id);
@@ -418,10 +404,7 @@ class PrintJobController extends Controller {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => 'Not authenticated'],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: 'Not authenticated');
 			}
 
 			$templateId = $this->request->getParam('templateId', '');
