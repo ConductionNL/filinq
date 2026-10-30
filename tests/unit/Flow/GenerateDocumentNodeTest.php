@@ -349,6 +349,64 @@ class GenerateDocumentNodeTest extends TestCase {
 	}//end testEveryFormFieldEditsAKeyTheNodeReads()
 
 	/**
+	 * The editor form, field by field, with every label and help text translated.
+	 *
+	 * @return void
+	 */
+	public function testConfigFormIsPinned(): void {
+		$l10n = $this->createMock(IL10N::class);
+		$l10n->method('t')->willReturnCallback(static fn (string $text): string => '[nl] ' . $text);
+		$node = new GenerateDocumentNode(
+			generator: $this->createMock(DocumentGenerationRequestService::class),
+			urls: $this->createMock(IURLGenerator::class),
+			l10n: $l10n
+		);
+
+		$form = $node->configForm();
+
+		$this->assertSame(
+			['templateId', 'templateSlug', 'templateNamespace', 'template', 'format', 'filename', 'storeFile', 'targetField', 'output'],
+			array_column($form, 'key')
+		);
+		$this->assertSame(['key', 'label', 'type', 'help'], array_keys($form[0]));
+		$this->assertSame('[nl] Template', $form[0]['label']);
+		$this->assertSame('[nl] Without extension. May use item fields, for example {{ identifier }}.', $form[5]['help']);
+		$this->assertSame('02d2184a91085102b5f166729eb228917026646e', sha1(json_encode($form)));
+	}//end testConfigFormIsPinned()
+
+	/**
+	 * The palette shows a translated name and description and the app icon.
+	 *
+	 * @return void
+	 */
+	public function testPaletteTextsAndIcon(): void {
+		$urls = $this->createMock(IURLGenerator::class);
+		$urls->method('imagePath')->with('filinq', 'app.svg')->willReturn('/apps/filinq/img/app.svg');
+		$urls->method('getAbsoluteURL')->willReturnCallback(static fn (string $path): string => 'https://cloud.example' . $path);
+		$node = new GenerateDocumentNode(
+			generator: $this->createMock(DocumentGenerationRequestService::class),
+			urls: $urls,
+			l10n: $this->createMock(IL10N::class)
+		);
+		$this->assertSame('https://cloud.example/apps/filinq/img/app.svg', $node->getIcon());
+
+		$this->assertSame('Generate document', $this->node->getDisplayName());
+		$this->assertSame('Render a Filinq template for each item and file the document with its object.', $this->node->getDescription());
+	}//end testPaletteTextsAndIcon()
+
+	/**
+	 * A blank output key is refused by the request rules before any document is made.
+	 *
+	 * @return void
+	 */
+	public function testABlankOutputKeyIsRefused(): void {
+		$this->documents->expects($this->never())->method('generateFromTemplate');
+		$this->expectException(\UnexpectedValueException::class);
+
+		$this->node->execute(items: [['json' => ['id' => 'x']]], config: ['template' => 'x', 'output' => '  '], context: []);
+	}//end testABlankOutputKeyIsRefused()
+
+	/**
 	 * Kind and category come from OpenRegister's closed lists.
 	 *
 	 * @return void
