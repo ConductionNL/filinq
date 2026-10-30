@@ -37,6 +37,7 @@ use ReflectionMethod;
  * @uses   \OCA\Filinq\Service\BaseLabelResolver
  * @uses   \OCA\Filinq\Service\DossierEntityCollector
  * @uses   \OCA\Filinq\Service\DossierObjectRepository
+ * @uses   \OCA\Filinq\Service\DossierPlaceholderRanker
  */
 class DossierBasesAggregateGoldenTest extends TestCase {
 
