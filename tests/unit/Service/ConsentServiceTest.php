@@ -876,7 +876,7 @@ class ConsentServiceTest extends TestCase {
 		$this->mockScopeValidator->expects($this->once())->method('validateTransition')
 			->with(['scope' => 'entity', 'consentStatus' => 'granted'], ['consentStatus' => 'revoked']);
 		$this->mockUpdateHandler->expects($this->once())->method('updateConsentStatus')
-			->with('c-1', 'reg-1', 'sch-1', ['consentStatus' => 'revoked'], 'anna')
+			->with(new RegisterObjectRef(id: 'c-1', register: 'reg-1', schema: 'sch-1'), new ConsentStatusChange(data: ['consentStatus' => 'revoked'], actor: 'anna'))
 			->willReturn(['id' => 'c-1', 'consentStatus' => 'revoked']);
 
 		$service = new ConsentService(
