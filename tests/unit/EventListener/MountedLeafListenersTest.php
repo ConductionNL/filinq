@@ -44,6 +44,7 @@ use RuntimeException;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
+ * @covers \OCA\Filinq\EventListener\MountedLeafListener
  * @covers \OCA\Filinq\EventListener\RegisterDocumentIntakeLeafListener
  * @covers \OCA\Filinq\EventListener\RegisterDocumentsLeafListener
  * @covers \OCA\Filinq\EventListener\RegisterDownloadAllFilesLeafListener
