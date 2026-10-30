@@ -593,6 +593,52 @@ class SigningAuditServiceTest extends TestCase {
 	}//end testValidActionsIncludesStart()
 
 	/**
+	 * The whole persisted context of an entry, with and without the optional
+	 * level, provider and metadata.
+	 *
+	 * @return void
+	 */
+	public function testTheWholeContextIsPersisted(): void {
+		$returnedTrail = $this->createMock(AuditTrail::class);
+		$returnedTrail->method('jsonSerialize')->willReturn(['id' => 7]);
+		$contexts = [];
+		$this->mapperMock->method('createAuditTrailEntry')->willReturnCallback(
+			function (ObjectEntity $obj, string $action, array $context) use (&$contexts, $returnedTrail): AuditTrail {
+				$contexts[] = [$action, $context];
+				return $returnedTrail;
+			}
+		);
+
+		$full = $this->service->logEvent(
+			signingRequestId: 'sign-9',
+			action: 'DECLINED',
+			actorUserId: 'u9',
+			actorDisplayName: 'User Nine',
+			ipAddress: '10.0.0.9',
+			signatureLevel: 'QES',
+			provider: 'native',
+			metadata: ['reason' => 'wrong document']
+		);
+		$this->service->logEvent(signingRequestId: 'sign-10', action: 'CANCELLED', actorUserId: 'u10', actorDisplayName: 'User Ten', ipAddress: '10.0.0.10');
+
+		$this->assertSame(['id' => 7], $full);
+		$this->assertSame(
+			[
+				[
+					'docudesk.signing.DECLINED',
+					['signRequestId' => 'sign-9', 'actorUserId' => 'u9', 'actorDisplayName' => 'User Nine', 'ipAddress' => '10.0.0.9', 'signatureLevel' => 'QES', 'provider' => 'native', 'extra' => ['reason' => 'wrong document']],
+				],
+				[
+					'docudesk.signing.CANCELLED',
+					['signRequestId' => 'sign-10', 'actorUserId' => 'u10', 'actorDisplayName' => 'User Ten', 'ipAddress' => '10.0.0.10', 'signatureLevel' => '', 'provider' => '', 'extra' => []],
+				],
+			],
+			$contexts
+		);
+
+	}//end testTheWholeContextIsPersisted()
+
+	/**
 	 * logEvent() and getAuditTrail() public surface must still be present.
 	 *
 	 * @return void
