@@ -257,13 +257,13 @@ class CorrespondenceService implements CorrespondenceServiceInterface {
 
 		// Log to correspondence register.
 		$registerEntry = $this->logCorrespondence(
-			templateId: $templateId,
-			templateName: ($template['name'] ?? ''),
-			dataRefs: $dataRefs,
-			format: $format,
-			status: 'generated',
-			errorMessage: null,
-			options: $options
+			request: new CorrespondenceRequest(templateId: $templateId, options: $options),
+			outcome: [
+				'templateName' => ($template['name'] ?? ''),
+				'dataRefs'     => $dataRefs,
+				'status'       => 'generated',
+				'errorMessage' => null,
+			]
 		);
 
 		return [
@@ -295,83 +295,31 @@ class CorrespondenceService implements CorrespondenceServiceInterface {
 		array $recipientIds,
 		array $options = [],
 	): array {
-		$count = count($recipientIds);
+		$request = new CorrespondenceRequest(templateId: $templateId, options: $options);
 
-		if ($count <= $this->getSyncBatchLimit()) {
-			return $this->generateBatchSync(
-				templateId: $templateId,
-				recipientIds: $recipientIds,
-				options: $options
-			);
+		if (count($recipientIds) <= $this->getSyncBatchLimit()) {
+			return $this->generateBatchSync(request: $request, recipientIds: $recipientIds);
 		}
 
-		return $this->dispatchBatchJob(
-			templateId: $templateId,
-			recipientIds: $recipientIds,
-			options: $options
-		);
+		return $this->dispatchBatchJob(request: $request, recipientIds: $recipientIds);
 
 	}//end generateBatch()
 
 	/**
 	 * Process a batch synchronously
 	 *
-	 * @param string $templateId The template UUID
-	 * @param array $recipientIds Array of recipient UUIDs
-	 * @param array $options Generation options
+	 * @param CorrespondenceRequest $request      The template and generation options
+	 * @param array                 $recipientIds Array of recipient UUIDs
 	 *
 	 * @return array{results: array, total: int, completed: int, errors: int}
 	 *
 	 * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-batch-correspondence-generation
 	 */
-	private function generateBatchSync(
-		string $templateId,
-		array $recipientIds,
-		array $options,
-	): array {
-		$register = $options['register'] ?? '';
-		$schema = $options['schema'] ?? '';
+	private function generateBatchSync(CorrespondenceRequest $request, array $recipientIds): array {
 		$results = [];
-
 		foreach ($recipientIds as $recipientId) {
-			$dataRefs = [
-				[
-					'register' => $register,
-					'schema' => $schema,
-					'id' => $recipientId,
-				],
-			];
-
-			try {
-				$result = $this->generate(
-					templateId: $templateId,
-					dataRefs: $dataRefs,
-					options: $options
-				);
-				$results[] = [
-					'recipientId' => $recipientId,
-					'status' => 'success',
-					'content' => $result['content'],
-					'warnings' => $result['warnings'],
-				];
-			} catch (Exception $e) {
-				$results[] = [
-					'recipientId' => $recipientId,
-					'status' => 'error',
-					'error' => $e->getMessage(),
-				];
-
-				$this->logCorrespondence(
-					templateId: $templateId,
-					templateName: '',
-					dataRefs: $dataRefs,
-					format: ($options['format'] ?? $this->getDefaultFormat()),
-					status: 'failed',
-					errorMessage: $e->getMessage(),
-					options: $options
-				);
-			}//end try
-		}//end foreach
+			$results[] = $this->generateForRecipient(request: $request, recipientId: $recipientId);
+		}
 
 		$errorCount = count(
 			array_filter(
@@ -392,30 +340,75 @@ class CorrespondenceService implements CorrespondenceServiceInterface {
 	}//end generateBatchSync()
 
 	/**
+	 * Generate the letter for one batch recipient, logging a failed entry when it fails
+	 *
+	 * @param CorrespondenceRequest $request     The template and generation options
+	 * @param string                $recipientId The recipient UUID
+	 *
+	 * @return array The recipient's batch result
+	 *
+	 * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-batch-correspondence-generation
+	 */
+	private function generateForRecipient(CorrespondenceRequest $request, string $recipientId): array {
+		$dataRefs = [
+			[
+				'register' => ($request->options['register'] ?? ''),
+				'schema' => ($request->options['schema'] ?? ''),
+				'id' => $recipientId,
+			],
+		];
+
+		try {
+			$result = $this->generate(
+				templateId: $request->templateId,
+				dataRefs: $dataRefs,
+				options: $request->options
+			);
+			return [
+				'recipientId' => $recipientId,
+				'status' => 'success',
+				'content' => $result['content'],
+				'warnings' => $result['warnings'],
+			];
+		} catch (Exception $e) {
+			$this->logCorrespondence(
+				request: $request,
+				outcome: [
+					'templateName' => '',
+					'dataRefs'     => $dataRefs,
+					'status'       => 'failed',
+					'errorMessage' => $e->getMessage(),
+				]
+			);
+			return [
+				'recipientId' => $recipientId,
+				'status' => 'error',
+				'error' => $e->getMessage(),
+			];
+		}//end try
+
+	}//end generateForRecipient()
+
+	/**
 	 * Dispatch a batch generation as a background job
 	 *
-	 * @param string $templateId The template UUID
-	 * @param array $recipientIds Array of recipient UUIDs
-	 * @param array $options Generation options
+	 * @param CorrespondenceRequest $request      The template and generation options
+	 * @param array                 $recipientIds Array of recipient UUIDs
 	 *
 	 * @return array{jobId: string, status: string, totalRecipients: int}
 	 *
 	 * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-batch-correspondence-generation
 	 */
-	private function dispatchBatchJob(
-		string $templateId,
-		array $recipientIds,
-		array $options,
-	): array {
+	private function dispatchBatchJob(CorrespondenceRequest $request, array $recipientIds): array {
 		$jobId = $this->generateJobId();
 
 		$this->jobList->add(
 			JobQueueInterface::BATCH_CORRESPONDENCE,
 			[
 				'jobId' => $jobId,
-				'templateId' => $templateId,
+				'templateId' => $request->templateId,
 				'recipientIds' => $recipientIds,
-				'options' => $options,
+				'options' => $request->options,
 			]
 		);
 
@@ -431,7 +424,7 @@ class CorrespondenceService implements CorrespondenceServiceInterface {
 				'completed' => 0,
 				'errors' => 0,
 				'results' => [],
-				'ownerUserId' => (string)($options['userId'] ?? ''),
+				'ownerUserId' => (string)($request->options['userId'] ?? ''),
 			]
 		);
 
@@ -758,46 +751,37 @@ class CorrespondenceService implements CorrespondenceServiceInterface {
 	/**
 	 * Log correspondence generation to the document register
 	 *
-	 * @param string $templateId The template UUID
-	 * @param string $templateName The template name
-	 * @param array $dataRefs The data references used
-	 * @param string $format The output format
-	 * @param string $status The generation status (generated|failed)
-	 * @param string|null $errorMessage Error message if status is failed
-	 * @param array $options The request options
+	 * The output format is the requested one, or the configured default.
+	 *
+	 * @param CorrespondenceRequest $request The template and generation options
+	 * @param array                 $outcome templateName, dataRefs, status (generated|failed), errorMessage
 	 *
 	 * @return array The created correspondence register entry
 	 *
 	 * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-correspondence-register-logging
 	 */
-	private function logCorrespondence(
-		string $templateId,
-		string $templateName,
-		array $dataRefs,
-		string $format,
-		string $status,
-		?string $errorMessage,
-		array $options,
-	): array {
+	private function logCorrespondence(CorrespondenceRequest $request, array $outcome): array {
+		$options = $request->options;
 		try {
 			$objectService = $this->getObjectService();
 
+			$dataRefs    = $outcome['dataRefs'];
 			$recipientId = '';
 			if (empty($dataRefs) === false && isset($dataRefs[0]['id']) === true) {
 				$recipientId = $dataRefs[0]['id'];
 			}
 
 			$entry = [
-				'templateId' => $templateId,
-				'templateName' => $templateName,
+				'templateId' => $request->templateId,
+				'templateName' => $outcome['templateName'],
 				'recipientId' => $recipientId,
 				'recipientType' => $options['recipientType'] ?? '',
 				'caseReference' => $options['caseReference'] ?? '',
 				'generatedAt' => date('c'),
-				'format' => $format,
-				'status' => $status,
+				'format' => ($options['format'] ?? $this->getDefaultFormat()),
+				'status' => $outcome['status'],
 				'generatedBy' => $options['userId'] ?? '',
-				'errorMessage' => $errorMessage,
+				'errorMessage' => $outcome['errorMessage'],
 			];
 
 			$result = $objectService->saveObject(
@@ -816,7 +800,7 @@ class CorrespondenceService implements CorrespondenceServiceInterface {
 		} catch (Exception $e) {
 			$this->logger->error(
 				message: 'Failed to log correspondence: ' . $e->getMessage(),
-				context: ['templateId' => $templateId, 'status' => $status]
+				context: ['templateId' => $request->templateId, 'status' => $outcome['status']]
 			);
 			return [];
 		}//end try
