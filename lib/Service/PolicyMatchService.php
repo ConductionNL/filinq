@@ -191,6 +191,8 @@ class PolicyMatchService {
 	 * @return array<string, mixed>|null Prohibition match, or null when none matches.
 	 *
 	 * @phpstan-return null|array{uuid: string, kind: 'prohibition', entityType: string, primaryName: string}
+	 *
+	 * @spec openspec/specs/entity-publication-policies/spec.md
 	 */
 	public function matchProhibition(
 		string $entityText,
