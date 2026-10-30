@@ -111,43 +111,52 @@ class SigningExpirationJob extends TimedJob {
 			return;
 		}
 
-		$now = new DateTimeImmutable();
+		$sweep = ['now' => new DateTimeImmutable(), 'objectService' => $objectService, 'register' => $register, 'schema' => $schema];
 		$expired = 0;
-
 		foreach (['PENDING', 'IN_PROGRESS'] as $status) {
-			try {
-				$results = $objectService->findAll(
-					[
-						'filters' => [
-							'register' => $register,
-							'schema' => $schema,
-							'status' => $status,
-						],
-					],
-					_rbac: false
-				);
-
-				foreach ($results as $result) {
-					$this->maybeExpire(
-						request: $this->normaliseResult(result: $result),
-						now: $now,
-						objectService: $objectService,
-						register: $register,
-						schema: $schema,
-						expired: $expired
-					);
-				}//end foreach
-			} catch (Exception $e) {
-				$this->logger->error(
-					'[SigningExpirationJob] Failed to process status ' . $status . ': ' . $e->getMessage(),
-					['exception' => $e]
-				);
-			}//end try
-		}//end foreach
+			$expired += $this->expireStatus(status: $status, sweep: $sweep);
+		}
 
 		$this->logger->info('[SigningExpirationJob] Done. Expired ' . $expired . ' request(s).');
 
 	}//end run()
+
+	/**
+	 * Expire the overdue requests of one status.
+	 *
+	 * @param string               $status The request status to sweep.
+	 * @param array<string, mixed> $sweep  The sweep: now, objectService, register, schema.
+	 *
+	 * @return int How many requests expired, also when the sweep of this status failed part-way.
+	 */
+	private function expireStatus(string $status, array $sweep): int {
+		$expired = 0;
+		try {
+			$results = $sweep['objectService']->findAll(
+				[
+					'filters' => [
+						'register' => $sweep['register'],
+						'schema' => $sweep['schema'],
+						'status' => $status,
+					],
+				],
+				_rbac: false
+			);
+
+			foreach ($results as $result) {
+				if ($this->maybeExpire(request: $this->normaliseResult(result: $result), sweep: $sweep) === true) {
+					$expired++;
+				}
+			}
+		} catch (Exception $e) {
+			$this->logger->error(
+				'[SigningExpirationJob] Failed to process status ' . $status . ': ' . $e->getMessage(),
+				['exception' => $e]
+			);
+		}//end try
+
+		return $expired;
+	}//end expireStatus()
 
 	/**
 	 * Normalise one findAll() result row into a plain associative array
@@ -171,25 +180,14 @@ class SigningExpirationJob extends TimedJob {
 	 * Expire a single request if its deadline has passed
 	 *
 	 * @param array<string, mixed> $request The signing request data
-	 * @param DateTimeImmutable $now The current time
-	 * @param object $objectService The OR object service
-	 * @param string $register The signing register
-	 * @param string $schema The signingRequest schema
-	 * @param int $expired Counter incremented on each expiry (by-ref)
+	 * @param array<string, mixed> $sweep   The sweep: now, objectService, register, schema.
 	 *
-	 * @return void
+	 * @return bool True when the request expired.
 	 */
-	private function maybeExpire(
-		array $request,
-		DateTimeImmutable $now,
-		object $objectService,
-		string $register,
-		string $schema,
-		int &$expired,
-	): void {
+	private function maybeExpire(array $request, array $sweep): bool {
 		$deadline = $request['deadline'] ?? '';
 		if ($deadline === '') {
-			return;
+			return false;
 		}
 
 		// Deadlines are persisted as ISO-8601/ATOM strings, which the
@@ -197,19 +195,17 @@ class SigningExpirationJob extends TimedJob {
 		// looser formats older records may carry, so it covers both the strict
 		// and the lenient path in one step. An unparseable value throws, and
 		// the caller's try/catch turns that into a logged, non-fatal skip.
-		$deadlineDate = new DateTimeImmutable($deadline);
-
-		if ($deadlineDate > $now) {
-			return;
+		if (new DateTimeImmutable($deadline) > $sweep['now']) {
+			return false;
 		}
 
 		$requestId = (string)($request['id'] ?? $request['uuid'] ?? '');
 		if ($requestId === '') {
-			return;
+			return false;
 		}
 
 		$request['status'] = 'EXPIRED';
-		$objectService->saveObject(object: $request, register: $register, schema: $schema, _rbac: false);
+		$sweep['objectService']->saveObject(object: $request, register: $sweep['register'], schema: $sweep['schema'], _rbac: false);
 
 		// Cross-app delegated-signing contract (filinq-signing-events): an
 		// expired request is terminal — emit SigningConcludedEvent
@@ -217,6 +213,23 @@ class SigningExpirationJob extends TimedJob {
 		// Internal requests emit nothing. Fail-soft inside the service.
 		$this->signingService->emitExpiredConclusion(request: $request);
 
+		$this->auditExpiry(request: $request, sweep: $sweep);
+
+		$this->logger->info('[SigningExpirationJob] Expired signing request ' . $requestId);
+		return true;
+
+	}//end maybeExpire()
+
+	/**
+	 * Write the audit event of an expired request; a failed write is logged, not thrown.
+	 *
+	 * @param array<string, mixed> $request The expired request.
+	 * @param array<string, mixed> $sweep   The sweep, for its moment.
+	 *
+	 * @return void
+	 */
+	private function auditExpiry(array $request, array $sweep): void {
+		$requestId = (string)($request['id'] ?? $request['uuid'] ?? '');
 		try {
 			$this->auditService->logEvent(
 				signingRequestId: $requestId,
@@ -226,7 +239,7 @@ class SigningExpirationJob extends TimedJob {
 				ipAddress: '127.0.0.1',
 				signatureLevel: (string)($request['signatureLevel'] ?? ''),
 				provider: (string)($request['provider'] ?? ''),
-				metadata: ['deadline' => $deadline, 'expiredAt' => $now->format(DateTimeInterface::ATOM)]
+				metadata: ['deadline' => $request['deadline'], 'expiredAt' => $sweep['now']->format(DateTimeInterface::ATOM)]
 			);
 		} catch (Exception $e) {
 			$this->logger->error(
@@ -234,8 +247,5 @@ class SigningExpirationJob extends TimedJob {
 			);
 		}
 
-		$expired++;
-		$this->logger->info('[SigningExpirationJob] Expired signing request ' . $requestId);
-
-	}//end maybeExpire()
+	}//end auditExpiry()
 }//end class
