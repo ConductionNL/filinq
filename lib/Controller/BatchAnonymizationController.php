@@ -34,6 +34,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
+use OCA\Filinq\Kernel\Contracts\AnonymizationProfileServiceInterface;
 use OCA\Filinq\Kernel\Contracts\BatchAnonymizeServiceInterface;
 use OCA\Filinq\Kernel\Contracts\BatchExtractionServiceInterface;
 use OCA\Filinq\Kernel\Contracts\BatchReportServiceInterface;
@@ -41,7 +42,6 @@ use OCA\Filinq\Kernel\Contracts\BatchStateServiceInterface;
 use OCA\Filinq\Kernel\Contracts\BatchUploadServiceInterface;
 use OCA\Filinq\Kernel\Contracts\EntityConsolidationServiceInterface;
 use OCA\Filinq\Kernel\Contracts\FolderBatchServiceInterface;
-use OCA\Filinq\Kernel\Contracts\WooProfileServiceInterface;
 use OCA\Filinq\Service\BatchRequestService;
 use OCA\Filinq\Settings\FilinqAdmin;
 use OCP\AppFramework\Controller;
@@ -93,7 +93,7 @@ class BatchAnonymizationController extends Controller {
 	 * @param BatchAnonymizeServiceInterface $anonService Service that applies approved entities across a batch.
 	 * @param BatchReportServiceInterface $reportService Service that produces the per-batch CSV report.
 	 * @param EntityConsolidationServiceInterface $entityService Service that merges per-file entity detections into one list.
-	 * @param WooProfileServiceInterface $profileService Service that stores the WOO entity profile.
+	 * @param AnonymizationProfileServiceInterface $profileService Service that stores the entity anonymization profile.
 	 * @param FolderBatchServiceInterface $folderBatchService Service that turns an existing folder into a batch.
 	 * @param IL10N $l10n Translator for user-facing error messages.
 	 * @param IAppConfig $appConfig Tenant configuration provider (reads
@@ -112,7 +112,7 @@ class BatchAnonymizationController extends Controller {
 		private readonly BatchAnonymizeServiceInterface $anonService,
 		private readonly BatchReportServiceInterface $reportService,
 		private readonly EntityConsolidationServiceInterface $entityService,
-		private readonly WooProfileServiceInterface $profileService,
+		private readonly AnonymizationProfileServiceInterface $profileService,
 		private readonly FolderBatchServiceInterface $folderBatchService,
 		private readonly IL10N $l10n,
 		private readonly IAppConfig $appConfig,
