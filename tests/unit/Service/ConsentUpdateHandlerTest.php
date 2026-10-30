@@ -20,7 +20,9 @@
 
 namespace OCA\Filinq\Tests\Unit\Service;
 
+use OCA\Filinq\Service\ConsentStatusChange;
 use OCA\Filinq\Service\ConsentUpdateHandler;
+use OCA\Filinq\Service\RegisterObjectRef;
 use OCP\App\IAppManager;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -100,7 +102,7 @@ class ConsentUpdateHandlerTest extends TestCase {
 		$this->mockAppManager->method('getInstalledApps')
 			->willReturn([]);
 
-		$this->handler->updateConsentStatus('uuid-1', 'reg-1', 'sch-1', ['status' => 'granted']);
+		$this->handler->updateConsentStatus(consent: new RegisterObjectRef(id: 'uuid-1', register: 'reg-1', schema: 'sch-1'), change: new ConsentStatusChange(data: ['status' => 'granted']));
 
 	}//end testUpdateConsentStatusThrowsWhenNotInstalled()
 
@@ -426,13 +428,7 @@ class ConsentUpdateHandlerTest extends TestCase {
 		$this->mockAppManager->method('getInstalledApps')->willReturn(['openregister']);
 		$this->mockContainer->method('get')->willReturn($objects);
 
-		$result = $this->handler->updateConsentStatus(
-			consentId: 'c-1',
-			register: 'filinq',
-			schema: 'publicationConsent',
-			data: ['consentStatus' => 'consent_given', 'evidence' => 'Signed form received by post'],
-			actor: 'ingrid'
-		);
+		$result = $this->handler->updateConsentStatus(consent: new RegisterObjectRef(id: 'c-1', register: 'filinq', schema: 'publicationConsent'), change: new ConsentStatusChange(data: ['consentStatus' => 'consent_given', 'evidence' => 'Signed form received by post'], actor: 'ingrid'));
 
 		$this->assertSame(expected: 'consent_given', actual: $result['consentStatus']);
 		$this->assertSame(expected: 'ingrid', actual: $result['statusEvents'][0]['by']);
@@ -459,13 +455,7 @@ class ConsentUpdateHandlerTest extends TestCase {
 		$this->expectException(exception: \InvalidArgumentException::class);
 		$this->expectExceptionCode(code: 400);
 
-		$this->handler->updateConsentStatus(
-			consentId: 'c-1',
-			register: 'filinq',
-			schema: 'publicationConsent',
-			data: ['consentStatus' => 'consent_given'],
-			actor: 'ingrid'
-		);
+		$this->handler->updateConsentStatus(consent: new RegisterObjectRef(id: 'c-1', register: 'filinq', schema: 'publicationConsent'), change: new ConsentStatusChange(data: ['consentStatus' => 'consent_given'], actor: 'ingrid'));
 
 	}//end testAConsentWithoutEvidenceIsNotSaved()
 }//end class

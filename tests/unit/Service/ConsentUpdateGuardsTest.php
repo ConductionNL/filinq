@@ -24,7 +24,9 @@ namespace OCA\Filinq\Tests\Unit\Service;
 use DateTimeImmutable;
 use Exception;
 use InvalidArgumentException;
+use OCA\Filinq\Service\ConsentStatusChange;
 use OCA\Filinq\Service\ConsentUpdateHandler;
+use OCA\Filinq\Service\RegisterObjectRef;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
@@ -133,13 +135,7 @@ class ConsentUpdateGuardsTest extends TestCase {
 	 * @return array<string, mixed> The saved record.
 	 */
 	private function update(array $world, array $data): array {
-		return $this->handler(world: $world)->updateConsentStatus(
-			consentId: 'c-1',
-			register: 'filinq',
-			schema: 'publicationConsent',
-			data: $data,
-			actor: 'ingrid'
-		);
+		return $this->handler(world: $world)->updateConsentStatus(consent: new RegisterObjectRef(id: 'c-1', register: 'filinq', schema: 'publicationConsent'), change: new ConsentStatusChange(data: $data, actor: 'ingrid'));
 	}//end update()
 
 	/**

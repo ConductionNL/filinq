@@ -61,6 +61,10 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/consent-management/spec.md
  * @spec openspec/changes/consent-create-idempotency-and-notes/tasks.md#task-1
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The thirteenth and fourteenth
+ * classes are RegisterObjectRef and ConsentStatusChange: the contract keeps its
+ * five-argument update, and this class turns it into the handler's two values.
  */
 class ConsentService implements ConsentServiceInterface {
 	/**
@@ -365,11 +369,8 @@ class ConsentService implements ConsentServiceInterface {
 		string $actor = '',
 	): array {
 		return $this->updateHandler->updateConsentStatus(
-			consentId: $consentId,
-			register: $register,
-			schema: $schema,
-			data: $data,
-			actor: $actor
+			consent: new RegisterObjectRef(id: $consentId, register: $register, schema: $schema),
+			change: new ConsentStatusChange(data: $data, actor: $actor)
 		);
 
 	}//end updateConsentStatus()

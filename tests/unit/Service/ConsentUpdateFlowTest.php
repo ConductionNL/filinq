@@ -23,7 +23,9 @@ namespace OCA\Filinq\Tests\Unit\Service;
 
 use Exception;
 use InvalidArgumentException;
+use OCA\Filinq\Service\ConsentStatusChange;
 use OCA\Filinq\Service\ConsentUpdateHandler;
+use OCA\Filinq\Service\RegisterObjectRef;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
@@ -112,13 +114,7 @@ class ConsentUpdateFlowTest extends TestCase {
 	public function testWhitelistedFieldsAreSaved(): void {
 		$stored = ['consentStatus' => 'pending', 'notificationStatus' => 'pending', 'documentId' => 'd-1', 'policyMatch' => null];
 
-		$result = $this->handler(stored: $stored)->updateConsentStatus(
-			consentId: 'c-1',
-			register: 'filinq',
-			schema: 'publicationConsent',
-			data: ['notificationStatus' => 'sent', 'objectionReason' => 'privacy', 'documentId' => 'd-9', 'extra' => 'x', 'evidence' => 'mail'],
-			actor: 'ingrid'
-		);
+		$result = $this->handler(stored: $stored)->updateConsentStatus(consent: new RegisterObjectRef(id: 'c-1', register: 'filinq', schema: 'publicationConsent'), change: new ConsentStatusChange(data: ['notificationStatus' => 'sent', 'objectionReason' => 'privacy', 'documentId' => 'd-9', 'extra' => 'x', 'evidence' => 'mail'], actor: 'ingrid'));
 
 		$this->assertSame(
 			expected: [
@@ -204,7 +200,7 @@ class ConsentUpdateFlowTest extends TestCase {
 	 */
 	private function failure(ConsentUpdateHandler $handler, array $data=['notificationStatus' => 'sent']): Throwable {
 		try {
-			$handler->updateConsentStatus(consentId: 'c-1', register: 'filinq', schema: 'publicationConsent', data: $data);
+			$handler->updateConsentStatus(consent: new RegisterObjectRef(id: 'c-1', register: 'filinq', schema: 'publicationConsent'), change: new ConsentStatusChange(data: $data));
 		} catch (Throwable $e) {
 			return $e;
 		}

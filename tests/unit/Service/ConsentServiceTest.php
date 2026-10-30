@@ -27,9 +27,11 @@ use OCA\Filinq\Service\ConsentNotesHelper;
 use OCA\Filinq\Service\ConsentRecordWriter;
 use OCA\Filinq\Service\ConsentScopeValidator;
 use OCA\Filinq\Service\ConsentService;
+use OCA\Filinq\Service\ConsentStatusChange;
 use OCA\Filinq\Service\ConsentUpdateHandler;
 use OCA\Filinq\Service\ObjectionDeadlineChecker;
 use OCA\Filinq\Service\PolicyMatchService;
+use OCA\Filinq\Service\RegisterObjectRef;
 use OCP\App\IAppManager;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -257,10 +259,13 @@ class ConsentServiceTest extends TestCase {
 		);
 
 		$this->mockUpdateHandler->method('updateConsentStatus')
-			->with('uuid-1', 'reg-1', 'sch-1', ['consentStatus' => 'granted'])
+			->with(
+				new RegisterObjectRef(id: 'uuid-1', register: 'reg-1', schema: 'sch-1'),
+				new ConsentStatusChange(data: ['consentStatus' => 'granted'], actor: 'ingrid')
+			)
 			->willReturn($expected);
 
-		$result = $service->updateConsentStatus(consentId: 'uuid-1', register: 'reg-1', schema: 'sch-1', data: ['consentStatus' => 'granted']);
+		$result = $service->updateConsentStatus(consentId: 'uuid-1', register: 'reg-1', schema: 'sch-1', data: ['consentStatus' => 'granted'], actor: 'ingrid');
 		$this->assertEquals(expected: $expected, actual: $result);
 
 	}//end testUpdateConsentStatusDelegates()
