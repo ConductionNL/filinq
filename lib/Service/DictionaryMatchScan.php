@@ -65,6 +65,8 @@ final class DictionaryMatchScan {
 	 * @param int $end   Absolute match end.
 	 *
 	 * @return bool True when the range was free and is now claimed.
+	 *
+	 * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
 	 */
 	public function claim(int $start, int $end): bool {
 		foreach ($this->claimed as [$claimedStart, $claimedEnd]) {
@@ -83,6 +85,8 @@ final class DictionaryMatchScan {
 	 * @param string $value The matched value.
 	 *
 	 * @return int|null The entity id.
+	 *
+	 * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
 	 */
 	public function entityIdOf(string $value): ?int {
 		return $this->entityIds[$value] ?? null;
@@ -95,6 +99,8 @@ final class DictionaryMatchScan {
 	 * @param int    $entityId The entity id.
 	 *
 	 * @return int The entity id.
+	 *
+	 * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
 	 */
 	public function remember(string $value, int $entityId): int {
 		$this->entityIds[$value] = $entityId;
