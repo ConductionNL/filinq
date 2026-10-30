@@ -47,6 +47,13 @@ class EmlPdfAssemblyDividerTest extends TestCase {
 	private array $calls = [];
 
 	/**
+	 * The PDF the last assembly produced.
+	 *
+	 * @var string
+	 */
+	private string $lastPdf = '';
+
+	/**
 	 * Assemble a structure with a spying attachment renderer.
 	 *
 	 * @param array<int, object>    $attachments The attachments.
@@ -83,7 +90,7 @@ class EmlPdfAssemblyDividerTest extends TestCase {
 		);
 
 		$service = new EmlPdfAssemblyService($pdfService, $templates, $appConfig, $logger, null, $renderer);
-		$service->assemble(result: $this->structure(attachments: $attachments));
+		$this->lastPdf = $service->assemble(result: $this->structure(attachments: $attachments));
 
 	}//end assemble()
 
@@ -180,4 +187,22 @@ class EmlPdfAssemblyDividerTest extends TestCase {
 		);
 
 	}//end testAppendOffAndRenderFailure()
+
+	/**
+	 * A nested message starts on a page of its own.
+	 *
+	 * @return void
+	 */
+	public function testANestedMessageStartsOnItsOwnPage(): void {
+		$this->assemble(attachments: []);
+		$flat = $this->lastPdf;
+		$nested = $this->structure(attachments: []);
+		$this->assemble(attachments: [$this->attachment('n.eml', 'message/rfc822', null, ['nestedEml' => $nested])]);
+
+		$this->assertSame(
+			preg_match_all('#/Type\s*/Page\b#', $flat) + 1,
+			preg_match_all('#/Type\s*/Page\b#', $this->lastPdf)
+		);
+
+	}//end testANestedMessageStartsOnItsOwnPage()
 }//end class
