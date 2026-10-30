@@ -253,6 +253,18 @@ class FinalDocumentRepository {
 	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	public function dossiersByFile(): array {
+		return $this->dossierIndex()->byFile();
+
+	}//end dossiersByFile()
+
+	/**
+	 * Every dossier the caller may read, as an index by member file and by folder.
+	 *
+	 * @return DossierFileIndex The index, empty when the dossiers cannot be read.
+	 *
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
+	 */
+	public function dossierIndex(): DossierFileIndex {
 		try {
 			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
 				registerSlug: self::REGISTER,
@@ -265,7 +277,7 @@ class FinalDocumentRepository {
 				context: ['file' => __FILE__, 'line' => __LINE__, 'error' => $e->getMessage()]
 			);
 
-			return [];
+			return new DossierFileIndex();
 		}
 
 		$index = new DossierFileIndex();
@@ -283,13 +295,14 @@ class FinalDocumentRepository {
 			$self = (array) ($data['@self'] ?? []);
 			$index->add(
 				dossier: ['id' => (string) $fields['uuid'], 'name' => $fields['name']],
-				members: array_merge((array) ($self['files'] ?? []), (array) ($fields['documents'] ?? []))
+				members: array_merge((array) ($self['files'] ?? []), (array) ($fields['documents'] ?? [])),
+				folder: (int) ($self['folder'] ?? 0)
 			);
 		}
 
-		return $index->byFile();
+		return $index;
 
-	}//end dossiersByFile()
+	}//end dossierIndex()
 
 	/**
 	 * Every document record linked to one domain.

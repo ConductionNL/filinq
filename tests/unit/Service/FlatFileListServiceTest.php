@@ -55,10 +55,11 @@ class FlatFileListServiceTest extends TestCase {
 	 * @param array<int, string> $files File id to file name, for the files this user can see.
 	 * @param array<int, array<string, mixed>> $dossiers The stored dossiers.
 	 * @param array<int, string> $objectFiles File id to file name, for files in an object's folder this user may read through the object.
+	 * @param array<int, int> $parents File id to the id of the folder it is in.
 	 *
 	 * @return FlatFileListService The service under test.
 	 */
-	private function service(array $records, array $files, array $dossiers=[], array $objectFiles=[]): FlatFileListService {
+	private function service(array $records, array $files, array $dossiers=[], array $objectFiles=[], array $parents=[]): FlatFileListService {
 		$objectService = $this->createMock(ObjectService::class);
 		$objectService->method('searchObjectsBySlug')->willReturnCallback(
 			function (string $registerSlug, string $schemaSlug) use ($records, $dossiers): array {
@@ -74,12 +75,15 @@ class FlatFileListServiceTest extends TestCase {
 
 		$userFolder = $this->createMock(Folder::class);
 		$userFolder->method('getById')->willReturnCallback(
-			function (int $fileId) use ($files): array {
+			function (int $fileId) use ($files, $parents): array {
 				if (isset($files[$fileId]) === false) {
 					return [];
 				}
 
+				$parent = $this->createMock(originalClassName: Folder::class);
+				$parent->method('getId')->willReturn($parents[$fileId] ?? 1);
 				$file = $this->createMock(File::class);
+				$file->method('getParent')->willReturn($parent);
 				$file->method('getName')->willReturn($files[$fileId]);
 				$file->method('getPath')->willReturn('/anna/files/Zaken/' . $files[$fileId]);
 				$file->method('getSize')->willReturn(1024);
@@ -335,6 +339,37 @@ class FlatFileListServiceTest extends TestCase {
 		$this->assertNull(actual: $byName['los.pdf']);
 
 	}//end testAFileNamesTheDossierItIsIn()
+
+	/**
+	 * A dossier read from the register carries its folder but no file list
+	 * (OpenRegister fills `@self.files` only when it renders an object), so a
+	 * file in that folder still names the dossier.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
+	 */
+	public function testAFileInADossiersFolderNamesItWithoutAFileList(): void {
+		$dossier = [
+			'uuid' => 'dossier-1',
+			'name' => 'Fietspad Lindelaan',
+			'@self' => ['files' => [], 'folder' => 900],
+		];
+		$page = $this->service(
+			records: [
+				$this->record(uuid: 'record-1', fileId: 4711),
+				$this->record(uuid: 'record-4', fileId: 4714),
+			],
+			files: [4711 => 'advies.pdf', 4714 => 'los.pdf'],
+			dossiers: [$dossier],
+			parents: [4711 => 900, 4714 => 901]
+		)->listFor(domain: ['register' => 'zaken', 'schema' => 'zaak', 'id' => 'zaak-1']);
+
+		$byName = array_column(array: $page['results'], column_key: 'dossier', index_key: 'name');
+		$this->assertSame(expected: ['id' => 'dossier-1', 'name' => 'Fietspad Lindelaan'], actual: $byName['advies.pdf']);
+		$this->assertNull(actual: $byName['los.pdf']);
+
+	}//end testAFileInADossiersFolderNamesItWithoutAFileList()
 
 	/**
 	 * A file in the folder of an object the reader may read is listed, though

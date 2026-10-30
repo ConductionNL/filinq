@@ -38,6 +38,13 @@ final class DossierFileIndex {
 	private array $byFile = [];
 
 	/**
+	 * The dossier by the id of its folder.
+	 *
+	 * @var array<int, array{id: string, name: string}>
+	 */
+	private array $byFolder = [];
+
+	/**
 	 * Claim a dossier's member files that no earlier dossier claimed.
 	 *
 	 * A member is a file id, or an array carrying it under `id`. Members
@@ -45,14 +52,19 @@ final class DossierFileIndex {
 	 *
 	 * @param array{id: string, name: string} $dossier The dossier.
 	 * @param array<int|string, mixed>        $members Its member files.
+	 * @param int                             $folder  The id of its folder, 0 when unknown.
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
-	public function add(array $dossier, array $members): void {
+	public function add(array $dossier, array $members, int $folder=0): void {
 		if ($dossier['id'] === '') {
 			return;
+		}
+
+		if ($folder > 0 && isset($this->byFolder[$folder]) === false) {
+			$this->byFolder[$folder] = $dossier;
 		}
 
 		foreach ($members as $member) {
@@ -77,4 +89,20 @@ final class DossierFileIndex {
 	public function byFile(): array {
 		return $this->byFile;
 	}//end byFile()
+
+	/**
+	 * The dossier a file is in: a member file, else a file in a dossier's
+	 * folder. A dossier read from the register carries its folder but not
+	 * always its file list, which OpenRegister fills only when it renders.
+	 *
+	 * @param int $fileId   The file id.
+	 * @param int $folderId The id of the folder the file is in, 0 when unknown.
+	 *
+	 * @return array{id: string, name: string}|null The dossier, or null.
+	 *
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
+	 */
+	public function of(int $fileId, int $folderId=0): ?array {
+		return ($this->byFile[$fileId] ?? ($this->byFolder[$folderId] ?? null));
+	}//end of()
 }//end class
