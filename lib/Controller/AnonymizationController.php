@@ -32,6 +32,7 @@ namespace OCA\Filinq\Controller;
 
 use OCA\Filinq\Exception\ConversionFailedException;
 use OCA\Filinq\Exception\RedactionNotReviewedException;
+use OCA\Filinq\Kernel\AnonymizeCall;
 use OCA\Filinq\Kernel\Contracts\AnonymizationServiceInterface;
 use OCA\Filinq\Kernel\Contracts\AnonymizeRequestServiceInterface;
 use OCA\Filinq\Kernel\Contracts\FileListingServiceInterface;
@@ -56,7 +57,8 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The thirteenth type is
  * RedactionNotReviewedException, caught here so a document nobody checked is
  * answered with a 409 the reviewer can act on instead of falling through to
- * the catch-all 500.
+ * the catch-all 500. The fourteenth is AnonymizeCall, the one value a
+ * validated request is run with.
  */
 class AnonymizationController extends Controller {
 
@@ -323,7 +325,9 @@ class AnonymizationController extends Controller {
 				return $this->invalidOutputFormatResponse();
 			}
 
-			return $this->runAnonymize(fileId: $fileId, params: $params, request: $validated['request'], outputFormat: $outputFormat);
+			return $this->runAnonymize(
+				call: new AnonymizeCall(fileId: $fileId, params: $params, request: $validated['request'], outputFormat: $outputFormat)
+			);
 		} catch (\Throwable $e) {
 			return $this->anonymizeFailedResponse(exception: $e);
 		}//end try
@@ -417,27 +421,21 @@ class AnonymizationController extends Controller {
 	 * A failed PDF conversion answers 422 (the run is rolled back) and a run
 	 * nobody checked answers 409. Any other failure reaches the caller.
 	 *
-	 * @param int $fileId The Nextcloud file ID.
-	 * @param array<array-key, mixed> $params The request parameters.
-	 * @param array<array-key, mixed> $request The validated request.
-	 * @param string $outputFormat The resolved output format.
+	 * @param AnonymizeCall $call The file, parameters, validated request and output format.
 	 *
 	 * @return JSONResponse The result.
 	 *
 	 * @spec openspec/specs/anonymization/spec.md
 	 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-1
 	 */
-	private function runAnonymize(int $fileId, array $params, array $request, string $outputFormat): JSONResponse {
+	private function runAnonymize(AnonymizeCall $call): JSONResponse {
 		try {
 			$result = $this->anonymizeRequest->executeAnonymize(
-				fileId: $fileId,
-				userId: $this->anonymizeRequest->currentUserId(),
-				params: $params,
-				request: $request,
-				outputFormat: $outputFormat
+				call: $call,
+				userId: $this->anonymizeRequest->currentUserId()
 			);
 		} catch (ConversionFailedException $e) {
-			return $this->conversionFailedResponse(exception: $e, outputFormat: $outputFormat);
+			return $this->conversionFailedResponse(exception: $e, outputFormat: $call->outputFormat);
 		} catch (RedactionNotReviewedException $e) {
 			return $this->reviewRefusal(refusal: $e);
 		}

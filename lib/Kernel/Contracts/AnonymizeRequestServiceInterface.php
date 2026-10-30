@@ -23,6 +23,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Kernel\Contracts;
 
 use OCA\Filinq\Exception\ConversionFailedException;
+use OCA\Filinq\Kernel\AnonymizeCall;
 
 /**
  * Contract of AnonymizeRequestService.
@@ -101,11 +102,8 @@ interface AnonymizeRequestServiceInterface {
 	 * `ConversionFailedException` propagates to the caller by design — the
 	 * controller owns the documented 422 conversion body.
 	 *
-	 * @param int $fileId The Nextcloud file ID.
-	 * @param string $userId UID of the acting user (for override audit entries).
-	 * @param array<string, mixed> $params Raw request parameters (scope, dossierKey, filters).
-	 * @param array<string, mixed> $request The normalised body from validateBody().
-	 * @param string $outputFormat The resolved output format.
+	 * @param AnonymizeCall $call   The file, parameters, body and output format.
+	 * @param string        $userId UID of the acting user (for override audit entries).
 	 *
 	 * @return array{status: int, body: array<string, mixed>} The response payload.
 	 *
@@ -116,7 +114,7 @@ interface AnonymizeRequestServiceInterface {
 	 * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-11
 	 * @spec openspec/changes/archive/2026-09-29-anonymisation-fails-closed-without-a-detector/tasks.md#task-2
 	 */
-	public function executeAnonymize(int $fileId, string $userId, array $params, array $request, string $outputFormat): array;
+	public function executeAnonymize(AnonymizeCall $call, string $userId): array;
 
 	/**
 	 * Record a per-entity skip/include decision, guarded by the prohibition policy.

@@ -19,6 +19,7 @@ namespace OCA\Filinq\Tests\Unit\Service;
 
 use OCA\Filinq\Exception\DetectionUnavailableException;
 use OCA\Filinq\Exception\ProhibitionGateException;
+use OCA\Filinq\Kernel\AnonymizeCall;
 use OCA\Filinq\Kernel\Contracts\AnonymizationServiceInterface;
 use OCA\Filinq\Service\AnonymizeRequestService;
 use OCP\Files\IRootFolder;
@@ -132,13 +133,7 @@ class AnonymizeRequestExecuteTest extends TestCase {
 	 * @return void
 	 */
 	public function testARunGetsTheFilteredEntitiesAndEveryField(): void {
-		$response = $this->service()->executeAnonymize(
-			fileId: 42,
-			userId: 'noor',
-			params: ['excludeTypes' => ['EMAIL'], 'minConfidence' => '0.5', 'scope' => 'dossier', 'dossierKey' => 'z-7'],
-			request: self::REQUEST + ['reversible' => true],
-			outputFormat: 'preserve'
-		);
+		$response = $this->service()->executeAnonymize(call: new AnonymizeCall(fileId: 42, params: ['excludeTypes' => ['EMAIL'], 'minConfidence' => '0.5', 'scope' => 'dossier', 'dossierKey' => 'z-7'], request: self::REQUEST + ['reversible' => true], outputFormat: 'preserve'), userId: 'noor');
 
 		$this->assertSame(['status' => 200, 'body' => ['anonymizedFileId' => 99]], $response);
 		$this->assertSame(
@@ -171,13 +166,7 @@ class AnonymizeRequestExecuteTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheBasisSummaryRunAndStrayBases(): void {
-		$response = $this->service()->executeAnonymize(
-			fileId: 7,
-			userId: 'anna',
-			params: [],
-			request: array_merge(self::REQUEST, ['appendBasisSummary' => true, 'hasStrayBases' => true]),
-			outputFormat: 'pdf-only'
-		);
+		$response = $this->service()->executeAnonymize(call: new AnonymizeCall(fileId: 7, params: [], request: array_merge(self::REQUEST, ['appendBasisSummary' => true, 'hasStrayBases' => true]), outputFormat: 'pdf-only'), userId: 'anna');
 
 		$this->assertSame(['status' => 200, 'body' => ['anonymizedFileId' => 99, 'ignoredFields' => ['bases']]], $response);
 		$this->assertSame('anonymizeDocumentWithBasisSummary', $this->calls[1][0]);
@@ -204,13 +193,7 @@ class AnonymizeRequestExecuteTest extends TestCase {
 	 * @return void
 	 */
 	public function testAnAbsoluteProhibitionRefusesBeforeTheRun(): void {
-		$response = $this->service(violations: [['entity' => 'Jan']])->executeAnonymize(
-			fileId: 42,
-			userId: 'noor',
-			params: [],
-			request: self::REQUEST,
-			outputFormat: 'preserve'
-		);
+		$response = $this->service(violations: [['entity' => 'Jan']])->executeAnonymize(call: new AnonymizeCall(fileId: 42, params: [], request: self::REQUEST, outputFormat: 'preserve'), userId: 'noor');
 
 		$this->assertSame(
 			[
@@ -233,14 +216,14 @@ class AnonymizeRequestExecuteTest extends TestCase {
 	 */
 	public function testTheProhibitionGateAnswers(): void {
 		$blocked = $this->service(throws: new ProhibitionGateException(missingMatches: [['m' => 1]], rejectedOverrides: [['o' => 2]]))
-			->executeAnonymize(fileId: 5, userId: 'u', params: [], request: self::REQUEST, outputFormat: 'preserve');
+			->executeAnonymize(call: new AnonymizeCall(fileId: 5, params: [], request: self::REQUEST, outputFormat: 'preserve'), userId: 'u');
 		$this->assertSame(422, $blocked['status']);
 		$this->assertSame([['m' => 1]], $blocked['body']['missingProhibitionMatches']);
 		$this->assertSame([['o' => 2]], $blocked['body']['rejectedOverrides']);
 
 		$this->calls = [];
 		$closed = $this->service(throws: new ProhibitionGateException(backendUnavailable: 'or down'))
-			->executeAnonymize(fileId: 6, userId: 'u', params: [], request: self::REQUEST, outputFormat: 'preserve');
+			->executeAnonymize(call: new AnonymizeCall(fileId: 6, params: [], request: self::REQUEST, outputFormat: 'preserve'), userId: 'u');
 		$this->assertSame(503, $closed['status']);
 		$this->assertSame('or down', $closed['body']['backendUnavailable']);
 		$this->assertSame(['log warning', 'ProhibitionGate failed closed: or down', ['fileId' => 6]], $this->calls[2]);
@@ -255,7 +238,7 @@ class AnonymizeRequestExecuteTest extends TestCase {
 	public function testNoLiveDetectorAnswers503(): void {
 		$refusal = new DetectionUnavailableException(reason: DetectionUnavailableException::REASON_UNAVAILABLE, message: 'presidio gone', backend: 'presidio');
 		$response = $this->service(throws: $refusal)
-			->executeAnonymize(fileId: 8, userId: 'u', params: [], request: self::REQUEST, outputFormat: 'preserve');
+			->executeAnonymize(call: new AnonymizeCall(fileId: 8, params: [], request: self::REQUEST, outputFormat: 'preserve'), userId: 'u');
 
 		$this->assertSame(503, $response['status']);
 		$this->assertSame('presidio', $response['body']['detectionBackend']);
