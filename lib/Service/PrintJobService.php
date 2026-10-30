@@ -88,8 +88,9 @@ class PrintJobService implements PrintJobServiceInterface {
 	 *
 	 * Without a download name the job and its letter are document.pdf.
 	 *
-	 * @param PrintJobRequest      $request The template, options, user and download name
+	 * @param PrintJobRequest      $request The template, options and download name
 	 * @param array<string, mixed> $data    Data context for template rendering
+	 * @param string               $userId  UID of the requesting user
 	 *
 	 * @return array{jobId: string, status: string, total: int, printConfig: array}
 	 *
@@ -97,12 +98,13 @@ class PrintJobService implements PrintJobServiceInterface {
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-print-jobs-in-the-app/tasks.md#task-1.2
 	 */
-	public function createJob(PrintJobRequest $request, array $data = []): array {
+	public function createJob(PrintJobRequest $request, array $data, string $userId): array {
 		$filename = $request->filenameOr(default: 'document.pdf');
 
 		return $this->createBatchJob(
 			request: $request->named(filename: $filename),
-			items: [['data' => $data, 'filename' => $filename]]
+			items: [['data' => $data, 'filename' => $filename]],
+			userId: $userId
 		);
 
 	}//end createJob()
@@ -115,8 +117,9 @@ class PrintJobService implements PrintJobServiceInterface {
 	 * rendered now; a larger batch is rendered by BatchPrintJob. Without a
 	 * download name the job is print-job.pdf.
 	 *
-	 * @param PrintJobRequest $request The template, options, user and download name
+	 * @param PrintJobRequest $request The template, options and download name
 	 * @param array           $items   The letters
+	 * @param string          $userId  UID of the requesting user
 	 *
 	 * @return array{jobId: string, status: string, total: int, printConfig: array}
 	 *
@@ -124,9 +127,11 @@ class PrintJobService implements PrintJobServiceInterface {
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-print-jobs-in-the-app/tasks.md#task-1.2
 	 */
-	public function createBatchJob(PrintJobRequest $request, array $items = []): array {
+	public function createBatchJob(PrintJobRequest $request, array $items, string $userId): array {
 		$items = array_values($items);
-		$job = $this->jobs->save(job: $this->newJob(request: $request, total: count($items)));
+		$row = $this->newJob(request: $request, userId: $userId);
+		$row['total'] = count($items);
+		$job = $this->jobs->save(job: $row);
 
 		if (count($items) <= self::SYNC_BATCH_LIMIT) {
 			$job = $this->renderJob(jobId: $job['uuid'], templateId: $request->templateId, items: $items, options: $request->options);
@@ -334,23 +339,23 @@ class PrintJobService implements PrintJobServiceInterface {
 	}//end buildPrintConfig()
 
 	/**
-	 * A new job row in the rendering state.
+	 * A new job row in the rendering state, without letters yet.
 	 *
-	 * @param PrintJobRequest $request The template, options, user and download name
-	 * @param int             $total   The number of letters
+	 * @param PrintJobRequest $request The template, options and download name
+	 * @param string          $userId  UID of the requesting user
 	 *
 	 * @return array<string, mixed> The row.
 	 */
-	private function newJob(PrintJobRequest $request, int $total): array {
+	private function newJob(PrintJobRequest $request, string $userId): array {
 		$now = $this->now();
 
 		return [
 			'status' => 'rendering',
-			'requestedBy' => $request->userId,
+			'requestedBy' => $userId,
 			'requestedAt' => $now,
 			'templateId' => $request->templateId,
 			'filename' => $request->filenameOr(default: 'print-job.pdf'),
-			'total' => $total,
+			'total' => 0,
 			'rendered' => 0,
 			'errors' => 0,
 			'files' => [],

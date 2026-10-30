@@ -76,7 +76,7 @@ class BatchPrintJobTest extends TestCase {
 			$this->createMock(LoggerInterface::class)
 		);
 
-		$created = $service->createBatchJob(request: new PrintJobRequest(templateId: 't', userId: 'u'), items: array_fill(0, 12, ['data' => []]));
+		$created = $service->createBatchJob(request: new PrintJobRequest(templateId: 't'), items: array_fill(0, 12, ['data' => []]), userId: 'u');
 		$this->assertSame('rendering', $created['status']);
 
 		$job = new BatchPrintJob($this->createMock(ITimeFactory::class), $service, $this->createMock(LoggerInterface::class));

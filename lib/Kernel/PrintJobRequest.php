@@ -3,8 +3,8 @@
 /**
  * Print job request
  *
- * What a print job is made from apart from its letters: the template, the
- * print options, the requesting user and the download name.
+ * What a print job is made from apart from its letters and its user: the
+ * template, the print options and the download name.
  *
  * @category  Kernel
  * @package   OCA\Filinq\Kernel
@@ -25,7 +25,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Kernel;
 
 /**
- * The template, options, user and download name of one print job.
+ * The template, options and download name of one print job.
  *
  * @category Kernel
  * @package  OCA\Filinq\Kernel
@@ -42,7 +42,6 @@ final class PrintJobRequest {
 	 *
 	 * @param string               $templateId Template UUID to render
 	 * @param array<string, mixed> $options    Print options: format, orientation, pdfa, duplex, color, paperTray, stapling
-	 * @param string               $userId     UID of the requesting user
 	 * @param string|null          $filename   Download name, or null for the default of the kind of job
 	 *
 	 * @return void
@@ -50,7 +49,6 @@ final class PrintJobRequest {
 	public function __construct(
 		public readonly string $templateId,
 		public readonly array $options = [],
-		public readonly string $userId = '',
 		public readonly ?string $filename = null,
 	) {
 
@@ -80,7 +78,7 @@ final class PrintJobRequest {
 	 * @spec openspec/changes/archive/2026-09-29-print-jobs-in-the-app/tasks.md#task-1.2
 	 */
 	public function named(string $filename): self {
-		return new self(templateId: $this->templateId, options: $this->options, userId: $this->userId, filename: $filename);
+		return new self(templateId: $this->templateId, options: $this->options, filename: $filename);
 
 	}//end named()
 }//end class

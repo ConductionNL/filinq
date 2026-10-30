@@ -131,8 +131,9 @@ class PrintJobController extends Controller {
 			}
 
 			$result = $this->printJobSvc->createJob(
-				request: new PrintJobRequest(templateId: $templateId, options: $options, userId: $user->getUID(), filename: (string) $filename),
-				data: $data
+				request: new PrintJobRequest(templateId: $templateId, options: $options, filename: (string) $filename),
+				data: $data,
+				userId: $user->getUID()
 			);
 
 			return new JSONResponse(data: $result, statusCode: Http::STATUS_CREATED);
@@ -435,10 +436,10 @@ class PrintJobController extends Controller {
 				request: new PrintJobRequest(
 					templateId: (string) $templateId,
 					options: $options,
-					userId: $user->getUID(),
 					filename: (string) $this->request->getParam('filename', 'print-job.pdf')
 				),
-				items: $items
+				items: $items,
+				userId: $user->getUID()
 			);
 
 			return new JSONResponse(data: $result, statusCode: Http::STATUS_CREATED);

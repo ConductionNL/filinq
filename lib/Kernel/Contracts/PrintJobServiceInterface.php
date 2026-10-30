@@ -55,8 +55,9 @@ interface PrintJobServiceInterface {
 	 *
 	 * Without a download name the job and its letter are document.pdf.
 	 *
-	 * @param PrintJobRequest      $request The template, options, user and download name
+	 * @param PrintJobRequest      $request The template, options and download name
 	 * @param array<string, mixed> $data    Data context for template rendering
+	 * @param string               $userId  UID of the requesting user
 	 *
 	 * @return array{jobId: string, status: string, total: int, printConfig: array}
 	 *
@@ -64,7 +65,7 @@ interface PrintJobServiceInterface {
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-print-jobs-in-the-app/tasks.md#task-1.2
 	 */
-	public function createJob(PrintJobRequest $request, array $data = []): array;
+	public function createJob(PrintJobRequest $request, array $data, string $userId): array;
 
 	/**
 	 * Create a print job for one or more letters.
@@ -74,8 +75,9 @@ interface PrintJobServiceInterface {
 	 * rendered now; a larger batch is rendered by BatchPrintJob. Without a
 	 * download name the job is print-job.pdf.
 	 *
-	 * @param PrintJobRequest $request The template, options, user and download name
+	 * @param PrintJobRequest $request The template, options and download name
 	 * @param array           $items   The letters
+	 * @param string          $userId  UID of the requesting user
 	 *
 	 * @return array{jobId: string, status: string, total: int, printConfig: array}
 	 *
@@ -83,7 +85,7 @@ interface PrintJobServiceInterface {
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-print-jobs-in-the-app/tasks.md#task-1.2
 	 */
-	public function createBatchJob(PrintJobRequest $request, array $items = []): array;
+	public function createBatchJob(PrintJobRequest $request, array $items, string $userId): array;
 
 	/**
 	 * Render every letter of a job into app data and move it to queued.
