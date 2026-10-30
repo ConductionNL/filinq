@@ -22,6 +22,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Service;
 
 use Exception;
+use OCA\Filinq\Service\DocumentGenerationRecord;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\GeneratedDocumentLogger;
 use OCA\OpenRegister\Service\ObjectService;
@@ -32,6 +33,7 @@ use Psr\Log\LoggerInterface;
  * The audit entry, field by field, and what log() answers.
  *
  * @covers \OCA\Filinq\Service\GeneratedDocumentLogger
+ * @uses   \OCA\Filinq\Service\DocumentGenerationRecord
  */
 class GeneratedDocumentLoggerTest extends TestCase {
 
@@ -95,12 +97,14 @@ class GeneratedDocumentLoggerTest extends TestCase {
 		$answer = ['id' => 'entry-1'];
 
 		$result = $this->documentLogger(answer: $answer)->log(
-			template: ['id' => 'tpl-1', 'version' => 3, 'name' => 'Brief'],
-			dataRefs: [['type' => 'case', 'id' => 'case-9']],
-			format: 'pdf',
-			outcome: $this->outcome(),
-			userId: 'alice',
-			extra: ['plainRendition' => 'b1', 'status' => 'forged', 'templateId' => 'other']
+			generation: new DocumentGenerationRecord(
+				template: ['id' => 'tpl-1', 'version' => 3, 'name' => 'Brief'],
+				dataRefs: [['type' => 'case', 'id' => 'case-9']],
+				format: 'pdf',
+				userId: 'alice',
+				extra: ['plainRendition' => 'b1', 'status' => 'forged', 'templateId' => 'other']
+			),
+			outcome: $this->outcome()
 		);
 
 		$this->assertSame($answer, $result);
@@ -142,11 +146,13 @@ class GeneratedDocumentLoggerTest extends TestCase {
 		};
 
 		$result = $this->documentLogger(answer: $entity)->log(
-			template: ['id' => 'tpl-1', 'version' => null, 'name' => 'Brief'],
-			dataRefs: [],
-			format: 'docx',
-			outcome: ['fileId' => null] + $this->outcome(),
-			userId: 'alice'
+			generation: new DocumentGenerationRecord(
+				template: ['id' => 'tpl-1', 'version' => null, 'name' => 'Brief'],
+				dataRefs: [],
+				format: 'docx',
+				userId: 'alice'
+			),
+			outcome: ['fileId' => null] + $this->outcome()
 		);
 
 		$this->assertSame(['id' => 'entry-2'], $result);
@@ -161,11 +167,13 @@ class GeneratedDocumentLoggerTest extends TestCase {
 	 */
 	public function testAnUnreadableAnswerIsAnEmptyEntry(): void {
 		$result = $this->documentLogger(answer: 'saved')->log(
-			template: ['id' => 'tpl-1', 'version' => 1, 'name' => ''],
-			dataRefs: [],
-			format: 'pdf',
-			outcome: $this->outcome(),
-			userId: 'alice'
+			generation: new DocumentGenerationRecord(
+				template: ['id' => 'tpl-1', 'version' => 1, 'name' => ''],
+				dataRefs: [],
+				format: 'pdf',
+				userId: 'alice'
+			),
+			outcome: $this->outcome()
 		);
 
 		$this->assertSame([], $result);
@@ -185,11 +193,13 @@ class GeneratedDocumentLoggerTest extends TestCase {
 		);
 
 		$result = $this->documentLogger(answer: new Exception('register down'), logger: $logger)->log(
-			template: ['id' => 'tpl-1', 'version' => 2, 'name' => 'Brief'],
-			dataRefs: [],
-			format: 'pdf',
-			outcome: $this->outcome(),
-			userId: 'alice'
+			generation: new DocumentGenerationRecord(
+				template: ['id' => 'tpl-1', 'version' => 2, 'name' => 'Brief'],
+				dataRefs: [],
+				format: 'pdf',
+				userId: 'alice'
+			),
+			outcome: $this->outcome()
 		);
 
 		$this->assertSame([], $result);

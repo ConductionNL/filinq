@@ -302,9 +302,13 @@ class MultiFormatOutputProducer implements MultiFormatOutputProducerInterface {
 		);
 
 		return $this->auditLog->log(
-			template: ['id' => $template['id'], 'version' => ($template['version'] ?? null), 'name' => (string) ($template['name'] ?? '')],
-			dataRefs: $dataRefs,
-			format: $formats[0],
+			generation: new DocumentGenerationRecord(
+				template: ['id' => $template['id'], 'version' => ($template['version'] ?? null), 'name' => (string) ($template['name'] ?? '')],
+				dataRefs: $dataRefs,
+				format: $formats[0],
+				userId: (string) $options['userId'],
+				extra: ['outputs' => $lines]
+			),
 			outcome: [
 				'status' => 'generated',
 				'warnings' => $warnings,
@@ -312,9 +316,7 @@ class MultiFormatOutputProducer implements MultiFormatOutputProducerInterface {
 				'errorMessage' => null,
 				'fileId' => ($made[0]['fileId'] ?? null),
 				'filePath' => ($made[0]['path'] ?? null),
-			],
-			userId: (string) $options['userId'],
-			extra: ['outputs' => $lines]
+			]
 		);
 
 	}//end record()
