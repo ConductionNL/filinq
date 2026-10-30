@@ -231,63 +231,52 @@ class GenerateDocumentNode implements IFlowNode, IFlowNodeConfigKeys, IFlowNodeC
 	 * @spec openspec/changes/flow-generate-document-node/specs/flow-document-generation/spec.md#requirement-a-flow-step-generates-a-document-per-item
 	 */
 	public function configForm(): array {
+		$form = [];
+		foreach (array_merge($this->templateFields(), $this->outputFields()) as $key => [$type, $label, $help]) {
+			$form[] = ['key' => $key, 'label' => $label, 'type' => $type, 'help' => $help];
+		}
+
+		return $form;
+	}//end configForm()
+
+	/**
+	 * The form fields that pick the template, as key => [type, label, help].
+	 *
+	 * @return array<string, array{0: string, 1: string, 2: string}> The fields.
+	 */
+	private function templateFields(): array {
+		$l10n = $this->l10n;
+
 		return [
-			[
-				'key' => 'templateId',
-				'label' => $this->l10n->t('Template'),
-				'type' => 'text',
-				'help' => $this->l10n->t('The id of a Filinq template. Leave empty when you use a slug or inline text.'),
+			'templateId' => ['text', $l10n->t('Template'), $l10n->t('The id of a Filinq template. Leave empty when you use a slug or inline text.')],
+			'templateSlug' => ['text', $l10n->t('Template slug'),
+				$l10n->t('Find the template by its slug instead of its id. Needs the template namespace.')
 			],
-			[
-				'key' => 'templateSlug',
-				'label' => $this->l10n->t('Template slug'),
-				'type' => 'text',
-				'help' => $this->l10n->t('Find the template by its slug instead of its id. Needs the template namespace.'),
-			],
-			[
-				'key' => 'templateNamespace',
-				'label' => $this->l10n->t('Template namespace'),
-				'type' => 'text',
-				'help' => $this->l10n->t('The app the template belongs to, for example dossiq.'),
-			],
-			[
-				'key' => 'template',
-				'label' => $this->l10n->t('Inline template'),
-				'type' => 'textarea',
-				'help' => $this->l10n->t('Template text to render instead of a stored template. Fields of the item are available by name.'),
-			],
-			[
-				'key' => 'format',
-				'label' => $this->l10n->t('Format'),
-				'type' => 'text',
-				'help' => $this->l10n->t('pdf, odf or html. Defaults to pdf.'),
-			],
-			[
-				'key' => 'filename',
-				'label' => $this->l10n->t('File name'),
-				'type' => 'text',
-				'help' => $this->l10n->t('Without extension. May use item fields, for example {{ identifier }}.'),
-			],
-			[
-				'key' => 'storeFile',
-				'label' => $this->l10n->t('Store as a file'),
-				'type' => 'boolean',
-				'help' => $this->l10n->t('Turn off to only write the rendered text into a field.'),
-			],
-			[
-				'key' => 'targetField',
-				'label' => $this->l10n->t('Write text to field'),
-				'type' => 'text',
-				'help' => $this->l10n->t('Also write the rendered text into this field of the object. Only that field changes.'),
-			],
-			[
-				'key' => 'output',
-				'label' => $this->l10n->t('Output field'),
-				'type' => 'text',
-				'help' => $this->l10n->t('The item field that receives the document details. Defaults to document.'),
+			'templateNamespace' => ['text', $l10n->t('Template namespace'), $l10n->t('The app the template belongs to, for example dossiq.')],
+			'template' => ['textarea', $l10n->t('Inline template'),
+				$l10n->t('Template text to render instead of a stored template. Fields of the item are available by name.')
 			],
 		];
-	}//end configForm()
+	}//end templateFields()
+
+	/**
+	 * The form fields that shape the output, as key => [type, label, help].
+	 *
+	 * @return array<string, array{0: string, 1: string, 2: string}> The fields.
+	 */
+	private function outputFields(): array {
+		$l10n = $this->l10n;
+
+		return [
+			'format' => ['text', $l10n->t('Format'), $l10n->t('pdf, odf or html. Defaults to pdf.')],
+			'filename' => ['text', $l10n->t('File name'), $l10n->t('Without extension. May use item fields, for example {{ identifier }}.')],
+			'storeFile' => ['boolean', $l10n->t('Store as a file'), $l10n->t('Turn off to only write the rendered text into a field.')],
+			'targetField' => ['text', $l10n->t('Write text to field'),
+				$l10n->t('Also write the rendered text into this field of the object. Only that field changes.')
+			],
+			'output' => ['text', $l10n->t('Output field'), $l10n->t('The item field that receives the document details. Defaults to document.')],
+		];
+	}//end outputFields()
 
 	/**
 	 * Refuse a configuration this node cannot act on.
