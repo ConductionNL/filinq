@@ -178,7 +178,7 @@ here with a reason.**
 | `Service/Classification/ClassificationResultRepository.php` | 2 | The suggestion is written from the enrichment path, which runs as the system inside another app's save, and the one-active-record-per-file read must see every record of a file. The schema grants admins only; the people who decide reach a record through `ClassificationDecisionService` alone, which first resolves the file in the caller's own folder and answers 404 for a file they cannot open, the same answer as for a file without a suggestion. |
 | `Service/Classification/ClassificationSources.php` | 1 | Reads the dossier names to propose a dossier on an exact name match. Only the matched dossier's uuid is stored on the suggestion, never its content, and confirming one moves the file only into a dossier folder the reviewer can open themselves; otherwise the filing is recorded, not done. |
 | `Service/PolicyMatchService.php` | 2 | Matching must see every prohibition regardless of the acting user, or an anonymisation silently under-redacts. Fail-closed by design. |
-| `Service/ConsentPolicyReferentValidator.php` | 2 | Validation-only; returns a boolean, never record content. |
+| `Service/ConsentPolicyReferentValidator.php` | 1 | Validation-only; returns a boolean, never record content. |
 | `Service/PolicyRetroactiveService.php` | 2 | Background re-application over records the triggering user may not own. |
 | `Service/BaseLabelResolver.php` | 1 | Resolves a legal-basis label for display; `base` is organisation-readable anyway. |
 | `Service/BasesResolverService.php` | 1 | Same. |
