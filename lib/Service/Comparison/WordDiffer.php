@@ -361,7 +361,7 @@ class WordDiffer {
 	 * @return array<int, array{op:string, left?:string, right?:string}> Ops.
 	 */
 	private function trailing(array $words, string $op): array {
-		$side = ($op === 'delete') ? 'left' : 'right';
+		$side = ['delete' => 'left', 'insert' => 'right'][$op];
 		return array_map(static fn (string $word): array => ['op' => $op, $side => $word], $words);
 	}//end trailing()
 }//end class
