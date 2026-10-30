@@ -28,15 +28,6 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\EventListener;
 
-use OCA\Filinq\Kernel\AppIdentity;
-use OCA\OpenRegister\Event\RegisterLeafProvidersEvent;
-use OCA\OpenRegister\Service\Integration\LeafDescriptor;
-use OCP\EventDispatcher\Event;
-use OCP\EventDispatcher\IEventListener;
-use OCP\IL10N;
-use Psr\Log\LoggerInterface;
-use Throwable;
-
 /**
  * Registers the download-all-files leaf.
  *
@@ -46,11 +37,9 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @template-implements IEventListener<Event>
- *
  * @spec openspec/specs/document-creatie-sjablonen/spec.md
  */
-class RegisterDownloadAllFilesLeafListener implements IEventListener {
+class RegisterDownloadAllFilesLeafListener extends MountedLeafListener {
 
 	/**
 	 * The leaf id, shared with the JS half.
@@ -77,51 +66,20 @@ class RegisterDownloadAllFilesLeafListener implements IEventListener {
 	];
 
 	/**
-	 * Constructor.
+	 * The catalogue group the leaf is listed under.
 	 *
-	 * @param IL10N           $l10n   The translator for the label.
-	 * @param LoggerInterface $logger Where a failed registration is reported.
+	 * @var string
 	 */
-	public function __construct(
-		private readonly IL10N $l10n,
-		private readonly LoggerInterface $logger,
-	) {
-	}//end __construct()
+	public const GROUP = 'documents';
 
 	/**
-	 * Add the leaf to the catalogue.
+	 * The label the host shows.
 	 *
-	 * @param Event $event The collect-event.
-	 *
-	 * @return void
+	 * @return string The translated label.
 	 *
 	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
-	public function handle(Event $event): void {
-		if ($event instanceof RegisterLeafProvidersEvent === false) {
-			return;
-		}
-
-		try {
-			$descriptor = new LeafDescriptor(
-				id: self::LEAF_ID,
-				label: $this->l10n->t('Download all files'),
-				icon: self::ICON,
-				kinds: [LeafDescriptor::KIND_RENDER_SURFACE],
-				requiredApp: AppIdentity::APP_ID,
-				group: 'documents',
-				surfaces: self::SURFACES,
-				referenceType: self::LEAF_ID,
-				renderMode: LeafDescriptor::RENDER_MODE_MOUNT,
-			);
-
-			$event->registerLeaf($descriptor, null);
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'Filinq could not register the filinq-download-all-files leaf: ' . $e->getMessage(),
-				['exception' => $e]
-			);
-		}//end try
-
-	}//end handle()
+	protected function label(): string {
+		return $this->l10n->t('Download all files');
+	}//end label()
 }//end class
