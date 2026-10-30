@@ -59,6 +59,8 @@ final class DictionaryTermImport {
 	 * @param string $value The value.
 	 *
 	 * @return bool True when the value was not taken yet.
+	 *
+	 * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
 	 */
 	public function admits(string $value): bool {
 		$key = mb_strtolower($value);
