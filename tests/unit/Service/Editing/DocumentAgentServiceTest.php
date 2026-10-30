@@ -20,6 +20,7 @@ namespace OCA\Filinq\Tests\Unit\Service\Editing;
 use OCA\Filinq\Mcp\FilinqScannableServices;
 use OCA\Filinq\Service\CorrespondenceService;
 use OCA\Filinq\Service\Editing\AgentArtefactMarker;
+use OCA\Filinq\Service\Editing\AgentFileRequest;
 use OCA\Filinq\Service\Editing\DocumentAgentService;
 use OCA\Filinq\Service\Editing\EditSessionService;
 use OCA\Filinq\Service\GeneratedDocumentLogger;
@@ -377,7 +378,7 @@ class DocumentAgentServiceTest extends TestCase {
 	public function testAnOmittedOutputModeMeansTheConfiguredOne(): void {
 		$this->editSession->expects($this->once())
 			->method('editForAgent')
-			->with('alice', 4711, $this->anything(), 'v1', null)
+			->with(new AgentFileRequest(uid: 'alice', fileId: 4711, version: 'v1', requestedMode: null), $this->anything())
 			->willReturn(
 				[
 					'fileId' => 4711,
