@@ -935,4 +935,68 @@ class FolderBatchServiceTest extends TestCase {
 		$this->assertSame('/other/files/X', $this->service->createFolderBatch(null, '/X')['folderPath']);
 
 	}//end testAFolderWithoutARelativePathKeepsItsAbsolutePath()
+	/**
+	 * The deferred extraction: each uploaded file is extracted, a failing one marked error,
+	 * others skipped, the batch moved to review and the fallback job removed.
+	 *
+	 * @return void
+	 */
+	public function testTheDeferredExtractionRunsTheBatchToReview(): void {
+		$anon = $this->createMock(AnonymizationService::class);
+		$anon->method('extractAndDetectEntities')->willReturnCallback(
+			function (int $fileId): array {
+				if ($fileId === 2) {
+					throw new Exception('unreadable');
+				}
+
+				return ['entityCount' => 7];
+			}
+		);
+		$service = new FolderBatchService(
+			$this->mockLogger,
+			$this->mockRootFolder,
+			$this->mockUserSession,
+			$this->mockStateService,
+			new JobQueue(jobList: $this->mockJobList),
+			$anon,
+			$this->layout,
+			$this->mockConfidentialityLabel,
+			$this->mockAppConfig
+		);
+		$this->mockStateService->method('getBatch')->willReturnCallback(
+			fn (string $batchId): ?array => $batchId === 'gone' ? null : [
+				'batchId' => $batchId,
+				'status' => 'uploading',
+				'files' => [
+					['fileId' => 1, 'status' => 'uploaded', 'entityCount' => 0, 'error' => null],
+					['fileId' => 2, 'status' => 'uploaded', 'entityCount' => 0, 'error' => null],
+					['fileId' => 3, 'status' => 'extracted', 'entityCount' => 4, 'error' => null],
+				],
+			]
+		);
+		$writes = [];
+		$this->mockStateService->method('updateBatch')->willReturnCallback(
+			function (string $batchId, array $batch) use (&$writes): void {
+				$writes[] = [$batchId, $batch['status'], array_column($batch['files'], 'status'), array_column($batch['files'], 'entityCount'), array_column($batch['files'], 'error')];
+			}
+		);
+		$this->mockLogger->expects($this->once())->method('warning')
+			->with('Shutdown extraction failed for file', ['batchId' => 'b-1', 'fileId' => 2, 'error' => 'unreadable']);
+		$this->mockJobList->expects($this->once())->method('remove')->with(FolderExtractionJob::class, ['batchId' => 'b-1']);
+
+		$extract = new \ReflectionMethod($service, 'extractBatch');
+		$extract->invoke($service, 'gone');
+		$extract->invoke($service, 'b-1');
+
+		$this->assertSame(
+			[
+				['b-1', 'extracting', ['uploaded', 'uploaded', 'extracted'], [0, 0, 4], [null, null, null]],
+				['b-1', 'extracting', ['extracted', 'uploaded', 'extracted'], [7, 0, 4], [null, null, null]],
+				['b-1', 'extracting', ['extracted', 'error', 'extracted'], [7, 0, 4], [null, 'unreadable', null]],
+				['b-1', 'review', ['extracted', 'error', 'extracted'], [7, 0, 4], [null, 'unreadable', null]],
+			],
+			$writes
+		);
+
+	}//end testTheDeferredExtractionRunsTheBatchToReview()
 }//end class

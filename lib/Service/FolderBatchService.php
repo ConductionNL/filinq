@@ -236,56 +236,66 @@ class FolderBatchService implements FolderBatchServiceInterface {
 	 * @spec openspec/changes/folder-batch-accept-folder-id/tasks.md#task-1
 	 */
 	private function scheduleExtraction(string $batchId): void {
-		$stateService = $this->stateService;
-		$anonService = $this->anonService;
-		$jobList = $this->jobList;
-		$logger = $this->logger;
-
 		register_shutdown_function(
-			static function () use ($batchId, $stateService, $anonService, $jobList, $logger): void {
+			function () use ($batchId): void {
 				// Flush the response to the client before doing heavy work.
 				if (function_exists('fastcgi_finish_request') === true) {
 					fastcgi_finish_request();
 				}
 
-				$batch = $stateService->getBatch($batchId);
-				if ($batch === null) {
-					return;
-				}
-
-				$batch['status'] = 'extracting';
-				$stateService->updateBatch($batchId, $batch);
-
-				foreach ($batch['files'] as $i => $file) {
-					if ($file['status'] !== 'uploaded') {
-						continue;
-					}
-
-					try {
-						$result = $anonService->extractAndDetectEntities((int)$file['fileId']);
-						$batch['files'][$i]['status'] = 'extracted';
-						$batch['files'][$i]['entityCount'] = $result['entityCount'];
-					} catch (\Exception $e) {
-						$logger->warning(
-							'Shutdown extraction failed for file',
-							['batchId' => $batchId, 'fileId' => $file['fileId'], 'error' => $e->getMessage()]
-						);
-						$batch['files'][$i]['status'] = 'error';
-						$batch['files'][$i]['error'] = $e->getMessage();
-					}
-
-					$stateService->updateBatch($batchId, $batch);
-				}//end foreach
-
-				$batch['status'] = 'review';
-				$stateService->updateBatch($batchId, $batch);
-
-				// Extraction completed — remove the fallback background job.
-				$jobList->remove(JobQueueInterface::FOLDER_EXTRACTION, ['batchId' => $batchId]);
+				$this->extractBatch(batchId: $batchId);
 			}
 		);
 
 	}//end scheduleExtraction()
+
+	/**
+	 * Extract and detect entities in every uploaded file of a batch, then hand it to review.
+	 *
+	 * A file that fails is marked `error` with its message; the others go on.
+	 * The fallback background job is removed once the batch reaches review.
+	 *
+	 * @param string $batchId The batch.
+	 *
+	 * @return void
+	 */
+	private function extractBatch(string $batchId): void {
+		$batch = $this->stateService->getBatch($batchId);
+		if ($batch === null) {
+			return;
+		}
+
+		$batch['status'] = 'extracting';
+		$this->stateService->updateBatch($batchId, $batch);
+
+		foreach ($batch['files'] as $i => $file) {
+			if ($file['status'] !== 'uploaded') {
+				continue;
+			}
+
+			try {
+				$result = $this->anonService->extractAndDetectEntities((int)$file['fileId']);
+				$batch['files'][$i]['status'] = 'extracted';
+				$batch['files'][$i]['entityCount'] = $result['entityCount'];
+			} catch (\Exception $e) {
+				$this->logger->warning(
+					'Shutdown extraction failed for file',
+					['batchId' => $batchId, 'fileId' => $file['fileId'], 'error' => $e->getMessage()]
+				);
+				$batch['files'][$i]['status'] = 'error';
+				$batch['files'][$i]['error'] = $e->getMessage();
+			}
+
+			$this->stateService->updateBatch($batchId, $batch);
+		}//end foreach
+
+		$batch['status'] = 'review';
+		$this->stateService->updateBatch($batchId, $batch);
+
+		// Extraction completed — remove the fallback background job.
+		$this->jobList->remove(JobQueueInterface::FOLDER_EXTRACTION, ['batchId' => $batchId]);
+
+	}//end extractBatch()
 
 	/**
 	 * Get the current user ID
