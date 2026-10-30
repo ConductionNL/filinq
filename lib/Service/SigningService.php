@@ -508,7 +508,20 @@ class SigningService implements SigningServiceInterface {
 		[$actorUserId, $actorDisplayName] = $this->actorResolver->resolveActingIdentity(verifiedActor: $verifiedActor);
 
 		$objectService = $this->settingsService->getObjectService();
-		$request       = $this->loadSignableRequest(requestId: $requestId);
+
+		// Authorise the signer first, so someone who is not the signer learns
+		// neither whether the request exists nor what its status is.
+		['register' => $signerRegister, 'schema' => $signerSchema] = $this->requireSignerRecordBinding();
+
+		$signer = $this->actorResolver->loadAuthorisedSigner(
+			requestId: $requestId,
+			signerId: $signerId,
+			verifiedActor: $verifiedActor,
+			actorUserId: $actorUserId,
+			action: 'sign'
+		);
+
+		$request = $this->loadSignableRequest(requestId: $requestId);
 
 		// The mandate is declared in Nextcloud groups, which an invited portal
 		// signer is not in; the portal path has its own verified-assertion gate.
@@ -523,15 +536,6 @@ class SigningService implements SigningServiceInterface {
 			signatureData: $signatureData
 		);
 
-		['register' => $signerRegister, 'schema' => $signerSchema] = $this->requireSignerRecordBinding();
-
-		$signer = $this->actorResolver->loadAuthorisedSigner(
-			requestId: $requestId,
-			signerId: $signerId,
-			verifiedActor: $verifiedActor,
-			actorUserId: $actorUserId,
-			action: 'sign'
-		);
 		if (($signer['status'] ?? '') !== 'PENDING') {
 			throw new RuntimeException('Signer has already responded to this request');
 		}
