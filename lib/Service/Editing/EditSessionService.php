@@ -624,14 +624,13 @@ class EditSessionService {
 	 * @throws RuntimeException When the id names nothing the user can reach, or an uneditable format.
 	 */
 	private function resolveFile(AgentFileRequest $request): File {
-		$uid    = $request->uid;
 		$fileId = $request->fileId;
-		if (trim($uid) === '') {
+		if (trim($request->uid) === '') {
 			throw new RuntimeException('No acting user; document tools require a signed-in user.');
 		}
 
 		try {
-			$node = $this->rootFolder->getUserFolder($uid)->getFirstNodeById($fileId);
+			$node = $this->rootFolder->getUserFolder($request->uid)->getFirstNodeById($fileId);
 		} catch (Throwable $e) {
 			throw new RuntimeException('Could not open file ' . $fileId . ': ' . $e->getMessage(), 0, $e);
 		}
@@ -640,31 +639,45 @@ class EditSessionService {
 			throw new RuntimeException('File ' . $fileId . ' was not found in your files.');
 		}
 
+		$this->refuseUneditableFormat(file: $node, kind: $request->kind);
+
+		return $node;
+	}//end resolveFile()
+
+	/**
+	 * Refuse a file the calling codec does not edit, naming the formats it does.
+	 *
+	 * @param File $file The resolved file.
+	 * @param DocumentKind|null $kind The codec kind the file must match, or null for the text codec.
+	 *
+	 * @return void
+	 *
+	 * @throws RuntimeException When the file is not an editable format for this codec.
+	 */
+	private function refuseUneditableFormat(File $file, ?DocumentKind $kind): void {
 		// ⚠️ Validated against the codec that will actually handle this file, not
 		// against the text codec for everything. A spreadsheet reaching the
 		// spreadsheet path was being refused as "not an editable document
 		// format" and told to convert itself — advice that would have destroyed
 		// the very cells the caller asked to edit.
-		$kind    = $request->kind;
 		$accepts = ($kind->supports ?? fn (string $extension): bool => $this->codecs->text->supports(extension: $extension));
 		$supported = ($kind->formats ?? '');
 		if ($supported === '') {
 			$supported = implode(', ', $this->codecs->text->supportedExtensions());
 		}
 
-		if ($accepts($node->getExtension()) === false) {
+		if ($accepts($file->getExtension()) === false) {
 			throw new RuntimeException(
 				sprintf(
 					'"%s" is not an editable document format. Editable formats are: %s. '
 					. 'Convert the document first if you need to change it.',
-					$node->getName(),
+					$file->getName(),
 					$supported
 				)
 			);
 		}
 
-		return $node;
-	}//end resolveFile()
+	}//end refuseUneditableFormat()
 
 	/**
 	 * Read a file's bytes, refusing anything too large to hold in memory.
