@@ -1,0 +1,292 @@
+{
+    "an unknown channel": {
+        "refused": [
+            "Unknown intake channel: fax",
+            400
+        ],
+        "calls": [],
+        "logs": []
+    },
+    "seen before": {
+        "stored": {
+            "uuid": "intake-1",
+            "status": "routed"
+        },
+        "calls": [
+            [
+                "findBySourceRef",
+                "msg-1"
+            ]
+        ],
+        "logs": [
+            [
+                "info",
+                "[IntakeService] the channel delivered this document before, keeping the first intake document",
+                {
+                    "sourceRef": "msg-1",
+                    "uuid": "intake-1"
+                }
+            ]
+        ]
+    },
+    "everything": {
+        "stored": {
+            "uuid": "intake-2",
+            "channel": "mail",
+            "subject": "Bezwaar",
+            "sender": "a@b.nl",
+            "receivedAt": "2026-10-30T09:00:00+00:00",
+            "fileName": "brief.pdf",
+            "sourceRef": "msg-1",
+            "status": "received",
+            "file": 12,
+            "arrivedWith": "msg-0",
+            "confidentiality": "intern",
+            "partySuggestion": {
+                "party": "p-1"
+            },
+            "ocrStatus": "queued"
+        },
+        "calls": [
+            [
+                "findBySourceRef",
+                "msg-1"
+            ],
+            [
+                "stamp",
+                [
+                    "channel",
+                    "subject",
+                    "sender",
+                    "receivedAt",
+                    "fileName",
+                    "sourceRef",
+                    "status",
+                    "file",
+                    "arrivedWith"
+                ],
+                "mail",
+                "a@b.nl"
+            ],
+            [
+                "suggestFor",
+                12
+            ],
+            [
+                "save",
+                {
+                    "channel": "mail",
+                    "subject": "Bezwaar",
+                    "sender": "a@b.nl",
+                    "receivedAt": "2026-10-30T09:00:00+00:00",
+                    "fileName": "brief.pdf",
+                    "sourceRef": "msg-1",
+                    "status": "received",
+                    "file": 12,
+                    "arrivedWith": "msg-0",
+                    "confidentiality": "intern",
+                    "partySuggestion": {
+                        "party": "p-1"
+                    },
+                    "ocrStatus": "queued"
+                }
+            ],
+            [
+                "queue",
+                "intake-2"
+            ]
+        ],
+        "logs": []
+    },
+    "no file": {
+        "stored": {
+            "uuid": "intake-2",
+            "channel": "mail",
+            "subject": "Bezwaar",
+            "sender": "a@b.nl",
+            "receivedAt": "2026-10-30T09:00:00+00:00",
+            "fileName": "brief.pdf",
+            "sourceRef": "msg-1",
+            "status": "received",
+            "arrivedWith": "msg-0",
+            "confidentiality": "intern",
+            "ocrStatus": "queued"
+        },
+        "calls": [
+            [
+                "findBySourceRef",
+                "msg-1"
+            ],
+            [
+                "stamp",
+                [
+                    "channel",
+                    "subject",
+                    "sender",
+                    "receivedAt",
+                    "fileName",
+                    "sourceRef",
+                    "status",
+                    "arrivedWith"
+                ],
+                "mail",
+                "a@b.nl"
+            ],
+            [
+                "save",
+                {
+                    "channel": "mail",
+                    "subject": "Bezwaar",
+                    "sender": "a@b.nl",
+                    "receivedAt": "2026-10-30T09:00:00+00:00",
+                    "fileName": "brief.pdf",
+                    "sourceRef": "msg-1",
+                    "status": "received",
+                    "arrivedWith": "msg-0",
+                    "confidentiality": "intern",
+                    "ocrStatus": "queued"
+                }
+            ],
+            [
+                "queue",
+                "intake-2"
+            ]
+        ],
+        "logs": []
+    },
+    "nothing arrived with it": {
+        "stored": {
+            "uuid": "intake-2",
+            "channel": "mail",
+            "subject": "Bezwaar",
+            "sender": "a@b.nl",
+            "receivedAt": "2026-10-30T09:00:00+00:00",
+            "fileName": "brief.pdf",
+            "sourceRef": "msg-1",
+            "status": "received",
+            "file": 12,
+            "confidentiality": "intern",
+            "partySuggestion": {
+                "party": "p-1"
+            },
+            "ocrStatus": "queued"
+        },
+        "calls": [
+            [
+                "findBySourceRef",
+                "msg-1"
+            ],
+            [
+                "stamp",
+                [
+                    "channel",
+                    "subject",
+                    "sender",
+                    "receivedAt",
+                    "fileName",
+                    "sourceRef",
+                    "status",
+                    "file"
+                ],
+                "mail",
+                "a@b.nl"
+            ],
+            [
+                "suggestFor",
+                12
+            ],
+            [
+                "save",
+                {
+                    "channel": "mail",
+                    "subject": "Bezwaar",
+                    "sender": "a@b.nl",
+                    "receivedAt": "2026-10-30T09:00:00+00:00",
+                    "fileName": "brief.pdf",
+                    "sourceRef": "msg-1",
+                    "status": "received",
+                    "file": 12,
+                    "confidentiality": "intern",
+                    "partySuggestion": {
+                        "party": "p-1"
+                    },
+                    "ocrStatus": "queued"
+                }
+            ],
+            [
+                "queue",
+                "intake-2"
+            ]
+        ],
+        "logs": []
+    },
+    "no arrival time": {
+        "stored": {
+            "uuid": "intake-2",
+            "channel": "mail",
+            "subject": "Bezwaar",
+            "sender": "a@b.nl",
+            "receivedAt": "now",
+            "fileName": "brief.pdf",
+            "sourceRef": "msg-1",
+            "status": "received",
+            "file": 12,
+            "arrivedWith": "msg-0",
+            "confidentiality": "intern",
+            "partySuggestion": {
+                "party": "p-1"
+            },
+            "ocrStatus": "queued"
+        },
+        "calls": [
+            [
+                "findBySourceRef",
+                "msg-1"
+            ],
+            [
+                "stamp",
+                [
+                    "channel",
+                    "subject",
+                    "sender",
+                    "receivedAt",
+                    "fileName",
+                    "sourceRef",
+                    "status",
+                    "file",
+                    "arrivedWith"
+                ],
+                "mail",
+                "a@b.nl"
+            ],
+            [
+                "suggestFor",
+                12
+            ],
+            [
+                "save",
+                {
+                    "channel": "mail",
+                    "subject": "Bezwaar",
+                    "sender": "a@b.nl",
+                    "receivedAt": "now",
+                    "fileName": "brief.pdf",
+                    "sourceRef": "msg-1",
+                    "status": "received",
+                    "file": 12,
+                    "arrivedWith": "msg-0",
+                    "confidentiality": "intern",
+                    "partySuggestion": {
+                        "party": "p-1"
+                    },
+                    "ocrStatus": "queued"
+                }
+            ],
+            [
+                "queue",
+                "intake-2"
+            ]
+        ],
+        "logs": []
+    }
+}

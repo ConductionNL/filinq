@@ -120,24 +120,8 @@ class IntakeService implements IntakeServiceInterface {
 			return $existing;
 		}
 
-		$document = [
-			'channel' => $channel,
-			'subject' => $event->getSubject(),
-			'sender' => $event->getSender(),
-			'receivedAt' => ($event->getReceivedAt() ?? $this->now()),
-			'fileName' => $event->getFileName(),
-			'sourceRef' => $event->getSourceRef(),
-			'status' => IntakeRepository::STATUS_RECEIVED,
-		];
-
+		$document = $this->documentFrom(event: $event);
 		$fileId = $event->getFileId();
-		if ($fileId !== null) {
-			$document['file'] = $fileId;
-		}
-
-		if ($event->getArrivedWith() !== '') {
-			$document['arrivedWith'] = $event->getArrivedWith();
-		}
 
 		// STAMPED BEFORE ANYTHING ELSE LOOKS AT IT. The defaults are a decision
 		// somebody wrote down; a classifier's guess arrives later and is offered
@@ -160,6 +144,36 @@ class IntakeService implements IntakeServiceInterface {
 		return $stored;
 
 	}//end receive()
+
+	/**
+	 * The inbox row a delivery starts as, before defaults are stamped on it.
+	 *
+	 * @param IntakeDocumentReceivedEvent $event What the channel delivered.
+	 *
+	 * @return array<string, mixed> The intake document.
+	 */
+	private function documentFrom(IntakeDocumentReceivedEvent $event): array {
+		$document = [
+			'channel' => $event->getChannel(),
+			'subject' => $event->getSubject(),
+			'sender' => $event->getSender(),
+			'receivedAt' => ($event->getReceivedAt() ?? $this->now()),
+			'fileName' => $event->getFileName(),
+			'sourceRef' => $event->getSourceRef(),
+			'status' => IntakeRepository::STATUS_RECEIVED,
+		];
+
+		if ($event->getFileId() !== null) {
+			$document['file'] = $event->getFileId();
+		}
+
+		if ($event->getArrivedWith() !== '') {
+			$document['arrivedWith'] = $event->getArrivedWith();
+		}
+
+		return $document;
+
+	}//end documentFrom()
 
 	/**
 	 * Take in a message and everything that came attached to it.
