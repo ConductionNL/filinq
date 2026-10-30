@@ -125,6 +125,10 @@ class EntitySearchController extends Controller {
 	 * @return JSONResponse The entity, or a refusal.
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-entity-search/tasks.md#task-2.2
+	 *
+	 * @no-admin-idor-exempt role-guarded one layer down. EntitySearchService::detail() calls
+	 * assertMaySearch(), which admits only admins and the configured entity-search groups, scopes the
+	 * catalogue to the caller, and counts only occurrences in files the caller can read.
 	 */
 	#[NoAdminRequired]
 	public function show(string $entityUuid): JSONResponse {

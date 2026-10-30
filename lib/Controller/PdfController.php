@@ -183,6 +183,10 @@ class PdfController extends Controller {
 	 *
 	 * @spec openspec/specs/print-preview/spec.md
 	 * @spec openspec/specs/pdfa3-conversion/spec.md
+	 *
+	 * @no-admin-idor-exempt no stored object is addressed. The template, data, metadata and attachments
+	 * come from the request body as content and the PDF goes back to the caller, so there is no id to
+	 * steer.
 	 */
 	public function renderPdfA(): DataDownloadResponse|JSONResponse {
 		try {

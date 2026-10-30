@@ -109,6 +109,10 @@ class LegalHoldCaseController extends Controller {
 	 * @return JSONResponse The case, or a refusal.
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-e-discovery-legal-hold/tasks.md#task-3.1
+	 *
+	 * @no-admin-idor-exempt role-guarded one layer down. LegalHoldCaseService::get() calls
+	 * LegalHoldAuthority::assertAuthority(), which admits only admins and the configured legal-hold
+	 * groups.
 	 */
 	#[NoAdminRequired]
 	public function show(string $id): JSONResponse {
@@ -140,6 +144,10 @@ class LegalHoldCaseController extends Controller {
 	 * @return JSONResponse The case, or a refusal.
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-e-discovery-legal-hold/tasks.md#task-2.4
+	 *
+	 * @no-admin-idor-exempt role-guarded one layer down. LegalHoldCaseService::addScope() calls
+	 * LegalHoldAuthority::assertAuthority(), which admits only admins and the configured legal-hold
+	 * groups.
 	 */
 	#[NoAdminRequired]
 	public function addScope(string $id): JSONResponse {
@@ -155,6 +163,10 @@ class LegalHoldCaseController extends Controller {
 	 * @return JSONResponse The case, or a refusal.
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-e-discovery-legal-hold/tasks.md#task-2.4
+	 *
+	 * @no-admin-idor-exempt role-guarded one layer down. LegalHoldCaseService::retry() calls
+	 * LegalHoldAuthority::assertAuthority(), which admits only admins and the configured legal-hold
+	 * groups.
 	 */
 	#[NoAdminRequired]
 	public function retry(string $id): JSONResponse {
@@ -170,6 +182,10 @@ class LegalHoldCaseController extends Controller {
 	 * @return JSONResponse The released case, or a refusal.
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-e-discovery-legal-hold/tasks.md#task-2.4
+	 *
+	 * @no-admin-idor-exempt role-guarded one layer down. LegalHoldCaseService::release() calls
+	 * LegalHoldAuthority::assertAuthority(), which admits only admins and the configured legal-hold
+	 * groups.
 	 */
 	#[NoAdminRequired]
 	public function release(string $id): JSONResponse {
@@ -191,6 +207,10 @@ class LegalHoldCaseController extends Controller {
 	 * @return JSONResponse {held, cases}, or 404 when the caller cannot read the record.
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-e-discovery-legal-hold/tasks.md#task-3.2
+	 *
+	 * @no-admin-idor-exempt LegalHoldCaseService::statusFor() reads the record with OpenRegister RBAC on
+	 * (LegalHoldRecordFreeze::heldAsSeenBy()) and lists covering cases only for a caller with legal-hold
+	 * authority.
 	 */
 	#[NoAdminRequired]
 	public function status(string $objectId): JSONResponse {
