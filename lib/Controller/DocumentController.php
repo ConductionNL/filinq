@@ -248,7 +248,7 @@ class DocumentController extends Controller {
 	 *
 	 * @NoAdminRequired
 	 *
-	 * @spec openspec/changes/template-merge-preview/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 *
 	 * @no-admin-idor-exempt object access runs under OpenRegister's RBAC, as
 	 * for preview(): no `_rbac: false` on this path, so an id belonging to

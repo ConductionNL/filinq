@@ -11,7 +11,7 @@ import { generateUrl } from '@nextcloud/router'
  *
  * @param {Array<object>} rows The flat-list rows; `dossier` is `{ id, name }` or null.
  * @return {Array<{label: string, href: string, icon: string}>} The rows, dossiers first.
- * @spec openspec/changes/leaves-library-card/specs/leaves-library-card/spec.md#requirement-the-documents-leaf-reports-to-the-library-card-and-the-linked-card
+ * @spec openspec/specs/leaves-library-card/spec.md#requirement-the-documents-leaf-reports-to-the-library-card-and-the-linked-card
  */
 export function documentLinkRows(rows) {
 	const dossiers = new Map()

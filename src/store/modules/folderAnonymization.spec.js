@@ -49,7 +49,7 @@ function seedReview(store) {
 	]
 }
 
-// @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
+// @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
 describe('folder anonymise: the human check per file', () => {
 	beforeEach(() => {
 		setActivePinia(createPinia())
@@ -112,7 +112,7 @@ describe('folder anonymise: the human check per file', () => {
 	})
 })
 
-// @spec openspec/changes/folder-skip-through-the-prohibition-check/specs/folder-analysis-anonymization/spec.md
+// @spec openspec/specs/folder-analysis-anonymization/spec.md
 describe('folder anonymise: skip decisions go through filinq', () => {
 	beforeEach(() => {
 		setActivePinia(createPinia())

@@ -102,7 +102,7 @@ class RedactionOutputController extends Controller {
 	 * @return JSONResponse The stored mark, or the refusal.
 	 *
 	 * @spec openspec/changes/redaction-and-what-leaves-the-building/specs/redaction-output-guarantee/spec.md
-	 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-2
 	 *
 	 * @no-admin-idor-exempt AnonymizeRequestService::verifyFileAccess() refuses a file outside the
 	 * caller's user folder before anything is written, and the mark is saved with OpenRegister RBAC on
@@ -155,7 +155,7 @@ class RedactionOutputController extends Controller {
 	 *
 	 * @return JSONResponse `{marks: {fileId: {checkedBy, checkedAt, entityCount}}}`.
 	 *
-	 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-3
+	 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-3
 	 *
 	 * @no-admin-idor-exempt every requested id passes AnonymizeRequestService::verifyFileAccess() (the
 	 * caller's user folder) before its mark is read; ids the caller cannot read are dropped.

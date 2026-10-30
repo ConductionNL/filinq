@@ -19,7 +19,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-1
  *
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V.

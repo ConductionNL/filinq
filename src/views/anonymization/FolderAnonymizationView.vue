@@ -369,7 +369,7 @@ export default {
 		 * The analysed files that can be checked: extraction succeeded.
 		 *
 		 * @return {Array<object>}
-		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
 		 */
 		reviewableFiles() {
 			return this.store.files.filter((f) => f.status === 'extracted')
@@ -385,7 +385,7 @@ export default {
 		 *
 		 * @param {object} file A file of the batch.
 		 * @return {boolean}
-		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
 		 */
 		isReviewed(file) {
 			return this.store.reviewedFiles.includes(file)

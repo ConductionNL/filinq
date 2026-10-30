@@ -49,7 +49,7 @@ import CheckDecagram from 'vue-material-design-icons/CheckDecagram.vue'
  * offers the reviewer the one action that records it. The parent owns the
  * call; this component only asks for it.
  *
- * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
+ * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
  */
 export default {
 	name: 'ReviewMarkCard',
@@ -93,7 +93,7 @@ export default {
 		 * Who checked and when, or that nobody did.
 		 *
 		 * @return {string}
-		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
 		 */
 		stateLabel() {
 			if (!this.checked || !this.mark) {
@@ -114,7 +114,7 @@ export default {
 		 *
 		 * @param {string} iso The moment.
 		 * @return {string}
-		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
 		 */
 		formatMoment(iso) {
 			const date = new Date(iso)

@@ -865,7 +865,7 @@ export default {
 		 * files (see `pendingSourceFiles`) whose findings a person checked.
 		 *
 		 * @return {number}
-		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
 		 */
 		batchCount() {
 			return this.reviewedPendingFiles.length
@@ -876,7 +876,7 @@ export default {
 		 * checked or not. Keeps the dossier footer on screen.
 		 *
 		 * @return {number}
-		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
 		 */
 		pendingCount() {
 			return this.pendingSourceFiles.length
@@ -886,7 +886,7 @@ export default {
 		 * Pending dossier files whose findings a person checked as they are now.
 		 *
 		 * @return {Array<object>}
-		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
 		 */
 		reviewedPendingFiles() {
 			return this.pendingSourceFiles.filter((d) =>
@@ -898,7 +898,7 @@ export default {
 		 * Pending dossier files nobody checked yet. The batch leaves them alone.
 		 *
 		 * @return {Array<object>}
-		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
 		 */
 		unreviewedPendingFiles() {
 			return this.pendingSourceFiles.filter(
@@ -910,7 +910,7 @@ export default {
 		 * Whether a person checked the open file's findings as they are now.
 		 *
 		 * @return {boolean}
-		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
 		 */
 		entryChecked() {
 			return entryIsChecked(this.entry)
@@ -920,7 +920,7 @@ export default {
 		 * Why the open file cannot be anonymised yet, or empty.
 		 *
 		 * @return {string}
-		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
 		 */
 		reviewMessage() {
 			if (this.entry?.reviewError) {
@@ -1547,7 +1547,7 @@ export default {
 		 * Record the reviewer's check of the open file's findings.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
 		 */
 		async onMarkChecked() {
 			if (!this.entry) {
@@ -1625,7 +1625,7 @@ export default {
 		 * identically.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
 		 */
 		async anonymizeAll() {
 			// Scope the run to the dossier's pending source files and pass full

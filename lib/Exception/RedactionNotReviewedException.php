@@ -56,7 +56,7 @@ class RedactionNotReviewedException extends RuntimeException {
 	 *
 	 * @return string The instruction, or an empty string when the gate gave none.
 	 *
-	 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-1
 	 */
 	public function getInstruction(): string {
 		return $this->instruction;

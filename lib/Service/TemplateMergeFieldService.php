@@ -15,7 +15,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/template-merge-preview/specs/document-creatie-sjablonen/spec.md
+ * @spec openspec/specs/document-creatie-sjablonen/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -34,7 +34,7 @@ use Twig\Token;
 /**
  * Extracts and resolves a template's merge fields.
  *
- * @spec openspec/changes/template-merge-preview/specs/document-creatie-sjablonen/spec.md
+ * @spec openspec/specs/document-creatie-sjablonen/spec.md
  */
 class TemplateMergeFieldService {
 
@@ -49,7 +49,7 @@ class TemplateMergeFieldService {
 	 *
 	 * @return array<int, string> The paths.
 	 *
-	 * @spec openspec/changes/template-merge-preview/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function paths(string $content): array {
 		$tokens = $this->tokens(content: $content);
@@ -156,7 +156,7 @@ class TemplateMergeFieldService {
 	 *
 	 * @return array{fields: array<int, array{path: string, label: string, source: string, value: string, filled: bool}>, complete: bool}
 	 *
-	 * @spec openspec/changes/template-merge-preview/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function resolve(array $template, array $data): array {
 		$declared = [];

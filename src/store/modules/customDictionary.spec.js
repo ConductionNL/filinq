@@ -17,7 +17,7 @@ jest.mock('@nextcloud/router', () => ({
 	generateUrl: (path) => path,
 }))
 
-// @spec openspec/changes/dictionary-actions-for-maintainers/specs/custom-dictionary-recognition/spec.md
+// @spec openspec/specs/custom-dictionary-recognition/spec.md
 describe('custom dictionary capabilities', () => {
 	beforeEach(() => {
 		setActivePinia(createPinia())

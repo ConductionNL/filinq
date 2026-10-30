@@ -125,7 +125,7 @@ class ConsentController extends Controller {
 	 *
 	 * @return bool True when the user may change any consent record.
 	 *
-	 * @spec openspec/changes/consent-changes-are-recorded-events/specs/consent-management/spec.md
+	 * @spec openspec/specs/consent-management/spec.md
 	 */
 	private function isConsentOfficer(string $uid): bool {
 		if ($this->groupManager->isAdmin($uid) === true) {

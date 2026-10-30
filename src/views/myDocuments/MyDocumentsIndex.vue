@@ -1046,7 +1046,7 @@ export default {
 		 *
 		 * @param {Array<object>} rows The rows on the page.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-5
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-5
 		 */
 		async loadReviewMarks(rows) {
 			const ids = (rows || [])
@@ -1068,7 +1068,7 @@ export default {
 		 *
 		 * @param {object} row The row.
 		 * @return {string}
-		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-5
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-5
 		 */
 		statusLabel(row) {
 			return this.reviewMarks[String(row.fileId)]
@@ -1081,7 +1081,7 @@ export default {
 		 *
 		 * @param {object} row The row.
 		 * @return {string}
-		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-5
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-5
 		 */
 		statusTitle(row) {
 			const mark = this.reviewMarks[String(row.fileId)]

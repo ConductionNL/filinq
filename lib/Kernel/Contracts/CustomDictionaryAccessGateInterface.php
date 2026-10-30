@@ -58,7 +58,7 @@ interface CustomDictionaryAccessGateInterface {
 	 *
 	 * @return bool True for an admin or a member of the maintainer group.
 	 *
-	 * @spec openspec/changes/dictionary-actions-for-maintainers/specs/custom-dictionary-recognition/spec.md
+	 * @spec openspec/specs/custom-dictionary-recognition/spec.md
 	 */
 	public function mayMaintain(): bool;
 
