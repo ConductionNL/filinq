@@ -377,7 +377,6 @@ class BatchAnonymizeServiceTest extends TestCase {
 
 	}//end testPreserveModeSummaryFieldsStoredPerFile()
 
-
 	/**
 	 * A batch with every kind of file: both stored states, the summary and
 	 * the per-file calls are exactly these.

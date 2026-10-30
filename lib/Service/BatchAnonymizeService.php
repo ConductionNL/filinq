@@ -106,17 +106,9 @@ class BatchAnonymizeService implements BatchAnonymizeServiceInterface {
 		string $outputFormat = 'pdf-only',
 		string $scope = 'dossier',
 	): array {
-		return $this->runBatch(
-			batchId: $batchId,
-			entities: $entities,
-			callOptions: [
-				'appendBasisSummary' => false,
-				'unredactedEntities' => $unredactedEntities,
-				'outputFormat' => $outputFormat,
-				'scope' => $scope,
-			]
-		);
+		$callOptions = ['appendBasisSummary' => false, 'unredactedEntities' => $unredactedEntities, 'outputFormat' => $outputFormat, 'scope' => $scope];
 
+		return $this->runBatch(batchId: $batchId, request: new BatchAnonymizeRequest(entities: $entities, callOptions: $callOptions));
 	}//end anonymizeBatch()
 
 	/**
@@ -149,27 +141,16 @@ class BatchAnonymizeService implements BatchAnonymizeServiceInterface {
 		string $outputFormat = 'pdf-only',
 		string $scope = 'dossier',
 	): array {
-		return $this->runBatch(
-			batchId: $batchId,
-			entities: $entities,
-			callOptions: [
-				'appendBasisSummary' => true,
-				'unredactedEntities' => $unredactedEntities,
-				'outputFormat' => $outputFormat,
-				'scope' => $scope,
-			]
-		);
+		$callOptions = ['appendBasisSummary' => true, 'unredactedEntities' => $unredactedEntities, 'outputFormat' => $outputFormat, 'scope' => $scope];
 
+		return $this->runBatch(batchId: $batchId, request: new BatchAnonymizeRequest(entities: $entities, callOptions: $callOptions));
 	}//end anonymizeBatchWithBasisSummary()
 
 	/**
 	 * Shared implementation behind both batch entry points.
 	 *
 	 * @param string $batchId Identifier of the batch to anonymize.
-	 * @param array<int, array<string, mixed>> $entities User-approved entities to anonymize.
-	 * @param array<string, mixed> $callOptions Per-batch options (appendBasisSummary,
-	 *                                          unredactedEntities, outputFormat, scope)
-	 *                                          forwarded verbatim to each per-file call.
+	 * @param BatchAnonymizeRequest $request The entities and per-batch options every file is anonymised with.
 	 *
 	 * @return array Summary of the run, with shape:
 	 *               {
@@ -186,9 +167,7 @@ class BatchAnonymizeService implements BatchAnonymizeServiceInterface {
 	 * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-anonymization
 	 * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-5
 	 */
-	private function runBatch(string $batchId, array $entities, array $callOptions): array {
-		$unredactedEntities = $callOptions['unredactedEntities'];
-
+	private function runBatch(string $batchId, BatchAnonymizeRequest $request): array {
 		$batch = $this->stateService->getBatch($batchId);
 		if ($batch === null) {
 			throw new Exception('Batch not found or expired', 404);
@@ -196,71 +175,82 @@ class BatchAnonymizeService implements BatchAnonymizeServiceInterface {
 
 		$batch['status'] = 'anonymizing';
 		$this->stateService->updateBatch($batchId, $batch);
-		$skipped = [];
-		$processed = 0;
-		$prohibitionSkipped = 0;
 
-		// $callOptions is constant for every file in the batch and forwarded
-		// verbatim to each per-file anonymise call. The dossierKey:null entry
-		// applied there makes OpenRegister fall back to each file's parent
+		// The request is the same for every file. The dossierKey:null entry
+		// applied per file makes OpenRegister fall back to each file's parent
 		// folder as the dossier (= the batch's folder), so a person is numbered
 		// consistently across the batch.
-		foreach ($batch['files'] as $i => $file) {
-			if ($file['status'] === 'error') {
-				$skipped[] = ['fileId' => $file['fileId'], 'reason' => $file['error'] ?? 'Previous error'];
-				continue;
-			}
+		$run = new BatchAnonymizeRun(batch: $batch, request: $request);
+		foreach (array_keys($batch['files']) as $index) {
+			$this->processFile(run: $run, index: $index);
+		}
 
-			if ($file['status'] !== 'extracted') {
-				continue;
-			}
-
-			$violations = $this->prohibitionViolationsFor(unredactedEntities: $unredactedEntities);
-			if ($violations !== []) {
-				$batch['files'][$i]['status'] = 'prohibitionViolation';
-				$batch['files'][$i]['prohibitedEntries'] = $violations;
-				$skipped[] = [
-					'fileId' => $file['fileId'],
-					'reason' => 'Prohibition violation on unredacted entities',
-					'httpStatus' => 422,
-				];
-				$prohibitionSkipped++;
-				continue;
-			}
-
-			$outcome = $this->anonymizeBatchFile(
-				entry: $batch['files'][$i],
-				entities: $entities,
-				callOptions: $callOptions
-			);
-			if ($outcome['error'] === null) {
-				$outcome['entry'] = $this->applyOutputLayout(
-					entry: $outcome['entry'],
-					userId: (string)($batch['userId'] ?? '')
-				);
-			}
-			$batch['files'][$i] = $outcome['entry'];
-
-			if ($outcome['error'] === null) {
-				$processed++;
-				continue;
-			}
-
-			$skipped[] = ['fileId' => $file['fileId'], 'reason' => $outcome['error']];
-		}//end foreach
-
-		$batch['status'] = 'completed';
-		$this->stateService->updateBatch($batchId, $batch);
-		return [
-			'batchId' => $batchId,
-			'batchStatus' => 'completed',
-			'processedFiles' => $processed,
-			'skippedFiles' => $skipped,
-			'prohibitionSkippedFiles' => $prohibitionSkipped,
-			'totalFiles' => count($batch['files']),
-		];
-
+		$run->batch['status'] = 'completed';
+		$this->stateService->updateBatch($batchId, $run->batch);
+		return $run->summary(batchId: $batchId);
 	}//end runBatch()
+
+	/**
+	 * Skip, refuse or anonymise one file of the batch, by its status and the prohibition gate.
+	 *
+	 * @param BatchAnonymizeRun $run The running batch.
+	 * @param int|string $index The file's position in the batch.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-anonymization
+	 */
+	private function processFile(BatchAnonymizeRun $run, int|string $index): void {
+		$file = $run->batch['files'][$index];
+		if ($file['status'] === 'error') {
+			$run->skipped[] = ['fileId' => $file['fileId'], 'reason' => $file['error'] ?? 'Previous error'];
+			return;
+		}
+
+		if ($file['status'] !== 'extracted') {
+			return;
+		}
+
+		$violations = $this->prohibitionViolationsFor(unredactedEntities: $run->request->callOptions['unredactedEntities']);
+		if ($violations !== []) {
+			$run->skipProhibited(index: $index, violations: $violations);
+			return;
+		}
+
+		$this->anonymizeEntry(run: $run, index: $index);
+
+	}//end processFile()
+
+	/**
+	 * Anonymise one extracted file, move its output into place and record the outcome.
+	 *
+	 * @param BatchAnonymizeRun $run The running batch.
+	 * @param int|string $index The file's position in the batch.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-anonymization
+	 */
+	private function anonymizeEntry(BatchAnonymizeRun $run, int|string $index): void {
+		$fileId = $run->batch['files'][$index]['fileId'];
+		$outcome = $this->anonymizeBatchFile(entry: $run->batch['files'][$index], request: $run->request);
+		if ($outcome['error'] === null) {
+			$outcome['entry'] = $this->applyOutputLayout(
+				entry: $outcome['entry'],
+				userId: (string)($run->batch['userId'] ?? '')
+			);
+		}
+
+		$run->batch['files'][$index] = $outcome['entry'];
+
+		if ($outcome['error'] === null) {
+			$run->processed++;
+			return;
+		}
+
+		$run->skipped[] = ['fileId' => $fileId, 'reason' => $outcome['error']];
+
+	}//end anonymizeEntry()
 
 	/**
 	 * Resolve the prohibition violations for the batch's unredacted entities.
@@ -295,10 +285,9 @@ class BatchAnonymizeService implements BatchAnonymizeServiceInterface {
 	 * next file.
 	 *
 	 * @param array<string, mixed> $entry The batch entry for this file.
-	 * @param array<int, array<string, mixed>> $entities User-approved entities to anonymize.
-	 * @param array<string, mixed> $callOptions Per-batch options; `appendBasisSummary` selects
-	 *                                          which AnonymizationService entry point is used,
-	 *                                          the rest are forwarded verbatim.
+	 * @param BatchAnonymizeRequest $request The entities and per-batch options; `appendBasisSummary`
+	 *                                       selects which AnonymizationService entry point is used,
+	 *                                       the rest are forwarded verbatim.
 	 *
 	 * @return array{entry: array<string, mixed>, error: string|null} The updated entry plus the
 	 *                                                                failure reason, or null when
@@ -306,13 +295,9 @@ class BatchAnonymizeService implements BatchAnonymizeServiceInterface {
 	 *
 	 * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-anonymization
 	 */
-	private function anonymizeBatchFile(array $entry, array $entities, array $callOptions): array {
+	private function anonymizeBatchFile(array $entry, BatchAnonymizeRequest $request): array {
 		try {
-			$result = $this->anonymizeOneFile(
-				fileId: (int)$entry['fileId'],
-				entities: $entities,
-				callOptions: $callOptions
-			);
+			$result = $this->anonymizeOneFile(fileId: (int)$entry['fileId'], request: $request);
 
 			return [
 				'entry' => $this->applyAnonymizedResult(entry: $entry, result: $result),
@@ -344,18 +329,18 @@ class BatchAnonymizeService implements BatchAnonymizeServiceInterface {
 	 * argument makes OpenRegister fall back to the file's parent folder.
 	 *
 	 * @param int $fileId The Nextcloud file id to anonymize.
-	 * @param array<int, array<string, mixed>> $entities User-approved entities to anonymize.
-	 * @param array<string, mixed> $callOptions Per-batch options.
+	 * @param BatchAnonymizeRequest $request The entities and per-batch options.
 	 *
 	 * @return array<string, mixed> The AnonymizationService result payload.
 	 *
 	 * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-anonymization
 	 */
-	private function anonymizeOneFile(int $fileId, array $entities, array $callOptions): array {
+	private function anonymizeOneFile(int $fileId, BatchAnonymizeRequest $request): array {
+		$callOptions = $request->callOptions;
 		if ($callOptions['appendBasisSummary'] === true) {
 			return $this->anonService->anonymizeDocumentWithBasisSummary(
 				fileId: $fileId,
-				entities: $entities,
+				entities: $request->entities,
 				unredactedEntities: $callOptions['unredactedEntities'],
 				outputFormat: $callOptions['outputFormat'],
 				scope: $callOptions['scope'],
@@ -365,7 +350,7 @@ class BatchAnonymizeService implements BatchAnonymizeServiceInterface {
 
 		return $this->anonService->anonymizeDocument(
 			fileId: $fileId,
-			entities: $entities,
+			entities: $request->entities,
 			unredactedEntities: $callOptions['unredactedEntities'],
 			outputFormat: $callOptions['outputFormat'],
 			scope: $callOptions['scope'],
@@ -408,7 +393,6 @@ class BatchAnonymizeService implements BatchAnonymizeServiceInterface {
 		}
 
 		return $entry;
-
 	}//end applyOutputLayout()
 
 	/**
