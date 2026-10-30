@@ -4667,14 +4667,14 @@
 		{
 			"id": "red-one-click",
 			"area": "redact",
-			"name": "Anonymise a document with one click from inside the case system.",
+			"name": "Anonymise a document from inside the case system.",
 			"source": "competitor-derived",
 			"sourceRef": "xxllnc Anonimiseren zaaksysteem-embedded flow; Decos JOIN one-click via DataMask",
-			"filinq": "partial",
+			"filinq": "yes",
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Re-read 2026-10-30 from dossiq development: WOORedactionService is gone (dossiq change partly-public-documents-get-a-redacted-copy, archived 2026-10-30, commit 2a14fff09 of 16 Oct). dossiq's Woo case page 'Redact documents' (src/manifest.json action document-redact -> /cases/{id}/redact, board DqLakken) calls dossiq lib/Controller/DocumentRedactionController.php detect/check/redact -> lib/Service/Redaction/DocumentRedactionService.php -> lib/Service/FilinqRedactionClient.php, which resolves filinq's services by cross-app DI (FleetAppId::getService) in the order filinq's gate requires: detect(), markChecked() with the named officer (filinq RedactionOutputGuard::markChecked), then anonymize() (filinq AnonymizationService::anonymizeDocument). A review refusal comes back as the outcome not_checked, not an exception. On the filinq side the gate and the mark are the ones change anonymise-asks-for-the-review-mark wired. Partial against the row: it works from inside the case system, but it is three steps (detect, check, redact), not one click, by design (the check is the human review).",
+				"evidence": "Re-read 2026-10-30 from dossiq development: WOORedactionService is gone (dossiq change partly-public-documents-get-a-redacted-copy, archived 2026-10-30, commit 2a14fff09 of 16 Oct). dossiq's Woo case page 'Redact documents' (src/manifest.json action document-redact -> /cases/{id}/redact, board DqLakken) calls dossiq lib/Controller/DocumentRedactionController.php detect/check/redact -> lib/Service/Redaction/DocumentRedactionService.php -> lib/Service/FilinqRedactionClient.php, which resolves filinq's services by cross-app DI (FleetAppId::getService) in the order filinq's gate requires: detect(), markChecked() with the named officer (filinq RedactionOutputGuard::markChecked), then anonymize() (filinq AnonymizationService::anonymizeDocument). A review refusal comes back as the outcome not_checked, not an exception. On the filinq side the gate and the mark are the ones change anonymise-asks-for-the-review-mark wired. Re-measured by coverage lane fq-cover (filinq#1612). Meets the reworded row: it works from inside the case system, in three steps (detect, check, redact) by design.",
 				"change": "openspec/changes/anonymise-asks-for-the-review-mark",
 				"requirement": [
 					"openspec/changes/anonymise-asks-for-the-review-mark/specs/redaction-output-guarantee :: The screens record the check before they anonymise (REQ-RWB-06)"
@@ -4685,7 +4685,7 @@
 			"providerHow": "read-from-code",
 			"feature": "anonymization",
 			"featureConfidence": "high",
-			"note": "No longer a live defect: dossiq marks the check with the named officer before it anonymises. The one-click wording of the row conflicts with the review mark; the case system path is detect, check, redact.",
+			"note": "Reworded 2026-10-30 (DECISIONS row 268) from \"with one click\": the case system path is detect, check, redact, because the check is the human review. Built: dossiq marks the check with the named officer before it anonymises.",
 			"zylab": "unknown",
 			"datamask": "yes",
 			"smartdocuments": "unknown",
@@ -4712,10 +4712,12 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "Re-read 2026-10-30 on development: reachable since change anonymise-asks-for-the-review-mark (10/10 ticked). ReviewMarkCard.vue records the mark through POST api/redaction/documents/{fileId}/checked; RedactionOutputController::markChecked takes checkedBy from the session user and checks the caller can open the file first; GET api/redaction/documents/checked (routes.php:132, checkedStatus) feeds My documents' Status column ('Checked by {user} on {date}'). RedactionReviewGate::refuse() refuses a mark without checkedBy or for an older detection run. Partial: nothing requires the checker to be a different person from the one who ran the detection or the anonymise (no comparison of checkedBy with the runner in lib/Service/Redaction/), so a second person CAN check, but one person can also do both.",
-				"change": "openspec/changes/anonymise-asks-for-the-review-mark",
+				"change": "openspec/changes/redaction-four-eyes-setting",
 				"requirement": [
 					"openspec/changes/anonymise-asks-for-the-review-mark/specs/redaction-output-guarantee :: The screens record the check before they anonymise (REQ-RWB-06)",
-					"openspec/changes/anonymise-asks-for-the-review-mark/specs/redaction-output-guarantee :: My documents shows who checked a file (REQ-RWB-08)"
+					"openspec/changes/anonymise-asks-for-the-review-mark/specs/redaction-output-guarantee :: My documents shows who checked a file (REQ-RWB-08)",
+					"openspec/changes/redaction-four-eyes-setting/specs/redaction-output-guarantee :: The person who anonymises differs from the person who checked (REQ-RWB-09)",
+					"openspec/changes/redaction-four-eyes-setting/specs/admin-settings :: The admin chooses when four eyes are required (REQ-SET-12)"
 				]
 			},
 			"reachedOn": "ReviewMarkCard in the file viewer sidebar; Status column on My documents",
@@ -4723,7 +4725,7 @@
 			"providerHow": "read-from-code",
 			"feature": "anonymization-entity-review",
 			"featureConfidence": "medium",
-			"note": "Four eyes is not enforced: the checker may be the person who anonymises. Enforcing a different person is a decision for Ruben (coverage lane fq-cover, 30 Oct).",
+			"note": "Four eyes is not enforced yet: the checker may be the person who anonymises. Decided 2026-10-30 (DECISIONS row 266): an admin setting, on by default for Woo cases, makes the checker differ from the anonymiser; planned in change redaction-four-eyes-setting.",
 			"zylab": "yes",
 			"datamask": "unknown",
 			"smartdocuments": "unknown",
