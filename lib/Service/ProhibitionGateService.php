@@ -49,6 +49,10 @@ use Throwable;
  * @link     https://www.filinq.app
  *
  * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-3
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The fail-open and
+ * fail-closed paths of each backend are one decision each; splitting them
+ * across classes would hide the order in which the gate consults them.
  */
 class ProhibitionGateService {
 	/**
