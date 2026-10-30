@@ -22,6 +22,7 @@ namespace OCA\Filinq\Tests\Unit\Service;
 use OCA\Filinq\Exception\MergeRefusedException;
 use OCA\Filinq\Service\DocumentMergeService;
 use OCA\Filinq\Service\MergeCoverRenderer;
+use OCA\Filinq\Service\MergedPdfDocument;
 use OCA\Filinq\Service\MergeJobRepository;
 use OCA\Filinq\Service\PdfConversionService;
 use OCA\Filinq\Service\Pdfa3ConversionService;
@@ -68,6 +69,13 @@ class DocumentMergeServiceTest extends TestCase {
 	 * @var array<string, string>
 	 */
 	private array $written = [];
+
+	/**
+	 * The document factory the next service() uses; null for a plain one.
+	 *
+	 * @var PdfDocumentFactory|null
+	 */
+	private ?PdfDocumentFactory $factory = null;
 
 	/**
 	 * A real PDF of the given page count, each page carrying its label.
@@ -224,7 +232,7 @@ class DocumentMergeServiceTest extends TestCase {
 			$jobs,
 			$conversion,
 			$archival,
-			new PdfDocumentFactory(),
+			($this->factory ?? new PdfDocumentFactory()),
 			($cover ?? $this->createMock(originalClassName: MergeCoverRenderer::class)),
 			$rootFolder,
 			$session,
@@ -593,4 +601,163 @@ class DocumentMergeServiceTest extends TestCase {
 
 	}//end testAResultThatCannotBeWrittenFailsTheMerge()
 
+	/**
+	 * A factory that keeps every document it creates, so a test can read its bookmarks.
+	 *
+	 * @return PdfDocumentFactory The recording factory.
+	 */
+	private function recordingFactory(): PdfDocumentFactory {
+		return new class extends PdfDocumentFactory {
+			/**
+			 * Every document created so far.
+			 *
+			 * @var array<int, MergedPdfDocument>
+			 */
+			public array $created = [];
+
+			/**
+			 * Create a document and keep it.
+			 *
+			 * @return MergedPdfDocument The document.
+			 */
+			public function create(): MergedPdfDocument {
+				$document = parent::create();
+				$this->created[] = $document;
+
+				return $document;
+			}
+		};
+
+	}//end recordingFactory()
+
+	/**
+	 * A merge with a cover stores the job at every step in exactly this shape,
+	 * and every bookmark points at the page its input starts on.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/document-merge/spec.md
+	 */
+	public function testAMergeStoresEveryStepAndBookmarksEveryStartPage(): void {
+		$cover = $this->createMock(originalClassName: MergeCoverRenderer::class);
+		$cover->method('render')->willReturn($this->pdf(label: 'Voorblad', pages: 1));
+		$this->factory = $this->recordingFactory();
+		$service = $this->service(files: $this->threeDocuments(), cover: $cover);
+
+		$inputs = [['fileId' => 11, 'label' => 'Aanvraag'], ['fileId' => 13, 'label' => '']];
+		$options = ['name' => 'stap', 'coverTemplateRef' => 'voorblad'];
+		$service->merge(inputs: $inputs, options: $options, hostObject: ['id' => 'zaak-1']);
+
+		$summary = [['fileId' => 11, 'label' => 'Aanvraag'], ['fileId' => 13, 'label' => 'besluit.pdf']];
+		$running = ['inputs' => $summary, 'options' => $options, 'requestedBy' => 'anna', 'hostObject' => ['id' => 'zaak-1'], 'progress' => 0, 'status' => 'running', 'uuid' => 'merge-1'];
+		$this->assertSame(
+			[
+				$running,
+				array_replace($running, ['progress' => 50]),
+				array_replace($running, ['progress' => 100]),
+				array_replace($running, ['progress' => 100, 'status' => 'done']) + ['resultFileId' => 9001, 'pageCount' => 6, 'conformance' => 'pdf'],
+			],
+			$this->stored
+		);
+		$this->assertSame(['Aanvraag' => 2, 'besluit.pdf' => 4], array_column(array_slice($this->factory->created[0]->bookmarks(), -2), 'p', 't'));
+
+	}//end testAMergeStoresEveryStepAndBookmarksEveryStartPage()
+
+	/**
+	 * A failing input stops the job at the progress it reached, as a failed job.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/document-merge/spec.md
+	 */
+	public function testAFailingInputStoresTheJobAtTheProgressItReached(): void {
+		$service = $this->service(files: $this->threeDocuments(), conversionFails: true);
+
+		$job = $service->merge(
+			inputs: [['fileId' => 11, 'label' => 'Aanvraag'], ['fileId' => 12, 'label' => 'Plattegrond'], ['fileId' => 13, 'label' => 'Besluit']],
+			options: ['name' => 'half']
+		);
+
+		$this->assertSame(33, $job['progress']);
+		$this->assertSame('failed', $job['status']);
+		$this->assertSame('merge-1', $job['uuid']);
+		$this->assertCount(3, $this->stored);
+		$this->assertSame($job, $this->stored[2]);
+
+	}//end testAFailingInputStoresTheJobAtTheProgressItReached()
+
+	/**
+	 * A stored job without options runs with the defaults: bookmarks on and the default name.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/document-merge/spec.md
+	 */
+	public function testAQueuedJobWithoutOptionsRunsWithTheDefaults(): void {
+		$service = $this->service(files: $this->threeDocuments());
+
+		$finished = $service->resume(job: ['uuid' => 'merge-7', 'requestedBy' => 'anna', 'inputs' => [['fileId' => 11, 'label' => 'Aanvraag']], 'options' => 'none']);
+
+		$this->assertSame('done', $finished['status']);
+		$this->assertStringContainsString('/Outlines', $this->written['samenvoeging.pdf']);
+
+	}//end testAQueuedJobWithoutOptionsRunsWithTheDefaults()
+
+	/**
+	 * A threshold of zero or less never queues.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/document-merge/spec.md
+	 */
+	public function testAThresholdOfZeroNeverQueues(): void {
+		$service = $this->service(files: $this->threeDocuments());
+
+		$this->assertFalse($service->shouldQueue(inputs: [['fileId' => 11, 'pages' => 900]], threshold: 0));
+
+	}//end testAThresholdOfZeroNeverQueues()
+
+	/**
+	 * An input without a file id is refused before anything is stored.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/document-merge/spec.md
+	 */
+	public function testAnInputWithoutAFileIsRefused(): void {
+		$service = $this->service(files: $this->threeDocuments());
+
+		try {
+			$service->merge(inputs: [['fileId' => 11], ['label' => 'Los']]);
+			$this->fail('An input without a file must be refused.');
+		} catch (MergeRefusedException $e) {
+			$this->assertSame(400, $e->getStatus());
+			$this->assertSame('Every input names a file.', $e->getMessage());
+		}
+
+		$this->assertSame([], $this->stored);
+
+	}//end testAnInputWithoutAFileIsRefused()
+
+	/**
+	 * A named target that is not a folder is refused.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/document-merge/spec.md
+	 */
+	public function testANamedTargetThatIsNotAFolderIsRefused(): void {
+		$service = $this->service(files: $this->threeDocuments());
+
+		try {
+			$service->merge(inputs: [['fileId' => 11]], options: ['targetFolder' => '/Bundels/besluit.pdf']);
+			$this->fail('A target that is not a folder must be refused.');
+		} catch (MergeRefusedException $e) {
+			$this->assertSame(400, $e->getStatus());
+			$this->assertSame('The merge target is not a folder.', $e->getMessage());
+		}
+
+		$this->assertSame([], $this->stored);
+
+	}//end testANamedTargetThatIsNotAFolderIsRefused()
 }//end class
