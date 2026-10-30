@@ -343,30 +343,7 @@ class PrintJobController extends Controller {
 
 			$this->authorizeJobAccess(job: $job, userId: $user->getUID());
 
-			$status = (string)$this->request->getParam('status', '');
-			$details = $this->request->getParam('details', null);
-			if (is_array($details) === true) {
-				$details = (string) json_encode($details);
-			}
-
-			if ($details !== null) {
-				$details = (string) $details;
-			}
-
-			try {
-				$job = $this->printJobSvc->recordExternalStatus(
-					job: $job,
-					externalStatus: $status,
-					details: $details
-				);
-			} catch (InvalidArgumentException $e) {
-				return new JSONResponse(
-					data: ['error' => $e->getMessage()],
-					statusCode: Http::STATUS_BAD_REQUEST
-				);
-			}
-
-			return new JSONResponse(data: $job);
+			return $this->recordStatus(job: $job);
 		} catch (OCSForbiddenException $e) {
 			return new JSONResponse(
 				data: ['error' => 'Not authorized'],
@@ -385,6 +362,50 @@ class PrintJobController extends Controller {
 		}//end try
 
 	}//end updateStatus()
+
+	/**
+	 * Record the status the print service reports on a job the caller may access.
+	 *
+	 * @param array<string, mixed> $job The job, already authorised.
+	 *
+	 * @return JSONResponse The updated job, or 400 for a status the job does not accept.
+	 */
+	private function recordStatus(array $job): JSONResponse {
+		try {
+			$job = $this->printJobSvc->recordExternalStatus(
+				job: $job,
+				externalStatus: (string)$this->request->getParam('status', ''),
+				details: $this->statusDetails()
+			);
+		} catch (InvalidArgumentException $e) {
+			return new JSONResponse(
+				data: ['error' => $e->getMessage()],
+				statusCode: Http::STATUS_BAD_REQUEST
+			);
+		}
+
+		return new JSONResponse(data: $job);
+
+	}//end recordStatus()
+
+	/**
+	 * The `details` the print service sent, as text: a list or object as JSON, null when absent.
+	 *
+	 * @return string|null The details.
+	 */
+	private function statusDetails(): ?string {
+		$details = $this->request->getParam('details', null);
+		if (is_array($details) === true) {
+			return (string) json_encode($details);
+		}
+
+		if ($details !== null) {
+			return (string) $details;
+		}
+
+		return null;
+
+	}//end statusDetails()
 
 	/**
 	 * Create a batch print job
