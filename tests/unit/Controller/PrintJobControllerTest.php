@@ -191,4 +191,24 @@ class PrintJobControllerTest extends TestCase {
 		$this->assertSame(Http::STATUS_NOT_FOUND, $this->as('u')->download('nope')->getStatus());
 
 	}//end testTheDownload()
+	/**
+	 * The template, data, options, caller and download name of a request
+	 * reach the stored job, for one letter and for a batch.
+	 *
+	 * @return void
+	 */
+	public function testTheRequestReachesTheJob(): void {
+		$single = $this->as('u', ['templateId' => 't', 'options' => ['duplex' => true]])->create()->getData();
+		$row = $this->rows[$single['jobId']];
+		$this->assertSame(['t', 'document.pdf', 'u', true], [$row['templateId'], $row['filename'], $row['requestedBy'], $row['printConfig']['duplex']]);
+
+		$batch = $this->as('v', ['templateId' => 't2', 'items' => [['data' => []]], 'options' => ['stapling' => true], 'filename' => 'post.pdf'])->batch()->getData();
+		$row = $this->rows[$batch['jobId']];
+		$this->assertSame(['t2', 'post.pdf', 'v', true], [$row['templateId'], $row['filename'], $row['requestedBy'], $row['printConfig']['stapling']]);
+
+		$this->as('w', ['templateId' => 't', 'filename' => 'brief.pdf', 'options' => 'x', 'data' => 'y'])->create();
+		$this->assertSame('brief.pdf', $this->rows['job-3']['filename']);
+		$this->assertFalse($this->rows['job-3']['printConfig']['duplex']);
+
+	}//end testTheRequestReachesTheJob()
 }//end class

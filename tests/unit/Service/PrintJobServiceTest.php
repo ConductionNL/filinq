@@ -27,6 +27,7 @@ require_once __DIR__ . '/PrintJobDoubles.php';
 use InvalidArgumentException;
 use OCA\Filinq\BackgroundJob\BatchPrintJob;
 use OCA\Filinq\BackgroundJob\JobQueue;
+use OCA\Filinq\Kernel\PrintJobRequest;
 use OCA\Filinq\Service\DataResolverService;
 use OCA\Filinq\Service\PdfService;
 use OCA\Filinq\Service\PrintJobService;
@@ -71,6 +72,13 @@ class PrintJobServiceTest extends TestCase {
 	private PrintJobService $service;
 
 	/**
+	 * The PDF options of every render, in order.
+	 *
+	 * @var array<int, array<string, mixed>>
+	 */
+	private array $pdfOptions = [];
+
+	/**
 	 * Build the service over in-memory rows and files.
 	 *
 	 * @return void
@@ -80,7 +88,8 @@ class PrintJobServiceTest extends TestCase {
 
 		$pdf = $this->createMock(PdfService::class);
 		$pdf->method('renderPdf')->willReturnCallback(
-			static function (string $templateContent, array $data, array $options): string {
+			function (string $templateContent, array $data, array $options): string {
+				$this->pdfOptions[] = $options;
 				if (($data['naam'] ?? '') === 'kapot') {
 					throw new \RuntimeException('render failed');
 				}
@@ -111,11 +120,7 @@ class PrintJobServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testThreeLettersGoToPrintAsOneJob(): void {
-		$result = $this->service->createBatchJob(
-			templateId: 'tmpl-1',
-			items: [['data' => ['naam' => 'An']], ['data' => ['naam' => 'Bo']], ['data' => ['naam' => 'Cy']]],
-			userId: 'handler-a'
-		);
+		$result = $this->service->createBatchJob(request: new PrintJobRequest(templateId: 'tmpl-1'), items: [['data' => ['naam' => 'An']], ['data' => ['naam' => 'Bo']], ['data' => ['naam' => 'Cy']]], userId: 'handler-a');
 
 		$this->assertSame('queued', $result['status']);
 		$this->assertCount(1, $this->rows);
@@ -135,7 +140,7 @@ class PrintJobServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testNoPdfInTheAppConfiguration(): void {
-		$this->service->createJob(templateId: 'tmpl-1', data: ['naam' => 'An'], userId: 'handler-a');
+		$this->service->createJob(request: new PrintJobRequest(templateId: 'tmpl-1'), data: ['naam' => 'An'], userId: 'handler-a');
 
 		foreach ($this->written as $payload) {
 			$this->assertStringNotContainsString('%PDF', (string) json_encode($payload));
@@ -157,7 +162,7 @@ class PrintJobServiceTest extends TestCase {
 			->with($refs, [], ['extra' => 1])
 			->willReturn(['data' => ['naam' => 'Resolved'], 'errors' => [], 'warnings' => []]);
 
-		$this->service->createBatchJob(templateId: 'tmpl-1', items: [['dataRefs' => $refs, 'data' => ['extra' => 1]]], userId: 'u');
+		$this->service->createBatchJob(request: new PrintJobRequest(templateId: 'tmpl-1'), items: [['dataRefs' => $refs, 'data' => ['extra' => 1]]], userId: 'u');
 
 		$this->assertSame(['%PDF-Resolved'], array_values($this->stored));
 
@@ -169,11 +174,7 @@ class PrintJobServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testAFailedLetterLeavesTheRest(): void {
-		$result = $this->service->createBatchJob(
-			templateId: 'tmpl-1',
-			items: [['data' => ['naam' => 'An']], ['data' => ['naam' => 'kapot'], 'filename' => 'b.pdf']],
-			userId: 'u'
-		);
+		$result = $this->service->createBatchJob(request: new PrintJobRequest(templateId: 'tmpl-1'), items: [['data' => ['naam' => 'An']], ['data' => ['naam' => 'kapot'], 'filename' => 'b.pdf']], userId: 'u');
 
 		$job = $this->rows[$result['jobId']];
 		$this->assertSame('queued', $job['status']);
@@ -193,7 +194,7 @@ class PrintJobServiceTest extends TestCase {
 		$this->jobList->expects($this->once())->method('add')
 			->with(BatchPrintJob::class, $this->callback(static fn (array $a): bool => $a['jobId'] === 'job-1' && count($a['items']) === 11));
 
-		$result = $this->service->createBatchJob(templateId: 'tmpl-1', items: $items, userId: 'u');
+		$result = $this->service->createBatchJob(request: new PrintJobRequest(templateId: 'tmpl-1'), items: $items, userId: 'u');
 
 		$this->assertSame('rendering', $result['status']);
 		$this->assertSame([], $this->stored);
@@ -206,7 +207,7 @@ class PrintJobServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testThePrintServiceReportsBack(): void {
-		$result = $this->service->createJob(templateId: 'tmpl-1', data: ['naam' => 'An'], userId: 'u');
+		$result = $this->service->createJob(request: new PrintJobRequest(templateId: 'tmpl-1'), data: ['naam' => 'An'], userId: 'u');
 		$job = $this->service->getJob($result['jobId']);
 		$job['statusChangedAt'] = '2000-01-01T00:00:00+00:00';
 
@@ -236,11 +237,11 @@ class PrintJobServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheDownload(): void {
-		$single = $this->service->createJob(templateId: 'tmpl-1', data: ['naam' => 'An'], userId: 'u', filename: 'brief.pdf');
+		$single = $this->service->createJob(request: new PrintJobRequest(templateId: 'tmpl-1', filename: 'brief.pdf'), data: ['naam' => 'An'], userId: 'u');
 		$download = $this->service->download(job: $this->service->getJob($single['jobId']));
 		$this->assertSame(['content' => '%PDF-An', 'filename' => 'brief.pdf', 'contentType' => 'application/pdf'], $download);
 
-		$batch = $this->service->createBatchJob(templateId: 'tmpl-1', items: [['data' => ['naam' => 'Bo']], ['data' => ['naam' => 'Cy']]], userId: 'u', filename: 'post.pdf');
+		$batch = $this->service->createBatchJob(request: new PrintJobRequest(templateId: 'tmpl-1', filename: 'post.pdf'), items: [['data' => ['naam' => 'Bo']], ['data' => ['naam' => 'Cy']]], userId: 'u');
 		$job = $this->service->getJob($batch['jobId']);
 		$zip = $this->service->download(job: $job);
 		$this->assertSame('post.zip', $zip['filename']);
@@ -263,8 +264,8 @@ class PrintJobServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheListHoldsOnlyTheCallersJobs(): void {
-		$this->service->createJob(templateId: 'tmpl-1', data: ['naam' => 'An'], userId: 'handler-a');
-		$this->service->createJob(templateId: 'tmpl-1', data: ['naam' => 'Bo'], userId: 'handler-b');
+		$this->service->createJob(request: new PrintJobRequest(templateId: 'tmpl-1'), data: ['naam' => 'An'], userId: 'handler-a');
+		$this->service->createJob(request: new PrintJobRequest(templateId: 'tmpl-1'), data: ['naam' => 'Bo'], userId: 'handler-b');
 
 		$mine = $this->service->listJobs(userId: 'handler-a');
 
@@ -272,4 +273,82 @@ class PrintJobServiceTest extends TestCase {
 		$this->assertSame('handler-a', $mine[0]['requestedBy']);
 
 	}//end testTheListHoldsOnlyTheCallersJobs()
+	/**
+	 * The stored job row, the queued background work and the answer all
+	 * carry the template, the options, the user and the download name.
+	 *
+	 * @return void
+	 */
+	public function testALargeBatchStoresAndQueuesTheWholeRequest(): void {
+		$items = array_fill(0, 11, ['data' => ['naam' => 'X']]);
+		$options = ['duplex' => true, 'paperTray' => 'tray-2'];
+		$this->jobList->expects($this->once())->method('add')
+			->with(BatchPrintJob::class, ['jobId' => 'job-1', 'templateId' => 'tmpl-1', 'items' => $items, 'options' => $options]);
+
+		$result = $this->service->createBatchJob(request: new PrintJobRequest(templateId: 'tmpl-1', options: $options, filename: 'post.pdf'), items: $items, userId: 'handler-a');
+
+		$printConfig = ['duplex' => true, 'color' => true, 'paperTray' => 'tray-2', 'stapling' => false];
+		$this->assertSame(['jobId' => 'job-1', 'status' => 'rendering', 'total' => 11, 'printConfig' => $printConfig], $result);
+		$this->assertCount(1, $this->written);
+		$row = $this->written[0];
+		$this->assertIsString($row['requestedAt']);
+		$this->assertSame($row['requestedAt'], $row['statusChangedAt']);
+		unset($row['requestedAt'], $row['statusChangedAt']);
+		$this->assertSame(
+			[
+				'status' => 'rendering',
+				'requestedBy' => 'handler-a',
+				'templateId' => 'tmpl-1',
+				'filename' => 'post.pdf',
+				'total' => 11,
+				'rendered' => 0,
+				'errors' => 0,
+				'files' => [],
+				'printConfig' => $printConfig,
+				'manifest' => [],
+			],
+			$row
+		);
+
+	}//end testALargeBatchStoresAndQueuesTheWholeRequest()
+
+	/**
+	 * A batch of exactly the sync limit is rendered now, with the request's
+	 * options reaching the PDF renderer.
+	 *
+	 * @return void
+	 */
+	public function testABatchAtTheLimitIsRenderedNowWithItsOptions(): void {
+		$this->jobList->expects($this->never())->method('add');
+
+		$result = $this->service->createBatchJob(request: new PrintJobRequest(templateId: 'tmpl-1', options: ['pdfa' => true, 'stapling' => true]), items: ['a' => ['data' => ['naam' => 'An']]] + array_fill(0, 9, ['data' => ['naam' => 'Bo']]), userId: 'u');
+
+		$this->assertSame('queued', $result['status']);
+		$this->assertSame(10, $result['total']);
+		$this->assertCount(10, $this->pdfOptions);
+		$this->assertTrue($this->pdfOptions[0]['pdfa']);
+		$this->assertTrue($this->pdfOptions[0]['stapling']);
+		$this->assertSame('%PDF-An', $this->stored[array_key_first($this->stored)]);
+
+	}//end testABatchAtTheLimitIsRenderedNowWithItsOptions()
+
+	/**
+	 * Without a download name a single letter is document.pdf, both as the
+	 * job's name and as the letter's, and a batch is print-job.pdf.
+	 *
+	 * @return void
+	 */
+	public function testTheDefaultDownloadNames(): void {
+		$single = $this->service->createJob(request: new PrintJobRequest(templateId: 'tmpl-1', options: ['color' => false]), data: ['naam' => 'An'], userId: 'u');
+		$job = $this->rows[$single['jobId']];
+		$this->assertSame('document.pdf', $job['filename']);
+		$this->assertSame('document.pdf', $job['manifest'][0]['filename']);
+		$this->assertFalse($job['printConfig']['color']);
+		$this->assertSame('u', $job['requestedBy']);
+
+		$batch = $this->service->createBatchJob(request: new PrintJobRequest(templateId: 'tmpl-1'), items: [['data' => ['naam' => 'Bo']]], userId: '');
+		$this->assertSame('print-job.pdf', $this->rows[$batch['jobId']]['filename']);
+		$this->assertSame('', $this->rows[$batch['jobId']]['requestedBy']);
+
+	}//end testTheDefaultDownloadNames()
 }//end class
