@@ -60,6 +60,7 @@ use RuntimeException;
  * @covers \OCA\Filinq\Controller\RedactionOutputController
  * @covers \OCA\Filinq\Service\Redaction\DownloadAgreementGate
  * @covers \OCA\Filinq\Service\Redaction\DownloadAgreementRepository
+ * @uses   \OCA\Filinq\Service\ReadsStoredObjectRows
  */
 class RedactionOutputDownloadPathTest extends TestCase {
 

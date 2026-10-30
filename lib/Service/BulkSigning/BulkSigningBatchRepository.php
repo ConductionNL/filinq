@@ -25,6 +25,7 @@ namespace OCA\Filinq\Service\BulkSigning;
 
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\IntakeRepository;
+use OCA\Filinq\Service\ReadsStoredObjectRows;
 use RuntimeException;
 use Throwable;
 
@@ -43,6 +44,7 @@ use Throwable;
  * @spec openspec/specs/bulk-signing-field-builder/spec.md#requirement-batch-envelope-and-placement-data-live-in-the-signing-register-req-ddbsf-001
  */
 class BulkSigningBatchRepository {
+	use ReadsStoredObjectRows;
 
 	/**
 	 * Schema slug.
@@ -87,7 +89,7 @@ class BulkSigningBatchRepository {
 			throw new RuntimeException(message: 'Could not store the bulk send: ' . $e->getMessage(), code: 0, previous: $e);
 		}
 
-		$normalised = $this->normalise(row: $stored);
+		$normalised = $this->storedFields(row: $stored);
 		if (($normalised['uuid'] ?? '') === '' && $uuid !== null) {
 			$normalised['uuid'] = $uuid;
 		}
@@ -122,7 +124,7 @@ class BulkSigningBatchRepository {
 			return null;
 		}
 
-		return $this->normalise(row: $object);
+		return $this->storedFields(row: $object);
 
 	}//end find()
 
@@ -156,7 +158,7 @@ class BulkSigningBatchRepository {
 
 		$batches = [];
 		foreach ((array) $results as $result) {
-			$batch = $this->normalise(row: $result);
+			$batch = $this->storedFields(row: $result);
 			// The filter is the search's; the owner check is ours.
 			if ($createdBy === null || ($batch['createdBy'] ?? '') === $createdBy) {
 				$batches[] = $batch;
@@ -171,33 +173,4 @@ class BulkSigningBatchRepository {
 		return $batches;
 
 	}//end list()
-
-	/**
-	 * Flatten an OpenRegister object into its fields plus `uuid`.
-	 *
-	 * @param mixed $row An ObjectEntity or array
-	 *
-	 * @return array
-	 */
-	private function normalise(mixed $row): array {
-		$data = $row;
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			$data = $row->jsonSerialize();
-		}
-
-		if (is_array($data) === false) {
-			return [];
-		}
-
-		$fields = $data;
-		if (isset($data['object']) === true && is_array($data['object']) === true) {
-			$fields = $data['object'];
-		}
-
-		unset($fields['@self']);
-		$fields['uuid'] = (string) ($fields['uuid'] ?? ($data['uuid'] ?? ($data['@self']['id'] ?? ($data['id'] ?? ''))));
-
-		return $fields;
-
-	}//end normalise()
 }//end class

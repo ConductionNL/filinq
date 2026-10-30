@@ -28,6 +28,7 @@ namespace OCA\Filinq\Service\Pseudonymisation;
 
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\IntakeRepository;
+use OCA\Filinq\Service\ReadsStoredObjectRows;
 use RuntimeException;
 use Throwable;
 
@@ -41,6 +42,7 @@ use Throwable;
  * @link     https://www.filinq.app
  */
 class PseudonymMapRepository {
+	use ReadsStoredObjectRows;
 
 	public const SCHEMA = 'pseudonymMap';
 
@@ -87,7 +89,7 @@ class PseudonymMapRepository {
 		}
 
 		foreach ((array) $results as $result) {
-			$row = $this->normalise(row: $result);
+			$row = $this->storedEntityFields(row: $result);
 			// The filter is the search's; the match is ours. A search that
 			// ignored the filter must not hand one link another link's key.
 			if ((string) ($row['anonymizationLink'] ?? '') === $linkId) {
@@ -125,7 +127,7 @@ class PseudonymMapRepository {
 
 		$rows = [];
 		foreach ((array) $results as $result) {
-			$row = $this->normalise(row: $result);
+			$row = $this->storedEntityFields(row: $result);
 			// The filter is the search's; the match is ours.
 			if ((int) ($row['sourceFileId'] ?? 0) === $sourceFileId && (string) ($row['uuid'] ?? '') !== '') {
 				unset($row['mappings']);
@@ -168,7 +170,7 @@ class PseudonymMapRepository {
 			throw new RuntimeException(message: 'The pseudonym map ' . $uuid . ' does not exist.');
 		}
 
-		return (string) ($this->normalise(row: $entity)['mappings'] ?? '');
+		return (string)($this->storedEntityFields(row: $entity)['mappings'] ?? '');
 
 	}//end readCiphertext()
 
@@ -198,7 +200,7 @@ class PseudonymMapRepository {
 			throw new RuntimeException(message: 'Could not store the pseudonym map: ' . $e->getMessage(), code: 0, previous: $e);
 		}
 
-		$storedUuid = (string) ($this->normalise(row: $stored)['uuid'] ?? '');
+		$storedUuid = (string)($this->storedEntityFields(row: $stored)['uuid'] ?? '');
 		if ($storedUuid === '') {
 			throw new RuntimeException(message: 'OpenRegister stored the pseudonym map without a uuid.');
 		}
@@ -235,41 +237,4 @@ class PseudonymMapRepository {
 		}
 
 	}//end delete()
-
-	/**
-	 * Flatten an OpenRegister row to its fields plus uuid.
-	 *
-	 * @param mixed $row An ObjectEntity or array.
-	 *
-	 * @return array<string, mixed> The fields.
-	 *
-	 * @spec exclude Shape adapter over an OpenRegister response.
-	 */
-	private function normalise(mixed $row): array {
-		$data = $row;
-		if (is_object($row) === true && method_exists($row, 'getObject') === true && method_exists($row, 'getUuid') === true) {
-			// An unrendered ObjectEntity: its jsonSerialize is the RENDER
-			// shape, so the stored payload is read from getObject().
-			return array_merge((array) $row->getObject(), ['uuid' => (string) $row->getUuid()]);
-		}
-
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			$data = $row->jsonSerialize();
-		}
-
-		if (is_array($data) === false) {
-			return [];
-		}
-
-		$fields = $data;
-		if (isset($data['object']) === true && is_array($data['object']) === true) {
-			$fields = $data['object'];
-		}
-
-		unset($fields['@self']);
-		$fields['uuid'] = (string) ($fields['uuid'] ?? ($data['uuid'] ?? ($data['@self']['id'] ?? ($data['id'] ?? ''))));
-
-		return $fields;
-
-	}//end normalise()
 }//end class
