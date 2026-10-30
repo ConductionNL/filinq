@@ -46,6 +46,10 @@ use Psr\Log\LoggerInterface;
  * @link     https://www.filinq.app
  *
  * @spec openspec/specs/anonymization/spec.md
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The thirteenth type is the
+ * EmlAnonymizeRequest value object the EML branch hands its source, entities
+ * and scope over in.
  */
 class DocumentAnonymizeRunner {
 	/**
