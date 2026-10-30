@@ -30,6 +30,9 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\EventListener;
 
+use OCA\Filinq\Kernel\AppIdentity;
+use OCA\OpenRegister\Service\Integration\LeafDescriptor;
+
 /**
  * Registers the signing folder leaf.
  *
@@ -68,20 +71,24 @@ class RegisterSigningFolderLeafListener extends MountedLeafListener {
 	];
 
 	/**
-	 * The catalogue group the leaf is listed under.
+	 * The descriptor this listener contributes, written out in full so the
+	 * integration-parity gate can compare it with the JS half.
 	 *
-	 * @var string
-	 */
-	public const GROUP = 'signing';
-
-	/**
-	 * The label the host shows.
-	 *
-	 * @return string The translated label.
+	 * @return LeafDescriptor The leaf.
 	 *
 	 * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/tasks.md#task-1.2
 	 */
-	protected function label(): string {
-		return $this->l10n->t('Waiting for your signature');
-	}//end label()
+	protected function descriptor(): LeafDescriptor {
+		return new LeafDescriptor(
+			id: self::LEAF_ID,
+			label: $this->l10n->t('Waiting for your signature'),
+			icon: self::ICON,
+			kinds: [LeafDescriptor::KIND_RENDER_SURFACE],
+			requiredApp: AppIdentity::APP_ID,
+			group: 'signing',
+			surfaces: self::SURFACES,
+			referenceType: self::LEAF_ID,
+			renderMode: LeafDescriptor::RENDER_MODE_MOUNT,
+		);
+	}//end descriptor()
 }//end class

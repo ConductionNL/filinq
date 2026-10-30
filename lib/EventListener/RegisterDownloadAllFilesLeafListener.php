@@ -28,6 +28,9 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\EventListener;
 
+use OCA\Filinq\Kernel\AppIdentity;
+use OCA\OpenRegister\Service\Integration\LeafDescriptor;
+
 /**
  * Registers the download-all-files leaf.
  *
@@ -66,20 +69,24 @@ class RegisterDownloadAllFilesLeafListener extends MountedLeafListener {
 	];
 
 	/**
-	 * The catalogue group the leaf is listed under.
+	 * The descriptor this listener contributes, written out in full so the
+	 * integration-parity gate can compare it with the JS half.
 	 *
-	 * @var string
-	 */
-	public const GROUP = 'documents';
-
-	/**
-	 * The label the host shows.
-	 *
-	 * @return string The translated label.
+	 * @return LeafDescriptor The leaf.
 	 *
 	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
-	protected function label(): string {
-		return $this->l10n->t('Download all files');
-	}//end label()
+	protected function descriptor(): LeafDescriptor {
+		return new LeafDescriptor(
+			id: self::LEAF_ID,
+			label: $this->l10n->t('Download all files'),
+			icon: self::ICON,
+			kinds: [LeafDescriptor::KIND_RENDER_SURFACE],
+			requiredApp: AppIdentity::APP_ID,
+			group: 'documents',
+			surfaces: self::SURFACES,
+			referenceType: self::LEAF_ID,
+			renderMode: LeafDescriptor::RENDER_MODE_MOUNT,
+		);
+	}//end descriptor()
 }//end class

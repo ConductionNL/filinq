@@ -5,8 +5,9 @@
  *
  * Shared half of the listeners that contribute one Filinq leaf to
  * OpenRegister's cross-app leaf catalogue (`RegisterLeafProvidersEvent`,
- * ADR-066). Each leaf is a render surface in mount mode; a listener names its
- * id, icon, group and surfaces as constants and its label in label().
+ * ADR-066). A listener writes its descriptor out in full, so the
+ * integration-parity gate can read it; this base registers it and logs a
+ * failure.
  *
  * @category EventListener
  * @package  OCA\Filinq\EventListener
@@ -24,7 +25,6 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\EventListener;
 
-use OCA\Filinq\Kernel\AppIdentity;
 use OCA\OpenRegister\Event\RegisterLeafProvidersEvent;
 use OCA\OpenRegister\Service\Integration\LeafDescriptor;
 use OCP\EventDispatcher\Event;
@@ -56,27 +56,6 @@ abstract class MountedLeafListener implements IEventListener {
 	public const LEAF_ID = '';
 
 	/**
-	 * The icon, shared with the JS half.
-	 *
-	 * @var string
-	 */
-	public const ICON = '';
-
-	/**
-	 * The catalogue group the leaf is listed under.
-	 *
-	 * @var string
-	 */
-	public const GROUP = '';
-
-	/**
-	 * The surfaces, written out so both halves can be compared.
-	 *
-	 * @var string[]
-	 */
-	public const SURFACES = [];
-
-	/**
 	 * Constructor.
 	 *
 	 * @param IL10N $l10n The translator for the label.
@@ -89,20 +68,15 @@ abstract class MountedLeafListener implements IEventListener {
 	}//end __construct()
 
 	/**
-	 * The label the host shows.
+	 * The descriptor to register.
 	 *
-	 * @return string The translated label.
+	 * @return LeafDescriptor The leaf.
 	 */
-	abstract protected function label(): string;
+	abstract protected function descriptor(): LeafDescriptor;
 
 	/**
 	 * Add the leaf to the catalogue. A failure is logged and loses only this
 	 * leaf, never the whole catalogue.
-	 *
-	 * Filinq is Vue 3 and a consuming host may still be Vue 2.7, so the JS half
-	 * hands over a bare DOM element and roots its own app there. The server half
-	 * must name the same mode under the shared id or the host renders the leaf
-	 * the wrong way.
 	 *
 	 * @param Event $event The collect-event.
 	 *
@@ -116,19 +90,7 @@ abstract class MountedLeafListener implements IEventListener {
 		}
 
 		try {
-			$descriptor = new LeafDescriptor(
-				id: static::LEAF_ID,
-				label: $this->label(),
-				icon: static::ICON,
-				kinds: [LeafDescriptor::KIND_RENDER_SURFACE],
-				requiredApp: AppIdentity::APP_ID,
-				group: static::GROUP,
-				surfaces: static::SURFACES,
-				referenceType: static::LEAF_ID,
-				renderMode: LeafDescriptor::RENDER_MODE_MOUNT,
-			);
-
-			$event->registerLeaf($descriptor, null);
+			$event->registerLeaf($this->descriptor(), null);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'Filinq could not register the ' . static::LEAF_ID . ' leaf: ' . $e->getMessage(),
