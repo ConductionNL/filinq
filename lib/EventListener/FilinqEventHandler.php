@@ -139,13 +139,7 @@ class FilinqEventHandler {
 			services: $services
 		);
 
-		$this->enrichmentRunner->enrichObject(
-			$object,
-			$services->metadataService,
-			$services->settingsService,
-			$logger,
-			'new object'
-		);
+		$this->enrichmentRunner->enrichObject(object: $object, services: $services, logContext: 'new object');
 
 	}//end handleObjectCreated()
 
@@ -197,13 +191,7 @@ class FilinqEventHandler {
 			return;
 		}
 
-		$this->enrichmentRunner->enrichObject(
-			$object,
-			$services->metadataService,
-			$services->settingsService,
-			$logger,
-			'updated object'
-		);
+		$this->enrichmentRunner->enrichObject(object: $object, services: $services, logContext: 'updated object');
 
 	}//end handleObjectUpdated()
 
