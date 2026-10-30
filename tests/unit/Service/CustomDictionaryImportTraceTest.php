@@ -34,6 +34,7 @@ use Throwable;
  *
  * @covers \OCA\Filinq\Service\CustomDictionaryService
  * @uses   \OCA\Filinq\Service\CustomDictionaryPayloadNormaliser
+ * @uses   \OCA\Filinq\Service\DictionaryTermImport
  *
  * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
  */
@@ -64,7 +65,7 @@ class CustomDictionaryImportTraceTest extends TestCase {
 			'a list with blanks and duplicates' => ["Ridderkerk\nBarendrecht\n  \nbarendrecht\n RIDDERKERK \nDelft\nridderkerk", false, []],
 			'a csv with labels' => ["Operatie Zilverreiger,Codenaam X\nDossier Karekiet\n,leeg\nzilverreiger\n", true, []],
 			'a csv read as a list' => ["Operatie Zilverreiger,Codenaam X\n", false, []],
-			'a dictionary without an id' => ["Gouda\nLeiden\n", false, ['dictionary' => ['label' => 'Steden', 'slug' => 'steden']]],
+			'a dictionary without an id' => ["Gouda\n \nLeiden\n", false, ['dictionary' => ['label' => 'Steden', 'slug' => 'steden']]],
 			'nothing to import' => ["\n \n", false, []],
 			'a save fails' => ["Gouda\nDelft\n", false, ['save' => 'throw']],
 		];

@@ -210,8 +210,8 @@
     "a dictionary without an id": {
         "result": {
             "added": 1,
-            "skipped": 1,
-            "total": 2
+            "skipped": 2,
+            "total": 3
         },
         "calls": [
             [
