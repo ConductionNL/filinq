@@ -35,6 +35,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\Conversion;
 
 use OCA\Filinq\Exception\ConversionFailedException;
+use OCA\Filinq\Service\StripsFileExtension;
 use OCP\Files\File;
 use OCP\IAppConfig;
 use OCP\Lock\ILockingProvider;
@@ -60,6 +61,7 @@ use Throwable;
  * @spec openspec/changes/pdf-conversion-service/tasks.md#task-6
  */
 class LibreOfficeHeadlessBackend implements ConversionBackendInterface {
+	use StripsFileExtension;
 
 	/**
 	 * App config key controlling whether this backend is attempted.
@@ -625,22 +627,6 @@ class LibreOfficeHeadlessBackend implements ConversionBackendInterface {
 
 		return strtolower(substr($name, ($dotPos + 1)));
 	}//end extractExtension()
-
-	/**
-	 * Return $name without its trailing `.ext` suffix.
-	 *
-	 * @param string $name File name with or without an extension.
-	 *
-	 * @return string Name without extension.
-	 */
-	private function stripExtension(string $name): string {
-		$dotPos = strrpos($name, '.');
-		if ($dotPos === false) {
-			return $name;
-		}
-
-		return substr($name, 0, $dotPos);
-	}//end stripExtension()
 
 	/**
 	 * Read and resolve the configured soffice binary path.

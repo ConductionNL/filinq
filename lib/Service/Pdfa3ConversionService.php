@@ -67,6 +67,7 @@ use Throwable;
  * @spec openspec/specs/pdfa3-conversion/spec.md
  */
 class Pdfa3ConversionService implements Pdfa3ConversionServiceInterface {
+	use StripsFileExtension;
 
 	/**
 	 * App identifier used for IAppConfig reads.
@@ -678,21 +679,4 @@ class Pdfa3ConversionService implements Pdfa3ConversionServiceInterface {
 
 		return $parsed;
 	}//end resolveMaxSeconds()
-
-	/**
-	 * Return $name without its trailing `.ext` suffix, for use as a
-	 * default document title.
-	 *
-	 * @param string $name File name with extension.
-	 *
-	 * @return string Name without extension.
-	 */
-	private function stripExtension(string $name): string {
-		$dotPos = strrpos($name, '.');
-		if ($dotPos === false) {
-			return $name;
-		}
-
-		return substr($name, 0, $dotPos);
-	}//end stripExtension()
 }//end class

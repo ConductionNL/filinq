@@ -33,6 +33,7 @@ use PHPUnit\Framework\TestCase;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
+ * @covers \OCA\Filinq\Service\StripsFileExtension
  * @covers \OCA\Filinq\Service\Conversion\EmlBackend
  * @covers \OCA\Filinq\Service\Conversion\LibreOfficeHeadlessBackend
  * @covers \OCA\Filinq\Service\Conversion\MpdfBackend

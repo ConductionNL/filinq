@@ -31,6 +31,7 @@ namespace OCA\Filinq\Service\Conversion;
 
 use OCA\Filinq\Exception\ConversionFailedException;
 use OCA\Filinq\Service\PdfService;
+use OCA\Filinq\Service\StripsFileExtension;
 use OCP\Files\File;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -49,6 +50,7 @@ use Throwable;
  * @link      https://www.filinq.app
  */
 class MpdfBackend implements ConversionBackendInterface {
+	use StripsFileExtension;
 
 	/**
 	 * App config key controlling whether this backend is attempted.
@@ -272,21 +274,4 @@ class MpdfBackend implements ConversionBackendInterface {
 
 		return strtolower(substr($name, ($dotPos + 1)));
 	}//end extractExtension()
-
-	/**
-	 * Return $name without its trailing `.ext` suffix, for use as a
-	 * title and PDF filename base.
-	 *
-	 * @param string $name File name with extension.
-	 *
-	 * @return string Name without extension.
-	 */
-	private function stripExtension(string $name): string {
-		$dotPos = strrpos($name, '.');
-		if ($dotPos === false) {
-			return $name;
-		}
-
-		return substr($name, 0, $dotPos);
-	}//end stripExtension()
 }//end class
