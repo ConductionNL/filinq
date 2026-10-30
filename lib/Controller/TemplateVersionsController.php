@@ -45,6 +45,8 @@ use OCP\IUserSession;
  * @link     https://www.filinq.app
  */
 class TemplateVersionsController extends Controller {
+	use AnswersNotAuthenticated;
+
 	/**
 	 * Constructor for TemplateVersionsController
 	 *
@@ -89,10 +91,7 @@ class TemplateVersionsController extends Controller {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => 'Not authenticated'],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: 'Not authenticated');
 			}
 
 			$limit = (int)$this->request->getParam('_limit', '20');
@@ -125,10 +124,7 @@ class TemplateVersionsController extends Controller {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => 'Not authenticated'],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: 'Not authenticated');
 			}
 
 			$result = $this->versionService->restoreVersion(
@@ -166,10 +162,7 @@ class TemplateVersionsController extends Controller {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => 'Not authenticated'],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: 'Not authenticated');
 			}
 
 			$from = $this->request->getParam('from', '');

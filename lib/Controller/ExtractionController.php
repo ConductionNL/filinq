@@ -48,6 +48,8 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/specs/financial-document-field-extraction/spec.md
  */
 class ExtractionController extends Controller {
+	use AnswersNotAuthenticated;
+
 	/**
 	 * Constructor.
 	 *
@@ -91,10 +93,7 @@ class ExtractionController extends Controller {
 	public function financial(): JSONResponse {
 		$user = $this->userSession->getUser();
 		if ($user === null) {
-			return new JSONResponse(
-				data: ['error' => $this->l10n->t('Not authenticated')],
-				statusCode: Http::STATUS_UNAUTHORIZED
-			);
+			return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 		}
 
 		try {
@@ -128,10 +127,7 @@ class ExtractionController extends Controller {
 	public function corrections(string $id): JSONResponse {
 		$user = $this->userSession->getUser();
 		if ($user === null) {
-			return new JSONResponse(
-				data: ['error' => $this->l10n->t('Not authenticated')],
-				statusCode: Http::STATUS_UNAUTHORIZED
-			);
+			return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 		}
 
 		try {

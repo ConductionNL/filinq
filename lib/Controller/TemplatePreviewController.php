@@ -43,6 +43,8 @@ use OCP\IUserSession;
  * @link     https://www.filinq.app
  */
 class TemplatePreviewController extends Controller {
+	use AnswersNotAuthenticated;
+
 	/**
 	 * Constructor for TemplatePreviewController
 	 *
@@ -78,10 +80,7 @@ class TemplatePreviewController extends Controller {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => 'Not authenticated'],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: 'Not authenticated');
 			}
 
 			$data = $this->requestHandler->parseBodyParams(request: $this->request);
@@ -121,10 +120,7 @@ class TemplatePreviewController extends Controller {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => 'Not authenticated'],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: 'Not authenticated');
 			}
 
 			$data = $this->requestHandler->parseBodyParams(request: $this->request);
