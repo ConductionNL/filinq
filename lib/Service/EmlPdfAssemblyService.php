@@ -159,12 +159,14 @@ class EmlPdfAssemblyService {
 		$mpdf = $this->createEngine(options: $options);
 
 		$this->renderStructure(
-			mpdf: $mpdf,
-			result: $result,
-			options: $options,
-			appendPages: $this->shouldAppendPages(),
-			maxSize: $this->maxAttachmentSize(),
-			isRoot: true
+			run: new EmlRenderRun(
+				mpdf: $mpdf,
+				options: $options,
+				appendPages: $this->shouldAppendPages(),
+				maxSize: $this->maxAttachmentSize(),
+				isRoot: true
+			),
+			result: $result
 		);
 
 		return $this->emit(mpdf: $mpdf);
@@ -260,27 +262,17 @@ class EmlPdfAssemblyService {
 	 * Render one EML structure (envelope + attachments) into the shared mPDF
 	 * instance. Recurses for nested EML attachments.
 	 *
-	 * @param \Mpdf\Mpdf $mpdf Shared mPDF instance.
+	 * @param EmlRenderRun $run The engine, options and attachment settings, and whether this is the outermost message.
 	 * @param object $result AnonymisedEmlStructure to render.
-	 * @param array<string,mixed> $options PDF options (for print CSS).
-	 * @param bool $appendPages Whether renderable attachments are appended.
-	 * @param int $maxSize Max attachment render size in bytes.
-	 * @param bool $isRoot True for the outermost message (no leading page break).
 	 *
 	 * @return void
 	 */
-	private function renderStructure(
-		\Mpdf\Mpdf $mpdf,
-		object $result,
-		array $options,
-		bool $appendPages,
-		int $maxSize,
-		bool $isRoot,
-	): void {
-		$envelopeHtml = $this->envelopeRenderer->render(result: $result, options: $options);
+	private function renderStructure(EmlRenderRun $run, object $result): void {
+		$mpdf = $run->mpdf;
+		$envelopeHtml = $this->envelopeRenderer->render(result: $result, options: $run->options);
 
 		try {
-			if ($isRoot === false) {
+			if ($run->isRoot === false) {
 				$mpdf->AddPage();
 			}
 
@@ -290,19 +282,15 @@ class EmlPdfAssemblyService {
 				'[EmlPdfAssemblyService] Envelope WriteHTML failed; rendering minimal envelope',
 				['exception' => get_class($e), 'message' => $e->getMessage()]
 			);
-			$this->envelopeRenderer->writeMinimal(mpdf: $mpdf, result: $result, options: $options, addPage: false);
+			$this->envelopeRenderer->writeMinimal(mpdf: $mpdf, result: $result, options: $run->options, addPage: false);
 		}
 
 		$index = 0;
 		foreach ($this->attachmentRenderer->attachmentsOf(result: $result) as $attachment) {
 			$index++;
 			$this->renderAttachment(
-				mpdf: $mpdf,
-				attachment: $attachment,
-				index: $index,
-				options: $options,
-				appendPages: $appendPages,
-				maxSize: $maxSize
+				run: $run,
+				meta: ($this->attachmentRenderer->metaOf(attachment: $attachment) + ['index' => $index])
 			);
 		}
 
@@ -316,59 +304,33 @@ class EmlPdfAssemblyService {
 	 * design.md D6: "no anonymiser" wins over "nested EML", which wins over
 	 * "no redacted bytes".
 	 *
-	 * @param \Mpdf\Mpdf $mpdf Shared mPDF instance.
-	 * @param object $attachment AnonymisedEmlAttachment.
-	 * @param int $index 1-based attachment index.
-	 * @param array<string,mixed> $options PDF options.
-	 * @param bool $appendPages Whether to append renderable pages.
-	 * @param int $maxSize Max render size in bytes.
+	 * @param EmlRenderRun $run The engine, options and attachment settings.
+	 * @param array<string, mixed> $meta Attachment metadata from `EmlAttachmentRenderer::metaOf()`
+	 *                                   plus its 1-based `index`.
 	 *
 	 * @return void
 	 */
-	private function renderAttachment(
-		\Mpdf\Mpdf $mpdf,
-		object $attachment,
-		int $index,
-		array $options,
-		bool $appendPages,
-		int $maxSize,
-	): void {
-		$meta = $this->attachmentRenderer->metaOf(attachment: $attachment);
-
+	private function renderAttachment(EmlRenderRun $run, array $meta): void {
 		// Unsupported (no anonymiser) → placeholder, no content.
 		if ($meta['unsupported'] === true && $meta['nestedEml'] === null) {
-			$this->writePlaceholder(mpdf: $mpdf, meta: $meta, index: $index, size: null, variant: 'unsupported');
+			$this->writePlaceholder(run: $run, divider: ['size' => null, 'variant' => 'unsupported'] + $meta);
 			return;
 		}
 
 		// Nested EML: recurse on the redacted nested result when present;
 		// otherwise (depth cap reached / no nested result) a placeholder.
 		if ($meta['mimeType'] === 'message/rfc822') {
-			$this->renderNestedEml(
-				mpdf: $mpdf,
-				meta: $meta,
-				index: $index,
-				options: $options,
-				appendPages: $appendPages,
-				maxSize: $maxSize
-			);
+			$this->renderNestedEml(run: $run, meta: $meta);
 			return;
 		}
 
 		// No redacted bytes available → placeholder (unsupported-shaped).
 		if (is_string($meta['redacted']) === false) {
-			$this->writePlaceholder(mpdf: $mpdf, meta: $meta, index: $index, size: null, variant: 'unsupported');
+			$this->writePlaceholder(run: $run, divider: ['size' => null, 'variant' => 'unsupported'] + $meta);
 			return;
 		}
 
-		$this->renderRedactedBytes(
-			mpdf: $mpdf,
-			meta: $meta,
-			index: $index,
-			options: $options,
-			appendPages: $appendPages,
-			maxSize: $maxSize
-		);
+		$this->renderRedactedBytes(run: $run, meta: $meta);
 
 	}//end renderAttachment()
 
@@ -376,37 +338,19 @@ class EmlPdfAssemblyService {
 	 * Render a nested `message/rfc822` attachment: divider plus the recursed
 	 * redacted structure, or a depth-limit placeholder when OR supplied none.
 	 *
-	 * @param \Mpdf\Mpdf $mpdf Shared mPDF instance.
-	 * @param array<string, mixed> $meta Attachment metadata from `EmlAttachmentRenderer::metaOf()`.
-	 * @param int $index 1-based attachment index.
-	 * @param array<string,mixed> $options PDF options.
-	 * @param bool $appendPages Whether to append renderable pages.
-	 * @param int $maxSize Max render size in bytes.
+	 * @param EmlRenderRun $run The engine, options and attachment settings.
+	 * @param array<string, mixed> $meta Attachment metadata plus its 1-based `index`.
 	 *
 	 * @return void
 	 */
-	private function renderNestedEml(
-		\Mpdf\Mpdf $mpdf,
-		array $meta,
-		int $index,
-		array $options,
-		bool $appendPages,
-		int $maxSize,
-	): void {
+	private function renderNestedEml(EmlRenderRun $run, array $meta): void {
 		if (is_object($meta['nestedEml']) === false) {
-			$this->writePlaceholder(mpdf: $mpdf, meta: $meta, index: $index, size: null, variant: 'depth_limit');
+			$this->writePlaceholder(run: $run, divider: ['size' => null, 'variant' => 'depth_limit'] + $meta);
 			return;
 		}
 
-		$this->writePlaceholder(mpdf: $mpdf, meta: $meta, index: $index, size: null, variant: 'default');
-		$this->renderStructure(
-			mpdf: $mpdf,
-			result: $meta['nestedEml'],
-			options: $options,
-			appendPages: $appendPages,
-			maxSize: $maxSize,
-			isRoot: false
-		);
+		$this->writePlaceholder(run: $run, divider: ['size' => null, 'variant' => 'default'] + $meta);
+		$this->renderStructure(run: $run->nested(), result: $meta['nestedEml']);
 
 	}//end renderNestedEml()
 
@@ -414,66 +358,55 @@ class EmlPdfAssemblyService {
 	 * Render an attachment that carries redacted bytes: a placeholder when it
 	 * is oversize or non-renderable, otherwise a divider plus its pages.
 	 *
-	 * @param \Mpdf\Mpdf $mpdf Shared mPDF instance.
-	 * @param array<string, mixed> $meta Attachment metadata from `EmlAttachmentRenderer::metaOf()`.
-	 * @param int $index 1-based attachment index.
-	 * @param array<string,mixed> $options PDF options.
-	 * @param bool $appendPages Whether to append renderable pages.
-	 * @param int $maxSize Max render size in bytes.
+	 * @param EmlRenderRun $run The engine, options and attachment settings.
+	 * @param array<string, mixed> $meta Attachment metadata plus its 1-based `index`.
 	 *
 	 * @return void
 	 */
-	private function renderRedactedBytes(
-		\Mpdf\Mpdf $mpdf,
-		array $meta,
-		int $index,
-		array $options,
-		bool $appendPages,
-		int $maxSize,
-	): void {
+	private function renderRedactedBytes(EmlRenderRun $run, array $meta): void {
 		$redacted = (string)$meta['redacted'];
 		$size = strlen($redacted);
 
 		// Append disabled → render nothing for renderable attachments.
 		// Placeholders above still appear because they carry no content.
-		if ($appendPages === false) {
+		if ($run->appendPages === false) {
 			return;
 		}
 
 		// Oversize → placeholder.
-		if ($size > $maxSize) {
-			$this->writePlaceholder(mpdf: $mpdf, meta: $meta, index: $index, size: $size, variant: 'too_large');
+		if ($size > $run->maxSize) {
+			$this->writePlaceholder(run: $run, divider: ['size' => $size, 'variant' => 'too_large'] + $meta);
 			return;
 		}
 
 		// Non-renderable MIME → placeholder.
 		if ($this->attachmentRenderer->isRenderable(mimeType: $meta['mimeType']) === false) {
-			$this->writePlaceholder(mpdf: $mpdf, meta: $meta, index: $index, size: $size, variant: 'non_renderable');
+			$this->writePlaceholder(run: $run, divider: ['size' => $size, 'variant' => 'non_renderable'] + $meta);
 			return;
 		}
 
 		// Renderable → divider + rendered pages from the REDACTED bytes.
-		$this->writePlaceholder(mpdf: $mpdf, meta: $meta, index: $index, size: $size, variant: 'default');
+		$this->writePlaceholder(run: $run, divider: ['size' => $size, 'variant' => 'default'] + $meta);
 
 		try {
 			$this->attachmentRenderer->renderBytes(
-				mpdf: $mpdf,
+				mpdf: $run->mpdf,
 				bytes: $redacted,
 				mimeType: $meta['mimeType'],
 				filename: $meta['filename'],
-				options: $options
+				options: $run->options
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'[EmlPdfAssemblyService] Attachment render failed; placeholder used',
 				[
-					'index' => $index,
+					'index' => $meta['index'],
 					'mimeType' => $meta['mimeType'],
 					'exception' => get_class($e),
 					'message' => $e->getMessage(),
 				]
 			);
-			$this->writePlaceholder(mpdf: $mpdf, meta: $meta, index: $index, size: $size, variant: 'render_failed');
+			$this->writePlaceholder(run: $run, divider: ['size' => $size, 'variant' => 'render_failed'] + $meta);
 		}//end try
 
 	}//end renderRedactedBytes()
@@ -481,22 +414,20 @@ class EmlPdfAssemblyService {
 	/**
 	 * Write one divider/placeholder page for an attachment.
 	 *
-	 * @param \Mpdf\Mpdf $mpdf Shared mPDF instance.
-	 * @param array<string, mixed> $meta Attachment metadata from `EmlAttachmentRenderer::metaOf()`.
-	 * @param int $index 1-based attachment index.
-	 * @param int|null $size Size in bytes, or null.
-	 * @param string $variant Divider variant.
+	 * @param EmlRenderRun $run The run whose engine the page is written to.
+	 * @param array<string, mixed> $divider Attachment metadata with its `index`, the `size`
+	 *                                      in bytes (or null) and the divider `variant`.
 	 *
 	 * @return void
 	 */
-	private function writePlaceholder(\Mpdf\Mpdf $mpdf, array $meta, int $index, ?int $size, string $variant): void {
+	private function writePlaceholder(EmlRenderRun $run, array $divider): void {
 		$this->attachmentRenderer->writeDivider(
-			mpdf: $mpdf,
-			index: $index,
-			filename: $meta['filename'],
-			mimeType: $meta['mimeType'],
-			size: $size,
-			variant: $variant
+			mpdf: $run->mpdf,
+			index: $divider['index'],
+			filename: $divider['filename'],
+			mimeType: $divider['mimeType'],
+			size: $divider['size'],
+			variant: $divider['variant']
 		);
 
 	}//end writePlaceholder()
