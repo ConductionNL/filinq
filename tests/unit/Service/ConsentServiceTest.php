@@ -31,6 +31,7 @@ use OCA\Filinq\Service\ConsentUpdateHandler;
 use OCA\Filinq\Service\ObjectionDeadlineChecker;
 use OCA\Filinq\Service\PolicyMatchService;
 use OCP\App\IAppManager;
+use OCP\IUser;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -848,6 +849,77 @@ class ConsentServiceTest extends TestCase {
 		}//end foreach
 
 	}//end testLookupAndWritesAddressTheCallersRegisterAndSchema()
+
+	/**
+	 * A validated update loads the record from the caller's register and schema, gates a standing consent
+	 * on the admin group, checks the transition and delegates the write with the acting user.
+	 *
+	 * @return void
+	 */
+	public function testValidateAndUpdateGatesAStandingConsentAndDelegates(): void {
+		$objectService = $this->createMock(originalClassName: \OCA\OpenRegister\Service\ObjectService::class);
+		$objectService->expects($this->once())->method('find')
+			->with('c-1', 'reg-1', 'sch-1')
+			->willReturn($this->buildSavedObject(data: ['scope' => 'entity', 'consentStatus' => 'granted']));
+		$container = $this->createMock(originalClassName: ContainerInterface::class);
+		$container->method('get')->willReturn($objectService);
+
+		$user = $this->createMock(originalClassName: IUser::class);
+		$user->method('getUID')->willReturn('anna');
+
+		$this->mockScopeValidator->expects($this->once())->method('requireStandingConsentAdminGroup')->with($user);
+		$this->mockScopeValidator->expects($this->once())->method('validateTransition')
+			->with(['scope' => 'entity', 'consentStatus' => 'granted'], ['consentStatus' => 'revoked']);
+		$this->mockUpdateHandler->expects($this->once())->method('updateConsentStatus')
+			->with('c-1', 'reg-1', 'sch-1', ['consentStatus' => 'revoked'], 'anna')
+			->willReturn(['id' => 'c-1', 'consentStatus' => 'revoked']);
+
+		$service = new ConsentService(
+			logger: $this->mockLogger,
+			deadlineChecker: $this->mockDeadlineChecker,
+			updateHandler: $this->mockUpdateHandler,
+			scopeValidator: $this->mockScopeValidator,
+			policyMatcher: $this->createMock(originalClassName: PolicyMatchService::class),
+			recordWriter: $this->buildRecordWriter(container: $container)
+		);
+
+		$result = $service->validateAndUpdateConsent(
+			consentId: 'c-1',
+			register: 'reg-1',
+			schema: 'sch-1',
+			data: ['consentStatus' => 'revoked'],
+			user: $user
+		);
+
+		$this->assertSame(['id' => 'c-1', 'consentStatus' => 'revoked'], $result);
+
+	}//end testValidateAndUpdateGatesAStandingConsentAndDelegates()
+
+	/**
+	 * A validated update of a record that does not exist throws and writes nothing.
+	 *
+	 * @return void
+	 */
+	public function testValidateAndUpdateOfAMissingRecordThrows(): void {
+		$objectService = $this->createMock(originalClassName: \OCA\OpenRegister\Service\ObjectService::class);
+		$objectService->method('find')->willReturn(null);
+		$container = $this->createMock(originalClassName: ContainerInterface::class);
+		$container->method('get')->willReturn($objectService);
+		$this->mockUpdateHandler->expects($this->never())->method('updateConsentStatus');
+
+		$service = new ConsentService(
+			logger: $this->mockLogger,
+			deadlineChecker: $this->mockDeadlineChecker,
+			updateHandler: $this->mockUpdateHandler,
+			scopeValidator: $this->mockScopeValidator,
+			policyMatcher: $this->createMock(originalClassName: PolicyMatchService::class),
+			recordWriter: $this->buildRecordWriter(container: $container)
+		);
+
+		$this->expectExceptionMessage('Consent record not found: c-404');
+		$service->validateAndUpdateConsent(consentId: 'c-404', register: 'r', schema: 's', data: []);
+
+	}//end testValidateAndUpdateOfAMissingRecordThrows()
 
 	// ------------------------------------------------------------------
 	// validatePublicationConsentData scope rules
