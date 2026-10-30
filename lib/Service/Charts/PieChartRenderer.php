@@ -92,16 +92,14 @@ class PieChartRenderer {
 		$parts[] = $this->svg->svgOpenTag(width: $chart->width, height: $chart->height);
 
 		if ($title !== '') {
-			$parts[] = $this->svg->textEl(x: $chart->width / 2, y: 18, text: $title, anchor: 'middle', size: 13, weight: 'bold');
+			$parts[] = $this->svg->textEl(position: new SvgPoint(x: $chart->width / 2, y: 18), text: new SvgText(content: $title, style: SvgTextStyle::Title));
 		}
 
 		$parts[] = $this->drawSlices(pie: $pie, chart: $chart);
 
 		if ($geometry['innerRadius'] > 0.0) {
 			$parts[] = $this->svg->circleEl(
-				cx: $geometry['cx'],
-				cy: $geometry['cy'],
-				radius: $geometry['innerRadius'],
+				circle: new SvgCircle(center: new SvgPoint(x: $geometry['cx'], y: $geometry['cy']), radius: $geometry['innerRadius']),
 				color: '#FFFFFF'
 			);
 		}
@@ -203,12 +201,10 @@ class PieChartRenderer {
 		$slices = $pie['slices'];
 		$total = $pie['total'];
 		$geometry = $pie['geometry'];
-		$cx = $geometry['cx'];
-		$cy = $geometry['cy'];
-		$radius = $geometry['radius'];
+		$circle = new SvgCircle(center: new SvgPoint(x: $geometry['cx'], y: $geometry['cy']), radius: $geometry['radius']);
 
 		if (count($slices) === 1) {
-			return $this->svg->circleEl(cx: $cx, cy: $cy, radius: $radius, color: $chart->palette[0]);
+			return $this->svg->circleEl(circle: $circle, color: $chart->palette[0]);
 		}
 
 		$parts = [];
@@ -216,11 +212,7 @@ class PieChartRenderer {
 		foreach ($slices as $index => $slice) {
 			$endAngle = $angle + ((($slice['value'] / $total) * 360.0));
 			$parts[] = $this->svg->pieSliceEl(
-				cx: $cx,
-				cy: $cy,
-				radius: $radius,
-				startAngle: $angle,
-				endAngle: $endAngle,
+				sector: new SvgSector(circle: $circle, arc: new SvgArc(startAngle: $angle, endAngle: $endAngle)),
 				color: $chart->color(index: (int)$index)
 			);
 			$angle = $endAngle;
@@ -253,19 +245,12 @@ class PieChartRenderer {
 			$rowY = $legendY + ($shown * 16);
 
 			$parts[] = $this->svg->rectEl(
-				x: $legendX,
-				y: $rowY - 8,
-				width: 10,
-				height: 10,
+				box: new SvgBox(origin: new SvgPoint(x: $legendX, y: $rowY - 8), size: new SvgSize(width: 10, height: 10)),
 				color: $chart->color(index: (int)$index)
 			);
 			$parts[] = $this->svg->textEl(
-				x: $legendX + 14,
-				y: $rowY + 1,
-				text: $this->labels->truncate(text: $slice['label'], max: 20) . ' (' . $percent . '%)',
-				anchor: 'start',
-				size: 9,
-				color: '#333333'
+				position: new SvgPoint(x: $legendX + 14, y: $rowY + 1),
+				text: new SvgText(content: $this->labels->truncate(text: $slice['label'], max: 20) . ' (' . $percent . '%)', style: SvgTextStyle::LabelStart)
 			);
 			$shown++;
 		}//end foreach

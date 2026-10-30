@@ -291,14 +291,9 @@ class ChartSvgRenderer {
 
 		$this->lastWarning = $message;
 
-		$parts = [];
-		$parts[] = $this->svg->svgOpenTag(width: $width, height: $height);
-		$parts[] = $this->svg->rectEl(x: 1, y: 1, width: $width - 2, height: $height - 2, color: '#F5F5F5');
-		$parts[] = $this->svg->rectOutlineEl(x: 1, y: 1, width: $width - 2, height: $height - 2, color: '#CCCCCC');
-		$parts[] = $this->svg->textEl(x: $width / 2, y: $height / 2, text: $message, anchor: 'middle', size: 11, color: '#888888');
-		$parts[] = '</svg>';
-
-		return implode('', $parts);
+		return $this->svg->svgOpenTag(width: $width, height: $height)
+			. $this->svg->placeholderEl(canvas: new SvgSize(width: $width, height: $height), message: $message)
+			. '</svg>';
 	}//end renderPlaceholder()
 
 	/**

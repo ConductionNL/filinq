@@ -49,7 +49,16 @@ use PHPUnit\Framework\TestCase;
  * @uses   \OCA\Filinq\Service\Charts\ChartPalette
  * @uses   \OCA\Filinq\Service\Charts\ChartRenderError
  * @uses   \OCA\Filinq\Service\Charts\ChartScale
+ * @uses   \OCA\Filinq\Service\Charts\SvgArc
+ * @uses   \OCA\Filinq\Service\Charts\SvgBox
+ * @uses   \OCA\Filinq\Service\Charts\SvgCircle
+ * @uses   \OCA\Filinq\Service\Charts\SvgPoint
  * @uses   \OCA\Filinq\Service\Charts\SvgPrimitives
+ * @uses   \OCA\Filinq\Service\Charts\SvgSector
+ * @uses   \OCA\Filinq\Service\Charts\SvgSegment
+ * @uses   \OCA\Filinq\Service\Charts\SvgSize
+ * @uses   \OCA\Filinq\Service\Charts\SvgText
+ * @uses   \OCA\Filinq\Service\Charts\SvgTextStyle
  * @uses   \OCA\Filinq\Service\Charts\ThousandsFormatter
  *
  * @psalm-suppress PropertyNotSetInConstructor
