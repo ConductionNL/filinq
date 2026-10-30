@@ -44,8 +44,7 @@ class SignerEntries {
 
 	/**
 	 * @param array<int|string, mixed> $entries  The signer entries as the consumer sent them
-	 * @param array{fields: array<int|string, array<string, mixed>>, links: array<int|string, int|string>} $prepared
-	 *        What GuardianConsentGuard::prepareSigners() returned for these entries
+	 * @param array                    $prepared What GuardianConsentGuard::prepareSigners() returned: fields and links
 	 */
 	public function __construct(
 		public readonly array $entries,

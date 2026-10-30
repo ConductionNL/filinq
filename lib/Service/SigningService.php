@@ -865,8 +865,15 @@ class SigningService implements SigningServiceInterface {
 		// COMPLETED with the unsigned original as its signed reference. If the
 		// artifact cannot be produced, the request stays IN_PROGRESS and the
 		// failure surfaces loudly to the completing signer.
-		// Step through IN_PROGRESS when the request is still PENDING.
-		$freshRequest = $this->startIfPending(request: $freshRequest);
+		// Step through IN_PROGRESS when the request is still PENDING. A
+		// single-signer request reaches here PENDING, and PENDING may only move
+		// to IN_PROGRESS, CANCELLED or EXPIRED (`self::STATUS_TRANSITIONS` and
+		// the schema's `x-openregister-lifecycle`, enforced on save), so the
+		// declared `start` edge is taken rather than widening the state machine.
+		if (($freshRequest['status'] ?? '') === 'PENDING') {
+			$freshRequest['status'] = 'IN_PROGRESS';
+			$freshRequest = $this->toArray(object: $objectService->saveObject(object: $freshRequest, register: $register, schema: $schema, _rbac: false));
+		}
 
 		// Guardian consent (signer-identity-rails REQ-DDSIR-008/010): no
 		// artifact while a signer who signed under the age of consent has no
@@ -926,39 +933,6 @@ class SigningService implements SigningServiceInterface {
 		return ['allSigned' => $allSigned, 'signers' => $signers];
 
 	}//end signerProgress()
-
-	/**
-	 * Move a still-PENDING request to IN_PROGRESS before it completes.
-	 *
-	 * A single-signer request is fully signed the moment that one signer
-	 * signs, so it reaches completion still PENDING. PENDING may only move to
-	 * IN_PROGRESS, CANCELLED or EXPIRED (`self::STATUS_TRANSITIONS`, and the
-	 * same edges in the schema's `x-openregister-lifecycle`, which OpenRegister
-	 * enforces on save), so the declared `start` edge is taken explicitly
-	 * rather than widening the state machine.
-	 *
-	 * @param array<string, mixed> $request The fresh request data.
-	 *
-	 * @return array<string, mixed> The request, saved as IN_PROGRESS when it was PENDING.
-	 */
-	private function startIfPending(array $request): array {
-		if (($request['status'] ?? '') !== 'PENDING') {
-			return $request;
-		}
-
-		['register' => $register, 'schema' => $schema] = $this->requireSigningRequestBinding();
-		$request['status'] = 'IN_PROGRESS';
-
-		return $this->toArray(
-			object: $this->settingsService->getObjectService()->saveObject(
-				object: $request,
-				register: $register,
-				schema: $schema,
-				_rbac: false
-			)
-		);
-
-	}//end startIfPending()
 
 	/**
 	 * Emit a terminal SigningConcludedEvent for an expired request.
