@@ -34,6 +34,9 @@ use ReflectionMethod;
  * @covers \OCA\Filinq\Service\LegalBasesSummaryService
  * @uses   \OCA\Filinq\Service\DossierSummaryDataService
  * @uses   \OCA\Filinq\Service\DossierEntityTally
+ * @uses   \OCA\Filinq\Service\BaseLabelResolver
+ * @uses   \OCA\Filinq\Service\DossierEntityCollector
+ * @uses   \OCA\Filinq\Service\DossierObjectRepository
  */
 class DossierBasesAggregateGoldenTest extends TestCase {
 
