@@ -162,33 +162,22 @@ class BarChartRenderer {
 				$y = $baselineY - $barHeight;
 
 				$parts[] = $this->svg->rectEl(
-					x: $x,
-					y: $y,
-					width: $barWidth * 0.86,
-					height: $barHeight,
+					box: new SvgBox(origin: new SvgPoint(x: $x, y: $y), size: new SvgSize(width: $barWidth * 0.86, height: $barHeight)),
 					color: $chart->color(index: $s)
 				);
 
 				if ($labelled === true && $barHeight > 12) {
 					$parts[] = $this->svg->textEl(
-						x: $x + (($barWidth * 0.86) / 2),
-						y: $y - 4,
-						text: $this->labels->formatValue(value: $value, format: $valueFmt),
-						anchor: 'middle',
-						size: 9,
-						color: '#333333'
+						position: new SvgPoint(x: $x + (($barWidth * 0.86) / 2), y: $y - 4),
+						text: new SvgText(content: $this->labels->formatValue(value: $value, format: $valueFmt), style: SvgTextStyle::LabelMiddle)
 					);
 				}
 			}//end for
 
 			if ($labelled === true) {
 				$parts[] = $this->svg->textEl(
-					x: $groupX + ($groupWidth / 2),
-					y: $baselineY + 16,
-					text: $this->labels->truncate(text: $labels[$i], max: 14),
-					anchor: 'middle',
-					size: 9,
-					color: '#333333'
+					position: new SvgPoint(x: $groupX + ($groupWidth / 2), y: $baselineY + 16),
+					text: new SvgText(content: $this->labels->truncate(text: $labels[$i], max: 14), style: SvgTextStyle::LabelMiddle)
 				);
 			}
 		}//end for
@@ -228,7 +217,7 @@ class BarChartRenderer {
 		$parts[] = $this->svg->svgOpenTag(width: $width, height: $chart->height);
 
 		if ($title !== '') {
-			$parts[] = $this->svg->textEl(x: $width / 2, y: 18, text: $title, anchor: 'middle', size: 13, weight: 'bold');
+			$parts[] = $this->svg->textEl(position: new SvgPoint(x: $width / 2, y: 18), text: new SvgText(content: $title, style: SvgTextStyle::Title));
 		}
 
 		$parts[] = $this->drawRows(
@@ -274,12 +263,8 @@ class BarChartRenderer {
 			$rowY = $geometry['marginTop'] + ($i * $rowHeight);
 
 			$parts[] = $this->svg->textEl(
-				x: $marginLeft - 8,
-				y: $rowY + ($rowHeight / 2) + 3,
-				text: $this->labels->truncate(text: $labels[$i], max: 22),
-				anchor: 'end',
-				size: 9,
-				color: '#333333'
+				position: new SvgPoint(x: $marginLeft - 8, y: $rowY + ($rowHeight / 2) + 3),
+				text: new SvgText(content: $this->labels->truncate(text: $labels[$i], max: 22), style: SvgTextStyle::LabelEnd)
 			);
 
 			if ($value === null) {
@@ -289,14 +274,11 @@ class BarChartRenderer {
 			$barWidth = max(0.0, (($value / $niceMax) * $geometry['plotWidth']));
 			$barY = $rowY + (($rowHeight - $barHeight) / 2);
 
-			$parts[] = $this->svg->rectEl(x: $marginLeft, y: $barY, width: $barWidth, height: $barHeight, color: $color);
+			$bar = new SvgBox(origin: new SvgPoint(x: $marginLeft, y: $barY), size: new SvgSize(width: $barWidth, height: $barHeight));
+			$parts[] = $this->svg->rectEl(box: $bar, color: $color);
 			$parts[] = $this->svg->textEl(
-				x: $marginLeft + $barWidth + 6,
-				y: $barY + ($barHeight / 2) + 3,
-				text: $this->labels->formatValue(value: $value, format: $valueFmt),
-				anchor: 'start',
-				size: 9,
-				color: '#333333'
+				position: new SvgPoint(x: $marginLeft + $barWidth + 6, y: $barY + ($barHeight / 2) + 3),
+				text: new SvgText(content: $this->labels->formatValue(value: $value, format: $valueFmt), style: SvgTextStyle::LabelStart)
 			);
 		}//end for
 

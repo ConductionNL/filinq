@@ -128,7 +128,7 @@ class CartesianFrame {
 
 		$title = $chart->title();
 		if ($title !== '') {
-			$parts[] = $this->svg->textEl(x: $chart->width / 2, y: 18, text: $title, anchor: 'middle', size: 13, weight: 'bold');
+			$parts[] = $this->svg->textEl(position: new SvgPoint(x: $chart->width / 2, y: 18), text: new SvgText(content: $title, style: SvgTextStyle::Title));
 		}
 
 		$niceMax = $plot['niceMax'];
@@ -139,19 +139,16 @@ class CartesianFrame {
 		for ($t = 0; $t <= self::TICK_COUNT; $t++) {
 			$value = ($niceMax / self::TICK_COUNT) * $t;
 			$y = $plot['marginTop'] + $plot['plotHeight'] - (($value / $niceMax) * $plot['plotHeight']);
-			$valueLabel = $this->labels->formatValue(value: $value, format: $valueFmt);
-			$parts[] = $this->svg->lineEl(x1: $marginLeft, y1: $y, x2: $marginLeft + $plotWidth, y2: $y, color: '#E2E2E2', width: 1);
-			$parts[] = $this->svg->textEl(x: $marginLeft - 6, y: $y + 3, text: $valueLabel, anchor: 'end', size: 9, color: '#666666');
+			$tickText = new SvgText(content: $this->labels->formatValue(value: $value, format: $valueFmt), style: SvgTextStyle::Axis);
+			$gridLine = new SvgSegment(from: new SvgPoint(x: $marginLeft, y: $y), to: new SvgPoint(x: $marginLeft + $plotWidth, y: $y));
+			$parts[] = $this->svg->lineEl(segment: $gridLine, color: '#E2E2E2');
+			$parts[] = $this->svg->textEl(position: new SvgPoint(x: $marginLeft - 6, y: $y + 3), text: $tickText);
 		}
 
 		$baselineY = $plot['baselineY'];
 		$parts[] = $this->svg->lineEl(
-			x1: $marginLeft,
-			y1: $baselineY,
-			x2: $marginLeft + $plotWidth,
-			y2: $baselineY,
-			color: '#999999',
-			width: 1
+			segment: new SvgSegment(from: new SvgPoint(x: $marginLeft, y: $baselineY), to: new SvgPoint(x: $marginLeft + $plotWidth, y: $baselineY)),
+			color: '#999999'
 		);
 
 		return implode('', $parts);

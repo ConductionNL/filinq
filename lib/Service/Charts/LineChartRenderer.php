@@ -194,7 +194,7 @@ class LineChartRenderer {
 		}
 
 		foreach ($points as [$px, $py]) {
-			$parts[] = $this->svg->circleEl(cx: $px, cy: $py, radius: 2.5, color: $color);
+			$parts[] = $this->svg->circleEl(circle: new SvgCircle(center: new SvgPoint(x: $px, y: $py), radius: 2.5), color: $color);
 		}
 
 		return implode('', $parts);
@@ -218,12 +218,8 @@ class LineChartRenderer {
 		$parts = [];
 		for ($i = 0; $i < $numLabels; $i++) {
 			$parts[] = $this->svg->textEl(
-				x: $plot['marginLeft'] + ($i * $stepX),
-				y: $plot['baselineY'] + 16,
-				text: $this->labels->truncate(text: $labels[$i], max: 14),
-				anchor: 'middle',
-				size: 9,
-				color: '#333333'
+				position: new SvgPoint(x: $plot['marginLeft'] + ($i * $stepX), y: $plot['baselineY'] + 16),
+				text: new SvgText(content: $this->labels->truncate(text: $labels[$i], max: 14), style: SvgTextStyle::LabelMiddle)
 			);
 		}
 
