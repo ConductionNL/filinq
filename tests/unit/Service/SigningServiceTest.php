@@ -1216,6 +1216,77 @@ class SigningServiceTest extends TestCase {
 	}//end testASingleSignerRequestStepsThroughInProgressToCompleted()
 
 	/**
+	 * A portal completion hands the verified actor to the artifact: the email is the signer and the portal evidence is bound.
+	 *
+	 * @return void
+	 */
+	public function testAPortalCompletionBindsThePortalActorInTheArtifact(): void {
+		$store = [
+			'req-001' => [
+				'id' => 'req-001',
+				'status' => 'IN_PROGRESS',
+				'signatureLevel' => 'SES',
+				'provider' => 'native',
+				'initiatorUserId' => 'bob',
+				'documentFileId' => '42',
+				'signerIds' => ['signer-001'],
+			],
+			'signer-001' => ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'email' => 'mark@home.example', 'status' => 'PENDING'],
+		];
+		$this->objectService->method('find')->willReturnCallback(
+			static function (string $id) use (&$store): ?array {
+				return ($store[$id] ?? null);
+			}
+		);
+		$this->objectService->method('saveObject')->willReturnCallback(
+			static function (array $object) use (&$store): array {
+				if (isset($object['id']) === true) {
+					$store[$object['id']] = $object;
+				}
+
+				return $object;
+			}
+		);
+
+		$context  = null;
+		$provider = $this->createMock(\OCA\Filinq\Service\Signing\SigningProviderInterface::class);
+		$provider->method('produceSignedArtifact')->willReturnCallback(
+			static function (string $content, array $ctx) use (&$context): string {
+				$context = $ctx;
+				return 'SIGNED-BYTES';
+			}
+		);
+		$this->providerFactory->method('getProvider')->willReturn($provider);
+		$file = $this->createMock(\OCP\Files\File::class);
+		$file->method('getContent')->willReturn('original-bytes');
+		$folder = $this->createMock(\OCP\Files\Folder::class);
+		$folder->method('getById')->willReturn([$file]);
+		$this->userFolder = $folder;
+
+		$this->service->sign(
+			requestId: 'req-001',
+			signerId: 'signer-001',
+			verifiedActor: [
+				'email' => 'mark@home.example',
+				'subjectRef' => 'sub-1',
+				'identityRef' => 'id-1',
+				'trust' => 'low',
+				'jti' => 'jti-1',
+			],
+			signatureData: ['consent' => true]
+		);
+
+		$this->assertSame('COMPLETED', $store['req-001']['status']);
+		$this->assertIsArray($context);
+		$this->assertSame('mark@home.example', $context['signer']);
+		$this->assertSame('sub-1', $context['portalSubjectRef'] ?? null);
+		$this->assertSame('id-1', $context['portalIdentityRef'] ?? null);
+		$this->assertSame('low', $context['portalTrust'] ?? null);
+		$this->assertSame('jti-1', $context['portalJti'] ?? null);
+
+	}//end testAPortalCompletionBindsThePortalActorInTheArtifact()
+
+	/**
 	 * Honest-completion gate: when the provider cannot produce an artifact the
 	 * completing signature fails and the request is NOT marked COMPLETED.
 	 *
