@@ -356,4 +356,77 @@ class ConsentUpdateGuardsTest extends TestCase {
 
 		$this->assertSame(expected: $thrown, actual: $refusal);
 	}//end testASaveRefusalPassesThrough()
+	/**
+	 * Every from/to pair of both status fields on an unmatched record.
+	 *
+	 * The expected verdicts are written out here rather than read from
+	 * ConsentStatusEvents::MOVES, so a change to the declared moves fails.
+	 *
+	 * @return array<string, array{0: string, 1: string, 2: string, 3: bool}>
+	 */
+	public static function transitionProvider(): array {
+		$allowed = [
+			'consentStatus pending consent_given', 'consentStatus pending objection_received', 'consentStatus pending no_response',
+			'consentStatus no_response consent_given', 'consentStatus no_response objection_received',
+			'notificationStatus pending sent', 'notificationStatus pending skipped', 'notificationStatus pending failed',
+			'notificationStatus sent delivered', 'notificationStatus sent failed',
+			'notificationStatus failed sent',
+		];
+		$values = [
+			'consentStatus'      => ['pending', 'consent_given', 'objection_received', 'no_response'],
+			'notificationStatus' => ['pending', 'sent', 'skipped', 'failed', 'delivered'],
+		];
+		$cases = [];
+		foreach ($values as $field => $statuses) {
+			foreach ($statuses as $from) {
+				foreach ($statuses as $to) {
+					if ($from !== $to) {
+						$key = $field . ' ' . $from . ' ' . $to;
+						$cases[$key] = [$field, $from, $to, in_array($key, $allowed, true)];
+					}
+				}
+			}
+		}
+
+		return $cases;
+	}//end transitionProvider()
+
+	/**
+	 * A declared move is saved with one event by the actor; any other move is refused with 400 and nothing is saved.
+	 *
+	 * @param string $field   The status field.
+	 * @param string $from    The stored status.
+	 * @param string $to      The requested status.
+	 * @param bool   $allowed Whether the move is declared.
+	 *
+	 * @return void
+	 *
+	 * @dataProvider transitionProvider
+	 */
+	public function testEveryStatusTransition(string $field, string $from, string $to, bool $allowed): void {
+		$world = ['stored' => [$field => $from, 'documentId' => 'd-1']];
+		$data = [$field => $to, 'evidence' => 'Form 12'];
+
+		if ($allowed === false) {
+			$refusal = $this->refusal(world: $world, data: $data);
+			$this->assertSame(expected: InvalidArgumentException::class, actual: get_class($refusal));
+			$this->assertSame(expected: 400, actual: $refusal->getCode());
+			$this->assertSame(expected: sprintf('%s cannot move from "%s" to "%s".', $field, $from, $to), actual: $refusal->getMessage());
+			$this->assertSame(expected: [], actual: $this->saved);
+			return;
+		}
+
+		$saved = $this->update(world: $world, data: $data);
+
+		$this->assertSame(expected: $to, actual: $saved[$field]);
+		$this->assertSame(expected: 'd-1', actual: $saved['documentId']);
+		$this->assertCount(expectedCount: 1, haystack: $this->saved);
+		$this->assertCount(expectedCount: 1, haystack: $saved['statusEvents']);
+		$event = $saved['statusEvents'][0];
+		unset($event['at']);
+		$this->assertSame(
+			expected: ['field' => $field, 'from' => $from, 'to' => $to, 'evidence' => 'Form 12', 'by' => 'ingrid'],
+			actual: $event
+		);
+	}//end testEveryStatusTransition()
 }//end class
