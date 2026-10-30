@@ -43,6 +43,7 @@ namespace OCA\Filinq\Service\Conversion;
 
 use OCA\Filinq\Exception\ConversionFailedException;
 use OCA\Filinq\Service\EmlPdfAssemblyService;
+use OCA\Filinq\Service\RaisesEmlStructureFailures;
 use OCA\Filinq\Service\StripsFileExtension;
 use OCP\App\IAppManager;
 use OCP\Files\File;
@@ -65,6 +66,7 @@ use Throwable;
  * @link      https://www.filinq.app
  */
 class EmlBackend implements ConversionBackendInterface {
+	use RaisesEmlStructureFailures;
 	use StripsFileExtension;
 
 	/**
@@ -165,24 +167,11 @@ class EmlBackend implements ConversionBackendInterface {
 	 * @return File Newly written PDF file node.
 	 *
 	 * @throws ConversionFailedException On OR API failure or assembly failure.
+	 *
+	 * @spec openspec/specs/pdf-conversion/spec.md
 	 */
 	public function convert(File $source): File {
-		try {
-			$fileService = $this->container->get(self::OR_FILE_SERVICE);
-		} catch (Throwable $e) {
-			throw new ConversionFailedException(
-				message: 'EML backend could not resolve OpenRegister FileService: ' . $e->getMessage(),
-				attempts: [
-					[
-						'name' => $this->name(),
-						'available' => false,
-						'supports' => true,
-						'reason' => 'OpenRegister FileService unavailable',
-					],
-				],
-				previous: $e
-			);
-		}
+		$fileService = $this->fileService();
 
 		try {
 			$structure = $fileService->anonymizeEmlStructured($source, [], 'document', null);
@@ -192,36 +181,42 @@ class EmlBackend implements ConversionBackendInterface {
 				'[EmlBackend] OR anonymizeEmlStructured failed; no raw-parse fallback',
 				['source' => $source->getPath(), 'exception' => get_class($e), 'message' => $e->getMessage()]
 			);
-			throw new ConversionFailedException(
-				message: 'OpenRegister anonymise-EML API failed: ' . $e->getMessage(),
-				attempts: [
-					[
-						'name' => $this->name(),
-						'available' => true,
-						'supports' => true,
-						'reason' => 'anonymizeEmlStructured threw: ' . $e->getMessage(),
-					],
-				],
-				previous: $e
-			);
-		}//end try
-
-		if (is_object($structure) === false) {
-			throw new ConversionFailedException(
-				message: 'OpenRegister anonymise-EML API returned no structure.',
-				attempts: [
-					[
-						'name' => $this->name(),
-						'available' => true,
-						'supports' => true,
-						'reason' => 'anonymizeEmlStructured returned non-object',
-					],
-				]
-			);
+			throw $this->emlApiFailed(error: $e);
 		}
 
-		$pdfBytes = $this->assembly->assemble(result: $structure, sourceFilename: $source->getName());
+		$pdfBytes = $this->assembly->assemble(result: $this->requireEmlStructure(structure: $structure), sourceFilename: $source->getName());
 
+		return $this->writeBesideSource(source: $source, pdfBytes: $pdfBytes);
+	}//end convert()
+
+	/**
+	 * OpenRegister's FileService, or a typed failure when it cannot be resolved.
+	 *
+	 * @return mixed The FileService.
+	 *
+	 * @throws ConversionFailedException When the container cannot provide it.
+	 */
+	private function fileService(): mixed {
+		try {
+			return $this->container->get(self::OR_FILE_SERVICE);
+		} catch (Throwable $e) {
+			throw new ConversionFailedException(
+				message: 'EML backend could not resolve OpenRegister FileService: ' . $e->getMessage(),
+				attempts: [$this->emlAttempt(available: false, reason: 'OpenRegister FileService unavailable')],
+				previous: $e
+			);
+		}
+	}//end fileService()
+
+	/**
+	 * Write the PDF beside the source as `<name>_anonymized.pdf`, replacing an earlier one.
+	 *
+	 * @param File $source The EML file.
+	 * @param string $pdfBytes The assembled PDF.
+	 *
+	 * @return File The written PDF.
+	 */
+	private function writeBesideSource(File $source, string $pdfBytes): File {
 		$parent = $source->getParent();
 		$outputName = $this->stripExtension(name: $source->getName()) . '_anonymized.pdf';
 		if ($parent->nodeExists($outputName) === true) {
@@ -229,5 +224,5 @@ class EmlBackend implements ConversionBackendInterface {
 		}
 
 		return $parent->newFile($outputName, $pdfBytes);
-	}//end convert()
+	}//end writeBesideSource()
 }//end class
