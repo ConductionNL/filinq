@@ -22,6 +22,8 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\EventListener;
 
 use OCA\Filinq\EventListener\EnrichmentRunner;
+use OCA\Filinq\EventListener\ObjectEventServices;
+use OCA\Filinq\Kernel\Contracts\PolicyRetroactiveServiceInterface;
 use OCA\Filinq\Service\MetadataService;
 use OCA\Filinq\Service\SettingsService;
 use OCA\OpenRegister\Db\ObjectEntity;
@@ -35,6 +37,7 @@ use Throwable;
  * The enrichment run's log lines and its system write.
  *
  * @covers \OCA\Filinq\EventListener\EnrichmentRunner
+ * @uses   \OCA\Filinq\EventListener\ObjectEventServices
  */
 class EnrichmentRunnerLogTest extends TestCase {
 
@@ -165,7 +168,13 @@ class EnrichmentRunnerLogTest extends TestCase {
 			'enable_topic_classification' => $enabled,
 		]);
 
-		(new EnrichmentRunner(classification: null))->enrichObject($object, $metadata, $settings, $logger, 'new object');
+		$services = new ObjectEventServices(
+			metadataService: $metadata,
+			settingsService: $settings,
+			logger: $logger,
+			retroactive: $this->createMock(PolicyRetroactiveServiceInterface::class)
+		);
+		(new EnrichmentRunner(classification: null))->enrichObject(object: $object, services: $services, logContext: 'new object');
 
 	}//end enrich()
 
