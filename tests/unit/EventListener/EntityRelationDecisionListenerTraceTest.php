@@ -212,7 +212,9 @@ class EntityRelationDecisionListenerTraceTest extends TestCase {
 			/**
 			 * @param array{fileId: ?int, entityId: ?int, id: ?int} $ids The ids.
 			 */
-			public function __construct(private array $ids) {
+			public function __construct(
+				private array $ids,
+			) {
 			}
 
 			public function getFileId(): ?int {
@@ -241,7 +243,9 @@ class EntityRelationDecisionListenerTraceTest extends TestCase {
 			/**
 			 * @param array<string, ?string>|string $entity The entity.
 			 */
-			public function __construct(private array|string $entity) {
+			public function __construct(
+				private array|string $entity,
+			) {
 			}
 
 			public function find(int $id): object {
@@ -253,7 +257,9 @@ class EntityRelationDecisionListenerTraceTest extends TestCase {
 					/**
 					 * @param array<string, ?string> $fields The fields.
 					 */
-					public function __construct(private array $fields) {
+					public function __construct(
+						private array $fields,
+					) {
 					}
 
 					public function getType(): ?string {
