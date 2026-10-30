@@ -601,7 +601,6 @@ class DocumentMergeServiceTest extends TestCase {
 
 	}//end testAResultThatCannotBeWrittenFailsTheMerge()
 
-
 	/**
 	 * A factory that keeps every document it creates, so a test can read its bookmarks.
 	 *
