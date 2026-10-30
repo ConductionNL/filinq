@@ -20,6 +20,7 @@
 namespace OCA\Filinq\Tests\Unit\Service;
 
 use Exception;
+use OCA\Filinq\BackgroundJob\JobQueue;
 use OCA\Filinq\Service\DataResolverService;
 use OCA\Filinq\Service\DocumentJobStore;
 use OCA\Filinq\Service\DocumentService;
@@ -164,7 +165,7 @@ class DocumentServiceTest extends TestCase {
 				$objectResolver,
 				$logger
 			),
-			new DocumentJobStore(appConfig: $appConfig, jobList: $this->jobList, logger: $logger)
+			new DocumentJobStore(appConfig: $appConfig, jobList: new JobQueue(jobList: $this->jobList), logger: $logger)
 		);
 
 	}//end setUp()

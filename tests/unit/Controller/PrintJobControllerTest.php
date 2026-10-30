@@ -24,6 +24,7 @@ namespace OCA\Filinq\Tests\Unit\Controller;
 
 require_once __DIR__ . '/../Service/PrintJobDoubles.php';
 
+use OCA\Filinq\BackgroundJob\JobQueue;
 use OCA\Filinq\Controller\PrintJobController;
 use OCA\Filinq\Service\DataResolverService;
 use OCA\Filinq\Service\PdfService;
@@ -78,7 +79,7 @@ class PrintJobControllerTest extends TestCase {
 			$this->createMock(DataResolverService::class),
 			$this->printJobRepository(),
 			$this->printJobFileStore(),
-			$this->createMock(IJobList::class),
+			new JobQueue(jobList: $this->createMock(IJobList::class)),
 			$this->createMock(LoggerInterface::class)
 		);
 

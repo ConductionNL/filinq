@@ -18,6 +18,7 @@
 namespace OCA\Filinq\Tests\Unit\Service;
 
 use Exception;
+use OCA\Filinq\BackgroundJob\JobQueue;
 use OCA\Filinq\Service\CorrespondenceService;
 use OCA\Filinq\Service\DataResolverService;
 use OCA\Filinq\Service\PdfService;
@@ -164,7 +165,7 @@ class CorrespondenceServiceTest extends TestCase {
 			$this->pdfService,
 			$container,
 			$appManager,
-			$this->jobList,
+			new JobQueue(jobList: $this->jobList),
 			$logger,
 			$appConfig
 		);

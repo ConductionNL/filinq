@@ -26,6 +26,7 @@ require_once __DIR__ . '/PrintJobDoubles.php';
 
 use InvalidArgumentException;
 use OCA\Filinq\BackgroundJob\BatchPrintJob;
+use OCA\Filinq\BackgroundJob\JobQueue;
 use OCA\Filinq\Service\DataResolverService;
 use OCA\Filinq\Service\PdfService;
 use OCA\Filinq\Service\PrintJobService;
@@ -98,7 +99,7 @@ class PrintJobServiceTest extends TestCase {
 			$this->resolver,
 			$this->printJobRepository(),
 			$this->printJobFileStore(),
-			$this->jobList,
+			new JobQueue(jobList: $this->jobList),
 			$this->createMock(LoggerInterface::class)
 		);
 

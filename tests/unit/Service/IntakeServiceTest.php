@@ -20,24 +20,25 @@
 namespace OCA\Filinq\Tests\Unit\Service;
 
 use OCA\Filinq\BackgroundJob\IntakeOcrJob;
+use OCA\Filinq\BackgroundJob\JobQueue;
+use OCA\Filinq\Event\IntakeDocumentReceivedEvent;
+use OCA\Filinq\Exception\IntakeRefusedException;
+use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\Intake\IntakeOcrQueue;
 use OCA\Filinq\Service\Intake\IntakeReadingProgress;
+use OCA\Filinq\Service\IntakeAuthorizationGate;
+use OCA\Filinq\Service\IntakeDefaultRuleService;
+use OCA\Filinq\Service\IntakeFilePlacement;
+use OCA\Filinq\Service\IntakeRepository;
+use OCA\Filinq\Service\IntakeRoutingService;
+use OCA\Filinq\Service\IntakeService;
+use OCA\Filinq\Service\PartySuggestionService;
 use OCA\Filinq\Tests\Unit\Service\Ocr\OcrDoubles;
+use OCA\OpenRegister\Service\ObjectService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\IJobList;
 use OCP\Files\IRootFolder;
 use OCP\IAppConfig;
-use OCA\Filinq\Event\IntakeDocumentReceivedEvent;
-use OCA\Filinq\Exception\IntakeRefusedException;
-use OCA\Filinq\Service\DocumentObjectServiceResolver;
-use OCA\Filinq\Service\IntakeAuthorizationGate;
-use OCA\Filinq\Service\IntakeDefaultRuleService;
-use OCA\Filinq\Service\IntakeRoutingService;
-use OCA\Filinq\Service\PartySuggestionService;
-use OCA\Filinq\Service\IntakeFilePlacement;
-use OCA\Filinq\Service\IntakeRepository;
-use OCA\Filinq\Service\IntakeService;
-use OCA\OpenRegister\Service\ObjectService;
 use OCP\IUser;
 use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
@@ -232,7 +233,7 @@ class IntakeServiceTest extends TestCase {
 		$time = $this->createMock(ITimeFactory::class);
 		$time->method('getDateTime')->willReturn(new \DateTime('2026-09-29T08:00:00+00:00'));
 
-		return new IntakeOcrQueue($config, $this->ocrService(), $root, $jobs, new IntakeReadingProgress(), $time);
+		return new IntakeOcrQueue($config, $this->ocrService(), $root, new JobQueue(jobList: $jobs), new IntakeReadingProgress(), $time);
 
 	}//end ocrQueue()
 

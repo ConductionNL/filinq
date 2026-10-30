@@ -24,12 +24,11 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\BulkSigning;
 
-use OCA\Filinq\BackgroundJob\BulkSigningJob;
 use OCA\Filinq\Kernel\Contracts\BulkSigningServiceInterface;
+use OCA\Filinq\Kernel\JobQueueInterface;
 use OCA\Filinq\Service\SettingsService;
 use OCA\Filinq\Service\SigningRequestValidator;
 use OCA\Filinq\Service\SigningService;
-use OCP\BackgroundJob\IJobList;
 use RuntimeException;
 use Throwable;
 
@@ -65,7 +64,7 @@ class BulkSigningService implements BulkSigningServiceInterface {
 	 * @param SigningRequestValidator    $requestValidator The single-request validator
 	 * @param SettingsService            $settings         Default level and provider
 	 * @param BulkSigningBatchRepository $repository       Batch storage
-	 * @param IJobList                   $jobList          Queues phase 2
+	 * @param JobQueueInterface                   $jobList          Queues phase 2
 	 * @param SigningService             $signing          Cancels member requests
 	 *
 	 * @spec openspec/specs/bulk-signing-field-builder/spec.md#requirement-bulk-send-validates-first-then-creates-isolated-ordinary-requests-req-ddbsf-002
@@ -76,7 +75,7 @@ class BulkSigningService implements BulkSigningServiceInterface {
 		private readonly SigningRequestValidator $requestValidator,
 		private readonly SettingsService $settings,
 		private readonly BulkSigningBatchRepository $repository,
-		private readonly IJobList $jobList,
+		private readonly JobQueueInterface $jobList,
 		private readonly SigningService $signing,
 	) {
 
@@ -167,7 +166,7 @@ class BulkSigningService implements BulkSigningServiceInterface {
 		$batch['status'] = 'creating';
 		$batch = $this->repository->save(batch: $batch, uuid: $id);
 		// The job runs the rows as the initiator, never as the admin who confirmed.
-		$this->jobList->add(BulkSigningJob::class, ['batchId' => $id, 'userId' => (string) $batch['createdBy']]);
+		$this->jobList->add(JobQueueInterface::BULK_SIGNING, ['batchId' => $id, 'userId' => (string) $batch['createdBy']]);
 
 		return $batch;
 
