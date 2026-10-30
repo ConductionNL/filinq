@@ -88,6 +88,39 @@ class AnonymizeRequestValidator {
 			);
 		}
 
+		$flags = $this->validatedFlags(params: $params);
+		if ($flags['error'] !== null) {
+			return $flags;
+		}
+
+		$lists = $this->validatedLists(params: $params);
+		if ($lists['error'] !== null) {
+			return $lists;
+		}
+
+		return [
+			'error' => null,
+			'request' => [
+				'entities' => $entities,
+				'hasStrayBases' => $this->hasStrayBases(entities: $entities),
+				'appendBasisSummary' => $flags['request']['appendBasisSummary'],
+				'reversible' => $flags['request']['reversible'],
+				'unredactedEntities' => $lists['request']['unredactedEntities'],
+				'overrides' => $lists['request']['overrides'],
+			],
+		];
+
+	}//end validateBody()
+
+	/**
+	 * The appendBasisSummary and reversible flags, or the first refusal.
+	 *
+	 * @param array<string, mixed> $params Request parameters.
+	 *
+	 * @return array{error: array{status: int, body: array<string, mixed>}|null,
+	 *               request: array{appendBasisSummary: bool, reversible: bool}|null} The flags under `request`.
+	 */
+	private function validatedFlags(array $params): array {
 		$appendBasisSummary = $this->extractAppendBasisSummary(params: $params);
 		if (is_bool($appendBasisSummary) === false) {
 			return $this->rejected(error: $appendBasisSummary);
@@ -98,6 +131,19 @@ class AnonymizeRequestValidator {
 			return $this->rejected(error: $reversible);
 		}
 
+		return ['error' => null, 'request' => ['appendBasisSummary' => $appendBasisSummary, 'reversible' => $reversible]];
+
+	}//end validatedFlags()
+
+	/**
+	 * The unredactedEntities and acknowledgedOverrides lists, or the first refusal.
+	 *
+	 * @param array<string, mixed> $params Request parameters.
+	 *
+	 * @return array{error: array{status: int, body: array<string, mixed>}|null,
+	 *               request: array{unredactedEntities: array<mixed>, overrides: array<mixed>}|null} The lists under `request`.
+	 */
+	private function validatedLists(array $params): array {
 		$unredacted = ($params['unredactedEntities'] ?? []);
 		if (is_array($unredacted) === false) {
 			return $this->rejected(
@@ -122,19 +168,9 @@ class AnonymizeRequestValidator {
 			return $this->rejected(error: $overridesError);
 		}
 
-		return [
-			'error' => null,
-			'request' => [
-				'entities' => $entities,
-				'hasStrayBases' => $this->hasStrayBases(entities: $entities),
-				'appendBasisSummary' => $appendBasisSummary,
-				'reversible' => $reversible,
-				'unredactedEntities' => $unredacted,
-				'overrides' => $overrides,
-			],
-		];
+		return ['error' => null, 'request' => ['unredactedEntities' => $unredacted, 'overrides' => $overrides]];
 
-	}//end validateBody()
+	}//end validatedLists()
 
 	/**
 	 * Extract and validate the appendBasisSummary flag from request params.

@@ -109,38 +109,8 @@ class SigningCancellationService {
 	 * Tracked in filinq#628.
 	 */
 	public function cancel(string $uid, string $requestId): array {
-		// Scoped lookup: getRequest() already collapses access-denied to null and
-		// throws an id-free message for a genuine miss, so neither shape leaks
-		// which request ids exist.
-		$request = null;
-		try {
-			$request = $this->requests->getRequest(requestId: $requestId, callerUserId: $uid);
-		} catch (Throwable $e) {
-			$request = null;
-		}
-
-		// ONE refusal for "not yours" and "does not exist". Distinguishing them
-		// would let an unauthorised caller enumerate valid request ids from the
-		// error text, so the two cases must be indistinguishable from outside.
-		// A SIGNER reaches this point too — getRequest() admits signers — and is
-		// refused here, because signing a document is not authority to withdraw it.
-		if ($request === null || $this->isCreator(uid: $uid, request: $request) === false) {
-			$this->recordAttempt(
-				uid: $uid,
-				requestId: $requestId,
-				outcome: 'refused-not-creator',
-				detail: 'actor is not the creator, or the request does not exist'
-			);
-
-			throw new RuntimeException($this->refusalMessage(request: $request));
-		}
-
-		$externalId = (string)($request['externalId'] ?? '');
-		if ($externalId === '') {
-			throw new RuntimeException(
-				'This signing request has no provider reference, so it cannot be withdrawn at the provider.'
-			);
-		}
+		$request = $this->creatorsRequest(uid: $uid, requestId: $requestId);
+		$externalId = $this->providerReference(request: $request);
 
 		try {
 			$this->providerFor(request: $request)->cancelSigning($externalId);
@@ -182,6 +152,66 @@ class SigningCancellationService {
 			'alreadyCancelled' => $already,
 		];
 	}//end cancel()
+
+	/**
+	 * The request, when the actor created it; otherwise the one refusal, recorded.
+	 *
+	 * @param string $uid The acting user id.
+	 * @param string $requestId The signing request id.
+	 *
+	 * @return array<string, mixed> The request.
+	 *
+	 * @throws RuntimeException When the request does not exist or the actor did not create it.
+	 */
+	private function creatorsRequest(string $uid, string $requestId): array {
+		// Scoped lookup: getRequest() already collapses access-denied to null and
+		// throws an id-free message for a genuine miss, so neither shape leaks
+		// which request ids exist.
+		$request = null;
+		try {
+			$request = $this->requests->getRequest(requestId: $requestId, callerUserId: $uid);
+		} catch (Throwable $e) {
+			$request = null;
+		}
+
+		// ONE refusal for "not yours" and "does not exist". Distinguishing them
+		// would let an unauthorised caller enumerate valid request ids from the
+		// error text, so the two cases must be indistinguishable from outside.
+		// A SIGNER reaches this point too — getRequest() admits signers — and is
+		// refused here, because signing a document is not authority to withdraw it.
+		if ($request === null || $this->isCreator(uid: $uid, request: $request) === false) {
+			$this->recordAttempt(
+				uid: $uid,
+				requestId: $requestId,
+				outcome: 'refused-not-creator',
+				detail: 'actor is not the creator, or the request does not exist'
+			);
+
+			throw new RuntimeException($this->refusalMessage(request: $request));
+		}
+
+		return $request;
+	}//end creatorsRequest()
+
+	/**
+	 * The provider's reference for the request.
+	 *
+	 * @param array<string, mixed> $request The request.
+	 *
+	 * @return string The external id.
+	 *
+	 * @throws RuntimeException When the request carries none.
+	 */
+	private function providerReference(array $request): string {
+		$externalId = (string)($request['externalId'] ?? '');
+		if ($externalId === '') {
+			throw new RuntimeException(
+				'This signing request has no provider reference, so it cannot be withdrawn at the provider.'
+			);
+		}
+
+		return $externalId;
+	}//end providerReference()
 
 	/**
 	 * Whether the actor created this request.

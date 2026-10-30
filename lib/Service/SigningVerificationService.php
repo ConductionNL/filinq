@@ -152,15 +152,35 @@ class SigningVerificationService implements SigningVerificationServiceInterface 
 	 * @spec openspec/specs/document-signing/spec.md
 	 */
 	private function extractSignatures(string $pdfContent): array {
-		$signatures = [];
-
 		$pattern = '/\/Type\s*\/Sig/';
 		$matches = preg_match_all($pattern, $pdfContent);
 
 		if ($matches === false || $matches === 0) {
-			return $signatures;
+			return [];
 		}
 
+		$signatures = $this->markedSignatures(pdfContent: $pdfContent);
+		if (empty($signatures) === true) {
+			// A `/Type /Sig` entry with no Filinq marker is a genuine
+			// external signature Filinq cannot yet validate — honestly
+			// `unverifiable`, never `invalid` (that would mislabel an
+			// inability to verify as tampering, REQ-DDSTR-005).
+			return $this->externalSignatures(count: $matches);
+		}
+
+		return $signatures;
+	}//end extractSignatures()
+
+	/**
+	 * The records of every Filinq signature marker in the PDF, each verified.
+	 *
+	 * @param string $pdfContent The PDF file content
+	 *
+	 * @return array<int, array<string, mixed>> List of signature records
+	 *
+	 * @spec openspec/specs/document-signing/spec.md
+	 */
+	private function markedSignatures(string $pdfContent): array {
 		// ⚠️ THE MARKER NAME STAYS `/DocuDesk-Signature` ACROSS THE FILINQ
 		// RENAME. It is not source text: it is a byte sequence written into
 		// every PDF this app has ever signed, and this regex is what reads it
@@ -175,62 +195,69 @@ class SigningVerificationService implements SigningVerificationServiceInterface 
 		$dataPattern = '/\/DocuDesk-Signature\s*\(([^)]+)\)/';
 		preg_match_all($dataPattern, $pdfContent, $dataMatches);
 
-		if (empty($dataMatches[1]) === false) {
-			foreach ($dataMatches[1] as $encoded) {
-				$decoded = json_decode(base64_decode($encoded), true);
-				if (is_array($decoded) === true) {
-					$verification = $this->verifyAssertion(
-						assertion: $decoded,
-						pdfContent: $pdfContent
-					);
+		$signatures = [];
+		foreach ($dataMatches[1] as $encoded) {
+			$decoded = json_decode(base64_decode($encoded), true);
+			if (is_array($decoded) === true) {
+				$verification = $this->verifyAssertion(
+					assertion: $decoded,
+					pdfContent: $pdfContent
+				);
 
-					$signatures[] = [
-						'signer' => $decoded['signer'] ?? 'Unknown',
-						'timestamp' => $decoded['timestamp'] ?? '',
-						'level' => $decoded['level'] ?? 'SES',
-						'method' => $decoded['method'] ?? 'unknown',
-						'ip' => $decoded['ip'] ?? '',
-						'status' => $verification['status'],
-						'reason' => $verification['reason'],
-						// What was checked, against which key, and what the
-						// verdict proves — so a result on a screen is readable
-						// by the person it is shown to.
-						'checked' => $verification['checked'],
-						'keyId' => $verification['keyId'],
-						'means' => $verification['means'],
-						// Derived boolean kept for response-shape
-						// compatibility (REQ-DDSTR-005).
-						'valid' => ($verification['status'] === 'verified'),
-					];
-				}
-			}//end foreach
-		}//end if
-
-		if (empty($signatures) === true) {
-			// A `/Type /Sig` entry with no Filinq marker is a genuine
-			// external signature Filinq cannot yet validate — honestly
-			// `unverifiable`, never `invalid` (that would mislabel an
-			// inability to verify as tampering, REQ-DDSTR-005).
-			for ($i = 0; $i < $matches; $i++) {
 				$signatures[] = [
-					'signer' => 'External signer',
-					'timestamp' => '',
-					'level' => 'unknown',
-					'method' => 'external',
-					'ip' => '',
-					'status' => 'unverifiable',
-					'reason' => 'external-signature-unsupported',
-					'checked' => 'nothing',
-					'keyId' => null,
-					'means' => 'A signature this instance did not produce. Check it with the tool that '
-						. 'made it; nothing here says whether it is good.',
-					'valid' => false,
+					'signer' => $decoded['signer'] ?? 'Unknown',
+					'timestamp' => $decoded['timestamp'] ?? '',
+					'level' => $decoded['level'] ?? 'SES',
+					'method' => $decoded['method'] ?? 'unknown',
+					'ip' => $decoded['ip'] ?? '',
+					'status' => $verification['status'],
+					'reason' => $verification['reason'],
+					// What was checked, against which key, and what the
+					// verdict proves — so a result on a screen is readable
+					// by the person it is shown to.
+					'checked' => $verification['checked'],
+					'keyId' => $verification['keyId'],
+					'means' => $verification['means'],
+					// Derived boolean kept for response-shape
+					// compatibility (REQ-DDSTR-005).
+					'valid' => ($verification['status'] === 'verified'),
 				];
 			}
 		}
 
 		return $signatures;
-	}//end extractSignatures()
+	}//end markedSignatures()
+
+	/**
+	 * One unverifiable record per signature entry Filinq did not write.
+	 *
+	 * @param int $count The number of `/Type /Sig` entries.
+	 *
+	 * @return array<int, array<string, mixed>> List of signature records
+	 *
+	 * @spec openspec/specs/document-signing/spec.md
+	 */
+	private function externalSignatures(int $count): array {
+		$signatures = [];
+		for ($i = 0; $i < $count; $i++) {
+			$signatures[] = [
+				'signer' => 'External signer',
+				'timestamp' => '',
+				'level' => 'unknown',
+				'method' => 'external',
+				'ip' => '',
+				'status' => 'unverifiable',
+				'reason' => 'external-signature-unsupported',
+				'checked' => 'nothing',
+				'keyId' => null,
+				'means' => 'A signature this instance did not produce. Check it with the tool that '
+					. 'made it; nothing here says whether it is good.',
+				'valid' => false,
+			];
+		}
+
+		return $signatures;
+	}//end externalSignatures()
 
 	/**
 	 * Cryptographically verify a self-asserted Filinq signature blob (v2)

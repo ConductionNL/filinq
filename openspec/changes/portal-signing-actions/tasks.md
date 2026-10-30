@@ -5,7 +5,10 @@
 
 ## Prerequisites (apply-blockers)
 
-- [ ] **BLOCKED (external, go-live only)**: Confirm the portaliq A6 amendment that forwards the resolved `signerEmail` scope claim in the `X-Portal-Subject` assertion (design.md Open Question 1, option a) is landed — OR the subjectRef→email callback (option b). The Filinq receiver fails closed `403` without a signer-identifying claim, so this gates go-live, not authoring — the receiver, verifier and entrypoint below are fully implemented and unit-tested against the frozen contract as specified.
+- [x] **BLOCKED (external, go-live only)**: Confirm the portaliq A6 amendment that forwards the resolved `signerEmail` scope claim in the `X-Portal-Subject` assertion (design.md Open Question 1, option a) is landed — OR the subjectRef→email callback (option b). The Filinq receiver fails closed `403` without a signer-identifying claim, so this gates go-live, not authoring — the receiver, verifier and entrypoint below are fully implemented and unit-tested against the frozen contract as specified.
+  - 2026-10-30: the portaliq side is landed. portaliq#833 (merged 2026-09-28) resolves an action's declared `scopeClaim` server side (`ActionScopeResolver`) and adds it as a tenth claim to the signed `X-Portal-Subject` assertion (`PortalJwtService::createAssertion()`), answering 403 before the forward when it does not resolve. What is left is on filinq's side, the task below.
+- [ ] Declare the signer claim on the portal actions (sig-external go-live dependency on portaliq#833): in `lib/Portal/PortalContributionProvider.php` give the `sign` and `decline` row actions `rowField: signingRequestId` and `scopeClaim: signerEmail`, so portaliq resolves the signer's email and forwards it to `PortalSigningReceiverController`; unit test the declaration in `tests/unit/Portal/PortalContributionProviderTest.php` (REQ-DDPSA-001)
+  - Acceptance: with portaliq on `development`, a resident signs a document from its row and the receiver records the signature for the invited `signerRecord`; without the claim the receiver still fails closed 403.
 - [x] Confirm the shared-secret sourcing (design.md Open Question 3): the verifier reads portaliq's `jwt_signing_secret` instance secret server-side (`IConfig::getAppValue('portaliq', 'jwt_signing_secret', '')`, falling back to `getSystemValue('secret', ...)`); fails closed `401` when unset or < 16 chars — unit-tested (`testUnusableSecretFailsClosed`, `testAppConfigSecretTakesPrecedence`, `testInstanceSecretFallback`).
 
 ## Implementation
@@ -41,7 +44,7 @@
 - [x] Pass the quality gates (re-confirmed 2026-07-24 after a second merge of origin/development, baseline = origin/development @ 6b4f69d5): `php -l` clean; PHPCS 0 errors fleet-wide (183 warnings vs baseline 196 — fewer, zero new) on every touched file; the full unit suite is green — **1053/1053** in the `nextcloud:34.0.0-apache` container vs baseline **998/998** (+55, zero regressions); PHPStan **2 pre-existing unrelated errors** identical to baseline; Psalm **1 pre-existing unrelated error** identical to baseline; route-auth/route-reachability satisfied (`#[PublicPage]`/`#[NoCSRFRequired]` on all 3 routes, routes.php entries match controller methods).
 
 - [x] `openspec validate --type change portal-signing-actions --strict` → **valid** (re-run 2026-07-23).
-- [ ] **NOT DONE**: closing Conduction/filinq#160 requires live-verify evidence — the A6 `signerEmail` claim forward from portaliq is still not landed (go-live blocker, not an authoring blocker; see Prerequisites above). The issue was NOT closed.
+- [ ] **NOT DONE**: closing Conduction/filinq#160 requires live-verify evidence — the A6 `signerEmail` claim forward from portaliq is still not landed (go-live blocker, not an authoring blocker; see Prerequisites above). The issue was NOT closed. 2026-10-30: portaliq#833 landed the forward; the claim declaration on filinq's side (Prerequisites) is what remains before the live check.
 
 ## Quality checklist
 

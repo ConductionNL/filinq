@@ -20,6 +20,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Service\EntitySearch;
 
 use OCA\Filinq\Exception\EntitySearchRefusedException;
+use OCA\Filinq\Kernel\EntitySearchQuery;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\EntitySearch\EntityCatalogue;
 use OCA\Filinq\Service\EntitySearch\EntityOccurrences;
@@ -115,6 +116,13 @@ class EntitySearchServiceTest extends TestCase {
 	 * @var int
 	 */
 	private int $catalogueReads = 0;
+
+	/**
+	 * What each catalogue search was asked: query, type, category, limit, offset.
+	 *
+	 * @var array<int, array<int, mixed>>
+	 */
+	private array $catalogueAsked = [];
 
 	/**
 	 * A person in three documents, one of them unreadable to petra.
@@ -238,17 +246,13 @@ class EntitySearchServiceTest extends TestCase {
 			/**
 			 * The rows matching, as the SQL would.
 			 *
-			 * @param array<int, string>|null $scope    The organisations.
-			 * @param string                  $query    The query.
-			 * @param string                  $type     The type.
-			 * @param string                  $category The category.
-			 * @param int                     $limit    The page size.
-			 * @param int                     $offset   The page start.
+			 * @param array<int, string>|null $scope The organisations.
+			 * @param EntitySearchQuery       $query The text, filters and page.
 			 *
 			 * @return array{results: array<int, array<string, mixed>>, total: int} The page.
 			 */
-			public function search(?array $scope, string $query, string $type, string $category, int $limit, int $offset): array {
-				return $this->test->catalogueSearch($scope, $query, $type, $category, $limit, $offset);
+			public function search(?array $scope, EntitySearchQuery $query): array {
+				return $this->test->catalogueSearch($scope, $query->text, $query->type, $query->category, $query->limit, $query->offset);
 			}
 
 			/**
@@ -314,6 +318,7 @@ class EntitySearchServiceTest extends TestCase {
 	 */
 	public function catalogueSearch(?array $scope, string $query, string $type, string $category, int $limit, int $offset): array {
 		$this->catalogueReads++;
+		$this->catalogueAsked[] = [$query, $type, $category, $limit, $offset];
 		$hits = [];
 		foreach ($this->entities as $row) {
 			if ($scope !== null && in_array($row['organisation'], $scope, true) === false) {
@@ -484,7 +489,7 @@ class EntitySearchServiceTest extends TestCase {
 	public function testSearchByValueReturnsMatchingEntitiesWithCounts(): void {
 		$this->current = 'petra';
 
-		$page = $this->service()->search(userId: 'petra', query: 'de vries', type: '', category: '', limit: 25, offset: 0);
+		$page = $this->service()->search(userId: 'petra', query: new EntitySearchQuery(text: 'de vries', type: '', category: '', limit: 25, offset: 0));
 
 		$this->assertSame(1, $page['total']);
 		$this->assertSame('Jan de Vries', $page['results'][0]['value']);
@@ -501,7 +506,7 @@ class EntitySearchServiceTest extends TestCase {
 		$this->members['bob'] = ['privacy-officers'];
 		$this->current = 'bob';
 
-		$page = $this->service()->search(userId: 'bob', query: 'vries', type: '', category: '', limit: 25, offset: 0);
+		$page = $this->service()->search(userId: 'bob', query: new EntitySearchQuery(text: 'vries', type: '', category: '', limit: 25, offset: 0));
 
 		$this->assertSame([], $page['results']);
 		$this->assertSame(0, $page['total']);
@@ -517,7 +522,7 @@ class EntitySearchServiceTest extends TestCase {
 		$this->members['carol'] = ['privacy-officers'];
 		$this->current = 'carol';
 
-		$reason = $this->refusal(fn () => $this->service()->search(userId: 'carol', query: 'vries', type: '', category: '', limit: 25, offset: 0));
+		$reason = $this->refusal(fn () => $this->service()->search(userId: 'carol', query: new EntitySearchQuery(text: 'vries', type: '', category: '', limit: 25, offset: 0)));
 
 		$this->assertSame(EntitySearchRefusedException::REASON_CATALOGUE_UNAVAILABLE, $reason);
 		$this->assertSame(0, $this->catalogueReads);
@@ -533,7 +538,7 @@ class EntitySearchServiceTest extends TestCase {
 	public function testAnAdminSeesEveryOrganisation(): void {
 		$this->current = 'root';
 
-		$page = $this->service()->search(userId: 'root', query: 'vries', type: '', category: '', limit: 25, offset: 0);
+		$page = $this->service()->search(userId: 'root', query: new EntitySearchQuery(text: 'vries', type: '', category: '', limit: 25, offset: 0));
 
 		$this->assertSame(2, $page['total']);
 
@@ -547,7 +552,7 @@ class EntitySearchServiceTest extends TestCase {
 	public function testANonMemberIsRefused(): void {
 		$this->current = 'bob';
 
-		$reason = $this->refusal(fn () => $this->service()->search(userId: 'bob', query: 'vries', type: '', category: '', limit: 25, offset: 0));
+		$reason = $this->refusal(fn () => $this->service()->search(userId: 'bob', query: new EntitySearchQuery(text: 'vries', type: '', category: '', limit: 25, offset: 0)));
 
 		$this->assertSame(EntitySearchRefusedException::REASON_NOT_ALLOWED, $reason);
 		$this->assertSame(0, $this->catalogueReads);
@@ -581,7 +586,7 @@ class EntitySearchServiceTest extends TestCase {
 		$this->entities[] = ['uuid' => 'bsn-1', 'type' => 'SSN', 'value' => '123456782', 'category' => 'personal_data', 'organisation' => 'org-a', 'relations' => []];
 		$this->entities[] = ['uuid' => 'bsn-2', 'type' => 'SSN', 'value' => '1234567820', 'category' => 'personal_data', 'organisation' => 'org-a', 'relations' => []];
 
-		$this->service()->search(userId: 'petra', query: ' 123456782 ', type: 'SSN', category: '', limit: 25, offset: 0);
+		$this->service()->search(userId: 'petra', query: new EntitySearchQuery(text: ' 123456782 ', type: 'SSN', category: '', limit: 25, offset: 0));
 
 		$this->assertCount(1, $this->saved['entitySearchLog']);
 		$entry = $this->saved['entitySearchLog'][0];
@@ -607,7 +612,7 @@ class EntitySearchServiceTest extends TestCase {
 
 		$this->assertSame(
 			EntitySearchRefusedException::REASON_LOG_UNAVAILABLE,
-			$this->refusal(fn () => $this->service()->search(userId: 'petra', query: 'vries', type: '', category: '', limit: 25, offset: 0))
+			$this->refusal(fn () => $this->service()->search(userId: 'petra', query: new EntitySearchQuery(text: 'vries', type: '', category: '', limit: 25, offset: 0)))
 		);
 		$this->assertSame(
 			EntitySearchRefusedException::REASON_LOG_UNAVAILABLE,
@@ -678,7 +683,27 @@ class EntitySearchServiceTest extends TestCase {
 	public function testAnEmptySearchIsRefused(): void {
 		$this->current = 'petra';
 
-		$this->assertSame(EntitySearchRefusedException::REASON_INVALID, $this->refusal(fn () => $this->service()->search(userId: 'petra', query: '  ', type: '', category: '', limit: 25, offset: 0)));
+		$this->assertSame(EntitySearchRefusedException::REASON_INVALID, $this->refusal(fn () => $this->service()->search(userId: 'petra', query: new EntitySearchQuery(text: '  ', type: '', category: '', limit: 25, offset: 0))));
 
 	}//end testAnEmptySearchIsRefused()
+	/**
+	 * The filters are trimmed and the page is clamped before the catalogue
+	 * and the log see them, and the answer names the page it served.
+	 *
+	 * @return void
+	 */
+	public function testFiltersAreTrimmedAndThePageIsClamped(): void {
+		$this->current = 'petra';
+		$this->entities[] = ['uuid' => 'p-1', 'type' => 'PERSON', 'value' => 'Jan de Vries', 'category' => 'name', 'organisation' => 'org-a', 'relations' => []];
+		$service = $this->service();
+
+		$wide = $service->search(userId: 'petra', query: new EntitySearchQuery(text: ' vries ', type: ' PERSON ', category: ' name ', limit: 500, offset: -3));
+		$narrow = $service->search(userId: 'petra', query: new EntitySearchQuery(text: '', type: '', category: ' name ', limit: 0, offset: 7));
+
+		$this->assertSame([['vries', 'PERSON', 'name', 100, 0], ['', '', 'name', 1, 7]], $this->catalogueAsked);
+		$this->assertSame([100, 0, 1, 1, 7, 0], [$wide['limit'], $wide['offset'], $wide['total'], $narrow['limit'], $narrow['offset'], count($narrow['results'])]);
+		$this->assertSame(['PERSON', 'name'], [$this->saved['entitySearchLog'][0]['row']['typeFilter'], $this->saved['entitySearchLog'][0]['row']['categoryFilter']]);
+		$this->assertSame('name', $this->saved['entitySearchLog'][1]['row']['categoryFilter']);
+
+	}//end testFiltersAreTrimmedAndThePageIsClamped()
 }//end class

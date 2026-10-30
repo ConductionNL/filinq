@@ -25,6 +25,7 @@ namespace OCA\Filinq\Tests\Unit\Service;
 use OCA\Filinq\Exception\ConversionFailedException;
 use OCA\Filinq\Service\Conversion\EmlBackend;
 use OCA\Filinq\Service\EmlAnonymizationService;
+use OCA\Filinq\Service\EmlAnonymizeRequest;
 use OCA\Filinq\Service\EmlPdfAssemblyService;
 use OCA\Filinq\Service\EntityDetectionService;
 use OCP\App\IAppManager;
@@ -47,6 +48,7 @@ use RuntimeException;
  * @covers \OCA\Filinq\Service\Conversion\EmlBackend
  * @covers \OCA\Filinq\Service\EmlAnonymizationService
  * @uses   \OCA\Filinq\Exception\ConversionFailedException
+ * @uses   \OCA\Filinq\Service\EmlAnonymizeRequest
  */
 class EmlStructureFailuresTest extends TestCase {
 
@@ -207,7 +209,7 @@ class EmlStructureFailuresTest extends TestCase {
 				[['name' => 'eml', 'available' => false, 'supports' => true, 'reason' => 'anonymizeEmlStructured not present on OpenRegister FileService']],
 				null,
 			],
-			$this->failure(fn () => $this->service()->anonymize(fileId: 5, node: $this->source(), fileService: new \stdClass(), mappedEntities: [], scope: 'document', dossierKey: null))
+			$this->failure(fn () => $this->service()->anonymize(request: new EmlAnonymizeRequest(fileId: 5, node: $this->source(), mappedEntities: [], options: ['scope' => 'document', 'dossierKey' => null]), fileService: new \stdClass()))
 		);
 	}
 
@@ -227,7 +229,7 @@ class EmlStructureFailuresTest extends TestCase {
 				[['name' => 'eml', 'available' => true, 'supports' => true, 'reason' => 'anonymizeEmlStructured threw: OR exploded']],
 				$boom,
 			],
-			$this->failure(fn () => $this->service(logger: $logger)->anonymize(fileId: 5, node: $node, fileService: $fileService, mappedEntities: [['t' => 'x']], scope: 'dossier', dossierKey: 'd-1'))
+			$this->failure(fn () => $this->service(logger: $logger)->anonymize(request: new EmlAnonymizeRequest(fileId: 5, node: $node, mappedEntities: [['t' => 'x']], options: ['scope' => 'dossier', 'dossierKey' => 'd-1']), fileService: $fileService))
 		);
 		$this->assertSame([[$node, [['t' => 'x']], 'dossier', 'd-1']], $fileService->calls);
 	}
@@ -237,7 +239,7 @@ class EmlStructureFailuresTest extends TestCase {
 		$logger = $this->createMock(LoggerInterface::class);
 		$logger->expects($this->never())->method('warning');
 		try {
-			$this->service(logger: $logger)->anonymize(fileId: 5, node: $this->source(), fileService: $this->fileService(answer: $inner), mappedEntities: [], scope: 'document', dossierKey: null);
+			$this->service(logger: $logger)->anonymize(request: new EmlAnonymizeRequest(fileId: 5, node: $this->source(), mappedEntities: [], options: ['scope' => 'document', 'dossierKey' => null]), fileService: $this->fileService(answer: $inner));
 			$this->fail('Expected ConversionFailedException');
 		} catch (ConversionFailedException $e) {
 			$this->assertSame($inner, $e);
@@ -252,7 +254,7 @@ class EmlStructureFailuresTest extends TestCase {
 				[['name' => 'eml', 'available' => true, 'supports' => true, 'reason' => 'anonymizeEmlStructured returned non-object']],
 				null,
 			],
-			$this->failure(fn () => $this->service()->anonymize(fileId: 5, node: $this->source(), fileService: $this->fileService(answer: 'flat'), mappedEntities: [], scope: 'document', dossierKey: null))
+			$this->failure(fn () => $this->service()->anonymize(request: new EmlAnonymizeRequest(fileId: 5, node: $this->source(), mappedEntities: [], options: ['scope' => 'document', 'dossierKey' => null]), fileService: $this->fileService(answer: 'flat')))
 		);
 	}
 }

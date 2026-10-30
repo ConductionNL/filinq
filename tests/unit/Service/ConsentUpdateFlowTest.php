@@ -23,7 +23,9 @@ namespace OCA\Filinq\Tests\Unit\Service;
 
 use Exception;
 use InvalidArgumentException;
+use OCA\Filinq\Service\ConsentStatusChange;
 use OCA\Filinq\Service\ConsentUpdateHandler;
+use OCA\Filinq\Service\RegisterObjectRef;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
@@ -112,13 +114,7 @@ class ConsentUpdateFlowTest extends TestCase {
 	public function testWhitelistedFieldsAreSaved(): void {
 		$stored = ['consentStatus' => 'pending', 'notificationStatus' => 'pending', 'documentId' => 'd-1', 'policyMatch' => null];
 
-		$result = $this->handler(stored: $stored)->updateConsentStatus(
-			consentId: 'c-1',
-			register: 'filinq',
-			schema: 'publicationConsent',
-			data: ['notificationStatus' => 'sent', 'objectionReason' => 'privacy', 'documentId' => 'd-9', 'extra' => 'x', 'evidence' => 'mail'],
-			actor: 'ingrid'
-		);
+		$result = $this->handler(stored: $stored)->updateConsentStatus(consent: new RegisterObjectRef(id: 'c-1', register: 'filinq', schema: 'publicationConsent'), change: new ConsentStatusChange(data: ['notificationStatus' => 'sent', 'objectionReason' => 'privacy', 'documentId' => 'd-9', 'extra' => 'x', 'evidence' => 'mail'], actor: 'ingrid'));
 
 		$this->assertSame(
 			expected: [
@@ -204,11 +200,50 @@ class ConsentUpdateFlowTest extends TestCase {
 	 */
 	private function failure(ConsentUpdateHandler $handler, array $data=['notificationStatus' => 'sent']): Throwable {
 		try {
-			$handler->updateConsentStatus(consentId: 'c-1', register: 'filinq', schema: 'publicationConsent', data: $data);
+			$handler->updateConsentStatus(consent: new RegisterObjectRef(id: 'c-1', register: 'filinq', schema: 'publicationConsent'), change: new ConsentStatusChange(data: $data));
 		} catch (Throwable $e) {
 			return $e;
 		}
 
 		$this->fail(message: 'Expected the update to throw');
 	}//end failure()
+	/**
+	 * The consents of a document are read under the register and schema, scoped
+	 * to the owner when one is given, and unwrapped from their entities.
+	 *
+	 * @return void
+	 */
+	public function testTheConsentsOfADocumentAreScopedToTheOwner(): void {
+		$queries = [];
+		$objects = $this->createMock(originalClassName: ObjectService::class);
+		$objects->method('searchObjects')->willReturnCallback(
+			static function (array $query) use (&$queries): array {
+				$queries[] = $query;
+				$entity = new ObjectEntity();
+				$entity->setObject(['id' => 'c-1', 'consentStatus' => 'pending']);
+				return [$entity, ['id' => 'c-2']];
+			}
+		);
+		$appManager = $this->createMock(originalClassName: IAppManager::class);
+		$appManager->method('getInstalledApps')->willReturn(['openregister']);
+		$container = $this->createMock(originalClassName: ContainerInterface::class);
+		$container->method('get')->willReturn($objects);
+		$handler = new ConsentUpdateHandler(
+			logger: $this->createMock(originalClassName: LoggerInterface::class),
+			container: $container,
+			appManager: $appManager
+		);
+
+		$owned = $handler->getConsentsByDocument(documentId: 'd-1', register: 'filinq', schema: 'publicationConsent', ownerUid: 'ingrid');
+		$handler->getConsentsByDocument(documentId: 'd-2', register: 'filinq', schema: 'publicationConsent');
+
+		$this->assertSame([['id' => 'c-1', 'consentStatus' => 'pending'], ['id' => 'c-2']], $owned);
+		$this->assertSame(
+			[
+				['@self' => ['register' => 'filinq', 'schema' => 'publicationConsent', 'owner' => 'ingrid'], 'documentId' => 'd-1'],
+				['@self' => ['register' => 'filinq', 'schema' => 'publicationConsent'], 'documentId' => 'd-2'],
+			],
+			$queries
+		);
+	}//end testTheConsentsOfADocumentAreScopedToTheOwner()
 }//end class

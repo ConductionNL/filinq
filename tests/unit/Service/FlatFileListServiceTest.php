@@ -22,6 +22,8 @@ namespace OCA\Filinq\Tests\Unit\Service;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\FinalDocumentRepository;
 use OCA\Filinq\Service\FlatFileListService;
+use OCA\Filinq\Service\OpenRegisterServiceLocator;
+use OCA\Filinq\Service\ReadableFileResolver;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\Files\File;
 use OCP\Files\Folder;
@@ -52,10 +54,11 @@ class FlatFileListServiceTest extends TestCase {
 	 * @param array<int, array<string, mixed>> $records The stored document records.
 	 * @param array<int, string> $files File id to file name, for the files this user can see.
 	 * @param array<int, array<string, mixed>> $dossiers The stored dossiers.
+	 * @param array<int, string> $objectFiles File id to file name, for files in an object's folder this user may read through the object.
 	 *
 	 * @return FlatFileListService The service under test.
 	 */
-	private function service(array $records, array $files, array $dossiers=[]): FlatFileListService {
+	private function service(array $records, array $files, array $dossiers=[], array $objectFiles=[]): FlatFileListService {
 		$objectService = $this->createMock(ObjectService::class);
 		$objectService->method('searchObjectsBySlug')->willReturnCallback(
 			function (string $registerSlug, string $schemaSlug) use ($records, $dossiers): array {
@@ -95,14 +98,81 @@ class FlatFileListServiceTest extends TestCase {
 		$session = $this->createMock(IUserSession::class);
 		$session->method('getUser')->willReturn($user);
 
+		$scope = new class($objectFiles) {
+			/**
+			 * @param array<int, string> $files The object files this user may read.
+			 */
+			public function __construct(private array $files) {
+			}
+
+			/**
+			 * @param int $fileId The file id.
+			 *
+			 * @return bool Whether the object read rule admits this user.
+			 */
+			public function mayReadFile(int $fileId): bool {
+				return isset($this->files[$fileId]);
+			}
+		};
+		$fileService = new class($objectFiles, $this) {
+			/**
+			 * @param array<int, string> $files The object files.
+			 * @param FlatFileListServiceTest $test The test, to build file doubles.
+			 */
+			public function __construct(private array $files, private FlatFileListServiceTest $test) {
+			}
+
+			/**
+			 * @param int $fileId The file id.
+			 *
+			 * @return File|null The file.
+			 */
+			public function getFileById(int $fileId): ?File {
+				if (isset($this->files[$fileId]) === false) {
+					return null;
+				}
+
+				return $this->test->objectFile(name: $this->files[$fileId]);
+			}
+		};
+		$locator = $this->createMock(originalClassName: OpenRegisterServiceLocator::class);
+		$locator->method('get')->willReturnCallback(
+			static fn (string $className): mixed => match ($className) {
+				ReadableFileResolver::OR_READ_SCOPE => $scope,
+				ReadableFileResolver::OR_FILE_SERVICE => $fileService,
+			}
+		);
+
 		return new FlatFileListService(
 			new FinalDocumentRepository($resolver, $this->createMock(LoggerInterface::class)),
-			$rootFolder,
-			$session,
-			$this->createMock(LoggerInterface::class)
+			new ReadableFileResolver(
+				rootFolder: $rootFolder,
+				userSession: $session,
+				locator: $locator,
+				logger: $this->createMock(originalClassName: LoggerInterface::class)
+			),
 		);
 
 	}//end service()
+
+	/**
+	 * A file double in an object's folder, in the openregister account's home.
+	 *
+	 * @param string $name The file name.
+	 *
+	 * @return File The file.
+	 */
+	public function objectFile(string $name): File {
+		$file = $this->createMock(originalClassName: File::class);
+		$file->method('getName')->willReturn($name);
+		$file->method('getPath')->willReturn('/openregister/files/Open Registers/Filinq Register/dossier-1/' . $name);
+		$file->method('getSize')->willReturn(2048);
+		$file->method('getMTime')->willReturn(1789000000);
+		$file->method('getMimetype')->willReturn('application/pdf');
+
+		return $file;
+
+	}//end objectFile()
 
 	/**
 	 * One record on the case, for a file id.
@@ -265,4 +335,25 @@ class FlatFileListServiceTest extends TestCase {
 		$this->assertNull(actual: $byName['los.pdf']);
 
 	}//end testAFileNamesTheDossierItIsIn()
+
+	/**
+	 * A file in the folder of an object the reader may read is listed, though
+	 * it is not in the reader's own Files.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/object-files-read-through-the-record/specs/document-register/spec.md
+	 */
+	public function testAFileInTheFolderOfAReadableObjectIsListed(): void {
+		$page = $this->service(
+			records: [$this->record(uuid: 'record-1', fileId: 21064), $this->record(uuid: 'record-2', fileId: 21065)],
+			files: [],
+			objectFiles: [21064 => '02-advies-verlichting-fietspad.pdf']
+		)->listFor(domain: ['register' => 'zaken', 'schema' => 'zaak', 'id' => 'zaak-1']);
+
+		$this->assertSame(expected: 1, actual: $page['total']);
+		$this->assertSame(expected: '02-advies-verlichting-fietspad.pdf', actual: $page['results'][0]['name']);
+		$this->assertSame(expected: 'record-1', actual: $page['results'][0]['record']['uuid']);
+
+	}//end testAFileInTheFolderOfAReadableObjectIsListed()
 }//end class

@@ -77,11 +77,8 @@ class ConsentUpdateHandler {
 	/**
 	 * Update consent status for a consent record
 	 *
-	 * @param string $consentId The consent object UUID
-	 * @param string $register The register ID
-	 * @param string $schema The schema ID
-	 * @param array<string, mixed> $data The data to update
-	 * @param string $actor The user making the change, recorded on each status event
+	 * @param RegisterObjectRef   $consent Where the consent record lives
+	 * @param ConsentStatusChange $change  The proposed update and who makes it
 	 *
 	 * @return array<string, mixed> The updated consent record
 	 *
@@ -90,13 +87,7 @@ class ConsentUpdateHandler {
 	 *
 	 * @spec openspec/specs/consent-management/spec.md
 	 */
-	public function updateConsentStatus(
-		string $consentId,
-		string $register,
-		string $schema,
-		array $data,
-		string $actor = '',
-	): array {
+	public function updateConsentStatus(RegisterObjectRef $consent, ConsentStatusChange $change): array {
 		try {
 			$objectService = $this->getObjectService();
 
@@ -105,30 +96,30 @@ class ConsentUpdateHandler {
 			// authenticated user to overwrite consent records owned by
 			// other users.
 			$object = $objectService->find(
-				id: $consentId,
-				register: $register,
-				schema: $schema,
+				id: $consent->id,
+				register: $consent->register,
+				schema: $consent->schema,
 				_rbac: false
 			);
 
 			if ($object === null) {
-				throw new Exception('Consent record not found: ' . $consentId);
+				throw new Exception('Consent record not found: ' . $consent->id);
 			}
 
 			$existing = $object->getObject();
-			$allowedData = $this->consentChanges(existing: $existing, request: ['data' => $data, 'actor' => $actor]);
+			$allowedData = $this->consentChanges(existing: $existing, change: $change);
 
 			$savedObject = $objectService->saveObject(
 				object: array_merge($existing, $allowedData),
-				register: $register,
-				schema: $schema,
+				register: $consent->register,
+				schema: $consent->schema,
 				_rbac: false
 			);
 
 			$this->logger->info(
 				'Consent status updated',
 				[
-					'consentId' => $consentId,
+					'consentId' => $consent->id,
 					'updatedKeys' => array_keys($allowedData),
 				]
 			);
@@ -137,7 +128,7 @@ class ConsentUpdateHandler {
 		} catch (InvalidArgumentException $e) {
 			throw $e;
 		} catch (Exception $e) {
-			throw $this->updateFailure(error: $e, consentId: $consentId);
+			throw $this->updateFailure(error: $e, consentId: $consent->id);
 		}//end try
 
 	}//end updateConsentStatus()
@@ -145,8 +136,8 @@ class ConsentUpdateHandler {
 	/**
 	 * The fields an update may change, past the guards and with its status events.
 	 *
-	 * @param array<string, mixed>                              $existing The record's current data.
-	 * @param array{data: array<string, mixed>, actor: string} $request  The proposed update and who makes it.
+	 * @param array<string, mixed> $existing The record's current data.
+	 * @param ConsentStatusChange  $change   The proposed update and who makes it.
 	 *
 	 * @return array<string, mixed> The changes to merge into the record.
 	 *
@@ -154,8 +145,8 @@ class ConsentUpdateHandler {
 	 *
 	 * @spec openspec/specs/consent-management/spec.md
 	 */
-	private function consentChanges(array $existing, array $request): array {
-		$data = $request['data'];
+	private function consentChanges(array $existing, ConsentStatusChange $change): array {
+		$data = $change->data;
 
 		// Whitelist the fields a consent update may mutate so callers
 		// cannot rewrite arbitrary consent attributes (e.g. documentId,
@@ -187,7 +178,7 @@ class ConsentUpdateHandler {
 		return $this->statusEvents->apply(
 			existing: $existing,
 			changes: $allowedData,
-			actor: $request['actor'],
+			actor: $change->actor,
 			evidence: (string) ($data['evidence'] ?? ''),
 			now: new DateTimeImmutable()
 		);

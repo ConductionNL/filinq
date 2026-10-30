@@ -1,0 +1,238 @@
+{
+    "nobody logged in": {
+        "status": 401,
+        "data": {
+            "error": "Not authenticated"
+        },
+        "calls": [],
+        "logs": []
+    },
+    "no such job": {
+        "status": 404,
+        "data": {
+            "error": "Job not found"
+        },
+        "calls": [
+            [
+                "getJob",
+                "job-1"
+            ]
+        ],
+        "logs": []
+    },
+    "somebody else": {
+        "status": 403,
+        "data": {
+            "error": "Not authorized"
+        },
+        "calls": [
+            [
+                "getJob",
+                "job-1"
+            ],
+            [
+                "isAdmin",
+                "bob"
+            ]
+        ],
+        "logs": []
+    },
+    "an admin": {
+        "status": 200,
+        "data": {
+            "status": "printed",
+            "statusDetails": null,
+            "id": "job-1",
+            "requestedBy": "anna"
+        },
+        "calls": [
+            [
+                "getJob",
+                "job-1"
+            ],
+            [
+                "isAdmin",
+                "root"
+            ],
+            [
+                "recordExternalStatus",
+                "job-1",
+                "printed",
+                null
+            ]
+        ],
+        "logs": []
+    },
+    "the owner, details as a list": {
+        "status": 200,
+        "data": {
+            "status": "printing",
+            "statusDetails": "{\"tray\":2,\"sheets\":[1,2]}",
+            "id": "job-1",
+            "requestedBy": "anna"
+        },
+        "calls": [
+            [
+                "getJob",
+                "job-1"
+            ],
+            [
+                "isAdmin",
+                "anna"
+            ],
+            [
+                "recordExternalStatus",
+                "job-1",
+                "printing",
+                "{\"tray\":2,\"sheets\":[1,2]}"
+            ]
+        ],
+        "logs": []
+    },
+    "the owner, details as a number": {
+        "status": 200,
+        "data": {
+            "status": "failed",
+            "statusDetails": "42",
+            "id": "job-1",
+            "requestedBy": "anna"
+        },
+        "calls": [
+            [
+                "getJob",
+                "job-1"
+            ],
+            [
+                "isAdmin",
+                "anna"
+            ],
+            [
+                "recordExternalStatus",
+                "job-1",
+                "failed",
+                "42"
+            ]
+        ],
+        "logs": []
+    },
+    "the owner, no status": {
+        "status": 200,
+        "data": {
+            "status": "",
+            "statusDetails": null,
+            "id": "job-1",
+            "requestedBy": "anna"
+        },
+        "calls": [
+            [
+                "getJob",
+                "job-1"
+            ],
+            [
+                "isAdmin",
+                "anna"
+            ],
+            [
+                "recordExternalStatus",
+                "job-1",
+                "",
+                null
+            ]
+        ],
+        "logs": []
+    },
+    "an unknown status": {
+        "status": 400,
+        "data": {
+            "error": "Unknown print status \"lost\"."
+        },
+        "calls": [
+            [
+                "getJob",
+                "job-1"
+            ],
+            [
+                "isAdmin",
+                "anna"
+            ],
+            [
+                "recordExternalStatus",
+                "job-1",
+                "lost",
+                null
+            ]
+        ],
+        "logs": []
+    },
+    "the service fails": {
+        "status": 500,
+        "data": {
+            "error": "Operation failed"
+        },
+        "calls": [
+            [
+                "getJob",
+                "job-1"
+            ],
+            [
+                "isAdmin",
+                "anna"
+            ],
+            [
+                "recordExternalStatus",
+                "job-1",
+                "printed",
+                null
+            ]
+        ],
+        "logs": [
+            [
+                "error",
+                "Print job status update failed: write failed",
+                {
+                    "jobId": "job-1",
+                    "exception": "Exception"
+                }
+            ]
+        ]
+    },
+    "the lookup fails": {
+        "status": 500,
+        "data": {
+            "error": "Operation failed"
+        },
+        "calls": [
+            [
+                "getJob",
+                "job-1"
+            ]
+        ],
+        "logs": [
+            [
+                "error",
+                "Print job status update failed: repository offline",
+                {
+                    "jobId": "job-1",
+                    "exception": "Exception"
+                }
+            ]
+        ]
+    },
+    "somebody else naming the owner": {
+        "status": 403,
+        "data": {
+            "error": "Not authorized"
+        },
+        "calls": [
+            [
+                "getJob",
+                "job-1"
+            ],
+            [
+                "isAdmin",
+                "bob"
+            ]
+        ],
+        "logs": []
+    }
+}
