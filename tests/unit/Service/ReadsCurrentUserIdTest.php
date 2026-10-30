@@ -35,6 +35,7 @@ use PHPUnit\Framework\TestCase;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
+ * @covers \OCA\Filinq\Service\ReadsCurrentUserId
  * @covers \OCA\Filinq\Controller\SigningFolderController
  * @covers \OCA\Filinq\Service\CaseArchiveService
  * @covers \OCA\Filinq\Service\DocumentDomainService

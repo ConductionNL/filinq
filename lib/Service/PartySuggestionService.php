@@ -54,6 +54,7 @@ use Throwable;
  * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
  */
 class PartySuggestionService implements PartySuggestionServiceInterface {
+	use ReadsCurrentUserId;
 
 	/**
 	 * The entity types a party is read out of, in the order they are asked for.
@@ -228,21 +229,4 @@ class PartySuggestionService implements PartySuggestionServiceInterface {
 		return $correction;
 
 	}//end recordDecision()
-
-	/**
-	 * The user id of the person at the keyboard.
-	 *
-	 * @return string The user id, or an empty string when there is no session.
-	 *
-	 * @spec exclude Session accessor with no behaviour of its own.
-	 */
-	private function currentUserId(): string {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return '';
-		}
-
-		return $user->getUID();
-
-	}//end currentUserId()
 }//end class
