@@ -114,6 +114,7 @@ class ScanIntakeSplitTraceTest extends TestCase {
 
 		$file = $this->createMock(File::class);
 		$file->method('getPath')->willReturn('/beheerder/files/Scans/batch.pdf');
+		$file->method('getId')->willReturn(42);
 		if (($world['parent'] ?? '') === 'throw') {
 			$file->method('getParent')->willThrowException(new RuntimeException('no parent'));
 		} else {

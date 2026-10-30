@@ -190,8 +190,8 @@ class ScanIntakeController extends Controller {
 	 *
 	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 *
-	 * @no-admin-idor-exempt the batch file is resolved through the caller's own user folder in the method
-	 * body, and the segments are written with the Node API into its parent folder, which enforces create
+	 * @no-admin-idor-exempt the batch file is resolved by batchFile() from the session user's own user
+	 * folder, and the segments are written with the Node API into its parent folder, which enforces create
 	 * permission.
 	 */
 	#[NoAdminRequired]
@@ -218,7 +218,7 @@ class ScanIntakeController extends Controller {
 				);
 			}
 
-			return $this->cut(fileId: $fileId, cut: new ScanBatchCut(file: $file, profile: $profile));
+			return $this->cut(cut: new ScanBatchCut(file: $file, profile: $profile));
 		} catch (Throwable $e) {
 			return new JSONResponse(
 				data: ['error' => $e->getMessage()],
@@ -263,13 +263,15 @@ class ScanIntakeController extends Controller {
 	/**
 	 * Receive the batch when it is new, then cut it into its parent folder.
 	 *
-	 * @param int          $fileId The batch the scanner wrote.
-	 * @param ScanBatchCut $cut    The batch file and its profile.
+	 * The batch is looked up by the id of the file batchFile() resolved, so
+	 * nothing reaches the store without that check.
+	 *
+	 * @param ScanBatchCut $cut The batch file and its profile.
 	 *
 	 * @return JSONResponse The split batch, or a 400 when it has no folder to write to.
 	 */
-	private function cut(int $fileId, ScanBatchCut $cut): JSONResponse {
-		$batch = $this->store->findByFile(fileId: $fileId);
+	private function cut(ScanBatchCut $cut): JSONResponse {
+		$batch = $this->store->findByFile(fileId: (int)$cut->file->getId());
 		if ($batch === null) {
 			$batch = $this->batches->receive(file: $cut->file, profile: $cut->profile);
 		}
