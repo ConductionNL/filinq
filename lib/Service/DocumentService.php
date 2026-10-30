@@ -427,7 +427,7 @@ class DocumentService implements DocumentServiceInterface {
 		array $options = [],
 	): array {
 		$template = $this->templateService->getTemplate(id: $templateId);
-		$preview = $this->renderPreview(template: $template, dataRefs: $dataRefs, options: $options);
+		$preview = $this->renderPreview(run: ['template' => $template, 'dataRefs' => $dataRefs, 'options' => $options]);
 
 		return [
 			'html' => $preview['html'],
@@ -460,7 +460,7 @@ class DocumentService implements DocumentServiceInterface {
 		array $options = [],
 	): array {
 		$template = $this->templateService->getTemplate(id: $templateId);
-		$preview = $this->renderPreview(template: $template, dataRefs: $dataRefs, options: $options);
+		$preview = $this->renderPreview(run: ['template' => $template, 'dataRefs' => $dataRefs, 'options' => $options]);
 		$mergeFields = ($this->mergeFields ?? new TemplateMergeFieldService());
 		$merge = $mergeFields->resolve(template: $template, data: $preview['data']);
 
@@ -476,39 +476,28 @@ class DocumentService implements DocumentServiceInterface {
 	/**
 	 * Resolve a template's data and render it with the house style, without output.
 	 *
-	 * @param array $template The template.
-	 * @param array $dataRefs Data references: [{register, schema, id}, ...]
-	 * @param array $options  Options: huisstijlId, adHocData, listRefs.
+	 * @param array<string, mixed> $run The preview run: template, dataRefs
+	 *                                  ([{register, schema, id}, ...]) and options
+	 *                                  (huisstijlId, adHocData, listRefs).
 	 *
 	 * @return array{html: string, warnings: string[], data: array}
 	 *
 	 * @throws Exception If rendering fails
 	 */
-	private function renderPreview(array $template, array $dataRefs, array $options): array {
-		$resolution = $this->dataResolver->resolve(
-			dataRefs: $dataRefs,
-			listRefs: ($options['listRefs'] ?? []),
-			adHocData: ($options['adHocData'] ?? [])
-		);
-		$data = $resolution['data'];
-		$warnings = $resolution['warnings'];
+	private function renderPreview(array $run): array {
+		$resolved = $this->resolveTemplateData(run: $run);
 
-		foreach ($resolution['errors'] as $error) {
-			$ref = $error['register'] . '/' . $error['schema'] . '/' . $error['id'];
-			$warnings[] = "Data resolution failed for {$ref}: {$error['message']}";
-		}
-
-		$huisstijl = $this->renderPipeline->loadHuisstijl(huisstijlId: ($options['huisstijlId'] ?? null));
+		$huisstijl = $this->renderPipeline->loadHuisstijl(huisstijlId: ($run['options']['huisstijlId'] ?? null));
 		$renderResult = $this->renderPipeline->renderWithHuisstijl(
-			templateContent: $template['content'],
-			data: $data,
+			templateContent: $run['template']['content'],
+			data: $resolved['data'],
 			huisstijl: $huisstijl
 		);
 
 		return [
 			'html' => $renderResult['html'],
-			'warnings' => array_merge($warnings, $renderResult['warnings']),
-			'data' => $data,
+			'warnings' => array_merge($resolved['warnings'], $renderResult['warnings']),
+			'data' => $resolved['data'],
 		];
 
 	}//end renderPreview()
@@ -565,11 +554,7 @@ class DocumentService implements DocumentServiceInterface {
 
 		$this->validateAsyncOutputMode(options: $options);
 
-		return $this->dispatchBulkJob(
-			templateId: $templateId,
-			objectIds: $objectIds,
-			options: $options
-		);
+		return $this->dispatchBulkJob(run: ['templateId' => $templateId, 'objectIds' => $objectIds, 'options' => $options]);
 
 	}//end generateBulk()
 
@@ -923,20 +908,18 @@ class DocumentService implements DocumentServiceInterface {
 	 * fixed path, so a large batch's outputs land in one folder instead of
 	 * spraying across the destination.
 	 *
-	 * @param string $templateId The template UUID
-	 * @param array $objectIds Array of object UUIDs
-	 * @param array $options Generation options (options.output.mode is
-	 *                       already validated to be 'files' by the caller)
+	 * @param array<string, mixed> $run The bulk run: templateId, objectIds and options
+	 *                                  (options.output.mode is already validated
+	 *                                  to be 'files' by the caller).
 	 *
 	 * @return array{jobId: string, status: string, total: int}
 	 *
 	 * @spec openspec/changes/document-output-destinations-and-bulk-retention/specs/document-creatie-sjablonen/spec.md#req-ddob-006
 	 */
-	private function dispatchBulkJob(
-		string $templateId,
-		array $objectIds,
-		array $options,
-	): array {
+	private function dispatchBulkJob(array $run): array {
+		$templateId = $run['templateId'];
+		$objectIds = $run['objectIds'];
+		$options = $run['options'];
 		$jobId = $this->jobs->newId();
 
 		$baseTargetPath = $this->buildOutputTargetPath(

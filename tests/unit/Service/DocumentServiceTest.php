@@ -535,6 +535,65 @@ class DocumentServiceTest extends TestCase {
 	}//end testAsyncBulkComputesPerJobTargetPath()
 
 	/**
+	 * An async bulk job is queued with exactly the template, objects and options, its target path suffixed by the job id.
+	 *
+	 * @return void
+	 */
+	public function testAsyncBulkQueuesTheFullArgument(): void {
+		$this->templateSvc->method('getTemplate')->willReturn(['id' => 'tmpl-1', 'namespace' => 'ns']);
+
+		$captured = null;
+		$this->jobList->expects($this->once())->method('add')->willReturnCallback(
+			function (string $job, array $argument) use (&$captured): void {
+				$captured = $argument;
+			}
+		);
+
+		$objectIds = array_map(static fn (int $i): string => 'o' . $i, range(1, 12));
+		$result    = $this->service->generateBulk(
+			templateId: 'tmpl-1',
+			objectIds: $objectIds,
+			options: ['output' => ['mode' => 'files', 'targetPath' => 'Custom/dir/'], 'userId' => 'u1']
+		);
+
+		$this->assertSame(['jobId', 'status', 'total'], array_keys($result));
+		$this->assertSame(12, $result['total']);
+		$this->assertSame(
+			[
+				'jobId' => $result['jobId'],
+				'templateId' => 'tmpl-1',
+				'objectIds' => $objectIds,
+				'options' => ['output' => ['mode' => 'files', 'targetPath' => 'Custom/dir/' . $result['jobId']], 'userId' => 'u1'],
+			],
+			$captured
+		);
+
+	}//end testAsyncBulkQueuesTheFullArgument()
+
+	/**
+	 * A preview turns failed data references into warnings, before the renderer's own.
+	 *
+	 * @return void
+	 */
+	public function testPreviewReportsFailedReferencesAsWarnings(): void {
+		$this->templateSvc->method('getTemplate')->willReturn(['id' => 'tmpl-1', 'content' => '<p>x</p>']);
+		$this->dataResolver->method('resolve')->willReturn(
+			[
+				'data' => ['a' => 1],
+				'errors' => [['register' => 'r', 'schema' => 's', 'id' => 'i', 'message' => 'gone']],
+				'warnings' => ['first'],
+			]
+		);
+		$this->renderer->method('renderTemplate')->willReturn('<p>x</p>');
+
+		$result = $this->service->generatePreview(templateId: 'tmpl-1', dataRefs: [['register' => 'r']], options: []);
+
+		$this->assertSame('<p>x</p>', $result['html']);
+		$this->assertSame(['first', 'Data resolution failed for r/s/i: gone'], array_slice($result['warnings'], 0, 2));
+
+	}//end testPreviewReportsFailedReferencesAsWarnings()
+
+	/**
 	 * Test that invalid format raises exception (DCS-023).
 	 *
 	 * @return void
