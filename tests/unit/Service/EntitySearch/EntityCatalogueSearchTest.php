@@ -18,6 +18,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Service\EntitySearch;
 
 use OCA\Filinq\Exception\EntitySearchRefusedException;
+use OCA\Filinq\Kernel\EntitySearchQuery;
 use OCA\Filinq\Service\EntitySearch\EntityCatalogue;
 use OCP\App\IAppManager;
 use OCP\DB\IResult;
@@ -160,7 +161,7 @@ class EntityCatalogueSearchTest extends TestCase {
 				['id' => '5', 'uuid' => 'e-5', 'type' => 'PERSON', 'value' => 'Bo de Vries', 'category' => null],
 			],
 			relations: [['entity_id' => '3', 'occurrences' => '4']]
-		)->search(scope: ['org-1', 'org-2'], query: 'de_vries%', type: 'PERSON', category: 'name', limit: 2, offset: 4);
+		)->search(scope: ['org-1', 'org-2'], query: new EntitySearchQuery(text: 'de_vries%', type: 'PERSON', category: 'name', limit: 2, offset: 4));
 
 		$this->assertSame(
 			[
@@ -208,7 +209,7 @@ class EntityCatalogueSearchTest extends TestCase {
 	 * @return void
 	 */
 	public function testAnUnscopedSearchWithoutFilters(): void {
-		$page = $this->catalogue(total: 0)->search(scope: null, query: '', type: '', category: '', limit: 25, offset: 0);
+		$page = $this->catalogue(total: 0)->search(scope: null, query: new EntitySearchQuery(text: '', type: '', category: '', limit: 25, offset: 0));
 
 		$this->assertSame(['results' => [], 'total' => 0], $page);
 		$this->assertSame(['select(COUNT(*, total))', 'from(openregister_entities, e)', 'executeQuery', 'closeCursor'], $this->queries[0]);
@@ -224,11 +225,11 @@ class EntityCatalogueSearchTest extends TestCase {
 	 * @return void
 	 */
 	public function testAnEmptyScopeAndAFailingDatabase(): void {
-		$this->assertSame(['results' => [], 'total' => 0], $this->catalogue()->search(scope: [], query: 'x', type: '', category: '', limit: 25, offset: 0));
+		$this->assertSame(['results' => [], 'total' => 0], $this->catalogue()->search(scope: [], query: new EntitySearchQuery(text: 'x', type: '', category: '', limit: 25, offset: 0)));
 		$this->assertSame([], $this->queries);
 
 		try {
-			$this->catalogue(fails: true)->search(scope: null, query: 'x', type: '', category: '', limit: 25, offset: 0);
+			$this->catalogue(fails: true)->search(scope: null, query: new EntitySearchQuery(text: 'x', type: '', category: '', limit: 25, offset: 0));
 			$this->fail('Expected a refusal');
 		} catch (EntitySearchRefusedException $e) {
 			$this->assertSame(EntitySearchRefusedException::REASON_CATALOGUE_UNAVAILABLE, $e->getReason());
