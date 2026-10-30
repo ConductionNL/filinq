@@ -151,12 +151,8 @@ class DocumentAnonymizeRunner {
 			// path below. See EmlAnonymizationService.
 			if ($this->emlAnonymizer->isEmlInput(node: $node) === true) {
 				$eml = $this->emlAnonymizer->anonymize(
-					fileId: $fileId,
-					node: $node,
-					fileService: $fileService,
-					mappedEntities: $mappedEntities,
-					scope: $options['scope'],
-					dossierKey: $options['dossierKey']
+					request: new EmlAnonymizeRequest(fileId: $fileId, node: $node, mappedEntities: $mappedEntities, options: $options),
+					fileService: $fileService
 				);
 
 				$context['anonymisedNode'] = $eml['node'];

@@ -21,6 +21,7 @@ namespace OCA\Filinq\Tests\Unit\Service;
 
 use OCA\Filinq\Exception\ConversionFailedException;
 use OCA\Filinq\Service\EmlAnonymizationService;
+use OCA\Filinq\Service\EmlAnonymizeRequest;
 use OCA\Filinq\Service\EmlPdfAssemblyService;
 use OCA\Filinq\Service\EntityDetectionService;
 use PHPUnit\Framework\TestCase;
@@ -34,6 +35,7 @@ use Throwable;
  *
  * @covers \OCA\Filinq\Service\EmlAnonymizationService
  * @uses   \OCA\Filinq\Exception\ConversionFailedException
+ * @uses   \OCA\Filinq\Service\EmlAnonymizeRequest
  */
 class EmlAnonymizeTraceTest extends TestCase {
 
@@ -112,14 +114,13 @@ class EmlAnonymizeTraceTest extends TestCase {
 		$service = new EmlAnonymizationService(logger: $logger, entityDetection: $detection, emlAssembly: $assembly);
 		$trace = [];
 		try {
-			$answer = $service->anonymize(
+			$request = new EmlAnonymizeRequest(
 				fileId: 42,
 				node: $this->source($name, $world),
-				fileService: $this->fileService($world),
 				mappedEntities: [['entityText' => 'Jan', 'replacement' => '[PERSOON]'], ['entityText' => 'Delft']],
-				scope: $world['scope'] ?? 'document',
-				dossierKey: $world['dossierKey'] ?? null
+				options: ['scope' => $world['scope'] ?? 'document', 'dossierKey' => $world['dossierKey'] ?? null]
 			);
+			$answer = $service->anonymize(request: $request, fileService: $this->fileService($world));
 			$trace['answer'] = ['resultInfo' => $answer['resultInfo'], 'node' => $answer['node']->name, 'placeholderMap' => $answer['placeholderMap']];
 		} catch (ConversionFailedException $e) {
 			$trace['thrown'] = [$e->getMessage(), $e->getCode(), $e->getAttempts()];
