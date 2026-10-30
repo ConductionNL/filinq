@@ -53,6 +53,7 @@ use Psr\Log\LoggerInterface;
 use RuntimeException;
 use DateTimeImmutable;
 use OCA\Filinq\Exception\StepUpRequiredException;
+use OCA\Filinq\Kernel\SigningAuditEvent;
 use OCA\Filinq\Service\SignerAuth\IdentityEvidence;
 
 /**
@@ -1986,8 +1987,8 @@ class SigningServiceTest extends TestCase {
 
 		$metadata = null;
 		$this->auditService->expects($this->once())->method('logEvent')->willReturnCallback(
-			function (...$args) use (&$metadata): array {
-				$metadata = $args[7] ?? null;
+			function (SigningAuditEvent $event) use (&$metadata): array {
+				$metadata = $event->metadata;
 				return [];
 			}
 		);
@@ -2625,16 +2626,8 @@ class SigningServiceTest extends TestCase {
 
 		$audit = [];
 		$this->auditService->expects($this->once())->method('logEvent')->willReturnCallback(
-			function (
-				string $signingRequestId,
-				string $action,
-				string $actorUserId,
-				string $actorDisplayName,
-				string $ipAddress,
-				string $signatureLevel='',
-				string $provider='',
-				array $metadata=[]
-			) use (&$audit): array {
+			function (SigningAuditEvent $event) use (&$audit): array {
+				[$signingRequestId, $action, $actorUserId, $actorDisplayName, $ipAddress, $signatureLevel, $provider, $metadata] = [$event->request->id, $event->action, $event->actor->userId, $event->actor->displayName, $event->actor->ipAddress, $event->request->signatureLevel, $event->request->provider, $event->metadata];
 				$audit = compact('signingRequestId', 'action', 'actorUserId', 'actorDisplayName', 'ipAddress', 'signatureLevel', 'provider', 'metadata');
 				return $audit;
 			}

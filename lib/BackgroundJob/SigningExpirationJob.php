@@ -29,6 +29,9 @@ use Exception;
 use OCA\Filinq\Kernel\Contracts\SettingsServiceInterface;
 use OCA\Filinq\Kernel\Contracts\SigningAuditServiceInterface;
 use OCA\Filinq\Kernel\Contracts\SigningServiceInterface;
+use OCA\Filinq\Kernel\SigningAuditActor;
+use OCA\Filinq\Kernel\SigningAuditEvent;
+use OCA\Filinq\Kernel\SigningAuditSubject;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use OCP\IAppConfig;
@@ -48,6 +51,10 @@ use Psr\Log\LoggerInterface;
  * @link     https://conduction.nl
  *
  * @spec openspec/changes/document-signing/tasks.md#task-1
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Three of its types are the
+ * audit event's value objects (SigningAuditEvent, SigningAuditSubject,
+ * SigningAuditActor): every expiry writes one audit entry.
  */
 class SigningExpirationJob extends TimedJob {
 	/**
@@ -232,14 +239,16 @@ class SigningExpirationJob extends TimedJob {
 		$requestId = (string)($request['id'] ?? $request['uuid'] ?? '');
 		try {
 			$this->auditService->logEvent(
-				signingRequestId: $requestId,
-				action: 'EXPIRED',
-				actorUserId: 'system',
-				actorDisplayName: 'System',
-				ipAddress: '127.0.0.1',
-				signatureLevel: (string)($request['signatureLevel'] ?? ''),
-				provider: (string)($request['provider'] ?? ''),
-				metadata: ['deadline' => $request['deadline'], 'expiredAt' => $sweep['now']->format(DateTimeInterface::ATOM)]
+				event: new SigningAuditEvent(
+					request: new SigningAuditSubject(
+						id: $requestId,
+						signatureLevel: (string)($request['signatureLevel'] ?? ''),
+						provider: (string)($request['provider'] ?? '')
+					),
+					action: 'EXPIRED',
+					actor: new SigningAuditActor(userId: 'system', displayName: 'System', ipAddress: '127.0.0.1'),
+					metadata: ['deadline' => $request['deadline'], 'expiredAt' => $sweep['now']->format(DateTimeInterface::ATOM)]
+				)
 			);
 		} catch (Exception $e) {
 			$this->logger->error(

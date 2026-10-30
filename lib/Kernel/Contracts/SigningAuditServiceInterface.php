@@ -22,6 +22,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Kernel\Contracts;
 
+use OCA\Filinq\Kernel\SigningAuditEvent;
 use RuntimeException;
 
 /**
@@ -48,14 +49,7 @@ interface SigningAuditServiceInterface {
 	 * the uuid-only fallback and a warning is logged — an unlinked audit entry
 	 * is acceptable, a dropped one is not.
 	 *
-	 * @param string $signingRequestId The signing request UUID.
-	 * @param string $action The action type (must be in VALID_ACTIONS).
-	 * @param string $actorUserId The actor user ID.
-	 * @param string $actorDisplayName The actor display name.
-	 * @param string $ipAddress The actor IP address.
-	 * @param string $signatureLevel The signature level.
-	 * @param string $provider The signing provider.
-	 * @param array<string, mixed> $metadata Additional metadata (pass-through).
+	 * @param SigningAuditEvent $event The request, action, actor and metadata.
 	 *
 	 * @return array<string, mixed> The created audit entry serialised.
 	 *
@@ -63,16 +57,7 @@ interface SigningAuditServiceInterface {
 	 *
 	 * @spec openspec/specs/signing-audit-via-or/spec.md
 	 */
-	public function logEvent(
-		string $signingRequestId,
-		string $action,
-		string $actorUserId,
-		string $actorDisplayName,
-		string $ipAddress,
-		string $signatureLevel = '',
-		string $provider = '',
-		array $metadata = [],
-	): array;
+	public function logEvent(SigningAuditEvent $event): array;
 
 	/**
 	 * Get all audit entries for a signing request from OR's audit trail.
