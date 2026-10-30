@@ -46,7 +46,6 @@ namespace OCA\Filinq\Service;
 
 use Mpdf\Mpdf;
 use Mpdf\MpdfException;
-use Mpdf\Output\Destination;
 use OCA\Filinq\Exception\Pdfa3ConversionException;
 use OCA\Filinq\Kernel\Contracts\Pdfa3ConversionServiceInterface;
 use OCA\Filinq\Service\VeraPdf\Pdfa3OutputVerifier;
@@ -108,6 +107,13 @@ class Pdfa3ConversionService implements Pdfa3ConversionServiceInterface {
 	 * font/colour rigor already used by PdfService's PDF/A-3b path).
 	 */
 	private const PDFA_VERSION = '3-B';
+
+	/**
+	 * mPDF output destination that returns the document as a string (Mpdf\Output\Destination::STRING_RETURN).
+	 *
+	 * @var string
+	 */
+	private const OUTPUT_AS_STRING = 'S';
 
 	/**
 	 * Serialises MDTO/archival metadata into the XMP packet and the
@@ -215,14 +221,16 @@ class Pdfa3ConversionService implements Pdfa3ConversionServiceInterface {
 		$deadline = $this->deadline();
 
 		$result = $this->buildPdfa3(
-			pageBuilder: function (Mpdf $mpdf) use ($raw, $deadline): void {
-				$this->importAllPages(mpdf: $mpdf, raw: $raw, deadline: $deadline);
-			},
-			metadata: $metadata,
-			attachments: $attachments,
-			options: $options,
-			defaultTitle: $this->stripExtension(name: $source->getName()),
-			deadline: $deadline
+			job: new Pdfa3Job(
+				pageBuilder: function (Mpdf $mpdf) use ($raw, $deadline): void {
+					$this->importAllPages(mpdf: $mpdf, raw: $raw, deadline: $deadline);
+				},
+				deadline: $deadline,
+				defaultTitle: $this->stripExtension(name: $source->getName()),
+				metadata: $metadata,
+				attachments: $attachments,
+				options: $options
+			)
 		);
 
 		// Imported pages keep the fonts their source had.
@@ -263,14 +271,16 @@ class Pdfa3ConversionService implements Pdfa3ConversionServiceInterface {
 		$deadline = $this->deadline();
 
 		$result = $this->buildPdfa3(
-			pageBuilder: function (Mpdf $mpdf) use ($html): void {
-				$mpdf->WriteHTML(html: $html);
-			},
-			metadata: $metadata,
-			attachments: $attachments,
-			options: $options,
-			defaultTitle: (string)($metadata['title'] ?? ''),
-			deadline: $deadline
+			job: new Pdfa3Job(
+				pageBuilder: function (Mpdf $mpdf) use ($html): void {
+					$mpdf->WriteHTML(html: $html);
+				},
+				deadline: $deadline,
+				defaultTitle: (string)($metadata['title'] ?? ''),
+				metadata: $metadata,
+				attachments: $attachments,
+				options: $options
+			)
 		);
 
 		// Rendered output has no stored source file to keep a report on.
@@ -285,43 +295,31 @@ class Pdfa3ConversionService implements Pdfa3ConversionServiceInterface {
 	 * attachments, run the caller-supplied page builder, then validate
 	 * and return the output.
 	 *
-	 * @param callable $pageBuilder function(Mpdf $mpdf): void — writes page
-	 *                              content.
-	 * @param array<string,mixed> $metadata MDTO/archival metadata.
-	 * @param array<int,array<string,mixed>> $attachments Files to embed.
-	 * @param array<string,mixed> $options {format?, orientation?, margin?}.
-	 * @param string $defaultTitle Title used when $metadata['title'] is absent.
-	 * @param float $deadline Absolute microtime(true) deadline for this conversion.
+	 * @param Pdfa3Job $job The page builder, deadline, default title, metadata,
+	 *                      attachments and page options.
 	 *
 	 * @return array{content:string,checksumSha256:string,pages:int,conformance:string}
 	 *
 	 * @throws Pdfa3ConversionException On render failure or output-validation failure.
 	 */
-	private function buildPdfa3(
-		callable $pageBuilder,
-		array $metadata,
-		array $attachments,
-		array $options,
-		string $defaultTitle,
-		float $deadline,
-	): array {
+	private function buildPdfa3(Pdfa3Job $job): array {
 		$associatedFiles = $this->metadataAssembler->buildAssociatedFiles(
-			attachments: $attachments,
-			metadata: $metadata
+			attachments: $job->attachments,
+			metadata: $job->metadata
 		);
-		$mpdf = $this->instantiateMpdf(options: $options);
+		$mpdf = $this->instantiateMpdf(options: $job->options);
 
 		$this->metadataAssembler->applyMetadata(
 			mpdf: $mpdf,
-			metadata: $metadata,
-			defaultTitle: $defaultTitle
+			metadata: $job->metadata,
+			defaultTitle: $job->defaultTitle
 		);
 
 		if (empty($associatedFiles) === false) {
 			$mpdf->SetAssociatedFiles(files: $associatedFiles);
 		}
 
-		$rendered = $this->renderPages(mpdf: $mpdf, pageBuilder: $pageBuilder, deadline: $deadline);
+		$rendered = $this->renderPages(mpdf: $mpdf, job: $job);
 
 		$this->validateOutput(pdfBytes: $rendered['content']);
 
@@ -401,28 +399,27 @@ class Pdfa3ConversionService implements Pdfa3ConversionServiceInterface {
 	 * (config, metadata, rendering) stays independently readable.
 	 *
 	 * @param Mpdf $mpdf Configured, metadata/attachment-primed document.
-	 * @param callable $pageBuilder function(Mpdf $mpdf): void — writes page content.
-	 * @param float $deadline Absolute microtime(true) deadline.
+	 * @param Pdfa3Job $job The page builder and the deadline.
 	 *
 	 * @return array{content:string,pages:int}
 	 *
 	 * @throws Pdfa3ConversionException REASON_TIME_LIMIT_EXCEEDED, REASON_RENDER_FAILED,
 	 *                                  or REASON_SOURCE_UNREADABLE.
 	 */
-	private function renderPages(Mpdf $mpdf, callable $pageBuilder, float $deadline): array {
+	private function renderPages(Mpdf $mpdf, Pdfa3Job $job): array {
 		try {
-			if ($this->now() > $deadline) {
+			if ($this->now() > $job->deadline) {
 				throw $this->timeLimitExceeded();
 			}
 
-			$pageBuilder($mpdf);
+			($job->pageBuilder)($mpdf);
 
-			if ($this->now() > $deadline) {
+			if ($this->now() > $job->deadline) {
 				throw $this->timeLimitExceeded();
 			}
 
 			return [
-				'content' => $mpdf->Output(name: '', dest: Destination::STRING_RETURN),
+				'content' => $mpdf->Output(name: '', dest: self::OUTPUT_AS_STRING),
 				'pages' => (int)$mpdf->page,
 			];
 		} catch (Pdfa3ConversionException $e) {
