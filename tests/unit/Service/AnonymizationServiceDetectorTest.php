@@ -155,6 +155,65 @@ class AnonymizationServiceDetectorTest extends TestCase {
 	}//end testARedactingRunNamesItsBackend()
 
 	/**
+	 * Both entry points hand the runner the file, the entities and exactly these run options.
+	 *
+	 * @return void
+	 */
+	public function testBothEntryPointsHandTheRunnerTheRunOptions(): void {
+		$calls  = [];
+		$runner = $this->getMockBuilder(DocumentAnonymizeRunner::class)
+			->disableOriginalConstructor()
+			->onlyMethods(['run'])
+			->getMock();
+		$runner->method('run')->willReturnCallback(
+			static function (int $fileId, array $entities, array $options) use (&$calls): array {
+				$calls[] = [$fileId, $entities, $options];
+				return ['anonymizedFileId' => 99];
+			}
+		);
+		$service = $this->serviceOver(
+			state: DetectionStates::orState(enabled: true, active: 'presidio', effective: 'presidio', available: ['presidio' => true]),
+			runner: $runner
+		);
+
+		$service->anonymizeDocument(42, self::FOUR, 'pdf', [['text' => 'u']], [], 'alice', 'dossier', 'dk-1', true);
+		$service->anonymizeDocumentWithBasisSummary(fileId: 43, entities: [], userId: 'bob');
+
+		$this->assertSame(
+			[
+				[
+					42,
+					self::FOUR,
+					[
+						'appendBasisSummary' => false,
+						'outputFormat' => 'pdf',
+						'unredactedEntities' => [['text' => 'u']],
+						'scope' => 'dossier',
+						'dossierKey' => 'dk-1',
+						'reversible' => true,
+						'userId' => 'alice',
+					],
+				],
+				[
+					43,
+					[],
+					[
+						'appendBasisSummary' => true,
+						'outputFormat' => 'pdf-only',
+						'unredactedEntities' => [],
+						'scope' => 'document',
+						'dossierKey' => null,
+						'reversible' => false,
+						'userId' => 'bob',
+					],
+				],
+			],
+			$calls
+		);
+
+	}//end testBothEntryPointsHandTheRunnerTheRunOptions()
+
+	/**
 	 * Build the service over a given OpenRegister state.
 	 *
 	 * @param BackendState|null $state The state, null when OpenRegister cannot answer.
