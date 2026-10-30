@@ -4217,19 +4217,23 @@
 			"name": "Accept or reject each suggested redaction before the document is anonymised.",
 			"source": "competitor-derived",
 			"sourceRef": "xxllnc Anonimiseren suggest-then-approve; OCTOBOX mandatory human accept/reject",
-			"filinq": "no",
+			"filinq": "yes",
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "The entity-level review step is built and reachable: src/views/anonymization/EntityReviewTable.vue lets a user include/skip each detected entity (persistSkip -> PATCH api/anonymization/relations/{id}, routes.php:137, FE). But the sentence's second half never happens: AnonymizationService::runAnonymize (lib/Service/AnonymizationService.php:594-624) unconditionally calls RedactionOutputGuard::assertMayWrite() at line 616 BEFORE any file is written, and that guard (lib/Service/Redaction/RedactionReviewGate.php:98-155) always refuses when no RedactionReviewMark exists. The ONLY way a mark is created is RedactionOutputController::markChecked (lib/Controller/RedactionOutputController.php:92) via POST api/redaction/documents/{fileId}/checked (routes.php:127) — grepped src/ entirely (components, views, services, store) for markChecked/redaction/documents/checked, zero hits; _lane/shared/route-reach.txt line 53 independently tags that route 'none'; also grepped all 5 available sibling repos (procest, dq-flow, shillinq, opencatalogi, scholiq) on origin/development, zero hits.",
-				"change": "openspec/changes/archive/2026-10-07-redaction-and-what-leaves-the-building"
+				"evidence": "Re-read 2026-10-30 on development: the review step reaches the anonymise again. Change anonymise-asks-for-the-review-mark (all 10 tasks ticked, commits 3c0c9d67 and 83855641, 16 Oct) put the review mark in the screens: src/components/ReviewMarkCard.vue ('Check before anonymising', 'Mark as checked') in src/sidebars/FileViewerSidebar.vue:400/482, which records the mark through src/services/reviewMark.js markChecked() -> POST api/redaction/documents/{fileId}/checked (routes.php:133) over exactly the entities it then sends; the anonymise button waits for it. Folder runs (src/store/modules/folderAnonymization.js:249) send only checked files and list the rest. A refused anonymise now answers 409 with reviewRequired instead of a 500 (AnonymizationController, RedactionNotReviewedException). Per-entity include/skip stays in src/views/anonymization/EntityReviewTable.vue (PATCH api/anonymization/relations/{id}).",
+				"change": "openspec/changes/anonymise-asks-for-the-review-mark",
+				"requirement": [
+					"openspec/changes/anonymise-asks-for-the-review-mark/specs/redaction-output-guarantee :: The screens record the check before they anonymise (REQ-RWB-06)",
+					"openspec/changes/anonymise-asks-for-the-review-mark/specs/redaction-output-guarantee :: A refused anonymise says what to do (REQ-RWB-05)"
+				]
 			},
-			"reachedOn": "/anonymization (AnonymizationIndex.vue) and /folder-anonymization (FolderAnonymizationView.vue) for the review step; the commit step always throws RedactionNotReviewedException",
+			"reachedOn": "/anonymization and /folder-anonymization: review the entities, 'Mark as checked' on the ReviewMarkCard, then anonymise",
 			"provider": "filinq",
 			"providerHow": "read-from-code",
 			"feature": "anonymization-entity-review",
 			"featureConfidence": "high",
-			"note": "LIVE DEFECT (confirmed jointly with reader r3): every anonymise call from every surface throws NEVER_CHECKED because nothing ever calls markChecked. See notes.md. Live defect filed as ConductionNL/filinq#1178: AnonymizationService.php:616 calls RedactionOutputGuard::assertMayWrite() on every write, and the only route that sets the review mark (routes.php:127, markChecked) has no caller, so every anonymise refuses with NEVER_CHECKED.",
+			"note": "The live defect ConductionNL/filinq#1178 (no caller of markChecked, every anonymise refused NEVER_CHECKED) is fixed on development by anonymise-asks-for-the-review-mark; a live check on the dev instance is still to be recorded.",
 			"zylab": "partial",
 			"datamask": "yes",
 			"smartdocuments": "unknown",
@@ -4666,19 +4670,22 @@
 			"name": "Anonymise a document with one click from inside the case system.",
 			"source": "competitor-derived",
 			"sourceRef": "xxllnc Anonimiseren zaaksysteem-embedded flow; Decos JOIN one-click via DataMask",
-			"filinq": "no",
+			"filinq": "partial",
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "The machine-consumer wiring exists: dq-flow (dossiq)'s lib/Service/FilinqRedactionClient.php resolves filinq's AnonymizationService via cross-app DI (FleetAppId::getService) and calls extractAndDetectEntities() then anonymizeDocument() directly from WOORedactionService, as a one-click hand-off from dossiq's own Woo case screen. But this hits the exact same runAnonymize -> RedactionOutputGuard gate as red-review: dossiq's own catch block (FilinqRedactionClient.php, around line 146) already anticipates a Throwable and rethrows as 'filinq_redaction_failed', so this integration is currently 100% non-functional, confirmed from BOTH sides of the cross-app call.",
-				"change": "openspec/changes/archive/2026-03-21-anonymization"
+				"evidence": "Re-read 2026-10-30 from dossiq development: WOORedactionService is gone (dossiq change partly-public-documents-get-a-redacted-copy, archived 2026-10-30, commit 2a14fff09 of 16 Oct). dossiq's Woo case page 'Redact documents' (src/manifest.json action document-redact -> /cases/{id}/redact, board DqLakken) calls dossiq lib/Controller/DocumentRedactionController.php detect/check/redact -> lib/Service/Redaction/DocumentRedactionService.php -> lib/Service/FilinqRedactionClient.php, which resolves filinq's services by cross-app DI (FleetAppId::getService) in the order filinq's gate requires: detect(), markChecked() with the named officer (filinq RedactionOutputGuard::markChecked), then anonymize() (filinq AnonymizationService::anonymizeDocument). A review refusal comes back as the outcome not_checked, not an exception. On the filinq side the gate and the mark are the ones change anonymise-asks-for-the-review-mark wired. Partial against the row: it works from inside the case system, but it is three steps (detect, check, redact), not one click, by design (the check is the human review).",
+				"change": "openspec/changes/anonymise-asks-for-the-review-mark",
+				"requirement": [
+					"openspec/changes/anonymise-asks-for-the-review-mark/specs/redaction-output-guarantee :: The screens record the check before they anonymise (REQ-RWB-06)"
+				]
 			},
-			"reachedOn": "machine consumer: dossiq's Woo case screen -> dq-flow lib/Service/FilinqRedactionClient.php -> filinq's AnonymizationService (cross-app DI, no HTTP route)",
+			"reachedOn": "machine consumer: dossiq Woo case 'Redact documents' page -> DocumentRedactionController -> FilinqRedactionClient -> filinq RedactionOutputGuard::markChecked and AnonymizationService::anonymizeDocument (cross-app DI, no HTTP route)",
 			"provider": "filinq",
 			"providerHow": "read-from-code",
 			"feature": "anonymization",
 			"featureConfidence": "high",
-			"note": "LIVE DEFECT, confirmed independently from the dossiq side: every one-click Woo redaction attempt from dossiq currently fails closed with 'filinq_redaction_failed' due to the RedactionOutputGuard issue. Live defect filed as ConductionNL/filinq#1178: AnonymizationService.php:616 calls RedactionOutputGuard::assertMayWrite() on every write, and the only route that sets the review mark (routes.php:127, markChecked) has no caller, so every anonymise refuses with NEVER_CHECKED.",
+			"note": "No longer a live defect: dossiq marks the check with the named officer before it anonymises. The one-click wording of the row conflicts with the review mark; the case system path is detect, check, redact.",
 			"zylab": "unknown",
 			"datamask": "yes",
 			"smartdocuments": "unknown",
@@ -4700,19 +4707,23 @@
 			"area": "redact",
 			"name": "Have a second person mark a redacted document as checked.",
 			"source": "own-code",
-			"filinq": "no",
+			"filinq": "partial",
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "The capability is fully implemented server-side and completely unreachable: RedactionOutputController::markChecked (lib/Controller/RedactionOutputController.php:92) records checkedBy from the SESSION user (never the payload, per the method's own comment 'THE CHECKER IS THE SESSION'), which is exactly a second-person sign-off distinct from whoever ran detection. Route POST api/redaction/documents/{fileId}/checked (routes.php:127) is tagged 'none' in _lane/shared/route-reach.txt; grepped all of src/ and all 5 available sibling repos, zero callers anywhere.",
-				"change": "openspec/changes/archive/2026-10-07-redaction-and-what-leaves-the-building"
+				"evidence": "Re-read 2026-10-30 on development: reachable since change anonymise-asks-for-the-review-mark (10/10 ticked). ReviewMarkCard.vue records the mark through POST api/redaction/documents/{fileId}/checked; RedactionOutputController::markChecked takes checkedBy from the session user and checks the caller can open the file first; GET api/redaction/documents/checked (routes.php:132, checkedStatus) feeds My documents' Status column ('Checked by {user} on {date}'). RedactionReviewGate::refuse() refuses a mark without checkedBy or for an older detection run. Partial: nothing requires the checker to be a different person from the one who ran the detection or the anonymise (no comparison of checkedBy with the runner in lib/Service/Redaction/), so a second person CAN check, but one person can also do both.",
+				"change": "openspec/changes/anonymise-asks-for-the-review-mark",
+				"requirement": [
+					"openspec/changes/anonymise-asks-for-the-review-mark/specs/redaction-output-guarantee :: The screens record the check before they anonymise (REQ-RWB-06)",
+					"openspec/changes/anonymise-asks-for-the-review-mark/specs/redaction-output-guarantee :: My documents shows who checked a file (REQ-RWB-08)"
+				]
 			},
-			"reachedOn": "nothing reaches it — no frontend caller, no sibling caller",
+			"reachedOn": "ReviewMarkCard in the file viewer sidebar; Status column on My documents",
 			"provider": "filinq",
 			"providerHow": "read-from-code",
 			"feature": "anonymization-entity-review",
 			"featureConfidence": "medium",
-			"note": "This IS the same defect as red-review, viewed from the built-but-dark capability's own name. Live defect filed as ConductionNL/filinq#1178: AnonymizationService.php:616 calls RedactionOutputGuard::assertMayWrite() on every write, and the only route that sets the review mark (routes.php:127, markChecked) has no caller, so every anonymise refuses with NEVER_CHECKED.",
+			"note": "Four eyes is not enforced: the checker may be the person who anonymises. Enforcing a different person is a decision for Ruben (coverage lane fq-cover, 30 Oct).",
 			"zylab": "yes",
 			"datamask": "unknown",
 			"smartdocuments": "unknown",
@@ -5670,7 +5681,7 @@
 			"built": {
 				"state": "building",
 				"owner": "ConductionNL/filinq",
-				"evidence": "openspec/changes/portal-signing-actions/tasks.md: 11/15 done. openspec/changes/archive/2026-09-28-portal-signing-surface: every task done (T06, the SES/AES cap with signerRecord.signatureAssurance, landed 2026-09-28). Still building because portal-signing-actions waits on the portaliq signerEmail claim and its Newman collection. lib/Controller/PortalSigningReceiverController.php implements the bearer-guarded receiver (signDocument/declineDocument/viewDocument, routes.php:271-273). The rendering surface is portaliq's generic contribution/rowActions renderer (confirmed present: portaliq's lib/Contribution/PortalManifestNormaliser.php, lib/Controller/ContributionController.php, src/portal/components/CollectionTable.jsx), which is manifest-driven rather than hardcoded per app, so it needs no literal 'filinq' string to reach these routes.",
+				"evidence": "openspec/changes/portal-signing-actions/tasks.md: 11/15 done. openspec/changes/archive/2026-09-28-portal-signing-surface: every task done (T06, the SES/AES cap with signerRecord.signatureAssurance, landed 2026-09-28). Still building because portal-signing-actions waits on the portaliq signerEmail claim and its Newman collection. lib/Controller/PortalSigningReceiverController.php implements the bearer-guarded receiver (signDocument/declineDocument/viewDocument, routes.php:271-273). The rendering surface is portaliq's generic contribution/rowActions renderer (confirmed present: portaliq's lib/Contribution/PortalManifestNormaliser.php, lib/Controller/ContributionController.php, src/portal/components/CollectionTable.jsx), which is manifest-driven rather than hardcoded per app, so it needs no literal 'filinq' string to reach these routes. Re-read 2026-10-30: the portaliq side of the go-live blocker is landed (portaliq#833, merged 2026-09-28: a declared scopeClaim rides in the signed X-Portal-Subject assertion). What is left is filinq declaring rowField signingRequestId and scopeClaim signerEmail on its sign and decline actions in lib/Portal/PortalContributionProvider.php (neither is declared today); that is now an open task in openspec/changes/portal-signing-actions/tasks.md, then the live check.",
 				"change": "openspec/changes/portal-signing-actions"
 			},
 			"reachedOn": "external: portaliq's shared external portal (cross-app), calling filinq's api/portal/signing/* routes",
@@ -5678,7 +5689,7 @@
 			"providerHow": "read-from-code",
 			"feature": "document-signing",
 			"featureConfidence": "medium",
-			"note": "Both dependency changes are largely but not fully built (4 and 2 tasks respectively still unchecked).",
+			"note": "portaliq dependency: portaliq#833 (landed). Remaining build task in filinq portal-signing-actions (Prerequisites), then the live check and the Newman happy path.",
 			"zylab": "unknown",
 			"datamask": "unknown",
 			"smartdocuments": "unknown",
@@ -8154,14 +8165,19 @@
 				"state": "specified",
 				"owner": "ConductionNL/hermiq",
 				"evidence": "filinq mounts the shared AI companion: src/App.vue:14 :aiCompanion=\"true\" -> nextcloud-vue v2.39.0 (filinq's lockfile) src/components/CnAppRoot/CnAppRoot.vue:410 <CnAiCompanion>, which talks to hermiq by default (src/composables/aiChatConfig.js DEFAULT_CHAT_APP_ID). hermiq@5277c0df appinfo/routes.php:514 chat#sendMessage returns sources (lib/Controller/ChatController.php:1161), but the companion at v2.39.0 renders none (grep '\\.sources' in src/components hits only CnIconBrowser), and nothing scopes a chat to one document. filinq's own MCP tools (lib/Mcp/FilinqScannableServices.php:73-74) expose correspondence and editing, not document reading.",
-				"change": "hermiq/companion-everywhere"
+				"change": "hermiq/chat-about-a-document-cites-its-sources",
+				"requirement": [
+					"hermiq openspec/changes/chat-about-a-document-cites-its-sources/specs/document-chat :: A turn can be about one document (REQ-DCHAT-001)",
+					"hermiq openspec/changes/chat-about-a-document-cites-its-sources/specs/document-chat :: A turn can be about a collection (REQ-DCHAT-002)",
+					"hermiq openspec/changes/chat-about-a-document-cites-its-sources/specs/document-chat :: Every scoped answer cites its sources (REQ-DCHAT-003)"
+				]
 			},
 			"reachedOn": "floating AI companion on every filinq page, shown only when hermiq's /api/chat/health answers",
 			"provider": "hermiq",
 			"providerHow": "read-from-code",
 			"feature": "ai-assistant",
 			"featureConfidence": "high",
-			"note": "A general chat is there; the row's two specifics, citing sources and asking about one document, are missing in what a filinq user sees. Whether hermiq's retrieval indexes filinq's documents depends on its file vectorisation setup, not checked. Specified in ConductionNL/hermiq openspec/changes/companion-everywhere (hermiq lane, OpenSpec pass 2026-09-27).",
+			"note": "A general chat is there; the row's two specifics, citing sources and asking about one document, are missing in what a filinq user sees. Whether hermiq's retrieval indexes filinq's documents depends on its file vectorisation setup, not checked. Specified in ConductionNL/hermiq openspec/changes/companion-everywhere (hermiq lane, OpenSpec pass 2026-09-27). Build plan since 2026-10-30: ConductionNL/hermiq change chat-about-a-document-cites-its-sources (hermiq#1196): file and folder scope on a turn, numbered sources, the companion's scope chip and source list (nextcloud-vue task 4), and filinq passing the open document to the companion (task 5).",
 			"zylab": "unknown",
 			"datamask": "unknown",
 			"smartdocuments": "unknown",
