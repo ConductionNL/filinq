@@ -31,6 +31,7 @@ use Exception;
 use OCA\Filinq\Kernel\Contracts\FolderBatchServiceInterface;
 use OCA\Filinq\Kernel\JobQueueInterface;
 use OCA\Filinq\Service\Conversion\OutputLayoutResolver;
+use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
 use OCP\IAppConfig;
 use OCP\IUserSession;
@@ -135,7 +136,51 @@ class FolderBatchService implements FolderBatchServiceInterface {
 			userFolder: $userFolder
 		);
 
-		$files = $this->enumerator->enumerate(folder: $node);
+		$batchFiles = $this->startingFileRecords(files: $this->requireBatchableFiles(folder: $node));
+
+		// Canonical identifiers captured from the resolved node — stored and
+		// returned regardless of which input method the caller used.
+		$folderFields = [
+			'sourceType' => 'folder',
+			'folderId' => $node->getId(),
+			'folderPath' => ($userFolder->getRelativePath($node->getPath()) ?? $node->getPath()),
+		];
+
+		$batch = array_merge($this->stateService->createBatch($userId, $batchFiles), $folderFields);
+		$this->stateService->updateBatch($batch['batchId'], $batch);
+
+		// Run extraction asynchronously: the shutdown function fires after the
+		// HTTP response has been flushed to the client (via fastcgi_finish_request).
+		// The IJobList entry serves as a fallback if the shutdown handler is
+		// interrupted (e.g. process kill, memory limit).
+		$this->jobList->add(JobQueueInterface::FOLDER_EXTRACTION, ['batchId' => $batch['batchId']]);
+		$this->scheduleExtraction(batchId: $batch['batchId']);
+
+		$inputMethod = 'path';
+		if ($folderId !== null) {
+			$inputMethod = 'id';
+		}
+
+		$this->logger->info(
+			'Folder batch created, extraction job fired',
+			['batchId' => $batch['batchId'], 'folderId' => $batch['folderId'], 'folderPath' => $batch['folderPath']]
+				+ ['fileCount' => count($batchFiles), 'inputMethod' => $inputMethod]
+		);
+
+		return $batch;
+	}//end createFolderBatch()
+
+	/**
+	 * The files of a folder, when there are some and not more than a batch may hold.
+	 *
+	 * @param Folder $folder The resolved folder.
+	 *
+	 * @return array<int, \OCP\Files\File> The files.
+	 *
+	 * @throws Exception Code 400 when the folder is empty or holds too many files.
+	 */
+	private function requireBatchableFiles(Folder $folder): array {
+		$files = $this->enumerator->enumerate(folder: $folder);
 
 		if (empty($files) === true) {
 			throw new Exception('No files found in folder', 400);
@@ -149,18 +194,20 @@ class FolderBatchService implements FolderBatchServiceInterface {
 			);
 		}
 
-		// Canonical identifiers captured from the resolved node — stored and
-		// returned regardless of which input method the caller used.
-		$resolvedFolderId = $node->getId();
-		$resolvedFolderPath = $userFolder->getRelativePath($node->getPath()) ?? $node->getPath();
-		$inputMethod = 'path';
-		if ($folderId !== null) {
-			$inputMethod = 'id';
-		}
+		return $files;
+	}//end requireBatchableFiles()
 
-		$batchFiles = [];
+	/**
+	 * Each file's record as a new batch starts it: uploaded, nothing found yet.
+	 *
+	 * @param array<int, \OCP\Files\File> $files The files.
+	 *
+	 * @return array<int, array<string, mixed>> The records.
+	 */
+	private function startingFileRecords(array $files): array {
+		$records = [];
 		foreach ($files as $file) {
-			$batchFiles[] = [
+			$records[] = [
 				'fileId' => $file->getId(),
 				'fileName' => $file->getName(),
 				'status' => 'uploaded',
@@ -170,34 +217,8 @@ class FolderBatchService implements FolderBatchServiceInterface {
 			];
 		}
 
-		$batch = $this->stateService->createBatch($userId, $batchFiles);
-
-		// Store folder metadata on the batch — both identifiers regardless of input.
-		$batch['sourceType'] = 'folder';
-		$batch['folderId'] = $resolvedFolderId;
-		$batch['folderPath'] = $resolvedFolderPath;
-		$this->stateService->updateBatch($batch['batchId'], $batch);
-
-		// Run extraction asynchronously: the shutdown function fires after the
-		// HTTP response has been flushed to the client (via fastcgi_finish_request).
-		// The IJobList entry serves as a fallback if the shutdown handler is
-		// interrupted (e.g. process kill, memory limit).
-		$this->jobList->add(JobQueueInterface::FOLDER_EXTRACTION, ['batchId' => $batch['batchId']]);
-		$this->scheduleExtraction(batchId: $batch['batchId']);
-
-		$this->logger->info(
-			'Folder batch created, extraction job fired',
-			[
-				'batchId' => $batch['batchId'],
-				'folderId' => $resolvedFolderId,
-				'folderPath' => $resolvedFolderPath,
-				'fileCount' => count($batchFiles),
-				'inputMethod' => $inputMethod,
-			]
-		);
-
-		return $batch;
-	}//end createFolderBatch()
+		return $records;
+	}//end startingFileRecords()
 
 	/**
 	 * Schedule extraction to run after the HTTP response is flushed
