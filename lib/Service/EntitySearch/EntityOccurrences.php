@@ -79,6 +79,27 @@ class EntityOccurrences {
 	 * @spec openspec/changes/archive/2026-09-29-entity-search/tasks.md#task-2.2
 	 */
 	public function forUser(array $relations, string $userId): array {
+		$grouped = $this->grouped(relations: $relations);
+		$readable = $this->documents(byFile: $grouped['byFile'], userId: $userId);
+
+		return [
+			'documents' => $readable['documents'],
+			'noAccess' => $readable['noAccess'],
+			'other' => $this->others(counts: $grouped['other']),
+			'occurrenceCount' => count($relations),
+		];
+
+	}//end forUser()
+
+	/**
+	 * The occurrence rows per file id (ascending), and the count of object and e-mail rows.
+	 *
+	 * @param array<int, array<string, mixed>> $relations The catalogue's occurrence rows.
+	 *
+	 * @return array{byFile: array<int, list<array{confidence: float, anonymized: bool, detectionMethod: string}>>,
+	 *               other: array{object: int, email: int}} The groups.
+	 */
+	private function grouped(array $relations): array {
 		$byFile = [];
 		$other = ['object' => 0, 'email' => 0];
 		foreach ($relations as $relation) {
@@ -101,6 +122,19 @@ class EntityOccurrences {
 		}
 
 		ksort($byFile);
+		return ['byFile' => $byFile, 'other' => $other];
+
+	}//end grouped()
+
+	/**
+	 * The documents the caller can read, and how many they cannot.
+	 *
+	 * @param array<int, list<array<string, mixed>>> $byFile File id => its occurrences.
+	 * @param string                                 $userId The caller.
+	 *
+	 * @return array{documents: array<int, array<string, mixed>>, noAccess: int} The documents.
+	 */
+	private function documents(array $byFile, string $userId): array {
 		$userFolder = $this->userFolder(userId: $userId);
 		$dossiers = null;
 		$documents = [];
@@ -124,21 +158,28 @@ class EntityOccurrences {
 			];
 		}
 
+		return ['documents' => $documents, 'noAccess' => $noAccess];
+
+	}//end documents()
+
+	/**
+	 * The non-file kinds that occur, in object then e-mail order.
+	 *
+	 * @param array{object: int, email: int} $counts Rows per kind.
+	 *
+	 * @return list<array{kind: string, count: int}> The kinds with a count above zero.
+	 */
+	private function others(array $counts): array {
 		$others = [];
-		foreach ($other as $kind => $count) {
+		foreach ($counts as $kind => $count) {
 			if ($count > 0) {
 				$others[] = ['kind' => $kind, 'count' => $count];
 			}
 		}
 
-		return [
-			'documents' => $documents,
-			'noAccess' => $noAccess,
-			'other' => $others,
-			'occurrenceCount' => count($relations),
-		];
+		return $others;
 
-	}//end forUser()
+	}//end others()
 
 	/**
 	 * The caller's own view of the file tree, or null.
