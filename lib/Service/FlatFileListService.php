@@ -30,11 +30,6 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use OCA\Filinq\Kernel\Contracts\FlatFileListServiceInterface;
-use OCP\Files\IRootFolder;
-use OCP\Files\Node;
-use OCP\IUserSession;
-use Psr\Log\LoggerInterface;
-use Throwable;
 
 /**
  * Lists every file on every document record of one object.
@@ -53,17 +48,13 @@ class FlatFileListService implements FlatFileListServiceInterface {
 	 * Constructor.
 	 *
 	 * @param FinalDocumentRepository $repository The document record store.
-	 * @param IRootFolder $rootFolder The file tree.
-	 * @param IUserSession $userSession The current session.
-	 * @param LoggerInterface $logger Logger for diagnostics.
+	 * @param ReadableFileResolver $files The file behind an id, as the reader may read it.
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		private readonly FinalDocumentRepository $repository,
-		private readonly IRootFolder $rootFolder,
-		private readonly IUserSession $userSession,
-		private readonly LoggerInterface $logger,
+		private readonly ReadableFileResolver $files,
 	) {
 
 	}//end __construct()
@@ -139,8 +130,8 @@ class FlatFileListService implements FlatFileListServiceInterface {
 	 * One row of the flat list: the file, and the record it belongs to.
 	 *
 	 * A record whose file the reader cannot see is LEFT OUT rather than listed
-	 * as a name with nothing behind it. The flat list obeys the same
-	 * permissions as the folder it flattens.
+	 * as a name with nothing behind it. A file in an object's folder is seen
+	 * through the read right on that object (ReadableFileResolver).
 	 *
 	 * @param array<string, mixed> $record The document record.
 	 * @param array<int, array{id: string, name: string}> $dossiers The dossier by file id.
@@ -155,7 +146,7 @@ class FlatFileListService implements FlatFileListServiceInterface {
 			return null;
 		}
 
-		$node = $this->node(fileId: $fileId);
+		$node = $this->files->node(fileId: $fileId);
 		if ($node === null) {
 			return null;
 		}
@@ -176,38 +167,4 @@ class FlatFileListService implements FlatFileListServiceInterface {
 		];
 
 	}//end row()
-
-	/**
-	 * The file behind one id, as the current user can see it.
-	 *
-	 * @param int $fileId The Nextcloud file id.
-	 *
-	 * @return Node|null The node, or null when this user cannot see it.
-	 *
-	 * @spec exclude File lookup with no behaviour of its own.
-	 */
-	private function node(int $fileId): ?Node {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return null;
-		}
-
-		try {
-			$nodes = $this->rootFolder->getUserFolder($user->getUID())->getById($fileId);
-		} catch (Throwable $e) {
-			$this->logger->debug(
-				message: '[FlatFileListService] could not resolve a file of the flat list',
-				context: ['file' => __FILE__, 'line' => __LINE__, 'fileId' => $fileId, 'error' => $e->getMessage()]
-			);
-
-			return null;
-		}
-
-		if ($nodes === []) {
-			return null;
-		}
-
-		return $nodes[0];
-
-	}//end node()
 }//end class

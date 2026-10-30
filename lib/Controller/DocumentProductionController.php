@@ -156,8 +156,9 @@ class DocumentProductionController extends Controller {
 	 *
 	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 *
-	 * @no-admin-idor-exempt files are listed through the caller's own user folder
-	 * (FlatFileListService::node()), and the document records are read with OpenRegister RBAC on.
+	 * @no-admin-idor-exempt files are resolved for the caller (ReadableFileResolver: their own Files,
+	 * or an object's folder when OpenRegister's object read rule admits them), and the document records
+	 * are read with OpenRegister RBAC on.
 	 */
 	#[NoAdminRequired]
 	public function archivePreflight(
@@ -189,9 +190,9 @@ class DocumentProductionController extends Controller {
 	 *
 	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 *
-	 * @no-admin-idor-exempt files are listed and copied through the caller's own user folder
-	 * (FlatFileListService, CaseArchiveWriter), records are read with OpenRegister RBAC on, and the bundle
-	 * lands in the caller's own Files.
+	 * @no-admin-idor-exempt files are listed and copied as the caller may read them (ReadableFileResolver:
+	 * their own Files, or an object's folder when OpenRegister's object read rule admits them), records are
+	 * read with OpenRegister RBAC on, and the bundle lands in the caller's own Files.
 	 */
 	#[NoAdminRequired]
 	public function archiveManifest(
