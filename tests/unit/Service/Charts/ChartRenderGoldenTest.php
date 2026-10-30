@@ -43,6 +43,7 @@ use PHPUnit\Framework\TestCase;
  * @covers \OCA\Filinq\Service\Charts\PieChartRenderer
  * @covers \OCA\Filinq\Service\Charts\CartesianFrame
  * @covers \OCA\Filinq\Service\Charts\ChartLegendRenderer
+ * @covers \OCA\Filinq\Service\Charts\ChartRequest
  * @uses   \OCA\Filinq\Service\Charts\ChartDataNormalizer
  * @uses   \OCA\Filinq\Service\Charts\ChartLabelFormatter
  * @uses   \OCA\Filinq\Service\Charts\ChartPalette
