@@ -87,3 +87,28 @@ number. The write check of REQ-DII-03 MUST still run on assign.
 - WHEN the clerk opens the assign dialog
 - THEN the picker shows that case selected, and confirming assigns the document to it
 - e2e: `tests/e2e/intake-inbox.spec.ts`
+
+### Requirement: A scanner profile is saved per source and reused (REQ-SCI-05)
+
+Filinq MUST keep the scanner settings for each source as a named scanner
+profile in the admin settings key `scanProfiles`: the source name, the
+watched folder, the resolution and colour mode, and the separator mode
+(`qr`, `blankPage`, or `none` for one document per batch). A batch MUST take the
+settings of the profile whose folder it arrived in. The intake channels
+page MUST list the profiles and let an administrator add one, as the board
+`filinq/FqInvoerkanalen` draws it ("Scanprofielen", "Scanprofiel
+toevoegen").
+
+#### Scenario: An administrator adds a scanner profile
+
+- GIVEN an administrator on the intake channels page
+- WHEN they add a profile "Scanner 2e verdieping" with 300 dpi, black and white, folder `Scans/Post` and separator mode `qr`
+- THEN the profile is listed and the next batch in `Scans/Post` is split at separator sheets
+- @e2e tests/e2e/scan-separators.spec.ts
+
+#### Scenario: A profile is read back as it was declared
+
+- GIVEN two declared profiles
+- WHEN the profiles are listed through the API
+- THEN both come back with their folder and separator mode unchanged
+- @e2e exclude settings round trip; covered by PHPUnit on `ScanProfileService`

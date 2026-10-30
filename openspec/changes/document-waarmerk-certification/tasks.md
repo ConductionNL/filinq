@@ -1,6 +1,6 @@
 # Tasks: document-waarmerk-certification
 
-<!-- HYDRA CAP: max 20 unindented `- [ ]` lines. This file uses 14.
+<!-- HYDRA CAP: max 20 unindented `- [ ]` lines. This file uses 16.
      Acceptance criteria are plain bullets, not checkboxes. -->
 
 ## 1. Register & data model
@@ -21,6 +21,9 @@
 
 - [ ] 2.4 Verification: `POST /api/waarmerk/verify` (`{code, sha256}` → `valid|hash-mismatch|revoked|unknown`, CMS validation via `openssl_cms_verify`, fail-closed, oracle-free response parity, rate-limited) and revocation endpoint with in-method admin-or-sealer guard, reason mandatory, irreversible (REQ-DDWMK-004/005)
 
+- [ ] 2.5 `SigningEvidenceService`: builds the evidence PDF/A for a terminal `signingRequest` from its `signerRecord` objects and `signingAuditEntry` trail through `PdfService`, seals it with `sealType: signing-evidence` via `WaarmerkService::seal()`, refuses an open request with 409 (REQ-DDWMK-006)
+  - Titles and checksums only, never document content; covered by `tests/unit/Service/SigningEvidenceServiceTest.php`
+
 ## 3. Routes & controller
 
 - [ ] 3.1 `WaarmerkController` + routes in `appinfo/routes.php`: seal, list/show, revoke (authenticated, explicit attributes); `GET /verify/{code}` page + `POST /api/waarmerk/verify` as `#[PublicPage]` with brute-force protection
@@ -33,6 +36,8 @@
 - [ ] 4.2 Public verification page: standalone entry, client-side WebCrypto hash of a locally selected file (bytes never uploaded), status rendering incl. `certificateExpired` advisory; NL Design System tokens, WCAG AA (citizen-facing)
 
 - [ ] 4.3 Admin settings panel (settings framework, NOT vue-router): PEM upload, fingerprint/expiry, `credentialRef`, custody-mode label, test-seal button
+
+- [ ] 4.4 Signing request page: "Bewijsdocument downloaden (pdf)" and "Kopie naar dossier" on the evidence card, as the board `filinq/FqOndertekenverzoek` draws it; route `GET /api/signing/{id}/evidence` (REQ-DDWMK-006)
 
 ## 5. Quality, i18n, docs
 

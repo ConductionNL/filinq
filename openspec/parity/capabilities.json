@@ -1129,7 +1129,8 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "lib/Service/ScanProfileService.php reads/writes 'scanProfiles' via IAppConfig; routed at scanIntake#listProfiles/declareProfiles (routes.php:120-121), route-reach.txt marks both 'none'. No admin-settings Vue component references 'scanProfiles' (checked src/views/settings/Settings.vue).",
-				"change": "openspec/changes/scan-intake-with-separator-sheets"
+				"change": "openspec/changes/scan-intake-with-separator-sheets",
+				"requirement": "openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake :: A scanner profile is saved per source and reused (REQ-SCI-05)"
 			},
 			"reachedOn": "nothing reaches it (no admin UI, no frontend caller)",
 			"provider": "filinq",
@@ -1197,7 +1198,8 @@
 				"owner": "ConductionNL/filinq",
 				"evidence": "An incoming email in the intake (intakeDocument, channel mail) gets a suggested dossier from a case reference in its subject or text, or from its sender, on an exact match with a dossier name (DossierMatcher via InboundClassificationService::referenceText; InboundClassificationServiceTest::testAnEmailsSubjectReferenceSuggestsItsCase). The person confirms it on the Classification page or the document card, which files the email into the dossier folder. Emails filed by email-ingestion go to their inbox's mapped dossier and are not re-suggested. Shared machinery: see in-classify.",
 				"change": "openspec/changes/inbound-auto-classification",
-				"readOn": "2026-10-02"
+				"readOn": "2026-10-02",
+				"requirement": "openspec/changes/inbound-auto-classification/specs/inbound-auto-classification :: Dossier routing is a suggestion only (REQ-DDIAC-004)"
 			},
 			"reachedOn": "Classification in the menu (/classification), for intake documents from the mail channel",
 			"provider": "filinq",
@@ -1361,7 +1363,9 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "lib/Service/IntakeService.php:285 assign() calls IntakeRoutingService::apply() on every assignment (real code path, not decorative). lib/Controller/IntakeController.php:325 declareRouting() -> IntakeRoutingService::declare() is routed at intake#declareRouting (routes.php:85, route-reach.txt='none'); no frontend caller found and no sibling reference to this route fragment turned up in the sibling greps performed for this pack.",
-				"change": "openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist"
+				"change": "openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist",
+				"spec": "openspec/specs/inbound-auto-classification",
+				"requirement": "openspec/specs/inbound-auto-classification :: Routing and acceptance are declared by the consuming app (REQ-IDW-05)"
 			},
 			"reachedOn": "nothing reaches it for declaring a rule (no known caller); apply() runs on every assign() but has nothing to apply without a declared intakeRoutingRule",
 			"provider": "filinq",
@@ -1719,7 +1723,9 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "lib/Controller/ExtractionController.php:91 financial() -> lib/Service/FinancialExtractionService.php:236 extractFinancial() (supplier/IBAN/KvK/BTW, invoice number, dates, currency, VAT breakdown) dispatches FinancialExtractionCompletedEvent at line 957. Route api/extraction/financial (routes.php:276) has no filinq frontend caller, but shillinq (dq-flow/procest sibling clone check n/a - verified in shillinq) calls it directly: lib/Service/Extraction/DocudeskExtractionClient.php:71 'POST /api/extraction/financial' and consumes the completion event via ExtractionCompletedListener (shillinq lib/Listener/ExtractionCompletedListener.php:117 matches OCA\\Filinq\\Event\\FinancialExtractionCompletedEvent).",
-				"change": "openspec/changes/archive/2026-07-12-financial-document-field-extraction"
+				"change": "openspec/changes/archive/2026-07-12-financial-document-field-extraction",
+				"spec": "openspec/specs/financial-document-field-extraction",
+				"requirement": "openspec/specs/financial-document-field-extraction :: Extracted Field Set and Totals Reconciliation (REQ-FIN-03)"
 			},
 			"reachedOn": "machine consumer: shillinq (lib/Service/Extraction/DocudeskExtractionClient.php POSTs api/extraction/financial directly; lib/Listener/ExtractionCompletedListener.php consumes filinq's FinancialExtractionCompletedEvent)",
 			"provider": "filinq",
@@ -1750,7 +1756,12 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "lib/Controller/ExtractionController.php -> lib/Service/GlAccountSuggestionService.php, routed at glAccountSuggestion#suggestAccount (routes.php:280, api/extraction/{id}/suggest-account). shillinq's lib/Service/Extraction/GlAccountSuggestionClient.php:12-15 calls 'POST /api/extraction/{id}/suggest-account' and 'POST /api/extraction/{id}/corrections' directly.",
-				"change": "openspec/changes/archive/2026-07-13-ai-gl-account-suggestion"
+				"change": "openspec/changes/archive/2026-07-13-ai-gl-account-suggestion",
+				"spec": "openspec/specs/ai-gl-account-suggestion",
+				"requirement": [
+					"openspec/specs/ai-gl-account-suggestion :: Suggestion Endpoint and Sibling Event Contract (REQ-GLS-06)",
+					"openspec/specs/ai-gl-account-suggestion :: History-Ranked Baseline Suggestion (REQ-GLS-02)"
+				]
 			},
 			"reachedOn": "machine consumer: shillinq (lib/Service/Extraction/GlAccountSuggestionClient.php)",
 			"provider": "filinq",
@@ -1913,7 +1924,12 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "lib/Service/CorrespondenceService.php:672-676 produceOutput() 'docx' case calls convertToDocx(). FE: src/views/correspondence/CorrespondenceIndex.vue:262-264 format dropdown offers 'PDF' and 'DOCX (editable)'.",
-				"change": "openspec/changes/archive/2026-06-14-letter-correspondence-generation"
+				"change": "openspec/changes/archive/2026-06-14-letter-correspondence-generation",
+				"spec": "openspec/specs/document-creatie-sjablonen",
+				"requirement": [
+					"openspec/specs/document-creatie-sjablonen :: Editable DOCX is a first-class document-generation format (REQ-DDMFO-003)",
+					"openspec/specs/letter-correspondence-generation :: Output format selection"
+				]
 			},
 			"reachedOn": "/correspondence (CorrespondenceIndex.vue)",
 			"provider": "filinq",
@@ -2148,7 +2164,8 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "lib/Service/TemplateRenderer.php:312+ converts data-condition-field/op/value HTML attributes to Twig if-blocks before rendering. UI: src/views/templates/TemplateDetail.vue:155 'Insert conditional section' toolbar button + insertConditionalSection() method (~line 604) inserts the data-condition markup.",
-				"change": "openspec/changes/archive/2026-06-14-advanced-template-management"
+				"spec": "openspec/specs/document-creatie-sjablonen",
+				"requirement": "openspec/specs/document-creatie-sjablonen :: REQ-DCS-02 Template Merge Execution (Priority: Must)"
 			},
 			"reachedOn": "/templates/:id (TemplateDetail.vue editor tab)",
 			"provider": "filinq",
@@ -2605,7 +2622,11 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "src/views/templates/TemplateDetail.vue: contenteditable WYSIWYG area (~line 163-170), toolbar with bold/italic/underline/headings/lists (lines ~90-155), raw-HTML toggle (showRaw). Route templates#show/update (routes.php:228-229) via src/store/modules/template.js fetchTemplate/updateTemplate.",
-				"change": "openspec/changes/archive/2026-06-14-advanced-template-management"
+				"spec": "openspec/specs/template-management",
+				"requirement": [
+					"openspec/specs/template-management :: A template is created and edited in the browser (REQ-TMPL-14)",
+					"openspec/specs/template-management :: Template CRUD API (REQ-TMPL-02)"
+				]
 			},
 			"reachedOn": "/templates/:id (TemplateDetail.vue)",
 			"provider": "filinq",
@@ -2726,7 +2747,8 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "lib/Controller/TemplateVersionsController.php:84 versions(), :120 restoreVersion() -> lib/Service/TemplateVersionService.php. FE: src/store/modules/template.js:219 fetchVersions(), :243 restoreVersion(); UI in TemplateDetail.vue versions tab (lines 226-253).",
-				"change": "openspec/changes/archive/2026-06-14-advanced-template-management"
+				"spec": "openspec/specs/template-management",
+				"requirement": "openspec/specs/template-management :: REQ-TMPL-08: Template Version Snapshotting and Retrieval"
 			},
 			"reachedOn": "/templates/:id versions tab (TemplateDetail.vue)",
 			"provider": "filinq",
@@ -2785,7 +2807,8 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "lib/Controller/TemplatesController.php:292 lock(), :331 unlock(). FE: src/store/modules/template.js:289 acquireLock(), :308 releaseLock(); TemplateDetail.vue acquires a lock on mount and shows 'Locked by {user}' (lines 17-19, 391-393).",
-				"change": "openspec/changes/archive/2026-06-14-advanced-template-management"
+				"spec": "openspec/specs/template-management",
+				"requirement": "openspec/specs/template-management :: REQ-TMPL-11: Template Edit Lock Acquire and Release"
 			},
 			"reachedOn": "/templates/:id (TemplateDetail.vue, on open/close)",
 			"provider": "filinq",
@@ -2816,7 +2839,8 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "lib/Controller/TemplatesController.php:263 duplicate(). FE: src/store/modules/template.js:197 duplicateTemplate() posts to /apps/filinq/api/templates/{id}/duplicate.",
-				"change": "openspec/changes/archive/2026-06-14-advanced-template-management"
+				"spec": "openspec/specs/template-management",
+				"requirement": "openspec/specs/template-management :: REQ-TMPL-10: Template Duplication"
 			},
 			"reachedOn": "/templates (TemplateIndex.vue duplicate action)",
 			"provider": "filinq",
@@ -2848,7 +2872,9 @@
 				"state": "built",
 				"owner": "ConductionNL/openregister",
 				"evidence": "lib/Settings/filinq_register.json ~line 721-732: template schema's authorization block: read=[authenticated], create=[authenticated], update/delete=[docudesk-template-editors]. Enforced by OpenRegister's PermissionHandler, per openspec/changes/archive/2026-10-09-consumer-schema-authorization-audit (8/9 tasks done; the 1 open task is a fleet-communication task, not code) which closed a proven cross-user write exploit (documented in the register's own v7.9.0 changelog: an unrestricted cascade let ddauth-bob overwrite ddauth-alice's private template via PUT).",
-				"change": "openspec/changes/archive/2026-10-09-consumer-schema-authorization-audit"
+				"change": "openspec/changes/archive/2026-10-09-consumer-schema-authorization-audit",
+				"spec": "openspec/specs/consumer-schema-authorization-audit",
+				"requirement": "openspec/specs/consumer-schema-authorization-audit :: Every owned schema MUST carry an explicit authorisation decision"
 			},
 			"reachedOn": "OpenRegister's own permission/group mechanism (Nextcloud group membership of 'docudesk-template-editors'); no dedicated filinq settings page for this",
 			"provider": "openregister",
@@ -3114,7 +3140,11 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "src/services/fileViewerService.js:84 emlPreviewUrl() called from src/views/fileViewer/FileViewerPage.vue:176; route GET /api/anonymization/eml-preview/{fileId} (routes.php:140) -> lib/Controller/EmlPreviewController.php -> lib/Service/EmlPdfAssemblyService.php, which renders the envelope, body AND attachments (renderAttachment/renderNestedEml, lines 281-383) into one PDF.",
-				"spec": "openspec/specs/document-preview"
+				"spec": "openspec/specs/eml-preview",
+				"requirement": [
+					"openspec/specs/eml-preview :: The file viewer MUST render EML via the server-rendered preview",
+					"openspec/specs/eml-preview :: A backend endpoint MUST render an original-EML preview as PDF"
+				]
 			},
 			"reachedOn": "/my-documents (MyDocumentsIndex.vue -> FileViewerPage.vue)",
 			"provider": "filinq",
@@ -3891,7 +3921,12 @@
 				"owner": "ConductionNL/filinq",
 				"evidence": "lib/Service/Ocr/OcrExtractionFallback.php runs in AnonymizationService::runExtraction() after OpenRegister's extractFile(): when OcrService::needsOcr(mime, getExtractedText()) says a scan has no text, OcrRunService runs Tesseract (admin languages/DPI) and stores an ocrResult row; the text goes to OpenRegister's extractFromProvidedText when it exists. OpenRegister development has no such seam yet (ConductionNL/openregister#2033), so on today's OpenRegister every scan answers ocrDetectionPending: true and the review (FileViewerSidebar, anonymization store) keeps it open with a warning instead of marking it clean. Partial: entities in scans are not detected until OpenRegister takes the text. Tests: AnonymizationServiceOcrFallbackTest, jest anonymization.spec.js reanalyseEntry.",
 				"change": "openspec/changes/archive/2026-09-29-ocr-trigger-surface",
-				"readOn": "2026-09-29"
+				"readOn": "2026-09-29",
+				"spec": "openspec/specs/ocr-trigger-surface",
+				"requirement": [
+					"openspec/specs/ocr-trigger-surface :: Automatic OCR fallback in the anonymisation extract pipeline (REQ-DDOCR-003)",
+					"openspec/specs/ocr-trigger-surface :: \"Run OCR\" UI action (REQ-DDOCR-002)"
+				]
 			},
 			"reachedOn": "anonymisation upload and review (POST api/anonymization/extract/{fileId}); the warning shows in the file viewer sidebar",
 			"provider": "filinq",
@@ -4368,7 +4403,9 @@
 				"owner": "ConductionNL/filinq",
 				"evidence": "OpenRegister's DocumentProcessingHandler replaces each detected value with a stable, scope-local numbered placeholder ([PERSOON: 1], [ADRES: 2]; per document or per dossier) and filinq reads the exact strings through FileService::getLastPlaceholderMap(). The file-viewer sidebar now offers the choice between keeping no key and keeping an encrypted key (FileViewerSidebar.vue anonymiseMode -> anonymization store reversible -> AnonymizeRequestValidator -> DocumentAnonymizeRunner -> PseudonymMapRecorder). Partial: the pseudonym is a numbered type label, not a realistic replacement name. Tests: PseudonymPairsTest::testThePlaceholderIsTheKeyOpenRegisterEmitted, DocumentAnonymizeRunnerPseudonymTest, vitest pseudonymisation.spec.js.",
 				"change": "openspec/changes/archive/2026-09-29-reversible-pseudonymization",
-				"readOn": "2026-09-29"
+				"readOn": "2026-09-29",
+				"spec": "openspec/specs/reversible-pseudonymization",
+				"requirement": "openspec/specs/reversible-pseudonymization :: Reversible anonymisation mode reusing OR placeholders (REQ-DDRPS-003)"
 			},
 			"reachedOn": "the anonymise step in the file-viewer sidebar (After anonymising); POST api/anonymization/anonymize/{fileId} with reversible",
 			"provider": "filinq",
@@ -4598,7 +4635,12 @@
 				"owner": "ConductionNL/filinq",
 				"evidence": "DocumentAnonymizeRunner passes preserveStructure (OR FileService::anonymizeDocument 5th arg, default on via filinq.redaction.preserve_tags_default) and reads getLastStructurePreservation(); RedactionAccessibilityService maps it to preserved/degraded/not-applicable/unknown (nothing reported = unknown), checks a PDF/UA claim with VeraPdfService (ua1) and downgrades on contradiction; anonymizationLink 1.3.0 structurePreservation; PublicationReadiness records accessibilityState on publicationRecord 1.1.0 and, with filinq.redaction.accessibility_gate=block, holds the Woo hand-off until accessibilityOverrideReason (logged). File viewer sidebar and Publications page show it. Partial: whether tags survive depends on OpenRegister's engine.",
 				"change": "openspec/changes/archive/2026-09-29-accessible-redaction-output",
-				"readOn": "2026-09-29"
+				"readOn": "2026-09-29",
+				"spec": "openspec/specs/accessible-redaction-output",
+				"requirement": [
+					"openspec/specs/accessible-redaction-output :: Request tag-structure preservation on redaction jobs (REQ-DDARO-001)",
+					"openspec/specs/accessible-redaction-output :: Gate publication clearance on preserved accessibility (REQ-DDARO-003)"
+				]
 			},
 			"reachedOn": "Anonymise a PDF (file viewer sidebar result); Publications page for a redacted document",
 			"provider": "filinq",
@@ -4828,7 +4870,11 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "src/views/anonymization/EntityReviewTable.vue:56-127 lets an operator pick a 'grondslag' (Woo exemption ground, WOO_BASES from src/constants/grondslagen.js) per detected entity/redacted passage and save it, persisted via relation ids. Reached from src/views/anonymization/FolderAnonymizationView.vue.",
-				"spec": "openspec/specs/anonymisation-grondslagen-summary"
+				"spec": "openspec/specs/anonymisation-grondslagen-summary",
+				"requirement": [
+					"openspec/specs/anonymization :: Grondslag pickers MUST source the list from the register",
+					"openspec/specs/anonymisation-grondslagen-summary :: The per-document summary MUST list anonymised entities and their bases"
+				]
 			},
 			"reachedOn": "/folder-anonymization (FolderAnonymizationView.vue -> EntityReviewTable.vue)",
 			"provider": "filinq",
@@ -5736,7 +5782,8 @@
 				"state": "specified",
 				"owner": "ConductionNL/filinq",
 				"evidence": "openspec/changes/document-waarmerk-certification/tasks.md: 0/15 done; its proposal.md explicitly names 'ValidSign ships an evidence summary' and 'a signing-specific evidence PDF' as the gap this change would close. signing-trust-rebuild's proposal.md separately notes 'Deed-of-signing / evidence-summary artifacts (Zynyo/ValidSign parity)' as out of scope for that change. No evidence-document generator exists in code today (only the raw per-event audit trail, sig-audit).",
-				"change": "openspec/changes/document-waarmerk-certification"
+				"change": "openspec/changes/document-waarmerk-certification",
+				"requirement": "openspec/changes/document-waarmerk-certification/specs/document-waarmerk-certification :: A completed signing transaction yields one sealed evidence document (REQ-DDWMK-006)"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -6220,7 +6267,8 @@
 				"state": "built",
 				"owner": "ConductionNL/openregister",
 				"evidence": "Filinq ships fixed schemas in lib/Settings/filinq_register.json but does not implement its own schema-design UI. Schema/metadata-field design is OpenRegister's own capability: ConductionNL/openregister src/modals/schema/{EditSchema,EditSchemaProperty,ValidateSchema,UploadSchema}.vue provide a full schema editor over any register, including filinq's.",
-				"spec": "openspec/specs/openregister-bridge"
+				"spec": "openspec/specs/document-register",
+				"requirement": "openspec/specs/document-register :: Each document type declares its required metadata as a register schema (REQ-DREG-06)"
 			},
 			"reachedOn": "external frontend, not in this repo (OpenRegister's own schema admin UI)",
 			"provider": "openregister",
@@ -6696,7 +6744,9 @@
 				"owner": "ConductionNL/filinq",
 				"evidence": "Contracts page (manifest index on documentContract) and Renewal pipeline (src/views/contracts/ContractPipeline.vue; buckets expired / notice due within 30 days / ending within 90 days / later from src/services/contractPipeline.js) -> ContractDetail (/contracts/:id): terms, parties named from NC contacts (GET api/contracts/{id}/parties, ContractParties via OCP Contacts IManager), documents (Files picker, generate from a template via api/documents/generate), send for signature (ordinary signing request, recorded by POST api/contracts/{id}/signing = ContractSigningLink, which links the signed document back once the request completed), suggested terms accept/reject, put in force / renew / end with a reason. documentContract 1.1.0 (register 8.40.0) with an OpenRegister-enforced lifecycle and scheduled notice-deadline and end-date notifications (x-openregister-notifications, recipients filinq-contract-managers + object ACL). Tests: ContractServiceTest, ContractSigningLinkTest, ContractPartiesTest, ContractControllerTest, ContractRegisterDeclarationTest, ContractNoticeDeadlineListenerTest, ContractTermSuggestionServiceTest (payloads validated with Opis against the real documentContract fragment), vitest contractPipeline.spec.js and contracts.spec.js.",
 				"change": "openspec/changes/archive/2026-09-30-contract-lifecycle-management",
-				"readOn": "2026-09-30"
+				"readOn": "2026-09-30",
+				"spec": "openspec/specs/contract-lifecycle-management",
+				"requirement": "openspec/specs/contract-lifecycle-management :: Key-date reminders are declarative notifications (REQ-DDCLM-003)"
 			},
 			"reachedOn": "the Contracts and Renewal pipeline menu entries; the contract page; api/contracts/{id}/renew|terminate|suggestions|signing|parties",
 			"provider": "filinq",
@@ -6762,7 +6812,12 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "src/views/correspondence/CorrespondenceIndex.vue -> src/store/modules/correspondence.js:83 -> POST api/correspondence/generate (routes.php:220, FE) -> lib/Controller/CorrespondenceController.php:91 generate() -> lib/Service/CorrespondenceService.php (VALID_FORMATS = ['pdf','docx','html','email'], line 78) composes from an approved template. Composition returns a DataDownloadResponse|JSONResponse (download or content) - grep of lib/ for IMailer/OCP\\Mail found no match, so the 'email' format only produces email-safe HTML (line 670 case 'email', line 690 strips page CSS for email clients); nothing dispatches it.",
-				"change": "openspec/changes/archive/2026-06-14-letter-correspondence-generation"
+				"change": "openspec/changes/archive/2026-06-14-letter-correspondence-generation",
+				"spec": "openspec/specs/letter-correspondence-generation",
+				"requirement": [
+					"openspec/specs/letter-correspondence-generation :: Correspondence generation API",
+					"openspec/specs/letter-correspondence-generation :: Email body generation"
+				]
 			},
 			"reachedOn": "/correspondence (CorrespondenceIndex.vue)",
 			"provider": "filinq",
@@ -7290,7 +7345,9 @@
 				"owner": "ConductionNL/filinq",
 				"evidence": "dossiq's lib/Service/Beschikking/FilinqTemplateEngineAdapter.php resolves filinq's DocumentService via FleetAppId and calls generateDocument() (filinq lib/Service/DocumentService.php:168) directly through PHP DI, described as 'Filinq owns document generation for the fleet (ADR-075)'. Counter-evidence: learniq (formerly scholiq) lib/Service/ReportCardPdfDelegationService.php:199-200 now resolves the app id through FleetAppId::path($this->appManager, 'filinq', ...) and POSTs to the documents/render path under it, but that render endpoint still does not exist in filinq, so the report-card half is unbuilt on filinq's side (corrected 2026-09-26).",
 				"readOn": "2026-09-26",
-				"change": "openspec/changes/archive/2026-06-14-document-creatie-sjablonen"
+				"change": "openspec/changes/archive/2026-06-14-document-creatie-sjablonen",
+				"spec": "openspec/specs/document-creatie-sjablonen",
+				"requirement": "openspec/specs/document-creatie-sjablonen :: REQ-DCS-07 Document Generation API (Priority: Must)"
 			},
 			"reachedOn": "machine consumer: dossiq (FilinqTemplateEngineAdapter, via direct DI to DocumentService::generateDocument())",
 			"provider": "filinq",
@@ -7322,7 +7379,12 @@
 				"state": "built",
 				"owner": "ConductionNL/openregister",
 				"evidence": "filinq_register.json changelog v7.5.0 (unified-search-provider): 'corrects the searchable opt-in so only navigable schemas (template, signingRequest) stay searchable... No bespoke OCP\\Search\\IProvider - org scoping inherited from openregister_objects.' Deep-link routing lives in src/manifest.json deepLinks[] (template, signingRequest, publicationConsent, dossier, customDictionary all declare urlTemplate).",
-				"change": "openspec/changes/archive/2026-07-23-unified-search-provider"
+				"change": "openspec/changes/archive/2026-07-23-unified-search-provider",
+				"spec": "openspec/specs/unified-search-provider",
+				"requirement": [
+					"openspec/specs/unified-search-provider :: Filinq consumes OR's provider without registering its own (REQ-DDUSP-003)",
+					"openspec/specs/unified-search-provider :: Deep links resolve result URLs for searchable schemas (REQ-DDUSP-002)"
+				]
 			},
 			"reachedOn": "Nextcloud unified search results (via OpenRegister's shared IProvider, deep-linked through src/manifest.json deepLinks[])",
 			"provider": "openregister",
@@ -7448,7 +7510,9 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "src/manifest.json 'setup' block (steps: welcome/demo-data/load-demo-data/done), completionConfigKey 'setup_completed_version', backed by lib/Service/DemoDataService.php and lib/Controller/SetupController.php.",
-				"change": "openspec/changes/archive/2026-03-21-admin-settings"
+				"change": "openspec/changes/archive/2026-03-21-admin-settings",
+				"spec": "openspec/specs/first-time-setup",
+				"requirement": "openspec/specs/first-time-setup :: Setup status reports every manifest step"
 			},
 			"reachedOn": "first-visit setup wizard (declared in src/manifest.json)",
 			"provider": "filinq",
@@ -7576,7 +7640,8 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "Filinq is a standard Nextcloud app (appinfo/info.xml) with a self-hostable office/conversion stack: deploy/office-suites/docker-compose.yml (LibreOffice), lib/Service/Conversion/, lib/Service/PdfService.php (mPDF). No mandatory external SaaS dependency found for core document generation/anonymisation.",
-				"spec": "none"
+				"spec": "openspec/specs/platform-properties",
+				"requirement": "openspec/specs/platform-properties :: Filinq runs on the customer's own infrastructure (REQ-PLAT-01)"
 			},
 			"reachedOn": "self-hosted Nextcloud + Docker deployment (deploy/office-suites/docker-compose.yml)",
 			"provider": "filinq",
@@ -7610,7 +7675,11 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "LICENSE file at repo root: European Union Public Licence v1.2 (EUPL). Every PHP file's docblock also carries '@license EUPL-1.2'. Public repo ConductionNL/filinq.",
-				"spec": "none"
+				"spec": "openspec/specs/platform-properties",
+				"requirement": [
+					"openspec/specs/platform-properties :: The source is public under EUPL-1.2 (REQ-PLAT-02)",
+					"openspec/specs/admin-settings :: Declared licence matches the repository licence (REQ-SET-10)"
+				]
 			},
 			"reachedOn": "repository root LICENSE file",
 			"provider": "filinq",
@@ -7683,7 +7752,8 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "l10n/ contains de.json, en.json, es.json, fr.json, it.json, nl.json -- standard Nextcloud app translation files, applied automatically per the user's Nextcloud language preference.",
-				"spec": "none"
+				"spec": "openspec/specs/register-i18n",
+				"requirement": "openspec/specs/register-i18n :: REQ-I18N-06 Minimum Language Support (Priority: Must)"
 			},
 			"reachedOn": "automatic, driven by the user's Nextcloud language setting",
 			"provider": "filinq",
@@ -7753,7 +7823,9 @@
 				"state": "built",
 				"owner": "ConductionNL/openregister",
 				"evidence": "lib/Settings/filinq_register.json: verified programmatically that all 39 declared schemas carry a complete authorization block (read/create/update/delete all present, none null/empty). This is openspec/changes/archive/2026-10-09-consumer-schema-authorization-audit applied (8/9 tasks done, the 1 open task is a fleet-communication item not code); the register's own v7.9.0 changelog documents the pre-fix exploit it closed (cross-user template overwrite via PUT) and the current per-schema grants (e.g. financialExtraction/publicationConsent/signing schemas further restrict read to specific groups beyond the default 'authenticated').",
-				"change": "openspec/changes/archive/2026-10-09-consumer-schema-authorization-audit"
+				"change": "openspec/changes/archive/2026-10-09-consumer-schema-authorization-audit",
+				"spec": "openspec/specs/consumer-schema-authorization-audit",
+				"requirement": "openspec/specs/consumer-schema-authorization-audit :: Every owned schema MUST carry an explicit authorisation decision"
 			},
 			"reachedOn": "OpenRegister's own permission/group enforcement (PermissionHandler); declared per-schema in lib/Settings/filinq_register.json, no dedicated filinq permissions page",
 			"provider": "openregister",
@@ -8272,7 +8344,8 @@
 				"state": "built",
 				"owner": "nextcloud/server",
 				"evidence": "filinq sends a removed document to the Nextcloud trash: src/views/dossier/DossierDetail.vue:390 tells the user it 'will be moved to the trash, where you can still restore it' -> lib/Controller/DossierManagementController.php:201 removeDocument() -> lib/Service/DossierManagementService.php:401 -> lib/Service/DossierFileService.php:324 $node->delete(), which routes through files_trashbin. Restore and the automatic expiry are Nextcloud Files' trashbin, not filinq code.",
-				"spec": "openspec/specs/dossier-register"
+				"change": "openspec/changes/dossier-management-ui",
+				"requirement": "openspec/changes/dossier-management-ui/specs/dossier-management-ui :: Add and remove documents in a dossier (REQ-DDDMU-004)"
 			},
 			"reachedOn": "/dossiers/:id (DossierDetail.vue) remove action; restore in Nextcloud Files, Deleted files",
 			"provider": "nextcloud",
@@ -8368,7 +8441,12 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "per-document check only, for final documents: lib/Service/FinalDocumentService.php:241 verifyChecksum() compares the frozen checksum with the file now on storage, shown as a warning at src/views/versions/VersionsView.vue:37 via GET api/documents/{fileId}/final. The nightly job (appinfo/info.xml:106 DomainFolderReconciliationJob -> lib/Service/DomainFolderReconciler.php:80) reconciles domain folder existence and group access, not missing or orphaned document files. No collection-wide scan exists (grep -ri 'orphan|sanity|integrity' lib).",
-				"change": "openspec/changes/archive/2026-10-07-final-documents-frozen"
+				"change": "openspec/changes/archive/2026-10-07-final-documents-frozen",
+				"spec": "openspec/specs/document-versions",
+				"requirement": [
+					"openspec/specs/document-versions :: Every write path refuses a final version (REQ-FDF-02)",
+					"openspec/specs/document-versions :: Final is a declared lifecycle state (REQ-FDF-01)"
+				]
 			},
 			"reachedOn": "/versions (VersionsView.vue) checksum warning for one final document at a time",
 			"provider": "filinq",

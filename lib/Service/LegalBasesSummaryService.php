@@ -423,61 +423,21 @@ class LegalBasesSummaryService implements LegalBasesSummaryServiceInterface {
 	private function aggregateForDossier(array $perFile, array $labelMap): array {
 		unset($labelMap);
 
-		$grouped = [];
-		$totalOccurrences = 0;
-		$distinctBasisRefs = [];
-
+		$tally = new DossierEntityTally();
 		foreach ($perFile as $fileRow) {
 			$filename = (string)($fileRow['filename'] ?? '');
-
 			foreach (($fileRow['entities'] ?? []) as $entity) {
-				$count = (int)($entity['count'] ?? 0);
-				$baseLabels = ($entity['baseLabels'] ?? []);
-				if (is_array($baseLabels) === false) {
-					$baseLabels = [];
-				}
-
-				$totalOccurrences += $count;
-
-				foreach (($entity['bases'] ?? []) as $ref) {
-					$distinctBasisRefs[(string)$ref] = true;
-				}
-
-				// Dedup to ONE row per distinct entity (entityType:entityId).
-				// The dossier number is consistent across files, so the same
-				// person/date appears once — aggregating its occurrence count,
-				// the files it appears in, and the union of its grondslagen —
-				// instead of repeating the same placeholder once per file.
-				$entityKey = (string)($entity['entityType'] ?? '') . ':' . (string)($entity['entityId'] ?? '');
-				if (isset($grouped[$entityKey]) === false) {
-					$grouped[$entityKey] = [
-						'placeholder' => (string)($entity['placeholder'] ?? ''),
-						'entityType' => (string)($entity['entityType'] ?? ''),
-						'entityId' => (int)($entity['entityId'] ?? 0),
-						'count' => 0,
-						'filenames' => [],
-						'baseLabels' => [],
-					];
-				}
-
-				$grouped[$entityKey]['count'] += $count;
-				if ($filename !== '') {
-					$grouped[$entityKey]['filenames'][$filename] = true;
-				}
-
-				foreach ($baseLabels as $label) {
-					$grouped[$entityKey]['baseLabels'][(string)$label] = true;
-				}
-			}//end foreach
-		}//end foreach
+				$tally->add(entity: $entity, filename: $filename);
+			}
+		}
 
 		return [
-			'rows' => $this->buildDossierRows(grouped: $grouped),
+			'rows' => $this->buildDossierRows(grouped: $tally->grouped()),
 			'totals' => [
 				'documentCount' => count($perFile),
-				'entityCount' => $totalOccurrences,
-				'distinctEntityCount' => count($grouped),
-				'distinctBasesCount' => count($distinctBasisRefs),
+				'entityCount' => $tally->occurrences(),
+				'distinctEntityCount' => count($tally->grouped()),
+				'distinctBasesCount' => $tally->distinctBases(),
 			],
 		];
 

@@ -107,12 +107,8 @@ class EmlAnonymizationService {
 	 * raised with NO raw-parse fallback (design D9), so the controller maps it
 	 * to HTTP 422 and no un-redacted content is ever written.
 	 *
-	 * @param int $fileId Source Nextcloud file ID.
-	 * @param mixed $node Source EML file node.
+	 * @param EmlAnonymizeRequest $request The source, the entities and the placeholder scope.
 	 * @param mixed $fileService OR FileService (resolved reflectively).
-	 * @param array<int, array<string,mixed>> $mappedEntities Entities to redact.
-	 * @param string $scope Placeholder-numbering scope.
-	 * @param string|null $dossierKey Stable dossier folder id, or null.
 	 *
 	 * @return array{resultInfo: array<string, mixed>, node: mixed,
 	 *               placeholderMap: array<string, string>} The result info the controller expects,
@@ -123,22 +119,9 @@ class EmlAnonymizationService {
 	 *
 	 * @spec openspec/specs/anonymization/spec.md
 	 */
-	public function anonymize(
-		int $fileId,
-		mixed $node,
-		mixed $fileService,
-		array $mappedEntities,
-		string $scope,
-		?string $dossierKey,
-	): array {
-		$structure = $this->requestStructure(
-			fileId: $fileId,
-			node: $node,
-			fileService: $fileService,
-			mappedEntities: $mappedEntities,
-			scope: $scope,
-			dossierKey: $dossierKey
-		);
+	public function anonymize(EmlAnonymizeRequest $request, mixed $fileService): array {
+		$structure = $this->requestStructure(request: $request, fileService: $fileService);
+		$node = $request->node;
 
 		$sourceName = '';
 		if (method_exists($node, 'getName') === true) {
@@ -166,8 +149,8 @@ class EmlAnonymizationService {
 		$this->logger->info(
 			'EML anonymised and assembled to PDF',
 			[
-				'fileId' => $fileId,
-				'entityCount' => count($mappedEntities),
+				'fileId' => $request->fileId,
+				'entityCount' => count($request->mappedEntities),
 			]
 		);
 
@@ -177,7 +160,7 @@ class EmlAnonymizationService {
 		}
 
 		return [
-			'resultInfo' => $this->buildResultInfo(pdfNode: $pdfNode, mappedEntities: $mappedEntities),
+			'resultInfo' => $this->buildResultInfo(pdfNode: $pdfNode, mappedEntities: $request->mappedEntities),
 			'node' => $pdfNode,
 			'placeholderMap' => $placeholderMap,
 		];
@@ -187,12 +170,8 @@ class EmlAnonymizationService {
 	/**
 	 * Call OpenRegister's anonymise-EML API and validate its return value.
 	 *
-	 * @param int $fileId Source Nextcloud file ID.
-	 * @param mixed $node Source EML file node.
+	 * @param EmlAnonymizeRequest $request The source, the entities and the placeholder scope.
 	 * @param mixed $fileService OR FileService (resolved reflectively).
-	 * @param array<int, array<string,mixed>> $mappedEntities Entities to redact.
-	 * @param string $scope Placeholder-numbering scope.
-	 * @param string|null $dossierKey Stable dossier folder id, or null.
 	 *
 	 * @return object The redacted EML structure.
 	 *
@@ -200,14 +179,7 @@ class EmlAnonymizationService {
 	 *
 	 * @spec openspec/specs/anonymization/spec.md
 	 */
-	private function requestStructure(
-		int $fileId,
-		mixed $node,
-		mixed $fileService,
-		array $mappedEntities,
-		string $scope,
-		?string $dossierKey,
-	): object {
+	private function requestStructure(EmlAnonymizeRequest $request, mixed $fileService): object {
 		if (method_exists($fileService, 'anonymizeEmlStructured') === false) {
 			throw new ConversionFailedException(
 				message: 'OpenRegister does not expose the anonymise-EML API; cannot anonymise EML input.',
@@ -216,7 +188,12 @@ class EmlAnonymizationService {
 		}
 
 		try {
-			$structure = $fileService->anonymizeEmlStructured($node, $mappedEntities, $scope, $dossierKey);
+			$structure = $fileService->anonymizeEmlStructured(
+				$request->node,
+				$request->mappedEntities,
+				$request->scope(),
+				$request->dossierKey()
+			);
 		} catch (ConversionFailedException $e) {
 			throw $e;
 		} catch (Throwable $e) {
@@ -224,7 +201,7 @@ class EmlAnonymizationService {
 			// failure. Surface as a typed conversion failure (HTTP 422).
 			$this->logger->warning(
 				'EML anonymise-API failed; no raw-parse fallback.',
-				['fileId' => $fileId, 'exception' => get_class($e), 'message' => $e->getMessage()]
+				['fileId' => $request->fileId, 'exception' => get_class($e), 'message' => $e->getMessage()]
 			);
 			throw $this->emlApiFailed(error: $e);
 		}
