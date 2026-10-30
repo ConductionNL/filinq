@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Unit tests for the stored-object row normalisation shared by the repositories.
+ * Unit tests for the stored-object row readings shared by the repositories.
  *
  * @category Tests
  * @package  OCA\Filinq\Tests\Unit\Service
@@ -22,10 +22,11 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Tests\Unit\Service;
 
+use OCA\Filinq\Service\ReadsStoredObjectRows;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Pins what each repository makes of an OpenRegister row, per variant.
+ * Pins what each ReadsStoredObjectRows reading makes of an OpenRegister row.
  *
  * @category Tests
  * @package  OCA\Filinq\Tests\Unit\Service
@@ -33,44 +34,9 @@ use PHPUnit\Framework\TestCase;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @covers \OCA\Filinq\Service\Contract\ContractRepository
- * @covers \OCA\Filinq\Service\PrintJobRepository
- * @covers \OCA\Filinq\Service\VeraPdf\ConformanceReportRepository
- * @covers \OCA\Filinq\Service\SigningEnvelope\SigningEnvelopeRepository
- * @covers \OCA\Filinq\Service\Ocr\OcrResultRepository
- * @covers \OCA\Filinq\Service\BulkSigning\BulkSigningBatchRepository
- * @covers \OCA\Filinq\Service\MergeJobRepository
- * @covers \OCA\Filinq\Service\Redaction\RedactionReviewMarkRepository
- * @covers \OCA\Filinq\Service\ScanBatchRepository
- * @covers \OCA\Filinq\Service\DocumentReviewService
- * @covers \OCA\Filinq\Service\Redaction\DownloadAgreementRepository
- * @covers \OCA\Filinq\Service\Redaction\AnonymizationLinkReader
- * @covers \OCA\Filinq\Service\LegalHold\LegalHoldCaseRepository
- * @covers \OCA\Filinq\Service\SubjectErasure\SubjectErasureStore
- * @covers \OCA\Filinq\Service\Pseudonymisation\PseudonymMapRepository
+ * @covers \OCA\Filinq\Service\ReadsStoredObjectRows
  */
-class StoredObjectRowTest extends TestCase {
-
-	/**
-	 * Each repository and the normalisation variant it implements.
-	 */
-	public const REPOSITORIES = [
-		\OCA\Filinq\Service\Contract\ContractRepository::class => 'fields',
-		\OCA\Filinq\Service\PrintJobRepository::class => 'fields',
-		\OCA\Filinq\Service\VeraPdf\ConformanceReportRepository::class => 'fields',
-		\OCA\Filinq\Service\SigningEnvelope\SigningEnvelopeRepository::class => 'fields',
-		\OCA\Filinq\Service\Ocr\OcrResultRepository::class => 'fields',
-		\OCA\Filinq\Service\BulkSigning\BulkSigningBatchRepository::class => 'fields',
-		\OCA\Filinq\Service\MergeJobRepository::class => 'fieldsKeepingSelf',
-		\OCA\Filinq\Service\Redaction\RedactionReviewMarkRepository::class => 'fieldsKeepingSelf',
-		\OCA\Filinq\Service\ScanBatchRepository::class => 'fieldsKeepingSelf',
-		\OCA\Filinq\Service\DocumentReviewService::class => 'fieldsKeepingSelf',
-		\OCA\Filinq\Service\Redaction\DownloadAgreementRepository::class => 'payload',
-		\OCA\Filinq\Service\Redaction\AnonymizationLinkReader::class => 'payload',
-		\OCA\Filinq\Service\LegalHold\LegalHoldCaseRepository::class => 'entityFieldsOrBlankUuid',
-		\OCA\Filinq\Service\SubjectErasure\SubjectErasureStore::class => 'entityFieldsOrBlankUuid',
-		\OCA\Filinq\Service\Pseudonymisation\PseudonymMapRepository::class => 'entityFields',
-	];
+class ReadsStoredObjectRowsTest extends TestCase {
 
 	/**
 	 * The rows every variant is run over.
@@ -222,27 +188,41 @@ class StoredObjectRowTest extends TestCase {
 	}
 
 	/**
-	 * @return array<string, array{0: class-string, 1: string}>
+	 * Each reading, as the repositories call it: [recorded variant, trait method, blank uuid added].
+	 *
+	 * @return array<string, array{0: string, 1: string, 2: bool}>
 	 */
-	public static function repositories(): array {
-		$cases = [];
-		foreach (self::REPOSITORIES as $class => $variant) {
-			$cases[substr(strrchr($class, '\\'), 1)] = [$class, $variant];
-		}
-		return $cases;
+	public static function readings(): array {
+		return [
+			'fields' => ['fields', 'storedFields', false],
+			'fieldsKeepingSelf' => ['fieldsKeepingSelf', 'storedFieldsKeepingSelf', false],
+			'payload' => ['payload', 'storedPayload', false],
+			'entityFields' => ['entityFields', 'storedEntityFields', false],
+			'entityFields, blank uuid (legal hold, subject erasure)' => ['entityFieldsOrBlankUuid', 'storedEntityFields', true],
+		];
 	}
 
 	/**
-	 * @dataProvider repositories
+	 * @dataProvider readings
 	 *
-	 * @param class-string $class The repository.
-	 * @param string $variant The variant it implements.
+	 * @param string $variant The recorded variant.
+	 * @param string $method The trait method under test.
+	 * @param bool $blankUuid Whether the caller adds a blank uuid.
 	 */
-	public function testRepositoryNormalisesEveryRowAsItsVariant(string $class, string $variant): void {
-		$method = new \ReflectionMethod($class, 'normalise');
-		$repository = (new \ReflectionClass($class))->newInstanceWithoutConstructor();
+	public function testEveryRowReadsAsRecorded(string $variant, string $method, bool $blankUuid): void {
+		$reader = new class {
+			use ReadsStoredObjectRows;
+
+			public function read(string $method, mixed $row): array {
+				return $this->$method(row: $row);
+			}
+		};
 		foreach (self::inputs() as $name => $input) {
-			$this->assertSame(self::expected()[$variant][$name], $method->invoke($repository, $input), $variant . ': ' . $name);
+			$read = $reader->read(method: $method, row: $input);
+			if ($blankUuid === true) {
+				$read += ['uuid' => ''];
+			}
+			$this->assertSame(self::expected()[$variant][$name], $read, $variant . ': ' . $name);
 		}
 	}
 }

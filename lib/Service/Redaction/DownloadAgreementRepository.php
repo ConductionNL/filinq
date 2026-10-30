@@ -23,6 +23,7 @@ namespace OCA\Filinq\Service\Redaction;
 use OCA\Filinq\Exception\AgreementStoreUnreadableException;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\IntakeRepository;
+use OCA\Filinq\Service\ReadsStoredObjectRows;
 use OCP\AppFramework\Db\DoesNotExistException;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -32,6 +33,7 @@ use Throwable;
  * Reads and writes `downloadAgreement` rows in the `filinq` register.
  */
 class DownloadAgreementRepository {
+	use ReadsStoredObjectRows;
 
 	/**
 	 * The schema these rows live in.
@@ -165,7 +167,7 @@ class DownloadAgreementRepository {
 			);
 		}
 
-		return $this->normalise(row: $stored);
+		return $this->storedPayload(row: $stored);
 
 	}//end recordAcceptance()
 
@@ -245,37 +247,10 @@ class DownloadAgreementRepository {
 
 		$rows = [];
 		foreach ($results as $result) {
-			$rows[] = $this->normalise(row: $result);
+			$rows[] = $this->storedPayload(row: $result);
 		}
 
 		return $rows;
 
 	}//end rowsFor()
-
-	/**
-	 * Read one OpenRegister row into the flat shape this app uses.
-	 *
-	 * @param mixed $row The row.
-	 *
-	 * @return array<string, mixed> The row.
-	 *
-	 * @spec exclude Shape adapter over an OpenRegister response.
-	 */
-	private function normalise(mixed $row): array {
-		$data = $row;
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			$data = $row->jsonSerialize();
-		}
-
-		if (is_array($data) === false) {
-			return [];
-		}
-
-		if (isset($data['object']) === true && is_array($data['object']) === true) {
-			return $data['object'];
-		}
-
-		return $data;
-
-	}//end normalise()
 }//end class

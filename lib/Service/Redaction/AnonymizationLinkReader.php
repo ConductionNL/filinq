@@ -22,6 +22,7 @@ namespace OCA\Filinq\Service\Redaction;
 
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\IntakeRepository;
+use OCA\Filinq\Service\ReadsStoredObjectRows;
 use OCA\OpenRegister\Db\ObjectEntity;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -30,6 +31,7 @@ use Throwable;
  * Reads `anonymizationLink` rows, which pair a source file with its copy.
  */
 class AnonymizationLinkReader {
+	use ReadsStoredObjectRows;
 
 	/**
 	 * The schema these rows live in.
@@ -101,7 +103,7 @@ class AnonymizationLinkReader {
 			return null;
 		}
 
-		return $this->normalise(row: $results[0]);
+		return $this->storedPayload(row: $results[0]);
 
 	}//end forSource()
 
@@ -240,7 +242,7 @@ class AnonymizationLinkReader {
 	 * @spec exclude Shape adapter over an OpenRegister response.
 	 */
 	private function withUuid(mixed $row): array {
-		$link = $this->normalise(row: $row);
+		$link = $this->storedPayload(row: $row);
 		$uuid = '';
 		if (is_object($row) === true && method_exists($row, 'getUuid') === true) {
 			$uuid = (string) $row->getUuid();
@@ -258,31 +260,4 @@ class AnonymizationLinkReader {
 		return $link;
 
 	}//end withUuid()
-
-	/**
-	 * Read one OpenRegister row into the flat shape this app uses.
-	 *
-	 * @param mixed $row The row.
-	 *
-	 * @return array<string, mixed> The link.
-	 *
-	 * @spec exclude Shape adapter over an OpenRegister response.
-	 */
-	private function normalise(mixed $row): array {
-		$data = $row;
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			$data = $row->jsonSerialize();
-		}
-
-		if (is_array($data) === false) {
-			return [];
-		}
-
-		if (isset($data['object']) === true && is_array($data['object']) === true) {
-			return $data['object'];
-		}
-
-		return $data;
-
-	}//end normalise()
 }//end class
