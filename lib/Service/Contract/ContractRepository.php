@@ -28,6 +28,7 @@ namespace OCA\Filinq\Service\Contract;
 use OCA\Filinq\Kernel\Contracts\ContractRepositoryInterface;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\IntakeRepository;
+use OCA\Filinq\Service\ReadsStoredObjectRows;
 use RuntimeException;
 use Throwable;
 
@@ -43,6 +44,7 @@ use Throwable;
  * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/specs/contract-lifecycle-management/spec.md#requirement-contract-is-a-first-class-openregister-object-req-ddclm-001
  */
 class ContractRepository implements ContractRepositoryInterface {
+	use ReadsStoredObjectRows;
 
 	/**
 	 * Constructor.
@@ -86,7 +88,7 @@ class ContractRepository implements ContractRepositoryInterface {
 			return null;
 		}
 
-		return $this->normalise(row: $object);
+		return $this->storedFields(row: $object);
 
 	}//end find()
 
@@ -123,7 +125,7 @@ class ContractRepository implements ContractRepositoryInterface {
 			);
 		}
 
-		$normalised = $this->normalise(row: $stored);
+		$normalised = $this->storedFields(row: $stored);
 		if (($normalised['uuid'] ?? '') === '' && $uuid !== null) {
 			$normalised['uuid'] = $uuid;
 		}
@@ -131,33 +133,4 @@ class ContractRepository implements ContractRepositoryInterface {
 		return $normalised;
 
 	}//end save()
-
-	/**
-	 * The object's own fields plus its uuid.
-	 *
-	 * @param mixed $row An ObjectEntity or an array.
-	 *
-	 * @return array<string, mixed> The fields.
-	 */
-	private function normalise(mixed $row): array {
-		$data = $row;
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			$data = $row->jsonSerialize();
-		}
-
-		if (is_array($data) === false) {
-			return [];
-		}
-
-		$fields = $data;
-		if (isset($data['object']) === true && is_array($data['object']) === true) {
-			$fields = $data['object'];
-		}
-
-		unset($fields['@self']);
-		$fields['uuid'] = (string) ($fields['uuid'] ?? ($data['uuid'] ?? ($data['@self']['id'] ?? ($data['id'] ?? ''))));
-
-		return $fields;
-
-	}//end normalise()
 }//end class
