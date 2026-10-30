@@ -302,14 +302,16 @@ class DomainFolderServiceTest extends TestCase {
 	public function testTheWholeOutcomeOfAMixedRunAndOfAnUnreadableFolder(): void {
 		$gateway = $this->willingGateway(['groep-oud', 'groep-vast']);
 		$gateway->method('grant')->willReturnCallback(
-			static function (string $path, string $owner, string $group): void {
+			function (string $path, string $owner, string $group): void {
+				$this->assertSame('beheerder', $owner);
 				if ($group === 'groep-nee') {
 					throw new RuntimeException('grant refused');
 				}
 			}
 		);
 		$gateway->method('revoke')->willReturnCallback(
-			static function (string $path, string $owner, string $group): void {
+			function (string $path, string $owner, string $group): void {
+				$this->assertSame('beheerder', $owner);
 				if ($group === 'groep-vast') {
 					throw new RuntimeException('revoke refused');
 				}
