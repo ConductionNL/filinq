@@ -6812,11 +6812,13 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "src/views/correspondence/CorrespondenceIndex.vue -> src/store/modules/correspondence.js:83 -> POST api/correspondence/generate (routes.php:220, FE) -> lib/Controller/CorrespondenceController.php:91 generate() -> lib/Service/CorrespondenceService.php (VALID_FORMATS = ['pdf','docx','html','email'], line 78) composes from an approved template. Composition returns a DataDownloadResponse|JSONResponse (download or content) - grep of lib/ for IMailer/OCP\\Mail found no match, so the 'email' format only produces email-safe HTML (line 670 case 'email', line 690 strips page CSS for email clients); nothing dispatches it.",
-				"change": "openspec/changes/archive/2026-06-14-letter-correspondence-generation",
+				"change": "openspec/changes/letter-email-sending",
 				"spec": "openspec/specs/letter-correspondence-generation",
 				"requirement": [
 					"openspec/specs/letter-correspondence-generation :: Correspondence generation API",
-					"openspec/specs/letter-correspondence-generation :: Email body generation"
+					"openspec/specs/letter-correspondence-generation :: Email body generation",
+					"openspec/changes/letter-email-sending/specs/letter-correspondence-generation :: A composed letter can be sent by email (REQ-LCS-01)",
+					"openspec/changes/letter-email-sending/specs/letter-correspondence-generation :: A send that cannot happen says why and records nothing as sent (REQ-LCS-02)"
 				]
 			},
 			"reachedOn": "/correspondence (CorrespondenceIndex.vue)",
@@ -6824,7 +6826,7 @@
 			"providerHow": "read-from-code",
 			"feature": "letter-correspondence-generation",
 			"featureConfidence": "high",
-			"note": "Composing from a template works end-to-end; actual sending (email/post) is not implemented anywhere - only an email-formatted download is produced.",
+			"note": "Partial (DECISIONS row 268, 2026-10-30): composing from a template works end to end, sending does not exist yet; only an email-formatted download is produced. Planned in change letter-email-sending.",
 			"zylab": "unknown",
 			"datamask": "unknown",
 			"smartdocuments": "partial",
