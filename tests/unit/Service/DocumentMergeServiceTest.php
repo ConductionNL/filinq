@@ -685,4 +685,79 @@ class DocumentMergeServiceTest extends TestCase {
 		$this->assertSame($job, $this->stored[2]);
 
 	}//end testAFailingInputStoresTheJobAtTheProgressItReached()
+
+	/**
+	 * A stored job without options runs with the defaults: bookmarks on and the default name.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/document-merge/spec.md
+	 */
+	public function testAQueuedJobWithoutOptionsRunsWithTheDefaults(): void {
+		$service = $this->service(files: $this->threeDocuments());
+
+		$finished = $service->resume(job: ['uuid' => 'merge-7', 'requestedBy' => 'anna', 'inputs' => [['fileId' => 11, 'label' => 'Aanvraag']], 'options' => 'none']);
+
+		$this->assertSame('done', $finished['status']);
+		$this->assertStringContainsString('/Outlines', $this->written['samenvoeging.pdf']);
+
+	}//end testAQueuedJobWithoutOptionsRunsWithTheDefaults()
+
+	/**
+	 * A threshold of zero or less never queues.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/document-merge/spec.md
+	 */
+	public function testAThresholdOfZeroNeverQueues(): void {
+		$service = $this->service(files: $this->threeDocuments());
+
+		$this->assertFalse($service->shouldQueue(inputs: [['fileId' => 11, 'pages' => 900]], threshold: 0));
+
+	}//end testAThresholdOfZeroNeverQueues()
+
+	/**
+	 * An input without a file id is refused before anything is stored.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/document-merge/spec.md
+	 */
+	public function testAnInputWithoutAFileIsRefused(): void {
+		$service = $this->service(files: $this->threeDocuments());
+
+		try {
+			$service->merge(inputs: [['fileId' => 11], ['label' => 'Los']]);
+			$this->fail('An input without a file must be refused.');
+		} catch (MergeRefusedException $e) {
+			$this->assertSame(400, $e->getStatus());
+			$this->assertSame('Every input names a file.', $e->getMessage());
+		}
+
+		$this->assertSame([], $this->stored);
+
+	}//end testAnInputWithoutAFileIsRefused()
+
+	/**
+	 * A named target that is not a folder is refused.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/document-merge/spec.md
+	 */
+	public function testANamedTargetThatIsNotAFolderIsRefused(): void {
+		$service = $this->service(files: $this->threeDocuments());
+
+		try {
+			$service->merge(inputs: [['fileId' => 11]], options: ['targetFolder' => '/Bundels/besluit.pdf']);
+			$this->fail('A target that is not a folder must be refused.');
+		} catch (MergeRefusedException $e) {
+			$this->assertSame(400, $e->getStatus());
+			$this->assertSame('The merge target is not a folder.', $e->getMessage());
+		}
+
+		$this->assertSame([], $this->stored);
+
+	}//end testANamedTargetThatIsNotAFolderIsRefused()
 }//end class
