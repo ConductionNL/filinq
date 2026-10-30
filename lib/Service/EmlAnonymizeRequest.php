@@ -49,6 +49,8 @@ final class EmlAnonymizeRequest {
 	 * The placeholder-numbering scope.
 	 *
 	 * @return string The scope.
+	 *
+	 * @spec openspec/specs/anonymization/spec.md
 	 */
 	public function scope(): string {
 		return $this->options['scope'];
@@ -58,6 +60,8 @@ final class EmlAnonymizeRequest {
 	 * The stable dossier folder id, or null.
 	 *
 	 * @return string|null The dossier key.
+	 *
+	 * @spec openspec/specs/anonymization/spec.md
 	 */
 	public function dossierKey(): ?string {
 		return $this->options['dossierKey'];
