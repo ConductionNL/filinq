@@ -58,6 +58,7 @@ use Throwable;
  * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md
  */
 class DossierManagementController extends Controller {
+	use AnswersNotAuthenticated;
 
 	/**
 	 * Constructor.
@@ -270,10 +271,7 @@ class DossierManagementController extends Controller {
 	 */
 	private function run(callable $handler, int $status = Http::STATUS_OK): JSONResponse {
 		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(
-				['error' => $this->l10n->t('Not authenticated')],
-				Http::STATUS_UNAUTHORIZED
-			);
+			return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 		}
 
 		try {

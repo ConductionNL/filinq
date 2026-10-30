@@ -47,6 +47,7 @@ use Throwable;
  * @link     https://www.filinq.app
  */
 class MetadataController extends Controller {
+	use AnswersNotAuthenticated;
 	/**
 	 * Constructor for MetadataController
 	 *
@@ -94,10 +95,7 @@ class MetadataController extends Controller {
 	public function enrich(): JSONResponse {
 		try {
 			if ($this->userSession->getUser() === null) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Not authenticated')],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 			}
 
 			$data = $this->request->getParams();

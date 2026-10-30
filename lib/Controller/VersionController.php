@@ -53,6 +53,7 @@ use Throwable;
  * @spec openspec/specs/document-versions/spec.md
  */
 class VersionController extends Controller {
+	use AnswersNotAuthenticated;
 	/**
 	 * Constructor.
 	 *
@@ -95,7 +96,7 @@ class VersionController extends Controller {
 	#[NoAdminRequired]
 	public function index(int $fileId): JSONResponse {
 		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(data: ['error' => $this->l10n->t('Not authenticated')], statusCode: Http::STATUS_UNAUTHORIZED);
+			return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 		}
 
 		$limit = (int)($this->request->getParam('limit', 50));
@@ -133,7 +134,7 @@ class VersionController extends Controller {
 	#[NoAdminRequired]
 	public function download(int $fileId, int $versionTimestamp): DataDownloadResponse|JSONResponse {
 		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(data: ['error' => $this->l10n->t('Not authenticated')], statusCode: Http::STATUS_UNAUTHORIZED);
+			return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 		}
 
 		try {
@@ -166,7 +167,7 @@ class VersionController extends Controller {
 	#[NoAdminRequired]
 	public function restore(int $fileId, int $versionTimestamp): JSONResponse {
 		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(data: ['error' => $this->l10n->t('Not authenticated')], statusCode: Http::STATUS_UNAUTHORIZED);
+			return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 		}
 
 		try {

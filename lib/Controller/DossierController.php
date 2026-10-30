@@ -67,6 +67,7 @@ use Psr\Log\LoggerInterface;
  * @link     https://www.filinq.app
  */
 class DossierController extends Controller {
+	use AnswersNotAuthenticated;
 	/**
 	 * Constructor for DossierController.
 	 *
@@ -109,10 +110,7 @@ class DossierController extends Controller {
 	 */
 	public function generateGrondslagenSummary(string $dossierId): JSONResponse {
 		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(
-				['error' => $this->l10n->t('Not authenticated')],
-				Http::STATUS_UNAUTHORIZED
-			);
+			return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 		}
 
 		try {

@@ -51,6 +51,7 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/specs/pdfa3-conversion/spec.md
  */
 class PdfController extends Controller {
+	use AnswersNotAuthenticated;
 	/**
 	 * Constructor for PdfController
 	 *
@@ -100,10 +101,7 @@ class PdfController extends Controller {
 	public function render(): DataDownloadResponse|JSONResponse {
 		try {
 			if ($this->userSession->getUser() === null) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Not authenticated')],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 			}
 
 			$template = $this->request->getParam('template');
@@ -191,10 +189,7 @@ class PdfController extends Controller {
 	public function renderPdfA(): DataDownloadResponse|JSONResponse {
 		try {
 			if ($this->userSession->getUser() === null) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Not authenticated')],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 			}
 
 			$template = $this->request->getParam('template');

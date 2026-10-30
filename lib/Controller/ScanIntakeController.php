@@ -57,6 +57,7 @@ use Throwable;
  * pages, which is the silent version of this refusal.
  */
 class ScanIntakeController extends Controller {
+	use AnswersNotAuthenticated;
 
 	/**
 	 * Constructor.
@@ -107,10 +108,7 @@ class ScanIntakeController extends Controller {
 	#[NoAdminRequired]
 	public function separators(string $profileId = '', array $caseNumbers = []): DataDownloadResponse|JSONResponse {
 		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(
-				data: ['error' => 'You must be logged in to print separator sheets.'],
-				statusCode: Http::STATUS_UNAUTHORIZED
-			);
+			return $this->notAuthenticated(message: 'You must be logged in to print separator sheets.');
 		}
 
 		try {
@@ -136,10 +134,7 @@ class ScanIntakeController extends Controller {
 	#[NoAdminRequired]
 	public function listProfiles(): JSONResponse {
 		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(
-				data: ['error' => 'You must be logged in.'],
-				statusCode: Http::STATUS_UNAUTHORIZED
-			);
+			return $this->notAuthenticated(message: 'You must be logged in.');
 		}
 
 		$profiles = $this->profiles->all();

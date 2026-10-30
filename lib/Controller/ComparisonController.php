@@ -48,6 +48,7 @@ use Throwable;
  * @link     https://www.filinq.app
  */
 class ComparisonController extends Controller {
+	use AnswersNotAuthenticated;
 	/**
 	 * Constructor.
 	 *
@@ -92,10 +93,7 @@ class ComparisonController extends Controller {
 	#[NoAdminRequired]
 	public function compare(): JSONResponse {
 		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(
-				data: ['error' => $this->l10n->t('Not authenticated')],
-				statusCode: Http::STATUS_UNAUTHORIZED
-			);
+			return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 		}
 
 		$left = $this->request->getParam('left');

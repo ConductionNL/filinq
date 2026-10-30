@@ -57,6 +57,7 @@ use Throwable;
  * @spec openspec/changes/documents-in-and-out-of-the-building/specs/document-register/spec.md
  */
 class PostRegisterController extends Controller {
+	use AnswersNotAuthenticated;
 
 	/**
 	 * Constructor.
@@ -156,10 +157,7 @@ class PostRegisterController extends Controller {
 	 */
 	private function read(callable $handler): JSONResponse {
 		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(
-				data: ['error' => 'You must be logged in to read the post register.'],
-				statusCode: Http::STATUS_UNAUTHORIZED
-			);
+			return $this->notAuthenticated(message: 'You must be logged in to read the post register.');
 		}
 
 		try {

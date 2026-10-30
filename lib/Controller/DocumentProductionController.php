@@ -49,6 +49,7 @@ use Throwable;
  * @spec openspec/specs/document-creatie-sjablonen/spec.md
  */
 class DocumentProductionController extends Controller {
+	use AnswersNotAuthenticated;
 
 	/**
 	 * Constructor.
@@ -287,10 +288,7 @@ class DocumentProductionController extends Controller {
 	 */
 	private function answer(callable $handler): JSONResponse {
 		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(
-				data: ['error' => 'You must be logged in.'],
-				statusCode: Http::STATUS_UNAUTHORIZED
-			);
+			return $this->notAuthenticated(message: 'You must be logged in.');
 		}
 
 		try {

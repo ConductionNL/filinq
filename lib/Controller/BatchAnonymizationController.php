@@ -71,6 +71,7 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.ExcessiveParameterList)
  */
 class BatchAnonymizationController extends Controller {
+	use AnswersNotAuthenticated;
 
 	/**
 	 * Constructor for BatchAnonymizationController
@@ -146,7 +147,7 @@ class BatchAnonymizationController extends Controller {
 	public function batchUpload(): JSONResponse {
 		try {
 			if ($this->userSession->getUser() === null) {
-				return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 			}
 
 			$files = $this->uploadService->collectFiles($this->request);
@@ -192,7 +193,7 @@ class BatchAnonymizationController extends Controller {
 	public function folderBatch(): JSONResponse {
 		try {
 			if ($this->userSession->getUser() === null) {
-				return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 			}
 
 			$folder = $this->batchRequest->resolveFolderParams(
@@ -245,7 +246,7 @@ class BatchAnonymizationController extends Controller {
 	public function batchExtract(string $batchId): JSONResponse {
 		try {
 			if ($this->userSession->getUser() === null) {
-				return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 			}
 
 			return new JSONResponse($this->extractService->extractNext($batchId));
@@ -272,7 +273,7 @@ class BatchAnonymizationController extends Controller {
 	 */
 	public function batchStatus(string $batchId): JSONResponse {
 		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+			return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 		}
 
 		$batch = $this->stateService->getBatch($batchId);
@@ -317,7 +318,7 @@ class BatchAnonymizationController extends Controller {
 	public function batchEntities(string $batchId): JSONResponse {
 		try {
 			if ($this->userSession->getUser() === null) {
-				return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 			}
 
 			$batch = $this->stateService->getBatch($batchId);
@@ -377,7 +378,7 @@ class BatchAnonymizationController extends Controller {
 	public function batchAnonymize(string $batchId): JSONResponse {
 		try {
 			if ($this->userSession->getUser() === null) {
-				return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 			}
 
 			$params = $this->request->getParams();
@@ -530,7 +531,7 @@ class BatchAnonymizationController extends Controller {
 	public function batchReport(string $batchId): JSONResponse|DataDownloadResponse {
 		try {
 			if ($this->userSession->getUser() === null) {
-				return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 			}
 
 			$csv = $this->reportService->generateReport($batchId);
@@ -553,7 +554,7 @@ class BatchAnonymizationController extends Controller {
 	 */
 	public function getProfiles(): JSONResponse {
 		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+			return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 		}
 
 		return new JSONResponse($this->profileService->getProfile());
@@ -594,7 +595,7 @@ class BatchAnonymizationController extends Controller {
 	public function updateProfiles(): JSONResponse {
 		try {
 			if ($this->userSession->getUser() === null) {
-				return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 			}
 
 			$params = $this->request->getParams();

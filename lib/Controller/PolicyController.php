@@ -45,6 +45,7 @@ use Psr\Log\LoggerInterface;
  * @link     https://www.filinq.app
  */
 class PolicyController extends Controller {
+	use AnswersNotAuthenticated;
 	/**
 	 * Constructor.
 	 *
@@ -74,10 +75,12 @@ class PolicyController extends Controller {
 	 *
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
+	 *
+	 * @spec openspec/specs/entity-publication-policies/spec.md
 	 */
 	public function indexProhibitions(): JSONResponse {
 		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+			return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 		}
 
 		try {
@@ -101,10 +104,12 @@ class PolicyController extends Controller {
 	 *
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
+	 *
+	 * @spec openspec/specs/entity-publication-policies/spec.md
 	 */
 	public function showProhibition(string $id): JSONResponse {
 		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+			return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 		}
 
 		try {
@@ -130,10 +135,12 @@ class PolicyController extends Controller {
 	 * @return JSONResponse
 	 *
 	 * @NoAdminRequired
+	 *
+	 * @spec openspec/specs/entity-publication-policies/spec.md
 	 */
 	public function createProhibition(): JSONResponse {
 		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+			return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 		}
 
 		try {
@@ -159,10 +166,12 @@ class PolicyController extends Controller {
 	 * @return JSONResponse
 	 *
 	 * @NoAdminRequired
+	 *
+	 * @spec openspec/specs/entity-publication-policies/spec.md
 	 */
 	public function updateProhibition(string $id): JSONResponse {
 		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+			return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 		}
 
 		try {
@@ -208,7 +217,7 @@ class PolicyController extends Controller {
 	 */
 	public function deleteProhibition(string $id): JSONResponse {
 		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+			return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 		}
 
 		try {
