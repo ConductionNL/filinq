@@ -349,6 +349,32 @@ class GenerateDocumentNodeTest extends TestCase {
 	}//end testEveryFormFieldEditsAKeyTheNodeReads()
 
 	/**
+	 * The editor form, field by field, with every label and help text translated.
+	 *
+	 * @return void
+	 */
+	public function testConfigFormIsPinned(): void {
+		$l10n = $this->createMock(IL10N::class);
+		$l10n->method('t')->willReturnCallback(static fn (string $text): string => '[nl] ' . $text);
+		$node = new GenerateDocumentNode(
+			generator: $this->createMock(DocumentGenerationRequestService::class),
+			urls: $this->createMock(IURLGenerator::class),
+			l10n: $l10n
+		);
+
+		$form = $node->configForm();
+
+		$this->assertSame(
+			['templateId', 'templateSlug', 'templateNamespace', 'template', 'format', 'filename', 'storeFile', 'targetField', 'output'],
+			array_column($form, 'key')
+		);
+		$this->assertSame(['key', 'label', 'type', 'help'], array_keys($form[0]));
+		$this->assertSame('[nl] Template', $form[0]['label']);
+		$this->assertSame('[nl] Without extension. May use item fields, for example {{ identifier }}.', $form[5]['help']);
+		$this->assertSame('02d2184a91085102b5f166729eb228917026646e', sha1(json_encode($form)));
+	}//end testConfigFormIsPinned()
+
+	/**
 	 * Kind and category come from OpenRegister's closed lists.
 	 *
 	 * @return void
