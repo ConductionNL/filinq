@@ -95,59 +95,29 @@ class BarChartRenderer {
 	 * Render a bar chart (vertical, grouped by series; or horizontal, first
 	 * series only — the ranked-list orientation).
 	 *
-	 * @param array $normalized Normalized `{labels, series}` data.
-	 * @param array $palette Ordered hex colors.
-	 * @param int $width Canvas width.
-	 * @param int $height Canvas height.
-	 * @param array $options Rendering options.
+	 * @param ChartRequest $chart The normalized data, palette, canvas size and options.
 	 *
 	 * @return string SVG markup.
 	 *
 	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-001
 	 */
-	public function render(array $normalized, array $palette, int $width, int $height, array $options): string {
-		if (($options['orientation'] ?? 'vertical') === 'horizontal') {
-			return $this->renderHorizontal(
-				normalized: $normalized,
-				palette: $palette,
-				width: $width,
-				height: $height,
-				options: $options
-			);
+	public function render(ChartRequest $chart): string {
+		if (($chart->options['orientation'] ?? 'vertical') === 'horizontal') {
+			return $this->renderHorizontal(chart: $chart);
 		}
 
-		$series = $normalized['series'];
-		$title = (string)($options['title'] ?? '');
-		$showLegend = (bool)($options['showLegend'] ?? (count($series) > 1));
+		$series = $chart->normalized['series'];
+		$showLegend = (bool)($chart->options['showLegend'] ?? (count($series) > 1));
 
-		$layout = $this->frame->layout(hasTitle: ($title !== ''), showLegend: $showLegend, width: $width, height: $height);
-		$niceMax = $this->scale->axisCeiling(value: $this->scale->seriesMax(series: $series));
+		$plot = $this->frame->layout(chart: $chart, showLegend: $showLegend);
+		$plot['niceMax'] = $this->scale->axisCeiling(value: $this->scale->seriesMax(series: $series));
 
 		$parts = [];
-		$parts[] = $this->frame->render(
-			layout: $layout,
-			title: $title,
-			valueFmt: (string)($options['valueFormat'] ?? 'integer'),
-			niceMax: $niceMax,
-			width: $width,
-			height: $height
-		);
-		$parts[] = $this->drawBars(
-			normalized: $normalized,
-			palette: $palette,
-			layout: $layout,
-			niceMax: $niceMax,
-			valueFmt: (string)($options['valueFormat'] ?? 'integer')
-		);
+		$parts[] = $this->frame->render(chart: $chart, plot: $plot);
+		$parts[] = $this->drawBars(chart: $chart, plot: $plot);
 
 		if ($showLegend === true) {
-			$parts[] = $this->legend->render(
-				series: $series,
-				palette: $palette,
-				x: $layout['marginLeft'],
-				y: $height - 12,
-				maxEntries: ChartLabelFormatter::MAX_LABELLED_ENTRIES
-			);
+			$parts[] = $this->legend->render(chart: $chart, x: $plot['marginLeft']);
 		}
 
 		$parts[] = '</svg>';
@@ -158,29 +128,28 @@ class BarChartRenderer {
 	/**
 	 * Draw the grouped bars plus their value and category labels.
 	 *
-	 * @param array $normalized Normalized `{labels, series}` data.
-	 * @param array $palette Ordered hex colors.
-	 * @param array $layout Geometry from {@see CartesianFrame::layout()}.
-	 * @param float $niceMax Axis ceiling value.
-	 * @param string $valueFmt Value label format.
+	 * @param ChartRequest $chart The normalized data, palette and value format.
+	 * @param array $plot Geometry from {@see CartesianFrame::layout()} plus the axis ceiling `niceMax`.
 	 *
 	 * @return string SVG markup fragment.
 	 */
-	private function drawBars(array $normalized, array $palette, array $layout, float $niceMax, string $valueFmt): string {
-		$labels = $normalized['labels'];
-		$series = $normalized['series'];
+	private function drawBars(ChartRequest $chart, array $plot): string {
+		$niceMax = $plot['niceMax'];
+		$valueFmt = $chart->valueFormat();
+		$labels = $chart->normalized['labels'];
+		$series = $chart->normalized['series'];
 		$numLabels = count($labels);
 		$numSeries = count($series);
-		$baselineY = $layout['baselineY'];
+		$baselineY = $plot['baselineY'];
 		$labelled = ($numLabels <= ChartLabelFormatter::MAX_LABELLED_ENTRIES);
 
-		$groupWidth = $layout['plotWidth'] / max(1, $numLabels);
+		$groupWidth = $plot['plotWidth'] / max(1, $numLabels);
 		$barGap = $groupWidth * 0.18;
 		$barWidth = ($groupWidth - (2 * $barGap)) / max(1, $numSeries);
 
 		$parts = [];
 		for ($i = 0; $i < $numLabels; $i++) {
-			$groupX = $layout['marginLeft'] + ($i * $groupWidth);
+			$groupX = $plot['marginLeft'] + ($i * $groupWidth);
 
 			for ($s = 0; $s < $numSeries; $s++) {
 				$value = $series[$s]['values'][$i] ?? null;
@@ -188,7 +157,7 @@ class BarChartRenderer {
 					continue;
 				}
 
-				$barHeight = max(0.0, (($value / $niceMax) * $layout['plotHeight']));
+				$barHeight = max(0.0, (($value / $niceMax) * $plot['plotHeight']));
 				$x = $groupX + $barGap + ($s * $barWidth);
 				$y = $baselineY - $barHeight;
 
@@ -197,7 +166,7 @@ class BarChartRenderer {
 					y: $y,
 					width: $barWidth * 0.86,
 					height: $barHeight,
-					color: $palette[$s % count($palette)]
+					color: $chart->color(index: $s)
 				);
 
 				if ($labelled === true && $barHeight > 12) {
@@ -230,17 +199,14 @@ class BarChartRenderer {
 	/**
 	 * Render a horizontal bar chart (ranked-list orientation, first series only).
 	 *
-	 * @param array $normalized Normalized `{labels, series}` data.
-	 * @param array $palette Ordered hex colors.
-	 * @param int $width Canvas width.
-	 * @param int $height Canvas height.
-	 * @param array $options Rendering options.
+	 * @param ChartRequest $chart The normalized data, palette, canvas size and options.
 	 *
 	 * @return string SVG markup.
 	 */
-	private function renderHorizontal(array $normalized, array $palette, int $width, int $height, array $options): string {
-		$values = $normalized['series'][0]['values'];
-		$title = (string)($options['title'] ?? '');
+	private function renderHorizontal(ChartRequest $chart): string {
+		$width = $chart->width;
+		$values = $chart->normalized['series'][0]['values'];
+		$title = $chart->title();
 
 		$marginTop = 14;
 		if ($title !== '') {
@@ -249,7 +215,7 @@ class BarChartRenderer {
 
 		$marginLeft = 130;
 		$plotWidth = (float)max(1, $width - $marginLeft - 50);
-		$plotHeight = (float)max(1, $height - $marginTop - 12);
+		$plotHeight = (float)max(1, $chart->height - $marginTop - 12);
 
 		$numericValues = array_filter($values, static fn ($v) => $v !== null);
 		if ($numericValues === []) {
@@ -259,24 +225,21 @@ class BarChartRenderer {
 		$niceMax = $this->scale->axisCeiling(value: (float)max($numericValues));
 
 		$parts = [];
-		$parts[] = $this->svg->svgOpenTag(width: $width, height: $height);
+		$parts[] = $this->svg->svgOpenTag(width: $width, height: $chart->height);
 
 		if ($title !== '') {
 			$parts[] = $this->svg->textEl(x: $width / 2, y: 18, text: $title, anchor: 'middle', size: 13, weight: 'bold');
 		}
 
 		$parts[] = $this->drawRows(
-			labels: $normalized['labels'],
-			values: $values,
-			color: $palette[0],
-			valueFmt: (string)($options['valueFormat'] ?? 'integer'),
+			chart: $chart,
 			geometry: [
 				'marginTop' => $marginTop,
 				'marginLeft' => $marginLeft,
 				'plotWidth' => $plotWidth,
-				'rowHeight' => ($plotHeight / max(1, count($normalized['labels']))),
-			],
-			niceMax: $niceMax
+				'rowHeight' => ($plotHeight / max(1, count($chart->normalized['labels']))),
+				'niceMax' => $niceMax,
+			]
 		);
 
 		$parts[] = '</svg>';
@@ -287,16 +250,19 @@ class BarChartRenderer {
 	/**
 	 * Draw one labelled horizontal bar row per category.
 	 *
-	 * @param array $labels Category labels.
-	 * @param array $values First-series values (null marks a gap).
-	 * @param string $color Bar fill color.
-	 * @param string $valueFmt Value label format.
-	 * @param array $geometry `{marginTop, marginLeft, plotWidth, rowHeight}`.
-	 * @param float $niceMax Axis ceiling value.
+	 * Draws the first series (null marks a gap) in the first palette color.
+	 *
+	 * @param ChartRequest $chart The labels, first-series values, palette and value format.
+	 * @param array $geometry `{marginTop, marginLeft, plotWidth, rowHeight, niceMax}`.
 	 *
 	 * @return string SVG markup fragment.
 	 */
-	private function drawRows(array $labels, array $values, string $color, string $valueFmt, array $geometry, float $niceMax): string {
+	private function drawRows(ChartRequest $chart, array $geometry): string {
+		$labels = $chart->normalized['labels'];
+		$values = $chart->normalized['series'][0]['values'];
+		$color = $chart->palette[0];
+		$valueFmt = $chart->valueFormat();
+		$niceMax = $geometry['niceMax'];
 		$marginLeft = $geometry['marginLeft'];
 		$rowHeight = $geometry['rowHeight'];
 		$barHeight = $rowHeight * 0.6;
