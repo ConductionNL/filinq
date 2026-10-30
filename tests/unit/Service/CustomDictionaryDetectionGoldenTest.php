@@ -34,6 +34,7 @@ use Psr\Log\NullLogger;
  *
  * @covers \OCA\Filinq\Service\CustomDictionaryDetectionRunner
  * @uses   \OCA\Filinq\Service\CustomDictionaryMatchService
+ * @uses   \OCA\Filinq\Service\DictionaryMatchScan
  */
 class CustomDictionaryDetectionGoldenTest extends TestCase {
 
@@ -61,6 +62,9 @@ class CustomDictionaryDetectionGoldenTest extends TestCase {
 			]],
 			'a known and a new entity, each twice' => [[
 				[5, 100, 'Karekiet, Ridderkerk, Karekiet en Ridderkerk.'],
+			]],
+			'matches that touch without overlapping' => [[
+				[7, 0, 'KarekietOperatie ZilverreigerKarekiet'],
 			]],
 			'a longer term across two dictionaries' => [[
 				[6, 0, 'Dossier Karekiet ligt in Ridderkerk-Zuid.'],
@@ -90,7 +94,7 @@ class CustomDictionaryDetectionGoldenTest extends TestCase {
 		$name = (string)$this->dataName();
 		if (getenv('GOLDEN_RECORD') === '1') {
 			$recorded[$name] = $trace;
-			file_put_contents($path, json_encode($recorded, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n");
+			file_put_contents($path, json_encode($recorded, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_PRESERVE_ZERO_FRACTION) . "\n");
 		}
 
 		$this->assertSame($recorded[$name] ?? null, $trace);

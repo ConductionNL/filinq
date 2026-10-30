@@ -48,7 +48,7 @@
                     "chunkId": 1,
                     "positionStart": 0,
                     "positionEnd": 21,
-                    "confidence": 1,
+                    "confidence": 1.0,
                     "detectionMethod": "custom_dictionary",
                     "context": "Codenaam",
                     "anonymized": false,
@@ -64,7 +64,7 @@
                     "chunkId": 1,
                     "positionStart": 32,
                     "positionEnd": 42,
-                    "confidence": 1,
+                    "confidence": 1.0,
                     "detectionMethod": "custom_dictionary",
                     "context": "Stad",
                     "anonymized": false,
@@ -80,7 +80,7 @@
                     "chunkId": 2,
                     "positionStart": 36,
                     "positionEnd": 57,
-                    "confidence": 1,
+                    "confidence": 1.0,
                     "detectionMethod": "custom_dictionary",
                     "context": "Codenaam",
                     "anonymized": false,
@@ -96,7 +96,7 @@
                     "chunkId": 2,
                     "positionStart": 21,
                     "positionEnd": 32,
-                    "confidence": 1,
+                    "confidence": 1.0,
                     "detectionMethod": "custom_dictionary",
                     "context": "Barendrecht",
                     "anonymized": false,
@@ -137,7 +137,7 @@
                     "chunkId": 5,
                     "positionStart": 10,
                     "positionEnd": 20,
-                    "confidence": 1,
+                    "confidence": 1.0,
                     "detectionMethod": "custom_dictionary",
                     "context": "Stad",
                     "anonymized": false,
@@ -153,7 +153,7 @@
                     "chunkId": 5,
                     "positionStart": 34,
                     "positionEnd": 44,
-                    "confidence": 1,
+                    "confidence": 1.0,
                     "detectionMethod": "custom_dictionary",
                     "context": "Stad",
                     "anonymized": false,
@@ -169,7 +169,7 @@
                     "chunkId": 5,
                     "positionStart": 0,
                     "positionEnd": 8,
-                    "confidence": 1,
+                    "confidence": 1.0,
                     "detectionMethod": "custom_dictionary",
                     "context": "Karekiet",
                     "anonymized": false,
@@ -185,7 +185,7 @@
                     "chunkId": 5,
                     "positionStart": 22,
                     "positionEnd": 30,
-                    "confidence": 1,
+                    "confidence": 1.0,
                     "detectionMethod": "custom_dictionary",
                     "context": "Karekiet",
                     "anonymized": false,
@@ -222,7 +222,7 @@
                     "chunkId": 6,
                     "positionStart": 0,
                     "positionEnd": 16,
-                    "confidence": 1,
+                    "confidence": 1.0,
                     "detectionMethod": "custom_dictionary",
                     "context": "Dossier",
                     "anonymized": false,
@@ -238,9 +238,84 @@
                     "chunkId": 6,
                     "positionStart": 25,
                     "positionEnd": 35,
-                    "confidence": 1,
+                    "confidence": 1.0,
                     "detectionMethod": "custom_dictionary",
                     "context": "Stad",
+                    "anonymized": false,
+                    "skipAnonymization": false,
+                    "createdAt": true
+                }
+            ]
+        ]
+    },
+    "matches that touch without overlapping": {
+        "warning": null,
+        "calls": [
+            [
+                "find",
+                "Operatie Zilverreiger",
+                "CUSTOM_DICTIONARY"
+            ],
+            [
+                "create",
+                "Operatie Zilverreiger",
+                "CUSTOM_DICTIONARY",
+                "contextual_data"
+            ],
+            [
+                "find",
+                "Karekiet",
+                "CUSTOM_DICTIONARY"
+            ],
+            [
+                "create",
+                "Karekiet",
+                "CUSTOM_DICTIONARY",
+                "contextual_data"
+            ],
+            [
+                "insert",
+                {
+                    "entityId": 900,
+                    "fileId": 77,
+                    "chunkId": 7,
+                    "positionStart": 8,
+                    "positionEnd": 29,
+                    "confidence": 1.0,
+                    "detectionMethod": "custom_dictionary",
+                    "context": "Codenaam",
+                    "anonymized": false,
+                    "skipAnonymization": false,
+                    "createdAt": true
+                }
+            ],
+            [
+                "insert",
+                {
+                    "entityId": 901,
+                    "fileId": 77,
+                    "chunkId": 7,
+                    "positionStart": 0,
+                    "positionEnd": 8,
+                    "confidence": 1.0,
+                    "detectionMethod": "custom_dictionary",
+                    "context": "Karekiet",
+                    "anonymized": false,
+                    "skipAnonymization": false,
+                    "createdAt": true
+                }
+            ],
+            [
+                "insert",
+                {
+                    "entityId": 901,
+                    "fileId": 77,
+                    "chunkId": 7,
+                    "positionStart": 29,
+                    "positionEnd": 37,
+                    "confidence": 1.0,
+                    "detectionMethod": "custom_dictionary",
+                    "context": "Karekiet",
                     "anonymized": false,
                     "skipAnonymization": false,
                     "createdAt": true
