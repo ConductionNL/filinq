@@ -27,6 +27,9 @@ use RuntimeException;
  * implementation before resolveEdits() was split.
  *
  * @covers \OCA\Filinq\Service\Editing\PackageCodec
+ * @uses   \OCA\Filinq\Service\Editing\BlockStyleCodec
+ * @uses   \OCA\Filinq\Service\Editing\XmlBlockScanner
+ * @uses   \OCA\Filinq\Service\Editing\PackagePartIo
  */
 class EditResolutionGoldenTest extends TestCase {
 
