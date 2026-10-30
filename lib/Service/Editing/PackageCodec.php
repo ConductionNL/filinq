@@ -46,8 +46,9 @@ use RuntimeException;
  *
  * @spec openspec/specs/document-editing/spec.md#requirement-untouched-parts-of-a-document-package-survive-an-edit-unchanged
  *
- * @SuppressWarnings(PHPMD.CyclomaticComplexity)
- * @SuppressWarnings(PHPMD.NPathComplexity)
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Reading and editing both
+ * package families goes through one codec so an edit cannot reach a part the
+ * reader did not see; each check of an edit is its own small method.
  */
 class PackageCodec {
 
