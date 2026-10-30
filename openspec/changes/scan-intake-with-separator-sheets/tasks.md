@@ -1,6 +1,6 @@
 # Tasks: scan-intake-with-separator-sheets
 
-<!-- HYDRA CAP: max 20 unindented `- [ ]` lines. This file uses 9. -->
+<!-- HYDRA CAP: max 20 unindented `- [ ]` lines. This file uses 10. -->
 
 ## 1. Schema and settings
 
@@ -24,6 +24,8 @@
 
 - [x] 4.1 Pre-fill the assign picker from `sourceRef` on the intake page and the leaf (REQ-SCI-04)
   - The intake dialog pre-selects; the `filinq-document-intake` leaf (built 2026-10-09) lists documents whose `sourceRef` names the host record first and marks them (`orderForHost()` in `src/services/intakeLeaf.js`, tests/vitest/documentIntakeLeaf.spec.js).
+
+- [ ] 4.2 List and add scanner profiles on the intake channels page as the board `filinq/FqInvoerkanalen` draws it, over the existing `scanIntake#listProfiles` and `scanIntake#declareProfiles` routes; extend `ScanProfileService` with `resolution`, `colourMode` and separator mode `none` (one document per batch, no split) (REQ-SCI-05)
 
 ## 5. Quality
 
