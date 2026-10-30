@@ -319,7 +319,28 @@ class CustomDictionaryService implements CustomDictionaryServiceInterface {
 	public function importTerms(string $dictionaryUuid, string $content, bool $isCsv): array {
 		$this->accessGate->assertMayMaintain();
 		$dictionary = $this->findDictionaryOrFail(uuid: $dictionaryUuid);
+		$rows = $this->importRows(content: $content, isCsv: $isCsv);
 
+		$import = new DictionaryTermImport(
+			dictionary: (string)($dictionary['id'] ?? $dictionaryUuid),
+			existingTerms: $this->listTermsForDictionary(dictionary: $dictionary)
+		);
+
+		return $this->addTerms(rows: $rows, import: $import);
+
+	}//end importTerms()
+
+	/**
+	 * The rows of an upload, within the size and row bounds.
+	 *
+	 * @param string $content Raw uploaded/pasted content.
+	 * @param bool   $isCsv   True for CSV parsing, false for newline-list parsing.
+	 *
+	 * @return array<int, array{value: string, label: string|null}> The rows.
+	 *
+	 * @throws InvalidArgumentException When the payload exceeds the size/row bound.
+	 */
+	private function importRows(string $content, bool $isCsv): array {
 		if (strlen($content) > self::MAX_IMPORT_BYTES) {
 			throw new InvalidArgumentException(
 				sprintf('Import payload exceeds the %d byte limit.', self::MAX_IMPORT_BYTES)
@@ -337,43 +358,40 @@ class CustomDictionaryService implements CustomDictionaryServiceInterface {
 			);
 		}
 
-		$existingKeys = [];
-		foreach ($this->listTermsForDictionary(dictionary: $dictionary) as $existingTerm) {
-			$existingKeys[mb_strtolower(trim((string)($existingTerm['value'] ?? '')))] = true;
-		}
+		return $rows;
 
-		$dictionaryReference = (string)($dictionary['id'] ?? $dictionaryUuid);
+	}//end importRows()
+
+	/**
+	 * Save every new, non-blank row as a term; count the rest as skipped.
+	 *
+	 * @param array<int, array{value: string, label: string|null}> $rows   The parsed rows.
+	 * @param DictionaryTermImport                           $import The dictionary and the values already taken.
+	 *
+	 * @return array{added: int, skipped: int, total: int}
+	 */
+	private function addTerms(array $rows, DictionaryTermImport $import): array {
 		$added = 0;
 		$skipped = 0;
-		$seenThisBatch = [];
-
 		foreach ($rows as $row) {
 			// The normaliser always emits a string `value` (a missing CSV
 			// column is coerced to ''), so no null-coalesce is needed here.
 			$value = trim($row['value']);
-			if ($value === '') {
+			if ($value === '' || $import->admits(value: $value) === false) {
 				$skipped++;
 				continue;
 			}
-
-			$key = mb_strtolower($value);
-			if (isset($existingKeys[$key]) === true || isset($seenThisBatch[$key]) === true) {
-				$skipped++;
-				continue;
-			}
-
-			$seenThisBatch[$key] = true;
 
 			$this->repository->save(
 				schema: self::SCHEMA_TERM,
 				data: [
 					'value' => $value,
 					'label' => $this->normaliser->stringOrNull(value: ($row['label'] ?? null)),
-					'dictionary' => $dictionaryReference,
+					'dictionary' => $import->dictionary,
 				]
 			);
 			$added++;
-		}//end foreach
+		}
 
 		return [
 			'added' => $added,
@@ -381,7 +399,7 @@ class CustomDictionaryService implements CustomDictionaryServiceInterface {
 			'total' => ($added + $skipped),
 		];
 
-	}//end importTerms()
+	}//end addTerms()
 
 	/**
 	 * Active dictionaries + their non-blank terms, scoped to the caller's
