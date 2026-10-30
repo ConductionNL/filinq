@@ -1,0 +1,250 @@
+{
+    "no entities": {
+        "error": {
+            "status": 400,
+            "body": {
+                "error": "[t] No entities provided for anonymization"
+            }
+        },
+        "request": null
+    },
+    "entities not a list": {
+        "error": {
+            "status": 400,
+            "body": {
+                "error": "[t] No entities provided for anonymization"
+            }
+        },
+        "request": null
+    },
+    "empty entities": {
+        "error": {
+            "status": 400,
+            "body": {
+                "error": "[t] No entities provided for anonymization"
+            }
+        },
+        "request": null
+    },
+    "only entities": {
+        "error": null,
+        "request": {
+            "entities": [
+                {
+                    "text": "Jan"
+                }
+            ],
+            "hasStrayBases": false,
+            "appendBasisSummary": false,
+            "reversible": false,
+            "unredactedEntities": [],
+            "overrides": []
+        }
+    },
+    "stray bases": {
+        "error": null,
+        "request": {
+            "entities": [
+                {
+                    "text": "Jan",
+                    "type": "PERSON"
+                },
+                {
+                    "text": "Delft",
+                    "bases": [
+                        "5.1.2e"
+                    ]
+                }
+            ],
+            "hasStrayBases": true,
+            "appendBasisSummary": false,
+            "reversible": false,
+            "unredactedEntities": [],
+            "overrides": []
+        }
+    },
+    "a string flag": {
+        "error": {
+            "status": 400,
+            "body": {
+                "error": "[t] appendBasisSummary must be a boolean"
+            }
+        },
+        "request": null
+    },
+    "both flags": {
+        "error": null,
+        "request": {
+            "entities": [
+                {
+                    "text": "Jan"
+                }
+            ],
+            "hasStrayBases": false,
+            "appendBasisSummary": true,
+            "reversible": false,
+            "unredactedEntities": [],
+            "overrides": []
+        }
+    },
+    "a string reversible": {
+        "error": {
+            "status": 400,
+            "body": {
+                "error": "[t] reversible must be true or false"
+            }
+        },
+        "request": null
+    },
+    "both flags wrong": {
+        "error": {
+            "status": 400,
+            "body": {
+                "error": "[t] appendBasisSummary must be a boolean"
+            }
+        },
+        "request": null
+    },
+    "unredacted not a list": {
+        "error": {
+            "status": 400,
+            "body": {
+                "error": "[t] unredactedEntities must be an array"
+            }
+        },
+        "request": null
+    },
+    "unredacted entry not an object": {
+        "error": {
+            "status": 400,
+            "body": {
+                "error": "[t] Each unredactedEntities entry must be an object (index 0)"
+            }
+        },
+        "request": null
+    },
+    "unredacted entries": {
+        "error": null,
+        "request": {
+            "entities": [
+                {
+                    "text": "Jan"
+                }
+            ],
+            "hasStrayBases": false,
+            "appendBasisSummary": false,
+            "reversible": false,
+            "unredactedEntities": [
+                {
+                    "entityId": 3,
+                    "entityText": "Jan",
+                    "entityType": "PERSON",
+                    "publicationBases": [
+                        "5.1.2e"
+                    ]
+                }
+            ],
+            "overrides": []
+        }
+    },
+    "overrides not a list": {
+        "error": {
+            "status": 400,
+            "body": {
+                "error": "[t] acknowledgedOverrides must be an array"
+            }
+        },
+        "request": null
+    },
+    "an override not an object": {
+        "error": {
+            "status": 400,
+            "body": {
+                "error": "[t] Each acknowledgedOverrides entry must be an object (index 0)"
+            }
+        },
+        "request": null
+    },
+    "an override without a rule": {
+        "error": {
+            "status": 400,
+            "body": {
+                "error": "[t] acknowledgedOverrides[0].ruleId is required and must be a string"
+            }
+        },
+        "request": null
+    },
+    "an override with a string entity": {
+        "error": {
+            "status": 400,
+            "body": {
+                "error": "[t] acknowledgedOverrides[0].entityId is required and must be an integer"
+            }
+        },
+        "request": null
+    },
+    "an override with a numeric reason": {
+        "error": {
+            "status": 400,
+            "body": {
+                "error": "[t] acknowledgedOverrides[0].reason must be a string"
+            }
+        },
+        "request": null
+    },
+    "everything": {
+        "error": null,
+        "request": {
+            "entities": [
+                {
+                    "text": "Jan",
+                    "type": "PERSON"
+                },
+                {
+                    "text": "Delft",
+                    "bases": [
+                        "5.1.2e"
+                    ]
+                }
+            ],
+            "hasStrayBases": true,
+            "appendBasisSummary": true,
+            "reversible": true,
+            "unredactedEntities": [
+                {
+                    "entityId": 3,
+                    "entityText": "Jan",
+                    "entityType": "PERSON",
+                    "publicationBases": [
+                        "5.1.2e"
+                    ]
+                }
+            ],
+            "overrides": [
+                {
+                    "ruleId": "R-1",
+                    "entityId": 7,
+                    "reason": "ok"
+                }
+            ]
+        }
+    },
+    "unredacted and overrides both wrong": {
+        "error": {
+            "status": 400,
+            "body": {
+                "error": "[t] unredactedEntities must be an array"
+            }
+        },
+        "request": null
+    },
+    "a wrong flag and wrong overrides": {
+        "error": {
+            "status": 400,
+            "body": {
+                "error": "[t] reversible must be true or false"
+            }
+        },
+        "request": null
+    }
+}
