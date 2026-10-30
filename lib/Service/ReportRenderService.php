@@ -167,35 +167,43 @@ class ReportRenderService implements ReportRenderServiceInterface {
 			tenantId: $tenantId
 		);
 
+		$batch = $this->zipBatch(
+			job: ['template' => $template, 'templateSlug' => $templateSlug, 'items' => $items, 'options' => $options]
+		);
+
+		$filename = $this->buildFilename(templateSlug: $templateSlug, extension: 'zip');
+		$stored = $this->storageService->store(
+			userId: $userId,
+			targetPath: self::STORAGE_FOLDER,
+			filename: $filename,
+			content: $batch['content']
+		);
+
+		return [
+			'documentRef' => (string)$stored['fileId'],
+			'count' => $batch['count'],
+			'failures' => $batch['failures'],
+		];
+	}//end renderBatch()
+
+	/**
+	 * Render every batch item into one ZIP archive and read it back.
+	 *
+	 * @param array<string,mixed> $job The batch: template, templateSlug, items, options.
+	 *
+	 * @return array{content: string, count: int, failures: array<int,array{index:int,error:string}>} The archive and what went into it.
+	 *
+	 * @throws Exception Code 500 when the archive cannot be created or read.
+	 */
+	private function zipBatch(array $job): array {
 		$tempZipPath = sys_get_temp_dir() . '/' . uniqid('filinq_report_batch_', true) . '.zip';
 		$zip = new ZipArchive();
 		if ($zip->open($tempZipPath, ZipArchive::CREATE) !== true) {
 			throw new Exception(message: 'Could not create batch ZIP archive', code: 500);
 		}
 
-		$failures = [];
-		$rendered = 0;
-
 		try {
-			foreach ($items as $index => $item) {
-				$itemData = (array)($item['data'] ?? []);
-				try {
-					$pdfBytes = $this->renderOne(template: $template, data: $itemData, options: $options);
-					$entryName = $this->buildFilename(
-						templateSlug: $templateSlug,
-						extension: 'pdf',
-						suffix: (string)($index + 1)
-					);
-					$zip->addFromString($entryName, $pdfBytes);
-					$rendered++;
-				} catch (Throwable $e) {
-					$this->logger->warning(
-						message: '[ReportRenderService] Batch item {index} failed to render: {msg}',
-						context: ['index' => $index, 'msg' => $e->getMessage()]
-					);
-					$failures[] = ['index' => $index, 'error' => $e->getMessage()];
-				}//end try
-			}//end foreach
+			$batch = $this->addBatchItems(zip: $zip, job: $job);
 		} finally {
 			$zip->close();
 		}
@@ -207,20 +215,45 @@ class ReportRenderService implements ReportRenderServiceInterface {
 			throw new Exception(message: 'Could not read the assembled batch ZIP archive', code: 500);
 		}
 
-		$filename = $this->buildFilename(templateSlug: $templateSlug, extension: 'zip');
-		$stored = $this->storageService->store(
-			userId: $userId,
-			targetPath: self::STORAGE_FOLDER,
-			filename: $filename,
-			content: $zipContent
-		);
+		return ['content' => $zipContent] + $batch;
+	}//end zipBatch()
 
-		return [
-			'documentRef' => (string)$stored['fileId'],
-			'count' => $rendered,
-			'failures' => $failures,
-		];
-	}//end renderBatch()
+	/**
+	 * Render each batch item into the archive; a failing item is logged and reported, not thrown.
+	 *
+	 * @param ZipArchive          $zip The open archive.
+	 * @param array<string,mixed> $job The batch: template, templateSlug, items, options.
+	 *
+	 * @return array{count: int, failures: array<int,array{index:int,error:string}>} How many rendered, and what failed.
+	 */
+	private function addBatchItems(ZipArchive $zip, array $job): array {
+		$failures = [];
+		$rendered = 0;
+		foreach ($job['items'] as $index => $item) {
+			try {
+				$pdfBytes = $this->renderOne(
+					template: $job['template'],
+					data: (array)($item['data'] ?? []),
+					options: $job['options']
+				);
+				$entryName = $this->buildFilename(
+					templateSlug: $job['templateSlug'],
+					extension: 'pdf',
+					suffix: (string)($index + 1)
+				);
+				$zip->addFromString($entryName, $pdfBytes);
+				$rendered++;
+			} catch (Throwable $e) {
+				$this->logger->warning(
+					message: '[ReportRenderService] Batch item {index} failed to render: {msg}',
+					context: ['index' => $index, 'msg' => $e->getMessage()]
+				);
+				$failures[] = ['index' => $index, 'error' => $e->getMessage()];
+			}//end try
+		}//end foreach
+
+		return ['count' => $rendered, 'failures' => $failures];
+	}//end addBatchItems()
 
 	/**
 	 * Render one template + data pair to PDF bytes, honouring `outputQuality`.
@@ -241,9 +274,7 @@ class ReportRenderService implements ReportRenderServiceInterface {
 			huisstijl: $huisstijl
 		);
 
-		$outputQuality = (string)($options['outputQuality'] ?? 'screen');
-
-		if ($outputQuality === 'print') {
+		if ((string)($options['outputQuality'] ?? 'screen') === 'print') {
 			$converted = $this->pdfa3Service->convertHtml(
 				html: $renderResult['html'],
 				metadata: ['title' => (string)($template['name'] ?? 'Report')],

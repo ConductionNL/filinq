@@ -48,6 +48,7 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
  */
 class IntakeService implements IntakeServiceInterface {
+	use ReadsCurrentUserId;
 
 	/**
 	 * Constructor.
@@ -481,23 +482,6 @@ class IntakeService implements IntakeServiceInterface {
 		);
 
 	}//end requireWrite()
-
-	/**
-	 * The user id of the person at the keyboard.
-	 *
-	 * @return string The user id, or an empty string when there is no session.
-	 *
-	 * @spec exclude Session accessor with no behaviour of its own.
-	 */
-	private function currentUserId(): string {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return '';
-		}
-
-		return $user->getUID();
-
-	}//end currentUserId()
 
 	/**
 	 * Now, in ISO 8601.

@@ -51,6 +51,7 @@ use Throwable;
  * @spec openspec/specs/document-creatie-sjablonen/spec.md
  */
 class CaseArchiveService implements CaseArchiveServiceInterface {
+	use ReadsCurrentUserId;
 
 	/**
 	 * Constructor.
@@ -341,21 +342,4 @@ class CaseArchiveService implements CaseArchiveServiceInterface {
 		return $missing;
 
 	}//end unreadable()
-
-	/**
-	 * The user id of the person at the keyboard.
-	 *
-	 * @return string The user id, or an empty string when there is no session.
-	 *
-	 * @spec exclude Session accessor with no behaviour of its own.
-	 */
-	private function currentUserId(): string {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return '';
-		}
-
-		return $user->getUID();
-
-	}//end currentUserId()
 }//end class

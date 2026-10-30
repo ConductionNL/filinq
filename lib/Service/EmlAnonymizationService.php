@@ -43,6 +43,9 @@ use Throwable;
  * @spec openspec/specs/anonymization/spec.md
  */
 class EmlAnonymizationService {
+	use RaisesEmlStructureFailures;
+	use StripsFileExtension;
+
 	/**
 	 * Constructor for EmlAnonymizationService
 	 *
@@ -208,14 +211,7 @@ class EmlAnonymizationService {
 		if (method_exists($fileService, 'anonymizeEmlStructured') === false) {
 			throw new ConversionFailedException(
 				message: 'OpenRegister does not expose the anonymise-EML API; cannot anonymise EML input.',
-				attempts: [
-					[
-						'name' => 'eml',
-						'available' => false,
-						'supports' => true,
-						'reason' => 'anonymizeEmlStructured not present on OpenRegister FileService',
-					],
-				]
+				attempts: [$this->emlAttempt(available: false, reason: 'anonymizeEmlStructured not present on OpenRegister FileService')]
 			);
 		}
 
@@ -230,35 +226,10 @@ class EmlAnonymizationService {
 				'EML anonymise-API failed; no raw-parse fallback.',
 				['fileId' => $fileId, 'exception' => get_class($e), 'message' => $e->getMessage()]
 			);
-			throw new ConversionFailedException(
-				message: 'OpenRegister anonymise-EML API failed: ' . $e->getMessage(),
-				attempts: [
-					[
-						'name' => 'eml',
-						'available' => true,
-						'supports' => true,
-						'reason' => 'anonymizeEmlStructured threw: ' . $e->getMessage(),
-					],
-				],
-				previous: $e
-			);
-		}//end try
-
-		if (is_object($structure) === false) {
-			throw new ConversionFailedException(
-				message: 'OpenRegister anonymise-EML API returned no structure.',
-				attempts: [
-					[
-						'name' => 'eml',
-						'available' => true,
-						'supports' => true,
-						'reason' => 'anonymizeEmlStructured returned non-object',
-					],
-				]
-			);
+			throw $this->emlApiFailed(error: $e);
 		}
 
-		return $structure;
+		return $this->requireEmlStructure(structure: $structure);
 	}//end requestStructure()
 
 	/**
@@ -300,22 +271,4 @@ class EmlAnonymizationService {
 
 		return $resultInfo;
 	}//end buildResultInfo()
-
-	/**
-	 * Return $name without its trailing `.ext`.
-	 *
-	 * @param string $name File name with extension.
-	 *
-	 * @return string Name without extension.
-	 *
-	 * @spec openspec/specs/anonymization/spec.md
-	 */
-	private function stripExtension(string $name): string {
-		$dotPos = strrpos($name, '.');
-		if ($dotPos === false) {
-			return $name;
-		}
-
-		return substr($name, 0, $dotPos);
-	}//end stripExtension()
 }//end class

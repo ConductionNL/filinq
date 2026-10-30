@@ -273,4 +273,45 @@ class PeriodicDocumentServiceTest extends TestCase {
 		$this->assertSame([], $this->generations);
 		$this->assertStringContainsString('no owner', $this->scheduleWrites[0][1]['lastRunError']);
 	}
+	public function testAFailedOnDemandRunNamesTheCauseAndKeepsIt(): void {
+		$cause = new Exception('Template not found', 404);
+		$service = $this->service(records: [['id' => 'a']], failWith: $cause);
+
+		$failure = null;
+		try {
+			$service->run(schedule: $this->schedule());
+		} catch (RuntimeException $caught) {
+			$failure = $caught;
+		}
+
+		$this->assertNotNull($failure);
+		$this->assertSame('The document could not be generated: Template not found', $failure->getMessage());
+		$this->assertSame(0, $failure->getCode());
+		$this->assertSame($cause, $failure->getPrevious());
+		$this->assertSame([], $this->scheduleWrites);
+	}
+
+	public function testTheRunCarriesItsNameAndMomentIntoTheTemplateAndTheFileName(): void {
+		$service = $this->service(records: [['id' => 'a']]);
+
+		$document = $service->run(schedule: $this->schedule(['name' => 'Besluiten: week/39!', 'layout' => '  ']));
+
+		[, $options, $recordFields] = $this->generations[0];
+		$ranAt = $options['adHocData']['periodic']['ranAt'];
+		$this->assertSame('Besluiten: week/39!', $options['adHocData']['periodic']['name']);
+		$this->assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/', $ranAt);
+		$this->assertSame('Besluiten week39 ' . substr($ranAt, 0, 10), $options['filename']);
+		$this->assertSame([['id' => 'a']], $options['adHocData']['records']);
+		$this->assertSame(['viewSlug' => 'besluiten-deze-maand', 'recordCount' => 1], $recordFields);
+		$this->assertSame(['uuid' => 'document-new', 'status' => 'generated', 'templateId' => 'template-1', 'viewSlug' => 'besluiten-deze-maand', 'recordCount' => 1, 'fileId' => 991], $document);
+		$this->assertSame($ranAt, $this->scheduleWrites[0][1]['lastRunAt']);
+	}
+
+	public function testAnUnnamedScheduleStillGetsAFileName(): void {
+		$service = $this->service(records: []);
+
+		$service->run(schedule: $this->schedule(['name' => '!!!']));
+
+		$this->assertStringStartsWith('periodic-document ', $this->generations[0][1]['filename']);
+	}
 }

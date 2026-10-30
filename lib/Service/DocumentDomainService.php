@@ -50,6 +50,7 @@ use RuntimeException;
  * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
  */
 class DocumentDomainService implements DocumentDomainServiceInterface {
+	use ReadsCurrentUserId;
 
 	/**
 	 * Constructor.
@@ -259,21 +260,4 @@ class DocumentDomainService implements DocumentDomainServiceInterface {
 		return true;
 
 	}//end same()
-
-	/**
-	 * The user id of the person at the keyboard.
-	 *
-	 * @return string The user id, or an empty string when there is no session.
-	 *
-	 * @spec exclude Session accessor with no behaviour of its own.
-	 */
-	private function currentUserId(): string {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return '';
-		}
-
-		return $user->getUID();
-
-	}//end currentUserId()
 }//end class
