@@ -29,6 +29,7 @@ use OCA\Filinq\Kernel\Contracts\SigningServiceInterface;
 use OCA\Filinq\Service\SignerAuth\SigningAssuranceGate;
 use OCA\Filinq\Service\Signing\GuardianConsentGuard;
 use OCA\Filinq\Service\Signing\PortalSignatureAssurance;
+use OCA\Filinq\Service\Signing\SignerEntries;
 use OCA\Filinq\Service\Signing\SigningAct;
 use RuntimeException;
 
@@ -227,8 +228,7 @@ class SigningService implements SigningServiceInterface {
 		$requestId = $createdRequest['id'] ?? $createdRequest['uuid'] ?? '';
 		$createdRequest['signerIds'] = $this->persistSigners(
 			requestId: (string)$requestId,
-			signers: $signers,
-			prepared: $prepared
+			entries: new SignerEntries(entries: $signers, prepared: $prepared)
 		);
 		$objectService->saveObject(object: $createdRequest, register: $register, schema: $schema, _rbac: false);
 		$createdRequest['assuranceFloor'] = $this->assuranceGate->floorFor(request: $request);
@@ -301,19 +301,18 @@ class SigningService implements SigningServiceInterface {
 	 * first and guardians after; the returned ids keep the order of the entries.
 	 *
 	 * @param string $requestId The id of the saved signing request.
-	 * @param array<int|string, mixed> $signers The signer entries as the consumer sent them.
-	 * @param array{fields: array<int|string, array<string, mixed>>, links: array<int|string, int|string>} $prepared The guardian
-	 *     fields per entry and the guardian-to-signer links, from GuardianConsentGuard::prepareSigners().
+	 * @param SignerEntries $entries The signer entries, their guardian fields and guardian-to-signer links.
 	 *
 	 * @return list<string> The signer record ids, in entry order.
 	 *
 	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
-	private function persistSigners(string $requestId, array $signers, array $prepared): array {
+	private function persistSigners(string $requestId, SignerEntries $entries): array {
 		$objectService = $this->settingsService->getObjectService();
 		['register' => $signerRegister, 'schema' => $signerSchema] = $this->requireSignerRecordBinding();
 
-		$links = $prepared['links'];
+		$signers = $entries->entries;
+		$links = $entries->links;
 		$ids = [];
 		$guardiansLast = array_diff_key($signers, $links) + array_intersect_key($signers, $links);
 
@@ -327,7 +326,7 @@ class SigningService implements SigningServiceInterface {
 					'order' => $signerData['order'] ?? $index,
 					'status' => 'PENDING',
 				],
-				($prepared['fields'][$index] ?? []),
+				($entries->fields[$index] ?? []),
 				// A signer named by user id alone has no address: `format: email` refuses ''.
 				// An envelope's signer records carry envelopeRef, so the per-document notification skips them.
 				array_filter(
@@ -561,7 +560,7 @@ class SigningService implements SigningServiceInterface {
 
 		$this->logSigned(act: $act, metadata: array_merge($consent['audit'], ['identityEvidence' => $signer['identityEvidence']]));
 		$this->assuranceGate->consume(requestId: $requestId, signerId: $signerId);
-		$this->updateRequestStatus(requestId: $requestId, request: $request, verifiedActor: $verifiedActor);
+		$this->updateRequestStatus(act: $act);
 
 		return $signer;
 	}//end sign()
@@ -837,34 +836,19 @@ class SigningService implements SigningServiceInterface {
 	/**
 	 * Update the signing request status based on signer progress
 	 *
-	 * @param string $requestId The signing request ID
-	 * @param array<string, mixed> $request The current request data
-	 * @param array<string, mixed>|null $verifiedActor The verified external actor completing
-	 *                                                 this act, when portal-originated (see
-	 *                                                 `sign()`); threaded through to the
-	 *                                                 produced artifact's evidence binding
-	 *                                                 (portal-signing-surface REQ-DDPSS-004).
+	 * The act's verified external actor, when portal-originated (see `sign()`),
+	 * is threaded through to the produced artifact's evidence binding
+	 * (portal-signing-surface REQ-DDPSS-004).
+	 *
+	 * @param SigningAct $act The signing act: request ID, request data and verified actor.
 	 *
 	 * @return void
 	 */
-	private function updateRequestStatus(string $requestId, array $request, ?array $verifiedActor = null): void {
+	private function updateRequestStatus(SigningAct $act): void {
+		$requestId = $act->requestId;
 		$objectService = $this->settingsService->getObjectService();
 		['register' => $register, 'schema' => $schema] = $this->requireSigningRequestBinding();
-		['register' => $signerRegister, 'schema' => $signerSchema] = $this->requireSignerRecordBinding();
-		$signerIds = $request['signerIds'] ?? [];
-		$allSigned = true;
-		$signers = [];
-
-		foreach ($signerIds as $signerId) {
-			$signerObj = $objectService->find(id: $signerId, register: $signerRegister, schema: $signerSchema, _rbac: false);
-			$signer = $this->toArray(object: $signerObj);
-			$signers[(string)$signerId] = $signer;
-
-			if (($signer['status'] ?? '') !== 'SIGNED') {
-				$allSigned = false;
-				break;
-			}
-		}//end foreach
+		['allSigned' => $allSigned, 'signers' => $signers] = $this->signerProgress(request: $act->request);
 
 		$freshObj = $objectService->find(id: $requestId, register: $register, schema: $schema, _rbac: false);
 		$freshRequest = $this->toArray(object: $freshObj);
@@ -881,35 +865,14 @@ class SigningService implements SigningServiceInterface {
 		// COMPLETED with the unsigned original as its signed reference. If the
 		// artifact cannot be produced, the request stays IN_PROGRESS and the
 		// failure surfaces loudly to the completing signer.
-		// Step through IN_PROGRESS when the request is still PENDING.
-		//
-		// A single-signer request is fully signed the moment that one signer
-		// signs, so control reaches here with the request still PENDING — the
-		// `$allSigned === false` branch above, which is what normally moves it
-		// to IN_PROGRESS, never ran. Writing COMPLETED straight from PENDING is
-		// not a legal move: `self::STATUS_TRANSITIONS` allows PENDING only to
-		// IN_PROGRESS / CANCELLED / EXPIRED, and the `x-openregister-lifecycle`
-		// block on the signingRequest schema declares exactly the same edges
-		// (`start`: PENDING -> IN_PROGRESS, `complete`: IN_PROGRESS ->
-		// COMPLETED). OpenRegister enforces that declaration on save, so the
-		// jump was rejected with 'No transition allows moving "status" from
-		// "PENDING" to "COMPLETED"' and the whole sign action 500'd — every
-		// single-signer request was impossible to complete.
-		//
-		// Take the declared `start` edge explicitly rather than widening the
-		// state machine: "a signer has opened the request" is exactly what
-		// happened, and the intermediate state is what the audit trail and the
-		// list view expect to see.
+		// Step through IN_PROGRESS when the request is still PENDING. A
+		// single-signer request reaches here PENDING, and PENDING may only move
+		// to IN_PROGRESS, CANCELLED or EXPIRED (`self::STATUS_TRANSITIONS` and
+		// the schema's `x-openregister-lifecycle`, enforced on save), so the
+		// declared `start` edge is taken rather than widening the state machine.
 		if (($freshRequest['status'] ?? '') === 'PENDING') {
 			$freshRequest['status'] = 'IN_PROGRESS';
-			$freshRequest = $this->toArray(
-				object: $objectService->saveObject(
-					object: $freshRequest,
-					register: $register,
-					schema: $schema,
-					_rbac: false
-				)
-			);
+			$freshRequest = $this->toArray(object: $objectService->saveObject(object: $freshRequest, register: $register, schema: $schema, _rbac: false));
 		}
 
 		// Guardian consent (signer-identity-rails REQ-DDSIR-008/010): no
@@ -924,7 +887,7 @@ class SigningService implements SigningServiceInterface {
 		// MAC-covered assertion and into the completion payload.
 		$freshRequest = $this->assuranceGate->withResolvedAssurance(request: $freshRequest, signers: $signers);
 
-		$signedDocumentRef = $this->artifactProducer->produce(request: $freshRequest, verifiedActor: $verifiedActor, signers: $signers);
+		$signedDocumentRef = $this->artifactProducer->produce(request: $freshRequest, verifiedActor: $act->verifiedActor, signers: $signers);
 
 		$freshRequest['status'] = 'COMPLETED';
 		$freshRequest['signedDocumentRef'] = $signedDocumentRef;
@@ -941,6 +904,35 @@ class SigningService implements SigningServiceInterface {
 		);
 
 	}//end updateRequestStatus()
+
+	/**
+	 * Read the signer records of a request in order, stopping at the first that has not signed.
+	 *
+	 * @param array<string, mixed> $request The signing request data.
+	 *
+	 * @return array{allSigned: bool, signers: array<string, array<string, mixed>>} Whether every
+	 *     signer signed, and the records read, keyed by signer ID.
+	 */
+	private function signerProgress(array $request): array {
+		$objectService = $this->settingsService->getObjectService();
+		['register' => $signerRegister, 'schema' => $signerSchema] = $this->requireSignerRecordBinding();
+		$allSigned = true;
+		$signers = [];
+
+		foreach (($request['signerIds'] ?? []) as $signerId) {
+			$signerObj = $objectService->find(id: $signerId, register: $signerRegister, schema: $signerSchema, _rbac: false);
+			$signer = $this->toArray(object: $signerObj);
+			$signers[(string)$signerId] = $signer;
+
+			if (($signer['status'] ?? '') !== 'SIGNED') {
+				$allSigned = false;
+				break;
+			}
+		}
+
+		return ['allSigned' => $allSigned, 'signers' => $signers];
+
+	}//end signerProgress()
 
 	/**
 	 * Emit a terminal SigningConcludedEvent for an expired request.
