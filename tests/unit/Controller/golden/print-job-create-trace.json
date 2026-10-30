@@ -1,0 +1,617 @@
+{
+    "batch: nobody logged in": {
+        "status": 401,
+        "data": {
+            "error": "Not authenticated"
+        },
+        "calls": [],
+        "logs": []
+    },
+    "batch: no template": {
+        "status": 400,
+        "data": {
+            "error": "templateId is required"
+        },
+        "calls": [],
+        "logs": []
+    },
+    "batch: template \"0\"": {
+        "status": 400,
+        "data": {
+            "error": "templateId is required"
+        },
+        "calls": [],
+        "logs": []
+    },
+    "batch: no items": {
+        "status": 400,
+        "data": {
+            "error": "items array is required and must not be empty"
+        },
+        "calls": [],
+        "logs": []
+    },
+    "batch: items not a list": {
+        "status": 400,
+        "data": {
+            "error": "items array is required and must not be empty"
+        },
+        "calls": [],
+        "logs": []
+    },
+    "batch: empty items": {
+        "status": 400,
+        "data": {
+            "error": "items array is required and must not be empty"
+        },
+        "calls": [],
+        "logs": []
+    },
+    "batch: options not an array": {
+        "status": 201,
+        "data": {
+            "batchId": "batch-1",
+            "count": 2
+        },
+        "calls": [
+            [
+                "createBatchJob",
+                [
+                    "t-1",
+                    [],
+                    "print-job.pdf"
+                ],
+                [
+                    {
+                        "data": {
+                            "naam": "Jansen"
+                        },
+                        "filename": "a.pdf"
+                    },
+                    {
+                        "data": []
+                    }
+                ],
+                "anna"
+            ]
+        ],
+        "logs": []
+    },
+    "batch: everything": {
+        "status": 201,
+        "data": {
+            "batchId": "batch-1",
+            "count": 2
+        },
+        "calls": [
+            [
+                "createBatchJob",
+                [
+                    "t-1",
+                    {
+                        "duplex": true
+                    },
+                    "brieven.pdf"
+                ],
+                [
+                    {
+                        "data": {
+                            "naam": "Jansen"
+                        },
+                        "filename": "a.pdf"
+                    },
+                    {
+                        "data": []
+                    }
+                ],
+                "anna"
+            ]
+        ],
+        "logs": []
+    },
+    "batch: a numeric template id": {
+        "status": 201,
+        "data": {
+            "batchId": "batch-1",
+            "count": 2
+        },
+        "calls": [
+            [
+                "createBatchJob",
+                [
+                    "12",
+                    [],
+                    "print-job.pdf"
+                ],
+                [
+                    {
+                        "data": {
+                            "naam": "Jansen"
+                        },
+                        "filename": "a.pdf"
+                    },
+                    {
+                        "data": []
+                    }
+                ],
+                "anna"
+            ]
+        ],
+        "logs": []
+    },
+    "batch: the service refuses with 422": {
+        "status": 422,
+        "data": {
+            "error": "Operation failed"
+        },
+        "calls": [
+            [
+                "createBatchJob",
+                [
+                    "t-1",
+                    [],
+                    "print-job.pdf"
+                ],
+                [
+                    {
+                        "data": {
+                            "naam": "Jansen"
+                        },
+                        "filename": "a.pdf"
+                    },
+                    {
+                        "data": []
+                    }
+                ],
+                "anna"
+            ]
+        ],
+        "logs": [
+            [
+                "error",
+                "Batch print job create failed: batch refused",
+                {
+                    "exception": [
+                        "Exception",
+                        422
+                    ]
+                }
+            ]
+        ]
+    },
+    "batch: the service fails with 400": {
+        "status": 400,
+        "data": {
+            "error": "Operation failed"
+        },
+        "calls": [
+            [
+                "createBatchJob",
+                [
+                    "t-1",
+                    [],
+                    "print-job.pdf"
+                ],
+                [
+                    {
+                        "data": {
+                            "naam": "Jansen"
+                        },
+                        "filename": "a.pdf"
+                    },
+                    {
+                        "data": []
+                    }
+                ],
+                "anna"
+            ]
+        ],
+        "logs": [
+            [
+                "error",
+                "Batch print job create failed: batch refused",
+                {
+                    "exception": [
+                        "Exception",
+                        400
+                    ]
+                }
+            ]
+        ]
+    },
+    "batch: the service fails with 599": {
+        "status": 599,
+        "data": {
+            "error": "Operation failed"
+        },
+        "calls": [
+            [
+                "createBatchJob",
+                [
+                    "t-1",
+                    [],
+                    "print-job.pdf"
+                ],
+                [
+                    {
+                        "data": {
+                            "naam": "Jansen"
+                        },
+                        "filename": "a.pdf"
+                    },
+                    {
+                        "data": []
+                    }
+                ],
+                "anna"
+            ]
+        ],
+        "logs": [
+            [
+                "error",
+                "Batch print job create failed: batch refused",
+                {
+                    "exception": [
+                        "Exception",
+                        599
+                    ]
+                }
+            ]
+        ]
+    },
+    "batch: the service fails with 600": {
+        "status": 500,
+        "data": {
+            "error": "Operation failed"
+        },
+        "calls": [
+            [
+                "createBatchJob",
+                [
+                    "t-1",
+                    [],
+                    "print-job.pdf"
+                ],
+                [
+                    {
+                        "data": {
+                            "naam": "Jansen"
+                        },
+                        "filename": "a.pdf"
+                    },
+                    {
+                        "data": []
+                    }
+                ],
+                "anna"
+            ]
+        ],
+        "logs": [
+            [
+                "error",
+                "Batch print job create failed: batch refused",
+                {
+                    "exception": [
+                        "Exception",
+                        600
+                    ]
+                }
+            ]
+        ]
+    },
+    "batch: the service fails with 399": {
+        "status": 500,
+        "data": {
+            "error": "Operation failed"
+        },
+        "calls": [
+            [
+                "createBatchJob",
+                [
+                    "t-1",
+                    [],
+                    "print-job.pdf"
+                ],
+                [
+                    {
+                        "data": {
+                            "naam": "Jansen"
+                        },
+                        "filename": "a.pdf"
+                    },
+                    {
+                        "data": []
+                    }
+                ],
+                "anna"
+            ]
+        ],
+        "logs": [
+            [
+                "error",
+                "Batch print job create failed: batch refused",
+                {
+                    "exception": [
+                        "Exception",
+                        399
+                    ]
+                }
+            ]
+        ]
+    },
+    "batch: the service fails with 0": {
+        "status": 500,
+        "data": {
+            "error": "Operation failed"
+        },
+        "calls": [
+            [
+                "createBatchJob",
+                [
+                    "t-1",
+                    [],
+                    "print-job.pdf"
+                ],
+                [
+                    {
+                        "data": {
+                            "naam": "Jansen"
+                        },
+                        "filename": "a.pdf"
+                    },
+                    {
+                        "data": []
+                    }
+                ],
+                "anna"
+            ]
+        ],
+        "logs": [
+            [
+                "error",
+                "Batch print job create failed: batch refused",
+                {
+                    "exception": [
+                        "Exception",
+                        0
+                    ]
+                }
+            ]
+        ]
+    },
+    "create: nobody logged in": {
+        "status": 401,
+        "data": {
+            "error": "Not authenticated"
+        },
+        "calls": [],
+        "logs": []
+    },
+    "create: no template": {
+        "status": 400,
+        "data": {
+            "error": "templateId is required"
+        },
+        "calls": [],
+        "logs": []
+    },
+    "create: template \"0\"": {
+        "status": 400,
+        "data": {
+            "error": "templateId is required"
+        },
+        "calls": [],
+        "logs": []
+    },
+    "create: data and options not arrays": {
+        "status": 201,
+        "data": {
+            "jobId": "job-1"
+        },
+        "calls": [
+            [
+                "createJob",
+                [
+                    "t-1",
+                    [],
+                    "document.pdf"
+                ],
+                [],
+                "anna"
+            ]
+        ],
+        "logs": []
+    },
+    "create: everything": {
+        "status": 201,
+        "data": {
+            "jobId": "job-1"
+        },
+        "calls": [
+            [
+                "createJob",
+                [
+                    "t-1",
+                    {
+                        "duplex": true
+                    },
+                    "brief.pdf"
+                ],
+                {
+                    "naam": "Jansen"
+                },
+                "anna"
+            ]
+        ],
+        "logs": []
+    },
+    "create: a numeric file name": {
+        "status": 201,
+        "data": {
+            "jobId": "job-1"
+        },
+        "calls": [
+            [
+                "createJob",
+                [
+                    "t-1",
+                    [],
+                    "7"
+                ],
+                [],
+                "anna"
+            ]
+        ],
+        "logs": []
+    },
+    "create: the service refuses with 422": {
+        "status": 422,
+        "data": {
+            "error": "Operation failed"
+        },
+        "calls": [
+            [
+                "createJob",
+                [
+                    "t-1",
+                    [],
+                    "document.pdf"
+                ],
+                [],
+                "anna"
+            ]
+        ],
+        "logs": [
+            [
+                "error",
+                "Print job create failed: job refused",
+                {
+                    "exception": [
+                        "Exception",
+                        422
+                    ]
+                }
+            ]
+        ]
+    },
+    "create: the service fails with 400": {
+        "status": 400,
+        "data": {
+            "error": "Operation failed"
+        },
+        "calls": [
+            [
+                "createJob",
+                [
+                    "t-1",
+                    [],
+                    "document.pdf"
+                ],
+                [],
+                "anna"
+            ]
+        ],
+        "logs": [
+            [
+                "error",
+                "Print job create failed: job refused",
+                {
+                    "exception": [
+                        "Exception",
+                        400
+                    ]
+                }
+            ]
+        ]
+    },
+    "create: the service fails with 599": {
+        "status": 599,
+        "data": {
+            "error": "Operation failed"
+        },
+        "calls": [
+            [
+                "createJob",
+                [
+                    "t-1",
+                    [],
+                    "document.pdf"
+                ],
+                [],
+                "anna"
+            ]
+        ],
+        "logs": [
+            [
+                "error",
+                "Print job create failed: job refused",
+                {
+                    "exception": [
+                        "Exception",
+                        599
+                    ]
+                }
+            ]
+        ]
+    },
+    "create: the service fails with 600": {
+        "status": 500,
+        "data": {
+            "error": "Operation failed"
+        },
+        "calls": [
+            [
+                "createJob",
+                [
+                    "t-1",
+                    [],
+                    "document.pdf"
+                ],
+                [],
+                "anna"
+            ]
+        ],
+        "logs": [
+            [
+                "error",
+                "Print job create failed: job refused",
+                {
+                    "exception": [
+                        "Exception",
+                        600
+                    ]
+                }
+            ]
+        ]
+    },
+    "create: the service fails with 399": {
+        "status": 500,
+        "data": {
+            "error": "Operation failed"
+        },
+        "calls": [
+            [
+                "createJob",
+                [
+                    "t-1",
+                    [],
+                    "document.pdf"
+                ],
+                [],
+                "anna"
+            ]
+        ],
+        "logs": [
+            [
+                "error",
+                "Print job create failed: job refused",
+                {
+                    "exception": [
+                        "Exception",
+                        399
+                    ]
+                }
+            ]
+        ]
+    }
+}
