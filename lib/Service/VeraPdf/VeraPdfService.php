@@ -165,7 +165,7 @@ class VeraPdfService {
 			throw new VeraPdfException(reason: VeraPdfException::REASON_FAILED, message: 'No temporary file could be written for validation.');
 		}
 
-		$started = microtime(true);
+		$started = hrtime(true);
 		try {
 			$run = $this->process->run(argv: $this->arguments(flavour: $flavour, path: $path), seconds: $this->maxSeconds());
 		} finally {
@@ -191,7 +191,7 @@ class VeraPdfService {
 			);
 		}
 
-		$verdict['elapsedMs'] = (int) round((microtime(true) - $started) * 1000);
+		$verdict['elapsedMs'] = (int) round((hrtime(true) - $started) / 1e6);
 
 		return $verdict;
 
