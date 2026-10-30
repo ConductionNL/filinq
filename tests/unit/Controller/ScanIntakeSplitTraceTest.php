@@ -36,6 +36,7 @@ use RuntimeException;
  * implementation before it was split into helpers.
  *
  * @covers \OCA\Filinq\Controller\ScanIntakeController
+ * @uses   \OCA\Filinq\Service\ScanBatchCut
  *
  * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
  */
