@@ -85,6 +85,11 @@ class EntityRelationDecisionListenerTraceTest extends TestCase {
 				[],
 				[['0', 'PERSON', 'Anneke Jansen', 'filinq', 'publicationConsent', ['entityKey' => 'uuid-1']]],
 			],
+			'no file id and no entity' => [
+				['fileId' => null, 'entityId' => null, 'entity' => $entity],
+				[['warning', self::DECLINE_FILE, ['relation' => '5']]],
+				[],
+			],
 			'no entity id' => [
 				['fileId' => 42, 'entityId' => null, 'entity' => $entity],
 				[['warning', self::DECLINE_ENTITY, ['relation' => '5', 'entity' => 'unknown']]],

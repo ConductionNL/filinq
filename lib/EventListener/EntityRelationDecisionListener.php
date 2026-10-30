@@ -101,17 +101,17 @@ class EntityRelationDecisionListener implements IEventListener {
 			return;
 		}
 
-		// HELD AS `mixed` ON PURPOSE, and this is not a style choice.
-		//
-		// `is_a()` with a literal class name is a type assertion to static
-		// analysis, so psalm narrows `$event` to a class it cannot load — this
-		// app does not depend on OpenRegister — and every subsequent property
-		// access becomes an UndefinedClass error. Widening to `mixed` here says
-		// what is actually true: the shape is guaranteed by the runtime check
-		// above, not by anything psalm can see. It is the same posture
-		// `CustomDictionaryDetectionRunner::getOpenRegisterService()` takes,
-		// which returns `mixed` for exactly this reason.
 		try {
+			// HELD AS `mixed` ON PURPOSE, and this is not a style choice.
+			//
+			// `is_a()` with a literal class name is a type assertion to static
+			// analysis, so psalm narrows `$event` to a class it cannot load — this
+			// app does not depend on OpenRegister — and every subsequent property
+			// access becomes an UndefinedClass error. Widening to `mixed` here says
+			// what is actually true: the shape is guaranteed by the runtime check
+			// above, not by anything psalm can see. It is the same posture
+			// `CustomDictionaryDetectionRunner::getOpenRegisterService()` takes,
+			// which returns `mixed` for exactly this reason.
 			$this->createConsentFor(decision: $this->asDecision(event: $event));
 		} catch (Throwable $e) {
 			// SWALLOWED ON PURPOSE — see the class docblock. The operator's
