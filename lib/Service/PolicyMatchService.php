@@ -158,28 +158,21 @@ class PolicyMatchService {
 		string $entityType,
 		array $resolvedIdentifiers = [],
 	): ?array {
-		$rules = $this->loadRules();
+		$entity = new PolicyEntity(
+			text: $entityText,
+			type: $entityType,
+			identifiers: $resolvedIdentifiers,
+			normalised: $this->textNormaliser->normalise(value: $entityText)
+		);
 
 		// Prohibitions win on conflict — split into two passes.
-		$prohibitionMatch = $this->firstMatchOf(
-			kind: self::KIND_PROHIBITION,
-			rules: $rules,
-			entityText: $entityText,
-			entityType: $entityType,
-			resolvedIdentifiers: $resolvedIdentifiers
-		);
+		$prohibitionMatch = $this->firstMatchOf(kind: self::KIND_PROHIBITION, entity: $entity);
 
 		if ($prohibitionMatch !== null) {
 			return $prohibitionMatch;
 		}
 
-		return $this->firstMatchOf(
-			kind: self::KIND_STANDING_CONSENT,
-			rules: $rules,
-			entityText: $entityText,
-			entityType: $entityType,
-			resolvedIdentifiers: $resolvedIdentifiers
-		);
+		return $this->firstMatchOf(kind: self::KIND_STANDING_CONSENT, entity: $entity);
 
 	}//end match()
 
@@ -206,10 +199,12 @@ class PolicyMatchService {
 	): ?array {
 		return $this->firstMatchOf(
 			kind: self::KIND_PROHIBITION,
-			rules: $this->loadRules(),
-			entityText: $entityText,
-			entityType: $entityType,
-			resolvedIdentifiers: $resolvedIdentifiers
+			entity: new PolicyEntity(
+				text: $entityText,
+				type: $entityType,
+				identifiers: $resolvedIdentifiers,
+				normalised: $this->textNormaliser->normalise(value: $entityText)
+			)
 		);
 
 	}//end matchProhibition()
@@ -220,48 +215,31 @@ class PolicyMatchService {
 	 * Sorts candidates by UUID lexicographically so multi-match resolution
 	 * is deterministic.
 	 *
-	 * @param string $kind Rule kind to scan.
-	 * @param array<int, array<string,mixed>> $rules Cached rule list.
-	 * @param string $entityText Entity literal text.
-	 * @param string $entityType Entity type.
-	 * @param array<string, mixed> $resolvedIdentifiers Structured identifiers.
+	 * @param string       $kind   Rule kind to scan.
+	 * @param PolicyEntity $entity The detected entity.
 	 *
 	 * @return array<string, mixed>|null
 	 */
-	private function firstMatchOf(
-		string $kind,
-		array $rules,
-		string $entityText,
-		string $entityType,
-		array $resolvedIdentifiers,
-	): ?array {
-		$matchesKind = static function (array $r) use ($kind, $entityType): bool {
+	private function firstMatchOf(string $kind, PolicyEntity $entity): ?array {
+		$matchesKind = static function (array $r) use ($kind, $entity): bool {
 			if ($r['kind'] !== $kind) {
 				return false;
 			}
 
-			return $r['entityType'] === $entityType || $r['entityType'] === 'OTHER';
+			return $r['entityType'] === $entity->type || $r['entityType'] === 'OTHER';
 		};
 
-		$candidates = array_values(array_filter($rules, $matchesKind));
+		$candidates = array_values(array_filter($this->loadRules(), $matchesKind));
 
 		usort(
 			$candidates,
 			static fn (array $a, array $b): int => strcmp($a['uuid'], $b['uuid'])
 		);
 
-		$entityTextNormalised = $this->textNormaliser->normalise(value: $entityText);
-
 		foreach ($candidates as $rule) {
 			foreach ($rule['matchRules'] as $matchRule) {
-				if ($this->ruleMatches(
-					type: $matchRule['type'] ?? '',
-					value: $matchRule['value'] ?? '',
-					entityText: $entityText,
-					entityTextNormalised: $entityTextNormalised,
-					resolvedIdentifiers: $resolvedIdentifiers
-				) === true
-				) {
+				$candidate = new PolicyMatchRule(type: $matchRule['type'] ?? '', value: $matchRule['value'] ?? '');
+				if ($this->ruleMatches(rule: $candidate, entity: $entity) === true) {
 					return [
 						'uuid' => $rule['uuid'],
 						'kind' => $rule['kind'],
@@ -273,6 +251,7 @@ class PolicyMatchService {
 		}
 
 		return null;
+
 	}//end firstMatchOf()
 
 	/**
@@ -295,16 +274,15 @@ class PolicyMatchService {
 		string $entityText,
 		array $resolvedIdentifiers = [],
 	): bool {
-		$entityTextNormalised = $this->textNormaliser->normalise(value: $entityText);
+		$entity = new PolicyEntity(
+			text: $entityText,
+			type: '',
+			identifiers: $resolvedIdentifiers,
+			normalised: $this->textNormaliser->normalise(value: $entityText)
+		);
 		foreach ($matchRules as $rule) {
-			if ($this->ruleMatches(
-				type: (string)($rule['type'] ?? ''),
-				value: (string)($rule['value'] ?? ''),
-				entityText: $entityText,
-				entityTextNormalised: $entityTextNormalised,
-				resolvedIdentifiers: $resolvedIdentifiers
-			) === true
-			) {
+			$candidate = new PolicyMatchRule(type: (string)($rule['type'] ?? ''), value: (string)($rule['value'] ?? ''));
+			if ($this->ruleMatches(rule: $candidate, entity: $entity) === true) {
 				return true;
 			}
 		}
@@ -315,34 +293,26 @@ class PolicyMatchService {
 	/**
 	 * Test a single match rule against an entity.
 	 *
-	 * @param string $type Match type ('exact', 'normalized', 'bsn', 'kvk').
-	 * @param string $value Match value (literal or wildcard).
-	 * @param string $entityText Entity literal text.
-	 * @param string $entityTextNormalised Lower-cased + accent-stripped text.
-	 * @param array<string, mixed> $resolvedIdentifiers Structured identifiers (BSN, KvK).
+	 * @param PolicyMatchRule $rule   The match type and value.
+	 * @param PolicyEntity    $entity The detected entity.
 	 *
 	 * @return bool
 	 */
-	private function ruleMatches(
-		string $type,
-		string $value,
-		string $entityText,
-		string $entityTextNormalised,
-		array $resolvedIdentifiers,
-	): bool {
-		switch ($type) {
+	private function ruleMatches(PolicyMatchRule $rule, PolicyEntity $entity): bool {
+		$value = $rule->value;
+		switch ($rule->type) {
 			case 'exact':
-				return $entityText === $value;
+				return $entity->text === $value;
 			case 'normalized':
-				return $entityTextNormalised === $this->textNormaliser->normalise(value: $value);
+				return $entity->normalised === $this->textNormaliser->normalise(value: $value);
 			case 'bsn':
-				$bsn = (string)($resolvedIdentifiers['bsn'] ?? '');
+				$bsn = (string)($entity->identifiers['bsn'] ?? '');
 				if ($bsn === '') {
 					return false;
 				}
 				return $value === '*' || $bsn === $value;
 			case 'kvk':
-				$kvk = (string)($resolvedIdentifiers['kvk'] ?? '');
+				$kvk = (string)($entity->identifiers['kvk'] ?? '');
 				if ($kvk === '') {
 					return false;
 				}
@@ -350,7 +320,7 @@ class PolicyMatchService {
 			default:
 				$this->logger->warning(
 					'PolicyMatchService: unknown match type, skipping',
-					['type' => $type]
+					['type' => $rule->type]
 				);
 				return false;
 		}//end switch
