@@ -28,10 +28,10 @@ namespace OCA\Filinq\Controller;
 
 use OCA\Filinq\Exception\IntakeRefusedException;
 use OCA\Filinq\Kernel\Contracts\IntakeDetachmentServiceInterface;
+use OCA\Filinq\Kernel\Contracts\IntakeNotificationReachInterface;
 use OCA\Filinq\Kernel\Contracts\IntakeRoutingServiceInterface;
 use OCA\Filinq\Kernel\Contracts\IntakeServiceInterface;
 use OCA\Filinq\Kernel\Contracts\PartySuggestionServiceInterface;
-use OCA\Filinq\Service\Intake\IntakeNotificationReach;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -64,7 +64,7 @@ class IntakeController extends Controller {
 	 * @param IntakeRoutingServiceInterface $routing What a consuming app declared per record type.
 	 * @param PartySuggestionServiceInterface $parties Party suggestions and the corrections corpus.
 	 * @param IUserSession $userSession The current session.
-	 * @param IntakeNotificationReach $reach Whether a failed reading reaches anybody.
+	 * @param IntakeNotificationReachInterface $reach Whether a failed reading reaches anybody.
 	 * @param IGroupManager $groups Counts the people in the notified group.
 	 *
 	 * @return void
@@ -77,7 +77,7 @@ class IntakeController extends Controller {
 		private readonly IntakeRoutingServiceInterface $routing,
 		private readonly PartySuggestionServiceInterface $parties,
 		private readonly IUserSession $userSession,
-		private readonly IntakeNotificationReach $reach,
+		private readonly IntakeNotificationReachInterface $reach,
 		private readonly IGroupManager $groups,
 	) {
 		parent::__construct(appName: $appName, request: $request);
@@ -137,7 +137,7 @@ class IntakeController extends Controller {
 		}
 
 		$members = 0;
-		$group   = $this->groups->get(IntakeNotificationReach::GROUP);
+		$group   = $this->groups->get(IntakeNotificationReachInterface::GROUP);
 		if ($group !== null) {
 			$counted = $group->count();
 			if (is_int($counted) === true) {
@@ -147,7 +147,7 @@ class IntakeController extends Controller {
 
 		$reach = $this->reach->describe(failureCount: $failed, groupMembers: $members);
 		$reach['failureCount'] = $failed;
-		$reach['group']        = IntakeNotificationReach::GROUP;
+		$reach['group']        = IntakeNotificationReachInterface::GROUP;
 
 		return $reach;
 

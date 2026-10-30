@@ -68,6 +68,7 @@ use OCA\Filinq\Kernel\Contracts\EmailIngestionServiceInterface;
 use OCA\Filinq\Kernel\Contracts\EmailIngestionSettingsInterface;
 use OCA\Filinq\Kernel\Contracts\EmlPreviewServiceInterface;
 use OCA\Filinq\Kernel\Contracts\EntityConsolidationServiceInterface;
+use OCA\Filinq\Kernel\Contracts\EntitySearchServiceInterface;
 use OCA\Filinq\Kernel\Contracts\ExternalMountValidatorInterface;
 use OCA\Filinq\Kernel\Contracts\FileListingServiceInterface;
 use OCA\Filinq\Kernel\Contracts\FinalDocumentCorrectionServiceInterface;
@@ -82,12 +83,14 @@ use OCA\Filinq\Kernel\Contracts\GenerationRequestServiceInterface;
 use OCA\Filinq\Kernel\Contracts\GlAccountSuggestionServiceInterface;
 use OCA\Filinq\Kernel\Contracts\InboundClassificationServiceInterface;
 use OCA\Filinq\Kernel\Contracts\IntakeDetachmentServiceInterface;
+use OCA\Filinq\Kernel\Contracts\IntakeNotificationReachInterface;
 use OCA\Filinq\Kernel\Contracts\IntakeReadingProgressInterface;
 use OCA\Filinq\Kernel\Contracts\IntakeRepositoryInterface;
 use OCA\Filinq\Kernel\Contracts\IntakeRoutingServiceInterface;
 use OCA\Filinq\Kernel\Contracts\IntakeServiceInterface;
 use OCA\Filinq\Kernel\Contracts\LegalBasesSummaryServiceInterface;
 use OCA\Filinq\Kernel\Contracts\LegalHoldCaseServiceInterface;
+use OCA\Filinq\Kernel\Contracts\LegalHoldNotificationsInterface;
 use OCA\Filinq\Kernel\Contracts\LibreSignCompletionInterface;
 use OCA\Filinq\Kernel\Contracts\MergeJobRepositoryInterface;
 use OCA\Filinq\Kernel\Contracts\MetadataServiceInterface;
@@ -155,8 +158,11 @@ use OCA\Filinq\Service\Conversion\OutputLayoutResolver;
 use OCA\Filinq\Service\EmailIngestion\EmailDocumentRepository;
 use OCA\Filinq\Service\EmailIngestion\EmailIngestionService;
 use OCA\Filinq\Service\EmailIngestion\EmailIngestionSettings;
+use OCA\Filinq\Service\EntitySearch\EntitySearchService;
+use OCA\Filinq\Service\Intake\IntakeNotificationReach;
 use OCA\Filinq\Service\Intake\IntakeReadingProgress;
 use OCA\Filinq\Service\LegalHold\LegalHoldCaseService;
+use OCA\Filinq\Service\LegalHold\LegalHoldNotifications;
 use OCA\Filinq\Service\Ocr\OcrResultRepository;
 use OCA\Filinq\Service\Ocr\OcrRunService;
 use OCA\Filinq\Service\Office\OfficeSuiteCapabilityService;
@@ -244,6 +250,7 @@ final class ContractBindings {
 		EmailIngestionSettingsInterface::class         => EmailIngestionSettings::class,
 		EmlPreviewServiceInterface::class              => EmlPreviewService::class,
 		EntityConsolidationServiceInterface::class     => EntityConsolidationService::class,
+		EntitySearchServiceInterface::class            => EntitySearchService::class,
 		ExternalMountValidatorInterface::class         => ExternalMountValidator::class,
 		FileListingServiceInterface::class             => FileListingService::class,
 		FinalDocumentCorrectionServiceInterface::class => FinalDocumentCorrectionService::class,
@@ -258,12 +265,14 @@ final class ContractBindings {
 		GlAccountSuggestionServiceInterface::class     => GlAccountSuggestionService::class,
 		InboundClassificationServiceInterface::class   => InboundClassificationService::class,
 		IntakeDetachmentServiceInterface::class        => IntakeDetachmentService::class,
+		IntakeNotificationReachInterface::class        => IntakeNotificationReach::class,
 		IntakeReadingProgressInterface::class          => IntakeReadingProgress::class,
 		IntakeRepositoryInterface::class               => IntakeRepository::class,
 		IntakeRoutingServiceInterface::class           => IntakeRoutingService::class,
 		IntakeServiceInterface::class                  => IntakeService::class,
 		LegalBasesSummaryServiceInterface::class       => LegalBasesSummaryService::class,
 		LegalHoldCaseServiceInterface::class           => LegalHoldCaseService::class,
+		LegalHoldNotificationsInterface::class         => LegalHoldNotifications::class,
 		LibreSignCompletionInterface::class            => LibreSignCompletion::class,
 		MergeJobRepositoryInterface::class             => MergeJobRepository::class,
 		MetadataServiceInterface::class                => MetadataService::class,
