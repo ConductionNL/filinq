@@ -119,15 +119,11 @@ class PrintJobController extends Controller {
 			}
 
 			$data = $this->request->getParam('data', []);
-			$options = $this->request->getParam('options', []);
+			$options = $this->requestOptions();
 			$filename = $this->request->getParam('filename', 'document.pdf');
 
 			if (is_array($data) === false) {
 				$data = [];
-			}
-
-			if (is_array($options) === false) {
-				$options = [];
 			}
 
 			$result = $this->printJobSvc->createJob(
@@ -138,20 +134,7 @@ class PrintJobController extends Controller {
 
 			return new JSONResponse(data: $result, statusCode: Http::STATUS_CREATED);
 		} catch (Exception $e) {
-			$statusCode = 500;
-			if ($e->getCode() >= 400 && $e->getCode() < 600) {
-				$statusCode = $e->getCode();
-			}
-
-			$this->logger->error(
-				message: 'Print job create failed: ' . $e->getMessage(),
-				context: ['exception' => $e]
-			);
-
-			return new JSONResponse(
-				data: ['error' => 'Operation failed'],
-				statusCode: $statusCode
-			);
+			return $this->creationFailed(exception: $e, what: 'Print job create');
 		}//end try
 
 	}//end create()
@@ -418,19 +401,15 @@ class PrintJobController extends Controller {
 				);
 			}
 
-			$items = $this->request->getParam('items', []);
-			$options = $this->request->getParam('options', []);
-
-			if (is_array($items) === false || empty($items) === true) {
+			$items = $this->batchItems();
+			if ($items === []) {
 				return new JSONResponse(
 					data: ['error' => 'items array is required and must not be empty'],
 					statusCode: Http::STATUS_BAD_REQUEST
 				);
 			}
 
-			if (is_array($options) === false) {
-				$options = [];
-			}
+			$options = $this->requestOptions();
 
 			$result = $this->printJobSvc->createBatchJob(
 				request: new PrintJobRequest(
@@ -444,23 +423,66 @@ class PrintJobController extends Controller {
 
 			return new JSONResponse(data: $result, statusCode: Http::STATUS_CREATED);
 		} catch (Exception $e) {
-			$statusCode = 500;
-			if ($e->getCode() >= 400 && $e->getCode() < 600) {
-				$statusCode = $e->getCode();
-			}
-
-			$this->logger->error(
-				message: 'Batch print job create failed: ' . $e->getMessage(),
-				context: ['exception' => $e]
-			);
-
-			return new JSONResponse(
-				data: ['error' => 'Operation failed'],
-				statusCode: $statusCode
-			);
+			return $this->creationFailed(exception: $e, what: 'Batch print job create');
 		}//end try
 
 	}//end batch()
+
+	/**
+	 * The batch items the request carries, or an empty list when it carries none or no list.
+	 *
+	 * @return array<int|string, mixed> The items.
+	 */
+	private function batchItems(): array {
+		$items = $this->request->getParam('items', []);
+		if (is_array($items) === false) {
+			return [];
+		}
+
+		return $items;
+
+	}//end batchItems()
+
+	/**
+	 * The print options the request carries, or none when they are not an array.
+	 *
+	 * @return array<string, mixed> The options.
+	 */
+	private function requestOptions(): array {
+		$options = $this->request->getParam('options', []);
+		if (is_array($options) === false) {
+			return [];
+		}
+
+		return $options;
+
+	}//end requestOptions()
+
+	/**
+	 * Log a failed job creation and answer with its 4xx or 5xx code, else 500.
+	 *
+	 * @param Exception $exception The failure.
+	 * @param string    $what      What failed, as the log line names it.
+	 *
+	 * @return JSONResponse The error response.
+	 */
+	private function creationFailed(Exception $exception, string $what): JSONResponse {
+		$statusCode = 500;
+		if ($exception->getCode() >= 400 && $exception->getCode() < 600) {
+			$statusCode = $exception->getCode();
+		}
+
+		$this->logger->error(
+			message: $what . ' failed: ' . $exception->getMessage(),
+			context: ['exception' => $exception]
+		);
+
+		return new JSONResponse(
+			data: ['error' => 'Operation failed'],
+			statusCode: $statusCode
+		);
+
+	}//end creationFailed()
 
 	/**
 	 * Read the optional `item` query parameter as a letter index.
