@@ -31,6 +31,7 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\Filinq\Event\FinancialExtractionCompletedEvent;
 use OCA\Filinq\Kernel\Contracts\FinancialExtractionServiceInterface;
+use OCA\Filinq\Service\Extraction\AiPrompt;
 use OCA\Filinq\Service\Extraction\AmountExtractor;
 use OCA\Filinq\Service\Extraction\DateExtractor;
 use OCA\Filinq\Service\Extraction\IbanExtractor;
@@ -266,13 +267,7 @@ class FinancialExtractionService implements FinancialExtractionServiceInterface 
 		$savedArray = $this->toArray(object: $saved);
 
 		if ($request['callbackEvent'] === true) {
-			$this->dispatchCompletionEvent(
-				documentUri: $request['effectiveDocumentUri'],
-				requestedBy: $requestedBy,
-				sourceApp: $request['sourceApp'],
-				docType: $request['docType'],
-				pipeline: $pipeline
-			);
+			$this->dispatchCompletionEvent(payload: $payload);
 		}
 
 		return $savedArray;
@@ -429,58 +424,11 @@ class FinancialExtractionService implements FinancialExtractionServiceInterface 
 	 * @spec openspec/specs/financial-document-field-extraction/spec.md
 	 */
 	public function runExtraction(string $text, string $docType): array {
-		$fields = self::FIELD_DEFAULTS;
-		$confidence = [];
-
-		$this->applyExtraction(fields: $fields, confidence: $confidence, field: 'supplierIban', extracted: $this->ibanExtractor->extract($text));
-		$this->applyExtraction(fields: $fields, confidence: $confidence, field: 'supplierKvk', extracted: $this->kvkExtractor->extract($text));
-		$this->applyExtraction(fields: $fields, confidence: $confidence, field: 'supplierVatId', extracted: $this->vatIdExtractor->extract($text));
-		$this->applyExtraction(fields: $fields, confidence: $confidence, field: 'invoiceNumber', extracted: $this->extractInvoiceNumber(text: $text));
-		$this->applyExtraction(fields: $fields, confidence: $confidence, field: 'supplierName', extracted: $this->extractSupplierName(text: $text));
-		$this->applyExtraction(fields: $fields, confidence: $confidence, field: 'currency', extracted: $this->extractCurrency(text: $text));
-
-		$this->applyExtraction(
-			fields: $fields,
-			confidence: $confidence,
-			field: 'issueDate',
-			extracted: $this->dateExtractor->extractLabelled($text, self::ISSUE_DATE_LABELS)
-		);
-		$this->applyExtraction(
-			fields: $fields,
-			confidence: $confidence,
-			field: 'dueDate',
-			extracted: $this->dateExtractor->extractLabelled($text, self::DUE_DATE_LABELS)
-		);
-
-		$this->applyExtraction(
-			fields: $fields,
-			confidence: $confidence,
-			field: 'totalExcl',
-			extracted: $this->amountExtractor->extractLabelled($text, self::TOTAL_EXCL_LABELS)
-		);
-		$this->applyExtraction(
-			fields: $fields,
-			confidence: $confidence,
-			field: 'totalVat',
-			extracted: $this->amountExtractor->extractLabelled($text, self::TOTAL_VAT_LABELS)
-		);
-		$this->applyExtraction(
-			fields: $fields,
-			confidence: $confidence,
-			field: 'totalIncl',
-			extracted: $this->amountExtractor->extractLabelled($text, self::TOTAL_INCL_LABELS)
-		);
-
-		$fields['vatBreakdown'] = $this->extractVatBreakdown(text: $text);
-
+		$found = array_filter($this->extractFields(text: $text), static fn (array $one): bool => $one['value'] !== null);
+		$values = array_map(static fn (array $one): mixed => $one['value'], $found);
+		$fields = array_merge(self::FIELD_DEFAULTS, $values, ['vatBreakdown' => $this->extractVatBreakdown(text: $text)]);
 		$reconciled = $this->totalsReconciler->reconciles($fields['totalExcl'], $fields['totalVat'], $fields['totalIncl']);
-		if ($reconciled === true) {
-			foreach (['totalExcl', 'totalVat', 'totalIncl'] as $amountField) {
-				if (isset($confidence[$amountField]) === true) {
-					$confidence[$amountField] = min(1.0, $confidence[$amountField] + self::RECONCILIATION_BOOST);
-				}
-			}
-		}
+		$confidence = $this->confidenceOf(found: $found, reconciled: $reconciled);
 
 		return [
 			'fields' => $fields,
@@ -490,6 +438,53 @@ class FinancialExtractionService implements FinancialExtractionServiceInterface 
 		];
 
 	}//end runExtraction()
+
+	/**
+	 * Run every field extractor over the text.
+	 *
+	 * @param string $text The extracted document text.
+	 *
+	 * @return array<string, array{value: mixed, confidence: float}> Extractor result per field.
+	 */
+	private function extractFields(string $text): array {
+		return [
+			'supplierIban' => $this->ibanExtractor->extract($text),
+			'supplierKvk' => $this->kvkExtractor->extract($text),
+			'supplierVatId' => $this->vatIdExtractor->extract($text),
+			'invoiceNumber' => $this->extractInvoiceNumber(text: $text),
+			'supplierName' => $this->extractSupplierName(text: $text),
+			'currency' => $this->extractCurrency(text: $text),
+			'issueDate' => $this->dateExtractor->extractLabelled($text, self::ISSUE_DATE_LABELS),
+			'dueDate' => $this->dateExtractor->extractLabelled($text, self::DUE_DATE_LABELS),
+			'totalExcl' => $this->amountExtractor->extractLabelled($text, self::TOTAL_EXCL_LABELS),
+			'totalVat' => $this->amountExtractor->extractLabelled($text, self::TOTAL_VAT_LABELS),
+			'totalIncl' => $this->amountExtractor->extractLabelled($text, self::TOTAL_INCL_LABELS),
+		];
+	}//end extractFields()
+
+	/**
+	 * The confidence per found field; the amount fields get a boost when the
+	 * totals reconcile.
+	 *
+	 * @param array<string, array{value: mixed, confidence: float}> $found Extractor result per found field.
+	 * @param bool $reconciled Whether the totals reconcile.
+	 *
+	 * @return array<string, float> Confidence per field.
+	 */
+	private function confidenceOf(array $found, bool $reconciled): array {
+		$confidence = array_map(static fn (array $one): float => $one['confidence'], $found);
+		if ($reconciled === false) {
+			return $confidence;
+		}
+
+		foreach (['totalExcl', 'totalVat', 'totalIncl'] as $amountField) {
+			if (isset($confidence[$amountField]) === true) {
+				$confidence[$amountField] = min(1.0, $confidence[$amountField] + self::RECONCILIATION_BOOST);
+			}
+		}
+
+		return $confidence;
+	}//end confidenceOf()
 
 	/**
 	 * Apply an optional AI-backend enhancement pass to fill null/low-confidence
@@ -519,13 +514,13 @@ class FinancialExtractionService implements FinancialExtractionServiceInterface 
 		}
 
 		try {
-			$raw = $this->runAiTask(manager: $manager, text: $text, fillable: $fillable, requestedBy: $requestedBy);
-			$decoded = json_decode($this->stripCodeFences(text: $raw), associative: true);
+			$prompt = new AiPrompt(text: $this->buildPrompt(text: $text, fillable: $fillable), requestedBy: $requestedBy);
+			$decoded = json_decode($this->stripCodeFences(text: $this->runAiTask(manager: $manager, prompt: $prompt)), associative: true);
 			if (is_array($decoded) === false) {
 				return $result;
 			}
 
-			$result = $this->mergeAiFields(result: $result, fillable: $fillable, decoded: $decoded);
+			$result = $this->mergeAiFields(result: $result, values: $this->aiValues(fillable: $fillable, decoded: $decoded));
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'Filinq: AI extraction enhancement failed, returning heuristic-only result: ' . $e->getMessage()
@@ -536,27 +531,37 @@ class FinancialExtractionService implements FinancialExtractionServiceInterface 
 	}//end applyAiEnhancement()
 
 	/**
-	 * Merge the AI's decoded field values onto the pipeline result: only
-	 * fillable fields with a non-empty decoded value are written, each at
-	 * the fixed AI-fill confidence, and the aggregate is recomputed.
+	 * The AI's decoded values for the fillable fields, in fillable order,
+	 * leaving out null and empty values.
 	 *
-	 * @param array<string, mixed> $result Pipeline result to merge onto.
 	 * @param array<int, string> $fillable Field names the AI was allowed to fill.
 	 * @param array<string, mixed> $decoded Decoded AI JSON response.
 	 *
+	 * @return array<string, mixed> Value per field to fill.
+	 */
+	private function aiValues(array $fillable, array $decoded): array {
+		$values = [];
+		foreach ($fillable as $field) {
+			$value = ($decoded[$field] ?? null);
+			if ($value !== null && $value !== '') {
+				$values[$field] = $value;
+			}
+		}
+
+		return $values;
+	}//end aiValues()
+
+	/**
+	 * Write the AI values onto the pipeline result, each at the fixed
+	 * AI-fill confidence, and recompute the aggregate.
+	 *
+	 * @param array<string, mixed> $result Pipeline result to merge onto.
+	 * @param array<string, mixed> $values Value per field to fill.
+	 *
 	 * @return array<string, mixed> The merged pipeline result.
 	 */
-	private function mergeAiFields(array $result, array $fillable, array $decoded): array {
-		foreach ($fillable as $field) {
-			if (array_key_exists($field, $decoded) === false) {
-				continue;
-			}
-
-			$value = $decoded[$field];
-			if ($value === null || $value === '') {
-				continue;
-			}
-
+	private function mergeAiFields(array $result, array $values): array {
+		foreach ($values as $field => $value) {
 			$result['fields'][$field] = $value;
 			$result['fieldConfidence'][$field] = self::AI_FILL_CONFIDENCE;
 		}
@@ -565,27 +570,6 @@ class FinancialExtractionService implements FinancialExtractionServiceInterface 
 
 		return $result;
 	}//end mergeAiFields()
-
-	/**
-	 * Apply one extractor's `{value, confidence}` result onto the shaped
-	 * field set, only when a value was found.
-	 *
-	 * @param array<string, mixed> $fields Field set (by reference).
-	 * @param array<string, float> $confidence Confidence map (by reference).
-	 * @param string $field Field key to write.
-	 * @param array{value: mixed, confidence: float} $extracted Extractor result.
-	 *
-	 * @return void
-	 */
-	private function applyExtraction(array &$fields, array &$confidence, string $field, array $extracted): void {
-		if ($extracted['value'] === null) {
-			return;
-		}
-
-		$fields[$field] = $extracted['value'];
-		$confidence[$field] = $extracted['confidence'];
-
-	}//end applyExtraction()
 
 	/**
 	 * Heuristic supplier-name match: a capitalised phrase ending in a Dutch
@@ -861,41 +845,45 @@ class FinancialExtractionService implements FinancialExtractionServiceInterface 
 	 * AI manager and return its raw text output.
 	 *
 	 * @param array{type: string, manager: object} $manager Resolved AI manager.
-	 * @param string $text Document text (prompt context).
-	 * @param array<int, string> $fillable Field names the AI may fill.
-	 * @param string $requestedBy Nextcloud user id (task attribution).
+	 * @param AiPrompt $prompt The prompt and the user the task runs for.
 	 *
 	 * @return string Raw model output.
 	 */
-	private function runAiTask(array $manager, string $text, array $fillable, string $requestedBy): string {
-		$prompt = $this->buildPrompt(text: $text, fillable: $fillable);
-		$userId = $requestedBy;
-		if ($userId === '') {
-			$userId = null;
-		}
-
+	private function runAiTask(array $manager, AiPrompt $prompt): string {
 		if ($manager['type'] === 'task') {
-			$task = new TaskProcessingTask(
-				TextToText::ID,
-				['input' => $prompt],
-				'filinq',
-				$userId,
-			);
-
-			$completed = $manager['manager']->runTask($task);
-			$output = $completed->getOutput();
-			return (string)($output['output'] ?? '');
+			return $this->runTaskProcessingTask(manager: $manager['manager'], prompt: $prompt);
 		}
 
 		$task = new TextProcessingTask(
 			FreePromptTaskType::class,
-			$prompt,
+			$prompt->text,
 			'filinq',
-			$userId,
+			$prompt->userId(),
 		);
 
 		return (string)$manager['manager']->runTask($task);
 	}//end runAiTask()
+
+	/**
+	 * Run the prompt as a TaskProcessing text-to-text task.
+	 *
+	 * @param object $manager The `OCP\TaskProcessing\IManager`.
+	 * @param AiPrompt $prompt The prompt and the user the task runs for.
+	 *
+	 * @return string Raw model output.
+	 */
+	private function runTaskProcessingTask(object $manager, AiPrompt $prompt): string {
+		$task = new TaskProcessingTask(
+			TextToText::ID,
+			['input' => $prompt->text],
+			'filinq',
+			$prompt->userId(),
+		);
+
+		$completed = $manager->runTask($task);
+		$output = $completed->getOutput();
+		return (string)($output['output'] ?? '');
+	}//end runTaskProcessingTask()
 
 	/**
 	 * Build the structured-extraction prompt for the AI enhancement step.
@@ -937,32 +925,23 @@ class FinancialExtractionService implements FinancialExtractionServiceInterface 
 	 * event. Fail-soft: the already-persisted result is never rolled back on
 	 * a dispatch failure (mirrors SigningService::emitConclusionIfDelegated).
 	 *
-	 * @param string $documentUri Source document URI.
-	 * @param string $requestedBy Requesting user id.
-	 * @param string $sourceApp Requesting app id.
-	 * @param string $docType `receipt` or `supplier-invoice`.
-	 * @param array<string, mixed> $pipeline Pipeline result (`{fields, fieldConfidence, overallConfidence}`).
+	 * @param array<string, mixed> $payload The persisted extraction: document, requester,
+	 *                                      app, type, fields and confidences.
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/specs/financial-document-field-extraction/spec.md
 	 */
-	private function dispatchCompletionEvent(
-		string $documentUri,
-		string $requestedBy,
-		string $sourceApp,
-		string $docType,
-		array $pipeline,
-	): void {
+	private function dispatchCompletionEvent(array $payload): void {
 		try {
 			$event = new FinancialExtractionCompletedEvent(
-				documentUri: $documentUri,
-				requestedBy: $requestedBy,
-				sourceApp: $sourceApp,
-				docType: $docType,
-				fields: $pipeline['fields'],
-				fieldConfidence: $pipeline['fieldConfidence'],
-				overallConfidence: $pipeline['overallConfidence'],
+				documentUri: $payload['documentUri'],
+				requestedBy: $payload['requestedBy'],
+				sourceApp: $payload['sourceApp'],
+				docType: $payload['docType'],
+				fields: $payload['fields'],
+				fieldConfidence: $payload['fieldConfidence'],
+				overallConfidence: $payload['overallConfidence'],
 			);
 
 			$this->eventDispatcher->dispatchTyped($event);
@@ -1008,7 +987,7 @@ class FinancialExtractionService implements FinancialExtractionServiceInterface 
 			return ['text' => $embedded, 'ocrConfidence' => 0.0];
 		}
 
-		return $this->runOcr(file: $file, mimeType: $mimeType, embedded: $embedded);
+		return $this->runOcr(file: $file, embedded: $embedded);
 	}//end resolveText()
 
 	/**
@@ -1017,12 +996,11 @@ class FinancialExtractionService implements FinancialExtractionServiceInterface 
 	 * empty) with zero OCR confidence.
 	 *
 	 * @param File $file The Nextcloud file to OCR.
-	 * @param string $mimeType The file MIME type.
 	 * @param string $embedded Embedded text already extracted (fallback value).
 	 *
 	 * @return array{text: string, ocrConfidence: float}
 	 */
-	private function runOcr(File $file, string $mimeType, string $embedded): array {
+	private function runOcr(File $file, string $embedded): array {
 		try {
 			$tempFile = $this->writeToTemp(file: $file);
 		} catch (Throwable $e) {
@@ -1031,19 +1009,7 @@ class FinancialExtractionService implements FinancialExtractionServiceInterface 
 		}
 
 		try {
-			$languages = $this->ocrService->getOcrLanguages();
-			$dpi = $this->ocrService->getOcrDpi();
-			$isImage = str_starts_with($mimeType, 'image/');
-
-			$result = $this->ocrService->extractTextFromPdf(filePath: $tempFile, languages: $languages, dpi: $dpi);
-			if ($isImage === true) {
-				$result = $this->ocrService->extractTextFromImage(filePath: $tempFile, languages: $languages, dpi: $dpi);
-			}
-
-			return [
-				'text' => $result['text'],
-				'ocrConfidence' => ($result['confidence'] / 100),
-			];
+			return $this->ocrStagedFile(tempFile: $tempFile, isImage: str_starts_with($file->getMimeType(), 'image/'));
 		} catch (Throwable $e) {
 			$this->logger->warning('Filinq: financial extraction OCR failed: ' . $e->getMessage());
 			return ['text' => $embedded, 'ocrConfidence' => 0.0];
@@ -1054,6 +1020,29 @@ class FinancialExtractionService implements FinancialExtractionServiceInterface 
 		}//end try
 
 	}//end runOcr()
+
+	/**
+	 * OCR a staged copy of the file with the configured languages and DPI.
+	 *
+	 * @param string $tempFile Path of the staged copy.
+	 * @param bool $isImage Whether the file is an image rather than a PDF.
+	 *
+	 * @return array{text: string, ocrConfidence: float}
+	 */
+	private function ocrStagedFile(string $tempFile, bool $isImage): array {
+		$languages = $this->ocrService->getOcrLanguages();
+		$dpi = $this->ocrService->getOcrDpi();
+
+		$result = $this->ocrService->extractTextFromPdf(filePath: $tempFile, languages: $languages, dpi: $dpi);
+		if ($isImage === true) {
+			$result = $this->ocrService->extractTextFromImage(filePath: $tempFile, languages: $languages, dpi: $dpi);
+		}
+
+		return [
+			'text' => $result['text'],
+			'ocrConfidence' => ($result['confidence'] / 100),
+		];
+	}//end ocrStagedFile()
 
 	/**
 	 * Extract embedded PDF text via the `pdftotext` CLI (poppler-utils), when
