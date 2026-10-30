@@ -49,6 +49,8 @@ final class MultiFormatJob {
 	 * Whose Files the outputs go in.
 	 *
 	 * @return string The user id.
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-multi-format-output/tasks.md#task-2.4
 	 */
 	public function userId(): string {
 		return (string) $this->options['userId'];
