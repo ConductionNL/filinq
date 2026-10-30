@@ -492,7 +492,7 @@ class DocumentControllerTest extends TestCase {
 	/**
 	 * The merge preview answers with the preview, its fields and whether all are filled.
 	 *
-	 * @spec openspec/changes/template-merge-preview/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 *
 	 * @return void
 	 */

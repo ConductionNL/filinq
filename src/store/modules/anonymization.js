@@ -479,7 +479,7 @@ function entryPayload(entry) {
  *
  * @param {object} entry Queue entry.
  * @return {boolean}
- * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
+ * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
  */
 export function entryIsChecked(entry) {
 	return !!entry && reviewIsCurrent(entry.reviewMark, entryPayload(entry))
@@ -991,7 +991,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 		 *
 		 * @param {object} entry Queue entry in the `extracted` state.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
 		 */
 		async markEntryChecked(entry) {
 			if (!entry || entry.status !== 'extracted') {
@@ -1026,7 +1026,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 		 *   before anonymising — covers dossier files the user never opened,
 		 *   which are otherwise missing from the queue.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
 		 */
 		async anonymiseAllExtracted(options = {}) {
 			const { fileIds, files, ...entryOptions } = options
@@ -1865,7 +1865,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 		/**
 		 * Reset the queue, processing flag and dossier records completely.
 		 *
-		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
 		 */
 		reset() {
 			this.files = []

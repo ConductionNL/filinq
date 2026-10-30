@@ -21,7 +21,7 @@ jest.mock('@nextcloud/router', () => ({
 	generateUrl: (path) => path,
 }))
 
-// @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
+// @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
 describe('redactionPayload', () => {
 	it('puts the longest value first so a short span cannot eat a longer one', () => {
 		const payload = redactionPayload([
@@ -36,7 +36,7 @@ describe('redactionPayload', () => {
 	})
 })
 
-// @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
+// @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
 describe('reviewSignature and reviewIsCurrent', () => {
 	const a = { type: 'PERSON', value: 'Jan', confidence: 0.9 }
 	const b = { type: 'BSN', value: '123456782', confidence: 0.99 }
@@ -55,7 +55,7 @@ describe('reviewSignature and reviewIsCurrent', () => {
 	})
 })
 
-// @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-5
+// @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-5
 describe('fetchReviewMarks', () => {
 	it('asks for the listed files in one call and returns the marks', async () => {
 		axios.get.mockResolvedValue({

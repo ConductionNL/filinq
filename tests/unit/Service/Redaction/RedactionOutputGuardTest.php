@@ -309,7 +309,7 @@ class RedactionOutputGuardTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-3
+	 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-3
 	 */
 	public function testTheStatusReadNamesWhoCheckedAndSkipsTheRest(): void {
 		$this->marks->method('findFor')->willReturnCallback(

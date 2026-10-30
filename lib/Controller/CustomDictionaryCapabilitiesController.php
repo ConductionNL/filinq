@@ -17,7 +17,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/dictionary-actions-for-maintainers/specs/custom-dictionary-recognition/spec.md
+ * @spec openspec/specs/custom-dictionary-recognition/spec.md
  */
 
 declare(strict_types=1);
@@ -66,7 +66,7 @@ class CustomDictionaryCapabilitiesController extends Controller {
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
 	 *
-	 * @spec openspec/changes/dictionary-actions-for-maintainers/specs/custom-dictionary-recognition/spec.md
+	 * @spec openspec/specs/custom-dictionary-recognition/spec.md
 	 */
 	public function show(): JSONResponse {
 		return new JSONResponse(['canMaintain' => $this->gate->mayMaintain()]);

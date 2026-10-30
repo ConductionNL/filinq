@@ -76,7 +76,7 @@ interface RedactionOutputGuardInterface {
 	 *
 	 * @return array<int, array{checkedBy: string, checkedAt: string, entityCount: int}> The marks found.
 	 *
-	 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-3
+	 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-3
 	 */
 	public function marksFor(array $fileIds): array;
 

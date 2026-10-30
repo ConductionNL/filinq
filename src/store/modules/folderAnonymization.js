@@ -239,7 +239,7 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 		 *
 		 * @param {object} state Store state.
 		 * @return {Array<object>}
-		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
 		 */
 		reviewedFiles: (state) => {
 			const payload = folderPayload(state.entities)
@@ -254,7 +254,7 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 		 *
 		 * @param {object} state Store state.
 		 * @return {Array<object>}
-		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
 		 */
 		unreviewedFiles: (state) => {
 			const payload = folderPayload(state.entities)
@@ -462,7 +462,7 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 		 *
 		 * @param {object} file A file of this batch in the `extracted` state.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
 		 */
 		async markFileChecked(file) {
 			if (!file || file.status !== 'extracted') {
@@ -583,7 +583,7 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 		/**
 		 * Clear the batch, the review state and the dossier form.
 		 *
-		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
 		 */
 		reset() {
 			this.stopPolling()

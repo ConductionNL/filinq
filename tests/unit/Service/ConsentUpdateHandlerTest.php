@@ -406,7 +406,7 @@ class ConsentUpdateHandlerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/consent-changes-are-recorded-events/specs/consent-management/spec.md
+	 * @spec openspec/specs/consent-management/spec.md
 	 */
 	public function testAConsentChangeIsSavedWithItsEvent(): void {
 		$stored = new \OCA\OpenRegister\Db\ObjectEntity();
@@ -445,7 +445,7 @@ class ConsentUpdateHandlerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/consent-changes-are-recorded-events/specs/consent-management/spec.md
+	 * @spec openspec/specs/consent-management/spec.md
 	 */
 	public function testAConsentWithoutEvidenceIsNotSaved(): void {
 		$stored = new \OCA\OpenRegister\Db\ObjectEntity();

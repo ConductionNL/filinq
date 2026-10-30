@@ -293,7 +293,7 @@ class AnonymizationController extends Controller {
 	 * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-4
 	 * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-6
 	 * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-11
-	 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-1
 	 */
 	public function anonymize(int $fileId): JSONResponse {
 		try {
@@ -426,7 +426,7 @@ class AnonymizationController extends Controller {
 	 * @return JSONResponse The result.
 	 *
 	 * @spec openspec/specs/anonymization/spec.md
-	 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-1
 	 */
 	private function runAnonymize(AnonymizeCall $call): JSONResponse {
 		try {
@@ -485,7 +485,7 @@ class AnonymizationController extends Controller {
 	 *
 	 * @return JSONResponse The 409 with `error`, `reviewRequired` and `document`.
 	 *
-	 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-1
 	 */
 	private function reviewRefusal(RedactionNotReviewedException $refusal): JSONResponse {
 		$this->logger->info(

@@ -239,7 +239,7 @@ class PortalAssertionVerifier {
 	 * @return string|null
 	 *
 	 * @spec openspec/specs/portal-signing-actions/spec.md
-	 * @spec openspec/changes/portal-verifier-has-no-instance-secret-fallback/specs/portal-contribution/spec.md#requirement-a-portal-assertion-is-verified-with-portaliqs-dedicated-secret-only-req-pvs-001
+	 * @spec openspec/specs/portal-contribution/spec.md#requirement-a-portal-assertion-is-verified-with-portaliqs-dedicated-secret-only-req-pvs-001
 	 */
 	private function secret(): ?string {
 		$secret = $this->secretOverride;

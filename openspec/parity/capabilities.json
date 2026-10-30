@@ -4187,10 +4187,10 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "Re-read 2026-10-30 on development: the review step reaches the anonymise again. Change anonymise-asks-for-the-review-mark (all 10 tasks ticked, commits 3c0c9d67 and 83855641, 16 Oct) put the review mark in the screens: src/components/ReviewMarkCard.vue ('Check before anonymising', 'Mark as checked') in src/sidebars/FileViewerSidebar.vue:400/482, which records the mark through src/services/reviewMark.js markChecked() -> POST api/redaction/documents/{fileId}/checked (routes.php:133) over exactly the entities it then sends; the anonymise button waits for it. Folder runs (src/store/modules/folderAnonymization.js:249) send only checked files and list the rest. A refused anonymise now answers 409 with reviewRequired instead of a 500 (AnonymizationController, RedactionNotReviewedException). Per-entity include/skip stays in src/views/anonymization/EntityReviewTable.vue (PATCH api/anonymization/relations/{id}).",
-				"change": "openspec/changes/anonymise-asks-for-the-review-mark",
+				"change": "openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark",
 				"requirement": [
-					"openspec/changes/anonymise-asks-for-the-review-mark/specs/redaction-output-guarantee :: The screens record the check before they anonymise (REQ-RWB-06)",
-					"openspec/changes/anonymise-asks-for-the-review-mark/specs/redaction-output-guarantee :: A refused anonymise says what to do (REQ-RWB-05)"
+					"openspec/specs/redaction-output-guarantee :: The screens record the check before they anonymise (REQ-RWB-06)",
+					"openspec/specs/redaction-output-guarantee :: A refused anonymise says what to do (REQ-RWB-05)"
 				]
 			},
 			"reachedOn": "/anonymization and /folder-anonymization: review the entities, 'Mark as checked' on the ReviewMarkCard, then anonymise",
@@ -4633,9 +4633,9 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "Re-read 2026-10-30 from dossiq development: WOORedactionService is gone (dossiq change partly-public-documents-get-a-redacted-copy, archived 2026-10-30, commit 2a14fff09 of 16 Oct). dossiq's Woo case page 'Redact documents' (src/manifest.json action document-redact -> /cases/{id}/redact, board DqLakken) calls dossiq lib/Controller/DocumentRedactionController.php detect/check/redact -> lib/Service/Redaction/DocumentRedactionService.php -> lib/Service/FilinqRedactionClient.php, which resolves filinq's services by cross-app DI (FleetAppId::getService) in the order filinq's gate requires: detect(), markChecked() with the named officer (filinq RedactionOutputGuard::markChecked), then anonymize() (filinq AnonymizationService::anonymizeDocument). A review refusal comes back as the outcome not_checked, not an exception. On the filinq side the gate and the mark are the ones change anonymise-asks-for-the-review-mark wired. Partial against the row: it works from inside the case system, but it is three steps (detect, check, redact), not one click, by design (the check is the human review).",
-				"change": "openspec/changes/anonymise-asks-for-the-review-mark",
+				"change": "openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark",
 				"requirement": [
-					"openspec/changes/anonymise-asks-for-the-review-mark/specs/redaction-output-guarantee :: The screens record the check before they anonymise (REQ-RWB-06)"
+					"openspec/specs/redaction-output-guarantee :: The screens record the check before they anonymise (REQ-RWB-06)"
 				]
 			},
 			"reachedOn": "machine consumer: dossiq Woo case 'Redact documents' page -> DocumentRedactionController -> FilinqRedactionClient -> filinq RedactionOutputGuard::markChecked and AnonymizationService::anonymizeDocument (cross-app DI, no HTTP route)",
@@ -4670,10 +4670,10 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "Re-read 2026-10-30 on development: reachable since change anonymise-asks-for-the-review-mark (10/10 ticked). ReviewMarkCard.vue records the mark through POST api/redaction/documents/{fileId}/checked; RedactionOutputController::markChecked takes checkedBy from the session user and checks the caller can open the file first; GET api/redaction/documents/checked (routes.php:132, checkedStatus) feeds My documents' Status column ('Checked by {user} on {date}'). RedactionReviewGate::refuse() refuses a mark without checkedBy or for an older detection run. Partial: nothing requires the checker to be a different person from the one who ran the detection or the anonymise (no comparison of checkedBy with the runner in lib/Service/Redaction/), so a second person CAN check, but one person can also do both.",
-				"change": "openspec/changes/anonymise-asks-for-the-review-mark",
+				"change": "openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark",
 				"requirement": [
-					"openspec/changes/anonymise-asks-for-the-review-mark/specs/redaction-output-guarantee :: The screens record the check before they anonymise (REQ-RWB-06)",
-					"openspec/changes/anonymise-asks-for-the-review-mark/specs/redaction-output-guarantee :: My documents shows who checked a file (REQ-RWB-08)"
+					"openspec/specs/redaction-output-guarantee :: The screens record the check before they anonymise (REQ-RWB-06)",
+					"openspec/specs/redaction-output-guarantee :: My documents shows who checked a file (REQ-RWB-08)"
 				]
 			},
 			"reachedOn": "ReviewMarkCard in the file viewer sidebar; Status column on My documents",

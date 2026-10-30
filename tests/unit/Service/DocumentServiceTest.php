@@ -258,7 +258,7 @@ class DocumentServiceTest extends TestCase {
 	/**
 	 * The merge preview returns the preview and the fields the data fills.
 	 *
-	 * @spec openspec/changes/template-merge-preview/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 *
 	 * @return void
 	 */
