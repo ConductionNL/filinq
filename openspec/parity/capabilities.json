@@ -8445,11 +8445,13 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "per-document check only, for final documents: lib/Service/FinalDocumentService.php:241 verifyChecksum() compares the frozen checksum with the file now on storage, shown as a warning at src/views/versions/VersionsView.vue:37 via GET api/documents/{fileId}/final. The nightly job (appinfo/info.xml:106 DomainFolderReconciliationJob -> lib/Service/DomainFolderReconciler.php:80) reconciles domain folder existence and group access, not missing or orphaned document files. No collection-wide scan exists (grep -ri 'orphan|sanity|integrity' lib).",
-				"change": "openspec/changes/archive/2026-10-07-final-documents-frozen",
+				"change": "openspec/changes/whole-collection-integrity-scan",
 				"spec": "openspec/specs/document-versions",
 				"requirement": [
 					"openspec/specs/document-versions :: Every write path refuses a final version (REQ-FDF-02)",
-					"openspec/specs/document-versions :: Final is a declared lifecycle state (REQ-FDF-01)"
+					"openspec/specs/document-versions :: Final is a declared lifecycle state (REQ-FDF-01)",
+					"openspec/changes/whole-collection-integrity-scan/specs/document-versions :: A scan finds missing, changed and orphaned files across the collection (REQ-DIS-01)",
+					"openspec/changes/whole-collection-integrity-scan/specs/document-versions :: The scan runs nightly and on demand, and administrators see the result (REQ-DIS-02)"
 				]
 			},
 			"reachedOn": "/versions (VersionsView.vue) checksum warning for one final document at a time",
@@ -8457,7 +8459,7 @@
 			"providerHow": "read-from-code",
 			"feature": "document-versions",
 			"featureConfidence": "high",
-			"note": "Finds a changed file for a frozen document when someone opens it; does not find missing or orphaned files across the collection.",
+			"note": "Partial (DECISIONS row 268, 2026-10-30): finds a changed file for a frozen document when someone opens it; no scan finds missing or orphaned files across the collection yet. Planned in change whole-collection-integrity-scan.",
 			"zylab": "unknown",
 			"datamask": "unknown",
 			"smartdocuments": "unknown",

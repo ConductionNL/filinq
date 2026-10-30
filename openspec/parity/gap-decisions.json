@@ -266,10 +266,10 @@
   {
     "row": "op-integrity",
     "matrix": "filinq",
-    "decision": "defer",
-    "reason": "Partial and built, no demand row and fewer than two competitors rate it yes, so the missing half is deferred (only paperless-ngx rates it yes).",
-    "change": null,
-    "decidedOn": "2026-09-27"
+    "decision": "build",
+    "reason": "Partial, plan accepted by Ruben 2026-10-30 (DECISIONS row 268): a whole-collection integrity scan.",
+    "change": "whole-collection-integrity-scan",
+    "decidedOn": "2026-10-30"
   },
   {
     "row": "rec-born-ready",
