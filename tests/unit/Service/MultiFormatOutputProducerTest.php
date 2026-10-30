@@ -57,13 +57,20 @@ class MultiFormatOutputProducerTest extends TestCase {
 	/**
 	 * The service; ODT conversion fails when told to.
 	 *
-	 * @param bool $odtFails Whether the ODT conversion throws.
+	 * @param bool                 $odtFails Whether the ODT conversion throws.
+	 * @param array<string, mixed> $world    Golden-run switches: pdfOptions shows the PDF options in the PDF,
+	 *                                       rasterWarning is what the rasterizer warns, noTemplateId drops the id.
 	 *
 	 * @return MultiFormatOutputProducer
 	 */
-	private function service(bool $odtFails = false): MultiFormatOutputProducer {
+	private function service(bool $odtFails = false, array $world = []): MultiFormatOutputProducer {
+		$template = ['id' => 'tmpl-1', 'name' => 'Besluit', 'content' => 'Besluit {{ naam }}', 'namespace' => 'besluiten', 'version' => 2];
+		if (($world['noTemplateId'] ?? false) === true) {
+			unset($template['id']);
+		}
+
 		$templates = $this->createMock(TemplateService::class);
-		$templates->method('getTemplate')->willReturn(['id' => 'tmpl-1', 'name' => 'Besluit', 'content' => 'Besluit {{ naam }}', 'namespace' => 'besluiten', 'version' => 2]);
+		$templates->method('getTemplate')->willReturn($template);
 
 		$resolver = $this->getMockBuilder(DataResolverService::class)->disableOriginalConstructor()->onlyMethods(['resolve'])->getMock();
 		$resolver->method('resolve')->willReturn(['data' => ['naam' => 'Jansen'], 'warnings' => [], 'errors' => []]);
@@ -78,7 +85,10 @@ class MultiFormatOutputProducerTest extends TestCase {
 		$renderer->method('getLastRenderWarnings')->willReturn([]);
 
 		$pdf = $this->createMock(PdfService::class);
-		$pdf->method('renderPdf')->willReturnCallback(static fn (string $templateContent): string => '%PDF of ' . $templateContent);
+		$pdf->method('renderPdf')->willReturnCallback(
+			static fn (string $templateContent, array $data = [], array $options = []): string => '%PDF of ' . $templateContent
+				. (($world['pdfOptions'] ?? false) === true ? ' with ' . json_encode($options) : '')
+		);
 		$office = $this->createMock(HtmlToOfficeConverter::class);
 		$office->method('isAvailable')->willReturn(true);
 		$office->method('toDocx')->willReturnCallback(static fn (string $html): string => 'PK docx of ' . $html);
@@ -86,7 +96,7 @@ class MultiFormatOutputProducerTest extends TestCase {
 			static fn (string $html): string => $odtFails === true ? throw new RuntimeException('soffice exited with code 81.') : 'PK odt of ' . $html
 		);
 		$rasterizer = $this->createMock(SvgRasterizer::class);
-		$rasterizer->method('rasterizeInlineSvg')->willReturnCallback(static fn (string $html): array => ['html' => $html, 'warnings' => []]);
+		$rasterizer->method('rasterizeInlineSvg')->willReturnCallback(static fn (string $html): array => ['html' => $html, 'warnings' => ($world['rasterWarning'] ?? [])]);
 
 		$storage = $this->getMockBuilder(DocumentStorageService::class)->disableOriginalConstructor()->onlyMethods(['store'])->getMock();
 		$storage->method('store')->willReturnCallback(
@@ -261,5 +271,55 @@ class MultiFormatOutputProducerTest extends TestCase {
 		}
 
 		$this->assertSame([], $this->filed);
+	}
+	/**
+	 * @return array<string, array{0: array<string, mixed>, 1: bool, 2: array<string, mixed>}>
+	 */
+	public static function goldenRequests(): array {
+		return [
+			'three formats, one failing' => [['formats' => ['pdf', 'odf', 'docx'], 'userId' => 'clerk', 'filename' => 'besluit.html', 'caseId' => 'case-7'], true, []],
+			'a target path and no file name' => [['formats' => ['docx', 'pdf'], 'userId' => 'clerk', 'output' => ['targetPath' => 'Zaken/2026']], false, []],
+			'a file name that is only an extension' => [['formats' => ['pdf'], 'userId' => 'clerk', 'filename' => '.pdf'], false, []],
+			'every format failing' => [['formats' => ['odf'], 'userId' => 'clerk'], true, []],
+			'pdf options and output warnings' => [
+				['formats' => ['docx', 'pdf'], 'userId' => 'clerk', 'pdfOptions' => ['orientation' => 'landscape']],
+				false,
+				['pdfOptions' => true, 'rasterWarning' => ['chart 1 could not be rasterised']],
+			],
+			'a template without an id' => [['formats' => ['pdf'], 'userId' => 'clerk'], false, ['noTemplateId' => true]],
+		];
+	}
+
+	/**
+	 * The whole answer, the files filed and the audit entry, as recorded before the producer took request objects.
+	 *
+	 * @dataProvider goldenRequests
+	 *
+	 * @param array<string, mixed> $options  The request options.
+	 * @param bool                 $odtFails Whether the ODT conversion throws.
+	 * @param array<string, mixed> $world    Golden-run switches for the service.
+	 *
+	 * @return void
+	 */
+	public function testTheWholeJobMatchesTheRecordedOne(array $options, bool $odtFails, array $world): void {
+		$result = $this->service(odtFails: $odtFails, world: $world)->generate('tmpl-1', [['register' => 'r', 'schema' => 's', 'id' => 'o-1']], $options);
+		$stable = static fn (array $entry): array => array_diff_key($entry, array_flip(['generatedAt', 'createdAt', 'uuid', 'id']));
+		$logged = array_map($stable, $this->logged);
+		$result['metadata'] = $stable($result['metadata']);
+		$trace = ['result' => $result, 'filed' => $this->filed, 'logged' => $logged];
+
+		$path = __DIR__ . '/golden/multi-format-jobs.json';
+		$recorded = [];
+		if (is_file($path) === true) {
+			$recorded = json_decode((string) file_get_contents($path), true);
+		}
+
+		$name = (string) $this->dataName();
+		if (getenv('GOLDEN_RECORD') === '1') {
+			$recorded[$name] = $trace;
+			file_put_contents($path, json_encode($recorded, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_PRESERVE_ZERO_FRACTION) . "\n");
+		}
+
+		$this->assertSame($recorded[$name] ?? null, $trace);
 	}
 }//end class
