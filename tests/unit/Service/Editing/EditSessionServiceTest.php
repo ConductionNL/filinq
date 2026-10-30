@@ -348,6 +348,40 @@ class EditSessionServiceTest extends TestCase {
 	}//end testReadReturnsAnchorsAndTheVersionAnEditWillNeed()
 
 	/**
+	 * A read past the block cap reports the full count, says it is truncated and
+	 * returns only the first 400 blocks, with the file's identity and user path.
+	 *
+	 * @return void
+	 */
+	public function testALongReadIsTruncatedToTheBlockCap(): void {
+		$path = tempnam(sys_get_temp_dir(), 'filinq-session-');
+		$this->spilled[] = $path;
+		unlink($path);
+		$zip = new ZipArchive();
+		$zip->open($path, ZipArchive::CREATE);
+		$paragraphs = '';
+		for ($i = 1; $i <= 401; $i++) {
+			$paragraphs .= '<w:p><w:r><w:t>Paragraph ' . $i . '</w:t></w:r></w:p>';
+		}
+
+		$zip->addFromString('word/document.xml', '<w:document xmlns:w="urn:w"><w:body>' . $paragraphs . '</w:body></w:document>');
+		$zip->close();
+		$this->attach($this->file((string)file_get_contents($path), 'etag-long'));
+
+		$outline = $this->service()->openForAgent(uid: self::UID, fileId: self::FILE_ID);
+
+		$this->assertSame(self::FILE_ID, $outline['fileId']);
+		$this->assertSame('letter.docx', $outline['name']);
+		$this->assertSame('letter.docx', $outline['path']);
+		$this->assertSame(401, $outline['blockCount']);
+		$this->assertTrue($outline['truncated']);
+		$this->assertCount(400, $outline['blocks']);
+		$this->assertSame('Paragraph 400', $outline['blocks'][399]['text']);
+		$this->assertArrayHasKey('format', $outline);
+
+	}//end testALongReadIsTruncatedToTheBlockCap()
+
+	/**
 	 * A read returns text, never bytes. A tool that hands a package back to the
 	 * model both poisons the prompt and moves document content somewhere with
 	 * different access rules.
