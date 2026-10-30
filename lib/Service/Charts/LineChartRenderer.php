@@ -93,53 +93,28 @@ class LineChartRenderer {
 	/**
 	 * Render a line chart (one polyline per series, gaps for skipped values).
 	 *
-	 * @param array $normalized Normalized `{labels, series}` data.
-	 * @param array $palette Ordered hex colors.
-	 * @param int $width Canvas width.
-	 * @param int $height Canvas height.
-	 * @param array $options Rendering options.
+	 * @param ChartRequest $chart The normalized data, palette, canvas size and options.
 	 *
 	 * @return string SVG markup.
 	 *
 	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-001
 	 */
-	public function render(array $normalized, array $palette, int $width, int $height, array $options): string {
-		$labels = $normalized['labels'];
-		$series = $normalized['series'];
-		$title = (string)($options['title'] ?? '');
-		$showLegend = (bool)($options['showLegend'] ?? (count($series) > 1));
+	public function render(ChartRequest $chart): string {
+		$labels = $chart->normalized['labels'];
+		$series = $chart->normalized['series'];
+		$showLegend = (bool)($chart->options['showLegend'] ?? (count($series) > 1));
 
-		$layout = $this->frame->layout(hasTitle: ($title !== ''), showLegend: $showLegend, width: $width, height: $height);
-		$niceMax = $this->scale->axisCeiling(value: $this->scale->seriesMax(series: $series));
-		$stepX = $layout['plotWidth'] / max(1, ($this->lineSteps(numLabels: count($labels))));
+		$plot = $this->frame->layout(chart: $chart, showLegend: $showLegend);
+		$plot['niceMax'] = $this->scale->axisCeiling(value: $this->scale->seriesMax(series: $series));
+		$plot['stepX'] = $plot['plotWidth'] / max(1, ($this->lineSteps(numLabels: count($labels))));
 
 		$parts = [];
-		$parts[] = $this->frame->render(
-			layout: $layout,
-			title: $title,
-			valueFmt: (string)($options['valueFormat'] ?? 'integer'),
-			niceMax: $niceMax,
-			width: $width,
-			height: $height
-		);
-		$parts[] = $this->drawSeries(
-			series: $series,
-			palette: $palette,
-			layout: $layout,
-			niceMax: $niceMax,
-			stepX: $stepX,
-			numLabels: count($labels)
-		);
-		$parts[] = $this->drawCategoryLabels(labels: $labels, layout: $layout, stepX: $stepX);
+		$parts[] = $this->frame->render(chart: $chart, plot: $plot);
+		$parts[] = $this->drawSeries(chart: $chart, plot: $plot);
+		$parts[] = $this->drawCategoryLabels(labels: $labels, plot: $plot);
 
 		if ($showLegend === true) {
-			$parts[] = $this->legend->render(
-				series: $series,
-				palette: $palette,
-				x: $layout['marginLeft'],
-				y: $height - 12,
-				maxEntries: ChartLabelFormatter::MAX_LABELLED_ENTRIES
-			);
+			$parts[] = $this->legend->render(chart: $chart, x: $plot['marginLeft']);
 		}
 
 		$parts[] = '</svg>';
@@ -165,21 +140,22 @@ class LineChartRenderer {
 	/**
 	 * Draw one polyline (broken at skipped points) plus point markers per series.
 	 *
-	 * @param array $series Normalized series list.
-	 * @param array $palette Ordered hex colors.
-	 * @param array $layout Geometry from {@see CartesianFrame::layout()}.
-	 * @param float $niceMax Axis ceiling value.
-	 * @param float $stepX Horizontal distance between category positions.
-	 * @param int $numLabels Number of category labels.
+	 * @param ChartRequest $chart The normalized series, labels and palette.
+	 * @param array $plot Geometry from {@see CartesianFrame::layout()} plus the axis
+	 *                    ceiling `niceMax` and the category distance `stepX`.
 	 *
 	 * @return string SVG markup fragment.
 	 */
-	private function drawSeries(array $series, array $palette, array $layout, float $niceMax, float $stepX, int $numLabels): string {
+	private function drawSeries(ChartRequest $chart, array $plot): string {
+		$series = $chart->normalized['series'];
+		$numLabels = count($chart->normalized['labels']);
+		$niceMax = $plot['niceMax'];
+		$stepX = $plot['stepX'];
 		$parts = [];
 		$numSeries = count($series);
 
 		for ($s = 0; $s < $numSeries; $s++) {
-			$color = $palette[$s % count($palette)];
+			$color = $chart->color(index: $s);
 			$points = [];
 			$segment = [];
 
@@ -194,8 +170,8 @@ class LineChartRenderer {
 					continue;
 				}
 
-				$x = $layout['marginLeft'] + ($i * $stepX);
-				$y = $layout['baselineY'] - (($value / $niceMax) * $layout['plotHeight']);
+				$x = $plot['marginLeft'] + ($i * $stepX);
+				$y = $plot['baselineY'] - (($value / $niceMax) * $plot['plotHeight']);
 				$segment[] = [$x, $y];
 				$points[] = [$x, $y];
 			}
@@ -216,12 +192,12 @@ class LineChartRenderer {
 	 * Draw the x-axis category labels, bounded by the label-volume cap.
 	 *
 	 * @param array $labels Category labels.
-	 * @param array $layout Geometry from {@see CartesianFrame::layout()}.
-	 * @param float $stepX Horizontal distance between category positions.
+	 * @param array $plot Geometry from {@see CartesianFrame::layout()} plus the category distance `stepX`.
 	 *
 	 * @return string SVG markup fragment.
 	 */
-	private function drawCategoryLabels(array $labels, array $layout, float $stepX): string {
+	private function drawCategoryLabels(array $labels, array $plot): string {
+		$stepX = $plot['stepX'];
 		$numLabels = count($labels);
 		if ($numLabels > ChartLabelFormatter::MAX_LABELLED_ENTRIES) {
 			return '';
@@ -230,8 +206,8 @@ class LineChartRenderer {
 		$parts = [];
 		for ($i = 0; $i < $numLabels; $i++) {
 			$parts[] = $this->svg->textEl(
-				x: $layout['marginLeft'] + ($i * $stepX),
-				y: $layout['baselineY'] + 16,
+				x: $plot['marginLeft'] + ($i * $stepX),
+				y: $plot['baselineY'] + 16,
 				text: $this->labels->truncate(text: $labels[$i], max: 14),
 				anchor: 'middle',
 				size: 9,

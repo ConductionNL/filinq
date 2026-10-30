@@ -69,47 +69,33 @@ class PieChartRenderer {
 	/**
 	 * Render a pie (or donut) chart from the first series.
 	 *
-	 * @param array $normalized Normalized `{labels, series}` data.
-	 * @param array $palette Ordered hex colors.
-	 * @param int $width Canvas width.
-	 * @param int $height Canvas height.
-	 * @param array $options Rendering options.
+	 * @param ChartRequest $chart The normalized data, palette, canvas size and options.
 	 *
 	 * @return string|ChartRenderError SVG markup, or the reason no chart could
 	 *                                 be drawn (the caller renders a placeholder).
 	 *
 	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-001
 	 */
-	public function render(array $normalized, array $palette, int $width, int $height, array $options): string|ChartRenderError {
-		$sliced = $this->collectSlices(labels: $normalized['labels'], values: $normalized['series'][0]['values']);
-		if ($sliced['total'] <= 0.0 || $sliced['slices'] === []) {
+	public function render(ChartRequest $chart): string|ChartRenderError {
+		$pie = $this->collectSlices(labels: $chart->normalized['labels'], values: $chart->normalized['series'][0]['values']);
+		if ($pie['total'] <= 0.0 || $pie['slices'] === []) {
 			return new ChartRenderError(message: 'chart error: no data');
 		}
 
-		$title = (string)($options['title'] ?? '');
-		$showLegend = (bool)($options['showLegend'] ?? true);
+		$title = $chart->title();
+		$showLegend = (bool)($chart->options['showLegend'] ?? true);
 
-		$geometry = $this->geometry(
-			hasTitle: ($title !== ''),
-			showLegend: $showLegend,
-			donut: (bool)($options['donut'] ?? false),
-			width: $width,
-			height: $height
-		);
+		$pie['geometry'] = $this->geometry(chart: $chart, showLegend: $showLegend);
+		$geometry = $pie['geometry'];
 
 		$parts = [];
-		$parts[] = $this->svg->svgOpenTag(width: $width, height: $height);
+		$parts[] = $this->svg->svgOpenTag(width: $chart->width, height: $chart->height);
 
 		if ($title !== '') {
-			$parts[] = $this->svg->textEl(x: $width / 2, y: 18, text: $title, anchor: 'middle', size: 13, weight: 'bold');
+			$parts[] = $this->svg->textEl(x: $chart->width / 2, y: 18, text: $title, anchor: 'middle', size: 13, weight: 'bold');
 		}
 
-		$parts[] = $this->drawSlices(
-			slices: $sliced['slices'],
-			total: $sliced['total'],
-			palette: $palette,
-			geometry: $geometry
-		);
+		$parts[] = $this->drawSlices(pie: $pie, chart: $chart);
 
 		if ($geometry['innerRadius'] > 0.0) {
 			$parts[] = $this->svg->circleEl(
@@ -121,12 +107,7 @@ class PieChartRenderer {
 		}
 
 		if ($showLegend === true) {
-			$parts[] = $this->drawLegend(
-				slices: $sliced['slices'],
-				total: $sliced['total'],
-				palette: $palette,
-				geometry: $geometry
-			);
+			$parts[] = $this->drawLegend(pie: $pie, chart: $chart);
 		}
 
 		$parts[] = '</svg>';
@@ -167,17 +148,17 @@ class PieChartRenderer {
 	/**
 	 * Compute the pie geometry: plot area, center, radius, and donut hole.
 	 *
-	 * @param bool $hasTitle Whether a chart title is drawn.
+	 * A title widens the top margin; the `donut` option punches out a hole.
+	 *
+	 * @param ChartRequest $chart The chart: its title, donut option and canvas size.
 	 * @param bool $showLegend Whether a legend column is drawn.
-	 * @param bool $donut Whether a donut hole is punched out.
-	 * @param int $width Canvas width.
-	 * @param int $height Canvas height.
 	 *
 	 * @return array{marginTop: int, plotWidth: float, cx: float, cy: float, radius: float, innerRadius: float}
 	 */
-	private function geometry(bool $hasTitle, bool $showLegend, bool $donut, int $width, int $height): array {
+	private function geometry(ChartRequest $chart, bool $showLegend): array {
+		$width = $chart->width;
 		$marginTop = 14;
-		if ($hasTitle === true) {
+		if ($chart->title() !== '') {
 			$marginTop = 34;
 		}
 
@@ -187,11 +168,11 @@ class PieChartRenderer {
 		}
 
 		$plotWidth = (float)($width - $legendWidth);
-		$plotHeight = (float)($height - $marginTop - 14);
+		$plotHeight = (float)($chart->height - $marginTop - 14);
 		$radius = max(10.0, ((min($plotWidth, $plotHeight) / 2) - 8));
 
 		$innerRadius = 0.0;
-		if ($donut === true) {
+		if ((bool)($chart->options['donut'] ?? false) === true) {
 			$innerRadius = $radius * 0.55;
 		}
 
@@ -211,21 +192,23 @@ class PieChartRenderer {
 	 * `<circle>` (the 360° sweep arc-math edge case), otherwise one `<path>`
 	 * arc sector per slice.
 	 *
-	 * @param array $slices `[{label, value}, ...]` — already filtered to
-	 *                      non-zero, positive values.
-	 * @param float $total Sum of all slice values.
-	 * @param array $palette Ordered hex colors.
-	 * @param array $geometry Geometry from {@see geometry()}.
+	 * @param array $pie `{slices, total, geometry}`: the slices (already filtered
+	 *                   to non-zero, positive values), their sum, and the
+	 *                   geometry from {@see geometry()}.
+	 * @param ChartRequest $chart The chart whose palette colors the slices.
 	 *
 	 * @return string SVG markup fragment.
 	 */
-	private function drawSlices(array $slices, float $total, array $palette, array $geometry): string {
+	private function drawSlices(array $pie, ChartRequest $chart): string {
+		$slices = $pie['slices'];
+		$total = $pie['total'];
+		$geometry = $pie['geometry'];
 		$cx = $geometry['cx'];
 		$cy = $geometry['cy'];
 		$radius = $geometry['radius'];
 
 		if (count($slices) === 1) {
-			return $this->svg->circleEl(cx: $cx, cy: $cy, radius: $radius, color: $palette[0]);
+			return $this->svg->circleEl(cx: $cx, cy: $cy, radius: $radius, color: $chart->palette[0]);
 		}
 
 		$parts = [];
@@ -238,7 +221,7 @@ class PieChartRenderer {
 				radius: $radius,
 				startAngle: $angle,
 				endAngle: $endAngle,
-				color: $palette[(int)$index % count($palette)]
+				color: $chart->color(index: (int)$index)
 			);
 			$angle = $endAngle;
 		}
@@ -249,20 +232,19 @@ class PieChartRenderer {
 	/**
 	 * Render the slice legend column with per-slice percentage shares.
 	 *
-	 * @param array $slices `[{label, value}, ...]`.
-	 * @param float $total Sum of all slice values.
-	 * @param array $palette Ordered hex colors.
-	 * @param array $geometry Geometry from {@see geometry()}.
+	 * @param array $pie `{slices, total, geometry}` as built by {@see render()}.
+	 * @param ChartRequest $chart The chart whose palette colors the legend.
 	 *
 	 * @return string SVG markup fragment.
 	 */
-	private function drawLegend(array $slices, float $total, array $palette, array $geometry): string {
-		$legendX = $geometry['plotWidth'] + 12;
-		$legendY = $geometry['marginTop'] + 6;
+	private function drawLegend(array $pie, ChartRequest $chart): string {
+		$total = $pie['total'];
+		$legendX = $pie['geometry']['plotWidth'] + 12;
+		$legendY = $pie['geometry']['marginTop'] + 6;
 
 		$parts = [];
 		$shown = 0;
-		foreach ($slices as $index => $slice) {
+		foreach ($pie['slices'] as $index => $slice) {
 			if ($shown >= ChartLabelFormatter::MAX_LABELLED_ENTRIES) {
 				break;
 			}
@@ -275,7 +257,7 @@ class PieChartRenderer {
 				y: $rowY - 8,
 				width: 10,
 				height: 10,
-				color: $palette[(int)$index % count($palette)]
+				color: $chart->color(index: (int)$index)
 			);
 			$parts[] = $this->svg->textEl(
 				x: $legendX + 14,

@@ -213,11 +213,13 @@ class ChartSvgRenderer {
 
 		$svg = $this->delegate(
 			type: $type,
-			normalized: $normalized,
-			palette: $this->palette->resolve(options: $options),
-			width: $width,
-			height: $height,
-			options: $options
+			chart: new ChartRequest(
+				normalized: $normalized,
+				palette: $this->palette->resolve(options: $options),
+				width: $width,
+				height: $height,
+				options: $options
+			)
 		);
 
 		if ($svg instanceof ChartRenderError) {
@@ -248,50 +250,21 @@ class ChartSvgRenderer {
 	 * Hand a normalized payload to the renderer for its chart type.
 	 *
 	 * @param string $type Chart type (already validated as supported).
-	 * @param array $normalized Normalized `{labels, series}` data.
-	 * @param array $palette Ordered hex colors.
-	 * @param int $width Canvas width.
-	 * @param int $height Canvas height.
-	 * @param array $options Rendering options.
+	 * @param ChartRequest $chart The normalized data, palette, canvas size and options.
 	 *
 	 * @return string|ChartRenderError SVG markup, or the reason no chart could
 	 *                                 be drawn.
 	 */
-	private function delegate(
-		string $type,
-		array $normalized,
-		array $palette,
-		int $width,
-		int $height,
-		array $options,
-	): string|ChartRenderError {
+	private function delegate(string $type, ChartRequest $chart): string|ChartRenderError {
 		if ($type === 'bar') {
-			return $this->bar->render(
-				normalized: $normalized,
-				palette: $palette,
-				width: $width,
-				height: $height,
-				options: $options
-			);
+			return $this->bar->render(chart: $chart);
 		}
 
 		if ($type === 'line') {
-			return $this->line->render(
-				normalized: $normalized,
-				palette: $palette,
-				width: $width,
-				height: $height,
-				options: $options
-			);
+			return $this->line->render(chart: $chart);
 		}
 
-		return $this->pie->render(
-			normalized: $normalized,
-			palette: $palette,
-			width: $width,
-			height: $height,
-			options: $options
-		);
+		return $this->pie->render(chart: $chart);
 
 	}//end delegate()
 

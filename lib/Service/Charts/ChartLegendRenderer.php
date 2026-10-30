@@ -69,25 +69,26 @@ class ChartLegendRenderer {
 	/**
 	 * Render a legend row of color-swatch + series name entries.
 	 *
-	 * @param array $series Normalized series list.
-	 * @param array $palette Ordered hex colors.
+	 * Draws at most {@see ChartLabelFormatter::MAX_LABELLED_ENTRIES} entries on
+	 * a baseline 12px above the bottom of the canvas.
+	 *
+	 * @param ChartRequest $chart The chart: its series, palette and canvas height.
 	 * @param float $x Left x position.
-	 * @param float $y Baseline y position.
-	 * @param int $maxEntries Maximum number of entries rendered.
 	 *
 	 * @return string SVG markup fragment.
 	 *
 	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-001
 	 */
-	public function render(array $series, array $palette, float $x, float $y, int $maxEntries): string {
+	public function render(ChartRequest $chart, float $x): string {
+		$y = (float)($chart->height - 12);
 		$parts = [];
 		$cursorX = $x;
-		foreach ($series as $index => $oneSeries) {
-			if ($index >= $maxEntries) {
+		foreach ($chart->normalized['series'] as $index => $oneSeries) {
+			if ($index >= ChartLabelFormatter::MAX_LABELLED_ENTRIES) {
 				break;
 			}
 
-			$color = $palette[(int)$index % count($palette)];
+			$color = $chart->color(index: (int)$index);
 			$name = $this->labels->truncate(text: $oneSeries['name'], max: 18);
 
 			$parts[] = $this->svg->rectEl(x: $cursorX, y: $y - 9, width: 9, height: 9, color: $color);
