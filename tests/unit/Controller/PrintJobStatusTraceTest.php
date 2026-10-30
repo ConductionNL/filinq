@@ -56,6 +56,7 @@ class PrintJobStatusTraceTest extends TestCase {
 			'nobody logged in' => [null, false, ['status' => 'printed'], []],
 			'no such job' => ['anna', false, ['status' => 'printed'], ['job' => null]],
 			'somebody else' => ['bob', false, ['status' => 'printed'], []],
+			'somebody else naming the owner' => ['bob', false, ['status' => 'printed', 'userId' => 'anna', 'requestedBy' => 'anna'], []],
 			'an admin' => ['root', true, ['status' => 'printed'], []],
 			'the owner, details as a list' => ['anna', false, ['status' => 'printing', 'details' => ['tray' => 2, 'sheets' => [1, 2]]], []],
 			'the owner, details as a number' => ['anna', false, ['status' => 'failed', 'details' => 42], []],

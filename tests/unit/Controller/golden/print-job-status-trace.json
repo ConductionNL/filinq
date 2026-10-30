@@ -217,5 +217,22 @@
                 }
             ]
         ]
+    },
+    "somebody else naming the owner": {
+        "status": 403,
+        "data": {
+            "error": "Not authorized"
+        },
+        "calls": [
+            [
+                "getJob",
+                "job-1"
+            ],
+            [
+                "isAdmin",
+                "bob"
+            ]
+        ],
+        "logs": []
     }
 }
