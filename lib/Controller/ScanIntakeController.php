@@ -28,6 +28,7 @@ use OCA\Filinq\Kernel\Contracts\ScanBatchRepositoryInterface;
 use OCA\Filinq\Kernel\Contracts\ScanBatchServiceInterface;
 use OCA\Filinq\Kernel\Contracts\ScanProfileServiceInterface;
 use OCA\Filinq\Kernel\Contracts\SeparatorSheetServiceInterface;
+use OCA\Filinq\Service\ScanBatchCut;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -189,8 +190,8 @@ class ScanIntakeController extends Controller {
 	 *
 	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 *
-	 * @no-admin-idor-exempt the batch file is resolved through the caller's own user folder in the method
-	 * body, and the segments are written with the Node API into its parent folder, which enforces create
+	 * @no-admin-idor-exempt the batch file is resolved by batchFile() from the session user's own user
+	 * folder, and the segments are written with the Node API into its parent folder, which enforces create
 	 * permission.
 	 */
 	#[NoAdminRequired]
@@ -204,24 +205,9 @@ class ScanIntakeController extends Controller {
 		}
 
 		try {
-			$userFolder = $this->rootFolder->getUserFolder($user->getUID());
-			$nodes = $userFolder->getById($fileId);
-			if ($nodes === []) {
-				return new JSONResponse(
-					data: ['error' => 'You may not read that batch.'],
-					statusCode: Http::STATUS_FORBIDDEN
-				);
-			}
-
-			$file = $nodes[0];
-			if (($file instanceof File) === false) {
-				// The id answers with whatever node carries it, and a folder id
-				// is as valid an int as a file id. Passing a folder on would
-				// reach the reader as a batch with no pages.
-				return new JSONResponse(
-					data: ['error' => 'That id is not a scanned batch.'],
-					statusCode: Http::STATUS_BAD_REQUEST
-				);
+			$file = $this->batchFile(userId: $user->getUID(), fileId: $fileId);
+			if ($file instanceof JSONResponse) {
+				return $file;
 			}
 
 			$profile = $this->resolveProfile(profileId: $profileId, path: $file->getPath());
@@ -232,23 +218,7 @@ class ScanIntakeController extends Controller {
 				);
 			}
 
-			$batch = $this->store->findByFile(fileId: $fileId);
-			if ($batch === null) {
-				$batch = $this->batches->receive(file: $file, profile: $profile);
-			}
-
-			$target = $file->getParent();
-			if (($target instanceof Folder) === false) {
-				return new JSONResponse(
-					data: ['error' => 'The batch has no folder to write its segments to.'],
-					statusCode: Http::STATUS_BAD_REQUEST
-				);
-			}
-
-			return new JSONResponse(
-				data: $this->batches->split(batch: $batch, profile: $profile, file: $file, target: $target),
-				statusCode: Http::STATUS_OK
-			);
+			return $this->cut(cut: new ScanBatchCut(file: $file, profile: $profile));
 		} catch (Throwable $e) {
 			return new JSONResponse(
 				data: ['error' => $e->getMessage()],
@@ -257,6 +227,69 @@ class ScanIntakeController extends Controller {
 		}//end try
 
 	}//end split()
+
+	/**
+	 * The batch file, as the caller's own user folder resolves it, or the refusal.
+	 *
+	 * @param string $userId The caller.
+	 * @param int    $fileId The batch the scanner wrote.
+	 *
+	 * @return File|JSONResponse The file, or a 403 when the caller cannot see it and a 400 when it is no file.
+	 */
+	private function batchFile(string $userId, int $fileId): File|JSONResponse {
+		$nodes = $this->rootFolder->getUserFolder($userId)->getById($fileId);
+		if ($nodes === []) {
+			return new JSONResponse(
+				data: ['error' => 'You may not read that batch.'],
+				statusCode: Http::STATUS_FORBIDDEN
+			);
+		}
+
+		$file = $nodes[0];
+		if (($file instanceof File) === false) {
+			// The id answers with whatever node carries it, and a folder id
+			// is as valid an int as a file id. Passing a folder on would
+			// reach the reader as a batch with no pages.
+			return new JSONResponse(
+				data: ['error' => 'That id is not a scanned batch.'],
+				statusCode: Http::STATUS_BAD_REQUEST
+			);
+		}
+
+		return $file;
+
+	}//end batchFile()
+
+	/**
+	 * Receive the batch when it is new, then cut it into its parent folder.
+	 *
+	 * The batch is looked up by the id of the file batchFile() resolved, so
+	 * nothing reaches the store without that check.
+	 *
+	 * @param ScanBatchCut $cut The batch file and its profile.
+	 *
+	 * @return JSONResponse The split batch, or a 400 when it has no folder to write to.
+	 */
+	private function cut(ScanBatchCut $cut): JSONResponse {
+		$batch = $this->store->findByFile(fileId: (int)$cut->file->getId());
+		if ($batch === null) {
+			$batch = $this->batches->receive(file: $cut->file, profile: $cut->profile);
+		}
+
+		$target = $cut->file->getParent();
+		if (($target instanceof Folder) === false) {
+			return new JSONResponse(
+				data: ['error' => 'The batch has no folder to write its segments to.'],
+				statusCode: Http::STATUS_BAD_REQUEST
+			);
+		}
+
+		return new JSONResponse(
+			data: $this->batches->split(batch: $batch, profile: $cut->profile, file: $cut->file, target: $target),
+			statusCode: Http::STATUS_OK
+		);
+
+	}//end cut()
 
 	/**
 	 * The profile to cut a batch with.
