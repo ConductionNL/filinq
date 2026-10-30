@@ -30,6 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\Editing;
 
+use OCA\Filinq\Service\DocumentGenerationRecord;
 use OCA\Filinq\Service\GeneratedDocumentLogger;
 use OCA\Filinq\Service\PdfConversionService;
 use OCA\OpenRegister\Mcp\Attribute\McpTool;
@@ -589,13 +590,16 @@ class DocumentAgentService {
 	private function record(string $uid, int $fileId, string $path, string $format, string $note): void {
 		try {
 			$this->documentLogger->log(
-				template: [
-					'id' => '',
-					'version' => null,
-					'name' => $note,
-				],
-				dataRefs: [],
-				format: $format,
+				generation: new DocumentGenerationRecord(
+					template: [
+						'id' => '',
+						'version' => null,
+						'name' => $note,
+					],
+					dataRefs: [],
+					format: $format,
+					userId: $uid
+				),
 				outcome: [
 					'status' => 'generated',
 					'warnings' => [$note],
@@ -603,8 +607,7 @@ class DocumentAgentService {
 					'errorMessage' => null,
 					'fileId' => $fileId,
 					'filePath' => $path,
-				],
-				userId: $uid
+				]
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning('Filinq could not record an agent document artefact: ' . $e->getMessage());
