@@ -130,9 +130,7 @@ class CustomDictionaryDetectionRunner {
 
 			$rowsToInsert = $this->matchDictionariesAgainstChunks(
 				chunks: $chunks,
-				dictionaries: $dictionaries,
-				fileId: $fileId,
-				gdprEntityMapper: $gdprEntityMapper
+				scan: new DictionaryMatchScan(dictionaries: $dictionaries, fileId: $fileId, entityMapper: $gdprEntityMapper)
 			);
 
 			if (empty($rowsToInsert) === false) {
@@ -154,82 +152,95 @@ class CustomDictionaryDetectionRunner {
 	 * Run every active dictionary's matcher against every chunk and build
 	 * the `EntityRelationMapper::insertBatch()` row set.
 	 *
-	 * @param array<int, mixed> $chunks OpenRegister `Chunk` entities, chunk-index ascending.
-	 * @param array<int, mixed> $dictionaries Active dictionaries + terms (see
-	 *                                        {@see CustomDictionaryService::listActiveDictionariesForDetection()}
-	 *                                        for the exact row shape).
-	 * @param int $fileId The Nextcloud file ID.
-	 * @param mixed $gdprEntityMapper OpenRegister `GdprEntityMapper` instance.
+	 * @param array<int, mixed>  $chunks OpenRegister `Chunk` entities, chunk-index ascending.
+	 * @param DictionaryMatchScan $scan   The dictionaries, file and catalogue of this pass.
 	 *
 	 * @return array<int, array<string, mixed>> Rows ready for `EntityRelationMapper::insertBatch()`.
 	 */
-	private function matchDictionariesAgainstChunks(
-		array $chunks,
-		array $dictionaries,
-		int $fileId,
-		mixed $gdprEntityMapper,
-	): array {
-		$globalClaimed = [];
-		$entityCache = [];
+	private function matchDictionariesAgainstChunks(array $chunks, DictionaryMatchScan $scan): array {
 		$rowsToInsert = [];
-
 		foreach ($chunks as $chunk) {
-			$chunkText = (string)$chunk->getTextContent();
-			if ($chunkText === '') {
-				continue;
+			foreach ($this->chunkRows(chunk: $chunk, scan: $scan) as $row) {
+				$rowsToInsert[] = $row;
 			}
-
-			$chunkOccurrences = $this->collectChunkOccurrences(
-				chunkText: $chunkText,
-				dictionaries: $dictionaries
-			);
-			if (empty($chunkOccurrences) === true) {
-				continue;
-			}
-
-			$startOffset = (int)$chunk->getStartOffset();
-			foreach ($chunkOccurrences as $occurrence) {
-				$absoluteStart = ($startOffset + $occurrence['positionStart']);
-				$absoluteEnd = ($startOffset + $occurrence['positionEnd']);
-
-				if ($this->rangeOverlapsAny(start: $absoluteStart, end: $absoluteEnd, claimed: $globalClaimed) === true) {
-					// Already matched at this absolute document position —
-					// typically the same occurrence seen again in an
-					// overlap region shared by two adjacent chunks.
-					continue;
-				}
-
-				$globalClaimed[] = [$absoluteStart, $absoluteEnd];
-
-				$entityKey = (self::ENTITY_TYPE . '|' . $occurrence['value']);
-				if (isset($entityCache[$entityKey]) === false) {
-					$entityCache[$entityKey] = $this->lookupOrCreateEntity(
-						value: $occurrence['value'],
-						gdprEntityMapper: $gdprEntityMapper
-					);
-				}
-
-				$rowsToInsert[] = [
-					'entityId' => $entityCache[$entityKey],
-					'fileId' => $fileId,
-					'chunkId' => (int)$chunk->getId(),
-					'positionStart' => $occurrence['positionStart'],
-					'positionEnd' => $occurrence['positionEnd'],
-					'confidence' => 1.0,
-					'detectionMethod' => self::DETECTION_METHOD,
-					// The only free-text field EntityRelation exposes; carries
-					// the matching term/dictionary label for the review UI
-					// (design.md §D3 — "per-list label carried on the relation").
-					'context' => $occurrence['label'],
-					'anonymized' => false,
-					'skipAnonymization' => false,
-					'createdAt' => new DateTime(),
-				];
-			}//end foreach
-		}//end foreach
+		}
 
 		return $rowsToInsert;
 	}//end matchDictionariesAgainstChunks()
+
+	/**
+	 * The relation rows for one chunk's matches at positions no earlier match claimed.
+	 *
+	 * @param mixed               $chunk An OpenRegister `Chunk` entity.
+	 * @param DictionaryMatchScan $scan  The pass so far.
+	 *
+	 * @return array<int, array<string, mixed>> The rows.
+	 */
+	private function chunkRows(mixed $chunk, DictionaryMatchScan $scan): array {
+		$chunkText = (string)$chunk->getTextContent();
+		if ($chunkText === '') {
+			return [];
+		}
+
+		$chunkOccurrences = $this->collectChunkOccurrences(
+			chunkText: $chunkText,
+			dictionaries: $scan->dictionaries
+		);
+
+		$rows = [];
+		$startOffset = (int)$chunk->getStartOffset();
+		foreach ($chunkOccurrences as $occurrence) {
+			$absoluteStart = ($startOffset + $occurrence['positionStart']);
+			$absoluteEnd = ($startOffset + $occurrence['positionEnd']);
+
+			if ($scan->claim(start: $absoluteStart, end: $absoluteEnd) === false) {
+				// Already matched at this absolute document position —
+				// typically the same occurrence seen again in an
+				// overlap region shared by two adjacent chunks.
+				continue;
+			}
+
+			$occurrence['chunkId'] = (int)$chunk->getId();
+			$rows[] = $this->relationRow(occurrence: $occurrence, scan: $scan);
+		}
+
+		return $rows;
+	}//end chunkRows()
+
+	/**
+	 * One `EntityRelationMapper::insertBatch()` row, its catalogue entity looked up once per value.
+	 *
+	 * @param array<string, mixed> $occurrence A match with its `chunkId`.
+	 * @param DictionaryMatchScan  $scan       The pass so far.
+	 *
+	 * @return array<string, mixed> The row.
+	 */
+	private function relationRow(array $occurrence, DictionaryMatchScan $scan): array {
+		$entityId = $scan->entityIdOf(value: $occurrence['value']);
+		if ($entityId === null) {
+			$entityId = $scan->remember(
+				value: $occurrence['value'],
+				entityId: $this->lookupOrCreateEntity(value: $occurrence['value'], gdprEntityMapper: $scan->entityMapper)
+			);
+		}
+
+		return [
+			'entityId' => $entityId,
+			'fileId' => $scan->fileId,
+			'chunkId' => $occurrence['chunkId'],
+			'positionStart' => $occurrence['positionStart'],
+			'positionEnd' => $occurrence['positionEnd'],
+			'confidence' => 1.0,
+			'detectionMethod' => self::DETECTION_METHOD,
+			// The only free-text field EntityRelation exposes; carries
+			// the matching term/dictionary label for the review UI
+			// (design.md §D3 — "per-list label carried on the relation").
+			'context' => $occurrence['label'],
+			'anonymized' => false,
+			'skipAnonymization' => false,
+			'createdAt' => new DateTime(),
+		];
+	}//end relationRow()
 
 	/**
 	 * Collect one chunk's occurrences across every active dictionary,
@@ -321,25 +332,6 @@ class CustomDictionaryDetectionRunner {
 		}
 
 	}//end clearRelations()
-
-	/**
-	 * Whether `[start, end)` overlaps any already-claimed absolute-position range.
-	 *
-	 * @param int $start Candidate match start.
-	 * @param int $end Candidate match end.
-	 * @param array<int, array{0:int,1:int}> $claimed Already-claimed `[start, end]` pairs.
-	 *
-	 * @return bool True when the candidate overlaps a claimed range.
-	 */
-	private function rangeOverlapsAny(int $start, int $end, array $claimed): bool {
-		foreach ($claimed as [$claimedStart, $claimedEnd]) {
-			if ($start < $claimedEnd && $end > $claimedStart) {
-				return true;
-			}
-		}
-
-		return false;
-	}//end rangeOverlapsAny()
 
 	/**
 	 * Get an OpenRegister service or mapper by class name.
