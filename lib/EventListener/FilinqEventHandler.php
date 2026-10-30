@@ -26,12 +26,10 @@ declare(strict_types=1);
 namespace OCA\Filinq\EventListener;
 
 use OCA\Filinq\Kernel\Contracts\LegalBasesSummaryServiceInterface;
-use OCA\Filinq\Kernel\Contracts\MetadataServiceInterface;
-use OCA\Filinq\Kernel\Contracts\PolicyRetroactiveServiceInterface;
-use OCA\Filinq\Kernel\Contracts\SettingsServiceInterface;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectDeletedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
+use OCP\EventDispatcher\Event;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -53,6 +51,13 @@ class FilinqEventHandler {
 	private readonly EnrichmentRunner $enrichmentRunner;
 
 	/**
+	 * Routes changed policy records to the retroactive policy layer.
+	 *
+	 * @var PolicyChangeRouter
+	 */
+	private readonly PolicyChangeRouter $policyRouter;
+
+	/**
 	 * Constructor for FilinqEventHandler
 	 *
 	 * @param ContainerInterface $container App container the legal-bases summary service is resolved from.
@@ -70,48 +75,74 @@ class FilinqEventHandler {
 		?EnrichmentRunner $enrichmentRunner = null,
 	) {
 		$this->enrichmentRunner = $enrichmentRunner ?? (new EnrichmentRunner())->withClassificationFrom(container: $container);
+		$this->policyRouter = new PolicyChangeRouter();
 
 	}//end __construct()
+
+	/**
+	 * Hand an OpenRegister object event to the handler for its type.
+	 *
+	 * @param Event $event The event to dispatch
+	 * @param ObjectEventServices $services The services the event is handled with
+	 *
+	 * @return void
+	 *
+	 * @psalm-suppress TypeDoesNotContainType OpenRegister is an optional dep; event classes may not be loaded.
+	 *
+	 * @spec openspec/specs/metadata-enrichment/spec.md
+	 */
+	public function dispatch(Event $event, ObjectEventServices $services): void {
+		if ($event instanceof ObjectCreatedEvent) {
+			$this->handleObjectCreated(event: $event, services: $services);
+			return;
+		}
+
+		if ($event instanceof ObjectUpdatedEvent) {
+			$this->handleObjectUpdated(event: $event, services: $services);
+			return;
+		}
+
+		if ($event instanceof ObjectDeletedEvent) {
+			$this->handleObjectDeleted(event: $event, services: $services);
+			return;
+		}
+
+		$services->logger->debug(
+			'Filinq: Ignoring unhandled event type',
+			[
+				'eventType' => get_class($event),
+			]
+		);
+
+	}//end dispatch()
 
 	/**
 	 * Handles object creation events
 	 *
 	 * @param ObjectCreatedEvent $event The creation event
-	 * @param MetadataServiceInterface $metadataService The metadata service
-	 * @param SettingsServiceInterface $settingsService The settings service
-	 * @param LoggerInterface $logger The logger instance
-	 * @param PolicyRetroactiveServiceInterface $retroactive Retroactive policy applicator
-	 *                                              (injected here, not via
-	 *                                              service-locator).
+	 * @param ObjectEventServices $services The metadata, settings, logging and retroactive-policy services
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/specs/metadata-enrichment/spec.md
 	 */
-	public function handleObjectCreated(
-		ObjectCreatedEvent $event,
-		MetadataServiceInterface $metadataService,
-		SettingsServiceInterface $settingsService,
-		LoggerInterface $logger,
-		PolicyRetroactiveServiceInterface $retroactive,
-	): void {
+	public function handleObjectCreated(ObjectCreatedEvent $event, ObjectEventServices $services): void {
+		$logger = $services->logger;
 		$object = $event->getObject();
 		if ($object === null) {
 			$logger->warning('Filinq: ObjectCreatedEvent received with null object');
 			return;
 		}
 
-		$this->dispatchPolicyRetroactive(
-			objectData: $object->getObject(),
-			logger: $logger,
-			reason: 'created',
-			retroactive: $retroactive
+		$this->policyRouter->route(
+			change: new ObjectChange(objectData: $object->getObject(), reason: 'created'),
+			services: $services
 		);
 
 		$this->enrichmentRunner->enrichObject(
 			$object,
-			$metadataService,
-			$settingsService,
+			$services->metadataService,
+			$services->settingsService,
 			$logger,
 			'new object'
 		);
@@ -122,22 +153,14 @@ class FilinqEventHandler {
 	 * Handles object update events
 	 *
 	 * @param ObjectUpdatedEvent $event The update event
-	 * @param MetadataServiceInterface $metadataService The metadata service
-	 * @param SettingsServiceInterface $settingsService The settings service
-	 * @param LoggerInterface $logger The logger instance
-	 * @param PolicyRetroactiveServiceInterface $retroactive Retroactive policy applicator.
+	 * @param ObjectEventServices $services The metadata, settings, logging and retroactive-policy services
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/specs/metadata-enrichment/spec.md
 	 */
-	public function handleObjectUpdated(
-		ObjectUpdatedEvent $event,
-		MetadataServiceInterface $metadataService,
-		SettingsServiceInterface $settingsService,
-		LoggerInterface $logger,
-		PolicyRetroactiveServiceInterface $retroactive,
-	): void {
+	public function handleObjectUpdated(ObjectUpdatedEvent $event, ObjectEventServices $services): void {
+		$logger = $services->logger;
 		$object = $event->getNewObject();
 		$oldObject = $event->getOldObject();
 
@@ -152,23 +175,15 @@ class FilinqEventHandler {
 			$oldObjectData = $oldObject->getObject();
 		}
 
-		$this->dispatchPolicyRetroactive(
-			objectData: $objectData,
-			logger: $logger,
-			reason: 'updated',
-			retroactive: $retroactive
-		);
+		$change = new ObjectChange(objectData: $objectData, reason: 'updated', oldObjectData: $oldObjectData);
+		$this->policyRouter->route(change: $change, services: $services);
 
 		// Wave 4a: auto-regenerate the per-dossier grondslagen summary when a
 		// dossier's `checkedOn` review timestamp changes (and the dossier
 		// opts in via `configuration.grondslagen.autoRegenOnReview`, default
 		// true). Runs synchronously inside the event flow; failures are
 		// logged but do NOT roll back the dossier update.
-		$this->maybeRegenerateGrondslagenSummary(
-			objectData: $objectData,
-			oldObjectData: $oldObjectData,
-			logger: $logger
-		);
+		$this->maybeRegenerateGrondslagenSummary(change: $change, logger: $logger);
 
 		if ($this->hasContentChanged(objectData: $objectData, oldObjectData: $oldObjectData) === false) {
 			// An intake document gets its OCR text (contentText) by an update,
@@ -184,8 +199,8 @@ class FilinqEventHandler {
 
 		$this->enrichmentRunner->enrichObject(
 			$object,
-			$metadataService,
-			$settingsService,
+			$services->metadataService,
+			$services->settingsService,
 			$logger,
 			'updated object'
 		);
@@ -211,23 +226,19 @@ class FilinqEventHandler {
 	 * lastGeneratedAt}` is updated by the summary service after a
 	 * successful render.
 	 *
-	 * @param array<string, mixed> $objectData The new dossier object data.
-	 * @param array<string, mixed> $oldObjectData The previous dossier object data
-	 *                                            (empty when the event lacks a previous state).
+	 * @param ObjectChange $change The new and previous dossier object data (the previous
+	 *                             is empty when the event lacks a previous state).
 	 * @param LoggerInterface $logger Structured logger.
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/specs/metadata-enrichment/spec.md
 	 */
-	private function maybeRegenerateGrondslagenSummary(
-		array $objectData,
-		array $oldObjectData,
-		LoggerInterface $logger,
-	): void {
+	private function maybeRegenerateGrondslagenSummary(ObjectChange $change, LoggerInterface $logger): void {
+		$objectData = $change->objectData;
 		if ($this->shouldRegenerateGrondslagenSummary(
 			objectData: $objectData,
-			oldObjectData: $oldObjectData
+			oldObjectData: $change->oldObjectData
 		) === false
 		) {
 			return;
@@ -327,27 +338,21 @@ class FilinqEventHandler {
 	 * Handles object deletion events
 	 *
 	 * @param ObjectDeletedEvent $event The deletion event
-	 * @param LoggerInterface $logger The logger instance
-	 * @param PolicyRetroactiveServiceInterface $retroactive Retroactive policy applicator.
+	 * @param ObjectEventServices $services The logging and retroactive-policy services
 	 *
 	 * @return void
 	 */
-	public function handleObjectDeleted(
-		ObjectDeletedEvent $event,
-		LoggerInterface $logger,
-		PolicyRetroactiveServiceInterface $retroactive,
-	): void {
+	public function handleObjectDeleted(ObjectDeletedEvent $event, ObjectEventServices $services): void {
+		$logger = $services->logger;
 		$object = $event->getObject();
 		if ($object === null) {
 			$logger->warning('Filinq: ObjectDeletedEvent received with null object');
 			return;
 		}
 
-		$this->dispatchPolicyRetroactive(
-			objectData: $object->getObject(),
-			logger: $logger,
-			reason: 'deleted',
-			retroactive: $retroactive
+		$this->policyRouter->route(
+			change: new ObjectChange(objectData: $object->getObject(), reason: 'deleted'),
+			services: $services
 		);
 
 		$logger->info(
@@ -360,143 +365,6 @@ class FilinqEventHandler {
 		);
 
 	}//end handleObjectDeleted()
-
-	/**
-	 * Route policy-surface mutations to the retroactive layer.
-	 *
-	 * Identifies the changed object as a `publicationProhibition` or a
-	 * `publicationConsent` (scope=entity / scope=document) using payload-shape
-	 * heuristics rather than schema-ID lookups, since:
-	 *   - the event's `$object->getSchema()` returns a schema *ID* (numeric),
-	 *     not a slug, so we would need an extra DB round-trip per event;
-	 *   - the discriminating fields (`reason` + `legalAuthority` for
-	 *     prohibitions; `scope` for consents) are stable across versions.
-	 *
-	 * For non-policy events this is a cheap no-op and returns immediately.
-	 *
-	 * @param array<string, mixed> $objectData The changed object's payload.
-	 * @param LoggerInterface $logger Structured log sink.
-	 * @param string $reason 'created' | 'updated' | 'deleted'.
-	 * @param PolicyRetroactiveServiceInterface $retroactive Retroactive policy applicator
-	 *                                              (constructor/method-injected at
-	 *                                              the calling public handler).
-	 *
-	 * @return void
-	 *
-	 * @psalm-suppress UnusedParam Both $logger and $reason are used in the conditional branches —
-	 *                             Psalm misreads the path coverage through the try/catch.
-	 */
-	private function dispatchPolicyRetroactive(
-		array $objectData,
-		LoggerInterface $logger,
-		string $reason,
-		PolicyRetroactiveServiceInterface $retroactive,
-	): void {
-		$shape = $this->detectPolicyShape(objectData: $objectData);
-		if ($shape === null) {
-			return;
-		}
-
-		try {
-			if ($shape === 'prohibition') {
-				if ($reason === 'deleted') {
-					$retroactive->applyRuleRemoval();
-					return;
-				}
-
-				$resolved = $retroactive->applyProhibitionMutation(prohibition: $objectData);
-				if ($resolved > 0) {
-					$logger->info(
-						'Filinq: prohibition mutation force-resolved in-flight records',
-						['resolved' => $resolved, 'reason' => $reason]
-					);
-				}
-
-				return;
-			}
-
-			if ($shape === 'standing_consent') {
-				if ($reason === 'deleted') {
-					$retroactive->applyRuleRemoval();
-					return;
-				}
-
-				$retroactive->applyStandingConsentMutation();
-				return;
-			}
-
-			// Document_consent shape (workflow record): not a policy rule, no-op.
-		} catch (\Exception $e) {
-			$logger->warning(
-				'Filinq: retroactive policy dispatch failed',
-				['error' => $e->getMessage(), 'reason' => $reason]
-			);
-		}//end try
-
-	}//end dispatchPolicyRetroactive()
-
-	/**
-	 * Classify a payload as a policy record by structural signature.
-	 *
-	 * @param array<string, mixed> $objectData The changed object's payload.
-	 *
-	 * @return string|null 'prohibition', 'standing_consent', 'document_consent', or null.
-	 */
-	private function detectPolicyShape(array $objectData): ?string {
-		if ($this->looksLikeProhibition(objectData: $objectData) === true) {
-			return 'prohibition';
-		}
-
-		if (isset($objectData['consentStatus']) === true) {
-			return $this->detectConsentScope(objectData: $objectData);
-		}
-
-		return null;
-	}//end detectPolicyShape()
-
-	/**
-	 * Structural test for a `publicationProhibition` payload.
-	 *
-	 * A prohibition is identified by the combination of `matchRules` plus
-	 * `reason` or `legalAuthority`, and the absence of a `consentStatus` field
-	 * (consent records always carry it).
-	 *
-	 * @param array<string, mixed> $objectData The changed object's payload.
-	 *
-	 * @return bool True when the payload is a prohibition record.
-	 */
-	private function looksLikeProhibition(array $objectData): bool {
-		$hasMatchRules = isset($objectData['matchRules']) === true
-			&& is_array($objectData['matchRules']) === true
-			&& count($objectData['matchRules']) > 0;
-		if ($hasMatchRules === false) {
-			return false;
-		}
-
-		if (isset($objectData['consentStatus']) === true) {
-			return false;
-		}
-
-		$hasReason = isset($objectData['reason']) === true && (string)$objectData['reason'] !== '';
-
-		return $hasReason === true || isset($objectData['legalAuthority']) === true;
-	}//end looksLikeProhibition()
-
-	/**
-	 * Classify a consent payload by its `scope` field.
-	 *
-	 * @param array<string, mixed> $objectData The changed object's payload.
-	 *
-	 * @return string 'standing_consent' for scope=entity, otherwise 'document_consent'.
-	 */
-	private function detectConsentScope(array $objectData): string {
-		$scope = (string)($objectData['scope'] ?? 'document');
-		if ($scope === 'entity') {
-			return 'standing_consent';
-		}
-
-		return 'document_consent';
-	}//end detectConsentScope()
 
 	/**
 	 * Check if content fields have changed between old and new object data
