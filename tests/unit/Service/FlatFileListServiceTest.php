@@ -377,7 +377,7 @@ class FlatFileListServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/object-files-read-through-the-record/specs/document-register/spec.md
+	 * @spec openspec/specs/document-register/spec.md
 	 */
 	public function testAFileInTheFolderOfAReadableObjectIsListed(): void {
 		$page = $this->service(

@@ -17,7 +17,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/object-files-read-through-the-record/specs/document-register/spec.md
+ * @spec openspec/specs/document-register/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -42,7 +42,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/object-files-read-through-the-record/specs/document-register/spec.md
+ * @spec openspec/specs/document-register/spec.md
  */
 class ReadableFileResolver {
 
@@ -86,7 +86,7 @@ class ReadableFileResolver {
 	 *
 	 * @return Node|null The node, or null when there is no reader or the reader may not read it.
 	 *
-	 * @spec openspec/changes/object-files-read-through-the-record/specs/document-register/spec.md
+	 * @spec openspec/specs/document-register/spec.md
 	 */
 	public function node(int $fileId): ?Node {
 		$user = $this->userSession->getUser();

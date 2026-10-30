@@ -14,7 +14,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/object-files-read-through-the-record/specs/document-register/spec.md
+ * @spec openspec/specs/document-register/spec.md
  */
 
 namespace OCA\Filinq\Tests\Unit\Service;
@@ -185,7 +185,7 @@ class ReadableFileResolverTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/object-files-read-through-the-record/specs/document-register/spec.md
+	 * @spec openspec/specs/document-register/spec.md
 	 */
 	public function testAFileInTheReadersOwnFilesResolvesThere(): void {
 		$node = $this->resolver(home: [4711 => 'eigen.pdf'])->node(fileId: 4711);
@@ -200,7 +200,7 @@ class ReadableFileResolverTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/object-files-read-through-the-record/specs/document-register/spec.md
+	 * @spec openspec/specs/document-register/spec.md
 	 */
 	public function testAnObjectsFileResolvesWhenTheReaderMayReadTheObject(): void {
 		$node = $this->resolver(
@@ -218,7 +218,7 @@ class ReadableFileResolverTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/object-files-read-through-the-record/specs/document-register/spec.md
+	 * @spec openspec/specs/document-register/spec.md
 	 */
 	public function testAnObjectsFileTheReaderMayNotReadIsNeverOpened(): void {
 		$node = $this->resolver(
@@ -237,7 +237,7 @@ class ReadableFileResolverTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/object-files-read-through-the-record/specs/document-register/spec.md
+	 * @spec openspec/specs/document-register/spec.md
 	 */
 	public function testWithoutOpenRegisterOnlyTheReadersOwnFilesCount(): void {
 		$node = $this->resolver(
@@ -256,7 +256,7 @@ class ReadableFileResolverTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/object-files-read-through-the-record/specs/document-register/spec.md
+	 * @spec openspec/specs/document-register/spec.md
 	 */
 	public function testNoReaderOrNoFileIdResolvesToNothing(): void {
 		$anonymous = $this->resolver(home: [4711 => 'eigen.pdf'], mayRead: [4711 => true], signedIn: false);
