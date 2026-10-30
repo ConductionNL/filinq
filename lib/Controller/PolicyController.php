@@ -75,6 +75,8 @@ class PolicyController extends Controller {
 	 *
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
+	 *
+	 * @spec openspec/specs/entity-publication-policies/spec.md
 	 */
 	public function indexProhibitions(): JSONResponse {
 		if ($this->userSession->getUser() === null) {
@@ -102,6 +104,8 @@ class PolicyController extends Controller {
 	 *
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
+	 *
+	 * @spec openspec/specs/entity-publication-policies/spec.md
 	 */
 	public function showProhibition(string $id): JSONResponse {
 		if ($this->userSession->getUser() === null) {
@@ -131,6 +135,8 @@ class PolicyController extends Controller {
 	 * @return JSONResponse
 	 *
 	 * @NoAdminRequired
+	 *
+	 * @spec openspec/specs/entity-publication-policies/spec.md
 	 */
 	public function createProhibition(): JSONResponse {
 		if ($this->userSession->getUser() === null) {
@@ -160,6 +166,8 @@ class PolicyController extends Controller {
 	 * @return JSONResponse
 	 *
 	 * @NoAdminRequired
+	 *
+	 * @spec openspec/specs/entity-publication-policies/spec.md
 	 */
 	public function updateProhibition(string $id): JSONResponse {
 		if ($this->userSession->getUser() === null) {
