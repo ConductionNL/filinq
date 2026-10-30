@@ -795,6 +795,60 @@ class ConsentServiceTest extends TestCase {
 
 	}//end testScopeEntityRecordsAreNotMatchedByIdempotencyLookup()
 
+	/**
+	 * The idempotency lookup and both writes address the caller's register and schema.
+	 *
+	 * @return void
+	 */
+	public function testLookupAndWritesAddressTheCallersRegisterAndSchema(): void {
+		foreach (['create' => [], 'update' => [$this->buildSavedObject(data: ['documentId' => 'doc-1', 'scope' => 'document'])]] as $path => $rows) {
+			$queries = [];
+			$writes  = [];
+			$objectService = $this->createMock(originalClassName: \OCA\OpenRegister\Service\ObjectService::class);
+			$objectService->method('searchObjects')->willReturnCallback(
+				function (array $query) use (&$queries, $rows): array {
+					$queries[] = $query;
+					return $rows;
+				}
+			);
+			$objectService->method('saveObject')->willReturnCallback(
+				function (array $object, $register, $schema) use (&$writes): object {
+					$writes[] = [$register, $schema];
+					return $this->buildSavedObject(data: $object);
+				}
+			);
+			$container = $this->createMock(originalClassName: ContainerInterface::class);
+			$container->method('get')->willReturn($objectService);
+			$policyMatcher = $this->createMock(originalClassName: PolicyMatchService::class);
+			$policyMatcher->method('match')->willReturn(null);
+			$service = new ConsentService(
+				logger: $this->mockLogger,
+				deadlineChecker: $this->mockDeadlineChecker,
+				updateHandler: $this->mockUpdateHandler,
+				scopeValidator: $this->mockScopeValidator,
+				policyMatcher: $policyMatcher,
+				recordWriter: $this->buildRecordWriter(container: $container)
+			);
+
+			$service->createConsentRequest(
+				documentId: 'doc-1',
+				entityType: 'PERSON',
+				entityText: 'Anneke Jansen',
+				register: 'reg-9',
+				schema: 'sch-9',
+				extra: []
+			);
+
+			$this->assertSame(
+				[['@self' => ['register' => 'reg-9', 'schema' => 'sch-9'], 'documentId' => 'doc-1', 'scope' => 'document', 'entityText' => 'Anneke Jansen']],
+				$queries,
+				$path
+			);
+			$this->assertSame([['reg-9', 'sch-9']], $writes, $path);
+		}//end foreach
+
+	}//end testLookupAndWritesAddressTheCallersRegisterAndSchema()
+
 	// ------------------------------------------------------------------
 	// validatePublicationConsentData scope rules
 	// ------------------------------------------------------------------
