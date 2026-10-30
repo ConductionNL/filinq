@@ -120,6 +120,9 @@ class AnonymizationController extends Controller {
 	 * @NoCSRFRequired
 	 *
 	 * @spec openspec/specs/anonymization/spec.md
+	 *
+	 * @no-admin-idor-exempt no id is taken. FileListingService::listProcessedFiles() lists the Filinq
+	 * folder inside the caller's own user folder.
 	 */
 	public function files(): JSONResponse {
 		try {
@@ -160,6 +163,9 @@ class AnonymizationController extends Controller {
 	 * @NoAdminRequired
 	 *
 	 * @spec openspec/specs/anonymization/spec.md
+	 *
+	 * @no-admin-idor-exempt no id is taken. FileUploadService::uploadFile() writes into the Filinq folder
+	 * inside the caller's own user folder.
 	 */
 	public function upload(): JSONResponse {
 		try {
@@ -227,6 +233,9 @@ class AnonymizationController extends Controller {
 	 * @NoAdminRequired
 	 *
 	 * @spec openspec/specs/anonymization/spec.md
+	 *
+	 * @no-admin-idor-exempt AnonymizeRequestService::verifyFileAccess() in the method body refuses a file
+	 * outside the caller's own user folder before anything is read.
 	 */
 	public function extract(int $fileId): JSONResponse {
 		try {
@@ -526,6 +535,9 @@ class AnonymizationController extends Controller {
 	 * @NoCSRFRequired
 	 *
 	 * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-6
+	 *
+	 * @no-admin-idor-exempt RelationSkipDecisionService::apply() refuses (404) a relation whose file is
+	 * not in the caller's own user folder (requireRelationAccess()) before the decision is written.
 	 */
 	public function updateRelation(int $id): JSONResponse {
 		$denied = $this->anonymizeRequest->requireAuthenticated();

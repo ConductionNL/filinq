@@ -97,6 +97,9 @@ class Pdfa3ConversionController extends Controller {
 	 * @return DataDownloadResponse|JSONResponse PDF/A-3 download or a typed error response.
 	 *
 	 * @spec openspec/specs/pdfa3-conversion/spec.md
+	 *
+	 * @no-admin-idor-exempt the source file is resolved through the caller's own user folder in the method
+	 * body (resolveReadableFile()); attachments are inline content, not ids.
 	 */
 	#[NoAdminRequired]
 	public function convert(): DataDownloadResponse|JSONResponse {
