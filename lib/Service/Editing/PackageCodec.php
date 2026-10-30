@@ -303,44 +303,17 @@ class PackageCodec {
 		$resolved = [];
 
 		foreach ($edits as $position => $edit) {
+			$number = ((int)$position + 1);
+			$edit['action'] = $this->actionOf(edit: $edit, number: $number);
+
 			$anchor = (string)($edit['anchor'] ?? '');
-			$action = (string)($edit['action'] ?? self::ACTION_REPLACE);
-
-			if (in_array($action, self::ACTIONS, true) === false) {
-				throw new RuntimeException(
-					sprintf('Edit %d: unknown action "%s".', ((int)$position + 1), $action)
-				);
-			}
-
 			if (isset($byAnchor[$anchor]) === false) {
 				throw new RuntimeException(
 					sprintf(
 						'Edit %d: anchor "%s" does not match any block in this document. '
 						. 'Anchors are derived from block content, so re-read the document and use current anchors.',
-						((int)$position + 1),
+						$number,
 						$anchor
-					)
-				);
-			}
-
-			$text = (string)($edit['text'] ?? '');
-			$textless = [self::ACTION_DELETE, self::ACTION_STYLE];
-			if (in_array($action, $textless, true) === false && $text === '') {
-				throw new RuntimeException(
-					sprintf('Edit %d: action "%s" requires non-empty text.', ((int)$position + 1), $action)
-				);
-			}
-
-			// A style edit carries no text by design — see ACTION_STYLE. It must
-			// carry style properties instead, or it is a request to change nothing
-			// that would otherwise report success.
-			$style = ($edit['style'] ?? []);
-			if ($action === self::ACTION_STYLE && (is_array($style) === false || $style === [])) {
-				throw new RuntimeException(
-					sprintf(
-						'Edit %d: action "style" requires a non-empty "style" object. Supported properties: %s.',
-						((int)$position + 1),
-						implode(', ', BlockStyleCodec::STYLE_KEYS)
 					)
 				);
 			}
@@ -348,14 +321,89 @@ class PackageCodec {
 			$resolved[] = [
 				'index' => (int)$byAnchor[$anchor],
 				'anchor' => $anchor,
-				'action' => $action,
-				'text' => $text,
-				'style' => (array)$style,
+				'action' => $edit['action'],
+				'text' => $this->textOf(edit: $edit, number: $number),
+				'style' => $this->styleOf(edit: $edit, number: $number),
 			];
 		}//end foreach
 
 		return $resolved;
 	}//end resolveEdits()
+
+	/**
+	 * The edit's action, `replace` when it names none.
+	 *
+	 * @param array<string, mixed> $edit   The requested edit.
+	 * @param int                  $number The edit's place in the set, from 1.
+	 *
+	 * @return string The action.
+	 *
+	 * @throws RuntimeException When the action is not supported.
+	 */
+	private function actionOf(array $edit, int $number): string {
+		$action = (string)($edit['action'] ?? self::ACTION_REPLACE);
+		if (in_array($action, self::ACTIONS, true) === false) {
+			throw new RuntimeException(
+				sprintf('Edit %d: unknown action "%s".', $number, $action)
+			);
+		}
+
+		return $action;
+
+	}//end actionOf()
+
+	/**
+	 * The edit's text, which every action but delete and style needs.
+	 *
+	 * @param array<string, mixed> $edit   The requested edit, with its resolved action.
+	 * @param int                  $number The edit's place in the set, from 1.
+	 *
+	 * @return string The text.
+	 *
+	 * @throws RuntimeException When an action that writes text has none.
+	 */
+	private function textOf(array $edit, int $number): string {
+		$text = (string)($edit['text'] ?? '');
+		$textless = [self::ACTION_DELETE, self::ACTION_STYLE];
+		if (in_array($edit['action'], $textless, true) === false && $text === '') {
+			throw new RuntimeException(
+				sprintf('Edit %d: action "%s" requires non-empty text.', $number, $edit['action'])
+			);
+		}
+
+		return $text;
+
+	}//end textOf()
+
+	/**
+	 * The edit's style properties, which a style edit must carry.
+	 *
+	 * A style edit carries no text by design — see ACTION_STYLE. It must
+	 * carry style properties instead, or it is a request to change nothing
+	 * that would otherwise report success.
+	 *
+	 * @param array<string, mixed> $edit   The requested edit, with its resolved action.
+	 * @param int                  $number The edit's place in the set, from 1.
+	 *
+	 * @return array<string, mixed> The style properties.
+	 *
+	 * @throws RuntimeException When a style edit carries no style properties.
+	 */
+	private function styleOf(array $edit, int $number): array {
+		$style = ($edit['style'] ?? []);
+		if ($edit['action'] === self::ACTION_STYLE && (is_array($style) === false || $style === [])) {
+			throw new RuntimeException(
+				sprintf(
+					'Edit %d: action "style" requires a non-empty "style" object. Supported properties: %s.',
+					$number,
+					implode(', ', BlockStyleCodec::STYLE_KEYS)
+				)
+			);
+		}
+
+		return (array)$style;
+
+	}//end styleOf()
 
 	/**
 	 * Apply a style edit, injecting any ODF automatic style it mints.
