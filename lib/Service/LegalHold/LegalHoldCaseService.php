@@ -21,6 +21,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\LegalHold;
 
 use OCA\Filinq\Exception\LegalHoldRefusedException;
+use OCA\Filinq\Kernel\Contracts\LegalHoldCaseServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 
 /**
@@ -35,7 +36,7 @@ use OCP\AppFramework\Utility\ITimeFactory;
  * crash between the two leaves records frozen (over-held), never unfrozen
  * under an active case. The retry picks up where it stopped.
  */
-class LegalHoldCaseService {
+class LegalHoldCaseService implements LegalHoldCaseServiceInterface {
 
 	/**
 	 * The matter types a case can have.

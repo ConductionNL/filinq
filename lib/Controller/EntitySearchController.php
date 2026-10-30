@@ -23,7 +23,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use OCA\Filinq\Exception\EntitySearchRefusedException;
-use OCA\Filinq\Service\EntitySearch\EntitySearchService;
+use OCA\Filinq\Kernel\Contracts\EntitySearchServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -63,7 +63,7 @@ class EntitySearchController extends Controller {
 	 *
 	 * @param string              $appName     The app name.
 	 * @param IRequest            $request     The request.
-	 * @param EntitySearchService $search      The entity search.
+	 * @param EntitySearchServiceInterface $search      The entity search.
 	 * @param IUserSession        $userSession The signed-in user.
 	 * @param IL10N               $l10n        Translations.
 	 * @param LoggerInterface     $logger      For failures that are not refusals.
@@ -73,7 +73,7 @@ class EntitySearchController extends Controller {
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly EntitySearchService $search,
+		private readonly EntitySearchServiceInterface $search,
 		private readonly IUserSession $userSession,
 		private readonly IL10N $l10n,
 		private readonly LoggerInterface $logger,
@@ -110,7 +110,7 @@ class EntitySearchController extends Controller {
 				query: (string) $this->request->getParam('query', ''),
 				type: (string) $this->request->getParam('type', ''),
 				category: (string) $this->request->getParam('category', ''),
-				limit: (int) $this->request->getParam('limit', EntitySearchService::DEFAULT_LIMIT),
+				limit: (int) $this->request->getParam('limit', EntitySearchServiceInterface::DEFAULT_LIMIT),
 				offset: (int) $this->request->getParam('offset', 0)
 			)
 		);

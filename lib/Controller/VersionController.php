@@ -28,6 +28,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use OCA\Filinq\Exception\ComparisonException;
+use OCA\Filinq\Exception\DocumentFinalException;
 use OCA\Filinq\Kernel\Contracts\DocumentVersionServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -173,6 +174,11 @@ class VersionController extends Controller {
 			return new JSONResponse(data: ['restored' => true], statusCode: Http::STATUS_OK);
 		} catch (ComparisonException $e) {
 			return $this->errorResponse(exception: $e);
+		} catch (DocumentFinalException $e) {
+			return new JSONResponse(
+				data: ['error' => $e->getMessage(), 'reason' => 'document-final'],
+				statusCode: Http::STATUS_CONFLICT
+			);
 		} catch (Throwable $e) {
 			$this->logger->error('Version restore failed', ['exception' => $e->getMessage()]);
 			return new JSONResponse(data: ['error' => $this->l10n->t('Could not restore version')], statusCode: Http::STATUS_INTERNAL_SERVER_ERROR);

@@ -23,7 +23,7 @@ namespace OCA\Filinq\Tests\Unit\Controller;
 use OCA\Filinq\Controller\PublicationController;
 use OCA\Filinq\Service\Publication\OpenCatalogiPlatform;
 use OCA\Filinq\Service\Publication\PublicationAccess;
-use OCA\Filinq\Service\Publication\PublicationNotReadyException;
+use OCA\Filinq\Exception\PublicationNotReadyException;
 use OCA\Filinq\Service\Publication\PublicationPipelineService;
 use OCA\Filinq\Service\Publication\PublicationStore;
 use OCP\Files\Folder;

@@ -24,7 +24,9 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\ActiveSigningProviderInterface;
 use OCA\Filinq\Kernel\Contracts\AnonymiserBackendStateClientInterface;
+use OCA\Filinq\Kernel\Contracts\AnonymizationProfileServiceInterface;
 use OCA\Filinq\Kernel\Contracts\AnonymizationServiceInterface;
 use OCA\Filinq\Kernel\Contracts\AnonymizeRequestServiceInterface;
 use OCA\Filinq\Kernel\Contracts\BatchAnonymizeServiceInterface;
@@ -36,11 +38,15 @@ use OCA\Filinq\Kernel\Contracts\BatchUploadServiceInterface;
 use OCA\Filinq\Kernel\Contracts\BulkSigningRunnerInterface;
 use OCA\Filinq\Kernel\Contracts\BulkSigningServiceInterface;
 use OCA\Filinq\Kernel\Contracts\CaseArchiveServiceInterface;
+use OCA\Filinq\Kernel\Contracts\ClassificationDecisionServiceInterface;
 use OCA\Filinq\Kernel\Contracts\ConformanceServiceInterface;
 use OCA\Filinq\Kernel\Contracts\ConsentCrudServiceInterface;
 use OCA\Filinq\Kernel\Contracts\ConsentServiceInterface;
+use OCA\Filinq\Kernel\Contracts\ContractDatesInterface;
 use OCA\Filinq\Kernel\Contracts\ContractPartiesInterface;
 use OCA\Filinq\Kernel\Contracts\ContractRepositoryInterface;
+use OCA\Filinq\Kernel\Contracts\ContractServiceInterface;
+use OCA\Filinq\Kernel\Contracts\ContractSigningLinkInterface;
 use OCA\Filinq\Kernel\Contracts\ContractTermSuggestionServiceInterface;
 use OCA\Filinq\Kernel\Contracts\CorrespondenceServiceInterface;
 use OCA\Filinq\Kernel\Contracts\CustomDictionaryAccessGateInterface;
@@ -57,12 +63,14 @@ use OCA\Filinq\Kernel\Contracts\DocumentValidationServiceInterface;
 use OCA\Filinq\Kernel\Contracts\DocumentVersionServiceInterface;
 use OCA\Filinq\Kernel\Contracts\DomainFolderReconcilerInterface;
 use OCA\Filinq\Kernel\Contracts\DomainFolderServiceInterface;
+use OCA\Filinq\Kernel\Contracts\DossierManagementServiceInterface;
 use OCA\Filinq\Kernel\Contracts\DownloadAgreementGateInterface;
 use OCA\Filinq\Kernel\Contracts\EmailDocumentRepositoryInterface;
 use OCA\Filinq\Kernel\Contracts\EmailIngestionServiceInterface;
 use OCA\Filinq\Kernel\Contracts\EmailIngestionSettingsInterface;
 use OCA\Filinq\Kernel\Contracts\EmlPreviewServiceInterface;
 use OCA\Filinq\Kernel\Contracts\EntityConsolidationServiceInterface;
+use OCA\Filinq\Kernel\Contracts\EntitySearchServiceInterface;
 use OCA\Filinq\Kernel\Contracts\ExternalMountValidatorInterface;
 use OCA\Filinq\Kernel\Contracts\FileListingServiceInterface;
 use OCA\Filinq\Kernel\Contracts\FinalDocumentCorrectionServiceInterface;
@@ -73,14 +81,18 @@ use OCA\Filinq\Kernel\Contracts\FinancialExtractionServiceInterface;
 use OCA\Filinq\Kernel\Contracts\FlatFileListServiceInterface;
 use OCA\Filinq\Kernel\Contracts\FolderBatchServiceInterface;
 use OCA\Filinq\Kernel\Contracts\FormatMatrixServiceInterface;
+use OCA\Filinq\Kernel\Contracts\GenerationRequestServiceInterface;
 use OCA\Filinq\Kernel\Contracts\GlAccountSuggestionServiceInterface;
 use OCA\Filinq\Kernel\Contracts\InboundClassificationServiceInterface;
 use OCA\Filinq\Kernel\Contracts\IntakeDetachmentServiceInterface;
+use OCA\Filinq\Kernel\Contracts\IntakeNotificationReachInterface;
 use OCA\Filinq\Kernel\Contracts\IntakeReadingProgressInterface;
 use OCA\Filinq\Kernel\Contracts\IntakeRepositoryInterface;
 use OCA\Filinq\Kernel\Contracts\IntakeRoutingServiceInterface;
 use OCA\Filinq\Kernel\Contracts\IntakeServiceInterface;
 use OCA\Filinq\Kernel\Contracts\LegalBasesSummaryServiceInterface;
+use OCA\Filinq\Kernel\Contracts\LegalHoldCaseServiceInterface;
+use OCA\Filinq\Kernel\Contracts\LegalHoldNotificationsInterface;
 use OCA\Filinq\Kernel\Contracts\LibreSignCompletionInterface;
 use OCA\Filinq\Kernel\Contracts\MergeJobRepositoryInterface;
 use OCA\Filinq\Kernel\Contracts\MetadataServiceInterface;
@@ -109,6 +121,7 @@ use OCA\Filinq\Kernel\Contracts\PseudonymMapServiceInterface;
 use OCA\Filinq\Kernel\Contracts\PseudonymRestoreServiceInterface;
 use OCA\Filinq\Kernel\Contracts\PublicationAccessInterface;
 use OCA\Filinq\Kernel\Contracts\PublicationListComposerInterface;
+use OCA\Filinq\Kernel\Contracts\PublicationPipelineServiceInterface;
 use OCA\Filinq\Kernel\Contracts\PublicationStoreInterface;
 use OCA\Filinq\Kernel\Contracts\RedactionOutputGuardInterface;
 use OCA\Filinq\Kernel\Contracts\ReportRenderServiceInterface;
@@ -133,18 +146,26 @@ use OCA\Filinq\Kernel\Contracts\TemplateServiceInterface;
 use OCA\Filinq\Kernel\Contracts\TemplateVersionServiceInterface;
 use OCA\Filinq\Kernel\Contracts\UploadFragmentReaperInterface;
 use OCA\Filinq\Kernel\Contracts\UploadPolicyServiceInterface;
-use OCA\Filinq\Kernel\Contracts\WooProfileServiceInterface;
+use OCA\Filinq\Kernel\Contracts\WizardServiceInterface;
 use OCA\Filinq\Service\BulkSigning\BulkSigningRunner;
 use OCA\Filinq\Service\BulkSigning\BulkSigningService;
+use OCA\Filinq\Service\Classification\ClassificationDecisionService;
+use OCA\Filinq\Service\Contract\ContractDates;
 use OCA\Filinq\Service\Contract\ContractParties;
 use OCA\Filinq\Service\Contract\ContractRepository;
+use OCA\Filinq\Service\Contract\ContractService;
+use OCA\Filinq\Service\Contract\ContractSigningLink;
 use OCA\Filinq\Service\Contract\ContractTermSuggestionService;
 use OCA\Filinq\Service\Conversion\OutputLayoutMover;
 use OCA\Filinq\Service\Conversion\OutputLayoutResolver;
 use OCA\Filinq\Service\EmailIngestion\EmailDocumentRepository;
 use OCA\Filinq\Service\EmailIngestion\EmailIngestionService;
 use OCA\Filinq\Service\EmailIngestion\EmailIngestionSettings;
+use OCA\Filinq\Service\EntitySearch\EntitySearchService;
+use OCA\Filinq\Service\Intake\IntakeNotificationReach;
 use OCA\Filinq\Service\Intake\IntakeReadingProgress;
+use OCA\Filinq\Service\LegalHold\LegalHoldCaseService;
+use OCA\Filinq\Service\LegalHold\LegalHoldNotifications;
 use OCA\Filinq\Service\Ocr\OcrResultRepository;
 use OCA\Filinq\Service\Ocr\OcrRunService;
 use OCA\Filinq\Service\Office\OfficeSuiteCapabilityService;
@@ -152,6 +173,7 @@ use OCA\Filinq\Service\Pseudonymisation\PseudonymMapService;
 use OCA\Filinq\Service\Pseudonymisation\PseudonymRestoreService;
 use OCA\Filinq\Service\Publication\OpenCatalogiPlatform;
 use OCA\Filinq\Service\Publication\PublicationAccess;
+use OCA\Filinq\Service\Publication\PublicationPipelineService;
 use OCA\Filinq\Service\Publication\PublicationStore;
 use OCA\Filinq\Service\Redaction\DownloadAgreementGate;
 use OCA\Filinq\Service\Redaction\PublicationListComposer;
@@ -161,10 +183,12 @@ use OCA\Filinq\Service\Sanitization\SanitizationStatus;
 use OCA\Filinq\Service\SignerAuth\SignerAuthSettings;
 use OCA\Filinq\Service\SignerAuth\SignerStepUpService;
 use OCA\Filinq\Service\Signing\LibreSignCompletion;
+use OCA\Filinq\Service\Signing\SigningProviderFactory;
 use OCA\Filinq\Service\SigningEnvelope\SigningEnvelopeService;
 use OCA\Filinq\Service\SubjectErasure\SubjectErasureRun;
 use OCA\Filinq\Service\SubjectErasure\SubjectErasureService;
 use OCA\Filinq\Service\VeraPdf\ConformanceService;
+use OCA\Filinq\Service\Wizard\WizardService;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 
 /**
@@ -186,7 +210,9 @@ final class ContractBindings {
 	 * @var array<class-string, class-string>
 	 */
 	public const BINDINGS = [
+		ActiveSigningProviderInterface::class          => SigningProviderFactory::class,
 		AnonymiserBackendStateClientInterface::class   => AnonymiserBackendStateClient::class,
+		AnonymizationProfileServiceInterface::class    => WooProfileService::class,
 		AnonymizationServiceInterface::class           => AnonymizationService::class,
 		AnonymizeRequestServiceInterface::class        => AnonymizeRequestService::class,
 		BatchAnonymizeServiceInterface::class          => BatchAnonymizeService::class,
@@ -198,11 +224,15 @@ final class ContractBindings {
 		BulkSigningRunnerInterface::class              => BulkSigningRunner::class,
 		BulkSigningServiceInterface::class             => BulkSigningService::class,
 		CaseArchiveServiceInterface::class             => CaseArchiveService::class,
+		ClassificationDecisionServiceInterface::class  => ClassificationDecisionService::class,
 		ConformanceServiceInterface::class             => ConformanceService::class,
 		ConsentCrudServiceInterface::class             => ConsentCrudService::class,
 		ConsentServiceInterface::class                 => ConsentService::class,
+		ContractDatesInterface::class                  => ContractDates::class,
 		ContractPartiesInterface::class                => ContractParties::class,
 		ContractRepositoryInterface::class             => ContractRepository::class,
+		ContractServiceInterface::class                => ContractService::class,
+		ContractSigningLinkInterface::class            => ContractSigningLink::class,
 		ContractTermSuggestionServiceInterface::class  => ContractTermSuggestionService::class,
 		CorrespondenceServiceInterface::class          => CorrespondenceService::class,
 		CustomDictionaryAccessGateInterface::class     => CustomDictionaryAccessGate::class,
@@ -219,12 +249,14 @@ final class ContractBindings {
 		DocumentVersionServiceInterface::class         => DocumentVersionService::class,
 		DomainFolderReconcilerInterface::class         => DomainFolderReconciler::class,
 		DomainFolderServiceInterface::class            => DomainFolderService::class,
+		DossierManagementServiceInterface::class       => DossierManagementService::class,
 		DownloadAgreementGateInterface::class          => DownloadAgreementGate::class,
 		EmailDocumentRepositoryInterface::class        => EmailDocumentRepository::class,
 		EmailIngestionServiceInterface::class          => EmailIngestionService::class,
 		EmailIngestionSettingsInterface::class         => EmailIngestionSettings::class,
 		EmlPreviewServiceInterface::class              => EmlPreviewService::class,
 		EntityConsolidationServiceInterface::class     => EntityConsolidationService::class,
+		EntitySearchServiceInterface::class            => EntitySearchService::class,
 		ExternalMountValidatorInterface::class         => ExternalMountValidator::class,
 		FileListingServiceInterface::class             => FileListingService::class,
 		FinalDocumentCorrectionServiceInterface::class => FinalDocumentCorrectionService::class,
@@ -235,14 +267,18 @@ final class ContractBindings {
 		FlatFileListServiceInterface::class            => FlatFileListService::class,
 		FolderBatchServiceInterface::class             => FolderBatchService::class,
 		FormatMatrixServiceInterface::class            => FormatMatrixService::class,
+		GenerationRequestServiceInterface::class       => DocumentGenerationRequestService::class,
 		GlAccountSuggestionServiceInterface::class     => GlAccountSuggestionService::class,
 		InboundClassificationServiceInterface::class   => InboundClassificationService::class,
 		IntakeDetachmentServiceInterface::class        => IntakeDetachmentService::class,
+		IntakeNotificationReachInterface::class        => IntakeNotificationReach::class,
 		IntakeReadingProgressInterface::class          => IntakeReadingProgress::class,
 		IntakeRepositoryInterface::class               => IntakeRepository::class,
 		IntakeRoutingServiceInterface::class           => IntakeRoutingService::class,
 		IntakeServiceInterface::class                  => IntakeService::class,
 		LegalBasesSummaryServiceInterface::class       => LegalBasesSummaryService::class,
+		LegalHoldCaseServiceInterface::class           => LegalHoldCaseService::class,
+		LegalHoldNotificationsInterface::class         => LegalHoldNotifications::class,
 		LibreSignCompletionInterface::class            => LibreSignCompletion::class,
 		MergeJobRepositoryInterface::class             => MergeJobRepository::class,
 		MetadataServiceInterface::class                => MetadataService::class,
@@ -271,6 +307,7 @@ final class ContractBindings {
 		PseudonymRestoreServiceInterface::class        => PseudonymRestoreService::class,
 		PublicationAccessInterface::class              => PublicationAccess::class,
 		PublicationListComposerInterface::class        => PublicationListComposer::class,
+		PublicationPipelineServiceInterface::class     => PublicationPipelineService::class,
 		PublicationStoreInterface::class               => PublicationStore::class,
 		RedactionOutputGuardInterface::class           => RedactionOutputGuard::class,
 		ReportRenderServiceInterface::class            => ReportRenderService::class,
@@ -295,7 +332,7 @@ final class ContractBindings {
 		TemplateVersionServiceInterface::class         => TemplateVersionService::class,
 		UploadFragmentReaperInterface::class           => UploadFragmentReaper::class,
 		UploadPolicyServiceInterface::class            => UploadPolicyService::class,
-		WooProfileServiceInterface::class              => WooProfileService::class,
+		WizardServiceInterface::class                  => WizardService::class,
 	];
 
 	/**

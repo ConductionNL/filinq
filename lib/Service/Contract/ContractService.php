@@ -28,6 +28,8 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\Contract;
 
 use InvalidArgumentException;
+use OCA\Filinq\Exception\ContractNotFoundException;
+use OCA\Filinq\Kernel\Contracts\ContractServiceInterface;
 
 /**
  * Renew, terminate and decide on suggestions.
@@ -40,7 +42,7 @@ use InvalidArgumentException;
  *
  * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/specs/contract-lifecycle-management/spec.md#requirement-contract-status-lifecycle-is-declaratively-guarded-req-ddclm-002
  */
-class ContractService {
+class ContractService implements ContractServiceInterface {
 
 	/**
 	 * The fields a successor contract carries forward from the one it renews.
@@ -183,7 +185,7 @@ class ContractService {
 	public function requireReadable(string $uuid): array {
 		$contract = $this->repository->find(uuid: $uuid);
 		if ($contract === null) {
-			throw new ContractNotFoundException('Contract not found.');
+			throw new ContractNotFoundException(message: 'Contract not found.');
 		}
 
 		return $contract;

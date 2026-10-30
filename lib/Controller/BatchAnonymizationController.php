@@ -34,15 +34,15 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
+use OCA\Filinq\Kernel\Contracts\AnonymizationProfileServiceInterface;
 use OCA\Filinq\Kernel\Contracts\BatchAnonymizeServiceInterface;
 use OCA\Filinq\Kernel\Contracts\BatchExtractionServiceInterface;
 use OCA\Filinq\Kernel\Contracts\BatchReportServiceInterface;
+use OCA\Filinq\Kernel\Contracts\BatchRequestServiceInterface;
 use OCA\Filinq\Kernel\Contracts\BatchStateServiceInterface;
 use OCA\Filinq\Kernel\Contracts\BatchUploadServiceInterface;
 use OCA\Filinq\Kernel\Contracts\EntityConsolidationServiceInterface;
 use OCA\Filinq\Kernel\Contracts\FolderBatchServiceInterface;
-use OCA\Filinq\Kernel\Contracts\WooProfileServiceInterface;
-use OCA\Filinq\Service\BatchRequestService;
 use OCA\Filinq\Settings\FilinqAdmin;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -73,15 +73,6 @@ use Psr\Log\LoggerInterface;
 class BatchAnonymizationController extends Controller {
 
 	/**
-	 * Request/response shaping helpers for the batch endpoints: body
-	 * validation, folder-parameter coercion, progress aggregation and the
-	 * multi-status mapping.
-	 *
-	 * @var BatchRequestService
-	 */
-	private readonly BatchRequestService $batchRequest;
-
-	/**
 	 * Constructor for BatchAnonymizationController
 	 *
 	 * @param string $appName App name passed through to the base Controller.
@@ -93,12 +84,15 @@ class BatchAnonymizationController extends Controller {
 	 * @param BatchAnonymizeServiceInterface $anonService Service that applies approved entities across a batch.
 	 * @param BatchReportServiceInterface $reportService Service that produces the per-batch CSV report.
 	 * @param EntityConsolidationServiceInterface $entityService Service that merges per-file entity detections into one list.
-	 * @param WooProfileServiceInterface $profileService Service that stores the WOO entity profile.
+	 * @param AnonymizationProfileServiceInterface $profileService Service that stores the entity anonymization profile.
 	 * @param FolderBatchServiceInterface $folderBatchService Service that turns an existing folder into a batch.
 	 * @param IL10N $l10n Translator for user-facing error messages.
 	 * @param IAppConfig $appConfig Tenant configuration provider (reads
 	 *                              filinq.anonymisation.default_output_format).
 	 * @param IUserSession $userSession User session for authentication.
+	 * @param BatchRequestServiceInterface $batchRequest Request/response shaping for the batch endpoints: body
+	 *                                                   validation, folder-parameter coercion, progress
+	 *                                                   aggregation and the multi-status mapping.
 	 *
 	 * @return void
 	 */
@@ -112,15 +106,14 @@ class BatchAnonymizationController extends Controller {
 		private readonly BatchAnonymizeServiceInterface $anonService,
 		private readonly BatchReportServiceInterface $reportService,
 		private readonly EntityConsolidationServiceInterface $entityService,
-		private readonly WooProfileServiceInterface $profileService,
+		private readonly AnonymizationProfileServiceInterface $profileService,
 		private readonly FolderBatchServiceInterface $folderBatchService,
 		private readonly IL10N $l10n,
 		private readonly IAppConfig $appConfig,
 		private readonly IUserSession $userSession,
+		private readonly BatchRequestServiceInterface $batchRequest,
 	) {
 		parent::__construct(appName: $appName, request: $request);
-
-		$this->batchRequest = new BatchRequestService(l10n: $this->l10n);
 
 	}//end __construct()
 

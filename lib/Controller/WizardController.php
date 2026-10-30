@@ -25,8 +25,8 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
-use OCA\Filinq\Service\Wizard\WizardRefused;
-use OCA\Filinq\Service\Wizard\WizardService;
+use OCA\Filinq\Exception\WizardRefused;
+use OCA\Filinq\Kernel\Contracts\WizardServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -46,7 +46,7 @@ class WizardController extends Controller {
 	 *
 	 * @param string          $appName     The app id.
 	 * @param IRequest        $request     The request.
-	 * @param WizardService   $wizards     The wizards.
+	 * @param WizardServiceInterface   $wizards     The wizards.
 	 * @param IUserSession    $userSession The session.
 	 * @param LoggerInterface $logger      The logger.
 	 *
@@ -55,7 +55,7 @@ class WizardController extends Controller {
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly WizardService $wizards,
+		private readonly WizardServiceInterface $wizards,
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
 	) {

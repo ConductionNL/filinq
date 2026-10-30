@@ -33,12 +33,12 @@ namespace OCA\Filinq\Service;
 
 use Exception;
 use OCA\Filinq\Kernel\Contracts\CorrespondenceServiceInterface;
+use OCA\Filinq\Kernel\JobQueueInterface;
 use OCA\Filinq\Service\Charts\SvgRasterizer;
 use OCA\Filinq\Service\Conversion\HtmlToOfficeConverter;
 use OCA\Filinq\Service\Conversion\LibreOfficeHeadlessBackend;
 use OCA\OpenRegister\Mcp\Attribute\McpTool;
 use OCP\App\IAppManager;
-use OCP\BackgroundJob\IJobList;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -90,7 +90,7 @@ class CorrespondenceService implements CorrespondenceServiceInterface {
 	 * @param PdfService $pdfService Service for PDF generation
 	 * @param ContainerInterface $container Container for DI
 	 * @param IAppManager $appManager App manager interface
-	 * @param IJobList $jobList Nextcloud job list for async
+	 * @param JobQueueInterface $jobList Nextcloud job list for async
 	 * @param LoggerInterface $logger Logger for error reporting
 	 * @param IAppConfig $appConfig App configuration accessor
 	 *
@@ -103,7 +103,7 @@ class CorrespondenceService implements CorrespondenceServiceInterface {
 		private readonly PdfService $pdfService,
 		private readonly ContainerInterface $container,
 		private readonly IAppManager $appManager,
-		private readonly IJobList $jobList,
+		private readonly JobQueueInterface $jobList,
 		private readonly LoggerInterface $logger,
 		private readonly IAppConfig $appConfig,
 	) {
@@ -410,7 +410,7 @@ class CorrespondenceService implements CorrespondenceServiceInterface {
 		$jobId = $this->generateJobId();
 
 		$this->jobList->add(
-			\OCA\Filinq\BackgroundJob\BatchCorrespondenceJob::class,
+			JobQueueInterface::BATCH_CORRESPONDENCE,
 			[
 				'jobId' => $jobId,
 				'templateId' => $templateId,

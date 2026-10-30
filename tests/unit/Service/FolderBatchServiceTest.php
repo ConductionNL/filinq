@@ -24,6 +24,7 @@ namespace OCA\Filinq\Tests\Unit\Service;
 
 use Exception;
 use OCA\Filinq\BackgroundJob\FolderExtractionJob;
+use OCA\Filinq\BackgroundJob\JobQueue;
 use OCA\Filinq\Service\AnonymizationService;
 use OCA\Filinq\Service\BatchStateService;
 use OCA\Filinq\Service\ConfidentialityLabelService;
@@ -155,7 +156,7 @@ class FolderBatchServiceTest extends TestCase {
 			$this->mockRootFolder,
 			$this->mockUserSession,
 			$this->mockStateService,
-			$this->mockJobList,
+			new JobQueue(jobList: $this->mockJobList),
 			$this->createMock(AnonymizationService::class),
 			$this->layout,
 			$this->mockConfidentialityLabel,
@@ -600,7 +601,7 @@ class FolderBatchServiceTest extends TestCase {
 			$this->mockRootFolder,
 			$mockUserSession,
 			$this->mockStateService,
-			$this->mockJobList,
+			new JobQueue(jobList: $this->mockJobList),
 			$this->createMock(AnonymizationService::class),
 			$this->makeLayoutResolver(),
 			$this->mockConfidentialityLabel,
@@ -639,7 +640,7 @@ class FolderBatchServiceTest extends TestCase {
 			$this->mockRootFolder,
 			$this->mockUserSession,
 			$this->mockStateService,
-			$this->mockJobList,
+			new JobQueue(jobList: $this->mockJobList),
 			$this->createMock(AnonymizationService::class),
 			$this->makeLayoutResolver(),
 			$this->mockConfidentialityLabel,
@@ -697,7 +698,7 @@ class FolderBatchServiceTest extends TestCase {
 			$this->mockRootFolder,
 			$this->mockUserSession,
 			$this->mockStateService,
-			$this->mockJobList,
+			new JobQueue(jobList: $this->mockJobList),
 			$this->createMock(AnonymizationService::class),
 			$this->makeLayoutResolver(),
 			$this->mockConfidentialityLabel,

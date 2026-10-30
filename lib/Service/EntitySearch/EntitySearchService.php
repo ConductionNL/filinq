@@ -23,27 +23,14 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\EntitySearch;
 
 use OCA\Filinq\Exception\EntitySearchRefusedException;
+use OCA\Filinq\Kernel\Contracts\EntitySearchServiceInterface;
 
 /**
  * The order is the control: the gate first, then the tenant scope, then the
  * read, then the log, and only then the answer. A lookup the log did not take
  * is refused, so nobody can look up a person without it being accounted for.
  */
-class EntitySearchService {
-
-	/**
-	 * The largest page.
-	 *
-	 * @var int
-	 */
-	public const MAX_LIMIT = 100;
-
-	/**
-	 * The page size when none is asked for.
-	 *
-	 * @var int
-	 */
-	public const DEFAULT_LIMIT = 25;
+class EntitySearchService implements EntitySearchServiceInterface {
 
 	/**
 	 * Constructor.

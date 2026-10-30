@@ -425,18 +425,30 @@ class TemplateService implements TemplateServiceInterface {
 	/**
 	 * Delete a template
 	 *
+	 * Scoped to the template register and schema, so an id of any other
+	 * object answers 404 instead of deleting it.
+	 *
 	 * @param string $id The template UUID
 	 *
 	 * @return bool True if deletion succeeded
 	 *
-	 * @throws Exception If the template is not found or deletion fails
+	 * @throws Exception If the template is not found (404) or deletion fails
 	 *
 	 * @spec openspec/specs/template-management/spec.md
 	 */
 	public function deleteTemplate(string $id): bool {
 		$objectService = $this->getObjectService();
+		$config = $this->registerResolver->getRegisterAndSchema();
 
-		$objectService->deleteObject(uuid: $id);
+		try {
+			$objectService->deleteObject(
+				uuid: $id,
+				register: $config['register'],
+				schema: $config['schema']
+			);
+		} catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
+			throw new Exception(message: 'Template not found', code: 404);
+		}
 
 		return true;
 	}//end deleteTemplate()

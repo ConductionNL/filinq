@@ -27,6 +27,7 @@ use OCA\Filinq\Controller\BatchAnonymizationController;
 use OCA\Filinq\Service\BatchAnonymizeService;
 use OCA\Filinq\Service\BatchExtractionService;
 use OCA\Filinq\Service\BatchReportService;
+use OCA\Filinq\Service\BatchRequestService;
 use OCA\Filinq\Service\BatchStateService;
 use OCA\Filinq\Service\BatchUploadService;
 use OCA\Filinq\Service\EntityConsolidationService;
@@ -135,7 +136,8 @@ class BatchAnonymizationControllerFolderTest extends TestCase {
 			$this->mockFolderService,
 			$this->mockL10n,
 			$this->createMock(\OCP\IAppConfig::class),
-			$mockUserSession
+			$mockUserSession,
+			new BatchRequestService(l10n: $this->mockL10n)
 		);
 
 	}//end setUp()

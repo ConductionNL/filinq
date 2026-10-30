@@ -24,6 +24,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\SignerAuth;
 
 use DateTimeImmutable;
+use OCA\Filinq\Kernel\SignerAcrMapping;
 use RuntimeException;
 
 /**
@@ -57,25 +58,11 @@ class OidcBrokerProvider implements SignerAuthenticationProviderInterface {
 	public const IDENTIFIER = 'oidc-broker';
 
 	/**
-	 * The documented default acr mapping (design D2).
-	 *
-	 * DigiD's levels are the AuthnContextClassRefs Logius publishes (Basis,
-	 * Midden, Substantieel, Hoog); eHerkenning's are the eToegang assurance
-	 * classes. iDIN has no standard acr: the key below is a placeholder, and
-	 * an admin maps their broker's own iDIN value in the settings.
+	 * The documented default acr mapping (design D2), see {@see SignerAcrMapping::DEFAULT}.
 	 *
 	 * @var array<string, array{means: string, assurance: string}>
 	 */
-	public const DEFAULT_ACR_MAPPING = [
-		'urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport' => ['means' => 'digid', 'assurance' => 'low'],
-		'urn:oasis:names:tc:SAML:2.0:ac:classes:MobileTwoFactorContract' => ['means' => 'digid', 'assurance' => 'substantial'],
-		'urn:oasis:names:tc:SAML:2.0:ac:classes:Smartcard' => ['means' => 'digid', 'assurance' => 'substantial'],
-		'urn:oasis:names:tc:SAML:2.0:ac:classes:SmartcardPKI' => ['means' => 'digid', 'assurance' => 'high'],
-		'urn:etoegang:core:assurance-class:loa2plus' => ['means' => 'eherkenning', 'assurance' => 'low'],
-		'urn:etoegang:core:assurance-class:loa3' => ['means' => 'eherkenning', 'assurance' => 'substantial'],
-		'urn:etoegang:core:assurance-class:loa4' => ['means' => 'eherkenning', 'assurance' => 'high'],
-		'urn:nl:idin:bank-verified' => ['means' => 'idin', 'assurance' => 'substantial'],
-	];
+	public const DEFAULT_ACR_MAPPING = SignerAcrMapping::DEFAULT;
 
 	/**
 	 * Validates the ID token's claims.

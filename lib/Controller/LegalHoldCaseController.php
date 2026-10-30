@@ -21,7 +21,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use OCA\Filinq\Exception\LegalHoldRefusedException;
-use OCA\Filinq\Service\LegalHold\LegalHoldCaseService;
+use OCA\Filinq\Kernel\Contracts\LegalHoldCaseServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -58,7 +58,7 @@ class LegalHoldCaseController extends Controller {
 	 *
 	 * @param string               $appName     The app name.
 	 * @param IRequest             $request     The request.
-	 * @param LegalHoldCaseService $holds       The hold cases.
+	 * @param LegalHoldCaseServiceInterface $holds       The hold cases.
 	 * @param IUserSession         $userSession The signed-in user.
 	 * @param IL10N                $l10n        Translations.
 	 * @param LoggerInterface      $logger      For failures that are not refusals.
@@ -68,7 +68,7 @@ class LegalHoldCaseController extends Controller {
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly LegalHoldCaseService $holds,
+		private readonly LegalHoldCaseServiceInterface $holds,
 		private readonly IUserSession $userSession,
 		private readonly IL10N $l10n,
 		private readonly LoggerInterface $logger,

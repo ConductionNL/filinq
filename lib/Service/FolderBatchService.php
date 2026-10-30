@@ -28,10 +28,9 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use Exception;
-use OCA\Filinq\BackgroundJob\FolderExtractionJob;
 use OCA\Filinq\Kernel\Contracts\FolderBatchServiceInterface;
+use OCA\Filinq\Kernel\JobQueueInterface;
 use OCA\Filinq\Service\Conversion\OutputLayoutResolver;
-use OCP\BackgroundJob\IJobList;
 use OCP\Files\IRootFolder;
 use OCP\IAppConfig;
 use OCP\IUserSession;
@@ -74,7 +73,7 @@ class FolderBatchService implements FolderBatchServiceInterface {
 	 * @param IRootFolder $rootFolder Root folder for file operations
 	 * @param IUserSession $userSession User session for current user
 	 * @param BatchStateService $stateService Batch state management
-	 * @param IJobList $jobList Background job list
+	 * @param JobQueueInterface $jobList Background job list
 	 * @param AnonymizationService $anonService Anonymization/extraction service
 	 * @param OutputLayoutResolver $layout Output-layout helper (used here to
 	 *                                     identify legacy `_anonymized` outputs
@@ -95,7 +94,7 @@ class FolderBatchService implements FolderBatchServiceInterface {
 		private readonly IRootFolder $rootFolder,
 		private readonly IUserSession $userSession,
 		private readonly BatchStateService $stateService,
-		private readonly IJobList $jobList,
+		private readonly JobQueueInterface $jobList,
 		private readonly AnonymizationService $anonService,
 		OutputLayoutResolver $layout,
 		ConfidentialityLabelService $confidentialityLabel,
@@ -183,7 +182,7 @@ class FolderBatchService implements FolderBatchServiceInterface {
 		// HTTP response has been flushed to the client (via fastcgi_finish_request).
 		// The IJobList entry serves as a fallback if the shutdown handler is
 		// interrupted (e.g. process kill, memory limit).
-		$this->jobList->add(FolderExtractionJob::class, ['batchId' => $batch['batchId']]);
+		$this->jobList->add(JobQueueInterface::FOLDER_EXTRACTION, ['batchId' => $batch['batchId']]);
 		$this->scheduleExtraction(batchId: $batch['batchId']);
 
 		$this->logger->info(
@@ -261,7 +260,7 @@ class FolderBatchService implements FolderBatchServiceInterface {
 				$stateService->updateBatch($batchId, $batch);
 
 				// Extraction completed — remove the fallback background job.
-				$jobList->remove(FolderExtractionJob::class, ['batchId' => $batchId]);
+				$jobList->remove(JobQueueInterface::FOLDER_EXTRACTION, ['batchId' => $batchId]);
 			}
 		);
 

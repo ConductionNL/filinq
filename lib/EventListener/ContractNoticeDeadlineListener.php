@@ -26,8 +26,8 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\EventListener;
 
+use OCA\Filinq\Kernel\Contracts\ContractDatesInterface;
 use OCA\Filinq\Kernel\Contracts\ContractRepositoryInterface;
-use OCA\Filinq\Service\Contract\ContractDates;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use Psr\Container\ContainerInterface;
@@ -56,13 +56,13 @@ class ContractNoticeDeadlineListener implements IEventListener {
 	 * Constructor.
 	 *
 	 * @param ContainerInterface $container Resolves OpenRegister's SchemaMapper lazily.
-	 * @param ContractDates      $dates     The notice-deadline rule.
+	 * @param ContractDatesInterface $dates The notice-deadline rule.
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
-		private readonly ContractDates $dates = new ContractDates(),
+		private readonly ContractDatesInterface $dates,
 	) {
 
 	}//end __construct()

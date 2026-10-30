@@ -198,6 +198,10 @@ class DocumentVersionService implements DocumentVersionServiceInterface {
 	 * @spec openspec/changes/final-documents-frozen/specs/document-versions/spec.md
 	 */
 	public function restoreVersion(int $fileId, int $versionTimestamp): void {
+		// Access first: a file the caller cannot write answers 404 whether or
+		// not it is final, so finality never leaks for an unseen file.
+		$file = $this->resolveFile(fileId: $fileId, requireWrite: true);
+
 		// Restoring replaces the file's content, which is a write like any
 		// other. It is the API's file-replacement path, so it asks the same
 		// service the editors ask.
@@ -206,7 +210,6 @@ class DocumentVersionService implements DocumentVersionServiceInterface {
 			action: 'restore an earlier version of this document'
 		);
 
-		$file = $this->resolveFile(fileId: $fileId, requireWrite: true);
 		$versionManager = $this->resolveVersionManager();
 		$user = $this->requireUser();
 

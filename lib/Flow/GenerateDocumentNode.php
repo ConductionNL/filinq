@@ -36,7 +36,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Flow;
 
-use OCA\Filinq\Service\DocumentGenerationRequestService;
+use OCA\Filinq\Kernel\Contracts\GenerationRequestServiceInterface;
 use OCA\OpenRegister\Service\Flow\IFlowNode;
 use OCA\OpenRegister\Service\Flow\IFlowNodeConfigForm;
 use OCA\OpenRegister\Service\Flow\IFlowNodeConfigKeys;
@@ -117,14 +117,14 @@ class GenerateDocumentNode implements IFlowNode, IFlowNodeConfigKeys, IFlowNodeC
 	/**
 	 * Constructor.
 	 *
-	 * @param DocumentGenerationRequestService $generator The shared generation service.
+	 * @param GenerationRequestServiceInterface $generator The shared generation service.
 	 * @param IURLGenerator                    $urls      Builds the palette icon URL.
 	 * @param IL10N                            $l10n      Translates what the editor shows.
 	 *
 	 * @return void
 	 */
 	public function __construct(
-		private readonly DocumentGenerationRequestService $generator,
+		private readonly GenerationRequestServiceInterface $generator,
 		private readonly IURLGenerator $urls,
 		private readonly IL10N $l10n,
 	) {

@@ -21,6 +21,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\Signing;
 
+use OCA\Filinq\Kernel\Contracts\ActiveSigningProviderInterface;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use RuntimeException;
@@ -36,7 +37,7 @@ use RuntimeException;
  *
  * @spec openspec/changes/digital-signing-integration/tasks.md#2-4
  */
-class SigningProviderFactory {
+class SigningProviderFactory implements ActiveSigningProviderInterface {
 
 	/**
 	 * Map of provider identifiers to their class instances
@@ -73,6 +74,20 @@ class SigningProviderFactory {
 		}
 
 	}//end __construct()
+
+	/**
+	 * Identifier of the configured signing provider.
+	 *
+	 * @return string The active provider's identifier
+	 *
+	 * @throws RuntimeException When LibreSign is configured but not enabled
+	 *
+	 * @spec openspec/changes/digital-signing-integration/tasks.md#2-4
+	 */
+	public function getActiveProviderIdentifier(): string {
+		return $this->getActiveProvider()->getIdentifier();
+
+	}//end getActiveProviderIdentifier()
 
 	/**
 	 * Get the currently configured signing provider

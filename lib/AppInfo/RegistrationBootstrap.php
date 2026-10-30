@@ -24,10 +24,13 @@ declare(strict_types=1);
 namespace OCA\Filinq\AppInfo;
 
 use Exception;
+use OCA\Filinq\BackgroundJob\JobQueue;
+use OCA\Filinq\Dashboard\DashboardRegistrar;
 use OCA\Filinq\EventListener\ListenerRegistrar;
+use OCA\Filinq\Kernel\Contracts\SettingsServiceInterface;
+use OCA\Filinq\Kernel\JobQueueInterface;
 use OCA\Filinq\Mcp\FilinqScannableServices;
 use OCA\Filinq\Middleware\LanguageNegotiationMiddleware;
-use OCA\Filinq\Kernel\Contracts\SettingsServiceInterface;
 use OCA\Filinq\Service\ServiceRegistrar;
 use OCA\OpenRegister\AppHost\Bootstrap;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
@@ -71,8 +74,13 @@ class RegistrationBootstrap {
 		OpenRegisterAutoloader::register();
 		(new ListenerRegistrar())->register(context: $context);
 		(new ServiceRegistrar())->register(context: $context);
+		(new DashboardRegistrar())->register(context: $context);
 
 		$this->bindStoreController(context: $context);
+
+		// Services queue background jobs by name; the BackgroundJob component
+		// owns which class runs each name.
+		$context->registerServiceAlias(JobQueueInterface::class, JobQueue::class);
 
 		// ADR-084: services type-hint OpenRegister's PUBLISHED interface, never
 		// its concrete class, so a leaf app's unit tests can mock a type they
