@@ -31,13 +31,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\EventListener;
 
 use OCA\Filinq\Kernel\AppIdentity;
-use OCA\OpenRegister\Event\RegisterLeafProvidersEvent;
 use OCA\OpenRegister\Service\Integration\LeafDescriptor;
-use OCP\EventDispatcher\Event;
-use OCP\EventDispatcher\IEventListener;
-use OCP\IL10N;
-use Psr\Log\LoggerInterface;
-use Throwable;
 
 /**
  * Registers the signing folder leaf.
@@ -48,11 +42,9 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @template-implements IEventListener<Event>
- *
  * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/tasks.md#task-1.2
  */
-class RegisterSigningFolderLeafListener implements IEventListener {
+class RegisterSigningFolderLeafListener extends MountedLeafListener {
 
 	/**
 	 * The leaf id, shared with the JS half.
@@ -79,51 +71,24 @@ class RegisterSigningFolderLeafListener implements IEventListener {
 	];
 
 	/**
-	 * Constructor.
+	 * The descriptor this listener contributes, written out in full so the
+	 * integration-parity gate can compare it with the JS half.
 	 *
-	 * @param IL10N           $l10n   The translator for the label.
-	 * @param LoggerInterface $logger Where a failed registration is reported.
-	 */
-	public function __construct(
-		private readonly IL10N $l10n,
-		private readonly LoggerInterface $logger,
-	) {
-	}//end __construct()
-
-	/**
-	 * Add the leaf to the catalogue.
-	 *
-	 * @param Event $event The collect-event.
-	 *
-	 * @return void
+	 * @return LeafDescriptor The leaf.
 	 *
 	 * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/tasks.md#task-1.2
 	 */
-	public function handle(Event $event): void {
-		if ($event instanceof RegisterLeafProvidersEvent === false) {
-			return;
-		}
-
-		try {
-			$descriptor = new LeafDescriptor(
-				id: self::LEAF_ID,
-				label: $this->l10n->t('Waiting for your signature'),
-				icon: self::ICON,
-				kinds: [LeafDescriptor::KIND_RENDER_SURFACE],
-				requiredApp: AppIdentity::APP_ID,
-				group: 'signing',
-				surfaces: self::SURFACES,
-				referenceType: self::LEAF_ID,
-				renderMode: LeafDescriptor::RENDER_MODE_MOUNT,
-			);
-
-			$event->registerLeaf($descriptor, null);
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'Filinq could not register the filinq-signing-folder leaf: ' . $e->getMessage(),
-				['exception' => $e]
-			);
-		}//end try
-
-	}//end handle()
+	protected function descriptor(): LeafDescriptor {
+		return new LeafDescriptor(
+			id: self::LEAF_ID,
+			label: $this->l10n->t('Waiting for your signature'),
+			icon: self::ICON,
+			kinds: [LeafDescriptor::KIND_RENDER_SURFACE],
+			requiredApp: AppIdentity::APP_ID,
+			group: 'signing',
+			surfaces: self::SURFACES,
+			referenceType: self::LEAF_ID,
+			renderMode: LeafDescriptor::RENDER_MODE_MOUNT,
+		);
+	}//end descriptor()
 }//end class
