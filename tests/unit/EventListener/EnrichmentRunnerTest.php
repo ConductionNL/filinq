@@ -28,6 +28,8 @@ namespace OCA\Filinq\Tests\Unit\EventListener;
 require_once __DIR__ . '/../Service/Classification/InboundClassificationFixture.php';
 
 use OCA\Filinq\EventListener\EnrichmentRunner;
+use OCA\Filinq\EventListener\ObjectEventServices;
+use OCA\Filinq\Kernel\Contracts\PolicyRetroactiveServiceInterface;
 use OCA\Filinq\Service\MetadataService;
 use OCA\Filinq\Service\SettingsService;
 use OCA\Filinq\Tests\Unit\Service\Classification\ClassificationObjectStore;
@@ -37,6 +39,7 @@ use OCP\AppFramework\Db\DoesNotExistException;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\AbstractLogger;
+use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 use Psr\Log\NullLogger;
 use RuntimeException;
@@ -74,7 +77,7 @@ class EnrichmentRunnerTest extends TestCase {
 	public function testEnrichmentTriggersClassificationWithoutTouchingFields(): void {
 		$runner = new EnrichmentRunner(classification: $this->service());
 
-		$runner->enrichObject($this->object(), $this->metadata(metadata: ['language' => 'nl']), $this->settings(enrichment: true), new NullLogger(), 'new object');
+		$runner->enrichObject(object: $this->object(), services: $this->services(metadata: $this->metadata(metadata: ['language' => 'nl']), settings: $this->settings(enrichment: true), logger: new NullLogger()), logContext: 'new object');
 
 		$this->assertSame([['language' => 'nl']], $this->enriched);
 		$this->assertCount(1, $this->store->saves);
@@ -94,7 +97,7 @@ class EnrichmentRunnerTest extends TestCase {
 	public function testClassificationRunsWhenEnrichmentIsOff(): void {
 		$runner = new EnrichmentRunner(classification: $this->service());
 
-		$runner->enrichObject($this->object(), $this->metadata(metadata: ['language' => 'nl']), $this->settings(enrichment: false), new NullLogger(), 'new object');
+		$runner->enrichObject(object: $this->object(), services: $this->services(metadata: $this->metadata(metadata: ['language' => 'nl']), settings: $this->settings(enrichment: false), logger: new NullLogger()), logContext: 'new object');
 
 		$this->assertSame([], $this->enriched);
 		$this->assertCount(1, $this->store->saves);
@@ -110,7 +113,7 @@ class EnrichmentRunnerTest extends TestCase {
 		$this->toggle = '0';
 		$runner = new EnrichmentRunner(classification: $this->service());
 
-		$runner->enrichObject($this->object(), $this->metadata(metadata: ['language' => 'nl']), $this->settings(enrichment: true), new NullLogger(), 'new object');
+		$runner->enrichObject(object: $this->object(), services: $this->services(metadata: $this->metadata(metadata: ['language' => 'nl']), settings: $this->settings(enrichment: true), logger: new NullLogger()), logContext: 'new object');
 
 		$this->assertSame([['language' => 'nl']], $this->enriched);
 		$this->assertSame([], $this->store->saves);
@@ -142,7 +145,7 @@ class EnrichmentRunnerTest extends TestCase {
 		};
 		$runner = new EnrichmentRunner(classification: null);
 
-		$runner->enrichObject($this->object(), $metadata, $this->settings(enrichment: true), $logger, 'new object');
+		$runner->enrichObject(object: $this->object(), services: $this->services(metadata: $metadata, settings: $this->settings(enrichment: true), logger: $logger), logContext: 'new object');
 
 		$this->assertContains(LogLevel::DEBUG, $logger->levels);
 		$this->assertNotContains(LogLevel::ERROR, $logger->levels);
@@ -173,7 +176,7 @@ class EnrichmentRunnerTest extends TestCase {
 		};
 		$runner = new EnrichmentRunner(classification: $this->service());
 
-		$runner->enrichObject($this->object(), $this->metadata(metadata: ['language' => 'nl']), $this->settings(enrichment: true), new NullLogger(), 'new object');
+		$runner->enrichObject(object: $this->object(), services: $this->services(metadata: $this->metadata(metadata: ['language' => 'nl']), settings: $this->settings(enrichment: true), logger: new NullLogger()), logContext: 'new object');
 
 		$this->assertSame([['language' => 'nl']], $this->enriched);
 
@@ -191,7 +194,7 @@ class EnrichmentRunnerTest extends TestCase {
 		$this->store->rows['classificationResult'][$uuid]['status'] = 'rejected';
 
 		$runner->classify(object: $this->object(), logger: new NullLogger());
-		$runner->enrichObject($this->object(), $this->metadata(metadata: []), $this->settings(enrichment: true), new NullLogger(), 'updated object');
+		$runner->enrichObject(object: $this->object(), services: $this->services(metadata: $this->metadata(metadata: []), settings: $this->settings(enrichment: true), logger: new NullLogger()), logContext: 'updated object');
 
 		$this->assertCount(1, $this->store->saves);
 		$this->assertSame([], $this->enriched);
@@ -204,7 +207,7 @@ class EnrichmentRunnerTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheRunnerWorksWithoutAClassificationService(): void {
-		(new EnrichmentRunner())->enrichObject($this->object(), $this->metadata(metadata: ['language' => 'nl']), $this->settings(enrichment: true), new NullLogger(), 'new object');
+		(new EnrichmentRunner())->enrichObject(object: $this->object(), services: $this->services(metadata: $this->metadata(metadata: ['language' => 'nl']), settings: $this->settings(enrichment: true), logger: new NullLogger()), logContext: 'new object');
 
 		$this->assertSame([['language' => 'nl']], $this->enriched);
 		$this->assertSame([], $this->store->saves);
@@ -224,11 +227,11 @@ class EnrichmentRunnerTest extends TestCase {
 		$missing = $this->createMock(ContainerInterface::class);
 		$missing->method('get')->willThrowException(new RuntimeException('not registered'));
 
-		(new EnrichmentRunner())->withClassificationFrom(container: $missing)->enrichObject($this->object(), $this->metadata(metadata: ['language' => 'nl']), $this->settings(enrichment: true), new NullLogger(), 'new object');
+		(new EnrichmentRunner())->withClassificationFrom(container: $missing)->enrichObject(object: $this->object(), services: $this->services(metadata: $this->metadata(metadata: ['language' => 'nl']), settings: $this->settings(enrichment: true), logger: new NullLogger()), logContext: 'new object');
 		$this->assertSame([], $this->store->saves);
 		$this->assertSame([['language' => 'nl']], $this->enriched);
 
-		(new EnrichmentRunner())->withClassificationFrom(container: $found)->enrichObject($this->object(), $this->metadata(metadata: []), $this->settings(enrichment: true), new NullLogger(), 'new object');
+		(new EnrichmentRunner())->withClassificationFrom(container: $found)->enrichObject(object: $this->object(), services: $this->services(metadata: $this->metadata(metadata: []), settings: $this->settings(enrichment: true), logger: new NullLogger()), logContext: 'new object');
 		$this->assertCount(1, $this->store->saves);
 
 	}//end testTheRunnerResolvesClassificationFromTheContainer()
@@ -287,4 +290,22 @@ class EnrichmentRunnerTest extends TestCase {
 		return $settings;
 
 	}//end settings()
+	/**
+	 * The services an object event hands the runner.
+	 *
+	 * @param MetadataService $metadata The metadata service.
+	 * @param SettingsService $settings The settings.
+	 * @param LoggerInterface $logger   The logger.
+	 *
+	 * @return ObjectEventServices The services.
+	 */
+	private function services(MetadataService $metadata, SettingsService $settings, LoggerInterface $logger): ObjectEventServices {
+		return new ObjectEventServices(
+			metadataService: $metadata,
+			settingsService: $settings,
+			logger: $logger,
+			retroactive: $this->createMock(PolicyRetroactiveServiceInterface::class)
+		);
+
+	}//end services()
 }//end class

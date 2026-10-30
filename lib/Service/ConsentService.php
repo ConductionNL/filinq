@@ -167,31 +167,16 @@ class ConsentService implements ConsentServiceInterface {
 				);
 			}
 
-			$context = $this->withPolicyMatch(context: $context, policyResult: $policyResult);
+			$context = $this->withPolicyMatch(context: $context, policyResult: $policyResult) + ['register' => $register, 'schema' => $schema];
 
 			// Idempotency lookup — find an existing scope=document record.
-			$existing = $this->recordWriter->findExistingConsent(
-				documentId: $documentId,
-				entityKey: $context['entityKey'],
-				entityText: $entityText,
-				register: $register,
-				schema: $schema
-			);
+			$existing = $this->recordWriter->findExistingConsent(context: $context);
 
 			if ($existing !== null) {
-				return $this->recordWriter->updateExistingConsent(
-					existing: $existing,
-					context: $context,
-					register: $register,
-					schema: $schema
-				);
+				return $this->recordWriter->updateExistingConsent(existing: $existing, context: $context);
 			}
 
-			return $this->recordWriter->createNewConsent(
-				context: $context,
-				register: $register,
-				schema: $schema
-			);
+			return $this->recordWriter->createNewConsent(context: $context);
 		} catch (PolicyRejectedException $e) {
 			// Re-throw without wrapping so callers can catch the typed exception.
 			throw $e;

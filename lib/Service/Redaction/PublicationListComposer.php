@@ -78,48 +78,9 @@ class PublicationListComposer implements PublicationListComposerInterface {
 			];
 		}
 
-		$entries = [];
-		$notReady = [];
-
-		foreach ($records as $record) {
-			$fields = $this->fieldsOf(record: $record);
-			$sourceFileId = (int)($fields['fileId'] ?? ($fields['sourceFileId'] ?? 0));
-			$label = $this->labelOf(fields: $fields, sourceFileId: $sourceFileId);
-
-			$link = $this->links->forSource(sourceFileId: $sourceFileId);
-			$copyId = 0;
-			if ($link !== null) {
-				$copyId = (int)($link['anonymizedFileId'] ?? 0);
-			}
-
-			if ($copyId <= 0) {
-				$notReady[] = ['record' => $label, 'sourceFileId' => $sourceFileId];
-				continue;
-			}
-
-			// Only the copy travels. The source id is not carried into the
-			// entry at all, so there is nothing for a later renderer to link
-			// by accident.
-			$entries[] = [
-				'record' => $label,
-				'fileId' => $copyId,
-				'fileName' => (string)($link['anonymizedFileName'] ?? ''),
-				'filePath' => (string)($link['anonymizedFilePath'] ?? ''),
-			];
-		}
-
-		if ($notReady !== []) {
-			return [
-				'refused' => self::NOT_READY,
-				'message' => sprintf(
-					'%d of %d records in this view have no redacted copy yet, so the list is not composed. '
-					.'Redact them, or take them out of the view.',
-					count($notReady),
-					count($records)
-				),
-				'view' => $view,
-				'notReady' => $notReady,
-			];
+		$sorted = $this->sortRecords(records: $records);
+		if ($sorted['notReady'] !== []) {
+			return $this->notReadyRefusal(view: $view, sorted: $sorted);
 		}
 
 		$heading = $title;
@@ -130,12 +91,72 @@ class PublicationListComposer implements PublicationListComposerInterface {
 		return [
 			'view' => $view,
 			'title' => $heading,
-			'count' => count($entries),
+			'count' => count($sorted['entries']),
 			'composedAt' => gmdate(format: 'c'),
-			'entries' => $entries,
+			'entries' => $sorted['entries'],
 		];
 
 	}//end compose()
+
+	/**
+	 * Sort a view's records into list entries and records with no redacted copy yet.
+	 *
+	 * @param array<int, mixed> $records The view's records.
+	 *
+	 * @return array{entries: array<int, array<string, mixed>>, notReady: array<int, array<string, mixed>>, total: int} The sorted records.
+	 */
+	private function sortRecords(array $records): array {
+		$sorted = ['entries' => [], 'notReady' => [], 'total' => count($records)];
+
+		foreach ($records as $record) {
+			$fields = $this->fieldsOf(record: $record);
+			$sourceFileId = (int)($fields['fileId'] ?? ($fields['sourceFileId'] ?? 0));
+			$label = $this->labelOf(fields: $fields, sourceFileId: $sourceFileId);
+
+			$link = $this->links->forSource(sourceFileId: $sourceFileId);
+			$copyId = (int)($link['anonymizedFileId'] ?? 0);
+			if ($copyId <= 0) {
+				$sorted['notReady'][] = ['record' => $label, 'sourceFileId' => $sourceFileId];
+				continue;
+			}
+
+			// Only the copy travels. The source id is not carried into the
+			// entry at all, so there is nothing for a later renderer to link
+			// by accident.
+			$sorted['entries'][] = [
+				'record' => $label,
+				'fileId' => $copyId,
+				'fileName' => (string)($link['anonymizedFileName'] ?? ''),
+				'filePath' => (string)($link['anonymizedFilePath'] ?? ''),
+			];
+		}
+
+		return $sorted;
+
+	}//end sortRecords()
+
+	/**
+	 * The refusal when some records have no redacted copy yet.
+	 *
+	 * @param string                                                        $view   The view id or slug.
+	 * @param array{notReady: array<int, array<string, mixed>>, total: int} $sorted The sorted records.
+	 *
+	 * @return array<string, mixed> The refusal.
+	 */
+	private function notReadyRefusal(string $view, array $sorted): array {
+		return [
+			'refused' => self::NOT_READY,
+			'message' => sprintf(
+				'%d of %d records in this view have no redacted copy yet, so the list is not composed. '
+				.'Redact them, or take them out of the view.',
+				count($sorted['notReady']),
+				$sorted['total']
+			),
+			'view' => $view,
+			'notReady' => $sorted['notReady'],
+		];
+
+	}//end notReadyRefusal()
 
 	/**
 	 * One record's fields, whatever shape OpenRegister returned it in.

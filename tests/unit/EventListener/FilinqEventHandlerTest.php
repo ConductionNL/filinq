@@ -254,9 +254,9 @@ class FilinqEventHandlerTest extends TestCase {
 			->method('enrichObject')
 			->with(
 				$this->identicalTo($object),
-				$this->identicalTo($this->metadataService),
-				$this->identicalTo($this->settingsService),
-				$this->identicalTo($this->logger),
+				$this->callback(fn (ObjectEventServices $services): bool => $services->metadataService === $this->metadataService
+					&& $services->settingsService === $this->settingsService
+					&& $services->logger === $this->logger),
 				$this->identicalTo('new object')
 			);
 		$this->retroactive->expects($this->never())->method('applyProhibitionMutation');
@@ -562,9 +562,9 @@ class FilinqEventHandlerTest extends TestCase {
 			->method('enrichObject')
 			->with(
 				$this->identicalTo($newObject),
-				$this->identicalTo($this->metadataService),
-				$this->identicalTo($this->settingsService),
-				$this->identicalTo($this->logger),
+				$this->callback(fn (ObjectEventServices $services): bool => $services->metadataService === $this->metadataService
+					&& $services->settingsService === $this->settingsService
+					&& $services->logger === $this->logger),
 				$this->identicalTo('updated object')
 			);
 
