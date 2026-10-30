@@ -44,6 +44,7 @@ namespace OCA\Filinq\Service\Conversion;
 use OCA\Filinq\Exception\ConversionFailedException;
 use OCA\Filinq\Service\EmlPdfAssemblyService;
 use OCA\Filinq\Service\RaisesEmlStructureFailures;
+use OCA\Filinq\Service\StripsFileExtension;
 use OCP\App\IAppManager;
 use OCP\Files\File;
 use OCP\IAppConfig;
@@ -66,6 +67,7 @@ use Throwable;
  */
 class EmlBackend implements ConversionBackendInterface {
 	use RaisesEmlStructureFailures;
+	use StripsFileExtension;
 
 	/**
 	 * App config key for the tenant observability flag.
@@ -221,20 +223,4 @@ class EmlBackend implements ConversionBackendInterface {
 
 		return $parent->newFile($outputName, $pdfBytes);
 	}//end writeBesideSource()
-
-	/**
-	 * Return $name without its trailing `.ext`.
-	 *
-	 * @param string $name File name with extension.
-	 *
-	 * @return string
-	 */
-	private function stripExtension(string $name): string {
-		$dotPos = strrpos($name, '.');
-		if ($dotPos === false) {
-			return $name;
-		}
-
-		return substr($name, 0, $dotPos);
-	}//end stripExtension()
 }//end class

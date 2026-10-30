@@ -44,6 +44,7 @@ use Throwable;
  */
 class EmlAnonymizationService {
 	use RaisesEmlStructureFailures;
+	use StripsFileExtension;
 
 	/**
 	 * Constructor for EmlAnonymizationService
@@ -270,22 +271,4 @@ class EmlAnonymizationService {
 
 		return $resultInfo;
 	}//end buildResultInfo()
-
-	/**
-	 * Return $name without its trailing `.ext`.
-	 *
-	 * @param string $name File name with extension.
-	 *
-	 * @return string Name without extension.
-	 *
-	 * @spec openspec/specs/anonymization/spec.md
-	 */
-	private function stripExtension(string $name): string {
-		$dotPos = strrpos($name, '.');
-		if ($dotPos === false) {
-			return $name;
-		}
-
-		return substr($name, 0, $dotPos);
-	}//end stripExtension()
 }//end class

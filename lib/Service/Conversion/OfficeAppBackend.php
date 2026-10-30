@@ -32,6 +32,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\Conversion;
 
 use OCA\Filinq\Exception\ConversionFailedException;
+use OCA\Filinq\Service\StripsFileExtension;
 use OCP\Files\Conversion\IConversionManager;
 use OCP\Files\File;
 use OCP\Files\Folder;
@@ -53,6 +54,7 @@ use Throwable;
  * @link      https://www.filinq.app
  */
 class OfficeAppBackend implements ConversionBackendInterface {
+	use StripsFileExtension;
 
 	/**
 	 * App config key controlling whether this backend is attempted.
@@ -376,20 +378,4 @@ class OfficeAppBackend implements ConversionBackendInterface {
 
 		return $this->providersCache;
 	}//end getProvidersCached()
-
-	/**
-	 * Return $name without its trailing `.ext`.
-	 *
-	 * @param string $name File name with extension.
-	 *
-	 * @return string
-	 */
-	private function stripExtension(string $name): string {
-		$dotPos = strrpos($name, '.');
-		if ($dotPos === false) {
-			return $name;
-		}
-
-		return substr($name, 0, $dotPos);
-	}//end stripExtension()
 }//end class
