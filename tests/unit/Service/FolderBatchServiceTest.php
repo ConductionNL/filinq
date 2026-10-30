@@ -825,4 +825,114 @@ class FolderBatchServiceTest extends TestCase {
 
 	}//end testPriorityOnOrdersSecretAheadOfUnlabelled()
 
+	/**
+	 * The batch in full: each file's starting record, the folder fields written back,
+	 * the fallback job and the log line, for both input methods.
+	 *
+	 * @return void
+	 */
+	public function testAFolderBatchInFull(): void {
+		$folder = $this->buildFolder([$this->buildFile(101, 'report.pdf'), $this->buildFile(102, 'letter.docx')], 500);
+		$this->mockRootFolder->method('getUserFolder')->willReturn($this->buildUserFolder([$folder], $folder, false, '/Documents/WOB'));
+		$this->mockStateService->method('getMaxFiles')->willReturn(2);
+
+		$created = [];
+		$this->mockStateService->method('createBatch')->willReturnCallback(
+			function (string $userId, array $files) use (&$created): array {
+				$created[] = [$userId, $files];
+				return ['batchId' => 'b-' . count($created), 'status' => 'uploading', 'files' => $files];
+			}
+		);
+		$updated = [];
+		$this->mockStateService->method('updateBatch')->willReturnCallback(
+			function (string $batchId, array $batch) use (&$updated): void {
+				$updated[] = [$batchId, $batch['sourceType'], $batch['folderId'], $batch['folderPath']];
+			}
+		);
+		$jobs = [];
+		$this->mockJobList->method('add')->willReturnCallback(
+			function (string $job, mixed $argument) use (&$jobs): void {
+				$jobs[] = $argument;
+			}
+		);
+		$logged = [];
+		$this->mockLogger->method('info')->willReturnCallback(
+			function (string $message, array $context) use (&$logged): void {
+				$logged[] = [$message, $context];
+			}
+		);
+
+		$byPath = $this->service->createFolderBatch(null, '/Documents/WOB');
+		$byId = $this->service->createFolderBatch(500, null);
+
+		$file = ['status' => 'uploaded', 'entityCount' => 0, 'replacementCount' => 0, 'error' => null];
+		$this->assertSame(
+			['testuser', [['fileId' => 101, 'fileName' => 'report.pdf'] + $file, ['fileId' => 102, 'fileName' => 'letter.docx'] + $file]],
+			$created[0]
+		);
+		$this->assertSame([['b-1', 'folder', 500, '/Documents/WOB'], ['b-2', 'folder', 500, '/Documents/WOB']], $updated);
+		$this->assertSame([['batchId' => 'b-1'], ['batchId' => 'b-2']], $jobs);
+		$this->assertSame(
+			['Folder batch created, extraction job fired', ['batchId' => 'b-1', 'folderId' => 500, 'folderPath' => '/Documents/WOB', 'fileCount' => 2, 'inputMethod' => 'path']],
+			$logged[0]
+		);
+		$this->assertSame('id', $logged[1][1]['inputMethod']);
+		$this->assertSame(['b-1', 'folder', 500, '/Documents/WOB'], [$byPath['batchId'], $byPath['sourceType'], $byPath['folderId'], $byPath['folderPath']]);
+		$this->assertSame('b-2', $byId['batchId']);
+
+	}//end testAFolderBatchInFull()
+
+	/**
+	 * A folder over the file limit is refused with both counts, before any batch is made.
+	 *
+	 * @return void
+	 */
+	public function testAFolderOverTheLimitIsRefusedWithBothCounts(): void {
+		$folder = $this->buildFolder([$this->buildFile(1, 'a.pdf'), $this->buildFile(2, 'b.pdf')], 500);
+		$this->mockRootFolder->method('getUserFolder')->willReturn($this->buildUserFolder(null, $folder));
+		$this->mockStateService->method('getMaxFiles')->willReturn(1);
+		$this->mockStateService->expects($this->never())->method('createBatch');
+
+		$this->expectException(Exception::class);
+		$this->expectExceptionCode(400);
+		$this->expectExceptionMessage('Folder contains too many files (found: 2, maximum: 1)');
+
+		$this->service->createFolderBatch(null, '/Documents/WOB');
+
+	}//end testAFolderOverTheLimitIsRefusedWithBothCounts()
+
+	/**
+	 * An empty folder is refused before any batch is made.
+	 *
+	 * @return void
+	 */
+	public function testAnEmptyFolderIsRefused(): void {
+		$folder = $this->buildFolder([], 500);
+		$this->mockRootFolder->method('getUserFolder')->willReturn($this->buildUserFolder(null, $folder));
+		$this->mockStateService->expects($this->never())->method('createBatch');
+
+		$this->expectException(Exception::class);
+		$this->expectExceptionCode(400);
+		$this->expectExceptionMessage('No files found in folder');
+
+		$this->service->createFolderBatch(null, '/Documents/WOB');
+
+	}//end testAnEmptyFolderIsRefused()
+	/**
+	 * A folder outside the user's tree keeps its absolute path as the batch's folder path.
+	 *
+	 * @return void
+	 */
+	public function testAFolderWithoutARelativePathKeepsItsAbsolutePath(): void {
+		$folder = $this->buildFolder([$this->buildFile(1, 'a.pdf')], 500, Constants::PERMISSION_ALL, '/other/files/X');
+		$userFolder = $this->createMock(Folder::class);
+		$userFolder->method('get')->willReturn($folder);
+		$userFolder->method('getRelativePath')->willReturn(null);
+		$this->mockRootFolder->method('getUserFolder')->willReturn($userFolder);
+		$this->mockStateService->method('getMaxFiles')->willReturn(10);
+		$this->mockStateService->method('createBatch')->willReturn(['batchId' => 'b', 'files' => []]);
+
+		$this->assertSame('/other/files/X', $this->service->createFolderBatch(null, '/X')['folderPath']);
+
+	}//end testAFolderWithoutARelativePathKeepsItsAbsolutePath()
 }//end class
