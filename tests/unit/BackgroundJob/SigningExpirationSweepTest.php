@@ -38,6 +38,9 @@ use ReflectionMethod;
  * One sweep over both open statuses, recorded call by call.
  *
  * @covers \OCA\Filinq\BackgroundJob\SigningExpirationJob
+ * @uses   \OCA\Filinq\Kernel\SigningAuditActor
+ * @uses   \OCA\Filinq\Kernel\SigningAuditEvent
+ * @uses   \OCA\Filinq\Kernel\SigningAuditSubject
  */
 class SigningExpirationSweepTest extends TestCase {
 
