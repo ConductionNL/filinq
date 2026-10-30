@@ -92,11 +92,57 @@ class PeriodicDocumentService implements PeriodicDocumentServiceInterface {
 	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function run(array $schedule, string $userId = ''): array {
+		$viewSlug = $this->requireViewSlug(schedule: $schedule);
+		$run = [
+			'viewSlug' => $viewSlug,
+			'records' => $this->requireRecords(viewSlug: $viewSlug),
+			'owner' => $this->requireOwner(schedule: $schedule, userId: $userId),
+		];
+		$run['ranAt'] = (new DateTimeImmutable())->format(DateTimeInterface::ATOM);
+
+		$result = $this->generate(schedule: $schedule, run: $run);
+
+		$document = ((array)($result['metadata'] ?? [])) + [
+			'viewSlug' => $viewSlug,
+			'recordCount' => count($run['records']),
+		];
+		$document['fileId'] = ($result['output']['fileId'] ?? null);
+
+		$this->recordRun(schedule: $schedule, ranAt: $run['ranAt'], records: count($run['records']), document: $document);
+
+		return $document;
+
+	}//end run()
+
+	/**
+	 * The view a schedule renders.
+	 *
+	 * @param array<string, mixed> $schedule The schedule.
+	 *
+	 * @return string The view slug.
+	 *
+	 * @throws RuntimeException When the schedule names no view.
+	 */
+	private function requireViewSlug(array $schedule): string {
 		$viewSlug = trim((string)($schedule['viewSlug'] ?? ''));
 		if ($viewSlug === '') {
 			throw new RuntimeException(message: 'This periodic document names no view.');
 		}
 
+		return $viewSlug;
+
+	}//end requireViewSlug()
+
+	/**
+	 * The records of the view a schedule renders.
+	 *
+	 * @param string $viewSlug The view slug.
+	 *
+	 * @return array<int, mixed> The records.
+	 *
+	 * @throws RuntimeException When the view no longer exists.
+	 */
+	private function requireRecords(string $viewSlug): array {
 		$records = $this->readView(slug: $viewSlug);
 		if ($records === null) {
 			throw new RuntimeException(
@@ -104,6 +150,21 @@ class PeriodicDocumentService implements PeriodicDocumentServiceInterface {
 			);
 		}
 
+		return $records;
+
+	}//end requireRecords()
+
+	/**
+	 * Whose Files receive the PDF: the caller, or else the schedule's owner.
+	 *
+	 * @param array<string, mixed> $schedule The schedule.
+	 * @param string               $userId   The caller; empty means the schedule's owner.
+	 *
+	 * @return string The user id.
+	 *
+	 * @throws RuntimeException When nobody owns the schedule.
+	 */
+	private function requireOwner(array $schedule, string $userId): string {
 		$owner = $userId;
 		if ($owner === '') {
 			$owner = $this->ownerOf(schedule: $schedule);
@@ -115,28 +176,34 @@ class PeriodicDocumentService implements PeriodicDocumentServiceInterface {
 			);
 		}
 
+		return $owner;
+
+	}//end requireOwner()
+
+	/**
+	 * Generate the run's PDF through the one generation path.
+	 *
+	 * @param array<string, mixed>                                                      $schedule The schedule.
+	 * @param array{viewSlug: string, records: array<int, mixed>, owner: string, ranAt: string} $run      The run.
+	 *
+	 * @return array<string, mixed> The generation result.
+	 *
+	 * @throws RuntimeException When generation fails.
+	 */
+	private function generate(array $schedule, array $run): array {
 		$layout = null;
 		$layoutName = trim((string)($schedule['layout'] ?? ''));
 		if ($layoutName !== '') {
 			$layout = $this->layouts->resolve(name: $layoutName);
 		}
 
-		$now = (new DateTimeImmutable())->format(DateTimeInterface::ATOM);
-		$name = trim((string)($schedule['name'] ?? ''));
-
 		try {
-			$result = $this->documents->generateDocument(
+			return $this->documents->generateDocument(
 				templateId: (string)($schedule['templateId'] ?? ''),
 				dataRefs: [],
-				options: [
-					'format' => 'pdf',
-					'adHocData' => ['records' => $records, 'view' => $viewSlug, 'periodic' => ['name' => $name, 'ranAt' => $now]],
-					'output' => ['mode' => 'files'],
-					'userId' => $owner,
-					'filename' => $this->filename(name: $name, ranAt: $now),
-				],
+				options: $this->generationOptions(schedule: $schedule, run: $run),
 				recordFields: $this->layouts->stamp(
-					document: ['viewSlug' => $viewSlug, 'recordCount' => count($records)],
+					document: ['viewSlug' => $run['viewSlug'], 'recordCount' => count($run['records'])],
 					layout: $layout
 				)
 			);
@@ -148,17 +215,32 @@ class PeriodicDocumentService implements PeriodicDocumentServiceInterface {
 			);
 		}
 
-		$document = ((array)($result['metadata'] ?? [])) + [
-			'viewSlug' => $viewSlug,
-			'recordCount' => count($records),
+	}//end generate()
+
+	/**
+	 * The generation options of one run: a PDF in the owner's Files, over the view's records.
+	 *
+	 * @param array<string, mixed>                                                      $schedule The schedule.
+	 * @param array{viewSlug: string, records: array<int, mixed>, owner: string, ranAt: string} $run      The run.
+	 *
+	 * @return array<string, mixed> The options.
+	 */
+	private function generationOptions(array $schedule, array $run): array {
+		$name = trim((string)($schedule['name'] ?? ''));
+
+		return [
+			'format' => 'pdf',
+			'adHocData' => [
+				'records' => $run['records'],
+				'view' => $run['viewSlug'],
+				'periodic' => ['name' => $name, 'ranAt' => $run['ranAt']],
+			],
+			'output' => ['mode' => 'files'],
+			'userId' => $run['owner'],
+			'filename' => $this->filename(name: $name, ranAt: $run['ranAt']),
 		];
-		$document['fileId'] = ($result['output']['fileId'] ?? null);
 
-		$this->recordRun(schedule: $schedule, ranAt: $now, records: count($records), document: $document);
-
-		return $document;
-
-	}//end run()
+	}//end generationOptions()
 
 	/**
 	 * Run every active schedule whose cadence has come round.
