@@ -147,46 +147,58 @@ class LineChartRenderer {
 	 * @return string SVG markup fragment.
 	 */
 	private function drawSeries(ChartRequest $chart, array $plot): string {
-		$series = $chart->normalized['series'];
-		$numLabels = count($chart->normalized['labels']);
-		$niceMax = $plot['niceMax'];
-		$stepX = $plot['stepX'];
 		$parts = [];
-		$numSeries = count($series);
-
+		$numSeries = count($chart->normalized['series']);
 		for ($s = 0; $s < $numSeries; $s++) {
-			$color = $chart->color(index: $s);
-			$points = [];
-			$segment = [];
-
-			for ($i = 0; $i < $numLabels; $i++) {
-				$value = $series[$s]['values'][$i] ?? null;
-				if ($value === null) {
-					if ($segment !== []) {
-						$parts[] = $this->svg->polylineEl(points: $segment, color: $color);
-						$segment = [];
-					}
-
-					continue;
-				}
-
-				$x = $plot['marginLeft'] + ($i * $stepX);
-				$y = $plot['baselineY'] - (($value / $niceMax) * $plot['plotHeight']);
-				$segment[] = [$x, $y];
-				$points[] = [$x, $y];
-			}
-
-			if ($segment !== []) {
-				$parts[] = $this->svg->polylineEl(points: $segment, color: $color);
-			}
-
-			foreach ($points as [$px, $py]) {
-				$parts[] = $this->svg->circleEl(cx: $px, cy: $py, radius: 2.5, color: $color);
-			}
-		}//end for
+			$parts[] = $this->drawOneSeries(chart: $chart, plot: ($plot + ['series' => $s]));
+		}
 
 		return implode('', $parts);
 	}//end drawSeries()
+
+	/**
+	 * Draw the polyline segments and point markers of one series.
+	 *
+	 * @param ChartRequest $chart The normalized series, labels and palette.
+	 * @param array $plot The plot from {@see drawSeries()} plus the index `series` to draw.
+	 *
+	 * @return string SVG markup fragment.
+	 */
+	private function drawOneSeries(ChartRequest $chart, array $plot): string {
+		$values = ($chart->normalized['series'][$plot['series']]['values'] ?? []);
+		$numLabels = count($chart->normalized['labels']);
+		$color = $chart->color(index: $plot['series']);
+		$parts = [];
+		$points = [];
+		$segment = [];
+
+		for ($i = 0; $i < $numLabels; $i++) {
+			$value = $values[$i] ?? null;
+			if ($value === null) {
+				if ($segment !== []) {
+					$parts[] = $this->svg->polylineEl(points: $segment, color: $color);
+					$segment = [];
+				}
+
+				continue;
+			}
+
+			$x = $plot['marginLeft'] + ($i * $plot['stepX']);
+			$y = $plot['baselineY'] - (($value / $plot['niceMax']) * $plot['plotHeight']);
+			$segment[] = [$x, $y];
+			$points[] = [$x, $y];
+		}
+
+		if ($segment !== []) {
+			$parts[] = $this->svg->polylineEl(points: $segment, color: $color);
+		}
+
+		foreach ($points as [$px, $py]) {
+			$parts[] = $this->svg->circleEl(cx: $px, cy: $py, radius: 2.5, color: $color);
+		}
+
+		return implode('', $parts);
+	}//end drawOneSeries()
 
 	/**
 	 * Draw the x-axis category labels, bounded by the label-volume cap.
