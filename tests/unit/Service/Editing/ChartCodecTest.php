@@ -443,4 +443,53 @@ class ChartCodecTest extends TestCase {
 		);
 
 	}//end testEveryEntryOfAnEmbeddedPackageIsExactlyThis()
+
+	/**
+	 * The supported chart types are bar, line and pie.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/document-chart-embedding/spec.md
+	 */
+	public function testTheSupportedTypesAreBarLineAndPie(): void {
+		$this->assertSame(['bar', 'line', 'pie'], $this->codec->types());
+
+	}//end testTheSupportedTypesAreBarLineAndPie()
+
+	/**
+	 * A chart without categories is refused.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/document-chart-embedding/spec.md
+	 */
+	public function testAChartWithoutCategoriesIsRefused(): void {
+		$chart = self::CHART;
+		$chart['categories'] = [];
+
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessage('A chart needs at least one category.');
+
+		$this->codec->embedChart($this->docx(), 'docx', $chart);
+
+	}//end testAChartWithoutCategoriesIsRefused()
+
+	/**
+	 * A line chart is drawn as a standard-grouped line chart.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/document-chart-embedding/spec.md
+	 */
+	public function testALineChartIsStandardGrouped(): void {
+		$chart = self::CHART;
+		$chart['type'] = 'line';
+
+		$result = $this->codec->embedChart($this->docx(), 'docx', $chart);
+		$xml = $this->entry($result['bytes'], $result['chartPart']);
+
+		$this->assertStringContainsString('<c:lineChart><c:grouping val="standard"/>', $xml);
+		$this->assertStringNotContainsString('c:barDir', $xml);
+
+	}//end testALineChartIsStandardGrouped()
 }//end class
