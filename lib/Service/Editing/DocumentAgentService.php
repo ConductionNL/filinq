@@ -183,11 +183,8 @@ class DocumentAgentService {
 		}
 
 		$result = $this->editSession->editForAgent(
-			uid: $uid,
-			fileId: $fileId,
-			edits: $edits,
-			version: $version,
-			requestedMode: $requestedMode
+			request: new AgentFileRequest(uid: $uid, fileId: $fileId, version: $version, requestedMode: $requestedMode),
+			edits: $edits
 		);
 
 		$this->record(
@@ -258,10 +255,8 @@ class DocumentAgentService {
 		$uid = $this->requireUid();
 
 		$result = $this->editSession->editSpreadsheetForAgent(
-			uid: $uid,
-			fileId: $fileId,
-			edits: $edits,
-			version: $version
+			request: new AgentFileRequest(uid: $uid, fileId: $fileId, version: $version),
+			edits: $edits
 		);
 
 		$this->record(
@@ -332,10 +327,8 @@ class DocumentAgentService {
 		$uid = $this->requireUid();
 
 		$result = $this->editSession->editPresentationForAgent(
-			uid: $uid,
-			fileId: $fileId,
-			edits: $edits,
-			version: $version
+			request: new AgentFileRequest(uid: $uid, fileId: $fileId, version: $version),
+			edits: $edits
 		);
 
 		$this->record(
@@ -406,12 +399,9 @@ class DocumentAgentService {
 		}
 
 		return $this->editSession->embedChartForAgent(
-			uid: $this->requireUid(),
-			fileId: $fileId,
+			request: new AgentFileRequest(uid: $this->requireUid(), fileId: $fileId, version: $version, requestedMode: $mode),
 			chart: $chart,
-			version: $version,
-			afterAnchor: $anchor,
-			requestedMode: $mode
+			afterAnchor: $anchor
 		);
 
 	}//end addDocumentChart()
@@ -497,11 +487,8 @@ class DocumentAgentService {
 		}
 
 		return $this->editSession->setMetadataForAgent(
-			uid: $this->requireUid(),
-			fileId: $fileId,
-			values: $metadata,
-			version: $version,
-			requestedMode: $mode
+			request: new AgentFileRequest(uid: $this->requireUid(), fileId: $fileId, version: $version, requestedMode: $mode),
+			values: $metadata
 		);
 
 	}//end setDocumentMetadata()
