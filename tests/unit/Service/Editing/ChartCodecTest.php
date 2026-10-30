@@ -412,4 +412,35 @@ class ChartCodecTest extends TestCase {
 			$this->entry($second['bytes'], 'word/charts/chart1.xml')
 		);
 	}//end testASecondChartDoesNotCollideWithTheFirst()
+
+	/**
+	 * Every package entry after embedding two charts, one after an anchor,
+	 * is exactly this.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/document-chart-embedding/spec.md
+	 */
+	public function testEveryEntryOfAnEmbeddedPackageIsExactlyThis(): void {
+		$first = $this->codec->embedChart($this->docx(existingRelationships: 2), 'docx', self::CHART);
+		$second = $this->codec->embedChart($first['bytes'], 'docx', self::CHART, sprintf('b%s-1', substr(sha1('Intro paragraph'), 0, 8)));
+
+		$hashes = [];
+		foreach (['[Content_Types].xml', 'word/document.xml', 'word/_rels/document.xml.rels', 'word/charts/chart1.xml', 'word/charts/chart2.xml'] as $name) {
+			$hashes[$name] = sha1($this->entry($second['bytes'], $name));
+		}
+
+		$this->assertSame(['word/charts/chart2.xml', 'rId4'], [$second['chartPart'], $second['relationshipId']]);
+		$this->assertSame(
+			[
+				'[Content_Types].xml' => '0f4479d4e731503366d1ea02b49059b05709c6db',
+				'word/document.xml' => '3f2c7de1834056774b427a9dbe2c5397ec2b3d56',
+				'word/_rels/document.xml.rels' => '9bab9913d30506f2e7de718b41165e6d4fd9a1e6',
+				'word/charts/chart1.xml' => '823ac4ee200eb2f7c30d5a1087bb4f13008f4683',
+				'word/charts/chart2.xml' => '823ac4ee200eb2f7c30d5a1087bb4f13008f4683',
+			],
+			$hashes
+		);
+
+	}//end testEveryEntryOfAnEmbeddedPackageIsExactlyThis()
 }//end class
