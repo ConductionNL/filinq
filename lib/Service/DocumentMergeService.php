@@ -63,6 +63,7 @@ use Throwable;
  * @spec openspec/specs/document-merge/spec.md
  */
 class DocumentMergeService implements DocumentMergeServiceInterface {
+	use ReadsCurrentUserId;
 
 	/**
 	 * Constructor.
@@ -635,20 +636,4 @@ class DocumentMergeService implements DocumentMergeServiceInterface {
 
 		return $name;
 	}//end resultName()
-
-	/**
-	 * The user id of the person at the keyboard.
-	 *
-	 * @return string The user id, or an empty string when there is no session.
-	 *
-	 * @spec exclude Session accessor with no behaviour of its own.
-	 */
-	private function currentUserId(): string {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return '';
-		}
-
-		return $user->getUID();
-	}//end currentUserId()
 }//end class

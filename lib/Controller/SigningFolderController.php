@@ -26,6 +26,7 @@ use Exception;
 use InvalidArgumentException;
 use OCA\Filinq\Kernel\Contracts\SigningFolderServiceInterface;
 use OCA\Filinq\Kernel\Contracts\SigningMandateServiceInterface;
+use OCA\Filinq\Service\ReadsCurrentUserId;
 use OCA\Filinq\Settings\FilinqAdmin;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -49,6 +50,7 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
  */
 class SigningFolderController extends Controller {
+	use ReadsCurrentUserId;
 
 	/**
 	 * Constructor.
@@ -211,23 +213,6 @@ class SigningFolderController extends Controller {
 		}
 
 	}//end withdrawMandate()
-
-	/**
-	 * The calling user, or '' when there is none.
-	 *
-	 * @return string
-	 *
-	 * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
-	 */
-	private function currentUserId(): string {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return '';
-		}
-
-		return $user->getUID();
-
-	}//end currentUserId()
 
 	/**
 	 * One generic error body, with the detail in the log.
