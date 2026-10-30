@@ -60,6 +60,9 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The thirteenth class is
  * PrintJobRequest: the controller turns the request parameters into the one
  * value the print job service takes.
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) WMC 50 at threshold 50 on
+ * 2026-10-30. Each endpoint keeps its own login, lookup and owner-or-admin
+ * check; the steps after the check are small private methods.
  */
 class PrintJobController extends Controller {
 	use AnswersNotAuthenticated;
