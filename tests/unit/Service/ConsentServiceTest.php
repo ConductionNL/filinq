@@ -33,6 +33,7 @@ use OCA\Filinq\Service\ObjectionDeadlineChecker;
 use OCA\Filinq\Service\PolicyMatchService;
 use OCA\Filinq\Service\RegisterObjectRef;
 use OCP\App\IAppManager;
+use OCP\IUser;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -952,4 +953,82 @@ class ConsentServiceTest extends TestCase {
 		$this->expectNotToPerformAssertions();
 
 	}//end testValidateAcceptsValidScopeEntity()
+	/**
+	 * A validated update loads the record, holds a standing consent to the
+	 * admin group, checks the transition and saves it as the acting user.
+	 *
+	 * @return void
+	 */
+	public function testValidateAndUpdateConsentChecksThenSavesAsTheUser(): void {
+		$stored = ['scope' => 'entity', 'consentStatus' => 'pending'];
+		$service = $this->serviceOverStoredConsent(stored: $stored);
+		$user = $this->createMock(originalClassName: IUser::class);
+		$user->method('getUID')->willReturn('ingrid');
+		$update = ['consentStatus' => 'consent_given', 'evidence' => 'form'];
+
+		$this->mockScopeValidator->expects($this->once())->method('requireStandingConsentAdminGroup')->with($user);
+		$this->mockScopeValidator->expects($this->once())->method('validateTransition')->with($stored, $update);
+		$this->mockUpdateHandler->expects($this->once())->method('updateConsentStatus')
+			->with(
+				new RegisterObjectRef(id: 'c-1', register: 'filinq', schema: 'publicationConsent'),
+				new ConsentStatusChange(data: $update, actor: 'ingrid')
+			)
+			->willReturn(['saved' => true]);
+
+		$result = $service->validateAndUpdateConsent(consentId: 'c-1', register: 'filinq', schema: 'publicationConsent', data: $update, user: $user);
+
+		$this->assertSame(expected: ['saved' => true], actual: $result);
+
+	}//end testValidateAndUpdateConsentChecksThenSavesAsTheUser()
+
+	/**
+	 * A document consent, or an update without a user, skips the admin group
+	 * and is saved without an actor.
+	 *
+	 * @return void
+	 */
+	public function testValidateAndUpdateConsentWithoutAUser(): void {
+		$service = $this->serviceOverStoredConsent(stored: ['scope' => 'entity']);
+
+		$this->mockScopeValidator->expects($this->never())->method('requireStandingConsentAdminGroup');
+		$this->mockScopeValidator->expects($this->exactly(2))->method('validateTransition');
+		$this->mockUpdateHandler->expects($this->exactly(2))->method('updateConsentStatus')
+			->willReturnCallback(
+				function (RegisterObjectRef $consent, ConsentStatusChange $change): array {
+					$this->assertSame(expected: '', actual: $change->actor);
+					return [];
+				}
+			);
+
+		$service->validateAndUpdateConsent(consentId: 'c-1', register: 'r', schema: 's', data: ['objectionReason' => 'x']);
+
+		$user = $this->createMock(originalClassName: IUser::class);
+		$document = $this->serviceOverStoredConsent(stored: ['consentStatus' => 'pending']);
+		$document->validateAndUpdateConsent(consentId: 'c-2', register: 'r', schema: 's', data: ['objectionReason' => 'x'], user: $user);
+
+	}//end testValidateAndUpdateConsentWithoutAUser()
+
+	/**
+	 * A consent service whose record writer reads one stored consent.
+	 *
+	 * @param array<string, mixed> $stored The stored consent.
+	 *
+	 * @return ConsentService The service.
+	 */
+	private function serviceOverStoredConsent(array $stored): ConsentService {
+		$objects = $this->createMock(originalClassName: \OCA\OpenRegister\Service\ObjectService::class);
+		$objects->method('find')->willReturn($this->buildSavedObject(data: $stored));
+		$container = $this->createMock(originalClassName: ContainerInterface::class);
+		$container->method('get')->willReturn($objects);
+
+		return new ConsentService(
+			logger: $this->mockLogger,
+			deadlineChecker: $this->mockDeadlineChecker,
+			updateHandler: $this->mockUpdateHandler,
+			scopeValidator: $this->mockScopeValidator,
+			policyMatcher: $this->createMock(originalClassName: PolicyMatchService::class),
+			recordWriter: $this->buildRecordWriter(container: $container)
+		);
+
+	}//end serviceOverStoredConsent()
 }//end class
