@@ -60,6 +60,9 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The thirteenth class is
  * PrintJobRequest: the controller turns the request parameters into the one
  * value the print job service takes.
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) WMC 50 at threshold 50 on
+ * 2026-10-30. Each endpoint keeps its own login, lookup and owner-or-admin
+ * check; the steps after the check are small private methods.
  */
 class PrintJobController extends Controller {
 	use AnswersNotAuthenticated;
@@ -254,27 +257,7 @@ class PrintJobController extends Controller {
 
 			$this->authorizeJobAccess(job: $job, userId: $user->getUID());
 
-			if (($job['status'] ?? '') === 'rendering') {
-				return new JSONResponse(
-					data: ['error' => 'Job not rendered yet', 'status' => 'rendering'],
-					statusCode: Http::STATUS_CONFLICT
-				);
-			}
-
-			$item = $this->request->getParam('item', null);
-			$download = $this->printJobSvc->download(job: $job, item: $this->itemIndex(item: $item));
-			if ($download === null) {
-				return new JSONResponse(
-					data: ['error' => 'PDF not found for this job'],
-					statusCode: Http::STATUS_NOT_FOUND
-				);
-			}
-
-			return new DataDownloadResponse(
-				data: $download['content'],
-				filename: $download['filename'],
-				contentType: $download['contentType']
-			);
+			return $this->renderedPdf(job: $job);
 		} catch (OCSForbiddenException $e) {
 			return new JSONResponse(
 				data: ['error' => 'Not authorized'],
@@ -293,6 +276,38 @@ class PrintJobController extends Controller {
 		}//end try
 
 	}//end download()
+
+	/**
+	 * The rendered PDF of a job the caller may access, or why it cannot be served yet.
+	 *
+	 * @param array<string, mixed> $job The job, already authorised.
+	 *
+	 * @return DataDownloadResponse|JSONResponse The PDF, 409 while rendering, or 404 without a PDF.
+	 */
+	private function renderedPdf(array $job): DataDownloadResponse|JSONResponse {
+		if (($job['status'] ?? '') === 'rendering') {
+			return new JSONResponse(
+				data: ['error' => 'Job not rendered yet', 'status' => 'rendering'],
+				statusCode: Http::STATUS_CONFLICT
+			);
+		}
+
+		$item = $this->request->getParam('item', null);
+		$download = $this->printJobSvc->download(job: $job, item: $this->itemIndex(item: $item));
+		if ($download === null) {
+			return new JSONResponse(
+				data: ['error' => 'PDF not found for this job'],
+				statusCode: Http::STATUS_NOT_FOUND
+			);
+		}
+
+		return new DataDownloadResponse(
+			data: $download['content'],
+			filename: $download['filename'],
+			contentType: $download['contentType']
+		);
+
+	}//end renderedPdf()
 
 	/**
 	 * Update job status (called by external print service to acknowledge)
