@@ -301,8 +301,10 @@ class DomainFolderServiceTest extends TestCase {
 	 */
 	public function testTheWholeOutcomeOfAMixedRunAndOfAnUnreadableFolder(): void {
 		$gateway = $this->willingGateway(['groep-oud', 'groep-vast']);
+		$path = $this->service($gateway)->pathFor(domain: $this->domain([]));
 		$gateway->method('grant')->willReturnCallback(
-			function (string $path, string $owner, string $group): void {
+			function (string $p, string $owner, string $group) use ($path): void {
+				$this->assertSame($path, $p);
 				$this->assertSame('beheerder', $owner);
 				if ($group === 'groep-nee') {
 					throw new RuntimeException('grant refused');
@@ -310,7 +312,8 @@ class DomainFolderServiceTest extends TestCase {
 			}
 		);
 		$gateway->method('revoke')->willReturnCallback(
-			function (string $path, string $owner, string $group): void {
+			function (string $p, string $owner, string $group) use ($path): void {
+				$this->assertSame($path, $p);
 				$this->assertSame('beheerder', $owner);
 				if ($group === 'groep-vast') {
 					throw new RuntimeException('revoke refused');
@@ -320,7 +323,6 @@ class DomainFolderServiceTest extends TestCase {
 
 		$outcome = $this->service($gateway)->reconcile(domain: $this->domain(['groep-ja', 'groep-nee']), owner: 'beheerder');
 
-		$path = $this->service($gateway)->pathFor(domain: $this->domain([]));
 		$this->assertSame(
 			[
 				'state' => DomainFolderService::STATE_REFUSED,

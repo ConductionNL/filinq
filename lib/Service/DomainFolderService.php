@@ -175,7 +175,10 @@ class DomainFolderService implements DomainFolderServiceInterface {
 		foreach ($moves as $action => $groups) {
 			foreach ($groups as $group) {
 				try {
-					$this->gateway->{$action}(path: $access['path'], owner: $access['owner'], group: (string)$group);
+					match ($action) {
+						'grant' => $this->gateway->grant(path: $access['path'], owner: $access['owner'], group: (string)$group),
+						'revoke' => $this->gateway->revoke(path: $access['path'], owner: $access['owner'], group: (string)$group),
+					};
 					$changes[$action][] = (string)$group;
 				} catch (Throwable $e) {
 					// 🔴 A REVOKE THAT FAILS IS THE ONE THAT MATTERS. A grant that
@@ -196,7 +199,9 @@ class DomainFolderService implements DomainFolderServiceInterface {
 	 * @param string              $path    The folder.
 	 * @param array<string, array> $changes What happened: `grant`, `revoke` and `refused`, as correct() returns them.
 	 *
-	 * @return array<string, mixed> The outcome.
+	 * @return array{state: string, path: string, granted: array<int, string>, revoked: array<int, string>,
+	 *               refused: array<int, array{group: string, action: string, reason: string}>,
+	 *               pinnedReason: ?string} The outcome.
 	 */
 	private function settled(string $path, array $changes): array {
 		if ($changes['refused'] !== []) {
@@ -258,7 +263,9 @@ class DomainFolderService implements DomainFolderServiceInterface {
 	 * @param array<int, array{group: string, action: string, reason: string}> $refused    What could not be done, and why.
 	 * @param string|null                                                   $pinnedReason Why it was pinned out.
 	 *
-	 * @return array<string, mixed> The outcome.
+	 * @return array{state: string, path: string, granted: array<int, string>, revoked: array<int, string>,
+	 *               refused: array<int, array{group: string, action: string, reason: string}>,
+	 *               pinnedReason: ?string} The outcome.
 	 */
 	private function outcome(
 		string $state,
