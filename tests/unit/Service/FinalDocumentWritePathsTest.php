@@ -31,6 +31,7 @@ use OCA\Filinq\Service\PdfService;
 use OCA\Filinq\Service\SignedArtifactProducer;
 use OCA\Filinq\Service\Signing\SigningProviderFactory;
 use OCP\App\IAppManager;
+use OCP\Constants;
 use OCP\Files\File;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
@@ -116,17 +117,30 @@ class FinalDocumentWritePathsTest extends TestCase {
 	/**
 	 * The API refuses to replace the file by restoring an earlier version.
 	 *
+	 * The caller may write the file, so the refusal is the final one, and the
+	 * version manager is never reached.
+	 *
 	 * @return void
 	 *
 	 * @spec openspec/changes/final-documents-frozen/specs/document-versions/spec.md
 	 */
 	public function testTheApiRefusesARestoreOfAFinalDocument(): void {
+		$file = $this->file();
+		$file->method('getPermissions')->willReturn(Constants::PERMISSION_READ | Constants::PERMISSION_UPDATE);
+		$userFolder = $this->createMock(Folder::class);
+		$userFolder->method('getById')->willReturn([$file]);
+		$rootFolder = $this->createMock(IRootFolder::class);
+		$rootFolder->method('getUserFolder')->willReturn($userFolder);
+
+		$container = $this->createMock(ContainerInterface::class);
+		$container->expects($this->never())->method('get');
+
 		$service = new DocumentVersionService(
 			logger: $this->createMock(LoggerInterface::class),
-			rootFolder: $this->createMock(IRootFolder::class),
+			rootFolder: $rootFolder,
 			userSession: $this->userSession(),
 			appManager: $this->createMock(IAppManager::class),
-			container: $this->createMock(ContainerInterface::class),
+			container: $container,
 			finalDocuments: $this->refusing()
 		);
 
