@@ -347,13 +347,17 @@ class DocumentService implements DocumentServiceInterface {
 	 */
 	private function logGenerated(array $run, array $outcome): array {
 		return $this->documentLogger->log(
-			template: [
-				'id' => $run['templateId'],
-				'version' => ($run['template']['version'] ?? null),
-				'name' => ($run['template']['name'] ?? ''),
-			],
-			dataRefs: $run['dataRefs'],
-			format: $run['format'],
+			generation: new DocumentGenerationRecord(
+				template: [
+					'id' => $run['templateId'],
+					'version' => ($run['template']['version'] ?? null),
+					'name' => ($run['template']['name'] ?? ''),
+				],
+				dataRefs: $run['dataRefs'],
+				format: $run['format'],
+				userId: (string)($run['options']['userId'] ?? ''),
+				extra: array_merge($run['recordFields'], $outcome['plain']['record'])
+			),
 			outcome: [
 				'status' => 'generated',
 				'warnings' => $outcome['warnings'],
@@ -361,9 +365,7 @@ class DocumentService implements DocumentServiceInterface {
 				'errorMessage' => null,
 				'fileId' => $outcome['stored']['fileId'],
 				'filePath' => $outcome['stored']['path'],
-			],
-			userId: (string)($run['options']['userId'] ?? ''),
-			extra: array_merge($run['recordFields'], $outcome['plain']['record'])
+			]
 		);
 	}//end logGenerated()
 

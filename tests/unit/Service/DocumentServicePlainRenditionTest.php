@@ -55,6 +55,7 @@ use Psr\Log\NullLogger;
  * @uses \OCA\Filinq\Service\DocumentObjectServiceResolver
  * @uses \OCA\Filinq\Service\DocumentRenderPipeline
  * @uses \OCA\Filinq\Service\GeneratedDocumentLogger
+ * @uses \OCA\Filinq\Service\DocumentGenerationRecord
  * @uses \OCA\Filinq\Service\PlainLanguageRenditionService
  * @uses \OCA\Filinq\Service\PlainRenditionAcceptanceGate
  */
