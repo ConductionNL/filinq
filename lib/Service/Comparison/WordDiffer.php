@@ -344,22 +344,24 @@ class WordDiffer {
 			$rightPos++;
 		}//end while
 
-		while ($leftPos < $n) {
-			$ops[] = [
-				'op' => 'delete',
-				'left' => $a[$leftPos],
-			];
-			$leftPos++;
-		}
-
-		while ($rightPos < $m) {
-			$ops[] = [
-				'op' => 'insert',
-				'right' => $b[$rightPos],
-			];
-			$rightPos++;
-		}
-
-		return $ops;
+		return array_merge(
+			$ops,
+			$this->trailing(words: array_slice($a, $leftPos), op: 'delete'),
+			$this->trailing(words: array_slice($b, $rightPos), op: 'insert')
+		);
 	}//end backtrack()
+
+	/**
+	 * One op per word left over once the other side ran out: delete for the
+	 * left side, insert for the right.
+	 *
+	 * @param array<int, string> $words The words left over.
+	 * @param string             $op    'delete' or 'insert'.
+	 *
+	 * @return array<int, array{op:string, left?:string, right?:string}> Ops.
+	 */
+	private function trailing(array $words, string $op): array {
+		$side = ($op === 'delete') ? 'left' : 'right';
+		return array_map(static fn (string $word): array => ['op' => $op, $side => $word], $words);
+	}//end trailing()
 }//end class
