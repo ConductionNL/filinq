@@ -40,6 +40,7 @@ use RuntimeException;
  * What the fallback validates, writes and logs, per outcome.
  *
  * @covers \OCA\Filinq\EventListener\ValidationRunner
+ * @uses   \OCA\Filinq\EventListener\ValidationFallbackContext
  */
 class ValidationRunnerTest extends TestCase {
 
