@@ -35,6 +35,7 @@ use Throwable;
  * implementation before it was split.
  *
  * @covers \OCA\Filinq\Service\Signing\SigningCancellationService
+ * @uses   \OCA\Filinq\Exception\SigningCancellationNotSupportedException
  *
  * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md
  */
