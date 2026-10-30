@@ -36,6 +36,7 @@ use PHPUnit\Framework\TestCase;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
+ * @covers \OCA\Filinq\Controller\AnswersNotAuthenticated
  * @covers \OCA\Filinq\Controller\ConsentController
  * @covers \OCA\Filinq\Controller\CorrespondenceController
  * @covers \OCA\Filinq\Controller\DocumentController

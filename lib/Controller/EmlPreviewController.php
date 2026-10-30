@@ -45,6 +45,8 @@ use Throwable;
  * @link      https://www.filinq.app
  */
 class EmlPreviewController extends Controller {
+	use AnswersNotAuthenticated;
+
 	/**
 	 * Constructor.
 	 *
@@ -96,10 +98,7 @@ class EmlPreviewController extends Controller {
 	private function verifyFileAccess(int $fileId): ?JSONResponse {
 		$user = $this->userSession->getUser();
 		if ($user === null) {
-			return new JSONResponse(
-				data: ['error' => $this->l10n->t('Not authenticated')],
-				statusCode: Http::STATUS_UNAUTHORIZED
-			);
+			return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 		}
 
 		$nodes = $this->rootFolder->getUserFolder($user->getUID())->getById($fileId);

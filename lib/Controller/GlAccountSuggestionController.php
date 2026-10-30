@@ -46,6 +46,8 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/specs/ai-gl-account-suggestion/spec.md
  */
 class GlAccountSuggestionController extends Controller {
+	use AnswersNotAuthenticated;
+
 	/**
 	 * Constructor.
 	 *
@@ -90,10 +92,7 @@ class GlAccountSuggestionController extends Controller {
 	public function suggestAccount(string $id): JSONResponse {
 		$user = $this->userSession->getUser();
 		if ($user === null) {
-			return new JSONResponse(
-				data: ['error' => $this->l10n->t('Not authenticated')],
-				statusCode: Http::STATUS_UNAUTHORIZED
-			);
+			return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 		}
 
 		try {
