@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\EventListener;
 
 use OCA\Filinq\EventListener\ContractNoticeDeadlineListener;
+use OCA\Filinq\Service\Contract\ContractDates;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
@@ -96,7 +97,7 @@ class ContractNoticeDeadlineListenerTest extends TestCase {
 		$container = $this->createMock(ContainerInterface::class);
 		$container->method('get')->willReturn($mapper);
 
-		return new ContractNoticeDeadlineListener(container: $container);
+		return new ContractNoticeDeadlineListener(container: $container, dates: new ContractDates());
 
 	}//end listener()
 
