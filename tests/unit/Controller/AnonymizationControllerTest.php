@@ -25,6 +25,7 @@ namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\AnonymizationController;
 use OCA\Filinq\Service\AnonymizationService;
+use OCA\Filinq\Service\AnonymizeRequestService;
 use OCA\Filinq\Service\FileListingService;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\Files\File;
@@ -148,8 +149,7 @@ class AnonymizationControllerTest extends TestCase {
 			fileListingService: $this->mockFileService,
 			l10n: $this->mockL10n,
 			appConfig: $this->createMock(\OCP\IAppConfig::class),
-			userSession: $this->mockUserSession,
-			rootFolder: $this->mockRootFolder
+			anonymizeRequest: new AnonymizeRequestService(logger: $this->mockLogger, anonymizationService: $this->mockAnonService, l10n: $this->mockL10n, rootFolder: $this->mockRootFolder, userSession: $this->mockUserSession)
 		);
 
 	}//end setUp()
@@ -329,8 +329,7 @@ class AnonymizationControllerTest extends TestCase {
 			fileListingService: $this->mockFileService,
 			l10n: $this->mockL10n,
 			appConfig: $this->createMock(\OCP\IAppConfig::class),
-			userSession: $this->mockUserSession,
-			rootFolder: $emptyRootFolder
+			anonymizeRequest: new AnonymizeRequestService(logger: $this->mockLogger, anonymizationService: $this->mockAnonService, l10n: $this->mockL10n, rootFolder: $emptyRootFolder, userSession: $this->mockUserSession)
 		);
 
 		$response = $controller->extract(fileId: 999);
@@ -420,8 +419,7 @@ class AnonymizationControllerTest extends TestCase {
 			fileListingService: $this->mockFileService,
 			l10n: $this->mockL10n,
 			appConfig: $this->createMock(\OCP\IAppConfig::class),
-			userSession: $this->mockUserSession,
-			rootFolder: $emptyRootFolder
+			anonymizeRequest: new AnonymizeRequestService(logger: $this->mockLogger, anonymizationService: $this->mockAnonService, l10n: $this->mockL10n, rootFolder: $emptyRootFolder, userSession: $this->mockUserSession)
 		);
 
 		$response = $controller->anonymize(fileId: 999);
@@ -775,8 +773,7 @@ class AnonymizationControllerTest extends TestCase {
 			fileListingService: $this->mockFileService,
 			l10n: $this->mockL10n,
 			appConfig: $this->createMock(originalClassName: \OCP\IAppConfig::class),
-			userSession: $session,
-			rootFolder: $this->mockRootFolder
+			anonymizeRequest: new AnonymizeRequestService(logger: $this->mockLogger, anonymizationService: $this->mockAnonService, l10n: $this->mockL10n, rootFolder: $this->mockRootFolder, userSession: $session)
 		);
 
 		$response = $controller->anonymize(fileId: 1);
@@ -785,6 +782,41 @@ class AnonymizationControllerTest extends TestCase {
 		$this->assertSame(expected: ['error' => 'Not authenticated'], actual: $response->getData());
 
 	}//end testAnonymizeReturns401WithoutASession()
+
+	/**
+	 * files() answers 401 without a session and never lists files.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/anonymization/spec.md
+	 */
+	public function testFilesReturns401WithoutASession(): void {
+		$session = $this->createMock(originalClassName: IUserSession::class);
+		$session->method('getUser')->willReturn(null);
+		$this->mockFileService->expects($this->never())->method('listProcessedFiles');
+		$controller = new AnonymizationController(
+			appName: 'filinq',
+			request: $this->mockRequest,
+			logger: $this->mockLogger,
+			anonymizationService: $this->mockAnonService,
+			fileListingService: $this->mockFileService,
+			l10n: $this->mockL10n,
+			appConfig: $this->createMock(originalClassName: \OCP\IAppConfig::class),
+			anonymizeRequest: new AnonymizeRequestService(
+				logger: $this->mockLogger,
+				anonymizationService: $this->mockAnonService,
+				l10n: $this->mockL10n,
+				rootFolder: $this->mockRootFolder,
+				userSession: $session
+			)
+		);
+
+		$response = $controller->files();
+
+		$this->assertSame(expected: 401, actual: $response->getStatus());
+		$this->assertSame(expected: ['error' => 'Not authenticated'], actual: $response->getData());
+
+	}//end testFilesReturns401WithoutASession()
 
 	/**
 	 * An unexpected failure during the run answers 500 with its message.
