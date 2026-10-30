@@ -279,9 +279,11 @@ class AnonymizationService implements AnonymizationServiceInterface {
 			return array_merge(
 				$this->buildExtractionResult(
 					fileId: $fileId,
-					normalized: $normalized,
-					entityCount: count($entities),
-					dictionaryWarning: $dictionaryWarning
+					detected: [
+						'entities' => $normalized,
+						'entityCount' => count($entities),
+						'customDictionaryWarning' => $dictionaryWarning,
+					]
 				),
 				$ocrFields
 			);
@@ -308,21 +310,15 @@ class AnonymizationService implements AnonymizationServiceInterface {
 	 * blocking detection (files-confidential-labels, design.md D2).
 	 *
 	 * @param int $fileId The Nextcloud file ID.
-	 * @param array<int, array<string, mixed>> $normalized Normalized, policy-decorated entities.
-	 * @param int $entityCount Raw detected-entity count.
-	 * @param string|null $dictionaryWarning Warning from the best-effort
-	 *                                       custom-dictionary pass, or null.
+	 * @param array $detected The normalized, policy-decorated `entities`, the raw detected
+	 *                        `entityCount` and the `customDictionaryWarning` from the
+	 *                        best-effort custom-dictionary pass (or null).
 	 *
 	 * @return array<string, mixed> The extraction result payload.
 	 *
 	 * @spec openspec/changes/files-confidential-labels/specs/files-confidential-labels/spec.md#requirement-surface-the-label-in-the-document-report-and-entity-review-context-req-ddfcl-002
 	 */
-	private function buildExtractionResult(
-		int $fileId,
-		array $normalized,
-		int $entityCount,
-		?string $dictionaryWarning,
-	): array {
+	private function buildExtractionResult(int $fileId, array $detected): array {
 		// Development riskLevel feature (RiskLevelService via
 		// FileEntityStatsService) — required by the return payload below.
 		$riskLevelService = $this->fileEntityStats->tryGetRiskLevelService();
@@ -332,10 +328,10 @@ class AnonymizationService implements AnonymizationServiceInterface {
 		);
 
 		$result = [
-			'entities' => $normalized,
-			'entityCount' => $entityCount,
+			'entities' => $detected['entities'],
+			'entityCount' => $detected['entityCount'],
 			'riskLevel' => $riskLevel,
-			'customDictionaryWarning' => $dictionaryWarning,
+			'customDictionaryWarning' => $detected['customDictionaryWarning'],
 		];
 
 		// Read-only sensitivity signal from files_confidential (or null when the
@@ -523,19 +519,20 @@ class AnonymizationService implements AnonymizationServiceInterface {
 		bool $reversible = false,
 	): array {
 		return $this->runAnonymize(
-			fileId: $fileId,
-			entities: $entities,
-			userId: $userId,
-			overrides: $overrides,
-			options: [
-				'appendBasisSummary' => false,
-				'outputFormat' => $outputFormat,
-				'unredactedEntities' => $unredactedEntities,
-				'scope' => $scope,
-				'dossierKey' => $dossierKey,
-				'reversible' => $reversible,
-				'userId' => $userId,
-			]
+			run: new AnonymizeRun(
+				fileId: $fileId,
+				entities: $entities,
+				overrides: $overrides,
+				options: [
+					'appendBasisSummary' => false,
+					'outputFormat' => $outputFormat,
+					'unredactedEntities' => $unredactedEntities,
+					'scope' => $scope,
+					'dossierKey' => $dossierKey,
+					'reversible' => $reversible,
+					'userId' => $userId,
+				]
+			)
 		);
 
 	}//end anonymizeDocument()
@@ -593,19 +590,20 @@ class AnonymizationService implements AnonymizationServiceInterface {
 		bool $reversible = false,
 	): array {
 		return $this->runAnonymize(
-			fileId: $fileId,
-			entities: $entities,
-			userId: $userId,
-			overrides: $overrides,
-			options: [
-				'appendBasisSummary' => true,
-				'outputFormat' => $outputFormat,
-				'unredactedEntities' => $unredactedEntities,
-				'scope' => $scope,
-				'dossierKey' => $dossierKey,
-				'reversible' => $reversible,
-				'userId' => $userId,
-			]
+			run: new AnonymizeRun(
+				fileId: $fileId,
+				entities: $entities,
+				overrides: $overrides,
+				options: [
+					'appendBasisSummary' => true,
+					'outputFormat' => $outputFormat,
+					'unredactedEntities' => $unredactedEntities,
+					'scope' => $scope,
+					'dossierKey' => $dossierKey,
+					'reversible' => $reversible,
+					'userId' => $userId,
+				]
+			)
 		);
 
 	}//end anonymizeDocumentWithBasisSummary()
@@ -616,13 +614,7 @@ class AnonymizationService implements AnonymizationServiceInterface {
 	 * The prohibition gate runs BEFORE any OpenRegister interaction; the pipeline
 	 * itself is owned by DocumentAnonymizeRunner.
 	 *
-	 * @param int $fileId The Nextcloud file ID.
-	 * @param array<array<string, mixed>> $entities The entities to anonymize.
-	 * @param string $userId UID of the acting user.
-	 * @param array<int, array<string, mixed>> $overrides Acknowledged override entries.
-	 * @param array<string, mixed> $options Run options forwarded to the runner
-	 *                                      (appendBasisSummary, outputFormat,
-	 *                                      unredactedEntities, scope, dossierKey).
+	 * @param AnonymizeRun $run The file, entities, overrides and run options (the acting user among them).
 	 *
 	 * @return array<string, mixed> The anonymisation result.
 	 *
@@ -637,20 +629,17 @@ class AnonymizationService implements AnonymizationServiceInterface {
 	 * @spec openspec/changes/redaction-and-what-leaves-the-building/specs/redaction-output-guarantee/spec.md
 	 * @spec openspec/changes/archive/2026-09-29-anonymisation-fails-closed-without-a-detector/tasks.md#task-2
 	 */
-	private function runAnonymize(
-		int $fileId,
-		array $entities,
-		string $userId,
-		array $overrides,
-		array $options,
-	): array {
+	private function runAnonymize(AnonymizeRun $run): array {
+		$fileId = $run->fileId;
+		$entities = $run->entities;
+
 		// Prohibition gate — runs BEFORE any OR interaction.
 		// Throws ProhibitionGateException when gate fires; passes through otherwise.
 		$this->runProhibitionGate(
 			fileId: $fileId,
 			requestEntities: $entities,
-			overrides: $overrides,
-			userId: $userId
+			overrides: $run->overrides,
+			userId: $run->userId()
 		);
 
 		// 🔴 THE HUMAN GATE, IN THE SERVICE RATHER THAN ON THE SCREEN. Both
@@ -670,7 +659,7 @@ class AnonymizationService implements AnonymizationServiceInterface {
 		$result = $this->anonymizeRunner->run(
 			fileId: $fileId,
 			entities: $entities,
-			options: $options
+			options: $run->options
 		);
 
 		$redacted = count($entities);
