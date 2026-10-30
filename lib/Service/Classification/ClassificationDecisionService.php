@@ -35,6 +35,8 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\Classification;
 
 use DateTimeInterface;
+use OCA\Filinq\Exception\ClassificationRefused;
+use OCA\Filinq\Kernel\Contracts\ClassificationDecisionServiceInterface;
 use OCA\Filinq\Service\DocumentTypeClassifier;
 use OCA\Filinq\Service\DossierObjectRepository;
 use OCA\Filinq\Service\MetadataService;
@@ -49,7 +51,7 @@ use Throwable;
  *
  * @spec openspec/changes/inbound-auto-classification/tasks.md#2-4
  */
-class ClassificationDecisionService {
+class ClassificationDecisionService implements ClassificationDecisionServiceInterface {
 
 	/**
 	 * The types a confirmation may set.

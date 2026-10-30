@@ -3,8 +3,8 @@
 /**
  * Publication not ready
  *
- * @category  Service
- * @package   OCA\Filinq\Service\Publication
+ * @category  Exception
+ * @package   OCA\Filinq\Exception
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
@@ -17,15 +17,15 @@
 
 declare(strict_types=1);
 
-namespace OCA\Filinq\Service\Publication;
+namespace OCA\Filinq\Exception;
 
 use RuntimeException;
 
 /**
  * A hand-off refused because a check failed at that moment.
  *
- * @category Service
- * @package  OCA\Filinq\Service\Publication
+ * @category Exception
+ * @package  OCA\Filinq\Exception
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app

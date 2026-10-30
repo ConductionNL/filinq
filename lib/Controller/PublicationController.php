@@ -22,8 +22,8 @@ namespace OCA\Filinq\Controller;
 use OCA\Filinq\Kernel\Contracts\OpenCatalogiPlatformInterface;
 use OCA\Filinq\Kernel\Contracts\PublicationAccessInterface;
 use OCA\Filinq\Kernel\Contracts\PublicationStoreInterface;
-use OCA\Filinq\Service\Publication\PublicationNotReadyException;
-use OCA\Filinq\Service\Publication\PublicationPipelineService;
+use OCA\Filinq\Exception\PublicationNotReadyException;
+use OCA\Filinq\Kernel\Contracts\PublicationPipelineServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -54,7 +54,7 @@ class PublicationController extends Controller {
 	 *
 	 * @param string                     $appName  The app name
 	 * @param IRequest                   $request  The request
-	 * @param PublicationPipelineService $pipeline The pipeline
+	 * @param PublicationPipelineServiceInterface $pipeline The pipeline
 	 * @param PublicationStoreInterface           $store    The records and log
 	 * @param OpenCatalogiPlatformInterface       $platform Whether OpenCatalogi is there, its categories
 	 * @param PublicationAccessInterface          $access   Who may act
@@ -66,7 +66,7 @@ class PublicationController extends Controller {
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly PublicationPipelineService $pipeline,
+		private readonly PublicationPipelineServiceInterface $pipeline,
 		private readonly PublicationStoreInterface $store,
 		private readonly OpenCatalogiPlatformInterface $platform,
 		private readonly PublicationAccessInterface $access,

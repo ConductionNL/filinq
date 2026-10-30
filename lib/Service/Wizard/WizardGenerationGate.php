@@ -31,6 +31,8 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\Wizard;
 
+use OCA\Filinq\Exception\WizardRefused;
+
 /**
  * Validates a wizard run and produces its audit fields.
  */

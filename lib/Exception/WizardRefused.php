@@ -6,8 +6,8 @@
  * Carries the HTTP status (404, 409, 422, 423) and, for 422, the error per
  * question, so the controller can answer with both.
  *
- * @category  Service
- * @package   OCA\Filinq\Service\Wizard
+ * @category  Exception
+ * @package   OCA\Filinq\Exception
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
@@ -22,9 +22,8 @@
 
 declare(strict_types=1);
 
-namespace OCA\Filinq\Service\Wizard;
+namespace OCA\Filinq\Exception;
 
-use OCA\Filinq\Exception\ErrorDetailsInterface;
 use RuntimeException;
 
 /**

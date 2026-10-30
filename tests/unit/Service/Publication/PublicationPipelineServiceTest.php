@@ -33,7 +33,7 @@ use OCA\Filinq\Service\RedactionAccessibilityService;
 use OCA\Filinq\Service\Publication\ConsentClearance;
 use OCA\Filinq\Service\Publication\OpenCatalogiPlatform;
 use OCA\Filinq\Service\Publication\OpenCatalogiPublicationMap;
-use OCA\Filinq\Service\Publication\PublicationNotReadyException;
+use OCA\Filinq\Exception\PublicationNotReadyException;
 use OCA\Filinq\Service\Publication\PublicationPipelineService;
 use OCA\Filinq\Service\Publication\PublicationReadiness;
 use OCA\Filinq\Service\Publication\PublicationStore;

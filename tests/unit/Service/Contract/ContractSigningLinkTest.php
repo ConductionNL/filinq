@@ -28,7 +28,7 @@ require_once __DIR__ . '/ContractSchemaValidation.php';
 require_once __DIR__ . '/InMemoryContracts.php';
 
 use InvalidArgumentException;
-use OCA\Filinq\Service\Contract\ContractNotFoundException;
+use OCA\Filinq\Exception\ContractNotFoundException;
 use OCA\Filinq\Service\Contract\ContractSigningLink;
 use OCA\Filinq\Service\SigningService;
 use OCP\IUser;

@@ -32,7 +32,7 @@ use OCA\Filinq\Service\TemplateService;
 use OCA\Filinq\Service\Wizard\WizardAnswers;
 use OCA\Filinq\Service\Wizard\WizardConditions;
 use OCA\Filinq\Service\Wizard\WizardDefinitionValidator;
-use OCA\Filinq\Service\Wizard\WizardRefused;
+use OCA\Filinq\Exception\WizardRefused;
 use OCA\Filinq\Service\Wizard\WizardRepository;
 use OCA\Filinq\Service\Wizard\WizardService;
 use OCA\Filinq\Tests\Unit\Service\Wizard\WizardFixtures;
