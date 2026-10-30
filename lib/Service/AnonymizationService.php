@@ -207,86 +207,8 @@ class AnonymizationService implements AnonymizationServiceInterface {
 	 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-2.3
 	 */
 	private function runExtraction(int $fileId, array $options): array {
-		$force = $options['force'];
-
 		try {
-			$textExtractor = $this->locator->get(
-				className: 'OCA\OpenRegister\Service\TextExtractionService'
-			);
-
-			// Resolve Filinq's grondslag service up front (via the container,
-			// string class name, to keep this class's coupling in check). It
-			// also owns the operator's enabled-entity-type selection, used to
-			// scope automatic detection just below.
-			$legalBasisProposal = $this->container->get('OCA\Filinq\Service\LegalBasisProposalService');
-
-			// Scope automatic detection to the enabled entity types (null = all
-			// types). Manual entities are added through a separate path, so a
-			// manually-added type is still anonymised even when its automatic
-			// detection is disabled here.
-			$entityTypes = $legalBasisProposal->getEntityTypeWhitelist();
-			$textExtractor->extractFile($fileId, $force, $entityTypes);
-
-			// OpenRegister does no OCR, so a scan comes back without text and
-			// would read as "nothing to redact". The fallback runs OCR for it
-			// and says on the result when detection could not see the scan.
-			$ocrFields = $this->ocrFallback->afterExtraction(
-				fileId: $fileId,
-				textExtractor: $textExtractor,
-				force: $force
-			);
-
-			$this->logger->debug(
-				'Text extracted from file',
-				['fileId' => $fileId, 'entityTypes' => $entityTypes]
-			);
-
-			// Custom-dictionary pass (custom-dictionary-recognition, design.md
-			// §D3): runs after OR extraction and before the entities are read
-			// back below, so freshly-written CUSTOM_DICTIONARY relations are
-			// included in `$entities`. Best-effort — a failure here is logged
-			// and surfaced as a warning but never blocks OR's own detection.
-			$dictionaryWarning = $this->dictionaryRunner->run(
-				fileId: $fileId,
-				entityTypeWhitelist: $entityTypes
-			);
-
-			$entityRelationMapper = $this->locator->get(
-				className: 'OCA\OpenRegister\Db\EntityRelationMapper'
-			);
-			$entities = $entityRelationMapper->findEntitiesForFile($fileId);
-
-			// Pre-fill a proposed grondslag per entity type onto the
-			// freshly-detected relations (fill-only-when-empty), then enrich
-			// the returned rows with their current bases so the review UI can
-			// show the proposal. $legalBasisProposal was resolved above. Both
-			// calls are internally best-effort and never block detection.
-			$legalBasisProposal->applyProposals(fileId: $fileId);
-			$entities = $legalBasisProposal->enrichEntitiesWithBases(entities: $entities, fileId: $fileId);
-
-			$normalized = $this->entityDetection->normalizeEntities(entities: $entities);
-
-			// Apply publication policy (Robert's policy pass, supersedes the
-			// narrower attachProhibitionMatches): standing-consent winners are
-			// auto-skipped on their relation; prohibition winners get a
-			// read-only `prohibitionMatch` hint for the review UI. Best-effort —
-			// a policy failure never blocks detection.
-			$normalized = $this->prohibitionPolicy->applyPolicyDecisions(
-				entities: $normalized,
-				entityRelationMapper: $entityRelationMapper
-			);
-
-			return array_merge(
-				$this->buildExtractionResult(
-					fileId: $fileId,
-					detected: [
-						'entities' => $normalized,
-						'entityCount' => count($entities),
-						'customDictionaryWarning' => $dictionaryWarning,
-					]
-				),
-				$ocrFields
-			);
+			return $this->extractAndDetect(fileId: $fileId, force: $options['force']);
 		} catch (Exception $e) {
 			$this->logger->error(
 				'Failed to extract and detect entities: ' . $e->getMessage(),
@@ -298,8 +220,104 @@ class AnonymizationService implements AnonymizationServiceInterface {
 				$e
 			);
 		}//end try
-
 	}//end runExtraction()
+
+	/**
+	 * Extract the file's text, run the OCR fallback and the custom-dictionary
+	 * pass, then read the detected entities back.
+	 *
+	 * @param int $fileId The file.
+	 * @param mixed $force Whether to bypass OpenRegister's up-to-date check.
+	 *
+	 * @return array<string, mixed> The extraction result, with any OCR fields.
+	 *
+	 * @throws Exception When a step fails.
+	 */
+	private function extractAndDetect(int $fileId, mixed $force): array {
+		$textExtractor = $this->locator->get(
+			className: 'OCA\OpenRegister\Service\TextExtractionService'
+		);
+
+		// Resolve Filinq's grondslag service up front (via the container,
+		// string class name, to keep this class's coupling in check). It
+		// also owns the operator's enabled-entity-type selection, used to
+		// scope automatic detection just below.
+		$legalBasisProposal = $this->container->get('OCA\Filinq\Service\LegalBasisProposalService');
+
+		// Scope automatic detection to the enabled entity types (null = all
+		// types). Manual entities are added through a separate path, so a
+		// manually-added type is still anonymised even when its automatic
+		// detection is disabled here.
+		$entityTypes = $legalBasisProposal->getEntityTypeWhitelist();
+		$textExtractor->extractFile($fileId, $force, $entityTypes);
+
+		// OpenRegister does no OCR, so a scan comes back without text and
+		// would read as "nothing to redact". The fallback runs OCR for it
+		// and says on the result when detection could not see the scan.
+		$ocrFields = $this->ocrFallback->afterExtraction(
+			fileId: $fileId,
+			textExtractor: $textExtractor,
+			force: $force
+		);
+
+		$this->logger->debug(
+			'Text extracted from file',
+			['fileId' => $fileId, 'entityTypes' => $entityTypes]
+		);
+
+		// Custom-dictionary pass (custom-dictionary-recognition, design.md
+		// §D3): runs after OR extraction and before the entities are read
+		// back below, so freshly-written CUSTOM_DICTIONARY relations are
+		// included. Best-effort — a failure here is logged and surfaced as a
+		// warning but never blocks OR's own detection.
+		$detected = ['customDictionaryWarning' => $this->dictionaryRunner->run(fileId: $fileId, entityTypeWhitelist: $entityTypes)];
+		$detected += $this->detectedEntities(fileId: $fileId, legalBasisProposal: $legalBasisProposal);
+
+		return array_merge(
+			$this->buildExtractionResult(fileId: $fileId, detected: $detected),
+			$ocrFields
+		);
+	}//end extractAndDetect()
+
+	/**
+	 * Read the file's detected entities back, with proposed bases and the
+	 * publication policy applied.
+	 *
+	 * @param int $fileId The file.
+	 * @param object $legalBasisProposal The grondslag service.
+	 *
+	 * @return array{entities: array<int, mixed>, entityCount: int} The normalised entities and the raw count.
+	 *
+	 * @throws Exception When a step fails.
+	 */
+	private function detectedEntities(int $fileId, object $legalBasisProposal): array {
+		$entityRelationMapper = $this->locator->get(
+			className: 'OCA\OpenRegister\Db\EntityRelationMapper'
+		);
+		$entities = $entityRelationMapper->findEntitiesForFile($fileId);
+
+		// Pre-fill a proposed grondslag per entity type onto the
+		// freshly-detected relations (fill-only-when-empty), then enrich
+		// the returned rows with their current bases so the review UI can
+		// show the proposal. Both calls are internally best-effort and never
+		// block detection.
+		$legalBasisProposal->applyProposals(fileId: $fileId);
+		$entities = $legalBasisProposal->enrichEntitiesWithBases(entities: $entities, fileId: $fileId);
+
+		$normalized = $this->entityDetection->normalizeEntities(entities: $entities);
+
+		// Apply publication policy (Robert's policy pass, supersedes the
+		// narrower attachProhibitionMatches): standing-consent winners are
+		// auto-skipped on their relation; prohibition winners get a
+		// read-only `prohibitionMatch` hint for the review UI. Best-effort —
+		// a policy failure never blocks detection.
+		$normalized = $this->prohibitionPolicy->applyPolicyDecisions(
+			entities: $normalized,
+			entityRelationMapper: $entityRelationMapper
+		);
+
+		return ['entities' => $normalized, 'entityCount' => count($entities)];
+	}//end detectedEntities()
 
 	/**
 	 * Assemble the extraction response payload.
