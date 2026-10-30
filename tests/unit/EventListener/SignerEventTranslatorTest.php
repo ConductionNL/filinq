@@ -30,8 +30,7 @@ use OCA\Filinq\Event\SignerStepApprovedEvent;
 use OCA\Filinq\Event\SignerStepPendingEvent;
 use OCA\Filinq\Event\SignerStepRejectedEvent;
 use OCA\Filinq\EventListener\SignerEventTranslator;
-use OCA\Filinq\Service\Signing\SigningProviderFactory;
-use OCA\Filinq\Service\Signing\SigningProviderInterface;
+use OCA\Filinq\Kernel\Contracts\ActiveSigningProviderInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventDispatcher;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -60,9 +59,9 @@ final class SignerEventTranslatorTest extends TestCase {
 	/**
 	 * Provider factory mock.
 	 *
-	 * @var SigningProviderFactory&MockObject
+	 * @var ActiveSigningProviderInterface&MockObject
 	 */
-	private SigningProviderFactory $providerFactory;
+	private ActiveSigningProviderInterface $providerFactory;
 
 	/**
 	 * Dispatcher mock.
@@ -93,7 +92,7 @@ final class SignerEventTranslatorTest extends TestCase {
 	protected function setUp(): void {
 		parent::setUp();
 
-		$this->providerFactory = $this->createMock(SigningProviderFactory::class);
+		$this->providerFactory = $this->createMock(ActiveSigningProviderInterface::class);
 		$this->dispatcher = $this->createMock(IEventDispatcher::class);
 		$this->logger = $this->createMock(LoggerInterface::class);
 
@@ -112,11 +111,9 @@ final class SignerEventTranslatorTest extends TestCase {
 	 * @return void
 	 */
 	public function testOnPositionEnabledDispatchesPendingAndResolvesProvider(): void {
-		$provider = $this->createMock(SigningProviderInterface::class);
-		$provider->method('getIdentifier')->willReturn('native');
 		$this->providerFactory->expects($this->once())
-			->method('getActiveProvider')
-			->willReturn($provider);
+			->method('getActiveProviderIdentifier')
+			->willReturn('native');
 
 		$this->dispatcher->expects($this->once())
 			->method('dispatchTyped')
@@ -152,7 +149,7 @@ final class SignerEventTranslatorTest extends TestCase {
 	 * @return void
 	 */
 	public function testProviderResolutionFailureIsLoggedNotThrown(): void {
-		$this->providerFactory->method('getActiveProvider')
+		$this->providerFactory->method('getActiveProviderIdentifier')
 			->willThrowException(new RuntimeException('no provider configured'));
 		$this->logger->expects($this->once())->method('error');
 		$this->dispatcher->expects($this->once())

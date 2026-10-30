@@ -24,6 +24,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\ActiveSigningProviderInterface;
 use OCA\Filinq\Kernel\Contracts\AnonymiserBackendStateClientInterface;
 use OCA\Filinq\Kernel\Contracts\AnonymizationProfileServiceInterface;
 use OCA\Filinq\Kernel\Contracts\AnonymizationServiceInterface;
@@ -182,6 +183,7 @@ use OCA\Filinq\Service\Sanitization\SanitizationStatus;
 use OCA\Filinq\Service\SignerAuth\SignerAuthSettings;
 use OCA\Filinq\Service\SignerAuth\SignerStepUpService;
 use OCA\Filinq\Service\Signing\LibreSignCompletion;
+use OCA\Filinq\Service\Signing\SigningProviderFactory;
 use OCA\Filinq\Service\SigningEnvelope\SigningEnvelopeService;
 use OCA\Filinq\Service\SubjectErasure\SubjectErasureRun;
 use OCA\Filinq\Service\SubjectErasure\SubjectErasureService;
@@ -208,6 +210,7 @@ final class ContractBindings {
 	 * @var array<class-string, class-string>
 	 */
 	public const BINDINGS = [
+		ActiveSigningProviderInterface::class          => SigningProviderFactory::class,
 		AnonymiserBackendStateClientInterface::class   => AnonymiserBackendStateClient::class,
 		AnonymizationProfileServiceInterface::class    => WooProfileService::class,
 		AnonymizationServiceInterface::class           => AnonymizationService::class,

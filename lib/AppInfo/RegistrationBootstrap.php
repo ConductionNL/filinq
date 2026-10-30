@@ -25,6 +25,7 @@ namespace OCA\Filinq\AppInfo;
 
 use Exception;
 use OCA\Filinq\BackgroundJob\JobQueue;
+use OCA\Filinq\Dashboard\DashboardRegistrar;
 use OCA\Filinq\EventListener\ListenerRegistrar;
 use OCA\Filinq\Kernel\Contracts\SettingsServiceInterface;
 use OCA\Filinq\Kernel\JobQueueInterface;
@@ -73,6 +74,7 @@ class RegistrationBootstrap {
 		OpenRegisterAutoloader::register();
 		(new ListenerRegistrar())->register(context: $context);
 		(new ServiceRegistrar())->register(context: $context);
+		(new DashboardRegistrar())->register(context: $context);
 
 		$this->bindStoreController(context: $context);
 

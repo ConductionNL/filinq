@@ -35,8 +35,7 @@ use OCA\Filinq\Event\SignerStepRejectedEvent;
 use OCA\Filinq\EventListener\SignerEventTranslator;
 use OCA\Filinq\EventListener\SigningTaskListener;
 use OCA\Filinq\Service\SettingsService;
-use OCA\Filinq\Service\Signing\SigningProviderFactory;
-use OCA\Filinq\Service\Signing\SigningProviderInterface;
+use OCA\Filinq\Kernel\Contracts\ActiveSigningProviderInterface;
 use OCA\OpenRegister\Db\Task;
 use OCA\OpenRegister\Db\TaskSequence;
 use OCA\OpenRegister\Event\TaskSequenceCompletedEvent;
@@ -80,9 +79,9 @@ final class SigningTaskListenerTest extends TestCase {
 	/**
 	 * Provider factory mock.
 	 *
-	 * @var SigningProviderFactory&MockObject
+	 * @var ActiveSigningProviderInterface&MockObject
 	 */
-	private SigningProviderFactory $providerFactory;
+	private ActiveSigningProviderInterface $providerFactory;
 
 	/**
 	 * Dispatcher mock used for re-emitting typed filinq events.
@@ -128,7 +127,7 @@ final class SigningTaskListenerTest extends TestCase {
 	protected function setUp(): void {
 		parent::setUp();
 
-		$this->providerFactory = $this->createMock(SigningProviderFactory::class);
+		$this->providerFactory = $this->createMock(ActiveSigningProviderInterface::class);
 		$this->dispatcher = $this->createMock(IEventDispatcher::class);
 		$this->settingsService = $this->createMock(SettingsService::class);
 		$this->objectService = $this->createMock(ObjectService::class);
@@ -208,11 +207,9 @@ final class SigningTaskListenerTest extends TestCase {
 	 * @return void
 	 */
 	public function testEnabledTransitionDispatchesPendingAndInvokesProvider(): void {
-		$provider = $this->createMock(SigningProviderInterface::class);
-		$provider->method('getIdentifier')->willReturn('native');
 		$this->providerFactory->expects($this->once())
-			->method('getActiveProvider')
-			->willReturn($provider);
+			->method('getActiveProviderIdentifier')
+			->willReturn('native');
 
 		$this->dispatcher->expects($this->once())
 			->method('dispatchTyped')
@@ -247,7 +244,7 @@ final class SigningTaskListenerTest extends TestCase {
 	 */
 	public function testTransitionOfAlreadyEnabledTaskIsIgnored(): void {
 		$this->dispatcher->expects($this->never())->method('dispatchTyped');
-		$this->providerFactory->expects($this->never())->method('getActiveProvider');
+		$this->providerFactory->expects($this->never())->method('getActiveProviderIdentifier');
 
 		$event = new TaskTransitionedEvent(
 			task: $this->makeTask(state: 'enabled'),
@@ -313,7 +310,7 @@ final class SigningTaskListenerTest extends TestCase {
 	 */
 	public function testForeignAnchorObjectIsIgnored(): void {
 		$this->dispatcher->expects($this->never())->method('dispatchTyped');
-		$this->providerFactory->expects($this->never())->method('getActiveProvider');
+		$this->providerFactory->expects($this->never())->method('getActiveProviderIdentifier');
 
 		$event = new TaskTransitionedEvent(
 			task: $this->makeTask(state: 'enabled', objectUuid: 'someone-elses-object'),
