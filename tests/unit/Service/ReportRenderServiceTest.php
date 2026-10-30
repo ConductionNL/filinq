@@ -350,4 +350,75 @@ class ReportRenderServiceTest extends TestCase {
 		$this->assertEquals(1, $result['failures'][0]['index']);
 
 	}//end testRenderBatchContinuesAfterOneItemFails()
+	/**
+	 * The stored ZIP holds one PDF per rendered item, named after the slug and
+	 * the item's position, under the requested user and the report folder; a
+	 * failed item is logged and reported with its error, and no temp file stays.
+	 *
+	 * @return void
+	 */
+	public function testRenderBatchStoresOneZipWithOnePdfPerRenderedItem(): void {
+		$this->slugResolver->expects($this->once())
+			->method('resolve')
+			->with('learniq', 'report card!', 'school-a')
+			->willReturn(self::TEMPLATE);
+		$this->renderPipeline = $this->createMock(DocumentRenderPipeline::class);
+		$this->renderPipeline->method('renderWithHuisstijl')
+			->willReturnCallback(static function (string $templateContent, array $data): array {
+				if (($data['fail'] ?? false) === true) {
+					throw new Exception('bad data for this item');
+				}
+
+				return ['html' => '<h1>' . $data['a'] . '</h1>', 'warnings' => []];
+			});
+		$this->renderPipeline->method('buildPdfOptions')->willReturn([]);
+		$this->renderPipeline->method('produceOutput')
+			->willReturnCallback(static fn (string $htmlContent): string => '%PDF ' . $htmlContent);
+
+		$stored = [];
+		$this->storageService->method('store')
+			->willReturnCallback(static function (string $userId, string $targetPath, string $filename, string $content) use (&$stored): array {
+				$stored = [$userId, $targetPath, $filename, $content];
+				return ['fileId' => 5, 'path' => '/x', 'name' => $filename, 'size' => strlen($content)];
+			});
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())
+			->method('warning')
+			->with($this->stringContains('Batch item'), ['index' => 1, 'msg' => 'bad data for this item']);
+		$service = new ReportRenderService(
+			$this->slugResolver,
+			$this->renderPipeline,
+			$this->pdfa3Service,
+			$this->storageService,
+			$this->appConfig,
+			$logger
+		);
+		$tempBefore = glob(sys_get_temp_dir() . '/filinq_report_batch_*');
+
+		$result = $service->renderBatch(
+			'report card!',
+			'school-a',
+			[['data' => ['a' => 'one']], ['data' => ['fail' => true]], ['data' => ['a' => 'three']]],
+			['userId' => 'teacher']
+		);
+
+		$this->assertSame(['documentRef' => '5', 'count' => 2, 'failures' => [['index' => 1, 'error' => 'bad data for this item']]], $result);
+		$this->assertSame(['teacher', 'DocuDesk/Rendered Reports'], [$stored[0], $stored[1]]);
+		$this->assertMatchesRegularExpression('/^report-card--[0-9a-f]+\.zip$/', $stored[2]);
+		$this->assertSame($tempBefore, glob(sys_get_temp_dir() . '/filinq_report_batch_*'));
+
+		$zipPath = tempnam(sys_get_temp_dir(), 'rrs-test');
+		file_put_contents($zipPath, $stored[3]);
+		$zip = new \ZipArchive();
+		$this->assertTrue($zip->open($zipPath));
+		$entries = [];
+		for ($i = 0; $i < $zip->numFiles; $i++) {
+			$name = (string)$zip->getNameIndex($i);
+			$entries[preg_replace('/-[0-9a-f]+\.pdf$/', '.pdf', $name)] = $zip->getFromName($name);
+		}
+		$zip->close();
+		unlink($zipPath);
+		$this->assertSame(['report-card--1.pdf' => '%PDF <h1>one</h1>', 'report-card--3.pdf' => '%PDF <h1>three</h1>'], $entries);
+
+	}//end testRenderBatchStoresOneZipWithOnePdfPerRenderedItem()
 }//end class
