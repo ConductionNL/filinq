@@ -22,11 +22,10 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\EntitySearch;
 
-use OCA\Filinq\Kernel\AppIdentity;
+use OCA\Filinq\Service\AdmitsConfiguredGroups;
 use OCA\Filinq\Exception\EntitySearchRefusedException;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
-use Throwable;
 
 /**
  * Admins, plus the groups in `entity_search.allowed_groups` (a JSON list,
@@ -38,6 +37,7 @@ use Throwable;
  * refuses everyone, admins included: a broken setting never widens access.
  */
 class EntitySearchGate {
+	use AdmitsConfiguredGroups;
 
 	/**
 	 * The app setting that names the entity search groups.
@@ -73,7 +73,7 @@ class EntitySearchGate {
 	 * @spec openspec/changes/archive/2026-09-29-entity-search/tasks.md#task-2.3
 	 */
 	public function assertMaySearch(string $userId): void {
-		$groups = $this->groups();
+		$groups = $this->configuredGroups(key: self::CONFIG_KEY, default: '[]');
 		if ($groups === null) {
 			throw new EntitySearchRefusedException(
 				reason: EntitySearchRefusedException::REASON_CONFIG_UNREADABLE,
@@ -85,14 +85,8 @@ class EntitySearchGate {
 			throw new EntitySearchRefusedException(reason: EntitySearchRefusedException::REASON_NOT_ALLOWED, message: 'Only a signed-in user may search.');
 		}
 
-		if ($this->groupManager->isAdmin($userId) === true) {
+		if ($this->isAdminOrMember(userId: $userId, groups: $groups) === true) {
 			return;
-		}
-
-		foreach ($groups as $group) {
-			if ($this->groupManager->isInGroup($userId, $group) === true) {
-				return;
-			}
 		}
 
 		throw new EntitySearchRefusedException(
@@ -115,36 +109,4 @@ class EntitySearchGate {
 		return ($userId !== '' && $this->groupManager->isAdmin($userId) === true);
 
 	}//end isAdmin()
-
-	/**
-	 * The configured groups, or null when the setting does not parse.
-	 *
-	 * @return array<int, string>|null The groups.
-	 */
-	private function groups(): ?array {
-		try {
-			$raw = $this->appConfig->getValueString(AppIdentity::APP_ID, self::CONFIG_KEY, '[]');
-			$decoded = json_decode(json: $raw, associative: true, flags: JSON_THROW_ON_ERROR);
-		} catch (Throwable) {
-			return null;
-		}
-
-		if (is_array($decoded) === false || array_is_list($decoded) === false) {
-			return null;
-		}
-
-		$groups = [];
-		foreach ($decoded as $group) {
-			if (is_string($group) === false) {
-				return null;
-			}
-
-			if (trim($group) !== '') {
-				$groups[] = trim($group);
-			}
-		}
-
-		return $groups;
-
-	}//end groups()
 }//end class
