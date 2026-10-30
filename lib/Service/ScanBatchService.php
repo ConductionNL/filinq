@@ -33,6 +33,7 @@ namespace OCA\Filinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\Filinq\Event\IntakeDocumentReceivedEvent;
+use OCA\Filinq\Exception\ScanSplitFailedException;
 use OCA\Filinq\Kernel\Contracts\ScanBatchServiceInterface;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Files\File;
@@ -119,65 +120,99 @@ class ScanBatchService implements ScanBatchServiceInterface {
 	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function split(array $batch, array $profile, File $file, Folder $target): array {
-		$uuid = (string)($batch['uuid'] ?? '');
 		$mode = $this->mode(profile: $profile);
 
+		try {
+			$pages = $this->readPages(file: $file, mode: $mode);
+			$batch['pageCount'] = count($pages);
+			$segments = $this->segmentsOf(pages: $pages, mode: $mode, profile: $profile);
+			$this->requireSegments(pages: $pages, segments: $segments);
+			$delivery = new ScanDelivery(scannerId: (string)($batch['scannerId'] ?? ($profile['id'] ?? '')), target: $target);
+			$batch['segments'] = $this->deliverAll(segments: $segments, delivery: $delivery);
+		} catch (ScanSplitFailedException $e) {
+			return $this->fail(batch: $batch, reason: $e->getMessage());
+		}
+
+		$batch['status'] = self::STATUS_SPLIT;
+
+		return $this->batches->save(batch: $batch, uuid: (string)($batch['uuid'] ?? ''));
+	}//end split()
+
+	/**
+	 * Read the batch page by page.
+	 *
+	 * @param File $file The batch file.
+	 * @param string $mode The separator mode.
+	 *
+	 * @return array<int, string> The pages, in order.
+	 *
+	 * @throws ScanSplitFailedException When no page can be read, or separators cannot be seen in QR mode.
+	 */
+	private function readPages(File $file, string $mode): array {
 		if ($mode === self::MODE_QR && $this->pages->isAvailable() === false) {
 			// FAIL, do not deliver. Without a reader every page reads empty,
 			// every separator goes unseen, and a forty-page batch would arrive
 			// as one document that nobody has any reason to look at twice.
-			return $this->fail(
-				uuid: $uuid,
-				batch: $batch,
-				reason: 'This instance cannot read text off a scanned page, so the separator sheets in this batch could not be seen. Nothing was delivered.'
+			throw new ScanSplitFailedException(
+				message: 'This instance cannot read text off a scanned page, so the separator sheets in this batch could not be seen. Nothing was delivered.'
 			);
 		}
 
 		try {
-			$pages = $this->pages->pages(batch: (string)$file->getContent());
+			return $this->pages->pages(batch: (string)$file->getContent());
 		} catch (Throwable $e) {
-			return $this->fail(uuid: $uuid, batch: $batch, reason: $e->getMessage());
+			throw new ScanSplitFailedException(message: $e->getMessage(), code: 0, previous: $e);
 		}
 
-		$batch['pageCount'] = count($pages);
+	}//end readPages()
+
+	/**
+	 * Refuse a batch without pages, or one with nothing between its separators.
+	 *
+	 * @param array<int, string> $pages The pages.
+	 * @param array<int, array<string, mixed>> $segments The segments cut from them.
+	 *
+	 * @return void
+	 *
+	 * @throws ScanSplitFailedException When there is nothing to deliver.
+	 */
+	private function requireSegments(array $pages, array $segments): void {
 		if ($pages === []) {
-			return $this->fail(uuid: $uuid, batch: $batch, reason: 'The batch holds no pages.');
+			throw new ScanSplitFailedException(message: 'The batch holds no pages.');
 		}
 
-		$segments = $this->segmentsOf(pages: $pages, mode: $mode, profile: $profile);
 		if ($segments === []) {
-			return $this->fail(
-				uuid: $uuid,
-				batch: $batch,
-				reason: 'Every page in this batch is a separator, so there is nothing between them to deliver.'
-			);
+			throw new ScanSplitFailedException(message: 'Every page in this batch is a separator, so there is nothing between them to deliver.');
 		}
 
+	}//end requireSegments()
+
+	/**
+	 * Write and announce every segment, in order.
+	 *
+	 * @param array<int, array<string, mixed>> $segments The segments.
+	 * @param ScanDelivery $delivery The scanner and the target folder.
+	 *
+	 * @return array<int, array<string, mixed>> What the batch records about each segment.
+	 *
+	 * @throws ScanSplitFailedException When a segment cannot be written; it names the segment.
+	 */
+	private function deliverAll(array $segments, ScanDelivery $delivery): array {
 		$written = [];
 		foreach ($segments as $index => $segment) {
 			try {
-				$written[] = $this->deliver(
-					segment: $segment,
-					index: $index,
-					batch: $batch,
-					profile: $profile,
-					target: $target
-				);
+				$written[] = $this->deliver(segment: $segment + ['position' => $index], delivery: $delivery);
 			} catch (Throwable $e) {
-				return $this->fail(
-					uuid: $uuid,
-					batch: $batch,
-					reason: 'Segment ' . ($index + 1) . ' could not be written: ' . $e->getMessage()
+				throw new ScanSplitFailedException(
+					message: 'Segment ' . ($index + 1) . ' could not be written: ' . $e->getMessage(),
+					code: 0,
+					previous: $e
 				);
 			}
 		}
 
-		$batch['segments'] = $written;
-		$batch['status'] = self::STATUS_SPLIT;
-
-		return $this->batches->save(batch: $batch, uuid: $uuid);
-
-	}//end split()
+		return $written;
+	}//end deliverAll()
 
 	/**
 	 * Cut a list of pages into segments at the separators.
@@ -195,12 +230,13 @@ class ScanBatchService implements ScanBatchServiceInterface {
 	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function segmentsOf(array $pages, string $mode, array $profile): array {
+		$rule = new SeparatorRule(mode: $mode, inkThreshold: (int)($profile['inkThreshold'] ?? 4096));
 		$segments = [];
 		$current = ['pages' => [], 'firstPage' => 1, 'caseNumber' => ''];
 		$pending = '';
 
 		foreach ($pages as $index => $page) {
-			$separator = $this->separatorOf(page: $page, mode: $mode, profile: $profile);
+			$separator = $this->separatorOf(page: $page, rule: $rule);
 			if ($separator !== null) {
 				if ($current['pages'] !== []) {
 					$segments[] = $current;
@@ -224,7 +260,6 @@ class ScanBatchService implements ScanBatchServiceInterface {
 		}
 
 		return $segments;
-
 	}//end segmentsOf()
 
 	/**
@@ -232,17 +267,15 @@ class ScanBatchService implements ScanBatchServiceInterface {
 	 * an ordinary page.
 	 *
 	 * @param string $page The page as PDF bytes.
-	 * @param string $mode The separator mode.
-	 * @param array<string, mixed> $profile The scan profile.
+	 * @param SeparatorRule $rule The separator mode and ink threshold.
 	 *
 	 * @return string|null The case number the separator named, an empty string when it named none, or null for an ordinary page.
 	 *
 	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
-	private function separatorOf(string $page, string $mode, array $profile): ?string {
-		if ($mode === self::MODE_BLANK) {
-			$threshold = (int)($profile['inkThreshold'] ?? 4096);
-			if ($this->pages->weight(page: $page) > $threshold) {
+	private function separatorOf(string $page, SeparatorRule $rule): ?string {
+		if ($rule->mode === self::MODE_BLANK) {
+			if ($this->pages->weight(page: $page) > $rule->inkThreshold) {
 				return null;
 			}
 
@@ -254,17 +287,13 @@ class ScanBatchService implements ScanBatchServiceInterface {
 		}
 
 		return $this->separators->readPayload(payload: $this->pages->text(page: $page));
-
 	}//end separatorOf()
 
 	/**
 	 * Write one segment and announce it to the intake inbox.
 	 *
-	 * @param array<string, mixed> $segment The segment.
-	 * @param int $index Its position in the batch, from 0.
-	 * @param array<string, mixed> $batch The batch it came from.
-	 * @param array<string, mixed> $profile The scan profile.
-	 * @param Folder $target The folder it is written to.
+	 * @param array<string, mixed> $segment The segment, with its `position` in the batch from 0.
+	 * @param ScanDelivery $delivery The scanner and the folder it is written to.
 	 *
 	 * @return array<string, mixed> What the batch records about this segment.
 	 *
@@ -272,17 +301,17 @@ class ScanBatchService implements ScanBatchServiceInterface {
 	 *
 	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
-	private function deliver(array $segment, int $index, array $batch, array $profile, Folder $target): array {
+	private function deliver(array $segment, ScanDelivery $delivery): array {
 		$document = $this->documents->create();
 		foreach ($segment['pages'] as $page) {
 			$this->documents->appendPages(document: $document, pdf: $page);
 		}
 
-		$scannerId = (string)($batch['scannerId'] ?? ($profile['id'] ?? ''));
-		$name = $target->getNonExistingName(
-			sprintf('scan-%s-%02d.pdf', $scannerId, ($index + 1))
+		$scannerId = $delivery->scannerId;
+		$name = $delivery->target->getNonExistingName(
+			sprintf('scan-%s-%02d.pdf', $scannerId, ($segment['position'] + 1))
 		);
-		$file = $target->newFile($name, $this->documents->output(document: $document));
+		$file = $delivery->target->newFile($name, $this->documents->output(document: $document));
 
 		// The event carries the case number the SEPARATOR named, as a source
 		// reference. It is a suggestion for the clerk, never an assignment.
@@ -321,7 +350,6 @@ class ScanBatchService implements ScanBatchServiceInterface {
 	/**
 	 * Stop a batch, saying why, having delivered nothing.
 	 *
-	 * @param string $uuid The batch.
 	 * @param array<string, mixed> $batch The batch as it stands.
 	 * @param string $reason What went wrong.
 	 *
@@ -329,7 +357,8 @@ class ScanBatchService implements ScanBatchServiceInterface {
 	 *
 	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
-	private function fail(string $uuid, array $batch, string $reason): array {
+	private function fail(array $batch, string $reason): array {
+		$uuid = (string)($batch['uuid'] ?? '');
 		$batch['status'] = self::STATUS_FAILED;
 		$batch['lastError'] = $reason;
 
@@ -339,7 +368,6 @@ class ScanBatchService implements ScanBatchServiceInterface {
 		);
 
 		return $this->batches->save(batch: $batch, uuid: $uuid);
-
 	}//end fail()
 
 	/**
@@ -358,6 +386,5 @@ class ScanBatchService implements ScanBatchServiceInterface {
 		}
 
 		return self::MODE_QR;
-
 	}//end mode()
 }//end class

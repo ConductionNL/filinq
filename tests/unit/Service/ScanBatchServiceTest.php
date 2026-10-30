@@ -105,6 +105,7 @@ class ScanBatchServiceTest extends TestCase {
 		array $texts,
 		bool $readerAvailable = true,
 		array $weights = [],
+		?\Throwable $readFails = null,
 	): ScanBatchService {
 		$pagesByBytes = [];
 		$pages = [];
@@ -116,7 +117,11 @@ class ScanBatchServiceTest extends TestCase {
 
 		$reader = $this->createMock(ScanPageReader::class);
 		$reader->method('isAvailable')->willReturn($readerAvailable);
-		$reader->method('pages')->willReturn($pages);
+		if ($readFails !== null) {
+			$reader->method('pages')->willThrowException($readFails);
+		} else {
+			$reader->method('pages')->willReturn($pages);
+		}
 		$reader->method('text')->willReturnCallback(
 			static fn (string $page): string => (string)($pagesByBytes[$page]['text'] ?? '')
 		);
@@ -575,4 +580,118 @@ class ScanBatchServiceTest extends TestCase {
 		$this->assertTrue($result->isValid(), 'scanBatch payload refused: ' . $message);
 
 	}//end assertValidScanBatch()
+
+	/**
+	 * A split stores exactly this batch and announces every segment with
+	 * exactly these values; the profile names the scanner when the batch does not.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 */
+	public function testASplitStoresAndAnnouncesExactlyThis(): void {
+		$service = $this->service(texts: ['een', 'twee', 'filinq:sep:v1:postkamer:2026-0042', 'drie']);
+
+		$batch = $service->split(
+			batch: ['uuid' => 'batch-7', 'status' => 'received'],
+			profile: ['id' => 'balie', 'separatorMode' => 'qr'],
+			file: $this->batchFile(),
+			target: $this->targetFolder()
+		);
+
+		$this->assertSame(
+			[
+				'uuid' => 'batch-7',
+				'status' => 'split',
+				'pageCount' => 4,
+				'segments' => [
+					['fileId' => 9001, 'name' => 'scan-balie-01.pdf', 'firstPage' => 1, 'pages' => 2, 'sourceRef' => ''],
+					['fileId' => 9002, 'name' => 'scan-balie-02.pdf', 'firstPage' => 4, 'pages' => 1, 'sourceRef' => '2026-0042'],
+				],
+			],
+			$batch
+		);
+		$this->assertCount(1, $this->stored);
+		$announced = array_map(
+			static fn (IntakeDocumentReceivedEvent $event): array => [$event->getFileId(), $event->getFileName(), $event->getSubject(), $event->getSender(), $event->getSourceRef()],
+			$this->dispatched
+		);
+		$this->assertSame(
+			[
+				[9001, 'scan-balie-01.pdf', 'scan-balie-01.pdf', 'balie', ''],
+				[9002, 'scan-balie-02.pdf', 'scan-balie-02.pdf', 'balie', '2026-0042'],
+			],
+			$announced
+		);
+
+	}//end testASplitStoresAndAnnouncesExactlyThis()
+
+	/**
+	 * Every way a split fails stores the batch once, failed, with exactly this reason.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 */
+	public function testEveryFailureStoresExactlyThisReason(): void {
+		$cases = [
+			'no reader' => [
+				$this->service(texts: ['een'], readerAvailable: false),
+				['uuid' => 'b', 'status' => 'failed', 'lastError' => 'This instance cannot read text off a scanned page, so the separator sheets in this batch could not be seen. Nothing was delivered.'],
+			],
+			'unreadable' => [
+				$this->service(texts: ['een'], readFails: new \RuntimeException('not a PDF')),
+				['uuid' => 'b', 'status' => 'failed', 'lastError' => 'not a PDF'],
+			],
+			'empty' => [
+				$this->service(texts: []),
+				['uuid' => 'b', 'pageCount' => 0, 'status' => 'failed', 'lastError' => 'The batch holds no pages.'],
+			],
+			'only separators' => [
+				$this->service(texts: ['filinq:sep:v1:postkamer', 'filinq:sep:v1:postkamer']),
+				['uuid' => 'b', 'pageCount' => 2, 'status' => 'failed', 'lastError' => 'Every page in this batch is a separator, so there is nothing between them to deliver.'],
+			],
+		];
+
+		foreach ($cases as $name => [$service, $expected]) {
+			$this->stored = [];
+			$batch = $service->split(batch: ['uuid' => 'b'], profile: ['id' => 'p'], file: $this->batchFile(), target: $this->targetFolder());
+			$this->assertSame($expected, $batch, $name);
+			$this->assertSame([$expected], $this->stored, $name);
+		}
+
+	}//end testEveryFailureStoresExactlyThisReason()
+
+	/**
+	 * A segment that cannot be written fails the batch, naming the segment, and records no segments.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 */
+	public function testASegmentThatCannotBeWrittenFailsTheBatch(): void {
+		$service = $this->service(texts: ['een', 'filinq:sep:v1:postkamer', 'twee']);
+		$folder = $this->createMock(Folder::class);
+		$folder->method('getNonExistingName')->willReturnArgument(0);
+		$calls = 0;
+		$folder->method('newFile')->willReturnCallback(
+			function (string $name) use (&$calls): File {
+				$calls++;
+				if ($calls === 2) {
+					throw new \RuntimeException('disk full');
+				}
+
+				$file = $this->createMock(File::class);
+				$file->method('getId')->willReturn(42);
+
+				return $file;
+			}
+		);
+
+		$batch = $service->split(batch: ['uuid' => 'b', 'scannerId' => 's'], profile: [], file: $this->batchFile(), target: $folder);
+
+		$this->assertSame(['uuid' => 'b', 'scannerId' => 's', 'pageCount' => 3, 'status' => 'failed', 'lastError' => 'Segment 2 could not be written: disk full'], $batch);
+		$this->assertCount(1, $this->dispatched);
+
+	}//end testASegmentThatCannotBeWrittenFailsTheBatch()
 }//end class
