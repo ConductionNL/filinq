@@ -1421,6 +1421,19 @@ class SigningServiceTest extends TestCase {
 	}//end testCancelRequestTransitionsToCancel()
 
 	/**
+	 * cancelRequest() answers null for a request that does not exist, and writes nothing.
+	 *
+	 * @return void
+	 */
+	public function testCancelRequestAnswersNullForAMissingRequest(): void {
+		$this->objectService->method('find')->willReturn(null);
+		$this->objectService->expects($this->never())->method('saveObject');
+
+		$this->assertNull($this->service->cancelRequest(requestId: 'req-404'));
+
+	}//end testCancelRequestAnswersNullForAMissingRequest()
+
+	/**
 	 * cancelRequest() throws when the request is in a terminal state.
 	 *
 	 * @return void
