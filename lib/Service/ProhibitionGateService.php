@@ -146,22 +146,7 @@ class ProhibitionGateService {
 	 * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-7
 	 */
 	public function run(int $fileId, array $requestEntities, array $overrides, string $userId): void {
-		$policyService = $this->resolvePolicyService(fileId: $fileId);
-		if ($policyService === null) {
-			return;
-		}
-
-		$rawEntities = $this->loadFileEntities(fileId: $fileId);
-		if ($rawEntities === null) {
-			return;
-		}
-
-		// Build prohibition matches: [ruleId, ruleName, entityId, entityRelationId, confidence, entityValue].
-		$matches = $this->buildProhibitionMatches(
-			rawEntities: $rawEntities,
-			policyService: $policyService
-		);
-
+		$matches = $this->matchesFor(fileId: $fileId);
 		if ($matches === []) {
 			return;
 		}
@@ -204,6 +189,35 @@ class ProhibitionGateService {
 		}
 
 	}//end run()
+
+	/**
+	 * The file's prohibition matches, or none when the gate fails open.
+	 *
+	 * @param int $fileId Nextcloud file ID.
+	 *
+	 * @return array<int, array<string, mixed>> Match entries with ruleId, ruleName, entityId,
+	 *                                          entityRelationId, confidence, entityValue.
+	 *
+	 * @throws ProhibitionGateException When the gate is fail-closed and a backend is unavailable.
+	 */
+	private function matchesFor(int $fileId): array {
+		$policyService = $this->resolvePolicyService(fileId: $fileId);
+		if ($policyService === null) {
+			return [];
+		}
+
+		$rawEntities = $this->loadFileEntities(fileId: $fileId);
+		if ($rawEntities === null) {
+			return [];
+		}
+
+		// Build prohibition matches: [ruleId, ruleName, entityId, entityRelationId, confidence, entityValue].
+		return $this->buildProhibitionMatches(
+			rawEntities: $rawEntities,
+			policyService: $policyService
+		);
+
+	}//end matchesFor()
 
 	/**
 	 * Move every release to the rejected list unless the user may override.
