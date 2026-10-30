@@ -1128,6 +1128,94 @@ class SigningServiceTest extends TestCase {
 	}//end testCompletingSignatureStoresArtifactAndSetsRef()
 
 	/**
+	 * A partial signature saves the request IN_PROGRESS and stops reading signers at the first unsigned one.
+	 *
+	 * @return void
+	 */
+	public function testAPartialSignatureMovesTheRequestInProgressAndStopsAtTheFirstUnsigned(): void {
+		$request = [
+			'id' => 'req-001',
+			'status' => 'PENDING',
+			'signatureLevel' => 'SES',
+			'provider' => 'native',
+			'initiatorUserId' => 'alice',
+			'documentFileId' => '42',
+			'signerIds' => ['signer-001', 'signer-002'],
+		];
+		$found = [];
+		$rows  = [
+			'req-001' => $request,
+			'signer-001' => ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'alice', 'status' => 'PENDING'],
+			'signer-002' => ['id' => 'signer-002', 'signingRequestId' => 'req-001', 'userId' => 'bob', 'status' => 'PENDING'],
+		];
+		$this->objectService->method('find')->willReturnCallback(
+			static function (string $id) use (&$found, $rows): ?array {
+				$found[] = $id;
+				return ($rows[$id] ?? null);
+			}
+		);
+		$saved = [];
+		$this->objectService->method('saveObject')->willReturnCallback(
+			static function (array $object) use (&$saved): array {
+				$saved[] = [($object['id'] ?? ''), ($object['status'] ?? '')];
+				return $object;
+			}
+		);
+
+		$this->service->sign(requestId: 'req-001', signerId: 'signer-001');
+
+		$this->assertNotContains('signer-002', $found);
+		$this->assertSame(['req-001', 'IN_PROGRESS'], end($saved));
+		$this->assertNotContains(['req-001', 'COMPLETED'], $saved);
+
+	}//end testAPartialSignatureMovesTheRequestInProgressAndStopsAtTheFirstUnsigned()
+
+	/**
+	 * A single-signer request still PENDING is saved IN_PROGRESS before it is saved COMPLETED.
+	 *
+	 * @return void
+	 */
+	public function testASingleSignerRequestStepsThroughInProgressToCompleted(): void {
+		$request = [
+			'id' => 'req-001',
+			'status' => 'PENDING',
+			'signatureLevel' => 'SES',
+			'provider' => 'native',
+			'initiatorUserId' => 'alice',
+			'documentFileId' => '42',
+			'signerIds' => ['signer-001'],
+		];
+		$signerPending = ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'alice', 'status' => 'PENDING'];
+		$signerSigned  = ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'alice', 'status' => 'SIGNED'];
+		$this->objectService->method('find')->willReturnOnConsecutiveCalls($signerPending, $request, $signerSigned, $request);
+
+		$requestStatuses = [];
+		$this->objectService->method('saveObject')->willReturnCallback(
+			static function (array $object) use (&$requestStatuses): array {
+				if (($object['id'] ?? '') === 'req-001') {
+					$requestStatuses[] = ($object['status'] ?? '');
+				}
+
+				return $object;
+			}
+		);
+
+		$provider = $this->createMock(\OCA\Filinq\Service\Signing\SigningProviderInterface::class);
+		$provider->method('produceSignedArtifact')->willReturn('SIGNED-BYTES');
+		$this->providerFactory->method('getProvider')->willReturn($provider);
+		$file = $this->createMock(\OCP\Files\File::class);
+		$file->method('getContent')->willReturn('original-bytes');
+		$folder = $this->createMock(\OCP\Files\Folder::class);
+		$folder->method('getById')->willReturn([$file]);
+		$this->userFolder = $folder;
+
+		$this->service->sign(requestId: 'req-001', signerId: 'signer-001');
+
+		$this->assertSame(['IN_PROGRESS', 'COMPLETED'], $requestStatuses);
+
+	}//end testASingleSignerRequestStepsThroughInProgressToCompleted()
+
+	/**
 	 * Honest-completion gate: when the provider cannot produce an artifact the
 	 * completing signature fails and the request is NOT marked COMPLETED.
 	 *
