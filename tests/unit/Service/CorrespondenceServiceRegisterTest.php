@@ -48,6 +48,7 @@ use Psr\Log\LoggerInterface;
  * @link     https://www.filinq.app
  *
  * @covers \OCA\Filinq\Service\CorrespondenceService
+ * @covers \OCA\Filinq\Service\CorrespondenceRequest
  * @uses   \OCA\Filinq\BackgroundJob\JobQueue
  *
  * @psalm-suppress PropertyNotSetInConstructor
