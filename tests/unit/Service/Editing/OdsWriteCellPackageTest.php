@@ -103,4 +103,21 @@ class OdsWriteCellPackageTest extends TestCase {
 		$this->assertSame('of:=[.B2]*40', $xpath->evaluate('string(//table:table-row-group/table:table-row[1]/table:table-cell[3]/@table:formula)'));
 
 	}//end testAWriteKeepsTheSheetAndRowMarkup()
+	/**
+	 * Reading the same package addresses the grouped rows as rows 2 and 3.
+	 *
+	 * @return void
+	 */
+	public function testTheGroupedRowsReadAtTheirAddresses(): void {
+		$cells = (new SpreadsheetCodec(new PackagePartIo()))->readCells(
+			packageBytes: (string)file_get_contents(dirname(__DIR__, 3) . '/fixtures/ods/budget.ods'),
+			extension: 'ods'
+		);
+
+		$this->assertSame(
+			['Begroting!A1' => 'Naam', 'Begroting!B1' => 'Uurtarief', 'Begroting!C1' => 'Totaal', 'Begroting!A2' => 'Ontwikkelaar', 'Begroting!B2' => '95', 'Begroting!C2' => '3800'],
+			array_column($cells, 'value', 'cell')
+		);
+
+	}//end testTheGroupedRowsReadAtTheirAddresses()
 }//end class
