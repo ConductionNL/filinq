@@ -38,6 +38,18 @@ use RuntimeException;
 class OdsSpreadsheetCodec implements SpreadsheetFamilyCodec {
 
 	/**
+	 * A named sheet: [whole, attributes, name, body]. The name must be followed by
+	 * whitespace, so `table:table-row` and its kin never match.
+	 */
+	private const SHEET_PATTERN = '/<table:table(\s[^>]*?table:name="([^"]*)"[^>]*?)(?<!\/)>(.*?)<\/table:table>/s';
+
+	/**
+	 * A row: [whole, attributes, cells]. `table:table-row-group` and
+	 * `table:table-rows` do not match, nor does a self-closing row.
+	 */
+	private const ROW_PATTERN = '/<table:table-row(\s[^>]*?)?(?<!\/)>(.*?)<\/table:table-row>/s';
+
+	/**
 	 * Whether this codec handles an extension.
 	 *
 	 * @param string $extension The lower-case file extension.
@@ -78,15 +90,15 @@ class OdsSpreadsheetCodec implements SpreadsheetFamilyCodec {
 	public function readCells(string $xml, string $packageBytes): array {
 		$cells = [];
 
-		preg_match_all('/<table:table\b[^>]*table:name="([^"]*)"(.*?)<\/table:table>/s', $xml, $tables, PREG_SET_ORDER);
+		preg_match_all(self::SHEET_PATTERN, $xml, $tables, PREG_SET_ORDER);
 		foreach ($tables as $table) {
-			$sheet = $table[1];
-			preg_match_all('/<table:table-row\b[^>]*>(.*?)<\/table:table-row>/s', $table[2], $rows, PREG_SET_ORDER);
+			$sheet = $table[2];
+			preg_match_all(self::ROW_PATTERN, $table[3], $rows, PREG_SET_ORDER);
 
 			$rowNumber = 0;
 			foreach ($rows as $row) {
 				$rowNumber++;
-				foreach ($this->rowCells(sheet: $sheet, rowNumber: $rowNumber, row: $row[1]) as $cell) {
+				foreach ($this->rowCells(sheet: $sheet, rowNumber: $rowNumber, row: $row[2]) as $cell) {
 					$cells[] = $cell;
 				}
 			}
@@ -203,7 +215,7 @@ class OdsSpreadsheetCodec implements SpreadsheetFamilyCodec {
 		];
 
 		$xml = preg_replace_callback(
-			'/<table:table\b[^>]*table:name="([^"]*)"(.*?)<\/table:table>/s',
+			self::SHEET_PATTERN,
 			function (array $table) use (&$write): string {
 				return $this->writeIntoTable(table: $table, write: $write);
 			},
@@ -222,30 +234,30 @@ class OdsSpreadsheetCodec implements SpreadsheetFamilyCodec {
 	/**
 	 * Rewrite one sheet, numbering its rows from 1.
 	 *
-	 * @param array<int, string>   $table The sheet match: [whole, name, body].
+	 * @param array<int, string>   $table The sheet match: [whole, attributes, name, body].
 	 * @param array<string, mixed> $write The write in progress: target, value, rewritten, and the cursor.
 	 *
 	 * @return string The rewritten sheet.
 	 */
 	private function writeIntoTable(array $table, array &$write): string {
-		$write['sheet'] = $table[1];
+		$write['sheet'] = $table[2];
 		$write['row'] = 0;
 
 		$body = preg_replace_callback(
-			'/<table:table-row\b[^>]*>(.*?)<\/table:table-row>/s',
+			self::ROW_PATTERN,
 			function (array $row) use (&$write): string {
 				return $this->writeIntoRow(row: $row, write: $write);
 			},
-			$table[2]
+			$table[3]
 		);
 
-		return '<table:table table:name="' . $table[1] . '">' . $body . '</table:table>';
+		return '<table:table' . $table[1] . '>' . $body . '</table:table>';
 	}//end writeIntoTable()
 
 	/**
 	 * Rewrite one row, counting its columns from 1.
 	 *
-	 * @param array<int, string>   $row   The row match: [whole, cells].
+	 * @param array<int, string>   $row   The row match: [whole, attributes, cells].
 	 * @param array<string, mixed> $write The write in progress.
 	 *
 	 * @return string The rewritten row.
@@ -259,10 +271,10 @@ class OdsSpreadsheetCodec implements SpreadsheetFamilyCodec {
 			function (array $match) use (&$write): string {
 				return $this->writeIntoCell(match: $match, write: $write);
 			},
-			$row[1]
+			$row[2]
 		);
 
-		return '<table:table-row>' . $cells . '</table:table-row>';
+		return '<table:table-row' . $row[1] . '>' . $cells . '</table:table-row>';
 	}//end writeIntoRow()
 
 	/**
