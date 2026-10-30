@@ -115,7 +115,9 @@ class MountedLeafListenersTest extends TestCase {
 	 * @param string $id The leaf id.
 	 */
 	public function testIgnoresOtherEventsAndLogsAFailedRegistration(string $class, string $id): void {
-		$this->listener(class: $class)->handle(new Event());
+		$quiet = $this->createMock(LoggerInterface::class);
+		$quiet->expects($this->never())->method('warning');
+		$this->listener(class: $class, logger: $quiet)->handle(new Event());
 
 		$boom = new RuntimeException('catalogue closed');
 		$event = $this->createMock(RegisterLeafProvidersEvent::class);
