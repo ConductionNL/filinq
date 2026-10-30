@@ -636,11 +636,22 @@ class SigningService implements SigningServiceInterface {
 
 		$objectService = $this->settingsService->getObjectService();
 
-		// Load the request FIRST and gate the terminal-state status machine
-		// BEFORE any signer/request mutation (signing-trust-rebuild
-		// REQ-DDSTR-003, closing the #282 residual where decline() skipped
-		// isValidTransition() entirely — a COMPLETED/CANCELLED/EXPIRED
-		// request could still be flipped to DECLINED).
+		// Authorise the signer first, so someone who is not the signer learns
+		// neither whether the request exists nor what its status is.
+		['register' => $signerRegister, 'schema' => $signerSchema] = $this->requireSignerRecordBinding();
+
+		$signer = $this->actorResolver->loadAuthorisedSigner(
+			requestId: $requestId,
+			signerId: $signerId,
+			verifiedActor: $verifiedActor,
+			actorUserId: $actorUserId,
+			action: 'decline'
+		);
+
+		// Gate the terminal-state status machine BEFORE any signer/request
+		// mutation (signing-trust-rebuild REQ-DDSTR-003, closing the #282
+		// residual where decline() skipped isValidTransition() entirely — a
+		// COMPLETED/CANCELLED/EXPIRED request could still be flipped to DECLINED).
 		// Same latent defect as getRequest(): unconfigured, find() returns null
 		// and this reports "not found" for a request that exists.
 		['register' => $register, 'schema' => $schema] = $this->requireSigningRequestBinding();
@@ -654,16 +665,6 @@ class SigningService implements SigningServiceInterface {
 		if ($this->isValidTransition(currentStatus: $request['status'] ?? '', newStatus: 'DECLINED') === false) {
 			throw new RuntimeException('Cannot decline request in status: ' . ($request['status'] ?? 'unknown'));
 		}
-
-		['register' => $signerRegister, 'schema' => $signerSchema] = $this->requireSignerRecordBinding();
-
-		$signer = $this->actorResolver->loadAuthorisedSigner(
-			requestId: $requestId,
-			signerId: $signerId,
-			verifiedActor: $verifiedActor,
-			actorUserId: $actorUserId,
-			action: 'decline'
-		);
 
 		// The same identity gate as sign() (REQ-DDSIR-003), before any write.
 		$signer['identityEvidence'] = $this->assuranceGate->evidenceForAct(

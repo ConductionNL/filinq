@@ -1419,8 +1419,9 @@ class SigningServiceTest extends TestCase {
 			'id' => 'req-001',
 			'status' => 'COMPLETED',
 		];
+		$signerData = ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'alice', 'status' => 'PENDING'];
 
-		$this->objectService->method('find')->willReturn($requestData);
+		$this->stubFindById(rows: ['req-001' => $requestData, 'signer-001' => $signerData]);
 		// The gate must reject BEFORE any signer/request mutation.
 		$this->objectService->expects($this->never())->method('saveObject');
 
@@ -1452,7 +1453,7 @@ class SigningServiceTest extends TestCase {
 			'status' => 'PENDING',
 		];
 
-		$this->objectService->method('find')->willReturnOnConsecutiveCalls($requestData, $signerData);
+		$this->stubFindById(rows: ['req-001' => $requestData, 'signer-001' => $signerData]);
 		$this->objectService->method('saveObject')->willReturnArgument(0);
 
 		$this->auditService->expects($this->once())
@@ -1488,7 +1489,7 @@ class SigningServiceTest extends TestCase {
 			'status' => 'PENDING',
 		];
 
-		$this->objectService->method('find')->willReturnOnConsecutiveCalls($requestData, $signerData);
+		$this->stubFindById(rows: ['req-001' => $requestData, 'signer-001' => $signerData]);
 		$saved = [];
 		$this->objectService->method('saveObject')->willReturnCallback(
 			static function (array $object) use (&$saved): array {
@@ -1520,7 +1521,7 @@ class SigningServiceTest extends TestCase {
 			'status' => 'PENDING',
 		];
 
-		$this->objectService->method('find')->willReturnOnConsecutiveCalls($requestData, $signerData);
+		$this->stubFindById(rows: ['req-001' => $requestData, 'signer-001' => $signerData]);
 
 		$this->expectException(RuntimeException::class);
 		$this->expectExceptionMessage('does not belong to this signing request');
@@ -1528,6 +1529,56 @@ class SigningServiceTest extends TestCase {
 		$this->service->decline(requestId: 'req-001', signerId: 'signer-001', reason: 'no');
 
 	}//end testDeclineThrowsOnSignerRequestMismatch()
+
+	/**
+	 * Someone who is not the signer learns nothing about the request's status:
+	 * the signer check runs before the status check.
+	 *
+	 * @return void
+	 */
+	public function testDeclineByAnotherUserDoesNotRevealTheRequestStatus(): void {
+		$requestData = ['id' => 'req-001', 'status' => 'COMPLETED'];
+		$signerData = ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'bob', 'status' => 'PENDING'];
+		$this->stubFindById(rows: ['req-001' => $requestData, 'signer-001' => $signerData]);
+		$this->objectService->expects($this->never())->method('saveObject');
+
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessage('Not authorized to decline as this signer');
+
+		$this->service->decline(requestId: 'req-001', signerId: 'signer-001', reason: 'no');
+
+	}//end testDeclineByAnotherUserDoesNotRevealTheRequestStatus()
+
+	/**
+	 * Someone who is not the signer learns nothing about whether a request id
+	 * exists: an unknown request answers with the signer refusal too.
+	 *
+	 * @return void
+	 */
+	public function testDeclineByAnotherUserDoesNotRevealWhetherTheRequestExists(): void {
+		$signerData = ['id' => 'signer-001', 'signingRequestId' => 'req-404', 'userId' => 'bob', 'status' => 'PENDING'];
+		$this->stubFindById(rows: ['signer-001' => $signerData]);
+
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessage('Not authorized to decline as this signer');
+
+		$this->service->decline(requestId: 'req-404', signerId: 'signer-001', reason: 'no');
+
+	}//end testDeclineByAnotherUserDoesNotRevealWhetherTheRequestExists()
+
+	/**
+	 * Answer find() by object id, whatever order the service looks objects up in.
+	 *
+	 * @param array<string, array<string, mixed>> $rows The objects by id.
+	 *
+	 * @return void
+	 */
+	private function stubFindById(array $rows): void {
+		$this->objectService->method('find')->willReturnCallback(
+			static fn (string $id): ?array => ($rows[$id] ?? null)
+		);
+
+	}//end stubFindById()
 
 	/**
 	 * Provider/level honesty on the completion path (signing-trust-rebuild
@@ -1694,7 +1745,7 @@ class SigningServiceTest extends TestCase {
 	public function testDeclineIsGatedToo(): void {
 		$request = ['id' => 'req-001', 'status' => 'IN_PROGRESS', 'signatureLevel' => 'SES', 'requiredAssurance' => 'high'];
 		$signer = ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'alice', 'status' => 'PENDING'];
-		$this->objectService->method('find')->willReturnOnConsecutiveCalls($request, $signer);
+		$this->stubFindById(rows: ['req-001' => $request, 'signer-001' => $signer]);
 		$this->objectService->expects($this->never())->method('saveObject');
 
 		$this->expectException(StepUpRequiredException::class);
