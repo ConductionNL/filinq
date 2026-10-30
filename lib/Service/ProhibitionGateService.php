@@ -50,9 +50,10 @@ use Throwable;
  *
  * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-3
  *
- * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The fail-open and
- * fail-closed paths of each backend are one decision each; splitting them
- * across classes would hide the order in which the gate consults them.
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) WMC 50 at threshold 50 on
+ * 2026-10-30. The fail-open and fail-closed paths of each backend are one
+ * decision each; splitting them across classes would hide the order in which
+ * the gate consults them.
  */
 class ProhibitionGateService {
 	/**

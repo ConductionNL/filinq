@@ -194,7 +194,9 @@ class ProhibitionGateRunTraceTest extends TestCase {
 		$config->method('getValueString')->willReturnArgument(2);
 
 		$authority = $this->createMock(originalClassName: ProhibitionOverrideAuthority::class);
-		$authority->method('mayOverride')->willReturn($world['mayOverride'] ?? true);
+		$authority->method('mayOverride')->willReturnCallback(
+			static fn (string $userId): bool => $userId === 'anna' && ($world['mayOverride'] ?? true)
+		);
 
 		return new ProhibitionGateService(
 			logger: $logger,
