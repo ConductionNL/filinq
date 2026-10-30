@@ -114,7 +114,7 @@ class OdsRepeatedRowsTest extends TestCase {
 	public function testAWriteAfterTheRunChangesThatCellOnly(): void {
 		$cells = $this->read(package: $this->write(cell: 'Planning!B5', value: '120'));
 
-		$this->assertSame(['Planning!B5' => '120'] + self::CELLS, $cells);
+		$this->assertSame(array_replace(self::CELLS, ['Planning!B5' => '120']), $cells);
 
 	}//end testAWriteAfterTheRunChangesThatCellOnly()
 
@@ -145,7 +145,7 @@ class OdsRepeatedRowsTest extends TestCase {
 	public function testAWriteIntoAFilledRunChangesOneRowOfIt(): void {
 		$cells = $this->read(package: $this->write(cell: 'Planning!A7', value: 'Anders'));
 
-		$this->assertSame(['Planning!A7' => 'Anders'] + self::CELLS, $cells);
+		$this->assertSame(array_replace(self::CELLS, ['Planning!A7' => 'Anders']), $cells);
 
 	}//end testAWriteIntoAFilledRunChangesOneRowOfIt()
 
@@ -161,4 +161,20 @@ class OdsRepeatedRowsTest extends TestCase {
 		$this->assertSame('110', $cells['Planning!B5']);
 
 	}//end testARepeatedColumnAfterARunLandsInItsColumn()
+	/**
+	 * A run on another sheet is left whole by a write that shares its row number.
+	 *
+	 * @return void
+	 */
+	public function testARunOnAnotherSheetStaysWhole(): void {
+		$run = '<table:table-row table:number-rows-repeated="3"><table:table-cell table:number-columns-repeated="2"/></table:table-row>';
+		$xml = '<table:table table:name="Een">' . $run . '</table:table>'
+			. '<table:table table:name="Twee"><table:table-row><table:table-cell/></table:table-row>'
+			. '<table:table-row><table:table-cell/></table:table-row></table:table>';
+
+		$written = (new \OCA\Filinq\Service\Editing\OdsSpreadsheetCodec())->writeCell(xml: $xml, cell: 'Twee!A2', value: 'x');
+
+		$this->assertStringContainsString('<table:table table:name="Een">' . $run . '</table:table>', $written);
+
+	}//end testARunOnAnotherSheetStaysWhole()
 }//end class
