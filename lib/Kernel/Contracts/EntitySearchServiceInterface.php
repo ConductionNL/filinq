@@ -23,6 +23,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Kernel\Contracts;
 
 use OCA\Filinq\Exception\EntitySearchRefusedException;
+use OCA\Filinq\Kernel\EntitySearchQuery;
 
 /**
  * Contract of EntitySearchService.
@@ -66,12 +67,8 @@ interface EntitySearchServiceInterface {
 	/**
 	 * Entities matching the query, logged before they are returned.
 	 *
-	 * @param string $userId   The caller.
-	 * @param string $query    Case-insensitive substring of the value.
-	 * @param string $type     Exact type, '' for any.
-	 * @param string $category Exact category, '' for any.
-	 * @param int    $limit    Page size.
-	 * @param int    $offset   Page start.
+	 * @param string            $userId The caller.
+	 * @param EntitySearchQuery $query  The value text, type and category filters, and page.
 	 *
 	 * @return array{results: array<int, array<string, mixed>>, total: int, limit: int, offset: int} The page.
 	 *
@@ -79,7 +76,7 @@ interface EntitySearchServiceInterface {
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-entity-search/tasks.md#task-2.1
 	 */
-	public function search(string $userId, string $query, string $type, string $category, int $limit, int $offset): array;
+	public function search(string $userId, EntitySearchQuery $query): array;
 
 	/**
 	 * One entity and where it occurs, logged before it is returned.

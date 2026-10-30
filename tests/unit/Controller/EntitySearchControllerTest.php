@@ -21,6 +21,7 @@ namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\EntitySearchController;
 use OCA\Filinq\Exception\EntitySearchRefusedException;
+use OCA\Filinq\Kernel\EntitySearchQuery;
 use OCA\Filinq\Service\EntitySearch\EntitySearchService;
 use OCP\IL10N;
 use OCP\IRequest;
@@ -120,7 +121,9 @@ class EntitySearchControllerTest extends TestCase {
 		$response = $this->controller(failure: null, params: ['query' => 'vries', 'type' => 'PERSON', 'limit' => '10', 'offset' => '20'], calls: $calls)->index();
 
 		$this->assertSame(200, $response->getStatus());
-		$this->assertSame(['search', ['petra', 'vries', 'PERSON', '', 10, 20]], [$calls[0][0], array_values($calls[0][1])]);
+		[$userId, $query] = array_values($calls[0][1]);
+		$this->assertSame(['search', 'petra'], [$calls[0][0], $userId]);
+		$this->assertEquals(new EntitySearchQuery(text: 'vries', type: 'PERSON', category: '', limit: 10, offset: 20), $query);
 
 	}//end testTheSearchPassesTheCallerAndParameters()
 

@@ -23,6 +23,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\EntitySearch;
 
 use OCA\Filinq\Exception\EntitySearchRefusedException;
+use OCA\Filinq\Kernel\EntitySearchQuery;
 use OCP\App\IAppManager;
 use OCP\DB\QueryBuilder\IQueryBuilder;
 use OCP\IDBConnection;
@@ -131,12 +132,8 @@ class EntityCatalogue {
 	/**
 	 * Entities whose value contains the query, newest first.
 	 *
-	 * @param array<int, string>|null $scope    The organisations, null for all.
-	 * @param string                  $query    Case-insensitive substring of the value, '' for any.
-	 * @param string                  $type     Exact type, '' for any.
-	 * @param string                  $category Exact category, '' for any.
-	 * @param int                     $limit    Page size.
-	 * @param int                     $offset   Page start.
+	 * @param array<int, string>|null $scope The organisations, null for all.
+	 * @param EntitySearchQuery       $query The value text, type and category filters, and page.
 	 *
 	 * @return array{results: array<int, array<string, mixed>>, total: int} The page and the full count.
 	 *
@@ -144,7 +141,7 @@ class EntityCatalogue {
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-entity-search/tasks.md#task-2.1
 	 */
-	public function search(?array $scope, string $query, string $type, string $category, int $limit, int $offset): array {
+	public function search(?array $scope, EntitySearchQuery $query): array {
 		if ($scope === []) {
 			return ['results' => [], 'total' => 0];
 		}
@@ -152,15 +149,17 @@ class EntityCatalogue {
 		try {
 			$count = $this->db->getQueryBuilder();
 			$count->select($count->func()->count('*', 'total'))->from(self::ENTITIES, 'e');
-			$this->filter(qb: $count, scope: $scope, query: $query, type: $type, category: $category);
+			$this->scopeTo(qb: $count, scope: $scope);
+			$this->filter(qb: $count, query: $query);
 			$result = $count->executeQuery();
 			$total = (int) $result->fetchOne();
 			$result->closeCursor();
 
 			$rows = $this->db->getQueryBuilder();
 			$rows->select('e.id', 'e.uuid', 'e.type', 'e.value', 'e.category')->from(self::ENTITIES, 'e');
-			$this->filter(qb: $rows, scope: $scope, query: $query, type: $type, category: $category);
-			$rows->orderBy('e.detected_at', 'DESC')->setMaxResults($limit)->setFirstResult($offset);
+			$this->scopeTo(qb: $rows, scope: $scope);
+			$this->filter(qb: $rows, query: $query);
+			$rows->orderBy('e.detected_at', 'DESC')->setMaxResults($query->limit)->setFirstResult($query->offset);
 			$result = $rows->executeQuery();
 			$entities = $result->fetchAll();
 			$result->closeCursor();
@@ -280,31 +279,39 @@ class EntityCatalogue {
 	}//end inScope()
 
 	/**
-	 * Apply the tenant scope and the search filters.
+	 * Limit a query to the given organisations.
 	 *
-	 * @param IQueryBuilder           $qb       The query.
-	 * @param array<int, string>|null $scope    The organisations, null for all.
-	 * @param string                  $query    Substring of the value.
-	 * @param string                  $type     Exact type.
-	 * @param string                  $category Exact category.
+	 * @param IQueryBuilder           $qb    The query.
+	 * @param array<int, string>|null $scope The organisations, null for all.
 	 *
 	 * @return void
 	 */
-	private function filter(IQueryBuilder $qb, ?array $scope, string $query, string $type, string $category): void {
+	private function scopeTo(IQueryBuilder $qb, ?array $scope): void {
 		if ($scope !== null) {
 			$qb->andWhere($qb->expr()->in('e.organisation', $qb->createNamedParameter($scope, IQueryBuilder::PARAM_STR_ARRAY)));
 		}
 
-		if ($query !== '') {
-			$qb->andWhere($qb->expr()->iLike('e.value', $qb->createNamedParameter('%' . $this->db->escapeLikeParameter($query) . '%')));
+	}//end scopeTo()
+
+	/**
+	 * Add the value, type and category filters a query asks for.
+	 *
+	 * @param IQueryBuilder     $qb    The query.
+	 * @param EntitySearchQuery $query The filters; an empty one adds nothing.
+	 *
+	 * @return void
+	 */
+	private function filter(IQueryBuilder $qb, EntitySearchQuery $query): void {
+		if ($query->text !== '') {
+			$qb->andWhere($qb->expr()->iLike('e.value', $qb->createNamedParameter('%' . $this->db->escapeLikeParameter($query->text) . '%')));
 		}
 
-		if ($type !== '') {
-			$qb->andWhere($qb->expr()->eq('e.type', $qb->createNamedParameter($type)));
+		if ($query->type !== '') {
+			$qb->andWhere($qb->expr()->eq('e.type', $qb->createNamedParameter($query->type)));
 		}
 
-		if ($category !== '') {
-			$qb->andWhere($qb->expr()->eq('e.category', $qb->createNamedParameter($category)));
+		if ($query->category !== '') {
+			$qb->andWhere($qb->expr()->eq('e.category', $qb->createNamedParameter($query->category)));
 		}
 
 	}//end filter()

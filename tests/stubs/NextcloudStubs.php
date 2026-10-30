@@ -1724,6 +1724,15 @@ interface IDBConnection {
 	 * @return mixed
 	 */
 	public function getDatabasePlatform(): mixed;
+
+	/**
+	 * Escape a LIKE parameter. Pinned to OCP\IDBConnection::escapeLikeParameter().
+	 *
+	 * @param string $param The parameter.
+	 *
+	 * @return string The escaped parameter.
+	 */
+	public function escapeLikeParameter(string $param): string;
 }//end interface
 
 /**
@@ -2225,4 +2234,107 @@ interface IClientService {
 	 * @return IClient
 	 */
 	public function newClient(): IClient;
+}//end interface
+
+namespace OCP\DB\QueryBuilder;
+
+/**
+ * Stub of OCP\DB\QueryBuilder\IQueryFunction.
+ *
+ * The real QueryBuilder interfaces reference Doctrine, which this app does not
+ * ship, so the methods the app calls are stubbed here.
+ */
+interface IQueryFunction {
+
+	/**
+	 * The SQL of the function.
+	 *
+	 * @return string
+	 */
+	public function __toString(): string;
+}//end interface
+
+/**
+ * Stub of OCP\DB\QueryBuilder\IFunctionBuilder.
+ */
+interface IFunctionBuilder {
+
+	/**
+	 * COUNT(...).
+	 *
+	 * @param mixed       $count The column or expression.
+	 * @param string|null $alias The alias.
+	 *
+	 * @return IQueryFunction
+	 */
+	public function count(mixed $count = '', ?string $alias = ''): IQueryFunction;
+}//end interface
+
+/**
+ * Stub of OCP\DB\QueryBuilder\IExpressionBuilder.
+ */
+interface IExpressionBuilder {
+
+	/**
+	 * Column IN (values).
+	 *
+	 * @param mixed $x    The column.
+	 * @param mixed $y    The values.
+	 * @param mixed $type The parameter type.
+	 *
+	 * @return string
+	 */
+	public function in(mixed $x, mixed $y, mixed $type = null): string;
+
+	/**
+	 * Column ILIKE value.
+	 *
+	 * @param mixed $x    The column.
+	 * @param mixed $y    The pattern.
+	 * @param mixed $type The parameter type.
+	 *
+	 * @return string
+	 */
+	public function iLike(mixed $x, mixed $y, mixed $type = null): string;
+
+	/**
+	 * Column = value.
+	 *
+	 * @param mixed $x    The column.
+	 * @param mixed $y    The value.
+	 * @param mixed $type The parameter type.
+	 *
+	 * @return string
+	 */
+	public function eq(mixed $x, mixed $y, mixed $type = null): string;
+}//end interface
+
+/**
+ * Stub of OCP\DB\QueryBuilder\IQueryBuilder: the constants and methods the app calls.
+ */
+interface IQueryBuilder {
+
+	/**
+	 * Doctrine's ArrayParameterType::INTEGER.
+	 */
+	public const PARAM_INT_ARRAY = 101;
+
+	/**
+	 * Doctrine's ArrayParameterType::STRING.
+	 */
+	public const PARAM_STR_ARRAY = 102;
+
+	public function expr(): IExpressionBuilder;
+	public function func(): IFunctionBuilder;
+	public function select(...$selects): self;
+	public function selectAlias(mixed $select, string $alias): self;
+	public function from(mixed $from, ?string $alias = null): self;
+	public function where(...$predicates): self;
+	public function andWhere(...$where): self;
+	public function groupBy(...$groupBys): self;
+	public function orderBy(mixed $sort, ?string $order = null): self;
+	public function setMaxResults(?int $maxResults): self;
+	public function setFirstResult(int $firstResult): self;
+	public function createNamedParameter(mixed $value, mixed $type = 2, ?string $placeHolder = null): string;
+	public function executeQuery(?\OCP\IDBConnection $connection = null): \OCP\DB\IResult;
 }//end interface

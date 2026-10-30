@@ -24,6 +24,7 @@ namespace OCA\Filinq\Controller;
 
 use OCA\Filinq\Exception\EntitySearchRefusedException;
 use OCA\Filinq\Kernel\Contracts\EntitySearchServiceInterface;
+use OCA\Filinq\Kernel\EntitySearchQuery;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -107,11 +108,13 @@ class EntitySearchController extends Controller {
 		return $this->answer(
 			action: fn (): array => $this->search->search(
 				userId: $this->userId(),
-				query: (string) $this->request->getParam('query', ''),
-				type: (string) $this->request->getParam('type', ''),
-				category: (string) $this->request->getParam('category', ''),
-				limit: (int) $this->request->getParam('limit', EntitySearchServiceInterface::DEFAULT_LIMIT),
-				offset: (int) $this->request->getParam('offset', 0)
+				query: new EntitySearchQuery(
+					text: (string) $this->request->getParam('query', ''),
+					type: (string) $this->request->getParam('type', ''),
+					category: (string) $this->request->getParam('category', ''),
+					limit: (int) $this->request->getParam('limit', EntitySearchServiceInterface::DEFAULT_LIMIT),
+					offset: (int) $this->request->getParam('offset', 0)
+				)
 			)
 		);
 
