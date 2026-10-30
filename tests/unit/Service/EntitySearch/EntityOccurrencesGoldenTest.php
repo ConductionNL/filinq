@@ -97,14 +97,14 @@ class EntityOccurrencesGoldenTest extends TestCase {
 		}
 
 		$answer = $this->occurrences()->forUser(relations: $relations, userId: $userId);
-		$actual = (string) json_encode(['answer' => $answer, 'dossierReads' => $this->dossierReads], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_PRESERVE_ZERO_FRACTION) . "\n";
+		$actual = (string)json_encode(['answer' => $answer, 'dossierReads' => $this->dossierReads], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_PRESERVE_ZERO_FRACTION) . "\n";
 
 		$path = __DIR__ . '/golden/occurrences-' . $golden;
 		if (getenv('GOLDEN_RECORD') === '1') {
 			file_put_contents($path, $actual);
 		}
 
-		$this->assertSame((string) file_get_contents($path), $actual);
+		$this->assertSame((string)file_get_contents($path), $actual);
 	}//end testAnswerMatchesTheRecordedOne()
 
 	/**
