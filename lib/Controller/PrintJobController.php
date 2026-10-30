@@ -31,6 +31,7 @@ namespace OCA\Filinq\Controller;
 use Exception;
 use InvalidArgumentException;
 use OCA\Filinq\Kernel\Contracts\PrintJobServiceInterface;
+use OCA\Filinq\Kernel\PrintJobRequest;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataDownloadResponse;
@@ -55,6 +56,10 @@ use Psr\Log\LoggerInterface;
  * @link     https://www.filinq.app
  *
  * @spec openspec/changes/print-functionality/tasks.md#task-5
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The thirteenth class is
+ * PrintJobRequest: the controller turns the request parameters into the one
+ * value the print job service takes.
  */
 class PrintJobController extends Controller {
 	use AnswersNotAuthenticated;
@@ -126,11 +131,8 @@ class PrintJobController extends Controller {
 			}
 
 			$result = $this->printJobSvc->createJob(
-				templateId: $templateId,
-				data: $data,
-				options: $options,
-				userId: $user->getUID(),
-				filename: (string)$filename
+				request: new PrintJobRequest(templateId: $templateId, options: $options, userId: $user->getUID(), filename: (string) $filename),
+				data: $data
 			);
 
 			return new JSONResponse(data: $result, statusCode: Http::STATUS_CREATED);
@@ -430,11 +432,13 @@ class PrintJobController extends Controller {
 			}
 
 			$result = $this->printJobSvc->createBatchJob(
-				templateId: (string)$templateId,
-				items: $items,
-				options: $options,
-				userId: $user->getUID(),
-				filename: (string) $this->request->getParam('filename', 'print-job.pdf')
+				request: new PrintJobRequest(
+					templateId: (string) $templateId,
+					options: $options,
+					userId: $user->getUID(),
+					filename: (string) $this->request->getParam('filename', 'print-job.pdf')
+				),
+				items: $items
 			);
 
 			return new JSONResponse(data: $result, statusCode: Http::STATUS_CREATED);

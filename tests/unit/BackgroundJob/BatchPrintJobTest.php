@@ -26,6 +26,7 @@ require_once __DIR__ . '/../Service/PrintJobDoubles.php';
 
 use OCA\Filinq\BackgroundJob\BatchPrintJob;
 use OCA\Filinq\BackgroundJob\JobQueue;
+use OCA\Filinq\Kernel\PrintJobRequest;
 use OCA\Filinq\Service\DataResolverService;
 use OCA\Filinq\Service\PdfService;
 use OCA\Filinq\Service\PrintJobService;
@@ -75,7 +76,7 @@ class BatchPrintJobTest extends TestCase {
 			$this->createMock(LoggerInterface::class)
 		);
 
-		$created = $service->createBatchJob(templateId: 't', items: array_fill(0, 12, ['data' => []]), userId: 'u');
+		$created = $service->createBatchJob(request: new PrintJobRequest(templateId: 't', userId: 'u'), items: array_fill(0, 12, ['data' => []]));
 		$this->assertSame('rendering', $created['status']);
 
 		$job = new BatchPrintJob($this->createMock(ITimeFactory::class), $service, $this->createMock(LoggerInterface::class));
