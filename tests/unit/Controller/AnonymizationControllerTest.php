@@ -839,4 +839,34 @@ class AnonymizationControllerTest extends TestCase {
 
 	}//end testAnonymizeReturns500OnAnUnexpectedFailure()
 
+	/**
+	 * The request parameters reach the run: excluded types are filtered out,
+	 * and the dossier scope and key are passed on.
+	 *
+	 * @return void
+	 */
+	public function testTheRequestParametersReachTheRun(): void {
+		$entities = [['type' => 'PERSON', 'text' => 'John'], ['type' => 'EMAIL', 'text' => 'j@example.org']];
+
+		$this->mockRequest->method('getParams')->willReturn(
+			['entities' => $entities, 'excludeTypes' => ['EMAIL'], 'scope' => 'dossier', 'dossierKey' => 'z-1']
+		);
+
+		$this->mockAnonService->expects($this->once())
+			->method('anonymizeDocument')
+			->with(
+				fileId: 42,
+				entities: [['type' => 'PERSON', 'text' => 'John']],
+				outputFormat: 'pdf-only',
+				unredactedEntities: [],
+				overrides: [],
+				userId: 'test-user',
+				scope: 'dossier',
+				dossierKey: 'z-1'
+			)
+			->willReturn(['replacementCount' => 1, 'anonymizedFileId' => 'file-42']);
+
+		$this->assertSame(200, $this->controller->anonymize(42)->getStatus());
+
+	}//end testTheRequestParametersReachTheRun()
 }//end class

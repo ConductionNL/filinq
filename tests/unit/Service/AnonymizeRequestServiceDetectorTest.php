@@ -20,6 +20,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Tests\Unit\Service;
 
+use OCA\Filinq\Kernel\AnonymizeCall;
 use OCA\Filinq\Service\AnonymizeRequestService;
 use OCA\Filinq\Service\AnonymizeRequestValidator;
 use OCA\Filinq\Service\DocumentAnonymizeRunner;
@@ -62,7 +63,7 @@ class AnonymizeRequestServiceDetectorTest extends TestCase {
 		$response = $this->requestServiceOver(
 			state: DetectionStates::orState(enabled: false, active: 'regex', effective: 'regex'),
 			runner: $runner
-		)->executeAnonymize(fileId: 42, userId: 'noor', params: [], request: self::REQUEST, outputFormat: 'preserve');
+		)->executeAnonymize(call: new AnonymizeCall(fileId: 42, params: [], request: self::REQUEST, outputFormat: 'preserve'), userId: 'noor');
 
 		$this->assertSame(503, $response['status']);
 		$this->assertSame('detection_disabled', $response['body']['detectionUnavailable']);
@@ -85,7 +86,7 @@ class AnonymizeRequestServiceDetectorTest extends TestCase {
 		$response = $this->requestServiceOver(
 			state: DetectionStates::orState(enabled: true, active: 'regex', effective: 'regex'),
 			runner: $runner
-		)->executeAnonymize(fileId: 42, userId: 'noor', params: [], request: self::REQUEST, outputFormat: 'preserve');
+		)->executeAnonymize(call: new AnonymizeCall(fileId: 42, params: [], request: self::REQUEST, outputFormat: 'preserve'), userId: 'noor');
 
 		$this->assertSame(200, $response['status']);
 		$this->assertSame('nothing_found', $response['body']['detection']['outcome']);
@@ -115,8 +116,8 @@ class AnonymizeRequestServiceDetectorTest extends TestCase {
 		);
 		$service = $this->requestServiceOver(state: DetectionStates::orState(enabled: true, active: 'regex', effective: 'regex'), runner: $runner);
 
-		$service->executeAnonymize(fileId: 42, userId: 'noor', params: [], request: array_merge(self::REQUEST, ['reversible' => true]), outputFormat: 'preserve');
-		$service->executeAnonymize(fileId: 42, userId: 'noor', params: [], request: self::REQUEST, outputFormat: 'preserve');
+		$service->executeAnonymize(call: new AnonymizeCall(fileId: 42, params: [], request: array_merge(self::REQUEST, ['reversible' => true]), outputFormat: 'preserve'), userId: 'noor');
+		$service->executeAnonymize(call: new AnonymizeCall(fileId: 42, params: [], request: self::REQUEST, outputFormat: 'preserve'), userId: 'noor');
 
 		$this->assertTrue($seen[0]['reversible']);
 		$this->assertSame('noor', $seen[0]['userId']);
