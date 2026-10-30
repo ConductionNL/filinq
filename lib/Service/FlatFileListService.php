@@ -30,6 +30,8 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use OCA\Filinq\Kernel\Contracts\FlatFileListServiceInterface;
+use OCP\Files\Node;
+use Throwable;
 
 /**
  * Lists every file on every document record of one object.
@@ -75,7 +77,7 @@ class FlatFileListService implements FlatFileListServiceInterface {
 		$rows     = [];
 		$dossiers = null;
 		foreach ($this->repository->findByDomain(domain: $domain) as $record) {
-			$dossiers ??= $this->repository->dossiersByFile();
+			$dossiers ??= $this->repository->dossierIndex();
 			$row        = $this->row(record: $record, dossiers: $dossiers);
 			if ($row === null) {
 				continue;
@@ -134,13 +136,13 @@ class FlatFileListService implements FlatFileListServiceInterface {
 	 * through the read right on that object (ReadableFileResolver).
 	 *
 	 * @param array<string, mixed> $record The document record.
-	 * @param array<int, array{id: string, name: string}> $dossiers The dossier by file id.
+	 * @param DossierFileIndex|null $dossiers The dossiers, by member file and by folder.
 	 *
 	 * @return array<string, mixed>|null The row, or null when there is no readable file; `dossier` names the dossier the file is in, or is null.
 	 *
 	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
-	private function row(array $record, array $dossiers=[]): ?array {
+	private function row(array $record, ?DossierFileIndex $dossiers=null): ?array {
 		$fileId = (int)($record['fileId'] ?? 0);
 		if ($fileId <= 0) {
 			return null;
@@ -163,8 +165,24 @@ class FlatFileListService implements FlatFileListServiceInterface {
 				'name' => (string)($record['documentName'] ?? $node->getName()),
 				'status' => (string)($record['status'] ?? ''),
 			],
-			'dossier' => ($dossiers[$fileId] ?? null),
+			'dossier' => $dossiers?->dossierOf(fileId: $fileId, folderId: $this->folderOf(node: $node)),
 		];
 
 	}//end row()
+
+	/**
+	 * The id of the folder a file is in, 0 when it has none to give.
+	 *
+	 * @param Node $node The file.
+	 *
+	 * @return int
+	 */
+	private function folderOf(Node $node): int {
+		try {
+			return (int) $node->getParent()->getId();
+		} catch (Throwable) {
+			return 0;
+		}
+
+	}//end folderOf()
 }//end class
