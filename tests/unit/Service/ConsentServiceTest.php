@@ -921,6 +921,112 @@ class ConsentServiceTest extends TestCase {
 
 	}//end testValidateAndUpdateOfAMissingRecordThrows()
 
+	/**
+	 * Build a ConsentService whose ObjectService records every lookup and save.
+	 *
+	 * @param array<mixed> $rows What searchObjects() returns.
+	 * @param array<int, array<string, mixed>> $queries Receives each lookup query.
+	 * @param array<int, array<string, mixed>> $saves Receives each save's named arguments.
+	 *
+	 * @return ConsentService
+	 */
+	private function recordingService(array $rows, array &$queries, array &$saves): ConsentService {
+		$objectService = $this->createMock(originalClassName: \OCA\OpenRegister\Service\ObjectService::class);
+		$objectService->method('searchObjects')->willReturnCallback(
+			function (array $query) use (&$queries, $rows): array {
+				$queries[] = $query;
+				return $rows;
+			}
+		);
+		$objectService->method('saveObject')->willReturnCallback(
+			function (...$arguments) use (&$saves): object {
+				$saves[] = $arguments;
+				return $this->buildSavedObject(data: $arguments[0]);
+			}
+		);
+		$container = $this->createMock(originalClassName: ContainerInterface::class);
+		$container->method('get')->willReturn($objectService);
+		$policyMatcher = $this->createMock(originalClassName: PolicyMatchService::class);
+		$policyMatcher->method('match')->willReturn(null);
+
+		return new ConsentService(
+			logger: $this->mockLogger,
+			deadlineChecker: $this->mockDeadlineChecker,
+			updateHandler: $this->mockUpdateHandler,
+			scopeValidator: $this->mockScopeValidator,
+			policyMatcher: $policyMatcher,
+			recordWriter: $this->buildRecordWriter(container: $container)
+		);
+
+	}//end recordingService()
+
+	/**
+	 * The idempotent re-submit saves without RBAC, as the system write it is.
+	 *
+	 * @return void
+	 */
+	public function testTheResubmitSaveBypassesRbac(): void {
+		$queries = [];
+		$saves   = [];
+		$service = $this->recordingService(
+			rows: [$this->buildSavedObject(data: ['documentId' => 'doc-1', 'scope' => 'document'])],
+			queries: $queries,
+			saves: $saves
+		);
+
+		$service->createConsentRequest(documentId: 'doc-1', entityType: 'PERSON', entityText: 'A', register: 'r', schema: 's');
+
+		$this->assertCount(1, $saves);
+		$this->assertFalse($saves[0][4], 'The update save must pass _rbac: false.');
+
+	}//end testTheResubmitSaveBypassesRbac()
+
+	/**
+	 * With an entityKey the lookup filters on it and not on the entity text.
+	 *
+	 * @return void
+	 */
+	public function testTheLookupFiltersOnTheEntityKeyWhenThereIsOne(): void {
+		$queries = [];
+		$saves   = [];
+		$service = $this->recordingService(rows: [], queries: $queries, saves: $saves);
+
+		$service->createConsentRequest(
+			documentId: 'doc-1',
+			entityType: 'PERSON',
+			entityText: 'Anneke Jansen',
+			register: 'reg-9',
+			schema: 'sch-9',
+			extra: ['entityKey' => 'key-A']
+		);
+
+		$this->assertSame(
+			[['@self' => ['register' => 'reg-9', 'schema' => 'sch-9'], 'documentId' => 'doc-1', 'scope' => 'document', 'entityKey' => 'key-A']],
+			$queries
+		);
+
+	}//end testTheLookupFiltersOnTheEntityKeyWhenThereIsOne()
+
+	/**
+	 * The register and schema address the write; they never become fields of the stored record.
+	 *
+	 * @return void
+	 */
+	public function testTheRegisterAndSchemaNeverReachTheStoredRecord(): void {
+		foreach (['create' => [], 'update' => [$this->buildSavedObject(data: ['documentId' => 'doc-1', 'scope' => 'document'])]] as $path => $rows) {
+			$queries = [];
+			$saves   = [];
+			$service = $this->recordingService(rows: $rows, queries: $queries, saves: $saves);
+
+			$service->createConsentRequest(documentId: 'doc-1', entityType: 'PERSON', entityText: 'A', register: 'reg-9', schema: 'sch-9');
+
+			$this->assertCount(1, $saves, $path);
+			$this->assertArrayNotHasKey('register', $saves[0][0], $path);
+			$this->assertArrayNotHasKey('schema', $saves[0][0], $path);
+		}
+
+	}//end testTheRegisterAndSchemaNeverReachTheStoredRecord()
+
 	// ------------------------------------------------------------------
 	// validatePublicationConsentData scope rules
 	// ------------------------------------------------------------------
