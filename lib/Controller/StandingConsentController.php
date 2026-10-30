@@ -47,6 +47,7 @@ use RuntimeException;
  * @link     https://www.filinq.app
  */
 class StandingConsentController extends Controller {
+	use AnswersNotAuthenticated;
 	/**
 	 * Constructor.
 	 *
@@ -81,7 +82,7 @@ class StandingConsentController extends Controller {
 	 */
 	public function index(): JSONResponse {
 		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+			return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 		}
 
 		try {
@@ -110,7 +111,7 @@ class StandingConsentController extends Controller {
 	 */
 	public function show(string $id): JSONResponse {
 		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+			return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 		}
 
 		try {
@@ -141,7 +142,7 @@ class StandingConsentController extends Controller {
 	 */
 	public function create(): JSONResponse {
 		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+			return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 		}
 
 		try {
@@ -174,7 +175,7 @@ class StandingConsentController extends Controller {
 	 */
 	public function update(string $id): JSONResponse {
 		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+			return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 		}
 
 		try {
@@ -209,7 +210,7 @@ class StandingConsentController extends Controller {
 	 */
 	public function destroy(string $id): JSONResponse {
 		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+			return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 		}
 
 		try {

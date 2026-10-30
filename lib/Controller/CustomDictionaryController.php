@@ -53,6 +53,7 @@ use RuntimeException;
  * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
  */
 class CustomDictionaryController extends Controller {
+	use AnswersNotAuthenticated;
 	/**
 	 * Constructor.
 	 *
@@ -395,7 +396,7 @@ class CustomDictionaryController extends Controller {
 	 */
 	private function requireAuthenticated(): ?JSONResponse {
 		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+			return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 		}
 
 		return null;

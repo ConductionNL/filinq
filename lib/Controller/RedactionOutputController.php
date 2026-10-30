@@ -51,6 +51,7 @@ use Throwable;
  * @spec openspec/changes/redaction-and-what-leaves-the-building/specs/redaction-output-guarantee/spec.md
  */
 class RedactionOutputController extends Controller {
+	use AnswersNotAuthenticated;
 
 	/**
 	 * How many documents one status read may ask about.
@@ -162,10 +163,7 @@ class RedactionOutputController extends Controller {
 	#[NoAdminRequired]
 	public function checkedStatus(string $fileIds = ''): JSONResponse {
 		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(
-				data: ['error' => $this->l10n->t('Not authenticated')],
-				statusCode: Http::STATUS_UNAUTHORIZED
-			);
+			return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 		}
 
 		$ids = array_values(array_unique(array_filter(array_map('intval', explode(',', $fileIds)))));

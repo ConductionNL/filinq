@@ -52,6 +52,7 @@ use Psr\Log\LoggerInterface;
  * @link     https://www.filinq.app
  */
 class PrintController extends Controller {
+	use AnswersNotAuthenticated;
 	/**
 	 * Constructor for PrintController
 	 *
@@ -190,10 +191,7 @@ class PrintController extends Controller {
 	public function preview(): JSONResponse {
 		try {
 			if ($this->userSession->getUser() === null) {
-				return new JSONResponse(
-					data: ['error' => 'Not authenticated'],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: 'Not authenticated');
 			}
 
 			$resolved = $this->resolveTemplate();
@@ -258,10 +256,7 @@ class PrintController extends Controller {
 	public function downloadPdfA(): DataDownloadResponse|JSONResponse {
 		try {
 			if ($this->userSession->getUser() === null) {
-				return new JSONResponse(
-					data: ['error' => 'Not authenticated'],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: 'Not authenticated');
 			}
 
 			$resolved = $this->resolveTemplate();
