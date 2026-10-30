@@ -167,6 +167,8 @@ class EmlBackend implements ConversionBackendInterface {
 	 * @return File Newly written PDF file node.
 	 *
 	 * @throws ConversionFailedException On OR API failure or assembly failure.
+	 *
+	 * @spec openspec/specs/pdf-conversion/spec.md
 	 */
 	public function convert(File $source): File {
 		$fileService = $this->fileService();
