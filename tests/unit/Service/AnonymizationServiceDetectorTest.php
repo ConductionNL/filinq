@@ -214,6 +214,67 @@ class AnonymizationServiceDetectorTest extends TestCase {
 	}//end testBothEntryPointsHandTheRunnerTheRunOptions()
 
 	/**
+	 * The entry point hands its overrides and acting user to the prohibition gate: the released match is audited for that user.
+	 *
+	 * @return void
+	 */
+	public function testTheGateReceivesTheOverridesAndTheActingUser(): void {
+		$audits  = [];
+		$matcher = $this->createMock(\OCA\Filinq\Service\PolicyMatchService::class);
+		$matcher->method('matchProhibitionHint')->willReturn(['ruleId' => 'R-X', 'ruleName' => 'Undercover']);
+		$mapper = $this->createMock(\OCA\OpenRegister\Db\EntityRelationMapper::class);
+		$mapper->method('findEntitiesForFile')->willReturn(
+			[['relation_id' => 7, 'entity_id' => 42, 'entity_value' => 'Jansen', 'entity_type' => 'PERSON', 'confidence' => 0.5]]
+		);
+		$objects = $this->createMock(\OCA\OpenRegister\Service\ObjectService::class);
+		$objects->method('saveObject')->willReturnCallback(
+			static function (array $object = []) use (&$audits): array {
+				$audits[] = $object;
+				return $object;
+			}
+		);
+		$container = $this->createMock(\Psr\Container\ContainerInterface::class);
+		$container->method('get')->willReturnCallback(
+			static fn (string $id): mixed => match ($id) {
+				'OCA\Filinq\Service\PolicyMatchService' => $matcher,
+				'OCA\OpenRegister\Db\EntityRelationMapper' => $mapper,
+				'OCA\OpenRegister\Service\ObjectService' => $objects,
+				default => null,
+			}
+		);
+		$apps = $this->createMock(\OCP\App\IAppManager::class);
+		$apps->method('getInstalledApps')->willReturn(['openregister']);
+		$config = $this->createMock(\OCP\IAppConfig::class);
+		$config->method('getValueFloat')->willReturnArgument(2);
+		$config->method('getValueBool')->willReturnArgument(2);
+		$config->method('getValueString')->willReturnArgument(2);
+
+		$service = $this->makeAnonymizationServiceFrom(
+			deps: [
+				'container' => $container,
+				'appManager' => $apps,
+				'appConfig' => $config,
+				'anonymizeRunner' => $this->runnerThatWrites(),
+				'backendState' => DetectionStates::clientOver(
+					DetectionStates::orState(enabled: true, active: 'presidio', effective: 'presidio', available: ['presidio' => true])
+				),
+			]
+		);
+
+		$service->anonymizeDocument(
+			fileId: 99,
+			entities: [],
+			overrides: [['ruleId' => 'R-X', 'entityId' => 42, 'reason' => 'approved']],
+			userId: 'anna'
+		);
+
+		$this->assertCount(1, $audits);
+		$this->assertSame('anna', $audits[0]['acknowledgedBy']);
+		$this->assertSame('R-X', $audits[0]['ruleId']);
+
+	}//end testTheGateReceivesTheOverridesAndTheActingUser()
+
+	/**
 	 * Build the service over a given OpenRegister state.
 	 *
 	 * @param BackendState|null $state The state, null when OpenRegister cannot answer.
