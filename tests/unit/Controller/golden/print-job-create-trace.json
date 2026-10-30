@@ -613,5 +613,54 @@
                 }
             ]
         ]
+    },
+    "batch: a forged owner": {
+        "status": 201,
+        "data": {
+            "batchId": "batch-1",
+            "count": 2
+        },
+        "calls": [
+            [
+                "createBatchJob",
+                [
+                    "t-1",
+                    [],
+                    "print-job.pdf"
+                ],
+                [
+                    {
+                        "data": {
+                            "naam": "Jansen"
+                        },
+                        "filename": "a.pdf"
+                    },
+                    {
+                        "data": []
+                    }
+                ],
+                "anna"
+            ]
+        ],
+        "logs": []
+    },
+    "create: a forged owner": {
+        "status": 201,
+        "data": {
+            "jobId": "job-1"
+        },
+        "calls": [
+            [
+                "createJob",
+                [
+                    "t-1",
+                    [],
+                    "document.pdf"
+                ],
+                [],
+                "anna"
+            ]
+        ],
+        "logs": []
     }
 }

@@ -61,6 +61,7 @@ class PrintJobCreateTraceTest extends TestCase {
 
 		$create = [
 			'nobody logged in' => [false, ['templateId' => 't-1'], null],
+			'a forged owner' => [true, ['templateId' => 't-1', 'userId' => 'boss', 'requestedBy' => 'boss'], null],
 			'no template' => [true, [], null],
 			'template "0"' => [true, ['templateId' => '0'], null],
 			'data and options not arrays' => [true, ['templateId' => 't-1', 'data' => 'x', 'options' => 'duplex'], null],
@@ -89,6 +90,7 @@ class PrintJobCreateTraceTest extends TestCase {
 	private static function batchScenarios(array $items): array {
 		return [
 			'nobody logged in' => [false, ['templateId' => 't-1', 'items' => $items], null],
+			'a forged owner' => [true, ['templateId' => 't-1', 'items' => $items, 'userId' => 'boss', 'requestedBy' => 'boss'], null],
 			'no template' => [true, ['items' => $items], null],
 			'template "0"' => [true, ['templateId' => '0', 'items' => $items], null],
 			'no items' => [true, ['templateId' => 't-1'], null],
