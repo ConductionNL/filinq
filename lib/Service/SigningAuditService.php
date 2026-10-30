@@ -22,6 +22,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use OCA\Filinq\Kernel\Contracts\SigningAuditServiceInterface;
+use OCA\Filinq\Kernel\SigningAuditEvent;
 use OCA\OpenRegister\Db\AuditTrail;
 use OCA\OpenRegister\Db\AuditTrailMapper;
 use OCA\OpenRegister\Db\ObjectEntity;
@@ -96,14 +97,7 @@ class SigningAuditService implements SigningAuditServiceInterface {
 	 * the uuid-only fallback and a warning is logged — an unlinked audit entry
 	 * is acceptable, a dropped one is not.
 	 *
-	 * @param string $signingRequestId The signing request UUID.
-	 * @param string $action The action type (must be in VALID_ACTIONS).
-	 * @param string $actorUserId The actor user ID.
-	 * @param string $actorDisplayName The actor display name.
-	 * @param string $ipAddress The actor IP address.
-	 * @param string $signatureLevel The signature level.
-	 * @param string $provider The signing provider.
-	 * @param array<string, mixed> $metadata Additional metadata (pass-through).
+	 * @param SigningAuditEvent $event The request, action, actor and metadata.
 	 *
 	 * @return array<string, mixed> The created audit entry serialised.
 	 *
@@ -111,18 +105,9 @@ class SigningAuditService implements SigningAuditServiceInterface {
 	 *
 	 * @spec openspec/specs/signing-audit-via-or/spec.md
 	 */
-	public function logEvent(
-		string $signingRequestId,
-		string $action,
-		string $actorUserId,
-		string $actorDisplayName,
-		string $ipAddress,
-		string $signatureLevel = '',
-		string $provider = '',
-		array $metadata = [],
-	): array {
-		if (in_array($action, self::VALID_ACTIONS, true) === false) {
-			throw new RuntimeException('Invalid audit action: ' . $action);
+	public function logEvent(SigningAuditEvent $event): array {
+		if (in_array($event->action, self::VALID_ACTIONS, true) === false) {
+			throw new RuntimeException('Invalid audit action: ' . $event->action);
 		}
 
 		// ⚠️ THE `docudesk.signing.` PREFIX STAYS ACROSS THE FILINQ RENAME. It
@@ -135,21 +120,21 @@ class SigningAuditService implements SigningAuditServiceInterface {
 		// "nothing happened". This is the evidential record of a legal
 		// signature process. Moving the prefix requires a data migration over
 		// the stored rows, or a reader that accepts both.
-		$actionType = 'docudesk.signing.' . $action;
+		$actionType = 'docudesk.signing.' . $event->action;
 
 		// Context is persisted in the `changed` JSON column on openregister_audit_trails.
 		$context = [
-			'signRequestId' => $signingRequestId,
-			'actorUserId' => $actorUserId,
-			'actorDisplayName' => $actorDisplayName,
-			'ipAddress' => $ipAddress,
-			'signatureLevel' => $signatureLevel,
-			'provider' => $provider,
-			'extra' => $metadata,
+			'signRequestId' => $event->request->id,
+			'actorUserId' => $event->actor->userId,
+			'actorDisplayName' => $event->actor->displayName,
+			'ipAddress' => $event->actor->ipAddress,
+			'signatureLevel' => $event->request->signatureLevel,
+			'provider' => $event->request->provider,
+			'extra' => $event->metadata,
 		];
 
 		$entry = $this->auditTrailMapper->createAuditTrailEntry(
-			object:  $this->resolveSigningRequestObject(signingRequestId: $signingRequestId),
+			object:  $this->resolveSigningRequestObject(signingRequestId: $event->request->id),
 			action:  $actionType,
 			context: $context
 		);

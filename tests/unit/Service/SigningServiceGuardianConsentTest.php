@@ -28,6 +28,7 @@ require_once __DIR__ . '/SignerAuth/AssuranceGateHarness.php';
 
 use DateTimeImmutable;
 use OCA\Filinq\Event\SigningConcludedEventFactory;
+use OCA\Filinq\Kernel\SigningAuditEvent;
 use OCA\Filinq\Service\FinalDocumentService;
 use OCA\Filinq\Service\SettingsService;
 use OCA\Filinq\Service\SignedArtifactProducer;
@@ -204,17 +205,8 @@ class SigningServiceGuardianConsentTest extends TestCase {
 
 		$auditService = $this->createMock(SigningAuditService::class);
 		$auditService->method('logEvent')->willReturnCallback(
-			function (
-				string $signingRequestId,
-				string $action,
-				string $actorUserId = '',
-				string $actorDisplayName = '',
-				string $ipAddress = '',
-				string $signatureLevel = '',
-				string $provider = '',
-				array $metadata = [],
-			): array {
-				$this->audit[] = ['action' => $action, 'metadata' => $metadata];
+			function (SigningAuditEvent $event): array {
+				$this->audit[] = ['action' => $event->action, 'metadata' => $event->metadata];
 				return [];
 			}
 		);

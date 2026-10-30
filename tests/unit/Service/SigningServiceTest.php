@@ -36,6 +36,9 @@ use OCA\Filinq\Service\SigningAuditService;
 use OCA\Filinq\Service\SigningConclusionEmitter;
 use OCA\Filinq\Service\SigningRequestValidator;
 use OCA\Filinq\Service\SigningService;
+use OCA\OpenRegister\Db\AuditTrail;
+use OCA\OpenRegister\Db\AuditTrailMapper;
+use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Files\File;
@@ -50,6 +53,7 @@ use Psr\Log\LoggerInterface;
 use RuntimeException;
 use DateTimeImmutable;
 use OCA\Filinq\Exception\StepUpRequiredException;
+use OCA\Filinq\Kernel\SigningAuditEvent;
 use OCA\Filinq\Service\SignerAuth\IdentityEvidence;
 
 /**
@@ -64,6 +68,13 @@ use OCA\Filinq\Service\SignerAuth\IdentityEvidence;
  * @psalm-suppress PropertyNotSetInConstructor
  */
 class SigningServiceTest extends TestCase {
+
+	/**
+	 * What the audit trail persisted: [action, context] per entry.
+	 *
+	 * @var array<int, array{0: string, 1: array<string, mixed>}>
+	 */
+	private array $persistedAudits = [];
 	use \OCA\Filinq\Tests\Unit\Service\SignerAuth\AssuranceGateHarness;
 
 
@@ -248,6 +259,53 @@ class SigningServiceTest extends TestCase {
 	}//end defaultUserFolder()
 
 	/**
+	 * Let the audit double write through a real SigningAuditService, so the
+	 * test reads the action and context the audit trail persists.
+	 *
+	 * @return void
+	 */
+	private function persistAuditsThroughTheRealService(): void {
+		$trail = $this->createMock(AuditTrail::class);
+		$trail->method('jsonSerialize')->willReturn([]);
+		$mapper = $this->createMock(AuditTrailMapper::class);
+		$mapper->method('createAuditTrailEntry')->willReturnCallback(
+			function (ObjectEntity $object, string $action, array $context) use ($trail): AuditTrail {
+				$this->persistedAudits[] = [$action, $context];
+				return $trail;
+			}
+		);
+		$real = new SigningAuditService(
+			auditTrailMapper: $mapper,
+			logger: $this->createMock(LoggerInterface::class),
+			settingsService: $this->createMock(SettingsService::class),
+			config: $this->createMock(IAppConfig::class)
+		);
+		$this->auditService->expects($this->once())->method('logEvent')->willReturnCallback(
+			static fn (...$arguments): array => $real->logEvent(...$arguments)
+		);
+
+	}//end persistAuditsThroughTheRealService()
+
+	/**
+	 * The one persisted audit entry has this action and context; of its
+	 * time-dependent `extra` only the keys and the evidence provider are compared.
+	 *
+	 * @param string               $action  The persisted action.
+	 * @param array<string, mixed> $context The context, with `extraKeys` in place of `extra`.
+	 *
+	 * @return void
+	 */
+	private function assertPersistedAudit(string $action, array $context): void {
+		$this->assertCount(1, $this->persistedAudits);
+		[$persistedAction, $persisted] = $this->persistedAudits[0];
+		$this->assertSame('nextcloud-session', $persisted['extra']['identityEvidence']['provider']);
+		$persisted['extraKeys'] = array_keys($persisted['extra']);
+		unset($persisted['extra']);
+		$this->assertSame([$action, $context], [$persistedAction, $persisted]);
+
+	}//end assertPersistedAudit()
+
+	/**
 	 * createRequest() with valid data creates and persists a signing request.
 	 *
 	 * @return void
@@ -272,8 +330,7 @@ class SigningServiceTest extends TestCase {
 			->method('saveObject')
 			->willReturn($savedRequest);
 
-		$this->auditService->expects($this->once())
-			->method('logEvent');
+		$this->persistAuditsThroughTheRealService();
 
 		$result = $this->service->createRequest(
 			data: [
@@ -287,6 +344,7 @@ class SigningServiceTest extends TestCase {
 
 		$this->assertSame('PENDING', $result['status']);
 		$this->assertSame('alice', $result['initiatorUserId']);
+		$this->assertSame([['docudesk.signing.CREATED', ['signRequestId' => 'req-001', 'actorUserId' => 'alice', 'actorDisplayName' => 'Alice', 'ipAddress' => '127.0.0.1', 'signatureLevel' => 'SES', 'provider' => 'native', 'extra' => []]]], $this->persistedAudits);
 
 	}//end testCreateRequestHappyPath()
 
@@ -961,14 +1019,13 @@ class SigningServiceTest extends TestCase {
 		);
 		$this->objectService->method('saveObject')->willReturnArgument(0);
 
-		$this->auditService->expects($this->once())
-			->method('logEvent')
-			->with($this->equalTo('req-001'), $this->equalTo('SIGNED'));
+		$this->persistAuditsThroughTheRealService();
 
 		$result = $this->service->sign(requestId: 'req-001', signerId: 'signer-001');
 
 		$this->assertSame('SIGNED', $result['status']);
 		$this->assertArrayHasKey('signedAt', $result);
+		$this->assertPersistedAudit(action: 'docudesk.signing.SIGNED', context: ['signRequestId' => 'req-001', 'actorUserId' => 'alice', 'actorDisplayName' => 'Alice', 'ipAddress' => '127.0.0.1', 'signatureLevel' => 'SES', 'provider' => 'native', 'extraKeys' => ['identityEvidence']]);
 
 	}//end testSignHappyPath()
 
@@ -1413,10 +1470,12 @@ class SigningServiceTest extends TestCase {
 
 		$this->objectService->method('find')->willReturn($requestData);
 		$this->objectService->method('saveObject')->willReturnArgument(0);
+		$this->persistAuditsThroughTheRealService();
 
 		$result = $this->service->cancelRequest(requestId: 'req-001');
 
 		$this->assertSame('CANCELLED', $result['status']);
+		$this->assertSame([['docudesk.signing.CANCELLED', ['signRequestId' => 'req-001', 'actorUserId' => 'alice', 'actorDisplayName' => 'Alice', 'ipAddress' => '127.0.0.1', 'signatureLevel' => '', 'provider' => '', 'extra' => []]]], $this->persistedAudits);
 
 	}//end testCancelRequestTransitionsToCancel()
 
@@ -1628,14 +1687,14 @@ class SigningServiceTest extends TestCase {
 		$this->stubFindById(rows: ['req-001' => $requestData, 'signer-001' => $signerData]);
 		$this->objectService->method('saveObject')->willReturnArgument(0);
 
-		$this->auditService->expects($this->once())
-			->method('logEvent')
-			->with($this->equalTo('req-001'), $this->equalTo('DECLINED'));
+		$this->persistAuditsThroughTheRealService();
 
 		$result = $this->service->decline(requestId: 'req-001', signerId: 'signer-001', reason: 'changed my mind');
 
 		$this->assertSame('DECLINED', $result['status']);
 		$this->assertSame('changed my mind', $result['declineReason']);
+		$this->assertPersistedAudit(action: 'docudesk.signing.DECLINED', context: ['signRequestId' => 'req-001', 'actorUserId' => 'alice', 'actorDisplayName' => 'Alice', 'ipAddress' => '127.0.0.1', 'signatureLevel' => 'SES', 'provider' => 'native', 'extraKeys' => ['reason', 'identityEvidence']]);
+		$this->assertSame('changed my mind', $this->persistedAudits[0][1]['extra']['reason']);
 
 	}//end testDeclineHappyPathFromInProgress()
 
@@ -1928,8 +1987,8 @@ class SigningServiceTest extends TestCase {
 
 		$metadata = null;
 		$this->auditService->expects($this->once())->method('logEvent')->willReturnCallback(
-			function (...$args) use (&$metadata): array {
-				$metadata = $args[7] ?? null;
+			function (SigningAuditEvent $event) use (&$metadata): array {
+				$metadata = $event->metadata;
 				return [];
 			}
 		);
@@ -2567,16 +2626,8 @@ class SigningServiceTest extends TestCase {
 
 		$audit = [];
 		$this->auditService->expects($this->once())->method('logEvent')->willReturnCallback(
-			function (
-				string $signingRequestId,
-				string $action,
-				string $actorUserId,
-				string $actorDisplayName,
-				string $ipAddress,
-				string $signatureLevel='',
-				string $provider='',
-				array $metadata=[]
-			) use (&$audit): array {
+			function (SigningAuditEvent $event) use (&$audit): array {
+				[$signingRequestId, $action, $actorUserId, $actorDisplayName, $ipAddress, $signatureLevel, $provider, $metadata] = [$event->request->id, $event->action, $event->actor->userId, $event->actor->displayName, $event->actor->ipAddress, $event->request->signatureLevel, $event->request->provider, $event->metadata];
 				$audit = compact('signingRequestId', 'action', 'actorUserId', 'actorDisplayName', 'ipAddress', 'signatureLevel', 'provider', 'metadata');
 				return $audit;
 			}

@@ -32,6 +32,9 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Service;
 
 use DateTime;
+use OCA\Filinq\Kernel\SigningAuditActor;
+use OCA\Filinq\Kernel\SigningAuditEvent;
+use OCA\Filinq\Kernel\SigningAuditSubject;
 use OCA\Filinq\Service\SettingsService;
 use OCA\Filinq\Service\SigningAuditService;
 use OCA\OpenRegister\Db\AuditTrail;
@@ -189,13 +192,11 @@ class SigningAuditServiceTest extends TestCase {
 			);
 
 		$this->service->logEvent(
-			signingRequestId: 'sign-001',
-			action:           'SIGNED',
-			actorUserId:      'user1',
-			actorDisplayName: 'User One',
-			ipAddress:        '1.2.3.4',
-			signatureLevel:   'advanced',
-			provider:         'NativeSigningProvider'
+			event: new SigningAuditEvent(
+				request: new SigningAuditSubject(id: 'sign-001', signatureLevel: 'advanced', provider: 'NativeSigningProvider'),
+				action: 'SIGNED',
+				actor: new SigningAuditActor(userId: 'user1', displayName: 'User One', ipAddress: '1.2.3.4')
+			)
 		);
 
 		$this->assertSame('docudesk.signing.SIGNED', $capturedAction);
@@ -230,11 +231,11 @@ class SigningAuditServiceTest extends TestCase {
 			);
 
 		$this->service->logEvent(
-			signingRequestId: 'sign-uuid-42',
-			action:           'CREATED',
-			actorUserId:      'u',
-			actorDisplayName: 'U',
-			ipAddress:        '0.0.0.0'
+			event: new SigningAuditEvent(
+				request: new SigningAuditSubject(id: 'sign-uuid-42'),
+				action: 'CREATED',
+				actor: new SigningAuditActor(userId: 'u', displayName: 'U', ipAddress: '0.0.0.0')
+			)
 		);
 
 		$this->assertNotNull($capturedObject);
@@ -268,11 +269,11 @@ class SigningAuditServiceTest extends TestCase {
 				);
 
 			$this->service->logEvent(
-				signingRequestId: 'req',
-				action:           $action,
-				actorUserId:      'u',
-				actorDisplayName: 'U',
-				ipAddress:        '0.0.0.0'
+				event: new SigningAuditEvent(
+					request: new SigningAuditSubject(id: 'req'),
+					action: $action,
+					actor: new SigningAuditActor(userId: 'u', displayName: 'U', ipAddress: '0.0.0.0')
+				)
 			);
 
 			$this->assertSame('docudesk.signing.' . $action, $capturedAction, "Action type mismatch for $action");
@@ -303,11 +304,11 @@ class SigningAuditServiceTest extends TestCase {
 		$this->expectExceptionMessage('Invalid audit action: UNKNOWN');
 
 		$this->service->logEvent(
-			signingRequestId: 'req',
-			action:           'UNKNOWN',
-			actorUserId:      'u',
-			actorDisplayName: 'U',
-			ipAddress:        '0.0.0.0'
+			event: new SigningAuditEvent(
+				request: new SigningAuditSubject(id: 'req'),
+				action: 'UNKNOWN',
+				actor: new SigningAuditActor(userId: 'u', displayName: 'U', ipAddress: '0.0.0.0')
+			)
 		);
 
 	}//end testLogEventThrowsForInvalidAction()
@@ -363,11 +364,11 @@ class SigningAuditServiceTest extends TestCase {
 		);
 
 		$this->service->logEvent(
-			signingRequestId: 'sign-001',
-			action:           'SIGNED',
-			actorUserId:      'u',
-			actorDisplayName: 'U',
-			ipAddress:        '0.0.0.0'
+			event: new SigningAuditEvent(
+				request: new SigningAuditSubject(id: 'sign-001'),
+				action: 'SIGNED',
+				actor: new SigningAuditActor(userId: 'u', displayName: 'U', ipAddress: '0.0.0.0')
+			)
 		);
 
 		$this->assertSame($realEntity, $capturedObject, 'logEvent() must bind to the REAL resolved ObjectEntity.');
@@ -408,11 +409,11 @@ class SigningAuditServiceTest extends TestCase {
 
 		// Must NOT throw — the entry is still written.
 		$this->service->logEvent(
-			signingRequestId: 'vanished-request',
-			action:           'CANCELLED',
-			actorUserId:      'u',
-			actorDisplayName: 'U',
-			ipAddress:        '0.0.0.0'
+			event: new SigningAuditEvent(
+				request: new SigningAuditSubject(id: 'vanished-request'),
+				action: 'CANCELLED',
+				actor: new SigningAuditActor(userId: 'u', displayName: 'U', ipAddress: '0.0.0.0')
+			)
 		);
 
 		$this->assertNotNull($capturedObject);
@@ -591,6 +592,56 @@ class SigningAuditServiceTest extends TestCase {
 		);
 
 	}//end testValidActionsIncludesStart()
+
+	/**
+	 * The whole persisted context of an entry, with and without the optional
+	 * level, provider and metadata.
+	 *
+	 * @return void
+	 */
+	public function testTheWholeContextIsPersisted(): void {
+		$returnedTrail = $this->createMock(AuditTrail::class);
+		$returnedTrail->method('jsonSerialize')->willReturn(['id' => 7]);
+		$contexts = [];
+		$this->mapperMock->method('createAuditTrailEntry')->willReturnCallback(
+			function (ObjectEntity $obj, string $action, array $context) use (&$contexts, $returnedTrail): AuditTrail {
+				$contexts[] = [$action, $context];
+				return $returnedTrail;
+			}
+		);
+
+		$full = $this->service->logEvent(
+			event: new SigningAuditEvent(
+				request: new SigningAuditSubject(id: 'sign-9', signatureLevel: 'QES', provider: 'native'),
+				action: 'DECLINED',
+				actor: new SigningAuditActor(userId: 'u9', displayName: 'User Nine', ipAddress: '10.0.0.9'),
+				metadata: ['reason' => 'wrong document']
+			)
+		);
+		$this->service->logEvent(
+			event: new SigningAuditEvent(
+				request: new SigningAuditSubject(id: 'sign-10'),
+				action: 'CANCELLED',
+				actor: new SigningAuditActor(userId: 'u10', displayName: 'User Ten', ipAddress: '10.0.0.10')
+			)
+		);
+
+		$this->assertSame(['id' => 7], $full);
+		$this->assertSame(
+			[
+				[
+					'docudesk.signing.DECLINED',
+					['signRequestId' => 'sign-9', 'actorUserId' => 'u9', 'actorDisplayName' => 'User Nine', 'ipAddress' => '10.0.0.9', 'signatureLevel' => 'QES', 'provider' => 'native', 'extra' => ['reason' => 'wrong document']],
+				],
+				[
+					'docudesk.signing.CANCELLED',
+					['signRequestId' => 'sign-10', 'actorUserId' => 'u10', 'actorDisplayName' => 'User Ten', 'ipAddress' => '10.0.0.10', 'signatureLevel' => '', 'provider' => '', 'extra' => []],
+				],
+			],
+			$contexts
+		);
+
+	}//end testTheWholeContextIsPersisted()
 
 	/**
 	 * logEvent() and getAuditTrail() public surface must still be present.

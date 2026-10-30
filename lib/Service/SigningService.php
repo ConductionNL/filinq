@@ -26,6 +26,9 @@ use DateTimeInterface;
 use Exception;
 use OCA\Filinq\Exception\RegisterNotConfiguredException;
 use OCA\Filinq\Kernel\Contracts\SigningServiceInterface;
+use OCA\Filinq\Kernel\SigningAuditActor;
+use OCA\Filinq\Kernel\SigningAuditEvent;
+use OCA\Filinq\Kernel\SigningAuditSubject;
 use OCA\Filinq\Service\SignerAuth\SigningAssuranceGate;
 use OCA\Filinq\Service\Signing\GuardianConsentGuard;
 use OCA\Filinq\Service\Signing\PortalSignatureAssurance;
@@ -234,13 +237,15 @@ class SigningService implements SigningServiceInterface {
 		$createdRequest['assuranceFloor'] = $this->assuranceGate->floorFor(request: $request);
 
 		$this->auditService->logEvent(
-			signingRequestId: $requestId,
-			action: 'CREATED',
-			actorUserId: $initiatorUserId,
-			actorDisplayName: $initiatorDisplayName,
-			ipAddress: $this->actorResolver->getClientIp(),
-			signatureLevel: $request['signatureLevel'],
-			provider: $request['provider']
+			event: new SigningAuditEvent(
+				request: new SigningAuditSubject(id: $requestId, signatureLevel: $request['signatureLevel'], provider: $request['provider']),
+				action: 'CREATED',
+				actor: new SigningAuditActor(
+					userId: $initiatorUserId,
+					displayName: $initiatorDisplayName,
+					ipAddress: $this->actorResolver->getClientIp()
+				)
+			)
 		);
 
 		return $createdRequest;
@@ -603,14 +608,20 @@ class SigningService implements SigningServiceInterface {
 	 */
 	private function logSigned(SigningAct $act, array $metadata): void {
 		$this->auditService->logEvent(
-			signingRequestId: $act->requestId,
-			action: 'SIGNED',
-			actorUserId: $act->actor['userId'],
-			actorDisplayName: $act->actor['displayName'],
-			ipAddress: $this->actorResolver->getClientIp(),
-			signatureLevel: $act->request['signatureLevel'] ?? 'SES',
-			provider: $act->request['provider'] ?? 'native',
-			metadata: array_merge($this->actorResolver->actorAuditMetadata(verifiedActor: $act->verifiedActor), $metadata)
+			event: new SigningAuditEvent(
+				request: new SigningAuditSubject(
+					id: $act->requestId,
+					signatureLevel: $act->request['signatureLevel'] ?? 'SES',
+					provider: $act->request['provider'] ?? 'native'
+				),
+				action: 'SIGNED',
+				actor: new SigningAuditActor(
+					userId: $act->actor['userId'],
+					displayName: $act->actor['displayName'],
+					ipAddress: $this->actorResolver->getClientIp()
+				),
+				metadata: array_merge($this->actorResolver->actorAuditMetadata(verifiedActor: $act->verifiedActor), $metadata)
+			)
 		);
 	}//end logSigned()
 
@@ -697,14 +708,12 @@ class SigningService implements SigningServiceInterface {
 		$metadata['identityEvidence'] = $signer['identityEvidence'];
 
 		$this->auditService->logEvent(
-			signingRequestId: $requestId,
-			action: 'DECLINED',
-			actorUserId: $actorUserId,
-			actorDisplayName: $actorDisplayName,
-			ipAddress: $this->actorResolver->getClientIp(),
-			signatureLevel: $signatureLevel,
-			provider: $provider,
-			metadata: $metadata
+			event: new SigningAuditEvent(
+				request: new SigningAuditSubject(id: $requestId, signatureLevel: $signatureLevel, provider: $provider),
+				action: 'DECLINED',
+				actor: new SigningAuditActor(userId: $actorUserId, displayName: $actorDisplayName, ipAddress: $this->actorResolver->getClientIp()),
+				metadata: $metadata
+			)
 		);
 
 		return $signer;
@@ -755,11 +764,11 @@ class SigningService implements SigningServiceInterface {
 		$this->emitter->emitIfDelegated(request: $request, status: 'cancelled');
 
 		$this->auditService->logEvent(
-			signingRequestId: $requestId,
-			action: 'CANCELLED',
-			actorUserId: $actorUserId,
-			actorDisplayName: $actorDisplayName,
-			ipAddress: $this->actorResolver->getClientIp()
+			event: new SigningAuditEvent(
+				request: new SigningAuditSubject(id: $requestId),
+				action: 'CANCELLED',
+				actor: new SigningAuditActor(userId: $actorUserId, displayName: $actorDisplayName, ipAddress: $this->actorResolver->getClientIp())
+			)
 		);
 
 		return $request;

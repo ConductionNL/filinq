@@ -23,6 +23,7 @@ namespace OCA\Filinq\Tests\Unit\BackgroundJob;
 
 use Exception;
 use OCA\Filinq\BackgroundJob\SigningExpirationJob;
+use OCA\Filinq\Kernel\SigningAuditEvent;
 use OCA\Filinq\Service\SettingsService;
 use OCA\Filinq\Service\SigningAuditService;
 use OCA\Filinq\Service\SigningService;
@@ -37,6 +38,9 @@ use ReflectionMethod;
  * One sweep over both open statuses, recorded call by call.
  *
  * @covers \OCA\Filinq\BackgroundJob\SigningExpirationJob
+ * @uses   \OCA\Filinq\Kernel\SigningAuditActor
+ * @uses   \OCA\Filinq\Kernel\SigningAuditEvent
+ * @uses   \OCA\Filinq\Kernel\SigningAuditSubject
  */
 class SigningExpirationSweepTest extends TestCase {
 
@@ -82,8 +86,8 @@ class SigningExpirationSweepTest extends TestCase {
 		);
 
 		$audit = $this->createMock(SigningAuditService::class);
-		$audit->method('logEvent')->willReturnCallback(function (...$arguments) use ($auditFails): array {
-			$this->calls[] = ['audit', $arguments];
+		$audit->method('logEvent')->willReturnCallback(function (SigningAuditEvent $event) use ($auditFails): array {
+			$this->calls[] = ['audit', [$event->request->id, $event->action, $event->actor->userId, $event->actor->displayName, $event->actor->ipAddress, $event->request->signatureLevel, $event->request->provider, $event->metadata]];
 			if ($auditFails === true) {
 				throw new Exception('audit down');
 			}
