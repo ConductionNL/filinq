@@ -102,7 +102,7 @@ final class DossierFileIndex {
 	 *
 	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
-	public function of(int $fileId, int $folderId=0): ?array {
+	public function dossierOf(int $fileId, int $folderId=0): ?array {
 		return ($this->byFile[$fileId] ?? ($this->byFolder[$folderId] ?? null));
-	}//end of()
+	}//end dossierOf()
 }//end class

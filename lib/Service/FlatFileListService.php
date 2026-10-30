@@ -165,7 +165,7 @@ class FlatFileListService implements FlatFileListServiceInterface {
 				'name' => (string)($record['documentName'] ?? $node->getName()),
 				'status' => (string)($record['status'] ?? ''),
 			],
-			'dossier' => $dossiers?->of(fileId: $fileId, folderId: $this->folderOf(node: $node)),
+			'dossier' => $dossiers?->dossierOf(fileId: $fileId, folderId: $this->folderOf(node: $node)),
 		];
 
 	}//end row()
