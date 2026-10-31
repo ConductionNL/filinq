@@ -176,52 +176,91 @@ class AnonymizationController extends Controller {
 				return new JSONResponse($authError['body'], $authError['status']);
 			}
 
-			$file = $this->request->getUploadedFile('file');
-
-			if (empty($file) === true || isset($file['tmp_name']) === false) {
-				return new JSONResponse(
-					['error' => $this->l10n->t('No file uploaded')],
-					400
-				);
-			}
-
-			if ($file['error'] !== UPLOAD_ERR_OK) {
-				return new JSONResponse(
-					['error' => $this->l10n->t('File upload failed with error code: %s', [$file['error']])],
-					400
-				);
-			}
-
-			$fileName = $file['name'];
-			$fileContent = file_get_contents($file['tmp_name']);
-
-			if ($fileContent === false) {
-				return new JSONResponse(
-					['error' => $this->l10n->t('Failed to read uploaded file')],
-					500
-				);
-			}
-
-			$result = $this->fileListingService->uploadFile($fileName, $fileContent);
-
-			return new JSONResponse($result);
+			return $this->storeUpload();
 		} catch (\Throwable $e) {
-			$statusCode = 500;
-			if ($e->getCode() >= 400 && $e->getCode() < 600) {
-				$statusCode = $e->getCode();
-			}
-
-			$this->logger->error(
-				'Failed to upload file: ' . $e->getMessage(),
-				['exception' => $e]
-			);
-			return new JSONResponse(
-				['error' => $this->l10n->t('Failed to upload file: %s', [$e->getMessage()])],
-				$statusCode
-			);
-		}//end try
+			return $this->uploadFailed(exception: $e);
+		}
 
 	}//end upload()
+
+	/**
+	 * Read the request's `file` part and store it in the caller's Filinq folder.
+	 *
+	 * @return JSONResponse The service's result, or a 400/500 refusal.
+	 *
+	 * @spec openspec/specs/anonymization/spec.md
+	 */
+	private function storeUpload(): JSONResponse {
+		$file = $this->request->getUploadedFile('file');
+
+		$refusal = $this->uploadRefusal(file: $file);
+		if ($refusal !== null) {
+			return $refusal;
+		}
+
+		$fileContent = file_get_contents($file['tmp_name']);
+		if ($fileContent === false) {
+			return new JSONResponse(
+				['error' => $this->l10n->t('Failed to read uploaded file')],
+				500
+			);
+		}
+
+		return new JSONResponse($this->fileListingService->uploadFile($file['name'], $fileContent));
+	}//end storeUpload()
+
+	/**
+	 * Refuse a missing upload or a transfer PHP flagged as failed.
+	 *
+	 * @param mixed $file The uploaded `file` part: an array, or null when absent.
+	 *
+	 * @return JSONResponse|null A 400 refusal, or null when the upload can be read.
+	 *
+	 * @spec openspec/specs/anonymization/spec.md
+	 */
+	private function uploadRefusal(mixed $file): ?JSONResponse {
+		if (empty($file) === true || isset($file['tmp_name']) === false) {
+			return new JSONResponse(
+				['error' => $this->l10n->t('No file uploaded')],
+				400
+			);
+		}
+
+		if ($file['error'] !== UPLOAD_ERR_OK) {
+			return new JSONResponse(
+				['error' => $this->l10n->t('File upload failed with error code: %s', [$file['error']])],
+				400
+			);
+		}
+
+		return null;
+	}//end uploadRefusal()
+
+	/**
+	 * Log a failed upload and answer with its HTTP-range code, else 500.
+	 *
+	 * @param \Throwable $exception The failure.
+	 *
+	 * @return JSONResponse The error response.
+	 *
+	 * @spec openspec/specs/anonymization/spec.md
+	 */
+	private function uploadFailed(\Throwable $exception): JSONResponse {
+		$statusCode = 500;
+		if ($exception->getCode() >= 400 && $exception->getCode() < 600) {
+			$statusCode = $exception->getCode();
+		}
+
+		$this->logger->error(
+			'Failed to upload file: ' . $exception->getMessage(),
+			['exception' => $exception]
+		);
+		return new JSONResponse(
+			['error' => $this->l10n->t('Failed to upload file: %s', [$exception->getMessage()])],
+			$statusCode
+		);
+
+	}//end uploadFailed()
 
 	/**
 	 * Extract text and detect entities in a file
