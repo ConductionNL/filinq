@@ -159,6 +159,22 @@ class MetadataControllerEnrichTraceTest extends TestCase {
 	}//end testForgedUserIdDoesNotChooseTheFolder()
 
 	/**
+	 * A file the acting user can read but not update gets no suggestion.
+	 *
+	 * @return void
+	 */
+	public function testReadableButNotUpdateableFileIsSkipped(): void {
+		$this->metadata->method('enhanceMetadata')->willReturn([]);
+		$this->classification->expects($this->never())->method('classify');
+
+		$response = $this->controller(params: self::PARAMS, uid: 'annemarie', reachable: [4411], writable: false)->enrich();
+
+		$this->assertSame(200, $response->getStatus());
+		$this->assertSame('skipped', $response->getData()['classification']);
+
+	}//end testReadableButNotUpdateableFileIsSkipped()
+
+	/**
 	 * A failing save answers 500 with the message and logs the error.
 	 *
 	 * @return void
@@ -201,12 +217,16 @@ class MetadataControllerEnrichTraceTest extends TestCase {
 	 * @param string|null $uid The session user, or null for none.
 	 * @param int[] $reachable File ids in the session user's folder.
 	 * @param int[] $forgedReachable File ids in any other user's folder.
+	 * @param bool $writable Whether the reachable files are updateable.
 	 *
 	 * @return MetadataController The controller.
 	 */
-	private function controller(array $params, ?string $uid, array $reachable = [], array $forgedReachable = []): MetadataController {
+	private function controller(array $params, ?string $uid, array $reachable = [], array $forgedReachable = [], bool $writable = true): MetadataController {
 		$request = $this->createMock(IRequest::class);
 		$request->method('getParams')->willReturn($params);
+		$request->method('getParam')->willReturnCallback(
+			fn (string $key, mixed $default = null): mixed => (array_key_exists($key, $params) === true ? $params[$key] : $default)
+		);
 
 		$l10n = $this->createMock(IL10N::class);
 		$l10n->method('t')->willReturnCallback(fn (string $text, array $args = []): string => vsprintf($text, $args));
@@ -221,7 +241,7 @@ class MetadataControllerEnrichTraceTest extends TestCase {
 		$session->method('getUser')->willReturn($user);
 
 		$file = $this->createMock(File::class);
-		$file->method('isUpdateable')->willReturn(true);
+		$file->method('isUpdateable')->willReturn($writable);
 		$root = $this->createMock(IRootFolder::class);
 		$root->method('getUserFolder')->willReturnCallback(
 			function (string $owner) use ($uid, $reachable, $forgedReachable, $file): Folder {
