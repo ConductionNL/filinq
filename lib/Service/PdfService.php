@@ -539,45 +539,14 @@ class PdfService implements PdfServiceInterface {
 		$this->ensureTempDirectory(tempDir: $tempDir);
 
 		$config = $this->buildMpdfConfig(tempDir: $tempDir, options: $options);
-		$title = $options['title'] ?? '';
-		$isPdfA = ($options['pdfa'] ?? false) === true;
-
-		if ($isPdfA === true) {
-			$format = $options['format'] ?? 'A4';
-			$orientation = $options['orientation'] ?? 'P';
-			$printCss = $this->buildPrintCss(format: $format, orientation: $orientation);
-			$html = $printCss . $html;
-		}
-
-		$author = (string)($options['author'] ?? 'Filinq');
-		$caseReference = (string)($options['caseReference'] ?? '');
-		$hasCropMarks = ($options['cropMarks'] ?? false) === true;
-
-		if ($hasCropMarks === true) {
+		$html = $this->applyPrintCss(html: $html, options: $options);
+		if (($options['cropMarks'] ?? false) === true) {
 			$html = $this->buildCropMarksHtml(html: $html);
 		}
 
 		try {
 			$mpdf = new Mpdf(config: $config);
-
-			if ($title !== '') {
-				$mpdf->SetTitle($title);
-			}
-
-			$mpdf->SetAuthor($author);
-
-			if ($isPdfA === true) {
-				$mpdf->SetCreator('Filinq PDF/A Generator');
-
-				$keywords = 'Filinq';
-				if ($caseReference !== '') {
-					$keywords .= ' ' . $caseReference;
-				}
-
-				$mpdf->SetKeywords($keywords);
-				$mpdf->SetSubject($title);
-			}
-
+			$this->applyDocumentMetadata(mpdf: $mpdf, options: $options);
 			$mpdf->WriteHTML(html: $html);
 
 			return $mpdf->Output(name: '', dest: \Mpdf\Output\Destination::STRING_RETURN);
@@ -594,4 +563,37 @@ class PdfService implements PdfServiceInterface {
 		}//end try
 
 	}//end generatePdf()
+
+	/**
+	 * Set the title, author and, for PDF/A, the creator, keywords and subject.
+	 *
+	 * @param Mpdf                 $mpdf    The mPDF instance.
+	 * @param array<string, mixed> $options The PDF options (`title`, `author`, `pdfa`, `caseReference`).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/pdf-generation/spec.md
+	 */
+	private function applyDocumentMetadata(Mpdf $mpdf, array $options): void {
+		$title = $options['title'] ?? '';
+		if ($title !== '') {
+			$mpdf->SetTitle($title);
+		}
+
+		$mpdf->SetAuthor((string)($options['author'] ?? 'Filinq'));
+		if (($options['pdfa'] ?? false) !== true) {
+			return;
+		}
+
+		$mpdf->SetCreator('Filinq PDF/A Generator');
+		$caseReference = (string)($options['caseReference'] ?? '');
+		$keywords = 'Filinq';
+		if ($caseReference !== '') {
+			$keywords .= ' ' . $caseReference;
+		}
+
+		$mpdf->SetKeywords($keywords);
+		$mpdf->SetSubject($title);
+
+	}//end applyDocumentMetadata()
 }//end class
