@@ -400,19 +400,7 @@ class ListReferenceResolver {
 	 */
 	private function resolveList(array $ref): array {
 		$objectService = $this->getObjectService();
-
-		$query = $ref['filter'] ?? [];
-
-		$limit = self::DEFAULT_LIST_LIMIT;
-		if (isset($ref['limit']) === true) {
-			$limit = (int)$ref['limit'];
-		}
-
-		$query['_limit'] = $limit;
-
-		if (isset($ref['order']) === true && is_array($ref['order']) === true) {
-			$query['_order'] = $ref['order'];
-		}
+		$query = $this->listQuery(ref: $ref);
 
 		try {
 			$objectService->setRegister(register: (string)$ref['register']);
@@ -426,8 +414,41 @@ class ListReferenceResolver {
 			);
 		}
 
-		$rows = $result['results'] ?? [];
+		return $this->plainRows(rows: $result['results'] ?? []);
+	}//end resolveList()
 
+	/**
+	 * The search query of a list reference: its filter, with the limit and the order.
+	 *
+	 * @param array $ref A validated list reference.
+	 *
+	 * @return array<string, mixed> The query.
+	 */
+	private function listQuery(array $ref): array {
+		$query = $ref['filter'] ?? [];
+
+		$limit = self::DEFAULT_LIST_LIMIT;
+		if (isset($ref['limit']) === true) {
+			$limit = (int)$ref['limit'];
+		}
+
+		$query['_limit'] = $limit;
+
+		if (isset($ref['order']) === true && is_array($ref['order']) === true) {
+			$query['_order'] = $ref['order'];
+		}
+
+		return $query;
+	}//end listQuery()
+
+	/**
+	 * The search rows, each serializable object as its serialized form.
+	 *
+	 * @param iterable<mixed> $rows The rows the search returned.
+	 *
+	 * @return array<int, mixed> The rows.
+	 */
+	private function plainRows(iterable $rows): array {
 		$items = [];
 		foreach ($rows as $item) {
 			if (is_object($item) === true
@@ -441,5 +462,5 @@ class ListReferenceResolver {
 		}
 
 		return $items;
-	}//end resolveList()
+	}//end plainRows()
 }//end class
