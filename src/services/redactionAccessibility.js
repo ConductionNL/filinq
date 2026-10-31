@@ -14,6 +14,24 @@
 import { translate as t } from '@nextcloud/l10n'
 
 /**
+ * The sentence for each loss reason code OpenRegister or veraPDF reports.
+ * Each entry is a function so the string is translated when it is shown.
+ */
+const LOSS_REASON_TEXT = {
+	'engine-cannot-reauthor-structtree': () =>
+		t('filinq', 'The redaction engine cannot rebuild the tag structure'),
+	'marked-content-correspondence-broken': () =>
+		t('filinq', 'The tags no longer point at the right text'),
+	'structtreeroot-dropped-on-rebuild': () =>
+		t('filinq', 'The tag structure was dropped when the file was rebuilt'),
+	'input-not-tagged': () => t('filinq', 'The original had no tags to keep'),
+	'page-structure-not-preservable': () =>
+		t('filinq', 'The page structure could not be kept'),
+	'verapdf-not-pdfua': () =>
+		t('filinq', 'veraPDF found that the copy no longer meets PDF/UA'),
+}
+
+/**
  * A readable sentence for a loss reason from OpenRegister or veraPDF.
  *
  * @param {string} reason The reason code.
@@ -22,28 +40,9 @@ import { translate as t } from '@nextcloud/l10n'
  * @spec openspec/changes/archive/2026-09-29-accessible-redaction-output/tasks.md#task-3.1
  */
 export function lossReasonText(reason) {
-	switch (reason) {
-		case 'engine-cannot-reauthor-structtree':
-			return t(
-				'filinq',
-				'The redaction engine cannot rebuild the tag structure',
-			)
-		case 'marked-content-correspondence-broken':
-			return t('filinq', 'The tags no longer point at the right text')
-		case 'structtreeroot-dropped-on-rebuild':
-			return t(
-				'filinq',
-				'The tag structure was dropped when the file was rebuilt',
-			)
-		case 'input-not-tagged':
-			return t('filinq', 'The original had no tags to keep')
-		case 'page-structure-not-preservable':
-			return t('filinq', 'The page structure could not be kept')
-		case 'verapdf-not-pdfua':
-			return t('filinq', 'veraPDF found that the copy no longer meets PDF/UA')
-		default:
-			return reason
-	}
+	return Object.hasOwn(LOSS_REASON_TEXT, reason)
+		? LOSS_REASON_TEXT[reason]()
+		: reason
 }
 
 /**
