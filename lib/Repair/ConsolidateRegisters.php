@@ -521,58 +521,16 @@ class ConsolidateRegisters implements IRepairStep {
 	 * rows still in place: the migration is then INCOMPLETE, which is
 	 * recoverable, rather than PARTIAL, which is not.
 	 *
-	 * @param array<string, mixed> $pair  The pair plus the columns to carry; targetId is written into `_register`.
-	 * @param array<int, string>   $uuids The movable uuids.
+	 * @param array<string, mixed> $pair The pair plus the columns to carry; targetId is written into `_register`.
+	 * @param array<int, string> $uuids The movable uuids.
 	 *
 	 * @return int How many rows were moved AND confirmed.
 	 */
 	private function moveBatches(array $pair, array $uuids): int {
-		$sourceTable = $pair['sourceTable'];
-		$targetTable = $pair['targetTable'];
-		$moved       = 0;
+		$moved = 0;
 
 		foreach ($this->decisions->chunk(items: $uuids) as $batch) {
-			$inserted = $this->gateway->insertBatch(
-				sourceTable: $sourceTable,
-				targetTable: $targetTable,
-				targetId: $pair['targetId'],
-				columns: $pair['columns'],
-				batch: $batch
-			);
-
-			if ($inserted === false) {
-				$this->logger->warning(
-					'ConsolidateRegisters: insert failed; the source rows are untouched and the pair is '
-					. 'left incomplete. Re-running is safe.',
-					['sourceTable' => $sourceTable, 'targetTable' => $targetTable, 'batch' => count($batch)]
-				);
-				return $moved;
-			}
-
-			$observed = $this->countPresent(table: $targetTable, uuids: $batch);
-			if ($this->decisions->reconciled(expected: count($batch), observed: $observed) === false) {
-				$this->logger->error(
-					'ConsolidateRegisters: the target does not hold every uuid of the batch after the insert; '
-					. 'NOT deleting the source rows. The pair is left incomplete and both sides now hold some '
-					. 'of these rows; a re-run will report the arrived ones as conflicts.',
-					[
-						'sourceTable' => $sourceTable,
-						'targetTable' => $targetTable,
-						'expected' => count($batch),
-						'observed' => $observed,
-					]
-				);
-				return $moved;
-			}
-
-			if ($this->gateway->deleteBatch(table: $sourceTable, uuids: $batch) === false) {
-				$this->logger->error(
-					'ConsolidateRegisters: rows were inserted and confirmed but could NOT be deleted from the '
-					. 'source. They now exist in BOTH tables. The app reads the target, so no object is lost, '
-					. 'but the source copies must be removed by hand: a re-run will see them as conflicts and '
-					. 'refuse, by design.',
-					['sourceTable' => $sourceTable, 'targetTable' => $targetTable, 'uuids' => $batch]
-				);
+			if ($this->moveBatch(pair: $pair, batch: $batch) === false) {
 				return $moved;
 			}
 
@@ -581,6 +539,103 @@ class ConsolidateRegisters implements IRepairStep {
 
 		return $moved;
 	}//end moveBatches()
+
+	/**
+	 * Move one batch: insert, confirm it arrived, then delete it from the source.
+	 *
+	 * @param array<string, mixed> $pair The pair plus the columns to carry.
+	 * @param array<int, string> $batch The uuids of this batch.
+	 *
+	 * @return bool True when the batch was moved AND confirmed; false stops the pair.
+	 *
+	 * @spec exclude No canonical spec covers the consolidation of Filinq's five
+	 *  OpenRegister registers into one.
+	 */
+	private function moveBatch(array $pair, array $batch): bool {
+		if ($this->insertConfirmed(pair: $pair, batch: $batch) === false) {
+			return false;
+		}
+
+		$sourceTable = $pair['sourceTable'];
+		if ($this->gateway->deleteBatch(table: $sourceTable, uuids: $batch) === false) {
+			$this->logger->error(
+				'ConsolidateRegisters: rows were inserted and confirmed but could NOT be deleted from the '
+				. 'source. They now exist in BOTH tables. The app reads the target, so no object is lost, '
+				. 'but the source copies must be removed by hand: a re-run will see them as conflicts and '
+				. 'refuse, by design.',
+				['sourceTable' => $sourceTable, 'targetTable' => $pair['targetTable'], 'uuids' => $batch]
+			);
+			return false;
+		}
+
+		return true;
+	}//end moveBatch()
+
+	/**
+	 * Insert one batch into the target and confirm every uuid arrived.
+	 *
+	 * @param array<string, mixed> $pair The pair plus the columns to carry; targetId is written into `_register`.
+	 * @param array<int, string> $batch The uuids of this batch.
+	 *
+	 * @return bool True when the target holds the whole batch; only then may the source rows go.
+	 *
+	 * @spec exclude No canonical spec covers the consolidation of Filinq's five
+	 *  OpenRegister registers into one.
+	 */
+	private function insertConfirmed(array $pair, array $batch): bool {
+		$sourceTable = $pair['sourceTable'];
+		$targetTable = $pair['targetTable'];
+
+		$inserted = $this->gateway->insertBatch(
+			sourceTable: $sourceTable,
+			targetTable: $targetTable,
+			targetId: $pair['targetId'],
+			columns: $pair['columns'],
+			batch: $batch
+		);
+
+		if ($inserted === false) {
+			$this->logger->warning(
+				'ConsolidateRegisters: insert failed; the source rows are untouched and the pair is '
+				. 'left incomplete. Re-running is safe.',
+				['sourceTable' => $sourceTable, 'targetTable' => $targetTable, 'batch' => count($batch)]
+			);
+			return false;
+		}
+
+		return $this->arrivedInTarget(pair: $pair, batch: $batch);
+	}//end insertConfirmed()
+
+	/**
+	 * Confirm the target holds every uuid of the batch, counted back out of it.
+	 *
+	 * @param array<string, mixed> $pair The pair: sourceTable and targetTable.
+	 * @param array<int, string> $batch The uuids just inserted.
+	 *
+	 * @return bool True when the whole batch arrived.
+	 *
+	 * @spec exclude No canonical spec covers the consolidation of Filinq's five
+	 *  OpenRegister registers into one.
+	 */
+	private function arrivedInTarget(array $pair, array $batch): bool {
+		$observed = $this->countPresent(table: $pair['targetTable'], uuids: $batch);
+		if ($this->decisions->reconciled(expected: count($batch), observed: $observed) === false) {
+			$this->logger->error(
+				'ConsolidateRegisters: the target does not hold every uuid of the batch after the insert; '
+				. 'NOT deleting the source rows. The pair is left incomplete and both sides now hold some '
+				. 'of these rows; a re-run will report the arrived ones as conflicts.',
+				[
+					'sourceTable' => $pair['sourceTable'],
+					'targetTable' => $pair['targetTable'],
+					'expected' => count($batch),
+					'observed' => $observed,
+				]
+			);
+			return false;
+		}
+
+		return true;
+	}//end arrivedInTarget()
 
 	/**
 	 * How many of these uuids the target holds RIGHT NOW.
