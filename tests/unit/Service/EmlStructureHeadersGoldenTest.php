@@ -12,7 +12,7 @@
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/archive/2026-05-07-eml-pdf-anonymization/tasks.md
+ * @spec openspec/changes/archive/2026-06-14-eml-pdf-assembly/tasks.md
  */
 
 declare(strict_types=1);

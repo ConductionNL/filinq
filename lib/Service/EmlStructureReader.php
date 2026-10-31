@@ -71,6 +71,8 @@ class EmlStructureReader {
 	 * @param object $result AnonymisedEmlStructure.
 	 *
 	 * @return array<string,string> Flattened header strings.
+	 *
+	 * @spec openspec/changes/archive/2026-06-14-eml-pdf-assembly/tasks.md
 	 */
 	public function headers(object $result): array {
 		$raw = $this->prop(obj: $result, name: 'headers', default: []);
