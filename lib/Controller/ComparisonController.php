@@ -27,7 +27,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use OCA\Filinq\Exception\ComparisonException;
-use OCA\Filinq\Service\DocumentComparisonService;
+use OCA\Filinq\Kernel\Contracts\DocumentComparisonServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -48,13 +48,14 @@ use Throwable;
  * @link     https://www.filinq.app
  */
 class ComparisonController extends Controller {
+	use AnswersNotAuthenticated;
 	/**
 	 * Constructor.
 	 *
 	 * @param string $appName The app name.
 	 * @param IRequest $request The request.
 	 * @param LoggerInterface $logger Logger.
-	 * @param DocumentComparisonService $service The comparison service.
+	 * @param DocumentComparisonServiceInterface $service The comparison service.
 	 * @param IL10N $l10n Localisation.
 	 * @param IUserSession $userSession User session.
 	 *
@@ -64,7 +65,7 @@ class ComparisonController extends Controller {
 		string $appName,
 		IRequest $request,
 		private readonly LoggerInterface $logger,
-		private readonly DocumentComparisonService $service,
+		private readonly DocumentComparisonServiceInterface $service,
 		private readonly IL10N $l10n,
 		private readonly IUserSession $userSession,
 	) {
@@ -92,10 +93,7 @@ class ComparisonController extends Controller {
 	#[NoAdminRequired]
 	public function compare(): JSONResponse {
 		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(
-				data: ['error' => $this->l10n->t('Not authenticated')],
-				statusCode: Http::STATUS_UNAUTHORIZED
-			);
+			return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 		}
 
 		$left = $this->request->getParam('left');

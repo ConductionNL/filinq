@@ -11,8 +11,7 @@
 			{{ error }}
 		</div>
 		<div v-else class="word-viewer__page">
-			<!-- mammoth output is HTML extracted from the docx; safe enough here
-				since it strips scripts and we never execute it. -->
+			<!-- mammoth does not sanitise; the HTML is sanitised in load(). -->
 			<!-- eslint-disable-next-line vue/no-v-html -->
 			<div ref="content" class="word-viewer__content" v-html="html" />
 		</div>
@@ -22,12 +21,16 @@
 <script>
 import { translate as t } from '@nextcloud/l10n'
 import { NcLoadingIcon } from '@nextcloud/vue'
-import { fetchFileAsArrayBuffer } from '../../services/fileViewerService.js'
+import {
+	fetchFileAsArrayBuffer,
+	fetchUrlAsArrayBuffer,
+} from '../../services/fileViewerService.js'
 import {
 	applyDomHighlights,
 	clearDomHighlights,
 } from '../../services/highlightDom.js'
 import { fileViewerStore } from '../../store/store.js'
+import { sanitizeHtml } from '../../utils/sanitizeHtml.js'
 
 let mammothPromise = null
 
@@ -53,6 +56,14 @@ export default {
 		path: {
 			type: String,
 			required: true,
+		},
+
+		// Optional: read the bytes from this same-origin URL instead of the
+		// WebDAV path, for a file outside the user's storage (the compare view
+		// mounted by another app).
+		url: {
+			type: String,
+			default: '',
 		},
 	},
 
@@ -103,6 +114,16 @@ export default {
 			},
 		},
 
+		/**
+		 * Reload when the host points the viewer at another URL.
+		 *
+		 * @return {void}
+		 * @spec openspec/changes/anonymization-review-workbench/specs/anonymization-review-workbench/spec.md#requirement-the-split-view-is-mountable-by-another-app-req-ddarw-014
+		 */
+		url() {
+			this.load()
+		},
+
 		highlightEntities: {
 			deep: true,
 			handler() {
@@ -132,11 +153,13 @@ export default {
 			try {
 				const [mammothModule, arrayBuffer] = await Promise.all([
 					loadMammoth(),
-					fetchFileAsArrayBuffer(this.path),
+					this.url
+						? fetchUrlAsArrayBuffer(this.url)
+						: fetchFileAsArrayBuffer(this.path),
 				])
 				const mammoth = mammothModule.default || mammothModule
 				const result = await mammoth.convertToHtml({ arrayBuffer })
-				this.html = result.value
+				this.html = sanitizeHtml(result.value)
 			} catch (err) {
 				console.error('[WordViewer] failed to load docx:', err)
 				this.error = err.message || t('filinq', 'Failed to load document')

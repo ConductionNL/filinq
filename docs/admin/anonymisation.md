@@ -47,6 +47,15 @@ by toggling *Show anonymiser backend warning*.
 > **Note:** Dismissal is informational only — regex-only mode continues to work.
 > The banner is a discovery aid, not a blocker.
 
+### When anonymisation is refused
+
+The banner turns red, and cannot be dismissed, when filinq refuses to anonymise:
+entity recognition is switched off in OpenRegister, the detector OpenRegister would
+run is unavailable, or filinq cannot read OpenRegister's detector state. Until you
+fix that in the OpenRegister settings, every anonymisation answers with an error
+and writes no file. When a detector other than regex is live, the settings page
+names it: *Entity detector in use: presidio*.
+
 ### AppAPI not installed
 
 If AppAPI itself is not installed on the instance, the banner additionally

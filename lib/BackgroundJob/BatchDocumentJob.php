@@ -33,7 +33,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\BackgroundJob;
 
 use Exception;
-use OCA\Filinq\Service\DocumentService;
+use OCA\Filinq\Kernel\Contracts\DocumentServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\QueuedJob;
 use Psr\Log\LoggerInterface;
@@ -54,14 +54,14 @@ class BatchDocumentJob extends QueuedJob {
 	 * Constructor for BatchDocumentJob.
 	 *
 	 * @param ITimeFactory $time Time factory
-	 * @param DocumentService $documentSvc Document generation service
+	 * @param DocumentServiceInterface $documentSvc Document generation service
 	 * @param LoggerInterface $logger Logger for error reporting
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		ITimeFactory $time,
-		private readonly DocumentService $documentSvc,
+		private readonly DocumentServiceInterface $documentSvc,
 		private readonly LoggerInterface $logger,
 	) {
 		parent::__construct(time: $time);
@@ -96,137 +96,102 @@ class BatchDocumentJob extends QueuedJob {
 			return;
 		}
 
-		$this->initializeJobStatus(jobId: $jobId, total: count($objectIds), options: $options);
 		$this->processObjects(
-			jobId: $jobId,
-			templateId: $templateId,
-			objectIds: $objectIds,
-			options: $options
+			job: ['jobId' => $jobId, 'templateId' => $templateId, 'options' => $options],
+			objectIds: $objectIds
 		);
 
 	}//end run()
 
 	/**
-	 * Initialize job status to processing.
+	 * Generate a document per object and report the progress after each one.
 	 *
-	 * @param string $jobId The job UUID
-	 * @param int $total Total number of objects to process
-	 * @param array $options Generation options (preserved so userId survives for auth checks)
-	 *
-	 * @return void
-	 */
-	private function initializeJobStatus(string $jobId, int $total, array $options): void {
-		$this->documentSvc->updateJobStatus(
-			jobId: $jobId,
-			status: [
-				'jobId' => $jobId,
-				'status' => 'processing',
-				'total' => $total,
-				'completed' => 0,
-				'errors' => 0,
-				'results' => [],
-				'options' => $options,
-			]
-		);
-
-	}//end initializeJobStatus()
-
-	/**
-	 * Process all objects and update job status after each one.
-	 *
-	 * @param string $jobId The job UUID
-	 * @param string $templateId The template UUID
-	 * @param array $objectIds Array of object UUIDs
-	 * @param array $options Generation options
+	 * @param array{jobId: string, templateId: string, options: array} $job       The job.
+	 * @param array                                                    $objectIds Array of object UUIDs
 	 *
 	 * @return void
 	 */
-	private function processObjects(
-		string $jobId,
-		string $templateId,
-		array $objectIds,
-		array $options,
-	): void {
-		$register = $options['register'] ?? '';
-		$schema = $options['schema'] ?? '';
-		$results = [];
-		$completed = 0;
-		$errors = 0;
-		$total = count($objectIds);
+	private function processObjects(array $job, array $objectIds): void {
+		$tally = new BatchTally(total: count($objectIds));
+		$this->storeProgress(job: $job, progress: $tally->progress(status: 'processing'));
 
 		foreach ($objectIds as $objectId) {
-			$dataRefs = [
-				[
-					'register' => $register,
-					'schema' => $schema,
-					'id' => $objectId,
-				],
-			];
-
-			try {
-				$result = $this->documentSvc->generateDocument(
-					templateId: $templateId,
-					dataRefs: $dataRefs,
-					options: $options
-				);
-
-				$results[] = [
-					'objectId' => $objectId,
-					'status' => 'success',
-					'warnings' => $result['warnings'],
-					'fileId' => $result['output']['fileId'] ?? null,
-					'path' => $result['output']['path'] ?? null,
-				];
-				$completed++;
-			} catch (Exception $e) {
-				$results[] = [
-					'objectId' => $objectId,
-					'status' => 'error',
-					'error' => $e->getMessage(),
-				];
-				$errors++;
-
-				$this->logger->warning(
-					message: 'BatchDocumentJob: failed to generate document for object',
-					context: [
-						'objectId' => $objectId,
-						'templateId' => $templateId,
-						'error' => $e->getMessage(),
-					]
-				);
-			}//end try
-
-			$this->documentSvc->updateJobStatus(
-				jobId: $jobId,
-				status: [
-					'jobId' => $jobId,
-					'status' => 'processing',
-					'total' => $total,
-					'completed' => $completed,
-					'errors' => $errors,
-					'results' => $results,
-					'options' => $options,
-				]
-			);
-		}//end foreach
+			$tally->record(result: $this->generateFor(job: $job, objectId: $objectId));
+			$this->storeProgress(job: $job, progress: $tally->progress(status: 'processing'));
+		}
 
 		$finalStatus = 'completed';
-		if ($errors > 0) {
+		if ($tally->hasErrors() === true) {
 			$finalStatus = 'completed_with_errors';
 		}
 
-		$this->documentSvc->updateJobStatus(
-			jobId: $jobId,
-			status: [
-				'jobId' => $jobId,
-				'status' => $finalStatus,
-				'total' => $total,
-				'completed' => $completed,
-				'errors' => $errors,
-				'results' => $results,
-				'options' => $options,
-			]
-		);
+		$this->storeProgress(job: $job, progress: $tally->progress(status: $finalStatus));
 
 	}//end processObjects()
+
+	/**
+	 * Generate the document for one object.
+	 *
+	 * @param array{jobId: string, templateId: string, options: array} $job      The job.
+	 * @param mixed                                                    $objectId The object UUID.
+	 *
+	 * @return array<string, mixed> The object's result row.
+	 */
+	private function generateFor(array $job, mixed $objectId): array {
+		$dataRefs = [
+			[
+				'register' => $job['options']['register'] ?? '',
+				'schema' => $job['options']['schema'] ?? '',
+				'id' => $objectId,
+			],
+		];
+
+		try {
+			$result = $this->documentSvc->generateDocument(
+				templateId: $job['templateId'],
+				dataRefs: $dataRefs,
+				options: $job['options']
+			);
+		} catch (Exception $e) {
+			$this->logger->warning(
+				message: 'BatchDocumentJob: failed to generate document for object',
+				context: [
+					'objectId' => $objectId,
+					'templateId' => $job['templateId'],
+					'error' => $e->getMessage(),
+				]
+			);
+
+			return [
+				'objectId' => $objectId,
+				'status' => 'error',
+				'error' => $e->getMessage(),
+			];
+		}//end try
+
+		return [
+			'objectId' => $objectId,
+			'status' => 'success',
+			'warnings' => $result['warnings'],
+			'fileId' => $result['output']['fileId'] ?? null,
+			'path' => $result['output']['path'] ?? null,
+		];
+
+	}//end generateFor()
+
+	/**
+	 * Store the job's progress, keeping its options so userId survives for auth checks.
+	 *
+	 * @param array{jobId: string, templateId: string, options: array} $job      The job.
+	 * @param array<string, mixed>                                     $progress The tally's progress.
+	 *
+	 * @return void
+	 */
+	private function storeProgress(array $job, array $progress): void {
+		$this->documentSvc->updateJobStatus(
+			jobId: $job['jobId'],
+			status: ['jobId' => $job['jobId']] + $progress + ['options' => $job['options']]
+		);
+
+	}//end storeProgress()
 }//end class

@@ -23,9 +23,10 @@ namespace OCA\Filinq\Controller;
 
 use Exception;
 use OCA\Filinq\Exception\RegisterNotConfiguredException;
-use OCA\Filinq\Service\SigningAuditService;
-use OCA\Filinq\Service\SigningService;
-use OCA\Filinq\Service\SigningVerificationService;
+use OCA\Filinq\Exception\StepUpRequiredException;
+use OCA\Filinq\Kernel\Contracts\SigningAuditServiceInterface;
+use OCA\Filinq\Kernel\Contracts\SigningServiceInterface;
+use OCA\Filinq\Kernel\Contracts\SigningVerificationServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -45,16 +46,22 @@ use Psr\Log\LoggerInterface;
  * @link     https://www.filinq.app
  *
  * @spec openspec/specs/document-signing/spec.md
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The thirteenth class is
+ * StepUpRequiredException: the step-up hint the sign dialog needs rides on
+ * the error response, and only this controller knows the response shape.
  */
 class SigningController extends Controller {
+	use AnswersNotAuthenticated;
+
 	/**
 	 * Constructor
 	 *
 	 * @param string $appName App name
 	 * @param IRequest $request Request object
-	 * @param SigningService $signingService Signing service
-	 * @param SigningAuditService $auditService Audit service
-	 * @param SigningVerificationService $verificationService Verification service
+	 * @param SigningServiceInterface $signingService Signing service
+	 * @param SigningAuditServiceInterface $auditService Audit service
+	 * @param SigningVerificationServiceInterface $verificationService Verification service
 	 * @param IUserSession $userSession User session
 	 * @param LoggerInterface $logger Logger
 	 * @param IL10N $l10n Localization
@@ -65,9 +72,9 @@ class SigningController extends Controller {
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly SigningService $signingService,
-		private readonly SigningAuditService $auditService,
-		private readonly SigningVerificationService $verificationService,
+		private readonly SigningServiceInterface $signingService,
+		private readonly SigningAuditServiceInterface $auditService,
+		private readonly SigningVerificationServiceInterface $verificationService,
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
 		private readonly IL10N $l10n,
@@ -85,15 +92,16 @@ class SigningController extends Controller {
 	 * @NoAdminRequired
 	 *
 	 * @spec openspec/changes/digital-signing-integration/tasks.md#6-1
+	 *
+	 * @no-admin-idor-exempt SignedArtifactProducer::initiatorDocument() resolves documentFileId through
+	 * the session user's own folder and refuses a file they cannot read; the initiator is always the
+	 * session user.
 	 */
 	public function createRequest(): JSONResponse {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Not authenticated')],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 			}
 
 			$data = $this->request->getParams();
@@ -118,10 +126,7 @@ class SigningController extends Controller {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Not authenticated')],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 			}
 
 			// WF2 security fix: pass the caller identity so the service scopes
@@ -170,10 +175,7 @@ class SigningController extends Controller {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Not authenticated')],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 			}
 
 			// WF2 + Wilco #6 fix (filinq#100, 2026-06-06): pass the caller
@@ -219,10 +221,7 @@ class SigningController extends Controller {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Not authenticated')],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 			}
 
 			// WF1 fix (filinq#100): only the initiator or an admin may
@@ -292,15 +291,15 @@ class SigningController extends Controller {
 	 * @NoAdminRequired
 	 *
 	 * @spec openspec/changes/digital-signing-integration/tasks.md#6-1
+	 *
+	 * @no-admin-idor-exempt SigningActorResolver::loadAuthorisedSigner() refuses unless the signer record
+	 * belongs to this request and its userId is the session user.
 	 */
 	public function sign(string $id): JSONResponse {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Not authenticated')],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 			}
 
 			$signerId = $this->request->getParam('signerId', '');
@@ -322,15 +321,15 @@ class SigningController extends Controller {
 	 * @NoAdminRequired
 	 *
 	 * @spec openspec/changes/digital-signing-integration/tasks.md#6-1
+	 *
+	 * @no-admin-idor-exempt SigningActorResolver::loadAuthorisedSigner() refuses unless the signer record
+	 * belongs to this request and its userId is the session user.
 	 */
 	public function decline(string $id): JSONResponse {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Not authenticated')],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 			}
 
 			$signerId = $this->request->getParam('signerId', '');
@@ -351,15 +350,15 @@ class SigningController extends Controller {
 	 * @NoAdminRequired
 	 *
 	 * @spec openspec/changes/digital-signing-integration/tasks.md#6-1
+	 *
+	 * @no-admin-idor-exempt each id is read with getRequest(callerUserId: session user), which hides
+	 * requests the caller neither initiated nor signs, and only the caller's own signer record is signed.
 	 */
 	public function bulkSign(): JSONResponse {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Not authenticated')],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 			}
 
 			$requestIds = $this->request->getParam('requestIds', []);
@@ -419,10 +418,7 @@ class SigningController extends Controller {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Not authenticated')],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 			}
 
 			// Security (M2 + Wilco #6 / filinq#100): only the initiator,
@@ -487,10 +483,17 @@ class SigningController extends Controller {
 		// no longer act as an existence-probing oracle. The status code is
 		// still honoured from the exception (e.g. 400 for invalid input) so
 		// genuine client errors are not masked as a generic 500.
-		return new JSONResponse(
-			['error' => $this->l10n->t($message)],
-			$statusCode
-		);
+		$body = ['error' => $this->l10n->t($message)];
+
+		// Identity rails (signer-identity-rails REQ-DDSIR-003): a refusal for
+		// missing, stale or insufficient identity evidence tells the sign dialog
+		// which assurance to step up to. It is thrown only after the ownership
+		// check, so only the signer the record belongs to ever sees it.
+		if ($exception instanceof StepUpRequiredException) {
+			$body['stepUp'] = $exception->stepUp();
+		}
+
+		return new JSONResponse($body, $statusCode);
 
 	}//end errorResponse()
 }//end class

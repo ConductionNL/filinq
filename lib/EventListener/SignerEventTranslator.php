@@ -33,7 +33,7 @@ use OCA\Filinq\Event\SignerChainCompletedEvent;
 use OCA\Filinq\Event\SignerStepApprovedEvent;
 use OCA\Filinq\Event\SignerStepPendingEvent;
 use OCA\Filinq\Event\SignerStepRejectedEvent;
-use OCA\Filinq\Service\Signing\SigningProviderFactory;
+use OCA\Filinq\Kernel\Contracts\ActiveSigningProviderInterface;
 use OCP\EventDispatcher\IEventDispatcher;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -53,11 +53,11 @@ class SignerEventTranslator {
 	/**
 	 * Constructor.
 	 *
-	 * @param SigningProviderFactory $providerFactory Provider factory for invoking
-	 *                                                the configured provider on
-	 *                                                position-enabled transitions.
-	 * @param IEventDispatcher $dispatcher Dispatcher used to re-emit
-	 *                                     typed filinq-side events.
+	 * @param ActiveSigningProviderInterface $providerFactory Names the configured
+	 *                                                        provider on
+	 *                                                        position-enabled transitions.
+	 * @param IEventDispatcher               $dispatcher      Dispatcher used to re-emit
+	 *                                                        typed filinq-side events.
 	 * @param LoggerInterface $logger Logger.
 	 *
 	 * @return void
@@ -65,7 +65,7 @@ class SignerEventTranslator {
 	 * @spec openspec/specs/signing-via-or-approval-with-provider-plugins/spec.md
 	 */
 	public function __construct(
-		private readonly SigningProviderFactory $providerFactory,
+		private readonly ActiveSigningProviderInterface $providerFactory,
 		private readonly IEventDispatcher $dispatcher,
 		private readonly LoggerInterface $logger,
 	) {
@@ -222,9 +222,9 @@ class SignerEventTranslator {
 	 */
 	private function invokeProviderForEnabledPosition(string $objectUuid, int $position): void {
 		try {
-			$provider = $this->providerFactory->getActiveProvider();
+			$providerId = $this->providerFactory->getActiveProviderIdentifier();
 			$this->logger->debug(
-				'SigningTaskListener: provider ' . $provider->getIdentifier()
+				'SigningTaskListener: provider ' . $providerId
 				. ' notified that position ' . $position . ' is enabled for sign-request ' . $objectUuid
 			);
 		} catch (Throwable $e) {

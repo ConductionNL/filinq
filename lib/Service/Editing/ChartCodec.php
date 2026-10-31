@@ -186,16 +186,7 @@ class ChartCodec {
 		array $chart,
 		?string $afterAnchor = null,
 	): array {
-		if ($this->supports(extension: $extension) === false) {
-			throw new RuntimeException(
-				sprintf(
-					'Charts can only be embedded in .docx files, not "%s". An ODF chart is an embedded object '
-					. 'with its own manifest entry, which is a different construction and is not implemented.',
-					$extension
-				)
-			);
-		}
-
+		$this->requireDocx(extension: $extension);
 		$chart = $this->validate(chart: $chart);
 
 		$documentXml = $this->io->readPart(packageBytes: $packageBytes, part: 'word/document.xml');
@@ -204,51 +195,59 @@ class ChartCodec {
 		$index = $this->nextChartIndex(packageBytes: $packageBytes);
 		$chartPart = sprintf('word/charts/chart%d.xml', $index);
 		$relId = $this->nextRelationshipId(relsXml: $relsXml);
+		$relationships = $this->withRelationship(xml: $relsXml, relId: $relId, target: sprintf('charts/chart%d.xml', $index));
+		$drawing = $this->withDrawing(xml: $documentXml, relId: $relId, title: $chart['title'], afterAnchor: $afterAnchor);
 
 		// Order matters only in that every write must land; each writePart returns
 		// new bytes, so they are threaded rather than applied to the original.
-		$bytes = $this->io->writePart(
-			packageBytes: $packageBytes,
-			part: $chartPart,
-			xml: $this->buildChartXml(chart: $chart)
-		);
+		$bytes = $this->io->writePart(packageBytes: $packageBytes, part: $chartPart, xml: $this->buildChartXml(chart: $chart));
+		$bytes = $this->withChartContentType(packageBytes: $bytes, chartPart: $chartPart);
+		$bytes = $this->io->writePart(packageBytes: $bytes, part: 'word/_rels/document.xml.rels', xml: $relationships);
+		$bytes = $this->io->writePart(packageBytes: $bytes, part: 'word/document.xml', xml: $drawing);
 
-		$bytes = $this->io->writePart(
-			packageBytes: $bytes,
-			part: '[Content_Types].xml',
-			xml: $this->withContentTypeOverride(
-				xml: $this->io->readPart(packageBytes: $bytes, part: '[Content_Types].xml'),
-				partName: '/' . $chartPart
-			)
-		);
-
-		$bytes = $this->io->writePart(
-			packageBytes: $bytes,
-			part: 'word/_rels/document.xml.rels',
-			xml: $this->withRelationship(
-				xml: $relsXml,
-				relId: $relId,
-				target: sprintf('charts/chart%d.xml', $index)
-			)
-		);
-
-		$bytes = $this->io->writePart(
-			packageBytes: $bytes,
-			part: 'word/document.xml',
-			xml: $this->withDrawing(
-				xml: $documentXml,
-				relId: $relId,
-				title: $chart['title'],
-				afterAnchor: $afterAnchor
-			)
-		);
-
-		return [
-			'bytes' => $bytes,
-			'chartPart' => $chartPart,
-			'relationshipId' => $relId,
-		];
+		return ['bytes' => $bytes, 'chartPart' => $chartPart, 'relationshipId' => $relId];
 	}//end embedChart()
+
+	/**
+	 * Refuse any package that is not a .docx.
+	 *
+	 * @param string $extension The file extension.
+	 *
+	 * @return void
+	 *
+	 * @throws RuntimeException When the format is not .docx.
+	 */
+	private function requireDocx(string $extension): void {
+		if ($this->supports(extension: $extension) === true) {
+			return;
+		}
+
+		throw new RuntimeException(
+			sprintf(
+				'Charts can only be embedded in .docx files, not "%s". An ODF chart is an embedded object '
+				. 'with its own manifest entry, which is a different construction and is not implemented.',
+				$extension
+			)
+		);
+	}//end requireDocx()
+
+	/**
+	 * Declare the chart part's content type in `[Content_Types].xml`.
+	 *
+	 * @param string $packageBytes The package bytes.
+	 * @param string $chartPart The chart part, such as `word/charts/chart1.xml`.
+	 *
+	 * @return string The new package bytes.
+	 */
+	private function withChartContentType(string $packageBytes, string $chartPart): string {
+		$types = $this->io->readPart(packageBytes: $packageBytes, part: '[Content_Types].xml');
+
+		return $this->io->writePart(
+			packageBytes: $packageBytes,
+			part: '[Content_Types].xml',
+			xml: $this->withContentTypeOverride(xml: $types, partName: '/' . $chartPart)
+		);
+	}//end withChartContentType()
 
 	/**
 	 * Validate and normalise a chart definition.

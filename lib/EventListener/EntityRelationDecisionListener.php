@@ -17,8 +17,8 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\EventListener;
 
-use OCA\Filinq\Service\ConsentCrudService;
-use OCA\Filinq\Service\ConsentService;
+use OCA\Filinq\Kernel\Contracts\ConsentCrudServiceInterface;
+use OCA\Filinq\Kernel\Contracts\ConsentServiceInterface;
 use OCP\App\IAppManager;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
@@ -71,15 +71,15 @@ class EntityRelationDecisionListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param ConsentService     $consentService Creates the consent request.
-	 * @param ConsentCrudService $consentCrud    Resolves the configured register/schema.
+	 * @param ConsentServiceInterface     $consentService Creates the consent request.
+	 * @param ConsentCrudServiceInterface $consentCrud    Resolves the configured register/schema.
 	 * @param IAppManager        $appManager     Tells us whether OpenRegister is installed.
 	 * @param ContainerInterface $container      Resolves OpenRegister classes by name.
 	 * @param LoggerInterface    $logger         Records every path that declines to act.
 	 */
 	public function __construct(
-		private readonly ConsentService $consentService,
-		private readonly ConsentCrudService $consentCrud,
+		private readonly ConsentServiceInterface $consentService,
+		private readonly ConsentCrudServiceInterface $consentCrud,
 		private readonly IAppManager $appManager,
 		private readonly ContainerInterface $container,
 		private readonly LoggerInterface $logger,
@@ -101,83 +101,18 @@ class EntityRelationDecisionListener implements IEventListener {
 			return;
 		}
 
-		// HELD AS `mixed` ON PURPOSE, and this is not a style choice.
-		//
-		// `is_a()` with a literal class name is a type assertion to static
-		// analysis, so psalm narrows `$event` to a class it cannot load — this
-		// app does not depend on OpenRegister — and every subsequent property
-		// access becomes an UndefinedClass error. Widening to `mixed` here says
-		// what is actually true: the shape is guaranteed by the runtime check
-		// above, not by anything psalm can see. It is the same posture
-		// `CustomDictionaryDetectionRunner::getOpenRegisterService()` takes,
-		// which returns `mixed` for exactly this reason.
-		$decision = $this->asDecision(event: $event);
-
 		try {
-			// THE WHOLE TRIGGER, AND IT BELONGS TO THE EVENT. The event's own
-			// `isSkipAnonymizationActivated()` returns true ONLY for a
-			// false -> true transition. That single call is what makes the
-			// three negative scenarios correct rather than accidental:
+			// HELD AS `mixed` ON PURPOSE, and this is not a style choice.
 			//
-			//   * a bases-only edit leaves `skipAnonymization` out of
-			//     changedFields entirely -> false
-			//   * a reversal (true -> false) matches the key but not the
-			//     direction -> false
-			//
-			// Reimplementing this check here would be a second copy of a
-			// grammar that already exists, and the two would drift.
-			if ($decision->isSkipAnonymizationActivated() === false) {
-				return;
-			}
-
-			$config = $this->consentCrud->getConsentConfig();
-			if ($config === null) {
-				$this->logger->warning(
-					'Publication consent register/schema not configured; the decision to publish '
-					. 'an entity unredacted was recorded in OpenRegister but no consent request '
-					. 'was created.'
-				);
-				return;
-			}
-
-			$relation = $decision->getRelation();
-			$documentId = (string)($relation->getFileId() ?? '');
-			if ($documentId === '') {
-				$this->logger->warning(
-					'EntityRelation {relation} activated skipAnonymization but carries no fileId, so there is no document to attach a consent record to.',
-					['relation' => (string)($relation->getId() ?? 'unknown')]
-				);
-				return;
-			}
-
-			$entity = $this->resolveEntity(entityId: $relation->getEntityId());
-			if ($entity === null) {
-				$this->logger->warning(
-					'EntityRelation {relation} activated skipAnonymization but its entity {entity} could not be resolved; no consent request created.',
-					[
-						'relation' => (string)($relation->getId() ?? 'unknown'),
-						'entity' => (string)($relation->getEntityId() ?? 'unknown'),
-					]
-				);
-				return;
-			}
-
-			// `entityKey` is what makes `createConsentRequest` idempotent on
-			// (documentId, entityKey) — see the requirement of that name in the
-			// spec. Without it a second decision on the same entity would
-			// create a duplicate record rather than update the first, and the
-			// workflow state on the original (notificationStatus, objection
-			// dates) would be stranded on a row nothing reads.
-			$extra = ['entityKey' => (string)($entity->getUuid() ?? '')];
-
-			$this->consentService->createConsentRequest(
-				documentId: $documentId,
-				entityType: (string)($entity->getType() ?? ''),
-				entityText: (string)($entity->getValue() ?? ''),
-				register: $config['register'],
-				schema: $config['schema'],
-				extra: $extra
-			);
+			// `is_a()` with a literal class name is a type assertion to static
+			// analysis, so psalm narrows `$event` to a class it cannot load — this
+			// app does not depend on OpenRegister — and every subsequent property
+			// access becomes an UndefinedClass error. Widening to `mixed` here says
+			// what is actually true: the shape is guaranteed by the runtime check
+			// above, not by anything psalm can see. It is the same posture
+			// `CustomDictionaryDetectionRunner::getOpenRegisterService()` takes,
+			// which returns `mixed` for exactly this reason.
+			$this->createConsentFor(decision: $this->asDecision(event: $event));
 		} catch (Throwable $e) {
 			// SWALLOWED ON PURPOSE — see the class docblock. The operator's
 			// PATCH has already been persisted by OpenRegister at this point;
@@ -189,6 +124,111 @@ class EntityRelationDecisionListener implements IEventListener {
 			);
 		}
 	}//end handle()
+
+	/**
+	 * Create the consent request an activated skipAnonymization decision calls for.
+	 *
+	 * @param mixed $decision The OpenRegister event, widened by asDecision().
+	 *
+	 * @return void
+	 */
+	private function createConsentFor(mixed $decision): void {
+		// THE WHOLE TRIGGER, AND IT BELONGS TO THE EVENT. The event's own
+		// `isSkipAnonymizationActivated()` returns true ONLY for a
+		// false -> true transition. That single call is what makes the
+		// three negative scenarios correct rather than accidental:
+		//
+		//   * a bases-only edit leaves `skipAnonymization` out of
+		//     changedFields entirely -> false
+		//   * a reversal (true -> false) matches the key but not the
+		//     direction -> false
+		//
+		// Reimplementing this check here would be a second copy of a
+		// grammar that already exists, and the two would drift.
+		if ($decision->isSkipAnonymizationActivated() === false) {
+			return;
+		}
+
+		$config = $this->consentCrud->getConsentConfig();
+		if ($config === null) {
+			$this->logger->warning(
+				'Publication consent register/schema not configured; the decision to publish '
+				. 'an entity unredacted was recorded in OpenRegister but no consent request '
+				. 'was created.'
+			);
+			return;
+		}
+
+		$relation = $decision->getRelation();
+		$documentId = $this->documentIdOf(relation: $relation);
+		if ($documentId === null) {
+			return;
+		}
+
+		$entity = $this->entityOf(relation: $relation);
+		if ($entity === null) {
+			return;
+		}
+
+		// `entityKey` is what makes `createConsentRequest` idempotent on
+		// (documentId, entityKey) — see the requirement of that name in the
+		// spec. Without it a second decision on the same entity would
+		// create a duplicate record rather than update the first, and the
+		// workflow state on the original (notificationStatus, objection
+		// dates) would be stranded on a row nothing reads.
+		$extra = ['entityKey' => (string)($entity->getUuid() ?? '')];
+
+		$this->consentService->createConsentRequest(
+			documentId: $documentId,
+			entityType: (string)($entity->getType() ?? ''),
+			entityText: (string)($entity->getValue() ?? ''),
+			register: $config['register'],
+			schema: $config['schema'],
+			extra: $extra
+		);
+	}//end createConsentFor()
+
+	/**
+	 * The document a relation sits on, or null (logged) when it carries no fileId.
+	 *
+	 * @param mixed $relation The relation in its post-update state.
+	 *
+	 * @return string|null The document id.
+	 */
+	private function documentIdOf(mixed $relation): ?string {
+		$documentId = (string)($relation->getFileId() ?? '');
+		if ($documentId === '') {
+			$this->logger->warning(
+				'EntityRelation {relation} activated skipAnonymization but carries no fileId, so there is no document to attach a consent record to.',
+				['relation' => (string)($relation->getId() ?? 'unknown')]
+			);
+			return null;
+		}
+
+		return $documentId;
+	}//end documentIdOf()
+
+	/**
+	 * The entity a relation points at, or null (logged) when it cannot be resolved.
+	 *
+	 * @param mixed $relation The relation in its post-update state.
+	 *
+	 * @return mixed The entity, or null.
+	 */
+	private function entityOf(mixed $relation): mixed {
+		$entity = $this->resolveEntity(entityId: $relation->getEntityId());
+		if ($entity === null) {
+			$this->logger->warning(
+				'EntityRelation {relation} activated skipAnonymization but its entity {entity} could not be resolved; no consent request created.',
+				[
+					'relation' => (string)($relation->getId() ?? 'unknown'),
+					'entity' => (string)($relation->getEntityId() ?? 'unknown'),
+				]
+			);
+		}
+
+		return $entity;
+	}//end entityOf()
 
 	/**
 	 * Widen a verified event to `mixed` so its OpenRegister accessors are callable.

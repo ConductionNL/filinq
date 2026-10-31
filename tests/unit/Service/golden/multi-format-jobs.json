@@ -1,0 +1,527 @@
+{
+    "three formats, one failing": {
+        "result": {
+            "outputs": [
+                {
+                    "format": "pdf",
+                    "status": "generated",
+                    "fileId": 101,
+                    "fileName": "besluit.pdf",
+                    "downloadUrl": "/remote.php/dav/files/clerk/DocuDesk/besluiten/besluit.pdf",
+                    "size": 29
+                },
+                {
+                    "format": "odf",
+                    "status": "failed",
+                    "fileId": null,
+                    "fileName": null,
+                    "downloadUrl": null,
+                    "size": null,
+                    "error": "soffice exited with code 81."
+                },
+                {
+                    "format": "docx",
+                    "status": "generated",
+                    "fileId": 102,
+                    "fileName": "besluit.docx",
+                    "downloadUrl": "/remote.php/dav/files/clerk/DocuDesk/besluiten/besluit.docx",
+                    "size": 32
+                }
+            ],
+            "metadata": {
+                "templateId": "tmpl-1",
+                "templateVersion": 2,
+                "templateName": "Besluit",
+                "dataRefs": [
+                    {
+                        "register": "r",
+                        "schema": "s",
+                        "id": "o-1"
+                    }
+                ],
+                "format": "pdf",
+                "status": "generated",
+                "generatedBy": "clerk",
+                "warnings": [],
+                "caseId": "case-7",
+                "errorMessage": null,
+                "fileId": 101,
+                "filePath": "/clerk/files/DocuDesk/besluiten/besluit.pdf",
+                "outputs": [
+                    {
+                        "format": "pdf",
+                        "fileId": 101,
+                        "status": "generated"
+                    },
+                    {
+                        "format": "odf",
+                        "status": "failed",
+                        "error": "soffice exited with code 81."
+                    },
+                    {
+                        "format": "docx",
+                        "fileId": 102,
+                        "status": "generated"
+                    }
+                ]
+            },
+            "warnings": []
+        },
+        "filed": {
+            "besluit.pdf": "%PDF of <p>Besluit Jansen</p>",
+            "besluit.docx": "PK docx of <p>Besluit Jansen</p>"
+        },
+        "logged": [
+            {
+                "templateId": "tmpl-1",
+                "templateVersion": 2,
+                "templateName": "Besluit",
+                "dataRefs": [
+                    {
+                        "register": "r",
+                        "schema": "s",
+                        "id": "o-1"
+                    }
+                ],
+                "format": "pdf",
+                "status": "generated",
+                "generatedBy": "clerk",
+                "warnings": [],
+                "caseId": "case-7",
+                "errorMessage": null,
+                "fileId": 101,
+                "filePath": "/clerk/files/DocuDesk/besluiten/besluit.pdf",
+                "outputs": [
+                    {
+                        "format": "pdf",
+                        "fileId": 101,
+                        "status": "generated"
+                    },
+                    {
+                        "format": "odf",
+                        "status": "failed",
+                        "error": "soffice exited with code 81."
+                    },
+                    {
+                        "format": "docx",
+                        "fileId": 102,
+                        "status": "generated"
+                    }
+                ]
+            }
+        ]
+    },
+    "a target path and no file name": {
+        "result": {
+            "outputs": [
+                {
+                    "format": "docx",
+                    "status": "generated",
+                    "fileId": 101,
+                    "fileName": "document.docx",
+                    "downloadUrl": "/remote.php/dav/files/clerk/Zaken/2026/document.docx",
+                    "size": 32
+                },
+                {
+                    "format": "pdf",
+                    "status": "generated",
+                    "fileId": 102,
+                    "fileName": "document.pdf",
+                    "downloadUrl": "/remote.php/dav/files/clerk/Zaken/2026/document.pdf",
+                    "size": 29
+                }
+            ],
+            "metadata": {
+                "templateId": "tmpl-1",
+                "templateVersion": 2,
+                "templateName": "Besluit",
+                "dataRefs": [
+                    {
+                        "register": "r",
+                        "schema": "s",
+                        "id": "o-1"
+                    }
+                ],
+                "format": "docx",
+                "status": "generated",
+                "generatedBy": "clerk",
+                "warnings": [],
+                "caseId": null,
+                "errorMessage": null,
+                "fileId": 101,
+                "filePath": "/clerk/files/Zaken/2026/document.docx",
+                "outputs": [
+                    {
+                        "format": "docx",
+                        "fileId": 101,
+                        "status": "generated"
+                    },
+                    {
+                        "format": "pdf",
+                        "fileId": 102,
+                        "status": "generated"
+                    }
+                ]
+            },
+            "warnings": []
+        },
+        "filed": {
+            "document.docx": "PK docx of <p>Besluit Jansen</p>",
+            "document.pdf": "%PDF of <p>Besluit Jansen</p>"
+        },
+        "logged": [
+            {
+                "templateId": "tmpl-1",
+                "templateVersion": 2,
+                "templateName": "Besluit",
+                "dataRefs": [
+                    {
+                        "register": "r",
+                        "schema": "s",
+                        "id": "o-1"
+                    }
+                ],
+                "format": "docx",
+                "status": "generated",
+                "generatedBy": "clerk",
+                "warnings": [],
+                "caseId": null,
+                "errorMessage": null,
+                "fileId": 101,
+                "filePath": "/clerk/files/Zaken/2026/document.docx",
+                "outputs": [
+                    {
+                        "format": "docx",
+                        "fileId": 101,
+                        "status": "generated"
+                    },
+                    {
+                        "format": "pdf",
+                        "fileId": 102,
+                        "status": "generated"
+                    }
+                ]
+            }
+        ]
+    },
+    "a file name that is only an extension": {
+        "result": {
+            "outputs": [
+                {
+                    "format": "pdf",
+                    "status": "generated",
+                    "fileId": 101,
+                    "fileName": "document.pdf",
+                    "downloadUrl": "/remote.php/dav/files/clerk/DocuDesk/besluiten/document.pdf",
+                    "size": 29
+                }
+            ],
+            "metadata": {
+                "templateId": "tmpl-1",
+                "templateVersion": 2,
+                "templateName": "Besluit",
+                "dataRefs": [
+                    {
+                        "register": "r",
+                        "schema": "s",
+                        "id": "o-1"
+                    }
+                ],
+                "format": "pdf",
+                "status": "generated",
+                "generatedBy": "clerk",
+                "warnings": [],
+                "caseId": null,
+                "errorMessage": null,
+                "fileId": 101,
+                "filePath": "/clerk/files/DocuDesk/besluiten/document.pdf",
+                "outputs": [
+                    {
+                        "format": "pdf",
+                        "fileId": 101,
+                        "status": "generated"
+                    }
+                ]
+            },
+            "warnings": []
+        },
+        "filed": {
+            "document.pdf": "%PDF of <p>Besluit Jansen</p>"
+        },
+        "logged": [
+            {
+                "templateId": "tmpl-1",
+                "templateVersion": 2,
+                "templateName": "Besluit",
+                "dataRefs": [
+                    {
+                        "register": "r",
+                        "schema": "s",
+                        "id": "o-1"
+                    }
+                ],
+                "format": "pdf",
+                "status": "generated",
+                "generatedBy": "clerk",
+                "warnings": [],
+                "caseId": null,
+                "errorMessage": null,
+                "fileId": 101,
+                "filePath": "/clerk/files/DocuDesk/besluiten/document.pdf",
+                "outputs": [
+                    {
+                        "format": "pdf",
+                        "fileId": 101,
+                        "status": "generated"
+                    }
+                ]
+            }
+        ]
+    },
+    "every format failing": {
+        "result": {
+            "outputs": [
+                {
+                    "format": "odf",
+                    "status": "failed",
+                    "fileId": null,
+                    "fileName": null,
+                    "downloadUrl": null,
+                    "size": null,
+                    "error": "soffice exited with code 81."
+                }
+            ],
+            "metadata": {
+                "templateId": "tmpl-1",
+                "templateVersion": 2,
+                "templateName": "Besluit",
+                "dataRefs": [
+                    {
+                        "register": "r",
+                        "schema": "s",
+                        "id": "o-1"
+                    }
+                ],
+                "format": "odf",
+                "status": "generated",
+                "generatedBy": "clerk",
+                "warnings": [],
+                "caseId": null,
+                "errorMessage": null,
+                "fileId": null,
+                "filePath": null,
+                "outputs": [
+                    {
+                        "format": "odf",
+                        "status": "failed",
+                        "error": "soffice exited with code 81."
+                    }
+                ]
+            },
+            "warnings": []
+        },
+        "filed": [],
+        "logged": [
+            {
+                "templateId": "tmpl-1",
+                "templateVersion": 2,
+                "templateName": "Besluit",
+                "dataRefs": [
+                    {
+                        "register": "r",
+                        "schema": "s",
+                        "id": "o-1"
+                    }
+                ],
+                "format": "odf",
+                "status": "generated",
+                "generatedBy": "clerk",
+                "warnings": [],
+                "caseId": null,
+                "errorMessage": null,
+                "fileId": null,
+                "filePath": null,
+                "outputs": [
+                    {
+                        "format": "odf",
+                        "status": "failed",
+                        "error": "soffice exited with code 81."
+                    }
+                ]
+            }
+        ]
+    },
+    "pdf options and output warnings": {
+        "result": {
+            "outputs": [
+                {
+                    "format": "docx",
+                    "status": "generated",
+                    "fileId": 101,
+                    "fileName": "document.docx",
+                    "downloadUrl": "/remote.php/dav/files/clerk/DocuDesk/besluiten/document.docx",
+                    "size": 32
+                },
+                {
+                    "format": "pdf",
+                    "status": "generated",
+                    "fileId": 102,
+                    "fileName": "document.pdf",
+                    "downloadUrl": "/remote.php/dav/files/clerk/DocuDesk/besluiten/document.pdf",
+                    "size": 101
+                }
+            ],
+            "metadata": {
+                "templateId": "tmpl-1",
+                "templateVersion": 2,
+                "templateName": "Besluit",
+                "dataRefs": [
+                    {
+                        "register": "r",
+                        "schema": "s",
+                        "id": "o-1"
+                    }
+                ],
+                "format": "docx",
+                "status": "generated",
+                "generatedBy": "clerk",
+                "warnings": [
+                    "chart 1 could not be rasterised"
+                ],
+                "caseId": null,
+                "errorMessage": null,
+                "fileId": 101,
+                "filePath": "/clerk/files/DocuDesk/besluiten/document.docx",
+                "outputs": [
+                    {
+                        "format": "docx",
+                        "fileId": 101,
+                        "status": "generated"
+                    },
+                    {
+                        "format": "pdf",
+                        "fileId": 102,
+                        "status": "generated"
+                    }
+                ]
+            },
+            "warnings": [
+                "chart 1 could not be rasterised"
+            ]
+        },
+        "filed": {
+            "document.docx": "PK docx of <p>Besluit Jansen</p>",
+            "document.pdf": "%PDF of <p>Besluit Jansen</p> with {\"format\":\"A4\",\"orientation\":\"landscape\",\"templateName\":\"Besluit\"}"
+        },
+        "logged": [
+            {
+                "templateId": "tmpl-1",
+                "templateVersion": 2,
+                "templateName": "Besluit",
+                "dataRefs": [
+                    {
+                        "register": "r",
+                        "schema": "s",
+                        "id": "o-1"
+                    }
+                ],
+                "format": "docx",
+                "status": "generated",
+                "generatedBy": "clerk",
+                "warnings": [
+                    "chart 1 could not be rasterised"
+                ],
+                "caseId": null,
+                "errorMessage": null,
+                "fileId": 101,
+                "filePath": "/clerk/files/DocuDesk/besluiten/document.docx",
+                "outputs": [
+                    {
+                        "format": "docx",
+                        "fileId": 101,
+                        "status": "generated"
+                    },
+                    {
+                        "format": "pdf",
+                        "fileId": 102,
+                        "status": "generated"
+                    }
+                ]
+            }
+        ]
+    },
+    "a template without an id": {
+        "result": {
+            "outputs": [
+                {
+                    "format": "pdf",
+                    "status": "generated",
+                    "fileId": 101,
+                    "fileName": "document.pdf",
+                    "downloadUrl": "/remote.php/dav/files/clerk/DocuDesk/besluiten/document.pdf",
+                    "size": 29
+                }
+            ],
+            "metadata": {
+                "templateId": "tmpl-1",
+                "templateVersion": 2,
+                "templateName": "Besluit",
+                "dataRefs": [
+                    {
+                        "register": "r",
+                        "schema": "s",
+                        "id": "o-1"
+                    }
+                ],
+                "format": "pdf",
+                "status": "generated",
+                "generatedBy": "clerk",
+                "warnings": [],
+                "caseId": null,
+                "errorMessage": null,
+                "fileId": 101,
+                "filePath": "/clerk/files/DocuDesk/besluiten/document.pdf",
+                "outputs": [
+                    {
+                        "format": "pdf",
+                        "fileId": 101,
+                        "status": "generated"
+                    }
+                ]
+            },
+            "warnings": []
+        },
+        "filed": {
+            "document.pdf": "%PDF of <p>Besluit Jansen</p>"
+        },
+        "logged": [
+            {
+                "templateId": "tmpl-1",
+                "templateVersion": 2,
+                "templateName": "Besluit",
+                "dataRefs": [
+                    {
+                        "register": "r",
+                        "schema": "s",
+                        "id": "o-1"
+                    }
+                ],
+                "format": "pdf",
+                "status": "generated",
+                "generatedBy": "clerk",
+                "warnings": [],
+                "caseId": null,
+                "errorMessage": null,
+                "fileId": 101,
+                "filePath": "/clerk/files/DocuDesk/besluiten/document.pdf",
+                "outputs": [
+                    {
+                        "format": "pdf",
+                        "fileId": 101,
+                        "status": "generated"
+                    }
+                ]
+            }
+        ]
+    }
+}

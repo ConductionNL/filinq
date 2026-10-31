@@ -25,9 +25,11 @@ use OCA\Filinq\Controller\AnonymizationController;
 use OCA\Filinq\Controller\BatchAnonymizationController;
 use OCA\Filinq\Exception\ConversionFailedException;
 use OCA\Filinq\Service\AnonymizationService;
+use OCA\Filinq\Service\AnonymizeRequestService;
 use OCA\Filinq\Service\BatchAnonymizeService;
 use OCA\Filinq\Service\BatchExtractionService;
 use OCA\Filinq\Service\BatchReportService;
+use OCA\Filinq\Service\BatchRequestService;
 use OCA\Filinq\Service\BatchStateService;
 use OCA\Filinq\Service\BatchUploadService;
 use OCA\Filinq\Service\EntityConsolidationService;
@@ -468,7 +470,8 @@ class AnonymizationControllerOutputFormatTest extends TestCase {
 			$this->createMock(FolderBatchService::class),
 			$this->mockL10n,
 			$this->mockAppConfig,
-			$this->mockUserSession
+			$this->mockUserSession,
+			new BatchRequestService(l10n: $this->mockL10n)
 		);
 		// phpcs:enable
 
@@ -578,16 +581,16 @@ class AnonymizationControllerOutputFormatTest extends TestCase {
 	 */
 	private function buildController(): AnonymizationController {
 		// phpcs:disable CustomSn.Functions.NamedParameters
+		$logger = $this->createMock(LoggerInterface::class);
 		return new AnonymizationController(
 			'filinq',
 			$this->mockRequest,
-			$this->createMock(LoggerInterface::class),
+			$logger,
 			$this->mockAnonService,
 			$this->createMock(FileListingService::class),
 			$this->mockL10n,
 			$this->mockAppConfig,
-			$this->mockUserSession,
-			$this->mockRootFolder
+			new AnonymizeRequestService(logger: $logger, anonymizationService: $this->mockAnonService, l10n: $this->mockL10n, rootFolder: $this->mockRootFolder, userSession: $this->mockUserSession)
 		);
 		// phpcs:enable
 
@@ -626,7 +629,8 @@ class AnonymizationControllerOutputFormatTest extends TestCase {
 			$this->createMock(FolderBatchService::class),
 			$this->mockL10n,
 			$this->mockAppConfig,
-			$this->mockUserSession
+			$this->mockUserSession,
+			new BatchRequestService(l10n: $this->mockL10n)
 		);
 		// phpcs:enable
 

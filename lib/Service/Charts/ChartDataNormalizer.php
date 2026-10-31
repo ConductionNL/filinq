@@ -15,7 +15,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/template-charts/specs/template-charts/spec.md
+ * @spec openspec/specs/template-charts/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -34,7 +34,7 @@ namespace OCA\Filinq\Service\Charts;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/template-charts/tasks.md#task-1.1
+ * @spec openspec/changes/archive/2026-09-28-template-charts/tasks.md#task-1.1
  */
 class ChartDataNormalizer {
 	/**
@@ -49,7 +49,7 @@ class ChartDataNormalizer {
 	 *
 	 * @return array{labels: string[], series: array<int, array{name: string, values: array<int, float|null>}>}|ChartRenderError
 	 *
-	 * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-001
+	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-001
 	 */
 	public function normalize(array $data, int $maxPoints): array|ChartRenderError {
 		$shapeError = $this->validateShape(data: $data, maxPoints: $maxPoints);
@@ -121,7 +121,8 @@ class ChartDataNormalizer {
 
 		if (count($labels) > $maxPoints) {
 			return new ChartRenderError(
-				message: 'chart error: too many data points (max ' . $maxPoints . ')'
+				message: 'chart error: too many data points (max %s)',
+				parameters: [$maxPoints]
 			);
 		}
 

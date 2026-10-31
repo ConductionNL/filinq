@@ -46,8 +46,9 @@ namespace OCA\Filinq\Service;
 
 use Mpdf\Mpdf;
 use Mpdf\MpdfException;
-use Mpdf\Output\Destination;
 use OCA\Filinq\Exception\Pdfa3ConversionException;
+use OCA\Filinq\Kernel\Contracts\Pdfa3ConversionServiceInterface;
+use OCA\Filinq\Service\VeraPdf\Pdfa3OutputVerifier;
 use OCP\Files\File;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -65,7 +66,8 @@ use Throwable;
  *
  * @spec openspec/specs/pdfa3-conversion/spec.md
  */
-class Pdfa3ConversionService {
+class Pdfa3ConversionService implements Pdfa3ConversionServiceInterface {
+	use StripsFileExtension;
 
 	/**
 	 * App identifier used for IAppConfig reads.
@@ -108,6 +110,13 @@ class Pdfa3ConversionService {
 	private const PDFA_VERSION = '3-B';
 
 	/**
+	 * mPDF output destination that returns the document as a string (Mpdf\Output\Destination::STRING_RETURN).
+	 *
+	 * @var string
+	 */
+	private const OUTPUT_AS_STRING = 'S';
+
+	/**
 	 * Serialises MDTO/archival metadata into the XMP packet and the
 	 * embedded-attachment set.
 	 *
@@ -136,6 +145,10 @@ class Pdfa3ConversionService {
 	 * @param PdfStreamReaderFactory|null $streamReaderFactory FPDI stream-reader seam; autowired in
 	 *                                                         production, defaulted here so existing
 	 *                                                         call sites stay source-compatible.
+	 * @param Pdfa3OutputVerifier|null $outputVerifier veraPDF check of the output; null keeps the
+	 *                                                 marker guard only (header `skipped`).
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-verapdf-validation/tasks.md#task-2.5
 	 */
 	public function __construct(
 		private readonly PdfService $pdfService,
@@ -143,6 +156,7 @@ class Pdfa3ConversionService {
 		private readonly LoggerInterface $logger,
 		?Pdfa3MetadataAssembler $metadataAssembler = null,
 		?PdfStreamReaderFactory $streamReaderFactory = null,
+		private readonly ?Pdfa3OutputVerifier $outputVerifier = null,
 	) {
 		$this->metadataAssembler = ($metadataAssembler ?? new Pdfa3MetadataAssembler($appConfig));
 		$this->streamReaderFactory = ($streamReaderFactory ?? new PdfStreamReaderFactory());
@@ -168,7 +182,8 @@ class Pdfa3ConversionService {
 	 *                                                    AFRelationship?}.
 	 * @param array<string,mixed> $options {format?, orientation?}.
 	 *
-	 * @return array{content:string,checksumSha256:string,pages:int,conformance:string}
+	 * @return array{content:string,checksumSha256:string,pages:int,conformance:string,verified:string} The PDF;
+	 *         verified is the veraPDF verdict: true, false or skipped.
 	 *
 	 * @throws Pdfa3ConversionException On any guardrail violation or conversion failure.
 	 *
@@ -206,16 +221,27 @@ class Pdfa3ConversionService {
 
 		$deadline = $this->deadline();
 
-		return $this->buildPdfa3(
-			pageBuilder: function (Mpdf $mpdf) use ($raw, $deadline): void {
-				$this->importAllPages(mpdf: $mpdf, raw: $raw, deadline: $deadline);
-			},
-			metadata: $metadata,
-			attachments: $attachments,
-			options: $options,
-			defaultTitle: $this->stripExtension(name: $source->getName()),
-			deadline: $deadline
+		$result = $this->buildPdfa3(
+			job: new Pdfa3Job(
+				pageBuilder: function (Mpdf $mpdf) use ($raw, $deadline): void {
+					$this->importAllPages(mpdf: $mpdf, raw: $raw, deadline: $deadline);
+				},
+				deadline: $deadline,
+				defaultTitle: $this->stripExtension(name: $source->getName()),
+				metadata: $metadata,
+				attachments: $attachments,
+				options: $options
+			)
 		);
+
+		// Imported pages keep the fonts their source had.
+		$result['verified'] = $this->verifyOutput(
+			bytes: $result['content'],
+			origin: Pdfa3OutputVerifier::ORIGIN_IMPORTED,
+			sourceFileId: (int) $source->getId()
+		);
+
+		return $result;
 
 	}//end convertExistingPdf()
 
@@ -233,7 +259,8 @@ class Pdfa3ConversionService {
 	 * @param array<int,array<string,mixed>> $attachments Files to embed; see convertExistingPdf().
 	 * @param array<string,mixed> $options {format?, orientation?, margin?}.
 	 *
-	 * @return array{content:string,checksumSha256:string,pages:int,conformance:string}
+	 * @return array{content:string,checksumSha256:string,pages:int,conformance:string,verified:string} The PDF;
+	 *         verified is the veraPDF verdict: true, false or skipped.
 	 *
 	 * @throws Pdfa3ConversionException On any guardrail violation or conversion failure.
 	 *
@@ -244,16 +271,23 @@ class Pdfa3ConversionService {
 
 		$deadline = $this->deadline();
 
-		return $this->buildPdfa3(
-			pageBuilder: function (Mpdf $mpdf) use ($html): void {
-				$mpdf->WriteHTML(html: $html);
-			},
-			metadata: $metadata,
-			attachments: $attachments,
-			options: $options,
-			defaultTitle: (string)($metadata['title'] ?? ''),
-			deadline: $deadline
+		$result = $this->buildPdfa3(
+			job: new Pdfa3Job(
+				pageBuilder: function (Mpdf $mpdf) use ($html): void {
+					$mpdf->WriteHTML(html: $html);
+				},
+				deadline: $deadline,
+				defaultTitle: (string)($metadata['title'] ?? ''),
+				metadata: $metadata,
+				attachments: $attachments,
+				options: $options
+			)
 		);
+
+		// Rendered output has no stored source file to keep a report on.
+		$result['verified'] = $this->verifyOutput(bytes: $result['content'], origin: Pdfa3OutputVerifier::ORIGIN_RENDERED, sourceFileId: null);
+
+		return $result;
 
 	}//end convertHtml()
 
@@ -262,43 +296,31 @@ class Pdfa3ConversionService {
 	 * attachments, run the caller-supplied page builder, then validate
 	 * and return the output.
 	 *
-	 * @param callable $pageBuilder function(Mpdf $mpdf): void — writes page
-	 *                              content.
-	 * @param array<string,mixed> $metadata MDTO/archival metadata.
-	 * @param array<int,array<string,mixed>> $attachments Files to embed.
-	 * @param array<string,mixed> $options {format?, orientation?, margin?}.
-	 * @param string $defaultTitle Title used when $metadata['title'] is absent.
-	 * @param float $deadline Absolute microtime(true) deadline for this conversion.
+	 * @param Pdfa3Job $job The page builder, deadline, default title, metadata,
+	 *                      attachments and page options.
 	 *
 	 * @return array{content:string,checksumSha256:string,pages:int,conformance:string}
 	 *
 	 * @throws Pdfa3ConversionException On render failure or output-validation failure.
 	 */
-	private function buildPdfa3(
-		callable $pageBuilder,
-		array $metadata,
-		array $attachments,
-		array $options,
-		string $defaultTitle,
-		float $deadline,
-	): array {
+	private function buildPdfa3(Pdfa3Job $job): array {
 		$associatedFiles = $this->metadataAssembler->buildAssociatedFiles(
-			attachments: $attachments,
-			metadata: $metadata
+			attachments: $job->attachments,
+			metadata: $job->metadata
 		);
-		$mpdf = $this->instantiateMpdf(options: $options);
+		$mpdf = $this->instantiateMpdf(options: $job->options);
 
 		$this->metadataAssembler->applyMetadata(
 			mpdf: $mpdf,
-			metadata: $metadata,
-			defaultTitle: $defaultTitle
+			metadata: $job->metadata,
+			defaultTitle: $job->defaultTitle
 		);
 
 		if (empty($associatedFiles) === false) {
 			$mpdf->SetAssociatedFiles(files: $associatedFiles);
 		}
 
-		$rendered = $this->renderPages(mpdf: $mpdf, pageBuilder: $pageBuilder, deadline: $deadline);
+		$rendered = $this->renderPages(mpdf: $mpdf, job: $job);
 
 		$this->validateOutput(pdfBytes: $rendered['content']);
 
@@ -378,28 +400,27 @@ class Pdfa3ConversionService {
 	 * (config, metadata, rendering) stays independently readable.
 	 *
 	 * @param Mpdf $mpdf Configured, metadata/attachment-primed document.
-	 * @param callable $pageBuilder function(Mpdf $mpdf): void — writes page content.
-	 * @param float $deadline Absolute microtime(true) deadline.
+	 * @param Pdfa3Job $job The page builder and the deadline.
 	 *
 	 * @return array{content:string,pages:int}
 	 *
 	 * @throws Pdfa3ConversionException REASON_TIME_LIMIT_EXCEEDED, REASON_RENDER_FAILED,
 	 *                                  or REASON_SOURCE_UNREADABLE.
 	 */
-	private function renderPages(Mpdf $mpdf, callable $pageBuilder, float $deadline): array {
+	private function renderPages(Mpdf $mpdf, Pdfa3Job $job): array {
 		try {
-			if ($this->now() > $deadline) {
+			if ($this->now() > $job->deadline) {
 				throw $this->timeLimitExceeded();
 			}
 
-			$pageBuilder($mpdf);
+			($job->pageBuilder)($mpdf);
 
-			if ($this->now() > $deadline) {
+			if ($this->now() > $job->deadline) {
 				throw $this->timeLimitExceeded();
 			}
 
 			return [
-				'content' => $mpdf->Output(name: '', dest: Destination::STRING_RETURN),
+				'content' => $mpdf->Output(name: '', dest: self::OUTPUT_AS_STRING),
 				'pages' => (int)$mpdf->page,
 			];
 		} catch (Pdfa3ConversionException $e) {
@@ -502,6 +523,26 @@ class Pdfa3ConversionService {
 		);
 
 	}//end timeLimitExceeded()
+
+	/**
+	 * The veraPDF verdict on the output: `true`, `false` or `skipped`.
+	 *
+	 * @param string   $bytes        The output.
+	 * @param string   $origin       Where its pages came from.
+	 * @param int|null $sourceFileId The converted file, when there is one.
+	 *
+	 * @return string The X-Docudesk-Pdfa3-Verified value.
+	 *
+	 * @throws Pdfa3ConversionException In strict mode, when the output fails.
+	 */
+	private function verifyOutput(string $bytes, string $origin, ?int $sourceFileId): string {
+		if ($this->outputVerifier === null) {
+			return Pdfa3OutputVerifier::SKIPPED;
+		}
+
+		return $this->outputVerifier->verify(bytes: $bytes, origin: $origin, sourceFileId: $sourceFileId);
+
+	}//end verifyOutput()
 
 	/**
 	 * No-silent-passthrough guardrail: assert the assembled bytes carry
@@ -638,21 +679,4 @@ class Pdfa3ConversionService {
 
 		return $parsed;
 	}//end resolveMaxSeconds()
-
-	/**
-	 * Return $name without its trailing `.ext` suffix, for use as a
-	 * default document title.
-	 *
-	 * @param string $name File name with extension.
-	 *
-	 * @return string Name without extension.
-	 */
-	private function stripExtension(string $name): string {
-		$dotPos = strrpos($name, '.');
-		if ($dotPos === false) {
-			return $name;
-		}
-
-		return substr($name, 0, $dotPos);
-	}//end stripExtension()
 }//end class

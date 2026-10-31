@@ -29,8 +29,8 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use Exception;
-use OCA\Filinq\Service\PdfService;
-use OCA\Filinq\Service\TemplateService;
+use OCA\Filinq\Kernel\Contracts\PdfServiceInterface;
+use OCA\Filinq\Kernel\Contracts\TemplateServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataDownloadResponse;
@@ -52,14 +52,15 @@ use Psr\Log\LoggerInterface;
  * @link     https://www.filinq.app
  */
 class PrintController extends Controller {
+	use AnswersNotAuthenticated;
 	/**
 	 * Constructor for PrintController
 	 *
 	 * @param string $appName The application name
 	 * @param IRequest $request The request object
 	 * @param LoggerInterface $logger Logger for error reporting
-	 * @param PdfService $pdfService Service for PDF generation
-	 * @param TemplateService $templateService Service for template retrieval
+	 * @param PdfServiceInterface $pdfService Service for PDF generation
+	 * @param TemplateServiceInterface $templateService Service for template retrieval
 	 * @param IUserSession $userSession User session for authentication
 	 *
 	 * @return void
@@ -68,8 +69,8 @@ class PrintController extends Controller {
 		string $appName,
 		IRequest $request,
 		private readonly LoggerInterface $logger,
-		private readonly PdfService $pdfService,
-		private readonly TemplateService $templateService,
+		private readonly PdfServiceInterface $pdfService,
+		private readonly TemplateServiceInterface $templateService,
 		private readonly IUserSession $userSession,
 	) {
 		parent::__construct(appName: $appName, request: $request);
@@ -190,10 +191,7 @@ class PrintController extends Controller {
 	public function preview(): JSONResponse {
 		try {
 			if ($this->userSession->getUser() === null) {
-				return new JSONResponse(
-					data: ['error' => 'Not authenticated'],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: 'Not authenticated');
 			}
 
 			$resolved = $this->resolveTemplate();
@@ -251,14 +249,14 @@ class PrintController extends Controller {
 	 * @psalm-suppress InvalidArgument $statusCode is clamped to int<400, 599>; Psalm wants the literal HTTP status union.
 	 *
 	 * @spec openspec/specs/print-preview/spec.md
+	 *
+	 * @no-admin-idor-exempt a templateId is read through TemplateService::getTemplate() with OpenRegister
+	 * RBAC on (template read: authenticated); otherwise the caller's own posted template is rendered.
 	 */
 	public function downloadPdfA(): DataDownloadResponse|JSONResponse {
 		try {
 			if ($this->userSession->getUser() === null) {
-				return new JSONResponse(
-					data: ['error' => 'Not authenticated'],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: 'Not authenticated');
 			}
 
 			$resolved = $this->resolveTemplate();

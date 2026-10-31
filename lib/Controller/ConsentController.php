@@ -29,7 +29,7 @@ namespace OCA\Filinq\Controller;
 
 use Exception;
 use OCA\Filinq\Exception\PolicyRejectedException;
-use OCA\Filinq\Service\ConsentCrudService;
+use OCA\Filinq\Kernel\Contracts\ConsentCrudServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -51,13 +51,21 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/specs/consent-endpoint-hardening/spec.md
  */
 class ConsentController extends Controller {
+	use AnswersNotAuthenticated;
+
+	/**
+	 * Groups that handle consent records, besides admins.
+	 *
+	 * @var list<string>
+	 */
+	private const OFFICER_GROUPS = ['filinq-woo-officers', 'filinq-policy-admins'];
 	/**
 	 * Constructor for ConsentController
 	 *
 	 * @param string $appName The application name
 	 * @param IRequest $request The request object
 	 * @param LoggerInterface $logger Logger for error reporting
-	 * @param ConsentCrudService $crudService CRUD service for consent records
+	 * @param ConsentCrudServiceInterface $crudService CRUD service for consent records
 	 * @param IL10N $l10n The localization service
 	 * @param IUserSession $userSession User session for authentication
 	 * @param IGroupManager $groupManager Group manager for admin checks
@@ -68,7 +76,7 @@ class ConsentController extends Controller {
 		string $appName,
 		IRequest $request,
 		private readonly LoggerInterface $logger,
-		private readonly ConsentCrudService $crudService,
+		private readonly ConsentCrudServiceInterface $crudService,
 		private readonly IL10N $l10n,
 		private readonly IUserSession $userSession,
 		private readonly IGroupManager $groupManager,
@@ -95,7 +103,7 @@ class ConsentController extends Controller {
 			return false;
 		}
 
-		if ($this->groupManager->isAdmin($user->getUID()) === true) {
+		if ($this->isConsentOfficer(uid: $user->getUID()) === true) {
 			return true;
 		}
 
@@ -106,6 +114,33 @@ class ConsentController extends Controller {
 
 		return $owner !== null && (string)$owner === $user->getUID();
 	}//end canAccessConsent()
+
+	/**
+	 * Whether the user handles consent: an admin, a consent officer or a policy admin.
+	 *
+	 * Only they may change a consent record; the person who opened a request
+	 * may read it but not record its outcome.
+	 *
+	 * @param string $uid The user.
+	 *
+	 * @return bool True when the user may change any consent record.
+	 *
+	 * @spec openspec/specs/consent-management/spec.md
+	 */
+	private function isConsentOfficer(string $uid): bool {
+		if ($this->groupManager->isAdmin($uid) === true) {
+			return true;
+		}
+
+		foreach (self::OFFICER_GROUPS as $group) {
+			if ($this->groupManager->isInGroup($uid, $group) === true) {
+				return true;
+			}
+		}
+
+		return false;
+
+	}//end isConsentOfficer()
 
 	/**
 	 * Build an error JSON response with logging
@@ -168,10 +203,7 @@ class ConsentController extends Controller {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Not authenticated')],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 			}
 
 			$config = $this->crudService->getConsentConfig();
@@ -186,10 +218,8 @@ class ConsentController extends Controller {
 			// makes the non-null provable to every analyser and drops a redundant
 			// session lookup.
 			$uid = $user->getUID();
-			$isAdmin = ($this->groupManager->isAdmin($uid) === true);
-
 			$filterUid = $uid;
-			if ($isAdmin === true) {
+			if ($this->isConsentOfficer(uid: $uid) === true) {
 				$filterUid = null;
 			}
 
@@ -280,10 +310,7 @@ class ConsentController extends Controller {
 	public function create(): JSONResponse {
 		try {
 			if ($this->userSession->getUser() === null) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Not authenticated')],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 			}
 
 			$data = $this->request->getParams();
@@ -337,10 +364,7 @@ class ConsentController extends Controller {
 	public function show(string $id): JSONResponse {
 		try {
 			if ($this->userSession->getUser() === null) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Not authenticated')],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 			}
 
 			$config = $this->crudService->getConsentConfig();
@@ -386,10 +410,7 @@ class ConsentController extends Controller {
 	public function update(string $id): JSONResponse {
 		try {
 			if ($this->userSession->getUser() === null) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Not authenticated')],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 			}
 
 			$config = $this->crudService->getConsentConfig();
@@ -407,6 +428,13 @@ class ConsentController extends Controller {
 				);
 			}
 
+			if ($this->isConsentOfficer(uid: $this->userSession->getUser()->getUID()) === false) {
+				return new JSONResponse(
+					['error' => $this->l10n->t('Only a consent officer can record the outcome of a consent request.')],
+					Http::STATUS_FORBIDDEN
+				);
+			}
+
 			$result = $this->crudService->updateConsentStatus(
 				$id,
 				$config['register'],
@@ -419,6 +447,9 @@ class ConsentController extends Controller {
 			);
 
 			return new JSONResponse($result);
+		} catch (\InvalidArgumentException $e) {
+			// An undeclared status move or missing evidence: say which.
+			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_BAD_REQUEST);
 		} catch (\OCP\AppFramework\OCS\OCSForbiddenException $e) {
 			return new JSONResponse(
 				['error' => $this->l10n->t('You are not allowed to revoke or modify standing consents.')],
@@ -446,10 +477,7 @@ class ConsentController extends Controller {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Not authenticated')],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 			}
 
 			$config = $this->crudService->getConsentConfig();
@@ -460,10 +488,8 @@ class ConsentController extends Controller {
 			// Same as index(): bound once by the guard above, so no second
 			// getUser() and no re-check.
 			$uid = $user->getUID();
-			$isAdmin = ($this->groupManager->isAdmin($uid) === true);
-
 			$filterUid = $uid;
-			if ($isAdmin === true) {
+			if ($this->isConsentOfficer(uid: $uid) === true) {
 				$filterUid = null;
 			}
 

@@ -66,7 +66,7 @@ status: in-progress
   See ConductionNL/filinq#431.
 -->
 
-## ADDED Requirements
+## Requirements
 
 ### Requirement: Consolidated entity list endpoint
 The system SHALL provide `GET /api/anonymization/batch/{batchId}/entities` that returns all unique entities detected across all files in the batch. Entities SHALL be deduplicated by value (case-insensitive). Each entity SHALL include: type, value, highestConfidence (maximum confidence across all files), fileCount (number of files containing this entity), and included (boolean, pre-set based on active WOO profile). Uses OpenRegister's EntityRelationMapper for entity data.
@@ -149,20 +149,6 @@ The frontend SHALL display the entity review as a table with columns: checkbox (
 - **WHEN** a user clicks the "Confidence" column header
 - **THEN** entities are sorted by confidence descending (highest first)
 - **AND** clicking again sorts ascending
-## Requirements
-### Requirement: Consolidated entity list endpoint
-The system SHALL deduplicate entities across files.
-
-#### Scenario: Retrieve consolidated entities
-- **WHEN** GET /api/anonymization/batch/{batchId}/entities is called
-- **THEN** deduplicated entities are returned with included flags
-
-### Requirement: Confidence threshold filter
-The system SHALL support configurable confidence thresholds.
-
-#### Scenario: Apply confidence threshold
-- **WHEN** minConfidence=0.7 parameter is provided
-- **THEN** entities below 0.7 have included=false
 
 ### Requirement: The consolidated-entities endpoint response MUST include `prohibitionMatch` per entity
 

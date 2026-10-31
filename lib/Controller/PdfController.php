@@ -28,8 +28,8 @@ namespace OCA\Filinq\Controller;
 
 use Exception;
 use OCA\Filinq\Exception\Pdfa3ConversionException;
-use OCA\Filinq\Service\Pdfa3ConversionService;
-use OCA\Filinq\Service\PdfService;
+use OCA\Filinq\Kernel\Contracts\Pdfa3ConversionServiceInterface;
+use OCA\Filinq\Kernel\Contracts\PdfServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataDownloadResponse;
@@ -51,14 +51,15 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/specs/pdfa3-conversion/spec.md
  */
 class PdfController extends Controller {
+	use AnswersNotAuthenticated;
 	/**
 	 * Constructor for PdfController
 	 *
 	 * @param string $appName The application name
 	 * @param IRequest $request The request object
 	 * @param LoggerInterface $logger Logger for error reporting
-	 * @param PdfService $pdfService Service for PDF generation
-	 * @param Pdfa3ConversionService $pdfa3Service Service for archival PDF/A-3
+	 * @param PdfServiceInterface $pdfService Service for PDF generation
+	 * @param Pdfa3ConversionServiceInterface $pdfa3Service Service for archival PDF/A-3
 	 *                                             generation (attachments +
 	 *                                             MDTO metadata)
 	 * @param IL10N $l10n The localization service
@@ -70,8 +71,8 @@ class PdfController extends Controller {
 		string $appName,
 		IRequest $request,
 		private readonly LoggerInterface $logger,
-		private readonly PdfService $pdfService,
-		private readonly Pdfa3ConversionService $pdfa3Service,
+		private readonly PdfServiceInterface $pdfService,
+		private readonly Pdfa3ConversionServiceInterface $pdfa3Service,
 		private readonly IL10N $l10n,
 		private readonly IUserSession $userSession,
 	) {
@@ -93,14 +94,14 @@ class PdfController extends Controller {
 	 * @NoAdminRequired
 	 *
 	 * @spec openspec/specs/pdf-generation/spec.md
+	 *
+	 * @no-admin-idor-exempt no stored object is addressed. The template and data come from the request
+	 * body and the PDF goes back to the caller, so there is no id to steer.
 	 */
 	public function render(): DataDownloadResponse|JSONResponse {
 		try {
 			if ($this->userSession->getUser() === null) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Not authenticated')],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 			}
 
 			$template = $this->request->getParam('template');
@@ -180,14 +181,15 @@ class PdfController extends Controller {
 	 *
 	 * @spec openspec/specs/print-preview/spec.md
 	 * @spec openspec/specs/pdfa3-conversion/spec.md
+	 *
+	 * @no-admin-idor-exempt no stored object is addressed. The template, data, metadata and attachments
+	 * come from the request body as content and the PDF goes back to the caller, so there is no id to
+	 * steer.
 	 */
 	public function renderPdfA(): DataDownloadResponse|JSONResponse {
 		try {
 			if ($this->userSession->getUser() === null) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Not authenticated')],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 			}
 
 			$template = $this->request->getParam('template');
@@ -385,6 +387,7 @@ class PdfController extends Controller {
 		$response->addHeader('X-Docudesk-Pdfa3-Checksum-Sha256', $result['checksumSha256']);
 		$response->addHeader('X-Docudesk-Pdfa3-Pages', (string)$result['pages']);
 		$response->addHeader('X-Docudesk-Pdfa3-Conformance', $result['conformance']);
+		$response->addHeader('X-Docudesk-Pdfa3-Verified', (string) ($result['verified'] ?? 'skipped'));
 
 		return $response;
 	}//end renderArchivalPdfA()

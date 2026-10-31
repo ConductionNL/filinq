@@ -26,7 +26,9 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use Exception;
-use OCA\Filinq\Service\DocumentService;
+use OCA\Filinq\Exception\ErrorDetailsInterface;
+use OCA\Filinq\Kernel\Contracts\DocumentServiceInterface;
+use OCA\Filinq\Kernel\Contracts\MultiFormatOutputProducerInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataDownloadResponse;
@@ -49,25 +51,39 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
  */
 class DocumentController extends Controller {
+	use AnswersNotAuthenticated;
+
+	/**
+	 * File extension and content type per download format; anything else downloads as PDF.
+	 *
+	 * @var array<string, array{0: string, 1: string}>
+	 */
+	private const DOWNLOAD_TYPES = [
+		'pdf' => ['.pdf', 'application/pdf'],
+		'odf' => ['.odt', 'application/vnd.oasis.opendocument.text'],
+		'docx' => ['.docx', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+	];
 	/**
 	 * Constructor for DocumentController.
 	 *
 	 * @param string $appName The application name
 	 * @param IRequest $request The request object
-	 * @param DocumentService $documentSvc Document generation service
+	 * @param DocumentServiceInterface $documentSvc Document generation service
 	 * @param IUserSession $userSession User session for authentication
 	 * @param LoggerInterface $logger Logger for error reporting
 	 * @param IL10N $l10n The localization service
+	 * @param MultiFormatOutputProducerInterface|null $multiFormat Answers a request with options.formats
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly DocumentService $documentSvc,
+		private readonly DocumentServiceInterface $documentSvc,
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
 		private readonly IL10N $l10n,
+		private readonly ?MultiFormatOutputProducerInterface $multiFormat = null,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 
@@ -101,17 +117,15 @@ class DocumentController extends Controller {
 	 * @NoAdminRequired
 	 *
 	 * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
-	 * @spec openspec/changes/document-generation-list-refs/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 * @spec openspec/changes/document-output-destinations-and-bulk-retention/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/changes/archive/2026-09-29-multi-format-output/tasks.md#task-3.1
 	 */
 	public function generate(): DataDownloadResponse|JSONResponse {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Not authenticated')],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 			}
 
 			$params = $this->parseGenerateParams();
@@ -121,6 +135,18 @@ class DocumentController extends Controller {
 
 			$params['options']['userId'] = $user->getUID();
 			$params['options']['filename'] = $params['filename'];
+
+			if (array_key_exists('formats', $params['options']) === true && $this->multiFormat !== null) {
+				$result = $this->multiFormat->generate(
+					templateId: $params['templateId'],
+					dataRefs: $params['dataRefs'],
+					options: $params['options']
+				);
+				return new JSONResponse(
+					data: ['outputs' => $result['outputs'], 'metadata' => $result['metadata'], 'warnings' => $result['warnings']],
+					statusCode: Http::STATUS_OK
+				);
+			}
 
 			$result = $this->documentSvc->generateDocument(
 				templateId: $params['templateId'],
@@ -156,7 +182,7 @@ class DocumentController extends Controller {
 	 * @NoAdminRequired
 	 *
 	 * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
-	 * @spec openspec/changes/document-generation-list-refs/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 *
 	 * @no-admin-idor-exempt object access runs under OpenRegister's RBAC,
 	 * which is ON by default. This method passes no `_rbac: false`, and none
@@ -169,10 +195,7 @@ class DocumentController extends Controller {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Not authenticated')],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 			}
 
 			$templateId = $this->request->getParam('templateId');
@@ -213,6 +236,64 @@ class DocumentController extends Controller {
 	}//end preview()
 
 	/**
+	 * Preview a template and name the fields it fills.
+	 *
+	 * POST /api/documents/generate/merge-preview
+	 *
+	 * The same request body as preview(). The response adds the template's
+	 * merge fields (path, label, source, value, filled) and whether all are
+	 * filled. Nothing is stored or logged.
+	 *
+	 * @return JSONResponse The preview and its fields, or an error
+	 *
+	 * @NoAdminRequired
+	 *
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
+	 *
+	 * @no-admin-idor-exempt object access runs under OpenRegister's RBAC, as
+	 * for preview(): no `_rbac: false` on this path, so an id belonging to
+	 * another tenant resolves to nothing.
+	 */
+	public function mergePreview(): JSONResponse {
+		try {
+			$user = $this->userSession->getUser();
+			if ($user === null) {
+				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
+			}
+
+			$templateId = $this->request->getParam('templateId');
+			if (empty($templateId) === true) {
+				return new JSONResponse(
+					data: ['error' => $this->l10n->t('templateId is required')],
+					statusCode: Http::STATUS_BAD_REQUEST
+				);
+			}
+
+			$dataRefs = $this->request->getParam('dataRefs', []);
+			if (is_array($dataRefs) === false) {
+				$dataRefs = [];
+			}
+
+			$options = $this->request->getParam('options', []);
+			if (is_array($options) === false) {
+				$options = [];
+			}
+
+			return new JSONResponse(
+				data: $this->documentSvc->generateMergePreview(
+					templateId: $templateId,
+					dataRefs: $dataRefs,
+					options: $options
+				),
+				statusCode: Http::STATUS_OK
+			);
+		} catch (Exception $e) {
+			return $this->handleException(exception: $e);
+		}//end try
+
+	}//end mergePreview()
+
+	/**
 	 * Generate documents for multiple objects in bulk.
 	 *
 	 * POST /api/documents/generate/bulk
@@ -241,10 +322,7 @@ class DocumentController extends Controller {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Not authenticated')],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 			}
 
 			$templateId = $this->request->getParam('templateId');
@@ -306,10 +384,7 @@ class DocumentController extends Controller {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Not authenticated')],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 			}
 
 			$status = $this->documentSvc->getJobStatus(jobId: $jobId);
@@ -395,25 +470,40 @@ class DocumentController extends Controller {
 		array $result,
 		string $filename,
 	): DataDownloadResponse|JSONResponse {
-		$format = $result['format'];
 		$output = $result['output'] ?? ['mode' => 'return'];
-		$mode = $output['mode'] ?? 'return';
-
-		if ($mode === 'files') {
+		if (($output['mode'] ?? 'return') === 'files') {
 			return new JSONResponse(
 				data: [
 					'fileId' => $output['fileId'] ?? null,
 					'path' => $output['path'] ?? null,
 					'name' => $output['name'] ?? null,
 					'size' => $output['size'] ?? null,
-					'format' => $format,
+					'format' => $result['format'],
 				],
 				statusCode: Http::STATUS_OK
 			);
 		}
 
+		$response = $this->inlineDocumentResponse(result: $result, filename: $filename);
+		$this->addStoredFileHeaders(response: $response, output: $output);
+
+		return $response;
+	}//end buildDocumentResponse()
+
+	/**
+	 * The document itself: JSON with the content for html, a download otherwise.
+	 *
+	 * @param array  $result   The generation result
+	 * @param string $filename The requested filename (without extension)
+	 *
+	 * @return DataDownloadResponse|JSONResponse The response carrying the document
+	 *
+	 * @spec openspec/changes/document-output-destinations-and-bulk-retention/specs/document-creatie-sjablonen/spec.md#req-ddob-001
+	 */
+	private function inlineDocumentResponse(array $result, string $filename): DataDownloadResponse|JSONResponse {
+		$format = $result['format'];
 		if ($format === 'html') {
-			$response = new JSONResponse(
+			return new JSONResponse(
 				data: [
 					'content' => $result['content'],
 					'format' => $format,
@@ -422,31 +512,21 @@ class DocumentController extends Controller {
 				],
 				statusCode: Http::STATUS_OK
 			);
-			$this->addStoredFileHeaders(response: $response, mode: $mode, output: $output);
-			return $response;
 		}
 
-		$extension = '.pdf';
-		$contentType = 'application/pdf';
-		if ($format === 'odf') {
-			$extension = '.odt';
-			$contentType = 'application/vnd.oasis.opendocument.text';
-		}
+		[$extension, $contentType] = self::DOWNLOAD_TYPES[$format] ?? self::DOWNLOAD_TYPES['pdf'];
 
 		$basename = pathinfo($filename, PATHINFO_FILENAME);
 		if (empty($basename) === true) {
 			$basename = 'document';
 		}
 
-		$response = new DataDownloadResponse(
+		return new DataDownloadResponse(
 			data: $result['content'],
 			filename: $basename . $extension,
 			contentType: $contentType
 		);
-		$this->addStoredFileHeaders(response: $response, mode: $mode, output: $output);
-
-		return $response;
-	}//end buildDocumentResponse()
+	}//end inlineDocumentResponse()
 
 	/**
 	 * Attach X-Docudesk-File-Id/X-Docudesk-File-Path headers when the
@@ -454,19 +534,14 @@ class DocumentController extends Controller {
 	 * fail-open storage failure leaves no fileId, so no headers are added).
 	 *
 	 * @param Response $response The response to annotate
-	 * @param string $mode The resolved output mode
-	 * @param array $output The generation result's output sub-array
+	 * @param array    $output   The generation result's output sub-array
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/changes/document-output-destinations-and-bulk-retention/specs/document-creatie-sjablonen/spec.md#req-ddob-001
 	 */
-	private function addStoredFileHeaders(Response $response, string $mode, array $output): void {
-		if ($mode !== 'both') {
-			return;
-		}
-
-		if (isset($output['fileId']) === false) {
+	private function addStoredFileHeaders(Response $response, array $output): void {
+		if (($output['mode'] ?? 'return') !== 'both' || isset($output['fileId']) === false) {
 			return;
 		}
 
@@ -496,8 +571,15 @@ class DocumentController extends Controller {
 			context: ['exception' => $exception]
 		);
 
+		$data = ['error' => $exception->getMessage()];
+		if ($exception instanceof ErrorDetailsInterface) {
+			// The conversion attempts of a failed PDF conversion, or which wizard
+			// questions were unanswered or answered wrongly.
+			$data = array_merge($data, $exception->getErrorDetails());
+		}
+
 		return new JSONResponse(
-			data: ['error' => $exception->getMessage()],
+			data: $data,
 			statusCode: $statusCode
 		);
 

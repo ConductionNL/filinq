@@ -25,6 +25,7 @@ namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\AnonymizationController;
 use OCA\Filinq\Service\AnonymizationService;
+use OCA\Filinq\Service\AnonymizeRequestService;
 use OCA\Filinq\Service\FileListingService;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\Files\File;
@@ -148,8 +149,7 @@ class AnonymizationControllerTest extends TestCase {
 			fileListingService: $this->mockFileService,
 			l10n: $this->mockL10n,
 			appConfig: $this->createMock(\OCP\IAppConfig::class),
-			userSession: $this->mockUserSession,
-			rootFolder: $this->mockRootFolder
+			anonymizeRequest: new AnonymizeRequestService(logger: $this->mockLogger, anonymizationService: $this->mockAnonService, l10n: $this->mockL10n, rootFolder: $this->mockRootFolder, userSession: $this->mockUserSession)
 		);
 
 	}//end setUp()
@@ -329,8 +329,7 @@ class AnonymizationControllerTest extends TestCase {
 			fileListingService: $this->mockFileService,
 			l10n: $this->mockL10n,
 			appConfig: $this->createMock(\OCP\IAppConfig::class),
-			userSession: $this->mockUserSession,
-			rootFolder: $emptyRootFolder
+			anonymizeRequest: new AnonymizeRequestService(logger: $this->mockLogger, anonymizationService: $this->mockAnonService, l10n: $this->mockL10n, rootFolder: $emptyRootFolder, userSession: $this->mockUserSession)
 		);
 
 		$response = $controller->extract(fileId: 999);
@@ -420,8 +419,7 @@ class AnonymizationControllerTest extends TestCase {
 			fileListingService: $this->mockFileService,
 			l10n: $this->mockL10n,
 			appConfig: $this->createMock(\OCP\IAppConfig::class),
-			userSession: $this->mockUserSession,
-			rootFolder: $emptyRootFolder
+			anonymizeRequest: new AnonymizeRequestService(logger: $this->mockLogger, anonymizationService: $this->mockAnonService, l10n: $this->mockL10n, rootFolder: $emptyRootFolder, userSession: $this->mockUserSession)
 		);
 
 		$response = $controller->anonymize(fileId: 999);
@@ -756,4 +754,119 @@ class AnonymizationControllerTest extends TestCase {
 
 	}//end testAnonymizeRejectsNonBooleanFlag()
 
+	/**
+	 * Without a session the run answers 401 before reading the body.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/anonymization/spec.md
+	 */
+	public function testAnonymizeReturns401WithoutASession(): void {
+		$session = $this->createMock(originalClassName: IUserSession::class);
+		$session->method('getUser')->willReturn(null);
+		$this->mockRequest->expects($this->never())->method('getParams');
+		$controller = new AnonymizationController(
+			appName: 'filinq',
+			request: $this->mockRequest,
+			logger: $this->mockLogger,
+			anonymizationService: $this->mockAnonService,
+			fileListingService: $this->mockFileService,
+			l10n: $this->mockL10n,
+			appConfig: $this->createMock(originalClassName: \OCP\IAppConfig::class),
+			anonymizeRequest: new AnonymizeRequestService(logger: $this->mockLogger, anonymizationService: $this->mockAnonService, l10n: $this->mockL10n, rootFolder: $this->mockRootFolder, userSession: $session)
+		);
+
+		$response = $controller->anonymize(fileId: 1);
+
+		$this->assertSame(expected: 401, actual: $response->getStatus());
+		$this->assertSame(expected: ['error' => 'Not authenticated'], actual: $response->getData());
+
+	}//end testAnonymizeReturns401WithoutASession()
+
+	/**
+	 * files() answers 401 without a session and never lists files.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/anonymization/spec.md
+	 */
+	public function testFilesReturns401WithoutASession(): void {
+		$session = $this->createMock(originalClassName: IUserSession::class);
+		$session->method('getUser')->willReturn(null);
+		$this->mockFileService->expects($this->never())->method('listProcessedFiles');
+		$controller = new AnonymizationController(
+			appName: 'filinq',
+			request: $this->mockRequest,
+			logger: $this->mockLogger,
+			anonymizationService: $this->mockAnonService,
+			fileListingService: $this->mockFileService,
+			l10n: $this->mockL10n,
+			appConfig: $this->createMock(originalClassName: \OCP\IAppConfig::class),
+			anonymizeRequest: new AnonymizeRequestService(
+				logger: $this->mockLogger,
+				anonymizationService: $this->mockAnonService,
+				l10n: $this->mockL10n,
+				rootFolder: $this->mockRootFolder,
+				userSession: $session
+			)
+		);
+
+		$response = $controller->files();
+
+		$this->assertSame(expected: 401, actual: $response->getStatus());
+		$this->assertSame(expected: ['error' => 'Not authenticated'], actual: $response->getData());
+
+	}//end testFilesReturns401WithoutASession()
+
+	/**
+	 * An unexpected failure during the run answers 500 with its message.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/anonymization/spec.md
+	 */
+	public function testAnonymizeReturns500OnAnUnexpectedFailure(): void {
+		$this->mockRequest->method('getParams')->willReturn(
+			['entities' => [['text' => 'Amsterdam', 'type' => 'LOCATION']]]
+		);
+		$this->mockAnonService->method('anonymizeDocument')
+			->willThrowException(exception: new \RuntimeException(message: 'disk full'));
+
+		$response = $this->controller->anonymize(fileId: 1);
+
+		$this->assertSame(expected: 500, actual: $response->getStatus());
+		$this->assertSame(expected: ['error' => 'Failed to anonymize document: %s'], actual: $response->getData());
+
+	}//end testAnonymizeReturns500OnAnUnexpectedFailure()
+
+	/**
+	 * The request parameters reach the run: excluded types are filtered out,
+	 * and the dossier scope and key are passed on.
+	 *
+	 * @return void
+	 */
+	public function testTheRequestParametersReachTheRun(): void {
+		$entities = [['type' => 'PERSON', 'text' => 'John'], ['type' => 'EMAIL', 'text' => 'j@example.org']];
+
+		$this->mockRequest->method('getParams')->willReturn(
+			['entities' => $entities, 'excludeTypes' => ['EMAIL'], 'scope' => 'dossier', 'dossierKey' => 'z-1']
+		);
+
+		$this->mockAnonService->expects($this->once())
+			->method('anonymizeDocument')
+			->with(
+				fileId: 42,
+				entities: [['type' => 'PERSON', 'text' => 'John']],
+				outputFormat: 'pdf-only',
+				unredactedEntities: [],
+				overrides: [],
+				userId: 'test-user',
+				scope: 'dossier',
+				dossierKey: 'z-1'
+			)
+			->willReturn(['replacementCount' => 1, 'anonymizedFileId' => 'file-42']);
+
+		$this->assertSame(200, $this->controller->anonymize(42)->getStatus());
+
+	}//end testTheRequestParametersReachTheRun()
 }//end class

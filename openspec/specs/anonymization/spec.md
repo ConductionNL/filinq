@@ -22,6 +22,8 @@ Provides a complete document anonymization pipeline: files are stored as **OR Fi
 - **Decision 2** — `anonymizationResult` objects (if stored separately) carry `x-openregister-archival.retention: P1Y` (Archiefwet cat. 1.2: operational processing logs). File attachments inherit OR's standard retention; DPO sign-off required for legal-hold override.
 - **Decision 5** — Status strings on the wire stay the same (`uploaded`, `extracted`, `anonymized`). Lifecycle annotation maps these states; no renaming.
 
+## Requirements
+
 ### Requirement: File Input via OR File Attachments (REQ-ANON-00)
 
 @e2e exclude Backend FileUploadService persistence as OR file attachment and OR virus-scan-hook rejection (HTTP 422) — service/contract behaviour, no UI assertion. Covered by PHPUnit (FileUploadService) and Newman (upload endpoint).
@@ -78,7 +80,7 @@ Uploaded files MUST be stored as OR File Attachments, not by filinq-specific sto
 | ANON-CAL-001 | `x-openregister-calculations` declared for: anonymizationConfidence, riskScore, riskLevel, entityDensity, redactionCoverage | MUST | Implementing |
 | ANON-CAL-002 | AnonymizationService does not contain direct writes to calculated fields | MUST | Apply-phase |
 | ANON-CAL-003 | OR PR raised if file-attachment schema is upstream and needs the extension | SHOULD | Apply-phase |
-## Requirements
+
 ### Requirement: File Upload to User-Scoped Folder (REQ-ANON-01)
 
 **Priority:** MUST
@@ -847,6 +849,186 @@ This delta MUST NOT modify the anonymise endpoint's request payload or its succe
 - **WHEN** any other anonymise error condition arises (file not found, permission denied, OR rejection, etc.)
 - **THEN** the response code and shape remain whatever the pre-change behaviour produced
 - **AND** the new 422 path applies ONLY to the blocking-consent case described above
+
+### Requirement: The anonymise endpoint MUST accept `outputFormat: "pdf-only"` and default to it
+
+The anonymise endpoint and `AnonymizationService::anonymizeDocument()` MUST accept `outputFormat` value `"pdf-only"` in addition to `"pdf"` and `"preserve"`. The allowed set MUST be exactly `["pdf-only", "pdf", "preserve"]`. When `outputFormat` is omitted, the endpoint MUST use the tenant default `filinq.anonymisation.default_output_format`, whose default value MUST be `"pdf-only"`. Any value outside the allowed set MUST be rejected with HTTP 400 whose body cites the three allowed values.
+
+#### Scenario: Default mode is pdf-only
+- **GIVEN** an anonymise request with no `outputFormat` specified
+- **AND** the tenant default is unset (so it resolves to `pdf-only`)
+- **WHEN** the endpoint processes a non-PDF input (e.g. DOCX)
+- **THEN** the resolved mode is `pdf-only`
+- **AND** the file written to Nextcloud Files is a PDF/A-3b
+- **AND** no native-format anonymised intermediate remains in Nextcloud Files
+
+#### Scenario: Invalid value is rejected with the widened allowed set
+- **GIVEN** an anonymise request with `outputFormat: "rtf"`
+- **WHEN** the endpoint processes the request
+- **THEN** the response is HTTP 400
+- **AND** the body cites the allowed values: `"pdf-only"`, `"pdf"`, `"preserve"`
+
+#### Scenario: Explicit pdf keeps the native intermediate
+- **GIVEN** an anonymise request with `outputFormat: "pdf"` and a DOCX input
+- **WHEN** the conversion succeeds
+- **THEN** the converted PDF is written to Nextcloud Files
+- **AND** the native-format anonymised intermediate is also kept (today's `pdf` behaviour, unchanged)
+
+#### Scenario: Explicit preserve skips conversion
+- **GIVEN** an anonymise request with `outputFormat: "preserve"` and a DOCX input
+- **WHEN** the endpoint processes the request
+- **THEN** the resulting file is the native DOCX
+- **AND** no conversion is attempted and nothing is deleted
+
+### Requirement: In `pdf-only` mode the native intermediate MUST be deleted after a successful conversion
+
+When the resolved mode is `pdf-only` and a conversion actually occurs (the anonymised result is not already a PDF), `AnonymizationService::anonymizeDocument()` MUST, after `PdfConversionService::convertToPdf()` returns successfully, delete the native-format anonymised intermediate that was the conversion's source. The reference to that native node MUST be captured before the converted-PDF node replaces it, so the converted PDF is never the deletion target. The recorded `anonymizationLink.anonymizedFileId` MUST point at the converted PDF (no relation or schema change is required — it already does).
+
+#### Scenario: Successful pdf-only conversion deletes the native intermediate
+- **GIVEN** an anonymise request resolved to `pdf-only` with a DOCX input
+- **AND** at least one conversion backend is available and capable
+- **WHEN** the conversion succeeds
+- **THEN** the converted PDF/A-3b is written to Nextcloud Files
+- **AND** the native-format anonymised intermediate (the conversion source) is deleted
+- **AND** the converted PDF is NOT deleted
+- **AND** the `anonymizationLink` relation points at the converted PDF id
+
+### Requirement: The `pdf-only` deletion MUST be best-effort and never fail the run
+
+The native-intermediate deletion MUST mirror the existing conversion-failure rollback pattern: attempt `delete()`, catch `Throwable`, log a PII-free warning, and continue. A deletion failure MUST NOT abort the anonymise run, alter the success response, or change the recorded relation. The run has already succeeded (PDF written, relation recorded) before cleanup runs.
+
+#### Scenario: Deletion failure is swallowed and the run still succeeds
+- **GIVEN** an anonymise request resolved to `pdf-only` with a DOCX input
+- **AND** the conversion succeeds but deleting the native intermediate throws (e.g. a locked or already-removed node)
+- **WHEN** the cleanup runs
+- **THEN** the failure is caught and logged at warning level (file id + exception class/message, no PII)
+- **AND** the anonymise run still returns its success response with the PDF metadata
+- **AND** the recorded `anonymizationLink` is unchanged
+
+### Requirement: `pdf-only` MUST be a no-op delete when the result is already a PDF
+
+When the anonymised result is already a PDF, the conversion gate (guarded by `mime !== "application/pdf"`) is skipped, so no native intermediate is created. In that case `pdf-only` MUST behave identically to `pdf`: the PDF is written, no conversion runs, and there is nothing extra to delete.
+
+#### Scenario: Already-a-PDF input deletes nothing
+- **GIVEN** an anonymise request resolved to `pdf-only` whose anonymised result is already `application/pdf`
+- **WHEN** the endpoint processes the request
+- **THEN** no conversion is attempted
+- **AND** no extra deletion occurs (there is no native intermediate)
+- **AND** the behaviour is identical to `outputFormat: "pdf"` for the same input
+
+### Requirement: The admin settings UI MUST let the operator choose the default among all three modes
+
+The Filinq admin settings panel MUST expose the tenant default `filinq.anonymisation.default_output_format` as a control that can select any of the three values `pdf-only`, `pdf`, `preserve` (not a two-state toggle). The control MUST load the persisted value, default to `pdf-only` when unset, and persist exactly the selected value without coercing an unrecognised/ third value to one of only two. A boolean toggle is insufficient because it cannot represent or preserve `pdf-only`.
+
+#### Scenario: Admin selects pdf-only and it persists
+- **GIVEN** the admin settings panel with the Anonymisation section
+- **WHEN** the operator selects the "PDF only" option and saves
+- **THEN** `filinq.anonymisation.default_output_format` is persisted as `pdf-only`
+- **AND** re-opening the panel shows "PDF only" selected
+
+#### Scenario: Saving the panel never clobbers pdf-only
+- **GIVEN** the persisted default is `pdf-only`
+- **WHEN** the operator opens the settings panel and saves without changing the output-format control
+- **THEN** the persisted value remains `pdf-only` (it is NOT coerced to `pdf` or `preserve`)
+
+### Requirement: KENTEKEN MUST be a curated, toggleable entity type
+
+`KENTEKEN` (Dutch vehicle registration / license plate) MUST be part of Filinq's curated entity-type vocabulary: it MUST appear as a toggle in the Settings entity-type selector, MUST be enabled by default (all-on), and MUST be carried in the entity-type whitelist handed to the detector when a subset is active — so OpenAnonymiser (which recognises license plates) detects it. No OpenRegister change is required: unmapped whitelist types pass through to the detector unchanged.
+
+#### Scenario: KENTEKEN is selectable in Settings
+
+- **WHEN** the selectable entity types are requested for the Settings selector
+- **THEN** the list includes `KENTEKEN`
+
+#### Scenario: KENTEKEN is enabled by default
+
+- **GIVEN** no stored entity-type selection
+- **WHEN** the enabled entity types are resolved
+- **THEN** the result includes `KENTEKEN` (the full curated set)
+
+#### Scenario: KENTEKEN is carried in a subset whitelist
+
+- **GIVEN** the operator enables a subset of entity types that includes `KENTEKEN`
+- **WHEN** the whitelist is handed to the detector
+- **THEN** `KENTEKEN` is present in the whitelist and reaches OpenAnonymiser unchanged
+
+### Requirement: The anonymisation upload widget MUST accept ODT files
+
+The Filinq anonymisation upload surface (`AnonymizationWidget.vue`) MUST accept `.odt` (OpenDocument Text, MIME `application/vnd.oasis.opendocument.text`) files for anonymisation, alongside the existing `docx`/`txt`/`pdf`/`eml` formats. Acceptance MUST hold both when the browser supplies the MIME type and when only the filename extension is available (drag-and-drop). The file input's `accept` attribute, the upload allow-list, and the user-facing "supported formats" copy MUST all include ODT, and the copy MUST have NL and EN translations.
+
+#### Scenario: An ODT selected from the file picker is accepted
+
+- **GIVEN** a file `brief.odt` with MIME `application/vnd.oasis.opendocument.text`
+- **WHEN** it is partitioned by the upload allow-list
+- **THEN** it is accepted (not rejected)
+
+#### Scenario: An ODT dropped without a MIME type is accepted by extension
+
+- **GIVEN** a file `brief.odt` whose browser-supplied MIME is empty
+- **WHEN** it is partitioned by the upload allow-list
+- **THEN** it is accepted on its `.odt` extension
+
+#### Scenario: Previously-supported formats still pass and unsupported formats are still rejected
+
+- **GIVEN** a batch containing `.docx`, `.odt`, `.pdf`, `.txt`, `.eml`, and an unsupported `.xlsx`
+- **WHEN** the batch is partitioned
+- **THEN** the docx/odt/pdf/txt/eml files are accepted
+- **AND** the `.xlsx` file is rejected and reported in the "supported formats" skip message
+
+### Requirement: The grondslagen seed MUST be the Woo Art. 5 grounds (A–S)
+
+The `dossier` register's `base` seed MUST contain the 19 Woo Art. 5 exception grounds (legend A–S), with article-derived slugs (`art-5-1-1-a` … `art-5-2-2`), a legend-prefixed Dutch `name` (e.g. "J — Persoonlijke levenssfeer"), and the Woo text + article reference in `description`. Demo seed references (`bases[]`) MUST use the new slugs.
+
+#### Scenario: The 19 grounds are seeded
+
+- **WHEN** the Filinq register configuration is imported
+- **THEN** the `base` objects include all 19 Woo Art. 5 grounds A–S with `art-5-*` slugs
+- **AND** no demo `dossier`/reference still points at a removed legacy slug
+
+### Requirement: Grondslag pickers MUST source the list from the register
+
+The anonymisation grondslag pickers MUST fetch the `base` objects from OpenRegister rather than a hardcoded list, display each grondslag's human `name`, and store its `slug`. On a fetch error the UI MUST fall back to a known slug list so the pickers keep working. No hardcoded grondslagen mirror may remain in the picker components.
+
+#### Scenario: Pickers show names and store slugs
+
+- **GIVEN** the register returns the seeded `base` objects
+- **WHEN** a grondslag picker renders its options
+- **THEN** each option shows the grondslag `name` and, when selected, persists the `slug`
+
+#### Scenario: Fetch failure falls back to the slug list
+
+- **GIVEN** the register is unreachable or returns no `base` objects
+- **WHEN** a grondslag picker loads
+- **THEN** it falls back to the known slug list and remains usable
+
+#### Scenario: No hardcoded mirror remains
+
+- **WHEN** the picker components are inspected
+- **THEN** they contain no hardcoded `BASES_OPTIONS` grondslagen list (they consume the shared fetch)
+
+### Requirement: Publication-policy features are labelled "Publish always" / "Publish never"
+
+The standing-consent feature MUST be presented to users as "Publish always" and the prohibition feature as "Publish never", at the main menu entry, the page title, and the add/edit dialog labels, with NL translations ("Altijd publiceren" / "Nooit publiceren"). Route names, component names, and store identifiers MUST remain unchanged (display labels only).
+
+#### Scenario: Menu shows the renamed labels
+
+- **WHEN** the main navigation is rendered
+- **THEN** the standing-consent entry reads "Publish always" and the prohibition entry reads "Publish never"
+
+#### Scenario: Page titles and add/edit dialogs use the new labels
+
+- **WHEN** the Publish-always or Publish-never page is opened
+- **THEN** its title uses the new label and its add/edit dialog reads "Add/Edit publish-always rule" / "Add/Edit publish-never rule"
+
+### Requirement: The two publication-policy pages are in the navigation
+
+The navigation MUST list "Publish always" and "Publish never" directly beneath Consent Management, each with a registered icon, so both pages open from the menu and not only by a typed URL. The earlier trim of Dashboard, Folder Analysis, Consent Management and Templates is superseded: those are core entries.
+
+#### Scenario: Both policy pages open from the menu
+
+- **WHEN** the main navigation is rendered
+- **THEN** it lists "Publish always" and "Publish never" beneath Consent Management
+- **AND** choosing either opens its page
 
 ## Data Model
 

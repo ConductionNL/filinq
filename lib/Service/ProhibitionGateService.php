@@ -49,6 +49,11 @@ use Throwable;
  * @link     https://www.filinq.app
  *
  * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-3
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) WMC 50 at threshold 50 on
+ * 2026-10-30. The fail-open and fail-closed paths of each backend are one
+ * decision each; splitting them across classes would hide the order in which
+ * the gate consults them.
  */
 class ProhibitionGateService {
 	/**
@@ -104,6 +109,7 @@ class ProhibitionGateService {
 	 * @param IAppConfig $appConfig App configuration for threshold + fail-mode settings.
 	 * @param ContainerInterface $container Container the PolicyMatchService is resolved from.
 	 * @param OpenRegisterServiceLocator $locator Resolver for OpenRegister services and mappers.
+	 * @param ProhibitionOverrideAuthority $authority Who may release a prohibition match.
 	 *
 	 * @return void
 	 */
@@ -112,6 +118,7 @@ class ProhibitionGateService {
 		private readonly IAppConfig $appConfig,
 		private readonly ContainerInterface $container,
 		private readonly OpenRegisterServiceLocator $locator,
+		private readonly ProhibitionOverrideAuthority $authority,
 	) {
 		$this->committer = new ProhibitionOverrideCommitter(
 			logger: $logger,
@@ -144,27 +151,15 @@ class ProhibitionGateService {
 	 * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-7
 	 */
 	public function run(int $fileId, array $requestEntities, array $overrides, string $userId): void {
-		$policyService = $this->resolvePolicyService(fileId: $fileId);
-		if ($policyService === null) {
-			return;
-		}
-
-		$rawEntities = $this->loadFileEntities(fileId: $fileId);
-		if ($rawEntities === null) {
-			return;
-		}
-
-		// Build prohibition matches: [ruleId, ruleName, entityId, entityRelationId, confidence, entityValue].
-		$matches = $this->buildProhibitionMatches(
-			rawEntities: $rawEntities,
-			policyService: $policyService
-		);
-
+		$matches = $this->matchesFor(fileId: $fileId);
 		if ($matches === []) {
 			return;
 		}
 
-		$split = $this->splitOverrides(matches: $matches, overrides: $overrides);
+		$split = $this->withoutUnauthorisedReleases(
+			split: $this->splitOverrides(matches: $matches, overrides: $overrides),
+			userId: $userId
+		);
 		$missing = $this->collectMissingMatches(
 			matches: $matches,
 			released: $split['released'],
@@ -199,6 +194,64 @@ class ProhibitionGateService {
 		}
 
 	}//end run()
+
+	/**
+	 * The file's prohibition matches, or none when the gate fails open.
+	 *
+	 * @param int $fileId Nextcloud file ID.
+	 *
+	 * @return array<int, array<string, mixed>> Match entries with ruleId, ruleName, entityId,
+	 *                                          entityRelationId, confidence, entityValue.
+	 *
+	 * @throws ProhibitionGateException When the gate is fail-closed and a backend is unavailable.
+	 */
+	private function matchesFor(int $fileId): array {
+		$policyService = $this->resolvePolicyService(fileId: $fileId);
+		if ($policyService === null) {
+			return [];
+		}
+
+		$rawEntities = $this->loadFileEntities(fileId: $fileId);
+		if ($rawEntities === null) {
+			return [];
+		}
+
+		// Build prohibition matches: [ruleId, ruleName, entityId, entityRelationId, confidence, entityValue].
+		return $this->buildProhibitionMatches(
+			rawEntities: $rawEntities,
+			policyService: $policyService
+		);
+
+	}//end matchesFor()
+
+	/**
+	 * Move every release to the rejected list unless the user may override.
+	 *
+	 * @param array<string, array<mixed>> $split  The overrides as splitOverrides() divided them.
+	 * @param string                      $userId The acting user.
+	 *
+	 * @return array<string, array<mixed>> The same shape, with unauthorised releases rejected.
+	 *
+	 * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-6
+	 */
+	private function withoutUnauthorisedReleases(array $split, string $userId): array {
+		if ($split['released'] === [] || $this->authority->mayOverride(userId: $userId) === true) {
+			return $split;
+		}
+
+		foreach ($split['released'] as $override) {
+			$split['rejected'][] = [
+				'ruleId' => $override['match']['ruleId'],
+				'entityId' => $override['match']['entityId'],
+				'reason' => 'only a policy admin may override a publication prohibition',
+			];
+		}
+
+		$split['released'] = [];
+
+		return $split;
+
+	}//end withoutUnauthorisedReleases()
 
 	/**
 	 * Read the high-confidence threshold from app config.
@@ -407,14 +460,14 @@ class ProhibitionGateService {
 		bool $failClosed,
 	): ?array {
 		try {
-			return $policyService->matchProhibition(
+			return $policyService->matchProhibitionHint(
 				entityType: $entityType,
 				entityValue: $entityValue
 			);
 		} catch (Throwable $e) {
 			if ($failClosed === true) {
 				$this->logger->warning(
-					'ProhibitionGate: matchProhibition threw — failing closed',
+					'ProhibitionGate: matchProhibitionHint threw — failing closed',
 					[
 						'entityId' => $entityId,
 						'entityType' => $entityType,
@@ -424,12 +477,12 @@ class ProhibitionGateService {
 				throw new ProhibitionGateException(
 					missingMatches: [],
 					rejectedOverrides: [],
-					backendUnavailable: 'PolicyMatchService::matchProhibition threw: ' . $e->getMessage()
+					backendUnavailable: 'PolicyMatchService::matchProhibitionHint threw: ' . $e->getMessage()
 				);
 			}
 
 			$this->logger->debug(
-				'ProhibitionGate: matchProhibition threw; skipping entity (legacy fail-open)',
+				'ProhibitionGate: matchProhibitionHint threw; skipping entity (legacy fail-open)',
 				['exception' => $e->getMessage()]
 			);
 

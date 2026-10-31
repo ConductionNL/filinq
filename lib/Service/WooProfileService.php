@@ -26,6 +26,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\AnonymizationProfileServiceInterface;
 use OCP\IAppConfig;
 
 /**
@@ -37,7 +38,7 @@ use OCP\IAppConfig;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  */
-class WooProfileService {
+class WooProfileService implements AnonymizationProfileServiceInterface {
 	private const DEFAULT_ANONYMIZE = ['PERSON', 'BSN', 'PHONE', 'EMAIL', 'IBAN', 'ADDRESS'];
 	private const DEFAULT_KEEP = ['ORGANIZATION', 'LOCATION', 'DATE'];
 

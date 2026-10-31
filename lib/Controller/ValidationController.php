@@ -25,7 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
-use OCA\Filinq\Service\DocumentValidationService;
+use OCA\Filinq\Kernel\Contracts\DocumentValidationServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -48,13 +48,15 @@ use Throwable;
  * @link     https://www.filinq.app
  */
 class ValidationController extends Controller {
+	use AnswersNotAuthenticated;
+
 	/**
 	 * Constructor.
 	 *
 	 * @param string $appName The app name.
 	 * @param IRequest $request The request.
 	 * @param LoggerInterface $logger Logger.
-	 * @param DocumentValidationService $service The validation service.
+	 * @param DocumentValidationServiceInterface $service The validation service.
 	 * @param IRootFolder $rootFolder Root folder.
 	 * @param IL10N $l10n Localisation.
 	 * @param IUserSession $userSession User session.
@@ -65,7 +67,7 @@ class ValidationController extends Controller {
 		string $appName,
 		IRequest $request,
 		private readonly LoggerInterface $logger,
-		private readonly DocumentValidationService $service,
+		private readonly DocumentValidationServiceInterface $service,
 		private readonly IRootFolder $rootFolder,
 		private readonly IL10N $l10n,
 		private readonly IUserSession $userSession,
@@ -82,15 +84,15 @@ class ValidationController extends Controller {
 	 * @return JSONResponse The verdict + findings, or an error.
 	 *
 	 * @spec openspec/specs/document-validation-checks/spec.md
+	 *
+	 * @no-admin-idor-exempt the file is resolved through the caller's own user folder in the method body,
+	 * and an id the caller cannot read answers 404.
 	 */
 	#[NoAdminRequired]
 	public function validate(): JSONResponse {
 		$user = $this->userSession->getUser();
 		if ($user === null) {
-			return new JSONResponse(
-				data: ['error' => $this->l10n->t('Not authenticated')],
-				statusCode: Http::STATUS_UNAUTHORIZED
-			);
+			return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 		}
 
 		$fileId = (int)$this->request->getParam('fileId', 0);

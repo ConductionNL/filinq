@@ -27,7 +27,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use Exception;
-use OCA\Filinq\Service\CorrespondenceService;
+use OCA\Filinq\Kernel\Contracts\CorrespondenceServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataDownloadResponse;
@@ -49,12 +49,14 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/changes/letter-correspondence-generation/tasks.md#task-1
  */
 class CorrespondenceController extends Controller {
+	use AnswersNotAuthenticated;
+
 	/**
 	 * Constructor for CorrespondenceController
 	 *
 	 * @param string $appName The application name
 	 * @param IRequest $request The request object
-	 * @param CorrespondenceService $corrSvc Correspondence generation service
+	 * @param CorrespondenceServiceInterface $corrSvc Correspondence generation service
 	 * @param IUserSession $userSession User session for auth info
 	 * @param LoggerInterface $logger Logger for error reporting
 	 * @param IL10N $l10n The localization service
@@ -64,7 +66,7 @@ class CorrespondenceController extends Controller {
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly CorrespondenceService $corrSvc,
+		private readonly CorrespondenceServiceInterface $corrSvc,
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
 		private readonly IL10N $l10n,
@@ -92,10 +94,7 @@ class CorrespondenceController extends Controller {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Not authenticated')],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 			}
 
 			$params = $this->parseGenerateParams();
@@ -251,10 +250,7 @@ class CorrespondenceController extends Controller {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Not authenticated')],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 			}
 
 			$templateId = $this->request->getParam('templateId');
@@ -318,10 +314,7 @@ class CorrespondenceController extends Controller {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Not authenticated')],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 			}
 
 			$status = $this->corrSvc->getJobStatus(jobId: $jobId);

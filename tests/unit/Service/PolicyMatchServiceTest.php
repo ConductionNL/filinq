@@ -532,4 +532,43 @@ class PolicyMatchServiceTest extends TestCase {
 
 	}//end testInvalidateCacheClearsLoadedRules()
 
+	/**
+	 * A wildcard BSN or KvK rule matches any resolved identifier of that kind,
+	 * and never an entity without one.
+	 *
+	 * @return void
+	 */
+	public function testAWildcardIdentifierRuleNeedsAnIdentifier(): void {
+		$svc = $this->buildService([
+			[
+				'@self' => ['id' => 'rule-w'],
+				'active' => true,
+				'entityType' => 'OTHER',
+				'primaryName' => 'Everyone with a number',
+				'matchRules' => [['type' => 'bsn', 'value' => '*'], ['type' => 'kvk', 'value' => '*']],
+			],
+		]);
+
+		self::assertSame('rule-w', $svc->match('Any Name', 'PERSON', ['bsn' => '111222333'])['uuid'] ?? null);
+		self::assertSame('rule-w', $svc->match('Acme BV', 'ORGANIZATION', ['kvk' => '87654321'])['uuid'] ?? null);
+		self::assertNull($svc->match('Any Name', 'PERSON'));
+		self::assertNull($svc->match('Any Name', 'PERSON', ['bsn' => '', 'kvk' => '']));
+
+	}//end testAWildcardIdentifierRuleNeedsAnIdentifier()
+
+	/**
+	 * The retroactive question: does any of these match rules hit this entity.
+	 *
+	 * @return void
+	 */
+	public function testEntityMatchesAnyRule(): void {
+		$svc = $this->buildService([]);
+		$rules = [['type' => 'exact', 'value' => 'Bea'], ['type' => 'kvk', 'value' => '12345678']];
+
+		self::assertTrue($svc->entityMatchesAnyRule($rules, 'Bea'));
+		self::assertTrue($svc->entityMatchesAnyRule($rules, 'Acme', ['kvk' => '12345678']));
+		self::assertFalse($svc->entityMatchesAnyRule($rules, 'Acme', ['kvk' => '00000000']));
+		self::assertTrue($svc->entityMatchesAnyRule([['type' => 'exact']], ''), 'A rule without a value compares against the empty string.');
+
+	}//end testEntityMatchesAnyRule()
 }//end class

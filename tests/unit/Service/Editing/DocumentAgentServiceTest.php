@@ -20,8 +20,10 @@ namespace OCA\Filinq\Tests\Unit\Service\Editing;
 use OCA\Filinq\Mcp\FilinqScannableServices;
 use OCA\Filinq\Service\CorrespondenceService;
 use OCA\Filinq\Service\Editing\AgentArtefactMarker;
+use OCA\Filinq\Service\Editing\AgentFileRequest;
 use OCA\Filinq\Service\Editing\DocumentAgentService;
 use OCA\Filinq\Service\Editing\EditSessionService;
+use OCA\Filinq\Service\DocumentGenerationRecord;
 use OCA\Filinq\Service\GeneratedDocumentLogger;
 use OCA\Filinq\Service\PdfConversionService;
 use OCA\OpenRegister\Mcp\Attribute\McpTool;
@@ -377,7 +379,7 @@ class DocumentAgentServiceTest extends TestCase {
 	public function testAnOmittedOutputModeMeansTheConfiguredOne(): void {
 		$this->editSession->expects($this->once())
 			->method('editForAgent')
-			->with('alice', 4711, $this->anything(), 'v1', null)
+			->with(new AgentFileRequest(uid: 'alice', fileId: 4711, version: 'v1', requestedMode: null), $this->anything())
 			->willReturn(
 				[
 					'fileId' => 4711,
@@ -469,4 +471,43 @@ class DocumentAgentServiceTest extends TestCase {
 		$this->assertSame(4711, $result['fileId']);
 
 	}//end testAFailedAuditRowDoesNotFailACompletedEdit()
+	/**
+	 * A completed edit is recorded in the document register: no template, the
+	 * note as its name, the acting user, and the produced file.
+	 *
+	 * @return void
+	 */
+	public function testACompletedEditIsRecorded(): void {
+		$this->editSession->method('editForAgent')->willReturn(
+			[
+				'fileId' => 4712,
+				'name' => 'letter.docx',
+				'path' => 'Docs/letter.docx',
+				'outputMode' => 'copy',
+				'appliedAnchors' => [],
+				'version' => 'v2',
+				'warnings' => [],
+			]
+		);
+		$note = 'Agent edit of file 4711 (copy output)';
+		$this->documentLogger->expects($this->once())->method('log')->with(
+			new DocumentGenerationRecord(
+				template: ['id' => '', 'version' => null, 'name' => $note],
+				dataRefs: [],
+				format: 'docx',
+				userId: 'alice'
+			),
+			[
+				'status' => 'generated',
+				'warnings' => [$note],
+				'caseId' => null,
+				'errorMessage' => null,
+				'fileId' => 4712,
+				'filePath' => 'Docs/letter.docx',
+			]
+		)->willReturn([]);
+
+		$this->service()->editDocument(4711, [['anchor' => 'b1-1', 'text' => 'x']], 'v1');
+
+	}//end testACompletedEditIsRecorded()
 }//end class

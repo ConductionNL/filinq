@@ -24,9 +24,14 @@ declare(strict_types=1);
 namespace OCA\Filinq\AppInfo;
 
 use Exception;
+use OCA\Filinq\BackgroundJob\JobQueue;
+use OCA\Filinq\Dashboard\DashboardRegistrar;
+use OCA\Filinq\EventListener\ListenerRegistrar;
+use OCA\Filinq\Kernel\Contracts\SettingsServiceInterface;
+use OCA\Filinq\Kernel\JobQueueInterface;
 use OCA\Filinq\Mcp\FilinqScannableServices;
 use OCA\Filinq\Middleware\LanguageNegotiationMiddleware;
-use OCA\Filinq\Service\SettingsService;
+use OCA\Filinq\Service\ServiceRegistrar;
 use OCA\OpenRegister\AppHost\Bootstrap;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
@@ -55,13 +60,27 @@ class RegistrationBootstrap {
 	 * @param IRegistrationContext $context The registration context.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/changes/flow-generate-document-node/specs/flow-document-generation/spec.md#requirement-filinq-registers-its-node-and-still-boots-without-openregister
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) OpenRegisterAutoloader::register() is
+	 * the app's own static prelude; there is no container at the composition root
+	 * to resolve an adapter from.
 	 */
 	public function register(IRegistrationContext $context): void {
-		(new ObjectEventRegistrar())->register(context: $context);
-		(new SigningEventRegistrar())->register(context: $context);
-		(new PdfConversionRegistrar())->register(context: $context);
+		// The integration-leaf registrar probes for an OpenRegister event class,
+		// which only resolves once OpenRegister's prefix is on the autoloader.
+		// apphost-prelude exclude OpenRegisterAutoloader::register() below is the prelude.
+		OpenRegisterAutoloader::register();
+		(new ListenerRegistrar())->register(context: $context);
+		(new ServiceRegistrar())->register(context: $context);
+		(new DashboardRegistrar())->register(context: $context);
 
 		$this->bindStoreController(context: $context);
+
+		// Services queue background jobs by name; the BackgroundJob component
+		// owns which class runs each name.
+		$context->registerServiceAlias(JobQueueInterface::class, JobQueue::class);
 
 		// ADR-084: services type-hint OpenRegister's PUBLISHED interface, never
 		// its concrete class, so a leaf app's unit tests can mock a type they
@@ -108,6 +127,10 @@ class RegistrationBootstrap {
 		// objects to the right variant.
 		$context->registerMiddleware(LanguageNegotiationMiddleware::class);
 
+		// Legal holds (e-discovery-legal-hold): renders the place and release notifications.
+		// Named by string to keep this class's coupling where it is.
+		$context->registerNotifierService('OCA\\Filinq\\Notification\\LegalHoldNotifier');
+
 		// AppHost observability adoption (ADR-006 / ADR-040). Registers only the
 		// MetricsEngine; the Health/Metrics controllers auto-wire from OCP and
 		// resolve the engine by FQCN string at dispatch time.
@@ -139,11 +162,11 @@ class RegistrationBootstrap {
 	 * @return void
 	 */
 	public function boot(ContainerInterface $container, string $appName): void {
-		(new ObjectEventRegistrar())->boot(container: $container, appName: $appName);
+		(new ListenerRegistrar())->boot(container: $container, appName: $appName);
 
 		// Initialize OpenRegister configuration on boot.
 		try {
-			$settingsService = $container->get(SettingsService::class);
+			$settingsService = $container->get(SettingsServiceInterface::class);
 			$settingsService->initialize();
 		} catch (Exception $e) {
 			// Silently fail - initialization errors are logged by SettingsService.
@@ -183,6 +206,8 @@ class RegistrationBootstrap {
 		// order, so OCA\OpenRegister\ is NOT on the autoloader yet. Without
 		// this the class_exists() below answers false on a perfectly healthy
 		// instance and the binding is skipped in silence.
+		// apphost-prelude exclude OpenRegisterAutoloader::register() below is the prelude.
+		// Gate-64 only recognises OC_App::registerAutoloading(), which Nextcloud 35 removed.
 		OpenRegisterAutoloader::register();
 
 		// The class_exists() guard MUST stay in this method: it is also the

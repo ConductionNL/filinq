@@ -51,6 +51,17 @@ import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
 							:size="18"
 							class="my-documents-name__icon" />
 						<span>{{ displayName(row) }}</span>
+						<span
+							v-if="ocrBadgeFor(row)"
+							class="my-documents-ocr-badge"
+							:title="
+								t(
+									'filinq',
+									'Text recognised by OCR, with its confidence',
+								)
+							">
+							{{ ocrBadgeFor(row) }}
+						</span>
 					</div>
 				</template>
 
@@ -60,17 +71,20 @@ import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
 						:colorMap="kindColorMap" />
 				</template>
 
-				<!-- TODO: re-enable the Status column once a real per-document
-				     checked/reviewed status is available from the backend. The
-				     label is hardcoded ("Not checked") for now, so the column is
-				     hidden rather than showing a placeholder for every row.
 				<template #column-status="{ row }">
-					<span class="my-documents-status">
-						<EyeOffOutline :size="16" class="my-documents-status__icon" />
+					<span
+						v-if="!row.isFolder"
+						class="my-documents-status"
+						:class="{ 'my-documents-status--checked': !!reviewMarks[String(row.fileId)] }"
+						:title="statusTitle(row)">
+						<CheckDecagram
+							v-if="reviewMarks[String(row.fileId)]"
+							:size="16"
+							class="my-documents-status__icon" />
+						<EyeOffOutline v-else :size="16" class="my-documents-status__icon" />
 						{{ statusLabel(row) }}
 					</span>
 				</template>
-				-->
 
 				<template #column-modified="{ row }">
 					{{ formatDate(row.modified) }}
@@ -163,6 +177,30 @@ import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
 						<NcActionButton
 							v-if="!row.isFolder"
 							closeAfterClick
+							data-testid="document-sanitize"
+							@click="sanitizeDocument(row)">
+							<template #icon>
+								<BroomIcon :size="20" />
+							</template>
+							{{ t('filinq', 'Sanitize') }}
+						</NcActionButton>
+						<NcActionButton
+							v-if="ocrOfferedFor(row)"
+							:disabled="Boolean(ocrRunning[row.fileId])"
+							closeAfterClick
+							@click="runOcrOn(row)">
+							<template #icon>
+								<TextRecognition :size="20" />
+							</template>
+							{{
+								ocrRunning[row.fileId]
+									? t('filinq', 'Running OCR…')
+									: t('filinq', 'Run OCR')
+							}}
+						</NcActionButton>
+						<NcActionButton
+							v-if="!row.isFolder"
+							closeAfterClick
 							@click="compareDocument(row)">
 							<template #icon>
 								<Compare :size="20" />
@@ -189,6 +227,12 @@ import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
 			</DdIndexPage>
 		</template>
 
+		<SanitizationReportModal
+			:show="sanitization.show"
+			:loading="sanitization.loading"
+			:error="sanitization.error"
+			:result="sanitization.result"
+			@close="sanitization.show = false" />
 		<ValidationResultModal
 			:show="validation.show"
 			:loading="validation.loading"
@@ -226,27 +270,38 @@ import { CnStatusBadge } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
 import { NcActionButton, NcActions } from '@nextcloud/vue'
+import BroomIcon from 'vue-material-design-icons/Broom.vue'
 import CheckboxMultipleMarkedOutline from 'vue-material-design-icons/CheckboxMultipleMarkedOutline.vue'
+import CheckDecagram from 'vue-material-design-icons/CheckDecagram.vue'
 import Cog from 'vue-material-design-icons/Cog.vue'
 import Compare from 'vue-material-design-icons/Compare.vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
-// TODO: re-enable with the Status column (commented out until a real
-// per-document checked status exists).
-// import EyeOffOutline from 'vue-material-design-icons/EyeOffOutline.vue'
 import Download from 'vue-material-design-icons/Download.vue'
 import Eye from 'vue-material-design-icons/Eye.vue'
+import EyeOffOutline from 'vue-material-design-icons/EyeOffOutline.vue'
 import FilterOutline from 'vue-material-design-icons/FilterOutline.vue'
 import History from 'vue-material-design-icons/History.vue'
 import ShieldCheckOutline from 'vue-material-design-icons/ShieldCheckOutline.vue'
+import TextRecognition from 'vue-material-design-icons/TextRecognition.vue'
 import DdDocumentCard from '../../components/DdDocumentCard.vue'
 import DdIcon from '../../components/DdIcon.vue'
 import DdIndexPage from '../../components/DdIndexPage.vue'
 import DdPageHeader from '../../components/DdPageHeader.vue'
 import DdSearchBar from '../../components/DdSearchBar.vue'
 import ConfirmActionDialog from '../../dialogs/ConfirmActionDialog.vue'
+import SanitizationReportModal from '../../modals/SanitizationReportModal.vue'
 import ValidationResultModal from '../../modals/ValidationResultModal.vue'
 import FileViewerPage from '../fileViewer/FileViewerPage.vue'
+import {
+	fetchOcrStatus,
+	isOcrCandidate,
+	ocrBadgeLabel,
+	ocrErrorMessage,
+	runOcr,
+} from '../../services/ocr.js'
+import { fetchReviewMarks } from '../../services/reviewMark.js'
+import { sanitizeFile } from '../../services/sanitization.js'
 import { validateFile } from '../../services/validationService.js'
 
 const VIEW_MODE_STORAGE_KEY = 'filinq:myDocuments:viewMode'
@@ -283,13 +338,17 @@ export default {
 		DdIcon,
 		FileViewerPage,
 		ValidationResultModal,
+		SanitizationReportModal,
+		BroomIcon,
 		ConfirmActionDialog,
 		DotsHorizontal,
 		Eye,
 		// TODO: re-enable with the Status column (see import above).
-		// EyeOffOutline,
+		CheckDecagram,
+		EyeOffOutline,
 		Download,
 		ShieldCheckOutline,
+		TextRecognition,
 		Compare,
 		History,
 		Delete,
@@ -306,6 +365,13 @@ export default {
 			viewMode: loadPersistedViewMode(),
 			bulkSelect: false,
 			selectedIds: [],
+			sanitization: {
+				show: false,
+				loading: false,
+				error: '',
+				result: null,
+			},
+
 			validation: {
 				show: false,
 				loading: false,
@@ -323,6 +389,14 @@ export default {
 			deleteTarget: null, // row awaiting delete confirmation, or null
 			bulkDeleteNames: [], // file names awaiting bulk-delete confirmation
 			deleting: false,
+
+			// OCR (ocr-trigger-surface): whether it can run here, the last
+			// result per file id, and which files are running now.
+			ocrAvailable: false,
+			ocrResults: {},
+			// The latest review mark per file id on this page.
+			reviewMarks: {},
+			ocrRunning: {},
 		}
 	},
 
@@ -337,9 +411,7 @@ export default {
 			return [
 				{ key: 'fileName', label: t('filinq', 'Name') },
 				{ key: 'kind', label: t('filinq', 'Kind') },
-				// TODO: re-enable once a real per-document checked/reviewed status
-				// is available from the backend (label is hardcoded for now).
-				// { key: 'status', label: t('filinq', 'Status') },
+				{ key: 'status', label: t('filinq', 'Status') },
 				{ key: 'modified', label: t('filinq', 'Date') },
 				{ key: 'fileSize', label: t('filinq', 'Size') },
 			]
@@ -418,6 +490,20 @@ export default {
 	/**
 	 * @spec exclude Lifecycle bootstrap (fetch + keyboard listener wiring).
 	 */
+	watch: {
+		paginatedDocuments: {
+			/**
+			 * Read the OCR status when the files on screen change.
+			 *
+			 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-3.1
+			 */
+			handler(rows) {
+				this.loadOcrStatus(rows)
+				this.loadReviewMarks(rows)
+			},
+		},
+	},
+
 	mounted() {
 		myDocumentsStore.fetchDocuments()
 		window.addEventListener('keydown', this.onKeydown)
@@ -428,6 +514,88 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * Read whether OCR can run, and the results for the images and PDFs on this page.
+		 *
+		 * @param {Array<object>} rows The rows on the page.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-3.1
+		 */
+		async loadOcrStatus(rows) {
+			const ids = (rows || [])
+				.filter(
+					(row) =>
+						!row.isFolder && row.fileId && isOcrCandidate(row.mimeType),
+				)
+				.map((row) => row.fileId)
+			if (ids.length === 0) {
+				return
+			}
+			try {
+				const status = await fetchOcrStatus(ids)
+				this.ocrAvailable = status.capability?.available === true
+				this.ocrResults = { ...this.ocrResults, ...(status.results || {}) }
+			} catch {
+				// No status: no action and no badge. The list itself still shows.
+			}
+		},
+
+		/**
+		 * Whether Run OCR is offered on a row. The server checks again.
+		 *
+		 * @param {object} row The row.
+		 * @return {boolean}
+		 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-3.1
+		 */
+		ocrOfferedFor(row) {
+			return this.ocrAvailable && !row.isFolder && isOcrCandidate(row.mimeType)
+		},
+
+		/**
+		 * The OCR badge for a row.
+		 *
+		 * @param {object} row The row.
+		 * @return {string}
+		 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-3.1
+		 */
+		ocrBadgeFor(row) {
+			return ocrBadgeLabel(this.ocrResults[String(row.fileId)] ?? null)
+		},
+
+		/**
+		 * Run OCR on a row and update its badge without a reload.
+		 *
+		 * @param {object} row The row.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-3.1
+		 */
+		async runOcrOn(row) {
+			this.ocrRunning = { ...this.ocrRunning, [row.fileId]: true }
+			try {
+				const result = await runOcr(row.fileId)
+				if (result.ocrProcessed) {
+					this.ocrResults = {
+						...this.ocrResults,
+						[String(row.fileId)]: result,
+					}
+					showSuccess(
+						t('filinq', 'OCR read {length} characters.', {
+							length: result.textLength,
+						}),
+					)
+				} else {
+					showError(ocrErrorMessage(result))
+				}
+			} catch (error) {
+				showError(ocrErrorMessage(error))
+				if ([409, 503].includes(error?.response?.status)) {
+					this.ocrAvailable = false
+				}
+			} finally {
+				this.ocrRunning = { ...this.ocrRunning, [row.fileId]: false }
+			}
+		},
+
 		/**
 		 * Global keydown handler. Escape cancels bulk-selection mode so the
 		 * user can bail out of a bulk action without reaching for the menu.
@@ -734,6 +902,30 @@ export default {
 		},
 
 		/**
+		 * Sanitize a document into a clean copy beside it and show what was removed.
+		 *
+		 * @param {object} row Document row.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/document-sanitization/tasks.md#4-1
+		 */
+		async sanitizeDocument(row) {
+			if (!row || !row.fileId) return
+			this.sanitization = {
+				show: true,
+				loading: true,
+				error: '',
+				result: null,
+			}
+			const answer = await sanitizeFile(row.fileId)
+			this.sanitization.loading = false
+			if (!answer.ok) {
+				this.sanitization.error = answer.error
+				return
+			}
+			this.sanitization.result = answer.data
+		},
+
+		/**
 		 * Run on-demand validation for a document and surface the verdict +
 		 * findings in a modal. Nothing is persisted by this call.
 		 *
@@ -849,13 +1041,59 @@ export default {
 				: t('filinq', 'Concept')
 		},
 
-		// TODO: re-enable when the app has a real per-document checked/reviewed
-		// status. The Status column is commented out for now (both its column
-		// definition and template) because this was hardcoded to "Not checked".
-		// /** Placeholder status until the app has a real "checked" signal. */
-		// statusLabel() {
-		//     return t('filinq', 'Not checked')
-		// },
+		/**
+		 * Read who checked the files on this page, for the Status column.
+		 *
+		 * @param {Array<object>} rows The rows on the page.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-5
+		 */
+		async loadReviewMarks(rows) {
+			const ids = (rows || [])
+				.filter((row) => !row.isFolder && row.fileId)
+				.map((row) => row.fileId)
+			if (ids.length === 0) {
+				return
+			}
+			try {
+				const marks = await fetchReviewMarks(ids)
+				this.reviewMarks = { ...this.reviewMarks, ...marks }
+			} catch {
+				// No status read: every row keeps saying "Not checked".
+			}
+		},
+
+		/**
+		 * Whether a person checked the document's findings.
+		 *
+		 * @param {object} row The row.
+		 * @return {string}
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-5
+		 */
+		statusLabel(row) {
+			return this.reviewMarks[String(row.fileId)]
+				? t('filinq', 'Checked')
+				: t('filinq', 'Not checked')
+		},
+
+		/**
+		 * Who checked the document and when, as a tooltip.
+		 *
+		 * @param {object} row The row.
+		 * @return {string}
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-5
+		 */
+		statusTitle(row) {
+			const mark = this.reviewMarks[String(row.fileId)]
+			if (!mark) {
+				return ''
+			}
+			return t('filinq', 'Checked by {user} on {date}', {
+				user: mark.checkedBy,
+				date: this.formatDate(mark.checkedAt),
+			})
+		},
+
 		/**
 		 * Format a timestamp (unix seconds or ISO string) as DD-MM-YYYY.
 		 *
@@ -913,8 +1151,6 @@ export default {
 	transition: color 0.15s ease;
 }
 
-/* TODO: re-enable with the Status column (commented out until a real
-   per-document checked status exists).
 .my-documents-status {
 	display: inline-flex;
 	align-items: center;
@@ -926,7 +1162,11 @@ export default {
 .my-documents-status__icon {
 	color: var(--color-text-maxcontrast);
 }
-*/
+
+.my-documents-status--checked,
+.my-documents-status--checked .my-documents-status__icon {
+	color: var(--color-success-text);
+}
 
 /* Options menu in the actions-column header (bulk-selection / bulk actions). */
 .my-documents-options {
@@ -950,5 +1190,14 @@ export default {
 	.my-documents-name__icon {
 		transition: none;
 	}
+}
+
+.my-documents-ocr-badge {
+	margin-inline-start: 8px;
+	padding: 0 6px;
+	border-radius: var(--border-radius-pill);
+	background: var(--color-primary-element-light);
+	color: var(--color-primary-element-light-text);
+	font-size: 0.85em;
 }
 </style>

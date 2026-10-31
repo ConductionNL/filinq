@@ -47,8 +47,9 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use Exception;
-use OCA\Filinq\Service\LegalBasesSummaryService;
+use OCA\Filinq\Kernel\Contracts\LegalBasesSummaryServiceInterface;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
@@ -66,13 +67,14 @@ use Psr\Log\LoggerInterface;
  * @link     https://www.filinq.app
  */
 class DossierController extends Controller {
+	use AnswersNotAuthenticated;
 	/**
 	 * Constructor for DossierController.
 	 *
 	 * @param string $appName The application name.
 	 * @param IRequest $request The current HTTP request.
 	 * @param LoggerInterface $logger Logger for error reporting.
-	 * @param LegalBasesSummaryService $grondslagenSummary Per-dossier renderer.
+	 * @param LegalBasesSummaryServiceInterface $grondslagenSummary Per-dossier renderer.
 	 * @param IL10N $l10n Localisation service.
 	 * @param IUserSession $userSession User session for auth check.
 	 */
@@ -80,7 +82,7 @@ class DossierController extends Controller {
 		string $appName,
 		IRequest $request,
 		private readonly LoggerInterface $logger,
-		private readonly LegalBasesSummaryService $grondslagenSummary,
+		private readonly LegalBasesSummaryServiceInterface $grondslagenSummary,
 		private readonly IL10N $l10n,
 		private readonly IUserSession $userSession,
 	) {
@@ -103,17 +105,27 @@ class DossierController extends Controller {
 	 *
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
+	 *
+	 * @spec openspec/changes/fix-dossier-grondslagen-route-mismatch/tasks.md#task-R-2.1
 	 */
 	public function generateGrondslagenSummary(string $dossierId): JSONResponse {
 		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(
-				['error' => $this->l10n->t('Not authenticated')],
-				Http::STATUS_UNAUTHORIZED
-			);
+			return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 		}
 
 		try {
 			$this->grondslagenSummary->authorizeAccess(dossierId: $dossierId);
+		} catch (Exception $e) {
+			// OpenRegister's mapper throws DoesNotExistException for an unknown
+			// id; the access check throws code 403. Both are a refusal.
+			if (($e instanceof DoesNotExistException) === false && $e->getCode() !== Http::STATUS_FORBIDDEN) {
+				throw $e;
+			}
+
+			return $this->refused();
+		}
+
+		try {
 			$file = $this->grondslagenSummary->renderDossierSummary(dossierUuid: $dossierId);
 
 			return new JSONResponse(
@@ -142,4 +154,20 @@ class DossierController extends Controller {
 		}//end try
 
 	}//end generateGrondslagenSummary()
+
+	/**
+	 * The answer for a dossier that is unknown or not readable. One answer for
+	 * both, so the endpoint does not tell an outsider which dossiers exist.
+	 *
+	 * @return JSONResponse A 403 with a localised error.
+	 *
+	 * @spec openspec/changes/fix-dossier-grondslagen-route-mismatch/tasks.md#task-R-2.1
+	 */
+	private function refused(): JSONResponse {
+		return new JSONResponse(
+			['error' => $this->l10n->t('This dossier does not exist or you may not read it.')],
+			Http::STATUS_FORBIDDEN
+		);
+
+	}//end refused()
 }//end class

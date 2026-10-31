@@ -325,6 +325,57 @@ class JSONResponse extends Response {
 }//end class
 
 /**
+ * Stub for OCP\AppFramework\Http\RedirectResponse
+ *
+ * Constructor signature as in vendor/nextcloud/ocp (default 303 See Other,
+ * Location header set to the redirect URL).
+ *
+ * @category Tests
+ * @package  OCA\Filinq\Tests
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2
+ * @link     https://www.filinq.app
+ */
+class RedirectResponse extends Response {
+
+	/**
+	 * Constructor.
+	 *
+	 * @param string $redirectURL The target.
+	 * @param int $status HTTP status code.
+	 * @param array<string, string> $headers Extra headers.
+	 *
+	 * @return void
+	 */
+	public function __construct(private string $redirectURL, private int $status = 303, array $headers = []) {
+		foreach ($headers as $name => $value) {
+			$this->addHeader($name, $value);
+		}
+
+		$this->addHeader('Location', $redirectURL);
+
+	}//end __construct()
+
+	/**
+	 * The redirect target.
+	 *
+	 * @return string
+	 */
+	public function getRedirectURL(): string {
+		return $this->redirectURL;
+	}//end getRedirectURL()
+
+	/**
+	 * The HTTP status code.
+	 *
+	 * @return int
+	 */
+	public function getStatus(): int {
+		return $this->status;
+	}//end getStatus()
+}//end class
+
+/**
  * Stub for OCP\AppFramework\Http\DataDownloadResponse
  *
  * Extends the local Response stub (matching the real
@@ -1412,6 +1463,15 @@ interface IAppManager {
 	public function isEnabledForUser(string $appId, $user = null): bool;
 
 	/**
+	 * Whether the app is enabled for at least one user (OCP since 32.0.0).
+	 *
+	 * @param string $appId The app id.
+	 *
+	 * @return bool
+	 */
+	public function isEnabledForAnyone(string $appId): bool;
+
+	/**
 	 * Get the version of an installed app.
 	 *
 	 * @param string $appId App identifier
@@ -1495,6 +1555,30 @@ interface INotification {
 	 * @return INotification
 	 */
 	public function setSubject(string $subject, array $parameters = []): INotification;
+
+	/** Real OCP method. @param \DateTime $dateTime When. @return INotification */
+	public function setDateTime(\DateTime $dateTime): INotification;
+
+	/** Real OCP method. @return string */
+	public function getApp(): string;
+
+	/** Real OCP method. @return string */
+	public function getUser(): string;
+
+	/** Real OCP method. @return string */
+	public function getSubject(): string;
+
+	/** Real OCP method. @return array */
+	public function getSubjectParameters(): array;
+
+	/** Real OCP method. @param string $subject The text. @return INotification */
+	public function setParsedSubject(string $subject): INotification;
+
+	/** Real OCP method. @param string $icon Absolute URL. @return INotification */
+	public function setIcon(string $icon): INotification;
+
+	/** Real OCP method. @param string $link Absolute URL. @return INotification */
+	public function setLink(string $link): INotification;
 }//end interface
 
 /**
@@ -1622,6 +1706,15 @@ interface IDBConnection {
 	public function executeStatement(string $sql, array $params = [], array $types = []): int;
 
 	/**
+	 * Whether a table exists. Pinned to OCP\IDBConnection::tableExists().
+	 *
+	 * @param string $table The table name without prefix.
+	 *
+	 * @return bool
+	 */
+	public function tableExists(string $table): bool;
+
+	/**
 	 * The active database platform.
 	 *
 	 * Real OCP declares this and RenameDutchColumns calls it to quote identifiers.
@@ -1631,6 +1724,15 @@ interface IDBConnection {
 	 * @return mixed
 	 */
 	public function getDatabasePlatform(): mixed;
+
+	/**
+	 * Escape a LIKE parameter. Pinned to OCP\IDBConnection::escapeLikeParameter().
+	 *
+	 * @param string $param The parameter.
+	 *
+	 * @return string The escaped parameter.
+	 */
+	public function escapeLikeParameter(string $param): string;
 }//end interface
 
 /**
@@ -2099,6 +2201,26 @@ interface IClient {
 	 * @return IResponse
 	 */
 	public function get(string $uri, array $options = []): IResponse;
+
+	/**
+	 * Issue a POST request (signature as in vendor/nextcloud/ocp IClient).
+	 *
+	 * @param string $uri The URI.
+	 * @param array $options Request options.
+	 *
+	 * @return IResponse
+	 */
+	public function post(string $uri, array $options = []): IResponse;
+
+	/**
+	 * Issue a DELETE request (signature as in vendor/nextcloud/ocp IClient).
+	 *
+	 * @param string $uri The URI.
+	 * @param array $options Request options.
+	 *
+	 * @return IResponse
+	 */
+	public function delete(string $uri, array $options = []): IResponse;
 }//end interface
 
 /**
@@ -2112,4 +2234,107 @@ interface IClientService {
 	 * @return IClient
 	 */
 	public function newClient(): IClient;
+}//end interface
+
+namespace OCP\DB\QueryBuilder;
+
+/**
+ * Stub of OCP\DB\QueryBuilder\IQueryFunction.
+ *
+ * The real QueryBuilder interfaces reference Doctrine, which this app does not
+ * ship, so the methods the app calls are stubbed here.
+ */
+interface IQueryFunction {
+
+	/**
+	 * The SQL of the function.
+	 *
+	 * @return string
+	 */
+	public function __toString(): string;
+}//end interface
+
+/**
+ * Stub of OCP\DB\QueryBuilder\IFunctionBuilder.
+ */
+interface IFunctionBuilder {
+
+	/**
+	 * COUNT(...).
+	 *
+	 * @param mixed       $count The column or expression.
+	 * @param string|null $alias The alias.
+	 *
+	 * @return IQueryFunction
+	 */
+	public function count(mixed $count = '', ?string $alias = ''): IQueryFunction;
+}//end interface
+
+/**
+ * Stub of OCP\DB\QueryBuilder\IExpressionBuilder.
+ */
+interface IExpressionBuilder {
+
+	/**
+	 * Column IN (values).
+	 *
+	 * @param mixed $x    The column.
+	 * @param mixed $y    The values.
+	 * @param mixed $type The parameter type.
+	 *
+	 * @return string
+	 */
+	public function in(mixed $x, mixed $y, mixed $type = null): string;
+
+	/**
+	 * Column ILIKE value.
+	 *
+	 * @param mixed $x    The column.
+	 * @param mixed $y    The pattern.
+	 * @param mixed $type The parameter type.
+	 *
+	 * @return string
+	 */
+	public function iLike(mixed $x, mixed $y, mixed $type = null): string;
+
+	/**
+	 * Column = value.
+	 *
+	 * @param mixed $x    The column.
+	 * @param mixed $y    The value.
+	 * @param mixed $type The parameter type.
+	 *
+	 * @return string
+	 */
+	public function eq(mixed $x, mixed $y, mixed $type = null): string;
+}//end interface
+
+/**
+ * Stub of OCP\DB\QueryBuilder\IQueryBuilder: the constants and methods the app calls.
+ */
+interface IQueryBuilder {
+
+	/**
+	 * Doctrine's ArrayParameterType::INTEGER.
+	 */
+	public const PARAM_INT_ARRAY = 101;
+
+	/**
+	 * Doctrine's ArrayParameterType::STRING.
+	 */
+	public const PARAM_STR_ARRAY = 102;
+
+	public function expr(): IExpressionBuilder;
+	public function func(): IFunctionBuilder;
+	public function select(...$selects): self;
+	public function selectAlias(mixed $select, string $alias): self;
+	public function from(mixed $from, ?string $alias = null): self;
+	public function where(...$predicates): self;
+	public function andWhere(...$where): self;
+	public function groupBy(...$groupBys): self;
+	public function orderBy(mixed $sort, ?string $order = null): self;
+	public function setMaxResults(?int $maxResults): self;
+	public function setFirstResult(int $firstResult): self;
+	public function createNamedParameter(mixed $value, mixed $type = 2, ?string $placeHolder = null): string;
+	public function executeQuery(?\OCP\IDBConnection $connection = null): \OCP\DB\IResult;
 }//end interface

@@ -151,7 +151,7 @@
       ],
       "body": {
        "mode": "raw",
-       "raw": "{\"documentFileId\": \"file-newman-seed\", \"documentName\": \"Newman Seed.pdf\", \"signatureLevel\": \"SES\", \"signingMode\": \"sequential\"}"
+       "raw": "{\"documentFileId\": \"file-newman-seed\", \"documentName\": \"Newman Seed.pdf\", \"signatureLevel\": \"SES\", \"signingMode\": \"sequential\", \"signers\": [{\"userId\": \"admin\", \"displayName\": \"admin\"}]}"
       },
       "url": {
        "raw": "{{baseUrl}}/index.php/apps/filinq/api/signing/requests",

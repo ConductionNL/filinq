@@ -26,8 +26,8 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use Exception;
-use OCA\Filinq\Service\AnonymiserBackendStateClient;
-use OCA\Filinq\Service\SettingsService;
+use OCA\Filinq\Kernel\Contracts\AnonymiserBackendStateClientInterface;
+use OCA\Filinq\Kernel\Contracts\SettingsServiceInterface;
 use OCA\Filinq\Settings\FilinqAdmin;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
@@ -52,6 +52,8 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/changes/anonymiser-backend-warning/tasks.md#task-3
  */
 class SettingsController extends Controller {
+	use AnswersNotAuthenticated;
+
 	/**
 	 * SettingsController constructor
 	 *
@@ -61,8 +63,8 @@ class SettingsController extends Controller {
 	 * @param IGroupManager $groupManager The group manager
 	 * @param IUserSession $userSession The user session
 	 * @param LoggerInterface $logger Logger for error reporting
-	 * @param SettingsService $settingsService Service for settings operations
-	 * @param AnonymiserBackendStateClient $anonymiserClient Backend state client
+	 * @param SettingsServiceInterface $settingsService Service for settings operations
+	 * @param AnonymiserBackendStateClientInterface $anonymiserClient Backend state client
 	 * @param IConfig $config Nextcloud config for user values
 	 *
 	 * @return void
@@ -74,8 +76,8 @@ class SettingsController extends Controller {
 		private readonly IGroupManager $groupManager,
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
-		private readonly SettingsService $settingsService,
-		private readonly AnonymiserBackendStateClient $anonymiserClient,
+		private readonly SettingsServiceInterface $settingsService,
+		private readonly AnonymiserBackendStateClientInterface $anonymiserClient,
 		private readonly IConfig $config,
 	) {
 		parent::__construct(appName: $appName, request: $request);
@@ -97,7 +99,6 @@ class SettingsController extends Controller {
 			$user = $this->userSession->getUser();
 			$isAdmin = $user !== null && $this->groupManager->isAdmin($user->getUID());
 
-			$backendState = $this->anonymiserClient->getState();
 			$dismissed = false;
 			if ($user !== null) {
 				$dismissed = $this->config->getUserValue(
@@ -114,14 +115,10 @@ class SettingsController extends Controller {
 					$data,
 					[
 						'openRegisters' => in_array(needle: 'openregister', haystack: $this->appManager->getInstalledApps()),
+						// The signing provider picker offers LibreSign only when it can sign.
+						'libresignAvailable' => $this->appManager->isEnabledForAnyone('libresign'),
 						'isAdmin' => $isAdmin,
-						'anonymiserBackend' => array_merge(
-							$backendState,
-							[
-								'warningDismissed' => $dismissed,
-								'showWarning' => ($backendState['method'] ?? 'regex') === 'regex' && $dismissed === false,
-							]
-						),
+						'anonymiserBackend' => $this->anonymiserBackendPayload(dismissed: $dismissed),
 					]
 				)
 			);
@@ -136,6 +133,40 @@ class SettingsController extends Controller {
 		}//end try
 
 	}//end index()
+
+	/**
+	 * The detection backend OpenRegister reports, and the warning it calls for.
+	 *
+	 * A dismissal hides only the regex warning. Unknown, disabled and
+	 * unavailable mean every anonymisation is refused, so those stay up.
+	 *
+	 * @param bool $dismissed Whether this admin dismissed the regex warning.
+	 *
+	 * @return array<string, mixed> The state plus warning, showWarning,
+	 *                              warningDismissed and appApiInstalled.
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-anonymisation-fails-closed-without-a-detector/tasks.md#task-4
+	 */
+	private function anonymiserBackendPayload(bool $dismissed): array {
+		$state = $this->anonymiserClient->getState();
+		$warning = $this->anonymiserClient->warningFor(state: $state);
+
+		$shown = $warning !== null;
+		if ($warning === 'regex' && $dismissed === true) {
+			$shown = false;
+		}
+
+		return array_merge(
+			$state,
+			[
+				'warning' => $warning,
+				'warningDismissed' => $dismissed,
+				'showWarning' => $shown,
+				'appApiInstalled' => $this->appManager->isInstalled('app_api'),
+			]
+		);
+
+	}//end anonymiserBackendPayload()
 
 	/**
 	 * Handle the post request to update settings
@@ -155,10 +186,7 @@ class SettingsController extends Controller {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => 'Not authenticated'],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: 'Not authenticated');
 			}
 
 			if ($this->groupManager->isAdmin($user->getUID()) === false) {
@@ -219,10 +247,7 @@ class SettingsController extends Controller {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => 'Not authenticated'],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: 'Not authenticated');
 			}
 
 			if ($this->groupManager->isAdmin($user->getUID()) === false) {

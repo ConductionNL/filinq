@@ -1321,7 +1321,7 @@
     },
     {
       "name": "Policy — Detection-time outcomes",
-      "description": "Coverage for the canonical PolicyMatchService::match decision table (entity-publication-policies §3). Exercises the four outcomes — no-match (WOO default), prohibition-only, standing-consent-only, and both-match (prohibition wins). Each item that seeds a policy record cleans it up afterwards so the suite is idempotent across re-runs. Group-permission failures (403/500) are accepted by the seed POSTs because the test environment may not configure the docudesk-policy-admins / docudesk-standing-consent-admins groups; subsequent assertions are skipped when seeding fails.",
+      "description": "Coverage for the canonical PolicyMatchService::match decision table (entity-publication-policies §3). Exercises the four outcomes — no-match (WOO default), prohibition-only, standing-consent-only, and both-match (prohibition wins). Each item that seeds a policy record cleans it up afterwards so the suite is idempotent across re-runs. Group-permission failures (403/500) are accepted by the seed POSTs because the test environment may not configure the filinq-policy-admins / filinq-standing-consent-admins groups; subsequent assertions are skipped when seeding fails.",
       "item": [
         {
           "name": "no-match: POST /api/consent → WOO default (pending across the board)",
@@ -1374,7 +1374,7 @@
                   "// The 403/500 guard that stood here called pm.test.skip() and",
                   "// returned — a skipped test is NON-FAILING, so an unseeded",
                   "// environment reported green and every outcome assertion below was",
-                  "// skipped too. ci-seed.sh now creates docudesk-policy-admins and puts",
+                  "// skipped too. ci-seed.sh now creates filinq-policy-admins and puts",
                   "// the admin user in it, so a 403 here is a real regression.",
                   "pm.collectionVariables.set('detectionProhibitionSeeded', 'true');",
                   "pm.test('Seed prohibition created (201)', function () { pm.response.to.have.status(201); });",
@@ -1528,7 +1528,7 @@
                 "exec": [
                   "// See the prohibition seed above: the pm.test.skip() guard that stood",
                   "// here made an unseeded 403 non-failing. ci-seed.sh now creates",
-                  "// docudesk-standing-consent-admins and adds the admin user to it.",
+                  "// filinq-standing-consent-admins and adds the admin user to it.",
                   "pm.collectionVariables.set('detectionStandingSeeded', 'true');",
                   "pm.test('Seed standing-consent created (201)', function () { pm.response.to.have.status(201); });",
                   "var json = pm.response.json();",
@@ -1611,7 +1611,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "// pm.test.skip() guard removed — ci-seed.sh now provisions the",
-                  "// docudesk-policy-admins group, so a 403 here is a real regression.",
+                  "// filinq-policy-admins group, so a 403 here is a real regression.",
                   "pm.collectionVariables.set('detectionConflictSeeded', 'partial');",
                   "pm.test('Seed prohibition created (201)', function () { pm.response.to.have.status(201); });",
                   "var json = pm.response.json();",
@@ -1641,7 +1641,7 @@
                 "exec": [
                   "// Both pm.test.skip() guards removed — the prohibition seed above is",
                   "// now asserted rather than optional, and ci-seed.sh provisions",
-                  "// docudesk-standing-consent-admins.",
+                  "// filinq-standing-consent-admins.",
                   "pm.collectionVariables.set('detectionConflictSeeded', 'true');",
                   "pm.test('Seed standing-consent created (201)', function () { pm.response.to.have.status(201); });",
                   "var json = pm.response.json();",

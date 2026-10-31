@@ -81,23 +81,8 @@
       "count": 1
     }
   },
-  "src/dialogs/AnonymizationUploadDialog.vue": {
-    "@nextcloud/no-deprecated-library-props": {
-      "count": 1
-    }
-  },
-  "src/dialogs/ConfirmActionDialog.vue": {
-    "@nextcloud/no-deprecated-library-props": {
-      "count": 1
-    }
-  },
   "src/dialogs/Dialogs.vue": {
     "vue/multi-word-component-names": {
-      "count": 1
-    }
-  },
-  "src/dialogs/DossierNameDialog.vue": {
-    "@nextcloud/no-deprecated-library-props": {
       "count": 1
     }
   },
@@ -209,17 +194,6 @@
       "count": 1
     }
   },
-  "src/views/consent/StandingConsentIndex.vue": {
-    "@typescript-eslint/no-unused-vars": {
-      "count": 2
-    },
-    "jsdoc/require-param-type": {
-      "count": 8
-    },
-    "vue/prefer-define-options": {
-      "count": 1
-    }
-  },
   "src/views/customDictionary/CustomDictionaryDetail.vue": {
     "jsdoc/check-tag-names": {
       "count": 1
@@ -308,17 +282,11 @@
     }
   },
   "src/views/templates/TemplateDetail.vue": {
-    "@nextcloud/l10n-enforce-ellipsis": {
-      "count": 1
-    },
     "jsdoc/require-param-type": {
       "count": 10
     }
   },
   "src/views/templates/TemplateIndex.vue": {
-    "@nextcloud/l10n-enforce-ellipsis": {
-      "count": 1
-    },
     "jsdoc/require-param-type": {
       "count": 3
     }

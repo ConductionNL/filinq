@@ -23,17 +23,26 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Tests\Unit\Service;
 
+require_once __DIR__ . '/SignerAuth/AssuranceGateHarness.php';
+
 use OCA\Filinq\Event\SigningConcludedEventFactory;
+use OCA\Filinq\Service\FinalDocumentService;
 use OCA\Filinq\Service\SettingsService;
 use OCA\Filinq\Service\SignedArtifactProducer;
+use OCA\Filinq\Service\Signing\GuardianConsentGuard;
 use OCA\Filinq\Service\Signing\SigningProviderFactory;
 use OCA\Filinq\Service\SigningActorResolver;
 use OCA\Filinq\Service\SigningAuditService;
 use OCA\Filinq\Service\SigningConclusionEmitter;
 use OCA\Filinq\Service\SigningRequestValidator;
 use OCA\Filinq\Service\SigningService;
+use OCA\OpenRegister\Db\AuditTrail;
+use OCA\OpenRegister\Db\AuditTrailMapper;
+use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\EventDispatcher\IEventDispatcher;
+use OCP\Files\File;
+use OCP\Files\Folder;
 use OCP\IAppConfig;
 use OCP\IRequest;
 use OCP\IUser;
@@ -42,6 +51,10 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use DateTimeImmutable;
+use OCA\Filinq\Exception\StepUpRequiredException;
+use OCA\Filinq\Kernel\SigningAuditEvent;
+use OCA\Filinq\Service\SignerAuth\IdentityEvidence;
 
 /**
  * Tests for SigningService signing request lifecycle
@@ -55,6 +68,15 @@ use RuntimeException;
  * @psalm-suppress PropertyNotSetInConstructor
  */
 class SigningServiceTest extends TestCase {
+
+	/**
+	 * What the audit trail persisted: [action, context] per entry.
+	 *
+	 * @var array<int, array{0: string, 1: array<string, mixed>}>
+	 */
+	private array $persistedAudits = [];
+	use \OCA\Filinq\Tests\Unit\Service\SignerAuth\AssuranceGateHarness;
+
 
 	/**
 	 * @var SigningService
@@ -105,6 +127,13 @@ class SigningServiceTest extends TestCase {
 	 * @var \OCP\Files\IRootFolder|MockObject
 	 */
 	private \OCP\Files\IRootFolder|MockObject $rootFolder;
+
+	/**
+	 * The folder the initiator's files resolve in.
+	 *
+	 * @var Folder|MockObject
+	 */
+	private Folder|MockObject $userFolder;
 
 	/**
 	 * Set up test environment
@@ -175,6 +204,8 @@ class SigningServiceTest extends TestCase {
 		$logger = $this->createMock(LoggerInterface::class);
 		$eventDispatcher = $this->createMock(IEventDispatcher::class);
 		$this->rootFolder = $this->createMock(\OCP\Files\IRootFolder::class);
+		$this->userFolder = $this->defaultUserFolder();
+		$this->rootFolder->method('getUserFolder')->willReturnCallback(fn (): Folder => $this->userFolder);
 
 		// Real (not mocked) collaborators, so these tests still exercise the
 		// identity-resolution, signer-authorisation and conclusion-emission
@@ -186,7 +217,8 @@ class SigningServiceTest extends TestCase {
 				providerFactory: $this->providerFactory,
 				userSession: $this->userSession,
 				request: $this->request,
-				rootFolder: $this->rootFolder
+				rootFolder: $this->rootFolder,
+				finalDocuments: $this->createMock(FinalDocumentService::class)
 			),
 			validator: new SigningRequestValidator(providerFactory: $this->providerFactory),
 			actorResolver: new SigningActorResolver(
@@ -199,10 +231,79 @@ class SigningServiceTest extends TestCase {
 				eventDispatcher: $eventDispatcher,
 				logger: $logger,
 				eventFactory: new SigningConcludedEventFactory()
-			)
+			),
+			consentGuard: new GuardianConsentGuard(settingsService: $this->settingsService),
+			assuranceGate: $this->assuranceGate(userSession: $this->userSession)
 		);
 
 	}//end setUp()
+
+	/**
+	 * A user folder in which every numeric id is a readable PDF.
+	 *
+	 * @return Folder|MockObject
+	 */
+	private function defaultUserFolder(): Folder|MockObject {
+		$folder = $this->createMock(originalClassName: Folder::class);
+		$folder->method('getById')->willReturnCallback(
+			function (int $id): array {
+				$file = $this->createMock(originalClassName: File::class);
+				$file->method('getId')->willReturn($id);
+				$file->method('getName')->willReturn('besluit.pdf');
+				$file->method('getMimeType')->willReturn('application/pdf');
+				return [$file];
+			}
+		);
+
+		return $folder;
+	}//end defaultUserFolder()
+
+	/**
+	 * Let the audit double write through a real SigningAuditService, so the
+	 * test reads the action and context the audit trail persists.
+	 *
+	 * @return void
+	 */
+	private function persistAuditsThroughTheRealService(): void {
+		$trail = $this->createMock(AuditTrail::class);
+		$trail->method('jsonSerialize')->willReturn([]);
+		$mapper = $this->createMock(AuditTrailMapper::class);
+		$mapper->method('createAuditTrailEntry')->willReturnCallback(
+			function (ObjectEntity $object, string $action, array $context) use ($trail): AuditTrail {
+				$this->persistedAudits[] = [$action, $context];
+				return $trail;
+			}
+		);
+		$real = new SigningAuditService(
+			auditTrailMapper: $mapper,
+			logger: $this->createMock(LoggerInterface::class),
+			settingsService: $this->createMock(SettingsService::class),
+			config: $this->createMock(IAppConfig::class)
+		);
+		$this->auditService->expects($this->once())->method('logEvent')->willReturnCallback(
+			static fn (...$arguments): array => $real->logEvent(...$arguments)
+		);
+
+	}//end persistAuditsThroughTheRealService()
+
+	/**
+	 * The one persisted audit entry has this action and context; of its
+	 * time-dependent `extra` only the keys and the evidence provider are compared.
+	 *
+	 * @param string               $action  The persisted action.
+	 * @param array<string, mixed> $context The context, with `extraKeys` in place of `extra`.
+	 *
+	 * @return void
+	 */
+	private function assertPersistedAudit(string $action, array $context): void {
+		$this->assertCount(1, $this->persistedAudits);
+		[$persistedAction, $persisted] = $this->persistedAudits[0];
+		$this->assertSame('nextcloud-session', $persisted['extra']['identityEvidence']['provider']);
+		$persisted['extraKeys'] = array_keys($persisted['extra']);
+		unset($persisted['extra']);
+		$this->assertSame([$action, $context], [$persistedAction, $persisted]);
+
+	}//end assertPersistedAudit()
 
 	/**
 	 * createRequest() with valid data creates and persists a signing request.
@@ -212,7 +313,7 @@ class SigningServiceTest extends TestCase {
 	public function testCreateRequestHappyPath(): void {
 		$savedRequest = [
 			'id' => 'req-001',
-			'documentFileId' => 'file-001',
+			'documentFileId' => '1001',
 			'documentName' => 'besluit.pdf',
 			'initiatorUserId' => 'alice',
 			'signatureLevel' => 'SES',
@@ -229,22 +330,86 @@ class SigningServiceTest extends TestCase {
 			->method('saveObject')
 			->willReturn($savedRequest);
 
-		$this->auditService->expects($this->once())
-			->method('logEvent');
+		$this->persistAuditsThroughTheRealService();
 
 		$result = $this->service->createRequest(
 			data: [
-				'documentFileId' => 'file-001',
+				'documentFileId' => '1001',
 				'documentName' => 'besluit.pdf',
 				'signatureLevel' => 'SES',
 				'signingMode' => 'sequential',
+				'signers' => [['displayName' => 'Bea', 'email' => 'bea@example.org']],
 			]
 		);
 
 		$this->assertSame('PENDING', $result['status']);
 		$this->assertSame('alice', $result['initiatorUserId']);
+		$this->assertSame([['docudesk.signing.CREATED', ['signRequestId' => 'req-001', 'actorUserId' => 'alice', 'actorDisplayName' => 'Alice', 'ipAddress' => '127.0.0.1', 'signatureLevel' => 'SES', 'provider' => 'native', 'extra' => []]]], $this->persistedAudits);
 
 	}//end testCreateRequestHappyPath()
+
+	/**
+	 * A request may only name a file its initiator can read, and the stored
+	 * name is the file's own, never the one the browser sent.
+	 *
+	 * @return void
+	 */
+	public function testCreateRequestRefusesAFileTheInitiatorCannotRead(): void {
+		$folder = $this->createMock(originalClassName: Folder::class);
+		$folder->method('getById')->willReturn([]);
+		$this->userFolder = $folder;
+		$this->providerFactory->method('getProvider')->willReturn($this->makeSupportingProvider());
+		$this->objectService->expects($this->never())->method('saveObject');
+
+		try {
+			$this->service->createRequest(
+				data: [
+					'documentFileId' => '4242',
+					'documentName' => 'mine.pdf',
+					'signatureLevel' => 'SES',
+					'signingMode' => 'sequential',
+					'signers' => [['displayName' => 'Bea', 'email' => 'bea@example.org']],
+				]
+			);
+			$this->fail(message: 'A file outside the initiator\'s folder was accepted');
+		} catch (RuntimeException $e) {
+			$this->assertSame(expected: 403, actual: $e->getCode());
+		}
+
+	}//end testCreateRequestRefusesAFileTheInitiatorCannotRead()
+
+	/**
+	 * The stored document name comes from the file node.
+	 *
+	 * @return void
+	 */
+	public function testCreateRequestTakesTheNameFromTheFile(): void {
+		$this->providerFactory->method('getProvider')->willReturn($this->makeSupportingProvider());
+		$stored = [];
+		$this->objectService->method('saveObject')->willReturnCallback(
+			function (array $object) use (&$stored): array {
+				if (isset($object['initiatorUserId']) === true && $stored === []) {
+					$stored = $object;
+				}
+
+				return $object + ['id' => 'req-1'];
+			}
+		);
+
+		$this->service->createRequest(
+			data: [
+				'documentFileId' => '42',
+				'documentName' => 'someone-elses-name.pdf',
+				'signatureLevel' => 'SES',
+				'signingMode' => 'sequential',
+				'signers' => [['displayName' => 'Bea', 'email' => 'bea@example.org']],
+			]
+		);
+
+		$this->assertSame(expected: '42', actual: $stored['documentFileId']);
+		$this->assertSame(expected: 'besluit.pdf', actual: $stored['documentName']);
+
+	}//end testCreateRequestTakesTheNameFromTheFile()
 
 	/**
 	 * createRequest() persists consumer provenance fields onto the request.
@@ -275,10 +440,11 @@ class SigningServiceTest extends TestCase {
 
 		$this->service->createRequest(
 			data: [
-				'documentFileId' => 'file-9',
+				'documentFileId' => '9',
 				'documentName' => 'contract.pdf',
 				'signatureLevel' => 'SES',
 				'signingMode' => 'sequential',
+				'signers' => [['displayName' => 'Bea', 'email' => 'bea@example.org']],
 				'sourceApp' => 'shillinq',
 				'subjectRegister' => 'finance',
 				'subjectSchema' => 'invoice',
@@ -318,16 +484,141 @@ class SigningServiceTest extends TestCase {
 
 		$this->service->createRequest(
 			data: [
-				'documentFileId' => 'file-int',
+				'documentFileId' => '7',
 				'documentName' => 'internal.pdf',
 				'signatureLevel' => 'SES',
 				'signingMode' => 'sequential',
+				'signers' => [['displayName' => 'Bea', 'email' => 'bea@example.org']],
 			]
 		);
 
 		$this->assertArrayNotHasKey('sourceApp', $captured);
 
 	}//end testCreateRequestInternalHasNoProvenance()
+
+	/**
+	 * Issue #1209: a request that names nobody to sign is refused with a 400
+	 * before anything is stored, instead of being saved as a PENDING request
+	 * nobody can ever sign.
+	 *
+	 * @return void
+	 */
+	public function testCreateRequestRejectsARequestWithoutSigners(): void {
+		$this->providerFactory->method('getProvider')->willReturn($this->makeSupportingProvider());
+		$this->objectService->expects($this->never())->method('saveObject');
+
+		foreach ([[], [['displayName' => 'Nobody reachable']], [['userId' => '', 'email' => '  ']]] as $signers) {
+			try {
+				$this->service->createRequest(
+					data: [
+						'documentFileId' => '1001',
+						'documentName' => 'besluit.pdf',
+						'signatureLevel' => 'SES',
+						'signingMode' => 'sequential',
+						'signers' => $signers,
+					]
+				);
+				$this->fail('createRequest() must refuse a request without a reachable signer: '.json_encode($signers));
+			} catch (RuntimeException $e) {
+				$this->assertSame(400, $e->getCode());
+				$this->assertStringContainsString('signer', $e->getMessage());
+			}
+		}
+
+	}//end testCreateRequestRejectsARequestWithoutSigners()
+
+	/**
+	 * Issue #1209: the signers sent with the form are stored as signer records
+	 * linked to the new request.
+	 *
+	 * @return void
+	 */
+	public function testCreateRequestStoresTheSignersItIsGiven(): void {
+		$saved = [];
+		$this->providerFactory->method('getProvider')->willReturn($this->makeSupportingProvider());
+		$this->objectService->method('saveObject')->willReturnCallback(
+			function (array $object) use (&$saved): array {
+				$saved[] = $object;
+				$object['id'] = (isset($object['initiatorUserId']) === true) ? 'req-1209' : 'signer-'.count($saved);
+				return $object;
+			}
+		);
+
+		$result = $this->service->createRequest(
+			data: [
+				'documentFileId' => '1001',
+				'documentName' => 'besluit.pdf',
+				'signatureLevel' => 'SES',
+				'signingMode' => 'sequential',
+				'signers' => [
+					['displayName' => 'Bea', 'email' => 'bea@example.org'],
+					['displayName' => 'Carl', 'userId' => 'carl'],
+				],
+			]
+		);
+
+		$signerRecords = array_values(array_filter($saved, static fn (array $o) => isset($o['signingRequestId']) === true));
+		$this->assertCount(2, $signerRecords);
+		$this->assertSame('req-1209', $signerRecords[0]['signingRequestId']);
+		$this->assertSame('bea@example.org', $signerRecords[0]['email']);
+		$this->assertSame('carl', $signerRecords[1]['userId']);
+		$this->assertCount(2, $result['signerIds']);
+
+	}//end testCreateRequestStoresTheSignersItIsGiven()
+
+	/**
+	 * A signer named only by user id is stored without an e-mail key, and
+	 * every field of every stored signer record validates against the real
+	 * signerRecord fragment. Before this fix the record carried `email: ''`,
+	 * which `format: email` refuses (it saved only because the register
+	 * validates softly).
+	 *
+	 * @return void
+	 */
+	public function testAUserOnlySignerRecordValidatesAgainstTheRegister(): void {
+		$saved = [];
+		$this->providerFactory->method('getProvider')->willReturn($this->makeSupportingProvider());
+		$this->objectService->method('saveObject')->willReturnCallback(
+			function (array $object) use (&$saved): array {
+				$saved[] = $object;
+				$object['id'] = (isset($object['initiatorUserId']) === true) ? 'req-1' : 'signer-'.count($saved);
+				return $object;
+			}
+		);
+
+		$this->service->createRequest(
+			data: [
+				'documentFileId' => '1001',
+				'documentName' => 'besluit.pdf',
+				'signatureLevel' => 'SES',
+				'signingMode' => 'sequential',
+				'signers' => [
+					['displayName' => 'Carl', 'userId' => 'carl'],
+					['displayName' => 'Bea', 'email' => 'bea@example.org'],
+				],
+			]
+		);
+
+		$signerRecords = array_values(array_filter($saved, static fn (array $o) => isset($o['signingRequestId']) === true));
+		$this->assertCount(2, $signerRecords);
+		$this->assertArrayNotHasKey('email', $signerRecords[0]);
+		$this->assertSame('bea@example.org', $signerRecords[1]['email']);
+
+		$descriptor = json_decode((string) file_get_contents(__DIR__ . '/../../../lib/Settings/filinq_register.json'));
+		$properties = $descriptor->components->schemas->signerRecord->properties;
+		$validator = new \Opis\JsonSchema\Validator();
+		foreach ($signerRecords as $record) {
+			foreach ($record as $field => $value) {
+				$this->assertObjectHasProperty($field, $properties, 'signerRecord declares ' . $field);
+				$property = clone $properties->{$field};
+				// A boolean `required` on a property is OpenRegister's, not JSON Schema's.
+				unset($property->required);
+				$result = $validator->validate(json_decode(json_encode($value)), json_encode($property));
+				$this->assertTrue($result->isValid(), $field . ' = ' . json_encode($value) . ' must validate');
+			}
+		}
+
+	}//end testAUserOnlySignerRecordValidatesAgainstTheRegister()
 
 	/**
 	 * createRequest() rejects missing documentFileId.
@@ -360,7 +651,7 @@ class SigningServiceTest extends TestCase {
 
 		$this->service->createRequest(
 			data: [
-				'documentFileId' => 'file-001',
+				'documentFileId' => '1001',
 				'documentName' => 'test.pdf',
 				'signatureLevel' => 'INVALID',
 				'signingMode' => 'sequential',
@@ -380,7 +671,7 @@ class SigningServiceTest extends TestCase {
 
 		$this->service->createRequest(
 			data: [
-				'documentFileId' => 'file-001',
+				'documentFileId' => '1001',
 				'documentName' => 'test.pdf',
 				'signatureLevel' => 'SES',
 				'signingMode' => 'unknown-mode',
@@ -408,19 +699,17 @@ class SigningServiceTest extends TestCase {
 	}//end testGetRequestReturnsObjectWhenFound()
 
 	/**
-	 * getRequest() throws when the request is not found.
+	 * getRequest() answers null for a request that does not exist, the same
+	 * answer a caller gets for one that is not theirs.
 	 *
 	 * @return void
 	 */
-	public function testGetRequestThrowsWhenNotFound(): void {
+	public function testGetRequestReturnsNullWhenNotFound(): void {
 		$this->objectService->method('find')->willReturn(null);
 
-		$this->expectException(RuntimeException::class);
-		$this->expectExceptionMessage('Signing request not found');
+		$this->assertNull(actual: $this->service->getRequest(requestId: 'does-not-exist'));
 
-		$this->service->getRequest(requestId: 'does-not-exist');
-
-	}//end testGetRequestThrowsWhenNotFound()
+	}//end testGetRequestReturnsNullWhenNotFound()
 
 	/**
 	 * listRequests() returns an array of request arrays when the paginated
@@ -491,15 +780,31 @@ class SigningServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testListRequestsFiltersForNonAdminCaller(): void {
-		$this->objectService->method('buildSearchQuery')->willReturn(['_limit' => 1000]);
-		$this->objectService->method('searchObjectsPaginated')->willReturn(
-			[
-				'results' => [
-					['id' => 'req-001', 'status' => 'PENDING', 'initiatorUserId' => 'alice'],
-					['id' => 'req-002', 'status' => 'PENDING', 'initiatorUserId' => 'bob', 'signerIds' => ['alice']],
-					['id' => 'req-003', 'status' => 'PENDING', 'initiatorUserId' => 'bob', 'signerIds' => ['carol']],
-				],
-			]
+		$this->objectService->method('buildSearchQuery')->willReturnCallback(
+			fn (array $requestParams = [], string $register = '', string $schema = ''): array => $requestParams
+		);
+		$this->objectService->method('searchObjectsPaginated')->willReturnCallback(
+			function (array $query = []): array {
+				if (isset($query['userId']) === true) {
+					// The signer records of alice: one on req-002, one under someone else's id.
+					return [
+						'results' => [
+							['id' => 'signer-1', 'signingRequestId' => 'req-002', 'userId' => 'alice'],
+							['id' => 'signer-9', 'signingRequestId' => 'req-003', 'userId' => 'carol'],
+						],
+					];
+				}
+
+				return [
+					'results' => [
+						['id' => 'req-001', 'status' => 'PENDING', 'initiatorUserId' => 'alice'],
+						['id' => 'req-002', 'status' => 'PENDING', 'initiatorUserId' => 'bob', 'signerIds' => ['signer-1']],
+						['id' => 'req-003', 'status' => 'PENDING', 'initiatorUserId' => 'bob', 'signerIds' => ['signer-9']],
+						// A request that lists alice's USER id where a signer record id belongs grants nothing.
+						['id' => 'req-004', 'status' => 'PENDING', 'initiatorUserId' => 'bob', 'signerIds' => ['alice']],
+					],
+				];
+			}
 		);
 
 		$result = $this->service->listRequests(callerUserId: 'alice');
@@ -510,6 +815,7 @@ class SigningServiceTest extends TestCase {
 		$this->assertContains('req-001', $ids);
 		$this->assertContains('req-002', $ids);
 		$this->assertNotContains('req-003', $ids);
+		$this->assertNotContains(needle: 'req-004', haystack: $ids);
 
 	}//end testListRequestsFiltersForNonAdminCaller()
 
@@ -601,21 +907,27 @@ class SigningServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testGetRequestAllowsScopedSigner(): void {
-		$this->objectService->method('find')->willReturn(
-			$this->makeSigningRequestEntity(
-				[
-					'id' => 'req-001',
-					'status' => 'PENDING',
-					'initiatorUserId' => 'bob',
-					'signerIds' => ['carol'],
-				]
-			)
+		$this->objectService->method('find')->willReturnCallback(
+			fn (string $id = ''): mixed => match ($id) {
+				'req-001' => $this->makeSigningRequestEntity(
+					data: [
+						'id' => 'req-001',
+						'status' => 'PENDING',
+						'initiatorUserId' => 'bob',
+						'signerIds' => ['signer-1'],
+					]
+				),
+				'signer-1' => ['id' => 'signer-1', 'signingRequestId' => 'req-001', 'userId' => 'carol'],
+				default => null,
+			}
 		);
 
 		$result = $this->service->getRequest(requestId: 'req-001', callerUserId: 'carol');
 
 		$this->assertIsArray($result);
 		$this->assertSame('req-001', $result['id']);
+		$this->assertNull(actual: $this->service->getRequest(requestId: 'req-001', callerUserId: 'mallory'));
+		$this->assertNull(actual: $this->service->getRequest(requestId: 'req-missing', callerUserId: 'carol'));
 
 	}//end testGetRequestAllowsScopedSigner()
 
@@ -700,23 +1012,112 @@ class SigningServiceTest extends TestCase {
 		];
 
 		$this->objectService->method('find')->willReturnOnConsecutiveCalls(
-			$requestData,
 			$signerData,
+			$requestData,
 			$requestData,
 			$signerData
 		);
 		$this->objectService->method('saveObject')->willReturnArgument(0);
 
-		$this->auditService->expects($this->once())
-			->method('logEvent')
-			->with($this->equalTo('req-001'), $this->equalTo('SIGNED'));
+		$this->persistAuditsThroughTheRealService();
 
 		$result = $this->service->sign(requestId: 'req-001', signerId: 'signer-001');
 
 		$this->assertSame('SIGNED', $result['status']);
 		$this->assertArrayHasKey('signedAt', $result);
+		$this->assertPersistedAudit(action: 'docudesk.signing.SIGNED', context: ['signRequestId' => 'req-001', 'actorUserId' => 'alice', 'actorDisplayName' => 'Alice', 'ipAddress' => '127.0.0.1', 'signatureLevel' => 'SES', 'provider' => 'native', 'extraKeys' => ['identityEvidence']]);
 
 	}//end testSignHappyPath()
+
+	/**
+	 * A portal signature records its assurance level, capped by the session
+	 * trust and never QES (portal-signing-surface REQ-DDPSS-005).
+	 *
+	 * @return void
+	 */
+	public function testPortalSignatureRecordsAssuranceNoHigherThanTheSession(): void {
+		$requestData = [
+			'id' => 'req-001',
+			'status' => 'PENDING',
+			'signatureLevel' => 'AES',
+			'provider' => 'native',
+			'initiatorUserId' => 'bob',
+			'signerIds' => ['signer-001'],
+		];
+		$signerData = [
+			'id' => 'signer-001',
+			'signingRequestId' => 'req-001',
+			'email' => 'mark@home.example',
+			'status' => 'PENDING',
+		];
+
+		$this->objectService->method('find')->willReturnOnConsecutiveCalls(
+			$signerData,
+			$requestData,
+			$requestData,
+			$signerData
+		);
+
+		$saved = [];
+		$this->objectService->method('saveObject')->willReturnCallback(
+			function (array $object) use (&$saved): array {
+				$saved[] = $object;
+
+				return $object;
+			}
+		);
+
+		$result = $this->service->sign(
+			requestId: 'req-001',
+			signerId: 'signer-001',
+			verifiedActor: [
+				'email' => 'mark@home.example',
+				'subjectRef' => 'sub-1',
+				'identityRef' => 'sub-1',
+				'trust' => 'low',
+				'jti' => 'jti-1',
+			]
+		);
+
+		$this->assertSame('SES', $result['signatureAssurance'] ?? null, 'A low session caps an AES request at SES.');
+		$this->assertSame('SES', $saved[0]['signatureAssurance'] ?? null, 'The capped level is what is stored.');
+
+	}//end testPortalSignatureRecordsAssuranceNoHigherThanTheSession()
+
+	/**
+	 * An in-app signature carries no portal assurance field.
+	 *
+	 * @return void
+	 */
+	public function testInAppSignatureRecordsNoPortalAssurance(): void {
+		$requestData = [
+			'id' => 'req-001',
+			'status' => 'PENDING',
+			'signatureLevel' => 'SES',
+			'provider' => 'native',
+			'initiatorUserId' => 'bob',
+			'signerIds' => ['signer-001'],
+		];
+		$signerData = [
+			'id' => 'signer-001',
+			'signingRequestId' => 'req-001',
+			'userId' => 'alice',
+			'status' => 'PENDING',
+		];
+
+		$this->objectService->method('find')->willReturnOnConsecutiveCalls(
+			$signerData,
+			$requestData,
+			$requestData,
+			$signerData
+		);
+		$this->objectService->method('saveObject')->willReturnArgument(0);
+
+		$result = $this->service->sign(requestId: 'req-001', signerId: 'signer-001');
+
+		$this->assertArrayNotHasKey('signatureAssurance', $result);
+
+	}//end testInAppSignatureRecordsNoPortalAssurance()
 
 	/**
 	 * The completing signature produces + stores a signed artifact and sets
@@ -738,8 +1139,8 @@ class SigningServiceTest extends TestCase {
 		$signerSigned = ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'alice', 'status' => 'SIGNED'];
 
 		$this->objectService->method('find')->willReturnOnConsecutiveCalls(
-			$request,
 			$signerPending,
+			$request,
 			$signerSigned,
 			$request
 		);
@@ -770,7 +1171,7 @@ class SigningServiceTest extends TestCase {
 
 		$folder = $this->createMock(\OCP\Files\Folder::class);
 		$folder->method('getById')->willReturn([$file]);
-		$this->rootFolder->method('getUserFolder')->willReturn($folder);
+		$this->userFolder = $folder;
 
 		$this->service->sign(requestId: 'req-001', signerId: 'signer-001');
 
@@ -782,6 +1183,165 @@ class SigningServiceTest extends TestCase {
 		$this->assertNotSame('42', $captured['signedDocumentRef'] ?? null, 'Ref must not be the unsigned original file id.');
 
 	}//end testCompletingSignatureStoresArtifactAndSetsRef()
+
+	/**
+	 * A partial signature saves the request IN_PROGRESS and stops reading signers at the first unsigned one.
+	 *
+	 * @return void
+	 */
+	public function testAPartialSignatureMovesTheRequestInProgressAndStopsAtTheFirstUnsigned(): void {
+		$request = [
+			'id' => 'req-001',
+			'status' => 'PENDING',
+			'signatureLevel' => 'SES',
+			'provider' => 'native',
+			'initiatorUserId' => 'alice',
+			'documentFileId' => '42',
+			'signerIds' => ['signer-001', 'signer-002'],
+		];
+		$found = [];
+		$rows  = [
+			'req-001' => $request,
+			'signer-001' => ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'alice', 'status' => 'PENDING'],
+			'signer-002' => ['id' => 'signer-002', 'signingRequestId' => 'req-001', 'userId' => 'bob', 'status' => 'PENDING'],
+		];
+		$this->objectService->method('find')->willReturnCallback(
+			static function (string $id) use (&$found, $rows): ?array {
+				$found[] = $id;
+				return ($rows[$id] ?? null);
+			}
+		);
+		$saved = [];
+		$this->objectService->method('saveObject')->willReturnCallback(
+			static function (array $object) use (&$saved): array {
+				$saved[] = [($object['id'] ?? ''), ($object['status'] ?? '')];
+				return $object;
+			}
+		);
+
+		$this->service->sign(requestId: 'req-001', signerId: 'signer-001');
+
+		$this->assertNotContains('signer-002', $found);
+		$this->assertSame(['req-001', 'IN_PROGRESS'], end($saved));
+		$this->assertNotContains(['req-001', 'COMPLETED'], $saved);
+
+	}//end testAPartialSignatureMovesTheRequestInProgressAndStopsAtTheFirstUnsigned()
+
+	/**
+	 * A single-signer request still PENDING is saved IN_PROGRESS before it is saved COMPLETED.
+	 *
+	 * @return void
+	 */
+	public function testASingleSignerRequestStepsThroughInProgressToCompleted(): void {
+		$request = [
+			'id' => 'req-001',
+			'status' => 'PENDING',
+			'signatureLevel' => 'SES',
+			'provider' => 'native',
+			'initiatorUserId' => 'alice',
+			'documentFileId' => '42',
+			'signerIds' => ['signer-001'],
+		];
+		$signerPending = ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'alice', 'status' => 'PENDING'];
+		$signerSigned  = ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'alice', 'status' => 'SIGNED'];
+		$this->objectService->method('find')->willReturnOnConsecutiveCalls($signerPending, $request, $signerSigned, $request);
+
+		$requestStatuses = [];
+		$this->objectService->method('saveObject')->willReturnCallback(
+			static function (array $object) use (&$requestStatuses): array {
+				if (($object['id'] ?? '') === 'req-001') {
+					$requestStatuses[] = ($object['status'] ?? '');
+				}
+
+				return $object;
+			}
+		);
+
+		$provider = $this->createMock(\OCA\Filinq\Service\Signing\SigningProviderInterface::class);
+		$provider->method('produceSignedArtifact')->willReturn('SIGNED-BYTES');
+		$this->providerFactory->method('getProvider')->willReturn($provider);
+		$file = $this->createMock(\OCP\Files\File::class);
+		$file->method('getContent')->willReturn('original-bytes');
+		$folder = $this->createMock(\OCP\Files\Folder::class);
+		$folder->method('getById')->willReturn([$file]);
+		$this->userFolder = $folder;
+
+		$this->service->sign(requestId: 'req-001', signerId: 'signer-001');
+
+		$this->assertSame(['IN_PROGRESS', 'COMPLETED'], $requestStatuses);
+
+	}//end testASingleSignerRequestStepsThroughInProgressToCompleted()
+
+	/**
+	 * A portal completion hands the verified actor to the artifact: the email is the signer and the portal evidence is bound.
+	 *
+	 * @return void
+	 */
+	public function testAPortalCompletionBindsThePortalActorInTheArtifact(): void {
+		$store = [
+			'req-001' => [
+				'id' => 'req-001',
+				'status' => 'IN_PROGRESS',
+				'signatureLevel' => 'SES',
+				'provider' => 'native',
+				'initiatorUserId' => 'bob',
+				'documentFileId' => '42',
+				'signerIds' => ['signer-001'],
+			],
+			'signer-001' => ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'email' => 'mark@home.example', 'status' => 'PENDING'],
+		];
+		$this->objectService->method('find')->willReturnCallback(
+			static function (string $id) use (&$store): ?array {
+				return ($store[$id] ?? null);
+			}
+		);
+		$this->objectService->method('saveObject')->willReturnCallback(
+			static function (array $object) use (&$store): array {
+				if (isset($object['id']) === true) {
+					$store[$object['id']] = $object;
+				}
+
+				return $object;
+			}
+		);
+
+		$context  = null;
+		$provider = $this->createMock(\OCA\Filinq\Service\Signing\SigningProviderInterface::class);
+		$provider->method('produceSignedArtifact')->willReturnCallback(
+			static function (string $content, array $ctx) use (&$context): string {
+				$context = $ctx;
+				return 'SIGNED-BYTES';
+			}
+		);
+		$this->providerFactory->method('getProvider')->willReturn($provider);
+		$file = $this->createMock(\OCP\Files\File::class);
+		$file->method('getContent')->willReturn('original-bytes');
+		$folder = $this->createMock(\OCP\Files\Folder::class);
+		$folder->method('getById')->willReturn([$file]);
+		$this->userFolder = $folder;
+
+		$this->service->sign(
+			requestId: 'req-001',
+			signerId: 'signer-001',
+			verifiedActor: [
+				'email' => 'mark@home.example',
+				'subjectRef' => 'sub-1',
+				'identityRef' => 'id-1',
+				'trust' => 'low',
+				'jti' => 'jti-1',
+			],
+			signatureData: ['consent' => true]
+		);
+
+		$this->assertSame('COMPLETED', $store['req-001']['status']);
+		$this->assertIsArray($context);
+		$this->assertSame('mark@home.example', $context['signer']);
+		$this->assertSame('sub-1', $context['portalSubjectRef'] ?? null);
+		$this->assertSame('id-1', $context['portalIdentityRef'] ?? null);
+		$this->assertSame('low', $context['portalTrust'] ?? null);
+		$this->assertSame('jti-1', $context['portalJti'] ?? null);
+
+	}//end testAPortalCompletionBindsThePortalActorInTheArtifact()
 
 	/**
 	 * Honest-completion gate: when the provider cannot produce an artifact the
@@ -803,8 +1363,8 @@ class SigningServiceTest extends TestCase {
 		$signerSigned = ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'alice', 'status' => 'SIGNED'];
 
 		$this->objectService->method('find')->willReturnOnConsecutiveCalls(
-			$request,
 			$signerPending,
+			$request,
 			$signerSigned,
 			$request
 		);
@@ -830,7 +1390,7 @@ class SigningServiceTest extends TestCase {
 		$file->method('getContent')->willReturn('original-bytes');
 		$folder = $this->createMock(\OCP\Files\Folder::class);
 		$folder->method('getById')->willReturn([$file]);
-		$this->rootFolder->method('getUserFolder')->willReturn($folder);
+		$this->userFolder = $folder;
 
 		$threw = false;
 		try {
@@ -862,7 +1422,7 @@ class SigningServiceTest extends TestCase {
 			'status' => 'PENDING',
 		];
 
-		$this->objectService->method('find')->willReturnOnConsecutiveCalls($requestData, $signerData);
+		$this->objectService->method('find')->willReturnOnConsecutiveCalls($signerData, $requestData);
 
 		$this->expectException(RuntimeException::class);
 		$this->expectExceptionMessage('does not belong to this signing request');
@@ -888,7 +1448,7 @@ class SigningServiceTest extends TestCase {
 			'status' => 'PENDING',
 		];
 
-		$this->objectService->method('find')->willReturnOnConsecutiveCalls($requestData, $signerData);
+		$this->objectService->method('find')->willReturnOnConsecutiveCalls($signerData, $requestData);
 
 		$this->expectException(RuntimeException::class);
 		$this->expectExceptionMessage('Not authorized to sign as this signer');
@@ -910,12 +1470,27 @@ class SigningServiceTest extends TestCase {
 
 		$this->objectService->method('find')->willReturn($requestData);
 		$this->objectService->method('saveObject')->willReturnArgument(0);
+		$this->persistAuditsThroughTheRealService();
 
 		$result = $this->service->cancelRequest(requestId: 'req-001');
 
 		$this->assertSame('CANCELLED', $result['status']);
+		$this->assertSame([['docudesk.signing.CANCELLED', ['signRequestId' => 'req-001', 'actorUserId' => 'alice', 'actorDisplayName' => 'Alice', 'ipAddress' => '127.0.0.1', 'signatureLevel' => '', 'provider' => '', 'extra' => []]]], $this->persistedAudits);
 
 	}//end testCancelRequestTransitionsToCancel()
+
+	/**
+	 * cancelRequest() answers null for a request that does not exist, and writes nothing.
+	 *
+	 * @return void
+	 */
+	public function testCancelRequestAnswersNullForAMissingRequest(): void {
+		$this->objectService->method('find')->willReturn(null);
+		$this->objectService->expects($this->never())->method('saveObject');
+
+		$this->assertNull($this->service->cancelRequest(requestId: 'req-404'));
+
+	}//end testCancelRequestAnswersNullForAMissingRequest()
 
 	/**
 	 * cancelRequest() throws when the request is in a terminal state.
@@ -1016,7 +1591,7 @@ class SigningServiceTest extends TestCase {
 		try {
 			$this->service->createRequest(
 				data: [
-					'documentFileId' => 'file-001',
+					'documentFileId' => '1001',
 					'documentName' => 'contract.pdf',
 					'signatureLevel' => 'QES',
 					'signingMode' => 'sequential',
@@ -1047,7 +1622,7 @@ class SigningServiceTest extends TestCase {
 		try {
 			$this->service->createRequest(
 				data: [
-					'documentFileId' => 'file-001',
+					'documentFileId' => '1001',
 					'documentName' => 'contract.pdf',
 					'signatureLevel' => 'SES',
 					'signingMode' => 'sequential',
@@ -1075,8 +1650,9 @@ class SigningServiceTest extends TestCase {
 			'id' => 'req-001',
 			'status' => 'COMPLETED',
 		];
+		$signerData = ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'alice', 'status' => 'PENDING'];
 
-		$this->objectService->method('find')->willReturn($requestData);
+		$this->stubFindById(rows: ['req-001' => $requestData, 'signer-001' => $signerData]);
 		// The gate must reject BEFORE any signer/request mutation.
 		$this->objectService->expects($this->never())->method('saveObject');
 
@@ -1108,19 +1684,58 @@ class SigningServiceTest extends TestCase {
 			'status' => 'PENDING',
 		];
 
-		$this->objectService->method('find')->willReturnOnConsecutiveCalls($requestData, $signerData);
+		$this->stubFindById(rows: ['req-001' => $requestData, 'signer-001' => $signerData]);
 		$this->objectService->method('saveObject')->willReturnArgument(0);
 
-		$this->auditService->expects($this->once())
-			->method('logEvent')
-			->with($this->equalTo('req-001'), $this->equalTo('DECLINED'));
+		$this->persistAuditsThroughTheRealService();
 
 		$result = $this->service->decline(requestId: 'req-001', signerId: 'signer-001', reason: 'changed my mind');
 
 		$this->assertSame('DECLINED', $result['status']);
 		$this->assertSame('changed my mind', $result['declineReason']);
+		$this->assertPersistedAudit(action: 'docudesk.signing.DECLINED', context: ['signRequestId' => 'req-001', 'actorUserId' => 'alice', 'actorDisplayName' => 'Alice', 'ipAddress' => '127.0.0.1', 'signatureLevel' => 'SES', 'provider' => 'native', 'extraKeys' => ['reason', 'identityEvidence']]);
+		$this->assertSame('changed my mind', $this->persistedAudits[0][1]['extra']['reason']);
 
 	}//end testDeclineHappyPathFromInProgress()
+
+	/**
+	 * The first signer of a request nobody has signed yet (PENDING) can
+	 * decline it: the signer record and the request both become DECLINED.
+	 * Before this fix the status machine only allowed IN_PROGRESS -> DECLINED,
+	 * so the first signer got "Cannot decline request in status: PENDING".
+	 *
+	 * @return void
+	 */
+	public function testFirstSignerCanDeclineAFreshPendingRequest(): void {
+		$requestData = [
+			'id' => 'req-001',
+			'status' => 'PENDING',
+			'signatureLevel' => 'SES',
+			'provider' => 'native',
+		];
+		$signerData = [
+			'id' => 'signer-001',
+			'signingRequestId' => 'req-001',
+			'userId' => 'alice',
+			'status' => 'PENDING',
+		];
+
+		$this->stubFindById(rows: ['req-001' => $requestData, 'signer-001' => $signerData]);
+		$saved = [];
+		$this->objectService->method('saveObject')->willReturnCallback(
+			static function (array $object) use (&$saved): array {
+				$saved[] = $object;
+				return $object;
+			}
+		);
+
+		$result = $this->service->decline(requestId: 'req-001', signerId: 'signer-001', reason: 'wrong document');
+
+		$this->assertSame('DECLINED', $result['status']);
+		$this->assertSame(['DECLINED', 'DECLINED'], array_column($saved, 'status'));
+		$this->assertTrue($this->service->isValidTransition(currentStatus: 'PENDING', newStatus: 'DECLINED'));
+
+	}//end testFirstSignerCanDeclineAFreshPendingRequest()
 
 	/**
 	 * decline() throws when signer record belongs to a different request
@@ -1137,7 +1752,7 @@ class SigningServiceTest extends TestCase {
 			'status' => 'PENDING',
 		];
 
-		$this->objectService->method('find')->willReturnOnConsecutiveCalls($requestData, $signerData);
+		$this->stubFindById(rows: ['req-001' => $requestData, 'signer-001' => $signerData]);
 
 		$this->expectException(RuntimeException::class);
 		$this->expectExceptionMessage('does not belong to this signing request');
@@ -1145,6 +1760,92 @@ class SigningServiceTest extends TestCase {
 		$this->service->decline(requestId: 'req-001', signerId: 'signer-001', reason: 'no');
 
 	}//end testDeclineThrowsOnSignerRequestMismatch()
+
+	/**
+	 * Someone who is not the signer learns nothing about the request's status:
+	 * the signer check runs before the status check.
+	 *
+	 * @return void
+	 */
+	public function testDeclineByAnotherUserDoesNotRevealTheRequestStatus(): void {
+		$requestData = ['id' => 'req-001', 'status' => 'COMPLETED'];
+		$signerData = ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'bob', 'status' => 'PENDING'];
+		$this->stubFindById(rows: ['req-001' => $requestData, 'signer-001' => $signerData]);
+		$this->objectService->expects($this->never())->method('saveObject');
+
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessage('Not authorized to decline as this signer');
+
+		$this->service->decline(requestId: 'req-001', signerId: 'signer-001', reason: 'no');
+
+	}//end testDeclineByAnotherUserDoesNotRevealTheRequestStatus()
+
+	/**
+	 * Someone who is not the signer learns nothing about whether a request id
+	 * exists: an unknown request answers with the signer refusal too.
+	 *
+	 * @return void
+	 */
+	public function testDeclineByAnotherUserDoesNotRevealWhetherTheRequestExists(): void {
+		$signerData = ['id' => 'signer-001', 'signingRequestId' => 'req-404', 'userId' => 'bob', 'status' => 'PENDING'];
+		$this->stubFindById(rows: ['signer-001' => $signerData]);
+
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessage('Not authorized to decline as this signer');
+
+		$this->service->decline(requestId: 'req-404', signerId: 'signer-001', reason: 'no');
+
+	}//end testDeclineByAnotherUserDoesNotRevealWhetherTheRequestExists()
+
+	/**
+	 * Someone who is not the signer cannot learn a request's status by trying
+	 * to sign it: the signer check runs before the status check.
+	 *
+	 * @return void
+	 */
+	public function testSignByAnotherUserDoesNotRevealTheRequestStatus(): void {
+		$requestData = ['id' => 'req-001', 'status' => 'COMPLETED'];
+		$signerData = ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'bob', 'status' => 'PENDING'];
+		$this->stubFindById(rows: ['req-001' => $requestData, 'signer-001' => $signerData]);
+		$this->objectService->expects($this->never())->method('saveObject');
+
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessage('Not authorized to sign as this signer');
+
+		$this->service->sign(requestId: 'req-001', signerId: 'signer-001');
+
+	}//end testSignByAnotherUserDoesNotRevealTheRequestStatus()
+
+	/**
+	 * Someone who is not the signer cannot learn whether a request id exists
+	 * by trying to sign it.
+	 *
+	 * @return void
+	 */
+	public function testSignByAnotherUserDoesNotRevealWhetherTheRequestExists(): void {
+		$signerData = ['id' => 'signer-001', 'signingRequestId' => 'req-404', 'userId' => 'bob', 'status' => 'PENDING'];
+		$this->stubFindById(rows: ['signer-001' => $signerData]);
+
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessage('Not authorized to sign as this signer');
+
+		$this->service->sign(requestId: 'req-404', signerId: 'signer-001');
+
+	}//end testSignByAnotherUserDoesNotRevealWhetherTheRequestExists()
+
+	/**
+	 * Answer find() by object id, whatever order the service looks objects up in.
+	 *
+	 * @param array<string, array<string, mixed>> $rows The objects by id.
+	 *
+	 * @return void
+	 */
+	private function stubFindById(array $rows): void {
+		$this->objectService->method('find')->willReturnCallback(
+			static fn (string $id): ?array => ($rows[$id] ?? null)
+		);
+
+	}//end stubFindById()
 
 	/**
 	 * Provider/level honesty on the completion path (signing-trust-rebuild
@@ -1167,8 +1868,8 @@ class SigningServiceTest extends TestCase {
 		$signerSigned = ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'alice', 'status' => 'SIGNED'];
 
 		$this->objectService->method('find')->willReturnOnConsecutiveCalls(
-			$request,
 			$signerPending,
+			$request,
 			$signerSigned,
 			$request
 		);
@@ -1194,7 +1895,7 @@ class SigningServiceTest extends TestCase {
 		$file->method('getContent')->willReturn('original-bytes');
 		$folder = $this->createMock(\OCP\Files\Folder::class);
 		$folder->method('getById')->willReturn([$file]);
-		$this->rootFolder->method('getUserFolder')->willReturn($folder);
+		$this->userFolder = $folder;
 
 		$threw = false;
 		try {
@@ -1207,4 +1908,751 @@ class SigningServiceTest extends TestCase {
 		$this->assertFalse($sawCompleted, 'The request must NOT complete via a silently substituted provider.');
 
 	}//end testCompletionFailsLoudlyOnUnknownProviderNoFallback()
+	/**
+	 * Keep step-up evidence for req-001 / signer-001, as the broker callback does.
+	 *
+	 * @param string $assurance The assurance.
+	 * @param int $ageSeconds How long ago the signer authenticated.
+	 *
+	 * @return void
+	 */
+	private function keepStepUpEvidence(string $assurance, int $ageSeconds = 30): void {
+		$this->evidenceStore()->put(
+			requestId: 'req-001',
+			signerId: 'signer-001',
+			evidence: new IdentityEvidence(
+				provider: 'oidc-broker',
+				means: 'digid',
+				assurance: $assurance,
+				subjectPseudonym: 'ps-abcdef',
+				authenticatedAt: (new DateTimeImmutable())->modify('-' . $ageSeconds . ' seconds'),
+				evidenceHash: str_repeat('d', 64)
+			)
+		);
+
+	}//end keepStepUpEvidence()
+
+	/**
+	 * A substantial request refuses a session-only signer: 403 with a step-up hint, nothing written.
+	 *
+	 * @return void
+	 */
+	public function testASubstantialRequestRefusesASessionOnlySignerWithoutMutation(): void {
+		$request = ['id' => 'req-001', 'status' => 'PENDING', 'signatureLevel' => 'SES', 'requiredAssurance' => 'substantial', 'signerIds' => ['signer-001']];
+		$signer = ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'alice', 'status' => 'PENDING'];
+		$this->objectService->method('find')->willReturnOnConsecutiveCalls($signer, $request);
+		$this->objectService->expects($this->never())->method('saveObject');
+		$this->auditService->expects($this->never())->method('logEvent');
+
+		try {
+			$this->service->sign(requestId: 'req-001', signerId: 'signer-001');
+			$this->fail('A session-only signer must not sign a substantial request');
+		} catch (StepUpRequiredException $e) {
+			$this->assertSame(403, $e->getCode());
+			$this->assertSame('substantial', $e->stepUp()['requiredAssurance']);
+		}
+
+	}//end testASubstantialRequestRefusesASessionOnlySignerWithoutMutation()
+
+	/**
+	 * Stale evidence does not carry over (REQ-DDSIR-003 "Stale evidence does not carry over").
+	 *
+	 * @return void
+	 */
+	public function testStaleEvidenceDoesNotCarryOver(): void {
+		$this->keepStepUpEvidence(assurance: 'substantial', ageSeconds: 20 * 60);
+		$request = ['id' => 'req-001', 'status' => 'PENDING', 'signatureLevel' => 'SES', 'requiredAssurance' => 'substantial', 'signerIds' => ['signer-001']];
+		$signer = ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'alice', 'status' => 'PENDING'];
+		$this->objectService->method('find')->willReturnOnConsecutiveCalls($signer, $request);
+		$this->objectService->expects($this->never())->method('saveObject');
+
+		$this->expectException(StepUpRequiredException::class);
+
+		$this->service->sign(requestId: 'req-001', signerId: 'signer-001');
+
+	}//end testStaleEvidenceDoesNotCarryOver()
+
+	/**
+	 * After step-up the act is accepted and the evidence lands on the record and the audit entry.
+	 *
+	 * @return void
+	 */
+	public function testStepUpEvidenceLandsOnTheRecordAndTheAuditEntry(): void {
+		$this->keepStepUpEvidence(assurance: 'substantial');
+		$request = ['id' => 'req-001', 'status' => 'PENDING', 'signatureLevel' => 'SES', 'requiredAssurance' => 'substantial', 'signerIds' => ['signer-001', 'signer-002']];
+		$signer = ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'alice', 'status' => 'PENDING'];
+		$other = ['id' => 'signer-002', 'signingRequestId' => 'req-001', 'userId' => 'bob', 'status' => 'PENDING'];
+		$this->objectService->method('find')->willReturnOnConsecutiveCalls($signer, $request, $signer + ['status' => 'SIGNED'], $other, $request);
+		$this->objectService->method('saveObject')->willReturnArgument(0);
+
+		$metadata = null;
+		$this->auditService->expects($this->once())->method('logEvent')->willReturnCallback(
+			function (SigningAuditEvent $event) use (&$metadata): array {
+				$metadata = $event->metadata;
+				return [];
+			}
+		);
+
+		$result = $this->service->sign(requestId: 'req-001', signerId: 'signer-001');
+
+		$this->assertSame('SIGNED', $result['status']);
+		$this->assertSame('oidc-broker', $result['identityEvidence']['provider']);
+		$this->assertSame('substantial', $result['identityEvidence']['assurance']);
+		$this->assertSame('ps-abcdef', $result['identityEvidence']['subjectPseudonym']);
+		$this->assertSame($result['identityEvidence'], $metadata['identityEvidence'] ?? null);
+		$this->assertNull($this->evidenceStore()->get(requestId: 'req-001', signerId: 'signer-001'), 'The act spends the evidence');
+
+	}//end testStepUpEvidenceLandsOnTheRecordAndTheAuditEntry()
+
+	/**
+	 * decline() runs the same gate.
+	 *
+	 * @return void
+	 */
+	public function testDeclineIsGatedToo(): void {
+		$request = ['id' => 'req-001', 'status' => 'IN_PROGRESS', 'signatureLevel' => 'SES', 'requiredAssurance' => 'high'];
+		$signer = ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'alice', 'status' => 'PENDING'];
+		$this->stubFindById(rows: ['req-001' => $request, 'signer-001' => $signer]);
+		$this->objectService->expects($this->never())->method('saveObject');
+
+		$this->expectException(StepUpRequiredException::class);
+
+		$this->service->decline(requestId: 'req-001', signerId: 'signer-001', reason: 'no');
+
+	}//end testDeclineIsGatedToo()
+
+	/**
+	 * Completion writes the resolved assurance and each signer's evidence, and hands both to the artifact.
+	 *
+	 * @return void
+	 */
+	public function testCompletionRecordsTheResolvedAssuranceAndHandsTheEvidenceToTheArtifact(): void {
+		$this->keepStepUpEvidence(assurance: 'substantial');
+		$request = ['id' => 'req-001', 'status' => 'IN_PROGRESS', 'signatureLevel' => 'SES', 'provider' => 'native', 'requiredAssurance' => 'substantial', 'initiatorUserId' => 'alice', 'documentFileId' => '42', 'signerIds' => ['signer-001']];
+		$pending = ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'alice', 'status' => 'PENDING'];
+
+		$saved = [];
+		$this->objectService->method('saveObject')->willReturnCallback(
+			function (array $object) use (&$saved): array {
+				$saved[] = $object;
+				return $object;
+			}
+		);
+		$this->objectService->method('find')->willReturnCallback(
+			function (string $id) use ($request, $pending, &$saved): array {
+				if ($id === 'req-001') {
+					return $request;
+				}
+
+				foreach (array_reverse($saved) as $object) {
+					if (($object['id'] ?? '') === $id) {
+						return $object;
+					}
+				}
+
+				return $pending;
+			}
+		);
+
+		$context = null;
+		$provider = $this->createMock(\OCA\Filinq\Service\Signing\SigningProviderInterface::class);
+		$provider->method('produceSignedArtifact')->willReturnCallback(
+			function (string $bytes, array $ctx) use (&$context): string {
+				$context = $ctx;
+				return 'SIGNED-BYTES';
+			}
+		);
+		$this->providerFactory->method('getProvider')->willReturn($provider);
+		$file = $this->createMock(\OCP\Files\File::class);
+		$file->method('getContent')->willReturn('original-bytes');
+		$folder = $this->createMock(\OCP\Files\Folder::class);
+		$folder->method('getById')->willReturn([$file]);
+		$this->userFolder = $folder;
+
+		$this->service->sign(requestId: 'req-001', signerId: 'signer-001');
+
+		$completed = array_values(array_filter($saved, static fn (array $o): bool => ($o['status'] ?? '') === 'COMPLETED'))[0] ?? [];
+		$this->assertSame('substantial', $completed['resolvedAssurance'] ?? null);
+		$this->assertSame('signer-001', $completed['signerEvidence'][0]['signerId'] ?? null);
+		$this->assertSame('oidc-broker', $completed['signerEvidence'][0]['provider'] ?? null);
+		$this->assertSame($completed['signerEvidence'], $context['signerEvidence'] ?? null);
+
+	}//end testCompletionRecordsTheResolvedAssuranceAndHandsTheEvidenceToTheArtifact()
+
+	/**
+	 * The completion payload carries exactly the recorded assurance (REQ-DDSIR-007).
+	 *
+	 * @return void
+	 */
+	public function testTheCompletionPayloadCarriesTheRecordedAssurance(): void {
+		$factory = new SigningConcludedEventFactory();
+
+		$recorded = $factory->create(request: ['id' => 'r', 'provider' => 'native', 'signatureLevel' => 'SES', 'resolvedAssurance' => 'substantial'], status: 'signed');
+		$this->assertSame('substantial', $recorded->getAssuranceLevel());
+
+		$forged = $factory->create(request: ['id' => 'r', 'provider' => 'native', 'signatureLevel' => 'SES', 'resolvedAssurance' => 'ultra'], status: 'signed');
+		$this->assertSame('low', $forged->getAssuranceLevel(), 'A value off the scale is never surfaced');
+
+		$legacy = $factory->create(request: ['id' => 'r', 'provider' => 'native', 'signatureLevel' => 'SES'], status: 'declined');
+		$this->assertSame('low', $legacy->getAssuranceLevel());
+
+	}//end testTheCompletionPayloadCarriesTheRecordedAssurance()
+
+	/**
+	 * Creation holds a request at its floor and says so.
+	 *
+	 * @return void
+	 */
+	public function testCreateRequestHoldsTheAssuranceAtTheFloor(): void {
+		$this->providerFactory->method('getProvider')->willReturn($this->makeSupportingProvider());
+		$first = null;
+		$this->objectService->method('saveObject')->willReturnCallback(
+			function (array $object) use (&$first): array {
+				$first ??= $object;
+				return ['id' => $object['id'] ?? 'req-001'] + $object;
+			}
+		);
+
+		$result = $this->service->createRequest(
+			data: [
+				'documentFileId' => '1001',
+				'documentName' => 'besluit.pdf',
+				'signatureLevel' => 'AdES',
+				'provider' => 'validsign',
+				'requiredAssurance' => 'low',
+				'signers' => [['displayName' => 'Bea', 'email' => 'bea@example.org']],
+			]
+		);
+
+		$this->assertSame('substantial', $first['requiredAssurance']);
+		$this->assertSame('substantial', $result['requiredAssurance']);
+		$this->assertSame('substantial', $result['assuranceFloor']);
+
+	}//end testCreateRequestHoldsTheAssuranceAtTheFloor()
+
+	/**
+	 * A LibreSign request is handed to LibreSign before it is stored, with the
+	 * document's bytes, and keeps LibreSign's uuid as its externalId.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-libresign-signing-provider/tasks.md#task-3.1
+	 */
+	public function testALibreSignRequestIsDelegatedAndKeepsItsExternalId(): void {
+		$client = new class implements \OCA\Filinq\Service\Signing\LibreSignClient {
+			/**
+			 * The requests LibreSign received.
+			 *
+			 * @var array<int, array<int, mixed>>
+			 */
+			public array $requests = [];
+
+			public function requestSignature(array $file, string $name, array $signers): array {
+				$this->requests[] = [$file, $name, $signers];
+				return ['uuid' => 'ls-uuid-9', 'status' => 1];
+			}
+
+			public function validate(string $uuid): array {
+				return ['uuid' => $uuid, 'status' => 1];
+			}
+
+			public function downloadSigned(string $uuid): string {
+				return '';
+			}
+
+			public function deleteRequest(int $nodeId): void {
+			}
+		};
+		$provider = new \OCA\Filinq\Service\Signing\LibreSignProvider(config: $this->config, client: $client);
+		$this->providerFactory->method('getProvider')->with('libresign')->willReturn($provider);
+
+		$document = $this->createMock(\OCP\Files\File::class);
+		$document->method('getId')->willReturn(42);
+		$document->method('getName')->willReturn('besluit.pdf');
+		$document->method('getContent')->willReturn('%PDF-1.7 besluit');
+		$folder = $this->createMock(\OCP\Files\Folder::class);
+		$folder->method('getById')->with(42)->willReturn([$document]);
+		$this->userFolder = $folder;
+
+		$saved = [];
+		$this->objectService->method('saveObject')->willReturnCallback(
+			function (array $object) use (&$saved): array {
+				$saved[] = $object;
+				$object['id'] = (isset($object['initiatorUserId']) === true) ? 'req-ls' : 'signer-'.count($saved);
+				return $object;
+			}
+		);
+
+		$this->service->createRequest(
+			data: [
+				'documentFileId' => '42',
+				'documentName' => 'besluit.pdf',
+				'signatureLevel' => 'AdES',
+				'provider' => 'libresign',
+				'signers' => [['displayName' => 'Bea', 'email' => 'bea@example.org']],
+			]
+		);
+
+		$this->assertSame('ls-uuid-9', $saved[0]['externalId']);
+		$this->assertSame('libresign', $saved[0]['provider']);
+		$this->assertCount(1, $client->requests);
+		$this->assertSame(['base64' => base64_encode('%PDF-1.7 besluit'), 'name' => 'besluit.pdf'], $client->requests[0][0]);
+		$this->assertSame('bea@example.org', $client->requests[0][2][0]['identifyMethods'][0]['value']);
+
+	}//end testALibreSignRequestIsDelegatedAndKeepsItsExternalId()
+
+	/**
+	 * A native request is not handed to any provider at creation.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-libresign-signing-provider/tasks.md#task-3.1
+	 */
+	public function testANativeRequestIsNotDelegated(): void {
+		$provider = $this->createMock(\OCA\Filinq\Service\Signing\SigningProviderInterface::class);
+		$provider->method('supportsLevel')->willReturn(true);
+		$provider->expects($this->never())->method('initiateSigning');
+		$this->providerFactory->method('getProvider')->willReturn($provider);
+
+		$saved = [];
+		$this->objectService->method('saveObject')->willReturnCallback(
+			function (array $object) use (&$saved): array {
+				$saved[] = $object;
+				$object['id'] = 'req-n';
+				return $object;
+			}
+		);
+
+		$this->service->createRequest(
+			data: [
+				'documentFileId' => '42',
+				'documentName' => 'besluit.pdf',
+				'signers' => [['displayName' => 'Bea', 'email' => 'bea@example.org']],
+			]
+		);
+
+		$this->assertArrayNotHasKey('externalId', $saved[0]);
+
+	}//end testANativeRequestIsNotDelegated()
+
+	/**
+	 * At completion the provider is told which LibreSign request to take the signed file from.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-libresign-signing-provider/tasks.md#task-3.1
+	 */
+	public function testCompletionHandsTheProviderItsExternalId(): void {
+		$contexts = [];
+		$provider = $this->createMock(\OCA\Filinq\Service\Signing\SigningProviderInterface::class);
+		$provider->method('produceSignedArtifact')->willReturnCallback(
+			function (string $content, array $context) use (&$contexts): string {
+				$contexts[] = $context;
+				return '%PDF-signed';
+			}
+		);
+		$this->providerFactory->method('getProvider')->with('libresign')->willReturn($provider);
+
+		$document = $this->createMock(\OCP\Files\File::class);
+		$document->method('getId')->willReturn(42);
+		$document->method('getName')->willReturn('besluit.pdf');
+		$document->method('getContent')->willReturn('%PDF-original');
+		$document->expects($this->once())->method('putContent')->with('%PDF-signed');
+		$folder = $this->createMock(\OCP\Files\Folder::class);
+		$folder->method('getById')->willReturn([$document]);
+		$this->userFolder = $folder;
+
+		$producer = new SignedArtifactProducer(
+			providerFactory: $this->providerFactory,
+			userSession: $this->userSession,
+			request: $this->request,
+			rootFolder: $this->rootFolder,
+			finalDocuments: $this->createMock(FinalDocumentService::class)
+		);
+		$producer->produce(
+			request: [
+				'documentFileId' => 42,
+				'initiatorUserId' => 'alice',
+				'provider' => 'libresign',
+				'signatureLevel' => 'AdES',
+				'externalId' => 'ls-uuid-9',
+			]
+		);
+
+		$this->assertSame('ls-uuid-9', $contexts[0]['externalId']);
+		$this->assertSame('AdES', $contexts[0]['level']);
+
+	}//end testCompletionHandsTheProviderItsExternalId()
+	/**
+	 * A three-page PDF made in the test.
+	 *
+	 * @return string The bytes.
+	 */
+	private function threePagePdf(): string {
+		$pdf = new \FPDF('P', 'pt', 'A4');
+		foreach ([1, 2, 3] as $page) {
+			$pdf->AddPage();
+			unset($page);
+		}
+
+		return $pdf->Output('S');
+
+	}//end threePagePdf()
+
+	/**
+	 * Create a request with placements over a three-page document.
+	 *
+	 * @param array<int, array<string, mixed>> $placements The placements.
+	 * @param string                           $provider   The provider.
+	 * @param array<int, array<string, mixed>> $saved      Collects what was saved.
+	 * @param string|null                      $content    The document bytes (a three-page PDF when null).
+	 *
+	 * @return array<string, mixed> The created request.
+	 */
+	private function createWithPlacements(array $placements, string $provider, array &$saved, ?string $content = null): array {
+		$supporting = $this->makeSupportingProvider();
+		$this->providerFactory->method('getProvider')->willReturn($supporting);
+		$document = $this->createMock(\OCP\Files\File::class);
+		$document->method('getId')->willReturn(42);
+		$document->method('getName')->willReturn('besluit.pdf');
+		$document->method('getContent')->willReturn($content ?? $this->threePagePdf());
+		$folder = $this->createMock(\OCP\Files\Folder::class);
+		$folder->method('getById')->willReturn([$document]);
+		$this->userFolder = $folder;
+		$this->objectService->method('saveObject')->willReturnCallback(
+			function (array $object) use (&$saved): array {
+				$saved[] = $object;
+				$object['id'] = (isset($object['initiatorUserId']) === true) ? 'req-fp' : 'signer-'.count($saved);
+				return $object;
+			}
+		);
+
+		return $this->service->createRequest(
+			data: [
+				'documentFileId' => '42',
+				'documentName' => 'besluit.pdf',
+				'signatureLevel' => 'SES',
+				'provider' => $provider,
+				'signers' => [['displayName' => 'Anna', 'email' => 'anna@example.org'], ['displayName' => 'Bram', 'email' => 'bram@example.org']],
+				'fieldPlacements' => $placements,
+			]
+		);
+
+	}//end createWithPlacements()
+
+	/**
+	 * Placements are validated, normalised, stored, and the stored request
+	 * validates against the real signingRequest schema fragment.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.1
+	 */
+	public function testCreateRequestStoresItsFieldPlacements(): void {
+		$saved = [];
+		$this->createWithPlacements(
+			placements: [['signerIndex' => 1, 'page' => 3, 'x' => 0.6, 'y' => 0.8, 'width' => 0.3, 'height' => 0.05, 'type' => 'signature']],
+			provider: 'native',
+			saved: $saved
+		);
+
+		$this->assertSame(
+			[['signerIndex' => 1, 'page' => 3, 'x' => 0.6, 'y' => 0.8, 'width' => 0.3, 'height' => 0.05, 'type' => 'signature']],
+			$saved[0]['fieldPlacements'] ?? null
+		);
+
+		$descriptor = json_decode((string) file_get_contents(__DIR__ . '/../../../lib/Settings/filinq_register.json'), true);
+		$schema = $descriptor['components']['schemas']['signingRequest'];
+		$properties = [];
+		foreach ($schema['properties'] as $name => $property) {
+			unset($property['required'], $property['visible'], $property['order'], $property['facetable'], $property['x-enum-labels']);
+			$properties[$name] = $property;
+		}
+
+		$json = (string) json_encode(['type' => 'object', 'properties' => $properties, 'additionalProperties' => false]);
+		foreach ([$saved[0], end($saved)] as $payload) {
+			$result = (new \Opis\JsonSchema\Validator())->validate(json_decode((string) json_encode(array_diff_key($payload, ['id' => true]))), $json);
+			$message = '';
+			if ($result->isValid() === false) {
+				$message = (string) json_encode((new \Opis\JsonSchema\Errors\ErrorFormatter())->format($result->error()));
+			}
+
+			$this->assertTrue($result->isValid(), $message);
+		}
+
+	}//end testCreateRequestStoresItsFieldPlacements()
+
+	/**
+	 * A placement the document cannot hold, or a signer that does not exist,
+	 * is a 400 and nothing is stored.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.1
+	 */
+	public function testCreateRequestRefusesAPlacementPastTheLastPage(): void {
+		$saved = [];
+		try {
+			$this->createWithPlacements(
+				placements: [['signerIndex' => 0, 'page' => 4, 'x' => 0.1, 'y' => 0.1, 'width' => 0.2, 'height' => 0.1, 'type' => 'date']],
+				provider: 'native',
+				saved: $saved
+			);
+			$this->fail('A field on page 4 of 3 was accepted');
+		} catch (RuntimeException $e) {
+			$this->assertSame(400, $e->getCode());
+			$this->assertStringContainsString('page 4', $e->getMessage());
+		}
+
+		$this->assertSame([], $saved);
+
+	}//end testCreateRequestRefusesAPlacementPastTheLastPage()
+
+	/**
+	 * A placement naming signer 3 of 2 is a 400 and nothing is stored.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.1
+	 */
+	public function testCreateRequestRefusesAPlacementForAnAbsentSigner(): void {
+		$saved = [];
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionCode(400);
+		try {
+			$this->createWithPlacements(
+				placements: [['signerIndex' => 2, 'page' => 1, 'x' => 0.1, 'y' => 0.1, 'width' => 0.2, 'height' => 0.1, 'type' => 'initials']],
+				provider: 'native',
+				saved: $saved
+			);
+		} finally {
+			$this->assertSame([], $saved);
+		}
+
+	}//end testCreateRequestRefusesAPlacementForAnAbsentSigner()
+
+	/**
+	 * LibreSign's request-signature call has no field input, so a LibreSign
+	 * request with placements is refused rather than signed without them.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.1
+	 */
+	public function testCreateRequestRefusesPlacementsLibreSignCannotCarry(): void {
+		$saved = [];
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionCode(400);
+		$this->createWithPlacements(
+			placements: [['signerIndex' => 0, 'page' => 1, 'x' => 0.1, 'y' => 0.1, 'width' => 0.2, 'height' => 0.1, 'type' => 'signature']],
+			provider: 'libresign',
+			saved: $saved
+		);
+
+	}//end testCreateRequestRefusesPlacementsLibreSignCannotCarry()
+
+	/**
+	 * A document the renderer cannot read gets no placements: 400 at creation, not a failure at signing.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.1
+	 */
+	public function testCreateRequestRefusesPlacementsOnADocumentThatIsNotAPdf(): void {
+		$saved = [];
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionCode(400);
+		$this->createWithPlacements(
+			placements: [['signerIndex' => 0, 'page' => 1, 'x' => 0.1, 'y' => 0.1, 'width' => 0.2, 'height' => 0.1, 'type' => 'signature']],
+			provider: 'native',
+			saved: $saved,
+			content: 'plain text, not a PDF'
+		);
+
+	}//end testCreateRequestRefusesPlacementsOnADocumentThatIsNotAPdf()
+
+	/**
+	 * At completion the provider gets the placements and each signer's name,
+	 * in the order of the request's signers.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.2
+	 */
+	public function testCompletionHandsThePlacementsAndSignerNamesToTheProvider(): void {
+		$placements = [['signerIndex' => 1, 'page' => 1, 'x' => 0.1, 'y' => 0.1, 'width' => 0.2, 'height' => 0.1, 'type' => 'signature']];
+		$request = ['id' => 'req-001', 'status' => 'IN_PROGRESS', 'signatureLevel' => 'SES', 'provider' => 'native', 'initiatorUserId' => 'alice', 'documentFileId' => '42', 'signerIds' => ['signer-001', 'signer-002'], 'signingMode' => 'parallel', 'fieldPlacements' => $placements];
+		$records = [
+			'signer-001' => ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'bob', 'displayName' => 'Bob Smit', 'status' => 'SIGNED'],
+			'signer-002' => ['id' => 'signer-002', 'signingRequestId' => 'req-001', 'userId' => 'alice', 'displayName' => 'Alice Jansen', 'status' => 'PENDING'],
+		];
+
+		$saved = [];
+		$this->objectService->method('saveObject')->willReturnCallback(
+			function (array $object) use (&$saved): array {
+				$saved[] = $object;
+				return $object;
+			}
+		);
+		$this->objectService->method('find')->willReturnCallback(
+			function (string $id) use ($request, $records, &$saved): array {
+				if ($id === 'req-001') {
+					return $request;
+				}
+
+				foreach (array_reverse($saved) as $object) {
+					if (($object['id'] ?? '') === $id) {
+						return $object;
+					}
+				}
+
+				return $records[$id];
+			}
+		);
+		$this->objectService->method('findAll')->willReturn(array_values($records));
+
+		$context = null;
+		$provider = $this->createMock(\OCA\Filinq\Service\Signing\SigningProviderInterface::class);
+		$provider->method('produceSignedArtifact')->willReturnCallback(
+			function (string $bytes, array $ctx) use (&$context): string {
+				$context = $ctx;
+				return 'SIGNED-BYTES';
+			}
+		);
+		$this->providerFactory->method('getProvider')->willReturn($provider);
+		$file = $this->createMock(\OCP\Files\File::class);
+		$file->method('getContent')->willReturn('original-bytes');
+		$folder = $this->createMock(\OCP\Files\Folder::class);
+		$folder->method('getById')->willReturn([$file]);
+		$this->userFolder = $folder;
+
+		$this->service->sign(requestId: 'req-001', signerId: 'signer-002');
+
+		$this->assertNotNull($context, 'The artifact was produced');
+		$this->assertSame($placements, $context['fieldPlacements'] ?? null);
+		$this->assertSame(['Bob Smit', 'Alice Jansen'], $context['signerLabels'] ?? null);
+
+	}//end testCompletionHandsThePlacementsAndSignerNamesToTheProvider()
+	/**
+	 * sign() refuses a request that does not exist, before any write.
+	 *
+	 * @return void
+	 */
+	public function testSignRefusesAMissingRequest(): void {
+		$this->stubFindById(rows: ['signer-001' => ['id' => 'signer-001', 'signingRequestId' => 'req-404', 'userId' => 'alice', 'status' => 'PENDING']]);
+		$this->objectService->expects($this->never())->method('saveObject');
+		$this->auditService->expects($this->never())->method('logEvent');
+
+		$this->expectException(exception: RuntimeException::class);
+		$this->expectExceptionMessage(message: 'Signing request not found: req-404');
+
+		$this->service->sign(requestId: 'req-404', signerId: 'signer-001');
+
+	}//end testSignRefusesAMissingRequest()
+
+	/**
+	 * sign() refuses a request that is no longer PENDING or IN_PROGRESS.
+	 *
+	 * @return void
+	 */
+	public function testSignRefusesARequestThatIsNotSignable(): void {
+		$this->stubFindById(rows: ['req-001' => ['id' => 'req-001', 'status' => 'COMPLETED'], 'signer-001' => ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'alice', 'status' => 'PENDING']]);
+		$this->objectService->expects($this->never())->method('saveObject');
+
+		$this->expectException(exception: RuntimeException::class);
+		$this->expectExceptionMessage(message: 'Signing request is not in a signable state: COMPLETED');
+
+		$this->service->sign(requestId: 'req-001', signerId: 'signer-001');
+
+	}//end testSignRefusesARequestThatIsNotSignable()
+
+	/**
+	 * sign() refuses a signer that already responded, before any write.
+	 *
+	 * @return void
+	 */
+	public function testSignRefusesASignerThatAlreadyResponded(): void {
+		$requestData = ['id' => 'req-001', 'status' => 'IN_PROGRESS'];
+		$signerData = [
+			'id' => 'signer-001',
+			'signingRequestId' => 'req-001',
+			'userId' => 'alice',
+			'status' => 'SIGNED',
+		];
+		$this->objectService->method('find')->willReturnOnConsecutiveCalls($signerData, $requestData);
+		$this->objectService->expects($this->never())->method('saveObject');
+		$this->auditService->expects($this->never())->method('logEvent');
+
+		$this->expectException(exception: RuntimeException::class);
+		$this->expectExceptionMessage(message: 'Signer has already responded to this request');
+
+		$this->service->sign(requestId: 'req-001', signerId: 'signer-001');
+
+	}//end testSignRefusesASignerThatAlreadyResponded()
+
+	/**
+	 * sign() saves the signer with its evidence and logs the SIGNED event with
+	 * the default level and provider when the request names none.
+	 *
+	 * @return void
+	 */
+	public function testSignRecordsSignatureDataAndAuditDefaults(): void {
+		$requestData = [
+			'id' => 'req-001',
+			'status' => 'IN_PROGRESS',
+			'initiatorUserId' => 'bob',
+			'signerIds' => ['signer-001'],
+		];
+		$signerData = [
+			'id' => 'signer-001',
+			'signingRequestId' => 'req-001',
+			'userId' => 'alice',
+			'status' => 'PENDING',
+		];
+		$this->objectService->method('find')->willReturnOnConsecutiveCalls(
+			$signerData,
+			$requestData,
+			$requestData,
+			$signerData
+		);
+
+		$saved = [];
+		$this->objectService->method('saveObject')->willReturnCallback(
+			function (array $object, string $register, string $schema) use (&$saved): array {
+				$saved[] = [$object, $register, $schema];
+				return $object;
+			}
+		);
+
+		$audit = [];
+		$this->auditService->expects($this->once())->method('logEvent')->willReturnCallback(
+			function (SigningAuditEvent $event) use (&$audit): array {
+				[$signingRequestId, $action, $actorUserId, $actorDisplayName, $ipAddress, $signatureLevel, $provider, $metadata] = [$event->request->id, $event->action, $event->actor->userId, $event->actor->displayName, $event->actor->ipAddress, $event->request->signatureLevel, $event->request->provider, $event->metadata];
+				$audit = compact('signingRequestId', 'action', 'actorUserId', 'actorDisplayName', 'ipAddress', 'signatureLevel', 'provider', 'metadata');
+				return $audit;
+			}
+		);
+
+		$evidence = ['consent' => true, 'drawn' => 'data:image/png;base64,AAAA'];
+		$result = $this->service->sign(requestId: 'req-001', signerId: 'signer-001', signatureData: $evidence);
+
+		$this->assertSame(expected: 'SIGNED', actual: $result['status']);
+		$this->assertSame(expected: $evidence, actual: $result['signatureData']);
+		$this->assertSame(expected: '127.0.0.1', actual: $result['ipAddress']);
+		$this->assertArrayHasKey(key: 'identityEvidence', array: $result);
+		$this->assertSame(expected: 'filinq', actual: $saved[0][1]);
+		$this->assertSame(expected: 'signerRecord', actual: $saved[0][2]);
+		$this->assertSame(expected: 'SIGNED', actual: $saved[0][0]['status']);
+
+		$this->assertSame(expected: 'req-001', actual: $audit['signingRequestId']);
+		$this->assertSame(expected: 'SIGNED', actual: $audit['action']);
+		$this->assertSame(expected: 'alice', actual: $audit['actorUserId']);
+		$this->assertSame(expected: 'Alice', actual: $audit['actorDisplayName']);
+		$this->assertSame(expected: '127.0.0.1', actual: $audit['ipAddress']);
+		$this->assertSame(expected: 'SES', actual: $audit['signatureLevel']);
+		$this->assertSame(expected: 'native', actual: $audit['provider']);
+		$this->assertSame(expected: $result['identityEvidence'], actual: $audit['metadata']['identityEvidence']);
+
+	}//end testSignRecordsSignatureDataAndAuditDefaults()
+
 }//end class

@@ -28,7 +28,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use OCA\Filinq\Exception\Pdfa3ConversionException;
-use OCA\Filinq\Service\Pdfa3ConversionService;
+use OCA\Filinq\Kernel\Contracts\Pdfa3ConversionServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -60,7 +60,7 @@ class Pdfa3ConversionController extends Controller {
 	 * @param string $appName The application name.
 	 * @param IRequest $request The request object.
 	 * @param LoggerInterface $logger Logger for error reporting.
-	 * @param Pdfa3ConversionService $service The PDF/A-3 conversion service.
+	 * @param Pdfa3ConversionServiceInterface $service The PDF/A-3 conversion service.
 	 * @param IRootFolder $rootFolder Root folder, for IDOR-safe file resolution.
 	 * @param IL10N $l10n The localization service.
 	 * @param IUserSession $userSession User session for authentication.
@@ -71,7 +71,7 @@ class Pdfa3ConversionController extends Controller {
 		string $appName,
 		IRequest $request,
 		private readonly LoggerInterface $logger,
-		private readonly Pdfa3ConversionService $service,
+		private readonly Pdfa3ConversionServiceInterface $service,
 		private readonly IRootFolder $rootFolder,
 		private readonly IL10N $l10n,
 		private readonly IUserSession $userSession,
@@ -97,106 +97,166 @@ class Pdfa3ConversionController extends Controller {
 	 * @return DataDownloadResponse|JSONResponse PDF/A-3 download or a typed error response.
 	 *
 	 * @spec openspec/specs/pdfa3-conversion/spec.md
+	 *
+	 * @no-admin-idor-exempt the source file is resolved through the caller's own user folder in the method
+	 * body (resolveReadableFile()); attachments are inline content, not ids.
 	 */
 	#[NoAdminRequired]
 	public function convert(): DataDownloadResponse|JSONResponse {
 		$user = $this->userSession->getUser();
 		if ($user === null) {
-			return new JSONResponse(
-				data: ['error' => $this->l10n->t('Not authenticated')],
-				statusCode: Http::STATUS_UNAUTHORIZED
-			);
+			return $this->errorResponse(message: $this->l10n->t('Not authenticated'), status: Http::STATUS_UNAUTHORIZED);
 		}
 
 		$fileId = (int)$this->request->getParam('fileId', 0);
 		if ($fileId <= 0) {
-			return new JSONResponse(
-				data: ['error' => $this->l10n->t('fileId is required')],
-				statusCode: Http::STATUS_BAD_REQUEST
-			);
+			return $this->errorResponse(message: $this->l10n->t('fileId is required'), status: Http::STATUS_BAD_REQUEST);
 		}
 
-		// IDOR-safe resolution: a file the user cannot read is a 404, no disclosure.
-		$userFolder = $this->rootFolder->getUserFolder($user->getUID());
-		$nodes = $userFolder->getById($fileId);
-		if (empty($nodes) === true || ($nodes[0] instanceof File) === false) {
-			return new JSONResponse(
-				data: ['error' => $this->l10n->t('File not found')],
-				statusCode: Http::STATUS_NOT_FOUND
-			);
+		$source = $this->resolveReadableFile(userId: $user->getUID(), fileId: $fileId);
+		if ($source === null) {
+			return $this->errorResponse(message: $this->l10n->t('File not found'), status: Http::STATUS_NOT_FOUND);
 		}
 
-		$metadata = $this->request->getParam('metadata', []);
-		if (is_array($metadata) === false) {
-			$metadata = [];
-		}
-
-		$attachments = $this->request->getParam('attachments', []);
-		if (is_array($attachments) === false) {
-			$attachments = [];
-		}
-
-		$filename = $this->request->getParam('filename', 'document-pdfa3.pdf');
-
+		$filename = (string)$this->request->getParam('filename', 'document-pdfa3.pdf');
 		try {
 			$result = $this->service->convertExistingPdf(
-				source: $nodes[0],
-				metadata: $metadata,
-				attachments: $attachments
+				source: $source,
+				metadata: $this->arrayParam(name: 'metadata'),
+				attachments: $this->arrayParam(name: 'attachments')
 			);
 
-			$response = new DataDownloadResponse(
-				data: $result['content'],
-				filename: (string)$filename,
-				contentType: 'application/pdf'
-			);
-			// Surfaced so callers (e.g. procest's TemplateEngineAdapterInterface,
-			// which expects {checksumSha256, paginas}) can read the composition
-			// metadata without a second round trip.
-			// ⚠️ THE `X-Docudesk-*` HEADER NAMES STAY ACROSS THE FILINQ RENAME.
-			// They are a CROSS-APP response contract: dossiq's (procest's)
-			// beschikking/archival pipeline reads them off this endpoint. A
-			// renamed header is not an error to a consumer — it is an ABSENT
-			// header, so the integration degrades silently rather than failing.
-			// Rename them only together with the consumers, in a coordinated
-			// change; the same applies to the `X-Docudesk-File-*` headers in
-			// DocumentController.
-			$response->addHeader('X-Docudesk-Pdfa3-Checksum-Sha256', $result['checksumSha256']);
-			$response->addHeader('X-Docudesk-Pdfa3-Pages', (string)$result['pages']);
-			$response->addHeader('X-Docudesk-Pdfa3-Conformance', $result['conformance']);
-
-			return $response;
+			return $this->downloadResponse(result: $result, filename: $filename);
 		} catch (Pdfa3ConversionException $e) {
-			$this->logger->warning(
-				'PDF/A-3 conversion failed',
-				[
-					'fileId' => $fileId,
-					'reason' => $e->getReason(),
-					'exception' => $e->getMessage(),
-				]
-			);
-
-			return new JSONResponse(
-				data: [
-					'error' => $e->getMessage(),
-					'reason' => $e->getReason(),
-					'adminHint' => $e->getAdminHint(),
-				],
-				statusCode: $this->clampStatusCode(code: $e->getCode())
-			);
+			return $this->conversionErrorResponse(exception: $e, fileId: $fileId);
 		} catch (Throwable $e) {
-			$this->logger->error(
-				'PDF/A-3 conversion failed unexpectedly',
-				['fileId' => $fileId, 'exception' => $e]
-			);
+			$this->logger->error('PDF/A-3 conversion failed unexpectedly', ['fileId' => $fileId, 'exception' => $e]);
 
-			return new JSONResponse(
-				data: ['error' => $this->l10n->t('PDF/A-3 conversion failed')],
-				statusCode: Http::STATUS_INTERNAL_SERVER_ERROR
-			);
+			return $this->errorResponse(message: $this->l10n->t('PDF/A-3 conversion failed'), status: Http::STATUS_INTERNAL_SERVER_ERROR);
 		}//end try
 
 	}//end convert()
+
+	/**
+	 * A JSON error response with one message.
+	 *
+	 * @param string $message The error message.
+	 * @param int $status The HTTP status.
+	 *
+	 * @return JSONResponse The response.
+	 *
+	 * @psalm-suppress InvalidArgument $status is always one of the Http::STATUS_* constants.
+	 *
+	 * @spec openspec/specs/pdfa3-conversion/spec.md
+	 */
+	private function errorResponse(string $message, int $status): JSONResponse {
+		return new JSONResponse(data: ['error' => $message], statusCode: $status);
+
+	}//end errorResponse()
+
+	/**
+	 * Resolve a file id through the user's own folder. A file the user cannot
+	 * read resolves to null, so the caller answers 404 without disclosure.
+	 *
+	 * @param string $userId The requesting user.
+	 * @param int $fileId The requested file id.
+	 *
+	 * @return File|null The file, or null when it is not a readable file.
+	 *
+	 * @spec openspec/specs/pdfa3-conversion/spec.md
+	 */
+	private function resolveReadableFile(string $userId, int $fileId): ?File {
+		$nodes = $this->rootFolder->getUserFolder($userId)->getById($fileId);
+		if (empty($nodes) === true || ($nodes[0] instanceof File) === false) {
+			return null;
+		}
+
+		return $nodes[0];
+
+	}//end resolveReadableFile()
+
+	/**
+	 * A request parameter that must be an array, or an empty array otherwise.
+	 *
+	 * @param string $name The parameter name.
+	 *
+	 * @return array<array-key, mixed> The parameter value.
+	 *
+	 * @spec openspec/specs/pdfa3-conversion/spec.md
+	 */
+	private function arrayParam(string $name): array {
+		$value = $this->request->getParam($name, []);
+		if (is_array($value) === false) {
+			return [];
+		}
+
+		return $value;
+
+	}//end arrayParam()
+
+	/**
+	 * The PDF/A-3 download with its composition headers.
+	 *
+	 * Callers such as dossiq's archival pipeline read the composition
+	 * metadata ({checksumSha256, paginas}) off these headers without a second
+	 * round trip. THE `X-Docudesk-*` HEADER NAMES STAY ACROSS THE FILINQ RENAME:
+	 * they are a cross-app response contract, and a renamed header is not an
+	 * error to a consumer but an absent header, so the integration degrades
+	 * silently. Rename them only together with the consumers; the same applies
+	 * to the `X-Docudesk-File-*` headers in DocumentController.
+	 *
+	 * @param array<string, mixed> $result The conversion result.
+	 * @param string $filename The download file name.
+	 *
+	 * @return DataDownloadResponse The download.
+	 *
+	 * @spec openspec/specs/pdfa3-conversion/spec.md
+	 */
+	private function downloadResponse(array $result, string $filename): DataDownloadResponse {
+		$response = new DataDownloadResponse(
+			data: $result['content'],
+			filename: $filename,
+			contentType: 'application/pdf'
+		);
+		$response->addHeader('X-Docudesk-Pdfa3-Checksum-Sha256', $result['checksumSha256']);
+		$response->addHeader('X-Docudesk-Pdfa3-Pages', (string)$result['pages']);
+		$response->addHeader('X-Docudesk-Pdfa3-Conformance', $result['conformance']);
+		$response->addHeader('X-Docudesk-Pdfa3-Verified', (string) ($result['verified'] ?? 'skipped'));
+
+		return $response;
+
+	}//end downloadResponse()
+
+	/**
+	 * The typed error response for a conversion the service refused.
+	 *
+	 * @param Pdfa3ConversionException $exception The refusal.
+	 * @param int $fileId The source file id, for the log.
+	 *
+	 * @return JSONResponse The error with its reason and admin hint.
+	 *
+	 * @spec openspec/specs/pdfa3-conversion/spec.md
+	 */
+	private function conversionErrorResponse(Pdfa3ConversionException $exception, int $fileId): JSONResponse {
+		$this->logger->warning(
+			'PDF/A-3 conversion failed',
+			[
+				'fileId' => $fileId,
+				'reason' => $exception->getReason(),
+				'exception' => $exception->getMessage(),
+			]
+		);
+
+		return new JSONResponse(
+			data: [
+				'error' => $exception->getMessage(),
+				'reason' => $exception->getReason(),
+				'adminHint' => $exception->getAdminHint(),
+			],
+			statusCode: $this->clampStatusCode(code: $exception->getCode())
+		);
+
+	}//end conversionErrorResponse()
 
 	/**
 	 * Clamp an exception code to a valid HTTP status range, defaulting

@@ -26,6 +26,7 @@ use Exception;
 use OCA\Filinq\BackgroundJob\FolderExtractionJob;
 use OCA\Filinq\Service\AnonymizationService;
 use OCA\Filinq\Service\BatchStateService;
+use OCA\Filinq\Service\Conversion\OutputLayoutMover;
 use OCA\Filinq\Service\Conversion\OutputLayoutResolver;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\Files\File;
@@ -117,7 +118,7 @@ class FolderExtractionJobTest extends TestCase {
 			$this->mockStateService,
 			$this->mockLogger,
 			$this->mockLayoutResolver,
-			$this->mockRootFolder
+			new OutputLayoutMover($this->mockLayoutResolver, $this->mockRootFolder, $this->mockLogger)
 		);
 		// phpcs:enable CustomSn.Functions.NamedParameters
 
@@ -244,6 +245,43 @@ class FolderExtractionJobTest extends TestCase {
 		// phpcs:enable CustomSn.Functions.NamedParameters
 
 	}//end testProcessesAllFilesSequentially()
+
+	/**
+	 * A folder entry names the backend that looked and what it found.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-anonymisation-fails-closed-without-a-detector/tasks.md#task-3
+	 */
+	public function testEachFolderEntryCarriesTheDetectionOutcome(): void {
+		$detection = ['ran' => true, 'backend' => 'regex', 'entitiesRedacted' => 1, 'outcome' => 'redacted'];
+		$this->mockStateService->method('getBatch')->willReturn(
+			[
+				'batchId' => 'batch-d',
+				'userId' => 'testuser',
+				'status' => 'uploading',
+				'files' => [['fileId' => 1, 'fileName' => 'a.pdf', 'status' => 'uploaded', 'entityCount' => 0, 'error' => null]],
+			]
+		);
+		$this->mockAnonService->method('extractAndDetectEntities')
+			->willReturn(['entityCount' => 1, 'entities' => [['type' => 'PERSON', 'value' => 'Alice']]]);
+		$this->mockAnonService->method('anonymizeDocument')
+			->willReturn(['anonymizedFileId' => null, 'anonymizedFilePath' => '/p.pdf', 'replacementCount' => 1, 'detection' => $detection]);
+
+		$updates = [];
+		$this->mockStateService->method('updateBatch')->willReturnCallback(
+			function (string $id, array $batch) use (&$updates): void {
+				$updates[] = $batch;
+			}
+		);
+
+		$ref = new \ReflectionMethod($this->job, 'run');
+		$ref->invoke($this->job, ['batchId' => 'batch-d']);
+
+		$last = end($updates);
+		$this->assertSame($detection, $last['files'][0]['detection']);
+
+	}//end testEachFolderEntryCarriesTheDetectionOutcome()
 
 	/**
 	 * Test that a single file extraction failure does not abort the batch

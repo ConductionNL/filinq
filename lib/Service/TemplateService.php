@@ -31,6 +31,7 @@ namespace OCA\Filinq\Service;
 
 use DateTime;
 use Exception;
+use OCA\Filinq\Kernel\Contracts\TemplateServiceInterface;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\IUserSession;
@@ -46,7 +47,7 @@ use RuntimeException;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  */
-class TemplateService {
+class TemplateService implements TemplateServiceInterface {
 
 	/**
 	 * Lock timeout in minutes
@@ -64,6 +65,12 @@ class TemplateService {
 	 * @param TemplateVersionService $versionService Service for template version management
 	 * @param IUserSession $userSession User session for getting current user
 	 * @param IAppConfig $config App-config reader for admin-tunable knobs
+	 * @param TemplateSlugResolver|null $slugResolver Slug lookup + duplicate-slug guard,
+	 *                                                extracted to its own class to keep this
+	 *                                                one under the complexity threshold.
+	 *                                                Nullable only so existing test doubles
+	 *                                                built before this field existed keep
+	 *                                                constructing without change.
 	 *
 	 * @return void
 	 */
@@ -74,6 +81,7 @@ class TemplateService {
 		private readonly TemplateVersionService $versionService,
 		private readonly IUserSession $userSession,
 		private readonly IAppConfig $config,
+		private readonly ?TemplateSlugResolver $slugResolver = null,
 	) {
 
 	}//end __construct()
@@ -178,11 +186,80 @@ class TemplateService {
 		if (is_object($result) === true
 			&& method_exists(object_or_class: $result, method: 'jsonSerialize') === true
 		) {
-			return $result->jsonSerialize();
+			$result = $result->jsonSerialize();
 		}
 
-		return $result;
+		return $this->withVersion(id: $id, template: $result);
 	}//end getTemplate()
+
+	/**
+	 * Put the version the template is on at the top level of the template.
+	 *
+	 * 🔑 THE NUMBER IS FILINQ'S OWN VERSION CHAIN, NOT `@self.version`.
+	 * OpenRegister's object version is a semver string that also moves on saves
+	 * that make no template version (a restore's head write, a lock release),
+	 * while a caller pins, and the audit record stores, the chain's integer:
+	 * snapshots 1..N-1 plus the head as N. A chain that cannot be read leaves
+	 * the key out, so "unversioned" never reads as version 1. `@self` is left
+	 * as OpenRegister returned it.
+	 *
+	 * @param string $id       The template id the chain is keyed on
+	 * @param array  $template The serialised template
+	 *
+	 * @return array The template with `version`, or without it when unknown
+	 *
+	 * @spec openspec/changes/generated-document-names-its-template-version/specs/template-version-provenance/spec.md#requirement-a-template-carries-the-version-it-is-on-req-ddtvp-001
+	 */
+	private function withVersion(string $id, array $template): array {
+		unset($template['version']);
+		try {
+			$number = $this->versionService->getNextVersionNumber(templateId: $id);
+		} catch (Exception $e) {
+			return $template;
+		}
+
+		if ($number >= 1) {
+			$template['version'] = $number;
+		}
+
+		return $template;
+	}//end withVersion()
+
+	/**
+	 * Get a template as it was at one version, or the head when none is named.
+	 *
+	 * A pinned version renders the content stored in its snapshot. Nothing is
+	 * restored: the head stays where it is. A version the chain does not hold
+	 * is refused rather than answered with the head, because a document
+	 * claiming a version it was not rendered from is worse than no document.
+	 *
+	 * @param string   $id      The template id
+	 * @param int|null $version The version to read, or null for the head
+	 *
+	 * @return array The template, with `version` set to the version returned
+	 *
+	 * @throws Exception 404 naming the template and the version when it does not exist
+	 *
+	 * @spec openspec/changes/generated-document-names-its-template-version/specs/template-version-provenance/spec.md#requirement-a-caller-can-pin-the-template-version-to-render-req-ddtvp-003
+	 */
+	public function getTemplateAtVersion(string $id, ?int $version): array {
+		$template = $this->getTemplate(id: $id);
+		if ($version === null || $version === ($template['version'] ?? null)) {
+			return $template;
+		}
+
+		$snapshot = null;
+		if ($version >= 1) {
+			$snapshot = $this->versionService->findVersionByNumber(templateId: $id, number: $version);
+		}
+
+		if ($snapshot === null) {
+			throw new Exception(message: "Template {$id} has no version {$version}", code: 404);
+		}
+
+		$stored = array_intersect_key($snapshot, array_flip(['content', 'name', 'format', 'orientation']));
+		return array_merge($template, $stored, ['version' => $version]);
+	}//end getTemplateAtVersion()
 
 	/**
 	 * Create a new template
@@ -210,6 +287,14 @@ class TemplateService {
 			throw new Exception(message: 'Content is required', code: 400);
 		}
 
+		if (empty($data['slug']) === false && $this->slugResolver !== null) {
+			$this->slugResolver->assertAvailable(
+				namespace: $data['namespace'],
+				slug: $data['slug'],
+				tenantId: ($data['tenantId'] ?? null)
+			);
+		}
+
 		$objectService = $this->getObjectService();
 		$config = $this->registerResolver->getRegisterAndSchema();
 
@@ -231,8 +316,9 @@ class TemplateService {
 	/**
 	 * Update an existing template with version history
 	 *
-	 * The namespace field cannot be changed after creation.
-	 * A version snapshot of the current state is created before updating.
+	 * The namespace field cannot be changed after creation. A save is refused
+	 * while another user holds a live edit lock, and the previous state is kept
+	 * as a version once the save has succeeded.
 	 *
 	 * @param string $id The template UUID
 	 * @param array $data Updated template data
@@ -249,23 +335,23 @@ class TemplateService {
 
 		$existing = $this->getTemplate(id: $id);
 
-		// Create a version snapshot of the current state before updating.
 		$editor = $this->getCurrentUserId();
 		$changelog = $data['_changelog'] ?? null;
 		unset($data['_changelog']);
 
-		$this->versionService->createVersion(
-			templateId: $id,
-			templateState: $existing,
-			editor: $editor,
-			changelog: $changelog
-		);
+		// The edit lock is enforced here, not only in the editor: a save by
+		// anyone but the holder of a live lock is refused.
+		if ($this->heldByAnother(template: $existing, userId: $editor) === true) {
+			throw new Exception(message: 'Template is locked by another user', code: 409);
+		}
 
 		// Namespace is immutable after creation.
 		unset($data['namespace']);
 
 		$data['id'] = $id;
 		$merged = array_merge($existing, $data);
+		// The version is read from the chain, never stored on the template.
+		unset($merged['version']);
 
 		// Release lock after successful save.
 		$merged['lockedBy'] = null;
@@ -275,6 +361,15 @@ class TemplateService {
 			object: $merged,
 			register: $config['register'],
 			schema: $config['schema']
+		);
+
+		// Snapshot the previous state only once the save has gone through, so
+		// a refused save leaves no version row behind.
+		$this->versionService->createVersion(
+			templateId: $id,
+			templateState: $existing,
+			editor: $editor,
+			changelog: $changelog
 		);
 
 		if (is_object($result) === true
@@ -309,6 +404,8 @@ class TemplateService {
 
 		$data['id'] = $id;
 		$merged = array_merge($existing, $data);
+		// The version is read from the chain, never stored on the template.
+		unset($merged['version']);
 
 		$result = $objectService->saveObject(
 			object: $merged,
@@ -328,18 +425,30 @@ class TemplateService {
 	/**
 	 * Delete a template
 	 *
+	 * Scoped to the template register and schema, so an id of any other
+	 * object answers 404 instead of deleting it.
+	 *
 	 * @param string $id The template UUID
 	 *
 	 * @return bool True if deletion succeeded
 	 *
-	 * @throws Exception If the template is not found or deletion fails
+	 * @throws Exception If the template is not found (404) or deletion fails
 	 *
 	 * @spec openspec/specs/template-management/spec.md
 	 */
 	public function deleteTemplate(string $id): bool {
 		$objectService = $this->getObjectService();
+		$config = $this->registerResolver->getRegisterAndSchema();
 
-		$objectService->deleteObject(uuid: $id);
+		try {
+			$objectService->deleteObject(
+				uuid: $id,
+				register: $config['register'],
+				schema: $config['schema']
+			);
+		} catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
+			throw new Exception(message: 'Template not found', code: 404);
+		}
 
 		return true;
 	}//end deleteTemplate()
@@ -429,21 +538,17 @@ class TemplateService {
 	public function acquireLock(string $id, string $userId): array {
 		$template = $this->getTemplate(id: $id);
 
-		// Check if already locked by another user.
-		if (empty($template['lockedBy']) === false && $template['lockedBy'] !== $userId) {
-			// Check if lock has expired.
-			if ($this->isLockExpired(template: $template) === false) {
-				throw new Exception(
-					message: json_encode(
-						[
-							'error' => 'Template is locked by another user',
-							'lockedBy' => $template['lockedBy'],
-							'lockedAt' => $template['lockedAt'],
-						]
-					),
-					code: 409
-				);
-			}
+		if ($this->heldByAnother(template: $template, userId: $userId) === true) {
+			throw new Exception(
+				message: json_encode(
+					[
+						'error' => 'Template is locked by another user',
+						'lockedBy' => $template['lockedBy'],
+						'lockedAt' => $template['lockedAt'],
+					]
+				),
+				code: 409
+			);
 		}
 
 		// Acquire or refresh the lock.
@@ -477,10 +582,7 @@ class TemplateService {
 		$template = $this->getTemplate(id: $id);
 
 		// Only the lock holder can release (or if lock is expired).
-		if (empty($template['lockedBy']) === false
-			&& $template['lockedBy'] !== $userId
-			&& $this->isLockExpired(template: $template) === false
-		) {
+		if ($this->heldByAnother(template: $template, userId: $userId) === true) {
 			throw new Exception(
 				message: 'Cannot release lock held by another user',
 				code: 403
@@ -498,17 +600,18 @@ class TemplateService {
 	}//end releaseLock()
 
 	/**
-	 * Check if a template's lock has expired.
+	 * Whether another user holds a live edit lock on the template.
 	 *
-	 * @param array $template The template data with lockedAt field
+	 * @param array  $template The template data with lockedBy and lockedAt
+	 * @param string $userId   The user asking
 	 *
-	 * @return bool True if the lock has expired or no lock exists
+	 * @return bool True when someone else holds a lock that has not expired
 	 *
 	 * @spec openspec/specs/template-management/spec.md
 	 */
-	private function isLockExpired(array $template): bool {
-		if (empty($template['lockedAt']) === true) {
-			return true;
+	private function heldByAnother(array $template, string $userId): bool {
+		if (empty($template['lockedBy']) === true || $template['lockedBy'] === $userId || empty($template['lockedAt']) === true) {
+			return false;
 		}
 
 		try {
@@ -521,11 +624,11 @@ class TemplateService {
 				'templates.lock_timeout_minutes',
 				(string)self::LOCK_TIMEOUT_MINUTES
 			);
-			return $diffMins > $timeoutMinutes;
+			return $diffMins <= $timeoutMinutes;
 		} catch (Exception $exception) {
-			// If we cannot parse the lock time, consider it expired.
-			return true;
+			// A lock time that cannot be parsed counts as expired.
+			return false;
 		}
 
-	}//end isLockExpired()
+	}//end heldByAnother()
 }//end class

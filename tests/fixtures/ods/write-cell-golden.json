@@ -1,0 +1,45 @@
+{
+    "xml": "<office:document-content><table:table table:name=\"Sheet1\" table:style-name=\"ta1\"><table:table-row table:style-name=\"ro1\"><table:table-cell office:value-type=\"string\"><text:p>Name</text:p></table:table-cell><table:table-cell table:style-name=\"ce1\" table:number-columns-repeated=\"3\"/><table:table-cell table:formula=\"of:=1+1\" office:value-type=\"float\"><text:p>2</text:p></table:table-cell></table:table-row><table:table-row><table:table-cell office:value-type=\"string\"><text:p>Dev</text:p></table:table-cell></table:table-row></table:table><table:table table:name=\"Two\"><table:table-row><table:table-cell table:number-columns-repeated=\"2\"><text:p>x</text:p></table:table-cell></table:table-row></table:table></office:document-content>",
+    "cases": [
+        {
+            "cell": "Sheet1!a1",
+            "value": "<a&\"b\">",
+            "expected": "<office:document-content><table:table table:name=\"Sheet1\" table:style-name=\"ta1\"><table:table-row table:style-name=\"ro1\"><table:table-cell office:value-type=\"string\"><text:p>&lt;a&amp;&quot;b&quot;&gt;</text:p></table:table-cell><table:table-cell table:style-name=\"ce1\" table:number-columns-repeated=\"3\"/><table:table-cell table:formula=\"of:=1+1\" office:value-type=\"float\"><text:p>2</text:p></table:table-cell></table:table-row><table:table-row><table:table-cell office:value-type=\"string\"><text:p>Dev</text:p></table:table-cell></table:table-row></table:table><table:table table:name=\"Two\"><table:table-row><table:table-cell table:number-columns-repeated=\"2\"><text:p>x</text:p></table:table-cell></table:table-row></table:table></office:document-content>"
+        },
+        {
+            "cell": "Sheet1!B1",
+            "value": "v",
+            "expected": "<office:document-content><table:table table:name=\"Sheet1\" table:style-name=\"ta1\"><table:table-row table:style-name=\"ro1\"><table:table-cell office:value-type=\"string\"><text:p>Name</text:p></table:table-cell><table:table-cell office:value-type=\"string\"><text:p>v</text:p></table:table-cell><table:table-cell table:style-name=\"ce1\" table:number-columns-repeated=\"2\"/><table:table-cell table:formula=\"of:=1+1\" office:value-type=\"float\"><text:p>2</text:p></table:table-cell></table:table-row><table:table-row><table:table-cell office:value-type=\"string\"><text:p>Dev</text:p></table:table-cell></table:table-row></table:table><table:table table:name=\"Two\"><table:table-row><table:table-cell table:number-columns-repeated=\"2\"><text:p>x</text:p></table:table-cell></table:table-row></table:table></office:document-content>"
+        },
+        {
+            "cell": "Sheet1!C1",
+            "value": "v",
+            "expected": "<office:document-content><table:table table:name=\"Sheet1\" table:style-name=\"ta1\"><table:table-row table:style-name=\"ro1\"><table:table-cell office:value-type=\"string\"><text:p>Name</text:p></table:table-cell><table:table-cell table:style-name=\"ce1\"/><table:table-cell office:value-type=\"string\"><text:p>v</text:p></table:table-cell><table:table-cell table:style-name=\"ce1\"/><table:table-cell table:formula=\"of:=1+1\" office:value-type=\"float\"><text:p>2</text:p></table:table-cell></table:table-row><table:table-row><table:table-cell office:value-type=\"string\"><text:p>Dev</text:p></table:table-cell></table:table-row></table:table><table:table table:name=\"Two\"><table:table-row><table:table-cell table:number-columns-repeated=\"2\"><text:p>x</text:p></table:table-cell></table:table-row></table:table></office:document-content>"
+        },
+        {
+            "cell": "Sheet1!D1",
+            "value": "v",
+            "expected": "<office:document-content><table:table table:name=\"Sheet1\" table:style-name=\"ta1\"><table:table-row table:style-name=\"ro1\"><table:table-cell office:value-type=\"string\"><text:p>Name</text:p></table:table-cell><table:table-cell table:style-name=\"ce1\" table:number-columns-repeated=\"2\"/><table:table-cell office:value-type=\"string\"><text:p>v</text:p></table:table-cell><table:table-cell table:formula=\"of:=1+1\" office:value-type=\"float\"><text:p>2</text:p></table:table-cell></table:table-row><table:table-row><table:table-cell office:value-type=\"string\"><text:p>Dev</text:p></table:table-cell></table:table-row></table:table><table:table table:name=\"Two\"><table:table-row><table:table-cell table:number-columns-repeated=\"2\"><text:p>x</text:p></table:table-cell></table:table-row></table:table></office:document-content>"
+        },
+        {
+            "cell": "Sheet1!E1",
+            "value": "v",
+            "expected": "<office:document-content><table:table table:name=\"Sheet1\" table:style-name=\"ta1\"><table:table-row table:style-name=\"ro1\"><table:table-cell office:value-type=\"string\"><text:p>Name</text:p></table:table-cell><table:table-cell table:style-name=\"ce1\" table:number-columns-repeated=\"3\"/><table:table-cell office:value-type=\"string\"><text:p>v</text:p></table:table-cell></table:table-row><table:table-row><table:table-cell office:value-type=\"string\"><text:p>Dev</text:p></table:table-cell></table:table-row></table:table><table:table table:name=\"Two\"><table:table-row><table:table-cell table:number-columns-repeated=\"2\"><text:p>x</text:p></table:table-cell></table:table-row></table:table></office:document-content>"
+        },
+        {
+            "cell": "Sheet1!A2",
+            "value": "v",
+            "expected": "<office:document-content><table:table table:name=\"Sheet1\" table:style-name=\"ta1\"><table:table-row table:style-name=\"ro1\"><table:table-cell office:value-type=\"string\"><text:p>Name</text:p></table:table-cell><table:table-cell table:style-name=\"ce1\" table:number-columns-repeated=\"3\"/><table:table-cell table:formula=\"of:=1+1\" office:value-type=\"float\"><text:p>2</text:p></table:table-cell></table:table-row><table:table-row><table:table-cell office:value-type=\"string\"><text:p>v</text:p></table:table-cell></table:table-row></table:table><table:table table:name=\"Two\"><table:table-row><table:table-cell table:number-columns-repeated=\"2\"><text:p>x</text:p></table:table-cell></table:table-row></table:table></office:document-content>"
+        },
+        {
+            "cell": "Two!A1",
+            "value": "w",
+            "expected": "<office:document-content><table:table table:name=\"Sheet1\" table:style-name=\"ta1\"><table:table-row table:style-name=\"ro1\"><table:table-cell office:value-type=\"string\"><text:p>Name</text:p></table:table-cell><table:table-cell table:style-name=\"ce1\" table:number-columns-repeated=\"3\"/><table:table-cell table:formula=\"of:=1+1\" office:value-type=\"float\"><text:p>2</text:p></table:table-cell></table:table-row><table:table-row><table:table-cell office:value-type=\"string\"><text:p>Dev</text:p></table:table-cell></table:table-row></table:table><table:table table:name=\"Two\"><table:table-row><table:table-cell office:value-type=\"string\"><text:p>w</text:p></table:table-cell><table:table-cell/></table:table-row></table:table></office:document-content>"
+        },
+        {
+            "cell": "Two!B1",
+            "value": "w",
+            "expected": "<office:document-content><table:table table:name=\"Sheet1\" table:style-name=\"ta1\"><table:table-row table:style-name=\"ro1\"><table:table-cell office:value-type=\"string\"><text:p>Name</text:p></table:table-cell><table:table-cell table:style-name=\"ce1\" table:number-columns-repeated=\"3\"/><table:table-cell table:formula=\"of:=1+1\" office:value-type=\"float\"><text:p>2</text:p></table:table-cell></table:table-row><table:table-row><table:table-cell office:value-type=\"string\"><text:p>Dev</text:p></table:table-cell></table:table-row></table:table><table:table table:name=\"Two\"><table:table-row><table:table-cell/><table:table-cell office:value-type=\"string\"><text:p>w</text:p></table:table-cell></table:table-row></table:table></office:document-content>"
+        }
+    ]
+}

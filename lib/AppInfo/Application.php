@@ -23,6 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\AppInfo;
 
+use OCA\Filinq\Kernel\AppIdentity;
 use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
@@ -34,7 +35,7 @@ use OCP\AppFramework\Bootstrap\IRegistrationContext;
  * @package OCA\Filinq\AppInfo
  */
 class Application extends App implements IBootstrap {
-	public const APP_ID = 'filinq';
+	public const APP_ID = AppIdentity::APP_ID;
 
 	/**
 	 * Constructor

@@ -28,8 +28,10 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use Exception;
+use OCA\Filinq\Kernel\Contracts\MetadataServiceInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCP\App\IAppManager;
+use OCP\AppFramework\Db\DoesNotExistException;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -45,7 +47,7 @@ use RuntimeException;
  *
  * @spec openspec/specs/metadata-enrichment/spec.md
  */
-class MetadataService {
+class MetadataService implements MetadataServiceInterface {
 	/**
 	 * Constructor for MetadataService
 	 *
@@ -276,23 +278,16 @@ class MetadataService {
 	 * passed, and system-context callers elevate via `runAsSystem()` instead of
 	 * disabling the guards wholesale. That much is real and worth keeping.
 	 *
-	 * ⚠️ But read what each half actually buys, because this comment used to
-	 * claim more than the code delivers:
+	 * What each half buys:
 	 *
-	 *  - The MULTITENANCY half is live. Organisation scoping still applies.
-	 *  - The per-object RBAC half currently enforces NOTHING for this app.
-	 *    OpenRegister resolves authorization through a register/schema cascade
-	 *    and treats "configured nowhere" as OPEN. Every schema in
-	 *    `lib/Settings/filinq_register.json` declares `"authorization": null`
-	 *    except `publicationProhibition`, and no register declares the key at
-	 *    all — so for the schemas this method writes, OR permits the read and
-	 *    the write regardless of who is asking.
+	 *  - MULTITENANCY: organisation scoping applies.
+	 *  - RBAC: every schema in `lib/Settings/filinq_register.json` declares an
+	 *    `authorization` block, so OpenRegister checks the caller's read right
+	 *    on find() and update right on saveObject() against that schema.
 	 *
-	 * So this is NOT a per-user boundary today. Do not treat the absence of the
-	 * bypass flags as an ownership check, and do not delete a caller-side
-	 * ownership guard on the strength of it. Making the RBAC half real means
-	 * declaring `authorization` on the schemas (ConductionNL/openregister#2011),
-	 * not changing anything here.
+	 * That boundary is per schema, not per object. Do not treat it as an
+	 * ownership check, and do not delete a caller-side ownership guard on the
+	 * strength of it.
 	 *
 	 * @param \OCA\OpenRegister\Contract\ObjectServiceInterface $objectService The resolved OpenRegister object service
 	 * @param string $objectId The object UUID in OpenRegister
@@ -302,7 +297,9 @@ class MetadataService {
 	 *
 	 * @return mixed The saved ObjectEntity
 	 *
-	 * @throws Exception If the object cannot be found.
+	 * @throws DoesNotExistException If the object cannot be found.
+	 *
+	 * @spec openspec/specs/metadata-enrichment/spec.md
 	 */
 	private function persistEnrichedMetadata(
 		\OCA\OpenRegister\Contract\ObjectServiceInterface $objectService,
@@ -318,7 +315,7 @@ class MetadataService {
 		);
 
 		if ($object === null) {
-			throw new Exception('Object not found: ' . $objectId);
+			throw new DoesNotExistException('Object not found: ' . $objectId);
 		}
 
 		$objectData = array_merge($object->getObject(), $metadata);
@@ -359,6 +356,11 @@ class MetadataService {
 			);
 
 			return $savedObject->getObject();
+		} catch (DoesNotExistException $e) {
+			// The object is not readable (yet): an import can dispatch the
+			// created event before the row is findable. Nothing to write to, so
+			// the caller decides how loudly to report it.
+			throw $e;
 		} catch (Exception $e) {
 			$this->logger->error(
 				'Failed to save enriched metadata: ' . $e->getMessage(),

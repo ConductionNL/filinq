@@ -33,6 +33,12 @@ import { generateRemoteUrl, generateUrl } from '@nextcloud/router'
  */
 import { defineStore } from 'pinia'
 import { extractDocumentText } from '../../services/fileViewerService.js'
+import { applyOcrFlags } from '../../services/ocr.js'
+import {
+	markChecked,
+	redactionPayload,
+	reviewIsCurrent,
+} from '../../services/reviewMark.js'
 
 let fileCounter = 0
 
@@ -341,6 +347,322 @@ function parseFileIdFromPropfind(xmlText) {
 	}
 }
 
+/**
+ * An operator-facing input error for `addManualEntity`.
+ *
+ * @param {string} message The message to show.
+ * @return {Error}
+ * @spec openspec/specs/anonymization-entity-review/spec.md#requirement-entity-toggle-in-review
+ */
+function manualEntityInputError(message) {
+	const err = new Error(message)
+	err.status = 0
+	return err
+}
+
+/**
+ * Validate a manual-entity request and build its POST body.
+ *
+ * @param {object} entry Queue entry (must have fileId).
+ * @param {object} payload Manual-entity input (see `addManualEntity`).
+ * @return {{value: string, type: string, wholeWord: boolean, caseSensitive: boolean}}
+ * @throws {Error} On a missing fileId, value or type.
+ * @spec openspec/specs/anonymization-entity-review/spec.md#requirement-entity-toggle-in-review
+ */
+function manualEntityBody(entry, payload) {
+	if (!entry?.fileId) {
+		throw manualEntityInputError('Entry has no fileId yet.')
+	}
+	const value = (payload?.value || '').trim()
+	const type = payload?.type || ''
+	if (!value || !type) {
+		throw manualEntityInputError('A value and a type are required.')
+	}
+	return {
+		value,
+		type,
+		wholeWord: payload?.wholeWord ?? true,
+		caseSensitive: payload?.caseSensitive ?? true,
+	}
+}
+
+/**
+ * The relation ids a manual-entities response created.
+ *
+ * @param {object} data Response body of the manual-entities call.
+ * @return {Array<number>}
+ * @spec openspec/specs/anonymization-entity-review/spec.md#requirement-entity-toggle-in-review
+ */
+function manualRelationIds(data) {
+	const relations = Array.isArray(data.relations) ? data.relations : []
+	return relations.map((r) => r.id).filter((id) => id != null)
+}
+
+/**
+ * PATCH the chosen grondslagen onto the relations of a new manual entity,
+ * so they survive a reopen. On failure nothing counts as persisted, so
+ * `anonymiseEntry` retries the PATCH when the user anonymises.
+ *
+ * @param {Array<number>} relationIds The new relation ids.
+ * @param {Array<string>} bases The chosen grondslagen.
+ * @return {Promise<Array<string>>} The bases that were persisted.
+ * @spec openspec/specs/anonymization-entity-review/spec.md#requirement-entity-toggle-in-review
+ */
+async function persistManualBases(relationIds, bases) {
+	if (bases.length === 0 || relationIds.length === 0) {
+		return []
+	}
+	try {
+		await Promise.all(
+			relationIds.map((rid) =>
+				axios.patch(
+					generateUrl(`/apps/openregister/api/entity-relations/${rid}`),
+					{ bases, skipAnonymization: false },
+				),
+			),
+		)
+		return bases
+	} catch (err) {
+		console.error(
+			'[anonymization] failed to set grondslagen on manual entity:',
+			err,
+		)
+		return []
+	}
+}
+
+/**
+ * A review row for a manual entity, in the shape `decorateEntities`
+ * produces, grouping every matched relation under one card.
+ *
+ * @param {object} data Response body of the manual-entities call.
+ * @param {{value: string, type: string}} body The request body.
+ * @param {Array<string>} bases The chosen grondslagen.
+ * @param {Array<string>} persistedBases The grondslagen that were persisted.
+ * @return {object}
+ * @spec openspec/specs/anonymization-entity-review/spec.md#requirement-entity-toggle-in-review
+ */
+function manualReviewRow(data, body, bases, persistedBases) {
+	const relationIds = manualRelationIds(data)
+	return {
+		type: data?.entity?.type ?? body.type,
+		value: data?.entity?.value ?? body.value,
+		included: true,
+		confidence: 1.0,
+		highestConfidence: 1.0,
+		fileCount: 1,
+		count: relationIds.length || 1,
+		relationId: relationIds[0] ?? null,
+		relationIds,
+		bases: [...persistedBases],
+		_decisionBases: [...bases],
+		_decisionSkip: false,
+		skipAnonymization: false,
+		_patchError: null,
+	}
+}
+
+/**
+ * The entities an anonymise call for this entry sends, and a check covers.
+ *
+ * @param {object} entry Queue entry.
+ * @return {Array<{type: string, value: string, confidence: number}>}
+ */
+function entryPayload(entry) {
+	return redactionPayload(
+		(entry.entities || []).filter((e) => e.included !== false),
+	)
+}
+
+/**
+ * Whether a person checked exactly what this entry would send now.
+ *
+ * @param {object} entry Queue entry.
+ * @return {boolean}
+ * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
+ */
+export function entryIsChecked(entry) {
+	return !!entry && reviewIsCurrent(entry.reviewMark, entryPayload(entry))
+}
+
+/**
+ * The relation rows a reviewed entity owns. A grouped row may own several
+ * (append bug); older entries carry a single `relationId`.
+ *
+ * @param {object} entity Decorated entity row.
+ * @return {Array<number|string>}
+ * @spec openspec/specs/anonymization-entity-review/spec.md#requirement-entity-toggle-in-review
+ */
+function relationIdsOf(entity) {
+	if (Array.isArray(entity.relationIds) && entity.relationIds.length > 0) {
+		return entity.relationIds
+	}
+	return entity.relationId != null ? [entity.relationId] : []
+}
+
+/**
+ * Whether the reviewer changed the bases or the skip flag of an entity.
+ *
+ * @param {object} entity Decorated entity row.
+ * @param {Array<string>} newBases The bases the reviewer chose.
+ * @return {boolean}
+ * @spec openspec/specs/anonymization-entity-review/spec.md#requirement-entity-toggle-in-review
+ */
+function decisionChanged(entity, newBases) {
+	const originalBases = Array.isArray(entity.bases) ? entity.bases : []
+	const basesChanged = JSON.stringify(originalBases) !== JSON.stringify(newBases)
+	return basesChanged || !!entity.skipAnonymization !== !!entity._decisionSkip
+}
+
+/**
+ * PATCH a changed review decision onto every relation row of an entity.
+ * Unchanged decisions are skipped to avoid no-op writes. A failure is kept
+ * on the entity so the other entities still go through.
+ *
+ * @param {object} entity Decorated entity row.
+ * @return {Promise<void>}
+ * @spec openspec/specs/anonymization-entity-review/spec.md#requirement-entity-toggle-in-review
+ */
+async function patchEntityDecision(entity) {
+	const relationIds = relationIdsOf(entity)
+	const newBases = Array.isArray(entity._decisionBases)
+		? entity._decisionBases
+		: []
+	if (relationIds.length === 0 || !decisionChanged(entity, newBases)) {
+		return
+	}
+
+	const skipAnonymization = !!entity._decisionSkip
+	try {
+		// Every duplicate relation gets the decision, so a re-extracted copy
+		// cannot slip through unredacted.
+		await Promise.all(
+			relationIds.map((rid) =>
+				axios.patch(
+					generateUrl(`/apps/filinq/api/anonymization/relations/${rid}`),
+					{ bases: newBases, skipAnonymization },
+				),
+			),
+		)
+		entity.bases = newBases
+		entity.skipAnonymization = skipAnonymization
+		entity._patchError = null
+	} catch (err) {
+		entity._patchError = err.response?.data?.error || err.message
+	}
+}
+
+/**
+ * The body of a single-document anonymise call.
+ *
+ * Only `included` entities are sent, the list the review mark was recorded
+ * over. The grondslagen summary flags go as a pair or not at all, because
+ * the backend ignores a lone flag. `reversible` is only sent when chosen,
+ * so the default run stays irreversible and keeps no key.
+ *
+ * @param {object} entry Queue entry.
+ * @param {object} options Anonymisation options (see `anonymiseEntry`).
+ * @return {object}
+ * @spec openspec/specs/anonymization-entity-review/spec.md#requirement-entity-toggle-in-review
+ */
+function anonymizePayloadFor(entry, options) {
+	const payload = {
+		entities: entryPayload(entry),
+		// Placeholder numbering is local to this file; the batch path
+		// handles dossier-wide numbering.
+		scope: 'document',
+	}
+	if (options.appendBasisSummary && options.outputFormat) {
+		payload.appendBasisSummary = true
+		payload.outputFormat = options.outputFormat
+	}
+	if (options.reversible === true) {
+		payload.reversible = true
+	}
+	return payload
+}
+
+/**
+ * Copy an anonymise response onto its queue entry and mark it completed.
+ *
+ * `complete === false` means the file was produced but some entities could
+ * not be fully removed; the sidebar warns so the operator can refine and
+ * re-run.
+ *
+ * @param {object} entry Queue entry.
+ * @param {object} data Response body of the anonymise call.
+ * @return {void}
+ * @spec openspec/specs/anonymization-entity-review/spec.md#requirement-entity-toggle-in-review
+ */
+function applyAnonymizeResult(entry, data) {
+	entry.anonymizedFileId = data.anonymizedFileId
+	entry.anonymizedFileName = data.anonymizedFileName
+	entry.anonymizedFilePath = data.anonymizedFilePath
+	entry.replacementCount = data.replacementCount || 0
+	entry.complete = data.complete !== false
+	entry.residualCount = data.residualCount || 0
+	entry.residualEntities = data.residualEntities || []
+	entry.pseudonymisation = data.pseudonymisation || null
+	entry.structurePreservation = data.structurePreservation || null
+	entry.sanitizationReport = data.sanitizationReport || null
+	entry.reanonymize = false
+	entry.status = 'completed'
+}
+
+/**
+ * Resolve the produced file so the result cards show the placeholder the
+ * document carries (`[<localized-TYPE>: <number>]`) instead of the
+ * reconstructed `[<TYPE>]`. Best-effort: on failure the cards keep the
+ * reconstructed fallback.
+ *
+ * @param {object} store The anonymization store.
+ * @param {object} entry Completed queue entry.
+ * @return {Promise<void>}
+ * @spec openspec/specs/anonymization-entity-review/spec.md#requirement-entity-toggle-in-review
+ */
+async function resolveFaithfulMarkers(store, entry) {
+	try {
+		const resolved = await store.loadAnonymizedEntities(
+			{
+				fileId: entry.anonymizedFileId,
+				fileName: entry.anonymizedFileName,
+				path: entry.anonymizedFilePath,
+			},
+			{ push: false },
+		)
+		if (Array.isArray(resolved?.entities) && resolved.entities.length > 0) {
+			entry.resolvedEntities = resolved.entities
+		}
+	} catch (err) {
+		console.error(
+			`Failed to resolve anonymised placeholders for ${entry.name}:`,
+			err,
+		)
+	}
+}
+
+/**
+ * Record a failed anonymise call on its entry. When the server holds no
+ * review mark for this run the entry goes back to review, so the person can
+ * check it and try again.
+ *
+ * @param {object} entry Queue entry.
+ * @param {Error} err The failure.
+ * @return {void}
+ * @spec openspec/specs/anonymization-entity-review/spec.md#requirement-entity-toggle-in-review
+ */
+function applyAnonymizeFailure(entry, err) {
+	console.error(`Failed to anonymise ${entry.name}:`, err)
+	entry.error = err.response?.data?.error || err.message
+	if (err.response?.data?.reviewRequired) {
+		entry.reviewMark = null
+		entry.reviewRequired = true
+		entry.status = 'extracted'
+		return
+	}
+	entry.status = 'error'
+}
+
 export const useAnonymizationStore = defineStore('anonymization', {
 	state: () => ({
 		files: [],
@@ -358,9 +680,12 @@ export const useAnonymizationStore = defineStore('anonymization', {
 		 * `running` gates the dossier nav button; `done`/`failed` drive the
 		 * "Anonymizing X/N…" label and the completion summary.
 		 *
-		 * @type {{running: boolean, total: number, done: number, failed: number}}
+		 * `unreviewed` lists the files the run left alone because nobody
+		 * checked them.
+		 *
+		 * @type {{running: boolean, total: number, done: number, failed: number, unreviewed: Array<{fileId: number, name: string}>}}
 		 */
-		batch: { running: false, total: 0, done: 0, failed: 0 },
+		batch: { running: false, total: 0, done: 0, failed: 0, unreviewed: [] },
 	}),
 	getters: {
 		hasFiles: (state) => state.files.length > 0,
@@ -591,8 +916,10 @@ export const useAnonymizationStore = defineStore('anonymization', {
 					extractResponse.data.confidentialityLabel ?? null
 				entry.confidentialityLevel =
 					extractResponse.data.confidentialityLevel ?? null
+				// A scan detection could not read is not "nothing to anonymise".
+				const unseen = applyOcrFlags(entry, extractResponse.data)
 
-				if (entities.length === 0) {
+				if (entities.length === 0 && !unseen) {
 					// Nothing to anonymise; skip review and mark done.
 					entry.status = 'completed'
 					return
@@ -620,164 +947,69 @@ export const useAnonymizationStore = defineStore('anonymization', {
 		 *   both flags before it generates and appends the summary.
 		 * @param {string} [options.outputFormat] Output document format
 		 *   (e.g. `pdf`). Required alongside `appendBasisSummary`.
+		 * @param {boolean} [options.reversible] Keep an encrypted key so a
+		 *   permitted user can restore the names later.
 		 * @return {Promise<void>}
 		 * @spec openspec/specs/anonymization-entity-review/spec.md#requirement-entity-toggle-in-review
+		 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-4.1
 		 */
 		async anonymiseEntry(entry, options = {}) {
 			if (entry.status !== 'extracted') {
 				return
 			}
+			if (!entryIsChecked(entry)) {
+				entry.reviewRequired = true
+				return
+			}
 
+			entry.reviewRequired = false
 			entry.status = 'anonymising'
 			try {
-				// Step 1 — PATCH decisions for entities the user modified.
 				for (const entity of entry.entities) {
-					// A grouped row may own several relation rows (append bug);
-					// fall back to the single id for older entries.
-					const relationIds =
-						Array.isArray(entity.relationIds)
-						&& entity.relationIds.length > 0
-							? entity.relationIds
-							: entity.relationId != null
-								? [entity.relationId]
-								: []
-					if (relationIds.length === 0) {
-						continue
-					}
-
-					const originalBases = Array.isArray(entity.bases)
-						? entity.bases
-						: []
-					const newBases = Array.isArray(entity._decisionBases)
-						? entity._decisionBases
-						: []
-					const basesChanged =
-						JSON.stringify(originalBases) !== JSON.stringify(newBases)
-					const skipChanged =
-						!!entity.skipAnonymization !== !!entity._decisionSkip
-					if (!basesChanged && !skipChanged) {
-						continue
-					}
-
-					try {
-						// Apply the decision to every duplicate relation so a
-						// re-extracted copy can't slip through unredacted.
-						await Promise.all(
-							relationIds.map((rid) =>
-								axios.patch(
-									generateUrl(
-										`/apps/filinq/api/anonymization/relations/${rid}`,
-									),
-									{
-										bases: newBases,
-										skipAnonymization: !!entity._decisionSkip,
-									},
-								),
-							),
-						)
-						entity.bases = newBases
-						entity.skipAnonymization = !!entity._decisionSkip
-						entity._patchError = null
-					} catch (err) {
-						entity._patchError = err.response?.data?.error || err.message
-						// Continue with other entities — partial application is preferable
-						// to all-or-nothing in a smoke-test surface.
-					}
+					await patchEntityDecision(entity)
 				}
 
-				// Step 2 — anonymise. Only `included` entities are sent; the
-				// review checkbox in EntityReviewTable controls inclusion.
-				// The OR side additionally filters skipAnonymization=true
-				// relations, so an explicit skip still takes effect even
-				// when the entity was left included.
-				//
-				// Longest value first: OpenRegister replaces matches in
-				// payload order via str_ireplace. If a shorter span runs
-				// first it eats its own text out of an overlapping longer
-				// span — e.g. redacting "Claudia Fischer" before "Mevrouw
-				// Claudia Fischer" leaves a dangling "Mevrouw". Sorting by
-				// descending length makes the longest overlap redact first.
-				const anonymizePayload = {
-					entities: entry.entities
-						.filter((e) => e.included !== false)
-						.map((e) => ({
-							type: e.type,
-							value: e.value,
-							confidence: e.confidence,
-						}))
-						.sort(
-							(a, b) =>
-								(b.value || '').length - (a.value || '').length,
-						),
-					// Placeholder-numbering scope: a single-document anonymise
-					// numbers entities locally to this file. Folder/dossier
-					// consistency is handled by the batch path (scope=dossier).
-					scope: 'document',
-				}
-
-				// Grondslagen summary. The backend only generates and appends
-				// it when BOTH flags are present, so send them as a pair or
-				// not at all — a lone flag is a silent no-op.
-				if (options.appendBasisSummary && options.outputFormat) {
-					anonymizePayload.appendBasisSummary = true
-					anonymizePayload.outputFormat = options.outputFormat
-				}
 				const anonymizeResponse = await axios.post(
 					generateUrl(
 						`/apps/filinq/api/anonymization/anonymize/${entry.fileId}`,
 					),
-					anonymizePayload,
+					anonymizePayloadFor(entry, options),
 				)
-
-				entry.anonymizedFileId = anonymizeResponse.data.anonymizedFileId
-				entry.anonymizedFileName = anonymizeResponse.data.anonymizedFileName
-				entry.anonymizedFilePath = anonymizeResponse.data.anonymizedFilePath
-				entry.replacementCount = anonymizeResponse.data.replacementCount || 0
-				// Best-effort: the file is produced even if some entities could not
-				// be fully removed. `complete === false` drives a warning so the
-				// operator can refine entities (manual / skip unselected) and re-run.
-				entry.complete = anonymizeResponse.data.complete !== false
-				entry.residualCount = anonymizeResponse.data.residualCount || 0
-				entry.residualEntities =
-					anonymizeResponse.data.residualEntities || []
-				// The re-anonymise sub-flow (if any) is done — clear the marker
-				// so the dossier footer returns to its batch state.
-				entry.reanonymize = false
-				entry.status = 'completed'
-
-				// Faithful markers: resolve the produced file so the finished
-				// result cards show the SAME placeholder the document carries
-				// (`[<localized-TYPE>: <scope-local-number>]`) rather than the
-				// reconstructed `[<TYPE>]`. Reuse the anonymised-document
-				// resolver on the output file, but with push:false so it does
-				// not append a second card for this entry. Best-effort — on a
-				// read/parse failure the cards keep the reconstructed fallback.
-				try {
-					const resolved = await this.loadAnonymizedEntities(
-						{
-							fileId: entry.anonymizedFileId,
-							fileName: entry.anonymizedFileName,
-							path: entry.anonymizedFilePath,
-						},
-						{ push: false },
-					)
-					if (
-						resolved
-						&& Array.isArray(resolved.entities)
-						&& resolved.entities.length > 0
-					) {
-						entry.resolvedEntities = resolved.entities
-					}
-				} catch (err) {
-					console.error(
-						`Failed to resolve anonymised placeholders for ${entry.name}:`,
-						err,
-					)
-				}
+				applyAnonymizeResult(entry, anonymizeResponse.data)
+				await resolveFaithfulMarkers(this, entry)
 			} catch (err) {
-				console.error(`Failed to anonymise ${entry.name}:`, err)
-				entry.error = err.response?.data?.error || err.message
-				entry.status = 'error'
+				applyAnonymizeFailure(entry, err)
+			}
+		},
+
+		/**
+		 * Record that the signed-in person checked this entry's findings.
+		 *
+		 * Called only from the reviewer's own click. The mark covers the
+		 * entities the next anonymise call sends; changing the selection
+		 * afterwards makes it stale and asks for a new check.
+		 *
+		 * @param {object} entry Queue entry in the `extracted` state.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 */
+		async markEntryChecked(entry) {
+			if (!entry || entry.status !== 'extracted') {
+				return
+			}
+			entry.reviewing = true
+			entry.reviewError = null
+			try {
+				entry.reviewMark = await markChecked(
+					entry.fileId,
+					entryPayload(entry),
+				)
+				entry.reviewRequired = false
+				entry.error = null
+			} catch (err) {
+				entry.reviewError = err.response?.data?.error || err.message
+			} finally {
+				entry.reviewing = false
 			}
 		},
 
@@ -794,6 +1026,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 		 *   before anonymising — covers dossier files the user never opened,
 		 *   which are otherwise missing from the queue.
 		 * @return {Promise<void>}
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
 		 */
 		async anonymiseAllExtracted(options = {}) {
 			const { fileIds, files, ...entryOptions } = options
@@ -804,7 +1037,13 @@ export const useAnonymizationStore = defineStore('anonymization', {
 			// run silently skips every un-opened file. ensureExtracted is a
 			// no-op for files already in the queue, so this is idempotent.
 			if (Array.isArray(files) && files.length > 0) {
-				this.batch = { running: true, total: 0, done: 0, failed: 0 }
+				this.batch = {
+					running: true,
+					total: 0,
+					done: 0,
+					failed: 0,
+					unreviewed: [],
+				}
 				for (const meta of files) {
 					await this.ensureExtracted(meta)
 				}
@@ -815,13 +1054,24 @@ export const useAnonymizationStore = defineStore('anonymization', {
 			// Snapshot the targets up-front: anonymiseEntry mutates each
 			// entry's status to 'completed'/'error', so iterating live
 			// would be order-sensitive.
-			const targets = this.files.filter(
+			const inScope = this.files.filter(
 				(entry) =>
 					entry.status === 'extracted'
 					&& (!scope || scope.has(Number(entry.fileId))),
 			)
+			// Only what a person checked is written; the rest is reported.
+			const targets = inScope.filter((entry) => entryIsChecked(entry))
+			const unreviewed = inScope
+				.filter((entry) => !entryIsChecked(entry))
+				.map((entry) => ({ fileId: entry.fileId, name: entry.name }))
 
-			this.batch = { running: true, total: targets.length, done: 0, failed: 0 }
+			this.batch = {
+				running: true,
+				total: targets.length,
+				done: 0,
+				failed: 0,
+				unreviewed,
+			}
 			try {
 				for (const entry of targets) {
 					try {
@@ -889,7 +1139,9 @@ export const useAnonymizationStore = defineStore('anonymization', {
 					extractResponse.data.confidentialityLabel ?? null
 				entry.confidentialityLevel =
 					extractResponse.data.confidentialityLevel ?? null
-				entry.status = entities.length === 0 ? 'completed' : 'extracted'
+				const unseen = applyOcrFlags(entry, extractResponse.data)
+				entry.status =
+					entities.length === 0 && !unseen ? 'completed' : 'extracted'
 			} catch (err) {
 				console.error(`Failed to load entities for ${entry.name}:`, err)
 				entry.error = err.response?.data?.error || err.message
@@ -926,7 +1178,9 @@ export const useAnonymizationStore = defineStore('anonymization', {
 				entry.entityCount = entry.entities.length
 				entry.confidentialityLabel = res.data.confidentialityLabel ?? null
 				entry.confidentialityLevel = res.data.confidentialityLevel ?? null
-				entry.status = entities.length === 0 ? 'completed' : 'extracted'
+				const unseen = applyOcrFlags(entry, res.data)
+				entry.status =
+					entities.length === 0 && !unseen ? 'completed' : 'extracted'
 			} catch (err) {
 				entry.error = err.response?.data?.error || err.message
 				entry.status = 'error'
@@ -997,10 +1251,13 @@ export const useAnonymizationStore = defineStore('anonymization', {
 				}
 				entry.entities = entities
 				entry.entityCount = entities.length
+				// A new detection run needs a new check.
+				entry.reviewMark = null
 				entry.confidentialityLabel =
 					extractResponse.data.confidentialityLabel ?? null
 				entry.confidentialityLevel =
 					extractResponse.data.confidentialityLevel ?? null
+				applyOcrFlags(entry, extractResponse.data)
 				// Drop the read-only anonymised view so the editable review
 				// list + "Anonymize" button take over. Keep anonymizedFile*
 				// so the viewer toggle can still show the current result until
@@ -1570,26 +1827,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 		 * @throws {Error} With `.message` operator-facing; on missing fileId/value/type or HTTP error.
 		 */
 		async addManualEntity(entry, payload) {
-			if (!entry?.fileId) {
-				const err = new Error('Entry has no fileId yet.')
-				err.status = 0
-				throw err
-			}
-			const value = (payload?.value || '').trim()
-			const type = payload?.type || ''
-			if (!value || !type) {
-				const err = new Error('A value and a type are required.')
-				err.status = 0
-				throw err
-			}
-
-			const body = {
-				value,
-				type,
-				wholeWord: payload?.wholeWord ?? true,
-				caseSensitive: payload?.caseSensitive ?? true,
-			}
-
+			const body = manualEntityBody(entry, payload)
 			const response = await axios.post(
 				generateUrl(
 					`/apps/openregister/api/files/${entry.fileId}/manual-entities`,
@@ -1598,56 +1836,17 @@ export const useAnonymizationStore = defineStore('anonymization', {
 			)
 			const data = response.data || {}
 
-			const relations = Array.isArray(data.relations) ? data.relations : []
-			const relationIds = relations.map((r) => r.id).filter((id) => id != null)
 			const bases = Array.isArray(payload?.bases) ? payload.bases : []
-
-			// Persist the chosen grondslagen immediately (mirrors the PATCH in
-			// anonymiseEntry). On failure leave `bases` empty so anonymiseEntry
-			// retries the PATCH when the user anonymises.
-			let persistedBases = []
-			if (bases.length > 0 && relationIds.length > 0) {
-				try {
-					await Promise.all(
-						relationIds.map((rid) =>
-							axios.patch(
-								generateUrl(
-									`/apps/openregister/api/entity-relations/${rid}`,
-								),
-								{ bases, skipAnonymization: false },
-							),
-						),
-					)
-					persistedBases = bases
-				} catch (err) {
-					console.error(
-						'[anonymization] failed to set grondslagen on manual entity:',
-						err,
-					)
-				}
-			}
-
-			// Build a review row in the same shape decorateEntities produces,
-			// grouping every matched relation under one card.
-			const newRow = {
-				type: data?.entity?.type ?? type,
-				value: data?.entity?.value ?? value,
-				included: true,
-				confidence: 1.0,
-				highestConfidence: 1.0,
-				fileCount: 1,
-				count: relationIds.length || 1,
-				relationId: relationIds[0] ?? null,
-				relationIds,
-				bases: [...persistedBases],
-				_decisionBases: [...bases],
-				_decisionSkip: false,
-				skipAnonymization: false,
-				_patchError: null,
-			}
+			const persistedBases = await persistManualBases(
+				manualRelationIds(data),
+				bases,
+			)
 
 			// Prepend so the newest addition sits at the top of the list.
-			entry.entities = [newRow, ...entry.entities]
+			entry.entities = [
+				manualReviewRow(data, body, bases, persistedBases),
+				...entry.entities,
+			]
 			entry.entityCount = entry.entities.length
 
 			return data
@@ -1665,12 +1864,20 @@ export const useAnonymizationStore = defineStore('anonymization', {
 
 		/**
 		 * Reset the queue, processing flag and dossier records completely.
+		 *
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
 		 */
 		reset() {
 			this.files = []
 			this.processing = false
 			this.dossiers = []
-			this.batch = { running: false, total: 0, done: 0, failed: 0 }
+			this.batch = {
+				running: false,
+				total: 0,
+				done: 0,
+				failed: 0,
+				unreviewed: [],
+			}
 		},
 	},
 })

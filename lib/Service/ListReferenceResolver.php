@@ -18,7 +18,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/document-generation-list-refs/specs/document-creatie-sjablonen/spec.md
+ * @spec openspec/specs/document-creatie-sjablonen/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -43,7 +43,7 @@ use RuntimeException;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/document-generation-list-refs/specs/document-creatie-sjablonen/spec.md
+ * @spec openspec/specs/document-creatie-sjablonen/spec.md
  */
 class ListReferenceResolver {
 
@@ -134,7 +134,7 @@ class ListReferenceResolver {
 	 *                   (too many entries, invalid filter values, invalid
 	 *                   or colliding 'as' key) — all HTTP 400
 	 *
-	 * @spec openspec/changes/document-generation-list-refs/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function resolve(array $listRefs, array $reservedKeys = []): array {
 		if (empty($listRefs) === true) {
@@ -215,7 +215,7 @@ class ListReferenceResolver {
 	 *                   non-scalar filter value, an out-of-range limit, or
 	 *                   an invalid/colliding 'as' key — all HTTP 400
 	 *
-	 * @spec openspec/changes/document-generation-list-refs/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	private function validateListReference(array $ref, int $index, array $usedKeys): string {
 		$this->validateListReferenceFields(ref: $ref, index: $index);
@@ -396,7 +396,7 @@ class ListReferenceResolver {
 	 * @throws Exception If the register/schema slug does not resolve, or the
 	 *                   OpenRegister search fails
 	 *
-	 * @spec openspec/changes/document-generation-list-refs/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	private function resolveList(array $ref): array {
 		$objectService = $this->getObjectService();

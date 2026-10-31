@@ -28,7 +28,9 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\CustomDictionaryAccessGateInterface;
 use OCP\App\IAppManager;
+use OCP\IGroupManager;
 use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -46,7 +48,7 @@ use Throwable;
  *
  * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
  */
-class CustomDictionaryAccessGate {
+class CustomDictionaryAccessGate implements CustomDictionaryAccessGateInterface {
 
 	/**
 	 * OpenRegister's app id, used for the install-presence check.
@@ -62,12 +64,14 @@ class CustomDictionaryAccessGate {
 	 * @param IAppManager $appManager App manager (OpenRegister availability check).
 	 * @param IUserSession $userSession Current-user lookup for the organisation gate.
 	 * @param LoggerInterface $logger Structured logger.
+	 * @param IGroupManager $groupManager Who maintains the organisation's dictionaries.
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
 		private readonly IAppManager $appManager,
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
+		private readonly IGroupManager $groupManager,
 	) {
 
 	}//end __construct()
@@ -83,6 +87,50 @@ class CustomDictionaryAccessGate {
 	public function isAvailable(): bool {
 		return in_array(self::OPENREGISTER_APP_ID, $this->appManager->getInstalledApps(), true);
 	}//end isAvailable()
+
+	/**
+	 * Whether the caller maintains custom dictionaries.
+	 *
+	 * @return bool True for an admin or a member of the maintainer group.
+	 *
+	 * @spec openspec/specs/custom-dictionary-recognition/spec.md
+	 */
+	public function mayMaintain(): bool {
+		try {
+			$this->assertMayMaintain();
+		} catch (RuntimeException) {
+			return false;
+		}
+
+		return true;
+
+	}//end mayMaintain()
+
+	/**
+	 * Refuse unless the caller maintains custom dictionaries.
+	 *
+	 * Creating, changing or deleting a list changes what anonymisation
+	 * detects for everybody, so it belongs to the group the schema names
+	 * (and to admins), not to every member of the organisation.
+	 *
+	 * @return void
+	 *
+	 * @throws RuntimeException When the caller is neither an admin nor a maintainer.
+	 *
+	 * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
+	 */
+	public function assertMayMaintain(): void {
+		$user = $this->userSession->getUser();
+		if ($user !== null
+			&& ($this->groupManager->isAdmin($user->getUID()) === true
+			|| $this->groupManager->isInGroup($user->getUID(), self::MAINTAINER_GROUP) === true)
+		) {
+			return;
+		}
+
+		throw new RuntimeException('Only a dictionary maintainer may change custom dictionaries.');
+
+	}//end assertMayMaintain()
 
 	/**
 	 * Fail-closed organisation-membership check for one record.
