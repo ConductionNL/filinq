@@ -561,55 +561,66 @@ class LibreOfficeHeadlessBackend implements ConversionBackendInterface {
 	private function readEmittedPdf(string $tmpDir, string $baseName, string $extension = 'pdf'): string {
 		$outputTmp = $tmpDir . '/' . $baseName . '.' . $extension;
 		if (file_exists($outputTmp) === false) {
-			throw new ConversionFailedException(
+			throw $this->outputFailure(
 				message: 'soffice reported success but output PDF was not found.',
-				attempts: [
-					[
-						'name' => $this->name(),
-						'available' => true,
-						'supports' => true,
-						'reason' => 'expected output at ' . $outputTmp . ' but file is missing',
-					],
-				]
+				reason: 'expected output at ' . $outputTmp . ' but file is missing'
 			);
 		}
 
-		$realTmpDir = realpath($tmpDir);
-		$realOutputTmp = realpath($outputTmp);
-		if ($realTmpDir === false
-			|| $realOutputTmp === false
-			|| str_starts_with($realOutputTmp, $realTmpDir . '/') === false
-		) {
-			throw new ConversionFailedException(
+		if ($this->isInsideDir(dir: $tmpDir, path: $outputTmp) === false) {
+			throw $this->outputFailure(
 				message: 'soffice output path escaped the conversion sandbox.',
-				attempts: [
-					[
-						'name' => $this->name(),
-						'available' => true,
-						'supports' => true,
-						'reason' => 'output path not contained in tmp dir',
-					],
-				]
+				reason: 'output path not contained in tmp dir'
 			);
 		}
 
 		$pdfBytes = file_get_contents($outputTmp);
 		if ($pdfBytes === false || $pdfBytes === '') {
-			throw new ConversionFailedException(
-				message: 'soffice emitted an empty PDF file.',
-				attempts: [
-					[
-						'name' => $this->name(),
-						'available' => true,
-						'supports' => true,
-						'reason' => 'output PDF was empty',
-					],
-				]
-			);
+			throw $this->outputFailure(message: 'soffice emitted an empty PDF file.', reason: 'output PDF was empty');
 		}
 
 		return $pdfBytes;
 	}//end readEmittedPdf()
+
+	/**
+	 * Whether a path, with its links resolved, lies inside a directory.
+	 *
+	 * @param string $dir The directory.
+	 * @param string $path The path.
+	 *
+	 * @return bool True when both resolve and the path lies below the directory.
+	 */
+	private function isInsideDir(string $dir, string $path): bool {
+		$realDir = realpath($dir);
+		$realPath = realpath($path);
+		if ($realDir === false || $realPath === false) {
+			return false;
+		}
+
+		return str_starts_with($realPath, $realDir . '/');
+	}//end isInsideDir()
+
+	/**
+	 * The failure for output soffice should have written but did not, usably.
+	 *
+	 * @param string $message The exception message.
+	 * @param string $reason The reason in the attempt record.
+	 *
+	 * @return ConversionFailedException The failure, with this backend's attempt record.
+	 */
+	private function outputFailure(string $message, string $reason): ConversionFailedException {
+		return new ConversionFailedException(
+			message: $message,
+			attempts: [
+				[
+					'name' => $this->name(),
+					'available' => true,
+					'supports' => true,
+					'reason' => $reason,
+				],
+			]
+		);
+	}//end outputFailure()
 
 	/**
 	 * Return the lowercased extension of $name without the leading dot.
