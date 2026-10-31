@@ -567,7 +567,7 @@ class PdfService implements PdfServiceInterface {
 	/**
 	 * Set the title, author and, for PDF/A, the creator, keywords and subject.
 	 *
-	 * @param Mpdf                 $mpdf    The mPDF instance.
+	 * @param Mpdf $mpdf The mPDF instance.
 	 * @param array<string, mixed> $options The PDF options (`title`, `author`, `pdfa`, `caseReference`).
 	 *
 	 * @return void

@@ -31,6 +31,7 @@ use Stringable;
  * from the implementation before generatePdf() was split.
  *
  * @covers \OCA\Filinq\Service\PdfService
+ * @uses   \OCA\Filinq\Exception\ConversionFailedException
  */
 class PdfGeneratePdfGoldenTest extends TestCase {
 
@@ -82,9 +83,9 @@ class PdfGeneratePdfGoldenTest extends TestCase {
 			/**
 			 * Record one line, with the exception's class.
 			 *
-			 * @param mixed             $level   The level.
+			 * @param mixed $level The level.
 			 * @param string|Stringable $message The message.
-			 * @param array<mixed>      $context The context.
+			 * @param array<mixed> $context The context.
 			 *
 			 * @return void
 			 */
@@ -104,7 +105,7 @@ class PdfGeneratePdfGoldenTest extends TestCase {
 			/**
 			 * Record the call and mark the HTML, so the prefix shows in the PDF.
 			 *
-			 * @param string $format      The format.
+			 * @param string $format The format.
 			 * @param string $orientation The orientation.
 			 *
 			 * @return string
