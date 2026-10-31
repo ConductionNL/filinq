@@ -10,52 +10,17 @@
  * @spec openspec/changes/document-intake-inbox/tasks.md#task-3.2
  */
 import { translate as t } from '@nextcloud/l10n'
-import { createApp } from 'vue'
 import CnFilinqDocumentIntakeWidget from './CnFilinqDocumentIntakeWidget.vue'
+import { leafMounter, registerLeaf } from './leafHost.js'
 
 export const DOCUMENT_INTAKE_INTEGRATION_ID = 'filinq-document-intake'
 
 export const DOCUMENT_INTAKE_SURFACES = ['detail-page', 'single-entity']
 
-const mountedApps = new Map()
-
 /**
- * Mount the widget into a host element.
- *
- * @param {HTMLElement} el    The element the host hands over.
- * @param {object}      props The host record: { register, schema, objectId, … }.
- *
- * @return {void}
- *
- * @spec openspec/changes/document-intake-inbox/tasks.md#task-3.2
+ * Mount and unmount the widget at a host-owned element; see `leafMounter`.
  */
-export function mount(el, props) {
-	if (el === undefined || el === null || mountedApps.has(el) === true) {
-		return
-	}
-	const app = createApp(CnFilinqDocumentIntakeWidget, { ...(props || {}) })
-	app.config.globalProperties.t = t
-	app.mount(el)
-	mountedApps.set(el, app)
-}
-
-/**
- * Unmount the widget from a host element.
- *
- * @param {HTMLElement} el The element the widget was mounted in.
- *
- * @return {void}
- *
- * @spec openspec/changes/document-intake-inbox/tasks.md#task-3.2
- */
-export function unmount(el) {
-	const app = mountedApps.get(el)
-	if (app === undefined) {
-		return
-	}
-	mountedApps.delete(el)
-	app.unmount()
-}
+export const { mount, unmount } = leafMounter(CnFilinqDocumentIntakeWidget)
 
 export const documentIntakeLeafDescriptor = {
 	id: DOCUMENT_INTAKE_INTEGRATION_ID,
@@ -83,19 +48,5 @@ export const documentIntakeLeafDescriptor = {
  * @spec openspec/changes/document-intake-inbox/tasks.md#task-3.2
  */
 export function registerDocumentIntakeLeaf(globalRef) {
-	const target = globalRef || (typeof window !== 'undefined' ? window : null)
-	if (target === null) {
-		return
-	}
-
-	target.OCA = target.OCA || {}
-	target.OCA.OpenRegister = target.OCA.OpenRegister || {}
-	target.OCA.OpenRegister.integrations = target.OCA.OpenRegister.integrations || {
-		_queue: [],
-		register(entry) {
-			this._queue.push(entry)
-		},
-	}
-
-	target.OCA.OpenRegister.integrations.register(documentIntakeLeafDescriptor)
+	registerLeaf(documentIntakeLeafDescriptor, globalRef)
 }

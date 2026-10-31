@@ -10,52 +10,17 @@
  * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/tasks.md#task-1.2
  */
 import { translate as t } from '@nextcloud/l10n'
-import { createApp } from 'vue'
 import CnFilinqSigningFolderWidget from './CnFilinqSigningFolderWidget.vue'
+import { leafMounter, registerLeaf } from './leafHost.js'
 
 export const SIGNING_FOLDER_INTEGRATION_ID = 'filinq-signing-folder'
 
 export const SIGNING_FOLDER_SURFACES = ['user-dashboard', 'app-dashboard']
 
-const mountedApps = new Map()
-
 /**
- * Mount the widget into a host element.
- *
- * @param {HTMLElement} el    The element the host hands over.
- * @param {object}      props The host context (unused: the folder is per signer).
- *
- * @return {void}
- *
- * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/tasks.md#task-1.2
+ * Mount and unmount the widget at a host-owned element; see `leafMounter`.
  */
-export function mount(el, props) {
-	if (el === undefined || el === null || mountedApps.has(el) === true) {
-		return
-	}
-	const app = createApp(CnFilinqSigningFolderWidget, { ...(props || {}) })
-	app.config.globalProperties.t = t
-	app.mount(el)
-	mountedApps.set(el, app)
-}
-
-/**
- * Unmount the widget from a host element.
- *
- * @param {HTMLElement} el The element the widget was mounted in.
- *
- * @return {void}
- *
- * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/tasks.md#task-1.2
- */
-export function unmount(el) {
-	const app = mountedApps.get(el)
-	if (app === undefined) {
-		return
-	}
-	mountedApps.delete(el)
-	app.unmount()
-}
+export const { mount, unmount } = leafMounter(CnFilinqSigningFolderWidget)
 
 export const signingFolderLeafDescriptor = {
 	id: SIGNING_FOLDER_INTEGRATION_ID,
@@ -83,19 +48,5 @@ export const signingFolderLeafDescriptor = {
  * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/tasks.md#task-1.2
  */
 export function registerSigningFolderLeaf(globalRef) {
-	const target = globalRef || (typeof window !== 'undefined' ? window : null)
-	if (target === null) {
-		return
-	}
-
-	target.OCA = target.OCA || {}
-	target.OCA.OpenRegister = target.OCA.OpenRegister || {}
-	target.OCA.OpenRegister.integrations = target.OCA.OpenRegister.integrations || {
-		_queue: [],
-		register(entry) {
-			this._queue.push(entry)
-		},
-	}
-
-	target.OCA.OpenRegister.integrations.register(signingFolderLeafDescriptor)
+	registerLeaf(signingFolderLeafDescriptor, globalRef)
 }

@@ -16,8 +16,8 @@
  * them is a leaf whose behaviour depends on which half the consumer read.
  */
 import { translate as t } from '@nextcloud/l10n'
-import { createApp } from 'vue'
 import CnFilinqDocumentsWidget from './CnFilinqDocumentsWidget.vue'
+import { leafMounter, registerLeaf } from './leafHost.js'
 
 /**
  * The integration id a consuming app references to place this leaf.
@@ -39,55 +39,9 @@ export const DOCUMENTS_INTEGRATION_ID = 'filinq-documents'
 export const SURFACES = ['detail-page', 'single-entity']
 
 /**
- * Vue apps this leaf has mounted, keyed by the host-owned element.
- *
- * Keyed by ELEMENT, not by leaf id: one page may show the leaf as a tab and as
- * a widget at once, and each needs to unmount independently.
- *
- * @type {Map<Element, import('vue').App>}
+ * Mount and unmount the widget at a host-owned element; see `leafMounter`.
  */
-const mountedApps = new Map()
-
-/**
- * Root a Filinq-owned Vue app at a host-owned element.
- *
- * Filinq is Vue 3 and a consuming host may be Vue 2.7. A Vue 3 SFC handed to
- * such a host renders blank under its incompatible runtime, so the host hands
- * over a bare DOM element and each side runs its own framework across that
- * neutral boundary. Idempotent per element.
- *
- * @param {Element} el    Host-owned container element.
- * @param {object}  props Forwarded context: { register, schema, objectId, … }.
- *
- * @return {void}
- */
-export function mount(el, props) {
-	if (el === undefined || el === null || mountedApps.has(el) === true) {
-		return
-	}
-	const app = createApp(CnFilinqDocumentsWidget, { ...(props || {}) })
-	// The SFC calls `t(...)` as a global, which main.js installs for the app
-	// bundle; this leaf mounts its own instance, so install it here too.
-	app.config.globalProperties.t = t
-	app.mount(el)
-	mountedApps.set(el, app)
-}
-
-/**
- * Destroy the app rooted at `el` and release the map entry.
- *
- * @param {Element} el The element previously passed to `mount`.
- *
- * @return {void}
- */
-export function unmount(el) {
-	const app = mountedApps.get(el)
-	if (app === undefined) {
-		return
-	}
-	mountedApps.delete(el)
-	app.unmount()
-}
+export const { mount, unmount } = leafMounter(CnFilinqDocumentsWidget)
 
 /**
  * The integration descriptor for the documents leaf.
@@ -124,19 +78,5 @@ export const documentsLeafDescriptor = {
  * @return {void}
  */
 export function registerDocumentsLeaf(globalRef) {
-	const target = globalRef || (typeof window !== 'undefined' ? window : null)
-	if (target === null) {
-		return
-	}
-
-	target.OCA = target.OCA || {}
-	target.OCA.OpenRegister = target.OCA.OpenRegister || {}
-	target.OCA.OpenRegister.integrations = target.OCA.OpenRegister.integrations || {
-		_queue: [],
-		register(entry) {
-			this._queue.push(entry)
-		},
-	}
-
-	target.OCA.OpenRegister.integrations.register(documentsLeafDescriptor)
+	registerLeaf(documentsLeafDescriptor, globalRef)
 }

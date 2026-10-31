@@ -1,0 +1,533 @@
+{
+	"registerDocumentIntakeLeaf": {
+		"exports": [
+			"DOCUMENT_INTAKE_INTEGRATION_ID",
+			"DOCUMENT_INTAKE_SURFACES",
+			"documentIntakeLeafDescriptor",
+			"mount",
+			"registerDocumentIntakeLeaf",
+			"unmount"
+		],
+		"descriptor": {
+			"id": "filinq-document-intake",
+			"label": "Documents waiting to be filed",
+			"icon": "InboxArrowDown",
+			"requiredApp": "filinq",
+			"order": 33,
+			"group": "documents",
+			"surfaces": [
+				"detail-page",
+				"single-entity"
+			],
+			"referenceType": "filinq-document-intake",
+			"renderMode": "mount",
+			"mount": {
+				"fn": "mount",
+				"isExport": true
+			},
+			"unmount": {
+				"fn": "unmount",
+				"isExport": true
+			},
+			"defaultSize": {
+				"w": 4,
+				"h": 4
+			}
+		},
+		"events": [
+			[
+				"createApp",
+				"CnFilinqDocumentIntakeWidget",
+				{
+					"register": "r",
+					"objectId": "o"
+				}
+			],
+			[
+				"mount",
+				0,
+				"a",
+				"function"
+			],
+			[
+				"createApp",
+				"CnFilinqDocumentIntakeWidget",
+				{}
+			],
+			[
+				"mount",
+				1,
+				"b",
+				"function"
+			],
+			[
+				"unmount",
+				0
+			],
+			[
+				"createApp",
+				"CnFilinqDocumentIntakeWidget",
+				{}
+			],
+			[
+				"mount",
+				2,
+				"a",
+				"function"
+			],
+			[
+				"unmount",
+				1
+			]
+		],
+		"freshQueue": [
+			"filinq-document-intake",
+			"filinq-document-intake"
+		],
+		"freshKeys": [
+			"_queue",
+			"register"
+		],
+		"registered": [
+			"filinq-document-intake"
+		],
+		"liveKeys": [
+			"integrations",
+			"keep"
+		],
+		"partial": [
+			"integrations",
+			"x"
+		],
+		"windowQueue": [
+			"filinq-document-intake"
+		]
+	},
+	"registerDocumentsLeaf": {
+		"exports": [
+			"DOCUMENTS_INTEGRATION_ID",
+			"SURFACES",
+			"documentsLeafDescriptor",
+			"mount",
+			"registerDocumentsLeaf",
+			"unmount"
+		],
+		"descriptor": {
+			"id": "filinq-documents",
+			"label": "Documents",
+			"icon": "FileDocumentMultipleOutline",
+			"requiredApp": "filinq",
+			"order": 30,
+			"group": "documents",
+			"surfaces": [
+				"detail-page",
+				"single-entity"
+			],
+			"referenceType": "filinq-documents",
+			"renderMode": "mount",
+			"chrome": "card",
+			"mount": {
+				"fn": "mount",
+				"isExport": true
+			},
+			"unmount": {
+				"fn": "unmount",
+				"isExport": true
+			},
+			"defaultSize": {
+				"w": 4,
+				"h": 3
+			}
+		},
+		"events": [
+			[
+				"createApp",
+				"CnFilinqDocumentsWidget",
+				{
+					"register": "r",
+					"objectId": "o"
+				}
+			],
+			[
+				"mount",
+				0,
+				"a",
+				"function"
+			],
+			[
+				"createApp",
+				"CnFilinqDocumentsWidget",
+				{}
+			],
+			[
+				"mount",
+				1,
+				"b",
+				"function"
+			],
+			[
+				"unmount",
+				0
+			],
+			[
+				"createApp",
+				"CnFilinqDocumentsWidget",
+				{}
+			],
+			[
+				"mount",
+				2,
+				"a",
+				"function"
+			],
+			[
+				"unmount",
+				1
+			]
+		],
+		"freshQueue": [
+			"filinq-documents",
+			"filinq-documents"
+		],
+		"freshKeys": [
+			"_queue",
+			"register"
+		],
+		"registered": [
+			"filinq-documents"
+		],
+		"liveKeys": [
+			"integrations",
+			"keep"
+		],
+		"partial": [
+			"integrations",
+			"x"
+		],
+		"windowQueue": [
+			"filinq-document-intake",
+			"filinq-documents"
+		]
+	},
+	"registerDownloadAllFilesLeaf": {
+		"exports": [
+			"DOWNLOAD_ALL_INTEGRATION_ID",
+			"DOWNLOAD_ALL_SURFACES",
+			"downloadAllFilesLeafDescriptor",
+			"mount",
+			"registerDownloadAllFilesLeaf",
+			"unmount"
+		],
+		"descriptor": {
+			"id": "filinq-download-all-files",
+			"label": "Download all files",
+			"icon": "FolderZipOutline",
+			"requiredApp": "filinq",
+			"order": 32,
+			"group": "documents",
+			"surfaces": [
+				"detail-page",
+				"single-entity"
+			],
+			"referenceType": "filinq-download-all-files",
+			"renderMode": "mount",
+			"mount": {
+				"fn": "mount",
+				"isExport": true
+			},
+			"unmount": {
+				"fn": "unmount",
+				"isExport": true
+			},
+			"defaultSize": {
+				"w": 4,
+				"h": 4
+			}
+		},
+		"events": [
+			[
+				"createApp",
+				"CnFilinqDownloadAllFilesWidget",
+				{
+					"register": "r",
+					"objectId": "o"
+				}
+			],
+			[
+				"mount",
+				0,
+				"a",
+				"function"
+			],
+			[
+				"createApp",
+				"CnFilinqDownloadAllFilesWidget",
+				{}
+			],
+			[
+				"mount",
+				1,
+				"b",
+				"function"
+			],
+			[
+				"unmount",
+				0
+			],
+			[
+				"createApp",
+				"CnFilinqDownloadAllFilesWidget",
+				{}
+			],
+			[
+				"mount",
+				2,
+				"a",
+				"function"
+			],
+			[
+				"unmount",
+				1
+			]
+		],
+		"freshQueue": [
+			"filinq-download-all-files",
+			"filinq-download-all-files"
+		],
+		"freshKeys": [
+			"_queue",
+			"register"
+		],
+		"registered": [
+			"filinq-download-all-files"
+		],
+		"liveKeys": [
+			"integrations",
+			"keep"
+		],
+		"partial": [
+			"integrations",
+			"x"
+		],
+		"windowQueue": [
+			"filinq-document-intake",
+			"filinq-documents",
+			"filinq-download-all-files"
+		]
+	},
+	"registerMergeToPdfLeaf": {
+		"exports": [
+			"MERGE_INTEGRATION_ID",
+			"MERGE_SURFACES",
+			"mergeToPdfLeafDescriptor",
+			"mount",
+			"registerMergeToPdfLeaf",
+			"unmount"
+		],
+		"descriptor": {
+			"id": "filinq-merge-to-pdf",
+			"label": "Merge to PDF",
+			"icon": "FilePdfBox",
+			"requiredApp": "filinq",
+			"order": 31,
+			"group": "documents",
+			"surfaces": [
+				"detail-page",
+				"single-entity"
+			],
+			"referenceType": "filinq-merge-to-pdf",
+			"renderMode": "mount",
+			"mount": {
+				"fn": "mount",
+				"isExport": true
+			},
+			"unmount": {
+				"fn": "unmount",
+				"isExport": true
+			},
+			"defaultSize": {
+				"w": 4,
+				"h": 4
+			}
+		},
+		"events": [
+			[
+				"createApp",
+				"CnFilinqMergeToPdfWidget",
+				{
+					"register": "r",
+					"objectId": "o"
+				}
+			],
+			[
+				"mount",
+				0,
+				"a",
+				"function"
+			],
+			[
+				"createApp",
+				"CnFilinqMergeToPdfWidget",
+				{}
+			],
+			[
+				"mount",
+				1,
+				"b",
+				"function"
+			],
+			[
+				"unmount",
+				0
+			],
+			[
+				"createApp",
+				"CnFilinqMergeToPdfWidget",
+				{}
+			],
+			[
+				"mount",
+				2,
+				"a",
+				"function"
+			],
+			[
+				"unmount",
+				1
+			]
+		],
+		"freshQueue": [
+			"filinq-merge-to-pdf",
+			"filinq-merge-to-pdf"
+		],
+		"freshKeys": [
+			"_queue",
+			"register"
+		],
+		"registered": [
+			"filinq-merge-to-pdf"
+		],
+		"liveKeys": [
+			"integrations",
+			"keep"
+		],
+		"partial": [
+			"integrations",
+			"x"
+		],
+		"windowQueue": [
+			"filinq-document-intake",
+			"filinq-documents",
+			"filinq-download-all-files",
+			"filinq-merge-to-pdf"
+		]
+	},
+	"registerSigningFolderLeaf": {
+		"exports": [
+			"SIGNING_FOLDER_INTEGRATION_ID",
+			"SIGNING_FOLDER_SURFACES",
+			"mount",
+			"registerSigningFolderLeaf",
+			"signingFolderLeafDescriptor",
+			"unmount"
+		],
+		"descriptor": {
+			"id": "filinq-signing-folder",
+			"label": "Waiting for your signature",
+			"icon": "FileSign",
+			"requiredApp": "filinq",
+			"order": 40,
+			"group": "signing",
+			"surfaces": [
+				"user-dashboard",
+				"app-dashboard"
+			],
+			"referenceType": "filinq-signing-folder",
+			"renderMode": "mount",
+			"mount": {
+				"fn": "mount",
+				"isExport": true
+			},
+			"unmount": {
+				"fn": "unmount",
+				"isExport": true
+			},
+			"defaultSize": {
+				"w": 4,
+				"h": 4
+			}
+		},
+		"events": [
+			[
+				"createApp",
+				"CnFilinqSigningFolderWidget",
+				{
+					"register": "r",
+					"objectId": "o"
+				}
+			],
+			[
+				"mount",
+				0,
+				"a",
+				"function"
+			],
+			[
+				"createApp",
+				"CnFilinqSigningFolderWidget",
+				{}
+			],
+			[
+				"mount",
+				1,
+				"b",
+				"function"
+			],
+			[
+				"unmount",
+				0
+			],
+			[
+				"createApp",
+				"CnFilinqSigningFolderWidget",
+				{}
+			],
+			[
+				"mount",
+				2,
+				"a",
+				"function"
+			],
+			[
+				"unmount",
+				1
+			]
+		],
+		"freshQueue": [
+			"filinq-signing-folder",
+			"filinq-signing-folder"
+		],
+		"freshKeys": [
+			"_queue",
+			"register"
+		],
+		"registered": [
+			"filinq-signing-folder"
+		],
+		"liveKeys": [
+			"integrations",
+			"keep"
+		],
+		"partial": [
+			"integrations",
+			"x"
+		],
+		"windowQueue": [
+			"filinq-document-intake",
+			"filinq-documents",
+			"filinq-download-all-files",
+			"filinq-merge-to-pdf",
+			"filinq-signing-folder"
+		]
+	}
+}

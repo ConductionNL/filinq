@@ -12,52 +12,17 @@
  * @spec openspec/specs/document-merge/spec.md
  */
 import { translate as t } from '@nextcloud/l10n'
-import { createApp } from 'vue'
 import CnFilinqMergeToPdfWidget from './CnFilinqMergeToPdfWidget.vue'
+import { leafMounter, registerLeaf } from './leafHost.js'
 
 export const MERGE_INTEGRATION_ID = 'filinq-merge-to-pdf'
 
 export const MERGE_SURFACES = ['detail-page', 'single-entity']
 
-const mountedApps = new Map()
-
 /**
- * Mount the widget into a host element.
- *
- * @param {HTMLElement} el    The element the host hands over.
- * @param {object}      props The host object context.
- *
- * @return {void}
- *
- * @spec openspec/specs/document-merge/spec.md
+ * Mount and unmount the widget at a host-owned element; see `leafMounter`.
  */
-export function mount(el, props) {
-	if (el === undefined || el === null || mountedApps.has(el) === true) {
-		return
-	}
-	const app = createApp(CnFilinqMergeToPdfWidget, { ...(props || {}) })
-	app.config.globalProperties.t = t
-	app.mount(el)
-	mountedApps.set(el, app)
-}
-
-/**
- * Unmount the widget from a host element.
- *
- * @param {HTMLElement} el The element the widget was mounted in.
- *
- * @return {void}
- *
- * @spec openspec/specs/document-merge/spec.md
- */
-export function unmount(el) {
-	const app = mountedApps.get(el)
-	if (app === undefined) {
-		return
-	}
-	mountedApps.delete(el)
-	app.unmount()
-}
+export const { mount, unmount } = leafMounter(CnFilinqMergeToPdfWidget)
 
 export const mergeToPdfLeafDescriptor = {
 	id: MERGE_INTEGRATION_ID,
@@ -85,19 +50,5 @@ export const mergeToPdfLeafDescriptor = {
  * @spec openspec/specs/document-merge/spec.md
  */
 export function registerMergeToPdfLeaf(globalRef) {
-	const target = globalRef || (typeof window !== 'undefined' ? window : null)
-	if (target === null) {
-		return
-	}
-
-	target.OCA = target.OCA || {}
-	target.OCA.OpenRegister = target.OCA.OpenRegister || {}
-	target.OCA.OpenRegister.integrations = target.OCA.OpenRegister.integrations || {
-		_queue: [],
-		register(entry) {
-			this._queue.push(entry)
-		},
-	}
-
-	target.OCA.OpenRegister.integrations.register(mergeToPdfLeafDescriptor)
+	registerLeaf(mergeToPdfLeafDescriptor, globalRef)
 }
