@@ -125,7 +125,7 @@ class VeraPdfReportParser {
 		$fonts = [];
 		$imported = false;
 		$otherFailed = false;
-		foreach (array_filter($summaries, [$this, 'isFailed']) as $summary) {
+		foreach (array_filter($summaries, fn (mixed $summary): bool => $this->isFailed(summary: $summary)) as $summary) {
 			$rule = $this->ruleReference(summary: $summary);
 			$rules[] = $rule;
 			if (in_array($rule['clause'], self::FONT_EMBEDDING_CLAUSES, true) === false) {
