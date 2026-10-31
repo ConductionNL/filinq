@@ -88,7 +88,7 @@ class LibreOfficeReadEmittedPdfGoldenTest extends TestCase {
 	/**
 	 * The outcome matches the recorded one.
 	 *
-	 * @param string $setup     What lies in the sandbox.
+	 * @param string $setup What lies in the sandbox.
 	 * @param string $extension The extension asked for.
 	 *
 	 * @dataProvider scenarios

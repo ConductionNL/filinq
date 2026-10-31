@@ -585,7 +585,7 @@ class LibreOfficeHeadlessBackend implements ConversionBackendInterface {
 	/**
 	 * Whether a path, with its links resolved, lies inside a directory.
 	 *
-	 * @param string $dir  The directory.
+	 * @param string $dir The directory.
 	 * @param string $path The path.
 	 *
 	 * @return bool True when both resolve and the path lies below the directory.
@@ -604,7 +604,7 @@ class LibreOfficeHeadlessBackend implements ConversionBackendInterface {
 	 * The failure for output soffice should have written but did not, usably.
 	 *
 	 * @param string $message The exception message.
-	 * @param string $reason  The reason in the attempt record.
+	 * @param string $reason The reason in the attempt record.
 	 *
 	 * @return ConversionFailedException The failure, with this backend's attempt record.
 	 */
