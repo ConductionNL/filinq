@@ -137,20 +137,7 @@ class PrintController extends Controller {
 		}
 
 		if (empty($templateId) === false) {
-			$templateRecord = $this->templateService->getTemplate($templateId);
-			return [
-				'content' => $templateRecord['content'] ?? '',
-				'title' => $templateRecord['name'] ?? 'document',
-				'data' => $data,
-				'options' => [
-					'format' => $templateRecord['format'] ?? 'A4',
-					'orientation' => $templateRecord['orientation'] ?? 'P',
-					'duplex' => $templateRecord['duplex'] ?? false,
-					'color' => $templateRecord['color'] ?? true,
-					'paperTray' => $templateRecord['paperTray'] ?? 'default',
-					'stapling' => $templateRecord['stapling'] ?? false,
-				],
-			];
+			return $this->fromStoredTemplate(record: $this->templateService->getTemplate($templateId), data: $data);
 		}
 
 		if (empty($template) === false) {
@@ -166,8 +153,33 @@ class PrintController extends Controller {
 			message: 'Either templateId or template content is required',
 			code: 400
 		);
-
 	}//end resolveTemplate()
+
+	/**
+	 * The resolved template for a stored template record, with its print options and defaults.
+	 *
+	 * @param array<string, mixed> $record The stored template.
+	 * @param array<mixed> $data Data context for template rendering.
+	 *
+	 * @return array{content: string, title: string, data: array, options: array} Resolved template data
+	 *
+	 * @spec openspec/specs/print-preview/spec.md
+	 */
+	private function fromStoredTemplate(array $record, array $data): array {
+		return [
+			'content' => $record['content'] ?? '',
+			'title' => $record['name'] ?? 'document',
+			'data' => $data,
+			'options' => [
+				'format' => $record['format'] ?? 'A4',
+				'orientation' => $record['orientation'] ?? 'P',
+				'duplex' => $record['duplex'] ?? false,
+				'color' => $record['color'] ?? true,
+				'paperTray' => $record['paperTray'] ?? 'default',
+				'stapling' => $record['stapling'] ?? false,
+			],
+		];
+	}//end fromStoredTemplate()
 
 	/**
 	 * Generate a print preview with rendered HTML and print-optimized CSS
@@ -184,8 +196,6 @@ class PrintController extends Controller {
 	 *
 	 * @NoAdminRequired
 	 *
-	 * @psalm-suppress InvalidArgument $statusCode is clamped to int<400, 599>; Psalm wants the literal HTTP status union.
-	 *
 	 * @spec openspec/specs/print-preview/spec.md
 	 */
 	public function preview(): JSONResponse {
@@ -194,42 +204,36 @@ class PrintController extends Controller {
 				return $this->notAuthenticated(message: 'Not authenticated');
 			}
 
-			$resolved = $this->resolveTemplate();
-
-			$options = $resolved['options'];
-
-			$html = $this->pdfService->renderHtmlPreview(
-				templateContent: $resolved['content'],
-				data: $resolved['data'],
-				options: $options
-			);
-			$printConfig = $this->extractPrintConfig(options: $options);
-
-			return new JSONResponse(
-				data: [
-					'html' => $html,
-					'title' => $resolved['title'],
-					'printConfig' => $printConfig,
-				]
-			);
+			return $this->previewOf(resolved: $this->resolveTemplate());
 		} catch (Exception $e) {
-			$statusCode = 500;
-			if ($e->getCode() >= 400 && $e->getCode() < 600) {
-				$statusCode = $e->getCode();
-			}
-
-			$this->logger->error(
-				message: 'Print preview failed: ' . $e->getMessage(),
-				context: ['exception' => $e]
-			);
-
-			return new JSONResponse(
-				data: ['error' => $e->getMessage()],
-				statusCode: $statusCode
-			);
-		}//end try
-
+			return $this->failed(what: 'Print preview failed: ', exception: $e);
+		}
 	}//end preview()
+
+	/**
+	 * The HTML preview, title and print configuration of a resolved template.
+	 *
+	 * @param array{content: string, title: string, data: array, options: array} $resolved The resolved template.
+	 *
+	 * @return JSONResponse The preview.
+	 *
+	 * @spec openspec/specs/print-preview/spec.md
+	 */
+	private function previewOf(array $resolved): JSONResponse {
+		$html = $this->pdfService->renderHtmlPreview(
+			templateContent: $resolved['content'],
+			data: $resolved['data'],
+			options: $resolved['options']
+		);
+
+		return new JSONResponse(
+			data: [
+				'html' => $html,
+				'title' => $resolved['title'],
+				'printConfig' => $this->extractPrintConfig(options: $resolved['options']),
+			]
+		);
+	}//end previewOf()
 
 	/**
 	 * Generate and download a PDF/A-3b compliant document
@@ -246,8 +250,6 @@ class PrintController extends Controller {
 	 *
 	 * @NoAdminRequired
 	 *
-	 * @psalm-suppress InvalidArgument $statusCode is clamped to int<400, 599>; Psalm wants the literal HTTP status union.
-	 *
 	 * @spec openspec/specs/print-preview/spec.md
 	 *
 	 * @no-admin-idor-exempt a templateId is read through TemplateService::getTemplate() with OpenRegister
@@ -259,41 +261,65 @@ class PrintController extends Controller {
 				return $this->notAuthenticated(message: 'Not authenticated');
 			}
 
-			$resolved = $this->resolveTemplate();
-			$filename = $this->request->getParam('filename', 'document.pdf');
-
-			$options = $resolved['options'];
-
-			$options['pdfa'] = true;
-			$options['title'] = $resolved['title'];
-
-			$pdfContent = $this->pdfService->renderPdf(
-				templateContent: $resolved['content'],
-				data: $resolved['data'],
-				options: $options
-			);
-
-			return new DataDownloadResponse(
-				data: $pdfContent,
-				filename: $filename,
-				contentType: 'application/pdf'
-			);
+			return $this->pdfAOf(resolved: $this->resolveTemplate());
 		} catch (Exception $e) {
-			$statusCode = 500;
-			if ($e->getCode() >= 400 && $e->getCode() < 600) {
-				$statusCode = $e->getCode();
-			}
-
-			$this->logger->error(
-				message: 'PDF/A download failed: ' . $e->getMessage(),
-				context: ['exception' => $e]
-			);
-
-			return new JSONResponse(
-				data: ['error' => $e->getMessage()],
-				statusCode: $statusCode
-			);
-		}//end try
-
+			return $this->failed(what: 'PDF/A download failed: ', exception: $e);
+		}
 	}//end downloadPdfA()
+
+	/**
+	 * The PDF/A download of a resolved template, titled after it.
+	 *
+	 * @param array{content: string, title: string, data: array, options: array} $resolved The resolved template.
+	 *
+	 * @return DataDownloadResponse The PDF/A download.
+	 *
+	 * @spec openspec/specs/print-preview/spec.md
+	 */
+	private function pdfAOf(array $resolved): DataDownloadResponse {
+		$options = $resolved['options'];
+		$options['pdfa'] = true;
+		$options['title'] = $resolved['title'];
+
+		$pdfContent = $this->pdfService->renderPdf(
+			templateContent: $resolved['content'],
+			data: $resolved['data'],
+			options: $options
+		);
+
+		return new DataDownloadResponse(
+			data: $pdfContent,
+			filename: $this->request->getParam('filename', 'document.pdf'),
+			contentType: 'application/pdf'
+		);
+	}//end pdfAOf()
+
+	/**
+	 * Log a failed request and answer with its HTTP-range code, else 500.
+	 *
+	 * @param string $what The log message prefix naming the endpoint.
+	 * @param Exception $exception The failure.
+	 *
+	 * @return JSONResponse The error response.
+	 *
+	 * @psalm-suppress InvalidArgument $statusCode is clamped to int<400, 599>; Psalm wants the literal HTTP status union.
+	 *
+	 * @spec openspec/specs/print-preview/spec.md
+	 */
+	private function failed(string $what, Exception $exception): JSONResponse {
+		$statusCode = 500;
+		if ($exception->getCode() >= 400 && $exception->getCode() < 600) {
+			$statusCode = $exception->getCode();
+		}
+
+		$this->logger->error(
+			message: $what . $exception->getMessage(),
+			context: ['exception' => $exception]
+		);
+
+		return new JSONResponse(
+			data: ['error' => $exception->getMessage()],
+			statusCode: $statusCode
+		);
+	}//end failed()
 }//end class
