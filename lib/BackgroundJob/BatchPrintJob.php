@@ -6,7 +6,8 @@
  * Background job for rendering large print batches. Dispatched by
  * PrintJobService when a job holds more letters than it renders during the
  * request; the rendering itself is PrintJobService::renderJob(), the same
- * code a small job runs.
+ * code a small job runs. It runs as the user who asked for the job, so the
+ * letters' data is read with that user's access, as during the request.
  *
  * @category BackgroundJob
  * @package  OCA\Filinq\BackgroundJob
@@ -33,6 +34,9 @@ use Exception;
 use OCA\Filinq\Kernel\Contracts\PrintJobServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\QueuedJob;
+use OCP\IUser;
+use OCP\IUserManager;
+use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -53,6 +57,8 @@ class BatchPrintJob extends QueuedJob {
 	 *
 	 * @param ITimeFactory    $time        Time factory
 	 * @param PrintJobServiceInterface $printJobSvc The print job service
+	 * @param IUserManager    $users       Finds the user who asked for the job
+	 * @param IUserSession    $userSession The session the job renders in
 	 * @param LoggerInterface $logger      Logger
 	 *
 	 * @return void
@@ -60,6 +66,8 @@ class BatchPrintJob extends QueuedJob {
 	public function __construct(
 		ITimeFactory $time,
 		private readonly PrintJobServiceInterface $printJobSvc,
+		private readonly IUserManager $users,
+		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
 	) {
 		parent::__construct(time: $time);
@@ -87,7 +95,18 @@ class BatchPrintJob extends QueuedJob {
 			return;
 		}
 
+		$previous = $this->userSession->getUser();
 		try {
+			$requester = $this->requester(jobId: $jobId);
+			if ($requester === null) {
+				$this->logger->error(
+					message: 'BatchPrintJob: the user who asked for the job is not known',
+					context: ['jobId' => $jobId]
+				);
+				return;
+			}
+
+			$this->userSession->setVolatileActiveUser($requester);
 			$job = $this->printJobSvc->renderJob(
 				jobId: $jobId,
 				templateId: $templateId,
@@ -103,7 +122,30 @@ class BatchPrintJob extends QueuedJob {
 				message: 'BatchPrintJob failed: ' . $e->getMessage(),
 				context: ['jobId' => $jobId, 'exception' => $e]
 			);
-		}
+		} finally {
+			$this->userSession->setVolatileActiveUser($previous);
+		}//end try
 
 	}//end run()
+
+	/**
+	 * The user who asked for a job.
+	 *
+	 * @param string $jobId The job uuid
+	 *
+	 * @return IUser|null The user, or null when the job or its user is not found.
+	 *
+	 * @throws Exception If the job cannot be read
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-print-jobs-in-the-app/tasks.md#task-1.2
+	 */
+	private function requester(string $jobId): ?IUser {
+		$uid = (string) ($this->printJobSvc->getJob(jobId: $jobId)['requestedBy'] ?? '');
+		if ($uid === '') {
+			return null;
+		}
+
+		return $this->users->get($uid);
+
+	}//end requester()
 }//end class
