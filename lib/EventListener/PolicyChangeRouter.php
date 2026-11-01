@@ -21,6 +21,8 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\EventListener;
 
+use OCA\Filinq\Kernel\Contracts\PolicyRetroactiveServiceInterface;
+
 /**
  * Recognises prohibition and consent records by their shape and applies the matching retroactive policy step.
  *
@@ -49,52 +51,69 @@ class PolicyChangeRouter {
 	 * @spec openspec/specs/metadata-enrichment/spec.md
 	 */
 	public function route(ObjectChange $change, ObjectEventServices $services): void {
-		$objectData = $change->objectData;
-		$reason = $change->reason;
-		$logger = $services->logger;
-		$retroactive = $services->retroactive;
-		$shape = $this->detectPolicyShape(objectData: $objectData);
+		$shape = $this->detectPolicyShape(objectData: $change->objectData);
 		if ($shape === null) {
 			return;
 		}
 
 		try {
 			if ($shape === 'prohibition') {
-				if ($reason === 'deleted') {
-					$retroactive->applyRuleRemoval();
-					return;
-				}
-
-				$resolved = $retroactive->applyProhibitionMutation(prohibition: $objectData);
-				if ($resolved > 0) {
-					$logger->info(
-						'Filinq: prohibition mutation force-resolved in-flight records',
-						['resolved' => $resolved, 'reason' => $reason]
-					);
-				}
-
+				$this->routeProhibition(change: $change, services: $services);
 				return;
 			}
 
 			if ($shape === 'standing_consent') {
-				if ($reason === 'deleted') {
-					$retroactive->applyRuleRemoval();
-					return;
-				}
-
-				$retroactive->applyStandingConsentMutation();
-				return;
+				$this->routeStandingConsent(change: $change, retroactive: $services->retroactive);
 			}
 
 			// Document_consent shape (workflow record): not a policy rule, no-op.
 		} catch (\Exception $e) {
-			$logger->warning(
+			$services->logger->warning(
 				'Filinq: retroactive policy dispatch failed',
-				['error' => $e->getMessage(), 'reason' => $reason]
+				['error' => $e->getMessage(), 'reason' => $change->reason]
 			);
-		}//end try
-
+		}
 	}//end route()
+
+	/**
+	 * Apply a changed prohibition, or remove its rule when it was deleted.
+	 *
+	 * @param ObjectChange $change The changed prohibition and the kind of change.
+	 * @param ObjectEventServices $services The logger and the retroactive policy applicator.
+	 *
+	 * @return void
+	 */
+	private function routeProhibition(ObjectChange $change, ObjectEventServices $services): void {
+		if ($change->reason === 'deleted') {
+			$services->retroactive->applyRuleRemoval();
+			return;
+		}
+
+		$resolved = $services->retroactive->applyProhibitionMutation(prohibition: $change->objectData);
+		if ($resolved > 0) {
+			$services->logger->info(
+				'Filinq: prohibition mutation force-resolved in-flight records',
+				['resolved' => $resolved, 'reason' => $change->reason]
+			);
+		}
+	}//end routeProhibition()
+
+	/**
+	 * Apply a changed standing consent, or remove its rule when it was deleted.
+	 *
+	 * @param ObjectChange $change The changed consent and the kind of change.
+	 * @param PolicyRetroactiveServiceInterface $retroactive The retroactive policy applicator.
+	 *
+	 * @return void
+	 */
+	private function routeStandingConsent(ObjectChange $change, PolicyRetroactiveServiceInterface $retroactive): void {
+		if ($change->reason === 'deleted') {
+			$retroactive->applyRuleRemoval();
+			return;
+		}
+
+		$retroactive->applyStandingConsentMutation();
+	}//end routeStandingConsent()
 
 	/**
 	 * Classify a payload as a policy record by structural signature.
