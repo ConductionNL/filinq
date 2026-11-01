@@ -1569,6 +1569,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 		 *   already in the queue (e.g. a just-finished run) without creating a
 		 *   duplicate card.
 		 * @return {Promise<object|null>} The review entry, or null when not anonymised.
+		 * @spec openspec/specs/anonymization-link/spec.md
 		 */
 		async loadAnonymizedEntities(fileMeta, { push = true } = {}) {
 			// Authoritative signal: the source↔anonymised DB mapping. A hit
@@ -1640,6 +1641,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 		 *   Pass false to reuse the resolution for an existing entry without
 		 *   creating a duplicate card.
 		 * @return {object} The read-only summary entry.
+		 * @spec openspec/specs/anonymization-link/spec.md
 		 */
 		buildLinkedAnonymizedEntry(fileMeta, link, { push = true } = {}) {
 			const entry = {
