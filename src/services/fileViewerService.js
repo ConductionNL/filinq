@@ -2,6 +2,7 @@ import { getCurrentUser } from '@nextcloud/auth'
 import axios from '@nextcloud/axios'
 import { generateRemoteUrl, generateUrl } from '@nextcloud/router'
 import { odfXmlToText } from './odfToHtml.js'
+import { loadPdfjs } from './pdfjsLoader.js'
 
 /**
  * Build the WebDAV URL for a file inside the current user's storage.
@@ -111,32 +112,10 @@ export async function fetchUrlAsText(url) {
 	return response.data
 }
 
-// Lazy module promises — pdfjs (~2MB) and mammoth are only pulled in when a
-// binary document actually needs its text layer read. Mirrors the loaders in
-// PdfViewer.vue / WordViewer.vue so we don't double-bundle.
-let pdfjsLibPromise = null
+// Lazy module promises: mammoth and JSZip are only pulled in when a binary
+// document actually needs its text layer read.
 let mammothPromise = null
 let jsZipPromise = null
-
-/**
- * Lazy-load pdfjs-dist plus its worker.
- *
- * @return {Promise<object>} pdfjsLib module.
- */
-async function loadPdfjs() {
-	if (!pdfjsLibPromise) {
-		pdfjsLibPromise = (async () => {
-			const pdfjsLib = await import('pdfjs-dist/build/pdf.mjs')
-			const workerUrl = new URL(
-				'pdfjs-dist/build/pdf.worker.min.mjs',
-				import.meta.url,
-			).toString()
-			pdfjsLib.GlobalWorkerOptions.workerSrc = workerUrl
-			return pdfjsLib
-		})()
-	}
-	return pdfjsLibPromise
-}
 
 /**
  * Lazy-load mammoth (docx → text).
@@ -200,6 +179,77 @@ function isOdt(mime, name) {
 }
 
 /**
+ * Every page's text content of a PDF, read with pdfjs.
+ *
+ * @param {string} path Absolute path inside the user's storage.
+ * @return {Promise<string>}
+ */
+async function pdfText(path) {
+	const [pdfjsLib, data] = await Promise.all([
+		loadPdfjs(),
+		fetchFileAsArrayBuffer(path),
+	])
+	const pdf = await pdfjsLib.getDocument({ data }).promise
+	const pages = []
+	for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
+		const page = await pdf.getPage(pageNumber)
+		const textContent = await page.getTextContent()
+		pages.push(textContent.items.map((item) => item.str).join(' '))
+	}
+	return pages.join('\n')
+}
+
+/**
+ * The raw text of a Word document, read with mammoth.
+ *
+ * @param {string} path Absolute path inside the user's storage.
+ * @return {Promise<string>}
+ */
+async function wordText(path) {
+	const [mammothModule, arrayBuffer] = await Promise.all([
+		loadMammoth(),
+		fetchFileAsArrayBuffer(path),
+	])
+	const mammoth = mammothModule.default || mammothModule
+	const result = await mammoth.extractRawText({ arrayBuffer })
+	return result.value || ''
+}
+
+/**
+ * The text of an ODT's content.xml and styles.xml, read with JSZip.
+ *
+ * @param {string} path Absolute path inside the user's storage.
+ * @return {Promise<string>}
+ */
+async function odtText(path) {
+	const [jsZipModule, arrayBuffer] = await Promise.all([
+		loadJsZip(),
+		fetchFileAsArrayBuffer(path),
+	])
+	const JSZip = jsZipModule.default || jsZipModule
+	const zip = await JSZip.loadAsync(arrayBuffer)
+	const parts = []
+	for (const part of ['content.xml', 'styles.xml']) {
+		const entry = zip.file(part)
+		if (entry) {
+			parts.push(odfXmlToText(await entry.async('string')))
+		}
+	}
+	return parts.filter((p) => p !== '').join('\n')
+}
+
+/**
+ * The text extractors in the order they are tried.
+ *
+ * @type {Array<{matches: function(string, string): boolean, extract: function(string): Promise<string>}>}
+ */
+const TEXT_EXTRACTORS = [
+	{ matches: isPdf, extract: pdfText },
+	{ matches: isWord, extract: wordText },
+	{ matches: isOdt, extract: odtText },
+]
+
+/**
  * Extract the plain-text layer of a document regardless of format. Used to
  * scan an anonymised file for `[<TYPE>: <entity_id>]` placeholders.
  *
@@ -215,53 +265,12 @@ function isOdt(mime, name) {
  * @param {string} [file.mimeType] MIME type (used to pick the extractor).
  * @param {string} [file.fileName] File name (fallback for extension sniffing).
  * @return {Promise<string>} The document's plain text (may be empty).
+ * @spec openspec/specs/document-preview/spec.md#requirement-odt-placeholder-text-extraction-must-unzip-the-container
  */
 export async function extractDocumentText(file) {
 	const mime = (file.mimeType || '').toLowerCase()
 	const name = file.fileName || ''
-
-	if (isPdf(mime, name)) {
-		const [pdfjsLib, data] = await Promise.all([
-			loadPdfjs(),
-			fetchFileAsArrayBuffer(file.path),
-		])
-		const pdf = await pdfjsLib.getDocument({ data }).promise
-		const pages = []
-		for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
-			const page = await pdf.getPage(pageNumber)
-			const textContent = await page.getTextContent()
-			pages.push(textContent.items.map((item) => item.str).join(' '))
-		}
-		return pages.join('\n')
-	}
-
-	if (isWord(mime, name)) {
-		const [mammothModule, arrayBuffer] = await Promise.all([
-			loadMammoth(),
-			fetchFileAsArrayBuffer(file.path),
-		])
-		const mammoth = mammothModule.default || mammothModule
-		const result = await mammoth.extractRawText({ arrayBuffer })
-		return result.value || ''
-	}
-
-	if (isOdt(mime, name)) {
-		const [jsZipModule, arrayBuffer] = await Promise.all([
-			loadJsZip(),
-			fetchFileAsArrayBuffer(file.path),
-		])
-		const JSZip = jsZipModule.default || jsZipModule
-		const zip = await JSZip.loadAsync(arrayBuffer)
-		const parts = []
-		for (const part of ['content.xml', 'styles.xml']) {
-			const entry = zip.file(part)
-			if (entry) {
-				parts.push(odfXmlToText(await entry.async('string')))
-			}
-		}
-		return parts.filter((p) => p !== '').join('\n')
-	}
-
-	// text/plain, markdown, json, xml, or unknown — fetch verbatim.
-	return fetchFileAsText(file.path)
+	const extractor = TEXT_EXTRACTORS.find((x) => x.matches(mime, name))
+	// text/plain, markdown, json, xml, or unknown: fetch verbatim.
+	return extractor ? extractor.extract(file.path) : fetchFileAsText(file.path)
 }
