@@ -175,7 +175,7 @@ class TemplateMergeFieldService {
 			$complete = $complete && $filled;
 			$fields[] = [
 				'path'   => $path,
-				'label'  => $this->labelOf(declared: $declared[$path] ?? [], path: $path),
+				'label'  => ($declared[$path]['label'] ?? $path),
 				'source' => ($declared[$path]['source'] ?? ''),
 				'value'  => $value,
 				'filled' => $filled,
@@ -186,7 +186,8 @@ class TemplateMergeFieldService {
 	}//end resolve()
 
 	/**
-	 * The declared merge fields by path, the first declaration of each path, trimmed.
+	 * The declared merge fields by path, the first declaration of each path, trimmed;
+	 * a field without a label is labelled by its path.
 	 *
 	 * @param array<int|string, mixed> $mergeFields The template's mergeFields.
 	 *
@@ -200,31 +201,19 @@ class TemplateMergeFieldService {
 				continue;
 			}
 
+			$label = trim((string)(((array)$field)['label'] ?? ''));
+			if ($label === '') {
+				$label = $path;
+			}
+
 			$declared[$path] = [
-				'label'  => trim((string)(((array)$field)['label'] ?? '')),
+				'label'  => $label,
 				'source' => trim((string)(((array)$field)['source'] ?? '')),
 			];
 		}
 
 		return $declared;
 	}//end declaredFields()
-
-	/**
-	 * A field's declared label, or its path when it declares none.
-	 *
-	 * @param array<string, string> $declared The field's declaration, empty when undeclared.
-	 * @param string $path The field's path.
-	 *
-	 * @return string The label.
-	 */
-	private function labelOf(array $declared, string $path): string {
-		$label = ($declared['label'] ?? '');
-		if ($label === '') {
-			return $path;
-		}
-
-		return $label;
-	}//end labelOf()
 
 	/**
 	 * The names `{% for %}` and `{% set %}` tags bind.
