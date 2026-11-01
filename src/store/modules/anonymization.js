@@ -445,6 +445,73 @@ function parseFileIdFromPropfind(xmlText) {
 }
 
 /**
+ * The trimmed name of a dossier folder.
+ *
+ * @param {string|null} folderName Folder name under /DocuDesk/.
+ * @return {string}
+ * @throws {Error} When the name is empty.
+ */
+function dossierFolderName(folderName) {
+	const cleanName = (folderName || '').trim()
+	if (!cleanName) {
+		throw new Error('Folder name is required')
+	}
+	return cleanName
+}
+
+/**
+ * Read a /DocuDesk/ folder's Nextcloud node id through a PROPFIND.
+ *
+ * @param {string} folderName Folder name under /DocuDesk/.
+ * @return {Promise<number>}
+ * @throws {Error} When the request fails or the answer holds no id.
+ */
+async function readFolderId(folderName) {
+	const response = await axios({
+		method: 'PROPFIND',
+		url: `${davBaseUrl()}/DocuDesk/${encodePath(folderName)}/`,
+		headers: { Depth: '0', 'Content-Type': 'application/xml' },
+		data: `<?xml version="1.0"?>
+						<d:propfind xmlns:d="DAV:" xmlns:oc="http://owncloud.org/ns">
+							<d:prop>
+								<oc:fileid />
+							</d:prop>
+						</d:propfind>`,
+	})
+	const folderId = parseFileIdFromPropfind(response.data)
+	if (folderId === null) {
+		throw new Error(`Failed to read folder id for ${folderName}`)
+	}
+	return folderId
+}
+
+/**
+ * The bases a new dossier starts with: the given ones, else
+ * `persoonsgegevens`.
+ *
+ * @param {Array<string>|undefined} bases The requested bases.
+ * @return {Array<string>}
+ */
+function dossierBases(bases) {
+	return Array.isArray(bases) && bases.length > 0 ? bases : ['persoonsgegevens']
+}
+
+/**
+ * The UUID of a created OpenRegister object.
+ *
+ * @param {object|null} data The create response body.
+ * @return {string}
+ * @throws {Error} When the response carries no UUID.
+ */
+function createdUuid(data) {
+	const uuid = data?.['@self']?.id ?? data?.id ?? null
+	if (uuid === null) {
+		throw new Error('Dossier created but no UUID returned')
+	}
+	return uuid
+}
+
+/**
  * An operator-facing input error for `addManualEntity`.
  *
  * @param {string} message The message to show.
@@ -1603,55 +1670,24 @@ export const useAnonymizationStore = defineStore('anonymization', {
 		 * @spec openspec/specs/dossier-register/spec.md#requirement-dossier-objects-bind-to-a-nextcloud-folder-via-selffolder
 		 */
 		async bindDossier(folderName, options = {}) {
-			const cleanName = (folderName || '').trim()
-			if (!cleanName) {
-				throw new Error('Folder name is required')
-			}
-
+			const cleanName = dossierFolderName(folderName)
 			const cached = this.dossiers.find((d) => d.folderName === cleanName)
 			if (cached) {
 				return cached
 			}
 
-			// Step 1 — PROPFIND for the folder's NC node id.
-			const propfindUrl = `${davBaseUrl()}/DocuDesk/${encodePath(cleanName)}/`
-			const propfindResponse = await axios({
-				method: 'PROPFIND',
-				url: propfindUrl,
-				headers: { Depth: '0', 'Content-Type': 'application/xml' },
-				data: `<?xml version="1.0"?>
-						<d:propfind xmlns:d="DAV:" xmlns:oc="http://owncloud.org/ns">
-							<d:prop>
-								<oc:fileid />
-							</d:prop>
-						</d:propfind>`,
-			})
-			const folderId = parseFileIdFromPropfind(propfindResponse.data)
-			if (folderId === null) {
-				throw new Error(`Failed to read folder id for ${cleanName}`)
-			}
-
-			// Step 2 — create the OR dossier object.
-			const bases =
-				Array.isArray(options.bases) && options.bases.length > 0
-					? options.bases
-					: ['persoonsgegevens']
-			const payload = {
-				name: cleanName,
-				description: options.description ?? '',
-				bases,
-				'@self': { folder: String(folderId) },
-			}
-
+			const folderId = await readFolderId(cleanName)
+			const bases = dossierBases(options.bases)
 			const createResponse = await axios.post(
 				generateUrl('/apps/openregister/api/objects/filinq/dossier'),
-				payload,
+				{
+					name: cleanName,
+					description: options.description ?? '',
+					bases,
+					'@self': { folder: String(folderId) },
+				},
 			)
-			const uuid =
-				createResponse.data?.['@self']?.id ?? createResponse.data?.id ?? null
-			if (uuid === null) {
-				throw new Error('Dossier created but no UUID returned')
-			}
+			const uuid = createdUuid(createResponse.data)
 
 			const record = {
 				folderName: cleanName,
