@@ -1,0 +1,686 @@
+[
+	{
+		"entry": {
+			"name": "up.pdf",
+			"status": "extracted",
+			"dossier": "D 1",
+			"entities": [
+				{
+					"type": "PERSON",
+					"value": "Jan",
+					"relationId": 1,
+					"confidence": 0.9,
+					"included": false,
+					"highestConfidence": 0.9,
+					"fileCount": 1,
+					"count": 4,
+					"relationIds": [
+						1,
+						2
+					],
+					"bases": [
+						"5.1.2e"
+					],
+					"prohibitionMatch": null,
+					"_decisionBases": [
+						"5.1.2e"
+					],
+					"_decisionSkip": true,
+					"_patchError": null,
+					"skipAnonymization": true
+				},
+				{
+					"type": "EMAIL",
+					"value": "a@b.nl",
+					"relationId": 3,
+					"bases": [
+						"5.1.1d"
+					],
+					"skipAnonymization": true,
+					"included": false,
+					"confidence": 0,
+					"highestConfidence": 0,
+					"fileCount": 1,
+					"count": 2,
+					"relationIds": [
+						3,
+						4
+					],
+					"prohibitionMatch": null,
+					"_decisionBases": [
+						"5.1.1d"
+					],
+					"_decisionSkip": true,
+					"_patchError": null
+				},
+				{
+					"value": "no type",
+					"type": "UNKNOWN",
+					"included": true,
+					"confidence": 0,
+					"highestConfidence": 0,
+					"fileCount": 1,
+					"count": 1,
+					"relationId": null,
+					"relationIds": [],
+					"bases": null,
+					"prohibitionMatch": null,
+					"_decisionBases": [],
+					"_decisionSkip": false,
+					"_patchError": null
+				},
+				{
+					"type": "LOC",
+					"value": "",
+					"included": true,
+					"confidence": 0,
+					"highestConfidence": 0,
+					"fileCount": 1,
+					"count": 2,
+					"relationId": null,
+					"relationIds": [],
+					"bases": null,
+					"prohibitionMatch": null,
+					"_decisionBases": [],
+					"_decisionSkip": false,
+					"_patchError": null
+				},
+				{
+					"type": "IBAN",
+					"value": "NL00",
+					"relationId": 0,
+					"bases": "loose",
+					"prohibitionMatch": {
+						"ruleId": 9,
+						"ruleName": "r",
+						"highConfidence": true
+					},
+					"extra": "kept",
+					"included": true,
+					"confidence": 0,
+					"highestConfidence": 0,
+					"fileCount": 1,
+					"count": 2,
+					"relationIds": [
+						0
+					],
+					"_decisionBases": [],
+					"_decisionSkip": false,
+					"_patchError": null
+				}
+			],
+			"fileId": 77,
+			"filePath": "/DocuDesk/D 1/up.pdf",
+			"entityCount": 5,
+			"confidentialityLabel": "Secret",
+			"confidentialityLevel": 3,
+			"ocrWarning": null,
+			"plain": {
+				"name": "up.pdf",
+				"status": "extracted",
+				"dossier": null,
+				"fileId": 77,
+				"filePath": "/DocuDesk/up.pdf",
+				"entities": [
+					{
+						"type": "PERSON",
+						"value": "Jan",
+						"relationId": 1,
+						"confidence": 0.9,
+						"included": false,
+						"highestConfidence": 0.9,
+						"fileCount": 1,
+						"count": 4,
+						"relationIds": [
+							1,
+							2
+						],
+						"bases": [
+							"5.1.2e"
+						],
+						"prohibitionMatch": null,
+						"_decisionBases": [
+							"5.1.2e"
+						],
+						"_decisionSkip": true,
+						"_patchError": null,
+						"skipAnonymization": true
+					},
+					{
+						"type": "EMAIL",
+						"value": "a@b.nl",
+						"relationId": 3,
+						"bases": [
+							"5.1.1d"
+						],
+						"skipAnonymization": true,
+						"included": false,
+						"confidence": 0,
+						"highestConfidence": 0,
+						"fileCount": 1,
+						"count": 2,
+						"relationIds": [
+							3,
+							4
+						],
+						"prohibitionMatch": null,
+						"_decisionBases": [
+							"5.1.1d"
+						],
+						"_decisionSkip": true,
+						"_patchError": null
+					},
+					{
+						"value": "no type",
+						"type": "UNKNOWN",
+						"included": true,
+						"confidence": 0,
+						"highestConfidence": 0,
+						"fileCount": 1,
+						"count": 1,
+						"relationId": null,
+						"relationIds": [],
+						"bases": null,
+						"prohibitionMatch": null,
+						"_decisionBases": [],
+						"_decisionSkip": false,
+						"_patchError": null
+					},
+					{
+						"type": "LOC",
+						"value": "",
+						"included": true,
+						"confidence": 0,
+						"highestConfidence": 0,
+						"fileCount": 1,
+						"count": 2,
+						"relationId": null,
+						"relationIds": [],
+						"bases": null,
+						"prohibitionMatch": null,
+						"_decisionBases": [],
+						"_decisionSkip": false,
+						"_patchError": null
+					},
+					{
+						"type": "IBAN",
+						"value": "NL00",
+						"relationId": 0,
+						"bases": "loose",
+						"prohibitionMatch": {
+							"ruleId": 9,
+							"ruleName": "r",
+							"highConfidence": true
+						},
+						"extra": "kept",
+						"included": true,
+						"confidence": 0,
+						"highestConfidence": 0,
+						"fileCount": 1,
+						"count": 2,
+						"relationIds": [
+							0
+						],
+						"_decisionBases": [],
+						"_decisionSkip": false,
+						"_patchError": null
+					}
+				],
+				"entityCount": 5,
+				"confidentialityLabel": "Secret",
+				"confidentialityLevel": 3,
+				"ocrWarning": null,
+				"hasFile": false
+			},
+			"hasFile": false
+		},
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/filinq/api/anonymization/upload",
+				"form"
+			],
+			[
+				"MOVE",
+				"http://localhost/remote.php/dav/files/admin/DocuDesk/up.pdf",
+				{
+					"Destination": "http://localhost/remote.php/dav/files/admin/DocuDesk/D%201/up.pdf"
+				}
+			],
+			[
+				"POST",
+				"/index.php/apps/filinq/api/anonymization/extract/77",
+				null
+			],
+			[
+				"POST",
+				"/index.php/apps/filinq/api/anonymization/upload",
+				"form"
+			],
+			[
+				"POST",
+				"/index.php/apps/filinq/api/anonymization/extract/77",
+				null
+			]
+		]
+	},
+	{
+		"entry": {
+			"name": "up.pdf",
+			"status": "completed",
+			"dossier": "D 1",
+			"entities": [],
+			"fileId": 77,
+			"filePath": "/DocuDesk/D 1/up.pdf",
+			"entityCount": 0,
+			"confidentialityLabel": null,
+			"confidentialityLevel": null,
+			"ocrWarning": null,
+			"plain": {
+				"name": "up.pdf",
+				"status": "completed",
+				"dossier": null,
+				"fileId": 77,
+				"filePath": "/DocuDesk/up.pdf",
+				"entities": [],
+				"entityCount": 0,
+				"confidentialityLabel": null,
+				"confidentialityLevel": null,
+				"ocrWarning": null,
+				"hasFile": false
+			},
+			"hasFile": false
+		},
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/filinq/api/anonymization/upload",
+				"form"
+			],
+			[
+				"MOVE",
+				"http://localhost/remote.php/dav/files/admin/DocuDesk/up.pdf",
+				{
+					"Destination": "http://localhost/remote.php/dav/files/admin/DocuDesk/D%201/up.pdf"
+				}
+			],
+			[
+				"POST",
+				"/index.php/apps/filinq/api/anonymization/extract/77",
+				null
+			],
+			[
+				"POST",
+				"/index.php/apps/filinq/api/anonymization/upload",
+				"form"
+			],
+			[
+				"POST",
+				"/index.php/apps/filinq/api/anonymization/extract/77",
+				null
+			]
+		]
+	},
+	{
+		"entry": {
+			"name": "up.pdf",
+			"status": "extracted",
+			"dossier": "D 1",
+			"entities": [],
+			"fileId": 77,
+			"filePath": "/DocuDesk/D 1/up.pdf",
+			"entityCount": 0,
+			"confidentialityLabel": null,
+			"confidentialityLevel": null,
+			"ocrWarning": "This document is a scan. OCR read its text, but entity detection could not check it yet. Review it by hand before you publish.",
+			"plain": {
+				"name": "up.pdf",
+				"status": "extracted",
+				"dossier": null,
+				"fileId": 77,
+				"filePath": "/DocuDesk/up.pdf",
+				"entities": [],
+				"entityCount": 0,
+				"confidentialityLabel": null,
+				"confidentialityLevel": null,
+				"ocrWarning": "This document is a scan. OCR read its text, but entity detection could not check it yet. Review it by hand before you publish.",
+				"hasFile": false
+			},
+			"hasFile": false
+		},
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/filinq/api/anonymization/upload",
+				"form"
+			],
+			[
+				"MOVE",
+				"http://localhost/remote.php/dav/files/admin/DocuDesk/up.pdf",
+				{
+					"Destination": "http://localhost/remote.php/dav/files/admin/DocuDesk/D%201/up.pdf"
+				}
+			],
+			[
+				"POST",
+				"/index.php/apps/filinq/api/anonymization/extract/77",
+				null
+			],
+			[
+				"POST",
+				"/index.php/apps/filinq/api/anonymization/upload",
+				"form"
+			],
+			[
+				"POST",
+				"/index.php/apps/filinq/api/anonymization/extract/77",
+				null
+			]
+		]
+	},
+	{
+		"entry": {
+			"name": "up.pdf",
+			"status": "extracted",
+			"dossier": "D 1",
+			"entities": [],
+			"fileId": 77,
+			"filePath": "/DocuDesk/D 1/up.pdf",
+			"entityCount": 0,
+			"confidentialityLabel": null,
+			"confidentialityLevel": null,
+			"ocrWarning": "This document is a scan and OCR is switched off, so it was not checked for personal data.",
+			"plain": {
+				"name": "up.pdf",
+				"status": "extracted",
+				"dossier": null,
+				"fileId": 77,
+				"filePath": "/DocuDesk/up.pdf",
+				"entities": [],
+				"entityCount": 0,
+				"confidentialityLabel": null,
+				"confidentialityLevel": null,
+				"ocrWarning": "This document is a scan and OCR is switched off, so it was not checked for personal data.",
+				"hasFile": false
+			},
+			"hasFile": false
+		},
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/filinq/api/anonymization/upload",
+				"form"
+			],
+			[
+				"MOVE",
+				"http://localhost/remote.php/dav/files/admin/DocuDesk/up.pdf",
+				{
+					"Destination": "http://localhost/remote.php/dav/files/admin/DocuDesk/D%201/up.pdf"
+				}
+			],
+			[
+				"POST",
+				"/index.php/apps/filinq/api/anonymization/extract/77",
+				null
+			],
+			[
+				"POST",
+				"/index.php/apps/filinq/api/anonymization/upload",
+				"form"
+			],
+			[
+				"POST",
+				"/index.php/apps/filinq/api/anonymization/extract/77",
+				null
+			]
+		]
+	},
+	{
+		"entry": {
+			"name": "up.pdf",
+			"status": "extracted",
+			"dossier": "D 1",
+			"entities": [
+				{
+					"type": "PERSON",
+					"value": "Piet",
+					"included": true,
+					"confidence": 0,
+					"highestConfidence": 0,
+					"fileCount": 1,
+					"count": 1,
+					"relationId": null,
+					"relationIds": [],
+					"bases": null,
+					"prohibitionMatch": null,
+					"_decisionBases": [],
+					"_decisionSkip": false,
+					"_patchError": null
+				}
+			],
+			"fileId": 77,
+			"filePath": "/DocuDesk/D 1/up.pdf",
+			"entityCount": 1,
+			"confidentialityLabel": null,
+			"confidentialityLevel": 0,
+			"ocrWarning": null,
+			"plain": {
+				"name": "up.pdf",
+				"status": "extracted",
+				"dossier": null,
+				"fileId": 77,
+				"filePath": "/DocuDesk/up.pdf",
+				"entities": [
+					{
+						"type": "PERSON",
+						"value": "Piet",
+						"included": true,
+						"confidence": 0,
+						"highestConfidence": 0,
+						"fileCount": 1,
+						"count": 1,
+						"relationId": null,
+						"relationIds": [],
+						"bases": null,
+						"prohibitionMatch": null,
+						"_decisionBases": [],
+						"_decisionSkip": false,
+						"_patchError": null
+					}
+				],
+				"entityCount": 1,
+				"confidentialityLabel": null,
+				"confidentialityLevel": 0,
+				"ocrWarning": null,
+				"hasFile": false
+			},
+			"hasFile": false
+		},
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/filinq/api/anonymization/upload",
+				"form"
+			],
+			[
+				"MOVE",
+				"http://localhost/remote.php/dav/files/admin/DocuDesk/up.pdf",
+				{
+					"Destination": "http://localhost/remote.php/dav/files/admin/DocuDesk/D%201/up.pdf"
+				}
+			],
+			[
+				"POST",
+				"/index.php/apps/filinq/api/anonymization/extract/77",
+				null
+			],
+			[
+				"POST",
+				"/index.php/apps/filinq/api/anonymization/upload",
+				"form"
+			],
+			[
+				"POST",
+				"/index.php/apps/filinq/api/anonymization/extract/77",
+				null
+			]
+		]
+	},
+	{
+		"entry": {
+			"name": "up.pdf",
+			"status": "completed",
+			"dossier": "D 1",
+			"entities": [],
+			"fileId": 77,
+			"filePath": "/DocuDesk/D 1/up.pdf",
+			"entityCount": 0,
+			"confidentialityLabel": null,
+			"confidentialityLevel": null,
+			"ocrWarning": null,
+			"plain": {
+				"name": "up.pdf",
+				"status": "completed",
+				"dossier": null,
+				"fileId": 77,
+				"filePath": "/DocuDesk/up.pdf",
+				"entities": [],
+				"entityCount": 0,
+				"confidentialityLabel": null,
+				"confidentialityLevel": null,
+				"ocrWarning": null,
+				"hasFile": false
+			},
+			"hasFile": false
+		},
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/filinq/api/anonymization/upload",
+				"form"
+			],
+			[
+				"MOVE",
+				"http://localhost/remote.php/dav/files/admin/DocuDesk/up.pdf",
+				{
+					"Destination": "http://localhost/remote.php/dav/files/admin/DocuDesk/D%201/up.pdf"
+				}
+			],
+			[
+				"POST",
+				"/index.php/apps/filinq/api/anonymization/extract/77",
+				null
+			],
+			[
+				"POST",
+				"/index.php/apps/filinq/api/anonymization/upload",
+				"form"
+			],
+			[
+				"POST",
+				"/index.php/apps/filinq/api/anonymization/extract/77",
+				null
+			]
+		]
+	},
+	{
+		"entry": {
+			"name": "up.pdf",
+			"status": "error",
+			"dossier": "D 1",
+			"entities": [],
+			"fileId": 77,
+			"filePath": "/DocuDesk/D 1/up.pdf",
+			"error": "extract failed",
+			"plain": {
+				"name": "up.pdf",
+				"status": "error",
+				"dossier": null,
+				"fileId": 77,
+				"filePath": "/DocuDesk/up.pdf",
+				"error": "extract failed",
+				"hasFile": false
+			},
+			"hasFile": false
+		},
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/filinq/api/anonymization/upload",
+				"form"
+			],
+			[
+				"MOVE",
+				"http://localhost/remote.php/dav/files/admin/DocuDesk/up.pdf",
+				{
+					"Destination": "http://localhost/remote.php/dav/files/admin/DocuDesk/D%201/up.pdf"
+				}
+			],
+			[
+				"POST",
+				"/index.php/apps/filinq/api/anonymization/extract/77",
+				null
+			],
+			[
+				"POST",
+				"/index.php/apps/filinq/api/anonymization/upload",
+				"form"
+			],
+			[
+				"POST",
+				"/index.php/apps/filinq/api/anonymization/extract/77",
+				null
+			]
+		]
+	},
+	{
+		"entry": {
+			"name": "up.pdf",
+			"status": "error",
+			"dossier": "D 1",
+			"entities": [],
+			"fileId": 77,
+			"filePath": "/DocuDesk/D 1/up.pdf",
+			"error": "plain",
+			"plain": {
+				"name": "up.pdf",
+				"status": "error",
+				"dossier": null,
+				"fileId": 77,
+				"filePath": "/DocuDesk/up.pdf",
+				"error": "plain",
+				"hasFile": false
+			},
+			"hasFile": false
+		},
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/filinq/api/anonymization/upload",
+				"form"
+			],
+			[
+				"MOVE",
+				"http://localhost/remote.php/dav/files/admin/DocuDesk/up.pdf",
+				{
+					"Destination": "http://localhost/remote.php/dav/files/admin/DocuDesk/D%201/up.pdf"
+				}
+			],
+			[
+				"POST",
+				"/index.php/apps/filinq/api/anonymization/extract/77",
+				null
+			],
+			[
+				"POST",
+				"/index.php/apps/filinq/api/anonymization/upload",
+				"form"
+			],
+			[
+				"POST",
+				"/index.php/apps/filinq/api/anonymization/extract/77",
+				null
+			]
+		]
+	}
+]
