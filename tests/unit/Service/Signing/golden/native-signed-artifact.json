@@ -368,5 +368,63 @@
             "ip": "10.0.0.7"
         },
         "drawn": []
+    },
+    "field placements, no timestamp": {
+        "assertion": {
+            "v": 2,
+            "signer": "Anna de Vries",
+            "signers": [
+                {
+                    "name": "Anna de Vries",
+                    "email": "anna@example.nl"
+                }
+            ],
+            "timestamp": "<now>",
+            "level": "SES",
+            "method": "native",
+            "ip": "10.0.0.7",
+            "fieldPlacements": [
+                {
+                    "page": 1,
+                    "x": 10,
+                    "y": 20,
+                    "signer": 0
+                }
+            ]
+        },
+        "drawn": [
+            {
+                "pdf": "%PDF-1.4\n%body\n",
+                "placements": [
+                    {
+                        "page": 1,
+                        "x": 10,
+                        "y": 20,
+                        "signer": 0
+                    }
+                ],
+                "signers": [],
+                "timestamp": "<now>"
+            }
+        ]
+    },
+    "forged identity fields and secret are not taken from the context": {
+        "bytes": "%PDF-1.4\n%body\n\n1 0 obj\n<< /Type /Sig /SubFilter /DocuDesk.SES >>\n/DocuDesk-Signature(eyJ2IjoyLCJzaWduZXIiOiJBbm5hIGRlIFZyaWVzIiwic2lnbmVycyI6W3sibmFtZSI6IkFubmEgZGUgVnJpZXMiLCJlbWFpbCI6ImFubmFAZXhhbXBsZS5ubCJ9XSwidGltZXN0YW1wIjoiMjAyNi0xMC0wMVQwOTozMDowMCswMjowMCIsImxldmVsIjoiU0VTIiwibWV0aG9kIjoibmF0aXZlIiwiaXAiOiIxMC4wLjAuNyIsIm1hYyI6IjE1MWYzZjQ1ODc0MmY1NzQyZTkxMGQ1MDY3ZTc1NzkwODM3ZmIwNzYzMGYxMDk5YWYyNjRmMzcwMzI4NjI3MzIifQ==)\nendobj\n",
+        "assertion": {
+            "v": 2,
+            "signer": "Anna de Vries",
+            "signers": [
+                {
+                    "name": "Anna de Vries",
+                    "email": "anna@example.nl"
+                }
+            ],
+            "timestamp": "2026-10-01T09:30:00+02:00",
+            "level": "SES",
+            "method": "native",
+            "ip": "10.0.0.7",
+            "mac": "151f3f458742f5742e910d5067e75790837fb07630f1099af264f37032862732"
+        },
+        "drawn": []
     }
 }

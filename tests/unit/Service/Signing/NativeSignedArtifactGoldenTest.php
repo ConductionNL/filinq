@@ -69,6 +69,8 @@ class NativeSignedArtifactGoldenTest extends TestCase {
 			'field placements that are not a list' => [['fieldPlacements' => 'page 1'] + $base, 'secret-1'],
 			'everything' => [$base + $portal + ['consentBasis' => [['guardian' => 'Piet']], 'fieldPlacements' => $placements, 'signerLabels' => ['A']], 'secret-1'],
 			'no timestamp' => [array_diff_key($base, ['timestamp' => true]), 'secret-1'],
+			'field placements, no timestamp' => [array_diff_key(['fieldPlacements' => $placements] + $base, ['timestamp' => true]), 'secret-1'],
+			'forged identity fields and secret are not taken from the context' => [['userId' => 'mallory', 'owner' => 'x', 'requestedBy' => 'x', 'secret' => 's'] + $base, 'secret-1'],
 		];
 	}//end contexts()
 
@@ -111,6 +113,11 @@ class NativeSignedArtifactGoldenTest extends TestCase {
 			$result = ['bytes' => $bytes, 'assertion' => $assertion];
 			if (isset($context['timestamp']) === false) {
 				$this->assertNotFalse(\DateTimeImmutable::createFromFormat(DATE_ATOM, $assertion['timestamp']));
+				foreach ($this->drawn as $i => $drawn) {
+					$this->assertSame($assertion['timestamp'], $drawn['timestamp'], 'Placements are drawn with the assertion timestamp.');
+					$this->drawn[$i]['timestamp'] = '<now>';
+				}
+
 				$assertion['timestamp'] = '<now>';
 				unset($assertion['mac']);
 				$result = ['assertion' => $assertion];
@@ -138,5 +145,8 @@ class NativeSignedArtifactGoldenTest extends TestCase {
 		}
 
 		$this->assertSame($recorded[$name] ?? null, $result);
+		if ($name === 'forged identity fields and secret are not taken from the context') {
+			$this->assertSame($recorded['a plain SES signature']['bytes'], $result['bytes']);
+		}
 	}//end testArtifactMatchesTheRecordedOne()
 }//end class
