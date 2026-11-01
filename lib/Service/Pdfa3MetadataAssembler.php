@@ -156,41 +156,11 @@ class Pdfa3MetadataAssembler {
 	public function buildAssociatedFiles(array $attachments, array $metadata): array {
 		$maxAttachmentBytes = $this->resolveMaxAttachmentBytes();
 		$files = [];
-		$hasXmlSidecar = false;
-
 		foreach ($attachments as $attachment) {
-			$content = (string)($attachment['content'] ?? '');
-			if (strlen($content) > $maxAttachmentBytes) {
-				throw new Pdfa3ConversionException(
-					reason: Pdfa3ConversionException::REASON_ATTACHMENT_TOO_LARGE,
-					message: sprintf(
-						'Attachment "%s" (%d bytes) exceeds the configured cap (%d bytes).',
-						($attachment['name'] ?? '(unnamed)'),
-						strlen($content),
-						$maxAttachmentBytes
-					),
-					adminHint: sprintf(
-						'Increase %s in app config, or omit this attachment.',
-						self::CFG_MAX_ATTACHMENT_BYTES
-					),
-					code: 413
-				);
-			}
+			$files[] = $this->associatedFile(attachment: $attachment, maxAttachmentBytes: $maxAttachmentBytes);
+		}
 
-			$name = (string)($attachment['name'] ?? 'attachment.bin');
-			if (str_ends_with(strtolower($name), '.xml') === true) {
-				$hasXmlSidecar = true;
-			}
-
-			$files[] = [
-				'content' => $content,
-				'name' => $name,
-				'mime' => (string)($attachment['mime'] ?? 'application/octet-stream'),
-				'description' => (string)($attachment['description'] ?? ''),
-				'AFRelationship' => (string)($attachment['AFRelationship'] ?? 'Supplement'),
-			];
-		}//end foreach
-
+		$hasXmlSidecar = $this->hasXmlFile(files: $files);
 		if (empty($metadata) === false && $hasXmlSidecar === false) {
 			$files[] = [
 				'content' => $this->buildMetadataSidecarXml(metadata: $metadata),
@@ -203,6 +173,61 @@ class Pdfa3MetadataAssembler {
 
 		return $files;
 	}//end buildAssociatedFiles()
+
+	/**
+	 * One caller-supplied attachment as an mPDF associated-file record.
+	 *
+	 * @param array<string,mixed> $attachment The attachment.
+	 * @param int $maxAttachmentBytes The size cap.
+	 *
+	 * @return array<string,string> The record.
+	 *
+	 * @throws Pdfa3ConversionException REASON_ATTACHMENT_TOO_LARGE.
+	 */
+	private function associatedFile(array $attachment, int $maxAttachmentBytes): array {
+		$content = (string)($attachment['content'] ?? '');
+		if (strlen($content) > $maxAttachmentBytes) {
+			throw new Pdfa3ConversionException(
+				reason: Pdfa3ConversionException::REASON_ATTACHMENT_TOO_LARGE,
+				message: sprintf(
+					'Attachment "%s" (%d bytes) exceeds the configured cap (%d bytes).',
+					($attachment['name'] ?? '(unnamed)'),
+					strlen($content),
+					$maxAttachmentBytes
+				),
+				adminHint: sprintf(
+					'Increase %s in app config, or omit this attachment.',
+					self::CFG_MAX_ATTACHMENT_BYTES
+				),
+				code: 413
+			);
+		}
+
+		return [
+			'content' => $content,
+			'name' => (string)($attachment['name'] ?? 'attachment.bin'),
+			'mime' => (string)($attachment['mime'] ?? 'application/octet-stream'),
+			'description' => (string)($attachment['description'] ?? ''),
+			'AFRelationship' => (string)($attachment['AFRelationship'] ?? 'Supplement'),
+		];
+	}//end associatedFile()
+
+	/**
+	 * Whether any record is an XML file, by its name.
+	 *
+	 * @param array<int,array<string,string>> $files The records.
+	 *
+	 * @return bool True when a name ends in .xml, in any case.
+	 */
+	private function hasXmlFile(array $files): bool {
+		foreach ($files as $file) {
+			if (str_ends_with(strtolower($file['name']), '.xml') === true) {
+				return true;
+			}
+		}
+
+		return false;
+	}//end hasXmlFile()
 
 	/**
 	 * Serialise every non-standard metadata key into a custom XMP RDF

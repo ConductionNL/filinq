@@ -264,36 +264,41 @@ class FinalDocumentController extends Controller {
 			);
 		}
 
-		$states = $this->request->getParam('finalStates', []);
-		if (is_array($states) === false) {
-			$states = [];
-		}
-
-		$user      = $this->userSession->getUser();
-		$declaredBy = null;
-		if ($user !== null) {
-			$declaredBy = $user->getUID();
-		}
-
 		try {
-			return new JSONResponse(
-				data: [
-					'rule' => $this->rules->declareRule(
-						declaringApp: (string)$this->request->getParam('declaringApp', ''),
-						typeReference: (string)$this->request->getParam('typeReference', ''),
-						finalStates: $states,
-						documentRole: (string)$this->request->getParam('documentRole', ''),
-						reasonTemplate: (string)$this->request->getParam('reasonTemplate', ''),
-						declaredBy: $declaredBy
-					),
-				],
-				statusCode: Http::STATUS_OK
+			$rule = $this->rules->declareRule(
+				...$this->declarationRequest(),
+				declaredBy: $this->userSession->getUser()?->getUID()
 			);
+
+			return new JSONResponse(data: ['rule' => $rule], statusCode: Http::STATUS_OK);
 		} catch (Throwable $e) {
 			return $this->failure(exception: $e, fallback: $this->l10n->t('Could not store the declaration'));
 		}
 
 	}//end declareRule()
+
+	/**
+	 * The declaration the request body describes; missing fields read as empty.
+	 *
+	 * @return array{declaringApp: string, typeReference: string, finalStates: array<mixed>, documentRole: string, reasonTemplate: string}
+	 *
+	 * @spec openspec/changes/final-documents-frozen/specs/document-versions/spec.md
+	 */
+	private function declarationRequest(): array {
+		$states = $this->request->getParam('finalStates', []);
+		if (is_array($states) === false) {
+			$states = [];
+		}
+
+		return [
+			'declaringApp' => (string)$this->request->getParam('declaringApp', ''),
+			'typeReference' => (string)$this->request->getParam('typeReference', ''),
+			'finalStates' => $states,
+			'documentRole' => (string)$this->request->getParam('documentRole', ''),
+			'reasonTemplate' => (string)$this->request->getParam('reasonTemplate', ''),
+		];
+
+	}//end declarationRequest()
 
 	/**
 	 * Apply a consuming app's state change to that record's documents.
