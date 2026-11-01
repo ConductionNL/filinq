@@ -103,9 +103,15 @@ describe('menu relocations golden', () => {
 			return { name, result, input, same: result === input }
 		})
 		const real = structuredClone(manifest.menu)
+		const relocated = applyMenuRelocations(real, {
+			[real[1]?.id]: real[0]?.id,
+		})
 		out.push({
 			name: 'bundled manifest, own group dissolved',
-			result: applyMenuRelocations(real, { [real[1]?.id]: real[0]?.id }),
+			result: relocated.map((m) => [
+				m.id,
+				(m.children || []).map((c) => c.id),
+			]),
 		})
 		golden('menuRelocations', out)
 	})
