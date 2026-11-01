@@ -76,16 +76,16 @@ class LibreOfficeEmittedPdfLinkSwapTest extends TestCase {
 			[1 => ['pipe', 'w']],
 			$readerPipes
 		);
-		$this->assertIsResource($swapper);
-		$this->assertIsResource($reader);
+		$this->assertIsResource(actual: $swapper);
+		$this->assertIsResource(actual: $reader);
 
 		$seen = json_decode((string)stream_get_contents($readerPipes[1]), true);
 		proc_close($reader);
 		proc_close($swapper);
 
-		$this->assertIsArray($seen);
-		$this->assertGreaterThan(0, $seen['%PDF-inside'] ?? 0, (string)json_encode($seen));
-		$this->assertSame(0, $seen['%PDF-outside'] ?? 0, (string)json_encode($seen));
+		$this->assertIsArray(actual: $seen);
+		$this->assertGreaterThan(expected: 0, actual: $seen['%PDF-inside'] ?? 0, message: (string)json_encode($seen));
+		$this->assertSame(expected: 0, actual: $seen['%PDF-outside'] ?? 0, message: (string)json_encode($seen));
 	}//end testAReadNeverFollowsTheLinkOutOfTheSandbox()
 
 	/**

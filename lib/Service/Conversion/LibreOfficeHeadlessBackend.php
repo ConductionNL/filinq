@@ -545,9 +545,9 @@ class LibreOfficeHeadlessBackend implements ConversionBackendInterface {
 	 * Locate, containment-check, and read the PDF soffice emitted.
 	 *
 	 * Soffice emits the file with the source basename + ".pdf". Even though
-	 * $baseName is derived from basename($source->getName()), the resolved
-	 * output path is realpath'd and checked to stay inside $tmpDir before it
-	 * is read — that closes any remaining TOCTOU / symlink window.
+	 * $baseName is derived from basename($source->getName()), the output path
+	 * is realpath'd, checked to stay inside $tmpDir, and the resolved path is
+	 * what gets read, so a link swapped after the check is not followed.
 	 *
 	 * @param string $tmpDir Temp directory soffice wrote its output into.
 	 * @param string $baseName Source basename without extension.
@@ -567,14 +567,15 @@ class LibreOfficeHeadlessBackend implements ConversionBackendInterface {
 			);
 		}
 
-		if ($this->isInsideDir(dir: $tmpDir, path: $outputTmp) === false) {
+		$resolved = $this->resolveInsideDir(dir: $tmpDir, path: $outputTmp);
+		if ($resolved === '') {
 			throw $this->outputFailure(
 				message: 'soffice output path escaped the conversion sandbox.',
 				reason: 'output path not contained in tmp dir'
 			);
 		}
 
-		$pdfBytes = file_get_contents($outputTmp);
+		$pdfBytes = file_get_contents($resolved);
 		if ($pdfBytes === false || $pdfBytes === '') {
 			throw $this->outputFailure(message: 'soffice emitted an empty PDF file.', reason: 'output PDF was empty');
 		}
@@ -583,22 +584,25 @@ class LibreOfficeHeadlessBackend implements ConversionBackendInterface {
 	}//end readEmittedPdf()
 
 	/**
-	 * Whether a path, with its links resolved, lies inside a directory.
+	 * A path with its links resolved, when it lies inside a directory.
+	 *
+	 * The caller reads the resolved path, so a link changed after this check
+	 * cannot point the read elsewhere.
 	 *
 	 * @param string $dir The directory.
 	 * @param string $path The path.
 	 *
-	 * @return bool True when both resolve and the path lies below the directory.
+	 * @return string The resolved path, or '' when either does not resolve or the path lies outside.
 	 */
-	private function isInsideDir(string $dir, string $path): bool {
+	private function resolveInsideDir(string $dir, string $path): string {
 		$realDir = realpath($dir);
 		$realPath = realpath($path);
-		if ($realDir === false || $realPath === false) {
-			return false;
+		if ($realDir === false || str_starts_with((string)$realPath, $realDir . '/') === false) {
+			return '';
 		}
 
-		return str_starts_with($realPath, $realDir . '/');
-	}//end isInsideDir()
+		return $realPath;
+	}//end resolveInsideDir()
 
 	/**
 	 * The failure for output soffice should have written but did not, usably.

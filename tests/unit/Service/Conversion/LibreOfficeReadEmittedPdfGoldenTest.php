@@ -144,12 +144,12 @@ class LibreOfficeReadEmittedPdfGoldenTest extends TestCase {
 			$this->createMock(ILockingProvider::class),
 			new NullLogger()
 		);
-		$inside = new ReflectionMethod($backend, 'isInsideDir');
+		$inside = new ReflectionMethod($backend, 'resolveInsideDir');
 		$tmp = sys_get_temp_dir();
 
-		$this->assertFalse($inside->invoke($backend, $tmp . '/filinq-missing-dir', $tmp . '/filinq-missing-dir/input.pdf'));
-		$this->assertFalse($inside->invoke($backend, $tmp, $tmp . '/filinq-missing-file.pdf'));
-		$this->assertFalse($inside->invoke($backend, $tmp . '/filinq-missing-dir', $tmp));
+		$this->assertSame('', $inside->invoke($backend, $tmp . '/filinq-missing-dir', $tmp . '/filinq-missing-dir/input.pdf'));
+		$this->assertSame('', $inside->invoke($backend, $tmp, $tmp . '/filinq-missing-file.pdf'));
+		$this->assertSame('', $inside->invoke($backend, $tmp . '/filinq-missing-dir', $tmp));
 	}//end testUnresolvedPathsAreNotInside()
 
 	/**
