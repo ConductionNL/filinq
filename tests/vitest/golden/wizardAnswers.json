@@ -1,0 +1,319 @@
+[
+	{
+		"visible": [
+			"kind",
+			"org",
+			"later",
+			"after",
+			"odd",
+			"none",
+			"blank",
+			"numeric",
+			"count",
+			"notnull",
+			"num3"
+		],
+		"missing": [
+			"kind",
+			"after"
+		],
+		"overriding": [],
+		"payload": {
+			"dataRefs": [],
+			"adHocData": {},
+			"wizardContext": {
+				"wizardId": "w",
+				"wizardVersion": "2",
+				"answers": {}
+			}
+		}
+	},
+	{
+		"visible": [
+			"kind",
+			"name",
+			"later",
+			"after",
+			"odd",
+			"none",
+			"blank",
+			"numeric",
+			"count",
+			"notnull",
+			"num3"
+		],
+		"missing": [
+			"after"
+		],
+		"overriding": [],
+		"payload": {
+			"dataRefs": [],
+			"adHocData": {},
+			"wizardContext": {
+				"wizardId": "w",
+				"wizardVersion": "2",
+				"answers": {
+					"kind": "person"
+				}
+			}
+		}
+	},
+	{
+		"visible": [
+			"kind",
+			"name",
+			"later",
+			"after",
+			"odd",
+			"none",
+			"blank",
+			"hidden",
+			"numeric",
+			"count",
+			"notnull",
+			"num3"
+		],
+		"missing": [
+			"after"
+		],
+		"overriding": [],
+		"payload": {
+			"dataRefs": [],
+			"adHocData": {
+				"applicant": {
+					"name": "Jan"
+				}
+			},
+			"wizardContext": {
+				"wizardId": "w",
+				"wizardVersion": "2",
+				"answers": {
+					"kind": "person",
+					"name": "Jan"
+				}
+			}
+		}
+	},
+	{
+		"visible": [
+			"kind",
+			"org",
+			"case",
+			"later",
+			"after",
+			"odd",
+			"none",
+			"blank",
+			"numeric",
+			"count",
+			"notnull",
+			"num3"
+		],
+		"missing": [
+			"after"
+		],
+		"overriding": [],
+		"payload": {
+			"dataRefs": [
+				{
+					"register": "r",
+					"schema": "applicant",
+					"id": "c-1"
+				}
+			],
+			"adHocData": {},
+			"wizardContext": {
+				"wizardId": "w",
+				"wizardVersion": "2",
+				"answers": {
+					"kind": "company",
+					"org": "ACME",
+					"case": "c-1"
+				}
+			}
+		}
+	},
+	{
+		"visible": [
+			"kind",
+			"org",
+			"later",
+			"after",
+			"odd",
+			"none",
+			"blank",
+			"numeric",
+			"count",
+			"notnull",
+			"num3"
+		],
+		"missing": [],
+		"overriding": [],
+		"payload": {
+			"dataRefs": [],
+			"adHocData": {},
+			"wizardContext": {
+				"wizardId": "w",
+				"wizardVersion": "2",
+				"answers": {
+					"kind": [
+						"a"
+					],
+					"after": "x"
+				}
+			}
+		}
+	},
+	{
+		"visible": [
+			"kind",
+			"org",
+			"case",
+			"later",
+			"after",
+			"odd",
+			"none",
+			"blank",
+			"numeric",
+			"count",
+			"num3"
+		],
+		"missing": [
+			"kind",
+			"after"
+		],
+		"overriding": [],
+		"payload": {
+			"dataRefs": [],
+			"adHocData": {},
+			"wizardContext": {
+				"wizardId": "w",
+				"wizardVersion": "2",
+				"answers": {
+					"org": 0
+				}
+			}
+		}
+	},
+	{
+		"visible": [
+			"kind",
+			"org",
+			"later",
+			"after",
+			"odd",
+			"none",
+			"blank",
+			"numeric",
+			"count",
+			"notnull",
+			"num2"
+		],
+		"missing": [
+			"kind",
+			"after"
+		],
+		"overriding": [],
+		"payload": {
+			"dataRefs": [],
+			"adHocData": {
+				"n": "yes"
+			},
+			"wizardContext": {
+				"wizardId": "w",
+				"wizardVersion": "2",
+				"answers": {
+					"numeric": "yes",
+					"count": "3"
+				}
+			}
+		}
+	},
+	{
+		"visible": [
+			"kind",
+			"org",
+			"later",
+			"after",
+			"odd",
+			"none",
+			"blank",
+			"numeric",
+			"count",
+			"num2"
+		],
+		"missing": [
+			"kind",
+			"after"
+		],
+		"overriding": [],
+		"payload": {
+			"dataRefs": [],
+			"adHocData": {
+				"n": "n"
+			},
+			"wizardContext": {
+				"wizardId": "w",
+				"wizardVersion": "2",
+				"answers": {
+					"numeric": "n",
+					"count": 3
+				}
+			}
+		}
+	},
+	{
+		"visible": [
+			"kind",
+			"name",
+			"later",
+			"after",
+			"odd",
+			"none",
+			"blank",
+			"hidden",
+			"numeric",
+			"count",
+			"notnull",
+			"num3"
+		],
+		"missing": [
+			"after"
+		],
+		"overriding": [],
+		"payload": {
+			"dataRefs": [],
+			"adHocData": {
+				"applicant": {
+					"name": "Piet"
+				}
+			},
+			"wizardContext": {
+				"wizardId": "w",
+				"wizardVersion": "2",
+				"answers": {
+					"kind": "person",
+					"name": "Piet"
+				}
+			}
+		}
+	},
+	{
+		"visible": []
+	},
+	{
+		"visible": [
+			"kind",
+			"org",
+			"later",
+			"after",
+			"odd",
+			"none",
+			"blank",
+			"numeric",
+			"count",
+			"notnull",
+			"num3"
+		]
+	}
+]

@@ -50,8 +50,9 @@ export function isAnswered(answer) {
 export function visibleKeys(questions, answers) {
 	const visible = new Set()
 	const earlier = new Set()
+	const scope = { answers: answers || {}, earlier, visible }
 	for (const question of questions || []) {
-		if (isAsked(question, answers || {}, earlier, visible)) {
+		if (isAsked(question, scope)) {
 			visible.add(question.key)
 		}
 		earlier.add(question.key)
@@ -63,31 +64,37 @@ export function visibleKeys(questions, answers) {
  * Whether one question is asked.
  *
  * @param {object} question The question.
- * @param {object} answers The answers.
- * @param {Set<string>} earlier Keys before it.
- * @param {Set<string>} visible Keys asked so far.
+ * @param {{answers: object, earlier: Set<string>, visible: Set<string>}} scope
+ *        The answers, the keys before it and the keys asked so far.
  * @return {boolean} True when asked.
  */
-function isAsked(question, answers, earlier, visible) {
+function isAsked(question, scope) {
 	const condition = question.condition
 	if (!condition || typeof condition !== 'object') {
 		return true
 	}
 	const on = condition.questionKey || ''
-	if (!on || !earlier.has(on) || !OPERATORS.includes(condition.operator)) {
+	if (!on || !scope.earlier.has(on) || !OPERATORS.includes(condition.operator)) {
 		return true
 	}
-	if (!visible.has(on)) {
-		return false
-	}
-	const answer = answers[on]
+	return scope.visible.has(on) && conditionHolds(condition, scope.answers[on])
+}
+
+/**
+ * Whether a condition holds for the answer to the question it is on.
+ *
+ * @param {{operator: string, value: (string|number|undefined)}} condition The condition.
+ * @param {(string|number|Array<string>|null|undefined)} answer The answer it looks at.
+ * @return {boolean}
+ */
+function conditionHolds(condition, answer) {
 	if (condition.operator === 'answered') {
 		return isAnswered(answer)
 	}
 	const same =
-		String(answer ?? '') === String(condition.value ?? '')
-		&& answer !== undefined
+		answer !== undefined
 		&& answer !== null
+		&& String(answer) === String(condition.value ?? '')
 	if (condition.operator === 'equals') {
 		return isAnswered(answer) && same
 	}
@@ -225,9 +232,21 @@ export function questionToForm(question) {
 		register: q.register || '',
 		schema: q.schema || '',
 		mapsTo: q.mapsTo || '',
-		conditionKey: q.condition?.questionKey || null,
-		conditionOperator: q.condition?.operator || 'equals',
-		conditionValue: q.condition?.value || '',
+		...conditionForm(q.condition),
+	}
+}
+
+/**
+ * The condition fields of a question form.
+ *
+ * @param {object|undefined} condition The question's condition.
+ * @return {{conditionKey: (string|null), conditionOperator: string, conditionValue: (string|number)}}
+ */
+function conditionForm(condition) {
+	return {
+		conditionKey: condition?.questionKey || null,
+		conditionOperator: condition?.operator || 'equals',
+		conditionValue: condition?.value || '',
 	}
 }
 
@@ -281,6 +300,56 @@ export function formToQuestion(form) {
 	return question
 }
 
+const KEY_PATTERN = /^[a-zA-Z][a-zA-Z0-9_-]{0,63}$/
+
+const DATA_PATH_PATTERN = /^[a-zA-Z_][a-zA-Z0-9_]*(\.[a-zA-Z_][a-zA-Z0-9_]*)*$/
+
+/**
+ * The rules a question form must meet, in the order they are reported.
+ * Each problem is a function so the text is translated when it is shown.
+ *
+ * @type {Array<{fails: function(object, Array<string>): boolean, problem: function(): string}>}
+ */
+const QUESTION_RULES = [
+	{
+		fails: (form) => !form.label.trim(),
+		problem: () => t('filinq', 'Write the question.'),
+	},
+	{
+		fails: (form) => !KEY_PATTERN.test(form.key.trim()),
+		problem: () =>
+			t(
+				'filinq',
+				'The key needs letters, digits, - or _, starting with a letter.',
+			),
+	},
+	{
+		fails: (form, usedKeys) => usedKeys.includes(form.key.trim()),
+		problem: () => t('filinq', 'Another question already uses this key.'),
+	},
+	{
+		fails: (form) => form.type === 'choice' && !form.choicesText.trim(),
+		problem: () => t('filinq', 'Add at least one choice.'),
+	},
+	{
+		fails: (form) =>
+			form.type === 'registerObject'
+			&& (!form.register.trim() || !form.schema.trim()),
+		problem: () => t('filinq', 'Name the register and the schema to pick from.'),
+	},
+	{
+		fails: (form) =>
+			form.type !== 'registerObject'
+			&& form.mapsTo.trim() !== ''
+			&& !DATA_PATH_PATTERN.test(form.mapsTo.trim()),
+		problem: () =>
+			t(
+				'filinq',
+				'The data path needs names joined by dots, such as applicant.name.',
+			),
+	},
+]
+
 /**
  * What keeps a question form from being kept, the same rules the server applies.
  *
@@ -290,40 +359,8 @@ export function formToQuestion(form) {
  * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-1
  */
 export function questionProblem(form, usedKeys) {
-	if (!form.label.trim()) {
-		return t('filinq', 'Write the question.')
-	}
-	if (!/^[a-zA-Z][a-zA-Z0-9_-]{0,63}$/.test(form.key.trim())) {
-		return t(
-			'filinq',
-			'The key needs letters, digits, - or _, starting with a letter.',
-		)
-	}
-	if (usedKeys.includes(form.key.trim())) {
-		return t('filinq', 'Another question already uses this key.')
-	}
-	if (form.type === 'choice' && !form.choicesText.trim()) {
-		return t('filinq', 'Add at least one choice.')
-	}
-	if (
-		form.type === 'registerObject'
-		&& (!form.register.trim() || !form.schema.trim())
-	) {
-		return t('filinq', 'Name the register and the schema to pick from.')
-	}
-	if (
-		form.type !== 'registerObject'
-		&& form.mapsTo.trim()
-		&& !/^[a-zA-Z_][a-zA-Z0-9_]*(\.[a-zA-Z_][a-zA-Z0-9_]*)*$/.test(
-			form.mapsTo.trim(),
-		)
-	) {
-		return t(
-			'filinq',
-			'The data path needs names joined by dots, such as applicant.name.',
-		)
-	}
-	return ''
+	const rule = QUESTION_RULES.find((r) => r.fails(form, usedKeys))
+	return rule ? rule.problem() : ''
 }
 
 /**
