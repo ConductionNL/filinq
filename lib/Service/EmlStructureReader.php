@@ -71,6 +71,8 @@ class EmlStructureReader {
 	 * @param object $result AnonymisedEmlStructure.
 	 *
 	 * @return array<string,string> Flattened header strings.
+	 *
+	 * @spec openspec/changes/archive/2026-06-14-eml-pdf-assembly/tasks.md
 	 */
 	public function headers(object $result): array {
 		$raw = $this->prop(obj: $result, name: 'headers', default: []);
@@ -78,48 +80,54 @@ class EmlStructureReader {
 			$raw = [];
 		}
 
-		$joinList = static function (mixed $value): string {
-			if (is_array($value) === false) {
-				if (is_string($value) === true) {
-					return trim($value);
-				}
-
-				return '';
-			}
-
-			$parts = [];
-			foreach ($value as $entry) {
-				if (is_string($entry) === false) {
-					continue;
-				}
-
-				$trimmed = trim($entry);
-				if ($trimmed !== '') {
-					$parts[] = $trimmed;
-				}
-			}
-
-			return implode(', ', $parts);
-		};
-
-		$asString = static function (mixed $value): string {
-			if (is_string($value) === true) {
-				return $value;
-			}
-
-			return '';
-		};
-
 		return [
-			'from' => $asString($raw['from'] ?? null),
-			'replyTo' => $asString($raw['replyTo'] ?? null),
-			'to' => $joinList($raw['to'] ?? ''),
-			'cc' => $joinList($raw['cc'] ?? ''),
-			'subject' => $asString($raw['subject'] ?? null),
+			'from' => $this->stringOrEmpty(value: $raw['from'] ?? null),
+			'replyTo' => $this->stringOrEmpty(value: $raw['replyTo'] ?? null),
+			'to' => $this->joinList(value: $raw['to'] ?? ''),
+			'cc' => $this->joinList(value: $raw['cc'] ?? ''),
+			'subject' => $this->stringOrEmpty(value: $raw['subject'] ?? null),
 			'date' => $this->formatDate(date: $raw['date'] ?? ''),
 		];
 
 	}//end headers()
+
+	/**
+	 * The value when it is a string, else an empty string.
+	 *
+	 * @param mixed $value Raw header value.
+	 *
+	 * @return string The string, or ''.
+	 */
+	private function stringOrEmpty(mixed $value): string {
+		if (is_string($value) === true) {
+			return $value;
+		}
+
+		return '';
+	}//end stringOrEmpty()
+
+	/**
+	 * Join an address list into one comma-separated string; a single string is trimmed.
+	 *
+	 * @param mixed $value Raw header value: a list of addresses or one string.
+	 *
+	 * @return string The joined addresses, or ''.
+	 */
+	private function joinList(mixed $value): string {
+		if (is_array($value) === false) {
+			return trim($this->stringOrEmpty(value: $value));
+		}
+
+		$parts = [];
+		foreach ($value as $entry) {
+			$trimmed = trim($this->stringOrEmpty(value: $entry));
+			if ($trimmed !== '') {
+				$parts[] = $trimmed;
+			}
+		}
+
+		return implode(', ', $parts);
+	}//end joinList()
 
 	/**
 	 * Format OR's redacted date string to `YYYY-MM-DD HH:MM`. Passes through
