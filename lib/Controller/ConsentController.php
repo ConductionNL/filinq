@@ -447,19 +447,36 @@ class ConsentController extends Controller {
 			);
 
 			return new JSONResponse($result);
-		} catch (\InvalidArgumentException $e) {
-			// An undeclared status move or missing evidence: say which.
-			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_BAD_REQUEST);
-		} catch (\OCP\AppFramework\OCS\OCSForbiddenException $e) {
+		} catch (Exception $e) {
+			return $this->updateFailed(exception: $e);
+		}//end try
+
+	}//end update()
+
+	/**
+	 * Answer a failed consent update by the kind of failure.
+	 *
+	 * @param Exception $exception The failure.
+	 *
+	 * @return JSONResponse 400 for an undeclared status move or missing evidence, 403 for a
+	 *                      standing consent the caller may not change, otherwise the logged error.
+	 *
+	 * @spec openspec/specs/consent-management/spec.md
+	 */
+	private function updateFailed(Exception $exception): JSONResponse {
+		if ($exception instanceof \InvalidArgumentException) {
+			return new JSONResponse(['error' => $exception->getMessage()], Http::STATUS_BAD_REQUEST);
+		}
+
+		if ($exception instanceof \OCP\AppFramework\OCS\OCSForbiddenException) {
 			return new JSONResponse(
 				['error' => $this->l10n->t('You are not allowed to revoke or modify standing consents.')],
 				Http::STATUS_FORBIDDEN
 			);
-		} catch (Exception $e) {
-			return $this->errorResponse(message: 'Failed to update consent', exception: $e);
-		}//end try
+		}
 
-	}//end update()
+		return $this->errorResponse(message: 'Failed to update consent', exception: $exception);
+	}//end updateFailed()
 
 	/**
 	 * Get all consent records for a specific document
