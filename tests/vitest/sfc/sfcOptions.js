@@ -9,9 +9,11 @@
  * `.vue` file, imports every non-UI dependency for real (so `vi.mock` in the
  * calling test applies), replaces `.vue` files and UI libraries with named
  * stubs, and evaluates the blocks as one scope, the way the Vue compiler
- * merges them. `createInstance(options, setup)` then builds a plain object
- * with the merged mixins, data, props, computed getters and bound methods,
- * so characterization tests can drive the component's logic.
+ * merges them. Dynamic `import()` goes through the same loader, and
+ * `import.meta.url` is the component file's URL. `createInstance(options,
+ * setup)` then builds a plain object with the merged mixins, data, props,
+ * computed getters and bound methods, so characterization tests can drive
+ * the component's logic.
  *
  * @spec exclude test harness for characterization tests of component logic
  */
@@ -104,7 +106,15 @@ export async function loadSfc(file) {
 			}
 		}
 	}
-	const body = code.replace(IMPORT, '').replace(/^export default\s/m, 'return ')
+	const body = code
+		.replace(IMPORT, '')
+		.replace(/^export default\s/m, 'return ')
+		.replace(/\bimport\(/g, '__import(')
+		.replace(/\bimport\.meta\b/g, '__importMeta')
+	names.push('__import', '__importMeta')
+	values.push((source) => load(source, dirname(file)), {
+		url: pathToFileURL(file).href,
+	})
 	return {
 		options: new Function(...names, body)(...values),
 		setup,
