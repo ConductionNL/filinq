@@ -1,0 +1,132 @@
+{
+	"props": {
+		"path": {
+			"type": "String",
+			"required": true
+		},
+		"url": {
+			"type": "String",
+			"default": ""
+		}
+	},
+	"watchers": {
+		"path": {
+			"deep": false,
+			"immediate": true
+		},
+		"url": {
+			"deep": false,
+			"immediate": false
+		},
+		"highlightEntities": {
+			"deep": true,
+			"immediate": false
+		},
+		"pendingValue": {
+			"deep": false,
+			"immediate": false
+		}
+	},
+	"wiring": {
+		"loading": true,
+		"error": null,
+		"highlightEntities": [],
+		"pendingValue": "",
+		"isAddMode": false,
+		"calls": [
+			[
+				"load"
+			],
+			[
+				"load"
+			],
+			[
+				"scheduleHighlights"
+			],
+			[
+				"scheduleHighlights"
+			]
+		],
+		"errors": []
+	},
+	"addModeOff": {
+		"loading": true,
+		"error": null,
+		"highlightEntities": [
+			{
+				"value": "Jan",
+				"type": "PERSON"
+			}
+		],
+		"pendingValue": "",
+		"isAddMode": false,
+		"calls": [],
+		"errors": []
+	},
+	"addModeOn": {
+		"loading": true,
+		"error": null,
+		"highlightEntities": [
+			{
+				"value": "Jan",
+				"type": "PERSON"
+			}
+		],
+		"pendingValue": "sel",
+		"isAddMode": true,
+		"calls": [],
+		"errors": []
+	},
+	"addModeNoSelection": {
+		"loading": true,
+		"error": null,
+		"highlightEntities": [
+			{
+				"value": "Jan",
+				"type": "PERSON"
+			}
+		],
+		"pendingValue": "",
+		"isAddMode": true,
+		"calls": [],
+		"errors": []
+	},
+	"captured": {
+		"loading": true,
+		"error": null,
+		"highlightEntities": [
+			{
+				"value": "Jan",
+				"type": "PERSON"
+			}
+		],
+		"pendingValue": "",
+		"isAddMode": true,
+		"calls": [
+			[
+				"setSelection",
+				"picked text"
+			]
+		],
+		"errors": []
+	},
+	"capturedNothing": {
+		"loading": true,
+		"error": null,
+		"highlightEntities": [
+			{
+				"value": "Jan",
+				"type": "PERSON"
+			}
+		],
+		"pendingValue": "",
+		"isAddMode": true,
+		"calls": [
+			[
+				"setSelection",
+				""
+			]
+		],
+		"errors": []
+	}
+}
