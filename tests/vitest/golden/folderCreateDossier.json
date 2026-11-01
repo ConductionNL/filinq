@@ -1144,5 +1144,279 @@
 			"creating": false,
 			"error": "plain"
 		}
+	},
+	{
+		"state": {
+			"folderId": 15,
+			"folderPath": "/C",
+			"unsetDescription": true
+		},
+		"answer": {
+			"@self": {
+				"id": "self"
+			},
+			"id": "id",
+			"uuid": "uuid"
+		},
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/openregister/api/objects/filinq/dossier",
+				{
+					"name": "/C",
+					"description": "",
+					"bases": [
+						"art-5-1-2-e"
+					],
+					"@self": {
+						"folder": "15"
+					}
+				},
+				{
+					"creating": true,
+					"error": null
+				}
+			]
+		],
+		"dossier": {
+			"uuid": "self",
+			"name": "",
+			"bases": [
+				"art-5-1-2-e"
+			],
+			"creating": false,
+			"error": null
+		}
+	},
+	{
+		"state": {
+			"folderId": 15,
+			"folderPath": "/C",
+			"unsetDescription": true
+		},
+		"answer": {
+			"@self": {
+				"id": ""
+			},
+			"id": "id"
+		},
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/openregister/api/objects/filinq/dossier",
+				{
+					"name": "/C",
+					"description": "",
+					"bases": [
+						"art-5-1-2-e"
+					],
+					"@self": {
+						"folder": "15"
+					}
+				},
+				{
+					"creating": true,
+					"error": null
+				}
+			]
+		],
+		"dossier": {
+			"uuid": "id",
+			"name": "",
+			"bases": [
+				"art-5-1-2-e"
+			],
+			"creating": false,
+			"error": null
+		}
+	},
+	{
+		"state": {
+			"folderId": 15,
+			"folderPath": "/C",
+			"unsetDescription": true
+		},
+		"answer": {
+			"uuid": "only-uuid"
+		},
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/openregister/api/objects/filinq/dossier",
+				{
+					"name": "/C",
+					"description": "",
+					"bases": [
+						"art-5-1-2-e"
+					],
+					"@self": {
+						"folder": "15"
+					}
+				},
+				{
+					"creating": true,
+					"error": null
+				}
+			]
+		],
+		"dossier": {
+			"uuid": "only-uuid",
+			"name": "",
+			"bases": [
+				"art-5-1-2-e"
+			],
+			"creating": false,
+			"error": null
+		}
+	},
+	{
+		"state": {
+			"folderId": 15,
+			"folderPath": "/C",
+			"unsetDescription": true
+		},
+		"answer": {
+			"@self": {}
+		},
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/openregister/api/objects/filinq/dossier",
+				{
+					"name": "/C",
+					"description": "",
+					"bases": [
+						"art-5-1-2-e"
+					],
+					"@self": {
+						"folder": "15"
+					}
+				},
+				{
+					"creating": true,
+					"error": null
+				}
+			]
+		],
+		"dossier": {
+			"uuid": null,
+			"name": "",
+			"bases": [
+				"art-5-1-2-e"
+			],
+			"creating": false,
+			"error": "Dossier created but UUID not found in response."
+		}
+	},
+	{
+		"state": {
+			"folderId": 15,
+			"folderPath": "/C",
+			"unsetDescription": true
+		},
+		"answer": null,
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/openregister/api/objects/filinq/dossier",
+				{
+					"name": "/C",
+					"description": "",
+					"bases": [
+						"art-5-1-2-e"
+					],
+					"@self": {
+						"folder": "15"
+					}
+				},
+				{
+					"creating": true,
+					"error": null
+				}
+			]
+		],
+		"dossier": {
+			"uuid": null,
+			"name": "",
+			"bases": [
+				"art-5-1-2-e"
+			],
+			"creating": false,
+			"error": "Dossier created but UUID not found in response."
+		}
+	},
+	{
+		"state": {
+			"folderId": 15,
+			"folderPath": "/C",
+			"unsetDescription": true
+		},
+		"answer": "down",
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/openregister/api/objects/filinq/dossier",
+				{
+					"name": "/C",
+					"description": "",
+					"bases": [
+						"art-5-1-2-e"
+					],
+					"@self": {
+						"folder": "15"
+					}
+				},
+				{
+					"creating": true,
+					"error": null
+				}
+			]
+		],
+		"dossier": {
+			"uuid": null,
+			"name": "",
+			"bases": [
+				"art-5-1-2-e"
+			],
+			"creating": false,
+			"error": "refused"
+		}
+	},
+	{
+		"state": {
+			"folderId": 15,
+			"folderPath": "/C",
+			"unsetDescription": true
+		},
+		"answer": "plain",
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/openregister/api/objects/filinq/dossier",
+				{
+					"name": "/C",
+					"description": "",
+					"bases": [
+						"art-5-1-2-e"
+					],
+					"@self": {
+						"folder": "15"
+					}
+				},
+				{
+					"creating": true,
+					"error": null
+				}
+			]
+		],
+		"dossier": {
+			"uuid": null,
+			"name": "",
+			"bases": [
+				"art-5-1-2-e"
+			],
+			"creating": false,
+			"error": "plain"
+		}
 	}
 ]

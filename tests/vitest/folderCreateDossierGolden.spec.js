@@ -44,6 +44,7 @@ const STATES = [
 		dossier: { name: '', description: '', bases: null },
 	},
 	{ folderId: 14, folderPath: '', dossier: { name: '', bases: undefined } },
+	{ folderId: 15, folderPath: '/C', unsetDescription: true },
 ]
 
 const ANSWERS = [
@@ -74,6 +75,9 @@ describe('folder createDossier golden', () => {
 					folderPath: state.folderPath,
 					dossier: { error: 'old', ...(state.dossier || {}) },
 				})
+				if (state.unsetDescription) {
+					store.dossier.description = undefined
+				}
 				await store.createDossier()
 				out.push({
 					state,
