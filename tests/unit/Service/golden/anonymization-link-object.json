@@ -133,6 +133,7 @@
             }
         },
         "saved": {
+            "sourceFileId": 7,
             "runCount": 6,
             "anonymizedFileId": 12,
             "anonymizedFileName": "brief_anonymized.pdf",
@@ -661,6 +662,7 @@
             }
         },
         "saved": {
+            "sourceFileId": 7,
             "runCount": 3,
             "anonymizedFileId": 12,
             "anonymizedFileName": "brief_anonymized.pdf",
@@ -693,6 +695,56 @@
             "status": "anonymized",
             "replacementCount": 4,
             "anonymizedAt": "<timestamp>"
+        },
+        "linkId": "saved-1"
+    },
+    "an existing link of another file": {
+        "search": {
+            "registerSlug": "filinq",
+            "schemaSlug": "anonymizationLink",
+            "filters": {
+                "sourceFileId": 7
+            }
+        },
+        "saved": {
+            "@self": {
+                "register": "filinq",
+                "schema": "anonymizationLink"
+            },
+            "sourceFileId": 7,
+            "runCount": 1,
+            "anonymizedFileId": 12,
+            "anonymizedFileName": "brief_anonymized.pdf",
+            "anonymizedFilePath": "/u/files/brief_anonymized.pdf",
+            "status": "anonymized",
+            "replacementCount": 4,
+            "anonymizedAt": "<timestamp>",
+            "outputFormat": "pdf"
+        },
+        "linkId": "saved-1"
+    },
+    "an existing link without a file id": {
+        "search": {
+            "registerSlug": "filinq",
+            "schemaSlug": "anonymizationLink",
+            "filters": {
+                "sourceFileId": 7
+            }
+        },
+        "saved": {
+            "@self": {
+                "register": "filinq",
+                "schema": "anonymizationLink"
+            },
+            "sourceFileId": 7,
+            "runCount": 1,
+            "anonymizedFileId": 12,
+            "anonymizedFileName": "brief_anonymized.pdf",
+            "anonymizedFilePath": "/u/files/brief_anonymized.pdf",
+            "status": "anonymized",
+            "replacementCount": 4,
+            "anonymizedAt": "<timestamp>",
+            "outputFormat": "pdf"
         },
         "linkId": "saved-1"
     }
