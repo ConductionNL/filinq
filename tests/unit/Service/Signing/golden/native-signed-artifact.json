@@ -1,0 +1,372 @@
+{
+    "a plain SES signature": {
+        "bytes": "%PDF-1.4\n%body\n\n1 0 obj\n<< /Type /Sig /SubFilter /DocuDesk.SES >>\n/DocuDesk-Signature(eyJ2IjoyLCJzaWduZXIiOiJBbm5hIGRlIFZyaWVzIiwic2lnbmVycyI6W3sibmFtZSI6IkFubmEgZGUgVnJpZXMiLCJlbWFpbCI6ImFubmFAZXhhbXBsZS5ubCJ9XSwidGltZXN0YW1wIjoiMjAyNi0xMC0wMVQwOTozMDowMCswMjowMCIsImxldmVsIjoiU0VTIiwibWV0aG9kIjoibmF0aXZlIiwiaXAiOiIxMC4wLjAuNyIsIm1hYyI6IjE1MWYzZjQ1ODc0MmY1NzQyZTkxMGQ1MDY3ZTc1NzkwODM3ZmIwNzYzMGYxMDk5YWYyNjRmMzcwMzI4NjI3MzIifQ==)\nendobj\n",
+        "assertion": {
+            "v": 2,
+            "signer": "Anna de Vries",
+            "signers": [
+                {
+                    "name": "Anna de Vries",
+                    "email": "anna@example.nl"
+                }
+            ],
+            "timestamp": "2026-10-01T09:30:00+02:00",
+            "level": "SES",
+            "method": "native",
+            "ip": "10.0.0.7",
+            "mac": "151f3f458742f5742e910d5067e75790837fb07630f1099af264f37032862732"
+        },
+        "drawn": []
+    },
+    "another secret": {
+        "bytes": "%PDF-1.4\n%body\n\n1 0 obj\n<< /Type /Sig /SubFilter /DocuDesk.SES >>\n/DocuDesk-Signature(eyJ2IjoyLCJzaWduZXIiOiJBbm5hIGRlIFZyaWVzIiwic2lnbmVycyI6W3sibmFtZSI6IkFubmEgZGUgVnJpZXMiLCJlbWFpbCI6ImFubmFAZXhhbXBsZS5ubCJ9XSwidGltZXN0YW1wIjoiMjAyNi0xMC0wMVQwOTozMDowMCswMjowMCIsImxldmVsIjoiU0VTIiwibWV0aG9kIjoibmF0aXZlIiwiaXAiOiIxMC4wLjAuNyIsIm1hYyI6ImVlNWVkZWIzZjcyYmQ2ZGJiMmEyYTZlMTZmNmY4ZmUzOTdjMTE5OTVmZTBmZWFhZWNjZTk4NmUzNGU1MWRjNDMifQ==)\nendobj\n",
+        "assertion": {
+            "v": 2,
+            "signer": "Anna de Vries",
+            "signers": [
+                {
+                    "name": "Anna de Vries",
+                    "email": "anna@example.nl"
+                }
+            ],
+            "timestamp": "2026-10-01T09:30:00+02:00",
+            "level": "SES",
+            "method": "native",
+            "ip": "10.0.0.7",
+            "mac": "ee5edeb3f72bd6dbb2a2a6e16f6f8fe397c11995fe0feaaecce986e34e51dc43"
+        },
+        "drawn": []
+    },
+    "the defaults": {
+        "bytes": "%PDF-1.4\n%body\n\n1 0 obj\n<< /Type /Sig /SubFilter /DocuDesk.SES >>\n/DocuDesk-Signature(eyJ2IjoyLCJzaWduZXIiOiJVbmtub3duIiwic2lnbmVycyI6W10sInRpbWVzdGFtcCI6IjIwMjYtMTAtMDFUMDk6MzA6MDArMDI6MDAiLCJsZXZlbCI6IlNFUyIsIm1ldGhvZCI6Im5hdGl2ZSIsImlwIjoiIiwibWFjIjoiOTRlMGEwYmQ3NDQ2Y2E1MmNiNTQzOTljYTNjMTRmZWQxMGQ5NmZlODFkMDZkYjIzN2FmMmNhYjBhMGVkNjBlNCJ9)\nendobj\n",
+        "assertion": {
+            "v": 2,
+            "signer": "Unknown",
+            "signers": [],
+            "timestamp": "2026-10-01T09:30:00+02:00",
+            "level": "SES",
+            "method": "native",
+            "ip": "",
+            "mac": "94e0a0bd7446ca52cb54399ca3c14fed10d96fe81d06db237af2cab0a0ed60e4"
+        },
+        "drawn": []
+    },
+    "an unsupported level": {
+        "refused": "Native provider cannot produce a signed artifact for unsupported level \"AES\": the native provider only supports SES (REQ-DDSTR-002).",
+        "drawn": []
+    },
+    "a lower case level": {
+        "refused": "Native provider cannot produce a signed artifact for unsupported level \"ses\": the native provider only supports SES (REQ-DDSTR-002).",
+        "drawn": []
+    },
+    "no secret": {
+        "refused": "Cannot produce a native SES artifact: signing_verification_secret is unset. Configure the signing secret in Filinq admin settings before enabling signing.",
+        "drawn": []
+    },
+    "an unsupported level and no secret": {
+        "refused": "Native provider cannot produce a signed artifact for unsupported level \"QES\": the native provider only supports SES (REQ-DDSTR-002).",
+        "drawn": []
+    },
+    "portal claims": {
+        "bytes": "%PDF-1.4\n%body\n\n1 0 obj\n<< /Type /Sig /SubFilter /DocuDesk.SES >>\n/DocuDesk-Signature(eyJ2IjoyLCJzaWduZXIiOiJBbm5hIGRlIFZyaWVzIiwic2lnbmVycyI6W3sibmFtZSI6IkFubmEgZGUgVnJpZXMiLCJlbWFpbCI6ImFubmFAZXhhbXBsZS5ubCJ9XSwidGltZXN0YW1wIjoiMjAyNi0xMC0wMVQwOTozMDowMCswMjowMCIsImxldmVsIjoiU0VTIiwibWV0aG9kIjoibmF0aXZlIiwiaXAiOiIxMC4wLjAuNyIsInBvcnRhbFN1YmplY3RSZWYiOiJic24taGFzaC0xIiwicG9ydGFsSWRlbnRpdHlSZWYiOiJkaWdpZDoxIiwicG9ydGFsVHJ1c3QiOiJzdWJzdGFudGlhbCIsInBvcnRhbEp0aSI6Imp0aS05IiwibWFjIjoiNTQ5MWVkNGQzZWNjMjQ3MzYzYzE5ZDQ0YWM1YjFmYTkxMjNlMDI2YjMzMzQxOTM2MWE5ODU4OTBmMTNlNDAxZCJ9)\nendobj\n",
+        "assertion": {
+            "v": 2,
+            "signer": "Anna de Vries",
+            "signers": [
+                {
+                    "name": "Anna de Vries",
+                    "email": "anna@example.nl"
+                }
+            ],
+            "timestamp": "2026-10-01T09:30:00+02:00",
+            "level": "SES",
+            "method": "native",
+            "ip": "10.0.0.7",
+            "portalSubjectRef": "bsn-hash-1",
+            "portalIdentityRef": "digid:1",
+            "portalTrust": "substantial",
+            "portalJti": "jti-9",
+            "mac": "5491ed4d3ecc247363c19d44ac5b1fa9123e026b333419361a985890f13e401d"
+        },
+        "drawn": []
+    },
+    "empty and missing portal claims": {
+        "bytes": "%PDF-1.4\n%body\n\n1 0 obj\n<< /Type /Sig /SubFilter /DocuDesk.SES >>\n/DocuDesk-Signature(eyJ2IjoyLCJzaWduZXIiOiJBbm5hIGRlIFZyaWVzIiwic2lnbmVycyI6W3sibmFtZSI6IkFubmEgZGUgVnJpZXMiLCJlbWFpbCI6ImFubmFAZXhhbXBsZS5ubCJ9XSwidGltZXN0YW1wIjoiMjAyNi0xMC0wMVQwOTozMDowMCswMjowMCIsImxldmVsIjoiU0VTIiwibWV0aG9kIjoibmF0aXZlIiwiaXAiOiIxMC4wLjAuNyIsInBvcnRhbEp0aSI6IjQyIiwibWFjIjoiM2U2OWUwNDRlNTJiM2I2ZTYzYzMwYmFlOWZmMjI0MTI1MTI2Y2JjYzRkZjNhNjY2OGU0ZWE5NDk2NTZiNmM1ZSJ9)\nendobj\n",
+        "assertion": {
+            "v": 2,
+            "signer": "Anna de Vries",
+            "signers": [
+                {
+                    "name": "Anna de Vries",
+                    "email": "anna@example.nl"
+                }
+            ],
+            "timestamp": "2026-10-01T09:30:00+02:00",
+            "level": "SES",
+            "method": "native",
+            "ip": "10.0.0.7",
+            "portalJti": "42",
+            "mac": "3e69e044e52b3b6e63c30bae9ff224125126cbcc4df3a6668e4ea949656b6c5e"
+        },
+        "drawn": []
+    },
+    "forged assertion fields are not taken from the context": {
+        "bytes": "%PDF-1.4\n%body\n\n1 0 obj\n<< /Type /Sig /SubFilter /DocuDesk.SES >>\n/DocuDesk-Signature(eyJ2IjoyLCJzaWduZXIiOiJBbm5hIGRlIFZyaWVzIiwic2lnbmVycyI6W3sibmFtZSI6IkFubmEgZGUgVnJpZXMiLCJlbWFpbCI6ImFubmFAZXhhbXBsZS5ubCJ9XSwidGltZXN0YW1wIjoiMjAyNi0xMC0wMVQwOTozMDowMCswMjowMCIsImxldmVsIjoiU0VTIiwibWV0aG9kIjoibmF0aXZlIiwiaXAiOiIxMC4wLjAuNyIsIm1hYyI6IjE1MWYzZjQ1ODc0MmY1NzQyZTkxMGQ1MDY3ZTc1NzkwODM3ZmIwNzYzMGYxMDk5YWYyNjRmMzcwMzI4NjI3MzIifQ==)\nendobj\n",
+        "assertion": {
+            "v": 2,
+            "signer": "Anna de Vries",
+            "signers": [
+                {
+                    "name": "Anna de Vries",
+                    "email": "anna@example.nl"
+                }
+            ],
+            "timestamp": "2026-10-01T09:30:00+02:00",
+            "level": "SES",
+            "method": "native",
+            "ip": "10.0.0.7",
+            "mac": "151f3f458742f5742e910d5067e75790837fb07630f1099af264f37032862732"
+        },
+        "drawn": []
+    },
+    "consent and evidence lists": {
+        "bytes": "%PDF-1.4\n%body\n\n1 0 obj\n<< /Type /Sig /SubFilter /DocuDesk.SES >>\n/DocuDesk-Signature(eyJ2IjoyLCJzaWduZXIiOiJBbm5hIGRlIFZyaWVzIiwic2lnbmVycyI6W3sibmFtZSI6IkFubmEgZGUgVnJpZXMiLCJlbWFpbCI6ImFubmFAZXhhbXBsZS5ubCJ9XSwidGltZXN0YW1wIjoiMjAyNi0xMC0wMVQwOTozMDowMCswMjowMCIsImxldmVsIjoiU0VTIiwibWV0aG9kIjoibmF0aXZlIiwiaXAiOiIxMC4wLjAuNyIsImNvbnNlbnRCYXNpcyI6W3siZ3VhcmRpYW4iOiJQaWV0In1dLCJzaWduZXJFdmlkZW5jZSI6W3sicHJvdmlkZXIiOiJkaWdpZCIsImFzc3VyYW5jZSI6InN1YnN0YW50aWFsIn1dLCJtYWMiOiJiOGEwZWY1OTM5ZjViM2IzMGYwZWVjYmE1NDM0ZWRmZDEyZDA5ZWFjNGM0MzVjODA5ZGU4NTcwNWM3MjM4OTI3In0=)\nendobj\n",
+        "assertion": {
+            "v": 2,
+            "signer": "Anna de Vries",
+            "signers": [
+                {
+                    "name": "Anna de Vries",
+                    "email": "anna@example.nl"
+                }
+            ],
+            "timestamp": "2026-10-01T09:30:00+02:00",
+            "level": "SES",
+            "method": "native",
+            "ip": "10.0.0.7",
+            "consentBasis": [
+                {
+                    "guardian": "Piet"
+                }
+            ],
+            "signerEvidence": [
+                {
+                    "provider": "digid",
+                    "assurance": "substantial"
+                }
+            ],
+            "mac": "b8a0ef5939f5b3b30f0eecba5434edfd12d09eac4c435c809de85705c7238927"
+        },
+        "drawn": []
+    },
+    "empty and non-list bound fields": {
+        "bytes": "%PDF-1.4\n%body\n\n1 0 obj\n<< /Type /Sig /SubFilter /DocuDesk.SES >>\n/DocuDesk-Signature(eyJ2IjoyLCJzaWduZXIiOiJBbm5hIGRlIFZyaWVzIiwic2lnbmVycyI6W3sibmFtZSI6IkFubmEgZGUgVnJpZXMiLCJlbWFpbCI6ImFubmFAZXhhbXBsZS5ubCJ9XSwidGltZXN0YW1wIjoiMjAyNi0xMC0wMVQwOTozMDowMCswMjowMCIsImxldmVsIjoiU0VTIiwibWV0aG9kIjoibmF0aXZlIiwiaXAiOiIxMC4wLjAuNyIsIm1hYyI6IjE1MWYzZjQ1ODc0MmY1NzQyZTkxMGQ1MDY3ZTc1NzkwODM3ZmIwNzYzMGYxMDk5YWYyNjRmMzcwMzI4NjI3MzIifQ==)\nendobj\n",
+        "assertion": {
+            "v": 2,
+            "signer": "Anna de Vries",
+            "signers": [
+                {
+                    "name": "Anna de Vries",
+                    "email": "anna@example.nl"
+                }
+            ],
+            "timestamp": "2026-10-01T09:30:00+02:00",
+            "level": "SES",
+            "method": "native",
+            "ip": "10.0.0.7",
+            "mac": "151f3f458742f5742e910d5067e75790837fb07630f1099af264f37032862732"
+        },
+        "drawn": []
+    },
+    "field placements": {
+        "bytes": "%PDF-1.4\n%body\n% drawn\n\n1 0 obj\n<< /Type /Sig /SubFilter /DocuDesk.SES >>\n/DocuDesk-Signature(eyJ2IjoyLCJzaWduZXIiOiJBbm5hIGRlIFZyaWVzIiwic2lnbmVycyI6W3sibmFtZSI6IkFubmEgZGUgVnJpZXMiLCJlbWFpbCI6ImFubmFAZXhhbXBsZS5ubCJ9XSwidGltZXN0YW1wIjoiMjAyNi0xMC0wMVQwOTozMDowMCswMjowMCIsImxldmVsIjoiU0VTIiwibWV0aG9kIjoibmF0aXZlIiwiaXAiOiIxMC4wLjAuNyIsImZpZWxkUGxhY2VtZW50cyI6W3sicGFnZSI6MSwieCI6MTAsInkiOjIwLCJzaWduZXIiOjB9XSwibWFjIjoiMmUxYTEzZDM4ZDM5YTIxNTdlOGEyY2M2ZDE1ZGQ3NzE2N2VlMjY0YzUxMGNmNjEzYjAyNGQwNmM0MGVkNmI4MyJ9)\nendobj\n",
+        "assertion": {
+            "v": 2,
+            "signer": "Anna de Vries",
+            "signers": [
+                {
+                    "name": "Anna de Vries",
+                    "email": "anna@example.nl"
+                }
+            ],
+            "timestamp": "2026-10-01T09:30:00+02:00",
+            "level": "SES",
+            "method": "native",
+            "ip": "10.0.0.7",
+            "fieldPlacements": [
+                {
+                    "page": 1,
+                    "x": 10,
+                    "y": 20,
+                    "signer": 0
+                }
+            ],
+            "mac": "2e1a13d38d39a2157e8a2cc6d15dd77167ee264c510cf613b024d06c40ed6b83"
+        },
+        "drawn": [
+            {
+                "pdf": "%PDF-1.4\n%body\n",
+                "placements": [
+                    {
+                        "page": 1,
+                        "x": 10,
+                        "y": 20,
+                        "signer": 0
+                    }
+                ],
+                "signers": [
+                    "Anna de Vries"
+                ],
+                "timestamp": "2026-10-01T09:30:00+02:00"
+            }
+        ]
+    },
+    "field placements without labels": {
+        "bytes": "%PDF-1.4\n%body\n% drawn\n\n1 0 obj\n<< /Type /Sig /SubFilter /DocuDesk.SES >>\n/DocuDesk-Signature(eyJ2IjoyLCJzaWduZXIiOiJBbm5hIGRlIFZyaWVzIiwic2lnbmVycyI6W3sibmFtZSI6IkFubmEgZGUgVnJpZXMiLCJlbWFpbCI6ImFubmFAZXhhbXBsZS5ubCJ9XSwidGltZXN0YW1wIjoiMjAyNi0xMC0wMVQwOTozMDowMCswMjowMCIsImxldmVsIjoiU0VTIiwibWV0aG9kIjoibmF0aXZlIiwiaXAiOiIxMC4wLjAuNyIsImZpZWxkUGxhY2VtZW50cyI6W3sicGFnZSI6MSwieCI6MTAsInkiOjIwLCJzaWduZXIiOjB9XSwibWFjIjoiMmUxYTEzZDM4ZDM5YTIxNTdlOGEyY2M2ZDE1ZGQ3NzE2N2VlMjY0YzUxMGNmNjEzYjAyNGQwNmM0MGVkNmI4MyJ9)\nendobj\n",
+        "assertion": {
+            "v": 2,
+            "signer": "Anna de Vries",
+            "signers": [
+                {
+                    "name": "Anna de Vries",
+                    "email": "anna@example.nl"
+                }
+            ],
+            "timestamp": "2026-10-01T09:30:00+02:00",
+            "level": "SES",
+            "method": "native",
+            "ip": "10.0.0.7",
+            "fieldPlacements": [
+                {
+                    "page": 1,
+                    "x": 10,
+                    "y": 20,
+                    "signer": 0
+                }
+            ],
+            "mac": "2e1a13d38d39a2157e8a2cc6d15dd77167ee264c510cf613b024d06c40ed6b83"
+        },
+        "drawn": [
+            {
+                "pdf": "%PDF-1.4\n%body\n",
+                "placements": [
+                    {
+                        "page": 1,
+                        "x": 10,
+                        "y": 20,
+                        "signer": 0
+                    }
+                ],
+                "signers": [],
+                "timestamp": "2026-10-01T09:30:00+02:00"
+            }
+        ]
+    },
+    "no field placements": {
+        "bytes": "%PDF-1.4\n%body\n\n1 0 obj\n<< /Type /Sig /SubFilter /DocuDesk.SES >>\n/DocuDesk-Signature(eyJ2IjoyLCJzaWduZXIiOiJBbm5hIGRlIFZyaWVzIiwic2lnbmVycyI6W3sibmFtZSI6IkFubmEgZGUgVnJpZXMiLCJlbWFpbCI6ImFubmFAZXhhbXBsZS5ubCJ9XSwidGltZXN0YW1wIjoiMjAyNi0xMC0wMVQwOTozMDowMCswMjowMCIsImxldmVsIjoiU0VTIiwibWV0aG9kIjoibmF0aXZlIiwiaXAiOiIxMC4wLjAuNyIsIm1hYyI6IjE1MWYzZjQ1ODc0MmY1NzQyZTkxMGQ1MDY3ZTc1NzkwODM3ZmIwNzYzMGYxMDk5YWYyNjRmMzcwMzI4NjI3MzIifQ==)\nendobj\n",
+        "assertion": {
+            "v": 2,
+            "signer": "Anna de Vries",
+            "signers": [
+                {
+                    "name": "Anna de Vries",
+                    "email": "anna@example.nl"
+                }
+            ],
+            "timestamp": "2026-10-01T09:30:00+02:00",
+            "level": "SES",
+            "method": "native",
+            "ip": "10.0.0.7",
+            "mac": "151f3f458742f5742e910d5067e75790837fb07630f1099af264f37032862732"
+        },
+        "drawn": []
+    },
+    "field placements that are not a list": {
+        "bytes": "%PDF-1.4\n%body\n\n1 0 obj\n<< /Type /Sig /SubFilter /DocuDesk.SES >>\n/DocuDesk-Signature(eyJ2IjoyLCJzaWduZXIiOiJBbm5hIGRlIFZyaWVzIiwic2lnbmVycyI6W3sibmFtZSI6IkFubmEgZGUgVnJpZXMiLCJlbWFpbCI6ImFubmFAZXhhbXBsZS5ubCJ9XSwidGltZXN0YW1wIjoiMjAyNi0xMC0wMVQwOTozMDowMCswMjowMCIsImxldmVsIjoiU0VTIiwibWV0aG9kIjoibmF0aXZlIiwiaXAiOiIxMC4wLjAuNyIsIm1hYyI6IjE1MWYzZjQ1ODc0MmY1NzQyZTkxMGQ1MDY3ZTc1NzkwODM3ZmIwNzYzMGYxMDk5YWYyNjRmMzcwMzI4NjI3MzIifQ==)\nendobj\n",
+        "assertion": {
+            "v": 2,
+            "signer": "Anna de Vries",
+            "signers": [
+                {
+                    "name": "Anna de Vries",
+                    "email": "anna@example.nl"
+                }
+            ],
+            "timestamp": "2026-10-01T09:30:00+02:00",
+            "level": "SES",
+            "method": "native",
+            "ip": "10.0.0.7",
+            "mac": "151f3f458742f5742e910d5067e75790837fb07630f1099af264f37032862732"
+        },
+        "drawn": []
+    },
+    "everything": {
+        "bytes": "%PDF-1.4\n%body\n% drawn\n\n1 0 obj\n<< /Type /Sig /SubFilter /DocuDesk.SES >>\n/DocuDesk-Signature(eyJ2IjoyLCJzaWduZXIiOiJBbm5hIGRlIFZyaWVzIiwic2lnbmVycyI6W3sibmFtZSI6IkFubmEgZGUgVnJpZXMiLCJlbWFpbCI6ImFubmFAZXhhbXBsZS5ubCJ9XSwidGltZXN0YW1wIjoiMjAyNi0xMC0wMVQwOTozMDowMCswMjowMCIsImxldmVsIjoiU0VTIiwibWV0aG9kIjoibmF0aXZlIiwiaXAiOiIxMC4wLjAuNyIsInBvcnRhbFN1YmplY3RSZWYiOiJic24taGFzaC0xIiwicG9ydGFsSWRlbnRpdHlSZWYiOiJkaWdpZDoxIiwicG9ydGFsVHJ1c3QiOiJzdWJzdGFudGlhbCIsInBvcnRhbEp0aSI6Imp0aS05IiwiY29uc2VudEJhc2lzIjpbeyJndWFyZGlhbiI6IlBpZXQifV0sImZpZWxkUGxhY2VtZW50cyI6W3sicGFnZSI6MSwieCI6MTAsInkiOjIwLCJzaWduZXIiOjB9XSwibWFjIjoiNmY2ZTExMDVlZTQyMmI1ODlkNTI0NDYwZjliYzE3OWNhMDM2YTc5YjY1M2I0YWViZDYyMjc0ZTA4MmM2NmJiOSJ9)\nendobj\n",
+        "assertion": {
+            "v": 2,
+            "signer": "Anna de Vries",
+            "signers": [
+                {
+                    "name": "Anna de Vries",
+                    "email": "anna@example.nl"
+                }
+            ],
+            "timestamp": "2026-10-01T09:30:00+02:00",
+            "level": "SES",
+            "method": "native",
+            "ip": "10.0.0.7",
+            "portalSubjectRef": "bsn-hash-1",
+            "portalIdentityRef": "digid:1",
+            "portalTrust": "substantial",
+            "portalJti": "jti-9",
+            "consentBasis": [
+                {
+                    "guardian": "Piet"
+                }
+            ],
+            "fieldPlacements": [
+                {
+                    "page": 1,
+                    "x": 10,
+                    "y": 20,
+                    "signer": 0
+                }
+            ],
+            "mac": "6f6e1105ee422b589d524460f9bc179ca036a79b653b4aebd62274e082c66bb9"
+        },
+        "drawn": [
+            {
+                "pdf": "%PDF-1.4\n%body\n",
+                "placements": [
+                    {
+                        "page": 1,
+                        "x": 10,
+                        "y": 20,
+                        "signer": 0
+                    }
+                ],
+                "signers": [
+                    "A"
+                ],
+                "timestamp": "2026-10-01T09:30:00+02:00"
+            }
+        ]
+    },
+    "no timestamp": {
+        "assertion": {
+            "v": 2,
+            "signer": "Anna de Vries",
+            "signers": [
+                {
+                    "name": "Anna de Vries",
+                    "email": "anna@example.nl"
+                }
+            ],
+            "timestamp": "<now>",
+            "level": "SES",
+            "method": "native",
+            "ip": "10.0.0.7"
+        },
+        "drawn": []
+    }
+}
