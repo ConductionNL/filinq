@@ -41,6 +41,7 @@ use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
 use OCP\EventDispatcher\Event;
 use PHPUnit\Framework\TestCase;
+use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
 
 /**
@@ -49,6 +50,69 @@ use Psr\Log\NullLogger;
  * @covers \OCA\Filinq\EventListener\DocumentRegistrationWriteGuard
  */
 class DocumentRegistrationWriteGuardTest extends TestCase {
+
+	/**
+	 * The SchemaMapper double behind the last container built.
+	 */
+	private ?object $mapper = null;
+
+	/**
+	 * A container whose SchemaMapper knows schema 17 as `documentRegistration`
+	 * and 18 as `template`, answers a slug with itself, and fails on any other id.
+	 *
+	 * The mapper double carries the real OpenRegister `find()` signature and
+	 * records the arguments of each lookup in `$calls`.
+	 *
+	 * @return ContainerInterface The container.
+	 */
+	private function schemas(): ContainerInterface {
+		$mapper = new class {
+			/** @var list<array{string, bool, bool}> */
+			public array $calls = [];
+
+			/**
+			 * Find a schema by id or slug.
+			 *
+			 * @param string|int $id            The id or slug.
+			 * @param array|null $_extend       Unused.
+			 * @param bool       $_rbac         Whether RBAC applies.
+			 * @param bool       $_multitenancy Whether tenancy applies.
+			 *
+			 * @return object The schema.
+			 */
+			public function find(string|int $id, ?array $_extend = [], bool $_rbac = true, bool $_multitenancy = true): object {
+				$this->calls[] = [(string)$id, $_rbac, $_multitenancy];
+				$slug = ['17' => 'documentRegistration', '18' => 'template'][(string)$id] ?? null;
+				if ($slug === null && is_numeric($id) === true) {
+					throw new \RuntimeException('Schema not found');
+				}
+
+				return new class ($slug ?? (string)$id) {
+					/**
+					 * Constructor.
+					 *
+					 * @param string $slug The slug.
+					 */
+					public function __construct(private string $slug) {
+					}
+
+					/**
+					 * The slug.
+					 *
+					 * @return string The slug.
+					 */
+					public function getSlug(): string {
+						return $this->slug;
+					}
+				};
+			}
+		};
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->with('OCA\\OpenRegister\\Db\\SchemaMapper')->willReturn($mapper);
+		$this->mapper = $mapper;
+
+		return $container;
+	}//end schemas()
 
 	/**
 	 * An object of the given schema carrying the given number.
@@ -82,7 +146,7 @@ class DocumentRegistrationWriteGuardTest extends TestCase {
 			$this->registration($schema, $was)
 		);
 
-		(new DocumentRegistrationWriteGuard(new NullLogger()))->handle($event);
+		(new DocumentRegistrationWriteGuard(new NullLogger(), $this->schemas()))->handle($event);
 
 		return $event;
 	}//end update()
@@ -152,6 +216,42 @@ class DocumentRegistrationWriteGuardTest extends TestCase {
 	}//end testAnotherSchemaIsUntouched()
 
 	/**
+	 * 🔴 THE EVENT CARRIES THE SCHEMA ID, AND THE GUARD STILL FIRES ON IT.
+	 *
+	 * OpenRegister's save and load paths set `schema` to the numeric id, so a
+	 * guard that only matched the slug never fired on a real update.
+	 *
+	 * @return void
+	 */
+	public function testAMovedNumberIsRefusedWhenTheEventCarriesTheSchemaId(): void {
+		$event = $this->update(was: '2026-00042', now: '2026-00043', schema: '17');
+
+		$this->assertTrue($event->isPropagationStopped());
+		$this->assertStringContainsString('2026-00042', (string)$event->getErrors()['message']);
+		$this->assertSame([['17', false, false]], $this->mapper->calls);
+	}//end testAMovedNumberIsRefusedWhenTheEventCarriesTheSchemaId()
+
+	/**
+	 * Another schema's id is left alone, as is an id that does not resolve.
+	 *
+	 * @return void
+	 */
+	public function testAnotherOrUnknownSchemaIdIsUntouched(): void {
+		$this->assertFalse($this->update(was: '2026-00042', now: '2026-00043', schema: '18')->isPropagationStopped());
+		$this->assertFalse($this->update(was: '2026-00042', now: '2026-00043', schema: '99')->isPropagationStopped());
+	}//end testAnotherOrUnknownSchemaIdIsUntouched()
+
+	/**
+	 * An update that keeps the number costs no schema lookup.
+	 *
+	 * @return void
+	 */
+	public function testAKeptNumberCostsNoLookup(): void {
+		$this->assertFalse($this->update(was: '2026-00042', now: '2026-00042', schema: '17')->isPropagationStopped());
+		$this->assertSame([], $this->mapper->calls);
+	}//end testAKeptNumberCostsNoLookup()
+
+	/**
 	 * A create carries no old object, so there is nothing to move.
 	 *
 	 * @return void
@@ -159,7 +259,7 @@ class DocumentRegistrationWriteGuardTest extends TestCase {
 	public function testACreateIsNotAnUpdate(): void {
 		$event = new ObjectUpdatingEvent($this->registration('documentRegistration', '2026-00042'), null);
 
-		(new DocumentRegistrationWriteGuard(new NullLogger()))->handle($event);
+		(new DocumentRegistrationWriteGuard(new NullLogger(), $this->schemas()))->handle($event);
 
 		$this->assertFalse($event->isPropagationStopped());
 	}//end testACreateIsNotAnUpdate()
@@ -170,7 +270,7 @@ class DocumentRegistrationWriteGuardTest extends TestCase {
 	 * @return void
 	 */
 	public function testAnUnrelatedEventIsIgnored(): void {
-		(new DocumentRegistrationWriteGuard(new NullLogger()))->handle(new Event());
+		(new DocumentRegistrationWriteGuard(new NullLogger(), $this->schemas()))->handle(new Event());
 
 		$this->assertTrue(true);
 	}//end testAnUnrelatedEventIsIgnored()

@@ -30,6 +30,7 @@ use OCA\OpenRegister\Event\ObjectUpdatingEvent;
 use OCP\EventDispatcher\Event;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -40,6 +41,11 @@ use Psr\Log\LoggerInterface;
 class DocumentRegistrationWriteGuardTraceTest extends TestCase {
 
 	private LoggerInterface&MockObject $logger;
+
+	/**
+	 * The SchemaMapper double behind the last container built.
+	 */
+	private ?object $mapper = null;
 
 	/**
 	 * Fresh logger double.
@@ -231,9 +237,43 @@ class DocumentRegistrationWriteGuardTraceTest extends TestCase {
 		$event = $this->createMock(Event::class);
 		$event->expects($this->never())->method('stopPropagation');
 
-		(new DocumentRegistrationWriteGuard($this->logger))->handle($event);
+		(new DocumentRegistrationWriteGuard($this->logger, $this->schemas()))->handle($event);
 
 	}//end testOtherEventIsIgnored()
+
+	/**
+	 * A schema id that does not resolve is logged and the update passes.
+	 *
+	 * @return void
+	 */
+	public function testAnUnresolvedSchemaIdIsLogged(): void {
+		$this->logger->expects($this->once())
+			->method('warning')
+			->with('filinq.post-register.schema-unresolved', ['schema' => '99', 'error' => 'Schema not found']);
+
+		$event = $this->guard(
+			new: $this->entity(uuid: 'n', schema: '99', data: ['registrationNumber' => 'B']),
+			old: $this->entity(uuid: 'o', schema: '99', data: ['registrationNumber' => 'A'])
+		);
+
+		$this->assertFalse($event->isPropagationStopped());
+		$this->assertCount(1, $this->mapper->calls);
+	}//end testAnUnresolvedSchemaIdIsLogged()
+
+	/**
+	 * The stored side's schema id is resolved when the incoming side differs.
+	 *
+	 * @return void
+	 */
+	public function testTheStoredSchemaIdIsResolved(): void {
+		$event = $this->guard(
+			new: $this->entity(uuid: 'n', schema: '18', data: ['registrationNumber' => 'B']),
+			old: $this->entity(uuid: 'o', schema: '17', data: ['registrationNumber' => 'A'])
+		);
+
+		$this->assertTrue($event->isPropagationStopped());
+		$this->assertSame(['18', '17'], array_column($this->mapper->calls, 0));
+	}//end testTheStoredSchemaIdIsResolved()
 
 	/**
 	 * Run the guard over one update.
@@ -245,10 +285,68 @@ class DocumentRegistrationWriteGuardTraceTest extends TestCase {
 	 */
 	private function guard(ObjectEntity $new, ObjectEntity $old): ObjectUpdatingEvent {
 		$event = new ObjectUpdatingEvent($new, $old);
-		(new DocumentRegistrationWriteGuard($this->logger))->handle($event);
+		(new DocumentRegistrationWriteGuard($this->logger, $this->schemas()))->handle($event);
 
 		return $event;
 	}//end guard()
+
+	/**
+	 * A container whose SchemaMapper knows schema 17 as `documentRegistration`
+	 * and 18 as `template`, answers a slug with itself, and fails on any other id.
+	 *
+	 * The mapper double carries the real OpenRegister `find()` signature and
+	 * records the arguments of each lookup in `$calls`.
+	 *
+	 * @return ContainerInterface The container.
+	 */
+	private function schemas(): ContainerInterface {
+		$mapper = new class {
+			/** @var list<array{string, bool, bool}> */
+			public array $calls = [];
+
+			/**
+			 * Find a schema by id or slug.
+			 *
+			 * @param string|int $id            The id or slug.
+			 * @param array|null $_extend       Unused.
+			 * @param bool       $_rbac         Whether RBAC applies.
+			 * @param bool       $_multitenancy Whether tenancy applies.
+			 *
+			 * @return object The schema.
+			 */
+			public function find(string|int $id, ?array $_extend = [], bool $_rbac = true, bool $_multitenancy = true): object {
+				$this->calls[] = [(string)$id, $_rbac, $_multitenancy];
+				$slug = ['17' => 'documentRegistration', '18' => 'template'][(string)$id] ?? null;
+				if ($slug === null && is_numeric($id) === true) {
+					throw new \RuntimeException('Schema not found');
+				}
+
+				return new class ($slug ?? (string)$id) {
+					/**
+					 * Constructor.
+					 *
+					 * @param string $slug The slug.
+					 */
+					public function __construct(private string $slug) {
+					}
+
+					/**
+					 * The slug.
+					 *
+					 * @return string The slug.
+					 */
+					public function getSlug(): string {
+						return $this->slug;
+					}
+				};
+			}
+		};
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->with('OCA\\OpenRegister\\Db\\SchemaMapper')->willReturn($mapper);
+		$this->mapper = $mapper;
+
+		return $container;
+	}//end schemas()
 
 	/**
 	 * An object entity.
