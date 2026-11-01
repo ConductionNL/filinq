@@ -47,6 +47,7 @@ use RuntimeException;
  * @uses   \OCA\Filinq\Service\MergeSelection
  * @uses   \OCA\Filinq\Service\MergePlan
  * @uses   \OCA\Filinq\Service\MergeRun
+ * @uses   \OCA\Filinq\Service\PdfDocumentFactory
  */
 class DocumentMergeInputsTraceTest extends TestCase {
 
