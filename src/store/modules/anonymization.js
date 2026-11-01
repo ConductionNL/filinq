@@ -266,14 +266,50 @@ function anonymizedEntry(fileMeta, link) {
 		anonymizedFileId: null,
 		anonymizedFileName: null,
 		anonymizedFilePath: null,
-		// Source mapping (feat #107) when a link was recorded.
-		sourceFileId: link?.sourceFileId ?? null,
-		sourceFileName: link?.sourceFileName ?? null,
-		sourceFilePath: link?.sourceFilePath ?? null,
-		anonymizationLinkId: link?.id ?? null,
-		runCount: link?.runCount ?? null,
+		...linkedSource(link),
 		dossier: inferDossier(fileMeta.path),
 	}
+}
+
+/**
+ * Entry field name → `anonymizationLink` field it is read from.
+ *
+ * @type {Object<string, string>}
+ */
+const LINKED_SOURCE_FIELDS = {
+	sourceFileId: 'sourceFileId',
+	sourceFileName: 'sourceFileName',
+	sourceFilePath: 'sourceFilePath',
+	anonymizationLinkId: 'id',
+	runCount: 'runCount',
+}
+
+/**
+ * The source mapping (feat #107) an entry takes from its link, null per
+ * field when no link was recorded.
+ *
+ * @param {object|null} link The file's `anonymizationLink`, if any.
+ * @return {object}
+ */
+function linkedSource(link) {
+	return Object.fromEntries(
+		Object.entries(LINKED_SOURCE_FIELDS).map(([key, field]) => [
+			key,
+			link?.[field] ?? null,
+		]),
+	)
+}
+
+/**
+ * The replacement count of an anonymised file: the link's count when it
+ * records one, else the occurrences of its resolved placeholders.
+ *
+ * @param {object|null} link The file's `anonymizationLink`, if any.
+ * @param {Array<object>} entities The resolved placeholder rows.
+ * @return {number}
+ */
+function replacementCountOf(link, entities) {
+	return link?.replacementCount ?? entities.reduce((sum, e) => sum + e.count, 0)
 }
 
 /**
@@ -323,6 +359,23 @@ function resolveErrorText(err) {
 }
 
 /**
+ * The fields a resolved entity fills in on its placeholder row.
+ *
+ * @param {{type: string}} ph The placeholder.
+ * @param {object|undefined} body The entity endpoint's response body.
+ * @return {{type: string, value: (string|null), confidence: (number|null), bases: Array<string>}}
+ */
+function resolvedFields(ph, body) {
+	const data = body?.data || {}
+	return {
+		type: data.type || ph.type,
+		value: data.value ?? null,
+		confidence: data.confidence ?? null,
+		bases: relationBases(body),
+	}
+}
+
+/**
  * Resolve one `[<TYPE>: <id>]` placeholder to its source entity. A failed
  * lookup (deleted entity, permission) degrades to a placeholder-only row
  * rather than dropping the occurrence.
@@ -345,14 +398,7 @@ async function resolvePlaceholder(ph) {
 		const r = await axios.get(
 			generateUrl(`/apps/openregister/api/entities/${ph.entityId}`),
 		)
-		const data = r.data?.data || {}
-		return {
-			...row,
-			type: data.type || ph.type,
-			value: data.value ?? null,
-			confidence: data.confidence ?? null,
-			bases: relationBases(r.data),
-		}
+		return { ...row, ...resolvedFields(ph, r.data) }
 	} catch (err) {
 		return { ...row, _resolveError: resolveErrorText(err) }
 	}
@@ -1551,10 +1597,20 @@ export const useAnonymizationStore = defineStore('anonymization', {
 				...anonymizedEntry(fileMeta, link),
 				entities: deduped,
 				entityCount: deduped.length,
-				replacementCount:
-					link?.replacementCount
-					?? deduped.reduce((sum, e) => sum + e.count, 0),
+				replacementCount: replacementCountOf(link, deduped),
 			}
+			return this._queueAnonymized(entry, push)
+		},
+
+		/**
+		 * Append a read-only anonymised entry to the queue when asked to.
+		 *
+		 * @param {object} entry The entry.
+		 * @param {boolean} push Whether to append it.
+		 * @return {object} The entry.
+		 * @spec openspec/specs/anonymization-link/spec.md
+		 */
+		_queueAnonymized(entry, push) {
 			if (push) {
 				this.files.push(entry)
 			}
@@ -1592,10 +1648,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 				// without a (mutating) re-extract. The sidebar renders a note.
 				detailUnavailable: true,
 			}
-			if (push) {
-				this.files.push(entry)
-			}
-			return entry
+			return this._queueAnonymized(entry, push)
 		},
 
 		/**
