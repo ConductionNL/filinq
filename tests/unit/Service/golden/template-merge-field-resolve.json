@@ -1,0 +1,179 @@
+{
+    "declared and printed": {
+        "fields": [
+            {
+                "path": "naam",
+                "label": "Naam",
+                "source": "klant",
+                "value": "Anna",
+                "filled": true
+            },
+            {
+                "path": "zaak.nummer",
+                "label": "zaak.nummer",
+                "source": "",
+                "value": "Z-1",
+                "filled": true
+            },
+            {
+                "path": "onbekend.veld",
+                "label": "onbekend.veld",
+                "source": "",
+                "value": "",
+                "filled": false
+            }
+        ],
+        "complete": false
+    },
+    "only printed": {
+        "fields": [
+            {
+                "path": "naam",
+                "label": "naam",
+                "source": "",
+                "value": "Anna",
+                "filled": true
+            },
+            {
+                "path": "zaak.leeg",
+                "label": "zaak.leeg",
+                "source": "",
+                "value": "",
+                "filled": false
+            }
+        ],
+        "complete": false
+    },
+    "only declared": {
+        "fields": [
+            {
+                "path": "naam",
+                "label": "Naam",
+                "source": "crm",
+                "value": "Anna",
+                "filled": true
+            }
+        ],
+        "complete": true
+    },
+    "a declared duplicate": {
+        "fields": [
+            {
+                "path": "naam",
+                "label": "Eerste",
+                "source": "",
+                "value": "Anna",
+                "filled": true
+            }
+        ],
+        "complete": true
+    },
+    "a blank declared path": {
+        "fields": [],
+        "complete": true
+    },
+    "declared then printed again": {
+        "fields": [
+            {
+                "path": "zaak.nummer",
+                "label": "Nummer",
+                "source": "",
+                "value": "Z-1",
+                "filled": true
+            },
+            {
+                "path": "naam",
+                "label": "naam",
+                "source": "",
+                "value": "Anna",
+                "filled": true
+            }
+        ],
+        "complete": true
+    },
+    "a loop variable": {
+        "fields": [
+            {
+                "path": "naam",
+                "label": "naam",
+                "source": "",
+                "value": "Anna",
+                "filled": true
+            }
+        ],
+        "complete": true
+    },
+    "nothing filled": {
+        "fields": [
+            {
+                "path": "d",
+                "label": "D",
+                "source": "",
+                "value": "",
+                "filled": false
+            },
+            {
+                "path": "a",
+                "label": "a",
+                "source": "",
+                "value": "",
+                "filled": false
+            },
+            {
+                "path": "b.c",
+                "label": "b.c",
+                "source": "",
+                "value": "",
+                "filled": false
+            }
+        ],
+        "complete": false
+    },
+    "an empty template": {
+        "fields": [],
+        "complete": true
+    },
+    "mergeFields not a list": {
+        "fields": [
+            {
+                "path": "naam",
+                "label": "naam",
+                "source": "",
+                "value": "Anna",
+                "filled": true
+            }
+        ],
+        "complete": true
+    },
+    "a numeric label": {
+        "fields": [
+            {
+                "path": "naam",
+                "label": "12",
+                "source": "3",
+                "value": "Anna",
+                "filled": true
+            }
+        ],
+        "complete": true
+    },
+    "a gap before a filled field": {
+        "fields": [
+            {
+                "path": "zaak.leeg",
+                "label": "zaak.leeg",
+                "source": "",
+                "value": "",
+                "filled": false
+            },
+            {
+                "path": "naam",
+                "label": "naam",
+                "source": "",
+                "value": "Anna",
+                "filled": true
+            }
+        ],
+        "complete": false
+    }
+}

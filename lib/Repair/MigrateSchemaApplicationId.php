@@ -132,33 +132,57 @@ class MigrateSchemaApplicationId implements IRepairStep {
 			return;
 		}
 
-		$moved = 0;
-		$refused = 0;
-		foreach ($candidates as $slug) {
-			if (in_array(strtolower($slug), $taken, true) === true) {
-				$refused++;
-				$this->logger->warning(
-					'MigrateSchemaApplicationId: schema slug already exists under the new application id; '
-					. 'refusing to create a duplicate (application, slug) pair. Merge them by hand.',
-					['slug' => $slug, 'old' => self::OLD_APP_ID, 'new' => self::NEW_APP_ID]
-				);
-				continue;
-			}
-
-			if ($this->repoint(slug: $slug) === true) {
-				$moved++;
-			}
-		}
+		$counts = $this->moveAll(candidates: $candidates, taken: $taken);
 
 		$output->info(
 			sprintf(
 				'MigrateSchemaApplicationId: %d schema(s) moved to %s, %d refused as duplicates.',
-				$moved,
+				$counts['moved'],
 				self::NEW_APP_ID,
-				$refused
+				$counts['refused']
 			)
 		);
 	}//end run()
+
+	/**
+	 * Move each candidate slug that is not already taken under the new application id.
+	 *
+	 * @param array<int, string> $candidates Slugs under the old application id.
+	 * @param array<int, string> $taken Lower-cased slugs under the new application id.
+	 *
+	 * @return array{moved: int, refused: int} How many moved and how many were refused as duplicates.
+	 */
+	private function moveAll(array $candidates, array $taken): array {
+		$counts = ['moved' => 0, 'refused' => 0];
+		foreach ($candidates as $slug) {
+			if (in_array(strtolower($slug), $taken, true) === true) {
+				$counts['refused']++;
+				$this->refuseDuplicate(slug: $slug);
+				continue;
+			}
+
+			if ($this->repoint(slug: $slug) === true) {
+				$counts['moved']++;
+			}
+		}
+
+		return $counts;
+	}//end moveAll()
+
+	/**
+	 * Log a slug that would create a duplicate (application, slug) pair.
+	 *
+	 * @param string $slug The refused slug.
+	 *
+	 * @return void
+	 */
+	private function refuseDuplicate(string $slug): void {
+		$this->logger->warning(
+			'MigrateSchemaApplicationId: schema slug already exists under the new application id; '
+			. 'refusing to create a duplicate (application, slug) pair. Merge them by hand.',
+			['slug' => $slug, 'old' => self::OLD_APP_ID, 'new' => self::NEW_APP_ID]
+		);
+	}//end refuseDuplicate()
 
 	/**
 	 * Slugs already claimed under the NEW application id.

@@ -257,18 +257,9 @@ class CorrespondenceController extends Controller {
 			$recipientIds = $this->request->getParam('recipientIds', []);
 			$options = $this->request->getParam('options', []);
 
-			if (empty($templateId) === true) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('templateId is required')],
-					statusCode: Http::STATUS_BAD_REQUEST
-				);
-			}
-
-			if (empty($recipientIds) === true || is_array($recipientIds) === false) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('recipientIds is required and must be an array')],
-					statusCode: Http::STATUS_BAD_REQUEST
-				);
+			$refusal = $this->batchRefusal();
+			if ($refusal !== null) {
+				return $refusal;
 			}
 
 			if (is_array($options) === false) {
@@ -283,20 +274,58 @@ class CorrespondenceController extends Controller {
 				options: $options
 			);
 
-			// If async (has jobId), return 202 Accepted.
-			if (isset($result['jobId']) === true) {
-				return new JSONResponse(
-					data: $result,
-					statusCode: Http::STATUS_ACCEPTED
-				);
-			}
-
-			return new JSONResponse(data: $result, statusCode: Http::STATUS_OK);
+			return $this->batchResponse(result: $result);
 		} catch (Exception $e) {
 			return $this->handleException(exception: $e);
 		}//end try
 
 	}//end generateBatch()
+
+	/**
+	 * Refuse a batch request without a template or without a list of recipients.
+	 *
+	 * @return JSONResponse|null A 400 naming the missing field, or null.
+	 *
+	 * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-batch-correspondence-rest-endpoints
+	 */
+	private function batchRefusal(): ?JSONResponse {
+		if (empty($this->request->getParam('templateId')) === true) {
+			return new JSONResponse(
+				data: ['error' => $this->l10n->t('templateId is required')],
+				statusCode: Http::STATUS_BAD_REQUEST
+			);
+		}
+
+		$recipientIds = $this->request->getParam('recipientIds', []);
+		if (empty($recipientIds) === true || is_array($recipientIds) === false) {
+			return new JSONResponse(
+				data: ['error' => $this->l10n->t('recipientIds is required and must be an array')],
+				statusCode: Http::STATUS_BAD_REQUEST
+			);
+		}
+
+		return null;
+	}//end batchRefusal()
+
+	/**
+	 * Answer a batch run: 202 when it was queued as a job, else 200.
+	 *
+	 * @param array<string, mixed> $result The service's result.
+	 *
+	 * @return JSONResponse The answer.
+	 *
+	 * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-batch-correspondence-rest-endpoints
+	 */
+	private function batchResponse(array $result): JSONResponse {
+		if (isset($result['jobId']) === true) {
+			return new JSONResponse(
+				data: $result,
+				statusCode: Http::STATUS_ACCEPTED
+			);
+		}
+
+		return new JSONResponse(data: $result, statusCode: Http::STATUS_OK);
+	}//end batchResponse()
 
 	/**
 	 * Get the status of a batch correspondence job

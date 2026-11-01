@@ -138,36 +138,15 @@ class BatchDocumentJob extends QueuedJob {
 	 * @return array<string, mixed> The object's result row.
 	 */
 	private function generateFor(array $job, mixed $objectId): array {
-		$dataRefs = [
-			[
-				'register' => $job['options']['register'] ?? '',
-				'schema' => $job['options']['schema'] ?? '',
-				'id' => $objectId,
-			],
-		];
-
 		try {
 			$result = $this->documentSvc->generateDocument(
 				templateId: $job['templateId'],
-				dataRefs: $dataRefs,
+				dataRefs: $this->dataRefsFor(job: $job, objectId: $objectId),
 				options: $job['options']
 			);
 		} catch (Exception $e) {
-			$this->logger->warning(
-				message: 'BatchDocumentJob: failed to generate document for object',
-				context: [
-					'objectId' => $objectId,
-					'templateId' => $job['templateId'],
-					'error' => $e->getMessage(),
-				]
-			);
-
-			return [
-				'objectId' => $objectId,
-				'status' => 'error',
-				'error' => $e->getMessage(),
-			];
-		}//end try
+			return $this->failureEntry(exception: $e, context: ['objectId' => $objectId, 'templateId' => $job['templateId']]);
+		}
 
 		return [
 			'objectId' => $objectId,
@@ -176,8 +155,46 @@ class BatchDocumentJob extends QueuedJob {
 			'fileId' => $result['output']['fileId'] ?? null,
 			'path' => $result['output']['path'] ?? null,
 		];
-
 	}//end generateFor()
+
+	/**
+	 * The single data reference for one object, addressed through the job's register and schema.
+	 *
+	 * @param array{jobId: string, templateId: string, options: array} $job The job.
+	 * @param mixed $objectId The object UUID.
+	 *
+	 * @return array<int, array<string, mixed>> The data references.
+	 */
+	private function dataRefsFor(array $job, mixed $objectId): array {
+		return [
+			[
+				'register' => $job['options']['register'] ?? '',
+				'schema' => $job['options']['schema'] ?? '',
+				'id' => $objectId,
+			],
+		];
+	}//end dataRefsFor()
+
+	/**
+	 * Log a failed object and return its error row.
+	 *
+	 * @param Exception $exception The failure.
+	 * @param array{objectId: mixed, templateId: string} $context The object and template ids.
+	 *
+	 * @return array<string, mixed> The object's error row.
+	 */
+	private function failureEntry(Exception $exception, array $context): array {
+		$this->logger->warning(
+			message: 'BatchDocumentJob: failed to generate document for object',
+			context: $context + ['error' => $exception->getMessage()]
+		);
+
+		return [
+			'objectId' => $context['objectId'],
+			'status' => 'error',
+			'error' => $exception->getMessage(),
+		];
+	}//end failureEntry()
 
 	/**
 	 * Store the job's progress, keeping its options so userId survives for auth checks.

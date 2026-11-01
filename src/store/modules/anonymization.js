@@ -244,6 +244,167 @@ function inferDossier(path) {
 }
 
 /**
+ * The read-only review entry of an anonymised file, before its entities are
+ * known: no entities, the replacement count and source of its link.
+ *
+ * @param {object} fileMeta File descriptor (fileId, fileName, path).
+ * @param {object|null} link The file's `anonymizationLink`, if any.
+ * @return {object}
+ */
+function anonymizedEntry(fileMeta, link) {
+	return {
+		id: `file-${++fileCounter}`,
+		name: fileMeta.fileName,
+		status: 'completed',
+		viewMode: 'anonymized',
+		error: null,
+		fileId: fileMeta.fileId,
+		filePath: fileMeta.path,
+		entities: [],
+		entityCount: 0,
+		replacementCount: link?.replacementCount ?? 0,
+		anonymizedFileId: null,
+		anonymizedFileName: null,
+		anonymizedFilePath: null,
+		...linkedSource(link),
+		dossier: inferDossier(fileMeta.path),
+	}
+}
+
+/**
+ * Entry field name → `anonymizationLink` field it is read from.
+ *
+ * @type {Object<string, string>}
+ */
+const LINKED_SOURCE_FIELDS = {
+	sourceFileId: 'sourceFileId',
+	sourceFileName: 'sourceFileName',
+	sourceFilePath: 'sourceFilePath',
+	anonymizationLinkId: 'id',
+	runCount: 'runCount',
+}
+
+/**
+ * The source mapping (feat #107) an entry takes from its link, null per
+ * field when no link was recorded.
+ *
+ * @param {object|null} link The file's `anonymizationLink`, if any.
+ * @return {object}
+ */
+function linkedSource(link) {
+	return Object.fromEntries(
+		Object.entries(LINKED_SOURCE_FIELDS).map(([key, field]) => [
+			key,
+			link?.[field] ?? null,
+		]),
+	)
+}
+
+/**
+ * The replacement count of an anonymised file: the link's count when it
+ * records one, else the occurrences of its resolved placeholders.
+ *
+ * @param {object|null} link The file's `anonymizationLink`, if any.
+ * @param {Array<object>} entities The resolved placeholder rows.
+ * @return {number}
+ */
+function replacementCountOf(link, entities) {
+	return link?.replacementCount ?? entities.reduce((sum, e) => sum + e.count, 0)
+}
+
+/**
+ * The text of an anonymised file, or '' when it cannot be read.
+ *
+ * @param {object} fileMeta File descriptor (path, mimeType, fileName).
+ * @return {Promise<string>}
+ */
+async function readAnonymizedText(fileMeta) {
+	try {
+		return await extractDocumentText({
+			path: fileMeta.path,
+			mimeType: fileMeta.mimeType,
+			fileName: fileMeta.fileName,
+		})
+	} catch (err) {
+		console.error(`Failed to read text for ${fileMeta.fileName}:`, err)
+		return ''
+	}
+}
+
+/**
+ * The distinct bases across an entity's relations.
+ *
+ * @param {object|undefined} body The entity endpoint's response body.
+ * @return {Array<string>}
+ */
+function relationBases(body) {
+	const relations = Array.isArray(body?.relations) ? body.relations : []
+	return [
+		...new Set(
+			relations.flatMap((rel) => (Array.isArray(rel.bases) ? rel.bases : [])),
+		),
+	]
+}
+
+/**
+ * Why a placeholder's entity could not be resolved.
+ *
+ * @param {Error} err The lookup failure.
+ * @return {string}
+ */
+function resolveErrorText(err) {
+	return err.response?.status === 404
+		? 'Entity no longer exists'
+		: err.response?.data?.message || err.message
+}
+
+/**
+ * The fields a resolved entity fills in on its placeholder row.
+ *
+ * @param {{type: string}} ph The placeholder.
+ * @param {object|undefined} body The entity endpoint's response body.
+ * @return {{type: string, value: (string|null), confidence: (number|null), bases: Array<string>}}
+ */
+function resolvedFields(ph, body) {
+	const data = body?.data || {}
+	return {
+		type: data.type || ph.type,
+		value: data.value ?? null,
+		confidence: data.confidence ?? null,
+		bases: relationBases(body),
+	}
+}
+
+/**
+ * Resolve one `[<TYPE>: <id>]` placeholder to its source entity. A failed
+ * lookup (deleted entity, permission) degrades to a placeholder-only row
+ * rather than dropping the occurrence.
+ *
+ * @param {{entityId: number, type: string, count: number}} ph The placeholder.
+ * @return {Promise<object>} The review row.
+ */
+async function resolvePlaceholder(ph) {
+	const row = {
+		type: ph.type,
+		value: null,
+		confidence: null,
+		entityId: ph.entityId,
+		count: ph.count,
+		bases: [],
+		placeholder: `[${ph.type}: ${ph.entityId}]`,
+		_resolveError: null,
+	}
+	try {
+		const r = await axios.get(
+			generateUrl(`/apps/openregister/api/entities/${ph.entityId}`),
+		)
+		return { ...row, ...resolvedFields(ph, r.data) }
+	} catch (err) {
+		return { ...row, _resolveError: resolveErrorText(err) }
+	}
+}
+
+/**
  * Map a raw entity payload (as returned by the extract endpoint) to the
  * shape `EntityReviewTable` expects. Centralised so both `addFiles` and
  * `ensureExtracted` produce identical entry.entities.
@@ -445,6 +606,73 @@ function parseFileIdFromPropfind(xmlText) {
 }
 
 /**
+ * The trimmed name of a dossier folder.
+ *
+ * @param {string|null} folderName Folder name under /DocuDesk/.
+ * @return {string}
+ * @throws {Error} When the name is empty.
+ */
+function dossierFolderName(folderName) {
+	const cleanName = (folderName || '').trim()
+	if (!cleanName) {
+		throw new Error('Folder name is required')
+	}
+	return cleanName
+}
+
+/**
+ * Read a /DocuDesk/ folder's Nextcloud node id through a PROPFIND.
+ *
+ * @param {string} folderName Folder name under /DocuDesk/.
+ * @return {Promise<number>}
+ * @throws {Error} When the request fails or the answer holds no id.
+ */
+async function readFolderId(folderName) {
+	const response = await axios({
+		method: 'PROPFIND',
+		url: `${davBaseUrl()}/DocuDesk/${encodePath(folderName)}/`,
+		headers: { Depth: '0', 'Content-Type': 'application/xml' },
+		data: `<?xml version="1.0"?>
+						<d:propfind xmlns:d="DAV:" xmlns:oc="http://owncloud.org/ns">
+							<d:prop>
+								<oc:fileid />
+							</d:prop>
+						</d:propfind>`,
+	})
+	const folderId = parseFileIdFromPropfind(response.data)
+	if (folderId === null) {
+		throw new Error(`Failed to read folder id for ${folderName}`)
+	}
+	return folderId
+}
+
+/**
+ * The bases a new dossier starts with: the given ones, else
+ * `persoonsgegevens`.
+ *
+ * @param {Array<string>|undefined} bases The requested bases.
+ * @return {Array<string>}
+ */
+function dossierBases(bases) {
+	return Array.isArray(bases) && bases.length > 0 ? bases : ['persoonsgegevens']
+}
+
+/**
+ * The UUID of a created OpenRegister object.
+ *
+ * @param {object|null} data The create response body.
+ * @return {string}
+ * @throws {Error} When the response carries no UUID.
+ */
+function createdUuid(data) {
+	const uuid = data?.['@self']?.id ?? data?.id ?? null
+	if (uuid === null) {
+		throw new Error('Dossier created but no UUID returned')
+	}
+	return uuid
+}
+
+/**
  * An operator-facing input error for `addManualEntity`.
  *
  * @param {string} message The message to show.
@@ -580,6 +808,60 @@ function entryPayload(entry) {
  */
 export function entryIsChecked(entry) {
 	return !!entry && reviewIsCurrent(entry.reviewMark, entryPayload(entry))
+}
+
+/**
+ * A fresh batch progress record.
+ *
+ * @param {number} total The number of entries the batch runs.
+ * @param {Array<{fileId: number, name: string}>} unreviewed The entries it skips.
+ * @return {{running: boolean, total: number, done: number, failed: number, unreviewed: Array<object>}}
+ */
+function batchProgress(total, unreviewed) {
+	return { running: true, total, done: 0, failed: 0, unreviewed }
+}
+
+/**
+ * The extracted entries a batch covers, split into the ones a person
+ * checked and the ones left unreviewed.
+ *
+ * @param {Array<object>} files The queue.
+ * @param {Array<number|string>|undefined} fileIds Scope the batch to these file ids.
+ * @return {{targets: Array<object>, unreviewed: Array<{fileId: number, name: string}>}}
+ */
+function batchTargets(files, fileIds) {
+	const scope = fileIds ? new Set(fileIds.map(Number)) : null
+	// Snapshot the targets up-front: anonymiseEntry mutates each
+	// entry's status to 'completed'/'error', so iterating live
+	// would be order-sensitive.
+	const inScope = files.filter(
+		(entry) =>
+			entry.status === 'extracted'
+			&& (!scope || scope.has(Number(entry.fileId))),
+	)
+	// Only what a person checked is written; the rest is reported.
+	return {
+		targets: inScope.filter((entry) => entryIsChecked(entry)),
+		unreviewed: inScope
+			.filter((entry) => !entryIsChecked(entry))
+			.map((entry) => ({ fileId: entry.fileId, name: entry.name })),
+	}
+}
+
+/**
+ * Count a batch entry's outcome. anonymiseEntry can mark 'error' without
+ * throwing on partial failures, so the entry's own status decides.
+ *
+ * @param {object} batch The batch progress record.
+ * @param {object} entry The entry that ran.
+ * @return {void}
+ */
+function countOutcome(batch, entry) {
+	if (entry.status === 'error') {
+		batch.failed++
+	} else {
+		batch.done++
+	}
 }
 
 /**
@@ -867,12 +1149,10 @@ export const useAnonymizationStore = defineStore('anonymization', {
 		 * @param {string} folderName Dossier folder name under /DocuDesk/.
 		 * @return {Promise<void>}
 		 * @throws {Error} If the folder name is empty or folder creation fails.
+		 * @spec openspec/specs/dossier-register/spec.md#requirement-dossier-objects-bind-to-a-nextcloud-folder-via-selffolder
 		 */
 		async addFilesAsDossier(fileList, folderName) {
-			const cleanName = (folderName || '').trim()
-			if (!cleanName) {
-				throw new Error('Folder name is required')
-			}
+			const cleanName = dossierFolderName(folderName)
 
 			try {
 				await this.createDossierFolder(cleanName)
@@ -1115,69 +1395,44 @@ export const useAnonymizationStore = defineStore('anonymization', {
 		async anonymiseAllExtracted(options = {}) {
 			const { fileIds, files, ...entryOptions } = options
 
+			await this._extractListed(files)
+			const { targets, unreviewed } = batchTargets(this.files, fileIds)
+			this.batch = batchProgress(targets.length, unreviewed)
+			try {
+				for (const entry of targets) {
+					// anonymiseEntry already sets entry.status = 'error';
+					// swallow so one bad file doesn't abort the batch.
+					await this.anonymiseEntry(entry, entryOptions).catch((err) =>
+						console.error(
+							`Batch anonymise failed for ${entry.name}:`,
+							err,
+						),
+					)
+					countOutcome(this.batch, entry)
+				}
+			} finally {
+				this.batch.running = false
+			}
+		},
+
+		/**
+		 * Extract the listed files of a dossier batch before it runs.
+		 *
+		 * @param {Array<object>|undefined} files File descriptors to extract.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 */
+		async _extractListed(files) {
 			// Dossier batch: the listing may contain files the user never
 			// opened in the viewer, so they were never lazily extracted and
 			// aren't in the queue yet. Extract them first — otherwise the
 			// run silently skips every un-opened file. ensureExtracted is a
 			// no-op for files already in the queue, so this is idempotent.
 			if (Array.isArray(files) && files.length > 0) {
-				this.batch = {
-					running: true,
-					total: 0,
-					done: 0,
-					failed: 0,
-					unreviewed: [],
-				}
+				this.batch = batchProgress(0, [])
 				for (const meta of files) {
 					await this.ensureExtracted(meta)
 				}
-			}
-
-			const scope = fileIds ? new Set(fileIds.map(Number)) : null
-
-			// Snapshot the targets up-front: anonymiseEntry mutates each
-			// entry's status to 'completed'/'error', so iterating live
-			// would be order-sensitive.
-			const inScope = this.files.filter(
-				(entry) =>
-					entry.status === 'extracted'
-					&& (!scope || scope.has(Number(entry.fileId))),
-			)
-			// Only what a person checked is written; the rest is reported.
-			const targets = inScope.filter((entry) => entryIsChecked(entry))
-			const unreviewed = inScope
-				.filter((entry) => !entryIsChecked(entry))
-				.map((entry) => ({ fileId: entry.fileId, name: entry.name }))
-
-			this.batch = {
-				running: true,
-				total: targets.length,
-				done: 0,
-				failed: 0,
-				unreviewed,
-			}
-			try {
-				for (const entry of targets) {
-					try {
-						await this.anonymiseEntry(entry, entryOptions)
-					} catch (err) {
-						// anonymiseEntry already sets entry.status = 'error';
-						// swallow so one bad file doesn't abort the batch.
-						console.error(
-							`Batch anonymise failed for ${entry.name}:`,
-							err,
-						)
-					}
-					// Classify by the entry's own outcome — anonymiseEntry
-					// can mark 'error' without throwing on partial failures.
-					if (entry.status === 'error') {
-						this.batch.failed++
-					} else {
-						this.batch.done++
-					}
-				}
-			} finally {
-				this.batch.running = false
 			}
 		},
 
@@ -1408,116 +1663,49 @@ export const useAnonymizationStore = defineStore('anonymization', {
 		 *   already in the queue (e.g. a just-finished run) without creating a
 		 *   duplicate card.
 		 * @return {Promise<object|null>} The review entry, or null when not anonymised.
+		 * @spec openspec/specs/anonymization-link/spec.md
 		 */
 		async loadAnonymizedEntities(fileMeta, { push = true } = {}) {
 			// Authoritative signal: the source↔anonymised DB mapping. A hit
 			// means this file IS an anonymised output regardless of whether
-			// its text yields parseable placeholders.
+			// its text yields parseable placeholders, or any text at all.
 			const link = await this.findAnonymizationLink(fileMeta.fileId)
-
-			let text = ''
-			try {
-				text = await extractDocumentText({
-					path: fileMeta.path,
-					mimeType: fileMeta.mimeType,
-					fileName: fileMeta.fileName,
-				})
-			} catch (err) {
-				console.error(`Failed to read text for ${fileMeta.fileName}:`, err)
-				// A linked file is still anonymised even if its text is
-				// unreadable — fall through to the source-entity resolution.
-				if (!link) {
-					return null
-				}
-			}
-
-			const placeholders = parsePlaceholders(text)
-			if (placeholders.length === 0 && !link) {
-				return null
-			}
+			const placeholders = parsePlaceholders(
+				await readAnonymizedText(fileMeta),
+			)
 
 			// No parseable placeholders but a DB link exists (e.g. redacted
 			// PDF): resolve the removed entities from the linked source file
 			// and map them onto the anonymised-card shape.
 			if (placeholders.length === 0) {
-				return this.buildLinkedAnonymizedEntry(fileMeta, link, { push })
+				return link
+					? this.buildLinkedAnonymizedEntry(fileMeta, link, { push })
+					: null
 			}
-
-			// Resolve every distinct entity id in parallel. A failed lookup
-			// (deleted entity, permission) degrades to a placeholder-only
-			// row rather than dropping the occurrence entirely.
-			const resolved = await Promise.all(
-				placeholders.map(async (ph) => {
-					try {
-						const r = await axios.get(
-							generateUrl(
-								`/apps/openregister/api/entities/${ph.entityId}`,
-							),
-						)
-						const data = r.data?.data || {}
-						const relations = Array.isArray(r.data?.relations)
-							? r.data.relations
-							: []
-						// Collect bases across this entity's relations.
-						const bases = relations.flatMap((rel) =>
-							Array.isArray(rel.bases) ? rel.bases : [],
-						)
-						return {
-							type: data.type || ph.type,
-							value: data.value ?? null,
-							confidence: data.confidence ?? null,
-							entityId: ph.entityId,
-							count: ph.count,
-							bases: [...new Set(bases)],
-							placeholder: `[${ph.type}: ${ph.entityId}]`,
-							_resolveError: null,
-						}
-					} catch (err) {
-						return {
-							type: ph.type,
-							value: null,
-							confidence: null,
-							entityId: ph.entityId,
-							count: ph.count,
-							bases: [],
-							placeholder: `[${ph.type}: ${ph.entityId}]`,
-							_resolveError:
-								err.response?.status === 404
-									? 'Entity no longer exists'
-									: err.response?.data?.message || err.message,
-						}
-					}
-				}),
-			)
 
 			// Collapse rows duplicated by the extract-append bug so the same
 			// removed value is shown once (see entity-double-extract TODO).
-			const deduped = dedupeAnonEntities(resolved)
-
+			const deduped = dedupeAnonEntities(
+				await Promise.all(placeholders.map(resolvePlaceholder)),
+			)
 			const entry = {
-				id: `file-${++fileCounter}`,
-				name: fileMeta.fileName,
-				status: 'completed',
-				viewMode: 'anonymized',
-				error: null,
-				fileId: fileMeta.fileId,
-				filePath: fileMeta.path,
+				...anonymizedEntry(fileMeta, link),
 				entities: deduped,
 				entityCount: deduped.length,
-				replacementCount:
-					link?.replacementCount
-					?? deduped.reduce((sum, e) => sum + e.count, 0),
-				anonymizedFileId: null,
-				anonymizedFileName: null,
-				anonymizedFilePath: null,
-				// Source mapping (feat #107) when a link was recorded.
-				sourceFileId: link?.sourceFileId ?? null,
-				sourceFileName: link?.sourceFileName ?? null,
-				sourceFilePath: link?.sourceFilePath ?? null,
-				anonymizationLinkId: link?.id ?? null,
-				runCount: link?.runCount ?? null,
-				dossier: inferDossier(fileMeta.path),
+				replacementCount: replacementCountOf(link, deduped),
 			}
+			return this._queueAnonymized(entry, push)
+		},
+
+		/**
+		 * Append a read-only anonymised entry to the queue when asked to.
+		 *
+		 * @param {object} entry The entry.
+		 * @param {boolean} push Whether to append it.
+		 * @return {object} The entry.
+		 * @spec openspec/specs/anonymization-link/spec.md
+		 */
+		_queueAnonymized(entry, push) {
 			if (push) {
 				this.files.push(entry)
 			}
@@ -1547,36 +1735,16 @@ export const useAnonymizationStore = defineStore('anonymization', {
 		 *   Pass false to reuse the resolution for an existing entry without
 		 *   creating a duplicate card.
 		 * @return {object} The read-only summary entry.
+		 * @spec openspec/specs/anonymization-link/spec.md
 		 */
 		buildLinkedAnonymizedEntry(fileMeta, link, { push = true } = {}) {
 			const entry = {
-				id: `file-${++fileCounter}`,
-				name: fileMeta.fileName,
-				status: 'completed',
-				viewMode: 'anonymized',
-				error: null,
-				fileId: fileMeta.fileId,
-				filePath: fileMeta.path,
-				entities: [],
-				entityCount: 0,
-				replacementCount: link?.replacementCount ?? 0,
+				...anonymizedEntry(fileMeta, link),
 				// No readable placeholders → the detailed list can't be shown
 				// without a (mutating) re-extract. The sidebar renders a note.
 				detailUnavailable: true,
-				anonymizedFileId: null,
-				anonymizedFileName: null,
-				anonymizedFilePath: null,
-				sourceFileId: link?.sourceFileId ?? null,
-				sourceFileName: link?.sourceFileName ?? null,
-				sourceFilePath: link?.sourceFilePath ?? null,
-				anonymizationLinkId: link?.id ?? null,
-				runCount: link?.runCount ?? null,
-				dossier: inferDossier(fileMeta.path),
 			}
-			if (push) {
-				this.files.push(entry)
-			}
-			return entry
+			return this._queueAnonymized(entry, push)
 		},
 
 		/**
@@ -1603,55 +1771,24 @@ export const useAnonymizationStore = defineStore('anonymization', {
 		 * @spec openspec/specs/dossier-register/spec.md#requirement-dossier-objects-bind-to-a-nextcloud-folder-via-selffolder
 		 */
 		async bindDossier(folderName, options = {}) {
-			const cleanName = (folderName || '').trim()
-			if (!cleanName) {
-				throw new Error('Folder name is required')
-			}
-
+			const cleanName = dossierFolderName(folderName)
 			const cached = this.dossiers.find((d) => d.folderName === cleanName)
 			if (cached) {
 				return cached
 			}
 
-			// Step 1 — PROPFIND for the folder's NC node id.
-			const propfindUrl = `${davBaseUrl()}/DocuDesk/${encodePath(cleanName)}/`
-			const propfindResponse = await axios({
-				method: 'PROPFIND',
-				url: propfindUrl,
-				headers: { Depth: '0', 'Content-Type': 'application/xml' },
-				data: `<?xml version="1.0"?>
-						<d:propfind xmlns:d="DAV:" xmlns:oc="http://owncloud.org/ns">
-							<d:prop>
-								<oc:fileid />
-							</d:prop>
-						</d:propfind>`,
-			})
-			const folderId = parseFileIdFromPropfind(propfindResponse.data)
-			if (folderId === null) {
-				throw new Error(`Failed to read folder id for ${cleanName}`)
-			}
-
-			// Step 2 — create the OR dossier object.
-			const bases =
-				Array.isArray(options.bases) && options.bases.length > 0
-					? options.bases
-					: ['persoonsgegevens']
-			const payload = {
-				name: cleanName,
-				description: options.description ?? '',
-				bases,
-				'@self': { folder: String(folderId) },
-			}
-
+			const folderId = await readFolderId(cleanName)
+			const bases = dossierBases(options.bases)
 			const createResponse = await axios.post(
 				generateUrl('/apps/openregister/api/objects/filinq/dossier'),
-				payload,
+				{
+					name: cleanName,
+					description: options.description ?? '',
+					bases,
+					'@self': { folder: String(folderId) },
+				},
 			)
-			const uuid =
-				createResponse.data?.['@self']?.id ?? createResponse.data?.id ?? null
-			if (uuid === null) {
-				throw new Error('Dossier created but no UUID returned')
-			}
+			const uuid = createdUuid(createResponse.data)
 
 			const record = {
 				folderName: cleanName,

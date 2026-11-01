@@ -392,15 +392,7 @@ class BatchAnonymizationController extends Controller {
 			// values mirror AnonymizationController semantics.
 			$outputFormat = $this->resolveOutputFormat(params: $params);
 			if ($outputFormat === null) {
-				return new JSONResponse(
-					[
-						'error' => sprintf(
-							'Invalid outputFormat: must be one of %s',
-							implode(', ', self::VALID_OUTPUT_FORMATS)
-						),
-					],
-					400
-				);
+				return $this->invalidOutputFormatResponse();
 			}
 
 			$unredactedError = $this->batchRequest->validateUnredactedEntries(
@@ -412,9 +404,11 @@ class BatchAnonymizationController extends Controller {
 
 			$batchResult = $this->runBatchAnonymize(
 				batchId: $batchId,
-				request: $validated['request'],
-				outputFormat: $outputFormat,
-				scope: $this->batchRequest->resolveScope(params: $params)
+				run: [
+					'request' => $validated['request'],
+					'outputFormat' => $outputFormat,
+					'scope' => $this->batchRequest->resolveScope(params: $params),
+				]
 			);
 
 			if ($validated['request']['hasStrayBases'] === true) {
@@ -435,28 +429,22 @@ class BatchAnonymizationController extends Controller {
 	 * BatchAnonymizeService entry point; every other value is forwarded verbatim.
 	 *
 	 * @param string $batchId Identifier of the batch to anonymize.
-	 * @param array<string, mixed> $request The validated request body.
-	 * @param string $outputFormat Resolved per-batch output format.
-	 * @param string $scope Resolved placeholder-numbering scope.
+	 * @param array{request: array<string, mixed>, outputFormat: string, scope: string} $run Request, format and scope.
 	 *
 	 * @return array<string, mixed> The batch run summary.
 	 *
 	 * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-7
 	 * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-anonymization
 	 */
-	private function runBatchAnonymize(
-		string $batchId,
-		array $request,
-		string $outputFormat,
-		string $scope,
-	): array {
+	private function runBatchAnonymize(string $batchId, array $run): array {
+		$request = $run['request'];
 		if ($request['appendBasisSummary'] === true) {
 			return $this->anonService->anonymizeBatchWithBasisSummary(
 				batchId: $batchId,
 				entities: $request['entities'],
 				unredactedEntities: $request['unredactedEntities'],
-				outputFormat: $outputFormat,
-				scope: $scope
+				outputFormat: $run['outputFormat'],
+				scope: $run['scope']
 			);
 		}
 
@@ -464,11 +452,31 @@ class BatchAnonymizationController extends Controller {
 			batchId: $batchId,
 			entities: $request['entities'],
 			unredactedEntities: $request['unredactedEntities'],
-			outputFormat: $outputFormat,
-			scope: $scope
+			outputFormat: $run['outputFormat'],
+			scope: $run['scope']
 		);
 
 	}//end runBatchAnonymize()
+
+	/**
+	 * The 400 answer for an output format outside the valid set.
+	 *
+	 * @return JSONResponse The refusal naming the valid formats.
+	 *
+	 * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-anonymization
+	 */
+	private function invalidOutputFormatResponse(): JSONResponse {
+		return new JSONResponse(
+			[
+				'error' => sprintf(
+					'Invalid outputFormat: must be one of %s',
+					implode(', ', self::VALID_OUTPUT_FORMATS)
+				),
+			],
+			400
+		);
+
+	}//end invalidOutputFormatResponse()
 
 	/**
 	 * Resolve the effective `outputFormat` for this batch call.

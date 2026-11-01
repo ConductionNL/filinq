@@ -243,33 +243,53 @@ class AnonymizeRequestValidator {
 	 */
 	private function validateOverrides(array $overrides): ?array {
 		foreach ($overrides as $idx => $override) {
-			if (is_array($override) === false) {
-				return $this->badRequest(
-					message: $this->l10n->t('Each acknowledgedOverrides entry must be an object (index %s)', [$idx])
-				);
+			$message = $this->overrideProblem(idx: $idx, override: $override);
+			if ($message !== '') {
+				return $this->badRequest(message: $message);
 			}
-
-			if (empty($override['ruleId']) === true || is_string($override['ruleId']) === false) {
-				return $this->badRequest(
-					message: $this->l10n->t('acknowledgedOverrides[%s].ruleId is required and must be a string', [$idx])
-				);
-			}
-
-			if (isset($override['entityId']) === false || is_int($override['entityId']) === false) {
-				return $this->badRequest(
-					message: $this->l10n->t('acknowledgedOverrides[%s].entityId is required and must be an integer', [$idx])
-				);
-			}
-
-			if (isset($override['reason']) === true && is_string($override['reason']) === false) {
-				return $this->badRequest(
-					message: $this->l10n->t('acknowledgedOverrides[%s].reason must be a string', [$idx])
-				);
-			}
-		}//end foreach
+		}
 
 		return null;
 	}//end validateOverrides()
+
+	/**
+	 * The translated reason one acknowledgedOverrides entry is invalid.
+	 *
+	 * @param int|string $idx The entry's key in acknowledgedOverrides.
+	 * @param mixed $override The entry.
+	 *
+	 * @return string The message for the first failing field, '' when the entry is valid.
+	 */
+	private function overrideProblem(int|string $idx, mixed $override): string {
+		if (is_array($override) === false) {
+			return $this->l10n->t('Each acknowledgedOverrides entry must be an object (index %s)', [$idx]);
+		}
+
+		if ($this->isNonEmptyString(value: ($override['ruleId'] ?? null)) === false) {
+			return $this->l10n->t('acknowledgedOverrides[%s].ruleId is required and must be a string', [$idx]);
+		}
+
+		if (is_int($override['entityId'] ?? null) === false) {
+			return $this->l10n->t('acknowledgedOverrides[%s].entityId is required and must be an integer', [$idx]);
+		}
+
+		if (is_string($override['reason'] ?? '') === false) {
+			return $this->l10n->t('acknowledgedOverrides[%s].reason must be a string', [$idx]);
+		}
+
+		return '';
+	}//end overrideProblem()
+
+	/**
+	 * Whether a value is a string that empty() does not treat as empty.
+	 *
+	 * @param mixed $value The value.
+	 *
+	 * @return bool True for a string other than '' and '0'.
+	 */
+	private function isNonEmptyString(mixed $value): bool {
+		return is_string($value) === true && empty($value) === false;
+	}//end isNonEmptyString()
 
 	/**
 	 * Detect stray `bases[]` fields on entity entries.

@@ -1,0 +1,697 @@
+{
+	"initial": {
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 20,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 2,
+			"limit": 20
+		},
+		"emptyContentName": "[No consent records found]",
+		"tableColumns": [
+			{
+				"key": "entityText",
+				"label": "[Entity]",
+				"sortable": true
+			},
+			{
+				"key": "entityType",
+				"label": "[Type]",
+				"sortable": true
+			},
+			{
+				"key": "consentStatus",
+				"label": "[Consent Status]",
+				"sortable": true
+			},
+			{
+				"key": "notificationStatus",
+				"label": "[Notification]",
+				"sortable": true
+			},
+			{
+				"key": "objectionDeadline",
+				"label": "[Deadline]",
+				"sortable": true
+			},
+			{
+				"key": "publicationDecision",
+				"label": "[Decision]",
+				"sortable": true
+			}
+		],
+		"workflowConsents": [
+			{
+				"@self": {
+					"id": "self-1"
+				},
+				"id": "id-1",
+				"entityText": "Jan",
+				"primaryName": "Jan",
+				"label": "Dict",
+				"matchRules": [
+					{
+						"type": "bsn",
+						"value": "123",
+						"extra": true
+					},
+					{
+						"type": "exact",
+						"value": "Jan"
+					}
+				],
+				"active": false,
+				"severity": "high",
+				"scope": "document"
+			},
+			{
+				"id": "id-3",
+				"consentStatus": "objection_received"
+			}
+		],
+		"calls": [],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"mounted": {
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 20,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 2,
+			"limit": 20
+		},
+		"emptyContentName": "[No consent records found]",
+		"tableColumns": [
+			{
+				"key": "entityText",
+				"label": "[Entity]",
+				"sortable": true
+			},
+			{
+				"key": "entityType",
+				"label": "[Type]",
+				"sortable": true
+			},
+			{
+				"key": "consentStatus",
+				"label": "[Consent Status]",
+				"sortable": true
+			},
+			{
+				"key": "notificationStatus",
+				"label": "[Notification]",
+				"sortable": true
+			},
+			{
+				"key": "objectionDeadline",
+				"label": "[Deadline]",
+				"sortable": true
+			},
+			{
+				"key": "publicationDecision",
+				"label": "[Decision]",
+				"sortable": true
+			}
+		],
+		"workflowConsents": [
+			{
+				"@self": {
+					"id": "self-1"
+				},
+				"id": "id-1",
+				"entityText": "Jan",
+				"primaryName": "Jan",
+				"label": "Dict",
+				"matchRules": [
+					{
+						"type": "bsn",
+						"value": "123",
+						"extra": true
+					},
+					{
+						"type": "exact",
+						"value": "Jan"
+					}
+				],
+				"active": false,
+				"severity": "high",
+				"scope": "document"
+			},
+			{
+				"id": "id-3",
+				"consentStatus": "objection_received"
+			}
+		],
+		"calls": [
+			[
+				"consent",
+				"fetchConsents"
+			]
+		],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"formatStatus": [
+		"[Pending]",
+		"[Approved]",
+		"[Skipped]",
+		"odd",
+		"[Unknown]",
+		"[Unknown]"
+	],
+	"formatDecision": [
+		"[Rejected]",
+		"[Publish Anonymized]",
+		"odd",
+		"[Pending]"
+	],
+	"formatDate": [
+		"-",
+		"-",
+		"1/2/2026"
+	],
+	"refresh": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 20,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 2,
+			"limit": 20
+		},
+		"emptyContentName": "[No consent records found]",
+		"tableColumns": [
+			{
+				"key": "entityText",
+				"label": "[Entity]",
+				"sortable": true
+			},
+			{
+				"key": "entityType",
+				"label": "[Type]",
+				"sortable": true
+			},
+			{
+				"key": "consentStatus",
+				"label": "[Consent Status]",
+				"sortable": true
+			},
+			{
+				"key": "notificationStatus",
+				"label": "[Notification]",
+				"sortable": true
+			},
+			{
+				"key": "objectionDeadline",
+				"label": "[Deadline]",
+				"sortable": true
+			},
+			{
+				"key": "publicationDecision",
+				"label": "[Decision]",
+				"sortable": true
+			}
+		],
+		"workflowConsents": [
+			{
+				"@self": {
+					"id": "self-1"
+				},
+				"id": "id-1",
+				"entityText": "Jan",
+				"primaryName": "Jan",
+				"label": "Dict",
+				"matchRules": [
+					{
+						"type": "bsn",
+						"value": "123",
+						"extra": true
+					},
+					{
+						"type": "exact",
+						"value": "Jan"
+					}
+				],
+				"active": false,
+				"severity": "high",
+				"scope": "document"
+			},
+			{
+				"id": "id-3",
+				"consentStatus": "objection_received"
+			}
+		],
+		"calls": [
+			[
+				"consent",
+				"fetchConsents"
+			]
+		],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"page3": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 3,
+		"pageSize": 20,
+		"paginationData": {
+			"page": 3,
+			"pages": 1,
+			"total": 2,
+			"limit": 20
+		},
+		"emptyContentName": "[No consent records found]",
+		"tableColumns": [
+			{
+				"key": "entityText",
+				"label": "[Entity]",
+				"sortable": true
+			},
+			{
+				"key": "entityType",
+				"label": "[Type]",
+				"sortable": true
+			},
+			{
+				"key": "consentStatus",
+				"label": "[Consent Status]",
+				"sortable": true
+			},
+			{
+				"key": "notificationStatus",
+				"label": "[Notification]",
+				"sortable": true
+			},
+			{
+				"key": "objectionDeadline",
+				"label": "[Deadline]",
+				"sortable": true
+			},
+			{
+				"key": "publicationDecision",
+				"label": "[Decision]",
+				"sortable": true
+			}
+		],
+		"workflowConsents": [
+			{
+				"@self": {
+					"id": "self-1"
+				},
+				"id": "id-1",
+				"entityText": "Jan",
+				"primaryName": "Jan",
+				"label": "Dict",
+				"matchRules": [
+					{
+						"type": "bsn",
+						"value": "123",
+						"extra": true
+					},
+					{
+						"type": "exact",
+						"value": "Jan"
+					}
+				],
+				"active": false,
+				"severity": "high",
+				"scope": "document"
+			},
+			{
+				"id": "id-3",
+				"consentStatus": "objection_received"
+			}
+		],
+		"calls": [],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"size50": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 50,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 2,
+			"limit": 50
+		},
+		"emptyContentName": "[No consent records found]",
+		"tableColumns": [
+			{
+				"key": "entityText",
+				"label": "[Entity]",
+				"sortable": true
+			},
+			{
+				"key": "entityType",
+				"label": "[Type]",
+				"sortable": true
+			},
+			{
+				"key": "consentStatus",
+				"label": "[Consent Status]",
+				"sortable": true
+			},
+			{
+				"key": "notificationStatus",
+				"label": "[Notification]",
+				"sortable": true
+			},
+			{
+				"key": "objectionDeadline",
+				"label": "[Deadline]",
+				"sortable": true
+			},
+			{
+				"key": "publicationDecision",
+				"label": "[Decision]",
+				"sortable": true
+			}
+		],
+		"workflowConsents": [
+			{
+				"@self": {
+					"id": "self-1"
+				},
+				"id": "id-1",
+				"entityText": "Jan",
+				"primaryName": "Jan",
+				"label": "Dict",
+				"matchRules": [
+					{
+						"type": "bsn",
+						"value": "123",
+						"extra": true
+					},
+					{
+						"type": "exact",
+						"value": "Jan"
+					}
+				],
+				"active": false,
+				"severity": "high",
+				"scope": "document"
+			},
+			{
+				"id": "id-3",
+				"consentStatus": "objection_received"
+			}
+		],
+		"calls": [],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"create": "(no method)",
+	"submitCreate": "(no method)",
+	"submitCreateDialog": "(no method)",
+	"editFull": "(no method)",
+	"submitUpdate": "(no method)",
+	"editEmpty": "(no method)",
+	"failResponse": "(no method)",
+	"failMessage": "(no method)",
+	"failBare": "(no method)",
+	"createAfterFail": "(no method)",
+	"editById": "(no method)",
+	"deleteNone": "(no method)",
+	"confirm": "(no method)",
+	"cancel": "(no method)",
+	"confirmUuid": "(no method)",
+	"deleteOk": "(no method)",
+	"confirmSelf": "(no method)",
+	"deleteSelf": "(no method)",
+	"confirmAgain": "(no method)",
+	"deleteFail": "(no method)",
+	"view": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 50,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 2,
+			"limit": 50
+		},
+		"emptyContentName": "[No consent records found]",
+		"tableColumns": [
+			{
+				"key": "entityText",
+				"label": "[Entity]",
+				"sortable": true
+			},
+			{
+				"key": "entityType",
+				"label": "[Type]",
+				"sortable": true
+			},
+			{
+				"key": "consentStatus",
+				"label": "[Consent Status]",
+				"sortable": true
+			},
+			{
+				"key": "notificationStatus",
+				"label": "[Notification]",
+				"sortable": true
+			},
+			{
+				"key": "objectionDeadline",
+				"label": "[Deadline]",
+				"sortable": true
+			},
+			{
+				"key": "publicationDecision",
+				"label": "[Decision]",
+				"sortable": true
+			}
+		],
+		"workflowConsents": [
+			{
+				"@self": {
+					"id": "self-1"
+				},
+				"id": "id-1",
+				"entityText": "Jan",
+				"primaryName": "Jan",
+				"label": "Dict",
+				"matchRules": [
+					{
+						"type": "bsn",
+						"value": "123",
+						"extra": true
+					},
+					{
+						"type": "exact",
+						"value": "Jan"
+					}
+				],
+				"active": false,
+				"severity": "high",
+				"scope": "document"
+			},
+			{
+				"id": "id-3",
+				"consentStatus": "objection_received"
+			}
+		],
+		"calls": [
+			[
+				"consent",
+				"setConsentItem",
+				{
+					"@self": {
+						"id": "self-1"
+					},
+					"id": "id-1",
+					"entityText": "Jan",
+					"primaryName": "Jan",
+					"label": "Dict",
+					"matchRules": [
+						{
+							"type": "bsn",
+							"value": "123",
+							"extra": true
+						},
+						{
+							"type": "exact",
+							"value": "Jan"
+						}
+					],
+					"active": false,
+					"severity": "high",
+					"scope": "document"
+				}
+			]
+		],
+		"emitted": [],
+		"pushed": [
+			{
+				"name": "ConsentDetail",
+				"params": {
+					"id": "id-1"
+				}
+			}
+		],
+		"errors": []
+	},
+	"viewUuid": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 50,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 2,
+			"limit": 50
+		},
+		"emptyContentName": "[No consent records found]",
+		"tableColumns": [
+			{
+				"key": "entityText",
+				"label": "[Entity]",
+				"sortable": true
+			},
+			{
+				"key": "entityType",
+				"label": "[Type]",
+				"sortable": true
+			},
+			{
+				"key": "consentStatus",
+				"label": "[Consent Status]",
+				"sortable": true
+			},
+			{
+				"key": "notificationStatus",
+				"label": "[Notification]",
+				"sortable": true
+			},
+			{
+				"key": "objectionDeadline",
+				"label": "[Deadline]",
+				"sortable": true
+			},
+			{
+				"key": "publicationDecision",
+				"label": "[Decision]",
+				"sortable": true
+			}
+		],
+		"workflowConsents": [
+			{
+				"@self": {
+					"id": "self-1"
+				},
+				"id": "id-1",
+				"entityText": "Jan",
+				"primaryName": "Jan",
+				"label": "Dict",
+				"matchRules": [
+					{
+						"type": "bsn",
+						"value": "123",
+						"extra": true
+					},
+					{
+						"type": "exact",
+						"value": "Jan"
+					}
+				],
+				"active": false,
+				"severity": "high",
+				"scope": "document"
+			},
+			{
+				"id": "id-3",
+				"consentStatus": "objection_received"
+			}
+		],
+		"calls": [
+			[
+				"consent",
+				"setConsentItem",
+				{
+					"uuid": "uuid-2",
+					"matchRules": "not-an-array",
+					"scope": "entity"
+				}
+			]
+		],
+		"emitted": [],
+		"pushed": [
+			{
+				"name": "ConsentDetail",
+				"params": {
+					"id": "uuid-2"
+				}
+			}
+		],
+		"errors": []
+	},
+	"viewDict": "(no method)",
+	"emptyWithError": {
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 20,
+		"paginationData": {
+			"page": 1,
+			"pages": 0,
+			"total": 0,
+			"limit": 20
+		},
+		"emptyContentName": "load failed",
+		"tableColumns": [
+			{
+				"key": "entityText",
+				"label": "[Entity]",
+				"sortable": true
+			},
+			{
+				"key": "entityType",
+				"label": "[Type]",
+				"sortable": true
+			},
+			{
+				"key": "consentStatus",
+				"label": "[Consent Status]",
+				"sortable": true
+			},
+			{
+				"key": "notificationStatus",
+				"label": "[Notification]",
+				"sortable": true
+			},
+			{
+				"key": "objectionDeadline",
+				"label": "[Deadline]",
+				"sortable": true
+			},
+			{
+				"key": "publicationDecision",
+				"label": "[Decision]",
+				"sortable": true
+			}
+		],
+		"workflowConsents": [],
+		"calls": [],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	}
+}
