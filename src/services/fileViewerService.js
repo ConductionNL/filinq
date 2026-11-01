@@ -265,6 +265,7 @@ const TEXT_EXTRACTORS = [
  * @param {string} [file.mimeType] MIME type (used to pick the extractor).
  * @param {string} [file.fileName] File name (fallback for extension sniffing).
  * @return {Promise<string>} The document's plain text (may be empty).
+ * @spec openspec/specs/document-preview/spec.md#requirement-odt-placeholder-text-extraction-must-unzip-the-container
  */
 export async function extractDocumentText(file) {
 	const mime = (file.mimeType || '').toLowerCase()
