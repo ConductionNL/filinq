@@ -193,10 +193,7 @@ class SigningController extends Controller {
 
 			$result = $this->signingService->getRequest(requestId: $id, callerUserId: $scope);
 			if ($result === null) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Signing request not found')],
-					statusCode: Http::STATUS_NOT_FOUND
-				);
+				return $this->notFoundResponse();
 			}
 
 			return new JSONResponse($result);
@@ -236,42 +233,18 @@ class SigningController extends Controller {
 			// found'), which we catch here and map to a single 404 (no UUID is
 			// echoed, so existence is not leaked).
 			$uid = $user->getUID();
-			$isAdmin = $this->groupManager->isAdmin($uid);
-			if ($isAdmin === false) {
-				try {
-					$request = $this->signingService->getRequest(requestId: $id);
-				} catch (Exception $e) {
-					return new JSONResponse(
-						data: ['error' => $this->l10n->t('Signing request not found')],
-						statusCode: Http::STATUS_NOT_FOUND
-					);
+			if ($this->groupManager->isAdmin($uid) === false) {
+				$refusal = $this->cancelRefusal(uid: $uid, id: $id);
+				if ($refusal !== null) {
+					return $refusal;
 				}
-
-				if ($request === null) {
-					return new JSONResponse(
-						data: ['error' => $this->l10n->t('Signing request not found')],
-						statusCode: Http::STATUS_NOT_FOUND
-					);
-				}
-
-				// The destructive transition needs the tighter initiator gate
-				// (signers are in scope for READ only).
-				if (($request['initiatorUserId'] ?? '') !== $uid) {
-					return new JSONResponse(
-						data: ['error' => $this->l10n->t('You are not allowed to cancel this signing request')],
-						statusCode: Http::STATUS_FORBIDDEN
-					);
-				}
-			}//end if
+			}
 
 			$result = $this->signingService->cancelRequest(requestId: $id);
 			if ($result === null) {
 				// Admin path or post-recheck null — race / vanished
 				// between fetch and cancel. Same generic 404.
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Signing request not found')],
-					statusCode: Http::STATUS_NOT_FOUND
-				);
+				return $this->notFoundResponse();
 			}
 
 			return new JSONResponse($result);
@@ -280,6 +253,55 @@ class SigningController extends Controller {
 		}//end try
 
 	}//end cancelRequest()
+
+	/**
+	 * Refuse a non-admin cancel unless the caller started the request.
+	 *
+	 * The record is read without caller scoping so the initiator gate applies
+	 * here: a signer may read a request but not cancel it.
+	 *
+	 * @param string $uid The session user.
+	 * @param string $id The signing request id.
+	 *
+	 * @return JSONResponse|null A 404 for a missing request, a 403 for a non-initiator, or null.
+	 *
+	 * @spec openspec/changes/digital-signing-integration/tasks.md#6-1
+	 */
+	private function cancelRefusal(string $uid, string $id): ?JSONResponse {
+		try {
+			$request = $this->signingService->getRequest(requestId: $id);
+		} catch (Exception $e) {
+			return $this->notFoundResponse();
+		}
+
+		if ($request === null) {
+			return $this->notFoundResponse();
+		}
+
+		if (($request['initiatorUserId'] ?? '') !== $uid) {
+			return new JSONResponse(
+				data: ['error' => $this->l10n->t('You are not allowed to cancel this signing request')],
+				statusCode: Http::STATUS_FORBIDDEN
+			);
+		}
+
+		return null;
+	}//end cancelRefusal()
+
+	/**
+	 * The single 404 for a signing request that is missing or out of reach.
+	 *
+	 * @return JSONResponse The 404 answer; it never names the id.
+	 *
+	 * @spec openspec/changes/digital-signing-integration/tasks.md#6-1
+	 */
+	private function notFoundResponse(): JSONResponse {
+		return new JSONResponse(
+			data: ['error' => $this->l10n->t('Signing request not found')],
+			statusCode: Http::STATUS_NOT_FOUND
+		);
+
+	}//end notFoundResponse()
 
 	/**
 	 * Sign a document
@@ -436,10 +458,7 @@ class SigningController extends Controller {
 					callerUserId: $uid
 				);
 				if ($request === null) {
-					return new JSONResponse(
-						data: ['error' => $this->l10n->t('Signing request not found')],
-						statusCode: Http::STATUS_NOT_FOUND
-					);
+					return $this->notFoundResponse();
 				}
 			}
 
