@@ -493,6 +493,25 @@ class DocumentMergeService implements DocumentMergeServiceInterface {
 			);
 		}
 
+		$userFolder = $this->rootFolder->getUserFolder($this->readingUser(owner: $owner));
+		$resolved = [];
+		foreach ($inputs as $input) {
+			$resolved[] = $this->resolveInput(userFolder: $userFolder, input: $input);
+		}
+
+		return $resolved;
+	}//end resolveInputs()
+
+	/**
+	 * The person the inputs are read as: the owner given, else the session user.
+	 *
+	 * @param string $owner The owner recorded on a queued job, or an empty string.
+	 *
+	 * @return string The user id.
+	 *
+	 * @throws MergeRefusedException 401 when there is neither.
+	 */
+	private function readingUser(string $owner): string {
 		if ($owner === '') {
 			$owner = $this->currentUserId();
 		}
@@ -501,37 +520,40 @@ class DocumentMergeService implements DocumentMergeServiceInterface {
 			throw new MergeRefusedException(message: 'You must be logged in to merge documents.', status: 401);
 		}
 
-		$userFolder = $this->rootFolder->getUserFolder($owner);
-		$resolved = [];
+		return $owner;
+	}//end readingUser()
 
-		foreach ($inputs as $input) {
-			$fileId = (int)($input['fileId'] ?? 0);
-			if ($fileId <= 0) {
-				throw new MergeRefusedException(message: 'Every input names a file.', status: 400);
-			}
+	/**
+	 * Resolve one input to a file in the reading user's folder.
+	 *
+	 * @param Folder $userFolder The reading user's folder.
+	 * @param mixed $input The requested input, `{fileId, label}`.
+	 *
+	 * @return array<string, mixed> The resolved input: fileId, label and file.
+	 *
+	 * @throws MergeRefusedException 400 without a file id, 403 when the user cannot read the file.
+	 */
+	private function resolveInput(Folder $userFolder, mixed $input): array {
+		$fileId = (int)($input['fileId'] ?? 0);
+		if ($fileId <= 0) {
+			throw new MergeRefusedException(message: 'Every input names a file.', status: 400);
+		}
 
-			$nodes = $userFolder->getById($fileId);
-			if ($nodes === []) {
-				// Indistinguishable from "does not exist", on purpose: the
-				// caller learns no more about a file they may not read than
-				// about one that is not there.
-				throw new MergeRefusedException(
-					message: 'You may not read one of the documents in this selection.',
-					status: 403
-				);
-			}
+		$nodes = $userFolder->getById($fileId);
+		if ($nodes === []) {
+			// Indistinguishable from "does not exist", on purpose: the
+			// caller learns no more about a file they may not read than
+			// about one that is not there.
+			throw new MergeRefusedException(message: 'You may not read one of the documents in this selection.', status: 403);
+		}
 
-			$node = $nodes[0];
-			$label = trim((string)($input['label'] ?? ''));
-			if ($label === '') {
-				$label = $node->getName();
-			}
+		$label = trim((string)($input['label'] ?? ''));
+		if ($label === '') {
+			$label = $nodes[0]->getName();
+		}
 
-			$resolved[] = ['fileId' => $fileId, 'label' => $label, 'file' => $node];
-		}//end foreach
-
-		return $resolved;
-	}//end resolveInputs()
+		return ['fileId' => $fileId, 'label' => $label, 'file' => $nodes[0]];
+	}//end resolveInput()
 
 	/**
 	 * The folder the result goes in, checked for write.
