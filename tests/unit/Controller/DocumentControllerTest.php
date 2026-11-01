@@ -924,4 +924,24 @@ class DocumentControllerTest extends TestCase {
 
 	}//end testGenerateBulkNeedsATemplateAndAnswers200ForASmallBatch()
 
+	/**
+	 * A failing bulk generation is answered through the shared failure handler.
+	 *
+	 * @return void
+	 */
+	public function testGenerateBulkFailureKeepsItsHttpCode(): void {
+		$this->request->method('getParam')
+			->willReturnMap([
+				['templateId', null, 'tmpl-1'],
+				['objectIds', [], ['obj-1']],
+				['options', [], []],
+			]);
+		$this->documentSvc->method('generateBulk')->willThrowException(new \Exception('template gone', 404));
+
+		$result = $this->controller->generateBulk();
+		$this->assertSame(expected: 404, actual: $result->getStatus());
+		$this->assertSame(expected: ['error' => 'template gone'], actual: $result->getData());
+
+	}//end testGenerateBulkFailureKeepsItsHttpCode()
+
 }//end class
