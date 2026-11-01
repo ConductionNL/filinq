@@ -11,6 +11,8 @@
 			"false",
 			"true",
 			"a",
+			"a,b",
+			"",
 			"",
 			"Naam",
 			"Name",
@@ -19,7 +21,8 @@
 			"Name DE",
 			"Nombre",
 			"",
-			"empty key"
+			"empty key",
+			"X"
 		],
 		"fallback": [
 			"FB",
@@ -31,6 +34,8 @@
 			"false",
 			"true",
 			"a",
+			"a,b",
+			"",
 			"FB",
 			"Naam",
 			"Name",
@@ -39,7 +44,8 @@
 			"Name DE",
 			"Nombre",
 			"FB",
-			"empty key"
+			"empty key",
+			"X"
 		]
 	},
 	{
@@ -54,6 +60,8 @@
 			"false",
 			"true",
 			"a",
+			"a,b",
+			"",
 			"",
 			"Naam",
 			"Name",
@@ -62,7 +70,8 @@
 			"Name DE",
 			"Nombre",
 			"",
-			"empty key"
+			"empty key",
+			"X"
 		],
 		"fallback": [
 			"FB",
@@ -74,6 +83,8 @@
 			"false",
 			"true",
 			"a",
+			"a,b",
+			"",
 			"FB",
 			"Naam",
 			"Name",
@@ -82,7 +93,8 @@
 			"Name DE",
 			"Nombre",
 			"FB",
-			"empty key"
+			"empty key",
+			"X"
 		]
 	},
 	{
@@ -97,6 +109,8 @@
 			"false",
 			"true",
 			"a",
+			"a,b",
+			"",
 			"",
 			"Name",
 			"Name",
@@ -105,7 +119,8 @@
 			"Name DE",
 			"Nombre",
 			"",
-			"empty key"
+			"empty key",
+			"X"
 		],
 		"fallback": [
 			"FB",
@@ -117,6 +132,8 @@
 			"false",
 			"true",
 			"a",
+			"a,b",
+			"",
 			"FB",
 			"Name",
 			"Name",
@@ -125,7 +142,8 @@
 			"Name DE",
 			"Nombre",
 			"FB",
-			"empty key"
+			"empty key",
+			"X"
 		]
 	},
 	{
@@ -140,6 +158,8 @@
 			"false",
 			"true",
 			"a",
+			"a,b",
+			"",
 			"",
 			"Name",
 			"Name",
@@ -148,7 +168,8 @@
 			"Name DE",
 			"Nombre",
 			"",
-			"empty key"
+			"empty key",
+			"X"
 		],
 		"fallback": [
 			"FB",
@@ -160,6 +181,8 @@
 			"false",
 			"true",
 			"a",
+			"a,b",
+			"",
 			"FB",
 			"Name",
 			"Name",
@@ -168,7 +191,8 @@
 			"Name DE",
 			"Nombre",
 			"FB",
-			"empty key"
+			"empty key",
+			"X"
 		]
 	},
 	{
@@ -183,6 +207,8 @@
 			"false",
 			"true",
 			"a",
+			"a,b",
+			"",
 			"",
 			"Name",
 			"Name",
@@ -191,7 +217,8 @@
 			"Nom",
 			"Nombre",
 			"",
-			"empty key"
+			"empty key",
+			"X"
 		],
 		"fallback": [
 			"FB",
@@ -203,6 +230,8 @@
 			"false",
 			"true",
 			"a",
+			"a,b",
+			"",
 			"FB",
 			"Name",
 			"Name",
@@ -211,7 +240,8 @@
 			"Nom",
 			"Nombre",
 			"FB",
-			"empty key"
+			"empty key",
+			"X"
 		]
 	},
 	{
@@ -226,6 +256,8 @@
 			"false",
 			"true",
 			"a",
+			"a,b",
+			"",
 			"",
 			"Name",
 			"Name",
@@ -234,7 +266,8 @@
 			"Name DE",
 			"Nombre",
 			"",
-			"empty key"
+			"empty key",
+			"X"
 		],
 		"fallback": [
 			"FB",
@@ -246,6 +279,8 @@
 			"false",
 			"true",
 			"a",
+			"a,b",
+			"",
 			"FB",
 			"Name",
 			"Name",
@@ -254,7 +289,8 @@
 			"Name DE",
 			"Nombre",
 			"FB",
-			"empty key"
+			"empty key",
+			"X"
 		]
 	},
 	{
@@ -269,6 +305,8 @@
 			"false",
 			"true",
 			"a",
+			"a,b",
+			"",
 			"",
 			"Name",
 			"Name",
@@ -277,7 +315,8 @@
 			"Name DE",
 			"Nombre",
 			"",
-			"empty key"
+			"empty key",
+			"X"
 		],
 		"fallback": [
 			"FB",
@@ -289,6 +328,8 @@
 			"false",
 			"true",
 			"a",
+			"a,b",
+			"",
 			"FB",
 			"Name",
 			"Name",
@@ -297,7 +338,8 @@
 			"Name DE",
 			"Nombre",
 			"FB",
-			"empty key"
+			"empty key",
+			"X"
 		]
 	},
 	{
@@ -312,6 +354,8 @@
 			"false",
 			"true",
 			"a",
+			"a,b",
+			"",
 			"",
 			"Name",
 			"Name",
@@ -320,7 +364,8 @@
 			"Name DE",
 			"Nombre",
 			"",
-			"empty key"
+			"empty key",
+			"X"
 		],
 		"fallback": [
 			"FB",
@@ -332,6 +377,8 @@
 			"false",
 			"true",
 			"a",
+			"a,b",
+			"",
 			"FB",
 			"Name",
 			"Name",
@@ -340,7 +387,8 @@
 			"Name DE",
 			"Nombre",
 			"FB",
-			"empty key"
+			"empty key",
+			"X"
 		]
 	}
 ]

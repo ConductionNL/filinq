@@ -29,6 +29,8 @@ const VALUES = [
 	false,
 	true,
 	['a'],
+	['a', 'b'],
+	[],
 	{},
 	{ nl: 'Naam', en: 'Name', de: 'Name DE' },
 	{ nl: '', en: 'Name' },
@@ -38,6 +40,7 @@ const VALUES = [
 	{ de: '', fr: 7, es: 'Nombre' },
 	{ nl: 3, en: null, x: { nl: 'deep' } },
 	{ '': 'empty key', en: '' },
+	{ en: '', x: 'X', '': 'empty key' },
 ]
 
 const LANGUAGES = ['nl', 'nl_NL', 'pt-BR', 'en', 'fr', '', null, undefined]
