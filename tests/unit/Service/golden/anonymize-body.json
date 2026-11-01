@@ -246,5 +246,89 @@
             }
         },
         "request": null
+    },
+    "an override with an empty rule": {
+        "error": {
+            "status": 400,
+            "body": {
+                "error": "[t] acknowledgedOverrides[0].ruleId is required and must be a string"
+            }
+        },
+        "request": null
+    },
+    "an override with a zero rule": {
+        "error": {
+            "status": 400,
+            "body": {
+                "error": "[t] acknowledgedOverrides[0].ruleId is required and must be a string"
+            }
+        },
+        "request": null
+    },
+    "an override with a numeric rule": {
+        "error": {
+            "status": 400,
+            "body": {
+                "error": "[t] acknowledgedOverrides[0].ruleId is required and must be a string"
+            }
+        },
+        "request": null
+    },
+    "an override without an entity": {
+        "error": {
+            "status": 400,
+            "body": {
+                "error": "[t] acknowledgedOverrides[0].entityId is required and must be an integer"
+            }
+        },
+        "request": null
+    },
+    "an override with a null entity": {
+        "error": {
+            "status": 400,
+            "body": {
+                "error": "[t] acknowledgedOverrides[0].entityId is required and must be an integer"
+            }
+        },
+        "request": null
+    },
+    "an override with a null reason": {
+        "error": null,
+        "request": {
+            "entities": [
+                {
+                    "text": "Jan"
+                }
+            ],
+            "hasStrayBases": false,
+            "appendBasisSummary": false,
+            "reversible": false,
+            "unredactedEntities": [],
+            "overrides": [
+                {
+                    "ruleId": "R-1",
+                    "entityId": 7,
+                    "reason": null
+                }
+            ]
+        }
+    },
+    "the second override wrong": {
+        "error": {
+            "status": 400,
+            "body": {
+                "error": "[t] acknowledgedOverrides[1].reason must be a string"
+            }
+        },
+        "request": null
+    },
+    "a named override wrong": {
+        "error": {
+            "status": 400,
+            "body": {
+                "error": "[t] Each acknowledgedOverrides entry must be an object (index first)"
+            }
+        },
+        "request": null
     }
 }
