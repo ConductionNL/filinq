@@ -61,22 +61,12 @@
       "count": 1
     }
   },
-  "src/components/viewers/OdtViewer.vue": {
-    "no-console": {
-      "count": 1
-    }
-  },
   "src/components/viewers/PdfViewer.vue": {
     "no-console": {
       "count": 1
     }
   },
   "src/components/viewers/TextViewer.vue": {
-    "no-console": {
-      "count": 1
-    }
-  },
-  "src/components/viewers/WordViewer.vue": {
     "no-console": {
       "count": 1
     }
@@ -98,6 +88,16 @@
   },
   "src/main.js": {
     "no-unused-vars": {
+      "count": 1
+    }
+  },
+  "src/mixins/documentViewer.js": {
+    "no-console": {
+      "count": 1
+    }
+  },
+  "src/mixins/recordIndexPage.js": {
+    "no-console": {
       "count": 1
     }
   },
@@ -188,7 +188,7 @@
       "count": 1
     },
     "jsdoc/require-param-type": {
-      "count": 6
+      "count": 4
     },
     "vue/prefer-define-options": {
       "count": 1
@@ -203,9 +203,6 @@
     }
   },
   "src/views/customDictionary/CustomDictionaryIndex.vue": {
-    "no-console": {
-      "count": 1
-    },
     "vue/prefer-define-options": {
       "count": 1
     }
@@ -233,20 +230,11 @@
     }
   },
   "src/views/policy/ProhibitionIndex.vue": {
-    "jsdoc/check-tag-names": {
-      "count": 1
-    },
-    "no-console": {
-      "count": 1
-    },
     "vue/prefer-define-options": {
       "count": 1
     }
   },
   "src/views/policy/StandingConsentIndex.vue": {
-    "no-console": {
-      "count": 1
-    },
     "vue/prefer-define-options": {
       "count": 1
     }

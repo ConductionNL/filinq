@@ -1,0 +1,156 @@
+{
+    "one full attachment": {
+        "files": [
+            {
+                "content": "a9993e364706816aba3e25717850c26c9cd0d89d",
+                "name": "bijlage.pdf",
+                "mime": "application/pdf",
+                "description": "Bijlage",
+                "AFRelationship": "Data"
+            }
+        ]
+    },
+    "defaults": {
+        "files": [
+            {
+                "content": "11f6ad8ec52a2984abaafd7c3b516503785c2072",
+                "name": "attachment.bin",
+                "mime": "application/octet-stream",
+                "description": "",
+                "AFRelationship": "Supplement"
+            }
+        ]
+    },
+    "metadata adds a sidecar": {
+        "files": [
+            {
+                "content": "a9993e364706816aba3e25717850c26c9cd0d89d",
+                "name": "bijlage.pdf",
+                "mime": "application/pdf",
+                "description": "Bijlage",
+                "AFRelationship": "Data"
+            },
+            {
+                "content": "9be6b2b752cbb119a6ae2b77d1c6f1bbe893808b",
+                "name": "mdto-metadata.xml",
+                "mime": "text/xml",
+                "description": "MDTO/archival metadata for this document",
+                "AFRelationship": "Source"
+            }
+        ]
+    },
+    "a caller xml sidecar": {
+        "files": [
+            {
+                "content": "a9993e364706816aba3e25717850c26c9cd0d89d",
+                "name": "bijlage.pdf",
+                "mime": "application/pdf",
+                "description": "Bijlage",
+                "AFRelationship": "Data"
+            },
+            {
+                "content": "2401adb2cffefdbfcd7f63f17b91a5d946e7855c",
+                "name": "EIGEN.XML",
+                "mime": "application/octet-stream",
+                "description": "",
+                "AFRelationship": "Supplement"
+            }
+        ]
+    },
+    "an xml without metadata": {
+        "files": [
+            {
+                "content": "2401adb2cffefdbfcd7f63f17b91a5d946e7855c",
+                "name": "a.xml",
+                "mime": "application/octet-stream",
+                "description": "",
+                "AFRelationship": "Supplement"
+            }
+        ]
+    },
+    "only metadata": {
+        "files": [
+            {
+                "content": "9be6b2b752cbb119a6ae2b77d1c6f1bbe893808b",
+                "name": "mdto-metadata.xml",
+                "mime": "text/xml",
+                "description": "MDTO/archival metadata for this document",
+                "AFRelationship": "Source"
+            }
+        ]
+    },
+    "nothing": {
+        "files": []
+    },
+    "at the cap": {
+        "files": [
+            {
+                "content": "3495ff69d34671d1e15b33a63c1379fdedd3a32a",
+                "name": "tien.bin",
+                "mime": "application/octet-stream",
+                "description": "",
+                "AFRelationship": "Supplement"
+            }
+        ]
+    },
+    "over the cap": {
+        "error": [
+            "attachment_too_large",
+            "Attachment \"elf.bin\" (11 bytes) exceeds the configured cap (10 bytes).",
+            "Increase filinq.pdfa3.max_attachment_bytes in app config, or omit this attachment.",
+            413
+        ]
+    },
+    "over the cap without a name": {
+        "error": [
+            "attachment_too_large",
+            "Attachment \"(unnamed)\" (11 bytes) exceeds the configured cap (10 bytes).",
+            "Increase filinq.pdfa3.max_attachment_bytes in app config, or omit this attachment.",
+            413
+        ]
+    },
+    "a cap of zero falls back": {
+        "files": [
+            {
+                "content": "a9993e364706816aba3e25717850c26c9cd0d89d",
+                "name": "attachment.bin",
+                "mime": "application/octet-stream",
+                "description": "",
+                "AFRelationship": "Supplement"
+            }
+        ]
+    },
+    "a cap that is not a number": {
+        "files": [
+            {
+                "content": "a9993e364706816aba3e25717850c26c9cd0d89d",
+                "name": "attachment.bin",
+                "mime": "application/octet-stream",
+                "description": "",
+                "AFRelationship": "Supplement"
+            }
+        ]
+    },
+    "numeric fields": {
+        "files": [
+            {
+                "content": "7b52009b64fd0a2a49e6d8a939753077792b0554",
+                "name": "34",
+                "mime": "5",
+                "description": "",
+                "AFRelationship": "Supplement"
+            }
+        ]
+    },
+    "under a larger cap": {
+        "files": [
+            {
+                "content": "c846e4957a7aee790f5fe28904f0dd9ba88ed928",
+                "name": "vijftig.bin",
+                "mime": "application/octet-stream",
+                "description": "",
+                "AFRelationship": "Supplement"
+            }
+        ]
+    }
+}
