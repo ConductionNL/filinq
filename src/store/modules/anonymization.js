@@ -263,62 +263,159 @@ function inferDossier(path) {
 function decorateEntities(entities) {
 	const byKey = new Map()
 	for (const e of entities || []) {
-		const type = e.type ?? 'UNKNOWN'
-		const value = e.value ?? ''
-		const key = `${type}\u0000${value}`
-		const relationId = e.relationId ?? null
+		const row = entityReviewRow(e)
+		const key = `${row.type}\u0000${row.value}`
 		const existing = byKey.get(key)
 		if (existing) {
-			// Duplicate row from the append bug: merge into the first card.
-			if (
-				relationId != null
-				&& existing.relationIds.includes(relationId) === false
-			) {
-				existing.relationIds.push(relationId)
-			}
-			existing.count += 1
-			existing.highestConfidence = Math.max(
-				existing.highestConfidence,
-				e.confidence ?? 0,
-			)
-			existing.confidence = existing.highestConfidence
-			// Adopt grondslagen / skip metadata from whichever row carries it.
-			if (
-				(existing.bases == null || existing.bases.length === 0)
-				&& Array.isArray(e.bases)
-				&& e.bases.length > 0
-			) {
-				existing.bases = [...e.bases]
-				existing._decisionBases = [...e.bases]
-			}
-			if (e.skipAnonymization) {
-				existing.skipAnonymization = true
-				existing._decisionSkip = true
-				existing.included = false
-			}
-			continue
+			mergeDuplicateEntity(existing, e)
+		} else {
+			byKey.set(key, row)
 		}
-		byKey.set(key, {
-			...e,
-			type,
-			value,
-			included: !e.skipAnonymization,
-			confidence: e.confidence ?? 0,
-			highestConfidence: e.confidence ?? 0,
-			fileCount: 1,
-			count: 1,
-			relationId,
-			relationIds: relationId != null ? [relationId] : [],
-			bases: Array.isArray(e.bases) ? [...e.bases] : (e.bases ?? null),
-			// Read-only prohibition hint from the extract response: null, or
-			// { ruleId, ruleName, highConfidence }. Drives the skip-toggle lock.
-			prohibitionMatch: e.prohibitionMatch ?? null,
-			_decisionBases: Array.isArray(e.bases) ? [...e.bases] : [],
-			_decisionSkip: !!e.skipAnonymization,
-			_patchError: null,
-		})
 	}
 	return Array.from(byKey.values())
+}
+
+/**
+ * The review row for the first raw row of a `(type, value)` group.
+ *
+ * @param {object} e Raw entity row.
+ * @return {object}
+ */
+function entityReviewRow(e) {
+	const relationId = e.relationId ?? null
+	return {
+		...e,
+		type: e.type ?? 'UNKNOWN',
+		value: e.value ?? '',
+		included: !e.skipAnonymization,
+		confidence: e.confidence ?? 0,
+		highestConfidence: e.confidence ?? 0,
+		fileCount: 1,
+		count: 1,
+		relationId,
+		relationIds: relationId != null ? [relationId] : [],
+		...rowBases(e),
+		// Read-only prohibition hint from the extract response: null, or
+		// { ruleId, ruleName, highConfidence }. Drives the skip-toggle lock.
+		prohibitionMatch: e.prohibitionMatch ?? null,
+		_decisionSkip: !!e.skipAnonymization,
+		_patchError: null,
+	}
+}
+
+/**
+ * The grondslagen of a first raw row: as shown, and as the starting decision.
+ *
+ * @param {object} e Raw entity row.
+ * @return {{bases: (Array<string>|null), _decisionBases: Array<string>}}
+ */
+function rowBases(e) {
+	if (Array.isArray(e.bases)) {
+		return { bases: [...e.bases], _decisionBases: [...e.bases] }
+	}
+	return { bases: e.bases ?? null, _decisionBases: [] }
+}
+
+/**
+ * Merge a duplicate raw row (from the append bug) into the first card of
+ * its `(type, value)` group.
+ *
+ * @param {object} existing The group's review row.
+ * @param {object} e The duplicate raw row.
+ * @return {void}
+ */
+function mergeDuplicateEntity(existing, e) {
+	const relationId = e.relationId ?? null
+	if (relationId != null && existing.relationIds.includes(relationId) === false) {
+		existing.relationIds.push(relationId)
+	}
+	existing.count += 1
+	existing.highestConfidence = Math.max(
+		existing.highestConfidence,
+		e.confidence ?? 0,
+	)
+	existing.confidence = existing.highestConfidence
+	adoptRowMetadata(existing, e)
+}
+
+/**
+ * Adopt grondslagen and skip metadata from a duplicate row that carries it.
+ *
+ * @param {object} existing The group's review row.
+ * @param {object} e The duplicate raw row.
+ * @return {void}
+ */
+function adoptRowMetadata(existing, e) {
+	if (
+		(existing.bases == null || existing.bases.length === 0)
+		&& Array.isArray(e.bases)
+		&& e.bases.length > 0
+	) {
+		existing.bases = [...e.bases]
+		existing._decisionBases = [...e.bases]
+	}
+	if (e.skipAnonymization) {
+		existing.skipAnonymization = true
+		existing._decisionSkip = true
+		existing.included = false
+	}
+}
+
+/**
+ * The review decisions on a list of rows, keyed by `(type, value)`.
+ *
+ * @param {Array<object>} entities Review rows.
+ * @return {Map<string, {bases: Array<string>, skip: boolean}>}
+ */
+function decisionsByValue(entities) {
+	const decisions = new Map()
+	for (const e of entities || []) {
+		decisions.set(`${e.type}\u0000${e.value}`, {
+			bases: Array.isArray(e._decisionBases) ? [...e._decisionBases] : [],
+			skip: !!e._decisionSkip,
+		})
+	}
+	return decisions
+}
+
+/**
+ * Carry earlier decisions over to freshly extracted rows with the same
+ * `(type, value)`; new rows keep the extract defaults.
+ *
+ * @param {Array<object>} entities Fresh review rows, changed in place.
+ * @param {Map<string, {bases: Array<string>, skip: boolean}>} decisions Earlier decisions.
+ * @return {void}
+ */
+function restoreDecisions(entities, decisions) {
+	for (const e of entities) {
+		const prior = decisions.get(`${e.type}\u0000${e.value}`)
+		if (prior) {
+			e._decisionBases = prior.bases
+			e._decisionSkip = prior.skip
+		}
+	}
+}
+
+/**
+ * Put an extract response's entities, confidentiality label and OCR
+ * warning on a queue entry.
+ *
+ * @param {object} entry Queue entry.
+ * @param {object} data Extract endpoint response body.
+ * @return {{found: number, unseen: boolean}} The raw entity count, and
+ *         whether detection did not see the document.
+ */
+function applyExtractResponse(entry, data) {
+	const entities = data.entities || []
+	entry.entities = decorateEntities(entities)
+	entry.entityCount = entry.entities.length
+	// Read-only files_confidential signal, present only when the backend
+	// resolved a matching label (files-confidential-labels).
+	entry.confidentialityLabel = data.confidentialityLabel ?? null
+	entry.confidentialityLevel = data.confidentialityLevel ?? null
+	// A scan detection could not read is not "nothing to anonymise".
+	const unseen = applyOcrFlags(entry, data)
+	return { found: entities.length, unseen }
 }
 
 /**
@@ -898,28 +995,15 @@ export const useAnonymizationStore = defineStore('anonymization', {
 						`/apps/filinq/api/anonymization/extract/${entry.fileId}`,
 					),
 				)
-				const entities = extractResponse.data.entities || []
+				// Seed per-row review state on every detected entity, in the
+				// shape `EntityReviewTable` expects. The grouped rows are
+				// counted, not the raw append-bug rows.
+				const { found, unseen } = applyExtractResponse(
+					entry,
+					extractResponse.data,
+				)
 
-				// Seed per-row review state on every detected entity.
-				// `decorateEntities` adds the extra fields (`included`,
-				// `highestConfidence`, `fileCount`, `relationIds`) that
-				// `EntityReviewTable` expects — see helpers at the top of
-				// this file. Same shape is used by `ensureExtracted` so the
-				// sidebar can read entities regardless of how the file
-				// entered the queue. It also de-duplicates the append-bug
-				// rows, so count the grouped result, not the raw rows.
-				entry.entities = decorateEntities(entities)
-				entry.entityCount = entry.entities.length
-				// Read-only files_confidential signal — present only when the
-				// backend resolved a matching label (files-confidential-labels).
-				entry.confidentialityLabel =
-					extractResponse.data.confidentialityLabel ?? null
-				entry.confidentialityLevel =
-					extractResponse.data.confidentialityLevel ?? null
-				// A scan detection could not read is not "nothing to anonymise".
-				const unseen = applyOcrFlags(entry, extractResponse.data)
-
-				if (entities.length === 0 && !unseen) {
+				if (found === 0 && !unseen) {
 					// Nothing to anonymise; skip review and mark done.
 					entry.status = 'completed'
 					return
@@ -1132,16 +1216,11 @@ export const useAnonymizationStore = defineStore('anonymization', {
 						`/apps/filinq/api/anonymization/extract/${entry.fileId}`,
 					),
 				)
-				const entities = extractResponse.data.entities || []
-				entry.entities = decorateEntities(entities)
-				entry.entityCount = entry.entities.length
-				entry.confidentialityLabel =
-					extractResponse.data.confidentialityLabel ?? null
-				entry.confidentialityLevel =
-					extractResponse.data.confidentialityLevel ?? null
-				const unseen = applyOcrFlags(entry, extractResponse.data)
-				entry.status =
-					entities.length === 0 && !unseen ? 'completed' : 'extracted'
+				const { found, unseen } = applyExtractResponse(
+					entry,
+					extractResponse.data,
+				)
+				entry.status = found === 0 && !unseen ? 'completed' : 'extracted'
 			} catch (err) {
 				console.error(`Failed to load entities for ${entry.name}:`, err)
 				entry.error = err.response?.data?.error || err.message
@@ -1173,14 +1252,8 @@ export const useAnonymizationStore = defineStore('anonymization', {
 					generateUrl(`/apps/filinq/api/anonymization/extract/${fileId}`),
 					{ force: true },
 				)
-				const entities = res.data.entities || []
-				entry.entities = decorateEntities(entities)
-				entry.entityCount = entry.entities.length
-				entry.confidentialityLabel = res.data.confidentialityLabel ?? null
-				entry.confidentialityLevel = res.data.confidentialityLevel ?? null
-				const unseen = applyOcrFlags(entry, res.data)
-				entry.status =
-					entities.length === 0 && !unseen ? 'completed' : 'extracted'
+				const { found, unseen } = applyExtractResponse(entry, res.data)
+				entry.status = found === 0 && !unseen ? 'completed' : 'extracted'
 			} catch (err) {
 				entry.error = err.response?.data?.error || err.message
 				entry.status = 'error'
@@ -1221,15 +1294,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 			// Snapshot prior decisions before re-extraction overwrites the
 			// entity list, so grounds / skip choices the user already made
 			// survive the re-run.
-			const priorDecisions = new Map()
-			for (const e of entry.entities || []) {
-				priorDecisions.set(`${e.type}\u0000${e.value}`, {
-					bases: Array.isArray(e._decisionBases)
-						? [...e._decisionBases]
-						: [],
-					skip: !!e._decisionSkip,
-				})
-			}
+			const priorDecisions = decisionsByValue(entry.entities)
 
 			entry.status = 'extracting'
 			entry.error = null
@@ -1239,25 +1304,10 @@ export const useAnonymizationStore = defineStore('anonymization', {
 						`/apps/filinq/api/anonymization/extract/${entry.fileId}`,
 					),
 				)
-				const entities = decorateEntities(
-					extractResponse.data.entities || [],
-				)
-				for (const e of entities) {
-					const prior = priorDecisions.get(`${e.type}\u0000${e.value}`)
-					if (prior) {
-						e._decisionBases = prior.bases
-						e._decisionSkip = prior.skip
-					}
-				}
-				entry.entities = entities
-				entry.entityCount = entities.length
+				applyExtractResponse(entry, extractResponse.data)
+				restoreDecisions(entry.entities, priorDecisions)
 				// A new detection run needs a new check.
 				entry.reviewMark = null
-				entry.confidentialityLabel =
-					extractResponse.data.confidentialityLabel ?? null
-				entry.confidentialityLevel =
-					extractResponse.data.confidentialityLevel ?? null
-				applyOcrFlags(entry, extractResponse.data)
 				// Drop the read-only anonymised view so the editable review
 				// list + "Anonymize" button take over. Keep anonymizedFile*
 				// so the viewer toggle can still show the current result until
@@ -1269,7 +1319,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 				// batch footer (which otherwise shadows the single-file button).
 				// Cleared once the re-run completes in `anonymiseEntry`.
 				entry.reanonymize = true
-				entry.status = entities.length === 0 ? 'completed' : 'extracted'
+				entry.status = entry.entityCount === 0 ? 'completed' : 'extracted'
 			} catch (err) {
 				console.error(`Failed to re-extract ${entry.name}:`, err)
 				entry.error = err.response?.data?.error || err.message
