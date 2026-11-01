@@ -184,7 +184,7 @@ class TemplateLanguageServiceTest extends TestCase {
 	 */
 	public function testResolveFieldValueReturnsPreferredLanguage(): void {
 		$value = ['nl' => 'Beschikking', 'en' => 'Decision'];
-		$result = TemplateLanguageService::resolveFieldValue(fieldValue: $value, preferredLanguage: 'en');
+		$result = $this->service->resolveFieldValue(fieldValue: $value, preferredLanguage: 'en');
 
 		$this->assertSame('Decision', $result['value']);
 		$this->assertSame('en', $result['language']);
@@ -201,7 +201,7 @@ class TemplateLanguageServiceTest extends TestCase {
 	 */
 	public function testResolveFieldValueFallsBackToNl(): void {
 		$value = ['nl' => 'Beschikking', 'en' => 'Decision'];
-		$result = TemplateLanguageService::resolveFieldValue(fieldValue: $value, preferredLanguage: 'de');
+		$result = $this->service->resolveFieldValue(fieldValue: $value, preferredLanguage: 'de');
 
 		$this->assertSame('Beschikking', $result['value']);
 		$this->assertSame('nl', $result['language']);
@@ -218,7 +218,7 @@ class TemplateLanguageServiceTest extends TestCase {
 	 */
 	public function testResolveFieldValueFallsBackToFirstAvailable(): void {
 		$value = ['es' => 'Decisión'];
-		$result = TemplateLanguageService::resolveFieldValue(fieldValue: $value, preferredLanguage: 'fr');
+		$result = $this->service->resolveFieldValue(fieldValue: $value, preferredLanguage: 'fr');
 
 		$this->assertSame('Decisión', $result['value']);
 		$this->assertSame('es', $result['language']);
@@ -234,7 +234,7 @@ class TemplateLanguageServiceTest extends TestCase {
 	 * @spec openspec/changes/register-i18n/tasks.md#task-2
 	 */
 	public function testResolveFieldValueHandlesPlainString(): void {
-		$result = TemplateLanguageService::resolveFieldValue(fieldValue: 'Hello', preferredLanguage: 'nl');
+		$result = $this->service->resolveFieldValue(fieldValue: 'Hello', preferredLanguage: 'nl');
 
 		$this->assertSame('Hello', $result['value']);
 		$this->assertFalse($result['fallback']);

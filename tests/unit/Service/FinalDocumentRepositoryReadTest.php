@@ -176,7 +176,7 @@ class FinalDocumentRepositoryReadTest extends TestCase {
 
 		$this->assertSame(
 			expected: ['id' => '9c818640', 'name' => 'Fietspad Lindelaan'],
-			actual: $this->repository(rows: $rows)->dossierIndex()->dossierOf(fileId: 21064, folderId: 21063)
+			actual: $this->repository(rows: $rows, language: '')->dossierIndex()->dossierOf(fileId: 21064, folderId: 21063)
 		);
 		$this->assertSame(
 			expected: ['id' => '9c818640', 'name' => 'Cycle path Lindelaan'],

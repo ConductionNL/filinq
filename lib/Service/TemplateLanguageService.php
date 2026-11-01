@@ -143,7 +143,7 @@ class TemplateLanguageService {
 	 *
 	 * @spec openspec/changes/register-i18n/tasks.md#task-1
 	 */
-	public static function resolveFieldValue(mixed $fieldValue, string $preferredLanguage): array {
+	public function resolveFieldValue(mixed $fieldValue, string $preferredLanguage): array {
 		// Plain string — not yet language-keyed, serve as-is.
 		if (is_string($fieldValue) === true) {
 			return ['value' => $fieldValue, 'language' => self::DEFAULT_LANGUAGE, 'fallback' => false];

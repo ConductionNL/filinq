@@ -92,7 +92,7 @@ class FinalDocumentRepository {
 	 *
 	 * @param DocumentObjectServiceResolver $objectResolver Resolver for OpenRegister's ObjectService.
 	 * @param LoggerInterface $logger Logger for diagnostics.
-	 * @param TemplateLanguageService|null $languages The reader's language, for translatable names.
+	 * @param TemplateLanguageService|null $languages The reader's language; without it only plain dossier names are read.
 	 * @param IUserSession|null $userSession The reader.
 	 *
 	 * @return void
@@ -285,8 +285,7 @@ class FinalDocumentRepository {
 			return new DossierFileIndex();
 		}
 
-		$language = $this->readerLanguage();
-		$index    = new DossierFileIndex();
+		$index = new DossierFileIndex();
 		foreach ((array) $results as $result) {
 			$data = $result;
 			if (is_object($result) === true && method_exists($result, 'jsonSerialize') === true) {
@@ -294,10 +293,7 @@ class FinalDocumentRepository {
 			}
 
 			$fields = $this->normalise(row: $result);
-			$name   = '';
-			if (is_string($fields['name'] ?? null) === true || is_array($fields['name'] ?? null) === true) {
-				$name = (string) TemplateLanguageService::resolveFieldValue(fieldValue: $fields['name'], preferredLanguage: $language)['value'];
-			}
+			$name   = $this->dossierName(name: $fields['name'] ?? null);
 
 			if (is_array($data) === false || $name === '') {
 				continue;
@@ -316,18 +312,27 @@ class FinalDocumentRepository {
 	}//end dossierIndex()
 
 	/**
-	 * The reader's language, the default language when there is no reader.
+	 * A dossier's display name: a plain name, or a translatable name resolved
+	 * in the reader's language. A translatable name needs the language service.
 	 *
-	 * @return string
+	 * @param mixed $name The stored name.
+	 *
+	 * @return string The name, '' when there is none to show.
 	 */
-	private function readerLanguage(): string {
-		if ($this->languages === null) {
-			return TemplateLanguageService::DEFAULT_LANGUAGE;
+	private function dossierName(mixed $name): string {
+		if (is_string($name) === true) {
+			return $name;
 		}
 
-		return $this->languages->resolveUserLanguage(user: $this->userSession?->getUser());
+		if (is_array($name) === false || $this->languages === null) {
+			return '';
+		}
 
-	}//end readerLanguage()
+		$language = $this->languages->resolveUserLanguage(user: $this->userSession?->getUser());
+
+		return (string) $this->languages->resolveFieldValue(fieldValue: $name, preferredLanguage: $language)['value'];
+
+	}//end dossierName()
 
 	/**
 	 * Every document record linked to one domain.
