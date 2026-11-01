@@ -88,15 +88,39 @@ class PageLayoutService implements PageLayoutServiceInterface {
 		}
 
 		if ($version !== null) {
-			foreach ($versions as $candidate) {
-				if ((int)($candidate['layoutVersion'] ?? 0) === $version) {
-					return $candidate;
-				}
-			}
-
-			return null;
+			return $this->numbered(versions: $versions, version: $version);
 		}
 
+		return $this->activeOrNewest(versions: $versions);
+
+	}//end resolve()
+
+	/**
+	 * The first stored version carrying a layout version number.
+	 *
+	 * @param array<int, array<string, mixed>> $versions The stored versions.
+	 * @param int $version The version number.
+	 *
+	 * @return array<string, mixed>|null The version, or null when none carries the number.
+	 */
+	private function numbered(array $versions, int $version): ?array {
+		foreach ($versions as $candidate) {
+			if ((int)($candidate['layoutVersion'] ?? 0) === $version) {
+				return $candidate;
+			}
+		}
+
+		return null;
+	}//end numbered()
+
+	/**
+	 * The first active version, or else the first one.
+	 *
+	 * @param array<int, array<string, mixed>> $versions The stored versions, newest first, never empty.
+	 *
+	 * @return array<string, mixed> The version.
+	 */
+	private function activeOrNewest(array $versions): array {
 		foreach ($versions as $candidate) {
 			if (($candidate['active'] ?? false) === true) {
 				return $candidate;
@@ -104,8 +128,7 @@ class PageLayoutService implements PageLayoutServiceInterface {
 		}
 
 		return $versions[0];
-
-	}//end resolve()
+	}//end activeOrNewest()
 
 	/**
 	 * Every layout at its active version, for the admin list.
