@@ -75,28 +75,51 @@ async function load(source, dir) {
 }
 
 /**
+ * Evaluate the script blocks of a `.vue` file.
+ *
+ * @param {string} file Absolute path of the `.vue` file.
+ * @return {Promise<object>} `options` (the `export default`), `setup` (the
+ *   bindings `<script setup>` imports, which its template can use) and
+ *   `template` (the template source).
+ */
+export async function loadSfc(file) {
+	const { descriptor } = parse(readFileSync(file, 'utf8'), { filename: file })
+	const code = [descriptor.scriptSetup, descriptor.script]
+		.filter(Boolean)
+		.map((block) => block.content)
+		.join('\n')
+	const setupCode = descriptor.scriptSetup?.content || ''
+	const names = []
+	const values = []
+	const setup = {}
+	for (const [, clause, source] of code.matchAll(IMPORT)) {
+		const mod = await load(source, dirname(file))
+		const fromSetup = setupCode.includes(`from '${source}'`)
+		for (const [local, exported] of bindings(clause)) {
+			const value = exported === '*' ? mod : mod[exported]
+			names.push(local)
+			values.push(value)
+			if (fromSetup) {
+				setup[local] = value
+			}
+		}
+	}
+	const body = code.replace(IMPORT, '').replace(/^export default\s/m, 'return ')
+	return {
+		options: new Function(...names, body)(...values),
+		setup,
+		template: descriptor.template?.content || '',
+	}
+}
+
+/**
  * Evaluate the script blocks of a `.vue` file and return its options object.
  *
  * @param {string} file Absolute path of the `.vue` file.
  * @return {Promise<object>} The component options (`export default`).
  */
 export async function loadSfcOptions(file) {
-	const { descriptor } = parse(readFileSync(file, 'utf8'), { filename: file })
-	const code = [descriptor.scriptSetup, descriptor.script]
-		.filter(Boolean)
-		.map((block) => block.content)
-		.join('\n')
-	const names = []
-	const values = []
-	for (const [, clause, source] of code.matchAll(IMPORT)) {
-		const mod = await load(source, dirname(file))
-		for (const [local, exported] of bindings(clause)) {
-			names.push(local)
-			values.push(exported === '*' ? mod : mod[exported])
-		}
-	}
-	const body = code.replace(IMPORT, '').replace(/^export default\s/m, 'return ')
-	return new Function(...names, body)(...values)
+	return (await loadSfc(file)).options
 }
 
 /**
