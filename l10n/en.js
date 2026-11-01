@@ -1531,6 +1531,10 @@ OC.L10N.register(
         "Insert": "Insert",
         "Insert conditional section": "Insert conditional section",
         "Insert merge field": "Insert merge field",
+        "Path": "Path",
+        "The field in the template's data, such as client.name.": "The field in the template's data, such as client.name.",
+        "The name people see for this field. When it is empty, the path is shown.": "The name people see for this field. When it is empty, the path is shown.",
+        "Where the value comes from, in words people read, such as from the client details.": "Where the value comes from, in words people read, such as from the client details.",
         "Install Open Registers": "Install Open Registers",
         "Install OpenRegister": "Install OpenRegister",
         "Invalid": "Invalid",
@@ -2771,7 +2775,18 @@ OC.L10N.register(
         "Evidence: {evidence}": "Evidence: {evidence}",
         "How did the answer reach you?": "How did the answer reach you?",
         "For example: signed form received by post on 20 October": "For example: signed form received by post on 20 October",
-        "Only a consent officer can record the outcome of a consent request.": "Only a consent officer can record the outcome of a consent request."
+        "Only a consent officer can record the outcome of a consent request.": "Only a consent officer can record the outcome of a consent request.",
+        "Changed at": "Changed at",
+        "Changed by": "Changed by",
+        "Every change of consentStatus or notificationStatus, in order: the field, the old and new value, who made it, when, and the evidence given. Written by the server only.": "Every change of consentStatus or notificationStatus, in order: the field, the old and new value, who made it, when, and the evidence given. Written by the server only.",
+        "How the answer reached the organisation; required for consent given and objection received.": "How the answer reached the organisation; required for consent given and objection received.",
+        "The status field that changed: consentStatus or notificationStatus.": "The status field that changed: consentStatus or notificationStatus.",
+        "The user who made the change.": "The user who made the change.",
+        "The value after the change.": "The value after the change.",
+        "The value before the change.": "The value before the change.",
+        "When the change was made.": "When the change was made.",
+        "Merge fields": "Merge fields",
+        "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you.": "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you."
     },
     "nplurals=2; plural=(n != 1);"
 )

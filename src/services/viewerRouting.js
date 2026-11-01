@@ -9,6 +9,41 @@
 import { emlPreviewUrl } from './fileViewerService.js'
 
 /**
+ * The viewers in the order they are tried, each with its MIME and name test
+ * (both lower-cased).
+ *
+ * @type {Array<{kind: string, matches: function(string, string): boolean}>}
+ */
+const VIEWERS = [
+	{
+		kind: 'pdf',
+		matches: (mime, name) => mime.includes('pdf') || name.endsWith('.pdf'),
+	},
+	{
+		kind: 'word',
+		matches: (mime, name) =>
+			mime
+				=== 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+			|| name.endsWith('.docx'),
+	},
+	{
+		kind: 'odt',
+		matches: (mime, name) =>
+			mime === 'application/vnd.oasis.opendocument.text'
+			|| name.endsWith('.odt'),
+	},
+	{
+		kind: 'eml',
+		matches: (mime, name) => mime === 'message/rfc822' || name.endsWith('.eml'),
+	},
+	{
+		kind: 'text',
+		matches: (mime, name) =>
+			mime.startsWith('text/') || /\.(txt|md|markdown|log|csv)$/.test(name),
+	},
+]
+
+/**
  * Match a file (by MIME and name) to one of the supported in-app viewers.
  *
  * @param {object|null} file Current file descriptor from the store.
@@ -19,19 +54,8 @@ export function detectViewer(file) {
 	if (!file) return null
 	const name = (file.fileName || '').toLowerCase()
 	const mime = (file.mimeType || '').toLowerCase()
-	if (mime.includes('pdf') || name.endsWith('.pdf')) return 'pdf'
-	if (
-		mime
-			=== 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-		|| name.endsWith('.docx')
-	)
-		return 'word'
-	if (mime === 'application/vnd.oasis.opendocument.text' || name.endsWith('.odt'))
-		return 'odt'
-	if (mime === 'message/rfc822' || name.endsWith('.eml')) return 'eml'
-	if (mime.startsWith('text/') || name.match(/\.(txt|md|markdown|log|csv)$/))
-		return 'text'
-	return null
+	const viewer = VIEWERS.find((v) => v.matches(mime, name))
+	return viewer ? viewer.kind : null
 }
 
 /**
