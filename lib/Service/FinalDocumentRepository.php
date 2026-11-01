@@ -31,6 +31,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use OCP\AppFramework\Db\DoesNotExistException;
+use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
@@ -91,12 +92,16 @@ class FinalDocumentRepository {
 	 *
 	 * @param DocumentObjectServiceResolver $objectResolver Resolver for OpenRegister's ObjectService.
 	 * @param LoggerInterface $logger Logger for diagnostics.
+	 * @param TemplateLanguageService|null $languages The reader's language, for translatable names.
+	 * @param IUserSession|null $userSession The reader.
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		private readonly DocumentObjectServiceResolver $objectResolver,
 		private readonly LoggerInterface $logger,
+		private readonly ?TemplateLanguageService $languages=null,
+		private readonly ?IUserSession $userSession=null,
 	) {
 
 	}//end __construct()
@@ -280,7 +285,8 @@ class FinalDocumentRepository {
 			return new DossierFileIndex();
 		}
 
-		$index = new DossierFileIndex();
+		$language = $this->readerLanguage();
+		$index    = new DossierFileIndex();
 		foreach ((array) $results as $result) {
 			$data = $result;
 			if (is_object($result) === true && method_exists($result, 'jsonSerialize') === true) {
@@ -288,13 +294,18 @@ class FinalDocumentRepository {
 			}
 
 			$fields = $this->normalise(row: $result);
-			if (is_array($data) === false || is_string($fields['name'] ?? null) === false || $fields['name'] === '') {
+			$name   = '';
+			if (is_string($fields['name'] ?? null) === true || is_array($fields['name'] ?? null) === true) {
+				$name = (string) TemplateLanguageService::resolveFieldValue(fieldValue: $fields['name'], preferredLanguage: $language)['value'];
+			}
+
+			if (is_array($data) === false || $name === '') {
 				continue;
 			}
 
 			$self = (array) ($data['@self'] ?? []);
 			$index->add(
-				dossier: ['id' => (string) $fields['uuid'], 'name' => $fields['name']],
+				dossier: ['id' => (string) $fields['uuid'], 'name' => $name],
 				members: array_merge((array) ($self['files'] ?? []), (array) ($fields['documents'] ?? [])),
 				folder: (int) ($self['folder'] ?? 0)
 			);
@@ -303,6 +314,20 @@ class FinalDocumentRepository {
 		return $index;
 
 	}//end dossierIndex()
+
+	/**
+	 * The reader's language, the default language when there is no reader.
+	 *
+	 * @return string
+	 */
+	private function readerLanguage(): string {
+		if ($this->languages === null) {
+			return TemplateLanguageService::DEFAULT_LANGUAGE;
+		}
+
+		return $this->languages->resolveUserLanguage(user: $this->userSession?->getUser());
+
+	}//end readerLanguage()
 
 	/**
 	 * Every document record linked to one domain.
