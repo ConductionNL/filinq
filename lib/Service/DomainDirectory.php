@@ -113,21 +113,26 @@ class DomainDirectory {
 		$schema = trim($this->config->getValueString('filinq', self::SCHEMA_KEY, ''));
 
 		if ($register === '' || $schema === '') {
-			return [
-				'configured' => false,
-				'reason' => 'No domain register and schema are configured, so no folder was reconciled.',
-				'domains' => [],
-			];
+			return $this->unconfigured(reason: 'No domain register and schema are configured, so no folder was reconciled.');
 		}
 
 		if ($this->owner() === '') {
-			return [
-				'configured' => false,
-				'reason' => 'No owner is configured for the domain folders, so no folder was reconciled.',
-				'domains' => [],
-			];
+			return $this->unconfigured(reason: 'No owner is configured for the domain folders, so no folder was reconciled.');
 		}
 
+		return $this->read(register: $register, schema: $schema);
+
+	}//end all()
+
+	/**
+	 * Read the domains from the configured register and schema.
+	 *
+	 * @param string $register The domain register.
+	 * @param string $schema The domain schema.
+	 *
+	 * @return array{configured: bool, reason: string, domains: array<int, array<string, mixed>>} The domains, or why there are none.
+	 */
+	private function read(string $register, string $schema): array {
 		try {
 			$results = $this->objectResolver->resolve()->searchObjects(
 				query: ['@self' => ['register' => $register, 'schema' => $schema]]
@@ -141,11 +146,7 @@ class DomainDirectory {
 				['register' => $register, 'schema' => $schema, 'error' => $e->getMessage()]
 			);
 
-			return [
-				'configured' => false,
-				'reason' => 'The domain register could not be read: ' . $e->getMessage(),
-				'domains' => [],
-			];
+			return $this->unconfigured(reason: 'The domain register could not be read: ' . $e->getMessage());
 		}
 
 		$domains = [];
@@ -157,8 +158,22 @@ class DomainDirectory {
 		}
 
 		return ['configured' => true, 'reason' => '', 'domains' => $domains];
+	}//end read()
 
-	}//end all()
+	/**
+	 * The answer when there are no domains to reconcile, with the reason.
+	 *
+	 * @param string $reason Why there are none.
+	 *
+	 * @return array{configured: bool, reason: string, domains: array<int, array<string, mixed>>} The answer.
+	 */
+	private function unconfigured(string $reason): array {
+		return [
+			'configured' => false,
+			'reason' => $reason,
+			'domains' => [],
+		];
+	}//end unconfigured()
 
 	/**
 	 * One search result as a plain domain array.
