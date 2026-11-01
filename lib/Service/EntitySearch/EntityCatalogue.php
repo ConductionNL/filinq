@@ -173,13 +173,7 @@ class EntityCatalogue {
 		$counts = $this->relationCounts(entityIds: array_map(static fn (array $row): int => (int) $row['id'], $entities));
 		$results = [];
 		foreach ($entities as $row) {
-			$results[] = [
-				'uuid' => (string) $row['uuid'],
-				'type' => (string) $row['type'],
-				'value' => (string) $row['value'],
-				'category' => (string) ($row['category'] ?? ''),
-				'occurrences' => ($counts[(int) $row['id']] ?? 0),
-			];
+			$results[] = $this->entityFields(row: $row) + ['occurrences' => ($counts[(int) $row['id']] ?? 0)];
 		}
 
 		return ['results' => $results, 'total' => $total];
@@ -203,46 +197,114 @@ class EntityCatalogue {
 			return null;
 		}
 
+		return $this->readEntity(scope: $scope, uuid: $uuid);
+
+	}//end find()
+
+	/**
+	 * Read one entity in scope and its relations.
+	 *
+	 * @param array<int, string>|null $scope The organisations, null for all.
+	 * @param string $uuid The entity uuid.
+	 *
+	 * @return array{entity: array<string, mixed>, relations: array<int, array<string, mixed>>}|null The entity.
+	 *
+	 * @throws EntitySearchRefusedException When the catalogue cannot be read.
+	 */
+	private function readEntity(?array $scope, string $uuid): ?array {
 		try {
-			$qb = $this->db->getQueryBuilder();
-			$qb->select('e.id', 'e.uuid', 'e.type', 'e.value', 'e.category', 'e.organisation')->from(self::ENTITIES, 'e')
-				->where($qb->expr()->eq('e.uuid', $qb->createNamedParameter($uuid)));
-			$result = $qb->executeQuery();
-			$row = $result->fetch();
-			$result->closeCursor();
-			if (is_array($row) === false || $this->inScope(scope: $scope, organisation: (string) ($row['organisation'] ?? '')) === false) {
+			$row = $this->scopedRow(scope: $scope, uuid: $uuid);
+			if ($row === null) {
 				return null;
 			}
 
-			$relations = [];
-			foreach ($this->container->get(self::RELATION_MAPPER)->findByEntityId((int) $row['id']) as $relation) {
-				$relations[] = [
-					'fileId' => (int) $relation->getFileId(),
-					'objectId' => (int) $relation->getObjectId(),
-					'emailId' => (int) $relation->getEmailId(),
-					'confidence' => (float) $relation->getConfidence(),
-					'anonymized' => (bool) $relation->getAnonymized(),
-					'detectionMethod' => (string) $relation->getDetectionMethod(),
-				];
-			}
+			$relations = $this->relationsOf(entityId: (int) $row['id']);
 		} catch (Throwable $e) {
-			throw new EntitySearchRefusedException(
-				reason: EntitySearchRefusedException::REASON_CATALOGUE_UNAVAILABLE,
-				message: 'The entity could not be read: ' . $e->getMessage()
-			);
-		}//end try
+			throw $this->unreadable(failure: $e);
+		}
 
+		return ['entity' => $this->entityFields(row: $row), 'relations' => $relations];
+
+	}//end readEntity()
+
+	/**
+	 * The refusal for an entity that could not be read.
+	 *
+	 * @param Throwable $failure What went wrong.
+	 *
+	 * @return EntitySearchRefusedException The refusal, naming the failure.
+	 */
+	private function unreadable(Throwable $failure): EntitySearchRefusedException {
+		return new EntitySearchRefusedException(
+			reason: EntitySearchRefusedException::REASON_CATALOGUE_UNAVAILABLE,
+			message: 'The entity could not be read: ' . $failure->getMessage()
+		);
+
+	}//end unreadable()
+
+	/**
+	 * The stored row of one entity, or null when it is absent or outside the scope.
+	 *
+	 * @param array<int, string>|null $scope The organisations, null for all.
+	 * @param string $uuid The entity uuid.
+	 *
+	 * @return array<string, mixed>|null The row, read before any of its relations.
+	 */
+	private function scopedRow(?array $scope, string $uuid): ?array {
+		$qb = $this->db->getQueryBuilder();
+		$qb->select('e.id', 'e.uuid', 'e.type', 'e.value', 'e.category', 'e.organisation')->from(self::ENTITIES, 'e')
+			->where($qb->expr()->eq('e.uuid', $qb->createNamedParameter($uuid)));
+		$result = $qb->executeQuery();
+		$row = $result->fetch();
+		$result->closeCursor();
+		if (is_array($row) === false || $this->inScope(scope: $scope, organisation: (string) ($row['organisation'] ?? '')) === false) {
+			return null;
+		}
+
+		return $row;
+
+	}//end scopedRow()
+
+	/**
+	 * The relations of one entity, as plain values.
+	 *
+	 * @param int $entityId The entity id.
+	 *
+	 * @return array<int, array<string, mixed>> Each relation's file, object, email, confidence, state and method.
+	 */
+	private function relationsOf(int $entityId): array {
+		$relations = [];
+		foreach ($this->container->get(self::RELATION_MAPPER)->findByEntityId($entityId) as $relation) {
+			$relations[] = [
+				'fileId' => (int) $relation->getFileId(),
+				'objectId' => (int) $relation->getObjectId(),
+				'emailId' => (int) $relation->getEmailId(),
+				'confidence' => (float) $relation->getConfidence(),
+				'anonymized' => (bool) $relation->getAnonymized(),
+				'detectionMethod' => (string) $relation->getDetectionMethod(),
+			];
+		}
+
+		return $relations;
+
+	}//end relationsOf()
+
+	/**
+	 * The public fields of an entity row.
+	 *
+	 * @param array<string, mixed> $row The stored row.
+	 *
+	 * @return array{uuid: string, type: string, value: string, category: string} The fields.
+	 */
+	private function entityFields(array $row): array {
 		return [
-			'entity' => [
-				'uuid' => (string) $row['uuid'],
-				'type' => (string) $row['type'],
-				'value' => (string) $row['value'],
-				'category' => (string) ($row['category'] ?? ''),
-			],
-			'relations' => $relations,
+			'uuid' => (string) $row['uuid'],
+			'type' => (string) $row['type'],
+			'value' => (string) $row['value'],
+			'category' => (string) ($row['category'] ?? ''),
 		];
 
-	}//end find()
+	}//end entityFields()
 
 	/**
 	 * Refuse when OpenRegister is not installed.
