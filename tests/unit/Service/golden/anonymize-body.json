@@ -330,5 +330,23 @@
             }
         },
         "request": null
+    },
+    "the second override without a rule": {
+        "error": {
+            "status": 400,
+            "body": {
+                "error": "[t] acknowledgedOverrides[1].ruleId is required and must be a string"
+            }
+        },
+        "request": null
+    },
+    "the second override with a string entity": {
+        "error": {
+            "status": 400,
+            "body": {
+                "error": "[t] acknowledgedOverrides[1].entityId is required and must be an integer"
+            }
+        },
+        "request": null
     }
 }

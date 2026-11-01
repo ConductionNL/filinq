@@ -67,6 +67,8 @@ class AnonymizeBodyGoldenTest extends TestCase {
 			'an override with a null entity' => [['entities' => $plain, 'acknowledgedOverrides' => [['ruleId' => 'R-1', 'entityId' => null]]]],
 			'an override with a null reason' => [['entities' => $plain, 'acknowledgedOverrides' => [['ruleId' => 'R-1', 'entityId' => 7, 'reason' => null]]]],
 			'the second override wrong' => [['entities' => $plain, 'acknowledgedOverrides' => [$override, ['ruleId' => 'R-2', 'entityId' => 8, 'reason' => []]]]],
+			'the second override without a rule' => [['entities' => $plain, 'acknowledgedOverrides' => [$override, ['entityId' => 8]]]],
+			'the second override with a string entity' => [['entities' => $plain, 'acknowledgedOverrides' => [$override, ['ruleId' => 'R-2', 'entityId' => '8']]]],
 			'a named override wrong' => [['entities' => $plain, 'acknowledgedOverrides' => ['first' => 'R-1']]],
 			'everything' => [['entities' => $entities, 'appendBasisSummary' => true, 'reversible' => true, 'unredactedEntities' => $consent, 'acknowledgedOverrides' => [$override]]],
 			'unredacted and overrides both wrong' => [['entities' => $plain, 'unredactedEntities' => 'x', 'acknowledgedOverrides' => 'y']],
