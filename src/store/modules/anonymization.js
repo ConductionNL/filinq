@@ -244,6 +244,121 @@ function inferDossier(path) {
 }
 
 /**
+ * The read-only review entry of an anonymised file, before its entities are
+ * known: no entities, the replacement count and source of its link.
+ *
+ * @param {object} fileMeta File descriptor (fileId, fileName, path).
+ * @param {object|null} link The file's `anonymizationLink`, if any.
+ * @return {object}
+ */
+function anonymizedEntry(fileMeta, link) {
+	return {
+		id: `file-${++fileCounter}`,
+		name: fileMeta.fileName,
+		status: 'completed',
+		viewMode: 'anonymized',
+		error: null,
+		fileId: fileMeta.fileId,
+		filePath: fileMeta.path,
+		entities: [],
+		entityCount: 0,
+		replacementCount: link?.replacementCount ?? 0,
+		anonymizedFileId: null,
+		anonymizedFileName: null,
+		anonymizedFilePath: null,
+		// Source mapping (feat #107) when a link was recorded.
+		sourceFileId: link?.sourceFileId ?? null,
+		sourceFileName: link?.sourceFileName ?? null,
+		sourceFilePath: link?.sourceFilePath ?? null,
+		anonymizationLinkId: link?.id ?? null,
+		runCount: link?.runCount ?? null,
+		dossier: inferDossier(fileMeta.path),
+	}
+}
+
+/**
+ * The text of an anonymised file, or '' when it cannot be read.
+ *
+ * @param {object} fileMeta File descriptor (path, mimeType, fileName).
+ * @return {Promise<string>}
+ */
+async function readAnonymizedText(fileMeta) {
+	try {
+		return await extractDocumentText({
+			path: fileMeta.path,
+			mimeType: fileMeta.mimeType,
+			fileName: fileMeta.fileName,
+		})
+	} catch (err) {
+		console.error(`Failed to read text for ${fileMeta.fileName}:`, err)
+		return ''
+	}
+}
+
+/**
+ * The distinct bases across an entity's relations.
+ *
+ * @param {object|undefined} body The entity endpoint's response body.
+ * @return {Array<string>}
+ */
+function relationBases(body) {
+	const relations = Array.isArray(body?.relations) ? body.relations : []
+	return [
+		...new Set(
+			relations.flatMap((rel) => (Array.isArray(rel.bases) ? rel.bases : [])),
+		),
+	]
+}
+
+/**
+ * Why a placeholder's entity could not be resolved.
+ *
+ * @param {Error} err The lookup failure.
+ * @return {string}
+ */
+function resolveErrorText(err) {
+	return err.response?.status === 404
+		? 'Entity no longer exists'
+		: err.response?.data?.message || err.message
+}
+
+/**
+ * Resolve one `[<TYPE>: <id>]` placeholder to its source entity. A failed
+ * lookup (deleted entity, permission) degrades to a placeholder-only row
+ * rather than dropping the occurrence.
+ *
+ * @param {{entityId: number, type: string, count: number}} ph The placeholder.
+ * @return {Promise<object>} The review row.
+ */
+async function resolvePlaceholder(ph) {
+	const row = {
+		type: ph.type,
+		value: null,
+		confidence: null,
+		entityId: ph.entityId,
+		count: ph.count,
+		bases: [],
+		placeholder: `[${ph.type}: ${ph.entityId}]`,
+		_resolveError: null,
+	}
+	try {
+		const r = await axios.get(
+			generateUrl(`/apps/openregister/api/entities/${ph.entityId}`),
+		)
+		const data = r.data?.data || {}
+		return {
+			...row,
+			type: data.type || ph.type,
+			value: data.value ?? null,
+			confidence: data.confidence ?? null,
+			bases: relationBases(r.data),
+		}
+	} catch (err) {
+		return { ...row, _resolveError: resolveErrorText(err) }
+	}
+}
+
+/**
  * Map a raw entity payload (as returned by the extract endpoint) to the
  * shape `EntityReviewTable` expects. Centralised so both `addFiles` and
  * `ensureExtracted` produce identical entry.entities.
@@ -1412,111 +1527,33 @@ export const useAnonymizationStore = defineStore('anonymization', {
 		async loadAnonymizedEntities(fileMeta, { push = true } = {}) {
 			// Authoritative signal: the source↔anonymised DB mapping. A hit
 			// means this file IS an anonymised output regardless of whether
-			// its text yields parseable placeholders.
+			// its text yields parseable placeholders, or any text at all.
 			const link = await this.findAnonymizationLink(fileMeta.fileId)
-
-			let text = ''
-			try {
-				text = await extractDocumentText({
-					path: fileMeta.path,
-					mimeType: fileMeta.mimeType,
-					fileName: fileMeta.fileName,
-				})
-			} catch (err) {
-				console.error(`Failed to read text for ${fileMeta.fileName}:`, err)
-				// A linked file is still anonymised even if its text is
-				// unreadable — fall through to the source-entity resolution.
-				if (!link) {
-					return null
-				}
-			}
-
-			const placeholders = parsePlaceholders(text)
-			if (placeholders.length === 0 && !link) {
-				return null
-			}
+			const placeholders = parsePlaceholders(
+				await readAnonymizedText(fileMeta),
+			)
 
 			// No parseable placeholders but a DB link exists (e.g. redacted
 			// PDF): resolve the removed entities from the linked source file
 			// and map them onto the anonymised-card shape.
 			if (placeholders.length === 0) {
-				return this.buildLinkedAnonymizedEntry(fileMeta, link, { push })
+				return link
+					? this.buildLinkedAnonymizedEntry(fileMeta, link, { push })
+					: null
 			}
-
-			// Resolve every distinct entity id in parallel. A failed lookup
-			// (deleted entity, permission) degrades to a placeholder-only
-			// row rather than dropping the occurrence entirely.
-			const resolved = await Promise.all(
-				placeholders.map(async (ph) => {
-					try {
-						const r = await axios.get(
-							generateUrl(
-								`/apps/openregister/api/entities/${ph.entityId}`,
-							),
-						)
-						const data = r.data?.data || {}
-						const relations = Array.isArray(r.data?.relations)
-							? r.data.relations
-							: []
-						// Collect bases across this entity's relations.
-						const bases = relations.flatMap((rel) =>
-							Array.isArray(rel.bases) ? rel.bases : [],
-						)
-						return {
-							type: data.type || ph.type,
-							value: data.value ?? null,
-							confidence: data.confidence ?? null,
-							entityId: ph.entityId,
-							count: ph.count,
-							bases: [...new Set(bases)],
-							placeholder: `[${ph.type}: ${ph.entityId}]`,
-							_resolveError: null,
-						}
-					} catch (err) {
-						return {
-							type: ph.type,
-							value: null,
-							confidence: null,
-							entityId: ph.entityId,
-							count: ph.count,
-							bases: [],
-							placeholder: `[${ph.type}: ${ph.entityId}]`,
-							_resolveError:
-								err.response?.status === 404
-									? 'Entity no longer exists'
-									: err.response?.data?.message || err.message,
-						}
-					}
-				}),
-			)
 
 			// Collapse rows duplicated by the extract-append bug so the same
 			// removed value is shown once (see entity-double-extract TODO).
-			const deduped = dedupeAnonEntities(resolved)
-
+			const deduped = dedupeAnonEntities(
+				await Promise.all(placeholders.map(resolvePlaceholder)),
+			)
 			const entry = {
-				id: `file-${++fileCounter}`,
-				name: fileMeta.fileName,
-				status: 'completed',
-				viewMode: 'anonymized',
-				error: null,
-				fileId: fileMeta.fileId,
-				filePath: fileMeta.path,
+				...anonymizedEntry(fileMeta, link),
 				entities: deduped,
 				entityCount: deduped.length,
 				replacementCount:
 					link?.replacementCount
 					?? deduped.reduce((sum, e) => sum + e.count, 0),
-				anonymizedFileId: null,
-				anonymizedFileName: null,
-				anonymizedFilePath: null,
-				// Source mapping (feat #107) when a link was recorded.
-				sourceFileId: link?.sourceFileId ?? null,
-				sourceFileName: link?.sourceFileName ?? null,
-				sourceFilePath: link?.sourceFilePath ?? null,
-				anonymizationLinkId: link?.id ?? null,
-				runCount: link?.runCount ?? null,
-				dossier: inferDossier(fileMeta.path),
 			}
 			if (push) {
 				this.files.push(entry)
@@ -1550,28 +1587,10 @@ export const useAnonymizationStore = defineStore('anonymization', {
 		 */
 		buildLinkedAnonymizedEntry(fileMeta, link, { push = true } = {}) {
 			const entry = {
-				id: `file-${++fileCounter}`,
-				name: fileMeta.fileName,
-				status: 'completed',
-				viewMode: 'anonymized',
-				error: null,
-				fileId: fileMeta.fileId,
-				filePath: fileMeta.path,
-				entities: [],
-				entityCount: 0,
-				replacementCount: link?.replacementCount ?? 0,
+				...anonymizedEntry(fileMeta, link),
 				// No readable placeholders → the detailed list can't be shown
 				// without a (mutating) re-extract. The sidebar renders a note.
 				detailUnavailable: true,
-				anonymizedFileId: null,
-				anonymizedFileName: null,
-				anonymizedFilePath: null,
-				sourceFileId: link?.sourceFileId ?? null,
-				sourceFileName: link?.sourceFileName ?? null,
-				sourceFilePath: link?.sourceFilePath ?? null,
-				anonymizationLinkId: link?.id ?? null,
-				runCount: link?.runCount ?? null,
-				dossier: inferDossier(fileMeta.path),
 			}
 			if (push) {
 				this.files.push(entry)
