@@ -24,6 +24,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Tests\Unit\EventListener;
 
+use Error;
 use Exception;
 use OCA\Filinq\EventListener\ObjectChange;
 use OCA\Filinq\EventListener\ObjectEventServices;
@@ -182,6 +183,21 @@ class PolicyChangeRouterTraceTest extends TestCase {
 		$this->route(data: ['consentStatus' => 'x', 'scope' => 'entity'], reason: 'deleted');
 
 	}//end testStandingConsentFailureIsLogged()
+
+	/**
+	 * An Error is not a logged failure: it propagates and nothing is logged.
+	 *
+	 * @return void
+	 */
+	public function testErrorPropagatesUnlogged(): void {
+		$this->retroactive->method('applyStandingConsentMutation')->willThrowException(new Error('type broken'));
+		$this->logger->expects($this->never())->method('warning');
+
+		$this->expectException(Error::class);
+		$this->expectExceptionMessage('type broken');
+		$this->route(data: ['consentStatus' => 'x', 'scope' => 'entity'], reason: 'updated');
+
+	}//end testErrorPropagatesUnlogged()
 
 	/**
 	 * Route one change.
