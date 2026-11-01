@@ -23,11 +23,21 @@ export function documentLinkRows(rows) {
 			entry.count++
 			dossiers.set(dossier.id, entry)
 		} else if (row) {
-			loose.push({ label: row.name, href: generateUrl('/f/{fileId}', { fileId: row.fileId }), icon: 'FileDocumentOutline' })
+			loose.push({
+				label: row.name,
+				href: generateUrl('/f/{fileId}', { fileId: row.fileId }),
+				icon: 'FileDocumentOutline',
+			})
 		}
 	}
 	const grouped = [...dossiers.values()].map(({ dossier, count }) => ({
-		label: n('filinq', 'Dossier "{name}" (%n document)', 'Dossier "{name}" (%n documents)', count, { name: dossier.name }),
+		label: n(
+			'filinq',
+			'Dossier "{name}" (%n document)',
+			'Dossier "{name}" (%n documents)',
+			count,
+			{ name: dossier.name },
+		),
 		href: generateUrl('/apps/filinq/dossiers/{id}', { id: dossier.id }),
 		icon: 'FolderOutline',
 	}))

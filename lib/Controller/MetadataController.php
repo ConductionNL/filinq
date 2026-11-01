@@ -28,7 +28,6 @@ use Exception;
 use OCA\Filinq\Kernel\Contracts\InboundClassificationServiceInterface;
 use OCA\Filinq\Kernel\Contracts\MetadataServiceInterface;
 use OCP\AppFramework\Controller;
-use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\Files\IRootFolder;
 use OCP\IL10N;
@@ -105,55 +104,83 @@ class MetadataController extends Controller {
 				return $validationError;
 			}
 
-			// Get object data for enrichment.
-			$objectData = $data['objectData'] ?? [];
+			return $this->enrichValidated(data: $data);
+		} catch (Exception $e) {
+			return $this->enrichFailed(exception: $e);
+		}
 
-			// Run metadata enhancement.
-			$metadata = $this->metadataService->enhanceMetadata($objectData);
+	}//end enrich()
 
-			// The same classification hook as the event path; suggestions only.
-			$classification = $this->classifyReachable(objectData: $objectData, data: $data);
+	/**
+	 * Enrich and save a validated request's object, and classify its file.
+	 *
+	 * @param array<string, mixed> $data The request: objectId, register, schema, objectData.
+	 *
+	 * @return JSONResponse The enrichment result.
+	 *
+	 * @spec openspec/specs/metadata-enrichment/spec.md
+	 */
+	private function enrichValidated(array $data): JSONResponse {
+		// Get object data for enrichment.
+		$objectData = $data['objectData'] ?? [];
 
-			if (empty($metadata) === true) {
-				return new JSONResponse(
-					[
-						'success' => true,
-						'message' => $this->l10n->t('No metadata enrichment needed'),
-						'classification' => $classification,
-					]
-				);
-			}
+		// Run metadata enhancement.
+		$metadata = $this->metadataService->enhanceMetadata($objectData);
 
-			// Save enriched metadata back to OpenRegister.
-			$result = $this->metadataService->saveEnrichedMetadata(
-				$data['objectId'],
-				$data['register'],
-				$data['schema'],
-				$metadata
-			);
+		// The same classification hook as the event path; suggestions only.
+		$classification = $this->classifyReachable(objectData: $objectData, data: $data);
 
+		if (empty($metadata) === true) {
 			return new JSONResponse(
 				[
 					'success' => true,
-					'enrichedFields' => array_keys($metadata),
-					'object' => $result,
+					'message' => $this->l10n->t('No metadata enrichment needed'),
 					'classification' => $classification,
 				]
 			);
-		} catch (Exception $e) {
-			$this->logger->error(
-				'Failed to enrich metadata: ' . $e->getMessage(),
-				[
-					'exception' => $e,
-				]
-			);
-			return new JSONResponse(
-				['error' => $this->l10n->t('Failed to enrich metadata: %s', [$e->getMessage()])],
-				500
-			);
-		}//end try
+		}
 
-	}//end enrich()
+		// Save enriched metadata back to OpenRegister.
+		$result = $this->metadataService->saveEnrichedMetadata(
+			$data['objectId'],
+			$data['register'],
+			$data['schema'],
+			$metadata
+		);
+
+		return new JSONResponse(
+			[
+				'success' => true,
+				'enrichedFields' => array_keys($metadata),
+				'object' => $result,
+				'classification' => $classification,
+			]
+		);
+
+	}//end enrichValidated()
+
+	/**
+	 * Log a failed enrichment and answer 500 with its message.
+	 *
+	 * @param Exception $exception The failure.
+	 *
+	 * @return JSONResponse The 500 response.
+	 *
+	 * @spec openspec/specs/metadata-enrichment/spec.md
+	 */
+	private function enrichFailed(Exception $exception): JSONResponse {
+		$this->logger->error(
+			'Failed to enrich metadata: ' . $exception->getMessage(),
+			[
+				'exception' => $exception,
+			]
+		);
+		return new JSONResponse(
+			['error' => $this->l10n->t('Failed to enrich metadata: %s', [$exception->getMessage()])],
+			500
+		);
+
+	}//end enrichFailed()
 
 	/**
 	 * Offer the document to classification when the caller may update its file.
@@ -163,16 +190,16 @@ class MetadataController extends Controller {
 	 * makes or replaces a suggestion on a file they cannot change.
 	 *
 	 * @param array<string, mixed> $objectData The object's fields.
-	 * @param array<string, mixed> $data       The request: objectId, register, schema.
+	 * @param array<string, mixed> $data The request: objectId, register, schema.
 	 *
 	 * @return string `suggested`, `skipped` or `failed`.
 	 *
 	 * @spec openspec/changes/inbound-auto-classification/tasks.md#2-3
 	 */
 	private function classifyReachable(array $objectData, array $data): string {
-		$fileId = (int) ($objectData['file'] ?? ($objectData['fileId'] ?? 0));
+		$fileId = (int)($objectData['file'] ?? ($objectData['fileId'] ?? 0));
 		try {
-			$uid = (string) $this->userSession->getUser()?->getUID();
+			$uid = (string)$this->userSession->getUser()?->getUID();
 			// The suggestion is saved with RBAC off, so only a caller who may
 			// change the file may replace it; reading it is not enough.
 			$node = null;
@@ -186,7 +213,7 @@ class MetadataController extends Controller {
 
 			$outcome = $this->classification->classify(
 				objectData: $objectData,
-				objectRef: ['id' => (string) $data['objectId'], 'register' => (string) $data['register'], 'schema' => (string) $data['schema']]
+				objectRef: ['id' => (string)$data['objectId'], 'register' => (string)$data['register'], 'schema' => (string)$data['schema']]
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning('Classification on enrich failed: ' . $e->getMessage(), ['exception' => $e]);
@@ -195,7 +222,6 @@ class MetadataController extends Controller {
 		}
 
 		return $outcome['outcome'];
-
 	}//end classifyReachable()
 
 	/**

@@ -125,40 +125,81 @@ class VeraPdfReportParser {
 		$fonts = [];
 		$imported = false;
 		$otherFailed = false;
-		foreach ($summaries as $summary) {
-			if (is_array($summary) === false || strtolower((string) ($summary['status'] ?? ($summary['ruleStatus'] ?? ''))) !== 'failed') {
-				continue;
-			}
-
-			$specification = (string) ($summary['specification'] ?? '');
-			$clause = (string) ($summary['clause'] ?? '');
-			$testNumber = (int) ($summary['testNumber'] ?? 0);
-			$rules[] = [
-				'ruleId' => $this->ruleId(specification: $specification, clause: $clause, testNumber: $testNumber),
-				'specification' => $specification,
-				'clause' => $clause,
-				'testNumber' => $testNumber,
-				'checksFailed' => (int) ($summary['failedChecks'] ?? 0),
-			];
-			if (in_array($clause, self::FONT_EMBEDDING_CLAUSES, true) === false) {
+		foreach (array_filter($summaries, fn (mixed $summary): bool => $this->isFailed(summary: $summary)) as $summary) {
+			$rule = $this->ruleReference(summary: $summary);
+			$rules[] = $rule;
+			if (in_array($rule['clause'], self::FONT_EMBEDDING_CLAUSES, true) === false) {
 				$otherFailed = true;
 				continue;
 			}
 
-			foreach ((array) ($summary['checks'] ?? []) as $check) {
-				$context = (string) ($check['context'] ?? '');
-				// A font reached through a form XObject sits on a page imported whole.
-				$imported = ($imported === true || preg_match('/xObject\[\d+\].*font\[\d+\]/', $context) === 1);
-				$font = $this->fontName(context: $context);
-				if ($font !== '' && in_array($font, $fonts, true) === false) {
-					$fonts[] = $font;
-				}
-			}
-		}//end foreach
+			$found = $this->unembeddedFonts(checks: (array) ($summary['checks'] ?? []));
+			$fonts = array_values(array_unique(array_merge($fonts, $found['fonts'])));
+			$imported = ($imported === true || $found['imported'] === true);
+		}
 
 		return ['rules' => $rules, 'fonts' => $fonts, 'imported' => $imported, 'otherFailed' => $otherFailed];
 
 	}//end failedRules()
+
+	/**
+	 * Whether a rule summary is a failed rule.
+	 *
+	 * @param mixed $summary The rule summary.
+	 *
+	 * @return bool True when its status, or else its older ruleStatus, is "failed".
+	 */
+	private function isFailed(mixed $summary): bool {
+		if (is_array($summary) === false) {
+			return false;
+		}
+
+		return strtolower((string) ($summary['status'] ?? ($summary['ruleStatus'] ?? ''))) === 'failed';
+
+	}//end isFailed()
+
+	/**
+	 * A failed rule as a reference.
+	 *
+	 * @param array<string, mixed> $summary The rule summary.
+	 *
+	 * @return array{ruleId: string, specification: string, clause: string, testNumber: int, checksFailed: int} The reference.
+	 */
+	private function ruleReference(array $summary): array {
+		$specification = (string) ($summary['specification'] ?? '');
+		$clause = (string) ($summary['clause'] ?? '');
+		$testNumber = (int) ($summary['testNumber'] ?? 0);
+
+		return [
+			'ruleId' => $this->ruleId(specification: $specification, clause: $clause, testNumber: $testNumber),
+			'specification' => $specification,
+			'clause' => $clause,
+			'testNumber' => $testNumber,
+			'checksFailed' => (int) ($summary['failedChecks'] ?? 0),
+		];
+
+	}//end ruleReference()
+
+	/**
+	 * The fonts the checks of a font embedding rule name, and whether one sits on an imported page.
+	 *
+	 * @param array<int|string, mixed> $checks The failed checks.
+	 *
+	 * @return array{fonts: array<int, string>, imported: bool} The fonts, in order.
+	 */
+	private function unembeddedFonts(array $checks): array {
+		$fonts = [];
+		$imported = false;
+		foreach ($checks as $check) {
+			$context = (string) ($check['context'] ?? '');
+			// A font reached through a form XObject sits on a page imported whole.
+			$imported = ($imported === true || preg_match('/xObject\[\d+\].*font\[\d+\]/', $context) === 1);
+			$fonts[] = $this->fontName(context: $context);
+		}
+
+		return ['fonts' => array_values(array_diff($fonts, [''])), 'imported' => $imported];
+
+	}//end unembeddedFonts()
 
 	/**
 	 * A stable rule id, such as ISO19005-3_6.2.11.4.1-1.

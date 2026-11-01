@@ -130,32 +130,71 @@ export function statusLabel(status) {
  * @spec openspec/changes/inbound-auto-classification/tasks.md#3-1
  */
 export function confirmBody(record, choices = {}) {
-	const body = {}
+	return {
+		...documentTypeChange(record, choices),
+		...correspondentChange(record, choices),
+		...dossierChange(record, choices),
+	}
+}
+
+/**
+ * The document type part of a confirmation, when the person picked another.
+ *
+ * @param {object} record The suggestion.
+ * @param {object} choices The person's choices.
+ * @return {object} `{ documentType }` or nothing.
+ */
+function documentTypeChange(record, choices) {
 	if (
 		choices.documentType
 		&& choices.documentType !== record.suggestedDocumentType
 	) {
-		body.documentType = choices.documentType
+		return { documentType: choices.documentType }
 	}
-	if (choices.correspondentName !== undefined) {
-		const name = String(choices.correspondentName || '').trim()
-		if (name !== (record.suggestedCorrespondent?.name || '')) {
-			body.correspondent = name
-				? {
-						name,
-						entityType:
-							record.suggestedCorrespondent?.entityType || 'PERSON',
-					}
-				: null
-		}
+	return {}
+}
+
+/**
+ * The sender part of a confirmation, when the person changed the name. An
+ * empty name clears the sender.
+ *
+ * @param {object} record The suggestion.
+ * @param {object} choices The person's choices.
+ * @return {object} `{ correspondent }` or nothing.
+ */
+function correspondentChange(record, choices) {
+	if (choices.correspondentName === undefined) {
+		return {}
 	}
-	if (choices.dossier !== undefined) {
-		const dossier = choices.dossier || null
-		if (dossier !== (record.suggestedDossier || null)) {
-			body.dossier = dossier
-		}
+	const name = String(choices.correspondentName || '').trim()
+	if (name === (record.suggestedCorrespondent?.name || '')) {
+		return {}
 	}
-	return body
+	return {
+		correspondent: name
+			? {
+					name,
+					entityType:
+						record.suggestedCorrespondent?.entityType || 'PERSON',
+				}
+			: null,
+	}
+}
+
+/**
+ * The dossier part of a confirmation, when the person picked another. An
+ * empty dossier means "file nowhere" and is sent as null.
+ *
+ * @param {object} record The suggestion.
+ * @param {object} choices The person's choices.
+ * @return {object} `{ dossier }` or nothing.
+ */
+function dossierChange(record, choices) {
+	if (choices.dossier === undefined) {
+		return {}
+	}
+	const dossier = choices.dossier || null
+	return dossier === (record.suggestedDossier || null) ? {} : { dossier }
 }
 
 /**

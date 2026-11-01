@@ -4,9 +4,15 @@
 import { describe, expect, it, vi } from 'vitest'
 import { documentLinkRows } from '../../src/integrations/documentLinkRows.js'
 
-vi.mock('@nextcloud/router', () => ({ generateUrl: (path, params = {}) => path.replace(/\{(\w+)\}/g, (_m, key) => params[key]) }))
+vi.mock('@nextcloud/router', () => ({
+	generateUrl: (path, params = {}) =>
+		path.replace(/\{(\w+)\}/g, (_m, key) => params[key]),
+}))
 vi.mock('@nextcloud/l10n', () => ({
-	translatePlural: (app, one, many, count, vars) => (count === 1 ? one : many).replace('%n', String(count)).replace(/\{(\w+)\}/g, (_m, key) => vars[key]),
+	translatePlural: (app, one, many, count, vars) =>
+		(count === 1 ? one : many)
+			.replace('%n', String(count))
+			.replace(/\{(\w+)\}/g, (_m, key) => vars[key]),
 }))
 
 /**
@@ -26,13 +32,19 @@ describe('documentLinkRows', () => {
 			{ fileId: 4, name: 'klachten.csv', dossier: lindelaan },
 		])
 		expect(rows).toEqual([
-			{ label: 'Dossier "Fietspad Lindelaan" (3 documents)', href: '/apps/filinq/dossiers/d-1', icon: 'FolderOutline' },
+			{
+				label: 'Dossier "Fietspad Lindelaan" (3 documents)',
+				href: '/apps/filinq/dossiers/d-1',
+				icon: 'FolderOutline',
+			},
 			{ label: 'los.pdf', href: '/f/2', icon: 'FileDocumentOutline' },
 		])
 	})
 
 	it('lists every file on its own when none is in a dossier', () => {
-		expect(documentLinkRows([{ fileId: 7, name: 'a.pdf' }]).map((row) => row.label)).toEqual(['a.pdf'])
+		expect(
+			documentLinkRows([{ fileId: 7, name: 'a.pdf' }]).map((row) => row.label),
+		).toEqual(['a.pdf'])
 		expect(documentLinkRows(undefined)).toEqual([])
 	})
 })

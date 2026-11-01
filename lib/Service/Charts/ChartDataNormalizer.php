@@ -57,38 +57,13 @@ class ChartDataNormalizer {
 			return $shapeError;
 		}
 
-		$labels = $data['labels'];
-		$pointCount = count($labels);
-		$normalizedSeries = [];
-		$hasAnyValue = false;
-
-		foreach ($data['series'] as $oneSeries) {
-			if (is_array($oneSeries) === false) {
-				continue;
-			}
-
-			$values = $oneSeries['values'] ?? [];
-			if (is_array($values) === false) {
-				$values = [];
-			}
-
-			$normalizedValues = $this->normalizeValues(values: $values, pointCount: $pointCount);
-			if ($this->containsValue(values: $normalizedValues) === true) {
-				$hasAnyValue = true;
-			}
-
-			$normalizedSeries[] = [
-				'name' => (string)($oneSeries['name'] ?? ''),
-				'values' => $normalizedValues,
-			];
-		}
-
-		if ($normalizedSeries === [] || $hasAnyValue === false) {
+		$normalizedSeries = $this->normalizeSeriesList(seriesList: $data['series'], pointCount: count($data['labels']));
+		if ($normalizedSeries === null) {
 			return new ChartRenderError(message: 'chart error: no data');
 		}
 
 		$normalizedLabels = [];
-		foreach ($labels as $label) {
+		foreach ($data['labels'] as $label) {
 			$normalizedLabels[] = (string)$label;
 		}
 
@@ -98,6 +73,48 @@ class ChartDataNormalizer {
 		];
 
 	}//end normalize()
+
+	/**
+	 * Normalize every array entry of the series list.
+	 *
+	 * @param array $seriesList The raw series entries; entries that are not arrays are skipped.
+	 * @param int $pointCount Number of label positions to fill.
+	 *
+	 * @return array<int, array{name: string, values: array<int, float|null>}>|null The series, or null when none holds a value.
+	 */
+	private function normalizeSeriesList(array $seriesList, int $pointCount): ?array {
+		$normalizedSeries = [];
+		foreach (array_filter($seriesList, 'is_array') as $oneSeries) {
+			$normalizedSeries[] = $this->normalizeSeries(oneSeries: $oneSeries, pointCount: $pointCount);
+		}
+
+		$allValues = array_merge(...array_column($normalizedSeries, 'values'));
+		if ($this->containsValue(values: $allValues) === false) {
+			return null;
+		}
+
+		return $normalizedSeries;
+	}//end normalizeSeriesList()
+
+	/**
+	 * Normalize one series: its name as a string, its values as floats or gaps.
+	 *
+	 * @param array $oneSeries The raw series.
+	 * @param int $pointCount Number of label positions to fill.
+	 *
+	 * @return array{name: string, values: array<int, float|null>} The series.
+	 */
+	private function normalizeSeries(array $oneSeries, int $pointCount): array {
+		$values = $oneSeries['values'] ?? [];
+		if (is_array($values) === false) {
+			$values = [];
+		}
+
+		return [
+			'name' => (string)($oneSeries['name'] ?? ''),
+			'values' => $this->normalizeValues(values: $values, pointCount: $pointCount),
+		];
+	}//end normalizeSeries()
 
 	/**
 	 * Check the top-level payload shape and point budget.

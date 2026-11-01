@@ -75,13 +75,19 @@ import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
 					<span
 						v-if="!row.isFolder"
 						class="my-documents-status"
-						:class="{ 'my-documents-status--checked': !!reviewMarks[String(row.fileId)] }"
+						:class="{
+							'my-documents-status--checked':
+								!!reviewMarks[String(row.fileId)],
+						}"
 						:title="statusTitle(row)">
 						<CheckDecagram
 							v-if="reviewMarks[String(row.fileId)]"
 							:size="16"
 							class="my-documents-status__icon" />
-						<EyeOffOutline v-else :size="16" class="my-documents-status__icon" />
+						<EyeOffOutline
+							v-else
+							:size="16"
+							class="my-documents-status__icon" />
 						{{ statusLabel(row) }}
 					</span>
 				</template>

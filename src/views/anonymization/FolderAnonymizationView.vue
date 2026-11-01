@@ -183,7 +183,9 @@
 					)
 				}}
 			</NcNoteCard>
-			<section class="folder-review" :aria-label="t('filinq', 'Check per file')">
+			<section
+				class="folder-review"
+				:aria-label="t('filinq', 'Check per file')">
 				<h4>{{ t('filinq', 'Check per file') }}</h4>
 				<p class="muted">
 					{{
@@ -202,16 +204,25 @@
 						<span
 							v-if="isReviewed(f)"
 							class="folder-review__state folder-review__state--done">
-							{{ t('filinq', 'Checked by {user}', { user: f.reviewMark.checkedBy }) }}
+							{{
+								t('filinq', 'Checked by {user}', {
+									user: f.reviewMark.checkedBy,
+								})
+							}}
 						</span>
 						<NcButton
 							v-else
 							variant="secondary"
-							:disabled="!!f.reviewing || store.selectedEntityCount === 0"
+							:disabled="
+								!!f.reviewing || store.selectedEntityCount === 0
+							"
 							@click="store.markFileChecked(f)">
 							{{ t('filinq', 'Mark as checked') }}
 						</NcButton>
-						<span v-if="f.reviewError" class="folder-review__error" role="alert">
+						<span
+							v-if="f.reviewError"
+							class="folder-review__error"
+							role="alert">
 							{{ f.reviewError }}
 						</span>
 					</li>
@@ -223,7 +234,10 @@
 			<div class="action-bar">
 				<NcButton
 					variant="primary"
-					:disabled="store.selectedEntityCount === 0 || store.reviewedFiles.length === 0"
+					:disabled="
+						store.selectedEntityCount === 0
+						|| store.reviewedFiles.length === 0
+					"
 					@click="store.anonymizeFolder()">
 					{{
 						n(

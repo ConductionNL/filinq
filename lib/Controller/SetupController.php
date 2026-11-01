@@ -262,10 +262,7 @@ class SetupController extends Controller {
 		// run-action step; closing only the second leaves the first outstanding,
 		// and CnAppRoot opens the wizard while ANY optional step is outstanding.
 		if ($actionId === 'skip-demo-data') {
-			$this->appConfig->setValueString(AppIdentity::APP_ID, self::DATASET_KEY, DemoDataServiceInterface::NONE_DATASET);
-			$this->appConfig->setValueString(AppIdentity::APP_ID, self::DEMO_DECIDED_KEY, 'skipped');
-
-			return new JSONResponse(data: ['success' => true, 'message' => 'No example data was loaded.']);
+			return $this->declineDataset();
 		}
 
 		return new JSONResponse(
@@ -291,6 +288,29 @@ class SetupController extends Controller {
 	 * @spec openspec/changes/wizard-dataset-card-load/specs/first-time-setup/spec.md
 	 */
 	private function loadDataset(string $actionId): JSONResponse {
+		$picked = $this->pickedDataset(actionId: $actionId);
+		if ($picked instanceof JSONResponse) {
+			return $picked;
+		}
+
+		if ($picked === DemoDataServiceInterface::NONE_DATASET) {
+			return $this->declineDataset();
+		}
+
+		return $this->importDataset(dataset: $picked);
+	}//end loadDataset()
+
+	/**
+	 * The dataset to load: the posted one, else the stored pick, else the
+	 * shipped set for the legacy action.
+	 *
+	 * @param string $actionId The action that asked.
+	 *
+	 * @return string|JSONResponse The dataset id, or a 400 refusal.
+	 *
+	 * @spec openspec/changes/wizard-dataset-card-load/specs/first-time-setup/spec.md
+	 */
+	private function pickedDataset(string $actionId): string|JSONResponse {
 		$picked = $this->appConfig->getValueString(AppIdentity::APP_ID, self::DATASET_KEY, '');
 
 		// The card's Load button names its dataset in the body. An older wizard
@@ -323,13 +343,33 @@ class SetupController extends Controller {
 			);
 		}
 
-		if ($picked === DemoDataServiceInterface::NONE_DATASET) {
-			$this->appConfig->setValueString(AppIdentity::APP_ID, self::DATASET_KEY, DemoDataServiceInterface::NONE_DATASET);
-			$this->appConfig->setValueString(AppIdentity::APP_ID, self::DEMO_DECIDED_KEY, 'skipped');
+		return $picked;
+	}//end pickedDataset()
 
-			return new JSONResponse(data: ['success' => true, 'message' => 'No example data was loaded.']);
-		}
+	/**
+	 * Record that no example data is wanted, which answers both setup steps.
+	 *
+	 * @return JSONResponse `{ success, message }`.
+	 *
+	 * @spec openspec/changes/wizard-dataset-card-load/specs/first-time-setup/spec.md
+	 */
+	private function declineDataset(): JSONResponse {
+		$this->appConfig->setValueString(AppIdentity::APP_ID, self::DATASET_KEY, DemoDataServiceInterface::NONE_DATASET);
+		$this->appConfig->setValueString(AppIdentity::APP_ID, self::DEMO_DECIDED_KEY, 'skipped');
 
+		return new JSONResponse(data: ['success' => true, 'message' => 'No example data was loaded.']);
+	}//end declineDataset()
+
+	/**
+	 * Import a dataset and record it as the choice; a failure stores nothing.
+	 *
+	 * @param string $dataset The dataset id.
+	 *
+	 * @return JSONResponse `{ success, message }`.
+	 *
+	 * @spec openspec/changes/wizard-dataset-card-load/specs/first-time-setup/spec.md
+	 */
+	private function importDataset(string $dataset): JSONResponse {
 		try {
 			$imported = $this->demoDataService->install();
 		} catch (\Throwable $e) {
@@ -345,7 +385,7 @@ class SetupController extends Controller {
 		}
 
 		// Loading IS choosing the set, so the pick is recorded too.
-		$this->appConfig->setValueString(AppIdentity::APP_ID, self::DATASET_KEY, $picked);
+		$this->appConfig->setValueString(AppIdentity::APP_ID, self::DATASET_KEY, $dataset);
 		$this->appConfig->setValueString(AppIdentity::APP_ID, self::DEMO_DECIDED_KEY, 'installed');
 
 		return new JSONResponse(
@@ -355,7 +395,7 @@ class SetupController extends Controller {
 			]
 		);
 
-	}//end loadDataset()
+	}//end importDataset()
 
 	/**
 	 * Refuse a dataset id no dataset answers to.

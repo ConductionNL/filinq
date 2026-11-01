@@ -36,6 +36,69 @@ export function clearDomHighlights(root) {
 }
 
 /**
+ * The non-blank text nodes under `root`, collected up front because mutating
+ * the tree while walking it is fragile.
+ *
+ * @param {HTMLElement} root Container element.
+ * @return {Text[]}
+ */
+function nonBlankTextNodes(root) {
+	const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null)
+	const targets = []
+	let node = walker.nextNode()
+	while (node) {
+		if (node.nodeValue && node.nodeValue.trim()) {
+			targets.push(node)
+		}
+		node = walker.nextNode()
+	}
+	return targets
+}
+
+/**
+ * The DOM node for one highlight segment: a highlight span for a typed
+ * segment, a plain text node otherwise.
+ *
+ * @param {{text: string, type: (string|null)}} seg The segment.
+ * @return {Node}
+ */
+function segmentNode(seg) {
+	if (!seg.type) {
+		return document.createTextNode(seg.text)
+	}
+	const span = document.createElement('span')
+	span.setAttribute('data-dd-hl', '')
+	if (seg.type === PENDING_TYPE) {
+		span.className = 'dd-hl dd-hl--pending'
+	} else {
+		span.className = 'dd-hl'
+		span.style.backgroundColor = entityTypeColor(seg.type)
+	}
+	span.textContent = seg.text
+	return span
+}
+
+/**
+ * Replace one text node by its highlight segments, when any segment is
+ * highlighted.
+ *
+ * @param {Text} textNode The text node.
+ * @param {Array<{value: string, type: string}>} values Values to highlight.
+ * @return {void}
+ */
+function highlightTextNode(textNode, values) {
+	const segments = buildHighlightSegments(textNode.nodeValue, values)
+	if (!segments.some((s) => s.type)) {
+		return
+	}
+	const frag = document.createDocumentFragment()
+	for (const seg of segments) {
+		frag.appendChild(segmentNode(seg))
+	}
+	textNode.parentNode.replaceChild(frag, textNode)
+}
+
+/**
  * Wrap every occurrence of the given values inside `root` in a highlight span.
  * Clears any previous highlights first, so this is safe to call repeatedly.
  *
@@ -43,6 +106,7 @@ export function clearDomHighlights(root) {
  * @param {Array<{value: string, type: string}>} entities Values to highlight.
  * @param {string} [pendingValue] Optional pending selection to mark distinctly.
  * @return {void}
+ * @spec openspec/specs/document-preview/spec.md#requirement-format-specific-in-app-document-preview-req-ddprv-001
  */
 export function applyDomHighlights(root, entities, pendingValue) {
 	if (!root) {
@@ -57,41 +121,7 @@ export function applyDomHighlights(root, entities, pendingValue) {
 	if (!all.length) {
 		return
 	}
-
-	// Collect text nodes up front — mutating the tree while walking it is
-	// fragile.
-	const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null)
-	const targets = []
-	let node = walker.nextNode()
-	while (node) {
-		if (node.nodeValue && node.nodeValue.trim()) {
-			targets.push(node)
-		}
-		node = walker.nextNode()
-	}
-
-	for (const textNode of targets) {
-		const segments = buildHighlightSegments(textNode.nodeValue, all)
-		if (!segments.some((s) => s.type)) {
-			continue
-		}
-		const frag = document.createDocumentFragment()
-		for (const seg of segments) {
-			if (seg.type) {
-				const span = document.createElement('span')
-				span.setAttribute('data-dd-hl', '')
-				if (seg.type === PENDING_TYPE) {
-					span.className = 'dd-hl dd-hl--pending'
-				} else {
-					span.className = 'dd-hl'
-					span.style.backgroundColor = entityTypeColor(seg.type)
-				}
-				span.textContent = seg.text
-				frag.appendChild(span)
-			} else {
-				frag.appendChild(document.createTextNode(seg.text))
-			}
-		}
-		textNode.parentNode.replaceChild(frag, textNode)
+	for (const textNode of nonBlankTextNodes(root)) {
+		highlightTextNode(textNode, all)
 	}
 }
