@@ -1,0 +1,378 @@
+{
+    "a genuine signature": {
+        "fileId": 7,
+        "fileName": "besluit.pdf",
+        "signatures": [
+            {
+                "signer": "Anna de Vries",
+                "timestamp": "2026-10-01T09:30:00+02:00",
+                "level": "SES",
+                "method": "native",
+                "ip": "10.0.0.7",
+                "status": "verified",
+                "reason": "ok",
+                "checked": "the document bytes and the assertion fields",
+                "keyId": "dc556fea563e85ab",
+                "means": "This server produced the document and its bytes have not changed since. It does not prove who the signer is, and it is not a qualified electronic signature.",
+                "valid": true
+            }
+        ],
+        "isValid": true,
+        "verdict": "verified",
+        "folders": [
+            "anna"
+        ]
+    },
+    "a genuine signature with portal claims": {
+        "fileId": 7,
+        "fileName": "besluit.pdf",
+        "signatures": [
+            {
+                "signer": "Anna de Vries",
+                "timestamp": "2026-10-01T09:30:00+02:00",
+                "level": "SES",
+                "method": "native",
+                "ip": "10.0.0.7",
+                "status": "verified",
+                "reason": "ok",
+                "checked": "the document bytes and the assertion fields",
+                "keyId": "dc556fea563e85ab",
+                "means": "This server produced the document and its bytes have not changed since. It does not prove who the signer is, and it is not a qualified electronic signature.",
+                "valid": true
+            }
+        ],
+        "isValid": true,
+        "verdict": "verified",
+        "folders": [
+            "anna"
+        ]
+    },
+    "a rewritten signer": {
+        "fileId": 7,
+        "fileName": "besluit.pdf",
+        "signatures": [
+            {
+                "signer": "Mallory",
+                "timestamp": "2026-10-01T09:30:00+02:00",
+                "level": "SES",
+                "method": "native",
+                "ip": "10.0.0.7",
+                "status": "invalid",
+                "reason": "mac-mismatch",
+                "checked": "the document bytes and the assertion fields",
+                "keyId": "dc556fea563e85ab",
+                "means": "The document or its signature block changed after this server signed it, or it was signed by a server holding a different key.",
+                "valid": false
+            }
+        ],
+        "isValid": false,
+        "verdict": "tampered",
+        "folders": [
+            "anna"
+        ]
+    },
+    "a flipped content byte": {
+        "fileId": 7,
+        "fileName": "besluit.pdf",
+        "signatures": [
+            {
+                "signer": "Anna de Vries",
+                "timestamp": "2026-10-01T09:30:00+02:00",
+                "level": "SES",
+                "method": "native",
+                "ip": "10.0.0.7",
+                "status": "invalid",
+                "reason": "mac-mismatch",
+                "checked": "the document bytes and the assertion fields",
+                "keyId": "dc556fea563e85ab",
+                "means": "The document or its signature block changed after this server signed it, or it was signed by a server holding a different key.",
+                "valid": false
+            }
+        ],
+        "isValid": false,
+        "verdict": "tampered",
+        "folders": [
+            "anna"
+        ]
+    },
+    "a rotated secret": {
+        "fileId": 7,
+        "fileName": "besluit.pdf",
+        "signatures": [
+            {
+                "signer": "Anna de Vries",
+                "timestamp": "2026-10-01T09:30:00+02:00",
+                "level": "SES",
+                "method": "native",
+                "ip": "10.0.0.7",
+                "status": "invalid",
+                "reason": "mac-mismatch",
+                "checked": "the document bytes and the assertion fields",
+                "keyId": "4ae76dcde5aae642",
+                "means": "The document or its signature block changed after this server signed it, or it was signed by a server holding a different key.",
+                "valid": false
+            }
+        ],
+        "isValid": false,
+        "verdict": "tampered",
+        "folders": [
+            "anna"
+        ]
+    },
+    "no secret": {
+        "fileId": 7,
+        "fileName": "besluit.pdf",
+        "signatures": [
+            {
+                "signer": "Anna de Vries",
+                "timestamp": "2026-10-01T09:30:00+02:00",
+                "level": "SES",
+                "method": "native",
+                "ip": "10.0.0.7",
+                "status": "unverifiable",
+                "reason": "signing-secret-not-configured",
+                "checked": "nothing",
+                "keyId": null,
+                "means": "This instance holds no signing key, so nothing about this signature can be checked here. It is not evidence that anything is wrong.",
+                "valid": false
+            }
+        ],
+        "isValid": false,
+        "verdict": "unverifiable",
+        "folders": [
+            "anna"
+        ]
+    },
+    "no mac": {
+        "fileId": 7,
+        "fileName": "besluit.pdf",
+        "signatures": [
+            {
+                "signer": "Anna de Vries",
+                "timestamp": "2026-10-01T09:30:00+02:00",
+                "level": "SES",
+                "method": "native",
+                "ip": "10.0.0.7",
+                "status": "unverifiable",
+                "reason": "legacy-assertion-v1",
+                "checked": "nothing",
+                "keyId": null,
+                "means": "This signature predates the current format, whose guarantee covers the signer fields as well. It cannot be checked, which is not the same as being wrong.",
+                "valid": false
+            }
+        ],
+        "isValid": false,
+        "verdict": "unverifiable",
+        "folders": [
+            "anna"
+        ]
+    },
+    "an empty mac": {
+        "fileId": 7,
+        "fileName": "besluit.pdf",
+        "signatures": [
+            {
+                "signer": "Anna de Vries",
+                "timestamp": "2026-10-01T09:30:00+02:00",
+                "level": "SES",
+                "method": "native",
+                "ip": "10.0.0.7",
+                "status": "unverifiable",
+                "reason": "legacy-assertion-v1",
+                "checked": "nothing",
+                "keyId": null,
+                "means": "This signature predates the current format, whose guarantee covers the signer fields as well. It cannot be checked, which is not the same as being wrong.",
+                "valid": false
+            }
+        ],
+        "isValid": false,
+        "verdict": "unverifiable",
+        "folders": [
+            "anna"
+        ]
+    },
+    "a numeric mac": {
+        "fileId": 7,
+        "fileName": "besluit.pdf",
+        "signatures": [
+            {
+                "signer": "Anna de Vries",
+                "timestamp": "2026-10-01T09:30:00+02:00",
+                "level": "SES",
+                "method": "native",
+                "ip": "10.0.0.7",
+                "status": "unverifiable",
+                "reason": "legacy-assertion-v1",
+                "checked": "nothing",
+                "keyId": null,
+                "means": "This signature predates the current format, whose guarantee covers the signer fields as well. It cannot be checked, which is not the same as being wrong.",
+                "valid": false
+            }
+        ],
+        "isValid": false,
+        "verdict": "unverifiable",
+        "folders": [
+            "anna"
+        ]
+    },
+    "a v1 assertion": {
+        "fileId": 7,
+        "fileName": "besluit.pdf",
+        "signatures": [
+            {
+                "signer": "Anna de Vries",
+                "timestamp": "2026-10-01T09:30:00+02:00",
+                "level": "SES",
+                "method": "native",
+                "ip": "10.0.0.7",
+                "status": "unverifiable",
+                "reason": "legacy-assertion-v1",
+                "checked": "nothing",
+                "keyId": null,
+                "means": "This signature predates the current format, whose guarantee covers the signer fields as well. It cannot be checked, which is not the same as being wrong.",
+                "valid": false
+            }
+        ],
+        "isValid": false,
+        "verdict": "unverifiable",
+        "folders": [
+            "anna"
+        ]
+    },
+    "no version": {
+        "fileId": 7,
+        "fileName": "besluit.pdf",
+        "signatures": [
+            {
+                "signer": "Anna de Vries",
+                "timestamp": "2026-10-01T09:30:00+02:00",
+                "level": "SES",
+                "method": "native",
+                "ip": "10.0.0.7",
+                "status": "unverifiable",
+                "reason": "legacy-assertion-v1",
+                "checked": "nothing",
+                "keyId": null,
+                "means": "This signature predates the current format, whose guarantee covers the signer fields as well. It cannot be checked, which is not the same as being wrong.",
+                "valid": false
+            }
+        ],
+        "isValid": false,
+        "verdict": "unverifiable",
+        "folders": [
+            "anna"
+        ]
+    },
+    "a string version": {
+        "fileId": 7,
+        "fileName": "besluit.pdf",
+        "signatures": [
+            {
+                "signer": "Anna de Vries",
+                "timestamp": "2026-10-01T09:30:00+02:00",
+                "level": "SES",
+                "method": "native",
+                "ip": "10.0.0.7",
+                "status": "verified",
+                "reason": "ok",
+                "checked": "the document bytes and the assertion fields",
+                "keyId": "dc556fea563e85ab",
+                "means": "This server produced the document and its bytes have not changed since. It does not prove who the signer is, and it is not a qualified electronic signature.",
+                "valid": true
+            }
+        ],
+        "isValid": true,
+        "verdict": "verified",
+        "folders": [
+            "anna"
+        ]
+    },
+    "a v1 assertion and no secret": {
+        "fileId": 7,
+        "fileName": "besluit.pdf",
+        "signatures": [
+            {
+                "signer": "Anna de Vries",
+                "timestamp": "2026-10-01T09:30:00+02:00",
+                "level": "SES",
+                "method": "native",
+                "ip": "10.0.0.7",
+                "status": "unverifiable",
+                "reason": "legacy-assertion-v1",
+                "checked": "nothing",
+                "keyId": null,
+                "means": "This signature predates the current format, whose guarantee covers the signer fields as well. It cannot be checked, which is not the same as being wrong.",
+                "valid": false
+            }
+        ],
+        "isValid": false,
+        "verdict": "unverifiable",
+        "folders": [
+            "anna"
+        ]
+    },
+    "no mac and no secret": {
+        "fileId": 7,
+        "fileName": "besluit.pdf",
+        "signatures": [
+            {
+                "signer": "Anna de Vries",
+                "timestamp": "2026-10-01T09:30:00+02:00",
+                "level": "SES",
+                "method": "native",
+                "ip": "10.0.0.7",
+                "status": "unverifiable",
+                "reason": "legacy-assertion-v1",
+                "checked": "nothing",
+                "keyId": null,
+                "means": "This signature predates the current format, whose guarantee covers the signer fields as well. It cannot be checked, which is not the same as being wrong.",
+                "valid": false
+            }
+        ],
+        "isValid": false,
+        "verdict": "unverifiable",
+        "folders": [
+            "anna"
+        ]
+    },
+    "the mac in the content": {
+        "fileId": 7,
+        "fileName": "besluit.pdf",
+        "signatures": [
+            {
+                "signer": "Anna de Vries",
+                "timestamp": "2026-10-01T09:30:00+02:00",
+                "level": "SES",
+                "method": "native",
+                "ip": "10.0.0.7",
+                "status": "invalid",
+                "reason": "mac-mismatch",
+                "checked": "the document bytes and the assertion fields",
+                "keyId": "dc556fea563e85ab",
+                "means": "The document or its signature block changed after this server signed it, or it was signed by a server holding a different key.",
+                "valid": false
+            }
+        ],
+        "isValid": false,
+        "verdict": "tampered",
+        "folders": [
+            "anna"
+        ]
+    },
+    "no signature": {
+        "fileId": 7,
+        "fileName": "besluit.pdf",
+        "signatures": [],
+        "isValid": false,
+        "verdict": "unverifiable",
+        "folders": [
+            "anna"
+        ]
+    },
+    "another user asks": {
+        "refused": "File not found: 7",
+        "folders": [
+            "bob"
+        ]
+    }
+}

@@ -281,18 +281,7 @@ class SigningVerificationService implements SigningVerificationServiceInterface 
 	 * @spec openspec/specs/document-signing/spec.md
 	 */
 	private function verifyAssertion(array $assertion, string $pdfContent): array {
-		$mac = $assertion['mac'] ?? '';
-		if (is_string($mac) === false || $mac === '') {
-			// No server-issued MAC present: legacy/malformed, never trusted.
-			return $this->account(status: 'unverifiable', reason: 'legacy-assertion-v1', checked: 'nothing');
-		}
-
-		if ((int)($assertion['v'] ?? 0) !== 2) {
-			// A pre-rebuild (v1) assertion carried a MAC over the content-hash
-			// ONLY — its identity fields were never covered. Reporting it
-			// `verified` would resurrect the #284 forgery for old artifacts;
-			// reporting it `invalid` would mislabel a merely-unverifiable
-			// legacy artifact as tampered. Fail-closed to `unverifiable`.
+		if ($this->isCurrentAssertion(assertion: $assertion) === false) {
 			return $this->account(status: 'unverifiable', reason: 'legacy-assertion-v1', checked: 'nothing');
 		}
 
@@ -302,6 +291,44 @@ class SigningVerificationService implements SigningVerificationServiceInterface 
 			return $this->account(status: 'unverifiable', reason: 'signing-secret-not-configured', checked: 'nothing');
 		}
 
+		$expected = hash_hmac('sha256', $this->macInput(assertion: $assertion, pdfContent: $pdfContent), $secret);
+
+		$checked = 'the document bytes and the assertion fields';
+		if (hash_equals($expected, $assertion['mac']) === false) {
+			return $this->account(status: 'invalid', reason: 'mac-mismatch', checked: $checked, secret: $secret);
+		}
+
+		return $this->account(status: 'verified', reason: 'ok', checked: $checked, secret: $secret);
+	}//end verifyAssertion()
+
+	/**
+	 * Whether an assertion carries a server-issued MAC over its v2 fields.
+	 *
+	 * Without a MAC it is legacy or malformed and never trusted.
+	 * A pre-rebuild (v1) assertion carried a MAC over the content-hash
+	 * ONLY — its identity fields were never covered. Reporting it
+	 * `verified` would resurrect the #284 forgery for old artifacts;
+	 * reporting it `invalid` would mislabel a merely-unverifiable
+	 * legacy artifact as tampered. Fail-closed to `unverifiable`.
+	 *
+	 * @param array<string, mixed> $assertion The decoded assertion.
+	 *
+	 * @return bool True for a non-empty string MAC on a v2 assertion.
+	 */
+	private function isCurrentAssertion(array $assertion): bool {
+		$mac = ($assertion['mac'] ?? '');
+		return is_string($mac) === true && $mac !== '' && (int)($assertion['v'] ?? 0) === 2;
+	}//end isCurrentAssertion()
+
+	/**
+	 * What the MAC of an assertion is computed over: the canonical document hash and the assertion fields.
+	 *
+	 * @param array<string, mixed> $assertion The decoded assertion, with its `mac`.
+	 * @param string $pdfContent The document bytes.
+	 *
+	 * @return string The content hash and the canonical JSON of the fields other than `mac`, on two lines.
+	 */
+	private function macInput(array $assertion, string $pdfContent): string {
 		// Recompute the MAC over the *canonical* form of the document — the
 		// bytes with every `/DocuDesk-Signature(...)` marker payload blanked —
 		// so the self-asserted blob (which carries the mac) cannot cover
@@ -314,8 +341,7 @@ class SigningVerificationService implements SigningVerificationServiceInterface 
 		$canonical = $this->canonicaliseForAssertion(pdfContent: $pdfContent);
 		// Defensive: also strip any literal occurrence of the mac (a no-op on
 		// the canonical form, retained for the finding #284 fail-closed intent).
-		$canonical = $this->stripAssertionMac(pdfContent: $canonical, mac: $mac);
-		$contentHash = hash('sha256', $canonical);
+		$canonical = $this->stripAssertionMac(pdfContent: $canonical, mac: $assertion['mac']);
 
 		// V2: the MAC covers the content-hash AND the canonical-JSON of the
 		// assertion fields (minus `mac` itself) — recompute over BOTH parts so
@@ -323,17 +349,9 @@ class SigningVerificationService implements SigningVerificationServiceInterface 
 		// or a bound portal-identity claim) invalidates the MAC.
 		$assertionWithoutMac = $assertion;
 		unset($assertionWithoutMac['mac']);
-		$payloadCore = $this->canonicalizer->canonicalJson(data: $assertionWithoutMac);
 
-		$expected = hash_hmac('sha256', $contentHash . "\n" . $payloadCore, $secret);
-
-		$checked = 'the document bytes and the assertion fields';
-		if (hash_equals($expected, $mac) === false) {
-			return $this->account(status: 'invalid', reason: 'mac-mismatch', checked: $checked, secret: $secret);
-		}
-
-		return $this->account(status: 'verified', reason: 'ok', checked: $checked, secret: $secret);
-	}//end verifyAssertion()
+		return hash('sha256', $canonical) . "\n" . $this->canonicalizer->canonicalJson(data: $assertionWithoutMac);
+	}//end macInput()
 
 	/**
 	 * Say what was checked, against which key, and what that proves.
