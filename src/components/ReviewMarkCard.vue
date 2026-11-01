@@ -3,11 +3,16 @@
   SPDX-License-Identifier: EUPL-1.2
 -->
 <template>
-	<section class="review-mark" :aria-label="t('filinq', 'Check before anonymising')">
+	<section
+		class="review-mark"
+		:aria-label="t('filinq', 'Check before anonymising')">
 		<h3 class="review-mark__title">
 			{{ t('filinq', 'Check before anonymising') }}
 		</h3>
-		<p class="review-mark__state" :class="{ 'review-mark__state--done': checked }" aria-live="polite">
+		<p
+			class="review-mark__state"
+			:class="{ 'review-mark__state--done': checked }"
+			aria-live="polite">
 			<CheckDecagram v-if="checked" :size="16" aria-hidden="true" />
 			{{ stateLabel }}
 		</p>

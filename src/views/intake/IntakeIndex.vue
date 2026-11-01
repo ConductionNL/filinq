@@ -131,12 +131,7 @@ to a record or rejects it with a reason, and either way it leaves the inbox.
 <script>
 import { CnIndexPage, CnStatusBadge } from '@conduction/nextcloud-vue'
 import { translate as t } from '@nextcloud/l10n'
-import {
-	NcActionButton,
-	NcActions,
-	NcButton,
-	NcNoteCard,
-} from '@nextcloud/vue'
+import { NcActionButton, NcActions, NcButton, NcNoteCard } from '@nextcloud/vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
 import FolderOutline from 'vue-material-design-icons/FolderOutline.vue'
