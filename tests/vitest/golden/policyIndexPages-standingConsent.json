@@ -1,0 +1,1704 @@
+{
+	"initial": {
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 20,
+		"dialogOpen": false,
+		"saving": false,
+		"editing": null,
+		"editingRecord": null,
+		"formError": "",
+		"deleteTarget": null,
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 20
+		},
+		"emptyText": "[No standing publication consents defined.]",
+		"deleteMessage": "[Delete \"[this standing consent]\"? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "entityText",
+				"label": "[Entity]",
+				"sortable": true
+			},
+			{
+				"key": "entityType",
+				"label": "[Type]",
+				"sortable": true
+			},
+			{
+				"key": "matchRules",
+				"label": "[Match rules]"
+			},
+			{
+				"key": "consentMethod",
+				"label": "[Method]",
+				"sortable": true
+			},
+			{
+				"key": "validUntil",
+				"label": "[Valid until]",
+				"sortable": true
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"mounted": {
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 20,
+		"dialogOpen": false,
+		"saving": false,
+		"editing": null,
+		"editingRecord": null,
+		"formError": "",
+		"deleteTarget": null,
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 20
+		},
+		"emptyText": "[No standing publication consents defined.]",
+		"deleteMessage": "[Delete \"[this standing consent]\"? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "entityText",
+				"label": "[Entity]",
+				"sortable": true
+			},
+			{
+				"key": "entityType",
+				"label": "[Type]",
+				"sortable": true
+			},
+			{
+				"key": "matchRules",
+				"label": "[Match rules]"
+			},
+			{
+				"key": "consentMethod",
+				"label": "[Method]",
+				"sortable": true
+			},
+			{
+				"key": "validUntil",
+				"label": "[Valid until]",
+				"sortable": true
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [
+			[
+				"standingConsent",
+				"fetchStandingConsents"
+			]
+		],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"formatMatchRules": [
+		"bsn:123, exact:Jan",
+		"-",
+		"-",
+		"-"
+	],
+	"refresh": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 20,
+		"dialogOpen": false,
+		"saving": false,
+		"editing": null,
+		"editingRecord": null,
+		"formError": "",
+		"deleteTarget": null,
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 20
+		},
+		"emptyText": "[No standing publication consents defined.]",
+		"deleteMessage": "[Delete \"[this standing consent]\"? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "entityText",
+				"label": "[Entity]",
+				"sortable": true
+			},
+			{
+				"key": "entityType",
+				"label": "[Type]",
+				"sortable": true
+			},
+			{
+				"key": "matchRules",
+				"label": "[Match rules]"
+			},
+			{
+				"key": "consentMethod",
+				"label": "[Method]",
+				"sortable": true
+			},
+			{
+				"key": "validUntil",
+				"label": "[Valid until]",
+				"sortable": true
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [
+			[
+				"standingConsent",
+				"fetchStandingConsents"
+			]
+		],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"page3": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 3,
+		"pageSize": 20,
+		"dialogOpen": false,
+		"saving": false,
+		"editing": null,
+		"editingRecord": null,
+		"formError": "",
+		"deleteTarget": null,
+		"deleting": false,
+		"paginationData": {
+			"page": 3,
+			"pages": 1,
+			"total": 3,
+			"limit": 20
+		},
+		"emptyText": "[No standing publication consents defined.]",
+		"deleteMessage": "[Delete \"[this standing consent]\"? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "entityText",
+				"label": "[Entity]",
+				"sortable": true
+			},
+			{
+				"key": "entityType",
+				"label": "[Type]",
+				"sortable": true
+			},
+			{
+				"key": "matchRules",
+				"label": "[Match rules]"
+			},
+			{
+				"key": "consentMethod",
+				"label": "[Method]",
+				"sortable": true
+			},
+			{
+				"key": "validUntil",
+				"label": "[Valid until]",
+				"sortable": true
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"size50": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 50,
+		"dialogOpen": false,
+		"saving": false,
+		"editing": null,
+		"editingRecord": null,
+		"formError": "",
+		"deleteTarget": null,
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 50
+		},
+		"emptyText": "[No standing publication consents defined.]",
+		"deleteMessage": "[Delete \"[this standing consent]\"? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "entityText",
+				"label": "[Entity]",
+				"sortable": true
+			},
+			{
+				"key": "entityType",
+				"label": "[Type]",
+				"sortable": true
+			},
+			{
+				"key": "matchRules",
+				"label": "[Match rules]"
+			},
+			{
+				"key": "consentMethod",
+				"label": "[Method]",
+				"sortable": true
+			},
+			{
+				"key": "validUntil",
+				"label": "[Valid until]",
+				"sortable": true
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"create": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 50,
+		"dialogOpen": true,
+		"saving": false,
+		"editing": null,
+		"editingRecord": null,
+		"formError": "",
+		"deleteTarget": null,
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 50
+		},
+		"emptyText": "[No standing publication consents defined.]",
+		"deleteMessage": "[Delete \"[this standing consent]\"? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "entityText",
+				"label": "[Entity]",
+				"sortable": true
+			},
+			{
+				"key": "entityType",
+				"label": "[Type]",
+				"sortable": true
+			},
+			{
+				"key": "matchRules",
+				"label": "[Match rules]"
+			},
+			{
+				"key": "consentMethod",
+				"label": "[Method]",
+				"sortable": true
+			},
+			{
+				"key": "validUntil",
+				"label": "[Valid until]",
+				"sortable": true
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"submitCreate": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 50,
+		"dialogOpen": false,
+		"saving": false,
+		"editing": null,
+		"editingRecord": null,
+		"formError": "",
+		"deleteTarget": null,
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 50
+		},
+		"emptyText": "[No standing publication consents defined.]",
+		"deleteMessage": "[Delete \"[this standing consent]\"? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "entityText",
+				"label": "[Entity]",
+				"sortable": true
+			},
+			{
+				"key": "entityType",
+				"label": "[Type]",
+				"sortable": true
+			},
+			{
+				"key": "matchRules",
+				"label": "[Match rules]"
+			},
+			{
+				"key": "consentMethod",
+				"label": "[Method]",
+				"sortable": true
+			},
+			{
+				"key": "validUntil",
+				"label": "[Valid until]",
+				"sortable": true
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [
+			[
+				"standingConsent",
+				"createStandingConsent",
+				{
+					"a": 1
+				}
+			]
+		],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"submitCreateDialog": "(no method)",
+	"editFull": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 50,
+		"dialogOpen": true,
+		"saving": false,
+		"editing": "self-1",
+		"editingRecord": {
+			"entityText": "Jan",
+			"entityType": "PERSON",
+			"consentMethod": "",
+			"consentDocument": "",
+			"consentScope": "",
+			"legalBasis": "",
+			"validFrom": "",
+			"validUntil": "",
+			"active": false,
+			"matchRules": [
+				{
+					"type": "bsn",
+					"value": "123"
+				},
+				{
+					"type": "exact",
+					"value": "Jan"
+				}
+			],
+			"consentStatus": "consent_given",
+			"publicationDecision": "publish_with_consent",
+			"notificationStatus": "skipped"
+		},
+		"formError": "",
+		"deleteTarget": null,
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 50
+		},
+		"emptyText": "[No standing publication consents defined.]",
+		"deleteMessage": "[Delete \"[this standing consent]\"? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "entityText",
+				"label": "[Entity]",
+				"sortable": true
+			},
+			{
+				"key": "entityType",
+				"label": "[Type]",
+				"sortable": true
+			},
+			{
+				"key": "matchRules",
+				"label": "[Match rules]"
+			},
+			{
+				"key": "consentMethod",
+				"label": "[Method]",
+				"sortable": true
+			},
+			{
+				"key": "validUntil",
+				"label": "[Valid until]",
+				"sortable": true
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"submitUpdate": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 50,
+		"dialogOpen": false,
+		"saving": false,
+		"editing": "self-1",
+		"editingRecord": {
+			"entityText": "Jan",
+			"entityType": "PERSON",
+			"consentMethod": "",
+			"consentDocument": "",
+			"consentScope": "",
+			"legalBasis": "",
+			"validFrom": "",
+			"validUntil": "",
+			"active": false,
+			"matchRules": [
+				{
+					"type": "bsn",
+					"value": "123"
+				},
+				{
+					"type": "exact",
+					"value": "Jan"
+				}
+			],
+			"consentStatus": "consent_given",
+			"publicationDecision": "publish_with_consent",
+			"notificationStatus": "skipped"
+		},
+		"formError": "",
+		"deleteTarget": null,
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 50
+		},
+		"emptyText": "[No standing publication consents defined.]",
+		"deleteMessage": "[Delete \"[this standing consent]\"? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "entityText",
+				"label": "[Entity]",
+				"sortable": true
+			},
+			{
+				"key": "entityType",
+				"label": "[Type]",
+				"sortable": true
+			},
+			{
+				"key": "matchRules",
+				"label": "[Match rules]"
+			},
+			{
+				"key": "consentMethod",
+				"label": "[Method]",
+				"sortable": true
+			},
+			{
+				"key": "validUntil",
+				"label": "[Valid until]",
+				"sortable": true
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [
+			[
+				"standingConsent",
+				"updateStandingConsent",
+				"self-1",
+				{
+					"a": 2
+				}
+			]
+		],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"editEmpty": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 50,
+		"dialogOpen": true,
+		"saving": false,
+		"editing": "uuid-2",
+		"editingRecord": {
+			"entityText": "",
+			"entityType": "PERSON",
+			"consentMethod": "",
+			"consentDocument": "",
+			"consentScope": "",
+			"legalBasis": "",
+			"validFrom": "",
+			"validUntil": "",
+			"active": true,
+			"matchRules": [],
+			"consentStatus": "consent_given",
+			"publicationDecision": "publish_with_consent",
+			"notificationStatus": "skipped"
+		},
+		"formError": "",
+		"deleteTarget": null,
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 50
+		},
+		"emptyText": "[No standing publication consents defined.]",
+		"deleteMessage": "[Delete \"[this standing consent]\"? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "entityText",
+				"label": "[Entity]",
+				"sortable": true
+			},
+			{
+				"key": "entityType",
+				"label": "[Type]",
+				"sortable": true
+			},
+			{
+				"key": "matchRules",
+				"label": "[Match rules]"
+			},
+			{
+				"key": "consentMethod",
+				"label": "[Method]",
+				"sortable": true
+			},
+			{
+				"key": "validUntil",
+				"label": "[Valid until]",
+				"sortable": true
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"failResponse": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 50,
+		"dialogOpen": true,
+		"saving": false,
+		"editing": "uuid-2",
+		"editingRecord": {
+			"entityText": "",
+			"entityType": "PERSON",
+			"consentMethod": "",
+			"consentDocument": "",
+			"consentScope": "",
+			"legalBasis": "",
+			"validFrom": "",
+			"validUntil": "",
+			"active": true,
+			"matchRules": [],
+			"consentStatus": "consent_given",
+			"publicationDecision": "publish_with_consent",
+			"notificationStatus": "skipped"
+		},
+		"formError": "server says no",
+		"deleteTarget": null,
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 50
+		},
+		"emptyText": "[No standing publication consents defined.]",
+		"deleteMessage": "[Delete \"[this standing consent]\"? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "entityText",
+				"label": "[Entity]",
+				"sortable": true
+			},
+			{
+				"key": "entityType",
+				"label": "[Type]",
+				"sortable": true
+			},
+			{
+				"key": "matchRules",
+				"label": "[Match rules]"
+			},
+			{
+				"key": "consentMethod",
+				"label": "[Method]",
+				"sortable": true
+			},
+			{
+				"key": "validUntil",
+				"label": "[Valid until]",
+				"sortable": true
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [
+			[
+				"standingConsent",
+				"updateStandingConsent",
+				"uuid-2",
+				{
+					"a": 3
+				}
+			]
+		],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"failMessage": "(no method)",
+	"failBare": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 50,
+		"dialogOpen": true,
+		"saving": false,
+		"editing": "uuid-2",
+		"editingRecord": {
+			"entityText": "",
+			"entityType": "PERSON",
+			"consentMethod": "",
+			"consentDocument": "",
+			"consentScope": "",
+			"legalBasis": "",
+			"validFrom": "",
+			"validUntil": "",
+			"active": true,
+			"matchRules": [],
+			"consentStatus": "consent_given",
+			"publicationDecision": "publish_with_consent",
+			"notificationStatus": "skipped"
+		},
+		"formError": "[Save failed]",
+		"deleteTarget": null,
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 50
+		},
+		"emptyText": "[No standing publication consents defined.]",
+		"deleteMessage": "[Delete \"[this standing consent]\"? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "entityText",
+				"label": "[Entity]",
+				"sortable": true
+			},
+			{
+				"key": "entityType",
+				"label": "[Type]",
+				"sortable": true
+			},
+			{
+				"key": "matchRules",
+				"label": "[Match rules]"
+			},
+			{
+				"key": "consentMethod",
+				"label": "[Method]",
+				"sortable": true
+			},
+			{
+				"key": "validUntil",
+				"label": "[Valid until]",
+				"sortable": true
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [
+			[
+				"standingConsent",
+				"updateStandingConsent",
+				"uuid-2",
+				{
+					"a": 4
+				}
+			]
+		],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"createAfterFail": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 50,
+		"dialogOpen": true,
+		"saving": false,
+		"editing": null,
+		"editingRecord": null,
+		"formError": "",
+		"deleteTarget": null,
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 50
+		},
+		"emptyText": "[No standing publication consents defined.]",
+		"deleteMessage": "[Delete \"[this standing consent]\"? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "entityText",
+				"label": "[Entity]",
+				"sortable": true
+			},
+			{
+				"key": "entityType",
+				"label": "[Type]",
+				"sortable": true
+			},
+			{
+				"key": "matchRules",
+				"label": "[Match rules]"
+			},
+			{
+				"key": "consentMethod",
+				"label": "[Method]",
+				"sortable": true
+			},
+			{
+				"key": "validUntil",
+				"label": "[Valid until]",
+				"sortable": true
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"editById": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 50,
+		"dialogOpen": true,
+		"saving": false,
+		"editing": "id-3",
+		"editingRecord": {
+			"entityText": "",
+			"entityType": "PERSON",
+			"consentMethod": "",
+			"consentDocument": "",
+			"consentScope": "",
+			"legalBasis": "",
+			"validFrom": "",
+			"validUntil": "",
+			"active": true,
+			"matchRules": [],
+			"consentStatus": "objection_received",
+			"publicationDecision": "publish_with_consent",
+			"notificationStatus": "skipped"
+		},
+		"formError": "",
+		"deleteTarget": null,
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 50
+		},
+		"emptyText": "[No standing publication consents defined.]",
+		"deleteMessage": "[Delete \"[this standing consent]\"? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "entityText",
+				"label": "[Entity]",
+				"sortable": true
+			},
+			{
+				"key": "entityType",
+				"label": "[Type]",
+				"sortable": true
+			},
+			{
+				"key": "matchRules",
+				"label": "[Match rules]"
+			},
+			{
+				"key": "consentMethod",
+				"label": "[Method]",
+				"sortable": true
+			},
+			{
+				"key": "validUntil",
+				"label": "[Valid until]",
+				"sortable": true
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"deleteNone": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 50,
+		"dialogOpen": true,
+		"saving": false,
+		"editing": "id-3",
+		"editingRecord": {
+			"entityText": "",
+			"entityType": "PERSON",
+			"consentMethod": "",
+			"consentDocument": "",
+			"consentScope": "",
+			"legalBasis": "",
+			"validFrom": "",
+			"validUntil": "",
+			"active": true,
+			"matchRules": [],
+			"consentStatus": "objection_received",
+			"publicationDecision": "publish_with_consent",
+			"notificationStatus": "skipped"
+		},
+		"formError": "",
+		"deleteTarget": null,
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 50
+		},
+		"emptyText": "[No standing publication consents defined.]",
+		"deleteMessage": "[Delete \"[this standing consent]\"? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "entityText",
+				"label": "[Entity]",
+				"sortable": true
+			},
+			{
+				"key": "entityType",
+				"label": "[Type]",
+				"sortable": true
+			},
+			{
+				"key": "matchRules",
+				"label": "[Match rules]"
+			},
+			{
+				"key": "consentMethod",
+				"label": "[Method]",
+				"sortable": true
+			},
+			{
+				"key": "validUntil",
+				"label": "[Valid until]",
+				"sortable": true
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"confirm": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 50,
+		"dialogOpen": true,
+		"saving": false,
+		"editing": "id-3",
+		"editingRecord": {
+			"entityText": "",
+			"entityType": "PERSON",
+			"consentMethod": "",
+			"consentDocument": "",
+			"consentScope": "",
+			"legalBasis": "",
+			"validFrom": "",
+			"validUntil": "",
+			"active": true,
+			"matchRules": [],
+			"consentStatus": "objection_received",
+			"publicationDecision": "publish_with_consent",
+			"notificationStatus": "skipped"
+		},
+		"formError": "",
+		"deleteTarget": {
+			"@self": {
+				"id": "self-1"
+			},
+			"id": "id-1",
+			"entityText": "Jan",
+			"primaryName": "Jan",
+			"label": "Dict",
+			"matchRules": [
+				{
+					"type": "bsn",
+					"value": "123",
+					"extra": true
+				},
+				{
+					"type": "exact",
+					"value": "Jan"
+				}
+			],
+			"active": false,
+			"severity": "high",
+			"scope": "document"
+		},
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 50
+		},
+		"emptyText": "[No standing publication consents defined.]",
+		"deleteMessage": "[Delete \"Jan\"? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "entityText",
+				"label": "[Entity]",
+				"sortable": true
+			},
+			{
+				"key": "entityType",
+				"label": "[Type]",
+				"sortable": true
+			},
+			{
+				"key": "matchRules",
+				"label": "[Match rules]"
+			},
+			{
+				"key": "consentMethod",
+				"label": "[Method]",
+				"sortable": true
+			},
+			{
+				"key": "validUntil",
+				"label": "[Valid until]",
+				"sortable": true
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"cancel": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 50,
+		"dialogOpen": true,
+		"saving": false,
+		"editing": "id-3",
+		"editingRecord": {
+			"entityText": "",
+			"entityType": "PERSON",
+			"consentMethod": "",
+			"consentDocument": "",
+			"consentScope": "",
+			"legalBasis": "",
+			"validFrom": "",
+			"validUntil": "",
+			"active": true,
+			"matchRules": [],
+			"consentStatus": "objection_received",
+			"publicationDecision": "publish_with_consent",
+			"notificationStatus": "skipped"
+		},
+		"formError": "",
+		"deleteTarget": null,
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 50
+		},
+		"emptyText": "[No standing publication consents defined.]",
+		"deleteMessage": "[Delete \"[this standing consent]\"? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "entityText",
+				"label": "[Entity]",
+				"sortable": true
+			},
+			{
+				"key": "entityType",
+				"label": "[Type]",
+				"sortable": true
+			},
+			{
+				"key": "matchRules",
+				"label": "[Match rules]"
+			},
+			{
+				"key": "consentMethod",
+				"label": "[Method]",
+				"sortable": true
+			},
+			{
+				"key": "validUntil",
+				"label": "[Valid until]",
+				"sortable": true
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"confirmUuid": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 50,
+		"dialogOpen": true,
+		"saving": false,
+		"editing": "id-3",
+		"editingRecord": {
+			"entityText": "",
+			"entityType": "PERSON",
+			"consentMethod": "",
+			"consentDocument": "",
+			"consentScope": "",
+			"legalBasis": "",
+			"validFrom": "",
+			"validUntil": "",
+			"active": true,
+			"matchRules": [],
+			"consentStatus": "objection_received",
+			"publicationDecision": "publish_with_consent",
+			"notificationStatus": "skipped"
+		},
+		"formError": "",
+		"deleteTarget": {
+			"uuid": "uuid-2",
+			"matchRules": "not-an-array",
+			"scope": "entity"
+		},
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 50
+		},
+		"emptyText": "[No standing publication consents defined.]",
+		"deleteMessage": "[Delete \"[this standing consent]\"? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "entityText",
+				"label": "[Entity]",
+				"sortable": true
+			},
+			{
+				"key": "entityType",
+				"label": "[Type]",
+				"sortable": true
+			},
+			{
+				"key": "matchRules",
+				"label": "[Match rules]"
+			},
+			{
+				"key": "consentMethod",
+				"label": "[Method]",
+				"sortable": true
+			},
+			{
+				"key": "validUntil",
+				"label": "[Valid until]",
+				"sortable": true
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"deleteOk": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 50,
+		"dialogOpen": true,
+		"saving": false,
+		"editing": "id-3",
+		"editingRecord": {
+			"entityText": "",
+			"entityType": "PERSON",
+			"consentMethod": "",
+			"consentDocument": "",
+			"consentScope": "",
+			"legalBasis": "",
+			"validFrom": "",
+			"validUntil": "",
+			"active": true,
+			"matchRules": [],
+			"consentStatus": "objection_received",
+			"publicationDecision": "publish_with_consent",
+			"notificationStatus": "skipped"
+		},
+		"formError": "",
+		"deleteTarget": null,
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 50
+		},
+		"emptyText": "[No standing publication consents defined.]",
+		"deleteMessage": "[Delete \"[this standing consent]\"? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "entityText",
+				"label": "[Entity]",
+				"sortable": true
+			},
+			{
+				"key": "entityType",
+				"label": "[Type]",
+				"sortable": true
+			},
+			{
+				"key": "matchRules",
+				"label": "[Match rules]"
+			},
+			{
+				"key": "consentMethod",
+				"label": "[Method]",
+				"sortable": true
+			},
+			{
+				"key": "validUntil",
+				"label": "[Valid until]",
+				"sortable": true
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [
+			[
+				"standingConsent",
+				"deleteStandingConsent",
+				"uuid-2"
+			]
+		],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"confirmSelf": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 50,
+		"dialogOpen": true,
+		"saving": false,
+		"editing": "id-3",
+		"editingRecord": {
+			"entityText": "",
+			"entityType": "PERSON",
+			"consentMethod": "",
+			"consentDocument": "",
+			"consentScope": "",
+			"legalBasis": "",
+			"validFrom": "",
+			"validUntil": "",
+			"active": true,
+			"matchRules": [],
+			"consentStatus": "objection_received",
+			"publicationDecision": "publish_with_consent",
+			"notificationStatus": "skipped"
+		},
+		"formError": "",
+		"deleteTarget": {
+			"@self": {
+				"id": "self-1"
+			},
+			"id": "id-1",
+			"entityText": "Jan",
+			"primaryName": "Jan",
+			"label": "Dict",
+			"matchRules": [
+				{
+					"type": "bsn",
+					"value": "123",
+					"extra": true
+				},
+				{
+					"type": "exact",
+					"value": "Jan"
+				}
+			],
+			"active": false,
+			"severity": "high",
+			"scope": "document"
+		},
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 50
+		},
+		"emptyText": "[No standing publication consents defined.]",
+		"deleteMessage": "[Delete \"Jan\"? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "entityText",
+				"label": "[Entity]",
+				"sortable": true
+			},
+			{
+				"key": "entityType",
+				"label": "[Type]",
+				"sortable": true
+			},
+			{
+				"key": "matchRules",
+				"label": "[Match rules]"
+			},
+			{
+				"key": "consentMethod",
+				"label": "[Method]",
+				"sortable": true
+			},
+			{
+				"key": "validUntil",
+				"label": "[Valid until]",
+				"sortable": true
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"deleteSelf": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 50,
+		"dialogOpen": true,
+		"saving": false,
+		"editing": "id-3",
+		"editingRecord": {
+			"entityText": "",
+			"entityType": "PERSON",
+			"consentMethod": "",
+			"consentDocument": "",
+			"consentScope": "",
+			"legalBasis": "",
+			"validFrom": "",
+			"validUntil": "",
+			"active": true,
+			"matchRules": [],
+			"consentStatus": "objection_received",
+			"publicationDecision": "publish_with_consent",
+			"notificationStatus": "skipped"
+		},
+		"formError": "",
+		"deleteTarget": null,
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 50
+		},
+		"emptyText": "[No standing publication consents defined.]",
+		"deleteMessage": "[Delete \"[this standing consent]\"? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "entityText",
+				"label": "[Entity]",
+				"sortable": true
+			},
+			{
+				"key": "entityType",
+				"label": "[Type]",
+				"sortable": true
+			},
+			{
+				"key": "matchRules",
+				"label": "[Match rules]"
+			},
+			{
+				"key": "consentMethod",
+				"label": "[Method]",
+				"sortable": true
+			},
+			{
+				"key": "validUntil",
+				"label": "[Valid until]",
+				"sortable": true
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [
+			[
+				"standingConsent",
+				"deleteStandingConsent",
+				"self-1"
+			]
+		],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"confirmAgain": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 50,
+		"dialogOpen": true,
+		"saving": false,
+		"editing": "id-3",
+		"editingRecord": {
+			"entityText": "",
+			"entityType": "PERSON",
+			"consentMethod": "",
+			"consentDocument": "",
+			"consentScope": "",
+			"legalBasis": "",
+			"validFrom": "",
+			"validUntil": "",
+			"active": true,
+			"matchRules": [],
+			"consentStatus": "objection_received",
+			"publicationDecision": "publish_with_consent",
+			"notificationStatus": "skipped"
+		},
+		"formError": "",
+		"deleteTarget": {
+			"id": "id-3",
+			"consentStatus": "objection_received"
+		},
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 50
+		},
+		"emptyText": "[No standing publication consents defined.]",
+		"deleteMessage": "[Delete \"[this standing consent]\"? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "entityText",
+				"label": "[Entity]",
+				"sortable": true
+			},
+			{
+				"key": "entityType",
+				"label": "[Type]",
+				"sortable": true
+			},
+			{
+				"key": "matchRules",
+				"label": "[Match rules]"
+			},
+			{
+				"key": "consentMethod",
+				"label": "[Method]",
+				"sortable": true
+			},
+			{
+				"key": "validUntil",
+				"label": "[Valid until]",
+				"sortable": true
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"deleteFail": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 50,
+		"dialogOpen": true,
+		"saving": false,
+		"editing": "id-3",
+		"editingRecord": {
+			"entityText": "",
+			"entityType": "PERSON",
+			"consentMethod": "",
+			"consentDocument": "",
+			"consentScope": "",
+			"legalBasis": "",
+			"validFrom": "",
+			"validUntil": "",
+			"active": true,
+			"matchRules": [],
+			"consentStatus": "objection_received",
+			"publicationDecision": "publish_with_consent",
+			"notificationStatus": "skipped"
+		},
+		"formError": "",
+		"deleteTarget": {
+			"id": "id-3",
+			"consentStatus": "objection_received"
+		},
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 50
+		},
+		"emptyText": "[No standing publication consents defined.]",
+		"deleteMessage": "[Delete \"[this standing consent]\"? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "entityText",
+				"label": "[Entity]",
+				"sortable": true
+			},
+			{
+				"key": "entityType",
+				"label": "[Type]",
+				"sortable": true
+			},
+			{
+				"key": "matchRules",
+				"label": "[Match rules]"
+			},
+			{
+				"key": "consentMethod",
+				"label": "[Method]",
+				"sortable": true
+			},
+			{
+				"key": "validUntil",
+				"label": "[Valid until]",
+				"sortable": true
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [
+			[
+				"standingConsent",
+				"deleteStandingConsent",
+				"id-3"
+			]
+		],
+		"emitted": [],
+		"pushed": [],
+		"errors": [
+			[
+				"Failed to delete standing consent:",
+				"delete refused"
+			]
+		]
+	},
+	"view": "(no method)",
+	"viewUuid": "(no method)",
+	"viewDict": "(no method)",
+	"emptyWithError": {
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 20,
+		"dialogOpen": false,
+		"saving": false,
+		"editing": null,
+		"editingRecord": null,
+		"formError": "",
+		"deleteTarget": null,
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 0,
+			"total": 0,
+			"limit": 20
+		},
+		"emptyText": "load failed",
+		"deleteMessage": "[Delete \"[this standing consent]\"? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "entityText",
+				"label": "[Entity]",
+				"sortable": true
+			},
+			{
+				"key": "entityType",
+				"label": "[Type]",
+				"sortable": true
+			},
+			{
+				"key": "matchRules",
+				"label": "[Match rules]"
+			},
+			{
+				"key": "consentMethod",
+				"label": "[Method]",
+				"sortable": true
+			},
+			{
+				"key": "validUntil",
+				"label": "[Valid until]",
+				"sortable": true
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	}
+}
