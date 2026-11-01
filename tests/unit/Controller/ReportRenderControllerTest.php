@@ -192,8 +192,7 @@ class ReportRenderControllerTest extends TestCase {
 					'templateSlug' => 'report-card',
 					'tenantId' => 'school-a',
 					'data' => ['leerling' => ['naam' => 'Test']],
-					'options' => ['userId' => 'admin'],
-					'userId' => 'admin',
+					'options' => ['outputQuality' => 'print'],
 				];
 
 				return $values[$key] ?? $default;
@@ -205,7 +204,7 @@ class ReportRenderControllerTest extends TestCase {
 				'report-card',
 				'school-a',
 				['leerling' => ['naam' => 'Test']],
-				['userId' => 'admin']
+				['outputQuality' => 'print']
 			)
 			->willReturn([
 				'documentRef' => '123',
@@ -298,4 +297,43 @@ class ReportRenderControllerTest extends TestCase {
 		$this->assertEquals(2, $result->getData()['count']);
 
 	}//end testRenderBatchReturnsDocumentRefAndCount()
+
+	/**
+	 * A request may not choose whose Files receive the output.
+	 *
+	 * @param string               $endpoint render or renderBatch.
+	 * @param array<string, mixed> $params   The request parameters.
+	 *
+	 * @return void
+	 *
+	 * @dataProvider requestNamedUserProvider
+	 */
+	public function testARequestNamingAStorageUserIsRefused(string $endpoint, array $params): void {
+		$params += ['templateSlug' => 'report-card', 'items' => [['data' => []]]];
+		$this->request->method('getParam')
+			->willReturnCallback(fn (string $key, $default = null) => $params[$key] ?? $default);
+
+		$this->renderService->expects($this->never())->method('render');
+		$this->renderService->expects($this->never())->method('renderBatch');
+
+		$result = $this->controller->$endpoint();
+
+		$this->assertEquals(expected: 400, actual: $result->getStatus());
+
+	}//end testARequestNamingAStorageUserIsRefused()
+
+	/**
+	 * Requests that name a storage user, top-level or inside options.
+	 *
+	 * @return array<string, array{0: string, 1: array<string, mixed>}>
+	 */
+	public static function requestNamedUserProvider(): array {
+		return [
+			'render, top-level'      => ['render', ['userId' => 'alice']],
+			'render, in options'     => ['render', ['options' => ['userId' => 'alice']]],
+			'batch, top-level'       => ['renderBatch', ['userId' => 'alice']],
+			'batch, in options'      => ['renderBatch', ['options' => ['userId' => 'alice']]],
+		];
+
+	}//end requestNamedUserProvider()
 }//end class
