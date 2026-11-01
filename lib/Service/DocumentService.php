@@ -844,60 +844,99 @@ class DocumentService implements DocumentServiceInterface {
 	 * @spec exclude Private helper of generateDocument(); the storing rule is specified there.
 	 */
 	private function storeOutputIfRequested(array $run, array $output): array {
-		$result = [
-			'fileId' => null,
-			'path' => null,
-			'name' => null,
-			'size' => null,
-			'warnings' => $output['warnings'],
-		];
-
 		if ($run['outputMode'] === 'return') {
-			return $result;
+			return $this->storedOutput(stored: [], warnings: $output['warnings']);
 		}
 
-		$options = $run['options'];
-		$userId = (string)($options['userId'] ?? '');
-		if ($userId === '') {
-			throw new Exception(
-				message: 'options.userId is required to store generated documents in Files',
-				code: 400
-			);
-		}
-
-		$targetPath = $this->buildOutputTargetPath(
-			templateId: $run['templateId'],
-			explicitTargetPath: ($options['output']['targetPath'] ?? null),
-			template: $run['template']
-		);
-		$filename = $this->buildOutputFilename(
-			filename: ($options['filename'] ?? 'document'),
-			format: $run['format']
-		);
-
-		try {
-			$stored = $this->storageService->store(
-				userId: $userId,
-				targetPath: $targetPath,
-				filename: $filename,
-				content: $output['content']
-			);
-			$result['fileId'] = $stored['fileId'];
-			$result['path'] = $stored['path'];
-			$result['name'] = $stored['name'];
-			$result['size'] = $stored['size'];
-		} catch (Exception $e) {
-			$isStorageFailure = ($e->getCode() === DocumentStorageService::ERROR_CODE_STORAGE_FAILURE);
-			if ($run['outputMode'] === 'both' && $isStorageFailure === true) {
-				$result['warnings'][] = 'Document generated but could not be stored in Files: ' . $e->getMessage();
-				return $result;
-			}
-
-			throw $e;
-		}//end try
-
-		return $result;
+		return $this->fileOutput(run: $run, output: $output);
 	}//end storeOutputIfRequested()
+
+	/**
+	 * File the rendered bytes for the run's user; mode `both` turns a storage failure into a warning.
+	 *
+	 * @param array<string, mixed> $run The generation run.
+	 * @param array<string, mixed> $output The rendered bytes (`content`) and the warnings collected so far.
+	 *
+	 * @return array{fileId: ?int, path: ?string, name: ?string, size: ?int, warnings: array<int, string>}
+	 *         What was filed, or nulls when a tolerated storage failure left it unfiled.
+	 *
+	 * @throws Exception 400 without a user, or the storage failure when the mode does not tolerate it.
+	 */
+	private function fileOutput(array $run, array $output): array {
+		$target = $this->storeTarget(run: $run);
+		try {
+			$stored = $this->storageService->store(...$target, content: $output['content']);
+		} catch (Exception $e) {
+			$this->rethrowUnlessTolerated(run: $run, failure: $e);
+			$stored = [];
+			$output['warnings'][] = 'Document generated but could not be stored in Files: ' . $e->getMessage();
+		}
+
+		return $this->storedOutput(stored: $stored, warnings: $output['warnings']);
+	}//end fileOutput()
+
+	/**
+	 * Who the bytes are filed for, and where: refused before anything is stored when there is no user.
+	 *
+	 * @param array<string, mixed> $run The generation run: templateId, template, format and options
+	 *                                  (carrying `userId`, `filename` and `output.targetPath`).
+	 *
+	 * @return array{userId: string, targetPath: string, filename: string} The store arguments.
+	 *
+	 * @throws Exception 400 when options.userId is missing or empty.
+	 */
+	private function storeTarget(array $run): array {
+		$userId = (string)($run['options']['userId'] ?? '');
+		if ($userId === '') {
+			throw new Exception(message: 'options.userId is required to store generated documents in Files', code: 400);
+		}
+
+		return [
+			'userId' => $userId,
+			'targetPath' => $this->buildOutputTargetPath(
+				templateId: $run['templateId'],
+				explicitTargetPath: ($run['options']['output']['targetPath'] ?? null),
+				template: $run['template']
+			),
+			'filename' => $this->buildOutputFilename(filename: ($run['options']['filename'] ?? 'document'), format: $run['format']),
+		];
+	}//end storeTarget()
+
+	/**
+	 * Rethrow a storage failure unless mode `both` tolerates it: only a storage failure, never a refused path.
+	 *
+	 * @param array<string, mixed> $run The generation run.
+	 * @param Exception $failure What storing threw.
+	 *
+	 * @return void
+	 *
+	 * @throws Exception The failure, when it is not tolerated.
+	 */
+	private function rethrowUnlessTolerated(array $run, Exception $failure): void {
+		if ($run['outputMode'] === 'both' && $failure->getCode() === DocumentStorageService::ERROR_CODE_STORAGE_FAILURE) {
+			return;
+		}
+
+		throw $failure;
+	}//end rethrowUnlessTolerated()
+
+	/**
+	 * The stored-output shape: the filed refs, or nulls when nothing was filed.
+	 *
+	 * @param array<string, mixed> $stored What the storage service returned, or [].
+	 * @param array<int, string> $warnings The warnings collected so far.
+	 *
+	 * @return array{fileId: ?int, path: ?string, name: ?string, size: ?int, warnings: array<int, string>}
+	 */
+	private function storedOutput(array $stored, array $warnings): array {
+		return [
+			'fileId' => ($stored['fileId'] ?? null),
+			'path' => ($stored['path'] ?? null),
+			'name' => ($stored['name'] ?? null),
+			'size' => ($stored['size'] ?? null),
+			'warnings' => $warnings,
+		];
+	}//end storedOutput()
 
 	/**
 	 * Dispatch an async bulk generation background job.
