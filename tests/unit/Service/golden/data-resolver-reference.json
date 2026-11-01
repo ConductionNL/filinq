@@ -1,0 +1,294 @@
+{
+    "one object with a nested reference": {
+        "result": {
+            "data": {
+                "zaak": {
+                    "id": "11111111-1111-4111-8111-111111111111",
+                    "titel": "Zaak",
+                    "_register": "zaken",
+                    "besluit": {
+                        "id": "22222222-2222-4222-8222-222222222222",
+                        "titel": "Besluit",
+                        "_register": "zaken",
+                        "document": {
+                            "id": "33333333-3333-4333-8333-333333333333",
+                            "titel": "Document",
+                            "_register": "zaken",
+                            "zaak": {
+                                "id": "11111111-1111-4111-8111-111111111111",
+                                "titel": "Zaak",
+                                "_register": "zaken",
+                                "besluit": "22222222-2222-4222-8222-222222222222",
+                                "uuid": "33333333-3333-4333-8333-333333333333"
+                            }
+                        }
+                    },
+                    "uuid": "33333333-3333-4333-8333-333333333333"
+                }
+            },
+            "errors": [],
+            "warnings": []
+        },
+        "calls": [
+            [
+                "11111111-1111-4111-8111-111111111111",
+                "zaken",
+                "zaak"
+            ],
+            [
+                "22222222-2222-4222-8222-222222222222",
+                "zaken",
+                "besluit"
+            ],
+            [
+                "33333333-3333-4333-8333-333333333333",
+                "zaken",
+                "document"
+            ]
+        ],
+        "logs": []
+    },
+    "depth 0 keeps the reference": {
+        "result": {
+            "data": {
+                "zaak": {
+                    "id": "11111111-1111-4111-8111-111111111111",
+                    "titel": "Zaak",
+                    "_register": "zaken",
+                    "besluit": "22222222-2222-4222-8222-222222222222",
+                    "uuid": "33333333-3333-4333-8333-333333333333"
+                }
+            },
+            "errors": [],
+            "warnings": []
+        },
+        "calls": [
+            [
+                "11111111-1111-4111-8111-111111111111",
+                "zaken",
+                "zaak"
+            ]
+        ],
+        "logs": []
+    },
+    "depth 1 stops one level down": {
+        "result": {
+            "data": {
+                "zaak": {
+                    "id": "11111111-1111-4111-8111-111111111111",
+                    "titel": "Zaak",
+                    "_register": "zaken",
+                    "besluit": {
+                        "id": "22222222-2222-4222-8222-222222222222",
+                        "titel": "Besluit",
+                        "_register": "zaken",
+                        "document": "33333333-3333-4333-8333-333333333333"
+                    },
+                    "uuid": "33333333-3333-4333-8333-333333333333"
+                }
+            },
+            "errors": [],
+            "warnings": []
+        },
+        "calls": [
+            [
+                "11111111-1111-4111-8111-111111111111",
+                "zaken",
+                "zaak"
+            ],
+            [
+                "22222222-2222-4222-8222-222222222222",
+                "zaken",
+                "besluit"
+            ]
+        ],
+        "logs": []
+    },
+    "the same object twice": {
+        "result": {
+            "data": {
+                "zaak": {
+                    "id": "11111111-1111-4111-8111-111111111111",
+                    "titel": "Zaak",
+                    "_register": "zaken",
+                    "besluit": {
+                        "id": "22222222-2222-4222-8222-222222222222",
+                        "titel": "Besluit",
+                        "_register": "zaken",
+                        "document": {
+                            "id": "33333333-3333-4333-8333-333333333333",
+                            "titel": "Document",
+                            "_register": "zaken",
+                            "zaak": {
+                                "id": "11111111-1111-4111-8111-111111111111",
+                                "titel": "Zaak",
+                                "_register": "zaken",
+                                "besluit": "22222222-2222-4222-8222-222222222222",
+                                "uuid": "33333333-3333-4333-8333-333333333333"
+                            }
+                        }
+                    },
+                    "uuid": "33333333-3333-4333-8333-333333333333"
+                }
+            },
+            "errors": [],
+            "warnings": []
+        },
+        "calls": [
+            [
+                "11111111-1111-4111-8111-111111111111",
+                "zaken",
+                "zaak"
+            ],
+            [
+                "22222222-2222-4222-8222-222222222222",
+                "zaken",
+                "besluit"
+            ],
+            [
+                "33333333-3333-4333-8333-333333333333",
+                "zaken",
+                "document"
+            ]
+        ],
+        "logs": []
+    },
+    "an object that is not found": {
+        "result": {
+            "data": [],
+            "errors": [
+                {
+                    "index": 0,
+                    "register": "zaken",
+                    "schema": "zaak",
+                    "id": "gone",
+                    "message": "Object not found: register=zaken, schema=zaak, id=gone"
+                }
+            ],
+            "warnings": []
+        },
+        "calls": [
+            [
+                "gone",
+                "zaken",
+                "zaak"
+            ]
+        ],
+        "logs": []
+    },
+    "a plain array answer": {
+        "result": {
+            "data": {
+                "plain": {
+                    "id": "p1",
+                    "titel": "Plat"
+                }
+            },
+            "errors": [],
+            "warnings": []
+        },
+        "calls": [
+            [
+                "p1",
+                "zaken",
+                "plain"
+            ]
+        ],
+        "logs": []
+    },
+    "a failing lookup": {
+        "result": {
+            "data": [],
+            "errors": [
+                {
+                    "index": 0,
+                    "register": "zaken",
+                    "schema": "zaak",
+                    "id": "boom",
+                    "message": "register offline"
+                }
+            ],
+            "warnings": []
+        },
+        "calls": [
+            [
+                "boom",
+                "zaken",
+                "zaak"
+            ]
+        ],
+        "logs": []
+    },
+    "a depth that is not a number": {
+        "result": {
+            "data": {
+                "zaak": {
+                    "id": "11111111-1111-4111-8111-111111111111",
+                    "titel": "Zaak",
+                    "_register": "zaken",
+                    "besluit": "22222222-2222-4222-8222-222222222222",
+                    "uuid": "33333333-3333-4333-8333-333333333333"
+                }
+            },
+            "errors": [],
+            "warnings": []
+        },
+        "calls": [
+            [
+                "11111111-1111-4111-8111-111111111111",
+                "zaken",
+                "zaak"
+            ]
+        ],
+        "logs": []
+    },
+    "the default depth": {
+        "result": {
+            "data": {
+                "zaak": {
+                    "id": "11111111-1111-4111-8111-111111111111",
+                    "titel": "Zaak",
+                    "_register": "zaken",
+                    "besluit": {
+                        "id": "22222222-2222-4222-8222-222222222222",
+                        "titel": "Besluit",
+                        "_register": "zaken",
+                        "document": {
+                            "id": "33333333-3333-4333-8333-333333333333",
+                            "titel": "Document",
+                            "_register": "zaken",
+                            "zaak": {
+                                "id": "11111111-1111-4111-8111-111111111111",
+                                "titel": "Zaak",
+                                "_register": "zaken",
+                                "besluit": "22222222-2222-4222-8222-222222222222",
+                                "uuid": "33333333-3333-4333-8333-333333333333"
+                            }
+                        }
+                    },
+                    "uuid": "33333333-3333-4333-8333-333333333333"
+                }
+            },
+            "errors": [],
+            "warnings": []
+        },
+        "calls": [
+            [
+                "11111111-1111-4111-8111-111111111111",
+                "zaken",
+                "zaak"
+            ],
+            [
+                "22222222-2222-4222-8222-222222222222",
+                "zaken",
+                "besluit"
+            ],
+            [
+                "33333333-3333-4333-8333-333333333333",
+                "zaken",
+                "document"
+            ]
+        ],
+        "logs": []
+    }
+}

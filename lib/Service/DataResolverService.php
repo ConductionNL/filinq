@@ -246,27 +246,7 @@ class DataResolverService {
 			return $this->resolvedCache[$cacheKey];
 		}
 
-		$objectService = $this->getObjectService();
-
-		$result = $objectService->find(
-			id: $ref['id'],
-			register: $ref['register'],
-			schema: $ref['schema']
-		);
-
-		if (empty($result) === true) {
-			throw new Exception(
-				message: "Object not found: register={$ref['register']}, schema={$ref['schema']}, id={$ref['id']}"
-			);
-		}
-
-		$data = $result;
-		if (is_object($result) === true
-			&& method_exists(object_or_class: $result, method: 'jsonSerialize') === true
-		) {
-			$data = $result->jsonSerialize();
-		}
-
+		$data = $this->findReferenced(ref: $ref);
 		$this->resolvedCache[$cacheKey] = $data;
 
 		// Resolve nested references if within depth limit.
@@ -282,6 +262,37 @@ class DataResolverService {
 
 		return $data;
 	}//end resolveReference()
+
+	/**
+	 * The object a reference names, as a plain array.
+	 *
+	 * @param array $ref The reference with register, schema, and id
+	 *
+	 * @return array The object data
+	 *
+	 * @throws Exception If the object is not found
+	 */
+	private function findReferenced(array $ref): array {
+		$result = $this->getObjectService()->find(
+			id: $ref['id'],
+			register: $ref['register'],
+			schema: $ref['schema']
+		);
+
+		if (empty($result) === true) {
+			throw new Exception(
+				message: "Object not found: register={$ref['register']}, schema={$ref['schema']}, id={$ref['id']}"
+			);
+		}
+
+		if (is_object($result) === true
+			&& method_exists(object_or_class: $result, method: 'jsonSerialize') === true
+		) {
+			return $result->jsonSerialize();
+		}
+
+		return $result;
+	}//end findReferenced()
 
 	/**
 	 * Scan object data for nested UUID references and resolve them
