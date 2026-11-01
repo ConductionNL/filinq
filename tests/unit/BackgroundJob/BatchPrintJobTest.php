@@ -34,6 +34,9 @@ use OCA\Filinq\Service\TemplateService;
 use OCA\Filinq\Tests\Unit\Service\PrintJobDoubles;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\IJobList;
+use OCP\IUser;
+use OCP\IUserManager;
+use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
@@ -79,7 +82,7 @@ class BatchPrintJobTest extends TestCase {
 		$created = $service->createBatchJob(request: new PrintJobRequest(templateId: 't'), items: array_fill(0, 12, ['data' => []]), userId: 'u');
 		$this->assertSame('rendering', $created['status']);
 
-		$job = new BatchPrintJob($this->createMock(ITimeFactory::class), $service, $this->createMock(LoggerInterface::class));
+		$job = $this->batchPrintJob(service: $service, session: $this->session(), logger: $this->createMock(LoggerInterface::class));
 		// The QueuedJob stub's execute() does nothing, so run() is called the
 		// way the real QueuedJob::start() calls it.
 		(new \ReflectionMethod($job, 'run'))->invoke($job, $dispatched);
@@ -110,11 +113,124 @@ class BatchPrintJobTest extends TestCase {
 		);
 		$this->rows['j'] = ['uuid' => 'j', 'status' => 'rendering', 'requestedBy' => 'u', 'total' => 1];
 
-		$job = new BatchPrintJob($this->createMock(ITimeFactory::class), $service, $this->createMock(LoggerInterface::class));
+		$job = $this->batchPrintJob(service: $service, session: $this->session(), logger: $this->createMock(LoggerInterface::class));
 		(new \ReflectionMethod($job, 'run'))->invoke($job, ['jobId' => 'j', 'templateId' => 't', 'items' => [['data' => []]], 'options' => []]);
 
 		$this->assertSame('failed', $this->rows['j']['status']);
 		$this->assertSame('Template not found', $this->rows['j']['statusDetails']);
 
 	}//end testAMissingTemplateFailsTheJob()
+
+	/**
+	 * The letters' data is resolved as the user who asked for the job, and the
+	 * session is left as it was found.
+	 *
+	 * @return void
+	 */
+	public function testTheDataIsResolvedAsTheRequester(): void {
+		$session = $this->session();
+		$resolvedAs = [];
+		$resolver = $this->createMock(DataResolverService::class);
+		$resolver->method('resolve')->willReturnCallback(
+			static function () use ($session, &$resolvedAs): array {
+				$resolvedAs[] = $session->getUser()?->getUID();
+				return ['data' => [], 'errors' => [], 'warnings' => []];
+			}
+		);
+		$service = $this->service(resolver: $resolver);
+		$this->rows['j'] = ['uuid' => 'j', 'status' => 'rendering', 'requestedBy' => 'u', 'total' => 2];
+		$items = array_fill(0, 2, ['dataRefs' => [['register' => 'r', 'schema' => 's', 'id' => 'o']]]);
+
+		$job = $this->batchPrintJob(service: $service, session: $session, logger: $this->createMock(LoggerInterface::class));
+		(new \ReflectionMethod($job, 'run'))->invoke($job, ['jobId' => 'j', 'templateId' => 't', 'items' => $items, 'options' => []]);
+
+		$this->assertSame(['u', 'u'], $resolvedAs);
+		$this->assertNull($session->getUser());
+		$this->assertSame('queued', $this->rows['j']['status']);
+
+	}//end testTheDataIsResolvedAsTheRequester()
+
+	/**
+	 * A job whose requester no longer exists resolves nothing and is failed.
+	 *
+	 * @return void
+	 */
+	public function testAJobWithoutAKnownRequesterIsNotRendered(): void {
+		$resolver = $this->createMock(DataResolverService::class);
+		$resolver->expects($this->never())->method('resolve');
+		$service = $this->service(resolver: $resolver);
+		$this->rows['j'] = ['uuid' => 'j', 'status' => 'rendering', 'requestedBy' => 'gone', 'total' => 1];
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())->method('error');
+
+		$job = $this->batchPrintJob(service: $service, session: $this->session(), logger: $logger);
+		(new \ReflectionMethod($job, 'run'))->invoke($job, ['jobId' => 'j', 'templateId' => 't', 'items' => [['dataRefs' => [['register' => 'r', 'schema' => 's', 'id' => 'o']]]], 'options' => []]);
+
+		$this->assertSame([], $this->stored);
+		$this->assertSame('rendering', $this->rows['j']['status']);
+
+	}//end testAJobWithoutAKnownRequesterIsNotRendered()
+
+	/**
+	 * A print job service over the doubles, with a template that loads.
+	 *
+	 * @param DataResolverService $resolver The resolver.
+	 *
+	 * @return PrintJobService The service.
+	 */
+	private function service(DataResolverService $resolver): PrintJobService {
+		$pdf = $this->createMock(PdfService::class);
+		$pdf->method('renderPdf')->willReturn('%PDF');
+		$templates = $this->createMock(TemplateService::class);
+		$templates->method('getTemplate')->willReturn(['id' => 't', 'content' => '']);
+
+		return new PrintJobService(
+			$pdf,
+			$templates,
+			$resolver,
+			$this->printJobRepository(),
+			$this->printJobFileStore(),
+			new JobQueue(jobList: $this->createMock(IJobList::class)),
+			$this->createMock(LoggerInterface::class)
+		);
+
+	}//end service()
+
+	/**
+	 * The background job, with user 'u' known to the user manager.
+	 *
+	 * @param PrintJobService $service The print job service.
+	 * @param IUserSession    $session The session.
+	 * @param LoggerInterface $logger  The logger.
+	 *
+	 * @return BatchPrintJob The job.
+	 */
+	private function batchPrintJob(PrintJobService $service, IUserSession $session, LoggerInterface $logger): BatchPrintJob {
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn('u');
+		$users = $this->createMock(IUserManager::class);
+		$users->method('get')->willReturnCallback(static fn (string $uid): ?IUser => $uid === 'u' ? $user : null);
+
+		return new BatchPrintJob($this->createMock(ITimeFactory::class), $service, $users, $session, $logger);
+
+	}//end batchPrintJob()
+
+	/**
+	 * A session that starts without a user and holds the one it is given.
+	 *
+	 * @return IUserSession The session.
+	 */
+	private function session(): IUserSession {
+		$session = $this->createMock(IUserSession::class);
+		$current = null;
+		$session->method('getUser')->willReturnCallback(static function () use (&$current): ?IUser {
+			return $current;
+		});
+		$session->method('setVolatileActiveUser')->willReturnCallback(static function (?IUser $user) use (&$current): void {
+			$current = $user;
+		});
+
+		return $session;
+
+	}//end session()
 }//end class
