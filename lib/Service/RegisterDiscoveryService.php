@@ -101,29 +101,9 @@ class RegisterDiscoveryService {
 			);
 
 			$rawRegisters = array_map(
-				fn ($register) => $register->jsonSerialize(),
+				fn ($register) => $this->expandSchemas(registerArr: $register->jsonSerialize()),
 				$registers
 			);
-
-			// Expand schema IDs to full schema objects.
-			foreach ($rawRegisters as &$registerArr) {
-				if (isset($registerArr['schemas']) === true && is_array($registerArr['schemas']) === true) {
-					$expanded = [];
-					foreach ($registerArr['schemas'] as $schemaId) {
-						try {
-							$schema = $this->schemaMapper->find(id: $schemaId);
-							$expanded[] = $schema->jsonSerialize();
-						} catch (\Exception $schemaError) {
-							// Orphan schema — retain bare ID for transparency.
-							$expanded[] = $schemaId;
-						}
-					}
-
-					$registerArr['schemas'] = $expanded;
-				}
-			}
-
-			unset($registerArr);
 
 			return array_map([$this, 'filterSchemas'], $rawRegisters);
 		} catch (Throwable $e) {
@@ -146,6 +126,35 @@ class RegisterDiscoveryService {
 		}//end try
 
 	}//end fetchAvailableRegisters()
+
+	/**
+	 * Expand a serialized register's schema IDs to full schema objects.
+	 *
+	 * An orphan schema ID (one the mapper cannot find) is kept as the bare ID.
+	 *
+	 * @param array<string, mixed> $registerArr Serialized register.
+	 *
+	 * @return array<string, mixed> The register with its schemas expanded.
+	 */
+	private function expandSchemas(array $registerArr): array {
+		if (isset($registerArr['schemas']) === false || is_array($registerArr['schemas']) === false) {
+			return $registerArr;
+		}
+
+		$expanded = [];
+		foreach ($registerArr['schemas'] as $schemaId) {
+			try {
+				$expanded[] = $this->schemaMapper->find(id: $schemaId)->jsonSerialize();
+			} catch (\Exception $schemaError) {
+				// Orphan schema — retain bare ID for transparency.
+				$expanded[] = $schemaId;
+			}
+		}
+
+		$registerArr['schemas'] = $expanded;
+
+		return $registerArr;
+	}//end expandSchemas()
 
 	/**
 	 * Strip the `properties` field from each schema in a serialized register

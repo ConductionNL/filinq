@@ -48,7 +48,9 @@ export const useCustomDictionaryStore = defineStore('customDictionary', {
 		 */
 		async fetchCapabilities() {
 			try {
-				const response = await axios.get(generateUrl(`${baseUrl}/capabilities`))
+				const response = await axios.get(
+					generateUrl(`${baseUrl}/capabilities`),
+				)
 				this.canMaintain = response.data?.canMaintain === true
 			} catch {
 				this.canMaintain = false

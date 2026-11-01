@@ -1,0 +1,404 @@
+{
+	"props": {
+		"path": {
+			"type": "String",
+			"required": true
+		},
+		"url": {
+			"type": "String",
+			"default": ""
+		}
+	},
+	"watchers": {
+		"path": {
+			"deep": false,
+			"immediate": true
+		},
+		"url": {
+			"deep": false,
+			"immediate": false
+		},
+		"highlightEntities": {
+			"deep": true,
+			"immediate": false
+		},
+		"pendingValue": {
+			"deep": false,
+			"immediate": false
+		}
+	},
+	"wiring": {
+		"loading": true,
+		"error": null,
+		"html": "",
+		"highlightEntities": [],
+		"pendingValue": "",
+		"isAddMode": false,
+		"calls": [
+			[
+				"load"
+			],
+			[
+				"load"
+			],
+			[
+				"scheduleHighlights"
+			],
+			[
+				"scheduleHighlights"
+			]
+		],
+		"errors": []
+	},
+	"addModeOff": {
+		"loading": true,
+		"error": null,
+		"html": "",
+		"highlightEntities": [
+			{
+				"value": "Jan",
+				"type": "PERSON"
+			}
+		],
+		"pendingValue": "",
+		"isAddMode": false,
+		"calls": [],
+		"errors": []
+	},
+	"addModeOn": {
+		"loading": true,
+		"error": null,
+		"html": "",
+		"highlightEntities": [
+			{
+				"value": "Jan",
+				"type": "PERSON"
+			}
+		],
+		"pendingValue": "sel",
+		"isAddMode": true,
+		"calls": [],
+		"errors": []
+	},
+	"addModeNoSelection": {
+		"loading": true,
+		"error": null,
+		"html": "",
+		"highlightEntities": [
+			{
+				"value": "Jan",
+				"type": "PERSON"
+			}
+		],
+		"pendingValue": "",
+		"isAddMode": true,
+		"calls": [],
+		"errors": []
+	},
+	"captured": {
+		"loading": true,
+		"error": null,
+		"html": "",
+		"highlightEntities": [
+			{
+				"value": "Jan",
+				"type": "PERSON"
+			}
+		],
+		"pendingValue": "",
+		"isAddMode": true,
+		"calls": [
+			[
+				"setSelection",
+				"picked text"
+			]
+		],
+		"errors": []
+	},
+	"capturedNothing": {
+		"loading": true,
+		"error": null,
+		"html": "",
+		"highlightEntities": [
+			{
+				"value": "Jan",
+				"type": "PERSON"
+			}
+		],
+		"pendingValue": "",
+		"isAddMode": true,
+		"calls": [
+			[
+				"setSelection",
+				""
+			]
+		],
+		"errors": []
+	},
+	"initial": {
+		"loading": true,
+		"error": null,
+		"html": "",
+		"highlightEntities": [
+			{
+				"value": "Jan",
+				"type": "PERSON"
+			}
+		],
+		"pendingValue": "sel",
+		"isAddMode": true,
+		"calls": [],
+		"errors": []
+	},
+	"loadedPath": {
+		"loading": false,
+		"error": null,
+		"html": "<p>odf content.xml:string</p>",
+		"highlightEntities": [
+			{
+				"value": "Jan",
+				"type": "PERSON"
+			}
+		],
+		"pendingValue": "sel",
+		"isAddMode": true,
+		"calls": [
+			[
+				"fetchFileAsArrayBuffer",
+				"/doc"
+			],
+			[
+				"jszip",
+				{
+					"bytes": "/doc"
+				}
+			],
+			[
+				"applyDomHighlights",
+				{
+					"el": "content"
+				},
+				[
+					{
+						"value": "Jan",
+						"type": "PERSON"
+					}
+				],
+				"sel"
+			]
+		],
+		"errors": []
+	},
+	"loadedUrl": {
+		"loading": false,
+		"error": null,
+		"html": "<p>odf content.xml:string</p>",
+		"highlightEntities": [
+			{
+				"value": "Jan",
+				"type": "PERSON"
+			}
+		],
+		"pendingValue": "sel",
+		"isAddMode": true,
+		"calls": [
+			[
+				"fetchUrlAsArrayBuffer",
+				"https://x/y"
+			],
+			[
+				"jszip",
+				{
+					"bytes": "https://x/y"
+				}
+			],
+			[
+				"applyDomHighlights",
+				{
+					"el": "content"
+				},
+				[
+					{
+						"value": "Jan",
+						"type": "PERSON"
+					}
+				],
+				"sel"
+			]
+		],
+		"errors": []
+	},
+	"fetchFailed": {
+		"loading": false,
+		"error": "fetch broke",
+		"html": "<p>odf content.xml:string</p>",
+		"highlightEntities": [
+			{
+				"value": "Jan",
+				"type": "PERSON"
+			}
+		],
+		"pendingValue": "sel",
+		"isAddMode": true,
+		"calls": [
+			[
+				"fetchFileAsArrayBuffer",
+				"/doc"
+			]
+		],
+		"errors": [
+			[
+				"[OdtViewer] failed to load odt:",
+				"fetch broke"
+			]
+		]
+	},
+	"fetchFailedBare": {
+		"loading": false,
+		"error": "[Failed to load document]",
+		"html": "<p>odf content.xml:string</p>",
+		"highlightEntities": [
+			{
+				"value": "Jan",
+				"type": "PERSON"
+			}
+		],
+		"pendingValue": "sel",
+		"isAddMode": true,
+		"calls": [
+			[
+				"fetchFileAsArrayBuffer",
+				"/doc"
+			]
+		],
+		"errors": [
+			[
+				"[OdtViewer] failed to load odt:",
+				null
+			]
+		]
+	},
+	"convertFailed": {
+		"loading": false,
+		"error": "convert broke",
+		"html": "<p>odf content.xml:string</p>",
+		"highlightEntities": [
+			{
+				"value": "Jan",
+				"type": "PERSON"
+			}
+		],
+		"pendingValue": "sel",
+		"isAddMode": true,
+		"calls": [
+			[
+				"fetchFileAsArrayBuffer",
+				"/doc"
+			],
+			[
+				"jszip",
+				{
+					"bytes": "/doc"
+				}
+			]
+		],
+		"errors": [
+			[
+				"[OdtViewer] failed to load odt:",
+				"convert broke"
+			]
+		]
+	},
+	"noContent": {
+		"loading": false,
+		"error": "[Not a valid ODT document]",
+		"html": "<p>odf content.xml:string</p>",
+		"highlightEntities": [
+			{
+				"value": "Jan",
+				"type": "PERSON"
+			}
+		],
+		"pendingValue": "sel",
+		"isAddMode": true,
+		"calls": [
+			[
+				"fetchFileAsArrayBuffer",
+				"/doc"
+			],
+			[
+				"jszip",
+				{
+					"bytes": "/doc"
+				}
+			]
+		],
+		"errors": [
+			[
+				"[OdtViewer] failed to load odt:",
+				"[Not a valid ODT document]"
+			]
+		]
+	},
+	"reloaded": {
+		"loading": false,
+		"error": null,
+		"html": "<p>odf content.xml:string</p>",
+		"highlightEntities": [
+			{
+				"value": "Jan",
+				"type": "PERSON"
+			}
+		],
+		"pendingValue": "sel",
+		"isAddMode": true,
+		"calls": [
+			[
+				"fetchFileAsArrayBuffer",
+				"/doc"
+			],
+			[
+				"jszip",
+				{
+					"bytes": "/doc"
+				}
+			],
+			[
+				"applyDomHighlights",
+				{
+					"el": "content"
+				},
+				[
+					{
+						"value": "Jan",
+						"type": "PERSON"
+					}
+				],
+				"sel"
+			]
+		],
+		"errors": []
+	},
+	"unmounted": {
+		"loading": false,
+		"error": null,
+		"html": "<p>odf content.xml:string</p>",
+		"highlightEntities": [
+			{
+				"value": "Jan",
+				"type": "PERSON"
+			}
+		],
+		"pendingValue": "sel",
+		"isAddMode": true,
+		"calls": [
+			[
+				"clearDomHighlights",
+				{
+					"el": "content"
+				}
+			]
+		],
+		"errors": []
+	}
+}

@@ -148,6 +148,29 @@ class PostRegisterReader implements PostRegisterReaderInterface {
 			return [];
 		}
 
+		$open = [];
+		foreach ((array)$this->inboundFor(unitId: $unitId) as $entry) {
+			$entry = $this->plain(row: $entry);
+			if ($entry !== null && $this->isUndischarged(entry: $entry) === true) {
+				$open[] = $entry;
+			}
+		}
+
+		usort($open, [$this, 'oldestFirst']);
+
+		return $open;
+	}//end openPostFor()
+
+	/**
+	 * A unit's inbound registrations, as the register returns them.
+	 *
+	 * @param string $unitId The organisational unit, trimmed.
+	 *
+	 * @return mixed The search result.
+	 *
+	 * @throws Throwable When the register could not be read.
+	 */
+	private function inboundFor(string $unitId): mixed {
 		try {
 			// 🔴 SLUGS GO THROUGH `searchObjectsBySlug`, NEVER `searchObjects`.
 			// Slugs handed to `searchObjects` come back as zero rows and no
@@ -175,31 +198,27 @@ class PostRegisterReader implements PostRegisterReaderInterface {
 			throw $e;
 		}
 
-		$open = [];
-		foreach ((array)$results as $entry) {
-			$entry = $this->plain(row: $entry);
-			if ($entry === null) {
-				continue;
-			}
+		return $results;
+	}//end inboundFor()
 
-			$uuid = trim((string)($entry['id'] ?? $entry['uuid'] ?? ''));
-			if ($uuid === '') {
-				continue;
-			}
-
-			// A failed read raises inside answersFor() rather than reporting "no
-			// answers", and that raise is deliberately not caught here.
-			if ($this->answersFor(inboundUuid: $uuid) !== []) {
-				continue;
-			}
-
-			$open[] = $entry;
+	/**
+	 * Whether an inbound entry has an id and no outbound answer yet.
+	 *
+	 * A failed read raises inside answersFor() rather than reporting "no
+	 * answers", and that raise is deliberately not caught here.
+	 *
+	 * @param array<string, mixed> $entry The plain entry.
+	 *
+	 * @return bool True when the entry is still open.
+	 */
+	private function isUndischarged(array $entry): bool {
+		$uuid = trim((string)($entry['id'] ?? $entry['uuid'] ?? ''));
+		if ($uuid === '') {
+			return false;
 		}
 
-		usort($open, [$this, 'oldestFirst']);
-
-		return $open;
-	}//end openPostFor()
+		return $this->answersFor(inboundUuid: $uuid) === [];
+	}//end isUndischarged()
 
 	/**
 	 * A unit's series, read from the register and accounted for end to end.

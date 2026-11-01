@@ -74,7 +74,10 @@ describe('folder anonymise: the human check per file', () => {
 		axios.post.mockImplementation((url) => {
 			if (url.endsWith('/checked')) {
 				return Promise.resolve({
-					data: { checkedBy: 'ingrid', checkedAt: '2026-10-16T10:00:00+00:00' },
+					data: {
+						checkedBy: 'ingrid',
+						checkedAt: '2026-10-16T10:00:00+00:00',
+					},
 				})
 			}
 			return Promise.resolve({ data: { anonymizedFileId: 99 } })
@@ -126,30 +129,43 @@ describe('folder anonymise: skip decisions go through filinq', () => {
 		seedReview(store)
 		store.entities[0]._decisionSkip = true
 		axios.patch.mockResolvedValue({ data: { status: 'ok' } })
-		axios.post.mockImplementation((url) => Promise.resolve({
-			data: url.endsWith('/checked')
-				? { checkedBy: 'ingrid', checkedAt: '2026-10-16T10:00:00+00:00' }
-				: { anonymizedFileId: 99 },
-		}))
+		axios.post.mockImplementation((url) =>
+			Promise.resolve({
+				data: url.endsWith('/checked')
+					? { checkedBy: 'ingrid', checkedAt: '2026-10-16T10:00:00+00:00' }
+					: { anonymizedFileId: 99 },
+			}),
+		)
 
 		await store.markFileChecked(store.files[0])
 		await store.anonymizeFolder()
 
 		const urls = axios.patch.mock.calls.map(([url]) => url)
 		expect(urls).toEqual(['/apps/filinq/api/anonymization/relations/11'])
-		expect(axios.patch.mock.calls[0][1]).toEqual({ bases: [], skipAnonymization: true })
+		expect(axios.patch.mock.calls[0][1]).toEqual({
+			bases: [],
+			skipAnonymization: true,
+		})
 	})
 
 	it('keeps the refusal of a prohibited skip on the entity', async () => {
 		const store = useFolderAnonymizationStore()
 		seedReview(store)
 		store.entities[0]._decisionSkip = true
-		axios.patch.mockRejectedValue({ response: { data: { error: 'Entity is on the publication prohibition list; skipping is not allowed.' } } })
-		axios.post.mockImplementation((url) => Promise.resolve({
-			data: url.endsWith('/checked')
-				? { checkedBy: 'ingrid', checkedAt: '2026-10-16T10:00:00+00:00' }
-				: { anonymizedFileId: 99 },
-		}))
+		axios.patch.mockRejectedValue({
+			response: {
+				data: {
+					error: 'Entity is on the publication prohibition list; skipping is not allowed.',
+				},
+			},
+		})
+		axios.post.mockImplementation((url) =>
+			Promise.resolve({
+				data: url.endsWith('/checked')
+					? { checkedBy: 'ingrid', checkedAt: '2026-10-16T10:00:00+00:00' }
+					: { anonymizedFileId: 99 },
+			}),
+		)
 
 		await store.markFileChecked(store.files[0])
 		await store.anonymizeFolder()
@@ -168,11 +184,19 @@ function checkAll(store) {
 	const signature = reviewSignature(
 		store.entities
 			.filter((e) => e.included)
-			.map((e) => ({ type: e.type, value: e.value, confidence: e.highestConfidence })),
+			.map((e) => ({
+				type: e.type,
+				value: e.value,
+				confidence: e.highestConfidence,
+			})),
 	)
 	for (const file of store.files) {
 		if (file.status === 'extracted') {
-			file.reviewMark = { checkedBy: 'ingrid', checkedAt: '2026-10-16T10:00:00+00:00', signature }
+			file.reviewMark = {
+				checkedBy: 'ingrid',
+				checkedAt: '2026-10-16T10:00:00+00:00',
+				signature,
+			}
 		}
 	}
 }
@@ -230,7 +254,12 @@ describe('folder anonymise: characterization of the full run', () => {
 		seedReview(store)
 		checkAll(store)
 		axios.post.mockResolvedValue({
-			data: { anonymizedFileId: 99, replacementCount: 4, complete: false, residualCount: 1 },
+			data: {
+				anonymizedFileId: 99,
+				replacementCount: 4,
+				complete: false,
+				residualCount: 1,
+			},
 		})
 
 		await store.anonymizeFolder()
@@ -258,7 +287,11 @@ describe('folder anonymise: characterization of the full run', () => {
 
 		await store.anonymizeFolder()
 
-		expect(store.files[1]).toMatchObject({ replacementCount: 0, complete: true, residualCount: 0 })
+		expect(store.files[1]).toMatchObject({
+			replacementCount: 0,
+			complete: true,
+			residualCount: 0,
+		})
 	})
 
 	it('completes with a warning when some files fail', async () => {
@@ -271,7 +304,10 @@ describe('folder anonymise: characterization of the full run', () => {
 
 		await store.anonymizeFolder()
 
-		expect(store.files[1]).toMatchObject({ status: 'error', anonymizeError: 'Te groot' })
+		expect(store.files[1]).toMatchObject({
+			status: 'error',
+			anonymizeError: 'Te groot',
+		})
 		expect(store.progress).toBe(50)
 		expect(store.batchStatus).toBe('completed')
 		expect(store.error).toBe('Some files failed: Te groot')
@@ -303,8 +339,14 @@ describe('folder anonymise: characterization of the full run', () => {
 		await store.anonymizeFolder()
 
 		expect(axios.patch.mock.calls).toEqual([
-			['/apps/filinq/api/anonymization/relations/11', { bases: ['art-5-1-2-e'], skipAnonymization: false }],
-			['/apps/filinq/api/anonymization/relations/12', { bases: ['art-5-1-2-e'], skipAnonymization: false }],
+			[
+				'/apps/filinq/api/anonymization/relations/11',
+				{ bases: ['art-5-1-2-e'], skipAnonymization: false },
+			],
+			[
+				'/apps/filinq/api/anonymization/relations/12',
+				{ bases: ['art-5-1-2-e'], skipAnonymization: false },
+			],
 		])
 	})
 
@@ -336,13 +378,20 @@ describe('folder anonymise: characterization of the full run', () => {
 		await store.anonymizeFolder()
 
 		expect(axios.patch).not.toHaveBeenCalled()
-		expect(store.entities[0]._patchError).toBe('No relation ids — decisions cannot persist.')
+		expect(store.entities[0]._patchError).toBe(
+			'No relation ids — decisions cannot persist.',
+		)
 	})
 
 	it('patches nothing for an excluded entity or one without a decision', async () => {
 		const store = useFolderAnonymizationStore()
 		seedReview(store)
-		store.entities.push({ ...store.entities[0], value: 'Piet', included: false, _decisionSkip: true })
+		store.entities.push({
+			...store.entities[0],
+			value: 'Piet',
+			included: false,
+			_decisionSkip: true,
+		})
 		checkAll(store)
 		axios.post.mockResolvedValue({ data: { anonymizedFileId: 99 } })
 

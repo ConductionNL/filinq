@@ -12,7 +12,9 @@
 			class="filinq-documents-leaf__state filinq-documents-leaf__state--error">
 			{{ t('filinq', 'The documents could not be loaded') }}
 		</p>
-		<p v-else-if="rows.length === 0 && !carded" class="filinq-documents-leaf__state">
+		<p
+			v-else-if="rows.length === 0 && !carded"
+			class="filinq-documents-leaf__state">
 			{{ t('filinq', 'No documents yet') }}
 		</p>
 		<ul v-else-if="rows.length > 0" class="filinq-documents-leaf__list">
