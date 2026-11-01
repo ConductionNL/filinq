@@ -136,33 +136,44 @@ class DocumentController extends Controller {
 			$params['options']['userId'] = $user->getUID();
 			$params['options']['filename'] = $params['filename'];
 
-			if (array_key_exists('formats', $params['options']) === true && $this->multiFormat !== null) {
-				$result = $this->multiFormat->generate(
-					templateId: $params['templateId'],
-					dataRefs: $params['dataRefs'],
-					options: $params['options']
-				);
-				return new JSONResponse(
-					data: ['outputs' => $result['outputs'], 'metadata' => $result['metadata'], 'warnings' => $result['warnings']],
-					statusCode: Http::STATUS_OK
-				);
-			}
-
-			$result = $this->documentSvc->generateDocument(
-				templateId: $params['templateId'],
-				dataRefs: $params['dataRefs'],
-				options: $params['options']
-			);
-
-			return $this->buildDocumentResponse(
-				result: $result,
-				filename: $params['filename']
-			);
+			return $this->produce(params: $params);
 		} catch (Exception $e) {
 			return $this->handleException(exception: $e);
 		}//end try
 
 	}//end generate()
+
+	/**
+	 * Render the parsed request: several formats through the multi-format producer when it is there, else one document.
+	 *
+	 * @param array{templateId: mixed, dataRefs: array, options: array, filename: mixed} $params The parsed request, options stamped.
+	 *
+	 * @return DataDownloadResponse|JSONResponse The document or its manifest.
+	 *
+	 * @throws Exception When rendering fails.
+	 */
+	private function produce(array $params): DataDownloadResponse|JSONResponse {
+		if (array_key_exists('formats', $params['options']) === true && $this->multiFormat !== null) {
+			$result = $this->multiFormat->generate(
+				templateId: $params['templateId'],
+				dataRefs: $params['dataRefs'],
+				options: $params['options']
+			);
+			return new JSONResponse(
+				data: ['outputs' => $result['outputs'], 'metadata' => $result['metadata'], 'warnings' => $result['warnings']],
+				statusCode: Http::STATUS_OK
+			);
+		}
+
+		$result = $this->documentSvc->generateDocument(
+			templateId: $params['templateId'],
+			dataRefs: $params['dataRefs'],
+			options: $params['options']
+		);
+
+		return $this->buildDocumentResponse(result: $result, filename: $params['filename']);
+
+	}//end produce()
 
 	/**
 	 * Generate an HTML preview of a template without final output.
@@ -292,46 +303,84 @@ class DocumentController extends Controller {
 				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 			}
 
-			$templateId = $this->request->getParam('templateId');
-			$objectIds = $this->request->getParam('objectIds', []);
-			$options = $this->request->getParam('options', []);
-
-			if (empty($templateId) === true) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('templateId is required')],
-					statusCode: Http::STATUS_BAD_REQUEST
-				);
+			$refusal = $this->bulkRefusal();
+			if ($refusal !== null) {
+				return $refusal;
 			}
 
-			if (empty($objectIds) === true || is_array($objectIds) === false) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('objectIds is required and must be an array')],
-					statusCode: Http::STATUS_BAD_REQUEST
-				);
-			}
-
-			if (is_array($options) === false) {
-				$options = [];
-			}
-
+			$options = $this->arrayParam(name: 'options');
 			$options['userId'] = $user->getUID();
 
-			$result = $this->documentSvc->generateBulk(
-				templateId: $templateId,
-				objectIds: $objectIds,
-				options: $options
+			return $this->bulkResponse(
+				result: $this->documentSvc->generateBulk(
+					templateId: $this->request->getParam('templateId'),
+					objectIds: $this->request->getParam('objectIds', []),
+					options: $options
+				)
 			);
-
-			if (isset($result['jobId']) === true) {
-				return new JSONResponse(data: $result, statusCode: Http::STATUS_ACCEPTED);
-			}
-
-			return new JSONResponse(data: $result, statusCode: Http::STATUS_OK);
 		} catch (Exception $e) {
 			return $this->handleException(exception: $e);
 		}//end try
 
 	}//end generateBulk()
+
+	/**
+	 * The 400 answer for a bulk request without a template or without a list of object ids, or null when it has both.
+	 *
+	 * @return JSONResponse|null The refusal.
+	 */
+	private function bulkRefusal(): ?JSONResponse {
+		if (empty($this->request->getParam('templateId')) === true) {
+			return new JSONResponse(
+				data: ['error' => $this->l10n->t('templateId is required')],
+				statusCode: Http::STATUS_BAD_REQUEST
+			);
+		}
+
+		$objectIds = $this->request->getParam('objectIds', []);
+		if (empty($objectIds) === true || is_array($objectIds) === false) {
+			return new JSONResponse(
+				data: ['error' => $this->l10n->t('objectIds is required and must be an array')],
+				statusCode: Http::STATUS_BAD_REQUEST
+			);
+		}
+
+		return null;
+
+	}//end bulkRefusal()
+
+	/**
+	 * Answer a bulk run: 202 when it was queued as a job, else 200.
+	 *
+	 * @param array<string, mixed> $result The bulk service's answer.
+	 *
+	 * @return JSONResponse The response.
+	 */
+	private function bulkResponse(array $result): JSONResponse {
+		if (isset($result['jobId']) === true) {
+			return new JSONResponse(data: $result, statusCode: Http::STATUS_ACCEPTED);
+		}
+
+		return new JSONResponse(data: $result, statusCode: Http::STATUS_OK);
+
+	}//end bulkResponse()
+
+	/**
+	 * A request parameter that must be an array, or an empty array otherwise.
+	 *
+	 * @param string $name The parameter name.
+	 *
+	 * @return array<array-key, mixed> The parameter value.
+	 */
+	private function arrayParam(string $name): array {
+		$value = $this->request->getParam($name, []);
+		if (is_array($value) === false) {
+			return [];
+		}
+
+		return $value;
+
+	}//end arrayParam()
 
 	/**
 	 * Get the status of an async bulk document generation job.
@@ -387,8 +436,8 @@ class DocumentController extends Controller {
 	 */
 	private function parseGenerateParams(): array|JSONResponse {
 		$templateId = $this->request->getParam('templateId');
-		$dataRefs = $this->request->getParam('dataRefs', []);
-		$options = $this->request->getParam('options', []);
+		$dataRefs = $this->arrayParam(name: 'dataRefs');
+		$options = $this->arrayParam(name: 'options');
 		$filename = $this->request->getParam('filename', 'document');
 
 		if (empty($templateId) === true) {
@@ -396,14 +445,6 @@ class DocumentController extends Controller {
 				data: ['error' => $this->l10n->t('templateId is required')],
 				statusCode: Http::STATUS_BAD_REQUEST
 			);
-		}
-
-		if (is_array($dataRefs) === false) {
-			$dataRefs = [];
-		}
-
-		if (is_array($options) === false) {
-			$options = [];
 		}
 
 		return [
