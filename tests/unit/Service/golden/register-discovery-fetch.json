@@ -1,0 +1,235 @@
+{
+    "expanded schemas": {
+        "registers": [
+            {
+                "id": "r1",
+                "schemas": [
+                    {
+                        "id": 1,
+                        "title": "Zaak"
+                    },
+                    {
+                        "id": 2,
+                        "title": "Besluit"
+                    }
+                ]
+            },
+            {
+                "id": "r2",
+                "schemas": []
+            }
+        ],
+        "calls": [
+            [
+                "findAll",
+                [
+                    null,
+                    null,
+                    [],
+                    [],
+                    [],
+                    []
+                ]
+            ],
+            [
+                "find",
+                1
+            ],
+            [
+                "find",
+                2
+            ]
+        ],
+        "logs": []
+    },
+    "an orphan schema": {
+        "registers": [
+            {
+                "id": "r1",
+                "schemas": [
+                    {
+                        "id": 1,
+                        "title": "Zaak"
+                    },
+                    3,
+                    {
+                        "id": 2,
+                        "title": "Besluit"
+                    }
+                ]
+            }
+        ],
+        "calls": [
+            [
+                "findAll",
+                [
+                    null,
+                    null,
+                    [],
+                    [],
+                    [],
+                    []
+                ]
+            ],
+            [
+                "find",
+                1
+            ],
+            [
+                "find",
+                3
+            ],
+            [
+                "find",
+                2
+            ]
+        ],
+        "logs": []
+    },
+    "a schema that errors": {
+        "registers": [],
+        "calls": [
+            [
+                "findAll",
+                [
+                    null,
+                    null,
+                    [],
+                    [],
+                    [],
+                    []
+                ]
+            ],
+            [
+                "find",
+                1
+            ],
+            [
+                "find",
+                4
+            ]
+        ],
+        "logs": [
+            [
+                "warning",
+                "OpenRegister register list failed - using empty registers list",
+                {
+                    "exception": "schema table broken",
+                    "class": "Error"
+                }
+            ]
+        ]
+    },
+    "no schemas key": {
+        "registers": [
+            {
+                "id": "r1"
+            }
+        ],
+        "calls": [
+            [
+                "findAll",
+                [
+                    null,
+                    null,
+                    [],
+                    [],
+                    [],
+                    []
+                ]
+            ]
+        ],
+        "logs": []
+    },
+    "schemas not a list": {
+        "registers": [
+            {
+                "id": "r1",
+                "schemas": "1,2"
+            }
+        ],
+        "calls": [
+            [
+                "findAll",
+                [
+                    null,
+                    null,
+                    [],
+                    [],
+                    [],
+                    []
+                ]
+            ]
+        ],
+        "logs": []
+    },
+    "no registers": {
+        "registers": [],
+        "calls": [
+            [
+                "findAll",
+                [
+                    null,
+                    null,
+                    [],
+                    [],
+                    [],
+                    []
+                ]
+            ]
+        ],
+        "logs": []
+    },
+    "findAll fails": {
+        "registers": [],
+        "calls": [
+            [
+                "findAll",
+                [
+                    null,
+                    null,
+                    [],
+                    [],
+                    [],
+                    []
+                ]
+            ]
+        ],
+        "logs": [
+            [
+                "warning",
+                "OpenRegister register list failed - using empty registers list",
+                {
+                    "exception": "register table gone",
+                    "class": "Exception"
+                }
+            ]
+        ]
+    },
+    "findAll errors": {
+        "registers": [],
+        "calls": [
+            [
+                "findAll",
+                [
+                    null,
+                    null,
+                    [],
+                    [],
+                    [],
+                    []
+                ]
+            ]
+        ],
+        "logs": [
+            [
+                "warning",
+                "OpenRegister register list failed - using empty registers list",
+                {
+                    "exception": "Call to undefined method",
+                    "class": "Error"
+                }
+            ]
+        ]
+    }
+}
