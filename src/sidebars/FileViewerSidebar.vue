@@ -927,7 +927,9 @@ export default {
 				return this.entry.reviewError
 			}
 			if (this.entry?.reviewRequired && !this.entryChecked) {
-				return this.entry.error || t('filinq', 'Check the detected data first')
+				return (
+					this.entry.error || t('filinq', 'Check the detected data first')
+				)
 			}
 			return ''
 		},

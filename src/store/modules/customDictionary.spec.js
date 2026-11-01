@@ -34,7 +34,9 @@ describe('custom dictionary capabilities', () => {
 
 		await store.fetchCapabilities()
 
-		expect(axios.get).toHaveBeenCalledWith('/apps/filinq/api/custom-dictionaries/capabilities')
+		expect(axios.get).toHaveBeenCalledWith(
+			'/apps/filinq/api/custom-dictionaries/capabilities',
+		)
 		expect(store.canMaintain).toBe(true)
 	})
 

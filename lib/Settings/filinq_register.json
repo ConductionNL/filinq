@@ -717,20 +717,26 @@
                         "title": "Tags"
                     },
                     "mergeFields": {
-                        "description": "De velden die het sjabloon invult, met een naam en een herkomst voor mensen: wat een voorbeeld onder Voor je ingevuld toont",
+                        "description": "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you.",
                         "type": "array",
                         "items": {
                             "type": "object",
                             "properties": {
                                 "path": {
+                                    "title": "Path",
+                                    "description": "The field in the template's data, such as client.name.",
                                     "type": "string",
                                     "maxLength": 255
                                 },
                                 "label": {
+                                    "title": "Label",
+                                    "description": "The name people see for this field. When it is empty, the path is shown.",
                                     "type": "string",
                                     "maxLength": 128
                                 },
                                 "source": {
+                                    "title": "Source",
+                                    "description": "Where the value comes from, in words people read, such as from the client details.",
                                     "type": "string",
                                     "maxLength": 255
                                 }
@@ -740,7 +746,7 @@
                             ]
                         },
                         "visible": true,
-                        "title": "Samenvoegvelden"
+                        "title": "Merge fields"
                     },
                     "lockedBy": {
                         "description": "Nextcloud gebruikers-ID van de gebruiker die het template momenteel bewerkt",

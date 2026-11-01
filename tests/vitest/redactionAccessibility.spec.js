@@ -84,7 +84,11 @@ describe('the publication page', () => {
 			new URL('../../src/store/modules/anonymization.js', import.meta.url),
 			'utf8',
 		)
-		expect(store).toContain('applyAnonymizeResult(entry, anonymizeResponse.data)')
-		expect(store).toContain('entry.structurePreservation = data.structurePreservation')
+		expect(store).toContain(
+			'applyAnonymizeResult(entry, anonymizeResponse.data)',
+		)
+		expect(store).toContain(
+			'entry.structurePreservation = data.structurePreservation',
+		)
 	})
 })
