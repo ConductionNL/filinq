@@ -522,4 +522,41 @@ class RenameDutchColumnsTest extends TestCase {
 		$this->assertStringContainsString('1 renamed', $summary);
 		$this->assertStringContainsString('1 back-filled', $summary);
 	}//end testSummaryReportsCounts()
+	/**
+	 * The exact statements and summary for one rename and one back-fill.
+	 *
+	 * @return void
+	 */
+	public function testExactStatementsAndSummary(): void {
+		$a = 'oc_openregister_table_7_1';
+		$b = 'oc_openregister_table_7_2';
+		$c = 'oc_openregister_table_7_3';
+		$step = $this->step([7], [$a, $b, $c], [$a => ['zaak_id'], $b => ['case_id', 'zaak_id'], $c => ['case_id']]);
+		$step->run($this->repairOutput());
+		$this->assertSame(
+			[
+				'ALTER TABLE "oc_openregister_table_7_1" RENAME COLUMN "zaak_id" TO "case_id"',
+				'UPDATE "oc_openregister_table_7_2" SET "case_id" = "zaak_id" WHERE "case_id" IS NULL AND "zaak_id" IS NOT NULL',
+			],
+			$this->executed
+		);
+		$this->assertSame(['RenameDutchColumns: 1 renamed, 1 back-filled, 0 refused, across 3 shard table(s).'], $this->info);
+		$this->assertSame([], $this->warnings);
+	}//end testExactStatementsAndSummary()
+
+	/**
+	 * A failed rename or back-fill is not counted.
+	 *
+	 * @return void
+	 */
+	public function testFailedStatementsAreNotCounted(): void {
+		$a = 'oc_openregister_table_7_1';
+		$b = 'oc_openregister_table_7_2';
+		foreach (['RENAME COLUMN' => '0 renamed, 1 back-filled', 'UPDATE' => '1 renamed, 0 back-filled'] as $failOn => $counts) {
+			$step = $this->step([7], [$a, $b], [$a => ['zaak_id'], $b => ['zaak_id', 'case_id']], failOn: $failOn);
+			$step->run($this->repairOutput());
+			$this->assertSame(['RenameDutchColumns: ' . $counts . ', 0 refused, across 2 shard table(s).'], $this->info, $failOn);
+			$this->assertSame(['RenameDutchColumns: statement failed; leaving the column as it was.'], $this->warnings, $failOn);
+		}
+	}//end testFailedStatementsAreNotCounted()
 }//end class

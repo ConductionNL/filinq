@@ -60,8 +60,8 @@ class PdfController extends Controller {
 	 * @param LoggerInterface $logger Logger for error reporting
 	 * @param PdfServiceInterface $pdfService Service for PDF generation
 	 * @param Pdfa3ConversionServiceInterface $pdfa3Service Service for archival PDF/A-3
-	 *                                             generation (attachments +
-	 *                                             MDTO metadata)
+	 *                                                      generation (attachments +
+	 *                                                      MDTO metadata)
 	 * @param IL10N $l10n The localization service
 	 * @param IUserSession $userSession User session for authentication
 	 *
@@ -104,55 +104,84 @@ class PdfController extends Controller {
 				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 			}
 
-			$template = $this->request->getParam('template');
-			$data = $this->request->getParam('data', []);
-			$options = $this->request->getParam('options', []);
-			$filename = $this->request->getParam('filename', 'document.pdf');
-
-			if (empty($template) === true) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Template content is required')],
-					statusCode: 400
-				);
-			}
-
-			if (is_array($data) === false) {
-				$data = [];
-			}
-
-			if (is_array($options) === false) {
-				$options = [];
-			}
-
-			$pdfContent = $this->pdfService->renderPdf(
-				templateContent: $template,
-				data: $data,
-				options: $options
-			);
-
-			return new DataDownloadResponse(
-				data: $pdfContent,
-				filename: $filename,
-				contentType: 'application/pdf'
-			);
+			return $this->renderRequested();
 		} catch (Exception $e) {
-			$statusCode = 500;
-			if ($e->getCode() >= 400 && $e->getCode() < 600) {
-				$statusCode = $e->getCode();
-			}
-
-			$this->logger->error(
-				message: 'PDF generation failed: ' . $e->getMessage(),
-				context: ['exception' => $e]
-			);
-
-			return new JSONResponse(
-				data: ['error' => $e->getMessage()],
-				statusCode: $statusCode
-			);
-		}//end try
+			return $this->renderFailed(exception: $e);
+		}
 
 	}//end render()
+
+	/**
+	 * Render the request's template, data and options to a PDF download.
+	 *
+	 * @return DataDownloadResponse|JSONResponse The PDF, or 400 without a template.
+	 *
+	 * @spec openspec/specs/pdf-generation/spec.md
+	 */
+	private function renderRequested(): DataDownloadResponse|JSONResponse {
+		$template = $this->request->getParam('template');
+		$filename = $this->request->getParam('filename', 'document.pdf');
+
+		if (empty($template) === true) {
+			return new JSONResponse(
+				data: ['error' => $this->l10n->t('Template content is required')],
+				statusCode: 400
+			);
+		}
+
+		$pdfContent = $this->pdfService->renderPdf(
+			templateContent: $template,
+			data: $this->arrayParam(name: 'data'),
+			options: $this->arrayParam(name: 'options')
+		);
+
+		return new DataDownloadResponse(
+			data: $pdfContent,
+			filename: $filename,
+			contentType: 'application/pdf'
+		);
+
+	}//end renderRequested()
+
+	/**
+	 * A request parameter that must be an array; anything else reads as empty.
+	 *
+	 * @param string $name The parameter name.
+	 *
+	 * @return array<mixed> The parameter, or [] when absent or not an array.
+	 *
+	 * @spec openspec/specs/pdf-generation/spec.md
+	 */
+	private function arrayParam(string $name): array {
+		$value = $this->request->getParam($name, []);
+		if (is_array($value) === false) {
+			return [];
+		}
+
+		return $value;
+	}//end arrayParam()
+
+	/**
+	 * Log a failed render and answer with its HTTP-range code, else 500.
+	 *
+	 * @param Exception $exception The failure.
+	 *
+	 * @return JSONResponse The error response.
+	 *
+	 * @spec openspec/specs/pdf-generation/spec.md
+	 */
+	private function renderFailed(Exception $exception): JSONResponse {
+		$this->logger->error(
+			message: 'PDF generation failed: ' . $exception->getMessage(),
+			context: ['exception' => $exception]
+		);
+
+		return new JSONResponse(
+			data: ['error' => $exception->getMessage()],
+			statusCode: $this->clampStatusCode(code: (int)$exception->getCode())
+		);
+
+	}//end renderFailed()
 
 	/**
 	 * Generate a PDF/A-3b compliant document from a Twig template
@@ -387,7 +416,7 @@ class PdfController extends Controller {
 		$response->addHeader('X-Docudesk-Pdfa3-Checksum-Sha256', $result['checksumSha256']);
 		$response->addHeader('X-Docudesk-Pdfa3-Pages', (string)$result['pages']);
 		$response->addHeader('X-Docudesk-Pdfa3-Conformance', $result['conformance']);
-		$response->addHeader('X-Docudesk-Pdfa3-Verified', (string) ($result['verified'] ?? 'skipped'));
+		$response->addHeader('X-Docudesk-Pdfa3-Verified', (string)($result['verified'] ?? 'skipped'));
 
 		return $response;
 	}//end renderArchivalPdfA()
