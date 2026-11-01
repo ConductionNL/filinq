@@ -24,6 +24,7 @@ import { golden } from './golden/golden.js'
 function menu() {
 	return [
 		{ id: 'cap', type: 'caption', label: 'Caption' },
+		{ id: 'self', route: 'self' },
 		{ id: 'home', label: 'Home', route: 'home' },
 		{
 			id: 'settings',
@@ -55,7 +56,6 @@ function menu() {
 		{ id: 'loose', label: 'Loose', href: '/loose' },
 		{ id: 'empty', label: 'Empty group' },
 		{ id: 'chain', label: 'Chain', route: 'chain' },
-		{ id: 'self', route: 'self' },
 	]
 }
 
@@ -71,6 +71,7 @@ const RELOCATIONS = [
 	['child group flattens into its parent', { nested: 'settings' }],
 	['missing target', { home: 'nowhere', stay: 'nowhere' }],
 	['self target', { self: 'self' }],
+	['two children to one group', { general: 'admin', stay: 'admin' }],
 	['chained over passes', { tools: 'settings', export: 'admin', admin: 'loose' }],
 	[
 		'cycle',
@@ -113,6 +114,7 @@ describe('menu relocations golden', () => {
 		const target = [
 			{ id: 'a', label: 'A', children: [{ id: 'x' }] },
 			{ id: 'b', children: 'none' },
+			{ id: 'f', label: 'F' },
 		]
 		mergeMenuItems(target, [
 			{
@@ -127,7 +129,14 @@ describe('menu relocations golden', () => {
 			{ id: 'c', children: [{ id: 'k' }] },
 			{ id: 'd', children: 'keep' },
 			{ id: 'a', visibleIf: 'v', children: [] },
+			{ id: 'f', children: [] },
 		])
-		golden('mergeMenuItems', target)
+		const incoming = [{ id: 'e', children: [{ id: 'e1' }] }]
+		mergeMenuItems(target, incoming)
+		incoming[0].children.push({ id: 'e2' })
+		golden('mergeMenuItems', {
+			target,
+			keys: target.map((entry) => Object.keys(entry)),
+		})
 	})
 })

@@ -8,6 +8,10 @@
 				"label": "Caption"
 			},
 			{
+				"id": "self",
+				"route": "self"
+			},
+			{
 				"id": "home",
 				"label": "Home",
 				"route": "home"
@@ -76,10 +80,6 @@
 				"id": "chain",
 				"label": "Chain",
 				"route": "chain"
-			},
-			{
-				"id": "self",
-				"route": "self"
 			}
 		],
 		"input": [
@@ -89,6 +89,10 @@
 				"label": "Caption"
 			},
 			{
+				"id": "self",
+				"route": "self"
+			},
+			{
 				"id": "home",
 				"label": "Home",
 				"route": "home"
@@ -157,10 +161,6 @@
 				"id": "chain",
 				"label": "Chain",
 				"route": "chain"
-			},
-			{
-				"id": "self",
-				"route": "self"
 			}
 		],
 		"same": true
@@ -174,6 +174,10 @@
 				"label": "Caption"
 			},
 			{
+				"id": "self",
+				"route": "self"
+			},
+			{
 				"id": "home",
 				"label": "Home",
 				"route": "home"
@@ -242,10 +246,6 @@
 				"id": "chain",
 				"label": "Chain",
 				"route": "chain"
-			},
-			{
-				"id": "self",
-				"route": "self"
 			}
 		],
 		"input": [
@@ -255,6 +255,10 @@
 				"label": "Caption"
 			},
 			{
+				"id": "self",
+				"route": "self"
+			},
+			{
 				"id": "home",
 				"label": "Home",
 				"route": "home"
@@ -323,10 +327,6 @@
 				"id": "chain",
 				"label": "Chain",
 				"route": "chain"
-			},
-			{
-				"id": "self",
-				"route": "self"
 			}
 		],
 		"same": true
@@ -340,6 +340,10 @@
 				"label": "Caption"
 			},
 			{
+				"id": "self",
+				"route": "self"
+			},
+			{
 				"id": "home",
 				"label": "Home",
 				"route": "home"
@@ -408,10 +412,6 @@
 				"id": "chain",
 				"label": "Chain",
 				"route": "chain"
-			},
-			{
-				"id": "self",
-				"route": "self"
 			}
 		],
 		"input": [
@@ -421,6 +421,10 @@
 				"label": "Caption"
 			},
 			{
+				"id": "self",
+				"route": "self"
+			},
+			{
 				"id": "home",
 				"label": "Home",
 				"route": "home"
@@ -489,10 +493,6 @@
 				"id": "chain",
 				"label": "Chain",
 				"route": "chain"
-			},
-			{
-				"id": "self",
-				"route": "self"
 			}
 		],
 		"same": true
@@ -506,6 +506,10 @@
 				"label": "Caption"
 			},
 			{
+				"id": "self",
+				"route": "self"
+			},
+			{
 				"id": "home",
 				"label": "Home",
 				"route": "home"
@@ -564,10 +568,6 @@
 				"id": "chain",
 				"label": "Chain",
 				"route": "chain"
-			},
-			{
-				"id": "self",
-				"route": "self"
 			}
 		],
 		"input": [
@@ -575,6 +575,10 @@
 				"id": "cap",
 				"type": "caption",
 				"label": "Caption"
+			},
+			{
+				"id": "self",
+				"route": "self"
 			},
 			{
 				"id": "home",
@@ -645,10 +649,6 @@
 				"id": "chain",
 				"label": "Chain",
 				"route": "chain"
-			},
-			{
-				"id": "self",
-				"route": "self"
 			}
 		],
 		"same": false
@@ -662,6 +662,10 @@
 				"label": "Caption"
 			},
 			{
+				"id": "self",
+				"route": "self"
+			},
+			{
 				"id": "home",
 				"label": "Home",
 				"route": "home"
@@ -711,10 +715,6 @@
 				"id": "chain",
 				"label": "Chain",
 				"route": "chain"
-			},
-			{
-				"id": "self",
-				"route": "self"
 			}
 		],
 		"input": [
@@ -722,6 +722,10 @@
 				"id": "cap",
 				"type": "caption",
 				"label": "Caption"
+			},
+			{
+				"id": "self",
+				"route": "self"
 			},
 			{
 				"id": "home",
@@ -783,10 +787,6 @@
 				"id": "chain",
 				"label": "Chain",
 				"route": "chain"
-			},
-			{
-				"id": "self",
-				"route": "self"
 			}
 		],
 		"same": false
@@ -800,6 +800,10 @@
 				"label": "Caption"
 			},
 			{
+				"id": "self",
+				"route": "self"
+			},
+			{
 				"id": "settings",
 				"label": "Settings",
 				"children": [
@@ -865,10 +869,6 @@
 				"id": "chain",
 				"label": "Chain",
 				"route": "chain"
-			},
-			{
-				"id": "self",
-				"route": "self"
 			}
 		],
 		"input": [
@@ -876,6 +876,10 @@
 				"id": "cap",
 				"type": "caption",
 				"label": "Caption"
+			},
+			{
+				"id": "self",
+				"route": "self"
 			},
 			{
 				"id": "settings",
@@ -947,10 +951,6 @@
 				"id": "chain",
 				"label": "Chain",
 				"route": "chain"
-			},
-			{
-				"id": "self",
-				"route": "self"
 			}
 		],
 		"same": false
@@ -964,6 +964,10 @@
 				"label": "Caption"
 			},
 			{
+				"id": "self",
+				"route": "self"
+			},
+			{
 				"id": "home",
 				"label": "Home",
 				"route": "home"
@@ -1029,10 +1033,6 @@
 				"id": "chain",
 				"label": "Chain",
 				"route": "chain"
-			},
-			{
-				"id": "self",
-				"route": "self"
 			}
 		],
 		"input": [
@@ -1040,6 +1040,10 @@
 				"id": "cap",
 				"type": "caption",
 				"label": "Caption"
+			},
+			{
+				"id": "self",
+				"route": "self"
 			},
 			{
 				"id": "home",
@@ -1111,10 +1115,6 @@
 				"id": "chain",
 				"label": "Chain",
 				"route": "chain"
-			},
-			{
-				"id": "self",
-				"route": "self"
 			}
 		],
 		"same": false
@@ -1128,6 +1128,10 @@
 				"label": "Caption"
 			},
 			{
+				"id": "self",
+				"route": "self"
+			},
+			{
 				"id": "home",
 				"label": "Home",
 				"route": "home"
@@ -1186,10 +1190,6 @@
 				"id": "chain",
 				"label": "Chain",
 				"route": "chain"
-			},
-			{
-				"id": "self",
-				"route": "self"
 			}
 		],
 		"input": [
@@ -1197,6 +1197,10 @@
 				"id": "cap",
 				"type": "caption",
 				"label": "Caption"
+			},
+			{
+				"id": "self",
+				"route": "self"
 			},
 			{
 				"id": "home",
@@ -1267,10 +1271,6 @@
 				"id": "chain",
 				"label": "Chain",
 				"route": "chain"
-			},
-			{
-				"id": "self",
-				"route": "self"
 			}
 		],
 		"same": false
@@ -1284,6 +1284,10 @@
 				"label": "Caption"
 			},
 			{
+				"id": "self",
+				"route": "self"
+			},
+			{
 				"id": "home",
 				"label": "Home",
 				"route": "home"
@@ -1336,10 +1340,6 @@
 				"id": "chain",
 				"label": "Chain",
 				"route": "chain"
-			},
-			{
-				"id": "self",
-				"route": "self"
 			}
 		],
 		"input": [
@@ -1347,6 +1347,10 @@
 				"id": "cap",
 				"type": "caption",
 				"label": "Caption"
+			},
+			{
+				"id": "self",
+				"route": "self"
 			},
 			{
 				"id": "home",
@@ -1411,10 +1415,6 @@
 				"id": "chain",
 				"label": "Chain",
 				"route": "chain"
-			},
-			{
-				"id": "self",
-				"route": "self"
 			}
 		],
 		"same": false
@@ -1426,6 +1426,10 @@
 				"id": "cap",
 				"type": "caption",
 				"label": "Caption"
+			},
+			{
+				"id": "self",
+				"route": "self"
 			},
 			{
 				"id": "settings",
@@ -1477,10 +1481,6 @@
 				"id": "chain",
 				"label": "Chain",
 				"route": "chain"
-			},
-			{
-				"id": "self",
-				"route": "self"
 			},
 			{
 				"id": "stay",
@@ -1499,6 +1499,10 @@
 				"label": "Caption"
 			},
 			{
+				"id": "self",
+				"route": "self"
+			},
+			{
 				"id": "settings",
 				"label": "Settings",
 				"children": [
@@ -1558,10 +1562,6 @@
 				"id": "chain",
 				"label": "Chain",
 				"route": "chain"
-			},
-			{
-				"id": "self",
-				"route": "self"
 			},
 			{
 				"id": "stay",
@@ -1584,6 +1584,10 @@
 				"label": "Caption"
 			},
 			{
+				"id": "self",
+				"route": "self"
+			},
+			{
 				"id": "home",
 				"label": "Home",
 				"route": "home"
@@ -1642,10 +1646,6 @@
 				"id": "chain",
 				"label": "Chain",
 				"route": "chain"
-			},
-			{
-				"id": "self",
-				"route": "self"
 			}
 		],
 		"input": [
@@ -1653,6 +1653,10 @@
 				"id": "cap",
 				"type": "caption",
 				"label": "Caption"
+			},
+			{
+				"id": "self",
+				"route": "self"
 			},
 			{
 				"id": "home",
@@ -1723,10 +1727,156 @@
 				"id": "chain",
 				"label": "Chain",
 				"route": "chain"
+			}
+		],
+		"same": false
+	},
+	{
+		"name": "two children to one group",
+		"result": [
+			{
+				"id": "cap",
+				"type": "caption",
+				"label": "Caption"
 			},
 			{
 				"id": "self",
 				"route": "self"
+			},
+			{
+				"id": "home",
+				"label": "Home",
+				"route": "home"
+			},
+			{
+				"id": "settings",
+				"label": "Settings",
+				"children": [
+					{
+						"id": "nested",
+						"label": "Nested",
+						"children": [
+							{
+								"id": "deep",
+								"route": "d"
+							}
+						]
+					}
+				]
+			},
+			{
+				"id": "tools",
+				"label": "Tools",
+				"children": [
+					{
+						"id": "export",
+						"action": "export"
+					}
+				]
+			},
+			{
+				"id": "admin",
+				"label": "Admin",
+				"icon": "shield",
+				"children": [
+					{
+						"id": "g2",
+						"href": "/g"
+					},
+					{
+						"id": "stay",
+						"route": "stay"
+					},
+					{
+						"id": "general",
+						"route": "general"
+					}
+				]
+			},
+			{
+				"id": "loose",
+				"label": "Loose",
+				"href": "/loose"
+			},
+			{
+				"id": "chain",
+				"label": "Chain",
+				"route": "chain"
+			}
+		],
+		"input": [
+			{
+				"id": "cap",
+				"type": "caption",
+				"label": "Caption"
+			},
+			{
+				"id": "self",
+				"route": "self"
+			},
+			{
+				"id": "home",
+				"label": "Home",
+				"route": "home"
+			},
+			{
+				"id": "settings",
+				"label": "Settings",
+				"children": [
+					{
+						"id": "nested",
+						"label": "Nested",
+						"children": [
+							{
+								"id": "deep",
+								"route": "d"
+							}
+						]
+					}
+				]
+			},
+			{
+				"id": "tools",
+				"label": "Tools",
+				"children": [
+					{
+						"id": "export",
+						"action": "export"
+					}
+				]
+			},
+			{
+				"id": "admin",
+				"label": "Admin",
+				"icon": "shield",
+				"children": [
+					{
+						"id": "g2",
+						"href": "/g"
+					},
+					{
+						"id": "stay",
+						"route": "stay"
+					},
+					{
+						"id": "general",
+						"route": "general"
+					}
+				]
+			},
+			{
+				"id": "loose",
+				"label": "Loose",
+				"href": "/loose"
+			},
+			{
+				"id": "empty",
+				"label": "Empty group"
+			},
+			{
+				"id": "chain",
+				"label": "Chain",
+				"route": "chain"
 			}
 		],
 		"same": false
@@ -1738,6 +1888,10 @@
 				"id": "cap",
 				"type": "caption",
 				"label": "Caption"
+			},
+			{
+				"id": "self",
+				"route": "self"
 			},
 			{
 				"id": "home",
@@ -1788,10 +1942,6 @@
 				"route": "chain"
 			},
 			{
-				"id": "self",
-				"route": "self"
-			},
-			{
 				"id": "export",
 				"action": "export"
 			}
@@ -1801,6 +1951,10 @@
 				"id": "cap",
 				"type": "caption",
 				"label": "Caption"
+			},
+			{
+				"id": "self",
+				"route": "self"
 			},
 			{
 				"id": "home",
@@ -1855,10 +2009,6 @@
 				"route": "chain"
 			},
 			{
-				"id": "self",
-				"route": "self"
-			},
-			{
 				"id": "export",
 				"action": "export"
 			}
@@ -1874,13 +2024,13 @@
 				"label": "Caption"
 			},
 			{
+				"id": "self",
+				"route": "self"
+			},
+			{
 				"id": "loose",
 				"label": "Loose",
 				"href": "/loose"
-			},
-			{
-				"id": "self",
-				"route": "self"
 			},
 			{
 				"id": "chain",
@@ -1941,6 +2091,10 @@
 				"label": "Caption"
 			},
 			{
+				"id": "self",
+				"route": "self"
+			},
+			{
 				"id": "loose",
 				"label": "Loose",
 				"href": "/loose"
@@ -1948,10 +2102,6 @@
 			{
 				"id": "empty",
 				"label": "Empty group"
-			},
-			{
-				"id": "self",
-				"route": "self"
 			},
 			{
 				"id": "chain",
@@ -2011,6 +2161,10 @@
 		"name": "everything into admin",
 		"result": [
 			{
+				"id": "self",
+				"route": "self"
+			},
+			{
 				"id": "home",
 				"label": "Home",
 				"route": "home"
@@ -2070,14 +2224,14 @@
 				"id": "chain",
 				"label": "Chain",
 				"route": "chain"
-			},
-			{
-				"id": "self",
-				"route": "self"
 			}
 		],
 		"input": [
 			{
+				"id": "self",
+				"route": "self"
+			},
+			{
 				"id": "home",
 				"label": "Home",
 				"route": "home"
@@ -2137,10 +2291,6 @@
 				"id": "chain",
 				"label": "Chain",
 				"route": "chain"
-			},
-			{
-				"id": "self",
-				"route": "self"
 			}
 		],
 		"same": false
