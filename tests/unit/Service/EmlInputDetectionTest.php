@@ -70,7 +70,10 @@ class EmlInputDetectionTest extends TestCase {
 	private static function node(?string $mime, ?string $name): object {
 		if ($mime !== null && $name !== null) {
 			return new class($mime, $name) {
-				public function __construct(private string $mime, private string $name) {
+				public function __construct(
+					private string $mime,
+					private string $name,
+				) {
 				}
 				public function getMimeType(): string {
 					return $this->mime;
@@ -83,7 +86,9 @@ class EmlInputDetectionTest extends TestCase {
 
 		if ($mime !== null) {
 			return new class($mime) {
-				public function __construct(private string $mime) {
+				public function __construct(
+					private string $mime,
+				) {
 				}
 				public function getMimeType(): string {
 					return $this->mime;
@@ -92,7 +97,9 @@ class EmlInputDetectionTest extends TestCase {
 		}
 
 		return new class((string)$name) {
-			public function __construct(private string $name) {
+			public function __construct(
+				private string $name,
+			) {
 			}
 			public function getName(): string {
 				return $this->name;
@@ -103,8 +110,8 @@ class EmlInputDetectionTest extends TestCase {
 	/**
 	 * The node is classified as recorded on the implementation before the split.
 	 *
-	 * @param mixed $node     The node.
-	 * @param bool  $expected Whether it is an EML input.
+	 * @param mixed $node The node.
+	 * @param bool $expected Whether it is an EML input.
 	 *
 	 * @dataProvider nodes
 	 *
