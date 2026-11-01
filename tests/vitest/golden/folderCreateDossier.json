@@ -1,0 +1,1148 @@
+[
+	{
+		"state": {
+			"folderId": null,
+			"folderPath": "/a"
+		},
+		"answer": {
+			"@self": {
+				"id": "self"
+			},
+			"id": "id",
+			"uuid": "uuid"
+		},
+		"calls": [],
+		"dossier": {
+			"uuid": null,
+			"name": "",
+			"description": "",
+			"bases": [
+				"art-5-1-2-e"
+			],
+			"creating": false,
+			"error": "No folder bound yet — start the folder batch first."
+		}
+	},
+	{
+		"state": {
+			"folderId": null,
+			"folderPath": "/a"
+		},
+		"answer": {
+			"@self": {
+				"id": ""
+			},
+			"id": "id"
+		},
+		"calls": [],
+		"dossier": {
+			"uuid": null,
+			"name": "",
+			"description": "",
+			"bases": [
+				"art-5-1-2-e"
+			],
+			"creating": false,
+			"error": "No folder bound yet — start the folder batch first."
+		}
+	},
+	{
+		"state": {
+			"folderId": null,
+			"folderPath": "/a"
+		},
+		"answer": {
+			"uuid": "only-uuid"
+		},
+		"calls": [],
+		"dossier": {
+			"uuid": null,
+			"name": "",
+			"description": "",
+			"bases": [
+				"art-5-1-2-e"
+			],
+			"creating": false,
+			"error": "No folder bound yet — start the folder batch first."
+		}
+	},
+	{
+		"state": {
+			"folderId": null,
+			"folderPath": "/a"
+		},
+		"answer": {
+			"@self": {}
+		},
+		"calls": [],
+		"dossier": {
+			"uuid": null,
+			"name": "",
+			"description": "",
+			"bases": [
+				"art-5-1-2-e"
+			],
+			"creating": false,
+			"error": "No folder bound yet — start the folder batch first."
+		}
+	},
+	{
+		"state": {
+			"folderId": null,
+			"folderPath": "/a"
+		},
+		"answer": null,
+		"calls": [],
+		"dossier": {
+			"uuid": null,
+			"name": "",
+			"description": "",
+			"bases": [
+				"art-5-1-2-e"
+			],
+			"creating": false,
+			"error": "No folder bound yet — start the folder batch first."
+		}
+	},
+	{
+		"state": {
+			"folderId": null,
+			"folderPath": "/a"
+		},
+		"answer": "down",
+		"calls": [],
+		"dossier": {
+			"uuid": null,
+			"name": "",
+			"description": "",
+			"bases": [
+				"art-5-1-2-e"
+			],
+			"creating": false,
+			"error": "No folder bound yet — start the folder batch first."
+		}
+	},
+	{
+		"state": {
+			"folderId": null,
+			"folderPath": "/a"
+		},
+		"answer": "plain",
+		"calls": [],
+		"dossier": {
+			"uuid": null,
+			"name": "",
+			"description": "",
+			"bases": [
+				"art-5-1-2-e"
+			],
+			"creating": false,
+			"error": "No folder bound yet — start the folder batch first."
+		}
+	},
+	{
+		"state": {
+			"folderId": 0,
+			"folderPath": "/a"
+		},
+		"answer": {
+			"@self": {
+				"id": "self"
+			},
+			"id": "id",
+			"uuid": "uuid"
+		},
+		"calls": [],
+		"dossier": {
+			"uuid": null,
+			"name": "",
+			"description": "",
+			"bases": [
+				"art-5-1-2-e"
+			],
+			"creating": false,
+			"error": "No folder bound yet — start the folder batch first."
+		}
+	},
+	{
+		"state": {
+			"folderId": 0,
+			"folderPath": "/a"
+		},
+		"answer": {
+			"@self": {
+				"id": ""
+			},
+			"id": "id"
+		},
+		"calls": [],
+		"dossier": {
+			"uuid": null,
+			"name": "",
+			"description": "",
+			"bases": [
+				"art-5-1-2-e"
+			],
+			"creating": false,
+			"error": "No folder bound yet — start the folder batch first."
+		}
+	},
+	{
+		"state": {
+			"folderId": 0,
+			"folderPath": "/a"
+		},
+		"answer": {
+			"uuid": "only-uuid"
+		},
+		"calls": [],
+		"dossier": {
+			"uuid": null,
+			"name": "",
+			"description": "",
+			"bases": [
+				"art-5-1-2-e"
+			],
+			"creating": false,
+			"error": "No folder bound yet — start the folder batch first."
+		}
+	},
+	{
+		"state": {
+			"folderId": 0,
+			"folderPath": "/a"
+		},
+		"answer": {
+			"@self": {}
+		},
+		"calls": [],
+		"dossier": {
+			"uuid": null,
+			"name": "",
+			"description": "",
+			"bases": [
+				"art-5-1-2-e"
+			],
+			"creating": false,
+			"error": "No folder bound yet — start the folder batch first."
+		}
+	},
+	{
+		"state": {
+			"folderId": 0,
+			"folderPath": "/a"
+		},
+		"answer": null,
+		"calls": [],
+		"dossier": {
+			"uuid": null,
+			"name": "",
+			"description": "",
+			"bases": [
+				"art-5-1-2-e"
+			],
+			"creating": false,
+			"error": "No folder bound yet — start the folder batch first."
+		}
+	},
+	{
+		"state": {
+			"folderId": 0,
+			"folderPath": "/a"
+		},
+		"answer": "down",
+		"calls": [],
+		"dossier": {
+			"uuid": null,
+			"name": "",
+			"description": "",
+			"bases": [
+				"art-5-1-2-e"
+			],
+			"creating": false,
+			"error": "No folder bound yet — start the folder batch first."
+		}
+	},
+	{
+		"state": {
+			"folderId": 0,
+			"folderPath": "/a"
+		},
+		"answer": "plain",
+		"calls": [],
+		"dossier": {
+			"uuid": null,
+			"name": "",
+			"description": "",
+			"bases": [
+				"art-5-1-2-e"
+			],
+			"creating": false,
+			"error": "No folder bound yet — start the folder batch first."
+		}
+	},
+	{
+		"state": {
+			"folderId": 12,
+			"folderPath": "/Dossiers/A",
+			"dossier": {
+				"name": "Naam",
+				"description": "Omschrijving",
+				"bases": [
+					"x"
+				]
+			}
+		},
+		"answer": {
+			"@self": {
+				"id": "self"
+			},
+			"id": "id",
+			"uuid": "uuid"
+		},
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/openregister/api/objects/filinq/dossier",
+				{
+					"name": "Naam",
+					"description": "Omschrijving",
+					"bases": [
+						"x"
+					],
+					"@self": {
+						"folder": "12"
+					}
+				},
+				{
+					"creating": true,
+					"error": null
+				}
+			]
+		],
+		"dossier": {
+			"uuid": "self",
+			"name": "Naam",
+			"description": "Omschrijving",
+			"bases": [
+				"x"
+			],
+			"creating": false,
+			"error": null
+		}
+	},
+	{
+		"state": {
+			"folderId": 12,
+			"folderPath": "/Dossiers/A",
+			"dossier": {
+				"name": "Naam",
+				"description": "Omschrijving",
+				"bases": [
+					"x"
+				]
+			}
+		},
+		"answer": {
+			"@self": {
+				"id": ""
+			},
+			"id": "id"
+		},
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/openregister/api/objects/filinq/dossier",
+				{
+					"name": "Naam",
+					"description": "Omschrijving",
+					"bases": [
+						"x"
+					],
+					"@self": {
+						"folder": "12"
+					}
+				},
+				{
+					"creating": true,
+					"error": null
+				}
+			]
+		],
+		"dossier": {
+			"uuid": "id",
+			"name": "Naam",
+			"description": "Omschrijving",
+			"bases": [
+				"x"
+			],
+			"creating": false,
+			"error": null
+		}
+	},
+	{
+		"state": {
+			"folderId": 12,
+			"folderPath": "/Dossiers/A",
+			"dossier": {
+				"name": "Naam",
+				"description": "Omschrijving",
+				"bases": [
+					"x"
+				]
+			}
+		},
+		"answer": {
+			"uuid": "only-uuid"
+		},
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/openregister/api/objects/filinq/dossier",
+				{
+					"name": "Naam",
+					"description": "Omschrijving",
+					"bases": [
+						"x"
+					],
+					"@self": {
+						"folder": "12"
+					}
+				},
+				{
+					"creating": true,
+					"error": null
+				}
+			]
+		],
+		"dossier": {
+			"uuid": "only-uuid",
+			"name": "Naam",
+			"description": "Omschrijving",
+			"bases": [
+				"x"
+			],
+			"creating": false,
+			"error": null
+		}
+	},
+	{
+		"state": {
+			"folderId": 12,
+			"folderPath": "/Dossiers/A",
+			"dossier": {
+				"name": "Naam",
+				"description": "Omschrijving",
+				"bases": [
+					"x"
+				]
+			}
+		},
+		"answer": {
+			"@self": {}
+		},
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/openregister/api/objects/filinq/dossier",
+				{
+					"name": "Naam",
+					"description": "Omschrijving",
+					"bases": [
+						"x"
+					],
+					"@self": {
+						"folder": "12"
+					}
+				},
+				{
+					"creating": true,
+					"error": null
+				}
+			]
+		],
+		"dossier": {
+			"uuid": null,
+			"name": "Naam",
+			"description": "Omschrijving",
+			"bases": [
+				"x"
+			],
+			"creating": false,
+			"error": "Dossier created but UUID not found in response."
+		}
+	},
+	{
+		"state": {
+			"folderId": 12,
+			"folderPath": "/Dossiers/A",
+			"dossier": {
+				"name": "Naam",
+				"description": "Omschrijving",
+				"bases": [
+					"x"
+				]
+			}
+		},
+		"answer": null,
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/openregister/api/objects/filinq/dossier",
+				{
+					"name": "Naam",
+					"description": "Omschrijving",
+					"bases": [
+						"x"
+					],
+					"@self": {
+						"folder": "12"
+					}
+				},
+				{
+					"creating": true,
+					"error": null
+				}
+			]
+		],
+		"dossier": {
+			"uuid": null,
+			"name": "Naam",
+			"description": "Omschrijving",
+			"bases": [
+				"x"
+			],
+			"creating": false,
+			"error": "Dossier created but UUID not found in response."
+		}
+	},
+	{
+		"state": {
+			"folderId": 12,
+			"folderPath": "/Dossiers/A",
+			"dossier": {
+				"name": "Naam",
+				"description": "Omschrijving",
+				"bases": [
+					"x"
+				]
+			}
+		},
+		"answer": "down",
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/openregister/api/objects/filinq/dossier",
+				{
+					"name": "Naam",
+					"description": "Omschrijving",
+					"bases": [
+						"x"
+					],
+					"@self": {
+						"folder": "12"
+					}
+				},
+				{
+					"creating": true,
+					"error": null
+				}
+			]
+		],
+		"dossier": {
+			"uuid": null,
+			"name": "Naam",
+			"description": "Omschrijving",
+			"bases": [
+				"x"
+			],
+			"creating": false,
+			"error": "refused"
+		}
+	},
+	{
+		"state": {
+			"folderId": 12,
+			"folderPath": "/Dossiers/A",
+			"dossier": {
+				"name": "Naam",
+				"description": "Omschrijving",
+				"bases": [
+					"x"
+				]
+			}
+		},
+		"answer": "plain",
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/openregister/api/objects/filinq/dossier",
+				{
+					"name": "Naam",
+					"description": "Omschrijving",
+					"bases": [
+						"x"
+					],
+					"@self": {
+						"folder": "12"
+					}
+				},
+				{
+					"creating": true,
+					"error": null
+				}
+			]
+		],
+		"dossier": {
+			"uuid": null,
+			"name": "Naam",
+			"description": "Omschrijving",
+			"bases": [
+				"x"
+			],
+			"creating": false,
+			"error": "plain"
+		}
+	},
+	{
+		"state": {
+			"folderId": "13",
+			"folderPath": "/Dossiers/B",
+			"dossier": {
+				"name": "",
+				"description": "",
+				"bases": null
+			}
+		},
+		"answer": {
+			"@self": {
+				"id": "self"
+			},
+			"id": "id",
+			"uuid": "uuid"
+		},
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/openregister/api/objects/filinq/dossier",
+				{
+					"name": "/Dossiers/B",
+					"description": "",
+					"bases": [],
+					"@self": {
+						"folder": "13"
+					}
+				},
+				{
+					"creating": true,
+					"error": null
+				}
+			]
+		],
+		"dossier": {
+			"uuid": "self",
+			"name": "",
+			"description": "",
+			"bases": null,
+			"creating": false,
+			"error": null
+		}
+	},
+	{
+		"state": {
+			"folderId": "13",
+			"folderPath": "/Dossiers/B",
+			"dossier": {
+				"name": "",
+				"description": "",
+				"bases": null
+			}
+		},
+		"answer": {
+			"@self": {
+				"id": ""
+			},
+			"id": "id"
+		},
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/openregister/api/objects/filinq/dossier",
+				{
+					"name": "/Dossiers/B",
+					"description": "",
+					"bases": [],
+					"@self": {
+						"folder": "13"
+					}
+				},
+				{
+					"creating": true,
+					"error": null
+				}
+			]
+		],
+		"dossier": {
+			"uuid": "id",
+			"name": "",
+			"description": "",
+			"bases": null,
+			"creating": false,
+			"error": null
+		}
+	},
+	{
+		"state": {
+			"folderId": "13",
+			"folderPath": "/Dossiers/B",
+			"dossier": {
+				"name": "",
+				"description": "",
+				"bases": null
+			}
+		},
+		"answer": {
+			"uuid": "only-uuid"
+		},
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/openregister/api/objects/filinq/dossier",
+				{
+					"name": "/Dossiers/B",
+					"description": "",
+					"bases": [],
+					"@self": {
+						"folder": "13"
+					}
+				},
+				{
+					"creating": true,
+					"error": null
+				}
+			]
+		],
+		"dossier": {
+			"uuid": "only-uuid",
+			"name": "",
+			"description": "",
+			"bases": null,
+			"creating": false,
+			"error": null
+		}
+	},
+	{
+		"state": {
+			"folderId": "13",
+			"folderPath": "/Dossiers/B",
+			"dossier": {
+				"name": "",
+				"description": "",
+				"bases": null
+			}
+		},
+		"answer": {
+			"@self": {}
+		},
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/openregister/api/objects/filinq/dossier",
+				{
+					"name": "/Dossiers/B",
+					"description": "",
+					"bases": [],
+					"@self": {
+						"folder": "13"
+					}
+				},
+				{
+					"creating": true,
+					"error": null
+				}
+			]
+		],
+		"dossier": {
+			"uuid": null,
+			"name": "",
+			"description": "",
+			"bases": null,
+			"creating": false,
+			"error": "Dossier created but UUID not found in response."
+		}
+	},
+	{
+		"state": {
+			"folderId": "13",
+			"folderPath": "/Dossiers/B",
+			"dossier": {
+				"name": "",
+				"description": "",
+				"bases": null
+			}
+		},
+		"answer": null,
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/openregister/api/objects/filinq/dossier",
+				{
+					"name": "/Dossiers/B",
+					"description": "",
+					"bases": [],
+					"@self": {
+						"folder": "13"
+					}
+				},
+				{
+					"creating": true,
+					"error": null
+				}
+			]
+		],
+		"dossier": {
+			"uuid": null,
+			"name": "",
+			"description": "",
+			"bases": null,
+			"creating": false,
+			"error": "Dossier created but UUID not found in response."
+		}
+	},
+	{
+		"state": {
+			"folderId": "13",
+			"folderPath": "/Dossiers/B",
+			"dossier": {
+				"name": "",
+				"description": "",
+				"bases": null
+			}
+		},
+		"answer": "down",
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/openregister/api/objects/filinq/dossier",
+				{
+					"name": "/Dossiers/B",
+					"description": "",
+					"bases": [],
+					"@self": {
+						"folder": "13"
+					}
+				},
+				{
+					"creating": true,
+					"error": null
+				}
+			]
+		],
+		"dossier": {
+			"uuid": null,
+			"name": "",
+			"description": "",
+			"bases": null,
+			"creating": false,
+			"error": "refused"
+		}
+	},
+	{
+		"state": {
+			"folderId": "13",
+			"folderPath": "/Dossiers/B",
+			"dossier": {
+				"name": "",
+				"description": "",
+				"bases": null
+			}
+		},
+		"answer": "plain",
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/openregister/api/objects/filinq/dossier",
+				{
+					"name": "/Dossiers/B",
+					"description": "",
+					"bases": [],
+					"@self": {
+						"folder": "13"
+					}
+				},
+				{
+					"creating": true,
+					"error": null
+				}
+			]
+		],
+		"dossier": {
+			"uuid": null,
+			"name": "",
+			"description": "",
+			"bases": null,
+			"creating": false,
+			"error": "plain"
+		}
+	},
+	{
+		"state": {
+			"folderId": 14,
+			"folderPath": "",
+			"dossier": {
+				"name": ""
+			}
+		},
+		"answer": {
+			"@self": {
+				"id": "self"
+			},
+			"id": "id",
+			"uuid": "uuid"
+		},
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/openregister/api/objects/filinq/dossier",
+				{
+					"name": "Dossier",
+					"description": "",
+					"bases": [],
+					"@self": {
+						"folder": "14"
+					}
+				},
+				{
+					"creating": true,
+					"error": null
+				}
+			]
+		],
+		"dossier": {
+			"uuid": "self",
+			"name": "",
+			"description": "",
+			"creating": false,
+			"error": null
+		}
+	},
+	{
+		"state": {
+			"folderId": 14,
+			"folderPath": "",
+			"dossier": {
+				"name": ""
+			}
+		},
+		"answer": {
+			"@self": {
+				"id": ""
+			},
+			"id": "id"
+		},
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/openregister/api/objects/filinq/dossier",
+				{
+					"name": "Dossier",
+					"description": "",
+					"bases": [],
+					"@self": {
+						"folder": "14"
+					}
+				},
+				{
+					"creating": true,
+					"error": null
+				}
+			]
+		],
+		"dossier": {
+			"uuid": "id",
+			"name": "",
+			"description": "",
+			"creating": false,
+			"error": null
+		}
+	},
+	{
+		"state": {
+			"folderId": 14,
+			"folderPath": "",
+			"dossier": {
+				"name": ""
+			}
+		},
+		"answer": {
+			"uuid": "only-uuid"
+		},
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/openregister/api/objects/filinq/dossier",
+				{
+					"name": "Dossier",
+					"description": "",
+					"bases": [],
+					"@self": {
+						"folder": "14"
+					}
+				},
+				{
+					"creating": true,
+					"error": null
+				}
+			]
+		],
+		"dossier": {
+			"uuid": "only-uuid",
+			"name": "",
+			"description": "",
+			"creating": false,
+			"error": null
+		}
+	},
+	{
+		"state": {
+			"folderId": 14,
+			"folderPath": "",
+			"dossier": {
+				"name": ""
+			}
+		},
+		"answer": {
+			"@self": {}
+		},
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/openregister/api/objects/filinq/dossier",
+				{
+					"name": "Dossier",
+					"description": "",
+					"bases": [],
+					"@self": {
+						"folder": "14"
+					}
+				},
+				{
+					"creating": true,
+					"error": null
+				}
+			]
+		],
+		"dossier": {
+			"uuid": null,
+			"name": "",
+			"description": "",
+			"creating": false,
+			"error": "Dossier created but UUID not found in response."
+		}
+	},
+	{
+		"state": {
+			"folderId": 14,
+			"folderPath": "",
+			"dossier": {
+				"name": ""
+			}
+		},
+		"answer": null,
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/openregister/api/objects/filinq/dossier",
+				{
+					"name": "Dossier",
+					"description": "",
+					"bases": [],
+					"@self": {
+						"folder": "14"
+					}
+				},
+				{
+					"creating": true,
+					"error": null
+				}
+			]
+		],
+		"dossier": {
+			"uuid": null,
+			"name": "",
+			"description": "",
+			"creating": false,
+			"error": "Dossier created but UUID not found in response."
+		}
+	},
+	{
+		"state": {
+			"folderId": 14,
+			"folderPath": "",
+			"dossier": {
+				"name": ""
+			}
+		},
+		"answer": "down",
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/openregister/api/objects/filinq/dossier",
+				{
+					"name": "Dossier",
+					"description": "",
+					"bases": [],
+					"@self": {
+						"folder": "14"
+					}
+				},
+				{
+					"creating": true,
+					"error": null
+				}
+			]
+		],
+		"dossier": {
+			"uuid": null,
+			"name": "",
+			"description": "",
+			"creating": false,
+			"error": "refused"
+		}
+	},
+	{
+		"state": {
+			"folderId": 14,
+			"folderPath": "",
+			"dossier": {
+				"name": ""
+			}
+		},
+		"answer": "plain",
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/openregister/api/objects/filinq/dossier",
+				{
+					"name": "Dossier",
+					"description": "",
+					"bases": [],
+					"@self": {
+						"folder": "14"
+					}
+				},
+				{
+					"creating": true,
+					"error": null
+				}
+			]
+		],
+		"dossier": {
+			"uuid": null,
+			"name": "",
+			"description": "",
+			"creating": false,
+			"error": "plain"
+		}
+	}
+]
