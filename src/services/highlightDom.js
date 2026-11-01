@@ -106,6 +106,7 @@ function highlightTextNode(textNode, values) {
  * @param {Array<{value: string, type: string}>} entities Values to highlight.
  * @param {string} [pendingValue] Optional pending selection to mark distinctly.
  * @return {void}
+ * @spec openspec/specs/document-preview/spec.md#requirement-format-specific-in-app-document-preview-req-ddprv-001
  */
 export function applyDomHighlights(root, entities, pendingValue) {
 	if (!root) {

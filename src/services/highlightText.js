@@ -89,6 +89,7 @@ function segmentsAlong(text, ranges) {
  * @param {Array<{value: string, type: string}>} entities Values to highlight.
  * @return {Array<{text: string, type: (string|null)}>} Ordered segments;
  *         `type` is null for plain (non-highlighted) text.
+ * @spec openspec/specs/document-preview/spec.md#requirement-format-specific-in-app-document-preview-req-ddprv-001
  */
 export function buildHighlightSegments(text, entities) {
 	if (!text) {
