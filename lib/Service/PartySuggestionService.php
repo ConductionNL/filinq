@@ -101,32 +101,7 @@ class PartySuggestionService implements PartySuggestionServiceInterface {
 			return [];
 		}
 
-		$mapper = $this->entities->tryGetEntityRelationMapper();
-		if ($mapper === null) {
-			return [];
-		}
-
-		try {
-			$relations = $mapper->findEntitiesForFile($fileId);
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				message: '[PartySuggestionService] could not read the entities of this file',
-				context: ['file' => __FILE__, 'line' => __LINE__, 'fileId' => $fileId, 'error' => $e->getMessage()]
-			);
-
-			return [];
-		}
-
-		$party = [];
-		foreach ($relations as $relation) {
-			$field = $this->fieldOf(relation: $relation);
-			if ($field === null || isset($party[$field['name']]) === true) {
-				continue;
-			}
-
-			$party[$field['name']] = $field['value'];
-		}
-
+		$party = $this->partyFields(relations: $this->relationsOf(fileId: $fileId));
 		$spans = $party;
 
 		if ($party === []) {
@@ -145,6 +120,54 @@ class PartySuggestionService implements PartySuggestionServiceInterface {
 		];
 
 	}//end suggestFor()
+
+	/**
+	 * The entities detected on a file, or none when they cannot be read.
+	 *
+	 * @param int $fileId The Nextcloud file id.
+	 *
+	 * @return iterable<mixed> The entity relations.
+	 */
+	private function relationsOf(int $fileId): iterable {
+		$mapper = $this->entities->tryGetEntityRelationMapper();
+		if ($mapper === null) {
+			return [];
+		}
+
+		try {
+			return $mapper->findEntitiesForFile($fileId);
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				message: '[PartySuggestionService] could not read the entities of this file',
+				context: ['file' => __FILE__, 'line' => __LINE__, 'fileId' => $fileId, 'error' => $e->getMessage()]
+			);
+
+			return [];
+		}
+
+	}//end relationsOf()
+
+	/**
+	 * The party fields the relations fill, the first usable value of each.
+	 *
+	 * @param iterable<mixed> $relations The entity relations.
+	 *
+	 * @return array<string, string> Field name to value.
+	 */
+	private function partyFields(iterable $relations): array {
+		$party = [];
+		foreach ($relations as $relation) {
+			$field = $this->fieldOf(relation: $relation);
+			if ($field === null || isset($party[$field['name']]) === true) {
+				continue;
+			}
+
+			$party[$field['name']] = $field['value'];
+		}
+
+		return $party;
+
+	}//end partyFields()
 
 	/**
 	 * The party field one detected entity fills, and with what.

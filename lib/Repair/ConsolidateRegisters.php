@@ -270,14 +270,26 @@ class ConsolidateRegisters implements IRepairStep {
 			return null;
 		}
 
+		return $this->withTargetTables(output: $output, located: ['ids' => $ids, 'targetId' => $targetId]);
+	}//end preflight()
+
+	/**
+	 * Add the table names and the target's shard tables, or null (reported) when there are none.
+	 *
+	 * @param IOutput $output Repair output, for the early-return messages.
+	 * @param array{ids: array<string, int>, targetId: int} $located The located target.
+	 *
+	 * @return array{ids: array<string, int>, targetId: int, names: array<int, string>, targetTables: array<int, string>}|null
+	 */
+	private function withTargetTables(IOutput $output, array $located): ?array {
 		$names = $this->gateway->tableNames();
 		if ($names === null) {
 			$output->info('ConsolidateRegisters: could not list tables; nothing moved.');
 			return null;
 		}
 
-		$target = $this->decisions->shardTablesFor(names: $names, registerId: $targetId);
-		$this->reportAmbiguous(schemaIds: $target['ambiguous'], registerId: $targetId);
+		$target = $this->decisions->shardTablesFor(names: $names, registerId: $located['targetId']);
+		$this->reportAmbiguous(schemaIds: $target['ambiguous'], registerId: $located['targetId']);
 
 		if ($target['tables'] === []) {
 			$output->info(
@@ -289,13 +301,8 @@ class ConsolidateRegisters implements IRepairStep {
 			return null;
 		}
 
-		return [
-			'ids' => $ids,
-			'targetId' => $targetId,
-			'names' => $names,
-			'targetTables' => $target['tables'],
-		];
-	}//end preflight()
+		return $located + ['names' => $names, 'targetTables' => $target['tables']];
+	}//end withTargetTables()
 
 	/**
 	 * Move every (schema) pair of one source register.
