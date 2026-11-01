@@ -55,6 +55,17 @@ use thiagoalessio\TesseractOCR\TesseractOCR;
 class OcrService implements OcrServiceInterface {
 
 	/**
+	 * The answer when no OCR ran.
+	 *
+	 * @var array{text: string, confidence: float, ocrProcessed: bool}
+	 */
+	private const NO_OCR_RESULT = [
+		'text' => '',
+		'confidence' => 0.0,
+		'ocrProcessed' => false,
+	];
+
+	/**
 	 * MIME types that always require OCR processing
 	 *
 	 * @var array<string>
@@ -442,47 +453,12 @@ class OcrService implements OcrServiceInterface {
 	 * @spec openspec/specs/ocr-document-scanning/spec.md
 	 */
 	public function processFile(int $fileId): array {
-		$noOcrResult = [
-			'text' => '',
-			'confidence' => 0.0,
-			'ocrProcessed' => false,
-		];
-
-		if ($this->isOcrEnabled() === false) {
-			$this->logger->debug('OCR is disabled, skipping');
-			return $noOcrResult;
-		}
-
-		if ($this->isTesseractAvailable() === false) {
-			$this->logger->warning(
-				'Tesseract is not installed, OCR unavailable',
-				['fileId' => $fileId]
-			);
-			return $noOcrResult;
+		if ($this->canRunOcr(fileId: $fileId) === false) {
+			return self::NO_OCR_RESULT;
 		}
 
 		try {
-			$file = $this->getFileById(fileId: $fileId);
-			if ($file === null) {
-				$this->logger->warning(
-					'File not found for OCR processing',
-					['fileId' => $fileId]
-				);
-				return $noOcrResult;
-			}
-
-			$mimeType = $file->getMimeType();
-			if ($this->needsOcr(mimeType: $mimeType) === false) {
-				return $noOcrResult;
-			}
-
-			$result = $this->processNode(file: $file);
-
-			return [
-				'text' => $result['text'],
-				'confidence' => $result['confidence'],
-				'ocrProcessed' => empty($result['text']) === false,
-			];
+			return $this->ocrOfFile(fileId: $fileId);
 		} catch (Exception $e) {
 			$this->logger->error(
 				'OCR processing failed',
@@ -491,10 +467,66 @@ class OcrService implements OcrServiceInterface {
 					'exception' => $e->getMessage(),
 				]
 			);
-			return $noOcrResult;
+			return self::NO_OCR_RESULT;
 		}//end try
 
 	}//end processFile()
+
+	/**
+	 * Whether OCR is switched on and Tesseract is installed; logs why not.
+	 *
+	 * @param int $fileId The file the check is for, for the log.
+	 *
+	 * @return bool True when OCR can run.
+	 */
+	private function canRunOcr(int $fileId): bool {
+		if ($this->isOcrEnabled() === false) {
+			$this->logger->debug('OCR is disabled, skipping');
+			return false;
+		}
+
+		if ($this->isTesseractAvailable() === false) {
+			$this->logger->warning(
+				'Tesseract is not installed, OCR unavailable',
+				['fileId' => $fileId]
+			);
+			return false;
+		}
+
+		return true;
+	}//end canRunOcr()
+
+	/**
+	 * Run OCR on one of the acting user's files, when its type needs it.
+	 *
+	 * @param int $fileId The Nextcloud file id.
+	 *
+	 * @return array{text: string, confidence: float, ocrProcessed: bool} The OCR result.
+	 *
+	 * @throws Exception When OCR fails.
+	 */
+	private function ocrOfFile(int $fileId): array {
+		$file = $this->getFileById(fileId: $fileId);
+		if ($file === null) {
+			$this->logger->warning(
+				'File not found for OCR processing',
+				['fileId' => $fileId]
+			);
+			return self::NO_OCR_RESULT;
+		}
+
+		if ($this->needsOcr(mimeType: $file->getMimeType()) === false) {
+			return self::NO_OCR_RESULT;
+		}
+
+		$result = $this->processNode(file: $file);
+
+		return [
+			'text' => $result['text'],
+			'confidence' => $result['confidence'],
+			'ocrProcessed' => empty($result['text']) === false,
+		];
+	}//end ocrOfFile()
 
 	/**
 	 * Run Tesseract on one file node with the admin's languages and DPI.
