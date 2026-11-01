@@ -723,14 +723,20 @@
                             "type": "object",
                             "properties": {
                                 "path": {
+                                    "title": "Path",
+                                    "description": "The field in the template's data, such as client.name.",
                                     "type": "string",
                                     "maxLength": 255
                                 },
                                 "label": {
+                                    "title": "Label",
+                                    "description": "The name people see for this field. When it is empty, the path is shown.",
                                     "type": "string",
                                     "maxLength": 128
                                 },
                                 "source": {
+                                    "title": "Source",
+                                    "description": "Where the value comes from, in words people read, such as from the client details.",
                                     "type": "string",
                                     "maxLength": 255
                                 }
