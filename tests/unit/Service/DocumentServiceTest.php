@@ -1482,4 +1482,27 @@ class DocumentServiceTest extends TestCase {
 			$this->assertSame($options['userId'], $call[0], 'Only the acting user may own a stored document.');
 		}
 	}//end testStoreTraceMatchesTheRecordedOne()
+	/**
+	 * A successful store answers exactly the filed refs and the warnings, whatever else storage returns.
+	 *
+	 * @return void
+	 */
+	public function testAStoredOutputCarriesOnlyItsRefs(): void {
+		$this->storageService->method('store')->willReturn(
+			['fileId' => 99, 'path' => '/clerk/files/Zaken/brief.pdf', 'name' => 'brief.pdf', 'size' => 12, 'owner' => 'mallory']
+		);
+
+		$run = [
+			'outputMode' => 'files',
+			'templateId' => 'tmpl-1',
+			'template' => ['namespace' => 'procest'],
+			'format' => 'pdf',
+			'options' => ['userId' => 'clerk', 'filename' => 'brief', 'output' => ['targetPath' => 'Zaken']],
+		];
+		$method = new \ReflectionMethod(DocumentService::class, 'storeOutputIfRequested');
+		$outcome = $method->invoke($this->service, $run, ['content' => '%PDF', 'warnings' => ['earlier']]);
+
+		$this->assertSame(['fileId', 'path', 'name', 'size', 'warnings'], array_keys($outcome));
+		$this->assertSame([99, '/clerk/files/Zaken/brief.pdf', 'brief.pdf', 12, ['earlier']], array_values($outcome));
+	}//end testAStoredOutputCarriesOnlyItsRefs()
 }//end class
