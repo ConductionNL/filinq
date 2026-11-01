@@ -1,0 +1,308 @@
+{
+    "an entity of the caller's organisation": {
+        "calls": [
+            "select [\"e.id\",\"e.uuid\",\"e.type\",\"e.value\",\"e.category\",\"e.organisation\"]",
+            "from [\"openregister_entities\",\"e\"]",
+            "eq e.uuid :\"ent-1\"",
+            "where [\"e.uuid = :\\\"ent-1\\\"\"]",
+            "executeQuery",
+            "closeCursor",
+            "get OCA\\OpenRegister\\Db\\EntityRelationMapper",
+            "findByEntityId 41"
+        ],
+        "answer": {
+            "found": {
+                "entity": {
+                    "uuid": "ent-1",
+                    "type": "PERSON",
+                    "value": "Jan",
+                    "category": "name"
+                },
+                "relations": [
+                    {
+                        "fileId": 7,
+                        "objectId": 0,
+                        "emailId": 3,
+                        "confidence": 0.9,
+                        "anonymized": true,
+                        "detectionMethod": "presidio"
+                    },
+                    {
+                        "fileId": 8,
+                        "objectId": 0,
+                        "emailId": 3,
+                        "confidence": 0.9,
+                        "anonymized": true,
+                        "detectionMethod": "presidio"
+                    }
+                ]
+            }
+        }
+    },
+    "an entity of another organisation": {
+        "calls": [
+            "select [\"e.id\",\"e.uuid\",\"e.type\",\"e.value\",\"e.category\",\"e.organisation\"]",
+            "from [\"openregister_entities\",\"e\"]",
+            "eq e.uuid :\"ent-1\"",
+            "where [\"e.uuid = :\\\"ent-1\\\"\"]",
+            "executeQuery",
+            "closeCursor"
+        ],
+        "answer": {
+            "found": null
+        }
+    },
+    "an administrator sees any organisation": {
+        "calls": [
+            "select [\"e.id\",\"e.uuid\",\"e.type\",\"e.value\",\"e.category\",\"e.organisation\"]",
+            "from [\"openregister_entities\",\"e\"]",
+            "eq e.uuid :\"ent-1\"",
+            "where [\"e.uuid = :\\\"ent-1\\\"\"]",
+            "executeQuery",
+            "closeCursor",
+            "get OCA\\OpenRegister\\Db\\EntityRelationMapper",
+            "findByEntityId 41"
+        ],
+        "answer": {
+            "found": {
+                "entity": {
+                    "uuid": "ent-1",
+                    "type": "PERSON",
+                    "value": "Jan",
+                    "category": "name"
+                },
+                "relations": [
+                    {
+                        "fileId": 7,
+                        "objectId": 0,
+                        "emailId": 3,
+                        "confidence": 0.9,
+                        "anonymized": true,
+                        "detectionMethod": "presidio"
+                    }
+                ]
+            }
+        }
+    },
+    "an entity without an organisation, for a member": {
+        "calls": [
+            "select [\"e.id\",\"e.uuid\",\"e.type\",\"e.value\",\"e.category\",\"e.organisation\"]",
+            "from [\"openregister_entities\",\"e\"]",
+            "eq e.uuid :\"ent-1\"",
+            "where [\"e.uuid = :\\\"ent-1\\\"\"]",
+            "executeQuery",
+            "closeCursor"
+        ],
+        "answer": {
+            "found": null
+        }
+    },
+    "an entity without an organisation, for an administrator": {
+        "calls": [
+            "select [\"e.id\",\"e.uuid\",\"e.type\",\"e.value\",\"e.category\",\"e.organisation\"]",
+            "from [\"openregister_entities\",\"e\"]",
+            "eq e.uuid :\"ent-1\"",
+            "where [\"e.uuid = :\\\"ent-1\\\"\"]",
+            "executeQuery",
+            "closeCursor",
+            "get OCA\\OpenRegister\\Db\\EntityRelationMapper",
+            "findByEntityId 41"
+        ],
+        "answer": {
+            "found": {
+                "entity": {
+                    "uuid": "ent-1",
+                    "type": "PERSON",
+                    "value": "Jan",
+                    "category": "name"
+                },
+                "relations": []
+            }
+        }
+    },
+    "an entity with no organisation column": {
+        "calls": [
+            "select [\"e.id\",\"e.uuid\",\"e.type\",\"e.value\",\"e.category\",\"e.organisation\"]",
+            "from [\"openregister_entities\",\"e\"]",
+            "eq e.uuid :\"ent-1\"",
+            "where [\"e.uuid = :\\\"ent-1\\\"\"]",
+            "executeQuery",
+            "closeCursor"
+        ],
+        "answer": {
+            "found": null
+        }
+    },
+    "a numeric organisation is compared strictly": {
+        "calls": [
+            "select [\"e.id\",\"e.uuid\",\"e.type\",\"e.value\",\"e.category\",\"e.organisation\"]",
+            "from [\"openregister_entities\",\"e\"]",
+            "eq e.uuid :\"ent-1\"",
+            "where [\"e.uuid = :\\\"ent-1\\\"\"]",
+            "executeQuery",
+            "closeCursor"
+        ],
+        "answer": {
+            "found": null
+        }
+    },
+    "a caller without organisations": {
+        "calls": [],
+        "answer": {
+            "found": null
+        }
+    },
+    "an empty uuid": {
+        "calls": [],
+        "answer": {
+            "found": null
+        }
+    },
+    "an empty uuid for an administrator": {
+        "calls": [],
+        "answer": {
+            "found": null
+        }
+    },
+    "no such entity": {
+        "calls": [
+            "select [\"e.id\",\"e.uuid\",\"e.type\",\"e.value\",\"e.category\",\"e.organisation\"]",
+            "from [\"openregister_entities\",\"e\"]",
+            "eq e.uuid :\"ent-9\"",
+            "where [\"e.uuid = :\\\"ent-9\\\"\"]",
+            "executeQuery",
+            "closeCursor"
+        ],
+        "answer": {
+            "found": null
+        }
+    },
+    "no category": {
+        "calls": [
+            "select [\"e.id\",\"e.uuid\",\"e.type\",\"e.value\",\"e.category\",\"e.organisation\"]",
+            "from [\"openregister_entities\",\"e\"]",
+            "eq e.uuid :\"ent-1\"",
+            "where [\"e.uuid = :\\\"ent-1\\\"\"]",
+            "executeQuery",
+            "closeCursor",
+            "get OCA\\OpenRegister\\Db\\EntityRelationMapper",
+            "findByEntityId 41"
+        ],
+        "answer": {
+            "found": {
+                "entity": {
+                    "uuid": "ent-1",
+                    "type": "PERSON",
+                    "value": "Jan",
+                    "category": ""
+                },
+                "relations": []
+            }
+        }
+    },
+    "the database fails": {
+        "calls": [
+            "select [\"e.id\",\"e.uuid\",\"e.type\",\"e.value\",\"e.category\",\"e.organisation\"]",
+            "from [\"openregister_entities\",\"e\"]",
+            "eq e.uuid :\"ent-1\"",
+            "where [\"e.uuid = :\\\"ent-1\\\"\"]",
+            "executeQuery"
+        ],
+        "answer": {
+            "refused": [
+                "catalogue_unavailable",
+                "The entity could not be read: connection lost"
+            ]
+        }
+    },
+    "the relations cannot be read": {
+        "calls": [
+            "select [\"e.id\",\"e.uuid\",\"e.type\",\"e.value\",\"e.category\",\"e.organisation\"]",
+            "from [\"openregister_entities\",\"e\"]",
+            "eq e.uuid :\"ent-1\"",
+            "where [\"e.uuid = :\\\"ent-1\\\"\"]",
+            "executeQuery",
+            "closeCursor",
+            "get OCA\\OpenRegister\\Db\\EntityRelationMapper",
+            "findByEntityId 41"
+        ],
+        "answer": {
+            "refused": [
+                "catalogue_unavailable",
+                "The entity could not be read: mapper down"
+            ]
+        }
+    },
+    "the relations cannot be read for another organisation": {
+        "calls": [
+            "select [\"e.id\",\"e.uuid\",\"e.type\",\"e.value\",\"e.category\",\"e.organisation\"]",
+            "from [\"openregister_entities\",\"e\"]",
+            "eq e.uuid :\"ent-1\"",
+            "where [\"e.uuid = :\\\"ent-1\\\"\"]",
+            "executeQuery",
+            "closeCursor"
+        ],
+        "answer": {
+            "found": null
+        }
+    },
+    "no such entity for an administrator": {
+        "calls": [
+            "select [\"e.id\",\"e.uuid\",\"e.type\",\"e.value\",\"e.category\",\"e.organisation\"]",
+            "from [\"openregister_entities\",\"e\"]",
+            "eq e.uuid :\"ent-9\"",
+            "where [\"e.uuid = :\\\"ent-9\\\"\"]",
+            "executeQuery",
+            "closeCursor"
+        ],
+        "answer": {
+            "found": null
+        }
+    },
+    "another entity reads its own relations": {
+        "calls": [
+            "select [\"e.id\",\"e.uuid\",\"e.type\",\"e.value\",\"e.category\",\"e.organisation\"]",
+            "from [\"openregister_entities\",\"e\"]",
+            "eq e.uuid :\"ent-2\"",
+            "where [\"e.uuid = :\\\"ent-2\\\"\"]",
+            "executeQuery",
+            "closeCursor",
+            "get OCA\\OpenRegister\\Db\\EntityRelationMapper",
+            "findByEntityId 42"
+        ],
+        "answer": {
+            "found": {
+                "entity": {
+                    "uuid": "ent-2",
+                    "type": "PERSON",
+                    "value": "Jan",
+                    "category": "name"
+                },
+                "relations": []
+            }
+        }
+    },
+    "no category column": {
+        "calls": [
+            "select [\"e.id\",\"e.uuid\",\"e.type\",\"e.value\",\"e.category\",\"e.organisation\"]",
+            "from [\"openregister_entities\",\"e\"]",
+            "eq e.uuid :\"ent-1\"",
+            "where [\"e.uuid = :\\\"ent-1\\\"\"]",
+            "executeQuery",
+            "closeCursor",
+            "get OCA\\OpenRegister\\Db\\EntityRelationMapper",
+            "findByEntityId 41"
+        ],
+        "answer": {
+            "found": {
+                "entity": {
+                    "uuid": "ent-1",
+                    "type": "PERSON",
+                    "value": "Jan",
+                    "category": ""
+                },
+                "relations": []
+            }
+        }
+    }
+}
