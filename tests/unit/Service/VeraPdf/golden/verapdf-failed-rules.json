@@ -1,0 +1,504 @@
+{
+    "nothing failed": {
+        "flavour": "3b",
+        "compliant": true,
+        "failedRuleCount": 1,
+        "failedRules": [],
+        "fontsNotEmbedded": [],
+        "fontsInImportedPages": false,
+        "onlyFontRulesFailed": false,
+        "validatorVersion": "veraPDF"
+    },
+    "no summaries": {
+        "flavour": "3b",
+        "compliant": false,
+        "failedRuleCount": 1,
+        "failedRules": [],
+        "fontsNotEmbedded": [],
+        "fontsInImportedPages": false,
+        "onlyFontRulesFailed": false,
+        "validatorVersion": "veraPDF"
+    },
+    "one font rule": {
+        "flavour": "3b",
+        "compliant": false,
+        "failedRuleCount": 1,
+        "failedRules": [
+            {
+                "ruleId": "ISO19005-3_6.2.11.4.1-1",
+                "specification": "ISO 19005-3:2012",
+                "clause": "6.2.11.4.1",
+                "testNumber": 1,
+                "checksFailed": 2
+            }
+        ],
+        "fontsNotEmbedded": [
+            "Arial"
+        ],
+        "fontsInImportedPages": false,
+        "onlyFontRulesFailed": true,
+        "validatorVersion": "veraPDF"
+    },
+    "the PDF/A-1 font clause": {
+        "flavour": "3b",
+        "compliant": false,
+        "failedRuleCount": 1,
+        "failedRules": [
+            {
+                "ruleId": "ISO19005-3_6.3.4-1",
+                "specification": "ISO 19005-3:2012",
+                "clause": "6.3.4",
+                "testNumber": 1,
+                "checksFailed": 1
+            }
+        ],
+        "fontsNotEmbedded": [
+            "Arial"
+        ],
+        "fontsInImportedPages": false,
+        "onlyFontRulesFailed": true,
+        "validatorVersion": "veraPDF"
+    },
+    "a font in an imported page": {
+        "flavour": "3b",
+        "compliant": false,
+        "failedRuleCount": 1,
+        "failedRules": [
+            {
+                "ruleId": "ISO19005-3_6.2.11.4.1-1",
+                "specification": "ISO 19005-3:2012",
+                "clause": "6.2.11.4.1",
+                "testNumber": 1,
+                "checksFailed": 2
+            }
+        ],
+        "fontsNotEmbedded": [
+            "Arial",
+            "Helvetica"
+        ],
+        "fontsInImportedPages": true,
+        "onlyFontRulesFailed": true,
+        "validatorVersion": "veraPDF"
+    },
+    "font and other rules": {
+        "flavour": "3b",
+        "compliant": false,
+        "failedRuleCount": 2,
+        "failedRules": [
+            {
+                "ruleId": "ISO19005-3_6.2.11.4.1-1",
+                "specification": "ISO 19005-3:2012",
+                "clause": "6.2.11.4.1",
+                "testNumber": 1,
+                "checksFailed": 1
+            },
+            {
+                "ruleId": "ISO19005-3_6.6.2.1-2",
+                "specification": "ISO 19005-3:2012",
+                "clause": "6.6.2.1",
+                "testNumber": 2,
+                "checksFailed": 3
+            }
+        ],
+        "fontsNotEmbedded": [
+            "Helvetica"
+        ],
+        "fontsInImportedPages": true,
+        "onlyFontRulesFailed": false,
+        "validatorVersion": "veraPDF"
+    },
+    "only another rule": {
+        "flavour": "3b",
+        "compliant": false,
+        "failedRuleCount": 1,
+        "failedRules": [
+            {
+                "ruleId": "ISO19005-2_6.1.3-4",
+                "specification": "ISO 19005-2:2011",
+                "clause": "6.1.3",
+                "testNumber": 4,
+                "checksFailed": 0
+            }
+        ],
+        "fontsNotEmbedded": [],
+        "fontsInImportedPages": false,
+        "onlyFontRulesFailed": false,
+        "validatorVersion": "veraPDF"
+    },
+    "the old status key": {
+        "flavour": "3b",
+        "compliant": false,
+        "failedRuleCount": 1,
+        "failedRules": [
+            {
+                "ruleId": "_6.3.4-0",
+                "specification": "",
+                "clause": "6.3.4",
+                "testNumber": 0,
+                "checksFailed": 0
+            }
+        ],
+        "fontsNotEmbedded": [
+            "Arial"
+        ],
+        "fontsInImportedPages": false,
+        "onlyFontRulesFailed": true,
+        "validatorVersion": "veraPDF"
+    },
+    "status before ruleStatus": {
+        "flavour": "3b",
+        "compliant": false,
+        "failedRuleCount": 1,
+        "failedRules": [],
+        "fontsNotEmbedded": [],
+        "fontsInImportedPages": false,
+        "onlyFontRulesFailed": false,
+        "validatorVersion": "veraPDF"
+    },
+    "entries that are not arrays": {
+        "flavour": "3b",
+        "compliant": false,
+        "failedRuleCount": 1,
+        "failedRules": [
+            {
+                "ruleId": "ISO19005-3_6.3.4-1",
+                "specification": "ISO 19005-3:2012",
+                "clause": "6.3.4",
+                "testNumber": 1,
+                "checksFailed": 1
+            }
+        ],
+        "fontsNotEmbedded": [
+            "Arial"
+        ],
+        "fontsInImportedPages": false,
+        "onlyFontRulesFailed": true,
+        "validatorVersion": "veraPDF"
+    },
+    "a context without a font": {
+        "flavour": "3b",
+        "compliant": false,
+        "failedRuleCount": 1,
+        "failedRules": [
+            {
+                "ruleId": "ISO19005-3_6.3.4-1",
+                "specification": "ISO 19005-3:2012",
+                "clause": "6.3.4",
+                "testNumber": 1,
+                "checksFailed": 2
+            }
+        ],
+        "fontsNotEmbedded": [],
+        "fontsInImportedPages": false,
+        "onlyFontRulesFailed": true,
+        "validatorVersion": "veraPDF"
+    },
+    "no checks": {
+        "flavour": "3b",
+        "compliant": false,
+        "failedRuleCount": 1,
+        "failedRules": [
+            {
+                "ruleId": "_6.3.4-0",
+                "specification": "",
+                "clause": "6.3.4",
+                "testNumber": 0,
+                "checksFailed": 0
+            }
+        ],
+        "fontsNotEmbedded": [],
+        "fontsInImportedPages": false,
+        "onlyFontRulesFailed": true,
+        "validatorVersion": "veraPDF"
+    },
+    "checks without context": {
+        "flavour": "3b",
+        "compliant": false,
+        "failedRuleCount": 1,
+        "failedRules": [
+            {
+                "ruleId": "_6.3.4-0",
+                "specification": "",
+                "clause": "6.3.4",
+                "testNumber": 0,
+                "checksFailed": 0
+            }
+        ],
+        "fontsNotEmbedded": [],
+        "fontsInImportedPages": false,
+        "onlyFontRulesFailed": true,
+        "validatorVersion": "veraPDF"
+    },
+    "two fonts in one context": {
+        "flavour": "3b",
+        "compliant": false,
+        "failedRuleCount": 1,
+        "failedRules": [
+            {
+                "ruleId": "ISO19005-3_6.3.4-1",
+                "specification": "ISO 19005-3:2012",
+                "clause": "6.3.4",
+                "testNumber": 1,
+                "checksFailed": 1
+            }
+        ],
+        "fontsNotEmbedded": [
+            "Times"
+        ],
+        "fontsInImportedPages": false,
+        "onlyFontRulesFailed": true,
+        "validatorVersion": "veraPDF"
+    },
+    "the same font in two rules": {
+        "flavour": "3b",
+        "compliant": false,
+        "failedRuleCount": 2,
+        "failedRules": [
+            {
+                "ruleId": "ISO19005-3_6.3.4-1",
+                "specification": "ISO 19005-3:2012",
+                "clause": "6.3.4",
+                "testNumber": 1,
+                "checksFailed": 1
+            },
+            {
+                "ruleId": "ISO19005-3_6.2.11.4.1-1",
+                "specification": "ISO 19005-3:2012",
+                "clause": "6.2.11.4.1",
+                "testNumber": 1,
+                "checksFailed": 2
+            }
+        ],
+        "fontsNotEmbedded": [
+            "Arial",
+            "Times"
+        ],
+        "fontsInImportedPages": false,
+        "onlyFontRulesFailed": true,
+        "validatorVersion": "veraPDF"
+    },
+    "a lower-case subset prefix": {
+        "flavour": "3b",
+        "compliant": false,
+        "failedRuleCount": 1,
+        "failedRules": [
+            {
+                "ruleId": "ISO19005-3_6.3.4-1",
+                "specification": "ISO 19005-3:2012",
+                "clause": "6.3.4",
+                "testNumber": 1,
+                "checksFailed": 1
+            }
+        ],
+        "fontsNotEmbedded": [
+            "abcdef+Arial"
+        ],
+        "fontsInImportedPages": false,
+        "onlyFontRulesFailed": true,
+        "validatorVersion": "veraPDF"
+    },
+    "a numeric clause": {
+        "flavour": "3b",
+        "compliant": false,
+        "failedRuleCount": 1,
+        "failedRules": [
+            {
+                "ruleId": "_634-3",
+                "specification": "",
+                "clause": "634",
+                "testNumber": 3,
+                "checksFailed": 2
+            }
+        ],
+        "fontsNotEmbedded": [],
+        "fontsInImportedPages": false,
+        "onlyFontRulesFailed": false,
+        "validatorVersion": "veraPDF"
+    },
+    "many rules": {
+        "flavour": "3b",
+        "compliant": false,
+        "failedRuleCount": 30,
+        "failedRules": [
+            {
+                "ruleId": "_6.1.1-1",
+                "specification": "",
+                "clause": "6.1.1",
+                "testNumber": 1,
+                "checksFailed": 0
+            },
+            {
+                "ruleId": "_6.1.2-2",
+                "specification": "",
+                "clause": "6.1.2",
+                "testNumber": 2,
+                "checksFailed": 0
+            },
+            {
+                "ruleId": "_6.1.3-3",
+                "specification": "",
+                "clause": "6.1.3",
+                "testNumber": 3,
+                "checksFailed": 0
+            },
+            {
+                "ruleId": "_6.1.4-4",
+                "specification": "",
+                "clause": "6.1.4",
+                "testNumber": 4,
+                "checksFailed": 0
+            },
+            {
+                "ruleId": "_6.1.5-5",
+                "specification": "",
+                "clause": "6.1.5",
+                "testNumber": 5,
+                "checksFailed": 0
+            },
+            {
+                "ruleId": "_6.1.6-6",
+                "specification": "",
+                "clause": "6.1.6",
+                "testNumber": 6,
+                "checksFailed": 0
+            },
+            {
+                "ruleId": "_6.1.7-7",
+                "specification": "",
+                "clause": "6.1.7",
+                "testNumber": 7,
+                "checksFailed": 0
+            },
+            {
+                "ruleId": "_6.1.8-8",
+                "specification": "",
+                "clause": "6.1.8",
+                "testNumber": 8,
+                "checksFailed": 0
+            },
+            {
+                "ruleId": "_6.1.9-9",
+                "specification": "",
+                "clause": "6.1.9",
+                "testNumber": 9,
+                "checksFailed": 0
+            },
+            {
+                "ruleId": "_6.1.10-10",
+                "specification": "",
+                "clause": "6.1.10",
+                "testNumber": 10,
+                "checksFailed": 0
+            },
+            {
+                "ruleId": "_6.1.11-11",
+                "specification": "",
+                "clause": "6.1.11",
+                "testNumber": 11,
+                "checksFailed": 0
+            },
+            {
+                "ruleId": "_6.1.12-12",
+                "specification": "",
+                "clause": "6.1.12",
+                "testNumber": 12,
+                "checksFailed": 0
+            },
+            {
+                "ruleId": "_6.1.13-13",
+                "specification": "",
+                "clause": "6.1.13",
+                "testNumber": 13,
+                "checksFailed": 0
+            },
+            {
+                "ruleId": "_6.1.14-14",
+                "specification": "",
+                "clause": "6.1.14",
+                "testNumber": 14,
+                "checksFailed": 0
+            },
+            {
+                "ruleId": "_6.1.15-15",
+                "specification": "",
+                "clause": "6.1.15",
+                "testNumber": 15,
+                "checksFailed": 0
+            },
+            {
+                "ruleId": "_6.1.16-16",
+                "specification": "",
+                "clause": "6.1.16",
+                "testNumber": 16,
+                "checksFailed": 0
+            },
+            {
+                "ruleId": "_6.1.17-17",
+                "specification": "",
+                "clause": "6.1.17",
+                "testNumber": 17,
+                "checksFailed": 0
+            },
+            {
+                "ruleId": "_6.1.18-18",
+                "specification": "",
+                "clause": "6.1.18",
+                "testNumber": 18,
+                "checksFailed": 0
+            },
+            {
+                "ruleId": "_6.1.19-19",
+                "specification": "",
+                "clause": "6.1.19",
+                "testNumber": 19,
+                "checksFailed": 0
+            },
+            {
+                "ruleId": "_6.1.20-20",
+                "specification": "",
+                "clause": "6.1.20",
+                "testNumber": 20,
+                "checksFailed": 0
+            },
+            {
+                "ruleId": "_6.1.21-21",
+                "specification": "",
+                "clause": "6.1.21",
+                "testNumber": 21,
+                "checksFailed": 0
+            },
+            {
+                "ruleId": "_6.1.22-22",
+                "specification": "",
+                "clause": "6.1.22",
+                "testNumber": 22,
+                "checksFailed": 0
+            },
+            {
+                "ruleId": "_6.1.23-23",
+                "specification": "",
+                "clause": "6.1.23",
+                "testNumber": 23,
+                "checksFailed": 0
+            },
+            {
+                "ruleId": "_6.1.24-24",
+                "specification": "",
+                "clause": "6.1.24",
+                "testNumber": 24,
+                "checksFailed": 0
+            },
+            {
+                "ruleId": "_6.1.25-25",
+                "specification": "",
+                "clause": "6.1.25",
+                "testNumber": 25,
+                "checksFailed": 0
+            }
+        ],
+        "fontsNotEmbedded": [],
+        "fontsInImportedPages": false,
+        "onlyFontRulesFailed": false,
+        "validatorVersion": "veraPDF"
+    }
+}
