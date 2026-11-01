@@ -27,6 +27,7 @@ namespace OCA\Filinq\Service\Office;
 
 use OCA\Filinq\Kernel\Contracts\OfficeSuiteCapabilityServiceInterface;
 use OCP\Http\Client\IClientService;
+use OCP\Http\Client\IResponse;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -137,23 +138,9 @@ class OfficeSuiteCapabilityService implements OfficeSuiteCapabilityServiceInterf
 			return $this->absent(reason: 'no WOPI endpoint configured');
 		}
 
-		try {
-			$response = $this->clientService->newClient()->get(
-				$discoveryUrl,
-				[
-					'timeout' => self::TIMEOUT_SECONDS,
-					'connect_timeout' => self::TIMEOUT_SECONDS,
-					'allow_redirects' => false,
-					'http_errors' => false,
-				]
-			);
-		} catch (Throwable $e) {
-			return $this->absent(reason: 'probe could not complete: ' . $e->getMessage());
-		}
-
-		$status = $response->getStatusCode();
-		if ($status < 200 || $status >= 300) {
-			return $this->absent(reason: sprintf('discovery returned %d', $status));
+		$response = $this->fetchSuccess(url: $discoveryUrl, label: 'discovery');
+		if (is_array($response) === true) {
+			return $response;
 		}
 
 		$body = (string)$response->getBody();
@@ -212,16 +199,51 @@ class OfficeSuiteCapabilityService implements OfficeSuiteCapabilityServiceInterf
 			return $this->absent(reason: 'no WOPI endpoint configured');
 		}
 
+		$response = $this->fetchSuccess(url: $checkFileInfoUrl, label: 'CheckFileInfo');
+		if (is_array($response) === true) {
+			return $response;
+		}
+
+		$decoded = json_decode((string)$response->getBody(), true);
+		if (is_array($decoded) === false) {
+			// A 200 can be an error page or a login redirect body.
+			return $this->absent(reason: 'CheckFileInfo returned a non-JSON body');
+		}
+
+		$missing = $this->firstMissingField(payload: $decoded);
+		if ($missing !== null) {
+			return $this->absent(
+				reason: sprintf('CheckFileInfo response is missing the required field "%s"', $missing)
+			);
+		}
+
+		return [
+			'available' => true,
+			'reason' => 'CheckFileInfo succeeded',
+			'suite' => $this->identifySuite(payload: $decoded),
+		];
+	}//end probe()
+
+	/**
+	 * GET a WOPI URL and keep the response only when it answered 2xx.
+	 *
+	 * Redirects are not followed (a redirect to a login page is not a WOPI
+	 * response), and the status is handled here so a 404 is a verdict, not an
+	 * exception indistinguishable from a network failure.
+	 *
+	 * @param string $url Absolute URL to fetch.
+	 * @param string $label What the URL serves, for the absent reason.
+	 *
+	 * @return IResponse|array{available:bool, reason:string, suite:string|null} The response, or the absent verdict.
+	 */
+	private function fetchSuccess(string $url, string $label): IResponse|array {
 		try {
 			$response = $this->clientService->newClient()->get(
-				$checkFileInfoUrl,
+				$url,
 				[
 					'timeout' => self::TIMEOUT_SECONDS,
 					'connect_timeout' => self::TIMEOUT_SECONDS,
-					// A redirect to a login page is not a CheckFileInfo response.
 					'allow_redirects' => false,
-					// Handle the status ourselves so a 404 is a verdict, not an
-					// exception indistinguishable from a network failure.
 					'http_errors' => false,
 				]
 			);
@@ -232,30 +254,28 @@ class OfficeSuiteCapabilityService implements OfficeSuiteCapabilityServiceInterf
 
 		$status = $response->getStatusCode();
 		if ($status < 200 || $status >= 300) {
-			// The measured Euro-Office default lands exactly here, with 404.
-			return $this->absent(reason: sprintf('CheckFileInfo returned %d', $status));
+			return $this->absent(reason: sprintf('%s returned %d', $label, $status));
 		}
 
-		$decoded = json_decode((string)$response->getBody(), true);
-		if (is_array($decoded) === false) {
-			// A 200 can be an error page or a login redirect body.
-			return $this->absent(reason: 'CheckFileInfo returned a non-JSON body');
-		}
+		return $response;
+	}//end fetchSuccess()
 
+	/**
+	 * The first required CheckFileInfo field the payload lacks.
+	 *
+	 * @param array $payload The decoded CheckFileInfo response.
+	 *
+	 * @return string|null The field, or null when every required field is present.
+	 */
+	private function firstMissingField(array $payload): ?string {
 		foreach (self::REQUIRED_FIELDS as $field) {
-			if (array_key_exists($field, $decoded) === false) {
-				return $this->absent(
-					reason: sprintf('CheckFileInfo response is missing the required field "%s"', $field)
-				);
+			if (array_key_exists($field, $payload) === false) {
+				return $field;
 			}
 		}
 
-		return [
-			'available' => true,
-			'reason' => 'CheckFileInfo succeeded',
-			'suite' => $this->identifySuite(payload: $decoded),
-		];
-	}//end probe()
+		return null;
+	}//end firstMissingField()
 
 	/**
 	 * Build an absent verdict and record why.

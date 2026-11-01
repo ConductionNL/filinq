@@ -1,0 +1,1043 @@
+{
+	"initial": {
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 20,
+		"dialogOpen": false,
+		"saving": false,
+		"formError": "",
+		"deleteTarget": null,
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 20
+		},
+		"emptyText": "[No custom dictionaries defined yet.]",
+		"deleteMessage": "[Delete \"[this dictionary]\" and all its terms? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "label",
+				"label": "[Label]",
+				"sortable": true
+			},
+			{
+				"key": "termCount",
+				"label": "[Terms]",
+				"sortable": true
+			},
+			{
+				"key": "matchMode",
+				"label": "[Match mode]",
+				"sortable": true
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"mounted": {
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 20,
+		"dialogOpen": false,
+		"saving": false,
+		"formError": "",
+		"deleteTarget": null,
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 20
+		},
+		"emptyText": "[No custom dictionaries defined yet.]",
+		"deleteMessage": "[Delete \"[this dictionary]\" and all its terms? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "label",
+				"label": "[Label]",
+				"sortable": true
+			},
+			{
+				"key": "termCount",
+				"label": "[Terms]",
+				"sortable": true
+			},
+			{
+				"key": "matchMode",
+				"label": "[Match mode]",
+				"sortable": true
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [
+			[
+				"customDictionary",
+				"fetchDictionaries"
+			],
+			[
+				"customDictionary",
+				"fetchCapabilities"
+			]
+		],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"matchModeLabel": [
+		"[Exact]",
+		"[Word boundary]",
+		"odd",
+		"[Case-insensitive]"
+	],
+	"displayLabel": [
+		"Dict",
+		"NL",
+		"[Custom dictionary]"
+	],
+	"refresh": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 20,
+		"dialogOpen": false,
+		"saving": false,
+		"formError": "",
+		"deleteTarget": null,
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 20
+		},
+		"emptyText": "[No custom dictionaries defined yet.]",
+		"deleteMessage": "[Delete \"[this dictionary]\" and all its terms? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "label",
+				"label": "[Label]",
+				"sortable": true
+			},
+			{
+				"key": "termCount",
+				"label": "[Terms]",
+				"sortable": true
+			},
+			{
+				"key": "matchMode",
+				"label": "[Match mode]",
+				"sortable": true
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [
+			[
+				"customDictionary",
+				"fetchDictionaries"
+			]
+		],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"page3": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 3,
+		"pageSize": 20,
+		"dialogOpen": false,
+		"saving": false,
+		"formError": "",
+		"deleteTarget": null,
+		"deleting": false,
+		"paginationData": {
+			"page": 3,
+			"pages": 1,
+			"total": 3,
+			"limit": 20
+		},
+		"emptyText": "[No custom dictionaries defined yet.]",
+		"deleteMessage": "[Delete \"[this dictionary]\" and all its terms? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "label",
+				"label": "[Label]",
+				"sortable": true
+			},
+			{
+				"key": "termCount",
+				"label": "[Terms]",
+				"sortable": true
+			},
+			{
+				"key": "matchMode",
+				"label": "[Match mode]",
+				"sortable": true
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"size50": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 50,
+		"dialogOpen": false,
+		"saving": false,
+		"formError": "",
+		"deleteTarget": null,
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 50
+		},
+		"emptyText": "[No custom dictionaries defined yet.]",
+		"deleteMessage": "[Delete \"[this dictionary]\" and all its terms? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "label",
+				"label": "[Label]",
+				"sortable": true
+			},
+			{
+				"key": "termCount",
+				"label": "[Terms]",
+				"sortable": true
+			},
+			{
+				"key": "matchMode",
+				"label": "[Match mode]",
+				"sortable": true
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"create": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 50,
+		"dialogOpen": true,
+		"saving": false,
+		"formError": "",
+		"deleteTarget": null,
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 50
+		},
+		"emptyText": "[No custom dictionaries defined yet.]",
+		"deleteMessage": "[Delete \"[this dictionary]\" and all its terms? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "label",
+				"label": "[Label]",
+				"sortable": true
+			},
+			{
+				"key": "termCount",
+				"label": "[Terms]",
+				"sortable": true
+			},
+			{
+				"key": "matchMode",
+				"label": "[Match mode]",
+				"sortable": true
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"submitCreate": "(no method)",
+	"submitCreateDialog": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 50,
+		"dialogOpen": false,
+		"saving": false,
+		"formError": "",
+		"deleteTarget": null,
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 50
+		},
+		"emptyText": "[No custom dictionaries defined yet.]",
+		"deleteMessage": "[Delete \"[this dictionary]\" and all its terms? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "label",
+				"label": "[Label]",
+				"sortable": true
+			},
+			{
+				"key": "termCount",
+				"label": "[Terms]",
+				"sortable": true
+			},
+			{
+				"key": "matchMode",
+				"label": "[Match mode]",
+				"sortable": true
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [
+			[
+				"customDictionary",
+				"createDictionary",
+				{
+					"a": 1
+				}
+			]
+		],
+		"emitted": [],
+		"pushed": [
+			{
+				"name": "CustomDictionaryDetail",
+				"params": {
+					"id": "created-1"
+				}
+			}
+		],
+		"errors": []
+	},
+	"editFull": "(no method)",
+	"submitUpdate": "(no method)",
+	"editEmpty": "(no method)",
+	"failResponse": "(no method)",
+	"failMessage": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 50,
+		"dialogOpen": false,
+		"saving": false,
+		"formError": "network down",
+		"deleteTarget": null,
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 50
+		},
+		"emptyText": "[No custom dictionaries defined yet.]",
+		"deleteMessage": "[Delete \"[this dictionary]\" and all its terms? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "label",
+				"label": "[Label]",
+				"sortable": true
+			},
+			{
+				"key": "termCount",
+				"label": "[Terms]",
+				"sortable": true
+			},
+			{
+				"key": "matchMode",
+				"label": "[Match mode]",
+				"sortable": true
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [
+			[
+				"customDictionary",
+				"createDictionary",
+				{
+					"a": 3
+				}
+			]
+		],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"failBare": "(no method)",
+	"createAfterFail": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 50,
+		"dialogOpen": true,
+		"saving": false,
+		"formError": "",
+		"deleteTarget": null,
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 50
+		},
+		"emptyText": "[No custom dictionaries defined yet.]",
+		"deleteMessage": "[Delete \"[this dictionary]\" and all its terms? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "label",
+				"label": "[Label]",
+				"sortable": true
+			},
+			{
+				"key": "termCount",
+				"label": "[Terms]",
+				"sortable": true
+			},
+			{
+				"key": "matchMode",
+				"label": "[Match mode]",
+				"sortable": true
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"editById": "(no method)",
+	"deleteNone": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 50,
+		"dialogOpen": true,
+		"saving": false,
+		"formError": "",
+		"deleteTarget": null,
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 50
+		},
+		"emptyText": "[No custom dictionaries defined yet.]",
+		"deleteMessage": "[Delete \"[this dictionary]\" and all its terms? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "label",
+				"label": "[Label]",
+				"sortable": true
+			},
+			{
+				"key": "termCount",
+				"label": "[Terms]",
+				"sortable": true
+			},
+			{
+				"key": "matchMode",
+				"label": "[Match mode]",
+				"sortable": true
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"confirm": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 50,
+		"dialogOpen": true,
+		"saving": false,
+		"formError": "",
+		"deleteTarget": {
+			"@self": {
+				"id": "self-1"
+			},
+			"id": "id-1",
+			"entityText": "Jan",
+			"primaryName": "Jan",
+			"label": "Dict",
+			"matchRules": [
+				{
+					"type": "bsn",
+					"value": "123",
+					"extra": true
+				},
+				{
+					"type": "exact",
+					"value": "Jan"
+				}
+			],
+			"active": false,
+			"severity": "high",
+			"scope": "document"
+		},
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 50
+		},
+		"emptyText": "[No custom dictionaries defined yet.]",
+		"deleteMessage": "[Delete \"Dict\" and all its terms? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "label",
+				"label": "[Label]",
+				"sortable": true
+			},
+			{
+				"key": "termCount",
+				"label": "[Terms]",
+				"sortable": true
+			},
+			{
+				"key": "matchMode",
+				"label": "[Match mode]",
+				"sortable": true
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"cancel": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 50,
+		"dialogOpen": true,
+		"saving": false,
+		"formError": "",
+		"deleteTarget": null,
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 50
+		},
+		"emptyText": "[No custom dictionaries defined yet.]",
+		"deleteMessage": "[Delete \"[this dictionary]\" and all its terms? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "label",
+				"label": "[Label]",
+				"sortable": true
+			},
+			{
+				"key": "termCount",
+				"label": "[Terms]",
+				"sortable": true
+			},
+			{
+				"key": "matchMode",
+				"label": "[Match mode]",
+				"sortable": true
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"confirmUuid": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 50,
+		"dialogOpen": true,
+		"saving": false,
+		"formError": "",
+		"deleteTarget": {
+			"uuid": "uuid-2",
+			"matchRules": "not-an-array",
+			"scope": "entity"
+		},
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 50
+		},
+		"emptyText": "[No custom dictionaries defined yet.]",
+		"deleteMessage": "[Delete \"[this dictionary]\" and all its terms? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "label",
+				"label": "[Label]",
+				"sortable": true
+			},
+			{
+				"key": "termCount",
+				"label": "[Terms]",
+				"sortable": true
+			},
+			{
+				"key": "matchMode",
+				"label": "[Match mode]",
+				"sortable": true
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"deleteOk": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 50,
+		"dialogOpen": true,
+		"saving": false,
+		"formError": "",
+		"deleteTarget": null,
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 50
+		},
+		"emptyText": "[No custom dictionaries defined yet.]",
+		"deleteMessage": "[Delete \"[this dictionary]\" and all its terms? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "label",
+				"label": "[Label]",
+				"sortable": true
+			},
+			{
+				"key": "termCount",
+				"label": "[Terms]",
+				"sortable": true
+			},
+			{
+				"key": "matchMode",
+				"label": "[Match mode]",
+				"sortable": true
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [
+			[
+				"customDictionary",
+				"deleteDictionary",
+				"uuid-2"
+			]
+		],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"confirmSelf": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 50,
+		"dialogOpen": true,
+		"saving": false,
+		"formError": "",
+		"deleteTarget": {
+			"@self": {
+				"id": "self-1"
+			},
+			"id": "id-1",
+			"entityText": "Jan",
+			"primaryName": "Jan",
+			"label": "Dict",
+			"matchRules": [
+				{
+					"type": "bsn",
+					"value": "123",
+					"extra": true
+				},
+				{
+					"type": "exact",
+					"value": "Jan"
+				}
+			],
+			"active": false,
+			"severity": "high",
+			"scope": "document"
+		},
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 50
+		},
+		"emptyText": "[No custom dictionaries defined yet.]",
+		"deleteMessage": "[Delete \"Dict\" and all its terms? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "label",
+				"label": "[Label]",
+				"sortable": true
+			},
+			{
+				"key": "termCount",
+				"label": "[Terms]",
+				"sortable": true
+			},
+			{
+				"key": "matchMode",
+				"label": "[Match mode]",
+				"sortable": true
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"deleteSelf": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 50,
+		"dialogOpen": true,
+		"saving": false,
+		"formError": "",
+		"deleteTarget": null,
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 50
+		},
+		"emptyText": "[No custom dictionaries defined yet.]",
+		"deleteMessage": "[Delete \"[this dictionary]\" and all its terms? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "label",
+				"label": "[Label]",
+				"sortable": true
+			},
+			{
+				"key": "termCount",
+				"label": "[Terms]",
+				"sortable": true
+			},
+			{
+				"key": "matchMode",
+				"label": "[Match mode]",
+				"sortable": true
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [
+			[
+				"customDictionary",
+				"deleteDictionary",
+				"self-1"
+			]
+		],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"confirmAgain": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 50,
+		"dialogOpen": true,
+		"saving": false,
+		"formError": "",
+		"deleteTarget": {
+			"id": "id-3",
+			"consentStatus": "objection_received"
+		},
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 50
+		},
+		"emptyText": "[No custom dictionaries defined yet.]",
+		"deleteMessage": "[Delete \"[this dictionary]\" and all its terms? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "label",
+				"label": "[Label]",
+				"sortable": true
+			},
+			{
+				"key": "termCount",
+				"label": "[Terms]",
+				"sortable": true
+			},
+			{
+				"key": "matchMode",
+				"label": "[Match mode]",
+				"sortable": true
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"deleteFail": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 50,
+		"dialogOpen": true,
+		"saving": false,
+		"formError": "",
+		"deleteTarget": {
+			"id": "id-3",
+			"consentStatus": "objection_received"
+		},
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 50
+		},
+		"emptyText": "[No custom dictionaries defined yet.]",
+		"deleteMessage": "[Delete \"[this dictionary]\" and all its terms? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "label",
+				"label": "[Label]",
+				"sortable": true
+			},
+			{
+				"key": "termCount",
+				"label": "[Terms]",
+				"sortable": true
+			},
+			{
+				"key": "matchMode",
+				"label": "[Match mode]",
+				"sortable": true
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [
+			[
+				"customDictionary",
+				"deleteDictionary",
+				"id-3"
+			]
+		],
+		"emitted": [],
+		"pushed": [],
+		"errors": [
+			[
+				"Failed to delete custom dictionary:",
+				"delete refused"
+			]
+		]
+	},
+	"view": "(no method)",
+	"viewUuid": "(no method)",
+	"viewDict": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 50,
+		"dialogOpen": true,
+		"saving": false,
+		"formError": "",
+		"deleteTarget": {
+			"id": "id-3",
+			"consentStatus": "objection_received"
+		},
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 50
+		},
+		"emptyText": "[No custom dictionaries defined yet.]",
+		"deleteMessage": "[Delete \"[this dictionary]\" and all its terms? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "label",
+				"label": "[Label]",
+				"sortable": true
+			},
+			{
+				"key": "termCount",
+				"label": "[Terms]",
+				"sortable": true
+			},
+			{
+				"key": "matchMode",
+				"label": "[Match mode]",
+				"sortable": true
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [],
+		"emitted": [],
+		"pushed": [
+			{
+				"name": "CustomDictionaryDetail",
+				"params": {
+					"id": "uuid-2"
+				}
+			}
+		],
+		"errors": []
+	},
+	"emptyWithError": {
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 20,
+		"dialogOpen": false,
+		"saving": false,
+		"formError": "",
+		"deleteTarget": null,
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 0,
+			"limit": 20
+		},
+		"emptyText": "load failed",
+		"deleteMessage": "[Delete \"[this dictionary]\" and all its terms? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "label",
+				"label": "[Label]",
+				"sortable": true
+			},
+			{
+				"key": "termCount",
+				"label": "[Terms]",
+				"sortable": true
+			},
+			{
+				"key": "matchMode",
+				"label": "[Match mode]",
+				"sortable": true
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	}
+}

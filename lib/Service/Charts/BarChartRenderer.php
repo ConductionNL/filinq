@@ -134,56 +134,71 @@ class BarChartRenderer {
 	 * @return string SVG markup fragment.
 	 */
 	private function drawBars(ChartRequest $chart, array $plot): string {
-		$niceMax = $plot['niceMax'];
-		$valueFmt = $chart->valueFormat();
 		$labels = $chart->normalized['labels'];
-		$series = $chart->normalized['series'];
 		$numLabels = count($labels);
-		$numSeries = count($series);
-		$baselineY = $plot['baselineY'];
-		$labelled = ($numLabels <= ChartLabelFormatter::MAX_LABELLED_ENTRIES);
-
 		$groupWidth = $plot['plotWidth'] / max(1, $numLabels);
 		$barGap = $groupWidth * 0.18;
-		$barWidth = ($groupWidth - (2 * $barGap)) / max(1, $numSeries);
+		$group = [
+			'niceMax' => $plot['niceMax'],
+			'plotHeight' => $plot['plotHeight'],
+			'baselineY' => $plot['baselineY'],
+			'barGap' => $barGap,
+			'barWidth' => ($groupWidth - (2 * $barGap)) / max(1, count($chart->normalized['series'])),
+			'labelled' => ($numLabels <= ChartLabelFormatter::MAX_LABELLED_ENTRIES),
+		];
 
 		$parts = [];
 		for ($i = 0; $i < $numLabels; $i++) {
-			$groupX = $plot['marginLeft'] + ($i * $groupWidth);
+			$group['index'] = $i;
+			$group['groupX'] = $plot['marginLeft'] + ($i * $groupWidth);
+			$parts[] = $this->drawGroup(chart: $chart, group: $group);
 
-			for ($s = 0; $s < $numSeries; $s++) {
-				$value = $series[$s]['values'][$i] ?? null;
-				if ($value === null) {
-					continue;
-				}
-
-				$barHeight = max(0.0, (($value / $niceMax) * $plot['plotHeight']));
-				$x = $groupX + $barGap + ($s * $barWidth);
-				$y = $baselineY - $barHeight;
-
-				$parts[] = $this->svg->rectEl(
-					box: new SvgBox(origin: new SvgPoint(x: $x, y: $y), size: new SvgSize(width: $barWidth * 0.86, height: $barHeight)),
-					color: $chart->color(index: $s)
-				);
-
-				if ($labelled === true && $barHeight > 12) {
-					$parts[] = $this->svg->textEl(
-						position: new SvgPoint(x: $x + (($barWidth * 0.86) / 2), y: $y - 4),
-						text: new SvgText(content: $this->labels->formatValue(value: $value, format: $valueFmt), style: SvgTextStyle::LabelMiddle)
-					);
-				}
-			}//end for
-
-			if ($labelled === true) {
+			if ($group['labelled'] === true) {
 				$parts[] = $this->svg->textEl(
-					position: new SvgPoint(x: $groupX + ($groupWidth / 2), y: $baselineY + 16),
+					position: new SvgPoint(x: $group['groupX'] + ($groupWidth / 2), y: $group['baselineY'] + 16),
 					text: new SvgText(content: $this->labels->truncate(text: $labels[$i], max: 14), style: SvgTextStyle::LabelMiddle)
 				);
 			}
-		}//end for
+		}
 
 		return implode('', $parts);
 	}//end drawBars()
+
+	/**
+	 * Draw the bars of one category, each with its value label when there is room.
+	 *
+	 * @param ChartRequest $chart The normalized data, palette and value format.
+	 * @param array $group The category index and x, plus the bar geometry drawBars() derived.
+	 *
+	 * @return string SVG markup fragment.
+	 */
+	private function drawGroup(ChartRequest $chart, array $group): string {
+		$parts = [];
+		foreach ($chart->normalized['series'] as $s => $oneSeries) {
+			$value = $oneSeries['values'][$group['index']] ?? null;
+			if ($value === null) {
+				continue;
+			}
+
+			$barHeight = max(0.0, (($value / $group['niceMax']) * $group['plotHeight']));
+			$x = $group['groupX'] + $group['barGap'] + ($s * $group['barWidth']);
+			$y = $group['baselineY'] - $barHeight;
+
+			$parts[] = $this->svg->rectEl(
+				box: new SvgBox(origin: new SvgPoint(x: $x, y: $y), size: new SvgSize(width: $group['barWidth'] * 0.86, height: $barHeight)),
+				color: $chart->color(index: $s)
+			);
+
+			if ($group['labelled'] === true && $barHeight > 12) {
+				$parts[] = $this->svg->textEl(
+					position: new SvgPoint(x: $x + (($group['barWidth'] * 0.86) / 2), y: $y - 4),
+					text: new SvgText(content: $this->labels->formatValue(value: $value, format: $chart->valueFormat()), style: SvgTextStyle::LabelMiddle)
+				);
+			}
+		}
+
+		return implode('', $parts);
+	}//end drawGroup()
 
 	/**
 	 * Render a horizontal bar chart (ranked-list orientation, first series only).
