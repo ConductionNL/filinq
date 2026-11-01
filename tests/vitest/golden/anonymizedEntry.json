@@ -1,0 +1,868 @@
+[
+	{
+		"name": "no link, unreadable text",
+		"entry": null,
+		"queued": 0,
+		"calls": [
+			[
+				"GET",
+				"/index.php/apps/openregister/api/objects/filinq/anonymizationLink",
+				{
+					"params": {
+						"anonymizedFileId": 9
+					}
+				}
+			],
+			[
+				"TEXT",
+				{
+					"path": "/DocuDesk/Dos/f.pdf",
+					"mimeType": "application/pdf",
+					"fileName": "f.pdf"
+				}
+			]
+		]
+	},
+	{
+		"name": "no link, no placeholders",
+		"entry": null,
+		"queued": 0,
+		"calls": [
+			[
+				"GET",
+				"/index.php/apps/openregister/api/objects/filinq/anonymizationLink",
+				{
+					"params": {
+						"anonymizedFileId": 9
+					}
+				}
+			],
+			[
+				"TEXT",
+				{
+					"path": "/DocuDesk/Dos/f.pdf",
+					"mimeType": "application/pdf",
+					"fileName": "f.pdf"
+				}
+			]
+		]
+	},
+	{
+		"name": "link lookup fails, no placeholders",
+		"entry": null,
+		"queued": 0,
+		"calls": [
+			[
+				"GET",
+				"/index.php/apps/openregister/api/objects/filinq/anonymizationLink",
+				{
+					"params": {
+						"anonymizedFileId": 9
+					}
+				}
+			],
+			[
+				"TEXT",
+				{
+					"path": "/DocuDesk/Dos/f.pdf",
+					"mimeType": "application/pdf",
+					"fileName": "f.pdf"
+				}
+			]
+		]
+	},
+	{
+		"name": "link, unreadable text",
+		"entry": {
+			"id": "file-1",
+			"name": "f.pdf",
+			"status": "completed",
+			"viewMode": "anonymized",
+			"error": null,
+			"fileId": 9,
+			"filePath": "/DocuDesk/Dos/f.pdf",
+			"entities": [],
+			"entityCount": 0,
+			"replacementCount": 12,
+			"detailUnavailable": true,
+			"anonymizedFileId": null,
+			"anonymizedFileName": null,
+			"anonymizedFilePath": null,
+			"sourceFileId": 40,
+			"sourceFileName": "bron.pdf",
+			"sourceFilePath": "/DocuDesk/Dos/bron.pdf",
+			"anonymizationLinkId": "L1",
+			"runCount": 2,
+			"dossier": "Dos"
+		},
+		"queued": 1,
+		"calls": [
+			[
+				"GET",
+				"/index.php/apps/openregister/api/objects/filinq/anonymizationLink",
+				{
+					"params": {
+						"anonymizedFileId": 9
+					}
+				}
+			],
+			[
+				"TEXT",
+				{
+					"path": "/DocuDesk/Dos/f.pdf",
+					"mimeType": "application/pdf",
+					"fileName": "f.pdf"
+				}
+			]
+		]
+	},
+	{
+		"name": "link, no placeholders",
+		"entry": {
+			"id": "file-2",
+			"name": "f.pdf",
+			"status": "completed",
+			"viewMode": "anonymized",
+			"error": null,
+			"fileId": 9,
+			"filePath": "/DocuDesk/Dos/f.pdf",
+			"entities": [],
+			"entityCount": 0,
+			"replacementCount": 12,
+			"detailUnavailable": true,
+			"anonymizedFileId": null,
+			"anonymizedFileName": null,
+			"anonymizedFilePath": null,
+			"sourceFileId": 40,
+			"sourceFileName": "bron.pdf",
+			"sourceFilePath": "/DocuDesk/Dos/bron.pdf",
+			"anonymizationLinkId": "L1",
+			"runCount": 2,
+			"dossier": "Dos"
+		},
+		"queued": 1,
+		"calls": [
+			[
+				"GET",
+				"/index.php/apps/openregister/api/objects/filinq/anonymizationLink",
+				{
+					"params": {
+						"anonymizedFileId": 9
+					}
+				}
+			],
+			[
+				"TEXT",
+				{
+					"path": "/DocuDesk/Dos/f.pdf",
+					"mimeType": "application/pdf",
+					"fileName": "f.pdf"
+				}
+			]
+		]
+	},
+	{
+		"name": "link, no placeholders, no push",
+		"entry": {
+			"id": "file-3",
+			"name": "f.pdf",
+			"status": "completed",
+			"viewMode": "anonymized",
+			"error": null,
+			"fileId": 9,
+			"filePath": "/DocuDesk/Dos/f.pdf",
+			"entities": [],
+			"entityCount": 0,
+			"replacementCount": 12,
+			"detailUnavailable": true,
+			"anonymizedFileId": null,
+			"anonymizedFileName": null,
+			"anonymizedFilePath": null,
+			"sourceFileId": 40,
+			"sourceFileName": "bron.pdf",
+			"sourceFilePath": "/DocuDesk/Dos/bron.pdf",
+			"anonymizationLinkId": "L1",
+			"runCount": 2,
+			"dossier": "Dos"
+		},
+		"queued": 0,
+		"calls": [
+			[
+				"GET",
+				"/index.php/apps/openregister/api/objects/filinq/anonymizationLink",
+				{
+					"params": {
+						"anonymizedFileId": 9
+					}
+				}
+			],
+			[
+				"TEXT",
+				{
+					"path": "/DocuDesk/Dos/f.pdf",
+					"mimeType": "application/pdf",
+					"fileName": "f.pdf"
+				}
+			]
+		]
+	},
+	{
+		"name": "empty link",
+		"entry": {
+			"id": "file-4",
+			"name": "f.pdf",
+			"status": "completed",
+			"viewMode": "anonymized",
+			"error": null,
+			"fileId": 9,
+			"filePath": "/DocuDesk/Dos/f.pdf",
+			"entities": [],
+			"entityCount": 0,
+			"replacementCount": 0,
+			"detailUnavailable": true,
+			"anonymizedFileId": null,
+			"anonymizedFileName": null,
+			"anonymizedFilePath": null,
+			"sourceFileId": null,
+			"sourceFileName": null,
+			"sourceFilePath": null,
+			"anonymizationLinkId": null,
+			"runCount": null,
+			"dossier": "Dos"
+		},
+		"queued": 1,
+		"calls": [
+			[
+				"GET",
+				"/index.php/apps/openregister/api/objects/filinq/anonymizationLink",
+				{
+					"params": {
+						"anonymizedFileId": 9
+					}
+				}
+			],
+			[
+				"TEXT",
+				{
+					"path": "/DocuDesk/Dos/f.pdf",
+					"mimeType": "application/pdf",
+					"fileName": "f.pdf"
+				}
+			]
+		]
+	},
+	{
+		"name": "placeholders, no link",
+		"entry": {
+			"id": "file-5",
+			"name": "f.pdf",
+			"status": "completed",
+			"viewMode": "anonymized",
+			"error": null,
+			"fileId": 9,
+			"filePath": "/DocuDesk/Dos/f.pdf",
+			"entities": [
+				{
+					"type": "PERSON_NAME",
+					"value": "Jan",
+					"confidence": 0.9,
+					"entityId": 1,
+					"count": 2,
+					"bases": [
+						"a",
+						"b"
+					],
+					"placeholder": "[PERSON: 1]",
+					"_resolveError": null
+				},
+				{
+					"type": "EMAIL",
+					"value": null,
+					"confidence": null,
+					"entityId": 2,
+					"count": 1,
+					"bases": [],
+					"placeholder": "[EMAIL: 2]",
+					"_resolveError": null
+				},
+				{
+					"type": "LOCATION",
+					"value": null,
+					"confidence": null,
+					"entityId": 3,
+					"count": 1,
+					"bases": [],
+					"placeholder": "[LOCATION: 3]",
+					"_resolveError": "Entity no longer exists"
+				},
+				{
+					"type": "IBAN",
+					"value": null,
+					"confidence": null,
+					"entityId": 4,
+					"count": 1,
+					"bases": [],
+					"placeholder": "[IBAN: 4]",
+					"_resolveError": "no access"
+				},
+				{
+					"type": "PHONE",
+					"value": null,
+					"confidence": null,
+					"entityId": 5,
+					"count": 1,
+					"bases": [],
+					"placeholder": "[PHONE: 5]",
+					"_resolveError": "network"
+				},
+				{
+					"type": "PERSON",
+					"value": "Jan",
+					"confidence": 0,
+					"entityId": 6,
+					"count": 1,
+					"bases": [],
+					"placeholder": "[PERSON: 6]",
+					"_resolveError": null
+				},
+				{
+					"type": "X",
+					"value": null,
+					"confidence": null,
+					"entityId": 7,
+					"count": 1,
+					"bases": [],
+					"placeholder": "[X: 7]",
+					"_resolveError": null
+				}
+			],
+			"entityCount": 7,
+			"replacementCount": 8,
+			"anonymizedFileId": null,
+			"anonymizedFileName": null,
+			"anonymizedFilePath": null,
+			"sourceFileId": null,
+			"sourceFileName": null,
+			"sourceFilePath": null,
+			"anonymizationLinkId": null,
+			"runCount": null,
+			"dossier": "Dos"
+		},
+		"queued": 1,
+		"calls": [
+			[
+				"GET",
+				"/index.php/apps/openregister/api/objects/filinq/anonymizationLink",
+				{
+					"params": {
+						"anonymizedFileId": 9
+					}
+				}
+			],
+			[
+				"TEXT",
+				{
+					"path": "/DocuDesk/Dos/f.pdf",
+					"mimeType": "application/pdf",
+					"fileName": "f.pdf"
+				}
+			],
+			[
+				"GET",
+				"/index.php/apps/openregister/api/entities/1",
+				null
+			],
+			[
+				"GET",
+				"/index.php/apps/openregister/api/entities/2",
+				null
+			],
+			[
+				"GET",
+				"/index.php/apps/openregister/api/entities/3",
+				null
+			],
+			[
+				"GET",
+				"/index.php/apps/openregister/api/entities/4",
+				null
+			],
+			[
+				"GET",
+				"/index.php/apps/openregister/api/entities/5",
+				null
+			],
+			[
+				"GET",
+				"/index.php/apps/openregister/api/entities/6",
+				null
+			],
+			[
+				"GET",
+				"/index.php/apps/openregister/api/entities/7",
+				null
+			]
+		]
+	},
+	{
+		"name": "placeholders and link",
+		"entry": {
+			"id": "file-6",
+			"name": "f.pdf",
+			"status": "completed",
+			"viewMode": "anonymized",
+			"error": null,
+			"fileId": 9,
+			"filePath": "/DocuDesk/Dos/f.pdf",
+			"entities": [
+				{
+					"type": "PERSON_NAME",
+					"value": "Jan",
+					"confidence": 0.9,
+					"entityId": 1,
+					"count": 2,
+					"bases": [
+						"a",
+						"b"
+					],
+					"placeholder": "[PERSON: 1]",
+					"_resolveError": null
+				},
+				{
+					"type": "EMAIL",
+					"value": null,
+					"confidence": null,
+					"entityId": 2,
+					"count": 1,
+					"bases": [],
+					"placeholder": "[EMAIL: 2]",
+					"_resolveError": null
+				},
+				{
+					"type": "LOCATION",
+					"value": null,
+					"confidence": null,
+					"entityId": 3,
+					"count": 1,
+					"bases": [],
+					"placeholder": "[LOCATION: 3]",
+					"_resolveError": "Entity no longer exists"
+				},
+				{
+					"type": "IBAN",
+					"value": null,
+					"confidence": null,
+					"entityId": 4,
+					"count": 1,
+					"bases": [],
+					"placeholder": "[IBAN: 4]",
+					"_resolveError": "no access"
+				},
+				{
+					"type": "PHONE",
+					"value": null,
+					"confidence": null,
+					"entityId": 5,
+					"count": 1,
+					"bases": [],
+					"placeholder": "[PHONE: 5]",
+					"_resolveError": "network"
+				},
+				{
+					"type": "PERSON",
+					"value": "Jan",
+					"confidence": 0,
+					"entityId": 6,
+					"count": 1,
+					"bases": [],
+					"placeholder": "[PERSON: 6]",
+					"_resolveError": null
+				},
+				{
+					"type": "X",
+					"value": null,
+					"confidence": null,
+					"entityId": 7,
+					"count": 1,
+					"bases": [],
+					"placeholder": "[X: 7]",
+					"_resolveError": null
+				}
+			],
+			"entityCount": 7,
+			"replacementCount": 12,
+			"anonymizedFileId": null,
+			"anonymizedFileName": null,
+			"anonymizedFilePath": null,
+			"sourceFileId": 40,
+			"sourceFileName": "bron.pdf",
+			"sourceFilePath": "/DocuDesk/Dos/bron.pdf",
+			"anonymizationLinkId": "L1",
+			"runCount": 2,
+			"dossier": "Dos"
+		},
+		"queued": 1,
+		"calls": [
+			[
+				"GET",
+				"/index.php/apps/openregister/api/objects/filinq/anonymizationLink",
+				{
+					"params": {
+						"anonymizedFileId": 9
+					}
+				}
+			],
+			[
+				"TEXT",
+				{
+					"path": "/DocuDesk/Dos/f.pdf",
+					"mimeType": "application/pdf",
+					"fileName": "f.pdf"
+				}
+			],
+			[
+				"GET",
+				"/index.php/apps/openregister/api/entities/1",
+				null
+			],
+			[
+				"GET",
+				"/index.php/apps/openregister/api/entities/2",
+				null
+			],
+			[
+				"GET",
+				"/index.php/apps/openregister/api/entities/3",
+				null
+			],
+			[
+				"GET",
+				"/index.php/apps/openregister/api/entities/4",
+				null
+			],
+			[
+				"GET",
+				"/index.php/apps/openregister/api/entities/5",
+				null
+			],
+			[
+				"GET",
+				"/index.php/apps/openregister/api/entities/6",
+				null
+			],
+			[
+				"GET",
+				"/index.php/apps/openregister/api/entities/7",
+				null
+			]
+		]
+	},
+	{
+		"name": "placeholders, no push",
+		"entry": {
+			"id": "file-7",
+			"name": "f.pdf",
+			"status": "completed",
+			"viewMode": "anonymized",
+			"error": null,
+			"fileId": 9,
+			"filePath": "/DocuDesk/Dos/f.pdf",
+			"entities": [
+				{
+					"type": "PERSON_NAME",
+					"value": "Jan",
+					"confidence": 0.9,
+					"entityId": 1,
+					"count": 2,
+					"bases": [
+						"a",
+						"b"
+					],
+					"placeholder": "[PERSON: 1]",
+					"_resolveError": null
+				},
+				{
+					"type": "EMAIL",
+					"value": null,
+					"confidence": null,
+					"entityId": 2,
+					"count": 1,
+					"bases": [],
+					"placeholder": "[EMAIL: 2]",
+					"_resolveError": null
+				},
+				{
+					"type": "LOCATION",
+					"value": null,
+					"confidence": null,
+					"entityId": 3,
+					"count": 1,
+					"bases": [],
+					"placeholder": "[LOCATION: 3]",
+					"_resolveError": "Entity no longer exists"
+				},
+				{
+					"type": "IBAN",
+					"value": null,
+					"confidence": null,
+					"entityId": 4,
+					"count": 1,
+					"bases": [],
+					"placeholder": "[IBAN: 4]",
+					"_resolveError": "no access"
+				},
+				{
+					"type": "PHONE",
+					"value": null,
+					"confidence": null,
+					"entityId": 5,
+					"count": 1,
+					"bases": [],
+					"placeholder": "[PHONE: 5]",
+					"_resolveError": "network"
+				},
+				{
+					"type": "PERSON",
+					"value": "Jan",
+					"confidence": 0,
+					"entityId": 6,
+					"count": 1,
+					"bases": [],
+					"placeholder": "[PERSON: 6]",
+					"_resolveError": null
+				},
+				{
+					"type": "X",
+					"value": null,
+					"confidence": null,
+					"entityId": 7,
+					"count": 1,
+					"bases": [],
+					"placeholder": "[X: 7]",
+					"_resolveError": null
+				}
+			],
+			"entityCount": 7,
+			"replacementCount": 8,
+			"anonymizedFileId": null,
+			"anonymizedFileName": null,
+			"anonymizedFilePath": null,
+			"sourceFileId": null,
+			"sourceFileName": null,
+			"sourceFilePath": null,
+			"anonymizationLinkId": null,
+			"runCount": null,
+			"dossier": "Dos"
+		},
+		"queued": 0,
+		"calls": [
+			[
+				"GET",
+				"/index.php/apps/openregister/api/objects/filinq/anonymizationLink",
+				{
+					"params": {
+						"anonymizedFileId": 9
+					}
+				}
+			],
+			[
+				"TEXT",
+				{
+					"path": "/DocuDesk/Dos/f.pdf",
+					"mimeType": "application/pdf",
+					"fileName": "f.pdf"
+				}
+			],
+			[
+				"GET",
+				"/index.php/apps/openregister/api/entities/1",
+				null
+			],
+			[
+				"GET",
+				"/index.php/apps/openregister/api/entities/2",
+				null
+			],
+			[
+				"GET",
+				"/index.php/apps/openregister/api/entities/3",
+				null
+			],
+			[
+				"GET",
+				"/index.php/apps/openregister/api/entities/4",
+				null
+			],
+			[
+				"GET",
+				"/index.php/apps/openregister/api/entities/5",
+				null
+			],
+			[
+				"GET",
+				"/index.php/apps/openregister/api/entities/6",
+				null
+			],
+			[
+				"GET",
+				"/index.php/apps/openregister/api/entities/7",
+				null
+			]
+		]
+	},
+	{
+		"name": "placeholders, link without count",
+		"entry": {
+			"id": "file-8",
+			"name": "f.pdf",
+			"status": "completed",
+			"viewMode": "anonymized",
+			"error": null,
+			"fileId": 9,
+			"filePath": "/DocuDesk/Dos/f.pdf",
+			"entities": [
+				{
+					"type": "PERSON_NAME",
+					"value": "Jan",
+					"confidence": 0.9,
+					"entityId": 1,
+					"count": 2,
+					"bases": [
+						"a",
+						"b"
+					],
+					"placeholder": "[PERSON: 1]",
+					"_resolveError": null
+				}
+			],
+			"entityCount": 1,
+			"replacementCount": 2,
+			"anonymizedFileId": null,
+			"anonymizedFileName": null,
+			"anonymizedFilePath": null,
+			"sourceFileId": null,
+			"sourceFileName": null,
+			"sourceFilePath": null,
+			"anonymizationLinkId": "L3",
+			"runCount": null,
+			"dossier": "Dos"
+		},
+		"queued": 1,
+		"calls": [
+			[
+				"GET",
+				"/index.php/apps/openregister/api/objects/filinq/anonymizationLink",
+				{
+					"params": {
+						"anonymizedFileId": 9
+					}
+				}
+			],
+			[
+				"TEXT",
+				{
+					"path": "/DocuDesk/Dos/f.pdf",
+					"mimeType": "application/pdf",
+					"fileName": "f.pdf"
+				}
+			],
+			[
+				"GET",
+				"/index.php/apps/openregister/api/entities/1",
+				null
+			]
+		]
+	},
+	{
+		"name": "placeholders, link counting none",
+		"entry": {
+			"id": "file-9",
+			"name": "f.pdf",
+			"status": "completed",
+			"viewMode": "anonymized",
+			"error": null,
+			"fileId": 9,
+			"filePath": "/DocuDesk/Dos/f.pdf",
+			"entities": [
+				{
+					"type": "PERSON",
+					"value": "",
+					"confidence": 0,
+					"entityId": 8,
+					"count": 2,
+					"bases": [],
+					"placeholder": "[PERSON: 8]",
+					"_resolveError": null
+				}
+			],
+			"entityCount": 1,
+			"replacementCount": 0,
+			"anonymizedFileId": null,
+			"anonymizedFileName": null,
+			"anonymizedFilePath": null,
+			"sourceFileId": null,
+			"sourceFileName": null,
+			"sourceFilePath": null,
+			"anonymizationLinkId": "L4",
+			"runCount": null,
+			"dossier": "Dos"
+		},
+		"queued": 1,
+		"calls": [
+			[
+				"GET",
+				"/index.php/apps/openregister/api/objects/filinq/anonymizationLink",
+				{
+					"params": {
+						"anonymizedFileId": 9
+					}
+				}
+			],
+			[
+				"TEXT",
+				{
+					"path": "/DocuDesk/Dos/f.pdf",
+					"mimeType": "application/pdf",
+					"fileName": "f.pdf"
+				}
+			],
+			[
+				"GET",
+				"/index.php/apps/openregister/api/entities/8",
+				null
+			]
+		]
+	},
+	{
+		"name": "no file id",
+		"link": null,
+		"undef": null,
+		"calls": []
+	},
+	{
+		"name": "linked entry from a bare link",
+		"entry": {
+			"id": "file-10",
+			"name": "a.pdf",
+			"status": "completed",
+			"viewMode": "anonymized",
+			"error": null,
+			"fileId": 1,
+			"filePath": "/a.pdf",
+			"entities": [],
+			"entityCount": 0,
+			"replacementCount": 0,
+			"detailUnavailable": true,
+			"anonymizedFileId": null,
+			"anonymizedFileName": null,
+			"anonymizedFilePath": null,
+			"sourceFileId": null,
+			"sourceFileName": null,
+			"sourceFilePath": null,
+			"anonymizationLinkId": null,
+			"runCount": null,
+			"dossier": null
+		},
+		"queued": 1
+	}
+]
