@@ -160,6 +160,23 @@ export async function renderSfc(file, setup = {}) {
 	}
 	const app = createSSRApp(component, setup.props || {})
 	app.config.warnHandler = () => {}
-	const html = await renderToString(app)
-	return html.replace(/<!--[\s\S]*?-->/g, '').replace(/></g, '>\n<')
+	return withoutComments(await renderToString(app)).replace(/></g, '>\n<')
+}
+
+/**
+ * Remove every HTML comment, including the fragment markers server rendering
+ * adds. Repeats until nothing is left, so a comment that only forms once an
+ * inner one is removed goes as well.
+ *
+ * @param {string} html The rendered HTML.
+ * @return {string}
+ */
+function withoutComments(html) {
+	let previous
+	let current = html
+	do {
+		previous = current
+		current = previous.replace(/<!--[\s\S]*?-->/g, '')
+	} while (current !== previous)
+	return current
 }
