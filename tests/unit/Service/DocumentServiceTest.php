@@ -1398,4 +1398,111 @@ class DocumentServiceTest extends TestCase {
 
 	}//end testSyncBulkItemsAndFailedEntryGolden()
 
+	/**
+	 * Store requests for the acting user in options.userId, with owner fields forged next to it.
+	 *
+	 * @return array<string, array{0: array<string, mixed>, 1: Exception|null}>
+	 */
+	public static function storeTraces(): array {
+		$forged = ['owner' => 'mallory', 'requestedBy' => 'mallory', 'user' => 'mallory'];
+		$forgedOutput = ['userId' => 'mallory', 'owner' => 'mallory', 'requestedBy' => 'mallory'];
+		$full = new Exception('quota exceeded', DocumentStorageService::ERROR_CODE_STORAGE_FAILURE);
+		return [
+			'files for the acting user' => [['userId' => 'clerk', 'filename' => 'besluit', 'output' => ['mode' => 'files']] + $forged, null],
+			'files for another acting user' => [['userId' => 'officer', 'owner' => 'clerk', 'requestedBy' => 'clerk', 'output' => ['mode' => 'files', 'userId' => 'clerk']], null],
+			'files with forged output owners' => [['userId' => 'clerk', 'output' => ['mode' => 'files', 'targetPath' => 'Zaken/7/'] + $forgedOutput] + $forged, null],
+			'both for the acting user' => [['userId' => 'clerk', 'output' => ['mode' => 'both']] + $forged, null],
+			'return never stores' => [['userId' => 'clerk', 'output' => ['mode' => 'return']] + $forged, null],
+			'return without a user' => [['output' => ['mode' => 'return']] + $forged, null],
+			'files without a user' => [['output' => ['mode' => 'files'] + $forgedOutput] + $forged, null],
+			'both without a user' => [['output' => ['mode' => 'both'] + $forgedOutput] + $forged, null],
+			'files with an empty user' => [['userId' => '', 'output' => ['mode' => 'files']] + $forged, null],
+			'files with a null user' => [['userId' => null, 'output' => ['mode' => 'files']], null],
+			'files with a full disk' => [['userId' => 'clerk', 'output' => ['mode' => 'files']], $full],
+			'both with a full disk' => [['userId' => 'clerk', 'output' => ['mode' => 'both']], $full],
+			'both with a refused path' => [['userId' => 'clerk', 'output' => ['mode' => 'both']], new Exception('bad path', 400)],
+			'both with another failure' => [['userId' => 'clerk', 'output' => ['mode' => 'both']], new Exception('boom', 500)],
+			'an html file name' => [['userId' => 'clerk', 'format' => 'html', 'filename' => 'brief.html', 'output' => ['mode' => 'files']], null],
+			'an empty target path' => [['userId' => 'clerk', 'output' => ['mode' => 'files', 'targetPath' => '']], null],
+		];
+	}//end storeTraces()
+
+	/**
+	 * Storing files the bytes under the acting user only, and its outcome matches the recorded one.
+	 *
+	 * @param array<string, mixed> $options The generation options.
+	 * @param Exception|null $failure What storing throws, if anything.
+	 *
+	 * @dataProvider storeTraces
+	 *
+	 * @return void
+	 */
+	public function testStoreTraceMatchesTheRecordedOne(array $options, ?Exception $failure): void {
+		$this->stubHappyPathGeneration();
+
+		$calls = [];
+		$this->storageService->method('store')->willReturnCallback(
+			static function (string $userId, string $targetPath, string $filename, string $content) use (&$calls, $failure, $options): array {
+				$calls[] = [$userId, $targetPath, $filename, $content];
+				if ($userId !== ($options['userId'] ?? null)) {
+					throw new Exception('stored for ' . $userId, 403);
+				}
+
+				if ($failure !== null) {
+					throw $failure;
+				}
+
+				return ['fileId' => 99, 'path' => '/' . $userId . '/files/' . $targetPath . '/' . $filename, 'name' => $filename, 'size' => 12, 'owner' => 'ignored'];
+			}
+		);
+
+		try {
+			$result = $this->service->generateDocument(templateId: 'tmpl-1', dataRefs: [], options: $options);
+			$outcome = ['output' => $result['output'], 'warnings' => $result['warnings'], 'content' => $result['content']];
+		} catch (Exception $e) {
+			$outcome = ['error' => [$e->getCode(), $e->getMessage()]];
+		}
+
+		$outcome['calls'] = $calls;
+
+		$path = __DIR__ . '/golden/document-store-trace.json';
+		$recorded = [];
+		if (is_file($path) === true) {
+			$recorded = json_decode((string)file_get_contents($path), true);
+		}
+
+		$name = (string)$this->dataName();
+		if (getenv('GOLDEN_RECORD') === '1') {
+			$recorded[$name] = $outcome;
+			file_put_contents($path, json_encode($recorded, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n");
+		}
+
+		$this->assertSame($recorded[$name] ?? null, $outcome);
+		foreach ($calls as $call) {
+			$this->assertSame($options['userId'], $call[0], 'Only the acting user may own a stored document.');
+		}
+	}//end testStoreTraceMatchesTheRecordedOne()
+	/**
+	 * A successful store answers exactly the filed refs and the warnings, whatever else storage returns.
+	 *
+	 * @return void
+	 */
+	public function testAStoredOutputCarriesOnlyItsRefs(): void {
+		$this->storageService->method('store')->willReturn(
+			['fileId' => 99, 'path' => '/clerk/files/Zaken/brief.pdf', 'name' => 'brief.pdf', 'size' => 12, 'owner' => 'mallory']
+		);
+
+		$run = [
+			'outputMode' => 'files',
+			'templateId' => 'tmpl-1',
+			'template' => ['namespace' => 'procest'],
+			'format' => 'pdf',
+			'options' => ['userId' => 'clerk', 'filename' => 'brief', 'output' => ['targetPath' => 'Zaken']],
+		];
+		$method = new \ReflectionMethod(DocumentService::class, 'storeOutputIfRequested');
+		$outcome = $method->invoke($this->service, $run, ['content' => '%PDF', 'warnings' => ['earlier']]);
+
+		$this->assertSame(['fileId', 'path', 'name', 'size', 'warnings'], array_keys($outcome));
+		$this->assertSame([99, '/clerk/files/Zaken/brief.pdf', 'brief.pdf', 12, ['earlier']], array_values($outcome));
+	}//end testAStoredOutputCarriesOnlyItsRefs()
 }//end class
