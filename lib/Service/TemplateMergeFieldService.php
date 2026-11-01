@@ -159,19 +159,7 @@ class TemplateMergeFieldService {
 	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function resolve(array $template, array $data): array {
-		$declared = [];
-		foreach ((array)($template['mergeFields'] ?? []) as $field) {
-			$path = trim((string)(((array)$field)['path'] ?? ''));
-			if ($path === '' || isset($declared[$path]) === true) {
-				continue;
-			}
-
-			$declared[$path] = [
-				'label'  => trim((string)(((array)$field)['label'] ?? '')),
-				'source' => trim((string)(((array)$field)['source'] ?? '')),
-			];
-		}
-
+		$declared = $this->declaredFields(mergeFields: (array)($template['mergeFields'] ?? []));
 		$paths = array_keys($declared);
 		foreach ($this->paths(content: (string)($template['content'] ?? '')) as $path) {
 			if (isset($declared[$path]) === false) {
@@ -185,14 +173,9 @@ class TemplateMergeFieldService {
 			$value = $this->valueAt(data: $data, path: $path);
 			$filled = $value !== '';
 			$complete = $complete && $filled;
-			$label = ($declared[$path]['label'] ?? '');
-			if ($label === '') {
-				$label = $path;
-			}
-
 			$fields[] = [
 				'path'   => $path,
-				'label'  => $label,
+				'label'  => ($declared[$path]['label'] ?? $path),
 				'source' => ($declared[$path]['source'] ?? ''),
 				'value'  => $value,
 				'filled' => $filled,
@@ -201,6 +184,36 @@ class TemplateMergeFieldService {
 
 		return ['fields' => $fields, 'complete' => $complete];
 	}//end resolve()
+
+	/**
+	 * The declared merge fields by path, the first declaration of each path, trimmed;
+	 * a field without a label is labelled by its path.
+	 *
+	 * @param array<int|string, mixed> $mergeFields The template's mergeFields.
+	 *
+	 * @return array<string, array{label: string, source: string}> The fields.
+	 */
+	private function declaredFields(array $mergeFields): array {
+		$declared = [];
+		foreach ($mergeFields as $field) {
+			$path = trim((string)(((array)$field)['path'] ?? ''));
+			if ($path === '' || isset($declared[$path]) === true) {
+				continue;
+			}
+
+			$label = trim((string)(((array)$field)['label'] ?? ''));
+			if ($label === '') {
+				$label = $path;
+			}
+
+			$declared[$path] = [
+				'label'  => $label,
+				'source' => trim((string)(((array)$field)['source'] ?? '')),
+			];
+		}
+
+		return $declared;
+	}//end declaredFields()
 
 	/**
 	 * The names `{% for %}` and `{% set %}` tags bind.
