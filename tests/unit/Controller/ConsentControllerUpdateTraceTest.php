@@ -85,7 +85,7 @@ class ConsentControllerUpdateTraceTest extends TestCase {
 	}//end testOfficerUpdateCarriesTheSessionUser()
 
 	/**
-	 * A body naming the record's owner or an officer does not make a stranger either.
+	 * A body naming the record's owner, an officer, or the stranger as owner does not make a stranger either.
 	 *
 	 * @return void
 	 */
@@ -93,7 +93,7 @@ class ConsentControllerUpdateTraceTest extends TestCase {
 		$this->crud->method('getConsent')->willReturn(['id' => 'c-1', 'owner' => 'owner']);
 		$this->crud->expects($this->never())->method('updateConsentStatus');
 
-		$response = $this->controller(uid: 'stranger', params: ['userId' => 'owner', 'requestedBy' => 'officer'])->update('c-1');
+		$response = $this->controller(uid: 'stranger', params: ['userId' => 'owner', 'requestedBy' => 'officer', 'owner' => 'stranger', '@self' => ['owner' => 'stranger']])->update('c-1');
 
 		$this->assertSame(404, $response->getStatus());
 		$this->assertSame(['error' => 'Consent record not found'], $response->getData());
