@@ -9,6 +9,7 @@ import {
 	NcTextField,
 } from '@nextcloud/vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
+import { matchRuleForm } from '../mixins/matchRuleForm.js'
 
 /**
  *
@@ -40,32 +41,21 @@ export default {
 		Delete,
 	},
 
-	props: {
-		open: { type: Boolean, required: true },
-		editingRecord: { type: Object, default: null },
-		saving: { type: Boolean, default: false },
-		formError: { type: String, default: '' },
-	},
+	mixins: [matchRuleForm],
+	blankForm,
 
-	emits: ['update:open', 'submit', 'cancel'],
 	data() {
 		return {
-			form: blankForm(),
 			entityTypeOptions: ['PERSON', 'ORGANIZATION', 'OTHER'],
 			// Canonical set per the publicationProhibition schema's severity
 			// enum in filinq_register.json. Keep in lock-step with the
 			// register; widening here without widening the schema would
 			// silently fail the OR write-time validation.
 			severityOptions: ['high', 'medium', 'low'],
-			matchTypeOptions: ['exact', 'normalized', 'bsn', 'kvk'],
 		}
 	},
 
 	computed: {
-		editing() {
-			return this.editingRecord !== null
-		},
-
 		/**
 		 * Modal heading — "Edit" when an existing prohibition was handed in,
 		 * "Add" for a create on the Publication Prohibitions surface.
@@ -83,8 +73,7 @@ export default {
 			return (
 				this.form.primaryName.trim() !== ''
 				&& this.form.reason.trim() !== ''
-				&& this.form.matchRules.length > 0
-				&& this.form.matchRules.every((r) => r.type && r.value !== '')
+				&& this.matchRulesComplete
 			)
 		},
 
@@ -98,49 +87,8 @@ export default {
 		},
 	},
 
-	watch: {
-		open(now) {
-			if (now) {
-				this.resetForm()
-			}
-		},
-	},
-
 	methods: {
 		t,
-		resetForm() {
-			if (this.editingRecord) {
-				this.form = {
-					...blankForm(),
-					...this.editingRecord,
-					matchRules: Array.isArray(this.editingRecord.matchRules)
-						? this.editingRecord.matchRules.map((r) => ({ ...r }))
-						: [],
-				}
-			} else {
-				this.form = blankForm()
-			}
-		},
-
-		addRule() {
-			this.form.matchRules.push({ type: 'exact', value: '' })
-		},
-
-		removeRule(idx) {
-			this.form.matchRules.splice(idx, 1)
-		},
-
-		submit() {
-			this.$emit('submit', {
-				...this.form,
-				matchRules: this.form.matchRules.map((r) => ({ ...r })),
-			})
-		},
-
-		onCancel() {
-			this.$emit('update:open', false)
-			this.$emit('cancel')
-		},
 	},
 }
 </script>

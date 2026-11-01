@@ -9,6 +9,7 @@ import {
 	NcTextField,
 } from '@nextcloud/vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
+import { matchRuleForm } from '../mixins/matchRuleForm.js'
 
 /**
  *
@@ -43,17 +44,11 @@ export default {
 		Delete,
 	},
 
-	props: {
-		open: { type: Boolean, required: true },
-		editingRecord: { type: Object, default: null },
-		saving: { type: Boolean, default: false },
-		formError: { type: String, default: '' },
-	},
+	mixins: [matchRuleForm],
+	blankForm,
 
-	emits: ['update:open', 'submit', 'cancel'],
 	data() {
 		return {
-			form: blankForm(),
 			entityTypeOptions: ['PERSON', 'ORGANIZATION', 'OTHER'],
 			consentMethodOptions: [
 				'paper',
@@ -61,16 +56,10 @@ export default {
 				'verbal_recorded',
 				'opt_in_form',
 			],
-
-			matchTypeOptions: ['exact', 'normalized', 'bsn', 'kvk'],
 		}
 	},
 
 	computed: {
-		editing() {
-			return this.editingRecord !== null
-		},
-
 		/**
 		 * Modal heading — "Edit" when an existing standing consent was handed
 		 * in, "Add" for a create on the Standing Publication Consents surface.
@@ -88,55 +77,13 @@ export default {
 			return (
 				this.form.entityText.trim() !== ''
 				&& this.form.consentMethod !== ''
-				&& this.form.matchRules.length > 0
-				&& this.form.matchRules.every((r) => r.type && r.value !== '')
+				&& this.matchRulesComplete
 			)
-		},
-	},
-
-	watch: {
-		open(now) {
-			if (now) {
-				this.resetForm()
-			}
 		},
 	},
 
 	methods: {
 		t,
-		resetForm() {
-			if (this.editingRecord) {
-				this.form = {
-					...blankForm(),
-					...this.editingRecord,
-					matchRules: Array.isArray(this.editingRecord.matchRules)
-						? this.editingRecord.matchRules.map((r) => ({ ...r }))
-						: [],
-				}
-			} else {
-				this.form = blankForm()
-			}
-		},
-
-		addRule() {
-			this.form.matchRules.push({ type: 'exact', value: '' })
-		},
-
-		removeRule(idx) {
-			this.form.matchRules.splice(idx, 1)
-		},
-
-		submit() {
-			this.$emit('submit', {
-				...this.form,
-				matchRules: this.form.matchRules.map((r) => ({ ...r })),
-			})
-		},
-
-		onCancel() {
-			this.$emit('update:open', false)
-			this.$emit('cancel')
-		},
 	},
 }
 </script>
