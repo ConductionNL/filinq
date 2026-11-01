@@ -1095,6 +1095,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 		 * @param {string} folderName Dossier folder name under /DocuDesk/.
 		 * @return {Promise<void>}
 		 * @throws {Error} If the folder name is empty or folder creation fails.
+		 * @spec openspec/specs/dossier-register/spec.md#requirement-dossier-objects-bind-to-a-nextcloud-folder-via-selffolder
 		 */
 		async addFilesAsDossier(fileList, folderName) {
 			const cleanName = dossierFolderName(folderName)
