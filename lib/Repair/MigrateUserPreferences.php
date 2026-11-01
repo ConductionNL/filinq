@@ -154,49 +154,94 @@ class MigrateUserPreferences implements IRepairStep {
 	 * @spec exclude No canonical spec covers the docudesk -> filinq app-id rename.
 	 */
 	public function run(IOutput $output): void {
-		$migrated = 0;
-		$alreadyPresent = 0;
+		$tally = ['migrated' => 0, 'present' => 0];
 
 		foreach (self::MIGRATED_KEYS as $key => $values) {
 			foreach ($values as $value) {
-				/* Guarded like the per-user work below it. This enumeration
-				   used to sit outside any try, so an unreadable preference
-				   store propagated out of run() and aborted `occ upgrade` —
-				   the one thing this class's docblock promises it will not
-				   do. One unreadable key/value pair costs those users their
-				   stored preference; it should not cost everyone the
-				   upgrade. */
-				try {
-					$userIds = $this->config->getUsersForUserValue(self::OLD_APP_ID, $key, $value);
-				} catch (\Throwable $e) {
-					$this->logger->warning(
-						'MigrateUserPreferences: could not enumerate users for one preference; leaving it under the old app id.',
-						['key' => $key, 'value' => $value, 'exception' => $e->getMessage()]
-					);
+				$counts = $this->migrateValue(key: $key, value: $value);
+				$tally['migrated'] += $counts['migrated'];
+				$tally['present'] += $counts['present'];
+			}
+		}
+
+		$this->report(output: $output, tally: $tally);
+	}//end run()
+
+	/**
+	 * Copy one key/value pair for every user holding it under the old app id.
+	 *
+	 * @param string $key The preference key.
+	 * @param string $value The stored value to look for.
+	 *
+	 * @return array{migrated: int, present: int} Copied, and already set under the new app id.
+	 *
+	 * @spec exclude No canonical spec covers the docudesk -> filinq app-id rename.
+	 */
+	private function migrateValue(string $key, string $value): array {
+		$counts = ['migrated' => 0, 'present' => 0];
+
+		foreach ($this->usersFor(key: $key, value: $value) as $userId) {
+			try {
+				$existing = $this->config->getUserValue($userId, self::NEW_APP_ID, $key, '');
+				if ($existing !== '') {
+					$counts['present']++;
 					continue;
-				}//end try
+				}
 
-				foreach ($userIds as $userId) {
-					try {
-						$existing = $this->config->getUserValue($userId, self::NEW_APP_ID, $key, '');
-						if ($existing !== '') {
-							$alreadyPresent++;
-							continue;
-						}
+				$this->config->setUserValue($userId, self::NEW_APP_ID, $key, $value);
+				$counts['migrated']++;
+			} catch (\Throwable $e) {
+				$this->logger->warning(
+					'MigrateUserPreferences: could not migrate one preference; leaving it under the old app id.',
+					['exception' => $e->getMessage(), 'key' => $key, 'app' => self::NEW_APP_ID]
+				);
+			}//end try
+		}
 
-						$this->config->setUserValue($userId, self::NEW_APP_ID, $key, $value);
-						$migrated++;
-					} catch (\Throwable $e) {
-						$this->logger->warning(
-							'MigrateUserPreferences: could not migrate one preference; leaving it under the old app id.',
-							['exception' => $e->getMessage(), 'key' => $key, 'app' => self::NEW_APP_ID]
-						);
-					}//end try
-				}//end foreach
-			}//end foreach
-		}//end foreach
+		return $counts;
+	}//end migrateValue()
 
-		if ($migrated === 0 && $alreadyPresent === 0) {
+	/**
+	 * The users holding a key/value pair under the old app id.
+	 *
+	 * @param string $key The preference key.
+	 * @param string $value The stored value.
+	 *
+	 * @return array<int, string> The user ids, or none when the store cannot be read.
+	 *
+	 * @spec exclude No canonical spec covers the docudesk -> filinq app-id rename.
+	 */
+	private function usersFor(string $key, string $value): array {
+		/* Guarded like the per-user work below it. This enumeration
+		   used to sit outside any try, so an unreadable preference
+		   store propagated out of run() and aborted `occ upgrade` —
+		   the one thing this class's docblock promises it will not
+		   do. One unreadable key/value pair costs those users their
+		   stored preference; it should not cost everyone the
+		   upgrade. */
+		try {
+			return $this->config->getUsersForUserValue(self::OLD_APP_ID, $key, $value);
+		} catch (\Throwable $e) {
+			$this->logger->warning(
+				'MigrateUserPreferences: could not enumerate users for one preference; leaving it under the old app id.',
+				['key' => $key, 'value' => $value, 'exception' => $e->getMessage()]
+			);
+			return [];
+		}
+	}//end usersFor()
+
+	/**
+	 * Report the tally, or that there was nothing to do.
+	 *
+	 * @param IOutput $output Repair output channel.
+	 * @param array{migrated: int, present: int} $tally Copied, and already set under the new app id.
+	 *
+	 * @return void
+	 *
+	 * @spec exclude No canonical spec covers the docudesk -> filinq app-id rename.
+	 */
+	private function report(IOutput $output, array $tally): void {
+		if ($tally['migrated'] === 0 && $tally['present'] === 0) {
 			$output->info(
 				'MigrateUserPreferences: no stored docudesk user preferences on this install; nothing to do.'
 			);
@@ -206,9 +251,9 @@ class MigrateUserPreferences implements IRepairStep {
 		$output->info(
 			sprintf(
 				'MigrateUserPreferences: migrated %d preference(s); %d already set under filinq.',
-				$migrated,
-				$alreadyPresent
+				$tally['migrated'],
+				$tally['present']
 			)
 		);
-	}//end run()
+	}//end report()
 }//end class
