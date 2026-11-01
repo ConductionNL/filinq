@@ -169,12 +169,6 @@ class PortalAssertionVerifier {
 	 * @return array<string, mixed>|null The verified claims, or null.
 	 *
 	 * @spec openspec/specs/portal-signing-actions/spec.md
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) -- one fail-closed guard
-	 * per attack surface on an auth boundary (ADR-005); collapsing them would
-	 * trade auditability for a score.
-	 * @SuppressWarnings(PHPMD.NPathComplexity)      -- same rationale: the
-	 * guards are sequential early-returns, not combinatorial paths.
 	 */
 	public function verify(string $jwt): ?array {
 		$secret = $this->secret();
@@ -182,54 +176,109 @@ class PortalAssertionVerifier {
 			return $this->reject(reason: 'no usable signing secret');
 		}
 
+		$claims = $this->signedClaims(jwt: $jwt, secret: $secret);
+		if (is_string($claims) === true) {
+			return $this->reject(reason: $claims);
+		}
+
+		$refusal = $this->claimsRefusal(claims: $claims);
+		if ($refusal !== null) {
+			return $this->reject(reason: $refusal);
+		}
+
+		return $claims;
+	}//end verify()
+
+	/**
+	 * Guards 1-4: the token's structure, algorithm and HMAC signature, then its claims as a JSON object.
+	 *
+	 * @param string $jwt The compact JWT.
+	 * @param string $secret The usable signing secret.
+	 *
+	 * @return array<string, mixed>|string The signed claims, or the reason the token is refused.
+	 *
+	 * @spec openspec/specs/portal-signing-actions/spec.md
+	 */
+	private function signedClaims(string $jwt, string $secret): array|string {
 		$parts = explode('.', $jwt);
 		if (count($parts) !== 3 || in_array('', $parts, true) === true) {
-			return $this->reject(reason: 'malformed structure');
+			return 'malformed structure';
 		}
 
 		[$hPart, $cPart, $sPart] = $parts;
 
 		$header = json_decode($this->b64UrlDecode(encoded: $hPart), true);
 		if (is_array($header) === false || ($header['alg'] ?? '') !== self::ALG) {
-			return $this->reject(reason: 'unexpected algorithm');
+			return 'unexpected algorithm';
 		}
 
 		$expected = $this->b64UrlEncode(bytes: hash_hmac(self::HASH_FN, $hPart . '.' . $cPart, $secret, true));
 		if (hash_equals($expected, $sPart) === false) {
-			return $this->reject(reason: 'signature mismatch');
+			return 'signature mismatch';
 		}
 
 		$claims = json_decode($this->b64UrlDecode(encoded: $cPart), true);
 		if (is_array($claims) === false) {
-			return $this->reject(reason: 'malformed claims');
+			return 'malformed claims';
 		}
 
+		return $claims;
+	}//end signedClaims()
+
+	/**
+	 * Guards 5-9 over signed claims: use, issuer, lifetime and subject.
+	 *
+	 * @param array<string, mixed> $claims The signed claims.
+	 *
+	 * @return string|null The reason the claims are refused, or null when they hold.
+	 *
+	 * @spec openspec/specs/portal-signing-actions/spec.md
+	 */
+	private function claimsRefusal(array $claims): ?string {
 		if (($claims['use'] ?? '') !== self::USE_ASSERTION) {
-			return $this->reject(reason: 'not an assertion');
+			return 'not an assertion';
 		}
 
 		if (($claims['iss'] ?? '') !== self::ISSUER) {
-			return $this->reject(reason: 'unexpected issuer');
+			return 'unexpected issuer';
 		}
 
-		$now = time();
-		$exp = ($claims['exp'] ?? null);
-		if (is_int($exp) === false || $exp <= $now) {
-			return $this->reject(reason: 'expired or missing exp');
-		}
-
-		$iat = ($claims['iat'] ?? null);
-		if (is_int($iat) === false || $iat > ($now + self::IAT_LEEWAY) || $iat > $exp) {
-			return $this->reject(reason: 'implausible iat');
+		$lifetime = $this->lifetimeRefusal(claims: $claims);
+		if ($lifetime !== null) {
+			return $lifetime;
 		}
 
 		$sub = ($claims['sub'] ?? null);
 		if (is_string($sub) === false || $sub === '') {
-			return $this->reject(reason: 'missing subject');
+			return 'missing subject';
 		}
 
-		return $claims;
-	}//end verify()
+		return null;
+	}//end claimsRefusal()
+
+	/**
+	 * Guards 7-8: `exp` strictly in the future, `iat` not in the future (with leeway) and not after `exp`.
+	 *
+	 * @param array<string, mixed> $claims The signed claims.
+	 *
+	 * @return string|null The reason the lifetime is refused, or null when it holds.
+	 *
+	 * @spec openspec/specs/portal-signing-actions/spec.md
+	 */
+	private function lifetimeRefusal(array $claims): ?string {
+		$now = time();
+		$exp = ($claims['exp'] ?? null);
+		if (is_int($exp) === false || $exp <= $now) {
+			return 'expired or missing exp';
+		}
+
+		$iat = ($claims['iat'] ?? null);
+		if (is_int($iat) === false || $iat > ($now + self::IAT_LEEWAY) || $iat > $exp) {
+			return 'implausible iat';
+		}
+
+		return null;
+	}//end lifetimeRefusal()
 
 	/**
 	 * Derive the signing secret — EXACT copy of portaliq's derivation (see
