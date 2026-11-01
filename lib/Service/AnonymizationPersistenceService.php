@@ -339,7 +339,7 @@ class AnonymizationPersistenceService {
 	}//end existingLink()
 
 	/**
-	 * The link to update with this run: the existing one with its run count raised, or a new one.
+	 * The link to update with this run: the stored link of this file with its run count raised, or a new one.
 	 *
 	 * @param int $fileId The source file id.
 	 * @param array<string, mixed> $existing The stored link, or [] when there is none.
@@ -347,7 +347,8 @@ class AnonymizationPersistenceService {
 	 * @return array<string, mixed> The link object before this run's fields are set.
 	 */
 	private function linkForRun(int $fileId, array $existing): array {
-		if (empty($existing) === true) {
+		// An empty link, or one without a file id, never matches a file id.
+		if ((int) ($existing['sourceFileId'] ?? -1) !== $fileId) {
 			return [
 				'@self' => [
 					'register' => 'filinq',
