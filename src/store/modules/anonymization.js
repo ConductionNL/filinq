@@ -583,6 +583,60 @@ export function entryIsChecked(entry) {
 }
 
 /**
+ * A fresh batch progress record.
+ *
+ * @param {number} total The number of entries the batch runs.
+ * @param {Array<{fileId: number, name: string}>} unreviewed The entries it skips.
+ * @return {{running: boolean, total: number, done: number, failed: number, unreviewed: Array<object>}}
+ */
+function batchProgress(total, unreviewed) {
+	return { running: true, total, done: 0, failed: 0, unreviewed }
+}
+
+/**
+ * The extracted entries a batch covers, split into the ones a person
+ * checked and the ones left unreviewed.
+ *
+ * @param {Array<object>} files The queue.
+ * @param {Array<number|string>|undefined} fileIds Scope the batch to these file ids.
+ * @return {{targets: Array<object>, unreviewed: Array<{fileId: number, name: string}>}}
+ */
+function batchTargets(files, fileIds) {
+	const scope = fileIds ? new Set(fileIds.map(Number)) : null
+	// Snapshot the targets up-front: anonymiseEntry mutates each
+	// entry's status to 'completed'/'error', so iterating live
+	// would be order-sensitive.
+	const inScope = files.filter(
+		(entry) =>
+			entry.status === 'extracted'
+			&& (!scope || scope.has(Number(entry.fileId))),
+	)
+	// Only what a person checked is written; the rest is reported.
+	return {
+		targets: inScope.filter((entry) => entryIsChecked(entry)),
+		unreviewed: inScope
+			.filter((entry) => !entryIsChecked(entry))
+			.map((entry) => ({ fileId: entry.fileId, name: entry.name })),
+	}
+}
+
+/**
+ * Count a batch entry's outcome. anonymiseEntry can mark 'error' without
+ * throwing on partial failures, so the entry's own status decides.
+ *
+ * @param {object} batch The batch progress record.
+ * @param {object} entry The entry that ran.
+ * @return {void}
+ */
+function countOutcome(batch, entry) {
+	if (entry.status === 'error') {
+		batch.failed++
+	} else {
+		batch.done++
+	}
+}
+
+/**
  * The relation rows a reviewed entity owns. A grouped row may own several
  * (append bug); older entries carry a single `relationId`.
  *
@@ -1115,69 +1169,44 @@ export const useAnonymizationStore = defineStore('anonymization', {
 		async anonymiseAllExtracted(options = {}) {
 			const { fileIds, files, ...entryOptions } = options
 
+			await this._extractListed(files)
+			const { targets, unreviewed } = batchTargets(this.files, fileIds)
+			this.batch = batchProgress(targets.length, unreviewed)
+			try {
+				for (const entry of targets) {
+					// anonymiseEntry already sets entry.status = 'error';
+					// swallow so one bad file doesn't abort the batch.
+					await this.anonymiseEntry(entry, entryOptions).catch((err) =>
+						console.error(
+							`Batch anonymise failed for ${entry.name}:`,
+							err,
+						),
+					)
+					countOutcome(this.batch, entry)
+				}
+			} finally {
+				this.batch.running = false
+			}
+		},
+
+		/**
+		 * Extract the listed files of a dossier batch before it runs.
+		 *
+		 * @param {Array<object>|undefined} files File descriptors to extract.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 */
+		async _extractListed(files) {
 			// Dossier batch: the listing may contain files the user never
 			// opened in the viewer, so they were never lazily extracted and
 			// aren't in the queue yet. Extract them first — otherwise the
 			// run silently skips every un-opened file. ensureExtracted is a
 			// no-op for files already in the queue, so this is idempotent.
 			if (Array.isArray(files) && files.length > 0) {
-				this.batch = {
-					running: true,
-					total: 0,
-					done: 0,
-					failed: 0,
-					unreviewed: [],
-				}
+				this.batch = batchProgress(0, [])
 				for (const meta of files) {
 					await this.ensureExtracted(meta)
 				}
-			}
-
-			const scope = fileIds ? new Set(fileIds.map(Number)) : null
-
-			// Snapshot the targets up-front: anonymiseEntry mutates each
-			// entry's status to 'completed'/'error', so iterating live
-			// would be order-sensitive.
-			const inScope = this.files.filter(
-				(entry) =>
-					entry.status === 'extracted'
-					&& (!scope || scope.has(Number(entry.fileId))),
-			)
-			// Only what a person checked is written; the rest is reported.
-			const targets = inScope.filter((entry) => entryIsChecked(entry))
-			const unreviewed = inScope
-				.filter((entry) => !entryIsChecked(entry))
-				.map((entry) => ({ fileId: entry.fileId, name: entry.name }))
-
-			this.batch = {
-				running: true,
-				total: targets.length,
-				done: 0,
-				failed: 0,
-				unreviewed,
-			}
-			try {
-				for (const entry of targets) {
-					try {
-						await this.anonymiseEntry(entry, entryOptions)
-					} catch (err) {
-						// anonymiseEntry already sets entry.status = 'error';
-						// swallow so one bad file doesn't abort the batch.
-						console.error(
-							`Batch anonymise failed for ${entry.name}:`,
-							err,
-						)
-					}
-					// Classify by the entry's own outcome — anonymiseEntry
-					// can mark 'error' without throwing on partial failures.
-					if (entry.status === 'error') {
-						this.batch.failed++
-					} else {
-						this.batch.done++
-					}
-				}
-			} finally {
-				this.batch.running = false
 			}
 		},
 
