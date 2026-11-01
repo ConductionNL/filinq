@@ -69,6 +69,12 @@ export default {
 				: t('filinq', 'Add publish-never rule')
 		},
 
+		/**
+		 * Whether the prohibition form holds enough to save.
+		 *
+		 * @return {boolean}
+		 * @spec openspec/specs/entity-publication-policies/spec.md#requirement-three-separate-admin-surfaces-must-exist
+		 */
 		canSubmit() {
 			return (
 				this.form.primaryName.trim() !== ''

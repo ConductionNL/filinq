@@ -73,6 +73,12 @@ export default {
 				: t('filinq', 'Add standing consent')
 		},
 
+		/**
+		 * Whether the standing consent form holds enough to save.
+		 *
+		 * @return {boolean}
+		 * @spec openspec/specs/entity-publication-policies/spec.md#requirement-three-separate-admin-surfaces-must-exist
+		 */
 		canSubmit() {
 			return (
 				this.form.entityText.trim() !== ''
