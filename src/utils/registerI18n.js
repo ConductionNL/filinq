@@ -31,6 +31,7 @@ import { getLanguage } from '@nextcloud/l10n'
  * @param {string|object|null|undefined} value    The raw field value from OpenRegister.
  * @param {string}                       fallback Value to return when nothing resolves.
  * @return {string} A displayable string, never an object.
+ * @spec openspec/specs/register-i18n/spec.md
  */
 export function resolveI18nValue(value, fallback = '') {
 	if (isMissing(value)) {
