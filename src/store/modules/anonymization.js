@@ -936,10 +936,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 		 * @throws {Error} If the folder name is empty or folder creation fails.
 		 */
 		async addFilesAsDossier(fileList, folderName) {
-			const cleanName = (folderName || '').trim()
-			if (!cleanName) {
-				throw new Error('Folder name is required')
-			}
+			const cleanName = dossierFolderName(folderName)
 
 			try {
 				await this.createDossierFolder(cleanName)
