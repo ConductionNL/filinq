@@ -206,6 +206,22 @@ class DocumentRegistrationWriteGuardTraceTest extends TestCase {
 	}//end testNumericLookingNumbersCompareAsText()
 
 	/**
+	 * Numbers compare case-sensitively: "ZK-2026-1" to "zk-2026-1" is a move.
+	 *
+	 * @return void
+	 */
+	public function testChangingTheCaseOfANumberIsRefused(): void {
+		$event = $this->guard(
+			new: $this->entity(uuid: 'n', schema: 'documentRegistration', data: ['registrationNumber' => 'zk-2026-1']),
+			old: $this->entity(uuid: 'o', schema: 'documentRegistration', data: ['registrationNumber' => 'ZK-2026-1'])
+		);
+
+		$this->assertTrue($event->isPropagationStopped());
+		$this->assertSame('ZK-2026-1', $event->getErrors()['was']);
+
+	}//end testChangingTheCaseOfANumberIsRefused()
+
+	/**
 	 * An event other than ObjectUpdatingEvent is ignored.
 	 *
 	 * @return void
