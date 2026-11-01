@@ -1,0 +1,17 @@
+{
+    "twenty categories": {
+        "sha1": "d5731d86fb04306ff482d8b8539e4fd2a02ce601",
+        "texts": 54,
+        "rects": 37
+    },
+    "twenty-one categories": {
+        "sha1": "9f14720f73bbd621431dba009686e5ba8db12c45",
+        "texts": 7,
+        "rects": 38
+    },
+    "one tall and one low bar": {
+        "sha1": "6a6a738f8392555df5d378f934c70d5df79129fe",
+        "texts": 9,
+        "rects": 5
+    }
+}
