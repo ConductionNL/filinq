@@ -153,6 +153,16 @@ class ConsolidateRegisters implements IRepairStep {
 	 */
 	public const TARGET_SLUG = 'filinq';
 
+	private const COLUMNS_UNREADABLE = 'ConsolidateRegisters: could not read the columns of one of the tables; refusing the pair. '
+		. 'An unreadable schema is not an empty one.';
+
+	private const NOT_SHARD_TABLES = 'ConsolidateRegisters: a table matching the shard-table name pattern is missing `_uuid` or '
+		. '`_register`; it is not one of ours whatever its name says. Refusing the pair.';
+
+	private const SOURCE_WIDER = 'ConsolidateRegisters: the source table carries column(s) the target does not; refusing the '
+		. 'pair. Copying anyway would drop those properties from every migrated object while every '
+		. 'row count still reconciled — a data loss no count can catch. Sync the schema first.';
+
 	/**
 	 * Constructor.
 	 *
@@ -479,46 +489,39 @@ class ConsolidateRegisters implements IRepairStep {
 	 * @return array<int, string>|null Columns to carry, `_id` excluded.
 	 */
 	private function agreedColumns(string $sourceTable, string $targetTable): ?array {
+		$pair = ['sourceTable' => $sourceTable, 'targetTable' => $targetTable];
 		$sourceColumns = $this->gateway->columnsOf(table: $sourceTable);
 		$targetColumns = $this->gateway->columnsOf(table: $targetTable);
-
 		if ($sourceColumns === null || $targetColumns === null) {
-			$this->logger->warning(
-				'ConsolidateRegisters: could not read the columns of one of the tables; refusing the pair. '
-				. 'An unreadable schema is not an empty one.',
-				['sourceTable' => $sourceTable, 'targetTable' => $targetTable]
-			);
-			return null;
+			return $this->refusePair(message: self::COLUMNS_UNREADABLE, context: $pair);
 		}
 
-		if ($this->decisions->looksLikeShardTable(columns: $sourceColumns) === false
-			|| $this->decisions->looksLikeShardTable(columns: $targetColumns) === false
-		) {
-			$this->logger->warning(
-				'ConsolidateRegisters: a table matching the shard-table name pattern is missing `_uuid` or '
-				. '`_register`; it is not one of ours whatever its name says. Refusing the pair.',
-				['sourceTable' => $sourceTable, 'targetTable' => $targetTable]
-			);
-			return null;
+		$shards = $this->decisions->looksLikeShardTable(columns: $sourceColumns) === true
+			&& $this->decisions->looksLikeShardTable(columns: $targetColumns) === true;
+		if ($shards === false) {
+			return $this->refusePair(message: self::NOT_SHARD_TABLES, context: $pair);
 		}
 
-		$missing = $this->decisions->missingColumns(
-			sourceColumns: $sourceColumns,
-			targetColumns: $targetColumns
-		);
-
+		$missing = $this->decisions->missingColumns(sourceColumns: $sourceColumns, targetColumns: $targetColumns);
 		if ($missing !== []) {
-			$this->logger->warning(
-				'ConsolidateRegisters: the source table carries column(s) the target does not; refusing the '
-				. 'pair. Copying anyway would drop those properties from every migrated object while every '
-				. 'row count still reconciled — a data loss no count can catch. Sync the schema first.',
-				['sourceTable' => $sourceTable, 'targetTable' => $targetTable, 'columns' => $missing]
-			);
-			return null;
+			return $this->refusePair(message: self::SOURCE_WIDER, context: $pair + ['columns' => $missing]);
 		}
 
 		return $this->decisions->insertColumns(sourceColumns: $sourceColumns);
 	}//end agreedColumns()
+
+	/**
+	 * Log why a pair is refused on its columns.
+	 *
+	 * @param string               $message The reason.
+	 * @param array<string, mixed> $context The pair's tables, and the columns at issue.
+	 *
+	 * @return null Always: the pair has no agreed columns.
+	 */
+	private function refusePair(string $message, array $context): null {
+		$this->logger->warning($message, $context);
+		return null;
+	}//end refusePair()
 
 	/**
 	 * Insert, verify, then delete — one batch at a time.
