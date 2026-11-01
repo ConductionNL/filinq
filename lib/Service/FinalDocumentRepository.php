@@ -31,6 +31,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use OCP\AppFramework\Db\DoesNotExistException;
+use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
@@ -91,12 +92,16 @@ class FinalDocumentRepository {
 	 *
 	 * @param DocumentObjectServiceResolver $objectResolver Resolver for OpenRegister's ObjectService.
 	 * @param LoggerInterface $logger Logger for diagnostics.
+	 * @param TemplateLanguageService|null $languages The reader's language; without it only plain dossier names are read.
+	 * @param IUserSession|null $userSession The reader.
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		private readonly DocumentObjectServiceResolver $objectResolver,
 		private readonly LoggerInterface $logger,
+		private readonly ?TemplateLanguageService $languages=null,
+		private readonly ?IUserSession $userSession=null,
 	) {
 
 	}//end __construct()
@@ -288,13 +293,15 @@ class FinalDocumentRepository {
 			}
 
 			$fields = $this->normalise(row: $result);
-			if (is_array($data) === false || is_string($fields['name'] ?? null) === false || $fields['name'] === '') {
+			$name   = $this->dossierName(name: $fields['name'] ?? null);
+
+			if (is_array($data) === false || $name === '') {
 				continue;
 			}
 
 			$self = (array) ($data['@self'] ?? []);
 			$index->add(
-				dossier: ['id' => (string) $fields['uuid'], 'name' => $fields['name']],
+				dossier: ['id' => (string) $fields['uuid'], 'name' => $name],
 				members: array_merge((array) ($self['files'] ?? []), (array) ($fields['documents'] ?? [])),
 				folder: (int) ($self['folder'] ?? 0)
 			);
@@ -303,6 +310,29 @@ class FinalDocumentRepository {
 		return $index;
 
 	}//end dossierIndex()
+
+	/**
+	 * A dossier's display name: a plain name, or a translatable name resolved
+	 * in the reader's language. A translatable name needs the language service.
+	 *
+	 * @param mixed $name The stored name.
+	 *
+	 * @return string The name, '' when there is none to show.
+	 */
+	private function dossierName(mixed $name): string {
+		if (is_string($name) === true) {
+			return $name;
+		}
+
+		if (is_array($name) === false || $this->languages === null) {
+			return '';
+		}
+
+		$language = $this->languages->resolveUserLanguage(user: $this->userSession?->getUser());
+
+		return (string) $this->languages->resolveFieldValue(fieldValue: $name, preferredLanguage: $language)['value'];
+
+	}//end dossierName()
 
 	/**
 	 * Every document record linked to one domain.

@@ -24,7 +24,11 @@ namespace OCA\Filinq\Tests\Unit\Service;
 use JsonSerializable;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\FinalDocumentRepository;
+use OCA\Filinq\Service\TemplateLanguageService;
 use OCA\OpenRegister\Service\ObjectService;
+use OCP\IConfig;
+use OCP\IUser;
+use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use RuntimeException;
@@ -46,11 +50,12 @@ class FinalDocumentRepositoryReadTest extends TestCase {
 	/**
 	 * A repository over these rows, or over a register that fails to read.
 	 *
-	 * @param array<int, mixed>|null $rows The rows, or null for a failing read.
+	 * @param array<int, mixed>|null $rows     The rows, or null for a failing read.
+	 * @param string|null            $language The reader's Nextcloud language, or null for no reader.
 	 *
 	 * @return FinalDocumentRepository The repository under test.
 	 */
-	private function repository(?array $rows): FinalDocumentRepository {
+	private function repository(?array $rows, ?string $language=null): FinalDocumentRepository {
 		$objectService = $this->createMock(originalClassName: ObjectService::class);
 		$objectService->method('searchObjectsBySlug')->willReturnCallback(
 			function () use ($rows): array {
@@ -65,7 +70,23 @@ class FinalDocumentRepositoryReadTest extends TestCase {
 		$resolver = $this->createMock(originalClassName: DocumentObjectServiceResolver::class);
 		$resolver->method('resolve')->willReturn($objectService);
 
-		return new FinalDocumentRepository(objectResolver: $resolver, logger: new NullLogger());
+		if ($language === null) {
+			return new FinalDocumentRepository(objectResolver: $resolver, logger: new NullLogger());
+		}
+
+		$user = $this->createMock(originalClassName: IUser::class);
+		$user->method('getUID')->willReturn('pieter');
+		$session = $this->createMock(originalClassName: IUserSession::class);
+		$session->method('getUser')->willReturn($user);
+		$config = $this->createMock(originalClassName: IConfig::class);
+		$config->method('getUserValue')->willReturn($language);
+
+		return new FinalDocumentRepository(
+			objectResolver: $resolver,
+			logger: new NullLogger(),
+			languages: new TemplateLanguageService(config: $config),
+			userSession: $session
+		);
 	}//end repository()
 
 	/**
@@ -135,6 +156,33 @@ class FinalDocumentRepositoryReadTest extends TestCase {
 			actual: $this->repository(rows: $rows)->dossiersByFile()
 		);
 	}//end testDossiersByFileGolden()
+
+	/**
+	 * A dossier read from the register carries its translatable name as a
+	 * language map and its folder, but no file list: its files are still named.
+	 *
+	 * @return void
+	 */
+	public function testATranslatableDossierNameStillNamesTheFilesInItsFolder(): void {
+		$rows = [
+			$this->entity(
+				data: [
+					'name'  => ['en' => 'Cycle path Lindelaan', 'nl' => 'Fietspad Lindelaan'],
+					'@self' => ['id' => '9c818640', 'files' => [], 'folder' => '21063'],
+					'id'    => '9c818640',
+				]
+			),
+		];
+
+		$this->assertSame(
+			expected: ['id' => '9c818640', 'name' => 'Fietspad Lindelaan'],
+			actual: $this->repository(rows: $rows, language: '')->dossierIndex()->dossierOf(fileId: 21064, folderId: 21063)
+		);
+		$this->assertSame(
+			expected: ['id' => '9c818640', 'name' => 'Cycle path Lindelaan'],
+			actual: $this->repository(rows: $rows, language: 'en_GB')->dossierIndex()->dossierOf(fileId: 21064, folderId: 21063)
+		);
+	}//end testATranslatableDossierNameStillNamesTheFilesInItsFolder()
 
 	/**
 	 * An unreadable dossier register answers an empty map.
