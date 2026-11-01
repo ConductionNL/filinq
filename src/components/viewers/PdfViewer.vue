@@ -23,12 +23,12 @@
 <script>
 import { translate as t } from '@nextcloud/l10n'
 import { NcLoadingIcon } from '@nextcloud/vue'
+import { documentViewer, entityHighlighting } from '../../mixins/documentViewer.js'
 import {
 	fetchFileAsArrayBuffer,
 	fetchUrlAsArrayBuffer,
 } from '../../services/fileViewerService.js'
 import { applyDomHighlights } from '../../services/highlightDom.js'
-import { fileViewerStore } from '../../store/store.js'
 
 let pdfjsLibPromise = null
 
@@ -59,20 +59,7 @@ export default {
 		NcLoadingIcon,
 	},
 
-	props: {
-		path: {
-			type: String,
-			required: true,
-		},
-
-		// Optional: fetch the PDF bytes from this URL instead of deriving a
-		// WebDAV URL from `path`. Used for server-rendered content that isn't a
-		// plain file — e.g. the EML original preview endpoint.
-		url: {
-			type: String,
-			default: '',
-		},
-	},
+	mixins: [documentViewer, entityHighlighting],
 
 	data() {
 		return {
@@ -82,61 +69,6 @@ export default {
 			pdfDoc: null,
 			pageRefs: {},
 		}
-	},
-
-	computed: {
-		/**
-		 * Entities the sidebar asked to mark in the document. Read through a
-		 * computed (not a store string-path) so the watcher fires reliably.
-		 *
-		 * @return {Array<{value: string, type: string}>}
-		 */
-		highlightEntities() {
-			return fileViewerStore.highlightEntities || []
-		},
-
-		/**
-		 * Pending selection to mark distinctly — only while in add mode.
-		 *
-		 * @return {string}
-		 */
-		pendingValue() {
-			return fileViewerStore.addMode ? fileViewerStore.selection || '' : ''
-		},
-
-		/**
-		 * Whether the viewer is in add mode — drives the marking (highlighter)
-		 * cursor so it is obvious the user can select text to add an entity.
-		 *
-		 * @return {boolean}
-		 */
-		isAddMode() {
-			return fileViewerStore.addMode
-		},
-	},
-
-	watch: {
-		path: {
-			immediate: true,
-			handler() {
-				this.load()
-			},
-		},
-
-		url() {
-			this.load()
-		},
-
-		highlightEntities: {
-			deep: true,
-			handler() {
-				this.scheduleHighlights()
-			},
-		},
-
-		pendingValue() {
-			this.scheduleHighlights()
-		},
 	},
 
 	beforeUnmount() {
@@ -292,15 +224,6 @@ export default {
 		 */
 		applyHighlightsTo(layer) {
 			applyDomHighlights(layer, this.highlightEntities, this.pendingValue)
-		},
-
-		/**
-		 * Push the current text selection into the viewer store so the
-		 * "add selection as entity" flow can pick it up.
-		 */
-		captureSelection() {
-			const text = window.getSelection()?.toString() || ''
-			fileViewerStore.setSelection(text)
 		},
 	},
 }

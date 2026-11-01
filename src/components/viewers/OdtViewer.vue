@@ -22,16 +22,8 @@
 <script>
 import { translate as t } from '@nextcloud/l10n'
 import { NcLoadingIcon } from '@nextcloud/vue'
-import {
-	fetchFileAsArrayBuffer,
-	fetchUrlAsArrayBuffer,
-} from '../../services/fileViewerService.js'
-import {
-	applyDomHighlights,
-	clearDomHighlights,
-} from '../../services/highlightDom.js'
+import { htmlDocumentViewer } from '../../mixins/documentViewer.js'
 import { odfXmlToHtml } from '../../services/odfToHtml.js'
-import { fileViewerStore } from '../../store/store.js'
 
 let jsZipPromise = null
 
@@ -53,155 +45,28 @@ export default {
 		NcLoadingIcon,
 	},
 
-	props: {
-		path: {
-			type: String,
-			required: true,
-		},
-
-		// Optional: read the bytes from this same-origin URL instead of the
-		// WebDAV path, for a file outside the user's storage (the compare view
-		// mounted by another app).
-		url: {
-			type: String,
-			default: '',
-		},
-	},
-
-	data() {
-		return {
-			loading: true,
-			error: null,
-			html: '',
-		}
-	},
-
-	computed: {
-		/**
-		 * Entities the sidebar asked to mark in the document.
-		 *
-		 * @return {Array<{value: string, type: string}>}
-		 */
-		highlightEntities() {
-			return fileViewerStore.highlightEntities || []
-		},
-
-		/**
-		 * Pending selection to mark distinctly — only while in add mode.
-		 *
-		 * @return {string}
-		 */
-		pendingValue() {
-			return fileViewerStore.addMode ? fileViewerStore.selection || '' : ''
-		},
-
-		/**
-		 * Whether the viewer is in add mode — drives the marking cursor.
-		 *
-		 * @return {boolean}
-		 */
-		isAddMode() {
-			return fileViewerStore.addMode
-		},
-	},
-
-	watch: {
-		path: {
-			immediate: true,
-			handler() {
-				this.load()
-			},
-		},
-
-		/**
-		 * Reload when the host points the viewer at another URL.
-		 *
-		 * @return {void}
-		 * @spec openspec/changes/anonymization-review-workbench/specs/anonymization-review-workbench/spec.md#requirement-the-split-view-is-mountable-by-another-app-req-ddarw-014
-		 */
-		url() {
-			this.load()
-		},
-
-		highlightEntities: {
-			deep: true,
-			handler() {
-				this.scheduleHighlights()
-			},
-		},
-
-		pendingValue() {
-			this.scheduleHighlights()
-		},
-	},
-
-	beforeUnmount() {
-		clearDomHighlights(this.$refs.content)
-	},
+	mixins: [htmlDocumentViewer],
+	loadFailedLog: '[OdtViewer] failed to load odt:',
 
 	methods: {
+		loadConverter: loadJsZip,
+
 		/**
-		 * Fetch the odt as ArrayBuffer, unzip it, and transform content.xml to
-		 * HTML for display.
+		 * Unzip the odt and transform its content.xml to HTML.
 		 *
-		 * @return {Promise<void>}
+		 * @param {object} jsZipModule The JSZip module.
+		 * @param {ArrayBuffer} arrayBuffer The odt bytes.
+		 * @return {Promise<string>} The HTML.
 		 * @spec openspec/changes/odt-viewer-preview/specs/document-preview/spec.md#requirement-the-anonymisation-viewer-must-render-an-odt-preview
 		 */
-		async load() {
-			this.loading = true
-			this.error = null
-			try {
-				const [jsZipModule, arrayBuffer] = await Promise.all([
-					loadJsZip(),
-					this.url
-						? fetchUrlAsArrayBuffer(this.url)
-						: fetchFileAsArrayBuffer(this.path),
-				])
-				const JSZip = jsZipModule.default || jsZipModule
-				const zip = await JSZip.loadAsync(arrayBuffer)
-				const contentFile = zip.file('content.xml')
-				if (!contentFile) {
-					throw new Error(t('filinq', 'Not a valid ODT document'))
-				}
-				const contentXml = await contentFile.async('string')
-				this.html = odfXmlToHtml(contentXml)
-			} catch (err) {
-				console.error('[OdtViewer] failed to load odt:', err)
-				this.error = err.message || t('filinq', 'Failed to load document')
-			} finally {
-				this.loading = false
+		async toHtml(jsZipModule, arrayBuffer) {
+			const JSZip = jsZipModule.default || jsZipModule
+			const zip = await JSZip.loadAsync(arrayBuffer)
+			const contentFile = zip.file('content.xml')
+			if (!contentFile) {
+				throw new Error(t('filinq', 'Not a valid ODT document'))
 			}
-			// Highlight only after `loading` is false — the content element sits
-			// behind `v-else`, so it is not in the DOM while loading (mirrors
-			// WordViewer's ordering, incl. the cache-hit reopen case).
-			if (!this.error) {
-				this.scheduleHighlights()
-			}
-		},
-
-		/**
-		 * Re-apply entity highlights after the DOM has rendered the latest HTML.
-		 *
-		 * @return {void}
-		 */
-		scheduleHighlights() {
-			this.$nextTick(() => {
-				applyDomHighlights(
-					this.$refs.content,
-					this.highlightEntities,
-					this.pendingValue,
-				)
-			})
-		},
-
-		/**
-		 * Push the current text selection into the viewer store (add mode).
-		 *
-		 * @return {void}
-		 */
-		captureSelection() {
-			const text = window.getSelection()?.toString() || ''
-			fileViewerStore.setSelection(text)
+			return odfXmlToHtml(await contentFile.async('string'))
 		},
 	},
 }

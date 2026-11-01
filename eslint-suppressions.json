@@ -61,22 +61,12 @@
       "count": 1
     }
   },
-  "src/components/viewers/OdtViewer.vue": {
-    "no-console": {
-      "count": 1
-    }
-  },
   "src/components/viewers/PdfViewer.vue": {
     "no-console": {
       "count": 1
     }
   },
   "src/components/viewers/TextViewer.vue": {
-    "no-console": {
-      "count": 1
-    }
-  },
-  "src/components/viewers/WordViewer.vue": {
     "no-console": {
       "count": 1
     }
@@ -98,6 +88,11 @@
   },
   "src/main.js": {
     "no-unused-vars": {
+      "count": 1
+    }
+  },
+  "src/mixins/documentViewer.js": {
+    "no-console": {
       "count": 1
     }
   },

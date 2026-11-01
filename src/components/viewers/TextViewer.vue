@@ -21,6 +21,7 @@
 <script>
 import { translate as t } from '@nextcloud/l10n'
 import { NcLoadingIcon } from '@nextcloud/vue'
+import { documentViewer } from '../../mixins/documentViewer.js'
 import { entityTypeColor } from '../../services/entityTypes.js'
 import { fetchFileAsText, fetchUrlAsText } from '../../services/fileViewerService.js'
 import {
@@ -35,20 +36,7 @@ export default {
 		NcLoadingIcon,
 	},
 
-	props: {
-		path: {
-			type: String,
-			required: true,
-		},
-
-		// Optional: read the bytes from this same-origin URL instead of the
-		// WebDAV path, for a file outside the user's storage (the compare view
-		// mounted by another app).
-		url: {
-			type: String,
-			default: '',
-		},
-	},
+	mixins: [documentViewer],
 
 	data() {
 		return {
@@ -74,35 +62,6 @@ export default {
 					? [{ value: fileViewerStore.selection, type: PENDING_TYPE }]
 					: []
 			return buildHighlightSegments(this.content, [...pending, ...entities])
-		},
-
-		/**
-		 * Whether the viewer is in add mode — drives the marking (highlighter)
-		 * cursor so it is obvious the user can select text to add an entity.
-		 *
-		 * @return {boolean}
-		 */
-		isAddMode() {
-			return fileViewerStore.addMode
-		},
-	},
-
-	watch: {
-		path: {
-			immediate: true,
-			handler() {
-				this.load()
-			},
-		},
-
-		/**
-		 * Reload when the host points the viewer at another URL.
-		 *
-		 * @return {void}
-		 * @spec openspec/changes/anonymization-review-workbench/specs/anonymization-review-workbench/spec.md#requirement-the-split-view-is-mountable-by-another-app-req-ddarw-014
-		 */
-		url() {
-			this.load()
 		},
 	},
 
@@ -155,15 +114,6 @@ export default {
 			} finally {
 				this.loading = false
 			}
-		},
-
-		/**
-		 * Push the current text selection into the viewer store so future
-		 * features (e.g. "send selection to anonymisation") can pick it up.
-		 */
-		captureSelection() {
-			const text = window.getSelection()?.toString() || ''
-			fileViewerStore.setSelection(text)
 		},
 	},
 }
