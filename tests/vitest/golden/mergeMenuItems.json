@@ -1,0 +1,40 @@
+[
+	{
+		"id": "a",
+		"label": "A",
+		"children": [
+			{
+				"id": "x",
+				"route": "r"
+			},
+			{
+				"id": "y"
+			}
+		],
+		"icon": "i",
+		"order": 0,
+		"href": null,
+		"visibleIf": "v"
+	},
+	{
+		"id": "b",
+		"children": [
+			{
+				"id": "z"
+			}
+		],
+		"permission": "p"
+	},
+	{
+		"id": "c",
+		"children": [
+			{
+				"id": "k"
+			}
+		]
+	},
+	{
+		"id": "d",
+		"children": "keep"
+	}
+]
