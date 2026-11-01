@@ -104,4 +104,25 @@ describe('bindDossier golden', () => {
 		}
 		golden('bindDossier', out)
 	})
+
+	it('checks the folder name before creating a dossier folder', async () => {
+		const out = []
+		for (const folder of [null, '', '   ', ' Dos ']) {
+			setActivePinia(createPinia())
+			const store = useAnonymizationStore()
+			const created = []
+			store.createDossierFolder = async (name) => {
+				created.push(name)
+				throw new Error('stop')
+			}
+			let error = null
+			try {
+				await store.addFilesAsDossier([], folder)
+			} catch (err) {
+				error = err.message
+			}
+			out.push({ folder, error, created })
+		}
+		golden('addFilesAsDossierName', out)
+	})
 })
