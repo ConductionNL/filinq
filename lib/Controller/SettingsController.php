@@ -98,41 +98,70 @@ class SettingsController extends Controller {
 		try {
 			$user = $this->userSession->getUser();
 			$isAdmin = $user !== null && $this->groupManager->isAdmin($user->getUID());
+			$dismissed = $this->warningDismissed(userId: $user?->getUID());
 
-			$dismissed = false;
-			if ($user !== null) {
-				$dismissed = $this->config->getUserValue(
-					userId: $user->getUID(),
-					appName: 'filinq',
-					key: \OCA\Filinq\Controller\AnonymiserWarningController::DISMISSED_KEY,
-					default: ''
-				) === '1';
-			}
-
-			$data = $this->settingsService->getAllSettings();
 			return new JSONResponse(
-				array_merge(
-					$data,
-					[
-						'openRegisters' => in_array(needle: 'openregister', haystack: $this->appManager->getInstalledApps()),
-						// The signing provider picker offers LibreSign only when it can sign.
-						'libresignAvailable' => $this->appManager->isEnabledForAnyone('libresign'),
-						'isAdmin' => $isAdmin,
-						'anonymiserBackend' => $this->anonymiserBackendPayload(dismissed: $dismissed),
-					]
-				)
+				array_merge($this->settingsService->getAllSettings(), $this->environment(isAdmin: $isAdmin, dismissed: $dismissed))
 			);
 		} catch (Exception $e) {
-			$this->logger->error(
-				'Failed to retrieve settings',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(['error' => $e->getMessage()], 500);
+			return $this->failed(message: 'Failed to retrieve settings', exception: $e);
 		}//end try
 
 	}//end index()
+
+	/**
+	 * Whether the session user dismissed the anonymiser warning; never without a user.
+	 *
+	 * @param string|null $userId The session user's id.
+	 *
+	 * @return bool True when the user stored a dismissal.
+	 */
+	private function warningDismissed(?string $userId): bool {
+		if ($userId === null) {
+			return false;
+		}
+
+		return $this->config->getUserValue(
+			userId: $userId,
+			appName: 'filinq',
+			key: AnonymiserWarningController::DISMISSED_KEY,
+			default: ''
+		) === '1';
+
+	}//end warningDismissed()
+
+	/**
+	 * What the settings page needs besides the stored settings.
+	 *
+	 * @param bool $isAdmin   Whether the session user is an admin.
+	 * @param bool $dismissed Whether the session user dismissed the regex warning.
+	 *
+	 * @return array<string, mixed> openRegisters, libresignAvailable, isAdmin and anonymiserBackend.
+	 */
+	private function environment(bool $isAdmin, bool $dismissed): array {
+		return [
+			'openRegisters' => in_array(needle: 'openregister', haystack: $this->appManager->getInstalledApps()),
+			// The signing provider picker offers LibreSign only when it can sign.
+			'libresignAvailable' => $this->appManager->isEnabledForAnyone('libresign'),
+			'isAdmin' => $isAdmin,
+			'anonymiserBackend' => $this->anonymiserBackendPayload(dismissed: $dismissed),
+		];
+
+	}//end environment()
+
+	/**
+	 * Log a failure and answer 500 with its message.
+	 *
+	 * @param string    $message   The log line.
+	 * @param Exception $exception The failure.
+	 *
+	 * @return JSONResponse The 500 response.
+	 */
+	private function failed(string $message, Exception $exception): JSONResponse {
+		$this->logger->error($message, ['exception' => $exception->getMessage()]);
+		return new JSONResponse(['error' => $exception->getMessage()], 500);
+
+	}//end failed()
 
 	/**
 	 * The detection backend OpenRegister reports, and the warning it calls for.
@@ -202,13 +231,7 @@ class SettingsController extends Controller {
 
 			return new JSONResponse($updatedData);
 		} catch (Exception $e) {
-			$this->logger->error(
-				'Failed to update settings',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(['error' => $e->getMessage()], 500);
+			return $this->failed(message: 'Failed to update settings', exception: $e);
 		}//end try
 
 	}//end create()
@@ -259,13 +282,7 @@ class SettingsController extends Controller {
 
 			return new JSONResponse($this->settingsService->initialize());
 		} catch (Exception $e) {
-			$this->logger->error(
-				'Failed to load register configuration',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(['error' => $e->getMessage()], 500);
+			return $this->failed(message: 'Failed to load register configuration', exception: $e);
 		}//end try
 
 	}//end load()
