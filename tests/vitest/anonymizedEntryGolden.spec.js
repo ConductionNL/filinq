@@ -108,6 +108,16 @@ const CASES = [
 		{ results: [{ id: 'L4', replacementCount: 0 }] },
 		{},
 	],
+	[
+		'link with empty fields',
+		'[PERSON: 1]',
+		{
+			results: [
+				{ id: 0, runCount: 0, sourceFileName: '', sourceFileId: false },
+			],
+		},
+		{},
+	],
 ]
 
 beforeEach(() => {

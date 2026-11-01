@@ -834,6 +834,69 @@
 		]
 	},
 	{
+		"name": "link with empty fields",
+		"entry": {
+			"id": "file-10",
+			"name": "f.pdf",
+			"status": "completed",
+			"viewMode": "anonymized",
+			"error": null,
+			"fileId": 9,
+			"filePath": "/DocuDesk/Dos/f.pdf",
+			"entities": [
+				{
+					"type": "PERSON_NAME",
+					"value": "Jan",
+					"confidence": 0.9,
+					"entityId": 1,
+					"count": 1,
+					"bases": [
+						"a",
+						"b"
+					],
+					"placeholder": "[PERSON: 1]",
+					"_resolveError": null
+				}
+			],
+			"entityCount": 1,
+			"replacementCount": 1,
+			"anonymizedFileId": null,
+			"anonymizedFileName": null,
+			"anonymizedFilePath": null,
+			"sourceFileId": false,
+			"sourceFileName": "",
+			"sourceFilePath": null,
+			"anonymizationLinkId": 0,
+			"runCount": 0,
+			"dossier": "Dos"
+		},
+		"queued": 1,
+		"calls": [
+			[
+				"GET",
+				"/index.php/apps/openregister/api/objects/filinq/anonymizationLink",
+				{
+					"params": {
+						"anonymizedFileId": 9
+					}
+				}
+			],
+			[
+				"TEXT",
+				{
+					"path": "/DocuDesk/Dos/f.pdf",
+					"mimeType": "application/pdf",
+					"fileName": "f.pdf"
+				}
+			],
+			[
+				"GET",
+				"/index.php/apps/openregister/api/entities/1",
+				null
+			]
+		]
+	},
+	{
 		"name": "no file id",
 		"link": null,
 		"undef": null,
@@ -842,7 +905,7 @@
 	{
 		"name": "linked entry from a bare link",
 		"entry": {
-			"id": "file-10",
+			"id": "file-11",
 			"name": "a.pdf",
 			"status": "completed",
 			"viewMode": "anonymized",
