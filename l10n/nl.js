@@ -2857,7 +2857,18 @@ OC.L10N.register(
         "Evidence: {evidence}": "Bewijs: {evidence}",
         "How did the answer reach you?": "Hoe kwam het antwoord bij u binnen?",
         "For example: signed form received by post on 20 October": "Bijvoorbeeld: ondertekend formulier per post ontvangen op 20 oktober",
-        "Only a consent officer can record the outcome of a consent request.": "Alleen een toestemmingsfunctionaris kan de uitkomst van een toestemmingsverzoek vastleggen."
+        "Only a consent officer can record the outcome of a consent request.": "Alleen een toestemmingsfunctionaris kan de uitkomst van een toestemmingsverzoek vastleggen.",
+        "Changed at": "Gewijzigd op",
+        "Changed by": "Gewijzigd door",
+        "Every change of consentStatus or notificationStatus, in order: the field, the old and new value, who made it, when, and the evidence given. Written by the server only.": "Elke wijziging van consentStatus of notificationStatus, op volgorde: het veld, de oude en nieuwe waarde, wie de wijziging deed, wanneer, en het bewijs dat is gegeven. Alleen de server schrijft dit.",
+        "How the answer reached the organisation; required for consent given and objection received.": "Hoe het antwoord de organisatie bereikte; verplicht bij gegeven toestemming en ontvangen bezwaar.",
+        "The status field that changed: consentStatus or notificationStatus.": "Het statusveld dat is gewijzigd: consentStatus of notificationStatus.",
+        "The user who made the change.": "De gebruiker die de wijziging deed.",
+        "The value after the change.": "De waarde na de wijziging.",
+        "The value before the change.": "De waarde voor de wijziging.",
+        "When the change was made.": "Wanneer de wijziging is gedaan.",
+        "Merge fields": "Samenvoegvelden",
+        "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you.": "De velden die het sjabloon invult, met een naam en een herkomst voor mensen: wat een voorbeeld onder Voor je ingevuld toont"
     },
     "nplurals=2; plural=(n != 1);"
 )

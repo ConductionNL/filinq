@@ -717,7 +717,7 @@
                         "title": "Tags"
                     },
                     "mergeFields": {
-                        "description": "De velden die het sjabloon invult, met een naam en een herkomst voor mensen: wat een voorbeeld onder Voor je ingevuld toont",
+                        "description": "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you.",
                         "type": "array",
                         "items": {
                             "type": "object",
@@ -740,7 +740,7 @@
                             ]
                         },
                         "visible": true,
-                        "title": "Samenvoegvelden"
+                        "title": "Merge fields"
                     },
                     "lockedBy": {
                         "description": "Nextcloud gebruikers-ID van de gebruiker die het template momenteel bewerkt",
