@@ -11,7 +11,7 @@
  */
 import { translate as t } from '@nextcloud/l10n'
 import CnFilinqDocumentIntakeWidget from './CnFilinqDocumentIntakeWidget.vue'
-import { leafMounter, registerLeaf } from './leafHost.js'
+import { integrationRegistry, leafMounter } from './leafHost.js'
 
 export const DOCUMENT_INTAKE_INTEGRATION_ID = 'filinq-document-intake'
 
@@ -48,5 +48,6 @@ export const documentIntakeLeafDescriptor = {
  * @spec openspec/changes/document-intake-inbox/tasks.md#task-3.2
  */
 export function registerDocumentIntakeLeaf(globalRef) {
-	registerLeaf(documentIntakeLeafDescriptor, globalRef)
+	const integrations = integrationRegistry(globalRef)
+	integrations.register(documentIntakeLeafDescriptor)
 }

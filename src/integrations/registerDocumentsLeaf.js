@@ -17,7 +17,7 @@
  */
 import { translate as t } from '@nextcloud/l10n'
 import CnFilinqDocumentsWidget from './CnFilinqDocumentsWidget.vue'
-import { leafMounter, registerLeaf } from './leafHost.js'
+import { integrationRegistry, leafMounter } from './leafHost.js'
 
 /**
  * The integration id a consuming app references to place this leaf.
@@ -78,5 +78,6 @@ export const documentsLeafDescriptor = {
  * @return {void}
  */
 export function registerDocumentsLeaf(globalRef) {
-	registerLeaf(documentsLeafDescriptor, globalRef)
+	const integrations = integrationRegistry(globalRef)
+	integrations.register(documentsLeafDescriptor)
 }

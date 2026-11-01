@@ -50,21 +50,24 @@ export function leafMounter(component) {
 }
 
 /**
- * Register a leaf descriptor on the shared OpenRegister integration registry.
+ * The shared OpenRegister integration registry a leaf registers on.
  *
  * Installs a load-order-safe queue stub when OpenRegister's own bundle has not
  * installed the real registry yet, so a filinq bundle that happens to load
- * first is not simply lost.
+ * first is not simply lost. Without a global there is nowhere to register, so
+ * the registry returned then ignores what it is given.
  *
- * @param {object} descriptor The leaf's integration descriptor.
+ * Each leaf calls `register` on it with its own descriptor, which keeps the
+ * registration readable at the leaf for the integration parity check.
+ *
  * @param {object} [globalRef] Global to attach to (defaults to `window`).
- * @return {void}
+ * @return {{register: function(object): void}} The registry.
  * @spec openspec/specs/leaves-library-card/spec.md
  */
-export function registerLeaf(descriptor, globalRef) {
+export function integrationRegistry(globalRef) {
 	const target = globalRef || (typeof window !== 'undefined' ? window : null)
 	if (target === null) {
-		return
+		return { register() {} }
 	}
 
 	target.OCA = target.OCA || {}
@@ -76,5 +79,5 @@ export function registerLeaf(descriptor, globalRef) {
 		},
 	}
 
-	target.OCA.OpenRegister.integrations.register(descriptor)
+	return target.OCA.OpenRegister.integrations
 }

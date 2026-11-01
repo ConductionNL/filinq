@@ -13,7 +13,7 @@
  */
 import { translate as t } from '@nextcloud/l10n'
 import CnFilinqMergeToPdfWidget from './CnFilinqMergeToPdfWidget.vue'
-import { leafMounter, registerLeaf } from './leafHost.js'
+import { integrationRegistry, leafMounter } from './leafHost.js'
 
 export const MERGE_INTEGRATION_ID = 'filinq-merge-to-pdf'
 
@@ -50,5 +50,6 @@ export const mergeToPdfLeafDescriptor = {
  * @spec openspec/specs/document-merge/spec.md
  */
 export function registerMergeToPdfLeaf(globalRef) {
-	registerLeaf(mergeToPdfLeafDescriptor, globalRef)
+	const integrations = integrationRegistry(globalRef)
+	integrations.register(mergeToPdfLeafDescriptor)
 }

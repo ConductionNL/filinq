@@ -11,7 +11,7 @@
  */
 import { translate as t } from '@nextcloud/l10n'
 import CnFilinqDownloadAllFilesWidget from './CnFilinqDownloadAllFilesWidget.vue'
-import { leafMounter, registerLeaf } from './leafHost.js'
+import { integrationRegistry, leafMounter } from './leafHost.js'
 
 export const DOWNLOAD_ALL_INTEGRATION_ID = 'filinq-download-all-files'
 
@@ -48,5 +48,6 @@ export const downloadAllFilesLeafDescriptor = {
  * @spec openspec/specs/document-creatie-sjablonen/spec.md
  */
 export function registerDownloadAllFilesLeaf(globalRef) {
-	registerLeaf(downloadAllFilesLeafDescriptor, globalRef)
+	const integrations = integrationRegistry(globalRef)
+	integrations.register(downloadAllFilesLeafDescriptor)
 }

@@ -11,7 +11,7 @@
  */
 import { translate as t } from '@nextcloud/l10n'
 import CnFilinqSigningFolderWidget from './CnFilinqSigningFolderWidget.vue'
-import { leafMounter, registerLeaf } from './leafHost.js'
+import { integrationRegistry, leafMounter } from './leafHost.js'
 
 export const SIGNING_FOLDER_INTEGRATION_ID = 'filinq-signing-folder'
 
@@ -48,5 +48,6 @@ export const signingFolderLeafDescriptor = {
  * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/tasks.md#task-1.2
  */
 export function registerSigningFolderLeaf(globalRef) {
-	registerLeaf(signingFolderLeafDescriptor, globalRef)
+	const integrations = integrationRegistry(globalRef)
+	integrations.register(signingFolderLeafDescriptor)
 }
