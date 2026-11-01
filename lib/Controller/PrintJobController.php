@@ -121,13 +121,9 @@ class PrintJobController extends Controller {
 				);
 			}
 
-			$data = $this->request->getParam('data', []);
-			$options = $this->requestOptions();
+			$data = $this->arrayParam(name: 'data');
+			$options = $this->arrayParam(name: 'options');
 			$filename = $this->request->getParam('filename', 'document.pdf');
-
-			if (is_array($data) === false) {
-				$data = [];
-			}
 
 			$result = $this->printJobSvc->createJob(
 				request: new PrintJobRequest(templateId: $templateId, options: $options, filename: (string) $filename),
@@ -429,35 +425,12 @@ class PrintJobController extends Controller {
 				return $this->notAuthenticated(message: 'Not authenticated');
 			}
 
-			$templateId = $this->request->getParam('templateId', '');
-			if (empty($templateId) === true) {
-				return new JSONResponse(
-					data: ['error' => 'templateId is required'],
-					statusCode: Http::STATUS_BAD_REQUEST
-				);
+			$refusal = $this->batchRefusal();
+			if ($refusal !== null) {
+				return $refusal;
 			}
 
-			$items = $this->batchItems();
-			if ($items === []) {
-				return new JSONResponse(
-					data: ['error' => 'items array is required and must not be empty'],
-					statusCode: Http::STATUS_BAD_REQUEST
-				);
-			}
-
-			$options = $this->requestOptions();
-
-			$result = $this->printJobSvc->createBatchJob(
-				request: new PrintJobRequest(
-					templateId: (string) $templateId,
-					options: $options,
-					filename: (string) $this->request->getParam('filename', 'print-job.pdf')
-				),
-				items: $items,
-				userId: $user->getUID()
-			);
-
-			return new JSONResponse(data: $result, statusCode: Http::STATUS_CREATED);
+			return new JSONResponse(data: $this->createBatch(userId: $user->getUID()), statusCode: Http::STATUS_CREATED);
 		} catch (Exception $e) {
 			return $this->creationFailed(exception: $e, what: 'Batch print job create');
 		}//end try
@@ -465,34 +438,62 @@ class PrintJobController extends Controller {
 	}//end batch()
 
 	/**
-	 * The batch items the request carries, or an empty list when it carries none or no list.
+	 * The 400 answer for a batch request without a template or without items, or null when it has both.
 	 *
-	 * @return array<int|string, mixed> The items.
+	 * @return JSONResponse|null The refusal.
 	 */
-	private function batchItems(): array {
-		$items = $this->request->getParam('items', []);
-		if (is_array($items) === false) {
-			return [];
+	private function batchRefusal(): ?JSONResponse {
+		if (empty($this->request->getParam('templateId', '')) === true) {
+			return new JSONResponse(data: ['error' => 'templateId is required'], statusCode: Http::STATUS_BAD_REQUEST);
 		}
 
-		return $items;
+		if ($this->arrayParam(name: 'items') === []) {
+			return new JSONResponse(
+				data: ['error' => 'items array is required and must not be empty'],
+				statusCode: Http::STATUS_BAD_REQUEST
+			);
+		}
 
-	}//end batchItems()
+		return null;
+
+	}//end batchRefusal()
 
 	/**
-	 * The print options the request carries, or none when they are not an array.
+	 * Queue the batch the request describes for the session user.
 	 *
-	 * @return array<string, mixed> The options.
+	 * @param string $userId The session user, who owns the batch.
+	 *
+	 * @return array<string, mixed> The service's answer.
 	 */
-	private function requestOptions(): array {
-		$options = $this->request->getParam('options', []);
-		if (is_array($options) === false) {
+	private function createBatch(string $userId): array {
+		return $this->printJobSvc->createBatchJob(
+			request: new PrintJobRequest(
+				templateId: (string) $this->request->getParam('templateId', ''),
+				options: $this->arrayParam(name: 'options'),
+				filename: (string) $this->request->getParam('filename', 'print-job.pdf')
+			),
+			items: $this->arrayParam(name: 'items'),
+			userId: $userId
+		);
+
+	}//end createBatch()
+
+	/**
+	 * A request parameter that must be an array, or an empty array otherwise.
+	 *
+	 * @param string $name The parameter name.
+	 *
+	 * @return array<array-key, mixed> The parameter value.
+	 */
+	private function arrayParam(string $name): array {
+		$value = $this->request->getParam($name, []);
+		if (is_array($value) === false) {
 			return [];
 		}
 
-		return $options;
+		return $value;
 
-	}//end requestOptions()
+	}//end arrayParam()
 
 	/**
 	 * Log a failed job creation and answer with its 4xx or 5xx code, else 500.
