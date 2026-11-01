@@ -93,6 +93,8 @@ class ConsolidateRegistersPreflightTraceTest extends TestCase {
 	public function testUnlistableTables(): void {
 		$this->gateway->method('registerIds')->willReturn(['filinq' => 9]);
 		$this->gateway->method('tableNames')->willReturn(null);
+		$this->gateway->expects($this->never())->method('insertBatch');
+		$this->gateway->expects($this->never())->method('deleteBatch');
 		$this->decisions->expects($this->never())->method('shardTablesFor');
 
 		$this->assertSame(['ConsolidateRegisters: could not list tables; nothing moved.'], $this->runStep());
@@ -110,6 +112,8 @@ class ConsolidateRegistersPreflightTraceTest extends TestCase {
 		$this->decisions->expects($this->once())->method('shardTablesFor')
 			->with(['t1', 't2'], 9)
 			->willReturn(['tables' => [], 'ambiguous' => [4, 5]]);
+		$this->gateway->expects($this->never())->method('insertBatch');
+		$this->gateway->expects($this->never())->method('deleteBatch');
 		$this->logger->expects($this->once())->method('warning')
 			->with($this->stringContains('more than one table name matched'), ['registerId' => 9, 'schemaIds' => [4, 5]]);
 
