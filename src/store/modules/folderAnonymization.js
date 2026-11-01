@@ -184,6 +184,32 @@ async function anonymizeFolderFiles(store, targets, body) {
 	return folderRunOutcome(succeeded, lastError)
 }
 
+/**
+ * The create body of a folder's dossier, bound through `@self.folder`.
+ *
+ * @param {object} state The store state (dossier, folderPath, folderId).
+ * @return {{name: string, description: string, bases: Array<string>, '@self': {folder: string}}}
+ */
+function folderDossierPayload(state) {
+	return {
+		name: state.dossier.name || state.folderPath || 'Dossier',
+		description: state.dossier.description || '',
+		bases: state.dossier.bases || [],
+		'@self': { folder: String(state.folderId) },
+	}
+}
+
+/**
+ * The UUID of a created OpenRegister object, or null when the response
+ * carries none.
+ *
+ * @param {object|null} data The create response body.
+ * @return {string|null}
+ */
+function createdObjectUuid(data) {
+	return data?.['@self']?.id || data?.id || data?.uuid || null
+}
+
 export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 	state: () => ({
 		folderPath: '',
@@ -326,19 +352,11 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 			this.dossier.creating = true
 			this.dossier.error = null
 			try {
-				const payload = {
-					name: this.dossier.name || this.folderPath || 'Dossier',
-					description: this.dossier.description || '',
-					bases: this.dossier.bases || [],
-					'@self': { folder: String(this.folderId) },
-				}
 				const r = await axios.post(
 					generateUrl('/apps/openregister/api/objects/filinq/dossier'),
-					payload,
+					folderDossierPayload(this),
 				)
-				const data = r.data
-				this.dossier.uuid =
-					data?.['@self']?.id || data?.id || data?.uuid || null
+				this.dossier.uuid = createdObjectUuid(r.data)
 				if (!this.dossier.uuid) {
 					this.dossier.error =
 						'Dossier created but UUID not found in response.'
