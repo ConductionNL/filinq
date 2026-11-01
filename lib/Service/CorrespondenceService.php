@@ -761,28 +761,9 @@ class CorrespondenceService implements CorrespondenceServiceInterface {
 	 * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-correspondence-register-logging
 	 */
 	private function logCorrespondence(CorrespondenceRequest $request, array $outcome): array {
-		$options = $request->options;
 		try {
 			$objectService = $this->getObjectService();
-
-			$dataRefs    = $outcome['dataRefs'];
-			$recipientId = '';
-			if (empty($dataRefs) === false && isset($dataRefs[0]['id']) === true) {
-				$recipientId = $dataRefs[0]['id'];
-			}
-
-			$entry = [
-				'templateId' => $request->templateId,
-				'templateName' => $outcome['templateName'],
-				'recipientId' => $recipientId,
-				'recipientType' => $options['recipientType'] ?? '',
-				'caseReference' => $options['caseReference'] ?? '',
-				'generatedAt' => date('c'),
-				'format' => ($options['format'] ?? $this->getDefaultFormat()),
-				'status' => $outcome['status'],
-				'generatedBy' => $options['userId'] ?? '',
-				'errorMessage' => $outcome['errorMessage'],
-			];
+			$entry = $this->correspondenceEntry(request: $request, outcome: $outcome);
 
 			$result = $objectService->saveObject(
 				object: $entry,
@@ -806,6 +787,38 @@ class CorrespondenceService implements CorrespondenceServiceInterface {
 		}//end try
 
 	}//end logCorrespondence()
+
+	/**
+	 * The correspondence log entry for one generated document.
+	 *
+	 * The recipient is the first data reference's id, when it has one.
+	 *
+	 * @param CorrespondenceRequest $request The generation request.
+	 * @param array<string, mixed> $outcome The template name, data refs, status and error of the generation.
+	 *
+	 * @return array<string, mixed> The entry.
+	 */
+	private function correspondenceEntry(CorrespondenceRequest $request, array $outcome): array {
+		$options = $request->options;
+		$dataRefs = $outcome['dataRefs'];
+		$recipientId = '';
+		if (empty($dataRefs) === false && isset($dataRefs[0]['id']) === true) {
+			$recipientId = $dataRefs[0]['id'];
+		}
+
+		return [
+			'templateId' => $request->templateId,
+			'templateName' => $outcome['templateName'],
+			'recipientId' => $recipientId,
+			'recipientType' => $options['recipientType'] ?? '',
+			'caseReference' => $options['caseReference'] ?? '',
+			'generatedAt' => date('c'),
+			'format' => ($options['format'] ?? $this->getDefaultFormat()),
+			'status' => $outcome['status'],
+			'generatedBy' => $options['userId'] ?? '',
+			'errorMessage' => $outcome['errorMessage'],
+		];
+	}//end correspondenceEntry()
 
 	/**
 	 * Generate a unique job ID using a cryptographically secure source
