@@ -98,6 +98,13 @@ class OcrService implements OcrServiceInterface {
 	private const APP_NAME = 'filinq';
 
 	/**
+	 * The tesseract command line.
+	 *
+	 * @var TesseractCommand
+	 */
+	private readonly TesseractCommand $tesseract;
+
+	/**
 	 * Constructor for OcrService
 	 *
 	 * @param LoggerInterface $logger Logger for error reporting
@@ -113,6 +120,7 @@ class OcrService implements OcrServiceInterface {
 		private readonly IRootFolder $rootFolder,
 		private readonly IUserSession $userSession,
 	) {
+		$this->tesseract = new TesseractCommand(logger: $logger);
 
 	}//end __construct()
 
@@ -124,18 +132,7 @@ class OcrService implements OcrServiceInterface {
 	 * @spec openspec/specs/ocr-document-scanning/spec.md
 	 */
 	public function isTesseractAvailable(): bool {
-		try {
-			$output = [];
-			$returnCode = 0;
-			exec('tesseract --version 2>&1', $output, $returnCode);
-			return $returnCode === 0;
-		} catch (Exception $e) {
-			$this->logger->debug(
-				'Tesseract availability check failed',
-				['exception' => $e->getMessage()]
-			);
-			return false;
-		}//end try
+		return $this->tesseract->isAvailable();
 
 	}//end isTesseractAvailable()
 
@@ -147,23 +144,7 @@ class OcrService implements OcrServiceInterface {
 	 * @spec openspec/specs/ocr-document-scanning/spec.md
 	 */
 	public function getTesseractVersion(): ?string {
-		try {
-			$output = [];
-			$returnCode = 0;
-			exec('tesseract --version 2>&1', $output, $returnCode);
-			if ($returnCode === 0 && empty($output) === false) {
-				// The first line contains the version string.
-				return trim($output[0]);
-			}
-
-			return null;
-		} catch (Exception $e) {
-			$this->logger->debug(
-				'Tesseract version check failed',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}//end try
+		return $this->tesseract->version();
 
 	}//end getTesseractVersion()
 
@@ -298,7 +279,7 @@ class OcrService implements OcrServiceInterface {
 			$text = $ocr->run();
 
 			// Get confidence by running with configfile to get detailed output.
-			$confidence = $this->getConfidenceScore(filePath: $filePath, languages: $languages, dpi: $dpi);
+			$confidence = $this->tesseract->confidence(filePath: $filePath, languages: $languages, dpi: $dpi);
 
 			$this->logger->debug(
 				'OCR text extracted from image',
@@ -588,63 +569,4 @@ class OcrService implements OcrServiceInterface {
 
 		return $tempFile;
 	}//end writeToTemp()
-
-	/**
-	 * Get OCR confidence score for a file
-	 *
-	 * Uses Tesseract's hocr output to extract mean confidence.
-	 *
-	 * @param string $filePath Path to the image file
-	 * @param string $languages Tesseract language string
-	 * @param int $dpi DPI setting
-	 *
-	 * @return float Confidence score (0-100)
-	 *
-	 * @spec openspec/specs/ocr-document-scanning/spec.md
-	 */
-	private function getConfidenceScore(string $filePath, string $languages, int $dpi): float {
-		try {
-			$output = [];
-			$returnCode = 0;
-			$longArgs = str_replace('+', '+', $languages);
-			$command = sprintf(
-				'tesseract %s stdout -l %s --dpi %d -c hocr_font_info=0 hocr 2>/dev/null',
-				escapeshellarg($filePath),
-				escapeshellarg($longArgs),
-				$dpi
-			);
-			exec($command, $output, $returnCode);
-
-			if ($returnCode !== 0) {
-				return 0.0;
-			}
-
-			$hocrContent = implode("\n", $output);
-			$confidences = [];
-			$matchCount = preg_match_all(
-				'/x_wconf\s+(\d+)/',
-				$hocrContent,
-				$matches
-			);
-
-			if ($matchCount > 0 && empty($matches[1]) === false) {
-				foreach ($matches[1] as $conf) {
-					$confidences[] = (float)$conf;
-				}
-			}
-
-			if (empty($confidences) === true) {
-				return 0.0;
-			}
-
-			return round(array_sum($confidences) / count($confidences), 1);
-		} catch (Exception $e) {
-			$this->logger->debug(
-				'Could not determine OCR confidence',
-				['exception' => $e->getMessage()]
-			);
-			return 0.0;
-		}//end try
-
-	}//end getConfidenceScore()
 }//end class
