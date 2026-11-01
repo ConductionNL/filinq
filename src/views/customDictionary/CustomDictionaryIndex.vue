@@ -285,6 +285,12 @@ export default {
 			return customDictionaryStore.deleteDictionary(id)
 		},
 
+		/**
+		 * Open a dictionary's detail page.
+		 *
+		 * @param {object} row The dictionary row.
+		 * @spec openspec/specs/custom-dictionary-recognition/spec.md#requirement-custom-dictionary-admin-ui-req-ddcdr-006
+		 */
 		viewDictionary(row) {
 			this.$router.push({
 				name: 'CustomDictionaryDetail',
