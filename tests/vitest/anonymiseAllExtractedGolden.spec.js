@@ -55,6 +55,8 @@ describe('anonymiseAllExtracted golden', () => {
 				entry(4, 'completed', CHECKED),
 				entry(5, 'extracted', CHECKED),
 				entry(8, 'extracted', { signature: 'other' }),
+				entry(9, 'queued', CHECKED),
+				entry(10, 'extracted', CHECKED),
 			)
 			const calls = []
 			store.ensureExtracted = async (meta) => {
@@ -68,6 +70,10 @@ describe('anonymiseAllExtracted golden', () => {
 				if (String(e.fileId) === '3') {
 					e.status = 'error'
 					throw new Error('failed')
+				}
+				if (Number(e.fileId) === 10) {
+					e.status = 'anonymising'
+					return
 				}
 				e.status = Number(e.fileId) === 5 ? 'error' : 'completed'
 			}
