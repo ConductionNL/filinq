@@ -125,6 +125,21 @@ class DossierController extends Controller {
 			return $this->refused();
 		}
 
+		return $this->renderSummary(dossierId: $dossierId);
+	}//end generateGrondslagenSummary()
+
+	/**
+	 * Render the dossier's summary and describe the file, or answer 500 when the render fails.
+	 *
+	 * Only called after the access check in generateGrondslagenSummary() passed.
+	 *
+	 * @param string $dossierId The OR dossier object UUID.
+	 *
+	 * @return JSONResponse The generated file's metadata, or an error payload.
+	 *
+	 * @spec openspec/changes/fix-dossier-grondslagen-route-mismatch/tasks.md#task-R-2.1
+	 */
+	private function renderSummary(string $dossierId): JSONResponse {
 		try {
 			$file = $this->grondslagenSummary->renderDossierSummary(dossierUuid: $dossierId);
 
@@ -152,8 +167,7 @@ class DossierController extends Controller {
 				500
 			);
 		}//end try
-
-	}//end generateGrondslagenSummary()
+	}//end renderSummary()
 
 	/**
 	 * The answer for a dossier that is unknown or not readable. One answer for

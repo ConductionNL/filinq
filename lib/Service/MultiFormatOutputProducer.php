@@ -160,11 +160,42 @@ class MultiFormatOutputProducer implements MultiFormatOutputProducerInterface {
 			throw new Exception(message: 'Use options.format or options.formats, not both', code: 400);
 		}
 
+		$formats = $this->formatList(options: $options);
+		$this->assertKnownFormats(formats: $formats);
+
+		return array_values(array_unique($formats));
+
+	}//end requestedFormats()
+
+	/**
+	 * The `formats` option, refused unless it is a non-empty list.
+	 *
+	 * @param array $options The generation options.
+	 *
+	 * @return array<int, mixed> The listed formats, not yet checked.
+	 *
+	 * @throws Exception 400 when `formats` is missing, empty or not a list.
+	 */
+	private function formatList(array $options): array {
 		$formats = ($options['formats'] ?? null);
 		if (is_array($formats) === false || $formats === [] || array_is_list($formats) === false) {
 			throw new Exception(message: 'options.formats must be a non-empty list of formats', code: 400);
 		}
 
+		return $formats;
+
+	}//end formatList()
+
+	/**
+	 * Refuse the first format that is not one of FORMATS.
+	 *
+	 * @param array<int, mixed> $formats The listed formats.
+	 *
+	 * @return void
+	 *
+	 * @throws Exception 400 naming the first unknown format.
+	 */
+	private function assertKnownFormats(array $formats): void {
 		foreach ($formats as $format) {
 			if (in_array($format, self::FORMATS, true) === false) {
 				throw new Exception(
@@ -174,9 +205,7 @@ class MultiFormatOutputProducer implements MultiFormatOutputProducerInterface {
 			}
 		}
 
-		return array_values(array_unique($formats));
-
-	}//end requestedFormats()
+	}//end assertKnownFormats()
 
 	/**
 	 * Refuse the options a multi-format job cannot honour yet.

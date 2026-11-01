@@ -80,22 +80,37 @@ class EmlAnonymizationService {
 			return false;
 		}
 
-		if (method_exists($node, 'getMimeType') === true
-			&& (string)$node->getMimeType() === 'message/rfc822'
-		) {
-			return true;
-		}
-
-		if (method_exists($node, 'getName') === true) {
-			$name = (string)$node->getName();
-			$dot = strrpos($name, '.');
-			if ($dot !== false && strtolower(substr($name, ($dot + 1))) === 'eml') {
-				return true;
-			}
-		}
-
-		return false;
+		return $this->hasEmlMimeType(node: $node) === true || $this->hasEmlExtension(node: $node) === true;
 	}//end isEmlInput()
+
+	/**
+	 * Whether a node reports the `message/rfc822` MIME type.
+	 *
+	 * @param object $node The source file node.
+	 *
+	 * @return bool True when the node has getMimeType() and it answers `message/rfc822`.
+	 */
+	private function hasEmlMimeType(object $node): bool {
+		return method_exists($node, 'getMimeType') === true
+			&& (string)$node->getMimeType() === 'message/rfc822';
+	}//end hasEmlMimeType()
+
+	/**
+	 * Whether a node's name ends in a `.eml` extension, in any case.
+	 *
+	 * @param object $node The source file node.
+	 *
+	 * @return bool True when the node has getName() and its last extension is `eml`.
+	 */
+	private function hasEmlExtension(object $node): bool {
+		if (method_exists($node, 'getName') === false) {
+			return false;
+		}
+
+		$name = (string)$node->getName();
+		$dot = strrpos($name, '.');
+		return $dot !== false && strtolower(substr($name, ($dot + 1))) === 'eml';
+	}//end hasEmlExtension()
 
 	/**
 	 * Anonymise an EML input and assemble the redacted result into a PDF/A-3b.

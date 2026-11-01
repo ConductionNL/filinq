@@ -1,0 +1,499 @@
+{
+	"props": {
+		"open": {
+			"type": "Boolean",
+			"required": true
+		},
+		"editingRecord": {
+			"type": "Object",
+			"default": null
+		},
+		"saving": {
+			"type": "Boolean",
+			"default": false
+		},
+		"formError": {
+			"type": "String",
+			"default": ""
+		}
+	},
+	"emits": [
+		"update:open",
+		"submit",
+		"cancel"
+	],
+	"initial": {
+		"form": {
+			"primaryName": " ",
+			"entityType": "PERSON",
+			"reason": "",
+			"legalAuthority": "",
+			"caseReference": "",
+			"severity": "medium",
+			"jurisdiction": "",
+			"validUntil": "",
+			"active": true,
+			"matchRules": [],
+			"entityText": " "
+		},
+		"editing": false,
+		"dialogTitle": "[Add publish-never rule]",
+		"canSubmit": false,
+		"onlyNameRules": false,
+		"emitted": []
+	},
+	"choices": {
+		"matchTypeOptions": [
+			"exact",
+			"normalized",
+			"bsn",
+			"kvk"
+		],
+		"entityTypeOptions": [
+			"PERSON",
+			"ORGANIZATION",
+			"OTHER"
+		],
+		"severityOptions": [
+			"high",
+			"medium",
+			"low"
+		],
+		"consentMethodOptions": "(none)"
+	},
+	"closedWatch": {
+		"form": {
+			"primaryName": " ",
+			"entityType": "PERSON",
+			"reason": "",
+			"legalAuthority": "",
+			"caseReference": "",
+			"severity": "medium",
+			"jurisdiction": "",
+			"validUntil": "",
+			"active": true,
+			"matchRules": [],
+			"entityText": " "
+		},
+		"editing": false,
+		"dialogTitle": "[Add publish-never rule]",
+		"canSubmit": false,
+		"onlyNameRules": false,
+		"emitted": []
+	},
+	"openedBlank": {
+		"form": {
+			"primaryName": "X",
+			"entityType": "PERSON",
+			"reason": "",
+			"legalAuthority": "",
+			"caseReference": "",
+			"severity": "medium",
+			"jurisdiction": "",
+			"validUntil": "",
+			"active": true,
+			"matchRules": [
+				{
+					"type": "exact",
+					"value": "Jan"
+				}
+			],
+			"entityText": "X",
+			"consentMethod": ""
+		},
+		"editing": false,
+		"dialogTitle": "[Add publish-never rule]",
+		"canSubmit": false,
+		"onlyNameRules": false,
+		"emitted": []
+	},
+	"namedNoRules": {
+		"form": {
+			"primaryName": "X",
+			"entityType": "PERSON",
+			"reason": "",
+			"legalAuthority": "",
+			"caseReference": "",
+			"severity": "medium",
+			"jurisdiction": "",
+			"validUntil": "",
+			"active": true,
+			"matchRules": [
+				{
+					"type": "exact",
+					"value": "Jan"
+				}
+			],
+			"entityText": "X",
+			"consentMethod": ""
+		},
+		"editing": false,
+		"dialogTitle": "[Add publish-never rule]",
+		"canSubmit": false,
+		"onlyNameRules": false,
+		"emitted": []
+	},
+	"oneEmptyRule": {
+		"form": {
+			"primaryName": "X",
+			"entityType": "PERSON",
+			"reason": "",
+			"legalAuthority": "",
+			"caseReference": "",
+			"severity": "medium",
+			"jurisdiction": "",
+			"validUntil": "",
+			"active": true,
+			"matchRules": [
+				{
+					"type": "exact",
+					"value": "Jan"
+				}
+			],
+			"entityText": "X",
+			"consentMethod": ""
+		},
+		"editing": false,
+		"dialogTitle": "[Add publish-never rule]",
+		"canSubmit": false,
+		"onlyNameRules": true,
+		"emitted": []
+	},
+	"oneNameRule": {
+		"form": {
+			"primaryName": "X",
+			"entityType": "PERSON",
+			"reason": "",
+			"legalAuthority": "",
+			"caseReference": "",
+			"severity": "medium",
+			"jurisdiction": "",
+			"validUntil": "",
+			"active": true,
+			"matchRules": [
+				{
+					"type": "exact",
+					"value": "Jan"
+				}
+			],
+			"entityText": "X",
+			"consentMethod": ""
+		},
+		"editing": false,
+		"dialogTitle": "[Add publish-never rule]",
+		"canSubmit": true,
+		"onlyNameRules": true,
+		"emitted": []
+	},
+	"twoRules": {
+		"form": {
+			"primaryName": "X",
+			"entityType": "PERSON",
+			"reason": "",
+			"legalAuthority": "",
+			"caseReference": "",
+			"severity": "medium",
+			"jurisdiction": "",
+			"validUntil": "",
+			"active": true,
+			"matchRules": [
+				{
+					"type": "exact",
+					"value": "Jan"
+				}
+			],
+			"entityText": "X",
+			"consentMethod": ""
+		},
+		"editing": false,
+		"dialogTitle": "[Add publish-never rule]",
+		"canSubmit": true,
+		"onlyNameRules": false,
+		"emitted": []
+	},
+	"untypedRule": {
+		"form": {
+			"primaryName": "X",
+			"entityType": "PERSON",
+			"reason": "",
+			"legalAuthority": "",
+			"caseReference": "",
+			"severity": "medium",
+			"jurisdiction": "",
+			"validUntil": "",
+			"active": true,
+			"matchRules": [
+				{
+					"type": "exact",
+					"value": "Jan"
+				}
+			],
+			"entityText": "X",
+			"consentMethod": ""
+		},
+		"editing": false,
+		"dialogTitle": "[Add publish-never rule]",
+		"canSubmit": false,
+		"onlyNameRules": false,
+		"emitted": []
+	},
+	"removed": {
+		"form": {
+			"primaryName": "X",
+			"entityType": "PERSON",
+			"reason": "",
+			"legalAuthority": "",
+			"caseReference": "",
+			"severity": "medium",
+			"jurisdiction": "",
+			"validUntil": "",
+			"active": true,
+			"matchRules": [
+				{
+					"type": "exact",
+					"value": "Jan"
+				}
+			],
+			"entityText": "X",
+			"consentMethod": ""
+		},
+		"editing": false,
+		"dialogTitle": "[Add publish-never rule]",
+		"canSubmit": true,
+		"onlyNameRules": true,
+		"emitted": []
+	},
+	"missingSecondField": {
+		"form": {
+			"primaryName": "X",
+			"entityType": "PERSON",
+			"reason": "",
+			"legalAuthority": "",
+			"caseReference": "",
+			"severity": "medium",
+			"jurisdiction": "",
+			"validUntil": "",
+			"active": true,
+			"matchRules": [
+				{
+					"type": "exact",
+					"value": "Jan"
+				}
+			],
+			"entityText": "X",
+			"consentMethod": ""
+		},
+		"editing": false,
+		"dialogTitle": "[Add publish-never rule]",
+		"canSubmit": false,
+		"onlyNameRules": true,
+		"emitted": []
+	},
+	"submitted": {
+		"form": {
+			"primaryName": "X",
+			"entityType": "PERSON",
+			"reason": "",
+			"legalAuthority": "",
+			"caseReference": "",
+			"severity": "medium",
+			"jurisdiction": "",
+			"validUntil": "",
+			"active": true,
+			"matchRules": [
+				{
+					"type": "exact",
+					"value": "Jan"
+				}
+			],
+			"entityText": "X",
+			"consentMethod": ""
+		},
+		"editing": false,
+		"dialogTitle": "[Add publish-never rule]",
+		"canSubmit": false,
+		"onlyNameRules": true,
+		"emitted": [
+			[
+				"submit",
+				{
+					"primaryName": "X",
+					"entityType": "PERSON",
+					"reason": "",
+					"legalAuthority": "",
+					"caseReference": "",
+					"severity": "medium",
+					"jurisdiction": "",
+					"validUntil": "",
+					"active": true,
+					"matchRules": [
+						{
+							"type": "exact",
+							"value": "changed after submit"
+						}
+					],
+					"entityText": "X",
+					"consentMethod": ""
+				}
+			]
+		]
+	},
+	"cancelled": {
+		"form": {
+			"primaryName": "X",
+			"entityType": "PERSON",
+			"reason": "",
+			"legalAuthority": "",
+			"caseReference": "",
+			"severity": "medium",
+			"jurisdiction": "",
+			"validUntil": "",
+			"active": true,
+			"matchRules": [
+				{
+					"type": "exact",
+					"value": "Jan"
+				}
+			],
+			"entityText": "X",
+			"consentMethod": ""
+		},
+		"editing": false,
+		"dialogTitle": "[Add publish-never rule]",
+		"canSubmit": false,
+		"onlyNameRules": true,
+		"emitted": [
+			[
+				"update:open",
+				false
+			],
+			[
+				"cancel"
+			]
+		]
+	},
+	"editOpened": {
+		"form": {
+			"primaryName": "Jan",
+			"entityType": "PERSON",
+			"reason": "court order",
+			"legalAuthority": "",
+			"caseReference": "",
+			"severity": "high",
+			"jurisdiction": "",
+			"validUntil": "",
+			"active": false,
+			"matchRules": [
+				{
+					"type": "bsn",
+					"value": "edited"
+				},
+				{
+					"type": "exact",
+					"value": "Jan"
+				}
+			],
+			"entityText": "Jan",
+			"consentMethod": "paper"
+		},
+		"editing": true,
+		"dialogTitle": "[Edit publish-never rule]",
+		"canSubmit": true,
+		"onlyNameRules": false,
+		"emitted": [],
+		"source": {
+			"entityText": "Jan",
+			"primaryName": "Jan",
+			"reason": "court order",
+			"consentMethod": "paper",
+			"severity": "high",
+			"active": false,
+			"matchRules": [
+				{
+					"type": "bsn",
+					"value": "123"
+				},
+				{
+					"type": "exact",
+					"value": "Jan"
+				}
+			]
+		}
+	},
+	"editSubmitted": {
+		"form": {
+			"primaryName": "Jan",
+			"entityType": "PERSON",
+			"reason": "court order",
+			"legalAuthority": "",
+			"caseReference": "",
+			"severity": "high",
+			"jurisdiction": "",
+			"validUntil": "",
+			"active": false,
+			"matchRules": [
+				{
+					"type": "bsn",
+					"value": "edited"
+				},
+				{
+					"type": "exact",
+					"value": "Jan"
+				}
+			],
+			"entityText": "Jan",
+			"consentMethod": "paper"
+		},
+		"editing": true,
+		"dialogTitle": "[Edit publish-never rule]",
+		"canSubmit": true,
+		"onlyNameRules": false,
+		"emitted": [
+			[
+				"submit",
+				{
+					"primaryName": "Jan",
+					"entityType": "PERSON",
+					"reason": "court order",
+					"legalAuthority": "",
+					"caseReference": "",
+					"severity": "high",
+					"jurisdiction": "",
+					"validUntil": "",
+					"active": false,
+					"matchRules": [
+						{
+							"type": "bsn",
+							"value": "edited"
+						},
+						{
+							"type": "exact",
+							"value": "Jan"
+						}
+					],
+					"entityText": "Jan",
+					"consentMethod": "paper"
+				}
+			]
+		]
+	},
+	"editNoRules": {
+		"form": {
+			"primaryName": "",
+			"entityType": "PERSON",
+			"reason": "",
+			"legalAuthority": "",
+			"caseReference": "",
+			"severity": "medium",
+			"jurisdiction": "",
+			"validUntil": "",
+			"active": true,
+			"matchRules": []
+		},
+		"editing": true,
+		"dialogTitle": "[Edit publish-never rule]",
+		"canSubmit": false,
+		"onlyNameRules": false,
+		"emitted": []
+	}
+}

@@ -193,46 +193,28 @@ class DocumentController extends Controller {
 	 */
 	public function preview(): JSONResponse {
 		try {
-			$user = $this->userSession->getUser();
-			if ($user === null) {
+			if ($this->userSession->getUser() === null) {
 				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 			}
 
-			$templateId = $this->request->getParam('templateId');
-			if (empty($templateId) === true) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('templateId is required')],
-					statusCode: Http::STATUS_BAD_REQUEST
-				);
-			}
-
-			$dataRefs = $this->request->getParam('dataRefs', []);
-			if (is_array($dataRefs) === false) {
-				$dataRefs = [];
-			}
-
-			$options = $this->request->getParam('options', []);
-			if (is_array($options) === false) {
-				$options = [];
+			$params = $this->parseGenerateParams();
+			if ($params instanceof JSONResponse) {
+				return $params;
 			}
 
 			$result = $this->documentSvc->generatePreview(
-				templateId: $templateId,
-				dataRefs: $dataRefs,
-				options: $options
+				templateId: $params['templateId'],
+				dataRefs: $params['dataRefs'],
+				options: $params['options']
 			);
 
 			return new JSONResponse(
-				data: [
-					'html' => $result['html'],
-					'warnings' => $result['warnings'],
-				],
+				data: ['html' => $result['html'], 'warnings' => $result['warnings']],
 				statusCode: Http::STATUS_OK
 			);
 		} catch (Exception $e) {
 			return $this->handleException(exception: $e);
-		}//end try
-
+		}
 	}//end preview()
 
 	/**
@@ -256,41 +238,26 @@ class DocumentController extends Controller {
 	 */
 	public function mergePreview(): JSONResponse {
 		try {
-			$user = $this->userSession->getUser();
-			if ($user === null) {
+			if ($this->userSession->getUser() === null) {
 				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 			}
 
-			$templateId = $this->request->getParam('templateId');
-			if (empty($templateId) === true) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('templateId is required')],
-					statusCode: Http::STATUS_BAD_REQUEST
-				);
-			}
-
-			$dataRefs = $this->request->getParam('dataRefs', []);
-			if (is_array($dataRefs) === false) {
-				$dataRefs = [];
-			}
-
-			$options = $this->request->getParam('options', []);
-			if (is_array($options) === false) {
-				$options = [];
+			$params = $this->parseGenerateParams();
+			if ($params instanceof JSONResponse) {
+				return $params;
 			}
 
 			return new JSONResponse(
 				data: $this->documentSvc->generateMergePreview(
-					templateId: $templateId,
-					dataRefs: $dataRefs,
-					options: $options
+					templateId: $params['templateId'],
+					dataRefs: $params['dataRefs'],
+					options: $params['options']
 				),
 				statusCode: Http::STATUS_OK
 			);
 		} catch (Exception $e) {
 			return $this->handleException(exception: $e);
-		}//end try
-
+		}
 	}//end mergePreview()
 
 	/**
