@@ -151,6 +151,11 @@ import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
 import Pencil from 'vue-material-design-icons/Pencil.vue'
 import ConfirmActionDialog from '../../dialogs/ConfirmActionDialog.vue'
 import StandingConsentFormModal from '../../dialogs/StandingConsentFormModal.vue'
+import {
+	indexPaging,
+	recordDeletion,
+	recordFormDialog,
+} from '../../mixins/recordIndexPage.js'
 
 export default {
 	name: 'StandingConsentIndex',
@@ -167,18 +172,11 @@ export default {
 		Pencil,
 	},
 
+	mixins: [indexPaging, recordFormDialog, recordDeletion],
+	deleteFailedLog: 'Failed to delete standing consent:',
+
 	data() {
 		return {
-			isRefreshing: false,
-			currentPage: 1,
-			pageSize: 20,
-			dialogOpen: false,
-			saving: false,
-			editing: null, // UUID of the record being edited, or null for create
-			editingRecord: null, // full record passed to the modal so it can hydrate its form
-			formError: '',
-			deleteTarget: null, // row awaiting delete confirmation, or null
-			deleting: false,
 			entityTypeColorMap: {
 				PERSON: 'warning',
 				ORGANIZATION: 'primary',
@@ -266,52 +264,59 @@ export default {
 	},
 
 	methods: {
-		async handleRefresh() {
-			this.isRefreshing = true
-			try {
-				await standingConsentStore.fetchStandingConsents()
-			} finally {
-				this.isRefreshing = false
-			}
-		},
-
-		onPageChanged(page) {
-			this.currentPage = page
-		},
-
-		onPageSizeChanged(size) {
-			this.pageSize = size
-			this.currentPage = 1
-		},
-
-		formatMatchRules(rules) {
-			if (!Array.isArray(rules) || rules.length === 0) {
-				return '-'
-			}
-			return rules.map((r) => `${r.type}:${r.value}`).join(', ')
-		},
-
 		/**
-		 * Open the extracted standing-consent modal in create mode.
+		 * Load the standing consent list from the store.
 		 *
-		 * @spec openspec/changes/orphaned-surface-restoration/specs/orphaned-surface-restoration/spec.md#requirement-policy-surfaces-are-reachable-menu-ownership-deferred-req-ddosr-005
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/entity-publication-policies/spec.md#requirement-three-separate-admin-surfaces-must-exist
 		 */
-		openCreateDialog() {
-			this.editing = null
-			this.editingRecord = null
-			this.formError = ''
-			this.dialogOpen = true
+		reloadRecords() {
+			return standingConsentStore.fetchStandingConsents()
 		},
 
 		/**
-		 * Open the extracted standing-consent modal in edit mode for a row.
+		 * Create a standing consent from the form dialog's payload.
+		 *
+		 * @param {object} formData The submitted form.
+		 * @return {Promise<object>}
+		 * @spec openspec/specs/entity-publication-policies/spec.md#requirement-rbac-must-govern-writes-to-both-policy-surfaces
+		 */
+		createRecord(formData) {
+			return standingConsentStore.createStandingConsent(formData)
+		},
+
+		/**
+		 * Update a standing consent from the form dialog's payload.
+		 *
+		 * @param {string} id The record id.
+		 * @param {object} formData The submitted form.
+		 * @return {Promise<object>}
+		 * @spec openspec/specs/entity-publication-policies/spec.md#requirement-rbac-must-govern-writes-to-both-policy-surfaces
+		 */
+		updateRecord(id, formData) {
+			return standingConsentStore.updateStandingConsent(id, formData)
+		},
+
+		/**
+		 * Delete a standing consent by id.
+		 *
+		 * @param {string} id The record id.
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/orphaned-surface-restoration/spec.md#requirement-policy-surfaces-are-reachable-menu-ownership-deferred-req-ddosr-005
+		 */
+		deleteRecord(id) {
+			return standingConsentStore.deleteStandingConsent(id)
+		},
+
+		/**
+		 * The form values the standing-consent modal starts from for a row.
 		 *
 		 * @param {object} row The standing-consent object to edit.
+		 * @return {object}
 		 * @spec openspec/changes/orphaned-surface-restoration/specs/orphaned-surface-restoration/spec.md#requirement-policy-surfaces-are-reachable-menu-ownership-deferred-req-ddosr-005
 		 */
-		openEditDialog(row) {
-			this.editing = row['@self']?.id || row.id || row.uuid
-			this.editingRecord = {
+		toEditingRecord(row) {
+			return {
 				entityText: row.entityText || '',
 				entityType: row.entityType || 'PERSON',
 				consentMethod: row.consentMethod || '',
@@ -331,83 +336,6 @@ export default {
 
 				notificationStatus: row.notificationStatus || 'skipped',
 			}
-			this.formError = ''
-			this.dialogOpen = true
-		},
-
-		/**
-		 * Persist the modal form via the standing-consent store (create or update).
-		 *
-		 * @param {object} formData The submitted standing-consent form payload.
-		 * @spec openspec/changes/orphaned-surface-restoration/specs/orphaned-surface-restoration/spec.md#requirement-policy-surfaces-are-reachable-menu-ownership-deferred-req-ddosr-005
-		 */
-		async onModalSubmit(formData) {
-			this.saving = true
-			this.formError = ''
-			try {
-				if (this.editing) {
-					await standingConsentStore.updateStandingConsent(
-						this.editing,
-						formData,
-					)
-				} else {
-					await standingConsentStore.createStandingConsent(formData)
-				}
-				this.dialogOpen = false
-			} catch (err) {
-				this.formError =
-					err.response?.data?.error
-					|| err.message
-					|| t('filinq', 'Save failed')
-			} finally {
-				this.saving = false
-			}
-		},
-
-		/**
-		 * Ask for confirmation before deleting a standing consent.
-		 *
-		 * Opens ConfirmActionDialog; nothing is removed here.
-		 *
-		 * @param {object} row - The standing consent row to delete.
-		 * @spec openspec/specs/orphaned-surface-restoration/spec.md#requirement-policy-surfaces-are-reachable-menu-ownership-deferred-req-ddosr-005
-		 */
-		confirmDelete(row) {
-			this.deleteTarget = row
-		},
-
-		/**
-		 * Dismiss the delete confirmation without deleting anything.
-		 *
-		 * @spec openspec/specs/orphaned-surface-restoration/spec.md#requirement-policy-surfaces-are-reachable-menu-ownership-deferred-req-ddosr-005
-		 */
-		cancelDelete() {
-			this.deleteTarget = null
-		},
-
-		/**
-		 * Delete the confirmed standing consent. Reachable only from the
-		 * dialog's @confirm, so the record is never removed without an
-		 * explicit confirmation.
-		 *
-		 * @return {Promise<void>}
-		 * @spec openspec/specs/orphaned-surface-restoration/spec.md#requirement-policy-surfaces-are-reachable-menu-ownership-deferred-req-ddosr-005
-		 */
-		async executeDelete() {
-			const row = this.deleteTarget
-			if (!row) {
-				return
-			}
-			const id = row['@self']?.id || row.id || row.uuid
-			this.deleting = true
-			try {
-				await standingConsentStore.deleteStandingConsent(id)
-				this.deleteTarget = null
-			} catch (err) {
-				console.error('Failed to delete standing consent:', err)
-			} finally {
-				this.deleting = false
-			}
 		},
 	},
 }
@@ -419,35 +347,5 @@ export default {
 	gap: 16px;
 	margin-bottom: 16px;
 	flex-wrap: wrap;
-}
-
-.standing-consent-form {
-	display: flex;
-	flex-direction: column;
-	gap: 12px;
-	padding: 8px;
-}
-
-.match-rule-row {
-	display: grid;
-	grid-template-columns: 180px 1fr 40px;
-	gap: 8px;
-	align-items: center;
-}
-
-.form-warning {
-	background: var(--color-warning, #fff3cd);
-	color: var(--color-text-maxcontrast, #333);
-	padding: 8px 12px;
-	border-radius: var(--border-radius);
-	font-size: 13px;
-}
-
-.form-error {
-	background: var(--color-error, #ffd1d1);
-	color: var(--color-text-maxcontrast, #333);
-	padding: 8px 12px;
-	border-radius: var(--border-radius);
-	font-size: 13px;
 }
 </style>

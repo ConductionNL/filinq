@@ -149,6 +149,11 @@ import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
 import Pencil from 'vue-material-design-icons/Pencil.vue'
 import ConfirmActionDialog from '../../dialogs/ConfirmActionDialog.vue'
 import ProhibitionFormModal from '../../dialogs/ProhibitionFormModal.vue'
+import {
+	indexPaging,
+	recordDeletion,
+	recordFormDialog,
+} from '../../mixins/recordIndexPage.js'
 
 export default {
 	name: 'ProhibitionIndex',
@@ -165,18 +170,11 @@ export default {
 		Pencil,
 	},
 
+	mixins: [indexPaging, recordFormDialog, recordDeletion],
+	deleteFailedLog: 'Failed to delete prohibition:',
+
 	data() {
 		return {
-			isRefreshing: false,
-			currentPage: 1,
-			pageSize: 20,
-			dialogOpen: false,
-			saving: false,
-			editing: null, // UUID of the record being edited, or null for create
-			editingRecord: null, // full record passed to the modal so it can hydrate its form
-			formError: '',
-			deleteTarget: null, // row awaiting delete confirmation, or null
-			deleting: false,
 			entityTypeColorMap: {
 				PERSON: 'warning',
 				ORGANIZATION: 'primary',
@@ -261,41 +259,59 @@ export default {
 	},
 
 	methods: {
-		async handleRefresh() {
-			this.isRefreshing = true
-			try {
-				await prohibitionStore.fetchProhibitions()
-			} finally {
-				this.isRefreshing = false
-			}
+		/**
+		 * Load the prohibition list from the store.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/entity-publication-policies/spec.md#requirement-three-separate-admin-surfaces-must-exist
+		 */
+		reloadRecords() {
+			return prohibitionStore.fetchProhibitions()
 		},
 
-		onPageChanged(page) {
-			this.currentPage = page
+		/**
+		 * Create a prohibition from the form dialog's payload.
+		 *
+		 * @param {object} formData The submitted form.
+		 * @return {Promise<object>}
+		 * @spec openspec/specs/entity-publication-policies/spec.md#requirement-rbac-must-govern-writes-to-both-policy-surfaces
+		 */
+		createRecord(formData) {
+			return prohibitionStore.createProhibition(formData)
 		},
 
-		onPageSizeChanged(size) {
-			this.pageSize = size
-			this.currentPage = 1
+		/**
+		 * Update a prohibition from the form dialog's payload.
+		 *
+		 * @param {string} id The record id.
+		 * @param {object} formData The submitted form.
+		 * @return {Promise<object>}
+		 * @spec openspec/specs/entity-publication-policies/spec.md#requirement-rbac-must-govern-writes-to-both-policy-surfaces
+		 */
+		updateRecord(id, formData) {
+			return prohibitionStore.updateProhibition(id, formData)
 		},
 
-		formatMatchRules(rules) {
-			if (!Array.isArray(rules) || rules.length === 0) {
-				return '-'
-			}
-			return rules.map((r) => `${r.type}:${r.value}`).join(', ')
+		/**
+		 * Delete a prohibition by id.
+		 *
+		 * @param {string} id The record id.
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/orphaned-surface-restoration/spec.md#requirement-policy-surfaces-are-reachable-menu-ownership-deferred-req-ddosr-005
+		 */
+		deleteRecord(id) {
+			return prohibitionStore.deleteProhibition(id)
 		},
 
-		openCreateDialog() {
-			this.editing = null
-			this.editingRecord = null
-			this.formError = ''
-			this.dialogOpen = true
-		},
-
-		openEditDialog(row) {
-			this.editing = row['@self']?.id || row.id || row.uuid
-			this.editingRecord = {
+		/**
+		 * The form values the prohibition modal starts from for a row.
+		 *
+		 * @param {object} row The prohibition object to edit.
+		 * @return {object}
+		 * @spec openspec/specs/entity-publication-policies/spec.md#requirement-rbac-must-govern-writes-to-both-policy-surfaces
+		 */
+		toEditingRecord(row) {
+			return {
 				primaryName: row.primaryName || '',
 				entityType: row.entityType || 'PERSON',
 				reason: row.reason || '',
@@ -309,83 +325,6 @@ export default {
 					? row.matchRules.map((r) => ({ type: r.type, value: r.value }))
 					: [],
 			}
-			this.formError = ''
-			this.dialogOpen = true
-		},
-
-		/**
-		 * Create or update a `publicationProhibition` record from the modal
-		 * form; the write itself is RBAC-governed server-side.
-		 *
-		 * @param {object} formData Modal form payload.
-		 * @return {Promise<void>}
-		 * @spec openspec/specs/entity-publication-policies/spec.md#requirement-rbac-must-govern-writes-to-both-policy-surfaces
-		 */
-		async onModalSubmit(formData) {
-			this.saving = true
-			this.formError = ''
-			try {
-				if (this.editing) {
-					await prohibitionStore.updateProhibition(this.editing, formData)
-				} else {
-					await prohibitionStore.createProhibition(formData)
-				}
-				this.dialogOpen = false
-			} catch (err) {
-				this.formError =
-					err.response?.data?.error
-					|| err.message
-					|| t('filinq', 'Save failed')
-			} finally {
-				this.saving = false
-			}
-		},
-
-		/**
-		 * Ask for confirmation before deleting a prohibition.
-		 *
-		 * Opens ConfirmActionDialog; nothing is removed here.
-		 *
-		 * @param {object} row - The prohibition row to delete.
-		 * @spec openspec/specs/orphaned-surface-restoration/spec.md#requirement-policy-surfaces-are-reachable-menu-ownership-deferred-req-ddosr-005
-		 */
-		confirmDelete(row) {
-			this.deleteTarget = row
-		},
-
-		/**
-		 * Dismiss the delete confirmation without deleting anything.
-		 *
-		 * @spec openspec/specs/orphaned-surface-restoration/spec.md#requirement-policy-surfaces-are-reachable-menu-ownership-deferred-req-ddosr-005
-		 */
-		cancelDelete() {
-			this.deleteTarget = null
-		},
-
-		/**
-		 * Delete the confirmed prohibition. Reachable only from the dialog's
-		 *
-		 * @confirm, so the record is never removed without an explicit
-		 * confirmation.
-		 *
-		 * @return {Promise<void>}
-		 * @spec openspec/specs/orphaned-surface-restoration/spec.md#requirement-policy-surfaces-are-reachable-menu-ownership-deferred-req-ddosr-005
-		 */
-		async executeDelete() {
-			const row = this.deleteTarget
-			if (!row) {
-				return
-			}
-			const id = row['@self']?.id || row.id || row.uuid
-			this.deleting = true
-			try {
-				await prohibitionStore.deleteProhibition(id)
-				this.deleteTarget = null
-			} catch (err) {
-				console.error('Failed to delete prohibition:', err)
-			} finally {
-				this.deleting = false
-			}
 		},
 	},
 }
@@ -397,35 +336,5 @@ export default {
 	gap: 16px;
 	margin-bottom: 16px;
 	flex-wrap: wrap;
-}
-
-.prohibition-form {
-	display: flex;
-	flex-direction: column;
-	gap: 12px;
-	padding: 8px;
-}
-
-.match-rule-row {
-	display: grid;
-	grid-template-columns: 180px 1fr 40px;
-	gap: 8px;
-	align-items: center;
-}
-
-.form-warning {
-	background: var(--color-warning, #fff3cd);
-	color: var(--color-text-maxcontrast, #333);
-	padding: 8px 12px;
-	border-radius: var(--border-radius);
-	font-size: 13px;
-}
-
-.form-error {
-	background: var(--color-error, #ffd1d1);
-	color: var(--color-text-maxcontrast, #333);
-	padding: 8px 12px;
-	border-radius: var(--border-radius);
-	font-size: 13px;
 }
 </style>
