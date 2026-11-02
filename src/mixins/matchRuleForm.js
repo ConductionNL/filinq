@@ -33,9 +33,9 @@ export const matchRuleForm = {
 		},
 
 		/**
-		 * The state the dialog's buttons render from.
+		 * The props and listeners of the dialog's buttons (CnDialogActions).
 		 *
-		 * @return {{saving: boolean, canSubmit: boolean, confirmLabel: string}} The button state.
+		 * @return {{saving: boolean, canSubmit: boolean, confirmLabel: string, onCancel: () => void, onSubmit: () => void}} The button state and handlers.
 		 * @spec openspec/specs/entity-publication-policies/spec.md#requirement-three-separate-admin-surfaces-must-exist
 		 */
 		formActions() {
@@ -45,6 +45,8 @@ export const matchRuleForm = {
 				confirmLabel: this.editing
 					? t('filinq', 'Save')
 					: t('filinq', 'Create'),
+				onCancel: this.onCancel,
+				onSubmit: this.submit,
 			}
 		},
 

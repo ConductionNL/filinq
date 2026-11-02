@@ -386,10 +386,7 @@ export default {
 		</div>
 
 		<template #actions>
-			<CnDialogActions
-				v-bind="formActions"
-				@cancel="onCancel"
-				@submit="submit" />
+			<CnDialogActions v-bind="formActions" />
 		</template>
 	</NcDialog>
 </template>
