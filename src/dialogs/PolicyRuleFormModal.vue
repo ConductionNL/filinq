@@ -272,6 +272,24 @@ export default {
 				(r) => r.type === 'exact' || r.type === 'normalized',
 			)
 		},
+
+		/**
+		 * The notes below the match rules: the name-only warning and the
+		 * save error, each when it applies.
+		 *
+		 * @return {Array<{className: string, text: string}>}
+		 * @spec openspec/specs/entity-publication-policies/spec.md#requirement-three-separate-admin-surfaces-must-exist
+		 */
+		closingNotes() {
+			const notes = []
+			if (this.onlyNameRules) {
+				notes.push({ className: 'form-warning', text: this.texts.onlyNames })
+			}
+			if (this.formError) {
+				notes.push({ className: 'form-error', text: this.formError })
+			}
+			return notes
+		},
 	},
 
 	methods: {
@@ -359,12 +377,11 @@ export default {
 				{{ t('filinq', 'Add match rule') }}
 			</NcButton>
 
-			<div v-if="onlyNameRules" class="form-warning">
-				{{ texts.onlyNames }}
-			</div>
-
-			<div v-if="formError" class="form-error">
-				{{ formError }}
+			<div
+				v-for="note in closingNotes"
+				:key="note.className"
+				:class="note.className">
+				{{ note.text }}
 			</div>
 		</div>
 

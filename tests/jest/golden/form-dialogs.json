@@ -37,8 +37,6 @@
 			"<x-ncbutton variant=\"secondary\" data-on-onclick=\"\">",
 			"<x-slot name=\"default\">Add match rule</x-slot>",
 			"</x-ncbutton>",
-			"<!--v-if-->",
-			"<!--v-if-->",
 			"</div>",
 			"</x-slot>",
 			"</x-ncdialog>"
@@ -126,8 +124,6 @@
 			"<x-ncbutton variant=\"secondary\" data-on-onclick=\"\">",
 			"<x-slot name=\"default\">Add match rule</x-slot>",
 			"</x-ncbutton>",
-			"<!--v-if-->",
-			"<!--v-if-->",
 			"</div>",
 			"</x-slot>",
 			"</x-ncdialog>"
@@ -231,7 +227,6 @@
 			"<x-ncbutton variant=\"secondary\" data-on-onclick=\"\">",
 			"<x-slot name=\"default\">Add match rule</x-slot>",
 			"</x-ncbutton>",
-			"<!--v-if-->",
 			"<div class=\"form-error\">Save failed</div>",
 			"</div>",
 			"</x-slot>",
@@ -318,8 +313,6 @@
 			"<x-ncbutton variant=\"secondary\" data-on-onclick=\"\">",
 			"<x-slot name=\"default\">Add match rule</x-slot>",
 			"</x-ncbutton>",
-			"<!--v-if-->",
-			"<!--v-if-->",
 			"</div>",
 			"</x-slot>",
 			"</x-ncdialog>"
@@ -410,8 +403,6 @@
 			"<x-ncbutton variant=\"secondary\" data-on-onclick=\"\">",
 			"<x-slot name=\"default\">Add match rule</x-slot>",
 			"</x-ncbutton>",
-			"<!--v-if-->",
-			"<!--v-if-->",
 			"</div>",
 			"</x-slot>",
 			"</x-ncdialog>"
@@ -518,7 +509,6 @@
 			"<x-ncbutton variant=\"secondary\" data-on-onclick=\"\">",
 			"<x-slot name=\"default\">Add match rule</x-slot>",
 			"</x-ncbutton>",
-			"<!--v-if-->",
 			"<div class=\"form-error\">Save failed</div>",
 			"</div>",
 			"</x-slot>",
