@@ -531,3 +531,32 @@ describe('confirm dialogs golden', () => {
 		})
 	}
 })
+
+describe('a failed confirm resets only its own dialog', () => {
+	const SECOND = { ...ROW, id: 'row-2', uuid: 'row-2', name: 'Begroting' }
+	for (const name of [
+		'dictionaryTermRemove',
+		'templateDelete',
+		'prohibitionDelete',
+	]) {
+		it(name, async () => {
+			const site = SITES[name]
+			const page = await openSite(site)
+			await clickConfirm(document.body)
+			const target = Object.keys(site.open)[0]
+			page.vm.$data[target] = null
+			await nextTick()
+			page.vm.$data[target] = SECOND
+			await nextTick()
+			await clickConfirm(document.body)
+			mockPending.shift().reject(new Error('refused'))
+			for (let i = 0; i < 5; i++) {
+				await nextTick()
+			}
+			const view = dialogView(document.body)
+			page.unmount()
+			expect(view.buttons[1].disabled).toBe(true)
+			expect(view.buttons[1].busyIcon).toBe(true)
+		})
+	}
+})
