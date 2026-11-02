@@ -25,6 +25,8 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\EventListener;
 
 use OCA\Filinq\EventListener\SignerEventTranslator;
+use OCA\Filinq\EventListener\SignerStepDecision;
+use OCA\Filinq\EventListener\SignerStepTask;
 use OCA\Filinq\EventListener\SigningTaskListener;
 use OCA\Filinq\Kernel\Contracts\SettingsServiceInterface;
 use OCA\OpenRegister\Db\Task;
@@ -39,6 +41,8 @@ use stdClass;
  * Characterization of the terminal-task handling.
  *
  * @covers \OCA\Filinq\EventListener\SigningTaskListener
+ * @uses \OCA\Filinq\EventListener\SignerStepDecision
+ * @uses \OCA\Filinq\EventListener\SignerStepTask
  */
 class SigningTaskListenerTerminalTraceTest extends TestCase {
 
@@ -81,14 +85,9 @@ class SigningTaskListenerTerminalTraceTest extends TestCase {
 	 * @return void
 	 */
 	public function testCompletedTaskHandsOnItsOwnDecision(): void {
-		$this->translator->expects($this->once())->method('onTaskDecided')->with(
-			'seq-1',
-			'task-1',
-			2,
-			'alice',
-			'akkoord',
-			self::OWNED,
-			false
+		$this->expectDecision(
+			task: ['sequenceUuid' => 'seq-1', 'taskUuid' => 'task-1', 'position' => 2, 'objectUuid' => self::OWNED],
+			decision: ['userId' => 'alice', 'comment' => 'akkoord', 'isRejecting' => false]
 		);
 
 		$this->dispatch(task: $this->task(completedBy: 'alice', comment: 'akkoord', outcome: 'approved'));
@@ -105,8 +104,8 @@ class SigningTaskListenerTerminalTraceTest extends TestCase {
 	public function testTheSignerFollowsTheTask(): void {
 		$signers = [];
 		$this->translator->method('onTaskDecided')->willReturnCallback(
-			function (string $sequenceUuid, string $taskUuid, int $position, ?string $userId) use (&$signers): void {
-				$signers[] = $userId;
+			function (SignerStepTask $task, SignerStepDecision $decision) use (&$signers): void {
+				$signers[] = $decision->userId;
 			}
 		);
 
@@ -124,7 +123,10 @@ class SigningTaskListenerTerminalTraceTest extends TestCase {
 	 * @return void
 	 */
 	public function testDefaultsAndRejection(): void {
-		$this->translator->expects($this->once())->method('onTaskDecided')->with($this->identicalTo('seq-1'), $this->identicalTo(''), $this->identicalTo(0), $this->identicalTo('carol'), $this->identicalTo(null), $this->identicalTo(self::OWNED), $this->identicalTo(true));
+		$this->expectDecision(
+			task: ['sequenceUuid' => 'seq-1', 'taskUuid' => '', 'position' => 0, 'objectUuid' => self::OWNED],
+			decision: ['userId' => 'carol', 'comment' => null, 'isRejecting' => true]
+		);
 
 		$this->dispatch(
 			task: new Task(state: 'completed', outcome: ' Rejected ', objectUuid: self::OWNED, sequenceUuid: 'seq-1', completedBy: 'carol')
@@ -150,6 +152,21 @@ class SigningTaskListenerTerminalTraceTest extends TestCase {
 		$this->assertCount(1, $this->lookups);
 
 	}//end testTasksThatReachNothing()
+
+	/**
+	 * Expect one decision with exactly these task and decision fields.
+	 *
+	 * @param array<string, mixed> $task     The SignerStepTask fields.
+	 * @param array<string, mixed> $decision The SignerStepDecision fields.
+	 *
+	 * @return void
+	 */
+	private function expectDecision(array $task, array $decision): void {
+		$this->translator->expects($this->once())->method('onTaskDecided')->with(
+			$this->callback(fn (SignerStepTask $actual): bool => get_object_vars($actual) === $task),
+			$this->callback(fn (SignerStepDecision $actual): bool => get_object_vars($actual) === $decision)
+		);
+	}//end expectDecision()
 
 	/**
 	 * Dispatch a terminal event through a listener bound to filinq/signingRequest.

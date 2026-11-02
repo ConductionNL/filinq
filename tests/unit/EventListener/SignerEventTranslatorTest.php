@@ -30,6 +30,8 @@ use OCA\Filinq\Event\SignerStepApprovedEvent;
 use OCA\Filinq\Event\SignerStepPendingEvent;
 use OCA\Filinq\Event\SignerStepRejectedEvent;
 use OCA\Filinq\EventListener\SignerEventTranslator;
+use OCA\Filinq\EventListener\SignerStepDecision;
+use OCA\Filinq\EventListener\SignerStepTask;
 use OCA\Filinq\Kernel\Contracts\ActiveSigningProviderInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventDispatcher;
@@ -47,6 +49,8 @@ use RuntimeException;
  * @uses \OCA\Filinq\Event\SignerStepApprovedEvent
  * @uses \OCA\Filinq\Event\SignerStepRejectedEvent
  * @uses \OCA\Filinq\Event\SignerChainCompletedEvent
+ * @uses \OCA\Filinq\EventListener\SignerStepDecision
+ * @uses \OCA\Filinq\EventListener\SignerStepTask
  *
  * @category Tests
  * @package  OCA\Filinq\Tests\Unit\EventListener
@@ -187,13 +191,8 @@ final class SignerEventTranslatorTest extends TestCase {
 			);
 
 		$this->translator->onTaskDecided(
-			sequenceUuid: 'seq-1',
-			taskUuid: 'task-1',
-			position: 1,
-			userId: 'alice',
-			comment: 'akkoord',
-			objectUuid: 'sign-req-1',
-			isRejecting: false
+			task: new SignerStepTask(sequenceUuid: 'seq-1', taskUuid: 'task-1', position: 1, objectUuid: 'sign-req-1'),
+			decision: new SignerStepDecision(userId: 'alice', comment: 'akkoord', isRejecting: false)
 		);
 
 	}//end testApprovingDecisionDispatchesApproved()
@@ -219,13 +218,8 @@ final class SignerEventTranslatorTest extends TestCase {
 			);
 
 		$this->translator->onTaskDecided(
-			sequenceUuid: 'seq-1',
-			taskUuid: 'task-1',
-			position: 1,
-			userId: 'alice',
-			comment: 'niet akkoord',
-			objectUuid: 'sign-req-1',
-			isRejecting: true
+			task: new SignerStepTask(sequenceUuid: 'seq-1', taskUuid: 'task-1', position: 1, objectUuid: 'sign-req-1'),
+			decision: new SignerStepDecision(userId: 'alice', comment: 'niet akkoord', isRejecting: true)
 		);
 
 	}//end testRejectingDecisionDispatchesRejected()

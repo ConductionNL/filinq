@@ -3,12 +3,13 @@
 /**
  * Filinq Signer Event Translator
  *
- * Translates task-sequence transitions — already reduced to scalars by
- * `SigningTaskListener` — into Filinq's own typed signer events, and
- * notifies the configured signing provider when a position becomes enabled.
- * The listener keeps the OR event surface and the ownership filter; this
- * class is pure filinq: scalars in, `Signer*Event`s out. That split is what
- * keeps every OpenRegister type out of this file, so it loads with OR
+ * Translates task-sequence transitions — already reduced to scalars and
+ * filinq value objects by `SigningTaskListener` — into Filinq's own typed
+ * signer events, and notifies the configured signing provider when a
+ * position becomes enabled. The listener keeps the OR event surface and the
+ * ownership filter; this class is pure filinq: scalars and filinq values in,
+ * `Signer*Event`s out. That split is what keeps every OpenRegister type out
+ * of this file, so it loads with OR
  * older, newer or absent (openregister#3302, flow-approval-consolidation).
  *
  * @category  EventListener
@@ -124,37 +125,23 @@ class SignerEventTranslator {
 	 * {@see onPositionEnabled()}; the final approval additionally arrives
 	 * through {@see onSequenceCompleted()}.
 	 *
-	 * @param string $sequenceUuid UUID of the OR task sequence.
-	 * @param string $taskUuid UUID of the completed task.
-	 * @param int $position Ordinal of the position (1-based).
-	 * @param string|null $userId The completing identity.
-	 * @param string|null $comment The completion comment, when one was given.
-	 * @param string $objectUuid Signing-request UUID.
-	 * @param bool $isRejecting TRUE when the outcome is in the rejecting
-	 *                          vocabulary.
+	 * @param SignerStepTask     $task     The completed task and its signing request.
+	 * @param SignerStepDecision $decision Who decided, the comment and whether it rejects.
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/specs/signing-via-or-approval-with-provider-plugins/spec.md
 	 */
-	public function onTaskDecided(
-		string $sequenceUuid,
-		string $taskUuid,
-		int $position,
-		?string $userId,
-		?string $comment,
-		string $objectUuid,
-		bool $isRejecting,
-	): void {
-		if ($isRejecting === true) {
+	public function onTaskDecided(SignerStepTask $task, SignerStepDecision $decision): void {
+		if ($decision->isRejecting === true) {
 			$this->dispatcher->dispatchTyped(
 				new SignerStepRejectedEvent(
-					sequenceUuid: $sequenceUuid,
-					taskUuid: $taskUuid,
-					position: $position,
-					userId: $userId,
-					comment: $comment,
-					objectUuid: $objectUuid
+					sequenceUuid: $task->sequenceUuid,
+					taskUuid: $task->taskUuid,
+					position: $task->position,
+					userId: $decision->userId,
+					comment: $decision->comment,
+					objectUuid: $task->objectUuid
 				)
 			);
 			return;
@@ -162,12 +149,12 @@ class SignerEventTranslator {
 
 		$this->dispatcher->dispatchTyped(
 			new SignerStepApprovedEvent(
-				sequenceUuid: $sequenceUuid,
-				taskUuid: $taskUuid,
-				position: $position,
-				userId: $userId,
-				comment: $comment,
-				objectUuid: $objectUuid
+				sequenceUuid: $task->sequenceUuid,
+				taskUuid: $task->taskUuid,
+				position: $task->position,
+				userId: $decision->userId,
+				comment: $decision->comment,
+				objectUuid: $task->objectUuid
 			)
 		);
 

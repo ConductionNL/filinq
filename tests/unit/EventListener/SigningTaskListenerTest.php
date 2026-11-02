@@ -60,6 +60,8 @@ use stdClass;
  * @uses \OCA\Filinq\Event\SignerStepApprovedEvent
  * @uses \OCA\Filinq\Event\SignerStepRejectedEvent
  * @uses \OCA\Filinq\Event\SignerChainCompletedEvent
+ * @uses \OCA\Filinq\EventListener\SignerStepDecision
+ * @uses \OCA\Filinq\EventListener\SignerStepTask
  *
  * @category Tests
  * @package  OCA\Filinq\Tests\Unit\EventListener
