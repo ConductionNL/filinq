@@ -76,7 +76,7 @@
 						"label": "Generate",
 						"variant": "primary",
 						"disabled": true,
-						"busyIcon": false
+						"busyIcon": true
 					}
 				]
 			},
@@ -224,7 +224,7 @@
 						"label": "End contract",
 						"variant": "warning",
 						"disabled": true,
-						"busyIcon": false
+						"busyIcon": true
 					}
 				]
 			},
@@ -476,7 +476,7 @@
 					"label": "Assign",
 					"variant": "primary",
 					"disabled": true,
-					"busyIcon": false
+					"busyIcon": true
 				}
 			]
 		}

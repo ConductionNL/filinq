@@ -30,23 +30,21 @@ SPDX-License-Identifier: EUPL-1.2
 			</NcNoteCard>
 		</template>
 		<template #actions>
-			<NcButton :disabled="busy" @click="$emit('close')">
-				{{ t('filinq', 'Cancel') }}
-			</NcButton>
-			<NcButton
+			<CnDialogActions
 				variant="warning"
-				:disabled="busy || reason.trim() === ''"
-				data-testid="contract-terminate-confirm"
-				@click="onConfirm">
-				{{ t('filinq', 'End contract') }}
-			</NcButton>
+				:saving="busy"
+				:canSubmit="reason.trim() !== ''"
+				:confirmLabel="t('filinq', 'End contract')"
+				@cancel="$emit('close')"
+				@submit="onConfirm" />
 		</template>
 	</NcDialog>
 </template>
 
 <script>
+import { CnDialogActions } from '@conduction/nextcloud-vue'
 import { translate as t } from '@nextcloud/l10n'
-import { NcButton, NcDialog, NcNoteCard, NcTextArea } from '@nextcloud/vue'
+import { NcDialog, NcNoteCard, NcTextArea } from '@nextcloud/vue'
 import { terminateContract } from '../services/contracts.js'
 
 /**
@@ -57,7 +55,7 @@ import { terminateContract } from '../services/contracts.js'
  */
 export default {
 	name: 'TerminateContractDialog',
-	components: { NcButton, NcDialog, NcNoteCard, NcTextArea },
+	components: { CnDialogActions, NcDialog, NcNoteCard, NcTextArea },
 	props: {
 		/** The contract id. */
 		contractId: { type: String, required: true },

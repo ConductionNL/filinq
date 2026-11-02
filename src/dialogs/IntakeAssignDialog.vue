@@ -45,30 +45,26 @@ copy of that judgement.
 			</p>
 		</template>
 		<template #actions>
-			<NcButton :disabled="saving" @click="$emit('cancel')">
-				{{ t('filinq', 'Cancel') }}
-			</NcButton>
-			<NcButton
-				variant="primary"
-				:disabled="saving || !selected"
-				data-testid="intake-assign-confirm"
-				@click="confirm">
-				{{ t('filinq', 'Assign') }}
-			</NcButton>
+			<CnDialogActions
+				:saving="saving"
+				:canSubmit="Boolean(selected)"
+				:confirmLabel="t('filinq', 'Assign')"
+				@cancel="$emit('cancel')"
+				@submit="confirm" />
 		</template>
 	</NcDialog>
 </template>
 
 <script>
-import { CnRegisterSchemaSelect } from '@conduction/nextcloud-vue'
+import { CnDialogActions, CnRegisterSchemaSelect } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
-import { NcButton, NcDialog, NcSelect } from '@nextcloud/vue'
+import { NcDialog, NcSelect } from '@nextcloud/vue'
 
 export default {
 	name: 'IntakeAssignDialog',
-	components: { CnRegisterSchemaSelect, NcButton, NcDialog, NcSelect },
+	components: { CnDialogActions, CnRegisterSchemaSelect, NcDialog, NcSelect },
 
 	props: {
 		// The document being assigned, for the sentence above the pickers.
