@@ -46,3 +46,13 @@
       (`tests/scripts/boot-without-openregister.php`).
 - [ ] 4.3 Full quality pass: phpcs, phpmd, psalm, phpstan, PHPUnit, hydra
       gates scoped to the diff — 0 FAIL.
+
+## 5. Approving vocabulary
+
+- [ ] 5.1 When the deferred write path provisions a signing sequence, its
+      template declares `approvingOutcomes: ["approved"]` (OpenRegister
+      `a-sequence-advances-only-on-an-approving-outcome`), so a signer who
+      only ticks a task `done` has not signed and the next signer is not asked.
+      **Acceptance:** a test provisions a two-signer sequence and asserts the
+      template carries the key; completing position 1 with `done` leaves
+      position 2 not enabled.
