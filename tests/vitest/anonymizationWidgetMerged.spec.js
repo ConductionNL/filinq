@@ -118,7 +118,7 @@ describe('the one anonymisation widget', () => {
 		const vm = await widget(false)
 		const accepted = vm.filterAllowed([
 			file('a.docx'),
-			file('b.odt', 'application/vnd.oasis.opendocument.text'),
+			file('b.odt'),
 			file('c.pdf', 'application/pdf'),
 			file('d.txt'),
 			file('e.eml'),
