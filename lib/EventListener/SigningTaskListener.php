@@ -291,14 +291,18 @@ class SigningTaskListener implements IEventListener {
 	 */
 	private function translateDecision(object $task, array $ids): void {
 		$this->translator->onTaskDecided(
-			sequenceUuid: $ids['sequenceUuid'],
-			taskUuid: (string) ($this->read(subject: $task, getter: 'getUuid') ?? ''),
-			position: (int) ($this->read(subject: $task, getter: 'getSequencePosition') ?? 0),
-			userId: $this->nullableString(subject: $task, getter: 'getCompletedBy'),
-			comment: $this->nullableString(subject: $task, getter: 'getComment'),
-			objectUuid: $ids['objectUuid'],
-			isRejecting: $this->isRejectingOutcome(
-				outcome: (string) ($this->read(subject: $task, getter: 'getOutcome') ?? '')
+			task: new SignerStepTask(
+				sequenceUuid: $ids['sequenceUuid'],
+				taskUuid: (string) ($this->read(subject: $task, getter: 'getUuid') ?? ''),
+				position: (int) ($this->read(subject: $task, getter: 'getSequencePosition') ?? 0),
+				objectUuid: $ids['objectUuid']
+			),
+			decision: new SignerStepDecision(
+				userId: $this->nullableString(subject: $task, getter: 'getCompletedBy'),
+				comment: $this->nullableString(subject: $task, getter: 'getComment'),
+				isRejecting: $this->isRejectingOutcome(
+					outcome: (string) ($this->read(subject: $task, getter: 'getOutcome') ?? '')
+				)
 			)
 		);
 	}//end translateDecision()
