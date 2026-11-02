@@ -222,4 +222,66 @@ class SigningControllerTest extends TestCase {
 
 	}//end testAnOrdinaryRefusalCarriesNoHint()
 
+
+	/**
+	 * A controller whose request names another user, over the given verifier and session user.
+	 *
+	 * @param SigningVerificationService|MockObject $verification The verifier.
+	 * @param string|null                           $uid          The session user, null for nobody.
+	 *
+	 * @return SigningController The controller.
+	 */
+	private function forgedController(SigningVerificationService|MockObject $verification, ?string $uid): SigningController {
+		$request = $this->createMock(IRequest::class);
+		$request->method('getParam')->willReturnCallback(fn (string $key, mixed $default = null): mixed => ($key === 'userId') ? 'mallory' : $default);
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn((string) $uid);
+		$session = $this->createMock(IUserSession::class);
+		$session->method('getUser')->willReturn(($uid === null) ? null : $user);
+		$l10n = $this->createMock(IL10N::class);
+		$l10n->method('t')->willReturnArgument(0);
+
+		return new SigningController(
+			$request,
+			new SigningServices(signing: $this->signingService, audit: $this->createMock(SigningAuditService::class), verification: $verification),
+			$session,
+			$this->logger,
+			$l10n,
+			$this->createMock(IGroupManager::class)
+		);
+
+	}//end forgedController()
+
+	/**
+	 * A document is verified for the session user, not for a userId the request names.
+	 *
+	 * @return void
+	 */
+	public function testVerifyRunsForTheSessionUserNotAForgedUserId(): void {
+		$verification = $this->createMock(SigningVerificationService::class);
+		$verification->expects($this->once())
+			->method('verifyDocument')
+			->with(17, 'alice')
+			->willReturn(['valid' => true]);
+
+		$response = $this->forgedController(verification: $verification, uid: 'alice')->verify(fileId: 17);
+
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+
+	}//end testVerifyRunsForTheSessionUserNotAForgedUserId()
+
+	/**
+	 * With nobody signed in nothing is verified, not even for a userId the request names.
+	 *
+	 * @return void
+	 */
+	public function testVerifyAsksForASessionUser(): void {
+		$verification = $this->createMock(SigningVerificationService::class);
+		$verification->expects($this->never())->method('verifyDocument');
+
+		$response = $this->forgedController(verification: $verification, uid: null)->verify(fileId: 17);
+
+		$this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
+
+	}//end testVerifyAsksForASessionUser()
 }//end class
