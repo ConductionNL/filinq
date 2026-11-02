@@ -98,8 +98,8 @@
 			"</x-ncactions>",
 			"</x-slot>",
 			"</x-cnindexpage>",
-			"<x-prohibitionformmodal open=\"false\" saving=\"false\" formerror=\"\" data-on-onupdate:open=\"\" data-on-onsubmit=\"\" data-on-oncancel=\"\">",
-			"</x-prohibitionformmodal>",
+			"<x-policyruleformmodal surface=\"prohibition\" open=\"false\" saving=\"false\" formerror=\"\" data-on-onupdate:open=\"\" data-on-onsubmit=\"\" data-on-oncancel=\"\">",
+			"</x-policyruleformmodal>",
 			"<!--v-if-->",
 			"</div>"
 		],
@@ -499,8 +499,8 @@
 			"</x-ncactions>",
 			"</x-slot>",
 			"</x-cnindexpage>",
-			"<x-standingconsentformmodal open=\"false\" saving=\"false\" formerror=\"\" data-on-onupdate:open=\"\" data-on-onsubmit=\"\" data-on-oncancel=\"\">",
-			"</x-standingconsentformmodal>",
+			"<x-policyruleformmodal surface=\"standingConsent\" open=\"false\" saving=\"false\" formerror=\"\" data-on-onupdate:open=\"\" data-on-onsubmit=\"\" data-on-oncancel=\"\">",
+			"</x-policyruleformmodal>",
 			"<!--v-if-->",
 			"</div>"
 		],
