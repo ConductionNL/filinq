@@ -1,0 +1,608 @@
+{
+	"dossierRemove": {
+		"confirm": {
+			"title": "Remove document",
+			"text": "\"{name}\" will be removed from this dossier only. The file itself is left untouched. {\"name\":\"Jaarverslag\"}",
+			"noClose": false,
+			"buttons": [
+				{
+					"label": "Cancel",
+					"variant": null,
+					"disabled": false,
+					"busyIcon": false
+				},
+				{
+					"label": "Delete",
+					"variant": "error",
+					"disabled": false,
+					"busyIcon": false
+				}
+			]
+		},
+		"loading": {
+			"view": null,
+			"calls": [
+				[
+					"dossierStore",
+					"removeDocument",
+					"row-1",
+					"row-1"
+				]
+			]
+		},
+		"success": null,
+		"error": {
+			"view": null,
+			"unhandled": [
+				"refused"
+			]
+		}
+	},
+	"dictionaryTermRemove": {
+		"confirm": {
+			"title": "Remove term",
+			"text": "Remove \"{value}\"? {\"value\":\"Jansen\"}",
+			"noClose": false,
+			"buttons": [
+				{
+					"label": "Cancel",
+					"variant": null,
+					"disabled": false,
+					"busyIcon": false
+				},
+				{
+					"label": "Remove",
+					"variant": "error",
+					"disabled": false,
+					"busyIcon": false
+				}
+			]
+		},
+		"loading": {
+			"view": {
+				"title": "Remove term",
+				"text": "Remove \"{value}\"? {\"value\":\"Jansen\"}",
+				"noClose": true,
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": true,
+						"busyIcon": false
+					},
+					{
+						"label": "Remove",
+						"variant": "error",
+						"disabled": true,
+						"busyIcon": false
+					}
+				]
+			},
+			"calls": [
+				[
+					"registerI18n.js",
+					"resolveI18nValue",
+					null,
+					"Custom dictionary"
+				],
+				[
+					"customDictionaryStore",
+					"deleteTerm",
+					"row-1",
+					"row-1"
+				],
+				[
+					"registerI18n.js",
+					"resolveI18nValue",
+					null,
+					"Custom dictionary"
+				]
+			]
+		},
+		"success": null,
+		"error": {
+			"view": {
+				"title": "Remove term",
+				"text": "Remove \"{value}\"? {\"value\":\"Jansen\"}",
+				"noClose": false,
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Remove",
+						"variant": "error",
+						"disabled": false,
+						"busyIcon": false
+					}
+				]
+			},
+			"unhandled": [
+				"refused"
+			]
+		}
+	},
+	"dictionaryDelete": {
+		"confirm": {
+			"title": "Delete dictionary",
+			"text": "Delete \"{name}\" and all its terms? This cannot be undone. {\"name\":\"Woordenlijst\"}",
+			"noClose": false,
+			"buttons": [
+				{
+					"label": "Cancel",
+					"variant": null,
+					"disabled": false,
+					"busyIcon": false
+				},
+				{
+					"label": "Delete",
+					"variant": "error",
+					"disabled": false,
+					"busyIcon": false
+				}
+			]
+		},
+		"loading": {
+			"view": {
+				"title": "Delete dictionary",
+				"text": "Delete \"{name}\" and all its terms? This cannot be undone. {\"name\":\"Woordenlijst\"}",
+				"noClose": true,
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": true,
+						"busyIcon": false
+					},
+					{
+						"label": "Delete",
+						"variant": "error",
+						"disabled": true,
+						"busyIcon": false
+					}
+				]
+			},
+			"calls": [
+				[
+					"customDictionaryStore",
+					"deleteDictionary",
+					"row-1"
+				]
+			]
+		},
+		"success": null,
+		"error": {
+			"view": {
+				"title": "Delete dictionary",
+				"text": "Delete \"{name}\" and all its terms? This cannot be undone. {\"name\":\"Woordenlijst\"}",
+				"noClose": false,
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Delete",
+						"variant": "error",
+						"disabled": false,
+						"busyIcon": false
+					}
+				]
+			},
+			"unhandled": [
+				"Cannot read properties of undefined (reading 'colour')"
+			]
+		}
+	},
+	"documentDelete": {
+		"confirm": {
+			"title": "Delete document",
+			"text": "Delete \"{name}\"? This cannot be undone. {\"name\":\"Jaarverslag\"}",
+			"noClose": false,
+			"buttons": [
+				{
+					"label": "Cancel",
+					"variant": null,
+					"disabled": false,
+					"busyIcon": false
+				},
+				{
+					"label": "Delete",
+					"variant": "error",
+					"disabled": false,
+					"busyIcon": false
+				}
+			]
+		},
+		"loading": {
+			"view": {
+				"title": "Delete document",
+				"text": "Delete \"{name}\"? This cannot be undone. {\"name\":\"Jaarverslag\"}",
+				"noClose": true,
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": true,
+						"busyIcon": false
+					},
+					{
+						"label": "Delete",
+						"variant": "error",
+						"disabled": true,
+						"busyIcon": false
+					}
+				]
+			},
+			"calls": [
+				[
+					"myDocumentsStore",
+					"deleteDocument",
+					"Jaarverslag.pdf"
+				]
+			]
+		},
+		"success": null,
+		"error": {
+			"view": null,
+			"unhandled": []
+		}
+	},
+	"documentBulkDelete": {
+		"confirm": {
+			"title": "Delete selected items",
+			"text": "Delete {count} selected item(s)? Dossiers and the documents inside them will be removed. This cannot be undone. {\"count\":2}",
+			"noClose": false,
+			"buttons": [
+				{
+					"label": "Cancel",
+					"variant": null,
+					"disabled": false,
+					"busyIcon": false
+				},
+				{
+					"label": "Delete",
+					"variant": "error",
+					"disabled": false,
+					"busyIcon": false
+				}
+			]
+		},
+		"loading": {
+			"view": {
+				"title": "Delete selected items",
+				"text": "Delete {count} selected item(s)? Dossiers and the documents inside them will be removed. This cannot be undone. {\"count\":2}",
+				"noClose": true,
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": true,
+						"busyIcon": false
+					},
+					{
+						"label": "Delete",
+						"variant": "error",
+						"disabled": true,
+						"busyIcon": false
+					}
+				]
+			},
+			"calls": [
+				[
+					"myDocumentsStore",
+					"deleteDocuments",
+					[
+						"a.pdf",
+						"b.pdf"
+					]
+				]
+			]
+		},
+		"success": null,
+		"error": {
+			"view": null,
+			"unhandled": []
+		}
+	},
+	"prohibitionDelete": {
+		"confirm": {
+			"title": "Delete prohibition",
+			"text": "Delete \"{name}\"? This cannot be undone. {\"name\":\"Jan Jansen\"}",
+			"noClose": false,
+			"buttons": [
+				{
+					"label": "Cancel",
+					"variant": null,
+					"disabled": false,
+					"busyIcon": false
+				},
+				{
+					"label": "Delete",
+					"variant": "error",
+					"disabled": false,
+					"busyIcon": false
+				}
+			]
+		},
+		"loading": {
+			"view": {
+				"title": "Delete prohibition",
+				"text": "Delete \"{name}\"? This cannot be undone. {\"name\":\"Jan Jansen\"}",
+				"noClose": true,
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": true,
+						"busyIcon": false
+					},
+					{
+						"label": "Delete",
+						"variant": "error",
+						"disabled": true,
+						"busyIcon": false
+					}
+				]
+			},
+			"calls": [
+				[
+					"prohibitionStore",
+					"deleteProhibition",
+					"row-1"
+				]
+			]
+		},
+		"success": null,
+		"error": {
+			"view": {
+				"title": "Delete prohibition",
+				"text": "Delete \"{name}\"? This cannot be undone. {\"name\":\"Jan Jansen\"}",
+				"noClose": false,
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Delete",
+						"variant": "error",
+						"disabled": false,
+						"busyIcon": false
+					}
+				]
+			},
+			"unhandled": []
+		}
+	},
+	"standingConsentDelete": {
+		"confirm": {
+			"title": "Delete standing consent",
+			"text": "Delete \"{name}\"? This cannot be undone. {\"name\":\"Jan Jansen\"}",
+			"noClose": false,
+			"buttons": [
+				{
+					"label": "Cancel",
+					"variant": null,
+					"disabled": false,
+					"busyIcon": false
+				},
+				{
+					"label": "Delete",
+					"variant": "error",
+					"disabled": false,
+					"busyIcon": false
+				}
+			]
+		},
+		"loading": {
+			"view": {
+				"title": "Delete standing consent",
+				"text": "Delete \"{name}\"? This cannot be undone. {\"name\":\"Jan Jansen\"}",
+				"noClose": true,
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": true,
+						"busyIcon": false
+					},
+					{
+						"label": "Delete",
+						"variant": "error",
+						"disabled": true,
+						"busyIcon": false
+					}
+				]
+			},
+			"calls": [
+				[
+					"standingConsentStore",
+					"deleteStandingConsent",
+					"row-1"
+				]
+			]
+		},
+		"success": null,
+		"error": {
+			"view": {
+				"title": "Delete standing consent",
+				"text": "Delete \"{name}\"? This cannot be undone. {\"name\":\"Jan Jansen\"}",
+				"noClose": false,
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Delete",
+						"variant": "error",
+						"disabled": false,
+						"busyIcon": false
+					}
+				]
+			},
+			"unhandled": []
+		}
+	},
+	"templateDelete": {
+		"confirm": {
+			"title": "Delete template",
+			"text": "Are you sure you want to delete \"{name}\"? This action cannot be undone. {\"name\":\"Jaarverslag\"}",
+			"noClose": false,
+			"buttons": [
+				{
+					"label": "Cancel",
+					"variant": null,
+					"disabled": false,
+					"busyIcon": false
+				},
+				{
+					"label": "Delete",
+					"variant": "error",
+					"disabled": false,
+					"busyIcon": false
+				}
+			]
+		},
+		"loading": {
+			"view": {
+				"title": "Delete template",
+				"text": "Are you sure you want to delete \"{name}\"? This action cannot be undone. {\"name\":\"Jaarverslag\"}",
+				"noClose": false,
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Delete",
+						"variant": "error",
+						"disabled": false,
+						"busyIcon": false
+					}
+				]
+			},
+			"calls": [
+				[
+					"useTemplateStore",
+					"deleteTemplate",
+					"row-1"
+				]
+			]
+		},
+		"success": null,
+		"error": {
+			"view": {
+				"title": "Delete template",
+				"text": "Are you sure you want to delete \"{name}\"? This action cannot be undone. {\"name\":\"Jaarverslag\"}",
+				"noClose": false,
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Delete",
+						"variant": "error",
+						"disabled": false,
+						"busyIcon": false
+					}
+				]
+			},
+			"unhandled": [
+				"refused"
+			]
+		}
+	},
+	"templateRestore": {
+		"confirm": {
+			"title": "Restore version",
+			"text": "Restore to version {n}? The current state will be saved as a new version first. {\"n\":3}",
+			"noClose": false,
+			"buttons": [
+				{
+					"label": "Cancel",
+					"variant": null,
+					"disabled": false,
+					"busyIcon": false
+				},
+				{
+					"label": "Restore",
+					"variant": "primary",
+					"disabled": false,
+					"busyIcon": false
+				}
+			]
+		},
+		"loading": {
+			"view": null,
+			"calls": [
+				[
+					"useTemplateStore",
+					"restoreVersion",
+					"tpl-1",
+					"row-1"
+				]
+			]
+		},
+		"success": null,
+		"error": {
+			"view": null,
+			"unhandled": [
+				"refused",
+				"refused"
+			]
+		}
+	},
+	"versionRestore": {
+		"confirm": {
+			"title": "Restore version",
+			"text": "Restore to version {n}? The current state will be saved as a new version first. {\"n\":1700000000}",
+			"noClose": false,
+			"buttons": [
+				{
+					"label": "Cancel",
+					"variant": null,
+					"disabled": false,
+					"busyIcon": false
+				},
+				{
+					"label": "Restore",
+					"variant": "primary",
+					"disabled": false,
+					"busyIcon": false
+				}
+			]
+		},
+		"loading": {
+			"view": null,
+			"calls": [
+				[
+					"versionService.js",
+					"restoreVersion",
+					0,
+					1700000000
+				]
+			]
+		},
+		"success": null,
+		"error": {
+			"view": null,
+			"unhandled": []
+		}
+	}
+}
