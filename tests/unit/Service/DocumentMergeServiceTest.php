@@ -27,6 +27,8 @@ use OCA\Filinq\Service\MergeJobRepository;
 use OCA\Filinq\Service\PdfConversionService;
 use OCA\Filinq\Service\Pdfa3ConversionService;
 use OCA\Filinq\Service\PdfDocumentFactory;
+use OCA\Filinq\Service\Support\MergeParts;
+use OCA\Filinq\Service\Support\PdfConversions;
 use OCP\Files\File;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
@@ -230,10 +232,8 @@ class DocumentMergeServiceTest extends TestCase {
 
 		return new DocumentMergeService(
 			$jobs,
-			$conversion,
-			$archival,
-			($this->factory ?? new PdfDocumentFactory()),
-			($cover ?? $this->createMock(originalClassName: MergeCoverRenderer::class)),
+			new PdfConversions(conversion: $conversion, archival: $archival),
+			new MergeParts(documents: ($this->factory ?? new PdfDocumentFactory()), cover: ($cover ?? $this->createMock(originalClassName: MergeCoverRenderer::class))),
 			$rootFolder,
 			$session,
 			$this->createMock(LoggerInterface::class)

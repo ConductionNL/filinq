@@ -37,6 +37,9 @@ use OCA\Filinq\Kernel\JobQueueInterface;
 use OCA\Filinq\Service\Charts\SvgRasterizer;
 use OCA\Filinq\Service\Conversion\HtmlToOfficeConverter;
 use OCA\Filinq\Service\Conversion\LibreOfficeHeadlessBackend;
+use OCA\Filinq\Service\Support\OpenRegisterAccess;
+use OCA\Filinq\Service\Support\PdfRendering;
+use OCA\Filinq\Service\Support\TemplateSources;
 use OCA\OpenRegister\Mcp\Attribute\McpTool;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -82,14 +85,53 @@ class CorrespondenceService implements CorrespondenceServiceInterface {
 	private const VALID_FORMATS = ['pdf', 'docx', 'html', 'email'];
 
 	/**
+	 * Service for template CRUD.
+	 *
+	 * @var TemplateService
+	 */
+	private readonly TemplateService $templateService;
+
+	/**
+	 * Service for data resolution.
+	 *
+	 * @var DataResolverService
+	 */
+	private readonly DataResolverService $dataResolver;
+
+	/**
+	 * Service for Twig rendering.
+	 *
+	 * @var TemplateRenderer
+	 */
+	private readonly TemplateRenderer $templateRenderer;
+
+	/**
+	 * Service for PDF generation.
+	 *
+	 * @var PdfService
+	 */
+	private readonly PdfService $pdfService;
+
+	/**
+	 * App manager interface.
+	 *
+	 * @var IAppManager
+	 */
+	private readonly IAppManager $appManager;
+
+	/**
+	 * Container for DI.
+	 *
+	 * @var ContainerInterface
+	 */
+	private readonly ContainerInterface $container;
+
+	/**
 	 * Constructor for CorrespondenceService
 	 *
-	 * @param TemplateService $templateService Service for template CRUD
-	 * @param DataResolverService $dataResolver Service for data resolution
-	 * @param TemplateRenderer $templateRenderer Service for Twig rendering
-	 * @param PdfService $pdfService Service for PDF generation
-	 * @param ContainerInterface $container Container for DI
-	 * @param IAppManager $appManager App manager interface
+	 * @param TemplateSources $sources The template store and the data resolver.
+	 * @param PdfRendering $rendering The template renderer and the PDF generator.
+	 * @param OpenRegisterAccess $openRegister The app manager and container that reach OpenRegister.
 	 * @param JobQueueInterface $jobList Nextcloud job list for async
 	 * @param LoggerInterface $logger Logger for error reporting
 	 * @param IAppConfig $appConfig App configuration accessor
@@ -97,16 +139,19 @@ class CorrespondenceService implements CorrespondenceServiceInterface {
 	 * @return void
 	 */
 	public function __construct(
-		private readonly TemplateService $templateService,
-		private readonly DataResolverService $dataResolver,
-		private readonly TemplateRenderer $templateRenderer,
-		private readonly PdfService $pdfService,
-		private readonly ContainerInterface $container,
-		private readonly IAppManager $appManager,
+		TemplateSources $sources,
+		PdfRendering $rendering,
+		OpenRegisterAccess $openRegister,
 		private readonly JobQueueInterface $jobList,
 		private readonly LoggerInterface $logger,
 		private readonly IAppConfig $appConfig,
 	) {
+		$this->appManager = $openRegister->apps;
+		$this->container = $openRegister->container;
+		$this->templateRenderer = $rendering->renderer;
+		$this->pdfService = $rendering->pdf;
+		$this->templateService = $sources->templates;
+		$this->dataResolver = $sources->data;
 
 	}//end __construct()
 

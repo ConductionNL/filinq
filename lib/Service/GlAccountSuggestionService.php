@@ -40,6 +40,7 @@ use OCA\Filinq\Kernel\Contracts\GlAccountSuggestionServiceInterface;
 use OCA\Filinq\Service\Suggestion\CategoryKeywordMapper;
 use OCA\Filinq\Service\Suggestion\HistoryRanker;
 use OCA\Filinq\Service\Suggestion\SupplierIdentityResolver;
+use OCA\Filinq\Service\Support\SuggestionSignals;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\TaskProcessing\Task as TaskProcessingTask;
 use OCP\TaskProcessing\TaskTypes\TextToText;
@@ -65,6 +66,27 @@ use Throwable;
  */
 class GlAccountSuggestionService implements GlAccountSuggestionServiceInterface {
 	/**
+	 * Pure supplier-identity resolver.
+	 *
+	 * @var SupplierIdentityResolver
+	 */
+	private readonly SupplierIdentityResolver $identityResolver;
+
+	/**
+	 * Pure windowed-frequency ranker.
+	 *
+	 * @var HistoryRanker
+	 */
+	private readonly HistoryRanker $historyRanker;
+
+	/**
+	 * Pure cold-start keyword matcher.
+	 *
+	 * @var CategoryKeywordMapper
+	 */
+	private readonly CategoryKeywordMapper $keywordMapper;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param SettingsService $settingsService Resolves OpenRegister's ObjectService.
@@ -72,9 +94,7 @@ class GlAccountSuggestionService implements GlAccountSuggestionServiceInterface 
 	 * @param IEventDispatcher $eventDispatcher Dispatches the sibling suggestion event.
 	 * @param ContainerInterface $container DI container, for the optional AI provider.
 	 * @param LoggerInterface $logger Logger.
-	 * @param SupplierIdentityResolver $identityResolver Pure supplier-identity resolver.
-	 * @param HistoryRanker $historyRanker Pure windowed-frequency ranker.
-	 * @param CategoryKeywordMapper $keywordMapper Pure cold-start keyword matcher.
+	 * @param SuggestionSignals $signals Supplier identity, booking history and category keywords.
 	 *
 	 * @return void
 	 */
@@ -84,10 +104,11 @@ class GlAccountSuggestionService implements GlAccountSuggestionServiceInterface 
 		private readonly IEventDispatcher $eventDispatcher,
 		private readonly ContainerInterface $container,
 		private readonly LoggerInterface $logger,
-		private readonly SupplierIdentityResolver $identityResolver,
-		private readonly HistoryRanker $historyRanker,
-		private readonly CategoryKeywordMapper $keywordMapper,
+		SuggestionSignals $signals,
 	) {
+		$this->identityResolver = $signals->identity;
+		$this->historyRanker = $signals->history;
+		$this->keywordMapper = $signals->keywords;
 
 	}//end __construct()
 

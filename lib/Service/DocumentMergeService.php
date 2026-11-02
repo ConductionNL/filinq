@@ -38,6 +38,8 @@ namespace OCA\Filinq\Service;
 use OCA\Filinq\Exception\MergeRefusedException;
 use OCA\Filinq\Exception\MergeStepFailedException;
 use OCA\Filinq\Kernel\Contracts\DocumentMergeServiceInterface;
+use OCA\Filinq\Service\Support\MergeParts;
+use OCA\Filinq\Service\Support\PdfConversions;
 use OCP\Files\File;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
@@ -66,13 +68,39 @@ class DocumentMergeService implements DocumentMergeServiceInterface {
 	use ReadsCurrentUserId;
 
 	/**
+	 * Converts one input to PDF, and says which backend did it.
+	 *
+	 * @var PdfConversionService
+	 */
+	private readonly PdfConversionService $conversion;
+
+	/**
+	 * Turns the merged PDF into PDF/A-3b, where the instance can.
+	 *
+	 * @var Pdfa3ConversionService
+	 */
+	private readonly Pdfa3ConversionService $archival;
+
+	/**
+	 * Builds the FPDI document the pages go into.
+	 *
+	 * @var PdfDocumentFactory
+	 */
+	private readonly PdfDocumentFactory $documents;
+
+	/**
+	 * Renders the cover page, when one is asked for.
+	 *
+	 * @var MergeCoverRenderer
+	 */
+	private readonly MergeCoverRenderer $cover;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param MergeJobRepository $jobs The job store.
-	 * @param PdfConversionService $conversion Converts one input to PDF, and says which backend did it.
-	 * @param Pdfa3ConversionService $archival Turns the merged PDF into PDF/A-3b, where the instance can.
-	 * @param PdfDocumentFactory $documents Builds the FPDI document the pages go into.
-	 * @param MergeCoverRenderer $cover Renders the cover page, when one is asked for.
+	 * @param PdfConversions $conversions The PDF and PDF/A-3 conversions.
+	 * @param MergeParts $parts The PDF document factory and the cover renderer.
 	 * @param IRootFolder $rootFolder The file tree.
 	 * @param IUserSession $userSession The current session; every input is read as this person.
 	 * @param LoggerInterface $logger Logger for diagnostics.
@@ -81,14 +109,16 @@ class DocumentMergeService implements DocumentMergeServiceInterface {
 	 */
 	public function __construct(
 		private readonly MergeJobRepository $jobs,
-		private readonly PdfConversionService $conversion,
-		private readonly Pdfa3ConversionService $archival,
-		private readonly PdfDocumentFactory $documents,
-		private readonly MergeCoverRenderer $cover,
+		PdfConversions $conversions,
+		MergeParts $parts,
 		private readonly IRootFolder $rootFolder,
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
 	) {
+		$this->documents = $parts->documents;
+		$this->cover = $parts->cover;
+		$this->conversion = $conversions->conversion;
+		$this->archival = $conversions->archival;
 
 	}//end __construct()
 

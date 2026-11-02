@@ -25,6 +25,7 @@ use OCA\Filinq\Service\DocumentService;
 use OCA\Filinq\Service\DocumentStorageService;
 use OCA\Filinq\Service\GeneratedDocumentLogger;
 use OCA\Filinq\Service\MultiFormatOutputProducer;
+use OCA\Filinq\Service\Support\DocumentOutput;
 use OCA\Filinq\Service\TemplateService;
 use PHPUnit\Framework\TestCase;
 
@@ -33,6 +34,7 @@ use PHPUnit\Framework\TestCase;
  * before it was split.
  *
  * @covers \OCA\Filinq\Service\MultiFormatOutputProducer
+ * @covers \OCA\Filinq\Service\Support\DocumentOutput
  */
 class MultiFormatRequestedFormatsTest extends TestCase {
 
@@ -77,11 +79,10 @@ class MultiFormatRequestedFormatsTest extends TestCase {
 	 */
 	public function testOutcome(array $options, array|string $expected): void {
 		$producer = new MultiFormatOutputProducer(
+			output: new DocumentOutput(storage: $this->createMock(DocumentStorageService::class), log: $this->createMock(GeneratedDocumentLogger::class)),
 			documents: $this->createMock(DocumentService::class),
 			templates: $this->createMock(TemplateService::class),
 			renderPipeline: $this->createMock(DocumentRenderPipeline::class),
-			storage: $this->createMock(DocumentStorageService::class),
-			auditLog: $this->createMock(GeneratedDocumentLogger::class),
 		);
 
 		try {

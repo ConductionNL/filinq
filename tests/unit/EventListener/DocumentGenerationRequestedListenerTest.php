@@ -33,6 +33,7 @@ use OCA\Filinq\EventListener\DocumentGenerationRequestedListener;
 use OCA\Filinq\Service\DocumentGenerationRequestService;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\DocumentService;
+use OCA\Filinq\Service\Support\TemplateLookup;
 use OCA\Filinq\Service\TemplateRenderer;
 use OCA\Filinq\Service\TemplateService;
 use OCA\Filinq\Service\TemplateSlugResolver;
@@ -94,9 +95,8 @@ class DocumentGenerationRequestedListenerTest extends TestCase {
 		);
 
 		$service = new DocumentGenerationRequestService(
+			lookup: new TemplateLookup(templates: $this->createMock(TemplateService::class), slugs: $this->createMock(TemplateSlugResolver::class)),
 			documents: $this->documents,
-			templates: $this->createMock(TemplateService::class),
-			slugs: $this->createMock(TemplateSlugResolver::class),
 			renderer: $this->createMock(TemplateRenderer::class),
 			objectResolver: $this->createMock(DocumentObjectServiceResolver::class),
 			userSession: $session,

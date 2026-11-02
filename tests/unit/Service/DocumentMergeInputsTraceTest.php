@@ -26,6 +26,8 @@ use OCA\Filinq\Service\MergeJobRepository;
 use OCA\Filinq\Service\Pdfa3ConversionService;
 use OCA\Filinq\Service\PdfConversionService;
 use OCA\Filinq\Service\PdfDocumentFactory;
+use OCA\Filinq\Service\Support\MergeParts;
+use OCA\Filinq\Service\Support\PdfConversions;
 use OCP\Files\File;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
@@ -43,6 +45,8 @@ use RuntimeException;
  * mallory, who only ever appears as a forged value, reads every file.
  *
  * @covers \OCA\Filinq\Service\DocumentMergeService
+ * @covers \OCA\Filinq\Service\Support\PdfConversions
+ * @covers \OCA\Filinq\Service\Support\MergeParts
  * @uses   \OCA\Filinq\Exception\MergeRefusedException
  * @uses   \OCA\Filinq\Service\MergeSelection
  * @uses   \OCA\Filinq\Service\MergePlan
@@ -195,10 +199,8 @@ class DocumentMergeInputsTraceTest extends TestCase {
 
 		return new DocumentMergeService(
 			$jobs,
-			$conversion,
-			$this->createMock(Pdfa3ConversionService::class),
-			new PdfDocumentFactory(),
-			$this->createMock(MergeCoverRenderer::class),
+			new PdfConversions(conversion: $conversion, archival: $this->createMock(Pdfa3ConversionService::class)),
+			new MergeParts(documents: new PdfDocumentFactory(), cover: $this->createMock(MergeCoverRenderer::class)),
 			$rootFolder,
 			$userSession,
 			$this->createMock(LoggerInterface::class)

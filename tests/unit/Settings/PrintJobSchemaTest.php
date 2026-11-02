@@ -30,6 +30,7 @@ use OCA\Filinq\Repair\MigratePrintJobsOutOfAppConfig;
 use OCA\Filinq\Service\DataResolverService;
 use OCA\Filinq\Service\PdfService;
 use OCA\Filinq\Service\PrintJobService;
+use OCA\Filinq\Service\Support\TemplateSources;
 use OCA\Filinq\Service\TemplateService;
 use OCA\Filinq\Tests\Unit\Service\PrintJobDoubles;
 use OCP\BackgroundJob\IJobList;
@@ -158,8 +159,7 @@ class PrintJobSchemaTest extends TestCase {
 		$templates->method('getTemplate')->willReturn(['id' => 't', 'name' => 'Brief', 'content' => '']);
 		$service = new PrintJobService(
 			$pdf,
-			$templates,
-			$this->createMock(DataResolverService::class),
+			new TemplateSources(templates: $templates, data: $this->createMock(DataResolverService::class)),
 			$this->printJobRepository(),
 			$this->printJobFileStore(),
 			new JobQueue(jobList: $this->createMock(IJobList::class)),
