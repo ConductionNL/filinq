@@ -59,7 +59,7 @@ const ROWS = [
 		'@self': { id: 'self-1' },
 		id: 'id-1',
 		entityText: 'Jan',
-		primaryName: 'Jan',
+		primaryName: 'Jan Jansen',
 		label: 'Dict',
 		matchRules: [
 			{ type: 'bsn', value: '123', extra: true },
