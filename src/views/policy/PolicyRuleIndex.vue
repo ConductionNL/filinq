@@ -107,9 +107,9 @@
 			</template>
 		</CnIndexPage>
 
-		<!-- The surface's form modal owns its form state (ADR-004 gate-13). -->
-		<component
-			:is="rules.formModal"
+		<!-- The form modal owns its form state (ADR-004 gate-13). -->
+		<PolicyRuleFormModal
+			:surface="surface"
 			:open="dialogOpen"
 			:editingRecord="editingRecord"
 			:saving="saving"
@@ -142,8 +142,7 @@ import { NcActionButton, NcActions } from '@nextcloud/vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
 import Pencil from 'vue-material-design-icons/Pencil.vue'
-import ProhibitionFormModal from '../../dialogs/ProhibitionFormModal.vue'
-import StandingConsentFormModal from '../../dialogs/StandingConsentFormModal.vue'
+import PolicyRuleFormModal from '../../dialogs/PolicyRuleFormModal.vue'
 import {
 	indexPaging,
 	recordDeletion,
@@ -166,7 +165,6 @@ const SURFACES = {
 		create: 'createProhibition',
 		update: 'updateProhibition',
 		remove: 'deleteProhibition',
-		formModal: 'ProhibitionFormModal',
 		activeVariant: 'error',
 		nameField: 'primaryName',
 		deleteFailedLog: 'Failed to delete prohibition:',
@@ -205,7 +203,7 @@ const SURFACES = {
 			reason: row.reason || '',
 			legalAuthority: row.legalAuthority || '',
 			caseReference: row.caseReference || '',
-			severity: row.severity || 'standard',
+			severity: row.severity || 'medium',
 			jurisdiction: row.jurisdiction || '',
 			validUntil: row.validUntil || '',
 			active: row.active !== false,
@@ -220,7 +218,6 @@ const SURFACES = {
 		create: 'createStandingConsent',
 		update: 'updateStandingConsent',
 		remove: 'deleteStandingConsent',
-		formModal: 'StandingConsentFormModal',
 		activeVariant: 'success',
 		nameField: 'entityText',
 		deleteFailedLog: 'Failed to delete standing consent:',
@@ -290,8 +287,7 @@ export default {
 		CnStatusBadge,
 		NcActions,
 		NcActionButton,
-		ProhibitionFormModal,
-		StandingConsentFormModal,
+		PolicyRuleFormModal,
 		CnConfirmDialog,
 		Delete,
 		DotsHorizontal,

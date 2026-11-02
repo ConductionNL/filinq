@@ -670,7 +670,7 @@
 			"config": {
 				"surface": "prohibition"
 			},
-			"_note": "Entity-level publish-never rules (publicationProhibition) via PolicyController (indexProhibitions/createProhibition/showProhibition/updateProhibition/deleteProhibition) + PolicyMatchService. Reachable from the menu as \"Publish never\", beside Consent Management. It carried no menu entry until 2026-09-06: publication-policy-labels-and-nav was ticked complete, but its navigation tasks edited MainMenu.vue, which no longer exists since the app moved to manifest-driven nav (ADR-037), so only the label half of that change survived and the page was reachable by hand-typed URL alone. Modal is ProhibitionFormModal (registry kind:modal), its own file per ADR-004."
+			"_note": "Entity-level publish-never rules (publicationProhibition) via PolicyController (indexProhibitions/createProhibition/showProhibition/updateProhibition/deleteProhibition) + PolicyMatchService. Reachable from the menu as \"Publish never\", beside Consent Management. It carried no menu entry until 2026-09-06: publication-policy-labels-and-nav was ticked complete, but its navigation tasks edited MainMenu.vue, which no longer exists since the app moved to manifest-driven nav (ADR-037), so only the label half of that change survived and the page was reachable by hand-typed URL alone. The page is PolicyRuleIndex with config.surface prohibition; its form is PolicyRuleFormModal with surface prohibition, its own file per ADR-004."
 		},
 		{
 			"id": "StandingConsents",
@@ -681,7 +681,7 @@
 			"config": {
 				"surface": "standingConsent"
 			},
-			"_note": "Entity-level publish-always rules (publicationStandingConsent) via StandingConsentController (index/create/show/update/destroy) + PolicyRetroactiveService. Reachable from the menu as \"Publish always\", beside Consent Management — see the Prohibitions note for why it had no entry until 2026-09-06. Modal is StandingConsentFormModal (registry kind:modal); the view's previous inline NcDialog was replaced with it to fix the hydra modal-isolation gate."
+			"_note": "Entity-level publish-always rules (publicationStandingConsent) via StandingConsentController (index/create/show/update/destroy) + PolicyRetroactiveService. Reachable from the menu as \"Publish always\", beside Consent Management — see the Prohibitions note for why it had no entry until 2026-09-06. The page is PolicyRuleIndex with config.surface standingConsent; its form is PolicyRuleFormModal with surface standingConsent, its own file per ADR-004 (the hydra modal-isolation gate)."
 		},
 		{
 			"id": "Reports",

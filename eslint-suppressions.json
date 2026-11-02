@@ -76,7 +76,7 @@
       "count": 1
     }
   },
-  "src/dialogs/ProhibitionFormModal.vue": {
+  "src/dialogs/PolicyRuleFormModal.vue": {
     "@nextcloud/l10n-non-breaking-space": {
       "count": 1
     }

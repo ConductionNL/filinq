@@ -15,6 +15,10 @@
 		"formError": {
 			"type": "String",
 			"default": ""
+		},
+		"surface": {
+			"type": "String",
+			"required": true
 		}
 	},
 	"emits": [
@@ -42,7 +46,7 @@
 		"editing": false,
 		"dialogTitle": "[Add standing consent]",
 		"canSubmit": false,
-		"onlyNameRules": "(none)",
+		"onlyNameRules": false,
 		"emitted": []
 	},
 	"choices": {
@@ -85,7 +89,7 @@
 		"editing": false,
 		"dialogTitle": "[Add standing consent]",
 		"canSubmit": false,
-		"onlyNameRules": "(none)",
+		"onlyNameRules": false,
 		"emitted": []
 	},
 	"openedBlank": {
@@ -114,7 +118,7 @@
 		"editing": false,
 		"dialogTitle": "[Add standing consent]",
 		"canSubmit": false,
-		"onlyNameRules": "(none)",
+		"onlyNameRules": false,
 		"emitted": []
 	},
 	"namedNoRules": {
@@ -143,7 +147,7 @@
 		"editing": false,
 		"dialogTitle": "[Add standing consent]",
 		"canSubmit": false,
-		"onlyNameRules": "(none)",
+		"onlyNameRules": false,
 		"emitted": []
 	},
 	"oneEmptyRule": {
@@ -172,7 +176,7 @@
 		"editing": false,
 		"dialogTitle": "[Add standing consent]",
 		"canSubmit": false,
-		"onlyNameRules": "(none)",
+		"onlyNameRules": false,
 		"emitted": []
 	},
 	"oneNameRule": {
@@ -201,7 +205,7 @@
 		"editing": false,
 		"dialogTitle": "[Add standing consent]",
 		"canSubmit": true,
-		"onlyNameRules": "(none)",
+		"onlyNameRules": false,
 		"emitted": []
 	},
 	"twoRules": {
@@ -230,7 +234,7 @@
 		"editing": false,
 		"dialogTitle": "[Add standing consent]",
 		"canSubmit": true,
-		"onlyNameRules": "(none)",
+		"onlyNameRules": false,
 		"emitted": []
 	},
 	"untypedRule": {
@@ -259,7 +263,7 @@
 		"editing": false,
 		"dialogTitle": "[Add standing consent]",
 		"canSubmit": false,
-		"onlyNameRules": "(none)",
+		"onlyNameRules": false,
 		"emitted": []
 	},
 	"removed": {
@@ -288,7 +292,7 @@
 		"editing": false,
 		"dialogTitle": "[Add standing consent]",
 		"canSubmit": true,
-		"onlyNameRules": "(none)",
+		"onlyNameRules": false,
 		"emitted": []
 	},
 	"missingSecondField": {
@@ -317,7 +321,7 @@
 		"editing": false,
 		"dialogTitle": "[Add standing consent]",
 		"canSubmit": false,
-		"onlyNameRules": "(none)",
+		"onlyNameRules": false,
 		"emitted": []
 	},
 	"submitted": {
@@ -346,7 +350,7 @@
 		"editing": false,
 		"dialogTitle": "[Add standing consent]",
 		"canSubmit": false,
-		"onlyNameRules": "(none)",
+		"onlyNameRules": false,
 		"emitted": [
 			[
 				"submit",
@@ -401,7 +405,7 @@
 		"editing": false,
 		"dialogTitle": "[Add standing consent]",
 		"canSubmit": false,
-		"onlyNameRules": "(none)",
+		"onlyNameRules": false,
 		"emitted": [
 			[
 				"update:open",
@@ -443,7 +447,7 @@
 		"editing": true,
 		"dialogTitle": "[Edit standing consent]",
 		"canSubmit": true,
-		"onlyNameRules": "(none)",
+		"onlyNameRules": false,
 		"emitted": [],
 		"source": {
 			"entityText": "Jan",
@@ -495,7 +499,7 @@
 		"editing": true,
 		"dialogTitle": "[Edit standing consent]",
 		"canSubmit": true,
-		"onlyNameRules": "(none)",
+		"onlyNameRules": false,
 		"emitted": [
 			[
 				"submit",
@@ -548,7 +552,7 @@
 		"editing": true,
 		"dialogTitle": "[Edit standing consent]",
 		"canSubmit": false,
-		"onlyNameRules": "(none)",
+		"onlyNameRules": false,
 		"emitted": []
 	}
 }

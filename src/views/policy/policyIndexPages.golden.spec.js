@@ -131,17 +131,10 @@ jest.mock('vue-material-design-icons/Pencil.vue', () => ({
 		(global.mockStubs ??= []),
 	),
 }))
-jest.mock('../../dialogs/ProhibitionFormModal.vue', () => ({
+jest.mock('../../dialogs/PolicyRuleFormModal.vue', () => ({
 	__esModule: true,
 	default: require('../../../tests/jest/renderGolden.js').stubComponent(
-		'ProhibitionFormModal',
-		(global.mockStubs ??= []),
-	),
-}))
-jest.mock('../../dialogs/StandingConsentFormModal.vue', () => ({
-	__esModule: true,
-	default: require('../../../tests/jest/renderGolden.js').stubComponent(
-		'StandingConsentFormModal',
+		'PolicyRuleFormModal',
 		(global.mockStubs ??= []),
 	),
 }))
