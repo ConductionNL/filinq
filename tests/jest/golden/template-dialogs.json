@@ -1,0 +1,1133 @@
+{
+	"mergeField": {
+		"empty": {
+			"title": "Insert merge field",
+			"noClose": false,
+			"text": "Or pick a common fieldLegal basisLegal basis explanationLast day to objectFirst day to objectObjection term in weeksThis inserts {placeholder} into the template. {\"placeholder\":\"{{ field }}\"}",
+			"fields": [
+				{
+					"type": "x-nctextfield",
+					"label": "Field name",
+					"disabled": false
+				}
+			],
+			"buttons": [
+				{
+					"label": "Cancel",
+					"variant": null,
+					"disabled": false,
+					"busyIcon": false
+				},
+				{
+					"label": "Insert",
+					"variant": "primary",
+					"disabled": true,
+					"busyIcon": false
+				}
+			]
+		},
+		"filled": {
+			"title": "Insert merge field",
+			"noClose": false,
+			"text": "Or pick a common fieldLegal basisLegal basis explanationLast day to objectFirst day to objectObjection term in weeksThis inserts {placeholder} into the template. {\"placeholder\":\"{{ zaak.nummer }}\"}",
+			"fields": [
+				{
+					"type": "x-nctextfield",
+					"label": "Field name",
+					"disabled": false
+				}
+			],
+			"buttons": [
+				{
+					"label": "Cancel",
+					"variant": null,
+					"disabled": false,
+					"busyIcon": false
+				},
+				{
+					"label": "Insert",
+					"variant": "primary",
+					"disabled": false,
+					"busyIcon": false
+				}
+			]
+		},
+		"callsBeforeClick": [],
+		"busy": {
+			"view": {
+				"title": "Insert merge field",
+				"noClose": false,
+				"text": "Or pick a common fieldLegal basisLegal basis explanationLast day to objectFirst day to objectObjection term in weeksThis inserts {placeholder} into the template. {\"placeholder\":\"{{ field }}\"}",
+				"fields": [
+					{
+						"type": "x-nctextfield",
+						"label": "Field name",
+						"disabled": false
+					}
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Insert",
+						"variant": "primary",
+						"disabled": true,
+						"busyIcon": false
+					}
+				]
+			},
+			"calls": [],
+			"emitted": [["insert", "zaak.nummer"]]
+		},
+		"done": {
+			"view": {
+				"title": "Insert merge field",
+				"noClose": false,
+				"text": "Or pick a common fieldLegal basisLegal basis explanationLast day to objectFirst day to objectObjection term in weeksThis inserts {placeholder} into the template. {\"placeholder\":\"{{ field }}\"}",
+				"fields": [
+					{
+						"type": "x-nctextfield",
+						"label": "Field name",
+						"disabled": false
+					}
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Insert",
+						"variant": "primary",
+						"disabled": true,
+						"busyIcon": false
+					}
+				]
+			},
+			"emitted": []
+		},
+		"refused": {
+			"view": {
+				"title": "Insert merge field",
+				"noClose": false,
+				"text": "Or pick a common fieldLegal basisLegal basis explanationLast day to objectFirst day to objectObjection term in weeksThis inserts {placeholder} into the template. {\"placeholder\":\"{{ field }}\"}",
+				"fields": [
+					{
+						"type": "x-nctextfield",
+						"label": "Field name",
+						"disabled": false
+					}
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Insert",
+						"variant": "primary",
+						"disabled": true,
+						"busyIcon": false
+					}
+				]
+			},
+			"emitted": []
+		},
+		"cancel": {
+			"emitted": [["close"]]
+		}
+	},
+	"conditionalSection": {
+		"empty": {
+			"title": "Insert conditional section",
+			"noClose": false,
+			"text": "{% if field is not empty %}…{% endif %}",
+			"fields": [
+				{
+					"type": "x-nctextfield",
+					"label": "Field name",
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Operator",
+					"disabled": false
+				}
+			],
+			"buttons": [
+				{
+					"label": "Cancel",
+					"variant": null,
+					"disabled": false,
+					"busyIcon": false
+				},
+				{
+					"label": "Insert",
+					"variant": "primary",
+					"disabled": false,
+					"busyIcon": false
+				}
+			]
+		},
+		"filled": {
+			"title": "Insert conditional section",
+			"noClose": false,
+			"text": "{% if zaak.type == \"bezwaar\" %}…{% endif %}",
+			"fields": [
+				{
+					"type": "x-nctextfield",
+					"label": "Field name",
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Operator",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Value",
+					"disabled": false
+				}
+			],
+			"buttons": [
+				{
+					"label": "Cancel",
+					"variant": null,
+					"disabled": false,
+					"busyIcon": false
+				},
+				{
+					"label": "Insert",
+					"variant": "primary",
+					"disabled": false,
+					"busyIcon": false
+				}
+			]
+		},
+		"callsBeforeClick": [],
+		"busy": {
+			"view": {
+				"title": "Insert conditional section",
+				"noClose": false,
+				"text": "{% if field == \"\" %}…{% endif %}",
+				"fields": [
+					{
+						"type": "x-nctextfield",
+						"label": "Field name",
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Operator",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Value",
+						"disabled": false
+					}
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Insert",
+						"variant": "primary",
+						"disabled": false,
+						"busyIcon": false
+					}
+				]
+			},
+			"calls": [],
+			"emitted": [
+				[
+					"insert",
+					{
+						"field": "zaak.type",
+						"op": "equals",
+						"value": "bezwaar"
+					}
+				]
+			]
+		},
+		"done": {
+			"view": {
+				"title": "Insert conditional section",
+				"noClose": false,
+				"text": "{% if field == \"\" %}…{% endif %}",
+				"fields": [
+					{
+						"type": "x-nctextfield",
+						"label": "Field name",
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Operator",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Value",
+						"disabled": false
+					}
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Insert",
+						"variant": "primary",
+						"disabled": false,
+						"busyIcon": false
+					}
+				]
+			},
+			"emitted": []
+		},
+		"refused": {
+			"view": {
+				"title": "Insert conditional section",
+				"noClose": false,
+				"text": "{% if field == \"\" %}…{% endif %}",
+				"fields": [
+					{
+						"type": "x-nctextfield",
+						"label": "Field name",
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Operator",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Value",
+						"disabled": false
+					}
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Insert",
+						"variant": "primary",
+						"disabled": false,
+						"busyIcon": false
+					}
+				]
+			},
+			"emitted": []
+		},
+		"cancel": {
+			"emitted": [["close"]]
+		}
+	},
+	"wizardQuestionNew": {
+		"empty": {
+			"title": "New question",
+			"noClose": false,
+			"text": "An answer is requiredWrite the question.",
+			"fields": [
+				{
+					"type": "x-nctextfield",
+					"label": "Question",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Key",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextarea",
+					"label": "Help text (optional)",
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Answer type",
+					"disabled": false
+				},
+				{
+					"type": "x-nccheckboxradioswitch",
+					"label": null,
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Data path in the template (optional)",
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Ask only when this earlier question…",
+					"disabled": false
+				}
+			],
+			"buttons": [
+				{
+					"label": "Cancel",
+					"variant": null,
+					"disabled": false,
+					"busyIcon": false
+				},
+				{
+					"label": "Keep question",
+					"variant": "primary",
+					"disabled": true,
+					"busyIcon": false
+				}
+			]
+		},
+		"filled": {
+			"title": "New question",
+			"noClose": false,
+			"text": "An answer is required",
+			"fields": [
+				{
+					"type": "x-nctextfield",
+					"label": "Question",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Key",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextarea",
+					"label": "Help text (optional)",
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Answer type",
+					"disabled": false
+				},
+				{
+					"type": "x-nccheckboxradioswitch",
+					"label": null,
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Data path in the template (optional)",
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Ask only when this earlier question…",
+					"disabled": false
+				}
+			],
+			"buttons": [
+				{
+					"label": "Cancel",
+					"variant": null,
+					"disabled": false,
+					"busyIcon": false
+				},
+				{
+					"label": "Keep question",
+					"variant": "primary",
+					"disabled": false,
+					"busyIcon": false
+				}
+			]
+		},
+		"callsBeforeClick": [],
+		"busy": {
+			"view": {
+				"title": "New question",
+				"noClose": false,
+				"text": "An answer is required",
+				"fields": [
+					{
+						"type": "x-nctextfield",
+						"label": "Question",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Key",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextarea",
+						"label": "Help text (optional)",
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Answer type",
+						"disabled": false
+					},
+					{
+						"type": "x-nccheckboxradioswitch",
+						"label": null,
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Data path in the template (optional)",
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Ask only when this earlier question…",
+						"disabled": false
+					}
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Keep question",
+						"variant": "primary",
+						"disabled": false,
+						"busyIcon": false
+					}
+				]
+			},
+			"calls": [],
+			"emitted": [
+				[
+					"save",
+					{
+						"key": "datum",
+						"label": "Datum",
+						"type": "text",
+						"required": false
+					}
+				]
+			]
+		},
+		"done": {
+			"view": {
+				"title": "New question",
+				"noClose": false,
+				"text": "An answer is required",
+				"fields": [
+					{
+						"type": "x-nctextfield",
+						"label": "Question",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Key",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextarea",
+						"label": "Help text (optional)",
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Answer type",
+						"disabled": false
+					},
+					{
+						"type": "x-nccheckboxradioswitch",
+						"label": null,
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Data path in the template (optional)",
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Ask only when this earlier question…",
+						"disabled": false
+					}
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Keep question",
+						"variant": "primary",
+						"disabled": false,
+						"busyIcon": false
+					}
+				]
+			},
+			"emitted": []
+		},
+		"refused": {
+			"view": {
+				"title": "New question",
+				"noClose": false,
+				"text": "An answer is required",
+				"fields": [
+					{
+						"type": "x-nctextfield",
+						"label": "Question",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Key",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextarea",
+						"label": "Help text (optional)",
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Answer type",
+						"disabled": false
+					},
+					{
+						"type": "x-nccheckboxradioswitch",
+						"label": null,
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Data path in the template (optional)",
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Ask only when this earlier question…",
+						"disabled": false
+					}
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Keep question",
+						"variant": "primary",
+						"disabled": false,
+						"busyIcon": false
+					}
+				]
+			},
+			"emitted": []
+		},
+		"cancel": {
+			"emitted": [["close"]]
+		}
+	},
+	"wizardQuestionTakenKey": {
+		"empty": {
+			"title": "New question",
+			"noClose": false,
+			"text": "An answer is requiredWrite the question.",
+			"fields": [
+				{
+					"type": "x-nctextfield",
+					"label": "Question",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Key",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextarea",
+					"label": "Help text (optional)",
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Answer type",
+					"disabled": false
+				},
+				{
+					"type": "x-nccheckboxradioswitch",
+					"label": null,
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Data path in the template (optional)",
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Ask only when this earlier question…",
+					"disabled": false
+				}
+			],
+			"buttons": [
+				{
+					"label": "Cancel",
+					"variant": null,
+					"disabled": false,
+					"busyIcon": false
+				},
+				{
+					"label": "Keep question",
+					"variant": "primary",
+					"disabled": true,
+					"busyIcon": false
+				}
+			]
+		},
+		"filled": {
+			"title": "New question",
+			"noClose": false,
+			"text": "An answer is requiredAnother question already uses this key.",
+			"fields": [
+				{
+					"type": "x-nctextfield",
+					"label": "Question",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Key",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextarea",
+					"label": "Help text (optional)",
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Answer type",
+					"disabled": false
+				},
+				{
+					"type": "x-nccheckboxradioswitch",
+					"label": null,
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Data path in the template (optional)",
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Ask only when this earlier question…",
+					"disabled": false
+				}
+			],
+			"buttons": [
+				{
+					"label": "Cancel",
+					"variant": null,
+					"disabled": false,
+					"busyIcon": false
+				},
+				{
+					"label": "Keep question",
+					"variant": "primary",
+					"disabled": true,
+					"busyIcon": false
+				}
+			]
+		},
+		"callsBeforeClick": [],
+		"busy": {
+			"view": {
+				"title": "New question",
+				"noClose": false,
+				"text": "An answer is requiredAnother question already uses this key.",
+				"fields": [
+					{
+						"type": "x-nctextfield",
+						"label": "Question",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Key",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextarea",
+						"label": "Help text (optional)",
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Answer type",
+						"disabled": false
+					},
+					{
+						"type": "x-nccheckboxradioswitch",
+						"label": null,
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Data path in the template (optional)",
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Ask only when this earlier question…",
+						"disabled": false
+					}
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Keep question",
+						"variant": "primary",
+						"disabled": true,
+						"busyIcon": false
+					}
+				]
+			},
+			"calls": [],
+			"emitted": [
+				[
+					"save",
+					{
+						"key": "naam",
+						"label": "Naam",
+						"type": "text",
+						"required": false
+					}
+				]
+			]
+		},
+		"done": {
+			"view": {
+				"title": "New question",
+				"noClose": false,
+				"text": "An answer is requiredAnother question already uses this key.",
+				"fields": [
+					{
+						"type": "x-nctextfield",
+						"label": "Question",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Key",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextarea",
+						"label": "Help text (optional)",
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Answer type",
+						"disabled": false
+					},
+					{
+						"type": "x-nccheckboxradioswitch",
+						"label": null,
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Data path in the template (optional)",
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Ask only when this earlier question…",
+						"disabled": false
+					}
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Keep question",
+						"variant": "primary",
+						"disabled": true,
+						"busyIcon": false
+					}
+				]
+			},
+			"emitted": []
+		},
+		"refused": {
+			"view": {
+				"title": "New question",
+				"noClose": false,
+				"text": "An answer is requiredAnother question already uses this key.",
+				"fields": [
+					{
+						"type": "x-nctextfield",
+						"label": "Question",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Key",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextarea",
+						"label": "Help text (optional)",
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Answer type",
+						"disabled": false
+					},
+					{
+						"type": "x-nccheckboxradioswitch",
+						"label": null,
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Data path in the template (optional)",
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Ask only when this earlier question…",
+						"disabled": false
+					}
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Keep question",
+						"variant": "primary",
+						"disabled": true,
+						"busyIcon": false
+					}
+				]
+			},
+			"emitted": []
+		},
+		"cancel": {
+			"emitted": [["close"]]
+		}
+	},
+	"separatorSheets": {
+		"empty": {
+			"title": "Print separator sheets",
+			"noClose": false,
+			"text": "Put a sheet in front of each document in the scanner batch. The batch is cut at every sheet, and each part lands in the inbox with its case number.",
+			"fields": [
+				{
+					"type": "x-ncselect",
+					"label": "Scan profile",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextarea",
+					"label": "Case numbers, one per line",
+					"disabled": false
+				}
+			],
+			"buttons": [
+				{
+					"label": "Cancel",
+					"variant": null,
+					"disabled": false,
+					"busyIcon": false
+				},
+				{
+					"label": "Print %n sheets #0",
+					"variant": "primary",
+					"disabled": true,
+					"busyIcon": false
+				}
+			]
+		},
+		"filled": {
+			"title": "Print separator sheets",
+			"noClose": false,
+			"text": "Put a sheet in front of each document in the scanner batch. The batch is cut at every sheet, and each part lands in the inbox with its case number.",
+			"fields": [
+				{
+					"type": "x-ncselect",
+					"label": "Scan profile",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextarea",
+					"label": "Case numbers, one per line",
+					"disabled": false
+				}
+			],
+			"buttons": [
+				{
+					"label": "Cancel",
+					"variant": null,
+					"disabled": false,
+					"busyIcon": false
+				},
+				{
+					"label": "Print %n sheets #2",
+					"variant": "primary",
+					"disabled": false,
+					"busyIcon": false
+				}
+			]
+		},
+		"callsBeforeClick": [["separatorSheets", "listScanProfiles"]],
+		"busy": {
+			"view": {
+				"title": "Print separator sheets",
+				"noClose": false,
+				"text": "Put a sheet in front of each document in the scanner batch. The batch is cut at every sheet, and each part lands in the inbox with its case number.",
+				"fields": [
+					{
+						"type": "x-ncselect",
+						"label": "Scan profile",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextarea",
+						"label": "Case numbers, one per line",
+						"disabled": false
+					}
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Print %n sheets #2",
+						"variant": "primary",
+						"disabled": true,
+						"busyIcon": false
+					}
+				]
+			},
+			"calls": [
+				["separatorSheets", "renderSeparatorSheets", "p-1", ["Z-1", "Z-2"]]
+			],
+			"emitted": []
+		},
+		"done": {
+			"view": {
+				"title": "Print separator sheets",
+				"noClose": false,
+				"text": "Put a sheet in front of each document in the scanner batch. The batch is cut at every sheet, and each part lands in the inbox with its case number.",
+				"fields": [
+					{
+						"type": "x-ncselect",
+						"label": "Scan profile",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextarea",
+						"label": "Case numbers, one per line",
+						"disabled": false
+					}
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Print %n sheets #2",
+						"variant": "primary",
+						"disabled": false,
+						"busyIcon": false
+					}
+				]
+			},
+			"emitted": [["close"]]
+		},
+		"refused": {
+			"view": {
+				"title": "Print separator sheets",
+				"noClose": false,
+				"text": "Put a sheet in front of each document in the scanner batch. The batch is cut at every sheet, and each part lands in the inbox with its case number.The separator sheets could not be made. Check the case numbers and try again.",
+				"fields": [
+					{
+						"type": "x-ncselect",
+						"label": "Scan profile",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextarea",
+						"label": "Case numbers, one per line",
+						"disabled": false
+					}
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Print %n sheets #2",
+						"variant": "primary",
+						"disabled": false,
+						"busyIcon": false
+					}
+				]
+			},
+			"emitted": []
+		},
+		"cancel": {
+			"emitted": [["close"]]
+		}
+	}
+}
