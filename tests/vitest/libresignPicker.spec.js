@@ -30,7 +30,7 @@ describe('the signing provider picker', () => {
 
 	it('asks about a qualified certificate only for LibreSign, and saves it', () => {
 		expect(page).toMatch(
-			/v-if="settings\.signing_provider === 'libresign'"\s+class="setting-item"/,
+			/<SettingSwitchRow\s+v-if="settings\.signing_provider === 'libresign'"\s+v-model="settings\.libresign_qualified"/,
 		)
 		expect(page).toContain(
 			"libresign_qualified: this.settings.libresign_qualified ? '1' : '0'",
