@@ -56,6 +56,51 @@ export const hostObjectLeaf = {
 		},
 
 		/**
+		 * Read a Filinq route about the host object into the leaf. Sets
+		 * `error` on a refusal or an unreadable answer and clears `loading`
+		 * once done. Without an object nothing is asked: the route would
+		 * answer for the caller's whole set, not for one object.
+		 *
+		 * @param {string} path The route, e.g. `/apps/filinq/api/case-documents/files`.
+		 * @param {function(object): void} apply Receives the parsed JSON body.
+		 * @return {Promise<void>} Resolves once the answer is applied.
+		 *
+		 * @spec openspec/changes/leaf-integrations/specs/document-register/spec.md
+		 */
+		async loadForHostObject(path, apply) {
+			if (this.objectId === '') {
+				this.loading = false
+				return
+			}
+			try {
+				const response = await this.fetchForHostObject(path)
+				if (response.ok === false) {
+					this.error = true
+					return
+				}
+				apply(await response.json())
+			} catch {
+				this.error = true
+			} finally {
+				this.loading = false
+			}
+		},
+
+		/**
+		 * Read a route that answers `{ results: [...] }` into `rows`.
+		 *
+		 * @param {string} path The route.
+		 * @return {Promise<void>} Resolves once `rows` reflects the answer.
+		 *
+		 * @spec openspec/changes/leaf-integrations/specs/document-register/spec.md
+		 */
+		loadHostRows(path) {
+			return this.loadForHostObject(path, (body) => {
+				this.rows = Array.isArray(body.results) ? body.results : []
+			})
+		},
+
+		/**
 		 * The current page's request token.
 		 *
 		 * @return {string} The token, or an empty string when there is none.
