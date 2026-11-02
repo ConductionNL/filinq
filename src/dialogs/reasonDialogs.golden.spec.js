@@ -84,7 +84,7 @@ const SITES = {
 			name: 'Make final',
 			explanation: 'Why?',
 			placeholder: 'Reason',
-			confirmLabel: 'Make final',
+			confirmLabel: 'Freeze',
 		},
 		events: ['confirm', 'cancel'],
 		fill: { reason: '  Signed  ' },
