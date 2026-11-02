@@ -107,13 +107,7 @@ SPDX-License-Identifier: EUPL-1.2
 		<CnConfirmDialog
 			v-if="restoreTarget"
 			:dialogTitle="t('filinq', 'Restore version')"
-			:message="
-				t(
-					'filinq',
-					'Restore to version {n}? The current state will be saved as a new version first.',
-					{ n: restoreTarget.timestamp },
-				)
-			"
+			:message="restoreMessage"
 			:confirmLabel="t('filinq', 'Restore')"
 			@confirm="confirmRestore"
 			@close="restoreTarget = null" />
@@ -190,6 +184,20 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The restore question; a document version is named by its timestamp.
+		 *
+		 * @return {string}
+		 * @spec openspec/specs/document-versions/spec.md
+		 */
+		restoreMessage() {
+			return t(
+				'filinq',
+				'Restore to version {n}? The current state will be saved as a new version first.',
+				{ n: this.restoreTarget?.timestamp },
+			)
+		},
+
 		/**
 		 * Table columns for the version list.
 		 *

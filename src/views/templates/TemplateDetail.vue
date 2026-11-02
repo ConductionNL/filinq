@@ -299,13 +299,7 @@
 		<CnConfirmDialog
 			v-if="restoreTarget"
 			:dialogTitle="t('filinq', 'Restore version')"
-			:message="
-				t(
-					'filinq',
-					'Restore to version {n}? The current state will be saved as a new version first.',
-					{ n: restoreTarget.version },
-				)
-			"
+			:message="restoreMessage"
 			:confirmLabel="t('filinq', 'Restore')"
 			@confirm="executeRestore"
 			@close="restoreTarget = null" />
@@ -379,6 +373,21 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * Question of the restore dialog, naming the template version.
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/advanced-template-management/tasks.md#task-6
+		 */
+		restoreMessage() {
+			const n = this.restoreTarget?.version
+			return t(
+				'filinq',
+				'Restore to version {n}? The current state will be saved as a new version first.',
+				{ n },
+			)
+		},
+
 		/**
 		 * The stored template HTML, sanitised before it is mounted in the editor.
 		 *
