@@ -1,4 +1,5 @@
 <script>
+import { CnDialogActions } from '@conduction/nextcloud-vue'
 import { translate as t } from '@nextcloud/l10n'
 import {
 	NcButton,
@@ -8,7 +9,6 @@ import {
 	NcTextField,
 } from '@nextcloud/vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
-import FormDialogActions from '../components/FormDialogActions.vue'
 import { matchRuleForm } from '../mixins/matchRuleForm.js'
 
 /**
@@ -32,7 +32,7 @@ function blankForm() {
 export default {
 	name: 'ProhibitionFormModal',
 	components: {
-		FormDialogActions,
+		CnDialogActions,
 		NcButton,
 		NcCheckboxRadioSwitch,
 		NcDialog,
@@ -201,7 +201,7 @@ export default {
 		</div>
 
 		<template #actions>
-			<FormDialogActions
+			<CnDialogActions
 				v-bind="formActions"
 				@cancel="onCancel"
 				@submit="submit" />
