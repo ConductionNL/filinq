@@ -163,7 +163,7 @@ const unhandled = []
 function pendingCall(call) {
 	mockCalls.push(call)
 	const answer = new Promise((resolve, reject) =>
-		mockPending.push({ resolve, reject }),
+		mockPending.push({ call, resolve, reject }),
 	)
 	// A page that drops the promise must not crash the run when it is rejected.
 	answer.catch(() => {})
@@ -549,7 +549,9 @@ describe('a failed confirm resets only its own dialog', () => {
 			page.vm.$data[target] = SECOND
 			await nextTick()
 			await clickConfirm(document.body)
-			mockPending.shift().reject(new Error('refused'))
+			const store = /Store$/
+			const first = mockPending.find((p) => store.test(p.call[0]))
+			first.reject(new Error('refused'))
 			for (let i = 0; i < 5; i++) {
 				await nextTick()
 			}
