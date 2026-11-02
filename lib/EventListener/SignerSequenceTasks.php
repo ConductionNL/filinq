@@ -93,4 +93,25 @@ class SignerSequenceTasks {
 
 		return array_values(array_filter($tasks, 'is_object'));
 	}//end forSequence()
+
+	/**
+	 * The tasks of a sequence at a position before the given one.
+	 *
+	 * @param string $sequenceUuid UUID of the OR task sequence.
+	 * @param int    $position     The position whose predecessors to read.
+	 *
+	 * @return array<int, object> The earlier tasks; empty when none can be read.
+	 *
+	 * @spec openspec/specs/signing-via-or-approval-with-provider-plugins/spec.md
+	 */
+	public function before(string $sequenceUuid, int $position): array {
+		$earlier = [];
+		foreach (($this->forSequence(sequenceUuid: $sequenceUuid) ?? []) as $task) {
+			if (is_callable([$task, 'getSequencePosition']) === true && (int) $task->getSequencePosition() < $position) {
+				$earlier[] = $task;
+			}
+		}
+
+		return $earlier;
+	}//end before()
 }//end class

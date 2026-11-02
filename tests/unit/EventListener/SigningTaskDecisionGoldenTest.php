@@ -55,6 +55,7 @@ use stdClass;
  * @uses   \OCA\Filinq\Event\SignerStepRejectedEvent
  * @uses   \OCA\Filinq\EventListener\SignerStepDecision
  * @uses   \OCA\Filinq\EventListener\SignerStepTask
+ * @uses   \OCA\Filinq\EventListener\SignerApprovals
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */

@@ -64,6 +64,8 @@ use stdClass;
  * @uses \OCA\Filinq\Event\SignerChainCompletedEvent
  * @uses \OCA\Filinq\EventListener\SignerStepDecision
  * @uses \OCA\Filinq\EventListener\SignerStepTask
+ * @uses \OCA\Filinq\EventListener\SignerApprovals
+ * @uses \OCA\Filinq\EventListener\SignerSequenceTasks
  *
  * @category Tests
  * @package  OCA\Filinq\Tests\Unit\EventListener
@@ -143,7 +145,10 @@ final class SigningTaskListenerTest extends TestCase {
 		$this->settingsService = $this->createMock(SettingsService::class);
 		$this->objectService = $this->createMock(ObjectService::class);
 		$this->logger = $this->createMock(LoggerInterface::class);
-		$this->sequenceTasks = $this->createMock(SignerSequenceTasks::class);
+		$this->sequenceTasks = $this->getMockBuilder(SignerSequenceTasks::class)
+			->disableOriginalConstructor()
+			->onlyMethods(['forSequence'])
+			->getMock();
 
 		$this->settingsService->method('resolveSigningRequestBinding')
 			->willReturn(['register' => 'filinq', 'schema' => 'signingRequest']);
@@ -243,6 +248,14 @@ final class SigningTaskListenerTest extends TestCase {
 				)
 			);
 
+		$this->sequenceTasks->method('forSequence')->with('seq-1')->willReturn(
+			[
+				$this->positionTask(position: 1, outcome: 'approved', completedBy: 'alice'),
+				$this->makeTask(state: 'enabled'),
+				new Task(uuid: 'task-3', state: 'available', sequenceUuid: 'seq-1', sequencePosition: 3),
+			]
+		);
+
 		$event = new TaskTransitionedEvent(
 			task: $this->makeTask(state: 'enabled'),
 			previousState: 'available'
@@ -250,6 +263,100 @@ final class SigningTaskListenerTest extends TestCase {
 		$this->listener->handle($event);
 
 	}//end testEnabledTransitionDispatchesPendingAndInvokesProvider()
+
+	/**
+	 * Earlier positions that are not a signed approval.
+	 *
+	 * @return array<string, array{0: string|null, 1: string|null}>
+	 */
+	public static function unsignedEarlierPositions(): array {
+		return [
+			'done' => ['done', 'alice'],
+			'empty outcome' => ['', 'alice'],
+			'no outcome' => [null, 'alice'],
+			'resolved' => ['resolved', 'alice'],
+			'approved without signer' => ['approved', null],
+			'approved with blank signer' => ['approved', '  '],
+		];
+	}//end unsignedEarlierPositions()
+
+	/**
+	 * A position enabled after an earlier position that was not a signed
+	 * approval is not a signer's turn: no pending event, no provider call.
+	 *
+	 * @param string|null $outcome     The earlier position's outcome.
+	 * @param string|null $completedBy The earlier position's completing user.
+	 *
+	 * @return void
+	 */
+	#[DataProvider('unsignedEarlierPositions')]
+	public function testEnabledPositionAfterAnUnsignedEarlierPositionInvokesNoProvider(?string $outcome, ?string $completedBy): void {
+		$this->sequenceTasks->method('forSequence')->with('seq-1')->willReturn(
+			[$this->positionTask(position: 1, outcome: $outcome, completedBy: $completedBy), $this->makeTask(state: 'enabled')]
+		);
+		$this->providerFactory->expects($this->never())->method('getActiveProviderIdentifier');
+		$this->dispatcher->expects($this->never())->method('dispatchTyped');
+		$this->logger->expects($this->once())->method('warning')->with(
+			$this->stringContains('no signer is asked'),
+			['sequenceUuid' => 'seq-1', 'taskUuid' => 'task-1', 'objectUuid' => self::OWNED_OBJECT]
+		);
+
+		$this->listener->handle(new TaskTransitionedEvent(task: $this->makeTask(state: 'enabled'), previousState: 'available'));
+
+	}//end testEnabledPositionAfterAnUnsignedEarlierPositionInvokesNoProvider()
+
+	/**
+	 * Earlier positions that cannot be read, or are missing, fail closed.
+	 *
+	 * @return array<string, array{0: array<int, Task>|null}>
+	 */
+	public static function unreadableEarlierPositions(): array {
+		return [
+			'unreadable' => [null],
+			'empty' => [[]],
+			'only the enabled position' => [[new Task(uuid: 'task-1', state: 'enabled', sequenceUuid: 'seq-1', sequencePosition: 2)]],
+		];
+	}//end unreadableEarlierPositions()
+
+	/**
+	 * A position whose earlier positions cannot be read is not announced.
+	 *
+	 * @param array<int, Task>|null $tasks What the reader returns.
+	 *
+	 * @return void
+	 */
+	#[DataProvider('unreadableEarlierPositions')]
+	public function testUnreadableEarlierPositionsInvokeNoProvider(?array $tasks): void {
+		$this->sequenceTasks->method('forSequence')->willReturn($tasks);
+		$this->providerFactory->expects($this->never())->method('getActiveProviderIdentifier');
+		$this->dispatcher->expects($this->never())->method('dispatchTyped');
+
+		$this->listener->handle(new TaskTransitionedEvent(task: $this->makeTask(state: 'enabled'), previousState: 'available'));
+
+	}//end testUnreadableEarlierPositionsInvokeNoProvider()
+
+	/**
+	 * The first position has no earlier signer to wait for.
+	 *
+	 * @return void
+	 */
+	public function testTheFirstPositionIsAnnouncedWithoutReadingTheSequence(): void {
+		$this->sequenceTasks->expects($this->never())->method('forSequence');
+		$this->providerFactory->expects($this->once())->method('getActiveProviderIdentifier')->willReturn('native');
+		$this->dispatcher->expects($this->once())->method('dispatchTyped')
+			->with($this->isInstanceOf(SignerStepPendingEvent::class));
+
+		$first = new Task(
+			uuid: 'task-1',
+			state: 'enabled',
+			candidateGroups: ['filinq-signers'],
+			objectUuid: self::OWNED_OBJECT,
+			sequenceUuid: 'seq-1',
+			sequencePosition: 1
+		);
+		$this->listener->handle(new TaskTransitionedEvent(task: $first, previousState: 'available'));
+
+	}//end testTheFirstPositionIsAnnouncedWithoutReadingTheSequence()
 
 	/**
 	 * A transition that keeps an enabled task enabled (e.g. reassignment)

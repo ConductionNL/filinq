@@ -20,6 +20,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\EventListener;
 
 use OCA\Filinq\EventListener\SignerSequenceTasks;
+use OCA\OpenRegister\Db\Task;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -99,6 +100,22 @@ final class SignerSequenceTasksTest extends TestCase {
 		$this->assertSame([$first, $second], $this->reader(mapper: $mapper)->forSequence(sequenceUuid: 'seq-1'));
 		$this->assertSame(['seq-1'], $mapper->asked);
 	}//end testReturnsTheSequenceTasks()
+
+	/**
+	 * Only the tasks at an earlier position come back; an unreadable sequence gives none.
+	 *
+	 * @return void
+	 */
+	public function testBeforeReturnsOnlyEarlierPositions(): void {
+		$first  = new Task(uuid: 'task-1', sequencePosition: 1);
+		$second = new Task(uuid: 'task-2', sequencePosition: 2);
+		$third  = new Task(uuid: 'task-3', sequencePosition: 3);
+		$reader = $this->reader(mapper: $this->mapper(result: [$first, $second, $third, new stdClass()]));
+
+		$this->assertSame([$first, $second], $reader->before(sequenceUuid: 'seq-1', position: 3));
+		$this->assertSame([], $reader->before(sequenceUuid: 'seq-1', position: 1));
+		$this->assertSame([], $this->reader(mapper: $this->mapper(result: null))->before(sequenceUuid: 'seq-1', position: 3));
+	}//end testBeforeReturnsOnlyEarlierPositions()
 
 	/**
 	 * A mapper without findBySequence reads as null and warns.
