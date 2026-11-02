@@ -296,20 +296,22 @@
 			@close="showConditionalDialog = false"
 			@insert="insertConditionalSection" />
 
-		<ConfirmRestoreVersionDialog
+		<CnConfirmDialog
 			v-if="restoreTarget"
-			:versionNumber="restoreTarget ? restoreTarget.version : 0"
+			:dialogTitle="t('filinq', 'Restore version')"
+			:message="restoreMessage"
+			:confirmLabel="t('filinq', 'Restore')"
 			@confirm="executeRestore"
-			@cancel="restoreTarget = null" />
+			@close="restoreTarget = null" />
 	</div>
 </template>
 
 <script>
+import { CnConfirmDialog } from '@conduction/nextcloud-vue'
 import { translate as t } from '@nextcloud/l10n'
 import { NcButton, NcEmptyContent, NcLoadingIcon, NcTextField } from '@nextcloud/vue'
 import TemplateLintChecklist from '../../components/TemplateLintChecklist.vue'
 import ConditionalSectionDialog from '../../dialogs/ConditionalSectionDialog.vue'
-import ConfirmRestoreVersionDialog from '../../dialogs/ConfirmRestoreVersionDialog.vue'
 import MergeFieldDialog from '../../dialogs/MergeFieldDialog.vue'
 import WizardAuthoringPanel from './WizardAuthoringPanel.vue'
 import { loadTemplateWizard } from '../../services/wizard.js'
@@ -325,7 +327,7 @@ export default {
 		NcTextField,
 		ConditionalSectionDialog,
 		MergeFieldDialog,
-		ConfirmRestoreVersionDialog,
+		CnConfirmDialog,
 		TemplateLintChecklist,
 		WizardAuthoringPanel,
 	},
@@ -371,6 +373,21 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * Question of the restore dialog, naming the template version.
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/advanced-template-management/tasks.md#task-6
+		 */
+		restoreMessage() {
+			const n = this.restoreTarget?.version
+			return t(
+				'filinq',
+				'Restore to version {n}? The current state will be saved as a new version first.',
+				{ n },
+			)
+		},
+
 		/**
 		 * The stored template HTML, sanitised before it is mounted in the editor.
 		 *

@@ -256,18 +256,19 @@
 			</section>
 		</template>
 
-		<ConfirmActionDialog
+		<CnConfirmDialog
 			v-if="removeTarget"
-			:name="t('filinq', 'Remove document')"
+			:dialogTitle="t('filinq', 'Remove document')"
 			:message="removeMessage"
-			:busy="dossierStore.saving"
+			:confirmLabel="t('filinq', 'Delete')"
+			variant="error"
 			@confirm="executeRemove"
-			@cancel="removeTarget = null" />
+			@close="removeTarget = null" />
 	</div>
 </template>
 
 <script>
-import { CnStatusBadge } from '@conduction/nextcloud-vue'
+import { CnConfirmDialog, CnStatusBadge } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { translatePlural as n, translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
@@ -286,7 +287,6 @@ import FolderAccount from 'vue-material-design-icons/FolderAccount.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import LegalHoldBadge from '../../components/LegalHoldBadge.vue'
 import WizardEntryActions from '../../components/WizardEntryActions.vue'
-import ConfirmActionDialog from '../../dialogs/ConfirmActionDialog.vue'
 import { dossierStore } from '../../store/store.js'
 
 /**
@@ -302,7 +302,7 @@ export default {
 	name: 'DossierDetail',
 	components: {
 		CnStatusBadge,
-		ConfirmActionDialog,
+		CnConfirmDialog,
 		Delete,
 		DotsHorizontal,
 		EyeOffOutline,

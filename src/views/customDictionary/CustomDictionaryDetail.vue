@@ -156,23 +156,23 @@
 			runs only from @confirm, so an explicit confirmation is still
 			required before a term disappears.
 		-->
-		<ConfirmActionDialog
+		<CnConfirmDialog
 			v-if="removeTarget"
-			:name="t('filinq', 'Remove term')"
+			ref="confirmDialog"
+			:dialogTitle="t('filinq', 'Remove term')"
 			:message="removeMessage"
 			:confirmLabel="t('filinq', 'Remove')"
-			:busy="removing"
+			variant="error"
 			@confirm="executeRemoveTerm"
-			@cancel="cancelRemoveTerm" />
+			@close="cancelRemoveTerm" />
 	</div>
 </template>
 
 <script>
-import { CnStatusBadge } from '@conduction/nextcloud-vue'
+import { CnConfirmDialog, CnStatusBadge } from '@conduction/nextcloud-vue'
 import { translate as t } from '@nextcloud/l10n'
 import { NcButton, NcEmptyContent, NcLoadingIcon, NcTextField } from '@nextcloud/vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
-import ConfirmActionDialog from '../../dialogs/ConfirmActionDialog.vue'
 import CustomDictionaryFormDialog from '../../dialogs/CustomDictionaryFormDialog.vue'
 import CustomDictionaryImportDialog from '../../dialogs/CustomDictionaryImportDialog.vue'
 import { customDictionaryStore } from '../../store/store.js'
@@ -189,7 +189,7 @@ export default {
 		Delete,
 		CustomDictionaryFormDialog,
 		CustomDictionaryImportDialog,
-		ConfirmActionDialog,
+		CnConfirmDialog,
 	},
 
 	data() {
@@ -205,7 +205,6 @@ export default {
 			importing: false,
 			importError: '',
 			removeTarget: null, // term awaiting removal confirmation, or null
-			removing: false,
 			matchModeColorMap: {
 				exact: 'error',
 				caseInsensitive: 'primary',
@@ -346,7 +345,7 @@ export default {
 		/**
 		 * Ask for confirmation before removing a term.
 		 *
-		 * Opens ConfirmActionDialog; nothing is removed here.
+		 * Opens the confirm dialog; nothing is removed here.
 		 *
 		 * @param {object} term - The term to remove.
 		 * @spec openspec/specs/custom-dictionary-recognition/spec.md
@@ -379,14 +378,12 @@ export default {
 				return
 			}
 			const id = term['@self']?.id || term.id
-			this.removing = true
 			try {
 				await customDictionaryStore.deleteTerm(this.dictionaryId, id)
 				this.removeTarget = null
 			} catch (err) {
 				console.error('Failed to remove term:', err)
-			} finally {
-				this.removing = false
+				this.$refs.confirmDialog?.setResult(null)
 			}
 		},
 
