@@ -207,7 +207,10 @@ pending), a committed `TaskTerminalEvent` with state `completed` (rejected when
 the outcome is in the rejecting vocabulary; approved only when the outcome is
 `approved` and the task names its completing user; otherwise no signer event
 and a warning carrying only ids),
-and `TaskSequenceCompletedEvent` (final approval). Uncommitted dispatches and
+and `TaskSequenceCompletedEvent` (final approval, re-dispatched only when
+every position's task of the sequence has outcome `approved` and a non-blank
+completing user; otherwise no chain event and a warning carrying only ids,
+because OR advances a sequence on any non-rejecting completion). Uncommitted dispatches and
 terminal-but-not-completed states (cancel, moot, run termination) SHALL be
 ignored. An event belongs to filinq when its anchor object resolves in the
 configured signingRequest register/schema; with the binding unconfigured,
@@ -248,6 +251,16 @@ every event is foreign.
 - GIVEN a `TaskSequenceCompletedEvent` whose sequence anchors on a filinq signing request
 - WHEN the listener handles the event
 - THEN `SignerChainCompletedEvent` SHALL be dispatched carrying the sequence uuid, final task uuid, decider, resolved approving status and object uuid
+
+#### Scenario: A sequence completed without every signer approving dispatches no chain event
+
+@e2e exclude event bridge — same PHPUnit coverage
+
+- GIVEN a `TaskSequenceCompletedEvent` whose sequence anchors on a filinq signing request
+- AND one of its positions completed with an empty, missing or non-approving outcome, or without `completedBy`
+- WHEN the listener handles the event
+- THEN `SignerChainCompletedEvent` SHALL NOT be dispatched
+- AND a warning SHALL be logged carrying the sequence, final task and object uuids only
 
 #### Scenario: Foreign, uncommitted and non-completed events are ignored
 

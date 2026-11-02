@@ -150,7 +150,7 @@ class SignerEventTranslator {
 			return;
 		}
 
-		if ($decision->isApproving === false || $decision->userId === null || $decision->userId === '') {
+		if ($decision->isApproving === false || trim((string) $decision->userId) === '') {
 			$this->logger->warning(
 				'SigningTaskListener: completed task without an approving outcome and signer; no signer event dispatched',
 				[

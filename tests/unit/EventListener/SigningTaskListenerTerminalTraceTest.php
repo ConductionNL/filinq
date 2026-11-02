@@ -27,6 +27,7 @@ namespace OCA\Filinq\Tests\Unit\EventListener;
 use OCA\Filinq\EventListener\SignerEventTranslator;
 use OCA\Filinq\EventListener\SignerStepDecision;
 use OCA\Filinq\EventListener\SignerStepTask;
+use OCA\Filinq\EventListener\SignerSequenceTasks;
 use OCA\Filinq\EventListener\SigningTaskListener;
 use OCA\Filinq\Kernel\Contracts\SettingsServiceInterface;
 use OCA\OpenRegister\Db\Task;
@@ -181,7 +182,7 @@ class SigningTaskListenerTerminalTraceTest extends TestCase {
 		$settings->method('resolveSigningRequestBinding')->willReturn(['register' => 'filinq', 'schema' => 'signingRequest']);
 		$settings->method('getObjectService')->willReturn($this->objects);
 
-		$listener = new SigningTaskListener(translator: $this->translator, settingsService: $settings, logger: $this->createMock(LoggerInterface::class));
+		$listener = new SigningTaskListener(translator: $this->translator, settingsService: $settings, logger: $this->createMock(LoggerInterface::class), sequenceTasks: $this->createMock(SignerSequenceTasks::class));
 		$listener->handle(new TaskTerminalEvent(task: $task, committed: $committed));
 	}//end dispatch()
 
