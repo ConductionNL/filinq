@@ -163,7 +163,7 @@ const unhandled = []
 function pendingCall(call) {
 	mockCalls.push(call)
 	const answer = new Promise((resolve, reject) =>
-		mockPending.push({ resolve, reject }),
+		mockPending.push({ call, resolve, reject }),
 	)
 	// A page that drops the promise must not crash the run when it is rejected.
 	answer.catch(() => {})
@@ -257,6 +257,21 @@ const CONFIRM_DIALOGS =
 	/\/(ConfirmActionDialog|ConfirmDeleteTemplateDialog|ConfirmRestoreVersionDialog)\.vue$/
 
 /**
+ * Whether a bare import resolves to an installed package.
+ *
+ * @param {string} spec The import.
+ * @return {boolean} Installed.
+ */
+function isInstalled(spec) {
+	try {
+		require.resolve(spec)
+		return true
+	} catch {
+		return false
+	}
+}
+
+/**
  * Replace every import of a page, except the libraries above, the confirm
  * dialogs and the app's mixins, with a stub (components) or a recording module (everything else).
  *
@@ -278,7 +293,10 @@ function mockImportsOf(file) {
 		const target = spec.startsWith('.')
 			? path.resolve(path.dirname(file), spec)
 			: spec
-		const options = spec.startsWith('.') ? {} : { virtual: true }
+		// A virtual mock of an installed package leaks into the resolver cache
+		// and breaks the real mocks of later spec files in the same worker.
+		const options =
+			spec.startsWith('.') || isInstalled(spec) ? {} : { virtual: true }
 		if (spec.endsWith('.vue')) {
 			const name = path.basename(spec, '.vue')
 			jest.doMock(
@@ -338,11 +356,13 @@ const SITES = {
 		open: { bulkDeleteNames: ['a.pdf', 'b.pdf'] },
 	},
 	prohibitionDelete: {
-		page: '../views/policy/ProhibitionIndex.vue',
+		page: '../views/policy/PolicyRuleIndex.vue',
+		props: { surface: 'prohibition' },
 		open: { deleteTarget: ROW },
 	},
 	standingConsentDelete: {
-		page: '../views/policy/StandingConsentIndex.vue',
+		page: '../views/policy/PolicyRuleIndex.vue',
+		props: { surface: 'standingConsent' },
 		open: { deleteTarget: ROW },
 	},
 	templateDelete: {
@@ -460,6 +480,7 @@ async function clickConfirm(root) {
 async function openSite(site) {
 	const component = require(site.page).default
 	const page = await render(component, {
+		props: site.props,
 		globals: {
 			$route: { params: { id: 'row-1' }, query: {}, name: 'test' },
 			$router: { push: (to) => mockCalls.push(['router', 'push', to]) },
@@ -525,6 +546,36 @@ describe('confirm dialogs golden', () => {
 					])
 				}
 			}
+		})
+	}
+})
+
+describe('a failed confirm resets only its own dialog', () => {
+	const SECOND = { ...ROW, id: 'row-2', uuid: 'row-2', name: 'Begroting' }
+	for (const name of [
+		'dictionaryTermRemove',
+		'templateDelete',
+		'prohibitionDelete',
+	]) {
+		it(name, async () => {
+			const site = SITES[name]
+			const page = await openSite(site)
+			await clickConfirm(document.body)
+			const target = Object.keys(site.open)[0]
+			page.vm.$data[target] = null
+			await nextTick()
+			page.vm.$data[target] = SECOND
+			await nextTick()
+			await clickConfirm(document.body)
+			const first = mockPending.find((p) => /^delete/.test(p.call[1]))
+			first.reject(new Error('refused'))
+			for (let i = 0; i < 5; i++) {
+				await nextTick()
+			}
+			const view = dialogView(document.body)
+			page.unmount()
+			expect(view.buttons[1].disabled).toBe(true)
+			expect(view.buttons[1].busyIcon).toBe(true)
 		})
 	}
 })

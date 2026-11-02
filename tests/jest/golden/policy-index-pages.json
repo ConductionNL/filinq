@@ -1,0 +1,824 @@
+{
+	"prohibition": {
+		"html": [
+			"<div>",
+			"<x-cnindexpage title=\"Publish never\" description=\"Entity-level deny rules. A matched entity is always anonymised, regardless of the per-document consent workflow.\" showtitle=\"true\" data-objects=\"[1,2,3]\" data-columns=\"[{&quot;key&quot;:&quot;primaryName&quot;,&quot;label&quot;:&quot;Primary name&quot;,&quot;sortable&quot;:true},{&quot;key&quot;:&quot;entityType&quot;,&quot;label&quot;:&quot;Type&quot;,&quot;sortable&quot;:true},{&quot;key&quot;:&quot;matchRules&quot;,&quot;label&quot;:&quot;Match rules&quot;},{&quot;key&quot;:&quot;severity&quot;,&quot;label&quot;:&quot;Severity&quot;,&quot;sortable&quot;:true},{&quot;key&quot;:&quot;reason&quot;,&quot;label&quot;:&quot;Reason&quot;},{&quot;key&quot;:&quot;active&quot;,&quot;label&quot;:&quot;Status&quot;,&quot;sortable&quot;:true}]\" data-pagination=\"{&quot;page&quot;:1,&quot;pages&quot;:1,&quot;total&quot;:3,&quot;limit&quot;:20}\" loading=\"false\" selectable=\"false\" showeditaction=\"false\" showcopyaction=\"false\" showdeleteaction=\"false\" showmassimport=\"false\" showmassexport=\"false\" showmasscopy=\"false\" showmassdelete=\"false\" showviewtoggle=\"false\" showadd=\"true\" rowkey=\"id\" emptytext=\"No publication prohibitions defined.\" refreshing=\"false\" data-on-onrefresh=\"\" data-on-onpagechanged=\"\" data-on-onpagesizechanged=\"\" data-on-onadd=\"\">",
+			"<x-slot name=\"below-header\">",
+			"<div class=\"policy-stats\">",
+			"<x-cnstatsblock title=\"Total\" count=\"3\" countlabel=\"rules\" variant=\"default\" horizontal=\"\" showzerocount=\"\">",
+			"</x-cnstatsblock>",
+			"<x-cnstatsblock title=\"Active\" count=\"2\" countlabel=\"active\" variant=\"error\" horizontal=\"\" showzerocount=\"\">",
+			"</x-cnstatsblock>",
+			"<x-cnstatsblock title=\"Inactive\" count=\"1\" countlabel=\"inactive\" variant=\"default\" horizontal=\"\" showzerocount=\"\">",
+			"</x-cnstatsblock>",
+			"</div>",
+			"</x-slot>",
+			"<x-slot name=\"below-header\">",
+			"<div class=\"policy-stats\">",
+			"<x-cnstatsblock title=\"Total\" count=\"3\" countlabel=\"rules\" variant=\"default\" horizontal=\"\" showzerocount=\"\">",
+			"</x-cnstatsblock>",
+			"<x-cnstatsblock title=\"Active\" count=\"2\" countlabel=\"active\" variant=\"error\" horizontal=\"\" showzerocount=\"\">",
+			"</x-cnstatsblock>",
+			"<x-cnstatsblock title=\"Inactive\" count=\"1\" countlabel=\"inactive\" variant=\"default\" horizontal=\"\" showzerocount=\"\">",
+			"</x-cnstatsblock>",
+			"</div>",
+			"</x-slot>",
+			"<x-slot name=\"column-active\">",
+			"<x-cnstatusbadge label=\"Inactive\" data-colormap=\"{&quot;Active&quot;:&quot;error&quot;,&quot;Inactive&quot;:&quot;default&quot;}\">",
+			"</x-cnstatusbadge>",
+			"</x-slot>",
+			"<x-slot name=\"column-active\">",
+			"<x-cnstatusbadge label=\"Active\" data-colormap=\"{&quot;Active&quot;:&quot;error&quot;,&quot;Inactive&quot;:&quot;default&quot;}\">",
+			"</x-cnstatusbadge>",
+			"</x-slot>",
+			"<x-slot name=\"column-entityType\">",
+			"<x-cnstatusbadge label=\"PERSON\" data-colormap=\"{&quot;PERSON&quot;:&quot;warning&quot;,&quot;ORGANIZATION&quot;:&quot;primary&quot;,&quot;OTHER&quot;:&quot;default&quot;}\">",
+			"</x-cnstatusbadge>",
+			"</x-slot>",
+			"<x-slot name=\"column-entityType\">",
+			"<x-cnstatusbadge label=\"Unknown\" data-colormap=\"{&quot;PERSON&quot;:&quot;warning&quot;,&quot;ORGANIZATION&quot;:&quot;primary&quot;,&quot;OTHER&quot;:&quot;default&quot;}\">",
+			"</x-cnstatusbadge>",
+			"</x-slot>",
+			"<x-slot name=\"column-matchRules\">bsn:123456782</x-slot>",
+			"<x-slot name=\"column-matchRules\">-</x-slot>",
+			"<x-slot name=\"column-severity\">",
+			"<x-cnstatusbadge label=\"high\" data-colormap=\"{&quot;high&quot;:&quot;error&quot;,&quot;medium&quot;:&quot;warning&quot;,&quot;low&quot;:&quot;default&quot;}\">",
+			"</x-cnstatusbadge>",
+			"</x-slot>",
+			"<x-slot name=\"column-severity\">",
+			"<x-cnstatusbadge label=\"-\" data-colormap=\"{&quot;high&quot;:&quot;error&quot;,&quot;medium&quot;:&quot;warning&quot;,&quot;low&quot;:&quot;default&quot;}\">",
+			"</x-cnstatusbadge>",
+			"</x-slot>",
+			"<x-slot name=\"row-actions\">",
+			"<x-ncactions>",
+			"<x-slot name=\"icon\">",
+			"<x-dotshorizontal size=\"20\">",
+			"</x-dotshorizontal>",
+			"</x-slot>",
+			"<x-slot name=\"default\">",
+			"<x-ncactionbutton closeafterclick=\"\" data-on-onclick=\"\">",
+			"<x-slot name=\"icon\">",
+			"<x-pencil size=\"20\">",
+			"</x-pencil>",
+			"</x-slot>",
+			"<x-slot name=\"default\"> Edit</x-slot>",
+			"</x-ncactionbutton>",
+			"<x-ncactionbutton closeafterclick=\"\" data-on-onclick=\"\">",
+			"<x-slot name=\"icon\">",
+			"<x-delete size=\"20\">",
+			"</x-delete>",
+			"</x-slot>",
+			"<x-slot name=\"default\"> Delete</x-slot>",
+			"</x-ncactionbutton>",
+			"</x-slot>",
+			"</x-ncactions>",
+			"</x-slot>",
+			"<x-slot name=\"row-actions\">",
+			"<x-ncactions>",
+			"<x-slot name=\"icon\">",
+			"<x-dotshorizontal size=\"20\">",
+			"</x-dotshorizontal>",
+			"</x-slot>",
+			"<x-slot name=\"default\">",
+			"<x-ncactionbutton closeafterclick=\"\" data-on-onclick=\"\">",
+			"<x-slot name=\"icon\">",
+			"<x-pencil size=\"20\">",
+			"</x-pencil>",
+			"</x-slot>",
+			"<x-slot name=\"default\"> Edit</x-slot>",
+			"</x-ncactionbutton>",
+			"<x-ncactionbutton closeafterclick=\"\" data-on-onclick=\"\">",
+			"<x-slot name=\"icon\">",
+			"<x-delete size=\"20\">",
+			"</x-delete>",
+			"</x-slot>",
+			"<x-slot name=\"default\"> Delete</x-slot>",
+			"</x-ncactionbutton>",
+			"</x-slot>",
+			"</x-ncactions>",
+			"</x-slot>",
+			"</x-cnindexpage>",
+			"<x-prohibitionformmodal open=\"false\" saving=\"false\" formerror=\"\" data-on-onupdate:open=\"\" data-on-onsubmit=\"\" data-on-oncancel=\"\">",
+			"</x-prohibitionformmodal>",
+			"<!--v-if-->",
+			"</div>"
+		],
+		"mountCalls": [["prohibition", "fetchProhibitions"]],
+		"events": {
+			"onRefresh": {
+				"present": true,
+				"calls": [["prohibition", "fetchProhibitions"]],
+				"data": {
+					"isRefreshing": false,
+					"currentPage": 1,
+					"pageSize": 20,
+					"dialogOpen": false,
+					"saving": false,
+					"editing": null,
+					"editingRecord": null,
+					"formError": "",
+					"deleteTarget": null,
+					"entityTypeColorMap": {
+						"PERSON": "warning",
+						"ORGANIZATION": "primary",
+						"OTHER": "default"
+					},
+					"severityColorMap": {
+						"high": "error",
+						"medium": "warning",
+						"low": "default"
+					},
+					"activeColorMap": {
+						"Active": "error",
+						"Inactive": "default"
+					}
+				},
+				"changed": false
+			},
+			"onPageChanged": {
+				"present": true,
+				"calls": [],
+				"data": {
+					"isRefreshing": false,
+					"currentPage": 3,
+					"pageSize": 20,
+					"dialogOpen": false,
+					"saving": false,
+					"editing": null,
+					"editingRecord": null,
+					"formError": "",
+					"deleteTarget": null,
+					"entityTypeColorMap": {
+						"PERSON": "warning",
+						"ORGANIZATION": "primary",
+						"OTHER": "default"
+					},
+					"severityColorMap": {
+						"high": "error",
+						"medium": "warning",
+						"low": "default"
+					},
+					"activeColorMap": {
+						"Active": "error",
+						"Inactive": "default"
+					}
+				},
+				"changed": true
+			},
+			"onPageSizeChanged": {
+				"present": true,
+				"calls": [],
+				"data": {
+					"isRefreshing": false,
+					"currentPage": 1,
+					"pageSize": 50,
+					"dialogOpen": false,
+					"saving": false,
+					"editing": null,
+					"editingRecord": null,
+					"formError": "",
+					"deleteTarget": null,
+					"entityTypeColorMap": {
+						"PERSON": "warning",
+						"ORGANIZATION": "primary",
+						"OTHER": "default"
+					},
+					"severityColorMap": {
+						"high": "error",
+						"medium": "warning",
+						"low": "default"
+					},
+					"activeColorMap": {
+						"Active": "error",
+						"Inactive": "default"
+					}
+				},
+				"changed": true
+			},
+			"onAdd": {
+				"present": true,
+				"calls": [],
+				"data": {
+					"isRefreshing": false,
+					"currentPage": 1,
+					"pageSize": 50,
+					"dialogOpen": true,
+					"saving": false,
+					"editing": null,
+					"editingRecord": null,
+					"formError": "",
+					"deleteTarget": null,
+					"entityTypeColorMap": {
+						"PERSON": "warning",
+						"ORGANIZATION": "primary",
+						"OTHER": "default"
+					},
+					"severityColorMap": {
+						"high": "error",
+						"medium": "warning",
+						"low": "default"
+					},
+					"activeColorMap": {
+						"Active": "error",
+						"Inactive": "default"
+					}
+				},
+				"changed": true
+			}
+		},
+		"actions": [
+			{
+				"isRefreshing": false,
+				"currentPage": 1,
+				"pageSize": 50,
+				"dialogOpen": true,
+				"saving": false,
+				"editing": "row-1",
+				"editingRecord": {
+					"primaryName": "Jan Jansen",
+					"entityType": "PERSON",
+					"reason": "",
+					"legalAuthority": "",
+					"caseReference": "",
+					"severity": "high",
+					"jurisdiction": "",
+					"validUntil": "",
+					"active": false,
+					"matchRules": [
+						{
+							"type": "bsn",
+							"value": "123456782"
+						}
+					]
+				},
+				"formError": "",
+				"deleteTarget": null,
+				"entityTypeColorMap": {
+					"PERSON": "warning",
+					"ORGANIZATION": "primary",
+					"OTHER": "default"
+				},
+				"severityColorMap": {
+					"high": "error",
+					"medium": "warning",
+					"low": "default"
+				},
+				"activeColorMap": {
+					"Active": "error",
+					"Inactive": "default"
+				}
+			},
+			{
+				"isRefreshing": false,
+				"currentPage": 1,
+				"pageSize": 50,
+				"dialogOpen": false,
+				"saving": false,
+				"editing": "row-1",
+				"editingRecord": {
+					"primaryName": "Jan Jansen",
+					"entityType": "PERSON",
+					"reason": "",
+					"legalAuthority": "",
+					"caseReference": "",
+					"severity": "high",
+					"jurisdiction": "",
+					"validUntil": "",
+					"active": false,
+					"matchRules": [
+						{
+							"type": "bsn",
+							"value": "123456782"
+						}
+					]
+				},
+				"formError": "",
+				"deleteTarget": {
+					"id": "row-1",
+					"primaryName": "Jan Jansen",
+					"entityText": "Jan Jansen",
+					"entityType": "PERSON",
+					"severity": "high",
+					"consentMethod": "paper",
+					"active": false,
+					"matchRules": [
+						{
+							"type": "bsn",
+							"value": "123456782"
+						}
+					]
+				},
+				"entityTypeColorMap": {
+					"PERSON": "warning",
+					"ORGANIZATION": "primary",
+					"OTHER": "default"
+				},
+				"severityColorMap": {
+					"high": "error",
+					"medium": "warning",
+					"low": "default"
+				},
+				"activeColorMap": {
+					"Active": "error",
+					"Inactive": "default"
+				}
+			},
+			{
+				"isRefreshing": false,
+				"currentPage": 1,
+				"pageSize": 50,
+				"dialogOpen": true,
+				"saving": false,
+				"editing": "row-2",
+				"editingRecord": {
+					"primaryName": "",
+					"entityType": "PERSON",
+					"reason": "",
+					"legalAuthority": "",
+					"caseReference": "",
+					"severity": "standard",
+					"jurisdiction": "",
+					"validUntil": "",
+					"active": true,
+					"matchRules": []
+				},
+				"formError": "",
+				"deleteTarget": null,
+				"entityTypeColorMap": {
+					"PERSON": "warning",
+					"ORGANIZATION": "primary",
+					"OTHER": "default"
+				},
+				"severityColorMap": {
+					"high": "error",
+					"medium": "warning",
+					"low": "default"
+				},
+				"activeColorMap": {
+					"Active": "error",
+					"Inactive": "default"
+				}
+			},
+			{
+				"isRefreshing": false,
+				"currentPage": 1,
+				"pageSize": 50,
+				"dialogOpen": false,
+				"saving": false,
+				"editing": "row-2",
+				"editingRecord": {
+					"primaryName": "",
+					"entityType": "PERSON",
+					"reason": "",
+					"legalAuthority": "",
+					"caseReference": "",
+					"severity": "standard",
+					"jurisdiction": "",
+					"validUntil": "",
+					"active": true,
+					"matchRules": []
+				},
+				"formError": "",
+				"deleteTarget": {
+					"uuid": "row-2",
+					"matchRules": []
+				},
+				"entityTypeColorMap": {
+					"PERSON": "warning",
+					"ORGANIZATION": "primary",
+					"OTHER": "default"
+				},
+				"severityColorMap": {
+					"high": "error",
+					"medium": "warning",
+					"low": "default"
+				},
+				"activeColorMap": {
+					"Active": "error",
+					"Inactive": "default"
+				}
+			}
+		]
+	},
+	"standingConsent": {
+		"html": [
+			"<div>",
+			"<x-cnindexpage title=\"Publish always\" description=\"Entity-level allow rules. A matched entity may be published without per-document objection workflow, unless a publish-never rule also matches.\" showtitle=\"true\" data-objects=\"[1,2]\" data-columns=\"[{&quot;key&quot;:&quot;entityText&quot;,&quot;label&quot;:&quot;Entity&quot;,&quot;sortable&quot;:true},{&quot;key&quot;:&quot;entityType&quot;,&quot;label&quot;:&quot;Type&quot;,&quot;sortable&quot;:true},{&quot;key&quot;:&quot;matchRules&quot;,&quot;label&quot;:&quot;Match rules&quot;},{&quot;key&quot;:&quot;consentMethod&quot;,&quot;label&quot;:&quot;Method&quot;,&quot;sortable&quot;:true},{&quot;key&quot;:&quot;validUntil&quot;,&quot;label&quot;:&quot;Valid until&quot;,&quot;sortable&quot;:true},{&quot;key&quot;:&quot;active&quot;,&quot;label&quot;:&quot;Status&quot;,&quot;sortable&quot;:true}]\" data-pagination=\"{&quot;page&quot;:1,&quot;pages&quot;:1,&quot;total&quot;:2,&quot;limit&quot;:20}\" loading=\"true\" selectable=\"false\" showeditaction=\"false\" showcopyaction=\"false\" showdeleteaction=\"false\" showmassimport=\"false\" showmassexport=\"false\" showmasscopy=\"false\" showmassdelete=\"false\" showviewtoggle=\"false\" showadd=\"true\" rowkey=\"id\" emptytext=\"load failed\" refreshing=\"false\" data-on-onrefresh=\"\" data-on-onpagechanged=\"\" data-on-onpagesizechanged=\"\" data-on-onadd=\"\">",
+			"<x-slot name=\"below-header\">",
+			"<div class=\"policy-stats\">",
+			"<x-cnstatsblock title=\"Total\" count=\"2\" countlabel=\"rules\" variant=\"default\" horizontal=\"\" showzerocount=\"\">",
+			"</x-cnstatsblock>",
+			"<x-cnstatsblock title=\"Active\" count=\"0\" countlabel=\"active\" variant=\"success\" horizontal=\"\" showzerocount=\"\">",
+			"</x-cnstatsblock>",
+			"<x-cnstatsblock title=\"Inactive\" count=\"2\" countlabel=\"inactive\" variant=\"default\" horizontal=\"\" showzerocount=\"\">",
+			"</x-cnstatsblock>",
+			"</div>",
+			"</x-slot>",
+			"<x-slot name=\"below-header\">",
+			"<div class=\"policy-stats\">",
+			"<x-cnstatsblock title=\"Total\" count=\"2\" countlabel=\"rules\" variant=\"default\" horizontal=\"\" showzerocount=\"\">",
+			"</x-cnstatsblock>",
+			"<x-cnstatsblock title=\"Active\" count=\"0\" countlabel=\"active\" variant=\"success\" horizontal=\"\" showzerocount=\"\">",
+			"</x-cnstatsblock>",
+			"<x-cnstatsblock title=\"Inactive\" count=\"2\" countlabel=\"inactive\" variant=\"default\" horizontal=\"\" showzerocount=\"\">",
+			"</x-cnstatsblock>",
+			"</div>",
+			"</x-slot>",
+			"<x-slot name=\"column-active\">",
+			"<x-cnstatusbadge label=\"Inactive\" data-colormap=\"{&quot;Active&quot;:&quot;success&quot;,&quot;Inactive&quot;:&quot;default&quot;}\">",
+			"</x-cnstatusbadge>",
+			"</x-slot>",
+			"<x-slot name=\"column-active\">",
+			"<x-cnstatusbadge label=\"Active\" data-colormap=\"{&quot;Active&quot;:&quot;success&quot;,&quot;Inactive&quot;:&quot;default&quot;}\">",
+			"</x-cnstatusbadge>",
+			"</x-slot>",
+			"<x-slot name=\"column-consentMethod\">",
+			"<x-cnstatusbadge label=\"paper\" data-colormap=\"{&quot;paper&quot;:&quot;default&quot;,&quot;digital_signature&quot;:&quot;primary&quot;,&quot;verbal_recorded&quot;:&quot;warning&quot;,&quot;opt_in_form&quot;:&quot;success&quot;}\">",
+			"</x-cnstatusbadge>",
+			"</x-slot>",
+			"<x-slot name=\"column-consentMethod\">",
+			"<x-cnstatusbadge label=\"-\" data-colormap=\"{&quot;paper&quot;:&quot;default&quot;,&quot;digital_signature&quot;:&quot;primary&quot;,&quot;verbal_recorded&quot;:&quot;warning&quot;,&quot;opt_in_form&quot;:&quot;success&quot;}\">",
+			"</x-cnstatusbadge>",
+			"</x-slot>",
+			"<x-slot name=\"column-entityType\">",
+			"<x-cnstatusbadge label=\"PERSON\" data-colormap=\"{&quot;PERSON&quot;:&quot;warning&quot;,&quot;ORGANIZATION&quot;:&quot;primary&quot;,&quot;OTHER&quot;:&quot;default&quot;}\">",
+			"</x-cnstatusbadge>",
+			"</x-slot>",
+			"<x-slot name=\"column-entityType\">",
+			"<x-cnstatusbadge label=\"Unknown\" data-colormap=\"{&quot;PERSON&quot;:&quot;warning&quot;,&quot;ORGANIZATION&quot;:&quot;primary&quot;,&quot;OTHER&quot;:&quot;default&quot;}\">",
+			"</x-cnstatusbadge>",
+			"</x-slot>",
+			"<x-slot name=\"column-matchRules\">bsn:123456782</x-slot>",
+			"<x-slot name=\"column-matchRules\">-</x-slot>",
+			"<x-slot name=\"row-actions\">",
+			"<x-ncactions>",
+			"<x-slot name=\"icon\">",
+			"<x-dotshorizontal size=\"20\">",
+			"</x-dotshorizontal>",
+			"</x-slot>",
+			"<x-slot name=\"default\">",
+			"<x-ncactionbutton closeafterclick=\"\" data-on-onclick=\"\">",
+			"<x-slot name=\"icon\">",
+			"<x-pencil size=\"20\">",
+			"</x-pencil>",
+			"</x-slot>",
+			"<x-slot name=\"default\"> Edit</x-slot>",
+			"</x-ncactionbutton>",
+			"<x-ncactionbutton closeafterclick=\"\" data-on-onclick=\"\">",
+			"<x-slot name=\"icon\">",
+			"<x-delete size=\"20\">",
+			"</x-delete>",
+			"</x-slot>",
+			"<x-slot name=\"default\"> Delete</x-slot>",
+			"</x-ncactionbutton>",
+			"</x-slot>",
+			"</x-ncactions>",
+			"</x-slot>",
+			"<x-slot name=\"row-actions\">",
+			"<x-ncactions>",
+			"<x-slot name=\"icon\">",
+			"<x-dotshorizontal size=\"20\">",
+			"</x-dotshorizontal>",
+			"</x-slot>",
+			"<x-slot name=\"default\">",
+			"<x-ncactionbutton closeafterclick=\"\" data-on-onclick=\"\">",
+			"<x-slot name=\"icon\">",
+			"<x-pencil size=\"20\">",
+			"</x-pencil>",
+			"</x-slot>",
+			"<x-slot name=\"default\"> Edit</x-slot>",
+			"</x-ncactionbutton>",
+			"<x-ncactionbutton closeafterclick=\"\" data-on-onclick=\"\">",
+			"<x-slot name=\"icon\">",
+			"<x-delete size=\"20\">",
+			"</x-delete>",
+			"</x-slot>",
+			"<x-slot name=\"default\"> Delete</x-slot>",
+			"</x-ncactionbutton>",
+			"</x-slot>",
+			"</x-ncactions>",
+			"</x-slot>",
+			"</x-cnindexpage>",
+			"<x-standingconsentformmodal open=\"false\" saving=\"false\" formerror=\"\" data-on-onupdate:open=\"\" data-on-onsubmit=\"\" data-on-oncancel=\"\">",
+			"</x-standingconsentformmodal>",
+			"<!--v-if-->",
+			"</div>"
+		],
+		"mountCalls": [["standingConsent", "fetchStandingConsents"]],
+		"events": {
+			"onRefresh": {
+				"present": true,
+				"calls": [["standingConsent", "fetchStandingConsents"]],
+				"data": {
+					"isRefreshing": false,
+					"currentPage": 1,
+					"pageSize": 20,
+					"dialogOpen": false,
+					"saving": false,
+					"editing": null,
+					"editingRecord": null,
+					"formError": "",
+					"deleteTarget": null,
+					"entityTypeColorMap": {
+						"PERSON": "warning",
+						"ORGANIZATION": "primary",
+						"OTHER": "default"
+					},
+					"methodColorMap": {
+						"paper": "default",
+						"digital_signature": "primary",
+						"verbal_recorded": "warning",
+						"opt_in_form": "success"
+					},
+					"activeColorMap": {
+						"Active": "success",
+						"Inactive": "default"
+					}
+				},
+				"changed": false
+			},
+			"onPageChanged": {
+				"present": true,
+				"calls": [],
+				"data": {
+					"isRefreshing": false,
+					"currentPage": 3,
+					"pageSize": 20,
+					"dialogOpen": false,
+					"saving": false,
+					"editing": null,
+					"editingRecord": null,
+					"formError": "",
+					"deleteTarget": null,
+					"entityTypeColorMap": {
+						"PERSON": "warning",
+						"ORGANIZATION": "primary",
+						"OTHER": "default"
+					},
+					"methodColorMap": {
+						"paper": "default",
+						"digital_signature": "primary",
+						"verbal_recorded": "warning",
+						"opt_in_form": "success"
+					},
+					"activeColorMap": {
+						"Active": "success",
+						"Inactive": "default"
+					}
+				},
+				"changed": true
+			},
+			"onPageSizeChanged": {
+				"present": true,
+				"calls": [],
+				"data": {
+					"isRefreshing": false,
+					"currentPage": 1,
+					"pageSize": 50,
+					"dialogOpen": false,
+					"saving": false,
+					"editing": null,
+					"editingRecord": null,
+					"formError": "",
+					"deleteTarget": null,
+					"entityTypeColorMap": {
+						"PERSON": "warning",
+						"ORGANIZATION": "primary",
+						"OTHER": "default"
+					},
+					"methodColorMap": {
+						"paper": "default",
+						"digital_signature": "primary",
+						"verbal_recorded": "warning",
+						"opt_in_form": "success"
+					},
+					"activeColorMap": {
+						"Active": "success",
+						"Inactive": "default"
+					}
+				},
+				"changed": true
+			},
+			"onAdd": {
+				"present": true,
+				"calls": [],
+				"data": {
+					"isRefreshing": false,
+					"currentPage": 1,
+					"pageSize": 50,
+					"dialogOpen": true,
+					"saving": false,
+					"editing": null,
+					"editingRecord": null,
+					"formError": "",
+					"deleteTarget": null,
+					"entityTypeColorMap": {
+						"PERSON": "warning",
+						"ORGANIZATION": "primary",
+						"OTHER": "default"
+					},
+					"methodColorMap": {
+						"paper": "default",
+						"digital_signature": "primary",
+						"verbal_recorded": "warning",
+						"opt_in_form": "success"
+					},
+					"activeColorMap": {
+						"Active": "success",
+						"Inactive": "default"
+					}
+				},
+				"changed": true
+			}
+		},
+		"actions": [
+			{
+				"isRefreshing": false,
+				"currentPage": 1,
+				"pageSize": 50,
+				"dialogOpen": true,
+				"saving": false,
+				"editing": "row-1",
+				"editingRecord": {
+					"entityText": "Jan Jansen",
+					"entityType": "PERSON",
+					"consentMethod": "paper",
+					"consentDocument": "",
+					"consentScope": "",
+					"legalBasis": "",
+					"validFrom": "",
+					"validUntil": "",
+					"active": false,
+					"matchRules": [
+						{
+							"type": "bsn",
+							"value": "123456782"
+						}
+					],
+					"consentStatus": "consent_given",
+					"publicationDecision": "publish_with_consent",
+					"notificationStatus": "skipped"
+				},
+				"formError": "",
+				"deleteTarget": null,
+				"entityTypeColorMap": {
+					"PERSON": "warning",
+					"ORGANIZATION": "primary",
+					"OTHER": "default"
+				},
+				"methodColorMap": {
+					"paper": "default",
+					"digital_signature": "primary",
+					"verbal_recorded": "warning",
+					"opt_in_form": "success"
+				},
+				"activeColorMap": {
+					"Active": "success",
+					"Inactive": "default"
+				}
+			},
+			{
+				"isRefreshing": false,
+				"currentPage": 1,
+				"pageSize": 50,
+				"dialogOpen": false,
+				"saving": false,
+				"editing": "row-1",
+				"editingRecord": {
+					"entityText": "Jan Jansen",
+					"entityType": "PERSON",
+					"consentMethod": "paper",
+					"consentDocument": "",
+					"consentScope": "",
+					"legalBasis": "",
+					"validFrom": "",
+					"validUntil": "",
+					"active": false,
+					"matchRules": [
+						{
+							"type": "bsn",
+							"value": "123456782"
+						}
+					],
+					"consentStatus": "consent_given",
+					"publicationDecision": "publish_with_consent",
+					"notificationStatus": "skipped"
+				},
+				"formError": "",
+				"deleteTarget": {
+					"id": "row-1",
+					"primaryName": "Jan Jansen",
+					"entityText": "Jan Jansen",
+					"entityType": "PERSON",
+					"severity": "high",
+					"consentMethod": "paper",
+					"active": false,
+					"matchRules": [
+						{
+							"type": "bsn",
+							"value": "123456782"
+						}
+					]
+				},
+				"entityTypeColorMap": {
+					"PERSON": "warning",
+					"ORGANIZATION": "primary",
+					"OTHER": "default"
+				},
+				"methodColorMap": {
+					"paper": "default",
+					"digital_signature": "primary",
+					"verbal_recorded": "warning",
+					"opt_in_form": "success"
+				},
+				"activeColorMap": {
+					"Active": "success",
+					"Inactive": "default"
+				}
+			},
+			{
+				"isRefreshing": false,
+				"currentPage": 1,
+				"pageSize": 50,
+				"dialogOpen": true,
+				"saving": false,
+				"editing": "row-2",
+				"editingRecord": {
+					"entityText": "",
+					"entityType": "PERSON",
+					"consentMethod": "",
+					"consentDocument": "",
+					"consentScope": "",
+					"legalBasis": "",
+					"validFrom": "",
+					"validUntil": "",
+					"active": true,
+					"matchRules": [],
+					"consentStatus": "consent_given",
+					"publicationDecision": "publish_with_consent",
+					"notificationStatus": "skipped"
+				},
+				"formError": "",
+				"deleteTarget": null,
+				"entityTypeColorMap": {
+					"PERSON": "warning",
+					"ORGANIZATION": "primary",
+					"OTHER": "default"
+				},
+				"methodColorMap": {
+					"paper": "default",
+					"digital_signature": "primary",
+					"verbal_recorded": "warning",
+					"opt_in_form": "success"
+				},
+				"activeColorMap": {
+					"Active": "success",
+					"Inactive": "default"
+				}
+			},
+			{
+				"isRefreshing": false,
+				"currentPage": 1,
+				"pageSize": 50,
+				"dialogOpen": false,
+				"saving": false,
+				"editing": "row-2",
+				"editingRecord": {
+					"entityText": "",
+					"entityType": "PERSON",
+					"consentMethod": "",
+					"consentDocument": "",
+					"consentScope": "",
+					"legalBasis": "",
+					"validFrom": "",
+					"validUntil": "",
+					"active": true,
+					"matchRules": [],
+					"consentStatus": "consent_given",
+					"publicationDecision": "publish_with_consent",
+					"notificationStatus": "skipped"
+				},
+				"formError": "",
+				"deleteTarget": {
+					"uuid": "row-2",
+					"matchRules": []
+				},
+				"entityTypeColorMap": {
+					"PERSON": "warning",
+					"ORGANIZATION": "primary",
+					"OTHER": "default"
+				},
+				"methodColorMap": {
+					"paper": "default",
+					"digital_signature": "primary",
+					"verbal_recorded": "warning",
+					"opt_in_form": "success"
+				},
+				"activeColorMap": {
+					"Active": "success",
+					"Inactive": "default"
+				}
+			}
+		]
+	}
+}

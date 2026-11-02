@@ -163,7 +163,7 @@
 			:message="removeMessage"
 			:confirmLabel="t('filinq', 'Remove')"
 			variant="error"
-			@confirm="executeRemoveTerm"
+			@confirm="executeRemoveTerm($refs.confirmDialog)"
 			@close="cancelRemoveTerm" />
 	</div>
 </template>
@@ -367,12 +367,14 @@ export default {
 		 * Remove the confirmed term. Reachable only from the dialog's
 		 *
 		 * @confirm, so a term is never removed without an explicit
-		 * confirmation.
+		 * confirmation. A failed removal puts the dialog back in its confirm
+		 * state.
 		 *
+		 * @param {object} [dialog] The confirm dialog that asked.
 		 * @return {Promise<void>}
 		 * @spec openspec/specs/custom-dictionary-recognition/spec.md
 		 */
-		async executeRemoveTerm() {
+		async executeRemoveTerm(dialog) {
 			const term = this.removeTarget
 			if (!term) {
 				return
@@ -383,7 +385,7 @@ export default {
 				this.removeTarget = null
 			} catch (err) {
 				console.error('Failed to remove term:', err)
-				this.$refs.confirmDialog?.setResult(null)
+				dialog?.setResult(null)
 			}
 		},
 
