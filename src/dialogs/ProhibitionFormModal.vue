@@ -4,11 +4,11 @@ import {
 	NcButton,
 	NcCheckboxRadioSwitch,
 	NcDialog,
-	NcLoadingIcon,
 	NcSelect,
 	NcTextField,
 } from '@nextcloud/vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
+import FormDialogActions from '../components/FormDialogActions.vue'
 import { matchRuleForm } from '../mixins/matchRuleForm.js'
 
 /**
@@ -32,10 +32,10 @@ function blankForm() {
 export default {
 	name: 'ProhibitionFormModal',
 	components: {
+		FormDialogActions,
 		NcButton,
 		NcCheckboxRadioSwitch,
 		NcDialog,
-		NcLoadingIcon,
 		NcSelect,
 		NcTextField,
 		Delete,
@@ -201,18 +201,10 @@ export default {
 		</div>
 
 		<template #actions>
-			<NcButton variant="tertiary" @click="onCancel">
-				{{ t('filinq', 'Cancel') }}
-			</NcButton>
-			<NcButton
-				variant="primary"
-				:disabled="saving || !canSubmit"
-				@click="submit">
-				<template v-if="saving" #icon>
-					<NcLoadingIcon :size="20" />
-				</template>
-				{{ editing ? t('filinq', 'Save') : t('filinq', 'Create') }}
-			</NcButton>
+			<FormDialogActions
+				v-bind="formActions"
+				@cancel="onCancel"
+				@submit="submit" />
 		</template>
 	</NcDialog>
 </template>
