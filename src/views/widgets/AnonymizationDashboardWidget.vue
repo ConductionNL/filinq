@@ -170,10 +170,11 @@ import { anonymizationStore } from '../../store/store.js'
 
 <script>
 import { showError } from '@nextcloud/dialogs'
-import { generateRemoteUrl, generateUrl } from '@nextcloud/router'
+import { generateUrl } from '@nextcloud/router'
 import { NcLoadingIcon } from '@nextcloud/vue'
 import DossierNameDialog from '../../dialogs/DossierNameDialog.vue'
 import uploadIcon from '../../assets/upload.png'
+import { filesAppLink, webdavDownloadUrl } from '../../services/storagePathUrls.js'
 
 const ALLOWED_EXTENSIONS = ['docx', 'txt', 'pdf']
 const ALLOWED_MIMES = new Set([
@@ -393,21 +394,7 @@ export default {
 		 * @spec openspec/specs/dashboard/spec.md#requirement-nextcloud-dashboard-widgets-req-dash-02
 		 */
 		fileLink(filePath) {
-			const parts = filePath.split('/')
-			const filesIndex = parts.indexOf('files')
-			if (filesIndex >= 0) {
-				const relativePath = '/' + parts.slice(filesIndex + 1).join('/')
-				const dir =
-					relativePath.substring(0, relativePath.lastIndexOf('/')) || '/'
-				const file = relativePath.substring(
-					relativePath.lastIndexOf('/') + 1,
-				)
-				return generateUrl('/apps/files/?dir={dir}&scrollto={file}', {
-					dir,
-					file,
-				})
-			}
-			return generateUrl('/apps/files')
+			return filesAppLink(filePath)
 		},
 
 		/**
@@ -415,13 +402,7 @@ export default {
 		 * @spec openspec/specs/dashboard/spec.md#requirement-nextcloud-dashboard-widgets-req-dash-02
 		 */
 		downloadUrl(filePath) {
-			const parts = filePath.split('/')
-			const filesIndex = parts.indexOf('files')
-			if (filesIndex >= 0) {
-				const relativePath = parts.slice(filesIndex + 1).join('/')
-				return generateRemoteUrl('webdav') + '/' + relativePath
-			}
-			return generateRemoteUrl('webdav')
+			return webdavDownloadUrl(filePath)
 		},
 
 		/**
