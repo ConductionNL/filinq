@@ -44,6 +44,7 @@ use OCA\OpenRegister\Event\TaskTransitionedEvent;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventDispatcher;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -179,6 +180,7 @@ final class SigningTaskListenerTest extends TestCase {
 	 * @param string|null $outcome Task outcome.
 	 * @param string|null $sequenceUuid Sequence uuid (null = plain task).
 	 * @param string $objectUuid Anchor object uuid.
+	 * @param string|null $completedBy Completing identity.
 	 *
 	 * @return Task
 	 */
@@ -187,6 +189,7 @@ final class SigningTaskListenerTest extends TestCase {
 		?string $outcome = null,
 		?string $sequenceUuid = 'seq-1',
 		string $objectUuid = self::OWNED_OBJECT,
+		?string $completedBy = 'alice',
 	): Task {
 		return new Task(
 			uuid: 'task-1',
@@ -196,7 +199,7 @@ final class SigningTaskListenerTest extends TestCase {
 			objectUuid: $objectUuid,
 			sequenceUuid: $sequenceUuid,
 			sequencePosition: 2,
-			completedBy: 'alice',
+			completedBy: $completedBy,
 			comment: 'akkoord'
 		);
 	}//end makeTask()
@@ -599,4 +602,130 @@ final class SigningTaskListenerTest extends TestCase {
 		$this->assertTrue(true);
 
 	}//end testListenerFailureIsLoggedNotThrown()
+
+	/**
+	 * Completions that are neither approving nor rejecting.
+	 *
+	 * @return array<string, array{0: string|null}>
+	 */
+	public static function undecidedOutcomes(): array {
+		return [
+			'null' => [null],
+			'empty' => [''],
+			'blank' => ['  '],
+			'unknown' => ['reject'],
+			'generic completion' => ['done'],
+		];
+	}//end undecidedOutcomes()
+
+	/**
+	 * A completion without an approving outcome dispatches no signer event
+	 * and logs a warning carrying only ids.
+	 *
+	 * @param string|null $outcome The task outcome.
+	 *
+	 * @return void
+	 */
+	#[DataProvider('undecidedOutcomes')]
+	public function testCompletionWithoutApprovingOutcomeDispatchesNothing(?string $outcome): void {
+		$this->dispatcher->expects($this->never())->method('dispatchTyped');
+		$this->logger->expects($this->once())
+			->method('warning')
+			->with(
+				$this->isType('string'),
+				['sequenceUuid' => 'seq-1', 'taskUuid' => 'task-1', 'objectUuid' => self::OWNED_OBJECT]
+			);
+
+		$this->listener->handle(
+			new TaskTerminalEvent(task: $this->makeTask(state: 'completed', outcome: $outcome))
+		);
+
+	}//end testCompletionWithoutApprovingOutcomeDispatchesNothing()
+
+	/**
+	 * Missing completing identities.
+	 *
+	 * @return array<string, array{0: string|null}>
+	 */
+	public static function missingSigners(): array {
+		return [
+			'null' => [null],
+			'empty' => [''],
+		];
+	}//end missingSigners()
+
+	/**
+	 * An approving completion without a completing identity dispatches no
+	 * signer event and logs a warning.
+	 *
+	 * @param string|null $completedBy The completing identity.
+	 *
+	 * @return void
+	 */
+	#[DataProvider('missingSigners')]
+	public function testApprovingCompletionWithoutSignerDispatchesNothing(?string $completedBy): void {
+		$this->dispatcher->expects($this->never())->method('dispatchTyped');
+		$this->logger->expects($this->once())->method('warning');
+
+		$this->listener->handle(
+			new TaskTerminalEvent(
+				task: $this->makeTask(state: 'completed', outcome: 'approved', completedBy: $completedBy)
+			)
+		);
+
+	}//end testApprovingCompletionWithoutSignerDispatchesNothing()
+
+	/**
+	 * Spellings of the approving outcome.
+	 *
+	 * @return array<string, array{0: string}>
+	 */
+	public static function approvingOutcomes(): array {
+		return [
+			'canonical' => ['approved'],
+			'padded' => [' Approved '],
+			'upper' => ['APPROVED'],
+		];
+	}//end approvingOutcomes()
+
+	/**
+	 * Every spelling of the approving outcome with a signer approves.
+	 *
+	 * @param string $outcome The task outcome.
+	 *
+	 * @return void
+	 */
+	#[DataProvider('approvingOutcomes')]
+	public function testApprovingOutcomeWithSignerApproves(string $outcome): void {
+		$this->dispatcher->expects($this->once())
+			->method('dispatchTyped')
+			->with($this->isInstanceOf(SignerStepApprovedEvent::class));
+		$this->logger->expects($this->never())->method('warning');
+
+		$this->listener->handle(
+			new TaskTerminalEvent(task: $this->makeTask(state: 'completed', outcome: $outcome))
+		);
+
+	}//end testApprovingOutcomeWithSignerApproves()
+
+	/**
+	 * A rejecting outcome rejects with or without a completing identity.
+	 *
+	 * @param string|null $completedBy The completing identity.
+	 *
+	 * @return void
+	 */
+	#[DataProvider('missingSigners')]
+	public function testRejectingOutcomeWithoutSignerStillRejects(?string $completedBy): void {
+		$this->dispatcher->expects($this->once())
+			->method('dispatchTyped')
+			->with($this->isInstanceOf(SignerStepRejectedEvent::class));
+
+		$this->listener->handle(
+			new TaskTerminalEvent(
+				task: $this->makeTask(state: 'completed', outcome: 'declined', completedBy: $completedBy)
+			)
+		);
+
+	}//end testRejectingOutcomeWithoutSignerStillRejects()
 }//end class

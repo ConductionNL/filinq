@@ -203,8 +203,10 @@ deferred write path lands), never `provider->checkStatus`.
 SHALL be the requirement that filinq's signing bridge consumes exactly three
 OR events, registered by FQN string literal with no `class_exists()` probe at
 register() time: a committed `TaskTransitionedEvent` to `enabled` (position
-pending), a committed `TaskTerminalEvent` with state `completed` (approved
-when the outcome is not in the rejecting vocabulary, rejected when it is),
+pending), a committed `TaskTerminalEvent` with state `completed` (rejected when
+the outcome is in the rejecting vocabulary; approved only when the outcome is
+`approved` and the task names its completing user; otherwise no signer event
+and a warning carrying only ids),
 and `TaskSequenceCompletedEvent` (final approval). Uncommitted dispatches and
 terminal-but-not-completed states (cancel, moot, run termination) SHALL be
 ignored. An event belongs to filinq when its anchor object resolves in the
@@ -228,6 +230,16 @@ every event is foreign.
 - AND the task's state is `completed` with outcome `rejected`
 - WHEN the listener handles the event
 - THEN `SignerStepRejectedEvent` SHALL be dispatched with the rejection comment
+
+#### Scenario: A completion without an approving outcome or a signer approves nothing
+
+@e2e exclude event bridge — same PHPUnit coverage
+
+- GIVEN a committed `TaskTerminalEvent` for an owned sequence task with state `completed`
+- AND the outcome is empty, missing or outside both vocabularies, or the task has no `completedBy`
+- WHEN the listener handles the event
+- THEN no signer event SHALL be dispatched
+- AND a warning SHALL be logged carrying the sequence, task and object uuids only
 
 #### Scenario: Sequence completion re-dispatches SignerChainCompletedEvent
 

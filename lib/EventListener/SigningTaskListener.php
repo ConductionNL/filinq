@@ -124,6 +124,15 @@ class SigningTaskListener implements IEventListener {
 	private const REJECTING_OUTCOMES_FALLBACK = ['rejected', 'returned', 'declined', 'denied'];
 
 	/**
+	 * The outcomes that approve a signing step. OR's task vocabulary spells a
+	 * completed approval `approved`; every other non-rejecting outcome is
+	 * not a decision to sign.
+	 *
+	 * @var array<int, string>
+	 */
+	private const APPROVING_OUTCOMES = ['approved'];
+
+	/**
 	 * Constructor.
 	 *
 	 * @param SignerEventTranslator $translator Translates the extracted
@@ -290,6 +299,8 @@ class SigningTaskListener implements IEventListener {
 	 * @return void
 	 */
 	private function translateDecision(object $task, array $ids): void {
+		$outcome = (string) ($this->read(subject: $task, getter: 'getOutcome') ?? '');
+
 		$this->translator->onTaskDecided(
 			task: new SignerStepTask(
 				sequenceUuid: $ids['sequenceUuid'],
@@ -300,9 +311,8 @@ class SigningTaskListener implements IEventListener {
 			decision: new SignerStepDecision(
 				userId: $this->nullableString(subject: $task, getter: 'getCompletedBy'),
 				comment: $this->nullableString(subject: $task, getter: 'getComment'),
-				isRejecting: $this->isRejectingOutcome(
-					outcome: (string) ($this->read(subject: $task, getter: 'getOutcome') ?? '')
-				)
+				isRejecting: $this->isRejectingOutcome(outcome: $outcome),
+				isApproving: in_array(strtolower(trim($outcome)), self::APPROVING_OUTCOMES, true)
 			)
 		);
 	}//end translateDecision()

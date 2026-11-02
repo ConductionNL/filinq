@@ -87,7 +87,7 @@ class SigningTaskListenerTerminalTraceTest extends TestCase {
 	public function testCompletedTaskHandsOnItsOwnDecision(): void {
 		$this->expectDecision(
 			task: ['sequenceUuid' => 'seq-1', 'taskUuid' => 'task-1', 'position' => 2, 'objectUuid' => self::OWNED],
-			decision: ['userId' => 'alice', 'comment' => 'akkoord', 'isRejecting' => false]
+			decision: ['userId' => 'alice', 'comment' => 'akkoord', 'isRejecting' => false, 'isApproving' => true]
 		);
 
 		$this->dispatch(task: $this->task(completedBy: 'alice', comment: 'akkoord', outcome: 'approved'));
@@ -125,7 +125,7 @@ class SigningTaskListenerTerminalTraceTest extends TestCase {
 	public function testDefaultsAndRejection(): void {
 		$this->expectDecision(
 			task: ['sequenceUuid' => 'seq-1', 'taskUuid' => '', 'position' => 0, 'objectUuid' => self::OWNED],
-			decision: ['userId' => 'carol', 'comment' => null, 'isRejecting' => true]
+			decision: ['userId' => 'carol', 'comment' => null, 'isRejecting' => true, 'isApproving' => false]
 		);
 
 		$this->dispatch(

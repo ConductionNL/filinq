@@ -120,13 +120,16 @@ class SignerEventTranslator {
 	 * Handle a sequence task completing with a decision.
 	 *
 	 * Approving outcomes re-emit the typed approved event; rejecting
-	 * outcomes the typed rejected event. When an approval was not the final
+	 * outcomes the typed rejected event. An approval needs both an approving
+	 * outcome and a completing identity: any other completion (empty or
+	 * unknown outcome, no signer) dispatches nothing and logs a warning, so
+	 * the step stays undecided. When an approval was not the final
 	 * position, the next position's own enabled transition follows through
 	 * {@see onPositionEnabled()}; the final approval additionally arrives
 	 * through {@see onSequenceCompleted()}.
 	 *
 	 * @param SignerStepTask     $task     The completed task and its signing request.
-	 * @param SignerStepDecision $decision Who decided, the comment and whether it rejects.
+	 * @param SignerStepDecision $decision Who decided, the comment and whether it rejects or approves.
 	 *
 	 * @return void
 	 *
@@ -143,6 +146,18 @@ class SignerEventTranslator {
 					comment: $decision->comment,
 					objectUuid: $task->objectUuid
 				)
+			);
+			return;
+		}
+
+		if ($decision->isApproving === false || $decision->userId === null || $decision->userId === '') {
+			$this->logger->warning(
+				'SigningTaskListener: completed task without an approving outcome and signer; no signer event dispatched',
+				[
+					'sequenceUuid' => $task->sequenceUuid,
+					'taskUuid' => $task->taskUuid,
+					'objectUuid' => $task->objectUuid,
+				]
 			);
 			return;
 		}

@@ -192,7 +192,7 @@ final class SignerEventTranslatorTest extends TestCase {
 
 		$this->translator->onTaskDecided(
 			task: new SignerStepTask(sequenceUuid: 'seq-1', taskUuid: 'task-1', position: 1, objectUuid: 'sign-req-1'),
-			decision: new SignerStepDecision(userId: 'alice', comment: 'akkoord', isRejecting: false)
+			decision: new SignerStepDecision(userId: 'alice', comment: 'akkoord', isRejecting: false, isApproving: true)
 		);
 
 	}//end testApprovingDecisionDispatchesApproved()
@@ -219,10 +219,36 @@ final class SignerEventTranslatorTest extends TestCase {
 
 		$this->translator->onTaskDecided(
 			task: new SignerStepTask(sequenceUuid: 'seq-1', taskUuid: 'task-1', position: 1, objectUuid: 'sign-req-1'),
-			decision: new SignerStepDecision(userId: 'alice', comment: 'niet akkoord', isRejecting: true)
+			decision: new SignerStepDecision(userId: 'alice', comment: 'niet akkoord', isRejecting: true, isApproving: false)
 		);
 
 	}//end testRejectingDecisionDispatchesRejected()
+
+	/**
+	 * A decision that neither approves nor rejects, or approves without a
+	 * signer, dispatches nothing and warns.
+	 *
+	 * @return void
+	 */
+	public function testUndecidedOrUnsignedDecisionDispatchesNothing(): void {
+		$this->dispatcher->expects($this->never())->method('dispatchTyped');
+		$this->logger->expects($this->exactly(3))->method('warning');
+
+		$task = new SignerStepTask(sequenceUuid: 'seq-1', taskUuid: 'task-1', position: 1, objectUuid: 'sign-req-1');
+		$this->translator->onTaskDecided(
+			task: $task,
+			decision: new SignerStepDecision(userId: 'alice', comment: null, isRejecting: false, isApproving: false)
+		);
+		$this->translator->onTaskDecided(
+			task: $task,
+			decision: new SignerStepDecision(userId: null, comment: null, isRejecting: false, isApproving: true)
+		);
+		$this->translator->onTaskDecided(
+			task: $task,
+			decision: new SignerStepDecision(userId: '', comment: null, isRejecting: false, isApproving: true)
+		);
+
+	}//end testUndecidedOrUnsignedDecisionDispatchesNothing()
 
 	/**
 	 * Sequence completion dispatches the chain-completed event verbatim.
