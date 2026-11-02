@@ -369,6 +369,12 @@ export default {
 			return this.rules.columns()
 		},
 
+		/**
+		 * One page of the client-side list: the store holds every rule.
+		 *
+		 * @return {object}
+		 * @spec openspec/specs/entity-publication-policies/spec.md#requirement-three-separate-admin-surfaces-must-exist
+		 */
 		paginationData() {
 			const total = this.rules.store[this.rules.listKey].length
 			const pages = Math.ceil(total / this.pageSize)
