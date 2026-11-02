@@ -36,6 +36,11 @@ jest.mock(
 	{ virtual: true },
 )
 jest.mock('vue-material-design-icons/Delete.vue', () => ({}))
+jest.mock(
+	'@conduction/nextcloud-vue',
+	() => require('../../tests/jest/dialogGolden.js').cnVueModule(),
+	{ virtual: true },
+)
 
 const GOLDEN = path.join(__dirname, '../../tests/jest/golden/form-dialogs.json')
 const RECORD = process.env.RECORD_GOLDEN === '1'
@@ -85,7 +90,7 @@ describe('record form dialogs golden', () => {
 				}
 				const page = await renderStubbed(component, {
 					props: { ...props, ...listeners },
-					real: ['FormDialogActions'],
+					real: ['CnDialogActions'],
 				})
 				if (props.editingRecord && page.vm.resetForm) {
 					page.vm.resetForm()

@@ -8,15 +8,15 @@
 	it never trims/dedupes/splits client-side.
 -->
 <script>
+import { CnDialogActions } from '@conduction/nextcloud-vue'
 import { translate as t } from '@nextcloud/l10n'
-import { NcButton, NcDialog, NcLoadingIcon, NcTextArea } from '@nextcloud/vue'
+import { NcDialog, NcTextArea } from '@nextcloud/vue'
 
 export default {
 	name: 'CustomDictionaryImportDialog',
 	components: {
-		NcButton,
+		CnDialogActions,
 		NcDialog,
-		NcLoadingIcon,
 		NcTextArea,
 	},
 
@@ -117,18 +117,13 @@ export default {
 		</div>
 
 		<template #actions>
-			<NcButton variant="tertiary" @click="onClose">
-				{{ t('filinq', 'Close') }}
-			</NcButton>
-			<NcButton
-				variant="primary"
-				:disabled="importing || !canSubmit"
-				@click="submit">
-				<template v-if="importing" #icon>
-					<NcLoadingIcon :size="20" />
-				</template>
-				{{ t('filinq', 'Import') }}
-			</NcButton>
+			<CnDialogActions
+				:saving="importing"
+				:canSubmit="canSubmit"
+				:cancelLabel="t('filinq', 'Close')"
+				:confirmLabel="t('filinq', 'Import')"
+				@cancel="onClose"
+				@submit="submit" />
 		</template>
 	</NcDialog>
 </template>
