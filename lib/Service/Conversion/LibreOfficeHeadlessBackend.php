@@ -295,11 +295,12 @@ class LibreOfficeHeadlessBackend implements ConversionBackendInterface {
 		$baseName = $this->stripExtension(name: $name);
 
 		$pdfBytes = $this->exportPdfBytes(
-			bytes: $this->sourceBytes(source: $source),
-			extension: $this->extractExtension(name: $name),
-			convertTo: self::FILTER_PDFA,
-			binary: $binary,
-			timeout: $timeout
+			export: new SofficeExport(
+				bytes: $this->sourceBytes(source: $source),
+				extension: $this->extractExtension(name: $name),
+				convertTo: self::FILTER_PDFA
+			),
+			command: new SofficeCommand(binary: $binary, timeout: $timeout)
 		);
 
 		$parent = $source->getParent();
@@ -355,12 +356,8 @@ class LibreOfficeHeadlessBackend implements ConversionBackendInterface {
 
 		return $this->underLock(
 			work: fn (): string => $this->exportPdfBytes(
-				bytes: $bytes,
-				extension: $ext,
-				convertTo: 'pdf:writer_pdf_Export:' . json_encode($filter),
-				binary: $binary,
-				timeout: $timeout,
-				inputFilter: (self::INPUT_FILTERS[$ext] ?? [])
+				export: new SofficeExport(bytes: $bytes, extension: $ext, convertTo: 'pdf:writer_pdf_Export:' . json_encode($filter)),
+				command: new SofficeCommand(binary: $binary, timeout: $timeout, inputFilter: (self::INPUT_FILTERS[$ext] ?? []))
 			)
 		);
 
@@ -391,13 +388,8 @@ class LibreOfficeHeadlessBackend implements ConversionBackendInterface {
 
 		return $this->underLock(
 			work: fn (): string => $this->exportPdfBytes(
-				bytes: $html,
-				extension: 'html',
-				convertTo: $exportFilter,
-				binary: $binary,
-				timeout: $timeout,
-				inputFilter: self::INPUT_FILTERS['html'],
-				outputExtension: $toExtension
+				export: new SofficeExport(bytes: $html, extension: 'html', convertTo: $exportFilter, outputExtension: $toExtension),
+				command: new SofficeCommand(binary: $binary, timeout: $timeout, inputFilter: self::INPUT_FILTERS['html'])
 			)
 		);
 
@@ -454,42 +446,40 @@ class LibreOfficeHeadlessBackend implements ConversionBackendInterface {
 	 * The source is written as `input.<ext>`, so soffice emits `input.pdf`:
 	 * that is the name read back, whatever the original file was called.
 	 *
-	 * @param string $bytes        The source bytes.
-	 * @param string $extension    The source extension, '' for none.
-	 * @param string $convertTo    The --convert-to argument.
-	 * @param string $binary       Path to the soffice binary.
-	 * @param int    $timeout      Timeout in seconds.
-	 * @param array<int, string> $inputFilter Extra arguments that choose how soffice opens the source.
-	 * @param string $outputExtension The extension soffice gives its output (pdf, docx, odt).
+	 * @param SofficeExport  $export  The source and the output asked for.
+	 * @param SofficeCommand $command How soffice is started.
 	 *
 	 * @return string The output bytes.
 	 *
 	 * @throws ConversionFailedException On soffice failure, timeout, or file I/O error.
 	 */
-	private function exportPdfBytes(
-		string $bytes,
-		string $extension,
-		string $convertTo,
-		string $binary,
-		int $timeout,
-		array $inputFilter = [],
-		string $outputExtension = 'pdf',
-	): string {
+	private function exportPdfBytes(SofficeExport $export, SofficeCommand $command): string {
 		$tmpDir = sys_get_temp_dir() . '/filinq_libreoffice_' . bin2hex(random_bytes(8));
 		mkdir($tmpDir, 0700, true);
 
-		$srcPath = $tmpDir . '/' . rtrim(self::INPUT_STEM . '.' . $extension, '.');
+		$srcPath = $tmpDir . '/' . rtrim(self::INPUT_STEM . '.' . $export->extension, '.');
 
 		try {
-			file_put_contents($srcPath, $bytes);
+			file_put_contents($srcPath, $export->bytes);
 
 			// The array form of proc_open avoids the `/bin/sh -c` layer entirely.
 			// `--norestore` and `--nofirststartwizard` keep soffice from bringing
 			// up its on-disk profile UI under headless; the input filter, when
 			// there is one, chooses how soffice opens the source.
-			$argv = [$binary, '--headless', '--norestore', '--nofirststartwizard', ...$inputFilter, '--convert-to', $convertTo, '--outdir', $tmpDir, $srcPath];
+			$argv = [
+				$command->binary,
+				'--headless',
+				'--norestore',
+				'--nofirststartwizard',
+				...$command->inputFilter,
+				'--convert-to',
+				$export->convertTo,
+				'--outdir',
+				$tmpDir,
+				$srcPath,
+			];
 
-			$exitCode = $this->processRunner->run(argv: $argv, timeout: $timeout, tmpDir: $tmpDir, backendName: $this->name());
+			$exitCode = $this->processRunner->run(argv: $argv, timeout: $command->timeout, tmpDir: $tmpDir, backendName: $this->name());
 			if ($exitCode !== 0) {
 				throw new ConversionFailedException(
 					message: sprintf('soffice exited with code %d.', $exitCode),
@@ -504,7 +494,7 @@ class LibreOfficeHeadlessBackend implements ConversionBackendInterface {
 				);
 			}
 
-			return $this->readEmittedPdf(tmpDir: $tmpDir, baseName: self::INPUT_STEM, extension: $outputExtension);
+			return $this->readEmittedPdf(tmpDir: $tmpDir, baseName: self::INPUT_STEM, extension: $export->outputExtension);
 		} finally {
 			// Clean up the temp directory regardless of outcome.
 			$this->cleanupDir(dir: $tmpDir);
