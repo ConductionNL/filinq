@@ -43,6 +43,8 @@ use PHPUnit\Framework\TestCase;
  * @covers \OCA\Filinq\Service\IntakeDetachmentService
  * @covers \OCA\Filinq\Service\IntakeService
  * @covers \OCA\Filinq\Service\PartySuggestionService
+ * @covers \OCA\Filinq\Service\Support\PdfConversions
+ * @covers \OCA\Filinq\Service\Support\MergeParts
  */
 class ReadsCurrentUserIdTest extends TestCase {
 

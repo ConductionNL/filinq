@@ -34,6 +34,7 @@ use OCA\Filinq\Service\DocumentStorageService;
 use OCA\Filinq\Service\GeneratedDocumentLogger;
 use OCA\Filinq\Service\ObjectionTermCalculator;
 use OCA\Filinq\Service\PdfService;
+use OCA\Filinq\Service\Support\PdfRendering;
 use OCA\Filinq\Service\TemplateRenderer;
 use OCA\Filinq\Service\TemplateService;
 use OCP\App\IAppManager;
@@ -83,7 +84,7 @@ class DocumentServiceDecisionLetterTest extends TestCase {
 		return new DocumentService(
 			$templates,
 			new DataResolverService($container, $appManager, $logger, $appConfig),
-			new DocumentRenderPipeline($renderer, new PdfService($logger, $renderer), $objectResolver, $logger, $rasterizer, new ObjectionTermCalculator($appConfig)),
+			new DocumentRenderPipeline(new PdfRendering(renderer: $renderer, pdf: new PdfService($logger, $renderer)), $objectResolver, $logger, $rasterizer, new ObjectionTermCalculator($appConfig)),
 			$this->createMock(DocumentStorageService::class),
 			new GeneratedDocumentLogger($objectResolver, $logger),
 			$this->createMock(originalClassName: DocumentJobStore::class)

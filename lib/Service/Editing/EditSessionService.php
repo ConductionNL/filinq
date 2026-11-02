@@ -111,6 +111,20 @@ class EditSessionService {
 	private const MAX_BLOCKS = 400;
 
 	/**
+	 * The document metadata codec.
+	 *
+	 * @var PackageMetadataCodec
+	 */
+	private readonly PackageMetadataCodec $metadata;
+
+	/**
+	 * The chart embedding codec.
+	 *
+	 * @var ChartCodec
+	 */
+	private readonly ChartCodec $charts;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param IRootFolder $rootFolder The Nextcloud root folder.
@@ -118,8 +132,6 @@ class EditSessionService {
 	 * @param GuardedWriter $writer The guarded read-modify-write.
 	 * @param DocumentGuard $guard The standing refusals.
 	 * @param IAppConfig $appConfig App configuration.
-	 * @param PackageMetadataCodec $metadata The document metadata codec.
-	 * @param ChartCodec $charts The chart embedding codec.
 	 *
 	 * @return void
 	 */
@@ -129,9 +141,9 @@ class EditSessionService {
 		private readonly GuardedWriter $writer,
 		private readonly DocumentGuard $guard,
 		private readonly IAppConfig $appConfig,
-		private readonly PackageMetadataCodec $metadata = new PackageMetadataCodec(),
-		private readonly ChartCodec $charts = new ChartCodec(),
 	) {
+		$this->metadata = new PackageMetadataCodec();
+		$this->charts = new ChartCodec();
 
 	}//end __construct()
 

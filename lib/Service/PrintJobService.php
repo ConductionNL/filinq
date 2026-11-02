@@ -36,6 +36,7 @@ use InvalidArgumentException;
 use OCA\Filinq\Kernel\Contracts\PrintJobServiceInterface;
 use OCA\Filinq\Kernel\JobQueueInterface;
 use OCA\Filinq\Kernel\PrintJobRequest;
+use OCA\Filinq\Service\Support\TemplateSources;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -62,8 +63,7 @@ class PrintJobService implements PrintJobServiceInterface {
 	 * Constructor for PrintJobService
 	 *
 	 * @param PdfService          $pdfService   Service for PDF generation
-	 * @param TemplateService     $templateSvc  Service for template retrieval
-	 * @param DataResolverService $dataResolver Resolves an item's dataRefs into template data
+	 * @param TemplateSources $sources The template store and the data resolver.
 	 * @param PrintJobRepository  $jobs         The printJob rows
 	 * @param PrintJobFileStore   $files        The PDFs in app data
 	 * @param JobQueueInterface            $jobList      Nextcloud job list for async dispatch
@@ -73,8 +73,7 @@ class PrintJobService implements PrintJobServiceInterface {
 	 */
 	public function __construct(
 		private readonly PdfService $pdfService,
-		private readonly TemplateService $templateSvc,
-		private readonly DataResolverService $dataResolver,
+		private readonly TemplateSources $sources,
 		private readonly PrintJobRepository $jobs,
 		private readonly PrintJobFileStore $files,
 		private readonly JobQueueInterface $jobList,
@@ -177,7 +176,7 @@ class PrintJobService implements PrintJobServiceInterface {
 		}
 
 		try {
-			$template = $this->templateSvc->getTemplate(id: $templateId);
+			$template = $this->sources->templates->getTemplate(id: $templateId);
 		} catch (Exception $e) {
 			$this->logger->error(
 				message: 'Print job template could not be loaded: ' . $e->getMessage(),
@@ -420,7 +419,7 @@ class PrintJobService implements PrintJobServiceInterface {
 			return $data;
 		}
 
-		$resolution = $this->dataResolver->resolve(dataRefs: $refs, adHocData: $data);
+		$resolution = $this->sources->data->resolve(dataRefs: $refs, adHocData: $data);
 		if ($resolution['errors'] !== []) {
 			throw new InvalidArgumentException('Data could not be resolved: ' . (string) ($resolution['errors'][0]['message'] ?? ''));
 		}

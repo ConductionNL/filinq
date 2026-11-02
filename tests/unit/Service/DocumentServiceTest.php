@@ -154,8 +154,7 @@ class DocumentServiceTest extends TestCase {
 			$this->templateSvc,
 			$this->dataResolver,
 			new \OCA\Filinq\Service\DocumentRenderPipeline(
-				$this->renderer,
-				$this->pdfService,
+				new \OCA\Filinq\Service\Support\PdfRendering(renderer: $this->renderer, pdf: $this->pdfService),
 				$objectResolver,
 				$logger,
 				$this->passThroughRasterizer()

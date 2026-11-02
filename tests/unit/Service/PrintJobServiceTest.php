@@ -31,6 +31,7 @@ use OCA\Filinq\Kernel\PrintJobRequest;
 use OCA\Filinq\Service\DataResolverService;
 use OCA\Filinq\Service\PdfService;
 use OCA\Filinq\Service\PrintJobService;
+use OCA\Filinq\Service\Support\TemplateSources;
 use OCA\Filinq\Service\TemplateService;
 use OCP\BackgroundJob\IJobList;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -104,8 +105,7 @@ class PrintJobServiceTest extends TestCase {
 
 		$this->service = new PrintJobService(
 			$pdf,
-			$templates,
-			$this->resolver,
+			new TemplateSources(templates: $templates, data: $this->resolver),
 			$this->printJobRepository(),
 			$this->printJobFileStore(),
 			new JobQueue(jobList: $this->jobList),

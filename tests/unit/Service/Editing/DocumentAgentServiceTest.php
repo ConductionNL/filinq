@@ -26,6 +26,7 @@ use OCA\Filinq\Service\Editing\EditSessionService;
 use OCA\Filinq\Service\DocumentGenerationRecord;
 use OCA\Filinq\Service\GeneratedDocumentLogger;
 use OCA\Filinq\Service\PdfConversionService;
+use OCA\Filinq\Service\Support\AgentArtefacts;
 use OCA\OpenRegister\Mcp\Attribute\McpTool;
 use OCP\Files\File;
 use OCP\Files\Folder;
@@ -142,8 +143,7 @@ class DocumentAgentServiceTest extends TestCase {
 	private function service(): DocumentAgentService {
 		return new DocumentAgentService(
 			$this->editSession,
-			$this->pdfConversion,
-			$this->marker,
+			new AgentArtefacts(pdfConversion: $this->pdfConversion, marker: $this->marker),
 			$this->documentLogger,
 			$this->rootFolder,
 			$this->userSession,

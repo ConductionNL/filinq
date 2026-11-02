@@ -24,6 +24,7 @@ use OCA\Filinq\Service\Charts\TableHtmlRenderer;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\DocumentRenderPipeline;
 use OCA\Filinq\Service\PdfService;
+use OCA\Filinq\Service\Support\PdfRendering;
 use OCA\Filinq\Service\TemplateRenderer;
 use OCP\App\IAppManager;
 use OCA\Filinq\Service\Conversion\HtmlToOfficeConverter;
@@ -50,8 +51,7 @@ class DocumentRenderPipelineOdfTest extends TestCase {
 		$renderer = new TemplateRenderer(new NullLogger(), new ChartSvgRenderer(), new TableHtmlRenderer());
 
 		return new DocumentRenderPipeline(
-			$renderer,
-			$this->createMock(PdfService::class),
+			new PdfRendering(renderer: $renderer, pdf: $this->createMock(PdfService::class)),
 			new DocumentObjectServiceResolver($container, $appManager),
 			new NullLogger(),
 			$rasterizer,
