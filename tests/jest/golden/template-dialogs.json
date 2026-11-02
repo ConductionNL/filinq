@@ -1042,14 +1042,14 @@
 					{
 						"label": "Cancel",
 						"variant": null,
-						"disabled": false,
+						"disabled": true,
 						"busyIcon": false
 					},
 					{
 						"label": "Print %n sheets #2",
 						"variant": "primary",
 						"disabled": true,
-						"busyIcon": false
+						"busyIcon": true
 					}
 				]
 			},
