@@ -193,25 +193,13 @@ export default {
 		 *
 		 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 		 */
-		async load() {
-			if (this.objectId === '') {
-				this.loading = false
-				return
-			}
-			try {
-				const response = await this.fetchForHostObject(
-					'/apps/filinq/api/case-archive/preflight',
-				)
-				if (response.ok === false) {
-					this.error = true
-					return
-				}
-				this.preflight = await response.json()
-			} catch {
-				this.error = true
-			} finally {
-				this.loading = false
-			}
+		load() {
+			return this.loadForHostObject(
+				'/apps/filinq/api/case-archive/preflight',
+				(body) => {
+					this.preflight = body
+				},
+			)
 		},
 
 		/**

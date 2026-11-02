@@ -300,13 +300,8 @@ import DdSearchBar from '../../components/DdSearchBar.vue'
 import SanitizationReportModal from '../../modals/SanitizationReportModal.vue'
 import ValidationResultModal from '../../modals/ValidationResultModal.vue'
 import FileViewerPage from '../fileViewer/FileViewerPage.vue'
-import {
-	fetchOcrStatus,
-	isOcrCandidate,
-	ocrBadgeLabel,
-	ocrErrorMessage,
-	runOcr,
-} from '../../services/ocr.js'
+import { ocrRun } from '../../mixins/ocrRun.js'
+import { fetchOcrStatus, isOcrCandidate, ocrBadgeLabel } from '../../services/ocr.js'
 import { fetchReviewMarks } from '../../services/reviewMark.js'
 import { sanitizeFile } from '../../services/sanitization.js'
 import { validateFile } from '../../services/validationService.js'
@@ -363,6 +358,8 @@ export default {
 		CheckboxMultipleMarkedOutline,
 		FilterOutline,
 	},
+
+	mixins: [ocrRun],
 
 	data() {
 		return {
@@ -578,24 +575,12 @@ export default {
 		async runOcrOn(row) {
 			this.ocrRunning = { ...this.ocrRunning, [row.fileId]: true }
 			try {
-				const result = await runOcr(row.fileId)
-				if (result.ocrProcessed) {
+				const result = await this.runOcrAndReport(row.fileId)
+				if (result) {
 					this.ocrResults = {
 						...this.ocrResults,
 						[String(row.fileId)]: result,
 					}
-					showSuccess(
-						t('filinq', 'OCR read {length} characters.', {
-							length: result.textLength,
-						}),
-					)
-				} else {
-					showError(ocrErrorMessage(result))
-				}
-			} catch (error) {
-				showError(ocrErrorMessage(error))
-				if ([409, 503].includes(error?.response?.status)) {
-					this.ocrAvailable = false
 				}
 			} finally {
 				this.ocrRunning = { ...this.ocrRunning, [row.fileId]: false }
