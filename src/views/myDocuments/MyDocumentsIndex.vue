@@ -253,26 +253,28 @@ import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
 			executeDelete()/executeBulkDelete() run only from @confirm, so
 			nothing is removed without an explicit confirmation.
 		-->
-		<ConfirmActionDialog
+		<CnConfirmDialog
 			v-if="deleteTarget"
-			:name="t('filinq', 'Delete document')"
+			:dialogTitle="t('filinq', 'Delete document')"
 			:message="deleteMessage"
-			:busy="deleting"
+			:confirmLabel="t('filinq', 'Delete')"
+			variant="error"
 			@confirm="executeDelete"
-			@cancel="cancelDelete" />
+			@close="cancelDelete" />
 
-		<ConfirmActionDialog
+		<CnConfirmDialog
 			v-if="bulkDeleteNames.length > 0"
-			:name="t('filinq', 'Delete selected items')"
+			:dialogTitle="t('filinq', 'Delete selected items')"
 			:message="bulkDeleteMessage"
-			:busy="deleting"
+			:confirmLabel="t('filinq', 'Delete')"
+			variant="error"
 			@confirm="executeBulkDelete"
-			@cancel="cancelBulkDelete" />
+			@close="cancelBulkDelete" />
 	</div>
 </template>
 
 <script>
-import { CnStatusBadge } from '@conduction/nextcloud-vue'
+import { CnConfirmDialog, CnStatusBadge } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
 import { NcActionButton, NcActions } from '@nextcloud/vue'
@@ -295,7 +297,6 @@ import DdIcon from '../../components/DdIcon.vue'
 import DdIndexPage from '../../components/DdIndexPage.vue'
 import DdPageHeader from '../../components/DdPageHeader.vue'
 import DdSearchBar from '../../components/DdSearchBar.vue'
-import ConfirmActionDialog from '../../dialogs/ConfirmActionDialog.vue'
 import SanitizationReportModal from '../../modals/SanitizationReportModal.vue'
 import ValidationResultModal from '../../modals/ValidationResultModal.vue'
 import FileViewerPage from '../fileViewer/FileViewerPage.vue'
@@ -346,7 +347,7 @@ export default {
 		ValidationResultModal,
 		SanitizationReportModal,
 		BroomIcon,
-		ConfirmActionDialog,
+		CnConfirmDialog,
 		DotsHorizontal,
 		Eye,
 		// TODO: re-enable with the Status column (see import above).
@@ -394,7 +395,6 @@ export default {
 
 			deleteTarget: null, // row awaiting delete confirmation, or null
 			bulkDeleteNames: [], // file names awaiting bulk-delete confirmation
-			deleting: false,
 
 			// OCR (ocr-trigger-surface): whether it can run here, the last
 			// result per file id, and which files are running now.
@@ -715,7 +715,6 @@ export default {
 		async executeBulkDelete() {
 			const names = this.bulkDeleteNames
 			if (names.length === 0) return
-			this.deleting = true
 			try {
 				const failed = await myDocumentsStore.deleteDocuments(names)
 				if (failed.length > 0) {
@@ -737,7 +736,6 @@ export default {
 			} finally {
 				this.selectedIds = []
 				this.bulkDeleteNames = []
-				this.deleting = false
 			}
 		},
 
@@ -837,7 +835,6 @@ export default {
 		async executeDelete() {
 			const row = this.deleteTarget
 			if (!row) return
-			this.deleting = true
 			try {
 				await myDocumentsStore.deleteDocument(row.fileName)
 				showSuccess(
@@ -854,7 +851,6 @@ export default {
 				)
 			} finally {
 				this.deleteTarget = null
-				this.deleting = false
 			}
 		},
 

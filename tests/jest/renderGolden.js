@@ -46,15 +46,20 @@ function stubComponent(name, registry) {
 
 /**
  * A copy of the component whose child components are stubs, except the
- * names in `real`, which render for real with their own children stubbed.
+ * names in `real`, which render for real with their own children stubbed,
+ * and the names in `keep`, which render as they are.
  *
  * @param {object} component The component.
- * @param {object} context `{ stubs, real }`: the stub registry and the names to keep.
+ * @param {object} context `{ stubs, real, keep }`: the stub registry and the names to render.
  * @return {object} The component with stubbed children.
  */
 function stubTree(component, context) {
 	const stubbed = { ...component, components: {} }
 	for (const [name, child] of Object.entries(component.components || {})) {
+		if (context.keep.includes(name)) {
+			stubbed.components[name] = child
+			continue
+		}
 		stubbed.components[name] = context.real.includes(name)
 			? stubTree(child, context)
 			: stubComponent(name, context.stubs)
@@ -66,12 +71,16 @@ function stubTree(component, context) {
  * Mount a component with every child component stubbed.
  *
  * @param {object} component The component under test.
- * @param {object} options `{ props, data, real }`: props to pass, data to merge after creation, and child component names to render for real.
+ * @param {object} options `{ props, data, real, keep, globals, errorHandler }`: props to pass, data to merge after creation, child component names to render for real, child component names to render unstubbed, extra global properties (`$route`), and an app error handler.
  * @return {Promise<object>} `{ vm, html, stubs, unmount }`.
  */
 async function renderStubbed(component, options = {}) {
 	const stubs = []
-	const stubbed = stubTree(component, { stubs, real: options.real || [] })
+	const stubbed = stubTree(component, {
+		stubs,
+		real: options.real || [],
+		keep: options.keep || [],
+	})
 	const el = document.createElement('div')
 	document.body.appendChild(el)
 	const app = createApp(stubbed, options.props || {})
@@ -79,6 +88,10 @@ async function renderStubbed(component, options = {}) {
 		vars ? text + ' ' + JSON.stringify(vars) : text
 	app.config.globalProperties.n = (appId, one, many, count) =>
 		(count === 1 ? one : many) + ' #' + count
+	Object.assign(app.config.globalProperties, options.globals || {})
+	if (options.errorHandler) {
+		app.config.errorHandler = options.errorHandler
+	}
 	const vm = app.mount(el)
 	if (options.data) {
 		Object.assign(vm.$data, options.data)

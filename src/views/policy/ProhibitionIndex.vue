@@ -131,23 +131,29 @@ import { prohibitionStore } from '../../store/store.js'
 			runs only from @confirm, so an explicit confirmation is still
 			required before anything is removed.
 		-->
-		<ConfirmActionDialog
+		<CnConfirmDialog
 			v-if="deleteTarget"
-			:name="t('filinq', 'Delete prohibition')"
+			ref="confirmDialog"
+			:dialogTitle="t('filinq', 'Delete prohibition')"
 			:message="deleteMessage"
-			:busy="deleting"
-			@confirm="executeDelete"
-			@cancel="cancelDelete" />
+			:confirmLabel="t('filinq', 'Delete')"
+			variant="error"
+			@confirm="executeDelete($refs.confirmDialog)"
+			@close="cancelDelete" />
 	</div>
 </template>
 
 <script>
-import { CnIndexPage, CnStatsBlock, CnStatusBadge } from '@conduction/nextcloud-vue'
+import {
+	CnConfirmDialog,
+	CnIndexPage,
+	CnStatsBlock,
+	CnStatusBadge,
+} from '@conduction/nextcloud-vue'
 import { NcActionButton, NcActions } from '@nextcloud/vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
 import Pencil from 'vue-material-design-icons/Pencil.vue'
-import ConfirmActionDialog from '../../dialogs/ConfirmActionDialog.vue'
 import ProhibitionFormModal from '../../dialogs/ProhibitionFormModal.vue'
 import {
 	indexPaging,
@@ -164,7 +170,7 @@ export default {
 		NcActions,
 		NcActionButton,
 		ProhibitionFormModal,
-		ConfirmActionDialog,
+		CnConfirmDialog,
 		Delete,
 		DotsHorizontal,
 		Pencil,
