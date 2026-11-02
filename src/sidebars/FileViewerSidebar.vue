@@ -579,7 +579,6 @@ const documentRecordId = computed(() =>
 
 <script>
 import axios from '@nextcloud/axios'
-import { generateRemoteUrl } from '@nextcloud/router'
 import {
 	NcAppSidebar,
 	NcButton,
@@ -606,6 +605,7 @@ import { ENTITY_TYPES, entityTypeLabel } from '../services/entityTypes.js'
 import { fetchPseudonymStatus, keyWarning } from '../services/pseudonymisation.js'
 import { accessibilityNote } from '../services/redactionAccessibility.js'
 import { reportRows } from '../services/sanitization.js'
+import { encodedWebdavDownloadUrl } from '../services/storagePathUrls.js'
 import { entryIsChecked } from '../store/modules/anonymization.js'
 
 export default {
@@ -1379,24 +1379,10 @@ export default {
 		 * WebDAV download URL for the anonymised result, when available.
 		 *
 		 * @return {string}
+		 * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-anonymization
 		 */
 		downloadUrl() {
-			const path = this.entry?.anonymizedFilePath
-			if (!path) {
-				return ''
-			}
-			const parts = path.split('/')
-			const filesIndex = parts.indexOf('files')
-			if (filesIndex >= 0) {
-				// Encode each segment so a dossier/file name containing `?`,
-				// `#` or `&` doesn't corrupt the download URL.
-				const relativePath = parts
-					.slice(filesIndex + 1)
-					.map(encodeURIComponent)
-					.join('/')
-				return generateRemoteUrl('webdav') + '/' + relativePath
-			}
-			return generateRemoteUrl('webdav')
+			return encodedWebdavDownloadUrl(this.entry?.anonymizedFilePath)
 		},
 	},
 
@@ -1664,23 +1650,10 @@ export default {
 		 *
 		 * @param {string} anonymizedFilePath Absolute storage path of the result.
 		 * @return {string} The WebDAV URL, or '' when no path is given.
+		 * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-anonymization
 		 */
 		downloadUrlFor(anonymizedFilePath) {
-			if (!anonymizedFilePath) {
-				return ''
-			}
-			const parts = anonymizedFilePath.split('/')
-			const filesIndex = parts.indexOf('files')
-			if (filesIndex >= 0) {
-				// Encode each segment so a dossier/file name containing `?`,
-				// `#` or `&` doesn't corrupt the download URL.
-				const relativePath = parts
-					.slice(filesIndex + 1)
-					.map(encodeURIComponent)
-					.join('/')
-				return generateRemoteUrl('webdav') + '/' + relativePath
-			}
-			return generateRemoteUrl('webdav')
+			return encodedWebdavDownloadUrl(anonymizedFilePath)
 		},
 
 		/**
