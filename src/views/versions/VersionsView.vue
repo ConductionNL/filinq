@@ -104,11 +104,19 @@ SPDX-License-Identifier: EUPL-1.2
 			</template>
 		</CnDataTable>
 
-		<ConfirmRestoreVersionDialog
+		<CnConfirmDialog
 			v-if="restoreTarget"
-			:versionNumber="restoreTarget.timestamp"
+			:dialogTitle="t('filinq', 'Restore version')"
+			:message="
+				t(
+					'filinq',
+					'Restore to version {n}? The current state will be saved as a new version first.',
+					{ n: restoreTarget.timestamp },
+				)
+			"
+			:confirmLabel="t('filinq', 'Restore')"
 			@confirm="confirmRestore"
-			@cancel="restoreTarget = null" />
+			@close="restoreTarget = null" />
 
 		<FinalDocumentReasonDialog
 			v-if="prompt"
@@ -122,10 +130,9 @@ SPDX-License-Identifier: EUPL-1.2
 </template>
 
 <script>
-import { CnDataTable } from '@conduction/nextcloud-vue'
+import { CnConfirmDialog, CnDataTable } from '@conduction/nextcloud-vue'
 import { translate as t } from '@nextcloud/l10n'
 import { NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
-import ConfirmRestoreVersionDialog from '../../dialogs/ConfirmRestoreVersionDialog.vue'
 import FinalDocumentReasonDialog from '../../dialogs/FinalDocumentReasonDialog.vue'
 import {
 	correctDocument,
@@ -146,7 +153,7 @@ export default {
 		NcButton,
 		NcLoadingIcon,
 		NcNoteCard,
-		ConfirmRestoreVersionDialog,
+		CnConfirmDialog,
 		FinalDocumentReasonDialog,
 	},
 

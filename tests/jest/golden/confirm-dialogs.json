@@ -21,21 +21,12 @@
 		},
 		"loading": {
 			"view": null,
-			"calls": [
-				[
-					"dossierStore",
-					"removeDocument",
-					"row-1",
-					"row-1"
-				]
-			]
+			"calls": [["dossierStore", "removeDocument", "row-1", "row-1"]]
 		},
 		"success": null,
 		"error": {
 			"view": null,
-			"unhandled": [
-				"refused"
-			]
+			"unhandled": ["refused"]
 		}
 	},
 	"dictionaryTermRemove": {
@@ -67,36 +58,20 @@
 					{
 						"label": "Cancel",
 						"variant": null,
-						"disabled": true,
+						"disabled": false,
 						"busyIcon": false
 					},
 					{
 						"label": "Remove",
 						"variant": "error",
 						"disabled": true,
-						"busyIcon": false
+						"busyIcon": true
 					}
 				]
 			},
 			"calls": [
-				[
-					"registerI18n.js",
-					"resolveI18nValue",
-					null,
-					"Custom dictionary"
-				],
-				[
-					"customDictionaryStore",
-					"deleteTerm",
-					"row-1",
-					"row-1"
-				],
-				[
-					"registerI18n.js",
-					"resolveI18nValue",
-					null,
-					"Custom dictionary"
-				]
+				["registerI18n.js", "resolveI18nValue", null, "Custom dictionary"],
+				["customDictionaryStore", "deleteTerm", "row-1", "row-1"]
 			]
 		},
 		"success": null,
@@ -120,9 +95,7 @@
 					}
 				]
 			},
-			"unhandled": [
-				"refused"
-			]
+			"unhandled": ["refused"]
 		}
 	},
 	"dictionaryDelete": {
@@ -154,24 +127,18 @@
 					{
 						"label": "Cancel",
 						"variant": null,
-						"disabled": true,
+						"disabled": false,
 						"busyIcon": false
 					},
 					{
 						"label": "Delete",
 						"variant": "error",
 						"disabled": true,
-						"busyIcon": false
+						"busyIcon": true
 					}
 				]
 			},
-			"calls": [
-				[
-					"customDictionaryStore",
-					"deleteDictionary",
-					"row-1"
-				]
-			]
+			"calls": [["customDictionaryStore", "deleteDictionary", "row-1"]]
 		},
 		"success": null,
 		"error": {
@@ -194,9 +161,7 @@
 					}
 				]
 			},
-			"unhandled": [
-				"Cannot read properties of undefined (reading 'colour')"
-			]
+			"unhandled": []
 		}
 	},
 	"documentDelete": {
@@ -228,24 +193,18 @@
 					{
 						"label": "Cancel",
 						"variant": null,
-						"disabled": true,
+						"disabled": false,
 						"busyIcon": false
 					},
 					{
 						"label": "Delete",
 						"variant": "error",
 						"disabled": true,
-						"busyIcon": false
+						"busyIcon": true
 					}
 				]
 			},
-			"calls": [
-				[
-					"myDocumentsStore",
-					"deleteDocument",
-					"Jaarverslag.pdf"
-				]
-			]
+			"calls": [["myDocumentsStore", "deleteDocument", "Jaarverslag.pdf"]]
 		},
 		"success": null,
 		"error": {
@@ -282,27 +241,18 @@
 					{
 						"label": "Cancel",
 						"variant": null,
-						"disabled": true,
+						"disabled": false,
 						"busyIcon": false
 					},
 					{
 						"label": "Delete",
 						"variant": "error",
 						"disabled": true,
-						"busyIcon": false
+						"busyIcon": true
 					}
 				]
 			},
-			"calls": [
-				[
-					"myDocumentsStore",
-					"deleteDocuments",
-					[
-						"a.pdf",
-						"b.pdf"
-					]
-				]
-			]
+			"calls": [["myDocumentsStore", "deleteDocuments", ["a.pdf", "b.pdf"]]]
 		},
 		"success": null,
 		"error": {
@@ -339,24 +289,18 @@
 					{
 						"label": "Cancel",
 						"variant": null,
-						"disabled": true,
+						"disabled": false,
 						"busyIcon": false
 					},
 					{
 						"label": "Delete",
 						"variant": "error",
 						"disabled": true,
-						"busyIcon": false
+						"busyIcon": true
 					}
 				]
 			},
-			"calls": [
-				[
-					"prohibitionStore",
-					"deleteProhibition",
-					"row-1"
-				]
-			]
+			"calls": [["prohibitionStore", "deleteProhibition", "row-1"]]
 		},
 		"success": null,
 		"error": {
@@ -411,24 +355,18 @@
 					{
 						"label": "Cancel",
 						"variant": null,
-						"disabled": true,
+						"disabled": false,
 						"busyIcon": false
 					},
 					{
 						"label": "Delete",
 						"variant": "error",
 						"disabled": true,
-						"busyIcon": false
+						"busyIcon": true
 					}
 				]
 			},
-			"calls": [
-				[
-					"standingConsentStore",
-					"deleteStandingConsent",
-					"row-1"
-				]
-			]
+			"calls": [["standingConsentStore", "deleteStandingConsent", "row-1"]]
 		},
 		"success": null,
 		"error": {
@@ -478,7 +416,7 @@
 			"view": {
 				"title": "Delete template",
 				"text": "Are you sure you want to delete \"{name}\"? This action cannot be undone. {\"name\":\"Jaarverslag\"}",
-				"noClose": false,
+				"noClose": true,
 				"buttons": [
 					{
 						"label": "Cancel",
@@ -489,18 +427,12 @@
 					{
 						"label": "Delete",
 						"variant": "error",
-						"disabled": false,
-						"busyIcon": false
+						"disabled": true,
+						"busyIcon": true
 					}
 				]
 			},
-			"calls": [
-				[
-					"useTemplateStore",
-					"deleteTemplate",
-					"row-1"
-				]
-			]
+			"calls": [["useTemplateStore", "deleteTemplate", "row-1"]]
 		},
 		"success": null,
 		"error": {
@@ -523,9 +455,7 @@
 					}
 				]
 			},
-			"unhandled": [
-				"refused"
-			]
+			"unhandled": ["refused"]
 		}
 	},
 	"templateRestore": {
@@ -550,22 +480,12 @@
 		},
 		"loading": {
 			"view": null,
-			"calls": [
-				[
-					"useTemplateStore",
-					"restoreVersion",
-					"tpl-1",
-					"row-1"
-				]
-			]
+			"calls": [["useTemplateStore", "restoreVersion", "tpl-1", "row-1"]]
 		},
 		"success": null,
 		"error": {
 			"view": null,
-			"unhandled": [
-				"refused",
-				"refused"
-			]
+			"unhandled": ["refused", "refused"]
 		}
 	},
 	"versionRestore": {
@@ -590,14 +510,7 @@
 		},
 		"loading": {
 			"view": null,
-			"calls": [
-				[
-					"versionService.js",
-					"restoreVersion",
-					0,
-					1700000000
-				]
-			]
+			"calls": [["versionService.js", "restoreVersion", 0, 1700000000]]
 		},
 		"success": null,
 		"error": {

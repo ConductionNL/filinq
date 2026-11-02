@@ -119,15 +119,17 @@ jest.mock(
 			require,
 			{
 				[path.join(src, 'components/CnDialog/CnDialog.vue')]: {
+					__esModule: true,
 					default: stub('CnDialog'),
 				},
 				[path.join(src, 'components/CnIcon/index.js')]: {
+					__esModule: true,
 					CnIcon: stub('CnIcon'),
 				},
 				[path.join(
 					src,
 					'components/CnConfirmValueField/CnConfirmValueField.vue',
-				)]: { default: stub('CnConfirmValueField') },
+				)]: { __esModule: true, default: stub('CnConfirmValueField') },
 			},
 		).default
 		return {

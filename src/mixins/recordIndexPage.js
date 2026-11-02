@@ -169,7 +169,6 @@ export const recordDeletion = {
 	data() {
 		return {
 			deleteTarget: null, // row awaiting delete confirmation, or null
-			deleting: false,
 		}
 	},
 
@@ -196,24 +195,24 @@ export const recordDeletion = {
 		/**
 		 * Delete the confirmed row. Reachable only from the confirmation
 		 * dialog's @confirm, so nothing is removed without an explicit
-		 * confirmation.
+		 * confirmation. A failed delete puts the dialog back in its confirm
+		 * state.
 		 *
+		 * @param {object} [dialog] The confirm dialog.
 		 * @return {Promise<void>}
 		 * @spec openspec/specs/orphaned-surface-restoration/spec.md#requirement-policy-surfaces-are-reachable-menu-ownership-deferred-req-ddosr-005
 		 */
-		async executeDelete() {
+		async executeDelete(dialog) {
 			const row = this.deleteTarget
 			if (!row) {
 				return
 			}
-			this.deleting = true
 			try {
 				await this.deleteRecord(recordId(row))
 				this.deleteTarget = null
 			} catch (err) {
 				console.error(this.$options.deleteFailedLog, err)
-			} finally {
-				this.deleting = false
+				dialog?.setResult(null)
 			}
 		},
 	},
