@@ -26,7 +26,6 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
-use OCA\Filinq\Exception\IntakeRefusedException;
 use OCA\Filinq\Kernel\Contracts\IntakeDetachmentServiceInterface;
 use OCA\Filinq\Kernel\Contracts\IntakeNotificationReachInterface;
 use OCA\Filinq\Kernel\Contracts\IntakeRoutingServiceInterface;
@@ -52,13 +51,9 @@ use Throwable;
  * @link     https://www.filinq.app
  *
  * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
- *
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The thirteenth class is the
- * bare Response: assign reads its target from the request body and answers a
- * value of the wrong type with the same empty 400 the dispatcher gives a typed
- * argument it cannot pass.
  */
 class IntakeController extends Controller {
+	use AnswersIntakeRefusals;
 	use ReadsTypedRequestParameters;
 
 	/**
@@ -189,7 +184,7 @@ class IntakeController extends Controller {
 			]
 		);
 		if ($body === null) {
-			return new Response(Http::STATUS_BAD_REQUEST);
+			return $this->badRequest();
 		}
 
 		$unauthenticated = $this->requireUser();
@@ -416,23 +411,4 @@ class IntakeController extends Controller {
 		);
 
 	}//end requireUser()
-
-	/**
-	 * Answer one failure with the status the service gave it.
-	 *
-	 * @param Throwable $error The failure.
-	 *
-	 * @return JSONResponse The refusal.
-	 *
-	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
-	 */
-	private function failure(Throwable $error): JSONResponse {
-		$status = Http::STATUS_INTERNAL_SERVER_ERROR;
-		if ($error instanceof IntakeRefusedException) {
-			$status = $error->getStatus();
-		}
-
-		return new JSONResponse(data: ['error' => $error->getMessage()], statusCode: $status);
-
-	}//end failure()
 }//end class
