@@ -257,6 +257,21 @@ const CONFIRM_DIALOGS =
 	/\/(ConfirmActionDialog|ConfirmDeleteTemplateDialog|ConfirmRestoreVersionDialog)\.vue$/
 
 /**
+ * Whether a bare import resolves to an installed package.
+ *
+ * @param {string} spec The import.
+ * @return {boolean} Installed.
+ */
+function isInstalled(spec) {
+	try {
+		require.resolve(spec)
+		return true
+	} catch {
+		return false
+	}
+}
+
+/**
  * Replace every import of a page, except the libraries above, the confirm
  * dialogs and the app's mixins, with a stub (components) or a recording module (everything else).
  *
@@ -278,7 +293,10 @@ function mockImportsOf(file) {
 		const target = spec.startsWith('.')
 			? path.resolve(path.dirname(file), spec)
 			: spec
-		const options = spec.startsWith('.') ? {} : { virtual: true }
+		// A virtual mock of an installed package leaks into the resolver cache
+		// and breaks the real mocks of later spec files in the same worker.
+		const options =
+			spec.startsWith('.') || isInstalled(spec) ? {} : { virtual: true }
 		if (spec.endsWith('.vue')) {
 			const name = path.basename(spec, '.vue')
 			jest.doMock(
