@@ -26,7 +26,6 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
-use OCA\Filinq\Exception\IntakeRefusedException;
 use OCA\Filinq\Kernel\Contracts\IntakeDetachmentServiceInterface;
 use OCA\Filinq\Kernel\Contracts\IntakeNotificationReachInterface;
 use OCA\Filinq\Kernel\Contracts\IntakeRoutingServiceInterface;
@@ -36,6 +35,7 @@ use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\AppFramework\Http\Response;
 use OCP\IGroupManager;
 use OCP\IRequest;
 use OCP\IUserSession;
@@ -53,6 +53,8 @@ use Throwable;
  * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
  */
 class IntakeController extends Controller {
+	use AnswersIntakeRefusals;
+	use ReadsTypedRequestParameters;
 
 	/**
 	 * Constructor.
@@ -156,58 +158,53 @@ class IntakeController extends Controller {
 	/**
 	 * Assign one waiting document to a record.
 	 *
+	 * The request body names the target: `register`, `schema` and `id`, and
+	 * `declaringApp` and `typeReference` for the app that owns the record type,
+	 * each a string that defaults to ''. `withAttachments` says whether
+	 * everything that arrived with the message goes along; it defaults to
+	 * false. A target value that is not a string answers a bare 400, before
+	 * the session is checked, as the dispatcher does for a typed argument.
+	 *
 	 * @param string $uuid The intake document.
-	 * @param string $register The target register slug.
-	 * @param string $schema The target schema slug.
-	 * @param string $id The target object id.
-	 * @param string $declaringApp App id of the app that owns the record type.
-	 * @param string $typeReference That app's reference for the record type.
-	 * @param bool $withAttachments Whether everything that arrived with the message goes along.
 	 *
-	 * @return JSONResponse The assigned document, or the refusal.
-	 *
-	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) `$withAttachments` is a field
-	 * of the request body, not a mode this code chose. Nextcloud binds a
-	 * controller parameter to the JSON key of the same name, so the SRP split
-	 * phpmd asks for is a split into two ROUTES for one thing a clerk does:
-	 * "file this letter, and the bijlagen that came with it". The service
-	 * behind it carries no flag, see IntakeService::assignWithAttachments().
+	 * @return Response The assigned document, or the refusal.
 	 *
 	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	#[NoAdminRequired]
-	public function assign(
-		string $uuid,
-		string $register = '',
-		string $schema = '',
-		string $id = '',
-		string $declaringApp = '',
-		string $typeReference = '',
-		bool $withAttachments = false,
-	): JSONResponse {
+	public function assign(string $uuid): Response {
+		$body = $this->typedRequestParameters(
+			spec: [
+				'register' => ['string', ''],
+				'schema' => ['string', ''],
+				'id' => ['string', ''],
+				'declaringApp' => ['string', ''],
+				'typeReference' => ['string', ''],
+				'withAttachments' => ['bool', false],
+			]
+		);
+		if ($body === null) {
+			return $this->badRequest();
+		}
+
 		$unauthenticated = $this->requireUser();
 		if ($unauthenticated !== null) {
 			return $unauthenticated;
 		}
 
-		$target = [
-			'register' => $register,
-			'schema' => $schema,
-			'id' => $id,
-			'declaringApp' => $declaringApp,
-			'typeReference' => $typeReference,
-		];
+		$withAttachments = $body['withAttachments'];
+		unset($body['withAttachments']);
 
 		try {
 			if ($withAttachments === true) {
 				return new JSONResponse(
-					data: $this->intake->assignWithAttachments(uuid: $uuid, target: $target),
+					data: $this->intake->assignWithAttachments(uuid: $uuid, target: $body),
 					statusCode: Http::STATUS_OK
 				);
 			}
 
 			return new JSONResponse(
-				data: $this->intake->assign(uuid: $uuid, target: $target),
+				data: $this->intake->assign(uuid: $uuid, target: $body),
 				statusCode: Http::STATUS_OK
 			);
 		} catch (Throwable $e) {
@@ -414,23 +411,4 @@ class IntakeController extends Controller {
 		);
 
 	}//end requireUser()
-
-	/**
-	 * Answer one failure with the status the service gave it.
-	 *
-	 * @param Throwable $error The failure.
-	 *
-	 * @return JSONResponse The refusal.
-	 *
-	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
-	 */
-	private function failure(Throwable $error): JSONResponse {
-		$status = Http::STATUS_INTERNAL_SERVER_ERROR;
-		if ($error instanceof IntakeRefusedException) {
-			$status = $error->getStatus();
-		}
-
-		return new JSONResponse(data: ['error' => $error->getMessage()], statusCode: $status);
-
-	}//end failure()
 }//end class
