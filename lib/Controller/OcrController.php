@@ -25,7 +25,8 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
-use OCA\Filinq\Kernel\Contracts\OcrResultRepositoryInterface;
+use OCA\Filinq\Controller\Support\OcrServices;
+use OCA\Filinq\Kernel\AppIdentity;
 use OCA\Filinq\Kernel\Contracts\OcrRunServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -56,26 +57,22 @@ class OcrController extends Controller {
 	/**
 	 * Constructor.
 	 *
-	 * @param string $appName The app id.
 	 * @param IRequest $request The request.
-	 * @param OcrRunServiceInterface $runs Runs OCR and records the result.
-	 * @param OcrResultRepositoryInterface $results The ocrResult rows.
+	 * @param OcrServices $ocr The OCR runner and the OCR result store.
 	 * @param IRootFolder $rootFolder Resolves files in the caller's own folder.
 	 * @param IUserSession $userSession The caller.
 	 * @param IL10N $l10n Translations.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
-		string $appName,
 		IRequest $request,
-		private readonly OcrRunServiceInterface $runs,
-		private readonly OcrResultRepositoryInterface $results,
+		private readonly OcrServices $ocr,
 		private readonly IRootFolder $rootFolder,
 		private readonly IUserSession $userSession,
 		private readonly IL10N $l10n,
 		private readonly LoggerInterface $logger,
 	) {
-		parent::__construct(appName: $appName, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 
 	}//end __construct()
 
@@ -100,7 +97,7 @@ class OcrController extends Controller {
 		}
 
 		try {
-			$outcome = $this->runs->run(file: $file, trigger: 'manual');
+			$outcome = $this->ocr->runs->run(file: $file, trigger: 'manual');
 		} catch (Throwable $e) {
 			$this->logger->error('OCR result could not be stored', ['fileId' => $fileId, 'exception' => $e->getMessage()]);
 			return new JSONResponse(
@@ -133,12 +130,12 @@ class OcrController extends Controller {
 			return $this->notFound();
 		}
 
-		$result = $this->results->findForFile(fileId: $fileId);
+		$result = $this->ocr->results->findForFile(fileId: $fileId);
 		$status = [
 			'fileId' => $fileId,
 			'ocrProcessed' => false,
 			'ocrConfidence' => null,
-			'ocrAvailable' => $this->runs->isCandidate(mimeType: $file->getMimeType()),
+			'ocrAvailable' => $this->ocr->runs->isCandidate(mimeType: $file->getMimeType()),
 			'result' => null,
 		];
 		if ($result !== null) {
@@ -172,13 +169,13 @@ class OcrController extends Controller {
 				continue;
 			}
 
-			$result = $this->results->findForFile(fileId: $fileId);
+			$result = $this->ocr->results->findForFile(fileId: $fileId);
 			if ($result !== null) {
 				$results[(string) $fileId] = $this->publicFields(result: $result);
 			}
 		}
 
-		return new JSONResponse(['capability' => $this->runs->capability(), 'results' => (object) $results]);
+		return new JSONResponse(['capability' => $this->ocr->runs->capability(), 'results' => (object) $results]);
 
 	}//end index()
 

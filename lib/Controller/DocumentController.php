@@ -26,6 +26,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use Exception;
+use OCA\Filinq\Controller\Support\ControllerFeedback;
 use OCA\Filinq\Exception\ErrorDetailsInterface;
 use OCA\Filinq\Kernel\Contracts\DocumentServiceInterface;
 use OCA\Filinq\Kernel\Contracts\MultiFormatOutputProducerInterface;
@@ -34,10 +35,8 @@ use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\Response;
-use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUserSession;
-use Psr\Log\LoggerInterface;
 
 /**
  * Controller for document generation endpoints
@@ -70,8 +69,7 @@ class DocumentController extends Controller {
 	 * @param IRequest $request The request object
 	 * @param DocumentServiceInterface $documentSvc Document generation service
 	 * @param IUserSession $userSession User session for authentication
-	 * @param LoggerInterface $logger Logger for error reporting
-	 * @param IL10N $l10n The localization service
+	 * @param ControllerFeedback $feedback Translations for the answers and the failure log.
 	 * @param MultiFormatOutputProducerInterface|null $multiFormat Answers a request with options.formats
 	 *
 	 * @return void
@@ -81,8 +79,7 @@ class DocumentController extends Controller {
 		IRequest $request,
 		private readonly DocumentServiceInterface $documentSvc,
 		private readonly IUserSession $userSession,
-		private readonly LoggerInterface $logger,
-		private readonly IL10N $l10n,
+		private readonly ControllerFeedback $feedback,
 		private readonly ?MultiFormatOutputProducerInterface $multiFormat = null,
 	) {
 		parent::__construct(appName: $appName, request: $request);
@@ -125,7 +122,7 @@ class DocumentController extends Controller {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
+				return $this->notAuthenticated(message: $this->feedback->l10n->t('Not authenticated'));
 			}
 
 			$params = $this->parseGenerateParams();
@@ -205,7 +202,7 @@ class DocumentController extends Controller {
 	public function preview(): JSONResponse {
 		try {
 			if ($this->userSession->getUser() === null) {
-				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
+				return $this->notAuthenticated(message: $this->feedback->l10n->t('Not authenticated'));
 			}
 
 			$params = $this->parseGenerateParams();
@@ -250,7 +247,7 @@ class DocumentController extends Controller {
 	public function mergePreview(): JSONResponse {
 		try {
 			if ($this->userSession->getUser() === null) {
-				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
+				return $this->notAuthenticated(message: $this->feedback->l10n->t('Not authenticated'));
 			}
 
 			$params = $this->parseGenerateParams();
@@ -300,7 +297,7 @@ class DocumentController extends Controller {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
+				return $this->notAuthenticated(message: $this->feedback->l10n->t('Not authenticated'));
 			}
 
 			$refusal = $this->bulkRefusal();
@@ -332,7 +329,7 @@ class DocumentController extends Controller {
 	private function bulkRefusal(): ?JSONResponse {
 		if (empty($this->request->getParam('templateId')) === true) {
 			return new JSONResponse(
-				data: ['error' => $this->l10n->t('templateId is required')],
+				data: ['error' => $this->feedback->l10n->t('templateId is required')],
 				statusCode: Http::STATUS_BAD_REQUEST
 			);
 		}
@@ -340,7 +337,7 @@ class DocumentController extends Controller {
 		$objectIds = $this->request->getParam('objectIds', []);
 		if (empty($objectIds) === true || is_array($objectIds) === false) {
 			return new JSONResponse(
-				data: ['error' => $this->l10n->t('objectIds is required and must be an array')],
+				data: ['error' => $this->feedback->l10n->t('objectIds is required and must be an array')],
 				statusCode: Http::STATUS_BAD_REQUEST
 			);
 		}
@@ -400,14 +397,14 @@ class DocumentController extends Controller {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
+				return $this->notAuthenticated(message: $this->feedback->l10n->t('Not authenticated'));
 			}
 
 			$status = $this->documentSvc->getJobStatus(jobId: $jobId);
 
 			if ($status === null) {
 				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Job not found')],
+					data: ['error' => $this->feedback->l10n->t('Job not found')],
 					statusCode: Http::STATUS_NOT_FOUND
 				);
 			}
@@ -415,7 +412,7 @@ class DocumentController extends Controller {
 			$jobUserId = (string)($status['options']['userId'] ?? '');
 			if ($jobUserId !== '' && $jobUserId !== $user->getUID()) {
 				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Access denied')],
+					data: ['error' => $this->feedback->l10n->t('Access denied')],
 					statusCode: Http::STATUS_FORBIDDEN
 				);
 			}
@@ -442,7 +439,7 @@ class DocumentController extends Controller {
 
 		if (empty($templateId) === true) {
 			return new JSONResponse(
-				data: ['error' => $this->l10n->t('templateId is required')],
+				data: ['error' => $this->feedback->l10n->t('templateId is required')],
 				statusCode: Http::STATUS_BAD_REQUEST
 			);
 		}
@@ -574,7 +571,7 @@ class DocumentController extends Controller {
 			$statusCode = $code;
 		}
 
-		$this->logger->error(
+		$this->feedback->logger->error(
 			message: 'Document generation failed: ' . $exception->getMessage(),
 			context: ['exception' => $exception]
 		);

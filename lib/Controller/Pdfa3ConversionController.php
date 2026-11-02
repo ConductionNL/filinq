@@ -27,6 +27,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
+use OCA\Filinq\Controller\Support\ControllerFeedback;
 use OCA\Filinq\Exception\Pdfa3ConversionException;
 use OCA\Filinq\Kernel\Contracts\Pdfa3ConversionServiceInterface;
 use OCP\AppFramework\Controller;
@@ -36,10 +37,8 @@ use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
-use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUserSession;
-use Psr\Log\LoggerInterface;
 use Throwable;
 
 /**
@@ -59,10 +58,9 @@ class Pdfa3ConversionController extends Controller {
 	 *
 	 * @param string $appName The application name.
 	 * @param IRequest $request The request object.
-	 * @param LoggerInterface $logger Logger for error reporting.
+	 * @param ControllerFeedback $feedback Translations for the answers and the failure log.
 	 * @param Pdfa3ConversionServiceInterface $service The PDF/A-3 conversion service.
 	 * @param IRootFolder $rootFolder Root folder, for IDOR-safe file resolution.
-	 * @param IL10N $l10n The localization service.
 	 * @param IUserSession $userSession User session for authentication.
 	 *
 	 * @return void
@@ -70,10 +68,9 @@ class Pdfa3ConversionController extends Controller {
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly LoggerInterface $logger,
+		private readonly ControllerFeedback $feedback,
 		private readonly Pdfa3ConversionServiceInterface $service,
 		private readonly IRootFolder $rootFolder,
-		private readonly IL10N $l10n,
 		private readonly IUserSession $userSession,
 	) {
 		parent::__construct(appName: $appName, request: $request);
@@ -105,17 +102,17 @@ class Pdfa3ConversionController extends Controller {
 	public function convert(): DataDownloadResponse|JSONResponse {
 		$user = $this->userSession->getUser();
 		if ($user === null) {
-			return $this->errorResponse(message: $this->l10n->t('Not authenticated'), status: Http::STATUS_UNAUTHORIZED);
+			return $this->errorResponse(message: $this->feedback->l10n->t('Not authenticated'), status: Http::STATUS_UNAUTHORIZED);
 		}
 
 		$fileId = (int)$this->request->getParam('fileId', 0);
 		if ($fileId <= 0) {
-			return $this->errorResponse(message: $this->l10n->t('fileId is required'), status: Http::STATUS_BAD_REQUEST);
+			return $this->errorResponse(message: $this->feedback->l10n->t('fileId is required'), status: Http::STATUS_BAD_REQUEST);
 		}
 
 		$source = $this->resolveReadableFile(userId: $user->getUID(), fileId: $fileId);
 		if ($source === null) {
-			return $this->errorResponse(message: $this->l10n->t('File not found'), status: Http::STATUS_NOT_FOUND);
+			return $this->errorResponse(message: $this->feedback->l10n->t('File not found'), status: Http::STATUS_NOT_FOUND);
 		}
 
 		$filename = (string)$this->request->getParam('filename', 'document-pdfa3.pdf');
@@ -130,9 +127,9 @@ class Pdfa3ConversionController extends Controller {
 		} catch (Pdfa3ConversionException $e) {
 			return $this->conversionErrorResponse(exception: $e, fileId: $fileId);
 		} catch (Throwable $e) {
-			$this->logger->error('PDF/A-3 conversion failed unexpectedly', ['fileId' => $fileId, 'exception' => $e]);
+			$this->feedback->logger->error('PDF/A-3 conversion failed unexpectedly', ['fileId' => $fileId, 'exception' => $e]);
 
-			return $this->errorResponse(message: $this->l10n->t('PDF/A-3 conversion failed'), status: Http::STATUS_INTERNAL_SERVER_ERROR);
+			return $this->errorResponse(message: $this->feedback->l10n->t('PDF/A-3 conversion failed'), status: Http::STATUS_INTERNAL_SERVER_ERROR);
 		}//end try
 
 	}//end convert()
@@ -238,7 +235,7 @@ class Pdfa3ConversionController extends Controller {
 	 * @spec openspec/specs/pdfa3-conversion/spec.md
 	 */
 	private function conversionErrorResponse(Pdfa3ConversionException $exception, int $fileId): JSONResponse {
-		$this->logger->warning(
+		$this->feedback->logger->warning(
 			'PDF/A-3 conversion failed',
 			[
 				'fileId' => $fileId,

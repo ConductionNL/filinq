@@ -29,11 +29,10 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
-use OCA\Filinq\Kernel\Contracts\DocumentFinalityRuleServiceInterface;
-use OCA\Filinq\Kernel\Contracts\FinalDocumentCorrectionServiceInterface;
-use OCA\Filinq\Kernel\Contracts\FinalDocumentFailureMapperInterface;
+use OCA\Filinq\Controller\Support\FinalDocumentChanges;
+use OCA\Filinq\Controller\Support\FinalityRules;
+use OCA\Filinq\Kernel\AppIdentity;
 use OCA\Filinq\Kernel\Contracts\FinalDocumentServiceInterface;
-use OCA\Filinq\Kernel\Contracts\FinalDocumentUnfreezeServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -59,30 +58,24 @@ class FinalDocumentController extends Controller {
 	/**
 	 * Constructor.
 	 *
-	 * @param string $appName The app name.
 	 * @param IRequest $request The request.
 	 * @param FinalDocumentServiceInterface $finalDocuments The finalisation service.
-	 * @param FinalDocumentCorrectionServiceInterface $corrections The correction service.
-	 * @param FinalDocumentUnfreezeServiceInterface $unfreeze The recorded exception.
-	 * @param DocumentFinalityRuleServiceInterface $rules The declaration store.
-	 * @param FinalDocumentFailureMapperInterface $failures Failure shaping shared by every method here.
+	 * @param FinalDocumentChanges $changes Corrections and unfreezes of a final document.
+	 * @param FinalityRules $finality Finality rules and the refusal mapper.
 	 * @param IUserSession $userSession The current user session.
 	 * @param IL10N $l10n Localisation.
 	 *
 	 * @return void
 	 */
 	public function __construct(
-		string $appName,
 		IRequest $request,
 		private readonly FinalDocumentServiceInterface $finalDocuments,
-		private readonly FinalDocumentCorrectionServiceInterface $corrections,
-		private readonly FinalDocumentUnfreezeServiceInterface $unfreeze,
-		private readonly DocumentFinalityRuleServiceInterface $rules,
-		private readonly FinalDocumentFailureMapperInterface $failures,
+		private readonly FinalDocumentChanges $changes,
+		private readonly FinalityRules $finality,
 		private readonly IUserSession $userSession,
 		private readonly IL10N $l10n,
 	) {
-		parent::__construct(appName: $appName, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 
 	}//end __construct()
 
@@ -103,7 +96,7 @@ class FinalDocumentController extends Controller {
 		}
 
 		try {
-			$chain = $this->corrections->chainFor(fileId: $fileId);
+			$chain = $this->changes->corrections->chainFor(fileId: $fileId);
 			$version = $chain['version'];
 
 			return new JSONResponse(
@@ -113,7 +106,7 @@ class FinalDocumentController extends Controller {
 					'supersedes' => $chain['supersedes'],
 					'supersededBy' => $chain['supersededBy'],
 					'checksum' => $this->finalDocuments->verifyChecksum(fileId: $fileId),
-					'mayUnfreeze' => $this->unfreeze->mayUnfreeze(),
+					'mayUnfreeze' => $this->changes->unfreeze->mayUnfreeze(),
 				],
 				statusCode: Http::STATUS_OK
 			);
@@ -184,7 +177,7 @@ class FinalDocumentController extends Controller {
 
 		try {
 			return new JSONResponse(
-				data: $this->corrections->correct(fileId: $fileId, reason: $reason),
+				data: $this->changes->corrections->correct(fileId: $fileId, reason: $reason),
 				statusCode: Http::STATUS_OK
 			);
 		} catch (Throwable $e) {
@@ -209,7 +202,7 @@ class FinalDocumentController extends Controller {
 			return $unauthenticated;
 		}
 
-		if ($this->unfreeze->mayUnfreeze() === false) {
+		if ($this->changes->unfreeze->mayUnfreeze() === false) {
 			return new JSONResponse(
 				data: [
 					'error' => $this->l10n->t(
@@ -230,7 +223,7 @@ class FinalDocumentController extends Controller {
 
 		try {
 			return new JSONResponse(
-				data: ['version' => $this->unfreeze->unfreeze(fileId: $fileId, reason: $reason)],
+				data: ['version' => $this->changes->unfreeze->unfreeze(fileId: $fileId, reason: $reason)],
 				statusCode: Http::STATUS_OK
 			);
 		} catch (Throwable $e) {
@@ -253,7 +246,7 @@ class FinalDocumentController extends Controller {
 			return $unauthenticated;
 		}
 
-		if ($this->unfreeze->mayUnfreeze() === false) {
+		if ($this->changes->unfreeze->mayUnfreeze() === false) {
 			return new JSONResponse(
 				data: [
 					'error' => $this->l10n->t(
@@ -265,7 +258,7 @@ class FinalDocumentController extends Controller {
 		}
 
 		try {
-			$rule = $this->rules->declareRule(
+			$rule = $this->finality->rules->declareRule(
 				...$this->declarationRequest(),
 				declaredBy: $this->userSession->getUser()?->getUID()
 			);
@@ -320,7 +313,7 @@ class FinalDocumentController extends Controller {
 		}
 
 		try {
-			$finalised = $this->rules->applyStateChange(
+			$finalised = $this->finality->rules->applyStateChange(
 				declaringApp: (string)$this->request->getParam('declaringApp', ''),
 				typeReference: (string)$this->request->getParam('typeReference', ''),
 				state: (string)$this->request->getParam('state', ''),
@@ -373,7 +366,7 @@ class FinalDocumentController extends Controller {
 	 * @spec exclude Error shaping shared by every method here; ADR-105.
 	 */
 	private function failure(Throwable $exception, string $fallback): JSONResponse {
-		$shape = $this->failures->shape(exception: $exception, fallback: $fallback);
+		$shape = $this->finality->failures->shape(exception: $exception, fallback: $fallback);
 
 		return new JSONResponse(data: $shape['body'], statusCode: $shape['status']);
 

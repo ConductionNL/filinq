@@ -27,6 +27,7 @@ namespace OCA\Filinq\Tests\Unit\Controller;
 
 use Exception;
 use OCA\Filinq\Controller\DocumentController;
+use OCA\Filinq\Controller\Support\ControllerFeedback;
 use OCA\Filinq\Kernel\Contracts\DocumentServiceInterface;
 use OCA\Filinq\Kernel\Contracts\MultiFormatOutputProducerInterface;
 use OCP\IL10N;
@@ -41,6 +42,7 @@ use Psr\Log\LoggerInterface;
  * Characterization of the generate endpoints.
  *
  * @covers \OCA\Filinq\Controller\DocumentController
+ * @covers \OCA\Filinq\Controller\Support\ControllerFeedback
  */
 class DocumentControllerGenerateTraceTest extends TestCase {
 
@@ -253,12 +255,11 @@ class DocumentControllerGenerateTraceTest extends TestCase {
 		$session->method('getUser')->willReturn($user);
 
 		return new DocumentController(
+			feedback: new ControllerFeedback(l10n: $l10n, logger: $this->createMock(LoggerInterface::class)),
 			appName: 'filinq',
 			request: $request,
 			documentSvc: $this->documents,
 			userSession: $session,
-			logger: $this->createMock(LoggerInterface::class),
-			l10n: $l10n,
 			multiFormat: $this->multiFormat,
 		);
 	}//end controller()

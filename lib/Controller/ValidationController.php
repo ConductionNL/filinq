@@ -25,6 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
+use OCA\Filinq\Kernel\AppIdentity;
 use OCA\Filinq\Kernel\Contracts\DocumentValidationServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -53,7 +54,6 @@ class ValidationController extends Controller {
 	/**
 	 * Constructor.
 	 *
-	 * @param string $appName The app name.
 	 * @param IRequest $request The request.
 	 * @param LoggerInterface $logger Logger.
 	 * @param DocumentValidationServiceInterface $service The validation service.
@@ -64,7 +64,6 @@ class ValidationController extends Controller {
 	 * @return void
 	 */
 	public function __construct(
-		string $appName,
 		IRequest $request,
 		private readonly LoggerInterface $logger,
 		private readonly DocumentValidationServiceInterface $service,
@@ -72,7 +71,7 @@ class ValidationController extends Controller {
 		private readonly IL10N $l10n,
 		private readonly IUserSession $userSession,
 	) {
-		parent::__construct(appName: $appName, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 
 	}//end __construct()
 
