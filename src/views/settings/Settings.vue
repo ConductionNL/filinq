@@ -80,48 +80,19 @@
 					}}
 				</div>
 				<NcCheckboxRadioSwitch
+					v-for="option in outputFormatOptions"
+					:key="option.value"
 					:modelValue="
 						settings['filinq.anonymisation.default_output_format']
 					"
-					value="pdf-only"
+					:value="option.value"
 					name="anonymisation_output_format"
 					type="radio"
 					@update:modelValue="
 						settings['filinq.anonymisation.default_output_format'] =
 							$event
 					">
-					{{
-						t(
-							'filinq',
-							'PDF only — delete the native anonymised file (recommended)',
-						)
-					}}
-				</NcCheckboxRadioSwitch>
-				<NcCheckboxRadioSwitch
-					:modelValue="
-						settings['filinq.anonymisation.default_output_format']
-					"
-					value="pdf"
-					name="anonymisation_output_format"
-					type="radio"
-					@update:modelValue="
-						settings['filinq.anonymisation.default_output_format'] =
-							$event
-					">
-					{{ t('filinq', 'PDF and native file — keep both') }}
-				</NcCheckboxRadioSwitch>
-				<NcCheckboxRadioSwitch
-					:modelValue="
-						settings['filinq.anonymisation.default_output_format']
-					"
-					value="preserve"
-					name="anonymisation_output_format"
-					type="radio"
-					@update:modelValue="
-						settings['filinq.anonymisation.default_output_format'] =
-							$event
-					">
-					{{ t('filinq', 'Native format only — no PDF conversion') }}
+					{{ option.label }}
 				</NcCheckboxRadioSwitch>
 				<div class="setting-description">
 					{{
@@ -228,103 +199,50 @@
 			:description="
 				t('filinq', 'Configure automatic metadata enrichment for documents')
 			">
-			<div class="setting-item">
-				<div class="setting-label">
-					{{ t('filinq', 'Language Detection') }}
-				</div>
-				<NcCheckboxRadioSwitch
-					:aria-label="t('filinq', 'Language Detection')"
-					:modelValue="settings.enable_language_detection"
-					type="switch"
-					@update:modelValue="
-						settings.enable_language_detection = $event
-					" />
-				<div class="setting-description">
-					{{
-						t('filinq', 'Automatically detect the language of documents')
-					}}
-				</div>
-			</div>
+			<SettingSwitchRow
+				v-model="settings.enable_language_detection"
+				:label="t('filinq', 'Language Detection')"
+				:description="
+					t('filinq', 'Automatically detect the language of documents')
+				" />
 
-			<div class="setting-item">
-				<div class="setting-label">
-					{{ t('filinq', 'Keyword Extraction') }}
-				</div>
-				<NcCheckboxRadioSwitch
-					:aria-label="t('filinq', 'Keyword Extraction')"
-					:modelValue="settings.enable_keyword_extraction"
-					type="switch"
-					@update:modelValue="
-						settings.enable_keyword_extraction = $event
-					" />
-				<div class="setting-description">
-					{{
-						t(
-							'filinq',
-							'Automatically extract keywords from document content',
-						)
-					}}
-				</div>
-			</div>
+			<SettingSwitchRow
+				v-model="settings.enable_keyword_extraction"
+				:label="t('filinq', 'Keyword Extraction')"
+				:description="
+					t(
+						'filinq',
+						'Automatically extract keywords from document content',
+					)
+				" />
 
-			<div class="setting-item">
-				<div class="setting-label">
-					{{ t('filinq', 'Topic Classification') }}
-				</div>
-				<NcCheckboxRadioSwitch
-					:aria-label="t('filinq', 'Topic Classification')"
-					:modelValue="settings.enable_topic_classification"
-					type="switch"
-					@update:modelValue="
-						settings.enable_topic_classification = $event
-					" />
-				<div class="setting-description">
-					{{ t('filinq', 'Automatically classify documents by topic') }}
-				</div>
-			</div>
+			<SettingSwitchRow
+				v-model="settings.enable_topic_classification"
+				:label="t('filinq', 'Topic Classification')"
+				:description="
+					t('filinq', 'Automatically classify documents by topic')
+				" />
 
-			<div class="setting-item">
-				<div class="setting-label">
-					{{ t('filinq', 'Contract terms') }}
-				</div>
-				<NcCheckboxRadioSwitch
-					:aria-label="t('filinq', 'Contract terms')"
-					:modelValue="settings.enable_contract_term_extraction"
-					type="switch"
-					@update:modelValue="
-						settings.enable_contract_term_extraction = $event
-					" />
-				<div class="setting-description">
-					{{
-						t(
-							'filinq',
-							'Suggest dates, notice periods and values from contract documents. A suggestion changes nothing until somebody accepts it.',
-						)
-					}}
-				</div>
-			</div>
+			<SettingSwitchRow
+				v-model="settings.enable_contract_term_extraction"
+				:label="t('filinq', 'Contract terms')"
+				:description="
+					t(
+						'filinq',
+						'Suggest dates, notice periods and values from contract documents. A suggestion changes nothing until somebody accepts it.',
+					)
+				" />
 
-			<div class="setting-item">
-				<div class="setting-label">
-					{{ t('filinq', 'Inbound classification') }}
-				</div>
-				<NcCheckboxRadioSwitch
-					:aria-label="t('filinq', 'Inbound classification')"
-					:modelValue="settings.enable_inbound_classification"
-					type="switch"
-					data-testid="settings-inbound-classification"
-					@update:modelValue="
-						settings.enable_inbound_classification = $event
-					" />
-				<div class="setting-description">
-					{{
-						t(
-							'filinq',
-							'Suggest a document type, a sender and a dossier for documents that come in. A suggestion changes nothing until somebody confirms it.',
-						)
-					}}
-				</div>
-			</div>
+			<SettingSwitchRow
+				v-model="settings.enable_inbound_classification"
+				:label="t('filinq', 'Inbound classification')"
+				:description="
+					t(
+						'filinq',
+						'Suggest a document type, a sender and a dossier for documents that come in. A suggestion changes nothing until somebody confirms it.',
+					)
+				"
+				data-testid="settings-inbound-classification" />
 		</NcSettingsSection>
 
 		<NcSettingsSection
@@ -357,44 +275,26 @@
 			</div>
 
 			<!-- OCR enable/disable toggle -->
-			<div class="setting-item">
-				<div class="setting-label">
-					{{ t('filinq', 'Enable OCR') }}
-				</div>
-				<NcCheckboxRadioSwitch
-					:aria-label="t('filinq', 'Enable OCR')"
-					:modelValue="settings.ocr_enabled"
-					type="switch"
-					@update:modelValue="settings.ocr_enabled = $event" />
-				<div class="setting-description">
-					{{
-						t(
-							'filinq',
-							'Automatically extract text from scanned documents and images using Tesseract OCR',
-						)
-					}}
-				</div>
-			</div>
+			<SettingSwitchRow
+				v-model="settings.ocr_enabled"
+				:label="t('filinq', 'Enable OCR')"
+				:description="
+					t(
+						'filinq',
+						'Automatically extract text from scanned documents and images using Tesseract OCR',
+					)
+				" />
 
 			<!-- Read arriving intake scans in the background (intake-ocr-on-arrival) -->
-			<div class="setting-item">
-				<div class="setting-label">
-					{{ t('filinq', 'Read scans on arrival') }}
-				</div>
-				<NcCheckboxRadioSwitch
-					:aria-label="t('filinq', 'Read scans on arrival')"
-					:modelValue="settings.ocr_on_arrival"
-					type="switch"
-					@update:modelValue="settings.ocr_on_arrival = $event" />
-				<div class="setting-description">
-					{{
-						t(
-							'filinq',
-							'Read the text of a scan or photo in the inbox as soon as it arrives, so it can be searched. Needs OCR on and Tesseract installed.',
-						)
-					}}
-				</div>
-			</div>
+			<SettingSwitchRow
+				v-model="settings.ocr_on_arrival"
+				:label="t('filinq', 'Read scans on arrival')"
+				:description="
+					t(
+						'filinq',
+						'Read the text of a scan or photo in the inbox as soon as it arrives, so it can be searched. Needs OCR on and Tesseract installed.',
+					)
+				" />
 
 			<!-- Language selection -->
 			<div class="setting-item">
@@ -504,39 +404,20 @@
 					'Consume confidentiality labels already assigned by files_confidential (TSCP/BAILS) as a read-only sensitivity signal. This never blocks, redacts or gates anything.',
 				)
 			">
-			<div class="setting-item">
-				<div class="setting-label">
-					{{
-						t(
-							'filinq',
-							'Prioritise higher-confidentiality files in batch/folder analysis',
-						)
-					}}
-				</div>
-				<NcCheckboxRadioSwitch
-					:aria-label="
-						t(
-							'filinq',
-							'Prioritise higher-confidentiality files in batch/folder analysis',
-						)
-					"
-					:modelValue="
-						settings['filinq.confidentiality.prioritise_analysis']
-					"
-					type="switch"
-					@update:modelValue="
-						settings['filinq.confidentiality.prioritise_analysis'] =
-							$event
-					" />
-				<div class="setting-description">
-					{{
-						t(
-							'filinq',
-							'Off by default. When enabled, files with a higher confidentiality label are analysed sooner — a suggestion only, it never skips, blocks or redacts files.',
-						)
-					}}
-				</div>
-			</div>
+			<SettingSwitchRow
+				v-model="settings['filinq.confidentiality.prioritise_analysis']"
+				:label="
+					t(
+						'filinq',
+						'Prioritise higher-confidentiality files in batch/folder analysis',
+					)
+				"
+				:description="
+					t(
+						'filinq',
+						'Off by default. When enabled, files with a higher confidentiality label are analysed sooner — a suggestion only, it never skips, blocks or redacts files.',
+					)
+				" />
 
 			<div class="setting-item">
 				<div class="input-field">
@@ -663,24 +544,15 @@
 					'Configure digital document signing capabilities (eIDAS SES, AdES, QES)',
 				)
 			">
-			<div class="setting-item">
-				<div class="setting-label">
-					{{ t('filinq', 'Enable Digital Signing') }}
-				</div>
-				<NcCheckboxRadioSwitch
-					:aria-label="t('filinq', 'Enable Digital Signing')"
-					:modelValue="settings.signing_enabled"
-					type="switch"
-					@update:modelValue="settings.signing_enabled = $event" />
-				<div class="setting-description">
-					{{
-						t(
-							'filinq',
-							'Allow users to create and manage digital signing requests',
-						)
-					}}
-				</div>
-			</div>
+			<SettingSwitchRow
+				v-model="settings.signing_enabled"
+				:label="t('filinq', 'Enable Digital Signing')"
+				:description="
+					t(
+						'filinq',
+						'Allow users to create and manage digital signing requests',
+					)
+				" />
 
 			<div class="setting-item">
 				<div class="input-field">
@@ -731,26 +603,16 @@
 				</div>
 			</div>
 
-			<div
+			<SettingSwitchRow
 				v-if="settings.signing_provider === 'libresign'"
-				class="setting-item">
-				<div class="setting-label">
-					{{ t('filinq', 'LibreSign certificate is qualified') }}
-				</div>
-				<NcCheckboxRadioSwitch
-					:aria-label="t('filinq', 'LibreSign certificate is qualified')"
-					:modelValue="settings.libresign_qualified"
-					type="switch"
-					@update:modelValue="settings.libresign_qualified = $event" />
-				<div class="setting-description">
-					{{
-						t(
-							'filinq',
-							'Turn this on only when LibreSign signs with a qualified certificate from a trust service provider. Only then can a request ask for a qualified signature (QES).',
-						)
-					}}
-				</div>
-			</div>
+				v-model="settings.libresign_qualified"
+				:label="t('filinq', 'LibreSign certificate is qualified')"
+				:description="
+					t(
+						'filinq',
+						'Turn this on only when LibreSign signs with a qualified certificate from a trust service provider. Only then can a request ask for a qualified signature (QES).',
+					)
+				" />
 
 			<div class="setting-item">
 				<div class="input-field">
@@ -1014,6 +876,7 @@ import AnonymiserBackendWarning from '../../components/AnonymiserBackendWarning.
 import EmailIngestionSettings from './EmailIngestionSettings.vue'
 import EntityTypeSelector from './EntityTypeSelector.vue'
 import PageLayoutSettings from './PageLayoutSettings.vue'
+import SettingSwitchRow from './SettingSwitchRow.vue'
 import SignerIdentitySettings from './SignerIdentitySettings.vue'
 import {
 	backendStateFromSettings,
@@ -1055,6 +918,7 @@ export default {
 		EntityTypeSelector,
 		EmailIngestionSettings,
 		PageLayoutSettings,
+		SettingSwitchRow,
 		SignerIdentitySettings,
 	},
 
@@ -1115,6 +979,32 @@ export default {
 					.map((c) => (c === ' ' ? '␣' : c))
 					.join(' '),
 			})
+		},
+
+		/**
+		 * The choices for the default output format of anonymised documents.
+		 *
+		 * @return {Array<{value: string, label: string}>} Radio options, in display order.
+		 * @spec openspec/specs/admin-settings/spec.md
+		 */
+		outputFormatOptions() {
+			return [
+				{
+					value: 'pdf-only',
+					label: t(
+						'filinq',
+						'PDF only — delete the native anonymised file (recommended)',
+					),
+				},
+				{
+					value: 'pdf',
+					label: t('filinq', 'PDF and native file — keep both'),
+				},
+				{
+					value: 'preserve',
+					label: t('filinq', 'Native format only — no PDF conversion'),
+				},
+			]
 		},
 
 		// `base` records as NcSelect options (value = slug, label = name).
@@ -1699,6 +1589,8 @@ export default {
 }
 </script>
 
+<style scoped src="./settingItem.css"></style>
+
 <style scoped>
 .selectionContainer {
 	display: grid;
@@ -1708,24 +1600,6 @@ export default {
 
 .selectionContainer > * {
 	margin-block-end: 10px;
-}
-
-.setting-item {
-	display: flex;
-	flex-direction: column;
-	gap: 8px;
-	padding: 8px 0;
-	border-bottom: 1px solid var(--color-border-dark-translucent);
-}
-
-.setting-label {
-	font-weight: bold;
-	color: var(--color-main-text);
-}
-
-.setting-description {
-	color: var(--color-text-lighter);
-	font-size: 0.9em;
 }
 
 .input-field {
