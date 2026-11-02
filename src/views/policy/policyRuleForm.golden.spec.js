@@ -298,6 +298,8 @@ describe('policy rule form golden', () => {
 				form: JSON.parse(JSON.stringify(findForm(page.vm.$.subTree).form)),
 			}
 			site.edit(findForm(page.vm.$.subTree).form)
+			await flush()
+			actual.editChanged = dialogView()
 			await clickSubmit()
 			actual.updated = { calls: mockCalls.splice(0), page: pageState(page.vm) }
 

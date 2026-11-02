@@ -141,6 +141,37 @@
 				]
 			}
 		},
+		"editChanged": {
+			"title": "Edit publish-never rule",
+			"formClass": "prohibition-form",
+			"fields": [
+				"Primary name (Dutch)",
+				"Entity type",
+				"Reason (markdown allowed)",
+				"Legal authority (court order, statute, …)",
+				"Case reference (optional)",
+				"Severity",
+				"Jurisdiction (optional)",
+				"Valid until (ISO 8601, optional)",
+				"Active",
+				"Match type",
+				"Match value"
+			],
+			"notes": [
+				": Match rules",
+				"form-warning: Warning: only name-based rules are present. Names alone often produce false positives — consider adding a BSN or KvK match."
+			],
+			"buttons": [
+				{
+					"label": "Cancel",
+					"disabled": false
+				},
+				{
+					"label": "Save",
+					"disabled": false
+				}
+			]
+		},
 		"updated": {
 			"calls": [
 				[
@@ -385,6 +416,34 @@
 				"publicationDecision": "publish_with_consent",
 				"notificationStatus": "sent"
 			}
+		},
+		"editChanged": {
+			"title": "Edit standing consent",
+			"formClass": "standing-consent-form",
+			"fields": [
+				"Entity text (display name)",
+				"Entity type",
+				"Consent method",
+				"Consent document (file id or URL)",
+				"Consent scope (e.g. '2024-2025 municipal decisions')",
+				"Legal basis",
+				"Valid from (ISO 8601, optional)",
+				"Valid until (ISO 8601, optional)",
+				"Active",
+				"Match type",
+				"Match value"
+			],
+			"notes": [": Match rules"],
+			"buttons": [
+				{
+					"label": "Cancel",
+					"disabled": false
+				},
+				{
+					"label": "Save",
+					"disabled": false
+				}
+			]
 		},
 		"updated": {
 			"calls": [
