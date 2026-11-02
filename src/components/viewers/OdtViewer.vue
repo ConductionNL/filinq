@@ -1,20 +1,24 @@
 <template>
 	<div
-		class="odt-viewer"
+		class="odt-viewer dd-doc-viewer"
 		:class="{ 'dd-marking-cursor': isAddMode }"
 		@mouseup="captureSelection">
-		<div v-if="loading" class="odt-viewer__loading">
+		<div v-if="loading" class="odt-viewer__loading dd-doc-viewer__state">
 			<NcLoadingIcon :size="48" />
 			<span>{{ t('filinq', 'Loading document…') }}</span>
 		</div>
-		<div v-else-if="error" class="odt-viewer__error">
+		<div v-else-if="error" class="odt-viewer__error dd-doc-viewer__state">
 			{{ error }}
 		</div>
-		<div v-else class="odt-viewer__page">
+		<div v-else class="odt-viewer__page dd-doc-viewer__sheet">
 			<!-- HTML is produced by odfXmlToHtml, a whitelist transform that
 				escapes all text and emits no attributes/scripts — safe here. -->
-			<!-- eslint-disable-next-line vue/no-v-html -->
-			<div ref="content" class="odt-viewer__content" v-html="html" />
+			<!-- eslint-disable vue/no-v-html -->
+			<div
+				ref="content"
+				class="odt-viewer__content dd-doc-viewer__html"
+				v-html="html" />
+			<!-- eslint-enable vue/no-v-html -->
 		</div>
 	</div>
 </template>
@@ -72,41 +76,9 @@ export default {
 }
 </script>
 
+<style scoped src="./documentViewer.css"></style>
+
 <style scoped>
-.odt-viewer {
-	display: flex;
-	justify-content: center;
-	padding: 16px;
-	background: var(--color-background-dark);
-	min-height: 100%;
-}
-
-.odt-viewer__loading,
-.odt-viewer__error {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	gap: 8px;
-	padding: 32px;
-	color: var(--color-text-maxcontrast);
-}
-
-.odt-viewer__page {
-	background: white;
-	color: black;
-	max-width: 800px;
-	width: 100%;
-	padding: 48px;
-	box-shadow: var(--dd-shadow-doc);
-	border-radius: var(--border-radius);
-}
-
-.odt-viewer__content {
-	font-family: 'Calibri', 'Arial', sans-serif;
-	font-size: 14px;
-	line-height: 1.6;
-}
-
 /* :deep — the transform injects raw HTML that our scope hash cannot reach. */
 .odt-viewer__content :deep(h1),
 .odt-viewer__content :deep(h2),
