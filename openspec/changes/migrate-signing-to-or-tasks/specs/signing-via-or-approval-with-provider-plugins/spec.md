@@ -30,6 +30,12 @@ document, filinq provisions an OR task sequence with one ordered position per
 signer. A position's `candidateGroups` carries the signer's NC group. No new
 signing-chain rows are written to any filinq-local approval schema.
 
+The provisioned template SHALL declare `approvingOutcomes: ["approved"]`.
+OpenRegister then enables the next signer, and completes the sequence, only on
+`approved`. A position completed with `done`, an empty outcome or any other
+outcome that is not a rejection ends the sequence as `undecided` instead of
+asking the next signer.
+
 The write-path rewrite this requirement describes was deferred by the archived
 `migrate-signing-to-or-approval-workflow` change (tasks D1.1–D1.3) and stays
 deferred here: `SigningService` still records the bespoke
@@ -54,6 +60,15 @@ to the surviving surface so it is never re-attempted against the retired one.
 - GIVEN a sign request with a single signer `signer-only`
 - WHEN the sign-request endpoint is called
 - THEN a `TaskSequence` SHALL be provisioned in OR with one position, its task `enabled`
+
+#### Scenario: A signing sequence advances only on approved
+
+@e2e exclude deferred write path, same deferral as the two-signer scenario above
+
+- GIVEN a provisioned two-signer sequence
+- WHEN position 1's task is completed with outcome `done`
+- THEN the sequence template SHALL carry `approvingOutcomes: ["approved"]`
+- AND position 2 SHALL NOT be enabled, and the sequence SHALL end as `undecided`
 
 ### Requirement: Signer Approval and Decline MUST Emit Via OR's Task Verbs
 
