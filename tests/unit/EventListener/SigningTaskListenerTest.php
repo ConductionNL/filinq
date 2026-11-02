@@ -33,6 +33,7 @@ use OCA\Filinq\Event\SignerStepApprovedEvent;
 use OCA\Filinq\Event\SignerStepPendingEvent;
 use OCA\Filinq\Event\SignerStepRejectedEvent;
 use OCA\Filinq\EventListener\SignerEventTranslator;
+use OCA\Filinq\EventListener\SignerSequenceTasks;
 use OCA\Filinq\EventListener\SigningTaskListener;
 use OCA\Filinq\Service\SettingsService;
 use OCA\Filinq\Kernel\Contracts\ActiveSigningProviderInterface;
@@ -44,6 +45,7 @@ use OCA\OpenRegister\Event\TaskTransitionedEvent;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventDispatcher;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -114,6 +116,13 @@ final class SigningTaskListenerTest extends TestCase {
 	private LoggerInterface $logger;
 
 	/**
+	 * Reader of a completed sequence's positions.
+	 *
+	 * @var SignerSequenceTasks&MockObject
+	 */
+	private SignerSequenceTasks $sequenceTasks;
+
+	/**
 	 * Listener under test.
 	 *
 	 * @var SigningTaskListener
@@ -134,6 +143,7 @@ final class SigningTaskListenerTest extends TestCase {
 		$this->settingsService = $this->createMock(SettingsService::class);
 		$this->objectService = $this->createMock(ObjectService::class);
 		$this->logger = $this->createMock(LoggerInterface::class);
+		$this->sequenceTasks = $this->createMock(SignerSequenceTasks::class);
 
 		$this->settingsService->method('resolveSigningRequestBinding')
 			->willReturn(['register' => 'filinq', 'schema' => 'signingRequest']);
@@ -168,7 +178,8 @@ final class SigningTaskListenerTest extends TestCase {
 				logger: $this->logger
 			),
 			settingsService: $settingsService,
-			logger: $this->logger
+			logger: $this->logger,
+			sequenceTasks: $this->sequenceTasks
 		);
 	}//end makeListener()
 
@@ -179,6 +190,7 @@ final class SigningTaskListenerTest extends TestCase {
 	 * @param string|null $outcome Task outcome.
 	 * @param string|null $sequenceUuid Sequence uuid (null = plain task).
 	 * @param string $objectUuid Anchor object uuid.
+	 * @param string|null $completedBy Completing identity.
 	 *
 	 * @return Task
 	 */
@@ -187,6 +199,7 @@ final class SigningTaskListenerTest extends TestCase {
 		?string $outcome = null,
 		?string $sequenceUuid = 'seq-1',
 		string $objectUuid = self::OWNED_OBJECT,
+		?string $completedBy = 'alice',
 	): Task {
 		return new Task(
 			uuid: 'task-1',
@@ -196,7 +209,7 @@ final class SigningTaskListenerTest extends TestCase {
 			objectUuid: $objectUuid,
 			sequenceUuid: $sequenceUuid,
 			sequencePosition: 2,
-			completedBy: 'alice',
+			completedBy: $completedBy,
 			comment: 'akkoord'
 		);
 	}//end makeTask()
@@ -490,7 +503,8 @@ final class SigningTaskListenerTest extends TestCase {
 					logger: $this->logger
 				),
 				settingsService: $this->settingsService,
-				logger: $this->logger
+				logger: $this->logger,
+				sequenceTasks: $this->sequenceTasks
 			);
 
 			$listener->handle(
@@ -537,6 +551,9 @@ final class SigningTaskListenerTest extends TestCase {
 					}
 				)
 			);
+
+		$this->sequenceTasks->method('forSequence')->with('seq-1')
+			->willReturn([$this->makeTask(state: 'completed', outcome: 'approved')]);
 
 		$event = new TaskSequenceCompletedEvent(
 			sequence: new TaskSequence(uuid: 'seq-1', anchorObjectUuid: self::OWNED_OBJECT),
@@ -599,4 +616,309 @@ final class SigningTaskListenerTest extends TestCase {
 		$this->assertTrue(true);
 
 	}//end testListenerFailureIsLoggedNotThrown()
+
+	/**
+	 * Completions that are neither approving nor rejecting.
+	 *
+	 * @return array<string, array{0: string|null}>
+	 */
+	public static function undecidedOutcomes(): array {
+		return [
+			'null' => [null],
+			'empty' => [''],
+			'blank' => ['  '],
+			'unknown' => ['reject'],
+			'generic completion' => ['done'],
+		];
+	}//end undecidedOutcomes()
+
+	/**
+	 * A completion without an approving outcome dispatches no signer event
+	 * and logs a warning carrying only ids.
+	 *
+	 * @param string|null $outcome The task outcome.
+	 *
+	 * @return void
+	 */
+	#[DataProvider('undecidedOutcomes')]
+	public function testCompletionWithoutApprovingOutcomeDispatchesNothing(?string $outcome): void {
+		$this->dispatcher->expects($this->never())->method('dispatchTyped');
+		$this->logger->expects($this->once())
+			->method('warning')
+			->with(
+				$this->isType('string'),
+				['sequenceUuid' => 'seq-1', 'taskUuid' => 'task-1', 'objectUuid' => self::OWNED_OBJECT]
+			);
+
+		$this->listener->handle(
+			new TaskTerminalEvent(task: $this->makeTask(state: 'completed', outcome: $outcome))
+		);
+
+	}//end testCompletionWithoutApprovingOutcomeDispatchesNothing()
+
+	/**
+	 * Missing completing identities.
+	 *
+	 * @return array<string, array{0: string|null}>
+	 */
+	public static function missingSigners(): array {
+		return [
+			'null' => [null],
+			'empty' => [''],
+			'blank' => ['  '],
+		];
+	}//end missingSigners()
+
+	/**
+	 * An approving completion without a completing identity dispatches no
+	 * signer event and logs a warning.
+	 *
+	 * @param string|null $completedBy The completing identity.
+	 *
+	 * @return void
+	 */
+	#[DataProvider('missingSigners')]
+	public function testApprovingCompletionWithoutSignerDispatchesNothing(?string $completedBy): void {
+		$this->dispatcher->expects($this->never())->method('dispatchTyped');
+		$this->logger->expects($this->once())->method('warning');
+
+		$this->listener->handle(
+			new TaskTerminalEvent(
+				task: $this->makeTask(state: 'completed', outcome: 'approved', completedBy: $completedBy)
+			)
+		);
+
+	}//end testApprovingCompletionWithoutSignerDispatchesNothing()
+
+	/**
+	 * Spellings of the approving outcome.
+	 *
+	 * @return array<string, array{0: string}>
+	 */
+	public static function approvingOutcomes(): array {
+		return [
+			'canonical' => ['approved'],
+			'padded' => [' Approved '],
+			'upper' => ['APPROVED'],
+		];
+	}//end approvingOutcomes()
+
+	/**
+	 * Every spelling of the approving outcome with a signer approves.
+	 *
+	 * @param string $outcome The task outcome.
+	 *
+	 * @return void
+	 */
+	#[DataProvider('approvingOutcomes')]
+	public function testApprovingOutcomeWithSignerApproves(string $outcome): void {
+		$this->dispatcher->expects($this->once())
+			->method('dispatchTyped')
+			->with($this->isInstanceOf(SignerStepApprovedEvent::class));
+		$this->logger->expects($this->never())->method('warning');
+
+		$this->listener->handle(
+			new TaskTerminalEvent(task: $this->makeTask(state: 'completed', outcome: $outcome))
+		);
+
+	}//end testApprovingOutcomeWithSignerApproves()
+
+	/**
+	 * A rejecting outcome rejects with or without a completing identity.
+	 *
+	 * @param string|null $completedBy The completing identity.
+	 *
+	 * @return void
+	 */
+	#[DataProvider('missingSigners')]
+	public function testRejectingOutcomeWithoutSignerStillRejects(?string $completedBy): void {
+		$this->dispatcher->expects($this->once())
+			->method('dispatchTyped')
+			->with($this->isInstanceOf(SignerStepRejectedEvent::class));
+
+		$this->listener->handle(
+			new TaskTerminalEvent(
+				task: $this->makeTask(state: 'completed', outcome: 'declined', completedBy: $completedBy)
+			)
+		);
+
+	}//end testRejectingOutcomeWithoutSignerStillRejects()
+
+	/**
+	 * A sequence position's task.
+	 *
+	 * @param int         $position    The 1-based position.
+	 * @param string|null $outcome     Task outcome.
+	 * @param string|null $completedBy Completing identity.
+	 *
+	 * @return Task
+	 */
+	private function positionTask(int $position, ?string $outcome, ?string $completedBy): Task {
+		return new Task(
+			uuid: 'task-'.$position,
+			state: 'completed',
+			outcome: $outcome,
+			objectUuid: self::OWNED_OBJECT,
+			sequenceUuid: 'seq-1',
+			sequencePosition: $position,
+			completedBy: $completedBy
+		);
+	}//end positionTask()
+
+	/**
+	 * Hand a completed owned sequence to the listener.
+	 *
+	 * @param Task $finalTask The final position's task.
+	 *
+	 * @return void
+	 */
+	private function completeSequence(Task $finalTask): void {
+		$this->listener->handle(
+			new TaskSequenceCompletedEvent(
+				sequence: new TaskSequence(uuid: 'seq-1', anchorObjectUuid: self::OWNED_OBJECT),
+				finalTask: $finalTask,
+				decider: $finalTask->getCompletedBy(),
+				statusOnApprove: 'signed'
+			)
+		);
+	}//end completeSequence()
+
+	/**
+	 * Final completions that are not a signed approval.
+	 *
+	 * @return array<string, array{0: string|null, 1: string|null}>
+	 */
+	public static function unsignedFinalCompletions(): array {
+		return [
+			'done, no signer' => ['done', null],
+			'empty, no signer' => ['', null],
+			'null, no signer' => [null, null],
+			'done, signer' => ['done', 'alice'],
+			'approved, blank signer' => ['approved', '  '],
+			'approved, empty signer' => ['approved', ''],
+		];
+	}//end unsignedFinalCompletions()
+
+	/**
+	 * A single-signer sequence that OR completed without a signed approval
+	 * dispatches no chain event and logs ids only.
+	 *
+	 * @param string|null $outcome     The final task outcome.
+	 * @param string|null $completedBy The final task's completing identity.
+	 *
+	 * @return void
+	 */
+	#[DataProvider('unsignedFinalCompletions')]
+	public function testSingleSignerSequenceWithoutSignedApprovalDispatchesNothing(?string $outcome, ?string $completedBy): void {
+		$final = $this->positionTask(position: 1, outcome: $outcome, completedBy: $completedBy);
+		$this->sequenceTasks->method('forSequence')->willReturn([$final]);
+		$this->dispatcher->expects($this->never())->method('dispatchTyped');
+		$this->logger->expects($this->once())
+			->method('warning')
+			->with(
+				$this->isType('string'),
+				['sequenceUuid' => 'seq-1', 'finalTaskUuid' => 'task-1', 'objectUuid' => self::OWNED_OBJECT]
+			);
+
+		$this->completeSequence(finalTask: $final);
+
+	}//end testSingleSignerSequenceWithoutSignedApprovalDispatchesNothing()
+
+	/**
+	 * An earlier position completed without an approving outcome blocks the
+	 * chain event even when the final position approved.
+	 *
+	 * @return void
+	 */
+	public function testEarlierUnapprovedPositionBlocksChainCompletion(): void {
+		$final = $this->positionTask(position: 2, outcome: 'approved', completedBy: 'bob');
+		$this->sequenceTasks->method('forSequence')->with('seq-1')->willReturn(
+			[$this->positionTask(position: 1, outcome: '', completedBy: 'alice'), $final]
+		);
+		$this->dispatcher->expects($this->never())->method('dispatchTyped');
+		$this->logger->expects($this->once())->method('warning');
+
+		$this->completeSequence(finalTask: $final);
+
+	}//end testEarlierUnapprovedPositionBlocksChainCompletion()
+
+	/**
+	 * An earlier position without a signer blocks the chain event.
+	 *
+	 * @return void
+	 */
+	public function testEarlierUnsignedPositionBlocksChainCompletion(): void {
+		$final = $this->positionTask(position: 2, outcome: 'approved', completedBy: 'bob');
+		$this->sequenceTasks->method('forSequence')->willReturn(
+			[$this->positionTask(position: 1, outcome: 'approved', completedBy: null), $final]
+		);
+		$this->dispatcher->expects($this->never())->method('dispatchTyped');
+
+		$this->completeSequence(finalTask: $final);
+
+	}//end testEarlierUnsignedPositionBlocksChainCompletion()
+
+	/**
+	 * A final task from the event that disagrees with the read positions
+	 * blocks the chain event.
+	 *
+	 * @return void
+	 */
+	public function testUnsignedFinalTaskFromTheEventBlocksChainCompletion(): void {
+		$this->sequenceTasks->method('forSequence')->willReturn(
+			[$this->positionTask(position: 1, outcome: 'approved', completedBy: 'alice')]
+		);
+		$this->dispatcher->expects($this->never())->method('dispatchTyped');
+
+		$this->completeSequence(finalTask: $this->positionTask(position: 1, outcome: 'done', completedBy: null));
+
+	}//end testUnsignedFinalTaskFromTheEventBlocksChainCompletion()
+
+	/**
+	 * Unreadable or empty positions fail closed.
+	 *
+	 * @return array<string, array{0: array<int, Task>|null}>
+	 */
+	public static function unreadablePositions(): array {
+		return [
+			'unreadable' => [null],
+			'empty' => [[]],
+		];
+	}//end unreadablePositions()
+
+	/**
+	 * A sequence whose positions cannot be read dispatches no chain event.
+	 *
+	 * @param array<int, Task>|null $tasks What the reader returns.
+	 *
+	 * @return void
+	 */
+	#[DataProvider('unreadablePositions')]
+	public function testUnreadablePositionsBlockChainCompletion(?array $tasks): void {
+		$this->sequenceTasks->method('forSequence')->willReturn($tasks);
+		$this->dispatcher->expects($this->never())->method('dispatchTyped');
+		$this->logger->expects($this->once())->method('warning');
+
+		$this->completeSequence(finalTask: $this->positionTask(position: 1, outcome: 'approved', completedBy: 'alice'));
+
+	}//end testUnreadablePositionsBlockChainCompletion()
+
+	/**
+	 * Two signers who both approved complete the chain.
+	 *
+	 * @return void
+	 */
+	public function testEverySignerApprovedCompletesTheChain(): void {
+		$final = $this->positionTask(position: 2, outcome: ' Approved ', completedBy: 'bob');
+		$this->sequenceTasks->method('forSequence')->willReturn(
+			[$this->positionTask(position: 1, outcome: 'approved', completedBy: 'alice'), $final]
+		);
+		$this->dispatcher->expects($this->once())
+			->method('dispatchTyped')
+			->with($this->isInstanceOf(SignerChainCompletedEvent::class));
+		$this->logger->expects($this->never())->method('warning');
+
+		$this->completeSequence(finalTask: $final);
+
+	}//end testEverySignerApprovedCompletesTheChain()
 }//end class

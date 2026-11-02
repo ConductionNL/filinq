@@ -90,6 +90,7 @@ $signingSurface = [
 	'OCA\\Filinq\\EventListener\\SigningEventRegistrar',
 	'OCA\\Filinq\\EventListener\\SigningTaskListener',
 	'OCA\\Filinq\\EventListener\\SignerEventTranslator',
+	'OCA\\Filinq\\EventListener\\SignerSequenceTasks',
 	'OCA\\Filinq\\Event\\SignerStepPendingEvent',
 	'OCA\\Filinq\\Event\\SignerStepApprovedEvent',
 	'OCA\\Filinq\\Event\\SignerStepRejectedEvent',

@@ -50,10 +50,10 @@ final class SignerStepValuesTest extends TestCase {
 	 * @return void
 	 */
 	public function testDecisionCarriesItsValues(): void {
-		$decision = new SignerStepDecision(userId: 'alice', comment: 'akkoord', isRejecting: false);
-		$this->assertSame(['userId' => 'alice', 'comment' => 'akkoord', 'isRejecting' => false], get_object_vars($decision));
+		$decision = new SignerStepDecision(userId: 'alice', comment: 'akkoord', isRejecting: false, isApproving: true);
+		$this->assertSame(['userId' => 'alice', 'comment' => 'akkoord', 'isRejecting' => false, 'isApproving' => true], get_object_vars($decision));
 
-		$empty = new SignerStepDecision(userId: null, comment: null, isRejecting: true);
-		$this->assertSame(['userId' => null, 'comment' => null, 'isRejecting' => true], get_object_vars($empty));
+		$empty = new SignerStepDecision(userId: null, comment: null, isRejecting: true, isApproving: false);
+		$this->assertSame(['userId' => null, 'comment' => null, 'isRejecting' => true, 'isApproving' => false], get_object_vars($empty));
 	}//end testDecisionCarriesItsValues()
 }//end class

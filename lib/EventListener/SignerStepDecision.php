@@ -24,7 +24,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\EventListener;
 
 /**
- * The completing identity, the comment and whether the outcome rejects.
+ * The completing identity, the comment and whether the outcome rejects or approves.
  *
  * @category EventListener
  * @package  OCA\Filinq\EventListener
@@ -42,6 +42,7 @@ final class SignerStepDecision {
 	 * @param string|null $userId      The completing identity.
 	 * @param string|null $comment     The completion comment, when one was given.
 	 * @param bool        $isRejecting TRUE when the outcome is in the rejecting vocabulary.
+	 * @param bool        $isApproving TRUE when the outcome is in the approving vocabulary.
 	 *
 	 * @return void
 	 *
@@ -51,6 +52,7 @@ final class SignerStepDecision {
 		public readonly ?string $userId,
 		public readonly ?string $comment,
 		public readonly bool $isRejecting,
+		public readonly bool $isApproving,
 	) {
 
 	}//end __construct()

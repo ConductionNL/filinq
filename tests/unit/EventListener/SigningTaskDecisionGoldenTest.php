@@ -26,6 +26,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\EventListener;
 
 use OCA\Filinq\EventListener\SignerEventTranslator;
+use OCA\Filinq\EventListener\SignerSequenceTasks;
 use OCA\Filinq\EventListener\SigningTaskListener;
 use OCA\Filinq\Kernel\Contracts\ActiveSigningProviderInterface;
 use OCA\Filinq\Kernel\Contracts\SettingsServiceInterface;
@@ -166,7 +167,7 @@ class SigningTaskDecisionGoldenTest extends TestCase {
 		$settings->method('resolveSigningRequestBinding')->willReturn(['register' => 'filinq', 'schema' => 'signingRequest']);
 		$settings->method('getObjectService')->willReturn($objects);
 
-		$listener = new SigningTaskListener(translator: $translator, settingsService: $settings, logger: $this->createMock(LoggerInterface::class));
+		$listener = new SigningTaskListener(translator: $translator, settingsService: $settings, logger: $this->createMock(LoggerInterface::class), sequenceTasks: $this->createMock(SignerSequenceTasks::class));
 		$listener->handle(new TaskTerminalEvent(task: $task, committed: $committed));
 
 		return $this->seen;

@@ -124,6 +124,15 @@ class SigningTaskListener implements IEventListener {
 	private const REJECTING_OUTCOMES_FALLBACK = ['rejected', 'returned', 'declined', 'denied'];
 
 	/**
+	 * The outcomes that approve a signing step. OR's task vocabulary spells a
+	 * completed approval `approved`; every other non-rejecting outcome is
+	 * not a decision to sign.
+	 *
+	 * @var array<int, string>
+	 */
+	private const APPROVING_OUTCOMES = ['approved'];
+
+	/**
 	 * Constructor.
 	 *
 	 * @param SignerEventTranslator $translator Translates the extracted
@@ -133,6 +142,8 @@ class SigningTaskListener implements IEventListener {
 	 *                                         binding and the object service
 	 *                                         for the ownership check.
 	 * @param LoggerInterface $logger Logger.
+	 * @param SignerSequenceTasks $sequenceTasks Reads every position of a
+	 *                                          completed sequence.
 	 *
 	 * @return void
 	 */
@@ -140,6 +151,7 @@ class SigningTaskListener implements IEventListener {
 		private readonly SignerEventTranslator $translator,
 		private readonly SettingsServiceInterface $settingsService,
 		private readonly LoggerInterface $logger,
+		private readonly SignerSequenceTasks $sequenceTasks,
 	) {
 
 	}//end __construct()
@@ -290,6 +302,8 @@ class SigningTaskListener implements IEventListener {
 	 * @return void
 	 */
 	private function translateDecision(object $task, array $ids): void {
+		$outcome = (string) ($this->read(subject: $task, getter: 'getOutcome') ?? '');
+
 		$this->translator->onTaskDecided(
 			task: new SignerStepTask(
 				sequenceUuid: $ids['sequenceUuid'],
@@ -300,9 +314,8 @@ class SigningTaskListener implements IEventListener {
 			decision: new SignerStepDecision(
 				userId: $this->nullableString(subject: $task, getter: 'getCompletedBy'),
 				comment: $this->nullableString(subject: $task, getter: 'getComment'),
-				isRejecting: $this->isRejectingOutcome(
-					outcome: (string) ($this->read(subject: $task, getter: 'getOutcome') ?? '')
-				)
+				isRejecting: $this->isRejectingOutcome(outcome: $outcome),
+				isApproving: $this->isApprovingOutcome(outcome: $outcome)
 			)
 		);
 	}//end translateDecision()
@@ -346,6 +359,18 @@ class SigningTaskListener implements IEventListener {
 			return;
 		}
 
+		if ($this->isApprovedByEverySigner(sequenceUuid: $sequenceUuid, finalTask: $finalTask) === false) {
+			$this->logger->warning(
+				'SigningTaskListener: completed sequence has a position without an approving outcome and signer; no chain event dispatched',
+				[
+					'sequenceUuid' => $sequenceUuid,
+					'finalTaskUuid' => (string) ($this->read(subject: $finalTask, getter: 'getUuid') ?? ''),
+					'objectUuid' => $objectUuid,
+				]
+			);
+			return;
+		}
+
 		$decider = null;
 		$rawDecider = $this->read(subject: $event, getter: 'getDecider');
 		if ($rawDecider !== null) {
@@ -361,6 +386,58 @@ class SigningTaskListener implements IEventListener {
 		);
 
 	}//end handleSequenceCompleted()
+
+	/**
+	 * Whether every position of a sequence was completed with an approving
+	 * outcome by a named signer. OR advances a sequence on any non-rejecting
+	 * completion, so its completion event alone does not prove each signer
+	 * approved. An unreadable or empty sequence fails closed.
+	 *
+	 * @param string $sequenceUuid UUID of the completed sequence.
+	 * @param object $finalTask    The final position's task from the event.
+	 *
+	 * @return bool True when every position is a signed approval.
+	 */
+	private function isApprovedByEverySigner(string $sequenceUuid, object $finalTask): bool {
+		$tasks = $this->sequenceTasks->forSequence(sequenceUuid: $sequenceUuid);
+		if ($tasks === null || $tasks === []) {
+			return false;
+		}
+
+		$tasks[] = $finalTask;
+		foreach ($tasks as $task) {
+			if ($this->isSignedApproval(task: $task) === false) {
+				return false;
+			}
+		}
+
+		return true;
+	}//end isApprovedByEverySigner()
+
+	/**
+	 * Whether a task carries an approving outcome and a non-blank completing user.
+	 *
+	 * @param object $task The task.
+	 *
+	 * @return bool True for a signed approval.
+	 */
+	private function isSignedApproval(object $task): bool {
+		$outcome = (string) ($this->read(subject: $task, getter: 'getOutcome') ?? '');
+		$signer = trim((string) ($this->read(subject: $task, getter: 'getCompletedBy') ?? ''));
+
+		return $this->isApprovingOutcome(outcome: $outcome) === true && $signer !== '';
+	}//end isSignedApproval()
+
+	/**
+	 * Classify an outcome against the approving vocabulary.
+	 *
+	 * @param string $outcome The task's outcome.
+	 *
+	 * @return bool True when the outcome approves.
+	 */
+	private function isApprovingOutcome(string $outcome): bool {
+		return in_array(strtolower(trim($outcome)), self::APPROVING_OUTCOMES, true);
+	}//end isApprovingOutcome()
 
 	/**
 	 * Read one getter off a cross-app object, ducking the type system.

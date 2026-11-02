@@ -133,17 +133,6 @@
                 "schema": "signingRequest",
                 "_rbac": false
             }
-        },
-        {
-            "event": "OCA\\Filinq\\Event\\SignerStepApprovedEvent",
-            "fields": {
-                "getSequenceUuid": "seq-1",
-                "getTaskUuid": "task-1",
-                "getPosition": 2,
-                "getUserId": "",
-                "getComment": "akkoord",
-                "getObjectUuid": "sign-req-1"
-            }
         }
     ],
     "'approved' '' ''": [
@@ -153,17 +142,6 @@
                 "register": "filinq",
                 "schema": "signingRequest",
                 "_rbac": false
-            }
-        },
-        {
-            "event": "OCA\\Filinq\\Event\\SignerStepApprovedEvent",
-            "fields": {
-                "getSequenceUuid": "seq-1",
-                "getTaskUuid": "task-1",
-                "getPosition": 2,
-                "getUserId": "",
-                "getComment": "",
-                "getObjectUuid": "sign-req-1"
             }
         }
     ],
@@ -175,17 +153,6 @@
                 "schema": "signingRequest",
                 "_rbac": false
             }
-        },
-        {
-            "event": "OCA\\Filinq\\Event\\SignerStepApprovedEvent",
-            "fields": {
-                "getSequenceUuid": "seq-1",
-                "getTaskUuid": "task-1",
-                "getPosition": 2,
-                "getUserId": "",
-                "getComment": null,
-                "getObjectUuid": "sign-req-1"
-            }
         }
     ],
     "'approved' NULL 'akkoord'": [
@@ -195,17 +162,6 @@
                 "register": "filinq",
                 "schema": "signingRequest",
                 "_rbac": false
-            }
-        },
-        {
-            "event": "OCA\\Filinq\\Event\\SignerStepApprovedEvent",
-            "fields": {
-                "getSequenceUuid": "seq-1",
-                "getTaskUuid": "task-1",
-                "getPosition": 2,
-                "getUserId": null,
-                "getComment": "akkoord",
-                "getObjectUuid": "sign-req-1"
             }
         }
     ],
@@ -217,17 +173,6 @@
                 "schema": "signingRequest",
                 "_rbac": false
             }
-        },
-        {
-            "event": "OCA\\Filinq\\Event\\SignerStepApprovedEvent",
-            "fields": {
-                "getSequenceUuid": "seq-1",
-                "getTaskUuid": "task-1",
-                "getPosition": 2,
-                "getUserId": null,
-                "getComment": "",
-                "getObjectUuid": "sign-req-1"
-            }
         }
     ],
     "'approved' NULL NULL": [
@@ -237,17 +182,6 @@
                 "register": "filinq",
                 "schema": "signingRequest",
                 "_rbac": false
-            }
-        },
-        {
-            "event": "OCA\\Filinq\\Event\\SignerStepApprovedEvent",
-            "fields": {
-                "getSequenceUuid": "seq-1",
-                "getTaskUuid": "task-1",
-                "getPosition": 2,
-                "getUserId": null,
-                "getComment": null,
-                "getObjectUuid": "sign-req-1"
             }
         }
     ],
@@ -1519,17 +1453,6 @@
                 "schema": "signingRequest",
                 "_rbac": false
             }
-        },
-        {
-            "event": "OCA\\Filinq\\Event\\SignerStepApprovedEvent",
-            "fields": {
-                "getSequenceUuid": "seq-1",
-                "getTaskUuid": "task-1",
-                "getPosition": 2,
-                "getUserId": "alice",
-                "getComment": "akkoord",
-                "getObjectUuid": "sign-req-1"
-            }
         }
     ],
     "'reject' 'alice' ''": [
@@ -1539,17 +1462,6 @@
                 "register": "filinq",
                 "schema": "signingRequest",
                 "_rbac": false
-            }
-        },
-        {
-            "event": "OCA\\Filinq\\Event\\SignerStepApprovedEvent",
-            "fields": {
-                "getSequenceUuid": "seq-1",
-                "getTaskUuid": "task-1",
-                "getPosition": 2,
-                "getUserId": "alice",
-                "getComment": "",
-                "getObjectUuid": "sign-req-1"
             }
         }
     ],
@@ -1561,17 +1473,6 @@
                 "schema": "signingRequest",
                 "_rbac": false
             }
-        },
-        {
-            "event": "OCA\\Filinq\\Event\\SignerStepApprovedEvent",
-            "fields": {
-                "getSequenceUuid": "seq-1",
-                "getTaskUuid": "task-1",
-                "getPosition": 2,
-                "getUserId": "alice",
-                "getComment": null,
-                "getObjectUuid": "sign-req-1"
-            }
         }
     ],
     "'reject' 'admin' 'akkoord'": [
@@ -1581,17 +1482,6 @@
                 "register": "filinq",
                 "schema": "signingRequest",
                 "_rbac": false
-            }
-        },
-        {
-            "event": "OCA\\Filinq\\Event\\SignerStepApprovedEvent",
-            "fields": {
-                "getSequenceUuid": "seq-1",
-                "getTaskUuid": "task-1",
-                "getPosition": 2,
-                "getUserId": "admin",
-                "getComment": "akkoord",
-                "getObjectUuid": "sign-req-1"
             }
         }
     ],
@@ -1603,17 +1493,6 @@
                 "schema": "signingRequest",
                 "_rbac": false
             }
-        },
-        {
-            "event": "OCA\\Filinq\\Event\\SignerStepApprovedEvent",
-            "fields": {
-                "getSequenceUuid": "seq-1",
-                "getTaskUuid": "task-1",
-                "getPosition": 2,
-                "getUserId": "admin",
-                "getComment": "",
-                "getObjectUuid": "sign-req-1"
-            }
         }
     ],
     "'reject' 'admin' NULL": [
@@ -1623,17 +1502,6 @@
                 "register": "filinq",
                 "schema": "signingRequest",
                 "_rbac": false
-            }
-        },
-        {
-            "event": "OCA\\Filinq\\Event\\SignerStepApprovedEvent",
-            "fields": {
-                "getSequenceUuid": "seq-1",
-                "getTaskUuid": "task-1",
-                "getPosition": 2,
-                "getUserId": "admin",
-                "getComment": null,
-                "getObjectUuid": "sign-req-1"
             }
         }
     ],
@@ -1645,17 +1513,6 @@
                 "schema": "signingRequest",
                 "_rbac": false
             }
-        },
-        {
-            "event": "OCA\\Filinq\\Event\\SignerStepApprovedEvent",
-            "fields": {
-                "getSequenceUuid": "seq-1",
-                "getTaskUuid": "task-1",
-                "getPosition": 2,
-                "getUserId": "",
-                "getComment": "akkoord",
-                "getObjectUuid": "sign-req-1"
-            }
         }
     ],
     "'reject' '' ''": [
@@ -1665,17 +1522,6 @@
                 "register": "filinq",
                 "schema": "signingRequest",
                 "_rbac": false
-            }
-        },
-        {
-            "event": "OCA\\Filinq\\Event\\SignerStepApprovedEvent",
-            "fields": {
-                "getSequenceUuid": "seq-1",
-                "getTaskUuid": "task-1",
-                "getPosition": 2,
-                "getUserId": "",
-                "getComment": "",
-                "getObjectUuid": "sign-req-1"
             }
         }
     ],
@@ -1687,17 +1533,6 @@
                 "schema": "signingRequest",
                 "_rbac": false
             }
-        },
-        {
-            "event": "OCA\\Filinq\\Event\\SignerStepApprovedEvent",
-            "fields": {
-                "getSequenceUuid": "seq-1",
-                "getTaskUuid": "task-1",
-                "getPosition": 2,
-                "getUserId": "",
-                "getComment": null,
-                "getObjectUuid": "sign-req-1"
-            }
         }
     ],
     "'reject' NULL 'akkoord'": [
@@ -1707,17 +1542,6 @@
                 "register": "filinq",
                 "schema": "signingRequest",
                 "_rbac": false
-            }
-        },
-        {
-            "event": "OCA\\Filinq\\Event\\SignerStepApprovedEvent",
-            "fields": {
-                "getSequenceUuid": "seq-1",
-                "getTaskUuid": "task-1",
-                "getPosition": 2,
-                "getUserId": null,
-                "getComment": "akkoord",
-                "getObjectUuid": "sign-req-1"
             }
         }
     ],
@@ -1729,17 +1553,6 @@
                 "schema": "signingRequest",
                 "_rbac": false
             }
-        },
-        {
-            "event": "OCA\\Filinq\\Event\\SignerStepApprovedEvent",
-            "fields": {
-                "getSequenceUuid": "seq-1",
-                "getTaskUuid": "task-1",
-                "getPosition": 2,
-                "getUserId": null,
-                "getComment": "",
-                "getObjectUuid": "sign-req-1"
-            }
         }
     ],
     "'reject' NULL NULL": [
@@ -1749,17 +1562,6 @@
                 "register": "filinq",
                 "schema": "signingRequest",
                 "_rbac": false
-            }
-        },
-        {
-            "event": "OCA\\Filinq\\Event\\SignerStepApprovedEvent",
-            "fields": {
-                "getSequenceUuid": "seq-1",
-                "getTaskUuid": "task-1",
-                "getPosition": 2,
-                "getUserId": null,
-                "getComment": null,
-                "getObjectUuid": "sign-req-1"
             }
         }
     ],
@@ -1771,17 +1573,6 @@
                 "schema": "signingRequest",
                 "_rbac": false
             }
-        },
-        {
-            "event": "OCA\\Filinq\\Event\\SignerStepApprovedEvent",
-            "fields": {
-                "getSequenceUuid": "seq-1",
-                "getTaskUuid": "task-1",
-                "getPosition": 2,
-                "getUserId": "alice",
-                "getComment": "akkoord",
-                "getObjectUuid": "sign-req-1"
-            }
         }
     ],
     "'' 'alice' ''": [
@@ -1791,17 +1582,6 @@
                 "register": "filinq",
                 "schema": "signingRequest",
                 "_rbac": false
-            }
-        },
-        {
-            "event": "OCA\\Filinq\\Event\\SignerStepApprovedEvent",
-            "fields": {
-                "getSequenceUuid": "seq-1",
-                "getTaskUuid": "task-1",
-                "getPosition": 2,
-                "getUserId": "alice",
-                "getComment": "",
-                "getObjectUuid": "sign-req-1"
             }
         }
     ],
@@ -1813,17 +1593,6 @@
                 "schema": "signingRequest",
                 "_rbac": false
             }
-        },
-        {
-            "event": "OCA\\Filinq\\Event\\SignerStepApprovedEvent",
-            "fields": {
-                "getSequenceUuid": "seq-1",
-                "getTaskUuid": "task-1",
-                "getPosition": 2,
-                "getUserId": "alice",
-                "getComment": null,
-                "getObjectUuid": "sign-req-1"
-            }
         }
     ],
     "'' 'admin' 'akkoord'": [
@@ -1833,17 +1602,6 @@
                 "register": "filinq",
                 "schema": "signingRequest",
                 "_rbac": false
-            }
-        },
-        {
-            "event": "OCA\\Filinq\\Event\\SignerStepApprovedEvent",
-            "fields": {
-                "getSequenceUuid": "seq-1",
-                "getTaskUuid": "task-1",
-                "getPosition": 2,
-                "getUserId": "admin",
-                "getComment": "akkoord",
-                "getObjectUuid": "sign-req-1"
             }
         }
     ],
@@ -1855,17 +1613,6 @@
                 "schema": "signingRequest",
                 "_rbac": false
             }
-        },
-        {
-            "event": "OCA\\Filinq\\Event\\SignerStepApprovedEvent",
-            "fields": {
-                "getSequenceUuid": "seq-1",
-                "getTaskUuid": "task-1",
-                "getPosition": 2,
-                "getUserId": "admin",
-                "getComment": "",
-                "getObjectUuid": "sign-req-1"
-            }
         }
     ],
     "'' 'admin' NULL": [
@@ -1875,17 +1622,6 @@
                 "register": "filinq",
                 "schema": "signingRequest",
                 "_rbac": false
-            }
-        },
-        {
-            "event": "OCA\\Filinq\\Event\\SignerStepApprovedEvent",
-            "fields": {
-                "getSequenceUuid": "seq-1",
-                "getTaskUuid": "task-1",
-                "getPosition": 2,
-                "getUserId": "admin",
-                "getComment": null,
-                "getObjectUuid": "sign-req-1"
             }
         }
     ],
@@ -1897,17 +1633,6 @@
                 "schema": "signingRequest",
                 "_rbac": false
             }
-        },
-        {
-            "event": "OCA\\Filinq\\Event\\SignerStepApprovedEvent",
-            "fields": {
-                "getSequenceUuid": "seq-1",
-                "getTaskUuid": "task-1",
-                "getPosition": 2,
-                "getUserId": "",
-                "getComment": "akkoord",
-                "getObjectUuid": "sign-req-1"
-            }
         }
     ],
     "'' '' ''": [
@@ -1917,17 +1642,6 @@
                 "register": "filinq",
                 "schema": "signingRequest",
                 "_rbac": false
-            }
-        },
-        {
-            "event": "OCA\\Filinq\\Event\\SignerStepApprovedEvent",
-            "fields": {
-                "getSequenceUuid": "seq-1",
-                "getTaskUuid": "task-1",
-                "getPosition": 2,
-                "getUserId": "",
-                "getComment": "",
-                "getObjectUuid": "sign-req-1"
             }
         }
     ],
@@ -1939,17 +1653,6 @@
                 "schema": "signingRequest",
                 "_rbac": false
             }
-        },
-        {
-            "event": "OCA\\Filinq\\Event\\SignerStepApprovedEvent",
-            "fields": {
-                "getSequenceUuid": "seq-1",
-                "getTaskUuid": "task-1",
-                "getPosition": 2,
-                "getUserId": "",
-                "getComment": null,
-                "getObjectUuid": "sign-req-1"
-            }
         }
     ],
     "'' NULL 'akkoord'": [
@@ -1959,17 +1662,6 @@
                 "register": "filinq",
                 "schema": "signingRequest",
                 "_rbac": false
-            }
-        },
-        {
-            "event": "OCA\\Filinq\\Event\\SignerStepApprovedEvent",
-            "fields": {
-                "getSequenceUuid": "seq-1",
-                "getTaskUuid": "task-1",
-                "getPosition": 2,
-                "getUserId": null,
-                "getComment": "akkoord",
-                "getObjectUuid": "sign-req-1"
             }
         }
     ],
@@ -1981,17 +1673,6 @@
                 "schema": "signingRequest",
                 "_rbac": false
             }
-        },
-        {
-            "event": "OCA\\Filinq\\Event\\SignerStepApprovedEvent",
-            "fields": {
-                "getSequenceUuid": "seq-1",
-                "getTaskUuid": "task-1",
-                "getPosition": 2,
-                "getUserId": null,
-                "getComment": "",
-                "getObjectUuid": "sign-req-1"
-            }
         }
     ],
     "'' NULL NULL": [
@@ -2001,17 +1682,6 @@
                 "register": "filinq",
                 "schema": "signingRequest",
                 "_rbac": false
-            }
-        },
-        {
-            "event": "OCA\\Filinq\\Event\\SignerStepApprovedEvent",
-            "fields": {
-                "getSequenceUuid": "seq-1",
-                "getTaskUuid": "task-1",
-                "getPosition": 2,
-                "getUserId": null,
-                "getComment": null,
-                "getObjectUuid": "sign-req-1"
             }
         }
     ],
@@ -2023,17 +1693,6 @@
                 "schema": "signingRequest",
                 "_rbac": false
             }
-        },
-        {
-            "event": "OCA\\Filinq\\Event\\SignerStepApprovedEvent",
-            "fields": {
-                "getSequenceUuid": "seq-1",
-                "getTaskUuid": "task-1",
-                "getPosition": 2,
-                "getUserId": "alice",
-                "getComment": "akkoord",
-                "getObjectUuid": "sign-req-1"
-            }
         }
     ],
     "NULL 'alice' ''": [
@@ -2043,17 +1702,6 @@
                 "register": "filinq",
                 "schema": "signingRequest",
                 "_rbac": false
-            }
-        },
-        {
-            "event": "OCA\\Filinq\\Event\\SignerStepApprovedEvent",
-            "fields": {
-                "getSequenceUuid": "seq-1",
-                "getTaskUuid": "task-1",
-                "getPosition": 2,
-                "getUserId": "alice",
-                "getComment": "",
-                "getObjectUuid": "sign-req-1"
             }
         }
     ],
@@ -2065,17 +1713,6 @@
                 "schema": "signingRequest",
                 "_rbac": false
             }
-        },
-        {
-            "event": "OCA\\Filinq\\Event\\SignerStepApprovedEvent",
-            "fields": {
-                "getSequenceUuid": "seq-1",
-                "getTaskUuid": "task-1",
-                "getPosition": 2,
-                "getUserId": "alice",
-                "getComment": null,
-                "getObjectUuid": "sign-req-1"
-            }
         }
     ],
     "NULL 'admin' 'akkoord'": [
@@ -2085,17 +1722,6 @@
                 "register": "filinq",
                 "schema": "signingRequest",
                 "_rbac": false
-            }
-        },
-        {
-            "event": "OCA\\Filinq\\Event\\SignerStepApprovedEvent",
-            "fields": {
-                "getSequenceUuid": "seq-1",
-                "getTaskUuid": "task-1",
-                "getPosition": 2,
-                "getUserId": "admin",
-                "getComment": "akkoord",
-                "getObjectUuid": "sign-req-1"
             }
         }
     ],
@@ -2107,17 +1733,6 @@
                 "schema": "signingRequest",
                 "_rbac": false
             }
-        },
-        {
-            "event": "OCA\\Filinq\\Event\\SignerStepApprovedEvent",
-            "fields": {
-                "getSequenceUuid": "seq-1",
-                "getTaskUuid": "task-1",
-                "getPosition": 2,
-                "getUserId": "admin",
-                "getComment": "",
-                "getObjectUuid": "sign-req-1"
-            }
         }
     ],
     "NULL 'admin' NULL": [
@@ -2127,17 +1742,6 @@
                 "register": "filinq",
                 "schema": "signingRequest",
                 "_rbac": false
-            }
-        },
-        {
-            "event": "OCA\\Filinq\\Event\\SignerStepApprovedEvent",
-            "fields": {
-                "getSequenceUuid": "seq-1",
-                "getTaskUuid": "task-1",
-                "getPosition": 2,
-                "getUserId": "admin",
-                "getComment": null,
-                "getObjectUuid": "sign-req-1"
             }
         }
     ],
@@ -2149,17 +1753,6 @@
                 "schema": "signingRequest",
                 "_rbac": false
             }
-        },
-        {
-            "event": "OCA\\Filinq\\Event\\SignerStepApprovedEvent",
-            "fields": {
-                "getSequenceUuid": "seq-1",
-                "getTaskUuid": "task-1",
-                "getPosition": 2,
-                "getUserId": "",
-                "getComment": "akkoord",
-                "getObjectUuid": "sign-req-1"
-            }
         }
     ],
     "NULL '' ''": [
@@ -2169,17 +1762,6 @@
                 "register": "filinq",
                 "schema": "signingRequest",
                 "_rbac": false
-            }
-        },
-        {
-            "event": "OCA\\Filinq\\Event\\SignerStepApprovedEvent",
-            "fields": {
-                "getSequenceUuid": "seq-1",
-                "getTaskUuid": "task-1",
-                "getPosition": 2,
-                "getUserId": "",
-                "getComment": "",
-                "getObjectUuid": "sign-req-1"
             }
         }
     ],
@@ -2191,17 +1773,6 @@
                 "schema": "signingRequest",
                 "_rbac": false
             }
-        },
-        {
-            "event": "OCA\\Filinq\\Event\\SignerStepApprovedEvent",
-            "fields": {
-                "getSequenceUuid": "seq-1",
-                "getTaskUuid": "task-1",
-                "getPosition": 2,
-                "getUserId": "",
-                "getComment": null,
-                "getObjectUuid": "sign-req-1"
-            }
         }
     ],
     "NULL NULL 'akkoord'": [
@@ -2211,17 +1782,6 @@
                 "register": "filinq",
                 "schema": "signingRequest",
                 "_rbac": false
-            }
-        },
-        {
-            "event": "OCA\\Filinq\\Event\\SignerStepApprovedEvent",
-            "fields": {
-                "getSequenceUuid": "seq-1",
-                "getTaskUuid": "task-1",
-                "getPosition": 2,
-                "getUserId": null,
-                "getComment": "akkoord",
-                "getObjectUuid": "sign-req-1"
             }
         }
     ],
@@ -2233,17 +1793,6 @@
                 "schema": "signingRequest",
                 "_rbac": false
             }
-        },
-        {
-            "event": "OCA\\Filinq\\Event\\SignerStepApprovedEvent",
-            "fields": {
-                "getSequenceUuid": "seq-1",
-                "getTaskUuid": "task-1",
-                "getPosition": 2,
-                "getUserId": null,
-                "getComment": "",
-                "getObjectUuid": "sign-req-1"
-            }
         }
     ],
     "NULL NULL NULL": [
@@ -2253,17 +1802,6 @@
                 "register": "filinq",
                 "schema": "signingRequest",
                 "_rbac": false
-            }
-        },
-        {
-            "event": "OCA\\Filinq\\Event\\SignerStepApprovedEvent",
-            "fields": {
-                "getSequenceUuid": "seq-1",
-                "getTaskUuid": "task-1",
-                "getPosition": 2,
-                "getUserId": null,
-                "getComment": null,
-                "getObjectUuid": "sign-req-1"
             }
         }
     ],
@@ -2316,17 +1854,6 @@
                 "register": "filinq",
                 "schema": "signingRequest",
                 "_rbac": false
-            }
-        },
-        {
-            "event": "OCA\\Filinq\\Event\\SignerStepApprovedEvent",
-            "fields": {
-                "getSequenceUuid": "s",
-                "getTaskUuid": "t",
-                "getPosition": 9,
-                "getUserId": null,
-                "getComment": null,
-                "getObjectUuid": "sign-req-1"
             }
         }
     ],

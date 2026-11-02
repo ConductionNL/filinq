@@ -27,6 +27,7 @@ namespace OCA\Filinq\Tests\Unit\EventListener;
 use OCA\Filinq\EventListener\SignerEventTranslator;
 use OCA\Filinq\EventListener\SignerStepDecision;
 use OCA\Filinq\EventListener\SignerStepTask;
+use OCA\Filinq\EventListener\SignerSequenceTasks;
 use OCA\Filinq\EventListener\SigningTaskListener;
 use OCA\Filinq\Kernel\Contracts\SettingsServiceInterface;
 use OCA\OpenRegister\Db\Task;
@@ -87,7 +88,7 @@ class SigningTaskListenerTerminalTraceTest extends TestCase {
 	public function testCompletedTaskHandsOnItsOwnDecision(): void {
 		$this->expectDecision(
 			task: ['sequenceUuid' => 'seq-1', 'taskUuid' => 'task-1', 'position' => 2, 'objectUuid' => self::OWNED],
-			decision: ['userId' => 'alice', 'comment' => 'akkoord', 'isRejecting' => false]
+			decision: ['userId' => 'alice', 'comment' => 'akkoord', 'isRejecting' => false, 'isApproving' => true]
 		);
 
 		$this->dispatch(task: $this->task(completedBy: 'alice', comment: 'akkoord', outcome: 'approved'));
@@ -125,7 +126,7 @@ class SigningTaskListenerTerminalTraceTest extends TestCase {
 	public function testDefaultsAndRejection(): void {
 		$this->expectDecision(
 			task: ['sequenceUuid' => 'seq-1', 'taskUuid' => '', 'position' => 0, 'objectUuid' => self::OWNED],
-			decision: ['userId' => 'carol', 'comment' => null, 'isRejecting' => true]
+			decision: ['userId' => 'carol', 'comment' => null, 'isRejecting' => true, 'isApproving' => false]
 		);
 
 		$this->dispatch(
@@ -181,7 +182,7 @@ class SigningTaskListenerTerminalTraceTest extends TestCase {
 		$settings->method('resolveSigningRequestBinding')->willReturn(['register' => 'filinq', 'schema' => 'signingRequest']);
 		$settings->method('getObjectService')->willReturn($this->objects);
 
-		$listener = new SigningTaskListener(translator: $this->translator, settingsService: $settings, logger: $this->createMock(LoggerInterface::class));
+		$listener = new SigningTaskListener(translator: $this->translator, settingsService: $settings, logger: $this->createMock(LoggerInterface::class), sequenceTasks: $this->createMock(SignerSequenceTasks::class));
 		$listener->handle(new TaskTerminalEvent(task: $task, committed: $committed));
 	}//end dispatch()
 
