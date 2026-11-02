@@ -61,8 +61,7 @@
 
 import PrintPreview from './components/PrintPreview.vue'
 import DossierFormModal from './dialogs/DossierFormModal.vue'
-import ProhibitionFormModal from './dialogs/ProhibitionFormModal.vue'
-import StandingConsentFormModal from './dialogs/StandingConsentFormModal.vue'
+import PolicyRuleFormModal from './dialogs/PolicyRuleFormModal.vue'
 import AnonymizationIndex from './views/anonymization/AnonymizationIndex.vue'
 import FolderAnonymizationView from './views/anonymization/FolderAnonymizationView.vue'
 import ClassificationPending from './views/classification/ClassificationPending.vue'
@@ -130,9 +129,9 @@ export default {
 	ComponentGallery: { kind: 'page', component: ComponentGallery },
 	CorrespondenceIndex: { kind: 'page', component: CorrespondenceIndex },
 	ProhibitionIndex: { kind: 'page', component: PolicyRuleIndex },
-	ProhibitionFormModal: { kind: 'modal', component: ProhibitionFormModal },
+	ProhibitionFormModal: { kind: 'modal', component: PolicyRuleFormModal },
 	StandingConsentIndex: { kind: 'page', component: PolicyRuleIndex },
-	StandingConsentFormModal: { kind: 'modal', component: StandingConsentFormModal },
+	StandingConsentFormModal: { kind: 'modal', component: PolicyRuleFormModal },
 	CustomDictionaryIndex: { kind: 'page', component: CustomDictionaryIndex },
 	DossierIndex: { kind: 'page', component: DossierIndex },
 	DossierDetail: { kind: 'page', component: DossierDetail },

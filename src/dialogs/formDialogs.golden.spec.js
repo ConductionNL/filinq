@@ -11,8 +11,7 @@
 import fs from 'fs'
 import path from 'path'
 import CustomDictionaryFormDialog from './CustomDictionaryFormDialog.vue'
-import ProhibitionFormModal from './ProhibitionFormModal.vue'
-import StandingConsentFormModal from './StandingConsentFormModal.vue'
+import PolicyRuleFormModal from './PolicyRuleFormModal.vue'
 import { renderStubbed } from '../../tests/jest/renderGolden.js'
 
 jest.mock(
@@ -56,9 +55,9 @@ const RECORD_ROW = {
 }
 
 const DIALOGS = {
-	prohibition: ProhibitionFormModal,
-	standingConsent: StandingConsentFormModal,
-	customDictionary: CustomDictionaryFormDialog,
+	prohibition: [PolicyRuleFormModal, { surface: 'prohibition' }],
+	standingConsent: [PolicyRuleFormModal, { surface: 'standingConsent' }],
+	customDictionary: [CustomDictionaryFormDialog, {}],
 }
 
 const STATES = {
@@ -80,7 +79,7 @@ afterAll(() => {
 })
 
 describe('record form dialogs golden', () => {
-	for (const [dialog, component] of Object.entries(DIALOGS)) {
+	for (const [dialog, [component, fixed]] of Object.entries(DIALOGS)) {
 		for (const [state, props] of Object.entries(STATES)) {
 			it(`${dialog} ${state}`, async () => {
 				const emitted = []
@@ -89,7 +88,7 @@ describe('record form dialogs golden', () => {
 					listeners[event] = (...args) => emitted.push([event, ...args])
 				}
 				const page = await renderStubbed(component, {
-					props: { ...props, ...listeners },
+					props: { ...fixed, ...props, ...listeners },
 					real: ['CnDialogActions'],
 				})
 				if (props.editingRecord && page.vm.resetForm) {

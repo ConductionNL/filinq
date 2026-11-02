@@ -46,8 +46,12 @@ const POLICY_EVENTS = ['submit', 'cancel', 'update:open']
 
 const SITES = {
 	prohibitionCreate: {
-		file: './ProhibitionFormModal.vue',
-		props: { open: true, editingRecord: null },
+		file: './PolicyRuleFormModal.vue',
+		props: {
+			surface: 'prohibition',
+			open: true,
+			editingRecord: null,
+		},
 		events: POLICY_EVENTS,
 		fill: (vm) => {
 			vm.form.primaryName = 'Jan Jansen'
@@ -57,8 +61,9 @@ const SITES = {
 		busyProps: { saving: true, formError: 'Save failed' },
 	},
 	prohibitionEdit: {
-		file: './ProhibitionFormModal.vue',
+		file: './PolicyRuleFormModal.vue',
 		props: {
+			surface: 'prohibition',
 			open: true,
 			editingRecord: {
 				primaryName: 'Jan Jansen',
@@ -71,8 +76,12 @@ const SITES = {
 		busyProps: { saving: true },
 	},
 	standingConsentCreate: {
-		file: './StandingConsentFormModal.vue',
-		props: { open: true, editingRecord: null },
+		file: './PolicyRuleFormModal.vue',
+		props: {
+			surface: 'standingConsent',
+			open: true,
+			editingRecord: null,
+		},
 		events: POLICY_EVENTS,
 		fill: (vm) => {
 			vm.form.entityText = 'Jan Jansen'
@@ -82,8 +91,9 @@ const SITES = {
 		busyProps: { saving: true },
 	},
 	standingConsentEdit: {
-		file: './StandingConsentFormModal.vue',
+		file: './PolicyRuleFormModal.vue',
 		props: {
+			surface: 'standingConsent',
 			open: true,
 			editingRecord: {
 				entityText: 'Jan Jansen',
