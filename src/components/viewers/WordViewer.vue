@@ -1,19 +1,23 @@
 <template>
 	<div
-		class="word-viewer"
+		class="word-viewer dd-doc-viewer"
 		:class="{ 'dd-marking-cursor': isAddMode }"
 		@mouseup="captureSelection">
-		<div v-if="loading" class="word-viewer__loading">
+		<div v-if="loading" class="word-viewer__loading dd-doc-viewer__state">
 			<NcLoadingIcon :size="48" />
 			<span>{{ t('filinq', 'Loading document…') }}</span>
 		</div>
-		<div v-else-if="error" class="word-viewer__error">
+		<div v-else-if="error" class="word-viewer__error dd-doc-viewer__state">
 			{{ error }}
 		</div>
-		<div v-else class="word-viewer__page">
+		<div v-else class="word-viewer__page dd-doc-viewer__sheet">
 			<!-- mammoth does not sanitise; the HTML is sanitised in toHtml(). -->
-			<!-- eslint-disable-next-line vue/no-v-html -->
-			<div ref="content" class="word-viewer__content" v-html="html" />
+			<!-- eslint-disable vue/no-v-html -->
+			<div
+				ref="content"
+				class="word-viewer__content dd-doc-viewer__html"
+				v-html="html" />
+			<!-- eslint-enable vue/no-v-html -->
 		</div>
 	</div>
 </template>
@@ -67,38 +71,4 @@ export default {
 }
 </script>
 
-<style scoped>
-.word-viewer {
-	display: flex;
-	justify-content: center;
-	padding: 16px;
-	background: var(--color-background-dark);
-	min-height: 100%;
-}
-
-.word-viewer__loading,
-.word-viewer__error {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	gap: 8px;
-	padding: 32px;
-	color: var(--color-text-maxcontrast);
-}
-
-.word-viewer__page {
-	background: white;
-	color: black;
-	max-width: 800px;
-	width: 100%;
-	padding: 48px;
-	box-shadow: var(--dd-shadow-doc);
-	border-radius: var(--border-radius);
-}
-
-.word-viewer__content {
-	font-family: 'Calibri', 'Arial', sans-serif;
-	font-size: 14px;
-	line-height: 1.6;
-}
-</style>
+<style scoped src="./documentViewer.css"></style>

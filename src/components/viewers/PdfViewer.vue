@@ -3,11 +3,11 @@
 		class="pdf-viewer"
 		:class="{ 'dd-marking-cursor': isAddMode }"
 		@mouseup="captureSelection">
-		<div v-if="loading" class="pdf-viewer__loading">
+		<div v-if="loading" class="pdf-viewer__loading dd-doc-viewer__state">
 			<NcLoadingIcon :size="48" />
 			<span>{{ t('filinq', 'Loading document…') }}</span>
 		</div>
-		<div v-else-if="error" class="pdf-viewer__error">
+		<div v-else-if="error" class="pdf-viewer__error dd-doc-viewer__state">
 			{{ error }}
 		</div>
 		<div v-else class="pdf-viewer__pages">
@@ -229,6 +229,8 @@ export default {
 }
 </script>
 
+<style scoped src="./documentViewer.css"></style>
+
 <style scoped>
 .pdf-viewer {
 	display: flex;
@@ -238,16 +240,6 @@ export default {
 	padding: 16px;
 	background: var(--color-background-dark);
 	min-height: 100%;
-}
-
-.pdf-viewer__loading,
-.pdf-viewer__error {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	gap: 8px;
-	padding: 32px;
-	color: var(--color-text-maxcontrast);
 }
 
 .pdf-viewer__pages {

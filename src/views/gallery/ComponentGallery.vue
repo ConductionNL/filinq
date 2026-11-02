@@ -184,14 +184,7 @@
 			<div class="dd-demo">
 				<DdCardGrid :objects="documents" rowKey="id">
 					<template #card="{ object }">
-						<div class="dd-mini-card">
-							<DdIcon
-								:name="object.isFolder ? 'folder' : 'article'"
-								:size="24" />
-							<span class="dd-mini-card__name">{{
-								object.fileName
-							}}</span>
-						</div>
+						<GalleryMiniCard :item="object" />
 					</template>
 				</DdCardGrid>
 			</div>
@@ -240,13 +233,7 @@
 					@update:selectedKeys="onSelect"
 					@rowClick="noop">
 					<template #column-kind="{ row }">
-						<span class="dd-tag">{{
-							row.isFolder
-								? 'Dossier'
-								: row.isAnonymized
-									? 'Anonymized'
-									: 'Concept'
-						}}</span>
+						<span class="dd-tag">{{ kindLabel(row) }}</span>
 					</template>
 					<template #row-actions>
 						<DdButton variant="tertiary" icon="discover_tune" label="" />
@@ -318,23 +305,10 @@
 						<DdSearchBar v-model="indexSearch" placeholder="Filter…" />
 					</template>
 					<template #column-kind="{ row }">
-						<span class="dd-tag">{{
-							row.isFolder
-								? 'Dossier'
-								: row.isAnonymized
-									? 'Anonymized'
-									: 'Concept'
-						}}</span>
+						<span class="dd-tag">{{ kindLabel(row) }}</span>
 					</template>
 					<template #card="{ object }">
-						<div class="dd-mini-card">
-							<DdIcon
-								:name="object.isFolder ? 'folder' : 'article'"
-								:size="24" />
-							<span class="dd-mini-card__name">{{
-								object.fileName
-							}}</span>
-						</div>
+						<GalleryMiniCard :item="object" />
 					</template>
 				</DdIndexPage>
 			</div>
@@ -355,6 +329,7 @@ import DdPagination from '../../components/DdPagination.vue'
 import DdSearchBar from '../../components/DdSearchBar.vue'
 import DdSkeleton from '../../components/DdSkeleton.vue'
 import DdViewToggle from '../../components/DdViewToggle.vue'
+import GalleryMiniCard from './GalleryMiniCard.vue'
 
 /**
  * Component gallery for Filinq.
@@ -374,6 +349,7 @@ export default {
 		DdButton,
 		DdIcon,
 		DdViewToggle,
+		GalleryMiniCard,
 		DdSearchBar,
 		DdSkeleton,
 		DdPagination,
@@ -495,6 +471,20 @@ export default {
 	methods: {
 		/** No-op handler so interactive demos can emit without side effects. */
 		noop() {},
+
+		/**
+		 * The kind shown for a demo document.
+		 *
+		 * @param {object} row A demo document.
+		 * @return {string} Dossier, Anonymized or Concept.
+		 */
+		kindLabel(row) {
+			if (row.isFolder) {
+				return 'Dossier'
+			}
+			return row.isAnonymized ? 'Anonymized' : 'Concept'
+		},
+
 		/**
 		 * Reflect a pagination page change in the local demo state.
 		 *
@@ -647,17 +637,6 @@ export default {
 	color: var(--color-text-maxcontrast);
 	text-align: center;
 	overflow-wrap: break-word;
-}
-
-.dd-mini-card {
-	display: flex;
-	align-items: center;
-	gap: 10px;
-	padding: 16px;
-}
-
-.dd-mini-card__name {
-	font-weight: 500;
 }
 
 .dd-tag {
