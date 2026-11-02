@@ -549,8 +549,7 @@ describe('a failed confirm resets only its own dialog', () => {
 			page.vm.$data[target] = SECOND
 			await nextTick()
 			await clickConfirm(document.body)
-			const store = /Store$/
-			const first = mockPending.find((p) => store.test(p.call[0]))
+			const first = mockPending.find((p) => /^delete/.test(p.call[1]))
 			first.reject(new Error('refused'))
 			for (let i = 0; i < 5; i++) {
 				await nextTick()
