@@ -151,54 +151,93 @@ class RenameDutchColumns implements IRepairStep {
 			return;
 		}
 
-		$renamed = 0;
-		$copied = 0;
-		$refused = 0;
-
+		$tally = ['renamed' => 0, 'copied' => 0, 'refused' => 0];
 		foreach ($tables as $table) {
-			$columns = $this->columnsOf(table: $table);
-			$qTable = $this->quote(identifier: $table);
-
-			foreach (self::COLUMN_MAP as $old => $new) {
-				if (in_array($old, $columns, true) === false) {
-					continue;
-				}
-
-				if ($this->hasCollision(columns: $columns, target: $new) === true) {
-					$this->logger->warning(
-						'RenameDutchColumns: two sources target one destination; migrating neither.',
-						['table' => $table, 'source' => $old, 'destination' => $new]
-					);
-					$refused++;
-					continue;
-				}
-
-				if (in_array($new, $columns, true) === false) {
-					$sql = 'ALTER TABLE ' . $qTable . ' RENAME COLUMN '
-						. $this->quote(identifier: $old) . ' TO ' . $this->quote(identifier: $new);
-					if ($this->exec(sql: $sql) === true) {
-						$renamed++;
-					}
-
-					continue;
-				}
-
-				$qNew = $this->quote(identifier: $new);
-				$qOld = $this->quote(identifier: $old);
-				$sql = 'UPDATE ' . $qTable . ' SET ' . $qNew . ' = ' . $qOld
-					. ' WHERE ' . $qNew . ' IS NULL AND ' . $qOld . ' IS NOT NULL';
-				if ($this->exec(sql: $sql) === true) {
-					$copied++;
-				}
-			}//end foreach
-		}//end foreach
+			foreach ($this->migrateTable(table: $table) as $outcome) {
+				$tally[$outcome]++;
+			}
+		}
 
 		$output->info(
-			'RenameDutchColumns: ' . $renamed . ' renamed, ' . $copied . ' back-filled, '
-			. $refused . ' refused, across ' . count($tables) . ' shard table(s).'
+			'RenameDutchColumns: ' . $tally['renamed'] . ' renamed, ' . $tally['copied'] . ' back-filled, '
+			. $tally['refused'] . ' refused, across ' . count($tables) . ' shard table(s).'
 		);
 
 	}//end run()
+
+	/**
+	 * Migrate every mapped Dutch column one shard table holds.
+	 *
+	 * @param string $table The shard table.
+	 *
+	 * @return array<int, string> One outcome per column that changed or was refused.
+	 *
+	 * @spec exclude No canonical spec covers the Dutch-to-English vocabulary
+	 *  migration.
+	 */
+	private function migrateTable(string $table): array {
+		$columns = $this->columnsOf(table: $table);
+		$outcomes = [];
+
+		foreach (self::COLUMN_MAP as $old => $new) {
+			if (in_array($old, $columns, true) === false) {
+				continue;
+			}
+
+			$outcomes[] = $this->migrateColumn(
+				table: ['name' => $table, 'columns' => $columns],
+				move: ['old' => $old, 'new' => $new]
+			);
+		}
+
+		return array_values(array_filter($outcomes));
+	}//end migrateTable()
+
+	/**
+	 * Rename a Dutch column, or back-fill its English twin when both exist.
+	 *
+	 * @param array{name: string, columns: array<int, string>} $table The table and the columns it holds.
+	 * @param array{old: string, new: string} $move The Dutch source and English destination.
+	 *
+	 * @return string `renamed`, `copied`, `refused`, or '' when the statement failed.
+	 *
+	 * @spec exclude No canonical spec covers the Dutch-to-English vocabulary
+	 *  migration.
+	 */
+	private function migrateColumn(array $table, array $move): string {
+		$old = $move['old'];
+		$new = $move['new'];
+
+		if ($this->hasCollision(columns: $table['columns'], target: $new) === true) {
+			$this->logger->warning(
+				'RenameDutchColumns: two sources target one destination; migrating neither.',
+				['table' => $table['name'], 'source' => $old, 'destination' => $new]
+			);
+			return 'refused';
+		}
+
+		$qTable = $this->quote(identifier: $table['name']);
+		$qNew = $this->quote(identifier: $new);
+		$qOld = $this->quote(identifier: $old);
+
+		if (in_array($new, $table['columns'], true) === false) {
+			$outcome = '';
+			if ($this->exec(sql: 'ALTER TABLE ' . $qTable . ' RENAME COLUMN ' . $qOld . ' TO ' . $qNew) === true) {
+				$outcome = 'renamed';
+			}
+
+			return $outcome;
+		}
+
+		$sql = 'UPDATE ' . $qTable . ' SET ' . $qNew . ' = ' . $qOld
+			. ' WHERE ' . $qNew . ' IS NULL AND ' . $qOld . ' IS NOT NULL';
+
+		if ($this->exec(sql: $sql) === false) {
+			return '';
+		}
+
+		return 'copied';
+	}//end migrateColumn()
 
 	/**
 	 * Whether another mapped source already targets the same destination here.

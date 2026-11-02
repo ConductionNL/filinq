@@ -20,7 +20,9 @@
 
 namespace OCA\Filinq\Tests\Unit\Service;
 
+use OCA\Filinq\Service\ConsentStatusChange;
 use OCA\Filinq\Service\ConsentUpdateHandler;
+use OCA\Filinq\Service\RegisterObjectRef;
 use OCP\App\IAppManager;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -100,7 +102,7 @@ class ConsentUpdateHandlerTest extends TestCase {
 		$this->mockAppManager->method('getInstalledApps')
 			->willReturn([]);
 
-		$this->handler->updateConsentStatus('uuid-1', 'reg-1', 'sch-1', ['status' => 'granted']);
+		$this->handler->updateConsentStatus(consent: new RegisterObjectRef(id: 'uuid-1', register: 'reg-1', schema: 'sch-1'), change: new ConsentStatusChange(data: ['status' => 'granted']));
 
 	}//end testUpdateConsentStatusThrowsWhenNotInstalled()
 
@@ -401,4 +403,59 @@ class ConsentUpdateHandlerTest extends TestCase {
 
 	}//end testEqualServerControlledValuesAreAllowed()
 
+	/**
+	 * An officer's consent is saved past the cascade with its event appended.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/consent-management/spec.md
+	 */
+	public function testAConsentChangeIsSavedWithItsEvent(): void {
+		$stored = new \OCA\OpenRegister\Db\ObjectEntity();
+		$stored->setObject(['consentStatus' => 'pending', 'notificationStatus' => 'sent', 'policyMatch' => null]);
+
+		$saved = [];
+		$objects = $this->createMock(originalClassName: \OCA\OpenRegister\Service\ObjectService::class);
+		$objects->method('find')->willReturn($stored);
+		$objects->method('saveObject')->willReturnCallback(
+			function (array $object = [], string $register = '', string $schema = '', ?string $uuid = null, bool $_rbac = true) use (&$saved) {
+				$saved[] = ['object' => $object, 'rbac' => $_rbac];
+				$entity = new \OCA\OpenRegister\Db\ObjectEntity();
+				$entity->setObject($object);
+				return $entity;
+			}
+		);
+		$this->mockAppManager->method('getInstalledApps')->willReturn(['openregister']);
+		$this->mockContainer->method('get')->willReturn($objects);
+
+		$result = $this->handler->updateConsentStatus(consent: new RegisterObjectRef(id: 'c-1', register: 'filinq', schema: 'publicationConsent'), change: new ConsentStatusChange(data: ['consentStatus' => 'consent_given', 'evidence' => 'Signed form received by post'], actor: 'ingrid'));
+
+		$this->assertSame(expected: 'consent_given', actual: $result['consentStatus']);
+		$this->assertSame(expected: 'ingrid', actual: $result['statusEvents'][0]['by']);
+		$this->assertFalse(condition: $saved[0]['rbac']);
+
+	}//end testAConsentChangeIsSavedWithItsEvent()
+
+	/**
+	 * A consent without evidence is refused with 400 and nothing is saved.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/consent-management/spec.md
+	 */
+	public function testAConsentWithoutEvidenceIsNotSaved(): void {
+		$stored = new \OCA\OpenRegister\Db\ObjectEntity();
+		$stored->setObject(['consentStatus' => 'pending', 'policyMatch' => null]);
+		$objects = $this->createMock(originalClassName: \OCA\OpenRegister\Service\ObjectService::class);
+		$objects->method('find')->willReturn($stored);
+		$objects->expects($this->never())->method('saveObject');
+		$this->mockAppManager->method('getInstalledApps')->willReturn(['openregister']);
+		$this->mockContainer->method('get')->willReturn($objects);
+
+		$this->expectException(exception: \InvalidArgumentException::class);
+		$this->expectExceptionCode(code: 400);
+
+		$this->handler->updateConsentStatus(consent: new RegisterObjectRef(id: 'c-1', register: 'filinq', schema: 'publicationConsent'), change: new ConsentStatusChange(data: ['consentStatus' => 'consent_given'], actor: 'ingrid'));
+
+	}//end testAConsentWithoutEvidenceIsNotSaved()
 }//end class

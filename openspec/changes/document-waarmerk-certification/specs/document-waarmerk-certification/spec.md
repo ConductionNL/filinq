@@ -176,3 +176,32 @@ Revocation MUST be irreversible via the API.
 - THEN the request is rejected with 403
 - AND the waarmerk remains `active`
 - @e2e exclude authorization-guard negative path; covered by PHPUnit (tests/unit/Controller/WaarmerkControllerTest.php)
+
+### Requirement: A completed signing transaction yields one sealed evidence document (REQ-DDWMK-006)
+
+When a signing request reaches a terminal state (all signed, declined or
+cancelled), the app MUST be able to produce one evidence document (PDF/A)
+for the whole transaction from the `signingRequest`, its `signerRecord`
+objects and its `signingAuditEntry` trail: the document and its sha256
+before and after signing, each signer with name, method and assurance
+level, and the moments each step happened (sent, opened, signed or
+declined). The evidence document MUST be sealed as a waarmerk with
+`sealType: signing-evidence` (REQ-DDWMK-002). It MUST contain no document
+content beyond the title and the checksums. The signing request page
+MUST offer "Bewijsdocument downloaden (pdf)" and "Kopie naar dossier", as
+the board `filinq/FqOndertekenverzoek` draws them.
+
+#### Scenario: The sender downloads the evidence document
+
+- GIVEN a signing request that three signers have signed
+- WHEN the sender chooses "Bewijsdocument downloaden (pdf)"
+- THEN one PDF lists the three signers, their methods and the times of every step, with the checksums of the document
+- AND the PDF carries a waarmerk whose verification returns `valid`
+- @e2e tests/e2e/spec-coverage/document-waarmerk-certification.spec.ts
+
+#### Scenario: An open request has no evidence document yet
+
+- GIVEN a signing request where one signer has not signed
+- WHEN the evidence document is requested through the API
+- THEN the request is refused with 409, naming the open signers
+- @e2e exclude negative API path; covered by PHPUnit (tests/unit/Service/SigningEvidenceServiceTest.php)

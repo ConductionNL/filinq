@@ -34,6 +34,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\PortalSigningDocumentResolverInterface;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
 use Throwable;
@@ -49,7 +50,7 @@ use Throwable;
  *
  * @spec openspec/specs/portal-signing-actions/spec.md
  */
-class PortalSigningDocumentResolver {
+class PortalSigningDocumentResolver implements PortalSigningDocumentResolverInterface {
 	/**
 	 * Constructor.
 	 *

@@ -46,6 +46,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\LegalBasesSummaryServiceInterface;
 use OCP\App\IAppManager;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
@@ -63,7 +64,7 @@ use Psr\Log\LoggerInterface;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  */
-class LegalBasesSummaryService {
+class LegalBasesSummaryService implements LegalBasesSummaryServiceInterface {
 
 	/**
 	 * Suffix applied to the source file's base name when the per-document
@@ -113,12 +114,15 @@ class LegalBasesSummaryService {
 	/**
 	 * Constructor.
 	 *
-	 * The two collaborators are injected; the null defaults keep the
-	 * historical six/seven-argument signature usable, in which case equivalent
-	 * collaborators are wired from the same dependencies.
+	 * The writer is injected rather than built here. It used to be wired from a
+	 * PdfService this class held only to pass on, and once the writer also needed
+	 * the final-document guard that arrangement meant carrying two dependencies
+	 * this class never uses. Nextcloud's container builds the writer, and the
+	 * data source keeps its null default because it is wired from dependencies
+	 * this class does use.
 	 *
 	 * @param LoggerInterface $logger Structured logger.
-	 * @param PdfService $pdfService Twig + mPDF renderer.
+	 * @param GrondslagenPdfWriter $pdfWriter PDF rendering and persistence, guard included.
 	 * @param IRootFolder $rootFolder Nextcloud file API entry point.
 	 * @param IUserSession $userSession Session-user lookup for the "operator" header field.
 	 * @param IAppManager $appManager App-availability check for OpenRegister.
@@ -130,18 +134,16 @@ class LegalBasesSummaryService {
 	 *                         labels OpenRegister wrote into the redacted document.
 	 *                         Nullable: when absent the raw English label is used.
 	 * @param DossierSummaryDataService|null $data Report data source; wired from the above when null.
-	 * @param GrondslagenPdfWriter|null $pdfWriter PDF rendering + persistence; wired when null.
 	 */
 	public function __construct(
 		private readonly LoggerInterface $logger,
-		PdfService $pdfService,
+		GrondslagenPdfWriter $pdfWriter,
 		IRootFolder $rootFolder,
 		private readonly IUserSession $userSession,
 		IAppManager $appManager,
 		ContainerInterface $container,
 		private readonly ?IL10N $l10n = null,
 		?DossierSummaryDataService $data = null,
-		?GrondslagenPdfWriter $pdfWriter = null,
 	) {
 		$this->data = ($data ?? new DossierSummaryDataService(
 			$rootFolder,
@@ -151,7 +153,7 @@ class LegalBasesSummaryService {
 			$this->logger
 		));
 
-		$this->pdfWriter = ($pdfWriter ?? new GrondslagenPdfWriter($pdfService));
+		$this->pdfWriter = $pdfWriter;
 
 	}//end __construct()
 
@@ -421,61 +423,21 @@ class LegalBasesSummaryService {
 	private function aggregateForDossier(array $perFile, array $labelMap): array {
 		unset($labelMap);
 
-		$grouped = [];
-		$totalOccurrences = 0;
-		$distinctBasisRefs = [];
-
+		$tally = new DossierEntityTally();
 		foreach ($perFile as $fileRow) {
 			$filename = (string)($fileRow['filename'] ?? '');
-
 			foreach (($fileRow['entities'] ?? []) as $entity) {
-				$count = (int)($entity['count'] ?? 0);
-				$baseLabels = ($entity['baseLabels'] ?? []);
-				if (is_array($baseLabels) === false) {
-					$baseLabels = [];
-				}
-
-				$totalOccurrences += $count;
-
-				foreach (($entity['bases'] ?? []) as $ref) {
-					$distinctBasisRefs[(string)$ref] = true;
-				}
-
-				// Dedup to ONE row per distinct entity (entityType:entityId).
-				// The dossier number is consistent across files, so the same
-				// person/date appears once — aggregating its occurrence count,
-				// the files it appears in, and the union of its grondslagen —
-				// instead of repeating the same placeholder once per file.
-				$entityKey = (string)($entity['entityType'] ?? '') . ':' . (string)($entity['entityId'] ?? '');
-				if (isset($grouped[$entityKey]) === false) {
-					$grouped[$entityKey] = [
-						'placeholder' => (string)($entity['placeholder'] ?? ''),
-						'entityType' => (string)($entity['entityType'] ?? ''),
-						'entityId' => (int)($entity['entityId'] ?? 0),
-						'count' => 0,
-						'filenames' => [],
-						'baseLabels' => [],
-					];
-				}
-
-				$grouped[$entityKey]['count'] += $count;
-				if ($filename !== '') {
-					$grouped[$entityKey]['filenames'][$filename] = true;
-				}
-
-				foreach ($baseLabels as $label) {
-					$grouped[$entityKey]['baseLabels'][(string)$label] = true;
-				}
-			}//end foreach
-		}//end foreach
+				$tally->add(entity: $entity, filename: $filename);
+			}
+		}
 
 		return [
-			'rows' => $this->buildDossierRows(grouped: $grouped),
+			'rows' => $this->buildDossierRows(grouped: $tally->grouped()),
 			'totals' => [
 				'documentCount' => count($perFile),
-				'entityCount' => $totalOccurrences,
-				'distinctEntityCount' => count($grouped),
-				'distinctBasesCount' => count($distinctBasisRefs),
+				'entityCount' => $tally->occurrences(),
+				'distinctEntityCount' => count($tally->grouped()),
+				'distinctBasesCount' => $tally->distinctBases(),
 			],
 		];
 

@@ -9,7 +9,7 @@
          beStrictAboutCoverageMetadata="true"
          beStrictAboutOutputDuringTests="true"
          failOnRisky="true"
-         failOnWarning="false"
+         failOnWarning="true"
          failOnDeprecation="false">
 
     <testsuites>

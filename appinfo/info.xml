@@ -33,7 +33,7 @@ Create a [feature request](https://github.com/ConductionNL/filinq/issues/new)
 
 **Support:** For support, contact support@conduction.nl. For a Service Level Agreement (SLA), contact sales@conduction.nl.
     ]]></description>
-    <version>0.2.2-unstable.20260910104948</version>
+    <version>0.2.8-unstable.20261021160000</version>
     <licence>EUPL-1.2</licence>
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
     <namespace>Filinq</namespace>
@@ -96,13 +96,18 @@ Create a [feature request](https://github.com/ConductionNL/filinq/issues/new)
         the app cannot function there. Declaring 30 advertised a range this app
         cannot deliver. Same defect as openconnector#1173.
 
-        CI already tests stable32 only, so this changes the advertised app-store
-        range and nothing about what runs.
+        CI derives its Nextcloud matrix from this element (min..max-version),
+        so the advertised range and the tested range are the same thing.
         -->
-        <nextcloud min-version="32" max-version="34"/>
+        <nextcloud min-version="32" max-version="35"/>
     </dependencies>
     <background-jobs>
         <job>OCA\Filinq\BackgroundJob\SigningExpirationJob</job>
+        <job>OCA\Filinq\BackgroundJob\DomainFolderReconciliationJob</job>
+        <job>OCA\Filinq\BackgroundJob\UploadFragmentReaperJob</job>
+        <job>OCA\Filinq\BackgroundJob\PeriodicDocumentJob</job>
+        <job>OCA\Filinq\BackgroundJob\LibreSignCompletionJob</job>
+        <job>OCA\Filinq\BackgroundJob\EmailIngestionJob</job>
     </background-jobs>
     <!--
         info.xsd fixes the order of these elements: background-jobs, repair-steps,
@@ -175,6 +180,8 @@ Create a [feature request](https://github.com/ConductionNL/filinq/issues/new)
         <post-migration>
             <step>OCA\Filinq\Repair\MigrateAppConfigKeys</step>
             <step>OCA\Filinq\Repair\MigrateUserPreferences</step>
+            <!-- Copies the docudesk-* role group members into the filinq-* groups; once, deletes nothing. -->
+            <step>OCA\Filinq\Repair\RenameRoleGroups</step>
             <!--
                 THE THIRD STORE KEYED BY APP ID, AND THE TWO ABOVE DO NOT COVER
                 IT. `oc_appconfig` and `oc_preferences` are Nextcloud's; this
@@ -202,6 +209,8 @@ Create a [feature request](https://github.com/ConductionNL/filinq/issues/new)
             -->
             <step>OCA\Filinq\Repair\MigrateSchemaApplicationId</step>
             <step>OCA\Filinq\Repair\ConsolidateRegisters</step>
+            <!-- Hands rows of the server-only evidence schemas to the system identity; idempotent, deletes nothing. -->
+            <step>OCA\Filinq\Repair\UnownEvidenceRecords</step>
             <!-- WRITTEN BUT NEVER REGISTERED until now, so it never ran
                  anywhere. gate-98 (repair-step-registration) found it, and the
                  same step was unregistered in integriq (#1603).
@@ -223,10 +232,16 @@ Create a [feature request](https://github.com/ConductionNL/filinq/issues/new)
                  the old one in place, REFUSES two sources targeting one
                  destination, deletes nothing, and a re-run is a no-op. -->
             <step>OCA\Filinq\Repair\RenameDutchColumns</step>
+            <!-- Needs the printJob schema, which the register import creates on
+                 boot after the repair steps: the first pass moves nothing and
+                 keeps the entries, a later pass moves them. -->
+            <step>OCA\Filinq\Repair\MigratePrintJobsOutOfAppConfig</step>
         </post-migration>
         <install>
             <step>OCA\Filinq\Repair\MigrateAppConfigKeys</step>
             <step>OCA\Filinq\Repair\MigrateUserPreferences</step>
+            <!-- Copies the docudesk-* role group members into the filinq-* groups; once, deletes nothing. -->
+            <step>OCA\Filinq\Repair\RenameRoleGroups</step>
             <!-- Same step, same reason; see the <post-migration> block. An
                  app-id rename presents to Nextcloud as a FRESH INSTALL, so
                  this block is the one that actually fires on the upgrade the
@@ -235,6 +250,8 @@ Create a [feature request](https://github.com/ConductionNL/filinq/issues/new)
             <!-- Same step, same reason, same position: LAST. See the comment
                  above the <repair-steps> block. -->
             <step>OCA\Filinq\Repair\ConsolidateRegisters</step>
+            <!-- Hands rows of the server-only evidence schemas to the system identity; idempotent, deletes nothing. -->
+            <step>OCA\Filinq\Repair\UnownEvidenceRecords</step>
         </install>
     </repair-steps>
     <commands>

@@ -7,7 +7,7 @@ status: in-progress
 **Status**: in-progress
 **Scope**: filinq
 **OpenSpec changes**:
-- [ocr-trigger-surface](../../changes/ocr-trigger-surface/) _(active)_ — wires the engine: OCR API route + Run-OCR UI action + anonymisation-pipeline fallback; REQ-OCR-05 corrected from the file-listing MIME heuristic to persisted per-file `ocrResult` objects (kind: code)
+- [ocr-trigger-surface](../../changes/archive/2026-09-29-ocr-trigger-surface/) _(archived 2026-09-29)_ — wires the engine: OCR API route + Run-OCR UI action + anonymisation-pipeline fallback; REQ-OCR-05 corrected from the file-listing MIME heuristic to persisted per-file `ocrResult` objects (kind: code)
 
 ## Purpose
 
@@ -102,41 +102,28 @@ The system SHALL continue to function normally when the Tesseract binary is not 
 
 **Priority:** MUST
 
-The system SHALL report OCR confidence scores and track an ocrProcessed flag per file.
+The system SHALL report OCR confidence scores and track an ocrProcessed flag per file, derived from a persisted per-file `ocrResult` OpenRegister object written by every completed OCR run (manual trigger or anonymisation-pipeline fallback — see `ocr-trigger-surface` REQ-DDOCR-005). The file listing SHALL NOT infer OCR status from MIME type or processing status: `ocrProcessed` SHALL be true only when an `ocrResult` exists for the file, and `ocrConfidence` SHALL be the recorded Tesseract mean confidence (0-100) from that object. OCR-candidate files without an `ocrResult` SHALL report `ocrProcessed: false` with no confidence score and `ocrAvailable: true`.
 
 #### Scenario: Report confidence score
 - GIVEN OCR was performed on a file
 - WHEN the file listing is queried
-- THEN a confidence score (0-100) reflecting Tesseract mean confidence SHALL be reported
+- THEN a confidence score (0-100) reflecting Tesseract mean confidence SHALL be reported from the file's persisted `ocrResult`
 - AND the ocrProcessed flag SHALL be true
+- @e2e tests/e2e/spec-coverage/ocr-trigger.spec.ts
 
 #### Scenario: Non-OCR files
 - GIVEN a file that did not require OCR
 - WHEN the file listing is queried
 - THEN ocrProcessed SHALL be false
 - AND no confidence score SHALL be reported
+- @e2e exclude listing-shape contract; covered by PHPUnit (tests/unit/Service/FileListingServiceTest.php)
 
-| ID | Requirement | Priority | Status |
-|----|------------|----------|--------|
-| OCR-001 | Extract text from image-based documents (scanned PDFs, TIFF, PNG, JPG) using Tesseract OCR | MUST | Implemented |
-| OCR-002 | All OCR processing runs locally on the server with no external cloud service calls | MUST | Implemented |
-| OCR-003 | OCR extracts text from scanned PDFs by converting each page to an image via Imagick and running Tesseract | MUST | Implemented |
-| OCR-004 | OCR extracts text from image files (PNG, JPG, TIFF) directly via Tesseract | MUST | Implemented |
-| OCR-005 | OCR is skipped for digital-born PDFs that already contain embedded text | MUST | Implemented |
-| OCR-010 | Automatically detect whether a file requires OCR based on MIME type and text content | MUST | Implemented |
-| OCR-011 | Image MIME types (image/png, image/jpeg, image/tiff) always trigger OCR | MUST | Implemented |
-| OCR-012 | PDF files fall back to OCR when TextExtractionService returns empty text | MUST | Implemented |
-| OCR-013 | Non-image non-PDF files skip OCR and use standard text extraction | MUST | Implemented |
-| OCR-020 | Support configurable Tesseract language models, defaulting to Dutch and English (nld+eng) | MUST | Implemented |
-| OCR-021 | Support configurable DPI for PDF-to-image conversion, defaulting to 300 | MUST | Implemented |
-| OCR-022 | Custom language configuration passed to Tesseract for all OCR operations | MUST | Implemented |
-| OCR-023 | Custom DPI configuration used for all PDF-to-image conversions | MUST | Implemented |
-| OCR-030 | Continue to function normally when Tesseract binary is not installed | MUST | Implemented |
-| OCR-031 | Skip OCR processing with a warning log when Tesseract is unavailable | MUST | Implemented |
-| OCR-032 | Display Tesseract installation status and version in admin settings | MUST | Implemented |
-| OCR-040 | Report OCR confidence scores (0-100) indicating Tesseract mean confidence | MUST | Implemented |
-| OCR-041 | Track ocrProcessed boolean flag per file in file listing | MUST | Implemented |
-| OCR-042 | Non-OCR files show ocrProcessed: false with no confidence score | MUST | Implemented |
+#### Scenario: OCR candidate not yet processed is not faked
+- GIVEN a scanned PDF that has been uploaded but never OCR'd
+- WHEN the file listing is queried
+- THEN ocrProcessed SHALL be false and ocrAvailable SHALL be true
+- AND no confidence score SHALL be reported
+- @e2e exclude listing-shape contract; covered by PHPUnit (tests/unit/Service/FileListingServiceTest.php)
 
 ## Data Model
 

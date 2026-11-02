@@ -59,6 +59,30 @@ webpackConfig.entry = {
 		import: path.join(__dirname, 'src', 'dashboard.js'),
 		filename: appId + '-dashboard.js',
 	},
+	// The CLIENT half of this app's OpenRegister leaves, as its own entry.
+	//
+	// OpenRegister's LeafScriptListener enqueues `filinq-leaves` on the pages of
+	// apps that consume OpenRegister, so the documents leaf renders where the
+	// object is shown. THE ENTRY NAME MATTERS: the listener looks for the
+	// `leaves` entry and, failing that, for `js/filinq-leaves.js`, and it SKIPS
+	// the app when neither exists — silently, because enqueuing a script that is
+	// not there would 404 on someone else's page. A leaf whose server half is
+	// registered and whose bundle is missing is dark with every check green.
+	//
+	// Never fold this into `main`: that bundle is the whole SPA and would land
+	// on every page of every consuming app.
+	leaves: {
+		import: path.join(__dirname, 'src', 'leaves.js'),
+		filename: appId + '-leaves.js',
+	},
+	// The original/delivered split view for OTHER apps, as
+	// `OCA.Filinq.mountCompare` (anonymization-review-workbench REQ-DDARW-014).
+	// Loaded by the host only when its compare dialog opens. Kept out of the
+	// shared chunks below (see `chunks`), so the host loads this one file.
+	compare: {
+		import: path.join(__dirname, 'src', 'compare.js'),
+		filename: appId + '-compare.js',
+	},
 }
 
 // Use local source when available (monorepo dev), otherwise fall back to npm package.
@@ -187,7 +211,9 @@ webpackConfig.optimization = {
 	minimizer: [new TerserPlugin({ parallel: 2 })],
 	splitChunks: {
 		...(webpackConfig.optimization?.splitChunks || {}),
-		chunks: 'all',
+		// Every entry shares the framework chunks except `compare`: another app
+		// loads that bundle on its own page and cannot know these chunk names.
+		chunks: (chunk) => chunk.name !== 'compare',
 		cacheGroups: {
 			default: false,
 			defaultVendors: false,

@@ -27,7 +27,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use Exception;
-use OCA\Filinq\Service\CorrespondenceService;
+use OCA\Filinq\Kernel\Contracts\CorrespondenceServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataDownloadResponse;
@@ -49,12 +49,14 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/changes/letter-correspondence-generation/tasks.md#task-1
  */
 class CorrespondenceController extends Controller {
+	use AnswersNotAuthenticated;
+
 	/**
 	 * Constructor for CorrespondenceController
 	 *
 	 * @param string $appName The application name
 	 * @param IRequest $request The request object
-	 * @param CorrespondenceService $corrSvc Correspondence generation service
+	 * @param CorrespondenceServiceInterface $corrSvc Correspondence generation service
 	 * @param IUserSession $userSession User session for auth info
 	 * @param LoggerInterface $logger Logger for error reporting
 	 * @param IL10N $l10n The localization service
@@ -64,7 +66,7 @@ class CorrespondenceController extends Controller {
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly CorrespondenceService $corrSvc,
+		private readonly CorrespondenceServiceInterface $corrSvc,
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
 		private readonly IL10N $l10n,
@@ -92,10 +94,7 @@ class CorrespondenceController extends Controller {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Not authenticated')],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 			}
 
 			$params = $this->parseGenerateParams();
@@ -251,28 +250,16 @@ class CorrespondenceController extends Controller {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Not authenticated')],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 			}
 
 			$templateId = $this->request->getParam('templateId');
 			$recipientIds = $this->request->getParam('recipientIds', []);
 			$options = $this->request->getParam('options', []);
 
-			if (empty($templateId) === true) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('templateId is required')],
-					statusCode: Http::STATUS_BAD_REQUEST
-				);
-			}
-
-			if (empty($recipientIds) === true || is_array($recipientIds) === false) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('recipientIds is required and must be an array')],
-					statusCode: Http::STATUS_BAD_REQUEST
-				);
+			$refusal = $this->batchRefusal();
+			if ($refusal !== null) {
+				return $refusal;
 			}
 
 			if (is_array($options) === false) {
@@ -287,20 +274,58 @@ class CorrespondenceController extends Controller {
 				options: $options
 			);
 
-			// If async (has jobId), return 202 Accepted.
-			if (isset($result['jobId']) === true) {
-				return new JSONResponse(
-					data: $result,
-					statusCode: Http::STATUS_ACCEPTED
-				);
-			}
-
-			return new JSONResponse(data: $result, statusCode: Http::STATUS_OK);
+			return $this->batchResponse(result: $result);
 		} catch (Exception $e) {
 			return $this->handleException(exception: $e);
 		}//end try
 
 	}//end generateBatch()
+
+	/**
+	 * Refuse a batch request without a template or without a list of recipients.
+	 *
+	 * @return JSONResponse|null A 400 naming the missing field, or null.
+	 *
+	 * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-batch-correspondence-rest-endpoints
+	 */
+	private function batchRefusal(): ?JSONResponse {
+		if (empty($this->request->getParam('templateId')) === true) {
+			return new JSONResponse(
+				data: ['error' => $this->l10n->t('templateId is required')],
+				statusCode: Http::STATUS_BAD_REQUEST
+			);
+		}
+
+		$recipientIds = $this->request->getParam('recipientIds', []);
+		if (empty($recipientIds) === true || is_array($recipientIds) === false) {
+			return new JSONResponse(
+				data: ['error' => $this->l10n->t('recipientIds is required and must be an array')],
+				statusCode: Http::STATUS_BAD_REQUEST
+			);
+		}
+
+		return null;
+	}//end batchRefusal()
+
+	/**
+	 * Answer a batch run: 202 when it was queued as a job, else 200.
+	 *
+	 * @param array<string, mixed> $result The service's result.
+	 *
+	 * @return JSONResponse The answer.
+	 *
+	 * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-batch-correspondence-rest-endpoints
+	 */
+	private function batchResponse(array $result): JSONResponse {
+		if (isset($result['jobId']) === true) {
+			return new JSONResponse(
+				data: $result,
+				statusCode: Http::STATUS_ACCEPTED
+			);
+		}
+
+		return new JSONResponse(data: $result, statusCode: Http::STATUS_OK);
+	}//end batchResponse()
 
 	/**
 	 * Get the status of a batch correspondence job
@@ -318,10 +343,7 @@ class CorrespondenceController extends Controller {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Not authenticated')],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 			}
 
 			$status = $this->corrSvc->getJobStatus(jobId: $jobId);

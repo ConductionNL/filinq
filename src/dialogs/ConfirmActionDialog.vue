@@ -1,5 +1,5 @@
 <template>
-	<NcDialog :name="name" :canClose="!busy" @closing="$emit('cancel')">
+	<NcDialog :name="name" :noClose="busy" @closing="$emit('cancel')">
 		<template #default>
 			<p class="confirm-action-dialog__message">
 				{{ message }}
@@ -17,8 +17,8 @@
 </template>
 
 <script>
-import { NcButton, NcDialog } from '@conduction/nextcloud-vue'
 import { translate as t } from '@nextcloud/l10n'
+import { NcButton, NcDialog } from '@nextcloud/vue'
 
 /**
  * Generic "are you sure?" dialog.

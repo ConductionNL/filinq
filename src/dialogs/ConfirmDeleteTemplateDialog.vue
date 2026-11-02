@@ -23,8 +23,8 @@
 </template>
 
 <script>
-import { NcButton, NcDialog } from '@conduction/nextcloud-vue'
 import { translate as t } from '@nextcloud/l10n'
+import { NcButton, NcDialog } from '@nextcloud/vue'
 
 export default {
 	name: 'ConfirmDeleteTemplateDialog',

@@ -18,6 +18,10 @@ Provides automatic metadata enrichment for documents stored in OpenRegister. Whe
 - **Task 9** — Metadata enrichment is declared as a `x-openregister-calculations` annotation rather than a custom service that writes fields ad-hoc. Each enrichment output (language, keywords, documentType, topicCategory, dates) is a declared calculation whose expression calls the relevant `MetadataEnrichmentService` method. The service remains in filinq as the domain algorithm; OR's calculation engine dispatches it and persists the result.
 - **Rationale** — This follows ADR-031 (schema-declarative business logic). The enrichment outputs are derived/virtual fields that fit `x-openregister-calculations` exactly. The service is NOT removed — it is the computation backend. Only the wiring changes: instead of the event listener writing `$object['language'] = $lang` directly, it declares `language` as a calculation and OR invokes the service.
 
+The REQ-META-CAL requirement this decision produced is listed under Requirements below.
+
+## Requirements
+
 ### Requirement: Enrichment Outputs as OR Calculations (REQ-META-CAL)
 
 **Priority:** MUST (Phase 2 — gated on OR shipping ADR-031 calculation runtime)
@@ -59,8 +63,6 @@ Enrichment fields `language`, `keywords`, `documentType`, `topicCategory`, and n
 | META-CAL-002 | MetadataEnrichmentService methods called as calculation expressions, not ad-hoc event-listener writes | MUST | Apply-phase |
 | META-CAL-003 | Feature toggles (`enable_*`) checked inside the calculation expression | MUST | Apply-phase |
 | META-CAL-004 | Skip-if-populated logic preserved via OR calculation semantics | MUST | Apply-phase |
-
-## Requirements
 
 ### Requirement: Language Detection (REQ-META-01)
 
@@ -408,6 +410,49 @@ MetadataService extracts text content from object data fields in a defined prior
 | META-080 | Extract text from object fields in priority: content, text, description | MUST | Implemented |
 | META-081 | Skip text-based enrichment when no text content available | MUST | Implemented |
 
+### Requirement: Language and Topic Classifier Class Boundary (REQ-META-11)
+
+Reverse-engineered from already-shipped code on 2026-05-24 via ghost change
+`retrofit-2026-05-24-metadata-enrichment` (archived).
+
+Filinq SHALL implement the language-detection and topic-classification algorithms in a dedicated `LanguageClassifier` service that owns the word-list vocabularies, the minimum-match threshold, and the scoring tiebreaker. Other services (`TextAnalysisService`, `MetadataService`) SHALL consume the classifier via dependency injection; they MUST NOT re-implement the vocabulary or scoring logic.
+
+The class encapsulates three constants — `DUTCH_WORDS` (10 stop-ish high-frequency Dutch words), `ENGLISH_WORDS` (10 high-frequency English words), and `TOPIC_KEYWORDS` (4 topic categories with 6 keywords each: `legal`, `financial`, `medical`, `technical`). The detection helpers share a private `countWordOccurrences()` implementation that counts whitespace-padded `' word '` substrings (so word boundaries are required on both sides, matching what REQ-META-01 / REQ-META-03 already specify abstractly).
+
+#### Scenario: Classifier owns the word lists
+
+- **WHEN** REQ-META-01 / REQ-META-03 are implemented
+- **THEN** the word vocabularies live in `LanguageClassifier` constants and are NOT redefined in `TextAnalysisService` or `MetadataService`
+- **AND** `TextAnalysisService::detectLanguage()` / `::classifyTopic()` forward to the injected `LanguageClassifier`
+
+#### Scenario: Language detection threshold
+
+- **WHEN** `LanguageClassifier::detectLanguage(text)` is called
+- **THEN** it lowercases the text, computes Dutch and English match counts via `countWordOccurrences`, and returns `"nl"` when `dutchCount > englishCount AND dutchCount > 5`
+- **AND** otherwise returns `"en"` when `englishCount > 5`
+- **AND** otherwise returns `null`
+
+#### Scenario: Topic classification scoring
+
+- **WHEN** `LanguageClassifier::classifyTopic(text)` is called
+- **THEN** for each of the four topics it computes the keyword-match count via `countWordOccurrences`
+- **AND** returns the topic with the highest non-zero score (`array_search` on the max score)
+- **AND** returns `null` if the highest score is `0`
+
+#### Scenario: Word-occurrence helper requires word boundaries
+
+- **WHEN** `countWordOccurrences(text, words)` is called
+- **THEN** for each target word it sums `substr_count(text, " word ")` — i.e. the word must be padded by spaces on both sides
+- **AND** the running total across the list is returned
+- **AND** a substring match inside a longer word (e.g. `"the"` inside `"theater"`) is NOT counted
+
+#### Notes
+
+- The class is stateless and has no constructor dependencies; it can be resolved either via DI or instantiated directly (used as a unit-test seam).
+- `TextAnalysisService` still defines its own public `countWordOccurrences()` with byte-identical logic — that is a residual duplicate not yet consolidated. TODO: remove `TextAnalysisService::countWordOccurrences()` once no external caller relies on it (the coverage scan flagged `LanguageClassifier::countWordOccurrences` as the duplicate, but at HEAD the situation has inverted — the classifier owns the logic, the analyzer is the leftover).
+- The 5-match threshold and the 10-keyword vocabularies are constants, not config — by design (REQ-META-04 calibration). Changing them requires a code change + spec revision.
+- `countWordOccurrences()` is byte-naive — non-ASCII whitespace (NBSP, tabs) is not treated as a boundary. Real-world Filinq text is whitespace-normalised earlier in the pipeline; if that ever changes, detection accuracy will drop.
+
 ## Data Model
 
 ### Enrichment Output Fields
@@ -461,50 +506,3 @@ MetadataService extracts text content from object data fields in a defined prior
 - **ISO 8601**: Date normalization format
 - **DCAT-AP**: EU metadata requirements
 - **OWMS**: Dutch government metadata standard
-
----
-
-## Retrofit Requirements (REQ-META-11)
-
-Reverse-engineered from already-shipped code on 2026-05-24 via ghost change
-`retrofit-2026-05-24-metadata-enrichment` (archived).
-
-### Requirement: Language and Topic Classifier Class Boundary (REQ-META-11)
-
-Filinq SHALL implement the language-detection and topic-classification algorithms in a dedicated `LanguageClassifier` service that owns the word-list vocabularies, the minimum-match threshold, and the scoring tiebreaker. Other services (`TextAnalysisService`, `MetadataService`) SHALL consume the classifier via dependency injection; they MUST NOT re-implement the vocabulary or scoring logic.
-
-The class encapsulates three constants — `DUTCH_WORDS` (10 stop-ish high-frequency Dutch words), `ENGLISH_WORDS` (10 high-frequency English words), and `TOPIC_KEYWORDS` (4 topic categories with 6 keywords each: `legal`, `financial`, `medical`, `technical`). The detection helpers share a private `countWordOccurrences()` implementation that counts whitespace-padded `' word '` substrings (so word boundaries are required on both sides, matching what REQ-META-01 / REQ-META-03 already specify abstractly).
-
-#### Scenario: Classifier owns the word lists
-
-- **WHEN** REQ-META-01 / REQ-META-03 are implemented
-- **THEN** the word vocabularies live in `LanguageClassifier` constants and are NOT redefined in `TextAnalysisService` or `MetadataService`
-- **AND** `TextAnalysisService::detectLanguage()` / `::classifyTopic()` forward to the injected `LanguageClassifier`
-
-#### Scenario: Language detection threshold
-
-- **WHEN** `LanguageClassifier::detectLanguage(text)` is called
-- **THEN** it lowercases the text, computes Dutch and English match counts via `countWordOccurrences`, and returns `"nl"` when `dutchCount > englishCount AND dutchCount > 5`
-- **AND** otherwise returns `"en"` when `englishCount > 5`
-- **AND** otherwise returns `null`
-
-#### Scenario: Topic classification scoring
-
-- **WHEN** `LanguageClassifier::classifyTopic(text)` is called
-- **THEN** for each of the four topics it computes the keyword-match count via `countWordOccurrences`
-- **AND** returns the topic with the highest non-zero score (`array_search` on the max score)
-- **AND** returns `null` if the highest score is `0`
-
-#### Scenario: Word-occurrence helper requires word boundaries
-
-- **WHEN** `countWordOccurrences(text, words)` is called
-- **THEN** for each target word it sums `substr_count(text, " word ")` — i.e. the word must be padded by spaces on both sides
-- **AND** the running total across the list is returned
-- **AND** a substring match inside a longer word (e.g. `"the"` inside `"theater"`) is NOT counted
-
-#### Notes
-
-- The class is stateless and has no constructor dependencies; it can be resolved either via DI or instantiated directly (used as a unit-test seam).
-- `TextAnalysisService` still defines its own public `countWordOccurrences()` with byte-identical logic — that is a residual duplicate not yet consolidated. TODO: remove `TextAnalysisService::countWordOccurrences()` once no external caller relies on it (the coverage scan flagged `LanguageClassifier::countWordOccurrences` as the duplicate, but at HEAD the situation has inverted — the classifier owns the logic, the analyzer is the leftover).
-- The 5-match threshold and the 10-keyword vocabularies are constants, not config — by design (REQ-META-04 calibration). Changing them requires a code change + spec revision.
-- `countWordOccurrences()` is byte-naive — non-ASCII whitespace (NBSP, tabs) is not treated as a boundary. Real-world Filinq text is whitespace-normalised earlier in the pipeline; if that ever changes, detection accuracy will drop.

@@ -14,6 +14,7 @@ namespace OCA\Filinq\Tests\Unit\Service;
 
 use OCA\Filinq\Service\Charts\ChartSvgRenderer;
 use OCA\Filinq\Service\Charts\TableHtmlRenderer;
+use OCA\Filinq\Service\Charts\TemplateImageResolver;
 use OCA\Filinq\Service\TemplateRenderer;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -306,5 +307,139 @@ class TemplateRendererTest extends TestCase {
 		$this->assertNotEmpty($this->renderer->getLastRenderWarnings());
 
 	}//end testMaxChartsPerDocumentGuardrail()
+
+	/**
+	 * The sandbox whitelist is exactly the eight functions, nc_image included.
+	 *
+	 * @return void
+	 */
+	public function testFunctionWhitelistIsPinnedExactly(): void {
+		$constant = new \ReflectionClassConstant(TemplateRenderer::class, 'ALLOWED_FUNCTIONS');
+
+		$this->assertSame(
+			['range', 'cycle', 'date', 'max', 'min', 'chart', 'data_table', 'nc_image'],
+			$constant->getValue()
+		);
+
+	}//end testFunctionWhitelistIsPinnedExactly()
+
+	/**
+	 * A readable raster image is embedded as a data URI with an escaped alt text.
+	 *
+	 * @return void
+	 */
+	public function testNcImageEmbedsAnImageTheUserCanRead(): void {
+		$png = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=');
+		$renderer = $this->rendererWithImage(file: $this->file(bytes: $png));
+
+		$result = $renderer->renderTemplate(
+			templateContent: '{{ nc_image(logo, {alt: "Logo <b>", width: 120, height: "x"}) }}',
+			data: ['logo' => 42]
+		);
+
+		$this->assertStringStartsWith('<img src="data:image/png;base64,', $result);
+		$this->assertStringContainsString('alt="Logo &lt;b&gt;"', $result);
+		$this->assertStringContainsString('width="120"', $result);
+		$this->assertStringNotContainsString('height=', $result);
+		$this->assertSame([], $renderer->getLastRenderWarnings());
+
+	}//end testNcImageEmbedsAnImageTheUserCanRead()
+
+	/**
+	 * A file the user cannot reach becomes a marker and a warning, and no byte of it lands in the output.
+	 *
+	 * @return void
+	 */
+	public function testNcImageOfAnUnreachableFileIsAMarkerAndAWarning(): void {
+		$renderer = $this->rendererWithImage(file: null);
+
+		$result = $renderer->renderTemplate(templateContent: '{{ nc_image(7) }}', data: []);
+
+		$this->assertSame('<span>[image unavailable: not found or no access]</span>', $result);
+		$this->assertSame(['image unavailable: not found or no access'], $renderer->getLastRenderWarnings());
+
+	}//end testNcImageOfAnUnreachableFileIsAMarkerAndAWarning()
+
+	/**
+	 * Without a resolver wired, nc_image still degrades visibly instead of failing the render.
+	 *
+	 * @return void
+	 */
+	public function testNcImageWithoutAResolverDegradesVisibly(): void {
+		$result = $this->renderer->renderTemplate(templateContent: '{{ nc_image(7) }}', data: []);
+
+		$this->assertStringContainsString('[image unavailable: image support is not available]', $result);
+		$this->assertCount(1, $this->renderer->getLastRenderWarnings());
+
+	}//end testNcImageWithoutAResolverDegradesVisibly()
+
+	/**
+	 * With a translator wired, the markers and the empty-table row come out translated.
+	 *
+	 * @return void
+	 */
+	public function testMarkersAndEmptyRowAreTranslated(): void {
+		$l10n = $this->createMock(\OCP\IL10N::class);
+		$l10n->method('t')->willReturnCallback(
+			static fn (string $text, array $parameters = []) => 'NL(' . vsprintf($text, $parameters) . ')'
+		);
+		$logger = $this->createMock(LoggerInterface::class);
+		$renderer = new TemplateRenderer($logger, new ChartSvgRenderer($l10n), new TableHtmlRenderer(), null, $l10n);
+
+		$result = $renderer->renderTemplate(
+			templateContent: '{{ chart("radar", {labels: ["A"], series: [{name: "S", values: [1]}]}) }}'
+				. '{{ data_table([], [{key: "a", label: "A"}]) }}{{ nc_image(1) }}',
+			data: []
+		);
+
+		$this->assertStringContainsString('NL(chart error: unsupported chart type &quot;radar&quot;)', $result);
+		$this->assertStringContainsString('NL(No data available)', $result);
+		$this->assertStringContainsString('NL(image unavailable: NL(image support is not available))', $result);
+
+	}//end testMarkersAndEmptyRowAreTranslated()
+
+	/**
+	 * A renderer whose image resolver is the real class over a user folder holding one file (or none).
+	 *
+	 * @param \OCP\Files\File|null $file The file id 42 and 7 resolve to.
+	 *
+	 * @return TemplateRenderer
+	 */
+	private function rendererWithImage(?\OCP\Files\File $file): TemplateRenderer {
+		$user = $this->createMock(\OCP\IUser::class);
+		$user->method('getUID')->willReturn('alice');
+		$session = $this->createMock(\OCP\IUserSession::class);
+		$session->method('getUser')->willReturn($user);
+		$folder = $this->createMock(\OCP\Files\Folder::class);
+		$folder->method('getFirstNodeById')->willReturn($file);
+		$root = $this->createMock(\OCP\Files\IRootFolder::class);
+		$root->method('getUserFolder')->with('alice')->willReturn($folder);
+		$config = $this->createMock(\OCP\IAppConfig::class);
+		$config->method('getValueInt')->willReturnCallback(static fn (string $app, string $key, int $default) => $default);
+
+		return new TemplateRenderer(
+			$this->createMock(LoggerInterface::class),
+			new ChartSvgRenderer(),
+			new TableHtmlRenderer(),
+			new TemplateImageResolver($root, $session, $config)
+		);
+
+	}//end rendererWithImage()
+
+	/**
+	 * A readable file with the given bytes.
+	 *
+	 * @param string $bytes The content.
+	 *
+	 * @return \OCP\Files\File
+	 */
+	private function file(string $bytes): \OCP\Files\File {
+		$file = $this->createMock(\OCP\Files\File::class);
+		$file->method('getSize')->willReturn(strlen($bytes));
+		$file->method('isReadable')->willReturn(true);
+		$file->method('getContent')->willReturn($bytes);
+		return $file;
+
+	}//end file()
 
 }//end class

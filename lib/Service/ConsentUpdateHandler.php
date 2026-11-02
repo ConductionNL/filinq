@@ -22,6 +22,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use DateTimeImmutable;
 use Exception;
 use InvalidArgumentException;
 use OCP\App\IAppManager;
@@ -45,6 +46,7 @@ class ConsentUpdateHandler {
 	 * @param LoggerInterface $logger Logger for error reporting
 	 * @param ContainerInterface $container Container for dependency injection
 	 * @param IAppManager $appManager App manager interface
+	 * @param ConsentStatusEvents $statusEvents Declared status moves, recorded as events
 	 *
 	 * @return void
 	 */
@@ -52,6 +54,7 @@ class ConsentUpdateHandler {
 		private readonly LoggerInterface $logger,
 		private readonly ContainerInterface $container,
 		private readonly IAppManager $appManager,
+		private readonly ConsentStatusEvents $statusEvents = new ConsentStatusEvents(),
 	) {
 
 	}//end __construct()
@@ -74,23 +77,17 @@ class ConsentUpdateHandler {
 	/**
 	 * Update consent status for a consent record
 	 *
-	 * @param string $consentId The consent object UUID
-	 * @param string $register The register ID
-	 * @param string $schema The schema ID
-	 * @param array<string, mixed> $data The data to update
+	 * @param RegisterObjectRef   $consent Where the consent record lives
+	 * @param ConsentStatusChange $change  The proposed update and who makes it
 	 *
 	 * @return array<string, mixed> The updated consent record
 	 *
+	 * @throws InvalidArgumentException With code 400 for an undeclared status move or missing evidence
 	 * @throws Exception If update fails
 	 *
 	 * @spec openspec/specs/consent-management/spec.md
 	 */
-	public function updateConsentStatus(
-		string $consentId,
-		string $register,
-		string $schema,
-		array $data,
-	): array {
+	public function updateConsentStatus(RegisterObjectRef $consent, ConsentStatusChange $change): array {
 		try {
 			$objectService = $this->getObjectService();
 
@@ -99,77 +96,117 @@ class ConsentUpdateHandler {
 			// authenticated user to overwrite consent records owned by
 			// other users.
 			$object = $objectService->find(
-				id: $consentId,
-				register: $register,
-				schema: $schema
+				id: $consent->id,
+				register: $consent->register,
+				schema: $consent->schema,
+				_rbac: false
 			);
 
 			if ($object === null) {
-				throw new Exception('Consent record not found: ' . $consentId);
+				throw new Exception('Consent record not found: ' . $consent->id);
 			}
 
-			// Whitelist the fields a consent update may mutate so callers
-			// cannot rewrite arbitrary consent attributes (e.g. documentId,
-			// entityText) or inject extra keys (security finding #283).
-			$mutableFields = [
-				'notificationStatus',
-				'consentStatus',
-				'publicationDecision',
-				'objectionReason',
-				'objectionDeadline',
-			];
-			$allowedData = array_intersect_key($data, array_flip($mutableFields));
-
 			$existing = $object->getObject();
-
-			// Server-controlled-fields immutability gate: this always-on
-			// guard runs AHEAD of the policy-pre-emption lock so a PATCH that
-			// fabricates or swaps `policyMatch` / `matchKind` is rejected on
-			// BOTH the matched and unmatched branches (PR #147 sixth-pass).
-			// We pass the FULL inbound $data here (not the mutable-field
-			// whitelist) because server-controlled fields are deliberately
-			// absent from $mutableFields — checking the whitelist would never
-			// see the injection attempt.
-			$this->guardServerControlledFields(existing: $existing, data: $data);
-
-			// Policy pre-emption lock: records bound to a prohibition /
-			// standing-consent match must not have their transition fields
-			// overridden by operators (restored after 917b80e7 wiped it).
-			$this->guardPolicyPreemptedTransition(existing: $existing, data: $allowedData);
-
-			$consentData = array_merge($existing, $allowedData);
+			$allowedData = $this->consentChanges(existing: $existing, change: $change);
 
 			$savedObject = $objectService->saveObject(
-				object: $consentData,
-				register: $register,
-				schema: $schema
+				object: array_merge($existing, $allowedData),
+				register: $consent->register,
+				schema: $consent->schema,
+				_rbac: false
 			);
 
 			$this->logger->info(
 				'Consent status updated',
 				[
-					'consentId' => $consentId,
+					'consentId' => $consent->id,
 					'updatedKeys' => array_keys($allowedData),
 				]
 			);
 
 			return $savedObject->getObject();
+		} catch (InvalidArgumentException $e) {
+			throw $e;
 		} catch (Exception $e) {
-			$this->logger->error(
-				'Failed to update consent status: ' . $e->getMessage(),
-				[
-					'consentId' => $consentId,
-					'exception' => $e,
-				]
-			);
-			throw new Exception(
-				'Failed to update consent status: ' . $e->getMessage(),
-				0,
-				$e
-			);
+			throw $this->updateFailure(error: $e, consentId: $consent->id);
 		}//end try
 
 	}//end updateConsentStatus()
+
+	/**
+	 * The fields an update may change, past the guards and with its status events.
+	 *
+	 * @param array<string, mixed> $existing The record's current data.
+	 * @param ConsentStatusChange  $change   The proposed update and who makes it.
+	 *
+	 * @return array<string, mixed> The changes to merge into the record.
+	 *
+	 * @throws InvalidArgumentException With code 400 for a guarded field, an undeclared status move or missing evidence.
+	 *
+	 * @spec openspec/specs/consent-management/spec.md
+	 */
+	private function consentChanges(array $existing, ConsentStatusChange $change): array {
+		$data = $change->data;
+
+		// Whitelist the fields a consent update may mutate so callers
+		// cannot rewrite arbitrary consent attributes (e.g. documentId,
+		// entityText) or inject extra keys (security finding #283).
+		$mutableFields = [
+			'notificationStatus',
+			'consentStatus',
+			'publicationDecision',
+			'objectionReason',
+			'objectionDeadline',
+		];
+		$allowedData = array_intersect_key($data, array_flip($mutableFields));
+
+		// Server-controlled-fields immutability gate: this always-on
+		// guard runs AHEAD of the policy-pre-emption lock so a PATCH that
+		// fabricates or swaps `policyMatch` / `matchKind` is rejected on
+		// BOTH the matched and unmatched branches (PR #147 sixth-pass).
+		// We pass the FULL inbound $data here (not the mutable-field
+		// whitelist) because server-controlled fields are deliberately
+		// absent from $mutableFields — checking the whitelist would never
+		// see the injection attempt.
+		$this->guardServerControlledFields(existing: $existing, data: $data);
+
+		// Policy pre-emption lock: records bound to a prohibition /
+		// standing-consent match must not have their transition fields
+		// overridden by operators (restored after 917b80e7 wiped it).
+		$this->guardPolicyPreemptedTransition(existing: $existing, data: $allowedData);
+
+		return $this->statusEvents->apply(
+			existing: $existing,
+			changes: $allowedData,
+			actor: $change->actor,
+			evidence: (string) ($data['evidence'] ?? ''),
+			now: new DateTimeImmutable()
+		);
+	}//end consentChanges()
+
+	/**
+	 * Log a failed consent update and wrap it.
+	 *
+	 * @param Exception $error     What went wrong.
+	 * @param string    $consentId The consent object UUID.
+	 *
+	 * @return Exception The wrapped failure, for the caller to throw.
+	 */
+	private function updateFailure(Exception $error, string $consentId): Exception {
+		$this->logger->error(
+			'Failed to update consent status: ' . $error->getMessage(),
+			[
+				'consentId' => $consentId,
+				'exception' => $error,
+			]
+		);
+
+		return new Exception(
+			'Failed to update consent status: ' . $error->getMessage(),
+			0,
+			$error
+		);
+	}//end updateFailure()
 
 	/**
 	 * Reject any caller mutation of server-controlled consent fields.

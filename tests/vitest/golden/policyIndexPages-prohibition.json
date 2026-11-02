@@ -1,0 +1,1635 @@
+{
+	"initial": {
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 20,
+		"dialogOpen": false,
+		"saving": false,
+		"editing": null,
+		"editingRecord": null,
+		"formError": "",
+		"deleteTarget": null,
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 20
+		},
+		"emptyText": "[No publication prohibitions defined.]",
+		"deleteMessage": "[Delete \"[this prohibition]\"? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "primaryName",
+				"label": "[Primary name]",
+				"sortable": true
+			},
+			{
+				"key": "entityType",
+				"label": "[Type]",
+				"sortable": true
+			},
+			{
+				"key": "matchRules",
+				"label": "[Match rules]"
+			},
+			{
+				"key": "severity",
+				"label": "[Severity]",
+				"sortable": true
+			},
+			{
+				"key": "reason",
+				"label": "[Reason]"
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"mounted": {
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 20,
+		"dialogOpen": false,
+		"saving": false,
+		"editing": null,
+		"editingRecord": null,
+		"formError": "",
+		"deleteTarget": null,
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 20
+		},
+		"emptyText": "[No publication prohibitions defined.]",
+		"deleteMessage": "[Delete \"[this prohibition]\"? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "primaryName",
+				"label": "[Primary name]",
+				"sortable": true
+			},
+			{
+				"key": "entityType",
+				"label": "[Type]",
+				"sortable": true
+			},
+			{
+				"key": "matchRules",
+				"label": "[Match rules]"
+			},
+			{
+				"key": "severity",
+				"label": "[Severity]",
+				"sortable": true
+			},
+			{
+				"key": "reason",
+				"label": "[Reason]"
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [
+			[
+				"prohibition",
+				"fetchProhibitions"
+			]
+		],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"formatMatchRules": [
+		"bsn:123, exact:Jan",
+		"-",
+		"-",
+		"-"
+	],
+	"refresh": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 20,
+		"dialogOpen": false,
+		"saving": false,
+		"editing": null,
+		"editingRecord": null,
+		"formError": "",
+		"deleteTarget": null,
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 20
+		},
+		"emptyText": "[No publication prohibitions defined.]",
+		"deleteMessage": "[Delete \"[this prohibition]\"? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "primaryName",
+				"label": "[Primary name]",
+				"sortable": true
+			},
+			{
+				"key": "entityType",
+				"label": "[Type]",
+				"sortable": true
+			},
+			{
+				"key": "matchRules",
+				"label": "[Match rules]"
+			},
+			{
+				"key": "severity",
+				"label": "[Severity]",
+				"sortable": true
+			},
+			{
+				"key": "reason",
+				"label": "[Reason]"
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [
+			[
+				"prohibition",
+				"fetchProhibitions"
+			]
+		],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"page3": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 3,
+		"pageSize": 20,
+		"dialogOpen": false,
+		"saving": false,
+		"editing": null,
+		"editingRecord": null,
+		"formError": "",
+		"deleteTarget": null,
+		"deleting": false,
+		"paginationData": {
+			"page": 3,
+			"pages": 1,
+			"total": 3,
+			"limit": 20
+		},
+		"emptyText": "[No publication prohibitions defined.]",
+		"deleteMessage": "[Delete \"[this prohibition]\"? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "primaryName",
+				"label": "[Primary name]",
+				"sortable": true
+			},
+			{
+				"key": "entityType",
+				"label": "[Type]",
+				"sortable": true
+			},
+			{
+				"key": "matchRules",
+				"label": "[Match rules]"
+			},
+			{
+				"key": "severity",
+				"label": "[Severity]",
+				"sortable": true
+			},
+			{
+				"key": "reason",
+				"label": "[Reason]"
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"size50": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 50,
+		"dialogOpen": false,
+		"saving": false,
+		"editing": null,
+		"editingRecord": null,
+		"formError": "",
+		"deleteTarget": null,
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 50
+		},
+		"emptyText": "[No publication prohibitions defined.]",
+		"deleteMessage": "[Delete \"[this prohibition]\"? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "primaryName",
+				"label": "[Primary name]",
+				"sortable": true
+			},
+			{
+				"key": "entityType",
+				"label": "[Type]",
+				"sortable": true
+			},
+			{
+				"key": "matchRules",
+				"label": "[Match rules]"
+			},
+			{
+				"key": "severity",
+				"label": "[Severity]",
+				"sortable": true
+			},
+			{
+				"key": "reason",
+				"label": "[Reason]"
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"create": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 50,
+		"dialogOpen": true,
+		"saving": false,
+		"editing": null,
+		"editingRecord": null,
+		"formError": "",
+		"deleteTarget": null,
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 50
+		},
+		"emptyText": "[No publication prohibitions defined.]",
+		"deleteMessage": "[Delete \"[this prohibition]\"? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "primaryName",
+				"label": "[Primary name]",
+				"sortable": true
+			},
+			{
+				"key": "entityType",
+				"label": "[Type]",
+				"sortable": true
+			},
+			{
+				"key": "matchRules",
+				"label": "[Match rules]"
+			},
+			{
+				"key": "severity",
+				"label": "[Severity]",
+				"sortable": true
+			},
+			{
+				"key": "reason",
+				"label": "[Reason]"
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"submitCreate": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 50,
+		"dialogOpen": false,
+		"saving": false,
+		"editing": null,
+		"editingRecord": null,
+		"formError": "",
+		"deleteTarget": null,
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 50
+		},
+		"emptyText": "[No publication prohibitions defined.]",
+		"deleteMessage": "[Delete \"[this prohibition]\"? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "primaryName",
+				"label": "[Primary name]",
+				"sortable": true
+			},
+			{
+				"key": "entityType",
+				"label": "[Type]",
+				"sortable": true
+			},
+			{
+				"key": "matchRules",
+				"label": "[Match rules]"
+			},
+			{
+				"key": "severity",
+				"label": "[Severity]",
+				"sortable": true
+			},
+			{
+				"key": "reason",
+				"label": "[Reason]"
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [
+			[
+				"prohibition",
+				"createProhibition",
+				{
+					"a": 1
+				}
+			]
+		],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"submitCreateDialog": "(no method)",
+	"editFull": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 50,
+		"dialogOpen": true,
+		"saving": false,
+		"editing": "self-1",
+		"editingRecord": {
+			"primaryName": "Jan",
+			"entityType": "PERSON",
+			"reason": "",
+			"legalAuthority": "",
+			"caseReference": "",
+			"severity": "high",
+			"jurisdiction": "",
+			"validUntil": "",
+			"active": false,
+			"matchRules": [
+				{
+					"type": "bsn",
+					"value": "123"
+				},
+				{
+					"type": "exact",
+					"value": "Jan"
+				}
+			]
+		},
+		"formError": "",
+		"deleteTarget": null,
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 50
+		},
+		"emptyText": "[No publication prohibitions defined.]",
+		"deleteMessage": "[Delete \"[this prohibition]\"? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "primaryName",
+				"label": "[Primary name]",
+				"sortable": true
+			},
+			{
+				"key": "entityType",
+				"label": "[Type]",
+				"sortable": true
+			},
+			{
+				"key": "matchRules",
+				"label": "[Match rules]"
+			},
+			{
+				"key": "severity",
+				"label": "[Severity]",
+				"sortable": true
+			},
+			{
+				"key": "reason",
+				"label": "[Reason]"
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"submitUpdate": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 50,
+		"dialogOpen": false,
+		"saving": false,
+		"editing": "self-1",
+		"editingRecord": {
+			"primaryName": "Jan",
+			"entityType": "PERSON",
+			"reason": "",
+			"legalAuthority": "",
+			"caseReference": "",
+			"severity": "high",
+			"jurisdiction": "",
+			"validUntil": "",
+			"active": false,
+			"matchRules": [
+				{
+					"type": "bsn",
+					"value": "123"
+				},
+				{
+					"type": "exact",
+					"value": "Jan"
+				}
+			]
+		},
+		"formError": "",
+		"deleteTarget": null,
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 50
+		},
+		"emptyText": "[No publication prohibitions defined.]",
+		"deleteMessage": "[Delete \"[this prohibition]\"? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "primaryName",
+				"label": "[Primary name]",
+				"sortable": true
+			},
+			{
+				"key": "entityType",
+				"label": "[Type]",
+				"sortable": true
+			},
+			{
+				"key": "matchRules",
+				"label": "[Match rules]"
+			},
+			{
+				"key": "severity",
+				"label": "[Severity]",
+				"sortable": true
+			},
+			{
+				"key": "reason",
+				"label": "[Reason]"
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [
+			[
+				"prohibition",
+				"updateProhibition",
+				"self-1",
+				{
+					"a": 2
+				}
+			]
+		],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"editEmpty": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 50,
+		"dialogOpen": true,
+		"saving": false,
+		"editing": "uuid-2",
+		"editingRecord": {
+			"primaryName": "",
+			"entityType": "PERSON",
+			"reason": "",
+			"legalAuthority": "",
+			"caseReference": "",
+			"severity": "standard",
+			"jurisdiction": "",
+			"validUntil": "",
+			"active": true,
+			"matchRules": []
+		},
+		"formError": "",
+		"deleteTarget": null,
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 50
+		},
+		"emptyText": "[No publication prohibitions defined.]",
+		"deleteMessage": "[Delete \"[this prohibition]\"? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "primaryName",
+				"label": "[Primary name]",
+				"sortable": true
+			},
+			{
+				"key": "entityType",
+				"label": "[Type]",
+				"sortable": true
+			},
+			{
+				"key": "matchRules",
+				"label": "[Match rules]"
+			},
+			{
+				"key": "severity",
+				"label": "[Severity]",
+				"sortable": true
+			},
+			{
+				"key": "reason",
+				"label": "[Reason]"
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"failResponse": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 50,
+		"dialogOpen": true,
+		"saving": false,
+		"editing": "uuid-2",
+		"editingRecord": {
+			"primaryName": "",
+			"entityType": "PERSON",
+			"reason": "",
+			"legalAuthority": "",
+			"caseReference": "",
+			"severity": "standard",
+			"jurisdiction": "",
+			"validUntil": "",
+			"active": true,
+			"matchRules": []
+		},
+		"formError": "server says no",
+		"deleteTarget": null,
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 50
+		},
+		"emptyText": "[No publication prohibitions defined.]",
+		"deleteMessage": "[Delete \"[this prohibition]\"? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "primaryName",
+				"label": "[Primary name]",
+				"sortable": true
+			},
+			{
+				"key": "entityType",
+				"label": "[Type]",
+				"sortable": true
+			},
+			{
+				"key": "matchRules",
+				"label": "[Match rules]"
+			},
+			{
+				"key": "severity",
+				"label": "[Severity]",
+				"sortable": true
+			},
+			{
+				"key": "reason",
+				"label": "[Reason]"
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [
+			[
+				"prohibition",
+				"updateProhibition",
+				"uuid-2",
+				{
+					"a": 3
+				}
+			]
+		],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"failMessage": "(no method)",
+	"failBare": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 50,
+		"dialogOpen": true,
+		"saving": false,
+		"editing": "uuid-2",
+		"editingRecord": {
+			"primaryName": "",
+			"entityType": "PERSON",
+			"reason": "",
+			"legalAuthority": "",
+			"caseReference": "",
+			"severity": "standard",
+			"jurisdiction": "",
+			"validUntil": "",
+			"active": true,
+			"matchRules": []
+		},
+		"formError": "[Save failed]",
+		"deleteTarget": null,
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 50
+		},
+		"emptyText": "[No publication prohibitions defined.]",
+		"deleteMessage": "[Delete \"[this prohibition]\"? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "primaryName",
+				"label": "[Primary name]",
+				"sortable": true
+			},
+			{
+				"key": "entityType",
+				"label": "[Type]",
+				"sortable": true
+			},
+			{
+				"key": "matchRules",
+				"label": "[Match rules]"
+			},
+			{
+				"key": "severity",
+				"label": "[Severity]",
+				"sortable": true
+			},
+			{
+				"key": "reason",
+				"label": "[Reason]"
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [
+			[
+				"prohibition",
+				"updateProhibition",
+				"uuid-2",
+				{
+					"a": 4
+				}
+			]
+		],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"createAfterFail": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 50,
+		"dialogOpen": true,
+		"saving": false,
+		"editing": null,
+		"editingRecord": null,
+		"formError": "",
+		"deleteTarget": null,
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 50
+		},
+		"emptyText": "[No publication prohibitions defined.]",
+		"deleteMessage": "[Delete \"[this prohibition]\"? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "primaryName",
+				"label": "[Primary name]",
+				"sortable": true
+			},
+			{
+				"key": "entityType",
+				"label": "[Type]",
+				"sortable": true
+			},
+			{
+				"key": "matchRules",
+				"label": "[Match rules]"
+			},
+			{
+				"key": "severity",
+				"label": "[Severity]",
+				"sortable": true
+			},
+			{
+				"key": "reason",
+				"label": "[Reason]"
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"editById": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 50,
+		"dialogOpen": true,
+		"saving": false,
+		"editing": "id-3",
+		"editingRecord": {
+			"primaryName": "",
+			"entityType": "PERSON",
+			"reason": "",
+			"legalAuthority": "",
+			"caseReference": "",
+			"severity": "standard",
+			"jurisdiction": "",
+			"validUntil": "",
+			"active": true,
+			"matchRules": []
+		},
+		"formError": "",
+		"deleteTarget": null,
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 50
+		},
+		"emptyText": "[No publication prohibitions defined.]",
+		"deleteMessage": "[Delete \"[this prohibition]\"? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "primaryName",
+				"label": "[Primary name]",
+				"sortable": true
+			},
+			{
+				"key": "entityType",
+				"label": "[Type]",
+				"sortable": true
+			},
+			{
+				"key": "matchRules",
+				"label": "[Match rules]"
+			},
+			{
+				"key": "severity",
+				"label": "[Severity]",
+				"sortable": true
+			},
+			{
+				"key": "reason",
+				"label": "[Reason]"
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"deleteNone": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 50,
+		"dialogOpen": true,
+		"saving": false,
+		"editing": "id-3",
+		"editingRecord": {
+			"primaryName": "",
+			"entityType": "PERSON",
+			"reason": "",
+			"legalAuthority": "",
+			"caseReference": "",
+			"severity": "standard",
+			"jurisdiction": "",
+			"validUntil": "",
+			"active": true,
+			"matchRules": []
+		},
+		"formError": "",
+		"deleteTarget": null,
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 50
+		},
+		"emptyText": "[No publication prohibitions defined.]",
+		"deleteMessage": "[Delete \"[this prohibition]\"? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "primaryName",
+				"label": "[Primary name]",
+				"sortable": true
+			},
+			{
+				"key": "entityType",
+				"label": "[Type]",
+				"sortable": true
+			},
+			{
+				"key": "matchRules",
+				"label": "[Match rules]"
+			},
+			{
+				"key": "severity",
+				"label": "[Severity]",
+				"sortable": true
+			},
+			{
+				"key": "reason",
+				"label": "[Reason]"
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"confirm": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 50,
+		"dialogOpen": true,
+		"saving": false,
+		"editing": "id-3",
+		"editingRecord": {
+			"primaryName": "",
+			"entityType": "PERSON",
+			"reason": "",
+			"legalAuthority": "",
+			"caseReference": "",
+			"severity": "standard",
+			"jurisdiction": "",
+			"validUntil": "",
+			"active": true,
+			"matchRules": []
+		},
+		"formError": "",
+		"deleteTarget": {
+			"@self": {
+				"id": "self-1"
+			},
+			"id": "id-1",
+			"entityText": "Jan",
+			"primaryName": "Jan",
+			"label": "Dict",
+			"matchRules": [
+				{
+					"type": "bsn",
+					"value": "123",
+					"extra": true
+				},
+				{
+					"type": "exact",
+					"value": "Jan"
+				}
+			],
+			"active": false,
+			"severity": "high",
+			"scope": "document"
+		},
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 50
+		},
+		"emptyText": "[No publication prohibitions defined.]",
+		"deleteMessage": "[Delete \"Jan\"? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "primaryName",
+				"label": "[Primary name]",
+				"sortable": true
+			},
+			{
+				"key": "entityType",
+				"label": "[Type]",
+				"sortable": true
+			},
+			{
+				"key": "matchRules",
+				"label": "[Match rules]"
+			},
+			{
+				"key": "severity",
+				"label": "[Severity]",
+				"sortable": true
+			},
+			{
+				"key": "reason",
+				"label": "[Reason]"
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"cancel": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 50,
+		"dialogOpen": true,
+		"saving": false,
+		"editing": "id-3",
+		"editingRecord": {
+			"primaryName": "",
+			"entityType": "PERSON",
+			"reason": "",
+			"legalAuthority": "",
+			"caseReference": "",
+			"severity": "standard",
+			"jurisdiction": "",
+			"validUntil": "",
+			"active": true,
+			"matchRules": []
+		},
+		"formError": "",
+		"deleteTarget": null,
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 50
+		},
+		"emptyText": "[No publication prohibitions defined.]",
+		"deleteMessage": "[Delete \"[this prohibition]\"? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "primaryName",
+				"label": "[Primary name]",
+				"sortable": true
+			},
+			{
+				"key": "entityType",
+				"label": "[Type]",
+				"sortable": true
+			},
+			{
+				"key": "matchRules",
+				"label": "[Match rules]"
+			},
+			{
+				"key": "severity",
+				"label": "[Severity]",
+				"sortable": true
+			},
+			{
+				"key": "reason",
+				"label": "[Reason]"
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"confirmUuid": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 50,
+		"dialogOpen": true,
+		"saving": false,
+		"editing": "id-3",
+		"editingRecord": {
+			"primaryName": "",
+			"entityType": "PERSON",
+			"reason": "",
+			"legalAuthority": "",
+			"caseReference": "",
+			"severity": "standard",
+			"jurisdiction": "",
+			"validUntil": "",
+			"active": true,
+			"matchRules": []
+		},
+		"formError": "",
+		"deleteTarget": {
+			"uuid": "uuid-2",
+			"matchRules": "not-an-array",
+			"scope": "entity"
+		},
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 50
+		},
+		"emptyText": "[No publication prohibitions defined.]",
+		"deleteMessage": "[Delete \"[this prohibition]\"? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "primaryName",
+				"label": "[Primary name]",
+				"sortable": true
+			},
+			{
+				"key": "entityType",
+				"label": "[Type]",
+				"sortable": true
+			},
+			{
+				"key": "matchRules",
+				"label": "[Match rules]"
+			},
+			{
+				"key": "severity",
+				"label": "[Severity]",
+				"sortable": true
+			},
+			{
+				"key": "reason",
+				"label": "[Reason]"
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"deleteOk": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 50,
+		"dialogOpen": true,
+		"saving": false,
+		"editing": "id-3",
+		"editingRecord": {
+			"primaryName": "",
+			"entityType": "PERSON",
+			"reason": "",
+			"legalAuthority": "",
+			"caseReference": "",
+			"severity": "standard",
+			"jurisdiction": "",
+			"validUntil": "",
+			"active": true,
+			"matchRules": []
+		},
+		"formError": "",
+		"deleteTarget": null,
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 50
+		},
+		"emptyText": "[No publication prohibitions defined.]",
+		"deleteMessage": "[Delete \"[this prohibition]\"? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "primaryName",
+				"label": "[Primary name]",
+				"sortable": true
+			},
+			{
+				"key": "entityType",
+				"label": "[Type]",
+				"sortable": true
+			},
+			{
+				"key": "matchRules",
+				"label": "[Match rules]"
+			},
+			{
+				"key": "severity",
+				"label": "[Severity]",
+				"sortable": true
+			},
+			{
+				"key": "reason",
+				"label": "[Reason]"
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [
+			[
+				"prohibition",
+				"deleteProhibition",
+				"uuid-2"
+			]
+		],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"confirmSelf": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 50,
+		"dialogOpen": true,
+		"saving": false,
+		"editing": "id-3",
+		"editingRecord": {
+			"primaryName": "",
+			"entityType": "PERSON",
+			"reason": "",
+			"legalAuthority": "",
+			"caseReference": "",
+			"severity": "standard",
+			"jurisdiction": "",
+			"validUntil": "",
+			"active": true,
+			"matchRules": []
+		},
+		"formError": "",
+		"deleteTarget": {
+			"@self": {
+				"id": "self-1"
+			},
+			"id": "id-1",
+			"entityText": "Jan",
+			"primaryName": "Jan",
+			"label": "Dict",
+			"matchRules": [
+				{
+					"type": "bsn",
+					"value": "123",
+					"extra": true
+				},
+				{
+					"type": "exact",
+					"value": "Jan"
+				}
+			],
+			"active": false,
+			"severity": "high",
+			"scope": "document"
+		},
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 50
+		},
+		"emptyText": "[No publication prohibitions defined.]",
+		"deleteMessage": "[Delete \"Jan\"? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "primaryName",
+				"label": "[Primary name]",
+				"sortable": true
+			},
+			{
+				"key": "entityType",
+				"label": "[Type]",
+				"sortable": true
+			},
+			{
+				"key": "matchRules",
+				"label": "[Match rules]"
+			},
+			{
+				"key": "severity",
+				"label": "[Severity]",
+				"sortable": true
+			},
+			{
+				"key": "reason",
+				"label": "[Reason]"
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"deleteSelf": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 50,
+		"dialogOpen": true,
+		"saving": false,
+		"editing": "id-3",
+		"editingRecord": {
+			"primaryName": "",
+			"entityType": "PERSON",
+			"reason": "",
+			"legalAuthority": "",
+			"caseReference": "",
+			"severity": "standard",
+			"jurisdiction": "",
+			"validUntil": "",
+			"active": true,
+			"matchRules": []
+		},
+		"formError": "",
+		"deleteTarget": null,
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 50
+		},
+		"emptyText": "[No publication prohibitions defined.]",
+		"deleteMessage": "[Delete \"[this prohibition]\"? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "primaryName",
+				"label": "[Primary name]",
+				"sortable": true
+			},
+			{
+				"key": "entityType",
+				"label": "[Type]",
+				"sortable": true
+			},
+			{
+				"key": "matchRules",
+				"label": "[Match rules]"
+			},
+			{
+				"key": "severity",
+				"label": "[Severity]",
+				"sortable": true
+			},
+			{
+				"key": "reason",
+				"label": "[Reason]"
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [
+			[
+				"prohibition",
+				"deleteProhibition",
+				"self-1"
+			]
+		],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"confirmAgain": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 50,
+		"dialogOpen": true,
+		"saving": false,
+		"editing": "id-3",
+		"editingRecord": {
+			"primaryName": "",
+			"entityType": "PERSON",
+			"reason": "",
+			"legalAuthority": "",
+			"caseReference": "",
+			"severity": "standard",
+			"jurisdiction": "",
+			"validUntil": "",
+			"active": true,
+			"matchRules": []
+		},
+		"formError": "",
+		"deleteTarget": {
+			"id": "id-3",
+			"consentStatus": "objection_received"
+		},
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 50
+		},
+		"emptyText": "[No publication prohibitions defined.]",
+		"deleteMessage": "[Delete \"[this prohibition]\"? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "primaryName",
+				"label": "[Primary name]",
+				"sortable": true
+			},
+			{
+				"key": "entityType",
+				"label": "[Type]",
+				"sortable": true
+			},
+			{
+				"key": "matchRules",
+				"label": "[Match rules]"
+			},
+			{
+				"key": "severity",
+				"label": "[Severity]",
+				"sortable": true
+			},
+			{
+				"key": "reason",
+				"label": "[Reason]"
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	},
+	"deleteFail": {
+		"returned": "(undefined)",
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 50,
+		"dialogOpen": true,
+		"saving": false,
+		"editing": "id-3",
+		"editingRecord": {
+			"primaryName": "",
+			"entityType": "PERSON",
+			"reason": "",
+			"legalAuthority": "",
+			"caseReference": "",
+			"severity": "standard",
+			"jurisdiction": "",
+			"validUntil": "",
+			"active": true,
+			"matchRules": []
+		},
+		"formError": "",
+		"deleteTarget": {
+			"id": "id-3",
+			"consentStatus": "objection_received"
+		},
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 1,
+			"total": 3,
+			"limit": 50
+		},
+		"emptyText": "[No publication prohibitions defined.]",
+		"deleteMessage": "[Delete \"[this prohibition]\"? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "primaryName",
+				"label": "[Primary name]",
+				"sortable": true
+			},
+			{
+				"key": "entityType",
+				"label": "[Type]",
+				"sortable": true
+			},
+			{
+				"key": "matchRules",
+				"label": "[Match rules]"
+			},
+			{
+				"key": "severity",
+				"label": "[Severity]",
+				"sortable": true
+			},
+			{
+				"key": "reason",
+				"label": "[Reason]"
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [
+			[
+				"prohibition",
+				"deleteProhibition",
+				"id-3"
+			]
+		],
+		"emitted": [],
+		"pushed": [],
+		"errors": [
+			[
+				"Failed to delete prohibition:",
+				"delete refused"
+			]
+		]
+	},
+	"view": "(no method)",
+	"viewUuid": "(no method)",
+	"viewDict": "(no method)",
+	"emptyWithError": {
+		"isRefreshing": false,
+		"currentPage": 1,
+		"pageSize": 20,
+		"dialogOpen": false,
+		"saving": false,
+		"editing": null,
+		"editingRecord": null,
+		"formError": "",
+		"deleteTarget": null,
+		"deleting": false,
+		"paginationData": {
+			"page": 1,
+			"pages": 0,
+			"total": 0,
+			"limit": 20
+		},
+		"emptyText": "load failed",
+		"deleteMessage": "[Delete \"[this prohibition]\"? This cannot be undone.]",
+		"tableColumns": [
+			{
+				"key": "primaryName",
+				"label": "[Primary name]",
+				"sortable": true
+			},
+			{
+				"key": "entityType",
+				"label": "[Type]",
+				"sortable": true
+			},
+			{
+				"key": "matchRules",
+				"label": "[Match rules]"
+			},
+			{
+				"key": "severity",
+				"label": "[Severity]",
+				"sortable": true
+			},
+			{
+				"key": "reason",
+				"label": "[Reason]"
+			},
+			{
+				"key": "active",
+				"label": "[Status]",
+				"sortable": true
+			}
+		],
+		"calls": [],
+		"emitted": [],
+		"pushed": [],
+		"errors": []
+	}
+}

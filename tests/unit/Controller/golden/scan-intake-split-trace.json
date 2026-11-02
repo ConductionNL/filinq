@@ -1,0 +1,366 @@
+{
+    "nobody logged in": {
+        "status": 401,
+        "data": {
+            "error": "You must be logged in."
+        },
+        "calls": []
+    },
+    "no such batch": {
+        "status": 403,
+        "data": {
+            "error": "You may not read that batch."
+        },
+        "calls": [
+            [
+                "getUserFolder",
+                "beheerder"
+            ],
+            [
+                "getById",
+                42
+            ]
+        ]
+    },
+    "a folder id": {
+        "status": 400,
+        "data": {
+            "error": "That id is not a scanned batch."
+        },
+        "calls": [
+            [
+                "getUserFolder",
+                "beheerder"
+            ],
+            [
+                "getById",
+                42
+            ]
+        ]
+    },
+    "no profile watches the folder": {
+        "status": 400,
+        "data": {
+            "error": "No scan profile watches this folder, so there is nothing that says how to cut this batch."
+        },
+        "calls": [
+            [
+                "getUserFolder",
+                "beheerder"
+            ],
+            [
+                "getById",
+                42
+            ],
+            [
+                "forPath",
+                "/beheerder/files/Scans/batch.pdf"
+            ]
+        ]
+    },
+    "the folder decides the profile": {
+        "status": 200,
+        "data": {
+            "batch": "batch-new",
+            "segments": 2
+        },
+        "calls": [
+            [
+                "getUserFolder",
+                "beheerder"
+            ],
+            [
+                "getById",
+                42
+            ],
+            [
+                "forPath",
+                "/beheerder/files/Scans/batch.pdf"
+            ],
+            [
+                "findByFile",
+                42
+            ],
+            [
+                "receive",
+                "/beheerder/files/Scans/batch.pdf",
+                {
+                    "id": "scan-a",
+                    "folder": "/Scans"
+                }
+            ],
+            [
+                "split",
+                {
+                    "id": "batch-new",
+                    "status": "received"
+                },
+                {
+                    "id": "scan-a",
+                    "folder": "/Scans"
+                },
+                "/beheerder/files/Scans/batch.pdf",
+                "/beheerder/files/Scans"
+            ]
+        ]
+    },
+    "a named profile": {
+        "status": 200,
+        "data": {
+            "batch": "batch-new",
+            "segments": 2
+        },
+        "calls": [
+            [
+                "getUserFolder",
+                "beheerder"
+            ],
+            [
+                "getById",
+                42
+            ],
+            [
+                "find",
+                "scan-a"
+            ],
+            [
+                "findByFile",
+                42
+            ],
+            [
+                "receive",
+                "/beheerder/files/Scans/batch.pdf",
+                {
+                    "id": "scan-a",
+                    "folder": "/Scans"
+                }
+            ],
+            [
+                "split",
+                {
+                    "id": "batch-new",
+                    "status": "received"
+                },
+                {
+                    "id": "scan-a",
+                    "folder": "/Scans"
+                },
+                "/beheerder/files/Scans/batch.pdf",
+                "/beheerder/files/Scans"
+            ]
+        ]
+    },
+    "a blank profile name": {
+        "status": 200,
+        "data": {
+            "batch": "batch-new",
+            "segments": 2
+        },
+        "calls": [
+            [
+                "getUserFolder",
+                "beheerder"
+            ],
+            [
+                "getById",
+                42
+            ],
+            [
+                "forPath",
+                "/beheerder/files/Scans/batch.pdf"
+            ],
+            [
+                "findByFile",
+                42
+            ],
+            [
+                "receive",
+                "/beheerder/files/Scans/batch.pdf",
+                {
+                    "id": "scan-a",
+                    "folder": "/Scans"
+                }
+            ],
+            [
+                "split",
+                {
+                    "id": "batch-new",
+                    "status": "received"
+                },
+                {
+                    "id": "scan-a",
+                    "folder": "/Scans"
+                },
+                "/beheerder/files/Scans/batch.pdf",
+                "/beheerder/files/Scans"
+            ]
+        ]
+    },
+    "a named profile that does not exist": {
+        "status": 400,
+        "data": {
+            "error": "No scan profile watches this folder, so there is nothing that says how to cut this batch."
+        },
+        "calls": [
+            [
+                "getUserFolder",
+                "beheerder"
+            ],
+            [
+                "getById",
+                42
+            ],
+            [
+                "find",
+                "scan-x"
+            ]
+        ]
+    },
+    "a batch already received": {
+        "status": 200,
+        "data": {
+            "batch": "batch-1",
+            "segments": 2
+        },
+        "calls": [
+            [
+                "getUserFolder",
+                "beheerder"
+            ],
+            [
+                "getById",
+                42
+            ],
+            [
+                "forPath",
+                "/beheerder/files/Scans/batch.pdf"
+            ],
+            [
+                "findByFile",
+                42
+            ],
+            [
+                "split",
+                {
+                    "id": "batch-1",
+                    "status": "received"
+                },
+                {
+                    "id": "scan-a",
+                    "folder": "/Scans"
+                },
+                "/beheerder/files/Scans/batch.pdf",
+                "/beheerder/files/Scans"
+            ]
+        ]
+    },
+    "the user folder fails": {
+        "status": 500,
+        "data": {
+            "error": "storage offline"
+        },
+        "calls": [
+            [
+                "getUserFolder",
+                "beheerder"
+            ]
+        ]
+    },
+    "the profile store fails": {
+        "status": 500,
+        "data": {
+            "error": "profile store down"
+        },
+        "calls": [
+            [
+                "getUserFolder",
+                "beheerder"
+            ],
+            [
+                "getById",
+                42
+            ],
+            [
+                "forPath",
+                "/beheerder/files/Scans/batch.pdf"
+            ]
+        ]
+    },
+    "the batch has no parent": {
+        "status": 500,
+        "data": {
+            "error": "no parent"
+        },
+        "calls": [
+            [
+                "getUserFolder",
+                "beheerder"
+            ],
+            [
+                "getById",
+                42
+            ],
+            [
+                "forPath",
+                "/beheerder/files/Scans/batch.pdf"
+            ],
+            [
+                "findByFile",
+                42
+            ],
+            [
+                "receive",
+                "/beheerder/files/Scans/batch.pdf",
+                {
+                    "id": "scan-a",
+                    "folder": "/Scans"
+                }
+            ]
+        ]
+    },
+    "the cut fails": {
+        "status": 500,
+        "data": {
+            "error": "unreadable page 3"
+        },
+        "calls": [
+            [
+                "getUserFolder",
+                "beheerder"
+            ],
+            [
+                "getById",
+                42
+            ],
+            [
+                "forPath",
+                "/beheerder/files/Scans/batch.pdf"
+            ],
+            [
+                "findByFile",
+                42
+            ],
+            [
+                "receive",
+                "/beheerder/files/Scans/batch.pdf",
+                {
+                    "id": "scan-a",
+                    "folder": "/Scans"
+                }
+            ],
+            [
+                "split",
+                {
+                    "id": "batch-new",
+                    "status": "received"
+                },
+                {
+                    "id": "scan-a",
+                    "folder": "/Scans"
+                },
+                "/beheerder/files/Scans/batch.pdf",
+                "/beheerder/files/Scans"
+            ]
+        ]
+    }
+}

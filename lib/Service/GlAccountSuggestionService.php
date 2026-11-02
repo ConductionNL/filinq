@@ -36,6 +36,7 @@ namespace OCA\Filinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\Filinq\Event\GlAccountSuggestedEvent;
+use OCA\Filinq\Kernel\Contracts\GlAccountSuggestionServiceInterface;
 use OCA\Filinq\Service\Suggestion\CategoryKeywordMapper;
 use OCA\Filinq\Service\Suggestion\HistoryRanker;
 use OCA\Filinq\Service\Suggestion\SupplierIdentityResolver;
@@ -62,7 +63,7 @@ use Throwable;
  *
  * @spec openspec/specs/ai-gl-account-suggestion/spec.md
  */
-class GlAccountSuggestionService {
+class GlAccountSuggestionService implements GlAccountSuggestionServiceInterface {
 	/**
 	 * Constructor.
 	 *

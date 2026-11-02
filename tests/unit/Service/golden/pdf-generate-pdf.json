@@ -1,0 +1,697 @@
+{
+    "defaults": {
+        "pdf": {
+            "pages": 1,
+            "info": [
+                [
+                    "Author",
+                    "feff00460069006c0069006e0071"
+                ]
+            ],
+            "fonts": [
+                "MPDFAA+DejaVuSerifCondensed",
+                "MPDFAA+DejaVuSerifCondensed",
+                "MPDFAA+DejaVuSerifCondensed-Bold",
+                "MPDFAA+DejaVuSerifCondensed-Bold"
+            ],
+            "boxes": [
+                "0 0 595.280 841.890"
+            ],
+            "pdfa": [],
+            "streams": [
+                "66005cd5984f1e1c5d63d2b6714f7345d655d59b",
+                "370d312842995afc701180a1bdcca158a78d7d44",
+                "37efa5eee6631a8413f0ec21a726beb19443b967",
+                "370d312842995afc701180a1bdcca158a78d7d44",
+                "5bd2a973935d571b2a832f98ff9e0aab73347c58"
+            ]
+        },
+        "calls": [],
+        "logs": []
+    },
+    "a title": {
+        "pdf": {
+            "pages": 1,
+            "info": [
+                [
+                    "Title",
+                    "feff004200650073006c007500690074"
+                ],
+                [
+                    "Author",
+                    "feff00460069006c0069006e0071"
+                ]
+            ],
+            "fonts": [
+                "MPDFAA+DejaVuSerifCondensed",
+                "MPDFAA+DejaVuSerifCondensed",
+                "MPDFAA+DejaVuSerifCondensed-Bold",
+                "MPDFAA+DejaVuSerifCondensed-Bold"
+            ],
+            "boxes": [
+                "0 0 595.280 841.890"
+            ],
+            "pdfa": [],
+            "streams": [
+                "66005cd5984f1e1c5d63d2b6714f7345d655d59b",
+                "370d312842995afc701180a1bdcca158a78d7d44",
+                "37efa5eee6631a8413f0ec21a726beb19443b967",
+                "370d312842995afc701180a1bdcca158a78d7d44",
+                "5bd2a973935d571b2a832f98ff9e0aab73347c58"
+            ]
+        },
+        "calls": [],
+        "logs": []
+    },
+    "an empty title": {
+        "pdf": {
+            "pages": 1,
+            "info": [
+                [
+                    "Author",
+                    "feff00460069006c0069006e0071"
+                ]
+            ],
+            "fonts": [
+                "MPDFAA+DejaVuSerifCondensed",
+                "MPDFAA+DejaVuSerifCondensed",
+                "MPDFAA+DejaVuSerifCondensed-Bold",
+                "MPDFAA+DejaVuSerifCondensed-Bold"
+            ],
+            "boxes": [
+                "0 0 595.280 841.890"
+            ],
+            "pdfa": [],
+            "streams": [
+                "66005cd5984f1e1c5d63d2b6714f7345d655d59b",
+                "370d312842995afc701180a1bdcca158a78d7d44",
+                "37efa5eee6631a8413f0ec21a726beb19443b967",
+                "370d312842995afc701180a1bdcca158a78d7d44",
+                "5bd2a973935d571b2a832f98ff9e0aab73347c58"
+            ]
+        },
+        "calls": [],
+        "logs": []
+    },
+    "an author": {
+        "pdf": {
+            "pages": 1,
+            "info": [
+                [
+                    "Author",
+                    "feff00470065006d00650065006e007400650020005a007500690064006400720065006300680074"
+                ]
+            ],
+            "fonts": [
+                "MPDFAA+DejaVuSerifCondensed",
+                "MPDFAA+DejaVuSerifCondensed",
+                "MPDFAA+DejaVuSerifCondensed-Bold",
+                "MPDFAA+DejaVuSerifCondensed-Bold"
+            ],
+            "boxes": [
+                "0 0 595.280 841.890"
+            ],
+            "pdfa": [],
+            "streams": [
+                "66005cd5984f1e1c5d63d2b6714f7345d655d59b",
+                "370d312842995afc701180a1bdcca158a78d7d44",
+                "37efa5eee6631a8413f0ec21a726beb19443b967",
+                "370d312842995afc701180a1bdcca158a78d7d44",
+                "5bd2a973935d571b2a832f98ff9e0aab73347c58"
+            ]
+        },
+        "calls": [],
+        "logs": []
+    },
+    "a numeric author": {
+        "pdf": {
+            "pages": 1,
+            "info": [
+                [
+                    "Author",
+                    "feff00340032"
+                ]
+            ],
+            "fonts": [
+                "MPDFAA+DejaVuSerifCondensed",
+                "MPDFAA+DejaVuSerifCondensed",
+                "MPDFAA+DejaVuSerifCondensed-Bold",
+                "MPDFAA+DejaVuSerifCondensed-Bold"
+            ],
+            "boxes": [
+                "0 0 595.280 841.890"
+            ],
+            "pdfa": [],
+            "streams": [
+                "66005cd5984f1e1c5d63d2b6714f7345d655d59b",
+                "370d312842995afc701180a1bdcca158a78d7d44",
+                "37efa5eee6631a8413f0ec21a726beb19443b967",
+                "370d312842995afc701180a1bdcca158a78d7d44",
+                "5bd2a973935d571b2a832f98ff9e0aab73347c58"
+            ]
+        },
+        "calls": [],
+        "logs": []
+    },
+    "pdfa": {
+        "pdf": {
+            "pages": 1,
+            "info": [
+                [
+                    "Author",
+                    "feff00460069006c0069006e0071"
+                ],
+                [
+                    "Keywords",
+                    "feff00460069006c0069006e0071"
+                ],
+                [
+                    "Creator",
+                    "feff00460069006c0069006e00710020005000440046002f0041002000470065006e0065007200610074006f0072"
+                ]
+            ],
+            "fonts": [
+                "MPDFAA+DejaVuSans",
+                "MPDFAA+DejaVuSans",
+                "MPDFAA+DejaVuSans-Bold",
+                "MPDFAA+DejaVuSans-Bold"
+            ],
+            "boxes": [
+                "0 0 595.280 841.890"
+            ],
+            "pdfa": [
+                "part=3",
+                "part=\n    ",
+                "conformance=B",
+                "conformance=\n   "
+            ],
+            "streams": [
+                "fcb5fc658f1bae7fcaa43ce818b6e791df9c1fc0",
+                "370d312842995afc701180a1bdcca158a78d7d44",
+                "6d5443926f822474760f7d8af26cc4dcc426bce1",
+                "370d312842995afc701180a1bdcca158a78d7d44",
+                "4db4498e73f2fb6765759f3b60d24a504d93a98f",
+                "4e707e8db5245e72ab2e0075cdd17514f080d9f2"
+            ]
+        },
+        "calls": [
+            [
+                "buildPrintCss",
+                "A4",
+                "P"
+            ]
+        ],
+        "logs": []
+    },
+    "pdfa as a string": {
+        "pdf": {
+            "pages": 1,
+            "info": [
+                [
+                    "Author",
+                    "feff00460069006c0069006e0071"
+                ]
+            ],
+            "fonts": [
+                "MPDFAA+DejaVuSerifCondensed",
+                "MPDFAA+DejaVuSerifCondensed",
+                "MPDFAA+DejaVuSerifCondensed-Bold",
+                "MPDFAA+DejaVuSerifCondensed-Bold"
+            ],
+            "boxes": [
+                "0 0 595.280 841.890"
+            ],
+            "pdfa": [],
+            "streams": [
+                "66005cd5984f1e1c5d63d2b6714f7345d655d59b",
+                "370d312842995afc701180a1bdcca158a78d7d44",
+                "37efa5eee6631a8413f0ec21a726beb19443b967",
+                "370d312842995afc701180a1bdcca158a78d7d44",
+                "5bd2a973935d571b2a832f98ff9e0aab73347c58"
+            ]
+        },
+        "calls": [],
+        "logs": []
+    },
+    "pdfa with title and case": {
+        "pdf": {
+            "pages": 1,
+            "info": [
+                [
+                    "Title",
+                    "feff004200650073006c007500690074"
+                ],
+                [
+                    "Subject",
+                    "feff004200650073006c007500690074"
+                ],
+                [
+                    "Author",
+                    "feff00460069006c0069006e0071"
+                ],
+                [
+                    "Keywords",
+                    "feff00460069006c0069006e00710020005a002d0032003000320036002d0031"
+                ],
+                [
+                    "Creator",
+                    "feff00460069006c0069006e00710020005000440046002f0041002000470065006e0065007200610074006f0072"
+                ]
+            ],
+            "fonts": [
+                "MPDFAA+DejaVuSans",
+                "MPDFAA+DejaVuSans",
+                "MPDFAA+DejaVuSans-Bold",
+                "MPDFAA+DejaVuSans-Bold"
+            ],
+            "boxes": [
+                "0 0 595.280 841.890"
+            ],
+            "pdfa": [
+                "part=3",
+                "part=\n    ",
+                "conformance=B",
+                "conformance=\n   "
+            ],
+            "streams": [
+                "fcb5fc658f1bae7fcaa43ce818b6e791df9c1fc0",
+                "370d312842995afc701180a1bdcca158a78d7d44",
+                "6d5443926f822474760f7d8af26cc4dcc426bce1",
+                "370d312842995afc701180a1bdcca158a78d7d44",
+                "4db4498e73f2fb6765759f3b60d24a504d93a98f",
+                "4e707e8db5245e72ab2e0075cdd17514f080d9f2"
+            ]
+        },
+        "calls": [
+            [
+                "buildPrintCss",
+                "A4",
+                "P"
+            ]
+        ],
+        "logs": []
+    },
+    "pdfa with a numeric case": {
+        "pdf": {
+            "pages": 1,
+            "info": [
+                [
+                    "Author",
+                    "feff00460069006c0069006e0071"
+                ],
+                [
+                    "Keywords",
+                    "feff00460069006c0069006e007100200037"
+                ],
+                [
+                    "Creator",
+                    "feff00460069006c0069006e00710020005000440046002f0041002000470065006e0065007200610074006f0072"
+                ]
+            ],
+            "fonts": [
+                "MPDFAA+DejaVuSans",
+                "MPDFAA+DejaVuSans",
+                "MPDFAA+DejaVuSans-Bold",
+                "MPDFAA+DejaVuSans-Bold"
+            ],
+            "boxes": [
+                "0 0 595.280 841.890"
+            ],
+            "pdfa": [
+                "part=3",
+                "part=\n    ",
+                "conformance=B",
+                "conformance=\n   "
+            ],
+            "streams": [
+                "fcb5fc658f1bae7fcaa43ce818b6e791df9c1fc0",
+                "370d312842995afc701180a1bdcca158a78d7d44",
+                "6d5443926f822474760f7d8af26cc4dcc426bce1",
+                "370d312842995afc701180a1bdcca158a78d7d44",
+                "4db4498e73f2fb6765759f3b60d24a504d93a98f",
+                "4e707e8db5245e72ab2e0075cdd17514f080d9f2"
+            ]
+        },
+        "calls": [
+            [
+                "buildPrintCss",
+                "A4",
+                "P"
+            ]
+        ],
+        "logs": []
+    },
+    "pdfa without a case": {
+        "pdf": {
+            "pages": 1,
+            "info": [
+                [
+                    "Title",
+                    "feff004200650073006c007500690074"
+                ],
+                [
+                    "Subject",
+                    "feff004200650073006c007500690074"
+                ],
+                [
+                    "Author",
+                    "feff0041006e006e0061"
+                ],
+                [
+                    "Keywords",
+                    "feff00460069006c0069006e0071"
+                ],
+                [
+                    "Creator",
+                    "feff00460069006c0069006e00710020005000440046002f0041002000470065006e0065007200610074006f0072"
+                ]
+            ],
+            "fonts": [
+                "MPDFAA+DejaVuSans",
+                "MPDFAA+DejaVuSans",
+                "MPDFAA+DejaVuSans-Bold",
+                "MPDFAA+DejaVuSans-Bold"
+            ],
+            "boxes": [
+                "0 0 595.280 841.890"
+            ],
+            "pdfa": [
+                "part=3",
+                "part=\n    ",
+                "conformance=B",
+                "conformance=\n   "
+            ],
+            "streams": [
+                "fcb5fc658f1bae7fcaa43ce818b6e791df9c1fc0",
+                "370d312842995afc701180a1bdcca158a78d7d44",
+                "6d5443926f822474760f7d8af26cc4dcc426bce1",
+                "370d312842995afc701180a1bdcca158a78d7d44",
+                "4db4498e73f2fb6765759f3b60d24a504d93a98f",
+                "4e707e8db5245e72ab2e0075cdd17514f080d9f2"
+            ]
+        },
+        "calls": [
+            [
+                "buildPrintCss",
+                "A4",
+                "P"
+            ]
+        ],
+        "logs": []
+    },
+    "case without pdfa": {
+        "pdf": {
+            "pages": 1,
+            "info": [
+                [
+                    "Title",
+                    "feff004200650073006c007500690074"
+                ],
+                [
+                    "Author",
+                    "feff00460069006c0069006e0071"
+                ]
+            ],
+            "fonts": [
+                "MPDFAA+DejaVuSerifCondensed",
+                "MPDFAA+DejaVuSerifCondensed",
+                "MPDFAA+DejaVuSerifCondensed-Bold",
+                "MPDFAA+DejaVuSerifCondensed-Bold"
+            ],
+            "boxes": [
+                "0 0 595.280 841.890"
+            ],
+            "pdfa": [],
+            "streams": [
+                "66005cd5984f1e1c5d63d2b6714f7345d655d59b",
+                "370d312842995afc701180a1bdcca158a78d7d44",
+                "37efa5eee6631a8413f0ec21a726beb19443b967",
+                "370d312842995afc701180a1bdcca158a78d7d44",
+                "5bd2a973935d571b2a832f98ff9e0aab73347c58"
+            ]
+        },
+        "calls": [],
+        "logs": []
+    },
+    "crop marks": {
+        "pdf": {
+            "pages": 1,
+            "info": [
+                [
+                    "Author",
+                    "feff00460069006c0069006e0071"
+                ]
+            ],
+            "fonts": [
+                "MPDFAA+DejaVuSerifCondensed",
+                "MPDFAA+DejaVuSerifCondensed",
+                "MPDFAA+DejaVuSerifCondensed-Bold",
+                "MPDFAA+DejaVuSerifCondensed-Bold"
+            ],
+            "boxes": [
+                "0 0 595.280 841.890"
+            ],
+            "pdfa": [],
+            "streams": [
+                "66005cd5984f1e1c5d63d2b6714f7345d655d59b",
+                "370d312842995afc701180a1bdcca158a78d7d44",
+                "37efa5eee6631a8413f0ec21a726beb19443b967",
+                "370d312842995afc701180a1bdcca158a78d7d44",
+                "5bd2a973935d571b2a832f98ff9e0aab73347c58"
+            ]
+        },
+        "calls": [
+            [
+                "buildCropMarksHtml",
+                "a5ef030580be8c319a57282bbd7a498604e3d98b"
+            ]
+        ],
+        "logs": []
+    },
+    "crop marks as a string": {
+        "pdf": {
+            "pages": 1,
+            "info": [
+                [
+                    "Author",
+                    "feff00460069006c0069006e0071"
+                ]
+            ],
+            "fonts": [
+                "MPDFAA+DejaVuSerifCondensed",
+                "MPDFAA+DejaVuSerifCondensed",
+                "MPDFAA+DejaVuSerifCondensed-Bold",
+                "MPDFAA+DejaVuSerifCondensed-Bold"
+            ],
+            "boxes": [
+                "0 0 595.280 841.890"
+            ],
+            "pdfa": [],
+            "streams": [
+                "66005cd5984f1e1c5d63d2b6714f7345d655d59b",
+                "370d312842995afc701180a1bdcca158a78d7d44",
+                "37efa5eee6631a8413f0ec21a726beb19443b967",
+                "370d312842995afc701180a1bdcca158a78d7d44",
+                "5bd2a973935d571b2a832f98ff9e0aab73347c58"
+            ]
+        },
+        "calls": [],
+        "logs": []
+    },
+    "crop marks with pdfa": {
+        "pdf": {
+            "pages": 1,
+            "info": [
+                [
+                    "Author",
+                    "feff00460069006c0069006e0071"
+                ],
+                [
+                    "Keywords",
+                    "feff00460069006c0069006e0071"
+                ],
+                [
+                    "Creator",
+                    "feff00460069006c0069006e00710020005000440046002f0041002000470065006e0065007200610074006f0072"
+                ]
+            ],
+            "fonts": [
+                "MPDFAA+DejaVuSans",
+                "MPDFAA+DejaVuSans",
+                "MPDFAA+DejaVuSans-Bold",
+                "MPDFAA+DejaVuSans-Bold"
+            ],
+            "boxes": [
+                "0 0 595.280 841.890"
+            ],
+            "pdfa": [
+                "part=3",
+                "part=\n    ",
+                "conformance=B",
+                "conformance=\n   "
+            ],
+            "streams": [
+                "fcb5fc658f1bae7fcaa43ce818b6e791df9c1fc0",
+                "370d312842995afc701180a1bdcca158a78d7d44",
+                "6d5443926f822474760f7d8af26cc4dcc426bce1",
+                "370d312842995afc701180a1bdcca158a78d7d44",
+                "4db4498e73f2fb6765759f3b60d24a504d93a98f",
+                "4e707e8db5245e72ab2e0075cdd17514f080d9f2"
+            ]
+        },
+        "calls": [
+            [
+                "buildPrintCss",
+                "A4",
+                "P"
+            ],
+            [
+                "buildCropMarksHtml",
+                "c518678bec96843d4f9821d2a6d212bbf4ff90d2"
+            ]
+        ],
+        "logs": []
+    },
+    "landscape A3 with margins": {
+        "pdf": {
+            "pages": 1,
+            "info": [
+                [
+                    "Author",
+                    "feff00460069006c0069006e0071"
+                ]
+            ],
+            "fonts": [
+                "MPDFAA+DejaVuSerifCondensed",
+                "MPDFAA+DejaVuSerifCondensed",
+                "MPDFAA+DejaVuSerifCondensed-Bold",
+                "MPDFAA+DejaVuSerifCondensed-Bold"
+            ],
+            "boxes": [
+                "0 0 1190.550 841.890"
+            ],
+            "pdfa": [],
+            "streams": [
+                "514e6ac63cc22cbf8fe4ba786c9b0f71f303d314",
+                "370d312842995afc701180a1bdcca158a78d7d44",
+                "37efa5eee6631a8413f0ec21a726beb19443b967",
+                "370d312842995afc701180a1bdcca158a78d7d44",
+                "5bd2a973935d571b2a832f98ff9e0aab73347c58"
+            ]
+        },
+        "calls": [],
+        "logs": []
+    },
+    "pdfa landscape": {
+        "pdf": {
+            "pages": 1,
+            "info": [
+                [
+                    "Author",
+                    "feff00460069006c0069006e0071"
+                ],
+                [
+                    "Keywords",
+                    "feff00460069006c0069006e0071"
+                ],
+                [
+                    "Creator",
+                    "feff00460069006c0069006e00710020005000440046002f0041002000470065006e0065007200610074006f0072"
+                ]
+            ],
+            "fonts": [
+                "MPDFAA+DejaVuSans",
+                "MPDFAA+DejaVuSans",
+                "MPDFAA+DejaVuSans-Bold",
+                "MPDFAA+DejaVuSans-Bold"
+            ],
+            "boxes": [
+                "0 0 595.280 419.530"
+            ],
+            "pdfa": [
+                "part=3",
+                "part=\n    ",
+                "conformance=B",
+                "conformance=\n   "
+            ],
+            "streams": [
+                "8b991cf33bbdf0362f71ecd0c993e83d1eccf1e6",
+                "370d312842995afc701180a1bdcca158a78d7d44",
+                "6d5443926f822474760f7d8af26cc4dcc426bce1",
+                "370d312842995afc701180a1bdcca158a78d7d44",
+                "4db4498e73f2fb6765759f3b60d24a504d93a98f",
+                "4e707e8db5245e72ab2e0075cdd17514f080d9f2"
+            ]
+        },
+        "calls": [
+            [
+                "buildPrintCss",
+                "A5",
+                "L"
+            ]
+        ],
+        "logs": []
+    },
+    "accessible without a renderer": {
+        "error": [
+            "OCA\\Filinq\\Exception\\ConversionFailedException",
+            "Accessible PDF output is not available here; no untagged PDF is made instead.",
+            503,
+            null
+        ],
+        "calls": [],
+        "logs": []
+    },
+    "accessible as a string": {
+        "pdf": {
+            "pages": 1,
+            "info": [
+                [
+                    "Title",
+                    "feff004200650073006c007500690074"
+                ],
+                [
+                    "Author",
+                    "feff00460069006c0069006e0071"
+                ]
+            ],
+            "fonts": [
+                "MPDFAA+DejaVuSerifCondensed",
+                "MPDFAA+DejaVuSerifCondensed",
+                "MPDFAA+DejaVuSerifCondensed-Bold",
+                "MPDFAA+DejaVuSerifCondensed-Bold"
+            ],
+            "boxes": [
+                "0 0 595.280 841.890"
+            ],
+            "pdfa": [],
+            "streams": [
+                "66005cd5984f1e1c5d63d2b6714f7345d655d59b",
+                "370d312842995afc701180a1bdcca158a78d7d44",
+                "37efa5eee6631a8413f0ec21a726beb19443b967",
+                "370d312842995afc701180a1bdcca158a78d7d44",
+                "5bd2a973935d571b2a832f98ff9e0aab73347c58"
+            ]
+        },
+        "calls": [],
+        "logs": []
+    },
+    "an unknown page format": {
+        "error": [
+            "Exception",
+            "PDF generation failed: Unknown page format Z9",
+            500,
+            "Mpdf\\MpdfException"
+        ],
+        "calls": [],
+        "logs": [
+            [
+                "error",
+                "mPDF generation failed: Unknown page format Z9",
+                {
+                    "exception": "Mpdf\\MpdfException"
+                }
+            ]
+        ]
+    }
+}

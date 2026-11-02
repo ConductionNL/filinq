@@ -1,0 +1,63 @@
+{"report":{"buildInformation":{"releaseDetails":[{
+  "id" : "core",
+  "version" : "1.30.2",
+  "buildDate" : 1780483380000
+},{
+  "id" : "validation-model",
+  "version" : "1.30.2",
+  "buildDate" : 1780483560000
+},{
+  "id" : "apps",
+  "version" : "1.30.2",
+  "buildDate" : 1780484100000
+}]},"jobs":[{"itemDetails":{
+  "name" : "/data/garbage.pdf",
+  "size" : 10
+},"taskException":{
+  "exception" : "Couldn't parse stream",
+  "type" : "PARSE",
+  "duration" : {
+    "start" : 1790699074337,
+    "finish" : 1790699074429,
+    "duration" : "00:00:00.092",
+    "difference" : 92
+  },
+  "executed" : true,
+  "success" : false,
+  "exceptionMessage" : "Exception: Couldn't parse stream caused by exception: End of file is reached"
+},"processingTime":{
+  "start" : 1790699074337,
+  "finish" : 1790699074429,
+  "duration" : "00:00:00.092",
+  "difference" : 92
+}}],"batchSummary":{
+  "duration" : {
+    "start" : 1790699074228,
+    "finish" : 1790699074464,
+    "duration" : "00:00:00.236",
+    "difference" : 236
+  },
+  "totalJobs" : 1,
+  "outOfMemory" : 0,
+  "veraExceptions" : 0,
+  "failedEncryptedJobs" : 0,
+  "failedParsingJobs" : 1,
+  "validationSummary" : {
+    "nonCompliantPdfaCount" : 0,
+    "compliantPdfaCount" : 0,
+    "failedJobCount" : 1,
+    "totalJobCount" : 1,
+    "successfulJobCount" : 0
+  },
+  "featuresSummary" : {
+    "failedJobCount" : 0,
+    "totalJobCount" : 0,
+    "successfulJobCount" : 0
+  },
+  "repairSummary" : {
+    "failedJobCount" : 0,
+    "totalJobCount" : 0,
+    "successfulJobCount" : 0
+  },
+  "multiJob" : false
+}}}

@@ -1,0 +1,234 @@
+{
+    "both empty": [],
+    "only left": [
+        {
+            "op": "delete",
+            "left": "a"
+        },
+        {
+            "op": "delete",
+            "left": "b"
+        }
+    ],
+    "only right": [
+        {
+            "op": "insert",
+            "right": "a"
+        },
+        {
+            "op": "insert",
+            "right": "b"
+        }
+    ],
+    "equal": [
+        {
+            "op": "equal",
+            "left": "de",
+            "right": "de"
+        },
+        {
+            "op": "equal",
+            "left": "brief",
+            "right": "brief"
+        },
+        {
+            "op": "equal",
+            "left": "is",
+            "right": "is"
+        },
+        {
+            "op": "equal",
+            "left": "klaar",
+            "right": "klaar"
+        }
+    ],
+    "one word replaced": [
+        {
+            "op": "equal",
+            "left": "de",
+            "right": "de"
+        },
+        {
+            "op": "delete",
+            "left": "brief"
+        },
+        {
+            "op": "insert",
+            "right": "nota"
+        },
+        {
+            "op": "equal",
+            "left": "is",
+            "right": "is"
+        },
+        {
+            "op": "equal",
+            "left": "klaar",
+            "right": "klaar"
+        }
+    ],
+    "a tail removed": [
+        {
+            "op": "equal",
+            "left": "a",
+            "right": "a"
+        },
+        {
+            "op": "equal",
+            "left": "b",
+            "right": "b"
+        },
+        {
+            "op": "delete",
+            "left": "c"
+        },
+        {
+            "op": "delete",
+            "left": "d"
+        }
+    ],
+    "a tail added": [
+        {
+            "op": "equal",
+            "left": "a",
+            "right": "a"
+        },
+        {
+            "op": "equal",
+            "left": "b",
+            "right": "b"
+        },
+        {
+            "op": "insert",
+            "right": "c"
+        },
+        {
+            "op": "insert",
+            "right": "d"
+        }
+    ],
+    "a head added": [
+        {
+            "op": "insert",
+            "right": "a"
+        },
+        {
+            "op": "insert",
+            "right": "b"
+        },
+        {
+            "op": "equal",
+            "left": "c",
+            "right": "c"
+        },
+        {
+            "op": "equal",
+            "left": "d",
+            "right": "d"
+        }
+    ],
+    "crossing": [
+        {
+            "op": "delete",
+            "left": "a"
+        },
+        {
+            "op": "delete",
+            "left": "b"
+        },
+        {
+            "op": "equal",
+            "left": "c",
+            "right": "c"
+        },
+        {
+            "op": "delete",
+            "left": "a"
+        },
+        {
+            "op": "equal",
+            "left": "b",
+            "right": "b"
+        },
+        {
+            "op": "insert",
+            "right": "a"
+        },
+        {
+            "op": "equal",
+            "left": "b",
+            "right": "b"
+        },
+        {
+            "op": "equal",
+            "left": "a",
+            "right": "a"
+        },
+        {
+            "op": "insert",
+            "right": "c"
+        }
+    ],
+    "a tie": [
+        {
+            "op": "delete",
+            "left": "x"
+        },
+        {
+            "op": "equal",
+            "left": "y",
+            "right": "y"
+        },
+        {
+            "op": "insert",
+            "right": "x"
+        }
+    ],
+    "nothing shared": [
+        {
+            "op": "delete",
+            "left": "a"
+        },
+        {
+            "op": "delete",
+            "left": "b"
+        },
+        {
+            "op": "insert",
+            "right": "c"
+        },
+        {
+            "op": "insert",
+            "right": "d"
+        },
+        {
+            "op": "insert",
+            "right": "e"
+        }
+    ],
+    "repeats": [
+        {
+            "op": "equal",
+            "left": "a",
+            "right": "a"
+        },
+        {
+            "op": "delete",
+            "left": "a"
+        },
+        {
+            "op": "equal",
+            "left": "b",
+            "right": "b"
+        },
+        {
+            "op": "equal",
+            "left": "a",
+            "right": "a"
+        },
+        {
+            "op": "insert",
+            "right": "a"
+        }
+    ]
+}

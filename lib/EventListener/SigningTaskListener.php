@@ -47,7 +47,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\EventListener;
 
-use OCA\Filinq\Service\SettingsService;
+use OCA\Filinq\Kernel\Contracts\SettingsServiceInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use Psr\Log\LoggerInterface;
@@ -129,7 +129,7 @@ class SigningTaskListener implements IEventListener {
 	 * @param SignerEventTranslator $translator Translates the extracted
 	 *                                          scalars into filinq signer
 	 *                                          events and notifies the provider.
-	 * @param SettingsService $settingsService Resolves the signingRequest
+	 * @param SettingsServiceInterface $settingsService Resolves the signingRequest
 	 *                                         binding and the object service
 	 *                                         for the ownership check.
 	 * @param LoggerInterface $logger Logger.
@@ -138,7 +138,7 @@ class SigningTaskListener implements IEventListener {
 	 */
 	public function __construct(
 		private readonly SignerEventTranslator $translator,
-		private readonly SettingsService $settingsService,
+		private readonly SettingsServiceInterface $settingsService,
 		private readonly LoggerInterface $logger,
 	) {
 
@@ -241,50 +241,84 @@ class SigningTaskListener implements IEventListener {
 	 * @return void
 	 */
 	private function handleTerminal(Event $event): void {
-		if ((bool) $this->read(subject: $event, getter: 'isCommitted') === false) {
+		$task = $this->completedTask(event: $event);
+		if ($task === null) {
 			return;
+		}
+
+		$ids = [
+			'sequenceUuid' => (string) ($this->read(subject: $task, getter: 'getSequenceUuid') ?? ''),
+			'objectUuid' => (string) ($this->read(subject: $task, getter: 'getObjectUuid') ?? ''),
+		];
+		if ($this->isFilinqSequenceTask(sequenceUuid: $ids['sequenceUuid'], objectUuid: $ids['objectUuid']) === false) {
+			return;
+		}
+
+		$this->translateDecision(task: $task, ids: $ids);
+	}//end handleTerminal()
+
+	/**
+	 * The task of a committed terminal event whose state is `completed`, or null.
+	 *
+	 * @param Event $event OR's TaskTerminalEvent.
+	 *
+	 * @return object|null The completed task.
+	 */
+	private function completedTask(Event $event): ?object {
+		if ((bool) $this->read(subject: $event, getter: 'isCommitted') === false) {
+			return null;
 		}
 
 		$task = $this->read(subject: $event, getter: 'getTask');
 		if (is_object($task) === false) {
-			return;
+			return null;
 		}
 
 		if ((string) ($this->read(subject: $task, getter: 'getState') ?? '') !== self::STATE_COMPLETED) {
-			return;
+			return null;
 		}
 
-		$sequenceUuid = (string) ($this->read(subject: $task, getter: 'getSequenceUuid') ?? '');
-		$objectUuid = (string) ($this->read(subject: $task, getter: 'getObjectUuid') ?? '');
-		if ($this->isFilinqSequenceTask(sequenceUuid: $sequenceUuid, objectUuid: $objectUuid) === false) {
-			return;
-		}
+		return $task;
+	}//end completedTask()
 
-		$userId = null;
-		$completedBy = $this->read(subject: $task, getter: 'getCompletedBy');
-		if ($completedBy !== null) {
-			$userId = (string) $completedBy;
-		}
-
-		$comment = null;
-		$rawComment = $this->read(subject: $task, getter: 'getComment');
-		if ($rawComment !== null) {
-			$comment = (string) $rawComment;
-		}
-
+	/**
+	 * Hand a completed task's decision to the translator, signed by the task's own completedBy.
+	 *
+	 * @param object $task The completed task.
+	 * @param array{sequenceUuid: string, objectUuid: string} $ids The task's sequence and anchor object.
+	 *
+	 * @return void
+	 */
+	private function translateDecision(object $task, array $ids): void {
 		$this->translator->onTaskDecided(
-			sequenceUuid: $sequenceUuid,
+			sequenceUuid: $ids['sequenceUuid'],
 			taskUuid: (string) ($this->read(subject: $task, getter: 'getUuid') ?? ''),
 			position: (int) ($this->read(subject: $task, getter: 'getSequencePosition') ?? 0),
-			userId: $userId,
-			comment: $comment,
-			objectUuid: $objectUuid,
+			userId: $this->nullableString(subject: $task, getter: 'getCompletedBy'),
+			comment: $this->nullableString(subject: $task, getter: 'getComment'),
+			objectUuid: $ids['objectUuid'],
 			isRejecting: $this->isRejectingOutcome(
 				outcome: (string) ($this->read(subject: $task, getter: 'getOutcome') ?? '')
 			)
 		);
+	}//end translateDecision()
 
-	}//end handleTerminal()
+	/**
+	 * A getter's value as a string, keeping null as null.
+	 *
+	 * @param object $subject The object to read.
+	 * @param string $getter The getter name.
+	 *
+	 * @return string|null The value.
+	 */
+	private function nullableString(object $subject, string $getter): ?string {
+		$value = $this->read(subject: $subject, getter: $getter);
+		if ($value === null) {
+			return null;
+		}
+
+		return (string) $value;
+	}//end nullableString()
 
 	/**
 	 * A completed sequence: the final position approved — the replacement
@@ -382,7 +416,8 @@ class SigningTaskListener implements IEventListener {
 			$object = $objectService->find(
 				id: $objectUuid,
 				register: $binding['register'],
-				schema: $binding['schema']
+				schema: $binding['schema'],
+				_rbac: false
 			);
 		} catch (Throwable $e) {
 			// A lookup failure cannot prove ownership: fail closed.

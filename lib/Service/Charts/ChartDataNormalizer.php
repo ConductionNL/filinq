@@ -15,7 +15,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/template-charts/specs/template-charts/spec.md
+ * @spec openspec/specs/template-charts/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -34,7 +34,7 @@ namespace OCA\Filinq\Service\Charts;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/template-charts/tasks.md#task-1.1
+ * @spec openspec/changes/archive/2026-09-28-template-charts/tasks.md#task-1.1
  */
 class ChartDataNormalizer {
 	/**
@@ -49,7 +49,7 @@ class ChartDataNormalizer {
 	 *
 	 * @return array{labels: string[], series: array<int, array{name: string, values: array<int, float|null>}>}|ChartRenderError
 	 *
-	 * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-001
+	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-001
 	 */
 	public function normalize(array $data, int $maxPoints): array|ChartRenderError {
 		$shapeError = $this->validateShape(data: $data, maxPoints: $maxPoints);
@@ -57,38 +57,13 @@ class ChartDataNormalizer {
 			return $shapeError;
 		}
 
-		$labels = $data['labels'];
-		$pointCount = count($labels);
-		$normalizedSeries = [];
-		$hasAnyValue = false;
-
-		foreach ($data['series'] as $oneSeries) {
-			if (is_array($oneSeries) === false) {
-				continue;
-			}
-
-			$values = $oneSeries['values'] ?? [];
-			if (is_array($values) === false) {
-				$values = [];
-			}
-
-			$normalizedValues = $this->normalizeValues(values: $values, pointCount: $pointCount);
-			if ($this->containsValue(values: $normalizedValues) === true) {
-				$hasAnyValue = true;
-			}
-
-			$normalizedSeries[] = [
-				'name' => (string)($oneSeries['name'] ?? ''),
-				'values' => $normalizedValues,
-			];
-		}
-
-		if ($normalizedSeries === [] || $hasAnyValue === false) {
+		$normalizedSeries = $this->normalizeSeriesList(seriesList: $data['series'], pointCount: count($data['labels']));
+		if ($normalizedSeries === null) {
 			return new ChartRenderError(message: 'chart error: no data');
 		}
 
 		$normalizedLabels = [];
-		foreach ($labels as $label) {
+		foreach ($data['labels'] as $label) {
 			$normalizedLabels[] = (string)$label;
 		}
 
@@ -98,6 +73,48 @@ class ChartDataNormalizer {
 		];
 
 	}//end normalize()
+
+	/**
+	 * Normalize every array entry of the series list.
+	 *
+	 * @param array $seriesList The raw series entries; entries that are not arrays are skipped.
+	 * @param int $pointCount Number of label positions to fill.
+	 *
+	 * @return array<int, array{name: string, values: array<int, float|null>}>|null The series, or null when none holds a value.
+	 */
+	private function normalizeSeriesList(array $seriesList, int $pointCount): ?array {
+		$normalizedSeries = [];
+		foreach (array_filter($seriesList, 'is_array') as $oneSeries) {
+			$normalizedSeries[] = $this->normalizeSeries(oneSeries: $oneSeries, pointCount: $pointCount);
+		}
+
+		$allValues = array_merge(...array_column($normalizedSeries, 'values'));
+		if ($this->containsValue(values: $allValues) === false) {
+			return null;
+		}
+
+		return $normalizedSeries;
+	}//end normalizeSeriesList()
+
+	/**
+	 * Normalize one series: its name as a string, its values as floats or gaps.
+	 *
+	 * @param array $oneSeries The raw series.
+	 * @param int $pointCount Number of label positions to fill.
+	 *
+	 * @return array{name: string, values: array<int, float|null>} The series.
+	 */
+	private function normalizeSeries(array $oneSeries, int $pointCount): array {
+		$values = $oneSeries['values'] ?? [];
+		if (is_array($values) === false) {
+			$values = [];
+		}
+
+		return [
+			'name' => (string)($oneSeries['name'] ?? ''),
+			'values' => $this->normalizeValues(values: $values, pointCount: $pointCount),
+		];
+	}//end normalizeSeries()
 
 	/**
 	 * Check the top-level payload shape and point budget.
@@ -121,7 +138,8 @@ class ChartDataNormalizer {
 
 		if (count($labels) > $maxPoints) {
 			return new ChartRenderError(
-				message: 'chart error: too many data points (max ' . $maxPoints . ')'
+				message: 'chart error: too many data points (max %s)',
+				parameters: [$maxPoints]
 			);
 		}
 

@@ -15,7 +15,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/template-charts/specs/template-charts/spec.md
+ * @spec openspec/specs/template-charts/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -34,7 +34,7 @@ namespace OCA\Filinq\Service\Charts;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/template-charts/tasks.md#task-1.2
+ * @spec openspec/changes/archive/2026-09-28-template-charts/tasks.md#task-1.2
  */
 class TableCellFormatter {
 
@@ -63,7 +63,7 @@ class TableCellFormatter {
 	 *
 	 * @return string Formatted (unescaped) text — escaping happens by the caller.
 	 *
-	 * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-004
+	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-004
 	 */
 	public function format($value, string $format): string {
 		if ($value === null) {

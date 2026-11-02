@@ -45,6 +45,8 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Portal;
 
 use OCA\Filinq\Portal\PortalContributionProvider;
+use OCP\IL10N;
+use OCP\L10N\IFactory;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 
@@ -112,7 +114,7 @@ final class PortalContributionProviderTest extends TestCase {
 		);
 		$this->assertSame([], $reflection->getInterfaceNames(), 'Duck-typed: no implements clause allowed');
 		$this->assertFalse($reflection->getParentClass(), 'Provider must not extend anything');
-		$this->assertNull($reflection->getConstructor(), 'Provider must have no constructor dependencies');
+		$this->assertSame(0, $reflection->getConstructor()?->getNumberOfRequiredParameters() ?? 0, 'Provider must have no required constructor dependencies');
 
 		$source = (string)file_get_contents((string)$reflection->getFileName());
 		$stripped = (preg_replace('/\/\*.*?\*\/|\/\/[^\n]*/s', '', $source) ?? '');
@@ -414,6 +416,34 @@ final class PortalContributionProviderTest extends TestCase {
 	}//end testSignerManifestDeclaresEndpointActions()
 
 	/**
+	 * Portaliq contract (portaliq#804, merged as portaliq#833): an endpoint
+	 * action is offered on a row only when it declares `rowField`, the body
+	 * key the portal stamps the proven row's id under, and a declared
+	 * `scopeClaim` rides in the signed `X-Portal-Subject` assertion. The
+	 * receiver reads `signingRequestId` from the body and `signerEmail` from
+	 * the assertion (PortalSigningReceiverController), so sign and decline
+	 * must declare exactly those two names; without them portaliq drops both
+	 * row buttons and the receiver refuses the call.
+	 *
+	 * @return void
+	 */
+	public function testSignAndDeclineDeclareTheRowFieldAndScopeClaimTheReceiverReads(): void {
+		$manifest = $this->provider->getContribution(self::SIGNER_SUBJECT);
+		$this->assertIsArray($manifest);
+
+		$actions = $this->indexById($manifest['actions']);
+		foreach (['sign', 'decline'] as $id) {
+			$this->assertSame('signingRequestId', ($actions[$id]['rowField'] ?? null), "action '{$id}' must declare rowField signingRequestId");
+			$this->assertSame('signerEmail', ($actions[$id]['scopeClaim'] ?? null), "action '{$id}' must declare scopeClaim signerEmail");
+			$this->assertArrayNotHasKey('type', $actions[$id], "action '{$id}' must stay an endpoint action, not a create/update");
+		}
+
+		$requests = $this->indexById($manifest['collections'])['signerSigningRequests'];
+		$this->assertSame('signerEmail', $requests['scopeClaim'], 'the collection the rows come from is scoped by the same claim');
+
+	}//end testSignAndDeclineDeclareTheRowFieldAndScopeClaimTheReceiverReads()
+
+	/**
 	 * Pin the scoping map + whitelists against the shipped register JSON.
 	 *
 	 * Every declared scopeField, every via-join field and every projected read
@@ -529,4 +559,27 @@ final class PortalContributionProviderTest extends TestCase {
 		return $keys;
 	}//end sortedKeys()
 
+
+	/**
+	 * Every label the portal shows is passed through Filinq's translator.
+	 *
+	 * @return void
+	 */
+	public function testLabelsAreTranslated(): void {
+		$l10n = $this->createMock(IL10N::class);
+		$l10n->method('t')->willReturnCallback(static fn (string $text): string => 'nl:' . $text);
+		$factory = $this->createMock(IFactory::class);
+		$factory->method('get')->with('filinq')->willReturn($l10n);
+		$provider = new PortalContributionProvider(l10nFactory: $factory);
+
+		$signer = $provider->getContribution(['audience' => 'signer']);
+		$subject = $provider->getContribution(['audience' => 'data-subject']);
+
+		$this->assertSame('nl:My publication consents', $subject['collections'][0]['label']);
+		$this->assertSame('nl:My signatures', $signer['collections'][0]['label']);
+		$this->assertSame('nl:Documents awaiting my signature', $signer['collections'][1]['label']);
+		$this->assertSame(['nl:Sign', 'nl:Decline to sign'], array_column($signer['collections'][1]['rowActions'], 'label'));
+		$this->assertSame(['nl:Sign', 'nl:Decline to sign', 'nl:View document'], array_column($signer['actions'], 'label'));
+
+	}//end testLabelsAreTranslated()
 }//end class

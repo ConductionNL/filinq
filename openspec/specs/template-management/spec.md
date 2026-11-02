@@ -54,7 +54,6 @@ retrofit_extensions:
   hidden behind this line.
 -->
 
-
 Provides CRUD operations for reusable Twig/HTML templates stored as OpenRegister objects. Templates are scoped per-app via a `namespace` field, enabling multiple Nextcloud apps to maintain their own template collections through a shared service. Consumer apps access templates via the `TemplateService` (DI container) or the REST API.
 
 ## Requirements
@@ -63,12 +62,12 @@ Provides CRUD operations for reusable Twig/HTML templates stored as OpenRegister
 
 **Priority:** MUST
 
-Templates are stored as OpenRegister objects with defined properties for name, content, namespace, and page configuration.
+Templates are stored as OpenRegister objects with defined properties for name, content, namespace, page configuration, and an optional stable slug for lookup by external callers.
 
 #### Scenario: Template schema in OpenRegister
 - GIVEN Filinq boots and imports filinq_register.json
 - WHEN the template schema is created
-- THEN it contains properties: name, description, content, namespace, format, orientation
+- THEN it contains properties: name, description, content, namespace, format, orientation, slug, tenantId
 - AND the schema is searchable
 
 #### Scenario: Required fields validation
@@ -79,14 +78,17 @@ Templates are stored as OpenRegister objects with defined properties for name, c
 #### Scenario: Page format defaults
 - GIVEN a template created without format or orientation
 - WHEN the template is saved
-- THEN format defaults to "A4" and orientation defaults to "P" (portrait)
+- THEN `format` defaults to `A4` and `orientation` defaults to `P`
 
-| ID | Requirement | Priority | Status |
-|----|------------|----------|--------|
-| TMPL-001 | Templates stored as OpenRegister objects in template schema | MUST | Implemented |
-| TMPL-002 | Properties: name (required), description, content (required, HTML), namespace (required, facetable), format (A4/A3/Letter/Legal), orientation (P/L) | MUST | Implemented |
-| TMPL-003 | Schema in filinq_register.json, imported on boot | MUST | Implemented |
-| TMPL-004 | Schema is searchable | MUST | Implemented |
+#### Scenario: Slug is optional and namespace-scoped
+- GIVEN two templates in different namespaces both set `slug: "report-card"`
+- WHEN both are saved
+- THEN both saves succeed (slug uniqueness is per namespace, not global)
+
+#### Scenario: Duplicate slug within the same namespace and tenant is rejected
+- GIVEN a template with `namespace: "learniq"`, `tenantId: "school-a"`, `slug: "report-card"` already exists
+- WHEN a second template is created with the same `namespace`, `tenantId`, and `slug`
+- THEN a 400 error is returned naming the conflicting slug
 
 ### Requirement: Template CRUD API (REQ-TMPL-02)
 
@@ -294,6 +296,52 @@ Template objects from OpenRegister are consistently serialized for API responses
 | TMPL-060 | Objects with jsonSerialize() are serialized via that method | MUST | Implemented |
 | TMPL-061 | Non-object results are cast to array | MUST | Implemented |
 | TMPL-062 | Paginated results include `results` array and `total` count | MUST | Implemented |
+
+### Requirement: Template slug resolution (REQ-TMPL-13)
+
+**Priority:** MUST
+
+Filinq SHALL resolve a template by `namespace` + `slug`, optionally narrowed by `tenantId`, falling back from a tenant-specific match to a namespace-wide match (no `tenantId` set) when no tenant-specific template exists.
+
+#### Scenario: Resolve a tenant-specific template
+- GIVEN a template with `namespace: "learniq"`, `slug: "report-card"`, `tenantId: "school-a"`
+- AND a second template with `namespace: "learniq"`, `slug: "report-card"`, no `tenantId`
+- WHEN resolution is requested for `namespace: "learniq"`, `slug: "report-card"`, `tenantId: "school-a"`
+- THEN the tenant-specific template is returned
+
+#### Scenario: Fall back to the namespace-wide default
+- GIVEN only a template with `namespace: "learniq"`, `slug: "report-card"`, no `tenantId` exists
+- WHEN resolution is requested for `namespace: "learniq"`, `slug: "report-card"`, `tenantId: "school-b"`
+- THEN the namespace-wide template is returned
+
+#### Scenario: No match at all
+- GIVEN no template exists with the given `namespace` and `slug` in either form
+- WHEN resolution is requested
+- THEN a not-found error (code 404) is raised
+
+### Requirement: A template is created and edited in the browser (REQ-TMPL-14)
+
+Filinq MUST offer a template editor at `/templates/:id` where a template
+editor creates and changes a template's content without leaving the
+browser: a formatted editing area with bold, italic, underline, headings
+and lists, and a toggle to edit the raw HTML. Saving MUST go through the
+template update route (REQ-TMPL-02). While another user holds the
+template's edit lock (REQ-TMPL-11), the editor MUST name that user and
+MUST NOT save.
+
+#### Scenario: An editor changes a template and saves it
+
+- GIVEN a template editor opens a template
+- WHEN they make a heading bold and save
+- THEN the template's content holds the change and a new version is kept
+- @e2e tests/e2e/workflows/template-detail.spec.ts
+
+#### Scenario: A locked template cannot be saved
+
+- GIVEN another user holds the template's edit lock
+- WHEN an editor opens the template
+- THEN the editor reads "Locked by" with that user's name and the save button is disabled
+- @e2e exclude lock contention needs two sessions; covered by PHPUnit in `TemplatesControllerLockingTest`
 
 ## Data Model
 

@@ -95,7 +95,7 @@ import { NcLoadingIcon } from '@nextcloud/vue'
 import DdDocumentCard from '../../components/DdDocumentCard.vue'
 import AnonymizationUploadDialog from '../../dialogs/AnonymizationUploadDialog.vue'
 import uploadIcon from '../../assets/upload.png'
-import { partitionFiles } from '../../services/anonymizationUpload.js'
+import { dossierPlan, partitionFiles } from '../../services/anonymizationUpload.js'
 
 // Widget only handles upload + the dossier dialog. After upload the user is
 // routed to the file viewer (/my-documents host), where `FileViewerSidebar`
@@ -162,7 +162,7 @@ export default {
 		 * @return {boolean} True when exactly one file is pending.
 		 */
 		isSingleFile() {
-			return this.pendingFiles.length === 1
+			return !dossierPlan(this.pendingFiles, '').asksDossierName
 		},
 
 		/**
@@ -351,7 +351,7 @@ export default {
 		 * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md#requirement-auto-dossier-on-multi-upload-req-dddmu-005
 		 */
 		async confirmDossier() {
-			const name = this.dossierName.trim()
+			const name = dossierPlan(this.pendingFiles, this.dossierName).dossierName
 			this.dossierSubmitting = true
 			this.dossierError = ''
 			try {

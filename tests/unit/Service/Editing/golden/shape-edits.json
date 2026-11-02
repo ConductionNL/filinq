@@ -1,0 +1,99 @@
+{
+    "no edits": {
+        "refused": "At least one shape edit is required."
+    },
+    "one over the limit": {
+        "refused": "This call writes 101 shapes; the limit is 100. The call is refused rather than truncated — a partial write reports success for edits it never made."
+    },
+    "no slide": {
+        "refused": "Edit 1: both a slide id and a shape id are required."
+    },
+    "no shape": {
+        "refused": "Edit 1: both a slide id and a shape id are required."
+    },
+    "an unknown region": {
+        "refused": "Edit 1: unknown region \"notez\". Supported: slide, notes."
+    },
+    "notes in capitals": {
+        "applied": [
+            "page1/notes!Notitie"
+        ],
+        "shapes": [
+            {
+                "slide": "page1",
+                "shape": "Titel",
+                "region": "slide",
+                "text": "Op het scherm"
+            },
+            {
+                "slide": "page1",
+                "shape": "Notitie",
+                "region": "notes",
+                "text": "Nieuwe spreektekst"
+            },
+            {
+                "slide": "page2",
+                "shape": "Titel",
+                "region": "slide",
+                "text": "Tweede"
+            }
+        ]
+    },
+    "two edits": {
+        "applied": [
+            "page1/slide!Titel",
+            "page2/slide!Titel"
+        ],
+        "shapes": [
+            {
+                "slide": "page1",
+                "shape": "Titel",
+                "region": "slide",
+                "text": "Een"
+            },
+            {
+                "slide": "page1",
+                "shape": "Notitie",
+                "region": "notes",
+                "text": "Spreektekst"
+            },
+            {
+                "slide": "page2",
+                "shape": "Titel",
+                "region": "slide",
+                "text": "Twee"
+            }
+        ]
+    },
+    "no text": {
+        "applied": [
+            "page2/slide!Titel"
+        ],
+        "shapes": [
+            {
+                "slide": "page1",
+                "shape": "Titel",
+                "region": "slide",
+                "text": "Op het scherm"
+            },
+            {
+                "slide": "page1",
+                "shape": "Notitie",
+                "region": "notes",
+                "text": "Spreektekst"
+            },
+            {
+                "slide": "page2",
+                "shape": "Titel",
+                "region": "slide",
+                "text": ""
+            }
+        ]
+    },
+    "a later edit refused": {
+        "refused": "Edit 1: both a slide id and a shape id are required."
+    },
+    "an unknown shape": {
+        "refused": "Shape \"Bestaat niet\" was not found on \"page1\" (slide)."
+    }
+}

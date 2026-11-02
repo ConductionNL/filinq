@@ -6,238 +6,103 @@ status: proposed
 
 ## Purpose
 
-Passive-disclosure (Woo-verzoek) case workflow: intake a Woo request with
-statutory deadline tracking (Woo Art. 4.4), collect candidate documents into
-a request dossier from Nextcloud folders and — via the zgw-document-bridge
-when present — case systems, dedupe identical documents by content hash, tag
-per-document and per-passage exemption grounds against the existing Woo
-Art. 5 grondslagen (`base`) register, generate the inventarislijst from a
-template, assemble the disclosure package (redacted PDFs + inventory +
-besluit letter via correspondence generation), and track the request
-lifecycle through decision, disclosure and publication. This is the
-ZyLAB/INDICA/Octobox competitive category; Filinq orchestrates its existing
-anonymisation, generation and publication capabilities — it adds no new
-engines.
+Filinq drafts the Woo decision letter (besluit) and the inventory
+(inventarislijst) from organisation-edited templates, filled from the request
+and its assessments that the caller passes. Re-scoped on 2026-10-05 by
+decision D1: dossiq owns the Woo request, its term, its documents and their
+assessment, and calls filinq for these two documents. Woo row 7.9.
+
+The original requirements REQ-DDWRW-001 to 005, 008 and 009 were never built
+and are withdrawn by D1. The proposal's re-scope table says where each one now
+lives.
 
 ## ADDED Requirements
 
-### Requirement: Woo-request and request-document schemas (REQ-DDWRW-001)
+### Requirement: Filinq seeds two organisation-editable Woo templates (REQ-DDWRW-006)
 
-The app MUST declare two schemas in the `dossier` register: `wooRequest`
-(`requestNumber`, `subject`, `scopeDescription`, `requesterReference` —
-an opaque case/contact reference; the schema MUST NOT carry requester name,
-email or address fields (data minimisation, AVG Art. 5(1)(c)) —
-`receivedAt`, `decisionDeadlineAt`, `extendedAt`, `extensionReason`,
-`status`, `dossierRef`, `inventoryFileRef`, `decisionFileRef`,
-`packageFolderRef`, `publicationRecordRef`, `closedAt`) and `requestDocument`
-(`wooRequestRef`, `origin` enum `nc-folder`|`zgw-bridge`, `fileRef`,
-`externalDocumentRef`, `title`, `documentDate`, `contentHash`,
-`dedupeStatus` enum `unique`|`duplicate`, `duplicateOfRef`, `assessment`
-enum `pending`|`disclose`|`partially_disclose`|`withhold`,
-`exemptionGrounds[]` of `base` slugs, `passageTags[]` of
-`{locator, ground, note}`, `redactedFileRef`, `inventoryNumber`). All data
-MUST be stored as OpenRegister objects (ADR-001) with a register version
-bump for boot import.
+Filinq SHALL seed a `woo-besluit` and a `woo-inventarislijst` template in its
+template library, each with that stable slug and the declared data contract
+`woo-decision`. An organisation SHALL be able to edit both in the template
+editor. A seed run on install or upgrade SHALL create a missing template and
+SHALL NOT overwrite a template that exists, edited or not. The generated
+document SHALL name the template version it came from, as
+`generated-document-names-its-template-version` does for every template.
 
-#### Scenario: Register import creates the workflow schemas
+#### Scenario: an organisation edits the decision letter
+- GIVEN a fresh install with the seeded `woo-besluit` template
+- WHEN a functional administrator changes its closing paragraph and saves, and the app is upgraded
+- THEN the template still holds the edited paragraph, and the next letter is rendered from the edited version and names it
+- @e2e exclude a seed idempotency claim; covered by PHPUnit `WooTemplateSeedTest::testAnEditedTemplateSurvivesAnUpgrade`
 
-- GIVEN Filinq and OpenRegister installed
-- WHEN `ConfigurationService::importFromApp()` runs on boot
-- THEN `wooRequest` and `requestDocument` exist in the `dossier` register and the seeded demo request is queryable
-- AND neither schema declares a requester name, email or address property
-- @e2e exclude boot-time register import with no UI surface of its own — covered by PHPUnit register-import assertions (tests/unit/Settings/)
+### Requirement: The Woo decision data contract is checked before anything is rendered (REQ-DDWRW-010)
 
-### Requirement: Intake with statutory deadline (Woo Art. 4.4) (REQ-DDWRW-002)
+When a generation request resolves to a template whose data contract is
+`woo-decision`, filinq SHALL read `data.wooDecision` with the keys
+`reference` (string), `subject` (string), `receivedAt` (date),
+`decisionDate` (date), `decisionKind` (`disclose`, `partially-disclose`,
+`withhold` or `not-held`), `organisation` (name), and `documents`: a list of
+`{inventoryNumber, title, date, assessment, groundCodes, remark}` with
+`assessment` one of `disclose`, `partially-disclose`, `withhold`. Filinq SHALL
+refuse the request, through `setError()` on the event and with no file
+written, when a required key is missing, when a document with assessment
+`partially-disclose` or `withhold` has no ground code, when two documents share
+an inventory number, or when a ground code does not resolve (REQ-DDWRW-011).
+The error SHALL name every problem found, not only the first.
 
-Registering a Woo request MUST compute `decisionDeadlineAt = receivedAt + 4
-weeks` (Woo Art. 4.4). Exactly one extension MUST be possible, requiring a
-non-empty reason and adding at most 2 weeks (Woo Art. 4.4 lid 2), recording
-`extendedAt` + `extensionReason`; a second extension attempt MUST be
-refused. The computation MUST be clock-injected and app-owned — it MUST NOT
-be delegated to OpenRegister's GDPR Art. 12(3) deadline helper, whose terms
-belong to a different law. The UI MUST show a deadline indicator (on-track /
-due soon / overdue) on index and detail.
+#### Scenario: a withheld document without a ground is refused
+- GIVEN a `wooDecision` whose document 3 has assessment `withhold` and no ground code
+- WHEN dossiq dispatches the generation for `woo-besluit`
+- THEN `isHandled()` is false, `getError()` names document 3 and the missing ground, and no file exists
+- @e2e exclude an in-process command; covered by PHPUnit `WooDecisionContextBuilderTest::testAWithheldDocumentNeedsAGround`
 
-#### Scenario: Deadline computed at intake
+#### Scenario: every problem is named at once
+- GIVEN a `wooDecision` without `decisionDate` and with two documents numbered 4
+- WHEN the generation is dispatched
+- THEN `getError()` names the missing `decisionDate` and the duplicate number 4
+- @e2e exclude an in-process command; covered by PHPUnit `WooDecisionContextBuilderTest::testAllProblemsAreReported`
 
-- GIVEN an operator registering a request received on 2026-06-20
-- WHEN the request is created
-- THEN `decisionDeadlineAt` is 2026-07-18 and the detail shows the deadline indicator
-- @e2e tests/e2e/workflows/woo-request-workflow.spec.ts
+### Requirement: Grounds are printed by label and article, never as a bare code (REQ-DDWRW-011)
 
-#### Scenario: Second extension refused
+Filinq SHALL resolve each ground code through the grounds resolver of
+`grondslagen-read-from-dossiq` (dossiq's `WooRefusalGrounds::byCode()`, or the
+read-only snapshot when dossiq is absent) and pass the templates each ground
+as `{code, article, label}`. A code that resolves to nothing, or to a retired
+ground, SHALL refuse the request. A retired ground SHALL be accepted only when
+the request sets `allowRetiredGrounds: true`, which a caller uses to redraft
+an old decision.
 
-- GIVEN a request already extended by 2 weeks with reason
-- WHEN a second extension is attempted
-- THEN it is refused and the deadline is unchanged
-- @e2e exclude single-guard date arithmetic — covered exhaustively by clock-injected PHPUnit tests (tests/unit/Service/WooRequestServiceTest.php); the extension UI happy path is covered in the workflow e2e
+#### Scenario: a ground is printed in words
+- GIVEN a partly disclosed document citing ground code `5.1.2.e`
+- WHEN the decision letter is rendered
+- THEN the letter cites article 5.1, second paragraph, under e, with its label, and the code alone appears nowhere without its label
+- @e2e exclude needs dossiq's list; covered by PHPUnit `WooDecisionContextBuilderTest::testGroundsAreResolvedToLabels` with the real `WooRefusalGrounds` return shape
 
-### Requirement: Candidate-document collection into a request dossier (REQ-DDWRW-003)
+#### Scenario: an unknown ground is refused
+- GIVEN a ground code `5.9.9` the list does not hold
+- WHEN the generation is dispatched
+- THEN it is refused naming `5.9.9`
+- @e2e exclude an in-process command; covered by PHPUnit `WooDecisionContextBuilderTest::testAnUnknownGroundIsRefused`
 
-An operator MUST be able to collect candidate documents into the request's
-dossier folder from Nextcloud folder selections and, when the
-zgw-document-bridge is installed, from staged `externalDocument` objects
-(recorded with `origin = zgw-bridge` + `externalDocumentRef`). Each
-collected file MUST produce a `requestDocument` row with a sha256
-`contentHash`, and the copy MUST land in the request's dossier folder so the
-existing folder-batch anonymisation runs unchanged. Without the bridge, the
-case-system option MUST be hidden (not broken).
+### Requirement: The decision letter and the inventory agree (REQ-DDWRW-007)
 
-#### Scenario: Collect from a Nextcloud folder
+The `woo-besluit` template SHALL render the reference, the subject, the
+received and decision dates, the decision kind, and per assessment the
+documents it covers by inventory number with their grounds. The
+`woo-inventarislijst` template SHALL render one row per document in the
+caller's order with inventory number, title, date, assessment and grounds.
+Both SHALL take inventory numbers from the request and never renumber. A
+document with assessment `partially-disclose` SHALL never be shown as
+disclosed. Filinq SHALL NOT assemble a disclosure package; dossiq holds the
+documents and assembles it.
 
-- GIVEN a request in `collecting` and a folder with three documents
-- WHEN the operator collects the folder
-- THEN three `requestDocument` rows exist with hashes and copies in the request dossier folder
-- @e2e tests/e2e/workflows/woo-request-workflow.spec.ts
+#### Scenario: dossiq drafts a partial disclosure decision
+- GIVEN a Woo case in dossiq with three assessed documents: 1 disclose, 2 partially disclose on 5.1.2.e, 3 withhold on 5.1.2.e and 5.2.1
+- WHEN dossiq requests `woo-besluit` and then `woo-inventarislijst` with the same `wooDecision`
+- THEN both files are stored, the letter names documents 2 and 3 with their grounds in words, and the inventory lists 1, 2 and 3 with the same numbers and assessments
+- e2e: `tests/e2e/workflows/woo-request-workflow.spec.ts`
 
-#### Scenario: Bridge option is presence-gated
-
-- GIVEN an instance without the zgw-document-bridge configured
-- WHEN the collection surface renders
-- THEN only the folder option is offered
-- @e2e tests/e2e/spec-coverage/woo-requests.spec.ts
-
-### Requirement: Hash-based dedupe of the collected set (REQ-DDWRW-004)
-
-Collection MUST deduplicate within the request by content hash: rows sharing
-a `contentHash` collapse to one `unique` row (first collected) with the
-others marked `duplicate` + `duplicateOfRef`. Duplicates MUST be excluded
-from assessment, the inventarislijst and the disclosure package, but MUST
-remain listed on the request for accountability. Near-identical and
-email-thread deduplication is out of scope for this change and MUST be
-recorded as future work (the `dedupeStatus` enum remains extensible).
-
-#### Scenario: Identical documents collapse
-
-- GIVEN two collected files with identical content
-- WHEN dedupe runs
-- THEN one row is `unique` and the other is `duplicate` pointing at it
-- AND the duplicate is not offered for assessment
-- @e2e tests/e2e/workflows/woo-request-workflow.spec.ts
-
-### Requirement: Exemption-ground tagging reuses the grondslagen register (REQ-DDWRW-005)
-
-Per-document assessment MUST record `assessment`
-(`disclose`/`partially_disclose`/`withhold`) with `exemptionGrounds[]`
-referencing `base` objects by slug — the existing Woo Art. 5 grondslagen
-register, not a new taxonomy. Per-passage tagging MUST be possible via
-`passageTags[]` entries `{locator, ground, note}` whose `ground` is a `base`
-slug. A `withhold` or `partially_disclose` assessment MUST require at least
-one exemption ground. Grounds MUST render via the existing
-`BasesResolverService`; an unknown slug MUST render as a visible warning,
-never be silently dropped. The `base` schema itself MUST NOT be modified;
-the additional Woo Art. 5.1/5.2 grounds ship as new seed `base` objects with
-article references in name and description.
-
-#### Scenario: Withholding requires a ground
-
-- GIVEN a unique request document under assessment
-- WHEN the operator sets `withhold` without selecting a ground
-- THEN the assessment is refused with a message requiring an exemption ground
-- @e2e tests/e2e/spec-coverage/woo-requests.spec.ts
-
-#### Scenario: Per-passage tag with a seeded Art. 5 ground
-
-- GIVEN a document assessed `partially_disclose`
-- WHEN the operator adds a passage tag "p. 2, alinea 3" with ground "Art. 5.1.2e — Eerbiediging van de persoonlijke levenssfeer"
-- THEN the tag is stored with the `base` slug and rendered with the ground's name
-- @e2e tests/e2e/workflows/woo-request-workflow.spec.ts
-
-#### Scenario: Entity-level grounds deep-link to the existing review
-
-- GIVEN a request dossier with a completed batch extraction
-- WHEN the operator opens entity-level tagging
-- THEN they are deep-linked to the existing batch entity review for the dossier and no duplicate entity-review UI is rendered
-- @e2e tests/e2e/spec-coverage/woo-requests.spec.ts
-
-### Requirement: Inventarislijst generation from a template (REQ-DDWRW-006)
-
-The app MUST generate the inventarislijst through the existing
-document-generation capability (`api/documents/generate`) from a seeded
-`woo-inventarislijst` template, listing every `unique` request document with
-a stable `inventoryNumber` (assigned in collection order on first
-generation), title, document date, assessment and exemption grounds. The
-output MUST be stored and recorded in `inventoryFileRef`. No new rendering
-engine may be introduced.
-
-#### Scenario: Generate the inventory
-
-- GIVEN a request in `assessing` with three unique assessed documents
-- WHEN the operator generates the inventarislijst
-- THEN a document is produced listing the three documents with numbers, assessments and grounds, and `inventoryFileRef` is set
-- @e2e tests/e2e/workflows/woo-request-workflow.spec.ts
-
-### Requirement: Disclosure-package assembly (REQ-DDWRW-007)
-
-The app MUST assemble the disclosure package into a package folder
-(`packageFolderRef`): the redacted PDFs of every `disclose` and
-`partially_disclose` document, the inventarislijst and the besluit letter
-(generated via the existing correspondence capability from a seeded
-`woo-besluit` template, recorded in `decisionFileRef`). Assembly MUST refuse
-to include a `partially_disclose` document without a `redactedFileRef`
-(never the unredacted original), and MUST exclude `withhold` documents and
-duplicates. Package delivery (mail/portal) is out of scope (NC Mail / OR
-email leaf boundary).
-
-#### Scenario: Package refuses unredacted partial disclosures
-
-- GIVEN a `partially_disclose` document without a redacted derivative
-- WHEN package assembly is attempted
-- THEN assembly is refused naming the document, and no package folder is produced
-- @e2e tests/e2e/workflows/woo-request-workflow.spec.ts
-
-#### Scenario: Complete package
-
-- GIVEN all disclosable documents have redacted derivatives and inventory + besluit exist
-- WHEN the package is assembled
-- THEN the package folder contains the redacted PDFs, the inventarislijst and the besluit, and `packageFolderRef` is set
-- @e2e tests/e2e/workflows/woo-request-workflow.spec.ts
-
-### Requirement: Guarded request lifecycle (REQ-DDWRW-008)
-
-The `wooRequest` schema MUST declare an `x-openregister-lifecycle`
-annotation (canonical `initial: registered`) with transitions
-`registered → collecting`, `collecting → assessing`, `assessing →
-collecting` (reopen), `assessing → decision`, `decision → disclosed`,
-`disclosed → published`, `disclosed → closed`, `published → closed`.
-Guard conditions MUST hold before the service requests a transition:
-`assessing → decision` requires every `unique` document to have a
-non-`pending` assessment; `decision → disclosed` requires
-`inventoryFileRef` and `decisionFileRef`; `disclosed → published` requires a
-`publicationRecordRef` (woo-publicatie-pipeline handoff; the step MUST be
-skippable to `closed` when the pipeline is not installed). Direct
-out-of-order status writes MUST be rejected by OpenRegister's lifecycle
-guard.
-
-#### Scenario: Decision blocked while assessments are pending
-
-- GIVEN a request in `assessing` with one unique document still `pending`
-- WHEN the operator attempts to move to `decision`
-- THEN the transition is refused naming the unassessed document
-- @e2e tests/e2e/workflows/woo-request-workflow.spec.ts
-
-#### Scenario: Direct status write cannot skip stages
-
-- GIVEN a request in `collecting`
-- WHEN a save attempts `status = disclosed`
-- THEN OpenRegister rejects the transition
-- @e2e exclude server-side lifecycle guard — covered by PHPUnit transition tests (tests/unit/Service/WooRequestServiceTest.php)
-
-### Requirement: Woo-verzoeken UI (REQ-DDWRW-009)
-
-The app MUST provide a Woo-verzoeken index (manifest page; `CnIndexPage` +
-`CnDataTable` with request number, subject, status chip and deadline chip)
-and a request detail with collection, assessment (grounds multi-select bound
-to the `base` register, passage-tag editor), document/package actions and
-the lifecycle header, per ADR-012 (`@conduction/nextcloud-vue` components)
-and ADR-003 (NL Design tokens via Nextcloud CSS variables, no hardcoded
-colors). Modals/dialogs MUST live in their own files under
-`src/modals/`/`src/dialogs/`, and every `NcSelect` MUST carry an
-`inputLabel`.
-
-#### Scenario: Index shows deadline state
-
-- GIVEN the seeded demo request due within a week
-- WHEN the Woo-verzoeken index renders
-- THEN the request row shows its status chip and a "due soon" deadline chip
-- @e2e tests/e2e/spec-coverage/woo-requests.spec.ts
+#### Scenario: filinq absent
+- GIVEN filinq not installed
+- WHEN dossiq dispatches the generation
+- THEN the event comes back neither handled nor refused, and dossiq records that no letter was drafted
+- @e2e exclude an app-absent path on the caller's side; covered on dossiq's side by its own test of `FilinqTemplateEngineAdapter`

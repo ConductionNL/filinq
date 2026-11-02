@@ -127,13 +127,17 @@ class UnifiedSearchConsistencyTest extends TestCase {
 	 * `read` (register v7.9.0). Widening this list again is the same decision
 	 * and deserves the same thought.
 	 *
+	 * `documentContract` became navigable with its contract page
+	 * (contract-lifecycle-management, 2026-09-30). Its schema grants read to
+	 * `filinq-contract-managers` only, so search answers nobody else.
+	 *
 	 * @return void
 	 */
 	public function testOnlyNavigableSchemasAreSearchable(): void {
 		$searchable = $this->searchableSchemas();
 		sort($searchable);
 		$this->assertSame(
-			['customDictionary', 'dossier', 'publicationConsent', 'signingRequest', 'template'],
+			['customDictionary', 'documentContract', 'dossier', 'publicationConsent', 'signingRequest', 'template'],
 			$searchable,
 			'Only navigable schemas may be searchable — every other schema must be '
 			. 'searchable:false to avoid dead Unified Search results'

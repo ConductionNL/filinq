@@ -21,8 +21,10 @@
 namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\MetadataController;
+use OCA\Filinq\Service\InboundClassificationService;
 use OCA\Filinq\Service\MetadataService;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\Files\IRootFolder;
 use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUser;
@@ -101,7 +103,9 @@ class MetadataControllerTest extends TestCase {
 			$this->mockLogger,
 			$this->mockMetadataService,
 			$this->mockL10n,
-			$this->mockUserSession
+			$this->mockUserSession,
+			$this->createMock(InboundClassificationService::class),
+			$this->createMock(IRootFolder::class)
 		);
 
 	}//end setUp()

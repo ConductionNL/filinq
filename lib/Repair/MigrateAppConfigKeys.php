@@ -179,59 +179,67 @@ class MigrateAppConfigKeys implements IRepairStep {
 			return;
 		}
 
-		$migrated = 0;
-		$alreadyPresent = 0;
-		$emptySource = 0;
-		$skippedReserved = 0;
-
+		$tally = ['migrated' => 0, 'present' => 0, 'empty' => 0, 'reserved' => 0, 'failed' => 0];
 		foreach ($keys as $key) {
-			if (in_array($key, self::RESERVED_KEYS, strict: true) === true) {
-				$skippedReserved++;
-				continue;
-			}
-
-			/* The two READS belong inside the try as much as the write does.
-			   They used to sit outside it, so a read that threw propagated
-			   out of run() and aborted `occ upgrade` — the exact outcome the
-			   class docblock promises cannot happen ("every failure is
-			   logged and the loop continues"). One unreadable key is not
-			   worth failing an install over; the app falls back to its
-			   defaults and the admin re-enters that setting. */
-			/* Pre-set so the catch below can always name it: the first read
-			   can now throw, before newKeyFor() has run. */
-			$newKey = $key;
-
-			try {
-				$old = $this->appConfig->getValueString(self::OLD_APP_ID, $key, '');
-				if ($old === '') {
-					$emptySource++;
-					continue;
-				}
-
-				$newKey = $this->newKeyFor(oldKey: $key);
-
-				$existing = $this->appConfig->getValueString(self::NEW_APP_ID, $newKey, '');
-				if ($existing !== '') {
-					$alreadyPresent++;
-					continue;
-				}
-
-				$this->appConfig->setValueString(self::NEW_APP_ID, $newKey, $old);
-				$migrated++;
-			} catch (\Throwable $e) {
-				$this->logger->warning(
-					'Filinq: could not migrate one app config key; leaving it under the old namespace',
-					['key' => $key, 'newKey' => $newKey, 'exception' => $e->getMessage()]
-				);
-			}//end try
-		}//end foreach
+			$tally[$this->migrateKey(key: $key)]++;
+		}
 
 		$output->info(
-			'MigrateAppConfigKeys: ' . $migrated . ' key(s) migrated, ' . $alreadyPresent
-			. ' already present, ' . $emptySource . ' had no value to migrate, '
-			. $skippedReserved . ' skipped as Nextcloud-reserved.'
+			'MigrateAppConfigKeys: ' . $tally['migrated'] . ' key(s) migrated, ' . $tally['present']
+			. ' already present, ' . $tally['empty'] . ' had no value to migrate, '
+			. $tally['reserved'] . ' skipped as Nextcloud-reserved.'
 		);
 	}//end run()
+
+	/**
+	 * Copy one key into the new namespace unless it is reserved, empty or already set there.
+	 *
+	 * @param string $key The key under the old app id.
+	 *
+	 * @return string `migrated`, `present`, `empty`, `reserved` or `failed`.
+	 *
+	 * @spec exclude No canonical spec covers the docudesk -> filinq app-id rename.
+	 */
+	private function migrateKey(string $key): string {
+		if (in_array($key, self::RESERVED_KEYS, strict: true) === true) {
+			return 'reserved';
+		}
+
+		/* The two READS belong inside the try as much as the write does.
+		   They used to sit outside it, so a read that threw propagated
+		   out of run() and aborted `occ upgrade` — the exact outcome the
+		   class docblock promises cannot happen ("every failure is
+		   logged and the loop continues"). One unreadable key is not
+		   worth failing an install over; the app falls back to its
+		   defaults and the admin re-enters that setting. */
+		/* Pre-set so the catch below can always name it: the first read
+		   can now throw, before newKeyFor() has run. */
+		$newKey = $key;
+
+		try {
+			$old = $this->appConfig->getValueString(self::OLD_APP_ID, $key, '');
+			if ($old === '') {
+				return 'empty';
+			}
+
+			$newKey = $this->newKeyFor(oldKey: $key);
+
+			$existing = $this->appConfig->getValueString(self::NEW_APP_ID, $newKey, '');
+			if ($existing !== '') {
+				return 'present';
+			}
+
+			$this->appConfig->setValueString(self::NEW_APP_ID, $newKey, $old);
+			return 'migrated';
+		} catch (\Throwable $e) {
+			$this->logger->warning(
+				'Filinq: could not migrate one app config key; leaving it under the old namespace',
+				['key' => $key, 'newKey' => $newKey, 'exception' => $e->getMessage()]
+			);
+
+			return 'failed';
+		}//end try
+	}//end migrateKey()
 
 	/**
 	 * Translate one stored key name into the name the renamed app reads.

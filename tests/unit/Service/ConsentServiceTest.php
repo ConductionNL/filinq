@@ -27,10 +27,13 @@ use OCA\Filinq\Service\ConsentNotesHelper;
 use OCA\Filinq\Service\ConsentRecordWriter;
 use OCA\Filinq\Service\ConsentScopeValidator;
 use OCA\Filinq\Service\ConsentService;
+use OCA\Filinq\Service\ConsentStatusChange;
 use OCA\Filinq\Service\ConsentUpdateHandler;
 use OCA\Filinq\Service\ObjectionDeadlineChecker;
 use OCA\Filinq\Service\PolicyMatchService;
+use OCA\Filinq\Service\RegisterObjectRef;
 use OCP\App\IAppManager;
+use OCP\IUser;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -257,10 +260,13 @@ class ConsentServiceTest extends TestCase {
 		);
 
 		$this->mockUpdateHandler->method('updateConsentStatus')
-			->with('uuid-1', 'reg-1', 'sch-1', ['consentStatus' => 'granted'])
+			->with(
+				new RegisterObjectRef(id: 'uuid-1', register: 'reg-1', schema: 'sch-1'),
+				new ConsentStatusChange(data: ['consentStatus' => 'granted'], actor: 'ingrid')
+			)
 			->willReturn($expected);
 
-		$result = $service->updateConsentStatus(consentId: 'uuid-1', register: 'reg-1', schema: 'sch-1', data: ['consentStatus' => 'granted']);
+		$result = $service->updateConsentStatus(consentId: 'uuid-1', register: 'reg-1', schema: 'sch-1', data: ['consentStatus' => 'granted'], actor: 'ingrid');
 		$this->assertEquals(expected: $expected, actual: $result);
 
 	}//end testUpdateConsentStatusDelegates()
@@ -795,6 +801,237 @@ class ConsentServiceTest extends TestCase {
 
 	}//end testScopeEntityRecordsAreNotMatchedByIdempotencyLookup()
 
+	/**
+	 * The idempotency lookup and both writes address the caller's register and schema.
+	 *
+	 * @return void
+	 */
+	public function testLookupAndWritesAddressTheCallersRegisterAndSchema(): void {
+		foreach (['create' => [], 'update' => [$this->buildSavedObject(data: ['documentId' => 'doc-1', 'scope' => 'document'])]] as $path => $rows) {
+			$queries = [];
+			$writes  = [];
+			$objectService = $this->createMock(originalClassName: \OCA\OpenRegister\Service\ObjectService::class);
+			$objectService->method('searchObjects')->willReturnCallback(
+				function (array $query) use (&$queries, $rows): array {
+					$queries[] = $query;
+					return $rows;
+				}
+			);
+			$objectService->method('saveObject')->willReturnCallback(
+				function (array $object, $register, $schema) use (&$writes): object {
+					$writes[] = [$register, $schema];
+					return $this->buildSavedObject(data: $object);
+				}
+			);
+			$container = $this->createMock(originalClassName: ContainerInterface::class);
+			$container->method('get')->willReturn($objectService);
+			$policyMatcher = $this->createMock(originalClassName: PolicyMatchService::class);
+			$policyMatcher->method('match')->willReturn(null);
+			$service = new ConsentService(
+				logger: $this->mockLogger,
+				deadlineChecker: $this->mockDeadlineChecker,
+				updateHandler: $this->mockUpdateHandler,
+				scopeValidator: $this->mockScopeValidator,
+				policyMatcher: $policyMatcher,
+				recordWriter: $this->buildRecordWriter(container: $container)
+			);
+
+			$service->createConsentRequest(
+				documentId: 'doc-1',
+				entityType: 'PERSON',
+				entityText: 'Anneke Jansen',
+				register: 'reg-9',
+				schema: 'sch-9',
+				extra: []
+			);
+
+			$this->assertSame(
+				[['@self' => ['register' => 'reg-9', 'schema' => 'sch-9'], 'documentId' => 'doc-1', 'scope' => 'document', 'entityText' => 'Anneke Jansen']],
+				$queries,
+				$path
+			);
+			$this->assertSame([['reg-9', 'sch-9']], $writes, $path);
+		}//end foreach
+
+	}//end testLookupAndWritesAddressTheCallersRegisterAndSchema()
+
+	/**
+	 * A validated update loads the record from the caller's register and schema, gates a standing consent
+	 * on the admin group, checks the transition and delegates the write with the acting user.
+	 *
+	 * @return void
+	 */
+	public function testValidateAndUpdateGatesAStandingConsentAndDelegates(): void {
+		$objectService = $this->createMock(originalClassName: \OCA\OpenRegister\Service\ObjectService::class);
+		$objectService->expects($this->once())->method('find')
+			->with('c-1', 'reg-1', 'sch-1')
+			->willReturn($this->buildSavedObject(data: ['scope' => 'entity', 'consentStatus' => 'granted']));
+		$container = $this->createMock(originalClassName: ContainerInterface::class);
+		$container->method('get')->willReturn($objectService);
+
+		$user = $this->createMock(originalClassName: IUser::class);
+		$user->method('getUID')->willReturn('anna');
+
+		$this->mockScopeValidator->expects($this->once())->method('requireStandingConsentAdminGroup')->with($user);
+		$this->mockScopeValidator->expects($this->once())->method('validateTransition')
+			->with(['scope' => 'entity', 'consentStatus' => 'granted'], ['consentStatus' => 'revoked']);
+		$this->mockUpdateHandler->expects($this->once())->method('updateConsentStatus')
+			->with(new RegisterObjectRef(id: 'c-1', register: 'reg-1', schema: 'sch-1'), new ConsentStatusChange(data: ['consentStatus' => 'revoked'], actor: 'anna'))
+			->willReturn(['id' => 'c-1', 'consentStatus' => 'revoked']);
+
+		$service = new ConsentService(
+			logger: $this->mockLogger,
+			deadlineChecker: $this->mockDeadlineChecker,
+			updateHandler: $this->mockUpdateHandler,
+			scopeValidator: $this->mockScopeValidator,
+			policyMatcher: $this->createMock(originalClassName: PolicyMatchService::class),
+			recordWriter: $this->buildRecordWriter(container: $container)
+		);
+
+		$result = $service->validateAndUpdateConsent(
+			consentId: 'c-1',
+			register: 'reg-1',
+			schema: 'sch-1',
+			data: ['consentStatus' => 'revoked'],
+			user: $user
+		);
+
+		$this->assertSame(['id' => 'c-1', 'consentStatus' => 'revoked'], $result);
+
+	}//end testValidateAndUpdateGatesAStandingConsentAndDelegates()
+
+	/**
+	 * A validated update of a record that does not exist throws and writes nothing.
+	 *
+	 * @return void
+	 */
+	public function testValidateAndUpdateOfAMissingRecordThrows(): void {
+		$objectService = $this->createMock(originalClassName: \OCA\OpenRegister\Service\ObjectService::class);
+		$objectService->method('find')->willReturn(null);
+		$container = $this->createMock(originalClassName: ContainerInterface::class);
+		$container->method('get')->willReturn($objectService);
+		$this->mockUpdateHandler->expects($this->never())->method('updateConsentStatus');
+
+		$service = new ConsentService(
+			logger: $this->mockLogger,
+			deadlineChecker: $this->mockDeadlineChecker,
+			updateHandler: $this->mockUpdateHandler,
+			scopeValidator: $this->mockScopeValidator,
+			policyMatcher: $this->createMock(originalClassName: PolicyMatchService::class),
+			recordWriter: $this->buildRecordWriter(container: $container)
+		);
+
+		$this->expectExceptionMessage('Consent record not found: c-404');
+		$service->validateAndUpdateConsent(consentId: 'c-404', register: 'r', schema: 's', data: []);
+
+	}//end testValidateAndUpdateOfAMissingRecordThrows()
+
+	/**
+	 * Build a ConsentService whose ObjectService records every lookup and save.
+	 *
+	 * @param array<mixed> $rows What searchObjects() returns.
+	 * @param array<int, array<string, mixed>> $queries Receives each lookup query.
+	 * @param array<int, array<string, mixed>> $saves Receives each save's named arguments.
+	 *
+	 * @return ConsentService
+	 */
+	private function recordingService(array $rows, array &$queries, array &$saves): ConsentService {
+		$objectService = $this->createMock(originalClassName: \OCA\OpenRegister\Service\ObjectService::class);
+		$objectService->method('searchObjects')->willReturnCallback(
+			function (array $query) use (&$queries, $rows): array {
+				$queries[] = $query;
+				return $rows;
+			}
+		);
+		$objectService->method('saveObject')->willReturnCallback(
+			function (...$arguments) use (&$saves): object {
+				$saves[] = $arguments;
+				return $this->buildSavedObject(data: $arguments[0]);
+			}
+		);
+		$container = $this->createMock(originalClassName: ContainerInterface::class);
+		$container->method('get')->willReturn($objectService);
+		$policyMatcher = $this->createMock(originalClassName: PolicyMatchService::class);
+		$policyMatcher->method('match')->willReturn(null);
+
+		return new ConsentService(
+			logger: $this->mockLogger,
+			deadlineChecker: $this->mockDeadlineChecker,
+			updateHandler: $this->mockUpdateHandler,
+			scopeValidator: $this->mockScopeValidator,
+			policyMatcher: $policyMatcher,
+			recordWriter: $this->buildRecordWriter(container: $container)
+		);
+
+	}//end recordingService()
+
+	/**
+	 * The idempotent re-submit saves without RBAC, as the system write it is.
+	 *
+	 * @return void
+	 */
+	public function testTheResubmitSaveBypassesRbac(): void {
+		$queries = [];
+		$saves   = [];
+		$service = $this->recordingService(
+			rows: [$this->buildSavedObject(data: ['documentId' => 'doc-1', 'scope' => 'document'])],
+			queries: $queries,
+			saves: $saves
+		);
+
+		$service->createConsentRequest(documentId: 'doc-1', entityType: 'PERSON', entityText: 'A', register: 'r', schema: 's');
+
+		$this->assertCount(1, $saves);
+		$this->assertFalse($saves[0][4], 'The update save must pass _rbac: false.');
+
+	}//end testTheResubmitSaveBypassesRbac()
+
+	/**
+	 * With an entityKey the lookup filters on it and not on the entity text.
+	 *
+	 * @return void
+	 */
+	public function testTheLookupFiltersOnTheEntityKeyWhenThereIsOne(): void {
+		$queries = [];
+		$saves   = [];
+		$service = $this->recordingService(rows: [], queries: $queries, saves: $saves);
+
+		$service->createConsentRequest(
+			documentId: 'doc-1',
+			entityType: 'PERSON',
+			entityText: 'Anneke Jansen',
+			register: 'reg-9',
+			schema: 'sch-9',
+			extra: ['entityKey' => 'key-A']
+		);
+
+		$this->assertSame(
+			[['@self' => ['register' => 'reg-9', 'schema' => 'sch-9'], 'documentId' => 'doc-1', 'scope' => 'document', 'entityKey' => 'key-A']],
+			$queries
+		);
+
+	}//end testTheLookupFiltersOnTheEntityKeyWhenThereIsOne()
+
+	/**
+	 * The register and schema address the write; they never become fields of the stored record.
+	 *
+	 * @return void
+	 */
+	public function testTheRegisterAndSchemaNeverReachTheStoredRecord(): void {
+		foreach (['create' => [], 'update' => [$this->buildSavedObject(data: ['documentId' => 'doc-1', 'scope' => 'document'])]] as $path => $rows) {
+			$queries = [];
+			$saves   = [];
+			$service = $this->recordingService(rows: $rows, queries: $queries, saves: $saves);
+
+			$service->createConsentRequest(documentId: 'doc-1', entityType: 'PERSON', entityText: 'A', register: 'reg-9', schema: 'sch-9');
+
+			$this->assertCount(1, $saves, $path);
+			$this->assertArrayNotHasKey('register', $saves[0][0], $path);
+			$this->assertArrayNotHasKey('schema', $saves[0][0], $path);
+		}
+
+	}//end testTheRegisterAndSchemaNeverReachTheStoredRecord()
+
 	// ------------------------------------------------------------------
 	// validatePublicationConsentData scope rules
 	// ------------------------------------------------------------------
@@ -947,4 +1184,82 @@ class ConsentServiceTest extends TestCase {
 		$this->expectNotToPerformAssertions();
 
 	}//end testValidateAcceptsValidScopeEntity()
+	/**
+	 * A validated update loads the record, holds a standing consent to the
+	 * admin group, checks the transition and saves it as the acting user.
+	 *
+	 * @return void
+	 */
+	public function testValidateAndUpdateConsentChecksThenSavesAsTheUser(): void {
+		$stored = ['scope' => 'entity', 'consentStatus' => 'pending'];
+		$service = $this->serviceOverStoredConsent(stored: $stored);
+		$user = $this->createMock(originalClassName: IUser::class);
+		$user->method('getUID')->willReturn('ingrid');
+		$update = ['consentStatus' => 'consent_given', 'evidence' => 'form'];
+
+		$this->mockScopeValidator->expects($this->once())->method('requireStandingConsentAdminGroup')->with($user);
+		$this->mockScopeValidator->expects($this->once())->method('validateTransition')->with($stored, $update);
+		$this->mockUpdateHandler->expects($this->once())->method('updateConsentStatus')
+			->with(
+				new RegisterObjectRef(id: 'c-1', register: 'filinq', schema: 'publicationConsent'),
+				new ConsentStatusChange(data: $update, actor: 'ingrid')
+			)
+			->willReturn(['saved' => true]);
+
+		$result = $service->validateAndUpdateConsent(consentId: 'c-1', register: 'filinq', schema: 'publicationConsent', data: $update, user: $user);
+
+		$this->assertSame(expected: ['saved' => true], actual: $result);
+
+	}//end testValidateAndUpdateConsentChecksThenSavesAsTheUser()
+
+	/**
+	 * A document consent, or an update without a user, skips the admin group
+	 * and is saved without an actor.
+	 *
+	 * @return void
+	 */
+	public function testValidateAndUpdateConsentWithoutAUser(): void {
+		$service = $this->serviceOverStoredConsent(stored: ['scope' => 'entity']);
+
+		$this->mockScopeValidator->expects($this->never())->method('requireStandingConsentAdminGroup');
+		$this->mockScopeValidator->expects($this->exactly(2))->method('validateTransition');
+		$this->mockUpdateHandler->expects($this->exactly(2))->method('updateConsentStatus')
+			->willReturnCallback(
+				function (RegisterObjectRef $consent, ConsentStatusChange $change): array {
+					$this->assertSame(expected: '', actual: $change->actor);
+					return [];
+				}
+			);
+
+		$service->validateAndUpdateConsent(consentId: 'c-1', register: 'r', schema: 's', data: ['objectionReason' => 'x']);
+
+		$user = $this->createMock(originalClassName: IUser::class);
+		$document = $this->serviceOverStoredConsent(stored: ['consentStatus' => 'pending']);
+		$document->validateAndUpdateConsent(consentId: 'c-2', register: 'r', schema: 's', data: ['objectionReason' => 'x'], user: $user);
+
+	}//end testValidateAndUpdateConsentWithoutAUser()
+
+	/**
+	 * A consent service whose record writer reads one stored consent.
+	 *
+	 * @param array<string, mixed> $stored The stored consent.
+	 *
+	 * @return ConsentService The service.
+	 */
+	private function serviceOverStoredConsent(array $stored): ConsentService {
+		$objects = $this->createMock(originalClassName: \OCA\OpenRegister\Service\ObjectService::class);
+		$objects->method('find')->willReturn($this->buildSavedObject(data: $stored));
+		$container = $this->createMock(originalClassName: ContainerInterface::class);
+		$container->method('get')->willReturn($objects);
+
+		return new ConsentService(
+			logger: $this->mockLogger,
+			deadlineChecker: $this->mockDeadlineChecker,
+			updateHandler: $this->mockUpdateHandler,
+			scopeValidator: $this->mockScopeValidator,
+			policyMatcher: $this->createMock(originalClassName: PolicyMatchService::class),
+			recordWriter: $this->buildRecordWriter(container: $container)
+		);
+
+	}//end serviceOverStoredConsent()
 }//end class

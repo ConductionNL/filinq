@@ -171,30 +171,15 @@ class ConsentRecordWriter {
 	 * Fallback key when entityKey is null: (documentId, entityText, scope=document).
 	 * scope=entity records are excluded from matching.
 	 *
-	 * @param string $documentId The document UUID.
-	 * @param string|null $entityKey OR entity UUID, or null.
-	 * @param string $entityText Detected entity text.
-	 * @param string $register Register ID.
-	 * @param string $schema Schema ID.
+	 * @param array<string, mixed> $context The consent-request context: documentId, entityKey
+	 *                                      (OR entity UUID, or null), entityText, register and schema.
 	 *
 	 * @return array<string, mixed>|null Existing record data or null if not found.
 	 *
 	 * @spec openspec/changes/consent-create-idempotency-and-notes/tasks.md#task-1
 	 */
-	public function findExistingConsent(
-		string $documentId,
-		?string $entityKey,
-		string $entityText,
-		string $register,
-		string $schema,
-	): ?array {
-		$filter = $this->buildIdempotencyFilter(
-			documentId: $documentId,
-			entityKey: $entityKey,
-			entityText: $entityText,
-			register: $register,
-			schema: $schema
-		);
+	public function findExistingConsent(array $context): ?array {
+		$filter = $this->buildIdempotencyFilter(context: $context);
 
 		try {
 			$results = $this->getObjectService()->searchObjects(query: $filter);
@@ -202,7 +187,7 @@ class ConsentRecordWriter {
 			// A failed lookup is non-fatal — fall through to create path.
 			$this->logger->warning(
 				message: 'ConsentService: idempotency lookup failed, falling through to create',
-				context: ['documentId' => $documentId, 'error' => $e->getMessage()]
+				context: ['documentId' => $context['documentId'], 'error' => $e->getMessage()]
 			);
 			return null;
 		}
@@ -221,27 +206,19 @@ class ConsentRecordWriter {
 	/**
 	 * Build the idempotency-lookup filter.
 	 *
-	 * @param string $documentId The document UUID.
-	 * @param string|null $entityKey OR entity UUID, or null.
-	 * @param string $entityText Detected entity text.
-	 * @param string $register Register ID.
-	 * @param string $schema Schema ID.
+	 * @param array<string, mixed> $context The consent-request context: documentId, entityKey,
+	 *                                      entityText, register and schema.
 	 *
 	 * @return array<string, mixed> The searchObjects() query.
 	 */
-	private function buildIdempotencyFilter(
-		string $documentId,
-		?string $entityKey,
-		string $entityText,
-		string $register,
-		string $schema,
-	): array {
+	private function buildIdempotencyFilter(array $context): array {
+		$entityKey = $context['entityKey'];
 		$filter = [
 			'@self' => [
-				'register' => $register,
-				'schema' => $schema,
+				'register' => $context['register'],
+				'schema' => $context['schema'],
 			],
-			'documentId' => $documentId,
+			'documentId' => $context['documentId'],
 			'scope' => 'document',
 		];
 
@@ -250,7 +227,7 @@ class ConsentRecordWriter {
 			return $filter;
 		}
 
-		$filter['entityText'] = $entityText;
+		$filter['entityText'] = $context['entityText'];
 		return $filter;
 	}//end buildIdempotencyFilter()
 
@@ -261,20 +238,45 @@ class ConsentRecordWriter {
 	 * Re-evaluates policyMatch: sets it if newly applicable, never clears it.
 	 *
 	 * @param array<string, mixed> $existing Current record data.
-	 * @param array<string, mixed> $context The consent-request context.
-	 * @param string $register Register ID.
-	 * @param string $schema Schema ID.
+	 * @param array<string, mixed> $context The consent-request context, including the register and schema.
 	 *
 	 * @return array<string, mixed> Updated record with `wasUpdated: true`.
 	 *
 	 * @spec openspec/changes/consent-create-idempotency-and-notes/tasks.md#task-2
 	 */
-	public function updateExistingConsent(
-		array $existing,
-		array $context,
-		string $register,
-		string $schema,
-	): array {
+	public function updateExistingConsent(array $existing, array $context): array {
+		$updated = $this->mergeResubmission(existing: $existing, context: $context);
+
+		$savedObject = $this->getObjectService()->saveObject(
+			object: $updated,
+			register: $context['register'],
+			schema: $context['schema'],
+			_rbac: false
+		);
+
+		$this->logger->info(
+			message: 'Consent request updated (idempotent re-submit)',
+			context: ['documentId' => $updated['documentId'] ?? '']
+		);
+
+		$result = $savedObject->getObject();
+		$result['wasUpdated'] = true;
+		return $result;
+	}//end updateExistingConsent()
+
+	/**
+	 * Merge a re-submitted request into the stored record.
+	 *
+	 * Operator-set fields take the new values, the policy match is set when
+	 * newly applicable and never cleared, and workflow fields keep their
+	 * stored values.
+	 *
+	 * @param array<string, mixed> $existing Current record data.
+	 * @param array<string, mixed> $context The consent-request context.
+	 *
+	 * @return array<string, mixed> The record to save.
+	 */
+	private function mergeResubmission(array $existing, array $context): array {
 		// Start from the preserved record so all stored values survive.
 		$updated = $existing;
 
@@ -321,21 +323,8 @@ class ConsentRecordWriter {
 			}
 		}
 
-		$savedObject = $this->getObjectService()->saveObject(
-			object: $updated,
-			register: $register,
-			schema: $schema
-		);
-
-		$this->logger->info(
-			message: 'Consent request updated (idempotent re-submit)',
-			context: ['documentId' => $updated['documentId'] ?? '']
-		);
-
-		$result = $savedObject->getObject();
-		$result['wasUpdated'] = true;
-		return $result;
-	}//end updateExistingConsent()
+		return $updated;
+	}//end mergeResubmission()
 
 	/**
 	 * Create a brand-new consent record.
@@ -355,16 +344,15 @@ class ConsentRecordWriter {
 	 *   - `policyMatchUuid`, `policyMatchKind` (string|null): any policy match
 	 *   - `standingConsentUuid` (string|null): set only when the match was a
 	 *     standing consent, i.e. the only kind persisted on a new record
+	 *   - `register`, `schema` (string): where the record is written
 	 *
 	 * @param array<string, mixed> $context The consent-request context.
-	 * @param string $register Register ID.
-	 * @param string $schema Schema ID.
 	 *
 	 * @return array<string, mixed> Created record with `wasUpdated: false`.
 	 *
 	 * @spec openspec/changes/consent-create-idempotency-and-notes/tasks.md#task-5
 	 */
-	public function createNewConsent(array $context, string $register, string $schema): array {
+	public function createNewConsent(array $context): array {
 		$consentData = $this->buildNewConsentPayload(context: $context);
 
 		// Service-level scope contract (publication-consent-policy-fields
@@ -385,8 +373,8 @@ class ConsentRecordWriter {
 		// authenticated. Ownership is RECORDED here, not ENFORCED here.
 		$savedObject = $this->getObjectService()->saveObject(
 			object: $consentData,
-			register: $register,
-			schema: $schema
+			register: $context['register'],
+			schema: $context['schema']
 		);
 
 		$this->logger->info(

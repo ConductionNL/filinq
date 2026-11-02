@@ -20,7 +20,9 @@
 namespace OCA\Filinq\Tests\Unit\Service;
 
 use Exception;
+use OCA\Filinq\BackgroundJob\JobQueue;
 use OCA\Filinq\Service\DataResolverService;
+use OCA\Filinq\Service\DocumentJobStore;
 use OCA\Filinq\Service\DocumentService;
 use OCA\Filinq\Service\DocumentStorageService;
 use OCA\Filinq\Service\PdfService;
@@ -155,16 +157,15 @@ class DocumentServiceTest extends TestCase {
 				$this->renderer,
 				$this->pdfService,
 				$objectResolver,
-				$logger
+				$logger,
+				$this->passThroughRasterizer()
 			),
 			$this->storageService,
 			new \OCA\Filinq\Service\GeneratedDocumentLogger(
 				$objectResolver,
 				$logger
 			),
-			$container,
-			$this->jobList,
-			$logger
+			new DocumentJobStore(appConfig: $appConfig, jobList: new JobQueue(jobList: $this->jobList), logger: $logger)
 		);
 
 	}//end setUp()
@@ -253,6 +254,39 @@ class DocumentServiceTest extends TestCase {
 		$this->assertEquals('<p>Test</p>', $result['html']);
 
 	}//end testGeneratePreviewReturnsHtml()
+
+	/**
+	 * The merge preview returns the preview and the fields the data fills.
+	 *
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
+	 *
+	 * @return void
+	 */
+	public function testMergePreviewNamesTheFieldsItFills(): void {
+		$this->templateSvc->method('getTemplate')
+			->willReturn([
+				'id' => 'tmpl-1',
+				'name' => 'Uitnodiging',
+				'content' => '<p>{{ aanhef }}</p><p>{{ client.address }}</p>',
+				'mergeFields' => [['path' => 'aanhef', 'label' => 'Aanhef', 'source' => 'op basis van het opgegeven geslacht']],
+			]);
+		$this->dataResolver->method('resolve')
+			->willReturn([
+				'data' => ['aanhef' => 'Geachte mevrouw De Vries,', 'client' => ['address' => '']],
+				'errors' => [],
+				'warnings' => [],
+			]);
+		$this->renderer->method('renderTemplate')->willReturn('<p>Geachte mevrouw De Vries,</p>');
+
+		$result = $this->service->generateMergePreview(templateId: 'tmpl-1', dataRefs: [], options: []);
+
+		$this->assertSame(expected: '<p>Geachte mevrouw De Vries,</p>', actual: $result['html']);
+		$this->assertSame(expected: ['aanhef', 'client.address'], actual: array_column($result['fields'], 'path'));
+		$this->assertSame(expected: 'Aanhef', actual: $result['fields'][0]['label']);
+		$this->assertTrue(condition: $result['fields'][0]['filled']);
+		$this->assertFalse(condition: $result['fields'][1]['filled']);
+		$this->assertFalse(condition: $result['complete']);
+	}//end testMergePreviewNamesTheFieldsItFills()
 
 	/**
 	 * Test that generateDocument() forwards options.listRefs to
@@ -501,6 +535,65 @@ class DocumentServiceTest extends TestCase {
 	}//end testAsyncBulkComputesPerJobTargetPath()
 
 	/**
+	 * An async bulk job is queued with exactly the template, objects and options, its target path suffixed by the job id.
+	 *
+	 * @return void
+	 */
+	public function testAsyncBulkQueuesTheFullArgument(): void {
+		$this->templateSvc->method('getTemplate')->willReturn(['id' => 'tmpl-1', 'namespace' => 'ns']);
+
+		$captured = null;
+		$this->jobList->expects($this->once())->method('add')->willReturnCallback(
+			function (string $job, array $argument) use (&$captured): void {
+				$captured = $argument;
+			}
+		);
+
+		$objectIds = array_map(static fn (int $i): string => 'o' . $i, range(1, 12));
+		$result    = $this->service->generateBulk(
+			templateId: 'tmpl-1',
+			objectIds: $objectIds,
+			options: ['output' => ['mode' => 'files', 'targetPath' => 'Custom/dir/'], 'userId' => 'u1']
+		);
+
+		$this->assertSame(['jobId', 'status', 'total'], array_keys($result));
+		$this->assertSame(12, $result['total']);
+		$this->assertSame(
+			[
+				'jobId' => $result['jobId'],
+				'templateId' => 'tmpl-1',
+				'objectIds' => $objectIds,
+				'options' => ['output' => ['mode' => 'files', 'targetPath' => 'Custom/dir/' . $result['jobId']], 'userId' => 'u1'],
+			],
+			$captured
+		);
+
+	}//end testAsyncBulkQueuesTheFullArgument()
+
+	/**
+	 * A preview turns failed data references into warnings, before the renderer's own.
+	 *
+	 * @return void
+	 */
+	public function testPreviewReportsFailedReferencesAsWarnings(): void {
+		$this->templateSvc->method('getTemplate')->willReturn(['id' => 'tmpl-1', 'content' => '<p>x</p>']);
+		$this->dataResolver->method('resolve')->willReturn(
+			[
+				'data' => ['a' => 1],
+				'errors' => [['register' => 'r', 'schema' => 's', 'id' => 'i', 'message' => 'gone']],
+				'warnings' => ['first'],
+			]
+		);
+		$this->renderer->method('renderTemplate')->willReturn('<p>x</p>');
+
+		$result = $this->service->generatePreview(templateId: 'tmpl-1', dataRefs: [['register' => 'r']], options: []);
+
+		$this->assertSame('<p>x</p>', $result['html']);
+		$this->assertSame(['first', 'Data resolution failed for r/s/i: gone'], array_slice($result['warnings'], 0, 2));
+
+	}//end testPreviewReportsFailedReferencesAsWarnings()
+
+	/**
 	 * Test that invalid format raises exception (DCS-023).
 	 *
 	 * @return void
@@ -571,6 +664,48 @@ class DocumentServiceTest extends TestCase {
 		$this->assertEquals('generatedDocument', 'generatedDocument');
 
 	}//end testDocumentMetadataIncludesTemplateVersion()
+
+	/**
+	 * A generation without options.wizardContext never reaches the wizard gate and logs no wizardContext.
+	 *
+	 * @return void
+	 */
+	public function testGenerationWithoutWizardContextUnchanged(): void {
+		$this->templateSvc->method('getTemplate')->willReturn(['name' => 'Brief', 'content' => '<p>x</p>', 'version' => 1]);
+		$this->dataResolver->method('resolve')->willReturn(['data' => [], 'errors' => [], 'warnings' => []]);
+		$this->renderer->method('renderTemplate')->willReturn('<p>x</p>');
+		$this->pdfService->method('renderPdf')->willReturn('%PDF%');
+		$entries = [];
+		$this->objectSvc->method('saveObject')->willReturnCallback(
+			static function (array $entry) use (&$entries): array {
+				$entries[] = $entry;
+				return $entry;
+			}
+		);
+		$gate = $this->getMockBuilder(\OCA\Filinq\Service\Wizard\WizardGenerationGate::class)
+			->disableOriginalConstructor()
+			->onlyMethods(['check'])
+			->getMock();
+		$gate->expects($this->never())->method('check');
+		$withGate = new \ReflectionClass(DocumentService::class);
+		$service = $withGate->newInstanceWithoutConstructor();
+		foreach ($withGate->getProperties() as $property) {
+			if ($property->getName() !== 'wizardGate' && $property->isStatic() === false && $property->isInitialized($this->service) === true) {
+				$property->setValue($service, $property->getValue($this->service));
+			}
+		}
+
+		$withGate->getProperty('wizardGate')->setValue($service, $gate);
+
+		$result = $service->generateDocument(templateId: 'tmpl-1', dataRefs: [], options: ['userId' => 'u1']);
+		$plain  = $this->service->generateDocument(templateId: 'tmpl-1', dataRefs: [], options: ['userId' => 'u1']);
+
+		$this->assertArrayNotHasKey('wizardContext', $entries[0]);
+		$this->assertSame($entries[1], $entries[0], 'the logged entry is the same with and without a wizard gate');
+		$this->assertSame(array_keys($plain), array_keys($result));
+		$this->assertSame($plain['content'], $result['content']);
+
+	}//end testGenerationWithoutWizardContextUnchanged()
 
 	/**
 	 * Test partial failure does not abort bulk batch (DCS-043).
@@ -1083,4 +1218,291 @@ class DocumentServiceTest extends TestCase {
 		$this->assertArrayNotHasKey('fileId', $item);
 
 	}//end testSyncBulkReturnModeUnchanged()
+
+	/**
+	 * The real SvgRasterizer's method, passing HTML through unchanged.
+	 *
+	 * @return \OCA\Filinq\Service\Charts\SvgRasterizer
+	 */
+	private function passThroughRasterizer(): \OCA\Filinq\Service\Charts\SvgRasterizer {
+		$rasterizer = $this->createMock(\OCA\Filinq\Service\Charts\SvgRasterizer::class);
+		$rasterizer->method('rasterizeInlineSvg')->willReturnCallback(
+			static fn (string $html, string $format): array => ['html' => $html, 'warnings' => []]
+		);
+		return $rasterizer;
+
+	}//end passThroughRasterizer()
+	/**
+	 * Golden: generateFromTemplate's full answer and audit entry in files mode,
+	 * with resolution warnings, a failed data reference and a case id.
+	 *
+	 * @return void
+	 */
+	public function testGenerateFromTemplateAnswerAndAuditEntryGolden(): void {
+		$this->dataResolver->method('resolve')->willReturn(
+			[
+				'data' => ['zaak' => ['naam' => 'Jan']],
+				'errors' => [['register' => 'zaken', 'schema' => 'zaak', 'id' => 'z-9', 'message' => 'gone']],
+				'warnings' => ['list truncated'],
+			]
+		);
+		$this->renderer->method('renderTemplate')->willReturn('<h1>Jan</h1>');
+		$this->pdfService->method('renderPdf')->willReturn('%PDF-golden%');
+		$this->storageService->method('store')->willReturn(
+			['fileId' => 77, 'path' => '/u1/files/DocuDesk/ns/brief.pdf', 'name' => 'brief.pdf', 'size' => 12]
+		);
+
+		$entries   = [];
+		$logEntity = $this->createMock(originalClassName: ObjectEntity::class);
+		$logEntity->method('jsonSerialize')->willReturn(['id' => 'log-9']);
+		$this->objectSvc->method('saveObject')->willReturnCallback(
+			function (array $object) use (&$entries, $logEntity) {
+				$entries[] = $object;
+				return $logEntity;
+			}
+		);
+
+		$dataRefs = [['register' => 'zaken', 'schema' => 'zaak', 'id' => 'z-1']];
+		$result   = $this->service->generateFromTemplate(
+			templateId: 'tmpl-g',
+			template: ['content' => '<h1>{{ zaak.naam }}</h1>', 'name' => 'Brief', 'namespace' => 'ns', 'version' => 3],
+			dataRefs: $dataRefs,
+			options: ['userId' => 'u1', 'caseId' => 'case-1', 'filename' => 'brief', 'output' => ['mode' => 'files']],
+			recordFields: ['view' => 'v-1']
+		);
+
+		$warnings = ['list truncated', 'Data resolution failed for zaken/zaak/z-9: gone'];
+		$this->assertSame(
+			expected: [
+				'content' => '%PDF-golden%',
+				'html' => '<h1>Jan</h1>',
+				'format' => 'pdf',
+				'metadata' => ['id' => 'log-9'],
+				'plainRendition' => null,
+				'templateVersion' => 3,
+				'warnings' => $warnings,
+				'output' => ['mode' => 'files', 'fileId' => 77, 'path' => '/u1/files/DocuDesk/ns/brief.pdf', 'name' => 'brief.pdf', 'size' => 12],
+			],
+			actual: array_intersect_key($result, array_flip(array_slice(array_keys($result), 0, 8)))
+		);
+		$this->assertSame(
+			expected: ['content', 'html', 'format', 'metadata', 'plainRendition', 'templateVersion', 'warnings', 'output'],
+			actual: array_slice(array_keys($result), 0, 8)
+		);
+
+		$this->assertCount(expectedCount: 1, haystack: $entries);
+		unset($entries[0]['generatedAt']);
+		$this->assertSame(
+			expected: [
+				'templateId' => 'tmpl-g',
+				'templateVersion' => 3,
+				'templateName' => 'Brief',
+				'dataRefs' => $dataRefs,
+				'format' => 'pdf',
+				'status' => 'generated',
+				'generatedBy' => 'u1',
+				'warnings' => $warnings,
+				'caseId' => 'case-1',
+				'errorMessage' => null,
+				'fileId' => 77,
+				'filePath' => '/u1/files/DocuDesk/ns/brief.pdf',
+				'view' => 'v-1',
+			],
+			actual: $entries[0]
+		);
+
+	}//end testGenerateFromTemplateAnswerAndAuditEntryGolden()
+
+	/**
+	 * Golden: a sync bulk run's items and the failed audit entry for the
+	 * object that could not be generated.
+	 *
+	 * @return void
+	 */
+	public function testSyncBulkItemsAndFailedEntryGolden(): void {
+		$this->templateSvc->method('getTemplate')->willReturn(
+			['id' => 'tmpl-1', 'name' => 'Brief', 'content' => '<p>x</p>', 'format' => 'A4', 'version' => 1, 'namespace' => 'ns']
+		);
+		$this->dataResolver->method('resolve')->willReturnCallback(
+			static function (array $dataRefs): array {
+				if ($dataRefs[0]['id'] === 'o2') {
+					throw new Exception('Data not found');
+				}
+
+				return ['data' => [], 'errors' => [], 'warnings' => ['w-' . $dataRefs[0]['id']]];
+			}
+		);
+		$this->renderer->method('renderTemplate')->willReturn('<p>x</p>');
+		$this->pdfService->method('renderPdf')->willReturn('%PDF%');
+		$this->storageService->method('store')->willReturn(
+			['fileId' => 5, 'path' => '/u1/files/x.pdf', 'name' => 'x.pdf', 'size' => 4]
+		);
+
+		$entries   = [];
+		$logEntity = $this->createMock(originalClassName: ObjectEntity::class);
+		$logEntity->method('jsonSerialize')->willReturn(['id' => 'log']);
+		$this->objectSvc->method('saveObject')->willReturnCallback(
+			function (array $object) use (&$entries, $logEntity) {
+				$entries[] = $object;
+				return $logEntity;
+			}
+		);
+
+		$result = $this->service->generateBulk(
+			templateId: 'tmpl-1',
+			objectIds: ['o1', 'o2'],
+			options: ['register' => 'brp', 'schema' => 'persoon', 'userId' => 'u1', 'format' => 'pdf', 'output' => ['mode' => 'both']]
+		);
+
+		$this->assertSame(
+			expected: [
+				'results' => [
+					[
+						'objectId' => 'o1',
+						'status' => 'success',
+						'warnings' => ['w-o1'],
+						'content' => '%PDF%',
+						'fileId' => 5,
+						'path' => '/u1/files/x.pdf',
+						'name' => 'x.pdf',
+						'size' => 4,
+					],
+					['objectId' => 'o2', 'status' => 'error', 'error' => 'Data not found'],
+				],
+				'total' => 2,
+				'completed' => 1,
+				'errors' => 1,
+			],
+			actual: $result
+		);
+
+		$failed = array_values(array_filter($entries, static fn (array $e): bool => $e['status'] === 'failed'));
+		$this->assertCount(expectedCount: 1, haystack: $failed);
+		unset($failed[0]['generatedAt']);
+		$this->assertSame(
+			expected: [
+				'templateId' => 'tmpl-1',
+				'templateName' => '',
+				'dataRefs' => [['register' => 'brp', 'schema' => 'persoon', 'id' => 'o2']],
+				'format' => 'pdf',
+				'status' => 'failed',
+				'generatedBy' => 'u1',
+				'warnings' => [],
+				'caseId' => null,
+				'errorMessage' => 'Data not found',
+				'fileId' => null,
+				'filePath' => null,
+			],
+			actual: $failed[0]
+		);
+
+	}//end testSyncBulkItemsAndFailedEntryGolden()
+
+	/**
+	 * Store requests for the acting user in options.userId, with owner fields forged next to it.
+	 *
+	 * @return array<string, array{0: array<string, mixed>, 1: Exception|null}>
+	 */
+	public static function storeTraces(): array {
+		$forged = ['owner' => 'mallory', 'requestedBy' => 'mallory', 'user' => 'mallory'];
+		$forgedOutput = ['userId' => 'mallory', 'owner' => 'mallory', 'requestedBy' => 'mallory'];
+		$full = new Exception('quota exceeded', DocumentStorageService::ERROR_CODE_STORAGE_FAILURE);
+		return [
+			'files for the acting user' => [['userId' => 'clerk', 'filename' => 'besluit', 'output' => ['mode' => 'files']] + $forged, null],
+			'files for another acting user' => [['userId' => 'officer', 'owner' => 'clerk', 'requestedBy' => 'clerk', 'output' => ['mode' => 'files', 'userId' => 'clerk']], null],
+			'files with forged output owners' => [['userId' => 'clerk', 'output' => ['mode' => 'files', 'targetPath' => 'Zaken/7/'] + $forgedOutput] + $forged, null],
+			'both for the acting user' => [['userId' => 'clerk', 'output' => ['mode' => 'both']] + $forged, null],
+			'return never stores' => [['userId' => 'clerk', 'output' => ['mode' => 'return']] + $forged, null],
+			'return without a user' => [['output' => ['mode' => 'return']] + $forged, null],
+			'files without a user' => [['output' => ['mode' => 'files'] + $forgedOutput] + $forged, null],
+			'both without a user' => [['output' => ['mode' => 'both'] + $forgedOutput] + $forged, null],
+			'files with an empty user' => [['userId' => '', 'output' => ['mode' => 'files']] + $forged, null],
+			'files with a null user' => [['userId' => null, 'output' => ['mode' => 'files']], null],
+			'files with a full disk' => [['userId' => 'clerk', 'output' => ['mode' => 'files']], $full],
+			'both with a full disk' => [['userId' => 'clerk', 'output' => ['mode' => 'both']], $full],
+			'both with a refused path' => [['userId' => 'clerk', 'output' => ['mode' => 'both']], new Exception('bad path', 400)],
+			'both with another failure' => [['userId' => 'clerk', 'output' => ['mode' => 'both']], new Exception('boom', 500)],
+			'an html file name' => [['userId' => 'clerk', 'format' => 'html', 'filename' => 'brief.html', 'output' => ['mode' => 'files']], null],
+			'an empty target path' => [['userId' => 'clerk', 'output' => ['mode' => 'files', 'targetPath' => '']], null],
+		];
+	}//end storeTraces()
+
+	/**
+	 * Storing files the bytes under the acting user only, and its outcome matches the recorded one.
+	 *
+	 * @param array<string, mixed> $options The generation options.
+	 * @param Exception|null $failure What storing throws, if anything.
+	 *
+	 * @dataProvider storeTraces
+	 *
+	 * @return void
+	 */
+	public function testStoreTraceMatchesTheRecordedOne(array $options, ?Exception $failure): void {
+		$this->stubHappyPathGeneration();
+
+		$calls = [];
+		$this->storageService->method('store')->willReturnCallback(
+			static function (string $userId, string $targetPath, string $filename, string $content) use (&$calls, $failure, $options): array {
+				$calls[] = [$userId, $targetPath, $filename, $content];
+				if ($userId !== ($options['userId'] ?? null)) {
+					throw new Exception('stored for ' . $userId, 403);
+				}
+
+				if ($failure !== null) {
+					throw $failure;
+				}
+
+				return ['fileId' => 99, 'path' => '/' . $userId . '/files/' . $targetPath . '/' . $filename, 'name' => $filename, 'size' => 12, 'owner' => 'ignored'];
+			}
+		);
+
+		try {
+			$result = $this->service->generateDocument(templateId: 'tmpl-1', dataRefs: [], options: $options);
+			$outcome = ['output' => $result['output'], 'warnings' => $result['warnings'], 'content' => $result['content']];
+		} catch (Exception $e) {
+			$outcome = ['error' => [$e->getCode(), $e->getMessage()]];
+		}
+
+		$outcome['calls'] = $calls;
+
+		$path = __DIR__ . '/golden/document-store-trace.json';
+		$recorded = [];
+		if (is_file($path) === true) {
+			$recorded = json_decode((string)file_get_contents($path), true);
+		}
+
+		$name = (string)$this->dataName();
+		if (getenv('GOLDEN_RECORD') === '1') {
+			$recorded[$name] = $outcome;
+			file_put_contents($path, json_encode($recorded, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n");
+		}
+
+		$this->assertSame($recorded[$name] ?? null, $outcome);
+		foreach ($calls as $call) {
+			$this->assertSame($options['userId'], $call[0], 'Only the acting user may own a stored document.');
+		}
+	}//end testStoreTraceMatchesTheRecordedOne()
+	/**
+	 * A successful store answers exactly the filed refs and the warnings, whatever else storage returns.
+	 *
+	 * @return void
+	 */
+	public function testAStoredOutputCarriesOnlyItsRefs(): void {
+		$this->storageService->method('store')->willReturn(
+			['fileId' => 99, 'path' => '/clerk/files/Zaken/brief.pdf', 'name' => 'brief.pdf', 'size' => 12, 'owner' => 'mallory']
+		);
+
+		$run = [
+			'outputMode' => 'files',
+			'templateId' => 'tmpl-1',
+			'template' => ['namespace' => 'procest'],
+			'format' => 'pdf',
+			'options' => ['userId' => 'clerk', 'filename' => 'brief', 'output' => ['targetPath' => 'Zaken']],
+		];
+		$method = new \ReflectionMethod(DocumentService::class, 'storeOutputIfRequested');
+		$outcome = $method->invoke($this->service, $run, ['content' => '%PDF', 'warnings' => ['earlier']]);
+
+		$this->assertSame(['fileId', 'path', 'name', 'size', 'warnings'], array_keys($outcome));
+		$this->assertSame([99, '/clerk/files/Zaken/brief.pdf', 'brief.pdf', 12, ['earlier']], array_values($outcome));
+	}//end testAStoredOutputCarriesOnlyItsRefs()
 }//end class

@@ -30,7 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\EventListener;
 
-use OCA\Filinq\Service\LegalBasesSummaryService;
+use OCA\Filinq\Kernel\Contracts\LegalBasesSummaryServiceInterface;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
@@ -69,7 +69,7 @@ class DossierCheckedOnListener implements IEventListener {
 	 * Constructor for DossierCheckedOnListener.
 	 *
 	 * @param LoggerInterface $logger Logger for diagnostics
-	 * @param LegalBasesSummaryService $summaryService Dossier grondslagen summary renderer
+	 * @param LegalBasesSummaryServiceInterface $summaryService Dossier grondslagen summary renderer
 	 *
 	 * @return void
 	 *
@@ -77,7 +77,7 @@ class DossierCheckedOnListener implements IEventListener {
 	 */
 	public function __construct(
 		private readonly LoggerInterface $logger,
-		private readonly LegalBasesSummaryService $summaryService,
+		private readonly LegalBasesSummaryServiceInterface $summaryService,
 	) {
 
 	}//end __construct()
@@ -119,40 +119,70 @@ class DossierCheckedOnListener implements IEventListener {
 	 * @spec openspec/changes/anonymisation-grondslagen-summary-rendering/tasks.md#task-7
 	 */
 	private function processObjectUpdatedEvent(ObjectUpdatedEvent $event): void {
-		$newObject = $event->getNewObject();
-		$oldObject = $event->getOldObject();
-
-		if ($newObject === null) {
-			return;
-		}
-
-		// Only process dossier objects.
-		if ($this->isDossierObject(object: $newObject) === false) {
-			return;
-		}
-
-		$newData = $newObject->getObject();
-		$oldData = [];
-		if ($oldObject !== null) {
-			$oldData = $oldObject->getObject();
-		}
-
-		// Only regen when checkedOn has actually changed.
-		if ($this->hasCheckedOnChanged(newData: $newData, oldData: $oldData) === false) {
-			return;
-		}
-
-		// Honour the opt-out flag (default is true / auto-regen enabled).
-		if ($this->isAutoRegenEnabled(data: $newData) === false) {
-			return;
-		}
-
-		$dossierId = $newObject->getId();
+		$dossierId = $this->dossierToRegenerate(event: $event);
 		if ($dossierId === null) {
 			return;
 		}
 
-		// Run synchronously; catch any failure to preserve the review result.
+		$this->regenerate(dossierId: $dossierId);
+	}//end processObjectUpdatedEvent()
+
+	/**
+	 * The id of the dossier whose summary this update should regenerate, or null.
+	 *
+	 * @param ObjectUpdatedEvent $event The update event.
+	 *
+	 * @return int|null The dossier id, when it is a dossier whose checkedOn changed and auto-regen is on.
+	 *
+	 * @spec openspec/changes/anonymisation-grondslagen-summary-rendering/tasks.md#task-7
+	 */
+	private function dossierToRegenerate(ObjectUpdatedEvent $event): ?int {
+		$newObject = $event->getNewObject();
+		if ($newObject === null || $this->isDossierObject(object: $newObject) === false) {
+			return null;
+		}
+
+		$newData = $newObject->getObject();
+
+		// Only regen when checkedOn has actually changed.
+		if ($this->hasCheckedOnChanged(newData: $newData, oldData: $this->oldDataOf(event: $event)) === false) {
+			return null;
+		}
+
+		// Honour the opt-out flag (default is true / auto-regen enabled).
+		if ($this->isAutoRegenEnabled(data: $newData) === false) {
+			return null;
+		}
+
+		return $newObject->getId();
+	}//end dossierToRegenerate()
+
+	/**
+	 * The old object's data, or [] when the event carries no old object.
+	 *
+	 * @param ObjectUpdatedEvent $event The update event.
+	 *
+	 * @return array<string, mixed> The old data.
+	 */
+	private function oldDataOf(ObjectUpdatedEvent $event): array {
+		$oldObject = $event->getOldObject();
+		if ($oldObject === null) {
+			return [];
+		}
+
+		return $oldObject->getObject();
+	}//end oldDataOf()
+
+	/**
+	 * Render the dossier's summary synchronously; a failure is logged so the dossier update still succeeds.
+	 *
+	 * @param int $dossierId The dossier id.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/anonymisation-grondslagen-summary-rendering/tasks.md#task-7
+	 */
+	private function regenerate(int $dossierId): void {
 		try {
 			$this->logger->info(
 				message: 'Filinq: Auto-regenerating dossier grondslagen summary on checkedOn update',
@@ -167,9 +197,8 @@ class DossierCheckedOnListener implements IEventListener {
 				context: 'LegalBasesSummaryService::renderDossierSummary (auto-regen)',
 				extra: ['dossierId' => $dossierId]
 			);
-		}//end try
-
-	}//end processObjectUpdatedEvent()
+		}
+	}//end regenerate()
 
 	/**
 	 * Determine whether the updated object is a dossier.

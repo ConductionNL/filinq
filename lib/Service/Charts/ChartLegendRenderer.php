@@ -14,7 +14,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/template-charts/specs/template-charts/spec.md
+ * @spec openspec/specs/template-charts/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -33,7 +33,7 @@ namespace OCA\Filinq\Service\Charts;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/template-charts/tasks.md#task-1.1
+ * @spec openspec/changes/archive/2026-09-28-template-charts/tasks.md#task-1.1
  */
 class ChartLegendRenderer {
 
@@ -69,29 +69,31 @@ class ChartLegendRenderer {
 	/**
 	 * Render a legend row of color-swatch + series name entries.
 	 *
-	 * @param array $series Normalized series list.
-	 * @param array $palette Ordered hex colors.
+	 * Draws at most {@see ChartLabelFormatter::MAX_LABELLED_ENTRIES} entries on
+	 * a baseline 12px above the bottom of the canvas.
+	 *
+	 * @param ChartRequest $chart The chart: its series, palette and canvas height.
 	 * @param float $x Left x position.
-	 * @param float $y Baseline y position.
-	 * @param int $maxEntries Maximum number of entries rendered.
 	 *
 	 * @return string SVG markup fragment.
 	 *
-	 * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-001
+	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-001
 	 */
-	public function render(array $series, array $palette, float $x, float $y, int $maxEntries): string {
+	public function render(ChartRequest $chart, float $x): string {
+		$y = (float)($chart->height - 12);
 		$parts = [];
 		$cursorX = $x;
-		foreach ($series as $index => $oneSeries) {
-			if ($index >= $maxEntries) {
+		foreach ($chart->normalized['series'] as $index => $oneSeries) {
+			if ($index >= ChartLabelFormatter::MAX_LABELLED_ENTRIES) {
 				break;
 			}
 
-			$color = $palette[(int)$index % count($palette)];
+			$color = $chart->color(index: (int)$index);
 			$name = $this->labels->truncate(text: $oneSeries['name'], max: 18);
 
-			$parts[] = $this->svg->rectEl(x: $cursorX, y: $y - 9, width: 9, height: 9, color: $color);
-			$parts[] = $this->svg->textEl(x: $cursorX + 13, y: $y, text: $name, anchor: 'start', size: 9, color: '#333333');
+			$swatch = new SvgBox(origin: new SvgPoint(x: $cursorX, y: $y - 9), size: new SvgSize(width: 9, height: 9));
+			$parts[] = $this->svg->rectEl(box: $swatch, color: $color);
+			$parts[] = $this->svg->textEl(position: new SvgPoint(x: $cursorX + 13, y: $y), text: new SvgText(content: $name, style: SvgTextStyle::LabelStart));
 			$cursorX += 13 + (strlen($name) * 5.5) + 14;
 		}
 

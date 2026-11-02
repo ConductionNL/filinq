@@ -1,0 +1,63 @@
+{"report":{"buildInformation":{"releaseDetails":[{
+  "id" : "core",
+  "version" : "1.30.2",
+  "buildDate" : 1780483380000
+},{
+  "id" : "validation-model",
+  "version" : "1.30.2",
+  "buildDate" : 1780483560000
+},{
+  "id" : "apps",
+  "version" : "1.30.2",
+  "buildDate" : 1780484100000
+}]},"jobs":[{"itemDetails":{
+  "name" : "/data/pdfa3b-rendered.pdf",
+  "size" : 35507
+},"validationResult":[ {
+  "details" : {
+    "passedRules" : 146,
+    "failedRules" : 0,
+    "passedChecks" : 877,
+    "failedChecks" : 0,
+    "ruleSummaries" : [ ]
+  },
+  "jobEndStatus" : "normal",
+  "profileName" : "PDF/A-3b validation profile",
+  "statement" : "PDF file is compliant with Validation Profile requirements.",
+  "compliant" : true
+} ],"processingTime":{
+  "start" : 1790699031124,
+  "finish" : 1790699032198,
+  "duration" : "00:00:01.074",
+  "difference" : 1074
+}}],"batchSummary":{
+  "duration" : {
+    "start" : 1790699030890,
+    "finish" : 1790699032240,
+    "duration" : "00:00:01.350",
+    "difference" : 1350
+  },
+  "totalJobs" : 1,
+  "outOfMemory" : 0,
+  "veraExceptions" : 0,
+  "featuresSummary" : {
+    "failedJobCount" : 0,
+    "totalJobCount" : 0,
+    "successfulJobCount" : 0
+  },
+  "repairSummary" : {
+    "failedJobCount" : 0,
+    "totalJobCount" : 0,
+    "successfulJobCount" : 0
+  },
+  "multiJob" : false,
+  "failedEncryptedJobs" : 0,
+  "failedParsingJobs" : 0,
+  "validationSummary" : {
+    "failedJobCount" : 0,
+    "totalJobCount" : 1,
+    "compliantPdfaCount" : 1,
+    "nonCompliantPdfaCount" : 0,
+    "successfulJobCount" : 1
+  }
+}}}

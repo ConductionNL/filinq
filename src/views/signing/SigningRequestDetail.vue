@@ -23,6 +23,35 @@
 					>: {{ signingStore.signingRequest.provider }}
 				</div>
 			</div>
+			<SigningEnvelopePanel
+				v-if="signingStore.signingRequest.envelopeRef"
+				:envelopeId="signingStore.signingRequest.envelopeRef"
+				@changed="reload" />
+			<NcNoteCard v-if="stepUpDone && !signed" type="success">
+				{{
+					t(
+						'filinq',
+						'Your identity is confirmed. Sign now; the confirmation counts for 15 minutes.',
+					)
+				}}
+				<NcButton
+					variant="primary"
+					:disabled="signingStore.loading"
+					@click="signNow">
+					{{ t('filinq', 'Sign now') }}
+				</NcButton>
+			</NcNoteCard>
+			<NcNoteCard v-if="signed" type="success">
+				{{ t('filinq', 'You signed this document.') }}
+			</NcNoteCard>
+			<SignerStepUpModal
+				v-if="signingStore.stepUp"
+				:show="true"
+				:requestId="id"
+				:signerId="returned.signerId"
+				:requiredAssurance="signingStore.stepUp.requiredAssurance"
+				@close="signingStore.stepUp = null"
+				@ready="signNow" />
 			<NcButton
 				v-if="signingStore.signingRequest.documentFileId"
 				variant="secondary"
@@ -63,12 +92,22 @@
 
 <script>
 import { translate as t } from '@nextcloud/l10n'
-import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
+import { NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
+import SignerStepUpModal from '../../modals/SignerStepUpModal.vue'
+import SigningEnvelopePanel from './SigningEnvelopePanel.vue'
+import { stepUpReturn } from '../../services/signerStepUp.js'
 import { useSigningStore } from '../../store/modules/signing.js'
 
 export default {
 	name: 'SigningRequestDetail',
-	components: { NcButton, NcLoadingIcon },
+	components: {
+		NcButton,
+		NcLoadingIcon,
+		NcNoteCard,
+		SignerStepUpModal,
+		SigningEnvelopePanel,
+	},
+
 	props: {
 		/**
 		 * The signing request to show.
@@ -101,7 +140,67 @@ export default {
 		return { signingStore, t }
 	},
 
+	data() {
+		return { signed: false }
+	},
+
+	computed: {
+		/**
+		 * What the identity broker left in the query when it sent the signer back.
+		 *
+		 * @return {object} `{ status, signerId }`.
+		 *
+		 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+		 */
+		returned() {
+			return stepUpReturn(this.$route?.query)
+		},
+
+		/**
+		 * Did the signer come back from a confirmed step-up for a signer record.
+		 *
+		 * @return {boolean} True when the signature can be tried again.
+		 *
+		 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+		 */
+		stepUpDone() {
+			return this.returned.status === 'done' && this.returned.signerId !== ''
+		},
+	},
+
 	methods: {
+		/**
+		 * Try the signature again after a step-up (REQ-DDSIR-003). A refusal
+		 * that still needs a stronger identity opens the step-up dialog.
+		 *
+		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+		 */
+		async signNow() {
+			const result = await this.signingStore.signDocument(
+				this.id,
+				this.returned.signerId,
+			)
+			if (result) {
+				this.signed = true
+				await this.signingStore.fetchSigningRequest(this.id)
+				await this.signingStore.fetchAuditTrail(this.id)
+			}
+		},
+
+		/**
+		 * Read the request and its audit trail again after the envelope changed them.
+		 *
+		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/specs/bulk-signing-field-builder/spec.md#requirement-batch-and-envelope-surfaces-are-first-class-ui-req-ddbsf-005
+		 */
+		async reload() {
+			await this.signingStore.fetchSigningRequest(this.id)
+			await this.signingStore.fetchAuditTrail(this.id)
+		},
+
 		/**
 		 * Navigate to the restored SignatureVerification page for this
 		 * request's document file id.

@@ -24,7 +24,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/template-charts/specs/template-charts/spec.md
+ * @spec openspec/specs/template-charts/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -33,6 +33,8 @@
 declare(strict_types=1);
 
 namespace OCA\Filinq\Service\Charts;
+
+use OCP\IL10N;
 
 /**
  * Renders bar, line, and pie charts as self-contained, deterministic SVG.
@@ -49,7 +51,7 @@ namespace OCA\Filinq\Service\Charts;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/template-charts/tasks.md#task-1.1
+ * @spec openspec/changes/archive/2026-09-28-template-charts/tasks.md#task-1.1
  */
 class ChartSvgRenderer {
 
@@ -140,10 +142,16 @@ class ChartSvgRenderer {
 	 * Collaborators are pure, stateless helpers with no I/O, so they are
 	 * composed here rather than injected — this keeps the public constructor
 	 * argument-free for both the DI container and direct instantiation.
+	 * The one optional argument translates the error markers; without it
+	 * they stay in English.
+	 *
+	 * @param IL10N|null $l10n Translates the error markers (REQ-DDTCH-002).
 	 *
 	 * @return void
 	 */
-	public function __construct() {
+	public function __construct(
+		private readonly ?IL10N $l10n = null,
+	) {
 		$this->normalizer = new ChartDataNormalizer();
 		$this->palette = new ChartPalette();
 		$this->svg = new SvgPrimitives();
@@ -172,7 +180,7 @@ class ChartSvgRenderer {
 	 *
 	 * @return string SVG markup (starts with `<svg`).
 	 *
-	 * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-001
+	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-001
 	 */
 	public function render(string $type, array $data, array $options = []): string {
 		$this->lastWarning = null;
@@ -184,7 +192,8 @@ class ChartSvgRenderer {
 			return $this->renderPlaceholder(
 				width: $width,
 				height: $height,
-				message: 'chart error: unsupported chart type "' . $type . '"'
+				message: 'chart error: unsupported chart type "%s"',
+				parameters: [$type]
 			);
 		}
 
@@ -194,20 +203,32 @@ class ChartSvgRenderer {
 		);
 
 		if ($normalized instanceof ChartRenderError) {
-			return $this->renderPlaceholder(width: $width, height: $height, message: $normalized->message);
+			return $this->renderPlaceholder(
+				width: $width,
+				height: $height,
+				message: $normalized->message,
+				parameters: $normalized->parameters
+			);
 		}
 
 		$svg = $this->delegate(
 			type: $type,
-			normalized: $normalized,
-			palette: $this->palette->resolve(options: $options),
-			width: $width,
-			height: $height,
-			options: $options
+			chart: new ChartRequest(
+				normalized: $normalized,
+				palette: $this->palette->resolve(options: $options),
+				width: $width,
+				height: $height,
+				options: $options
+			)
 		);
 
 		if ($svg instanceof ChartRenderError) {
-			return $this->renderPlaceholder(width: $width, height: $height, message: $svg->message);
+			return $this->renderPlaceholder(
+				width: $width,
+				height: $height,
+				message: $svg->message,
+				parameters: $svg->parameters
+			);
 		}
 
 		return $svg;
@@ -219,7 +240,7 @@ class ChartSvgRenderer {
 	 *
 	 * @return string|null
 	 *
-	 * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-002
+	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-002
 	 */
 	public function getLastWarning(): ?string {
 		return $this->lastWarning;
@@ -229,50 +250,21 @@ class ChartSvgRenderer {
 	 * Hand a normalized payload to the renderer for its chart type.
 	 *
 	 * @param string $type Chart type (already validated as supported).
-	 * @param array $normalized Normalized `{labels, series}` data.
-	 * @param array $palette Ordered hex colors.
-	 * @param int $width Canvas width.
-	 * @param int $height Canvas height.
-	 * @param array $options Rendering options.
+	 * @param ChartRequest $chart The normalized data, palette, canvas size and options.
 	 *
 	 * @return string|ChartRenderError SVG markup, or the reason no chart could
 	 *                                 be drawn.
 	 */
-	private function delegate(
-		string $type,
-		array $normalized,
-		array $palette,
-		int $width,
-		int $height,
-		array $options,
-	): string|ChartRenderError {
+	private function delegate(string $type, ChartRequest $chart): string|ChartRenderError {
 		if ($type === 'bar') {
-			return $this->bar->render(
-				normalized: $normalized,
-				palette: $palette,
-				width: $width,
-				height: $height,
-				options: $options
-			);
+			return $this->bar->render(chart: $chart);
 		}
 
 		if ($type === 'line') {
-			return $this->line->render(
-				normalized: $normalized,
-				palette: $palette,
-				width: $width,
-				height: $height,
-				options: $options
-			);
+			return $this->line->render(chart: $chart);
 		}
 
-		return $this->pie->render(
-			normalized: $normalized,
-			palette: $palette,
-			width: $width,
-			height: $height,
-			options: $options
-		);
+		return $this->pie->render(chart: $chart);
 
 	}//end delegate()
 
@@ -283,21 +275,25 @@ class ChartSvgRenderer {
 	 *
 	 * @param int $width Canvas width.
 	 * @param int $height Canvas height.
-	 * @param string $message Message to display (escaped).
+	 * @param string $message    English source message with `%s` slots (escaped on output).
+	 * @param array  $parameters Values for the slots.
 	 *
 	 * @return string SVG markup.
+	 *
+	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-002
 	 */
-	private function renderPlaceholder(int $width, int $height, string $message): string {
+	private function renderPlaceholder(int $width, int $height, string $message, array $parameters = []): string {
+		if ($this->l10n !== null) {
+			$message = $this->l10n->t($message, $parameters);
+		} elseif ($parameters !== []) {
+			$message = vsprintf($message, $parameters);
+		}
+
 		$this->lastWarning = $message;
 
-		$parts = [];
-		$parts[] = $this->svg->svgOpenTag(width: $width, height: $height);
-		$parts[] = $this->svg->rectEl(x: 1, y: 1, width: $width - 2, height: $height - 2, color: '#F5F5F5');
-		$parts[] = $this->svg->rectOutlineEl(x: 1, y: 1, width: $width - 2, height: $height - 2, color: '#CCCCCC');
-		$parts[] = $this->svg->textEl(x: $width / 2, y: $height / 2, text: $message, anchor: 'middle', size: 11, color: '#888888');
-		$parts[] = '</svg>';
-
-		return implode('', $parts);
+		return $this->svg->svgOpenTag(width: $width, height: $height)
+			. $this->svg->placeholderEl(canvas: new SvgSize(width: $width, height: $height), message: $message)
+			. '</svg>';
 	}//end renderPlaceholder()
 
 	/**

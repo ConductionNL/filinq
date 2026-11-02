@@ -15,7 +15,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/template-charts/specs/template-charts/spec.md
+ * @spec openspec/specs/template-charts/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -37,7 +37,7 @@ use Traversable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/template-charts/tasks.md#task-1.2
+ * @spec openspec/changes/archive/2026-09-28-template-charts/tasks.md#task-1.2
  */
 class TableDataNormalizer {
 
@@ -63,7 +63,7 @@ class TableDataNormalizer {
 	 *
 	 * @return array<int, array<string, mixed>>
 	 *
-	 * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-004
+	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-004
 	 */
 	public function normalizeCollection($collection): array {
 		if (is_array($collection) === false && $collection instanceof Traversable) {
@@ -101,7 +101,7 @@ class TableDataNormalizer {
 	 *
 	 * @return array<int, array{key: string, label: string}>
 	 *
-	 * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-004
+	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-004
 	 */
 	public function deriveColumns(array $firstRow): array {
 		$columns = [];
@@ -126,7 +126,7 @@ class TableDataNormalizer {
 	 *
 	 * @return array<int, array{key: string, label: string, align: string, format: string}>
 	 *
-	 * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-004
+	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-004
 	 */
 	public function normalizeColumns(array $columns): array {
 		$normalized = [];

@@ -25,6 +25,7 @@ namespace OCA\Filinq\Service;
 
 use Exception;
 use OCA\Filinq\Exception\RegisterNotConfiguredException;
+use OCA\Filinq\Kernel\Contracts\OpenRegisterResolverInterface;
 
 /**
  * Service for resolving OpenRegister configuration and namespace validation
@@ -35,7 +36,7 @@ use OCA\Filinq\Exception\RegisterNotConfiguredException;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  */
-class OpenRegisterResolver {
+class OpenRegisterResolver implements OpenRegisterResolverInterface {
 	/**
 	 * Constructor for OpenRegisterResolver
 	 *

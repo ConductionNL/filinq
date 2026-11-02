@@ -1,0 +1,114 @@
+{
+    "every header": {
+        "from": "Anna <anna@example.nl>",
+        "replyTo": "balie@example.nl",
+        "to": "a@example.nl, b@example.nl",
+        "cc": "c@example.nl",
+        "subject": "Uw aanvraag",
+        "date": "2026-10-31 10:15"
+    },
+    "no headers property": {
+        "from": "",
+        "replyTo": "",
+        "to": "",
+        "cc": "",
+        "subject": "",
+        "date": ""
+    },
+    "headers not an array": {
+        "from": "",
+        "replyTo": "",
+        "to": "",
+        "cc": "",
+        "subject": "",
+        "date": ""
+    },
+    "an empty map": {
+        "from": "",
+        "replyTo": "",
+        "to": "",
+        "cc": "",
+        "subject": "",
+        "date": ""
+    },
+    "to and cc as strings": {
+        "from": "",
+        "replyTo": "",
+        "to": "a@example.nl, b@example.nl",
+        "cc": "",
+        "subject": "",
+        "date": ""
+    },
+    "lists with blanks and non-strings": {
+        "from": "",
+        "replyTo": "",
+        "to": "a@example.nl",
+        "cc": "c@example.nl",
+        "subject": "",
+        "date": ""
+    },
+    "to and cc as numbers": {
+        "from": "",
+        "replyTo": "",
+        "to": "",
+        "cc": "",
+        "subject": "",
+        "date": ""
+    },
+    "non-string scalars": {
+        "from": "",
+        "replyTo": "",
+        "to": "",
+        "cc": "",
+        "subject": "",
+        "date": ""
+    },
+    "empty strings": {
+        "from": "",
+        "replyTo": "",
+        "to": "",
+        "cc": "",
+        "subject": "",
+        "date": ""
+    },
+    "untrimmed from": {
+        "from": "  Anna  ",
+        "replyTo": "",
+        "to": "",
+        "cc": "",
+        "subject": "",
+        "date": ""
+    },
+    "an unparseable date": {
+        "from": "",
+        "replyTo": "",
+        "to": "",
+        "cc": "",
+        "subject": "",
+        "date": "[geanonimiseerd]"
+    },
+    "a blank date": {
+        "from": "",
+        "replyTo": "",
+        "to": "",
+        "cc": "",
+        "subject": "",
+        "date": ""
+    },
+    "a numeric date": {
+        "from": "",
+        "replyTo": "",
+        "to": "",
+        "cc": "",
+        "subject": "",
+        "date": ""
+    },
+    "keyed lists": {
+        "from": "",
+        "replyTo": "",
+        "to": "a@example.nl, b@example.nl",
+        "cc": "",
+        "subject": "",
+        "date": ""
+    }
+}

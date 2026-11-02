@@ -35,8 +35,12 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\DocumentValidationServiceInterface;
+use OCA\Filinq\Service\Validation\AccessibilityChecks;
+use OCA\Filinq\Service\Validation\ArchivalChecks;
 use OCA\Filinq\Service\Validation\DocumentFileInspector;
 use OCA\Filinq\Service\Validation\ValidationProfileResolver;
+use OCA\Filinq\Service\VeraPdf\ConformanceService;
 use OCP\Files\File;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -53,30 +57,14 @@ use Throwable;
  *
  * @spec openspec/specs/document-validation-checks/spec.md
  */
-class DocumentValidationService {
-	/**
-	 * Check identifiers.
-	 */
-	public const CHECK_FORMAT_NOT_ALLOWED = 'format-not-allowed';
+class DocumentValidationService implements DocumentValidationServiceInterface {
 	public const CHECK_EXTENSION_MIME = 'extension-mime-mismatch';
-	public const CHECK_FILE_UNREADABLE = 'file-unreadable';
 	public const CHECK_PDF_ENCRYPTED = 'pdf-encrypted';
-	public const CHECK_TEXT_LAYER_MISSING = 'text-layer-missing';
 	public const CHECK_METADATA_INCOMPLETE = 'metadata-incomplete';
 
-	/**
-	 * Severity values.
-	 */
-	public const SEVERITY_OFF = 'off';
 	public const SEVERITY_WARNING = 'warning';
-	public const SEVERITY_BLOCKING = 'blocking';
 
-	/**
-	 * Verdict values.
-	 */
-	public const STATUS_PASSED = 'passed';
 	public const STATUS_WARNINGS = 'warnings';
-	public const STATUS_FAILED = 'failed';
 
 	/**
 	 * Resolves the effective profile for a document type.
@@ -93,6 +81,20 @@ class DocumentValidationService {
 	private readonly DocumentFileInspector $inspector;
 
 	/**
+	 * The archival checks (veraPDF).
+	 *
+	 * @var ArchivalChecks
+	 */
+	private readonly ArchivalChecks $archival;
+
+	/**
+	 * The accessibility checks (presence heuristics).
+	 *
+	 * @var AccessibilityChecks
+	 */
+	private readonly AccessibilityChecks $accessibility;
+
+	/**
 	 * Constructor.
 	 *
 	 * The two collaborators are composed here rather than injected so the
@@ -100,14 +102,19 @@ class DocumentValidationService {
 	 * The logger and app config are consumed only by those collaborators, so
 	 * they are not retained as properties.
 	 *
-	 * @param LoggerInterface $logger Logger.
-	 * @param IAppConfig $appConfig App configuration.
+	 * @param LoggerInterface         $logger      Logger.
+	 * @param IAppConfig              $appConfig   App configuration.
+	 * @param ConformanceService|null $conformance The veraPDF conformance check for the archival checks.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-verapdf-validation/tasks.md#task-2.4
 	 */
-	public function __construct(LoggerInterface $logger, IAppConfig $appConfig) {
+	public function __construct(LoggerInterface $logger, IAppConfig $appConfig, ?ConformanceService $conformance = null) {
 		$this->profiles = new ValidationProfileResolver(logger: $logger, appConfig: $appConfig);
 		$this->inspector = new DocumentFileInspector(appConfig: $appConfig);
+		$this->archival = new ArchivalChecks(conformance: $conformance);
+		$this->accessibility = new AccessibilityChecks();
 
 	}//end __construct()
 
@@ -137,7 +144,9 @@ class DocumentValidationService {
 			$this->readabilityFindings(profile: $profile, contentFailed: $read['failed']),
 			$this->encryptionFindings(profile: $profile, mime: $mime, content: $read['content']),
 			$this->textLayerFindings(profile: $profile, mime: $mime, content: $read['content']),
-			$this->metadataFindings(profile: $profile, record: $record)
+			$this->metadataFindings(profile: $profile, record: $record),
+			$this->accessibility->findings(profile: $profile, mime: $mime, content: $read['content']),
+			$this->archival->findings(profile: $profile, mime: $mime, file: $file)
 		);
 
 		return [
@@ -414,6 +423,7 @@ class DocumentValidationService {
 	private function finding(string $checkId, array $profile, string $messageKey, array $params = []): array {
 		return [
 			'checkId' => $checkId,
+			'category' => self::CATEGORY_DOCUMENT,
 			'severity' => $this->checkSeverity(profile: $profile, check: $checkId),
 			'message' => $messageKey,
 			'params' => $params,

@@ -186,4 +186,21 @@ class AnonymizationServiceConfidentialityTest extends TestCase {
 		$this->assertArrayHasKey('entities', $result);
 
 	}//end testResultOmitsConfidentialityFieldsWhenNoLabelResolves()
+
+	/**
+	 * The extraction result keeps its field order, with the confidentiality fields last.
+	 *
+	 * @return void
+	 */
+	public function testResultFieldOrder(): void {
+		$this->mockConfidentialityLabel->method('getLabelForFile')->willReturn(new ConfidentialityLabel('Confidential', 2));
+
+		$result = $this->makeService()->extractAndDetectEntities(fileId: 1);
+
+		$this->assertSame(
+			['entities', 'entityCount', 'riskLevel', 'customDictionaryWarning', 'confidentialityLabel', 'confidentialityLevel'],
+			array_slice(array_keys($result), 0, 6)
+		);
+
+	}//end testResultFieldOrder()
 }//end class

@@ -28,9 +28,10 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use Exception;
-use OCA\Filinq\BackgroundJob\FolderExtractionJob;
+use OCA\Filinq\Kernel\Contracts\FolderBatchServiceInterface;
+use OCA\Filinq\Kernel\JobQueueInterface;
 use OCA\Filinq\Service\Conversion\OutputLayoutResolver;
-use OCP\BackgroundJob\IJobList;
+use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
 use OCP\IAppConfig;
 use OCP\IUserSession;
@@ -53,7 +54,7 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/changes/folder-batch-accept-folder-id/tasks.md#task-1
  * @spec openspec/changes/files-confidential-labels/specs/files-confidential-labels/spec.md
  */
-class FolderBatchService {
+class FolderBatchService implements FolderBatchServiceInterface {
 
 	/**
 	 * Resolves the source folder and enumerates its analysable files.
@@ -73,7 +74,7 @@ class FolderBatchService {
 	 * @param IRootFolder $rootFolder Root folder for file operations
 	 * @param IUserSession $userSession User session for current user
 	 * @param BatchStateService $stateService Batch state management
-	 * @param IJobList $jobList Background job list
+	 * @param JobQueueInterface $jobList Background job list
 	 * @param AnonymizationService $anonService Anonymization/extraction service
 	 * @param OutputLayoutResolver $layout Output-layout helper (used here to
 	 *                                     identify legacy `_anonymized` outputs
@@ -94,7 +95,7 @@ class FolderBatchService {
 		private readonly IRootFolder $rootFolder,
 		private readonly IUserSession $userSession,
 		private readonly BatchStateService $stateService,
-		private readonly IJobList $jobList,
+		private readonly JobQueueInterface $jobList,
 		private readonly AnonymizationService $anonService,
 		OutputLayoutResolver $layout,
 		ConfidentialityLabelService $confidentialityLabel,
@@ -135,7 +136,51 @@ class FolderBatchService {
 			userFolder: $userFolder
 		);
 
-		$files = $this->enumerator->enumerate(folder: $node);
+		$batchFiles = $this->startingFileRecords(files: $this->requireBatchableFiles(folder: $node));
+
+		// Canonical identifiers captured from the resolved node — stored and
+		// returned regardless of which input method the caller used.
+		$folderFields = [
+			'sourceType' => 'folder',
+			'folderId' => $node->getId(),
+			'folderPath' => ($userFolder->getRelativePath($node->getPath()) ?? $node->getPath()),
+		];
+
+		$batch = array_merge($this->stateService->createBatch($userId, $batchFiles), $folderFields);
+		$this->stateService->updateBatch($batch['batchId'], $batch);
+
+		// Run extraction asynchronously: the shutdown function fires after the
+		// HTTP response has been flushed to the client (via fastcgi_finish_request).
+		// The IJobList entry serves as a fallback if the shutdown handler is
+		// interrupted (e.g. process kill, memory limit).
+		$this->jobList->add(JobQueueInterface::FOLDER_EXTRACTION, ['batchId' => $batch['batchId']]);
+		$this->scheduleExtraction(batchId: $batch['batchId']);
+
+		$inputMethod = 'path';
+		if ($folderId !== null) {
+			$inputMethod = 'id';
+		}
+
+		$this->logger->info(
+			'Folder batch created, extraction job fired',
+			['batchId' => $batch['batchId'], 'folderId' => $batch['folderId'], 'folderPath' => $batch['folderPath']]
+				+ ['fileCount' => count($batchFiles), 'inputMethod' => $inputMethod]
+		);
+
+		return $batch;
+	}//end createFolderBatch()
+
+	/**
+	 * The files of a folder, when there are some and not more than a batch may hold.
+	 *
+	 * @param Folder $folder The resolved folder.
+	 *
+	 * @return array<int, \OCP\Files\File> The files.
+	 *
+	 * @throws Exception Code 400 when the folder is empty or holds too many files.
+	 */
+	private function requireBatchableFiles(Folder $folder): array {
+		$files = $this->enumerator->enumerate(folder: $folder);
 
 		if (empty($files) === true) {
 			throw new Exception('No files found in folder', 400);
@@ -149,18 +194,20 @@ class FolderBatchService {
 			);
 		}
 
-		// Canonical identifiers captured from the resolved node — stored and
-		// returned regardless of which input method the caller used.
-		$resolvedFolderId = $node->getId();
-		$resolvedFolderPath = $userFolder->getRelativePath($node->getPath()) ?? $node->getPath();
-		$inputMethod = 'path';
-		if ($folderId !== null) {
-			$inputMethod = 'id';
-		}
+		return $files;
+	}//end requireBatchableFiles()
 
-		$batchFiles = [];
+	/**
+	 * Each file's record as a new batch starts it: uploaded, nothing found yet.
+	 *
+	 * @param array<int, \OCP\Files\File> $files The files.
+	 *
+	 * @return array<int, array<string, mixed>> The records.
+	 */
+	private function startingFileRecords(array $files): array {
+		$records = [];
 		foreach ($files as $file) {
-			$batchFiles[] = [
+			$records[] = [
 				'fileId' => $file->getId(),
 				'fileName' => $file->getName(),
 				'status' => 'uploaded',
@@ -170,34 +217,8 @@ class FolderBatchService {
 			];
 		}
 
-		$batch = $this->stateService->createBatch($userId, $batchFiles);
-
-		// Store folder metadata on the batch — both identifiers regardless of input.
-		$batch['sourceType'] = 'folder';
-		$batch['folderId'] = $resolvedFolderId;
-		$batch['folderPath'] = $resolvedFolderPath;
-		$this->stateService->updateBatch($batch['batchId'], $batch);
-
-		// Run extraction asynchronously: the shutdown function fires after the
-		// HTTP response has been flushed to the client (via fastcgi_finish_request).
-		// The IJobList entry serves as a fallback if the shutdown handler is
-		// interrupted (e.g. process kill, memory limit).
-		$this->jobList->add(FolderExtractionJob::class, ['batchId' => $batch['batchId']]);
-		$this->scheduleExtraction(batchId: $batch['batchId']);
-
-		$this->logger->info(
-			'Folder batch created, extraction job fired',
-			[
-				'batchId' => $batch['batchId'],
-				'folderId' => $resolvedFolderId,
-				'folderPath' => $resolvedFolderPath,
-				'fileCount' => count($batchFiles),
-				'inputMethod' => $inputMethod,
-			]
-		);
-
-		return $batch;
-	}//end createFolderBatch()
+		return $records;
+	}//end startingFileRecords()
 
 	/**
 	 * Schedule extraction to run after the HTTP response is flushed
@@ -215,56 +236,66 @@ class FolderBatchService {
 	 * @spec openspec/changes/folder-batch-accept-folder-id/tasks.md#task-1
 	 */
 	private function scheduleExtraction(string $batchId): void {
-		$stateService = $this->stateService;
-		$anonService = $this->anonService;
-		$jobList = $this->jobList;
-		$logger = $this->logger;
-
 		register_shutdown_function(
-			static function () use ($batchId, $stateService, $anonService, $jobList, $logger): void {
+			function () use ($batchId): void {
 				// Flush the response to the client before doing heavy work.
 				if (function_exists('fastcgi_finish_request') === true) {
 					fastcgi_finish_request();
 				}
 
-				$batch = $stateService->getBatch($batchId);
-				if ($batch === null) {
-					return;
-				}
-
-				$batch['status'] = 'extracting';
-				$stateService->updateBatch($batchId, $batch);
-
-				foreach ($batch['files'] as $i => $file) {
-					if ($file['status'] !== 'uploaded') {
-						continue;
-					}
-
-					try {
-						$result = $anonService->extractAndDetectEntities((int)$file['fileId']);
-						$batch['files'][$i]['status'] = 'extracted';
-						$batch['files'][$i]['entityCount'] = $result['entityCount'];
-					} catch (\Exception $e) {
-						$logger->warning(
-							'Shutdown extraction failed for file',
-							['batchId' => $batchId, 'fileId' => $file['fileId'], 'error' => $e->getMessage()]
-						);
-						$batch['files'][$i]['status'] = 'error';
-						$batch['files'][$i]['error'] = $e->getMessage();
-					}
-
-					$stateService->updateBatch($batchId, $batch);
-				}//end foreach
-
-				$batch['status'] = 'review';
-				$stateService->updateBatch($batchId, $batch);
-
-				// Extraction completed — remove the fallback background job.
-				$jobList->remove(FolderExtractionJob::class, ['batchId' => $batchId]);
+				$this->extractBatch(batchId: $batchId);
 			}
 		);
 
 	}//end scheduleExtraction()
+
+	/**
+	 * Extract and detect entities in every uploaded file of a batch, then hand it to review.
+	 *
+	 * A file that fails is marked `error` with its message; the others go on.
+	 * The fallback background job is removed once the batch reaches review.
+	 *
+	 * @param string $batchId The batch.
+	 *
+	 * @return void
+	 */
+	private function extractBatch(string $batchId): void {
+		$batch = $this->stateService->getBatch($batchId);
+		if ($batch === null) {
+			return;
+		}
+
+		$batch['status'] = 'extracting';
+		$this->stateService->updateBatch($batchId, $batch);
+
+		foreach ($batch['files'] as $i => $file) {
+			if ($file['status'] !== 'uploaded') {
+				continue;
+			}
+
+			try {
+				$result = $this->anonService->extractAndDetectEntities((int)$file['fileId']);
+				$batch['files'][$i]['status'] = 'extracted';
+				$batch['files'][$i]['entityCount'] = $result['entityCount'];
+			} catch (\Exception $e) {
+				$this->logger->warning(
+					'Shutdown extraction failed for file',
+					['batchId' => $batchId, 'fileId' => $file['fileId'], 'error' => $e->getMessage()]
+				);
+				$batch['files'][$i]['status'] = 'error';
+				$batch['files'][$i]['error'] = $e->getMessage();
+			}
+
+			$this->stateService->updateBatch($batchId, $batch);
+		}//end foreach
+
+		$batch['status'] = 'review';
+		$this->stateService->updateBatch($batchId, $batch);
+
+		// Extraction completed — remove the fallback background job.
+		$this->jobList->remove(JobQueueInterface::FOLDER_EXTRACTION, ['batchId' => $batchId]);
+
+	}//end extractBatch()
 
 	/**
 	 * Get the current user ID

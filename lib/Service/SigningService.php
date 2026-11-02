@@ -25,6 +25,15 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use Exception;
 use OCA\Filinq\Exception\RegisterNotConfiguredException;
+use OCA\Filinq\Kernel\Contracts\SigningServiceInterface;
+use OCA\Filinq\Kernel\SigningAuditActor;
+use OCA\Filinq\Kernel\SigningAuditEvent;
+use OCA\Filinq\Kernel\SigningAuditSubject;
+use OCA\Filinq\Service\SignerAuth\SigningAssuranceGate;
+use OCA\Filinq\Service\Signing\GuardianConsentGuard;
+use OCA\Filinq\Service\Signing\PortalSignatureAssurance;
+use OCA\Filinq\Service\Signing\SignerEntries;
+use OCA\Filinq\Service\Signing\SigningAct;
 use RuntimeException;
 
 /**
@@ -39,12 +48,22 @@ use RuntimeException;
  * SignedArtifactProducer and SigningRequestValidator were extracted earlier;
  * SigningActorResolver (who is acting, and may they act as this signer) and
  * SigningConclusionEmitter (the cross-app conclusion contract) followed, so
- * the class now meets the length, coupling, complexity and parameter-list
- * thresholds on its own — no suppressions.
+ * the class now meets the length, complexity and parameter-list thresholds on
+ * its own. Coupling went back over the line with the signing folder's mandate
+ * service, which is a collaborator rather than work this class does itself.
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The thirteenth collaborator is
+ * SigningMandateService, added so a direct signing attempt is refused by the
+ * same rule that leaves the document out of the folder. Inlining that rule here
+ * would be the second copy of it. The fourteenth is GuardianConsentGuard, for
+ * the same reason: the guardian rule is applied here and kept there. The
+ * fifteenth is SigningAssuranceGate (signer-identity-rails REQ-DDSIR-003): the
+ * identity gate runs here, at every act, and its rules live there.
  *
  * @spec openspec/specs/document-signing/spec.md
+ * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
  */
-class SigningService {
+class SigningService implements SigningServiceInterface {
 
 	/**
 	 * Valid status transitions for signing requests
@@ -53,7 +72,7 @@ class SigningService {
 	 */
 	private const STATUS_TRANSITIONS = [
 		'DRAFT' => ['PENDING', 'CANCELLED'],
-		'PENDING' => ['IN_PROGRESS', 'CANCELLED', 'EXPIRED'],
+		'PENDING' => ['IN_PROGRESS', 'DECLINED', 'CANCELLED', 'EXPIRED'],
 		'IN_PROGRESS' => ['COMPLETED', 'DECLINED', 'CANCELLED', 'EXPIRED'],
 		'COMPLETED' => [],
 		'DECLINED' => [],
@@ -70,6 +89,23 @@ class SigningService {
 	 * @param SigningRequestValidator $validator Validates request data + the provider/level pair
 	 * @param SigningActorResolver $actorResolver Resolves the acting identity + authorises it
 	 * @param SigningConclusionEmitter $emitter Emits the cross-app SigningConcludedEvent
+	 * @param GuardianConsentGuard $consentGuard Holds the guardian rule for signers under the
+	 *                                           age of consent (signer-identity-rails
+	 *                                           REQ-DDSIR-008 to 010). Required, not a
+	 *                                           nullable seam: an unwired safety guard
+	 *                                           must fail construction, not pass silently.
+	 * @param SigningAssuranceGate $assuranceGate The identity gate of every signing act
+	 *                                           (signer-identity-rails REQ-DDSIR-003).
+	 *                                           Required for the same reason as the
+	 *                                           consent guard.
+	 * @param SigningMandateService|null $mandateService Applies the consuming app's per-type
+	 *                                                   mandate declaration to a direct signing
+	 *                                                   attempt (signing-folder-across-cases
+	 *                                                   REQ-SFC-04). An ADDITIVE seam: null
+	 *                                                   behaves exactly as before, so callers
+	 *                                                   constructing this service by hand are
+	 *                                                   unchanged, while the DI container
+	 *                                                   resolves the real one.
 	 *
 	 * @return void
 	 */
@@ -80,6 +116,9 @@ class SigningService {
 		private readonly SigningRequestValidator $validator,
 		private readonly SigningActorResolver $actorResolver,
 		private readonly SigningConclusionEmitter $emitter,
+		private readonly GuardianConsentGuard $consentGuard,
+		private readonly SigningAssuranceGate $assuranceGate,
+		private readonly ?SigningMandateService $mandateService = null,
 	) {
 
 	}//end __construct()
@@ -109,8 +148,11 @@ class SigningService {
 	 * @return array<string, mixed> The created signing request
 	 *
 	 * @throws RuntimeException If creation fails
+	 * @throws \InvalidArgumentException With code 400 when a guardian entry is invalid,
+	 *                                   or a signer under the age of consent has no guardian.
 	 *
 	 * @spec openspec/changes/digital-signing-integration/tasks.md#3-2
+	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function createRequest(array $data): array {
 		// Throws RuntimeException('No authenticated user') when there is no
@@ -150,62 +192,176 @@ class SigningService {
 		// with 400 BEFORE any object is persisted, so a QES request can never
 		// be routed to a provider that will later silently complete it with a
 		// lower-assurance (e.g. native SES) artifact.
-		$this->validator->validateProviderLevelPair(
-			provider: (string)$request['provider'],
-			level: (string)$request['signatureLevel']
+		$this->validator->validateProviderLevelPair(provider: (string)$request['provider'], level: (string)$request['signatureLevel']);
+
+		// Guardian consent (signer-identity-rails REQ-DDSIR-008/009): every
+		// request records the age of consent that governs it, and the signer
+		// entries are validated and linked BEFORE anything is persisted. A
+		// request naming a signer under that age without a guardian is refused
+		// with a 400 and leaves no object behind.
+		$request['guardianConsentAge'] = $this->consentGuard->appliedAge(data: $data);
+		// Required assurance, never below the level's floor (REQ-DDSIR-002).
+		$request = $this->assuranceGate->applyToRequest(request: $request, data: $data);
+		$signers = (array)($data['signers'] ?? []);
+
+		// A request that names nobody who can sign is refused before anything
+		// is stored, instead of being saved as PENDING for ever (#1209).
+		$this->validator->validateSigners(signers: $signers);
+		$prepared = $this->consentGuard->prepareSigners(
+			signers: $signers,
+			age: $request['guardianConsentAge'],
+			now: new DateTimeImmutable()
 		);
 
+		$request = $this->withInitiatorDocument(request: $request);
 		// Cross-app delegated-signing contract (filinq-signing-events): when a
 		// consumer raised this request through DocumentSigningRequestedEvent it
 		// carries provenance fields. Persist any present provenance onto the
 		// signing-request object (additive/optional) so the terminal
 		// SigningConcludedEvent can correlate back to the originating consumer.
 		// Internal requests omit these and are unaffected.
-		foreach (self::PROVENANCE_FIELDS as $field) {
+		$request = $this->withProvenance(request: $request, data: $data);
+		$request = $this->validator->withPlacements(request: $request, data: $data, producer: $this->artifactProducer);
+		$request = $this->artifactProducer->delegate(request: $request, signers: $signers);
+
+		['register' => $register, 'schema' => $schema] = $this->requireSigningRequestBinding();
+		$savedRequest = $objectService->saveObject(object: $request, register: $register, schema: $schema, _rbac: false, _unowned: true);
+		$createdRequest = $this->toArray(object: $savedRequest);
+
+		$requestId = $createdRequest['id'] ?? $createdRequest['uuid'] ?? '';
+		$createdRequest['signerIds'] = $this->persistSigners(
+			requestId: (string)$requestId,
+			entries: new SignerEntries(entries: $signers, prepared: $prepared)
+		);
+		$objectService->saveObject(object: $createdRequest, register: $register, schema: $schema, _rbac: false);
+		$createdRequest['assuranceFloor'] = $this->assuranceGate->floorFor(request: $request);
+
+		$this->auditService->logEvent(
+			event: new SigningAuditEvent(
+				request: new SigningAuditSubject(id: $requestId, signatureLevel: $request['signatureLevel'], provider: $request['provider']),
+				action: 'CREATED',
+				actor: new SigningAuditActor(
+					userId: $initiatorUserId,
+					displayName: $initiatorDisplayName,
+					ipAddress: $this->actorResolver->getClientIp()
+				)
+			)
+		);
+
+		return $createdRequest;
+	}//end createRequest()
+
+	/**
+	 * Copy the provenance a consuming app sent onto the request.
+	 *
+	 * @param array<string, mixed> $request The request being created.
+	 * @param array<string, mixed> $data    What the consumer sent.
+	 *
+	 * @return array<string, mixed> The request with any provenance fields set.
+	 *
+	 * @spec openspec/changes/filinq-signing-events/specs/filinq-signing-events/spec.md
+	 */
+	private function withProvenance(array $request, array $data): array {
+		foreach ([...self::PROVENANCE_FIELDS, 'envelopeRef'] as $field) {
 			if (empty($data[$field]) === false) {
 				$request[$field] = $data[$field];
 			}
 		}
 
-		['register' => $register, 'schema' => $schema] = $this->requireSigningRequestBinding();
-		$savedRequest = $objectService->saveObject(object: $request, register: $register, schema: $schema);
-		$createdRequest = $this->toArray(object: $savedRequest);
+		return $request;
 
-		$signers = $data['signers'] ?? [];
-		$signerIds = [];
+	}//end withProvenance()
+
+	/**
+	 * Point the request at the file as its initiator sees it.
+	 *
+	 * The file is resolved in the initiator's own folder and its name taken
+	 * from the node: a request may only name a file its initiator can read.
+	 *
+	 * @param array<string, mixed> $request The request being created.
+	 *
+	 * @return array<string, mixed> The request with the file's own id and name.
+	 *
+	 * @throws RuntimeException With code 403 when the initiator cannot read the file.
+	 *
+	 * @spec openspec/specs/document-signing/spec.md
+	 */
+	private function withInitiatorDocument(array $request): array {
+		$document = $this->artifactProducer->initiatorDocument(
+			fileId: (string)$request['documentFileId'],
+			initiatorUserId: (string)$request['initiatorUserId']
+		);
+		$request['documentFileId'] = (string)$document->getId();
+		$request['documentName'] = $document->getName();
+
+		return $request;
+
+	}//end withInitiatorDocument()
+
+	/**
+	 * Persist the signer records of a new request, guardians last.
+	 *
+	 * A guardian's record points at the signer it stands beside by record id,
+	 * which exists only once that signer is saved. Signers are therefore saved
+	 * first and guardians after; the returned ids keep the order of the entries.
+	 *
+	 * @param string $requestId The id of the saved signing request.
+	 * @param SignerEntries $entries The signer entries, their guardian fields and guardian-to-signer links.
+	 *
+	 * @return list<string> The signer record ids, in entry order.
+	 *
+	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 */
+	private function persistSigners(string $requestId, SignerEntries $entries): array {
+		$objectService = $this->settingsService->getObjectService();
 		['register' => $signerRegister, 'schema' => $signerSchema] = $this->requireSignerRecordBinding();
 
-		foreach ($signers as $index => $signerData) {
-			$signerRecord = [
-				'signingRequestId' => $createdRequest['id'] ?? $createdRequest['uuid'] ?? '',
-				'userId' => $signerData['userId'] ?? '',
-				'displayName' => $signerData['displayName'] ?? '',
-				'email' => $signerData['email'] ?? '',
-				'order' => $signerData['order'] ?? $index,
-				'status' => 'PENDING',
-			];
+		$signers = $entries->entries;
+		$links = $entries->links;
+		$ids = [];
+		$guardiansLast = array_diff_key($signers, $links) + array_intersect_key($signers, $links);
 
-			$savedSigner = $objectService->saveObject(object: $signerRecord, register: $signerRegister, schema: $signerSchema);
-			$created = $this->toArray(object: $savedSigner);
-			$signerIds[] = $created['id'] ?? $created['uuid'] ?? '';
+		foreach ($guardiansLast as $index => $signerData) {
+			$signerData = (array)$signerData;
+			$signerRecord = array_merge(
+				[
+					'signingRequestId' => $requestId,
+					'userId' => $signerData['userId'] ?? '',
+					'displayName' => $signerData['displayName'] ?? '',
+					'order' => $signerData['order'] ?? $index,
+					'status' => 'PENDING',
+				],
+				($entries->fields[$index] ?? []),
+				// A signer named by user id alone has no address: `format: email` refuses ''.
+				// An envelope's signer records carry envelopeRef, so the per-document notification skips them.
+				array_filter(
+					[
+						'email' => trim((string) ($signerData['email'] ?? '')),
+						'envelopeRef' => (string) ($signerData['envelopeRef'] ?? ''),
+					]
+				)
+			);
+
+			if (isset($links[$index]) === true) {
+				$signerRecord['guardianForSignerId'] = $ids[$links[$index]];
+			}
+
+			$created = $this->toArray(
+				object: $objectService->saveObject(
+					object: $signerRecord,
+					register: $signerRegister,
+					schema: $signerSchema,
+					_rbac: false,
+					_unowned: true
+				)
+			);
+			$ids[$index] = (string)($created['id'] ?? $created['uuid'] ?? '');
 		}//end foreach
 
-		$requestId = $createdRequest['id'] ?? $createdRequest['uuid'] ?? '';
-		$createdRequest['signerIds'] = $signerIds;
-		$objectService->saveObject(object: $createdRequest, register: $register, schema: $schema);
+		// Back into entry order: array_replace() keeps the key order of its first argument.
+		return array_values(array_replace(array_fill_keys(array_keys($signers), ''), $ids));
 
-		$this->auditService->logEvent(
-			signingRequestId: $requestId,
-			action: 'CREATED',
-			actorUserId: $initiatorUserId,
-			actorDisplayName: $initiatorDisplayName,
-			ipAddress: $this->actorResolver->getClientIp(),
-			signatureLevel: $request['signatureLevel'],
-			provider: $request['provider']
-		);
-
-		return $createdRequest;
-	}//end createRequest()
+	}//end persistSigners()
 
 	/**
 	 * Get a signing request by ID
@@ -227,21 +383,11 @@ class SigningService {
 	 * @return array<string, mixed>|null The signing request, or null when a
 	 *                                   scoped caller (callerUserId set,
 	 *                                   non-admin) is neither initiator nor
-	 *                                   signer (access denied collapses to
-	 *                                   null). A genuinely not-found request
-	 *                                   throws RuntimeException('Signing request
-	 *                                   not found') so the controller can map it
-	 *                                   to a 404.
+	 *                                   signer, or the request does not exist.
 	 *
-	 * @throws RuntimeException When the underlying record does not exist.
+	 * @throws RegisterNotConfiguredException When the signing register is not configured.
 	 *
 	 * @spec openspec/changes/digital-signing-integration/tasks.md#3-1
-	 *
-	 * Wilco #6 blocker fix (filinq#100, 2026-06-06): the access-denied path
-	 * still returns null (indistinguishable from the controller's not-found
-	 * 404 for a scoped caller), so an unrelated user cannot probe request-ID
-	 * existence. Not-found now throws a fixed, ID-free message ('Signing
-	 * request not found') — no UUID is echoed, so nothing is leaked.
 	 */
 	public function getRequest(string $requestId, string $callerUserId = ''): ?array {
 		$objectService = $this->settingsService->getObjectService();
@@ -252,13 +398,11 @@ class SigningService {
 		// request that does exist.
 		['register' => $register, 'schema' => $schema] = $this->requireSigningRequestBinding();
 
-		$object = $objectService->find(id: $requestId, register: $register, schema: $schema);
+		$object = $objectService->find(id: $requestId, register: $register, schema: $schema, _rbac: false);
 		if ($object === null) {
-			// Genuine not-found: throw so the controller maps it to a single
-			// 404. Access-denied below still collapses to null — the two
-			// shapes stay indistinguishable to a non-admin caller, preserving
-			// the Wilco #6 anti-existence-probing contract.
-			throw new RuntimeException('Signing request not found');
+			// The same null as for a request that is not the caller's, so no
+			// answer tells "does not exist" from "not yours".
+			return null;
 		}
 
 		$request = $this->toArray(object: $object);
@@ -266,13 +410,8 @@ class SigningService {
 		// WF2 + Wilco #6 fix: scope single-record access to initiator or
 		// signer. Access denied collapses to null (same shape as not-found),
 		// so the controller can emit one 404 regardless.
-		if ($callerUserId !== '') {
-			$isInitiator = ($request['initiatorUserId'] ?? '') === $callerUserId;
-			$isSignerInList = in_array($callerUserId, (array)($request['signerIds'] ?? []), true);
-
-			if ($isInitiator === false && $isSignerInList === false) {
-				return null;
-			}
+		if ($this->actorResolver->mayRead(request: $request, requestId: $requestId, userId: $callerUserId) === false) {
+			return null;
 		}
 
 		return $request;
@@ -312,8 +451,10 @@ class SigningService {
 			schema: $schema
 		);
 
-		$paginated = $objectService->searchObjectsPaginated(query: $query);
+		$paginated = $objectService->searchObjectsPaginated(query: $query, _rbac: false);
 		$results = ($paginated['results'] ?? []);
+
+		$signedRequestIds = $this->actorResolver->requestIdsForSigner(userId: $callerUserId);
 
 		$requests = [];
 		foreach ($results as $result) {
@@ -321,13 +462,8 @@ class SigningService {
 
 			// WF2 security fix: a scoped caller sees only requests they
 			// initiated or are listed as a signer on. Unscoped sees all.
-			if ($callerUserId !== '') {
-				$isInitiator = ($item['initiatorUserId'] ?? '') === $callerUserId;
-				$isSignerInList = in_array($callerUserId, (array)($item['signerIds'] ?? []), true);
-
-				if ($isInitiator === false && $isSignerInList === false) {
-					continue;
-				}
+			if ($this->actorResolver->isListedFor(request: $item, userId: $callerUserId, signedRequestIds: $signedRequestIds) === false) {
+				continue;
 			}
 
 			$requests[] = $item;
@@ -360,31 +496,25 @@ class SigningService {
 	 * @return array<string, mixed> The updated signer record
 	 *
 	 * @throws RuntimeException If signing fails
+	 * @throws \OCA\Filinq\Exception\StepUpRequiredException With code 403, before any write, when the
+	 *                                                         identity evidence is missing, stale, from an
+	 *                                                         unregistered provider or below the assurance
+	 *                                                         this signer needs (signer-identity-rails
+	 *                                                         REQ-DDSIR-003). The evidence goes onto the
+	 *                                                         record and the SIGNED audit entry.
 	 *
 	 * @spec openspec/changes/digital-signing-integration/tasks.md#3-3
 	 * @spec openspec/specs/portal-signing-actions/spec.md
 	 * @spec openspec/specs/portal-signing-surface/spec.md
+	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function sign(string $requestId, string $signerId, ?array $verifiedActor = null, ?array $signatureData = null): array {
 		[$actorUserId, $actorDisplayName] = $this->actorResolver->resolveActingIdentity(verifiedActor: $verifiedActor);
 
 		$objectService = $this->settingsService->getObjectService();
-		$request = $this->getRequest(requestId: $requestId);
-		if ($request === null) {
-			// The getRequest() call returns null on not-found and access-denied
-			// (Wilco #6 fix, filinq#100). Internal sign() doesn't pass a
-			// callerUserId so access-denied is impossible from here — null
-			// means truly not-found. Throw to keep callers' existing
-			// exception contract.
-			throw new RuntimeException('Signing request not found: ' . $requestId);
-		}
 
-		$status = $request['status'] ?? '';
-
-		if (in_array($status, ['PENDING', 'IN_PROGRESS'], true) === false) {
-			throw new RuntimeException('Signing request is not in a signable state: ' . $status);
-		}
-
+		// Authorise the signer first, so someone who is not the signer learns
+		// neither whether the request exists nor what its status is.
 		['register' => $signerRegister, 'schema' => $signerSchema] = $this->requireSignerRecordBinding();
 
 		$signer = $this->actorResolver->loadAuthorisedSigner(
@@ -395,38 +525,105 @@ class SigningService {
 			action: 'sign'
 		);
 
+		$request = $this->loadSignableRequest(requestId: $requestId);
+
+		// The mandate is declared in Nextcloud groups, which an invited portal
+		// signer is not in; the portal path has its own verified-assertion gate.
+		if ($this->mandateService !== null && $verifiedActor === null) {
+			$this->mandateService->assertMaySign(request: $request, userId: $actorUserId);
+		}
+
+		$act = new SigningAct(
+			request: $request,
+			target: ['requestId' => $requestId, 'signerId' => $signerId],
+			actor: ['userId' => $actorUserId, 'displayName' => $actorDisplayName, 'verified' => $verifiedActor],
+			signatureData: $signatureData
+		);
+
 		if (($signer['status'] ?? '') !== 'PENDING') {
 			throw new RuntimeException('Signer has already responded to this request');
 		}
 
-		$now = new DateTimeImmutable();
-		$signer['status'] = 'SIGNED';
-		$signer['signedAt'] = $now->format(DateTimeInterface::ATOM);
-		$signer['ipAddress'] = $this->actorResolver->getClientIp();
-		if ($signatureData !== null) {
-			// Portal-signing-surface REQ-DDPSS-002: consent confirmation +
-			// optional drawn signature, recorded into the existing
-			// `visible:false` field — never used for identity.
-			$signer['signatureData'] = $signatureData;
-		}
-
-		$objectService->saveObject(object: $signer, register: $signerRegister, schema: $signerSchema);
-
-		$this->auditService->logEvent(
-			signingRequestId: $requestId,
-			action: 'SIGNED',
+		$signer['identityEvidence'] = $this->assuranceGate->evidenceForAct(
+			request: $request + ['id' => $requestId],
+			signer: $signer + ['id' => $signerId],
+			verifiedActor: $verifiedActor,
 			actorUserId: $actorUserId,
-			actorDisplayName: $actorDisplayName,
-			ipAddress: $this->actorResolver->getClientIp(),
-			signatureLevel: $request['signatureLevel'] ?? 'SES',
-			provider: $request['provider'] ?? 'native',
-			metadata: $this->actorResolver->actorAuditMetadata(verifiedActor: $verifiedActor)
+			now: $act->now
+		)->toArray();
+		$consent = $this->consentGuard->guardSigningAct(
+			requestId: $requestId,
+			request: $request,
+			signer: $signer + ['id' => $signerId],
+			verifiedActor: $verifiedActor,
+			now: $act->now
 		);
 
-		$this->updateRequestStatus(requestId: $requestId, request: $request, verifiedActor: $verifiedActor);
+		$signer = $act->stampSigned(signer: array_merge($signer, $consent['record']), ipAddress: $this->actorResolver->getClientIp());
+		$signer = (new PortalSignatureAssurance())->recordOn(signer: $signer, request: $request, verifiedActor: $verifiedActor);
+		$objectService->saveObject(object: $signer, register: $signerRegister, schema: $signerSchema, _rbac: false);
+
+		$this->logSigned(act: $act, metadata: array_merge($consent['audit'], ['identityEvidence' => $signer['identityEvidence']]));
+		$this->assuranceGate->consume(requestId: $requestId, signerId: $signerId);
+		$this->updateRequestStatus(act: $act);
 
 		return $signer;
 	}//end sign()
+
+	/**
+	 * Load a signing request that can still be signed.
+	 *
+	 * @param string $requestId The signing request ID
+	 *
+	 * @return array<string, mixed> The signing request
+	 *
+	 * @throws RuntimeException When the request does not exist or is not PENDING or IN_PROGRESS
+	 *
+	 * @spec openspec/changes/digital-signing-integration/tasks.md#3-3
+	 */
+	private function loadSignableRequest(string $requestId): array {
+		// Without a caller user ID access-denied is impossible, so null means not found.
+		$request = $this->getRequest(requestId: $requestId);
+		if ($request === null) {
+			throw new RuntimeException('Signing request not found: ' . $requestId);
+		}
+
+		$status = $request['status'] ?? '';
+		if (in_array($status, ['PENDING', 'IN_PROGRESS'], true) === false) {
+			throw new RuntimeException('Signing request is not in a signable state: ' . $status);
+		}
+
+		return $request;
+	}//end loadSignableRequest()
+
+	/**
+	 * Write the SIGNED audit entry.
+	 *
+	 * @param SigningAct           $act      The signing act
+	 * @param array<string, mixed> $metadata Consent and identity evidence for the entry
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/digital-signing-integration/tasks.md#3-3
+	 */
+	private function logSigned(SigningAct $act, array $metadata): void {
+		$this->auditService->logEvent(
+			event: new SigningAuditEvent(
+				request: new SigningAuditSubject(
+					id: $act->requestId,
+					signatureLevel: $act->request['signatureLevel'] ?? 'SES',
+					provider: $act->request['provider'] ?? 'native'
+				),
+				action: 'SIGNED',
+				actor: new SigningAuditActor(
+					userId: $act->actor['userId'],
+					displayName: $act->actor['displayName'],
+					ipAddress: $this->actorResolver->getClientIp()
+				),
+				metadata: array_merge($this->actorResolver->actorAuditMetadata(verifiedActor: $act->verifiedActor), $metadata)
+			)
+		);
+	}//end logSigned()
 
 	/**
 	 * Decline a signing request
@@ -453,25 +650,8 @@ class SigningService {
 
 		$objectService = $this->settingsService->getObjectService();
 
-		// Load the request FIRST and gate the terminal-state status machine
-		// BEFORE any signer/request mutation (signing-trust-rebuild
-		// REQ-DDSTR-003, closing the #282 residual where decline() skipped
-		// isValidTransition() entirely — a COMPLETED/CANCELLED/EXPIRED
-		// request could still be flipped to DECLINED).
-		// Same latent defect as getRequest(): unconfigured, find() returns null
-		// and this reports "not found" for a request that exists.
-		['register' => $register, 'schema' => $schema] = $this->requireSigningRequestBinding();
-		$requestObject = $objectService->find(id: $requestId, register: $register, schema: $schema);
-		if ($requestObject === null) {
-			throw new RuntimeException('Signing request not found: ' . $requestId);
-		}
-
-		$request = $this->toArray(object: $requestObject);
-
-		if ($this->isValidTransition(currentStatus: $request['status'] ?? '', newStatus: 'DECLINED') === false) {
-			throw new RuntimeException('Cannot decline request in status: ' . ($request['status'] ?? 'unknown'));
-		}
-
+		// Authorise the signer first, so someone who is not the signer learns
+		// neither whether the request exists nor what its status is.
 		['register' => $signerRegister, 'schema' => $signerSchema] = $this->requireSignerRecordBinding();
 
 		$signer = $this->actorResolver->loadAuthorisedSigner(
@@ -482,15 +662,42 @@ class SigningService {
 			action: 'decline'
 		);
 
+		// Gate the terminal-state status machine BEFORE any signer/request
+		// mutation (signing-trust-rebuild REQ-DDSTR-003, closing the #282
+		// residual where decline() skipped isValidTransition() entirely — a
+		// COMPLETED/CANCELLED/EXPIRED request could still be flipped to DECLINED).
+		// Same latent defect as getRequest(): unconfigured, find() returns null
+		// and this reports "not found" for a request that exists.
+		['register' => $register, 'schema' => $schema] = $this->requireSigningRequestBinding();
+		$requestObject = $objectService->find(id: $requestId, register: $register, schema: $schema, _rbac: false);
+		if ($requestObject === null) {
+			throw new RuntimeException('Signing request not found: ' . $requestId);
+		}
+
+		$request = $this->toArray(object: $requestObject);
+
+		if ($this->isValidTransition(currentStatus: $request['status'] ?? '', newStatus: 'DECLINED') === false) {
+			throw new RuntimeException('Cannot decline request in status: ' . ($request['status'] ?? 'unknown'));
+		}
+
+		// The same identity gate as sign() (REQ-DDSIR-003), before any write.
+		$signer['identityEvidence'] = $this->assuranceGate->evidenceForAct(
+			request: $request + ['id' => $requestId],
+			signer: $signer + ['id' => $signerId],
+			verifiedActor: $verifiedActor,
+			actorUserId: $actorUserId,
+			now: new DateTimeImmutable()
+		)->toArray();
+
 		$signer['status'] = 'DECLINED';
 		$signer['declineReason'] = $reason;
-		$objectService->saveObject(object: $signer, register: $signerRegister, schema: $signerSchema);
+		$objectService->saveObject(object: $signer, register: $signerRegister, schema: $signerSchema, _rbac: false);
 
 		$signatureLevel = $request['signatureLevel'] ?? 'SES';
 		$provider = $request['provider'] ?? 'native';
 
 		$request['status'] = 'DECLINED';
-		$objectService->saveObject(object: $request, register: $register, schema: $schema);
+		$objectService->saveObject(object: $request, register: $register, schema: $schema, _rbac: false);
 
 		// Cross-app delegated-signing contract: a declined request is terminal —
 		// emit SigningConcludedEvent (status=declined) for a delegated request.
@@ -498,16 +705,15 @@ class SigningService {
 
 		$metadata = $this->actorResolver->actorAuditMetadata(verifiedActor: $verifiedActor);
 		$metadata['reason'] = $reason;
+		$metadata['identityEvidence'] = $signer['identityEvidence'];
 
 		$this->auditService->logEvent(
-			signingRequestId: $requestId,
-			action: 'DECLINED',
-			actorUserId: $actorUserId,
-			actorDisplayName: $actorDisplayName,
-			ipAddress: $this->actorResolver->getClientIp(),
-			signatureLevel: $signatureLevel,
-			provider: $provider,
-			metadata: $metadata
+			event: new SigningAuditEvent(
+				request: new SigningAuditSubject(id: $requestId, signatureLevel: $signatureLevel, provider: $provider),
+				action: 'DECLINED',
+				actor: new SigningAuditActor(userId: $actorUserId, displayName: $actorDisplayName, ipAddress: $this->actorResolver->getClientIp()),
+				metadata: $metadata
+			)
 		);
 
 		return $signer;
@@ -551,18 +757,18 @@ class SigningService {
 		}
 
 		$request['status'] = 'CANCELLED';
-		$objectService->saveObject(object: $request, register: $register, schema: $schema);
+		$objectService->saveObject(object: $request, register: $register, schema: $schema, _rbac: false);
 
 		// Cross-app delegated-signing contract: a cancelled request is terminal
 		// — emit SigningConcludedEvent (status=cancelled) for a delegated request.
 		$this->emitter->emitIfDelegated(request: $request, status: 'cancelled');
 
 		$this->auditService->logEvent(
-			signingRequestId: $requestId,
-			action: 'CANCELLED',
-			actorUserId: $actorUserId,
-			actorDisplayName: $actorDisplayName,
-			ipAddress: $this->actorResolver->getClientIp()
+			event: new SigningAuditEvent(
+				request: new SigningAuditSubject(id: $requestId),
+				action: 'CANCELLED',
+				actor: new SigningAuditActor(userId: $actorUserId, displayName: $actorDisplayName, ipAddress: $this->actorResolver->getClientIp())
+			)
 		);
 
 		return $request;
@@ -586,7 +792,7 @@ class SigningService {
 
 		foreach ($requestIds as $requestId) {
 			try {
-				$request = $this->getRequest(requestId: $requestId);
+				$request = $this->getRequest(requestId: $requestId, callerUserId: $userId);
 				if ($request === null) {
 					// Treat null as not-found in bulk context (Wilco #6
 					// fix) — generic error, no existence leak.
@@ -639,39 +845,26 @@ class SigningService {
 	/**
 	 * Update the signing request status based on signer progress
 	 *
-	 * @param string $requestId The signing request ID
-	 * @param array<string, mixed> $request The current request data
-	 * @param array<string, mixed>|null $verifiedActor The verified external actor completing
-	 *                                                 this act, when portal-originated (see
-	 *                                                 `sign()`); threaded through to the
-	 *                                                 produced artifact's evidence binding
-	 *                                                 (portal-signing-surface REQ-DDPSS-004).
+	 * The act's verified external actor, when portal-originated (see `sign()`),
+	 * is threaded through to the produced artifact's evidence binding
+	 * (portal-signing-surface REQ-DDPSS-004).
+	 *
+	 * @param SigningAct $act The signing act: request ID, request data and verified actor.
 	 *
 	 * @return void
 	 */
-	private function updateRequestStatus(string $requestId, array $request, ?array $verifiedActor = null): void {
+	private function updateRequestStatus(SigningAct $act): void {
+		$requestId = $act->requestId;
 		$objectService = $this->settingsService->getObjectService();
 		['register' => $register, 'schema' => $schema] = $this->requireSigningRequestBinding();
-		['register' => $signerRegister, 'schema' => $signerSchema] = $this->requireSignerRecordBinding();
-		$signerIds = $request['signerIds'] ?? [];
-		$allSigned = true;
+		['allSigned' => $allSigned, 'signers' => $signers] = $this->signerProgress(request: $act->request);
 
-		foreach ($signerIds as $signerId) {
-			$signerObj = $objectService->find(id: $signerId, register: $signerRegister, schema: $signerSchema);
-			$signer = $this->toArray(object: $signerObj);
-
-			if (($signer['status'] ?? '') !== 'SIGNED') {
-				$allSigned = false;
-				break;
-			}
-		}//end foreach
-
-		$freshObj = $objectService->find(id: $requestId, register: $register, schema: $schema);
+		$freshObj = $objectService->find(id: $requestId, register: $register, schema: $schema, _rbac: false);
 		$freshRequest = $this->toArray(object: $freshObj);
 
 		if ($allSigned === false) {
 			$freshRequest['status'] = 'IN_PROGRESS';
-			$objectService->saveObject(object: $freshRequest, register: $register, schema: $schema);
+			$objectService->saveObject(object: $freshRequest, register: $register, schema: $schema, _rbac: false);
 			return;
 		}
 
@@ -681,41 +874,33 @@ class SigningService {
 		// COMPLETED with the unsigned original as its signed reference. If the
 		// artifact cannot be produced, the request stays IN_PROGRESS and the
 		// failure surfaces loudly to the completing signer.
-		// Step through IN_PROGRESS when the request is still PENDING.
-		//
-		// A single-signer request is fully signed the moment that one signer
-		// signs, so control reaches here with the request still PENDING — the
-		// `$allSigned === false` branch above, which is what normally moves it
-		// to IN_PROGRESS, never ran. Writing COMPLETED straight from PENDING is
-		// not a legal move: `self::STATUS_TRANSITIONS` allows PENDING only to
-		// IN_PROGRESS / CANCELLED / EXPIRED, and the `x-openregister-lifecycle`
-		// block on the signingRequest schema declares exactly the same edges
-		// (`start`: PENDING -> IN_PROGRESS, `complete`: IN_PROGRESS ->
-		// COMPLETED). OpenRegister enforces that declaration on save, so the
-		// jump was rejected with 'No transition allows moving "status" from
-		// "PENDING" to "COMPLETED"' and the whole sign action 500'd — every
-		// single-signer request was impossible to complete.
-		//
-		// Take the declared `start` edge explicitly rather than widening the
-		// state machine: "a signer has opened the request" is exactly what
-		// happened, and the intermediate state is what the audit trail and the
-		// list view expect to see.
+		// Step through IN_PROGRESS when the request is still PENDING. A
+		// single-signer request reaches here PENDING, and PENDING may only move
+		// to IN_PROGRESS, CANCELLED or EXPIRED (`self::STATUS_TRANSITIONS` and
+		// the schema's `x-openregister-lifecycle`, enforced on save), so the
+		// declared `start` edge is taken rather than widening the state machine.
 		if (($freshRequest['status'] ?? '') === 'PENDING') {
 			$freshRequest['status'] = 'IN_PROGRESS';
-			$freshRequest = $this->toArray(
-				object: $objectService->saveObject(
-					object: $freshRequest,
-					register: $register,
-					schema: $schema
-				)
-			);
+			$freshRequest = $this->toArray(object: $objectService->saveObject(object: $freshRequest, register: $register, schema: $schema, _rbac: false));
 		}
 
-		$signedDocumentRef = $this->artifactProducer->produce(request: $freshRequest, verifiedActor: $verifiedActor);
+		// Guardian consent (signer-identity-rails REQ-DDSIR-008/010): no
+		// artifact while a signer who signed under the age of consent has no
+		// guardian who acted; the request then stays IN_PROGRESS, as it does
+		// when the artifact cannot be produced. The basis travels onto the
+		// request and, through the producer, into the MAC-covered assertion.
+		$freshRequest = $this->consentGuard->withConsentBasis(request: $freshRequest, signers: $signers);
+
+		// Identity rails (REQ-DDSIR-004/007): each signer's recorded evidence and
+		// the weakest assurance among them travel onto the request, into the
+		// MAC-covered assertion and into the completion payload.
+		$freshRequest = $this->assuranceGate->withResolvedAssurance(request: $freshRequest, signers: $signers);
+
+		$signedDocumentRef = $this->artifactProducer->produce(request: $freshRequest, verifiedActor: $act->verifiedActor, signers: $signers);
 
 		$freshRequest['status'] = 'COMPLETED';
 		$freshRequest['signedDocumentRef'] = $signedDocumentRef;
-		$objectService->saveObject(object: $freshRequest, register: $register, schema: $schema);
+		$objectService->saveObject(object: $freshRequest, register: $register, schema: $schema, _rbac: false);
 
 		// Cross-app delegated-signing contract: emit the terminal
 		// SigningConcludedEvent (status=signed) for a delegated request. The
@@ -728,6 +913,35 @@ class SigningService {
 		);
 
 	}//end updateRequestStatus()
+
+	/**
+	 * Read the signer records of a request in order, stopping at the first that has not signed.
+	 *
+	 * @param array<string, mixed> $request The signing request data.
+	 *
+	 * @return array{allSigned: bool, signers: array<string, array<string, mixed>>} Whether every
+	 *     signer signed, and the records read, keyed by signer ID.
+	 */
+	private function signerProgress(array $request): array {
+		$objectService = $this->settingsService->getObjectService();
+		['register' => $signerRegister, 'schema' => $signerSchema] = $this->requireSignerRecordBinding();
+		$allSigned = true;
+		$signers = [];
+
+		foreach (($request['signerIds'] ?? []) as $signerId) {
+			$signerObj = $objectService->find(id: $signerId, register: $signerRegister, schema: $signerSchema, _rbac: false);
+			$signer = $this->toArray(object: $signerObj);
+			$signers[(string)$signerId] = $signer;
+
+			if (($signer['status'] ?? '') !== 'SIGNED') {
+				$allSigned = false;
+				break;
+			}
+		}
+
+		return ['allSigned' => $allSigned, 'signers' => $signers];
+
+	}//end signerProgress()
 
 	/**
 	 * Emit a terminal SigningConcludedEvent for an expired request.

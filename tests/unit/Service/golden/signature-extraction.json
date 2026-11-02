@@ -1,0 +1,195 @@
+{
+    "no signature": [],
+    "two external signatures": [
+        {
+            "signer": "External signer",
+            "timestamp": "",
+            "level": "unknown",
+            "method": "external",
+            "ip": "",
+            "status": "unverifiable",
+            "reason": "external-signature-unsupported",
+            "checked": "nothing",
+            "keyId": null,
+            "means": "A signature this instance did not produce. Check it with the tool that made it; nothing here says whether it is good.",
+            "valid": false
+        },
+        {
+            "signer": "External signer",
+            "timestamp": "",
+            "level": "unknown",
+            "method": "external",
+            "ip": "",
+            "status": "unverifiable",
+            "reason": "external-signature-unsupported",
+            "checked": "nothing",
+            "keyId": null,
+            "means": "A signature this instance did not produce. Check it with the tool that made it; nothing here says whether it is good.",
+            "valid": false
+        }
+    ],
+    "a genuine v2 marker": [
+        {
+            "signer": "Alice",
+            "timestamp": "2026-07-23T12:00:00+00:00",
+            "level": "SES",
+            "method": "native",
+            "ip": "127.0.0.1",
+            "status": "verified",
+            "reason": "ok",
+            "checked": "the document bytes and the assertion fields",
+            "keyId": "237b02b33958d4c3",
+            "means": "This server produced the document and its bytes have not changed since. It does not prove who the signer is, and it is not a qualified electronic signature.",
+            "valid": true
+        }
+    ],
+    "a v2 marker over changed content": [
+        {
+            "signer": "Alice",
+            "timestamp": "2026-07-23T12:00:00+00:00",
+            "level": "SES",
+            "method": "native",
+            "ip": "127.0.0.1",
+            "status": "invalid",
+            "reason": "mac-mismatch",
+            "checked": "the document bytes and the assertion fields",
+            "keyId": "237b02b33958d4c3",
+            "means": "The document or its signature block changed after this server signed it, or it was signed by a server holding a different key.",
+            "valid": false
+        }
+    ],
+    "a legacy v1 marker": [
+        {
+            "signer": "Bob",
+            "timestamp": "",
+            "level": "AES",
+            "method": "native",
+            "ip": "",
+            "status": "unverifiable",
+            "reason": "legacy-assertion-v1",
+            "checked": "nothing",
+            "keyId": null,
+            "means": "This signature predates the current format, whose guarantee covers the signer fields as well. It cannot be checked, which is not the same as being wrong.",
+            "valid": false
+        }
+    ],
+    "a marker with no fields": [
+        {
+            "signer": "Unknown",
+            "timestamp": "",
+            "level": "SES",
+            "method": "unknown",
+            "ip": "",
+            "status": "unverifiable",
+            "reason": "legacy-assertion-v1",
+            "checked": "nothing",
+            "keyId": null,
+            "means": "This signature predates the current format, whose guarantee covers the signer fields as well. It cannot be checked, which is not the same as being wrong.",
+            "valid": false
+        }
+    ],
+    "a marker that is not json": [
+        {
+            "signer": "External signer",
+            "timestamp": "",
+            "level": "unknown",
+            "method": "external",
+            "ip": "",
+            "status": "unverifiable",
+            "reason": "external-signature-unsupported",
+            "checked": "nothing",
+            "keyId": null,
+            "means": "A signature this instance did not produce. Check it with the tool that made it; nothing here says whether it is good.",
+            "valid": false
+        }
+    ],
+    "a marker with a scalar": [
+        {
+            "signer": "Unknown",
+            "timestamp": "",
+            "level": "SES",
+            "method": "unknown",
+            "ip": "",
+            "status": "unverifiable",
+            "reason": "legacy-assertion-v1",
+            "checked": "nothing",
+            "keyId": null,
+            "means": "This signature predates the current format, whose guarantee covers the signer fields as well. It cannot be checked, which is not the same as being wrong.",
+            "valid": false
+        }
+    ],
+    "one marker among two signatures": [
+        {
+            "signer": "Carol",
+            "timestamp": "t",
+            "level": "SES",
+            "method": "unknown",
+            "ip": "10.0.0.1",
+            "status": "unverifiable",
+            "reason": "legacy-assertion-v1",
+            "checked": "nothing",
+            "keyId": null,
+            "means": "This signature predates the current format, whose guarantee covers the signer fields as well. It cannot be checked, which is not the same as being wrong.",
+            "valid": false
+        }
+    ],
+    "two markers": [
+        {
+            "signer": "Dave",
+            "timestamp": "",
+            "level": "SES",
+            "method": "unknown",
+            "ip": "",
+            "status": "unverifiable",
+            "reason": "legacy-assertion-v1",
+            "checked": "nothing",
+            "keyId": null,
+            "means": "This signature predates the current format, whose guarantee covers the signer fields as well. It cannot be checked, which is not the same as being wrong.",
+            "valid": false
+        },
+        {
+            "signer": "Eve",
+            "timestamp": "",
+            "level": "SES",
+            "method": "portal",
+            "ip": "",
+            "status": "unverifiable",
+            "reason": "legacy-assertion-v1",
+            "checked": "nothing",
+            "keyId": null,
+            "means": "This signature predates the current format, whose guarantee covers the signer fields as well. It cannot be checked, which is not the same as being wrong.",
+            "valid": false
+        }
+    ],
+    "a marker without a signature entry": [],
+    "an empty marker": [
+        {
+            "signer": "External signer",
+            "timestamp": "",
+            "level": "unknown",
+            "method": "external",
+            "ip": "",
+            "status": "unverifiable",
+            "reason": "external-signature-unsupported",
+            "checked": "nothing",
+            "keyId": null,
+            "means": "A signature this instance did not produce. Check it with the tool that made it; nothing here says whether it is good.",
+            "valid": false
+        }
+    ],
+    "a SigFlags entry beside one signature": [
+        {
+            "signer": "External signer",
+            "timestamp": "",
+            "level": "unknown",
+            "method": "external",
+            "ip": "",
+            "status": "unverifiable",
+            "reason": "external-signature-unsupported",
+            "checked": "nothing",
+            "keyId": null,
+            "means": "A signature this instance did not produce. Check it with the tool that made it; nothing here says whether it is good.",
+            "valid": false
+        }
+    ]
+}

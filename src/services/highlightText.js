@@ -21,57 +21,52 @@
 export const PENDING_TYPE = '__pending__'
 
 /**
- * Build the highlight segments for a text.
+ * The values to match, longest first so a longer value claims its span before
+ * a shorter, overlapping one gets a chance.
  *
- * @param {string} text Rendered text to split.
  * @param {Array<{value: string, type: string}>} entities Values to highlight.
- * @return {Array<{text: string, type: (string|null)}>} Ordered segments;
- *         `type` is null for plain (non-highlighted) text.
+ * @return {Array<{value: string, type: string}>}
  */
-export function buildHighlightSegments(text, entities) {
-	if (!text) {
-		return []
-	}
-
-	// Longest first so a longer value claims its span before a shorter,
-	// overlapping one gets a chance.
-	const values = (entities || [])
+function valuesLongestFirst(entities) {
+	return (entities || [])
 		.filter((e) => e && e.value)
 		.map((e) => ({ value: String(e.value), type: e.type }))
 		.sort((a, b) => b.value.length - a.value.length)
+}
 
-	if (!values.length) {
-		return [{ text, type: null }]
+/**
+ * Claim every occurrence of one value in the lower-cased text, skipping
+ * occurrences that overlap an already-claimed (longer) range.
+ *
+ * @param {{lower: string, ranges: Array<{start: number, end: number, type: string}>}} claim
+ *        The lower-cased text and the ranges claimed so far; new ranges are appended.
+ * @param {{value: string, type: string}} entity The value to claim.
+ * @return {void}
+ */
+function claimOccurrences(claim, { value, type }) {
+	const needle = value.toLowerCase()
+	if (!needle) {
+		return
 	}
-
-	const lower = text.toLowerCase()
-	const ranges = [] // { start, end, type }
-
-	for (const { value, type } of values) {
-		const needle = value.toLowerCase()
-		if (!needle) {
-			continue
+	let idx = claim.lower.indexOf(needle, 0)
+	while (idx !== -1) {
+		const end = idx + needle.length
+		const overlaps = claim.ranges.some((r) => idx < r.end && end > r.start)
+		if (!overlaps) {
+			claim.ranges.push({ start: idx, end, type })
 		}
-		let from = 0
-		let idx = lower.indexOf(needle, from)
-		while (idx !== -1) {
-			const end = idx + needle.length
-			// Skip occurrences that overlap an already-claimed (longer) range.
-			const overlaps = ranges.some((r) => idx < r.end && end > r.start)
-			if (!overlaps) {
-				ranges.push({ start: idx, end, type })
-			}
-			from = end
-			idx = lower.indexOf(needle, from)
-		}
+		idx = claim.lower.indexOf(needle, end)
 	}
+}
 
-	if (!ranges.length) {
-		return [{ text, type: null }]
-	}
-
-	ranges.sort((a, b) => a.start - b.start)
-
+/**
+ * Cut the text into plain and highlighted segments along sorted ranges.
+ *
+ * @param {string} text The text to cut.
+ * @param {Array<{start: number, end: number, type: string}>} ranges Non-overlapping ranges, sorted by start.
+ * @return {Array<{text: string, type: (string|null)}>}
+ */
+function segmentsAlong(text, ranges) {
 	const segments = []
 	let cursor = 0
 	for (const r of ranges) {
@@ -84,6 +79,29 @@ export function buildHighlightSegments(text, entities) {
 	if (cursor < text.length) {
 		segments.push({ text: text.slice(cursor), type: null })
 	}
-
 	return segments
+}
+
+/**
+ * Build the highlight segments for a text.
+ *
+ * @param {string} text Rendered text to split.
+ * @param {Array<{value: string, type: string}>} entities Values to highlight.
+ * @return {Array<{text: string, type: (string|null)}>} Ordered segments;
+ *         `type` is null for plain (non-highlighted) text.
+ * @spec openspec/specs/document-preview/spec.md#requirement-format-specific-in-app-document-preview-req-ddprv-001
+ */
+export function buildHighlightSegments(text, entities) {
+	if (!text) {
+		return []
+	}
+	const claim = { lower: text.toLowerCase(), ranges: [] }
+	for (const entity of valuesLongestFirst(entities)) {
+		claimOccurrences(claim, entity)
+	}
+	if (!claim.ranges.length) {
+		return [{ text, type: null }]
+	}
+	claim.ranges.sort((a, b) => a.start - b.start)
+	return segmentsAlong(text, claim.ranges)
 }

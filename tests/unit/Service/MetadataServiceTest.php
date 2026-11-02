@@ -20,7 +20,9 @@ namespace OCA\Filinq\Tests\Unit\Service;
 use OCA\Filinq\Service\DocumentTextExtractor;
 use OCA\Filinq\Service\MetadataService;
 use OCA\Filinq\Service\TextAnalysisService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCP\App\IAppManager;
+use OCP\AppFramework\Db\DoesNotExistException;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -182,4 +184,36 @@ class MetadataServiceTest extends TestCase {
 
 	}//end testEnhanceMetadataDoesNotOverrideExisting()
 
+	/**
+	 * An object that is not readable is passed up as not-found without an error log.
+	 *
+	 * @return void
+	 */
+	public function testSaveEnrichedMetadataPassesUpAnUnreadableObjectWithoutLogging(): void {
+		$objectService = $this->createMock(ObjectServiceInterface::class);
+		$objectService->method('find')->willThrowException(new DoesNotExistException('not found in any magic table'));
+		$this->mockAppManager->method('getInstalledApps')->willReturn(['openregister']);
+		$this->mockContainer->method('get')->willReturn($objectService);
+		$this->mockLogger->expects($this->never())->method('error');
+
+		$this->expectException(DoesNotExistException::class);
+		$this->service->saveEnrichedMetadata('obj-1', '1', '2', ['language' => 'nl']);
+
+	}//end testSaveEnrichedMetadataPassesUpAnUnreadableObjectWithoutLogging()
+
+	/**
+	 * A find that returns nothing is a not-found as well.
+	 *
+	 * @return void
+	 */
+	public function testSaveEnrichedMetadataTreatsAMissingObjectAsNotFound(): void {
+		$objectService = $this->createMock(ObjectServiceInterface::class);
+		$objectService->method('find')->willReturn(null);
+		$this->mockAppManager->method('getInstalledApps')->willReturn(['openregister']);
+		$this->mockContainer->method('get')->willReturn($objectService);
+
+		$this->expectException(DoesNotExistException::class);
+		$this->service->saveEnrichedMetadata('obj-1', '1', '2', ['language' => 'nl']);
+
+	}//end testSaveEnrichedMetadataTreatsAMissingObjectAsNotFound()
 }//end class

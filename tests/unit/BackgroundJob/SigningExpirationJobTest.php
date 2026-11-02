@@ -24,6 +24,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\BackgroundJob;
 
 use OCA\Filinq\BackgroundJob\SigningExpirationJob;
+use OCA\Filinq\Kernel\SigningAuditEvent;
 use OCA\Filinq\Service\SettingsService;
 use OCA\Filinq\Service\SigningAuditService;
 use OCA\Filinq\Service\SigningService;
@@ -156,11 +157,7 @@ class SigningExpirationJobTest extends TestCase {
 		$this->auditService->expects($this->once())
 			->method('logEvent')
 			->with(
-				$this->equalTo('req-expired'),
-				$this->equalTo('EXPIRED'),
-				$this->anything(),
-				$this->anything(),
-				$this->anything()
+				$this->callback(static fn (SigningAuditEvent $event): bool => $event->request->id === 'req-expired' && $event->action === 'EXPIRED')
 			);
 
 		// Invoke via reflection to call the protected run() method.

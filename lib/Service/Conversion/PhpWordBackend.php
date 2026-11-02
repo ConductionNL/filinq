@@ -39,6 +39,7 @@ namespace OCA\Filinq\Service\Conversion;
 
 use OCA\Filinq\Exception\ConversionFailedException;
 use OCA\Filinq\Service\PdfService;
+use OCA\Filinq\Service\StripsFileExtension;
 use OCP\Files\File;
 use OCP\IAppConfig;
 use OCP\ITempManager;
@@ -62,6 +63,7 @@ use Throwable;
  * @link      https://www.filinq.app
  */
 class PhpWordBackend implements ConversionBackendInterface {
+	use StripsFileExtension;
 
 	/**
 	 * App config key controlling whether this backend is attempted.
@@ -437,20 +439,4 @@ class PhpWordBackend implements ConversionBackendInterface {
 	private function stripAtPageRules(string $html): string {
 		return preg_replace('/@page[^{]*\{[^}]*\}/s', '', $html) ?? $html;
 	}//end stripAtPageRules()
-
-	/**
-	 * Return $name without its trailing `.ext`.
-	 *
-	 * @param string $name File name with extension.
-	 *
-	 * @return string
-	 */
-	private function stripExtension(string $name): string {
-		$dotPos = strrpos($name, '.');
-		if ($dotPos === false) {
-			return $name;
-		}
-
-		return substr($name, 0, $dotPos);
-	}//end stripExtension()
 }//end class

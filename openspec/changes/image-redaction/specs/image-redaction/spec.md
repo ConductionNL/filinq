@@ -209,3 +209,44 @@ region pixel content or entity values (AVG Art. 5(1)(c)).
 - WHEN the operator opens the file listing
 - THEN the document shows its burned-region count alongside the replacement count
 - @e2e tests/e2e/spec-coverage/image-redaction.spec.ts
+
+## ADDED Requirements (amendment 2026-10-05, Woo row 4.24)
+
+### Requirement: A page, a page range or a whole document is redacted in one action (REQ-DDIMR-009)
+
+The review model SHALL carry, beside an entity or a region, a scope decision
+with `scope` (`page`, `pageRange` or `document`), `fromPage` and `toPage`
+(1-based, inclusive; equal for `page`; absent for `document`) and `bases`
+(at least one ground). One action in the workbench SHALL create one such
+decision. On commit, a `page` or `pageRange` decision SHALL be sent to
+OpenRegister's image seam as one full-page region (`box` x 0, y 0, w 1, h 1)
+per page in scope, so the seam burns each page and removes its text, and each
+burned page SHALL carry a short notice naming the ground. A `document`
+decision SHALL write no redacted output for the file and SHALL set
+`withheld: true` and the grounds on its `anonymizationLink`. A page outside
+the document, a range whose `fromPage` exceeds `toPage`, or a decision without
+a ground SHALL be refused.
+
+#### Scenario: pages 3 to 5 are withheld in one action
+- GIVEN a 7-page PDF in the workbench
+- WHEN the reviewer chooses "redact pages", enters 3 to 5, picks ground 5.1.2.e and commits
+- THEN the output has 7 pages, pages 3 to 5 are uniform fill with a notice naming the ground, extracting text from them yields nothing, and pages 1, 2, 6 and 7 are unchanged
+- @e2e tests/e2e/spec-coverage/image-redaction.spec.ts
+
+#### Scenario: a whole document is withheld, not blacked out
+- GIVEN a document the reviewer withholds in full on ground 5.1.1.c
+- WHEN the anonymisation commits
+- THEN no redacted file exists for it, the link records `withheld: true` with ground 5.1.1.c, and the publication readiness lists it as not for publication
+- @e2e exclude a server-side outcome; covered by PHPUnit `ScopeRedactionServiceTest::testAWholeDocumentIsWithheldWithoutOutput`
+
+#### Scenario: the seam is missing
+- GIVEN an OpenRegister without the image seam
+- WHEN a page scope is committed
+- THEN the commit is refused with the reason, and no output is written
+- @e2e exclude an app-version path; covered by PHPUnit `ScopeRedactionServiceTest::testPageScopesNeedTheSeam`
+
+#### Scenario: a range that does not fit is refused
+- GIVEN a 4-page document
+- WHEN the reviewer enters pages 3 to 6
+- THEN the decision is refused naming the page count
+- @e2e exclude a validation; covered by PHPUnit `ScopeRedactionServiceTest::testARangeBeyondTheLastPageIsRefused`

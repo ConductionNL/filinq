@@ -263,13 +263,13 @@ class ProhibitionPolicyService {
 			$entityText = (string)($entry['entityText'] ?? '');
 
 			try {
-				$match = $policyService->matchProhibition(
+				$match = $policyService->matchProhibitionHint(
 					entityType: (string)($entry['entityType'] ?? ''),
 					entityValue: $entityText
 				);
 			} catch (Throwable $e) {
 				$this->logger->debug(
-					'PolicyMatchService::matchProhibition threw during unredacted check; skipping',
+					'PolicyMatchService::matchProhibitionHint threw during unredacted check; skipping',
 					['exception' => $e->getMessage()]
 				);
 				continue;

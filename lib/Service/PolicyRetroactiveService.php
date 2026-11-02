@@ -44,13 +44,14 @@ namespace OCA\Filinq\Service;
 
 use DateTimeImmutable;
 use Exception;
+use OCA\Filinq\Kernel\Contracts\PolicyRetroactiveServiceInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use Psr\Log\LoggerInterface;
 
 /**
  * Retroactive rule-mutation handler.
  */
-class PolicyRetroactiveService {
+class PolicyRetroactiveService implements PolicyRetroactiveServiceInterface {
 
 	/**
 	 * Statuses considered "in-flight" — eligible for retroactive force-resolve.

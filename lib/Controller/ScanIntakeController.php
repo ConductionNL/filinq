@@ -1,0 +1,316 @@
+<?php
+
+/**
+ * Scan Intake Controller
+ *
+ * The HTTP surface of paper intake: print separator sheets, read and declare
+ * the scan profiles, and cut one delivered batch.
+ *
+ * @category  Controller
+ * @package   OCA\Filinq\Controller
+ * @author    Conduction B.V. <info@conduction.nl>
+ * @copyright 2026 Conduction B.V.
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @version   GIT: <git_id>
+ * @link      https://www.filinq.app
+ *
+ * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+
+declare(strict_types=1);
+
+namespace OCA\Filinq\Controller;
+
+use OCA\Filinq\Kernel\Contracts\ScanBatchRepositoryInterface;
+use OCA\Filinq\Kernel\Contracts\ScanBatchServiceInterface;
+use OCA\Filinq\Kernel\Contracts\ScanProfileServiceInterface;
+use OCA\Filinq\Kernel\Contracts\SeparatorSheetServiceInterface;
+use OCA\Filinq\Service\ScanBatchCut;
+use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\NoAdminRequired;
+use OCP\AppFramework\Http\DataDownloadResponse;
+use OCP\AppFramework\Http\JSONResponse;
+use OCP\Files\File;
+use OCP\Files\Folder;
+use OCP\Files\IRootFolder;
+use OCP\IRequest;
+use OCP\IUserSession;
+use Throwable;
+
+/**
+ * Controller for separator sheets, scan profiles and batch splitting.
+ *
+ * @category Controller
+ * @package  OCA\Filinq\Controller
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.filinq.app
+ *
+ * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The thirteenth type is
+ * OCP\Files\File, named so the batch id is checked to be a file before it
+ * reaches the reader. Without that check a folder id passes as a batch with no
+ * pages, which is the silent version of this refusal.
+ */
+class ScanIntakeController extends Controller {
+	use AnswersNotAuthenticated;
+
+	/**
+	 * Constructor.
+	 *
+	 * @param string $appName The app name.
+	 * @param IRequest $request The request.
+	 * @param SeparatorSheetServiceInterface $sheets The sheets filinq prints and reads.
+	 * @param ScanProfileServiceInterface $profiles The declared scan profiles.
+	 * @param ScanBatchServiceInterface $batches The splitter.
+	 * @param ScanBatchRepositoryInterface $store The batch store.
+	 * @param IRootFolder $rootFolder The file tree.
+	 * @param IUserSession $userSession The current session.
+	 *
+	 * @return void
+	 */
+	public function __construct(
+		string $appName,
+		IRequest $request,
+		private readonly SeparatorSheetServiceInterface $sheets,
+		private readonly ScanProfileServiceInterface $profiles,
+		private readonly ScanBatchServiceInterface $batches,
+		private readonly ScanBatchRepositoryInterface $store,
+		private readonly IRootFolder $rootFolder,
+		private readonly IUserSession $userSession,
+	) {
+		parent::__construct(appName: $appName, request: $request);
+
+	}//end __construct()
+
+	/**
+	 * Print separator sheets, one page per case number.
+	 *
+	 * @param string $profileId The scan profile the sheets belong to.
+	 * @param array<int, string> $caseNumbers The cases to print a sheet for.
+	 *
+	 * @return DataDownloadResponse|JSONResponse The sheets, or the refusal.
+	 *
+	 * @no-admin-idor-exempt this endpoint reads no stored object, so there is
+	 *       nothing to scope to the caller. `render()` encodes the profile id and
+	 *       the case numbers the caller typed into a barcode payload and renders
+	 *       them to a PDF; the profile is instance-wide configuration that every
+	 *       clerk may print a sheet for, and no record, folder or file is looked
+	 *       up from either argument. Verified by reading SeparatorSheetService::
+	 *       render(), which touches the profile store and the PDF writer only.
+	 *
+	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 */
+	#[NoAdminRequired]
+	public function separators(string $profileId = '', array $caseNumbers = []): DataDownloadResponse|JSONResponse {
+		if ($this->userSession->getUser() === null) {
+			return $this->notAuthenticated(message: 'You must be logged in to print separator sheets.');
+		}
+
+		try {
+			$pdf = $this->sheets->render(profileId: $profileId, caseNumbers: $caseNumbers);
+		} catch (Throwable $e) {
+			return new JSONResponse(
+				data: ['error' => $e->getMessage()],
+				statusCode: Http::STATUS_BAD_REQUEST
+			);
+		}
+
+		return new DataDownloadResponse($pdf, 'scheidingsvellen.pdf', 'application/pdf');
+
+	}//end separators()
+
+	/**
+	 * The declared scan profiles.
+	 *
+	 * @return JSONResponse The profiles.
+	 *
+	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 */
+	#[NoAdminRequired]
+	public function listProfiles(): JSONResponse {
+		if ($this->userSession->getUser() === null) {
+			return $this->notAuthenticated(message: 'You must be logged in.');
+		}
+
+		$profiles = $this->profiles->all();
+
+		return new JSONResponse(
+			data: ['results' => $profiles, 'total' => count($profiles)],
+			statusCode: Http::STATUS_OK
+		);
+
+	}//end listProfiles()
+
+	/**
+	 * Declare the scan profiles.
+	 *
+	 * Administrative: a profile points a scanner's output at a folder and says
+	 * how what lands there is cut, which is an instance-wide decision.
+	 *
+	 * @param array<int, array<string, mixed>> $profiles The profiles.
+	 *
+	 * @return JSONResponse What was stored, or the refusal.
+	 *
+	 * @auth admin-only a profile decides which folder a scanner writes into and how
+	 *       everything landing there is cut, for the whole instance; the admin posture
+	 *       is the absence of NoAdminRequired, and adding that attribute to satisfy a
+	 *       gate would hand every authenticated user the setting this method exists to
+	 *       keep administrative.
+	 *
+	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 */
+	public function declareProfiles(array $profiles = []): JSONResponse {
+		try {
+			return new JSONResponse(
+				data: ['results' => $this->profiles->declare(profiles: $profiles)],
+				statusCode: Http::STATUS_OK
+			);
+		} catch (Throwable $e) {
+			return new JSONResponse(
+				data: ['error' => $e->getMessage()],
+				statusCode: Http::STATUS_BAD_REQUEST
+			);
+		}
+
+	}//end declareProfiles()
+
+	/**
+	 * Cut one delivered batch into documents.
+	 *
+	 * @param int $fileId The batch the scanner wrote.
+	 * @param string $profileId The profile to cut it with; when empty, the folder it sits in decides.
+	 *
+	 * @return JSONResponse The batch, split or failed.
+	 *
+	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 *
+	 * @no-admin-idor-exempt the batch file is resolved by batchFile() from the session user's own user
+	 * folder, and the segments are written with the Node API into its parent folder, which enforces create
+	 * permission.
+	 */
+	#[NoAdminRequired]
+	public function split(int $fileId, string $profileId = ''): JSONResponse {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			return new JSONResponse(
+				data: ['error' => 'You must be logged in.'],
+				statusCode: Http::STATUS_UNAUTHORIZED
+			);
+		}
+
+		try {
+			$file = $this->batchFile(userId: $user->getUID(), fileId: $fileId);
+			if ($file instanceof JSONResponse) {
+				return $file;
+			}
+
+			$profile = $this->resolveProfile(profileId: $profileId, path: $file->getPath());
+			if ($profile === null) {
+				return new JSONResponse(
+					data: ['error' => 'No scan profile watches this folder, so there is nothing that says how to cut this batch.'],
+					statusCode: Http::STATUS_BAD_REQUEST
+				);
+			}
+
+			return $this->cut(cut: new ScanBatchCut(file: $file, profile: $profile));
+		} catch (Throwable $e) {
+			return new JSONResponse(
+				data: ['error' => $e->getMessage()],
+				statusCode: Http::STATUS_INTERNAL_SERVER_ERROR
+			);
+		}//end try
+
+	}//end split()
+
+	/**
+	 * The batch file, as the caller's own user folder resolves it, or the refusal.
+	 *
+	 * @param string $userId The caller.
+	 * @param int    $fileId The batch the scanner wrote.
+	 *
+	 * @return File|JSONResponse The file, or a 403 when the caller cannot see it and a 400 when it is no file.
+	 */
+	private function batchFile(string $userId, int $fileId): File|JSONResponse {
+		$nodes = $this->rootFolder->getUserFolder($userId)->getById($fileId);
+		if ($nodes === []) {
+			return new JSONResponse(
+				data: ['error' => 'You may not read that batch.'],
+				statusCode: Http::STATUS_FORBIDDEN
+			);
+		}
+
+		$file = $nodes[0];
+		if (($file instanceof File) === false) {
+			// The id answers with whatever node carries it, and a folder id
+			// is as valid an int as a file id. Passing a folder on would
+			// reach the reader as a batch with no pages.
+			return new JSONResponse(
+				data: ['error' => 'That id is not a scanned batch.'],
+				statusCode: Http::STATUS_BAD_REQUEST
+			);
+		}
+
+		return $file;
+
+	}//end batchFile()
+
+	/**
+	 * Receive the batch when it is new, then cut it into its parent folder.
+	 *
+	 * The batch is looked up by the id of the file batchFile() resolved, so
+	 * nothing reaches the store without that check.
+	 *
+	 * @param ScanBatchCut $cut The batch file and its profile.
+	 *
+	 * @return JSONResponse The split batch, or a 400 when it has no folder to write to.
+	 */
+	private function cut(ScanBatchCut $cut): JSONResponse {
+		$batch = $this->store->findByFile(fileId: (int)$cut->file->getId());
+		if ($batch === null) {
+			$batch = $this->batches->receive(file: $cut->file, profile: $cut->profile);
+		}
+
+		$target = $cut->file->getParent();
+		if (($target instanceof Folder) === false) {
+			return new JSONResponse(
+				data: ['error' => 'The batch has no folder to write its segments to.'],
+				statusCode: Http::STATUS_BAD_REQUEST
+			);
+		}
+
+		return new JSONResponse(
+			data: $this->batches->split(batch: $batch, profile: $cut->profile, file: $cut->file, target: $target),
+			statusCode: Http::STATUS_OK
+		);
+
+	}//end cut()
+
+	/**
+	 * The profile to cut a batch with.
+	 *
+	 * @param string $profileId The profile the caller named, if any.
+	 * @param string $path The path the batch sits at.
+	 *
+	 * @return array<string, mixed>|null The profile, or null when nobody watches this folder.
+	 *
+	 * @throws Throwable When the profile store cannot be read. The caller, split(),
+	 *                   catches it and answers the refusal, so a store that is down
+	 *                   is reported rather than read as "nobody watches this folder".
+	 *
+	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 */
+	private function resolveProfile(string $profileId, string $path): ?array {
+		if (trim($profileId) !== '') {
+			return $this->profiles->find(id: trim($profileId));
+		}
+
+		return $this->profiles->forPath(path: $path);
+
+	}//end resolveProfile()
+}//end class

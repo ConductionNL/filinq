@@ -42,6 +42,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\Conversion;
 
+use OCA\Filinq\Kernel\Contracts\OutputLayoutResolverInterface;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 
@@ -54,29 +55,14 @@ use Psr\Log\LoggerInterface;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.nl
  */
-class OutputLayoutResolver {
-
-	/**
-	 * App-config key for the configurable subfolder name.
-	 */
-	public const SUBFOLDER_CONFIG_KEY = 'anonymisation.output_subfolder_name';
-
-	/**
-	 * Default subfolder name when the config key is unset or invalid.
-	 */
-	public const DEFAULT_SUBFOLDER_NAME = 'anonymised';
-
-	/**
-	 * Regex that valid subfolder names must match.
-	 */
-	private const SUBFOLDER_NAME_REGEX = '/^[a-z0-9_-]+$/';
+class OutputLayoutResolver implements OutputLayoutResolverInterface {
 
 	/**
 	 * Trailing-`_anonymized` strip pattern; matches the literal suffix on
 	 * the base name (post-strip of the extension) so `Report_anonymized`
 	 * becomes `Report` while `_anonymized_summary` is untouched.
 	 */
-	private const LEGACY_SUFFIX_REGEX = '/_anonymized$/';
+	private const LEGACY_SUFFIX_REGEX = '/(_anonymized)+$/';
 
 	/**
 	 * Constructor.
@@ -130,7 +116,8 @@ class OutputLayoutResolver {
 	 *
 	 * @param string $baseName Source base name (without extension).
 	 *
-	 * @return string Base name with one trailing `_anonymized` stripped, if present.
+	 * @return string Base name with every trailing `_anonymized` stripped, if present
+	 *                (a re-anonymised legacy output carries two).
 	 */
 	public function stripLegacyAnonymizedSuffix(string $baseName): string {
 		$stripped = preg_replace(self::LEGACY_SUFFIX_REGEX, '', $baseName);

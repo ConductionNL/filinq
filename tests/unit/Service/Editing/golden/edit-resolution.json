@@ -1,0 +1,105 @@
+{
+    "every action": {
+        "resolved": [
+            {
+                "index": 1,
+                "anchor": "b2",
+                "action": "replace",
+                "text": "Nieuw",
+                "style": []
+            },
+            {
+                "index": 0,
+                "anchor": "b1",
+                "action": "insertAfter",
+                "text": "Erna",
+                "style": []
+            },
+            {
+                "index": 2,
+                "anchor": "b3",
+                "action": "delete",
+                "text": "",
+                "style": []
+            },
+            {
+                "index": 2,
+                "anchor": "b3",
+                "action": "style",
+                "text": "",
+                "style": {
+                    "bold": true
+                }
+            },
+            {
+                "index": 0,
+                "anchor": "b1",
+                "action": "delete",
+                "text": "ignored",
+                "style": [
+                    "x"
+                ]
+            }
+        ]
+    },
+    "no edits": {
+        "resolved": []
+    },
+    "an unknown action": {
+        "refused": "Edit 2: unknown action \"move\"."
+    },
+    "an unknown action and an unknown anchor": {
+        "refused": "Edit 1: unknown action \"move\"."
+    },
+    "an unknown anchor": {
+        "refused": "Edit 1: anchor \"zz\" does not match any block in this document. Anchors are derived from block content, so re-read the document and use current anchors."
+    },
+    "a missing anchor": {
+        "refused": "Edit 1: anchor \"\" does not match any block in this document. Anchors are derived from block content, so re-read the document and use current anchors."
+    },
+    "an unknown anchor and no text": {
+        "refused": "Edit 1: anchor \"zz\" does not match any block in this document. Anchors are derived from block content, so re-read the document and use current anchors."
+    },
+    "a replace without text": {
+        "refused": "Edit 1: action \"replace\" requires non-empty text."
+    },
+    "an insert without text": {
+        "refused": "Edit 1: action \"insertAfter\" requires non-empty text."
+    },
+    "a style without style": {
+        "refused": "Edit 1: action \"style\" requires a non-empty \"style\" object. Supported properties: bold, italic, underline, alignment, heading, list, pageBreakBefore."
+    },
+    "a style with an empty style": {
+        "refused": "Edit 1: action \"style\" requires a non-empty \"style\" object. Supported properties: bold, italic, underline, alignment, heading, list, pageBreakBefore."
+    },
+    "a style with a string": {
+        "refused": "Edit 1: action \"style\" requires a non-empty \"style\" object. Supported properties: bold, italic, underline, alignment, heading, list, pageBreakBefore."
+    },
+    "a replace with a style string": {
+        "resolved": [
+            {
+                "index": 1,
+                "anchor": "b2",
+                "action": "replace",
+                "text": "x",
+                "style": [
+                    "bold"
+                ]
+            }
+        ]
+    },
+    "string keys": {
+        "refused": "Edit 1: action \"insertAfter\" requires non-empty text."
+    },
+    "a numeric text": {
+        "resolved": [
+            {
+                "index": 0,
+                "anchor": "b1",
+                "action": "replace",
+                "text": "0",
+                "style": []
+            }
+        ]
+    }
+}

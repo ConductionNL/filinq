@@ -226,4 +226,51 @@ class DossierControllerTest extends TestCase {
 		$this->assertArrayHasKey('error', $response->getData());
 
 	}//end testGenerateGrondslagenSummaryReturns500OnRenderFailure()
+	/**
+	 * A dossier that is unknown or not readable answers 403, not 500: the
+	 * access check refuses before anything renders, and a refusal is not a
+	 * server failure. The Newman case for this route asserts the same over HTTP.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/fix-dossier-grondslagen-route-mismatch/tasks.md#task-R-2.1
+	 */
+	public function testAnUnknownOrUnreadableDossierAnswers403NotA500(): void {
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn('alice');
+		$this->mockUserSession->method('getUser')->willReturn($user);
+
+		$this->mockSummaryService
+			->method('authorizeAccess')
+			->willThrowException(new \RuntimeException('Access denied or dossier not found: nope', 403));
+		$this->mockSummaryService->expects($this->never())->method('renderDossierSummary');
+
+		$response = $this->controller->generateGrondslagenSummary('nope');
+
+		$this->assertSame(403, $response->getStatus());
+		$this->assertArrayHasKey('error', $response->getData());
+
+	}//end testAnUnknownOrUnreadableDossierAnswers403NotA500()
+
+	/**
+	 * OpenRegister's mapper throws DoesNotExistException for an unknown id;
+	 * that is the same refusal, not a server failure.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/fix-dossier-grondslagen-route-mismatch/tasks.md#task-R-2.1
+	 */
+	public function testAMissingDossierFromTheMapperAnswers403(): void {
+		$user = $this->createMock(IUser::class);
+		$this->mockUserSession->method('getUser')->willReturn($user);
+
+		$this->mockSummaryService
+			->method('authorizeAccess')
+			->willThrowException(new \OCP\AppFramework\Db\DoesNotExistException('not found'));
+
+		$response = $this->controller->generateGrondslagenSummary('nope');
+
+		$this->assertSame(403, $response->getStatus());
+
+	}//end testAMissingDossierFromTheMapperAnswers403()
 }//end class

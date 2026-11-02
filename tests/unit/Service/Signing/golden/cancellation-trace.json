@@ -1,0 +1,369 @@
+{
+    "creator": {
+        "lookups": [
+            [
+                "req-1",
+                "alice"
+            ]
+        ],
+        "providers": [
+            "active"
+        ],
+        "cancelled": [
+            "ext-1"
+        ],
+        "logs": [
+            [
+                "warning",
+                "[Filinq] signing cancellation cancelled",
+                {
+                    "app": "filinq",
+                    "actor": "alice",
+                    "requestId": "req-1",
+                    "outcome": "cancelled",
+                    "detail": ""
+                }
+            ]
+        ],
+        "result": {
+            "requestId": "req-1",
+            "status": "cancelled",
+            "alreadyCancelled": false
+        }
+    },
+    "already cancelled": {
+        "lookups": [
+            [
+                "req-1",
+                "alice"
+            ]
+        ],
+        "providers": [
+            "active"
+        ],
+        "cancelled": [
+            "ext-1"
+        ],
+        "logs": [
+            [
+                "warning",
+                "[Filinq] signing cancellation cancelled",
+                {
+                    "app": "filinq",
+                    "actor": "alice",
+                    "requestId": "req-1",
+                    "outcome": "cancelled",
+                    "detail": ""
+                }
+            ]
+        ],
+        "result": {
+            "requestId": "req-1",
+            "status": "cancelled",
+            "alreadyCancelled": true
+        }
+    },
+    "named provider": {
+        "lookups": [
+            [
+                "req-1",
+                "alice"
+            ]
+        ],
+        "providers": [
+            "libresign"
+        ],
+        "cancelled": [
+            "ext-1"
+        ],
+        "logs": [
+            [
+                "warning",
+                "[Filinq] signing cancellation cancelled",
+                {
+                    "app": "filinq",
+                    "actor": "alice",
+                    "requestId": "req-1",
+                    "outcome": "cancelled",
+                    "detail": ""
+                }
+            ]
+        ],
+        "result": {
+            "requestId": "req-1",
+            "status": "cancelled",
+            "alreadyCancelled": false
+        }
+    },
+    "not the creator": {
+        "lookups": [
+            [
+                "req-1",
+                "bob"
+            ]
+        ],
+        "providers": [],
+        "cancelled": [],
+        "logs": [
+            [
+                "warning",
+                "[Filinq] signing cancellation refused-not-creator",
+                {
+                    "app": "filinq",
+                    "actor": "bob",
+                    "requestId": "req-1",
+                    "outcome": "refused-not-creator",
+                    "detail": "actor is not the creator, or the request does not exist"
+                }
+            ]
+        ],
+        "thrown": [
+            "RuntimeException",
+            "Only the person who created this signing request can withdraw it: alice. Administrators cannot withdraw it on their behalf.",
+            null
+        ]
+    },
+    "no such request": {
+        "lookups": [
+            [
+                "req-1",
+                "alice"
+            ]
+        ],
+        "providers": [],
+        "cancelled": [],
+        "logs": [
+            [
+                "warning",
+                "[Filinq] signing cancellation refused-not-creator",
+                {
+                    "app": "filinq",
+                    "actor": "alice",
+                    "requestId": "req-1",
+                    "outcome": "refused-not-creator",
+                    "detail": "actor is not the creator, or the request does not exist"
+                }
+            ]
+        ],
+        "thrown": [
+            "RuntimeException",
+            "Only the person who created this signing request can withdraw it.",
+            null
+        ]
+    },
+    "lookup throws": {
+        "lookups": [
+            [
+                "req-1",
+                "alice"
+            ]
+        ],
+        "providers": [],
+        "cancelled": [],
+        "logs": [
+            [
+                "warning",
+                "[Filinq] signing cancellation refused-not-creator",
+                {
+                    "app": "filinq",
+                    "actor": "alice",
+                    "requestId": "req-1",
+                    "outcome": "refused-not-creator",
+                    "detail": "actor is not the creator, or the request does not exist"
+                }
+            ]
+        ],
+        "thrown": [
+            "RuntimeException",
+            "Only the person who created this signing request can withdraw it.",
+            null
+        ]
+    },
+    "no creator and no actor": {
+        "lookups": [
+            [
+                "req-1",
+                ""
+            ]
+        ],
+        "providers": [],
+        "cancelled": [],
+        "logs": [
+            [
+                "warning",
+                "[Filinq] signing cancellation refused-not-creator",
+                {
+                    "app": "filinq",
+                    "actor": "",
+                    "requestId": "req-1",
+                    "outcome": "refused-not-creator",
+                    "detail": "actor is not the creator, or the request does not exist"
+                }
+            ]
+        ],
+        "thrown": [
+            "RuntimeException",
+            "Only the person who created this signing request can withdraw it.",
+            null
+        ]
+    },
+    "no creator field": {
+        "lookups": [
+            [
+                "req-1",
+                "alice"
+            ]
+        ],
+        "providers": [],
+        "cancelled": [],
+        "logs": [
+            [
+                "warning",
+                "[Filinq] signing cancellation refused-not-creator",
+                {
+                    "app": "filinq",
+                    "actor": "alice",
+                    "requestId": "req-1",
+                    "outcome": "refused-not-creator",
+                    "detail": "actor is not the creator, or the request does not exist"
+                }
+            ]
+        ],
+        "thrown": [
+            "RuntimeException",
+            "Only the person who created this signing request can withdraw it.",
+            null
+        ]
+    },
+    "empty provider reference": {
+        "lookups": [
+            [
+                "req-1",
+                "alice"
+            ]
+        ],
+        "providers": [],
+        "cancelled": [],
+        "logs": [],
+        "thrown": [
+            "RuntimeException",
+            "This signing request has no provider reference, so it cannot be withdrawn at the provider.",
+            null
+        ]
+    },
+    "no provider reference": {
+        "lookups": [
+            [
+                "req-1",
+                "alice"
+            ]
+        ],
+        "providers": [],
+        "cancelled": [],
+        "logs": [],
+        "thrown": [
+            "RuntimeException",
+            "This signing request has no provider reference, so it cannot be withdrawn at the provider.",
+            null
+        ]
+    },
+    "unsupported": {
+        "lookups": [
+            [
+                "req-1",
+                "alice"
+            ]
+        ],
+        "providers": [
+            "active"
+        ],
+        "cancelled": [
+            "ext-1"
+        ],
+        "logs": [
+            [
+                "warning",
+                "[Filinq] signing cancellation failed-unsupported",
+                {
+                    "app": "filinq",
+                    "actor": "alice",
+                    "requestId": "req-1",
+                    "outcome": "failed-unsupported",
+                    "detail": "The \"ValidSign\" signing provider cannot withdraw a signing request. The request is still live and its signatories can still sign. Withdraw it directly with the provider."
+                }
+            ]
+        ],
+        "thrown": [
+            "OCA\\Filinq\\Exception\\SigningCancellationNotSupportedException",
+            "The \"ValidSign\" signing provider cannot withdraw a signing request. The request is still live and its signatories can still sign. Withdraw it directly with the provider.",
+            null
+        ]
+    },
+    "provider fails": {
+        "lookups": [
+            [
+                "req-1",
+                "alice"
+            ]
+        ],
+        "providers": [
+            "active"
+        ],
+        "cancelled": [
+            "ext-1"
+        ],
+        "logs": [
+            [
+                "warning",
+                "[Filinq] signing cancellation failed",
+                {
+                    "app": "filinq",
+                    "actor": "alice",
+                    "requestId": "req-1",
+                    "outcome": "failed",
+                    "detail": "provider down."
+                }
+            ]
+        ],
+        "thrown": [
+            "RuntimeException",
+            "The signing request could not be withdrawn: provider down. It is still live and its signatories can still sign.",
+            [
+                "RuntimeException",
+                "provider down."
+            ]
+        ]
+    },
+    "other provider reference": {
+        "lookups": [
+            [
+                "req-1",
+                "alice"
+            ]
+        ],
+        "providers": [
+            "active"
+        ],
+        "cancelled": [
+            "ext-9"
+        ],
+        "logs": [
+            [
+                "warning",
+                "[Filinq] signing cancellation cancelled",
+                {
+                    "app": "filinq",
+                    "actor": "alice",
+                    "requestId": "req-1",
+                    "outcome": "cancelled",
+                    "detail": ""
+                }
+            ]
+        ],
+        "result": {
+            "requestId": "req-1",
+            "status": "cancelled",
+            "alreadyCancelled": false
+        }
+    }
+}

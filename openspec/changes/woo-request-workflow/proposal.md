@@ -4,6 +4,111 @@ kind: code
 
 # Proposal: woo-request-workflow
 
+## Summary
+
+filinq drafts the Woo decision letter and the inventory from two seeded, organisation-editable templates, from a checked `wooDecision` data contract that dossiq sends on `DocumentGenerationRequestedEvent`.
+
+- Rows: 7.9 (filinq's half; dossiq's half is in `dossiq/woo-request-takes-over-from-opencatalogi`).
+- Wave 1.
+- Dependencies: `dossiq/woo-refusal-grounds-list` (https://github.com/ConductionNL/dossiq/issues/3288), `filinq/grondslagen-read-from-dossiq` (https://github.com/ConductionNL/filinq/issues/1346), which share the grounds resolver. Called by `dossiq/woo-request-takes-over-from-opencatalogi` (https://github.com/ConductionNL/dossiq/issues/3289).
+- Decisions: D1 (dossiq owns the Woo request; filinq keeps only the letter and the inventory).
+- Build rules: openspec/woo-build-rules.md
+
+## Re-scope 2026-10-05 (decision D1): filinq keeps the decision letter and the inventory
+
+This section governs. Where the original proposal below says otherwise, it is
+superseded. None of the original sixteen tasks was built, so nothing built is
+removed.
+
+### Why the scope changed
+
+Ruben's decision **D1** of 2026-10-05: dossiq owns the Woo request, its intake
+and its statutory term. dossiq's Woo stack is built (`specs/woo-case-type`:
+a Woo case type with P28D plus one P14D extension, per-document assessment
+with grounds, a generated beschikking). dossiq gathers the documents itself
+(`dossiq/woo-requests-gather-documents-from-sources`, REQ-WOO-012 to 014).
+So filinq keeps only the service dossiq does not have: drafting the decision
+letter and the inventory from an organisation-edited template.
+
+Woo capability row 7.9, "A decision document is generated from a template".
+Our column reads `no`: "zero template or document generation in the three
+apps. Nearest is the filinq app, outside this stack". The gap register names
+the missing half: "Generate the Woo decision letter (besluit) from a seeded
+woo-besluit template filled from the request and its assessments." Build
+plan: amend this change, wave 1, size L.
+
+### What stays and what goes
+
+| original | fate | where it lives now |
+| --- | --- | --- |
+| REQ-DDWRW-001 `wooRequest` and `requestDocument` schemas | removed | dossiq's Woo case and its documents |
+| REQ-DDWRW-002 intake and the Woo art. 4.4 deadline | removed | dossiq, on OpenRegister's term engine |
+| REQ-DDWRW-003 collection into a request dossier | removed | `dossiq/woo-requests-gather-documents-from-sources` |
+| REQ-DDWRW-004 hash dedupe | removed | the same dossiq change (REQ-WOO-014) |
+| REQ-DDWRW-005 per-document and per-passage grounds | removed | dossiq's assessment; grounds from `dossiq/woo-refusal-grounds-list` |
+| REQ-DDWRW-006 inventarislijst from a template | kept, re-scoped | this change, rendered from data the caller passes |
+| REQ-DDWRW-007 disclosure package and besluit letter | besluit kept, package removed | the letter here; the package in dossiq, which holds the documents |
+| REQ-DDWRW-008 request lifecycle | removed | dossiq's case lifecycle |
+| REQ-DDWRW-009 Woo-verzoeken UI | removed | dossiq's Woo case screens |
+| task 4.6 collect entity-search hits into a request | removed | a dossiq concern; filinq's entity search keeps its own log |
+
+### What this change builds now
+
+1. Two seeded, organisation-editable templates in filinq's template library:
+   `woo-besluit` (the decision letter) and `woo-inventarislijst` (the
+   inventory). The seed never overwrites an organisation's edited version on
+   upgrade.
+2. A declared data contract, `woo-decision`, that both templates render from.
+   The caller passes it as `data.wooDecision` on the existing
+   `DocumentGenerationRequestedEvent` with `templateSlug`. No new command.
+3. A context builder that checks the contract and fails closed: a withheld or
+   partly disclosed document without a ground, a ground code the grounds list
+   does not know, or a missing reference or decision date refuses the
+   generation with the reason, and no document is made.
+4. Grounds rendered by label and article from dossiq's list, through the
+   resolver `grondslagen-read-from-dossiq` adds. Codes are never printed raw.
+5. Inventory numbers taken from the caller in the caller's order, so the
+   letter and the inventory always agree.
+
+### Cross-app contract
+
+The caller is dossiq (`lib/Service/Beschikking/FilinqTemplateEngineAdapter.php`
+already renders beschikkingen through filinq). If
+`dossiq-decisions-to-decidiq` moves the besluit raise to decidiq, decidiq
+becomes the caller with the same contract. The call, unchanged from
+`flow-generate-document-node`:
+
+`new \OCA\Filinq\Event\DocumentGenerationRequestedEvent(request: [...], requestingApp: 'dossiq')`
+with request keys `templateSlug` (`woo-besluit` or `woo-inventarislijst`),
+`data` (`['wooDecision' => ...]`, shape in the spec), `object` (the case
+reference), `format` (`pdf` default) and optional `userId`. After dispatch the
+caller reads `isHandled()`, `getResult()` (`fileId`, `path`, `name`, `mime`,
+`size`, `format`, `template`, `object`, `metadata`, `requestingApp`,
+`warnings`) or `getError()`.
+
+App absent: without filinq the event is dispatched and comes back neither
+handled nor refused. dossiq then reports that no decision letter could be
+drafted, and its Woo case cannot pretend one exists. That is dossiq's side and
+needs its own test there. Without dossiq nothing calls this.
+
+### Fail closed
+
+- A refused contract makes no file. `getError()` names every problem.
+- A ground the list does not know is refused, never printed as a bare code.
+- A partly disclosed document is listed in the inventory with its grounds; it
+  is never listed as disclosed.
+
+### Dependencies and wave
+
+- `filinq/grondslagen-read-from-dossiq` (wave 2) supplies the ground resolver.
+  Until it lands, the builder reads labels from dossiq's
+  `OCA\Dossiq\Woo\WooRefusalGrounds::byCode()` through the same guard, and
+  the two changes share one resolver class.
+- `dossiq/woo-refusal-grounds-list` (wave 1) defines the codes.
+- Wave 1. Implements decision D1 for filinq.
+
+## Original proposal (superseded where the re-scope above says so)
+
 ## Why
 
 Passive disclosure — handling a Woo-verzoek end-to-end — is the competitive

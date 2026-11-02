@@ -1,0 +1,622 @@
+{
+	"preserved absent": {
+		"note": {
+			"type": "success",
+			"title": "Accessibility preserved",
+			"detail": "1 of 4 tags kept. Confirmed by veraPDF.",
+			"reasons": []
+		}
+	},
+	"preserved null": {
+		"note": {
+			"type": "success",
+			"title": "Accessibility preserved",
+			"detail": "1 of 4 tags kept. Confirmed by veraPDF.",
+			"reasons": []
+		}
+	},
+	"preserved empty": {
+		"note": {
+			"type": "success",
+			"title": "Accessibility preserved",
+			"detail": "1 of 4 tags kept. Confirmed by veraPDF.",
+			"reasons": []
+		}
+	},
+	"preserved mixed": {
+		"note": {
+			"type": "success",
+			"title": "Accessibility preserved",
+			"detail": "1 of 4 tags kept. Confirmed by veraPDF.",
+			"reasons": [
+				"The original had no tags to keep",
+				"veraPDF found that the copy no longer meets PDF/UA",
+				"some-new-reason"
+			]
+		}
+	},
+	"preserved text": {
+		"threw": "TypeError"
+	},
+	"preserved blank": {
+		"note": {
+			"type": "success",
+			"title": "Accessibility preserved",
+			"detail": "1 of 4 tags kept. Confirmed by veraPDF.",
+			"reasons": []
+		}
+	},
+	"preserved false": {
+		"note": {
+			"type": "success",
+			"title": "Accessibility preserved",
+			"detail": "1 of 4 tags kept. Confirmed by veraPDF.",
+			"reasons": []
+		}
+	},
+	"degraded absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility lost",
+			"detail": "1 of 4 tags kept. Screen readers may not read this copy.",
+			"reasons": []
+		}
+	},
+	"degraded null": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility lost",
+			"detail": "1 of 4 tags kept. Screen readers may not read this copy.",
+			"reasons": []
+		}
+	},
+	"degraded empty": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility lost",
+			"detail": "1 of 4 tags kept. Screen readers may not read this copy.",
+			"reasons": []
+		}
+	},
+	"degraded mixed": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility lost",
+			"detail": "1 of 4 tags kept. Screen readers may not read this copy.",
+			"reasons": [
+				"The original had no tags to keep",
+				"veraPDF found that the copy no longer meets PDF/UA",
+				"some-new-reason"
+			]
+		}
+	},
+	"degraded text": {
+		"threw": "TypeError"
+	},
+	"degraded blank": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility lost",
+			"detail": "1 of 4 tags kept. Screen readers may not read this copy.",
+			"reasons": []
+		}
+	},
+	"degraded false": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility lost",
+			"detail": "1 of 4 tags kept. Screen readers may not read this copy.",
+			"reasons": []
+		}
+	},
+	"not-applicable absent": {
+		"note": {
+			"type": "info",
+			"title": "No accessibility to keep",
+			"detail": "The original had no tag structure, so the copy has none either.",
+			"reasons": []
+		}
+	},
+	"not-applicable null": {
+		"note": {
+			"type": "info",
+			"title": "No accessibility to keep",
+			"detail": "The original had no tag structure, so the copy has none either.",
+			"reasons": []
+		}
+	},
+	"not-applicable empty": {
+		"note": {
+			"type": "info",
+			"title": "No accessibility to keep",
+			"detail": "The original had no tag structure, so the copy has none either.",
+			"reasons": []
+		}
+	},
+	"not-applicable mixed": {
+		"note": {
+			"type": "info",
+			"title": "No accessibility to keep",
+			"detail": "The original had no tag structure, so the copy has none either.",
+			"reasons": []
+		}
+	},
+	"not-applicable text": {
+		"threw": "TypeError"
+	},
+	"not-applicable blank": {
+		"note": {
+			"type": "info",
+			"title": "No accessibility to keep",
+			"detail": "The original had no tag structure, so the copy has none either.",
+			"reasons": []
+		}
+	},
+	"not-applicable false": {
+		"note": {
+			"type": "info",
+			"title": "No accessibility to keep",
+			"detail": "The original had no tag structure, so the copy has none either.",
+			"reasons": []
+		}
+	},
+	"unknown absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"unknown null": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"unknown empty": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"unknown mixed": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"unknown text": {
+		"threw": "TypeError"
+	},
+	"unknown blank": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"unknown false": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"other absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"other null": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"other empty": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"other mixed": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"other text": {
+		"threw": "TypeError"
+	},
+	"other blank": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"other false": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"upper absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"upper null": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"upper empty": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"upper mixed": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"upper text": {
+		"threw": "TypeError"
+	},
+	"upper blank": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"upper false": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"toString absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"toString null": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"toString empty": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"toString mixed": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"toString text": {
+		"threw": "TypeError"
+	},
+	"toString blank": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"toString false": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"__proto__ absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"__proto__ null": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"__proto__ empty": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"__proto__ mixed": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"__proto__ text": {
+		"threw": "TypeError"
+	},
+	"__proto__ blank": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"__proto__ false": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"hasOwnProperty absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"hasOwnProperty null": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"hasOwnProperty empty": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"hasOwnProperty mixed": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"hasOwnProperty text": {
+		"threw": "TypeError"
+	},
+	"hasOwnProperty blank": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"hasOwnProperty false": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"number absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"number null": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"number empty": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"number mixed": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"number text": {
+		"threw": "TypeError"
+	},
+	"number blank": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"number false": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"boxed absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"boxed null": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"boxed empty": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"boxed mixed": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"boxed text": {
+		"threw": "TypeError"
+	},
+	"boxed blank": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"boxed false": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"array absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"array null": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"array empty": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"array mixed": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"array text": {
+		"threw": "TypeError"
+	},
+	"array blank": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"array false": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	}
+}

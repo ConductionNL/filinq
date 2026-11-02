@@ -28,7 +28,8 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use OCA\Filinq\Exception\ComparisonException;
-use OCA\Filinq\Service\DocumentVersionService;
+use OCA\Filinq\Exception\DocumentFinalException;
+use OCA\Filinq\Kernel\Contracts\DocumentVersionServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -52,13 +53,14 @@ use Throwable;
  * @spec openspec/specs/document-versions/spec.md
  */
 class VersionController extends Controller {
+	use AnswersNotAuthenticated;
 	/**
 	 * Constructor.
 	 *
 	 * @param string $appName The app name.
 	 * @param IRequest $request The request.
 	 * @param LoggerInterface $logger Logger.
-	 * @param DocumentVersionService $service The version service.
+	 * @param DocumentVersionServiceInterface $service The version service.
 	 * @param IL10N $l10n Localisation.
 	 * @param IUserSession $userSession User session.
 	 *
@@ -68,7 +70,7 @@ class VersionController extends Controller {
 		string $appName,
 		IRequest $request,
 		private readonly LoggerInterface $logger,
-		private readonly DocumentVersionService $service,
+		private readonly DocumentVersionServiceInterface $service,
 		private readonly IL10N $l10n,
 		private readonly IUserSession $userSession,
 	) {
@@ -86,11 +88,15 @@ class VersionController extends Controller {
 	 * @return JSONResponse The versions, or a localised error.
 	 *
 	 * @spec openspec/specs/document-versions/spec.md
+	 *
+	 * @no-admin-idor-exempt the file is resolved one layer down. DocumentVersionService::resolveFile()
+	 * looks $fileId up in the caller's own user folder and requires read permission, and answers 404
+	 * otherwise.
 	 */
 	#[NoAdminRequired]
 	public function index(int $fileId): JSONResponse {
 		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(data: ['error' => $this->l10n->t('Not authenticated')], statusCode: Http::STATUS_UNAUTHORIZED);
+			return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 		}
 
 		$limit = (int)($this->request->getParam('limit', 50));
@@ -120,11 +126,15 @@ class VersionController extends Controller {
 	 * @return DataDownloadResponse|JSONResponse The bytes, or a localised error.
 	 *
 	 * @spec openspec/specs/document-versions/spec.md
+	 *
+	 * @no-admin-idor-exempt the file is resolved one layer down. DocumentVersionService::resolveFile()
+	 * looks $fileId up in the caller's own user folder and requires read permission, and answers 404
+	 * otherwise.
 	 */
 	#[NoAdminRequired]
 	public function download(int $fileId, int $versionTimestamp): DataDownloadResponse|JSONResponse {
 		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(data: ['error' => $this->l10n->t('Not authenticated')], statusCode: Http::STATUS_UNAUTHORIZED);
+			return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 		}
 
 		try {
@@ -149,11 +159,15 @@ class VersionController extends Controller {
 	 * @return JSONResponse Success, or a localised error.
 	 *
 	 * @spec openspec/specs/document-versions/spec.md
+	 *
+	 * @no-admin-idor-exempt the file is resolved one layer down. DocumentVersionService::resolveFile()
+	 * looks $fileId up in the caller's own user folder and requires update permission, and answers 404
+	 * otherwise.
 	 */
 	#[NoAdminRequired]
 	public function restore(int $fileId, int $versionTimestamp): JSONResponse {
 		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(data: ['error' => $this->l10n->t('Not authenticated')], statusCode: Http::STATUS_UNAUTHORIZED);
+			return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 		}
 
 		try {
@@ -161,6 +175,11 @@ class VersionController extends Controller {
 			return new JSONResponse(data: ['restored' => true], statusCode: Http::STATUS_OK);
 		} catch (ComparisonException $e) {
 			return $this->errorResponse(exception: $e);
+		} catch (DocumentFinalException $e) {
+			return new JSONResponse(
+				data: ['error' => $e->getMessage(), 'reason' => 'document-final'],
+				statusCode: Http::STATUS_CONFLICT
+			);
 		} catch (Throwable $e) {
 			$this->logger->error('Version restore failed', ['exception' => $e->getMessage()]);
 			return new JSONResponse(data: ['error' => $this->l10n->t('Could not restore version')], statusCode: Http::STATUS_INTERNAL_SERVER_ERROR);

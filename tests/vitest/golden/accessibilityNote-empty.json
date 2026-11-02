@@ -1,0 +1,29 @@
+{
+	"undefined": {
+		"note": null
+	},
+	"null": {
+		"note": null
+	},
+	"false": {
+		"note": null
+	},
+	"zero": {
+		"note": null
+	},
+	"empty": {
+		"note": null
+	},
+	"emptyState": {
+		"note": null
+	},
+	"nullState": {
+		"note": null
+	},
+	"zeroState": {
+		"note": null
+	},
+	"falseState": {
+		"note": null
+	}
+}

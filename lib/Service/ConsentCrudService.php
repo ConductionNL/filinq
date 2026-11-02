@@ -26,6 +26,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use Exception;
+use OCA\Filinq\Kernel\Contracts\ConsentCrudServiceInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -39,7 +40,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/consent-management/spec.md
  */
-class ConsentCrudService {
+class ConsentCrudService implements ConsentCrudServiceInterface {
 	/**
 	 * Constructor for ConsentCrudService
 	 *

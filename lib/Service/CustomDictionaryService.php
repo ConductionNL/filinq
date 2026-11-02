@@ -31,6 +31,7 @@ namespace OCA\Filinq\Service;
 
 use Exception;
 use InvalidArgumentException;
+use OCA\Filinq\Kernel\Contracts\CustomDictionaryServiceInterface;
 use OCP\AppFramework\Db\DoesNotExistException;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -47,31 +48,7 @@ use Throwable;
  *
  * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
  */
-class CustomDictionaryService {
-
-	/**
-	 * Register slug both schemas live in.
-	 *
-	 * `filinq`, not `document`: this app declares ONE register holding all 23
-	 * schemas. The five it used to declare are retired.
-	 *
-	 * @var string
-	 */
-	public const REGISTER = 'filinq';
-
-	/**
-	 * Dictionary schema slug.
-	 *
-	 * @var string
-	 */
-	public const SCHEMA_DICTIONARY = 'customDictionary';
-
-	/**
-	 * Term schema slug.
-	 *
-	 * @var string
-	 */
-	public const SCHEMA_TERM = 'customDictionaryTerm';
+class CustomDictionaryService implements CustomDictionaryServiceInterface {
 
 	/**
 	 * Maximum number of term rows accepted in a single import call —
@@ -178,6 +155,7 @@ class CustomDictionaryService {
 	 * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
 	 */
 	public function createDictionary(array $data): array {
+		$this->accessGate->assertMayMaintain();
 		$payload = $this->normaliser->stripFrameworkParams(data: $data);
 		unset($payload['termCount']);
 		$payload['active'] = ($payload['active'] ?? true);
@@ -203,6 +181,7 @@ class CustomDictionaryService {
 	 * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
 	 */
 	public function updateDictionary(string $uuid, array $data): array {
+		$this->accessGate->assertMayMaintain();
 		$existing = $this->findDictionaryOrFail(uuid: $uuid);
 
 		$payload = array_merge($existing, $this->normaliser->stripFrameworkParams(data: $data));
@@ -226,6 +205,7 @@ class CustomDictionaryService {
 	 * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
 	 */
 	public function deleteDictionary(string $uuid): void {
+		$this->accessGate->assertMayMaintain();
 		$existing = $this->findDictionaryOrFail(uuid: $uuid);
 
 		foreach ($this->listTermsForDictionary(dictionary: $existing) as $term) {
@@ -270,6 +250,7 @@ class CustomDictionaryService {
 	 * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
 	 */
 	public function createTerm(string $dictionaryUuid, array $data): array {
+		$this->accessGate->assertMayMaintain();
 		$dictionary = $this->findDictionaryOrFail(uuid: $dictionaryUuid);
 
 		$value = trim((string)($data['value'] ?? ''));
@@ -303,6 +284,7 @@ class CustomDictionaryService {
 	 * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
 	 */
 	public function deleteTerm(string $dictionaryUuid, string $termUuid): void {
+		$this->accessGate->assertMayMaintain();
 		$dictionary = $this->findDictionaryOrFail(uuid: $dictionaryUuid);
 
 		$term = $this->repository->findOne(schema: self::SCHEMA_TERM, uuid: $termUuid);
@@ -335,8 +317,30 @@ class CustomDictionaryService {
 	 * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
 	 */
 	public function importTerms(string $dictionaryUuid, string $content, bool $isCsv): array {
+		$this->accessGate->assertMayMaintain();
 		$dictionary = $this->findDictionaryOrFail(uuid: $dictionaryUuid);
+		$rows = $this->importRows(content: $content, isCsv: $isCsv);
 
+		$import = new DictionaryTermImport(
+			dictionary: (string)($dictionary['id'] ?? $dictionaryUuid),
+			existingTerms: $this->listTermsForDictionary(dictionary: $dictionary)
+		);
+
+		return $this->addTerms(rows: $rows, import: $import);
+
+	}//end importTerms()
+
+	/**
+	 * The rows of an upload, within the size and row bounds.
+	 *
+	 * @param string $content Raw uploaded/pasted content.
+	 * @param bool   $isCsv   True for CSV parsing, false for newline-list parsing.
+	 *
+	 * @return array<int, array{value: string, label: string|null}> The rows.
+	 *
+	 * @throws InvalidArgumentException When the payload exceeds the size/row bound.
+	 */
+	private function importRows(string $content, bool $isCsv): array {
 		if (strlen($content) > self::MAX_IMPORT_BYTES) {
 			throw new InvalidArgumentException(
 				sprintf('Import payload exceeds the %d byte limit.', self::MAX_IMPORT_BYTES)
@@ -354,43 +358,40 @@ class CustomDictionaryService {
 			);
 		}
 
-		$existingKeys = [];
-		foreach ($this->listTermsForDictionary(dictionary: $dictionary) as $existingTerm) {
-			$existingKeys[mb_strtolower(trim((string)($existingTerm['value'] ?? '')))] = true;
-		}
+		return $rows;
 
-		$dictionaryReference = (string)($dictionary['id'] ?? $dictionaryUuid);
+	}//end importRows()
+
+	/**
+	 * Save every new, non-blank row as a term; count the rest as skipped.
+	 *
+	 * @param array<int, array{value: string, label: string|null}> $rows   The parsed rows.
+	 * @param DictionaryTermImport                           $import The dictionary and the values already taken.
+	 *
+	 * @return array{added: int, skipped: int, total: int}
+	 */
+	private function addTerms(array $rows, DictionaryTermImport $import): array {
 		$added = 0;
 		$skipped = 0;
-		$seenThisBatch = [];
-
 		foreach ($rows as $row) {
 			// The normaliser always emits a string `value` (a missing CSV
 			// column is coerced to ''), so no null-coalesce is needed here.
 			$value = trim($row['value']);
-			if ($value === '') {
+			if ($value === '' || $import->admits(value: $value) === false) {
 				$skipped++;
 				continue;
 			}
-
-			$key = mb_strtolower($value);
-			if (isset($existingKeys[$key]) === true || isset($seenThisBatch[$key]) === true) {
-				$skipped++;
-				continue;
-			}
-
-			$seenThisBatch[$key] = true;
 
 			$this->repository->save(
 				schema: self::SCHEMA_TERM,
 				data: [
 					'value' => $value,
 					'label' => $this->normaliser->stringOrNull(value: ($row['label'] ?? null)),
-					'dictionary' => $dictionaryReference,
+					'dictionary' => $import->dictionary,
 				]
 			);
 			$added++;
-		}//end foreach
+		}
 
 		return [
 			'added' => $added,
@@ -398,7 +399,7 @@ class CustomDictionaryService {
 			'total' => ($added + $skipped),
 		];
 
-	}//end importTerms()
+	}//end addTerms()
 
 	/**
 	 * Active dictionaries + their non-blank terms, scoped to the caller's

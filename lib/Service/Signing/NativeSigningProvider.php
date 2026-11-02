@@ -70,6 +70,7 @@ class NativeSigningProvider implements SigningProviderInterface {
 	 * @param SettingsService $settingsService Settings service (provides OR ObjectService)
 	 * @param IAppConfig $config App config (resolves session register/schema)
 	 * @param AssertionCanonicalizer $canonicalizer Canonical-JSON encoder shared with the verifier
+	 * @param FieldPlacementRenderer $placementRenderer Draws placed fields before the MAC is computed
 	 *
 	 * @return void
 	 */
@@ -78,6 +79,7 @@ class NativeSigningProvider implements SigningProviderInterface {
 		private readonly SettingsService $settingsService,
 		private readonly IAppConfig $config,
 		private readonly AssertionCanonicalizer $canonicalizer = new AssertionCanonicalizer(),
+		private readonly FieldPlacementRenderer $placementRenderer = new FieldPlacementRenderer(),
 	) {
 
 	}//end __construct()
@@ -321,9 +323,49 @@ class NativeSigningProvider implements SigningProviderInterface {
 	 *
 	 * @spec openspec/specs/document-signing/spec.md
 	 * @spec openspec/specs/portal-signing-surface/spec.md
+	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.2
 	 */
 	public function produceSignedArtifact(string $documentContent, array $context): string {
-		$level = (string)($context['level'] ?? 'SES');
+		$secret = $this->signingSecret(level: (string)($context['level'] ?? 'SES'));
+		$assertion = $this->assertionFor(context: $context);
+
+		// Field placements (bulk-signing-field-builder REQ-DDBSF-003): the placed
+		// fields are drawn into the pages BEFORE the canonical form is hashed, so
+		// the visible blocks are inside the MAC-covered content and a moved or
+		// altered block fails verification. They join the assertion as data too.
+		// Without placements the document bytes are untouched.
+		$placements = ($context['fieldPlacements'] ?? []);
+		if (is_array($placements) === true && $placements !== []) {
+			$documentContent = $this->placementRenderer->render(
+				pdf: $documentContent,
+				placements: $placements,
+				signers: (array) ($context['signerLabels'] ?? []),
+				timestamp: $assertion['timestamp']
+			);
+			$assertion['fieldPlacements'] = $placements;
+		}
+
+		// Build the canonical (unsigned-marker) form the verifier will recompute:
+		// the produced document with an empty marker payload. The HMAC is taken
+		// over the hash of that canonical form so the MAC cannot cover itself.
+		$canonical = $this->assembleSignedBytes(documentContent: $documentContent, payload: '');
+		$payloadCore = $this->canonicalizer->canonicalJson(data: $assertion);
+		$assertion['mac'] = hash_hmac('sha256', hash('sha256', $canonical) . "\n" . $payloadCore, $secret);
+
+		return $this->assembleSignedBytes(documentContent: $documentContent, payload: base64_encode((string)json_encode($assertion)));
+	}//end produceSignedArtifact()
+
+	/**
+	 * The signing secret, after refusing a level this provider cannot sign at.
+	 *
+	 * @param string $level The requested signature level.
+	 *
+	 * @return string The configured signing_verification_secret.
+	 *
+	 * @throws RuntimeException When the level is not SES, or when no secret is configured.
+	 */
+	private function signingSecret(string $level): string {
 		if ($this->supportsLevel(level: $level) === false) {
 			throw new RuntimeException(
 				'Native provider cannot produce a signed artifact for unsupported level "' . $level . '": '
@@ -339,12 +381,23 @@ class NativeSigningProvider implements SigningProviderInterface {
 			);
 		}
 
+		return $secret;
+	}//end signingSecret()
+
+	/**
+	 * The assertion the MAC covers: the signer fields, the portal claims and the non-empty consent and evidence lists.
+	 *
+	 * @param array<string, mixed> $context The signing context.
+	 *
+	 * @return array<string, mixed> The assertion, without placements and without its MAC.
+	 */
+	private function assertionFor(array $context): array {
 		$assertion = [
 			'v' => 2,
 			'signer' => (string)($context['signer'] ?? 'Unknown'),
 			'signers' => ($context['signers'] ?? []),
 			'timestamp' => (string)($context['timestamp'] ?? (new DateTimeImmutable())->format(DateTimeInterface::ATOM)),
-			'level' => $level,
+			'level' => (string)($context['level'] ?? 'SES'),
 			'method' => 'native',
 			'ip' => (string)($context['ip'] ?? ''),
 		];
@@ -356,24 +409,23 @@ class NativeSigningProvider implements SigningProviderInterface {
 		// Only ever populated by SigningService from a resolved, verified
 		// portal actor — never from raw request input.
 		foreach (['portalSubjectRef', 'portalIdentityRef', 'portalTrust', 'portalJti'] as $portalField) {
-			if (isset($context[$portalField]) === true && $context[$portalField] !== '') {
+			if (($context[$portalField] ?? '') !== '') {
 				$assertion[$portalField] = (string)$context[$portalField];
 			}
 		}
 
-		// Build the canonical (unsigned-marker) form the verifier will recompute:
-		// the produced document with an empty marker payload. The HMAC is taken
-		// over the hash of that canonical form so the MAC cannot cover itself.
-		$canonical = $this->assembleSignedBytes(documentContent: $documentContent, payload: '');
-		$contentHash = hash('sha256', $canonical);
-		$payloadCore = $this->canonicalizer->canonicalJson(data: $assertion);
-		$mac = hash_hmac('sha256', $contentHash . "\n" . $payloadCore, $secret);
-
-		$assertion['mac'] = $mac;
-		$payload = base64_encode((string)json_encode($assertion));
-
-		return $this->assembleSignedBytes(documentContent: $documentContent, payload: $payload);
-	}//end produceSignedArtifact()
+		// Guardian consent (signer-identity-rails REQ-DDSIR-010): the consent
+		// basis of a minor's signature joins the assertion BEFORE the MAC, so a
+		// rewritten basis fails verification like a rewritten signer. Absent for
+		// a request between adults, whose assertion keeps its old shape.
+		// Identity rails (signer-identity-rails REQ-DDSIR-004) likewise: each
+		// signer's identity evidence (provider, means, assurance, pseudonym,
+		// moment and token hash). Only non-empty lists join; an empty or
+		// non-list value is left out, so an adults-only, pre-rails request keeps
+		// its old assertion shape.
+		$boundLists = array_intersect_key($context, array_flip(['consentBasis', 'signerEvidence']));
+		return $assertion + array_filter(array_filter($boundLists, 'is_array'));
+	}//end assertionFor()
 
 	/**
 	 * Assemble the signed document bytes with the given marker payload.
@@ -446,7 +498,7 @@ class NativeSigningProvider implements SigningProviderInterface {
 			$session['id'] = $uuid;
 		}
 
-		$objectService->saveObject(object: $session, register: $register, schema: $schema);
+		$objectService->saveObject(object: $session, register: $register, schema: $schema, _rbac: false, _unowned: true);
 
 	}//end persistSession()
 
@@ -495,7 +547,8 @@ class NativeSigningProvider implements SigningProviderInterface {
 						'schema' => $schema,
 						'externalId' => $externalId,
 					],
-				]
+				],
+				_rbac: false
 			);
 
 			if (is_iterable($results) === false) {

@@ -1,0 +1,427 @@
+{
+    "a named message": {
+        "answer": {
+            "resultInfo": {
+                "fileId": 501,
+                "fileName": "bericht_anonymized.pdf",
+                "replacementsAttempted": 2,
+                "replacementsApplied": null,
+                "replacementsVerified": false,
+                "unmatchedEntities": [],
+                "replacementCount": 2,
+                "complete": true,
+                "residualCount": 0,
+                "residualEntities": []
+            },
+            "node": "bericht_anonymized.pdf",
+            "placeholderMap": {
+                "Jan": "[PERSOON 1]"
+            }
+        },
+        "calls": [
+            [
+                "api",
+                2,
+                "document",
+                null
+            ],
+            [
+                "assemble",
+                "Onderwerp",
+                "bericht.eml"
+            ],
+            [
+                "nodeExists",
+                "bericht_anonymized.pdf"
+            ],
+            [
+                "newFile",
+                "bericht_anonymized.pdf",
+                "%PDF-redacted"
+            ],
+            [
+                "placeholderMap"
+            ],
+            [
+                "parse",
+                "bericht_anonymized.pdf"
+            ]
+        ],
+        "logs": [
+            [
+                "info",
+                "EML anonymised and assembled to PDF",
+                {
+                    "fileId": 42,
+                    "entityCount": 2
+                }
+            ]
+        ]
+    },
+    "a message without a name": {
+        "answer": {
+            "resultInfo": {
+                "fileId": 501,
+                "fileName": "email_anonymized.pdf",
+                "replacementsAttempted": 2,
+                "replacementsApplied": null,
+                "replacementsVerified": false,
+                "unmatchedEntities": [],
+                "replacementCount": 2,
+                "complete": true,
+                "residualCount": 0,
+                "residualEntities": []
+            },
+            "node": "email_anonymized.pdf",
+            "placeholderMap": {
+                "Jan": "[PERSOON 1]"
+            }
+        },
+        "calls": [
+            [
+                "api",
+                2,
+                "document",
+                null
+            ],
+            [
+                "assemble",
+                "Onderwerp",
+                ""
+            ],
+            [
+                "nodeExists",
+                "email_anonymized.pdf"
+            ],
+            [
+                "newFile",
+                "email_anonymized.pdf",
+                "%PDF-redacted"
+            ],
+            [
+                "placeholderMap"
+            ],
+            [
+                "parse",
+                "email_anonymized.pdf"
+            ]
+        ],
+        "logs": [
+            [
+                "info",
+                "EML anonymised and assembled to PDF",
+                {
+                    "fileId": 42,
+                    "entityCount": 2
+                }
+            ]
+        ]
+    },
+    "a node that cannot name itself": {
+        "answer": {
+            "resultInfo": {
+                "fileId": 501,
+                "fileName": "email_anonymized.pdf",
+                "replacementsAttempted": 2,
+                "replacementsApplied": null,
+                "replacementsVerified": false,
+                "unmatchedEntities": [],
+                "replacementCount": 2,
+                "complete": true,
+                "residualCount": 0,
+                "residualEntities": []
+            },
+            "node": "email_anonymized.pdf",
+            "placeholderMap": {
+                "Jan": "[PERSOON 1]"
+            }
+        },
+        "calls": [
+            [
+                "api",
+                2,
+                "document",
+                null
+            ],
+            [
+                "assemble",
+                "Onderwerp",
+                ""
+            ],
+            [
+                "nodeExists",
+                "email_anonymized.pdf"
+            ],
+            [
+                "newFile",
+                "email_anonymized.pdf",
+                "%PDF-redacted"
+            ],
+            [
+                "placeholderMap"
+            ],
+            [
+                "parse",
+                "email_anonymized.pdf"
+            ]
+        ],
+        "logs": [
+            [
+                "info",
+                "EML anonymised and assembled to PDF",
+                {
+                    "fileId": 42,
+                    "entityCount": 2
+                }
+            ]
+        ]
+    },
+    "an earlier output is replaced": {
+        "answer": {
+            "resultInfo": {
+                "fileId": 501,
+                "fileName": "bericht_anonymized.pdf",
+                "replacementsAttempted": 2,
+                "replacementsApplied": null,
+                "replacementsVerified": false,
+                "unmatchedEntities": [],
+                "replacementCount": 2,
+                "complete": true,
+                "residualCount": 0,
+                "residualEntities": []
+            },
+            "node": "bericht_anonymized.pdf",
+            "placeholderMap": {
+                "Jan": "[PERSOON 1]"
+            }
+        },
+        "calls": [
+            [
+                "api",
+                2,
+                "document",
+                null
+            ],
+            [
+                "assemble",
+                "Onderwerp",
+                "bericht.eml"
+            ],
+            [
+                "nodeExists",
+                "bericht_anonymized.pdf"
+            ],
+            [
+                "delete",
+                "bericht_anonymized.pdf"
+            ],
+            [
+                "newFile",
+                "bericht_anonymized.pdf",
+                "%PDF-redacted"
+            ],
+            [
+                "placeholderMap"
+            ],
+            [
+                "parse",
+                "bericht_anonymized.pdf"
+            ]
+        ],
+        "logs": [
+            [
+                "info",
+                "EML anonymised and assembled to PDF",
+                {
+                    "fileId": 42,
+                    "entityCount": 2
+                }
+            ]
+        ]
+    },
+    "a dossier scope": {
+        "answer": {
+            "resultInfo": {
+                "fileId": 501,
+                "fileName": "bericht_anonymized.pdf",
+                "replacementsAttempted": 2,
+                "replacementsApplied": null,
+                "replacementsVerified": false,
+                "unmatchedEntities": [],
+                "replacementCount": 2,
+                "complete": true,
+                "residualCount": 0,
+                "residualEntities": []
+            },
+            "node": "bericht_anonymized.pdf",
+            "placeholderMap": {
+                "Jan": "[PERSOON 1]"
+            }
+        },
+        "calls": [
+            [
+                "api",
+                2,
+                "dossier",
+                "d-9"
+            ],
+            [
+                "assemble",
+                "Onderwerp",
+                "bericht.eml"
+            ],
+            [
+                "nodeExists",
+                "bericht_anonymized.pdf"
+            ],
+            [
+                "newFile",
+                "bericht_anonymized.pdf",
+                "%PDF-redacted"
+            ],
+            [
+                "placeholderMap"
+            ],
+            [
+                "parse",
+                "bericht_anonymized.pdf"
+            ]
+        ],
+        "logs": [
+            [
+                "info",
+                "EML anonymised and assembled to PDF",
+                {
+                    "fileId": 42,
+                    "entityCount": 2
+                }
+            ]
+        ]
+    },
+    "no placeholder map": {
+        "answer": {
+            "resultInfo": {
+                "fileId": 501,
+                "fileName": "bericht_anonymized.pdf",
+                "replacementsAttempted": 2,
+                "replacementsApplied": null,
+                "replacementsVerified": false,
+                "unmatchedEntities": [],
+                "replacementCount": 2,
+                "complete": true,
+                "residualCount": 0,
+                "residualEntities": []
+            },
+            "node": "bericht_anonymized.pdf",
+            "placeholderMap": []
+        },
+        "calls": [
+            [
+                "api",
+                2,
+                "document",
+                null
+            ],
+            [
+                "assemble",
+                "Onderwerp",
+                "bericht.eml"
+            ],
+            [
+                "nodeExists",
+                "bericht_anonymized.pdf"
+            ],
+            [
+                "newFile",
+                "bericht_anonymized.pdf",
+                "%PDF-redacted"
+            ],
+            [
+                "parse",
+                "bericht_anonymized.pdf"
+            ]
+        ],
+        "logs": [
+            [
+                "info",
+                "EML anonymised and assembled to PDF",
+                {
+                    "fileId": 42,
+                    "entityCount": 2
+                }
+            ]
+        ]
+    },
+    "no anonymise-EML API": {
+        "thrown": [
+            "OpenRegister does not expose the anonymise-EML API; cannot anonymise EML input.",
+            422,
+            [
+                {
+                    "name": "eml",
+                    "available": false,
+                    "supports": true,
+                    "reason": "anonymizeEmlStructured not present on OpenRegister FileService"
+                }
+            ]
+        ],
+        "calls": [],
+        "logs": []
+    },
+    "the API fails": {
+        "thrown": [
+            "OpenRegister anonymise-EML API failed: OR exploded",
+            422,
+            [
+                {
+                    "name": "eml",
+                    "available": true,
+                    "supports": true,
+                    "reason": "anonymizeEmlStructured threw: OR exploded"
+                }
+            ]
+        ],
+        "calls": [
+            [
+                "api",
+                2,
+                "document",
+                null
+            ]
+        ],
+        "logs": [
+            [
+                "warning",
+                "EML anonymise-API failed; no raw-parse fallback.",
+                {
+                    "fileId": 42,
+                    "exception": "RuntimeException",
+                    "message": "OR exploded"
+                }
+            ]
+        ]
+    },
+    "the API returns no structure": {
+        "thrown": [
+            "OpenRegister anonymise-EML API returned no structure.",
+            422,
+            [
+                {
+                    "name": "eml",
+                    "available": true,
+                    "supports": true,
+                    "reason": "anonymizeEmlStructured returned non-object"
+                }
+            ]
+        ],
+        "calls": [
+            [
+                "api",
+                2,
+                "document",
+                null
+            ]
+        ],
+        "logs": []
+    }
+}

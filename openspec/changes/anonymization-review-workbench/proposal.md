@@ -4,6 +4,16 @@ kind: code
 
 # Proposal: anonymization-review-workbench
 
+## Summary
+
+Every input is reviewed on one PDF rendition with a text layer that the anonymisation link records, and the review screen tells a certain finding from an uncertain one using the organisation's two thresholds.
+
+- Rows: 4.25 and 14.15.
+- Wave 2.
+- Dependencies: `openregister/anonymisation-discloses-itself` (https://github.com/ConductionNL/openregister/issues/4379).
+- Decisions: D2 (detection stays in OpenRegister, review stays in filinq).
+- Build rules: openspec/woo-build-rules.md
+
 ## Why
 
 Every serious buyer of anonymisation software demands a human-review surface,
@@ -111,3 +121,75 @@ anonymise" lists).
 - **Dependencies**: OpenRegister manual-entities endpoint
   (`fileText#addManualEntity`, verified present at OR HEAD); no new external
   services; all processing stays local.
+
+## Amendment 2026-10-05: one reviewable rendition, and certain versus uncertain (Woo rows 4.25 and 14.15)
+
+Woo capability row 4.25, "Every input format is re-rendered into one
+reviewable rendition with a text layer, and the product says which rendition
+the review was done on". Our column reads `no`: "each format is redacted in its
+own container: SAPP for PDF, PhpWord and ZipArchive for docx ... a per-format
+fallback, not a common rendition, and AnonymisationLog records the mimeType
+that was processed rather than stating which rendition a review was done on".
+Gap: "Normalise every input to one reviewable PDF rendition with a text layer
+before review, and record on the anonymizationLink which rendition the review
+was done on."
+
+Woo capability row 14.15, "A confidence threshold is set by the organisation,
+and the screen tells a certain finding from an uncertain one". Our column
+reads `partial`: "every openregister EntityRelation carries a confidence ...
+The threshold is a private const, not a setting". Gap: "The organisation sets
+the confidence threshold as a setting (openregister file configuration), and
+the review screen marks findings below it as uncertain."
+
+Build plan: amend this change, wave 2, size L. Depends on
+`openregister/anonymisation-discloses-itself`, whose REQ-ADI-007 makes
+`anonymisation.confidenceThreshold` an OpenRegister file setting (default
+0.5), returned by `GET /api/settings/files`. Implements decision D2's split:
+detection stays in OpenRegister, review stays in filinq.
+
+### One point the row and the dependency disagree on
+
+OpenRegister's REQ-ADI-007 makes the setting a detection floor: a finding
+below it is not stored ("a raised threshold drops weak findings"). So a
+finding below that number never reaches the review screen to be marked
+uncertain, as the gap text puts it. This amendment keeps the row's meaning
+with two organisation settings: OpenRegister's floor (below it, nothing is
+found), and filinq's `filinq.review.certain_from` (default 0.85, never below
+the floor). A finding between the two is uncertain, a finding at or above
+`certain_from` is certain, and a manual entity is certain. The screen shows
+both numbers and where each comes from. The report records this as a
+reading of the row, not a change to it.
+
+### What this amendment adds, on top of tasks 1 to 4 (none of which is built)
+
+1. A review rendition. Before review, every input becomes one PDF with a text
+   layer: a PDF with native text is used as it is; an office document, an
+   e-mail or an HTML file is converted with `PdfConversionService`; a scan or
+   an image gets an OCR text layer from `OcrService`. Detection and review run
+   on that rendition.
+2. The link says which rendition. `anonymizationLink` gains `reviewRendition`:
+   `fileId`, `sha256`, `kind` (`native-pdf`, `converted`, `ocr-text-layer`),
+   `backend`, `textLayer` (`native`, `ocr`, `none`) and `preparedAt`. The
+   `documentReview` check records the same `sha256`.
+3. Certain and uncertain on the screen, from the two settings above, with a
+   filter and a counter for uncertain findings.
+4. An uncertain finding needs a decision. A document cannot be marked checked
+   while an uncertain finding has no explicit include or skip.
+
+### Fail closed
+
+- A rendition without a text layer (`textLayer: none`, for example OCR not
+  installed for a scan) makes detection unable to see the text. The
+  workbench says so, and the document cannot be marked checked until a person
+  confirms they reviewed the pages by eye and adds every entity by hand.
+- If the rendition changes after the check (a different `sha256`), the check
+  no longer holds and the anonymize commit is refused until re-review.
+- An uncertain finding defaults to included (redacted), never to skipped.
+- `filinq.review.certain_from` below OpenRegister's floor is refused on save.
+
+### App absent
+
+OpenRegister absent: there is no detection, and the workbench is unavailable
+as today. OpenRegister present without REQ-ADI-007 (an older release): the
+floor is read as the old literal 0.5 and the screen says "floor not
+configurable in this OpenRegister version".
