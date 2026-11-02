@@ -101,7 +101,7 @@
 </template>
 
 <script>
-import { showError, showSuccess } from '@nextcloud/dialogs'
+import { showError } from '@nextcloud/dialogs'
 import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
@@ -121,13 +121,8 @@ import TextViewer from '../../components/viewers/TextViewer.vue'
 import WordViewer from '../../components/viewers/WordViewer.vue'
 import AccessibilityPublishWarningModal from '../../modals/AccessibilityPublishWarningModal.vue'
 import ConformanceReportModal from '../../modals/ConformanceReportModal.vue'
-import {
-	fetchOcrStatus,
-	isOcrCandidate,
-	ocrBadgeLabel,
-	ocrErrorMessage,
-	runOcr,
-} from '../../services/ocr.js'
+import { ocrRun } from '../../mixins/ocrRun.js'
+import { fetchOcrStatus, isOcrCandidate, ocrBadgeLabel } from '../../services/ocr.js'
 import { startPublication } from '../../services/publications.js'
 import { publicationReadiness } from '../../services/validationService.js'
 import {
@@ -159,6 +154,8 @@ export default {
 		OdtViewer,
 		TextViewer,
 	},
+
+	mixins: [ocrRun],
 
 	data() {
 		return {
@@ -352,21 +349,11 @@ export default {
 		async runOcrNow() {
 			this.ocrRunning = true
 			try {
-				const result = await runOcr(fileViewerStore.currentFile.fileId)
-				if (result.ocrProcessed) {
+				const result = await this.runOcrAndReport(
+					fileViewerStore.currentFile.fileId,
+				)
+				if (result) {
 					this.ocrResult = result
-					showSuccess(
-						t('filinq', 'OCR read {length} characters.', {
-							length: result.textLength,
-						}),
-					)
-				} else {
-					showError(ocrErrorMessage(result))
-				}
-			} catch (error) {
-				showError(ocrErrorMessage(error))
-				if ([409, 503].includes(error?.response?.status)) {
-					this.ocrAvailable = false
 				}
 			} finally {
 				this.ocrRunning = false
