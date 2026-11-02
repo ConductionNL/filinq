@@ -113,7 +113,7 @@ import { consentStore } from '../../store/store.js'
 
 			<!-- Quick Anonymization -->
 			<template #widget-anonymization>
-				<AnonymizationDashboardWidget :inApp="true" />
+				<AnonymizationWidget />
 			</template>
 		</CnDashboardPage>
 	</div>
@@ -127,7 +127,7 @@ import {
 } from '@conduction/nextcloud-vue'
 import { NcEmptyContent } from '@nextcloud/vue'
 import AnonymiserBackendWarning from '../../components/AnonymiserBackendWarning.vue'
-import AnonymizationDashboardWidget from '../widgets/AnonymizationDashboardWidget.vue'
+import AnonymizationWidget from '../anonymization/AnonymizationWidget.vue'
 import {
 	backendStateFromSettings,
 	emptyBackendState,
@@ -140,7 +140,7 @@ export default {
 		CnStatsBlock,
 		CnDataTable,
 		NcEmptyContent,
-		AnonymizationDashboardWidget,
+		AnonymizationWidget,
 		AnonymiserBackendWarning,
 	},
 

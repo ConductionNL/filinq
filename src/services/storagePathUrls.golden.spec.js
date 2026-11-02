@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  *
  * Golden test for the storage path links: the Files app link and the WebDAV
- * download URL the dashboard widgets and the file viewer sidebar build from a
+ * download URL the file entities widget and the file viewer sidebar build from a
  * Nextcloud-internal storage path. The router is replaced by a recorder, so
  * the golden pins the exact route and parameters each method passes.
  * RECORD_GOLDEN=1 rewrites the golden file.
@@ -12,7 +12,6 @@
 import fs from 'fs'
 import path from 'path'
 import FileViewerSidebar from '../sidebars/FileViewerSidebar.vue'
-import AnonymizationDashboardWidget from '../views/widgets/AnonymizationDashboardWidget.vue'
 import FileEntitiesDashboardWidget from '../views/widgets/FileEntitiesDashboardWidget.vue'
 
 jest.mock(
@@ -59,7 +58,6 @@ jest.mock('vue-material-design-icons/KeyVariant.vue', () => ({}))
 jest.mock('vue-material-design-icons/Plus.vue', () => ({}))
 jest.mock('vue-material-design-icons/ShieldLockOutline.vue', () => ({}))
 jest.mock('vue-material-design-icons/ShieldRefreshOutline.vue', () => ({}))
-jest.mock('../dialogs/DossierNameDialog.vue', () => ({}))
 jest.mock('../components/ClassificationCard.vue', () => ({}))
 jest.mock('../components/DocumentLeafTabs.vue', () => ({}))
 jest.mock('../components/DdEntityCard.vue', () => ({}))
@@ -97,10 +95,6 @@ const PATHS = [
 const SIDEBAR_EXTRA = [null, undefined]
 
 const METHODS = {
-	'AnonymizationDashboardWidget.fileLink': (p) =>
-		AnonymizationDashboardWidget.methods.fileLink.call({}, p),
-	'AnonymizationDashboardWidget.downloadUrl': (p) =>
-		AnonymizationDashboardWidget.methods.downloadUrl.call({}, p),
 	'FileEntitiesDashboardWidget.fileLink': (p) =>
 		FileEntitiesDashboardWidget.methods.fileLink.call({}, p),
 	'FileViewerSidebar.downloadUrl': (p) =>
