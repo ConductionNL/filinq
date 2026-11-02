@@ -214,6 +214,19 @@ function dataOf(vm) {
 	return JSON.parse(JSON.stringify(vm.$data))
 }
 
+/**
+ * The rendered HTML without the template's own comments, which a production
+ * build drops. Vue's fragment and v-if markers stay.
+ *
+ * @param {string} html The rendered HTML.
+ * @return {string} The HTML.
+ */
+function withoutAuthorComments(html) {
+	return html.replace(/<!--([\s\S]*?)-->/g, (all, text) =>
+		['', '[', ']', 'v-if'].includes(text) ? all : '',
+	)
+}
+
 afterAll(() => {
 	if (RECORD) {
 		fs.writeFileSync(GOLDEN, JSON.stringify(golden, null, '\t') + '\n')
@@ -230,7 +243,10 @@ describe('policy index pages golden', () => {
 				real: ['CnIndexPage'],
 			})
 			const actual = {
-				html: page.html().split('><').join('>\n<').split('\n'),
+				html: withoutAuthorComments(page.html())
+					.split('><')
+					.join('>\n<')
+					.split('\n'),
 				mountCalls: JSON.parse(JSON.stringify(mockStoreCalls)),
 				events: {},
 				actions: [],
