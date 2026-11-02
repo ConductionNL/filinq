@@ -255,9 +255,8 @@ export default {
 			try {
 				await this.templateStore.deleteTemplate(this.deleteTarget.id)
 			} catch (err) {
-				console.error('Failed to delete template:', err)
 				dialog?.setResult(null)
-				return
+				throw err
 			}
 			this.deleteTarget = null
 			await this.templateStore.fetchTemplates()
