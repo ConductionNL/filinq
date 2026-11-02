@@ -253,6 +253,29 @@ class Response {
 	private array $headers = [];
 
 	/**
+	 * Constructor, with the real class's status argument.
+	 *
+	 * @param int $status HTTP status code.
+	 * @param array<string,string> $headers Headers keyed by name.
+	 *
+	 * @return void
+	 */
+	public function __construct(private int $status = 200, array $headers = []) {
+		$this->headers = $headers;
+
+	}//end __construct()
+
+	/**
+	 * Get the HTTP status code.
+	 *
+	 * @return int
+	 */
+	public function getStatus(): int {
+		return $this->status;
+
+	}//end getStatus()
+
+	/**
 	 * Add a header.
 	 *
 	 * @param string $name Header name.

@@ -289,6 +289,10 @@ require_once __DIR__ . '/unit/Service/BatchStateTestDoubles.php';
 // "helper class under tests/unit that PSR-4 cannot resolve" situation as above.
 require_once __DIR__ . '/unit/EventListener/RegistersContainerServices.php';
 
+// Calls a controller action the way Nextcloud's Dispatcher does. Same
+// "helper class under tests/unit that PSR-4 cannot resolve" situation as above.
+require_once __DIR__ . '/unit/Support/NextcloudDispatch.php';
+
 // Subject erasure doubles (erase-a-person-while-the-records-stay); same
 // "helper class under tests/unit that PSR-4 cannot resolve" situation as above.
 require_once __DIR__ . '/unit/Service/SubjectErasure/SubjectErasureDoubles.php';
