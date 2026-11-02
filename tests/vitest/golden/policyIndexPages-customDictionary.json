@@ -7,7 +7,6 @@
 		"saving": false,
 		"formError": "",
 		"deleteTarget": null,
-		"deleting": false,
 		"paginationData": {
 			"page": 1,
 			"pages": 1,
@@ -51,7 +50,6 @@
 		"saving": false,
 		"formError": "",
 		"deleteTarget": null,
-		"deleting": false,
 		"paginationData": {
 			"page": 1,
 			"pages": 1,
@@ -116,7 +114,6 @@
 		"saving": false,
 		"formError": "",
 		"deleteTarget": null,
-		"deleting": false,
 		"paginationData": {
 			"page": 1,
 			"pages": 1,
@@ -166,7 +163,6 @@
 		"saving": false,
 		"formError": "",
 		"deleteTarget": null,
-		"deleting": false,
 		"paginationData": {
 			"page": 3,
 			"pages": 1,
@@ -211,7 +207,6 @@
 		"saving": false,
 		"formError": "",
 		"deleteTarget": null,
-		"deleting": false,
 		"paginationData": {
 			"page": 1,
 			"pages": 1,
@@ -256,7 +251,6 @@
 		"saving": false,
 		"formError": "",
 		"deleteTarget": null,
-		"deleting": false,
 		"paginationData": {
 			"page": 1,
 			"pages": 1,
@@ -302,7 +296,6 @@
 		"saving": false,
 		"formError": "",
 		"deleteTarget": null,
-		"deleting": false,
 		"paginationData": {
 			"page": 1,
 			"pages": 1,
@@ -366,7 +359,6 @@
 		"saving": false,
 		"formError": "network down",
 		"deleteTarget": null,
-		"deleting": false,
 		"paginationData": {
 			"page": 1,
 			"pages": 1,
@@ -420,7 +412,6 @@
 		"saving": false,
 		"formError": "",
 		"deleteTarget": null,
-		"deleting": false,
 		"paginationData": {
 			"page": 1,
 			"pages": 1,
@@ -466,7 +457,6 @@
 		"saving": false,
 		"formError": "",
 		"deleteTarget": null,
-		"deleting": false,
 		"paginationData": {
 			"page": 1,
 			"pages": 1,
@@ -533,7 +523,6 @@
 			"severity": "high",
 			"scope": "document"
 		},
-		"deleting": false,
 		"paginationData": {
 			"page": 1,
 			"pages": 1,
@@ -578,7 +567,6 @@
 		"saving": false,
 		"formError": "",
 		"deleteTarget": null,
-		"deleting": false,
 		"paginationData": {
 			"page": 1,
 			"pages": 1,
@@ -627,7 +615,6 @@
 			"matchRules": "not-an-array",
 			"scope": "entity"
 		},
-		"deleting": false,
 		"paginationData": {
 			"page": 1,
 			"pages": 1,
@@ -672,7 +659,6 @@
 		"saving": false,
 		"formError": "",
 		"deleteTarget": null,
-		"deleting": false,
 		"paginationData": {
 			"page": 1,
 			"pages": 1,
@@ -745,7 +731,6 @@
 			"severity": "high",
 			"scope": "document"
 		},
-		"deleting": false,
 		"paginationData": {
 			"page": 1,
 			"pages": 1,
@@ -790,7 +775,6 @@
 		"saving": false,
 		"formError": "",
 		"deleteTarget": null,
-		"deleting": false,
 		"paginationData": {
 			"page": 1,
 			"pages": 1,
@@ -844,7 +828,6 @@
 			"id": "id-3",
 			"consentStatus": "objection_received"
 		},
-		"deleting": false,
 		"paginationData": {
 			"page": 1,
 			"pages": 1,
@@ -892,7 +875,6 @@
 			"id": "id-3",
 			"consentStatus": "objection_received"
 		},
-		"deleting": false,
 		"paginationData": {
 			"page": 1,
 			"pages": 1,
@@ -953,7 +935,6 @@
 			"id": "id-3",
 			"consentStatus": "objection_received"
 		},
-		"deleting": false,
 		"paginationData": {
 			"page": 1,
 			"pages": 1,
@@ -1004,7 +985,6 @@
 		"saving": false,
 		"formError": "",
 		"deleteTarget": null,
-		"deleting": false,
 		"paginationData": {
 			"page": 1,
 			"pages": 1,

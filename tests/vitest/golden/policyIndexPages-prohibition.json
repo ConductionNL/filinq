@@ -9,7 +9,6 @@
 		"editingRecord": null,
 		"formError": "",
 		"deleteTarget": null,
-		"deleting": false,
 		"paginationData": {
 			"page": 1,
 			"pages": 1,
@@ -63,7 +62,6 @@
 		"editingRecord": null,
 		"formError": "",
 		"deleteTarget": null,
-		"deleting": false,
 		"paginationData": {
 			"page": 1,
 			"pages": 1,
@@ -129,7 +127,6 @@
 		"editingRecord": null,
 		"formError": "",
 		"deleteTarget": null,
-		"deleting": false,
 		"paginationData": {
 			"page": 1,
 			"pages": 1,
@@ -189,7 +186,6 @@
 		"editingRecord": null,
 		"formError": "",
 		"deleteTarget": null,
-		"deleting": false,
 		"paginationData": {
 			"page": 3,
 			"pages": 1,
@@ -244,7 +240,6 @@
 		"editingRecord": null,
 		"formError": "",
 		"deleteTarget": null,
-		"deleting": false,
 		"paginationData": {
 			"page": 1,
 			"pages": 1,
@@ -299,7 +294,6 @@
 		"editingRecord": null,
 		"formError": "",
 		"deleteTarget": null,
-		"deleting": false,
 		"paginationData": {
 			"page": 1,
 			"pages": 1,
@@ -354,7 +348,6 @@
 		"editingRecord": null,
 		"formError": "",
 		"deleteTarget": null,
-		"deleting": false,
 		"paginationData": {
 			"page": 1,
 			"pages": 1,
@@ -438,7 +431,6 @@
 		},
 		"formError": "",
 		"deleteTarget": null,
-		"deleting": false,
 		"paginationData": {
 			"page": 1,
 			"pages": 1,
@@ -513,7 +505,6 @@
 		},
 		"formError": "",
 		"deleteTarget": null,
-		"deleting": false,
 		"paginationData": {
 			"page": 1,
 			"pages": 1,
@@ -588,7 +579,6 @@
 		},
 		"formError": "",
 		"deleteTarget": null,
-		"deleting": false,
 		"paginationData": {
 			"page": 1,
 			"pages": 1,
@@ -654,7 +644,6 @@
 		},
 		"formError": "server says no",
 		"deleteTarget": null,
-		"deleting": false,
 		"paginationData": {
 			"page": 1,
 			"pages": 1,
@@ -730,7 +719,6 @@
 		},
 		"formError": "[Save failed]",
 		"deleteTarget": null,
-		"deleting": false,
 		"paginationData": {
 			"page": 1,
 			"pages": 1,
@@ -794,7 +782,6 @@
 		"editingRecord": null,
 		"formError": "",
 		"deleteTarget": null,
-		"deleting": false,
 		"paginationData": {
 			"page": 1,
 			"pages": 1,
@@ -860,7 +847,6 @@
 		},
 		"formError": "",
 		"deleteTarget": null,
-		"deleting": false,
 		"paginationData": {
 			"page": 1,
 			"pages": 1,
@@ -926,7 +912,6 @@
 		},
 		"formError": "",
 		"deleteTarget": null,
-		"deleting": false,
 		"paginationData": {
 			"page": 1,
 			"pages": 1,
@@ -1014,7 +999,6 @@
 			"severity": "high",
 			"scope": "document"
 		},
-		"deleting": false,
 		"paginationData": {
 			"page": 1,
 			"pages": 1,
@@ -1080,7 +1064,6 @@
 		},
 		"formError": "",
 		"deleteTarget": null,
-		"deleting": false,
 		"paginationData": {
 			"page": 1,
 			"pages": 1,
@@ -1150,7 +1133,6 @@
 			"matchRules": "not-an-array",
 			"scope": "entity"
 		},
-		"deleting": false,
 		"paginationData": {
 			"page": 1,
 			"pages": 1,
@@ -1216,7 +1198,6 @@
 		},
 		"formError": "",
 		"deleteTarget": null,
-		"deleting": false,
 		"paginationData": {
 			"page": 1,
 			"pages": 1,
@@ -1310,7 +1291,6 @@
 			"severity": "high",
 			"scope": "document"
 		},
-		"deleting": false,
 		"paginationData": {
 			"page": 1,
 			"pages": 1,
@@ -1376,7 +1356,6 @@
 		},
 		"formError": "",
 		"deleteTarget": null,
-		"deleting": false,
 		"paginationData": {
 			"page": 1,
 			"pages": 1,
@@ -1451,7 +1430,6 @@
 			"id": "id-3",
 			"consentStatus": "objection_received"
 		},
-		"deleting": false,
 		"paginationData": {
 			"page": 1,
 			"pages": 1,
@@ -1520,7 +1498,6 @@
 			"id": "id-3",
 			"consentStatus": "objection_received"
 		},
-		"deleting": false,
 		"paginationData": {
 			"page": 1,
 			"pages": 1,
@@ -1588,7 +1565,6 @@
 		"editingRecord": null,
 		"formError": "",
 		"deleteTarget": null,
-		"deleting": false,
 		"paginationData": {
 			"page": 1,
 			"pages": 0,

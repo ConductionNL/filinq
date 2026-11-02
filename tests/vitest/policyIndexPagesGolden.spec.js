@@ -120,7 +120,6 @@ const STATE = [
 	'editingRecord',
 	'formError',
 	'deleteTarget',
-	'deleting',
 	'paginationData',
 	'emptyText',
 	'emptyContentName',

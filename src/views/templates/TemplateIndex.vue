@@ -95,15 +95,20 @@
 				t('filinq', 'Create your first template to get started.')
 			" />
 
-		<ConfirmDeleteTemplateDialog
+		<CnConfirmDialog
 			v-if="deleteTarget"
-			:templateName="deleteTarget.name"
+			ref="confirmDialog"
+			:dialogTitle="t('filinq', 'Delete template')"
+			:message="deleteMessage"
+			:confirmLabel="t('filinq', 'Delete')"
+			variant="error"
 			@confirm="executeDelete"
-			@cancel="deleteTarget = null" />
+			@close="deleteTarget = null" />
 	</div>
 </template>
 
 <script>
+import { CnConfirmDialog } from '@conduction/nextcloud-vue'
 import { translate as t } from '@nextcloud/l10n'
 import {
 	NcButton,
@@ -112,7 +117,6 @@ import {
 	NcSelect,
 	NcTextField,
 } from '@nextcloud/vue'
-import ConfirmDeleteTemplateDialog from '../../dialogs/ConfirmDeleteTemplateDialog.vue'
 import { useTemplateStore } from '../../store/modules/template.js'
 
 export default {
@@ -123,7 +127,7 @@ export default {
 		NcLoadingIcon,
 		NcSelect,
 		NcTextField,
-		ConfirmDeleteTemplateDialog,
+		CnConfirmDialog,
 	},
 
 	data() {
@@ -157,6 +161,19 @@ export default {
 				{ label: t('filinq', 'All categories'), value: '' },
 				...[...cats].map((c) => ({ label: c, value: c })),
 			]
+		},
+
+		/**
+		 * Body text of the delete confirmation dialog.
+		 *
+		 * @spec openspec/changes/advanced-template-management/tasks.md#task-6
+		 */
+		deleteMessage() {
+			return t(
+				'filinq',
+				'Are you sure you want to delete "{name}"? This action cannot be undone.',
+				{ name: this.deleteTarget?.name },
+			)
 		},
 	},
 
@@ -233,7 +250,12 @@ export default {
 		 */
 		async executeDelete() {
 			if (!this.deleteTarget) return
-			await this.templateStore.deleteTemplate(this.deleteTarget.id)
+			try {
+				await this.templateStore.deleteTemplate(this.deleteTarget.id)
+			} catch (err) {
+				this.$refs.confirmDialog?.setResult(null)
+				throw err
+			}
 			this.deleteTarget = null
 			await this.templateStore.fetchTemplates()
 		},
