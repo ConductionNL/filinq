@@ -40,6 +40,7 @@ namespace OCA\Filinq\Service;
 
 use OCA\Filinq\Event\DocumentGeneratedEvent;
 use OCA\Filinq\Kernel\Contracts\GenerationRequestServiceInterface;
+use OCA\Filinq\Service\Support\TemplateLookup;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\IUserSession;
 use RuntimeException;
@@ -80,29 +81,33 @@ class DocumentGenerationRequestService implements GenerationRequestServiceInterf
 	private const INLINE_NAMESPACE = 'flow';
 
 	/**
+	 * What a request must hold, and how its values read.
+	 *
+	 * @var DocumentGenerationRequestRules
+	 */
+	private readonly DocumentGenerationRequestRules $rules;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param DocumentService               $documents       The render, store and audit path.
-	 * @param TemplateService               $templates       Looks a template up by id.
-	 * @param TemplateSlugResolver          $slugs           Looks a template up by namespace and slug.
+	 * @param TemplateLookup $lookup The template store and the slug resolver.
 	 * @param TemplateRenderer              $renderer        Renders a templated filename.
 	 * @param DocumentObjectServiceResolver $objectResolver  Reaches OpenRegister for the field write.
 	 * @param IUserSession                  $userSession     The acting user, whose Files receive the document.
 	 * @param IEventDispatcher              $eventDispatcher Announces the generated document.
-	 * @param DocumentGenerationRequestRules $rules          What a request must hold, and how its values read.
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		private readonly DocumentService $documents,
-		private readonly TemplateService $templates,
-		private readonly TemplateSlugResolver $slugs,
+		private readonly TemplateLookup $lookup,
 		private readonly TemplateRenderer $renderer,
 		private readonly DocumentObjectServiceResolver $objectResolver,
 		private readonly IUserSession $userSession,
 		private readonly IEventDispatcher $eventDispatcher,
-		private readonly DocumentGenerationRequestRules $rules = new DocumentGenerationRequestRules(),
 	) {
+		$this->rules = new DocumentGenerationRequestRules();
 
 	}//end __construct()
 
@@ -326,7 +331,7 @@ class DocumentGenerationRequestService implements GenerationRequestServiceInterf
 	private function resolveTemplate(array $request): array {
 		$templateId = $this->rules->text(value: ($request['templateId'] ?? null));
 		if ($templateId !== '') {
-			$template = $this->templates->getTemplate(id: $templateId);
+			$template = $this->lookup->templates->getTemplate(id: $templateId);
 
 			return [
 				'id' => $templateId,
@@ -338,7 +343,7 @@ class DocumentGenerationRequestService implements GenerationRequestServiceInterf
 		$slug = $this->rules->text(value: ($request['templateSlug'] ?? null));
 		if ($slug !== '') {
 			$tenant = $this->rules->text(value: ($request['templateTenantId'] ?? null));
-			$template = $this->slugs->resolve(
+			$template = $this->lookup->slugs->resolve(
 				namespace: $this->rules->text(value: ($request['templateNamespace'] ?? null)),
 				slug: $slug,
 				tenantId: $this->rules->orNull(value: $tenant)

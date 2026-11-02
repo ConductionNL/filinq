@@ -38,6 +38,7 @@ use OCA\Filinq\Service\GeneratedDocumentLogger;
 use OCA\Filinq\Service\PdfService;
 use OCA\Filinq\Service\PlainLanguageRenditionService;
 use OCA\Filinq\Service\PlainRenditionAcceptanceGate;
+use OCA\Filinq\Service\Support\PdfRendering;
 use OCA\Filinq\Service\TemplateRenderer;
 use OCA\Filinq\Service\TemplateService;
 use OCA\OpenRegister\Service\ObjectService;
@@ -54,6 +55,7 @@ use Psr\Log\NullLogger;
  * @uses \OCA\Filinq\Exception\PlainRenditionRefusedException
  * @uses \OCA\Filinq\Service\DocumentObjectServiceResolver
  * @uses \OCA\Filinq\Service\DocumentRenderPipeline
+ * @uses \OCA\Filinq\Service\Support\PdfRendering
  * @uses \OCA\Filinq\Service\GeneratedDocumentLogger
  * @uses \OCA\Filinq\Service\DocumentGenerationRecord
  * @uses \OCA\Filinq\Service\PlainLanguageRenditionService
@@ -145,8 +147,7 @@ class DocumentServicePlainRenditionTest extends TestCase {
 			$this->templates,
 			$resolver,
 			new DocumentRenderPipeline(
-				$renderer,
-				$this->createMock(PdfService::class),
+				new PdfRendering(renderer: $renderer, pdf: $this->createMock(PdfService::class)),
 				$objectResolver,
 				new NullLogger(),
 				$this->passThroughRasterizer()

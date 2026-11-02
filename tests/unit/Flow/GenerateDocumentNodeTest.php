@@ -30,6 +30,7 @@ use OCA\Filinq\Flow\GenerateDocumentNode;
 use OCA\Filinq\Service\DocumentGenerationRequestService;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\DocumentService;
+use OCA\Filinq\Service\Support\TemplateLookup;
 use OCA\Filinq\Service\TemplateRenderer;
 use OCA\Filinq\Service\TemplateService;
 use OCA\Filinq\Service\TemplateSlugResolver;
@@ -100,9 +101,8 @@ class GenerateDocumentNodeTest extends TestCase {
 		$session->method('getUser')->willReturn($user);
 
 		$service = new DocumentGenerationRequestService(
+			lookup: new TemplateLookup(templates: $this->createMock(TemplateService::class), slugs: $this->createMock(TemplateSlugResolver::class)),
 			documents: $this->documents,
-			templates: $this->createMock(TemplateService::class),
-			slugs: $this->createMock(TemplateSlugResolver::class),
 			renderer: $this->createMock(TemplateRenderer::class),
 			objectResolver: $resolver,
 			userSession: $session,

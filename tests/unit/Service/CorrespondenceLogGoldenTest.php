@@ -26,6 +26,9 @@ use OCA\Filinq\Service\CorrespondenceRequest;
 use OCA\Filinq\Service\CorrespondenceService;
 use OCA\Filinq\Service\DataResolverService;
 use OCA\Filinq\Service\PdfService;
+use OCA\Filinq\Service\Support\OpenRegisterAccess;
+use OCA\Filinq\Service\Support\PdfRendering;
+use OCA\Filinq\Service\Support\TemplateSources;
 use OCA\Filinq\Service\TemplateRenderer;
 use OCA\Filinq\Service\TemplateService;
 use OCA\OpenRegister\Service\ObjectService;
@@ -42,6 +45,9 @@ use Stringable;
  * compared with JSON recorded from the implementation before it was split.
  *
  * @covers \OCA\Filinq\Service\CorrespondenceService
+ * @covers \OCA\Filinq\Service\Support\TemplateSources
+ * @covers \OCA\Filinq\Service\Support\PdfRendering
+ * @covers \OCA\Filinq\Service\Support\OpenRegisterAccess
  * @uses   \OCA\Filinq\Service\CorrespondenceRequest
  */
 class CorrespondenceLogGoldenTest extends TestCase {
@@ -131,12 +137,9 @@ class CorrespondenceLogGoldenTest extends TestCase {
 		$config->method('getValueString')->willReturn($format);
 
 		$service = new CorrespondenceService(
-			$this->createMock(TemplateService::class),
-			$this->createMock(DataResolverService::class),
-			$this->createMock(TemplateRenderer::class),
-			$this->createMock(PdfService::class),
-			$container,
-			$apps,
+			new TemplateSources(templates: $this->createMock(TemplateService::class), data: $this->createMock(DataResolverService::class)),
+			new PdfRendering(renderer: $this->createMock(TemplateRenderer::class), pdf: $this->createMock(PdfService::class)),
+			new OpenRegisterAccess(apps: $apps, container: $container),
 			$this->createMock(JobQueueInterface::class),
 			$logger,
 			$config
