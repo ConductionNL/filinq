@@ -143,7 +143,7 @@ test.describe('legal holds', () => {
 		await page.getByRole('button', { name: 'Release' }).click()
 
 		const dialog = page.getByRole('dialog', { name: 'Release legal hold' })
-		const confirm = dialog.getByTestId('legal-hold-release-confirm')
+		const confirm = dialog.getByTestId('cn-dialog-actions-submit')
 		await expect(confirm).toBeDisabled()
 		await dialog.getByRole('textbox').fill('Settled.')
 		await expect(confirm).toBeEnabled()

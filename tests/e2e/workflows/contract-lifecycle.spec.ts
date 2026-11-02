@@ -212,7 +212,7 @@ test.describe('contract lifecycle', () => {
 
 		await page.getByTestId('contract-send-for-signature').click()
 		await page.getByTestId('contract-sign-user').locator('input').fill('admin')
-		await page.getByTestId('contract-sign-confirm').click()
+		await page.getByTestId('cn-dialog-actions-submit').click()
 		await expect(page.getByTestId('contract-signing-status')).toContainText(
 			'DRAFT',
 		)
