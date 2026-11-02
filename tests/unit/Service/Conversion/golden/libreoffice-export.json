@@ -1,0 +1,4061 @@
+{
+    "convert ok brief aan inwoner.docx": {
+        "returned": "written",
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:UseTaggedPDF=true,SelectPdfVersion=2",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.docx"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.docx"
+                ],
+                "input": "bytes of brief aan inwoner.docx",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "nodeExists",
+                "brief aan inwoner.pdf"
+            ],
+            [
+                "newFile",
+                "brief aan inwoner.pdf",
+                "%PDF out pdf"
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "convert ok noext": {
+        "returned": "written",
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:UseTaggedPDF=true,SelectPdfVersion=2",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input"
+                ],
+                "input": "bytes of noext",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "nodeExists",
+                "noext.pdf"
+            ],
+            [
+                "delete"
+            ],
+            [
+                "newFile",
+                "noext.pdf",
+                "%PDF out pdf"
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "convert ok a.b.ODT": {
+        "returned": "written",
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:UseTaggedPDF=true,SelectPdfVersion=2",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.odt"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.odt"
+                ],
+                "input": "bytes of a.b.ODT",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "nodeExists",
+                "a.b.pdf"
+            ],
+            [
+                "newFile",
+                "a.b.pdf",
+                "%PDF out pdf"
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "convert ok ../x.html": {
+        "returned": "written",
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:UseTaggedPDF=true,SelectPdfVersion=2",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.html"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.html"
+                ],
+                "input": "bytes of ../x.html",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "nodeExists",
+                "x.pdf"
+            ],
+            [
+                "newFile",
+                "x.pdf",
+                "%PDF out pdf"
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "convert ok page.htm": {
+        "returned": "written",
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:UseTaggedPDF=true,SelectPdfVersion=2",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.htm"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.htm"
+                ],
+                "input": "bytes of page.htm",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "nodeExists",
+                "page.pdf"
+            ],
+            [
+                "newFile",
+                "page.pdf",
+                "%PDF out pdf"
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "tagged ok html false": {
+        "returned": "%PDF out pdf",
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--infilter=HTML (StarWriter)",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:{\"UseTaggedPDF\":{\"type\":\"boolean\",\"value\":\"true\"},\"PDFUACompliance\":{\"type\":\"boolean\",\"value\":\"true\"},\"SelectPdfVersion\":{\"type\":\"long\",\"value\":\"0\"}}",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.html"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.html"
+                ],
+                "input": "src html",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "tagged ok html true": {
+        "returned": "%PDF out pdf",
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--infilter=HTML (StarWriter)",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:{\"UseTaggedPDF\":{\"type\":\"boolean\",\"value\":\"true\"},\"PDFUACompliance\":{\"type\":\"boolean\",\"value\":\"true\"},\"SelectPdfVersion\":{\"type\":\"long\",\"value\":\"3\"}}",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.html"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.html"
+                ],
+                "input": "src html",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "tagged ok HTM false": {
+        "returned": "%PDF out pdf",
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--infilter=HTML (StarWriter)",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:{\"UseTaggedPDF\":{\"type\":\"boolean\",\"value\":\"true\"},\"PDFUACompliance\":{\"type\":\"boolean\",\"value\":\"true\"},\"SelectPdfVersion\":{\"type\":\"long\",\"value\":\"0\"}}",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.htm"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.htm"
+                ],
+                "input": "src HTM",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "tagged ok HTM true": {
+        "returned": "%PDF out pdf",
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--infilter=HTML (StarWriter)",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:{\"UseTaggedPDF\":{\"type\":\"boolean\",\"value\":\"true\"},\"PDFUACompliance\":{\"type\":\"boolean\",\"value\":\"true\"},\"SelectPdfVersion\":{\"type\":\"long\",\"value\":\"3\"}}",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.htm"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.htm"
+                ],
+                "input": "src HTM",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "tagged ok docx false": {
+        "returned": "%PDF out pdf",
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:{\"UseTaggedPDF\":{\"type\":\"boolean\",\"value\":\"true\"},\"PDFUACompliance\":{\"type\":\"boolean\",\"value\":\"true\"},\"SelectPdfVersion\":{\"type\":\"long\",\"value\":\"0\"}}",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.docx"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.docx"
+                ],
+                "input": "src docx",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "tagged ok docx true": {
+        "returned": "%PDF out pdf",
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:{\"UseTaggedPDF\":{\"type\":\"boolean\",\"value\":\"true\"},\"PDFUACompliance\":{\"type\":\"boolean\",\"value\":\"true\"},\"SelectPdfVersion\":{\"type\":\"long\",\"value\":\"3\"}}",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.docx"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.docx"
+                ],
+                "input": "src docx",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "tagged ok  false": {
+        "returned": "%PDF out pdf",
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:{\"UseTaggedPDF\":{\"type\":\"boolean\",\"value\":\"true\"},\"PDFUACompliance\":{\"type\":\"boolean\",\"value\":\"true\"},\"SelectPdfVersion\":{\"type\":\"long\",\"value\":\"0\"}}",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input"
+                ],
+                "input": "src ",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "tagged ok  true": {
+        "returned": "%PDF out pdf",
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:{\"UseTaggedPDF\":{\"type\":\"boolean\",\"value\":\"true\"},\"PDFUACompliance\":{\"type\":\"boolean\",\"value\":\"true\"},\"SelectPdfVersion\":{\"type\":\"long\",\"value\":\"3\"}}",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input"
+                ],
+                "input": "src ",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "tagged ok odt false": {
+        "returned": "%PDF out pdf",
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:{\"UseTaggedPDF\":{\"type\":\"boolean\",\"value\":\"true\"},\"PDFUACompliance\":{\"type\":\"boolean\",\"value\":\"true\"},\"SelectPdfVersion\":{\"type\":\"long\",\"value\":\"0\"}}",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.odt"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.odt"
+                ],
+                "input": "src odt",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "tagged ok odt true": {
+        "returned": "%PDF out pdf",
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:{\"UseTaggedPDF\":{\"type\":\"boolean\",\"value\":\"true\"},\"PDFUACompliance\":{\"type\":\"boolean\",\"value\":\"true\"},\"SelectPdfVersion\":{\"type\":\"long\",\"value\":\"3\"}}",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.odt"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.odt"
+                ],
+                "input": "src odt",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "html ok docx": {
+        "returned": "%PDF out docx",
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--infilter=HTML (StarWriter)",
+                    "--convert-to",
+                    "docx:MS Word 2007 XML",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.html"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.html"
+                ],
+                "input": "<p>hoi</p>",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "html ok odt": {
+        "returned": "%PDF out odt",
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--infilter=HTML (StarWriter)",
+                    "--convert-to",
+                    "odt:writer8",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.html"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.html"
+                ],
+                "input": "<p>hoi</p>",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "convert exit3 brief aan inwoner.docx": {
+        "threw": {
+            "class": "OCA\\Filinq\\Exception\\ConversionFailedException",
+            "message": "soffice exited with code 3.",
+            "code": 422,
+            "attempts": [
+                {
+                    "name": "libreoffice_headless",
+                    "available": true,
+                    "supports": true,
+                    "reason": "soffice non-zero exit: 3"
+                }
+            ]
+        },
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:UseTaggedPDF=true,SelectPdfVersion=2",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.docx"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.docx"
+                ],
+                "input": "bytes of brief aan inwoner.docx",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "convert exit3 noext": {
+        "threw": {
+            "class": "OCA\\Filinq\\Exception\\ConversionFailedException",
+            "message": "soffice exited with code 3.",
+            "code": 422,
+            "attempts": [
+                {
+                    "name": "libreoffice_headless",
+                    "available": true,
+                    "supports": true,
+                    "reason": "soffice non-zero exit: 3"
+                }
+            ]
+        },
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:UseTaggedPDF=true,SelectPdfVersion=2",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input"
+                ],
+                "input": "bytes of noext",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "convert exit3 a.b.ODT": {
+        "threw": {
+            "class": "OCA\\Filinq\\Exception\\ConversionFailedException",
+            "message": "soffice exited with code 3.",
+            "code": 422,
+            "attempts": [
+                {
+                    "name": "libreoffice_headless",
+                    "available": true,
+                    "supports": true,
+                    "reason": "soffice non-zero exit: 3"
+                }
+            ]
+        },
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:UseTaggedPDF=true,SelectPdfVersion=2",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.odt"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.odt"
+                ],
+                "input": "bytes of a.b.ODT",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "convert exit3 ../x.html": {
+        "threw": {
+            "class": "OCA\\Filinq\\Exception\\ConversionFailedException",
+            "message": "soffice exited with code 3.",
+            "code": 422,
+            "attempts": [
+                {
+                    "name": "libreoffice_headless",
+                    "available": true,
+                    "supports": true,
+                    "reason": "soffice non-zero exit: 3"
+                }
+            ]
+        },
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:UseTaggedPDF=true,SelectPdfVersion=2",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.html"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.html"
+                ],
+                "input": "bytes of ../x.html",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "convert exit3 page.htm": {
+        "threw": {
+            "class": "OCA\\Filinq\\Exception\\ConversionFailedException",
+            "message": "soffice exited with code 3.",
+            "code": 422,
+            "attempts": [
+                {
+                    "name": "libreoffice_headless",
+                    "available": true,
+                    "supports": true,
+                    "reason": "soffice non-zero exit: 3"
+                }
+            ]
+        },
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:UseTaggedPDF=true,SelectPdfVersion=2",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.htm"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.htm"
+                ],
+                "input": "bytes of page.htm",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "tagged exit3 html false": {
+        "threw": {
+            "class": "OCA\\Filinq\\Exception\\ConversionFailedException",
+            "message": "soffice exited with code 3.",
+            "code": 422,
+            "attempts": [
+                {
+                    "name": "libreoffice_headless",
+                    "available": true,
+                    "supports": true,
+                    "reason": "soffice non-zero exit: 3"
+                }
+            ]
+        },
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--infilter=HTML (StarWriter)",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:{\"UseTaggedPDF\":{\"type\":\"boolean\",\"value\":\"true\"},\"PDFUACompliance\":{\"type\":\"boolean\",\"value\":\"true\"},\"SelectPdfVersion\":{\"type\":\"long\",\"value\":\"0\"}}",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.html"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.html"
+                ],
+                "input": "src html",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "tagged exit3 html true": {
+        "threw": {
+            "class": "OCA\\Filinq\\Exception\\ConversionFailedException",
+            "message": "soffice exited with code 3.",
+            "code": 422,
+            "attempts": [
+                {
+                    "name": "libreoffice_headless",
+                    "available": true,
+                    "supports": true,
+                    "reason": "soffice non-zero exit: 3"
+                }
+            ]
+        },
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--infilter=HTML (StarWriter)",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:{\"UseTaggedPDF\":{\"type\":\"boolean\",\"value\":\"true\"},\"PDFUACompliance\":{\"type\":\"boolean\",\"value\":\"true\"},\"SelectPdfVersion\":{\"type\":\"long\",\"value\":\"3\"}}",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.html"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.html"
+                ],
+                "input": "src html",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "tagged exit3 HTM false": {
+        "threw": {
+            "class": "OCA\\Filinq\\Exception\\ConversionFailedException",
+            "message": "soffice exited with code 3.",
+            "code": 422,
+            "attempts": [
+                {
+                    "name": "libreoffice_headless",
+                    "available": true,
+                    "supports": true,
+                    "reason": "soffice non-zero exit: 3"
+                }
+            ]
+        },
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--infilter=HTML (StarWriter)",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:{\"UseTaggedPDF\":{\"type\":\"boolean\",\"value\":\"true\"},\"PDFUACompliance\":{\"type\":\"boolean\",\"value\":\"true\"},\"SelectPdfVersion\":{\"type\":\"long\",\"value\":\"0\"}}",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.htm"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.htm"
+                ],
+                "input": "src HTM",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "tagged exit3 HTM true": {
+        "threw": {
+            "class": "OCA\\Filinq\\Exception\\ConversionFailedException",
+            "message": "soffice exited with code 3.",
+            "code": 422,
+            "attempts": [
+                {
+                    "name": "libreoffice_headless",
+                    "available": true,
+                    "supports": true,
+                    "reason": "soffice non-zero exit: 3"
+                }
+            ]
+        },
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--infilter=HTML (StarWriter)",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:{\"UseTaggedPDF\":{\"type\":\"boolean\",\"value\":\"true\"},\"PDFUACompliance\":{\"type\":\"boolean\",\"value\":\"true\"},\"SelectPdfVersion\":{\"type\":\"long\",\"value\":\"3\"}}",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.htm"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.htm"
+                ],
+                "input": "src HTM",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "tagged exit3 docx false": {
+        "threw": {
+            "class": "OCA\\Filinq\\Exception\\ConversionFailedException",
+            "message": "soffice exited with code 3.",
+            "code": 422,
+            "attempts": [
+                {
+                    "name": "libreoffice_headless",
+                    "available": true,
+                    "supports": true,
+                    "reason": "soffice non-zero exit: 3"
+                }
+            ]
+        },
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:{\"UseTaggedPDF\":{\"type\":\"boolean\",\"value\":\"true\"},\"PDFUACompliance\":{\"type\":\"boolean\",\"value\":\"true\"},\"SelectPdfVersion\":{\"type\":\"long\",\"value\":\"0\"}}",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.docx"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.docx"
+                ],
+                "input": "src docx",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "tagged exit3 docx true": {
+        "threw": {
+            "class": "OCA\\Filinq\\Exception\\ConversionFailedException",
+            "message": "soffice exited with code 3.",
+            "code": 422,
+            "attempts": [
+                {
+                    "name": "libreoffice_headless",
+                    "available": true,
+                    "supports": true,
+                    "reason": "soffice non-zero exit: 3"
+                }
+            ]
+        },
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:{\"UseTaggedPDF\":{\"type\":\"boolean\",\"value\":\"true\"},\"PDFUACompliance\":{\"type\":\"boolean\",\"value\":\"true\"},\"SelectPdfVersion\":{\"type\":\"long\",\"value\":\"3\"}}",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.docx"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.docx"
+                ],
+                "input": "src docx",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "tagged exit3  false": {
+        "threw": {
+            "class": "OCA\\Filinq\\Exception\\ConversionFailedException",
+            "message": "soffice exited with code 3.",
+            "code": 422,
+            "attempts": [
+                {
+                    "name": "libreoffice_headless",
+                    "available": true,
+                    "supports": true,
+                    "reason": "soffice non-zero exit: 3"
+                }
+            ]
+        },
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:{\"UseTaggedPDF\":{\"type\":\"boolean\",\"value\":\"true\"},\"PDFUACompliance\":{\"type\":\"boolean\",\"value\":\"true\"},\"SelectPdfVersion\":{\"type\":\"long\",\"value\":\"0\"}}",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input"
+                ],
+                "input": "src ",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "tagged exit3  true": {
+        "threw": {
+            "class": "OCA\\Filinq\\Exception\\ConversionFailedException",
+            "message": "soffice exited with code 3.",
+            "code": 422,
+            "attempts": [
+                {
+                    "name": "libreoffice_headless",
+                    "available": true,
+                    "supports": true,
+                    "reason": "soffice non-zero exit: 3"
+                }
+            ]
+        },
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:{\"UseTaggedPDF\":{\"type\":\"boolean\",\"value\":\"true\"},\"PDFUACompliance\":{\"type\":\"boolean\",\"value\":\"true\"},\"SelectPdfVersion\":{\"type\":\"long\",\"value\":\"3\"}}",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input"
+                ],
+                "input": "src ",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "tagged exit3 odt false": {
+        "threw": {
+            "class": "OCA\\Filinq\\Exception\\ConversionFailedException",
+            "message": "soffice exited with code 3.",
+            "code": 422,
+            "attempts": [
+                {
+                    "name": "libreoffice_headless",
+                    "available": true,
+                    "supports": true,
+                    "reason": "soffice non-zero exit: 3"
+                }
+            ]
+        },
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:{\"UseTaggedPDF\":{\"type\":\"boolean\",\"value\":\"true\"},\"PDFUACompliance\":{\"type\":\"boolean\",\"value\":\"true\"},\"SelectPdfVersion\":{\"type\":\"long\",\"value\":\"0\"}}",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.odt"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.odt"
+                ],
+                "input": "src odt",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "tagged exit3 odt true": {
+        "threw": {
+            "class": "OCA\\Filinq\\Exception\\ConversionFailedException",
+            "message": "soffice exited with code 3.",
+            "code": 422,
+            "attempts": [
+                {
+                    "name": "libreoffice_headless",
+                    "available": true,
+                    "supports": true,
+                    "reason": "soffice non-zero exit: 3"
+                }
+            ]
+        },
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:{\"UseTaggedPDF\":{\"type\":\"boolean\",\"value\":\"true\"},\"PDFUACompliance\":{\"type\":\"boolean\",\"value\":\"true\"},\"SelectPdfVersion\":{\"type\":\"long\",\"value\":\"3\"}}",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.odt"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.odt"
+                ],
+                "input": "src odt",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "html exit3 docx": {
+        "threw": {
+            "class": "OCA\\Filinq\\Exception\\ConversionFailedException",
+            "message": "soffice exited with code 3.",
+            "code": 422,
+            "attempts": [
+                {
+                    "name": "libreoffice_headless",
+                    "available": true,
+                    "supports": true,
+                    "reason": "soffice non-zero exit: 3"
+                }
+            ]
+        },
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--infilter=HTML (StarWriter)",
+                    "--convert-to",
+                    "docx:MS Word 2007 XML",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.html"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.html"
+                ],
+                "input": "<p>hoi</p>",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "html exit3 odt": {
+        "threw": {
+            "class": "OCA\\Filinq\\Exception\\ConversionFailedException",
+            "message": "soffice exited with code 3.",
+            "code": 422,
+            "attempts": [
+                {
+                    "name": "libreoffice_headless",
+                    "available": true,
+                    "supports": true,
+                    "reason": "soffice non-zero exit: 3"
+                }
+            ]
+        },
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--infilter=HTML (StarWriter)",
+                    "--convert-to",
+                    "odt:writer8",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.html"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.html"
+                ],
+                "input": "<p>hoi</p>",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "convert none brief aan inwoner.docx": {
+        "threw": {
+            "class": "OCA\\Filinq\\Exception\\ConversionFailedException",
+            "message": "soffice reported success but output PDF was not found.",
+            "code": 422,
+            "attempts": [
+                {
+                    "name": "libreoffice_headless",
+                    "available": true,
+                    "supports": true,
+                    "reason": "expected output at <tmp>/input.pdf but file is missing"
+                }
+            ]
+        },
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:UseTaggedPDF=true,SelectPdfVersion=2",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.docx"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.docx"
+                ],
+                "input": "bytes of brief aan inwoner.docx",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "convert none noext": {
+        "threw": {
+            "class": "OCA\\Filinq\\Exception\\ConversionFailedException",
+            "message": "soffice reported success but output PDF was not found.",
+            "code": 422,
+            "attempts": [
+                {
+                    "name": "libreoffice_headless",
+                    "available": true,
+                    "supports": true,
+                    "reason": "expected output at <tmp>/input.pdf but file is missing"
+                }
+            ]
+        },
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:UseTaggedPDF=true,SelectPdfVersion=2",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input"
+                ],
+                "input": "bytes of noext",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "convert none a.b.ODT": {
+        "threw": {
+            "class": "OCA\\Filinq\\Exception\\ConversionFailedException",
+            "message": "soffice reported success but output PDF was not found.",
+            "code": 422,
+            "attempts": [
+                {
+                    "name": "libreoffice_headless",
+                    "available": true,
+                    "supports": true,
+                    "reason": "expected output at <tmp>/input.pdf but file is missing"
+                }
+            ]
+        },
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:UseTaggedPDF=true,SelectPdfVersion=2",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.odt"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.odt"
+                ],
+                "input": "bytes of a.b.ODT",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "convert none ../x.html": {
+        "threw": {
+            "class": "OCA\\Filinq\\Exception\\ConversionFailedException",
+            "message": "soffice reported success but output PDF was not found.",
+            "code": 422,
+            "attempts": [
+                {
+                    "name": "libreoffice_headless",
+                    "available": true,
+                    "supports": true,
+                    "reason": "expected output at <tmp>/input.pdf but file is missing"
+                }
+            ]
+        },
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:UseTaggedPDF=true,SelectPdfVersion=2",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.html"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.html"
+                ],
+                "input": "bytes of ../x.html",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "convert none page.htm": {
+        "threw": {
+            "class": "OCA\\Filinq\\Exception\\ConversionFailedException",
+            "message": "soffice reported success but output PDF was not found.",
+            "code": 422,
+            "attempts": [
+                {
+                    "name": "libreoffice_headless",
+                    "available": true,
+                    "supports": true,
+                    "reason": "expected output at <tmp>/input.pdf but file is missing"
+                }
+            ]
+        },
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:UseTaggedPDF=true,SelectPdfVersion=2",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.htm"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.htm"
+                ],
+                "input": "bytes of page.htm",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "tagged none html false": {
+        "threw": {
+            "class": "OCA\\Filinq\\Exception\\ConversionFailedException",
+            "message": "soffice reported success but output PDF was not found.",
+            "code": 422,
+            "attempts": [
+                {
+                    "name": "libreoffice_headless",
+                    "available": true,
+                    "supports": true,
+                    "reason": "expected output at <tmp>/input.pdf but file is missing"
+                }
+            ]
+        },
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--infilter=HTML (StarWriter)",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:{\"UseTaggedPDF\":{\"type\":\"boolean\",\"value\":\"true\"},\"PDFUACompliance\":{\"type\":\"boolean\",\"value\":\"true\"},\"SelectPdfVersion\":{\"type\":\"long\",\"value\":\"0\"}}",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.html"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.html"
+                ],
+                "input": "src html",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "tagged none html true": {
+        "threw": {
+            "class": "OCA\\Filinq\\Exception\\ConversionFailedException",
+            "message": "soffice reported success but output PDF was not found.",
+            "code": 422,
+            "attempts": [
+                {
+                    "name": "libreoffice_headless",
+                    "available": true,
+                    "supports": true,
+                    "reason": "expected output at <tmp>/input.pdf but file is missing"
+                }
+            ]
+        },
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--infilter=HTML (StarWriter)",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:{\"UseTaggedPDF\":{\"type\":\"boolean\",\"value\":\"true\"},\"PDFUACompliance\":{\"type\":\"boolean\",\"value\":\"true\"},\"SelectPdfVersion\":{\"type\":\"long\",\"value\":\"3\"}}",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.html"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.html"
+                ],
+                "input": "src html",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "tagged none HTM false": {
+        "threw": {
+            "class": "OCA\\Filinq\\Exception\\ConversionFailedException",
+            "message": "soffice reported success but output PDF was not found.",
+            "code": 422,
+            "attempts": [
+                {
+                    "name": "libreoffice_headless",
+                    "available": true,
+                    "supports": true,
+                    "reason": "expected output at <tmp>/input.pdf but file is missing"
+                }
+            ]
+        },
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--infilter=HTML (StarWriter)",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:{\"UseTaggedPDF\":{\"type\":\"boolean\",\"value\":\"true\"},\"PDFUACompliance\":{\"type\":\"boolean\",\"value\":\"true\"},\"SelectPdfVersion\":{\"type\":\"long\",\"value\":\"0\"}}",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.htm"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.htm"
+                ],
+                "input": "src HTM",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "tagged none HTM true": {
+        "threw": {
+            "class": "OCA\\Filinq\\Exception\\ConversionFailedException",
+            "message": "soffice reported success but output PDF was not found.",
+            "code": 422,
+            "attempts": [
+                {
+                    "name": "libreoffice_headless",
+                    "available": true,
+                    "supports": true,
+                    "reason": "expected output at <tmp>/input.pdf but file is missing"
+                }
+            ]
+        },
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--infilter=HTML (StarWriter)",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:{\"UseTaggedPDF\":{\"type\":\"boolean\",\"value\":\"true\"},\"PDFUACompliance\":{\"type\":\"boolean\",\"value\":\"true\"},\"SelectPdfVersion\":{\"type\":\"long\",\"value\":\"3\"}}",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.htm"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.htm"
+                ],
+                "input": "src HTM",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "tagged none docx false": {
+        "threw": {
+            "class": "OCA\\Filinq\\Exception\\ConversionFailedException",
+            "message": "soffice reported success but output PDF was not found.",
+            "code": 422,
+            "attempts": [
+                {
+                    "name": "libreoffice_headless",
+                    "available": true,
+                    "supports": true,
+                    "reason": "expected output at <tmp>/input.pdf but file is missing"
+                }
+            ]
+        },
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:{\"UseTaggedPDF\":{\"type\":\"boolean\",\"value\":\"true\"},\"PDFUACompliance\":{\"type\":\"boolean\",\"value\":\"true\"},\"SelectPdfVersion\":{\"type\":\"long\",\"value\":\"0\"}}",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.docx"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.docx"
+                ],
+                "input": "src docx",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "tagged none docx true": {
+        "threw": {
+            "class": "OCA\\Filinq\\Exception\\ConversionFailedException",
+            "message": "soffice reported success but output PDF was not found.",
+            "code": 422,
+            "attempts": [
+                {
+                    "name": "libreoffice_headless",
+                    "available": true,
+                    "supports": true,
+                    "reason": "expected output at <tmp>/input.pdf but file is missing"
+                }
+            ]
+        },
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:{\"UseTaggedPDF\":{\"type\":\"boolean\",\"value\":\"true\"},\"PDFUACompliance\":{\"type\":\"boolean\",\"value\":\"true\"},\"SelectPdfVersion\":{\"type\":\"long\",\"value\":\"3\"}}",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.docx"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.docx"
+                ],
+                "input": "src docx",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "tagged none  false": {
+        "threw": {
+            "class": "OCA\\Filinq\\Exception\\ConversionFailedException",
+            "message": "soffice reported success but output PDF was not found.",
+            "code": 422,
+            "attempts": [
+                {
+                    "name": "libreoffice_headless",
+                    "available": true,
+                    "supports": true,
+                    "reason": "expected output at <tmp>/input.pdf but file is missing"
+                }
+            ]
+        },
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:{\"UseTaggedPDF\":{\"type\":\"boolean\",\"value\":\"true\"},\"PDFUACompliance\":{\"type\":\"boolean\",\"value\":\"true\"},\"SelectPdfVersion\":{\"type\":\"long\",\"value\":\"0\"}}",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input"
+                ],
+                "input": "src ",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "tagged none  true": {
+        "threw": {
+            "class": "OCA\\Filinq\\Exception\\ConversionFailedException",
+            "message": "soffice reported success but output PDF was not found.",
+            "code": 422,
+            "attempts": [
+                {
+                    "name": "libreoffice_headless",
+                    "available": true,
+                    "supports": true,
+                    "reason": "expected output at <tmp>/input.pdf but file is missing"
+                }
+            ]
+        },
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:{\"UseTaggedPDF\":{\"type\":\"boolean\",\"value\":\"true\"},\"PDFUACompliance\":{\"type\":\"boolean\",\"value\":\"true\"},\"SelectPdfVersion\":{\"type\":\"long\",\"value\":\"3\"}}",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input"
+                ],
+                "input": "src ",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "tagged none odt false": {
+        "threw": {
+            "class": "OCA\\Filinq\\Exception\\ConversionFailedException",
+            "message": "soffice reported success but output PDF was not found.",
+            "code": 422,
+            "attempts": [
+                {
+                    "name": "libreoffice_headless",
+                    "available": true,
+                    "supports": true,
+                    "reason": "expected output at <tmp>/input.pdf but file is missing"
+                }
+            ]
+        },
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:{\"UseTaggedPDF\":{\"type\":\"boolean\",\"value\":\"true\"},\"PDFUACompliance\":{\"type\":\"boolean\",\"value\":\"true\"},\"SelectPdfVersion\":{\"type\":\"long\",\"value\":\"0\"}}",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.odt"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.odt"
+                ],
+                "input": "src odt",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "tagged none odt true": {
+        "threw": {
+            "class": "OCA\\Filinq\\Exception\\ConversionFailedException",
+            "message": "soffice reported success but output PDF was not found.",
+            "code": 422,
+            "attempts": [
+                {
+                    "name": "libreoffice_headless",
+                    "available": true,
+                    "supports": true,
+                    "reason": "expected output at <tmp>/input.pdf but file is missing"
+                }
+            ]
+        },
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:{\"UseTaggedPDF\":{\"type\":\"boolean\",\"value\":\"true\"},\"PDFUACompliance\":{\"type\":\"boolean\",\"value\":\"true\"},\"SelectPdfVersion\":{\"type\":\"long\",\"value\":\"3\"}}",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.odt"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.odt"
+                ],
+                "input": "src odt",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "html none docx": {
+        "threw": {
+            "class": "OCA\\Filinq\\Exception\\ConversionFailedException",
+            "message": "soffice reported success but output PDF was not found.",
+            "code": 422,
+            "attempts": [
+                {
+                    "name": "libreoffice_headless",
+                    "available": true,
+                    "supports": true,
+                    "reason": "expected output at <tmp>/input.docx but file is missing"
+                }
+            ]
+        },
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--infilter=HTML (StarWriter)",
+                    "--convert-to",
+                    "docx:MS Word 2007 XML",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.html"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.html"
+                ],
+                "input": "<p>hoi</p>",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "html none odt": {
+        "threw": {
+            "class": "OCA\\Filinq\\Exception\\ConversionFailedException",
+            "message": "soffice reported success but output PDF was not found.",
+            "code": 422,
+            "attempts": [
+                {
+                    "name": "libreoffice_headless",
+                    "available": true,
+                    "supports": true,
+                    "reason": "expected output at <tmp>/input.odt but file is missing"
+                }
+            ]
+        },
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--infilter=HTML (StarWriter)",
+                    "--convert-to",
+                    "odt:writer8",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.html"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.html"
+                ],
+                "input": "<p>hoi</p>",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "convert empty brief aan inwoner.docx": {
+        "threw": {
+            "class": "OCA\\Filinq\\Exception\\ConversionFailedException",
+            "message": "soffice emitted an empty PDF file.",
+            "code": 422,
+            "attempts": [
+                {
+                    "name": "libreoffice_headless",
+                    "available": true,
+                    "supports": true,
+                    "reason": "output PDF was empty"
+                }
+            ]
+        },
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:UseTaggedPDF=true,SelectPdfVersion=2",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.docx"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.docx"
+                ],
+                "input": "bytes of brief aan inwoner.docx",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "convert empty noext": {
+        "threw": {
+            "class": "OCA\\Filinq\\Exception\\ConversionFailedException",
+            "message": "soffice emitted an empty PDF file.",
+            "code": 422,
+            "attempts": [
+                {
+                    "name": "libreoffice_headless",
+                    "available": true,
+                    "supports": true,
+                    "reason": "output PDF was empty"
+                }
+            ]
+        },
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:UseTaggedPDF=true,SelectPdfVersion=2",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input"
+                ],
+                "input": "bytes of noext",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "convert empty a.b.ODT": {
+        "threw": {
+            "class": "OCA\\Filinq\\Exception\\ConversionFailedException",
+            "message": "soffice emitted an empty PDF file.",
+            "code": 422,
+            "attempts": [
+                {
+                    "name": "libreoffice_headless",
+                    "available": true,
+                    "supports": true,
+                    "reason": "output PDF was empty"
+                }
+            ]
+        },
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:UseTaggedPDF=true,SelectPdfVersion=2",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.odt"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.odt"
+                ],
+                "input": "bytes of a.b.ODT",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "convert empty ../x.html": {
+        "threw": {
+            "class": "OCA\\Filinq\\Exception\\ConversionFailedException",
+            "message": "soffice emitted an empty PDF file.",
+            "code": 422,
+            "attempts": [
+                {
+                    "name": "libreoffice_headless",
+                    "available": true,
+                    "supports": true,
+                    "reason": "output PDF was empty"
+                }
+            ]
+        },
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:UseTaggedPDF=true,SelectPdfVersion=2",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.html"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.html"
+                ],
+                "input": "bytes of ../x.html",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "convert empty page.htm": {
+        "threw": {
+            "class": "OCA\\Filinq\\Exception\\ConversionFailedException",
+            "message": "soffice emitted an empty PDF file.",
+            "code": 422,
+            "attempts": [
+                {
+                    "name": "libreoffice_headless",
+                    "available": true,
+                    "supports": true,
+                    "reason": "output PDF was empty"
+                }
+            ]
+        },
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:UseTaggedPDF=true,SelectPdfVersion=2",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.htm"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.htm"
+                ],
+                "input": "bytes of page.htm",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "tagged empty html false": {
+        "threw": {
+            "class": "OCA\\Filinq\\Exception\\ConversionFailedException",
+            "message": "soffice emitted an empty PDF file.",
+            "code": 422,
+            "attempts": [
+                {
+                    "name": "libreoffice_headless",
+                    "available": true,
+                    "supports": true,
+                    "reason": "output PDF was empty"
+                }
+            ]
+        },
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--infilter=HTML (StarWriter)",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:{\"UseTaggedPDF\":{\"type\":\"boolean\",\"value\":\"true\"},\"PDFUACompliance\":{\"type\":\"boolean\",\"value\":\"true\"},\"SelectPdfVersion\":{\"type\":\"long\",\"value\":\"0\"}}",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.html"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.html"
+                ],
+                "input": "src html",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "tagged empty html true": {
+        "threw": {
+            "class": "OCA\\Filinq\\Exception\\ConversionFailedException",
+            "message": "soffice emitted an empty PDF file.",
+            "code": 422,
+            "attempts": [
+                {
+                    "name": "libreoffice_headless",
+                    "available": true,
+                    "supports": true,
+                    "reason": "output PDF was empty"
+                }
+            ]
+        },
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--infilter=HTML (StarWriter)",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:{\"UseTaggedPDF\":{\"type\":\"boolean\",\"value\":\"true\"},\"PDFUACompliance\":{\"type\":\"boolean\",\"value\":\"true\"},\"SelectPdfVersion\":{\"type\":\"long\",\"value\":\"3\"}}",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.html"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.html"
+                ],
+                "input": "src html",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "tagged empty HTM false": {
+        "threw": {
+            "class": "OCA\\Filinq\\Exception\\ConversionFailedException",
+            "message": "soffice emitted an empty PDF file.",
+            "code": 422,
+            "attempts": [
+                {
+                    "name": "libreoffice_headless",
+                    "available": true,
+                    "supports": true,
+                    "reason": "output PDF was empty"
+                }
+            ]
+        },
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--infilter=HTML (StarWriter)",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:{\"UseTaggedPDF\":{\"type\":\"boolean\",\"value\":\"true\"},\"PDFUACompliance\":{\"type\":\"boolean\",\"value\":\"true\"},\"SelectPdfVersion\":{\"type\":\"long\",\"value\":\"0\"}}",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.htm"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.htm"
+                ],
+                "input": "src HTM",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "tagged empty HTM true": {
+        "threw": {
+            "class": "OCA\\Filinq\\Exception\\ConversionFailedException",
+            "message": "soffice emitted an empty PDF file.",
+            "code": 422,
+            "attempts": [
+                {
+                    "name": "libreoffice_headless",
+                    "available": true,
+                    "supports": true,
+                    "reason": "output PDF was empty"
+                }
+            ]
+        },
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--infilter=HTML (StarWriter)",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:{\"UseTaggedPDF\":{\"type\":\"boolean\",\"value\":\"true\"},\"PDFUACompliance\":{\"type\":\"boolean\",\"value\":\"true\"},\"SelectPdfVersion\":{\"type\":\"long\",\"value\":\"3\"}}",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.htm"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.htm"
+                ],
+                "input": "src HTM",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "tagged empty docx false": {
+        "threw": {
+            "class": "OCA\\Filinq\\Exception\\ConversionFailedException",
+            "message": "soffice emitted an empty PDF file.",
+            "code": 422,
+            "attempts": [
+                {
+                    "name": "libreoffice_headless",
+                    "available": true,
+                    "supports": true,
+                    "reason": "output PDF was empty"
+                }
+            ]
+        },
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:{\"UseTaggedPDF\":{\"type\":\"boolean\",\"value\":\"true\"},\"PDFUACompliance\":{\"type\":\"boolean\",\"value\":\"true\"},\"SelectPdfVersion\":{\"type\":\"long\",\"value\":\"0\"}}",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.docx"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.docx"
+                ],
+                "input": "src docx",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "tagged empty docx true": {
+        "threw": {
+            "class": "OCA\\Filinq\\Exception\\ConversionFailedException",
+            "message": "soffice emitted an empty PDF file.",
+            "code": 422,
+            "attempts": [
+                {
+                    "name": "libreoffice_headless",
+                    "available": true,
+                    "supports": true,
+                    "reason": "output PDF was empty"
+                }
+            ]
+        },
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:{\"UseTaggedPDF\":{\"type\":\"boolean\",\"value\":\"true\"},\"PDFUACompliance\":{\"type\":\"boolean\",\"value\":\"true\"},\"SelectPdfVersion\":{\"type\":\"long\",\"value\":\"3\"}}",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.docx"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.docx"
+                ],
+                "input": "src docx",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "tagged empty  false": {
+        "threw": {
+            "class": "OCA\\Filinq\\Exception\\ConversionFailedException",
+            "message": "soffice emitted an empty PDF file.",
+            "code": 422,
+            "attempts": [
+                {
+                    "name": "libreoffice_headless",
+                    "available": true,
+                    "supports": true,
+                    "reason": "output PDF was empty"
+                }
+            ]
+        },
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:{\"UseTaggedPDF\":{\"type\":\"boolean\",\"value\":\"true\"},\"PDFUACompliance\":{\"type\":\"boolean\",\"value\":\"true\"},\"SelectPdfVersion\":{\"type\":\"long\",\"value\":\"0\"}}",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input"
+                ],
+                "input": "src ",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "tagged empty  true": {
+        "threw": {
+            "class": "OCA\\Filinq\\Exception\\ConversionFailedException",
+            "message": "soffice emitted an empty PDF file.",
+            "code": 422,
+            "attempts": [
+                {
+                    "name": "libreoffice_headless",
+                    "available": true,
+                    "supports": true,
+                    "reason": "output PDF was empty"
+                }
+            ]
+        },
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:{\"UseTaggedPDF\":{\"type\":\"boolean\",\"value\":\"true\"},\"PDFUACompliance\":{\"type\":\"boolean\",\"value\":\"true\"},\"SelectPdfVersion\":{\"type\":\"long\",\"value\":\"3\"}}",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input"
+                ],
+                "input": "src ",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "tagged empty odt false": {
+        "threw": {
+            "class": "OCA\\Filinq\\Exception\\ConversionFailedException",
+            "message": "soffice emitted an empty PDF file.",
+            "code": 422,
+            "attempts": [
+                {
+                    "name": "libreoffice_headless",
+                    "available": true,
+                    "supports": true,
+                    "reason": "output PDF was empty"
+                }
+            ]
+        },
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:{\"UseTaggedPDF\":{\"type\":\"boolean\",\"value\":\"true\"},\"PDFUACompliance\":{\"type\":\"boolean\",\"value\":\"true\"},\"SelectPdfVersion\":{\"type\":\"long\",\"value\":\"0\"}}",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.odt"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.odt"
+                ],
+                "input": "src odt",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "tagged empty odt true": {
+        "threw": {
+            "class": "OCA\\Filinq\\Exception\\ConversionFailedException",
+            "message": "soffice emitted an empty PDF file.",
+            "code": 422,
+            "attempts": [
+                {
+                    "name": "libreoffice_headless",
+                    "available": true,
+                    "supports": true,
+                    "reason": "output PDF was empty"
+                }
+            ]
+        },
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:{\"UseTaggedPDF\":{\"type\":\"boolean\",\"value\":\"true\"},\"PDFUACompliance\":{\"type\":\"boolean\",\"value\":\"true\"},\"SelectPdfVersion\":{\"type\":\"long\",\"value\":\"3\"}}",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.odt"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.odt"
+                ],
+                "input": "src odt",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "html empty docx": {
+        "threw": {
+            "class": "OCA\\Filinq\\Exception\\ConversionFailedException",
+            "message": "soffice emitted an empty PDF file.",
+            "code": 422,
+            "attempts": [
+                {
+                    "name": "libreoffice_headless",
+                    "available": true,
+                    "supports": true,
+                    "reason": "output PDF was empty"
+                }
+            ]
+        },
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--infilter=HTML (StarWriter)",
+                    "--convert-to",
+                    "docx:MS Word 2007 XML",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.html"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.html"
+                ],
+                "input": "<p>hoi</p>",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "html empty odt": {
+        "threw": {
+            "class": "OCA\\Filinq\\Exception\\ConversionFailedException",
+            "message": "soffice emitted an empty PDF file.",
+            "code": 422,
+            "attempts": [
+                {
+                    "name": "libreoffice_headless",
+                    "available": true,
+                    "supports": true,
+                    "reason": "output PDF was empty"
+                }
+            ]
+        },
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--infilter=HTML (StarWriter)",
+                    "--convert-to",
+                    "odt:writer8",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.html"
+                ],
+                "timeout": 60,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.html"
+                ],
+                "input": "<p>hoi</p>",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "timeout 0 convert": {
+        "returned": "written",
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:UseTaggedPDF=true,SelectPdfVersion=2",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.docx"
+                ],
+                "timeout": 1,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.docx"
+                ],
+                "input": "bytes of a.docx",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "nodeExists",
+                "a.pdf"
+            ],
+            [
+                "newFile",
+                "a.pdf",
+                "%PDF out pdf"
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "timeout 0 tagged": {
+        "returned": "%PDF out pdf",
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--infilter=HTML (StarWriter)",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:{\"UseTaggedPDF\":{\"type\":\"boolean\",\"value\":\"true\"},\"PDFUACompliance\":{\"type\":\"boolean\",\"value\":\"true\"},\"SelectPdfVersion\":{\"type\":\"long\",\"value\":\"3\"}}",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.html"
+                ],
+                "timeout": 1,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.html"
+                ],
+                "input": "x",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "timeout 0 html": {
+        "returned": "%PDF out odt",
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--infilter=HTML (StarWriter)",
+                    "--convert-to",
+                    "odt:writer8",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.html"
+                ],
+                "timeout": 1,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.html"
+                ],
+                "input": "x",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "timeout 7 convert": {
+        "returned": "written",
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:UseTaggedPDF=true,SelectPdfVersion=2",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.docx"
+                ],
+                "timeout": 7,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.docx"
+                ],
+                "input": "bytes of a.docx",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "nodeExists",
+                "a.pdf"
+            ],
+            [
+                "newFile",
+                "a.pdf",
+                "%PDF out pdf"
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "timeout 7 tagged": {
+        "returned": "%PDF out pdf",
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--infilter=HTML (StarWriter)",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:{\"UseTaggedPDF\":{\"type\":\"boolean\",\"value\":\"true\"},\"PDFUACompliance\":{\"type\":\"boolean\",\"value\":\"true\"},\"SelectPdfVersion\":{\"type\":\"long\",\"value\":\"3\"}}",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.html"
+                ],
+                "timeout": 7,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.html"
+                ],
+                "input": "x",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "timeout 7 html": {
+        "returned": "%PDF out odt",
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--infilter=HTML (StarWriter)",
+                    "--convert-to",
+                    "odt:writer8",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.html"
+                ],
+                "timeout": 7,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.html"
+                ],
+                "input": "x",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "timeout abc convert": {
+        "returned": "written",
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:UseTaggedPDF=true,SelectPdfVersion=2",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.docx"
+                ],
+                "timeout": 1,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.docx"
+                ],
+                "input": "bytes of a.docx",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "nodeExists",
+                "a.pdf"
+            ],
+            [
+                "newFile",
+                "a.pdf",
+                "%PDF out pdf"
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "timeout abc tagged": {
+        "returned": "%PDF out pdf",
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--infilter=HTML (StarWriter)",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:{\"UseTaggedPDF\":{\"type\":\"boolean\",\"value\":\"true\"},\"PDFUACompliance\":{\"type\":\"boolean\",\"value\":\"true\"},\"SelectPdfVersion\":{\"type\":\"long\",\"value\":\"3\"}}",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.html"
+                ],
+                "timeout": 1,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.html"
+                ],
+                "input": "x",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "timeout abc html": {
+        "returned": "%PDF out odt",
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--infilter=HTML (StarWriter)",
+                    "--convert-to",
+                    "odt:writer8",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.html"
+                ],
+                "timeout": 1,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.html"
+                ],
+                "input": "x",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "timeout -3 convert": {
+        "returned": "written",
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:UseTaggedPDF=true,SelectPdfVersion=2",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.docx"
+                ],
+                "timeout": 1,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.docx"
+                ],
+                "input": "bytes of a.docx",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "nodeExists",
+                "a.pdf"
+            ],
+            [
+                "newFile",
+                "a.pdf",
+                "%PDF out pdf"
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "timeout -3 tagged": {
+        "returned": "%PDF out pdf",
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--infilter=HTML (StarWriter)",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:{\"UseTaggedPDF\":{\"type\":\"boolean\",\"value\":\"true\"},\"PDFUACompliance\":{\"type\":\"boolean\",\"value\":\"true\"},\"SelectPdfVersion\":{\"type\":\"long\",\"value\":\"3\"}}",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.html"
+                ],
+                "timeout": 1,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.html"
+                ],
+                "input": "x",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "timeout -3 html": {
+        "returned": "%PDF out odt",
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--infilter=HTML (StarWriter)",
+                    "--convert-to",
+                    "odt:writer8",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.html"
+                ],
+                "timeout": 1,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.html"
+                ],
+                "input": "x",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "timeout  convert": {
+        "returned": "written",
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:UseTaggedPDF=true,SelectPdfVersion=2",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.docx"
+                ],
+                "timeout": 1,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.docx"
+                ],
+                "input": "bytes of a.docx",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "nodeExists",
+                "a.pdf"
+            ],
+            [
+                "newFile",
+                "a.pdf",
+                "%PDF out pdf"
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "timeout  tagged": {
+        "returned": "%PDF out pdf",
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--infilter=HTML (StarWriter)",
+                    "--convert-to",
+                    "pdf:writer_pdf_Export:{\"UseTaggedPDF\":{\"type\":\"boolean\",\"value\":\"true\"},\"PDFUACompliance\":{\"type\":\"boolean\",\"value\":\"true\"},\"SelectPdfVersion\":{\"type\":\"long\",\"value\":\"3\"}}",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.html"
+                ],
+                "timeout": 1,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.html"
+                ],
+                "input": "x",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    },
+    "timeout  html": {
+        "returned": "%PDF out odt",
+        "runs": [
+            {
+                "argv": [
+                    "/bin/sh",
+                    "--headless",
+                    "--norestore",
+                    "--nofirststartwizard",
+                    "--infilter=HTML (StarWriter)",
+                    "--convert-to",
+                    "odt:writer8",
+                    "--outdir",
+                    "<tmp>",
+                    "<tmp>/input.html"
+                ],
+                "timeout": 1,
+                "tmpIsOutdir": true,
+                "tmpPrefix": true,
+                "tmpMode": "0700",
+                "files": [
+                    "input.html"
+                ],
+                "input": "x",
+                "backendName": "libreoffice_headless"
+            }
+        ],
+        "events": [
+            [
+                "acquireLock",
+                "soffice:headless:convert",
+                2
+            ],
+            [
+                "releaseLock",
+                "soffice:headless:convert",
+                2
+            ]
+        ],
+        "tmpLeft": 0
+    }
+}
