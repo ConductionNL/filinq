@@ -35,6 +35,7 @@ use OCA\Filinq\Service\EmailIngestion\EmailIngestionSettings;
 use OCA\Filinq\Service\EmailIngestion\EmailMessageReader;
 use OCA\Filinq\Service\EmailIngestion\EmailThreadHeaders;
 use OCA\Filinq\Service\PdfConversionService;
+use OCA\Filinq\Service\Support\EmailHandling;
 use OCA\OpenRegister\Exception\EmlParseException;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\OpenRegister\Service\TextExtraction\EmlAttachment;
@@ -505,10 +506,9 @@ trait EmailInboxWorld {
 		$root = $this->rootFolder();
 
 		return new EmailIngestionService(
+			handling: new EmailHandling(reader: new EmailMessageReader(container: $this->container(), threadHeaders: new EmailThreadHeaders(), logger: $logger), filing: new EmailFiling(dossiers: $this->dossiers(), rootFolder: $root, conversion: $this->conversion(), logger: $logger)),
 			settings: new EmailIngestionSettings(appConfig: $appConfig),
 			repository: new EmailDocumentRepository(objectResolver: $resolver),
-			reader: new EmailMessageReader(container: $this->container(), threadHeaders: new EmailThreadHeaders(), logger: $logger),
-			filing: new EmailFiling(dossiers: $this->dossiers(), rootFolder: $root, conversion: $this->conversion(), logger: $logger),
 			rootFolder: $root,
 			clock: $clock,
 			logger: $logger,

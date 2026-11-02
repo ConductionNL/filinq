@@ -27,6 +27,7 @@ use OCA\Filinq\Service\OpenRegisterAvailabilityService;
 use OCA\Filinq\Service\RegisterDiscoveryService;
 use OCA\Filinq\Service\SettingsInitializer;
 use OCA\Filinq\Service\SettingsService;
+use OCA\Filinq\Service\Support\RegisterSetup;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -88,10 +89,9 @@ class SettingsFeatureTogglesGoldenTest extends TestCase {
 		$basis->method('getEnabledEntityTypes')->willReturn(['person']);
 
 		$service = new SettingsService(
+			registers: new RegisterSetup(discovery: $this->createMock(originalClassName: RegisterDiscoveryService::class), initializer: $this->createMock(originalClassName: SettingsInitializer::class)),
 			config: $config,
 			logger: $this->createMock(originalClassName: LoggerInterface::class),
-			discoveryService: $this->createMock(originalClassName: RegisterDiscoveryService::class),
-			initializer: $this->createMock(originalClassName: SettingsInitializer::class),
 			ocrService: $this->createMock(originalClassName: OcrService::class),
 			legalBasisProposal: $basis,
 			openRegister: $this->createMock(originalClassName: OpenRegisterAvailabilityService::class)

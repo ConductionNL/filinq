@@ -39,6 +39,7 @@ use OCA\Filinq\Service\Classification\ClassificationResultRepository;
 use OCA\Filinq\Service\Classification\ClassificationSources;
 use OCA\Filinq\Service\Classification\CorrespondentRanker;
 use OCA\Filinq\Service\Classification\DossierMatcher;
+use OCA\Filinq\Service\Support\ClassificationMatchers;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 
@@ -50,11 +51,24 @@ use Psr\Log\LoggerInterface;
 class InboundClassificationService implements InboundClassificationServiceInterface {
 
 	/**
+	 * Picks a correspondent from detected entities.
+	 *
+	 * @var CorrespondentRanker
+	 */
+	private readonly CorrespondentRanker $ranker;
+
+	/**
+	 * Exact or prefix dossier match.
+	 *
+	 * @var DossierMatcher
+	 */
+	private readonly DossierMatcher $matcher;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param DocumentTypeClassifier         $classifier The intake-type vocabularies.
-	 * @param CorrespondentRanker            $ranker     Picks a correspondent from detected entities.
-	 * @param DossierMatcher                 $matcher    Exact or prefix dossier match.
+	 * @param ClassificationMatchers $matchers The correspondent ranker and the dossier matcher.
 	 * @param ClassificationResultRepository $results    The classificationResult records.
 	 * @param ClassificationSources          $sources    Detected entities and dossiers.
 	 * @param IAppConfig                     $appConfig  Holds the toggle.
@@ -64,13 +78,14 @@ class InboundClassificationService implements InboundClassificationServiceInterf
 	 */
 	public function __construct(
 		private readonly DocumentTypeClassifier $classifier,
-		private readonly CorrespondentRanker $ranker,
-		private readonly DossierMatcher $matcher,
+		ClassificationMatchers $matchers,
 		private readonly ClassificationResultRepository $results,
 		private readonly ClassificationSources $sources,
 		private readonly IAppConfig $appConfig,
 		private readonly LoggerInterface $logger,
 	) {
+		$this->ranker = $matchers->ranker;
+		$this->matcher = $matchers->matcher;
 
 	}//end __construct()
 
