@@ -143,17 +143,22 @@ function recordingModule(name) {
 
 /**
  * Replace a dialog's relative imports: components by stubs, everything else
- * by a recording module.
+ * by a recording module. Mixins and the components named in `keep` load as
+ * they are.
  *
  * @param {string} file The dialog file.
+ * @param {Array<string>} keep Component names to leave real.
  */
-function mockRelativeImports(file) {
+function mockRelativeImports(file, keep = []) {
 	const source = fs.readFileSync(file, 'utf8')
 	for (const match of source.matchAll(
 		/^import\s+[\s\S]*?\s+from\s+'(\.[^']+)'/gm,
 	)) {
 		const target = path.resolve(path.dirname(file), match[1])
 		const name = path.basename(match[1]).replace(/\.(vue|js)$/, '')
+		if (match[1].includes('/mixins/') || keep.includes(name)) {
+			continue
+		}
 		jest.doMock(target, () =>
 			match[1].endsWith('.vue')
 				? { __esModule: true, default: stubComponent(name, registry()) }
@@ -272,10 +277,24 @@ async function click(root, which) {
 }
 
 /**
+ * Fill the dialog in: merge the data, or run the function on the instance.
+ *
+ * @param {object} vm The dialog instance.
+ * @param {object|Function} what The data to merge, or a function of the instance.
+ */
+function fill(vm, what) {
+	if (typeof what === 'function') {
+		what(vm)
+	} else {
+		Object.assign(vm.$data, what)
+	}
+}
+
+/**
  * Record one dialog through its phases.
  *
  * @param {object} component The dialog.
- * @param {object} site `{ props, fill, ok, refused, busyProps }`: the props, the data that makes it submittable, the answers for success and for a refusal, and props the parent sets while it waits.
+ * @param {object} site `{ props, fill, ok, refused, busyProps }`: the props, the data (or a function) that makes it submittable, the answers for success and for a refusal, and props the parent sets while it waits.
  * @return {Promise<object>} The phases.
  */
 async function recordPhases(component, site) {
@@ -292,7 +311,7 @@ async function recordPhases(component, site) {
 		pending.length = 0
 		const page = await renderStubbed(component, {
 			props: { ...site.props, ...extra, ...listen },
-			keep: ['NcButton', 'CnDialogActions'],
+			keep: ['NcButton', 'CnDialogActions', ...(site.keep || [])],
 		})
 		await settle(site.ok)
 		return page
@@ -300,7 +319,7 @@ async function recordPhases(component, site) {
 	const out = {}
 	let page = await mount()
 	out.empty = dialogView(root)
-	Object.assign(page.vm.$data, site.fill)
+	fill(page.vm, site.fill)
 	await flush()
 	out.filled = dialogView(root)
 	out.callsBeforeClick = JSON.parse(JSON.stringify(calls))
@@ -318,7 +337,7 @@ async function recordPhases(component, site) {
 	page.unmount()
 
 	page = await mount()
-	Object.assign(page.vm.$data, site.fill)
+	fill(page.vm, site.fill)
 	await flush()
 	await click(root, 'confirm')
 	emitted.length = 0
@@ -331,7 +350,7 @@ async function recordPhases(component, site) {
 
 	if (site.busyProps) {
 		page = await mount(site.busyProps)
-		Object.assign(page.vm.$data, site.fill)
+		fill(page.vm, site.fill)
 		await flush()
 		out.parentBusy = dialogView(root)
 		page.unmount()
