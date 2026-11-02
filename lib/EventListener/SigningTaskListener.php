@@ -217,8 +217,8 @@ class SigningTaskListener implements IEventListener {
 			return;
 		}
 
-		$position = (int) ($this->read(subject: $task, getter: 'getSequencePosition') ?? 0);
-		if ($this->isTurnAfterSignedApprovals(sequenceUuid: $sequenceUuid, position: $position) === false) {
+		$position = $this->read(subject: $task, getter: 'getSequencePosition');
+		if ($this->isSignersTurn(task: $task, position: $position) === false) {
 			$this->logger->warning(
 				'SigningTaskListener: enabled position follows a position without an approving outcome and signer; no signer is asked',
 				[
@@ -239,7 +239,7 @@ class SigningTaskListener implements IEventListener {
 		$this->translator->onPositionEnabled(
 			sequenceUuid: $sequenceUuid,
 			taskUuid: (string) ($this->read(subject: $task, getter: 'getUuid') ?? ''),
-			position: $position,
+			position: (int) $position,
 			role: $role,
 			objectUuid: $objectUuid
 		);
@@ -417,25 +417,31 @@ class SigningTaskListener implements IEventListener {
 	}//end isApprovedByEverySigner()
 
 	/**
-	 * Whether a newly enabled position is a signer's turn: every earlier
-	 * position of its sequence was completed with an approving outcome by a
-	 * named signer. The first position has no earlier signer. Unreadable or
-	 * missing earlier positions fail closed.
+	 * Whether a newly enabled position is a signer's turn: it has a position,
+	 * and every earlier position the chain declares holds one signed approval
+	 * on the same document. A missing or unprovable position fails closed.
 	 *
-	 * @param string $sequenceUuid UUID of the sequence.
-	 * @param int    $position     The enabled position's ordinal.
+	 * @param object $task     The enabled task.
+	 * @param mixed  $position The task's sequence position, as read.
 	 *
 	 * @return bool True when the position may ask its signer.
 	 */
-	private function isTurnAfterSignedApprovals(string $sequenceUuid, int $position): bool {
-		if ($position <= 1) {
-			return true;
+	private function isSignersTurn(object $task, mixed $position): bool {
+		if (is_numeric($position) === false) {
+			return false;
 		}
 
-		$earlier = $this->sequenceTasks->before(sequenceUuid: $sequenceUuid, position: $position);
+		$earlier = $this->sequenceTasks->earlierPositions(
+			step: new SignerStepTask(
+				sequenceUuid: (string) ($this->read(subject: $task, getter: 'getSequenceUuid') ?? ''),
+				taskUuid: (string) ($this->read(subject: $task, getter: 'getUuid') ?? ''),
+				position: (int) $position,
+				objectUuid: (string) ($this->read(subject: $task, getter: 'getObjectUuid') ?? '')
+			)
+		);
 
-		return $earlier !== [] && $this->approvals->areSigned(tasks: $earlier);
-	}//end isTurnAfterSignedApprovals()
+		return $earlier !== null && $this->approvals->areSigned(tasks: $earlier);
+	}//end isSignersTurn()
 
 
 	/**

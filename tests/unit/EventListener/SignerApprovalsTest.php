@@ -57,5 +57,6 @@ class SignerApprovalsTest extends TestCase {
 		$this->assertFalse($approvals->areSigned(tasks: [$signed, new Task(state: 'completed', outcome: 'done', completedBy: 'bob')]));
 		$this->assertFalse($approvals->areSigned(tasks: [new Task(state: 'completed', outcome: 'approved', completedBy: ' ')]));
 		$this->assertFalse($approvals->areSigned(tasks: [new stdClass()]));
+		$this->assertFalse($approvals->areSigned(tasks: [new Task(state: 'enabled', outcome: 'approved', completedBy: 'alice')]));
 	}//end testEveryTaskNeedsAnApprovingOutcomeAndASigner()
 }//end class

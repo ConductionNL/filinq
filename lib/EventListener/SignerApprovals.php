@@ -48,6 +48,13 @@ class SignerApprovals {
 	private const APPROVING_OUTCOMES = ['approved'];
 
 	/**
+	 * OR's state for a decided task.
+	 *
+	 * @var string
+	 */
+	private const STATE_COMPLETED = 'completed';
+
+	/**
 	 * Whether an outcome approves a signing step.
 	 *
 	 * @param string $outcome The task's outcome.
@@ -80,17 +87,18 @@ class SignerApprovals {
 	}//end areSigned()
 
 	/**
-	 * Whether a task carries an approving outcome and a non-blank completing user.
+	 * Whether a task is completed with an approving outcome by a non-blank user.
 	 *
 	 * @param object $task The task.
 	 *
 	 * @return bool True for a signed approval.
 	 */
 	private function isSigned(object $task): bool {
+		$state = (string) ($this->value(task: $task, getter: 'getState') ?? '');
 		$outcome = (string) ($this->value(task: $task, getter: 'getOutcome') ?? '');
 		$signer = trim((string) ($this->value(task: $task, getter: 'getCompletedBy') ?? ''));
 
-		return $this->isApprovingOutcome(outcome: $outcome) === true && $signer !== '';
+		return $state === self::STATE_COMPLETED && $this->isApprovingOutcome(outcome: $outcome) === true && $signer !== '';
 	}//end isSigned()
 
 	/**
