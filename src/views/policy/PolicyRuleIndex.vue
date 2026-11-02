@@ -203,7 +203,7 @@ const SURFACES = {
 			reason: row.reason || '',
 			legalAuthority: row.legalAuthority || '',
 			caseReference: row.caseReference || '',
-			severity: row.severity || 'standard',
+			severity: row.severity || 'medium',
 			jurisdiction: row.jurisdiction || '',
 			validUntil: row.validUntil || '',
 			active: row.active !== false,

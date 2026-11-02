@@ -328,3 +328,79 @@ describe('policy rule form golden', () => {
 		})
 	}
 })
+
+const KEEP_REAL = [
+	'CnIndexPage',
+	'NcButton',
+	'CnDialogActions',
+	'PolicyRuleFormModal',
+]
+
+/**
+ * Mount the page for a surface and open its form, to create or to edit a row.
+ *
+ * @param {string} surface The policy surface.
+ * @param {object|null} row The rule to edit, or null to create one.
+ * @return {Promise<object>} The page and the form instance.
+ */
+async function openForm(surface, row) {
+	const page = await renderStubbed(PolicyRuleIndex, {
+		props: { surface },
+		keep: KEEP_REAL,
+	})
+	await flush()
+	if (row) {
+		page.vm.openEditDialog(row)
+	} else {
+		page.vm.openCreateDialog()
+	}
+	await flush()
+	return { page, form: findForm(page.vm.$.subTree) }
+}
+
+const REQUIRED = {
+	prohibition: ['primaryName', 'reason'],
+	standingConsent: ['entityText', 'consentMethod'],
+}
+
+describe('policy rule form checks', () => {
+	it('edits a publish-never rule without a severity at the schema default', async () => {
+		const { page, form } = await openForm('prohibition', {
+			id: 'p-8',
+			primaryName: 'Piet',
+			reason: 'Threat',
+			matchRules: [{ type: 'bsn', value: '1' }],
+		})
+		expect(form.form.severity).toBe('medium')
+		expect(form.severityOptions).toContain(form.form.severity)
+		mockCalls.length = 0
+		await clickSubmit()
+		expect(mockCalls).toEqual([
+			[
+				'prohibitionStore',
+				'updateProhibition',
+				'p-8',
+				expect.objectContaining({ severity: 'medium' }),
+			],
+		])
+		page.unmount()
+	})
+
+	for (const [surface, fields] of Object.entries(REQUIRED)) {
+		for (const field of fields) {
+			it(`keeps ${surface} from saving without ${field}`, async () => {
+				const { page, form } = await openForm(surface, null)
+				SURFACES[surface].fill(form.form)
+				await flush()
+				expect(dialogView().buttons[1].disabled).toBe(false)
+				form.form[field] =
+					surface === 'standingConsent' && field === 'consentMethod'
+						? ''
+						: '   '
+				await flush()
+				expect(dialogView().buttons[1].disabled).toBe(true)
+				page.unmount()
+			})
+		}
+	}
+})

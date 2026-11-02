@@ -169,7 +169,7 @@ export default {
 				dialog was written with the `caseInsensitive` default no matter
 				what the user chose, silently.
 
-				The sibling select in StandingConsentFormModal.vue already uses
+				The sibling select in PolicyRuleFormModal.vue already uses
 				`v-model` and works; this was the only `:value`-bound NcSelect
 				left in src/ (swept 2026-08-11).
 			-->
