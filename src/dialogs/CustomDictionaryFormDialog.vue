@@ -9,13 +9,12 @@
 <script>
 import { translate as t } from '@nextcloud/l10n'
 import {
-	NcButton,
 	NcCheckboxRadioSwitch,
 	NcDialog,
-	NcLoadingIcon,
 	NcSelect,
 	NcTextField,
 } from '@nextcloud/vue'
+import FormDialogActions from '../components/FormDialogActions.vue'
 
 /**
  *
@@ -33,10 +32,9 @@ function blankForm() {
 export default {
 	name: 'CustomDictionaryFormDialog',
 	components: {
-		NcButton,
+		FormDialogActions,
 		NcCheckboxRadioSwitch,
 		NcDialog,
-		NcLoadingIcon,
 		NcSelect,
 		NcTextField,
 	},
@@ -87,6 +85,20 @@ export default {
 
 		canSubmit() {
 			return this.form.label.trim() !== ''
+		},
+
+		/**
+		 * Saving, submittable and editing, for the create or save button.
+		 *
+		 * @return {object} The props of FormDialogActions.
+		 * @spec openspec/specs/custom-dictionary-recognition/spec.md#requirement-custom-dictionary-admin-ui-req-ddcdr-006
+		 */
+		formActions() {
+			return {
+				saving: this.saving,
+				canSubmit: this.canSubmit,
+				editing: this.editing,
+			}
 		},
 	},
 
@@ -185,18 +197,10 @@ export default {
 		</div>
 
 		<template #actions>
-			<NcButton variant="tertiary" @click="onCancel">
-				{{ t('filinq', 'Cancel') }}
-			</NcButton>
-			<NcButton
-				variant="primary"
-				:disabled="saving || !canSubmit"
-				@click="submit">
-				<template v-if="saving" #icon>
-					<NcLoadingIcon :size="20" />
-				</template>
-				{{ editing ? t('filinq', 'Save') : t('filinq', 'Create') }}
-			</NcButton>
+			<FormDialogActions
+				v-bind="formActions"
+				@cancel="onCancel"
+				@submit="submit" />
 		</template>
 	</NcDialog>
 </template>

@@ -33,6 +33,20 @@ export const matchRuleForm = {
 		},
 
 		/**
+		 * The state the dialog's buttons render from.
+		 *
+		 * @return {{saving: boolean, canSubmit: boolean, editing: boolean}} The button state.
+		 * @spec openspec/specs/entity-publication-policies/spec.md#requirement-three-separate-admin-surfaces-must-exist
+		 */
+		formActions() {
+			return {
+				saving: this.saving,
+				canSubmit: this.canSubmit,
+				editing: this.editing,
+			}
+		},
+
+		/**
 		 * Whether the form has at least one match rule and every rule has a
 		 * type and a value.
 		 *
