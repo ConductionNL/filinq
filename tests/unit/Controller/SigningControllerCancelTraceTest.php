@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\SigningController;
+use OCA\Filinq\Controller\Support\SigningServices;
 use OCA\Filinq\Kernel\Contracts\SigningAuditServiceInterface;
 use OCA\Filinq\Kernel\Contracts\SigningServiceInterface;
 use OCA\Filinq\Kernel\Contracts\SigningVerificationServiceInterface;
@@ -42,6 +43,7 @@ use RuntimeException;
  * Characterization of the cancel endpoint.
  *
  * @covers \OCA\Filinq\Controller\SigningController
+ * @covers \OCA\Filinq\Controller\Support\SigningServices
  */
 class SigningControllerCancelTraceTest extends TestCase {
 
@@ -193,11 +195,8 @@ class SigningControllerCancelTraceTest extends TestCase {
 		$l10n->method('t')->willReturnArgument(0);
 
 		return new SigningController(
-			appName: 'filinq',
+			services: new SigningServices(signing: $this->signing, audit: $this->createMock(SigningAuditServiceInterface::class), verification: $this->createMock(SigningVerificationServiceInterface::class)),
 			request: $request,
-			signingService: $this->signing,
-			auditService: $this->createMock(SigningAuditServiceInterface::class),
-			verificationService: $this->createMock(SigningVerificationServiceInterface::class),
 			userSession: $session,
 			logger: $this->logger,
 			l10n: $l10n,

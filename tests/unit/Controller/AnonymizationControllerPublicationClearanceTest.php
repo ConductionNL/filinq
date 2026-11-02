@@ -23,6 +23,7 @@
 namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\AnonymizationController;
+use OCA\Filinq\Controller\Support\AnonymizationServices;
 use OCA\Filinq\Service\AnonymizationService;
 use OCA\Filinq\Service\AnonymizeRequestService;
 use OCA\Filinq\Service\FileListingService;
@@ -140,11 +141,9 @@ class AnonymizationControllerPublicationClearanceTest extends TestCase {
 		$this->mockRootFolder->method('getUserFolder')->willReturn($mockFolder);
 
 		$this->controller = new AnonymizationController(
-			appName: 'filinq',
+			services: new AnonymizationServices(anonymization: $this->mockAnonService, files: $this->mockFileService),
 			request: $this->mockRequest,
 			logger: $this->mockLogger,
-			anonymizationService: $this->mockAnonService,
-			fileListingService: $this->mockFileService,
 			l10n: $this->mockL10n,
 			appConfig: $this->createMock(\OCP\IAppConfig::class),
 			anonymizeRequest: new AnonymizeRequestService(logger: $this->mockLogger, anonymizationService: $this->mockAnonService, l10n: $this->mockL10n, rootFolder: $this->mockRootFolder, userSession: $this->mockUserSession)

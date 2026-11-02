@@ -21,6 +21,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\PublicationController;
+use OCA\Filinq\Controller\Support\PublicationFlow;
 use OCA\Filinq\Service\Publication\OpenCatalogiPlatform;
 use OCA\Filinq\Service\Publication\PublicationAccess;
 use OCA\Filinq\Exception\PublicationNotReadyException;
@@ -87,10 +88,8 @@ class PublicationControllerTest extends TestCase {
 		$session->method('getUser')->willReturn($user);
 
 		return new PublicationController(
-			'filinq',
 			$this->createMock(IRequest::class),
-			$pipeline,
-			$store,
+			new PublicationFlow(pipeline: $pipeline, store: $store),
 			($platform ?? $this->createMock(OpenCatalogiPlatform::class)),
 			new PublicationAccess(rootFolder: $root, groups: $groups, appConfig: $config),
 			$session,

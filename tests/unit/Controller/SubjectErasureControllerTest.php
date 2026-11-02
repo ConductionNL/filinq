@@ -69,7 +69,7 @@ class SubjectErasureControllerTest extends TestCase {
 		$l10n->method('t')->willReturnArgument(0);
 		$services = $this->erasure();
 
-		return new SubjectErasureController('filinq', $request, $services['service'], $services['run'], $session, $l10n, new NullLogger());
+		return new SubjectErasureController($request, $services['service'], $services['run'], $session, $l10n, new NullLogger());
 
 	}//end controller()
 

@@ -19,11 +19,11 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
+use OCA\Filinq\Controller\Support\PublicationFlow;
+use OCA\Filinq\Kernel\AppIdentity;
 use OCA\Filinq\Kernel\Contracts\OpenCatalogiPlatformInterface;
 use OCA\Filinq\Kernel\Contracts\PublicationAccessInterface;
-use OCA\Filinq\Kernel\Contracts\PublicationStoreInterface;
 use OCA\Filinq\Exception\PublicationNotReadyException;
-use OCA\Filinq\Kernel\Contracts\PublicationPipelineServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -52,10 +52,8 @@ class PublicationController extends Controller {
 	/**
 	 * Constructor
 	 *
-	 * @param string                     $appName  The app name
 	 * @param IRequest                   $request  The request
-	 * @param PublicationPipelineServiceInterface $pipeline The pipeline
-	 * @param PublicationStoreInterface           $store    The records and log
+	 * @param PublicationFlow $flow The publication pipeline and its store.
 	 * @param OpenCatalogiPlatformInterface       $platform Whether OpenCatalogi is there, its categories
 	 * @param PublicationAccessInterface          $access   Who may act
 	 * @param IUserSession               $session  The caller
@@ -64,16 +62,14 @@ class PublicationController extends Controller {
 	 * @return void
 	 */
 	public function __construct(
-		string $appName,
 		IRequest $request,
-		private readonly PublicationPipelineServiceInterface $pipeline,
-		private readonly PublicationStoreInterface $store,
+		private readonly PublicationFlow $flow,
 		private readonly OpenCatalogiPlatformInterface $platform,
 		private readonly PublicationAccessInterface $access,
 		private readonly IUserSession $session,
 		private readonly LoggerInterface $logger,
 	) {
-		parent::__construct(appName: $appName, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 
 	}//end __construct()
 
@@ -88,9 +84,9 @@ class PublicationController extends Controller {
 	public function index(): JSONResponse {
 		$uid = $this->uid();
 		$results = [];
-		foreach ($this->store->listRecords() as $record) {
+		foreach ($this->flow->store->listRecords() as $record) {
 			if ($this->access->maySee(uid: $uid, fileId: (string) ($record['documentFileRef'] ?? '')) === true) {
-				$results[] = $this->pipeline->sync(record: $record);
+				$results[] = $this->flow->pipeline->sync(record: $record);
 			}
 		}
 
@@ -126,7 +122,7 @@ class PublicationController extends Controller {
 		}
 
 		return $this->run(
-			step: fn (): array => $this->pipeline->create(
+			step: fn (): array => $this->flow->pipeline->create(
 				documentFileRef: $fileId,
 				subjectType: (string) $this->request->getParam('subjectType', 'document'),
 				dossierRef: (string) $this->request->getParam('dossierRef', ''),
@@ -153,8 +149,8 @@ class PublicationController extends Controller {
 			return $this->forbidden();
 		}
 
-		$record = $this->pipeline->sync(record: $record);
-		$record['log'] = $this->store->logFor(recordUuid: $id);
+		$record = $this->flow->pipeline->sync(record: $record);
+		$record['log'] = $this->flow->store->logFor(recordUuid: $id);
 		$record['platformAvailable'] = $this->platform->available();
 
 		return new JSONResponse($record);
@@ -177,7 +173,7 @@ class PublicationController extends Controller {
 			return $this->forbidden();
 		}
 
-		return $this->run(step: fn (): array => $this->pipeline->evaluate(record: $record, actor: $this->uid()));
+		return $this->run(step: fn (): array => $this->flow->pipeline->evaluate(record: $record, actor: $this->uid()));
 
 	}//end readiness()
 
@@ -199,7 +195,7 @@ class PublicationController extends Controller {
 
 		$metadata = $this->request->getParams();
 
-		return $this->run(step: fn (): array => $this->pipeline->updateMetadata(record: $record, metadata: $metadata, actor: $this->uid()));
+		return $this->run(step: fn (): array => $this->flow->pipeline->updateMetadata(record: $record, metadata: $metadata, actor: $this->uid()));
 
 	}//end metadata()
 
@@ -219,7 +215,7 @@ class PublicationController extends Controller {
 			return $this->forbidden();
 		}
 
-		return $this->run(step: fn (): array => $this->pipeline->handoff(record: $record, actor: $this->uid()));
+		return $this->run(step: fn (): array => $this->flow->pipeline->handoff(record: $record, actor: $this->uid()));
 
 	}//end handoff()
 
@@ -241,7 +237,7 @@ class PublicationController extends Controller {
 
 		$reason = (string) $this->request->getParam('reason', '');
 
-		return $this->run(step: fn (): array => $this->pipeline->withdraw(record: $record, reason: $reason, actor: $this->uid()));
+		return $this->run(step: fn (): array => $this->flow->pipeline->withdraw(record: $record, reason: $reason, actor: $this->uid()));
 
 	}//end withdraw()
 
@@ -262,7 +258,7 @@ class PublicationController extends Controller {
 		}
 
 		return $this->run(
-			step: fn (): array => $this->pipeline->setDestructionDate(
+			step: fn (): array => $this->flow->pipeline->setDestructionDate(
 				record: $record,
 				date: (string) $this->request->getParam('date', ''),
 				source: (string) $this->request->getParam('source', ''),
@@ -280,7 +276,7 @@ class PublicationController extends Controller {
 	 * @return array<string, mixed>|null The record, or null for "not found or not yours".
 	 */
 	private function authorised(string $id): ?array {
-		$record = $this->store->findRecord(uuid: $id);
+		$record = $this->flow->store->findRecord(uuid: $id);
 		if ($record === null || $this->access->mayAct(uid: $this->uid(), fileId: (string) ($record['documentFileRef'] ?? '')) === false) {
 			return null;
 		}
@@ -297,7 +293,7 @@ class PublicationController extends Controller {
 	 * @return array<string, mixed>|null The record, or null for "not found or not yours".
 	 */
 	private function readable(string $id): ?array {
-		$record = $this->store->findRecord(uuid: $id);
+		$record = $this->flow->store->findRecord(uuid: $id);
 		if ($record === null || $this->access->maySee(uid: $this->uid(), fileId: (string) ($record['documentFileRef'] ?? '')) === false) {
 			return null;
 		}

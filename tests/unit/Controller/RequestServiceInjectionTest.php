@@ -22,6 +22,7 @@ namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\AnonymizationController;
 use OCA\Filinq\Controller\BatchAnonymizationController;
+use OCA\Filinq\Controller\Support\AnonymizationServices;
 use OCA\Filinq\Kernel\Contracts\AnonymizationProfileServiceInterface;
 use OCA\Filinq\Kernel\Contracts\AnonymizationServiceInterface;
 use OCA\Filinq\Kernel\Contracts\AnonymizeRequestServiceInterface;
@@ -55,11 +56,9 @@ class RequestServiceInjectionTest extends TestCase {
 		);
 
 		$controller = new AnonymizationController(
-			appName: 'filinq',
+			services: new AnonymizationServices(anonymization: $this->createMock(originalClassName: AnonymizationServiceInterface::class), files: $this->createMock(originalClassName: FileListingServiceInterface::class)),
 			request: $this->createMock(originalClassName: IRequest::class),
 			logger: new NullLogger(),
-			anonymizationService: $this->createMock(originalClassName: AnonymizationServiceInterface::class),
-			fileListingService: $this->createMock(originalClassName: FileListingServiceInterface::class),
 			l10n: $this->createMock(originalClassName: IL10N::class),
 			appConfig: $this->createMock(originalClassName: IAppConfig::class),
 			anonymizeRequest: $requests

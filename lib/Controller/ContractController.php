@@ -28,8 +28,8 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use InvalidArgumentException;
-use OCA\Filinq\Kernel\Contracts\ContractPartiesInterface;
-use OCA\Filinq\Kernel\Contracts\ContractTermSuggestionServiceInterface;
+use OCA\Filinq\Controller\Support\ContractTerms;
+use OCA\Filinq\Kernel\AppIdentity;
 use OCA\Filinq\Exception\ContractNotFoundException;
 use OCA\Filinq\Kernel\Contracts\ContractServiceInterface;
 use OCA\Filinq\Kernel\Contracts\ContractSigningLinkInterface;
@@ -58,28 +58,24 @@ class ContractController extends Controller {
 	/**
 	 * Constructor.
 	 *
-	 * @param string                        $appName     The app id.
 	 * @param IRequest                      $request     The request.
 	 * @param ContractServiceInterface               $contracts   The contract actions.
-	 * @param ContractTermSuggestionServiceInterface $suggestions The key-term suggestions.
+	 * @param ContractTerms $terms Term suggestions and the parties.
 	 * @param IUserSession                  $userSession The session.
 	 * @param LoggerInterface               $logger      The logger.
 	 * @param ContractSigningLinkInterface           $signingLink The signing request link.
-	 * @param ContractPartiesInterface               $parties     The parties, from their contacts.
 	 *
 	 * @return void
 	 */
 	public function __construct(
-		string $appName,
 		IRequest $request,
 		private readonly ContractServiceInterface $contracts,
-		private readonly ContractTermSuggestionServiceInterface $suggestions,
+		private readonly ContractTerms $terms,
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
 		private readonly ContractSigningLinkInterface $signingLink,
-		private readonly ContractPartiesInterface $parties,
 	) {
-		parent::__construct(appName: $appName, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 
 	}//end __construct()
 
@@ -135,7 +131,7 @@ class ContractController extends Controller {
 
 		return $this->run(
 			id: $id,
-			action: fn (): array => $this->suggestions->suggest(contract: $this->contracts->requireReadable(uuid: $id), userId: $userId)
+			action: fn (): array => $this->terms->suggestions->suggest(contract: $this->contracts->requireReadable(uuid: $id), userId: $userId)
 		);
 
 	}//end suggest()
@@ -193,7 +189,7 @@ class ContractController extends Controller {
 	public function parties(string $id): JSONResponse {
 		return $this->run(
 			id: $id,
-			action: fn (): array => $this->parties->resolve(contract: $this->contracts->requireReadable(uuid: $id))
+			action: fn (): array => $this->terms->parties->resolve(contract: $this->contracts->requireReadable(uuid: $id))
 		);
 
 	}//end parties()

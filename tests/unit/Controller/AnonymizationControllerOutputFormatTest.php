@@ -23,6 +23,7 @@ namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\AnonymizationController;
 use OCA\Filinq\Controller\BatchAnonymizationController;
+use OCA\Filinq\Controller\Support\AnonymizationServices;
 use OCA\Filinq\Exception\ConversionFailedException;
 use OCA\Filinq\Service\AnonymizationService;
 use OCA\Filinq\Service\AnonymizeRequestService;
@@ -583,11 +584,9 @@ class AnonymizationControllerOutputFormatTest extends TestCase {
 		// phpcs:disable CustomSn.Functions.NamedParameters
 		$logger = $this->createMock(LoggerInterface::class);
 		return new AnonymizationController(
-			'filinq',
 			$this->mockRequest,
 			$logger,
-			$this->mockAnonService,
-			$this->createMock(FileListingService::class),
+			new AnonymizationServices(anonymization: $this->mockAnonService, files: $this->createMock(FileListingService::class)),
 			$this->mockL10n,
 			$this->mockAppConfig,
 			new AnonymizeRequestService(logger: $logger, anonymizationService: $this->mockAnonService, l10n: $this->mockL10n, rootFolder: $this->mockRootFolder, userSession: $this->mockUserSession)
