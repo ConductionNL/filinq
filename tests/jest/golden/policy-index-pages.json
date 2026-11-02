@@ -272,7 +272,7 @@
 				"isRefreshing": false,
 				"currentPage": 1,
 				"pageSize": 50,
-				"dialogOpen": true,
+				"dialogOpen": false,
 				"saving": false,
 				"editing": "row-1",
 				"editingRecord": {
@@ -343,21 +343,7 @@
 					"matchRules": []
 				},
 				"formError": "",
-				"deleteTarget": {
-					"id": "row-1",
-					"primaryName": "Jan Jansen",
-					"entityText": "Jan Jansen",
-					"entityType": "PERSON",
-					"severity": "high",
-					"consentMethod": "paper",
-					"active": false,
-					"matchRules": [
-						{
-							"type": "bsn",
-							"value": "123456782"
-						}
-					]
-				},
+				"deleteTarget": null,
 				"entityTypeColorMap": {
 					"PERSON": "warning",
 					"ORGANIZATION": "primary",
@@ -377,7 +363,7 @@
 				"isRefreshing": false,
 				"currentPage": 1,
 				"pageSize": 50,
-				"dialogOpen": true,
+				"dialogOpen": false,
 				"saving": false,
 				"editing": "row-2",
 				"editingRecord": {
@@ -695,7 +681,7 @@
 				"isRefreshing": false,
 				"currentPage": 1,
 				"pageSize": 50,
-				"dialogOpen": true,
+				"dialogOpen": false,
 				"saving": false,
 				"editing": "row-1",
 				"editingRecord": {
@@ -773,21 +759,7 @@
 					"notificationStatus": "skipped"
 				},
 				"formError": "",
-				"deleteTarget": {
-					"id": "row-1",
-					"primaryName": "Jan Jansen",
-					"entityText": "Jan Jansen",
-					"entityType": "PERSON",
-					"severity": "high",
-					"consentMethod": "paper",
-					"active": false,
-					"matchRules": [
-						{
-							"type": "bsn",
-							"value": "123456782"
-						}
-					]
-				},
+				"deleteTarget": null,
 				"entityTypeColorMap": {
 					"PERSON": "warning",
 					"ORGANIZATION": "primary",
@@ -808,7 +780,7 @@
 				"isRefreshing": false,
 				"currentPage": 1,
 				"pageSize": 50,
-				"dialogOpen": true,
+				"dialogOpen": false,
 				"saving": false,
 				"editing": "row-2",
 				"editingRecord": {

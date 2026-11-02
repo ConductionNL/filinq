@@ -272,8 +272,9 @@ describe('policy index pages golden', () => {
 			for (const stub of page.stubs
 				.concat(global.mockStubs)
 				.filter((s) => s.name === 'NcActionButton')) {
-				page.vm.deleteTarget = null
-				page.vm.dialogOpen = false
+				// Through $data: a `<script setup>` page exposes no instance state.
+				page.vm.$data.deleteTarget = null
+				page.vm.$data.dialogOpen = false
 				stub.attrs.onClick()
 				actual.actions.push(dataOf(page.vm))
 			}
