@@ -338,11 +338,13 @@ const SITES = {
 		open: { bulkDeleteNames: ['a.pdf', 'b.pdf'] },
 	},
 	prohibitionDelete: {
-		page: '../views/policy/ProhibitionIndex.vue',
+		page: '../views/policy/PolicyRuleIndex.vue',
+		props: { surface: 'prohibition' },
 		open: { deleteTarget: ROW },
 	},
 	standingConsentDelete: {
-		page: '../views/policy/StandingConsentIndex.vue',
+		page: '../views/policy/PolicyRuleIndex.vue',
+		props: { surface: 'standingConsent' },
 		open: { deleteTarget: ROW },
 	},
 	templateDelete: {
@@ -460,6 +462,7 @@ async function clickConfirm(root) {
 async function openSite(site) {
 	const component = require(site.page).default
 	const page = await render(component, {
+		props: site.props,
 		globals: {
 			$route: { params: { id: 'row-1' }, query: {}, name: 'test' },
 			$router: { push: (to) => mockCalls.push(['router', 'push', to]) },

@@ -11,7 +11,7 @@
  *  - `createRecord(formData)`, `updateRecord(id, formData)` and
  *    `toEditingRecord(row)` for `recordFormDialog`;
  *  - `deleteRecord(id)` for `recordDeletion`, with the console prefix for a
- *    failed delete in the component option `deleteFailedLog`.
+ *    failed delete in the component option or property `deleteFailedLog`.
  */
 
 import { translate as t } from '@nextcloud/l10n'
@@ -211,7 +211,10 @@ export const recordDeletion = {
 				await this.deleteRecord(recordId(row))
 				this.deleteTarget = null
 			} catch (err) {
-				console.error(this.$options.deleteFailedLog, err)
+				console.error(
+					this.$options.deleteFailedLog ?? this.deleteFailedLog,
+					err,
+				)
 				dialog?.setResult(null)
 			}
 		},

@@ -84,8 +84,7 @@ import ComponentGallery from './views/gallery/ComponentGallery.vue'
 import IntakeIndex from './views/intake/IntakeIndex.vue'
 import LegalHolds from './views/legalHolds/LegalHolds.vue'
 import MyDocumentsIndex from './views/myDocuments/MyDocumentsIndex.vue'
-import ProhibitionIndex from './views/policy/ProhibitionIndex.vue'
-import StandingConsentIndex from './views/policy/StandingConsentIndex.vue'
+import PolicyRuleIndex from './views/policy/PolicyRuleIndex.vue'
 import PrintJobs from './views/printJobs/PrintJobs.vue'
 import PublicationsPage from './views/publications/PublicationsPage.vue'
 import SignatureVerification from './views/signing/SignatureVerification.vue'
@@ -130,9 +129,9 @@ export default {
 	VersionsView: { kind: 'page', component: VersionsView },
 	ComponentGallery: { kind: 'page', component: ComponentGallery },
 	CorrespondenceIndex: { kind: 'page', component: CorrespondenceIndex },
-	ProhibitionIndex: { kind: 'page', component: ProhibitionIndex },
+	ProhibitionIndex: { kind: 'page', component: PolicyRuleIndex },
 	ProhibitionFormModal: { kind: 'modal', component: ProhibitionFormModal },
-	StandingConsentIndex: { kind: 'page', component: StandingConsentIndex },
+	StandingConsentIndex: { kind: 'page', component: PolicyRuleIndex },
 	StandingConsentFormModal: { kind: 'modal', component: StandingConsentFormModal },
 	CustomDictionaryIndex: { kind: 'page', component: CustomDictionaryIndex },
 	DossierIndex: { kind: 'page', component: DossierIndex },

@@ -11,8 +11,7 @@
 
 import fs from 'fs'
 import path from 'path'
-import ProhibitionIndex from './ProhibitionIndex.vue'
-import StandingConsentIndex from './StandingConsentIndex.vue'
+import PolicyRuleIndex from './PolicyRuleIndex.vue'
 import { renderStubbed } from '../../../tests/jest/renderGolden.js'
 
 const ROW = {
@@ -193,8 +192,8 @@ const RECORD = process.env.RECORD_GOLDEN === '1'
 const golden = RECORD ? {} : JSON.parse(fs.readFileSync(GOLDEN, 'utf8'))
 
 const PAGES = {
-	prohibition: ProhibitionIndex,
-	standingConsent: StandingConsentIndex,
+	prohibition: { surface: 'prohibition' },
+	standingConsent: { surface: 'standingConsent' },
 }
 
 const EVENTS = [
@@ -234,12 +233,13 @@ afterAll(() => {
 })
 
 describe('policy index pages golden', () => {
-	for (const [name, component] of Object.entries(PAGES)) {
+	for (const [name, props] of Object.entries(PAGES)) {
 		it(name, async () => {
 			global.SAMPLE_ROWS = [ROW, BARE_ROW]
 			mockStoreCalls.length = 0
 			global.mockStubs.length = 0
-			const page = await renderStubbed(component, {
+			const page = await renderStubbed(PolicyRuleIndex, {
+				props,
 				real: ['CnIndexPage'],
 			})
 			const actual = {
