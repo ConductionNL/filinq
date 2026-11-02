@@ -1,0 +1,1130 @@
+{
+	"newLegalHold": {
+		"empty": {
+			"title": "New legal hold",
+			"noClose": false,
+			"text": "",
+			"fields": [
+				{
+					"type": "x-nctextfield",
+					"label": "Name",
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Matter type",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextarea",
+					"label": "Why are the records frozen?",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Case reference (optional)",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Custodian user id (optional)",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextarea",
+					"label": "Document record ids, one per line",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextarea",
+					"label": "Dossier ids, one per line",
+					"disabled": false
+				}
+			],
+			"buttons": [
+				{
+					"label": "Cancel",
+					"variant": null,
+					"disabled": false,
+					"busyIcon": false
+				},
+				{
+					"label": "Place hold",
+					"variant": "primary",
+					"disabled": true,
+					"busyIcon": false
+				}
+			]
+		},
+		"filled": {
+			"title": "New legal hold",
+			"noClose": false,
+			"text": "",
+			"fields": [
+				{
+					"type": "x-nctextfield",
+					"label": "Name",
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Matter type",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextarea",
+					"label": "Why are the records frozen?",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Case reference (optional)",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Custodian user id (optional)",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextarea",
+					"label": "Document record ids, one per line",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextarea",
+					"label": "Dossier ids, one per line",
+					"disabled": false
+				}
+			],
+			"buttons": [
+				{
+					"label": "Cancel",
+					"variant": null,
+					"disabled": false,
+					"busyIcon": false
+				},
+				{
+					"label": "Place hold",
+					"variant": "primary",
+					"disabled": false,
+					"busyIcon": false
+				}
+			]
+		},
+		"callsBeforeClick": [],
+		"busy": {
+			"view": {
+				"title": "New legal hold",
+				"noClose": true,
+				"text": "",
+				"fields": [
+					{
+						"type": "x-nctextfield",
+						"label": "Name",
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Matter type",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextarea",
+						"label": "Why are the records frozen?",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Case reference (optional)",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Custodian user id (optional)",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextarea",
+						"label": "Document record ids, one per line",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextarea",
+						"label": "Dossier ids, one per line",
+						"disabled": false
+					}
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": true,
+						"busyIcon": false
+					},
+					{
+						"label": "Place hold",
+						"variant": "primary",
+						"disabled": true,
+						"busyIcon": true
+					}
+				]
+			},
+			"calls": [
+				[
+					"legalHolds",
+					"createCase",
+					{
+						"name": "Onderzoek",
+						"holdType": "litigation",
+						"reason": "Rechtszaak",
+						"caseReference": "Z-1",
+						"custodian": "",
+						"scopeDocuments": ["doc-1", "doc-2"],
+						"scopeDossiers": []
+					}
+				]
+			],
+			"emitted": []
+		},
+		"done": {
+			"view": {
+				"title": "New legal hold",
+				"noClose": false,
+				"text": "",
+				"fields": [
+					{
+						"type": "x-nctextfield",
+						"label": "Name",
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Matter type",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextarea",
+						"label": "Why are the records frozen?",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Case reference (optional)",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Custodian user id (optional)",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextarea",
+						"label": "Document record ids, one per line",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextarea",
+						"label": "Dossier ids, one per line",
+						"disabled": false
+					}
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Place hold",
+						"variant": "primary",
+						"disabled": false,
+						"busyIcon": false
+					}
+				]
+			},
+			"emitted": [
+				[
+					"created",
+					{
+						"id": "h-1"
+					}
+				]
+			]
+		},
+		"refused": {
+			"view": {
+				"title": "New legal hold",
+				"noClose": false,
+				"text": "No rights",
+				"fields": [
+					{
+						"type": "x-nctextfield",
+						"label": "Name",
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Matter type",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextarea",
+						"label": "Why are the records frozen?",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Case reference (optional)",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Custodian user id (optional)",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextarea",
+						"label": "Document record ids, one per line",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextarea",
+						"label": "Dossier ids, one per line",
+						"disabled": false
+					}
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Place hold",
+						"variant": "primary",
+						"disabled": false,
+						"busyIcon": false
+					}
+				]
+			},
+			"emitted": []
+		},
+		"cancel": {
+			"emitted": [["close"]]
+		}
+	},
+	"releaseLegalHold": {
+		"empty": {
+			"title": "Release legal hold",
+			"noClose": false,
+			"text": "Releasing \"{name}\" lets its records be destroyed or deleted again when their term allows. Records another active hold covers stay frozen. Released is final. {\"name\":\"Onderzoek\"}",
+			"fields": [
+				{
+					"type": "x-nctextarea",
+					"label": "Why is the hold released?",
+					"disabled": false
+				}
+			],
+			"buttons": [
+				{
+					"label": "Cancel",
+					"variant": null,
+					"disabled": false,
+					"busyIcon": false
+				},
+				{
+					"label": "Release",
+					"variant": "warning",
+					"disabled": true,
+					"busyIcon": false
+				}
+			]
+		},
+		"filled": {
+			"title": "Release legal hold",
+			"noClose": false,
+			"text": "Releasing \"{name}\" lets its records be destroyed or deleted again when their term allows. Records another active hold covers stay frozen. Released is final. {\"name\":\"Onderzoek\"}",
+			"fields": [
+				{
+					"type": "x-nctextarea",
+					"label": "Why is the hold released?",
+					"disabled": false
+				}
+			],
+			"buttons": [
+				{
+					"label": "Cancel",
+					"variant": null,
+					"disabled": false,
+					"busyIcon": false
+				},
+				{
+					"label": "Release",
+					"variant": "warning",
+					"disabled": false,
+					"busyIcon": false
+				}
+			]
+		},
+		"callsBeforeClick": [],
+		"busy": {
+			"view": {
+				"title": "Release legal hold",
+				"noClose": true,
+				"text": "Releasing \"{name}\" lets its records be destroyed or deleted again when their term allows. Records another active hold covers stay frozen. Released is final. {\"name\":\"Onderzoek\"}",
+				"fields": [
+					{
+						"type": "x-nctextarea",
+						"label": "Why is the hold released?",
+						"disabled": false
+					}
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": true,
+						"busyIcon": false
+					},
+					{
+						"label": "Release",
+						"variant": "warning",
+						"disabled": true,
+						"busyIcon": true
+					}
+				]
+			},
+			"calls": [["legalHolds", "releaseCase", "h-1", "Zaak gesloten"]],
+			"emitted": []
+		},
+		"done": {
+			"view": {
+				"title": "Release legal hold",
+				"noClose": false,
+				"text": "Releasing \"{name}\" lets its records be destroyed or deleted again when their term allows. Records another active hold covers stay frozen. Released is final. {\"name\":\"Onderzoek\"}",
+				"fields": [
+					{
+						"type": "x-nctextarea",
+						"label": "Why is the hold released?",
+						"disabled": false
+					}
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Release",
+						"variant": "warning",
+						"disabled": false,
+						"busyIcon": false
+					}
+				]
+			},
+			"emitted": [
+				[
+					"released",
+					{
+						"id": "h-1"
+					}
+				]
+			]
+		},
+		"refused": {
+			"view": {
+				"title": "Release legal hold",
+				"noClose": false,
+				"text": "Releasing \"{name}\" lets its records be destroyed or deleted again when their term allows. Records another active hold covers stay frozen. Released is final. {\"name\":\"Onderzoek\"}No rights",
+				"fields": [
+					{
+						"type": "x-nctextarea",
+						"label": "Why is the hold released?",
+						"disabled": false
+					}
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Release",
+						"variant": "warning",
+						"disabled": false,
+						"busyIcon": false
+					}
+				]
+			},
+			"emitted": []
+		},
+		"cancel": {
+			"emitted": [["close"]]
+		}
+	},
+	"newSubjectErasure": {
+		"empty": {
+			"title": "New erasure request",
+			"noClose": false,
+			"text": "",
+			"fields": [
+				{
+					"type": "x-nctextfield",
+					"label": "Person to remove",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextarea",
+					"label": "Other ways the documents name this person, one per line (email address, phone number, other spellings)",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Legal ground",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Answer due (optional, default one month)",
+					"disabled": false
+				}
+			],
+			"buttons": [
+				{
+					"label": "Cancel",
+					"variant": null,
+					"disabled": false,
+					"busyIcon": false
+				},
+				{
+					"label": "Record request",
+					"variant": "primary",
+					"disabled": true,
+					"busyIcon": false
+				}
+			]
+		},
+		"filled": {
+			"title": "New erasure request",
+			"noClose": false,
+			"text": "",
+			"fields": [
+				{
+					"type": "x-nctextfield",
+					"label": "Person to remove",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextarea",
+					"label": "Other ways the documents name this person, one per line (email address, phone number, other spellings)",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Legal ground",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Answer due (optional, default one month)",
+					"disabled": false
+				}
+			],
+			"buttons": [
+				{
+					"label": "Cancel",
+					"variant": null,
+					"disabled": false,
+					"busyIcon": false
+				},
+				{
+					"label": "Record request",
+					"variant": "primary",
+					"disabled": false,
+					"busyIcon": false
+				}
+			]
+		},
+		"callsBeforeClick": [],
+		"busy": {
+			"view": {
+				"title": "New erasure request",
+				"noClose": true,
+				"text": "",
+				"fields": [
+					{
+						"type": "x-nctextfield",
+						"label": "Person to remove",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextarea",
+						"label": "Other ways the documents name this person, one per line (email address, phone number, other spellings)",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Legal ground",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Answer due (optional, default one month)",
+						"disabled": false
+					}
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": true,
+						"busyIcon": false
+					},
+					{
+						"label": "Record request",
+						"variant": "primary",
+						"disabled": true,
+						"busyIcon": true
+					}
+				]
+			},
+			"calls": [
+				[
+					"subjectErasures",
+					"createRequest",
+					{
+						"subject": "Jan Jansen",
+						"identifiers": ["Jansen", "J. Jansen"],
+						"ground": "AVG 17",
+						"dueAt": ""
+					}
+				]
+			],
+			"emitted": []
+		},
+		"done": {
+			"view": {
+				"title": "New erasure request",
+				"noClose": false,
+				"text": "",
+				"fields": [
+					{
+						"type": "x-nctextfield",
+						"label": "Person to remove",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextarea",
+						"label": "Other ways the documents name this person, one per line (email address, phone number, other spellings)",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Legal ground",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Answer due (optional, default one month)",
+						"disabled": false
+					}
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Record request",
+						"variant": "primary",
+						"disabled": false,
+						"busyIcon": false
+					}
+				]
+			},
+			"emitted": [
+				[
+					"created",
+					{
+						"id": "e-1"
+					}
+				]
+			]
+		},
+		"refused": {
+			"view": {
+				"title": "New erasure request",
+				"noClose": false,
+				"text": "No rights",
+				"fields": [
+					{
+						"type": "x-nctextfield",
+						"label": "Person to remove",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextarea",
+						"label": "Other ways the documents name this person, one per line (email address, phone number, other spellings)",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Legal ground",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Answer due (optional, default one month)",
+						"disabled": false
+					}
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Record request",
+						"variant": "primary",
+						"disabled": false,
+						"busyIcon": false
+					}
+				]
+			},
+			"emitted": []
+		},
+		"cancel": {
+			"emitted": [["close"]]
+		}
+	},
+	"runSubjectErasure": {
+		"empty": {
+			"title": "Erase this person from the documents?",
+			"noClose": false,
+			"text": "The person is replaced by [VERWIJDERD] in {count} documents, and earlier versions that still name them are deleted. This cannot be undone. The documents themselves stay. {\"count\":4}{count} documents are refused because of a legal hold, and stay as they are. {\"count\":1}",
+			"fields": [],
+			"buttons": [
+				{
+					"label": "Cancel",
+					"variant": null,
+					"disabled": false,
+					"busyIcon": false
+				},
+				{
+					"label": "Erase",
+					"variant": "error",
+					"disabled": false,
+					"busyIcon": false
+				}
+			]
+		},
+		"filled": {
+			"title": "Erase this person from the documents?",
+			"noClose": false,
+			"text": "The person is replaced by [VERWIJDERD] in {count} documents, and earlier versions that still name them are deleted. This cannot be undone. The documents themselves stay. {\"count\":4}{count} documents are refused because of a legal hold, and stay as they are. {\"count\":1}",
+			"fields": [],
+			"buttons": [
+				{
+					"label": "Cancel",
+					"variant": null,
+					"disabled": false,
+					"busyIcon": false
+				},
+				{
+					"label": "Erase",
+					"variant": "error",
+					"disabled": false,
+					"busyIcon": false
+				}
+			]
+		},
+		"callsBeforeClick": [],
+		"busy": {
+			"view": {
+				"title": "Erase this person from the documents?",
+				"noClose": true,
+				"text": "The person is replaced by [VERWIJDERD] in {count} documents, and earlier versions that still name them are deleted. This cannot be undone. The documents themselves stay. {\"count\":4}{count} documents are refused because of a legal hold, and stay as they are. {\"count\":1}",
+				"fields": [],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": true,
+						"busyIcon": false
+					},
+					{
+						"label": "Erase",
+						"variant": "error",
+						"disabled": true,
+						"busyIcon": true
+					}
+				]
+			},
+			"calls": [["subjectErasures", "runRequest", "e-1"]],
+			"emitted": []
+		},
+		"done": {
+			"view": {
+				"title": "Erase this person from the documents?",
+				"noClose": false,
+				"text": "The person is replaced by [VERWIJDERD] in {count} documents, and earlier versions that still name them are deleted. This cannot be undone. The documents themselves stay. {\"count\":4}{count} documents are refused because of a legal hold, and stay as they are. {\"count\":1}",
+				"fields": [],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Erase",
+						"variant": "error",
+						"disabled": false,
+						"busyIcon": false
+					}
+				]
+			},
+			"emitted": [
+				[
+					"ran",
+					{
+						"erased": 4
+					}
+				]
+			]
+		},
+		"refused": {
+			"view": {
+				"title": "Erase this person from the documents?",
+				"noClose": false,
+				"text": "The person is replaced by [VERWIJDERD] in {count} documents, and earlier versions that still name them are deleted. This cannot be undone. The documents themselves stay. {\"count\":4}{count} documents are refused because of a legal hold, and stay as they are. {\"count\":1}No rights",
+				"fields": [],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Erase",
+						"variant": "error",
+						"disabled": false,
+						"busyIcon": false
+					}
+				]
+			},
+			"emitted": []
+		},
+		"cancel": {
+			"emitted": [["close"]]
+		}
+	},
+	"sendContractForSignature": {
+		"empty": {
+			"title": "Send for signature",
+			"noClose": false,
+			"text": "This creates an ordinary signing request for one of the contract documents. The contract keeps a link to it and shows its status.SignersRemoveAdd signer",
+			"fields": [
+				{
+					"type": "x-ncselect",
+					"label": "Document",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Document name",
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Signature level",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Name",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "E-mail",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Nextcloud user",
+					"disabled": false
+				}
+			],
+			"buttons": [
+				{
+					"label": "Cancel",
+					"variant": null,
+					"disabled": false,
+					"busyIcon": false
+				},
+				{
+					"label": "Send for signature",
+					"variant": "primary",
+					"disabled": true,
+					"busyIcon": false
+				}
+			]
+		},
+		"filled": {
+			"title": "Send for signature",
+			"noClose": false,
+			"text": "This creates an ordinary signing request for one of the contract documents. The contract keeps a link to it and shows its status.SignersRemoveAdd signer",
+			"fields": [
+				{
+					"type": "x-ncselect",
+					"label": "Document",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Document name",
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Signature level",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Name",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "E-mail",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Nextcloud user",
+					"disabled": false
+				}
+			],
+			"buttons": [
+				{
+					"label": "Cancel",
+					"variant": null,
+					"disabled": false,
+					"busyIcon": false
+				},
+				{
+					"label": "Send for signature",
+					"variant": "primary",
+					"disabled": false,
+					"busyIcon": false
+				}
+			]
+		},
+		"callsBeforeClick": [],
+		"busy": {
+			"view": {
+				"title": "Send for signature",
+				"noClose": true,
+				"text": "This creates an ordinary signing request for one of the contract documents. The contract keeps a link to it and shows its status.SignersRemoveAdd signer",
+				"fields": [
+					{
+						"type": "x-ncselect",
+						"label": "Document",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Document name",
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Signature level",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Name",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "E-mail",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Nextcloud user",
+						"disabled": false
+					}
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": true,
+						"busyIcon": false
+					},
+					{
+						"label": "Send for signature",
+						"variant": "primary",
+						"disabled": true,
+						"busyIcon": true
+					}
+				]
+			},
+			"calls": [
+				[
+					"signing",
+					"createSigningRequest",
+					{
+						"documentFileId": "12",
+						"documentName": "Huurcontract",
+						"signatureLevel": "SES",
+						"signingMode": "sequential",
+						"signers": [
+							{
+								"order": 0,
+								"displayName": "Jan",
+								"email": "jan@example.org"
+							}
+						]
+					}
+				]
+			],
+			"emitted": []
+		},
+		"done": {
+			"view": {
+				"title": "Send for signature",
+				"noClose": false,
+				"text": "This creates an ordinary signing request for one of the contract documents. The contract keeps a link to it and shows its status.SignersRemoveAdd signer",
+				"fields": [
+					{
+						"type": "x-ncselect",
+						"label": "Document",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Document name",
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Signature level",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Name",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "E-mail",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Nextcloud user",
+						"disabled": false
+					}
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Send for signature",
+						"variant": "primary",
+						"disabled": false,
+						"busyIcon": false
+					}
+				]
+			},
+			"emitted": [
+				[
+					"sent",
+					{
+						"id": "c-1"
+					}
+				]
+			]
+		},
+		"refused": {
+			"view": {
+				"title": "Send for signature",
+				"noClose": false,
+				"text": "This creates an ordinary signing request for one of the contract documents. The contract keeps a link to it and shows its status.SignersRemoveAdd signerNo rights",
+				"fields": [
+					{
+						"type": "x-ncselect",
+						"label": "Document",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Document name",
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Signature level",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Name",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "E-mail",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Nextcloud user",
+						"disabled": false
+					}
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Send for signature",
+						"variant": "primary",
+						"disabled": false,
+						"busyIcon": false
+					}
+				]
+			},
+			"emitted": []
+		},
+		"cancel": {
+			"emitted": [["close"]]
+		}
+	}
+}
