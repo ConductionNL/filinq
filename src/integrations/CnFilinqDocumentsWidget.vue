@@ -39,6 +39,7 @@
 import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 import { documentLinkRows } from './documentLinkRows.js'
+import { hostObjectLeaf } from './hostObjectLeaf.js'
 import { leafReportMixin } from './leafReport.js'
 
 /**
@@ -52,15 +53,8 @@ import { leafReportMixin } from './leafReport.js'
 export default {
 	name: 'CnFilinqDocumentsWidget',
 
+	extends: hostObjectLeaf,
 	mixins: [leafReportMixin],
-	props: {
-		/** The host object's register slug. */
-		register: { type: String, default: '' },
-		/** The host object's schema slug. */
-		schema: { type: String, default: '' },
-		/** The host object's id. */
-		objectId: { type: String, default: '' },
-	},
 
 	data() {
 		return {
@@ -120,23 +114,9 @@ export default {
 				return
 			}
 
-			const query = new URLSearchParams({
-				register: this.register,
-				schema: this.schema,
-				id: this.objectId,
-			})
-
 			try {
-				const response = await fetch(
-					generateUrl('/apps/filinq/api/case-documents/files')
-						+ '?'
-						+ query.toString(),
-					{
-						headers: {
-							requesttoken: this.requestToken(),
-							Accept: 'application/json',
-						},
-					},
+				const response = await this.fetchForHostObject(
+					'/apps/filinq/api/case-documents/files',
 				)
 				if (response.ok === false) {
 					this.error = true
@@ -149,22 +129,6 @@ export default {
 			} finally {
 				this.loading = false
 			}
-		},
-
-		/**
-		 * The current page's request token.
-		 *
-		 * Read from the DOM rather than from `@nextcloud/auth`, because this
-		 * component renders inside ANOTHER app's page and must not assume the
-		 * host bundled the same helper.
-		 *
-		 * @return {string} The token, or an empty string when there is none.
-		 *
-		 * @spec openspec/changes/leaf-integrations/specs/document-register/spec.md
-		 */
-		requestToken() {
-			const head = document.getElementsByTagName('head')[0]
-			return (head && head.getAttribute('data-requesttoken')) || ''
 		},
 	},
 }

@@ -130,6 +130,7 @@ import {
 	moveInSelection,
 	toggleInSelection,
 } from '../services/mergeSelection.js'
+import { hostObjectLeaf } from './hostObjectLeaf.js'
 
 let instanceCount = 0
 
@@ -145,14 +146,7 @@ let instanceCount = 0
  */
 export default {
 	name: 'CnFilinqMergeToPdfWidget',
-	props: {
-		/** The host object's register slug. */
-		register: { type: String, default: '' },
-		/** The host object's schema slug. */
-		schema: { type: String, default: '' },
-		/** The host object's id. */
-		objectId: { type: String, default: '' },
-	},
+	mixins: [hostObjectLeaf],
 
 	data() {
 		instanceCount += 1
@@ -247,16 +241,11 @@ export default {
 				this.loading = false
 				return
 			}
-			const query = new URLSearchParams({
-				register: this.register,
-				schema: this.schema,
-				id: this.objectId,
-			})
 			try {
 				const body = await this.request(
 					generateUrl('/apps/filinq/api/case-documents/files')
 						+ '?'
-						+ query.toString(),
+						+ this.hostObjectQuery().toString(),
 				)
 				this.rows = Array.isArray(body.results) ? body.results : []
 			} catch {
@@ -398,19 +387,6 @@ export default {
 				throw new Error('HTTP ' + response.status)
 			}
 			return response.json()
-		},
-
-		/**
-		 * The current page's request token, read from the DOM because this
-		 * widget renders inside another app's page.
-		 *
-		 * @return {string} The token, or ''.
-		 *
-		 * @spec openspec/specs/document-merge/spec.md
-		 */
-		requestToken() {
-			const head = document.getElementsByTagName('head')[0]
-			return (head && head.getAttribute('data-requesttoken')) || ''
 		},
 	},
 }
