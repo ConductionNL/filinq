@@ -10,6 +10,8 @@
  * reset from `editingRecord` each time `open` turns true.
  */
 
+import { translate as t } from '@nextcloud/l10n'
+
 export const matchRuleForm = {
 	props: {
 		open: { type: Boolean, required: true },
@@ -35,14 +37,16 @@ export const matchRuleForm = {
 		/**
 		 * The state the dialog's buttons render from.
 		 *
-		 * @return {{saving: boolean, canSubmit: boolean, editing: boolean}} The button state.
+		 * @return {{saving: boolean, canSubmit: boolean, confirmLabel: string}} The button state.
 		 * @spec openspec/specs/entity-publication-policies/spec.md#requirement-three-separate-admin-surfaces-must-exist
 		 */
 		formActions() {
 			return {
 				saving: this.saving,
 				canSubmit: this.canSubmit,
-				editing: this.editing,
+				confirmLabel: this.editing
+					? t('filinq', 'Save')
+					: t('filinq', 'Create'),
 			}
 		},
 
