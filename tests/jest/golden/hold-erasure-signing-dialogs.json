@@ -166,7 +166,7 @@
 						"label": "Place hold",
 						"variant": "primary",
 						"disabled": true,
-						"busyIcon": false
+						"busyIcon": true
 					}
 				]
 			},
@@ -393,7 +393,7 @@
 						"label": "Release",
 						"variant": "warning",
 						"disabled": true,
-						"busyIcon": false
+						"busyIcon": true
 					}
 				]
 			},
@@ -591,7 +591,7 @@
 						"label": "Record request",
 						"variant": "primary",
 						"disabled": true,
-						"busyIcon": false
+						"busyIcon": true
 					}
 				]
 			},
@@ -767,7 +767,7 @@
 						"label": "Erase",
 						"variant": "error",
 						"disabled": true,
-						"busyIcon": false
+						"busyIcon": true
 					}
 				]
 			},
@@ -983,7 +983,7 @@
 						"label": "Send for signature",
 						"variant": "primary",
 						"disabled": true,
-						"busyIcon": false
+						"busyIcon": true
 					}
 				]
 			},

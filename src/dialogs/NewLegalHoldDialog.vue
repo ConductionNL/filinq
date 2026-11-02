@@ -45,24 +45,20 @@ SPDX-License-Identifier: EUPL-1.2
 			</div>
 		</template>
 		<template #actions>
-			<NcButton :disabled="busy" @click="$emit('close')">
-				{{ t('filinq', 'Cancel') }}
-			</NcButton>
-			<NcButton
-				variant="primary"
-				:disabled="busy || !complete"
-				data-testid="legal-hold-create"
-				@click="onCreate">
-				{{ t('filinq', 'Place hold') }}
-			</NcButton>
+			<CnDialogActions
+				:saving="busy"
+				:canSubmit="complete"
+				:confirmLabel="t('filinq', 'Place hold')"
+				@cancel="$emit('close')"
+				@submit="onCreate" />
 		</template>
 	</NcDialog>
 </template>
 
 <script>
+import { CnDialogActions } from '@conduction/nextcloud-vue'
 import { translate as t } from '@nextcloud/l10n'
 import {
-	NcButton,
 	NcDialog,
 	NcNoteCard,
 	NcSelect,
@@ -80,7 +76,7 @@ import { createCase, holdTypeOptions, parseRefs } from '../services/legalHolds.j
 export default {
 	name: 'NewLegalHoldDialog',
 	components: {
-		NcButton,
+		CnDialogActions,
 		NcDialog,
 		NcNoteCard,
 		NcSelect,
