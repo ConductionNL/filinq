@@ -19,7 +19,6 @@ namespace OCA\Filinq\Tests\Unit\Service;
 
 use OCA\Filinq\Service\PolicyMatchService;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -55,7 +54,6 @@ class PolicyMatchServiceTest extends TestCase {
 
 		$service = new PolicyMatchService(
 			$this->createMock(LoggerInterface::class),
-			$this->createMock(IAppManager::class),
 			$config,
 			$this->createMock(ObjectServiceInterface::class)
 		);
@@ -254,10 +252,9 @@ class PolicyMatchServiceTest extends TestCase {
 		);
 
 		$logger = $this->createMock(LoggerInterface::class);
-		$appMan = $this->createMock(IAppManager::class);
 		$config = $this->createMock(IAppConfig::class);
 
-		return new PolicyMatchService($logger, $appMan, $config, $fakeObjectService);
+		return new PolicyMatchService($logger, $config, $fakeObjectService);
 	}//end buildService()
 
 	/**
