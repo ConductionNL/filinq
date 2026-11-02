@@ -26,6 +26,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use Exception;
+use OCA\Filinq\Kernel\AppIdentity;
 use OCA\Filinq\Kernel\Contracts\FinancialExtractionServiceInterface;
 use OCA\Filinq\Kernel\Contracts\GlAccountSuggestionServiceInterface;
 use OCP\AppFramework\Controller;
@@ -53,7 +54,6 @@ class ExtractionController extends Controller {
 	/**
 	 * Constructor.
 	 *
-	 * @param string $appName The application name.
 	 * @param IRequest $request The request object.
 	 * @param FinancialExtractionServiceInterface $extractionService Extraction orchestration service.
 	 * @param GlAccountSuggestionServiceInterface $suggestionService GL-account suggestion service (booking-history feed).
@@ -64,7 +64,6 @@ class ExtractionController extends Controller {
 	 * @return void
 	 */
 	public function __construct(
-		string $appName,
 		IRequest $request,
 		private readonly FinancialExtractionServiceInterface $extractionService,
 		private readonly GlAccountSuggestionServiceInterface $suggestionService,
@@ -72,7 +71,7 @@ class ExtractionController extends Controller {
 		private readonly IL10N $l10n,
 		private readonly LoggerInterface $logger,
 	) {
-		parent::__construct(appName: $appName, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 
 	}//end __construct()
 

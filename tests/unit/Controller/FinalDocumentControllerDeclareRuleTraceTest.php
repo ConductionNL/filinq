@@ -25,6 +25,8 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\FinalDocumentController;
+use OCA\Filinq\Controller\Support\FinalDocumentChanges;
+use OCA\Filinq\Controller\Support\FinalityRules;
 use OCA\Filinq\Kernel\Contracts\DocumentFinalityRuleServiceInterface;
 use OCA\Filinq\Kernel\Contracts\FinalDocumentCorrectionServiceInterface;
 use OCA\Filinq\Kernel\Contracts\FinalDocumentFailureMapperInterface;
@@ -42,6 +44,8 @@ use RuntimeException;
  * Characterization of the declare-rule endpoint.
  *
  * @covers \OCA\Filinq\Controller\FinalDocumentController
+ * @covers \OCA\Filinq\Controller\Support\FinalDocumentChanges
+ * @covers \OCA\Filinq\Controller\Support\FinalityRules
  */
 class FinalDocumentControllerDeclareRuleTraceTest extends TestCase {
 
@@ -184,13 +188,10 @@ class FinalDocumentControllerDeclareRuleTraceTest extends TestCase {
 		$l10n->method('t')->willReturnArgument(0);
 
 		return new FinalDocumentController(
-			appName: 'filinq',
+			finality: new FinalityRules(rules: $this->rules, failures: $this->failures),
+			changes: new FinalDocumentChanges(corrections: $this->createMock(FinalDocumentCorrectionServiceInterface::class), unfreeze: $this->unfreeze),
 			request: $request,
 			finalDocuments: $this->createMock(FinalDocumentServiceInterface::class),
-			corrections: $this->createMock(FinalDocumentCorrectionServiceInterface::class),
-			unfreeze: $this->unfreeze,
-			rules: $this->rules,
-			failures: $this->failures,
 			userSession: $session,
 			l10n: $l10n,
 		);

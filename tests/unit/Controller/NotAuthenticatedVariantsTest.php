@@ -92,6 +92,7 @@ class NotAuthenticatedVariantsTest extends TestCase {
 
 	/**
 	 * A controller over doubles: no session user, a translator that returns its input.
+	 * A final collaborator bundle is built the same way from doubles of its own collaborators.
 	 *
 	 * @param class-string $class The controller.
 	 *
@@ -108,6 +109,7 @@ class NotAuthenticatedVariantsTest extends TestCase {
 				$name === 'string' => 'filinq',
 				$parameter->isDefaultValueAvailable() === true && ($type === null || $type->isBuiltin() === true) => $parameter->getDefaultValue(),
 				$type !== null && $type->allowsNull() === true && $parameter->isDefaultValueAvailable() === true => null,
+				(new ReflectionClass($name))->isFinal() === true => $this->controller(class: $name),
 				default => $this->createMock($name),
 			};
 		}

@@ -23,6 +23,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\Pdfa3ConversionController;
+use OCA\Filinq\Controller\Support\ControllerFeedback;
 use OCA\Filinq\Exception\Pdfa3ConversionException;
 use OCA\Filinq\Service\Pdfa3ConversionService;
 use OCP\AppFramework\Http\DataDownloadResponse;
@@ -103,10 +104,9 @@ class Pdfa3ConversionControllerTest extends TestCase {
 		$this->controller = new Pdfa3ConversionController(
 			'filinq',
 			$this->mockRequest,
-			$mockLogger,
+			new ControllerFeedback(l10n: $mockL10n, logger: $mockLogger),
 			$this->mockService,
 			$this->mockRootFolder,
-			$mockL10n,
 			$this->mockUserSession
 		);
 
@@ -243,12 +243,11 @@ class Pdfa3ConversionControllerTest extends TestCase {
 		$l10n = $this->createMock(originalClassName: IL10N::class);
 		$l10n->method('t')->willReturnArgument(0);
 		$controller = new Pdfa3ConversionController(
+			feedback: new ControllerFeedback(l10n: $l10n, logger: $this->createMock(originalClassName: LoggerInterface::class)),
 			appName: 'filinq',
 			request: $this->mockRequest,
-			logger: $this->createMock(originalClassName: LoggerInterface::class),
 			service: $this->mockService,
 			rootFolder: $this->mockRootFolder,
-			l10n: $l10n,
 			userSession: $session
 		);
 

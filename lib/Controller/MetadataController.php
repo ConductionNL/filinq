@@ -25,8 +25,8 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use Exception;
-use OCA\Filinq\Kernel\Contracts\InboundClassificationServiceInterface;
-use OCA\Filinq\Kernel\Contracts\MetadataServiceInterface;
+use OCA\Filinq\Controller\Support\MetadataServices;
+use OCA\Filinq\Kernel\AppIdentity;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\Files\IRootFolder;
@@ -50,28 +50,24 @@ class MetadataController extends Controller {
 	/**
 	 * Constructor for MetadataController
 	 *
-	 * @param string $appName The application name
 	 * @param IRequest $request The request object
 	 * @param LoggerInterface $logger Logger for error reporting
-	 * @param MetadataServiceInterface $metadataService Service for metadata operations
+	 * @param MetadataServices $services The metadata reader and the inbound classification.
 	 * @param IL10N $l10n The localization service
 	 * @param IUserSession $userSession User session for authentication
-	 * @param InboundClassificationServiceInterface $classification Suggests a type, correspondent and dossier
 	 * @param IRootFolder $rootFolder Resolves the caller's own files
 	 *
 	 * @return void
 	 */
 	public function __construct(
-		string $appName,
 		IRequest $request,
 		private readonly LoggerInterface $logger,
-		private readonly MetadataServiceInterface $metadataService,
+		private readonly MetadataServices $services,
 		private readonly IL10N $l10n,
 		private readonly IUserSession $userSession,
-		private readonly InboundClassificationServiceInterface $classification,
 		private readonly IRootFolder $rootFolder,
 	) {
-		parent::__construct(appName: $appName, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 
 	}//end __construct()
 
@@ -125,7 +121,7 @@ class MetadataController extends Controller {
 		$objectData = $data['objectData'] ?? [];
 
 		// Run metadata enhancement.
-		$metadata = $this->metadataService->enhanceMetadata($objectData);
+		$metadata = $this->services->metadata->enhanceMetadata($objectData);
 
 		// The same classification hook as the event path; suggestions only.
 		$classification = $this->classifyReachable(objectData: $objectData, data: $data);
@@ -141,7 +137,7 @@ class MetadataController extends Controller {
 		}
 
 		// Save enriched metadata back to OpenRegister.
-		$result = $this->metadataService->saveEnrichedMetadata(
+		$result = $this->services->metadata->saveEnrichedMetadata(
 			$data['objectId'],
 			$data['register'],
 			$data['schema'],
@@ -211,7 +207,7 @@ class MetadataController extends Controller {
 				return 'skipped';
 			}
 
-			$outcome = $this->classification->classify(
+			$outcome = $this->services->classification->classify(
 				objectData: $objectData,
 				objectRef: ['id' => (string)$data['objectId'], 'register' => (string)$data['register'], 'schema' => (string)$data['schema']]
 			);

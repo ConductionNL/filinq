@@ -28,6 +28,7 @@ namespace OCA\Filinq\Tests\Unit\Controller;
 require_once __DIR__ . '/../Service/Classification/InboundClassificationFixture.php';
 
 use OCA\Filinq\Controller\MetadataController;
+use OCA\Filinq\Controller\Support\MetadataServices;
 use OCA\Filinq\Service\MetadataService;
 use OCA\Filinq\Tests\Unit\Service\Classification\ClassificationObjectStore;
 use OCA\Filinq\Tests\Unit\Service\Classification\InboundClassificationFixture;
@@ -133,13 +134,11 @@ class MetadataControllerClassificationTest extends TestCase {
 		$root->method('getUserFolder')->with('annemarie')->willReturn($userFolder);
 
 		return new MetadataController(
-			appName: 'filinq',
+			services: new MetadataServices(metadata: $metadata, classification: $this->service()),
 			request: $request,
 			logger: new NullLogger(),
-			metadataService: $metadata,
 			l10n: $l10n,
 			userSession: $session,
-			classification: $this->service(),
 			rootFolder: $root,
 		);
 

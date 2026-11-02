@@ -21,6 +21,7 @@
 namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\PdfController;
+use OCA\Filinq\Controller\Support\PdfServices;
 use OCA\Filinq\Service\Pdfa3ConversionService;
 use OCA\Filinq\Service\PdfService;
 use OCP\AppFramework\Http\DataDownloadResponse;
@@ -108,8 +109,7 @@ class PdfControllerTest extends TestCase {
 			'filinq',
 			$this->mockRequest,
 			$this->mockLogger,
-			$this->mockPdfService,
-			$this->mockPdfa3Service,
+			new PdfServices(pdf: $this->mockPdfService, pdfa3: $this->mockPdfa3Service),
 			$this->mockL10n,
 			$this->mockUserSession
 		);

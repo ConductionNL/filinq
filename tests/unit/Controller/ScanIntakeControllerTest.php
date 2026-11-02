@@ -29,6 +29,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\ScanIntakeController;
+use OCA\Filinq\Controller\Support\ScanSetupServices;
 use OCA\Filinq\Service\ScanBatchRepository;
 use OCA\Filinq\Service\ScanBatchService;
 use OCA\Filinq\Service\ScanProfileService;
@@ -47,6 +48,7 @@ use RuntimeException;
  * `ScanIntakeController`.
  *
  * @covers \OCA\Filinq\Controller\ScanIntakeController
+ * @covers \OCA\Filinq\Controller\Support\ScanSetupServices
  */
 class ScanIntakeControllerTest extends TestCase {
 
@@ -100,10 +102,8 @@ class ScanIntakeControllerTest extends TestCase {
 		}
 
 		return new ScanIntakeController(
-			'filinq',
 			$this->createMock(IRequest::class),
-			$sheets,
-			$profiles,
+			new ScanSetupServices(sheets: $sheets, profiles: $profiles),
 			$this->getMockBuilder(ScanBatchService::class)
 				->disableOriginalConstructor()
 				->onlyMethods(['receive', 'split'])
