@@ -27,6 +27,7 @@ namespace OCA\Filinq\Tests\Unit\Controller;
 require_once __DIR__ . '/../Service/Contract/InMemoryContracts.php';
 
 use OCA\Filinq\Controller\ContractController;
+use OCA\Filinq\Controller\Support\ContractTerms;
 use OCA\Filinq\Service\Contract\ContractDocumentText;
 use OCA\Filinq\Service\Contract\ContractParties;
 use OCA\Filinq\Service\Contract\ContractService;
@@ -80,14 +81,12 @@ class ContractControllerTest extends TestCase {
 			appConfig: $this->createMock(IAppConfig::class)
 		);
 		$this->controller = new ContractController(
-			appName: 'filinq',
+			terms: new ContractTerms(suggestions: $suggestions, parties: new ContractParties(contacts: $this->createMock(IManager::class))),
 			request: $this->createMock(IRequest::class),
 			contracts: new ContractService(repository: $this->store),
-			suggestions: $suggestions,
 			userSession: $session,
 			logger: $this->createMock(LoggerInterface::class),
-			signingLink: new ContractSigningLink(contracts: $this->store, signing: $this->createMock(SigningService::class), userSession: $session),
-			parties: new ContractParties(contacts: $this->createMock(IManager::class))
+			signingLink: new ContractSigningLink(contracts: $this->store, signing: $this->createMock(SigningService::class), userSession: $session)
 		);
 
 	}//end setUp()

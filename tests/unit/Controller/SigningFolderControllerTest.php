@@ -88,7 +88,6 @@ class SigningFolderControllerTest extends TestCase {
 		$l10n->method('t')->willReturnArgument(0);
 
 		return new SigningFolderController(
-			'filinq',
 			$request,
 			$service,
 			$this->getMockBuilder(SigningMandateService::class)

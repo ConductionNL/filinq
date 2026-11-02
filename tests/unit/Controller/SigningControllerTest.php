@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\SigningController;
+use OCA\Filinq\Controller\Support\SigningServices;
 use OCA\Filinq\Exception\RegisterNotConfiguredException;
 use OCA\Filinq\Service\SigningAuditService;
 use OCA\Filinq\Service\SigningService;
@@ -104,11 +105,8 @@ class SigningControllerTest extends TestCase {
 		$this->userSession->method('getUser')->willReturn($user);
 
 		$this->controller = new SigningController(
-			'filinq',
 			$request,
-			$this->signingService,
-			$auditService,
-			$verificationService,
+			new SigningServices(signing: $this->signingService, audit: $auditService, verification: $verificationService),
 			$this->userSession,
 			$this->logger,
 			$l10n,

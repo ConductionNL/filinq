@@ -39,6 +39,9 @@ use Psr\Log\NullLogger;
  * @link     https://www.filinq.app
  *
  * @covers \OCA\Filinq\Controller\AnswersNotAuthenticated
+ * @covers \OCA\Filinq\Controller\Support\SettingsBackends
+ * @covers \OCA\Filinq\Controller\Support\AppConfiguration
+ * @covers \OCA\Filinq\Controller\Support\SigningServices
  * @covers \OCA\Filinq\Controller\ConsentController
  * @covers \OCA\Filinq\Controller\CorrespondenceController
  * @covers \OCA\Filinq\Controller\DocumentController
