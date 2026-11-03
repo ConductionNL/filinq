@@ -32,7 +32,7 @@ const {
 	recordPhases,
 } = require('../../tests/jest/dialogGolden.js')
 
-const KEEP = ['FormDialogActions']
+const KEEP = ['FormDialogActions', 'policyRuleForms']
 const RULE = { type: 'bsn', value: '123456782' }
 const POLICY_EVENTS = ['submit', 'cancel', 'update:open']
 
