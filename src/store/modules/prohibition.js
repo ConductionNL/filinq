@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 /**
@@ -9,6 +8,7 @@ import { generateUrl } from '@nextcloud/router'
  * mirror each other.
  */
 import { defineStore } from 'pinia'
+import { storeRequest } from '../storeRequest.js'
 
 const baseUrl = '/apps/filinq/api/policy/prohibitions'
 
@@ -29,89 +29,74 @@ export const useProhibitionStore = defineStore('prohibition', {
 		}),
 	},
 	actions: {
-		async fetchProhibitions() {
-			this.loading = true
-			this.error = null
-			try {
-				const response = await axios.get(generateUrl(baseUrl))
-				this.prohibitions = response.data
-			} catch (err) {
-				console.error('Failed to fetch prohibitions:', err)
-				this.error = err.response?.data?.error || err.message
-			} finally {
-				this.loading = false
-			}
+		fetchProhibitions() {
+			return storeRequest(this, {
+				failure: 'Failed to fetch prohibitions:',
+				serverError: true,
+				run: async () => {
+					const response = await axios.get(generateUrl(baseUrl))
+					this.prohibitions = response.data
+				},
+			})
 		},
-		async fetchProhibition(id) {
-			this.loading = true
-			this.error = null
-			try {
-				const response = await axios.get(generateUrl(`${baseUrl}/${id}`))
-				this.prohibitionItem = response.data
-				return response.data
-			} catch (err) {
-				console.error('Failed to fetch prohibition:', err)
-				this.error = err.response?.data?.error || err.message
-				return null
-			} finally {
-				this.loading = false
-			}
+		fetchProhibition(id) {
+			return storeRequest(this, {
+				failure: 'Failed to fetch prohibition:',
+				fallback: null,
+				serverError: true,
+				run: async () => {
+					const response = await axios.get(generateUrl(`${baseUrl}/${id}`))
+					this.prohibitionItem = response.data
+					return response.data
+				},
+			})
 		},
-		async createProhibition(data) {
-			this.loading = true
-			this.error = null
-			try {
-				const response = await axios.post(generateUrl(baseUrl), data)
-				this.prohibitions.push(response.data)
-				return response.data
-			} catch (err) {
-				console.error('Failed to create prohibition:', err)
-				this.error = err.response?.data?.error || err.message
-				throw err
-			} finally {
-				this.loading = false
-			}
+		createProhibition(data) {
+			return storeRequest(this, {
+				failure: 'Failed to create prohibition:',
+				rethrow: true,
+				serverError: true,
+				run: async () => {
+					const response = await axios.post(generateUrl(baseUrl), data)
+					this.prohibitions.push(response.data)
+					return response.data
+				},
+			})
 		},
-		async updateProhibition(id, data) {
-			this.loading = true
-			this.error = null
-			try {
-				const response = await axios.put(
-					generateUrl(`${baseUrl}/${id}`),
-					data,
-				)
-				const idx = this.prohibitions.findIndex(
-					(p) => (p['@self']?.id || p.id || p.uuid) === id,
-				)
-				if (idx !== -1) {
-					this.prohibitions[idx] = response.data
-				}
+		updateProhibition(id, data) {
+			return storeRequest(this, {
+				failure: 'Failed to update prohibition:',
+				rethrow: true,
+				serverError: true,
+				run: async () => {
+					const response = await axios.put(
+						generateUrl(`${baseUrl}/${id}`),
+						data,
+					)
+					const idx = this.prohibitions.findIndex(
+						(p) => (p['@self']?.id || p.id || p.uuid) === id,
+					)
+					if (idx !== -1) {
+						this.prohibitions[idx] = response.data
+					}
 
-				this.prohibitionItem = response.data
-				return response.data
-			} catch (err) {
-				console.error('Failed to update prohibition:', err)
-				this.error = err.response?.data?.error || err.message
-				throw err
-			} finally {
-				this.loading = false
-			}
+					this.prohibitionItem = response.data
+					return response.data
+				},
+			})
 		},
-		async deleteProhibition(id) {
-			this.loading = true
-			this.error = null
-			try {
-				await axios.delete(generateUrl(`${baseUrl}/${id}`))
-				this.prohibitions = this.prohibitions.filter(
-					(p) => (p['@self']?.id || p.id || p.uuid) !== id,
-				)
-			} catch (err) {
-				console.error('Failed to delete prohibition:', err)
-				this.error = err.response?.data?.error || err.message
-				throw err
-			} finally {
-				this.loading = false
-			}
+		deleteProhibition(id) {
+			return storeRequest(this, {
+				failure: 'Failed to delete prohibition:',
+				rethrow: true,
+				serverError: true,
+				run: async () => {
+					await axios.delete(generateUrl(`${baseUrl}/${id}`))
+					this.prohibitions = this.prohibitions.filter(
+						(p) => (p['@self']?.id || p.id || p.uuid) !== id,
+					)
+				},
+			})
 		},
 		setProhibitionItem(item) {
 			this.prohibitionItem = item

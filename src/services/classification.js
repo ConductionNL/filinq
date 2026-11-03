@@ -14,6 +14,7 @@
 import axios from '@nextcloud/axios'
 import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
+import { answer } from './apiAnswer.js'
 
 const BASE = '/apps/filinq/api/classification'
 
@@ -195,25 +196,6 @@ function dossierChange(record, choices) {
 	}
 	const dossier = choices.dossier || null
 	return dossier === (record.suggestedDossier || null) ? {} : { dossier }
-}
-
-/**
- * Run a call and answer { ok, data } or { ok: false, status, error }.
- *
- * @param {Promise<object>} call The axios call.
- * @return {Promise<object>} The answer.
- */
-async function answer(call) {
-	try {
-		const { data } = await call
-		return { ok: true, data }
-	} catch (error) {
-		return {
-			ok: false,
-			status: error?.response?.status ?? 0,
-			error: error?.response?.data?.error ?? '',
-		}
-	}
 }
 
 /**

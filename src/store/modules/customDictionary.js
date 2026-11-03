@@ -13,6 +13,7 @@ import { generateUrl } from '@nextcloud/router'
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  */
 import { defineStore } from 'pinia'
+import { quietRequest, storeRequest } from '../storeRequest.js'
 
 const baseUrl = '/apps/filinq/api/custom-dictionaries'
 
@@ -56,104 +57,89 @@ export const useCustomDictionaryStore = defineStore('customDictionary', {
 				this.canMaintain = false
 			}
 		},
-		async fetchDictionaries() {
-			this.loading = true
-			this.error = null
-			try {
-				const response = await axios.get(generateUrl(baseUrl))
-				this.dictionaries = response.data
-			} catch (err) {
-				console.error('Failed to fetch custom dictionaries:', err)
-				this.error = err.response?.data?.error || err.message
-			} finally {
-				this.loading = false
-			}
+		fetchDictionaries() {
+			return storeRequest(this, {
+				failure: 'Failed to fetch custom dictionaries:',
+				serverError: true,
+				run: async () => {
+					const response = await axios.get(generateUrl(baseUrl))
+					this.dictionaries = response.data
+				},
+			})
 		},
-		async fetchDictionary(id) {
-			this.loading = true
-			this.error = null
-			try {
-				const response = await axios.get(generateUrl(`${baseUrl}/${id}`))
-				this.dictionaryItem = response.data
-				return response.data
-			} catch (err) {
-				console.error('Failed to fetch custom dictionary:', err)
-				this.error = err.response?.data?.error || err.message
-				return null
-			} finally {
-				this.loading = false
-			}
+		fetchDictionary(id) {
+			return storeRequest(this, {
+				failure: 'Failed to fetch custom dictionary:',
+				fallback: null,
+				serverError: true,
+				run: async () => {
+					const response = await axios.get(generateUrl(`${baseUrl}/${id}`))
+					this.dictionaryItem = response.data
+					return response.data
+				},
+			})
 		},
-		async createDictionary(data) {
-			this.loading = true
-			this.error = null
-			try {
-				const response = await axios.post(generateUrl(baseUrl), data)
-				this.dictionaries.push(response.data)
-				return response.data
-			} catch (err) {
-				console.error('Failed to create custom dictionary:', err)
-				this.error = err.response?.data?.error || err.message
-				throw err
-			} finally {
-				this.loading = false
-			}
+		createDictionary(data) {
+			return storeRequest(this, {
+				failure: 'Failed to create custom dictionary:',
+				rethrow: true,
+				serverError: true,
+				run: async () => {
+					const response = await axios.post(generateUrl(baseUrl), data)
+					this.dictionaries.push(response.data)
+					return response.data
+				},
+			})
 		},
-		async updateDictionary(id, data) {
-			this.loading = true
-			this.error = null
-			try {
-				const response = await axios.put(
-					generateUrl(`${baseUrl}/${id}`),
-					data,
-				)
-				const idx = this.dictionaries.findIndex((d) => recordId(d) === id)
-				if (idx !== -1) {
-					this.dictionaries[idx] = response.data
-				}
+		updateDictionary(id, data) {
+			return storeRequest(this, {
+				failure: 'Failed to update custom dictionary:',
+				rethrow: true,
+				serverError: true,
+				run: async () => {
+					const response = await axios.put(
+						generateUrl(`${baseUrl}/${id}`),
+						data,
+					)
+					const idx = this.dictionaries.findIndex(
+						(d) => recordId(d) === id,
+					)
+					if (idx !== -1) {
+						this.dictionaries[idx] = response.data
+					}
 
-				this.dictionaryItem = response.data
-				return response.data
-			} catch (err) {
-				console.error('Failed to update custom dictionary:', err)
-				this.error = err.response?.data?.error || err.message
-				throw err
-			} finally {
-				this.loading = false
-			}
+					this.dictionaryItem = response.data
+					return response.data
+				},
+			})
 		},
-		async deleteDictionary(id) {
-			this.loading = true
-			this.error = null
-			try {
-				await axios.delete(generateUrl(`${baseUrl}/${id}`))
-				this.dictionaries = this.dictionaries.filter(
-					(d) => recordId(d) !== id,
-				)
-			} catch (err) {
-				console.error('Failed to delete custom dictionary:', err)
-				this.error = err.response?.data?.error || err.message
-				throw err
-			} finally {
-				this.loading = false
-			}
+		deleteDictionary(id) {
+			return storeRequest(this, {
+				failure: 'Failed to delete custom dictionary:',
+				rethrow: true,
+				serverError: true,
+				run: async () => {
+					await axios.delete(generateUrl(`${baseUrl}/${id}`))
+					this.dictionaries = this.dictionaries.filter(
+						(d) => recordId(d) !== id,
+					)
+				},
+			})
 		},
-		async fetchTerms(dictionaryId) {
-			this.termsLoading = true
-			this.error = null
-			try {
-				const response = await axios.get(
-					generateUrl(`${baseUrl}/${dictionaryId}/terms`),
-				)
-				this.terms = response.data
-				return response.data
-			} catch (err) {
-				console.error('Failed to fetch terms:', err)
-				this.error = err.response?.data?.error || err.message
-				return []
-			} finally {
-				this.termsLoading = false
-			}
+		fetchTerms(dictionaryId) {
+			return storeRequest(this, {
+				failure: 'Failed to fetch terms:',
+				fallback: [],
+				serverError: true,
+				flag: 'termsLoading',
+				run: async () => {
+					const response = await axios.get(
+						generateUrl(`${baseUrl}/${dictionaryId}/terms`),
+					)
+					this.terms = response.data
+					return response.data
+				},
+			})
 		},
 		async createTerm(dictionaryId, data) {
 			try {
@@ -192,35 +178,35 @@ export const useCustomDictionaryStore = defineStore('customDictionary', {
 		 *                              client-side).
 		 * @return {Promise<{added: number, skipped: number, total: number}|null>}
 		 */
-		async importTerms(dictionaryId, payload) {
-			this.error = null
-			try {
-				let response
-				if (payload.file) {
-					const formData = new FormData()
-					formData.append('file', payload.file)
-					response = await axios.post(
-						generateUrl(`${baseUrl}/${dictionaryId}/import`),
-						formData,
-					)
-				} else {
-					response = await axios.post(
-						generateUrl(`${baseUrl}/${dictionaryId}/import`),
-						{
-							content: payload.content,
-							format: payload.format || 'newline',
-						},
-					)
-				}
+		importTerms(dictionaryId, payload) {
+			return quietRequest(this, {
+				failure: 'Failed to import terms:',
+				rethrow: true,
+				serverError: true,
+				run: async () => {
+					let response
+					if (payload.file) {
+						const formData = new FormData()
+						formData.append('file', payload.file)
+						response = await axios.post(
+							generateUrl(`${baseUrl}/${dictionaryId}/import`),
+							formData,
+						)
+					} else {
+						response = await axios.post(
+							generateUrl(`${baseUrl}/${dictionaryId}/import`),
+							{
+								content: payload.content,
+								format: payload.format || 'newline',
+							},
+						)
+					}
 
-				this.importResult = response.data
-				await this.fetchTerms(dictionaryId)
-				return response.data
-			} catch (err) {
-				console.error('Failed to import terms:', err)
-				this.error = err.response?.data?.error || err.message
-				throw err
-			}
+					this.importResult = response.data
+					await this.fetchTerms(dictionaryId)
+					return response.data
+				},
+			})
 		},
 		clearDictionaryItem() {
 			this.dictionaryItem = null
