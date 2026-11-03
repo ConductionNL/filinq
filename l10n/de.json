@@ -1675,7 +1675,7 @@
         "What is being anonymised, from where, and what failed.": "Was anonymisiert wird, woher, und was fehlschlug.",
         "What the templates generated, in which format, and what went out as correspondence.": "Was die Vorlagen erzeugten, in welchem Format, und was als Korrespondenz herausging.",
         "Template": "Vorlage",
-        "Store": "Store",
+        "Marketplace": "Store",
         "Install document configurations that other organisations have published: a template set, an anonymisation policy, or the flows behind a signature.": "Installieren Sie Register, Schemata und Flows, die andere Organisationen veröffentlicht haben.",
         "Conformance report": "Konformitätsbericht",
         "What veraPDF found when it checked one PDF against the PDF/A standard: the level, the verdict, the rules broken and the fonts missing. Rule references and font names only, never text from the document.": "Was veraPDF bei der Prüfung einer PDF gegen den PDF/A-Standard gefunden hat: die Stufe, das Ergebnis, die verletzten Regeln und die fehlenden Schriften. Nur Regelverweise und Schriftnamen, nie Text aus dem Dokument.",
