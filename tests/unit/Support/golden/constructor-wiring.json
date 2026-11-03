@@ -33,6 +33,65 @@
             "distinct objects built by the class": 0
         }
     ],
+    "ConsentRecordWriter defaults": [
+        "double ConsentNotesHelper",
+        "double ConsentScopeValidator",
+        "double ContainerInterface",
+        "double IAppManager",
+        "double LoggerInterface",
+        "double ObjectionDeadlineChecker",
+        {
+            "built OCA\\Filinq\\Service\\ConsentPolicyReferentValidator": [
+                "double ContainerInterface",
+                "double IAppManager",
+                "double LoggerInterface",
+                {
+                    "built OCA\\Filinq\\Service\\ObjectResultExtractor": []
+                }
+            ]
+        },
+        {
+            "built OCA\\Filinq\\Service\\ObjectResultExtractor": []
+        },
+        {
+            "distinct objects built by the class": 3
+        }
+    ],
+    "ConsentRecordWriter given": [
+        "double ConsentNotesHelper",
+        "double ConsentPolicyReferentValidator",
+        "double ConsentScopeValidator",
+        "double ContainerInterface",
+        "double IAppManager",
+        "double LoggerInterface",
+        "double ObjectResultExtractor",
+        "double ObjectionDeadlineChecker",
+        {
+            "distinct objects built by the class": 0
+        }
+    ],
+    "ConsentService defaults": [
+        "double ConsentRecordWriter",
+        "double ConsentScopeValidator",
+        "double ConsentUpdateHandler",
+        "double LoggerInterface",
+        "double ObjectionDeadlineChecker",
+        "double PolicyMatchService",
+        {
+            "distinct objects built by the class": 0
+        }
+    ],
+    "ConsentService given": [
+        "double ConsentRecordWriter",
+        "double ConsentScopeValidator",
+        "double ConsentUpdateHandler",
+        "double LoggerInterface",
+        "double ObjectionDeadlineChecker",
+        "double PolicyMatchService",
+        {
+            "distinct objects built by the class": 0
+        }
+    ],
     "DocumentAnonymizeRunner defaults": [
         "double AnonymisationRunRecords",
         "double AnonymisedPdfOutputService",
@@ -474,6 +533,34 @@
         "double IL10N",
         "double IUserSession",
         "double LoggerInterface",
+        {
+            "distinct objects built by the class": 0
+        }
+    ],
+    "SigningService defaults": [
+        "double GuardianConsentGuard",
+        "double SettingsService",
+        "double SignedArtifactProducer",
+        "double SigningActorResolver",
+        "double SigningAssuranceGate",
+        "double SigningAuditService",
+        "double SigningConclusionEmitter",
+        "double SigningRequestValidator",
+        null,
+        {
+            "distinct objects built by the class": 0
+        }
+    ],
+    "SigningService given": [
+        "double GuardianConsentGuard",
+        "double SettingsService",
+        "double SignedArtifactProducer",
+        "double SigningActorResolver",
+        "double SigningAssuranceGate",
+        "double SigningAuditService",
+        "double SigningConclusionEmitter",
+        "double SigningMandateService",
+        "double SigningRequestValidator",
         {
             "distinct objects built by the class": 0
         }
