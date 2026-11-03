@@ -28,6 +28,7 @@ use OCA\Filinq\Controller\Support\AnonymizationServices;
 use OCA\Filinq\Service\AnonymizationService;
 use OCA\Filinq\Service\AnonymizeRequestService;
 use OCA\Filinq\Service\FileListingService;
+use OCA\Filinq\Tests\Unit\Service\ReadsAnonymizeOptions;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\Files\File;
 use OCP\Files\Folder;
@@ -53,6 +54,8 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.TooManyPublicMethods)
  */
 class AnonymizationControllerTest extends TestCase {
+	use ReadsAnonymizeOptions;
+
 
 	/**
 	 * Mocked IRequest
@@ -585,14 +588,18 @@ class AnonymizationControllerTest extends TestCase {
 		$this->mockAnonService->expects($this->once())
 			->method('anonymizeDocument')
 			->with(
-				fileId: 42,
-				entities: $entities,
-				outputFormat: 'pdf-only',
-				unredactedEntities: [],
-				overrides: [],
-				userId: 'test-user',
-				scope: 'document',
-				dossierKey: null
+				42,
+				$entities,
+				$this->optionsWith(
+					[
+						'outputFormat' => 'pdf-only',
+						'unredactedEntities' => [],
+						'overrides' => [],
+						'userId' => 'test-user',
+						'scope' => 'document',
+						'dossierKey' => null,
+					]
+				)
 			)
 			->willReturn(['replacementCount' => 1, 'anonymizedFileId' => 'file-42']);
 
@@ -625,9 +632,13 @@ class AnonymizationControllerTest extends TestCase {
 		$this->mockAnonService->expects($this->once())
 			->method('anonymizeDocumentWithBasisSummary')
 			->with(
-				fileId: 10,
-				entities: $entities,
-				outputFormat: 'pdf'
+				10,
+				$entities,
+				$this->optionsWith(
+					[
+						'outputFormat' => 'pdf',
+					]
+				)
 			)
 			->willReturn(['replacementCount' => 2, 'anonymizedFileId' => 'file-10']);
 
@@ -659,9 +670,13 @@ class AnonymizationControllerTest extends TestCase {
 		$this->mockAnonService->expects($this->once())
 			->method('anonymizeDocumentWithBasisSummary')
 			->with(
-				fileId: 20,
-				entities: $entities,
-				outputFormat: 'preserve'
+				20,
+				$entities,
+				$this->optionsWith(
+					[
+						'outputFormat' => 'preserve',
+					]
+				)
 			)
 			->willReturn(
 				[
@@ -846,14 +861,18 @@ class AnonymizationControllerTest extends TestCase {
 		$this->mockAnonService->expects($this->once())
 			->method('anonymizeDocument')
 			->with(
-				fileId: 42,
-				entities: [['type' => 'PERSON', 'text' => 'John']],
-				outputFormat: 'pdf-only',
-				unredactedEntities: [],
-				overrides: [],
-				userId: 'test-user',
-				scope: 'dossier',
-				dossierKey: 'z-1'
+				42,
+				[['type' => 'PERSON', 'text' => 'John']],
+				$this->optionsWith(
+					[
+						'outputFormat' => 'pdf-only',
+						'unredactedEntities' => [],
+						'overrides' => [],
+						'userId' => 'test-user',
+						'scope' => 'dossier',
+						'dossierKey' => 'z-1',
+					]
+				)
 			)
 			->willReturn(['replacementCount' => 1, 'anonymizedFileId' => 'file-42']);
 
