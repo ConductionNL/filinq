@@ -264,6 +264,7 @@ if (interface_exists('\\OCA\\OpenRegister\\Service\\Flow\\IFlowNode') === false)
 // tests/unit/ directory segment, so non-test helper classes under tests/unit
 // are required explicitly (PHPUnit loads *Test.php files by path).
 require_once __DIR__ . '/unit/Service/BuildsAnonymizationService.php';
+require_once __DIR__ . '/unit/Service/ReadsAnonymizeOptions.php';
 require_once __DIR__ . '/unit/Service/DetectionStates.php';
 require_once __DIR__ . '/unit/Service/Ocr/OcrDoubles.php';
 require_once __DIR__ . '/unit/Service/Pseudonymisation/PseudonymDoubles.php';

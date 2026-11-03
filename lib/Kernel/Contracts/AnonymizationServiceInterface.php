@@ -27,6 +27,7 @@ use OCA\Filinq\Exception\DetectionUnavailableException;
 use Exception;
 use OCA\Filinq\Exception\ProhibitionGateException;
 use OCA\Filinq\Exception\RedactionNotReviewedException;
+use OCA\Filinq\Service\AnonymizeOptions;
 
 /**
  * Contract of AnonymizationService.
@@ -175,29 +176,13 @@ interface AnonymizationServiceInterface {
 	 *
 	 * @param int $fileId The Nextcloud file ID
 	 * @param array<array<string, mixed>> $entities The entities to anonymize
-	 * @param string $outputFormat Output format: 'pdf-only' (default), 'pdf'
-	 *                             or 'preserve'
-	 * @param array<int, array<string, mixed>> $unredactedEntities Entities to publish unredacted with consent
-	 *                                                             creation
-	 * @param array<int, array<string, mixed>> $overrides Acknowledged override entries {ruleId,
-	 *                                                    entityId, reason?} that release
-	 *                                                    low-confidence prohibition matches.
-	 * @param string $userId UID of the acting user (for override audit
-	 *                       entries).
-	 * @param string $scope Placeholder-numbering scope forwarded to
-	 *                      OpenRegister: 'document' (default) or
-	 *                      'dossier' (consistent numbering across the
-	 *                      dossier folder).
-	 * @param string|null $dossierKey Stable folder id for the dossier when
-	 *                                $scope='dossier'; null lets OpenRegister
-	 *                                fall back to the file's parent folder.
-	 * @param bool $reversible Keep an encrypted key so the placeholders can be turned
-	 *                         back into names later. False, the default, keeps nothing.
+	 * @param AnonymizeOptions|null $options Output format, consents, overrides, acting user,
+	 *                                       placeholder scope and reversibility; null for the defaults.
 	 *
 	 * @return array<string, mixed> Anonymization result with optional warning/createdConsents fields
 	 *
 	 * @throws Exception If anonymization fails.
-	 * @throws ConversionFailedException When `$outputFormat` requests a PDF and the cascade could
+	 * @throws ConversionFailedException When the output format requests a PDF and the cascade could
 	 *                                   not convert the anonymised intermediate. The intermediate
 	 *                                   is deleted (best-effort) before the exception propagates.
 	 * @throws ProhibitionGateException When the prohibition gate fires (high-confidence matches
@@ -211,21 +196,8 @@ interface AnonymizationServiceInterface {
 	 * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-3
 	 * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-4
 	 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-2.2
-	 *
-	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) `$reversible` is a request field the
-	 *     caller passes through; it selects no branch here, the runner records it.
 	 */
-	public function anonymizeDocument(
-		int $fileId,
-		array $entities,
-		string $outputFormat = 'pdf-only',
-		array $unredactedEntities = [],
-		array $overrides = [],
-		string $userId = '',
-		string $scope = 'document',
-		?string $dossierKey = null,
-		bool $reversible = false,
-	): array;
+	public function anonymizeDocument(int $fileId, array $entities, ?AnonymizeOptions $options = null): array;
 
 	/**
 	 * Anonymize entities in a document AND append the grondslagen summary.
@@ -239,18 +211,8 @@ interface AnonymizationServiceInterface {
 	 *
 	 * @param int $fileId The Nextcloud file ID
 	 * @param array<array<string, mixed>> $entities The entities to anonymize
-	 * @param string $outputFormat Output format: 'pdf-only' (default), 'pdf'
-	 *                             or 'preserve'
-	 * @param array<int, array<string, mixed>> $unredactedEntities Entities to publish unredacted with consent
-	 *                                                             creation
-	 * @param array<int, array<string, mixed>> $overrides Acknowledged override entries {ruleId,
-	 *                                                    entityId, reason?}.
-	 * @param string $userId UID of the acting user.
-	 * @param string $scope Placeholder-numbering scope forwarded to
-	 *                      OpenRegister.
-	 * @param string|null $dossierKey Stable folder id for the dossier.
-	 * @param bool $reversible Keep an encrypted key so the placeholders can be turned
-	 *                         back into names later. False, the default, keeps nothing.
+	 * @param AnonymizeOptions|null $options Output format, consents, overrides, acting user,
+	 *                                       placeholder scope and reversibility; null for the defaults.
 	 *
 	 * @return array<string, mixed> Anonymization result with optional
 	 *                              warning/summaryFileId/createdConsents fields
@@ -264,19 +226,6 @@ interface AnonymizationServiceInterface {
 	 * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-2
 	 * @spec openspec/specs/anonymization/spec.md
 	 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-2.2
-	 *
-	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) `$reversible` is a request field the
-	 *     caller passes through; it selects no branch here, the runner records it.
 	 */
-	public function anonymizeDocumentWithBasisSummary(
-		int $fileId,
-		array $entities,
-		string $outputFormat = 'pdf-only',
-		array $unredactedEntities = [],
-		array $overrides = [],
-		string $userId = '',
-		string $scope = 'document',
-		?string $dossierKey = null,
-		bool $reversible = false,
-	): array;
+	public function anonymizeDocumentWithBasisSummary(int $fileId, array $entities, ?AnonymizeOptions $options = null): array;
 }//end interface

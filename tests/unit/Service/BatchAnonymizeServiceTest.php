@@ -25,6 +25,7 @@ namespace OCA\Filinq\Tests\Unit\Service;
 use Exception;
 use OCA\Filinq\Exception\ConversionFailedException;
 use OCA\Filinq\Service\AnonymizationService;
+use OCA\Filinq\Service\AnonymizeOptions;
 use OCA\Filinq\Service\BatchAnonymizeService;
 use OCA\Filinq\Service\BatchStateService;
 use OCA\Filinq\Service\Conversion\OutputLayoutMover;
@@ -44,6 +45,8 @@ use PHPUnit\Framework\TestCase;
  * @phpstan-extends TestCase
  */
 class BatchAnonymizeServiceTest extends TestCase {
+	use ReadsAnonymizeOptions;
+
 
 	/**
 	 * The BatchAnonymizeService under test
@@ -406,8 +409,8 @@ class BatchAnonymizeServiceTest extends TestCase {
 		$this->mockAnonService->method('checkUnredactedProhibitions')->willReturn([]);
 		$calls = [];
 		$this->mockAnonService->method('anonymizeDocumentWithBasisSummary')->willReturnCallback(
-			function (int $fileId, array $entities, string $outputFormat, array $unredactedEntities, array $overrides, string $userId, string $scope, ?string $dossierKey) use (&$calls): array {
-				$calls[] = [$fileId, $entities, $outputFormat, $unredactedEntities, $overrides, $userId, $scope, $dossierKey];
+			function (int $fileId, array $entities, ?AnonymizeOptions $options = null) use (&$calls): array {
+				$calls[] = array_values(array_slice(self::anonymizeFields($fileId, $entities, $options), 0, 8));
 				if ($fileId === 4) {
 					throw new ConversionFailedException(message: 'no backend', attempts: [['backend' => 'office']]);
 				}

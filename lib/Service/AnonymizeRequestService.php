@@ -289,31 +289,20 @@ class AnonymizeRequestService implements AnonymizeRequestServiceInterface {
 	private function callAnonymizeDocument(AnonymizeCall $call, string $userId): array {
 		$request = $call->request;
 		$entities = $this->filterEntities(entities: $request['entities'], params: $call->params);
-		if ($request['appendBasisSummary'] === true) {
-			return $this->anonymizationService->anonymizeDocumentWithBasisSummary(
-				fileId: $call->fileId,
-				entities: $entities,
-				outputFormat: $call->outputFormat,
-				unredactedEntities: $request['unredactedEntities'],
-				overrides: $request['overrides'],
-				userId: $userId,
-				scope: $this->resolveScope(params: $call->params),
-				dossierKey: $this->resolveDossierKey(params: $call->params),
-				reversible: ($request['reversible'] ?? false) === true
-			);
+		$options = (new AnonymizeOptions())
+			->withOutputFormat(outputFormat: $call->outputFormat)
+			->withConsents(unredactedEntities: $request['unredactedEntities'], overrides: $request['overrides'])
+			->withUserId(userId: $userId)
+			->withScope(scope: $this->resolveScope(params: $call->params), dossierKey: $this->resolveDossierKey(params: $call->params));
+		if (($request['reversible'] ?? false) === true) {
+			$options = $options->reversible();
 		}
 
-		return $this->anonymizationService->anonymizeDocument(
-			fileId: $call->fileId,
-			entities: $entities,
-			outputFormat: $call->outputFormat,
-			unredactedEntities: $request['unredactedEntities'],
-			overrides: $request['overrides'],
-			userId: $userId,
-			scope: $this->resolveScope(params: $call->params),
-			dossierKey: $this->resolveDossierKey(params: $call->params),
-			reversible: ($request['reversible'] ?? false) === true
-		);
+		if ($request['appendBasisSummary'] === true) {
+			return $this->anonymizationService->anonymizeDocumentWithBasisSummary(fileId: $call->fileId, entities: $entities, options: $options);
+		}
+
+		return $this->anonymizationService->anonymizeDocument(fileId: $call->fileId, entities: $entities, options: $options);
 
 	}//end callAnonymizeDocument()
 

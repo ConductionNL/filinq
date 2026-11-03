@@ -24,6 +24,7 @@ namespace OCA\Filinq\Tests\Unit\Service;
 use OCA\Filinq\Exception\DetectionUnavailableException;
 use OCA\Filinq\Service\AnonymiserBackendStateClient;
 use OCA\Filinq\Service\AnonymizationService;
+use OCA\Filinq\Service\AnonymizeOptions;
 use OCA\Filinq\Service\DocumentAnonymizeRunner;
 use OCA\OpenRegister\Service\Anonymisation\BackendState;
 use PHPUnit\Framework\TestCase;
@@ -176,8 +177,17 @@ class AnonymizationServiceDetectorTest extends TestCase {
 			runner: $runner
 		);
 
-		$service->anonymizeDocument(42, self::FOUR, 'pdf', [['text' => 'u']], [], 'alice', 'dossier', 'dk-1', true);
-		$service->anonymizeDocumentWithBasisSummary(fileId: 43, entities: [], userId: 'bob');
+		$service->anonymizeDocument(
+			42,
+			self::FOUR,
+			(new AnonymizeOptions())
+				->withOutputFormat(outputFormat: 'pdf')
+				->withConsents(unredactedEntities: [['text' => 'u']], overrides: [])
+				->withUserId(userId: 'alice')
+				->withScope(scope: 'dossier', dossierKey: 'dk-1')
+				->reversible()
+		);
+		$service->anonymizeDocumentWithBasisSummary(fileId: 43, entities: [], options: (new AnonymizeOptions())->withUserId(userId: 'bob'));
 
 		$this->assertSame(
 			[
@@ -264,8 +274,9 @@ class AnonymizationServiceDetectorTest extends TestCase {
 		$service->anonymizeDocument(
 			fileId: 99,
 			entities: [],
-			overrides: [['ruleId' => 'R-X', 'entityId' => 42, 'reason' => 'approved']],
-			userId: 'anna'
+			options: (new AnonymizeOptions())
+				->withConsents(unredactedEntities: [], overrides: [['ruleId' => 'R-X', 'entityId' => 42, 'reason' => 'approved']])
+				->withUserId(userId: 'anna')
 		);
 
 		$this->assertCount(1, $audits);

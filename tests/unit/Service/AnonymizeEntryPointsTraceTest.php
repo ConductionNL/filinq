@@ -54,9 +54,11 @@ use ReflectionMethod;
  * @covers \OCA\Filinq\Service\AnonymizeRequestService
  * @covers \OCA\Filinq\Service\BatchAnonymizeService
  * @uses   \OCA\Filinq\Kernel\AnonymizeCall
+ * @uses   \OCA\Filinq\Service\AnonymizeOptions
  * @uses   \OCA\Filinq\Service\AnonymizeRequestValidator
  * @uses   \OCA\Filinq\Service\AnonymizeRun
  * @uses   \OCA\Filinq\Service\BatchAnonymizeRequest
+ * @uses   \OCA\Filinq\Service\UnredactedEntitiesValidator
  *
  * @spec openspec/specs/anonymization/spec.md
  */
