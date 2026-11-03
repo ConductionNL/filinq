@@ -48,7 +48,8 @@ use ReflectionMethod;
  * recorded from the implementation that took nine separate parameters.
  *
  * Each case acts as its own user, so the trace shows which user the
- * prohibition gate ran for.
+ * prohibition gate ran for. The forged cases put another user id in the body
+ * and the query: the gate must still run for the acting user.
  *
  * @covers \OCA\Filinq\Service\AnonymizationService
  * @covers \OCA\Filinq\Service\AnonymizeRequestService
@@ -105,6 +106,18 @@ class AnonymizeEntryPointsTraceTest extends TestCase {
 				'preserve',
 				'frank',
 			],
+			'plain, forged user in body and params' => [
+				$plain + ['userId' => 'mallory', 'requestedBy' => 'mallory'],
+				['userId' => 'mallory', 'requestedBy' => 'mallory'],
+				'pdf-only',
+				'grace',
+			],
+			'summary, forged user in body and params' => [
+				['appendBasisSummary' => true, 'userId' => 'mallory', 'requestedBy' => 'mallory'] + $plain,
+				['userId' => 'mallory', 'requestedBy' => 'mallory'],
+				'pdf',
+				'heidi',
+			],
 		];
 
 	}//end requestCases()
@@ -148,6 +161,7 @@ class AnonymizeEntryPointsTraceTest extends TestCase {
 
 		$result = (new ReflectionMethod($service, 'callAnonymizeDocument'))->invoke($service, $call, $userId);
 
+		$this->assertSame(expected: $userId, actual: $this->calls[0]['gate']['userId'] ?? null, message: 'the prohibition gate runs for the acting user');
 		$this->assertTrace(trace: ['result' => $result, 'calls' => $this->calls]);
 
 	}//end testRequestServiceTrace()
