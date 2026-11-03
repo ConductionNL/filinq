@@ -57,6 +57,13 @@ export const useCustomDictionaryStore = defineStore('customDictionary', {
 				this.canMaintain = false
 			}
 		},
+		/**
+		 * Load every custom dictionary into the store.
+		 *
+		 * @return {Promise} Resolves when the list is loaded.
+		 *
+		 * @spec openspec/specs/custom-dictionary-recognition/spec.md
+		 */
 		fetchDictionaries() {
 			return storeRequest(this, {
 				failure: 'Failed to fetch custom dictionaries:',
@@ -67,6 +74,14 @@ export const useCustomDictionaryStore = defineStore('customDictionary', {
 				},
 			})
 		},
+		/**
+		 * Load one custom dictionary and select it.
+		 *
+		 * @param {string} id The dictionary id.
+		 * @return {Promise} The dictionary, or null when it could not be read.
+		 *
+		 * @spec openspec/specs/custom-dictionary-recognition/spec.md
+		 */
 		fetchDictionary(id) {
 			return storeRequest(this, {
 				failure: 'Failed to fetch custom dictionary:',
@@ -79,6 +94,14 @@ export const useCustomDictionaryStore = defineStore('customDictionary', {
 				},
 			})
 		},
+		/**
+		 * Create a custom dictionary and add it to the list.
+		 *
+		 * @param {object} data The new dictionary.
+		 * @return {Promise} The created dictionary.
+		 *
+		 * @spec openspec/specs/custom-dictionary-recognition/spec.md
+		 */
 		createDictionary(data) {
 			return storeRequest(this, {
 				failure: 'Failed to create custom dictionary:',
@@ -91,6 +114,15 @@ export const useCustomDictionaryStore = defineStore('customDictionary', {
 				},
 			})
 		},
+		/**
+		 * Update a custom dictionary in the list and in the selection.
+		 *
+		 * @param {string} id The dictionary id.
+		 * @param {object} data The changed fields.
+		 * @return {Promise} The updated dictionary.
+		 *
+		 * @spec openspec/specs/custom-dictionary-recognition/spec.md
+		 */
 		updateDictionary(id, data) {
 			return storeRequest(this, {
 				failure: 'Failed to update custom dictionary:',
@@ -113,6 +145,14 @@ export const useCustomDictionaryStore = defineStore('customDictionary', {
 				},
 			})
 		},
+		/**
+		 * Delete a custom dictionary and drop it from the list.
+		 *
+		 * @param {string} id The dictionary id.
+		 * @return {Promise} Resolves when the dictionary is gone.
+		 *
+		 * @spec openspec/specs/custom-dictionary-recognition/spec.md
+		 */
 		deleteDictionary(id) {
 			return storeRequest(this, {
 				failure: 'Failed to delete custom dictionary:',
@@ -126,6 +166,14 @@ export const useCustomDictionaryStore = defineStore('customDictionary', {
 				},
 			})
 		},
+		/**
+		 * Load the terms of one custom dictionary.
+		 *
+		 * @param {string} dictionaryId The dictionary id.
+		 * @return {Promise} Resolves when the terms are loaded.
+		 *
+		 * @spec openspec/specs/custom-dictionary-recognition/spec.md
+		 */
 		fetchTerms(dictionaryId) {
 			return storeRequest(this, {
 				failure: 'Failed to fetch terms:',
@@ -177,6 +225,8 @@ export const useCustomDictionaryStore = defineStore('customDictionary', {
 		 *                              server-side per REQ-DDCDR-005 — never
 		 *                              client-side).
 		 * @return {Promise<{added: number, skipped: number, total: number}|null>}
+		 *
+		 * @spec openspec/specs/custom-dictionary-recognition/spec.md
 		 */
 		importTerms(dictionaryId, payload) {
 			return quietRequest(this, {

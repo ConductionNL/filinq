@@ -29,6 +29,13 @@ export const useProhibitionStore = defineStore('prohibition', {
 		}),
 	},
 	actions: {
+		/**
+		 * Load every prohibition rule into the store.
+		 *
+		 * @return {Promise} Resolves when the list is loaded.
+		 *
+		 * @spec openspec/specs/anonymisation-prohibition-gate/spec.md
+		 */
 		fetchProhibitions() {
 			return storeRequest(this, {
 				failure: 'Failed to fetch prohibitions:',
@@ -39,6 +46,14 @@ export const useProhibitionStore = defineStore('prohibition', {
 				},
 			})
 		},
+		/**
+		 * Load one prohibition rule and select it.
+		 *
+		 * @param {string} id The rule id.
+		 * @return {Promise} The rule, or null when it could not be read.
+		 *
+		 * @spec openspec/specs/anonymisation-prohibition-gate/spec.md
+		 */
 		fetchProhibition(id) {
 			return storeRequest(this, {
 				failure: 'Failed to fetch prohibition:',
@@ -51,6 +66,14 @@ export const useProhibitionStore = defineStore('prohibition', {
 				},
 			})
 		},
+		/**
+		 * Create a prohibition rule and add it to the list.
+		 *
+		 * @param {object} data The new rule.
+		 * @return {Promise} The created rule.
+		 *
+		 * @spec openspec/specs/anonymisation-prohibition-gate/spec.md
+		 */
 		createProhibition(data) {
 			return storeRequest(this, {
 				failure: 'Failed to create prohibition:',
@@ -63,6 +86,15 @@ export const useProhibitionStore = defineStore('prohibition', {
 				},
 			})
 		},
+		/**
+		 * Update a prohibition rule in the list and in the selection.
+		 *
+		 * @param {string} id The rule id.
+		 * @param {object} data The changed fields.
+		 * @return {Promise} The updated rule.
+		 *
+		 * @spec openspec/specs/anonymisation-prohibition-gate/spec.md
+		 */
 		updateProhibition(id, data) {
 			return storeRequest(this, {
 				failure: 'Failed to update prohibition:',
@@ -85,6 +117,14 @@ export const useProhibitionStore = defineStore('prohibition', {
 				},
 			})
 		},
+		/**
+		 * Delete a prohibition rule and drop it from the list.
+		 *
+		 * @param {string} id The rule id.
+		 * @return {Promise} Resolves when the rule is gone.
+		 *
+		 * @spec openspec/specs/anonymisation-prohibition-gate/spec.md
+		 */
 		deleteProhibition(id) {
 			return storeRequest(this, {
 				failure: 'Failed to delete prohibition:',
