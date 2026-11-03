@@ -35,26 +35,17 @@
     ],
     "ConsentRecordWriter defaults": [
         "double ConsentNotesHelper",
+        "double ConsentPolicyReferentValidator",
         "double ConsentScopeValidator",
         "double ContainerInterface",
         "double IAppManager",
         "double LoggerInterface",
         "double ObjectionDeadlineChecker",
         {
-            "built OCA\\Filinq\\Service\\ConsentPolicyReferentValidator": [
-                "double ContainerInterface",
-                "double IAppManager",
-                "double LoggerInterface",
-                {
-                    "built OCA\\Filinq\\Service\\ObjectResultExtractor": []
-                }
-            ]
-        },
-        {
             "built OCA\\Filinq\\Service\\ObjectResultExtractor": []
         },
         {
-            "distinct objects built by the class": 3
+            "distinct objects built by the class": 1
         }
     ],
     "ConsentRecordWriter given": [
@@ -486,45 +477,13 @@
         }
     ],
     "LegalBasesSummaryService defaults": [
+        "double DossierSummaryDataService",
         "double GrondslagenPdfWriter",
         "double IUserSession",
         "double LoggerInterface",
         null,
         {
-            "built OCA\\Filinq\\Service\\DossierSummaryDataService": [
-                {
-                    "built OCA\\Filinq\\Service\\BaseLabelResolver": [
-                        "built OCA\\Filinq\\Service\\DossierObjectRepository",
-                        "double LoggerInterface"
-                    ]
-                },
-                {
-                    "built OCA\\Filinq\\Service\\DossierEntityCollector": [
-                        "built OCA\\Filinq\\Service\\BaseLabelResolver",
-                        "built OCA\\Filinq\\Service\\DossierObjectRepository",
-                        "built OCA\\Filinq\\Service\\DossierPlaceholderRanker",
-                        "double LoggerInterface"
-                    ]
-                },
-                {
-                    "built OCA\\Filinq\\Service\\DossierObjectRepository": [
-                        "double ContainerInterface",
-                        "double IAppManager",
-                        "double IRootFolder",
-                        "double IUserSession",
-                        "double LoggerInterface"
-                    ]
-                },
-                {
-                    "built OCA\\Filinq\\Service\\DossierPlaceholderRanker": [
-                        "built OCA\\Filinq\\Service\\DossierObjectRepository",
-                        "double LoggerInterface"
-                    ]
-                }
-            ]
-        },
-        {
-            "distinct objects built by the class": 5
+            "distinct objects built by the class": 0
         }
     ],
     "LegalBasesSummaryService given": [

@@ -71,6 +71,9 @@ use ReflectionParameter;
  * @uses \OCA\Filinq\Service\Support\OpenRegisterAccess
  * @uses \OCA\Filinq\Service\Support\TemplateSources
  * @uses \OCA\Filinq\Service\Support\DossierSummaryParts
+ * @uses \OCA\Filinq\Service\Support\SigningGuards
+ * @uses \OCA\Filinq\Service\Support\SigningOutputs
+ * @uses \OCA\Filinq\Service\Support\ConsentRecordRules
  */
 class ConstructorWiringGoldenTest extends TestCase {
 

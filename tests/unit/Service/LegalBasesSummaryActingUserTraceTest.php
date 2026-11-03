@@ -152,10 +152,14 @@ class LegalBasesSummaryActingUserTraceTest extends TestCase {
 		return new LegalBasesSummaryService(
 			logger: $logger,
 			pdfWriter: $pdfWriter,
-			rootFolder: $rootFolder,
 			userSession: $session,
-			appManager: $apps,
-			container: $container
+			data: new DossierSummaryDataService(
+				rootFolder: $rootFolder,
+				userSession: $session,
+				appManager: $apps,
+				container: $container,
+				logger: $logger
+			)
 		);
 
 	}//end service()

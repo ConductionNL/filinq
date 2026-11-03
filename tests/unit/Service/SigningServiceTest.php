@@ -36,6 +36,8 @@ use OCA\Filinq\Service\SigningAuditService;
 use OCA\Filinq\Service\SigningConclusionEmitter;
 use OCA\Filinq\Service\SigningRequestValidator;
 use OCA\Filinq\Service\SigningService;
+use OCA\Filinq\Service\Support\SigningGuards;
+use OCA\Filinq\Service\Support\SigningOutputs;
 use OCA\OpenRegister\Db\AuditTrail;
 use OCA\OpenRegister\Db\AuditTrailMapper;
 use OCA\OpenRegister\Db\ObjectEntity;
@@ -212,28 +214,32 @@ class SigningServiceTest extends TestCase {
 		// code paths end to end after they moved out of SigningService.
 		$this->service = new SigningService(
 			settingsService: $this->settingsService,
-			auditService: $this->auditService,
-			artifactProducer: new SignedArtifactProducer(
-				providerFactory: $this->providerFactory,
-				userSession: $this->userSession,
-				request: $this->request,
-				rootFolder: $this->rootFolder,
-				finalDocuments: $this->createMock(FinalDocumentService::class)
-			),
-			validator: new SigningRequestValidator(providerFactory: $this->providerFactory),
 			actorResolver: new SigningActorResolver(
 				settingsService: $this->settingsService,
 				config: $this->config,
 				userSession: $this->userSession,
 				request: $this->request
 			),
-			emitter: new SigningConclusionEmitter(
+			guards: new SigningGuards(
+				validator: new SigningRequestValidator(providerFactory: $this->providerFactory),
+				consentGuard: new GuardianConsentGuard(settingsService: $this->settingsService),
+				assuranceGate: $this->assuranceGate(userSession: $this->userSession)
+			),
+			outputs: new SigningOutputs(
+				auditService: $this->auditService,
+				artifactProducer: new SignedArtifactProducer(
+				providerFactory: $this->providerFactory,
+				userSession: $this->userSession,
+				request: $this->request,
+				rootFolder: $this->rootFolder,
+				finalDocuments: $this->createMock(FinalDocumentService::class)
+			),
+				emitter: new SigningConclusionEmitter(
 				eventDispatcher: $eventDispatcher,
 				logger: $logger,
 				eventFactory: new SigningConcludedEventFactory()
-			),
-			consentGuard: new GuardianConsentGuard(settingsService: $this->settingsService),
-			assuranceGate: $this->assuranceGate(userSession: $this->userSession)
+			)
+			)
 		);
 
 	}//end setUp()

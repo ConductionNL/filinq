@@ -29,6 +29,8 @@ use OCA\Filinq\Service\SigningConclusionEmitter;
 use OCA\Filinq\Service\SigningMandateService;
 use OCA\Filinq\Service\SigningRequestValidator;
 use OCA\Filinq\Service\SigningService;
+use OCA\Filinq\Service\Support\SigningGuards;
+use OCA\Filinq\Service\Support\SigningOutputs;
 use OCA\Filinq\Tests\Unit\Support\RecordsCalls;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\Files\File;
@@ -51,6 +53,8 @@ use RuntimeException;
  *
  * @covers \OCA\Filinq\Service\SigningService
  * @uses   \OCA\Filinq\Service\SigningMandateService
+ * @uses   \OCA\Filinq\Service\Support\SigningGuards
+ * @uses   \OCA\Filinq\Service\Support\SigningOutputs
  * @uses   \OCA\Filinq\Service\SignerAuth\IdentityEvidence
  * @uses   \OCA\Filinq\Service\Signing\PortalSignatureAssurance
  * @uses   \OCA\Filinq\Service\Signing\SignerEntries
@@ -155,15 +159,13 @@ class SigningServiceActingUserTraceTest extends TestCase {
 
 		return new SigningService(
 			settingsService: $settings,
-			auditService: $this->recorder(SigningAuditService::class, ['logEvent' => []]),
-			artifactProducer: $this->recorder(SignedArtifactProducer::class, ['initiatorDocument' => $file, 'delegate' => static fn (array $request): array => $request, 'produce' => 'file:11@v2']),
-			validator: $this->recorder(
+			actorResolver: $actor,
+			guards: new SigningGuards(
+				validator: $this->recorder(
 				SigningRequestValidator::class,
 				['validateRequestData' => null, 'validateProviderLevelPair' => null, 'validateSigners' => null, 'withPlacements' => static fn (array $request): array => $request]
 			),
-			actorResolver: $actor,
-			emitter: $this->recorder(SigningConclusionEmitter::class, ['emitIfDelegated' => null]),
-			consentGuard: $this->recorder(
+				consentGuard: $this->recorder(
 				GuardianConsentGuard::class,
 				[
 					'appliedAge'        => 16,
@@ -172,7 +174,7 @@ class SigningServiceActingUserTraceTest extends TestCase {
 					'withConsentBasis'  => static fn (array $request): array => $request + ['consentBasis' => 'adult'],
 				]
 			),
-			assuranceGate: $this->recorder(
+				assuranceGate: $this->recorder(
 				SigningAssuranceGate::class,
 				[
 					'applyToRequest'        => static fn (array $request): array => $request + ['assuranceFloor' => 'low'],
@@ -182,9 +184,15 @@ class SigningServiceActingUserTraceTest extends TestCase {
 					'withResolvedAssurance' => static fn (array $request): array => $request + ['assurance' => 'low'],
 				]
 			),
-			mandateService: new SigningMandateService(
+				mandateService: new SigningMandateService(
 				config: $this->recorder(IAppConfig::class, ['getValueString' => json_encode(['dossiq/besluit' => ['groups' => ['portefeuillehouders'], 'rule' => 'Only the portefeuillehouder signs a besluit']])]),
 				groupManager: $this->recorder(IGroupManager::class, ['isInGroup' => static fn (string $userId, string $group): bool => ($userId === 'alice' && $group === 'portefeuillehouders')])
+			)
+			),
+			outputs: new SigningOutputs(
+				auditService: $this->recorder(SigningAuditService::class, ['logEvent' => []]),
+				artifactProducer: $this->recorder(SignedArtifactProducer::class, ['initiatorDocument' => $file, 'delegate' => static fn (array $request): array => $request, 'produce' => 'file:11@v2']),
+				emitter: $this->recorder(SigningConclusionEmitter::class, ['emitIfDelegated' => null])
 			)
 		);
 

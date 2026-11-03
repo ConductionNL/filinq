@@ -34,6 +34,8 @@ use OCA\Filinq\Service\SigningConclusionEmitter;
 use OCA\Filinq\Service\SigningMandateService;
 use OCA\Filinq\Service\SigningRequestValidator;
 use OCA\Filinq\Service\SigningService;
+use OCA\Filinq\Service\Support\SigningGuards;
+use OCA\Filinq\Service\Support\SigningOutputs;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
@@ -159,14 +161,18 @@ class SigningServiceMandateGuardTest extends TestCase {
 
 		$this->service = new SigningService(
 			settingsService: $settingsService,
-			auditService: $this->createMock(SigningAuditService::class),
-			artifactProducer: $this->createMock(SignedArtifactProducer::class),
-			validator: $this->createMock(SigningRequestValidator::class),
 			actorResolver: $this->actorResolver,
-			emitter: $this->createMock(SigningConclusionEmitter::class),
-			consentGuard: new GuardianConsentGuard(settingsService: $settingsService),
-			assuranceGate: $this->assuranceGate(userSession: $this->createMock(\OCP\IUserSession::class)),
-			mandateService: $this->mandateService
+			guards: new SigningGuards(
+				validator: $this->createMock(SigningRequestValidator::class),
+				consentGuard: new GuardianConsentGuard(settingsService: $settingsService),
+				assuranceGate: $this->assuranceGate(userSession: $this->createMock(\OCP\IUserSession::class)),
+				mandateService: $this->mandateService
+			),
+			outputs: new SigningOutputs(
+				auditService: $this->createMock(SigningAuditService::class),
+				artifactProducer: $this->createMock(SignedArtifactProducer::class),
+				emitter: $this->createMock(SigningConclusionEmitter::class)
+			)
 		);
 
 	}//end setUp()

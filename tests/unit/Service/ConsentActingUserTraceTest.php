@@ -18,13 +18,17 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Service;
 
 use DateTime;
+use OCA\Filinq\Kernel\ConsentUpdate;
 use OCA\Filinq\Service\ConsentNotesHelper;
+use OCA\Filinq\Service\ConsentPolicyReferentValidator;
 use OCA\Filinq\Service\ConsentRecordWriter;
 use OCA\Filinq\Service\ConsentScopeValidator;
 use OCA\Filinq\Service\ConsentService;
 use OCA\Filinq\Service\ConsentUpdateHandler;
 use OCA\Filinq\Service\ObjectionDeadlineChecker;
 use OCA\Filinq\Service\PolicyMatchService;
+use OCA\Filinq\Service\Support\ConsentRecordRules;
+use OCA\Filinq\Service\Support\OpenRegisterAccess;
 use OCA\Filinq\Tests\Unit\Support\RecordsCalls;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
@@ -51,6 +55,9 @@ use Psr\Log\LoggerInterface;
  * @uses   \OCA\Filinq\Service\ObjectResultExtractor
  * @uses   \OCA\Filinq\Service\RegisterObjectRef
  * @uses   \OCA\Filinq\Service\ConsentStatusChange
+ * @uses   \OCA\Filinq\Service\Support\ConsentRecordRules
+ * @uses   \OCA\Filinq\Service\Support\OpenRegisterAccess
+ * @uses   \OCA\Filinq\Kernel\ConsentUpdate
  *
  * @spec openspec/specs/consent-management/spec.md
  */
@@ -99,7 +106,7 @@ class ConsentActingUserTraceTest extends TestCase {
 		}
 
 		$service = $this->service(stored: $stored, existing: []);
-		$this->traceCall(fn () => $service->validateAndUpdateConsent(consentId: 'c-1', register: 'filinq', schema: 'publicationConsent', data: $data, user: $user));
+		$this->traceCall(fn () => $service->validateAndUpdateConsent(update: new ConsentUpdate(consentId: 'c-1', register: 'filinq', schema: 'publicationConsent', data: $data), user: $user));
 
 		$this->assertTrace(file: self::GOLDEN, name: 'update: '.$this->dataName());
 
@@ -188,11 +195,13 @@ class ConsentActingUserTraceTest extends TestCase {
 		$deadlines = $this->recorder(ObjectionDeadlineChecker::class, ['calculateDeadline' => new DateTime('2026-12-01T00:00:00+00:00')]);
 		$writer    = new ConsentRecordWriter(
 			logger: $logger,
-			container: $container,
-			appManager: $apps,
-			deadlineChecker: $deadlines,
-			notesHelper: new ConsentNotesHelper(),
-			scopeValidator: $scope
+			openRegister: new OpenRegisterAccess(apps: $apps, container: $container),
+			rules: new ConsentRecordRules(
+				deadlineChecker: $deadlines,
+				notesHelper: new ConsentNotesHelper(),
+				scopeValidator: $scope,
+				referentValidator: new ConsentPolicyReferentValidator(logger: $logger, container: $container, appManager: $apps)
+			)
 		);
 
 		return new ConsentService(
