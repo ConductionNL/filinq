@@ -184,7 +184,12 @@ import { consentStore } from '../../store/store.js'
 						<NcTextField
 							v-model="evidence"
 							:label="t('filinq', 'How did the answer reach you?')"
-							:placeholder="t('filinq', 'For example: signed form received by post on 20 October')" />
+							:placeholder="
+								t(
+									'filinq',
+									'For example: signed form received by post on 20 October',
+								)
+							" />
 					</td>
 				</tr>
 				<tr>
@@ -242,16 +247,24 @@ import { consentStore } from '../../store/store.js'
 			<ul class="status-events">
 				<li v-for="(event, index) in statusEvents" :key="index">
 					{{
-						t('filinq', '{when}: {who} changed {field} from {from} to {to}', {
-							when: formatDate(event.at),
-							who: event.by,
-							field: event.field,
-							from: event.from,
-							to: event.to,
-						})
+						t(
+							'filinq',
+							'{when}: {who} changed {field} from {from} to {to}',
+							{
+								when: formatDate(event.at),
+								who: event.by,
+								field: event.field,
+								from: event.from,
+								to: event.to,
+							},
+						)
 					}}
 					<span v-if="event.evidence">
-						{{ t('filinq', 'Evidence: {evidence}', { evidence: event.evidence }) }}
+						{{
+							t('filinq', 'Evidence: {evidence}', {
+								evidence: event.evidence,
+							})
+						}}
 					</span>
 				</li>
 			</ul>
@@ -407,8 +420,10 @@ export default {
 		 */
 		needsEvidence() {
 			const next = this.editData.consentStatus?.value
-			return ['consent_given', 'objection_received'].includes(next)
+			return (
+				['consent_given', 'objection_received'].includes(next)
 				&& next !== consentStore.consentItem?.consentStatus
+			)
 		},
 
 		/**
@@ -609,7 +624,10 @@ export default {
 				this.evidence = ''
 				showSuccess(t('filinq', 'Consent record updated successfully'))
 			} else {
-				showError(consentStore.error || t('filinq', 'Failed to update consent record'))
+				showError(
+					consentStore.error
+						|| t('filinq', 'Failed to update consent record'),
+				)
 			}
 		},
 	},
