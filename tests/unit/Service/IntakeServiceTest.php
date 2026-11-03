@@ -576,7 +576,7 @@ class IntakeServiceTest extends TestCase {
 				arrival: new IntakeArrival(sourceRef: 'mail-1')
 			),
 			attachments: [
-				new IntakeDocumentReceivedEvent(channel: 'mail', fileId: 101, arrival: new IntakeArrival(sourceRef: 'mail-1-a1')),
+				new IntakeDocumentReceivedEvent(channel: 'mail', fileId: 101, arrival: new IntakeArrival(sourceRef: 'mail-1-a1', receivedAt: '2026-10-30T09:00:00+00:00')),
 				new IntakeDocumentReceivedEvent(channel: 'mail', fileId: 102, arrival: new IntakeArrival(sourceRef: 'mail-1-a2')),
 				new IntakeDocumentReceivedEvent(channel: 'mail', fileId: 103, arrival: new IntakeArrival(sourceRef: 'mail-1-a3')),
 			]
@@ -591,6 +591,8 @@ class IntakeServiceTest extends TestCase {
 				'Every attachment names the message it arrived with.'
 			);
 		}
+
+		$this->assertSame('2026-10-30T09:00:00+00:00', $documents[1]['receivedAt'], 'An attachment keeps its own arrival time.');
 
 	}//end testAMessageWithThreeAttachmentsBecomesFourLinkedRecords()
 
