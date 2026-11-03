@@ -1,349 +1,403 @@
 {
-    "AnonymizationService defaults": {
-        "AnonymizationService::anonymizeRunner": "double DocumentAnonymizeRunner",
-        "AnonymizationService::backendState": "double AnonymiserBackendStateClient",
-        "AnonymizationService::confidentialityLabel": "double ConfidentialityLabelService",
-        "AnonymizationService::container": "double ContainerInterface",
-        "AnonymizationService::dictionaryRunner": "double CustomDictionaryDetectionRunner",
-        "AnonymizationService::entityDetection": "double EntityDetectionService",
-        "AnonymizationService::fileEntityStats": "double FileEntityStatsService",
-        "AnonymizationService::locator": "double OpenRegisterServiceLocator",
-        "AnonymizationService::logger": "double LoggerInterface",
-        "AnonymizationService::ocrFallback": "double OcrExtractionFallback",
-        "AnonymizationService::prohibitionPolicy": "double ProhibitionPolicyService",
-        "AnonymizationService::reviewGuard": "double RedactionOutputGuard"
-    },
-    "AnonymizationService given": {
-        "AnonymizationService::anonymizeRunner": "double DocumentAnonymizeRunner",
-        "AnonymizationService::backendState": "double AnonymiserBackendStateClient",
-        "AnonymizationService::confidentialityLabel": "double ConfidentialityLabelService",
-        "AnonymizationService::container": "double ContainerInterface",
-        "AnonymizationService::dictionaryRunner": "double CustomDictionaryDetectionRunner",
-        "AnonymizationService::entityDetection": "double EntityDetectionService",
-        "AnonymizationService::fileEntityStats": "double FileEntityStatsService",
-        "AnonymizationService::locator": "double OpenRegisterServiceLocator",
-        "AnonymizationService::logger": "double LoggerInterface",
-        "AnonymizationService::ocrFallback": "double OcrExtractionFallback",
-        "AnonymizationService::prohibitionPolicy": "double ProhibitionPolicyService",
-        "AnonymizationService::reviewGuard": "double RedactionOutputGuard"
-    },
-    "DocumentAnonymizeRunner defaults": {
-        "DocumentAnonymizeRunner::emlAnonymizer": "double EmlAnonymizationService",
-        "DocumentAnonymizeRunner::entityDetection": "double EntityDetectionService",
-        "DocumentAnonymizeRunner::locator": "double OpenRegisterServiceLocator",
-        "DocumentAnonymizeRunner::logger": "double LoggerInterface",
-        "DocumentAnonymizeRunner::pdfOutput": "double AnonymisedPdfOutputService",
-        "DocumentAnonymizeRunner::persistence": "double AnonymizationPersistenceService",
-        "DocumentAnonymizeRunner::replacementVerifier": "double ReplacementVerificationService",
-        "DocumentAnonymizeRunner::runRecords": "double AnonymisationRunRecords",
-        "DocumentAnonymizeRunner::summaryAttacher": "double GrondslagenSummaryAttacher"
-    },
-    "DocumentAnonymizeRunner given": {
-        "DocumentAnonymizeRunner::emlAnonymizer": "double EmlAnonymizationService",
-        "DocumentAnonymizeRunner::entityDetection": "double EntityDetectionService",
-        "DocumentAnonymizeRunner::locator": "double OpenRegisterServiceLocator",
-        "DocumentAnonymizeRunner::logger": "double LoggerInterface",
-        "DocumentAnonymizeRunner::pdfOutput": "double AnonymisedPdfOutputService",
-        "DocumentAnonymizeRunner::persistence": "double AnonymizationPersistenceService",
-        "DocumentAnonymizeRunner::replacementVerifier": "double ReplacementVerificationService",
-        "DocumentAnonymizeRunner::runRecords": "double AnonymisationRunRecords",
-        "DocumentAnonymizeRunner::summaryAttacher": "double GrondslagenSummaryAttacher"
-    },
-    "DocumentService defaults": {
-        "DocumentService::dataResolver": "double DataResolverService",
-        "DocumentService::documentLogger": "double GeneratedDocumentLogger",
-        "DocumentService::jobs": "double DocumentJobStore",
-        "DocumentService::mergeFields": null,
-        "DocumentService::plainRendition": null,
-        "DocumentService::renderPipeline": "double DocumentRenderPipeline",
-        "DocumentService::storageService": "double DocumentStorageService",
-        "DocumentService::templateService": "double TemplateService",
-        "DocumentService::wizardGate": null
-    },
-    "DocumentService given": {
-        "DocumentService::dataResolver": "double DataResolverService",
-        "DocumentService::documentLogger": "double GeneratedDocumentLogger",
-        "DocumentService::jobs": "double DocumentJobStore",
-        "DocumentService::mergeFields": "double TemplateMergeFieldService",
-        "DocumentService::plainRendition": "double PlainLanguageRenditionService",
-        "DocumentService::renderPipeline": "double DocumentRenderPipeline",
-        "DocumentService::storageService": "double DocumentStorageService",
-        "DocumentService::templateService": "double TemplateService",
-        "DocumentService::wizardGate": "double WizardGenerationGate"
-    },
-    "DossierSummaryDataService defaults": {
-        "DossierSummaryDataService::collector": "built OCA\\Filinq\\Service\\DossierEntityCollector",
-        "DossierSummaryDataService::collector > DossierEntityCollector::labelResolver": "built OCA\\Filinq\\Service\\BaseLabelResolver",
-        "DossierSummaryDataService::collector > DossierEntityCollector::labelResolver > BaseLabelResolver::logger": "double LoggerInterface",
-        "DossierSummaryDataService::collector > DossierEntityCollector::labelResolver > BaseLabelResolver::repository": "built OCA\\Filinq\\Service\\DossierObjectRepository",
-        "DossierSummaryDataService::collector > DossierEntityCollector::logger": "same as DossierSummaryDataService::collector > DossierEntityCollector::labelResolver > BaseLabelResolver::logger",
-        "DossierSummaryDataService::collector > DossierEntityCollector::ranker": "built OCA\\Filinq\\Service\\DossierPlaceholderRanker",
-        "DossierSummaryDataService::collector > DossierEntityCollector::ranker > DossierPlaceholderRanker::logger": "same as DossierSummaryDataService::collector > DossierEntityCollector::labelResolver > BaseLabelResolver::logger",
-        "DossierSummaryDataService::collector > DossierEntityCollector::ranker > DossierPlaceholderRanker::repository": "same as DossierSummaryDataService::collector > DossierEntityCollector::labelResolver > BaseLabelResolver::repository",
-        "DossierSummaryDataService::collector > DossierEntityCollector::repository": "same as DossierSummaryDataService::collector > DossierEntityCollector::labelResolver > BaseLabelResolver::repository",
-        "DossierSummaryDataService::collector > DossierEntityCollector::repository > DossierObjectRepository::appManager": "double IAppManager",
-        "DossierSummaryDataService::collector > DossierEntityCollector::repository > DossierObjectRepository::container": "double ContainerInterface",
-        "DossierSummaryDataService::collector > DossierEntityCollector::repository > DossierObjectRepository::logger": "same as DossierSummaryDataService::collector > DossierEntityCollector::labelResolver > BaseLabelResolver::logger",
-        "DossierSummaryDataService::collector > DossierEntityCollector::repository > DossierObjectRepository::rootFolder": "double IRootFolder",
-        "DossierSummaryDataService::collector > DossierEntityCollector::repository > DossierObjectRepository::userSession": "double IUserSession",
-        "DossierSummaryDataService::labelResolver": "same as DossierSummaryDataService::collector > DossierEntityCollector::labelResolver",
-        "DossierSummaryDataService::labelResolver > BaseLabelResolver::logger": "same as DossierSummaryDataService::collector > DossierEntityCollector::labelResolver > BaseLabelResolver::logger",
-        "DossierSummaryDataService::labelResolver > BaseLabelResolver::repository": "same as DossierSummaryDataService::collector > DossierEntityCollector::labelResolver > BaseLabelResolver::repository",
-        "DossierSummaryDataService::labelResolver > BaseLabelResolver::repository > DossierObjectRepository::appManager": "same as DossierSummaryDataService::collector > DossierEntityCollector::repository > DossierObjectRepository::appManager",
-        "DossierSummaryDataService::labelResolver > BaseLabelResolver::repository > DossierObjectRepository::container": "same as DossierSummaryDataService::collector > DossierEntityCollector::repository > DossierObjectRepository::container",
-        "DossierSummaryDataService::labelResolver > BaseLabelResolver::repository > DossierObjectRepository::logger": "same as DossierSummaryDataService::collector > DossierEntityCollector::labelResolver > BaseLabelResolver::logger",
-        "DossierSummaryDataService::labelResolver > BaseLabelResolver::repository > DossierObjectRepository::rootFolder": "same as DossierSummaryDataService::collector > DossierEntityCollector::repository > DossierObjectRepository::rootFolder",
-        "DossierSummaryDataService::labelResolver > BaseLabelResolver::repository > DossierObjectRepository::userSession": "same as DossierSummaryDataService::collector > DossierEntityCollector::repository > DossierObjectRepository::userSession",
-        "DossierSummaryDataService::ranker": "same as DossierSummaryDataService::collector > DossierEntityCollector::ranker",
-        "DossierSummaryDataService::ranker > DossierPlaceholderRanker::logger": "same as DossierSummaryDataService::collector > DossierEntityCollector::labelResolver > BaseLabelResolver::logger",
-        "DossierSummaryDataService::ranker > DossierPlaceholderRanker::repository": "same as DossierSummaryDataService::collector > DossierEntityCollector::labelResolver > BaseLabelResolver::repository",
-        "DossierSummaryDataService::ranker > DossierPlaceholderRanker::repository > DossierObjectRepository::appManager": "same as DossierSummaryDataService::collector > DossierEntityCollector::repository > DossierObjectRepository::appManager",
-        "DossierSummaryDataService::ranker > DossierPlaceholderRanker::repository > DossierObjectRepository::container": "same as DossierSummaryDataService::collector > DossierEntityCollector::repository > DossierObjectRepository::container",
-        "DossierSummaryDataService::ranker > DossierPlaceholderRanker::repository > DossierObjectRepository::logger": "same as DossierSummaryDataService::collector > DossierEntityCollector::labelResolver > BaseLabelResolver::logger",
-        "DossierSummaryDataService::ranker > DossierPlaceholderRanker::repository > DossierObjectRepository::rootFolder": "same as DossierSummaryDataService::collector > DossierEntityCollector::repository > DossierObjectRepository::rootFolder",
-        "DossierSummaryDataService::ranker > DossierPlaceholderRanker::repository > DossierObjectRepository::userSession": "same as DossierSummaryDataService::collector > DossierEntityCollector::repository > DossierObjectRepository::userSession",
-        "DossierSummaryDataService::repository": "same as DossierSummaryDataService::collector > DossierEntityCollector::labelResolver > BaseLabelResolver::repository",
-        "DossierSummaryDataService::repository > DossierObjectRepository::appManager": "same as DossierSummaryDataService::collector > DossierEntityCollector::repository > DossierObjectRepository::appManager",
-        "DossierSummaryDataService::repository > DossierObjectRepository::container": "same as DossierSummaryDataService::collector > DossierEntityCollector::repository > DossierObjectRepository::container",
-        "DossierSummaryDataService::repository > DossierObjectRepository::logger": "same as DossierSummaryDataService::collector > DossierEntityCollector::labelResolver > BaseLabelResolver::logger",
-        "DossierSummaryDataService::repository > DossierObjectRepository::rootFolder": "same as DossierSummaryDataService::collector > DossierEntityCollector::repository > DossierObjectRepository::rootFolder",
-        "DossierSummaryDataService::repository > DossierObjectRepository::userSession": "same as DossierSummaryDataService::collector > DossierEntityCollector::repository > DossierObjectRepository::userSession"
-    },
-    "DossierSummaryDataService given": {
-        "DossierSummaryDataService::collector": "double DossierEntityCollector",
-        "DossierSummaryDataService::labelResolver": "double BaseLabelResolver",
-        "DossierSummaryDataService::ranker": "double DossierPlaceholderRanker",
-        "DossierSummaryDataService::repository": "double DossierObjectRepository"
-    },
-    "EmlAttachmentRenderer defaults": {
-        "EmlAttachmentRenderer::appConfig": "double IAppConfig",
-        "EmlAttachmentRenderer::logger": "double LoggerInterface",
-        "EmlAttachmentRenderer::pdfService": "double PdfService",
-        "EmlAttachmentRenderer::structureReader": "built OCA\\Filinq\\Service\\EmlStructureReader",
-        "EmlAttachmentRenderer::templateLoader": "built OCA\\Filinq\\Service\\EmlTemplateLoader",
-        "EmlAttachmentRenderer::templateRenderer": "double TemplateRenderer",
-        "EmlAttachmentRenderer::wordRenderer": "built OCA\\Filinq\\Service\\PhpWordHtmlRenderer"
-    },
-    "EmlAttachmentRenderer given": {
-        "EmlAttachmentRenderer::appConfig": "double IAppConfig",
-        "EmlAttachmentRenderer::logger": "double LoggerInterface",
-        "EmlAttachmentRenderer::pdfService": "double PdfService",
-        "EmlAttachmentRenderer::structureReader": "double EmlStructureReader",
-        "EmlAttachmentRenderer::templateLoader": "double EmlTemplateLoader",
-        "EmlAttachmentRenderer::templateRenderer": "double TemplateRenderer",
-        "EmlAttachmentRenderer::wordRenderer": "double PhpWordHtmlRenderer"
-    },
-    "EntityConsolidationService defaults": {
-        "EntityConsolidationService::appConfig": "double IAppConfig",
-        "EntityConsolidationService::appManager": "double IAppManager",
-        "EntityConsolidationService::basesResolver": "double BasesResolverService",
-        "EntityConsolidationService::container": "double ContainerInterface",
-        "EntityConsolidationService::logger": "double LoggerInterface",
-        "EntityConsolidationService::policyMatch": "double PolicyMatchService",
-        "EntityConsolidationService::wooProfile": "double WooProfileService"
-    },
-    "EntityConsolidationService given": {
-        "EntityConsolidationService::appConfig": "double IAppConfig",
-        "EntityConsolidationService::appManager": "double IAppManager",
-        "EntityConsolidationService::basesResolver": "double BasesResolverService",
-        "EntityConsolidationService::container": "double ContainerInterface",
-        "EntityConsolidationService::logger": "double LoggerInterface",
-        "EntityConsolidationService::policyMatch": "double PolicyMatchService",
-        "EntityConsolidationService::wooProfile": "double WooProfileService"
-    },
-    "FinancialExtractionCompletedEvent defaults": {
-        "FinancialExtractionCompletedEvent::docType": "text:docType",
-        "FinancialExtractionCompletedEvent::documentUri": "text:documentUri",
-        "FinancialExtractionCompletedEvent::fieldConfidence": {
+    "AnonymizationService defaults": [
+        "double AnonymiserBackendStateClient",
+        "double ConfidentialityLabelService",
+        "double ContainerInterface",
+        "double CustomDictionaryDetectionRunner",
+        "double DocumentAnonymizeRunner",
+        "double EntityDetectionService",
+        "double FileEntityStatsService",
+        "double LoggerInterface",
+        "double OcrExtractionFallback",
+        "double OpenRegisterServiceLocator",
+        "double ProhibitionPolicyService",
+        "double RedactionOutputGuard"
+    ],
+    "AnonymizationService given": [
+        "double AnonymiserBackendStateClient",
+        "double ConfidentialityLabelService",
+        "double ContainerInterface",
+        "double CustomDictionaryDetectionRunner",
+        "double DocumentAnonymizeRunner",
+        "double EntityDetectionService",
+        "double FileEntityStatsService",
+        "double LoggerInterface",
+        "double OcrExtractionFallback",
+        "double OpenRegisterServiceLocator",
+        "double ProhibitionPolicyService",
+        "double RedactionOutputGuard"
+    ],
+    "DocumentAnonymizeRunner defaults": [
+        "double AnonymisationRunRecords",
+        "double AnonymisedPdfOutputService",
+        "double AnonymizationPersistenceService",
+        "double EmlAnonymizationService",
+        "double EntityDetectionService",
+        "double GrondslagenSummaryAttacher",
+        "double LoggerInterface",
+        "double OpenRegisterServiceLocator",
+        "double ReplacementVerificationService"
+    ],
+    "DocumentAnonymizeRunner given": [
+        "double AnonymisationRunRecords",
+        "double AnonymisedPdfOutputService",
+        "double AnonymizationPersistenceService",
+        "double EmlAnonymizationService",
+        "double EntityDetectionService",
+        "double GrondslagenSummaryAttacher",
+        "double LoggerInterface",
+        "double OpenRegisterServiceLocator",
+        "double ReplacementVerificationService"
+    ],
+    "DocumentService defaults": [
+        "double DataResolverService",
+        "double DocumentJobStore",
+        "double DocumentRenderPipeline",
+        "double DocumentStorageService",
+        "double GeneratedDocumentLogger",
+        "double TemplateService",
+        null,
+        null,
+        null
+    ],
+    "DocumentService given": [
+        "double DataResolverService",
+        "double DocumentJobStore",
+        "double DocumentRenderPipeline",
+        "double DocumentStorageService",
+        "double GeneratedDocumentLogger",
+        "double PlainLanguageRenditionService",
+        "double TemplateMergeFieldService",
+        "double TemplateService",
+        "double WizardGenerationGate"
+    ],
+    "DossierSummaryDataService defaults": [
+        {
+            "built OCA\\Filinq\\Service\\BaseLabelResolver": [
+                "double LoggerInterface",
+                {
+                    "built OCA\\Filinq\\Service\\DossierObjectRepository": [
+                        "double ContainerInterface",
+                        "double IAppManager",
+                        "double IRootFolder",
+                        "double IUserSession",
+                        "double LoggerInterface"
+                    ]
+                }
+            ]
+        },
+        {
+            "built OCA\\Filinq\\Service\\DossierEntityCollector": [
+                "double LoggerInterface",
+                {
+                    "built OCA\\Filinq\\Service\\BaseLabelResolver": [
+                        "built OCA\\Filinq\\Service\\DossierObjectRepository",
+                        "double LoggerInterface"
+                    ]
+                },
+                {
+                    "built OCA\\Filinq\\Service\\DossierObjectRepository": [
+                        "double ContainerInterface",
+                        "double IAppManager",
+                        "double IRootFolder",
+                        "double IUserSession",
+                        "double LoggerInterface"
+                    ]
+                },
+                {
+                    "built OCA\\Filinq\\Service\\DossierPlaceholderRanker": [
+                        "built OCA\\Filinq\\Service\\DossierObjectRepository",
+                        "double LoggerInterface"
+                    ]
+                }
+            ]
+        },
+        {
+            "built OCA\\Filinq\\Service\\DossierObjectRepository": [
+                "double ContainerInterface",
+                "double IAppManager",
+                "double IRootFolder",
+                "double IUserSession",
+                "double LoggerInterface"
+            ]
+        },
+        {
+            "built OCA\\Filinq\\Service\\DossierPlaceholderRanker": [
+                "double LoggerInterface",
+                {
+                    "built OCA\\Filinq\\Service\\DossierObjectRepository": [
+                        "double ContainerInterface",
+                        "double IAppManager",
+                        "double IRootFolder",
+                        "double IUserSession",
+                        "double LoggerInterface"
+                    ]
+                }
+            ]
+        }
+    ],
+    "DossierSummaryDataService given": [
+        "double BaseLabelResolver",
+        "double DossierEntityCollector",
+        "double DossierObjectRepository",
+        "double DossierPlaceholderRanker"
+    ],
+    "EmlAttachmentRenderer defaults": [
+        "double IAppConfig",
+        "double LoggerInterface",
+        "double PdfService",
+        "double TemplateRenderer",
+        {
+            "built OCA\\Filinq\\Service\\EmlStructureReader": []
+        },
+        {
+            "built OCA\\Filinq\\Service\\EmlTemplateLoader": []
+        },
+        {
+            "built OCA\\Filinq\\Service\\PhpWordHtmlRenderer": []
+        }
+    ],
+    "EmlAttachmentRenderer given": [
+        "double EmlStructureReader",
+        "double EmlTemplateLoader",
+        "double IAppConfig",
+        "double LoggerInterface",
+        "double PdfService",
+        "double PhpWordHtmlRenderer",
+        "double TemplateRenderer"
+    ],
+    "EntityConsolidationService defaults": [
+        "double BasesResolverService",
+        "double ContainerInterface",
+        "double IAppConfig",
+        "double IAppManager",
+        "double LoggerInterface",
+        "double PolicyMatchService",
+        "double WooProfileService"
+    ],
+    "EntityConsolidationService given": [
+        "double BasesResolverService",
+        "double ContainerInterface",
+        "double IAppConfig",
+        "double IAppManager",
+        "double LoggerInterface",
+        "double PolicyMatchService",
+        "double WooProfileService"
+    ],
+    "FinancialExtractionCompletedEvent defaults": [
+        "text:docType",
+        "text:documentUri",
+        "text:requestedBy",
+        "text:sourceApp",
+        4.25,
+        {
             "list:fieldConfidence": [
                 1,
                 "two"
             ]
         },
-        "FinancialExtractionCompletedEvent::fields": {
+        {
             "list:fields": [
                 1,
                 "two"
             ]
-        },
-        "FinancialExtractionCompletedEvent::overallConfidence": 4.25,
-        "FinancialExtractionCompletedEvent::requestedBy": "text:requestedBy",
-        "FinancialExtractionCompletedEvent::sourceApp": "text:sourceApp"
-    },
-    "FinancialExtractionCompletedEvent given": {
-        "FinancialExtractionCompletedEvent::docType": "text:docType",
-        "FinancialExtractionCompletedEvent::documentUri": "text:documentUri",
-        "FinancialExtractionCompletedEvent::fieldConfidence": {
+        }
+    ],
+    "FinancialExtractionCompletedEvent given": [
+        "text:docType",
+        "text:documentUri",
+        "text:requestedBy",
+        "text:sourceApp",
+        4.25,
+        {
             "list:fieldConfidence": [
                 1,
                 "two"
             ]
         },
-        "FinancialExtractionCompletedEvent::fields": {
+        {
             "list:fields": [
                 1,
                 "two"
             ]
-        },
-        "FinancialExtractionCompletedEvent::overallConfidence": 4.25,
-        "FinancialExtractionCompletedEvent::requestedBy": "text:requestedBy",
-        "FinancialExtractionCompletedEvent::sourceApp": "text:sourceApp"
-    },
-    "FinancialExtractionService defaults": {
-        "FinancialExtractionService::amountExtractor": "double AmountExtractor",
-        "FinancialExtractionService::container": "double ContainerInterface",
-        "FinancialExtractionService::dateExtractor": "double DateExtractor",
-        "FinancialExtractionService::eventDispatcher": "double IEventDispatcher",
-        "FinancialExtractionService::ibanExtractor": "double IbanExtractor",
-        "FinancialExtractionService::kvkExtractor": "double KvkExtractor",
-        "FinancialExtractionService::logger": "double LoggerInterface",
-        "FinancialExtractionService::ocrService": "double OcrService",
-        "FinancialExtractionService::registerResolver": "double OpenRegisterResolver",
-        "FinancialExtractionService::rootFolder": "double IRootFolder",
-        "FinancialExtractionService::settingsService": "double SettingsService",
-        "FinancialExtractionService::totalsReconciler": "double TotalsReconciler",
-        "FinancialExtractionService::userSession": "double IUserSession",
-        "FinancialExtractionService::vatIdExtractor": "double VatIdExtractor"
-    },
-    "FinancialExtractionService given": {
-        "FinancialExtractionService::amountExtractor": "double AmountExtractor",
-        "FinancialExtractionService::container": "double ContainerInterface",
-        "FinancialExtractionService::dateExtractor": "double DateExtractor",
-        "FinancialExtractionService::eventDispatcher": "double IEventDispatcher",
-        "FinancialExtractionService::ibanExtractor": "double IbanExtractor",
-        "FinancialExtractionService::kvkExtractor": "double KvkExtractor",
-        "FinancialExtractionService::logger": "double LoggerInterface",
-        "FinancialExtractionService::ocrService": "double OcrService",
-        "FinancialExtractionService::registerResolver": "double OpenRegisterResolver",
-        "FinancialExtractionService::rootFolder": "double IRootFolder",
-        "FinancialExtractionService::settingsService": "double SettingsService",
-        "FinancialExtractionService::totalsReconciler": "double TotalsReconciler",
-        "FinancialExtractionService::userSession": "double IUserSession",
-        "FinancialExtractionService::vatIdExtractor": "double VatIdExtractor"
-    },
-    "FolderBatchService defaults": {
-        "FolderBatchService::anonService": "double AnonymizationService",
-        "FolderBatchService::enumerator": "built OCA\\Filinq\\Service\\FolderFileEnumerator",
-        "FolderBatchService::enumerator > FolderFileEnumerator::appConfig": "double IAppConfig",
-        "FolderBatchService::enumerator > FolderFileEnumerator::confidentialityLabel": "double ConfidentialityLabelService",
-        "FolderBatchService::enumerator > FolderFileEnumerator::layout": "double OutputLayoutResolver",
-        "FolderBatchService::jobList": "double JobQueueInterface",
-        "FolderBatchService::logger": "double LoggerInterface",
-        "FolderBatchService::rootFolder": "double IRootFolder",
-        "FolderBatchService::stateService": "double BatchStateService",
-        "FolderBatchService::userSession": "double IUserSession"
-    },
-    "FolderBatchService given": {
-        "FolderBatchService::anonService": "double AnonymizationService",
-        "FolderBatchService::enumerator": "built OCA\\Filinq\\Service\\FolderFileEnumerator",
-        "FolderBatchService::enumerator > FolderFileEnumerator::appConfig": "double IAppConfig",
-        "FolderBatchService::enumerator > FolderFileEnumerator::confidentialityLabel": "double ConfidentialityLabelService",
-        "FolderBatchService::enumerator > FolderFileEnumerator::layout": "double OutputLayoutResolver",
-        "FolderBatchService::jobList": "double JobQueueInterface",
-        "FolderBatchService::logger": "double LoggerInterface",
-        "FolderBatchService::rootFolder": "double IRootFolder",
-        "FolderBatchService::stateService": "double BatchStateService",
-        "FolderBatchService::userSession": "double IUserSession"
-    },
-    "GlAccountSuggestedEvent defaults": {
-        "GlAccountSuggestedEvent::extractionId": "text:extractionId",
-        "GlAccountSuggestedEvent::identityType": "text:identityType",
-        "GlAccountSuggestedEvent::requestedBy": "text:requestedBy",
-        "GlAccountSuggestedEvent::source": "text:source",
-        "GlAccountSuggestedEvent::sourceApp": "text:sourceApp",
-        "GlAccountSuggestedEvent::suggestedAccounts": {
+        }
+    ],
+    "FinancialExtractionService defaults": [
+        "double AmountExtractor",
+        "double ContainerInterface",
+        "double DateExtractor",
+        "double IEventDispatcher",
+        "double IRootFolder",
+        "double IUserSession",
+        "double IbanExtractor",
+        "double KvkExtractor",
+        "double LoggerInterface",
+        "double OcrService",
+        "double OpenRegisterResolver",
+        "double SettingsService",
+        "double TotalsReconciler",
+        "double VatIdExtractor"
+    ],
+    "FinancialExtractionService given": [
+        "double AmountExtractor",
+        "double ContainerInterface",
+        "double DateExtractor",
+        "double IEventDispatcher",
+        "double IRootFolder",
+        "double IUserSession",
+        "double IbanExtractor",
+        "double KvkExtractor",
+        "double LoggerInterface",
+        "double OcrService",
+        "double OpenRegisterResolver",
+        "double SettingsService",
+        "double TotalsReconciler",
+        "double VatIdExtractor"
+    ],
+    "FolderBatchService defaults": [
+        "double AnonymizationService",
+        "double BatchStateService",
+        "double IRootFolder",
+        "double IUserSession",
+        "double JobQueueInterface",
+        "double LoggerInterface",
+        {
+            "built OCA\\Filinq\\Service\\FolderFileEnumerator": [
+                "double ConfidentialityLabelService",
+                "double IAppConfig",
+                "double OutputLayoutResolver"
+            ]
+        }
+    ],
+    "FolderBatchService given": [
+        "double AnonymizationService",
+        "double BatchStateService",
+        "double IRootFolder",
+        "double IUserSession",
+        "double JobQueueInterface",
+        "double LoggerInterface",
+        {
+            "built OCA\\Filinq\\Service\\FolderFileEnumerator": [
+                "double ConfidentialityLabelService",
+                "double IAppConfig",
+                "double OutputLayoutResolver"
+            ]
+        }
+    ],
+    "GlAccountSuggestedEvent defaults": [
+        "text:extractionId",
+        "text:identityType",
+        "text:requestedBy",
+        "text:source",
+        "text:sourceApp",
+        "text:supplierIdentity",
+        {
             "list:suggestedAccounts": [
                 1,
                 "two"
             ]
-        },
-        "GlAccountSuggestedEvent::supplierIdentity": "text:supplierIdentity"
-    },
-    "GlAccountSuggestedEvent given": {
-        "GlAccountSuggestedEvent::extractionId": "text:extractionId",
-        "GlAccountSuggestedEvent::identityType": "text:identityType",
-        "GlAccountSuggestedEvent::requestedBy": "text:requestedBy",
-        "GlAccountSuggestedEvent::source": "text:source",
-        "GlAccountSuggestedEvent::sourceApp": "text:sourceApp",
-        "GlAccountSuggestedEvent::suggestedAccounts": {
+        }
+    ],
+    "GlAccountSuggestedEvent given": [
+        "text:extractionId",
+        "text:identityType",
+        "text:requestedBy",
+        "text:source",
+        "text:sourceApp",
+        "text:supplierIdentity",
+        {
             "list:suggestedAccounts": [
                 1,
                 "two"
             ]
-        },
-        "GlAccountSuggestedEvent::supplierIdentity": "text:supplierIdentity"
-    },
-    "IntakeDocumentReceivedEvent defaults": {
-        "IntakeDocumentReceivedEvent::arrivedWith": "",
-        "IntakeDocumentReceivedEvent::channel": "text:channel",
-        "IntakeDocumentReceivedEvent::fileId": null,
-        "IntakeDocumentReceivedEvent::fileName": "",
-        "IntakeDocumentReceivedEvent::receivedAt": null,
-        "IntakeDocumentReceivedEvent::sender": "",
-        "IntakeDocumentReceivedEvent::sourceRef": "",
-        "IntakeDocumentReceivedEvent::subject": ""
-    },
-    "IntakeDocumentReceivedEvent given": {
-        "IntakeDocumentReceivedEvent::arrivedWith": "text:arrivedWith",
-        "IntakeDocumentReceivedEvent::channel": "text:channel",
-        "IntakeDocumentReceivedEvent::fileId": 6,
-        "IntakeDocumentReceivedEvent::fileName": "text:fileName",
-        "IntakeDocumentReceivedEvent::receivedAt": "text:receivedAt",
-        "IntakeDocumentReceivedEvent::sender": "text:sender",
-        "IntakeDocumentReceivedEvent::sourceRef": "text:sourceRef",
-        "IntakeDocumentReceivedEvent::subject": "text:subject"
-    },
-    "IntakeService defaults": {
-        "IntakeService::defaults": "double IntakeDefaultRuleService",
-        "IntakeService::gate": "double IntakeAuthorizationGate",
-        "IntakeService::logger": "double LoggerInterface",
-        "IntakeService::ocrQueue": "double IntakeOcrQueue",
-        "IntakeService::parties": "double PartySuggestionService",
-        "IntakeService::placement": "double IntakeFilePlacement",
-        "IntakeService::repository": "double IntakeRepository",
-        "IntakeService::routing": "double IntakeRoutingService",
-        "IntakeService::userSession": "double IUserSession"
-    },
-    "IntakeService given": {
-        "IntakeService::defaults": "double IntakeDefaultRuleService",
-        "IntakeService::gate": "double IntakeAuthorizationGate",
-        "IntakeService::logger": "double LoggerInterface",
-        "IntakeService::ocrQueue": "double IntakeOcrQueue",
-        "IntakeService::parties": "double PartySuggestionService",
-        "IntakeService::placement": "double IntakeFilePlacement",
-        "IntakeService::repository": "double IntakeRepository",
-        "IntakeService::routing": "double IntakeRoutingService",
-        "IntakeService::userSession": "double IUserSession"
-    },
-    "LegalBasesSummaryService defaults": {
-        "LegalBasesSummaryService::data": "built OCA\\Filinq\\Service\\DossierSummaryDataService",
-        "LegalBasesSummaryService::data > DossierSummaryDataService::collector": "built OCA\\Filinq\\Service\\DossierEntityCollector",
-        "LegalBasesSummaryService::data > DossierSummaryDataService::collector > DossierEntityCollector::labelResolver": "built OCA\\Filinq\\Service\\BaseLabelResolver",
-        "LegalBasesSummaryService::data > DossierSummaryDataService::collector > DossierEntityCollector::logger": "double LoggerInterface",
-        "LegalBasesSummaryService::data > DossierSummaryDataService::collector > DossierEntityCollector::ranker": "built OCA\\Filinq\\Service\\DossierPlaceholderRanker",
-        "LegalBasesSummaryService::data > DossierSummaryDataService::collector > DossierEntityCollector::repository": "built OCA\\Filinq\\Service\\DossierObjectRepository",
-        "LegalBasesSummaryService::data > DossierSummaryDataService::labelResolver": "same as LegalBasesSummaryService::data > DossierSummaryDataService::collector > DossierEntityCollector::labelResolver",
-        "LegalBasesSummaryService::data > DossierSummaryDataService::labelResolver > BaseLabelResolver::logger": "same as LegalBasesSummaryService::data > DossierSummaryDataService::collector > DossierEntityCollector::logger",
-        "LegalBasesSummaryService::data > DossierSummaryDataService::labelResolver > BaseLabelResolver::repository": "same as LegalBasesSummaryService::data > DossierSummaryDataService::collector > DossierEntityCollector::repository",
-        "LegalBasesSummaryService::data > DossierSummaryDataService::ranker": "same as LegalBasesSummaryService::data > DossierSummaryDataService::collector > DossierEntityCollector::ranker",
-        "LegalBasesSummaryService::data > DossierSummaryDataService::ranker > DossierPlaceholderRanker::logger": "same as LegalBasesSummaryService::data > DossierSummaryDataService::collector > DossierEntityCollector::logger",
-        "LegalBasesSummaryService::data > DossierSummaryDataService::ranker > DossierPlaceholderRanker::repository": "same as LegalBasesSummaryService::data > DossierSummaryDataService::collector > DossierEntityCollector::repository",
-        "LegalBasesSummaryService::data > DossierSummaryDataService::repository": "same as LegalBasesSummaryService::data > DossierSummaryDataService::collector > DossierEntityCollector::repository",
-        "LegalBasesSummaryService::data > DossierSummaryDataService::repository > DossierObjectRepository::appManager": "double IAppManager",
-        "LegalBasesSummaryService::data > DossierSummaryDataService::repository > DossierObjectRepository::container": "double ContainerInterface",
-        "LegalBasesSummaryService::data > DossierSummaryDataService::repository > DossierObjectRepository::logger": "same as LegalBasesSummaryService::data > DossierSummaryDataService::collector > DossierEntityCollector::logger",
-        "LegalBasesSummaryService::data > DossierSummaryDataService::repository > DossierObjectRepository::rootFolder": "double IRootFolder",
-        "LegalBasesSummaryService::data > DossierSummaryDataService::repository > DossierObjectRepository::userSession": "double IUserSession",
-        "LegalBasesSummaryService::l10n": null,
-        "LegalBasesSummaryService::logger": "same as LegalBasesSummaryService::data > DossierSummaryDataService::collector > DossierEntityCollector::logger",
-        "LegalBasesSummaryService::pdfWriter": "double GrondslagenPdfWriter",
-        "LegalBasesSummaryService::userSession": "same as LegalBasesSummaryService::data > DossierSummaryDataService::repository > DossierObjectRepository::userSession"
-    },
-    "LegalBasesSummaryService given": {
-        "LegalBasesSummaryService::data": "double DossierSummaryDataService",
-        "LegalBasesSummaryService::l10n": "double IL10N",
-        "LegalBasesSummaryService::logger": "double LoggerInterface",
-        "LegalBasesSummaryService::pdfWriter": "double GrondslagenPdfWriter",
-        "LegalBasesSummaryService::userSession": "double IUserSession"
-    }
+        }
+    ],
+    "IntakeDocumentReceivedEvent defaults": [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "text:channel",
+        null,
+        null
+    ],
+    "IntakeDocumentReceivedEvent given": [
+        "text:arrivedWith",
+        "text:channel",
+        "text:fileName",
+        "text:receivedAt",
+        "text:sender",
+        "text:sourceRef",
+        "text:subject",
+        6
+    ],
+    "IntakeService defaults": [
+        "double IUserSession",
+        "double IntakeAuthorizationGate",
+        "double IntakeDefaultRuleService",
+        "double IntakeFilePlacement",
+        "double IntakeOcrQueue",
+        "double IntakeRepository",
+        "double IntakeRoutingService",
+        "double LoggerInterface",
+        "double PartySuggestionService"
+    ],
+    "IntakeService given": [
+        "double IUserSession",
+        "double IntakeAuthorizationGate",
+        "double IntakeDefaultRuleService",
+        "double IntakeFilePlacement",
+        "double IntakeOcrQueue",
+        "double IntakeRepository",
+        "double IntakeRoutingService",
+        "double LoggerInterface",
+        "double PartySuggestionService"
+    ],
+    "LegalBasesSummaryService defaults": [
+        "double GrondslagenPdfWriter",
+        "double IUserSession",
+        "double LoggerInterface",
+        null,
+        {
+            "built OCA\\Filinq\\Service\\DossierSummaryDataService": [
+                {
+                    "built OCA\\Filinq\\Service\\BaseLabelResolver": [
+                        "built OCA\\Filinq\\Service\\DossierObjectRepository",
+                        "double LoggerInterface"
+                    ]
+                },
+                {
+                    "built OCA\\Filinq\\Service\\DossierEntityCollector": [
+                        "built OCA\\Filinq\\Service\\BaseLabelResolver",
+                        "built OCA\\Filinq\\Service\\DossierObjectRepository",
+                        "built OCA\\Filinq\\Service\\DossierPlaceholderRanker",
+                        "double LoggerInterface"
+                    ]
+                },
+                {
+                    "built OCA\\Filinq\\Service\\DossierObjectRepository": [
+                        "double ContainerInterface",
+                        "double IAppManager",
+                        "double IRootFolder",
+                        "double IUserSession",
+                        "double LoggerInterface"
+                    ]
+                },
+                {
+                    "built OCA\\Filinq\\Service\\DossierPlaceholderRanker": [
+                        "built OCA\\Filinq\\Service\\DossierObjectRepository",
+                        "double LoggerInterface"
+                    ]
+                }
+            ]
+        }
+    ],
+    "LegalBasesSummaryService given": [
+        "double DossierSummaryDataService",
+        "double GrondslagenPdfWriter",
+        "double IL10N",
+        "double IUserSession",
+        "double LoggerInterface"
+    ]
 }

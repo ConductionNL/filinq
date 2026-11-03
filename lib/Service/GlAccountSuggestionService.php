@@ -36,6 +36,7 @@ namespace OCA\Filinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\Filinq\Event\GlAccountSuggestedEvent;
+use OCA\Filinq\Event\Support\RequestOrigin;
 use OCA\Filinq\Kernel\Contracts\GlAccountSuggestionServiceInterface;
 use OCA\Filinq\Service\Suggestion\CategoryKeywordMapper;
 use OCA\Filinq\Service\Suggestion\HistoryRanker;
@@ -571,13 +572,12 @@ class GlAccountSuggestionService implements GlAccountSuggestionServiceInterface 
 	private function dispatchSuggestedEvent(string $extractionId, array $result, string $sourceApp, string $requestedBy): void {
 		try {
 			$event = new GlAccountSuggestedEvent(
+				origin: new RequestOrigin(sourceApp: $sourceApp, requestedBy: $requestedBy),
 				extractionId: $extractionId,
 				supplierIdentity: $result['supplierIdentity'],
 				identityType: $result['identityType'],
 				suggestedAccounts: $result['suggestedAccounts'],
 				source: $result['source'],
-				sourceApp: $sourceApp,
-				requestedBy: $requestedBy,
 			);
 
 			$this->eventDispatcher->dispatchTyped($event);

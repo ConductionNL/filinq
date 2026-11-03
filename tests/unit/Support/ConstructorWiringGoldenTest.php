@@ -32,9 +32,9 @@ use ReflectionParameter;
  * a double named after its type, a parameter whose type is a collaborator
  * bundle (namespace `...\Support\`) is built the same way, and optional
  * parameters are left out in one variant and given in the other. The golden
- * pins which double, scalar or self-built object ends up in which property,
- * so the wiring is the same whatever shape the constructor has. Properties
- * that hold a bundle are left out of the record. RECORD_GOLDEN=1 rewrites
+ * pins every double, scalar and self-built object the instance holds, and
+ * how often, so the wiring is the same whatever shape the constructor has
+ * and whichever property or bundle holds a collaborator. RECORD_GOLDEN=1 rewrites
  * the golden file.
  *
  * @covers \OCA\Filinq\Service\DossierSummaryDataService
@@ -50,6 +50,24 @@ use ReflectionParameter;
  * @covers \OCA\Filinq\Event\IntakeDocumentReceivedEvent
  * @covers \OCA\Filinq\Event\FinancialExtractionCompletedEvent
  * @covers \OCA\Filinq\Event\GlAccountSuggestedEvent
+ * @uses \OCA\Filinq\Event\Support\IntakeArrival
+ * @uses \OCA\Filinq\Event\Support\RequestOrigin
+ * @uses \OCA\Filinq\Service\BaseLabelResolver
+ * @uses \OCA\Filinq\Service\DossierEntityCollector
+ * @uses \OCA\Filinq\Service\DossierObjectRepository
+ * @uses \OCA\Filinq\Service\DossierPlaceholderRanker
+ * @uses \OCA\Filinq\Service\FolderFileEnumerator
+ * @uses \OCA\Filinq\Service\Support\AnonymisationRecords
+ * @uses \OCA\Filinq\Service\Support\AnonymisedOutputs
+ * @uses \OCA\Filinq\Service\Support\BatchQueue
+ * @uses \OCA\Filinq\Service\Support\DocumentOutput
+ * @uses \OCA\Filinq\Service\Support\DocumentProduction
+ * @uses \OCA\Filinq\Service\Support\FolderEnumerationSources
+ * @uses \OCA\Filinq\Service\Support\IntakeFiling
+ * @uses \OCA\Filinq\Service\Support\IntakeRouting
+ * @uses \OCA\Filinq\Service\Support\OpenRegisterAccess
+ * @uses \OCA\Filinq\Service\Support\TemplateSources
+ * @uses \OCA\Filinq\Service\Support\DossierSummaryParts
  */
 class ConstructorWiringGoldenTest extends TestCase {
 
@@ -186,51 +204,36 @@ class ConstructorWiringGoldenTest extends TestCase {
 	}//end argument()
 
 	/**
-	 * Every property of an object and what it holds, as a flat map from
-	 * property path to description. Objects the class built itself are
-	 * followed two levels deep; an object reached again is recorded as the
-	 * first path (in sorted order) it was reached by.
+	 * What an object holds, whatever properties hold it: the sorted list of
+	 * every value reachable through its properties. Collaborator bundles
+	 * (`...\\Support\\`) are looked through, objects the class built itself are
+	 * described with what they hold, two levels deep, and every reference is
+	 * listed, so a shared instance shows up once per holder.
 	 *
 	 * @param object $object The object.
 	 * @param int    $depth  How deep this object sits.
 	 *
-	 * @return array<string, mixed> Property path to description.
+	 * @return array<int, mixed> The descriptions, sorted.
 	 */
 	private function describe(object $object, int $depth): array {
-		$pairs = $this->properties(object: $object, prefix: '', depth: $depth);
-		ksort($pairs);
-		$first = [];
-		$out   = [];
-		foreach ($pairs as $path => $value) {
-			if (is_object($value) === false) {
-				$out[$path] = $value;
-				continue;
-			}
-
-			$id = spl_object_id($value);
-			if (isset($first[$id]) === true) {
-				$out[$path] = 'same as '.$first[$id];
-				continue;
-			}
-
-			$first[$id] = $path;
-			$out[$path] = ($this->labels[$id] ?? 'built '.get_class($value));
+		$out = [];
+		foreach ($this->values(object: $object) as $value) {
+			$out[] = $this->value(value: $value, depth: $depth);
 		}
 
+		usort($out, static fn ($left, $right): int => strcmp(json_encode($left), json_encode($right)));
 		return $out;
 
 	}//end describe()
 
 	/**
-	 * The property values of an object by path, following self-built objects.
+	 * The property values of an object, looking through collaborator bundles.
 	 *
 	 * @param object $object The object.
-	 * @param string $prefix The path of the object.
-	 * @param int    $depth  How deep this object sits.
 	 *
-	 * @return array<string, mixed> Property path to value.
+	 * @return array<int, mixed> The values.
 	 */
-	private function properties(object $object, string $prefix, int $depth): array {
+	private function values(object $object): array {
 		$out   = [];
 		$class = new ReflectionClass($object);
 		do {
@@ -241,14 +244,11 @@ class ConstructorWiringGoldenTest extends TestCase {
 
 				$value = $property->getValue($object);
 				if (is_object($value) === true && str_contains(get_class($value), '\\Support\\') === true) {
+					array_push($out, ...$this->values(object: $value));
 					continue;
 				}
 
-				$path       = $prefix.$class->getShortName().'::'.$property->getName();
-				$out[$path] = $value;
-				if ($this->followed(value: $value, depth: $depth) === true) {
-					$out += $this->properties(object: $value, prefix: $path.' > ', depth: ($depth + 1));
-				}
+				$out[] = $value;
 			}
 
 			$class = $class->getParentClass();
@@ -256,21 +256,32 @@ class ConstructorWiringGoldenTest extends TestCase {
 
 		return $out;
 
-	}//end properties()
+	}//end values()
 
 	/**
-	 * Whether a value is an object the class built itself, close enough to follow.
+	 * Describe one value.
 	 *
 	 * @param mixed $value The value.
 	 * @param int   $depth How deep its owner sits.
 	 *
-	 * @return bool True to follow it.
+	 * @return mixed The description.
 	 */
-	private function followed(mixed $value, int $depth): bool {
-		return is_object($value) === true
-			&& $depth < 2
-			&& isset($this->labels[spl_object_id($value)]) === false
-			&& str_starts_with(get_class($value), 'OCA\\Filinq\\') === true;
+	private function value(mixed $value, int $depth): mixed {
+		if (is_object($value) === false) {
+			return $value;
+		}
 
-	}//end followed()
+		$label = ($this->labels[spl_object_id($value)] ?? null);
+		if ($label !== null) {
+			return $label;
+		}
+
+		$built = 'built '.get_class($value);
+		if ($depth < 2 && str_starts_with(get_class($value), 'OCA\\Filinq\\') === true) {
+			return [$built => $this->describe(object: $value, depth: ($depth + 1))];
+		}
+
+		return $built;
+
+	}//end value()
 }//end class

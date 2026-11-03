@@ -30,6 +30,8 @@ use OCA\Filinq\Service\BatchStateService;
 use OCA\Filinq\Service\ConfidentialityLabelService;
 use OCA\Filinq\Service\Conversion\OutputLayoutResolver;
 use OCA\Filinq\Service\FolderBatchService;
+use OCA\Filinq\Service\Support\BatchQueue;
+use OCA\Filinq\Service\Support\FolderEnumerationSources;
 use OCP\BackgroundJob\IJobList;
 use OCP\Constants;
 use OCP\Files\File;
@@ -155,12 +157,9 @@ class FolderBatchServiceTest extends TestCase {
 			$this->mockLogger,
 			$this->mockRootFolder,
 			$this->mockUserSession,
-			$this->mockStateService,
-			new JobQueue(jobList: $this->mockJobList),
+			new BatchQueue(state: $this->mockStateService, jobs: new JobQueue(jobList: $this->mockJobList)),
 			$this->createMock(AnonymizationService::class),
-			$this->layout,
-			$this->mockConfidentialityLabel,
-			$this->mockAppConfig
+			new FolderEnumerationSources(layout: $this->layout, confidentialityLabel: $this->mockConfidentialityLabel, appConfig: $this->mockAppConfig)
 		);
 
 	}//end setUp()
@@ -600,12 +599,9 @@ class FolderBatchServiceTest extends TestCase {
 			$this->mockLogger,
 			$this->mockRootFolder,
 			$mockUserSession,
-			$this->mockStateService,
-			new JobQueue(jobList: $this->mockJobList),
+			new BatchQueue(state: $this->mockStateService, jobs: new JobQueue(jobList: $this->mockJobList)),
 			$this->createMock(AnonymizationService::class),
-			$this->makeLayoutResolver(),
-			$this->mockConfidentialityLabel,
-			$this->mockAppConfig
+			new FolderEnumerationSources(layout: $this->makeLayoutResolver(), confidentialityLabel: $this->mockConfidentialityLabel, appConfig: $this->mockAppConfig)
 		);
 
 		$this->expectException(Exception::class);
@@ -639,12 +635,9 @@ class FolderBatchServiceTest extends TestCase {
 			$this->mockLogger,
 			$this->mockRootFolder,
 			$this->mockUserSession,
-			$this->mockStateService,
-			new JobQueue(jobList: $this->mockJobList),
+			new BatchQueue(state: $this->mockStateService, jobs: new JobQueue(jobList: $this->mockJobList)),
 			$this->createMock(AnonymizationService::class),
-			$this->makeLayoutResolver(),
-			$this->mockConfidentialityLabel,
-			$this->mockAppConfig
+			new FolderEnumerationSources(layout: $this->makeLayoutResolver(), confidentialityLabel: $this->mockConfidentialityLabel, appConfig: $this->mockAppConfig)
 		);
 
 		$this->mockStateService->method('getMaxFiles')->willReturn(100);
@@ -697,12 +690,9 @@ class FolderBatchServiceTest extends TestCase {
 			$this->mockLogger,
 			$this->mockRootFolder,
 			$this->mockUserSession,
-			$this->mockStateService,
-			new JobQueue(jobList: $this->mockJobList),
+			new BatchQueue(state: $this->mockStateService, jobs: new JobQueue(jobList: $this->mockJobList)),
 			$this->createMock(AnonymizationService::class),
-			$this->makeLayoutResolver(),
-			$this->mockConfidentialityLabel,
-			$this->mockAppConfig
+			new FolderEnumerationSources(layout: $this->makeLayoutResolver(), confidentialityLabel: $this->mockConfidentialityLabel, appConfig: $this->mockAppConfig)
 		);
 
 		$this->expectException(Exception::class);
@@ -956,12 +946,9 @@ class FolderBatchServiceTest extends TestCase {
 			$this->mockLogger,
 			$this->mockRootFolder,
 			$this->mockUserSession,
-			$this->mockStateService,
-			new JobQueue(jobList: $this->mockJobList),
+			new BatchQueue(state: $this->mockStateService, jobs: new JobQueue(jobList: $this->mockJobList)),
 			$anon,
-			$this->layout,
-			$this->mockConfidentialityLabel,
-			$this->mockAppConfig
+			new FolderEnumerationSources(layout: $this->layout, confidentialityLabel: $this->mockConfidentialityLabel, appConfig: $this->mockAppConfig)
 		);
 		$this->mockStateService->method('getBatch')->willReturnCallback(
 			fn (string $batchId): ?array => $batchId === 'gone' ? null : [

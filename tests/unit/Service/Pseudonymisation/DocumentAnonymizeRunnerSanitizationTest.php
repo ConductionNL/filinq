@@ -34,6 +34,8 @@ use OCA\Filinq\Service\RedactionAccessibilityService;
 use OCA\Filinq\Service\ReplacementVerificationService;
 use OCA\Filinq\Service\Sanitization\AnonymisationSanitizationRecorder;
 use OCA\Filinq\Service\Sanitization\SanitizationRecordRepository;
+use OCA\Filinq\Service\Support\AnonymisationRecords;
+use OCA\Filinq\Service\Support\AnonymisedOutputs;
 use OCP\Files\File;
 use OCP\IAppConfig;
 use Opis\JsonSchema\Errors\ErrorFormatter;
@@ -174,21 +176,17 @@ class DocumentAnonymizeRunnerSanitizationTest extends TestCase {
 		);
 
 		return new DocumentAnonymizeRunner(
-			logger: $logger,
-			locator: $locator,
-			entityDetection: new EntityDetectionService(new AnonymizationResultParser()),
-			emlAnonymizer: $eml,
-			pdfOutput: $pdf,
-			replacementVerifier: new ReplacementVerificationService(logger: $logger),
-			persistence: $persistence,
-			summaryAttacher: $this->createMock(GrondslagenSummaryAttacher::class),
-			runRecords: new AnonymisationRunRecords(
+			records: new AnonymisationRecords(verifier: new ReplacementVerificationService(logger: $logger), persistence: $persistence, runs: new AnonymisationRunRecords(
 				verdicts: $verdicts,
 				persistence: $persistence,
 				keys: new PseudonymMapRecorder(new PseudonymPairs(), $this->mapService(container: $container), $persistence, $locator, $logger),
 				accessibility: new RedactionAccessibilityService($appConfig),
 				sanitization: new AnonymisationSanitizationRecorder(records: $this->sanitizationRecords(), logger: $logger)
-			)
+			)),
+			outputs: new AnonymisedOutputs(eml: $eml, pdf: $pdf, summary: $this->createMock(GrondslagenSummaryAttacher::class)),
+			logger: $logger,
+			locator: $locator,
+			entityDetection: new EntityDetectionService(new AnonymizationResultParser())
 		);
 
 	}//end runner()
