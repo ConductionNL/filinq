@@ -51,6 +51,7 @@ use Psr\Log\LoggerInterface;
  * @covers \OCA\Filinq\Service\ConsentService
  * @covers \OCA\Filinq\Service\ConsentRecordWriter
  * @uses   \OCA\Filinq\Service\ConsentScopeValidator
+ * @uses   \OCA\Filinq\Service\ConsentNotesHelper
  * @uses   \OCA\Filinq\Service\ConsentPolicyReferentValidator
  * @uses   \OCA\Filinq\Service\ObjectResultExtractor
  * @uses   \OCA\Filinq\Service\RegisterObjectRef
