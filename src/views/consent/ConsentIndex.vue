@@ -1,5 +1,6 @@
 <script setup>
 import { translate as t } from '@nextcloud/l10n'
+import { LIST_ONLY_INDEX_PAGE } from '../../constants/indexPage.js'
 import { consentStore } from '../../store/store.js'
 </script>
 
@@ -18,15 +19,7 @@ import { consentStore } from '../../store/store.js'
 		:columns="tableColumns"
 		:pagination="paginationData"
 		:loading="consentStore.loading"
-		:selectable="false"
-		:showEditAction="false"
-		:showCopyAction="false"
-		:showDeleteAction="false"
-		:showMassImport="false"
-		:showMassExport="false"
-		:showMassCopy="false"
-		:showMassDelete="false"
-		:showViewToggle="false"
+		v-bind="LIST_ONLY_INDEX_PAGE"
 		:showAdd="false"
 		rowKey="id"
 		:emptyText="emptyContentName"

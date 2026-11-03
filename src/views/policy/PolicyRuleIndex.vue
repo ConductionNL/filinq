@@ -16,15 +16,7 @@
 			:columns="tableColumns"
 			:pagination="paginationData"
 			:loading="rules.store.loading"
-			:selectable="false"
-			:showEditAction="false"
-			:showCopyAction="false"
-			:showDeleteAction="false"
-			:showMassImport="false"
-			:showMassExport="false"
-			:showMassCopy="false"
-			:showMassDelete="false"
-			:showViewToggle="false"
+			v-bind="$options.listOnlyIndexPage"
 			:showAdd="true"
 			rowKey="id"
 			:emptyText="emptyText"
@@ -143,6 +135,7 @@ import Delete from 'vue-material-design-icons/Delete.vue'
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
 import Pencil from 'vue-material-design-icons/Pencil.vue'
 import PolicyRuleFormModal from '../../dialogs/PolicyRuleFormModal.vue'
+import { LIST_ONLY_INDEX_PAGE } from '../../constants/indexPage.js'
 import {
 	indexPaging,
 	recordDeletion,
@@ -281,6 +274,7 @@ function copyMatchRules(row) {
 
 export default {
 	name: 'PolicyRuleIndex',
+	listOnlyIndexPage: LIST_ONLY_INDEX_PAGE,
 	components: {
 		CnIndexPage,
 		CnStatsBlock,

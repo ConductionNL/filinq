@@ -1,0 +1,372 @@
+{
+	"ClassificationPending": {
+		"columns": [
+			{
+				"key": "fileName",
+				"label": "Document"
+			},
+			{
+				"key": "suggestedDocumentType",
+				"label": "Type"
+			},
+			{
+				"key": "correspondent",
+				"label": "Sender"
+			},
+			{
+				"key": "suggestedDossier",
+				"label": "Dossier"
+			}
+		],
+		"data-testid": "classification-pending-index",
+		"description": "Filinq suggests a document type, a sender and a dossier for each document that comes in. Nothing changes until you confirm a suggestion.",
+		"emptyText": "No suggestions are waiting. New documents in the intake get one as soon as their text is read.",
+		"loading": true,
+		"objects": [],
+		"onRefresh": "(function)",
+		"refreshing": false,
+		"rowKey": "uuid",
+		"selectable": false,
+		"showAdd": false,
+		"showCopyAction": false,
+		"showDeleteAction": false,
+		"showEditAction": false,
+		"showMassCopy": false,
+		"showMassDelete": false,
+		"showMassExport": false,
+		"showMassImport": false,
+		"showTitle": true,
+		"showViewToggle": false,
+		"title": "Classification suggestions"
+	},
+	"ConsentIndex": {
+		"columns": [
+			{
+				"key": "entityText",
+				"label": "Entity",
+				"sortable": true
+			},
+			{
+				"key": "entityType",
+				"label": "Type",
+				"sortable": true
+			},
+			{
+				"key": "consentStatus",
+				"label": "Consent Status",
+				"sortable": true
+			},
+			{
+				"key": "notificationStatus",
+				"label": "Notification",
+				"sortable": true
+			},
+			{
+				"key": "objectionDeadline",
+				"label": "Deadline",
+				"sortable": true
+			},
+			{
+				"key": "publicationDecision",
+				"label": "Decision",
+				"sortable": true
+			}
+		],
+		"description": "Per-document consent records produced by the publication-clearance workflow.",
+		"emptyText": "(function)",
+		"loading": false,
+		"objects": [],
+		"onPageChanged": "(function)",
+		"onPageSizeChanged": "(function)",
+		"onRefresh": "(function)",
+		"onRowClick": "(function)",
+		"pagination": {
+			"page": 1,
+			"pages": 0,
+			"total": 0,
+			"limit": 20
+		},
+		"refreshing": false,
+		"rowKey": "id",
+		"selectable": false,
+		"showAdd": false,
+		"showCopyAction": false,
+		"showDeleteAction": false,
+		"showEditAction": false,
+		"showMassCopy": false,
+		"showMassDelete": false,
+		"showMassExport": false,
+		"showMassImport": false,
+		"showTitle": true,
+		"showViewToggle": false,
+		"title": "Consent Workflow"
+	},
+	"CustomDictionaryIndex": {
+		"columns": [
+			{
+				"key": "label",
+				"label": "Label",
+				"sortable": true
+			},
+			{
+				"key": "termCount",
+				"label": "Terms",
+				"sortable": true
+			},
+			{
+				"key": "matchMode",
+				"label": "Match mode",
+				"sortable": true
+			},
+			{
+				"key": "active",
+				"label": "Status",
+				"sortable": true
+			}
+		],
+		"description": "Organisation-managed term lists — project codenames, local street names, case-file codes — that add an extra recognizer alongside Presidio and regex.",
+		"emptyText": "(function)",
+		"loading": false,
+		"objects": [],
+		"onAdd": "(function)",
+		"onPageChanged": "(function)",
+		"onPageSizeChanged": "(function)",
+		"onRefresh": "(function)",
+		"onRowClick": "(function)",
+		"pagination": {
+			"page": 1,
+			"pages": 1,
+			"total": 0,
+			"limit": 20
+		},
+		"refreshing": false,
+		"rowKey": "id",
+		"selectable": false,
+		"showAdd": true,
+		"showCopyAction": false,
+		"showDeleteAction": false,
+		"showEditAction": false,
+		"showMassCopy": false,
+		"showMassDelete": false,
+		"showMassExport": false,
+		"showMassImport": false,
+		"showTitle": true,
+		"showViewToggle": false,
+		"title": "Custom dictionaries"
+	},
+	"DossierIndex": {
+		"columns": [
+			{
+				"key": "name",
+				"label": "Name"
+			},
+			{
+				"key": "status",
+				"label": "Status"
+			},
+			{
+				"key": "documentCount",
+				"label": "Documents"
+			},
+			{
+				"key": "bases",
+				"label": "Legal bases"
+			},
+			{
+				"key": "checkedOn",
+				"label": "Last reviewed"
+			}
+		],
+		"description": "A dossier groups the documents that are anonymised together under one or more Woo Art. 5 legal bases.",
+		"emptyText": "No dossiers yet. Create one to group the documents you want to anonymise together.",
+		"loading": true,
+		"objects": [
+			{
+				"id": "d-1",
+				"title": "Dossier"
+			}
+		],
+		"onAdd": "(function)",
+		"onRefresh": "(function)",
+		"onRowClick": "(function)",
+		"refreshing": false,
+		"rowKey": "id",
+		"selectable": false,
+		"showAdd": true,
+		"showCopyAction": false,
+		"showDeleteAction": false,
+		"showEditAction": false,
+		"showMassCopy": false,
+		"showMassDelete": false,
+		"showMassExport": false,
+		"showMassImport": false,
+		"showTitle": true,
+		"showViewToggle": false,
+		"title": "Dossiers"
+	},
+	"EmailIngestion": {
+		"columns": [
+			{
+				"key": "subject",
+				"label": "Subject"
+			},
+			{
+				"key": "fromAddress",
+				"label": "From"
+			},
+			{
+				"key": "sentAt",
+				"label": "Sent at"
+			},
+			{
+				"key": "dossierRef",
+				"label": "Dossier"
+			},
+			{
+				"key": "state",
+				"label": "Status"
+			}
+		],
+		"data-testid": "email-ingestion-index",
+		"description": "Emails saved as .eml in a watched inbox folder are filed into the dossier of that inbox, with a PDF copy beside them. A file that could not be filed stays in the inbox and shows here with the reason.",
+		"emptyText": "No emails yet. Map an inbox folder to a dossier in the filinq admin settings, then put .eml files in it.",
+		"loading": true,
+		"objects": [],
+		"onRefresh": "(function)",
+		"refreshing": false,
+		"rowKey": "uuid",
+		"selectable": false,
+		"showAdd": false,
+		"showCopyAction": false,
+		"showDeleteAction": false,
+		"showEditAction": false,
+		"showMassCopy": false,
+		"showMassDelete": false,
+		"showMassExport": false,
+		"showMassImport": false,
+		"showTitle": true,
+		"showViewToggle": false,
+		"title": "Email ingestion"
+	},
+	"PolicyRuleIndex prohibition": {
+		"columns": [
+			{
+				"key": "primaryName",
+				"label": "Primary name",
+				"sortable": true
+			},
+			{
+				"key": "entityType",
+				"label": "Type",
+				"sortable": true
+			},
+			{
+				"key": "matchRules",
+				"label": "Match rules"
+			},
+			{
+				"key": "severity",
+				"label": "Severity",
+				"sortable": true
+			},
+			{
+				"key": "reason",
+				"label": "Reason"
+			},
+			{
+				"key": "active",
+				"label": "Status",
+				"sortable": true
+			}
+		],
+		"description": "Entity-level deny rules. A matched entity is always anonymised, regardless of the per-document consent workflow.",
+		"emptyText": "No publication prohibitions defined.",
+		"loading": false,
+		"objects": [],
+		"onAdd": "(function)",
+		"onPageChanged": "(function)",
+		"onPageSizeChanged": "(function)",
+		"onRefresh": "(function)",
+		"pagination": {
+			"page": 1,
+			"pages": 0,
+			"total": 0,
+			"limit": 20
+		},
+		"refreshing": false,
+		"rowKey": "id",
+		"selectable": false,
+		"showAdd": true,
+		"showCopyAction": false,
+		"showDeleteAction": false,
+		"showEditAction": false,
+		"showMassCopy": false,
+		"showMassDelete": false,
+		"showMassExport": false,
+		"showMassImport": false,
+		"showTitle": true,
+		"showViewToggle": false,
+		"title": "Publish never"
+	},
+	"PolicyRuleIndex standingConsent": {
+		"columns": [
+			{
+				"key": "entityText",
+				"label": "Entity",
+				"sortable": true
+			},
+			{
+				"key": "entityType",
+				"label": "Type",
+				"sortable": true
+			},
+			{
+				"key": "matchRules",
+				"label": "Match rules"
+			},
+			{
+				"key": "consentMethod",
+				"label": "Method",
+				"sortable": true
+			},
+			{
+				"key": "validUntil",
+				"label": "Valid until",
+				"sortable": true
+			},
+			{
+				"key": "active",
+				"label": "Status",
+				"sortable": true
+			}
+		],
+		"description": "Entity-level allow rules. A matched entity may be published without per-document objection workflow, unless a publish-never rule also matches.",
+		"emptyText": "No standing publication consents defined.",
+		"loading": false,
+		"objects": [],
+		"onAdd": "(function)",
+		"onPageChanged": "(function)",
+		"onPageSizeChanged": "(function)",
+		"onRefresh": "(function)",
+		"pagination": {
+			"page": 1,
+			"pages": 0,
+			"total": 0,
+			"limit": 20
+		},
+		"refreshing": false,
+		"rowKey": "id",
+		"selectable": false,
+		"showAdd": true,
+		"showCopyAction": false,
+		"showDeleteAction": false,
+		"showEditAction": false,
+		"showMassCopy": false,
+		"showMassDelete": false,
+		"showMassExport": false,
+		"showMassImport": false,
+		"showTitle": true,
+		"showViewToggle": false,
+		"title": "Publish always"
+	}
+}
