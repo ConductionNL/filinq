@@ -109,12 +109,14 @@ class ConformanceService implements ConformanceServiceInterface {
 
 		return $this->reports->save(
 			report: $this->report(
-				fileId: (int) $file->getId(),
-				subject: ConformanceReportRepository::SUBJECT_FILE,
-				trigger: $trigger,
-				verdict: $verdict,
-				guidance: $this->guidance->for(verdict: $verdict, origin: $this->guidance->originOf(bytes: $bytes, verdict: $verdict)),
-				bytes: $bytes
+				check: [
+					'fileId' => (int) $file->getId(),
+					'subject' => ConformanceReportRepository::SUBJECT_FILE,
+					'trigger' => $trigger,
+					'guidance' => $this->guidance->for(verdict: $verdict, origin: $this->guidance->originOf(bytes: $bytes, verdict: $verdict)),
+					'bytes' => $bytes,
+				],
+				verdict: $verdict
 			)
 		);
 
@@ -136,12 +138,14 @@ class ConformanceService implements ConformanceServiceInterface {
 	public function checkConversion(string $bytes, string $origin, ?int $sourceFileId): array {
 		$verdict = $this->veraPdf->validateBytes(bytes: $bytes, flavour: VeraPdfService::DEFAULT_FLAVOUR);
 		$report = $this->report(
-			fileId: (int) $sourceFileId,
-			subject: ConformanceReportRepository::SUBJECT_CONVERSION,
-			trigger: self::TRIGGER_CONVERSION,
-			verdict: $verdict,
-			guidance: $this->guidance->for(verdict: $verdict, origin: $origin),
-			bytes: $bytes
+			check: [
+				'fileId' => (int) $sourceFileId,
+				'subject' => ConformanceReportRepository::SUBJECT_CONVERSION,
+				'trigger' => self::TRIGGER_CONVERSION,
+				'guidance' => $this->guidance->for(verdict: $verdict, origin: $origin),
+				'bytes' => $bytes,
+			],
+			verdict: $verdict
 		);
 		if ($sourceFileId === null || $sourceFileId <= 0) {
 			return $report + ['stored' => false];
@@ -175,29 +179,26 @@ class ConformanceService implements ConformanceServiceInterface {
 	/**
 	 * A verdict as the conformanceReport the register takes.
 	 *
-	 * @param int                  $fileId   The file id.
-	 * @param string               $subject  The subject.
-	 * @param string               $trigger  The trigger.
-	 * @param array<string, mixed> $verdict  The verdict.
-	 * @param string               $guidance The guidance key.
-	 * @param string               $bytes    The bytes checked.
+	 * @param array{fileId: int, subject: string, trigger: string, guidance: string, bytes: string} $check   The file id, subject,
+	 *                                                                                              trigger, guidance key and the bytes checked.
+	 * @param array<string, mixed>                                                               $verdict The verdict.
 	 *
 	 * @return array<string, mixed> The report.
 	 */
-	private function report(int $fileId, string $subject, string $trigger, array $verdict, string $guidance, string $bytes): array {
+	private function report(array $check, array $verdict): array {
 		return [
-			'fileId' => $fileId,
-			'subject' => $subject,
+			'fileId' => $check['fileId'],
+			'subject' => $check['subject'],
 			'flavour' => (string) $verdict['flavour'],
 			'compliant' => (bool) $verdict['compliant'],
 			'failedRuleCount' => (int) $verdict['failedRuleCount'],
 			'failedRules' => array_values((array) $verdict['failedRules']),
 			'fontsNotEmbedded' => array_values((array) $verdict['fontsNotEmbedded']),
-			'guidance' => $guidance,
+			'guidance' => $check['guidance'],
 			'validatorVersion' => (string) $verdict['validatorVersion'],
 			'validatedAt' => $this->time->getDateTime()->format(DateTimeInterface::ATOM),
-			'trigger' => $trigger,
-			'checksumSha256' => hash('sha256', $bytes),
+			'trigger' => $check['trigger'],
+			'checksumSha256' => hash('sha256', $check['bytes']),
 			'elapsedMs' => (int) ($verdict['elapsedMs'] ?? 0),
 		];
 
