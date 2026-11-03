@@ -191,14 +191,16 @@ const SURFACES = {
 			{ key: 'active', label: t('filinq', 'Status'), sortable: true },
 		],
 		editingRecord: (row) => ({
-			primaryName: row.primaryName || '',
-			entityType: row.entityType || 'PERSON',
-			reason: row.reason || '',
-			legalAuthority: row.legalAuthority || '',
-			caseReference: row.caseReference || '',
-			severity: row.severity || 'medium',
-			jurisdiction: row.jurisdiction || '',
-			validUntil: row.validUntil || '',
+			...withDefaults(row, {
+				primaryName: '',
+				entityType: 'PERSON',
+				reason: '',
+				legalAuthority: '',
+				caseReference: '',
+				severity: 'medium',
+				jurisdiction: '',
+				validUntil: '',
+			}),
 			active: row.active !== false,
 			matchRules: copyMatchRules(row),
 		}),
@@ -243,21 +245,39 @@ const SURFACES = {
 			{ key: 'active', label: t('filinq', 'Status'), sortable: true },
 		],
 		editingRecord: (row) => ({
-			entityText: row.entityText || '',
-			entityType: row.entityType || 'PERSON',
-			consentMethod: row.consentMethod || '',
-			consentDocument: row.consentDocument || '',
-			consentScope: row.consentScope || '',
-			legalBasis: row.legalBasis || '',
-			validFrom: row.validFrom || '',
-			validUntil: row.validUntil || '',
+			...withDefaults(row, {
+				entityText: '',
+				entityType: 'PERSON',
+				consentMethod: '',
+				consentDocument: '',
+				consentScope: '',
+				legalBasis: '',
+				validFrom: '',
+				validUntil: '',
+			}),
 			active: row.active !== false,
 			matchRules: copyMatchRules(row),
-			consentStatus: row.consentStatus || 'consent_given',
-			publicationDecision: row.publicationDecision || 'publish_with_consent',
-			notificationStatus: row.notificationStatus || 'skipped',
+			...withDefaults(row, {
+				consentStatus: 'consent_given',
+				publicationDecision: 'publish_with_consent',
+				notificationStatus: 'skipped',
+			}),
 		}),
 	},
+}
+
+/**
+ * The row's value for each key of `defaults`, or the default where the row's
+ * value is empty, in the order of `defaults`.
+ *
+ * @param {object} row The policy rule.
+ * @param {object} defaults Field name to the value an empty field starts from.
+ * @return {object} The fields.
+ */
+function withDefaults(row, defaults) {
+	return Object.fromEntries(
+		Object.entries(defaults).map(([key, value]) => [key, row[key] || value]),
+	)
 }
 
 /**
