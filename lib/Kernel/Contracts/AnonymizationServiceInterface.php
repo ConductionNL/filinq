@@ -27,7 +27,6 @@ use OCA\Filinq\Exception\DetectionUnavailableException;
 use Exception;
 use OCA\Filinq\Exception\ProhibitionGateException;
 use OCA\Filinq\Exception\RedactionNotReviewedException;
-use OCA\Filinq\Service\AnonymizeOptions;
 
 /**
  * Contract of AnonymizationService.
@@ -174,10 +173,12 @@ interface AnonymizationServiceInterface {
 	 * created for each entry AFTER the anonymise pipeline succeeds. The
 	 * `createdConsents` field in the response aggregates the resulting records.
 	 *
+	 * This contract runs with the default options. Callers inside the Service
+	 * component pass AnonymizeOptions to AnonymizationService::anonymizeDocument(),
+	 * or ask for the summary through anonymizeDocumentWithBasisSummary().
+	 *
 	 * @param int $fileId The Nextcloud file ID
 	 * @param array<array<string, mixed>> $entities The entities to anonymize
-	 * @param AnonymizeOptions|null $options Output format, consents, overrides, acting user,
-	 *                                       placeholder scope and reversibility; null for the defaults.
 	 *
 	 * @return array<string, mixed> Anonymization result with optional warning/createdConsents fields
 	 *
@@ -197,35 +198,5 @@ interface AnonymizationServiceInterface {
 	 * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-4
 	 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-2.2
 	 */
-	public function anonymizeDocument(int $fileId, array $entities, ?AnonymizeOptions $options = null): array;
-
-	/**
-	 * Anonymize entities in a document AND append the grondslagen summary.
-	 *
-	 * Identical to {@see anonymizeDocument()} except that LegalBasesSummaryService
-	 * is invoked after the anonymised file has been written. For PDF output the
-	 * summary is appended as an extra page; otherwise a separate
-	 * `<base>_grondslagen.pdf` is written alongside. Summary failure is non-fatal:
-	 * the anonymised file is always preserved and a `warning` field is added to the
-	 * response instead (HTTP 200).
-	 *
-	 * @param int $fileId The Nextcloud file ID
-	 * @param array<array<string, mixed>> $entities The entities to anonymize
-	 * @param AnonymizeOptions|null $options Output format, consents, overrides, acting user,
-	 *                                       placeholder scope and reversibility; null for the defaults.
-	 *
-	 * @return array<string, mixed> Anonymization result with optional
-	 *                              warning/summaryFileId/createdConsents fields
-	 *
-	 * @throws Exception If anonymization fails.
-	 * @throws ConversionFailedException When the PDF cascade is exhausted.
-	 * @throws ProhibitionGateException When the prohibition gate fires.
-	 * @throws RedactionNotReviewedException When nobody has checked this detection run yet.
-	 * @throws DetectionUnavailableException When no live entity detector is behind the run.
-	 *
-	 * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-2
-	 * @spec openspec/specs/anonymization/spec.md
-	 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-2.2
-	 */
-	public function anonymizeDocumentWithBasisSummary(int $fileId, array $entities, ?AnonymizeOptions $options = null): array;
+	public function anonymizeDocument(int $fileId, array $entities): array;
 }//end interface

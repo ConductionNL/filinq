@@ -20,7 +20,7 @@ namespace OCA\Filinq\Tests\Unit\Service;
 use OCA\Filinq\Exception\DetectionUnavailableException;
 use OCA\Filinq\Exception\ProhibitionGateException;
 use OCA\Filinq\Kernel\AnonymizeCall;
-use OCA\Filinq\Kernel\Contracts\AnonymizationServiceInterface;
+use OCA\Filinq\Service\AnonymizationService;
 use OCA\Filinq\Service\AnonymizeOptions;
 use OCA\Filinq\Service\AnonymizeRequestService;
 use OCP\Files\IRootFolder;
@@ -72,7 +72,7 @@ class AnonymizeRequestExecuteTest extends TestCase {
 	 * @return AnonymizeRequestService The service.
 	 */
 	private function service(array $violations = [], ?Throwable $throws = null): AnonymizeRequestService {
-		$anonymization = $this->createMock(AnonymizationServiceInterface::class);
+		$anonymization = $this->createMock(AnonymizationService::class);
 		$anonymization->method('absoluteProhibitionViolations')->willReturnCallback(
 			function (int $fileId) use ($violations): array {
 				$this->calls[] = ['violations', $fileId];
