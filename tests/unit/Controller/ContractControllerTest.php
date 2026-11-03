@@ -33,6 +33,7 @@ use OCA\Filinq\Service\Contract\ContractParties;
 use OCA\Filinq\Service\Contract\ContractService;
 use OCA\Filinq\Service\Contract\ContractSigningLink;
 use OCA\Filinq\Service\Contract\ContractTermSuggestionService;
+use OCA\Filinq\Kernel\Contracts\ContractTermSuggestionServiceInterface;
 use OCA\Filinq\Service\SigningService;
 use OCA\Filinq\Tests\Unit\Service\Contract\InMemoryContracts;
 use OCP\Contacts\IManager;
@@ -106,6 +107,37 @@ class ContractControllerTest extends TestCase {
 		$this->assertSame([], $this->store->writes);
 
 	}//end testAContractTheCallerCannotReadIsNotFound()
+
+	/**
+	 * Suggestions are read for the session user, not for a userId the request names.
+	 *
+	 * @return void
+	 */
+	public function testSuggestRunsForTheSessionUserNotAForgedUserId(): void {
+		$active = $this->store->seed(['title' => 'A', 'status' => 'active']);
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn('bob');
+		$session = $this->createMock(IUserSession::class);
+		$session->method('getUser')->willReturn($user);
+		$request = $this->createMock(IRequest::class);
+		$request->method('getParam')->willReturnCallback(static fn (string $key, $default = null) => ($key === 'userId') ? 'mallory' : $default);
+		$suggestions = $this->createMock(ContractTermSuggestionServiceInterface::class);
+		$suggestions->expects($this->once())
+			->method('suggest')
+			->with($this->callback(static fn (array $contract): bool => ($contract['title'] ?? null) === 'A'), 'bob')
+			->willReturn(['added' => 0]);
+		$controller = new ContractController(
+			terms: new ContractTerms(suggestions: $suggestions, parties: new ContractParties(contacts: $this->createMock(IManager::class))),
+			request: $request,
+			contracts: new ContractService(repository: $this->store),
+			userSession: $session,
+			logger: $this->createMock(LoggerInterface::class),
+			signingLink: new ContractSigningLink(contracts: $this->store, signing: $this->createMock(SigningService::class), userSession: $session)
+		);
+
+		$this->assertSame(200, $controller->suggest(id: $active)->getStatus());
+
+	}//end testSuggestRunsForTheSessionUserNotAForgedUserId()
 
 	/**
 	 * Terminate without a reason is 400, a draft is 409, with a reason is 200.

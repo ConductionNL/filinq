@@ -113,6 +113,40 @@ class SubjectErasureControllerTest extends TestCase {
 	}//end testOutsidersGet403OnEveryRoute()
 
 	/**
+	 * The caller is the session user: a userId request parameter naming the
+	 * privacy officer does not lend an outsider her rights.
+	 *
+	 * @return void
+	 */
+	public function testAForgedUserIdParameterIsIgnored(): void {
+		$uuid = $this->placed();
+		$forged = ['userId' => 'petra', 'subject' => self::PERSON, 'ground' => 'AVG artikel 17'];
+
+		$this->assertSame(403, $this->controller(userId: 'bob', params: $forged)->index()->getStatus());
+		$this->assertSame(403, $this->controller(userId: 'bob', params: $forged)->create()->getStatus());
+		$this->assertSame(403, $this->controller(userId: 'bob', params: $forged)->run(id: $uuid)->getStatus());
+		$this->assertStringContainsString(self::PERSON, $this->files[11]['content']);
+		$this->assertSame(200, $this->controller(userId: 'petra', params: $forged)->index()->getStatus());
+
+	}//end testAForgedUserIdParameterIsIgnored()
+
+	/**
+	 * Nobody signed in is nobody: not an account named admin, even when one exists.
+	 *
+	 * @return void
+	 */
+	public function testAnAnonymousCallerIsNotTheAdmin(): void {
+		$uuid = $this->placed();
+		$this->members['admin'] = ['admin'];
+
+		$this->assertSame(200, $this->controller(userId: 'admin')->index()->getStatus());
+		$this->assertSame(403, $this->controller(userId: '')->index()->getStatus());
+		$this->assertSame(403, $this->controller(userId: '')->run(id: $uuid)->getStatus());
+		$this->assertStringContainsString(self::PERSON, $this->files[11]['content']);
+
+	}//end testAnAnonymousCallerIsNotTheAdmin()
+
+	/**
 	 * A request without a ground is 400, a run before the preview 409, an unknown request 404.
 	 *
 	 * @return void
