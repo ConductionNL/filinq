@@ -26,8 +26,8 @@ use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
 /**
- * The calls findings() makes and the findings it returns, compared with JSON
- * recorded from the checks whose finding builder took five parameters.
+ * The calls findings() makes and the findings it returns, compared with the
+ * recorded JSON.
  *
  * @covers \OCA\Filinq\Service\Validation\ArchivalChecks
  *

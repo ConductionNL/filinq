@@ -23,7 +23,7 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * The offset/length pairs spans() and spansForTags() return, compared with
- * JSON recorded from the scanner whose close-tag walk took five parameters.
+ * the recorded JSON.
  *
  * @covers \OCA\Filinq\Service\Editing\XmlBlockScanner
  *

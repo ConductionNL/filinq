@@ -28,8 +28,8 @@ use Psr\Log\LoggerInterface;
 require_once __DIR__.'/ConsolidateRegistersTest.php';
 
 /**
- * The output, the warnings and every table afterwards, compared with JSON
- * recorded from the step whose per-register move took five parameters.
+ * The output, the warnings and every table afterwards, compared with the
+ * recorded JSON.
  *
  * @covers \OCA\Filinq\Repair\ConsolidateRegisters
  * @uses   \OCA\Filinq\Repair\ConsolidateRegistersGateway

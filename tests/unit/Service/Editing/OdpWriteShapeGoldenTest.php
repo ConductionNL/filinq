@@ -24,7 +24,7 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * The part each writeShape() call writes back, or the refusal, compared with
- * JSON recorded from the codec whose page rewrite took five parameters.
+ * the recorded JSON.
  *
  * @covers \OCA\Filinq\Service\Editing\OdpPresentationCodec
  * @uses   \OCA\Filinq\Service\Editing\FrameRewrite

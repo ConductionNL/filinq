@@ -30,8 +30,8 @@ use RuntimeException;
 
 /**
  * The calls checkFile() and checkConversion() make and the report they
- * return, compared with JSON recorded from the service whose report builder
- * took six parameters. The time and the checksum are part of the report.
+ * return, compared with the recorded JSON. The checksum is compared as is;
+ * validatedAt only has to be a timestamp, because the recorder masks times.
  *
  * @covers \OCA\Filinq\Service\VeraPdf\ConformanceService
  *

@@ -30,8 +30,8 @@ use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
 /**
- * The calls classify() makes and the record it saves, compared with JSON
- * recorded from the service whose suggestion builder took five parameters.
+ * The calls classify() makes and the record it saves, compared with the
+ * recorded JSON.
  *
  * @covers \OCA\Filinq\Service\InboundClassificationService
  * @uses   \OCA\Filinq\Service\Support\ClassificationMatchers

@@ -26,8 +26,7 @@ use RuntimeException;
 
 /**
  * The probe and policy calls validate() makes, in order, and the report it
- * returns, compared with JSON recorded from the validator whose per-answer
- * helper took five parameters.
+ * returns, compared with the recorded JSON.
  *
  * @covers \OCA\Filinq\Service\ExternalMountValidator
  *
