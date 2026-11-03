@@ -11,7 +11,10 @@
         "double OcrExtractionFallback",
         "double OpenRegisterServiceLocator",
         "double ProhibitionPolicyService",
-        "double RedactionOutputGuard"
+        "double RedactionOutputGuard",
+        {
+            "distinct objects built by the class": 0
+        }
     ],
     "AnonymizationService given": [
         "double AnonymiserBackendStateClient",
@@ -25,7 +28,10 @@
         "double OcrExtractionFallback",
         "double OpenRegisterServiceLocator",
         "double ProhibitionPolicyService",
-        "double RedactionOutputGuard"
+        "double RedactionOutputGuard",
+        {
+            "distinct objects built by the class": 0
+        }
     ],
     "DocumentAnonymizeRunner defaults": [
         "double AnonymisationRunRecords",
@@ -36,7 +42,10 @@
         "double GrondslagenSummaryAttacher",
         "double LoggerInterface",
         "double OpenRegisterServiceLocator",
-        "double ReplacementVerificationService"
+        "double ReplacementVerificationService",
+        {
+            "distinct objects built by the class": 0
+        }
     ],
     "DocumentAnonymizeRunner given": [
         "double AnonymisationRunRecords",
@@ -47,7 +56,10 @@
         "double GrondslagenSummaryAttacher",
         "double LoggerInterface",
         "double OpenRegisterServiceLocator",
-        "double ReplacementVerificationService"
+        "double ReplacementVerificationService",
+        {
+            "distinct objects built by the class": 0
+        }
     ],
     "DocumentService defaults": [
         "double DataResolverService",
@@ -58,7 +70,10 @@
         "double TemplateService",
         null,
         null,
-        null
+        null,
+        {
+            "distinct objects built by the class": 0
+        }
     ],
     "DocumentService given": [
         "double DataResolverService",
@@ -69,7 +84,10 @@
         "double PlainLanguageRenditionService",
         "double TemplateMergeFieldService",
         "double TemplateService",
-        "double WizardGenerationGate"
+        "double WizardGenerationGate",
+        {
+            "distinct objects built by the class": 0
+        }
     ],
     "DossierSummaryDataService defaults": [
         {
@@ -134,13 +152,19 @@
                     ]
                 }
             ]
+        },
+        {
+            "distinct objects built by the class": 4
         }
     ],
     "DossierSummaryDataService given": [
         "double BaseLabelResolver",
         "double DossierEntityCollector",
         "double DossierObjectRepository",
-        "double DossierPlaceholderRanker"
+        "double DossierPlaceholderRanker",
+        {
+            "distinct objects built by the class": 0
+        }
     ],
     "EmlAttachmentRenderer defaults": [
         "double IAppConfig",
@@ -155,6 +179,9 @@
         },
         {
             "built OCA\\Filinq\\Service\\PhpWordHtmlRenderer": []
+        },
+        {
+            "distinct objects built by the class": 3
         }
     ],
     "EmlAttachmentRenderer given": [
@@ -164,7 +191,10 @@
         "double LoggerInterface",
         "double PdfService",
         "double PhpWordHtmlRenderer",
-        "double TemplateRenderer"
+        "double TemplateRenderer",
+        {
+            "distinct objects built by the class": 0
+        }
     ],
     "EntityConsolidationService defaults": [
         "double BasesResolverService",
@@ -173,7 +203,10 @@
         "double IAppManager",
         "double LoggerInterface",
         "double PolicyMatchService",
-        "double WooProfileService"
+        "double WooProfileService",
+        {
+            "distinct objects built by the class": 0
+        }
     ],
     "EntityConsolidationService given": [
         "double BasesResolverService",
@@ -182,7 +215,10 @@
         "double IAppManager",
         "double LoggerInterface",
         "double PolicyMatchService",
-        "double WooProfileService"
+        "double WooProfileService",
+        {
+            "distinct objects built by the class": 0
+        }
     ],
     "FinancialExtractionCompletedEvent defaults": [
         "text:docType",
@@ -201,6 +237,9 @@
                 1,
                 "two"
             ]
+        },
+        {
+            "distinct objects built by the class": 0
         }
     ],
     "FinancialExtractionCompletedEvent given": [
@@ -220,6 +259,9 @@
                 1,
                 "two"
             ]
+        },
+        {
+            "distinct objects built by the class": 0
         }
     ],
     "FinancialExtractionService defaults": [
@@ -236,7 +278,10 @@
         "double OpenRegisterResolver",
         "double SettingsService",
         "double TotalsReconciler",
-        "double VatIdExtractor"
+        "double VatIdExtractor",
+        {
+            "distinct objects built by the class": 0
+        }
     ],
     "FinancialExtractionService given": [
         "double AmountExtractor",
@@ -252,7 +297,10 @@
         "double OpenRegisterResolver",
         "double SettingsService",
         "double TotalsReconciler",
-        "double VatIdExtractor"
+        "double VatIdExtractor",
+        {
+            "distinct objects built by the class": 0
+        }
     ],
     "FolderBatchService defaults": [
         "double AnonymizationService",
@@ -267,6 +315,9 @@
                 "double IAppConfig",
                 "double OutputLayoutResolver"
             ]
+        },
+        {
+            "distinct objects built by the class": 1
         }
     ],
     "FolderBatchService given": [
@@ -282,6 +333,9 @@
                 "double IAppConfig",
                 "double OutputLayoutResolver"
             ]
+        },
+        {
+            "distinct objects built by the class": 1
         }
     ],
     "GlAccountSuggestedEvent defaults": [
@@ -296,6 +350,9 @@
                 1,
                 "two"
             ]
+        },
+        {
+            "distinct objects built by the class": 0
         }
     ],
     "GlAccountSuggestedEvent given": [
@@ -310,6 +367,9 @@
                 1,
                 "two"
             ]
+        },
+        {
+            "distinct objects built by the class": 0
         }
     ],
     "IntakeDocumentReceivedEvent defaults": [
@@ -320,7 +380,10 @@
         "",
         "text:channel",
         null,
-        null
+        null,
+        {
+            "distinct objects built by the class": 0
+        }
     ],
     "IntakeDocumentReceivedEvent given": [
         "text:arrivedWith",
@@ -330,7 +393,10 @@
         "text:sender",
         "text:sourceRef",
         "text:subject",
-        6
+        6,
+        {
+            "distinct objects built by the class": 0
+        }
     ],
     "IntakeService defaults": [
         "double IUserSession",
@@ -341,7 +407,10 @@
         "double IntakeRepository",
         "double IntakeRoutingService",
         "double LoggerInterface",
-        "double PartySuggestionService"
+        "double PartySuggestionService",
+        {
+            "distinct objects built by the class": 0
+        }
     ],
     "IntakeService given": [
         "double IUserSession",
@@ -352,7 +421,10 @@
         "double IntakeRepository",
         "double IntakeRoutingService",
         "double LoggerInterface",
-        "double PartySuggestionService"
+        "double PartySuggestionService",
+        {
+            "distinct objects built by the class": 0
+        }
     ],
     "LegalBasesSummaryService defaults": [
         "double GrondslagenPdfWriter",
@@ -391,6 +463,9 @@
                     ]
                 }
             ]
+        },
+        {
+            "distinct objects built by the class": 5
         }
     ],
     "LegalBasesSummaryService given": [
@@ -398,6 +473,9 @@
         "double GrondslagenPdfWriter",
         "double IL10N",
         "double IUserSession",
-        "double LoggerInterface"
+        "double LoggerInterface",
+        {
+            "distinct objects built by the class": 0
+        }
     ]
 }

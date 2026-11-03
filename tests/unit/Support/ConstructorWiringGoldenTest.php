@@ -81,6 +81,13 @@ class ConstructorWiringGoldenTest extends TestCase {
 	private array $labels = [];
 
 	/**
+	 * The objects the class built itself, by object id.
+	 *
+	 * @var array<int, true>
+	 */
+	private array $built = [];
+
+	/**
 	 * The classes, and whether their optional parameters are given.
 	 *
 	 * @return array<string, array{0: class-string, 1: bool}> The cases.
@@ -124,6 +131,7 @@ class ConstructorWiringGoldenTest extends TestCase {
 	public function testWiring(string $class, bool $given): void {
 		$name = substr($class, (strrpos($class, '\\') + 1)).($given === true ? ' given' : ' defaults');
 		$wiring = $this->describe(object: $this->build(class: $class, given: $given), depth: 0);
+		$wiring[] = ['distinct objects built by the class' => count($this->built)];
 
 		$golden = [];
 		if (file_exists(self::GOLDEN) === true) {
@@ -276,6 +284,7 @@ class ConstructorWiringGoldenTest extends TestCase {
 			return $label;
 		}
 
+		$this->built[spl_object_id($value)] = true;
 		$built = 'built '.get_class($value);
 		if ($depth < 2 && str_starts_with(get_class($value), 'OCA\\Filinq\\') === true) {
 			return [$built => $this->describe(object: $value, depth: ($depth + 1))];
