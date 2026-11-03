@@ -14,31 +14,21 @@ import CustomDictionaryFormDialog from './CustomDictionaryFormDialog.vue'
 import PolicyRuleFormModal from './PolicyRuleFormModal.vue'
 import { renderStubbed } from '../../tests/jest/renderGolden.js'
 
-jest.mock(
-	'@nextcloud/l10n',
-	() => ({
-		translate: (app, text, vars) =>
-			vars ? text + ' ' + JSON.stringify(vars) : text,
-	}),
-	{ virtual: true },
-)
-jest.mock(
-	'@nextcloud/vue',
-	() => ({
-		NcButton: {},
-		NcCheckboxRadioSwitch: {},
-		NcDialog: {},
-		NcLoadingIcon: {},
-		NcSelect: {},
-		NcTextField: {},
-	}),
-	{ virtual: true },
-)
+jest.mock('@nextcloud/l10n', () => ({
+	translate: (app, text, vars) =>
+		vars ? text + ' ' + JSON.stringify(vars) : text,
+}))
+jest.mock('@nextcloud/vue', () => ({
+	NcButton: {},
+	NcCheckboxRadioSwitch: {},
+	NcDialog: {},
+	NcLoadingIcon: {},
+	NcSelect: {},
+	NcTextField: {},
+}))
 jest.mock('vue-material-design-icons/Delete.vue', () => ({}))
-jest.mock(
-	'@conduction/nextcloud-vue',
-	() => require('../../tests/jest/dialogGolden.js').cnVueModule(),
-	{ virtual: true },
+jest.mock('@conduction/nextcloud-vue', () =>
+	require('../../tests/jest/dialogGolden.js').cnVueModule(),
 )
 
 const GOLDEN = path.join(__dirname, '../../tests/jest/golden/form-dialogs.json')

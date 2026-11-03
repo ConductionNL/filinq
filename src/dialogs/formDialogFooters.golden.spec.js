@@ -13,25 +13,17 @@
 const fs = require('fs')
 const path = require('path')
 
-jest.mock(
-	'@nextcloud/l10n',
-	() => ({
-		translate: (app, text, vars) =>
-			vars ? text + ' ' + JSON.stringify(vars) : text,
-		translatePlural: (app, one, many, count) =>
-			(count === 1 ? one : many) + ' #' + count,
-	}),
-	{ virtual: true },
+jest.mock('@nextcloud/l10n', () => ({
+	translate: (app, text, vars) =>
+		vars ? text + ' ' + JSON.stringify(vars) : text,
+	translatePlural: (app, one, many, count) =>
+		(count === 1 ? one : many) + ' #' + count,
+}))
+jest.mock('@nextcloud/vue', () =>
+	require('../../tests/jest/dialogGolden.js').ncVueModule(),
 )
-jest.mock(
-	'@nextcloud/vue',
-	() => require('../../tests/jest/dialogGolden.js').ncVueModule(),
-	{ virtual: true },
-)
-jest.mock(
-	'@conduction/nextcloud-vue',
-	() => require('../../tests/jest/dialogGolden.js').cnVueModule(),
-	{ virtual: true },
+jest.mock('@conduction/nextcloud-vue', () =>
+	require('../../tests/jest/dialogGolden.js').cnVueModule(),
 )
 jest.mock('vue-material-design-icons/Delete.vue', () => ({}))
 

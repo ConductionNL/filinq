@@ -139,7 +139,11 @@ class GlAccountSuggestionServiceTest extends TestCase {
 			['accountCode' => '4300', 'accountLabel' => 'Kantoorkosten', 'bookedAt' => '2024-02-01T00:00:00+00:00'],
 		]);
 
-		$this->eventDispatcher->expects($this->once())->method('dispatchTyped');
+		$dispatched = [];
+		$this->eventDispatcher->expects($this->once())->method('dispatchTyped')
+			->willReturnCallback(static function (object $event) use (&$dispatched): void {
+				$dispatched[] = $event;
+			});
 
 		$result = $this->service->suggest(
 			extractionId: 'extraction-1',
@@ -152,6 +156,8 @@ class GlAccountSuggestionServiceTest extends TestCase {
 		$this->assertSame('kvk', $result['identityType']);
 		$this->assertSame('history', $result['source']);
 		$this->assertSame('4300', $result['suggestedAccounts'][0]['code']);
+		$this->assertSame('shillinq', $dispatched[0]->getSourceApp());
+		$this->assertSame('annemarie', $dispatched[0]->getRequestedBy());
 
 	}//end testSuggestReturnsHistoryRankedResult()
 

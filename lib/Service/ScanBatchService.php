@@ -33,6 +33,7 @@ namespace OCA\Filinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\Filinq\Event\IntakeDocumentReceivedEvent;
+use OCA\Filinq\Event\Support\IntakeArrival;
 use OCA\Filinq\Exception\ScanSplitFailedException;
 use OCA\Filinq\Kernel\Contracts\ScanBatchServiceInterface;
 use OCP\EventDispatcher\IEventDispatcher;
@@ -322,7 +323,7 @@ class ScanBatchService implements ScanBatchServiceInterface {
 				fileName: $name,
 				subject: $name,
 				sender: $scannerId,
-				sourceRef: (string)($segment['caseNumber'] ?? '')
+				arrival: new IntakeArrival(sourceRef: (string)($segment['caseNumber'] ?? ''))
 			)
 		);
 

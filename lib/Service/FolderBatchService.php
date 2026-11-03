@@ -30,10 +30,10 @@ namespace OCA\Filinq\Service;
 use Exception;
 use OCA\Filinq\Kernel\Contracts\FolderBatchServiceInterface;
 use OCA\Filinq\Kernel\JobQueueInterface;
-use OCA\Filinq\Service\Conversion\OutputLayoutResolver;
+use OCA\Filinq\Service\Support\BatchQueue;
+use OCA\Filinq\Service\Support\FolderEnumerationSources;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
-use OCP\IAppConfig;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 
@@ -68,25 +68,33 @@ class FolderBatchService implements FolderBatchServiceInterface {
 	private readonly FolderFileEnumerator $enumerator;
 
 	/**
+	 * Batch state management.
+	 *
+	 * @var BatchStateService
+	 */
+	private readonly BatchStateService $stateService;
+
+	/**
+	 * Background job list.
+	 *
+	 * @var JobQueueInterface
+	 */
+	private readonly JobQueueInterface $jobList;
+
+	/**
 	 * Constructor for FolderBatchService
 	 *
 	 * @param LoggerInterface $logger Logger for error reporting
 	 * @param IRootFolder $rootFolder Root folder for file operations
 	 * @param IUserSession $userSession User session for current user
-	 * @param BatchStateService $stateService Batch state management
-	 * @param JobQueueInterface $jobList Background job list
+	 * @param BatchQueue $queue The batch state and the job queue
 	 * @param AnonymizationService $anonService Anonymization/extraction service
-	 * @param OutputLayoutResolver $layout Output-layout helper (used here to
-	 *                                     identify legacy `_anonymized` outputs
-	 *                                     and exclude them from source discovery).
-	 * @param ConfidentialityLabelService $confidentialityLabel Read-only files_confidential signal,
-	 *                                                          used (only when
-	 *                                                          `filinq.confidentiality.prioritise_analysis`
-	 *                                                          is on) as a secondary, tie-breaking
-	 *                                                          sort key so higher-confidentiality
-	 *                                                          files are analysed sooner
-	 *                                                          (files-confidential-labels).
-	 * @param IAppConfig $appConfig App configuration for the priority-hint flag
+	 * @param FolderEnumerationSources $enumeration The output layout (to leave legacy
+	 *                                              `_anonymized` outputs out), the
+	 *                                              confidentiality labels (a tie-breaking
+	 *                                              sort key when prioritised analysis is
+	 *                                              on) and the app configuration that
+	 *                                              holds that flag
 	 *
 	 * @return void
 	 */
@@ -94,17 +102,16 @@ class FolderBatchService implements FolderBatchServiceInterface {
 		private readonly LoggerInterface $logger,
 		private readonly IRootFolder $rootFolder,
 		private readonly IUserSession $userSession,
-		private readonly BatchStateService $stateService,
-		private readonly JobQueueInterface $jobList,
+		BatchQueue $queue,
 		private readonly AnonymizationService $anonService,
-		OutputLayoutResolver $layout,
-		ConfidentialityLabelService $confidentialityLabel,
-		IAppConfig $appConfig,
+		FolderEnumerationSources $enumeration,
 	) {
+		$this->stateService = $queue->state;
+		$this->jobList = $queue->jobs;
 		$this->enumerator = new FolderFileEnumerator(
-			layout: $layout,
-			confidentialityLabel: $confidentialityLabel,
-			appConfig: $appConfig
+			layout: $enumeration->layout,
+			confidentialityLabel: $enumeration->confidentialityLabel,
+			appConfig: $enumeration->appConfig
 		);
 
 	}//end __construct()

@@ -26,6 +26,9 @@ use OCA\Filinq\Service\DocumentJobStore;
 use OCA\Filinq\Service\DocumentService;
 use OCA\Filinq\Service\DocumentStorageService;
 use OCA\Filinq\Service\PdfService;
+use OCA\Filinq\Service\Support\DocumentOutput;
+use OCA\Filinq\Service\Support\DocumentProduction;
+use OCA\Filinq\Service\Support\TemplateSources;
 use OCA\Filinq\Service\TemplateRenderer;
 use OCA\Filinq\Service\TemplateService;
 use OCA\OpenRegister\Db\ObjectEntity;
@@ -151,20 +154,17 @@ class DocumentServiceTest extends TestCase {
 		);
 
 		$this->service = new DocumentService(
-			$this->templateSvc,
-			$this->dataResolver,
-			new \OCA\Filinq\Service\DocumentRenderPipeline(
+			new TemplateSources(templates: $this->templateSvc, data: $this->dataResolver),
+			new DocumentProduction(pipeline: new \OCA\Filinq\Service\DocumentRenderPipeline(
 				new \OCA\Filinq\Service\Support\PdfRendering(renderer: $this->renderer, pdf: $this->pdfService),
 				$objectResolver,
 				$logger,
 				$this->passThroughRasterizer()
-			),
-			$this->storageService,
-			new \OCA\Filinq\Service\GeneratedDocumentLogger(
+			), jobs: new DocumentJobStore(appConfig: $appConfig, jobList: new JobQueue(jobList: $this->jobList), logger: $logger)),
+			new DocumentOutput(storage: $this->storageService, log: new \OCA\Filinq\Service\GeneratedDocumentLogger(
 				$objectResolver,
 				$logger
-			),
-			new DocumentJobStore(appConfig: $appConfig, jobList: new JobQueue(jobList: $this->jobList), logger: $logger)
+			))
 		);
 
 	}//end setUp()

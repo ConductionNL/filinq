@@ -27,32 +27,21 @@ const ROW = {
 
 const BARE_ROW = { uuid: 'row-2', matchRules: [] }
 
-jest.mock(
-	'@nextcloud/l10n',
-	() => ({
-		translate: (app, text, vars) =>
-			vars ? text + ' ' + JSON.stringify(vars) : text,
-	}),
-	{ virtual: true },
-)
+jest.mock('@nextcloud/l10n', () => ({
+	translate: (app, text, vars) =>
+		vars ? text + ' ' + JSON.stringify(vars) : text,
+}))
 global.mockStubs ??= []
 global.mockIndexPage ??= { attrs: null }
 
-jest.mock(
-	'@nextcloud/vue',
-	() => {
-		const { stubComponent } = require('../../../tests/jest/renderGolden.js')
-		return {
-			__esModule: true,
-			NcActionButton: stubComponent(
-				'NcActionButton',
-				(global.mockStubs ??= []),
-			),
-			NcActions: stubComponent('NcActions', (global.mockStubs ??= [])),
-		}
-	},
-	{ virtual: true },
-)
+jest.mock('@nextcloud/vue', () => {
+	const { stubComponent } = require('../../../tests/jest/renderGolden.js')
+	return {
+		__esModule: true,
+		NcActionButton: stubComponent('NcActionButton', (global.mockStubs ??= [])),
+		NcActions: stubComponent('NcActions', (global.mockStubs ??= [])),
+	}
+})
 // vue3-jest compiles the script and the template of a `<script setup>`
 // component separately and both name their first import `_vue`, so the
 // template's `$setup.NcActions` reads `vue.NcActions`. Expose the stubs there.
@@ -65,51 +54,44 @@ jest.mock('vue', () => {
 	}
 	return vue
 })
-jest.mock(
-	'@conduction/nextcloud-vue',
-	() => {
-		const { defineComponent, h } = require('vue')
-		const { stubComponent } = require('../../../tests/jest/renderGolden.js')
-		return {
-			CnConfirmDialog: stubComponent(
-				'CnConfirmDialog',
-				(global.mockStubs ??= []),
-			),
-			CnStatsBlock: stubComponent('CnStatsBlock', (global.mockStubs ??= [])),
-			CnStatusBadge: stubComponent('CnStatusBadge', (global.mockStubs ??= [])),
-			// Prints its attributes and renders every slot, in name order, for two sample rows.
-			CnIndexPage: defineComponent({
-				name: 'CnIndexPage',
-				inheritAttrs: false,
-				setup(props, { attrs, slots }) {
-					;(global.mockIndexPage ??= {}).attrs = attrs
-					return () => {
-						const plain = {}
-						for (const [key, value] of Object.entries(attrs)) {
-							if (typeof value === 'function') {
-								plain['data-on-' + key.toLowerCase()] = ''
-							} else if (value !== null && typeof value === 'object') {
-								plain['data-' + key.toLowerCase()] =
-									JSON.stringify(value)
-							} else {
-								plain[key] = value
-							}
+jest.mock('@conduction/nextcloud-vue', () => {
+	const { defineComponent, h } = require('vue')
+	const { stubComponent } = require('../../../tests/jest/renderGolden.js')
+	return {
+		CnConfirmDialog: stubComponent('CnConfirmDialog', (global.mockStubs ??= [])),
+		CnStatsBlock: stubComponent('CnStatsBlock', (global.mockStubs ??= [])),
+		CnStatusBadge: stubComponent('CnStatusBadge', (global.mockStubs ??= [])),
+		// Prints its attributes and renders every slot, in name order, for two sample rows.
+		CnIndexPage: defineComponent({
+			name: 'CnIndexPage',
+			inheritAttrs: false,
+			setup(props, { attrs, slots }) {
+				;(global.mockIndexPage ??= {}).attrs = attrs
+				return () => {
+					const plain = {}
+					for (const [key, value] of Object.entries(attrs)) {
+						if (typeof value === 'function') {
+							plain['data-on-' + key.toLowerCase()] = ''
+						} else if (value !== null && typeof value === 'object') {
+							plain['data-' + key.toLowerCase()] =
+								JSON.stringify(value)
+						} else {
+							plain[key] = value
 						}
-						const children = Object.keys(slots)
-							.sort()
-							.flatMap((name) =>
-								global.SAMPLE_ROWS.map((row) =>
-									h('x-slot', { name }, slots[name]({ row })),
-								),
-							)
-						return h('x-cnindexpage', plain, children)
 					}
-				},
-			}),
-		}
-	},
-	{ virtual: true },
-)
+					const children = Object.keys(slots)
+						.sort()
+						.flatMap((name) =>
+							global.SAMPLE_ROWS.map((row) =>
+								h('x-slot', { name }, slots[name]({ row })),
+							),
+						)
+					return h('x-cnindexpage', plain, children)
+				}
+			},
+		}),
+	}
+})
 jest.mock('vue-material-design-icons/Delete.vue', () => ({
 	__esModule: true,
 	default: require('../../../tests/jest/renderGolden.js').stubComponent(

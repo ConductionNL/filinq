@@ -38,6 +38,8 @@ use OCA\Filinq\Service\Pseudonymisation\PseudonymMapRecorder;
 use OCA\Filinq\Service\Pseudonymisation\PseudonymPairs;
 use OCA\Filinq\Service\Redaction\RedactionVerdictRecorder;
 use OCA\Filinq\Service\ReplacementVerificationService;
+use OCA\Filinq\Service\Support\AnonymisationRecords;
+use OCA\Filinq\Service\Support\AnonymisedOutputs;
 use OCP\Files\File;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -133,19 +135,15 @@ class DocumentAnonymizeRunnerPseudonymTest extends TestCase {
 		$verdicts->method('record')->willReturnArgument(0);
 
 		return new DocumentAnonymizeRunner(
-			logger: $logger,
-			locator: $locator,
-			entityDetection: new EntityDetectionService(new AnonymizationResultParser()),
-			emlAnonymizer: $eml,
-			pdfOutput: $pdf,
-			replacementVerifier: new ReplacementVerificationService(logger: $logger),
-			persistence: $persistence,
-			summaryAttacher: $this->createMock(GrondslagenSummaryAttacher::class),
-			runRecords: new AnonymisationRunRecords(
+			records: new AnonymisationRecords(verifier: new ReplacementVerificationService(logger: $logger), persistence: $persistence, runs: new AnonymisationRunRecords(
 				verdicts: $verdicts,
 				persistence: $persistence,
 				keys: new PseudonymMapRecorder(new PseudonymPairs(), $this->mapService(container: $container), $persistence, $locator, $logger)
-			)
+			)),
+			outputs: new AnonymisedOutputs(eml: $eml, pdf: $pdf, summary: $this->createMock(GrondslagenSummaryAttacher::class)),
+			logger: $logger,
+			locator: $locator,
+			entityDetection: new EntityDetectionService(new AnonymizationResultParser())
 		);
 
 	}//end runner()

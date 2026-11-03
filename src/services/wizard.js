@@ -14,6 +14,7 @@
 import axios from '@nextcloud/axios'
 import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
+import { refusal } from './apiAnswer.js'
 
 export const OPERATORS = ['equals', 'notEquals', 'answered']
 
@@ -22,7 +23,7 @@ export const QUESTION_TYPES = ['text', 'choice', 'date', 'registerObject']
 /**
  * Whether an answer counts as given.
  *
- * @param {*} answer The answer.
+ * @param {unknown} answer The answer.
  * @return {boolean} False for null, undefined, blank text and an empty list.
  * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#2-2
  */
@@ -106,7 +107,7 @@ function conditionHolds(condition, answer) {
  *
  * @param {object} data The data, changed in place.
  * @param {string} path The dotted path.
- * @param {*} value The value.
+ * @param {unknown} value The value.
  */
 function setPath(data, path, value) {
 	const segments = path.split('.')
@@ -374,12 +375,7 @@ async function answer(call) {
 		const { data } = await call
 		return { ok: true, data }
 	} catch (error) {
-		return {
-			ok: false,
-			status: error?.response?.status ?? 0,
-			error: error?.response?.data?.error ?? '',
-			errors: error?.response?.data?.errors ?? {},
-		}
+		return { ...refusal(error), errors: error?.response?.data?.errors ?? {} }
 	}
 }
 
@@ -536,7 +532,7 @@ function filenameOf(headers) {
 /**
  * Read a JSON error body that arrived as a Blob.
  *
- * @param {*} data The response data.
+ * @param {unknown} data The response data.
  * @return {Promise<object>} The parsed body, or {}.
  */
 async function readErrorBody(data) {

@@ -34,8 +34,11 @@ use OCA\Filinq\Service\DocumentStorageService;
 use OCA\Filinq\Service\GeneratedDocumentLogger;
 use OCA\Filinq\Service\OpenRegisterResolver;
 use OCA\Filinq\Service\PdfService;
+use OCA\Filinq\Service\Support\DocumentOutput;
+use OCA\Filinq\Service\Support\DocumentProduction;
 use OCA\Filinq\Service\Support\OpenRegisterAccess;
 use OCA\Filinq\Service\Support\PdfRendering;
+use OCA\Filinq\Service\Support\TemplateSources;
 use OCA\Filinq\Service\TemplateRenderer;
 use OCA\Filinq\Service\TemplateService;
 use OCA\Filinq\Service\TemplateVersionService;
@@ -190,12 +193,9 @@ class TemplateVersionProvenanceTest extends TestCase {
 		$pipeline = new DocumentRenderPipeline(new PdfRendering(renderer: $renderer, pdf: $pdf), $objectResolver, new NullLogger(), $rasterizer);
 		$logger = new GeneratedDocumentLogger($objectResolver, new NullLogger());
 		$documents = new DocumentService(
-			templateService: $templates,
-			dataResolver: $resolver,
-			renderPipeline: $pipeline,
-			storageService: $storage,
-			documentLogger: $logger,
-			jobs: $this->createMock(originalClassName: DocumentJobStore::class)
+			production: new DocumentProduction(pipeline: $pipeline, jobs: $this->createMock(originalClassName: DocumentJobStore::class)),
+			output: new DocumentOutput(storage: $storage, log: $logger),
+			sources: new TemplateSources(templates: $templates, data: $resolver)
 		);
 
 		return ['documents' => $documents, 'templates' => $templates, 'versions' => $versions];

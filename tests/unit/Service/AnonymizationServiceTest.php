@@ -44,6 +44,8 @@ use OCA\Filinq\Service\Redaction\RedactionVerdictRecorder;
 use OCA\Filinq\Service\ProhibitionSkipTier;
 use OCA\Filinq\Service\RelationSkipDecisionService;
 use OCA\Filinq\Service\ReplacementVerificationService;
+use OCA\Filinq\Service\Support\AnonymisationRecords;
+use OCA\Filinq\Service\Support\AnonymisedOutputs;
 use OCA\OpenRegister\Db\EntityRelation;
 use OCA\OpenRegister\Db\EntityRelationMapper;
 use OCP\App\IAppManager;
@@ -1207,25 +1209,7 @@ class AnonymizationServiceTest extends TestCase {
 			consentService: $this->createMock(\OCA\Filinq\Service\ConsentService::class)
 		);
 		$runner = new DocumentAnonymizeRunner(
-			logger: $logger,
-			locator: $locator,
-			entityDetection: $entityDetection,
-			emlAnonymizer: new EmlAnonymizationService(
-				logger: $logger,
-				entityDetection: $entityDetection,
-				emlAssembly: $this->createMock(EmlPdfAssemblyService::class)
-			),
-			pdfOutput: new AnonymisedPdfOutputService(
-				logger: $logger,
-				pdfConversion: $this->createMock(PdfConversionService::class)
-			),
-			replacementVerifier: new ReplacementVerificationService(logger: $logger),
-			persistence: $persistence,
-			summaryAttacher: new GrondslagenSummaryAttacher(
-				logger: $logger,
-				grondslagenSummary: $this->createMock(LegalBasesSummaryService::class)
-			),
-			runRecords: new AnonymisationRunRecords(
+			records: new AnonymisationRecords(verifier: new ReplacementVerificationService(logger: $logger), persistence: $persistence, runs: new AnonymisationRunRecords(
 				verdicts: new RedactionVerdictRecorder(
 					verifier: new RedactionIrreversibilityVerifier(),
 					logger: $logger
@@ -1238,7 +1222,21 @@ class AnonymizationServiceTest extends TestCase {
 					locator: $locator,
 					logger: $logger
 				)
-			)
+			)),
+			outputs: new AnonymisedOutputs(eml: new EmlAnonymizationService(
+				logger: $logger,
+				entityDetection: $entityDetection,
+				emlAssembly: $this->createMock(EmlPdfAssemblyService::class)
+			), pdf: new AnonymisedPdfOutputService(
+				logger: $logger,
+				pdfConversion: $this->createMock(PdfConversionService::class)
+			), summary: new GrondslagenSummaryAttacher(
+				logger: $logger,
+				grondslagenSummary: $this->createMock(LegalBasesSummaryService::class)
+			)),
+			logger: $logger,
+			locator: $locator,
+			entityDetection: $entityDetection
 		);
 
 		return $runner->run(

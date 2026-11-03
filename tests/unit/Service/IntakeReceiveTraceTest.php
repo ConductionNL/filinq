@@ -20,6 +20,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Service;
 
 use OCA\Filinq\Event\IntakeDocumentReceivedEvent;
+use OCA\Filinq\Event\Support\IntakeArrival;
 use OCA\Filinq\Exception\IntakeRefusedException;
 use OCA\Filinq\Service\Intake\IntakeOcrQueue;
 use OCA\Filinq\Service\IntakeAuthorizationGate;
@@ -29,6 +30,8 @@ use OCA\Filinq\Service\IntakeRepository;
 use OCA\Filinq\Service\IntakeRoutingService;
 use OCA\Filinq\Service\IntakeService;
 use OCA\Filinq\Service\PartySuggestionService;
+use OCA\Filinq\Service\Support\IntakeFiling;
+use OCA\Filinq\Service\Support\IntakeRouting;
 use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\AbstractLogger;
@@ -41,6 +44,9 @@ use Stringable;
  * @covers \OCA\Filinq\Service\IntakeService
  * @uses   \OCA\Filinq\Event\IntakeDocumentReceivedEvent
  * @uses   \OCA\Filinq\Exception\IntakeRefusedException
+ * @uses \OCA\Filinq\Event\Support\IntakeArrival
+ * @uses \OCA\Filinq\Service\Support\IntakeFiling
+ * @uses \OCA\Filinq\Service\Support\IntakeRouting
  */
 class IntakeReceiveTraceTest extends TestCase {
 
@@ -102,7 +108,9 @@ class IntakeReceiveTraceTest extends TestCase {
 
 		$trace = [];
 		try {
-			$trace['stored'] = $this->service($seen, $logger)->receive(new IntakeDocumentReceivedEvent(...$delivery));
+			$arrival = new IntakeArrival(sourceRef: $delivery['sourceRef'], receivedAt: $delivery['receivedAt'], arrivedWith: $delivery['arrivedWith']);
+			unset($delivery['sourceRef'], $delivery['receivedAt'], $delivery['arrivedWith']);
+			$trace['stored'] = $this->service($seen, $logger)->receive(new IntakeDocumentReceivedEvent(...$delivery, arrival: $arrival));
 		} catch (IntakeRefusedException $e) {
 			$trace['refused'] = [$e->getMessage(), $e->getStatus()];
 		}
@@ -176,13 +184,10 @@ class IntakeReceiveTraceTest extends TestCase {
 		return new IntakeService(
 			$repository,
 			$this->createMock(IntakeAuthorizationGate::class),
-			$this->createMock(IntakeFilePlacement::class),
-			$defaults,
-			$this->createMock(IntakeRoutingService::class),
-			$parties,
+			new IntakeFiling(placement: $this->createMock(IntakeFilePlacement::class), ocrQueue: $ocr),
+			new IntakeRouting(defaults: $defaults, routing: $this->createMock(IntakeRoutingService::class), parties: $parties),
 			$this->createMock(IUserSession::class),
-			$logger,
-			$ocr
+			$logger
 		);
 	}//end service()
 }//end class

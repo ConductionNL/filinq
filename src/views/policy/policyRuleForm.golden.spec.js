@@ -14,41 +14,28 @@ const fs = require('fs')
 const path = require('path')
 const { nextTick } = require('vue')
 
-jest.mock(
-	'@nextcloud/l10n',
-	() => ({
-		translate: (app, text, vars) =>
-			vars ? text + ' ' + JSON.stringify(vars) : text,
-		translatePlural: (app, one, many, count) =>
-			(count === 1 ? one : many) + ' #' + count,
-	}),
-	{ virtual: true },
-)
-jest.mock(
-	'@nextcloud/vue',
-	() => {
-		const module = require('../../../tests/jest/dialogGolden.js').ncVueModule()
-		const { stubComponent } = require('../../../tests/jest/renderGolden.js')
-		for (const name of ['NcActions', 'NcActionButton']) {
-			module[name] = stubComponent(name, (global.mockStubs ??= []))
-		}
-		return module
-	},
-	{ virtual: true },
-)
-jest.mock(
-	'@conduction/nextcloud-vue',
-	() => {
-		const module = require('../../../tests/jest/dialogGolden.js').cnVueModule()
-		// The table's row slots are out of scope here; the list renders as a marker.
-		const CnIndexPage = { name: 'CnIndexPage', render: () => null }
-		return new Proxy(module, {
-			get: (target, key) =>
-				key === 'CnIndexPage' ? CnIndexPage : target[key],
-		})
-	},
-	{ virtual: true },
-)
+jest.mock('@nextcloud/l10n', () => ({
+	translate: (app, text, vars) =>
+		vars ? text + ' ' + JSON.stringify(vars) : text,
+	translatePlural: (app, one, many, count) =>
+		(count === 1 ? one : many) + ' #' + count,
+}))
+jest.mock('@nextcloud/vue', () => {
+	const module = require('../../../tests/jest/dialogGolden.js').ncVueModule()
+	const { stubComponent } = require('../../../tests/jest/renderGolden.js')
+	for (const name of ['NcActions', 'NcActionButton']) {
+		module[name] = stubComponent(name, (global.mockStubs ??= []))
+	}
+	return module
+})
+jest.mock('@conduction/nextcloud-vue', () => {
+	const module = require('../../../tests/jest/dialogGolden.js').cnVueModule()
+	// The table's row slots are out of scope here; the list renders as a marker.
+	const CnIndexPage = { name: 'CnIndexPage', render: () => null }
+	return new Proxy(module, {
+		get: (target, key) => (key === 'CnIndexPage' ? CnIndexPage : target[key]),
+	})
+})
 for (const icon of ['Delete', 'DotsHorizontal', 'Pencil']) {
 	jest.mock('vue-material-design-icons/' + icon + '.vue', () => ({
 		name: 'Icon',
