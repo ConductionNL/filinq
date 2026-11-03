@@ -1,4 +1,62 @@
 {
+    "create: a consent without a document is not saved": [
+        {
+            "IAppManager::getInstalledApps": []
+        },
+        {
+            "ContainerInterface::get": {
+                "id": "OCA\\OpenRegister\\Service\\ObjectService"
+            }
+        },
+        {
+            "PolicyMatchService::match": {
+                "entityText": "Jan",
+                "entityType": "PERSON"
+            }
+        },
+        {
+            "IAppManager::getInstalledApps": []
+        },
+        {
+            "ContainerInterface::get": {
+                "id": "OCA\\OpenRegister\\Service\\ObjectService"
+            }
+        },
+        {
+            "ObjectService::searchObjects": {
+                "query": {
+                    "@self": {
+                        "register": "filinq",
+                        "schema": "publicationConsent"
+                    },
+                    "documentId": "",
+                    "scope": "document",
+                    "entityText": "Jan"
+                }
+            }
+        },
+        {
+            "ObjectionDeadlineChecker::calculateDeadline": []
+        },
+        {
+            "LoggerInterface::error": {
+                "message": "Failed to create consent request: scope=document publicationConsent records require a non-empty documentId",
+                "context": {
+                    "documentId": "",
+                    "exception": {
+                        "InvalidArgumentException": []
+                    }
+                }
+            }
+        },
+        {
+            "threw": [
+                "Exception",
+                "Failed to create consent request: scope=document publicationConsent records require a non-empty documentId",
+                0
+            ]
+        }
+    ],
     "create: a new consent is saved under the session user": [
         {
             "IAppManager::getInstalledApps": []

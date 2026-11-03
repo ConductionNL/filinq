@@ -113,9 +113,9 @@ class ConsentActingUserTraceTest extends TestCase {
 	}//end testUpdateTrace()
 
 	/**
-	 * Writer cases: the existing consent rows OpenRegister finds and the request extras.
+	 * Writer cases: the existing consent rows OpenRegister finds, the request extras and the document id.
 	 *
-	 * @return array<string, array{0: array<int, array<string, mixed>>, 1: array<string, mixed>}>
+	 * @return array<string, array{0: array<int, array<string, mixed>>, 1: array<string, mixed>, 2?: string}>
 	 */
 	public static function requests(): array {
 		$extra = ['entityKey' => 'ent-7', 'publicationBases' => ['5.1.2e', '5.1.1c'], 'contactEmail' => 'jan@example.org', 'owner' => 'mallory'];
@@ -123,6 +123,7 @@ class ConsentActingUserTraceTest extends TestCase {
 			'a new consent is saved under the session user' => [[], $extra],
 			'a re-submission updates the existing consent'  => [[['scope' => 'document', 'documentId' => 'doc-1', 'notes' => 'eerder', 'consentStatus' => 'consent_given']], $extra],
 			'a standing consent row is never matched'       => [[['scope' => 'entity', 'entityText' => 'Jan']], ['contactAddress' => 'Dorpsstraat 1']],
+			'a consent without a document is not saved'     => [[], [], ''],
 		];
 
 	}//end requests()
@@ -132,14 +133,15 @@ class ConsentActingUserTraceTest extends TestCase {
 	 *
 	 * @param array<int, array<string, mixed>> $existing The rows the idempotency lookup finds.
 	 * @param array<string, mixed>             $extra    The request extras.
+	 * @param string                           $document The document id.
 	 *
 	 * @dataProvider requests
 	 *
 	 * @return void
 	 */
-	public function testCreateTrace(array $existing, array $extra): void {
+	public function testCreateTrace(array $existing, array $extra, string $document = 'doc-1'): void {
 		$service = $this->service(stored: [], existing: $existing);
-		$this->traceCall(fn () => $service->createConsentRequest(documentId: 'doc-1', entityType: 'PERSON', entityText: 'Jan', register: 'filinq', schema: 'publicationConsent', extra: $extra));
+		$this->traceCall(fn () => $service->createConsentRequest(documentId: $document, entityType: 'PERSON', entityText: 'Jan', register: 'filinq', schema: 'publicationConsent', extra: $extra));
 
 		$this->assertTrace(file: self::GOLDEN, name: 'create: '.$this->dataName());
 
