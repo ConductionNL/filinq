@@ -1,0 +1,288 @@
+{
+    "a longer name is not the tag": [
+        {
+            "result": [
+                [
+                    0,
+                    36
+                ]
+            ]
+        },
+        {
+            "result": [
+                [
+                    0,
+                    36
+                ]
+            ]
+        }
+    ],
+    "a nested open tag never ends": [
+        {
+            "result": []
+        },
+        {
+            "result": []
+        }
+    ],
+    "an open tag never ends": [
+        {
+            "result": [
+                [
+                    0,
+                    12
+                ]
+            ]
+        },
+        {
+            "result": [
+                [
+                    0,
+                    12
+                ]
+            ]
+        }
+    ],
+    "close before the nested open": [
+        {
+            "result": [
+                [
+                    0,
+                    12
+                ],
+                [
+                    13,
+                    12
+                ]
+            ]
+        },
+        {
+            "result": [
+                [
+                    0,
+                    12
+                ],
+                [
+                    13,
+                    12
+                ]
+            ]
+        }
+    ],
+    "deeply nested": [
+        {
+            "result": [
+                [
+                    0,
+                    22
+                ],
+                [
+                    22,
+                    8
+                ]
+            ]
+        },
+        {
+            "result": [
+                [
+                    0,
+                    22
+                ],
+                [
+                    22,
+                    8
+                ]
+            ]
+        }
+    ],
+    "nested longer name inside": [
+        {
+            "result": [
+                [
+                    0,
+                    50
+                ]
+            ]
+        },
+        {
+            "result": [
+                [
+                    0,
+                    50
+                ]
+            ]
+        }
+    ],
+    "nested same name": [
+        {
+            "result": [
+                [
+                    0,
+                    27
+                ],
+                [
+                    27,
+                    6
+                ]
+            ]
+        },
+        {
+            "result": [
+                [
+                    0,
+                    27
+                ],
+                [
+                    27,
+                    6
+                ]
+            ]
+        }
+    ],
+    "nested self-closing": [
+        {
+            "result": [
+                [
+                    0,
+                    18
+                ]
+            ]
+        },
+        {
+            "result": [
+                [
+                    0,
+                    18
+                ]
+            ]
+        }
+    ],
+    "no close tag": [
+        {
+            "result": []
+        },
+        {
+            "result": []
+        }
+    ],
+    "no tag at all": [
+        {
+            "result": []
+        },
+        {
+            "result": []
+        }
+    ],
+    "only a close tag": [
+        {
+            "result": []
+        },
+        {
+            "result": []
+        }
+    ],
+    "self-closing": [
+        {
+            "result": [
+                [
+                    0,
+                    6
+                ],
+                [
+                    6,
+                    7
+                ]
+            ]
+        },
+        {
+            "result": [
+                [
+                    0,
+                    6
+                ],
+                [
+                    6,
+                    7
+                ]
+            ]
+        }
+    ],
+    "siblings": [
+        {
+            "result": [
+                [
+                    3,
+                    12
+                ],
+                [
+                    15,
+                    18
+                ]
+            ]
+        },
+        {
+            "result": [
+                [
+                    3,
+                    12
+                ],
+                [
+                    15,
+                    18
+                ]
+            ]
+        }
+    ],
+    "tab and newline after the name": [
+        {
+            "result": [
+                [
+                    0,
+                    18
+                ],
+                [
+                    18,
+                    13
+                ]
+            ]
+        },
+        {
+            "result": [
+                [
+                    0,
+                    18
+                ],
+                [
+                    18,
+                    13
+                ]
+            ]
+        }
+    ],
+    "two tags, sorted by offset": [
+        {
+            "result": [
+                [
+                    16,
+                    12
+                ]
+            ]
+        },
+        {
+            "result": [
+                [
+                    0,
+                    16
+                ],
+                [
+                    16,
+                    12
+                ],
+                [
+                    28,
+                    8
+                ]
+            ]
+        }
+    ]
+}
