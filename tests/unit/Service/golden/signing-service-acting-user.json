@@ -1103,7 +1103,111 @@
             ]
         }
     ],
+    "sign for a forged signer, forged signatureData": [
+        {
+            "SigningActorResolver::resolveActingIdentity": []
+        },
+        {
+            "SettingsService::getObjectService": []
+        },
+        {
+            "SettingsService::resolveSignerRecordBinding": []
+        },
+        {
+            "SigningActorResolver::loadAuthorisedSigner": {
+                "requestId": "req-1",
+                "signerId": "s-1",
+                "verifiedActor": null,
+                "actorUserId": "mallory",
+                "action": "sign"
+            }
+        },
+        {
+            "threw": [
+                "RuntimeException",
+                "Not authorised to sign for signer s-1",
+                0
+            ]
+        }
+    ],
     "sign outside the mandate": [
+        {
+            "SigningActorResolver::resolveActingIdentity": []
+        },
+        {
+            "SettingsService::getObjectService": []
+        },
+        {
+            "SettingsService::resolveSignerRecordBinding": []
+        },
+        {
+            "SigningActorResolver::loadAuthorisedSigner": {
+                "requestId": "req-1",
+                "signerId": "s-2",
+                "verifiedActor": null,
+                "actorUserId": "mallory",
+                "action": "sign"
+            }
+        },
+        {
+            "SettingsService::getObjectService": []
+        },
+        {
+            "SettingsService::resolveSigningRequestBinding": []
+        },
+        {
+            "ObjectService::find": {
+                "id": "req-1",
+                "register": "filinq",
+                "schema": "signingRequest",
+                "_rbac": false
+            }
+        },
+        {
+            "SigningActorResolver::mayRead": {
+                "request": {
+                    "id": "req-1",
+                    "status": "PENDING",
+                    "signatureLevel": "AdES",
+                    "provider": "native",
+                    "initiatorUserId": "griffier",
+                    "signerIds": [
+                        "s-1"
+                    ],
+                    "sourceApp": "dossiq",
+                    "subjectSchema": "besluit"
+                },
+                "requestId": "req-1",
+                "userId": ""
+            }
+        },
+        {
+            "IAppConfig::getValueString": {
+                "app": "filinq",
+                "key": "signingMandates"
+            }
+        },
+        {
+            "IGroupManager::isInGroup": {
+                "userId": "mallory",
+                "group": "portefeuillehouders"
+            }
+        },
+        {
+            "IAppConfig::getValueString": {
+                "app": "filinq",
+                "key": "signingMandates"
+            }
+        },
+        {
+            "threw": [
+                "RuntimeException",
+                "Signing refused by the mandate declared for dossiq/besluit: Only the portefeuillehouder signs a besluit (held by: portefeuillehouders)",
+                0
+            ]
+        }
+    ],
+    "sign outside the mandate, forged signatureData": [
         {
             "SigningActorResolver::resolveActingIdentity": []
         },
