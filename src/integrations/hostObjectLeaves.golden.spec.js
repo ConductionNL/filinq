@@ -16,22 +16,14 @@ import CnFilinqDownloadAllFilesWidget from './CnFilinqDownloadAllFilesWidget.vue
 import CnFilinqMergeToPdfWidget from './CnFilinqMergeToPdfWidget.vue'
 import { renderStubbed } from '../../tests/jest/renderGolden.js'
 
-jest.mock(
-	'@nextcloud/l10n',
-	() => ({
-		translate: (app, text, vars) =>
-			vars ? text + ' ' + JSON.stringify(vars) : text,
-	}),
-	{ virtual: true },
-)
-jest.mock(
-	'@nextcloud/router',
-	() => ({
-		generateUrl: (url, params) =>
-			'url:' + url + (params ? JSON.stringify(params) : ''),
-	}),
-	{ virtual: true },
-)
+jest.mock('@nextcloud/l10n', () => ({
+	translate: (app, text, vars) =>
+		vars ? text + ' ' + JSON.stringify(vars) : text,
+}))
+jest.mock('@nextcloud/router', () => ({
+	generateUrl: (url, params) =>
+		'url:' + url + (params ? JSON.stringify(params) : ''),
+}))
 
 const GOLDEN = path.join(
 	__dirname,

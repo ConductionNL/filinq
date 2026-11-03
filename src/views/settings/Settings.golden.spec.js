@@ -13,30 +13,20 @@ import Settings from './Settings.vue'
 import { renderStubbed } from '../../../tests/jest/renderGolden.js'
 import { defaultSettings } from '../../services/settingsDefaults.js'
 
-jest.mock(
-	'@nextcloud/dialogs',
-	() => ({
-		showError: () => {},
-		showSuccess: () => {},
-	}),
-	{ virtual: true },
-)
-jest.mock('@conduction/nextcloud-vue', () => ({ CnAdminSettingsShell: {} }), {
-	virtual: true,
-})
-jest.mock(
-	'@nextcloud/vue',
-	() => ({
-		NcButton: {},
-		NcCheckboxRadioSwitch: {},
-		NcLoadingIcon: {},
-		NcNoteCard: {},
-		NcSelect: {},
-		NcSettingsSection: {},
-		NcTextField: {},
-	}),
-	{ virtual: true },
-)
+jest.mock('@nextcloud/dialogs', () => ({
+	showError: () => {},
+	showSuccess: () => {},
+}))
+jest.mock('@conduction/nextcloud-vue', () => ({ CnAdminSettingsShell: {} }))
+jest.mock('@nextcloud/vue', () => ({
+	NcButton: {},
+	NcCheckboxRadioSwitch: {},
+	NcLoadingIcon: {},
+	NcNoteCard: {},
+	NcSelect: {},
+	NcSettingsSection: {},
+	NcTextField: {},
+}))
 jest.mock('vue-material-design-icons/AccountSearchOutline.vue', () => ({}))
 jest.mock('vue-material-design-icons/FileExportOutline.vue', () => ({}))
 jest.mock('vue-material-design-icons/OpenInNew.vue', () => ({}))
