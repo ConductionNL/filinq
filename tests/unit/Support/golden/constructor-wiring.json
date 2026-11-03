@@ -33,6 +33,56 @@
             "distinct objects built by the class": 0
         }
     ],
+    "ConsentRecordWriter defaults": [
+        "double ConsentNotesHelper",
+        "double ConsentPolicyReferentValidator",
+        "double ConsentScopeValidator",
+        "double ContainerInterface",
+        "double IAppManager",
+        "double LoggerInterface",
+        "double ObjectionDeadlineChecker",
+        {
+            "built OCA\\Filinq\\Service\\ObjectResultExtractor": []
+        },
+        {
+            "distinct objects built by the class": 1
+        }
+    ],
+    "ConsentRecordWriter given": [
+        "double ConsentNotesHelper",
+        "double ConsentPolicyReferentValidator",
+        "double ConsentScopeValidator",
+        "double ContainerInterface",
+        "double IAppManager",
+        "double LoggerInterface",
+        "double ObjectResultExtractor",
+        "double ObjectionDeadlineChecker",
+        {
+            "distinct objects built by the class": 0
+        }
+    ],
+    "ConsentService defaults": [
+        "double ConsentRecordWriter",
+        "double ConsentScopeValidator",
+        "double ConsentUpdateHandler",
+        "double LoggerInterface",
+        "double ObjectionDeadlineChecker",
+        "double PolicyMatchService",
+        {
+            "distinct objects built by the class": 0
+        }
+    ],
+    "ConsentService given": [
+        "double ConsentRecordWriter",
+        "double ConsentScopeValidator",
+        "double ConsentUpdateHandler",
+        "double LoggerInterface",
+        "double ObjectionDeadlineChecker",
+        "double PolicyMatchService",
+        {
+            "distinct objects built by the class": 0
+        }
+    ],
     "DocumentAnonymizeRunner defaults": [
         "double AnonymisationRunRecords",
         "double AnonymisedPdfOutputService",
@@ -427,45 +477,13 @@
         }
     ],
     "LegalBasesSummaryService defaults": [
+        "double DossierSummaryDataService",
         "double GrondslagenPdfWriter",
         "double IUserSession",
         "double LoggerInterface",
         null,
         {
-            "built OCA\\Filinq\\Service\\DossierSummaryDataService": [
-                {
-                    "built OCA\\Filinq\\Service\\BaseLabelResolver": [
-                        "built OCA\\Filinq\\Service\\DossierObjectRepository",
-                        "double LoggerInterface"
-                    ]
-                },
-                {
-                    "built OCA\\Filinq\\Service\\DossierEntityCollector": [
-                        "built OCA\\Filinq\\Service\\BaseLabelResolver",
-                        "built OCA\\Filinq\\Service\\DossierObjectRepository",
-                        "built OCA\\Filinq\\Service\\DossierPlaceholderRanker",
-                        "double LoggerInterface"
-                    ]
-                },
-                {
-                    "built OCA\\Filinq\\Service\\DossierObjectRepository": [
-                        "double ContainerInterface",
-                        "double IAppManager",
-                        "double IRootFolder",
-                        "double IUserSession",
-                        "double LoggerInterface"
-                    ]
-                },
-                {
-                    "built OCA\\Filinq\\Service\\DossierPlaceholderRanker": [
-                        "built OCA\\Filinq\\Service\\DossierObjectRepository",
-                        "double LoggerInterface"
-                    ]
-                }
-            ]
-        },
-        {
-            "distinct objects built by the class": 5
+            "distinct objects built by the class": 0
         }
     ],
     "LegalBasesSummaryService given": [
@@ -474,6 +492,34 @@
         "double IL10N",
         "double IUserSession",
         "double LoggerInterface",
+        {
+            "distinct objects built by the class": 0
+        }
+    ],
+    "SigningService defaults": [
+        "double GuardianConsentGuard",
+        "double SettingsService",
+        "double SignedArtifactProducer",
+        "double SigningActorResolver",
+        "double SigningAssuranceGate",
+        "double SigningAuditService",
+        "double SigningConclusionEmitter",
+        "double SigningRequestValidator",
+        null,
+        {
+            "distinct objects built by the class": 0
+        }
+    ],
+    "SigningService given": [
+        "double GuardianConsentGuard",
+        "double SettingsService",
+        "double SignedArtifactProducer",
+        "double SigningActorResolver",
+        "double SigningAssuranceGate",
+        "double SigningAuditService",
+        "double SigningConclusionEmitter",
+        "double SigningMandateService",
+        "double SigningRequestValidator",
         {
             "distinct objects built by the class": 0
         }

@@ -50,6 +50,9 @@ use ReflectionParameter;
  * @covers \OCA\Filinq\Event\IntakeDocumentReceivedEvent
  * @covers \OCA\Filinq\Event\FinancialExtractionCompletedEvent
  * @covers \OCA\Filinq\Event\GlAccountSuggestedEvent
+ * @covers \OCA\Filinq\Service\SigningService
+ * @covers \OCA\Filinq\Service\ConsentRecordWriter
+ * @covers \OCA\Filinq\Service\ConsentService
  * @uses \OCA\Filinq\Event\Support\IntakeArrival
  * @uses \OCA\Filinq\Event\Support\RequestOrigin
  * @uses \OCA\Filinq\Service\BaseLabelResolver
@@ -68,6 +71,9 @@ use ReflectionParameter;
  * @uses \OCA\Filinq\Service\Support\OpenRegisterAccess
  * @uses \OCA\Filinq\Service\Support\TemplateSources
  * @uses \OCA\Filinq\Service\Support\DossierSummaryParts
+ * @uses \OCA\Filinq\Service\Support\SigningGuards
+ * @uses \OCA\Filinq\Service\Support\SigningOutputs
+ * @uses \OCA\Filinq\Service\Support\ConsentRecordRules
  */
 class ConstructorWiringGoldenTest extends TestCase {
 
@@ -107,6 +113,9 @@ class ConstructorWiringGoldenTest extends TestCase {
 			'OCA\Filinq\Event\IntakeDocumentReceivedEvent',
 			'OCA\Filinq\Event\FinancialExtractionCompletedEvent',
 			'OCA\Filinq\Event\GlAccountSuggestedEvent',
+			'OCA\Filinq\Service\SigningService',
+			'OCA\Filinq\Service\ConsentRecordWriter',
+			'OCA\Filinq\Service\ConsentService',
 		];
 		$cases = [];
 		foreach ($classes as $class) {

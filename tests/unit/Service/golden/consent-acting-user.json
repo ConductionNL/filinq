@@ -1,0 +1,591 @@
+{
+    "create: a consent without a document is not saved": [
+        {
+            "IAppManager::getInstalledApps": []
+        },
+        {
+            "ContainerInterface::get": {
+                "id": "OCA\\OpenRegister\\Service\\ObjectService"
+            }
+        },
+        {
+            "PolicyMatchService::match": {
+                "entityText": "Jan",
+                "entityType": "PERSON"
+            }
+        },
+        {
+            "IAppManager::getInstalledApps": []
+        },
+        {
+            "ContainerInterface::get": {
+                "id": "OCA\\OpenRegister\\Service\\ObjectService"
+            }
+        },
+        {
+            "ObjectService::searchObjects": {
+                "query": {
+                    "@self": {
+                        "register": "filinq",
+                        "schema": "publicationConsent"
+                    },
+                    "documentId": "",
+                    "scope": "document",
+                    "entityText": "Jan"
+                }
+            }
+        },
+        {
+            "ObjectionDeadlineChecker::calculateDeadline": []
+        },
+        {
+            "LoggerInterface::error": {
+                "message": "Failed to create consent request: scope=document publicationConsent records require a non-empty documentId",
+                "context": {
+                    "documentId": "",
+                    "exception": {
+                        "InvalidArgumentException": []
+                    }
+                }
+            }
+        },
+        {
+            "threw": [
+                "Exception",
+                "Failed to create consent request: scope=document publicationConsent records require a non-empty documentId",
+                0
+            ]
+        }
+    ],
+    "create: a new consent is saved under the session user": [
+        {
+            "IAppManager::getInstalledApps": []
+        },
+        {
+            "ContainerInterface::get": {
+                "id": "OCA\\OpenRegister\\Service\\ObjectService"
+            }
+        },
+        {
+            "PolicyMatchService::match": {
+                "entityText": "Jan",
+                "entityType": "PERSON"
+            }
+        },
+        {
+            "IAppManager::getInstalledApps": []
+        },
+        {
+            "ContainerInterface::get": {
+                "id": "OCA\\OpenRegister\\Service\\ObjectService"
+            }
+        },
+        {
+            "ObjectService::searchObjects": {
+                "query": {
+                    "@self": {
+                        "register": "filinq",
+                        "schema": "publicationConsent"
+                    },
+                    "documentId": "doc-1",
+                    "scope": "document",
+                    "entityKey": "ent-7"
+                }
+            }
+        },
+        {
+            "ObjectionDeadlineChecker::calculateDeadline": []
+        },
+        {
+            "IAppManager::getInstalledApps": []
+        },
+        {
+            "ContainerInterface::get": {
+                "id": "OCA\\OpenRegister\\Service\\ObjectService"
+            }
+        },
+        {
+            "ObjectService::saveObject": {
+                "object": {
+                    "documentId": "doc-1",
+                    "entityType": "PERSON",
+                    "entityText": "Jan",
+                    "scope": "document",
+                    "notificationStatus": "pending",
+                    "consentStatus": "pending",
+                    "publicationDecision": "pending",
+                    "objectionDeadline": "<time>",
+                    "entityKey": "ent-7",
+                    "legalBasis": "5.1.2e",
+                    "notes": "<!-- docudesk:additional-publication-bases:begin -->\n**Aanvullende publicatiegrondslagen:**\n- 5.1.1c\n<!-- docudesk:additional-publication-bases:end -->",
+                    "contactEmail": "jan@example.org"
+                },
+                "register": "filinq",
+                "schema": "publicationConsent"
+            }
+        },
+        {
+            "LoggerInterface::info": {
+                "message": "Consent request created",
+                "context": {
+                    "documentId": "doc-1"
+                }
+            }
+        },
+        {
+            "result": {
+                "documentId": "doc-1",
+                "entityType": "PERSON",
+                "entityText": "Jan",
+                "scope": "document",
+                "notificationStatus": "pending",
+                "consentStatus": "pending",
+                "publicationDecision": "pending",
+                "objectionDeadline": "<time>",
+                "entityKey": "ent-7",
+                "legalBasis": "5.1.2e",
+                "notes": "<!-- docudesk:additional-publication-bases:begin -->\n**Aanvullende publicatiegrondslagen:**\n- 5.1.1c\n<!-- docudesk:additional-publication-bases:end -->",
+                "contactEmail": "jan@example.org",
+                "id": "saved",
+                "wasUpdated": false
+            }
+        }
+    ],
+    "create: a re-submission updates the existing consent": [
+        {
+            "IAppManager::getInstalledApps": []
+        },
+        {
+            "ContainerInterface::get": {
+                "id": "OCA\\OpenRegister\\Service\\ObjectService"
+            }
+        },
+        {
+            "PolicyMatchService::match": {
+                "entityText": "Jan",
+                "entityType": "PERSON"
+            }
+        },
+        {
+            "IAppManager::getInstalledApps": []
+        },
+        {
+            "ContainerInterface::get": {
+                "id": "OCA\\OpenRegister\\Service\\ObjectService"
+            }
+        },
+        {
+            "ObjectService::searchObjects": {
+                "query": {
+                    "@self": {
+                        "register": "filinq",
+                        "schema": "publicationConsent"
+                    },
+                    "documentId": "doc-1",
+                    "scope": "document",
+                    "entityKey": "ent-7"
+                }
+            }
+        },
+        {
+            "IAppManager::getInstalledApps": []
+        },
+        {
+            "ContainerInterface::get": {
+                "id": "OCA\\OpenRegister\\Service\\ObjectService"
+            }
+        },
+        {
+            "ObjectService::saveObject": {
+                "object": {
+                    "scope": "document",
+                    "documentId": "doc-1",
+                    "notes": "eerder\n\n<!-- docudesk:additional-publication-bases:begin -->\n**Aanvullende publicatiegrondslagen:**\n- 5.1.1c\n<!-- docudesk:additional-publication-bases:end -->",
+                    "consentStatus": "consent_given",
+                    "entityType": "PERSON",
+                    "legalBasis": "5.1.2e",
+                    "contactEmail": "jan@example.org"
+                },
+                "register": "filinq",
+                "schema": "publicationConsent",
+                "_rbac": false
+            }
+        },
+        {
+            "LoggerInterface::info": {
+                "message": "Consent request updated (idempotent re-submit)",
+                "context": {
+                    "documentId": "doc-1"
+                }
+            }
+        },
+        {
+            "result": {
+                "scope": "document",
+                "documentId": "doc-1",
+                "notes": "eerder\n\n<!-- docudesk:additional-publication-bases:begin -->\n**Aanvullende publicatiegrondslagen:**\n- 5.1.1c\n<!-- docudesk:additional-publication-bases:end -->",
+                "consentStatus": "consent_given",
+                "entityType": "PERSON",
+                "legalBasis": "5.1.2e",
+                "contactEmail": "jan@example.org",
+                "id": "saved",
+                "wasUpdated": true
+            }
+        }
+    ],
+    "create: a standing consent row is never matched": [
+        {
+            "IAppManager::getInstalledApps": []
+        },
+        {
+            "ContainerInterface::get": {
+                "id": "OCA\\OpenRegister\\Service\\ObjectService"
+            }
+        },
+        {
+            "PolicyMatchService::match": {
+                "entityText": "Jan",
+                "entityType": "PERSON"
+            }
+        },
+        {
+            "IAppManager::getInstalledApps": []
+        },
+        {
+            "ContainerInterface::get": {
+                "id": "OCA\\OpenRegister\\Service\\ObjectService"
+            }
+        },
+        {
+            "ObjectService::searchObjects": {
+                "query": {
+                    "@self": {
+                        "register": "filinq",
+                        "schema": "publicationConsent"
+                    },
+                    "documentId": "doc-1",
+                    "scope": "document",
+                    "entityText": "Jan"
+                }
+            }
+        },
+        {
+            "ObjectionDeadlineChecker::calculateDeadline": []
+        },
+        {
+            "IAppManager::getInstalledApps": []
+        },
+        {
+            "ContainerInterface::get": {
+                "id": "OCA\\OpenRegister\\Service\\ObjectService"
+            }
+        },
+        {
+            "ObjectService::saveObject": {
+                "object": {
+                    "documentId": "doc-1",
+                    "entityType": "PERSON",
+                    "entityText": "Jan",
+                    "scope": "document",
+                    "notificationStatus": "pending",
+                    "consentStatus": "pending",
+                    "publicationDecision": "pending",
+                    "objectionDeadline": "<time>",
+                    "contactAddress": "Dorpsstraat 1"
+                },
+                "register": "filinq",
+                "schema": "publicationConsent"
+            }
+        },
+        {
+            "LoggerInterface::info": {
+                "message": "Consent request created",
+                "context": {
+                    "documentId": "doc-1"
+                }
+            }
+        },
+        {
+            "result": {
+                "documentId": "doc-1",
+                "entityType": "PERSON",
+                "entityText": "Jan",
+                "scope": "document",
+                "notificationStatus": "pending",
+                "consentStatus": "pending",
+                "publicationDecision": "pending",
+                "objectionDeadline": "<time>",
+                "contactAddress": "Dorpsstraat 1",
+                "id": "saved",
+                "wasUpdated": false
+            }
+        }
+    ],
+    "update: document consent cannot change scope": [
+        {
+            "IAppManager::getInstalledApps": []
+        },
+        {
+            "ContainerInterface::get": {
+                "id": "OCA\\OpenRegister\\Service\\ObjectService"
+            }
+        },
+        {
+            "ObjectService::find": {
+                "id": "c-1",
+                "register": "filinq",
+                "schema": "publicationConsent"
+            }
+        },
+        {
+            "threw": [
+                "InvalidArgumentException",
+                "publicationConsent.scope cannot change from \"document\" to \"entity\" after creation.",
+                0
+            ]
+        }
+    ],
+    "update: document consent records the session user": [
+        {
+            "IAppManager::getInstalledApps": []
+        },
+        {
+            "ContainerInterface::get": {
+                "id": "OCA\\OpenRegister\\Service\\ObjectService"
+            }
+        },
+        {
+            "ObjectService::find": {
+                "id": "c-1",
+                "register": "filinq",
+                "schema": "publicationConsent"
+            }
+        },
+        {
+            "IUser::getUID": []
+        },
+        {
+            "ConsentUpdateHandler::updateConsentStatus": {
+                "consent": {
+                    "OCA\\Filinq\\Service\\RegisterObjectRef": {
+                        "id": "c-1",
+                        "register": "filinq",
+                        "schema": "publicationConsent"
+                    }
+                },
+                "change": {
+                    "OCA\\Filinq\\Service\\ConsentStatusChange": {
+                        "data": {
+                            "consentStatus": "consent_given",
+                            "actor": "ingrid"
+                        },
+                        "actor": "mallory"
+                    }
+                }
+            }
+        },
+        {
+            "result": {
+                "updated": true
+            }
+        }
+    ],
+    "update: standing consent by a forged user": [
+        {
+            "IAppManager::getInstalledApps": []
+        },
+        {
+            "ContainerInterface::get": {
+                "id": "OCA\\OpenRegister\\Service\\ObjectService"
+            }
+        },
+        {
+            "ObjectService::find": {
+                "id": "c-1",
+                "register": "filinq",
+                "schema": "publicationConsent"
+            }
+        },
+        {
+            "IUser::getUID": []
+        },
+        {
+            "IGroupManager::isAdmin": {
+                "userId": "mallory"
+            }
+        },
+        {
+            "IUser::getUID": []
+        },
+        {
+            "IGroupManager::isInGroup": {
+                "userId": "mallory",
+                "group": "filinq-standing-consent-admins"
+            }
+        },
+        {
+            "threw": [
+                "RuntimeException",
+                "Standing-consent write requires membership in the \"filinq-standing-consent-admins\" group.",
+                0
+            ]
+        }
+    ],
+    "update: standing consent by a group member": [
+        {
+            "IAppManager::getInstalledApps": []
+        },
+        {
+            "ContainerInterface::get": {
+                "id": "OCA\\OpenRegister\\Service\\ObjectService"
+            }
+        },
+        {
+            "ObjectService::find": {
+                "id": "c-1",
+                "register": "filinq",
+                "schema": "publicationConsent"
+            }
+        },
+        {
+            "IUser::getUID": []
+        },
+        {
+            "IGroupManager::isAdmin": {
+                "userId": "ingrid"
+            }
+        },
+        {
+            "IUser::getUID": []
+        },
+        {
+            "IGroupManager::isInGroup": {
+                "userId": "ingrid",
+                "group": "filinq-standing-consent-admins"
+            }
+        },
+        {
+            "IUser::getUID": []
+        },
+        {
+            "ConsentUpdateHandler::updateConsentStatus": {
+                "consent": {
+                    "OCA\\Filinq\\Service\\RegisterObjectRef": {
+                        "id": "c-1",
+                        "register": "filinq",
+                        "schema": "publicationConsent"
+                    }
+                },
+                "change": {
+                    "OCA\\Filinq\\Service\\ConsentStatusChange": {
+                        "data": {
+                            "consentStatus": "consent_withdrawn",
+                            "evidence": "brief"
+                        },
+                        "actor": "ingrid"
+                    }
+                }
+            }
+        },
+        {
+            "result": {
+                "updated": true
+            }
+        }
+    ],
+    "update: standing consent without a session user": [
+        {
+            "IAppManager::getInstalledApps": []
+        },
+        {
+            "ContainerInterface::get": {
+                "id": "OCA\\OpenRegister\\Service\\ObjectService"
+            }
+        },
+        {
+            "ObjectService::find": {
+                "id": "c-1",
+                "register": "filinq",
+                "schema": "publicationConsent"
+            }
+        },
+        {
+            "ConsentUpdateHandler::updateConsentStatus": {
+                "consent": {
+                    "OCA\\Filinq\\Service\\RegisterObjectRef": {
+                        "id": "c-1",
+                        "register": "filinq",
+                        "schema": "publicationConsent"
+                    }
+                },
+                "change": {
+                    "OCA\\Filinq\\Service\\ConsentStatusChange": {
+                        "data": {
+                            "consentStatus": "consent_withdrawn",
+                            "evidence": "brief"
+                        },
+                        "actor": ""
+                    }
+                }
+            }
+        },
+        {
+            "result": {
+                "updated": true
+            }
+        }
+    ],
+    "validate and unavailable": [
+        {
+            "IAppManager::getInstalledApps": []
+        },
+        {
+            "ContainerInterface::get": {
+                "id": "OCA\\OpenRegister\\Service\\ObjectService"
+            }
+        },
+        {
+            "IAppManager::getInstalledApps": []
+        },
+        {
+            "ContainerInterface::get": {
+                "id": "OCA\\OpenRegister\\Service\\ObjectService"
+            }
+        },
+        {
+            "threw": [
+                "InvalidArgumentException",
+                "policyMatch UUID \"p-1\" does not resolve to a known prohibition or entity-scope publicationConsent record.",
+                0
+            ]
+        },
+        {
+            "threw": [
+                "InvalidArgumentException",
+                "scope=entity requires a non-empty matchRules array",
+                0
+            ]
+        },
+        {
+            "IAppManager::getInstalledApps": []
+        },
+        {
+            "LoggerInterface::error": {
+                "message": "Failed to create consent request: OpenRegister service is not available.",
+                "context": {
+                    "documentId": "doc-1",
+                    "exception": {
+                        "RuntimeException": []
+                    }
+                }
+            }
+        },
+        {
+            "threw": [
+                "Exception",
+                "Failed to create consent request: OpenRegister service is not available.",
+                0
+            ]
+        }
+    ]
+}
