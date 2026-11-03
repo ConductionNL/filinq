@@ -35,7 +35,10 @@ use OCA\Filinq\Service\DocumentService;
 use OCA\Filinq\Service\DocumentStorageService;
 use OCA\Filinq\Service\GeneratedDocumentLogger;
 use OCA\Filinq\Service\PdfService;
+use OCA\Filinq\Service\Support\DocumentOutput;
+use OCA\Filinq\Service\Support\DocumentProduction;
 use OCA\Filinq\Service\Support\PdfRendering;
+use OCA\Filinq\Service\Support\TemplateSources;
 use OCA\Filinq\Service\TemplateRenderer;
 use OCA\Filinq\Service\TemplateService;
 use OCA\Filinq\Service\Wizard\WizardAnswers;
@@ -106,12 +109,9 @@ class DocumentServiceWizardTest extends TestCase {
 		$logger = $this->createMock(LoggerInterface::class);
 
 		return new DocumentService(
-			templateService: $templates,
-			dataResolver: $resolver,
-			renderPipeline: new DocumentRenderPipeline(new PdfRendering(renderer: $renderer, pdf: $this->createMock(PdfService::class)), $logResolver, $logger, $this->passThroughRasterizer()),
-			storageService: $this->createMock(DocumentStorageService::class),
-			documentLogger: new GeneratedDocumentLogger($logResolver, $logger),
-			jobs: $this->createMock(DocumentJobStore::class),
+			production: new DocumentProduction(pipeline: new DocumentRenderPipeline(new PdfRendering(renderer: $renderer, pdf: $this->createMock(PdfService::class)), $logResolver, $logger, $this->passThroughRasterizer()), jobs: $this->createMock(DocumentJobStore::class)),
+			output: new DocumentOutput(storage: $this->createMock(DocumentStorageService::class), log: new GeneratedDocumentLogger($logResolver, $logger)),
+			sources: new TemplateSources(templates: $templates, data: $resolver),
 			wizardGate: new WizardGenerationGate(
 				repository: new WizardRepository(objectResolver: $wizardResolver),
 				answers: new WizardAnswers(conditions: new WizardConditions())

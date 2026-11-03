@@ -34,7 +34,10 @@ use OCA\Filinq\Service\DocumentStorageService;
 use OCA\Filinq\Service\GeneratedDocumentLogger;
 use OCA\Filinq\Service\ObjectionTermCalculator;
 use OCA\Filinq\Service\PdfService;
+use OCA\Filinq\Service\Support\DocumentOutput;
+use OCA\Filinq\Service\Support\DocumentProduction;
 use OCA\Filinq\Service\Support\PdfRendering;
+use OCA\Filinq\Service\Support\TemplateSources;
 use OCA\Filinq\Service\TemplateRenderer;
 use OCA\Filinq\Service\TemplateService;
 use OCP\App\IAppManager;
@@ -82,12 +85,9 @@ class DocumentServiceDecisionLetterTest extends TestCase {
 		$objectResolver = new DocumentObjectServiceResolver($container, $appManager);
 
 		return new DocumentService(
-			$templates,
-			new DataResolverService($container, $appManager, $logger, $appConfig),
-			new DocumentRenderPipeline(new PdfRendering(renderer: $renderer, pdf: new PdfService($logger, $renderer)), $objectResolver, $logger, $rasterizer, new ObjectionTermCalculator($appConfig)),
-			$this->createMock(DocumentStorageService::class),
-			new GeneratedDocumentLogger($objectResolver, $logger),
-			$this->createMock(originalClassName: DocumentJobStore::class)
+			new TemplateSources(templates: $templates, data: new DataResolverService($container, $appManager, $logger, $appConfig)),
+			new DocumentProduction(pipeline: new DocumentRenderPipeline(new PdfRendering(renderer: $renderer, pdf: new PdfService($logger, $renderer)), $objectResolver, $logger, $rasterizer, new ObjectionTermCalculator($appConfig)), jobs: $this->createMock(originalClassName: DocumentJobStore::class)),
+			new DocumentOutput(storage: $this->createMock(DocumentStorageService::class), log: new GeneratedDocumentLogger($objectResolver, $logger))
 		);
 
 	}//end service()

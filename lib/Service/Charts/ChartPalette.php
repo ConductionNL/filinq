@@ -198,21 +198,20 @@ class ChartPalette {
 			$s = $d / (2 - $max - $min);
 		}
 
-		return [$this->hueOf(rf: $rf, gf: $gf, bf: $bf, max: $max, d: $d), $s, $l];
+		return [$this->hueOf(channels: [$rf, $gf, $bf]), $s, $l];
 	}//end rgbToHsl()
 
 	/**
 	 * Compute the hue (0-360°) of a color from its normalized channels.
 	 *
-	 * @param float $rf Red channel (0-1).
-	 * @param float $gf Green channel (0-1).
-	 * @param float $bf Blue channel (0-1).
-	 * @param float $max The largest of the three channels.
-	 * @param float $d The channel range (max - min), guaranteed non-zero.
+	 * @param array{0: float, 1: float, 2: float} $channels Red, green and blue (0-1), not all equal.
 	 *
 	 * @return float Hue in degrees.
 	 */
-	private function hueOf(float $rf, float $gf, float $bf, float $max, float $d): float {
+	private function hueOf(array $channels): float {
+		[$rf, $gf, $bf] = $channels;
+		$max = max($channels);
+		$d   = ($max - min($channels));
 		switch ($max) {
 			case $rf:
 				$h = fmod((($gf - $bf) / $d), 6);

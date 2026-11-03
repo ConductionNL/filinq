@@ -15,16 +15,12 @@ const fs = require('fs')
 const path = require('path')
 const { nextTick } = require('vue')
 
-jest.mock(
-	'@nextcloud/l10n',
-	() => ({
-		translate: (app, text, vars) =>
-			vars ? text + ' ' + JSON.stringify(vars) : text,
-		translatePlural: (app, one, many, count) =>
-			(count === 1 ? one : many) + ' #' + count,
-	}),
-	{ virtual: true },
-)
+jest.mock('@nextcloud/l10n', () => ({
+	translate: (app, text, vars) =>
+		vars ? text + ' ' + JSON.stringify(vars) : text,
+	translatePlural: (app, one, many, count) =>
+		(count === 1 ? one : many) + ' #' + count,
+}))
 
 /**
  * The Nextcloud components the pages and dialogs use, as printing stubs.
@@ -78,9 +74,7 @@ function mockClickable(stub) {
 	})
 }
 
-jest.mock('@nextcloud/vue', () => ({ __esModule: true, ...mockNcStubs() }), {
-	virtual: true,
-})
+jest.mock('@nextcloud/vue', () => ({ __esModule: true, ...mockNcStubs() }))
 
 // vue3-jest compiles the script and the template of a `<script setup>`
 // component separately and both name their first import `_vue`, so the
@@ -103,46 +97,42 @@ jest.mock('vue', () => {
 	return vue
 })
 
-jest.mock(
-	'@conduction/nextcloud-vue',
-	() => {
-		const path = require('path')
-		const { loadSource } = require('../../tests/jest/loadSfc.js')
-		const { stubComponent } = require('../../tests/jest/renderGolden.js')
-		const src = path.join(
-			__dirname,
-			'../../node_modules/@conduction/nextcloud-vue/src',
-		)
-		const stub = (name) => stubComponent(name, (global.mockStubs ??= []))
-		const CnConfirmDialog = loadSource(
-			path.join(src, 'dialogs/CnConfirmDialog.vue'),
-			require,
-			{
-				[path.join(src, 'components/CnDialog/CnDialog.vue')]: {
-					__esModule: true,
-					default: stub('CnDialog'),
-				},
-				[path.join(src, 'components/CnIcon/index.js')]: {
-					__esModule: true,
-					CnIcon: stub('CnIcon'),
-				},
-				[path.join(
-					src,
-					'components/CnConfirmValueField/CnConfirmValueField.vue',
-				)]: { __esModule: true, default: stub('CnConfirmValueField') },
+jest.mock('@conduction/nextcloud-vue', () => {
+	const path = require('path')
+	const { loadSource } = require('../../tests/jest/loadSfc.js')
+	const { stubComponent } = require('../../tests/jest/renderGolden.js')
+	const src = path.join(
+		__dirname,
+		'../../node_modules/@conduction/nextcloud-vue/src',
+	)
+	const stub = (name) => stubComponent(name, (global.mockStubs ??= []))
+	const CnConfirmDialog = loadSource(
+		path.join(src, 'dialogs/CnConfirmDialog.vue'),
+		require,
+		{
+			[path.join(src, 'components/CnDialog/CnDialog.vue')]: {
+				__esModule: true,
+				default: stub('CnDialog'),
 			},
-		).default
-		return {
-			__esModule: true,
-			CnConfirmDialog,
-			CnDataTable: stub('CnDataTable'),
-			CnIndexPage: stub('CnIndexPage'),
-			CnStatsBlock: stub('CnStatsBlock'),
-			CnStatusBadge: stub('CnStatusBadge'),
-		}
-	},
-	{ virtual: true },
-)
+			[path.join(src, 'components/CnIcon/index.js')]: {
+				__esModule: true,
+				CnIcon: stub('CnIcon'),
+			},
+			[path.join(
+				src,
+				'components/CnConfirmValueField/CnConfirmValueField.vue',
+			)]: { __esModule: true, default: stub('CnConfirmValueField') },
+		},
+	).default
+	return {
+		__esModule: true,
+		CnConfirmDialog,
+		CnDataTable: stub('CnDataTable'),
+		CnIndexPage: stub('CnIndexPage'),
+		CnStatsBlock: stub('CnStatsBlock'),
+		CnStatusBadge: stub('CnStatusBadge'),
+	}
+})
 
 const {
 	renderStubbed: render,
