@@ -584,13 +584,7 @@ class ConsolidateRegisters implements IRepairStep {
 		$sourceTable = $pair['sourceTable'];
 		$targetTable = $pair['targetTable'];
 
-		$inserted = $this->gateway->insertBatch(
-			sourceTable: $sourceTable,
-			targetTable: $targetTable,
-			targetId: $pair['targetId'],
-			columns: $pair['columns'],
-			batch: $batch
-		);
+		$inserted = $this->gateway->insertBatch(pair: $pair, batch: $batch);
 
 		if ($inserted === false) {
 			$this->logger->warning(
