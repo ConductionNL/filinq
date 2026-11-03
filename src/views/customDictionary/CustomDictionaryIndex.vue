@@ -9,6 +9,7 @@
 -->
 <script setup>
 import { translate as t } from '@nextcloud/l10n'
+import { LIST_ONLY_INDEX_PAGE } from '../../constants/indexPage.js'
 import { customDictionaryStore } from '../../store/store.js'
 import { resolveI18nValue } from '../../utils/registerI18n.js'
 </script>
@@ -29,15 +30,7 @@ import { resolveI18nValue } from '../../utils/registerI18n.js'
 			:columns="tableColumns"
 			:pagination="paginationData"
 			:loading="customDictionaryStore.loading"
-			:selectable="false"
-			:showEditAction="false"
-			:showCopyAction="false"
-			:showDeleteAction="false"
-			:showMassImport="false"
-			:showMassExport="false"
-			:showMassCopy="false"
-			:showMassDelete="false"
-			:showViewToggle="false"
+			v-bind="LIST_ONLY_INDEX_PAGE"
 			:showAdd="customDictionaryStore.canMaintain"
 			rowKey="id"
 			:emptyText="emptyText"
