@@ -49,7 +49,8 @@ use RuntimeException;
  * and by alice. Each case names the session user, so the trace shows the user
  * the signer lookup, the mandate, the identity gate and the audit log ran
  * for, and the forged cases show a session user acting for someone else's
- * signer, or outside the mandate, is refused before anything is written.
+ * signer, or outside the mandate, is refused before anything is written,
+ * also when the signatureData payload names a user who would be allowed.
  *
  * @covers \OCA\Filinq\Service\SigningService
  * @uses   \OCA\Filinq\Service\SigningMandateService
@@ -84,6 +85,8 @@ class SigningServiceActingUserTraceTest extends TestCase {
 			'sign as the signer holding the mandate' => ['alice', 'sign', ['signerId' => 's-1']],
 			'sign outside the mandate'             => ['mallory', 'sign', ['signerId' => 's-2']],
 			'sign for a forged signer'             => ['mallory', 'sign', ['signerId' => 's-1']],
+			'sign outside the mandate, forged signatureData' => ['mallory', 'sign', ['signerId' => 's-2', 'signatureData' => ['userId' => 'alice']]],
+			'sign for a forged signer, forged signatureData' => ['mallory', 'sign', ['signerId' => 's-1', 'signatureData' => ['userId' => 'alice']]],
 			'sign through the portal'              => ['', 'sign', ['signerId' => 's-1', 'verifiedActor' => $portal]],
 			'decline as the signer'                => ['alice', 'decline', ['signerId' => 's-1']],
 			'decline for a forged signer'          => ['mallory', 'decline', ['signerId' => 's-1']],
@@ -110,7 +113,12 @@ class SigningServiceActingUserTraceTest extends TestCase {
 			match ($call) {
 				'create'  => fn () => $service->createRequest(data: $args),
 				'read'    => fn () => $service->getRequest(requestId: 'req-1', callerUserId: $uid),
-				'sign'    => fn () => $service->sign(requestId: 'req-1', signerId: $args['signerId'], verifiedActor: ($args['verifiedActor'] ?? null)),
+				'sign'    => fn () => $service->sign(
+					requestId: 'req-1',
+					signerId: $args['signerId'],
+					verifiedActor: ($args['verifiedActor'] ?? null),
+					signatureData: ($args['signatureData'] ?? null)
+				),
 				'decline' => fn () => $service->decline(requestId: 'req-1', signerId: $args['signerId'], reason: 'onjuist'),
 				'cancel'  => fn () => $service->cancelRequest(requestId: 'req-1'),
 				'expire'  => fn () => $service->emitExpiredConclusion(request: ['id' => 'req-1', 'status' => 'EXPIRED']),
