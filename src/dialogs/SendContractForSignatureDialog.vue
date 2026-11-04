@@ -75,21 +75,18 @@ SPDX-License-Identifier: EUPL-1.2
 			</NcNoteCard>
 		</template>
 		<template #actions>
-			<NcButton :disabled="busy" @click="$emit('close')">
-				{{ t('filinq', 'Cancel') }}
-			</NcButton>
-			<NcButton
-				variant="primary"
-				:disabled="!ready"
-				data-testid="contract-sign-confirm"
-				@click="onConfirm">
-				{{ t('filinq', 'Send for signature') }}
-			</NcButton>
+			<CnDialogActions
+				:saving="busy"
+				:canSubmit="ready"
+				:confirmLabel="t('filinq', 'Send for signature')"
+				@cancel="$emit('close')"
+				@submit="onConfirm" />
 		</template>
 	</NcDialog>
 </template>
 
 <script>
+import { CnDialogActions } from '@conduction/nextcloud-vue'
 import { translate as t } from '@nextcloud/l10n'
 import {
 	NcButton,
@@ -115,7 +112,15 @@ import {
  */
 export default {
 	name: 'SendContractForSignatureDialog',
-	components: { NcButton, NcDialog, NcNoteCard, NcSelect, NcTextField },
+	components: {
+		CnDialogActions,
+		NcButton,
+		NcDialog,
+		NcNoteCard,
+		NcSelect,
+		NcTextField,
+	},
+
 	props: {
 		/** The contract id. */
 		contractId: { type: String, required: true },

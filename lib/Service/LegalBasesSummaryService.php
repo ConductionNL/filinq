@@ -47,12 +47,9 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use OCA\Filinq\Kernel\Contracts\LegalBasesSummaryServiceInterface;
-use OCP\App\IAppManager;
 use OCP\Files\File;
-use OCP\Files\IRootFolder;
 use OCP\IL10N;
 use OCP\IUserSession;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -63,6 +60,8 @@ use Psr\Log\LoggerInterface;
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
+ *
+ * @spec openspec/specs/anonymisation-grondslagen-summary/spec.md
  */
 class LegalBasesSummaryService implements LegalBasesSummaryServiceInterface {
 
@@ -98,62 +97,25 @@ class LegalBasesSummaryService implements LegalBasesSummaryServiceInterface {
 	];
 
 	/**
-	 * Everything the report needs to read.
-	 *
-	 * @var DossierSummaryDataService
-	 */
-	private readonly DossierSummaryDataService $data;
-
-	/**
-	 * Everything the report needs to render and write.
-	 *
-	 * @var GrondslagenPdfWriter
-	 */
-	private readonly GrondslagenPdfWriter $pdfWriter;
-
-	/**
 	 * Constructor.
-	 *
-	 * The writer is injected rather than built here. It used to be wired from a
-	 * PdfService this class held only to pass on, and once the writer also needed
-	 * the final-document guard that arrangement meant carrying two dependencies
-	 * this class never uses. Nextcloud's container builds the writer, and the
-	 * data source keeps its null default because it is wired from dependencies
-	 * this class does use.
 	 *
 	 * @param LoggerInterface $logger Structured logger.
 	 * @param GrondslagenPdfWriter $pdfWriter PDF rendering and persistence, guard included.
-	 * @param IRootFolder $rootFolder Nextcloud file API entry point.
 	 * @param IUserSession $userSession Session-user lookup for the "operator" header field.
-	 * @param IAppManager $appManager App-availability check for OpenRegister.
-	 * @param ContainerInterface $container DI container for OpenRegister-side services
-	 *                                      (EntityRelationMapper, ObjectService).
+	 * @param DossierSummaryDataService $data Report data source.
 	 * @param IL10N|null $l10n Acting-user localisation, used to translate the
 	 *                         placeholder TYPE label (PERSON → PERSOON on a Dutch
 	 *                         instance) so the summary legend matches the localized
 	 *                         labels OpenRegister wrote into the redacted document.
 	 *                         Nullable: when absent the raw English label is used.
-	 * @param DossierSummaryDataService|null $data Report data source; wired from the above when null.
 	 */
 	public function __construct(
 		private readonly LoggerInterface $logger,
-		GrondslagenPdfWriter $pdfWriter,
-		IRootFolder $rootFolder,
+		private readonly GrondslagenPdfWriter $pdfWriter,
 		private readonly IUserSession $userSession,
-		IAppManager $appManager,
-		ContainerInterface $container,
+		private readonly DossierSummaryDataService $data,
 		private readonly ?IL10N $l10n = null,
-		?DossierSummaryDataService $data = null,
 	) {
-		$this->data = ($data ?? new DossierSummaryDataService(
-			$rootFolder,
-			$this->userSession,
-			$appManager,
-			$container,
-			$this->logger
-		));
-
-		$this->pdfWriter = $pdfWriter;
 
 	}//end __construct()
 
@@ -272,6 +234,8 @@ class LegalBasesSummaryService implements LegalBasesSummaryServiceInterface {
 	 * @return void
 	 *
 	 * @throws \RuntimeException 403 when the dossier cannot be resolved at all.
+	 *
+	 * @spec openspec/specs/anonymisation-grondslagen-summary/spec.md
 	 */
 	public function authorizeAccess(string $dossierId): void {
 		$this->data->assertDossierReadable(dossierId: $dossierId);

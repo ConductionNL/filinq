@@ -84,7 +84,6 @@ class EmlPreviewControllerTest extends TestCase {
 		$mockL10n->method('t')->willReturnArgument(0);
 
 		$this->controller = new EmlPreviewController(
-			'filinq',
 			$this->createMock(IRequest::class),
 			$this->mockService,
 			$this->createMock(LoggerInterface::class),

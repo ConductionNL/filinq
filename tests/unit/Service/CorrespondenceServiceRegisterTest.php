@@ -27,6 +27,9 @@ use OCA\Filinq\BackgroundJob\JobQueue;
 use OCA\Filinq\Service\CorrespondenceService;
 use OCA\Filinq\Service\DataResolverService;
 use OCA\Filinq\Service\PdfService;
+use OCA\Filinq\Service\Support\OpenRegisterAccess;
+use OCA\Filinq\Service\Support\PdfRendering;
+use OCA\Filinq\Service\Support\TemplateSources;
 use OCA\Filinq\Service\TemplateRenderer;
 use OCA\Filinq\Service\TemplateService;
 use OCA\OpenRegister\Service\ObjectService;
@@ -49,6 +52,9 @@ use Psr\Log\LoggerInterface;
  *
  * @covers \OCA\Filinq\Service\CorrespondenceService
  * @covers \OCA\Filinq\Service\CorrespondenceRequest
+ * @covers \OCA\Filinq\Service\Support\TemplateSources
+ * @covers \OCA\Filinq\Service\Support\PdfRendering
+ * @covers \OCA\Filinq\Service\Support\OpenRegisterAccess
  * @uses   \OCA\Filinq\BackgroundJob\JobQueue
  *
  * @psalm-suppress PropertyNotSetInConstructor
@@ -136,12 +142,9 @@ class CorrespondenceServiceRegisterTest extends TestCase {
 		);
 
 		$this->service = new CorrespondenceService(
-			$this->templateSvc,
-			$dataResolver,
-			$renderer,
-			$pdfService,
-			$container,
-			$appManager,
+			new TemplateSources(templates: $this->templateSvc, data: $dataResolver),
+			new PdfRendering(renderer: $renderer, pdf: $pdfService),
+			new OpenRegisterAccess(apps: $appManager, container: $container),
 			new JobQueue(jobList: $this->jobList),
 			$this->createMock(LoggerInterface::class),
 			$this->appConfig

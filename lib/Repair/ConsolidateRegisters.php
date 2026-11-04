@@ -226,13 +226,7 @@ class ConsolidateRegisters implements IRepairStep {
 				continue;
 			}
 
-			$this->consolidateRegister(
-				sourceId: $sourceId,
-				targetId: $plan['targetId'],
-				names: $plan['names'],
-				targetTables: $plan['targetTables'],
-				tally: $tally
-			);
+			$this->consolidateRegister(sourceId: $sourceId, plan: $plan, tally: $tally);
 		}
 
 		$output->info(
@@ -318,26 +312,20 @@ class ConsolidateRegisters implements IRepairStep {
 	 * Move every (schema) pair of one source register.
 	 *
 	 * @param int $sourceId The register being emptied.
-	 * @param int $targetId The register being filled.
-	 * @param array<int, string> $names Every table name the database reported.
-	 * @param array<int, string> $targetTables Schema id => target table name.
+	 * @param array{targetId: int, names: array<int, string>, targetTables: array<int, string>} $plan The register being
+	 *        filled, every table name the database reported, and schema id => target table name.
 	 * @param array<string, int> $tally Running totals, mutated in place.
 	 *
 	 * @return void
 	 */
-	private function consolidateRegister(
-		int $sourceId,
-		int $targetId,
-		array $names,
-		array $targetTables,
-		array &$tally,
-	): void {
-		$source = $this->decisions->shardTablesFor(names: $names, registerId: $sourceId);
+	private function consolidateRegister(int $sourceId, array $plan, array &$tally): void {
+		$targetId = $plan['targetId'];
+		$source = $this->decisions->shardTablesFor(names: $plan['names'], registerId: $sourceId);
 		$this->reportAmbiguous(schemaIds: $source['ambiguous'], registerId: $sourceId);
 		$tally['refused'] += count($source['ambiguous']);
 
 		foreach ($source['tables'] as $schemaId => $sourceTable) {
-			$targetTable = $targetTables[$schemaId] ?? null;
+			$targetTable = $plan['targetTables'][$schemaId] ?? null;
 			if ($targetTable === null) {
 				// The target register does not hold this schema. It may be a
 				// stale shard from a schema this app no longer declares, or the
@@ -596,13 +584,7 @@ class ConsolidateRegisters implements IRepairStep {
 		$sourceTable = $pair['sourceTable'];
 		$targetTable = $pair['targetTable'];
 
-		$inserted = $this->gateway->insertBatch(
-			sourceTable: $sourceTable,
-			targetTable: $targetTable,
-			targetId: $pair['targetId'],
-			columns: $pair['columns'],
-			batch: $batch
-		);
+		$inserted = $this->gateway->insertBatch(pair: $pair, batch: $batch);
 
 		if ($inserted === false) {
 			$this->logger->warning(

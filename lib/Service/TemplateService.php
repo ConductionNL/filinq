@@ -32,10 +32,9 @@ namespace OCA\Filinq\Service;
 use DateTime;
 use Exception;
 use OCA\Filinq\Kernel\Contracts\TemplateServiceInterface;
-use OCP\App\IAppManager;
+use OCA\Filinq\Service\Support\OpenRegisterAccess;
 use OCP\IAppConfig;
 use OCP\IUserSession;
-use Psr\Container\ContainerInterface;
 use RuntimeException;
 
 /**
@@ -59,8 +58,7 @@ class TemplateService implements TemplateServiceInterface {
 	/**
 	 * Constructor for TemplateService
 	 *
-	 * @param ContainerInterface $container Container for dependency injection
-	 * @param IAppManager $appManager App manager interface
+	 * @param OpenRegisterAccess $openRegister The app manager and container that reach OpenRegister.
 	 * @param OpenRegisterResolver $registerResolver Resolver for register/schema config
 	 * @param TemplateVersionService $versionService Service for template version management
 	 * @param IUserSession $userSession User session for getting current user
@@ -75,8 +73,7 @@ class TemplateService implements TemplateServiceInterface {
 	 * @return void
 	 */
 	public function __construct(
-		private readonly ContainerInterface $container,
-		private readonly IAppManager $appManager,
+		private readonly OpenRegisterAccess $openRegister,
 		private readonly OpenRegisterResolver $registerResolver,
 		private readonly TemplateVersionService $versionService,
 		private readonly IUserSession $userSession,
@@ -96,11 +93,11 @@ class TemplateService implements TemplateServiceInterface {
 	private function getObjectService(): \OCA\OpenRegister\Service\ObjectService {
 		if (in_array(
 			needle: 'openregister',
-			haystack: $this->appManager->getInstalledApps(),
+			haystack: $this->openRegister->apps->getInstalledApps(),
 			strict: true
 		) === true
 		) {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+			return $this->openRegister->container->get('OCA\OpenRegister\Service\ObjectService');
 		}
 
 		throw new RuntimeException(message: 'OpenRegister service is not available.');

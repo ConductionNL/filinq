@@ -26,6 +26,7 @@ namespace OCA\Filinq\Tests\Unit\Controller;
 
 use Exception;
 use OCA\Filinq\Controller\DocumentController;
+use OCA\Filinq\Controller\Support\ControllerFeedback;
 use OCA\Filinq\Exception\ErrorDetailsInterface;
 use OCA\Filinq\Kernel\Contracts\DocumentServiceInterface;
 use OCP\AppFramework\Http\JSONResponse;
@@ -41,6 +42,7 @@ use Psr\Log\LoggerInterface;
  * Characterization of the two preview endpoints.
  *
  * @covers \OCA\Filinq\Controller\DocumentController
+ * @covers \OCA\Filinq\Controller\Support\ControllerFeedback
  */
 class DocumentControllerPreviewTraceTest extends TestCase {
 
@@ -214,12 +216,11 @@ class DocumentControllerPreviewTraceTest extends TestCase {
 		$session->method('getUser')->willReturn($user);
 
 		return new DocumentController(
+			feedback: new ControllerFeedback(l10n: $l10n, logger: $this->logger),
 			appName: 'filinq',
 			request: $request,
 			documentSvc: $this->documents,
 			userSession: $session,
-			logger: $this->logger,
-			l10n: $l10n,
 		);
 	}//end controller()
 }//end class

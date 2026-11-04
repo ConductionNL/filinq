@@ -33,8 +33,8 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use Exception;
-use OCP\App\IAppManager;
-use Psr\Container\ContainerInterface;
+use OCA\Filinq\Service\Support\ConsentRecordRules;
+use OCA\Filinq\Service\Support\OpenRegisterAccess;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 
@@ -68,39 +68,19 @@ class ConsentRecordWriter {
 	];
 
 	/**
-	 * Service-level scope + referent validator.
-	 *
-	 * @var ConsentPolicyReferentValidator
-	 */
-	private readonly ConsentPolicyReferentValidator $referentValidator;
-
-	/**
 	 * Constructor.
 	 *
 	 * @param LoggerInterface $logger Logger for error reporting.
-	 * @param ContainerInterface $container Container for DI.
-	 * @param IAppManager $appManager App manager interface.
-	 * @param ObjectionDeadlineChecker $deadlineChecker Objection-deadline calculator.
-	 * @param ConsentNotesHelper $notesHelper Sentinel-tagged notes helper.
-	 * @param ConsentScopeValidator $scopeValidator Consent scope validator.
-	 * @param ConsentPolicyReferentValidator|null $referentValidator Scope + referent validator.
+	 * @param OpenRegisterAccess $openRegister The app manager and container that reach OpenRegister.
+	 * @param ConsentRecordRules $rules The deadline, notes, scope and referent rules a record is built and checked by.
 	 * @param ObjectResultExtractor $resultExtractor Coerces OpenRegister results to rows.
 	 */
 	public function __construct(
 		private readonly LoggerInterface $logger,
-		private readonly ContainerInterface $container,
-		private readonly IAppManager $appManager,
-		private readonly ObjectionDeadlineChecker $deadlineChecker,
-		private readonly ConsentNotesHelper $notesHelper,
-		private readonly ConsentScopeValidator $scopeValidator,
-		?ConsentPolicyReferentValidator $referentValidator = null,
+		private readonly OpenRegisterAccess $openRegister,
+		private readonly ConsentRecordRules $rules,
 		private readonly ObjectResultExtractor $resultExtractor = new ObjectResultExtractor(),
 	) {
-		$this->referentValidator = ($referentValidator ?? new ConsentPolicyReferentValidator(
-			logger: $logger,
-			container: $container,
-			appManager: $appManager
-		));
 
 	}//end __construct()
 
@@ -133,7 +113,7 @@ class ConsentRecordWriter {
 	 * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-3
 	 */
 	public function validatePublicationConsentData(array $data): void {
-		$this->referentValidator->validatePublicationConsentData(data: $data);
+		$this->rules->referentValidator->validatePublicationConsentData(data: $data);
 
 	}//end validatePublicationConsentData()
 
@@ -287,14 +267,14 @@ class ConsentRecordWriter {
 		$publicationBases = $context['publicationBases'];
 		$additionalBases = [];
 		if (count($publicationBases) > 0) {
-			$updated['legalBasis'] = $this->notesHelper->truncateAtWordBoundary(
+			$updated['legalBasis'] = $this->rules->notesHelper->truncateAtWordBoundary(
 				value: $publicationBases[0]
 			);
 			$additionalBases = array_slice(array: $publicationBases, offset: 1);
 		}
 
 		$currentNotes = (string)($existing['notes'] ?? '');
-		$updated['notes'] = $this->notesHelper->updateSentinelRegion(
+		$updated['notes'] = $this->rules->notesHelper->updateSentinelRegion(
 			currentNotes: $currentNotes,
 			additionalBases: $additionalBases
 		);
@@ -360,7 +340,7 @@ class ConsentRecordWriter {
 		// scope=entity but forbidden when scope=document". The validator
 		// throws InvalidArgumentException on violations, which the
 		// controller surfaces as HTTP 400.
-		$this->scopeValidator->assertValid($consentData);
+		$this->rules->scopeValidator->assertValid($consentData);
 
 		// Save WITHOUT the bypass flags so OpenRegister stamps `@self.owner`
 		// from the session user — that ownership stamp is what the read guard
@@ -419,18 +399,18 @@ class ConsentRecordWriter {
 	 * @spec openspec/specs/entity-publication-policies/spec.md
 	 */
 	private function buildNewConsentPayload(array $context): array {
-		$deadline = $this->deadlineChecker->calculateDeadline();
+		$deadline = $this->rules->deadlineChecker->calculateDeadline();
 
 		// Resolve legalBasis and notes from publicationBases.
 		$publicationBases = $context['publicationBases'];
 		$legalBasis = null;
 		$additionalBases = [];
 		if (count($publicationBases) > 0) {
-			$legalBasis = $this->notesHelper->truncateAtWordBoundary(value: $publicationBases[0]);
+			$legalBasis = $this->rules->notesHelper->truncateAtWordBoundary(value: $publicationBases[0]);
 			$additionalBases = array_slice(array: $publicationBases, offset: 1);
 		}
 
-		$notes = $this->notesHelper->updateSentinelRegion(
+		$notes = $this->rules->notesHelper->updateSentinelRegion(
 			currentNotes: '',
 			additionalBases: $additionalBases
 		);
@@ -526,8 +506,8 @@ class ConsentRecordWriter {
 	 * @throws RuntimeException If OpenRegister is not available.
 	 */
 	private function getObjectService(): \OCA\OpenRegister\Service\ObjectService {
-		if (in_array(needle: 'openregister', haystack: $this->appManager->getInstalledApps(), strict: true) === true) {
-			return $this->container->get(id: 'OCA\OpenRegister\Service\ObjectService');
+		if (in_array(needle: 'openregister', haystack: $this->openRegister->apps->getInstalledApps(), strict: true) === true) {
+			return $this->openRegister->container->get(id: 'OCA\OpenRegister\Service\ObjectService');
 		}
 
 		throw new RuntimeException(message: 'OpenRegister service is not available.');

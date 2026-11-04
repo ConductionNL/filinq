@@ -30,9 +30,12 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use OCA\Filinq\Event\IntakeDocumentReceivedEvent;
+use OCA\Filinq\Event\Support\IntakeArrival;
 use OCA\Filinq\Exception\IntakeRefusedException;
 use OCA\Filinq\Kernel\Contracts\IntakeServiceInterface;
 use OCA\Filinq\Service\Intake\IntakeOcrQueue;
+use OCA\Filinq\Service\Support\IntakeFiling;
+use OCA\Filinq\Service\Support\IntakeRouting;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 
@@ -55,26 +58,20 @@ class IntakeService implements IntakeServiceInterface {
 	 *
 	 * @param IntakeRepository $repository The intake document store.
 	 * @param IntakeAuthorizationGate $gate The write-rights gate.
-	 * @param IntakeFilePlacement $placement Moves an assigned file into the record's folder.
-	 * @param IntakeDefaultRuleService $defaults Stamps the declared defaults at creation.
-	 * @param IntakeRoutingService $routing Applies what a consuming app declared per record type.
-	 * @param PartySuggestionService $parties Reads a party out of the document, and never files one.
+	 * @param IntakeFiling $filing File placement and the text recognition queue
+	 * @param IntakeRouting $routingRules The default rules, routing and party suggestions
 	 * @param IUserSession $userSession The current session.
 	 * @param LoggerInterface $logger Logger for diagnostics.
-	 * @param IntakeOcrQueue $ocrQueue Marks and queues the reading of an arriving scan.
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		private readonly IntakeRepository $repository,
 		private readonly IntakeAuthorizationGate $gate,
-		private readonly IntakeFilePlacement $placement,
-		private readonly IntakeDefaultRuleService $defaults,
-		private readonly IntakeRoutingService $routing,
-		private readonly PartySuggestionService $parties,
+		private readonly IntakeFiling $filing,
+		private readonly IntakeRouting $routingRules,
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
-		private readonly IntakeOcrQueue $ocrQueue,
 	) {
 
 	}//end __construct()
@@ -126,20 +123,20 @@ class IntakeService implements IntakeServiceInterface {
 		// STAMPED BEFORE ANYTHING ELSE LOOKS AT IT. The defaults are a decision
 		// somebody wrote down; a classifier's guess arrives later and is offered
 		// beside the stamped value, never over it.
-		$document = $this->defaults->stamp(
+		$document = $this->routingRules->defaults->stamp(
 			document: $document,
 			channel: $channel,
 			sender: $event->getSender()
 		);
 
 		if ($fileId !== null) {
-			$document['partySuggestion'] = $this->parties->suggestFor(fileId: $fileId);
+			$document['partySuggestion'] = $this->routingRules->parties->suggestFor(fileId: $fileId);
 		}
 
 		// Reading on arrival: a scan or photo is marked `queued` before it is
 		// stored and read by a background job after, so nobody has to start it.
-		$stored = $this->repository->save(document: $this->ocrQueue->mark(document: $document));
-		$this->ocrQueue->queue(document: $stored);
+		$stored = $this->repository->save(document: $this->filing->ocrQueue->mark(document: $document));
+		$this->filing->ocrQueue->queue(document: $stored);
 
 		return $stored;
 
@@ -206,9 +203,11 @@ class IntakeService implements IntakeServiceInterface {
 					fileName: $attachment->getFileName(),
 					subject: $attachment->getSubject(),
 					sender: $attachment->getSender(),
-					sourceRef: $attachment->getSourceRef(),
-					receivedAt: $attachment->getReceivedAt(),
-					arrivedWith: $messageUuid
+					arrival: new IntakeArrival(
+						sourceRef: $attachment->getSourceRef(),
+						receivedAt: $attachment->getReceivedAt(),
+						arrivedWith: $messageUuid
+					)
 				)
 			);
 		}
@@ -295,7 +294,7 @@ class IntakeService implements IntakeServiceInterface {
 			);
 		}
 
-		$placedAt = $this->placement->place(
+		$placedAt = $this->filing->placement->place(
 			fileId: (int)($document['file'] ?? 0),
 			register: $register,
 			schema: $schema,
@@ -310,7 +309,7 @@ class IntakeService implements IntakeServiceInterface {
 			$document['filePath'] = $placedAt;
 		}
 
-		$document = $this->routing->apply(
+		$document = $this->routingRules->routing->apply(
 			document: $document,
 			declaringApp: trim((string)($target['declaringApp'] ?? '')),
 			typeReference: trim((string)($target['typeReference'] ?? ''))

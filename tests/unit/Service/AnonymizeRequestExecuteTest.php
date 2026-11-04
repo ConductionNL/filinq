@@ -20,7 +20,8 @@ namespace OCA\Filinq\Tests\Unit\Service;
 use OCA\Filinq\Exception\DetectionUnavailableException;
 use OCA\Filinq\Exception\ProhibitionGateException;
 use OCA\Filinq\Kernel\AnonymizeCall;
-use OCA\Filinq\Kernel\Contracts\AnonymizationServiceInterface;
+use OCA\Filinq\Service\AnonymizationService;
+use OCA\Filinq\Service\AnonymizeOptions;
 use OCA\Filinq\Service\AnonymizeRequestService;
 use OCP\Files\IRootFolder;
 use OCP\IL10N;
@@ -35,6 +36,8 @@ use Throwable;
  * @psalm-suppress PropertyNotSetInConstructor
  */
 class AnonymizeRequestExecuteTest extends TestCase {
+	use ReadsAnonymizeOptions;
+
 
 	/**
 	 * What the anonymisation service and the logger were asked, in order.
@@ -69,7 +72,7 @@ class AnonymizeRequestExecuteTest extends TestCase {
 	 * @return AnonymizeRequestService The service.
 	 */
 	private function service(array $violations = [], ?Throwable $throws = null): AnonymizeRequestService {
-		$anonymization = $this->createMock(AnonymizationServiceInterface::class);
+		$anonymization = $this->createMock(AnonymizationService::class);
 		$anonymization->method('absoluteProhibitionViolations')->willReturnCallback(
 			function (int $fileId) use ($violations): array {
 				$this->calls[] = ['violations', $fileId];
@@ -78,8 +81,8 @@ class AnonymizeRequestExecuteTest extends TestCase {
 		);
 		foreach (['anonymizeDocument', 'anonymizeDocumentWithBasisSummary'] as $method) {
 			$anonymization->method($method)->willReturnCallback(
-				function (...$arguments) use ($method, $throws): array {
-					$this->calls[] = [$method, array_combine(['fileId', 'entities', 'outputFormat', 'unredactedEntities', 'overrides', 'userId', 'scope', 'dossierKey', 'reversible'], $arguments)];
+				function (int $fileId, array $entities, ?AnonymizeOptions $options = null) use ($method, $throws): array {
+					$this->calls[] = [$method, self::anonymizeFields($fileId, $entities, $options)];
 					if ($throws !== null) {
 						throw $throws;
 					}

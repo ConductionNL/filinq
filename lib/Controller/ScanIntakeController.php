@@ -24,11 +24,13 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
+use OCA\Filinq\Controller\Support\ScanBatchCut;
+use OCA\Filinq\Controller\Support\ScanSetupServices;
+use OCA\Filinq\Kernel\AppIdentity;
 use OCA\Filinq\Kernel\Contracts\ScanBatchRepositoryInterface;
 use OCA\Filinq\Kernel\Contracts\ScanBatchServiceInterface;
 use OCA\Filinq\Kernel\Contracts\ScanProfileServiceInterface;
 use OCA\Filinq\Kernel\Contracts\SeparatorSheetServiceInterface;
-use OCA\Filinq\Service\ScanBatchCut;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -61,12 +63,24 @@ class ScanIntakeController extends Controller {
 	use AnswersNotAuthenticated;
 
 	/**
+	 * The sheets filinq prints and reads.
+	 *
+	 * @var SeparatorSheetServiceInterface
+	 */
+	private readonly SeparatorSheetServiceInterface $sheets;
+
+	/**
+	 * The declared scan profiles.
+	 *
+	 * @var ScanProfileServiceInterface
+	 */
+	private readonly ScanProfileServiceInterface $profiles;
+
+	/**
 	 * Constructor.
 	 *
-	 * @param string $appName The app name.
 	 * @param IRequest $request The request.
-	 * @param SeparatorSheetServiceInterface $sheets The sheets filinq prints and reads.
-	 * @param ScanProfileServiceInterface $profiles The declared scan profiles.
+	 * @param ScanSetupServices $setup Separator sheets and scan profiles.
 	 * @param ScanBatchServiceInterface $batches The splitter.
 	 * @param ScanBatchRepositoryInterface $store The batch store.
 	 * @param IRootFolder $rootFolder The file tree.
@@ -75,16 +89,16 @@ class ScanIntakeController extends Controller {
 	 * @return void
 	 */
 	public function __construct(
-		string $appName,
 		IRequest $request,
-		private readonly SeparatorSheetServiceInterface $sheets,
-		private readonly ScanProfileServiceInterface $profiles,
+		ScanSetupServices $setup,
 		private readonly ScanBatchServiceInterface $batches,
 		private readonly ScanBatchRepositoryInterface $store,
 		private readonly IRootFolder $rootFolder,
 		private readonly IUserSession $userSession,
 	) {
-		parent::__construct(appName: $appName, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
+		$this->sheets = $setup->sheets;
+		$this->profiles = $setup->profiles;
 
 	}//end __construct()
 

@@ -13,6 +13,7 @@ import { generateUrl } from '@nextcloud/router'
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  */
 import { defineStore } from 'pinia'
+import { quietRequest, storeRequest } from '../storeRequest.js'
 
 const baseUrl = '/apps/filinq/api/custom-dictionaries'
 
@@ -56,104 +57,137 @@ export const useCustomDictionaryStore = defineStore('customDictionary', {
 				this.canMaintain = false
 			}
 		},
-		async fetchDictionaries() {
-			this.loading = true
-			this.error = null
-			try {
-				const response = await axios.get(generateUrl(baseUrl))
-				this.dictionaries = response.data
-			} catch (err) {
-				console.error('Failed to fetch custom dictionaries:', err)
-				this.error = err.response?.data?.error || err.message
-			} finally {
-				this.loading = false
-			}
+		/**
+		 * Load every custom dictionary into the store.
+		 *
+		 * @return {Promise} Resolves when the list is loaded.
+		 *
+		 * @spec openspec/specs/custom-dictionary-recognition/spec.md
+		 */
+		fetchDictionaries() {
+			return storeRequest(this, {
+				failure: 'Failed to fetch custom dictionaries:',
+				serverError: true,
+				run: async () => {
+					const response = await axios.get(generateUrl(baseUrl))
+					this.dictionaries = response.data
+				},
+			})
 		},
-		async fetchDictionary(id) {
-			this.loading = true
-			this.error = null
-			try {
-				const response = await axios.get(generateUrl(`${baseUrl}/${id}`))
-				this.dictionaryItem = response.data
-				return response.data
-			} catch (err) {
-				console.error('Failed to fetch custom dictionary:', err)
-				this.error = err.response?.data?.error || err.message
-				return null
-			} finally {
-				this.loading = false
-			}
+		/**
+		 * Load one custom dictionary and select it.
+		 *
+		 * @param {string} id The dictionary id.
+		 * @return {Promise} The dictionary, or null when it could not be read.
+		 *
+		 * @spec openspec/specs/custom-dictionary-recognition/spec.md
+		 */
+		fetchDictionary(id) {
+			return storeRequest(this, {
+				failure: 'Failed to fetch custom dictionary:',
+				fallback: null,
+				serverError: true,
+				run: async () => {
+					const response = await axios.get(generateUrl(`${baseUrl}/${id}`))
+					this.dictionaryItem = response.data
+					return response.data
+				},
+			})
 		},
-		async createDictionary(data) {
-			this.loading = true
-			this.error = null
-			try {
-				const response = await axios.post(generateUrl(baseUrl), data)
-				this.dictionaries.push(response.data)
-				return response.data
-			} catch (err) {
-				console.error('Failed to create custom dictionary:', err)
-				this.error = err.response?.data?.error || err.message
-				throw err
-			} finally {
-				this.loading = false
-			}
+		/**
+		 * Create a custom dictionary and add it to the list.
+		 *
+		 * @param {object} data The new dictionary.
+		 * @return {Promise} The created dictionary.
+		 *
+		 * @spec openspec/specs/custom-dictionary-recognition/spec.md
+		 */
+		createDictionary(data) {
+			return storeRequest(this, {
+				failure: 'Failed to create custom dictionary:',
+				rethrow: true,
+				serverError: true,
+				run: async () => {
+					const response = await axios.post(generateUrl(baseUrl), data)
+					this.dictionaries.push(response.data)
+					return response.data
+				},
+			})
 		},
-		async updateDictionary(id, data) {
-			this.loading = true
-			this.error = null
-			try {
-				const response = await axios.put(
-					generateUrl(`${baseUrl}/${id}`),
-					data,
-				)
-				const idx = this.dictionaries.findIndex((d) => recordId(d) === id)
-				if (idx !== -1) {
-					this.dictionaries[idx] = response.data
-				}
+		/**
+		 * Update a custom dictionary in the list and in the selection.
+		 *
+		 * @param {string} id The dictionary id.
+		 * @param {object} data The changed fields.
+		 * @return {Promise} The updated dictionary.
+		 *
+		 * @spec openspec/specs/custom-dictionary-recognition/spec.md
+		 */
+		updateDictionary(id, data) {
+			return storeRequest(this, {
+				failure: 'Failed to update custom dictionary:',
+				rethrow: true,
+				serverError: true,
+				run: async () => {
+					const response = await axios.put(
+						generateUrl(`${baseUrl}/${id}`),
+						data,
+					)
+					const idx = this.dictionaries.findIndex(
+						(d) => recordId(d) === id,
+					)
+					if (idx !== -1) {
+						this.dictionaries[idx] = response.data
+					}
 
-				this.dictionaryItem = response.data
-				return response.data
-			} catch (err) {
-				console.error('Failed to update custom dictionary:', err)
-				this.error = err.response?.data?.error || err.message
-				throw err
-			} finally {
-				this.loading = false
-			}
+					this.dictionaryItem = response.data
+					return response.data
+				},
+			})
 		},
-		async deleteDictionary(id) {
-			this.loading = true
-			this.error = null
-			try {
-				await axios.delete(generateUrl(`${baseUrl}/${id}`))
-				this.dictionaries = this.dictionaries.filter(
-					(d) => recordId(d) !== id,
-				)
-			} catch (err) {
-				console.error('Failed to delete custom dictionary:', err)
-				this.error = err.response?.data?.error || err.message
-				throw err
-			} finally {
-				this.loading = false
-			}
+		/**
+		 * Delete a custom dictionary and drop it from the list.
+		 *
+		 * @param {string} id The dictionary id.
+		 * @return {Promise} Resolves when the dictionary is gone.
+		 *
+		 * @spec openspec/specs/custom-dictionary-recognition/spec.md
+		 */
+		deleteDictionary(id) {
+			return storeRequest(this, {
+				failure: 'Failed to delete custom dictionary:',
+				rethrow: true,
+				serverError: true,
+				run: async () => {
+					await axios.delete(generateUrl(`${baseUrl}/${id}`))
+					this.dictionaries = this.dictionaries.filter(
+						(d) => recordId(d) !== id,
+					)
+				},
+			})
 		},
-		async fetchTerms(dictionaryId) {
-			this.termsLoading = true
-			this.error = null
-			try {
-				const response = await axios.get(
-					generateUrl(`${baseUrl}/${dictionaryId}/terms`),
-				)
-				this.terms = response.data
-				return response.data
-			} catch (err) {
-				console.error('Failed to fetch terms:', err)
-				this.error = err.response?.data?.error || err.message
-				return []
-			} finally {
-				this.termsLoading = false
-			}
+		/**
+		 * Load the terms of one custom dictionary.
+		 *
+		 * @param {string} dictionaryId The dictionary id.
+		 * @return {Promise} Resolves when the terms are loaded.
+		 *
+		 * @spec openspec/specs/custom-dictionary-recognition/spec.md
+		 */
+		fetchTerms(dictionaryId) {
+			return storeRequest(this, {
+				failure: 'Failed to fetch terms:',
+				fallback: [],
+				serverError: true,
+				flag: 'termsLoading',
+				run: async () => {
+					const response = await axios.get(
+						generateUrl(`${baseUrl}/${dictionaryId}/terms`),
+					)
+					this.terms = response.data
+					return response.data
+				},
+			})
 		},
 		async createTerm(dictionaryId, data) {
 			try {
@@ -191,36 +225,38 @@ export const useCustomDictionaryStore = defineStore('customDictionary', {
 		 *                              server-side per REQ-DDCDR-005 — never
 		 *                              client-side).
 		 * @return {Promise<{added: number, skipped: number, total: number}|null>}
+		 *
+		 * @spec openspec/specs/custom-dictionary-recognition/spec.md
 		 */
-		async importTerms(dictionaryId, payload) {
-			this.error = null
-			try {
-				let response
-				if (payload.file) {
-					const formData = new FormData()
-					formData.append('file', payload.file)
-					response = await axios.post(
-						generateUrl(`${baseUrl}/${dictionaryId}/import`),
-						formData,
-					)
-				} else {
-					response = await axios.post(
-						generateUrl(`${baseUrl}/${dictionaryId}/import`),
-						{
-							content: payload.content,
-							format: payload.format || 'newline',
-						},
-					)
-				}
+		importTerms(dictionaryId, payload) {
+			return quietRequest(this, {
+				failure: 'Failed to import terms:',
+				rethrow: true,
+				serverError: true,
+				run: async () => {
+					let response
+					if (payload.file) {
+						const formData = new FormData()
+						formData.append('file', payload.file)
+						response = await axios.post(
+							generateUrl(`${baseUrl}/${dictionaryId}/import`),
+							formData,
+						)
+					} else {
+						response = await axios.post(
+							generateUrl(`${baseUrl}/${dictionaryId}/import`),
+							{
+								content: payload.content,
+								format: payload.format || 'newline',
+							},
+						)
+					}
 
-				this.importResult = response.data
-				await this.fetchTerms(dictionaryId)
-				return response.data
-			} catch (err) {
-				console.error('Failed to import terms:', err)
-				this.error = err.response?.data?.error || err.message
-				throw err
-			}
+					this.importResult = response.data
+					await this.fetchTerms(dictionaryId)
+					return response.data
+				},
+			})
 		},
 		clearDictionaryItem() {
 			this.dictionaryItem = null

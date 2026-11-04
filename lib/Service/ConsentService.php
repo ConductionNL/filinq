@@ -45,6 +45,7 @@ namespace OCA\Filinq\Service;
 use DateTimeImmutable;
 use Exception;
 use OCA\Filinq\Exception\PolicyRejectedException;
+use OCA\Filinq\Kernel\ConsentUpdate;
 use OCA\Filinq\Kernel\Contracts\ConsentServiceInterface;
 use OCA\Filinq\Service\Publication\ConsentClearance;
 use OCP\IUser;
@@ -62,9 +63,10 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/specs/consent-management/spec.md
  * @spec openspec/changes/consent-create-idempotency-and-notes/tasks.md#task-1
  *
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The thirteenth and fourteenth
- * classes are RegisterObjectRef and ConsentStatusChange: the contract keeps its
- * five-argument update, and this class turns it into the handler's two values.
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The thirteenth to fifteenth
+ * classes are ConsentUpdate, RegisterObjectRef and ConsentStatusChange: the
+ * contract takes an update and the acting user, and this class turns them into
+ * the handler's two values.
  */
 class ConsentService implements ConsentServiceInterface {
 	/**
@@ -279,10 +281,7 @@ class ConsentService implements ConsentServiceInterface {
 	/**
 	 * Validate and update a consent record, enforcing policy-transition rules
 	 *
-	 * @param string $consentId The consent object UUID
-	 * @param string $register The register ID
-	 * @param string $schema The schema ID
-	 * @param array<string, mixed> $data The update payload
+	 * @param ConsentUpdate $update The consent record and the update payload
 	 * @param IUser|null $user The acting user, or null for system context
 	 *
 	 * @return array<string, mixed> The updated consent record
@@ -293,17 +292,11 @@ class ConsentService implements ConsentServiceInterface {
 	 * @spec openspec/changes/publication-consent-policy-fields/tasks.md#task-7
 	 * @spec openspec/changes/publication-consent-policy-fields/tasks.md#task-8
 	 */
-	public function validateAndUpdateConsent(
-		string $consentId,
-		string $register,
-		string $schema,
-		array $data,
-		?IUser $user = null,
-	): array {
+	public function validateAndUpdateConsent(ConsentUpdate $update, ?IUser $user = null): array {
 		$existing = $this->recordWriter->loadConsentRecord(
-			consentId: $consentId,
-			register: $register,
-			schema: $schema
+			consentId: $update->consentId,
+			register: $update->register,
+			schema: $update->schema
 		);
 
 		// Standing-consent (scope=entity) records carry policy-level
@@ -319,13 +312,13 @@ class ConsentService implements ConsentServiceInterface {
 			$this->scopeValidator->requireStandingConsentAdminGroup(user: $user);
 		}
 
-		$this->scopeValidator->validateTransition(existing: $existing, update: $data);
+		$this->scopeValidator->validateTransition(existing: $existing, update: $update->data);
 
 		return $this->updateConsentStatus(
-			consentId: $consentId,
-			register: $register,
-			schema: $schema,
-			data: $data,
+			consentId: $update->consentId,
+			register: $update->register,
+			schema: $update->schema,
+			data: $update->data,
 			actor: (string) $user?->getUID()
 		);
 

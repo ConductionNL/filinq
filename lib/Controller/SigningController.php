@@ -22,11 +22,10 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use Exception;
+use OCA\Filinq\Controller\Support\SigningServices;
 use OCA\Filinq\Exception\RegisterNotConfiguredException;
 use OCA\Filinq\Exception\StepUpRequiredException;
-use OCA\Filinq\Kernel\Contracts\SigningAuditServiceInterface;
-use OCA\Filinq\Kernel\Contracts\SigningServiceInterface;
-use OCA\Filinq\Kernel\Contracts\SigningVerificationServiceInterface;
+use OCA\Filinq\Kernel\AppIdentity;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -57,11 +56,8 @@ class SigningController extends Controller {
 	/**
 	 * Constructor
 	 *
-	 * @param string $appName App name
 	 * @param IRequest $request Request object
-	 * @param SigningServiceInterface $signingService Signing service
-	 * @param SigningAuditServiceInterface $auditService Audit service
-	 * @param SigningVerificationServiceInterface $verificationService Verification service
+	 * @param SigningServices $services Signing, its audit trail and verification.
 	 * @param IUserSession $userSession User session
 	 * @param LoggerInterface $logger Logger
 	 * @param IL10N $l10n Localization
@@ -70,17 +66,14 @@ class SigningController extends Controller {
 	 * @return void
 	 */
 	public function __construct(
-		string $appName,
 		IRequest $request,
-		private readonly SigningServiceInterface $signingService,
-		private readonly SigningAuditServiceInterface $auditService,
-		private readonly SigningVerificationServiceInterface $verificationService,
+		private readonly SigningServices $services,
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
 		private readonly IL10N $l10n,
 		private readonly IGroupManager $groupManager,
 	) {
-		parent::__construct(appName: $appName, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 
 	}//end __construct()
 
@@ -105,7 +98,7 @@ class SigningController extends Controller {
 			}
 
 			$data = $this->request->getParams();
-			$result = $this->signingService->createRequest(data: $data);
+			$result = $this->services->signing->createRequest(data: $data);
 			return new JSONResponse($result, Http::STATUS_CREATED);
 		} catch (Exception $e) {
 			return $this->errorResponse(message: 'Failed to create signing request', exception: $e);
@@ -140,7 +133,7 @@ class SigningController extends Controller {
 				$scope = '';
 			}
 
-			$result = $this->signingService->listRequests(callerUserId: $scope);
+			$result = $this->services->signing->listRequests(callerUserId: $scope);
 			return new JSONResponse($result);
 		} catch (RegisterNotConfiguredException $e) {
 			// Configuration missing is a setup state, not a failure —
@@ -191,7 +184,7 @@ class SigningController extends Controller {
 				$scope = '';
 			}
 
-			$result = $this->signingService->getRequest(requestId: $id, callerUserId: $scope);
+			$result = $this->services->signing->getRequest(requestId: $id, callerUserId: $scope);
 			if ($result === null) {
 				return $this->notFoundResponse();
 			}
@@ -240,7 +233,7 @@ class SigningController extends Controller {
 				}
 			}
 
-			$result = $this->signingService->cancelRequest(requestId: $id);
+			$result = $this->services->signing->cancelRequest(requestId: $id);
 			if ($result === null) {
 				// Admin path or post-recheck null — race / vanished
 				// between fetch and cancel. Same generic 404.
@@ -269,7 +262,7 @@ class SigningController extends Controller {
 	 */
 	private function cancelRefusal(string $uid, string $id): ?JSONResponse {
 		try {
-			$request = $this->signingService->getRequest(requestId: $id);
+			$request = $this->services->signing->getRequest(requestId: $id);
 		} catch (Exception $e) {
 			return $this->notFoundResponse();
 		}
@@ -325,7 +318,7 @@ class SigningController extends Controller {
 			}
 
 			$signerId = $this->request->getParam('signerId', '');
-			$result = $this->signingService->sign(requestId: $id, signerId: $signerId);
+			$result = $this->services->signing->sign(requestId: $id, signerId: $signerId);
 			return new JSONResponse($result);
 		} catch (Exception $e) {
 			return $this->errorResponse(message: 'Failed to sign document', exception: $e);
@@ -356,7 +349,7 @@ class SigningController extends Controller {
 
 			$signerId = $this->request->getParam('signerId', '');
 			$reason = $this->request->getParam('reason', '');
-			$result = $this->signingService->decline(requestId: $id, signerId: $signerId, reason: $reason);
+			$result = $this->services->signing->decline(requestId: $id, signerId: $signerId, reason: $reason);
 			return new JSONResponse($result);
 		} catch (Exception $e) {
 			return $this->errorResponse(message: 'Failed to decline signing request', exception: $e);
@@ -388,7 +381,7 @@ class SigningController extends Controller {
 				$requestIds = [];
 			}
 
-			$results = $this->signingService->bulkSign(requestIds: $requestIds);
+			$results = $this->services->signing->bulkSign(requestIds: $requestIds);
 			return new JSONResponse($results);
 		} catch (Exception $e) {
 			return $this->errorResponse(message: 'Failed to bulk sign', exception: $e);
@@ -417,7 +410,7 @@ class SigningController extends Controller {
 				);
 			}
 
-			$result = $this->verificationService->verifyDocument(fileId: $fileId, userId: $user->getUID());
+			$result = $this->services->verification->verifyDocument(fileId: $fileId, userId: $user->getUID());
 			return new JSONResponse($result);
 		} catch (Exception $e) {
 			return $this->errorResponse(message: 'Failed to verify document', exception: $e);
@@ -453,7 +446,7 @@ class SigningController extends Controller {
 			$isAdmin = $this->groupManager->isAdmin($uid);
 			if ($isAdmin === false) {
 				// Non-admin branch only, so the read is always scoped to $uid.
-				$request = $this->signingService->getRequest(
+				$request = $this->services->signing->getRequest(
 					requestId: $id,
 					callerUserId: $uid
 				);
@@ -462,7 +455,7 @@ class SigningController extends Controller {
 				}
 			}
 
-			$result = $this->auditService->getAuditTrail(signingRequestId: $id);
+			$result = $this->services->audit->getAuditTrail(signingRequestId: $id);
 			return new JSONResponse($result);
 		} catch (Exception $e) {
 			return $this->errorResponse(message: 'Failed to get audit trail', exception: $e);

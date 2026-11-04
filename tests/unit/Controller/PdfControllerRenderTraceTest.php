@@ -26,6 +26,7 @@ namespace OCA\Filinq\Tests\Unit\Controller;
 
 use Exception;
 use OCA\Filinq\Controller\PdfController;
+use OCA\Filinq\Controller\Support\PdfServices;
 use OCA\Filinq\Kernel\Contracts\Pdfa3ConversionServiceInterface;
 use OCA\Filinq\Kernel\Contracts\PdfServiceInterface;
 use OCP\AppFramework\Http\DataDownloadResponse;
@@ -42,6 +43,7 @@ use Psr\Log\LoggerInterface;
  * Characterization of the plain render endpoint.
  *
  * @covers \OCA\Filinq\Controller\PdfController
+ * @covers \OCA\Filinq\Controller\Support\PdfServices
  */
 class PdfControllerRenderTraceTest extends TestCase {
 
@@ -190,11 +192,10 @@ class PdfControllerRenderTraceTest extends TestCase {
 		$session->method('getUser')->willReturn($user);
 
 		return new PdfController(
+			pdf: new PdfServices(pdf: $this->pdf, pdfa3: $this->createMock(Pdfa3ConversionServiceInterface::class)),
 			appName: 'filinq',
 			request: $request,
 			logger: $this->logger,
-			pdfService: $this->pdf,
-			pdfa3Service: $this->createMock(Pdfa3ConversionServiceInterface::class),
 			l10n: $l10n,
 			userSession: $session,
 		);

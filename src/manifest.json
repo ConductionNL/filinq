@@ -230,7 +230,7 @@
 		},
 		{
 		  "id": "StoreMenu",
-		  "label": "Store",
+		  "label": "Marketplace",
 		  "icon": "StoreOutline",
 		  "route": "Store",
 		  "section": "footer",
@@ -304,10 +304,10 @@
 		  "id": "Store",
 		  "route": "/store",
 		  "type": "store",
-		  "title": "Store",
+		  "title": "Marketplace",
 		  "config": {
 		    "app": "filinq",
-		    "title": "Store",
+		    "title": "Marketplace",
 		    "description": "Install document configurations that other organisations have published: a template set, an anonymisation policy, or the flows behind a signature."
 		  },
 		  "_note": "ADR-114 Decision 4 / ADR-080. Declarative: openregister hosts the store plane, so this app writes NO store controller. With no registry configured the page renders the app's built-in items and makes NO network call."
@@ -667,7 +667,10 @@
 			"type": "custom",
 			"title": "Publish never",
 			"component": "ProhibitionIndex",
-			"_note": "Entity-level publish-never rules (publicationProhibition) via PolicyController (indexProhibitions/createProhibition/showProhibition/updateProhibition/deleteProhibition) + PolicyMatchService. Reachable from the menu as \"Publish never\", beside Consent Management. It carried no menu entry until 2026-09-06: publication-policy-labels-and-nav was ticked complete, but its navigation tasks edited MainMenu.vue, which no longer exists since the app moved to manifest-driven nav (ADR-037), so only the label half of that change survived and the page was reachable by hand-typed URL alone. Modal is ProhibitionFormModal (registry kind:modal), its own file per ADR-004."
+			"config": {
+				"surface": "prohibition"
+			},
+			"_note": "Entity-level publish-never rules (publicationProhibition) via PolicyController (indexProhibitions/createProhibition/showProhibition/updateProhibition/deleteProhibition) + PolicyMatchService. Reachable from the menu as \"Publish never\", beside Consent Management. It carried no menu entry until 2026-09-06: publication-policy-labels-and-nav was ticked complete, but its navigation tasks edited MainMenu.vue, which no longer exists since the app moved to manifest-driven nav (ADR-037), so only the label half of that change survived and the page was reachable by hand-typed URL alone. The page is PolicyRuleIndex with config.surface prohibition; its form is PolicyRuleFormModal with surface prohibition, its own file per ADR-004."
 		},
 		{
 			"id": "StandingConsents",
@@ -675,7 +678,10 @@
 			"type": "custom",
 			"title": "Publish always",
 			"component": "StandingConsentIndex",
-			"_note": "Entity-level publish-always rules (publicationStandingConsent) via StandingConsentController (index/create/show/update/destroy) + PolicyRetroactiveService. Reachable from the menu as \"Publish always\", beside Consent Management — see the Prohibitions note for why it had no entry until 2026-09-06. Modal is StandingConsentFormModal (registry kind:modal); the view's previous inline NcDialog was replaced with it to fix the hydra modal-isolation gate."
+			"config": {
+				"surface": "standingConsent"
+			},
+			"_note": "Entity-level publish-always rules (publicationStandingConsent) via StandingConsentController (index/create/show/update/destroy) + PolicyRetroactiveService. Reachable from the menu as \"Publish always\", beside Consent Management — see the Prohibitions note for why it had no entry until 2026-09-06. The page is PolicyRuleIndex with config.surface standingConsent; its form is PolicyRuleFormModal with surface standingConsent, its own file per ADR-004 (the hydra modal-isolation gate)."
 		},
 		{
 			"id": "Reports",

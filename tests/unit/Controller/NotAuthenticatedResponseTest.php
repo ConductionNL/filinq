@@ -22,10 +22,12 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Tests\Unit\Controller;
 
+use OCA\Filinq\Controller\Support\ControllerFeedback;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
 use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\NullLogger;
 
 /**
  * Every endpoint that checks for a session user answers 401 without one.
@@ -37,6 +39,9 @@ use PHPUnit\Framework\TestCase;
  * @link     https://www.filinq.app
  *
  * @covers \OCA\Filinq\Controller\AnswersNotAuthenticated
+ * @covers \OCA\Filinq\Controller\Support\SettingsBackends
+ * @covers \OCA\Filinq\Controller\Support\AppConfiguration
+ * @covers \OCA\Filinq\Controller\Support\SigningServices
  * @covers \OCA\Filinq\Controller\ConsentController
  * @covers \OCA\Filinq\Controller\CorrespondenceController
  * @covers \OCA\Filinq\Controller\DocumentController
@@ -50,6 +55,7 @@ use PHPUnit\Framework\TestCase;
  * @covers \OCA\Filinq\Controller\TemplateVersionsController
  * @covers \OCA\Filinq\Controller\TemplatesController
  * @covers \OCA\Filinq\Controller\ValidationController
+ * @covers \OCA\Filinq\Controller\Support\ControllerFeedback
  */
 class NotAuthenticatedResponseTest extends TestCase {
 
@@ -129,6 +135,9 @@ class NotAuthenticatedResponseTest extends TestCase {
 			$this->userSession = $session;
 			if (property_exists($this, 'l10n') === true) {
 				$this->l10n = $l10n;
+			}
+			if (property_exists($this, 'feedback') === true) {
+				$this->feedback = new ControllerFeedback(l10n: $l10n, logger: new NullLogger());
 			}
 		})->call($controller);
 

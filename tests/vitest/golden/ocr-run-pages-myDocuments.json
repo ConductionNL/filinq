@@ -1,0 +1,148 @@
+{
+	"processed": {
+		"calls": [
+			[
+				"post",
+				"/apps/filinq/api/ocr/7",
+				"running: {\"7\":true}"
+			],
+			[
+				"showSuccess",
+				"[OCR read 120 characters.]"
+			]
+		],
+		"state": {
+			"ocrRunning": {
+				"7": false
+			},
+			"ocrResults": {
+				"7": {
+					"ocrProcessed": true,
+					"textLength": 120,
+					"confidence": 88
+				}
+			},
+			"ocrAvailable": true
+		}
+	},
+	"unreadable": {
+		"calls": [
+			[
+				"post",
+				"/apps/filinq/api/ocr/7",
+				"running: {\"7\":true}"
+			],
+			[
+				"showError",
+				"Nothing to read"
+			]
+		],
+		"state": {
+			"ocrRunning": {
+				"7": false
+			},
+			"ocrResults": {},
+			"ocrAvailable": true
+		}
+	},
+	"unreadableBare": {
+		"calls": [
+			[
+				"post",
+				"/apps/filinq/api/ocr/7",
+				"running: {\"7\":true}"
+			],
+			[
+				"showError",
+				"[OCR failed on this file.]"
+			]
+		],
+		"state": {
+			"ocrRunning": {
+				"7": false
+			},
+			"ocrResults": {},
+			"ocrAvailable": true
+		}
+	},
+	"refused409": {
+		"calls": [
+			[
+				"post",
+				"/apps/filinq/api/ocr/7",
+				"running: {\"7\":true}"
+			],
+			[
+				"showError",
+				"OCR is switched off"
+			]
+		],
+		"state": {
+			"ocrRunning": {
+				"7": false
+			},
+			"ocrResults": {},
+			"ocrAvailable": false
+		}
+	},
+	"refused503": {
+		"calls": [
+			[
+				"post",
+				"/apps/filinq/api/ocr/7",
+				"running: {\"7\":true}"
+			],
+			[
+				"showError",
+				"[OCR failed on this file.]"
+			]
+		],
+		"state": {
+			"ocrRunning": {
+				"7": false
+			},
+			"ocrResults": {},
+			"ocrAvailable": false
+		}
+	},
+	"failed500": {
+		"calls": [
+			[
+				"post",
+				"/apps/filinq/api/ocr/7",
+				"running: {\"7\":true}"
+			],
+			[
+				"showError",
+				"Server error"
+			]
+		],
+		"state": {
+			"ocrRunning": {
+				"7": false
+			},
+			"ocrResults": {},
+			"ocrAvailable": true
+		}
+	},
+	"offline": {
+		"calls": [
+			[
+				"post",
+				"/apps/filinq/api/ocr/7",
+				"running: {\"7\":true}"
+			],
+			[
+				"showError",
+				"[OCR failed on this file.]"
+			]
+		],
+		"state": {
+			"ocrRunning": {
+				"7": false
+			},
+			"ocrResults": {},
+			"ocrAvailable": true
+		}
+	}
+}

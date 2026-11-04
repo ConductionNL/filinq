@@ -22,6 +22,9 @@ use OCA\Filinq\BackgroundJob\JobQueue;
 use OCA\Filinq\Service\CorrespondenceService;
 use OCA\Filinq\Service\DataResolverService;
 use OCA\Filinq\Service\PdfService;
+use OCA\Filinq\Service\Support\OpenRegisterAccess;
+use OCA\Filinq\Service\Support\PdfRendering;
+use OCA\Filinq\Service\Support\TemplateSources;
 use OCA\Filinq\Service\TemplateRenderer;
 use OCA\Filinq\Service\TemplateService;
 use OCA\OpenRegister\Db\ObjectEntity;
@@ -159,12 +162,9 @@ class CorrespondenceServiceTest extends TestCase {
 		$this->rasterizer = $this->createMock(\OCA\Filinq\Service\Charts\SvgRasterizer::class);
 
 		$this->service = new CorrespondenceService(
-			$this->templateSvc,
-			$this->dataResolver,
-			$this->renderer,
-			$this->pdfService,
-			$container,
-			$appManager,
+			new TemplateSources(templates: $this->templateSvc, data: $this->dataResolver),
+			new PdfRendering(renderer: $this->renderer, pdf: $this->pdfService),
+			new OpenRegisterAccess(apps: $appManager, container: $container),
 			new JobQueue(jobList: $this->jobList),
 			$logger,
 			$appConfig

@@ -11,31 +11,25 @@
 import fs from 'fs'
 import path from 'path'
 import CustomDictionaryFormDialog from './CustomDictionaryFormDialog.vue'
-import ProhibitionFormModal from './ProhibitionFormModal.vue'
-import StandingConsentFormModal from './StandingConsentFormModal.vue'
+import PolicyRuleFormModal from './PolicyRuleFormModal.vue'
 import { renderStubbed } from '../../tests/jest/renderGolden.js'
 
-jest.mock(
-	'@nextcloud/l10n',
-	() => ({
-		translate: (app, text, vars) =>
-			vars ? text + ' ' + JSON.stringify(vars) : text,
-	}),
-	{ virtual: true },
-)
-jest.mock(
-	'@nextcloud/vue',
-	() => ({
-		NcButton: {},
-		NcCheckboxRadioSwitch: {},
-		NcDialog: {},
-		NcLoadingIcon: {},
-		NcSelect: {},
-		NcTextField: {},
-	}),
-	{ virtual: true },
-)
+jest.mock('@nextcloud/l10n', () => ({
+	translate: (app, text, vars) =>
+		vars ? text + ' ' + JSON.stringify(vars) : text,
+}))
+jest.mock('@nextcloud/vue', () => ({
+	NcButton: {},
+	NcCheckboxRadioSwitch: {},
+	NcDialog: {},
+	NcLoadingIcon: {},
+	NcSelect: {},
+	NcTextField: {},
+}))
 jest.mock('vue-material-design-icons/Delete.vue', () => ({}))
+jest.mock('@conduction/nextcloud-vue', () =>
+	require('../../tests/jest/dialogGolden.js').cnVueModule(),
+)
 
 const GOLDEN = path.join(__dirname, '../../tests/jest/golden/form-dialogs.json')
 const RECORD = process.env.RECORD_GOLDEN === '1'
@@ -51,9 +45,9 @@ const RECORD_ROW = {
 }
 
 const DIALOGS = {
-	prohibition: ProhibitionFormModal,
-	standingConsent: StandingConsentFormModal,
-	customDictionary: CustomDictionaryFormDialog,
+	prohibition: [PolicyRuleFormModal, { surface: 'prohibition' }],
+	standingConsent: [PolicyRuleFormModal, { surface: 'standingConsent' }],
+	customDictionary: [CustomDictionaryFormDialog, {}],
 }
 
 const STATES = {
@@ -75,7 +69,7 @@ afterAll(() => {
 })
 
 describe('record form dialogs golden', () => {
-	for (const [dialog, component] of Object.entries(DIALOGS)) {
+	for (const [dialog, [component, fixed]] of Object.entries(DIALOGS)) {
 		for (const [state, props] of Object.entries(STATES)) {
 			it(`${dialog} ${state}`, async () => {
 				const emitted = []
@@ -84,8 +78,8 @@ describe('record form dialogs golden', () => {
 					listeners[event] = (...args) => emitted.push([event, ...args])
 				}
 				const page = await renderStubbed(component, {
-					props: { ...props, ...listeners },
-					real: ['FormDialogActions'],
+					props: { ...fixed, ...props, ...listeners },
+					real: ['CnDialogActions'],
 				})
 				if (props.editingRecord && page.vm.resetForm) {
 					page.vm.resetForm()

@@ -17,6 +17,7 @@
 
 namespace OCA\Filinq\Tests\Unit\Service;
 
+use OCA\Filinq\Service\DossierSummaryDataService;
 use OCA\Filinq\Service\LegalBasesSummaryService;
 use OCA\Filinq\Service\GrondslagenPdfWriter;
 use OCP\App\IAppManager;
@@ -116,10 +117,8 @@ class LegalBasesSummaryServiceTest extends TestCase {
 		$this->service = new LegalBasesSummaryService(
 			logger: $this->mockLogger,
 			pdfWriter: $this->mockPdfWriter,
-			rootFolder: $this->mockRootFolder,
 			userSession: $this->mockUserSession,
-			appManager: $this->mockAppManager,
-			container: $this->mockContainer
+			data: $this->dataService()
 		);
 
 	}//end setUp()
@@ -297,10 +296,8 @@ class LegalBasesSummaryServiceTest extends TestCase {
 		$service = new LegalBasesSummaryService(
 			logger: $this->mockLogger,
 			pdfWriter: $this->mockPdfWriter,
-			rootFolder: $this->mockRootFolder,
 			userSession: $this->mockUserSession,
-			appManager: $this->mockAppManager,
-			container: $this->mockContainer,
+			data: $this->dataService(),
 			l10n: $l10n
 		);
 
@@ -333,4 +330,19 @@ class LegalBasesSummaryServiceTest extends TestCase {
 		$this->assertSame(expected: 'PERSON', actual: $method->invoke($this->service, 'PERSON'));
 
 	}//end testLocalizeEntityTypeWithoutL10nReturnsRaw()
+	/**
+	 * The report data source over the mocked file tree, session and OpenRegister.
+	 *
+	 * @return DossierSummaryDataService The data source.
+	 */
+	private function dataService(): DossierSummaryDataService {
+		return new DossierSummaryDataService(
+			rootFolder: $this->mockRootFolder,
+			userSession: $this->mockUserSession,
+			appManager: $this->mockAppManager,
+			container: $this->mockContainer,
+			logger: $this->mockLogger
+		);
+
+	}//end dataService()
 }//end class

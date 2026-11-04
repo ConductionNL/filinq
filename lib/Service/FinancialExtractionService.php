@@ -30,6 +30,7 @@ namespace OCA\Filinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\Filinq\Event\FinancialExtractionCompletedEvent;
+use OCA\Filinq\Event\Support\RequestOrigin;
 use OCA\Filinq\Kernel\Contracts\FinancialExtractionServiceInterface;
 use OCA\Filinq\Service\Extraction\AiPrompt;
 use OCA\Filinq\Service\Extraction\AmountExtractor;
@@ -935,9 +936,8 @@ class FinancialExtractionService implements FinancialExtractionServiceInterface 
 	private function dispatchCompletionEvent(array $payload): void {
 		try {
 			$event = new FinancialExtractionCompletedEvent(
+				origin: new RequestOrigin(requestedBy: $payload['requestedBy'], sourceApp: $payload['sourceApp']),
 				documentUri: $payload['documentUri'],
-				requestedBy: $payload['requestedBy'],
-				sourceApp: $payload['sourceApp'],
 				docType: $payload['docType'],
 				fields: $payload['fields'],
 				fieldConfidence: $payload['fieldConfidence'],

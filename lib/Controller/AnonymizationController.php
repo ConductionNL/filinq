@@ -30,12 +30,12 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
+use OCA\Filinq\Controller\Support\AnonymizationServices;
 use OCA\Filinq\Exception\ConversionFailedException;
 use OCA\Filinq\Exception\RedactionNotReviewedException;
 use OCA\Filinq\Kernel\AnonymizeCall;
-use OCA\Filinq\Kernel\Contracts\AnonymizationServiceInterface;
+use OCA\Filinq\Kernel\AppIdentity;
 use OCA\Filinq\Kernel\Contracts\AnonymizeRequestServiceInterface;
-use OCA\Filinq\Kernel\Contracts\FileListingServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IAppConfig;
@@ -65,11 +65,9 @@ class AnonymizationController extends Controller {
 	/**
 	 * Constructor for AnonymizationController
 	 *
-	 * @param string $appName The application name
 	 * @param IRequest $request The request object
 	 * @param LoggerInterface $logger Logger for error reporting
-	 * @param AnonymizationServiceInterface $anonymizationService Service for anonymization operations
-	 * @param FileListingServiceInterface $fileListingService Service for file listing operations
+	 * @param AnonymizationServices $services The anonymisation runner and the file listing.
 	 * @param IL10N $l10n The localization service
 	 * @param IAppConfig $appConfig Tenant configuration provider (reads
 	 *                              filinq.anonymisation.default_output_format)
@@ -80,16 +78,14 @@ class AnonymizationController extends Controller {
 	 * @return void
 	 */
 	public function __construct(
-		string $appName,
 		IRequest $request,
 		private readonly LoggerInterface $logger,
-		private readonly AnonymizationServiceInterface $anonymizationService,
-		private readonly FileListingServiceInterface $fileListingService,
+		private readonly AnonymizationServices $services,
 		private readonly IL10N $l10n,
 		private readonly IAppConfig $appConfig,
 		private readonly AnonymizeRequestServiceInterface $anonymizeRequest,
 	) {
-		parent::__construct(appName: $appName, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 
 	}//end __construct()
 
@@ -133,7 +129,7 @@ class AnonymizationController extends Controller {
 				return new JSONResponse($authError['body'], $authError['status']);
 			}
 
-			$result = $this->fileListingService->listProcessedFiles();
+			$result = $this->services->files->listProcessedFiles();
 
 			return new JSONResponse($result);
 		} catch (\Throwable $e) {
@@ -206,7 +202,7 @@ class AnonymizationController extends Controller {
 			);
 		}
 
-		return new JSONResponse($this->fileListingService->uploadFile($file['name'], $fileContent));
+		return new JSONResponse($this->services->files->uploadFile($file['name'], $fileContent));
 	}//end storeUpload()
 
 	/**
@@ -294,10 +290,10 @@ class AnonymizationController extends Controller {
 			// is unchanged. `force=true` requests an explicit re-analysis.
 			$force = filter_var($this->request->getParam('force', false), FILTER_VALIDATE_BOOLEAN);
 			if ($force === true) {
-				return new JSONResponse($this->anonymizationService->reExtractAndDetectEntities($fileId));
+				return new JSONResponse($this->services->anonymization->reExtractAndDetectEntities($fileId));
 			}
 
-			return new JSONResponse($this->anonymizationService->extractAndDetectEntities($fileId));
+			return new JSONResponse($this->services->anonymization->extractAndDetectEntities($fileId));
 		} catch (\Throwable $e) {
 			$this->logger->error(
 				'Failed to extract and detect entities: ' . $e->getMessage(),

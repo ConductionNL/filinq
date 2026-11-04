@@ -26,10 +26,9 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
-use OCA\Filinq\Kernel\Contracts\IntakeDetachmentServiceInterface;
+use OCA\Filinq\Controller\Support\IntakeHandling;
+use OCA\Filinq\Kernel\AppIdentity;
 use OCA\Filinq\Kernel\Contracts\IntakeNotificationReachInterface;
-use OCA\Filinq\Kernel\Contracts\IntakeRoutingServiceInterface;
-use OCA\Filinq\Kernel\Contracts\IntakeServiceInterface;
 use OCA\Filinq\Kernel\Contracts\PartySuggestionServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -59,11 +58,8 @@ class IntakeController extends Controller {
 	/**
 	 * Constructor.
 	 *
-	 * @param string $appName The app name.
 	 * @param IRequest $request The request.
-	 * @param IntakeServiceInterface $intake The intake inbox.
-	 * @param IntakeDetachmentServiceInterface $detachment Returns a filed document to the worklist.
-	 * @param IntakeRoutingServiceInterface $routing What a consuming app declared per record type.
+	 * @param IntakeHandling $handling The inbox, detachment and routing.
 	 * @param PartySuggestionServiceInterface $parties Party suggestions and the corrections corpus.
 	 * @param IUserSession $userSession The current session.
 	 * @param IntakeNotificationReachInterface $reach Whether a failed reading reaches anybody.
@@ -72,17 +68,14 @@ class IntakeController extends Controller {
 	 * @return void
 	 */
 	public function __construct(
-		string $appName,
 		IRequest $request,
-		private readonly IntakeServiceInterface $intake,
-		private readonly IntakeDetachmentServiceInterface $detachment,
-		private readonly IntakeRoutingServiceInterface $routing,
+		private readonly IntakeHandling $handling,
 		private readonly PartySuggestionServiceInterface $parties,
 		private readonly IUserSession $userSession,
 		private readonly IntakeNotificationReachInterface $reach,
 		private readonly IGroupManager $groups,
 	) {
-		parent::__construct(appName: $appName, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 
 	}//end __construct()
 
@@ -101,7 +94,7 @@ class IntakeController extends Controller {
 		}
 
 		try {
-			$waiting = $this->intake->listWaiting();
+			$waiting = $this->handling->intake->listWaiting();
 
 			return new JSONResponse(
 				data: [
@@ -198,13 +191,13 @@ class IntakeController extends Controller {
 		try {
 			if ($withAttachments === true) {
 				return new JSONResponse(
-					data: $this->intake->assignWithAttachments(uuid: $uuid, target: $body),
+					data: $this->handling->intake->assignWithAttachments(uuid: $uuid, target: $body),
 					statusCode: Http::STATUS_OK
 				);
 			}
 
 			return new JSONResponse(
-				data: $this->intake->assign(uuid: $uuid, target: $body),
+				data: $this->handling->intake->assign(uuid: $uuid, target: $body),
 				statusCode: Http::STATUS_OK
 			);
 		} catch (Throwable $e) {
@@ -231,7 +224,7 @@ class IntakeController extends Controller {
 		}
 
 		try {
-			$document = $this->intake->reject(uuid: $uuid, reason: $reason);
+			$document = $this->handling->intake->reject(uuid: $uuid, reason: $reason);
 
 			return new JSONResponse(data: $document, statusCode: Http::STATUS_OK);
 		} catch (Throwable $e) {
@@ -255,7 +248,7 @@ class IntakeController extends Controller {
 		}
 
 		try {
-			$worklist = $this->intake->listDetached();
+			$worklist = $this->handling->intake->listDetached();
 
 			return new JSONResponse(
 				data: ['results' => $worklist, 'total' => count($worklist)],
@@ -286,7 +279,7 @@ class IntakeController extends Controller {
 		}
 
 		try {
-			$document = $this->detachment->detach(
+			$document = $this->handling->detachment->detach(
 				fileId: $fileId,
 				reason: $reason,
 				documentName: $documentName
@@ -379,7 +372,7 @@ class IntakeController extends Controller {
 		}
 
 		try {
-			$declaration = $this->routing->declare(
+			$declaration = $this->handling->routing->declare(
 				declaringApp: $declaringApp,
 				typeReference: $typeReference,
 				routeTo: $routeTo,

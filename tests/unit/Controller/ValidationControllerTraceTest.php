@@ -254,7 +254,6 @@ class ValidationControllerTraceTest extends TestCase {
 		);
 
 		return new ValidationController(
-			appName: 'filinq',
 			request: $request,
 			logger: $this->logger,
 			service: $this->service,

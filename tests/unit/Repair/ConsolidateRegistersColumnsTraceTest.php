@@ -144,10 +144,10 @@ class ConsolidateRegistersColumnsTraceTest extends TestCase {
 		$this->gateway->method('uuidsIn')->willReturn(['u1']);
 		$this->gateway->method('uuidsPresent')->willReturnOnConsecutiveCalls([], ['u1']);
 		$this->gateway->expects($this->once())->method('insertBatch')->with(
-			$this->identicalTo('src_3_1'),
-			$this->identicalTo('dst_9_1'),
-			$this->identicalTo(9),
-			$this->identicalTo(['insert:_uuid,_register,title,body']),
+			$this->callback(
+				static fn (array $pair): bool => [$pair['sourceTable'], $pair['targetTable'], $pair['targetId'], $pair['columns']]
+					=== ['src_3_1', 'dst_9_1', 9, ['insert:_uuid,_register,title,body']]
+			),
 			$this->identicalTo(['u1'])
 		)->willReturn(true);
 		$this->gateway->method('deleteBatch')->willReturn(true);

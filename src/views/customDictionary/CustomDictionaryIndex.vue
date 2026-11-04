@@ -9,6 +9,7 @@
 -->
 <script setup>
 import { translate as t } from '@nextcloud/l10n'
+import { LIST_ONLY_INDEX_PAGE } from '../../constants/indexPage.js'
 import { customDictionaryStore } from '../../store/store.js'
 import { resolveI18nValue } from '../../utils/registerI18n.js'
 </script>
@@ -29,15 +30,7 @@ import { resolveI18nValue } from '../../utils/registerI18n.js'
 			:columns="tableColumns"
 			:pagination="paginationData"
 			:loading="customDictionaryStore.loading"
-			:selectable="false"
-			:showEditAction="false"
-			:showCopyAction="false"
-			:showDeleteAction="false"
-			:showMassImport="false"
-			:showMassExport="false"
-			:showMassCopy="false"
-			:showMassDelete="false"
-			:showViewToggle="false"
+			v-bind="LIST_ONLY_INDEX_PAGE"
 			:showAdd="customDictionaryStore.canMaintain"
 			rowKey="id"
 			:emptyText="emptyText"
@@ -68,11 +61,7 @@ import { resolveI18nValue } from '../../utils/registerI18n.js'
 
 			<template #column-active="{ row }">
 				<CnStatusBadge
-					:label="
-						row.active === false
-							? t('filinq', 'Inactive')
-							: t('filinq', 'Active')
-					"
+					:label="activeLabel(row)"
 					:colorMap="activeColorMap" />
 			</template>
 
@@ -136,6 +125,7 @@ import Delete from 'vue-material-design-icons/Delete.vue'
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
 import Pencil from 'vue-material-design-icons/Pencil.vue'
 import CustomDictionaryFormDialog from '../../dialogs/CustomDictionaryFormDialog.vue'
+import { customDictionaryBadges } from '../../mixins/customDictionaryBadges.js'
 import {
 	indexPaging,
 	recordDeletion,
@@ -157,7 +147,7 @@ export default {
 		Pencil,
 	},
 
-	mixins: [indexPaging, recordDeletion],
+	mixins: [indexPaging, recordDeletion, customDictionaryBadges],
 	deleteFailedLog: 'Failed to delete custom dictionary:',
 
 	data() {
@@ -165,16 +155,6 @@ export default {
 			dialogOpen: false,
 			saving: false,
 			formError: '',
-			matchModeColorMap: {
-				exact: 'error',
-				caseInsensitive: 'primary',
-				wordBoundary: 'success',
-			},
-
-			activeColorMap: {
-				[t('filinq', 'Active')]: 'success',
-				[t('filinq', 'Inactive')]: 'default',
-			},
 		}
 	},
 
@@ -250,23 +230,6 @@ export default {
 		 */
 		displayLabel(row) {
 			return resolveI18nValue(row.label, t('filinq', 'Custom dictionary'))
-		},
-
-		/**
-		 * Translated label for a dictionary match mode, falling back to the raw
-		 * value and finally to the schema default.
-		 *
-		 * @param {string} mode Stored match mode.
-		 * @return {string} Displayable label.
-		 * @spec openspec/specs/custom-dictionary-recognition/spec.md#requirement-custom-dictionary-admin-ui-req-ddcdr-006
-		 */
-		matchModeLabel(mode) {
-			const labels = {
-				exact: t('filinq', 'Exact'),
-				caseInsensitive: t('filinq', 'Case-insensitive'),
-				wordBoundary: t('filinq', 'Word boundary'),
-			}
-			return labels[mode] || mode || t('filinq', 'Case-insensitive')
 		},
 
 		/**

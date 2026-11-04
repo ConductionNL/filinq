@@ -3,20 +3,20 @@
 		"html": [
 			"<x-ncdialog name=\"Add publish-never rule\" open=\"true\" size=\"normal\" data-on-onupdate:open=\"\">",
 			"<x-slot name=\"actions\">",
-			"<x-ncbutton variant=\"tertiary\" data-on-onclick=\"\">",
+			"<x-ncbutton disabled=\"false\" data-testid=\"cn-dialog-actions-cancel\" data-on-onclick=\"\">",
 			"<x-slot name=\"default\">Cancel</x-slot>",
 			"</x-ncbutton>",
-			"<x-ncbutton variant=\"primary\" disabled=\"true\" data-on-onclick=\"\">",
+			"<x-ncbutton variant=\"primary\" disabled=\"true\" data-testid=\"cn-dialog-actions-submit\" data-on-onclick=\"\">",
 			"<x-slot name=\"default\"> Create</x-slot>",
 			"</x-ncbutton>",
 			"</x-slot>",
 			"<x-slot name=\"default\">",
 			"<div class=\"prohibition-form\">",
-			"<x-nctextfield modelvalue=\"\" data-on-onupdate:modelvalue=\"\" label=\"Primary name (Dutch)\" required=\"\">",
+			"<x-nctextfield modelvalue=\"\" data-on-onupdate:modelvalue=\"\" label=\"Primary name (Dutch)\" required=\"true\">",
 			"</x-nctextfield>",
-			"<x-ncselect modelvalue=\"PERSON\" data-on-onupdate:modelvalue=\"\" data-options=\"[&quot;PERSON&quot;,&quot;ORGANIZATION&quot;,&quot;OTHER&quot;]\" inputlabel=\"Entity type\" label=\"Entity type\" required=\"\">",
+			"<x-ncselect modelvalue=\"PERSON\" data-on-onupdate:modelvalue=\"\" data-options=\"[&quot;PERSON&quot;,&quot;ORGANIZATION&quot;,&quot;OTHER&quot;]\" inputlabel=\"Entity type\" label=\"Entity type\" required=\"true\">",
 			"</x-ncselect>",
-			"<x-nctextfield modelvalue=\"\" data-on-onupdate:modelvalue=\"\" label=\"Reason (markdown allowed)\" required=\"\">",
+			"<x-nctextfield modelvalue=\"\" data-on-onupdate:modelvalue=\"\" label=\"Reason (markdown allowed)\" required=\"true\">",
 			"</x-nctextfield>",
 			"<x-nctextfield modelvalue=\"\" data-on-onupdate:modelvalue=\"\" label=\"Legal authority (court order, statute, …)\">",
 			"</x-nctextfield>",
@@ -31,29 +31,20 @@
 			"<x-nccheckboxradioswitch modelvalue=\"true\" data-on-onupdate:modelvalue=\"\" type=\"switch\">",
 			"<x-slot name=\"default\">Active</x-slot>",
 			"</x-nccheckboxradioswitch>",
+			"<!--v-if-->",
 			"<h4>Match rules</h4>",
 			"<div class=\"form-warning\">Add at least one match rule. Prefer stable identifiers (BSN/KvK) over name-only matches — names alone produce false positives.</div>",
 			"<x-ncbutton variant=\"secondary\" data-on-onclick=\"\">",
 			"<x-slot name=\"default\">Add match rule</x-slot>",
 			"</x-ncbutton>",
-			"<!--v-if-->",
-			"<!--v-if-->",
 			"</div>",
 			"</x-slot>",
 			"</x-ncdialog>"
 		],
 		"buttons": [
 			{
-				"variant": "tertiary",
-				"emitted": [
-					[
-						"onUpdate:open",
-						false
-					],
-					[
-						"onCancel"
-					]
-				]
+				"variant": null,
+				"emitted": [["onUpdate:open", false], ["onCancel"]]
 			},
 			{
 				"variant": "primary",
@@ -81,20 +72,20 @@
 		"html": [
 			"<x-ncdialog name=\"Edit publish-never rule\" open=\"true\" size=\"normal\" data-on-onupdate:open=\"\">",
 			"<x-slot name=\"actions\">",
-			"<x-ncbutton variant=\"tertiary\" data-on-onclick=\"\">",
+			"<x-ncbutton disabled=\"false\" data-testid=\"cn-dialog-actions-cancel\" data-on-onclick=\"\">",
 			"<x-slot name=\"default\">Cancel</x-slot>",
 			"</x-ncbutton>",
-			"<x-ncbutton variant=\"primary\" disabled=\"false\" data-on-onclick=\"\">",
+			"<x-ncbutton variant=\"primary\" disabled=\"false\" data-testid=\"cn-dialog-actions-submit\" data-on-onclick=\"\">",
 			"<x-slot name=\"default\"> Save</x-slot>",
 			"</x-ncbutton>",
 			"</x-slot>",
 			"<x-slot name=\"default\">",
 			"<div class=\"prohibition-form\">",
-			"<x-nctextfield modelvalue=\"Jan Jansen\" data-on-onupdate:modelvalue=\"\" label=\"Primary name (Dutch)\" required=\"\">",
+			"<x-nctextfield modelvalue=\"Jan Jansen\" data-on-onupdate:modelvalue=\"\" label=\"Primary name (Dutch)\" required=\"true\">",
 			"</x-nctextfield>",
-			"<x-ncselect modelvalue=\"PERSON\" data-on-onupdate:modelvalue=\"\" data-options=\"[&quot;PERSON&quot;,&quot;ORGANIZATION&quot;,&quot;OTHER&quot;]\" inputlabel=\"Entity type\" label=\"Entity type\" required=\"\">",
+			"<x-ncselect modelvalue=\"PERSON\" data-on-onupdate:modelvalue=\"\" data-options=\"[&quot;PERSON&quot;,&quot;ORGANIZATION&quot;,&quot;OTHER&quot;]\" inputlabel=\"Entity type\" label=\"Entity type\" required=\"true\">",
 			"</x-ncselect>",
-			"<x-nctextfield modelvalue=\"Court order\" data-on-onupdate:modelvalue=\"\" label=\"Reason (markdown allowed)\" required=\"\">",
+			"<x-nctextfield modelvalue=\"Court order\" data-on-onupdate:modelvalue=\"\" label=\"Reason (markdown allowed)\" required=\"true\">",
 			"</x-nctextfield>",
 			"<x-nctextfield modelvalue=\"\" data-on-onupdate:modelvalue=\"\" label=\"Legal authority (court order, statute, …)\">",
 			"</x-nctextfield>",
@@ -109,6 +100,7 @@
 			"<x-nccheckboxradioswitch modelvalue=\"true\" data-on-onupdate:modelvalue=\"\" type=\"switch\">",
 			"<x-slot name=\"default\">Active</x-slot>",
 			"</x-nccheckboxradioswitch>",
+			"<!--v-if-->",
 			"<h4>Match rules</h4>",
 			"<!--v-if-->",
 			"<div class=\"match-rule-row\">",
@@ -132,24 +124,14 @@
 			"<x-ncbutton variant=\"secondary\" data-on-onclick=\"\">",
 			"<x-slot name=\"default\">Add match rule</x-slot>",
 			"</x-ncbutton>",
-			"<!--v-if-->",
-			"<!--v-if-->",
 			"</div>",
 			"</x-slot>",
 			"</x-ncdialog>"
 		],
 		"buttons": [
 			{
-				"variant": "tertiary",
-				"emitted": [
-					[
-						"onUpdate:open",
-						false
-					],
-					[
-						"onCancel"
-					]
-				]
+				"variant": null,
+				"emitted": [["onUpdate:open", false], ["onCancel"]]
 			},
 			{
 				"variant": "primary",
@@ -189,24 +171,24 @@
 		"html": [
 			"<x-ncdialog name=\"Edit publish-never rule\" open=\"true\" size=\"normal\" data-on-onupdate:open=\"\">",
 			"<x-slot name=\"actions\">",
-			"<x-ncbutton variant=\"tertiary\" data-on-onclick=\"\">",
+			"<x-ncbutton disabled=\"true\" data-testid=\"cn-dialog-actions-cancel\" data-on-onclick=\"\">",
 			"<x-slot name=\"default\">Cancel</x-slot>",
 			"</x-ncbutton>",
-			"<x-ncbutton variant=\"primary\" disabled=\"true\" data-on-onclick=\"\">",
+			"<x-ncbutton variant=\"primary\" disabled=\"true\" data-testid=\"cn-dialog-actions-submit\" data-on-onclick=\"\">",
 			"<x-slot name=\"default\"> Save</x-slot>",
 			"<x-slot name=\"icon\">",
-			"<x-ncloadingicon size=\"20\">",
+			"<x-ncloadingicon size=\"20\" name=\"Loading&nbsp;…\">",
 			"</x-ncloadingicon>",
 			"</x-slot>",
 			"</x-ncbutton>",
 			"</x-slot>",
 			"<x-slot name=\"default\">",
 			"<div class=\"prohibition-form\">",
-			"<x-nctextfield modelvalue=\"Jan Jansen\" data-on-onupdate:modelvalue=\"\" label=\"Primary name (Dutch)\" required=\"\">",
+			"<x-nctextfield modelvalue=\"Jan Jansen\" data-on-onupdate:modelvalue=\"\" label=\"Primary name (Dutch)\" required=\"true\">",
 			"</x-nctextfield>",
-			"<x-ncselect modelvalue=\"PERSON\" data-on-onupdate:modelvalue=\"\" data-options=\"[&quot;PERSON&quot;,&quot;ORGANIZATION&quot;,&quot;OTHER&quot;]\" inputlabel=\"Entity type\" label=\"Entity type\" required=\"\">",
+			"<x-ncselect modelvalue=\"PERSON\" data-on-onupdate:modelvalue=\"\" data-options=\"[&quot;PERSON&quot;,&quot;ORGANIZATION&quot;,&quot;OTHER&quot;]\" inputlabel=\"Entity type\" label=\"Entity type\" required=\"true\">",
 			"</x-ncselect>",
-			"<x-nctextfield modelvalue=\"Court order\" data-on-onupdate:modelvalue=\"\" label=\"Reason (markdown allowed)\" required=\"\">",
+			"<x-nctextfield modelvalue=\"Court order\" data-on-onupdate:modelvalue=\"\" label=\"Reason (markdown allowed)\" required=\"true\">",
 			"</x-nctextfield>",
 			"<x-nctextfield modelvalue=\"\" data-on-onupdate:modelvalue=\"\" label=\"Legal authority (court order, statute, …)\">",
 			"</x-nctextfield>",
@@ -221,6 +203,7 @@
 			"<x-nccheckboxradioswitch modelvalue=\"true\" data-on-onupdate:modelvalue=\"\" type=\"switch\">",
 			"<x-slot name=\"default\">Active</x-slot>",
 			"</x-nccheckboxradioswitch>",
+			"<!--v-if-->",
 			"<h4>Match rules</h4>",
 			"<!--v-if-->",
 			"<div class=\"match-rule-row\">",
@@ -244,7 +227,6 @@
 			"<x-ncbutton variant=\"secondary\" data-on-onclick=\"\">",
 			"<x-slot name=\"default\">Add match rule</x-slot>",
 			"</x-ncbutton>",
-			"<!--v-if-->",
 			"<div class=\"form-error\">Save failed</div>",
 			"</div>",
 			"</x-slot>",
@@ -252,16 +234,8 @@
 		],
 		"buttons": [
 			{
-				"variant": "tertiary",
-				"emitted": [
-					[
-						"onUpdate:open",
-						false
-					],
-					[
-						"onCancel"
-					]
-				]
+				"variant": null,
+				"emitted": [["onUpdate:open", false], ["onCancel"]]
 			},
 			{
 				"variant": "primary",
@@ -298,29 +272,27 @@
 		]
 	},
 	"prohibition.closed": {
-		"html": [
-			"<!--v-if-->"
-		],
+		"html": ["<!--v-if-->"],
 		"buttons": []
 	},
 	"standingConsent.create": {
 		"html": [
 			"<x-ncdialog name=\"Add standing consent\" open=\"true\" size=\"normal\" data-on-onupdate:open=\"\">",
 			"<x-slot name=\"actions\">",
-			"<x-ncbutton variant=\"tertiary\" data-on-onclick=\"\">",
+			"<x-ncbutton disabled=\"false\" data-testid=\"cn-dialog-actions-cancel\" data-on-onclick=\"\">",
 			"<x-slot name=\"default\">Cancel</x-slot>",
 			"</x-ncbutton>",
-			"<x-ncbutton variant=\"primary\" disabled=\"true\" data-on-onclick=\"\">",
+			"<x-ncbutton variant=\"primary\" disabled=\"true\" data-testid=\"cn-dialog-actions-submit\" data-on-onclick=\"\">",
 			"<x-slot name=\"default\"> Create</x-slot>",
 			"</x-ncbutton>",
 			"</x-slot>",
 			"<x-slot name=\"default\">",
 			"<div class=\"standing-consent-form\">",
-			"<x-nctextfield modelvalue=\"\" data-on-onupdate:modelvalue=\"\" label=\"Entity text (display name)\" required=\"\">",
+			"<x-nctextfield modelvalue=\"\" data-on-onupdate:modelvalue=\"\" label=\"Entity text (display name)\" required=\"true\">",
 			"</x-nctextfield>",
-			"<x-ncselect modelvalue=\"PERSON\" data-on-onupdate:modelvalue=\"\" data-options=\"[&quot;PERSON&quot;,&quot;ORGANIZATION&quot;,&quot;OTHER&quot;]\" inputlabel=\"Entity type\" label=\"Entity type\" required=\"\">",
+			"<x-ncselect modelvalue=\"PERSON\" data-on-onupdate:modelvalue=\"\" data-options=\"[&quot;PERSON&quot;,&quot;ORGANIZATION&quot;,&quot;OTHER&quot;]\" inputlabel=\"Entity type\" label=\"Entity type\" required=\"true\">",
 			"</x-ncselect>",
-			"<x-ncselect modelvalue=\"\" data-on-onupdate:modelvalue=\"\" data-options=\"[&quot;paper&quot;,&quot;digital_signature&quot;,&quot;verbal_recorded&quot;,&quot;opt_in_form&quot;]\" inputlabel=\"Consent method\" label=\"Consent method\" required=\"\">",
+			"<x-ncselect modelvalue=\"\" data-on-onupdate:modelvalue=\"\" data-options=\"[&quot;paper&quot;,&quot;digital_signature&quot;,&quot;verbal_recorded&quot;,&quot;opt_in_form&quot;]\" inputlabel=\"Consent method\" label=\"Consent method\" required=\"true\">",
 			"</x-ncselect>",
 			"<x-nctextfield modelvalue=\"\" data-on-onupdate:modelvalue=\"\" label=\"Consent document (file id or URL)\">",
 			"</x-nctextfield>",
@@ -341,23 +313,14 @@
 			"<x-ncbutton variant=\"secondary\" data-on-onclick=\"\">",
 			"<x-slot name=\"default\">Add match rule</x-slot>",
 			"</x-ncbutton>",
-			"<!--v-if-->",
 			"</div>",
 			"</x-slot>",
 			"</x-ncdialog>"
 		],
 		"buttons": [
 			{
-				"variant": "tertiary",
-				"emitted": [
-					[
-						"onUpdate:open",
-						false
-					],
-					[
-						"onCancel"
-					]
-				]
+				"variant": null,
+				"emitted": [["onUpdate:open", false], ["onCancel"]]
 			},
 			{
 				"variant": "primary",
@@ -388,20 +351,20 @@
 		"html": [
 			"<x-ncdialog name=\"Edit standing consent\" open=\"true\" size=\"normal\" data-on-onupdate:open=\"\">",
 			"<x-slot name=\"actions\">",
-			"<x-ncbutton variant=\"tertiary\" data-on-onclick=\"\">",
+			"<x-ncbutton disabled=\"false\" data-testid=\"cn-dialog-actions-cancel\" data-on-onclick=\"\">",
 			"<x-slot name=\"default\">Cancel</x-slot>",
 			"</x-ncbutton>",
-			"<x-ncbutton variant=\"primary\" disabled=\"false\" data-on-onclick=\"\">",
+			"<x-ncbutton variant=\"primary\" disabled=\"false\" data-testid=\"cn-dialog-actions-submit\" data-on-onclick=\"\">",
 			"<x-slot name=\"default\"> Save</x-slot>",
 			"</x-ncbutton>",
 			"</x-slot>",
 			"<x-slot name=\"default\">",
 			"<div class=\"standing-consent-form\">",
-			"<x-nctextfield modelvalue=\"Jan Jansen\" data-on-onupdate:modelvalue=\"\" label=\"Entity text (display name)\" required=\"\">",
+			"<x-nctextfield modelvalue=\"Jan Jansen\" data-on-onupdate:modelvalue=\"\" label=\"Entity text (display name)\" required=\"true\">",
 			"</x-nctextfield>",
-			"<x-ncselect modelvalue=\"PERSON\" data-on-onupdate:modelvalue=\"\" data-options=\"[&quot;PERSON&quot;,&quot;ORGANIZATION&quot;,&quot;OTHER&quot;]\" inputlabel=\"Entity type\" label=\"Entity type\" required=\"\">",
+			"<x-ncselect modelvalue=\"PERSON\" data-on-onupdate:modelvalue=\"\" data-options=\"[&quot;PERSON&quot;,&quot;ORGANIZATION&quot;,&quot;OTHER&quot;]\" inputlabel=\"Entity type\" label=\"Entity type\" required=\"true\">",
 			"</x-ncselect>",
-			"<x-ncselect modelvalue=\"paper\" data-on-onupdate:modelvalue=\"\" data-options=\"[&quot;paper&quot;,&quot;digital_signature&quot;,&quot;verbal_recorded&quot;,&quot;opt_in_form&quot;]\" inputlabel=\"Consent method\" label=\"Consent method\" required=\"\">",
+			"<x-ncselect modelvalue=\"paper\" data-on-onupdate:modelvalue=\"\" data-options=\"[&quot;paper&quot;,&quot;digital_signature&quot;,&quot;verbal_recorded&quot;,&quot;opt_in_form&quot;]\" inputlabel=\"Consent method\" label=\"Consent method\" required=\"true\">",
 			"</x-ncselect>",
 			"<x-nctextfield modelvalue=\"\" data-on-onupdate:modelvalue=\"\" label=\"Consent document (file id or URL)\">",
 			"</x-nctextfield>",
@@ -440,23 +403,14 @@
 			"<x-ncbutton variant=\"secondary\" data-on-onclick=\"\">",
 			"<x-slot name=\"default\">Add match rule</x-slot>",
 			"</x-ncbutton>",
-			"<!--v-if-->",
 			"</div>",
 			"</x-slot>",
 			"</x-ncdialog>"
 		],
 		"buttons": [
 			{
-				"variant": "tertiary",
-				"emitted": [
-					[
-						"onUpdate:open",
-						false
-					],
-					[
-						"onCancel"
-					]
-				]
+				"variant": null,
+				"emitted": [["onUpdate:open", false], ["onCancel"]]
 			},
 			{
 				"variant": "primary",
@@ -499,24 +453,24 @@
 		"html": [
 			"<x-ncdialog name=\"Edit standing consent\" open=\"true\" size=\"normal\" data-on-onupdate:open=\"\">",
 			"<x-slot name=\"actions\">",
-			"<x-ncbutton variant=\"tertiary\" data-on-onclick=\"\">",
+			"<x-ncbutton disabled=\"true\" data-testid=\"cn-dialog-actions-cancel\" data-on-onclick=\"\">",
 			"<x-slot name=\"default\">Cancel</x-slot>",
 			"</x-ncbutton>",
-			"<x-ncbutton variant=\"primary\" disabled=\"true\" data-on-onclick=\"\">",
+			"<x-ncbutton variant=\"primary\" disabled=\"true\" data-testid=\"cn-dialog-actions-submit\" data-on-onclick=\"\">",
 			"<x-slot name=\"default\"> Save</x-slot>",
 			"<x-slot name=\"icon\">",
-			"<x-ncloadingicon size=\"20\">",
+			"<x-ncloadingicon size=\"20\" name=\"Loading&nbsp;…\">",
 			"</x-ncloadingicon>",
 			"</x-slot>",
 			"</x-ncbutton>",
 			"</x-slot>",
 			"<x-slot name=\"default\">",
 			"<div class=\"standing-consent-form\">",
-			"<x-nctextfield modelvalue=\"Jan Jansen\" data-on-onupdate:modelvalue=\"\" label=\"Entity text (display name)\" required=\"\">",
+			"<x-nctextfield modelvalue=\"Jan Jansen\" data-on-onupdate:modelvalue=\"\" label=\"Entity text (display name)\" required=\"true\">",
 			"</x-nctextfield>",
-			"<x-ncselect modelvalue=\"PERSON\" data-on-onupdate:modelvalue=\"\" data-options=\"[&quot;PERSON&quot;,&quot;ORGANIZATION&quot;,&quot;OTHER&quot;]\" inputlabel=\"Entity type\" label=\"Entity type\" required=\"\">",
+			"<x-ncselect modelvalue=\"PERSON\" data-on-onupdate:modelvalue=\"\" data-options=\"[&quot;PERSON&quot;,&quot;ORGANIZATION&quot;,&quot;OTHER&quot;]\" inputlabel=\"Entity type\" label=\"Entity type\" required=\"true\">",
 			"</x-ncselect>",
-			"<x-ncselect modelvalue=\"paper\" data-on-onupdate:modelvalue=\"\" data-options=\"[&quot;paper&quot;,&quot;digital_signature&quot;,&quot;verbal_recorded&quot;,&quot;opt_in_form&quot;]\" inputlabel=\"Consent method\" label=\"Consent method\" required=\"\">",
+			"<x-ncselect modelvalue=\"paper\" data-on-onupdate:modelvalue=\"\" data-options=\"[&quot;paper&quot;,&quot;digital_signature&quot;,&quot;verbal_recorded&quot;,&quot;opt_in_form&quot;]\" inputlabel=\"Consent method\" label=\"Consent method\" required=\"true\">",
 			"</x-ncselect>",
 			"<x-nctextfield modelvalue=\"\" data-on-onupdate:modelvalue=\"\" label=\"Consent document (file id or URL)\">",
 			"</x-nctextfield>",
@@ -562,16 +516,8 @@
 		],
 		"buttons": [
 			{
-				"variant": "tertiary",
-				"emitted": [
-					[
-						"onUpdate:open",
-						false
-					],
-					[
-						"onCancel"
-					]
-				]
+				"variant": null,
+				"emitted": [["onUpdate:open", false], ["onCancel"]]
 			},
 			{
 				"variant": "primary",
@@ -611,19 +557,17 @@
 		]
 	},
 	"standingConsent.closed": {
-		"html": [
-			"<!--v-if-->"
-		],
+		"html": ["<!--v-if-->"],
 		"buttons": []
 	},
 	"customDictionary.create": {
 		"html": [
 			"<x-ncdialog name=\"Add custom dictionary\" open=\"true\" size=\"normal\" data-onupdate:open=\"[null,null]\">",
 			"<x-slot name=\"actions\">",
-			"<x-ncbutton variant=\"tertiary\" data-on-onclick=\"\">",
+			"<x-ncbutton disabled=\"false\" data-testid=\"cn-dialog-actions-cancel\" data-on-onclick=\"\">",
 			"<x-slot name=\"default\">Cancel</x-slot>",
 			"</x-ncbutton>",
-			"<x-ncbutton variant=\"primary\" disabled=\"true\" data-on-onclick=\"\">",
+			"<x-ncbutton variant=\"primary\" disabled=\"true\" data-testid=\"cn-dialog-actions-submit\" data-on-onclick=\"\">",
 			"<x-slot name=\"default\"> Create</x-slot>",
 			"</x-ncbutton>",
 			"</x-slot>",
@@ -654,7 +598,7 @@
 			"\t\t\t\tdialog was written with the `caseInsensitive` default no matter",
 			"\t\t\t\twhat the user chose, silently.",
 			"",
-			"\t\t\t\tThe sibling select in StandingConsentFormModal.vue already uses",
+			"\t\t\t\tThe sibling select in PolicyRuleFormModal.vue already uses",
 			"\t\t\t\t`v-model` and works; this was the only `:value`-bound NcSelect",
 			"\t\t\t\tleft in src/ (swept 2026-08-11).",
 			"\t\t\t-->",
@@ -671,12 +615,8 @@
 		],
 		"buttons": [
 			{
-				"variant": "tertiary",
-				"emitted": [
-					[
-						"onCancel"
-					]
-				]
+				"variant": null,
+				"emitted": [["onCancel"]]
 			},
 			{
 				"variant": "primary",
@@ -688,10 +628,10 @@
 		"html": [
 			"<x-ncdialog name=\"Edit dictionary\" open=\"true\" size=\"normal\" data-onupdate:open=\"[null,null]\">",
 			"<x-slot name=\"actions\">",
-			"<x-ncbutton variant=\"tertiary\" data-on-onclick=\"\">",
+			"<x-ncbutton disabled=\"false\" data-testid=\"cn-dialog-actions-cancel\" data-on-onclick=\"\">",
 			"<x-slot name=\"default\">Cancel</x-slot>",
 			"</x-ncbutton>",
-			"<x-ncbutton variant=\"primary\" disabled=\"false\" data-on-onclick=\"\">",
+			"<x-ncbutton variant=\"primary\" disabled=\"false\" data-testid=\"cn-dialog-actions-submit\" data-on-onclick=\"\">",
 			"<x-slot name=\"default\"> Save</x-slot>",
 			"</x-ncbutton>",
 			"</x-slot>",
@@ -722,7 +662,7 @@
 			"\t\t\t\tdialog was written with the `caseInsensitive` default no matter",
 			"\t\t\t\twhat the user chose, silently.",
 			"",
-			"\t\t\t\tThe sibling select in StandingConsentFormModal.vue already uses",
+			"\t\t\t\tThe sibling select in PolicyRuleFormModal.vue already uses",
 			"\t\t\t\t`v-model` and works; this was the only `:value`-bound NcSelect",
 			"\t\t\t\tleft in src/ (swept 2026-08-11).",
 			"\t\t\t-->",
@@ -739,12 +679,8 @@
 		],
 		"buttons": [
 			{
-				"variant": "tertiary",
-				"emitted": [
-					[
-						"onCancel"
-					]
-				]
+				"variant": null,
+				"emitted": [["onCancel"]]
 			},
 			{
 				"variant": "primary",
@@ -777,13 +713,13 @@
 		"html": [
 			"<x-ncdialog name=\"Edit dictionary\" open=\"true\" size=\"normal\" data-onupdate:open=\"[null,null]\">",
 			"<x-slot name=\"actions\">",
-			"<x-ncbutton variant=\"tertiary\" data-on-onclick=\"\">",
+			"<x-ncbutton disabled=\"true\" data-testid=\"cn-dialog-actions-cancel\" data-on-onclick=\"\">",
 			"<x-slot name=\"default\">Cancel</x-slot>",
 			"</x-ncbutton>",
-			"<x-ncbutton variant=\"primary\" disabled=\"true\" data-on-onclick=\"\">",
+			"<x-ncbutton variant=\"primary\" disabled=\"true\" data-testid=\"cn-dialog-actions-submit\" data-on-onclick=\"\">",
 			"<x-slot name=\"default\"> Save</x-slot>",
 			"<x-slot name=\"icon\">",
-			"<x-ncloadingicon size=\"20\">",
+			"<x-ncloadingicon size=\"20\" name=\"Loading&nbsp;…\">",
 			"</x-ncloadingicon>",
 			"</x-slot>",
 			"</x-ncbutton>",
@@ -815,7 +751,7 @@
 			"\t\t\t\tdialog was written with the `caseInsensitive` default no matter",
 			"\t\t\t\twhat the user chose, silently.",
 			"",
-			"\t\t\t\tThe sibling select in StandingConsentFormModal.vue already uses",
+			"\t\t\t\tThe sibling select in PolicyRuleFormModal.vue already uses",
 			"\t\t\t\t`v-model` and works; this was the only `:value`-bound NcSelect",
 			"\t\t\t\tleft in src/ (swept 2026-08-11).",
 			"\t\t\t-->",
@@ -832,12 +768,8 @@
 		],
 		"buttons": [
 			{
-				"variant": "tertiary",
-				"emitted": [
-					[
-						"onCancel"
-					]
-				]
+				"variant": null,
+				"emitted": [["onCancel"]]
 			},
 			{
 				"variant": "primary",
@@ -870,10 +802,10 @@
 		"html": [
 			"<x-ncdialog name=\"Add custom dictionary\" open=\"false\" size=\"normal\" data-onupdate:open=\"[null,null]\">",
 			"<x-slot name=\"actions\">",
-			"<x-ncbutton variant=\"tertiary\" data-on-onclick=\"\">",
+			"<x-ncbutton disabled=\"false\" data-testid=\"cn-dialog-actions-cancel\" data-on-onclick=\"\">",
 			"<x-slot name=\"default\">Cancel</x-slot>",
 			"</x-ncbutton>",
-			"<x-ncbutton variant=\"primary\" disabled=\"true\" data-on-onclick=\"\">",
+			"<x-ncbutton variant=\"primary\" disabled=\"true\" data-testid=\"cn-dialog-actions-submit\" data-on-onclick=\"\">",
 			"<x-slot name=\"default\"> Create</x-slot>",
 			"</x-ncbutton>",
 			"</x-slot>",
@@ -904,7 +836,7 @@
 			"\t\t\t\tdialog was written with the `caseInsensitive` default no matter",
 			"\t\t\t\twhat the user chose, silently.",
 			"",
-			"\t\t\t\tThe sibling select in StandingConsentFormModal.vue already uses",
+			"\t\t\t\tThe sibling select in PolicyRuleFormModal.vue already uses",
 			"\t\t\t\t`v-model` and works; this was the only `:value`-bound NcSelect",
 			"\t\t\t\tleft in src/ (swept 2026-08-11).",
 			"\t\t\t-->",
@@ -921,12 +853,8 @@
 		],
 		"buttons": [
 			{
-				"variant": "tertiary",
-				"emitted": [
-					[
-						"onCancel"
-					]
-				]
+				"variant": null,
+				"emitted": [["onCancel"]]
 			},
 			{
 				"variant": "primary",

@@ -32,6 +32,7 @@ namespace OCA\Filinq\Service;
 
 use Exception;
 use OCA\Filinq\Kernel\Contracts\SettingsServiceInterface;
+use OCA\Filinq\Service\Support\RegisterSetup;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -93,8 +94,7 @@ class SettingsService implements SettingsServiceInterface {
 	 *
 	 * @param IAppConfig $config App configuration interface
 	 * @param LoggerInterface $logger Logger interface
-	 * @param RegisterDiscoveryService $discoveryService Register discovery service
-	 * @param SettingsInitializer $initializer Settings initializer
+	 * @param RegisterSetup $registers Register discovery and the settings initializer.
 	 * @param OcrService $ocrService OCR service for Tesseract status
 	 * @param LegalBasisProposalService $legalBasisProposal Grondslag-per-entity-type proposal service
 	 * @param OpenRegisterAvailabilityService $openRegister OpenRegister availability resolver
@@ -106,8 +106,7 @@ class SettingsService implements SettingsServiceInterface {
 	public function __construct(
 		private readonly IAppConfig $config,
 		private readonly LoggerInterface $logger,
-		private readonly RegisterDiscoveryService $discoveryService,
-		private readonly SettingsInitializer $initializer,
+		private readonly RegisterSetup $registers,
 		private readonly OcrService $ocrService,
 		private readonly LegalBasisProposalService $legalBasisProposal,
 		private readonly OpenRegisterAvailabilityService $openRegister,
@@ -148,7 +147,7 @@ class SettingsService implements SettingsServiceInterface {
 	 * @spec openspec/specs/admin-settings/spec.md
 	 */
 	public function initialize(): array {
-		return $this->initializer->initialize();
+		return $this->registers->initializer->initialize();
 	}//end initialize()
 
 	/**
@@ -336,7 +335,7 @@ class SettingsService implements SettingsServiceInterface {
 		try {
 			if ($this->isOpenRegisterInstalled() === true) {
 				$data['openRegisters'] = true;
-				$data['availableRegisters'] = $this->discoveryService->fetchAvailableRegisters();
+				$data['availableRegisters'] = $this->registers->discovery->fetchAvailableRegisters();
 			}
 		} catch (\RuntimeException $e) {
 			$this->logger->info(
@@ -346,7 +345,7 @@ class SettingsService implements SettingsServiceInterface {
 		}//end try
 
 		try {
-			$data['configuration'] = $this->discoveryService->loadObjectTypeConfiguration(
+			$data['configuration'] = $this->registers->discovery->loadObjectTypeConfiguration(
 				$data['objectTypes']
 			);
 			$data = array_merge($data, $this->loadFeatureToggles());

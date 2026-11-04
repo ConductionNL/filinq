@@ -18,6 +18,8 @@
 namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\SettingsController;
+use OCA\Filinq\Controller\Support\AppConfiguration;
+use OCA\Filinq\Controller\Support\SettingsBackends;
 use OCA\Filinq\Service\AnonymiserBackendStateClient;
 use OCA\Filinq\Tests\Unit\Service\DetectionStates;
 use OCA\Filinq\Service\SettingsService;
@@ -262,15 +264,12 @@ class SettingsControllerTest extends TestCase {
 		$request->method('getParams')->willReturn(['grondslag' => 'AVG-6.1.c']);
 
 		return new SettingsController(
-			'filinq',
 			$request,
-			($appManager ?? $this->createMock(IAppManager::class)),
+			new AppConfiguration(apps: ($appManager ?? $this->createMock(IAppManager::class)), config: $this->createMock(IConfig::class)),
 			$groupManager,
 			$userSession,
 			new NullLogger(),
-			$settingsService,
-			($backendClient ?? $this->createMock(AnonymiserBackendStateClient::class)),
-			$this->createMock(IConfig::class)
+			new SettingsBackends(settings: $settingsService, anonymiser: ($backendClient ?? $this->createMock(AnonymiserBackendStateClient::class)))
 		);
 
 	}//end controller()

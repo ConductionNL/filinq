@@ -59,7 +59,7 @@ const ROWS = [
 		'@self': { id: 'self-1' },
 		id: 'id-1',
 		entityText: 'Jan',
-		primaryName: 'Jan',
+		primaryName: 'Jan Jansen',
 		label: 'Dict',
 		matchRules: [
 			{ type: 'bsn', value: '123', extra: true },
@@ -172,10 +172,13 @@ async function run(ctx, step) {
 }
 
 const PAGES = {
-	standingConsent: 'views/policy/StandingConsentIndex.vue',
-	prohibition: 'views/policy/ProhibitionIndex.vue',
-	consent: 'views/consent/ConsentIndex.vue',
-	customDictionary: 'views/customDictionary/CustomDictionaryIndex.vue',
+	standingConsent: [
+		'views/policy/PolicyRuleIndex.vue',
+		{ surface: 'standingConsent' },
+	],
+	prohibition: ['views/policy/PolicyRuleIndex.vue', { surface: 'prohibition' }],
+	consent: ['views/consent/ConsentIndex.vue'],
+	customDictionary: ['views/customDictionary/CustomDictionaryIndex.vue'],
 }
 
 const FORMATTERS = [
@@ -188,7 +191,7 @@ const FORMATTERS = [
 ]
 
 describe('policy index pages golden', () => {
-	for (const [key, rel] of Object.entries(PAGES)) {
+	for (const [key, [rel, props]] of Object.entries(PAGES)) {
 		it(key, async () => {
 			resetStores(ROWS)
 			const errors = []
@@ -198,7 +201,7 @@ describe('policy index pages golden', () => {
 			const options = await loadSfcOptions(
 				join(import.meta.dirname, '../../src', rel),
 			)
-			const vm = createInstance(options)
+			const vm = createInstance(options, { props })
 			const record = { initial: snapshot(vm, errors) }
 			const ctx = { vm, record, errors }
 			await vm.$hook('mounted')
@@ -245,7 +248,7 @@ describe('policy index pages golden', () => {
 
 			resetStores([])
 			states[key + 'Store'].error = 'load failed'
-			const empty = createInstance(options)
+			const empty = createInstance(options, { props })
 			record.emptyWithError = snapshot(empty, errors)
 
 			spy.mockRestore()

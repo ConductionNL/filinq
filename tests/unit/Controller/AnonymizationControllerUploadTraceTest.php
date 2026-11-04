@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\AnonymizationController;
+use OCA\Filinq\Controller\Support\AnonymizationServices;
 use OCA\Filinq\Kernel\Contracts\AnonymizationServiceInterface;
 use OCA\Filinq\Kernel\Contracts\AnonymizeRequestServiceInterface;
 use OCA\Filinq\Kernel\Contracts\FileListingServiceInterface;
@@ -40,6 +41,7 @@ use RuntimeException;
  * Characterization of the upload endpoint.
  *
  * @covers \OCA\Filinq\Controller\AnonymizationController
+ * @covers \OCA\Filinq\Controller\Support\AnonymizationServices
  */
 class AnonymizationControllerUploadTraceTest extends TestCase {
 
@@ -231,11 +233,9 @@ class AnonymizationControllerUploadTraceTest extends TestCase {
 		$guard->method('requireAuthenticated')->willReturn($refusal);
 
 		return new AnonymizationController(
-			appName: 'filinq',
+			services: new AnonymizationServices(anonymization: $this->createMock(AnonymizationServiceInterface::class), files: $this->files),
 			request: $request,
 			logger: $this->logger,
-			anonymizationService: $this->createMock(AnonymizationServiceInterface::class),
-			fileListingService: $this->files,
 			l10n: $l10n,
 			appConfig: $this->createMock(IAppConfig::class),
 			anonymizeRequest: $guard

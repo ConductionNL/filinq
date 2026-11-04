@@ -266,7 +266,7 @@ class WordDiffer {
 	 * @return array<int, array{op:string, left?:string, right?:string}> Ops.
 	 */
 	private function lcsDiff(array $a, array $b): array {
-		return $this->backtrack(a: $a, b: $b, lcs: $this->lcsTable(a: $a, b: $b));
+		return $this->backtrack(a: $a, b: $b);
 	}//end lcsDiff()
 
 	/**
@@ -301,15 +301,15 @@ class WordDiffer {
 	}//end lcsTable()
 
 	/**
-	 * Backtrack an LCS length table into an ordered op list.
+	 * Backtrack the LCS length table of two word lists into an ordered op list.
 	 *
 	 * @param array<int, string> $a Left words.
 	 * @param array<int, string> $b Right words.
-	 * @param array<int, array<int, int>> $lcs The LCS length table.
 	 *
 	 * @return array<int, array{op:string, left?:string, right?:string}> Ops.
 	 */
-	private function backtrack(array $a, array $b, array $lcs): array {
+	private function backtrack(array $a, array $b): array {
+		$lcs = $this->lcsTable(a: $a, b: $b);
 		$n = count($a);
 		$m = count($b);
 

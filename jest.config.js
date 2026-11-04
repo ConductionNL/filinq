@@ -38,6 +38,10 @@ module.exports = {
 		// it, but jest.mock still needs the path to resolve — redirect it to a
 		// local stub so resolution succeeds and the spec's factory takes over.
 		'^@nextcloud/axios$': '<rootDir>/tests/__mocks__/nextcloud-axios.js',
+		// The same holds for the bare `@nextcloud/vue` import and for
+		// `@nextcloud/dialogs`.
+		'^@nextcloud/vue$': '<rootDir>/tests/__mocks__/nextcloud-vue.js',
+		'^@nextcloud/dialogs$': '<rootDir>/tests/__mocks__/nextcloud-dialogs.js',
 	},
 	coveragePathIgnorePatterns: ['index.js', 'index.ts'],
 	coverageDirectory: '<rootDir>/coverage-frontend/',

@@ -28,6 +28,7 @@ use OCA\Filinq\Service\AnonymisedPdfOutputService;
 use OCA\Filinq\Service\AnonymizationPersistenceService;
 use OCA\Filinq\Service\AnonymizationResultParser;
 use OCA\Filinq\Service\AnonymizationService;
+use OCA\Filinq\Service\AnonymizeOptions;
 use OCA\Filinq\Service\DocumentAnonymizeRunner;
 use OCA\Filinq\Service\EmlAnonymizationService;
 use OCA\Filinq\Service\EmlPdfAssemblyService;
@@ -44,6 +45,8 @@ use OCA\Filinq\Service\Redaction\RedactionVerdictRecorder;
 use OCA\Filinq\Service\ProhibitionSkipTier;
 use OCA\Filinq\Service\RelationSkipDecisionService;
 use OCA\Filinq\Service\ReplacementVerificationService;
+use OCA\Filinq\Service\Support\AnonymisationRecords;
+use OCA\Filinq\Service\Support\AnonymisedOutputs;
 use OCA\OpenRegister\Db\EntityRelation;
 use OCA\OpenRegister\Db\EntityRelationMapper;
 use OCP\App\IAppManager;
@@ -132,7 +135,8 @@ class AnonymizationServiceTest extends TestCase {
 	 * Test the anonymise entry points expose the documented options.
 	 *
 	 * The grondslagen summary is no longer a boolean flag: it is selected by
-	 * calling the dedicated `anonymizeDocumentWithBasisSummary()` entry point.
+	 * calling the dedicated `anonymizeDocumentWithBasisSummary()` entry point,
+	 * and nothing on the options object can switch it on.
 	 *
 	 * @return void
 	 *
@@ -144,41 +148,29 @@ class AnonymizationServiceTest extends TestCase {
 			'The grondslagen-summary variant must be an explicit entry point.'
 		);
 
-		$names = $this->parameterNames(AnonymizationService::class, 'anonymizeDocument');
-		$this->assertContains('outputFormat', $names);
-		$this->assertNotContains(
-			'appendBasisSummary',
-			$names,
-			'anonymizeDocument() must not carry a summary flag argument.'
+		$this->assertSame(['fileId', 'entities', 'options'], $this->parameterNames(AnonymizationService::class, 'anonymizeDocument'));
+		$options = (new AnonymizeOptions())->withOutputFormat(outputFormat: 'pdf');
+		$this->assertSame('pdf', $options->runFor(fileId: 1, entities: [])->options['outputFormat']);
+		$this->assertFalse(
+			$options->runFor(fileId: 1, entities: [])->options['appendBasisSummary'],
+			'anonymizeDocument() must not carry a summary flag.'
 		);
+		$this->assertTrue($options->summaryRunFor(fileId: 1, entities: [])->options['appendBasisSummary']);
 
 	}//end testAnonymizeDocumentSignatureAcceptsNewParams()
 
 	/**
 	 * anonymise-pdf-only-output-mode: both anonymise entry points accept an
-	 * `$outputFormat` argument, and its default is the privacy-correct
-	 * 'pdf-only'.
+	 * output format, and its default is the privacy-correct 'pdf-only'.
 	 *
 	 * @return void
 	 */
 	public function testAnonymizeDocumentAcceptsOutputFormatArgument(): void {
-		foreach (['anonymizeDocument', 'anonymizeDocumentWithBasisSummary'] as $entryPoint) {
-			$params = (new \ReflectionMethod(AnonymizationService::class, $entryPoint))->getParameters();
-			$found = null;
-			foreach ($params as $param) {
-				if ($param->getName() === 'outputFormat') {
-					$found = $param;
-				}
-			}
+		$defaults = new AnonymizeOptions();
 
-			$this->assertNotNull($found, $entryPoint . '() must accept $outputFormat.');
-			$this->assertTrue($found->isDefaultValueAvailable());
-			$this->assertSame(
-				'pdf-only',
-				$found->getDefaultValue(),
-				$entryPoint . '() must default $outputFormat to \'pdf-only\''
-			);
-		}
+		$this->assertSame('pdf-only', $defaults->runFor(fileId: 1, entities: [])->options['outputFormat']);
+		$this->assertSame('pdf-only', $defaults->summaryRunFor(fileId: 1, entities: [])->options['outputFormat']);
+		$this->assertSame('preserve', $defaults->withOutputFormat(outputFormat: 'preserve')->runFor(fileId: 1, entities: [])->options['outputFormat']);
 
 	}//end testAnonymizeDocumentAcceptsOutputFormatArgument()
 
@@ -1207,25 +1199,7 @@ class AnonymizationServiceTest extends TestCase {
 			consentService: $this->createMock(\OCA\Filinq\Service\ConsentService::class)
 		);
 		$runner = new DocumentAnonymizeRunner(
-			logger: $logger,
-			locator: $locator,
-			entityDetection: $entityDetection,
-			emlAnonymizer: new EmlAnonymizationService(
-				logger: $logger,
-				entityDetection: $entityDetection,
-				emlAssembly: $this->createMock(EmlPdfAssemblyService::class)
-			),
-			pdfOutput: new AnonymisedPdfOutputService(
-				logger: $logger,
-				pdfConversion: $this->createMock(PdfConversionService::class)
-			),
-			replacementVerifier: new ReplacementVerificationService(logger: $logger),
-			persistence: $persistence,
-			summaryAttacher: new GrondslagenSummaryAttacher(
-				logger: $logger,
-				grondslagenSummary: $this->createMock(LegalBasesSummaryService::class)
-			),
-			runRecords: new AnonymisationRunRecords(
+			records: new AnonymisationRecords(verifier: new ReplacementVerificationService(logger: $logger), persistence: $persistence, runs: new AnonymisationRunRecords(
 				verdicts: new RedactionVerdictRecorder(
 					verifier: new RedactionIrreversibilityVerifier(),
 					logger: $logger
@@ -1238,7 +1212,21 @@ class AnonymizationServiceTest extends TestCase {
 					locator: $locator,
 					logger: $logger
 				)
-			)
+			)),
+			outputs: new AnonymisedOutputs(eml: new EmlAnonymizationService(
+				logger: $logger,
+				entityDetection: $entityDetection,
+				emlAssembly: $this->createMock(EmlPdfAssemblyService::class)
+			), pdf: new AnonymisedPdfOutputService(
+				logger: $logger,
+				pdfConversion: $this->createMock(PdfConversionService::class)
+			), summary: new GrondslagenSummaryAttacher(
+				logger: $logger,
+				grondslagenSummary: $this->createMock(LegalBasesSummaryService::class)
+			)),
+			logger: $logger,
+			locator: $locator,
+			entityDetection: $entityDetection
 		);
 
 		return $runner->run(

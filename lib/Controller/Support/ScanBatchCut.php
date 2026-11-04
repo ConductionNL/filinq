@@ -5,8 +5,8 @@
  *
  * A delivered batch file and the profile it is cut with.
  *
- * @category  Service
- * @package   OCA\Filinq\Service
+ * @category  Controller
+ * @package   OCA\Filinq\Controller\Support
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
@@ -21,7 +21,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\Filinq\Service;
+namespace OCA\Filinq\Controller\Support;
 
 use OCP\Files\File;
 

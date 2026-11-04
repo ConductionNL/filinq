@@ -14,30 +14,20 @@ import path from 'path'
 import FileViewerSidebar from '../sidebars/FileViewerSidebar.vue'
 import FileEntitiesDashboardWidget from '../views/widgets/FileEntitiesDashboardWidget.vue'
 
-jest.mock(
-	'@nextcloud/router',
-	() => ({
-		generateUrl: (url, params) => 'url:' + JSON.stringify([url, params ?? null]),
-		generateRemoteUrl: (service) => 'remote:' + service,
-	}),
-	{ virtual: true },
-)
-jest.mock(
-	'@nextcloud/l10n',
-	() => ({ translate: (a, s) => s, translatePlural: (a, s) => s }),
-	{
-		virtual: true,
-	},
-)
-jest.mock(
-	'@nextcloud/dialogs',
-	() => ({ showError: () => {}, showSuccess: () => {} }),
-	{
-		virtual: true,
-	},
-)
-jest.mock('@nextcloud/vue', () => ({}), { virtual: true })
-jest.mock('jszip', () => ({}), { virtual: true })
+jest.mock('@nextcloud/router', () => ({
+	generateUrl: (url, params) => 'url:' + JSON.stringify([url, params ?? null]),
+	generateRemoteUrl: (service) => 'remote:' + service,
+}))
+jest.mock('@nextcloud/l10n', () => ({
+	translate: (a, s) => s,
+	translatePlural: (a, s) => s,
+}))
+jest.mock('@nextcloud/dialogs', () => ({
+	showError: () => {},
+	showSuccess: () => {},
+}))
+jest.mock('@nextcloud/vue', () => ({}))
+jest.mock('jszip', () => ({}))
 jest.mock('../store/store.js', () => ({}))
 jest.mock('../store/modules/anonymization.js', () => ({
 	entryIsChecked: () => false,

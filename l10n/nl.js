@@ -2148,7 +2148,7 @@ OC.L10N.register(
         "What is being anonymised, from where, and what failed.": "Wat er geanonimiseerd wordt, waarvandaan, en wat mislukte.",
         "What the templates generated, in which format, and what went out as correspondence.": "Wat de sjablonen genereerden, in welk formaat, en wat als correspondentie uitging.",
         "Template": "Sjabloon",
-        "Store": "Store",
+        "Marketplace": "Marktplaats",
         "Install document configurations that other organisations have published: a template set, an anonymisation policy, or the flows behind a signature.": "Installeer registers, schema's en flows die andere organisaties hebben gepubliceerd.",
         "\"{name}\" lives in this dossier and no other dossier uses it. It will be moved to the trash, where you can still restore it.": "\"{name}\" hoort bij dit dossier en wordt door geen ander dossier gebruikt. Het bestand gaat naar de prullenbak, waar je het nog kunt terugzetten.",
         "\"{name}\" will be removed from this dossier only. The file itself is left untouched.": "\"{name}\" wordt alleen uit dit dossier gehaald. Het bestand zelf blijft ongemoeid.",

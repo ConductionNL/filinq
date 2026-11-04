@@ -24,9 +24,11 @@
 namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\AnonymizationController;
+use OCA\Filinq\Controller\Support\AnonymizationServices;
 use OCA\Filinq\Service\AnonymizationService;
 use OCA\Filinq\Service\AnonymizeRequestService;
 use OCA\Filinq\Service\FileListingService;
+use OCA\Filinq\Tests\Unit\Service\ReadsAnonymizeOptions;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\Files\File;
 use OCP\Files\Folder;
@@ -52,6 +54,8 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.TooManyPublicMethods)
  */
 class AnonymizationControllerTest extends TestCase {
+	use ReadsAnonymizeOptions;
+
 
 	/**
 	 * Mocked IRequest
@@ -142,11 +146,9 @@ class AnonymizationControllerTest extends TestCase {
 		$this->mockRootFolder->method('getUserFolder')->willReturn($mockFolder);
 
 		$this->controller = new AnonymizationController(
-			appName: 'filinq',
+			services: new AnonymizationServices(anonymization: $this->mockAnonService, files: $this->mockFileService),
 			request: $this->mockRequest,
 			logger: $this->mockLogger,
-			anonymizationService: $this->mockAnonService,
-			fileListingService: $this->mockFileService,
 			l10n: $this->mockL10n,
 			appConfig: $this->createMock(\OCP\IAppConfig::class),
 			anonymizeRequest: new AnonymizeRequestService(logger: $this->mockLogger, anonymizationService: $this->mockAnonService, l10n: $this->mockL10n, rootFolder: $this->mockRootFolder, userSession: $this->mockUserSession)
@@ -322,11 +324,9 @@ class AnonymizationControllerTest extends TestCase {
 		$emptyRootFolder->method('getUserFolder')->willReturn($emptyFolder);
 
 		$controller = new AnonymizationController(
-			appName: 'filinq',
+			services: new AnonymizationServices(anonymization: $this->mockAnonService, files: $this->mockFileService),
 			request: $this->mockRequest,
 			logger: $this->mockLogger,
-			anonymizationService: $this->mockAnonService,
-			fileListingService: $this->mockFileService,
 			l10n: $this->mockL10n,
 			appConfig: $this->createMock(\OCP\IAppConfig::class),
 			anonymizeRequest: new AnonymizeRequestService(logger: $this->mockLogger, anonymizationService: $this->mockAnonService, l10n: $this->mockL10n, rootFolder: $emptyRootFolder, userSession: $this->mockUserSession)
@@ -412,11 +412,9 @@ class AnonymizationControllerTest extends TestCase {
 		$emptyRootFolder->method('getUserFolder')->willReturn($emptyFolder);
 
 		$controller = new AnonymizationController(
-			appName: 'filinq',
+			services: new AnonymizationServices(anonymization: $this->mockAnonService, files: $this->mockFileService),
 			request: $this->mockRequest,
 			logger: $this->mockLogger,
-			anonymizationService: $this->mockAnonService,
-			fileListingService: $this->mockFileService,
 			l10n: $this->mockL10n,
 			appConfig: $this->createMock(\OCP\IAppConfig::class),
 			anonymizeRequest: new AnonymizeRequestService(logger: $this->mockLogger, anonymizationService: $this->mockAnonService, l10n: $this->mockL10n, rootFolder: $emptyRootFolder, userSession: $this->mockUserSession)
@@ -590,14 +588,18 @@ class AnonymizationControllerTest extends TestCase {
 		$this->mockAnonService->expects($this->once())
 			->method('anonymizeDocument')
 			->with(
-				fileId: 42,
-				entities: $entities,
-				outputFormat: 'pdf-only',
-				unredactedEntities: [],
-				overrides: [],
-				userId: 'test-user',
-				scope: 'document',
-				dossierKey: null
+				42,
+				$entities,
+				$this->optionsWith(
+					[
+						'outputFormat' => 'pdf-only',
+						'unredactedEntities' => [],
+						'overrides' => [],
+						'userId' => 'test-user',
+						'scope' => 'document',
+						'dossierKey' => null,
+					]
+				)
 			)
 			->willReturn(['replacementCount' => 1, 'anonymizedFileId' => 'file-42']);
 
@@ -630,9 +632,13 @@ class AnonymizationControllerTest extends TestCase {
 		$this->mockAnonService->expects($this->once())
 			->method('anonymizeDocumentWithBasisSummary')
 			->with(
-				fileId: 10,
-				entities: $entities,
-				outputFormat: 'pdf'
+				10,
+				$entities,
+				$this->optionsWith(
+					[
+						'outputFormat' => 'pdf',
+					]
+				)
 			)
 			->willReturn(['replacementCount' => 2, 'anonymizedFileId' => 'file-10']);
 
@@ -664,9 +670,13 @@ class AnonymizationControllerTest extends TestCase {
 		$this->mockAnonService->expects($this->once())
 			->method('anonymizeDocumentWithBasisSummary')
 			->with(
-				fileId: 20,
-				entities: $entities,
-				outputFormat: 'preserve'
+				20,
+				$entities,
+				$this->optionsWith(
+					[
+						'outputFormat' => 'preserve',
+					]
+				)
 			)
 			->willReturn(
 				[
@@ -766,11 +776,9 @@ class AnonymizationControllerTest extends TestCase {
 		$session->method('getUser')->willReturn(null);
 		$this->mockRequest->expects($this->never())->method('getParams');
 		$controller = new AnonymizationController(
-			appName: 'filinq',
+			services: new AnonymizationServices(anonymization: $this->mockAnonService, files: $this->mockFileService),
 			request: $this->mockRequest,
 			logger: $this->mockLogger,
-			anonymizationService: $this->mockAnonService,
-			fileListingService: $this->mockFileService,
 			l10n: $this->mockL10n,
 			appConfig: $this->createMock(originalClassName: \OCP\IAppConfig::class),
 			anonymizeRequest: new AnonymizeRequestService(logger: $this->mockLogger, anonymizationService: $this->mockAnonService, l10n: $this->mockL10n, rootFolder: $this->mockRootFolder, userSession: $session)
@@ -795,11 +803,9 @@ class AnonymizationControllerTest extends TestCase {
 		$session->method('getUser')->willReturn(null);
 		$this->mockFileService->expects($this->never())->method('listProcessedFiles');
 		$controller = new AnonymizationController(
-			appName: 'filinq',
+			services: new AnonymizationServices(anonymization: $this->mockAnonService, files: $this->mockFileService),
 			request: $this->mockRequest,
 			logger: $this->mockLogger,
-			anonymizationService: $this->mockAnonService,
-			fileListingService: $this->mockFileService,
 			l10n: $this->mockL10n,
 			appConfig: $this->createMock(originalClassName: \OCP\IAppConfig::class),
 			anonymizeRequest: new AnonymizeRequestService(
@@ -855,14 +861,18 @@ class AnonymizationControllerTest extends TestCase {
 		$this->mockAnonService->expects($this->once())
 			->method('anonymizeDocument')
 			->with(
-				fileId: 42,
-				entities: [['type' => 'PERSON', 'text' => 'John']],
-				outputFormat: 'pdf-only',
-				unredactedEntities: [],
-				overrides: [],
-				userId: 'test-user',
-				scope: 'dossier',
-				dossierKey: 'z-1'
+				42,
+				[['type' => 'PERSON', 'text' => 'John']],
+				$this->optionsWith(
+					[
+						'outputFormat' => 'pdf-only',
+						'unredactedEntities' => [],
+						'overrides' => [],
+						'userId' => 'test-user',
+						'scope' => 'dossier',
+						'dossierKey' => 'z-1',
+					]
+				)
 			)
 			->willReturn(['replacementCount' => 1, 'anonymizedFileId' => 'file-42']);
 

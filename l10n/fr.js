@@ -1673,7 +1673,7 @@ OC.L10N.register(
         "What is being anonymised, from where, and what failed.": "Ce qui est anonymisé, d'où, et ce qui a échoué.",
         "What the templates generated, in which format, and what went out as correspondence.": "Ce que les modèles ont généré, dans quel format, et ce qui est parti en correspondance.",
         "Template": "Modèle",
-        "Store": "Boutique",
+        "Marketplace": "Boutique",
         "Install document configurations that other organisations have published: a template set, an anonymisation policy, or the flows behind a signature.": "Installez des registres, schémas et flux publiés par d'autres organisations.",
         "Conformance report": "Rapport de conformité",
         "What veraPDF found when it checked one PDF against the PDF/A standard: the level, the verdict, the rules broken and the fonts missing. Rule references and font names only, never text from the document.": "Ce que veraPDF a trouvé en vérifiant un PDF par rapport à la norme PDF/A : le niveau, le verdict, les règles enfreintes et les polices manquantes. Uniquement des références de règles et des noms de polices, jamais de texte du document.",

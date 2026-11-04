@@ -153,7 +153,7 @@ test.describe('contract lifecycle', () => {
 		await open(page, 'c-1')
 
 		await page.getByTestId('contract-terminate').click()
-		const confirm = page.getByTestId('contract-terminate-confirm')
+		const confirm = page.getByTestId('cn-dialog-actions-submit')
 		await expect(confirm).toBeDisabled()
 		await page
 			.getByTestId('contract-terminate-reason')
@@ -206,13 +206,13 @@ test.describe('contract lifecycle', () => {
 		await page.getByTestId('contract-generate').click()
 		await page.getByTestId('contract-generate-template').click()
 		await page.getByRole('option', { name: 'Raamovereenkomst' }).click()
-		await page.getByTestId('contract-generate-confirm').click()
+		await page.getByTestId('cn-dialog-actions-submit').click()
 		await expect(page.getByTestId('contract-documents')).toContainText('File 88')
 		expect(contracts['c-1'].documents).toEqual(['88'])
 
 		await page.getByTestId('contract-send-for-signature').click()
 		await page.getByTestId('contract-sign-user').locator('input').fill('admin')
-		await page.getByTestId('contract-sign-confirm').click()
+		await page.getByTestId('cn-dialog-actions-submit').click()
 		await expect(page.getByTestId('contract-signing-status')).toContainText(
 			'DRAFT',
 		)

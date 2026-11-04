@@ -32,6 +32,9 @@ namespace OCA\Filinq\Service;
 
 use Exception;
 use OCA\Filinq\Kernel\Contracts\DocumentServiceInterface;
+use OCA\Filinq\Service\Support\DocumentOutput;
+use OCA\Filinq\Service\Support\DocumentProduction;
+use OCA\Filinq\Service\Support\TemplateSources;
 use OCA\Filinq\Service\Wizard\WizardGenerationGate;
 
 /**
@@ -102,12 +105,9 @@ class DocumentService implements DocumentServiceInterface {
 	/**
 	 * Constructor for DocumentService.
 	 *
-	 * @param TemplateService $templateService Service for template CRUD
-	 * @param DataResolverService $dataResolver Service for OpenRegister data resolution
-	 * @param DocumentRenderPipeline $renderPipeline Huisstijl + Twig rendering and output production
-	 * @param DocumentStorageService $storageService Service for storing output in Files
-	 * @param GeneratedDocumentLogger $documentLogger Audit-trail writer for generated documents
-	 * @param DocumentJobStore $jobs Status records and queueing of async bulk jobs
+	 * @param TemplateSources $sources The template and data sources
+	 * @param DocumentProduction $production The render pipeline and the job store
+	 * @param DocumentOutput $output Where generated documents are stored and logged
 	 * @param PlainLanguageRenditionService|null $plainRendition The plain-language counterpart, when a template declares one
 	 * @param WizardGenerationGate|null $wizardGate Checks a wizard run before it renders (options.wizardContext)
 	 * @param TemplateMergeFieldService|null $mergeFields Names the fields a template fills, for the merge preview
@@ -115,12 +115,9 @@ class DocumentService implements DocumentServiceInterface {
 	 * @return void
 	 */
 	public function __construct(
-		private readonly TemplateService $templateService,
-		private readonly DataResolverService $dataResolver,
-		private readonly DocumentRenderPipeline $renderPipeline,
-		private readonly DocumentStorageService $storageService,
-		private readonly GeneratedDocumentLogger $documentLogger,
-		private readonly DocumentJobStore $jobs,
+		private readonly TemplateSources $sources,
+		private readonly DocumentProduction $production,
+		private readonly DocumentOutput $output,
 		private readonly ?PlainLanguageRenditionService $plainRendition = null,
 		private readonly ?WizardGenerationGate $wizardGate = null,
 		private readonly ?TemplateMergeFieldService $mergeFields = null,
@@ -180,10 +177,10 @@ class DocumentService implements DocumentServiceInterface {
 
 		$template = null;
 		if (isset($options['templateVersion']) === true) {
-			$template = $this->templateService->getTemplateAtVersion(id: $templateId, version: (int) $options['templateVersion']);
+			$template = $this->sources->templates->getTemplateAtVersion(id: $templateId, version: (int) $options['templateVersion']);
 		}
 
-		$template ??= $this->templateService->getTemplate(id: $templateId);
+		$template ??= $this->sources->templates->getTemplate(id: $templateId);
 
 		if (isset($options['wizardContext']) === true && $this->wizardGate !== null) {
 			// A wizard run: the answers are checked against the stored wizard before
@@ -285,7 +282,7 @@ class DocumentService implements DocumentServiceInterface {
 	 * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
 	 */
 	private function resolveTemplateData(array $run): array {
-		$resolution = $this->dataResolver->resolve(
+		$resolution = $this->sources->data->resolve(
 			dataRefs: $run['dataRefs'],
 			listRefs: ($run['options']['listRefs'] ?? []),
 			adHocData: ($run['options']['adHocData'] ?? [])
@@ -312,14 +309,14 @@ class DocumentService implements DocumentServiceInterface {
 	 * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
 	 */
 	private function renderDocument(array $run, array $resolved): array {
-		$huisstijl    = $this->renderPipeline->loadHuisstijl(huisstijlId: ($run['options']['huisstijlId'] ?? null));
-		$pdfOptions   = $this->renderPipeline->buildPdfOptions(template: $run['template'], huisstijl: $huisstijl, options: $run['options']);
-		$renderResult = $this->renderPipeline->renderWithHuisstijl(
+		$huisstijl    = $this->production->pipeline->loadHuisstijl(huisstijlId: ($run['options']['huisstijlId'] ?? null));
+		$pdfOptions   = $this->production->pipeline->buildPdfOptions(template: $run['template'], huisstijl: $huisstijl, options: $run['options']);
+		$renderResult = $this->production->pipeline->renderWithHuisstijl(
 			templateContent: $run['template']['content'],
 			data: $resolved['data'],
 			huisstijl: $huisstijl
 		);
-		$content      = $this->renderPipeline->produceOutput(
+		$content      = $this->production->pipeline->produceOutput(
 			htmlContent: $renderResult['html'],
 			format: $run['format'],
 			pdfOptions: $pdfOptions
@@ -331,7 +328,7 @@ class DocumentService implements DocumentServiceInterface {
 			'pdfOptions' => $pdfOptions,
 			'html' => $renderResult['html'],
 			'content' => $content,
-			'warnings' => array_merge($resolved['warnings'], $renderResult['warnings'], $this->renderPipeline->getLastOutputWarnings()),
+			'warnings' => array_merge($resolved['warnings'], $renderResult['warnings'], $this->production->pipeline->getLastOutputWarnings()),
 		];
 	}//end renderDocument()
 
@@ -346,7 +343,7 @@ class DocumentService implements DocumentServiceInterface {
 	 * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
 	 */
 	private function logGenerated(array $run, array $outcome): array {
-		return $this->documentLogger->log(
+		return $this->output->log->log(
 			generation: new DocumentGenerationRecord(
 				template: [
 					'id' => $run['templateId'],
@@ -398,7 +395,7 @@ class DocumentService implements DocumentServiceInterface {
 				'name' => $stored['name'],
 				'size' => $stored['size'],
 			],
-		] + $this->renderPipeline->describeOutput(content: $content, format: $run['format']);
+		] + $this->production->pipeline->describeOutput(content: $content, format: $run['format']);
 	}//end generationResult()
 
 
@@ -428,7 +425,7 @@ class DocumentService implements DocumentServiceInterface {
 		array $dataRefs,
 		array $options = [],
 	): array {
-		$template = $this->templateService->getTemplate(id: $templateId);
+		$template = $this->sources->templates->getTemplate(id: $templateId);
 		$preview = $this->renderPreview(run: ['template' => $template, 'dataRefs' => $dataRefs, 'options' => $options]);
 
 		return [
@@ -461,7 +458,7 @@ class DocumentService implements DocumentServiceInterface {
 		array $dataRefs,
 		array $options = [],
 	): array {
-		$template = $this->templateService->getTemplate(id: $templateId);
+		$template = $this->sources->templates->getTemplate(id: $templateId);
 		$preview = $this->renderPreview(run: ['template' => $template, 'dataRefs' => $dataRefs, 'options' => $options]);
 		$mergeFields = ($this->mergeFields ?? new TemplateMergeFieldService());
 		$merge = $mergeFields->resolve(template: $template, data: $preview['data']);
@@ -489,8 +486,8 @@ class DocumentService implements DocumentServiceInterface {
 	private function renderPreview(array $run): array {
 		$resolved = $this->resolveTemplateData(run: $run);
 
-		$huisstijl = $this->renderPipeline->loadHuisstijl(huisstijlId: ($run['options']['huisstijlId'] ?? null));
-		$renderResult = $this->renderPipeline->renderWithHuisstijl(
+		$huisstijl = $this->production->pipeline->loadHuisstijl(huisstijlId: ($run['options']['huisstijlId'] ?? null));
+		$renderResult = $this->production->pipeline->renderWithHuisstijl(
 			templateContent: $run['template']['content'],
 			data: $resolved['data'],
 			huisstijl: $huisstijl
@@ -550,7 +547,7 @@ class DocumentService implements DocumentServiceInterface {
 		$count = count($objectIds);
 
 		if ($count <= self::SYNC_BATCH_LIMIT) {
-			$bulk = new SyncBulkGeneration(documents: $this, documentLogger: $this->documentLogger);
+			$bulk = new SyncBulkGeneration(documents: $this, documentLogger: $this->output->log);
 			return $bulk->run(templateId: $templateId, objectIds: $objectIds, options: $options);
 		}
 
@@ -597,7 +594,7 @@ class DocumentService implements DocumentServiceInterface {
 	 * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
 	 */
 	public function getJobStatus(string $jobId): ?array {
-		return $this->jobs->get(jobId: $jobId);
+		return $this->production->jobs->get(jobId: $jobId);
 
 	}//end getJobStatus()
 
@@ -612,7 +609,7 @@ class DocumentService implements DocumentServiceInterface {
 	 * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
 	 */
 	public function updateJobStatus(string $jobId, array $status): void {
-		$this->jobs->put(jobId: $jobId, status: $status);
+		$this->production->jobs->put(jobId: $jobId, status: $status);
 
 	}//end updateJobStatus()
 
@@ -689,7 +686,7 @@ class DocumentService implements DocumentServiceInterface {
 
 		if ($template === null) {
 			try {
-				$template = $this->templateService->getTemplate(id: $templateId);
+				$template = $this->sources->templates->getTemplate(id: $templateId);
 			} catch (Exception $e) {
 				$template = [];
 			}
@@ -784,13 +781,13 @@ class DocumentService implements DocumentServiceInterface {
 			return ['rendition' => null, 'record' => [], 'warnings' => []];
 		}
 
-		$rendered = $this->renderPipeline->renderWithHuisstijl(
+		$rendered = $this->production->pipeline->renderWithHuisstijl(
 			templateContent: $plan['content'],
 			data: $formal['data'],
 			huisstijl: $formal['huisstijl']
 		);
 
-		$content = $this->renderPipeline->produceOutput(
+		$content = $this->production->pipeline->produceOutput(
 			htmlContent: $rendered['html'],
 			format: $run['format'],
 			pdfOptions: $formal['pdfOptions']
@@ -803,7 +800,7 @@ class DocumentService implements DocumentServiceInterface {
 		] + $run;
 		$stored   = $this->storeOutputIfRequested(
 			run: $plainRun,
-			output: ['content' => $content, 'warnings' => $this->renderPipeline->getLastOutputWarnings()]
+			output: ['content' => $content, 'warnings' => $this->production->pipeline->getLastOutputWarnings()]
 		);
 
 		$record = $this->plainRendition->recordFields(
@@ -865,7 +862,7 @@ class DocumentService implements DocumentServiceInterface {
 	private function fileOutput(array $run, array $output): array {
 		$target = $this->storeTarget(run: $run);
 		try {
-			$stored = $this->storageService->store(...$target, content: $output['content']);
+			$stored = $this->output->storage->store(...$target, content: $output['content']);
 		} catch (Exception $e) {
 			$this->rethrowUnlessTolerated(run: $run, failure: $e);
 			$stored = [];
@@ -961,7 +958,7 @@ class DocumentService implements DocumentServiceInterface {
 		$templateId = $run['templateId'];
 		$objectIds = $run['objectIds'];
 		$options = $run['options'];
-		$jobId = $this->jobs->newId();
+		$jobId = $this->production->jobs->newId();
 
 		$baseTargetPath = $this->buildOutputTargetPath(
 			templateId: $templateId,
@@ -978,7 +975,7 @@ class DocumentService implements DocumentServiceInterface {
 			'results' => [],
 			'options' => $options,
 		];
-		$this->jobs->enqueue(
+		$this->production->jobs->enqueue(
 			jobId: $jobId,
 			status: $initialStatus,
 			argument: [

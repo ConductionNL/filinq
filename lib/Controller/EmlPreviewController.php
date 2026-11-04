@@ -21,6 +21,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
+use OCA\Filinq\Kernel\AppIdentity;
 use OCA\Filinq\Kernel\Contracts\EmlPreviewServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -50,7 +51,6 @@ class EmlPreviewController extends Controller {
 	/**
 	 * Constructor.
 	 *
-	 * @param string $appName App identifier.
 	 * @param IRequest $request The current request.
 	 * @param EmlPreviewServiceInterface $emlPreviewService Renders the original EML to PDF.
 	 * @param LoggerInterface $logger Logger for diagnostics.
@@ -59,7 +59,6 @@ class EmlPreviewController extends Controller {
 	 * @param IL10N $l10n Translations for the guard responses.
 	 */
 	public function __construct(
-		string $appName,
 		IRequest $request,
 		private readonly EmlPreviewServiceInterface $emlPreviewService,
 		private readonly LoggerInterface $logger,
@@ -67,7 +66,7 @@ class EmlPreviewController extends Controller {
 		private readonly IRootFolder $rootFolder,
 		private readonly IL10N $l10n,
 	) {
-		parent::__construct(appName: $appName, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 
 	}//end __construct()
 

@@ -25,6 +25,7 @@ namespace OCA\Filinq\Tests\Unit;
 
 use OCA\Filinq\Controller\CorrespondenceController;
 use OCA\Filinq\Controller\SigningController;
+use OCA\Filinq\Controller\Support\SigningServices;
 use OCA\Filinq\Service\BatchStateRepository;
 use OCA\Filinq\Service\BatchStateService;
 use OCA\Filinq\Service\CorrespondenceService;
@@ -160,11 +161,8 @@ class Wave12SecurityRegressionTest extends TestCase {
 		IGroupManager $groupManager,
 	): SigningController {
 		return new SigningController(
-			'filinq',
 			$this->createMock(IRequest::class),
-			$signingService,
-			$this->createMock(SigningAuditService::class),
-			$this->createMock(SigningVerificationService::class),
+			new SigningServices(signing: $signingService, audit: $this->createMock(SigningAuditService::class), verification: $this->createMock(SigningVerificationService::class)),
 			$userSession,
 			$this->createMock(LoggerInterface::class),
 			$this->makeL10n(),

@@ -41,7 +41,6 @@ use Exception;
 use OCA\Filinq\Exception\DetectionUnavailableException;
 use OCA\Filinq\Exception\ProhibitionGateException;
 use OCA\Filinq\Kernel\AnonymizeCall;
-use OCA\Filinq\Kernel\Contracts\AnonymizationServiceInterface;
 use OCA\Filinq\Kernel\Contracts\AnonymizeRequestServiceInterface;
 use OCP\AppFramework\Http;
 use OCP\Files\File;
@@ -77,7 +76,7 @@ class AnonymizeRequestService implements AnonymizeRequestServiceInterface {
 	 * Constructor for AnonymizeRequestService
 	 *
 	 * @param LoggerInterface $logger Logger for gate failure reporting.
-	 * @param AnonymizationServiceInterface $anonymizationService Service for anonymization operations.
+	 * @param AnonymizationService $anonymizationService Service for anonymization operations.
 	 * @param IL10N $l10n The localization service.
 	 * @param IRootFolder $rootFolder Root folder for per-user file access checks.
 	 * @param IUserSession $userSession User session for authentication.
@@ -86,7 +85,7 @@ class AnonymizeRequestService implements AnonymizeRequestServiceInterface {
 	 */
 	public function __construct(
 		private readonly LoggerInterface $logger,
-		private readonly AnonymizationServiceInterface $anonymizationService,
+		private readonly AnonymizationService $anonymizationService,
 		private readonly IL10N $l10n,
 		private readonly IRootFolder $rootFolder,
 		private readonly IUserSession $userSession,
@@ -289,31 +288,20 @@ class AnonymizeRequestService implements AnonymizeRequestServiceInterface {
 	private function callAnonymizeDocument(AnonymizeCall $call, string $userId): array {
 		$request = $call->request;
 		$entities = $this->filterEntities(entities: $request['entities'], params: $call->params);
-		if ($request['appendBasisSummary'] === true) {
-			return $this->anonymizationService->anonymizeDocumentWithBasisSummary(
-				fileId: $call->fileId,
-				entities: $entities,
-				outputFormat: $call->outputFormat,
-				unredactedEntities: $request['unredactedEntities'],
-				overrides: $request['overrides'],
-				userId: $userId,
-				scope: $this->resolveScope(params: $call->params),
-				dossierKey: $this->resolveDossierKey(params: $call->params),
-				reversible: ($request['reversible'] ?? false) === true
-			);
+		$options = (new AnonymizeOptions())
+			->withOutputFormat(outputFormat: $call->outputFormat)
+			->withConsents(unredactedEntities: $request['unredactedEntities'], overrides: $request['overrides'])
+			->withUserId(userId: $userId)
+			->withScope(scope: $this->resolveScope(params: $call->params), dossierKey: $this->resolveDossierKey(params: $call->params));
+		if (($request['reversible'] ?? false) === true) {
+			$options = $options->reversible();
 		}
 
-		return $this->anonymizationService->anonymizeDocument(
-			fileId: $call->fileId,
-			entities: $entities,
-			outputFormat: $call->outputFormat,
-			unredactedEntities: $request['unredactedEntities'],
-			overrides: $request['overrides'],
-			userId: $userId,
-			scope: $this->resolveScope(params: $call->params),
-			dossierKey: $this->resolveDossierKey(params: $call->params),
-			reversible: ($request['reversible'] ?? false) === true
-		);
+		if ($request['appendBasisSummary'] === true) {
+			return $this->anonymizationService->anonymizeDocumentWithBasisSummary(fileId: $call->fileId, entities: $entities, options: $options);
+		}
+
+		return $this->anonymizationService->anonymizeDocument(fileId: $call->fileId, entities: $entities, options: $options);
 
 	}//end callAnonymizeDocument()
 

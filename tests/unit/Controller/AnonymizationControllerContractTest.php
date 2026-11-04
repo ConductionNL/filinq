@@ -36,6 +36,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\AnonymizationController;
+use OCA\Filinq\Controller\Support\AnonymizationServices;
 use OCA\Filinq\Service\AnonymizationService;
 use OCA\Filinq\Service\AnonymizeRequestService;
 use OCA\Filinq\Service\FileListingService;
@@ -169,11 +170,9 @@ class AnonymizationControllerContractTest extends TestCase {
 
 		$logger = $this->createMock(LoggerInterface::class);
 		return new AnonymizationController(
-			appName: 'filinq',
+			services: new AnonymizationServices(anonymization: $this->anonService, files: $this->fileService),
 			request: $this->request,
 			logger: $logger,
-			anonymizationService: $this->anonService,
-			fileListingService: $this->fileService,
 			l10n: $this->l10n,
 			appConfig: $this->createMock(IAppConfig::class),
 			anonymizeRequest: new AnonymizeRequestService(logger: $logger, anonymizationService: $this->anonService, l10n: $this->l10n, rootFolder: $rootFolder, userSession: $session)

@@ -27,6 +27,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Event;
 
+use OCA\Filinq\Event\Support\IntakeArrival;
 use OCP\EventDispatcher\Event;
 
 /**
@@ -75,6 +76,27 @@ class IntakeDocumentReceivedEvent extends Event {
 	];
 
 	/**
+	 * The channel's own reference for this delivery.
+	 *
+	 * @var string
+	 */
+	private readonly string $sourceRef;
+
+	/**
+	 * When it arrived, ISO 8601, or null for now.
+	 *
+	 * @var string|null
+	 */
+	private readonly ?string $receivedAt;
+
+	/**
+	 * The intake document of the message this file came as an attachment of.
+	 *
+	 * @var string
+	 */
+	private readonly string $arrivedWith;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param string $channel The channel that delivered the document.
@@ -82,11 +104,11 @@ class IntakeDocumentReceivedEvent extends Event {
 	 * @param string $fileName Name of the delivered file.
 	 * @param string $subject Subject line or document title.
 	 * @param string $sender Who sent it.
-	 * @param string $sourceRef The channel's own reference for this delivery.
-	 * @param string|null $receivedAt When it arrived, ISO 8601, or null for now.
-	 * @param string $arrivedWith The intake document of the message this file came as an attachment of.
+	 * @param IntakeArrival|null $arrival The channel's reference, the arrival time and the message it came with.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	public function __construct(
 		private readonly string $channel,
@@ -94,11 +116,13 @@ class IntakeDocumentReceivedEvent extends Event {
 		private readonly string $fileName = '',
 		private readonly string $subject = '',
 		private readonly string $sender = '',
-		private readonly string $sourceRef = '',
-		private readonly ?string $receivedAt = null,
-		private readonly string $arrivedWith = '',
+		?IntakeArrival $arrival = null,
 	) {
 		parent::__construct();
+		$arrival ??= new IntakeArrival();
+		$this->sourceRef   = $arrival->sourceRef;
+		$this->receivedAt  = $arrival->receivedAt;
+		$this->arrivedWith = $arrival->arrivedWith;
 
 	}//end __construct()
 
@@ -106,6 +130,8 @@ class IntakeDocumentReceivedEvent extends Event {
 	 * The channel that delivered the document.
 	 *
 	 * @return string The channel.
+	 *
+	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	public function getChannel(): string {
 		return $this->channel;
@@ -116,6 +142,8 @@ class IntakeDocumentReceivedEvent extends Event {
 	 * The Nextcloud file id, when the channel stored a file.
 	 *
 	 * @return int|null The file id.
+	 *
+	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	public function getFileId(): ?int {
 		return $this->fileId;
@@ -126,6 +154,8 @@ class IntakeDocumentReceivedEvent extends Event {
 	 * The file name as delivered.
 	 *
 	 * @return string The file name.
+	 *
+	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	public function getFileName(): string {
 		return $this->fileName;
@@ -136,6 +166,8 @@ class IntakeDocumentReceivedEvent extends Event {
 	 * The subject line or document title.
 	 *
 	 * @return string The subject.
+	 *
+	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	public function getSubject(): string {
 		return $this->subject;
@@ -146,6 +178,8 @@ class IntakeDocumentReceivedEvent extends Event {
 	 * Who sent the document.
 	 *
 	 * @return string The sender.
+	 *
+	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	public function getSender(): string {
 		return $this->sender;
@@ -156,6 +190,8 @@ class IntakeDocumentReceivedEvent extends Event {
 	 * The channel's own reference for this delivery.
 	 *
 	 * @return string The reference.
+	 *
+	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	public function getSourceRef(): string {
 		return $this->sourceRef;
@@ -166,6 +202,8 @@ class IntakeDocumentReceivedEvent extends Event {
 	 * When the document arrived.
 	 *
 	 * @return string|null The ISO 8601 timestamp, or null when the channel did not say.
+	 *
+	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	public function getReceivedAt(): ?string {
 		return $this->receivedAt;
@@ -181,6 +219,8 @@ class IntakeDocumentReceivedEvent extends Event {
 	 * say so.
 	 *
 	 * @return string The intake document uuid of the message, or an empty string.
+	 *
+	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	public function getArrivedWith(): string {
 		return $this->arrivedWith;
