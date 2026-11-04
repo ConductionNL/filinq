@@ -2270,11 +2270,21 @@ class TaskSequence {
 		private readonly ?string $anchorObjectUuid = null,
 		private readonly ?string $outcome = null,
 		private readonly ?string $chainKey = null,
+		private readonly ?array $templateSnapshot = null,
+		private readonly ?array $resolvedTier = null,
 	) {
 	}
 
 	public function getUuid(): ?string {
 		return $this->uuid;
+	}
+
+	public function getTemplateSnapshot(): ?array {
+		return $this->templateSnapshot;
+	}
+
+	public function getResolvedTier(): ?array {
+		return $this->resolvedTier;
 	}
 
 	public function getAnchorObjectUuid(): ?string {

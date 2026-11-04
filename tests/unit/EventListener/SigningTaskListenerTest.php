@@ -48,6 +48,7 @@ use OCP\EventDispatcher\IEventDispatcher;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use stdClass;
@@ -64,6 +65,8 @@ use stdClass;
  * @uses \OCA\Filinq\Event\SignerChainCompletedEvent
  * @uses \OCA\Filinq\EventListener\SignerStepDecision
  * @uses \OCA\Filinq\EventListener\SignerStepTask
+ * @uses \OCA\Filinq\EventListener\SignerApprovals
+ * @uses \OCA\Filinq\EventListener\SignerSequenceTasks
  *
  * @category Tests
  * @package  OCA\Filinq\Tests\Unit\EventListener
@@ -143,7 +146,10 @@ final class SigningTaskListenerTest extends TestCase {
 		$this->settingsService = $this->createMock(SettingsService::class);
 		$this->objectService = $this->createMock(ObjectService::class);
 		$this->logger = $this->createMock(LoggerInterface::class);
-		$this->sequenceTasks = $this->createMock(SignerSequenceTasks::class);
+		$this->sequenceTasks = $this->getMockBuilder(SignerSequenceTasks::class)
+			->setConstructorArgs([$this->sequenceContainer(), $this->logger])
+			->onlyMethods(['forSequence'])
+			->getMock();
 
 		$this->settingsService->method('resolveSigningRequestBinding')
 			->willReturn(['register' => 'filinq', 'schema' => 'signingRequest']);
@@ -182,6 +188,104 @@ final class SigningTaskListenerTest extends TestCase {
 			sequenceTasks: $this->sequenceTasks
 		);
 	}//end makeListener()
+
+	/**
+	 * The declared sequence the fake TaskSequenceMapper answers, or null for none.
+	 *
+	 * @var TaskSequence|null
+	 */
+	private ?TaskSequence $declaredSequence = null;
+
+	/**
+	 * A container whose OR TaskSequenceMapper answers the declared sequence.
+	 *
+	 * @return ContainerInterface
+	 */
+	private function sequenceContainer(): ContainerInterface {
+		$test = $this;
+		$mapper = new class($test) {
+			/**
+			 * Constructor.
+			 *
+			 * @param SigningTaskListenerTest $test The test holding the declared sequence.
+			 */
+			public function __construct(private SigningTaskListenerTest $test) {
+			}
+
+			/**
+			 * The sequence by uuid.
+			 *
+			 * @param string $uuid The sequence uuid.
+			 *
+			 * @return TaskSequence
+			 */
+			public function findByUuid(string $uuid): TaskSequence {
+				$sequence = $this->test->declared();
+				if ($sequence === null || $sequence->getUuid() !== $uuid) {
+					throw new RuntimeException('no such sequence');
+				}
+
+				return $sequence;
+			}
+		};
+
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->willReturnCallback(
+			static function (string $id) use ($mapper): object {
+				if ($id === 'OCA\\OpenRegister\\Db\\TaskSequenceMapper') {
+					return $mapper;
+				}
+
+				throw new RuntimeException('not in this container: ' . $id);
+			}
+		);
+
+		return $container;
+	}//end sequenceContainer()
+
+	/**
+	 * The declared sequence, read by the fake mapper.
+	 *
+	 * @return TaskSequence|null
+	 */
+	public function declared(): ?TaskSequence {
+		return $this->declaredSequence;
+	}//end declared()
+
+	/**
+	 * Declare the signing chain's positions on sequence `seq-1`.
+	 *
+	 * @param array<int, int> $orders The declared position ordinals.
+	 * @param string          $anchor The sequence's anchor object.
+	 *
+	 * @return void
+	 */
+	private function declareChain(array $orders, string $anchor = self::OWNED_OBJECT): void {
+		$positions = [];
+		foreach ($orders as $order) {
+			$positions[] = ['order' => $order, 'role' => 'filinq-signers'];
+		}
+
+		$this->declaredSequence = new TaskSequence(
+			uuid: 'seq-1',
+			anchorObjectUuid: $anchor,
+			templateSnapshot: ['name' => 'sign', 'positions' => $positions]
+		);
+	}//end declareChain()
+
+	/**
+	 * Announce an enabled task and expect no signer to be asked.
+	 *
+	 * @param Task $enabled The enabled task.
+	 *
+	 * @return void
+	 */
+	private function expectNoSignerAsked(Task $enabled): void {
+		$this->providerFactory->expects($this->never())->method('getActiveProviderIdentifier');
+		$this->dispatcher->expects($this->never())->method('dispatchTyped');
+
+		$this->listener->handle(new TaskTransitionedEvent(task: $enabled, previousState: 'available'));
+	}//end expectNoSignerAsked()
 
 	/**
 	 * Build a sequence task.
@@ -243,6 +347,15 @@ final class SigningTaskListenerTest extends TestCase {
 				)
 			);
 
+		$this->declareChain(orders: [1, 2, 3]);
+		$this->sequenceTasks->method('forSequence')->with('seq-1')->willReturn(
+			[
+				$this->positionTask(position: 1, outcome: 'approved', completedBy: 'alice'),
+				$this->makeTask(state: 'enabled'),
+				new Task(uuid: 'task-3', state: 'available', sequenceUuid: 'seq-1', sequencePosition: 3),
+			]
+		);
+
 		$event = new TaskTransitionedEvent(
 			task: $this->makeTask(state: 'enabled'),
 			previousState: 'available'
@@ -250,6 +363,273 @@ final class SigningTaskListenerTest extends TestCase {
 		$this->listener->handle($event);
 
 	}//end testEnabledTransitionDispatchesPendingAndInvokesProvider()
+
+	/**
+	 * Earlier positions that are not a signed approval.
+	 *
+	 * @return array<string, array{0: string|null, 1: string|null}>
+	 */
+	public static function unsignedEarlierPositions(): array {
+		return [
+			'done' => ['done', 'alice'],
+			'empty outcome' => ['', 'alice'],
+			'no outcome' => [null, 'alice'],
+			'resolved' => ['resolved', 'alice'],
+			'approved without signer' => ['approved', null],
+			'approved with blank signer' => ['approved', '  '],
+		];
+	}//end unsignedEarlierPositions()
+
+	/**
+	 * A position enabled after an earlier position that was not a signed
+	 * approval is not a signer's turn: no pending event, no provider call.
+	 *
+	 * @param string|null $outcome     The earlier position's outcome.
+	 * @param string|null $completedBy The earlier position's completing user.
+	 *
+	 * @return void
+	 */
+	#[DataProvider('unsignedEarlierPositions')]
+	public function testEnabledPositionAfterAnUnsignedEarlierPositionInvokesNoProvider(?string $outcome, ?string $completedBy): void {
+		$this->declareChain(orders: [1, 2]);
+		$this->sequenceTasks->method('forSequence')->with('seq-1')->willReturn(
+			[$this->positionTask(position: 1, outcome: $outcome, completedBy: $completedBy), $this->makeTask(state: 'enabled')]
+		);
+		$this->providerFactory->expects($this->never())->method('getActiveProviderIdentifier');
+		$this->dispatcher->expects($this->never())->method('dispatchTyped');
+		$this->logger->expects($this->once())->method('warning')->with(
+			$this->stringContains('no signer is asked'),
+			['sequenceUuid' => 'seq-1', 'taskUuid' => 'task-1', 'objectUuid' => self::OWNED_OBJECT]
+		);
+
+		$this->listener->handle(new TaskTransitionedEvent(task: $this->makeTask(state: 'enabled'), previousState: 'available'));
+
+	}//end testEnabledPositionAfterAnUnsignedEarlierPositionInvokesNoProvider()
+
+	/**
+	 * Earlier positions that cannot be read, or are missing, fail closed.
+	 *
+	 * @return array<string, array{0: array<int, Task>|null}>
+	 */
+	public static function unreadableEarlierPositions(): array {
+		return [
+			'unreadable' => [null],
+			'empty' => [[]],
+			'only the enabled position' => [[new Task(uuid: 'task-1', state: 'enabled', sequenceUuid: 'seq-1', sequencePosition: 2)]],
+		];
+	}//end unreadableEarlierPositions()
+
+	/**
+	 * A position whose earlier positions cannot be read is not announced.
+	 *
+	 * @param array<int, Task>|null $tasks What the reader returns.
+	 *
+	 * @return void
+	 */
+	#[DataProvider('unreadableEarlierPositions')]
+	public function testUnreadableEarlierPositionsInvokeNoProvider(?array $tasks): void {
+		$this->declareChain(orders: [1, 2]);
+		$this->sequenceTasks->method('forSequence')->willReturn($tasks);
+		$this->providerFactory->expects($this->never())->method('getActiveProviderIdentifier');
+		$this->dispatcher->expects($this->never())->method('dispatchTyped');
+
+		$this->listener->handle(new TaskTransitionedEvent(task: $this->makeTask(state: 'enabled'), previousState: 'available'));
+
+	}//end testUnreadableEarlierPositionsInvokeNoProvider()
+
+	/**
+	 * The first position has no earlier signer to wait for.
+	 *
+	 * @return void
+	 */
+	public function testTheFirstDeclaredPositionIsAnnounced(): void {
+		$this->declareChain(orders: [1, 2]);
+		$this->providerFactory->expects($this->once())->method('getActiveProviderIdentifier')->willReturn('native');
+		$this->dispatcher->expects($this->once())->method('dispatchTyped')
+			->with($this->isInstanceOf(SignerStepPendingEvent::class));
+
+		$first = new Task(
+			uuid: 'task-1',
+			state: 'enabled',
+			candidateGroups: ['filinq-signers'],
+			objectUuid: self::OWNED_OBJECT,
+			sequenceUuid: 'seq-1',
+			sequencePosition: 1
+		);
+		$this->sequenceTasks->method('forSequence')->willReturn([$first]);
+		$this->listener->handle(new TaskTransitionedEvent(task: $first, previousState: 'available'));
+
+	}//end testTheFirstDeclaredPositionIsAnnounced()
+
+	/**
+	 * An enabled task without a position is not a signer's turn.
+	 *
+	 * @return void
+	 */
+	public function testAPositionlessTaskAsksNoSigner(): void {
+		$this->declareChain(orders: [1, 2]);
+		$this->sequenceTasks->method('forSequence')->willReturn([]);
+
+		$this->expectNoSignerAsked(
+			new Task(uuid: 'task-1', state: 'enabled', objectUuid: self::OWNED_OBJECT, sequenceUuid: 'seq-1', sequencePosition: null)
+		);
+	}//end testAPositionlessTaskAsksNoSigner()
+
+	/**
+	 * A missing position is not read as position 0, even when the chain declares 0.
+	 *
+	 * @return void
+	 */
+	public function testAPositionlessTaskIsNotPositionZero(): void {
+		$this->declareChain(orders: [0, 1]);
+		$loose = new Task(uuid: 'task-1', state: 'enabled', objectUuid: self::OWNED_OBJECT, sequenceUuid: 'seq-1', sequencePosition: null);
+		$this->sequenceTasks->method('forSequence')->willReturn([]);
+
+		$this->expectNoSignerAsked($loose);
+	}//end testAPositionlessTaskIsNotPositionZero()
+
+	/**
+	 * A task at a lower position makes position 1 not the first.
+	 *
+	 * @return void
+	 */
+	public function testATaskAtPositionZeroMakesPositionOneWait(): void {
+		$this->declareChain(orders: [1, 2]);
+		$first = new Task(uuid: 'task-1', state: 'enabled', objectUuid: self::OWNED_OBJECT, sequenceUuid: 'seq-1', sequencePosition: 1);
+		$this->sequenceTasks->method('forSequence')->willReturn(
+			[$this->positionTask(position: 0, outcome: 'done', completedBy: 'mallory'), $first]
+		);
+
+		$this->expectNoSignerAsked($first);
+	}//end testATaskAtPositionZeroMakesPositionOneWait()
+
+	/**
+	 * An earlier approval on another document does not count.
+	 *
+	 * @return void
+	 */
+	public function testAnEarlierApprovalOfAnotherObjectAsksNoSigner(): void {
+		$this->declareChain(orders: [1, 2]);
+		$this->sequenceTasks->method('forSequence')->willReturn(
+			[
+				new Task(uuid: 'task-x', state: 'completed', outcome: 'approved', objectUuid: 'other-doc', sequenceUuid: 'seq-1', sequencePosition: 1, completedBy: 'alice'),
+				$this->makeTask(state: 'enabled'),
+			]
+		);
+
+		$this->expectNoSignerAsked($this->makeTask(state: 'enabled'));
+	}//end testAnEarlierApprovalOfAnotherObjectAsksNoSigner()
+
+	/**
+	 * A sequence anchored on another document asks no signer.
+	 *
+	 * @return void
+	 */
+	public function testASequenceAnchoredOnAnotherObjectAsksNoSigner(): void {
+		$this->declareChain(orders: [1, 2], anchor: 'other-doc');
+		$this->sequenceTasks->method('forSequence')->willReturn(
+			[$this->positionTask(position: 1, outcome: 'approved', completedBy: 'alice'), $this->makeTask(state: 'enabled')]
+		);
+
+		$this->expectNoSignerAsked($this->makeTask(state: 'enabled'));
+	}//end testASequenceAnchoredOnAnotherObjectAsksNoSigner()
+
+	/**
+	 * A declared position without its task fails closed.
+	 *
+	 * @return void
+	 */
+	public function testAGapInTheDeclaredPositionsAsksNoSigner(): void {
+		$this->declareChain(orders: [1, 2, 3]);
+		$third = new Task(uuid: 'task-3', state: 'enabled', objectUuid: self::OWNED_OBJECT, sequenceUuid: 'seq-1', sequencePosition: 3);
+		$this->sequenceTasks->method('forSequence')->willReturn(
+			[$this->positionTask(position: 1, outcome: 'approved', completedBy: 'alice'), $third]
+		);
+
+		$this->expectNoSignerAsked($third);
+	}//end testAGapInTheDeclaredPositionsAsksNoSigner()
+
+	/**
+	 * A reopened task that still carries `approved` is not a signed approval.
+	 *
+	 * @return void
+	 */
+	public function testAReopenedApprovedTaskAsksNoSigner(): void {
+		$this->declareChain(orders: [1, 2]);
+		$this->sequenceTasks->method('forSequence')->willReturn(
+			[
+				new Task(uuid: 'task-r', state: 'enabled', outcome: 'approved', objectUuid: self::OWNED_OBJECT, sequenceUuid: 'seq-1', sequencePosition: 1, completedBy: 'alice'),
+				$this->makeTask(state: 'enabled'),
+			]
+		);
+
+		$this->expectNoSignerAsked($this->makeTask(state: 'enabled'));
+	}//end testAReopenedApprovedTaskAsksNoSigner()
+
+	/**
+	 * Two tasks at one earlier position fail closed.
+	 *
+	 * @return void
+	 */
+	public function testTwoTasksAtOneEarlierPositionAskNoSigner(): void {
+		$this->declareChain(orders: [1, 2]);
+		$this->sequenceTasks->method('forSequence')->willReturn(
+			[
+				$this->positionTask(position: 1, outcome: 'approved', completedBy: 'alice'),
+				$this->positionTask(position: 1, outcome: 'approved', completedBy: 'bob'),
+				$this->makeTask(state: 'enabled'),
+			]
+		);
+
+		$this->expectNoSignerAsked($this->makeTask(state: 'enabled'));
+	}//end testTwoTasksAtOneEarlierPositionAskNoSigner()
+
+	/**
+	 * A position the chain does not declare asks no signer.
+	 *
+	 * @return void
+	 */
+	public function testAnUndeclaredPositionAsksNoSigner(): void {
+		$this->declareChain(orders: [1, 3]);
+		$this->sequenceTasks->method('forSequence')->willReturn(
+			[$this->positionTask(position: 1, outcome: 'approved', completedBy: 'alice'), $this->makeTask(state: 'enabled')]
+		);
+
+		$this->expectNoSignerAsked($this->makeTask(state: 'enabled'));
+	}//end testAnUndeclaredPositionAsksNoSigner()
+
+	/**
+	 * A sequence whose declaration cannot be read asks no signer.
+	 *
+	 * @return void
+	 */
+	public function testAnUnreadableDeclarationAsksNoSigner(): void {
+		$this->sequenceTasks->method('forSequence')->willReturn(
+			[$this->positionTask(position: 1, outcome: 'approved', completedBy: 'alice'), $this->makeTask(state: 'enabled')]
+		);
+
+		$this->expectNoSignerAsked($this->makeTask(state: 'enabled'));
+	}//end testAnUnreadableDeclarationAsksNoSigner()
+
+	/**
+	 * A resolved amount tier replaces the declared positions.
+	 *
+	 * @return void
+	 */
+	public function testTheResolvedTierDecidesThePositions(): void {
+		$this->declaredSequence = new TaskSequence(
+			uuid: 'seq-1',
+			anchorObjectUuid: self::OWNED_OBJECT,
+			templateSnapshot: ['positions' => [['order' => 1], ['order' => 2], ['order' => 3]]],
+			resolvedTier: ['positions' => [['order' => 1], ['order' => 2]]]
+		);
+		$this->providerFactory->expects($this->once())->method('getActiveProviderIdentifier')->willReturn('native');
+		$this->sequenceTasks->method('forSequence')->willReturn(
+			[$this->positionTask(position: 1, outcome: 'approved', completedBy: 'alice'), $this->makeTask(state: 'enabled')]
+		);
+
+		$this->listener->handle(new TaskTransitionedEvent(task: $this->makeTask(state: 'enabled'), previousState: 'available'));
+	}//end testTheResolvedTierDecidesThePositions()
 
 	/**
 	 * A transition that keeps an enabled task enabled (e.g. reassignment)

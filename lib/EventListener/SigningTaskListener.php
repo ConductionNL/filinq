@@ -124,15 +124,6 @@ class SigningTaskListener implements IEventListener {
 	private const REJECTING_OUTCOMES_FALLBACK = ['rejected', 'returned', 'declined', 'denied'];
 
 	/**
-	 * The outcomes that approve a signing step. OR's task vocabulary spells a
-	 * completed approval `approved`; every other non-rejecting outcome is
-	 * not a decision to sign.
-	 *
-	 * @var array<int, string>
-	 */
-	private const APPROVING_OUTCOMES = ['approved'];
-
-	/**
 	 * Constructor.
 	 *
 	 * @param SignerEventTranslator $translator Translates the extracted
@@ -144,6 +135,7 @@ class SigningTaskListener implements IEventListener {
 	 * @param LoggerInterface $logger Logger.
 	 * @param SignerSequenceTasks $sequenceTasks Reads every position of a
 	 *                                          completed sequence.
+	 * @param SignerApprovals $approvals What counts as a signed approval.
 	 *
 	 * @return void
 	 */
@@ -152,6 +144,7 @@ class SigningTaskListener implements IEventListener {
 		private readonly SettingsServiceInterface $settingsService,
 		private readonly LoggerInterface $logger,
 		private readonly SignerSequenceTasks $sequenceTasks,
+		private readonly SignerApprovals $approvals = new SignerApprovals(),
 	) {
 
 	}//end __construct()
@@ -224,6 +217,19 @@ class SigningTaskListener implements IEventListener {
 			return;
 		}
 
+		$position = $this->read(subject: $task, getter: 'getSequencePosition');
+		if ($this->isSignersTurn(task: $task, position: $position) === false) {
+			$this->logger->warning(
+				'SigningTaskListener: enabled position follows a position without an approving outcome and signer; no signer is asked',
+				[
+					'sequenceUuid' => $sequenceUuid,
+					'taskUuid' => (string) ($this->read(subject: $task, getter: 'getUuid') ?? ''),
+					'objectUuid' => $objectUuid,
+				]
+			);
+			return;
+		}
+
 		$candidateGroups = $this->read(subject: $task, getter: 'getCandidateGroups');
 		$role = null;
 		if (is_array($candidateGroups) === true && $candidateGroups !== []) {
@@ -233,7 +239,7 @@ class SigningTaskListener implements IEventListener {
 		$this->translator->onPositionEnabled(
 			sequenceUuid: $sequenceUuid,
 			taskUuid: (string) ($this->read(subject: $task, getter: 'getUuid') ?? ''),
-			position: (int) ($this->read(subject: $task, getter: 'getSequencePosition') ?? 0),
+			position: (int) $position,
 			role: $role,
 			objectUuid: $objectUuid
 		);
@@ -315,7 +321,7 @@ class SigningTaskListener implements IEventListener {
 				userId: $this->nullableString(subject: $task, getter: 'getCompletedBy'),
 				comment: $this->nullableString(subject: $task, getter: 'getComment'),
 				isRejecting: $this->isRejectingOutcome(outcome: $outcome),
-				isApproving: $this->isApprovingOutcome(outcome: $outcome)
+				isApproving: $this->approvals->isApprovingOutcome(outcome: $outcome)
 			)
 		);
 	}//end translateDecision()
@@ -389,9 +395,10 @@ class SigningTaskListener implements IEventListener {
 
 	/**
 	 * Whether every position of a sequence was completed with an approving
-	 * outcome by a named signer. OR advances a sequence on any non-rejecting
-	 * completion, so its completion event alone does not prove each signer
-	 * approved. An unreadable or empty sequence fails closed.
+	 * outcome by a named signer. OR also advances a sequence on outcomes
+	 * filinq does not count as signing, so its completion event alone does
+	 * not prove each signer approved. An unreadable or empty sequence fails
+	 * closed.
 	 *
 	 * @param string $sequenceUuid UUID of the completed sequence.
 	 * @param object $finalTask    The final position's task from the event.
@@ -405,39 +412,37 @@ class SigningTaskListener implements IEventListener {
 		}
 
 		$tasks[] = $finalTask;
-		foreach ($tasks as $task) {
-			if ($this->isSignedApproval(task: $task) === false) {
-				return false;
-			}
-		}
 
-		return true;
+		return $this->approvals->areSigned(tasks: $tasks);
 	}//end isApprovedByEverySigner()
 
 	/**
-	 * Whether a task carries an approving outcome and a non-blank completing user.
+	 * Whether a newly enabled position is a signer's turn: it has a position,
+	 * and every earlier position the chain declares holds one signed approval
+	 * on the same document. A missing or unprovable position fails closed.
 	 *
-	 * @param object $task The task.
+	 * @param object $task     The enabled task.
+	 * @param mixed  $position The task's sequence position, as read.
 	 *
-	 * @return bool True for a signed approval.
+	 * @return bool True when the position may ask its signer.
 	 */
-	private function isSignedApproval(object $task): bool {
-		$outcome = (string) ($this->read(subject: $task, getter: 'getOutcome') ?? '');
-		$signer = trim((string) ($this->read(subject: $task, getter: 'getCompletedBy') ?? ''));
+	private function isSignersTurn(object $task, mixed $position): bool {
+		if (is_numeric($position) === false) {
+			return false;
+		}
 
-		return $this->isApprovingOutcome(outcome: $outcome) === true && $signer !== '';
-	}//end isSignedApproval()
+		$earlier = $this->sequenceTasks->earlierPositions(
+			step: new SignerStepTask(
+				sequenceUuid: (string) ($this->read(subject: $task, getter: 'getSequenceUuid') ?? ''),
+				taskUuid: (string) ($this->read(subject: $task, getter: 'getUuid') ?? ''),
+				position: (int) $position,
+				objectUuid: (string) ($this->read(subject: $task, getter: 'getObjectUuid') ?? '')
+			)
+		);
 
-	/**
-	 * Classify an outcome against the approving vocabulary.
-	 *
-	 * @param string $outcome The task's outcome.
-	 *
-	 * @return bool True when the outcome approves.
-	 */
-	private function isApprovingOutcome(string $outcome): bool {
-		return in_array(strtolower(trim($outcome)), self::APPROVING_OUTCOMES, true);
-	}//end isApprovingOutcome()
+		return $earlier !== null && $this->approvals->areSigned(tasks: $earlier);
+	}//end isSignersTurn()
+
 
 	/**
 	 * Read one getter off a cross-app object, ducking the type system.
