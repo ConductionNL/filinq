@@ -1,0 +1,430 @@
+{
+    "every answer no, no policy": [
+        {
+            "MountCapabilityProbe::isWritable": {
+                "path": "/Domains/Zaken"
+            }
+        },
+        {
+            "MountCapabilityProbe::supportsPerGroupPermissions": {
+                "path": "/Domains/Zaken"
+            }
+        },
+        {
+            "MountCapabilityProbe::supportsVersions": {
+                "path": "/Domains/Zaken"
+            }
+        },
+        {
+            "UploadPolicyService::activePolicy": []
+        },
+        {
+            "result": {
+                "path": "/Domains/Zaken",
+                "ok": false,
+                "findings": [
+                    {
+                        "requirement": "store a document at all",
+                        "verdict": "cannot",
+                        "message": "This store is read-only, so no document can be filed in this domain."
+                    },
+                    {
+                        "requirement": "reconcile the folder to the domain",
+                        "verdict": "cannot",
+                        "message": "This store cannot hold a permission per group, so the nightly reconciliation will report a refusal every night and a group removed from the domain keeps its access."
+                    },
+                    {
+                        "requirement": "keep a version history",
+                        "verdict": "cannot",
+                        "message": "This store keeps no version history, so a document corrected here loses what it said before."
+                    }
+                ]
+            }
+        }
+    ],
+    "every answer no, with a policy": [
+        {
+            "MountCapabilityProbe::isWritable": {
+                "path": "/Domains/Zaken"
+            }
+        },
+        {
+            "MountCapabilityProbe::supportsPerGroupPermissions": {
+                "path": "/Domains/Zaken"
+            }
+        },
+        {
+            "MountCapabilityProbe::supportsVersions": {
+                "path": "/Domains/Zaken"
+            }
+        },
+        {
+            "UploadPolicyService::activePolicy": []
+        },
+        {
+            "MountCapabilityProbe::writesPassThroughFilinq": {
+                "path": "/Domains/Zaken"
+            }
+        },
+        {
+            "result": {
+                "path": "/Domains/Zaken",
+                "ok": false,
+                "findings": [
+                    {
+                        "requirement": "store a document at all",
+                        "verdict": "cannot",
+                        "message": "This store is read-only, so no document can be filed in this domain."
+                    },
+                    {
+                        "requirement": "reconcile the folder to the domain",
+                        "verdict": "cannot",
+                        "message": "This store cannot hold a permission per group, so the nightly reconciliation will report a refusal every night and a group removed from the domain keeps its access."
+                    },
+                    {
+                        "requirement": "keep a version history",
+                        "verdict": "cannot",
+                        "message": "This store keeps no version history, so a document corrected here loses what it said before."
+                    },
+                    {
+                        "requirement": "enforce the upload policy",
+                        "verdict": "cannot",
+                        "message": "Files can reach this store without passing filinq, so the upload policy cannot be enforced on everything that lands here."
+                    }
+                ]
+            }
+        }
+    ],
+    "every promise kept, no policy": [
+        {
+            "MountCapabilityProbe::isWritable": {
+                "path": "/Domains/Zaken"
+            }
+        },
+        {
+            "MountCapabilityProbe::supportsPerGroupPermissions": {
+                "path": "/Domains/Zaken"
+            }
+        },
+        {
+            "MountCapabilityProbe::supportsVersions": {
+                "path": "/Domains/Zaken"
+            }
+        },
+        {
+            "UploadPolicyService::activePolicy": []
+        },
+        {
+            "result": {
+                "path": "/Domains/Zaken",
+                "ok": true,
+                "findings": []
+            }
+        }
+    ],
+    "every promise kept, with a policy": [
+        {
+            "MountCapabilityProbe::isWritable": {
+                "path": "/Domains/Zaken"
+            }
+        },
+        {
+            "MountCapabilityProbe::supportsPerGroupPermissions": {
+                "path": "/Domains/Zaken"
+            }
+        },
+        {
+            "MountCapabilityProbe::supportsVersions": {
+                "path": "/Domains/Zaken"
+            }
+        },
+        {
+            "UploadPolicyService::activePolicy": []
+        },
+        {
+            "MountCapabilityProbe::writesPassThroughFilinq": {
+                "path": "/Domains/Zaken"
+            }
+        },
+        {
+            "result": {
+                "path": "/Domains/Zaken",
+                "ok": true,
+                "findings": []
+            }
+        }
+    ],
+    "mixed answers": [
+        {
+            "MountCapabilityProbe::isWritable": {
+                "path": "/Domains/Zaken"
+            }
+        },
+        {
+            "MountCapabilityProbe::supportsPerGroupPermissions": {
+                "path": "/Domains/Zaken"
+            }
+        },
+        {
+            "MountCapabilityProbe::supportsVersions": {
+                "path": "/Domains/Zaken"
+            }
+        },
+        {
+            "UploadPolicyService::activePolicy": []
+        },
+        {
+            "MountCapabilityProbe::writesPassThroughFilinq": {
+                "path": "/Domains/Zaken"
+            }
+        },
+        {
+            "result": {
+                "path": "/Domains/Zaken",
+                "ok": false,
+                "findings": [
+                    {
+                        "requirement": "store a document at all",
+                        "verdict": "cannot",
+                        "message": "This store is read-only, so no document can be filed in this domain."
+                    },
+                    {
+                        "requirement": "reconcile the folder to the domain",
+                        "verdict": "unknown",
+                        "message": "Whether this store holds a permission per group could not be found out, so reconciliation may silently do nothing."
+                    },
+                    {
+                        "requirement": "enforce the upload policy",
+                        "verdict": "cannot",
+                        "message": "Files can reach this store without passing filinq, so the upload policy cannot be enforced on everything that lands here."
+                    }
+                ]
+            }
+        }
+    ],
+    "mixed answers, reversed": [
+        {
+            "MountCapabilityProbe::isWritable": {
+                "path": "/Domains/Zaken"
+            }
+        },
+        {
+            "MountCapabilityProbe::supportsPerGroupPermissions": {
+                "path": "/Domains/Zaken"
+            }
+        },
+        {
+            "MountCapabilityProbe::supportsVersions": {
+                "path": "/Domains/Zaken"
+            }
+        },
+        {
+            "UploadPolicyService::activePolicy": []
+        },
+        {
+            "MountCapabilityProbe::writesPassThroughFilinq": {
+                "path": "/Domains/Zaken"
+            }
+        },
+        {
+            "result": {
+                "path": "/Domains/Zaken",
+                "ok": false,
+                "findings": [
+                    {
+                        "requirement": "reconcile the folder to the domain",
+                        "verdict": "cannot",
+                        "message": "This store cannot hold a permission per group, so the nightly reconciliation will report a refusal every night and a group removed from the domain keeps its access."
+                    },
+                    {
+                        "requirement": "keep a version history",
+                        "verdict": "unknown",
+                        "message": "Whether this store keeps a version history could not be found out."
+                    },
+                    {
+                        "requirement": "enforce the upload policy",
+                        "verdict": "unknown",
+                        "message": "Whether every write to this store passes filinq could not be found out, so the upload policy may be enforced on only some of them."
+                    }
+                ]
+            }
+        }
+    ],
+    "nobody could find out, unreadable": [
+        {
+            "MountCapabilityProbe::isWritable": {
+                "path": "/Domains/Zaken"
+            }
+        },
+        {
+            "MountCapabilityProbe::supportsPerGroupPermissions": {
+                "path": "/Domains/Zaken"
+            }
+        },
+        {
+            "MountCapabilityProbe::supportsVersions": {
+                "path": "/Domains/Zaken"
+            }
+        },
+        {
+            "UploadPolicyService::activePolicy": []
+        },
+        {
+            "MountCapabilityProbe::writesPassThroughFilinq": {
+                "path": "/Domains/Zaken"
+            }
+        },
+        {
+            "result": {
+                "path": "/Domains/Zaken",
+                "ok": false,
+                "findings": [
+                    {
+                        "requirement": "store a document at all",
+                        "verdict": "unknown",
+                        "message": "Whether this store accepts a write could not be found out, so a document may fail to file with no warning."
+                    },
+                    {
+                        "requirement": "reconcile the folder to the domain",
+                        "verdict": "unknown",
+                        "message": "Whether this store holds a permission per group could not be found out, so reconciliation may silently do nothing."
+                    },
+                    {
+                        "requirement": "keep a version history",
+                        "verdict": "unknown",
+                        "message": "Whether this store keeps a version history could not be found out."
+                    },
+                    {
+                        "requirement": "enforce the upload policy",
+                        "verdict": "unknown",
+                        "message": "Whether every write to this store passes filinq could not be found out, so the upload policy may be enforced on only some of them."
+                    }
+                ]
+            }
+        }
+    ],
+    "nobody could find out, with a policy": [
+        {
+            "MountCapabilityProbe::isWritable": {
+                "path": "/Domains/Zaken"
+            }
+        },
+        {
+            "MountCapabilityProbe::supportsPerGroupPermissions": {
+                "path": "/Domains/Zaken"
+            }
+        },
+        {
+            "MountCapabilityProbe::supportsVersions": {
+                "path": "/Domains/Zaken"
+            }
+        },
+        {
+            "UploadPolicyService::activePolicy": []
+        },
+        {
+            "MountCapabilityProbe::writesPassThroughFilinq": {
+                "path": "/Domains/Zaken"
+            }
+        },
+        {
+            "result": {
+                "path": "/Domains/Zaken",
+                "ok": false,
+                "findings": [
+                    {
+                        "requirement": "store a document at all",
+                        "verdict": "unknown",
+                        "message": "Whether this store accepts a write could not be found out, so a document may fail to file with no warning."
+                    },
+                    {
+                        "requirement": "reconcile the folder to the domain",
+                        "verdict": "unknown",
+                        "message": "Whether this store holds a permission per group could not be found out, so reconciliation may silently do nothing."
+                    },
+                    {
+                        "requirement": "keep a version history",
+                        "verdict": "unknown",
+                        "message": "Whether this store keeps a version history could not be found out."
+                    },
+                    {
+                        "requirement": "enforce the upload policy",
+                        "verdict": "unknown",
+                        "message": "Whether every write to this store passes filinq could not be found out, so the upload policy may be enforced on only some of them."
+                    }
+                ]
+            }
+        }
+    ],
+    "only the policy is at stake": [
+        {
+            "MountCapabilityProbe::isWritable": {
+                "path": "/Domains/Zaken"
+            }
+        },
+        {
+            "MountCapabilityProbe::supportsPerGroupPermissions": {
+                "path": "/Domains/Zaken"
+            }
+        },
+        {
+            "MountCapabilityProbe::supportsVersions": {
+                "path": "/Domains/Zaken"
+            }
+        },
+        {
+            "UploadPolicyService::activePolicy": []
+        },
+        {
+            "MountCapabilityProbe::writesPassThroughFilinq": {
+                "path": "/Domains/Zaken"
+            }
+        },
+        {
+            "result": {
+                "path": "/Domains/Zaken",
+                "ok": false,
+                "findings": [
+                    {
+                        "requirement": "enforce the upload policy",
+                        "verdict": "cannot",
+                        "message": "Files can reach this store without passing filinq, so the upload policy cannot be enforced on everything that lands here."
+                    }
+                ]
+            }
+        }
+    ],
+    "only versions are missing": [
+        {
+            "MountCapabilityProbe::isWritable": {
+                "path": "/Domains/Zaken"
+            }
+        },
+        {
+            "MountCapabilityProbe::supportsPerGroupPermissions": {
+                "path": "/Domains/Zaken"
+            }
+        },
+        {
+            "MountCapabilityProbe::supportsVersions": {
+                "path": "/Domains/Zaken"
+            }
+        },
+        {
+            "UploadPolicyService::activePolicy": []
+        },
+        {
+            "result": {
+                "path": "/Domains/Zaken",
+                "ok": false,
+                "findings": [
+                    {
+                        "requirement": "keep a version history",
+                        "verdict": "cannot",
+                        "message": "This store keeps no version history, so a document corrected here loses what it said before."
+                    }
+                ]
+            }
+        }
+    ]
+}
