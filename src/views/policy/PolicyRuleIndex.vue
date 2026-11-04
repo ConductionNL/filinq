@@ -136,6 +136,7 @@ import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
 import Pencil from 'vue-material-design-icons/Pencil.vue'
 import PolicyRuleFormModal from '../../dialogs/PolicyRuleFormModal.vue'
 import { LIST_ONLY_INDEX_PAGE } from '../../constants/indexPage.js'
+import { POLICY_RULE_BLANK_FORMS } from '../../constants/policyRuleForms.js'
 import {
 	indexPaging,
 	recordDeletion,
@@ -190,18 +191,8 @@ const SURFACES = {
 			{ key: 'reason', label: t('filinq', 'Reason') },
 			{ key: 'active', label: t('filinq', 'Status'), sortable: true },
 		],
-		editingRecord: (row) => ({
-			primaryName: row.primaryName || '',
-			entityType: row.entityType || 'PERSON',
-			reason: row.reason || '',
-			legalAuthority: row.legalAuthority || '',
-			caseReference: row.caseReference || '',
-			severity: row.severity || 'medium',
-			jurisdiction: row.jurisdiction || '',
-			validUntil: row.validUntil || '',
-			active: row.active !== false,
-			matchRules: copyMatchRules(row),
-		}),
+		editingRecord: (row) =>
+			editingRecordOf(row, POLICY_RULE_BLANK_FORMS.prohibition()),
 	},
 	standingConsent: {
 		store: standingConsentStore,
@@ -242,22 +233,36 @@ const SURFACES = {
 			{ key: 'validUntil', label: t('filinq', 'Valid until'), sortable: true },
 			{ key: 'active', label: t('filinq', 'Status'), sortable: true },
 		],
-		editingRecord: (row) => ({
-			entityText: row.entityText || '',
-			entityType: row.entityType || 'PERSON',
-			consentMethod: row.consentMethod || '',
-			consentDocument: row.consentDocument || '',
-			consentScope: row.consentScope || '',
-			legalBasis: row.legalBasis || '',
-			validFrom: row.validFrom || '',
-			validUntil: row.validUntil || '',
-			active: row.active !== false,
-			matchRules: copyMatchRules(row),
-			consentStatus: row.consentStatus || 'consent_given',
-			publicationDecision: row.publicationDecision || 'publish_with_consent',
-			notificationStatus: row.notificationStatus || 'skipped',
-		}),
+		editingRecord: (row) =>
+			editingRecordOf(row, POLICY_RULE_BLANK_FORMS.standingConsent()),
 	},
+}
+
+/**
+ * The form fields read differently from a plain `row.field || blank`.
+ *
+ * @type {Record<string, function(object): (boolean|object[])>}
+ */
+const COMPUTED_FIELDS = {
+	active: (row) => row.active !== false,
+	matchRules: (row) => copyMatchRules(row),
+}
+
+/**
+ * The form values for a row: every field of the blank form, in its order, with
+ * the row's value, or the blank value where the row's is empty.
+ *
+ * @param {object} row The policy rule.
+ * @param {object} blank The surface's blank form.
+ * @return {object} The form values.
+ */
+function editingRecordOf(row, blank) {
+	return Object.fromEntries(
+		Object.entries(blank).map(([key, value]) => [
+			key,
+			key in COMPUTED_FIELDS ? COMPUTED_FIELDS[key](row) : row[key] || value,
+		]),
+	)
 }
 
 /**
