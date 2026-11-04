@@ -248,12 +248,33 @@ class ChartPalette {
 
 		[$r, $g, $b] = $this->hueSextant(h: $h, c: $c, x: $x);
 
-		$rHex = str_pad(dechex((int)round(($r + $m) * 255)), 2, '0', STR_PAD_LEFT);
-		$gHex = str_pad(dechex((int)round(($g + $m) * 255)), 2, '0', STR_PAD_LEFT);
-		$bHex = str_pad(dechex((int)round(($b + $m) * 255)), 2, '0', STR_PAD_LEFT);
+		$rHex = str_pad(dechex($this->toByte(unit: $r + $m)), 2, '0', STR_PAD_LEFT);
+		$gHex = str_pad(dechex($this->toByte(unit: $g + $m)), 2, '0', STR_PAD_LEFT);
+		$bHex = str_pad(dechex($this->toByte(unit: $b + $m)), 2, '0', STR_PAD_LEFT);
 
 		return '#' . strtoupper($rHex . $gHex . $bHex);
 	}//end hslToHex()
+
+	/**
+	 * Scale a [0, 1] value to a 0-255 channel, halves rounded up.
+	 *
+	 * The product is first rounded to 15 significant digits, so float noise such as
+	 * 83.49999999999999 gives the same channel on every PHP version: PHP 8.3's round()
+	 * did this pre-rounding itself, PHP 8.4's round() does not.
+	 *
+	 * @param float $unit The value, normalised to [0, 1].
+	 *
+	 * @return int The channel value.
+	 */
+	private function toByte(float $unit): int {
+		$value = ($unit * 255);
+		if (abs($value) < 1.0E-9) {
+			return 0;
+		}
+
+		$scale = (10 ** (14 - (int)floor(log10(abs($value)))));
+		return (int)round(round($value * $scale) / $scale);
+	}//end toByte()
 
 	/**
 	 * Map a hue (0-360°) to its `[r, g, b]` sextant using the chroma/second
