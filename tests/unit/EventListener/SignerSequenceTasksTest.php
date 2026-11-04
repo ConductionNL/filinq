@@ -245,6 +245,57 @@ final class SignerSequenceTasksTest extends TestCase {
 	}//end testAPositionlessTaskOrUnreadableTasksFailClosed()
 
 	/**
+	 * Two tasks at one earlier position, or an earlier task on another document, fail closed.
+	 *
+	 * @return void
+	 */
+	public function testADoubledPositionOrAnotherDocumentFailsClosed(): void {
+		$sequence = new TaskSequence(uuid: 'seq-1', anchorObjectUuid: 'doc-1', templateSnapshot: ['positions' => [['order' => 1], ['order' => 2]]]);
+		$first = new Task(uuid: 'task-1', objectUuid: 'doc-1', sequencePosition: 1);
+		$extra = new Task(uuid: 'task-x', objectUuid: 'doc-1', sequencePosition: 1);
+		$other = new Task(uuid: 'task-y', objectUuid: 'doc-2', sequencePosition: 1);
+
+		$this->assertNull($this->declaredReader(tasks: [$first, $extra], sequence: $sequence)->earlierPositions(step: $this->step(position: 2)));
+		$this->assertNull($this->declaredReader(tasks: [$first, $other], sequence: $sequence)->earlierPositions(step: $this->step(position: 2)));
+	}//end testADoubledPositionOrAnotherDocumentFailsClosed()
+
+	/**
+	 * A sequence object without the expected getters proves nothing.
+	 *
+	 * @return void
+	 */
+	public function testASequenceWithoutGettersFailsClosed(): void {
+		$first = new Task(uuid: 'task-1', objectUuid: 'doc-1', sequencePosition: 1);
+
+		$this->assertNull($this->declaredReader(tasks: [$first], sequence: new stdClass())->earlierPositions(step: $this->step(position: 2)));
+	}//end testASequenceWithoutGettersFailsClosed()
+
+	/**
+	 * A sequence mapper failure fails closed and logs the sequence id only.
+	 *
+	 * @return void
+	 */
+	public function testASequenceReadFailureFailsClosedAndWarns(): void {
+		$tasks = $this->mapper(result: [new Task(uuid: 'task-1', objectUuid: 'doc-1', sequencePosition: 1)]);
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->willReturnCallback(static function (string $id) use ($tasks): object {
+			if ($id === 'OCA\OpenRegister\Db\TaskMapper') {
+				return $tasks;
+			}
+
+			throw new RuntimeException('no sequence mapper');
+		});
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())
+			->method('warning')
+			->with('SigningTaskListener: could not read a sequence', ['sequenceUuid' => 'seq-1']);
+
+		$reader = new SignerSequenceTasks(container: $container, logger: $logger);
+
+		$this->assertNull($reader->earlierPositions(step: $this->step(position: 2)));
+	}//end testASequenceReadFailureFailsClosedAndWarns()
+
+	/**
 	 * A mapper without findBySequence reads as null and warns.
 	 *
 	 * @return void
