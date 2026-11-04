@@ -8,7 +8,9 @@ import {
 </script>
 
 <template>
-	<div class="anonymization-widget">
+	<div
+		class="anonymization-widget"
+		:class="{ 'anonymization-widget--tile': !inApp }">
 		<!-- Drop zone -->
 		<div class="upload-area">
 			<!--
@@ -57,7 +59,7 @@ import {
 
 		<!-- Recent documents -->
 		<section
-			v-if="recentLoading || recentItems.length > 0"
+			v-if="showRecent && (recentLoading || recentItems.length > 0)"
 			class="recent-section">
 			<h3 class="recent-section__title">
 				{{ t('filinq', 'Recent documents') }}
@@ -73,6 +75,11 @@ import {
 					@click="openRecent" />
 			</div>
 		</section>
+
+		<!-- Outside the app (Nextcloud dashboard tile) the widget links to Filinq. -->
+		<a v-if="!inApp" class="widget-footer" :href="appUrl">
+			{{ t('filinq', 'Open Filinq') }}
+		</a>
 
 		<!-- Upload dialog (single document or dossier) — src/dialogs/ per ADR-004 -->
 		<AnonymizationUploadDialog
@@ -91,6 +98,7 @@ import {
 <script>
 import { getCurrentUser } from '@nextcloud/auth'
 import { showError } from '@nextcloud/dialogs'
+import { generateUrl } from '@nextcloud/router'
 import { NcLoadingIcon } from '@nextcloud/vue'
 import DdDocumentCard from '../../components/DdDocumentCard.vue'
 import AnonymizationUploadDialog from '../../dialogs/AnonymizationUploadDialog.vue'
@@ -109,6 +117,21 @@ export default {
 		DdDocumentCard,
 	},
 
+	// The Nextcloud dashboard passes the tile title, which its own header shows.
+	inheritAttrs: false,
+
+	props: {
+		/**
+		 * Show the "Recent documents" cards under the drop zone. Only the
+		 * Anonymisation page has the room; the dashboard cell and the
+		 * Nextcloud tile have a fixed height.
+		 */
+		showRecent: {
+			type: Boolean,
+			default: false,
+		},
+	},
+
 	data() {
 		return {
 			isDragging: false,
@@ -125,6 +148,27 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * Whether the widget runs inside Filinq. The Nextcloud dashboard tile
+		 * mounts it without the app's router.
+		 *
+		 * @return {boolean}
+		 * @spec openspec/changes/one-anonymisation-upload-widget/specs/anonymization/spec.md#requirement-after-an-upload-the-user-must-land-on-my-documents-with-the-first-file-open
+		 */
+		inApp() {
+			return Boolean(this.$router)
+		},
+
+		/**
+		 * Filinq's start page, for the link outside the app.
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/one-anonymisation-upload-widget/specs/anonymization/spec.md#requirement-after-an-upload-the-user-must-land-on-my-documents-with-the-first-file-open
+		 */
+		appUrl() {
+			return generateUrl('/apps/filinq')
+		},
+
 		/**
 		 * Display name of the currently logged-in Nextcloud user.
 		 *
@@ -176,7 +220,9 @@ export default {
 	},
 
 	mounted() {
-		this.loadRecent()
+		if (this.showRecent) {
+			this.loadRecent()
+		}
 	},
 
 	methods: {
@@ -311,11 +357,17 @@ export default {
 		/**
 		 * Route to the file-viewer host page when not already there.
 		 * Hash-mode router throws NavigationDuplicated if we push the same
-		 * route — swallowed so the upload flow stays clean.
+		 * route — swallowed so the upload flow stays clean. Outside the app
+		 * the browser opens Filinq's My documents page instead.
 		 *
 		 * @return {void}
+		 * @spec openspec/changes/one-anonymisation-upload-widget/specs/anonymization/spec.md#requirement-after-an-upload-the-user-must-land-on-my-documents-with-the-first-file-open
 		 */
 		gotoViewer() {
+			if (!this.inApp) {
+				window.location.assign(generateUrl('/apps/filinq/my-documents'))
+				return
+			}
 			if (this.$route?.name === 'MyDocuments') {
 				return
 			}
@@ -388,6 +440,16 @@ export default {
 					await anonymizationStore.addFiles(this.pendingFiles)
 				}
 
+				// The store marks a failed upload on its entry instead of
+				// throwing: keep the dialog open and show that error.
+				const failed = anonymizationStore.files
+					.slice(before)
+					.find((entry) => entry.status === 'error')
+				if (failed) {
+					this.dossierError = failed.error || 'Failed to upload'
+					return
+				}
+
 				// Open the first uploaded file in the viewer.
 				const firstEntry = anonymizationStore.files[before]
 				if (firstEntry && firstEntry.fileId) {
@@ -445,6 +507,20 @@ export default {
 	width: 100%;
 }
 
+.anonymization-widget--tile {
+	padding: 0;
+}
+
+.anonymization-widget--tile .drop-zone {
+	padding: 16px;
+	gap: 12px;
+}
+
+.anonymization-widget--tile .upload-icon {
+	width: 64px;
+	height: 62px;
+}
+
 .page-title {
 	margin: 0 0 16px 0;
 }
@@ -461,7 +537,7 @@ export default {
 	border: 2px dashed var(--color-border);
 	border-radius: var(--border-radius-large);
 	padding: 32px;
-	background-color: var(--dd-surface, #fff);
+	background-color: var(--color-main-background);
 	box-shadow: var(--dd-shadow-panel);
 	/* Not a click target any more — the picker is opened by .fake-button. */
 	transition:
@@ -475,7 +551,7 @@ export default {
 
 .drop-zone.dragging {
 	border-color: var(--color-primary);
-	background-color: #fff;
+	background-color: var(--color-background-hover);
 }
 
 .upload-icon {
@@ -555,6 +631,21 @@ export default {
 	grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
 	grid-auto-rows: 1fr;
 	gap: 16px;
+}
+
+.widget-footer {
+	display: block;
+	text-align: center;
+	padding: 8px;
+	border-top: 1px solid var(--color-border);
+	color: var(--color-text-maxcontrast);
+	font-size: 0.85rem;
+	text-decoration: none;
+}
+
+.widget-footer:hover {
+	background-color: var(--color-background-hover);
+	color: var(--color-main-text);
 }
 
 /* WCAG 2.2 SC 2.3.3 — users who ask the OS for reduced motion get the state
