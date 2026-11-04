@@ -1,6 +1,6 @@
 /**
- * Golden: the script logic of the two entity-policy form modals (publish
- * always, publish never), recorded on the per-modal implementations.
+ * Golden: the script logic of the entity-policy form modal on both surfaces
+ * (publish always, publish never), recorded on the per-modal implementations.
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  * SPDX-License-Identifier: EUPL-1.2
@@ -17,10 +17,8 @@ vi.mock('@nextcloud/l10n', () => ({
 	translate: (app, text) => '[' + text + ']',
 }))
 
-const MODALS = {
-	standingConsent: 'dialogs/StandingConsentFormModal.vue',
-	prohibition: 'dialogs/ProhibitionFormModal.vue',
-}
+const MODAL = 'dialogs/PolicyRuleFormModal.vue'
+const SURFACES = ['standingConsent', 'prohibition']
 
 const RECORD = {
 	entityText: 'Jan',
@@ -53,10 +51,10 @@ function snapshot(vm) {
 }
 
 describe('match rule forms golden', () => {
-	for (const [key, rel] of Object.entries(MODALS)) {
+	for (const key of SURFACES) {
 		it(key, async () => {
 			const options = await loadSfcOptions(
-				join(import.meta.dirname, '../../src', rel),
+				join(import.meta.dirname, '../../src', MODAL),
 			)
 			const parts = [...(options.mixins || []), options]
 			const declared = Object.assign({}, ...parts.map((o) => o.props))
@@ -68,7 +66,9 @@ describe('match rule forms golden', () => {
 				]),
 			)
 			const record = { props, emits }
-			const fresh = createInstance(options, { props: { open: false } })
+			const fresh = createInstance(options, {
+				props: { surface: key, open: false },
+			})
 			record.initial = snapshot(fresh)
 			record.choices = {
 				matchTypeOptions: fresh.matchTypeOptions,
@@ -111,7 +111,12 @@ describe('match rule forms golden', () => {
 
 			const source = JSON.parse(JSON.stringify(RECORD))
 			const edit = createInstance(options, {
-				props: { open: true, editingRecord: source, saving: true },
+				props: {
+					surface: key,
+					open: true,
+					editingRecord: source,
+					saving: true,
+				},
 			})
 			await edit.$fireWatch('open', true, false)
 			edit.form.matchRules[0].value = 'edited'
@@ -120,7 +125,11 @@ describe('match rule forms golden', () => {
 			record.editSubmitted = snapshot(edit)
 
 			const bare = createInstance(options, {
-				props: { open: true, editingRecord: { matchRules: 'x' } },
+				props: {
+					surface: key,
+					open: true,
+					editingRecord: { matchRules: 'x' },
+				},
 			})
 			await bare.$fireWatch('open', true, false)
 			record.editNoRules = snapshot(bare)

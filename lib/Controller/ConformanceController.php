@@ -26,6 +26,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use OCA\Filinq\Exception\VeraPdfException;
+use OCA\Filinq\Kernel\AppIdentity;
 use OCA\Filinq\Kernel\Contracts\ConformanceServiceInterface;
 use OCA\Filinq\Settings\FilinqAdmin;
 use OCP\AppFramework\Controller;
@@ -49,7 +50,6 @@ class ConformanceController extends Controller {
 	/**
 	 * Constructor.
 	 *
-	 * @param string             $appName     The app id.
 	 * @param IRequest           $request     The request.
 	 * @param ConformanceServiceInterface $conformance The conformance check.
 	 * @param IRootFolder        $rootFolder  The file tree.
@@ -60,7 +60,6 @@ class ConformanceController extends Controller {
 	 * @return void
 	 */
 	public function __construct(
-		string $appName,
 		IRequest $request,
 		private readonly ConformanceServiceInterface $conformance,
 		private readonly IRootFolder $rootFolder,
@@ -68,7 +67,7 @@ class ConformanceController extends Controller {
 		private readonly IL10N $l10n,
 		private readonly LoggerInterface $logger,
 	) {
-		parent::__construct(appName: $appName, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 
 	}//end __construct()
 

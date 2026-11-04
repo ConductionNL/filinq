@@ -76,13 +76,13 @@ class EmlPdfAssemblyDividerTest extends TestCase {
 			->onlyMethods(['writeDivider', 'renderBytes'])
 			->getMock();
 		$renderer->method('writeDivider')->willReturnCallback(
-			function (...$arguments): void {
-				$this->calls[] = array_merge(['divider'], array_slice($arguments, 1));
+			function (\Mpdf\Mpdf $mpdf, array $divider): void {
+				$this->calls[] = ['divider', $divider['index'], $divider['filename'], $divider['mimeType'], $divider['size'], $divider['variant']];
 			}
 		);
 		$renderer->method('renderBytes')->willReturnCallback(
-			function (...$arguments) use ($renderFails): void {
-				$this->calls[] = ['render', $arguments[1], $arguments[2], $arguments[3]];
+			function (\Mpdf\Mpdf $mpdf, array $attachment) use ($renderFails): void {
+				$this->calls[] = ['render', $attachment['bytes'], $attachment['mimeType'], $attachment['filename']];
 				if ($renderFails === true) {
 					throw new \RuntimeException('broken');
 				}

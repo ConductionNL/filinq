@@ -26,15 +26,14 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use Exception;
-use OCA\Filinq\Kernel\Contracts\AnonymiserBackendStateClientInterface;
-use OCA\Filinq\Kernel\Contracts\SettingsServiceInterface;
+use OCA\Filinq\Controller\Support\AppConfiguration;
+use OCA\Filinq\Controller\Support\SettingsBackends;
+use OCA\Filinq\Kernel\AppIdentity;
 use OCA\Filinq\Settings\FilinqAdmin;
-use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
 use OCP\AppFramework\Http\JSONResponse;
-use OCP\IConfig;
 use OCP\IGroupManager;
 use OCP\IRequest;
 use OCP\IUserSession;
@@ -57,30 +56,24 @@ class SettingsController extends Controller {
 	/**
 	 * SettingsController constructor
 	 *
-	 * @param string $appName The name of the app
 	 * @param IRequest $request The request object
-	 * @param IAppManager $appManager The app manager
+	 * @param AppConfiguration $system Installed apps and the system configuration.
 	 * @param IGroupManager $groupManager The group manager
 	 * @param IUserSession $userSession The user session
 	 * @param LoggerInterface $logger Logger for error reporting
-	 * @param SettingsServiceInterface $settingsService Service for settings operations
-	 * @param AnonymiserBackendStateClientInterface $anonymiserClient Backend state client
-	 * @param IConfig $config Nextcloud config for user values
+	 * @param SettingsBackends $backends The settings service and the anonymiser backend state.
 	 *
 	 * @return void
 	 */
 	public function __construct(
-		string $appName,
 		IRequest $request,
-		private readonly IAppManager $appManager,
+		private readonly AppConfiguration $system,
 		private readonly IGroupManager $groupManager,
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
-		private readonly SettingsServiceInterface $settingsService,
-		private readonly AnonymiserBackendStateClientInterface $anonymiserClient,
-		private readonly IConfig $config,
+		private readonly SettingsBackends $backends,
 	) {
-		parent::__construct(appName: $appName, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 
 	}//end __construct()
 
@@ -101,7 +94,7 @@ class SettingsController extends Controller {
 			$dismissed = $this->warningDismissed(userId: $user?->getUID());
 
 			return new JSONResponse(
-				array_merge($this->settingsService->getAllSettings(), $this->environment(isAdmin: $isAdmin, dismissed: $dismissed))
+				array_merge($this->backends->settings->getAllSettings(), $this->environment(isAdmin: $isAdmin, dismissed: $dismissed))
 			);
 		} catch (Exception $e) {
 			return $this->failed(message: 'Failed to retrieve settings', exception: $e);
@@ -121,7 +114,7 @@ class SettingsController extends Controller {
 			return false;
 		}
 
-		return $this->config->getUserValue(
+		return $this->system->config->getUserValue(
 			userId: $userId,
 			appName: 'filinq',
 			key: AnonymiserWarningController::DISMISSED_KEY,
@@ -140,9 +133,9 @@ class SettingsController extends Controller {
 	 */
 	private function environment(bool $isAdmin, bool $dismissed): array {
 		return [
-			'openRegisters' => in_array(needle: 'openregister', haystack: $this->appManager->getInstalledApps()),
+			'openRegisters' => in_array(needle: 'openregister', haystack: $this->system->apps->getInstalledApps()),
 			// The signing provider picker offers LibreSign only when it can sign.
-			'libresignAvailable' => $this->appManager->isEnabledForAnyone('libresign'),
+			'libresignAvailable' => $this->system->apps->isEnabledForAnyone('libresign'),
 			'isAdmin' => $isAdmin,
 			'anonymiserBackend' => $this->anonymiserBackendPayload(dismissed: $dismissed),
 		];
@@ -177,8 +170,8 @@ class SettingsController extends Controller {
 	 * @spec openspec/changes/archive/2026-09-29-anonymisation-fails-closed-without-a-detector/tasks.md#task-4
 	 */
 	private function anonymiserBackendPayload(bool $dismissed): array {
-		$state = $this->anonymiserClient->getState();
-		$warning = $this->anonymiserClient->warningFor(state: $state);
+		$state = $this->backends->anonymiser->getState();
+		$warning = $this->backends->anonymiser->warningFor(state: $state);
 
 		$shown = $warning !== null;
 		if ($warning === 'regex' && $dismissed === true) {
@@ -191,7 +184,7 @@ class SettingsController extends Controller {
 				'warning' => $warning,
 				'warningDismissed' => $dismissed,
 				'showWarning' => $shown,
-				'appApiInstalled' => $this->appManager->isInstalled('app_api'),
+				'appApiInstalled' => $this->system->apps->isInstalled('app_api'),
 			]
 		);
 
@@ -227,7 +220,7 @@ class SettingsController extends Controller {
 
 			$data = $this->request->getParams();
 
-			$updatedData = $this->settingsService->updateSettings($data);
+			$updatedData = $this->backends->settings->updateSettings($data);
 
 			return new JSONResponse($updatedData);
 		} catch (Exception $e) {
@@ -280,7 +273,7 @@ class SettingsController extends Controller {
 				);
 			}
 
-			return new JSONResponse($this->settingsService->initialize());
+			return new JSONResponse($this->backends->settings->initialize());
 		} catch (Exception $e) {
 			return $this->failed(message: 'Failed to load register configuration', exception: $e);
 		}//end try

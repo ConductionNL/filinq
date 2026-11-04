@@ -102,7 +102,7 @@
 			:message="deleteMessage"
 			:confirmLabel="t('filinq', 'Delete')"
 			variant="error"
-			@confirm="executeDelete"
+			@confirm="executeDelete($refs.confirmDialog)"
 			@close="deleteTarget = null" />
 	</div>
 </template>
@@ -244,16 +244,18 @@ export default {
 		},
 
 		/**
-		 * Execute deletion after user confirmed in the dialog.
+		 * Execute deletion after user confirmed in the dialog. A failed delete
+		 * puts the dialog back in its confirm state.
 		 *
+		 * @param {object} [dialog] The confirm dialog that asked.
 		 * @spec openspec/changes/advanced-template-management/tasks.md#task-6
 		 */
-		async executeDelete() {
+		async executeDelete(dialog) {
 			if (!this.deleteTarget) return
 			try {
 				await this.templateStore.deleteTemplate(this.deleteTarget.id)
 			} catch (err) {
-				this.$refs.confirmDialog?.setResult(null)
+				dialog?.setResult(null)
 				throw err
 			}
 			this.deleteTarget = null

@@ -21,6 +21,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use OCA\Filinq\Exception\SubjectErasureRefusedException;
+use OCA\Filinq\Kernel\AppIdentity;
 use OCA\Filinq\Kernel\Contracts\SubjectErasureRunInterface;
 use OCA\Filinq\Kernel\Contracts\SubjectErasureServiceInterface;
 use OCP\AppFramework\Controller;
@@ -58,7 +59,6 @@ class SubjectErasureController extends Controller {
 	/**
 	 * Constructor.
 	 *
-	 * @param string                $appName     The app name.
 	 * @param IRequest              $request     The request.
 	 * @param SubjectErasureServiceInterface $requests    The request lifecycle.
 	 * @param SubjectErasureRunInterface     $runs        The run and the certificate.
@@ -69,7 +69,6 @@ class SubjectErasureController extends Controller {
 	 * @return void
 	 */
 	public function __construct(
-		string $appName,
 		IRequest $request,
 		private readonly SubjectErasureServiceInterface $requests,
 		private readonly SubjectErasureRunInterface $runs,
@@ -77,7 +76,7 @@ class SubjectErasureController extends Controller {
 		private readonly IL10N $l10n,
 		private readonly LoggerInterface $logger,
 	) {
-		parent::__construct(appName: $appName, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 
 	}//end __construct()
 

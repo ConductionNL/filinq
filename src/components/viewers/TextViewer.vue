@@ -1,13 +1,13 @@
 <template>
 	<div
-		class="text-viewer"
+		class="text-viewer dd-doc-viewer"
 		:class="{ 'dd-marking-cursor': isAddMode }"
 		@mouseup="captureSelection">
-		<div v-if="loading" class="text-viewer__loading">
+		<div v-if="loading" class="text-viewer__loading dd-doc-viewer__state">
 			<NcLoadingIcon :size="48" />
 			<span>{{ t('filinq', 'Loading document…') }}</span>
 		</div>
-		<div v-else-if="error" class="text-viewer__error">
+		<div v-else-if="error" class="text-viewer__error dd-doc-viewer__state">
 			{{ error }}
 		</div>
 		<pre v-else class="text-viewer__content"><span
@@ -119,25 +119,9 @@ export default {
 }
 </script>
 
+<style scoped src="./documentViewer.css"></style>
+
 <style scoped>
-.text-viewer {
-	display: flex;
-	justify-content: center;
-	padding: 16px;
-	background: var(--color-background-dark);
-	min-height: 100%;
-}
-
-.text-viewer__loading,
-.text-viewer__error {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	gap: 8px;
-	padding: 32px;
-	color: var(--color-text-maxcontrast);
-}
-
 .text-viewer__content {
 	background: white;
 	color: black;

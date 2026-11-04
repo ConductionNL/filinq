@@ -1,0 +1,117 @@
+{
+	"elements": {
+		"pdf-viewer": {
+			"display": "flex",
+			"flex-direction": "column",
+			"align-items": "center",
+			"gap": "12px",
+			"padding": "16px",
+			"background": "var(--color-background-dark)",
+			"min-height": "100%"
+		},
+		"pdf-viewer__loading": {
+			"display": "flex",
+			"flex-direction": "column",
+			"align-items": "center",
+			"gap": "8px",
+			"padding": "32px",
+			"color": "var(--color-text-maxcontrast)"
+		},
+		"pdf-viewer__error": {
+			"display": "flex",
+			"flex-direction": "column",
+			"align-items": "center",
+			"gap": "8px",
+			"padding": "32px",
+			"color": "var(--color-text-maxcontrast)"
+		},
+		"pdf-viewer__pages": {
+			"display": "flex",
+			"flex-direction": "column",
+			"align-items": "center",
+			"gap": "12px",
+			"width": "100%"
+		},
+		"pdf-viewer__page": {
+			"background": "white",
+			"box-shadow": "var(--dd-shadow-doc)",
+			"max-width": "100%"
+		}
+	},
+	"other": [
+		{
+			"selector": ".pdf-viewer__page .pdf-viewer__text-layer",
+			"decls": {
+				"position": "absolute",
+				"inset": "0",
+				"overflow": "hidden",
+				"opacity": "1",
+				"line-height": "1",
+				"text-align": "initial",
+				"forced-color-adjust": "none",
+				"transform-origin": "0 0",
+				"z-index": "1",
+				"--min-font-size": "1",
+				"--text-scale-factor": "calc(var(--total-scale-factor) * var(--min-font-size))",
+				"--min-font-size-inv": "calc(1 / var(--min-font-size))"
+			}
+		},
+		{
+			"selector": ".pdf-viewer__page .pdf-viewer__text-layer :is(span, br)",
+			"decls": {
+				"color": "transparent",
+				"position": "absolute",
+				"white-space": "pre",
+				"cursor": "text",
+				"transform-origin": "0% 0%"
+			}
+		},
+		{
+			"selector": ".pdf-viewer__page .pdf-viewer__text-layer > :not(.markedContent)",
+			"decls": {
+				"z-index": "1",
+				"--font-height": "0",
+				"font-size": "calc(var(--text-scale-factor) * var(--font-height))",
+				"--scale-x": "1",
+				"--rotate": "0deg",
+				"transform": "rotate(var(--rotate)) scaleX(var(--scale-x))\n\t\tscale(var(--min-font-size-inv))"
+			}
+		},
+		{
+			"selector": ".pdf-viewer__page\n\t.pdf-viewer__text-layer .markedContent span:not(.markedContent)",
+			"decls": {
+				"z-index": "1",
+				"--font-height": "0",
+				"font-size": "calc(var(--text-scale-factor) * var(--font-height))",
+				"--scale-x": "1",
+				"--rotate": "0deg",
+				"transform": "rotate(var(--rotate)) scaleX(var(--scale-x))\n\t\tscale(var(--min-font-size-inv))"
+			}
+		},
+		{
+			"selector": ".pdf-viewer__page .pdf-viewer__text-layer .markedContent",
+			"decls": {
+				"display": "contents"
+			}
+		},
+		{
+			"selector": ".pdf-viewer__page .pdf-viewer__text-layer .dd-hl",
+			"decls": {
+				"position": "static",
+				"font-size": "inherit",
+				"transform": "none",
+				"padding": "0",
+				"box-shadow": "none",
+				"border-radius": "2px",
+				"opacity": "0.45"
+			}
+		},
+		{
+			"selector": ".pdf-viewer__page .pdf-viewer__text-layer ::selection",
+			"decls": {
+				"color": "transparent",
+				"background": "rgba(0, 100, 255, 0.4)"
+			}
+		}
+	]
+}

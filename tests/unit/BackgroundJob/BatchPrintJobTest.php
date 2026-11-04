@@ -30,6 +30,7 @@ use OCA\Filinq\Kernel\PrintJobRequest;
 use OCA\Filinq\Service\DataResolverService;
 use OCA\Filinq\Service\PdfService;
 use OCA\Filinq\Service\PrintJobService;
+use OCA\Filinq\Service\Support\TemplateSources;
 use OCA\Filinq\Service\TemplateService;
 use OCA\Filinq\Tests\Unit\Service\PrintJobDoubles;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -71,8 +72,7 @@ class BatchPrintJobTest extends TestCase {
 		);
 		$service = new PrintJobService(
 			$pdf,
-			$templates,
-			$this->createMock(DataResolverService::class),
+			new TemplateSources(templates: $templates, data: $this->createMock(DataResolverService::class)),
 			$this->printJobRepository(),
 			$this->printJobFileStore(),
 			new JobQueue(jobList: $jobList),
@@ -104,8 +104,7 @@ class BatchPrintJobTest extends TestCase {
 		$templates->method('getTemplate')->willThrowException(new \Exception('gone'));
 		$service = new PrintJobService(
 			$this->createMock(PdfService::class),
-			$templates,
-			$this->createMock(DataResolverService::class),
+			new TemplateSources(templates: $templates, data: $this->createMock(DataResolverService::class)),
 			$this->printJobRepository(),
 			$this->printJobFileStore(),
 			new JobQueue(jobList: $this->createMock(IJobList::class)),
@@ -186,8 +185,7 @@ class BatchPrintJobTest extends TestCase {
 
 		return new PrintJobService(
 			$pdf,
-			$templates,
-			$resolver,
+			new TemplateSources(templates: $templates, data: $resolver),
 			$this->printJobRepository(),
 			$this->printJobFileStore(),
 			new JobQueue(jobList: $this->createMock(IJobList::class)),

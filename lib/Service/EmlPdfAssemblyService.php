@@ -391,9 +391,7 @@ class EmlPdfAssemblyService {
 		try {
 			$this->attachmentRenderer->renderBytes(
 				mpdf: $run->mpdf,
-				bytes: $redacted,
-				mimeType: $meta['mimeType'],
-				filename: $meta['filename'],
+				attachment: ['bytes' => $redacted, 'mimeType' => $meta['mimeType'], 'filename' => $meta['filename']],
 				options: $run->options
 			);
 		} catch (Throwable $e) {
@@ -421,14 +419,7 @@ class EmlPdfAssemblyService {
 	 * @return void
 	 */
 	private function writePlaceholder(EmlRenderRun $run, array $divider): void {
-		$this->attachmentRenderer->writeDivider(
-			mpdf: $run->mpdf,
-			index: $divider['index'],
-			filename: $divider['filename'],
-			mimeType: $divider['mimeType'],
-			size: $divider['size'],
-			variant: $divider['variant']
-		);
+		$this->attachmentRenderer->writeDivider(mpdf: $run->mpdf, divider: $divider);
 
 	}//end writePlaceholder()
 

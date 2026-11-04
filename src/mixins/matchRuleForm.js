@@ -1,14 +1,16 @@
 /**
- * Mixin for the entity-policy form modals (publish always, publish never):
+ * Mixin for the entity-policy form modal (publish always, publish never):
  * an NcDialog form whose record carries a list of match rules.
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  * SPDX-License-Identifier: EUPL-1.2
  *
- * The modal gives its empty form as the component option `blankForm`, a
- * function returning a fresh object with a `matchRules` array. The form is
+ * The modal gives its empty form as the method `blankForm`, returning a
+ * fresh object with a `matchRules` array. The form is
  * reset from `editingRecord` each time `open` turns true.
  */
+
+import { translate as t } from '@nextcloud/l10n'
 
 export const matchRuleForm = {
 	props: {
@@ -18,11 +20,9 @@ export const matchRuleForm = {
 		formError: { type: String, default: '' },
 	},
 
-	emits: ['update:open', 'submit', 'cancel'],
-
 	data() {
 		return {
-			form: this.$options.blankForm(),
+			form: this.blankForm(),
 			matchTypeOptions: ['exact', 'normalized', 'bsn', 'kvk'],
 		}
 	},
@@ -33,16 +33,20 @@ export const matchRuleForm = {
 		},
 
 		/**
-		 * The state the dialog's buttons render from.
+		 * The props and listeners of the dialog's buttons (CnDialogActions).
 		 *
-		 * @return {{saving: boolean, canSubmit: boolean, editing: boolean}} The button state.
+		 * @return {{saving: boolean, canSubmit: boolean, confirmLabel: string, onCancel: () => void, onSubmit: () => void}} The button state and handlers.
 		 * @spec openspec/specs/entity-publication-policies/spec.md#requirement-three-separate-admin-surfaces-must-exist
 		 */
 		formActions() {
 			return {
 				saving: this.saving,
 				canSubmit: this.canSubmit,
-				editing: this.editing,
+				confirmLabel: this.editing
+					? t('filinq', 'Save')
+					: t('filinq', 'Create'),
+				onCancel: this.onCancel,
+				onSubmit: this.submit,
 			}
 		},
 
@@ -77,7 +81,7 @@ export const matchRuleForm = {
 		 * @spec openspec/specs/entity-publication-policies/spec.md#requirement-three-separate-admin-surfaces-must-exist
 		 */
 		resetForm() {
-			const blank = this.$options.blankForm()
+			const blank = this.blankForm()
 			if (this.editingRecord) {
 				this.form = {
 					...blank,

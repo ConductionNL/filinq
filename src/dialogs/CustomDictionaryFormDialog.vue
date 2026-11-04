@@ -7,6 +7,7 @@
 	CustomDictionaryDetail (edit) — ADR-004 gate-13, own file, not inline.
 -->
 <script>
+import { CnDialogActions } from '@conduction/nextcloud-vue'
 import { translate as t } from '@nextcloud/l10n'
 import {
 	NcCheckboxRadioSwitch,
@@ -14,7 +15,6 @@ import {
 	NcSelect,
 	NcTextField,
 } from '@nextcloud/vue'
-import FormDialogActions from '../components/FormDialogActions.vue'
 
 /**
  *
@@ -32,7 +32,7 @@ function blankForm() {
 export default {
 	name: 'CustomDictionaryFormDialog',
 	components: {
-		FormDialogActions,
+		CnDialogActions,
 		NcCheckboxRadioSwitch,
 		NcDialog,
 		NcSelect,
@@ -88,16 +88,18 @@ export default {
 		},
 
 		/**
-		 * Saving, submittable and editing, for the create or save button.
+		 * Saving, submittable and the create or save label, for the buttons.
 		 *
-		 * @return {object} The props of FormDialogActions.
+		 * @return {object} The props of CnDialogActions.
 		 * @spec openspec/specs/custom-dictionary-recognition/spec.md#requirement-custom-dictionary-admin-ui-req-ddcdr-006
 		 */
 		formActions() {
 			return {
 				saving: this.saving,
 				canSubmit: this.canSubmit,
-				editing: this.editing,
+				confirmLabel: this.editing
+					? t('filinq', 'Save')
+					: t('filinq', 'Create'),
 			}
 		},
 	},
@@ -167,7 +169,7 @@ export default {
 				dialog was written with the `caseInsensitive` default no matter
 				what the user chose, silently.
 
-				The sibling select in StandingConsentFormModal.vue already uses
+				The sibling select in PolicyRuleFormModal.vue already uses
 				`v-model` and works; this was the only `:value`-bound NcSelect
 				left in src/ (swept 2026-08-11).
 			-->
@@ -197,7 +199,7 @@ export default {
 		</div>
 
 		<template #actions>
-			<FormDialogActions
+			<CnDialogActions
 				v-bind="formActions"
 				@cancel="onCancel"
 				@submit="submit" />

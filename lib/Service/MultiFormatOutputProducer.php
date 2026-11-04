@@ -29,6 +29,7 @@ namespace OCA\Filinq\Service;
 
 use Exception;
 use OCA\Filinq\Kernel\Contracts\MultiFormatOutputProducerInterface;
+use OCA\Filinq\Service\Support\DocumentOutput;
 use OCP\IURLGenerator;
 use Throwable;
 
@@ -58,13 +59,26 @@ class MultiFormatOutputProducer implements MultiFormatOutputProducerInterface {
 	];
 
 	/**
+	 * Files each output in the user's Files.
+	 *
+	 * @var DocumentStorageService
+	 */
+	private readonly DocumentStorageService $storage;
+
+	/**
+	 * Writes the one generatedDocument entry.
+	 *
+	 * @var GeneratedDocumentLogger
+	 */
+	private readonly GeneratedDocumentLogger $auditLog;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param DocumentService                    $documents      Renders the template (its preview path: the same render, no audit entry).
 	 * @param TemplateService                    $templates      Reads the template.
 	 * @param DocumentRenderPipeline             $renderPipeline Converts the rendered HTML per format.
-	 * @param DocumentStorageService             $storage        Files each output in the user's Files.
-	 * @param GeneratedDocumentLogger            $auditLog       Writes the one generatedDocument entry.
+	 * @param DocumentOutput $output The document store and the generation log.
 	 * @param PlainLanguageRenditionService|null $plainRendition Tells whether the template has a plain-language counterpart.
 	 * @param IURLGenerator|null                 $urls           Makes the download URLs absolute.
 	 */
@@ -72,11 +86,12 @@ class MultiFormatOutputProducer implements MultiFormatOutputProducerInterface {
 		private readonly DocumentService $documents,
 		private readonly TemplateService $templates,
 		private readonly DocumentRenderPipeline $renderPipeline,
-		private readonly DocumentStorageService $storage,
-		private readonly GeneratedDocumentLogger $auditLog,
+		DocumentOutput $output,
 		private readonly ?PlainLanguageRenditionService $plainRendition = null,
 		private readonly ?IURLGenerator $urls = null,
 	) {
+		$this->storage = $output->storage;
+		$this->auditLog = $output->log;
 
 	}//end __construct()
 

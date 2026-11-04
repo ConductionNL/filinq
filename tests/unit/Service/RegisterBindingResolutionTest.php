@@ -28,6 +28,7 @@ use OCA\Filinq\Service\OpenRegisterResolver;
 use OCA\Filinq\Service\RegisterDiscoveryService;
 use OCA\Filinq\Service\SettingsInitializer;
 use OCA\Filinq\Service\SettingsService;
+use OCA\Filinq\Service\Support\RegisterSetup;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -80,8 +81,7 @@ class RegisterBindingResolutionTest extends TestCase {
 		$this->settings = new SettingsService(
 			$this->config,
 			$this->createMock(LoggerInterface::class),
-			$this->createMock(RegisterDiscoveryService::class),
-			$this->createMock(SettingsInitializer::class),
+			new RegisterSetup(discovery: $this->createMock(RegisterDiscoveryService::class), initializer: $this->createMock(SettingsInitializer::class)),
 			$this->createMock(OcrService::class),
 			$this->createMock(LegalBasisProposalService::class),
 			$this->createMock(OpenRegisterAvailabilityService::class)

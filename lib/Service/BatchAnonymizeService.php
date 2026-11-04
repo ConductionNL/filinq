@@ -337,25 +337,15 @@ class BatchAnonymizeService implements BatchAnonymizeServiceInterface {
 	 */
 	private function anonymizeOneFile(int $fileId, BatchAnonymizeRequest $request): array {
 		$callOptions = $request->callOptions;
+		$options = (new AnonymizeOptions())
+			->withConsents(unredactedEntities: $callOptions['unredactedEntities'], overrides: [])
+			->withOutputFormat(outputFormat: $callOptions['outputFormat'])
+			->withScope(scope: $callOptions['scope'], dossierKey: null);
 		if ($callOptions['appendBasisSummary'] === true) {
-			return $this->anonService->anonymizeDocumentWithBasisSummary(
-				fileId: $fileId,
-				entities: $request->entities,
-				unredactedEntities: $callOptions['unredactedEntities'],
-				outputFormat: $callOptions['outputFormat'],
-				scope: $callOptions['scope'],
-				dossierKey: null
-			);
+			return $this->anonService->anonymizeDocumentWithBasisSummary(fileId: $fileId, entities: $request->entities, options: $options);
 		}
 
-		return $this->anonService->anonymizeDocument(
-			fileId: $fileId,
-			entities: $request->entities,
-			unredactedEntities: $callOptions['unredactedEntities'],
-			outputFormat: $callOptions['outputFormat'],
-			scope: $callOptions['scope'],
-			dossierKey: null
-		);
+		return $this->anonService->anonymizeDocument(fileId: $fileId, entities: $request->entities, options: $options);
 
 	}//end anonymizeOneFile()
 

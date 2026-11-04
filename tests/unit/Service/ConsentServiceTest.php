@@ -23,7 +23,9 @@
 namespace OCA\Filinq\Tests\Unit\Service;
 
 use OCA\Filinq\Exception\PolicyRejectedException;
+use OCA\Filinq\Kernel\ConsentUpdate;
 use OCA\Filinq\Service\ConsentNotesHelper;
+use OCA\Filinq\Service\ConsentPolicyReferentValidator;
 use OCA\Filinq\Service\ConsentRecordWriter;
 use OCA\Filinq\Service\ConsentScopeValidator;
 use OCA\Filinq\Service\ConsentService;
@@ -32,6 +34,8 @@ use OCA\Filinq\Service\ConsentUpdateHandler;
 use OCA\Filinq\Service\ObjectionDeadlineChecker;
 use OCA\Filinq\Service\PolicyMatchService;
 use OCA\Filinq\Service\RegisterObjectRef;
+use OCA\Filinq\Service\Support\ConsentRecordRules;
+use OCA\Filinq\Service\Support\OpenRegisterAccess;
 use OCP\App\IAppManager;
 use OCP\IUser;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -196,13 +200,16 @@ class ConsentServiceTest extends TestCase {
 		?ContainerInterface $container = null,
 		?IAppManager $appManager = null,
 	): ConsentRecordWriter {
+		$openRegister = new OpenRegisterAccess(apps: ($appManager ?? $this->mockAppManager), container: ($container ?? $this->mockContainer));
 		return new ConsentRecordWriter(
 			logger: $this->mockLogger,
-			container: $container ?? $this->mockContainer,
-			appManager: $appManager ?? $this->mockAppManager,
-			deadlineChecker: $this->mockDeadlineChecker,
-			notesHelper: $this->notesHelper,
-			scopeValidator: $this->mockScopeValidator
+			openRegister: $openRegister,
+			rules: new ConsentRecordRules(
+				deadlineChecker: $this->mockDeadlineChecker,
+				notesHelper: $this->notesHelper,
+				scopeValidator: $this->mockScopeValidator,
+				referentValidator: new ConsentPolicyReferentValidator(logger: $this->mockLogger, container: $openRegister->container, appManager: $openRegister->apps)
+			)
 		);
 
 	}//end buildRecordWriter()
@@ -888,13 +895,7 @@ class ConsentServiceTest extends TestCase {
 			recordWriter: $this->buildRecordWriter(container: $container)
 		);
 
-		$result = $service->validateAndUpdateConsent(
-			consentId: 'c-1',
-			register: 'reg-1',
-			schema: 'sch-1',
-			data: ['consentStatus' => 'revoked'],
-			user: $user
-		);
+		$result = $service->validateAndUpdateConsent(update: new ConsentUpdate(consentId: 'c-1', register: 'reg-1', schema: 'sch-1', data: ['consentStatus' => 'revoked']), user: $user);
 
 		$this->assertSame(['id' => 'c-1', 'consentStatus' => 'revoked'], $result);
 
@@ -922,7 +923,7 @@ class ConsentServiceTest extends TestCase {
 		);
 
 		$this->expectExceptionMessage('Consent record not found: c-404');
-		$service->validateAndUpdateConsent(consentId: 'c-404', register: 'r', schema: 's', data: []);
+		$service->validateAndUpdateConsent(update: new ConsentUpdate(consentId: 'c-404', register: 'r', schema: 's', data: []));
 
 	}//end testValidateAndUpdateOfAMissingRecordThrows()
 
@@ -1206,7 +1207,7 @@ class ConsentServiceTest extends TestCase {
 			)
 			->willReturn(['saved' => true]);
 
-		$result = $service->validateAndUpdateConsent(consentId: 'c-1', register: 'filinq', schema: 'publicationConsent', data: $update, user: $user);
+		$result = $service->validateAndUpdateConsent(update: new ConsentUpdate(consentId: 'c-1', register: 'filinq', schema: 'publicationConsent', data: $update), user: $user);
 
 		$this->assertSame(expected: ['saved' => true], actual: $result);
 
@@ -1231,11 +1232,11 @@ class ConsentServiceTest extends TestCase {
 				}
 			);
 
-		$service->validateAndUpdateConsent(consentId: 'c-1', register: 'r', schema: 's', data: ['objectionReason' => 'x']);
+		$service->validateAndUpdateConsent(update: new ConsentUpdate(consentId: 'c-1', register: 'r', schema: 's', data: ['objectionReason' => 'x']));
 
 		$user = $this->createMock(originalClassName: IUser::class);
 		$document = $this->serviceOverStoredConsent(stored: ['consentStatus' => 'pending']);
-		$document->validateAndUpdateConsent(consentId: 'c-2', register: 'r', schema: 's', data: ['objectionReason' => 'x'], user: $user);
+		$document->validateAndUpdateConsent(update: new ConsentUpdate(consentId: 'c-2', register: 'r', schema: 's', data: ['objectionReason' => 'x']), user: $user);
 
 	}//end testValidateAndUpdateConsentWithoutAUser()
 

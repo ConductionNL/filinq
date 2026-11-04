@@ -19,6 +19,7 @@ namespace OCA\Filinq\Tests\Unit\Service;
 
 use Exception;
 use OCA\Filinq\Service\OpenRegisterResolver;
+use OCA\Filinq\Service\Support\OpenRegisterAccess;
 use OCA\Filinq\Service\TemplateService;
 use OCA\Filinq\Service\TemplateVersionService;
 use OCA\OpenRegister\Db\ObjectEntity;
@@ -98,8 +99,7 @@ class TemplateServiceTest extends TestCase {
 			->willReturn([]);
 
 		$this->templateService = new TemplateService(
-			$this->mockContainer,
-			$this->mockAppManager,
+			new OpenRegisterAccess(apps: $this->mockAppManager, container: $this->mockContainer),
 			$this->mockRegisterResolver,
 			$mockVersionService,
 			$mockUserSession,
@@ -140,8 +140,7 @@ class TemplateServiceTest extends TestCase {
 			->willReturn($mockObjectService);
 
 		$this->templateService = new TemplateService(
-			$this->mockContainer,
-			$this->mockAppManager,
+			new OpenRegisterAccess(apps: $this->mockAppManager, container: $this->mockContainer),
 			$this->mockRegisterResolver,
 			$this->createMock(TemplateVersionService::class),
 			$this->createMock(IUserSession::class),
@@ -176,8 +175,7 @@ class TemplateServiceTest extends TestCase {
 			->willReturn($mockObjectService);
 
 		$this->templateService = new TemplateService(
-			$this->mockContainer,
-			$this->mockAppManager,
+			new OpenRegisterAccess(apps: $this->mockAppManager, container: $this->mockContainer),
 			$this->mockRegisterResolver,
 			$mockVersionService,
 			$this->createMock(IUserSession::class),

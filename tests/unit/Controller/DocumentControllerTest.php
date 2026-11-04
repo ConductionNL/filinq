@@ -20,6 +20,7 @@
 namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\DocumentController;
+use OCA\Filinq\Controller\Support\ControllerFeedback;
 use OCA\Filinq\Exception\ConversionFailedException;
 use OCA\Filinq\Service\DocumentService;
 use OCP\AppFramework\Http\DataDownloadResponse;
@@ -125,8 +126,7 @@ class DocumentControllerTest extends TestCase {
 			$this->request,
 			$this->documentSvc,
 			$this->userSession,
-			$this->logger,
-			$this->l10n
+			new ControllerFeedback(l10n: $this->l10n, logger: $this->logger)
 		);
 
 	}//end setUp()
@@ -204,7 +204,7 @@ class DocumentControllerTest extends TestCase {
 		$user->method('getUID')->willReturn('clerk');
 		$session = $this->createMock(IUserSession::class);
 		$session->method('getUser')->willReturn($user);
-		$controller = new DocumentController('filinq', $this->request, $this->documentSvc, $session, $this->logger, $this->l10n, $producer);
+		$controller = new DocumentController('filinq', $this->request, $this->documentSvc, $session,new ControllerFeedback(l10n: $this->l10n, logger: $this->logger), $producer);
 
 		$result = $controller->generate();
 
@@ -708,8 +708,7 @@ class DocumentControllerTest extends TestCase {
 			$this->request,
 			$this->documentSvc,
 			$this->userSession,
-			$this->logger,
-			$this->l10n
+			new ControllerFeedback(l10n: $this->l10n, logger: $this->logger)
 		);
 
 		$result = $controller->generate();
@@ -794,12 +793,11 @@ class DocumentControllerTest extends TestCase {
 		$documents->method('generateDocument')->willReturn($result);
 
 		return new DocumentController(
+			feedback: new ControllerFeedback(l10n: $this->l10n, logger: $this->createMock(originalClassName: LoggerInterface::class)),
 			appName: 'filinq',
 			request: $request,
 			documentSvc: $documents,
-			userSession: $this->userSession,
-			logger: $this->createMock(originalClassName: LoggerInterface::class),
-			l10n: $this->l10n
+			userSession: $this->userSession
 		);
 
 	}//end controllerAnswering()
@@ -816,12 +814,11 @@ class DocumentControllerTest extends TestCase {
 		$this->documentSvc->expects($this->never())->method($this->anything());
 
 		$controller = new DocumentController(
+			feedback: new ControllerFeedback(l10n: $this->l10n, logger: $this->logger),
 			appName: 'filinq',
 			request: $this->request,
 			documentSvc: $this->documentSvc,
-			userSession: $session,
-			logger: $this->logger,
-			l10n: $this->l10n
+			userSession: $session
 		);
 
 		$this->assertSame(expected: 401, actual: $controller->preview()->getStatus());
@@ -899,12 +896,11 @@ class DocumentControllerTest extends TestCase {
 				['options', [], []],
 			]);
 		$controller = new DocumentController(
+			feedback: new ControllerFeedback(l10n: $this->l10n, logger: $this->logger),
 			appName: 'filinq',
 			request: $request,
 			documentSvc: $this->documentSvc,
-			userSession: $this->userSession,
-			logger: $this->logger,
-			l10n: $this->l10n
+			userSession: $this->userSession
 		);
 		$this->assertSame(expected: 400, actual: $controller->generateBulk()->getStatus());
 

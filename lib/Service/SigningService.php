@@ -29,11 +29,11 @@ use OCA\Filinq\Kernel\Contracts\SigningServiceInterface;
 use OCA\Filinq\Kernel\SigningAuditActor;
 use OCA\Filinq\Kernel\SigningAuditEvent;
 use OCA\Filinq\Kernel\SigningAuditSubject;
-use OCA\Filinq\Service\SignerAuth\SigningAssuranceGate;
-use OCA\Filinq\Service\Signing\GuardianConsentGuard;
 use OCA\Filinq\Service\Signing\PortalSignatureAssurance;
 use OCA\Filinq\Service\Signing\SignerEntries;
 use OCA\Filinq\Service\Signing\SigningAct;
+use OCA\Filinq\Service\Support\SigningGuards;
+use OCA\Filinq\Service\Support\SigningOutputs;
 use RuntimeException;
 
 /**
@@ -45,20 +45,13 @@ use RuntimeException;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * SignedArtifactProducer and SigningRequestValidator were extracted earlier;
- * SigningActorResolver (who is acting, and may they act as this signer) and
- * SigningConclusionEmitter (the cross-app conclusion contract) followed, so
- * the class now meets the length, complexity and parameter-list thresholds on
- * its own. Coupling went back over the line with the signing folder's mandate
- * service, which is a collaborator rather than work this class does itself.
+ * The request validator, the guardian consent rule, the identity gate and the
+ * mandate reach this class as one SigningGuards bundle; the audit trail, the
+ * artifact producer and the conclusion emitter as one SigningOutputs bundle.
  *
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The thirteenth collaborator is
- * SigningMandateService, added so a direct signing attempt is refused by the
- * same rule that leaves the document out of the folder. Inlining that rule here
- * would be the second copy of it. The fourteenth is GuardianConsentGuard, for
- * the same reason: the guardian rule is applied here and kept there. The
- * fifteenth is SigningAssuranceGate (signer-identity-rails REQ-DDSIR-003): the
- * identity gate runs here, at every act, and its rules live there.
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The audit value objects, the
+ * signing act and the portal assurance this class builds count as well as its
+ * four collaborators; inlining them elsewhere would split one lifecycle.
  *
  * @spec openspec/specs/document-signing/spec.md
  * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
@@ -84,41 +77,17 @@ class SigningService implements SigningServiceInterface {
 	 * Constructor
 	 *
 	 * @param SettingsService $settingsService Settings service
-	 * @param SigningAuditService $auditService Audit service
-	 * @param SignedArtifactProducer $artifactProducer Produces + stores the verifiable signed artifact
-	 * @param SigningRequestValidator $validator Validates request data + the provider/level pair
 	 * @param SigningActorResolver $actorResolver Resolves the acting identity + authorises it
-	 * @param SigningConclusionEmitter $emitter Emits the cross-app SigningConcludedEvent
-	 * @param GuardianConsentGuard $consentGuard Holds the guardian rule for signers under the
-	 *                                           age of consent (signer-identity-rails
-	 *                                           REQ-DDSIR-008 to 010). Required, not a
-	 *                                           nullable seam: an unwired safety guard
-	 *                                           must fail construction, not pass silently.
-	 * @param SigningAssuranceGate $assuranceGate The identity gate of every signing act
-	 *                                           (signer-identity-rails REQ-DDSIR-003).
-	 *                                           Required for the same reason as the
-	 *                                           consent guard.
-	 * @param SigningMandateService|null $mandateService Applies the consuming app's per-type
-	 *                                                   mandate declaration to a direct signing
-	 *                                                   attempt (signing-folder-across-cases
-	 *                                                   REQ-SFC-04). An ADDITIVE seam: null
-	 *                                                   behaves exactly as before, so callers
-	 *                                                   constructing this service by hand are
-	 *                                                   unchanged, while the DI container
-	 *                                                   resolves the real one.
+	 * @param SigningGuards $guards The request validator, guardian consent rule, identity gate and mandate
+	 * @param SigningOutputs $outputs The audit trail, signed artifact producer and conclusion emitter
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		private readonly SettingsService $settingsService,
-		private readonly SigningAuditService $auditService,
-		private readonly SignedArtifactProducer $artifactProducer,
-		private readonly SigningRequestValidator $validator,
 		private readonly SigningActorResolver $actorResolver,
-		private readonly SigningConclusionEmitter $emitter,
-		private readonly GuardianConsentGuard $consentGuard,
-		private readonly SigningAssuranceGate $assuranceGate,
-		private readonly ?SigningMandateService $mandateService = null,
+		private readonly SigningGuards $guards,
+		private readonly SigningOutputs $outputs,
 	) {
 
 	}//end __construct()
@@ -185,29 +154,29 @@ class SigningService implements SigningServiceInterface {
 			'signerIds' => [],
 		];
 
-		$this->validator->validateRequestData(data: $request);
+		$this->guards->validator->validateRequestData(data: $request);
 
 		// Provider/level honesty at creation time (signing-trust-rebuild
 		// REQ-DDSTR-002 point 1): reject an unsupported provider/level pair
 		// with 400 BEFORE any object is persisted, so a QES request can never
 		// be routed to a provider that will later silently complete it with a
 		// lower-assurance (e.g. native SES) artifact.
-		$this->validator->validateProviderLevelPair(provider: (string)$request['provider'], level: (string)$request['signatureLevel']);
+		$this->guards->validator->validateProviderLevelPair(provider: (string)$request['provider'], level: (string)$request['signatureLevel']);
 
 		// Guardian consent (signer-identity-rails REQ-DDSIR-008/009): every
 		// request records the age of consent that governs it, and the signer
 		// entries are validated and linked BEFORE anything is persisted. A
 		// request naming a signer under that age without a guardian is refused
 		// with a 400 and leaves no object behind.
-		$request['guardianConsentAge'] = $this->consentGuard->appliedAge(data: $data);
+		$request['guardianConsentAge'] = $this->guards->consentGuard->appliedAge(data: $data);
 		// Required assurance, never below the level's floor (REQ-DDSIR-002).
-		$request = $this->assuranceGate->applyToRequest(request: $request, data: $data);
+		$request = $this->guards->assuranceGate->applyToRequest(request: $request, data: $data);
 		$signers = (array)($data['signers'] ?? []);
 
 		// A request that names nobody who can sign is refused before anything
 		// is stored, instead of being saved as PENDING for ever (#1209).
-		$this->validator->validateSigners(signers: $signers);
-		$prepared = $this->consentGuard->prepareSigners(
+		$this->guards->validator->validateSigners(signers: $signers);
+		$prepared = $this->guards->consentGuard->prepareSigners(
 			signers: $signers,
 			age: $request['guardianConsentAge'],
 			now: new DateTimeImmutable()
@@ -221,8 +190,8 @@ class SigningService implements SigningServiceInterface {
 		// SigningConcludedEvent can correlate back to the originating consumer.
 		// Internal requests omit these and are unaffected.
 		$request = $this->withProvenance(request: $request, data: $data);
-		$request = $this->validator->withPlacements(request: $request, data: $data, producer: $this->artifactProducer);
-		$request = $this->artifactProducer->delegate(request: $request, signers: $signers);
+		$request = $this->guards->validator->withPlacements(request: $request, data: $data, producer: $this->outputs->artifactProducer);
+		$request = $this->outputs->artifactProducer->delegate(request: $request, signers: $signers);
 
 		['register' => $register, 'schema' => $schema] = $this->requireSigningRequestBinding();
 		$savedRequest = $objectService->saveObject(object: $request, register: $register, schema: $schema, _rbac: false, _unowned: true);
@@ -234,9 +203,9 @@ class SigningService implements SigningServiceInterface {
 			entries: new SignerEntries(entries: $signers, prepared: $prepared)
 		);
 		$objectService->saveObject(object: $createdRequest, register: $register, schema: $schema, _rbac: false);
-		$createdRequest['assuranceFloor'] = $this->assuranceGate->floorFor(request: $request);
+		$createdRequest['assuranceFloor'] = $this->guards->assuranceGate->floorFor(request: $request);
 
-		$this->auditService->logEvent(
+		$this->outputs->auditService->logEvent(
 			event: new SigningAuditEvent(
 				request: new SigningAuditSubject(id: $requestId, signatureLevel: $request['signatureLevel'], provider: $request['provider']),
 				action: 'CREATED',
@@ -287,7 +256,7 @@ class SigningService implements SigningServiceInterface {
 	 * @spec openspec/specs/document-signing/spec.md
 	 */
 	private function withInitiatorDocument(array $request): array {
-		$document = $this->artifactProducer->initiatorDocument(
+		$document = $this->outputs->artifactProducer->initiatorDocument(
 			fileId: (string)$request['documentFileId'],
 			initiatorUserId: (string)$request['initiatorUserId']
 		);
@@ -529,8 +498,8 @@ class SigningService implements SigningServiceInterface {
 
 		// The mandate is declared in Nextcloud groups, which an invited portal
 		// signer is not in; the portal path has its own verified-assertion gate.
-		if ($this->mandateService !== null && $verifiedActor === null) {
-			$this->mandateService->assertMaySign(request: $request, userId: $actorUserId);
+		if ($this->guards->mandateService !== null && $verifiedActor === null) {
+			$this->guards->mandateService->assertMaySign(request: $request, userId: $actorUserId);
 		}
 
 		$act = new SigningAct(
@@ -544,14 +513,14 @@ class SigningService implements SigningServiceInterface {
 			throw new RuntimeException('Signer has already responded to this request');
 		}
 
-		$signer['identityEvidence'] = $this->assuranceGate->evidenceForAct(
+		$signer['identityEvidence'] = $this->guards->assuranceGate->evidenceForAct(
 			request: $request + ['id' => $requestId],
 			signer: $signer + ['id' => $signerId],
 			verifiedActor: $verifiedActor,
 			actorUserId: $actorUserId,
 			now: $act->now
 		)->toArray();
-		$consent = $this->consentGuard->guardSigningAct(
+		$consent = $this->guards->consentGuard->guardSigningAct(
 			requestId: $requestId,
 			request: $request,
 			signer: $signer + ['id' => $signerId],
@@ -564,7 +533,7 @@ class SigningService implements SigningServiceInterface {
 		$objectService->saveObject(object: $signer, register: $signerRegister, schema: $signerSchema, _rbac: false);
 
 		$this->logSigned(act: $act, metadata: array_merge($consent['audit'], ['identityEvidence' => $signer['identityEvidence']]));
-		$this->assuranceGate->consume(requestId: $requestId, signerId: $signerId);
+		$this->guards->assuranceGate->consume(requestId: $requestId, signerId: $signerId);
 		$this->updateRequestStatus(act: $act);
 
 		return $signer;
@@ -607,7 +576,7 @@ class SigningService implements SigningServiceInterface {
 	 * @spec openspec/changes/digital-signing-integration/tasks.md#3-3
 	 */
 	private function logSigned(SigningAct $act, array $metadata): void {
-		$this->auditService->logEvent(
+		$this->outputs->auditService->logEvent(
 			event: new SigningAuditEvent(
 				request: new SigningAuditSubject(
 					id: $act->requestId,
@@ -681,7 +650,7 @@ class SigningService implements SigningServiceInterface {
 		}
 
 		// The same identity gate as sign() (REQ-DDSIR-003), before any write.
-		$signer['identityEvidence'] = $this->assuranceGate->evidenceForAct(
+		$signer['identityEvidence'] = $this->guards->assuranceGate->evidenceForAct(
 			request: $request + ['id' => $requestId],
 			signer: $signer + ['id' => $signerId],
 			verifiedActor: $verifiedActor,
@@ -701,13 +670,13 @@ class SigningService implements SigningServiceInterface {
 
 		// Cross-app delegated-signing contract: a declined request is terminal —
 		// emit SigningConcludedEvent (status=declined) for a delegated request.
-		$this->emitter->emitIfDelegated(request: $request, status: 'declined');
+		$this->outputs->emitter->emitIfDelegated(request: $request, status: 'declined');
 
 		$metadata = $this->actorResolver->actorAuditMetadata(verifiedActor: $verifiedActor);
 		$metadata['reason'] = $reason;
 		$metadata['identityEvidence'] = $signer['identityEvidence'];
 
-		$this->auditService->logEvent(
+		$this->outputs->auditService->logEvent(
 			event: new SigningAuditEvent(
 				request: new SigningAuditSubject(id: $requestId, signatureLevel: $signatureLevel, provider: $provider),
 				action: 'DECLINED',
@@ -761,9 +730,9 @@ class SigningService implements SigningServiceInterface {
 
 		// Cross-app delegated-signing contract: a cancelled request is terminal
 		// — emit SigningConcludedEvent (status=cancelled) for a delegated request.
-		$this->emitter->emitIfDelegated(request: $request, status: 'cancelled');
+		$this->outputs->emitter->emitIfDelegated(request: $request, status: 'cancelled');
 
-		$this->auditService->logEvent(
+		$this->outputs->auditService->logEvent(
 			event: new SigningAuditEvent(
 				request: new SigningAuditSubject(id: $requestId),
 				action: 'CANCELLED',
@@ -889,14 +858,14 @@ class SigningService implements SigningServiceInterface {
 		// guardian who acted; the request then stays IN_PROGRESS, as it does
 		// when the artifact cannot be produced. The basis travels onto the
 		// request and, through the producer, into the MAC-covered assertion.
-		$freshRequest = $this->consentGuard->withConsentBasis(request: $freshRequest, signers: $signers);
+		$freshRequest = $this->guards->consentGuard->withConsentBasis(request: $freshRequest, signers: $signers);
 
 		// Identity rails (REQ-DDSIR-004/007): each signer's recorded evidence and
 		// the weakest assurance among them travel onto the request, into the
 		// MAC-covered assertion and into the completion payload.
-		$freshRequest = $this->assuranceGate->withResolvedAssurance(request: $freshRequest, signers: $signers);
+		$freshRequest = $this->guards->assuranceGate->withResolvedAssurance(request: $freshRequest, signers: $signers);
 
-		$signedDocumentRef = $this->artifactProducer->produce(request: $freshRequest, verifiedActor: $act->verifiedActor, signers: $signers);
+		$signedDocumentRef = $this->outputs->artifactProducer->produce(request: $freshRequest, verifiedActor: $act->verifiedActor, signers: $signers);
 
 		$freshRequest['status'] = 'COMPLETED';
 		$freshRequest['signedDocumentRef'] = $signedDocumentRef;
@@ -906,7 +875,7 @@ class SigningService implements SigningServiceInterface {
 		// SigningConcludedEvent (status=signed) for a delegated request. The
 		// signed reference is the stored artifact (file id + version), never
 		// the unsigned original documentFileId.
-		$this->emitter->emitIfDelegated(
+		$this->outputs->emitter->emitIfDelegated(
 			request: $freshRequest,
 			status: 'signed',
 			signedDocumentRef: $signedDocumentRef
@@ -958,7 +927,7 @@ class SigningService implements SigningServiceInterface {
 	 * @return void
 	 */
 	public function emitExpiredConclusion(array $request): void {
-		$this->emitter->emitIfDelegated(request: $request, status: 'expired');
+		$this->outputs->emitter->emitIfDelegated(request: $request, status: 'expired');
 
 	}//end emitExpiredConclusion()
 

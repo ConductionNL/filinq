@@ -26,6 +26,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\IntakeController;
+use OCA\Filinq\Controller\Support\IntakeHandling;
 use OCA\Filinq\Exception\IntakeRefusedException;
 use OCA\Filinq\Kernel\Contracts\IntakeDetachmentServiceInterface;
 use OCA\Filinq\Kernel\Contracts\IntakeNotificationReachInterface;
@@ -54,6 +55,7 @@ use RuntimeException;
  * @link     https://www.filinq.app
  *
  * @covers \OCA\Filinq\Controller\IntakeController
+ * @covers \OCA\Filinq\Controller\Support\IntakeHandling
  * @uses   \OCA\Filinq\Exception\IntakeRefusedException
  *
  * @psalm-suppress PropertyNotSetInConstructor
@@ -221,11 +223,8 @@ class IntakeAssignGoldenTest extends TestCase {
 		}
 
 		return new IntakeController(
-			appName: 'filinq',
+			handling: new IntakeHandling(intake: $intake, detachment: $this->createMock(IntakeDetachmentServiceInterface::class), routing: $this->createMock(IntakeRoutingServiceInterface::class)),
 			request: $request,
-			intake: $intake,
-			detachment: $this->createMock(IntakeDetachmentServiceInterface::class),
-			routing: $this->createMock(IntakeRoutingServiceInterface::class),
 			parties: $this->createMock(PartySuggestionServiceInterface::class),
 			userSession: $session,
 			reach: $this->createMock(IntakeNotificationReachInterface::class),

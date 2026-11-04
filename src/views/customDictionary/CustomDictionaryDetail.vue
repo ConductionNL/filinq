@@ -46,11 +46,7 @@
 						:label="matchModeLabel(dictionary.matchMode)"
 						:colorMap="matchModeColorMap" />
 					<CnStatusBadge
-						:label="
-							dictionary.active === false
-								? t('filinq', 'Inactive')
-								: t('filinq', 'Active')
-						"
+						:label="activeLabel(dictionary)"
 						:colorMap="activeColorMap" />
 					<span class="custom-dictionary-detail__term-count">
 						{{ t('filinq', '{count} terms', { count: terms.length }) }}
@@ -163,7 +159,7 @@
 			:message="removeMessage"
 			:confirmLabel="t('filinq', 'Remove')"
 			variant="error"
-			@confirm="executeRemoveTerm"
+			@confirm="executeRemoveTerm($refs.confirmDialog)"
 			@close="cancelRemoveTerm" />
 	</div>
 </template>
@@ -175,6 +171,7 @@ import { NcButton, NcEmptyContent, NcLoadingIcon, NcTextField } from '@nextcloud
 import Delete from 'vue-material-design-icons/Delete.vue'
 import CustomDictionaryFormDialog from '../../dialogs/CustomDictionaryFormDialog.vue'
 import CustomDictionaryImportDialog from '../../dialogs/CustomDictionaryImportDialog.vue'
+import { customDictionaryBadges } from '../../mixins/customDictionaryBadges.js'
 import { customDictionaryStore } from '../../store/store.js'
 import { resolveI18nValue } from '../../utils/registerI18n.js'
 
@@ -192,6 +189,8 @@ export default {
 		CnConfirmDialog,
 	},
 
+	mixins: [customDictionaryBadges],
+
 	data() {
 		return {
 			customDictionaryStore,
@@ -205,16 +204,6 @@ export default {
 			importing: false,
 			importError: '',
 			removeTarget: null, // term awaiting removal confirmation, or null
-			matchModeColorMap: {
-				exact: 'error',
-				caseInsensitive: 'primary',
-				wordBoundary: 'success',
-			},
-
-			activeColorMap: {
-				[t('filinq', 'Active')]: 'success',
-				[t('filinq', 'Inactive')]: 'default',
-			},
 		}
 	},
 
@@ -269,23 +258,6 @@ export default {
 		 */
 		displayValue(value, fallback = '') {
 			return resolveI18nValue(value, fallback)
-		},
-
-		/**
-		 * Translated label for a dictionary match mode, falling back to the raw
-		 * value and finally to the schema default.
-		 *
-		 * @param {string} mode Stored match mode.
-		 * @return {string} Displayable label.
-		 * @spec openspec/specs/custom-dictionary-recognition/spec.md#requirement-custom-dictionary-admin-ui-req-ddcdr-006
-		 */
-		matchModeLabel(mode) {
-			const labels = {
-				exact: t('filinq', 'Exact'),
-				caseInsensitive: t('filinq', 'Case-insensitive'),
-				wordBoundary: t('filinq', 'Word boundary'),
-			}
-			return labels[mode] || mode || t('filinq', 'Case-insensitive')
 		},
 
 		handleBack() {
@@ -367,12 +339,14 @@ export default {
 		 * Remove the confirmed term. Reachable only from the dialog's
 		 *
 		 * @confirm, so a term is never removed without an explicit
-		 * confirmation.
+		 * confirmation. A failed removal puts the dialog back in its confirm
+		 * state.
 		 *
+		 * @param {object} [dialog] The confirm dialog that asked.
 		 * @return {Promise<void>}
 		 * @spec openspec/specs/custom-dictionary-recognition/spec.md
 		 */
-		async executeRemoveTerm() {
+		async executeRemoveTerm(dialog) {
 			const term = this.removeTarget
 			if (!term) {
 				return
@@ -383,7 +357,7 @@ export default {
 				this.removeTarget = null
 			} catch (err) {
 				console.error('Failed to remove term:', err)
-				this.$refs.confirmDialog?.setResult(null)
+				dialog?.setResult(null)
 			}
 		},
 

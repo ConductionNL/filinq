@@ -95,7 +95,7 @@ class ConformanceControllerTest extends TestCase {
 			$this->clock()
 		);
 
-		return new ConformanceController('filinq', $this->createMock(IRequest::class), $conformance, $root, $session, $l10n, new NullLogger());
+		return new ConformanceController($this->createMock(IRequest::class), $conformance, $root, $session, $l10n, new NullLogger());
 
 	}//end controller()
 

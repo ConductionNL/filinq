@@ -29,6 +29,10 @@ use OCA\Filinq\Service\DocumentStorageService;
 use OCA\Filinq\Service\GeneratedDocumentLogger;
 use OCA\Filinq\Service\MultiFormatOutputProducer;
 use OCA\Filinq\Service\PdfService;
+use OCA\Filinq\Service\Support\DocumentOutput;
+use OCA\Filinq\Service\Support\DocumentProduction;
+use OCA\Filinq\Service\Support\PdfRendering;
+use OCA\Filinq\Service\Support\TemplateSources;
 use OCA\Filinq\Service\TemplateRenderer;
 use OCA\Filinq\Service\TemplateService;
 use OCA\OpenRegister\Service\ObjectService;
@@ -119,18 +123,15 @@ class MultiFormatOutputProducerTest extends TestCase {
 		$appManager->method('getInstalledApps')->willReturn(['openregister']);
 		$objectResolver = new DocumentObjectServiceResolver($container, $appManager);
 
-		$pipeline = new DocumentRenderPipeline($renderer, $pdf, $objectResolver, new NullLogger(), $rasterizer, null, $office);
+		$pipeline = new DocumentRenderPipeline(new PdfRendering(renderer: $renderer, pdf: $pdf), $objectResolver, new NullLogger(), $rasterizer, null, $office);
 		$logger = new GeneratedDocumentLogger($objectResolver, new NullLogger());
 		$documents = new DocumentService(
-			templateService: $templates,
-			dataResolver: $resolver,
-			renderPipeline: $pipeline,
-			storageService: $storage,
-			documentLogger: $logger,
-			jobs: $this->createMock(originalClassName: DocumentJobStore::class)
+			production: new DocumentProduction(pipeline: $pipeline, jobs: $this->createMock(originalClassName: DocumentJobStore::class)),
+			output: new DocumentOutput(storage: $storage, log: $logger),
+			sources: new TemplateSources(templates: $templates, data: $resolver)
 		);
 
-		return new MultiFormatOutputProducer($documents, $templates, $pipeline, $storage, $logger);
+		return new MultiFormatOutputProducer($documents, $templates, $pipeline,new DocumentOutput(storage: $storage, log: $logger));
 	}
 
 	/**
@@ -263,6 +264,7 @@ class MultiFormatOutputProducerTest extends TestCase {
 		foreach (['documents', 'templates', 'renderPipeline', 'storage', 'auditLog'] as $name) {
 			$args[] = (new \ReflectionProperty(MultiFormatOutputProducer::class, $name))->getValue($producer);
 		}
+		$args = [$args[0], $args[1], $args[2], new DocumentOutput(storage: $args[3], log: $args[4])];
 
 		try {
 			(new MultiFormatOutputProducer(...[...$args, $plain]))->generate('tmpl-1', [], ['formats' => ['pdf'], 'userId' => 'clerk']);

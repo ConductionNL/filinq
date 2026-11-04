@@ -15,6 +15,10 @@
 		"formError": {
 			"type": "String",
 			"default": ""
+		},
+		"surface": {
+			"type": "String",
+			"required": true
 		}
 	},
 	"emits": [

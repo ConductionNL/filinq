@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Tests\Unit\Service;
 
+use OCA\Filinq\Service\DossierSummaryDataService;
 use OCA\Filinq\Service\GrondslagenPdfWriter;
 use OCA\Filinq\Service\LegalBasesSummaryService;
 use OCP\App\IAppManager;
@@ -85,10 +86,14 @@ class DossierBasesAggregateGoldenTest extends TestCase {
 		$service = new LegalBasesSummaryService(
 			logger: new NullLogger(),
 			pdfWriter: $this->createMock(GrondslagenPdfWriter::class),
-			rootFolder: $this->createMock(IRootFolder::class),
 			userSession: $this->createMock(IUserSession::class),
-			appManager: $this->createMock(IAppManager::class),
-			container: $this->createMock(ContainerInterface::class)
+			data: new DossierSummaryDataService(
+				rootFolder: $this->createMock(IRootFolder::class),
+				userSession: $this->createMock(IUserSession::class),
+				appManager: $this->createMock(IAppManager::class),
+				container: $this->createMock(ContainerInterface::class),
+				logger: new NullLogger()
+			)
 		);
 		$result = (new ReflectionMethod(LegalBasesSummaryService::class, 'aggregateForDossier'))->invoke($service, $perFile, []);
 

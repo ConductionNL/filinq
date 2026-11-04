@@ -30,6 +30,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\AnonymizationController;
+use OCA\Filinq\Controller\Support\AnonymizationServices;
 use OCA\Filinq\Service\AnonymizeRequestService;
 use OCA\Filinq\Service\DocumentAnonymizeRunner;
 use OCA\Filinq\Service\FileListingService;
@@ -214,11 +215,9 @@ class AnonymizationControllerReviewGateTest extends TestCase {
 		);
 
 		return new AnonymizationController(
-			appName: 'filinq',
+			services: new AnonymizationServices(anonymization: $anonymizationService, files: $this->createMock(FileListingService::class)),
 			request: $request,
 			logger: $logger,
-			anonymizationService: $anonymizationService,
-			fileListingService: $this->createMock(FileListingService::class),
 			l10n: $l10n,
 			appConfig: $this->createMock(IAppConfig::class),
 			anonymizeRequest: new AnonymizeRequestService(logger: $logger, anonymizationService: $anonymizationService, l10n: $l10n, rootFolder: $rootFolder, userSession: $session)

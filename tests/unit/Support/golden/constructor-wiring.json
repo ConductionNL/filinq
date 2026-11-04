@@ -1,0 +1,527 @@
+{
+    "AnonymizationService defaults": [
+        "double AnonymiserBackendStateClient",
+        "double ConfidentialityLabelService",
+        "double ContainerInterface",
+        "double CustomDictionaryDetectionRunner",
+        "double DocumentAnonymizeRunner",
+        "double EntityDetectionService",
+        "double FileEntityStatsService",
+        "double LoggerInterface",
+        "double OcrExtractionFallback",
+        "double OpenRegisterServiceLocator",
+        "double ProhibitionPolicyService",
+        "double RedactionOutputGuard",
+        {
+            "distinct objects built by the class": 0
+        }
+    ],
+    "AnonymizationService given": [
+        "double AnonymiserBackendStateClient",
+        "double ConfidentialityLabelService",
+        "double ContainerInterface",
+        "double CustomDictionaryDetectionRunner",
+        "double DocumentAnonymizeRunner",
+        "double EntityDetectionService",
+        "double FileEntityStatsService",
+        "double LoggerInterface",
+        "double OcrExtractionFallback",
+        "double OpenRegisterServiceLocator",
+        "double ProhibitionPolicyService",
+        "double RedactionOutputGuard",
+        {
+            "distinct objects built by the class": 0
+        }
+    ],
+    "ConsentRecordWriter defaults": [
+        "double ConsentNotesHelper",
+        "double ConsentPolicyReferentValidator",
+        "double ConsentScopeValidator",
+        "double ContainerInterface",
+        "double IAppManager",
+        "double LoggerInterface",
+        "double ObjectionDeadlineChecker",
+        {
+            "built OCA\\Filinq\\Service\\ObjectResultExtractor": []
+        },
+        {
+            "distinct objects built by the class": 1
+        }
+    ],
+    "ConsentRecordWriter given": [
+        "double ConsentNotesHelper",
+        "double ConsentPolicyReferentValidator",
+        "double ConsentScopeValidator",
+        "double ContainerInterface",
+        "double IAppManager",
+        "double LoggerInterface",
+        "double ObjectResultExtractor",
+        "double ObjectionDeadlineChecker",
+        {
+            "distinct objects built by the class": 0
+        }
+    ],
+    "ConsentService defaults": [
+        "double ConsentRecordWriter",
+        "double ConsentScopeValidator",
+        "double ConsentUpdateHandler",
+        "double LoggerInterface",
+        "double ObjectionDeadlineChecker",
+        "double PolicyMatchService",
+        {
+            "distinct objects built by the class": 0
+        }
+    ],
+    "ConsentService given": [
+        "double ConsentRecordWriter",
+        "double ConsentScopeValidator",
+        "double ConsentUpdateHandler",
+        "double LoggerInterface",
+        "double ObjectionDeadlineChecker",
+        "double PolicyMatchService",
+        {
+            "distinct objects built by the class": 0
+        }
+    ],
+    "DocumentAnonymizeRunner defaults": [
+        "double AnonymisationRunRecords",
+        "double AnonymisedPdfOutputService",
+        "double AnonymizationPersistenceService",
+        "double EmlAnonymizationService",
+        "double EntityDetectionService",
+        "double GrondslagenSummaryAttacher",
+        "double LoggerInterface",
+        "double OpenRegisterServiceLocator",
+        "double ReplacementVerificationService",
+        {
+            "distinct objects built by the class": 0
+        }
+    ],
+    "DocumentAnonymizeRunner given": [
+        "double AnonymisationRunRecords",
+        "double AnonymisedPdfOutputService",
+        "double AnonymizationPersistenceService",
+        "double EmlAnonymizationService",
+        "double EntityDetectionService",
+        "double GrondslagenSummaryAttacher",
+        "double LoggerInterface",
+        "double OpenRegisterServiceLocator",
+        "double ReplacementVerificationService",
+        {
+            "distinct objects built by the class": 0
+        }
+    ],
+    "DocumentService defaults": [
+        "double DataResolverService",
+        "double DocumentJobStore",
+        "double DocumentRenderPipeline",
+        "double DocumentStorageService",
+        "double GeneratedDocumentLogger",
+        "double TemplateService",
+        null,
+        null,
+        null,
+        {
+            "distinct objects built by the class": 0
+        }
+    ],
+    "DocumentService given": [
+        "double DataResolverService",
+        "double DocumentJobStore",
+        "double DocumentRenderPipeline",
+        "double DocumentStorageService",
+        "double GeneratedDocumentLogger",
+        "double PlainLanguageRenditionService",
+        "double TemplateMergeFieldService",
+        "double TemplateService",
+        "double WizardGenerationGate",
+        {
+            "distinct objects built by the class": 0
+        }
+    ],
+    "DossierSummaryDataService defaults": [
+        {
+            "built OCA\\Filinq\\Service\\BaseLabelResolver": [
+                "double LoggerInterface",
+                {
+                    "built OCA\\Filinq\\Service\\DossierObjectRepository": [
+                        "double ContainerInterface",
+                        "double IAppManager",
+                        "double IRootFolder",
+                        "double IUserSession",
+                        "double LoggerInterface"
+                    ]
+                }
+            ]
+        },
+        {
+            "built OCA\\Filinq\\Service\\DossierEntityCollector": [
+                "double LoggerInterface",
+                {
+                    "built OCA\\Filinq\\Service\\BaseLabelResolver": [
+                        "built OCA\\Filinq\\Service\\DossierObjectRepository",
+                        "double LoggerInterface"
+                    ]
+                },
+                {
+                    "built OCA\\Filinq\\Service\\DossierObjectRepository": [
+                        "double ContainerInterface",
+                        "double IAppManager",
+                        "double IRootFolder",
+                        "double IUserSession",
+                        "double LoggerInterface"
+                    ]
+                },
+                {
+                    "built OCA\\Filinq\\Service\\DossierPlaceholderRanker": [
+                        "built OCA\\Filinq\\Service\\DossierObjectRepository",
+                        "double LoggerInterface"
+                    ]
+                }
+            ]
+        },
+        {
+            "built OCA\\Filinq\\Service\\DossierObjectRepository": [
+                "double ContainerInterface",
+                "double IAppManager",
+                "double IRootFolder",
+                "double IUserSession",
+                "double LoggerInterface"
+            ]
+        },
+        {
+            "built OCA\\Filinq\\Service\\DossierPlaceholderRanker": [
+                "double LoggerInterface",
+                {
+                    "built OCA\\Filinq\\Service\\DossierObjectRepository": [
+                        "double ContainerInterface",
+                        "double IAppManager",
+                        "double IRootFolder",
+                        "double IUserSession",
+                        "double LoggerInterface"
+                    ]
+                }
+            ]
+        },
+        {
+            "distinct objects built by the class": 4
+        }
+    ],
+    "DossierSummaryDataService given": [
+        "double BaseLabelResolver",
+        "double DossierEntityCollector",
+        "double DossierObjectRepository",
+        "double DossierPlaceholderRanker",
+        {
+            "distinct objects built by the class": 0
+        }
+    ],
+    "EmlAttachmentRenderer defaults": [
+        "double IAppConfig",
+        "double LoggerInterface",
+        "double PdfService",
+        "double TemplateRenderer",
+        {
+            "built OCA\\Filinq\\Service\\EmlStructureReader": []
+        },
+        {
+            "built OCA\\Filinq\\Service\\EmlTemplateLoader": []
+        },
+        {
+            "built OCA\\Filinq\\Service\\PhpWordHtmlRenderer": []
+        },
+        {
+            "distinct objects built by the class": 3
+        }
+    ],
+    "EmlAttachmentRenderer given": [
+        "double EmlStructureReader",
+        "double EmlTemplateLoader",
+        "double IAppConfig",
+        "double LoggerInterface",
+        "double PdfService",
+        "double PhpWordHtmlRenderer",
+        "double TemplateRenderer",
+        {
+            "distinct objects built by the class": 0
+        }
+    ],
+    "EntityConsolidationService defaults": [
+        "double BasesResolverService",
+        "double ContainerInterface",
+        "double IAppConfig",
+        "double IAppManager",
+        "double LoggerInterface",
+        "double PolicyMatchService",
+        "double WooProfileService",
+        {
+            "distinct objects built by the class": 0
+        }
+    ],
+    "EntityConsolidationService given": [
+        "double BasesResolverService",
+        "double ContainerInterface",
+        "double IAppConfig",
+        "double IAppManager",
+        "double LoggerInterface",
+        "double PolicyMatchService",
+        "double WooProfileService",
+        {
+            "distinct objects built by the class": 0
+        }
+    ],
+    "FinancialExtractionCompletedEvent defaults": [
+        "text:docType",
+        "text:documentUri",
+        "text:requestedBy",
+        "text:sourceApp",
+        4.25,
+        {
+            "list:fieldConfidence": [
+                1,
+                "two"
+            ]
+        },
+        {
+            "list:fields": [
+                1,
+                "two"
+            ]
+        },
+        {
+            "distinct objects built by the class": 0
+        }
+    ],
+    "FinancialExtractionCompletedEvent given": [
+        "text:docType",
+        "text:documentUri",
+        "text:requestedBy",
+        "text:sourceApp",
+        4.25,
+        {
+            "list:fieldConfidence": [
+                1,
+                "two"
+            ]
+        },
+        {
+            "list:fields": [
+                1,
+                "two"
+            ]
+        },
+        {
+            "distinct objects built by the class": 0
+        }
+    ],
+    "FinancialExtractionService defaults": [
+        "double AmountExtractor",
+        "double ContainerInterface",
+        "double DateExtractor",
+        "double IEventDispatcher",
+        "double IRootFolder",
+        "double IUserSession",
+        "double IbanExtractor",
+        "double KvkExtractor",
+        "double LoggerInterface",
+        "double OcrService",
+        "double OpenRegisterResolver",
+        "double SettingsService",
+        "double TotalsReconciler",
+        "double VatIdExtractor",
+        {
+            "distinct objects built by the class": 0
+        }
+    ],
+    "FinancialExtractionService given": [
+        "double AmountExtractor",
+        "double ContainerInterface",
+        "double DateExtractor",
+        "double IEventDispatcher",
+        "double IRootFolder",
+        "double IUserSession",
+        "double IbanExtractor",
+        "double KvkExtractor",
+        "double LoggerInterface",
+        "double OcrService",
+        "double OpenRegisterResolver",
+        "double SettingsService",
+        "double TotalsReconciler",
+        "double VatIdExtractor",
+        {
+            "distinct objects built by the class": 0
+        }
+    ],
+    "FolderBatchService defaults": [
+        "double AnonymizationService",
+        "double BatchStateService",
+        "double IRootFolder",
+        "double IUserSession",
+        "double JobQueueInterface",
+        "double LoggerInterface",
+        {
+            "built OCA\\Filinq\\Service\\FolderFileEnumerator": [
+                "double ConfidentialityLabelService",
+                "double IAppConfig",
+                "double OutputLayoutResolver"
+            ]
+        },
+        {
+            "distinct objects built by the class": 1
+        }
+    ],
+    "FolderBatchService given": [
+        "double AnonymizationService",
+        "double BatchStateService",
+        "double IRootFolder",
+        "double IUserSession",
+        "double JobQueueInterface",
+        "double LoggerInterface",
+        {
+            "built OCA\\Filinq\\Service\\FolderFileEnumerator": [
+                "double ConfidentialityLabelService",
+                "double IAppConfig",
+                "double OutputLayoutResolver"
+            ]
+        },
+        {
+            "distinct objects built by the class": 1
+        }
+    ],
+    "GlAccountSuggestedEvent defaults": [
+        "text:extractionId",
+        "text:identityType",
+        "text:requestedBy",
+        "text:source",
+        "text:sourceApp",
+        "text:supplierIdentity",
+        {
+            "list:suggestedAccounts": [
+                1,
+                "two"
+            ]
+        },
+        {
+            "distinct objects built by the class": 0
+        }
+    ],
+    "GlAccountSuggestedEvent given": [
+        "text:extractionId",
+        "text:identityType",
+        "text:requestedBy",
+        "text:source",
+        "text:sourceApp",
+        "text:supplierIdentity",
+        {
+            "list:suggestedAccounts": [
+                1,
+                "two"
+            ]
+        },
+        {
+            "distinct objects built by the class": 0
+        }
+    ],
+    "IntakeDocumentReceivedEvent defaults": [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "text:channel",
+        null,
+        null,
+        {
+            "distinct objects built by the class": 0
+        }
+    ],
+    "IntakeDocumentReceivedEvent given": [
+        "text:arrivedWith",
+        "text:channel",
+        "text:fileName",
+        "text:receivedAt",
+        "text:sender",
+        "text:sourceRef",
+        "text:subject",
+        6,
+        {
+            "distinct objects built by the class": 0
+        }
+    ],
+    "IntakeService defaults": [
+        "double IUserSession",
+        "double IntakeAuthorizationGate",
+        "double IntakeDefaultRuleService",
+        "double IntakeFilePlacement",
+        "double IntakeOcrQueue",
+        "double IntakeRepository",
+        "double IntakeRoutingService",
+        "double LoggerInterface",
+        "double PartySuggestionService",
+        {
+            "distinct objects built by the class": 0
+        }
+    ],
+    "IntakeService given": [
+        "double IUserSession",
+        "double IntakeAuthorizationGate",
+        "double IntakeDefaultRuleService",
+        "double IntakeFilePlacement",
+        "double IntakeOcrQueue",
+        "double IntakeRepository",
+        "double IntakeRoutingService",
+        "double LoggerInterface",
+        "double PartySuggestionService",
+        {
+            "distinct objects built by the class": 0
+        }
+    ],
+    "LegalBasesSummaryService defaults": [
+        "double DossierSummaryDataService",
+        "double GrondslagenPdfWriter",
+        "double IUserSession",
+        "double LoggerInterface",
+        null,
+        {
+            "distinct objects built by the class": 0
+        }
+    ],
+    "LegalBasesSummaryService given": [
+        "double DossierSummaryDataService",
+        "double GrondslagenPdfWriter",
+        "double IL10N",
+        "double IUserSession",
+        "double LoggerInterface",
+        {
+            "distinct objects built by the class": 0
+        }
+    ],
+    "SigningService defaults": [
+        "double GuardianConsentGuard",
+        "double SettingsService",
+        "double SignedArtifactProducer",
+        "double SigningActorResolver",
+        "double SigningAssuranceGate",
+        "double SigningAuditService",
+        "double SigningConclusionEmitter",
+        "double SigningRequestValidator",
+        null,
+        {
+            "distinct objects built by the class": 0
+        }
+    ],
+    "SigningService given": [
+        "double GuardianConsentGuard",
+        "double SettingsService",
+        "double SignedArtifactProducer",
+        "double SigningActorResolver",
+        "double SigningAssuranceGate",
+        "double SigningAuditService",
+        "double SigningConclusionEmitter",
+        "double SigningMandateService",
+        "double SigningRequestValidator",
+        {
+            "distinct objects built by the class": 0
+        }
+    ]
+}

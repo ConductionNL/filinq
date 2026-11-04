@@ -27,6 +27,8 @@ namespace OCA\Filinq\Tests\Unit\Controller;
 
 use Exception;
 use OCA\Filinq\Controller\SettingsController;
+use OCA\Filinq\Controller\Support\AppConfiguration;
+use OCA\Filinq\Controller\Support\SettingsBackends;
 use OCA\Filinq\Kernel\Contracts\AnonymiserBackendStateClientInterface;
 use OCA\Filinq\Kernel\Contracts\SettingsServiceInterface;
 use OCP\App\IAppManager;
@@ -43,6 +45,8 @@ use Psr\Log\LoggerInterface;
  * Characterization of the settings read endpoint.
  *
  * @covers \OCA\Filinq\Controller\SettingsController
+ * @covers \OCA\Filinq\Controller\Support\SettingsBackends
+ * @covers \OCA\Filinq\Controller\Support\AppConfiguration
  */
 class SettingsControllerIndexTraceTest extends TestCase {
 
@@ -288,15 +292,12 @@ class SettingsControllerIndexTraceTest extends TestCase {
 		$client->method('warningFor')->willReturnCallback(fn (array $state): ?string => ($state === ['state' => 'enabled'] ? $this->warning : 'wrong state'));
 
 		return new SettingsController(
-			appName: 'filinq',
+			system: new AppConfiguration(apps: $apps, config: $config),
+			backends: new SettingsBackends(settings: $this->settings, anonymiser: $client),
 			request: $request,
-			appManager: $apps,
 			groupManager: $groups,
 			userSession: $session,
 			logger: $this->logger,
-			settingsService: $this->settings,
-			anonymiserClient: $client,
-			config: $config,
 		);
 	}//end controller()
 }//end class

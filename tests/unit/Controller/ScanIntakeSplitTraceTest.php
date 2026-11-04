@@ -18,6 +18,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\ScanIntakeController;
+use OCA\Filinq\Controller\Support\ScanSetupServices;
 use OCA\Filinq\Kernel\Contracts\ScanBatchRepositoryInterface;
 use OCA\Filinq\Kernel\Contracts\ScanBatchServiceInterface;
 use OCA\Filinq\Kernel\Contracts\ScanProfileServiceInterface;
@@ -36,7 +37,8 @@ use RuntimeException;
  * implementation before it was split into helpers.
  *
  * @covers \OCA\Filinq\Controller\ScanIntakeController
- * @uses   \OCA\Filinq\Service\ScanBatchCut
+ * @covers \OCA\Filinq\Controller\Support\ScanSetupServices
+ * @uses   \OCA\Filinq\Controller\Support\ScanBatchCut
  *
  * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
  */
@@ -148,10 +150,8 @@ class ScanIntakeSplitTraceTest extends TestCase {
 		$session->method('getUser')->willReturn(array_key_exists('user', $world) === true ? null : $user);
 
 		return new ScanIntakeController(
-			'filinq',
 			$this->createMock(IRequest::class),
-			$this->createMock(SeparatorSheetServiceInterface::class),
-			$this->profiles($world),
+			new ScanSetupServices(sheets: $this->createMock(SeparatorSheetServiceInterface::class), profiles: $this->profiles($world)),
 			$this->batches($world),
 			$this->store($world),
 			$root,

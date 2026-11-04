@@ -45,7 +45,6 @@ namespace OCA\Filinq\Service;
 
 use Exception;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 
@@ -93,7 +92,6 @@ class PolicyMatchService {
 	 * Constructor.
 	 *
 	 * @param LoggerInterface $logger Structured log sink.
-	 * @param IAppManager $appManager App manager (used to confirm OR is installed).
 	 * @param IAppConfig $config App config (prohibition high-confidence threshold).
 	 * @param ObjectServiceInterface $objectService OpenRegister's published object contract (ADR-084).
 	 * @param ObjectResultExtractor $resultExtractor Coerces OpenRegister results to plain rows.
@@ -102,7 +100,6 @@ class PolicyMatchService {
 	 */
 	public function __construct(
 		private readonly LoggerInterface $logger,
-		private readonly IAppManager $appManager,
 		private readonly IAppConfig $config,
 		private readonly ObjectServiceInterface $objectService,
 		private readonly ObjectResultExtractor $resultExtractor = new ObjectResultExtractor(),

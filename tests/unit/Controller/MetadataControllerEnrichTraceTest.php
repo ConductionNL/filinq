@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\MetadataController;
+use OCA\Filinq\Controller\Support\MetadataServices;
 use OCA\Filinq\Kernel\Contracts\InboundClassificationServiceInterface;
 use OCA\Filinq\Kernel\Contracts\MetadataServiceInterface;
 use OCP\Files\File;
@@ -43,6 +44,7 @@ use RuntimeException;
  * Characterization of the enrich endpoint.
  *
  * @covers \OCA\Filinq\Controller\MetadataController
+ * @covers \OCA\Filinq\Controller\Support\MetadataServices
  */
 class MetadataControllerEnrichTraceTest extends TestCase {
 
@@ -257,13 +259,11 @@ class MetadataControllerEnrichTraceTest extends TestCase {
 		);
 
 		return new MetadataController(
-			appName: 'filinq',
+			services: new MetadataServices(metadata: $this->metadata, classification: $this->classification),
 			request: $request,
 			logger: $this->logger,
-			metadataService: $this->metadata,
 			l10n: $l10n,
 			userSession: $session,
-			classification: $this->classification,
 			rootFolder: $root,
 		);
 

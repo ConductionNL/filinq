@@ -25,6 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
+use OCA\Filinq\Kernel\AppIdentity;
 use OCA\Filinq\Kernel\Contracts\CaseArchiveServiceInterface;
 use OCA\Filinq\Kernel\Contracts\DocumentReviewServiceInterface;
 use OCA\Filinq\Kernel\Contracts\PageLayoutServiceInterface;
@@ -54,7 +55,6 @@ class DocumentProductionController extends Controller {
 	/**
 	 * Constructor.
 	 *
-	 * @param string $appName The app name.
 	 * @param IRequest $request The request.
 	 * @param PageLayoutServiceInterface $layouts The paper.
 	 * @param CaseArchiveServiceInterface $archives The bundle.
@@ -65,7 +65,6 @@ class DocumentProductionController extends Controller {
 	 * @return void
 	 */
 	public function __construct(
-		string $appName,
 		IRequest $request,
 		private readonly PageLayoutServiceInterface $layouts,
 		private readonly CaseArchiveServiceInterface $archives,
@@ -73,7 +72,7 @@ class DocumentProductionController extends Controller {
 		private readonly DocumentReviewServiceInterface $reviews,
 		private readonly IUserSession $userSession,
 	) {
-		parent::__construct(appName: $appName, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 
 	}//end __construct()
 

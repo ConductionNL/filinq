@@ -236,23 +236,8 @@ export default {
 		 *
 		 * @spec openspec/specs/document-merge/spec.md
 		 */
-		async load() {
-			if (this.objectId === '') {
-				this.loading = false
-				return
-			}
-			try {
-				const body = await this.request(
-					generateUrl('/apps/filinq/api/case-documents/files')
-						+ '?'
-						+ this.hostObjectQuery().toString(),
-				)
-				this.rows = Array.isArray(body.results) ? body.results : []
-			} catch {
-				this.error = true
-			} finally {
-				this.loading = false
-			}
+		load() {
+			return this.loadHostRows('/apps/filinq/api/case-documents/files')
 		},
 
 		/**

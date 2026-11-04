@@ -37,6 +37,7 @@ use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\DocumentTypeClassifier;
 use OCA\Filinq\Service\FileEntityStatsService;
 use OCA\Filinq\Service\InboundClassificationService;
+use OCA\Filinq\Service\Support\ClassificationMatchers;
 use OCA\OpenRegister\Db\EntityRelationMapper;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -96,9 +97,8 @@ trait InboundClassificationFixture {
 		$config->method('getValueString')->willReturnCallback(fn (string $app, string $key, string $default): string => $key === InboundClassificationService::TOGGLE ? $this->toggle : $default);
 
 		return new InboundClassificationService(
+			matchers: new ClassificationMatchers(ranker: new CorrespondentRanker(), matcher: new DossierMatcher()),
 			classifier: new DocumentTypeClassifier(),
-			ranker: new CorrespondentRanker(),
-			matcher: new DossierMatcher(),
 			results: new ClassificationResultRepository(objectResolver: $resolver),
 			sources: new ClassificationSources(entityStats: new FileEntityStatsService(new NullLogger(), $container, $apps), objectResolver: $resolver, logger: new NullLogger()),
 			appConfig: $config,

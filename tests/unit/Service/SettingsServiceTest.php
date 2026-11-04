@@ -26,6 +26,7 @@ use OCA\Filinq\Service\OpenRegisterAvailabilityService;
 use OCA\Filinq\Service\RegisterDiscoveryService;
 use OCA\Filinq\Service\SettingsInitializer;
 use OCA\Filinq\Service\SettingsService;
+use OCA\Filinq\Service\Support\RegisterSetup;
 use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -104,8 +105,7 @@ class SettingsServiceTest extends TestCase {
 		$this->settingsService = new SettingsService(
 			$this->mockConfig,
 			$this->mockLogger,
-			$this->mockDiscoveryService,
-			$this->mockInitializer,
+			new RegisterSetup(discovery: $this->mockDiscoveryService, initializer: $this->mockInitializer),
 			$this->mockOcrService,
 			$this->mockBasisProposal,
 			$this->mockOpenRegister

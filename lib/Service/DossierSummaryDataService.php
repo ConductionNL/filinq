@@ -28,6 +28,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Service\Support\DossierSummaryParts;
 use OCP\App\IAppManager;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
@@ -44,6 +45,8 @@ use RuntimeException;
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
+ *
+ * @spec openspec/specs/anonymisation-grondslagen-summary/spec.md
  */
 class DossierSummaryDataService {
 
@@ -78,21 +81,20 @@ class DossierSummaryDataService {
 	/**
 	 * Constructor.
 	 *
-	 * The four collaborators are injected; the null defaults wire an
-	 * equivalent chain from the raw dependencies so Nextcloud's autowiring and
+	 * The four collaborators come in as parts; without parts an equivalent
+	 * chain is wired from the raw dependencies so Nextcloud's autowiring and
 	 * tests can both construct this service without naming the chain.
 	 *
-	 * @param IRootFolder $rootFolder Nextcloud file API entry point.
-	 * @param IUserSession $userSession Session-user lookup.
-	 * @param IAppManager $appManager App-availability check for OpenRegister.
-	 * @param ContainerInterface $container DI container for OpenRegister-side services.
-	 * @param LoggerInterface $logger Structured logger.
-	 * @param DossierObjectRepository|null $repository OpenRegister object access.
-	 * @param BaseLabelResolver|null $labelResolver Grondslag label resolution.
-	 * @param DossierPlaceholderRanker|null $ranker Dossier placeholder ranking.
-	 * @param DossierEntityCollector|null $collector Anonymised entity collection.
+	 * @param IRootFolder              $rootFolder   Nextcloud file API entry point.
+	 * @param IUserSession             $userSession  Session-user lookup.
+	 * @param IAppManager              $appManager   App-availability check for OpenRegister.
+	 * @param ContainerInterface       $container    DI container for OpenRegister-side services.
+	 * @param LoggerInterface          $logger       Structured logger.
+	 * @param DossierSummaryParts|null $parts        The repository, label resolver, ranker and collector.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/specs/anonymisation-grondslagen-summary/spec.md
 	 */
 	public function __construct(
 		IRootFolder $rootFolder,
@@ -100,27 +102,26 @@ class DossierSummaryDataService {
 		IAppManager $appManager,
 		ContainerInterface $container,
 		LoggerInterface $logger,
-		?DossierObjectRepository $repository = null,
-		?BaseLabelResolver $labelResolver = null,
-		?DossierPlaceholderRanker $ranker = null,
-		?DossierEntityCollector $collector = null,
+		?DossierSummaryParts $parts = null,
 	) {
-		$this->repository = ($repository ?? new DossierObjectRepository(
+		if ($parts !== null) {
+			$this->repository    = $parts->repository;
+			$this->labelResolver = $parts->labelResolver;
+			$this->ranker        = $parts->ranker;
+			$this->collector     = $parts->collector;
+			return;
+		}
+
+		$this->repository    = new DossierObjectRepository(
 			$appManager,
 			$container,
 			$rootFolder,
 			$userSession,
 			$logger
-		));
-
-		$this->labelResolver = ($labelResolver ?? new BaseLabelResolver($this->repository, $logger));
-		$this->ranker = ($ranker ?? new DossierPlaceholderRanker($this->repository, $logger));
-		$this->collector = ($collector ?? new DossierEntityCollector(
-			$this->repository,
-			$this->labelResolver,
-			$this->ranker,
-			$logger
-		));
+		);
+		$this->labelResolver = new BaseLabelResolver($this->repository, $logger);
+		$this->ranker        = new DossierPlaceholderRanker($this->repository, $logger);
+		$this->collector     = new DossierEntityCollector($this->repository, $this->labelResolver, $this->ranker, $logger);
 
 	}//end __construct()
 
@@ -132,6 +133,8 @@ class DossierSummaryDataService {
 	 * @return array{context: array<string, mixed>, folder: Folder} Dossier context and folder.
 	 *
 	 * @throws RuntimeException When the dossier or its folder cannot be resolved.
+	 *
+	 * @spec openspec/specs/anonymisation-grondslagen-summary/spec.md
 	 */
 	public function loadDossier(string $dossierUuid): array {
 		$context = $this->repository->loadDossierContext(dossierUuid: $dossierUuid);
@@ -201,6 +204,8 @@ class DossierSummaryDataService {
 	 * @param Folder $folder The dossier folder.
 	 *
 	 * @return array{ranks: array<array-key, int>, types: array<string, string>} Ranks and entity types.
+	 *
+	 * @spec openspec/specs/anonymisation-grondslagen-summary/spec.md
 	 */
 	public function placeholderRanking(Folder $folder): array {
 		return $this->ranker->rank(folder: $folder);
@@ -212,6 +217,8 @@ class DossierSummaryDataService {
 	 * @param string $placeholder The placeholder string.
 	 *
 	 * @return array{0: string, 1: int} The [type, number] sort key.
+	 *
+	 * @spec openspec/specs/anonymisation-grondslagen-summary/spec.md
 	 */
 	public function placeholderSortKey(string $placeholder): array {
 		return $this->ranker->sortKey(placeholder: $placeholder);
@@ -224,6 +231,8 @@ class DossierSummaryDataService {
 	 * @param array<string, string> $placeholderMap Dossier scope-local placeholder map.
 	 *
 	 * @return array<int, array{fileId: int, filename: string, entities: array<int, array<string, mixed>>}> Per-file rows.
+	 *
+	 * @spec openspec/specs/anonymisation-grondslagen-summary/spec.md
 	 */
 	public function walkDossierFiles(Folder $folder, array $placeholderMap = []): array {
 		return $this->collector->walkDossierFiles(folder: $folder, placeholderMap: $placeholderMap);
@@ -236,6 +245,8 @@ class DossierSummaryDataService {
 	 * @param array<string, string> $placeholderMap Optional scope-local placeholder map.
 	 *
 	 * @return array<int, array<string, mixed>> Shaped entity rows.
+	 *
+	 * @spec openspec/specs/anonymisation-grondslagen-summary/spec.md
 	 */
 	public function loadAnonymisedEntitiesForFile(int $fileId, array $placeholderMap = []): array {
 		return $this->collector->loadAnonymisedEntitiesForFile(fileId: $fileId, placeholderMap: $placeholderMap);
@@ -247,6 +258,8 @@ class DossierSummaryDataService {
 	 * @param array<int, string> $baseRefs Slugs or UUIDs of base records.
 	 *
 	 * @return array<string, array{name: string, description: string}> The label map.
+	 *
+	 * @spec openspec/specs/anonymisation-grondslagen-summary/spec.md
 	 */
 	public function resolveBaseLabels(array $baseRefs): array {
 		return $this->labelResolver->resolve(baseRefs: $baseRefs);
@@ -258,6 +271,8 @@ class DossierSummaryDataService {
 	 * @param array<string, array{name: string, description: string}> $detail Resolved labels.
 	 *
 	 * @return array<int, array{name: string, description: string}> Distinct bases, sorted by name.
+	 *
+	 * @spec openspec/specs/anonymisation-grondslagen-summary/spec.md
 	 */
 	public function groupBasesByName(array $detail): array {
 		return $this->labelResolver->groupByName(detail: $detail);
@@ -270,6 +285,8 @@ class DossierSummaryDataService {
 	 * @param int $summaryFileId The newly-written summary file's NC node id.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/specs/anonymisation-grondslagen-summary/spec.md
 	 */
 	public function updateDossierConfiguration(string $dossierUuid, int $summaryFileId): void {
 		$this->repository->updateDossierConfiguration(

@@ -27,9 +27,8 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use Exception;
+use OCA\Filinq\Controller\Support\PdfServices;
 use OCA\Filinq\Exception\Pdfa3ConversionException;
-use OCA\Filinq\Kernel\Contracts\Pdfa3ConversionServiceInterface;
-use OCA\Filinq\Kernel\Contracts\PdfServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataDownloadResponse;
@@ -60,10 +59,7 @@ class PdfController extends Controller {
 	 * @param string $appName The application name
 	 * @param IRequest $request The request object
 	 * @param LoggerInterface $logger Logger for error reporting
-	 * @param PdfServiceInterface $pdfService Service for PDF generation
-	 * @param Pdfa3ConversionServiceInterface $pdfa3Service Service for archival PDF/A-3
-	 *                                                      generation (attachments +
-	 *                                                      MDTO metadata)
+	 * @param PdfServices $pdf The PDF and archival PDF/A-3 generators.
 	 * @param IL10N $l10n The localization service
 	 * @param IUserSession $userSession User session for authentication
 	 *
@@ -73,8 +69,7 @@ class PdfController extends Controller {
 		string $appName,
 		IRequest $request,
 		private readonly LoggerInterface $logger,
-		private readonly PdfServiceInterface $pdfService,
-		private readonly Pdfa3ConversionServiceInterface $pdfa3Service,
+		private readonly PdfServices $pdf,
 		private readonly IL10N $l10n,
 		private readonly IUserSession $userSession,
 	) {
@@ -131,7 +126,7 @@ class PdfController extends Controller {
 			);
 		}
 
-		$pdfContent = $this->pdfService->renderPdf(
+		$pdfContent = $this->pdf->pdf->renderPdf(
 			templateContent: $template,
 			data: $this->arrayParam(name: 'data'),
 			options: $this->arrayParam(name: 'options')
@@ -271,7 +266,7 @@ class PdfController extends Controller {
 		$options = $params['options'];
 		$options['pdfa'] = true;
 
-		$pdfContent = $this->pdfService->renderPdf(
+		$pdfContent = $this->pdf->pdf->renderPdf(
 			templateContent: $template,
 			data: $params['data'],
 			options: $options
@@ -379,8 +374,8 @@ class PdfController extends Controller {
 	 * @spec openspec/specs/pdfa3-conversion/spec.md
 	 */
 	private function renderArchivalPdfA(string $template, array $params): DataDownloadResponse {
-		$html = $this->pdfService->renderTemplateToHtml(templateContent: $template, data: $params['data']);
-		$result = $this->pdfa3Service->convertHtml(
+		$html = $this->pdf->pdf->renderTemplateToHtml(templateContent: $template, data: $params['data']);
+		$result = $this->pdf->pdfa3->convertHtml(
 			html: $html,
 			metadata: $params['metadata'],
 			attachments: $params['attachments'],

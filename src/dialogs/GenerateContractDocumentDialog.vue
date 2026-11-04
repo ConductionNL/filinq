@@ -31,23 +31,20 @@ SPDX-License-Identifier: EUPL-1.2
 			</NcNoteCard>
 		</template>
 		<template #actions>
-			<NcButton :disabled="busy" @click="$emit('close')">
-				{{ t('filinq', 'Cancel') }}
-			</NcButton>
-			<NcButton
-				variant="primary"
-				:disabled="busy || !template"
-				data-testid="contract-generate-confirm"
-				@click="onConfirm">
-				{{ t('filinq', 'Generate') }}
-			</NcButton>
+			<CnDialogActions
+				:saving="busy"
+				:canSubmit="Boolean(template)"
+				:confirmLabel="t('filinq', 'Generate')"
+				@cancel="$emit('close')"
+				@submit="onConfirm" />
 		</template>
 	</NcDialog>
 </template>
 
 <script>
+import { CnDialogActions } from '@conduction/nextcloud-vue'
 import { translate as t } from '@nextcloud/l10n'
-import { NcButton, NcDialog, NcNoteCard, NcSelect } from '@nextcloud/vue'
+import { NcDialog, NcNoteCard, NcSelect } from '@nextcloud/vue'
 import { generateDocument, listTemplates } from '../services/contracts.js'
 
 /**
@@ -58,7 +55,7 @@ import { generateDocument, listTemplates } from '../services/contracts.js'
  */
 export default {
 	name: 'GenerateContractDocumentDialog',
-	components: { NcButton, NcDialog, NcNoteCard, NcSelect },
+	components: { CnDialogActions, NcDialog, NcNoteCard, NcSelect },
 	props: {
 		/** The contract id. */
 		contractId: { type: String, required: true },

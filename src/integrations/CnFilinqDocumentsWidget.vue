@@ -105,30 +105,8 @@ export default {
 		 *
 		 * @spec openspec/changes/leaf-integrations/specs/document-register/spec.md
 		 */
-		async load() {
-			// Without an object there is nothing to list, and asking anyway
-			// would return the caller's whole document set, which is not what
-			// a per-object leaf means.
-			if (this.objectId === '') {
-				this.loading = false
-				return
-			}
-
-			try {
-				const response = await this.fetchForHostObject(
-					'/apps/filinq/api/case-documents/files',
-				)
-				if (response.ok === false) {
-					this.error = true
-					return
-				}
-				const body = await response.json()
-				this.rows = Array.isArray(body.results) ? body.results : []
-			} catch {
-				this.error = true
-			} finally {
-				this.loading = false
-			}
+		load() {
+			return this.loadHostRows('/apps/filinq/api/case-documents/files')
 		},
 	},
 }

@@ -104,24 +104,28 @@ class ArchivalChecks {
 		if ($report['compliant'] === false && $conformance !== DocumentValidationService::SEVERITY_OFF) {
 			$findings[] = $this->finding(
 				checkId: DocumentValidationService::CHECK_PDFA_CONFORMANCE,
-				severity: $conformance,
-				message: 'The PDF does not meet PDF/A-{flavour}: {failedRuleCount} rules fail, such as {rules}.',
-				params: [
-					'flavour' => (string) $report['flavour'],
-					'failedRuleCount' => (int) $report['failedRuleCount'],
-					'rules' => implode(', ', array_column(array_slice((array) $report['failedRules'], 0, self::RULES_NAMED), 'ruleId')),
-				],
-				guidance: (string) $report['guidance']
+				detail: [
+					'severity' => $conformance,
+					'message' => 'The PDF does not meet PDF/A-{flavour}: {failedRuleCount} rules fail, such as {rules}.',
+					'params' => [
+						'flavour' => (string) $report['flavour'],
+						'failedRuleCount' => (int) $report['failedRuleCount'],
+						'rules' => implode(', ', array_column(array_slice((array) $report['failedRules'], 0, self::RULES_NAMED), 'ruleId')),
+					],
+					'guidance' => (string) $report['guidance'],
+				]
 			);
 		}
 
 		if ($report['fontsNotEmbedded'] !== [] && $fonts !== DocumentValidationService::SEVERITY_OFF) {
 			$findings[] = $this->finding(
 				checkId: DocumentValidationService::CHECK_PDFA_FONTS,
-				severity: $fonts,
-				message: 'Fonts used but not embedded: {fonts}. An e-depot rejects this PDF.',
-				params: ['fonts' => implode(', ', (array) $report['fontsNotEmbedded'])],
-				guidance: (string) $report['guidance']
+				detail: [
+					'severity' => $fonts,
+					'message' => 'Fonts used but not embedded: {fonts}. An e-depot rejects this PDF.',
+					'params' => ['fonts' => implode(', ', (array) $report['fontsNotEmbedded'])],
+					'guidance' => (string) $report['guidance'],
+				]
 			);
 		}
 
@@ -137,10 +141,12 @@ class ArchivalChecks {
 	private function unavailable(): array {
 		return $this->finding(
 			checkId: DocumentValidationService::CHECK_ARCHIVAL_UNAVAILABLE,
-			severity: DocumentValidationService::SEVERITY_WARNING,
-			message: 'The PDF/A validator is not available, so this PDF was not checked against PDF/A.',
-			params: [],
-			guidance: ''
+			detail: [
+				'severity' => DocumentValidationService::SEVERITY_WARNING,
+				'message' => 'The PDF/A validator is not available, so this PDF was not checked against PDF/A.',
+				'params' => [],
+				'guidance' => '',
+			]
 		);
 
 	}//end unavailable()
@@ -148,24 +154,25 @@ class ArchivalChecks {
 	/**
 	 * One archival finding.
 	 *
-	 * @param string               $checkId  The check id.
-	 * @param string               $severity The severity.
-	 * @param string               $message  The English message the UI translates.
-	 * @param array<string, mixed> $params   Its placeholders: references and font names only.
-	 * @param string               $guidance The guidance key, '' for none.
+	 * The detail carries the severity, the English message the UI translates,
+	 * its placeholders (references and font names only) and the guidance key,
+	 * '' for none.
+	 *
+	 * @param string                                                                                 $checkId The check id.
+	 * @param array{severity: string, message: string, params: array<string, mixed>, guidance: string} $detail  The detail.
 	 *
 	 * @return array<string, mixed> The finding.
 	 */
-	private function finding(string $checkId, string $severity, string $message, array $params, string $guidance): array {
+	private function finding(string $checkId, array $detail): array {
 		$finding = [
 			'checkId' => $checkId,
 			'category' => self::CATEGORY,
-			'severity' => $severity,
-			'message' => $message,
-			'params' => $params,
+			'severity' => $detail['severity'],
+			'message' => $detail['message'],
+			'params' => $detail['params'],
 		];
-		if ($guidance !== '') {
-			$finding['guidance'] = $guidance;
+		if ($detail['guidance'] !== '') {
+			$finding['guidance'] = $detail['guidance'];
 		}
 
 		return $finding;

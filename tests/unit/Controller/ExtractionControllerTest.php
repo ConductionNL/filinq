@@ -72,7 +72,6 @@ class ExtractionControllerTest extends TestCase {
 		$logger = $this->createMock(LoggerInterface::class);
 
 		$this->controller = new ExtractionController(
-			'filinq',
 			$this->request,
 			$this->extractionService,
 			$this->suggestionService,
@@ -139,7 +138,6 @@ class ExtractionControllerTest extends TestCase {
 		$l10n->method('t')->willReturnCallback(static fn ($text, $params = []): string => vsprintf($text, $params));
 
 		$controller = new ExtractionController(
-			'filinq',
 			$this->request,
 			$this->extractionService,
 			$this->suggestionService,

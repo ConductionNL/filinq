@@ -49,20 +49,18 @@
  *
  * Restoration additions (openspec/changes/orphaned-surface-restoration):
  * `CorrespondenceIndex`, `SigningRequestForm`, `SignatureVerification`,
- * `ProhibitionIndex`, `StandingConsentIndex` (kind:"page") and
- * `ProhibitionFormModal`, `StandingConsentFormModal` (kind:"modal") were
- * built (backends live at HEAD) but never registered, so they 404'd
- * through the manifest router while their only wiring was the dead
- * `src/router/index.js` (also removed by this change). See
- * openspec/changes/orphaned-surface-restoration/design.md D3–D5.
+ * `ProhibitionIndex`, `StandingConsentIndex` (kind:"page") were built
+ * (backends live at HEAD) but never registered, so they 404'd through the
+ * manifest router while their only wiring was the dead `src/router/index.js`
+ * (also removed by this change). See
+ * openspec/changes/orphaned-surface-restoration/design.md D3–D5. Both keys
+ * now load PolicyRuleIndex, which mounts its own PolicyRuleFormModal.
  *
  * @type {Record<string, { kind: string, component: object }>}
  */
 
 import PrintPreview from './components/PrintPreview.vue'
 import DossierFormModal from './dialogs/DossierFormModal.vue'
-import ProhibitionFormModal from './dialogs/ProhibitionFormModal.vue'
-import StandingConsentFormModal from './dialogs/StandingConsentFormModal.vue'
 import AnonymizationIndex from './views/anonymization/AnonymizationIndex.vue'
 import FolderAnonymizationView from './views/anonymization/FolderAnonymizationView.vue'
 import ClassificationPending from './views/classification/ClassificationPending.vue'
@@ -84,8 +82,7 @@ import ComponentGallery from './views/gallery/ComponentGallery.vue'
 import IntakeIndex from './views/intake/IntakeIndex.vue'
 import LegalHolds from './views/legalHolds/LegalHolds.vue'
 import MyDocumentsIndex from './views/myDocuments/MyDocumentsIndex.vue'
-import ProhibitionIndex from './views/policy/ProhibitionIndex.vue'
-import StandingConsentIndex from './views/policy/StandingConsentIndex.vue'
+import PolicyRuleIndex from './views/policy/PolicyRuleIndex.vue'
 import PrintJobs from './views/printJobs/PrintJobs.vue'
 import PublicationsPage from './views/publications/PublicationsPage.vue'
 import SignatureVerification from './views/signing/SignatureVerification.vue'
@@ -130,10 +127,8 @@ export default {
 	VersionsView: { kind: 'page', component: VersionsView },
 	ComponentGallery: { kind: 'page', component: ComponentGallery },
 	CorrespondenceIndex: { kind: 'page', component: CorrespondenceIndex },
-	ProhibitionIndex: { kind: 'page', component: ProhibitionIndex },
-	ProhibitionFormModal: { kind: 'modal', component: ProhibitionFormModal },
-	StandingConsentIndex: { kind: 'page', component: StandingConsentIndex },
-	StandingConsentFormModal: { kind: 'modal', component: StandingConsentFormModal },
+	ProhibitionIndex: { kind: 'page', component: PolicyRuleIndex },
+	StandingConsentIndex: { kind: 'page', component: PolicyRuleIndex },
 	CustomDictionaryIndex: { kind: 'page', component: CustomDictionaryIndex },
 	DossierIndex: { kind: 'page', component: DossierIndex },
 	DossierDetail: { kind: 'page', component: DossierDetail },

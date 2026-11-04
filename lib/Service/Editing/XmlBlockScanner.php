@@ -105,7 +105,6 @@ class XmlBlockScanner {
 	public function spans(string $xml, string $tag): array {
 		$spans = [];
 		$open = '<' . $tag;
-		$close = '</' . $tag . '>';
 		$openLength = strlen($open);
 		$offset = 0;
 
@@ -126,13 +125,7 @@ class XmlBlockScanner {
 				continue;
 			}
 
-			$end = $this->matchingClose(
-				xml: $xml,
-				cursor: ($tagEnd + 1),
-				open: $open,
-				close: $close,
-				openLength: $openLength
-			);
+			$end = $this->matchingClose(xml: $xml, cursor: ($tagEnd + 1), tag: $tag);
 
 			if ($end === null) {
 				break;
@@ -150,15 +143,14 @@ class XmlBlockScanner {
 	 *
 	 * @param string $xml The part XML.
 	 * @param int $cursor The offset just past the opening tag.
-	 * @param string $open The `<name` prefix.
-	 * @param string $close The `</name>` string.
-	 * @param int $openLength The length of `$open`.
+	 * @param string $tag The element name.
 	 *
 	 * @return int|null The offset just past the matching close tag, or null when the XML is malformed.
 	 */
-	private function matchingClose(string $xml, int $cursor, string $open, string $close, int $openLength): ?int {
+	private function matchingClose(string $xml, int $cursor, string $tag): ?int {
+		$open = '<' . $tag;
+		$close = '</' . $tag . '>';
 		$depth = 1;
-		$closeLength = strlen($close);
 
 		while ($depth > 0) {
 			$nextClose = strpos($xml, $close, $cursor);
@@ -169,7 +161,7 @@ class XmlBlockScanner {
 			$nextOpen = strpos($xml, $open, $cursor);
 			if ($nextOpen === false || $nextOpen > $nextClose) {
 				$depth--;
-				$cursor = ($nextClose + $closeLength);
+				$cursor = ($nextClose + strlen($close));
 				continue;
 			}
 
@@ -178,7 +170,7 @@ class XmlBlockScanner {
 				return null;
 			}
 
-			if ($this->opensAnotherLevel(xml: $xml, nameEnd: ($nextOpen + $openLength), tagEnd: $tagEnd) === true) {
+			if ($this->opensAnotherLevel(xml: $xml, nameEnd: ($nextOpen + strlen($open)), tagEnd: $tagEnd) === true) {
 				$depth++;
 			}
 
