@@ -76,7 +76,10 @@ function resetStores() {
 	})
 	Object.assign(stores.myDocumentsStore, {
 		fetchDocuments: async (path) => calls.push(['fetchDocuments', path]),
-		fetchRecentAnonymized: async () => [],
+		fetchRecentAnonymized: async (limit) => {
+			calls.push(['fetchRecentAnonymized', limit])
+			return []
+		},
 	})
 }
 
@@ -87,14 +90,14 @@ function resetStores() {
  * @param {boolean} inApp Whether the app's router is there.
  * @return {Promise<object>} The instance.
  */
-async function widget(inApp) {
+async function widget(inApp, props = {}) {
 	const options = await loadSfcOptions(
 		join(
 			import.meta.dirname,
 			'../../src/views/anonymization/AnonymizationWidget.vue',
 		),
 	)
-	const vm = createInstance(options, { route: { name: 'Dashboard' } })
+	const vm = createInstance(options, { route: { name: 'Dashboard' }, props })
 	if (inApp) {
 		// vue-router's push answers a promise, which the widget catches.
 		vm.$router = {
@@ -201,6 +204,35 @@ describe('the one anonymisation widget', () => {
 		await vm.confirmDossier()
 		expect(calls.map((c) => c[0])).toEqual(['addFiles', 'open', 'assign'])
 		expect(calls[2]).toEqual(['assign', '/index.php/apps/filinq/my-documents'])
+	})
+
+	it('keeps the dialog open with the entry error when an upload fails', async () => {
+		stores.anonymizationStore.addFiles = async (files) => {
+			calls.push(['addFiles', files.map((f) => f.name)])
+			stores.anonymizationStore.files.push({
+				name: files[0].name,
+				status: 'error',
+				error: 'Bestand is te groot',
+			})
+		}
+		const vm = await widget(false)
+		vm.dispatchFiles([file('groot.pdf', 'application/pdf')])
+		await vm.confirmDossier()
+		expect(calls).toEqual([['addFiles', ['groot.pdf']]])
+		expect(vm.showDossierDialog).toBe(true)
+		expect(vm.dossierError).toBe('Bestand is te groot')
+		expect(vm.dossierSubmitting).toBe(false)
+	})
+
+	it('loads the recent documents only where they are asked for', async () => {
+		const tile = await widget(false)
+		tile.$options.mounted.call(tile)
+		expect(calls).toEqual([])
+		expect(tile.showRecent).toBe(false)
+
+		const page = await widget(true, { showRecent: true })
+		page.$options.mounted.call(page)
+		expect(calls).toEqual([['fetchRecentAnonymized', 4]])
 	})
 
 	it('links to Filinq outside the app', async () => {

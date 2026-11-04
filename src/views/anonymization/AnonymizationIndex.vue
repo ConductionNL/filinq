@@ -13,7 +13,7 @@
 		<h2 class="anonymization-page__title">
 			{{ t('filinq', 'Anonymization') }}
 		</h2>
-		<AnonymizationWidget />
+		<AnonymizationWidget show-recent />
 	</div>
 </template>
 

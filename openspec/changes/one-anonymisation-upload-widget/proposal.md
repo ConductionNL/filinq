@@ -15,7 +15,9 @@ So a user who drops an ODT or an email on the dashboard gets "not supported", wh
 - One routing: after the upload, the first file opens in the file viewer and the user is on My documents. On the Nextcloud dashboard the app's router does not exist, so the browser opens Filinq's My documents page there.
 - Outside the app the widget shows an "Open Filinq" link, as the dashboard tile did.
 - The progress table of the old dashboard widget goes. Every upload now leaves the widget for My documents, where progress and results are shown.
-- The "Recent documents" list shows in every place the widget is used.
+- The "Recent documents" list shows on the Anonymisation page only. The Filinq dashboard cell and the Nextcloud dashboard tile have a fixed height, so the widget leaves it out there.
+- A failed upload keeps the upload dialog open and shows the file's error.
+- The drop zone uses Nextcloud's own colour variables, so it follows the dark theme in the Nextcloud dashboard tile too.
 
 ## What stays
 

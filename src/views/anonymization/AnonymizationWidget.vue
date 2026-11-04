@@ -57,7 +57,7 @@ import {
 
 		<!-- Recent documents -->
 		<section
-			v-if="recentLoading || recentItems.length > 0"
+			v-if="showRecent && (recentLoading || recentItems.length > 0)"
 			class="recent-section">
 			<h3 class="recent-section__title">
 				{{ t('filinq', 'Recent documents') }}
@@ -109,6 +109,18 @@ import { dossierPlan, partitionFiles } from '../../services/anonymizationUpload.
 
 export default {
 	name: 'AnonymizationWidget',
+	props: {
+		/**
+		 * Show the "Recent documents" cards under the drop zone. Only the
+		 * Anonymisation page has the room; the dashboard cell and the
+		 * Nextcloud tile have a fixed height.
+		 */
+		showRecent: {
+			type: Boolean,
+			default: false,
+		},
+	},
+
 	components: {
 		AnonymizationUploadDialog,
 		NcLoadingIcon,
@@ -206,7 +218,9 @@ export default {
 	},
 
 	mounted() {
-		this.loadRecent()
+		if (this.showRecent) {
+			this.loadRecent()
+		}
 	},
 
 	methods: {
@@ -424,6 +438,16 @@ export default {
 					await anonymizationStore.addFiles(this.pendingFiles)
 				}
 
+				// The store marks a failed upload on its entry instead of
+				// throwing: keep the dialog open and show that error.
+				const failed = anonymizationStore.files
+					.slice(before)
+					.find((entry) => entry.status === 'error')
+				if (failed) {
+					this.dossierError = failed.error || 'Failed to upload'
+					return
+				}
+
 				// Open the first uploaded file in the viewer.
 				const firstEntry = anonymizationStore.files[before]
 				if (firstEntry && firstEntry.fileId) {
@@ -497,7 +521,7 @@ export default {
 	border: 2px dashed var(--color-border);
 	border-radius: var(--border-radius-large);
 	padding: 32px;
-	background-color: var(--dd-surface, #fff);
+	background-color: var(--color-main-background);
 	box-shadow: var(--dd-shadow-panel);
 	/* Not a click target any more — the picker is opened by .fake-button. */
 	transition:
@@ -511,7 +535,7 @@ export default {
 
 .drop-zone.dragging {
 	border-color: var(--color-primary);
-	background-color: #fff;
+	background-color: var(--color-background-hover);
 }
 
 .upload-icon {
