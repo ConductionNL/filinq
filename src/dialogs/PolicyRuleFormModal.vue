@@ -9,6 +9,7 @@ import {
 	NcTextField,
 } from '@nextcloud/vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
+import { POLICY_RULE_BLANK_FORMS } from '../constants/policyRuleForms.js'
 import { matchRuleForm } from '../mixins/matchRuleForm.js'
 
 /**
@@ -21,18 +22,7 @@ import { matchRuleForm } from '../mixins/matchRuleForm.js'
 const FORMS = {
 	prohibition: {
 		formClass: 'prohibition-form',
-		blankForm: () => ({
-			primaryName: '',
-			entityType: 'PERSON',
-			reason: '',
-			legalAuthority: '',
-			caseReference: '',
-			severity: 'medium', // matches the publicationProhibition.severity default in filinq_register.json
-			jurisdiction: '',
-			validUntil: '',
-			active: true,
-			matchRules: [],
-		}),
+		blankForm: POLICY_RULE_BLANK_FORMS.prohibition,
 		// Canonical set per the publicationProhibition schema's severity enum
 		// in filinq_register.json. Keep in lock-step with the register;
 		// widening here without widening the schema would silently fail the
@@ -91,21 +81,7 @@ const FORMS = {
 	},
 	standingConsent: {
 		formClass: 'standing-consent-form',
-		blankForm: () => ({
-			entityText: '',
-			entityType: 'PERSON',
-			consentMethod: '',
-			consentDocument: '',
-			consentScope: '',
-			legalBasis: '',
-			validFrom: '',
-			validUntil: '',
-			active: true,
-			matchRules: [],
-			consentStatus: 'consent_given',
-			publicationDecision: 'publish_with_consent',
-			notificationStatus: 'skipped',
-		}),
+		blankForm: POLICY_RULE_BLANK_FORMS.standingConsent,
 		choices: {
 			consentMethodOptions: [
 				'paper',
