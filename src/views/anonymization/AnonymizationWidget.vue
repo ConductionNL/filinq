@@ -8,7 +8,9 @@ import {
 </script>
 
 <template>
-	<div class="anonymization-widget">
+	<div
+		class="anonymization-widget"
+		:class="{ 'anonymization-widget--tile': !inApp }">
 		<!-- Drop zone -->
 		<div class="upload-area">
 			<!--
@@ -109,6 +111,15 @@ import { dossierPlan, partitionFiles } from '../../services/anonymizationUpload.
 
 export default {
 	name: 'AnonymizationWidget',
+	components: {
+		AnonymizationUploadDialog,
+		NcLoadingIcon,
+		DdDocumentCard,
+	},
+
+	// The Nextcloud dashboard passes the tile title, which its own header shows.
+	inheritAttrs: false,
+
 	props: {
 		/**
 		 * Show the "Recent documents" cards under the drop zone. Only the
@@ -120,15 +131,6 @@ export default {
 			default: false,
 		},
 	},
-
-	components: {
-		AnonymizationUploadDialog,
-		NcLoadingIcon,
-		DdDocumentCard,
-	},
-
-	// The Nextcloud dashboard passes the tile title, which its own header shows.
-	inheritAttrs: false,
 
 	data() {
 		return {
@@ -503,6 +505,20 @@ export default {
 	max-width: 900px;
 	margin-inline: auto;
 	width: 100%;
+}
+
+.anonymization-widget--tile {
+	padding: 0;
+}
+
+.anonymization-widget--tile .drop-zone {
+	padding: 16px;
+	gap: 12px;
+}
+
+.anonymization-widget--tile .upload-icon {
+	width: 64px;
+	height: 62px;
 }
 
 .page-title {
