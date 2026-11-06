@@ -1,0 +1,260 @@
+{
+    "open and answered post": {
+        "open": [
+            {
+                "id": "e",
+                "registeredAt": "2026-09-30"
+            },
+            {
+                "uuid": "b",
+                "registeredAt": "2026-10-01",
+                "id": "b"
+            },
+            {
+                "registeredAt": "2026-10-02",
+                "id": "c"
+            },
+            {
+                "id": "d"
+            }
+        ],
+        "calls": [
+            [
+                "search",
+                [
+                    "filinq",
+                    "documentRegistration",
+                    {
+                        "unit": "team-a",
+                        "direction": "inbound"
+                    },
+                    true,
+                    true
+                ]
+            ],
+            [
+                "answersFor",
+                "a"
+            ],
+            [
+                "answersFor",
+                "b"
+            ],
+            [
+                "answersFor",
+                "c"
+            ],
+            [
+                "answersFor",
+                "d"
+            ],
+            [
+                "answersFor",
+                "e"
+            ]
+        ],
+        "logs": []
+    },
+    "everything answered": {
+        "open": [],
+        "calls": [
+            [
+                "search",
+                [
+                    "filinq",
+                    "documentRegistration",
+                    {
+                        "unit": "team-a",
+                        "direction": "inbound"
+                    },
+                    true,
+                    true
+                ]
+            ],
+            [
+                "answersFor",
+                "a"
+            ],
+            [
+                "answersFor",
+                "b"
+            ],
+            [
+                "answersFor",
+                "c"
+            ],
+            [
+                "answersFor",
+                "d"
+            ],
+            [
+                "answersFor",
+                "e"
+            ]
+        ],
+        "logs": []
+    },
+    "nothing answered": {
+        "open": [
+            {
+                "id": "e",
+                "registeredAt": "2026-09-30"
+            },
+            {
+                "uuid": "b",
+                "registeredAt": "2026-10-01",
+                "id": "b"
+            },
+            {
+                "registeredAt": "2026-10-02",
+                "id": "c"
+            },
+            {
+                "id": "a",
+                "registeredAt": "2026-10-03",
+                "onderwerp": "A"
+            },
+            {
+                "id": "d"
+            }
+        ],
+        "calls": [
+            [
+                "search",
+                [
+                    "filinq",
+                    "documentRegistration",
+                    {
+                        "unit": "team-a",
+                        "direction": "inbound"
+                    },
+                    true,
+                    true
+                ]
+            ],
+            [
+                "answersFor",
+                "a"
+            ],
+            [
+                "answersFor",
+                "b"
+            ],
+            [
+                "answersFor",
+                "c"
+            ],
+            [
+                "answersFor",
+                "d"
+            ],
+            [
+                "answersFor",
+                "e"
+            ]
+        ],
+        "logs": []
+    },
+    "an answer read that raises": {
+        "error": "answers unreadable",
+        "calls": [
+            [
+                "search",
+                [
+                    "filinq",
+                    "documentRegistration",
+                    {
+                        "unit": "team-a",
+                        "direction": "inbound"
+                    },
+                    true,
+                    true
+                ]
+            ],
+            [
+                "answersFor",
+                "a"
+            ],
+            [
+                "answersFor",
+                "b"
+            ],
+            [
+                "answersFor",
+                "c"
+            ]
+        ],
+        "logs": []
+    },
+    "no rows": {
+        "open": [],
+        "calls": [
+            [
+                "search",
+                [
+                    "filinq",
+                    "documentRegistration",
+                    {
+                        "unit": "team-a",
+                        "direction": "inbound"
+                    },
+                    true,
+                    true
+                ]
+            ]
+        ],
+        "logs": []
+    },
+    "a scalar answer": {
+        "open": [],
+        "calls": [
+            [
+                "search",
+                [
+                    "filinq",
+                    "documentRegistration",
+                    {
+                        "unit": "team-a",
+                        "direction": "inbound"
+                    },
+                    true,
+                    true
+                ]
+            ]
+        ],
+        "logs": []
+    },
+    "the register read fails": {
+        "error": "register offline",
+        "calls": [
+            [
+                "search",
+                [
+                    "filinq",
+                    "documentRegistration",
+                    {
+                        "unit": "team-a",
+                        "direction": "inbound"
+                    },
+                    true,
+                    true
+                ]
+            ]
+        ],
+        "logs": [
+            [
+                "warning",
+                "filinq.post-register.open-post-read-failed",
+                {
+                    "unit": "team-a",
+                    "error": "register offline"
+                }
+            ]
+        ]
+    },
+    "a blank unit": {
+        "open": [],
+        "calls": [],
+        "logs": []
+    }
+}

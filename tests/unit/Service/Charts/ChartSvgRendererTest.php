@@ -418,4 +418,33 @@ class ChartSvgRendererTest extends TestCase {
 		$this->assertStringContainsString('€ 1.234,50', $svg);
 
 	}//end testCurrencyValueFormat()
+
+	/**
+	 * A non-numeric canvas size falls back to the default size.
+	 *
+	 * @return void
+	 */
+	public function testNonNumericSizeFallsBackToDefault(): void {
+		$svg = $this->renderer->render(type: 'bar', data: $this->barFixture(), options: ['width' => 'wide', 'height' => 'tall']);
+
+		$this->assertStringStartsWith('<svg xmlns="http://www.w3.org/2000/svg" width="600" height="300" ', $svg);
+
+	}//end testNonNumericSizeFallsBackToDefault()
+
+	/**
+	 * A line chart with a single category draws its one point without a
+	 * zero-width step.
+	 *
+	 * @return void
+	 */
+	public function testSingleCategoryLineChartDrawsOnePoint(): void {
+		$data = ['labels' => ['Only'], 'series' => [['name' => 'S', 'values' => [5]]]];
+
+		$svg = $this->renderer->render(type: 'line', data: $data);
+
+		$this->assertNull($this->renderer->getLastWarning());
+		$this->assertSame(1, substr_count($svg, '<circle '));
+		$this->assertStringContainsString('text-anchor="middle">Only</text>', $svg);
+
+	}//end testSingleCategoryLineChartDrawsOnePoint()
 }//end class

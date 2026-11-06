@@ -1,0 +1,2421 @@
+[
+	{
+		"name": "none",
+		"result": [
+			{
+				"id": "cap",
+				"type": "caption",
+				"label": "Caption"
+			},
+			{
+				"id": "self",
+				"route": "self"
+			},
+			{
+				"id": "home",
+				"label": "Home",
+				"route": "home"
+			},
+			{
+				"id": "settings",
+				"label": "Settings",
+				"children": [
+					{
+						"id": "general",
+						"route": "general"
+					},
+					{
+						"id": "nested",
+						"label": "Nested",
+						"children": [
+							{
+								"id": "deep",
+								"route": "d"
+							}
+						]
+					},
+					{
+						"id": "stay",
+						"route": "stay"
+					}
+				]
+			},
+			{
+				"id": "tools",
+				"label": "Tools",
+				"children": [
+					{
+						"id": "general",
+						"label": "General",
+						"icon": "cog",
+						"children": [
+							{
+								"id": "g2",
+								"href": "/g"
+							}
+						]
+					},
+					{
+						"id": "export",
+						"action": "export"
+					}
+				]
+			},
+			{
+				"id": "admin",
+				"label": "Admin",
+				"icon": "shield",
+				"children": []
+			},
+			{
+				"id": "loose",
+				"label": "Loose",
+				"href": "/loose"
+			},
+			{
+				"id": "empty",
+				"label": "Empty group"
+			},
+			{
+				"id": "chain",
+				"label": "Chain",
+				"route": "chain"
+			}
+		],
+		"input": [
+			{
+				"id": "cap",
+				"type": "caption",
+				"label": "Caption"
+			},
+			{
+				"id": "self",
+				"route": "self"
+			},
+			{
+				"id": "home",
+				"label": "Home",
+				"route": "home"
+			},
+			{
+				"id": "settings",
+				"label": "Settings",
+				"children": [
+					{
+						"id": "general",
+						"route": "general"
+					},
+					{
+						"id": "nested",
+						"label": "Nested",
+						"children": [
+							{
+								"id": "deep",
+								"route": "d"
+							}
+						]
+					},
+					{
+						"id": "stay",
+						"route": "stay"
+					}
+				]
+			},
+			{
+				"id": "tools",
+				"label": "Tools",
+				"children": [
+					{
+						"id": "general",
+						"label": "General",
+						"icon": "cog",
+						"children": [
+							{
+								"id": "g2",
+								"href": "/g"
+							}
+						]
+					},
+					{
+						"id": "export",
+						"action": "export"
+					}
+				]
+			},
+			{
+				"id": "admin",
+				"label": "Admin",
+				"icon": "shield",
+				"children": []
+			},
+			{
+				"id": "loose",
+				"label": "Loose",
+				"href": "/loose"
+			},
+			{
+				"id": "empty",
+				"label": "Empty group"
+			},
+			{
+				"id": "chain",
+				"label": "Chain",
+				"route": "chain"
+			}
+		],
+		"same": true
+	},
+	{
+		"name": "null",
+		"result": [
+			{
+				"id": "cap",
+				"type": "caption",
+				"label": "Caption"
+			},
+			{
+				"id": "self",
+				"route": "self"
+			},
+			{
+				"id": "home",
+				"label": "Home",
+				"route": "home"
+			},
+			{
+				"id": "settings",
+				"label": "Settings",
+				"children": [
+					{
+						"id": "general",
+						"route": "general"
+					},
+					{
+						"id": "nested",
+						"label": "Nested",
+						"children": [
+							{
+								"id": "deep",
+								"route": "d"
+							}
+						]
+					},
+					{
+						"id": "stay",
+						"route": "stay"
+					}
+				]
+			},
+			{
+				"id": "tools",
+				"label": "Tools",
+				"children": [
+					{
+						"id": "general",
+						"label": "General",
+						"icon": "cog",
+						"children": [
+							{
+								"id": "g2",
+								"href": "/g"
+							}
+						]
+					},
+					{
+						"id": "export",
+						"action": "export"
+					}
+				]
+			},
+			{
+				"id": "admin",
+				"label": "Admin",
+				"icon": "shield",
+				"children": []
+			},
+			{
+				"id": "loose",
+				"label": "Loose",
+				"href": "/loose"
+			},
+			{
+				"id": "empty",
+				"label": "Empty group"
+			},
+			{
+				"id": "chain",
+				"label": "Chain",
+				"route": "chain"
+			}
+		],
+		"input": [
+			{
+				"id": "cap",
+				"type": "caption",
+				"label": "Caption"
+			},
+			{
+				"id": "self",
+				"route": "self"
+			},
+			{
+				"id": "home",
+				"label": "Home",
+				"route": "home"
+			},
+			{
+				"id": "settings",
+				"label": "Settings",
+				"children": [
+					{
+						"id": "general",
+						"route": "general"
+					},
+					{
+						"id": "nested",
+						"label": "Nested",
+						"children": [
+							{
+								"id": "deep",
+								"route": "d"
+							}
+						]
+					},
+					{
+						"id": "stay",
+						"route": "stay"
+					}
+				]
+			},
+			{
+				"id": "tools",
+				"label": "Tools",
+				"children": [
+					{
+						"id": "general",
+						"label": "General",
+						"icon": "cog",
+						"children": [
+							{
+								"id": "g2",
+								"href": "/g"
+							}
+						]
+					},
+					{
+						"id": "export",
+						"action": "export"
+					}
+				]
+			},
+			{
+				"id": "admin",
+				"label": "Admin",
+				"icon": "shield",
+				"children": []
+			},
+			{
+				"id": "loose",
+				"label": "Loose",
+				"href": "/loose"
+			},
+			{
+				"id": "empty",
+				"label": "Empty group"
+			},
+			{
+				"id": "chain",
+				"label": "Chain",
+				"route": "chain"
+			}
+		],
+		"same": true
+	},
+	{
+		"name": "string",
+		"result": [
+			{
+				"id": "cap",
+				"type": "caption",
+				"label": "Caption"
+			},
+			{
+				"id": "self",
+				"route": "self"
+			},
+			{
+				"id": "home",
+				"label": "Home",
+				"route": "home"
+			},
+			{
+				"id": "settings",
+				"label": "Settings",
+				"children": [
+					{
+						"id": "general",
+						"route": "general"
+					},
+					{
+						"id": "nested",
+						"label": "Nested",
+						"children": [
+							{
+								"id": "deep",
+								"route": "d"
+							}
+						]
+					},
+					{
+						"id": "stay",
+						"route": "stay"
+					}
+				]
+			},
+			{
+				"id": "tools",
+				"label": "Tools",
+				"children": [
+					{
+						"id": "general",
+						"label": "General",
+						"icon": "cog",
+						"children": [
+							{
+								"id": "g2",
+								"href": "/g"
+							}
+						]
+					},
+					{
+						"id": "export",
+						"action": "export"
+					}
+				]
+			},
+			{
+				"id": "admin",
+				"label": "Admin",
+				"icon": "shield",
+				"children": []
+			},
+			{
+				"id": "loose",
+				"label": "Loose",
+				"href": "/loose"
+			},
+			{
+				"id": "empty",
+				"label": "Empty group"
+			},
+			{
+				"id": "chain",
+				"label": "Chain",
+				"route": "chain"
+			}
+		],
+		"input": [
+			{
+				"id": "cap",
+				"type": "caption",
+				"label": "Caption"
+			},
+			{
+				"id": "self",
+				"route": "self"
+			},
+			{
+				"id": "home",
+				"label": "Home",
+				"route": "home"
+			},
+			{
+				"id": "settings",
+				"label": "Settings",
+				"children": [
+					{
+						"id": "general",
+						"route": "general"
+					},
+					{
+						"id": "nested",
+						"label": "Nested",
+						"children": [
+							{
+								"id": "deep",
+								"route": "d"
+							}
+						]
+					},
+					{
+						"id": "stay",
+						"route": "stay"
+					}
+				]
+			},
+			{
+				"id": "tools",
+				"label": "Tools",
+				"children": [
+					{
+						"id": "general",
+						"label": "General",
+						"icon": "cog",
+						"children": [
+							{
+								"id": "g2",
+								"href": "/g"
+							}
+						]
+					},
+					{
+						"id": "export",
+						"action": "export"
+					}
+				]
+			},
+			{
+				"id": "admin",
+				"label": "Admin",
+				"icon": "shield",
+				"children": []
+			},
+			{
+				"id": "loose",
+				"label": "Loose",
+				"href": "/loose"
+			},
+			{
+				"id": "empty",
+				"label": "Empty group"
+			},
+			{
+				"id": "chain",
+				"label": "Chain",
+				"route": "chain"
+			}
+		],
+		"same": true
+	},
+	{
+		"name": "empty",
+		"result": [
+			{
+				"id": "cap",
+				"type": "caption",
+				"label": "Caption"
+			},
+			{
+				"id": "self",
+				"route": "self"
+			},
+			{
+				"id": "home",
+				"label": "Home",
+				"route": "home"
+			},
+			{
+				"id": "settings",
+				"label": "Settings",
+				"children": [
+					{
+						"id": "general",
+						"route": "general"
+					},
+					{
+						"id": "nested",
+						"label": "Nested",
+						"children": [
+							{
+								"id": "deep",
+								"route": "d"
+							}
+						]
+					},
+					{
+						"id": "stay",
+						"route": "stay"
+					}
+				]
+			},
+			{
+				"id": "tools",
+				"label": "Tools",
+				"children": [
+					{
+						"id": "general",
+						"label": "General",
+						"icon": "cog",
+						"children": [
+							{
+								"id": "g2",
+								"href": "/g"
+							}
+						]
+					},
+					{
+						"id": "export",
+						"action": "export"
+					}
+				]
+			},
+			{
+				"id": "loose",
+				"label": "Loose",
+				"href": "/loose"
+			},
+			{
+				"id": "chain",
+				"label": "Chain",
+				"route": "chain"
+			}
+		],
+		"input": [
+			{
+				"id": "cap",
+				"type": "caption",
+				"label": "Caption"
+			},
+			{
+				"id": "self",
+				"route": "self"
+			},
+			{
+				"id": "home",
+				"label": "Home",
+				"route": "home"
+			},
+			{
+				"id": "settings",
+				"label": "Settings",
+				"children": [
+					{
+						"id": "general",
+						"route": "general"
+					},
+					{
+						"id": "nested",
+						"label": "Nested",
+						"children": [
+							{
+								"id": "deep",
+								"route": "d"
+							}
+						]
+					},
+					{
+						"id": "stay",
+						"route": "stay"
+					}
+				]
+			},
+			{
+				"id": "tools",
+				"label": "Tools",
+				"children": [
+					{
+						"id": "general",
+						"label": "General",
+						"icon": "cog",
+						"children": [
+							{
+								"id": "g2",
+								"href": "/g"
+							}
+						]
+					},
+					{
+						"id": "export",
+						"action": "export"
+					}
+				]
+			},
+			{
+				"id": "admin",
+				"label": "Admin",
+				"icon": "shield",
+				"children": []
+			},
+			{
+				"id": "loose",
+				"label": "Loose",
+				"href": "/loose"
+			},
+			{
+				"id": "empty",
+				"label": "Empty group"
+			},
+			{
+				"id": "chain",
+				"label": "Chain",
+				"route": "chain"
+			}
+		],
+		"same": false
+	},
+	{
+		"name": "group dissolves into a group",
+		"result": [
+			{
+				"id": "cap",
+				"type": "caption",
+				"label": "Caption"
+			},
+			{
+				"id": "self",
+				"route": "self"
+			},
+			{
+				"id": "home",
+				"label": "Home",
+				"route": "home"
+			},
+			{
+				"id": "settings",
+				"label": "Settings",
+				"children": [
+					{
+						"id": "general",
+						"route": "general",
+						"label": "General",
+						"icon": "cog",
+						"children": [
+							{
+								"id": "g2",
+								"href": "/g"
+							}
+						]
+					},
+					{
+						"id": "nested",
+						"label": "Nested",
+						"children": [
+							{
+								"id": "deep",
+								"route": "d"
+							}
+						]
+					},
+					{
+						"id": "stay",
+						"route": "stay"
+					},
+					{
+						"id": "export",
+						"action": "export"
+					}
+				]
+			},
+			{
+				"id": "loose",
+				"label": "Loose",
+				"href": "/loose"
+			},
+			{
+				"id": "chain",
+				"label": "Chain",
+				"route": "chain"
+			}
+		],
+		"input": [
+			{
+				"id": "cap",
+				"type": "caption",
+				"label": "Caption"
+			},
+			{
+				"id": "self",
+				"route": "self"
+			},
+			{
+				"id": "home",
+				"label": "Home",
+				"route": "home"
+			},
+			{
+				"id": "settings",
+				"label": "Settings",
+				"children": [
+					{
+						"id": "general",
+						"route": "general",
+						"label": "General",
+						"icon": "cog",
+						"children": [
+							{
+								"id": "g2",
+								"href": "/g"
+							}
+						]
+					},
+					{
+						"id": "nested",
+						"label": "Nested",
+						"children": [
+							{
+								"id": "deep",
+								"route": "d"
+							}
+						]
+					},
+					{
+						"id": "stay",
+						"route": "stay"
+					},
+					{
+						"id": "export",
+						"action": "export"
+					}
+				]
+			},
+			{
+				"id": "admin",
+				"label": "Admin",
+				"icon": "shield",
+				"children": []
+			},
+			{
+				"id": "loose",
+				"label": "Loose",
+				"href": "/loose"
+			},
+			{
+				"id": "empty",
+				"label": "Empty group"
+			},
+			{
+				"id": "chain",
+				"label": "Chain",
+				"route": "chain"
+			}
+		],
+		"same": false
+	},
+	{
+		"name": "leaf to a group",
+		"result": [
+			{
+				"id": "cap",
+				"type": "caption",
+				"label": "Caption"
+			},
+			{
+				"id": "self",
+				"route": "self"
+			},
+			{
+				"id": "settings",
+				"label": "Settings",
+				"children": [
+					{
+						"id": "general",
+						"route": "general"
+					},
+					{
+						"id": "nested",
+						"label": "Nested",
+						"children": [
+							{
+								"id": "deep",
+								"route": "d"
+							}
+						]
+					},
+					{
+						"id": "stay",
+						"route": "stay"
+					},
+					{
+						"id": "loose",
+						"label": "Loose",
+						"href": "/loose"
+					}
+				]
+			},
+			{
+				"id": "tools",
+				"label": "Tools",
+				"children": [
+					{
+						"id": "general",
+						"label": "General",
+						"icon": "cog",
+						"children": [
+							{
+								"id": "g2",
+								"href": "/g"
+							}
+						]
+					},
+					{
+						"id": "export",
+						"action": "export"
+					}
+				]
+			},
+			{
+				"id": "admin",
+				"label": "Admin",
+				"icon": "shield",
+				"children": [
+					{
+						"id": "home",
+						"label": "Home",
+						"route": "home"
+					}
+				]
+			},
+			{
+				"id": "chain",
+				"label": "Chain",
+				"route": "chain"
+			}
+		],
+		"input": [
+			{
+				"id": "cap",
+				"type": "caption",
+				"label": "Caption"
+			},
+			{
+				"id": "self",
+				"route": "self"
+			},
+			{
+				"id": "settings",
+				"label": "Settings",
+				"children": [
+					{
+						"id": "general",
+						"route": "general"
+					},
+					{
+						"id": "nested",
+						"label": "Nested",
+						"children": [
+							{
+								"id": "deep",
+								"route": "d"
+							}
+						]
+					},
+					{
+						"id": "stay",
+						"route": "stay"
+					},
+					{
+						"id": "loose",
+						"label": "Loose",
+						"href": "/loose"
+					}
+				]
+			},
+			{
+				"id": "tools",
+				"label": "Tools",
+				"children": [
+					{
+						"id": "general",
+						"label": "General",
+						"icon": "cog",
+						"children": [
+							{
+								"id": "g2",
+								"href": "/g"
+							}
+						]
+					},
+					{
+						"id": "export",
+						"action": "export"
+					}
+				]
+			},
+			{
+				"id": "admin",
+				"label": "Admin",
+				"icon": "shield",
+				"children": [
+					{
+						"id": "home",
+						"label": "Home",
+						"route": "home"
+					}
+				]
+			},
+			{
+				"id": "empty",
+				"label": "Empty group"
+			},
+			{
+				"id": "chain",
+				"label": "Chain",
+				"route": "chain"
+			}
+		],
+		"same": false
+	},
+	{
+		"name": "child leaf to another group",
+		"result": [
+			{
+				"id": "cap",
+				"type": "caption",
+				"label": "Caption"
+			},
+			{
+				"id": "self",
+				"route": "self"
+			},
+			{
+				"id": "home",
+				"label": "Home",
+				"route": "home"
+			},
+			{
+				"id": "settings",
+				"label": "Settings",
+				"children": [
+					{
+						"id": "general",
+						"route": "general"
+					},
+					{
+						"id": "nested",
+						"label": "Nested",
+						"children": [
+							{
+								"id": "deep",
+								"route": "d"
+							}
+						]
+					}
+				]
+			},
+			{
+				"id": "tools",
+				"label": "Tools",
+				"children": [
+					{
+						"id": "general",
+						"label": "General",
+						"icon": "cog",
+						"children": [
+							{
+								"id": "g2",
+								"href": "/g"
+							}
+						]
+					},
+					{
+						"id": "stay",
+						"route": "stay"
+					}
+				]
+			},
+			{
+				"id": "admin",
+				"label": "Admin",
+				"icon": "shield",
+				"children": [
+					{
+						"id": "export",
+						"action": "export"
+					}
+				]
+			},
+			{
+				"id": "loose",
+				"label": "Loose",
+				"href": "/loose"
+			},
+			{
+				"id": "chain",
+				"label": "Chain",
+				"route": "chain"
+			}
+		],
+		"input": [
+			{
+				"id": "cap",
+				"type": "caption",
+				"label": "Caption"
+			},
+			{
+				"id": "self",
+				"route": "self"
+			},
+			{
+				"id": "home",
+				"label": "Home",
+				"route": "home"
+			},
+			{
+				"id": "settings",
+				"label": "Settings",
+				"children": [
+					{
+						"id": "general",
+						"route": "general"
+					},
+					{
+						"id": "nested",
+						"label": "Nested",
+						"children": [
+							{
+								"id": "deep",
+								"route": "d"
+							}
+						]
+					}
+				]
+			},
+			{
+				"id": "tools",
+				"label": "Tools",
+				"children": [
+					{
+						"id": "general",
+						"label": "General",
+						"icon": "cog",
+						"children": [
+							{
+								"id": "g2",
+								"href": "/g"
+							}
+						]
+					},
+					{
+						"id": "stay",
+						"route": "stay"
+					}
+				]
+			},
+			{
+				"id": "admin",
+				"label": "Admin",
+				"icon": "shield",
+				"children": [
+					{
+						"id": "export",
+						"action": "export"
+					}
+				]
+			},
+			{
+				"id": "loose",
+				"label": "Loose",
+				"href": "/loose"
+			},
+			{
+				"id": "empty",
+				"label": "Empty group"
+			},
+			{
+				"id": "chain",
+				"label": "Chain",
+				"route": "chain"
+			}
+		],
+		"same": false
+	},
+	{
+		"name": "child leaf onto its own parent",
+		"result": [
+			{
+				"id": "cap",
+				"type": "caption",
+				"label": "Caption"
+			},
+			{
+				"id": "self",
+				"route": "self"
+			},
+			{
+				"id": "home",
+				"label": "Home",
+				"route": "home"
+			},
+			{
+				"id": "settings",
+				"label": "Settings",
+				"children": [
+					{
+						"id": "general",
+						"route": "general"
+					},
+					{
+						"id": "nested",
+						"label": "Nested",
+						"children": [
+							{
+								"id": "deep",
+								"route": "d"
+							}
+						]
+					},
+					{
+						"id": "stay",
+						"route": "stay"
+					}
+				]
+			},
+			{
+				"id": "tools",
+				"label": "Tools",
+				"children": [
+					{
+						"id": "general",
+						"label": "General",
+						"icon": "cog",
+						"children": [
+							{
+								"id": "g2",
+								"href": "/g"
+							}
+						]
+					},
+					{
+						"id": "export",
+						"action": "export"
+					}
+				]
+			},
+			{
+				"id": "loose",
+				"label": "Loose",
+				"href": "/loose"
+			},
+			{
+				"id": "chain",
+				"label": "Chain",
+				"route": "chain"
+			}
+		],
+		"input": [
+			{
+				"id": "cap",
+				"type": "caption",
+				"label": "Caption"
+			},
+			{
+				"id": "self",
+				"route": "self"
+			},
+			{
+				"id": "home",
+				"label": "Home",
+				"route": "home"
+			},
+			{
+				"id": "settings",
+				"label": "Settings",
+				"children": [
+					{
+						"id": "general",
+						"route": "general"
+					},
+					{
+						"id": "nested",
+						"label": "Nested",
+						"children": [
+							{
+								"id": "deep",
+								"route": "d"
+							}
+						]
+					},
+					{
+						"id": "stay",
+						"route": "stay"
+					}
+				]
+			},
+			{
+				"id": "tools",
+				"label": "Tools",
+				"children": [
+					{
+						"id": "general",
+						"label": "General",
+						"icon": "cog",
+						"children": [
+							{
+								"id": "g2",
+								"href": "/g"
+							}
+						]
+					},
+					{
+						"id": "export",
+						"action": "export"
+					}
+				]
+			},
+			{
+				"id": "admin",
+				"label": "Admin",
+				"icon": "shield",
+				"children": []
+			},
+			{
+				"id": "loose",
+				"label": "Loose",
+				"href": "/loose"
+			},
+			{
+				"id": "empty",
+				"label": "Empty group"
+			},
+			{
+				"id": "chain",
+				"label": "Chain",
+				"route": "chain"
+			}
+		],
+		"same": false
+	},
+	{
+		"name": "child group flattens into its parent",
+		"result": [
+			{
+				"id": "cap",
+				"type": "caption",
+				"label": "Caption"
+			},
+			{
+				"id": "self",
+				"route": "self"
+			},
+			{
+				"id": "home",
+				"label": "Home",
+				"route": "home"
+			},
+			{
+				"id": "settings",
+				"label": "Settings",
+				"children": [
+					{
+						"id": "general",
+						"route": "general"
+					},
+					{
+						"id": "stay",
+						"route": "stay"
+					},
+					{
+						"id": "deep",
+						"route": "d"
+					}
+				]
+			},
+			{
+				"id": "tools",
+				"label": "Tools",
+				"children": [
+					{
+						"id": "general",
+						"label": "General",
+						"icon": "cog",
+						"children": [
+							{
+								"id": "g2",
+								"href": "/g"
+							}
+						]
+					},
+					{
+						"id": "export",
+						"action": "export"
+					}
+				]
+			},
+			{
+				"id": "loose",
+				"label": "Loose",
+				"href": "/loose"
+			},
+			{
+				"id": "chain",
+				"label": "Chain",
+				"route": "chain"
+			}
+		],
+		"input": [
+			{
+				"id": "cap",
+				"type": "caption",
+				"label": "Caption"
+			},
+			{
+				"id": "self",
+				"route": "self"
+			},
+			{
+				"id": "home",
+				"label": "Home",
+				"route": "home"
+			},
+			{
+				"id": "settings",
+				"label": "Settings",
+				"children": [
+					{
+						"id": "general",
+						"route": "general"
+					},
+					{
+						"id": "stay",
+						"route": "stay"
+					},
+					{
+						"id": "deep",
+						"route": "d"
+					}
+				]
+			},
+			{
+				"id": "tools",
+				"label": "Tools",
+				"children": [
+					{
+						"id": "general",
+						"label": "General",
+						"icon": "cog",
+						"children": [
+							{
+								"id": "g2",
+								"href": "/g"
+							}
+						]
+					},
+					{
+						"id": "export",
+						"action": "export"
+					}
+				]
+			},
+			{
+				"id": "admin",
+				"label": "Admin",
+				"icon": "shield",
+				"children": []
+			},
+			{
+				"id": "loose",
+				"label": "Loose",
+				"href": "/loose"
+			},
+			{
+				"id": "empty",
+				"label": "Empty group"
+			},
+			{
+				"id": "chain",
+				"label": "Chain",
+				"route": "chain"
+			}
+		],
+		"same": false
+	},
+	{
+		"name": "missing target",
+		"result": [
+			{
+				"id": "cap",
+				"type": "caption",
+				"label": "Caption"
+			},
+			{
+				"id": "self",
+				"route": "self"
+			},
+			{
+				"id": "settings",
+				"label": "Settings",
+				"children": [
+					{
+						"id": "general",
+						"route": "general"
+					},
+					{
+						"id": "nested",
+						"label": "Nested",
+						"children": [
+							{
+								"id": "deep",
+								"route": "d"
+							}
+						]
+					}
+				]
+			},
+			{
+				"id": "tools",
+				"label": "Tools",
+				"children": [
+					{
+						"id": "general",
+						"label": "General",
+						"icon": "cog",
+						"children": [
+							{
+								"id": "g2",
+								"href": "/g"
+							}
+						]
+					},
+					{
+						"id": "export",
+						"action": "export"
+					}
+				]
+			},
+			{
+				"id": "loose",
+				"label": "Loose",
+				"href": "/loose"
+			},
+			{
+				"id": "chain",
+				"label": "Chain",
+				"route": "chain"
+			},
+			{
+				"id": "stay",
+				"route": "stay"
+			},
+			{
+				"id": "home",
+				"label": "Home",
+				"route": "home"
+			}
+		],
+		"input": [
+			{
+				"id": "cap",
+				"type": "caption",
+				"label": "Caption"
+			},
+			{
+				"id": "self",
+				"route": "self"
+			},
+			{
+				"id": "settings",
+				"label": "Settings",
+				"children": [
+					{
+						"id": "general",
+						"route": "general"
+					},
+					{
+						"id": "nested",
+						"label": "Nested",
+						"children": [
+							{
+								"id": "deep",
+								"route": "d"
+							}
+						]
+					}
+				]
+			},
+			{
+				"id": "tools",
+				"label": "Tools",
+				"children": [
+					{
+						"id": "general",
+						"label": "General",
+						"icon": "cog",
+						"children": [
+							{
+								"id": "g2",
+								"href": "/g"
+							}
+						]
+					},
+					{
+						"id": "export",
+						"action": "export"
+					}
+				]
+			},
+			{
+				"id": "admin",
+				"label": "Admin",
+				"icon": "shield",
+				"children": []
+			},
+			{
+				"id": "loose",
+				"label": "Loose",
+				"href": "/loose"
+			},
+			{
+				"id": "empty",
+				"label": "Empty group"
+			},
+			{
+				"id": "chain",
+				"label": "Chain",
+				"route": "chain"
+			},
+			{
+				"id": "stay",
+				"route": "stay"
+			},
+			{
+				"id": "home",
+				"label": "Home",
+				"route": "home"
+			}
+		],
+		"same": false
+	},
+	{
+		"name": "self target",
+		"result": [
+			{
+				"id": "cap",
+				"type": "caption",
+				"label": "Caption"
+			},
+			{
+				"id": "self",
+				"route": "self"
+			},
+			{
+				"id": "home",
+				"label": "Home",
+				"route": "home"
+			},
+			{
+				"id": "settings",
+				"label": "Settings",
+				"children": [
+					{
+						"id": "general",
+						"route": "general"
+					},
+					{
+						"id": "nested",
+						"label": "Nested",
+						"children": [
+							{
+								"id": "deep",
+								"route": "d"
+							}
+						]
+					},
+					{
+						"id": "stay",
+						"route": "stay"
+					}
+				]
+			},
+			{
+				"id": "tools",
+				"label": "Tools",
+				"children": [
+					{
+						"id": "general",
+						"label": "General",
+						"icon": "cog",
+						"children": [
+							{
+								"id": "g2",
+								"href": "/g"
+							}
+						]
+					},
+					{
+						"id": "export",
+						"action": "export"
+					}
+				]
+			},
+			{
+				"id": "loose",
+				"label": "Loose",
+				"href": "/loose"
+			},
+			{
+				"id": "chain",
+				"label": "Chain",
+				"route": "chain"
+			}
+		],
+		"input": [
+			{
+				"id": "cap",
+				"type": "caption",
+				"label": "Caption"
+			},
+			{
+				"id": "self",
+				"route": "self"
+			},
+			{
+				"id": "home",
+				"label": "Home",
+				"route": "home"
+			},
+			{
+				"id": "settings",
+				"label": "Settings",
+				"children": [
+					{
+						"id": "general",
+						"route": "general"
+					},
+					{
+						"id": "nested",
+						"label": "Nested",
+						"children": [
+							{
+								"id": "deep",
+								"route": "d"
+							}
+						]
+					},
+					{
+						"id": "stay",
+						"route": "stay"
+					}
+				]
+			},
+			{
+				"id": "tools",
+				"label": "Tools",
+				"children": [
+					{
+						"id": "general",
+						"label": "General",
+						"icon": "cog",
+						"children": [
+							{
+								"id": "g2",
+								"href": "/g"
+							}
+						]
+					},
+					{
+						"id": "export",
+						"action": "export"
+					}
+				]
+			},
+			{
+				"id": "admin",
+				"label": "Admin",
+				"icon": "shield",
+				"children": []
+			},
+			{
+				"id": "loose",
+				"label": "Loose",
+				"href": "/loose"
+			},
+			{
+				"id": "empty",
+				"label": "Empty group"
+			},
+			{
+				"id": "chain",
+				"label": "Chain",
+				"route": "chain"
+			}
+		],
+		"same": false
+	},
+	{
+		"name": "two children to one group",
+		"result": [
+			{
+				"id": "cap",
+				"type": "caption",
+				"label": "Caption"
+			},
+			{
+				"id": "self",
+				"route": "self"
+			},
+			{
+				"id": "home",
+				"label": "Home",
+				"route": "home"
+			},
+			{
+				"id": "settings",
+				"label": "Settings",
+				"children": [
+					{
+						"id": "nested",
+						"label": "Nested",
+						"children": [
+							{
+								"id": "deep",
+								"route": "d"
+							}
+						]
+					}
+				]
+			},
+			{
+				"id": "tools",
+				"label": "Tools",
+				"children": [
+					{
+						"id": "export",
+						"action": "export"
+					}
+				]
+			},
+			{
+				"id": "admin",
+				"label": "Admin",
+				"icon": "shield",
+				"children": [
+					{
+						"id": "g2",
+						"href": "/g"
+					},
+					{
+						"id": "stay",
+						"route": "stay"
+					},
+					{
+						"id": "general",
+						"route": "general"
+					}
+				]
+			},
+			{
+				"id": "loose",
+				"label": "Loose",
+				"href": "/loose"
+			},
+			{
+				"id": "chain",
+				"label": "Chain",
+				"route": "chain"
+			}
+		],
+		"input": [
+			{
+				"id": "cap",
+				"type": "caption",
+				"label": "Caption"
+			},
+			{
+				"id": "self",
+				"route": "self"
+			},
+			{
+				"id": "home",
+				"label": "Home",
+				"route": "home"
+			},
+			{
+				"id": "settings",
+				"label": "Settings",
+				"children": [
+					{
+						"id": "nested",
+						"label": "Nested",
+						"children": [
+							{
+								"id": "deep",
+								"route": "d"
+							}
+						]
+					}
+				]
+			},
+			{
+				"id": "tools",
+				"label": "Tools",
+				"children": [
+					{
+						"id": "export",
+						"action": "export"
+					}
+				]
+			},
+			{
+				"id": "admin",
+				"label": "Admin",
+				"icon": "shield",
+				"children": [
+					{
+						"id": "g2",
+						"href": "/g"
+					},
+					{
+						"id": "stay",
+						"route": "stay"
+					},
+					{
+						"id": "general",
+						"route": "general"
+					}
+				]
+			},
+			{
+				"id": "loose",
+				"label": "Loose",
+				"href": "/loose"
+			},
+			{
+				"id": "empty",
+				"label": "Empty group"
+			},
+			{
+				"id": "chain",
+				"label": "Chain",
+				"route": "chain"
+			}
+		],
+		"same": false
+	},
+	{
+		"name": "chained over passes",
+		"result": [
+			{
+				"id": "cap",
+				"type": "caption",
+				"label": "Caption"
+			},
+			{
+				"id": "self",
+				"route": "self"
+			},
+			{
+				"id": "home",
+				"label": "Home",
+				"route": "home"
+			},
+			{
+				"id": "settings",
+				"label": "Settings",
+				"children": [
+					{
+						"id": "general",
+						"route": "general",
+						"label": "General",
+						"icon": "cog",
+						"children": [
+							{
+								"id": "g2",
+								"href": "/g"
+							}
+						]
+					},
+					{
+						"id": "nested",
+						"label": "Nested",
+						"children": [
+							{
+								"id": "deep",
+								"route": "d"
+							}
+						]
+					},
+					{
+						"id": "stay",
+						"route": "stay"
+					}
+				]
+			},
+			{
+				"id": "loose",
+				"label": "Loose",
+				"href": "/loose",
+				"children": []
+			},
+			{
+				"id": "chain",
+				"label": "Chain",
+				"route": "chain"
+			},
+			{
+				"id": "export",
+				"action": "export"
+			}
+		],
+		"input": [
+			{
+				"id": "cap",
+				"type": "caption",
+				"label": "Caption"
+			},
+			{
+				"id": "self",
+				"route": "self"
+			},
+			{
+				"id": "home",
+				"label": "Home",
+				"route": "home"
+			},
+			{
+				"id": "settings",
+				"label": "Settings",
+				"children": [
+					{
+						"id": "general",
+						"route": "general",
+						"label": "General",
+						"icon": "cog",
+						"children": [
+							{
+								"id": "g2",
+								"href": "/g"
+							}
+						]
+					},
+					{
+						"id": "nested",
+						"label": "Nested",
+						"children": [
+							{
+								"id": "deep",
+								"route": "d"
+							}
+						]
+					},
+					{
+						"id": "stay",
+						"route": "stay"
+					}
+				]
+			},
+			{
+				"id": "loose",
+				"label": "Loose",
+				"href": "/loose",
+				"children": []
+			},
+			{
+				"id": "empty",
+				"label": "Empty group"
+			},
+			{
+				"id": "chain",
+				"label": "Chain",
+				"route": "chain"
+			},
+			{
+				"id": "export",
+				"action": "export"
+			}
+		],
+		"same": false
+	},
+	{
+		"name": "cycle",
+		"result": [
+			{
+				"id": "cap",
+				"type": "caption",
+				"label": "Caption"
+			},
+			{
+				"id": "self",
+				"route": "self"
+			},
+			{
+				"id": "loose",
+				"label": "Loose",
+				"href": "/loose"
+			},
+			{
+				"id": "chain",
+				"label": "Chain",
+				"route": "chain",
+				"children": [
+					{
+						"id": "general",
+						"route": "general"
+					},
+					{
+						"id": "nested",
+						"label": "Nested",
+						"children": [
+							{
+								"id": "deep",
+								"route": "d"
+							}
+						]
+					},
+					{
+						"id": "stay",
+						"route": "stay"
+					}
+				]
+			},
+			{
+				"id": "tools",
+				"label": "Tools",
+				"children": [
+					{
+						"id": "general",
+						"label": "General",
+						"icon": "cog",
+						"children": [
+							{
+								"id": "g2",
+								"href": "/g"
+							}
+						]
+					},
+					{
+						"id": "export",
+						"action": "export"
+					},
+					{
+						"id": "home",
+						"label": "Home",
+						"route": "home"
+					}
+				]
+			}
+		],
+		"input": [
+			{
+				"id": "cap",
+				"type": "caption",
+				"label": "Caption"
+			},
+			{
+				"id": "self",
+				"route": "self"
+			},
+			{
+				"id": "loose",
+				"label": "Loose",
+				"href": "/loose"
+			},
+			{
+				"id": "empty",
+				"label": "Empty group"
+			},
+			{
+				"id": "chain",
+				"label": "Chain",
+				"route": "chain",
+				"children": [
+					{
+						"id": "general",
+						"route": "general"
+					},
+					{
+						"id": "nested",
+						"label": "Nested",
+						"children": [
+							{
+								"id": "deep",
+								"route": "d"
+							}
+						]
+					},
+					{
+						"id": "stay",
+						"route": "stay"
+					}
+				]
+			},
+			{
+				"id": "tools",
+				"label": "Tools",
+				"children": [
+					{
+						"id": "general",
+						"label": "General",
+						"icon": "cog",
+						"children": [
+							{
+								"id": "g2",
+								"href": "/g"
+							}
+						]
+					},
+					{
+						"id": "export",
+						"action": "export"
+					},
+					{
+						"id": "home",
+						"label": "Home",
+						"route": "home"
+					}
+				]
+			}
+		],
+		"same": false
+	},
+	{
+		"name": "everything into admin",
+		"result": [
+			{
+				"id": "self",
+				"route": "self"
+			},
+			{
+				"id": "home",
+				"label": "Home",
+				"route": "home"
+			},
+			{
+				"id": "admin",
+				"label": "Admin",
+				"icon": "shield",
+				"children": [
+					{
+						"id": "empty",
+						"label": "Empty group"
+					},
+					{
+						"id": "general",
+						"label": "General",
+						"icon": "cog",
+						"children": [
+							{
+								"id": "g2",
+								"href": "/g"
+							}
+						],
+						"route": "general"
+					},
+					{
+						"id": "export",
+						"action": "export"
+					},
+					{
+						"id": "nested",
+						"label": "Nested",
+						"children": [
+							{
+								"id": "deep",
+								"route": "d"
+							}
+						]
+					},
+					{
+						"id": "stay",
+						"route": "stay"
+					},
+					{
+						"id": "cap",
+						"type": "caption",
+						"label": "Caption"
+					}
+				]
+			},
+			{
+				"id": "loose",
+				"label": "Loose",
+				"href": "/loose"
+			},
+			{
+				"id": "chain",
+				"label": "Chain",
+				"route": "chain"
+			}
+		],
+		"input": [
+			{
+				"id": "self",
+				"route": "self"
+			},
+			{
+				"id": "home",
+				"label": "Home",
+				"route": "home"
+			},
+			{
+				"id": "admin",
+				"label": "Admin",
+				"icon": "shield",
+				"children": [
+					{
+						"id": "empty",
+						"label": "Empty group"
+					},
+					{
+						"id": "general",
+						"label": "General",
+						"icon": "cog",
+						"children": [
+							{
+								"id": "g2",
+								"href": "/g"
+							}
+						],
+						"route": "general"
+					},
+					{
+						"id": "export",
+						"action": "export"
+					},
+					{
+						"id": "nested",
+						"label": "Nested",
+						"children": [
+							{
+								"id": "deep",
+								"route": "d"
+							}
+						]
+					},
+					{
+						"id": "stay",
+						"route": "stay"
+					},
+					{
+						"id": "cap",
+						"type": "caption",
+						"label": "Caption"
+					}
+				]
+			},
+			{
+				"id": "loose",
+				"label": "Loose",
+				"href": "/loose"
+			},
+			{
+				"id": "chain",
+				"label": "Chain",
+				"route": "chain"
+			}
+		],
+		"same": false
+	},
+	{
+		"name": "bundled manifest, own group dissolved",
+		"result": [
+			[
+				"Dashboard",
+				[
+					"Consent"
+				]
+			],
+			[
+				"StandingConsents",
+				[]
+			],
+			[
+				"Prohibitions",
+				[]
+			],
+			[
+				"Intake",
+				[]
+			],
+			[
+				"ClassificationPending",
+				[]
+			],
+			[
+				"Anonymization",
+				[]
+			],
+			[
+				"MyDocuments",
+				[]
+			],
+			[
+				"FolderAnonymization",
+				[]
+			],
+			[
+				"Dossiers",
+				[]
+			],
+			[
+				"Contracts",
+				[]
+			],
+			[
+				"ContractPipeline",
+				[]
+			],
+			[
+				"Templates",
+				[]
+			],
+			[
+				"Correspondence",
+				[]
+			],
+			[
+				"Publications",
+				[]
+			],
+			[
+				"PrintJobs",
+				[]
+			],
+			[
+				"LegalHolds",
+				[]
+			],
+			[
+				"SubjectErasures",
+				[]
+			],
+			[
+				"EmailIngestion",
+				[]
+			],
+			[
+				"EntitySearch",
+				[]
+			],
+			[
+				"SigningRequests",
+				[]
+			],
+			[
+				"SigningFolder",
+				[]
+			],
+			[
+				"BulkSigningBatches",
+				[]
+			],
+			[
+				"SigningEnvelopes",
+				[]
+			],
+			[
+				"CustomDictionary",
+				[]
+			],
+			[
+				"Documentation",
+				[]
+			],
+			[
+				"StoreMenu",
+				[]
+			],
+			[
+				"ReportsMenu",
+				[]
+			],
+			[
+				"FeaturesRoadmapMenu",
+				[]
+			],
+			[
+				"FlowsMenu",
+				[]
+			]
+		]
+	}
+]

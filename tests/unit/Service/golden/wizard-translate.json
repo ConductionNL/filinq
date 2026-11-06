@@ -1,0 +1,153 @@
+{
+    "everything answered": {
+        "dataRefs": [
+            {
+                "register": "zaken",
+                "schema": "zaak",
+                "id": "z-1"
+            },
+            {
+                "register": "",
+                "schema": "",
+                "id": "7"
+            }
+        ],
+        "adHocData": {
+            "brief": {
+                "soort": "weigering",
+                "reden": {
+                    "tekst": "Te laat"
+                },
+                "datum": "2026-10-31"
+            }
+        },
+        "wizardContext": {
+            "wizardId": "w-1",
+            "wizardVersion": "3",
+            "answers": {
+                "zaak": "z-1",
+                "soort": "weigering",
+                "reden": "Te laat",
+                "notitie": "x",
+                "datum": "2026-10-31",
+                "klant": 7
+            }
+        }
+    },
+    "a hidden question": {
+        "dataRefs": [
+            {
+                "register": "zaken",
+                "schema": "zaak",
+                "id": "z-1"
+            }
+        ],
+        "adHocData": {
+            "brief": {
+                "soort": "toekenning"
+            }
+        },
+        "wizardContext": {
+            "wizardId": "w-1",
+            "wizardVersion": "3",
+            "answers": {
+                "zaak": "z-1",
+                "soort": "toekenning"
+            }
+        }
+    },
+    "blank answers": {
+        "dataRefs": [],
+        "adHocData": [],
+        "wizardContext": {
+            "wizardId": "w-1",
+            "wizardVersion": "3",
+            "answers": []
+        }
+    },
+    "an answer for no question": {
+        "dataRefs": [],
+        "adHocData": {
+            "brief": {
+                "datum": "2026-01-01"
+            }
+        },
+        "wizardContext": {
+            "wizardId": "w-1",
+            "wizardVersion": "3",
+            "answers": {
+                "datum": "2026-01-01"
+            }
+        }
+    },
+    "no answers": {
+        "dataRefs": [],
+        "adHocData": [],
+        "wizardContext": {
+            "wizardId": "w-1",
+            "wizardVersion": "3",
+            "answers": []
+        }
+    },
+    "a duplicate key": {
+        "dataRefs": [
+            {
+                "register": "r",
+                "schema": "",
+                "id": "v"
+            }
+        ],
+        "adHocData": {
+            "x": {
+                "a": "v"
+            },
+            "y": {
+                "a": "v"
+            }
+        },
+        "wizardContext": {
+            "wizardId": "",
+            "wizardVersion": "",
+            "answers": {
+                "a": "v"
+            }
+        }
+    },
+    "no questions": {
+        "dataRefs": [],
+        "adHocData": [],
+        "wizardContext": {
+            "wizardId": "w-2",
+            "wizardVersion": "",
+            "answers": []
+        }
+    },
+    "questions not a list": {
+        "dataRefs": [],
+        "adHocData": [],
+        "wizardContext": {
+            "wizardId": "",
+            "wizardVersion": "",
+            "answers": []
+        }
+    },
+    "a list answer": {
+        "dataRefs": [],
+        "adHocData": {
+            "tags": [
+                "a",
+                "b"
+            ]
+        },
+        "wizardContext": {
+            "wizardId": "",
+            "wizardVersion": "",
+            "answers": {
+                "tags": [
+                    "a",
+                    "b"
+                ]
+            }
+        }
+    }
+}

@@ -16,7 +16,7 @@
  * enforced. That cascade currently declares `read: ["authenticated"]`, so the
  * read guard resolves to an existence test for any authenticated user in the
  * organisation; `update` and `delete` are restricted to
- * `docudesk-policy-admins` plus OpenRegister's unconditional owner bypass, so
+ * `filinq-policy-admins` plus OpenRegister's unconditional owner bypass, so
  * an operator can always manage the dossiers they created.
  *
  * The FILE half is real regardless: every listing runs through the caller's own
@@ -40,7 +40,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
-use OCA\Filinq\Service\DossierManagementService;
+use OCA\Filinq\Kernel\Contracts\DossierManagementServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -58,13 +58,14 @@ use Throwable;
  * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md
  */
 class DossierManagementController extends Controller {
+	use AnswersNotAuthenticated;
 
 	/**
 	 * Constructor.
 	 *
 	 * @param string $appName The application name.
 	 * @param IRequest $request The current HTTP request.
-	 * @param DossierManagementService $dossiers Dossier aggregation and membership.
+	 * @param DossierManagementServiceInterface $dossiers Dossier aggregation and membership.
 	 * @param IUserSession $userSession The current session.
 	 * @param IL10N $l10n Localisation.
 	 * @param LoggerInterface $logger Logger.
@@ -72,7 +73,7 @@ class DossierManagementController extends Controller {
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly DossierManagementService $dossiers,
+		private readonly DossierManagementServiceInterface $dossiers,
 		private readonly IUserSession $userSession,
 		private readonly IL10N $l10n,
 		private readonly LoggerInterface $logger,
@@ -102,6 +103,10 @@ class DossierManagementController extends Controller {
 	 * @return JSONResponse The aggregated dossier.
 	 *
 	 * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md
+	 *
+	 * @no-admin-idor-exempt the dossier is read with OpenRegister RBAC and multitenancy on
+	 * (DossierManagementService::requireReadable()), and its documents are listed through the caller's own
+	 * user folder.
 	 */
 	#[NoAdminRequired]
 	public function show(string $dossierId): JSONResponse {
@@ -119,6 +124,9 @@ class DossierManagementController extends Controller {
 	 * @return JSONResponse The created dossier.
 	 *
 	 * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md
+	 *
+	 * @no-admin-idor-exempt the dossier is saved with OpenRegister RBAC on (dossier create:
+	 * authenticated), and its home folder is created in the caller's own Files.
 	 */
 	#[NoAdminRequired]
 	public function create(string $name, string $description = '', array $bases = []): JSONResponse {
@@ -142,6 +150,10 @@ class DossierManagementController extends Controller {
 	 * @return JSONResponse The refreshed dossier, carrying `folderWarning`.
 	 *
 	 * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md
+	 *
+	 * @no-admin-idor-exempt the dossier is read and saved with OpenRegister RBAC on (dossier update:
+	 * filinq-policy-admins); the home folder is resolved through the caller's own user folder, so
+	 * Nextcloud enforces the rename permission.
 	 */
 	#[NoAdminRequired]
 	public function rename(string $dossierId, string $name): JSONResponse {
@@ -160,6 +172,9 @@ class DossierManagementController extends Controller {
 	 * @return JSONResponse The refreshed dossier.
 	 *
 	 * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md
+	 *
+	 * @no-admin-idor-exempt the dossier is read and saved with OpenRegister RBAC on
+	 * (DossierManagementService::save(); dossier update: filinq-policy-admins).
 	 */
 	#[NoAdminRequired]
 	public function transition(string $dossierId, string $status): JSONResponse {
@@ -178,6 +193,10 @@ class DossierManagementController extends Controller {
 	 * @return JSONResponse The refreshed dossier.
 	 *
 	 * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md
+	 *
+	 * @no-admin-idor-exempt the file must be in the caller's own user folder
+	 * (DossierFileService::nodeFor()), and the dossier is saved with OpenRegister RBAC on (dossier update:
+	 * filinq-policy-admins).
 	 */
 	#[NoAdminRequired]
 	public function linkDocument(string $dossierId, int $fileId): JSONResponse {
@@ -196,6 +215,10 @@ class DossierManagementController extends Controller {
 	 * @return JSONResponse The refreshed dossier.
 	 *
 	 * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md
+	 *
+	 * @no-admin-idor-exempt the dossier is saved with OpenRegister RBAC on (dossier update: filinq-policy-
+	 * admins), and a file is trashed only through the caller's own user folder, so Nextcloud enforces the
+	 * delete permission.
 	 */
 	#[NoAdminRequired]
 	public function removeDocument(string $dossierId, int $fileId): JSONResponse {
@@ -218,6 +241,9 @@ class DossierManagementController extends Controller {
 	 * @return JSONResponse `{ mode: 'trash' | 'unlink' }`.
 	 *
 	 * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md
+	 *
+	 * @no-admin-idor-exempt read-only. The dossier is read with OpenRegister RBAC on and the file is
+	 * resolved through the caller's own user folder; anything unresolvable answers unlink.
 	 */
 	#[NoAdminRequired]
 	public function removalMode(string $dossierId, int $fileId): JSONResponse {
@@ -245,10 +271,7 @@ class DossierManagementController extends Controller {
 	 */
 	private function run(callable $handler, int $status = Http::STATUS_OK): JSONResponse {
 		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(
-				['error' => $this->l10n->t('Not authenticated')],
-				Http::STATUS_UNAUTHORIZED
-			);
+			return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 		}
 
 		try {

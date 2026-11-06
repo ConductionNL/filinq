@@ -1,0 +1,5378 @@
+{
+	"preserved absent absent absent": {
+		"note": {
+			"type": "success",
+			"title": "Accessibility preserved",
+			"detail": "",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"preserved absent absent yes": {
+		"note": {
+			"type": "success",
+			"title": "Accessibility preserved",
+			"detail": "Confirmed by veraPDF.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"preserved absent absent no": {
+		"note": {
+			"type": "success",
+			"title": "Accessibility preserved",
+			"detail": "",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"preserved absent absent text": {
+		"note": {
+			"type": "success",
+			"title": "Accessibility preserved",
+			"detail": "Confirmed by veraPDF.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"preserved absent null absent": {
+		"note": {
+			"type": "success",
+			"title": "Accessibility preserved",
+			"detail": "",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"preserved absent null yes": {
+		"note": {
+			"type": "success",
+			"title": "Accessibility preserved",
+			"detail": "Confirmed by veraPDF.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"preserved absent null no": {
+		"note": {
+			"type": "success",
+			"title": "Accessibility preserved",
+			"detail": "",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"preserved absent null text": {
+		"note": {
+			"type": "success",
+			"title": "Accessibility preserved",
+			"detail": "Confirmed by veraPDF.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"preserved absent zero absent": {
+		"note": {
+			"type": "success",
+			"title": "Accessibility preserved",
+			"detail": "",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"preserved absent zero yes": {
+		"note": {
+			"type": "success",
+			"title": "Accessibility preserved",
+			"detail": "Confirmed by veraPDF.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"preserved absent zero no": {
+		"note": {
+			"type": "success",
+			"title": "Accessibility preserved",
+			"detail": "",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"preserved absent zero text": {
+		"note": {
+			"type": "success",
+			"title": "Accessibility preserved",
+			"detail": "Confirmed by veraPDF.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"preserved absent two absent": {
+		"note": {
+			"type": "success",
+			"title": "Accessibility preserved",
+			"detail": "",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"preserved absent two yes": {
+		"note": {
+			"type": "success",
+			"title": "Accessibility preserved",
+			"detail": "Confirmed by veraPDF.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"preserved absent two no": {
+		"note": {
+			"type": "success",
+			"title": "Accessibility preserved",
+			"detail": "",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"preserved absent two text": {
+		"note": {
+			"type": "success",
+			"title": "Accessibility preserved",
+			"detail": "Confirmed by veraPDF.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"preserved null absent absent": {
+		"threw": "TypeError"
+	},
+	"preserved null absent yes": {
+		"threw": "TypeError"
+	},
+	"preserved null absent no": {
+		"threw": "TypeError"
+	},
+	"preserved null absent text": {
+		"threw": "TypeError"
+	},
+	"preserved null null absent": {
+		"threw": "TypeError"
+	},
+	"preserved null null yes": {
+		"threw": "TypeError"
+	},
+	"preserved null null no": {
+		"threw": "TypeError"
+	},
+	"preserved null null text": {
+		"threw": "TypeError"
+	},
+	"preserved null zero absent": {
+		"threw": "TypeError"
+	},
+	"preserved null zero yes": {
+		"threw": "TypeError"
+	},
+	"preserved null zero no": {
+		"threw": "TypeError"
+	},
+	"preserved null zero text": {
+		"threw": "TypeError"
+	},
+	"preserved null two absent": {
+		"threw": "TypeError"
+	},
+	"preserved null two yes": {
+		"threw": "TypeError"
+	},
+	"preserved null two no": {
+		"threw": "TypeError"
+	},
+	"preserved null two text": {
+		"threw": "TypeError"
+	},
+	"preserved zero absent absent": {
+		"note": {
+			"type": "success",
+			"title": "Accessibility preserved",
+			"detail": "0 of 0 tags kept.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"preserved zero absent yes": {
+		"note": {
+			"type": "success",
+			"title": "Accessibility preserved",
+			"detail": "0 of 0 tags kept. Confirmed by veraPDF.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"preserved zero absent no": {
+		"note": {
+			"type": "success",
+			"title": "Accessibility preserved",
+			"detail": "0 of 0 tags kept.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"preserved zero absent text": {
+		"note": {
+			"type": "success",
+			"title": "Accessibility preserved",
+			"detail": "0 of 0 tags kept. Confirmed by veraPDF.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"preserved zero null absent": {
+		"note": {
+			"type": "success",
+			"title": "Accessibility preserved",
+			"detail": "0 of 0 tags kept.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"preserved zero null yes": {
+		"note": {
+			"type": "success",
+			"title": "Accessibility preserved",
+			"detail": "0 of 0 tags kept. Confirmed by veraPDF.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"preserved zero null no": {
+		"note": {
+			"type": "success",
+			"title": "Accessibility preserved",
+			"detail": "0 of 0 tags kept.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"preserved zero null text": {
+		"note": {
+			"type": "success",
+			"title": "Accessibility preserved",
+			"detail": "0 of 0 tags kept. Confirmed by veraPDF.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"preserved zero zero absent": {
+		"note": {
+			"type": "success",
+			"title": "Accessibility preserved",
+			"detail": "0 of 0 tags kept.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"preserved zero zero yes": {
+		"note": {
+			"type": "success",
+			"title": "Accessibility preserved",
+			"detail": "0 of 0 tags kept. Confirmed by veraPDF.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"preserved zero zero no": {
+		"note": {
+			"type": "success",
+			"title": "Accessibility preserved",
+			"detail": "0 of 0 tags kept.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"preserved zero zero text": {
+		"note": {
+			"type": "success",
+			"title": "Accessibility preserved",
+			"detail": "0 of 0 tags kept. Confirmed by veraPDF.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"preserved zero two absent": {
+		"note": {
+			"type": "success",
+			"title": "Accessibility preserved",
+			"detail": "2 of 0 tags kept.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"preserved zero two yes": {
+		"note": {
+			"type": "success",
+			"title": "Accessibility preserved",
+			"detail": "2 of 0 tags kept. Confirmed by veraPDF.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"preserved zero two no": {
+		"note": {
+			"type": "success",
+			"title": "Accessibility preserved",
+			"detail": "2 of 0 tags kept.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"preserved zero two text": {
+		"note": {
+			"type": "success",
+			"title": "Accessibility preserved",
+			"detail": "2 of 0 tags kept. Confirmed by veraPDF.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"preserved three absent absent": {
+		"note": {
+			"type": "success",
+			"title": "Accessibility preserved",
+			"detail": "0 of 3 tags kept.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"preserved three absent yes": {
+		"note": {
+			"type": "success",
+			"title": "Accessibility preserved",
+			"detail": "0 of 3 tags kept. Confirmed by veraPDF.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"preserved three absent no": {
+		"note": {
+			"type": "success",
+			"title": "Accessibility preserved",
+			"detail": "0 of 3 tags kept.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"preserved three absent text": {
+		"note": {
+			"type": "success",
+			"title": "Accessibility preserved",
+			"detail": "0 of 3 tags kept. Confirmed by veraPDF.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"preserved three null absent": {
+		"note": {
+			"type": "success",
+			"title": "Accessibility preserved",
+			"detail": "0 of 3 tags kept.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"preserved three null yes": {
+		"note": {
+			"type": "success",
+			"title": "Accessibility preserved",
+			"detail": "0 of 3 tags kept. Confirmed by veraPDF.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"preserved three null no": {
+		"note": {
+			"type": "success",
+			"title": "Accessibility preserved",
+			"detail": "0 of 3 tags kept.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"preserved three null text": {
+		"note": {
+			"type": "success",
+			"title": "Accessibility preserved",
+			"detail": "0 of 3 tags kept. Confirmed by veraPDF.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"preserved three zero absent": {
+		"note": {
+			"type": "success",
+			"title": "Accessibility preserved",
+			"detail": "0 of 3 tags kept.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"preserved three zero yes": {
+		"note": {
+			"type": "success",
+			"title": "Accessibility preserved",
+			"detail": "0 of 3 tags kept. Confirmed by veraPDF.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"preserved three zero no": {
+		"note": {
+			"type": "success",
+			"title": "Accessibility preserved",
+			"detail": "0 of 3 tags kept.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"preserved three zero text": {
+		"note": {
+			"type": "success",
+			"title": "Accessibility preserved",
+			"detail": "0 of 3 tags kept. Confirmed by veraPDF.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"preserved three two absent": {
+		"note": {
+			"type": "success",
+			"title": "Accessibility preserved",
+			"detail": "2 of 3 tags kept.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"preserved three two yes": {
+		"note": {
+			"type": "success",
+			"title": "Accessibility preserved",
+			"detail": "2 of 3 tags kept. Confirmed by veraPDF.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"preserved three two no": {
+		"note": {
+			"type": "success",
+			"title": "Accessibility preserved",
+			"detail": "2 of 3 tags kept.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"preserved three two text": {
+		"note": {
+			"type": "success",
+			"title": "Accessibility preserved",
+			"detail": "2 of 3 tags kept. Confirmed by veraPDF.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"degraded absent absent absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility lost",
+			"detail": "Screen readers may not read this copy.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"degraded absent absent yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility lost",
+			"detail": "Screen readers may not read this copy.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"degraded absent absent no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility lost",
+			"detail": "Screen readers may not read this copy.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"degraded absent absent text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility lost",
+			"detail": "Screen readers may not read this copy.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"degraded absent null absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility lost",
+			"detail": "Screen readers may not read this copy.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"degraded absent null yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility lost",
+			"detail": "Screen readers may not read this copy.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"degraded absent null no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility lost",
+			"detail": "Screen readers may not read this copy.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"degraded absent null text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility lost",
+			"detail": "Screen readers may not read this copy.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"degraded absent zero absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility lost",
+			"detail": "Screen readers may not read this copy.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"degraded absent zero yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility lost",
+			"detail": "Screen readers may not read this copy.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"degraded absent zero no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility lost",
+			"detail": "Screen readers may not read this copy.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"degraded absent zero text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility lost",
+			"detail": "Screen readers may not read this copy.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"degraded absent two absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility lost",
+			"detail": "Screen readers may not read this copy.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"degraded absent two yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility lost",
+			"detail": "Screen readers may not read this copy.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"degraded absent two no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility lost",
+			"detail": "Screen readers may not read this copy.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"degraded absent two text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility lost",
+			"detail": "Screen readers may not read this copy.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"degraded null absent absent": {
+		"threw": "TypeError"
+	},
+	"degraded null absent yes": {
+		"threw": "TypeError"
+	},
+	"degraded null absent no": {
+		"threw": "TypeError"
+	},
+	"degraded null absent text": {
+		"threw": "TypeError"
+	},
+	"degraded null null absent": {
+		"threw": "TypeError"
+	},
+	"degraded null null yes": {
+		"threw": "TypeError"
+	},
+	"degraded null null no": {
+		"threw": "TypeError"
+	},
+	"degraded null null text": {
+		"threw": "TypeError"
+	},
+	"degraded null zero absent": {
+		"threw": "TypeError"
+	},
+	"degraded null zero yes": {
+		"threw": "TypeError"
+	},
+	"degraded null zero no": {
+		"threw": "TypeError"
+	},
+	"degraded null zero text": {
+		"threw": "TypeError"
+	},
+	"degraded null two absent": {
+		"threw": "TypeError"
+	},
+	"degraded null two yes": {
+		"threw": "TypeError"
+	},
+	"degraded null two no": {
+		"threw": "TypeError"
+	},
+	"degraded null two text": {
+		"threw": "TypeError"
+	},
+	"degraded zero absent absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility lost",
+			"detail": "0 of 0 tags kept. Screen readers may not read this copy.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"degraded zero absent yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility lost",
+			"detail": "0 of 0 tags kept. Screen readers may not read this copy.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"degraded zero absent no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility lost",
+			"detail": "0 of 0 tags kept. Screen readers may not read this copy.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"degraded zero absent text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility lost",
+			"detail": "0 of 0 tags kept. Screen readers may not read this copy.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"degraded zero null absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility lost",
+			"detail": "0 of 0 tags kept. Screen readers may not read this copy.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"degraded zero null yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility lost",
+			"detail": "0 of 0 tags kept. Screen readers may not read this copy.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"degraded zero null no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility lost",
+			"detail": "0 of 0 tags kept. Screen readers may not read this copy.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"degraded zero null text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility lost",
+			"detail": "0 of 0 tags kept. Screen readers may not read this copy.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"degraded zero zero absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility lost",
+			"detail": "0 of 0 tags kept. Screen readers may not read this copy.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"degraded zero zero yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility lost",
+			"detail": "0 of 0 tags kept. Screen readers may not read this copy.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"degraded zero zero no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility lost",
+			"detail": "0 of 0 tags kept. Screen readers may not read this copy.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"degraded zero zero text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility lost",
+			"detail": "0 of 0 tags kept. Screen readers may not read this copy.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"degraded zero two absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility lost",
+			"detail": "2 of 0 tags kept. Screen readers may not read this copy.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"degraded zero two yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility lost",
+			"detail": "2 of 0 tags kept. Screen readers may not read this copy.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"degraded zero two no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility lost",
+			"detail": "2 of 0 tags kept. Screen readers may not read this copy.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"degraded zero two text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility lost",
+			"detail": "2 of 0 tags kept. Screen readers may not read this copy.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"degraded three absent absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility lost",
+			"detail": "0 of 3 tags kept. Screen readers may not read this copy.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"degraded three absent yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility lost",
+			"detail": "0 of 3 tags kept. Screen readers may not read this copy.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"degraded three absent no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility lost",
+			"detail": "0 of 3 tags kept. Screen readers may not read this copy.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"degraded three absent text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility lost",
+			"detail": "0 of 3 tags kept. Screen readers may not read this copy.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"degraded three null absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility lost",
+			"detail": "0 of 3 tags kept. Screen readers may not read this copy.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"degraded three null yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility lost",
+			"detail": "0 of 3 tags kept. Screen readers may not read this copy.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"degraded three null no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility lost",
+			"detail": "0 of 3 tags kept. Screen readers may not read this copy.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"degraded three null text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility lost",
+			"detail": "0 of 3 tags kept. Screen readers may not read this copy.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"degraded three zero absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility lost",
+			"detail": "0 of 3 tags kept. Screen readers may not read this copy.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"degraded three zero yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility lost",
+			"detail": "0 of 3 tags kept. Screen readers may not read this copy.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"degraded three zero no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility lost",
+			"detail": "0 of 3 tags kept. Screen readers may not read this copy.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"degraded three zero text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility lost",
+			"detail": "0 of 3 tags kept. Screen readers may not read this copy.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"degraded three two absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility lost",
+			"detail": "2 of 3 tags kept. Screen readers may not read this copy.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"degraded three two yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility lost",
+			"detail": "2 of 3 tags kept. Screen readers may not read this copy.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"degraded three two no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility lost",
+			"detail": "2 of 3 tags kept. Screen readers may not read this copy.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"degraded three two text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility lost",
+			"detail": "2 of 3 tags kept. Screen readers may not read this copy.",
+			"reasons": [
+				"The original had no tags to keep"
+			]
+		}
+	},
+	"not-applicable absent absent absent": {
+		"note": {
+			"type": "info",
+			"title": "No accessibility to keep",
+			"detail": "The original had no tag structure, so the copy has none either.",
+			"reasons": []
+		}
+	},
+	"not-applicable absent absent yes": {
+		"note": {
+			"type": "info",
+			"title": "No accessibility to keep",
+			"detail": "The original had no tag structure, so the copy has none either.",
+			"reasons": []
+		}
+	},
+	"not-applicable absent absent no": {
+		"note": {
+			"type": "info",
+			"title": "No accessibility to keep",
+			"detail": "The original had no tag structure, so the copy has none either.",
+			"reasons": []
+		}
+	},
+	"not-applicable absent absent text": {
+		"note": {
+			"type": "info",
+			"title": "No accessibility to keep",
+			"detail": "The original had no tag structure, so the copy has none either.",
+			"reasons": []
+		}
+	},
+	"not-applicable absent null absent": {
+		"note": {
+			"type": "info",
+			"title": "No accessibility to keep",
+			"detail": "The original had no tag structure, so the copy has none either.",
+			"reasons": []
+		}
+	},
+	"not-applicable absent null yes": {
+		"note": {
+			"type": "info",
+			"title": "No accessibility to keep",
+			"detail": "The original had no tag structure, so the copy has none either.",
+			"reasons": []
+		}
+	},
+	"not-applicable absent null no": {
+		"note": {
+			"type": "info",
+			"title": "No accessibility to keep",
+			"detail": "The original had no tag structure, so the copy has none either.",
+			"reasons": []
+		}
+	},
+	"not-applicable absent null text": {
+		"note": {
+			"type": "info",
+			"title": "No accessibility to keep",
+			"detail": "The original had no tag structure, so the copy has none either.",
+			"reasons": []
+		}
+	},
+	"not-applicable absent zero absent": {
+		"note": {
+			"type": "info",
+			"title": "No accessibility to keep",
+			"detail": "The original had no tag structure, so the copy has none either.",
+			"reasons": []
+		}
+	},
+	"not-applicable absent zero yes": {
+		"note": {
+			"type": "info",
+			"title": "No accessibility to keep",
+			"detail": "The original had no tag structure, so the copy has none either.",
+			"reasons": []
+		}
+	},
+	"not-applicable absent zero no": {
+		"note": {
+			"type": "info",
+			"title": "No accessibility to keep",
+			"detail": "The original had no tag structure, so the copy has none either.",
+			"reasons": []
+		}
+	},
+	"not-applicable absent zero text": {
+		"note": {
+			"type": "info",
+			"title": "No accessibility to keep",
+			"detail": "The original had no tag structure, so the copy has none either.",
+			"reasons": []
+		}
+	},
+	"not-applicable absent two absent": {
+		"note": {
+			"type": "info",
+			"title": "No accessibility to keep",
+			"detail": "The original had no tag structure, so the copy has none either.",
+			"reasons": []
+		}
+	},
+	"not-applicable absent two yes": {
+		"note": {
+			"type": "info",
+			"title": "No accessibility to keep",
+			"detail": "The original had no tag structure, so the copy has none either.",
+			"reasons": []
+		}
+	},
+	"not-applicable absent two no": {
+		"note": {
+			"type": "info",
+			"title": "No accessibility to keep",
+			"detail": "The original had no tag structure, so the copy has none either.",
+			"reasons": []
+		}
+	},
+	"not-applicable absent two text": {
+		"note": {
+			"type": "info",
+			"title": "No accessibility to keep",
+			"detail": "The original had no tag structure, so the copy has none either.",
+			"reasons": []
+		}
+	},
+	"not-applicable null absent absent": {
+		"threw": "TypeError"
+	},
+	"not-applicable null absent yes": {
+		"threw": "TypeError"
+	},
+	"not-applicable null absent no": {
+		"threw": "TypeError"
+	},
+	"not-applicable null absent text": {
+		"threw": "TypeError"
+	},
+	"not-applicable null null absent": {
+		"threw": "TypeError"
+	},
+	"not-applicable null null yes": {
+		"threw": "TypeError"
+	},
+	"not-applicable null null no": {
+		"threw": "TypeError"
+	},
+	"not-applicable null null text": {
+		"threw": "TypeError"
+	},
+	"not-applicable null zero absent": {
+		"threw": "TypeError"
+	},
+	"not-applicable null zero yes": {
+		"threw": "TypeError"
+	},
+	"not-applicable null zero no": {
+		"threw": "TypeError"
+	},
+	"not-applicable null zero text": {
+		"threw": "TypeError"
+	},
+	"not-applicable null two absent": {
+		"threw": "TypeError"
+	},
+	"not-applicable null two yes": {
+		"threw": "TypeError"
+	},
+	"not-applicable null two no": {
+		"threw": "TypeError"
+	},
+	"not-applicable null two text": {
+		"threw": "TypeError"
+	},
+	"not-applicable zero absent absent": {
+		"note": {
+			"type": "info",
+			"title": "No accessibility to keep",
+			"detail": "The original had no tag structure, so the copy has none either.",
+			"reasons": []
+		}
+	},
+	"not-applicable zero absent yes": {
+		"note": {
+			"type": "info",
+			"title": "No accessibility to keep",
+			"detail": "The original had no tag structure, so the copy has none either.",
+			"reasons": []
+		}
+	},
+	"not-applicable zero absent no": {
+		"note": {
+			"type": "info",
+			"title": "No accessibility to keep",
+			"detail": "The original had no tag structure, so the copy has none either.",
+			"reasons": []
+		}
+	},
+	"not-applicable zero absent text": {
+		"note": {
+			"type": "info",
+			"title": "No accessibility to keep",
+			"detail": "The original had no tag structure, so the copy has none either.",
+			"reasons": []
+		}
+	},
+	"not-applicable zero null absent": {
+		"note": {
+			"type": "info",
+			"title": "No accessibility to keep",
+			"detail": "The original had no tag structure, so the copy has none either.",
+			"reasons": []
+		}
+	},
+	"not-applicable zero null yes": {
+		"note": {
+			"type": "info",
+			"title": "No accessibility to keep",
+			"detail": "The original had no tag structure, so the copy has none either.",
+			"reasons": []
+		}
+	},
+	"not-applicable zero null no": {
+		"note": {
+			"type": "info",
+			"title": "No accessibility to keep",
+			"detail": "The original had no tag structure, so the copy has none either.",
+			"reasons": []
+		}
+	},
+	"not-applicable zero null text": {
+		"note": {
+			"type": "info",
+			"title": "No accessibility to keep",
+			"detail": "The original had no tag structure, so the copy has none either.",
+			"reasons": []
+		}
+	},
+	"not-applicable zero zero absent": {
+		"note": {
+			"type": "info",
+			"title": "No accessibility to keep",
+			"detail": "The original had no tag structure, so the copy has none either.",
+			"reasons": []
+		}
+	},
+	"not-applicable zero zero yes": {
+		"note": {
+			"type": "info",
+			"title": "No accessibility to keep",
+			"detail": "The original had no tag structure, so the copy has none either.",
+			"reasons": []
+		}
+	},
+	"not-applicable zero zero no": {
+		"note": {
+			"type": "info",
+			"title": "No accessibility to keep",
+			"detail": "The original had no tag structure, so the copy has none either.",
+			"reasons": []
+		}
+	},
+	"not-applicable zero zero text": {
+		"note": {
+			"type": "info",
+			"title": "No accessibility to keep",
+			"detail": "The original had no tag structure, so the copy has none either.",
+			"reasons": []
+		}
+	},
+	"not-applicable zero two absent": {
+		"note": {
+			"type": "info",
+			"title": "No accessibility to keep",
+			"detail": "The original had no tag structure, so the copy has none either.",
+			"reasons": []
+		}
+	},
+	"not-applicable zero two yes": {
+		"note": {
+			"type": "info",
+			"title": "No accessibility to keep",
+			"detail": "The original had no tag structure, so the copy has none either.",
+			"reasons": []
+		}
+	},
+	"not-applicable zero two no": {
+		"note": {
+			"type": "info",
+			"title": "No accessibility to keep",
+			"detail": "The original had no tag structure, so the copy has none either.",
+			"reasons": []
+		}
+	},
+	"not-applicable zero two text": {
+		"note": {
+			"type": "info",
+			"title": "No accessibility to keep",
+			"detail": "The original had no tag structure, so the copy has none either.",
+			"reasons": []
+		}
+	},
+	"not-applicable three absent absent": {
+		"note": {
+			"type": "info",
+			"title": "No accessibility to keep",
+			"detail": "The original had no tag structure, so the copy has none either.",
+			"reasons": []
+		}
+	},
+	"not-applicable three absent yes": {
+		"note": {
+			"type": "info",
+			"title": "No accessibility to keep",
+			"detail": "The original had no tag structure, so the copy has none either.",
+			"reasons": []
+		}
+	},
+	"not-applicable three absent no": {
+		"note": {
+			"type": "info",
+			"title": "No accessibility to keep",
+			"detail": "The original had no tag structure, so the copy has none either.",
+			"reasons": []
+		}
+	},
+	"not-applicable three absent text": {
+		"note": {
+			"type": "info",
+			"title": "No accessibility to keep",
+			"detail": "The original had no tag structure, so the copy has none either.",
+			"reasons": []
+		}
+	},
+	"not-applicable three null absent": {
+		"note": {
+			"type": "info",
+			"title": "No accessibility to keep",
+			"detail": "The original had no tag structure, so the copy has none either.",
+			"reasons": []
+		}
+	},
+	"not-applicable three null yes": {
+		"note": {
+			"type": "info",
+			"title": "No accessibility to keep",
+			"detail": "The original had no tag structure, so the copy has none either.",
+			"reasons": []
+		}
+	},
+	"not-applicable three null no": {
+		"note": {
+			"type": "info",
+			"title": "No accessibility to keep",
+			"detail": "The original had no tag structure, so the copy has none either.",
+			"reasons": []
+		}
+	},
+	"not-applicable three null text": {
+		"note": {
+			"type": "info",
+			"title": "No accessibility to keep",
+			"detail": "The original had no tag structure, so the copy has none either.",
+			"reasons": []
+		}
+	},
+	"not-applicable three zero absent": {
+		"note": {
+			"type": "info",
+			"title": "No accessibility to keep",
+			"detail": "The original had no tag structure, so the copy has none either.",
+			"reasons": []
+		}
+	},
+	"not-applicable three zero yes": {
+		"note": {
+			"type": "info",
+			"title": "No accessibility to keep",
+			"detail": "The original had no tag structure, so the copy has none either.",
+			"reasons": []
+		}
+	},
+	"not-applicable three zero no": {
+		"note": {
+			"type": "info",
+			"title": "No accessibility to keep",
+			"detail": "The original had no tag structure, so the copy has none either.",
+			"reasons": []
+		}
+	},
+	"not-applicable three zero text": {
+		"note": {
+			"type": "info",
+			"title": "No accessibility to keep",
+			"detail": "The original had no tag structure, so the copy has none either.",
+			"reasons": []
+		}
+	},
+	"not-applicable three two absent": {
+		"note": {
+			"type": "info",
+			"title": "No accessibility to keep",
+			"detail": "The original had no tag structure, so the copy has none either.",
+			"reasons": []
+		}
+	},
+	"not-applicable three two yes": {
+		"note": {
+			"type": "info",
+			"title": "No accessibility to keep",
+			"detail": "The original had no tag structure, so the copy has none either.",
+			"reasons": []
+		}
+	},
+	"not-applicable three two no": {
+		"note": {
+			"type": "info",
+			"title": "No accessibility to keep",
+			"detail": "The original had no tag structure, so the copy has none either.",
+			"reasons": []
+		}
+	},
+	"not-applicable three two text": {
+		"note": {
+			"type": "info",
+			"title": "No accessibility to keep",
+			"detail": "The original had no tag structure, so the copy has none either.",
+			"reasons": []
+		}
+	},
+	"unknown absent absent absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"unknown absent absent yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"unknown absent absent no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"unknown absent absent text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"unknown absent null absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"unknown absent null yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"unknown absent null no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"unknown absent null text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"unknown absent zero absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"unknown absent zero yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"unknown absent zero no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"unknown absent zero text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"unknown absent two absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"unknown absent two yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"unknown absent two no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"unknown absent two text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"unknown null absent absent": {
+		"threw": "TypeError"
+	},
+	"unknown null absent yes": {
+		"threw": "TypeError"
+	},
+	"unknown null absent no": {
+		"threw": "TypeError"
+	},
+	"unknown null absent text": {
+		"threw": "TypeError"
+	},
+	"unknown null null absent": {
+		"threw": "TypeError"
+	},
+	"unknown null null yes": {
+		"threw": "TypeError"
+	},
+	"unknown null null no": {
+		"threw": "TypeError"
+	},
+	"unknown null null text": {
+		"threw": "TypeError"
+	},
+	"unknown null zero absent": {
+		"threw": "TypeError"
+	},
+	"unknown null zero yes": {
+		"threw": "TypeError"
+	},
+	"unknown null zero no": {
+		"threw": "TypeError"
+	},
+	"unknown null zero text": {
+		"threw": "TypeError"
+	},
+	"unknown null two absent": {
+		"threw": "TypeError"
+	},
+	"unknown null two yes": {
+		"threw": "TypeError"
+	},
+	"unknown null two no": {
+		"threw": "TypeError"
+	},
+	"unknown null two text": {
+		"threw": "TypeError"
+	},
+	"unknown zero absent absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"unknown zero absent yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"unknown zero absent no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"unknown zero absent text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"unknown zero null absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"unknown zero null yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"unknown zero null no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"unknown zero null text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"unknown zero zero absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"unknown zero zero yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"unknown zero zero no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"unknown zero zero text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"unknown zero two absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"unknown zero two yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"unknown zero two no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"unknown zero two text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"unknown three absent absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"unknown three absent yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"unknown three absent no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"unknown three absent text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"unknown three null absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"unknown three null yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"unknown three null no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"unknown three null text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"unknown three zero absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"unknown three zero yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"unknown three zero no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"unknown three zero text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"unknown three two absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"unknown three two yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"unknown three two no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"unknown three two text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"other absent absent absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"other absent absent yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"other absent absent no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"other absent absent text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"other absent null absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"other absent null yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"other absent null no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"other absent null text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"other absent zero absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"other absent zero yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"other absent zero no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"other absent zero text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"other absent two absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"other absent two yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"other absent two no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"other absent two text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"other null absent absent": {
+		"threw": "TypeError"
+	},
+	"other null absent yes": {
+		"threw": "TypeError"
+	},
+	"other null absent no": {
+		"threw": "TypeError"
+	},
+	"other null absent text": {
+		"threw": "TypeError"
+	},
+	"other null null absent": {
+		"threw": "TypeError"
+	},
+	"other null null yes": {
+		"threw": "TypeError"
+	},
+	"other null null no": {
+		"threw": "TypeError"
+	},
+	"other null null text": {
+		"threw": "TypeError"
+	},
+	"other null zero absent": {
+		"threw": "TypeError"
+	},
+	"other null zero yes": {
+		"threw": "TypeError"
+	},
+	"other null zero no": {
+		"threw": "TypeError"
+	},
+	"other null zero text": {
+		"threw": "TypeError"
+	},
+	"other null two absent": {
+		"threw": "TypeError"
+	},
+	"other null two yes": {
+		"threw": "TypeError"
+	},
+	"other null two no": {
+		"threw": "TypeError"
+	},
+	"other null two text": {
+		"threw": "TypeError"
+	},
+	"other zero absent absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"other zero absent yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"other zero absent no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"other zero absent text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"other zero null absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"other zero null yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"other zero null no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"other zero null text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"other zero zero absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"other zero zero yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"other zero zero no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"other zero zero text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"other zero two absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"other zero two yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"other zero two no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"other zero two text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"other three absent absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"other three absent yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"other three absent no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"other three absent text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"other three null absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"other three null yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"other three null no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"other three null text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"other three zero absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"other three zero yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"other three zero no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"other three zero text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"other three two absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"other three two yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"other three two no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"other three two text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"upper absent absent absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"upper absent absent yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"upper absent absent no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"upper absent absent text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"upper absent null absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"upper absent null yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"upper absent null no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"upper absent null text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"upper absent zero absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"upper absent zero yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"upper absent zero no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"upper absent zero text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"upper absent two absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"upper absent two yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"upper absent two no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"upper absent two text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"upper null absent absent": {
+		"threw": "TypeError"
+	},
+	"upper null absent yes": {
+		"threw": "TypeError"
+	},
+	"upper null absent no": {
+		"threw": "TypeError"
+	},
+	"upper null absent text": {
+		"threw": "TypeError"
+	},
+	"upper null null absent": {
+		"threw": "TypeError"
+	},
+	"upper null null yes": {
+		"threw": "TypeError"
+	},
+	"upper null null no": {
+		"threw": "TypeError"
+	},
+	"upper null null text": {
+		"threw": "TypeError"
+	},
+	"upper null zero absent": {
+		"threw": "TypeError"
+	},
+	"upper null zero yes": {
+		"threw": "TypeError"
+	},
+	"upper null zero no": {
+		"threw": "TypeError"
+	},
+	"upper null zero text": {
+		"threw": "TypeError"
+	},
+	"upper null two absent": {
+		"threw": "TypeError"
+	},
+	"upper null two yes": {
+		"threw": "TypeError"
+	},
+	"upper null two no": {
+		"threw": "TypeError"
+	},
+	"upper null two text": {
+		"threw": "TypeError"
+	},
+	"upper zero absent absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"upper zero absent yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"upper zero absent no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"upper zero absent text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"upper zero null absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"upper zero null yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"upper zero null no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"upper zero null text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"upper zero zero absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"upper zero zero yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"upper zero zero no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"upper zero zero text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"upper zero two absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"upper zero two yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"upper zero two no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"upper zero two text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"upper three absent absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"upper three absent yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"upper three absent no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"upper three absent text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"upper three null absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"upper three null yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"upper three null no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"upper three null text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"upper three zero absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"upper three zero yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"upper three zero no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"upper three zero text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"upper three two absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"upper three two yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"upper three two no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"upper three two text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"toString absent absent absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"toString absent absent yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"toString absent absent no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"toString absent absent text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"toString absent null absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"toString absent null yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"toString absent null no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"toString absent null text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"toString absent zero absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"toString absent zero yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"toString absent zero no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"toString absent zero text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"toString absent two absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"toString absent two yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"toString absent two no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"toString absent two text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"toString null absent absent": {
+		"threw": "TypeError"
+	},
+	"toString null absent yes": {
+		"threw": "TypeError"
+	},
+	"toString null absent no": {
+		"threw": "TypeError"
+	},
+	"toString null absent text": {
+		"threw": "TypeError"
+	},
+	"toString null null absent": {
+		"threw": "TypeError"
+	},
+	"toString null null yes": {
+		"threw": "TypeError"
+	},
+	"toString null null no": {
+		"threw": "TypeError"
+	},
+	"toString null null text": {
+		"threw": "TypeError"
+	},
+	"toString null zero absent": {
+		"threw": "TypeError"
+	},
+	"toString null zero yes": {
+		"threw": "TypeError"
+	},
+	"toString null zero no": {
+		"threw": "TypeError"
+	},
+	"toString null zero text": {
+		"threw": "TypeError"
+	},
+	"toString null two absent": {
+		"threw": "TypeError"
+	},
+	"toString null two yes": {
+		"threw": "TypeError"
+	},
+	"toString null two no": {
+		"threw": "TypeError"
+	},
+	"toString null two text": {
+		"threw": "TypeError"
+	},
+	"toString zero absent absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"toString zero absent yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"toString zero absent no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"toString zero absent text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"toString zero null absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"toString zero null yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"toString zero null no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"toString zero null text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"toString zero zero absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"toString zero zero yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"toString zero zero no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"toString zero zero text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"toString zero two absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"toString zero two yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"toString zero two no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"toString zero two text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"toString three absent absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"toString three absent yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"toString three absent no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"toString three absent text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"toString three null absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"toString three null yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"toString three null no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"toString three null text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"toString three zero absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"toString three zero yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"toString three zero no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"toString three zero text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"toString three two absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"toString three two yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"toString three two no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"toString three two text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"__proto__ absent absent absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"__proto__ absent absent yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"__proto__ absent absent no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"__proto__ absent absent text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"__proto__ absent null absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"__proto__ absent null yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"__proto__ absent null no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"__proto__ absent null text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"__proto__ absent zero absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"__proto__ absent zero yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"__proto__ absent zero no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"__proto__ absent zero text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"__proto__ absent two absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"__proto__ absent two yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"__proto__ absent two no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"__proto__ absent two text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"__proto__ null absent absent": {
+		"threw": "TypeError"
+	},
+	"__proto__ null absent yes": {
+		"threw": "TypeError"
+	},
+	"__proto__ null absent no": {
+		"threw": "TypeError"
+	},
+	"__proto__ null absent text": {
+		"threw": "TypeError"
+	},
+	"__proto__ null null absent": {
+		"threw": "TypeError"
+	},
+	"__proto__ null null yes": {
+		"threw": "TypeError"
+	},
+	"__proto__ null null no": {
+		"threw": "TypeError"
+	},
+	"__proto__ null null text": {
+		"threw": "TypeError"
+	},
+	"__proto__ null zero absent": {
+		"threw": "TypeError"
+	},
+	"__proto__ null zero yes": {
+		"threw": "TypeError"
+	},
+	"__proto__ null zero no": {
+		"threw": "TypeError"
+	},
+	"__proto__ null zero text": {
+		"threw": "TypeError"
+	},
+	"__proto__ null two absent": {
+		"threw": "TypeError"
+	},
+	"__proto__ null two yes": {
+		"threw": "TypeError"
+	},
+	"__proto__ null two no": {
+		"threw": "TypeError"
+	},
+	"__proto__ null two text": {
+		"threw": "TypeError"
+	},
+	"__proto__ zero absent absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"__proto__ zero absent yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"__proto__ zero absent no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"__proto__ zero absent text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"__proto__ zero null absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"__proto__ zero null yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"__proto__ zero null no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"__proto__ zero null text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"__proto__ zero zero absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"__proto__ zero zero yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"__proto__ zero zero no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"__proto__ zero zero text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"__proto__ zero two absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"__proto__ zero two yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"__proto__ zero two no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"__proto__ zero two text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"__proto__ three absent absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"__proto__ three absent yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"__proto__ three absent no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"__proto__ three absent text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"__proto__ three null absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"__proto__ three null yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"__proto__ three null no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"__proto__ three null text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"__proto__ three zero absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"__proto__ three zero yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"__proto__ three zero no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"__proto__ three zero text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"__proto__ three two absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"__proto__ three two yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"__proto__ three two no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"__proto__ three two text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"hasOwnProperty absent absent absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"hasOwnProperty absent absent yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"hasOwnProperty absent absent no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"hasOwnProperty absent absent text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"hasOwnProperty absent null absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"hasOwnProperty absent null yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"hasOwnProperty absent null no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"hasOwnProperty absent null text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"hasOwnProperty absent zero absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"hasOwnProperty absent zero yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"hasOwnProperty absent zero no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"hasOwnProperty absent zero text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"hasOwnProperty absent two absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"hasOwnProperty absent two yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"hasOwnProperty absent two no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"hasOwnProperty absent two text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"hasOwnProperty null absent absent": {
+		"threw": "TypeError"
+	},
+	"hasOwnProperty null absent yes": {
+		"threw": "TypeError"
+	},
+	"hasOwnProperty null absent no": {
+		"threw": "TypeError"
+	},
+	"hasOwnProperty null absent text": {
+		"threw": "TypeError"
+	},
+	"hasOwnProperty null null absent": {
+		"threw": "TypeError"
+	},
+	"hasOwnProperty null null yes": {
+		"threw": "TypeError"
+	},
+	"hasOwnProperty null null no": {
+		"threw": "TypeError"
+	},
+	"hasOwnProperty null null text": {
+		"threw": "TypeError"
+	},
+	"hasOwnProperty null zero absent": {
+		"threw": "TypeError"
+	},
+	"hasOwnProperty null zero yes": {
+		"threw": "TypeError"
+	},
+	"hasOwnProperty null zero no": {
+		"threw": "TypeError"
+	},
+	"hasOwnProperty null zero text": {
+		"threw": "TypeError"
+	},
+	"hasOwnProperty null two absent": {
+		"threw": "TypeError"
+	},
+	"hasOwnProperty null two yes": {
+		"threw": "TypeError"
+	},
+	"hasOwnProperty null two no": {
+		"threw": "TypeError"
+	},
+	"hasOwnProperty null two text": {
+		"threw": "TypeError"
+	},
+	"hasOwnProperty zero absent absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"hasOwnProperty zero absent yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"hasOwnProperty zero absent no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"hasOwnProperty zero absent text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"hasOwnProperty zero null absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"hasOwnProperty zero null yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"hasOwnProperty zero null no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"hasOwnProperty zero null text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"hasOwnProperty zero zero absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"hasOwnProperty zero zero yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"hasOwnProperty zero zero no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"hasOwnProperty zero zero text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"hasOwnProperty zero two absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"hasOwnProperty zero two yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"hasOwnProperty zero two no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"hasOwnProperty zero two text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"hasOwnProperty three absent absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"hasOwnProperty three absent yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"hasOwnProperty three absent no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"hasOwnProperty three absent text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"hasOwnProperty three null absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"hasOwnProperty three null yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"hasOwnProperty three null no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"hasOwnProperty three null text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"hasOwnProperty three zero absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"hasOwnProperty three zero yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"hasOwnProperty three zero no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"hasOwnProperty three zero text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"hasOwnProperty three two absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"hasOwnProperty three two yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"hasOwnProperty three two no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"hasOwnProperty three two text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"number absent absent absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"number absent absent yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"number absent absent no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"number absent absent text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"number absent null absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"number absent null yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"number absent null no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"number absent null text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"number absent zero absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"number absent zero yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"number absent zero no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"number absent zero text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"number absent two absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"number absent two yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"number absent two no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"number absent two text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"number null absent absent": {
+		"threw": "TypeError"
+	},
+	"number null absent yes": {
+		"threw": "TypeError"
+	},
+	"number null absent no": {
+		"threw": "TypeError"
+	},
+	"number null absent text": {
+		"threw": "TypeError"
+	},
+	"number null null absent": {
+		"threw": "TypeError"
+	},
+	"number null null yes": {
+		"threw": "TypeError"
+	},
+	"number null null no": {
+		"threw": "TypeError"
+	},
+	"number null null text": {
+		"threw": "TypeError"
+	},
+	"number null zero absent": {
+		"threw": "TypeError"
+	},
+	"number null zero yes": {
+		"threw": "TypeError"
+	},
+	"number null zero no": {
+		"threw": "TypeError"
+	},
+	"number null zero text": {
+		"threw": "TypeError"
+	},
+	"number null two absent": {
+		"threw": "TypeError"
+	},
+	"number null two yes": {
+		"threw": "TypeError"
+	},
+	"number null two no": {
+		"threw": "TypeError"
+	},
+	"number null two text": {
+		"threw": "TypeError"
+	},
+	"number zero absent absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"number zero absent yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"number zero absent no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"number zero absent text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"number zero null absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"number zero null yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"number zero null no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"number zero null text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"number zero zero absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"number zero zero yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"number zero zero no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"number zero zero text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"number zero two absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"number zero two yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"number zero two no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"number zero two text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"number three absent absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"number three absent yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"number three absent no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"number three absent text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"number three null absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"number three null yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"number three null no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"number three null text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"number three zero absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"number three zero yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"number three zero no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"number three zero text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"number three two absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"number three two yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"number three two no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"number three two text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"boxed absent absent absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"boxed absent absent yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"boxed absent absent no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"boxed absent absent text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"boxed absent null absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"boxed absent null yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"boxed absent null no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"boxed absent null text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"boxed absent zero absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"boxed absent zero yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"boxed absent zero no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"boxed absent zero text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"boxed absent two absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"boxed absent two yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"boxed absent two no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"boxed absent two text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"boxed null absent absent": {
+		"threw": "TypeError"
+	},
+	"boxed null absent yes": {
+		"threw": "TypeError"
+	},
+	"boxed null absent no": {
+		"threw": "TypeError"
+	},
+	"boxed null absent text": {
+		"threw": "TypeError"
+	},
+	"boxed null null absent": {
+		"threw": "TypeError"
+	},
+	"boxed null null yes": {
+		"threw": "TypeError"
+	},
+	"boxed null null no": {
+		"threw": "TypeError"
+	},
+	"boxed null null text": {
+		"threw": "TypeError"
+	},
+	"boxed null zero absent": {
+		"threw": "TypeError"
+	},
+	"boxed null zero yes": {
+		"threw": "TypeError"
+	},
+	"boxed null zero no": {
+		"threw": "TypeError"
+	},
+	"boxed null zero text": {
+		"threw": "TypeError"
+	},
+	"boxed null two absent": {
+		"threw": "TypeError"
+	},
+	"boxed null two yes": {
+		"threw": "TypeError"
+	},
+	"boxed null two no": {
+		"threw": "TypeError"
+	},
+	"boxed null two text": {
+		"threw": "TypeError"
+	},
+	"boxed zero absent absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"boxed zero absent yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"boxed zero absent no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"boxed zero absent text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"boxed zero null absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"boxed zero null yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"boxed zero null no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"boxed zero null text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"boxed zero zero absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"boxed zero zero yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"boxed zero zero no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"boxed zero zero text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"boxed zero two absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"boxed zero two yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"boxed zero two no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"boxed zero two text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"boxed three absent absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"boxed three absent yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"boxed three absent no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"boxed three absent text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"boxed three null absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"boxed three null yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"boxed three null no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"boxed three null text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"boxed three zero absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"boxed three zero yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"boxed three zero no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"boxed three zero text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"boxed three two absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"boxed three two yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"boxed three two no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"boxed three two text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"array absent absent absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"array absent absent yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"array absent absent no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"array absent absent text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"array absent null absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"array absent null yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"array absent null no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"array absent null text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"array absent zero absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"array absent zero yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"array absent zero no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"array absent zero text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"array absent two absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"array absent two yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"array absent two no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"array absent two text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"array null absent absent": {
+		"threw": "TypeError"
+	},
+	"array null absent yes": {
+		"threw": "TypeError"
+	},
+	"array null absent no": {
+		"threw": "TypeError"
+	},
+	"array null absent text": {
+		"threw": "TypeError"
+	},
+	"array null null absent": {
+		"threw": "TypeError"
+	},
+	"array null null yes": {
+		"threw": "TypeError"
+	},
+	"array null null no": {
+		"threw": "TypeError"
+	},
+	"array null null text": {
+		"threw": "TypeError"
+	},
+	"array null zero absent": {
+		"threw": "TypeError"
+	},
+	"array null zero yes": {
+		"threw": "TypeError"
+	},
+	"array null zero no": {
+		"threw": "TypeError"
+	},
+	"array null zero text": {
+		"threw": "TypeError"
+	},
+	"array null two absent": {
+		"threw": "TypeError"
+	},
+	"array null two yes": {
+		"threw": "TypeError"
+	},
+	"array null two no": {
+		"threw": "TypeError"
+	},
+	"array null two text": {
+		"threw": "TypeError"
+	},
+	"array zero absent absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"array zero absent yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"array zero absent no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"array zero absent text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"array zero null absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"array zero null yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"array zero null no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"array zero null text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"array zero zero absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"array zero zero yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"array zero zero no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"array zero zero text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"array zero two absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"array zero two yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"array zero two no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"array zero two text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"array three absent absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"array three absent yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"array three absent no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"array three absent text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"array three null absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"array three null yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"array three null no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"array three null text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"array three zero absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"array three zero yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"array three zero no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"array three zero text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"array three two absent": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"array three two yes": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"array three two no": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	},
+	"array three two text": {
+		"note": {
+			"type": "warning",
+			"title": "Accessibility unknown",
+			"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+			"reasons": []
+		}
+	}
+}

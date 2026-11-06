@@ -308,6 +308,59 @@
           ]
         }
       ]
+    },
+    {
+      "name": "Dossier",
+      "item": [
+        {
+          "name": "POST /api/anonymization/dossier/:id/grondslagen-pdf - 403 for an unknown dossier, never 500",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "OCS-APIREQUEST",
+                "value": "true"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/apps/filinq/api/anonymization/dossier/00000000-0000-4000-8000-000000000000/grondslagen-pdf",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "apps",
+                "filinq",
+                "api",
+                "anonymization",
+                "dossier",
+                "00000000-0000-4000-8000-000000000000",
+                "grondslagen-pdf"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// fix-dossier-grondslagen-route-mismatch R-2.1: the route once named a method",
+                  "// DossierController does not have, so every POST answered 500 behind green unit",
+                  "// tests. A routed method answers this unknown dossier with a JSON 403 (unknown",
+                  "// and unreadable get one answer). A 500 means the route or the access check broke;",
+                  "// the SPA HTML fallback means the route is gone.",
+                  "pm.test('Not a server error', () => pm.expect(pm.response.code).to.be.below(500));",
+                  "pm.test('Status is 403', () => pm.response.to.have.status(403));",
+                  "pm.test('403 is a JSON error, not the SPA HTML fallback', function () {",
+                  "    pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json');",
+                  "    pm.expect(pm.response.json()).to.have.property('error');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
     }
   ]
 }

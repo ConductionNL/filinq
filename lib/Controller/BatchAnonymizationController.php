@@ -34,15 +34,15 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
-use OCA\Filinq\Service\BatchAnonymizeService;
-use OCA\Filinq\Service\BatchExtractionService;
-use OCA\Filinq\Service\BatchReportService;
-use OCA\Filinq\Service\BatchRequestService;
-use OCA\Filinq\Service\BatchStateService;
-use OCA\Filinq\Service\BatchUploadService;
-use OCA\Filinq\Service\EntityConsolidationService;
-use OCA\Filinq\Service\FolderBatchService;
-use OCA\Filinq\Service\WooProfileService;
+use OCA\Filinq\Kernel\Contracts\AnonymizationProfileServiceInterface;
+use OCA\Filinq\Kernel\Contracts\BatchAnonymizeServiceInterface;
+use OCA\Filinq\Kernel\Contracts\BatchExtractionServiceInterface;
+use OCA\Filinq\Kernel\Contracts\BatchReportServiceInterface;
+use OCA\Filinq\Kernel\Contracts\BatchRequestServiceInterface;
+use OCA\Filinq\Kernel\Contracts\BatchStateServiceInterface;
+use OCA\Filinq\Kernel\Contracts\BatchUploadServiceInterface;
+use OCA\Filinq\Kernel\Contracts\EntityConsolidationServiceInterface;
+use OCA\Filinq\Kernel\Contracts\FolderBatchServiceInterface;
 use OCA\Filinq\Settings\FilinqAdmin;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -71,15 +71,7 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.ExcessiveParameterList)
  */
 class BatchAnonymizationController extends Controller {
-
-	/**
-	 * Request/response shaping helpers for the batch endpoints: body
-	 * validation, folder-parameter coercion, progress aggregation and the
-	 * multi-status mapping.
-	 *
-	 * @var BatchRequestService
-	 */
-	private readonly BatchRequestService $batchRequest;
+	use AnswersNotAuthenticated;
 
 	/**
 	 * Constructor for BatchAnonymizationController
@@ -87,18 +79,21 @@ class BatchAnonymizationController extends Controller {
 	 * @param string $appName App name passed through to the base Controller.
 	 * @param IRequest $request Current HTTP request.
 	 * @param LoggerInterface $logger Logger used by the err() helper for failure reporting.
-	 * @param BatchStateService $stateService Service that stores and loads batch records.
-	 * @param BatchUploadService $uploadService Service that persists uploaded files into a new batch.
-	 * @param BatchExtractionService $extractService Service that drives per-file entity extraction.
-	 * @param BatchAnonymizeService $anonService Service that applies approved entities across a batch.
-	 * @param BatchReportService $reportService Service that produces the per-batch CSV report.
-	 * @param EntityConsolidationService $entityService Service that merges per-file entity detections into one list.
-	 * @param WooProfileService $profileService Service that stores the WOO entity profile.
-	 * @param FolderBatchService $folderBatchService Service that turns an existing folder into a batch.
+	 * @param BatchStateServiceInterface $stateService Service that stores and loads batch records.
+	 * @param BatchUploadServiceInterface $uploadService Service that persists uploaded files into a new batch.
+	 * @param BatchExtractionServiceInterface $extractService Service that drives per-file entity extraction.
+	 * @param BatchAnonymizeServiceInterface $anonService Service that applies approved entities across a batch.
+	 * @param BatchReportServiceInterface $reportService Service that produces the per-batch CSV report.
+	 * @param EntityConsolidationServiceInterface $entityService Service that merges per-file entity detections into one list.
+	 * @param AnonymizationProfileServiceInterface $profileService Service that stores the entity anonymization profile.
+	 * @param FolderBatchServiceInterface $folderBatchService Service that turns an existing folder into a batch.
 	 * @param IL10N $l10n Translator for user-facing error messages.
 	 * @param IAppConfig $appConfig Tenant configuration provider (reads
 	 *                              filinq.anonymisation.default_output_format).
 	 * @param IUserSession $userSession User session for authentication.
+	 * @param BatchRequestServiceInterface $batchRequest Request/response shaping for the batch endpoints: body
+	 *                                                   validation, folder-parameter coercion, progress
+	 *                                                   aggregation and the multi-status mapping.
 	 *
 	 * @return void
 	 */
@@ -106,21 +101,20 @@ class BatchAnonymizationController extends Controller {
 		string $appName,
 		IRequest $request,
 		private readonly LoggerInterface $logger,
-		private readonly BatchStateService $stateService,
-		private readonly BatchUploadService $uploadService,
-		private readonly BatchExtractionService $extractService,
-		private readonly BatchAnonymizeService $anonService,
-		private readonly BatchReportService $reportService,
-		private readonly EntityConsolidationService $entityService,
-		private readonly WooProfileService $profileService,
-		private readonly FolderBatchService $folderBatchService,
+		private readonly BatchStateServiceInterface $stateService,
+		private readonly BatchUploadServiceInterface $uploadService,
+		private readonly BatchExtractionServiceInterface $extractService,
+		private readonly BatchAnonymizeServiceInterface $anonService,
+		private readonly BatchReportServiceInterface $reportService,
+		private readonly EntityConsolidationServiceInterface $entityService,
+		private readonly AnonymizationProfileServiceInterface $profileService,
+		private readonly FolderBatchServiceInterface $folderBatchService,
 		private readonly IL10N $l10n,
 		private readonly IAppConfig $appConfig,
 		private readonly IUserSession $userSession,
+		private readonly BatchRequestServiceInterface $batchRequest,
 	) {
 		parent::__construct(appName: $appName, request: $request);
-
-		$this->batchRequest = new BatchRequestService(l10n: $this->l10n);
 
 	}//end __construct()
 
@@ -153,7 +147,7 @@ class BatchAnonymizationController extends Controller {
 	public function batchUpload(): JSONResponse {
 		try {
 			if ($this->userSession->getUser() === null) {
-				return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 			}
 
 			$files = $this->uploadService->collectFiles($this->request);
@@ -199,7 +193,7 @@ class BatchAnonymizationController extends Controller {
 	public function folderBatch(): JSONResponse {
 		try {
 			if ($this->userSession->getUser() === null) {
-				return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 			}
 
 			$folder = $this->batchRequest->resolveFolderParams(
@@ -252,7 +246,7 @@ class BatchAnonymizationController extends Controller {
 	public function batchExtract(string $batchId): JSONResponse {
 		try {
 			if ($this->userSession->getUser() === null) {
-				return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 			}
 
 			return new JSONResponse($this->extractService->extractNext($batchId));
@@ -273,10 +267,13 @@ class BatchAnonymizationController extends Controller {
 	 * @NoCSRFRequired
 	 *
 	 * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-status-endpoint
+	 *
+	 * @no-admin-idor-exempt ownership is enforced one layer down. BatchStateService::getBatch() returns
+	 * null unless the batch's userId is the session user (admins excepted), and null answers 404.
 	 */
 	public function batchStatus(string $batchId): JSONResponse {
 		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+			return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 		}
 
 		$batch = $this->stateService->getBatch($batchId);
@@ -314,11 +311,14 @@ class BatchAnonymizationController extends Controller {
 	 * @NoCSRFRequired
 	 *
 	 * @spec openspec/specs/anonymization-entity-review/spec.md#requirement-consolidated-entity-list-endpoint
+	 *
+	 * @no-admin-idor-exempt ownership is enforced one layer down. BatchStateService::getBatch() returns
+	 * null unless the batch's userId is the session user (admins excepted), and null answers 404.
 	 */
 	public function batchEntities(string $batchId): JSONResponse {
 		try {
 			if ($this->userSession->getUser() === null) {
-				return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 			}
 
 			$batch = $this->stateService->getBatch($batchId);
@@ -378,7 +378,7 @@ class BatchAnonymizationController extends Controller {
 	public function batchAnonymize(string $batchId): JSONResponse {
 		try {
 			if ($this->userSession->getUser() === null) {
-				return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 			}
 
 			$params = $this->request->getParams();
@@ -392,15 +392,7 @@ class BatchAnonymizationController extends Controller {
 			// values mirror AnonymizationController semantics.
 			$outputFormat = $this->resolveOutputFormat(params: $params);
 			if ($outputFormat === null) {
-				return new JSONResponse(
-					[
-						'error' => sprintf(
-							'Invalid outputFormat: must be one of %s',
-							implode(', ', self::VALID_OUTPUT_FORMATS)
-						),
-					],
-					400
-				);
+				return $this->invalidOutputFormatResponse();
 			}
 
 			$unredactedError = $this->batchRequest->validateUnredactedEntries(
@@ -412,9 +404,11 @@ class BatchAnonymizationController extends Controller {
 
 			$batchResult = $this->runBatchAnonymize(
 				batchId: $batchId,
-				request: $validated['request'],
-				outputFormat: $outputFormat,
-				scope: $this->batchRequest->resolveScope(params: $params)
+				run: [
+					'request' => $validated['request'],
+					'outputFormat' => $outputFormat,
+					'scope' => $this->batchRequest->resolveScope(params: $params),
+				]
 			);
 
 			if ($validated['request']['hasStrayBases'] === true) {
@@ -435,28 +429,22 @@ class BatchAnonymizationController extends Controller {
 	 * BatchAnonymizeService entry point; every other value is forwarded verbatim.
 	 *
 	 * @param string $batchId Identifier of the batch to anonymize.
-	 * @param array<string, mixed> $request The validated request body.
-	 * @param string $outputFormat Resolved per-batch output format.
-	 * @param string $scope Resolved placeholder-numbering scope.
+	 * @param array{request: array<string, mixed>, outputFormat: string, scope: string} $run Request, format and scope.
 	 *
 	 * @return array<string, mixed> The batch run summary.
 	 *
 	 * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-7
 	 * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-anonymization
 	 */
-	private function runBatchAnonymize(
-		string $batchId,
-		array $request,
-		string $outputFormat,
-		string $scope,
-	): array {
+	private function runBatchAnonymize(string $batchId, array $run): array {
+		$request = $run['request'];
 		if ($request['appendBasisSummary'] === true) {
 			return $this->anonService->anonymizeBatchWithBasisSummary(
 				batchId: $batchId,
 				entities: $request['entities'],
 				unredactedEntities: $request['unredactedEntities'],
-				outputFormat: $outputFormat,
-				scope: $scope
+				outputFormat: $run['outputFormat'],
+				scope: $run['scope']
 			);
 		}
 
@@ -464,11 +452,31 @@ class BatchAnonymizationController extends Controller {
 			batchId: $batchId,
 			entities: $request['entities'],
 			unredactedEntities: $request['unredactedEntities'],
-			outputFormat: $outputFormat,
-			scope: $scope
+			outputFormat: $run['outputFormat'],
+			scope: $run['scope']
 		);
 
 	}//end runBatchAnonymize()
+
+	/**
+	 * The 400 answer for an output format outside the valid set.
+	 *
+	 * @return JSONResponse The refusal naming the valid formats.
+	 *
+	 * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-anonymization
+	 */
+	private function invalidOutputFormatResponse(): JSONResponse {
+		return new JSONResponse(
+			[
+				'error' => sprintf(
+					'Invalid outputFormat: must be one of %s',
+					implode(', ', self::VALID_OUTPUT_FORMATS)
+				),
+			],
+			400
+		);
+
+	}//end invalidOutputFormatResponse()
 
 	/**
 	 * Resolve the effective `outputFormat` for this batch call.
@@ -531,7 +539,7 @@ class BatchAnonymizationController extends Controller {
 	public function batchReport(string $batchId): JSONResponse|DataDownloadResponse {
 		try {
 			if ($this->userSession->getUser() === null) {
-				return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 			}
 
 			$csv = $this->reportService->generateReport($batchId);
@@ -554,7 +562,7 @@ class BatchAnonymizationController extends Controller {
 	 */
 	public function getProfiles(): JSONResponse {
 		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+			return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 		}
 
 		return new JSONResponse($this->profileService->getProfile());
@@ -595,7 +603,7 @@ class BatchAnonymizationController extends Controller {
 	public function updateProfiles(): JSONResponse {
 		try {
 			if ($this->userSession->getUser() === null) {
-				return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 			}
 
 			$params = $this->request->getParams();

@@ -30,8 +30,10 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\Editing;
 
+use OCA\Filinq\Service\DocumentGenerationRecord;
 use OCA\Filinq\Service\GeneratedDocumentLogger;
 use OCA\Filinq\Service\PdfConversionService;
+use OCA\Filinq\Service\Support\AgentArtefacts;
 use OCA\OpenRegister\Mcp\Attribute\McpTool;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
@@ -56,11 +58,24 @@ use Throwable;
 class DocumentAgentService {
 
 	/**
+	 * The PDF conversion cascade.
+	 *
+	 * @var PdfConversionService
+	 */
+	private readonly PdfConversionService $pdfConversion;
+
+	/**
+	 * The ADR-088 artefact marker.
+	 *
+	 * @var AgentArtefactMarker
+	 */
+	private readonly AgentArtefactMarker $marker;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param EditSessionService $editSession The edit session owner.
-	 * @param PdfConversionService $pdfConversion The PDF conversion cascade.
-	 * @param AgentArtefactMarker $marker The ADR-088 artefact marker.
+	 * @param AgentArtefacts $artefacts The PDF conversion and the agent marker.
 	 * @param GeneratedDocumentLogger $documentLogger The generated-document audit logger.
 	 * @param IRootFolder $rootFolder The Nextcloud root folder.
 	 * @param IUserSession $userSession The acting user's session.
@@ -70,13 +85,14 @@ class DocumentAgentService {
 	 */
 	public function __construct(
 		private readonly EditSessionService $editSession,
-		private readonly PdfConversionService $pdfConversion,
-		private readonly AgentArtefactMarker $marker,
+		AgentArtefacts $artefacts,
 		private readonly GeneratedDocumentLogger $documentLogger,
 		private readonly IRootFolder $rootFolder,
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
 	) {
+		$this->pdfConversion = $artefacts->pdfConversion;
+		$this->marker = $artefacts->marker;
 
 	}//end __construct()
 
@@ -183,11 +199,8 @@ class DocumentAgentService {
 		}
 
 		$result = $this->editSession->editForAgent(
-			uid: $uid,
-			fileId: $fileId,
-			edits: $edits,
-			version: $version,
-			requestedMode: $requestedMode
+			request: new AgentFileRequest(uid: $uid, fileId: $fileId, version: $version, requestedMode: $requestedMode),
+			edits: $edits
 		);
 
 		$this->record(
@@ -258,10 +271,8 @@ class DocumentAgentService {
 		$uid = $this->requireUid();
 
 		$result = $this->editSession->editSpreadsheetForAgent(
-			uid: $uid,
-			fileId: $fileId,
-			edits: $edits,
-			version: $version
+			request: new AgentFileRequest(uid: $uid, fileId: $fileId, version: $version),
+			edits: $edits
 		);
 
 		$this->record(
@@ -332,10 +343,8 @@ class DocumentAgentService {
 		$uid = $this->requireUid();
 
 		$result = $this->editSession->editPresentationForAgent(
-			uid: $uid,
-			fileId: $fileId,
-			edits: $edits,
-			version: $version
+			request: new AgentFileRequest(uid: $uid, fileId: $fileId, version: $version),
+			edits: $edits
 		);
 
 		$this->record(
@@ -406,12 +415,9 @@ class DocumentAgentService {
 		}
 
 		return $this->editSession->embedChartForAgent(
-			uid: $this->requireUid(),
-			fileId: $fileId,
+			request: new AgentFileRequest(uid: $this->requireUid(), fileId: $fileId, version: $version, requestedMode: $mode),
 			chart: $chart,
-			version: $version,
-			afterAnchor: $anchor,
-			requestedMode: $mode
+			afterAnchor: $anchor
 		);
 
 	}//end addDocumentChart()
@@ -497,11 +503,8 @@ class DocumentAgentService {
 		}
 
 		return $this->editSession->setMetadataForAgent(
-			uid: $this->requireUid(),
-			fileId: $fileId,
-			values: $metadata,
-			version: $version,
-			requestedMode: $mode
+			request: new AgentFileRequest(uid: $this->requireUid(), fileId: $fileId, version: $version, requestedMode: $mode),
+			values: $metadata
 		);
 
 	}//end setDocumentMetadata()
@@ -602,13 +605,16 @@ class DocumentAgentService {
 	private function record(string $uid, int $fileId, string $path, string $format, string $note): void {
 		try {
 			$this->documentLogger->log(
-				template: [
-					'id' => '',
-					'version' => 0,
-					'name' => $note,
-				],
-				dataRefs: [],
-				format: $format,
+				generation: new DocumentGenerationRecord(
+					template: [
+						'id' => '',
+						'version' => null,
+						'name' => $note,
+					],
+					dataRefs: [],
+					format: $format,
+					userId: $uid
+				),
 				outcome: [
 					'status' => 'generated',
 					'warnings' => [$note],
@@ -616,8 +622,7 @@ class DocumentAgentService {
 					'errorMessage' => null,
 					'fileId' => $fileId,
 					'filePath' => $path,
-				],
-				userId: $uid
+				]
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning('Filinq could not record an agent document artefact: ' . $e->getMessage());

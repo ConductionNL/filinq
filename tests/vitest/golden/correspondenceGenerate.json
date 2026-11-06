@@ -1,0 +1,1420 @@
+[
+	{
+		"state": {
+			"format": "pdf",
+			"huisstijlId": "h1",
+			"caseReference": "Z-1"
+		},
+		"answer": {
+			"warnings": [
+				"w1"
+			],
+			"jobId": "j1",
+			"totalRecipients": 3
+		},
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/filinq/api/correspondence/generate",
+				{
+					"templateId": "t1",
+					"dataRefs": [
+						{
+							"register": "r",
+							"schema": "s",
+							"id": "1"
+						}
+					],
+					"options": {
+						"format": "pdf",
+						"huisstijlId": "h1",
+						"caseReference": "Z-1"
+					},
+					"filename": "brief.pdf"
+				},
+				{
+					"responseType": "blob"
+				}
+			],
+			[
+				"POST",
+				"/index.php/apps/filinq/api/correspondence/generate",
+				{
+					"templateId": "t1",
+					"dataRefs": [
+						{
+							"register": "r",
+							"schema": "s",
+							"id": "1"
+						}
+					],
+					"options": {
+						"format": "pdf",
+						"huisstijlId": "h1",
+						"caseReference": "Z-1"
+					},
+					"filename": "eigen.docx"
+				},
+				{
+					"responseType": "blob"
+				}
+			]
+		],
+		"downloads": [
+			[
+				{
+					"warnings": [
+						"w1"
+					],
+					"jobId": "j1",
+					"totalRecipients": 3
+				},
+				"brief.pdf",
+				"pdf"
+			],
+			[
+				{
+					"warnings": [
+						"w1"
+					],
+					"jobId": "j1",
+					"totalRecipients": 3
+				},
+				"eigen.docx",
+				"pdf"
+			]
+		],
+		"after": {
+			"loading": false,
+			"error": null,
+			"warnings": [],
+			"jobId": "old",
+			"jobStatus": {
+				"old": true
+			}
+		}
+	},
+	{
+		"state": {
+			"format": "pdf",
+			"huisstijlId": "h1",
+			"caseReference": "Z-1"
+		},
+		"answer": {
+			"status": "done"
+		},
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/filinq/api/correspondence/generate",
+				{
+					"templateId": "t1",
+					"dataRefs": [
+						{
+							"register": "r",
+							"schema": "s",
+							"id": "1"
+						}
+					],
+					"options": {
+						"format": "pdf",
+						"huisstijlId": "h1",
+						"caseReference": "Z-1"
+					},
+					"filename": "brief.pdf"
+				},
+				{
+					"responseType": "blob"
+				}
+			],
+			[
+				"POST",
+				"/index.php/apps/filinq/api/correspondence/generate",
+				{
+					"templateId": "t1",
+					"dataRefs": [
+						{
+							"register": "r",
+							"schema": "s",
+							"id": "1"
+						}
+					],
+					"options": {
+						"format": "pdf",
+						"huisstijlId": "h1",
+						"caseReference": "Z-1"
+					},
+					"filename": "eigen.docx"
+				},
+				{
+					"responseType": "blob"
+				}
+			]
+		],
+		"downloads": [
+			[
+				{
+					"status": "done"
+				},
+				"brief.pdf",
+				"pdf"
+			],
+			[
+				{
+					"status": "done"
+				},
+				"eigen.docx",
+				"pdf"
+			]
+		],
+		"after": {
+			"loading": false,
+			"error": null,
+			"warnings": [],
+			"jobId": "old",
+			"jobStatus": {
+				"old": true
+			}
+		}
+	},
+	{
+		"state": {
+			"format": "pdf",
+			"huisstijlId": "h1",
+			"caseReference": "Z-1"
+		},
+		"answer": {
+			"jobId": "",
+			"warnings": null
+		},
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/filinq/api/correspondence/generate",
+				{
+					"templateId": "t1",
+					"dataRefs": [
+						{
+							"register": "r",
+							"schema": "s",
+							"id": "1"
+						}
+					],
+					"options": {
+						"format": "pdf",
+						"huisstijlId": "h1",
+						"caseReference": "Z-1"
+					},
+					"filename": "brief.pdf"
+				},
+				{
+					"responseType": "blob"
+				}
+			],
+			[
+				"POST",
+				"/index.php/apps/filinq/api/correspondence/generate",
+				{
+					"templateId": "t1",
+					"dataRefs": [
+						{
+							"register": "r",
+							"schema": "s",
+							"id": "1"
+						}
+					],
+					"options": {
+						"format": "pdf",
+						"huisstijlId": "h1",
+						"caseReference": "Z-1"
+					},
+					"filename": "eigen.docx"
+				},
+				{
+					"responseType": "blob"
+				}
+			]
+		],
+		"downloads": [
+			[
+				{
+					"jobId": "",
+					"warnings": null
+				},
+				"brief.pdf",
+				"pdf"
+			],
+			[
+				{
+					"jobId": "",
+					"warnings": null
+				},
+				"eigen.docx",
+				"pdf"
+			]
+		],
+		"after": {
+			"loading": false,
+			"error": null,
+			"warnings": [],
+			"jobId": "old",
+			"jobStatus": {
+				"old": true
+			}
+		}
+	},
+	{
+		"state": {
+			"format": "pdf",
+			"huisstijlId": "h1",
+			"caseReference": "Z-1"
+		},
+		"answer": "down",
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/filinq/api/correspondence/generate",
+				{
+					"templateId": "t1",
+					"dataRefs": [
+						{
+							"register": "r",
+							"schema": "s",
+							"id": "1"
+						}
+					],
+					"options": {
+						"format": "pdf",
+						"huisstijlId": "h1",
+						"caseReference": "Z-1"
+					},
+					"filename": "brief.pdf"
+				},
+				{
+					"responseType": "blob"
+				}
+			],
+			[
+				"POST",
+				"/index.php/apps/filinq/api/correspondence/generate",
+				{
+					"templateId": "t1",
+					"dataRefs": [
+						{
+							"register": "r",
+							"schema": "s",
+							"id": "1"
+						}
+					],
+					"options": {
+						"format": "pdf",
+						"huisstijlId": "h1",
+						"caseReference": "Z-1"
+					},
+					"filename": "eigen.docx"
+				},
+				{
+					"responseType": "blob"
+				}
+			]
+		],
+		"downloads": [],
+		"after": {
+			"loading": false,
+			"error": "bad",
+			"warnings": [],
+			"jobId": "old",
+			"jobStatus": {
+				"old": true
+			}
+		}
+	},
+	{
+		"state": {
+			"format": "pdf",
+			"huisstijlId": "h1",
+			"caseReference": "Z-1"
+		},
+		"answer": "plain",
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/filinq/api/correspondence/generate",
+				{
+					"templateId": "t1",
+					"dataRefs": [
+						{
+							"register": "r",
+							"schema": "s",
+							"id": "1"
+						}
+					],
+					"options": {
+						"format": "pdf",
+						"huisstijlId": "h1",
+						"caseReference": "Z-1"
+					},
+					"filename": "brief.pdf"
+				},
+				{
+					"responseType": "blob"
+				}
+			],
+			[
+				"POST",
+				"/index.php/apps/filinq/api/correspondence/generate",
+				{
+					"templateId": "t1",
+					"dataRefs": [
+						{
+							"register": "r",
+							"schema": "s",
+							"id": "1"
+						}
+					],
+					"options": {
+						"format": "pdf",
+						"huisstijlId": "h1",
+						"caseReference": "Z-1"
+					},
+					"filename": "eigen.docx"
+				},
+				{
+					"responseType": "blob"
+				}
+			]
+		],
+		"downloads": [],
+		"after": {
+			"loading": false,
+			"error": "plain",
+			"warnings": [],
+			"jobId": "old",
+			"jobStatus": {
+				"old": true
+			}
+		}
+	},
+	{
+		"state": {
+			"format": "docx",
+			"huisstijlId": null,
+			"caseReference": ""
+		},
+		"answer": {
+			"warnings": [
+				"w1"
+			],
+			"jobId": "j1",
+			"totalRecipients": 3
+		},
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/filinq/api/correspondence/generate",
+				{
+					"templateId": "t1",
+					"dataRefs": [
+						{
+							"register": "r",
+							"schema": "s",
+							"id": "1"
+						}
+					],
+					"options": {
+						"format": "docx"
+					},
+					"filename": "brief.pdf"
+				},
+				{
+					"responseType": "blob"
+				}
+			],
+			[
+				"POST",
+				"/index.php/apps/filinq/api/correspondence/generate",
+				{
+					"templateId": "t1",
+					"dataRefs": [
+						{
+							"register": "r",
+							"schema": "s",
+							"id": "1"
+						}
+					],
+					"options": {
+						"format": "docx"
+					},
+					"filename": "eigen.docx"
+				},
+				{
+					"responseType": "blob"
+				}
+			]
+		],
+		"downloads": [
+			[
+				{
+					"warnings": [
+						"w1"
+					],
+					"jobId": "j1",
+					"totalRecipients": 3
+				},
+				"brief.pdf",
+				"docx"
+			],
+			[
+				{
+					"warnings": [
+						"w1"
+					],
+					"jobId": "j1",
+					"totalRecipients": 3
+				},
+				"eigen.docx",
+				"docx"
+			]
+		],
+		"after": {
+			"loading": false,
+			"error": null,
+			"warnings": [],
+			"jobId": "old",
+			"jobStatus": {
+				"old": true
+			}
+		}
+	},
+	{
+		"state": {
+			"format": "docx",
+			"huisstijlId": null,
+			"caseReference": ""
+		},
+		"answer": {
+			"status": "done"
+		},
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/filinq/api/correspondence/generate",
+				{
+					"templateId": "t1",
+					"dataRefs": [
+						{
+							"register": "r",
+							"schema": "s",
+							"id": "1"
+						}
+					],
+					"options": {
+						"format": "docx"
+					},
+					"filename": "brief.pdf"
+				},
+				{
+					"responseType": "blob"
+				}
+			],
+			[
+				"POST",
+				"/index.php/apps/filinq/api/correspondence/generate",
+				{
+					"templateId": "t1",
+					"dataRefs": [
+						{
+							"register": "r",
+							"schema": "s",
+							"id": "1"
+						}
+					],
+					"options": {
+						"format": "docx"
+					},
+					"filename": "eigen.docx"
+				},
+				{
+					"responseType": "blob"
+				}
+			]
+		],
+		"downloads": [
+			[
+				{
+					"status": "done"
+				},
+				"brief.pdf",
+				"docx"
+			],
+			[
+				{
+					"status": "done"
+				},
+				"eigen.docx",
+				"docx"
+			]
+		],
+		"after": {
+			"loading": false,
+			"error": null,
+			"warnings": [],
+			"jobId": "old",
+			"jobStatus": {
+				"old": true
+			}
+		}
+	},
+	{
+		"state": {
+			"format": "docx",
+			"huisstijlId": null,
+			"caseReference": ""
+		},
+		"answer": {
+			"jobId": "",
+			"warnings": null
+		},
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/filinq/api/correspondence/generate",
+				{
+					"templateId": "t1",
+					"dataRefs": [
+						{
+							"register": "r",
+							"schema": "s",
+							"id": "1"
+						}
+					],
+					"options": {
+						"format": "docx"
+					},
+					"filename": "brief.pdf"
+				},
+				{
+					"responseType": "blob"
+				}
+			],
+			[
+				"POST",
+				"/index.php/apps/filinq/api/correspondence/generate",
+				{
+					"templateId": "t1",
+					"dataRefs": [
+						{
+							"register": "r",
+							"schema": "s",
+							"id": "1"
+						}
+					],
+					"options": {
+						"format": "docx"
+					},
+					"filename": "eigen.docx"
+				},
+				{
+					"responseType": "blob"
+				}
+			]
+		],
+		"downloads": [
+			[
+				{
+					"jobId": "",
+					"warnings": null
+				},
+				"brief.pdf",
+				"docx"
+			],
+			[
+				{
+					"jobId": "",
+					"warnings": null
+				},
+				"eigen.docx",
+				"docx"
+			]
+		],
+		"after": {
+			"loading": false,
+			"error": null,
+			"warnings": [],
+			"jobId": "old",
+			"jobStatus": {
+				"old": true
+			}
+		}
+	},
+	{
+		"state": {
+			"format": "docx",
+			"huisstijlId": null,
+			"caseReference": ""
+		},
+		"answer": "down",
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/filinq/api/correspondence/generate",
+				{
+					"templateId": "t1",
+					"dataRefs": [
+						{
+							"register": "r",
+							"schema": "s",
+							"id": "1"
+						}
+					],
+					"options": {
+						"format": "docx"
+					},
+					"filename": "brief.pdf"
+				},
+				{
+					"responseType": "blob"
+				}
+			],
+			[
+				"POST",
+				"/index.php/apps/filinq/api/correspondence/generate",
+				{
+					"templateId": "t1",
+					"dataRefs": [
+						{
+							"register": "r",
+							"schema": "s",
+							"id": "1"
+						}
+					],
+					"options": {
+						"format": "docx"
+					},
+					"filename": "eigen.docx"
+				},
+				{
+					"responseType": "blob"
+				}
+			]
+		],
+		"downloads": [],
+		"after": {
+			"loading": false,
+			"error": "bad",
+			"warnings": [],
+			"jobId": "old",
+			"jobStatus": {
+				"old": true
+			}
+		}
+	},
+	{
+		"state": {
+			"format": "docx",
+			"huisstijlId": null,
+			"caseReference": ""
+		},
+		"answer": "plain",
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/filinq/api/correspondence/generate",
+				{
+					"templateId": "t1",
+					"dataRefs": [
+						{
+							"register": "r",
+							"schema": "s",
+							"id": "1"
+						}
+					],
+					"options": {
+						"format": "docx"
+					},
+					"filename": "brief.pdf"
+				},
+				{
+					"responseType": "blob"
+				}
+			],
+			[
+				"POST",
+				"/index.php/apps/filinq/api/correspondence/generate",
+				{
+					"templateId": "t1",
+					"dataRefs": [
+						{
+							"register": "r",
+							"schema": "s",
+							"id": "1"
+						}
+					],
+					"options": {
+						"format": "docx"
+					},
+					"filename": "eigen.docx"
+				},
+				{
+					"responseType": "blob"
+				}
+			]
+		],
+		"downloads": [],
+		"after": {
+			"loading": false,
+			"error": "plain",
+			"warnings": [],
+			"jobId": "old",
+			"jobStatus": {
+				"old": true
+			}
+		}
+	},
+	{
+		"state": {
+			"format": "html",
+			"huisstijlId": "",
+			"caseReference": "Z-2"
+		},
+		"answer": {
+			"warnings": [
+				"w1"
+			],
+			"jobId": "j1",
+			"totalRecipients": 3
+		},
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/filinq/api/correspondence/generate",
+				{
+					"templateId": "t1",
+					"dataRefs": [
+						{
+							"register": "r",
+							"schema": "s",
+							"id": "1"
+						}
+					],
+					"options": {
+						"format": "html",
+						"caseReference": "Z-2"
+					},
+					"filename": "brief.pdf"
+				},
+				{
+					"responseType": "json"
+				}
+			],
+			[
+				"POST",
+				"/index.php/apps/filinq/api/correspondence/generate",
+				{
+					"templateId": "t1",
+					"dataRefs": [
+						{
+							"register": "r",
+							"schema": "s",
+							"id": "1"
+						}
+					],
+					"options": {
+						"format": "html",
+						"caseReference": "Z-2"
+					},
+					"filename": "eigen.docx"
+				},
+				{
+					"responseType": "json"
+				}
+			]
+		],
+		"downloads": [],
+		"after": {
+			"loading": false,
+			"error": null,
+			"warnings": [
+				"w1"
+			],
+			"jobId": "old",
+			"jobStatus": {
+				"old": true
+			}
+		}
+	},
+	{
+		"state": {
+			"format": "html",
+			"huisstijlId": "",
+			"caseReference": "Z-2"
+		},
+		"answer": {
+			"status": "done"
+		},
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/filinq/api/correspondence/generate",
+				{
+					"templateId": "t1",
+					"dataRefs": [
+						{
+							"register": "r",
+							"schema": "s",
+							"id": "1"
+						}
+					],
+					"options": {
+						"format": "html",
+						"caseReference": "Z-2"
+					},
+					"filename": "brief.pdf"
+				},
+				{
+					"responseType": "json"
+				}
+			],
+			[
+				"POST",
+				"/index.php/apps/filinq/api/correspondence/generate",
+				{
+					"templateId": "t1",
+					"dataRefs": [
+						{
+							"register": "r",
+							"schema": "s",
+							"id": "1"
+						}
+					],
+					"options": {
+						"format": "html",
+						"caseReference": "Z-2"
+					},
+					"filename": "eigen.docx"
+				},
+				{
+					"responseType": "json"
+				}
+			]
+		],
+		"downloads": [],
+		"after": {
+			"loading": false,
+			"error": null,
+			"warnings": [],
+			"jobId": "old",
+			"jobStatus": {
+				"old": true
+			}
+		}
+	},
+	{
+		"state": {
+			"format": "html",
+			"huisstijlId": "",
+			"caseReference": "Z-2"
+		},
+		"answer": {
+			"jobId": "",
+			"warnings": null
+		},
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/filinq/api/correspondence/generate",
+				{
+					"templateId": "t1",
+					"dataRefs": [
+						{
+							"register": "r",
+							"schema": "s",
+							"id": "1"
+						}
+					],
+					"options": {
+						"format": "html",
+						"caseReference": "Z-2"
+					},
+					"filename": "brief.pdf"
+				},
+				{
+					"responseType": "json"
+				}
+			],
+			[
+				"POST",
+				"/index.php/apps/filinq/api/correspondence/generate",
+				{
+					"templateId": "t1",
+					"dataRefs": [
+						{
+							"register": "r",
+							"schema": "s",
+							"id": "1"
+						}
+					],
+					"options": {
+						"format": "html",
+						"caseReference": "Z-2"
+					},
+					"filename": "eigen.docx"
+				},
+				{
+					"responseType": "json"
+				}
+			]
+		],
+		"downloads": [],
+		"after": {
+			"loading": false,
+			"error": null,
+			"warnings": [],
+			"jobId": "old",
+			"jobStatus": {
+				"old": true
+			}
+		}
+	},
+	{
+		"state": {
+			"format": "html",
+			"huisstijlId": "",
+			"caseReference": "Z-2"
+		},
+		"answer": "down",
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/filinq/api/correspondence/generate",
+				{
+					"templateId": "t1",
+					"dataRefs": [
+						{
+							"register": "r",
+							"schema": "s",
+							"id": "1"
+						}
+					],
+					"options": {
+						"format": "html",
+						"caseReference": "Z-2"
+					},
+					"filename": "brief.pdf"
+				},
+				{
+					"responseType": "json"
+				}
+			],
+			[
+				"POST",
+				"/index.php/apps/filinq/api/correspondence/generate",
+				{
+					"templateId": "t1",
+					"dataRefs": [
+						{
+							"register": "r",
+							"schema": "s",
+							"id": "1"
+						}
+					],
+					"options": {
+						"format": "html",
+						"caseReference": "Z-2"
+					},
+					"filename": "eigen.docx"
+				},
+				{
+					"responseType": "json"
+				}
+			]
+		],
+		"downloads": [],
+		"after": {
+			"loading": false,
+			"error": "bad",
+			"warnings": [],
+			"jobId": "old",
+			"jobStatus": {
+				"old": true
+			}
+		}
+	},
+	{
+		"state": {
+			"format": "html",
+			"huisstijlId": "",
+			"caseReference": "Z-2"
+		},
+		"answer": "plain",
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/filinq/api/correspondence/generate",
+				{
+					"templateId": "t1",
+					"dataRefs": [
+						{
+							"register": "r",
+							"schema": "s",
+							"id": "1"
+						}
+					],
+					"options": {
+						"format": "html",
+						"caseReference": "Z-2"
+					},
+					"filename": "brief.pdf"
+				},
+				{
+					"responseType": "json"
+				}
+			],
+			[
+				"POST",
+				"/index.php/apps/filinq/api/correspondence/generate",
+				{
+					"templateId": "t1",
+					"dataRefs": [
+						{
+							"register": "r",
+							"schema": "s",
+							"id": "1"
+						}
+					],
+					"options": {
+						"format": "html",
+						"caseReference": "Z-2"
+					},
+					"filename": "eigen.docx"
+				},
+				{
+					"responseType": "json"
+				}
+			]
+		],
+		"downloads": [],
+		"after": {
+			"loading": false,
+			"error": "plain",
+			"warnings": [],
+			"jobId": "old",
+			"jobStatus": {
+				"old": true
+			}
+		}
+	},
+	{
+		"state": {
+			"format": "txt"
+		},
+		"answer": {
+			"warnings": [
+				"w1"
+			],
+			"jobId": "j1",
+			"totalRecipients": 3
+		},
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/filinq/api/correspondence/generate",
+				{
+					"templateId": "t1",
+					"dataRefs": [
+						{
+							"register": "r",
+							"schema": "s",
+							"id": "1"
+						}
+					],
+					"options": {
+						"format": "txt"
+					},
+					"filename": "brief.pdf"
+				},
+				{
+					"responseType": "json"
+				}
+			],
+			[
+				"POST",
+				"/index.php/apps/filinq/api/correspondence/generate",
+				{
+					"templateId": "t1",
+					"dataRefs": [
+						{
+							"register": "r",
+							"schema": "s",
+							"id": "1"
+						}
+					],
+					"options": {
+						"format": "txt"
+					},
+					"filename": "eigen.docx"
+				},
+				{
+					"responseType": "json"
+				}
+			]
+		],
+		"downloads": [],
+		"after": {
+			"loading": false,
+			"error": null,
+			"warnings": [
+				"w1"
+			],
+			"jobId": "old",
+			"jobStatus": {
+				"old": true
+			}
+		}
+	},
+	{
+		"state": {
+			"format": "txt"
+		},
+		"answer": {
+			"status": "done"
+		},
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/filinq/api/correspondence/generate",
+				{
+					"templateId": "t1",
+					"dataRefs": [
+						{
+							"register": "r",
+							"schema": "s",
+							"id": "1"
+						}
+					],
+					"options": {
+						"format": "txt"
+					},
+					"filename": "brief.pdf"
+				},
+				{
+					"responseType": "json"
+				}
+			],
+			[
+				"POST",
+				"/index.php/apps/filinq/api/correspondence/generate",
+				{
+					"templateId": "t1",
+					"dataRefs": [
+						{
+							"register": "r",
+							"schema": "s",
+							"id": "1"
+						}
+					],
+					"options": {
+						"format": "txt"
+					},
+					"filename": "eigen.docx"
+				},
+				{
+					"responseType": "json"
+				}
+			]
+		],
+		"downloads": [],
+		"after": {
+			"loading": false,
+			"error": null,
+			"warnings": [],
+			"jobId": "old",
+			"jobStatus": {
+				"old": true
+			}
+		}
+	},
+	{
+		"state": {
+			"format": "txt"
+		},
+		"answer": {
+			"jobId": "",
+			"warnings": null
+		},
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/filinq/api/correspondence/generate",
+				{
+					"templateId": "t1",
+					"dataRefs": [
+						{
+							"register": "r",
+							"schema": "s",
+							"id": "1"
+						}
+					],
+					"options": {
+						"format": "txt"
+					},
+					"filename": "brief.pdf"
+				},
+				{
+					"responseType": "json"
+				}
+			],
+			[
+				"POST",
+				"/index.php/apps/filinq/api/correspondence/generate",
+				{
+					"templateId": "t1",
+					"dataRefs": [
+						{
+							"register": "r",
+							"schema": "s",
+							"id": "1"
+						}
+					],
+					"options": {
+						"format": "txt"
+					},
+					"filename": "eigen.docx"
+				},
+				{
+					"responseType": "json"
+				}
+			]
+		],
+		"downloads": [],
+		"after": {
+			"loading": false,
+			"error": null,
+			"warnings": [],
+			"jobId": "old",
+			"jobStatus": {
+				"old": true
+			}
+		}
+	},
+	{
+		"state": {
+			"format": "txt"
+		},
+		"answer": "down",
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/filinq/api/correspondence/generate",
+				{
+					"templateId": "t1",
+					"dataRefs": [
+						{
+							"register": "r",
+							"schema": "s",
+							"id": "1"
+						}
+					],
+					"options": {
+						"format": "txt"
+					},
+					"filename": "brief.pdf"
+				},
+				{
+					"responseType": "json"
+				}
+			],
+			[
+				"POST",
+				"/index.php/apps/filinq/api/correspondence/generate",
+				{
+					"templateId": "t1",
+					"dataRefs": [
+						{
+							"register": "r",
+							"schema": "s",
+							"id": "1"
+						}
+					],
+					"options": {
+						"format": "txt"
+					},
+					"filename": "eigen.docx"
+				},
+				{
+					"responseType": "json"
+				}
+			]
+		],
+		"downloads": [],
+		"after": {
+			"loading": false,
+			"error": "bad",
+			"warnings": [],
+			"jobId": "old",
+			"jobStatus": {
+				"old": true
+			}
+		}
+	},
+	{
+		"state": {
+			"format": "txt"
+		},
+		"answer": "plain",
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/filinq/api/correspondence/generate",
+				{
+					"templateId": "t1",
+					"dataRefs": [
+						{
+							"register": "r",
+							"schema": "s",
+							"id": "1"
+						}
+					],
+					"options": {
+						"format": "txt"
+					},
+					"filename": "brief.pdf"
+				},
+				{
+					"responseType": "json"
+				}
+			],
+			[
+				"POST",
+				"/index.php/apps/filinq/api/correspondence/generate",
+				{
+					"templateId": "t1",
+					"dataRefs": [
+						{
+							"register": "r",
+							"schema": "s",
+							"id": "1"
+						}
+					],
+					"options": {
+						"format": "txt"
+					},
+					"filename": "eigen.docx"
+				},
+				{
+					"responseType": "json"
+				}
+			]
+		],
+		"downloads": [],
+		"after": {
+			"loading": false,
+			"error": "plain",
+			"warnings": [],
+			"jobId": "old",
+			"jobStatus": {
+				"old": true
+			}
+		}
+	}
+]

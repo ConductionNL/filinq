@@ -1,0 +1,656 @@
+[
+	{
+		"state": {
+			"format": "pdf",
+			"huisstijlId": "h1",
+			"caseReference": "Z-1"
+		},
+		"answer": {
+			"warnings": [
+				"w1"
+			],
+			"jobId": "j1",
+			"totalRecipients": 3
+		},
+		"calls": [
+			[
+				"GET",
+				"/index.php/apps/filinq/api/correspondence/jobs/old"
+			],
+			[
+				"GET",
+				"/index.php/apps/filinq/api/correspondence/jobs/a%2Fb%20c"
+			]
+		],
+		"downloads": [],
+		"after": {
+			"loading": false,
+			"error": null,
+			"warnings": [
+				"old"
+			],
+			"jobId": "",
+			"jobStatus": {
+				"warnings": [
+					"w1"
+				],
+				"jobId": "j1",
+				"totalRecipients": 3
+			}
+		}
+	},
+	{
+		"state": {
+			"format": "pdf",
+			"huisstijlId": "h1",
+			"caseReference": "Z-1"
+		},
+		"answer": {
+			"status": "done"
+		},
+		"calls": [
+			[
+				"GET",
+				"/index.php/apps/filinq/api/correspondence/jobs/old"
+			],
+			[
+				"GET",
+				"/index.php/apps/filinq/api/correspondence/jobs/a%2Fb%20c"
+			]
+		],
+		"downloads": [],
+		"after": {
+			"loading": false,
+			"error": null,
+			"warnings": [
+				"old"
+			],
+			"jobId": "",
+			"jobStatus": {
+				"status": "done"
+			}
+		}
+	},
+	{
+		"state": {
+			"format": "pdf",
+			"huisstijlId": "h1",
+			"caseReference": "Z-1"
+		},
+		"answer": {
+			"jobId": "",
+			"warnings": null
+		},
+		"calls": [
+			[
+				"GET",
+				"/index.php/apps/filinq/api/correspondence/jobs/old"
+			],
+			[
+				"GET",
+				"/index.php/apps/filinq/api/correspondence/jobs/a%2Fb%20c"
+			]
+		],
+		"downloads": [],
+		"after": {
+			"loading": false,
+			"error": null,
+			"warnings": [
+				"old"
+			],
+			"jobId": "",
+			"jobStatus": {
+				"jobId": "",
+				"warnings": null
+			}
+		}
+	},
+	{
+		"state": {
+			"format": "pdf",
+			"huisstijlId": "h1",
+			"caseReference": "Z-1"
+		},
+		"answer": "down",
+		"calls": [
+			[
+				"GET",
+				"/index.php/apps/filinq/api/correspondence/jobs/old"
+			],
+			[
+				"GET",
+				"/index.php/apps/filinq/api/correspondence/jobs/a%2Fb%20c"
+			]
+		],
+		"downloads": [],
+		"after": {
+			"loading": false,
+			"error": "bad",
+			"warnings": [
+				"old"
+			],
+			"jobId": "",
+			"jobStatus": {
+				"old": true
+			}
+		}
+	},
+	{
+		"state": {
+			"format": "pdf",
+			"huisstijlId": "h1",
+			"caseReference": "Z-1"
+		},
+		"answer": "plain",
+		"calls": [
+			[
+				"GET",
+				"/index.php/apps/filinq/api/correspondence/jobs/old"
+			],
+			[
+				"GET",
+				"/index.php/apps/filinq/api/correspondence/jobs/a%2Fb%20c"
+			]
+		],
+		"downloads": [],
+		"after": {
+			"loading": false,
+			"error": "plain",
+			"warnings": [
+				"old"
+			],
+			"jobId": "",
+			"jobStatus": {
+				"old": true
+			}
+		}
+	},
+	{
+		"state": {
+			"format": "docx",
+			"huisstijlId": null,
+			"caseReference": ""
+		},
+		"answer": {
+			"warnings": [
+				"w1"
+			],
+			"jobId": "j1",
+			"totalRecipients": 3
+		},
+		"calls": [
+			[
+				"GET",
+				"/index.php/apps/filinq/api/correspondence/jobs/old"
+			],
+			[
+				"GET",
+				"/index.php/apps/filinq/api/correspondence/jobs/a%2Fb%20c"
+			]
+		],
+		"downloads": [],
+		"after": {
+			"loading": false,
+			"error": null,
+			"warnings": [
+				"old"
+			],
+			"jobId": "",
+			"jobStatus": {
+				"warnings": [
+					"w1"
+				],
+				"jobId": "j1",
+				"totalRecipients": 3
+			}
+		}
+	},
+	{
+		"state": {
+			"format": "docx",
+			"huisstijlId": null,
+			"caseReference": ""
+		},
+		"answer": {
+			"status": "done"
+		},
+		"calls": [
+			[
+				"GET",
+				"/index.php/apps/filinq/api/correspondence/jobs/old"
+			],
+			[
+				"GET",
+				"/index.php/apps/filinq/api/correspondence/jobs/a%2Fb%20c"
+			]
+		],
+		"downloads": [],
+		"after": {
+			"loading": false,
+			"error": null,
+			"warnings": [
+				"old"
+			],
+			"jobId": "",
+			"jobStatus": {
+				"status": "done"
+			}
+		}
+	},
+	{
+		"state": {
+			"format": "docx",
+			"huisstijlId": null,
+			"caseReference": ""
+		},
+		"answer": {
+			"jobId": "",
+			"warnings": null
+		},
+		"calls": [
+			[
+				"GET",
+				"/index.php/apps/filinq/api/correspondence/jobs/old"
+			],
+			[
+				"GET",
+				"/index.php/apps/filinq/api/correspondence/jobs/a%2Fb%20c"
+			]
+		],
+		"downloads": [],
+		"after": {
+			"loading": false,
+			"error": null,
+			"warnings": [
+				"old"
+			],
+			"jobId": "",
+			"jobStatus": {
+				"jobId": "",
+				"warnings": null
+			}
+		}
+	},
+	{
+		"state": {
+			"format": "docx",
+			"huisstijlId": null,
+			"caseReference": ""
+		},
+		"answer": "down",
+		"calls": [
+			[
+				"GET",
+				"/index.php/apps/filinq/api/correspondence/jobs/old"
+			],
+			[
+				"GET",
+				"/index.php/apps/filinq/api/correspondence/jobs/a%2Fb%20c"
+			]
+		],
+		"downloads": [],
+		"after": {
+			"loading": false,
+			"error": "bad",
+			"warnings": [
+				"old"
+			],
+			"jobId": "",
+			"jobStatus": {
+				"old": true
+			}
+		}
+	},
+	{
+		"state": {
+			"format": "docx",
+			"huisstijlId": null,
+			"caseReference": ""
+		},
+		"answer": "plain",
+		"calls": [
+			[
+				"GET",
+				"/index.php/apps/filinq/api/correspondence/jobs/old"
+			],
+			[
+				"GET",
+				"/index.php/apps/filinq/api/correspondence/jobs/a%2Fb%20c"
+			]
+		],
+		"downloads": [],
+		"after": {
+			"loading": false,
+			"error": "plain",
+			"warnings": [
+				"old"
+			],
+			"jobId": "",
+			"jobStatus": {
+				"old": true
+			}
+		}
+	},
+	{
+		"state": {
+			"format": "html",
+			"huisstijlId": "",
+			"caseReference": "Z-2"
+		},
+		"answer": {
+			"warnings": [
+				"w1"
+			],
+			"jobId": "j1",
+			"totalRecipients": 3
+		},
+		"calls": [
+			[
+				"GET",
+				"/index.php/apps/filinq/api/correspondence/jobs/old"
+			],
+			[
+				"GET",
+				"/index.php/apps/filinq/api/correspondence/jobs/a%2Fb%20c"
+			]
+		],
+		"downloads": [],
+		"after": {
+			"loading": false,
+			"error": null,
+			"warnings": [
+				"old"
+			],
+			"jobId": "",
+			"jobStatus": {
+				"warnings": [
+					"w1"
+				],
+				"jobId": "j1",
+				"totalRecipients": 3
+			}
+		}
+	},
+	{
+		"state": {
+			"format": "html",
+			"huisstijlId": "",
+			"caseReference": "Z-2"
+		},
+		"answer": {
+			"status": "done"
+		},
+		"calls": [
+			[
+				"GET",
+				"/index.php/apps/filinq/api/correspondence/jobs/old"
+			],
+			[
+				"GET",
+				"/index.php/apps/filinq/api/correspondence/jobs/a%2Fb%20c"
+			]
+		],
+		"downloads": [],
+		"after": {
+			"loading": false,
+			"error": null,
+			"warnings": [
+				"old"
+			],
+			"jobId": "",
+			"jobStatus": {
+				"status": "done"
+			}
+		}
+	},
+	{
+		"state": {
+			"format": "html",
+			"huisstijlId": "",
+			"caseReference": "Z-2"
+		},
+		"answer": {
+			"jobId": "",
+			"warnings": null
+		},
+		"calls": [
+			[
+				"GET",
+				"/index.php/apps/filinq/api/correspondence/jobs/old"
+			],
+			[
+				"GET",
+				"/index.php/apps/filinq/api/correspondence/jobs/a%2Fb%20c"
+			]
+		],
+		"downloads": [],
+		"after": {
+			"loading": false,
+			"error": null,
+			"warnings": [
+				"old"
+			],
+			"jobId": "",
+			"jobStatus": {
+				"jobId": "",
+				"warnings": null
+			}
+		}
+	},
+	{
+		"state": {
+			"format": "html",
+			"huisstijlId": "",
+			"caseReference": "Z-2"
+		},
+		"answer": "down",
+		"calls": [
+			[
+				"GET",
+				"/index.php/apps/filinq/api/correspondence/jobs/old"
+			],
+			[
+				"GET",
+				"/index.php/apps/filinq/api/correspondence/jobs/a%2Fb%20c"
+			]
+		],
+		"downloads": [],
+		"after": {
+			"loading": false,
+			"error": "bad",
+			"warnings": [
+				"old"
+			],
+			"jobId": "",
+			"jobStatus": {
+				"old": true
+			}
+		}
+	},
+	{
+		"state": {
+			"format": "html",
+			"huisstijlId": "",
+			"caseReference": "Z-2"
+		},
+		"answer": "plain",
+		"calls": [
+			[
+				"GET",
+				"/index.php/apps/filinq/api/correspondence/jobs/old"
+			],
+			[
+				"GET",
+				"/index.php/apps/filinq/api/correspondence/jobs/a%2Fb%20c"
+			]
+		],
+		"downloads": [],
+		"after": {
+			"loading": false,
+			"error": "plain",
+			"warnings": [
+				"old"
+			],
+			"jobId": "",
+			"jobStatus": {
+				"old": true
+			}
+		}
+	},
+	{
+		"state": {
+			"format": "txt"
+		},
+		"answer": {
+			"warnings": [
+				"w1"
+			],
+			"jobId": "j1",
+			"totalRecipients": 3
+		},
+		"calls": [
+			[
+				"GET",
+				"/index.php/apps/filinq/api/correspondence/jobs/old"
+			],
+			[
+				"GET",
+				"/index.php/apps/filinq/api/correspondence/jobs/a%2Fb%20c"
+			]
+		],
+		"downloads": [],
+		"after": {
+			"loading": false,
+			"error": null,
+			"warnings": [
+				"old"
+			],
+			"jobId": "",
+			"jobStatus": {
+				"warnings": [
+					"w1"
+				],
+				"jobId": "j1",
+				"totalRecipients": 3
+			}
+		}
+	},
+	{
+		"state": {
+			"format": "txt"
+		},
+		"answer": {
+			"status": "done"
+		},
+		"calls": [
+			[
+				"GET",
+				"/index.php/apps/filinq/api/correspondence/jobs/old"
+			],
+			[
+				"GET",
+				"/index.php/apps/filinq/api/correspondence/jobs/a%2Fb%20c"
+			]
+		],
+		"downloads": [],
+		"after": {
+			"loading": false,
+			"error": null,
+			"warnings": [
+				"old"
+			],
+			"jobId": "",
+			"jobStatus": {
+				"status": "done"
+			}
+		}
+	},
+	{
+		"state": {
+			"format": "txt"
+		},
+		"answer": {
+			"jobId": "",
+			"warnings": null
+		},
+		"calls": [
+			[
+				"GET",
+				"/index.php/apps/filinq/api/correspondence/jobs/old"
+			],
+			[
+				"GET",
+				"/index.php/apps/filinq/api/correspondence/jobs/a%2Fb%20c"
+			]
+		],
+		"downloads": [],
+		"after": {
+			"loading": false,
+			"error": null,
+			"warnings": [
+				"old"
+			],
+			"jobId": "",
+			"jobStatus": {
+				"jobId": "",
+				"warnings": null
+			}
+		}
+	},
+	{
+		"state": {
+			"format": "txt"
+		},
+		"answer": "down",
+		"calls": [
+			[
+				"GET",
+				"/index.php/apps/filinq/api/correspondence/jobs/old"
+			],
+			[
+				"GET",
+				"/index.php/apps/filinq/api/correspondence/jobs/a%2Fb%20c"
+			]
+		],
+		"downloads": [],
+		"after": {
+			"loading": false,
+			"error": "bad",
+			"warnings": [
+				"old"
+			],
+			"jobId": "",
+			"jobStatus": {
+				"old": true
+			}
+		}
+	},
+	{
+		"state": {
+			"format": "txt"
+		},
+		"answer": "plain",
+		"calls": [
+			[
+				"GET",
+				"/index.php/apps/filinq/api/correspondence/jobs/old"
+			],
+			[
+				"GET",
+				"/index.php/apps/filinq/api/correspondence/jobs/a%2Fb%20c"
+			]
+		],
+		"downloads": [],
+		"after": {
+			"loading": false,
+			"error": "plain",
+			"warnings": [
+				"old"
+			],
+			"jobId": "",
+			"jobStatus": {
+				"old": true
+			}
+		}
+	}
+]

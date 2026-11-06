@@ -1,15 +1,15 @@
 ---
 capability: portal-signing-surface
-status: in-progress
-built_by: openspec/changes/portal-signing-surface
+status: done
+built_by: openspec/changes/archive/2026-09-28-portal-signing-surface
 ---
 
 # portal-signing-surface Specification
 
-**Status**: in-progress
+**Status**: done
 **Scope**: filinq
 **OpenSpec changes**:
-- [portal-signing-surface](../../changes/portal-signing-surface/) _(active)_ — contract-v2.2 `rowActions` on the signer manifest + portal-subject evidence binding (kind: code)
+- [portal-signing-surface](../../changes/archive/2026-09-28-portal-signing-surface/) _(archived 2026-09-28)_ — contract-v2.2 `rowActions` on the signer manifest + portal-subject evidence binding (kind: code)
 
 ## Purpose
 
@@ -24,18 +24,11 @@ guard and verified-actor entrypoint from `portal-signing-actions` and the
 `v: 2` identity-bound MAC from `signing-trust-rebuild`; it does not
 re-implement them.
 
-**Status note (2026-07-23)**: both sibling changes (`portal-signing-actions`
-receiver/verifier/entrypoint, `signing-trust-rebuild`'s `v: 2` MAC) now have
-code and unit tests in this repo, so REQ-DDPSS-001 through REQ-DDPSS-004 below
-are implemented and tested. REQ-DDPSS-005 (SES/AES-only, never QES) holds
-structurally — the native provider only ever produces SES-level artifacts
-regardless of portal trust, so a portal signature can never be recorded above
-SES/`low` assurance — but no DEDICATED per-signature assurance-level field is
-recorded/exposed yet beyond the general `SigningConcludedEvent.assuranceLevel`
-completion payload (signing-trust-rebuild REQ-DDSTR-010); a labelled
-portal-signature assurance surface remains a follow-up. Newman/Playwright
-coverage for this capability has not been authored; PHPUnit is the sole test
-evidence today.
+**Status note (2026-09-28)**: REQ-DDPSS-001 through REQ-DDPSS-005 are implemented
+and unit-tested. A portal signature records `signatureAssurance` on the signer
+record, capped by the session trust and never QES (`PortalSignatureAssurance`),
+and `signDocument` returns it as `assurance`. Newman and Playwright coverage has
+not been authored; PHPUnit is the test evidence.
 
 ## Requirements
 
@@ -130,11 +123,13 @@ portal signature. The assurance level recorded and exposed on a portal signature
 MUST NOT exceed the portal session's trust level (a `substantial` session yields
 at most AES-grade evidence). Qualified signatures via an external eIDAS QTSP
 (Article 3(12)), PAdES-LTV and certificate rails are delegated to an external
-provider and MUST NOT be represented as delivered by this surface.
+provider and MUST NOT be represented as delivered by this surface. The level
+MUST be recorded on the signer record as `signatureAssurance` (SES or AES) and
+returned by `signDocument` as `assurance`.
 
 #### Scenario: A substantial-trust portal signature is AES, never QES
 - **GIVEN** a portal signer acting on a `minTrust: substantial` session
 - **WHEN** the signature evidence records the assurance level
 - **THEN** the recorded/exposed assurance is at most AES and never claims QES
 - **AND** the surface does not represent a QES as delivered — QES is delegated to an external QTSP
-- @e2e exclude structural guarantee (native provider only ever produces SES/`low`) — no dedicated per-signature assurance field yet; not independently unit-tested beyond `SigningConcludedEventTest.php`'s general assurance-resolution coverage
+- @e2e exclude backend receiver act with no Filinq UI surface; covered by PHPUnit (tests/unit/Service/Signing/PortalSignatureAssuranceTest.php, tests/unit/Service/SigningServiceTest.php::testPortalSignatureRecordsAssuranceNoHigherThanTheSession, tests/unit/Controller/PortalSigningReceiverControllerTest.php::testSignDocumentExposesTheRecordedAssurance, tests/unit/Settings/SignerRecordAssuranceSchemaTest.php)

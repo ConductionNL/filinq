@@ -35,6 +35,7 @@ namespace OCA\Filinq\Service;
 
 use Exception;
 use Imagick;
+use OCA\Filinq\Kernel\Contracts\OcrServiceInterface;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
 use OCP\IAppConfig;
@@ -51,7 +52,7 @@ use thiagoalessio\TesseractOCR\TesseractOCR;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  */
-class OcrService {
+class OcrService implements OcrServiceInterface {
 
 	/**
 	 * MIME types that always require OCR processing
@@ -97,6 +98,24 @@ class OcrService {
 	private const APP_NAME = 'filinq';
 
 	/**
+	 * The answer when no OCR ran.
+	 *
+	 * @var array{text: string, confidence: float, ocrProcessed: bool}
+	 */
+	private const NO_OCR_RESULT = [
+		'text' => '',
+		'confidence' => 0.0,
+		'ocrProcessed' => false,
+	];
+
+	/**
+	 * The tesseract command line.
+	 *
+	 * @var TesseractCommand
+	 */
+	private readonly TesseractCommand $tesseract;
+
+	/**
 	 * Constructor for OcrService
 	 *
 	 * @param LoggerInterface $logger Logger for error reporting
@@ -112,6 +131,7 @@ class OcrService {
 		private readonly IRootFolder $rootFolder,
 		private readonly IUserSession $userSession,
 	) {
+		$this->tesseract = new TesseractCommand(logger: $logger);
 
 	}//end __construct()
 
@@ -123,18 +143,7 @@ class OcrService {
 	 * @spec openspec/specs/ocr-document-scanning/spec.md
 	 */
 	public function isTesseractAvailable(): bool {
-		try {
-			$output = [];
-			$returnCode = 0;
-			exec('tesseract --version 2>&1', $output, $returnCode);
-			return $returnCode === 0;
-		} catch (Exception $e) {
-			$this->logger->debug(
-				'Tesseract availability check failed',
-				['exception' => $e->getMessage()]
-			);
-			return false;
-		}//end try
+		return $this->tesseract->isAvailable();
 
 	}//end isTesseractAvailable()
 
@@ -146,23 +155,7 @@ class OcrService {
 	 * @spec openspec/specs/ocr-document-scanning/spec.md
 	 */
 	public function getTesseractVersion(): ?string {
-		try {
-			$output = [];
-			$returnCode = 0;
-			exec('tesseract --version 2>&1', $output, $returnCode);
-			if ($returnCode === 0 && empty($output) === false) {
-				// The first line contains the version string.
-				return trim($output[0]);
-			}
-
-			return null;
-		} catch (Exception $e) {
-			$this->logger->debug(
-				'Tesseract version check failed',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}//end try
+		return $this->tesseract->version();
 
 	}//end getTesseractVersion()
 
@@ -297,7 +290,7 @@ class OcrService {
 			$text = $ocr->run();
 
 			// Get confidence by running with configfile to get detailed output.
-			$confidence = $this->getConfidenceScore(filePath: $filePath, languages: $languages, dpi: $dpi);
+			$confidence = $this->tesseract->confidence(filePath: $filePath, languages: $languages, dpi: $dpi);
 
 			$this->logger->debug(
 				'OCR text extracted from image',
@@ -441,63 +434,12 @@ class OcrService {
 	 * @spec openspec/specs/ocr-document-scanning/spec.md
 	 */
 	public function processFile(int $fileId): array {
-		$noOcrResult = [
-			'text' => '',
-			'confidence' => 0.0,
-			'ocrProcessed' => false,
-		];
-
-		if ($this->isOcrEnabled() === false) {
-			$this->logger->debug('OCR is disabled, skipping');
-			return $noOcrResult;
-		}
-
-		if ($this->isTesseractAvailable() === false) {
-			$this->logger->warning(
-				'Tesseract is not installed, OCR unavailable',
-				['fileId' => $fileId]
-			);
-			return $noOcrResult;
+		if ($this->canRunOcr(fileId: $fileId) === false) {
+			return self::NO_OCR_RESULT;
 		}
 
 		try {
-			$file = $this->getFileById(fileId: $fileId);
-			if ($file === null) {
-				$this->logger->warning(
-					'File not found for OCR processing',
-					['fileId' => $fileId]
-				);
-				return $noOcrResult;
-			}
-
-			$mimeType = $file->getMimeType();
-			if ($this->needsOcr(mimeType: $mimeType) === false) {
-				return $noOcrResult;
-			}
-
-			$languages = $this->getOcrLanguages();
-			$dpi = $this->getOcrDpi();
-
-			// Write file to temp location for Tesseract processing.
-			$tempFile = $this->writeToTemp(file: $file);
-
-			try {
-				$result = $this->extractTextFromPdf(filePath: $tempFile, languages: $languages, dpi: $dpi);
-				if (in_array($mimeType, self::IMAGE_MIME_TYPES, true) === true) {
-					$result = $this->extractTextFromImage(filePath: $tempFile, languages: $languages, dpi: $dpi);
-				}
-
-				return [
-					'text' => $result['text'],
-					'confidence' => $result['confidence'],
-					'ocrProcessed' => empty($result['text']) === false,
-				];
-			} finally {
-				// Clean up temp file.
-				if (file_exists($tempFile) === true) {
-					unlink($tempFile);
-				}
-			}
+			return $this->ocrOfFile(fileId: $fileId);
 		} catch (Exception $e) {
 			$this->logger->error(
 				'OCR processing failed',
@@ -506,10 +448,110 @@ class OcrService {
 					'exception' => $e->getMessage(),
 				]
 			);
-			return $noOcrResult;
+			return self::NO_OCR_RESULT;
 		}//end try
 
 	}//end processFile()
+
+	/**
+	 * Whether OCR is switched on and Tesseract is installed; logs why not.
+	 *
+	 * @param int $fileId The file the check is for, for the log.
+	 *
+	 * @return bool True when OCR can run.
+	 */
+	private function canRunOcr(int $fileId): bool {
+		if ($this->isOcrEnabled() === false) {
+			$this->logger->debug('OCR is disabled, skipping');
+			return false;
+		}
+
+		if ($this->isTesseractAvailable() === false) {
+			$this->logger->warning(
+				'Tesseract is not installed, OCR unavailable',
+				['fileId' => $fileId]
+			);
+			return false;
+		}
+
+		return true;
+	}//end canRunOcr()
+
+	/**
+	 * Run OCR on one of the acting user's files, when its type needs it.
+	 *
+	 * @param int $fileId The Nextcloud file id.
+	 *
+	 * @return array{text: string, confidence: float, ocrProcessed: bool} The OCR result.
+	 *
+	 * @throws Exception When OCR fails.
+	 */
+	private function ocrOfFile(int $fileId): array {
+		$file = $this->getFileById(fileId: $fileId);
+		if ($file === null) {
+			$this->logger->warning(
+				'File not found for OCR processing',
+				['fileId' => $fileId]
+			);
+			return self::NO_OCR_RESULT;
+		}
+
+		if ($this->needsOcr(mimeType: $file->getMimeType()) === false) {
+			return self::NO_OCR_RESULT;
+		}
+
+		$result = $this->processNode(file: $file);
+
+		return [
+			'text' => $result['text'],
+			'confidence' => $result['confidence'],
+			'ocrProcessed' => empty($result['text']) === false,
+		];
+	}//end ocrOfFile()
+
+	/**
+	 * Run Tesseract on one file node with the admin's languages and DPI.
+	 *
+	 * The node is resolved by the caller, so a background job with no user
+	 * session can run it too. An image goes straight to Tesseract; a PDF is
+	 * rasterised page by page first. The caller checks that OCR is enabled,
+	 * that Tesseract is installed and that the MIME type is a candidate.
+	 *
+	 * @param File $file The file to recognise.
+	 *
+	 * @return array{text: string, confidence: float, languages: string, dpi: int} What was recovered,
+	 *                                                                            and with which settings.
+	 *
+	 * @throws Exception When the file cannot be copied to a temporary location or recognition fails.
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-2.1
+	 */
+	public function processNode(File $file): array {
+		$languages = $this->getOcrLanguages();
+		$dpi = $this->getOcrDpi();
+		$tempFile = $this->writeToTemp(file: $file);
+
+		$isImage = in_array($file->getMimeType(), self::IMAGE_MIME_TYPES, true);
+
+		try {
+			$result = match ($isImage) {
+				true => $this->extractTextFromImage(filePath: $tempFile, languages: $languages, dpi: $dpi),
+				false => $this->extractTextFromPdf(filePath: $tempFile, languages: $languages, dpi: $dpi),
+			};
+		} finally {
+			if (file_exists($tempFile) === true) {
+				unlink($tempFile);
+			}
+		}
+
+		return [
+			'text' => (string) $result['text'],
+			'confidence' => (float) $result['confidence'],
+			'languages' => $languages,
+			'dpi' => $dpi,
+		];
+
+	}//end processNode()
 
 	/**
 	 * Get a file by its Nextcloud file ID
@@ -559,63 +601,4 @@ class OcrService {
 
 		return $tempFile;
 	}//end writeToTemp()
-
-	/**
-	 * Get OCR confidence score for a file
-	 *
-	 * Uses Tesseract's hocr output to extract mean confidence.
-	 *
-	 * @param string $filePath Path to the image file
-	 * @param string $languages Tesseract language string
-	 * @param int $dpi DPI setting
-	 *
-	 * @return float Confidence score (0-100)
-	 *
-	 * @spec openspec/specs/ocr-document-scanning/spec.md
-	 */
-	private function getConfidenceScore(string $filePath, string $languages, int $dpi): float {
-		try {
-			$output = [];
-			$returnCode = 0;
-			$longArgs = str_replace('+', '+', $languages);
-			$command = sprintf(
-				'tesseract %s stdout -l %s --dpi %d -c hocr_font_info=0 hocr 2>/dev/null',
-				escapeshellarg($filePath),
-				escapeshellarg($longArgs),
-				$dpi
-			);
-			exec($command, $output, $returnCode);
-
-			if ($returnCode !== 0) {
-				return 0.0;
-			}
-
-			$hocrContent = implode("\n", $output);
-			$confidences = [];
-			$matchCount = preg_match_all(
-				'/x_wconf\s+(\d+)/',
-				$hocrContent,
-				$matches
-			);
-
-			if ($matchCount > 0 && empty($matches[1]) === false) {
-				foreach ($matches[1] as $conf) {
-					$confidences[] = (float)$conf;
-				}
-			}
-
-			if (empty($confidences) === true) {
-				return 0.0;
-			}
-
-			return round(array_sum($confidences) / count($confidences), 1);
-		} catch (Exception $e) {
-			$this->logger->debug(
-				'Could not determine OCR confidence',
-				['exception' => $e->getMessage()]
-			);
-			return 0.0;
-		}//end try
-
-	}//end getConfidenceScore()
 }//end class

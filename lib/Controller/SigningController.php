@@ -22,10 +22,10 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use Exception;
+use OCA\Filinq\Controller\Support\SigningServices;
 use OCA\Filinq\Exception\RegisterNotConfiguredException;
-use OCA\Filinq\Service\SigningAuditService;
-use OCA\Filinq\Service\SigningService;
-use OCA\Filinq\Service\SigningVerificationService;
+use OCA\Filinq\Exception\StepUpRequiredException;
+use OCA\Filinq\Kernel\AppIdentity;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -45,16 +45,19 @@ use Psr\Log\LoggerInterface;
  * @link     https://www.filinq.app
  *
  * @spec openspec/specs/document-signing/spec.md
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The thirteenth class is
+ * StepUpRequiredException: the step-up hint the sign dialog needs rides on
+ * the error response, and only this controller knows the response shape.
  */
 class SigningController extends Controller {
+	use AnswersNotAuthenticated;
+
 	/**
 	 * Constructor
 	 *
-	 * @param string $appName App name
 	 * @param IRequest $request Request object
-	 * @param SigningService $signingService Signing service
-	 * @param SigningAuditService $auditService Audit service
-	 * @param SigningVerificationService $verificationService Verification service
+	 * @param SigningServices $services Signing, its audit trail and verification.
 	 * @param IUserSession $userSession User session
 	 * @param LoggerInterface $logger Logger
 	 * @param IL10N $l10n Localization
@@ -63,17 +66,14 @@ class SigningController extends Controller {
 	 * @return void
 	 */
 	public function __construct(
-		string $appName,
 		IRequest $request,
-		private readonly SigningService $signingService,
-		private readonly SigningAuditService $auditService,
-		private readonly SigningVerificationService $verificationService,
+		private readonly SigningServices $services,
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
 		private readonly IL10N $l10n,
 		private readonly IGroupManager $groupManager,
 	) {
-		parent::__construct(appName: $appName, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 
 	}//end __construct()
 
@@ -85,19 +85,20 @@ class SigningController extends Controller {
 	 * @NoAdminRequired
 	 *
 	 * @spec openspec/changes/digital-signing-integration/tasks.md#6-1
+	 *
+	 * @no-admin-idor-exempt SignedArtifactProducer::initiatorDocument() resolves documentFileId through
+	 * the session user's own folder and refuses a file they cannot read; the initiator is always the
+	 * session user.
 	 */
 	public function createRequest(): JSONResponse {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Not authenticated')],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 			}
 
 			$data = $this->request->getParams();
-			$result = $this->signingService->createRequest(data: $data);
+			$result = $this->services->signing->createRequest(data: $data);
 			return new JSONResponse($result, Http::STATUS_CREATED);
 		} catch (Exception $e) {
 			return $this->errorResponse(message: 'Failed to create signing request', exception: $e);
@@ -118,10 +119,7 @@ class SigningController extends Controller {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Not authenticated')],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 			}
 
 			// WF2 security fix: pass the caller identity so the service scopes
@@ -135,7 +133,7 @@ class SigningController extends Controller {
 				$scope = '';
 			}
 
-			$result = $this->signingService->listRequests(callerUserId: $scope);
+			$result = $this->services->signing->listRequests(callerUserId: $scope);
 			return new JSONResponse($result);
 		} catch (RegisterNotConfiguredException $e) {
 			// Configuration missing is a setup state, not a failure —
@@ -170,10 +168,7 @@ class SigningController extends Controller {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Not authenticated')],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 			}
 
 			// WF2 + Wilco #6 fix (filinq#100, 2026-06-06): pass the caller
@@ -189,12 +184,9 @@ class SigningController extends Controller {
 				$scope = '';
 			}
 
-			$result = $this->signingService->getRequest(requestId: $id, callerUserId: $scope);
+			$result = $this->services->signing->getRequest(requestId: $id, callerUserId: $scope);
 			if ($result === null) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Signing request not found')],
-					statusCode: Http::STATUS_NOT_FOUND
-				);
+				return $this->notFoundResponse();
 			}
 
 			return new JSONResponse($result);
@@ -219,10 +211,7 @@ class SigningController extends Controller {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Not authenticated')],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 			}
 
 			// WF1 fix (filinq#100): only the initiator or an admin may
@@ -237,42 +226,18 @@ class SigningController extends Controller {
 			// found'), which we catch here and map to a single 404 (no UUID is
 			// echoed, so existence is not leaked).
 			$uid = $user->getUID();
-			$isAdmin = $this->groupManager->isAdmin($uid);
-			if ($isAdmin === false) {
-				try {
-					$request = $this->signingService->getRequest(requestId: $id);
-				} catch (Exception $e) {
-					return new JSONResponse(
-						data: ['error' => $this->l10n->t('Signing request not found')],
-						statusCode: Http::STATUS_NOT_FOUND
-					);
+			if ($this->groupManager->isAdmin($uid) === false) {
+				$refusal = $this->cancelRefusal(uid: $uid, id: $id);
+				if ($refusal !== null) {
+					return $refusal;
 				}
+			}
 
-				if ($request === null) {
-					return new JSONResponse(
-						data: ['error' => $this->l10n->t('Signing request not found')],
-						statusCode: Http::STATUS_NOT_FOUND
-					);
-				}
-
-				// The destructive transition needs the tighter initiator gate
-				// (signers are in scope for READ only).
-				if (($request['initiatorUserId'] ?? '') !== $uid) {
-					return new JSONResponse(
-						data: ['error' => $this->l10n->t('You are not allowed to cancel this signing request')],
-						statusCode: Http::STATUS_FORBIDDEN
-					);
-				}
-			}//end if
-
-			$result = $this->signingService->cancelRequest(requestId: $id);
+			$result = $this->services->signing->cancelRequest(requestId: $id);
 			if ($result === null) {
 				// Admin path or post-recheck null — race / vanished
 				// between fetch and cancel. Same generic 404.
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Signing request not found')],
-					statusCode: Http::STATUS_NOT_FOUND
-				);
+				return $this->notFoundResponse();
 			}
 
 			return new JSONResponse($result);
@@ -281,6 +246,55 @@ class SigningController extends Controller {
 		}//end try
 
 	}//end cancelRequest()
+
+	/**
+	 * Refuse a non-admin cancel unless the caller started the request.
+	 *
+	 * The record is read without caller scoping so the initiator gate applies
+	 * here: a signer may read a request but not cancel it.
+	 *
+	 * @param string $uid The session user.
+	 * @param string $id The signing request id.
+	 *
+	 * @return JSONResponse|null A 404 for a missing request, a 403 for a non-initiator, or null.
+	 *
+	 * @spec openspec/changes/digital-signing-integration/tasks.md#6-1
+	 */
+	private function cancelRefusal(string $uid, string $id): ?JSONResponse {
+		try {
+			$request = $this->services->signing->getRequest(requestId: $id);
+		} catch (Exception $e) {
+			return $this->notFoundResponse();
+		}
+
+		if ($request === null) {
+			return $this->notFoundResponse();
+		}
+
+		if (($request['initiatorUserId'] ?? '') !== $uid) {
+			return new JSONResponse(
+				data: ['error' => $this->l10n->t('You are not allowed to cancel this signing request')],
+				statusCode: Http::STATUS_FORBIDDEN
+			);
+		}
+
+		return null;
+	}//end cancelRefusal()
+
+	/**
+	 * The single 404 for a signing request that is missing or out of reach.
+	 *
+	 * @return JSONResponse The 404 answer; it never names the id.
+	 *
+	 * @spec openspec/changes/digital-signing-integration/tasks.md#6-1
+	 */
+	private function notFoundResponse(): JSONResponse {
+		return new JSONResponse(
+			data: ['error' => $this->l10n->t('Signing request not found')],
+			statusCode: Http::STATUS_NOT_FOUND
+		);
+
+	}//end notFoundResponse()
 
 	/**
 	 * Sign a document
@@ -292,19 +306,19 @@ class SigningController extends Controller {
 	 * @NoAdminRequired
 	 *
 	 * @spec openspec/changes/digital-signing-integration/tasks.md#6-1
+	 *
+	 * @no-admin-idor-exempt SigningActorResolver::loadAuthorisedSigner() refuses unless the signer record
+	 * belongs to this request and its userId is the session user.
 	 */
 	public function sign(string $id): JSONResponse {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Not authenticated')],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 			}
 
 			$signerId = $this->request->getParam('signerId', '');
-			$result = $this->signingService->sign(requestId: $id, signerId: $signerId);
+			$result = $this->services->signing->sign(requestId: $id, signerId: $signerId);
 			return new JSONResponse($result);
 		} catch (Exception $e) {
 			return $this->errorResponse(message: 'Failed to sign document', exception: $e);
@@ -322,20 +336,20 @@ class SigningController extends Controller {
 	 * @NoAdminRequired
 	 *
 	 * @spec openspec/changes/digital-signing-integration/tasks.md#6-1
+	 *
+	 * @no-admin-idor-exempt SigningActorResolver::loadAuthorisedSigner() refuses unless the signer record
+	 * belongs to this request and its userId is the session user.
 	 */
 	public function decline(string $id): JSONResponse {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Not authenticated')],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 			}
 
 			$signerId = $this->request->getParam('signerId', '');
 			$reason = $this->request->getParam('reason', '');
-			$result = $this->signingService->decline(requestId: $id, signerId: $signerId, reason: $reason);
+			$result = $this->services->signing->decline(requestId: $id, signerId: $signerId, reason: $reason);
 			return new JSONResponse($result);
 		} catch (Exception $e) {
 			return $this->errorResponse(message: 'Failed to decline signing request', exception: $e);
@@ -351,15 +365,15 @@ class SigningController extends Controller {
 	 * @NoAdminRequired
 	 *
 	 * @spec openspec/changes/digital-signing-integration/tasks.md#6-1
+	 *
+	 * @no-admin-idor-exempt each id is read with getRequest(callerUserId: session user), which hides
+	 * requests the caller neither initiated nor signs, and only the caller's own signer record is signed.
 	 */
 	public function bulkSign(): JSONResponse {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Not authenticated')],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 			}
 
 			$requestIds = $this->request->getParam('requestIds', []);
@@ -367,7 +381,7 @@ class SigningController extends Controller {
 				$requestIds = [];
 			}
 
-			$results = $this->signingService->bulkSign(requestIds: $requestIds);
+			$results = $this->services->signing->bulkSign(requestIds: $requestIds);
 			return new JSONResponse($results);
 		} catch (Exception $e) {
 			return $this->errorResponse(message: 'Failed to bulk sign', exception: $e);
@@ -396,7 +410,7 @@ class SigningController extends Controller {
 				);
 			}
 
-			$result = $this->verificationService->verifyDocument(fileId: $fileId, userId: $user->getUID());
+			$result = $this->services->verification->verifyDocument(fileId: $fileId, userId: $user->getUID());
 			return new JSONResponse($result);
 		} catch (Exception $e) {
 			return $this->errorResponse(message: 'Failed to verify document', exception: $e);
@@ -419,10 +433,7 @@ class SigningController extends Controller {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Not authenticated')],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 			}
 
 			// Security (M2 + Wilco #6 / filinq#100): only the initiator,
@@ -435,19 +446,16 @@ class SigningController extends Controller {
 			$isAdmin = $this->groupManager->isAdmin($uid);
 			if ($isAdmin === false) {
 				// Non-admin branch only, so the read is always scoped to $uid.
-				$request = $this->signingService->getRequest(
+				$request = $this->services->signing->getRequest(
 					requestId: $id,
 					callerUserId: $uid
 				);
 				if ($request === null) {
-					return new JSONResponse(
-						data: ['error' => $this->l10n->t('Signing request not found')],
-						statusCode: Http::STATUS_NOT_FOUND
-					);
+					return $this->notFoundResponse();
 				}
 			}
 
-			$result = $this->auditService->getAuditTrail(signingRequestId: $id);
+			$result = $this->services->audit->getAuditTrail(signingRequestId: $id);
 			return new JSONResponse($result);
 		} catch (Exception $e) {
 			return $this->errorResponse(message: 'Failed to get audit trail', exception: $e);
@@ -487,10 +495,17 @@ class SigningController extends Controller {
 		// no longer act as an existence-probing oracle. The status code is
 		// still honoured from the exception (e.g. 400 for invalid input) so
 		// genuine client errors are not masked as a generic 500.
-		return new JSONResponse(
-			['error' => $this->l10n->t($message)],
-			$statusCode
-		);
+		$body = ['error' => $this->l10n->t($message)];
+
+		// Identity rails (signer-identity-rails REQ-DDSIR-003): a refusal for
+		// missing, stale or insufficient identity evidence tells the sign dialog
+		// which assurance to step up to. It is thrown only after the ownership
+		// check, so only the signer the record belongs to ever sees it.
+		if ($exception instanceof StepUpRequiredException) {
+			$body['stepUp'] = $exception->stepUp();
+		}
+
+		return new JSONResponse($body, $statusCode);
 
 	}//end errorResponse()
 }//end class

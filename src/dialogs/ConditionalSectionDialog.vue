@@ -21,23 +21,22 @@
 			</p>
 		</template>
 		<template #actions>
-			<NcButton @click="$emit('close')">
-				{{ t('filinq', 'Cancel') }}
-			</NcButton>
-			<NcButton variant="primary" @click="confirm">
-				{{ t('filinq', 'Insert') }}
-			</NcButton>
+			<CnDialogActions
+				:confirmLabel="t('filinq', 'Insert')"
+				@cancel="$emit('close')"
+				@submit="confirm" />
 		</template>
 	</NcDialog>
 </template>
 
 <script>
-import { NcButton, NcDialog, NcSelect, NcTextField } from '@conduction/nextcloud-vue'
+import { CnDialogActions } from '@conduction/nextcloud-vue'
 import { translate as t } from '@nextcloud/l10n'
+import { NcDialog, NcSelect, NcTextField } from '@nextcloud/vue'
 
 export default {
 	name: 'ConditionalSectionDialog',
-	components: { NcButton, NcDialog, NcSelect, NcTextField },
+	components: { CnDialogActions, NcDialog, NcSelect, NcTextField },
 	emits: ['close', 'insert'],
 	data() {
 		return {

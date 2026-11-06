@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\SigningController;
+use OCA\Filinq\Controller\Support\SigningServices;
 use OCA\Filinq\Exception\RegisterNotConfiguredException;
 use OCA\Filinq\Service\SigningAuditService;
 use OCA\Filinq\Service\SigningService;
@@ -40,6 +41,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Filinq\Exception\StepUpRequiredException;
 
 /**
  * Tests for SigningController::listRequests() error handling
@@ -83,6 +85,7 @@ class SigningControllerTest extends TestCase {
 		parent::setUp();
 
 		$request = $this->createMock(IRequest::class);
+		$request->method('getParam')->willReturnCallback(fn (string $key, mixed $default = null): mixed => $default);
 		$this->signingService = $this->createMock(SigningService::class);
 		$auditService = $this->createMock(SigningAuditService::class);
 		$verificationService = $this->createMock(SigningVerificationService::class);
@@ -102,11 +105,8 @@ class SigningControllerTest extends TestCase {
 		$this->userSession->method('getUser')->willReturn($user);
 
 		$this->controller = new SigningController(
-			'filinq',
 			$request,
-			$this->signingService,
-			$auditService,
-			$verificationService,
+			new SigningServices(signing: $this->signingService, audit: $auditService, verification: $verificationService),
 			$this->userSession,
 			$this->logger,
 			$l10n,
@@ -187,4 +187,101 @@ class SigningControllerTest extends TestCase {
 
 	}//end testListRequestsReturnsServiceResultOnSuccess()
 
+	/**
+	 * A step-up refusal answers 403 with the hint the sign dialog needs (REQ-DDSIR-003).
+	 *
+	 * @return void
+	 */
+	public function testAStepUpRefusalAnswers403WithTheHint(): void {
+		$this->signingService->method('sign')->willThrowException(
+			new StepUpRequiredException(reason: 'insufficient', requiredAssurance: 'substantial', heldAssurance: 'low', provider: 'oidc-broker')
+		);
+
+		$response = $this->controller->sign('req-1');
+
+		$this->assertSame(403, $response->getStatus());
+		$this->assertSame(
+			['required' => true, 'reason' => 'insufficient', 'requiredAssurance' => 'substantial', 'heldAssurance' => 'low', 'provider' => 'oidc-broker'],
+			$response->getData()['stepUp'] ?? null
+		);
+
+	}//end testAStepUpRefusalAnswers403WithTheHint()
+
+	/**
+	 * Any other failure carries no hint.
+	 *
+	 * @return void
+	 */
+	public function testAnOrdinaryRefusalCarriesNoHint(): void {
+		$this->signingService->method('decline')->willThrowException(new \RuntimeException('Not authorized to decline as this signer', 403));
+
+		$response = $this->controller->decline('req-1');
+
+		$this->assertSame(403, $response->getStatus());
+		$this->assertArrayNotHasKey('stepUp', $response->getData());
+
+	}//end testAnOrdinaryRefusalCarriesNoHint()
+
+
+	/**
+	 * A controller whose request names another user, over the given verifier and session user.
+	 *
+	 * @param SigningVerificationService|MockObject $verification The verifier.
+	 * @param string|null                           $uid          The session user, null for nobody.
+	 *
+	 * @return SigningController The controller.
+	 */
+	private function forgedController(SigningVerificationService|MockObject $verification, ?string $uid): SigningController {
+		$request = $this->createMock(IRequest::class);
+		$request->method('getParam')->willReturnCallback(fn (string $key, mixed $default = null): mixed => ($key === 'userId') ? 'mallory' : $default);
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn((string) $uid);
+		$session = $this->createMock(IUserSession::class);
+		$session->method('getUser')->willReturn(($uid === null) ? null : $user);
+		$l10n = $this->createMock(IL10N::class);
+		$l10n->method('t')->willReturnArgument(0);
+
+		return new SigningController(
+			$request,
+			new SigningServices(signing: $this->signingService, audit: $this->createMock(SigningAuditService::class), verification: $verification),
+			$session,
+			$this->logger,
+			$l10n,
+			$this->createMock(IGroupManager::class)
+		);
+
+	}//end forgedController()
+
+	/**
+	 * A document is verified for the session user, not for a userId the request names.
+	 *
+	 * @return void
+	 */
+	public function testVerifyRunsForTheSessionUserNotAForgedUserId(): void {
+		$verification = $this->createMock(SigningVerificationService::class);
+		$verification->expects($this->once())
+			->method('verifyDocument')
+			->with(17, 'alice')
+			->willReturn(['valid' => true]);
+
+		$response = $this->forgedController(verification: $verification, uid: 'alice')->verify(fileId: 17);
+
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+
+	}//end testVerifyRunsForTheSessionUserNotAForgedUserId()
+
+	/**
+	 * With nobody signed in nothing is verified, not even for a userId the request names.
+	 *
+	 * @return void
+	 */
+	public function testVerifyAsksForASessionUser(): void {
+		$verification = $this->createMock(SigningVerificationService::class);
+		$verification->expects($this->never())->method('verifyDocument');
+
+		$response = $this->forgedController(verification: $verification, uid: null)->verify(fileId: 17);
+
+		$this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
+
+	}//end testVerifyAsksForASessionUser()
 }//end class

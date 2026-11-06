@@ -101,7 +101,7 @@ class BatchStateRepositoryTest extends TestCase {
 	 * batch writes must not be subject to it — ownership is enforced in
 	 * BatchStateService::getBatch() instead — so if this flag ever flips, the
 	 * whole batch flow fails closed for every user who is not in
-	 * docudesk-policy-admins, and this test is what says so.
+	 * filinq-policy-admins, and this test is what says so.
 	 *
 	 * @return void
 	 */

@@ -26,6 +26,8 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use Exception;
+use OCA\Filinq\Kernel\ConsentUpdate;
+use OCA\Filinq\Kernel\Contracts\ConsentCrudServiceInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -39,7 +41,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/consent-management/spec.md
  */
-class ConsentCrudService {
+class ConsentCrudService implements ConsentCrudServiceInterface {
 	/**
 	 * Constructor for ConsentCrudService
 	 *
@@ -353,6 +355,9 @@ class ConsentCrudService {
 		array $data,
 		?\OCP\IUser $user = null,
 	): array {
-		return $this->consentService->validateAndUpdateConsent($consentId, $register, $schema, $data, $user);
+		return $this->consentService->validateAndUpdateConsent(
+			new ConsentUpdate(consentId: $consentId, register: $register, schema: $schema, data: $data),
+			$user
+		);
 	}//end updateConsentStatus()
 }//end class

@@ -266,7 +266,7 @@ class WordDiffer {
 	 * @return array<int, array{op:string, left?:string, right?:string}> Ops.
 	 */
 	private function lcsDiff(array $a, array $b): array {
-		return $this->backtrack(a: $a, b: $b, lcs: $this->lcsTable(a: $a, b: $b));
+		return $this->backtrack(a: $a, b: $b);
 	}//end lcsDiff()
 
 	/**
@@ -301,15 +301,15 @@ class WordDiffer {
 	}//end lcsTable()
 
 	/**
-	 * Backtrack an LCS length table into an ordered op list.
+	 * Backtrack the LCS length table of two word lists into an ordered op list.
 	 *
 	 * @param array<int, string> $a Left words.
 	 * @param array<int, string> $b Right words.
-	 * @param array<int, array<int, int>> $lcs The LCS length table.
 	 *
 	 * @return array<int, array{op:string, left?:string, right?:string}> Ops.
 	 */
-	private function backtrack(array $a, array $b, array $lcs): array {
+	private function backtrack(array $a, array $b): array {
+		$lcs = $this->lcsTable(a: $a, b: $b);
 		$n = count($a);
 		$m = count($b);
 
@@ -344,22 +344,24 @@ class WordDiffer {
 			$rightPos++;
 		}//end while
 
-		while ($leftPos < $n) {
-			$ops[] = [
-				'op' => 'delete',
-				'left' => $a[$leftPos],
-			];
-			$leftPos++;
-		}
-
-		while ($rightPos < $m) {
-			$ops[] = [
-				'op' => 'insert',
-				'right' => $b[$rightPos],
-			];
-			$rightPos++;
-		}
-
-		return $ops;
+		return array_merge(
+			$ops,
+			$this->trailing(words: array_slice($a, $leftPos), op: 'delete'),
+			$this->trailing(words: array_slice($b, $rightPos), op: 'insert')
+		);
 	}//end backtrack()
+
+	/**
+	 * One op per word left over once the other side ran out: delete for the
+	 * left side, insert for the right.
+	 *
+	 * @param array<int, string> $words The words left over.
+	 * @param string             $op    'delete' or 'insert'.
+	 *
+	 * @return array<int, array{op:string, left?:string, right?:string}> Ops.
+	 */
+	private function trailing(array $words, string $op): array {
+		$side = ['delete' => 'left', 'insert' => 'right'][$op];
+		return array_map(static fn (string $word): array => ['op' => $op, $side => $word], $words);
+	}//end trailing()
 }//end class

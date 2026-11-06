@@ -1,55 +1,59 @@
 # Tasks: woo-request-workflow
 
-<!-- HYDRA CAP: max 20 unindented `- [ ]` lines. This file uses 14.
+<!-- HYDRA CAP: max 20 unindented `- [ ]` lines. This file uses 6.
      Acceptance criteria are plain bullets, not checkboxes. -->
 
-## 1. Register + seed data
+Re-scoped 2026-10-05 by decision D1. The original sixteen tasks (schemas,
+intake and deadline, collection, dedupe, assessment, package, lifecycle, the
+Woo-verzoeken UI and the entity-search hand-over) were never started and are
+withdrawn; `proposal.md` says where each one now lives. Woo row 7.9. Wave 1.
 
-- [ ] 1.1 Add `wooRequest` and `requestDocument` schemas to the `dossier` register in `lib/Settings/filinq_register.json` (REQ-DDWRW-001, REQ-DDWRW-008)
-  - All properties per design.md D1 (no requester name/email/address fields); `x-openregister-lifecycle` on `wooRequest` with canonical `initial: registered` and the REQ-DDWRW-008 transitions; register-i18n tags on new user-facing string fields; register version bump with changelog entry.
+Every test named here fails on `development` today: no Woo template is seeded,
+no `woo-decision` contract exists, and `DocumentGenerationRequestService`
+renders any data it is given.
 
-- [ ] 1.2 Add seed data: demo `wooRequest` + unique/duplicate `requestDocument` rows, the additional Woo Art. 5.1/5.2 `base` ground objects, and `woo-inventarislijst` + `woo-besluit` template seeds (design.md Seed Data, REQ-DDWRW-005/006/007)
-  - `base` schema untouched; article references carried in ground names/descriptions; placeholder identifiers only.
+## 1. Templates
 
-## 2. Backend
+- [ ] 1.1 Seed `woo-besluit` and `woo-inventarislijst` (REQ-DDWRW-006). Files: `lib/Settings/filinq_register.json` (two `template` seed objects, slug, `dataContract: woo-decision`, placeholder body; register version bump), the seed path that imports templates.
+  - GIVEN a fresh install WHEN the seed runs THEN both slugs exist.
+  - GIVEN an edited `woo-besluit` WHEN the app is upgraded THEN the edit survives.
+  - Test: PHPUnit `WooTemplateSeedTest::testBothTemplatesAreSeeded`, `::testAnEditedTemplateSurvivesAnUpgrade`. Add the seed rows by hand; do not run a generator over the register file.
 
-- [ ] 2.1 Implement intake + statutory deadline logic in `lib/Service/WooRequestService.php` (REQ-DDWRW-002)
-  - Clock-injected; 4-week deadline; single 2-week-max extension with mandatory reason, second attempt refused; no delegation to OR's Art. 12(3) helper.
+## 2. The contract
 
-- [ ] 2.2 Implement collection + hash dedupe (REQ-DDWRW-003, REQ-DDWRW-004)
-  - Folder + bridge-staged sources (bridge presence-gated); copies into the dossier folder; sha256 hashing; duplicate collapse with `duplicateOfRef`; duplicates excluded from assessment/inventory/package but listed.
+- [ ] 2.1 `WooDecisionContextBuilder` and its hook in the generator (REQ-DDWRW-010, design R1). Files: `lib/Service/Woo/WooDecisionContextBuilder.php`, `lib/Exception/WooDecisionContractException.php`, `lib/Service/DocumentGenerationRequestService.php` (call the builder only for `dataContract: woo-decision`).
+  - GIVEN a withheld document without a ground WHEN dispatched THEN refused naming it, and no file.
+  - GIVEN a missing `decisionDate` and a duplicate inventory number WHEN dispatched THEN both named in one error.
+  - GIVEN a template without the contract WHEN generated THEN behaviour is as today.
+  - Test: PHPUnit `WooDecisionContextBuilderTest::testAWithheldDocumentNeedsAGround`, `::testAllProblemsAreReported`, `::testOtherTemplatesAreUntouched`. `testAWithheldDocumentNeedsAGround` must be shown failing on `development` first; paste the line in the PR body.
+- [ ] 2.2 Grounds by label (REQ-DDWRW-011). Files: `lib/Service/Woo/WooDecisionContextBuilder.php`, the grounds resolver class shared with `grondslagen-read-from-dossiq` (`lib/Service/Grounds/RefusalGroundsResolver.php`; whichever change lands first creates it, the other reuses it).
+  - GIVEN code `5.1.2.e` WHEN resolved THEN `{code, article, label}` reaches the template.
+  - GIVEN an unknown code, or a retired one without `allowRetiredGrounds` WHEN dispatched THEN refused naming it.
+  - Test: PHPUnit `WooDecisionContextBuilderTest::testGroundsAreResolvedToLabels`, `::testAnUnknownGroundIsRefused`, `::testARetiredGroundNeedsTheFlag`. Double the resolver from the real return shape of `OCA\Dossiq\Woo\WooRefusalGrounds::byCode()` (keys `id, code, article, paragraph, letter, label, description, parent, status, legalSource`, as `dossiq/woo-refusal-grounds-list` design D-3 fixes it). Read the class on dossiq `development` before writing the double; if it is not merged yet, say so in the PR body.
 
-- [ ] 2.3 Implement assessment + exemption-ground tagging (REQ-DDWRW-005)
-  - `withhold`/`partially_disclose` require ≥1 ground; passage tags store `base` slugs; rendering via existing `BasesResolverService` with visible unknown-slug warnings.
+## 3. The two documents
 
-- [ ] 2.4 Implement inventarislijst generation and disclosure-package assembly (REQ-DDWRW-006, REQ-DDWRW-007)
-  - Inventory via existing `api/documents/generate` + seeded template with stable inventory numbers; besluit via existing correspondence generation; package refuses `partially_disclose` items without `redactedFileRef`; excludes `withhold` + duplicates.
+- [ ] 3.1 Template bodies and agreement (REQ-DDWRW-007). Files: the two template bodies in the seed, `tests/fixtures/woo-decision.json` (three documents: disclose, partially disclose, withhold).
+  - GIVEN the fixture WHEN both templates render THEN the letter cites documents 2 and 3 with grounds in words, the inventory lists 1 to 3 with the same numbers and assessments, and document 2 is never shown as disclosed.
+  - Test: PHPUnit `WooDecisionTemplatesTest::testTheLetterAndTheInventoryAgree` renders the real seeded bodies through the real generator with only storage doubled.
+- [ ] 3.2 Through the command, as dossiq calls it (wiring). Files: `tests/Unit/EventListener/DocumentGenerationRequestedListenerWooTest.php`, `docs/features/woo-decision-templates.md` (the `wooDecision` keys, the refusals, the result keys, and that dossiq or decidiq is the caller).
+  - GIVEN the real `DocumentGenerationRequestedEvent` with `templateSlug: woo-besluit` and the fixture, dispatched through a real `IEventDispatcher` wired by `Application::register()` THEN `isHandled()` is true and `getResult()['fileId']` is set.
+  - GIVEN the same with a withheld document without a ground THEN `getError()` is set and `isHandled()` is false.
+  - Test: the listener test above.
+  - Cross-app: record in the PR body that dossiq's `FilinqTemplateEngineAdapter` (or decidiq's, if the besluit raise moves) must send `templateSlug` and `data.wooDecision` in this shape, with a test on that side using the same event class.
 
-- [ ] 2.5 Implement lifecycle guard conditions + `lib/Controller/WooRequestController.php` with `api/woo-requests/*` routes (REQ-DDWRW-008)
-  - Cross-object guards evaluated before transitions; every controller method carries explicit auth attributes and per-object guards; routes registered before the catch-all.
+## 4. Delivery
 
-## 3. Frontend
+- [ ] 4.1 Strings, docs and end-to-end. Files: `l10n/en.json`, `l10n/nl.json`, `docs/features/woo-decision-templates.md`, `tests/e2e/workflows/woo-request-workflow.spec.ts` (edit `woo-besluit` in the template editor, generate through the API with the fixture, open the stored PDF).
+  - Test: the Playwright spec.
 
-- [ ] 3.1 Woo-verzoeken index manifest page (REQ-DDWRW-009)
-  - `CnIndexPage`/`CnDataTable`; status + deadline chips; manifest schema refs use slugs.
+Verification (plain bullets on purpose). The building agent follows `openspec/woo-build-rules.md`:
 
-- [ ] 3.2 Request detail: lifecycle header + extension dialog, collection surface, assessment surface with grounds multi-select and passage-tag editor, document/package actions (REQ-DDWRW-002..007, REQ-DDWRW-009)
-  - Deep-link to batch entity review (no duplicate review UI); modals/dialogs in own files; `NcSelect` with `inputLabel`; NL Design tokens.
-
-## 4. Quality
-
-- [ ] 4.1 PHPUnit unit tests for WooRequestService (deadlines, dedupe, guards, package refusal) and controller — minimum 75% coverage on new code
-  - Run inside the container: `docker exec -w /var/www/html/custom_apps/filinq nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`.
-  - PUT-semantic saves verified (a non-changed field survives a status transition).
-
-- [ ] 4.2 Playwright e2e specs `tests/e2e/workflows/woo-request-workflow.spec.ts` + `tests/e2e/spec-coverage/woo-requests.spec.ts` covering the `@e2e`-referenced scenarios end-to-end with OpenRegister on the Postgres dev instance
-  - Test through the UI; includes the nldesign-theme accessibility pass.
-
-- [ ] 4.3 Verify the anonymize → assess → package chain end-to-end with OpenRegister entity detection on a seeded request dossier
-  - Redacted derivatives produced by the existing folder-batch flow land in the package; consent transitions remain valid per GDPR/WOO lifecycle.
-
-- [ ] 4.4 i18n: EN + NL for all new UI strings (statuses, chips, assessment labels, dialogs)
-  - Keys in English.
-
-- [ ] 4.5 Documentation `docs/features/woo-request-workflow.md` with Playwright MCP screenshots (ADR-010); run `openspec validate woo-request-workflow --strict`
-  - Documents the statutory-term semantics, the grondslagen reuse and the ZyLAB-category positioning.
+- Own clone, `git checkout --no-track -b <branch> origin/development`, `TMPDIR` a sibling outside the clone.
+- PHPUnit judged by the `Tests:` line, or with `--no-coverage`; a green suite exits 1 without a coverage driver.
+- `run-hydra-gates.sh --base origin/development`, counting the gates that ran.
+- Once before push: `COMPOSER_PROCESS_TIMEOUT=0 composer check:strict`, `npm run lint`, and every check `code-quality.yml` requires, read from `package.json`.
+- CI runs the gates on the full tree; the coverage guard needs a test for every added statement.
+- `openspec validate woo-request-workflow --type change --strict` passes.
+- One PR, `--base development`; merge `development` in, never rebase; no `Co-Authored-By` trailer.
+- Done means merged on `development` with CI green. Row 7.9 is `production` only once a store release of filinq carries the templates and a dossiq release calls them.

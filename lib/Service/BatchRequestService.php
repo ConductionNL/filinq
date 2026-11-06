@@ -32,6 +32,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\BatchRequestServiceInterface;
 use OCP\AppFramework\Http;
 use OCP\IL10N;
 
@@ -46,7 +47,7 @@ use OCP\IL10N;
  *
  * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-anonymization
  */
-class BatchRequestService {
+class BatchRequestService implements BatchRequestServiceInterface {
 
 	/**
 	 * Validator for the shared `unredactedEntities[]` payload shape.

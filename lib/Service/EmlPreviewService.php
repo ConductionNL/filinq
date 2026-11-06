@@ -28,6 +28,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\EmlPreviewServiceInterface;
 use OCP\App\IAppManager;
 use OCP\Files\File;
 use Psr\Container\ContainerInterface;
@@ -45,7 +46,7 @@ use Throwable;
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://www.filinq.app
  */
-class EmlPreviewService {
+class EmlPreviewService implements EmlPreviewServiceInterface {
 
 	/**
 	 * OpenRegister FileService FQCN — exposes anonymizeEmlStructured().

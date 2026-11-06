@@ -1,0 +1,712 @@
+[
+	{
+		"options": {},
+		"calls": [
+			[
+				"anonymise",
+				1,
+				{},
+				{
+					"running": true,
+					"total": 4,
+					"done": 0,
+					"failed": 0,
+					"unreviewed": [
+						{
+							"fileId": 2,
+							"name": "f2"
+						},
+						{
+							"fileId": 8,
+							"name": "f8"
+						}
+					]
+				}
+			],
+			[
+				"anonymise",
+				"3",
+				{},
+				{
+					"running": true,
+					"total": 4,
+					"done": 1,
+					"failed": 0,
+					"unreviewed": [
+						{
+							"fileId": 2,
+							"name": "f2"
+						},
+						{
+							"fileId": 8,
+							"name": "f8"
+						}
+					]
+				}
+			],
+			[
+				"anonymise",
+				5,
+				{},
+				{
+					"running": true,
+					"total": 4,
+					"done": 1,
+					"failed": 1,
+					"unreviewed": [
+						{
+							"fileId": 2,
+							"name": "f2"
+						},
+						{
+							"fileId": 8,
+							"name": "f8"
+						}
+					]
+				}
+			],
+			[
+				"anonymise",
+				10,
+				{},
+				{
+					"running": true,
+					"total": 4,
+					"done": 1,
+					"failed": 2,
+					"unreviewed": [
+						{
+							"fileId": 2,
+							"name": "f2"
+						},
+						{
+							"fileId": 8,
+							"name": "f8"
+						}
+					]
+				}
+			]
+		],
+		"batch": {
+			"running": false,
+			"total": 4,
+			"done": 2,
+			"failed": 2,
+			"unreviewed": [
+				{
+					"fileId": 2,
+					"name": "f2"
+				},
+				{
+					"fileId": 8,
+					"name": "f8"
+				}
+			]
+		},
+		"statuses": [
+			[
+				1,
+				"completed"
+			],
+			[
+				2,
+				"extracted"
+			],
+			[
+				"3",
+				"error"
+			],
+			[
+				4,
+				"completed"
+			],
+			[
+				5,
+				"error"
+			],
+			[
+				8,
+				"extracted"
+			],
+			[
+				9,
+				"queued"
+			],
+			[
+				10,
+				"anonymising"
+			]
+		]
+	},
+	{
+		"options": {
+			"fileIds": [
+				1,
+				"3",
+				6,
+				2
+			]
+		},
+		"calls": [
+			[
+				"anonymise",
+				1,
+				{},
+				{
+					"running": true,
+					"total": 2,
+					"done": 0,
+					"failed": 0,
+					"unreviewed": [
+						{
+							"fileId": 2,
+							"name": "f2"
+						}
+					]
+				}
+			],
+			[
+				"anonymise",
+				"3",
+				{},
+				{
+					"running": true,
+					"total": 2,
+					"done": 1,
+					"failed": 0,
+					"unreviewed": [
+						{
+							"fileId": 2,
+							"name": "f2"
+						}
+					]
+				}
+			]
+		],
+		"batch": {
+			"running": false,
+			"total": 2,
+			"done": 1,
+			"failed": 1,
+			"unreviewed": [
+				{
+					"fileId": 2,
+					"name": "f2"
+				}
+			]
+		},
+		"statuses": [
+			[
+				1,
+				"completed"
+			],
+			[
+				2,
+				"extracted"
+			],
+			[
+				"3",
+				"error"
+			],
+			[
+				4,
+				"completed"
+			],
+			[
+				5,
+				"extracted"
+			],
+			[
+				8,
+				"extracted"
+			],
+			[
+				9,
+				"queued"
+			],
+			[
+				10,
+				"extracted"
+			]
+		]
+	},
+	{
+		"options": {
+			"files": [
+				{
+					"fileId": 6
+				},
+				{
+					"fileId": 7
+				}
+			],
+			"appendBasisSummary": true
+		},
+		"calls": [
+			[
+				"ensure",
+				{
+					"fileId": 6
+				},
+				{
+					"running": true,
+					"total": 0,
+					"done": 0,
+					"failed": 0,
+					"unreviewed": []
+				}
+			],
+			[
+				"ensure",
+				{
+					"fileId": 7
+				},
+				{
+					"running": true,
+					"total": 0,
+					"done": 0,
+					"failed": 0,
+					"unreviewed": []
+				}
+			],
+			[
+				"anonymise",
+				1,
+				{
+					"appendBasisSummary": true
+				},
+				{
+					"running": true,
+					"total": 5,
+					"done": 0,
+					"failed": 0,
+					"unreviewed": [
+						{
+							"fileId": 2,
+							"name": "f2"
+						},
+						{
+							"fileId": 8,
+							"name": "f8"
+						}
+					]
+				}
+			],
+			[
+				"anonymise",
+				"3",
+				{
+					"appendBasisSummary": true
+				},
+				{
+					"running": true,
+					"total": 5,
+					"done": 1,
+					"failed": 0,
+					"unreviewed": [
+						{
+							"fileId": 2,
+							"name": "f2"
+						},
+						{
+							"fileId": 8,
+							"name": "f8"
+						}
+					]
+				}
+			],
+			[
+				"anonymise",
+				5,
+				{
+					"appendBasisSummary": true
+				},
+				{
+					"running": true,
+					"total": 5,
+					"done": 1,
+					"failed": 1,
+					"unreviewed": [
+						{
+							"fileId": 2,
+							"name": "f2"
+						},
+						{
+							"fileId": 8,
+							"name": "f8"
+						}
+					]
+				}
+			],
+			[
+				"anonymise",
+				10,
+				{
+					"appendBasisSummary": true
+				},
+				{
+					"running": true,
+					"total": 5,
+					"done": 1,
+					"failed": 2,
+					"unreviewed": [
+						{
+							"fileId": 2,
+							"name": "f2"
+						},
+						{
+							"fileId": 8,
+							"name": "f8"
+						}
+					]
+				}
+			],
+			[
+				"anonymise",
+				6,
+				{
+					"appendBasisSummary": true
+				},
+				{
+					"running": true,
+					"total": 5,
+					"done": 2,
+					"failed": 2,
+					"unreviewed": [
+						{
+							"fileId": 2,
+							"name": "f2"
+						},
+						{
+							"fileId": 8,
+							"name": "f8"
+						}
+					]
+				}
+			]
+		],
+		"batch": {
+			"running": false,
+			"total": 5,
+			"done": 3,
+			"failed": 2,
+			"unreviewed": [
+				{
+					"fileId": 2,
+					"name": "f2"
+				},
+				{
+					"fileId": 8,
+					"name": "f8"
+				}
+			]
+		},
+		"statuses": [
+			[
+				1,
+				"completed"
+			],
+			[
+				2,
+				"extracted"
+			],
+			[
+				"3",
+				"error"
+			],
+			[
+				4,
+				"completed"
+			],
+			[
+				5,
+				"error"
+			],
+			[
+				8,
+				"extracted"
+			],
+			[
+				9,
+				"queued"
+			],
+			[
+				10,
+				"anonymising"
+			],
+			[
+				6,
+				"completed"
+			]
+		]
+	},
+	{
+		"options": {
+			"files": [],
+			"fileIds": []
+		},
+		"calls": [],
+		"batch": {
+			"running": false,
+			"total": 0,
+			"done": 0,
+			"failed": 0,
+			"unreviewed": []
+		},
+		"statuses": [
+			[
+				1,
+				"extracted"
+			],
+			[
+				2,
+				"extracted"
+			],
+			[
+				"3",
+				"extracted"
+			],
+			[
+				4,
+				"completed"
+			],
+			[
+				5,
+				"extracted"
+			],
+			[
+				8,
+				"extracted"
+			],
+			[
+				9,
+				"queued"
+			],
+			[
+				10,
+				"extracted"
+			]
+		]
+	},
+	{
+		"options": {
+			"files": "x",
+			"outputFormat": "pdf"
+		},
+		"calls": [
+			[
+				"anonymise",
+				1,
+				{
+					"outputFormat": "pdf"
+				},
+				{
+					"running": true,
+					"total": 4,
+					"done": 0,
+					"failed": 0,
+					"unreviewed": [
+						{
+							"fileId": 2,
+							"name": "f2"
+						},
+						{
+							"fileId": 8,
+							"name": "f8"
+						}
+					]
+				}
+			],
+			[
+				"anonymise",
+				"3",
+				{
+					"outputFormat": "pdf"
+				},
+				{
+					"running": true,
+					"total": 4,
+					"done": 1,
+					"failed": 0,
+					"unreviewed": [
+						{
+							"fileId": 2,
+							"name": "f2"
+						},
+						{
+							"fileId": 8,
+							"name": "f8"
+						}
+					]
+				}
+			],
+			[
+				"anonymise",
+				5,
+				{
+					"outputFormat": "pdf"
+				},
+				{
+					"running": true,
+					"total": 4,
+					"done": 1,
+					"failed": 1,
+					"unreviewed": [
+						{
+							"fileId": 2,
+							"name": "f2"
+						},
+						{
+							"fileId": 8,
+							"name": "f8"
+						}
+					]
+				}
+			],
+			[
+				"anonymise",
+				10,
+				{
+					"outputFormat": "pdf"
+				},
+				{
+					"running": true,
+					"total": 4,
+					"done": 1,
+					"failed": 2,
+					"unreviewed": [
+						{
+							"fileId": 2,
+							"name": "f2"
+						},
+						{
+							"fileId": 8,
+							"name": "f8"
+						}
+					]
+				}
+			]
+		],
+		"batch": {
+			"running": false,
+			"total": 4,
+			"done": 2,
+			"failed": 2,
+			"unreviewed": [
+				{
+					"fileId": 2,
+					"name": "f2"
+				},
+				{
+					"fileId": 8,
+					"name": "f8"
+				}
+			]
+		},
+		"statuses": [
+			[
+				1,
+				"completed"
+			],
+			[
+				2,
+				"extracted"
+			],
+			[
+				"3",
+				"error"
+			],
+			[
+				4,
+				"completed"
+			],
+			[
+				5,
+				"error"
+			],
+			[
+				8,
+				"extracted"
+			],
+			[
+				9,
+				"queued"
+			],
+			[
+				10,
+				"anonymising"
+			]
+		]
+	},
+	{
+		"options": {
+			"fileIds": [
+				"5"
+			]
+		},
+		"calls": [
+			[
+				"anonymise",
+				5,
+				{},
+				{
+					"running": true,
+					"total": 1,
+					"done": 0,
+					"failed": 0,
+					"unreviewed": []
+				}
+			]
+		],
+		"batch": {
+			"running": false,
+			"total": 1,
+			"done": 0,
+			"failed": 1,
+			"unreviewed": []
+		},
+		"statuses": [
+			[
+				1,
+				"extracted"
+			],
+			[
+				2,
+				"extracted"
+			],
+			[
+				"3",
+				"extracted"
+			],
+			[
+				4,
+				"completed"
+			],
+			[
+				5,
+				"error"
+			],
+			[
+				8,
+				"extracted"
+			],
+			[
+				9,
+				"queued"
+			],
+			[
+				10,
+				"extracted"
+			]
+		]
+	},
+	{
+		"none": {
+			"running": false,
+			"total": 0,
+			"done": 0,
+			"failed": 0,
+			"unreviewed": []
+		}
+	}
+]

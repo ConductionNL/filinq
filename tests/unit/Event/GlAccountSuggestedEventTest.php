@@ -24,6 +24,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Event;
 
 use OCA\Filinq\Event\GlAccountSuggestedEvent;
+use OCA\Filinq\Event\Support\RequestOrigin;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -40,13 +41,12 @@ class GlAccountSuggestedEventTest extends TestCase {
 		];
 
 		$event = new GlAccountSuggestedEvent(
+			origin: new RequestOrigin(sourceApp: 'shillinq', requestedBy: 'annemarie'),
 			extractionId: 'extraction-1',
 			supplierIdentity: '12345678',
 			identityType: 'kvk',
 			suggestedAccounts: $suggestions,
 			source: 'history',
-			sourceApp: 'shillinq',
-			requestedBy: 'annemarie',
 		);
 
 		$this->assertSame('extraction-1', $event->getExtractionId());
@@ -64,13 +64,12 @@ class GlAccountSuggestedEventTest extends TestCase {
 	 */
 	public function testToPayloadShapeIsCanonical(): void {
 		$event = new GlAccountSuggestedEvent(
+			origin: new RequestOrigin(sourceApp: 'shillinq', requestedBy: 'annemarie'),
 			extractionId: 'extraction-4',
 			supplierIdentity: 'lunchroom de hoek',
 			identityType: 'name',
 			suggestedAccounts: [],
 			source: 'none',
-			sourceApp: 'shillinq',
-			requestedBy: 'annemarie',
 		);
 
 		$payload = $event->toPayload();
@@ -90,13 +89,12 @@ class GlAccountSuggestedEventTest extends TestCase {
 	 */
 	public function testUnresolvableIdentityIsNullInPayload(): void {
 		$event = new GlAccountSuggestedEvent(
+			origin: new RequestOrigin(sourceApp: 'shillinq', requestedBy: 'annemarie'),
 			extractionId: 'extraction-5',
 			supplierIdentity: null,
 			identityType: null,
 			suggestedAccounts: [],
 			source: 'none',
-			sourceApp: 'shillinq',
-			requestedBy: 'annemarie',
 		);
 
 		$payload = $event->toPayload();

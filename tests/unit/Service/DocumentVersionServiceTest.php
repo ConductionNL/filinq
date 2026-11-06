@@ -23,7 +23,9 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Service;
 
 use OCA\Filinq\Exception\ComparisonException;
+use OCA\Filinq\Exception\DocumentFinalException;
 use OCA\Filinq\Service\DocumentVersionService;
+use OCA\Filinq\Service\FinalDocumentService;
 use OCP\App\IAppManager;
 use OCP\Constants;
 use OCP\Files\File;
@@ -74,6 +76,11 @@ class DocumentVersionServiceTest extends TestCase {
 	private $container;
 
 	/**
+	 * @var FinalDocumentService|\PHPUnit\Framework\MockObject\MockObject
+	 */
+	private $finalDocuments;
+
+	/**
 	 * Set up shared mocks.
 	 *
 	 * @return void
@@ -86,6 +93,7 @@ class DocumentVersionServiceTest extends TestCase {
 		$this->userSession = $this->createMock(IUserSession::class);
 		$this->appManager = $this->createMock(IAppManager::class);
 		$this->container = $this->createMock(ContainerInterface::class);
+		$this->finalDocuments = $this->createMock(FinalDocumentService::class);
 
 		$user = $this->createMock(IUser::class);
 		$user->method('getUID')->willReturn('alice');
@@ -104,7 +112,8 @@ class DocumentVersionServiceTest extends TestCase {
 			rootFolder: $this->rootFolder,
 			userSession: $this->userSession,
 			appManager: $this->appManager,
-			container: $this->container
+			container: $this->container,
+			finalDocuments: $this->finalDocuments
 		);
 
 	}//end buildService()
@@ -279,6 +288,40 @@ class DocumentVersionServiceTest extends TestCase {
 		}
 
 	}//end testRestoreRejectedForReadOnlyCaller()
+
+	/**
+	 * A file the caller cannot see answers 404 whether or not it is final, so
+	 * the final check never runs before the access check.
+	 *
+	 * @return void
+	 */
+	public function testRestoreOfUnseenFinalFileAnswersNotFound(): void {
+		$this->wireFolder([]);
+		$this->finalDocuments->expects($this->never())->method('assertWritable');
+
+		try {
+			$this->buildService()->restoreVersion(fileId: 42, versionTimestamp: 1000);
+			$this->fail('Expected ComparisonException');
+		} catch (ComparisonException $e) {
+			$this->assertSame(404, $e->getStatusCode());
+		}
+
+	}//end testRestoreOfUnseenFinalFileAnswersNotFound()
+
+	/**
+	 * A writer restoring a final document gets the final refusal.
+	 *
+	 * @return void
+	 */
+	public function testRestoreOfFinalFileIsRefusedForWriter(): void {
+		$this->wireFolder([$this->mockFile(Constants::PERMISSION_READ | Constants::PERMISSION_UPDATE)]);
+		$this->finalDocuments->expects($this->once())->method('assertWritable')
+			->willThrowException(new DocumentFinalException(message: 'This document is final.'));
+
+		$this->expectException(DocumentFinalException::class);
+		$this->buildService()->restoreVersion(fileId: 42, versionTimestamp: 1000);
+
+	}//end testRestoreOfFinalFileIsRefusedForWriter()
 
 	/**
 	 * Restore delegates to IVersionManager::rollback for a writer.

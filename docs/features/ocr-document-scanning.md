@@ -44,18 +44,35 @@ The OCR feature:
 
 - `application/pdf` — when the PDF contains no embedded text (i.e. a scanned PDF)
 
-## API Endpoints
+## Run OCR yourself
 
-OCR processing is exposed through the document processing pipeline. The `OcrService` is
-invoked automatically by `DocumentTextExtractor` when it encounters an image or text-less PDF.
+On **My documents** and in the file viewer, an image or PDF has a **Run OCR** action when an admin has OCR switched on and Tesseract is installed on the server. The action shows that it is busy, and when it is done the file gets a badge with the confidence, such as *OCR 91%*. The page does not reload.
 
-Direct OCR triggering uses the standard file processing endpoint:
+The same run is an API call:
 
-```
-POST /apps/filinq/api/anonymization/extract/{fileId}
-```
+| Call | Answer |
+|---|---|
+| `POST /apps/filinq/api/ocr/{fileId}` | 200 with `ocrProcessed`, `confidence`, `textLength`, `languages`, `dpi`. Never the text. |
+| `GET /apps/filinq/api/ocr/{fileId}` | The file's last result, or `ocrProcessed: false`. |
+| `GET /apps/filinq/api/ocr?fileIds=1,2` | Whether OCR can run here (`capability`) and the results for those files. |
 
-The response includes an `ocrApplied: true` flag when OCR was used.
+The POST answers 409 when an admin switched OCR off, 503 when Tesseract is not installed, 400 for a file type OCR does not read, and 404 for a file that is not in your own files. It answers 200 with `ocrProcessed: false` when OCR found no text.
+
+Every run that recovers text stores an `ocrResult` row for the file: confidence, languages, DPI, text length, when, whether a person or the anonymisation pipeline started it, and the Tesseract version. A new run updates the row. The row never holds the text.
+
+## Scans in the anonymisation pipeline
+
+OpenRegister extracts text and detects entities, but it does no OCR. A scanned PDF comes back from OpenRegister without text, and used to read as "nothing to redact".
+
+Now, after OpenRegister's extraction, filinq checks whether the file needed OCR (an image, or a PDF without text). If it did, filinq runs OCR on it and hands the text to OpenRegister so the entities are detected in it. The extract answer says what happened:
+
+| Field | Meaning |
+|---|---|
+| `ocr` | `ran`, `ingested`, `confidence`, `textLength`. |
+| `ocrSkipped` | OCR could not run: `ocr_disabled`, `tesseract_unavailable`, `no_text_recovered` or `ocr_failed`. |
+| `ocrDetectionPending` | OCR read the text, but OpenRegister could not take it yet. |
+
+OpenRegister does not have the seam to take the text yet (ConductionNL/openregister#2033). Until it does, every scan reads `ocrDetectionPending: true`. The review shows a warning on that document and keeps it open, so an empty entity list never marks a scan as done. Reopening the document does not run OCR again.
 
 ## Configuration Options
 
@@ -106,11 +123,9 @@ Main OCR service.
 | `extractTextFromPdf()`    | Run Tesseract on each page of a scanned PDF                             |
 | `processFile()`           | Determine file type, apply OCR if needed, return extracted text and metadata |
 
-## Integration with Text Extraction
+## Who does what
 
-`DocumentTextExtractor` calls `OcrService::processFile()` when a file cannot yield text
-through standard means (e.g. pdftotext). The extracted text is then passed to
-`EntityDetectionService` for NER analysis.
+Filinq runs OCR, on your own server, with Tesseract. OpenRegister owns chunking and entity detection, and does no OCR. Filinq never runs its own entity detection on OCR text; it hands the text to OpenRegister. Born-digital files whose extraction found text never go through OCR.
 
 ## Dependencies
 

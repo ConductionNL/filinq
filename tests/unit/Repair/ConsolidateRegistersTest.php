@@ -277,6 +277,22 @@ class ConsolidateRegistersTest extends TestCase {
 	}//end testAnUnreadableSourceStopsThePairInsteadOfLookingEmpty()
 
 	/**
+	 * An unreadable TARGET stops the pair too: without knowing which uuids the
+	 * target already holds, nothing can be told apart from a conflict.
+	 *
+	 * @return void
+	 */
+	public function testAnUnreadableTargetStopsThePair(): void {
+		$database = $this->oneDossierPair();
+		$database->failOn(fragment: 'SELECT _uuid FROM `nc_openregister_table_517_227`');
+
+		$result = $this->runStep(database: $database);
+
+		$this->assertSame(expected: ['u1', 'u2'], actual: $database->uuidsIn(table: 'nc_openregister_table_66_227'));
+		$this->assertStringContainsString(needle: '1 pair(s) refused', haystack: implode(' ', $result['output']));
+	}//end testAnUnreadableTargetStopsThePair()
+
+	/**
 	 * PROPERTY 4 — an unreadable REGISTER table stops the whole step.
 	 *
 	 * @return void

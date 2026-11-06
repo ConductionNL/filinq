@@ -65,6 +65,8 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Portal;
 
+use OCP\L10N\IFactory;
+
 /**
  * Declares what an external portal subject may see in Filinq.
  *
@@ -167,6 +169,20 @@ class PortalContributionProvider {
 	private const SIGNING_MIN_TRUST = 'substantial';
 
 	/**
+	 * Constructor.
+	 *
+	 * Optional, so the provider still builds plain. Labels are translated
+	 * when a contribution is asked for, in the language portaliq sets for
+	 * that call.
+	 *
+	 * @param IFactory|null $l10nFactory Resolves Filinq's translator.
+	 */
+	public function __construct(
+		private readonly ?IFactory $l10nFactory = null,
+	) {
+	}//end __construct()
+
+	/**
 	 * The audiences this provider contributes to (contract v2, preferred).
 	 *
 	 * The registry probes for this method first. Filinq serves WOO-affected
@@ -251,7 +267,7 @@ class PortalContributionProvider {
 					'schema' => 'publicationConsent',
 					'scopeField' => 'contactRef',
 					'scopeClaim' => 'contactId',
-					'label' => 'My publication consents',
+					'label' => $this->translate(text: 'My publication consents'),
 					'listable' => true,
 					'minTrust' => 'substantial',
 					'fields' => [
@@ -336,94 +352,157 @@ class PortalContributionProvider {
 		return [
 			'label' => self::LABEL,
 			'collections' => [
-				[
-					'id' => 'signerRecords',
-					'register' => self::REGISTER_SIGNING,
-					'schema' => 'signerRecord',
-					'scopeField' => 'email',
-					'scopeClaim' => 'signerEmail',
-					'label' => 'My signatures',
-					'listable' => true,
-					'fields' => [
-						'displayName',
-						'status',
-						'order',
-						'signedAt',
-						'declineReason',
-					],
-				],
-				[
-					'id' => 'signerSigningRequests',
-					'register' => self::REGISTER_SIGNING,
-					'schema' => 'signingRequest',
-					'scopeField' => '',
-					'scopeClaim' => 'signerEmail',
-					'via' => [
-						'register' => self::REGISTER_SIGNING,
-						'schema' => 'signerRecord',
-						'scopeField' => 'email',
-						'targetField' => 'signingRequestId',
-					],
-					'label' => 'Documents awaiting my signature',
-					'listable' => true,
-					'minTrust' => 'substantial',
-					'fields' => [
-						'documentName',
-						'signatureLevel',
-						'signingMode',
-						'status',
-						'deadline',
-						'provider',
-					],
-					'rowActions' => [
-						[
-							'id' => 'sign',
-							'label' => 'Sign',
-							'endpoint' => self::SIGN_ENDPOINT,
-							'method' => 'POST',
-							'minTrust' => self::SIGNING_MIN_TRUST,
-						],
-						[
-							'id' => 'decline',
-							'label' => 'Decline to sign',
-							'endpoint' => self::DECLINE_ENDPOINT,
-							'method' => 'POST',
-							'minTrust' => self::SIGNING_MIN_TRUST,
-						],
-					],
-				],
+				$this->signerRecordsCollection(),
+				$this->signerSigningRequestsCollection(),
 			],
-			// Contract-v2 A6 endpoint-forward actions (REQ-DDPSA-001): the
-			// ONLY three actions on the `signer` manifest, all instance-local
-			// relative endpoints under `/apps/filinq/api/portal/signing/`,
-			// all gated `minTrust: substantial`. Handled by
-			// `PortalSigningReceiverController` +
-			// `Portal\PortalAssertionVerifier`.
-			'actions' => [
-				[
-					'id' => 'sign',
-					'label' => 'Sign',
-					'endpoint' => self::SIGN_ENDPOINT,
-					'method' => 'POST',
-					'minTrust' => self::SIGNING_MIN_TRUST,
-				],
-				[
-					'id' => 'decline',
-					'label' => 'Decline to sign',
-					'endpoint' => self::DECLINE_ENDPOINT,
-					'method' => 'POST',
-					'minTrust' => self::SIGNING_MIN_TRUST,
-				],
-				[
-					'id' => 'viewDocument',
-					'label' => 'View document',
-					'endpoint' => self::VIEW_DOCUMENT_ENDPOINT,
-					'method' => 'GET',
-					'minTrust' => self::SIGNING_MIN_TRUST,
-				],
-			],
+			'actions' => $this->signerActions(),
 			'notifications' => [],
 		];
 
 	}//end signerContribution()
+
+	/**
+	 * The signer's own `signerRecord` rows, scoped by the invited email.
+	 *
+	 * @return array<string, mixed> The collection.
+	 *
+	 * @spec openspec/specs/portal-signing-surface/spec.md
+	 */
+	private function signerRecordsCollection(): array {
+		return [
+			'id' => 'signerRecords',
+			'register' => self::REGISTER_SIGNING,
+			'schema' => 'signerRecord',
+			'scopeField' => 'email',
+			'scopeClaim' => 'signerEmail',
+			'label' => $this->translate(text: 'My signatures'),
+			'listable' => true,
+			'fields' => [
+				'displayName',
+				'status',
+				'order',
+				'signedAt',
+				'declineReason',
+			],
+		];
+
+	}//end signerRecordsCollection()
+
+	/**
+	 * The `signingRequest` rows awaiting the signer, reached through their
+	 * own `signerRecord` rows, with the sign and decline row actions.
+	 *
+	 * @return array<string, mixed> The collection.
+	 *
+	 * @spec openspec/specs/portal-signing-surface/spec.md
+	 */
+	private function signerSigningRequestsCollection(): array {
+		return [
+			'id' => 'signerSigningRequests',
+			'register' => self::REGISTER_SIGNING,
+			'schema' => 'signingRequest',
+			'scopeField' => '',
+			'scopeClaim' => 'signerEmail',
+			'via' => [
+				'register' => self::REGISTER_SIGNING,
+				'schema' => 'signerRecord',
+				'scopeField' => 'email',
+				'targetField' => 'signingRequestId',
+			],
+			'label' => $this->translate(text: 'Documents awaiting my signature'),
+			'listable' => true,
+			'minTrust' => 'substantial',
+			'fields' => [
+				'documentName',
+				'signatureLevel',
+				'signingMode',
+				'status',
+				'deadline',
+				'provider',
+			],
+			'rowActions' => $this->signingActs(),
+		];
+
+	}//end signerSigningRequestsCollection()
+
+	/**
+	 * The sign and decline acts: id, label, endpoint, method and minimum trust.
+	 *
+	 * @return array<int, array<string, string>> The two acts.
+	 *
+	 * @spec openspec/specs/portal-signing-surface/spec.md
+	 */
+	private function signingActs(): array {
+		return [
+			[
+				'id' => 'sign',
+				'label' => $this->translate(text: 'Sign'),
+				'endpoint' => self::SIGN_ENDPOINT,
+				'method' => 'POST',
+				'minTrust' => self::SIGNING_MIN_TRUST,
+			],
+			[
+				'id' => 'decline',
+				'label' => $this->translate(text: 'Decline to sign'),
+				'endpoint' => self::DECLINE_ENDPOINT,
+				'method' => 'POST',
+				'minTrust' => self::SIGNING_MIN_TRUST,
+			],
+		];
+
+	}//end signingActs()
+
+	/**
+	 * The actions on the `signer` manifest.
+	 *
+	 * Contract-v2 A6 endpoint-forward actions (REQ-DDPSA-001): the
+	 * ONLY three actions on the `signer` manifest, all instance-local
+	 * relative endpoints under `/apps/filinq/api/portal/signing/`,
+	 * all gated `minTrust: substantial`. Handled by
+	 * `PortalSigningReceiverController` +
+	 * `Portal\PortalAssertionVerifier`.
+	 *
+	 * `sign` and `decline` are endpoint ROW actions in portaliq's
+	 * contract (portaliq#804 / #833): `rowField` is the body key the
+	 * portal stamps the proven row's id under, and `scopeClaim` rides
+	 * in the signed X-Portal-Subject assertion. The receiver reads
+	 * exactly `signingRequestId` and `signerEmail`; without these two
+	 * keys portaliq drops the row buttons and the receiver refuses.
+	 *
+	 * @return array<int, array<string, mixed>> The actions.
+	 *
+	 * @spec openspec/specs/portal-signing-actions/spec.md
+	 */
+	private function signerActions(): array {
+		$actions = [];
+		foreach ($this->signingActs() as $act) {
+			$actions[] = $act + ['rowField' => 'signingRequestId', 'scopeClaim' => 'signerEmail'];
+		}
+
+		$actions[] = [
+			'id' => 'viewDocument',
+			'label' => $this->translate(text: 'View document'),
+			'endpoint' => self::VIEW_DOCUMENT_ENDPOINT,
+			'method' => 'GET',
+			'minTrust' => self::SIGNING_MIN_TRUST,
+		];
+
+		return $actions;
+
+	}//end signerActions()
+
+	/**
+	 * A label in the language of the current call, or as written without a translator.
+	 *
+	 * @param string $text The English source label.
+	 *
+	 * @return string The label.
+	 */
+	private function translate(string $text): string {
+		if ($this->l10nFactory === null) {
+			return $text;
+		}
+
+		return $this->l10nFactory->get('filinq')->t($text);
+	}//end translate()
 }//end class

@@ -26,6 +26,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use Exception;
+use OCA\Filinq\Kernel\Contracts\BatchReportServiceInterface;
 
 /**
  * Generates CSV reports summarizing the outcome of a batch.
@@ -36,7 +37,7 @@ use Exception;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  */
-class BatchReportService {
+class BatchReportService implements BatchReportServiceInterface {
 	/**
 	 * Constructor for BatchReportService
 	 *

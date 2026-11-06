@@ -78,6 +78,7 @@ class AnonymizeRequestValidator {
 	 * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-1
 	 * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-6
 	 * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-2.2
 	 */
 	public function validateBody(array $params): array {
 		$entities = ($params['entities'] ?? []);
@@ -87,11 +88,62 @@ class AnonymizeRequestValidator {
 			);
 		}
 
+		$flags = $this->validatedFlags(params: $params);
+		if ($flags['error'] !== null) {
+			return $flags;
+		}
+
+		$lists = $this->validatedLists(params: $params);
+		if ($lists['error'] !== null) {
+			return $lists;
+		}
+
+		return [
+			'error' => null,
+			'request' => [
+				'entities' => $entities,
+				'hasStrayBases' => $this->hasStrayBases(entities: $entities),
+				'appendBasisSummary' => $flags['request']['appendBasisSummary'],
+				'reversible' => $flags['request']['reversible'],
+				'unredactedEntities' => $lists['request']['unredactedEntities'],
+				'overrides' => $lists['request']['overrides'],
+			],
+		];
+
+	}//end validateBody()
+
+	/**
+	 * The appendBasisSummary and reversible flags, or the first refusal.
+	 *
+	 * @param array<string, mixed> $params Request parameters.
+	 *
+	 * @return array{error: array{status: int, body: array<string, mixed>}|null,
+	 *               request: array{appendBasisSummary: bool, reversible: bool}|null} The flags under `request`.
+	 */
+	private function validatedFlags(array $params): array {
 		$appendBasisSummary = $this->extractAppendBasisSummary(params: $params);
 		if (is_bool($appendBasisSummary) === false) {
 			return $this->rejected(error: $appendBasisSummary);
 		}
 
+		$reversible = $this->extractReversible(params: $params);
+		if (is_bool($reversible) === false) {
+			return $this->rejected(error: $reversible);
+		}
+
+		return ['error' => null, 'request' => ['appendBasisSummary' => $appendBasisSummary, 'reversible' => $reversible]];
+
+	}//end validatedFlags()
+
+	/**
+	 * The unredactedEntities and acknowledgedOverrides lists, or the first refusal.
+	 *
+	 * @param array<string, mixed> $params Request parameters.
+	 *
+	 * @return array{error: array{status: int, body: array<string, mixed>}|null,
+	 *               request: array{unredactedEntities: array<mixed>, overrides: array<mixed>}|null} The lists under `request`.
+	 */
+	private function validatedLists(array $params): array {
 		$unredacted = ($params['unredactedEntities'] ?? []);
 		if (is_array($unredacted) === false) {
 			return $this->rejected(
@@ -116,18 +168,9 @@ class AnonymizeRequestValidator {
 			return $this->rejected(error: $overridesError);
 		}
 
-		return [
-			'error' => null,
-			'request' => [
-				'entities' => $entities,
-				'hasStrayBases' => $this->hasStrayBases(entities: $entities),
-				'appendBasisSummary' => $appendBasisSummary,
-				'unredactedEntities' => $unredacted,
-				'overrides' => $overrides,
-			],
-		];
+		return ['error' => null, 'request' => ['unredactedEntities' => $unredacted, 'overrides' => $overrides]];
 
-	}//end validateBody()
+	}//end validatedLists()
 
 	/**
 	 * Extract and validate the appendBasisSummary flag from request params.
@@ -156,6 +199,33 @@ class AnonymizeRequestValidator {
 	}//end extractAppendBasisSummary()
 
 	/**
+	 * Extract and validate the reversible flag: keep a key to restore the names later.
+	 *
+	 * Omitted means irreversible, which keeps nothing. A value that is not a
+	 * boolean is refused rather than read: "false" as a string is truthy, and a
+	 * key kept by accident is the one mistake this flag must not make.
+	 *
+	 * @param array<string, mixed> $params Request parameters.
+	 *
+	 * @return bool|array{status: int, body: array<string, mixed>} False when omitted, the supplied
+	 *                                                             boolean when set, or the 400
+	 *                                                             payload on a type error.
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-2.2
+	 */
+	private function extractReversible(array $params): bool|array {
+		if (array_key_exists('reversible', $params) === false) {
+			return false;
+		}
+
+		if (is_bool($params['reversible']) === false) {
+			return $this->badRequest(message: $this->l10n->t('reversible must be true or false'));
+		}
+
+		return $params['reversible'];
+	}//end extractReversible()
+
+	/**
 	 * Validate the acknowledgedOverrides[] payload entries.
 	 *
 	 * Each entry must have:
@@ -173,33 +243,53 @@ class AnonymizeRequestValidator {
 	 */
 	private function validateOverrides(array $overrides): ?array {
 		foreach ($overrides as $idx => $override) {
-			if (is_array($override) === false) {
-				return $this->badRequest(
-					message: $this->l10n->t('Each acknowledgedOverrides entry must be an object (index %s)', [$idx])
-				);
+			$message = $this->overrideProblem(idx: $idx, override: $override);
+			if ($message !== '') {
+				return $this->badRequest(message: $message);
 			}
-
-			if (empty($override['ruleId']) === true || is_string($override['ruleId']) === false) {
-				return $this->badRequest(
-					message: $this->l10n->t('acknowledgedOverrides[%s].ruleId is required and must be a string', [$idx])
-				);
-			}
-
-			if (isset($override['entityId']) === false || is_int($override['entityId']) === false) {
-				return $this->badRequest(
-					message: $this->l10n->t('acknowledgedOverrides[%s].entityId is required and must be an integer', [$idx])
-				);
-			}
-
-			if (isset($override['reason']) === true && is_string($override['reason']) === false) {
-				return $this->badRequest(
-					message: $this->l10n->t('acknowledgedOverrides[%s].reason must be a string', [$idx])
-				);
-			}
-		}//end foreach
+		}
 
 		return null;
 	}//end validateOverrides()
+
+	/**
+	 * The translated reason one acknowledgedOverrides entry is invalid.
+	 *
+	 * @param int|string $idx The entry's key in acknowledgedOverrides.
+	 * @param mixed $override The entry.
+	 *
+	 * @return string The message for the first failing field, '' when the entry is valid.
+	 */
+	private function overrideProblem(int|string $idx, mixed $override): string {
+		if (is_array($override) === false) {
+			return $this->l10n->t('Each acknowledgedOverrides entry must be an object (index %s)', [$idx]);
+		}
+
+		if ($this->isNonEmptyString(value: ($override['ruleId'] ?? null)) === false) {
+			return $this->l10n->t('acknowledgedOverrides[%s].ruleId is required and must be a string', [$idx]);
+		}
+
+		if (is_int($override['entityId'] ?? null) === false) {
+			return $this->l10n->t('acknowledgedOverrides[%s].entityId is required and must be an integer', [$idx]);
+		}
+
+		if (is_string($override['reason'] ?? '') === false) {
+			return $this->l10n->t('acknowledgedOverrides[%s].reason must be a string', [$idx]);
+		}
+
+		return '';
+	}//end overrideProblem()
+
+	/**
+	 * Whether a value is a string that empty() does not treat as empty.
+	 *
+	 * @param mixed $value The value.
+	 *
+	 * @return bool True for a string other than '' and '0'.
+	 */
+	private function isNonEmptyString(mixed $value): bool {
+		return is_string($value) === true && empty($value) === false;
+	}//end isNonEmptyString()
 
 	/**
 	 * Detect stray `bases[]` fields on entity entries.

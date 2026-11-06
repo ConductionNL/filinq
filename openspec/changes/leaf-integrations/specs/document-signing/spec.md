@@ -27,6 +27,7 @@ signing state.
 - WHEN the user links the message to the signing request from the Mail sidebar
 - THEN the message SHALL appear on the signing request's comms/leaf surface
 - AND the signing request's `status`, `signerIds`, and `deadline` SHALL be unchanged
+- @e2e exclude NC Mail is not installed on the shared test instance, so the Mail sidebar this scenario drives does not exist there. The declaration it depends on is asserted live in tests/e2e/workflows/leaf-integrations.spec.ts, and the template keys in LeafIntegrationsConfigurationTest.
 
 #### Scenario: Mail app absent
 
@@ -46,12 +47,14 @@ canonical store of the deadline; the leaf SHALL NOT introduce a second write pat
 - GIVEN a signing request with `deadline` 2026-09-01 and `status` "pending"
 - WHEN the initiator opens the signing-request record
 - THEN the calendar leaf SHALL be rendered with the request's deadline visible
+- @e2e exclude NC Calendar is not installed on the shared test instance, so the calendar leaf has no surface to render there. The declaration it depends on is asserted live in tests/e2e/workflows/leaf-integrations.spec.ts.
 
 #### Scenario: A request without a deadline renders no calendar entry
 
 - GIVEN a signing request with no `deadline` set
 - WHEN its record surface renders
 - THEN the calendar leaf SHALL render without an entry for that object and SHALL NOT error
+- @e2e exclude NC Calendar is not installed on the shared test instance, so the calendar leaf has no surface to render there. The declaration it depends on is asserted live in tests/e2e/workflows/leaf-integrations.spec.ts.
 
 ### Requirement: Signers Bridge To NC Contacts Via The Contacts Leaf
 
@@ -68,6 +71,7 @@ declared by `filinq-mcp-adoption`.
 - WHEN the caseworker uses the contacts leaf on the signer surface
 - THEN the signer SHALL be linkable to the matching NC Contacts entry
 - AND the leaf SHALL show contact identity fields only — never `signatureData` or `ipAddress`
+- @e2e exclude NC Contacts is not installed on the shared test instance, so the contacts leaf has no surface to render there. The declaration it depends on is asserted live in tests/e2e/workflows/leaf-integrations.spec.ts.
 
 #### Scenario: Contacts leaf does not widen the agent surface
 

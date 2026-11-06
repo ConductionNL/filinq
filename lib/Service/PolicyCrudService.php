@@ -33,6 +33,7 @@ namespace OCA\Filinq\Service;
 
 use Exception;
 use InvalidArgumentException;
+use OCA\Filinq\Kernel\Contracts\PolicyCrudServiceInterface;
 use OCP\IGroupManager;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
@@ -47,72 +48,7 @@ use RuntimeException;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  */
-class PolicyCrudService {
-
-	/**
-	 * Register slug shared by both policy surfaces.
-	 *
-	 * `filinq`, not `consent`: this app declares ONE register holding all 23
-	 * schemas. The five it used to declare are retired.
-	 */
-	public const REGISTER = 'filinq';
-
-	/**
-	 * Schema slug for the deny-list surface.
-	 */
-	public const SCHEMA_PROHIBITION = 'publicationProhibition';
-
-	/**
-	 * Schema slug shared between standing consents and per-document records.
-	 */
-	public const SCHEMA_CONSENT = 'publicationConsent';
-
-	/**
-	 * Policy surface selector for the entity-level deny-list.
-	 *
-	 * Used as the `$surface` argument to {@see self::requirePolicyPermission()}.
-	 */
-	public const SURFACE_PROHIBITION = 'prohibition';
-
-	/**
-	 * Policy surface selector for standing consents (scope=entity records).
-	 *
-	 * Used as the `$surface` argument to {@see self::requirePolicyPermission()}.
-	 */
-	public const SURFACE_STANDING_CONSENT = 'standingConsent';
-
-	/**
-	 * Group whose members may create/update/delete standing-consent records.
-	 *
-	 * Enforced at service level per spec §RBAC scenario "Standing-consent
-	 * write requires standing-consent permission" — the underlying
-	 * publicationConsent schema's RBAC cannot discriminate by `scope`, so the
-	 * scope-aware gate lives here.
-	 *
-	 * ⚠️ STILL `docudesk-`, DELIBERATELY, ACROSS THE FILINQ RENAME — see
-	 * PROHIBITION_GROUP below for the full reasoning; it applies to every
-	 * `docudesk-*` group id this app declares.
-	 */
-	public const STANDING_CONSENT_GROUP = 'docudesk-standing-consent-admins';
-
-	/**
-	 * Group whose members may create/update/delete publication-prohibition
-	 * records. Prohibitions are operator-level blocking rules that override
-	 * the standard anonymise flow, so write authorisation requires either
-	 * admin role or membership in this group — never any authenticated user.
-	 *
-	 * ⚠️ STILL `docudesk-`, DELIBERATELY, ACROSS THE FILINQ RENAME. This is a
-	 * Nextcloud GROUP ID, declared in `lib/Settings/filinq_register.json` and
-	 * provisioned by OpenRegister CREATE-ONLY, then populated by admins.
-	 * Renaming the id therefore creates a NEW, EMPTY group while the existing
-	 * one keeps every member and nothing reads it any more. An empty group
-	 * denies everyone except admins and object owners, so the symptom is
-	 * prohibition writes starting to 403 for exactly the operators who were
-	 * granted them — no error at provisioning time, nothing in the log. Same
-	 * failure shape as renaming an OpenRegister register slug. Renaming these
-	 * groups needs its own membership migration, not a token substitution.
-	 */
-	public const PROHIBITION_GROUP = 'docudesk-prohibition-admins';
+class PolicyCrudService implements PolicyCrudServiceInterface {
 
 	/**
 	 * Constructor.
@@ -447,7 +383,7 @@ class PolicyCrudService {
 	 * permission". A consent-officer with normal `publicationConsent` write
 	 * permission may write `scope: "document"` records, but writes to
 	 * `scope: "entity"` require explicit membership in
-	 * `docudesk-standing-consent-admins`.
+	 * `filinq-standing-consent-admins`.
 	 *
 	 * Admin users bypass this gate (NC convention — they implicitly belong to
 	 * every privileged group).

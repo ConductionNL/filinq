@@ -1,0 +1,14 @@
+{
+	"index": [
+		"<stub-CnStatusBadge data-label=\"[Case-insensitive]\" data-colorMap=\"{&quot;exact&quot;:&quot;error&quot;,&quot;caseInsensitive&quot;:&quot;primary&quot;,&quot;wordBoundary&quot;:&quot;success&quot;}\">",
+		"</stub-CnStatusBadge>",
+		"<stub-CnStatusBadge data-label=\"[Inactive]\" data-colorMap=\"{&quot;[Active]&quot;:&quot;success&quot;,&quot;[Inactive]&quot;:&quot;default&quot;}\">",
+		"</stub-CnStatusBadge>"
+	],
+	"detail": [
+		"<stub-CnStatusBadge data-label=\"[Case-insensitive]\" data-colorMap=\"{&quot;exact&quot;:&quot;error&quot;,&quot;caseInsensitive&quot;:&quot;primary&quot;,&quot;wordBoundary&quot;:&quot;success&quot;}\">",
+		"</stub-CnStatusBadge>",
+		"<stub-CnStatusBadge data-label=\"[Inactive]\" data-colorMap=\"{&quot;[Active]&quot;:&quot;success&quot;,&quot;[Inactive]&quot;:&quot;default&quot;}\">",
+		"</stub-CnStatusBadge>"
+	]
+}

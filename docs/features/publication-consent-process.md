@@ -453,14 +453,14 @@ Per-entity toggle behaviour:
 
 ### Standing Publication Consents
 
-The **Standing Publication Consents** admin page (`/standing-consents`) shows only `scope: "entity"` records. It allows authorised operators (members of `docudesk-standing-consent-admins`) to:
+The **Standing Publication Consents** admin page (`/standing-consents`) shows only `scope: "entity"` records. It allows authorised operators (members of `filinq-standing-consent-admins`) to:
 
 - List all active and inactive standing consents
 - Create new standing consents (requires `consentMethod`; UI warns when `validUntil` is blank)
 - Expire a consent (sets `active: false`, preserves for audit)
 - Revoke a consent (sets `consentStatus: "anonymized"`, `active: false`)
 
-Creating a standing consent requires membership in the `docudesk-standing-consent-admins` group.
+Creating a standing consent requires membership in the `filinq-standing-consent-admins` group.
 
 ## Publication-Clearance via the Anonymise Endpoint
 
@@ -631,9 +631,9 @@ The Vue UI surfaces these in three separate admin pages — they are **not** con
 
 | Surface | Read | Write |
 |---|---|---|
-| `publicationProhibition` | Authenticated users (no restriction by default) | `docudesk-policy-admins` group |
+| `publicationProhibition` | Authenticated users (no restriction by default) | `filinq-policy-admins` group |
 | `publicationConsent` (scope=document) | Existing consent-officer role | Existing consent-officer role |
-| `publicationConsent` (scope=entity, "standing consent") | Existing consent-officer role can read | Service-level gate: `docudesk-standing-consent-admins` group is required. A consent-officer without this membership can still write `scope: "document"` records, but writes to `scope: "entity"` return 403. |
+| `publicationConsent` (scope=entity, "standing consent") | Existing consent-officer role can read | Service-level gate: `filinq-standing-consent-admins` group is required. A consent-officer without this membership can still write `scope: "document"` records, but writes to `scope: "entity"` return 403. |
 
 Admin users implicitly belong to both groups (NC convention). Adjust group memberships via the OpenRegister authorization UI.
 

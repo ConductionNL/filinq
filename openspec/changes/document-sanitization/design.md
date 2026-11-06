@@ -260,3 +260,12 @@ shows non-zero counts on a clean install.
 - Should `trigger: publication` runs be recorded on the publication record
   (wave-1 `publicationRecord`) as well? Provisional: no — the pipeline reads
   the signal; duplicating evidence rows invites drift.
+
+## Resolved at apply (2026-09-30, office PR)
+
+- **Register.** `sanitizationRecord` 1.0.0 lives in the app's one register, `filinq` (the `document` register this design names no longer exists), register 8.41.0. Read and create for authenticated users, no updates (append-only evidence), delete for admins. `report` declares OpenRegister's `SanitizationReport` fields verbatim plus the PDF categories, `additionalProperties: false`; a unit test pins the field set against OpenRegister's `jsonSerialize()`.
+- **PDF seam absent.** OpenRegister development (2026-09-30) has no standalone PDF sanitizer. A PDF request answers `sanitizationSkipped` with `pdf_sanitizer_unavailable`, writes no file and no record. The OpenRegister ask is drafted for Ruben (build-all `for-ruben/openregister-pdf-sanitizer-for-filinq.md`); task 2.1 stays open, and so does the PDF half of the `sanitize` flag.
+- **The `sanitize` flag (task 3.4) is not built.** Office outputs are already sanitised inside OpenRegister's anonymisation, so the flag only changes anything for PDF output, which needs the PDF seam. It lands with 2.1.
+- **A PDF output is never called sanitized.** A DOCX anonymised into a PDF shows OpenRegister's report on the result, but no `sanitizationRecord` names the PDF: the conversion wrote metadata the sanitiser never saw.
+- **Anonymisation report.** OpenRegister's `FileService` does not delegate `getLastSanitizationReport()` yet (only `getLastStructurePreservation()`). Filinq reads it from `FileService` when present, else from the shared `DocumentProcessingHandler` in the container, and records it with `trigger: anonymisation`. A run that produced no report (text, PDF) records nothing.
+- **Seal ordering.** `document-waarmerk-certification` is not built, so no waarmerk exists to warn about. The seal half of task 3.5 and 4.2 stays open until it is.

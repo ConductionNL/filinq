@@ -1,0 +1,270 @@
+{
+    "nobody logged in": {
+        "status": 401,
+        "data": {
+            "error": "Not authenticated"
+        },
+        "calls": [],
+        "logs": []
+    },
+    "no such job": {
+        "status": 404,
+        "data": {
+            "error": "Job not found"
+        },
+        "calls": [
+            [
+                "getJob",
+                "job-1"
+            ]
+        ],
+        "logs": []
+    },
+    "somebody else": {
+        "status": 403,
+        "data": {
+            "error": "Not authorized"
+        },
+        "calls": [
+            [
+                "getJob",
+                "job-1"
+            ],
+            [
+                "isAdmin",
+                "bob"
+            ]
+        ],
+        "logs": []
+    },
+    "somebody else naming the owner": {
+        "status": 403,
+        "data": {
+            "error": "Not authorized"
+        },
+        "calls": [
+            [
+                "getJob",
+                "job-1"
+            ],
+            [
+                "isAdmin",
+                "bob"
+            ]
+        ],
+        "logs": []
+    },
+    "an admin": {
+        "status": 200,
+        "data": [
+            "%PDF-all",
+            "application/pdf",
+            "attachment; filename=\"brief.pdf\""
+        ],
+        "calls": [
+            [
+                "getJob",
+                "job-1"
+            ],
+            [
+                "isAdmin",
+                "root"
+            ],
+            [
+                "download",
+                "job-1",
+                null
+            ]
+        ],
+        "logs": []
+    },
+    "still rendering": {
+        "status": 409,
+        "data": {
+            "error": "Job not rendered yet",
+            "status": "rendering"
+        },
+        "calls": [
+            [
+                "getJob",
+                "job-1"
+            ],
+            [
+                "isAdmin",
+                "anna"
+            ]
+        ],
+        "logs": []
+    },
+    "the whole job": {
+        "status": 200,
+        "data": [
+            "%PDF-all",
+            "application/pdf",
+            "attachment; filename=\"brief.pdf\""
+        ],
+        "calls": [
+            [
+                "getJob",
+                "job-1"
+            ],
+            [
+                "isAdmin",
+                "anna"
+            ],
+            [
+                "download",
+                "job-1",
+                null
+            ]
+        ],
+        "logs": []
+    },
+    "one item": {
+        "status": 200,
+        "data": [
+            "%PDF-2",
+            "application/pdf",
+            "attachment; filename=\"brief.pdf\""
+        ],
+        "calls": [
+            [
+                "getJob",
+                "job-1"
+            ],
+            [
+                "isAdmin",
+                "anna"
+            ],
+            [
+                "download",
+                "job-1",
+                2
+            ]
+        ],
+        "logs": []
+    },
+    "a negative item": {
+        "status": 200,
+        "data": [
+            "%PDF-all",
+            "application/pdf",
+            "attachment; filename=\"brief.pdf\""
+        ],
+        "calls": [
+            [
+                "getJob",
+                "job-1"
+            ],
+            [
+                "isAdmin",
+                "anna"
+            ],
+            [
+                "download",
+                "job-1",
+                null
+            ]
+        ],
+        "logs": []
+    },
+    "an item that is no number": {
+        "status": 200,
+        "data": [
+            "%PDF-all",
+            "application/pdf",
+            "attachment; filename=\"brief.pdf\""
+        ],
+        "calls": [
+            [
+                "getJob",
+                "job-1"
+            ],
+            [
+                "isAdmin",
+                "anna"
+            ],
+            [
+                "download",
+                "job-1",
+                null
+            ]
+        ],
+        "logs": []
+    },
+    "no PDF": {
+        "status": 404,
+        "data": {
+            "error": "PDF not found for this job"
+        },
+        "calls": [
+            [
+                "getJob",
+                "job-1"
+            ],
+            [
+                "isAdmin",
+                "anna"
+            ],
+            [
+                "download",
+                "job-1",
+                null
+            ]
+        ],
+        "logs": []
+    },
+    "the download fails": {
+        "status": 500,
+        "data": {
+            "error": "Operation failed"
+        },
+        "calls": [
+            [
+                "getJob",
+                "job-1"
+            ],
+            [
+                "isAdmin",
+                "anna"
+            ],
+            [
+                "download",
+                "job-1",
+                null
+            ]
+        ],
+        "logs": [
+            [
+                "error",
+                "Print job download failed: store offline",
+                {
+                    "jobId": "job-1",
+                    "exception": "Exception"
+                }
+            ]
+        ]
+    },
+    "the lookup fails": {
+        "status": 500,
+        "data": {
+            "error": "Operation failed"
+        },
+        "calls": [
+            [
+                "getJob",
+                "job-1"
+            ]
+        ],
+        "logs": [
+            [
+                "error",
+                "Print job download failed: repository offline",
+                {
+                    "jobId": "job-1",
+                    "exception": "Exception"
+                }
+            ]
+        ]
+    }
+}

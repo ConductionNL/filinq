@@ -37,6 +37,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\BatchStateServiceInterface;
 use OCP\IAppConfig;
 use OCP\ICache;
 use OCP\ICacheFactory;
@@ -57,7 +58,7 @@ use RuntimeException;
  *
  * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-status-endpoint
  */
-class BatchStateService {
+class BatchStateService implements BatchStateServiceInterface {
 	private const CACHE_TTL = 7200;
 	private const DEFAULT_MAX_FILES = 100;
 	private const CACHE_PREFIX = 'filinq_batch_';

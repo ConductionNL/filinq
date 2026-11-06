@@ -1,0 +1,132 @@
+{
+	"processed": {
+		"calls": [
+			[
+				"post",
+				"/apps/filinq/api/ocr/42",
+				"running: true"
+			],
+			[
+				"showSuccess",
+				"[OCR read 120 characters.]"
+			]
+		],
+		"state": {
+			"ocrRunning": false,
+			"ocrResult": {
+				"ocrProcessed": true,
+				"textLength": 120,
+				"confidence": 88
+			},
+			"ocrAvailable": true
+		}
+	},
+	"unreadable": {
+		"calls": [
+			[
+				"post",
+				"/apps/filinq/api/ocr/42",
+				"running: true"
+			],
+			[
+				"showError",
+				"Nothing to read"
+			]
+		],
+		"state": {
+			"ocrRunning": false,
+			"ocrResult": null,
+			"ocrAvailable": true
+		}
+	},
+	"unreadableBare": {
+		"calls": [
+			[
+				"post",
+				"/apps/filinq/api/ocr/42",
+				"running: true"
+			],
+			[
+				"showError",
+				"[OCR failed on this file.]"
+			]
+		],
+		"state": {
+			"ocrRunning": false,
+			"ocrResult": null,
+			"ocrAvailable": true
+		}
+	},
+	"refused409": {
+		"calls": [
+			[
+				"post",
+				"/apps/filinq/api/ocr/42",
+				"running: true"
+			],
+			[
+				"showError",
+				"OCR is switched off"
+			]
+		],
+		"state": {
+			"ocrRunning": false,
+			"ocrResult": null,
+			"ocrAvailable": false
+		}
+	},
+	"refused503": {
+		"calls": [
+			[
+				"post",
+				"/apps/filinq/api/ocr/42",
+				"running: true"
+			],
+			[
+				"showError",
+				"[OCR failed on this file.]"
+			]
+		],
+		"state": {
+			"ocrRunning": false,
+			"ocrResult": null,
+			"ocrAvailable": false
+		}
+	},
+	"failed500": {
+		"calls": [
+			[
+				"post",
+				"/apps/filinq/api/ocr/42",
+				"running: true"
+			],
+			[
+				"showError",
+				"Server error"
+			]
+		],
+		"state": {
+			"ocrRunning": false,
+			"ocrResult": null,
+			"ocrAvailable": true
+		}
+	},
+	"offline": {
+		"calls": [
+			[
+				"post",
+				"/apps/filinq/api/ocr/42",
+				"running: true"
+			],
+			[
+				"showError",
+				"[OCR failed on this file.]"
+			]
+		],
+		"state": {
+			"ocrRunning": false,
+			"ocrResult": null,
+			"ocrAvailable": true
+		}
+	}
+}

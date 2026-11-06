@@ -1,5 +1,6 @@
 <script setup>
 import { translate as t } from '@nextcloud/l10n'
+import { LIST_ONLY_INDEX_PAGE } from '../../constants/indexPage.js'
 import { consentStore } from '../../store/store.js'
 </script>
 
@@ -18,15 +19,7 @@ import { consentStore } from '../../store/store.js'
 		:columns="tableColumns"
 		:pagination="paginationData"
 		:loading="consentStore.loading"
-		:selectable="false"
-		:showEditAction="false"
-		:showCopyAction="false"
-		:showDeleteAction="false"
-		:showMassImport="false"
-		:showMassExport="false"
-		:showMassCopy="false"
-		:showMassDelete="false"
-		:showViewToggle="false"
+		v-bind="LIST_ONLY_INDEX_PAGE"
 		:showAdd="false"
 		rowKey="id"
 		:emptyText="emptyContentName"
@@ -138,6 +131,7 @@ import { CnIndexPage, CnStatsBlock, CnStatusBadge } from '@conduction/nextcloud-
 import { NcActionButton, NcActions } from '@nextcloud/vue'
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
 import Eye from 'vue-material-design-icons/Eye.vue'
+import { indexPaging } from '../../mixins/recordIndexPage.js'
 
 export default {
 	name: 'ConsentIndex',
@@ -151,11 +145,10 @@ export default {
 		Eye,
 	},
 
+	mixins: [indexPaging],
+
 	data() {
 		return {
-			isRefreshing: false,
-			currentPage: 1,
-			pageSize: 20,
 			entityTypeColorMap: {
 				person: 'warning',
 				organization: 'primary',
@@ -271,34 +264,14 @@ export default {
 			})
 		},
 
-		async handleRefresh() {
-			this.isRefreshing = true
-			try {
-				await consentStore.fetchConsents()
-			} finally {
-				this.isRefreshing = false
-			}
-		},
-
 		/**
-		 * Update the current page index of the consent table.
+		 * Load the consent records from the store.
 		 *
-		 * @param page
+		 * @return {Promise<void>}
 		 * @spec openspec/specs/consent-management/spec.md#requirement-consent-listing-and-querying-req-cons-03
 		 */
-		onPageChanged(page) {
-			this.currentPage = page
-		},
-
-		/**
-		 * Update the page size and reset to the first page.
-		 *
-		 * @param size
-		 * @spec openspec/specs/consent-management/spec.md#requirement-consent-listing-and-querying-req-cons-03
-		 */
-		onPageSizeChanged(size) {
-			this.pageSize = size
-			this.currentPage = 1
+		reloadRecords() {
+			return consentStore.fetchConsents()
 		},
 
 		/**

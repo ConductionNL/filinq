@@ -42,8 +42,12 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use DateTimeImmutable;
 use Exception;
 use OCA\Filinq\Exception\PolicyRejectedException;
+use OCA\Filinq\Kernel\ConsentUpdate;
+use OCA\Filinq\Kernel\Contracts\ConsentServiceInterface;
+use OCA\Filinq\Service\Publication\ConsentClearance;
 use OCP\IUser;
 use Psr\Log\LoggerInterface;
 
@@ -58,8 +62,13 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/consent-management/spec.md
  * @spec openspec/changes/consent-create-idempotency-and-notes/tasks.md#task-1
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The thirteenth to fifteenth
+ * classes are ConsentUpdate, RegisterObjectRef and ConsentStatusChange: the
+ * contract takes an update and the acting user, and this class turns them into
+ * the handler's two values.
  */
-class ConsentService {
+class ConsentService implements ConsentServiceInterface {
 	/**
 	 * Constructor for ConsentService
 	 *
@@ -160,31 +169,16 @@ class ConsentService {
 				);
 			}
 
-			$context = $this->withPolicyMatch(context: $context, policyResult: $policyResult);
+			$context = $this->withPolicyMatch(context: $context, policyResult: $policyResult) + ['register' => $register, 'schema' => $schema];
 
 			// Idempotency lookup — find an existing scope=document record.
-			$existing = $this->recordWriter->findExistingConsent(
-				documentId: $documentId,
-				entityKey: $context['entityKey'],
-				entityText: $entityText,
-				register: $register,
-				schema: $schema
-			);
+			$existing = $this->recordWriter->findExistingConsent(context: $context);
 
 			if ($existing !== null) {
-				return $this->recordWriter->updateExistingConsent(
-					existing: $existing,
-					context: $context,
-					register: $register,
-					schema: $schema
-				);
+				return $this->recordWriter->updateExistingConsent(existing: $existing, context: $context);
 			}
 
-			return $this->recordWriter->createNewConsent(
-				context: $context,
-				register: $register,
-				schema: $schema
-			);
+			return $this->recordWriter->createNewConsent(context: $context);
 		} catch (PolicyRejectedException $e) {
 			// Re-throw without wrapping so callers can catch the typed exception.
 			throw $e;
@@ -287,10 +281,7 @@ class ConsentService {
 	/**
 	 * Validate and update a consent record, enforcing policy-transition rules
 	 *
-	 * @param string $consentId The consent object UUID
-	 * @param string $register The register ID
-	 * @param string $schema The schema ID
-	 * @param array<string, mixed> $data The update payload
+	 * @param ConsentUpdate $update The consent record and the update payload
 	 * @param IUser|null $user The acting user, or null for system context
 	 *
 	 * @return array<string, mixed> The updated consent record
@@ -301,17 +292,11 @@ class ConsentService {
 	 * @spec openspec/changes/publication-consent-policy-fields/tasks.md#task-7
 	 * @spec openspec/changes/publication-consent-policy-fields/tasks.md#task-8
 	 */
-	public function validateAndUpdateConsent(
-		string $consentId,
-		string $register,
-		string $schema,
-		array $data,
-		?IUser $user = null,
-	): array {
+	public function validateAndUpdateConsent(ConsentUpdate $update, ?IUser $user = null): array {
 		$existing = $this->recordWriter->loadConsentRecord(
-			consentId: $consentId,
-			register: $register,
-			schema: $schema
+			consentId: $update->consentId,
+			register: $update->register,
+			schema: $update->schema
 		);
 
 		// Standing-consent (scope=entity) records carry policy-level
@@ -327,13 +312,14 @@ class ConsentService {
 			$this->scopeValidator->requireStandingConsentAdminGroup(user: $user);
 		}
 
-		$this->scopeValidator->validateTransition(existing: $existing, update: $data);
+		$this->scopeValidator->validateTransition(existing: $existing, update: $update->data);
 
 		return $this->updateConsentStatus(
-			consentId: $consentId,
-			register: $register,
-			schema: $schema,
-			data: $data
+			consentId: $update->consentId,
+			register: $update->register,
+			schema: $update->schema,
+			data: $update->data,
+			actor: (string) $user?->getUID()
 		);
 
 	}//end validateAndUpdateConsent()
@@ -345,6 +331,7 @@ class ConsentService {
 	 * @param string $register The register ID
 	 * @param string $schema The schema ID
 	 * @param array<string, mixed> $data The data to update
+	 * @param string $actor The user making the change, recorded on each status event
 	 *
 	 * @return array<string, mixed> The updated consent record
 	 *
@@ -357,12 +344,11 @@ class ConsentService {
 		string $register,
 		string $schema,
 		array $data,
+		string $actor = '',
 	): array {
 		return $this->updateHandler->updateConsentStatus(
-			consentId: $consentId,
-			register: $register,
-			schema: $schema,
-			data: $data
+			consent: new RegisterObjectRef(id: $consentId, register: $register, schema: $schema),
+			change: new ConsentStatusChange(data: $data, actor: $actor)
 		);
 
 	}//end updateConsentStatus()
@@ -437,4 +423,26 @@ class ConsentService {
 		$this->recordWriter->validatePublicationConsentData(data: $data);
 
 	}//end validatePublicationConsentData()
+	/**
+	 * Whether a document's consent requests allow publication. Reads only.
+	 *
+	 * Reads every record for the document, not only the caller's: the verdict
+	 * names record ids and never personal data, and a clearance that skipped
+	 * someone else's objection would clear too much.
+	 *
+	 * @param string            $documentId The document
+	 * @param string            $register   The consent register
+	 * @param string            $schema     The consent schema
+	 * @param DateTimeImmutable $now        The moment deadlines are judged at
+	 *
+	 * @return array{clear: bool, reasons: list<string>} The verdict.
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-2.1
+	 */
+	public function isDocumentConsentClear(string $documentId, string $register, string $schema, DateTimeImmutable $now): array {
+		$consents = $this->updateHandler->getConsentsByDocument(documentId: $documentId, register: $register, schema: $schema);
+
+		return (new ConsentClearance())->evaluate(consents: $consents, now: $now);
+
+	}//end isDocumentConsentClear()
 }//end class

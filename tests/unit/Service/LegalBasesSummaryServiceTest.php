@@ -17,8 +17,9 @@
 
 namespace OCA\Filinq\Tests\Unit\Service;
 
+use OCA\Filinq\Service\DossierSummaryDataService;
 use OCA\Filinq\Service\LegalBasesSummaryService;
-use OCA\Filinq\Service\PdfService;
+use OCA\Filinq\Service\GrondslagenPdfWriter;
 use OCP\App\IAppManager;
 use OCP\Files\IRootFolder;
 use OCP\IL10N;
@@ -64,11 +65,11 @@ class LegalBasesSummaryServiceTest extends TestCase {
 	private LoggerInterface|MockObject $mockLogger;
 
 	/**
-	 * Mock PdfService.
+	 * Mock GrondslagenPdfWriter.
 	 *
-	 * @var PdfService|MockObject
+	 * @var GrondslagenPdfWriter|MockObject
 	 */
-	private PdfService|MockObject $mockPdfService;
+	private GrondslagenPdfWriter|MockObject $mockPdfWriter;
 
 	/**
 	 * Mock root folder.
@@ -107,7 +108,7 @@ class LegalBasesSummaryServiceTest extends TestCase {
 		parent::setUp();
 
 		$this->mockLogger = $this->createMock(originalClassName: LoggerInterface::class);
-		$this->mockPdfService = $this->createMock(originalClassName: PdfService::class);
+		$this->mockPdfWriter = $this->createMock(originalClassName: GrondslagenPdfWriter::class);
 		$this->mockRootFolder = $this->createMock(originalClassName: IRootFolder::class);
 		$this->mockUserSession = $this->createMock(originalClassName: IUserSession::class);
 		$this->mockAppManager = $this->createMock(originalClassName: IAppManager::class);
@@ -115,11 +116,9 @@ class LegalBasesSummaryServiceTest extends TestCase {
 
 		$this->service = new LegalBasesSummaryService(
 			logger: $this->mockLogger,
-			pdfService: $this->mockPdfService,
-			rootFolder: $this->mockRootFolder,
+			pdfWriter: $this->mockPdfWriter,
 			userSession: $this->mockUserSession,
-			appManager: $this->mockAppManager,
-			container: $this->mockContainer
+			data: $this->dataService()
 		);
 
 	}//end setUp()
@@ -296,11 +295,9 @@ class LegalBasesSummaryServiceTest extends TestCase {
 
 		$service = new LegalBasesSummaryService(
 			logger: $this->mockLogger,
-			pdfService: $this->mockPdfService,
-			rootFolder: $this->mockRootFolder,
+			pdfWriter: $this->mockPdfWriter,
 			userSession: $this->mockUserSession,
-			appManager: $this->mockAppManager,
-			container: $this->mockContainer,
+			data: $this->dataService(),
 			l10n: $l10n
 		);
 
@@ -333,4 +330,19 @@ class LegalBasesSummaryServiceTest extends TestCase {
 		$this->assertSame(expected: 'PERSON', actual: $method->invoke($this->service, 'PERSON'));
 
 	}//end testLocalizeEntityTypeWithoutL10nReturnsRaw()
+	/**
+	 * The report data source over the mocked file tree, session and OpenRegister.
+	 *
+	 * @return DossierSummaryDataService The data source.
+	 */
+	private function dataService(): DossierSummaryDataService {
+		return new DossierSummaryDataService(
+			rootFolder: $this->mockRootFolder,
+			userSession: $this->mockUserSession,
+			appManager: $this->mockAppManager,
+			container: $this->mockContainer,
+			logger: $this->mockLogger
+		);
+
+	}//end dataService()
 }//end class

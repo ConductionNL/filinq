@@ -55,3 +55,8 @@
 
 - [ ] 4.5 Gates + validation
   - `composer check:strict` zero new violations; `openspec validate archiefwet-retention-engine --strict` exits 0; the REQ-DDARE-009 seed-lint passes (no `TODO-*` categorie remains); fix pre-existing quality issues encountered on touched files.
+
+## 5. Moved in from e-discovery-legal-hold
+
+- [ ] 5.1 Name the legal hold case behind each hold-excluded record on the vernietigingslijst detail
+  - Moved here from e-discovery-legal-hold task 3.2 (2026-09-29): the Archiefbeheer surface is built by this change. A record whose `retention.legalHold.reason` is `filinq-hold-case:<uuid>` resolves to that case's name through `GET api/legal-holds/{uuid}` for hold authority; everybody else sees "under a legal hold" without the name.

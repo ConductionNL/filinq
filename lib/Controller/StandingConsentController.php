@@ -27,7 +27,7 @@ namespace OCA\Filinq\Controller;
 
 use Exception;
 use InvalidArgumentException;
-use OCA\Filinq\Service\PolicyCrudService;
+use OCA\Filinq\Kernel\Contracts\PolicyCrudServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -47,13 +47,14 @@ use RuntimeException;
  * @link     https://www.filinq.app
  */
 class StandingConsentController extends Controller {
+	use AnswersNotAuthenticated;
 	/**
 	 * Constructor.
 	 *
 	 * @param string $appName App name.
 	 * @param IRequest $request Request abstraction.
 	 * @param LoggerInterface $logger Logger.
-	 * @param PolicyCrudService $crudService CRUD wrapper.
+	 * @param PolicyCrudServiceInterface $crudService CRUD wrapper.
 	 * @param IL10N $l10n Localisation.
 	 * @param IUserSession $userSession User session for authentication.
 	 */
@@ -61,7 +62,7 @@ class StandingConsentController extends Controller {
 		string $appName,
 		IRequest $request,
 		private readonly LoggerInterface $logger,
-		private readonly PolicyCrudService $crudService,
+		private readonly PolicyCrudServiceInterface $crudService,
 		private readonly IL10N $l10n,
 		private readonly IUserSession $userSession,
 	) {
@@ -81,12 +82,12 @@ class StandingConsentController extends Controller {
 	 */
 	public function index(): JSONResponse {
 		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+			return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 		}
 
 		try {
 			$this->crudService->requirePolicyPermission(
-				surface: PolicyCrudService::SURFACE_STANDING_CONSENT,
+				surface: PolicyCrudServiceInterface::SURFACE_STANDING_CONSENT,
 				action: 'read'
 			);
 			return new JSONResponse($this->crudService->listStandingConsents());
@@ -110,12 +111,12 @@ class StandingConsentController extends Controller {
 	 */
 	public function show(string $id): JSONResponse {
 		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+			return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 		}
 
 		try {
 			$this->crudService->requirePolicyPermission(
-				surface: PolicyCrudService::SURFACE_STANDING_CONSENT,
+				surface: PolicyCrudServiceInterface::SURFACE_STANDING_CONSENT,
 				action: 'read'
 			);
 			$record = $this->crudService->getStandingConsent(uuid: $id);
@@ -136,18 +137,17 @@ class StandingConsentController extends Controller {
 	 * @return JSONResponse
 	 *
 	 * @NoAdminRequired
-	 * @NoCSRFRequired
 	 *
 	 * @spec openspec/specs/entity-publication-policies/spec.md
 	 */
 	public function create(): JSONResponse {
 		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+			return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 		}
 
 		try {
 			$this->crudService->requirePolicyPermission(
-				surface: PolicyCrudService::SURFACE_STANDING_CONSENT,
+				surface: PolicyCrudServiceInterface::SURFACE_STANDING_CONSENT,
 				action: 'create'
 			);
 			$data = $this->request->getParams();
@@ -170,18 +170,17 @@ class StandingConsentController extends Controller {
 	 * @return JSONResponse
 	 *
 	 * @NoAdminRequired
-	 * @NoCSRFRequired
 	 *
 	 * @spec openspec/specs/entity-publication-policies/spec.md
 	 */
 	public function update(string $id): JSONResponse {
 		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+			return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 		}
 
 		try {
 			$this->crudService->requirePolicyPermission(
-				surface: PolicyCrudService::SURFACE_STANDING_CONSENT,
+				surface: PolicyCrudServiceInterface::SURFACE_STANDING_CONSENT,
 				action: 'update'
 			);
 			$data = $this->request->getParams();
@@ -206,18 +205,17 @@ class StandingConsentController extends Controller {
 	 * @return JSONResponse
 	 *
 	 * @NoAdminRequired
-	 * @NoCSRFRequired
 	 *
 	 * @spec openspec/specs/entity-publication-policies/spec.md
 	 */
 	public function destroy(string $id): JSONResponse {
 		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+			return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 		}
 
 		try {
 			$this->crudService->requirePolicyPermission(
-				surface: PolicyCrudService::SURFACE_STANDING_CONSENT,
+				surface: PolicyCrudServiceInterface::SURFACE_STANDING_CONSENT,
 				action: 'delete'
 			);
 			$this->crudService->deleteStandingConsent(uuid: $id);

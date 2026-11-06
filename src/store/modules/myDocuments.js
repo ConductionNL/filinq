@@ -24,6 +24,193 @@ function encodeDavPath(path) {
 		.join('/')
 }
 
+/** WebDAV properties of a folder listing. */
+const LISTING_PROPS = [
+	'<d:resourcetype />',
+	'<d:getcontenttype />',
+	'<d:getcontentlength />',
+	'<d:getlastmodified />',
+	'<oc:fileid />',
+	'<oc:size />',
+]
+
+/** WebDAV properties of the recent anonymized list. */
+const RECENT_PROPS = LISTING_PROPS.slice(0, 5)
+
+/** WebDAV properties needed to judge a dossier's anonymization status. */
+const CHILD_PROPS = ['<d:resourcetype />', '<oc:fileid />']
+
+/**
+ * Run a PROPFIND and return its response elements, without the first one
+ * (the requested folder itself).
+ *
+ * @param {string} url WebDAV URL.
+ * @param {{depth: string, props: string[]}} request Depth header and properties.
+ * @return {Promise<Element[]>}
+ */
+async function propfindEntries(url, request) {
+	const response = await axios({
+		method: 'PROPFIND',
+		url,
+		headers: {
+			Depth: request.depth,
+			'Content-Type': 'application/xml',
+		},
+		data: `<?xml version="1.0"?>
+			<d:propfind xmlns:d="DAV:" xmlns:oc="http://owncloud.org/ns" xmlns:nc="http://nextcloud.org/ns">
+				<d:prop>
+					${request.props.join('\n')}
+				</d:prop>
+			</d:propfind>`,
+	})
+	const parser = new DOMParser()
+	const xmlDoc = parser.parseFromString(response.data, 'text/xml')
+	return Array.from(xmlDoc.querySelectorAll('response')).slice(1)
+}
+
+/**
+ * The first non-empty text of the given properties, parsed as an integer
+ * (0 when none is set).
+ *
+ * @param {Element} resp PROPFIND response element.
+ * @param {string[]} tags Property names, in order of preference.
+ * @return {number}
+ */
+function davNumber(resp, tags) {
+	const text = tags
+		.map((tag) => resp.querySelector(tag)?.textContent)
+		.find(Boolean)
+	return parseInt(text || '0', 10)
+}
+
+/**
+ * Whether a PROPFIND response describes a collection.
+ *
+ * @param {Element} resp PROPFIND response element.
+ * @return {boolean}
+ */
+function davIsFolder(resp) {
+	const resourceType = resp.querySelector('resourcetype')
+	return resourceType?.querySelector('collection') !== null
+}
+
+/**
+ * The href of a PROPFIND response without its trailing slash.
+ *
+ * @param {Element} resp PROPFIND response element.
+ * @return {string}
+ */
+function davHref(resp) {
+	const href = resp.querySelector('href')?.textContent || ''
+	return href.endsWith('/') ? href.slice(0, -1) : href
+}
+
+/**
+ * The fields every listed entry carries: id, MIME type, modification time
+ * in seconds and whether it is a folder.
+ *
+ * @param {Element} resp PROPFIND response element.
+ * @return {{fileId: number, mimeType: string, modified: number, isFolder: boolean}}
+ */
+function davEntry(resp) {
+	const isFolder = davIsFolder(resp)
+	const modified = resp.querySelector('getlastmodified')?.textContent || ''
+	return {
+		fileId: davNumber(resp, ['fileid']),
+		mimeType:
+			resp.querySelector('getcontenttype')?.textContent
+			|| (isFolder ? 'httpd/unix-directory' : 'application/octet-stream'),
+		modified: new Date(modified).getTime() / 1000,
+		isFolder,
+	}
+}
+
+/**
+ * One document of a folder listing, or null for an entry without a name.
+ *
+ * @param {Element} resp PROPFIND response element.
+ * @param {Set<number>} anonymizedIds File ids that are anonymized outputs.
+ * @return {object|null}
+ */
+function listingDocument(resp, anonymizedIds) {
+	const fileName = decodeURIComponent(davHref(resp).split('/').pop() || '')
+	if (!fileName) {
+		return null
+	}
+	const entry = davEntry(resp)
+	return {
+		...entry,
+		fileName,
+		fileSize: davNumber(resp, ['getcontentlength', 'size']),
+		isAnonymized: anonymizedIds.has(entry.fileId),
+	}
+}
+
+/**
+ * One item of the recent anonymized list, or null when the entry is neither
+ * a folder nor an anonymized file.
+ *
+ * @param {Element} resp PROPFIND response element.
+ * @param {string} davPrefix The user's DAV path prefix, stripped from the href.
+ * @return {object|null}
+ */
+function recentItem(resp, davPrefix) {
+	const decoded = decodeURIComponent(davHref(resp))
+	const path = decoded.startsWith(davPrefix)
+		? decoded.slice(davPrefix.length)
+		: decoded
+	const fileName = path.split('/').pop() || ''
+	const isAnonymized = fileName.includes('_anonymized')
+	const entry = davEntry(resp)
+	if (!entry.isFolder && !isAnonymized) {
+		return null
+	}
+	return {
+		...entry,
+		fileName,
+		path,
+		fileSize: davNumber(resp, ['getcontentlength']),
+		isAnonymized,
+	}
+}
+
+/**
+ * The newest modification time of each concept (non-output, non-folder)
+ * file name in a listing.
+ *
+ * @param {object[]} documents Listed documents.
+ * @return {Map<string, number>}
+ */
+function conceptModifiedByName(documents) {
+	const byName = new Map()
+	for (const d of documents) {
+		if (d.isFolder || d.isAnonymized) continue
+		const mod = d.modified || 0
+		const prev = byName.get(d.fileName)
+		if (prev == null || mod > prev) {
+			byName.set(d.fileName, mod)
+		}
+	}
+	return byName
+}
+
+/**
+ * The recorded source file name of each anonymized output, from the links.
+ *
+ * @param {object[]} links anonymizationLink records.
+ * @return {Map<number, string>}
+ */
+function sourceNameByOutput(links) {
+	const byOutput = new Map()
+	for (const l of links) {
+		const anon = Number(l.anonymizedFileId)
+		if (Number.isFinite(anon) && l.sourceFileName) {
+			byOutput.set(anon, l.sourceFileName)
+		}
+	}
+	return byOutput
+}
+
 /*
  * Each document entry:
  * {
@@ -150,30 +337,15 @@ export const useMyDocumentsStore = defineStore('myDocuments', {
 		 * stop surfacing it.)
 		 *
 		 * @return {Set<number>} File ids of re-upload-orphaned anonymized outputs.
+		 * @spec openspec/specs/anonymization-link/spec.md#requirement-bidirectional-lookup-via-or-search-api-req-alink-03
 		 */
 		orphanedOutputIds() {
 			const { anonToSource } = this.linkMaps
 			const presentIds = new Set(this.documents.map((d) => Number(d.fileId)))
-			// Newest upload time of each present CONCEPT (non-output) file name.
 			// Anonymized outputs are excluded so an output's own name can't be
 			// mistaken for a re-uploaded source.
-			const conceptModifiedByName = new Map()
-			for (const d of this.documents) {
-				if (d.isFolder || d.isAnonymized) continue
-				const mod = d.modified || 0
-				const prev = conceptModifiedByName.get(d.fileName)
-				if (prev == null || mod > prev) {
-					conceptModifiedByName.set(d.fileName, mod)
-				}
-			}
-			// anonymizedFileId → recorded source file name, from the links.
-			const anonToSourceName = new Map()
-			for (const l of this.anonymizationLinks) {
-				const anon = Number(l.anonymizedFileId)
-				if (Number.isFinite(anon) && l.sourceFileName) {
-					anonToSourceName.set(anon, l.sourceFileName)
-				}
-			}
+			const conceptModified = conceptModifiedByName(this.documents)
+			const anonToSourceName = sourceNameByOutput(this.anonymizationLinks)
 			const orphans = new Set()
 			for (const d of this.documents) {
 				if (d.isFolder) continue
@@ -186,7 +358,7 @@ export const useMyDocumentsStore = defineStore('myDocuments', {
 				// replaced the original rather than merely sharing its name.
 				const srcName = anonToSourceName.get(fileId)
 				if (!srcName) continue
-				const freshModified = conceptModifiedByName.get(srcName)
+				const freshModified = conceptModified.get(srcName)
 				if (freshModified != null && freshModified > (d.modified || 0)) {
 					orphans.add(fileId)
 				}
@@ -300,6 +472,7 @@ export const useMyDocumentsStore = defineStore('myDocuments', {
 		 *
 		 * @param {string|null} path Optional path to navigate to. Defaults to currentPath.
 		 * @return {Promise<void>}
+		 * @spec openspec/specs/anonymization-link/spec.md#requirement-bidirectional-lookup-via-or-search-api-req-alink-03
 		 */
 		async fetchDocuments(path = null) {
 			this.loading = true
@@ -322,85 +495,18 @@ export const useMyDocumentsStore = defineStore('myDocuments', {
 					`dav/files/${user.uid}${encodeDavPath(targetPath)}`,
 				)
 
-				const response = await axios({
-					method: 'PROPFIND',
-					url: webdavUrl,
-					headers: {
-						Depth: '1',
-						'Content-Type': 'application/xml',
-					},
-					data: `<?xml version="1.0"?>
-							<d:propfind xmlns:d="DAV:" xmlns:oc="http://owncloud.org/ns" xmlns:nc="http://nextcloud.org/ns">
-								<d:prop>
-									<d:resourcetype />
-									<d:getcontenttype />
-									<d:getcontentlength />
-									<d:getlastmodified />
-									<oc:fileid />
-									<oc:size />
-								</d:prop>
-							</d:propfind>`,
+				const entries = await propfindEntries(webdavUrl, {
+					depth: '1',
+					props: LISTING_PROPS,
 				})
-
-				// Parse WebDAV XML response
-				const parser = new DOMParser()
-				const xmlDoc = parser.parseFromString(response.data, 'text/xml')
-				const responses = xmlDoc.querySelectorAll('response')
 
 				// Links are needed to flag anonymized outputs; wait for them
 				// before building the document list.
 				await linksPromise
 				const { anonymizedIds } = this.linkMaps
-
-				this.documents = []
-				responses.forEach((resp, index) => {
-					// Skip first response (it's the folder itself)
-					if (index === 0) {
-						return
-					}
-
-					const href = resp.querySelector('href')?.textContent || ''
-					const resourceType = resp.querySelector('resourcetype')
-					const isFolder =
-						resourceType?.querySelector('collection') !== null
-					const mimeType =
-						resp.querySelector('getcontenttype')?.textContent
-						|| (isFolder
-							? 'httpd/unix-directory'
-							: 'application/octet-stream')
-					const fileSize = parseInt(
-						resp.querySelector('getcontentlength')?.textContent
-							|| resp.querySelector('size')?.textContent
-							|| '0',
-						10,
-					)
-					const modified =
-						resp.querySelector('getlastmodified')?.textContent || ''
-					const fileId = parseInt(
-						resp.querySelector('fileid')?.textContent || '0',
-						10,
-					)
-
-					// Extract filename from href (strip trailing slash for folders first)
-					const hrefWithoutTrailingSlash = href.endsWith('/')
-						? href.slice(0, -1)
-						: href
-					const fileName = decodeURIComponent(
-						hrefWithoutTrailingSlash.split('/').pop() || '',
-					)
-
-					if (fileName) {
-						this.documents.push({
-							fileId,
-							fileName,
-							mimeType,
-							fileSize,
-							modified: new Date(modified).getTime() / 1000,
-							isFolder,
-							isAnonymized: anonymizedIds.has(fileId),
-						})
-					}
-				})
+				this.documents = entries
+					.map((resp) => listingDocument(resp, anonymizedIds))
+					.filter(Boolean)
 
 				// Flag each dossier (folder) as fully anonymized or not, so the
 				// overview can tag it "Anonymized" once every source inside has
@@ -481,44 +587,20 @@ export const useMyDocumentsStore = defineStore('myDocuments', {
 		 * @param {string} folderPath Absolute path of the folder.
 		 * @param {object} user       Current user (for the WebDAV URL).
 		 * @return {Promise<Array<{fileId: number, isFolder: boolean}>>}
+		 * @spec openspec/specs/anonymization-link/spec.md#requirement-bidirectional-lookup-via-or-search-api-req-alink-03
 		 */
 		async listFolderChildren(folderPath, user) {
 			const webdavUrl = generateRemoteUrl(
 				`dav/files/${user.uid}${encodeDavPath(folderPath)}`,
 			)
-			const response = await axios({
-				method: 'PROPFIND',
-				url: webdavUrl,
-				headers: {
-					Depth: '1',
-					'Content-Type': 'application/xml',
-				},
-				data: `<?xml version="1.0"?>
-						<d:propfind xmlns:d="DAV:" xmlns:oc="http://owncloud.org/ns" xmlns:nc="http://nextcloud.org/ns">
-							<d:prop>
-								<d:resourcetype />
-								<oc:fileid />
-							</d:prop>
-						</d:propfind>`,
+			const entries = await propfindEntries(webdavUrl, {
+				depth: '1',
+				props: CHILD_PROPS,
 			})
-			const parser = new DOMParser()
-			const xmlDoc = parser.parseFromString(response.data, 'text/xml')
-			const responses = xmlDoc.querySelectorAll('response')
-			const children = []
-			responses.forEach((resp, index) => {
-				// Skip the folder itself (the first PROPFIND entry).
-				if (index === 0) {
-					return
-				}
-				const resourceType = resp.querySelector('resourcetype')
-				const isFolder = resourceType?.querySelector('collection') !== null
-				const fileId = parseInt(
-					resp.querySelector('fileid')?.textContent || '0',
-					10,
-				)
-				children.push({ fileId, isFolder })
-			})
-			return children
+			return entries.map((resp) => ({
+				fileId: davNumber(resp, ['fileid']),
+				isFolder: davIsFolder(resp),
+			}))
 		},
 
 		/**
@@ -665,25 +747,11 @@ export const useMyDocumentsStore = defineStore('myDocuments', {
 			const davPrefix = `/remote.php/dav/files/${user.uid}`
 			const webdavUrl = generateRemoteUrl(`dav/files/${user.uid}/DocuDesk`)
 
-			let response
+			let entries
 			try {
-				response = await axios({
-					method: 'PROPFIND',
-					url: webdavUrl,
-					headers: {
-						Depth: 'infinity',
-						'Content-Type': 'application/xml',
-					},
-					data: `<?xml version="1.0"?>
-							<d:propfind xmlns:d="DAV:" xmlns:oc="http://owncloud.org/ns" xmlns:nc="http://nextcloud.org/ns">
-								<d:prop>
-									<d:resourcetype />
-									<d:getcontenttype />
-									<d:getcontentlength />
-									<d:getlastmodified />
-									<oc:fileid />
-								</d:prop>
-							</d:propfind>`,
+				entries = await propfindEntries(webdavUrl, {
+					depth: 'infinity',
+					props: RECENT_PROPS,
 				})
 			} catch (err) {
 				// /DocuDesk/ may not exist yet for fresh users — return empty list.
@@ -693,62 +761,10 @@ export const useMyDocumentsStore = defineStore('myDocuments', {
 				throw err
 			}
 
-			const parser = new DOMParser()
-			const xmlDoc = parser.parseFromString(response.data, 'text/xml')
-			const responses = xmlDoc.querySelectorAll('response')
-
-			const items = []
-			responses.forEach((resp, index) => {
-				// First response is /DocuDesk/ itself — skip.
-				if (index === 0) return
-
-				const href = resp.querySelector('href')?.textContent || ''
-				const hrefWithoutTrailingSlash = href.endsWith('/')
-					? href.slice(0, -1)
-					: href
-				const decoded = decodeURIComponent(hrefWithoutTrailingSlash)
-				const path = decoded.startsWith(davPrefix)
-					? decoded.slice(davPrefix.length)
-					: decoded
-				const fileName = path.split('/').pop() || ''
-
-				const resourceType = resp.querySelector('resourcetype')
-				const isFolder = resourceType?.querySelector('collection') !== null
-				const isAnonymized = fileName.includes('_anonymized')
-
-				// Filter to dossier folders + anonymized files only.
-				// Skip the dossier folder itself (depth-1) when it has no
-				// modified value yet (extremely rare) — Date parse handles it.
-				if (!isFolder && !isAnonymized) return
-
-				const mimeType =
-					resp.querySelector('getcontenttype')?.textContent
-					|| (isFolder
-						? 'httpd/unix-directory'
-						: 'application/octet-stream')
-				const fileSize = parseInt(
-					resp.querySelector('getcontentlength')?.textContent || '0',
-					10,
-				)
-				const modified =
-					resp.querySelector('getlastmodified')?.textContent || ''
-				const fileId = parseInt(
-					resp.querySelector('fileid')?.textContent || '0',
-					10,
-				)
-
-				items.push({
-					fileId,
-					fileName,
-					path,
-					mimeType,
-					fileSize,
-					modified: new Date(modified).getTime() / 1000,
-					isFolder,
-					isAnonymized,
-				})
-			})
-
+			// Dossier folders and anonymized files only.
+			const items = entries
+				.map((resp) => recentItem(resp, davPrefix))
+				.filter(Boolean)
 			items.sort((a, b) => b.modified - a.modified)
 			return items.slice(0, limit)
 		},

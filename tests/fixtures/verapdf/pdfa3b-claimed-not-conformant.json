@@ -1,0 +1,100 @@
+{"report":{"buildInformation":{"releaseDetails":[{
+  "id" : "core",
+  "version" : "1.30.2",
+  "buildDate" : 1780483380000
+},{
+  "id" : "validation-model",
+  "version" : "1.30.2",
+  "buildDate" : 1780483560000
+},{
+  "id" : "apps",
+  "version" : "1.30.2",
+  "buildDate" : 1780484100000
+}]},"jobs":[{"itemDetails":{
+  "name" : "/data/pdfa3b-claimed-not-conformant.pdf",
+  "size" : 925
+},"validationResult":[ {
+  "details" : {
+    "passedRules" : 144,
+    "failedRules" : 2,
+    "passedChecks" : 91,
+    "failedChecks" : 3,
+    "ruleSummaries" : [ {
+      "ruleStatus" : "FAILED",
+      "specification" : "ISO 19005-3:2012",
+      "clause" : "6.2.4.3",
+      "testNumber" : 2,
+      "status" : "failed",
+      "failedChecks" : 2,
+      "description" : "DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB colour space is used, or if the file has a PDF/A OutputIntent that contains an RGB destination profile",
+      "object" : "PDDeviceRGB",
+      "test" : "gOutputCS != null && gOutputCS == \"RGB \"",
+      "checks" : [ {
+        "status" : "failed",
+        "context" : "root/document[0]/pages[0](3 0 obj PDPage)/contentStream[0](5 0 obj PDContentStream)/operators[0]/colorSpace[0]",
+        "errorMessage" : "DeviceRGB colour space is used without RGB output intent profile",
+        "errorArguments" : [ ]
+      }, {
+        "status" : "failed",
+        "context" : "root/document[0]/pages[0](3 0 obj PDPage)/contentStream[0](5 0 obj PDContentStream)/operators[2]/fillCS[0]",
+        "errorMessage" : "DeviceRGB colour space is used without RGB output intent profile",
+        "errorArguments" : [ ]
+      } ]
+    }, {
+      "ruleStatus" : "FAILED",
+      "specification" : "ISO 19005-3:2012",
+      "clause" : "6.1.3",
+      "testNumber" : 1,
+      "status" : "failed",
+      "failedChecks" : 1,
+      "description" : "The file trailer dictionary shall contain the ID keyword whose value shall be File Identifiers as defined in ISO 32000-1:2008, 14.4",
+      "object" : "CosDocument",
+      "test" : "lastID != null && lastID.length() > 0",
+      "checks" : [ {
+        "status" : "failed",
+        "context" : "root",
+        "errorMessage" : "Missing or empty ID in the document trailer",
+        "errorArguments" : [ ]
+      } ]
+    } ]
+  },
+  "jobEndStatus" : "normal",
+  "profileName" : "PDF/A-3b validation profile",
+  "statement" : "PDF file is not compliant with Validation Profile requirements.",
+  "compliant" : false
+} ],"processingTime":{
+  "start" : 1790699062270,
+  "finish" : 1790699063044,
+  "duration" : "00:00:00.774",
+  "difference" : 774
+}}],"batchSummary":{
+  "duration" : {
+    "start" : 1790699062056,
+    "finish" : 1790699063138,
+    "duration" : "00:00:01.082",
+    "difference" : 1082
+  },
+  "totalJobs" : 1,
+  "outOfMemory" : 0,
+  "veraExceptions" : 0,
+  "featuresSummary" : {
+    "failedJobCount" : 0,
+    "totalJobCount" : 0,
+    "successfulJobCount" : 0
+  },
+  "repairSummary" : {
+    "failedJobCount" : 0,
+    "totalJobCount" : 0,
+    "successfulJobCount" : 0
+  },
+  "multiJob" : false,
+  "failedEncryptedJobs" : 0,
+  "failedParsingJobs" : 0,
+  "validationSummary" : {
+    "compliantPdfaCount" : 0,
+    "failedJobCount" : 0,
+    "totalJobCount" : 1,
+    "nonCompliantPdfaCount" : 1,
+    "successfulJobCount" : 1
+  }
+}}}

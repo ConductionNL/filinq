@@ -1,0 +1,1579 @@
+{
+	"defaults": {
+		"html": [
+			"<x-cnadminsettingsshell appid=\"filinq\" appname=\"Filinq\" docurl=\"https://filinq.app\" showreimport=\"false\">",
+			"<x-slot name=\"default\">",
+			"<!-- Anonymiser backend warning (shown when regex-only and admin has not dismissed) -->",
+			"<!--v-if-->",
+			"<x-ncsettingssection name=\"Consent Settings\" description=\"Configure GDPR publication consent tracking settings\">",
+			"<x-slot name=\"default\">",
+			"<div class=\"setting-item\">",
+			"<div class=\"input-field\">",
+			"<label for=\"objection-period\">Objection Period (days)</label>",
+			"<input id=\"objection-period\" type=\"number\" min=\"1\" max=\"365\" placeholder=\"28\">",
+			"</div>",
+			"<span class=\"setting-description\">Minimum number of days entities have to submit an objection before publication (Wet Open Overheid: minimum 4 weeks)</span>",
+			"</div>",
+			"</x-slot>",
+			"</x-ncsettingssection>",
+			"<x-ncsettingssection name=\"Anonymisation\" description=\"Configure how anonymised documents are written back to Nextcloud\">",
+			"<x-slot name=\"default\">",
+			"<!--v-if-->",
+			"<div class=\"setting-item\">",
+			"<div class=\"setting-label\">Default output format for anonymised documents</div>",
+			"<x-nccheckboxradioswitch modelvalue=\"pdf-only\" name=\"anonymisation_output_format\" type=\"radio\" data-on-onupdate:modelvalue=\"\" value=\"pdf-only\">",
+			"<x-slot name=\"default\">PDF only — delete the native anonymised file (recommended)</x-slot>",
+			"</x-nccheckboxradioswitch>",
+			"<x-nccheckboxradioswitch modelvalue=\"pdf-only\" name=\"anonymisation_output_format\" type=\"radio\" data-on-onupdate:modelvalue=\"\" value=\"pdf\">",
+			"<x-slot name=\"default\">PDF and native file — keep both</x-slot>",
+			"</x-nccheckboxradioswitch>",
+			"<x-nccheckboxradioswitch modelvalue=\"pdf-only\" name=\"anonymisation_output_format\" type=\"radio\" data-on-onupdate:modelvalue=\"\" value=\"preserve\">",
+			"<x-slot name=\"default\">Native format only — no PDF conversion</x-slot>",
+			"</x-nccheckboxradioswitch>",
+			"<div class=\"setting-description\">Controls what the anonymise endpoints write back to Nextcloud Files by default. \"PDF only\" converts the result to PDF/A-3b and then deletes the native-format intermediate, so no re-editable copy of the redacted document is left behind — PDF flattens the text into a glyph stream and strips most metadata channels that would otherwise still name the original entities. \"PDF and native file\" also keeps the native version (DOCX, ODT, …) alongside the PDF. \"Native format only\" skips conversion entirely. Callers can always override per-request by sending outputFormat: \"pdf-only\", \"pdf\", or \"preserve\".</div>",
+			"<div class=\"setting-description\">",
+			"<em>Conversion requires either a supported Office app integration (Collabora, OnlyOffice, or Euro Office) for the best fidelity, or the bundled PhpWord + mPDF fallback for DOC/DOCX/ODT/RTF/HTML/TXT. Spreadsheet and presentation formats are not supported in the fallback tier and will return an error unless an Office app is configured.</em>",
+			"</div>",
+			"</div>",
+			"<div class=\"setting-item\">",
+			"<x-nctextfield modelvalue=\"anonymised\" label=\"Subfolder for anonymised copies\" error=\"false\" helpertext=\"Use lowercase letters, digits, hyphens and underscores only.\" data-on-onupdate:modelvalue=\"\">",
+			"</x-nctextfield>",
+			"<div class=\"setting-description\">Batch and folder anonymisation put the redacted copies in this subfolder, next to the originals.</div>",
+			"</div>",
+			"</x-slot>",
+			"</x-ncsettingssection>",
+			"<x-ncsettingssection name=\"Legal basis per entity type\" description=\"Propose a default legal basis (grondslag) per detected entity type. After analysis, each detected entity is pre-filled with the selected basis (or bases) for its type when none has been assigned yet — operators can always override, and entity types left unmapped get no proposal.\">",
+			"<x-slot name=\"default\">",
+			"<div class=\"setting-item\">",
+			"<x-ncnotecard type=\"info\">",
+			"<x-slot name=\"default\">No legal bases (grondslagen) are available yet. Add base records to the dossier register to map them here.</x-slot>",
+			"</x-ncnotecard>",
+			"</div>",
+			"</x-slot>",
+			"</x-ncsettingssection>",
+			"<x-ncsettingssection name=\"Entity types to detect\" description=\"Choose which entity types are detected automatically during analysis. Types left off are not detected or stored, but can still be added manually per document and will be anonymised. Leaving every type on detects all types.\">",
+			"<x-slot name=\"default\">",
+			"<x-entitytypeselector data-modelvalue=\"[]\" data-on-onupdate:modelvalue=\"\" data-options=\"[]\">",
+			"</x-entitytypeselector>",
+			"</x-slot>",
+			"</x-ncsettingssection>",
+			"<x-ncsettingssection name=\"Metadata Enrichment\" description=\"Configure automatic metadata enrichment for documents\">",
+			"<x-slot name=\"default\">",
+			"<div class=\"setting-item\">",
+			"<div class=\"setting-label\">Language Detection</div>",
+			"<x-nccheckboxradioswitch aria-label=\"Language Detection\" modelvalue=\"true\" type=\"switch\" data-on-onupdate:modelvalue=\"\">",
+			"</x-nccheckboxradioswitch>",
+			"<div class=\"setting-description\">Automatically detect the language of documents</div>",
+			"</div>",
+			"<div class=\"setting-item\">",
+			"<div class=\"setting-label\">Keyword Extraction</div>",
+			"<x-nccheckboxradioswitch aria-label=\"Keyword Extraction\" modelvalue=\"true\" type=\"switch\" data-on-onupdate:modelvalue=\"\">",
+			"</x-nccheckboxradioswitch>",
+			"<div class=\"setting-description\">Automatically extract keywords from document content</div>",
+			"</div>",
+			"<div class=\"setting-item\">",
+			"<div class=\"setting-label\">Topic Classification</div>",
+			"<x-nccheckboxradioswitch aria-label=\"Topic Classification\" modelvalue=\"true\" type=\"switch\" data-on-onupdate:modelvalue=\"\">",
+			"</x-nccheckboxradioswitch>",
+			"<div class=\"setting-description\">Automatically classify documents by topic</div>",
+			"</div>",
+			"<div class=\"setting-item\">",
+			"<div class=\"setting-label\">Contract terms</div>",
+			"<x-nccheckboxradioswitch aria-label=\"Contract terms\" modelvalue=\"true\" type=\"switch\" data-on-onupdate:modelvalue=\"\">",
+			"</x-nccheckboxradioswitch>",
+			"<div class=\"setting-description\">Suggest dates, notice periods and values from contract documents. A suggestion changes nothing until somebody accepts it.</div>",
+			"</div>",
+			"<div class=\"setting-item\">",
+			"<div class=\"setting-label\">Inbound classification</div>",
+			"<x-nccheckboxradioswitch aria-label=\"Inbound classification\" modelvalue=\"true\" type=\"switch\" data-testid=\"settings-inbound-classification\" data-on-onupdate:modelvalue=\"\">",
+			"</x-nccheckboxradioswitch>",
+			"<div class=\"setting-description\">Suggest a document type, a sender and a dossier for documents that come in. A suggestion changes nothing until somebody confirms it.</div>",
+			"</div>",
+			"</x-slot>",
+			"</x-ncsettingssection>",
+			"<x-ncsettingssection name=\"OCR Document Scanning\" description=\"Configure Tesseract OCR for extracting text from scanned documents and images\">",
+			"<x-slot name=\"default\">",
+			"<!-- Tesseract availability status -->",
+			"<div class=\"setting-item\">",
+			"<x-ncnotecard type=\"warning\">",
+			"<x-slot name=\"default\">Tesseract OCR is not installed. Install tesseract-ocr on the server to enable OCR for scanned documents.</x-slot>",
+			"</x-ncnotecard>",
+			"</div>",
+			"<!-- OCR enable/disable toggle -->",
+			"<div class=\"setting-item\">",
+			"<div class=\"setting-label\">Enable OCR</div>",
+			"<x-nccheckboxradioswitch aria-label=\"Enable OCR\" modelvalue=\"true\" type=\"switch\" data-on-onupdate:modelvalue=\"\">",
+			"</x-nccheckboxradioswitch>",
+			"<div class=\"setting-description\">Automatically extract text from scanned documents and images using Tesseract OCR</div>",
+			"</div>",
+			"<!-- Read arriving intake scans in the background (intake-ocr-on-arrival) -->",
+			"<div class=\"setting-item\">",
+			"<div class=\"setting-label\">Read scans on arrival</div>",
+			"<x-nccheckboxradioswitch aria-label=\"Read scans on arrival\" modelvalue=\"true\" type=\"switch\" data-on-onupdate:modelvalue=\"\">",
+			"</x-nccheckboxradioswitch>",
+			"<div class=\"setting-description\">Read the text of a scan or photo in the inbox as soon as it arrives, so it can be searched. Needs OCR on and Tesseract installed.</div>",
+			"</div>",
+			"<!-- Language selection -->",
+			"<div class=\"setting-item\">",
+			"<div class=\"setting-label\">OCR Languages</div>",
+			"<div class=\"ocr-languages\">",
+			"<x-nccheckboxradioswitch modelvalue=\"true\" data-on-onupdate:modelvalue=\"\">",
+			"<x-slot name=\"default\">Dutch (nld)</x-slot>",
+			"</x-nccheckboxradioswitch>",
+			"<x-nccheckboxradioswitch modelvalue=\"true\" data-on-onupdate:modelvalue=\"\">",
+			"<x-slot name=\"default\">English (eng)</x-slot>",
+			"</x-nccheckboxradioswitch>",
+			"<x-nccheckboxradioswitch modelvalue=\"false\" data-on-onupdate:modelvalue=\"\">",
+			"<x-slot name=\"default\">German (deu)</x-slot>",
+			"</x-nccheckboxradioswitch>",
+			"<x-nccheckboxradioswitch modelvalue=\"false\" data-on-onupdate:modelvalue=\"\">",
+			"<x-slot name=\"default\">French (fra)</x-slot>",
+			"</x-nccheckboxradioswitch>",
+			"</div>",
+			"<div class=\"setting-description\">Select languages for OCR text recognition. At least one language must be selected.</div>",
+			"</div>",
+			"<!-- DPI configuration -->",
+			"<div class=\"setting-item\">",
+			"<div class=\"input-field\">",
+			"<label for=\"ocr-dpi\">OCR DPI</label>",
+			"<input id=\"ocr-dpi\" type=\"number\" min=\"72\" max=\"600\" placeholder=\"300\">",
+			"</div>",
+			"<div class=\"setting-description\">DPI for PDF-to-image conversion during OCR. Higher values improve accuracy but increase processing time. Default: 300.</div>",
+			"</div>",
+			"</x-slot>",
+			"</x-ncsettingssection>",
+			"<x-ncsettingssection name=\"PDF/A validation\" description=\"Check documents against the PDF/A standard with veraPDF, installed on this server. Documents are never sent elsewhere.\">",
+			"<x-slot name=\"default\">",
+			"<div class=\"setting-item\" data-testid=\"verapdf-status\">",
+			"<x-ncnotecard type=\"warning\">",
+			"<x-slot name=\"default\">The PDF/A validator (veraPDF) is not installed. Without it, Filinq only checks that a PDF claims to be PDF/A, not that it is.</x-slot>",
+			"</x-ncnotecard>",
+			"</div>",
+			"</x-slot>",
+			"</x-ncsettingssection>",
+			"<!-- files-confidential-labels — read-only signal ingested from",
+			"\t\t     files_confidential (TSCP/BAILS system tags). No policy/enforcement",
+			"\t\t     of its own: the vocabulary controls which tag names are recognised,",
+			"\t\t     and the priority hint (off by default) only reorders batch/folder",
+			"\t\t     analysis. -->",
+			"<x-ncsettingssection name=\"Confidentiality Labels\" description=\"Consume confidentiality labels already assigned by files_confidential (TSCP/BAILS) as a read-only sensitivity signal. This never blocks, redacts or gates anything.\">",
+			"<x-slot name=\"default\">",
+			"<div class=\"setting-item\">",
+			"<div class=\"setting-label\">Prioritise higher-confidentiality files in batch/folder analysis</div>",
+			"<x-nccheckboxradioswitch aria-label=\"Prioritise higher-confidentiality files in batch/folder analysis\" modelvalue=\"false\" type=\"switch\" data-on-onupdate:modelvalue=\"\">",
+			"</x-nccheckboxradioswitch>",
+			"<div class=\"setting-description\">Off by default. When enabled, files with a higher confidentiality label are analysed sooner — a suggestion only, it never skips, blocks or redacts files.</div>",
+			"</div>",
+			"<div class=\"setting-item\">",
+			"<div class=\"input-field\">",
+			"<label for=\"confidentiality-vocabulary\">Label vocabulary (JSON)</label>",
+			"<textarea id=\"confidentiality-vocabulary\" rows=\"4\" class=\"confidentiality-vocabulary-input\">",
+			"</textarea>",
+			"</div>",
+			"<!--v-if-->",
+			"<div class=\"setting-description\">Maps files_confidential tag names to a normalised level (higher = more confidential). Unmatched tags are ignored. Default: Public=0, Internal=1, Confidential=2, Secret=3.</div>",
+			"</div>",
+			"</x-slot>",
+			"</x-ncsettingssection>",
+			"<x-ncsettingssection name=\"Data Storage\" description=\"Configure Open Register integration for consent data storage\">",
+			"<x-slot name=\"default\">",
+			"<!--v-if-->",
+			"<x-ncloadingicon class=\"loadingIcon\" size=\"64\" appearance=\"dark\" name=\"Loading settings\">",
+			"</x-ncloadingicon>",
+			"</x-slot>",
+			"</x-ncsettingssection>",
+			"<x-ncsettingssection name=\"Digital Signing\" description=\"Configure digital document signing capabilities (eIDAS SES, AdES, QES)\">",
+			"<x-slot name=\"default\">",
+			"<div class=\"setting-item\">",
+			"<div class=\"setting-label\">Enable Digital Signing</div>",
+			"<x-nccheckboxradioswitch aria-label=\"Enable Digital Signing\" modelvalue=\"false\" type=\"switch\" data-on-onupdate:modelvalue=\"\">",
+			"</x-nccheckboxradioswitch>",
+			"<div class=\"setting-description\">Allow users to create and manage digital signing requests</div>",
+			"</div>",
+			"<div class=\"setting-item\">",
+			"<div class=\"input-field\">",
+			"<label for=\"signing-provider\">Signing Provider</label>",
+			"<select id=\"signing-provider\" style=\"padding: 8px; border: 1px solid var(--color-border); border-radius: var(--border-radius); background-color: var(--color-main-background); color: var(--color-main-text);\">",
+			"<option value=\"native\">Native (built-in SES)</option>",
+			"<option value=\"validsign\">ValidSign</option>",
+			"<!--v-if-->",
+			"</select>",
+			"</div>",
+			"<!--v-if-->",
+			"<div class=\"setting-description\">The signing provider to use for new signing requests</div>",
+			"</div>",
+			"<!--v-if-->",
+			"<div class=\"setting-item\">",
+			"<div class=\"input-field\">",
+			"<label for=\"signing-default-level\">Default Signature Level</label>",
+			"<select id=\"signing-default-level\" style=\"padding: 8px; border: 1px solid var(--color-border); border-radius: var(--border-radius); background-color: var(--color-main-background); color: var(--color-main-text);\">",
+			"<option value=\"SES\">SES — Simple Electronic Signature</option>",
+			"<option value=\"AdES\">AdES — Advanced Electronic Signature</option>",
+			"<option value=\"QES\">QES — Qualified Electronic Signature (PKIoverheid)</option>",
+			"</select>",
+			"</div>",
+			"<div class=\"setting-description\">The eIDAS signature level applied to new signing requests unless overridden</div>",
+			"</div>",
+			"<div class=\"setting-item\">",
+			"<div class=\"input-field\">",
+			"<label for=\"signing-expiry-days\">Default Request Expiry (days)</label>",
+			"<input id=\"signing-expiry-days\" type=\"number\" min=\"1\" max=\"365\" placeholder=\"30\">",
+			"</div>",
+			"<div class=\"setting-description\">Number of days before an unsigned signing request expires (1–365). Archiefwet requires minimum 10-year audit trail retention.</div>",
+			"</div>",
+			"<div class=\"setting-item\">",
+			"<div class=\"input-field\">",
+			"<label for=\"signing-guardian-consent-age\">Guardian consent age</label>",
+			"<input id=\"signing-guardian-consent-age\" type=\"number\" min=\"1\" max=\"21\" placeholder=\"16\">",
+			"</div>",
+			"<div class=\"setting-description\">Signers under this age sign only with a parent or guardian on the request. The default is 16, the Dutch age of consent.</div>",
+			"</div>",
+			"</x-slot>",
+			"</x-ncsettingssection>",
+			"<!-- Signer identity rails (signer-identity-rails): its own admin endpoint -->",
+			"<!--v-if-->",
+			"<!--v-if-->",
+			"<!-- Page layouts (documents-from-a-template REQ-DFT-01): their own endpoints -->",
+			"<!--v-if-->",
+			"<!-- AVG Art. 30 processing-activity register (provided by OpenRegister) -->",
+			"<!--v-if-->",
+			"<div class=\"button-container\">",
+			"<x-ncbutton variant=\"primary\" disabled=\"false\" data-on-onclick=\"\">",
+			"<x-slot name=\"icon\">",
+			"<x-plus size=\"20\">",
+			"</x-plus>",
+			"</x-slot>",
+			"<x-slot name=\"default\"> Save All Settings</x-slot>",
+			"</x-ncbutton>",
+			"</div>",
+			"</x-slot>",
+			"</x-cnadminsettingsshell>"
+		],
+		"switches": [
+			{
+				"label": "pdf-only",
+				"writes": {
+					"settings.filinq.anonymisation.default_output_format": "SENTINEL-0"
+				}
+			},
+			{
+				"label": "pdf",
+				"writes": {
+					"settings.filinq.anonymisation.default_output_format": "SENTINEL-1"
+				}
+			},
+			{
+				"label": "preserve",
+				"writes": {
+					"settings.filinq.anonymisation.default_output_format": "SENTINEL-2"
+				}
+			},
+			{
+				"label": "Language Detection",
+				"writes": {
+					"settings.enable_language_detection": "SENTINEL-3"
+				}
+			},
+			{
+				"label": "Keyword Extraction",
+				"writes": {
+					"settings.enable_keyword_extraction": "SENTINEL-4"
+				}
+			},
+			{
+				"label": "Topic Classification",
+				"writes": {
+					"settings.enable_topic_classification": "SENTINEL-5"
+				}
+			},
+			{
+				"label": "Contract terms",
+				"writes": {
+					"settings.enable_contract_term_extraction": "SENTINEL-6"
+				}
+			},
+			{
+				"label": "Inbound classification",
+				"writes": {
+					"settings.enable_inbound_classification": "SENTINEL-7"
+				}
+			},
+			{
+				"label": "Enable OCR",
+				"writes": {
+					"settings.ocr_enabled": "SENTINEL-8"
+				}
+			},
+			{
+				"label": "Read scans on arrival",
+				"writes": {
+					"settings.ocr_on_arrival": "SENTINEL-9"
+				}
+			},
+			{
+				"label": null,
+				"writes": {
+					"ocrLanguages": {
+						"nld": "SENTINEL-10",
+						"eng": true,
+						"deu": false,
+						"fra": false
+					}
+				}
+			},
+			{
+				"label": null,
+				"writes": {
+					"ocrLanguages": {
+						"nld": "SENTINEL-10",
+						"eng": "SENTINEL-11",
+						"deu": false,
+						"fra": false
+					}
+				}
+			},
+			{
+				"label": null,
+				"writes": {
+					"ocrLanguages": {
+						"nld": "SENTINEL-10",
+						"eng": "SENTINEL-11",
+						"deu": "SENTINEL-12",
+						"fra": false
+					}
+				}
+			},
+			{
+				"label": null,
+				"writes": {
+					"ocrLanguages": {
+						"nld": "SENTINEL-10",
+						"eng": "SENTINEL-11",
+						"deu": "SENTINEL-12",
+						"fra": "SENTINEL-13"
+					}
+				}
+			},
+			{
+				"label": "Prioritise higher-confidentiality files in batch/folder analysis",
+				"writes": {
+					"settings.filinq.confidentiality.prioritise_analysis": "SENTINEL-14"
+				}
+			},
+			{
+				"label": "Enable Digital Signing",
+				"writes": {
+					"settings.signing_enabled": "SENTINEL-15"
+				}
+			}
+		]
+	},
+	"flipped": {
+		"html": [
+			"<x-cnadminsettingsshell appid=\"filinq\" appname=\"Filinq\" docurl=\"https://filinq.app\" showreimport=\"false\">",
+			"<x-slot name=\"default\">",
+			"<!-- Anonymiser backend warning (shown when regex-only and admin has not dismissed) -->",
+			"<x-anonymiserbackendwarning showactivebackend=\"true\" data-on-ondismissed=\"\">",
+			"</x-anonymiserbackendwarning>",
+			"<x-ncsettingssection name=\"Consent Settings\" description=\"Configure GDPR publication consent tracking settings\">",
+			"<x-slot name=\"default\">",
+			"<div class=\"setting-item\">",
+			"<div class=\"input-field\">",
+			"<label for=\"objection-period\">Objection Period (days)</label>",
+			"<input id=\"objection-period\" type=\"number\" min=\"1\" max=\"365\" placeholder=\"28\">",
+			"</div>",
+			"<span class=\"setting-description\">Minimum number of days entities have to submit an objection before publication (Wet Open Overheid: minimum 4 weeks)</span>",
+			"</div>",
+			"</x-slot>",
+			"</x-ncsettingssection>",
+			"<x-ncsettingssection name=\"Anonymisation\" description=\"Configure how anonymised documents are written back to Nextcloud\">",
+			"<x-slot name=\"default\">",
+			"<div class=\"setting-item\">",
+			"<div class=\"setting-label\">Show anonymiser backend warning</div>",
+			"<x-nccheckboxradioswitch aria-label=\"Show anonymiser backend warning\" modelvalue=\"false\" type=\"switch\" data-on-onupdate:modelvalue=\"\">",
+			"</x-nccheckboxradioswitch>",
+			"<div class=\"setting-description\">Re-enable the anonymiser backend warning banner. It was previously dismissed and will appear again on the next page load.</div>",
+			"</div>",
+			"<div class=\"setting-item\">",
+			"<div class=\"setting-label\">Default output format for anonymised documents</div>",
+			"<x-nccheckboxradioswitch modelvalue=\"preserve\" name=\"anonymisation_output_format\" type=\"radio\" data-on-onupdate:modelvalue=\"\" value=\"pdf-only\">",
+			"<x-slot name=\"default\">PDF only — delete the native anonymised file (recommended)</x-slot>",
+			"</x-nccheckboxradioswitch>",
+			"<x-nccheckboxradioswitch modelvalue=\"preserve\" name=\"anonymisation_output_format\" type=\"radio\" data-on-onupdate:modelvalue=\"\" value=\"pdf\">",
+			"<x-slot name=\"default\">PDF and native file — keep both</x-slot>",
+			"</x-nccheckboxradioswitch>",
+			"<x-nccheckboxradioswitch modelvalue=\"preserve\" name=\"anonymisation_output_format\" type=\"radio\" data-on-onupdate:modelvalue=\"\" value=\"preserve\">",
+			"<x-slot name=\"default\">Native format only — no PDF conversion</x-slot>",
+			"</x-nccheckboxradioswitch>",
+			"<div class=\"setting-description\">Controls what the anonymise endpoints write back to Nextcloud Files by default. \"PDF only\" converts the result to PDF/A-3b and then deletes the native-format intermediate, so no re-editable copy of the redacted document is left behind — PDF flattens the text into a glyph stream and strips most metadata channels that would otherwise still name the original entities. \"PDF and native file\" also keeps the native version (DOCX, ODT, …) alongside the PDF. \"Native format only\" skips conversion entirely. Callers can always override per-request by sending outputFormat: \"pdf-only\", \"pdf\", or \"preserve\".</div>",
+			"<!--v-if-->",
+			"</div>",
+			"<div class=\"setting-item\">",
+			"<x-nctextfield modelvalue=\"anonymised\" label=\"Subfolder for anonymised copies\" error=\"false\" helpertext=\"Use lowercase letters, digits, hyphens and underscores only.\" data-on-onupdate:modelvalue=\"\">",
+			"</x-nctextfield>",
+			"<div class=\"setting-description\">Batch and folder anonymisation put the redacted copies in this subfolder, next to the originals.</div>",
+			"</div>",
+			"</x-slot>",
+			"</x-ncsettingssection>",
+			"<x-ncsettingssection name=\"Legal basis per entity type\" description=\"Propose a default legal basis (grondslag) per detected entity type. After analysis, each detected entity is pre-filled with the selected basis (or bases) for its type when none has been assigned yet — operators can always override, and entity types left unmapped get no proposal.\">",
+			"<x-slot name=\"default\">",
+			"<div class=\"setting-item\">",
+			"<x-ncnotecard type=\"info\">",
+			"<x-slot name=\"default\">No legal bases (grondslagen) are available yet. Add base records to the dossier register to map them here.</x-slot>",
+			"</x-ncnotecard>",
+			"</div>",
+			"</x-slot>",
+			"</x-ncsettingssection>",
+			"<x-ncsettingssection name=\"Entity types to detect\" description=\"Choose which entity types are detected automatically during analysis. Types left off are not detected or stored, but can still be added manually per document and will be anonymised. Leaving every type on detects all types.\">",
+			"<x-slot name=\"default\">",
+			"<x-entitytypeselector data-modelvalue=\"[]\" data-on-onupdate:modelvalue=\"\" data-options=\"[]\">",
+			"</x-entitytypeselector>",
+			"</x-slot>",
+			"</x-ncsettingssection>",
+			"<x-ncsettingssection name=\"Metadata Enrichment\" description=\"Configure automatic metadata enrichment for documents\">",
+			"<x-slot name=\"default\">",
+			"<div class=\"setting-item\">",
+			"<div class=\"setting-label\">Language Detection</div>",
+			"<x-nccheckboxradioswitch aria-label=\"Language Detection\" modelvalue=\"false\" type=\"switch\" data-on-onupdate:modelvalue=\"\">",
+			"</x-nccheckboxradioswitch>",
+			"<div class=\"setting-description\">Automatically detect the language of documents</div>",
+			"</div>",
+			"<div class=\"setting-item\">",
+			"<div class=\"setting-label\">Keyword Extraction</div>",
+			"<x-nccheckboxradioswitch aria-label=\"Keyword Extraction\" modelvalue=\"false\" type=\"switch\" data-on-onupdate:modelvalue=\"\">",
+			"</x-nccheckboxradioswitch>",
+			"<div class=\"setting-description\">Automatically extract keywords from document content</div>",
+			"</div>",
+			"<div class=\"setting-item\">",
+			"<div class=\"setting-label\">Topic Classification</div>",
+			"<x-nccheckboxradioswitch aria-label=\"Topic Classification\" modelvalue=\"false\" type=\"switch\" data-on-onupdate:modelvalue=\"\">",
+			"</x-nccheckboxradioswitch>",
+			"<div class=\"setting-description\">Automatically classify documents by topic</div>",
+			"</div>",
+			"<div class=\"setting-item\">",
+			"<div class=\"setting-label\">Contract terms</div>",
+			"<x-nccheckboxradioswitch aria-label=\"Contract terms\" modelvalue=\"false\" type=\"switch\" data-on-onupdate:modelvalue=\"\">",
+			"</x-nccheckboxradioswitch>",
+			"<div class=\"setting-description\">Suggest dates, notice periods and values from contract documents. A suggestion changes nothing until somebody accepts it.</div>",
+			"</div>",
+			"<div class=\"setting-item\">",
+			"<div class=\"setting-label\">Inbound classification</div>",
+			"<x-nccheckboxradioswitch aria-label=\"Inbound classification\" modelvalue=\"false\" type=\"switch\" data-testid=\"settings-inbound-classification\" data-on-onupdate:modelvalue=\"\">",
+			"</x-nccheckboxradioswitch>",
+			"<div class=\"setting-description\">Suggest a document type, a sender and a dossier for documents that come in. A suggestion changes nothing until somebody confirms it.</div>",
+			"</div>",
+			"</x-slot>",
+			"</x-ncsettingssection>",
+			"<x-ncsettingssection name=\"OCR Document Scanning\" description=\"Configure Tesseract OCR for extracting text from scanned documents and images\">",
+			"<x-slot name=\"default\">",
+			"<!-- Tesseract availability status -->",
+			"<div class=\"setting-item\">",
+			"<x-ncnotecard type=\"success\">",
+			"<x-slot name=\"default\">Tesseract OCR is installed: {version} {\"version\":\"5.3\"}</x-slot>",
+			"</x-ncnotecard>",
+			"</div>",
+			"<!-- OCR enable/disable toggle -->",
+			"<div class=\"setting-item\">",
+			"<div class=\"setting-label\">Enable OCR</div>",
+			"<x-nccheckboxradioswitch aria-label=\"Enable OCR\" modelvalue=\"false\" type=\"switch\" data-on-onupdate:modelvalue=\"\">",
+			"</x-nccheckboxradioswitch>",
+			"<div class=\"setting-description\">Automatically extract text from scanned documents and images using Tesseract OCR</div>",
+			"</div>",
+			"<!-- Read arriving intake scans in the background (intake-ocr-on-arrival) -->",
+			"<div class=\"setting-item\">",
+			"<div class=\"setting-label\">Read scans on arrival</div>",
+			"<x-nccheckboxradioswitch aria-label=\"Read scans on arrival\" modelvalue=\"false\" type=\"switch\" data-on-onupdate:modelvalue=\"\">",
+			"</x-nccheckboxradioswitch>",
+			"<div class=\"setting-description\">Read the text of a scan or photo in the inbox as soon as it arrives, so it can be searched. Needs OCR on and Tesseract installed.</div>",
+			"</div>",
+			"<!-- Language selection -->",
+			"<div class=\"setting-item\">",
+			"<div class=\"setting-label\">OCR Languages</div>",
+			"<div class=\"ocr-languages\">",
+			"<x-nccheckboxradioswitch modelvalue=\"true\" data-on-onupdate:modelvalue=\"\">",
+			"<x-slot name=\"default\">Dutch (nld)</x-slot>",
+			"</x-nccheckboxradioswitch>",
+			"<x-nccheckboxradioswitch modelvalue=\"true\" data-on-onupdate:modelvalue=\"\">",
+			"<x-slot name=\"default\">English (eng)</x-slot>",
+			"</x-nccheckboxradioswitch>",
+			"<x-nccheckboxradioswitch modelvalue=\"false\" data-on-onupdate:modelvalue=\"\">",
+			"<x-slot name=\"default\">German (deu)</x-slot>",
+			"</x-nccheckboxradioswitch>",
+			"<x-nccheckboxradioswitch modelvalue=\"false\" data-on-onupdate:modelvalue=\"\">",
+			"<x-slot name=\"default\">French (fra)</x-slot>",
+			"</x-nccheckboxradioswitch>",
+			"</div>",
+			"<div class=\"setting-description\">Select languages for OCR text recognition. At least one language must be selected.</div>",
+			"</div>",
+			"<!-- DPI configuration -->",
+			"<div class=\"setting-item\">",
+			"<div class=\"input-field\">",
+			"<label for=\"ocr-dpi\">OCR DPI</label>",
+			"<input id=\"ocr-dpi\" type=\"number\" min=\"72\" max=\"600\" placeholder=\"300\">",
+			"</div>",
+			"<div class=\"setting-description\">DPI for PDF-to-image conversion during OCR. Higher values improve accuracy but increase processing time. Default: 300.</div>",
+			"</div>",
+			"</x-slot>",
+			"</x-ncsettingssection>",
+			"<x-ncsettingssection name=\"PDF/A validation\" description=\"Check documents against the PDF/A standard with veraPDF, installed on this server. Documents are never sent elsewhere.\">",
+			"<x-slot name=\"default\">",
+			"<div class=\"setting-item\" data-testid=\"verapdf-status\">",
+			"<x-ncnotecard type=\"success\">",
+			"<x-slot name=\"default\">The PDF/A validator is installed: {version} {\"version\":\"1.26\"}</x-slot>",
+			"</x-ncnotecard>",
+			"</div>",
+			"</x-slot>",
+			"</x-ncsettingssection>",
+			"<!--v-if-->",
+			"<x-ncsettingssection name=\"Confidentiality Labels\" description=\"Consume confidentiality labels already assigned by files_confidential (TSCP/BAILS) as a read-only sensitivity signal. This never blocks, redacts or gates anything.\">",
+			"<x-slot name=\"default\">",
+			"<div class=\"setting-item\">",
+			"<div class=\"setting-label\">Prioritise higher-confidentiality files in batch/folder analysis</div>",
+			"<x-nccheckboxradioswitch aria-label=\"Prioritise higher-confidentiality files in batch/folder analysis\" modelvalue=\"true\" type=\"switch\" data-on-onupdate:modelvalue=\"\">",
+			"</x-nccheckboxradioswitch>",
+			"<div class=\"setting-description\">Off by default. When enabled, files with a higher confidentiality label are analysed sooner — a suggestion only, it never skips, blocks or redacts files.</div>",
+			"</div>",
+			"<div class=\"setting-item\">",
+			"<div class=\"input-field\">",
+			"<label for=\"confidentiality-vocabulary\">Label vocabulary (JSON)</label>",
+			"<textarea id=\"confidentiality-vocabulary\" rows=\"4\" class=\"confidentiality-vocabulary-input\">",
+			"</textarea>",
+			"</div>",
+			"<!--v-if-->",
+			"<div class=\"setting-description\">Maps files_confidential tag names to a normalised level (higher = more confidential). Unmatched tags are ignored. Default: Public=0, Internal=1, Confidential=2, Secret=3.</div>",
+			"</div>",
+			"</x-slot>",
+			"</x-ncsettingssection>",
+			"<x-ncsettingssection name=\"Data Storage\" description=\"Configure Open Register integration for consent data storage\">",
+			"<x-slot name=\"default\">",
+			"<!--v-if-->",
+			"<x-ncloadingicon class=\"loadingIcon\" size=\"64\" appearance=\"dark\" name=\"Loading settings\">",
+			"</x-ncloadingicon>",
+			"</x-slot>",
+			"</x-ncsettingssection>",
+			"<x-ncsettingssection name=\"Digital Signing\" description=\"Configure digital document signing capabilities (eIDAS SES, AdES, QES)\">",
+			"<x-slot name=\"default\">",
+			"<div class=\"setting-item\">",
+			"<div class=\"setting-label\">Enable Digital Signing</div>",
+			"<x-nccheckboxradioswitch aria-label=\"Enable Digital Signing\" modelvalue=\"true\" type=\"switch\" data-on-onupdate:modelvalue=\"\">",
+			"</x-nccheckboxradioswitch>",
+			"<div class=\"setting-description\">Allow users to create and manage digital signing requests</div>",
+			"</div>",
+			"<div class=\"setting-item\">",
+			"<div class=\"input-field\">",
+			"<label for=\"signing-provider\">Signing Provider</label>",
+			"<select id=\"signing-provider\" style=\"padding: 8px; border: 1px solid var(--color-border); border-radius: var(--border-radius); background-color: var(--color-main-background); color: var(--color-main-text);\">",
+			"<option value=\"native\">Native (built-in SES)</option>",
+			"<option value=\"validsign\">ValidSign</option>",
+			"<option value=\"libresign\">LibreSign (certificate)</option>",
+			"</select>",
+			"</div>",
+			"<!--v-if-->",
+			"<div class=\"setting-description\">The signing provider to use for new signing requests</div>",
+			"</div>",
+			"<div class=\"setting-item\">",
+			"<div class=\"setting-label\">LibreSign certificate is qualified</div>",
+			"<x-nccheckboxradioswitch aria-label=\"LibreSign certificate is qualified\" modelvalue=\"true\" type=\"switch\" data-on-onupdate:modelvalue=\"\">",
+			"</x-nccheckboxradioswitch>",
+			"<div class=\"setting-description\">Turn this on only when LibreSign signs with a qualified certificate from a trust service provider. Only then can a request ask for a qualified signature (QES).</div>",
+			"</div>",
+			"<div class=\"setting-item\">",
+			"<div class=\"input-field\">",
+			"<label for=\"signing-default-level\">Default Signature Level</label>",
+			"<select id=\"signing-default-level\" style=\"padding: 8px; border: 1px solid var(--color-border); border-radius: var(--border-radius); background-color: var(--color-main-background); color: var(--color-main-text);\">",
+			"<option value=\"SES\">SES — Simple Electronic Signature</option>",
+			"<option value=\"AdES\">AdES — Advanced Electronic Signature</option>",
+			"<option value=\"QES\">QES — Qualified Electronic Signature (PKIoverheid)</option>",
+			"</select>",
+			"</div>",
+			"<div class=\"setting-description\">The eIDAS signature level applied to new signing requests unless overridden</div>",
+			"</div>",
+			"<div class=\"setting-item\">",
+			"<div class=\"input-field\">",
+			"<label for=\"signing-expiry-days\">Default Request Expiry (days)</label>",
+			"<input id=\"signing-expiry-days\" type=\"number\" min=\"1\" max=\"365\" placeholder=\"30\">",
+			"</div>",
+			"<div class=\"setting-description\">Number of days before an unsigned signing request expires (1–365). Archiefwet requires minimum 10-year audit trail retention.</div>",
+			"</div>",
+			"<div class=\"setting-item\">",
+			"<div class=\"input-field\">",
+			"<label for=\"signing-guardian-consent-age\">Guardian consent age</label>",
+			"<input id=\"signing-guardian-consent-age\" type=\"number\" min=\"1\" max=\"21\" placeholder=\"16\">",
+			"</div>",
+			"<div class=\"setting-description\">Signers under this age sign only with a parent or guardian on the request. The default is 16, the Dutch age of consent.</div>",
+			"</div>",
+			"</x-slot>",
+			"</x-ncsettingssection>",
+			"<!-- files-confidential-labels — read-only signal ingested from",
+			"\t\t     files_confidential (TSCP/BAILS system tags). No policy/enforcement",
+			"\t\t     of its own: the vocabulary controls which tag names are recognised,",
+			"\t\t     and the priority hint (off by default) only reorders batch/folder",
+			"\t\t     analysis. -->",
+			"<x-signeridentitysettings>",
+			"</x-signeridentitysettings>",
+			"<x-emailingestionsettings>",
+			"</x-emailingestionsettings>",
+			"<!-- Signer identity rails (signer-identity-rails): its own admin endpoint -->",
+			"<x-pagelayoutsettings>",
+			"</x-pagelayoutsettings>",
+			"<!--v-if-->",
+			"<x-ncsettingssection name=\"Processing Activity Register (AVG Art. 30)\" description=\"Filinq's document-processing activities are recorded in OpenRegister's platform processing-activity register. The Art. 30 register, per-access logging, exports, and access control are provided by OpenRegister; Filinq contributes the four activity categories.\" docurl=\"https://conduction.gitbook.io/filinq-nextcloud/\">",
+			"<x-slot name=\"default\">",
+			"<!-- Controller-identity record state + configure prompt (OR-PA-1) -->",
+			"<div class=\"setting-item\">",
+			"<x-ncnotecard type=\"info\">",
+			"<x-slot name=\"default\">The verantwoordelijke (controller) identity for the Art. 30 register is maintained centrally in OpenRegister. If it has not been configured, the export still succeeds with identity fields rendered as \"not configured\". Configure it once in OpenRegister to have it appear on every export.</x-slot>",
+			"</x-ncnotecard>",
+			"<x-ncbutton variant=\"secondary\" data-on-onclick=\"\">",
+			"<x-slot name=\"icon\">",
+			"<x-openinnew size=\"20\">",
+			"</x-openinnew>",
+			"</x-slot>",
+			"<x-slot name=\"default\"> Configure controller identity in OpenRegister</x-slot>",
+			"</x-ncbutton>",
+			"</div>",
+			"<!-- Activity catalogue (the four Filinq categories) -->",
+			"<div class=\"setting-item\">",
+			"<div class=\"setting-label\">Filinq processing activities</div>",
+			"<div class=\"setting-description\">Filinq declares four processing activities. They are seeded into OpenRegister as drafts when the Filinq register configuration is imported; activate them in OpenRegister to make Filinq processing attributable in the Art. 30 register.</div>",
+			"<ul class=\"processing-activities\">",
+			"<li>",
+			"<strong>Anonymisation of documents</strong>",
+			"<span class=\"processing-meta\">Pseudonymise / redact personal data detected in documents for Wet Open Overheid publication.</span>",
+			"<span class=\"processing-meta\">Retention: {ref} {\"ref\":\"P7Y (selectielijst category to be confirmed)\"}</span>",
+			"</li>",
+			"<li>",
+			"<strong>OCR text extraction</strong>",
+			"<span class=\"processing-meta\">Extract machine-readable text from scanned documents and images.</span>",
+			"<span class=\"processing-meta\">Retention: {ref} {\"ref\":\"not declared\"}</span>",
+			"</li>",
+			"<li>",
+			"<strong>Document metadata enrichment</strong>",
+			"<span class=\"processing-meta\">Language detection, keyword extraction, and topic classification.</span>",
+			"<span class=\"processing-meta\">Retention: {ref} {\"ref\":\"not declared\"}</span>",
+			"</li>",
+			"<li>",
+			"<strong>Digital document signing</strong>",
+			"<span class=\"processing-meta\">Maintain a tamper-evident audit trail of electronic signing activities.</span>",
+			"<span class=\"processing-meta\">Retention: {ref} {\"ref\":\"P10Y (Archiefwet 1995 selectielijst cat. 5.1.3)\"}</span>",
+			"</li>",
+			"</ul>",
+			"</div>",
+			"<!-- Art. 30 export entry point (delegates to OpenRegister, OR-PA-7) -->",
+			"<div class=\"setting-item\">",
+			"<div class=\"setting-label\">Art. 30 export</div>",
+			"<div class=\"setting-description\">The Art. 30 export and per-subject (betrokkene) inzage extract are produced by OpenRegister, scoped to Filinq's registers, and never contain literal personal data beyond what the data subject is entitled to. Access is restricted to administrators and the privacy officer (FG) group; non-admins are denied.</div>",
+			"<div class=\"processing-export-actions\">",
+			"<x-ncbutton variant=\"primary\" data-on-onclick=\"\">",
+			"<x-slot name=\"icon\">",
+			"<x-fileexportoutline size=\"20\">",
+			"</x-fileexportoutline>",
+			"</x-slot>",
+			"<x-slot name=\"default\"> Open processing-activity log in OpenRegister</x-slot>",
+			"</x-ncbutton>",
+			"<x-ncbutton variant=\"secondary\" data-on-onclick=\"\">",
+			"<x-slot name=\"icon\">",
+			"<x-accountsearchoutline size=\"20\">",
+			"</x-accountsearchoutline>",
+			"</x-slot>",
+			"<x-slot name=\"default\"> Per-subject (betrokkene) extract</x-slot>",
+			"</x-ncbutton>",
+			"</div>",
+			"<div class=\"setting-description\">",
+			"<em>Note: the per-access read log and per-subject extract are available now. The aggregate Art. 30 register export to JSON/CSV/PDF is a forthcoming OpenRegister capability; until it lands, use the read-log query surface above.</em>",
+			"</div>",
+			"</div>",
+			"</x-slot>",
+			"</x-ncsettingssection>",
+			"<div class=\"button-container\">",
+			"<x-ncbutton variant=\"primary\" disabled=\"false\" data-on-onclick=\"\">",
+			"<x-slot name=\"icon\">",
+			"<x-plus size=\"20\">",
+			"</x-plus>",
+			"</x-slot>",
+			"<x-slot name=\"default\"> Save All Settings</x-slot>",
+			"</x-ncbutton>",
+			"</div>",
+			"</x-slot>",
+			"</x-cnadminsettingsshell>"
+		],
+		"switches": [
+			{
+				"label": "pdf-only",
+				"writes": {
+					"settings.filinq.anonymisation.default_output_format": "SENTINEL-0"
+				}
+			},
+			{
+				"label": "pdf",
+				"writes": {
+					"settings.filinq.anonymisation.default_output_format": "SENTINEL-1"
+				}
+			},
+			{
+				"label": "preserve",
+				"writes": {
+					"settings.filinq.anonymisation.default_output_format": "SENTINEL-2"
+				}
+			},
+			{
+				"label": "Language Detection",
+				"writes": {
+					"settings.enable_language_detection": "SENTINEL-3"
+				}
+			},
+			{
+				"label": "Keyword Extraction",
+				"writes": {
+					"settings.enable_keyword_extraction": "SENTINEL-4"
+				}
+			},
+			{
+				"label": "Topic Classification",
+				"writes": {
+					"settings.enable_topic_classification": "SENTINEL-5"
+				}
+			},
+			{
+				"label": "Contract terms",
+				"writes": {
+					"settings.enable_contract_term_extraction": "SENTINEL-6"
+				}
+			},
+			{
+				"label": "Inbound classification",
+				"writes": {
+					"settings.enable_inbound_classification": "SENTINEL-7"
+				}
+			},
+			{
+				"label": "Enable OCR",
+				"writes": {
+					"settings.ocr_enabled": "SENTINEL-8"
+				}
+			},
+			{
+				"label": "Read scans on arrival",
+				"writes": {
+					"settings.ocr_on_arrival": "SENTINEL-9"
+				}
+			},
+			{
+				"label": null,
+				"writes": {
+					"ocrLanguages": {
+						"nld": "SENTINEL-10",
+						"eng": true,
+						"deu": false,
+						"fra": false
+					}
+				}
+			},
+			{
+				"label": null,
+				"writes": {
+					"ocrLanguages": {
+						"nld": "SENTINEL-10",
+						"eng": "SENTINEL-11",
+						"deu": false,
+						"fra": false
+					}
+				}
+			},
+			{
+				"label": null,
+				"writes": {
+					"ocrLanguages": {
+						"nld": "SENTINEL-10",
+						"eng": "SENTINEL-11",
+						"deu": "SENTINEL-12",
+						"fra": false
+					}
+				}
+			},
+			{
+				"label": null,
+				"writes": {
+					"ocrLanguages": {
+						"nld": "SENTINEL-10",
+						"eng": "SENTINEL-11",
+						"deu": "SENTINEL-12",
+						"fra": "SENTINEL-13"
+					}
+				}
+			},
+			{
+				"label": "Prioritise higher-confidentiality files in batch/folder analysis",
+				"writes": {
+					"settings.filinq.confidentiality.prioritise_analysis": "SENTINEL-14"
+				}
+			},
+			{
+				"label": "Enable Digital Signing",
+				"writes": {
+					"settings.signing_enabled": "SENTINEL-15"
+				}
+			},
+			{
+				"label": "Show anonymiser backend warning",
+				"writes": {}
+			},
+			{
+				"label": "LibreSign certificate is qualified",
+				"writes": {
+					"settings.libresign_qualified": "SENTINEL-17"
+				}
+			}
+		]
+	},
+	"unset": {
+		"html": [
+			"<x-cnadminsettingsshell appid=\"filinq\" appname=\"Filinq\" docurl=\"https://filinq.app\" showreimport=\"false\">",
+			"<x-slot name=\"default\">",
+			"<!-- Anonymiser backend warning (shown when regex-only and admin has not dismissed) -->",
+			"<!--v-if-->",
+			"<x-ncsettingssection name=\"Consent Settings\" description=\"Configure GDPR publication consent tracking settings\">",
+			"<x-slot name=\"default\">",
+			"<div class=\"setting-item\">",
+			"<div class=\"input-field\">",
+			"<label for=\"objection-period\">Objection Period (days)</label>",
+			"<input id=\"objection-period\" type=\"number\" min=\"1\" max=\"365\" placeholder=\"28\">",
+			"</div>",
+			"<span class=\"setting-description\">Minimum number of days entities have to submit an objection before publication (Wet Open Overheid: minimum 4 weeks)</span>",
+			"</div>",
+			"</x-slot>",
+			"</x-ncsettingssection>",
+			"<x-ncsettingssection name=\"Anonymisation\" description=\"Configure how anonymised documents are written back to Nextcloud\">",
+			"<x-slot name=\"default\">",
+			"<!--v-if-->",
+			"<div class=\"setting-item\">",
+			"<div class=\"setting-label\">Default output format for anonymised documents</div>",
+			"<x-nccheckboxradioswitch modelvalue=\"pdf-only\" name=\"anonymisation_output_format\" type=\"radio\" data-on-onupdate:modelvalue=\"\" value=\"pdf-only\">",
+			"<x-slot name=\"default\">PDF only — delete the native anonymised file (recommended)</x-slot>",
+			"</x-nccheckboxradioswitch>",
+			"<x-nccheckboxradioswitch modelvalue=\"pdf-only\" name=\"anonymisation_output_format\" type=\"radio\" data-on-onupdate:modelvalue=\"\" value=\"pdf\">",
+			"<x-slot name=\"default\">PDF and native file — keep both</x-slot>",
+			"</x-nccheckboxradioswitch>",
+			"<x-nccheckboxradioswitch modelvalue=\"pdf-only\" name=\"anonymisation_output_format\" type=\"radio\" data-on-onupdate:modelvalue=\"\" value=\"preserve\">",
+			"<x-slot name=\"default\">Native format only — no PDF conversion</x-slot>",
+			"</x-nccheckboxradioswitch>",
+			"<div class=\"setting-description\">Controls what the anonymise endpoints write back to Nextcloud Files by default. \"PDF only\" converts the result to PDF/A-3b and then deletes the native-format intermediate, so no re-editable copy of the redacted document is left behind — PDF flattens the text into a glyph stream and strips most metadata channels that would otherwise still name the original entities. \"PDF and native file\" also keeps the native version (DOCX, ODT, …) alongside the PDF. \"Native format only\" skips conversion entirely. Callers can always override per-request by sending outputFormat: \"pdf-only\", \"pdf\", or \"preserve\".</div>",
+			"<div class=\"setting-description\">",
+			"<em>Conversion requires either a supported Office app integration (Collabora, OnlyOffice, or Euro Office) for the best fidelity, or the bundled PhpWord + mPDF fallback for DOC/DOCX/ODT/RTF/HTML/TXT. Spreadsheet and presentation formats are not supported in the fallback tier and will return an error unless an Office app is configured.</em>",
+			"</div>",
+			"</div>",
+			"<div class=\"setting-item\">",
+			"<x-nctextfield modelvalue=\"anonymised\" label=\"Subfolder for anonymised copies\" error=\"false\" helpertext=\"Use lowercase letters, digits, hyphens and underscores only.\" data-on-onupdate:modelvalue=\"\">",
+			"</x-nctextfield>",
+			"<div class=\"setting-description\">Batch and folder anonymisation put the redacted copies in this subfolder, next to the originals.</div>",
+			"</div>",
+			"</x-slot>",
+			"</x-ncsettingssection>",
+			"<x-ncsettingssection name=\"Legal basis per entity type\" description=\"Propose a default legal basis (grondslag) per detected entity type. After analysis, each detected entity is pre-filled with the selected basis (or bases) for its type when none has been assigned yet — operators can always override, and entity types left unmapped get no proposal.\">",
+			"<x-slot name=\"default\">",
+			"<div class=\"setting-item\">",
+			"<x-ncnotecard type=\"info\">",
+			"<x-slot name=\"default\">No legal bases (grondslagen) are available yet. Add base records to the dossier register to map them here.</x-slot>",
+			"</x-ncnotecard>",
+			"</div>",
+			"</x-slot>",
+			"</x-ncsettingssection>",
+			"<x-ncsettingssection name=\"Entity types to detect\" description=\"Choose which entity types are detected automatically during analysis. Types left off are not detected or stored, but can still be added manually per document and will be anonymised. Leaving every type on detects all types.\">",
+			"<x-slot name=\"default\">",
+			"<x-entitytypeselector data-modelvalue=\"[]\" data-on-onupdate:modelvalue=\"\" data-options=\"[]\">",
+			"</x-entitytypeselector>",
+			"</x-slot>",
+			"</x-ncsettingssection>",
+			"<x-ncsettingssection name=\"Metadata Enrichment\" description=\"Configure automatic metadata enrichment for documents\">",
+			"<x-slot name=\"default\">",
+			"<div class=\"setting-item\">",
+			"<div class=\"setting-label\">Language Detection</div>",
+			"<x-nccheckboxradioswitch aria-label=\"Language Detection\" type=\"switch\" data-on-onupdate:modelvalue=\"\">",
+			"</x-nccheckboxradioswitch>",
+			"<div class=\"setting-description\">Automatically detect the language of documents</div>",
+			"</div>",
+			"<div class=\"setting-item\">",
+			"<div class=\"setting-label\">Keyword Extraction</div>",
+			"<x-nccheckboxradioswitch aria-label=\"Keyword Extraction\" modelvalue=\"true\" type=\"switch\" data-on-onupdate:modelvalue=\"\">",
+			"</x-nccheckboxradioswitch>",
+			"<div class=\"setting-description\">Automatically extract keywords from document content</div>",
+			"</div>",
+			"<div class=\"setting-item\">",
+			"<div class=\"setting-label\">Topic Classification</div>",
+			"<x-nccheckboxradioswitch aria-label=\"Topic Classification\" modelvalue=\"true\" type=\"switch\" data-on-onupdate:modelvalue=\"\">",
+			"</x-nccheckboxradioswitch>",
+			"<div class=\"setting-description\">Automatically classify documents by topic</div>",
+			"</div>",
+			"<div class=\"setting-item\">",
+			"<div class=\"setting-label\">Contract terms</div>",
+			"<x-nccheckboxradioswitch aria-label=\"Contract terms\" modelvalue=\"true\" type=\"switch\" data-on-onupdate:modelvalue=\"\">",
+			"</x-nccheckboxradioswitch>",
+			"<div class=\"setting-description\">Suggest dates, notice periods and values from contract documents. A suggestion changes nothing until somebody accepts it.</div>",
+			"</div>",
+			"<div class=\"setting-item\">",
+			"<div class=\"setting-label\">Inbound classification</div>",
+			"<x-nccheckboxradioswitch aria-label=\"Inbound classification\" modelvalue=\"true\" type=\"switch\" data-testid=\"settings-inbound-classification\" data-on-onupdate:modelvalue=\"\">",
+			"</x-nccheckboxradioswitch>",
+			"<div class=\"setting-description\">Suggest a document type, a sender and a dossier for documents that come in. A suggestion changes nothing until somebody confirms it.</div>",
+			"</div>",
+			"</x-slot>",
+			"</x-ncsettingssection>",
+			"<x-ncsettingssection name=\"OCR Document Scanning\" description=\"Configure Tesseract OCR for extracting text from scanned documents and images\">",
+			"<x-slot name=\"default\">",
+			"<!-- Tesseract availability status -->",
+			"<div class=\"setting-item\">",
+			"<x-ncnotecard type=\"warning\">",
+			"<x-slot name=\"default\">Tesseract OCR is not installed. Install tesseract-ocr on the server to enable OCR for scanned documents.</x-slot>",
+			"</x-ncnotecard>",
+			"</div>",
+			"<!-- OCR enable/disable toggle -->",
+			"<div class=\"setting-item\">",
+			"<div class=\"setting-label\">Enable OCR</div>",
+			"<x-nccheckboxradioswitch aria-label=\"Enable OCR\" modelvalue=\"true\" type=\"switch\" data-on-onupdate:modelvalue=\"\">",
+			"</x-nccheckboxradioswitch>",
+			"<div class=\"setting-description\">Automatically extract text from scanned documents and images using Tesseract OCR</div>",
+			"</div>",
+			"<!-- Read arriving intake scans in the background (intake-ocr-on-arrival) -->",
+			"<div class=\"setting-item\">",
+			"<div class=\"setting-label\">Read scans on arrival</div>",
+			"<x-nccheckboxradioswitch aria-label=\"Read scans on arrival\" modelvalue=\"true\" type=\"switch\" data-on-onupdate:modelvalue=\"\">",
+			"</x-nccheckboxradioswitch>",
+			"<div class=\"setting-description\">Read the text of a scan or photo in the inbox as soon as it arrives, so it can be searched. Needs OCR on and Tesseract installed.</div>",
+			"</div>",
+			"<!-- Language selection -->",
+			"<div class=\"setting-item\">",
+			"<div class=\"setting-label\">OCR Languages</div>",
+			"<div class=\"ocr-languages\">",
+			"<x-nccheckboxradioswitch modelvalue=\"true\" data-on-onupdate:modelvalue=\"\">",
+			"<x-slot name=\"default\">Dutch (nld)</x-slot>",
+			"</x-nccheckboxradioswitch>",
+			"<x-nccheckboxradioswitch modelvalue=\"true\" data-on-onupdate:modelvalue=\"\">",
+			"<x-slot name=\"default\">English (eng)</x-slot>",
+			"</x-nccheckboxradioswitch>",
+			"<x-nccheckboxradioswitch modelvalue=\"false\" data-on-onupdate:modelvalue=\"\">",
+			"<x-slot name=\"default\">German (deu)</x-slot>",
+			"</x-nccheckboxradioswitch>",
+			"<x-nccheckboxradioswitch modelvalue=\"false\" data-on-onupdate:modelvalue=\"\">",
+			"<x-slot name=\"default\">French (fra)</x-slot>",
+			"</x-nccheckboxradioswitch>",
+			"</div>",
+			"<div class=\"setting-description\">Select languages for OCR text recognition. At least one language must be selected.</div>",
+			"</div>",
+			"<!-- DPI configuration -->",
+			"<div class=\"setting-item\">",
+			"<div class=\"input-field\">",
+			"<label for=\"ocr-dpi\">OCR DPI</label>",
+			"<input id=\"ocr-dpi\" type=\"number\" min=\"72\" max=\"600\" placeholder=\"300\">",
+			"</div>",
+			"<div class=\"setting-description\">DPI for PDF-to-image conversion during OCR. Higher values improve accuracy but increase processing time. Default: 300.</div>",
+			"</div>",
+			"</x-slot>",
+			"</x-ncsettingssection>",
+			"<x-ncsettingssection name=\"PDF/A validation\" description=\"Check documents against the PDF/A standard with veraPDF, installed on this server. Documents are never sent elsewhere.\">",
+			"<x-slot name=\"default\">",
+			"<div class=\"setting-item\" data-testid=\"verapdf-status\">",
+			"<x-ncnotecard type=\"warning\">",
+			"<x-slot name=\"default\">The PDF/A validator (veraPDF) is not installed. Without it, Filinq only checks that a PDF claims to be PDF/A, not that it is.</x-slot>",
+			"</x-ncnotecard>",
+			"</div>",
+			"</x-slot>",
+			"</x-ncsettingssection>",
+			"<!-- files-confidential-labels — read-only signal ingested from",
+			"\t\t     files_confidential (TSCP/BAILS system tags). No policy/enforcement",
+			"\t\t     of its own: the vocabulary controls which tag names are recognised,",
+			"\t\t     and the priority hint (off by default) only reorders batch/folder",
+			"\t\t     analysis. -->",
+			"<x-ncsettingssection name=\"Confidentiality Labels\" description=\"Consume confidentiality labels already assigned by files_confidential (TSCP/BAILS) as a read-only sensitivity signal. This never blocks, redacts or gates anything.\">",
+			"<x-slot name=\"default\">",
+			"<div class=\"setting-item\">",
+			"<div class=\"setting-label\">Prioritise higher-confidentiality files in batch/folder analysis</div>",
+			"<x-nccheckboxradioswitch aria-label=\"Prioritise higher-confidentiality files in batch/folder analysis\" modelvalue=\"0\" type=\"switch\" data-on-onupdate:modelvalue=\"\">",
+			"</x-nccheckboxradioswitch>",
+			"<div class=\"setting-description\">Off by default. When enabled, files with a higher confidentiality label are analysed sooner — a suggestion only, it never skips, blocks or redacts files.</div>",
+			"</div>",
+			"<div class=\"setting-item\">",
+			"<div class=\"input-field\">",
+			"<label for=\"confidentiality-vocabulary\">Label vocabulary (JSON)</label>",
+			"<textarea id=\"confidentiality-vocabulary\" rows=\"4\" class=\"confidentiality-vocabulary-input\">",
+			"</textarea>",
+			"</div>",
+			"<!--v-if-->",
+			"<div class=\"setting-description\">Maps files_confidential tag names to a normalised level (higher = more confidential). Unmatched tags are ignored. Default: Public=0, Internal=1, Confidential=2, Secret=3.</div>",
+			"</div>",
+			"</x-slot>",
+			"</x-ncsettingssection>",
+			"<x-ncsettingssection name=\"Data Storage\" description=\"Configure Open Register integration for consent data storage\">",
+			"<x-slot name=\"default\">",
+			"<!--v-if-->",
+			"<x-ncloadingicon class=\"loadingIcon\" size=\"64\" appearance=\"dark\" name=\"Loading settings\">",
+			"</x-ncloadingicon>",
+			"</x-slot>",
+			"</x-ncsettingssection>",
+			"<x-ncsettingssection name=\"Digital Signing\" description=\"Configure digital document signing capabilities (eIDAS SES, AdES, QES)\">",
+			"<x-slot name=\"default\">",
+			"<div class=\"setting-item\">",
+			"<div class=\"setting-label\">Enable Digital Signing</div>",
+			"<x-nccheckboxradioswitch aria-label=\"Enable Digital Signing\" type=\"switch\" data-on-onupdate:modelvalue=\"\">",
+			"</x-nccheckboxradioswitch>",
+			"<div class=\"setting-description\">Allow users to create and manage digital signing requests</div>",
+			"</div>",
+			"<div class=\"setting-item\">",
+			"<div class=\"input-field\">",
+			"<label for=\"signing-provider\">Signing Provider</label>",
+			"<select id=\"signing-provider\" style=\"padding: 8px; border: 1px solid var(--color-border); border-radius: var(--border-radius); background-color: var(--color-main-background); color: var(--color-main-text);\">",
+			"<option value=\"native\">Native (built-in SES)</option>",
+			"<option value=\"validsign\">ValidSign</option>",
+			"<!--v-if-->",
+			"</select>",
+			"</div>",
+			"<!--v-if-->",
+			"<div class=\"setting-description\">The signing provider to use for new signing requests</div>",
+			"</div>",
+			"<!--v-if-->",
+			"<div class=\"setting-item\">",
+			"<div class=\"input-field\">",
+			"<label for=\"signing-default-level\">Default Signature Level</label>",
+			"<select id=\"signing-default-level\" style=\"padding: 8px; border: 1px solid var(--color-border); border-radius: var(--border-radius); background-color: var(--color-main-background); color: var(--color-main-text);\">",
+			"<option value=\"SES\">SES — Simple Electronic Signature</option>",
+			"<option value=\"AdES\">AdES — Advanced Electronic Signature</option>",
+			"<option value=\"QES\">QES — Qualified Electronic Signature (PKIoverheid)</option>",
+			"</select>",
+			"</div>",
+			"<div class=\"setting-description\">The eIDAS signature level applied to new signing requests unless overridden</div>",
+			"</div>",
+			"<div class=\"setting-item\">",
+			"<div class=\"input-field\">",
+			"<label for=\"signing-expiry-days\">Default Request Expiry (days)</label>",
+			"<input id=\"signing-expiry-days\" type=\"number\" min=\"1\" max=\"365\" placeholder=\"30\">",
+			"</div>",
+			"<div class=\"setting-description\">Number of days before an unsigned signing request expires (1–365). Archiefwet requires minimum 10-year audit trail retention.</div>",
+			"</div>",
+			"<div class=\"setting-item\">",
+			"<div class=\"input-field\">",
+			"<label for=\"signing-guardian-consent-age\">Guardian consent age</label>",
+			"<input id=\"signing-guardian-consent-age\" type=\"number\" min=\"1\" max=\"21\" placeholder=\"16\">",
+			"</div>",
+			"<div class=\"setting-description\">Signers under this age sign only with a parent or guardian on the request. The default is 16, the Dutch age of consent.</div>",
+			"</div>",
+			"</x-slot>",
+			"</x-ncsettingssection>",
+			"<!-- Signer identity rails (signer-identity-rails): its own admin endpoint -->",
+			"<!--v-if-->",
+			"<!--v-if-->",
+			"<!-- Page layouts (documents-from-a-template REQ-DFT-01): their own endpoints -->",
+			"<!--v-if-->",
+			"<!-- AVG Art. 30 processing-activity register (provided by OpenRegister) -->",
+			"<!--v-if-->",
+			"<div class=\"button-container\">",
+			"<x-ncbutton variant=\"primary\" disabled=\"false\" data-on-onclick=\"\">",
+			"<x-slot name=\"icon\">",
+			"<x-plus size=\"20\">",
+			"</x-plus>",
+			"</x-slot>",
+			"<x-slot name=\"default\"> Save All Settings</x-slot>",
+			"</x-ncbutton>",
+			"</div>",
+			"</x-slot>",
+			"</x-cnadminsettingsshell>"
+		],
+		"switches": [
+			{
+				"label": "pdf-only",
+				"writes": {
+					"settings.filinq.anonymisation.default_output_format": "SENTINEL-0"
+				}
+			},
+			{
+				"label": "pdf",
+				"writes": {
+					"settings.filinq.anonymisation.default_output_format": "SENTINEL-1"
+				}
+			},
+			{
+				"label": "preserve",
+				"writes": {
+					"settings.filinq.anonymisation.default_output_format": "SENTINEL-2"
+				}
+			},
+			{
+				"label": "Language Detection",
+				"writes": {
+					"settings.enable_language_detection": "SENTINEL-3"
+				}
+			},
+			{
+				"label": "Keyword Extraction",
+				"writes": {
+					"settings.enable_keyword_extraction": "SENTINEL-4"
+				}
+			},
+			{
+				"label": "Topic Classification",
+				"writes": {
+					"settings.enable_topic_classification": "SENTINEL-5"
+				}
+			},
+			{
+				"label": "Contract terms",
+				"writes": {
+					"settings.enable_contract_term_extraction": "SENTINEL-6"
+				}
+			},
+			{
+				"label": "Inbound classification",
+				"writes": {
+					"settings.enable_inbound_classification": "SENTINEL-7"
+				}
+			},
+			{
+				"label": "Enable OCR",
+				"writes": {
+					"settings.ocr_enabled": "SENTINEL-8"
+				}
+			},
+			{
+				"label": "Read scans on arrival",
+				"writes": {
+					"settings.ocr_on_arrival": "SENTINEL-9"
+				}
+			},
+			{
+				"label": null,
+				"writes": {
+					"ocrLanguages": {
+						"nld": "SENTINEL-10",
+						"eng": true,
+						"deu": false,
+						"fra": false
+					}
+				}
+			},
+			{
+				"label": null,
+				"writes": {
+					"ocrLanguages": {
+						"nld": "SENTINEL-10",
+						"eng": "SENTINEL-11",
+						"deu": false,
+						"fra": false
+					}
+				}
+			},
+			{
+				"label": null,
+				"writes": {
+					"ocrLanguages": {
+						"nld": "SENTINEL-10",
+						"eng": "SENTINEL-11",
+						"deu": "SENTINEL-12",
+						"fra": false
+					}
+				}
+			},
+			{
+				"label": null,
+				"writes": {
+					"ocrLanguages": {
+						"nld": "SENTINEL-10",
+						"eng": "SENTINEL-11",
+						"deu": "SENTINEL-12",
+						"fra": "SENTINEL-13"
+					}
+				}
+			},
+			{
+				"label": "Prioritise higher-confidentiality files in batch/folder analysis",
+				"writes": {
+					"settings.filinq.confidentiality.prioritise_analysis": "SENTINEL-14"
+				}
+			},
+			{
+				"label": "Enable Digital Signing",
+				"writes": {
+					"settings.signing_enabled": "SENTINEL-15"
+				}
+			}
+		]
+	},
+	"mixed": {
+		"html": [
+			"<x-cnadminsettingsshell appid=\"filinq\" appname=\"Filinq\" docurl=\"https://filinq.app\" showreimport=\"false\">",
+			"<x-slot name=\"default\">",
+			"<!-- Anonymiser backend warning (shown when regex-only and admin has not dismissed) -->",
+			"<x-anonymiserbackendwarning showwarning=\"false\" appapiinstalled=\"false\" activemethod=\"\" effectivemethod=\"\" showactivebackend=\"true\" data-on-ondismissed=\"\">",
+			"</x-anonymiserbackendwarning>",
+			"<x-ncsettingssection name=\"Consent Settings\" description=\"Configure GDPR publication consent tracking settings\">",
+			"<x-slot name=\"default\">",
+			"<div class=\"setting-item\">",
+			"<div class=\"input-field\">",
+			"<label for=\"objection-period\">Objection Period (days)</label>",
+			"<input id=\"objection-period\" type=\"number\" min=\"1\" max=\"365\" placeholder=\"28\">",
+			"</div>",
+			"<span class=\"setting-description\">Minimum number of days entities have to submit an objection before publication (Wet Open Overheid: minimum 4 weeks)</span>",
+			"</div>",
+			"</x-slot>",
+			"</x-ncsettingssection>",
+			"<x-ncsettingssection name=\"Anonymisation\" description=\"Configure how anonymised documents are written back to Nextcloud\">",
+			"<x-slot name=\"default\">",
+			"<!--v-if-->",
+			"<div class=\"setting-item\">",
+			"<div class=\"setting-label\">Default output format for anonymised documents</div>",
+			"<x-nccheckboxradioswitch modelvalue=\"pdf\" name=\"anonymisation_output_format\" type=\"radio\" data-on-onupdate:modelvalue=\"\" value=\"pdf-only\">",
+			"<x-slot name=\"default\">PDF only — delete the native anonymised file (recommended)</x-slot>",
+			"</x-nccheckboxradioswitch>",
+			"<x-nccheckboxradioswitch modelvalue=\"pdf\" name=\"anonymisation_output_format\" type=\"radio\" data-on-onupdate:modelvalue=\"\" value=\"pdf\">",
+			"<x-slot name=\"default\">PDF and native file — keep both</x-slot>",
+			"</x-nccheckboxradioswitch>",
+			"<x-nccheckboxradioswitch modelvalue=\"pdf\" name=\"anonymisation_output_format\" type=\"radio\" data-on-onupdate:modelvalue=\"\" value=\"preserve\">",
+			"<x-slot name=\"default\">Native format only — no PDF conversion</x-slot>",
+			"</x-nccheckboxradioswitch>",
+			"<div class=\"setting-description\">Controls what the anonymise endpoints write back to Nextcloud Files by default. \"PDF only\" converts the result to PDF/A-3b and then deletes the native-format intermediate, so no re-editable copy of the redacted document is left behind — PDF flattens the text into a glyph stream and strips most metadata channels that would otherwise still name the original entities. \"PDF and native file\" also keeps the native version (DOCX, ODT, …) alongside the PDF. \"Native format only\" skips conversion entirely. Callers can always override per-request by sending outputFormat: \"pdf-only\", \"pdf\", or \"preserve\".</div>",
+			"<div class=\"setting-description\">",
+			"<em>Conversion requires either a supported Office app integration (Collabora, OnlyOffice, or Euro Office) for the best fidelity, or the bundled PhpWord + mPDF fallback for DOC/DOCX/ODT/RTF/HTML/TXT. Spreadsheet and presentation formats are not supported in the fallback tier and will return an error unless an Office app is configured.</em>",
+			"</div>",
+			"</div>",
+			"<div class=\"setting-item\">",
+			"<x-nctextfield modelvalue=\"anonymised\" label=\"Subfolder for anonymised copies\" error=\"false\" helpertext=\"Use lowercase letters, digits, hyphens and underscores only.\" data-on-onupdate:modelvalue=\"\">",
+			"</x-nctextfield>",
+			"<div class=\"setting-description\">Batch and folder anonymisation put the redacted copies in this subfolder, next to the originals.</div>",
+			"</div>",
+			"</x-slot>",
+			"</x-ncsettingssection>",
+			"<x-ncsettingssection name=\"Legal basis per entity type\" description=\"Propose a default legal basis (grondslag) per detected entity type. After analysis, each detected entity is pre-filled with the selected basis (or bases) for its type when none has been assigned yet — operators can always override, and entity types left unmapped get no proposal.\">",
+			"<x-slot name=\"default\">",
+			"<div class=\"setting-item\">",
+			"<x-ncnotecard type=\"info\">",
+			"<x-slot name=\"default\">No legal bases (grondslagen) are available yet. Add base records to the dossier register to map them here.</x-slot>",
+			"</x-ncnotecard>",
+			"</div>",
+			"</x-slot>",
+			"</x-ncsettingssection>",
+			"<x-ncsettingssection name=\"Entity types to detect\" description=\"Choose which entity types are detected automatically during analysis. Types left off are not detected or stored, but can still be added manually per document and will be anonymised. Leaving every type on detects all types.\">",
+			"<x-slot name=\"default\">",
+			"<x-entitytypeselector data-modelvalue=\"[]\" data-on-onupdate:modelvalue=\"\" data-options=\"[]\">",
+			"</x-entitytypeselector>",
+			"</x-slot>",
+			"</x-ncsettingssection>",
+			"<x-ncsettingssection name=\"Metadata Enrichment\" description=\"Configure automatic metadata enrichment for documents\">",
+			"<x-slot name=\"default\">",
+			"<div class=\"setting-item\">",
+			"<div class=\"setting-label\">Language Detection</div>",
+			"<x-nccheckboxradioswitch aria-label=\"Language Detection\" modelvalue=\"true\" type=\"switch\" data-on-onupdate:modelvalue=\"\">",
+			"</x-nccheckboxradioswitch>",
+			"<div class=\"setting-description\">Automatically detect the language of documents</div>",
+			"</div>",
+			"<div class=\"setting-item\">",
+			"<div class=\"setting-label\">Keyword Extraction</div>",
+			"<x-nccheckboxradioswitch aria-label=\"Keyword Extraction\" modelvalue=\"false\" type=\"switch\" data-on-onupdate:modelvalue=\"\">",
+			"</x-nccheckboxradioswitch>",
+			"<div class=\"setting-description\">Automatically extract keywords from document content</div>",
+			"</div>",
+			"<div class=\"setting-item\">",
+			"<div class=\"setting-label\">Topic Classification</div>",
+			"<x-nccheckboxradioswitch aria-label=\"Topic Classification\" modelvalue=\"true\" type=\"switch\" data-on-onupdate:modelvalue=\"\">",
+			"</x-nccheckboxradioswitch>",
+			"<div class=\"setting-description\">Automatically classify documents by topic</div>",
+			"</div>",
+			"<div class=\"setting-item\">",
+			"<div class=\"setting-label\">Contract terms</div>",
+			"<x-nccheckboxradioswitch aria-label=\"Contract terms\" modelvalue=\"true\" type=\"switch\" data-on-onupdate:modelvalue=\"\">",
+			"</x-nccheckboxradioswitch>",
+			"<div class=\"setting-description\">Suggest dates, notice periods and values from contract documents. A suggestion changes nothing until somebody accepts it.</div>",
+			"</div>",
+			"<div class=\"setting-item\">",
+			"<div class=\"setting-label\">Inbound classification</div>",
+			"<x-nccheckboxradioswitch aria-label=\"Inbound classification\" modelvalue=\"true\" type=\"switch\" data-testid=\"settings-inbound-classification\" data-on-onupdate:modelvalue=\"\">",
+			"</x-nccheckboxradioswitch>",
+			"<div class=\"setting-description\">Suggest a document type, a sender and a dossier for documents that come in. A suggestion changes nothing until somebody confirms it.</div>",
+			"</div>",
+			"</x-slot>",
+			"</x-ncsettingssection>",
+			"<x-ncsettingssection name=\"OCR Document Scanning\" description=\"Configure Tesseract OCR for extracting text from scanned documents and images\">",
+			"<x-slot name=\"default\">",
+			"<!-- Tesseract availability status -->",
+			"<div class=\"setting-item\">",
+			"<x-ncnotecard type=\"warning\">",
+			"<x-slot name=\"default\">Tesseract OCR is not installed. Install tesseract-ocr on the server to enable OCR for scanned documents.</x-slot>",
+			"</x-ncnotecard>",
+			"</div>",
+			"<!-- OCR enable/disable toggle -->",
+			"<div class=\"setting-item\">",
+			"<div class=\"setting-label\">Enable OCR</div>",
+			"<x-nccheckboxradioswitch aria-label=\"Enable OCR\" modelvalue=\"true\" type=\"switch\" data-on-onupdate:modelvalue=\"\">",
+			"</x-nccheckboxradioswitch>",
+			"<div class=\"setting-description\">Automatically extract text from scanned documents and images using Tesseract OCR</div>",
+			"</div>",
+			"<!-- Read arriving intake scans in the background (intake-ocr-on-arrival) -->",
+			"<div class=\"setting-item\">",
+			"<div class=\"setting-label\">Read scans on arrival</div>",
+			"<x-nccheckboxradioswitch aria-label=\"Read scans on arrival\" modelvalue=\"false\" type=\"switch\" data-on-onupdate:modelvalue=\"\">",
+			"</x-nccheckboxradioswitch>",
+			"<div class=\"setting-description\">Read the text of a scan or photo in the inbox as soon as it arrives, so it can be searched. Needs OCR on and Tesseract installed.</div>",
+			"</div>",
+			"<!-- Language selection -->",
+			"<div class=\"setting-item\">",
+			"<div class=\"setting-label\">OCR Languages</div>",
+			"<div class=\"ocr-languages\">",
+			"<x-nccheckboxradioswitch modelvalue=\"true\" data-on-onupdate:modelvalue=\"\">",
+			"<x-slot name=\"default\">Dutch (nld)</x-slot>",
+			"</x-nccheckboxradioswitch>",
+			"<x-nccheckboxradioswitch modelvalue=\"true\" data-on-onupdate:modelvalue=\"\">",
+			"<x-slot name=\"default\">English (eng)</x-slot>",
+			"</x-nccheckboxradioswitch>",
+			"<x-nccheckboxradioswitch modelvalue=\"false\" data-on-onupdate:modelvalue=\"\">",
+			"<x-slot name=\"default\">German (deu)</x-slot>",
+			"</x-nccheckboxradioswitch>",
+			"<x-nccheckboxradioswitch modelvalue=\"false\" data-on-onupdate:modelvalue=\"\">",
+			"<x-slot name=\"default\">French (fra)</x-slot>",
+			"</x-nccheckboxradioswitch>",
+			"</div>",
+			"<div class=\"setting-description\">Select languages for OCR text recognition. At least one language must be selected.</div>",
+			"</div>",
+			"<!-- DPI configuration -->",
+			"<div class=\"setting-item\">",
+			"<div class=\"input-field\">",
+			"<label for=\"ocr-dpi\">OCR DPI</label>",
+			"<input id=\"ocr-dpi\" type=\"number\" min=\"72\" max=\"600\" placeholder=\"300\">",
+			"</div>",
+			"<div class=\"setting-description\">DPI for PDF-to-image conversion during OCR. Higher values improve accuracy but increase processing time. Default: 300.</div>",
+			"</div>",
+			"</x-slot>",
+			"</x-ncsettingssection>",
+			"<x-ncsettingssection name=\"PDF/A validation\" description=\"Check documents against the PDF/A standard with veraPDF, installed on this server. Documents are never sent elsewhere.\">",
+			"<x-slot name=\"default\">",
+			"<div class=\"setting-item\" data-testid=\"verapdf-status\">",
+			"<x-ncnotecard type=\"warning\">",
+			"<x-slot name=\"default\">The PDF/A validator (veraPDF) is not installed. Without it, Filinq only checks that a PDF claims to be PDF/A, not that it is.</x-slot>",
+			"</x-ncnotecard>",
+			"</div>",
+			"</x-slot>",
+			"</x-ncsettingssection>",
+			"<!--v-if-->",
+			"<x-ncsettingssection name=\"Confidentiality Labels\" description=\"Consume confidentiality labels already assigned by files_confidential (TSCP/BAILS) as a read-only sensitivity signal. This never blocks, redacts or gates anything.\">",
+			"<x-slot name=\"default\">",
+			"<div class=\"setting-item\">",
+			"<div class=\"setting-label\">Prioritise higher-confidentiality files in batch/folder analysis</div>",
+			"<x-nccheckboxradioswitch aria-label=\"Prioritise higher-confidentiality files in batch/folder analysis\" modelvalue=\"false\" type=\"switch\" data-on-onupdate:modelvalue=\"\">",
+			"</x-nccheckboxradioswitch>",
+			"<div class=\"setting-description\">Off by default. When enabled, files with a higher confidentiality label are analysed sooner — a suggestion only, it never skips, blocks or redacts files.</div>",
+			"</div>",
+			"<div class=\"setting-item\">",
+			"<div class=\"input-field\">",
+			"<label for=\"confidentiality-vocabulary\">Label vocabulary (JSON)</label>",
+			"<textarea id=\"confidentiality-vocabulary\" rows=\"4\" class=\"confidentiality-vocabulary-input\">",
+			"</textarea>",
+			"</div>",
+			"<!--v-if-->",
+			"<div class=\"setting-description\">Maps files_confidential tag names to a normalised level (higher = more confidential). Unmatched tags are ignored. Default: Public=0, Internal=1, Confidential=2, Secret=3.</div>",
+			"</div>",
+			"</x-slot>",
+			"</x-ncsettingssection>",
+			"<x-ncsettingssection name=\"Data Storage\" description=\"Configure Open Register integration for consent data storage\">",
+			"<x-slot name=\"default\">",
+			"<!--v-if-->",
+			"<x-ncloadingicon class=\"loadingIcon\" size=\"64\" appearance=\"dark\" name=\"Loading settings\">",
+			"</x-ncloadingicon>",
+			"</x-slot>",
+			"</x-ncsettingssection>",
+			"<x-ncsettingssection name=\"Digital Signing\" description=\"Configure digital document signing capabilities (eIDAS SES, AdES, QES)\">",
+			"<x-slot name=\"default\">",
+			"<div class=\"setting-item\">",
+			"<div class=\"setting-label\">Enable Digital Signing</div>",
+			"<x-nccheckboxradioswitch aria-label=\"Enable Digital Signing\" modelvalue=\"true\" type=\"switch\" data-on-onupdate:modelvalue=\"\">",
+			"</x-nccheckboxradioswitch>",
+			"<div class=\"setting-description\">Allow users to create and manage digital signing requests</div>",
+			"</div>",
+			"<div class=\"setting-item\">",
+			"<div class=\"input-field\">",
+			"<label for=\"signing-provider\">Signing Provider</label>",
+			"<select id=\"signing-provider\" style=\"padding: 8px; border: 1px solid var(--color-border); border-radius: var(--border-radius); background-color: var(--color-main-background); color: var(--color-main-text);\">",
+			"<option value=\"native\">Native (built-in SES)</option>",
+			"<option value=\"validsign\">ValidSign</option>",
+			"<!--v-if-->",
+			"</select>",
+			"</div>",
+			"<!--v-if-->",
+			"<div class=\"setting-description\">The signing provider to use for new signing requests</div>",
+			"</div>",
+			"<!--v-if-->",
+			"<div class=\"setting-item\">",
+			"<div class=\"input-field\">",
+			"<label for=\"signing-default-level\">Default Signature Level</label>",
+			"<select id=\"signing-default-level\" style=\"padding: 8px; border: 1px solid var(--color-border); border-radius: var(--border-radius); background-color: var(--color-main-background); color: var(--color-main-text);\">",
+			"<option value=\"SES\">SES — Simple Electronic Signature</option>",
+			"<option value=\"AdES\">AdES — Advanced Electronic Signature</option>",
+			"<option value=\"QES\">QES — Qualified Electronic Signature (PKIoverheid)</option>",
+			"</select>",
+			"</div>",
+			"<div class=\"setting-description\">The eIDAS signature level applied to new signing requests unless overridden</div>",
+			"</div>",
+			"<div class=\"setting-item\">",
+			"<div class=\"input-field\">",
+			"<label for=\"signing-expiry-days\">Default Request Expiry (days)</label>",
+			"<input id=\"signing-expiry-days\" type=\"number\" min=\"1\" max=\"365\" placeholder=\"30\">",
+			"</div>",
+			"<div class=\"setting-description\">Number of days before an unsigned signing request expires (1–365). Archiefwet requires minimum 10-year audit trail retention.</div>",
+			"</div>",
+			"<div class=\"setting-item\">",
+			"<div class=\"input-field\">",
+			"<label for=\"signing-guardian-consent-age\">Guardian consent age</label>",
+			"<input id=\"signing-guardian-consent-age\" type=\"number\" min=\"1\" max=\"21\" placeholder=\"16\">",
+			"</div>",
+			"<div class=\"setting-description\">Signers under this age sign only with a parent or guardian on the request. The default is 16, the Dutch age of consent.</div>",
+			"</div>",
+			"</x-slot>",
+			"</x-ncsettingssection>",
+			"<!-- files-confidential-labels — read-only signal ingested from",
+			"\t\t     files_confidential (TSCP/BAILS system tags). No policy/enforcement",
+			"\t\t     of its own: the vocabulary controls which tag names are recognised,",
+			"\t\t     and the priority hint (off by default) only reorders batch/folder",
+			"\t\t     analysis. -->",
+			"<x-signeridentitysettings>",
+			"</x-signeridentitysettings>",
+			"<x-emailingestionsettings>",
+			"</x-emailingestionsettings>",
+			"<!-- Signer identity rails (signer-identity-rails): its own admin endpoint -->",
+			"<x-pagelayoutsettings>",
+			"</x-pagelayoutsettings>",
+			"<!--v-if-->",
+			"<x-ncsettingssection name=\"Processing Activity Register (AVG Art. 30)\" description=\"Filinq's document-processing activities are recorded in OpenRegister's platform processing-activity register. The Art. 30 register, per-access logging, exports, and access control are provided by OpenRegister; Filinq contributes the four activity categories.\" docurl=\"https://conduction.gitbook.io/filinq-nextcloud/\">",
+			"<x-slot name=\"default\">",
+			"<div class=\"setting-item\">",
+			"<x-ncnotecard type=\"warning\">",
+			"<x-slot name=\"default\">OpenRegister is not installed. The processing-activity register and Art. 30 export are provided by OpenRegister and are unavailable until it is installed.</x-slot>",
+			"</x-ncnotecard>",
+			"</div>",
+			"</x-slot>",
+			"</x-ncsettingssection>",
+			"<div class=\"button-container\">",
+			"<x-ncbutton variant=\"primary\" disabled=\"false\" data-on-onclick=\"\">",
+			"<x-slot name=\"icon\">",
+			"<x-plus size=\"20\">",
+			"</x-plus>",
+			"</x-slot>",
+			"<x-slot name=\"default\"> Save All Settings</x-slot>",
+			"</x-ncbutton>",
+			"</div>",
+			"</x-slot>",
+			"</x-cnadminsettingsshell>"
+		],
+		"switches": [
+			{
+				"label": "pdf-only",
+				"writes": {
+					"settings.filinq.anonymisation.default_output_format": "SENTINEL-0"
+				}
+			},
+			{
+				"label": "pdf",
+				"writes": {
+					"settings.filinq.anonymisation.default_output_format": "SENTINEL-1"
+				}
+			},
+			{
+				"label": "preserve",
+				"writes": {
+					"settings.filinq.anonymisation.default_output_format": "SENTINEL-2"
+				}
+			},
+			{
+				"label": "Language Detection",
+				"writes": {
+					"settings.enable_language_detection": "SENTINEL-3"
+				}
+			},
+			{
+				"label": "Keyword Extraction",
+				"writes": {
+					"settings.enable_keyword_extraction": "SENTINEL-4"
+				}
+			},
+			{
+				"label": "Topic Classification",
+				"writes": {
+					"settings.enable_topic_classification": "SENTINEL-5"
+				}
+			},
+			{
+				"label": "Contract terms",
+				"writes": {
+					"settings.enable_contract_term_extraction": "SENTINEL-6"
+				}
+			},
+			{
+				"label": "Inbound classification",
+				"writes": {
+					"settings.enable_inbound_classification": "SENTINEL-7"
+				}
+			},
+			{
+				"label": "Enable OCR",
+				"writes": {
+					"settings.ocr_enabled": "SENTINEL-8"
+				}
+			},
+			{
+				"label": "Read scans on arrival",
+				"writes": {
+					"settings.ocr_on_arrival": "SENTINEL-9"
+				}
+			},
+			{
+				"label": null,
+				"writes": {
+					"ocrLanguages": {
+						"nld": "SENTINEL-10",
+						"eng": true,
+						"deu": false,
+						"fra": false
+					}
+				}
+			},
+			{
+				"label": null,
+				"writes": {
+					"ocrLanguages": {
+						"nld": "SENTINEL-10",
+						"eng": "SENTINEL-11",
+						"deu": false,
+						"fra": false
+					}
+				}
+			},
+			{
+				"label": null,
+				"writes": {
+					"ocrLanguages": {
+						"nld": "SENTINEL-10",
+						"eng": "SENTINEL-11",
+						"deu": "SENTINEL-12",
+						"fra": false
+					}
+				}
+			},
+			{
+				"label": null,
+				"writes": {
+					"ocrLanguages": {
+						"nld": "SENTINEL-10",
+						"eng": "SENTINEL-11",
+						"deu": "SENTINEL-12",
+						"fra": "SENTINEL-13"
+					}
+				}
+			},
+			{
+				"label": "Prioritise higher-confidentiality files in batch/folder analysis",
+				"writes": {
+					"settings.filinq.confidentiality.prioritise_analysis": "SENTINEL-14"
+				}
+			},
+			{
+				"label": "Enable Digital Signing",
+				"writes": {
+					"settings.signing_enabled": "SENTINEL-15"
+				}
+			}
+		]
+	}
+}

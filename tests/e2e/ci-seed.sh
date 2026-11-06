@@ -328,13 +328,17 @@ fi
 # Verify against OpenRegister directly, and require exactly the slugs declared
 # in `lib/Settings/filinq_register.json` — so this check cannot drift away
 # from what the app actually ships.
+#
+# Both lists are read to the end, page by page: OpenRegister caps a page and
+# returns no total, so a single `_limit=1000` read dropped every schema past
+# the cap on a crowded instance and reported filinq's own schemas as missing.
 REG_BODY="$(mktemp)"
-curl -sS -u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
-	"${BASE}/index.php/apps/openregister/api/registers?_limit=300" -o "$REG_BODY"
+bash "${SCRIPT_DIR}/lib/fetch-all-pages.sh" \
+	"${BASE}/index.php/apps/openregister/api/registers" "$REG_BODY" "${USER_NAME}:${USER_PASS}"
 
 SCH_BODY="$(mktemp)"
-curl -sS -u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
-	"${BASE}/index.php/apps/openregister/api/schemas?_limit=1000" -o "$SCH_BODY"
+bash "${SCRIPT_DIR}/lib/fetch-all-pages.sh" \
+	"${BASE}/index.php/apps/openregister/api/schemas" "$SCH_BODY" "${USER_NAME}:${USER_PASS}"
 
 # Emits `KEY<TAB>VALUE` lines for the app-config bindings, on stdout, after
 # verifying. Anything diagnostic goes to stderr so the two never mix.
@@ -520,15 +524,15 @@ echo "[ci-seed] Filinq registers, schemas and object-type bindings provisioned."
 # The policy surface is group-gated, not admin-gated, and THREE group names are
 # in play across two enforcement layers:
 #
-#   PolicyCrudService::PROHIBITION_GROUP      = docudesk-prohibition-admins
-#   PolicyCrudService::STANDING_CONSENT_GROUP = docudesk-standing-consent-admins
+#   PolicyCrudService::PROHIBITION_GROUP      = filinq-prohibition-admins
+#   PolicyCrudService::STANDING_CONSENT_GROUP = filinq-standing-consent-admins
 #   filinq_register.json RBAC on publicationProhibition
-#                          (create/update/delete) = docudesk-policy-admins
+#                          (create/update/delete) = filinq-policy-admins
 #
 # ⚠️ The first and third DISAGREE, and they gate the same operation at two
-# different layers. A member of `docudesk-policy-admins` clears OpenRegister's
+# different layers. A member of `filinq-policy-admins` clears OpenRegister's
 # schema RBAC and is then rejected by the service check; a member of
-# `docudesk-prohibition-admins` clears the service check and is then rejected by
+# `filinq-prohibition-admins` clears the service check and is then rejected by
 # OpenRegister. So NO non-admin group can write a prohibition today — only the
 # admin flag can, via the short-circuit in assertProhibitionPermission(). Which
 # name is canonical is a product decision, so this script seeds all three rather
@@ -543,7 +547,7 @@ echo "[ci-seed] Filinq registers, schemas and object-type bindings provisioned."
 # depended on the seed. The whole "Detection-time outcomes" folder could report
 # green having exercised nothing. Creating the groups here is what makes those
 # assertions able to run — and able to fail.
-for _dd_group in docudesk-policy-admins docudesk-prohibition-admins docudesk-standing-consent-admins; do
+for _dd_group in filinq-policy-admins filinq-prohibition-admins filinq-standing-consent-admins; do
 	php "${NC_ROOT}/occ" group:add "${_dd_group}" 2>&1 | tail -1 || true
 	php "${NC_ROOT}/occ" group:adduser "${_dd_group}" "${USER_NAME}" 2>&1 | tail -1 || true
 done
@@ -551,7 +555,7 @@ done
 # Fail loudly if the memberships did not take: a silent 403 later reads like an
 # authorization bug in the app rather than an unseeded fixture.
 _dd_groups_actual=$(php "${NC_ROOT}/occ" user:info "${USER_NAME}" --output=json 2>/dev/null || echo '{}')
-for _dd_group in docudesk-policy-admins docudesk-prohibition-admins docudesk-standing-consent-admins; do
+for _dd_group in filinq-policy-admins filinq-prohibition-admins filinq-standing-consent-admins; do
 	case "${_dd_groups_actual}" in
 		*"${_dd_group}"*) echo "[ci-seed] ${USER_NAME} is in ${_dd_group}." ;;
 		*) echo "::error::${USER_NAME} is NOT in ${_dd_group} — every policy write will 403."; exit 1 ;;

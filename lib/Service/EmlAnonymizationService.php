@@ -43,6 +43,9 @@ use Throwable;
  * @spec openspec/specs/anonymization/spec.md
  */
 class EmlAnonymizationService {
+	use RaisesEmlStructureFailures;
+	use StripsFileExtension;
+
 	/**
 	 * Constructor for EmlAnonymizationService
 	 *
@@ -77,22 +80,37 @@ class EmlAnonymizationService {
 			return false;
 		}
 
-		if (method_exists($node, 'getMimeType') === true
-			&& (string)$node->getMimeType() === 'message/rfc822'
-		) {
-			return true;
-		}
-
-		if (method_exists($node, 'getName') === true) {
-			$name = (string)$node->getName();
-			$dot = strrpos($name, '.');
-			if ($dot !== false && strtolower(substr($name, ($dot + 1))) === 'eml') {
-				return true;
-			}
-		}
-
-		return false;
+		return $this->hasEmlMimeType(node: $node) === true || $this->hasEmlExtension(node: $node) === true;
 	}//end isEmlInput()
+
+	/**
+	 * Whether a node reports the `message/rfc822` MIME type.
+	 *
+	 * @param object $node The source file node.
+	 *
+	 * @return bool True when the node has getMimeType() and it answers `message/rfc822`.
+	 */
+	private function hasEmlMimeType(object $node): bool {
+		return method_exists($node, 'getMimeType') === true
+			&& (string)$node->getMimeType() === 'message/rfc822';
+	}//end hasEmlMimeType()
+
+	/**
+	 * Whether a node's name ends in a `.eml` extension, in any case.
+	 *
+	 * @param object $node The source file node.
+	 *
+	 * @return bool True when the node has getName() and its last extension is `eml`.
+	 */
+	private function hasEmlExtension(object $node): bool {
+		if (method_exists($node, 'getName') === false) {
+			return false;
+		}
+
+		$name = (string)$node->getName();
+		$dot = strrpos($name, '.');
+		return $dot !== false && strtolower(substr($name, ($dot + 1))) === 'eml';
+	}//end hasEmlExtension()
 
 	/**
 	 * Anonymise an EML input and assemble the redacted result into a PDF/A-3b.
@@ -104,12 +122,8 @@ class EmlAnonymizationService {
 	 * raised with NO raw-parse fallback (design D9), so the controller maps it
 	 * to HTTP 422 and no un-redacted content is ever written.
 	 *
-	 * @param int $fileId Source Nextcloud file ID.
-	 * @param mixed $node Source EML file node.
+	 * @param EmlAnonymizeRequest $request The source, the entities and the placeholder scope.
 	 * @param mixed $fileService OR FileService (resolved reflectively).
-	 * @param array<int, array<string,mixed>> $mappedEntities Entities to redact.
-	 * @param string $scope Placeholder-numbering scope.
-	 * @param string|null $dossierKey Stable dossier folder id, or null.
 	 *
 	 * @return array{resultInfo: array<string, mixed>, node: mixed,
 	 *               placeholderMap: array<string, string>} The result info the controller expects,
@@ -120,22 +134,9 @@ class EmlAnonymizationService {
 	 *
 	 * @spec openspec/specs/anonymization/spec.md
 	 */
-	public function anonymize(
-		int $fileId,
-		mixed $node,
-		mixed $fileService,
-		array $mappedEntities,
-		string $scope,
-		?string $dossierKey,
-	): array {
-		$structure = $this->requestStructure(
-			fileId: $fileId,
-			node: $node,
-			fileService: $fileService,
-			mappedEntities: $mappedEntities,
-			scope: $scope,
-			dossierKey: $dossierKey
-		);
+	public function anonymize(EmlAnonymizeRequest $request, mixed $fileService): array {
+		$structure = $this->requestStructure(request: $request, fileService: $fileService);
+		$node = $request->node;
 
 		$sourceName = '';
 		if (method_exists($node, 'getName') === true) {
@@ -163,8 +164,8 @@ class EmlAnonymizationService {
 		$this->logger->info(
 			'EML anonymised and assembled to PDF',
 			[
-				'fileId' => $fileId,
-				'entityCount' => count($mappedEntities),
+				'fileId' => $request->fileId,
+				'entityCount' => count($request->mappedEntities),
 			]
 		);
 
@@ -174,7 +175,7 @@ class EmlAnonymizationService {
 		}
 
 		return [
-			'resultInfo' => $this->buildResultInfo(pdfNode: $pdfNode, mappedEntities: $mappedEntities),
+			'resultInfo' => $this->buildResultInfo(pdfNode: $pdfNode, mappedEntities: $request->mappedEntities),
 			'node' => $pdfNode,
 			'placeholderMap' => $placeholderMap,
 		];
@@ -184,12 +185,8 @@ class EmlAnonymizationService {
 	/**
 	 * Call OpenRegister's anonymise-EML API and validate its return value.
 	 *
-	 * @param int $fileId Source Nextcloud file ID.
-	 * @param mixed $node Source EML file node.
+	 * @param EmlAnonymizeRequest $request The source, the entities and the placeholder scope.
 	 * @param mixed $fileService OR FileService (resolved reflectively).
-	 * @param array<int, array<string,mixed>> $mappedEntities Entities to redact.
-	 * @param string $scope Placeholder-numbering scope.
-	 * @param string|null $dossierKey Stable dossier folder id, or null.
 	 *
 	 * @return object The redacted EML structure.
 	 *
@@ -197,30 +194,21 @@ class EmlAnonymizationService {
 	 *
 	 * @spec openspec/specs/anonymization/spec.md
 	 */
-	private function requestStructure(
-		int $fileId,
-		mixed $node,
-		mixed $fileService,
-		array $mappedEntities,
-		string $scope,
-		?string $dossierKey,
-	): object {
+	private function requestStructure(EmlAnonymizeRequest $request, mixed $fileService): object {
 		if (method_exists($fileService, 'anonymizeEmlStructured') === false) {
 			throw new ConversionFailedException(
 				message: 'OpenRegister does not expose the anonymise-EML API; cannot anonymise EML input.',
-				attempts: [
-					[
-						'name' => 'eml',
-						'available' => false,
-						'supports' => true,
-						'reason' => 'anonymizeEmlStructured not present on OpenRegister FileService',
-					],
-				]
+				attempts: [$this->emlAttempt(available: false, reason: 'anonymizeEmlStructured not present on OpenRegister FileService')]
 			);
 		}
 
 		try {
-			$structure = $fileService->anonymizeEmlStructured($node, $mappedEntities, $scope, $dossierKey);
+			$structure = $fileService->anonymizeEmlStructured(
+				$request->node,
+				$request->mappedEntities,
+				$request->scope(),
+				$request->dossierKey()
+			);
 		} catch (ConversionFailedException $e) {
 			throw $e;
 		} catch (Throwable $e) {
@@ -228,37 +216,12 @@ class EmlAnonymizationService {
 			// failure. Surface as a typed conversion failure (HTTP 422).
 			$this->logger->warning(
 				'EML anonymise-API failed; no raw-parse fallback.',
-				['fileId' => $fileId, 'exception' => get_class($e), 'message' => $e->getMessage()]
+				['fileId' => $request->fileId, 'exception' => get_class($e), 'message' => $e->getMessage()]
 			);
-			throw new ConversionFailedException(
-				message: 'OpenRegister anonymise-EML API failed: ' . $e->getMessage(),
-				attempts: [
-					[
-						'name' => 'eml',
-						'available' => true,
-						'supports' => true,
-						'reason' => 'anonymizeEmlStructured threw: ' . $e->getMessage(),
-					],
-				],
-				previous: $e
-			);
-		}//end try
-
-		if (is_object($structure) === false) {
-			throw new ConversionFailedException(
-				message: 'OpenRegister anonymise-EML API returned no structure.',
-				attempts: [
-					[
-						'name' => 'eml',
-						'available' => true,
-						'supports' => true,
-						'reason' => 'anonymizeEmlStructured returned non-object',
-					],
-				]
-			);
+			throw $this->emlApiFailed(error: $e);
 		}
 
-		return $structure;
+		return $this->requireEmlStructure(structure: $structure);
 	}//end requestStructure()
 
 	/**
@@ -300,22 +263,4 @@ class EmlAnonymizationService {
 
 		return $resultInfo;
 	}//end buildResultInfo()
-
-	/**
-	 * Return $name without its trailing `.ext`.
-	 *
-	 * @param string $name File name with extension.
-	 *
-	 * @return string Name without extension.
-	 *
-	 * @spec openspec/specs/anonymization/spec.md
-	 */
-	private function stripExtension(string $name): string {
-		$dotPos = strrpos($name, '.');
-		if ($dotPos === false) {
-			return $name;
-		}
-
-		return substr($name, 0, $dotPos);
-	}//end stripExtension()
 }//end class

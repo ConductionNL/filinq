@@ -1,0 +1,842 @@
+[
+	{
+		"once": "<p>Jan Jansen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"twice": "<p>Jan Jansen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"other": "<p><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan Jansen</span> woont in <b><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-location, var(--dd-entity-color-default));\">Utrecht</span></b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan</span>.</p>",
+		"cleared": "<p>Jan Jansen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"textNodes": 5
+	},
+	{
+		"once": "<p>Jan Jansen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"twice": "<p>Jan Jansen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"other": "<p><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan Jansen</span> woont in <b><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-location, var(--dd-entity-color-default));\">Utrecht</span></b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan</span>.</p>",
+		"cleared": "<p>Jan Jansen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"textNodes": 5
+	},
+	{
+		"once": "<p>Jan Jansen <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">woont</span> in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"twice": "<p>Jan Jansen <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">woont</span> in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"other": "<p><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan Jansen</span> <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">woont</span> in <b><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-location, var(--dd-entity-color-default));\">Utrecht</span></b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan</span>.</p>",
+		"cleared": "<p>Jan Jansen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"textNodes": 5
+	},
+	{
+		"once": "<p><span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span> <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span>sen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span>.</p>",
+		"twice": "<p><span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span> <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span>sen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span>.</p>",
+		"other": "<p><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan Jansen</span> woont in <b><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-location, var(--dd-entity-color-default));\">Utrecht</span></b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span>.</p>",
+		"cleared": "<p>Jan Jansen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"textNodes": 5
+	},
+	{
+		"once": "<p>Jan Jansen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"twice": "<p>Jan Jansen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"other": "<p><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan Jansen</span> woont in <b><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-location, var(--dd-entity-color-default));\">Utrecht</span></b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan</span>.</p>",
+		"cleared": "<p>Jan Jansen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"textNodes": 5
+	},
+	{
+		"once": "<p>Jan Jansen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"twice": "<p>Jan Jansen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"other": "<p><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan Jansen</span> woont in <b><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-location, var(--dd-entity-color-default));\">Utrecht</span></b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan</span>.</p>",
+		"cleared": "<p>Jan Jansen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"textNodes": 5
+	},
+	{
+		"once": "<p>Jan Jansen <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">woont</span> in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"twice": "<p>Jan Jansen <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">woont</span> in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"other": "<p><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan Jansen</span> <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">woont</span> in <b><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-location, var(--dd-entity-color-default));\">Utrecht</span></b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan</span>.</p>",
+		"cleared": "<p>Jan Jansen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"textNodes": 5
+	},
+	{
+		"once": "<p><span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span> <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span>sen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span>.</p>",
+		"twice": "<p><span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span> <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span>sen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span>.</p>",
+		"other": "<p><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan Jansen</span> woont in <b><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-location, var(--dd-entity-color-default));\">Utrecht</span></b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span>.</p>",
+		"cleared": "<p>Jan Jansen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"textNodes": 5
+	},
+	{
+		"once": "<p><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan</span> <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan</span>sen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan</span>.</p>",
+		"twice": "<p><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan</span> <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan</span>sen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan</span>.</p>",
+		"other": "<p><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan Jansen</span> woont in <b><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-location, var(--dd-entity-color-default));\">Utrecht</span></b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan</span>.</p>",
+		"cleared": "<p>Jan Jansen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"textNodes": 5
+	},
+	{
+		"once": "<p><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan</span> <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan</span>sen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan</span>.</p>",
+		"twice": "<p><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan</span> <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan</span>sen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan</span>.</p>",
+		"other": "<p><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan Jansen</span> woont in <b><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-location, var(--dd-entity-color-default));\">Utrecht</span></b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan</span>.</p>",
+		"cleared": "<p>Jan Jansen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"textNodes": 5
+	},
+	{
+		"once": "<p><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan</span> <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan</span>sen <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">woont</span> in <b>Utrecht</b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan</span>.</p>",
+		"twice": "<p><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan</span> <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan</span>sen <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">woont</span> in <b>Utrecht</b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan</span>.</p>",
+		"other": "<p><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan Jansen</span> <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">woont</span> in <b><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-location, var(--dd-entity-color-default));\">Utrecht</span></b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan</span>.</p>",
+		"cleared": "<p>Jan Jansen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"textNodes": 5
+	},
+	{
+		"once": "<p><span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span> <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span>sen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span>.</p>",
+		"twice": "<p><span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span> <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span>sen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span>.</p>",
+		"other": "<p><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan Jansen</span> woont in <b><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-location, var(--dd-entity-color-default));\">Utrecht</span></b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span>.</p>",
+		"cleared": "<p>Jan Jansen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"textNodes": 5
+	},
+	{
+		"once": "<p><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan Jansen</span> woont in <b><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-location, var(--dd-entity-color-default));\">Utrecht</span></b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan</span>.</p>",
+		"twice": "<p><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan Jansen</span> woont in <b><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-location, var(--dd-entity-color-default));\">Utrecht</span></b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan</span>.</p>",
+		"other": "<p><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan Jansen</span> woont in <b><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-location, var(--dd-entity-color-default));\">Utrecht</span></b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan</span>.</p>",
+		"cleared": "<p>Jan Jansen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"textNodes": 5
+	},
+	{
+		"once": "<p><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan Jansen</span> woont in <b><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-location, var(--dd-entity-color-default));\">Utrecht</span></b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan</span>.</p>",
+		"twice": "<p><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan Jansen</span> woont in <b><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-location, var(--dd-entity-color-default));\">Utrecht</span></b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan</span>.</p>",
+		"other": "<p><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan Jansen</span> woont in <b><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-location, var(--dd-entity-color-default));\">Utrecht</span></b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan</span>.</p>",
+		"cleared": "<p>Jan Jansen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"textNodes": 5
+	},
+	{
+		"once": "<p><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan Jansen</span> <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">woont</span> in <b><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-location, var(--dd-entity-color-default));\">Utrecht</span></b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan</span>.</p>",
+		"twice": "<p><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan Jansen</span> <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">woont</span> in <b><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-location, var(--dd-entity-color-default));\">Utrecht</span></b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan</span>.</p>",
+		"other": "<p><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan Jansen</span> <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">woont</span> in <b><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-location, var(--dd-entity-color-default));\">Utrecht</span></b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan</span>.</p>",
+		"cleared": "<p>Jan Jansen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"textNodes": 5
+	},
+	{
+		"once": "<p><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan Jansen</span> woont in <b><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-location, var(--dd-entity-color-default));\">Utrecht</span></b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span>.</p>",
+		"twice": "<p><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan Jansen</span> woont in <b><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-location, var(--dd-entity-color-default));\">Utrecht</span></b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span>.</p>",
+		"other": "<p><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan Jansen</span> woont in <b><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-location, var(--dd-entity-color-default));\">Utrecht</span></b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span>.</p>",
+		"cleared": "<p>Jan Jansen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"textNodes": 5
+	},
+	{
+		"once": "<p>J<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\">a</span>n J<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\">a</span>nsen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel J<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\">a</span>n.</p>",
+		"twice": "<p>J<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\">a</span>n J<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\">a</span>nsen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel J<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\">a</span>n.</p>",
+		"other": "<p><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan Jansen</span> woont in <b><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-location, var(--dd-entity-color-default));\">Utrecht</span></b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan</span>.</p>",
+		"cleared": "<p>Jan Jansen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"textNodes": 5
+	},
+	{
+		"once": "<p>J<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\">a</span>n J<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\">a</span>nsen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel J<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\">a</span>n.</p>",
+		"twice": "<p>J<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\">a</span>n J<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\">a</span>nsen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel J<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\">a</span>n.</p>",
+		"other": "<p><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan Jansen</span> woont in <b><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-location, var(--dd-entity-color-default));\">Utrecht</span></b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan</span>.</p>",
+		"cleared": "<p>Jan Jansen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"textNodes": 5
+	},
+	{
+		"once": "<p>J<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\">a</span>n J<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\">a</span>nsen <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">woont</span> in <b>Utrecht</b>.</p><p>   </p><p>Bel J<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\">a</span>n.</p>",
+		"twice": "<p>J<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\">a</span>n J<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\">a</span>nsen <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">woont</span> in <b>Utrecht</b>.</p><p>   </p><p>Bel J<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\">a</span>n.</p>",
+		"other": "<p><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan Jansen</span> <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">woont</span> in <b><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-location, var(--dd-entity-color-default));\">Utrecht</span></b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan</span>.</p>",
+		"cleared": "<p>Jan Jansen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"textNodes": 5
+	},
+	{
+		"once": "<p><span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span> <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span>sen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span>.</p>",
+		"twice": "<p><span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span> <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span>sen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span>.</p>",
+		"other": "<p><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan Jansen</span> woont in <b><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-location, var(--dd-entity-color-default));\">Utrecht</span></b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span>.</p>",
+		"cleared": "<p>Jan Jansen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"textNodes": 5
+	},
+	{
+		"once": "<p>Jan Jansen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"twice": "<p>Jan Jansen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"other": "<p><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan Jansen</span> woont in <b><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-location, var(--dd-entity-color-default));\">Utrecht</span></b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan</span>.</p>",
+		"cleared": "<p>Jan Jansen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"textNodes": 5
+	},
+	{
+		"once": "<p>Jan Jansen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"twice": "<p>Jan Jansen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"other": "<p><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan Jansen</span> woont in <b><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-location, var(--dd-entity-color-default));\">Utrecht</span></b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan</span>.</p>",
+		"cleared": "<p>Jan Jansen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"textNodes": 5
+	},
+	{
+		"once": "<p>Jan Jansen <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">woont</span> in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"twice": "<p>Jan Jansen <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">woont</span> in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"other": "<p><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan Jansen</span> <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">woont</span> in <b><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-location, var(--dd-entity-color-default));\">Utrecht</span></b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan</span>.</p>",
+		"cleared": "<p>Jan Jansen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"textNodes": 5
+	},
+	{
+		"once": "<p><span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span> <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span>sen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span>.</p>",
+		"twice": "<p><span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span> <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span>sen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span>.</p>",
+		"other": "<p><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan Jansen</span> woont in <b><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-location, var(--dd-entity-color-default));\">Utrecht</span></b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span>.</p>",
+		"cleared": "<p>Jan Jansen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"textNodes": 5
+	},
+	{
+		"once": "<p>Jan Jansen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"twice": "<p>Jan Jansen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"other": "<p><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan Jansen</span> woont in <b><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-location, var(--dd-entity-color-default));\">Utrecht</span></b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan</span>.</p>",
+		"cleared": "<p>Jan Jansen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"textNodes": 5
+	},
+	{
+		"once": "<p>Jan Jansen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"twice": "<p>Jan Jansen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"other": "<p><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan Jansen</span> woont in <b><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-location, var(--dd-entity-color-default));\">Utrecht</span></b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan</span>.</p>",
+		"cleared": "<p>Jan Jansen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"textNodes": 5
+	},
+	{
+		"once": "<p>Jan Jansen <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">woont</span> in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"twice": "<p>Jan Jansen <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">woont</span> in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"other": "<p><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan Jansen</span> <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">woont</span> in <b><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-location, var(--dd-entity-color-default));\">Utrecht</span></b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan</span>.</p>",
+		"cleared": "<p>Jan Jansen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"textNodes": 5
+	},
+	{
+		"once": "<p><span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span> <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span>sen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span>.</p>",
+		"twice": "<p><span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span> <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span>sen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span>.</p>",
+		"other": "<p><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan Jansen</span> woont in <b><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-location, var(--dd-entity-color-default));\">Utrecht</span></b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span>.</p>",
+		"cleared": "<p>Jan Jansen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"textNodes": 5
+	},
+	{
+		"once": "<p><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\">Jan</span> <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\">Jansen</span> woont in <b>Utrecht</b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\">Jan</span>.</p>",
+		"twice": "<p><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\">Jan</span> <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\">Jansen</span> woont in <b>Utrecht</b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\">Jan</span>.</p>",
+		"other": "<p><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan Jansen</span> woont in <b><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-location, var(--dd-entity-color-default));\">Utrecht</span></b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan</span>.</p>",
+		"cleared": "<p>Jan Jansen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"textNodes": 5
+	},
+	{
+		"once": "<p><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\">Jan</span> <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\">Jansen</span> woont in <b>Utrecht</b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\">Jan</span>.</p>",
+		"twice": "<p><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\">Jan</span> <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\">Jansen</span> woont in <b>Utrecht</b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\">Jan</span>.</p>",
+		"other": "<p><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan Jansen</span> woont in <b><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-location, var(--dd-entity-color-default));\">Utrecht</span></b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan</span>.</p>",
+		"cleared": "<p>Jan Jansen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"textNodes": 5
+	},
+	{
+		"once": "<p><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\">Jan</span> <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\">Jansen</span> <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">woont</span> in <b>Utrecht</b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\">Jan</span>.</p>",
+		"twice": "<p><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\">Jan</span> <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\">Jansen</span> <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">woont</span> in <b>Utrecht</b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\">Jan</span>.</p>",
+		"other": "<p><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan Jansen</span> <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">woont</span> in <b><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-location, var(--dd-entity-color-default));\">Utrecht</span></b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan</span>.</p>",
+		"cleared": "<p>Jan Jansen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"textNodes": 5
+	},
+	{
+		"once": "<p><span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span> <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\">Jansen</span> woont in <b>Utrecht</b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span>.</p>",
+		"twice": "<p><span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span> <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\">Jansen</span> woont in <b>Utrecht</b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span>.</p>",
+		"other": "<p><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan Jansen</span> woont in <b><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-location, var(--dd-entity-color-default));\">Utrecht</span></b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span>.</p>",
+		"cleared": "<p>Jan Jansen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"textNodes": 5
+	},
+	{
+		"once": "<p>Jan Jansen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"twice": "<p>Jan Jansen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"other": "<p><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan Jansen</span> woont in <b><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-location, var(--dd-entity-color-default));\">Utrecht</span></b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan</span>.</p>",
+		"cleared": "<p>Jan Jansen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"textNodes": 5
+	},
+	{
+		"once": "<p>Jan Jansen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"twice": "<p>Jan Jansen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"other": "<p><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan Jansen</span> woont in <b><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-location, var(--dd-entity-color-default));\">Utrecht</span></b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan</span>.</p>",
+		"cleared": "<p>Jan Jansen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"textNodes": 5
+	},
+	{
+		"once": "<p>Jan Jansen <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">woont</span> in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"twice": "<p>Jan Jansen <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">woont</span> in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"other": "<p><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan Jansen</span> <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">woont</span> in <b><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-location, var(--dd-entity-color-default));\">Utrecht</span></b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan</span>.</p>",
+		"cleared": "<p>Jan Jansen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"textNodes": 5
+	},
+	{
+		"once": "<p><span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span> <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span>sen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span>.</p>",
+		"twice": "<p><span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span> <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span>sen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span>.</p>",
+		"other": "<p><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan Jansen</span> woont in <b><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-location, var(--dd-entity-color-default));\">Utrecht</span></b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span>.</p>",
+		"cleared": "<p>Jan Jansen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"textNodes": 5
+	},
+	{
+		"once": "<p>Jan<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span>Jansen<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span>woont<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span>in<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span><b>Utrecht</b>.</p><p>   </p><p>Bel<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span>Jan.</p>",
+		"twice": "<p>Jan<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span>Jansen<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span>woont<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span>in<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span><b>Utrecht</b>.</p><p>   </p><p>Bel<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span>Jan.</p>",
+		"other": "<p><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan Jansen</span> woont in <b><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-location, var(--dd-entity-color-default));\">Utrecht</span></b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan</span>.</p>",
+		"cleared": "<p>Jan Jansen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"textNodes": 5
+	},
+	{
+		"once": "<p>Jan<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span>Jansen<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span>woont<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span>in<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span><b>Utrecht</b>.</p><p>   </p><p>Bel<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span>Jan.</p>",
+		"twice": "<p>Jan<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span>Jansen<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span>woont<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span>in<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span><b>Utrecht</b>.</p><p>   </p><p>Bel<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span>Jan.</p>",
+		"other": "<p><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan Jansen</span> woont in <b><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-location, var(--dd-entity-color-default));\">Utrecht</span></b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan</span>.</p>",
+		"cleared": "<p>Jan Jansen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"textNodes": 5
+	},
+	{
+		"once": "<p>Jan<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span>Jansen<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span><span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">woont</span><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span>in<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span><b>Utrecht</b>.</p><p>   </p><p>Bel<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span>Jan.</p>",
+		"twice": "<p>Jan<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span>Jansen<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span><span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">woont</span><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span>in<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span><b>Utrecht</b>.</p><p>   </p><p>Bel<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span>Jan.</p>",
+		"other": "<p><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan Jansen</span> <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">woont</span> in <b><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-location, var(--dd-entity-color-default));\">Utrecht</span></b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan</span>.</p>",
+		"cleared": "<p>Jan Jansen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"textNodes": 5
+	},
+	{
+		"once": "<p><span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span><span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span>sen<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span>woont<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span>in<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span><b>Utrecht</b>.</p><p>   </p><p>Bel<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span><span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span>.</p>",
+		"twice": "<p><span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span><span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span>sen<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span>woont<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span>in<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span><b>Utrecht</b>.</p><p>   </p><p>Bel<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span><span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span>.</p>",
+		"other": "<p><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-person, var(--dd-entity-color-default));\">Jan Jansen</span> woont in <b><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-location, var(--dd-entity-color-default));\">Utrecht</span></b>.</p><p>   </p><p>Bel <span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Jan</span>.</p>",
+		"cleared": "<p>Jan Jansen woont in <b>Utrecht</b>.</p><p>   </p><p>Bel Jan.</p>",
+		"textNodes": 5
+	},
+	{
+		"once": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"twice": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"other": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"cleared": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"textNodes": 4
+	},
+	{
+		"once": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"twice": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"other": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"cleared": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"textNodes": 4
+	},
+	{
+		"once": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"twice": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"other": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"cleared": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"textNodes": 4
+	},
+	{
+		"once": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"twice": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"other": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"cleared": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"textNodes": 4
+	},
+	{
+		"once": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"twice": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"other": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"cleared": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"textNodes": 4
+	},
+	{
+		"once": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"twice": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"other": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"cleared": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"textNodes": 4
+	},
+	{
+		"once": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"twice": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"other": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"cleared": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"textNodes": 4
+	},
+	{
+		"once": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"twice": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"other": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"cleared": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"textNodes": 4
+	},
+	{
+		"once": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"twice": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"other": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"cleared": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"textNodes": 4
+	},
+	{
+		"once": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"twice": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"other": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"cleared": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"textNodes": 4
+	},
+	{
+		"once": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"twice": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"other": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"cleared": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"textNodes": 4
+	},
+	{
+		"once": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"twice": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"other": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"cleared": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"textNodes": 4
+	},
+	{
+		"once": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"twice": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"other": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"cleared": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"textNodes": 4
+	},
+	{
+		"once": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"twice": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"other": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"cleared": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"textNodes": 4
+	},
+	{
+		"once": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"twice": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"other": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"cleared": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"textNodes": 4
+	},
+	{
+		"once": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"twice": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"other": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"cleared": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"textNodes": 4
+	},
+	{
+		"once": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"twice": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"other": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"cleared": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"textNodes": 4
+	},
+	{
+		"once": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"twice": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"other": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"cleared": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"textNodes": 4
+	},
+	{
+		"once": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"twice": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"other": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"cleared": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"textNodes": 4
+	},
+	{
+		"once": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"twice": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"other": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"cleared": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"textNodes": 4
+	},
+	{
+		"once": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"twice": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"other": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"cleared": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"textNodes": 4
+	},
+	{
+		"once": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"twice": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"other": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"cleared": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"textNodes": 4
+	},
+	{
+		"once": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"twice": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"other": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"cleared": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"textNodes": 4
+	},
+	{
+		"once": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"twice": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"other": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"cleared": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"textNodes": 4
+	},
+	{
+		"once": "<div><span><span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Kuipers</span></span> en <i><span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">kuipers</span></i><br>niets</div>",
+		"twice": "<div><span><span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Kuipers</span></span> en <i><span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">kuipers</span></i><br>niets</div>",
+		"other": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"cleared": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"textNodes": 4
+	},
+	{
+		"once": "<div><span><span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Kuipers</span></span> en <i><span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">kuipers</span></i><br>niets</div>",
+		"twice": "<div><span><span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Kuipers</span></span> en <i><span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">kuipers</span></i><br>niets</div>",
+		"other": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"cleared": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"textNodes": 4
+	},
+	{
+		"once": "<div><span><span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Kuipers</span></span> en <i><span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">kuipers</span></i><br>niets</div>",
+		"twice": "<div><span><span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Kuipers</span></span> en <i><span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">kuipers</span></i><br>niets</div>",
+		"other": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"cleared": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"textNodes": 4
+	},
+	{
+		"once": "<div><span><span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Kuipers</span></span> en <i><span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">kuipers</span></i><br>niets</div>",
+		"twice": "<div><span><span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">Kuipers</span></span> en <i><span data-dd-hl=\"\" class=\"dd-hl dd-hl--pending\">kuipers</span></i><br>niets</div>",
+		"other": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"cleared": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"textNodes": 4
+	},
+	{
+		"once": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"twice": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"other": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"cleared": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"textNodes": 4
+	},
+	{
+		"once": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"twice": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"other": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"cleared": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"textNodes": 4
+	},
+	{
+		"once": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"twice": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"other": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"cleared": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"textNodes": 4
+	},
+	{
+		"once": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"twice": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"other": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"cleared": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"textNodes": 4
+	},
+	{
+		"once": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"twice": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"other": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"cleared": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"textNodes": 4
+	},
+	{
+		"once": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"twice": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"other": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"cleared": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"textNodes": 4
+	},
+	{
+		"once": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"twice": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"other": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"cleared": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"textNodes": 4
+	},
+	{
+		"once": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"twice": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"other": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"cleared": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"textNodes": 4
+	},
+	{
+		"once": "<div><span>Kuipers</span><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span>en<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span><i>kuipers</i><br>niets</div>",
+		"twice": "<div><span>Kuipers</span><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span>en<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span><i>kuipers</i><br>niets</div>",
+		"other": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"cleared": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"textNodes": 4
+	},
+	{
+		"once": "<div><span>Kuipers</span><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span>en<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span><i>kuipers</i><br>niets</div>",
+		"twice": "<div><span>Kuipers</span><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span>en<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span><i>kuipers</i><br>niets</div>",
+		"other": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"cleared": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"textNodes": 4
+	},
+	{
+		"once": "<div><span>Kuipers</span><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span>en<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span><i>kuipers</i><br>niets</div>",
+		"twice": "<div><span>Kuipers</span><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span>en<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span><i>kuipers</i><br>niets</div>",
+		"other": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"cleared": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"textNodes": 4
+	},
+	{
+		"once": "<div><span>Kuipers</span><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span>en<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span><i>kuipers</i><br>niets</div>",
+		"twice": "<div><span>Kuipers</span><span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span>en<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span><i>kuipers</i><br>niets</div>",
+		"other": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"cleared": "<div><span>Kuipers</span> en <i>kuipers</i><br>niets</div>",
+		"textNodes": 4
+	},
+	{
+		"once": "<p>no match</p>",
+		"twice": "<p>no match</p>",
+		"other": "<p>no match</p>",
+		"cleared": "<p>no match</p>",
+		"textNodes": 1
+	},
+	{
+		"once": "<p>no match</p>",
+		"twice": "<p>no match</p>",
+		"other": "<p>no match</p>",
+		"cleared": "<p>no match</p>",
+		"textNodes": 1
+	},
+	{
+		"once": "<p>no match</p>",
+		"twice": "<p>no match</p>",
+		"other": "<p>no match</p>",
+		"cleared": "<p>no match</p>",
+		"textNodes": 1
+	},
+	{
+		"once": "<p>no match</p>",
+		"twice": "<p>no match</p>",
+		"other": "<p>no match</p>",
+		"cleared": "<p>no match</p>",
+		"textNodes": 1
+	},
+	{
+		"once": "<p>no match</p>",
+		"twice": "<p>no match</p>",
+		"other": "<p>no match</p>",
+		"cleared": "<p>no match</p>",
+		"textNodes": 1
+	},
+	{
+		"once": "<p>no match</p>",
+		"twice": "<p>no match</p>",
+		"other": "<p>no match</p>",
+		"cleared": "<p>no match</p>",
+		"textNodes": 1
+	},
+	{
+		"once": "<p>no match</p>",
+		"twice": "<p>no match</p>",
+		"other": "<p>no match</p>",
+		"cleared": "<p>no match</p>",
+		"textNodes": 1
+	},
+	{
+		"once": "<p>no match</p>",
+		"twice": "<p>no match</p>",
+		"other": "<p>no match</p>",
+		"cleared": "<p>no match</p>",
+		"textNodes": 1
+	},
+	{
+		"once": "<p>no match</p>",
+		"twice": "<p>no match</p>",
+		"other": "<p>no match</p>",
+		"cleared": "<p>no match</p>",
+		"textNodes": 1
+	},
+	{
+		"once": "<p>no match</p>",
+		"twice": "<p>no match</p>",
+		"other": "<p>no match</p>",
+		"cleared": "<p>no match</p>",
+		"textNodes": 1
+	},
+	{
+		"once": "<p>no match</p>",
+		"twice": "<p>no match</p>",
+		"other": "<p>no match</p>",
+		"cleared": "<p>no match</p>",
+		"textNodes": 1
+	},
+	{
+		"once": "<p>no match</p>",
+		"twice": "<p>no match</p>",
+		"other": "<p>no match</p>",
+		"cleared": "<p>no match</p>",
+		"textNodes": 1
+	},
+	{
+		"once": "<p>no match</p>",
+		"twice": "<p>no match</p>",
+		"other": "<p>no match</p>",
+		"cleared": "<p>no match</p>",
+		"textNodes": 1
+	},
+	{
+		"once": "<p>no match</p>",
+		"twice": "<p>no match</p>",
+		"other": "<p>no match</p>",
+		"cleared": "<p>no match</p>",
+		"textNodes": 1
+	},
+	{
+		"once": "<p>no match</p>",
+		"twice": "<p>no match</p>",
+		"other": "<p>no match</p>",
+		"cleared": "<p>no match</p>",
+		"textNodes": 1
+	},
+	{
+		"once": "<p>no match</p>",
+		"twice": "<p>no match</p>",
+		"other": "<p>no match</p>",
+		"cleared": "<p>no match</p>",
+		"textNodes": 1
+	},
+	{
+		"once": "<p>no m<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\">a</span>tch</p>",
+		"twice": "<p>no m<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\">a</span>tch</p>",
+		"other": "<p>no match</p>",
+		"cleared": "<p>no match</p>",
+		"textNodes": 1
+	},
+	{
+		"once": "<p>no m<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\">a</span>tch</p>",
+		"twice": "<p>no m<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\">a</span>tch</p>",
+		"other": "<p>no match</p>",
+		"cleared": "<p>no match</p>",
+		"textNodes": 1
+	},
+	{
+		"once": "<p>no m<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\">a</span>tch</p>",
+		"twice": "<p>no m<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\">a</span>tch</p>",
+		"other": "<p>no match</p>",
+		"cleared": "<p>no match</p>",
+		"textNodes": 1
+	},
+	{
+		"once": "<p>no m<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\">a</span>tch</p>",
+		"twice": "<p>no m<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\">a</span>tch</p>",
+		"other": "<p>no match</p>",
+		"cleared": "<p>no match</p>",
+		"textNodes": 1
+	},
+	{
+		"once": "<p>no match</p>",
+		"twice": "<p>no match</p>",
+		"other": "<p>no match</p>",
+		"cleared": "<p>no match</p>",
+		"textNodes": 1
+	},
+	{
+		"once": "<p>no match</p>",
+		"twice": "<p>no match</p>",
+		"other": "<p>no match</p>",
+		"cleared": "<p>no match</p>",
+		"textNodes": 1
+	},
+	{
+		"once": "<p>no match</p>",
+		"twice": "<p>no match</p>",
+		"other": "<p>no match</p>",
+		"cleared": "<p>no match</p>",
+		"textNodes": 1
+	},
+	{
+		"once": "<p>no match</p>",
+		"twice": "<p>no match</p>",
+		"other": "<p>no match</p>",
+		"cleared": "<p>no match</p>",
+		"textNodes": 1
+	},
+	{
+		"once": "<p>no match</p>",
+		"twice": "<p>no match</p>",
+		"other": "<p>no match</p>",
+		"cleared": "<p>no match</p>",
+		"textNodes": 1
+	},
+	{
+		"once": "<p>no match</p>",
+		"twice": "<p>no match</p>",
+		"other": "<p>no match</p>",
+		"cleared": "<p>no match</p>",
+		"textNodes": 1
+	},
+	{
+		"once": "<p>no match</p>",
+		"twice": "<p>no match</p>",
+		"other": "<p>no match</p>",
+		"cleared": "<p>no match</p>",
+		"textNodes": 1
+	},
+	{
+		"once": "<p>no match</p>",
+		"twice": "<p>no match</p>",
+		"other": "<p>no match</p>",
+		"cleared": "<p>no match</p>",
+		"textNodes": 1
+	},
+	{
+		"once": "<p>no match</p>",
+		"twice": "<p>no match</p>",
+		"other": "<p>no match</p>",
+		"cleared": "<p>no match</p>",
+		"textNodes": 1
+	},
+	{
+		"once": "<p>no match</p>",
+		"twice": "<p>no match</p>",
+		"other": "<p>no match</p>",
+		"cleared": "<p>no match</p>",
+		"textNodes": 1
+	},
+	{
+		"once": "<p>no match</p>",
+		"twice": "<p>no match</p>",
+		"other": "<p>no match</p>",
+		"cleared": "<p>no match</p>",
+		"textNodes": 1
+	},
+	{
+		"once": "<p>no match</p>",
+		"twice": "<p>no match</p>",
+		"other": "<p>no match</p>",
+		"cleared": "<p>no match</p>",
+		"textNodes": 1
+	},
+	{
+		"once": "<p>no match</p>",
+		"twice": "<p>no match</p>",
+		"other": "<p>no match</p>",
+		"cleared": "<p>no match</p>",
+		"textNodes": 1
+	},
+	{
+		"once": "<p>no match</p>",
+		"twice": "<p>no match</p>",
+		"other": "<p>no match</p>",
+		"cleared": "<p>no match</p>",
+		"textNodes": 1
+	},
+	{
+		"once": "<p>no match</p>",
+		"twice": "<p>no match</p>",
+		"other": "<p>no match</p>",
+		"cleared": "<p>no match</p>",
+		"textNodes": 1
+	},
+	{
+		"once": "<p>no match</p>",
+		"twice": "<p>no match</p>",
+		"other": "<p>no match</p>",
+		"cleared": "<p>no match</p>",
+		"textNodes": 1
+	},
+	{
+		"once": "<p>no<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span>match</p>",
+		"twice": "<p>no<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span>match</p>",
+		"other": "<p>no match</p>",
+		"cleared": "<p>no match</p>",
+		"textNodes": 1
+	},
+	{
+		"once": "<p>no<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span>match</p>",
+		"twice": "<p>no<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span>match</p>",
+		"other": "<p>no match</p>",
+		"cleared": "<p>no match</p>",
+		"textNodes": 1
+	},
+	{
+		"once": "<p>no<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span>match</p>",
+		"twice": "<p>no<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span>match</p>",
+		"other": "<p>no match</p>",
+		"cleared": "<p>no match</p>",
+		"textNodes": 1
+	},
+	{
+		"once": "<p>no<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span>match</p>",
+		"twice": "<p>no<span data-dd-hl=\"\" class=\"dd-hl\" style=\"background-color: var(--dd-entity-color-default);\"> </span>match</p>",
+		"other": "<p>no match</p>",
+		"cleared": "<p>no match</p>",
+		"textNodes": 1
+	}
+]

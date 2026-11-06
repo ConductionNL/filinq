@@ -1,0 +1,5 @@
+- [x] TemplateMergeFieldService: the variables a template prints, and their values in a data context
+- [x] DocumentService::generateMergePreview(): the preview HTML plus the merge fields and whether all are filled
+- [x] POST /api/documents/generate/merge-preview
+- [x] template schema: optional `mergeFields`
+- [x] Unit tests for the extractor, the merge preview and the controller

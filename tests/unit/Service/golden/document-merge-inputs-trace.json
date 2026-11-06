@@ -1,0 +1,293 @@
+{
+    "anna queues her own files": {
+        "opened": [
+            "anna"
+        ],
+        "converted": [],
+        "outcome": {
+            "status": "queued",
+            "inputs": [
+                {
+                    "fileId": 1,
+                    "label": "Brief"
+                },
+                {
+                    "fileId": 2,
+                    "label": "bijlage.pdf"
+                }
+            ],
+            "requestedBy": "anna"
+        }
+    },
+    "anna forges an owner in the options": {
+        "opened": [
+            "anna"
+        ],
+        "converted": [],
+        "outcome": {
+            "refused": [
+                403,
+                "You may not read one of the documents in this selection."
+            ]
+        }
+    },
+    "anna forges an owner on an input": {
+        "opened": [
+            "anna"
+        ],
+        "converted": [],
+        "outcome": {
+            "refused": [
+                403,
+                "You may not read one of the documents in this selection."
+            ]
+        }
+    },
+    "anna merges her own files": {
+        "opened": [
+            "anna"
+        ],
+        "converted": [
+            "bijlage.pdf"
+        ],
+        "outcome": {
+            "status": "failed",
+            "inputs": [
+                {
+                    "fileId": 2,
+                    "label": "bijlage.pdf"
+                },
+                {
+                    "fileId": 1,
+                    "label": "brief.pdf"
+                }
+            ],
+            "requestedBy": "anna"
+        }
+    },
+    "anna merges a file of bob": {
+        "opened": [
+            "anna"
+        ],
+        "converted": [],
+        "outcome": {
+            "refused": [
+                403,
+                "You may not read one of the documents in this selection."
+            ]
+        }
+    },
+    "nobody is logged in": {
+        "opened": [],
+        "converted": [],
+        "outcome": {
+            "refused": [
+                401,
+                "You must be logged in to merge documents."
+            ]
+        }
+    },
+    "nobody, and no inputs": {
+        "opened": [],
+        "converted": [],
+        "outcome": {
+            "refused": [
+                400,
+                "A merge names the documents it merges."
+            ]
+        }
+    },
+    "no inputs": {
+        "opened": [],
+        "converted": [],
+        "outcome": {
+            "refused": [
+                400,
+                "A merge names the documents it merges."
+            ]
+        }
+    },
+    "an input without a file": {
+        "opened": [
+            "anna"
+        ],
+        "converted": [],
+        "outcome": {
+            "refused": [
+                400,
+                "Every input names a file."
+            ]
+        }
+    },
+    "a zero file id": {
+        "opened": [
+            "anna"
+        ],
+        "converted": [],
+        "outcome": {
+            "refused": [
+                400,
+                "Every input names a file."
+            ]
+        }
+    },
+    "a negative file id": {
+        "opened": [
+            "anna"
+        ],
+        "converted": [],
+        "outcome": {
+            "refused": [
+                400,
+                "Every input names a file."
+            ]
+        }
+    },
+    "a file reachable twice keeps the first node": {
+        "opened": [
+            "anna"
+        ],
+        "converted": [],
+        "outcome": {
+            "status": "queued",
+            "inputs": [
+                {
+                    "fileId": 4,
+                    "label": "eigen.pdf"
+                }
+            ],
+            "requestedBy": "anna"
+        }
+    },
+    "a merge of a file reachable twice converts the first node": {
+        "opened": [
+            "anna"
+        ],
+        "converted": [
+            "eigen.pdf"
+        ],
+        "outcome": {
+            "status": "failed",
+            "inputs": [
+                {
+                    "fileId": 4,
+                    "label": "Eigen"
+                }
+            ],
+            "requestedBy": "anna"
+        }
+    },
+    "a string file id": {
+        "opened": [
+            "anna"
+        ],
+        "converted": [],
+        "outcome": {
+            "status": "queued",
+            "inputs": [
+                {
+                    "fileId": 2,
+                    "label": "7"
+                }
+            ],
+            "requestedBy": "anna"
+        }
+    },
+    "a missing file before a bad one": {
+        "opened": [
+            "anna"
+        ],
+        "converted": [],
+        "outcome": {
+            "refused": [
+                403,
+                "You may not read one of the documents in this selection."
+            ]
+        }
+    },
+    "a bad one before a missing file": {
+        "opened": [
+            "anna"
+        ],
+        "converted": [],
+        "outcome": {
+            "refused": [
+                400,
+                "Every input names a file."
+            ]
+        }
+    },
+    "bob resumes his job while anna is logged in": {
+        "opened": [
+            "bob"
+        ],
+        "converted": [
+            "bob.pdf"
+        ],
+        "outcome": {
+            "status": "failed",
+            "inputs": [
+                {
+                    "fileId": 3
+                }
+            ],
+            "requestedBy": "bob"
+        }
+    },
+    "a job of bob naming a file of anna": {
+        "opened": [
+            "bob"
+        ],
+        "converted": [],
+        "outcome": {
+            "refused": [
+                403,
+                "You may not read one of the documents in this selection."
+            ]
+        }
+    },
+    "a job without a requester falls back to the session": {
+        "opened": [
+            "anna"
+        ],
+        "converted": [
+            "brief.pdf"
+        ],
+        "outcome": {
+            "status": "failed",
+            "inputs": [
+                {
+                    "fileId": 1
+                }
+            ],
+            "requestedBy": null
+        }
+    },
+    "a job without a requester and no session": {
+        "opened": [],
+        "converted": [],
+        "outcome": {
+            "refused": [
+                401,
+                "You must be logged in to merge documents."
+            ]
+        }
+    },
+    "a job with an empty requester": {
+        "opened": [
+            "anna"
+        ],
+        "converted": [
+            "brief.pdf"
+        ],
+        "outcome": {
+            "status": "failed",
+            "inputs": [
+                {
+                    "fileId": 1
+                }
+            ],
+            "requestedBy": ""
+        }
+    }
+}

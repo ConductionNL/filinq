@@ -106,7 +106,7 @@ export const useConsentStore = defineStore('consent', {
 				return response.data
 			} catch (err) {
 				console.error('Failed to update consent:', err)
-				this.error = err.message
+				this.error = err.response?.data?.error || err.message
 				return null
 			} finally {
 				this.loading = false

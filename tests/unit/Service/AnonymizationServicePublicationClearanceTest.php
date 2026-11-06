@@ -24,6 +24,7 @@ namespace OCA\Filinq\Tests\Unit\Service;
 
 use OCA\Filinq\Service\AnonymizationPersistenceService;
 use OCA\Filinq\Service\AnonymizationService;
+use OCA\Filinq\Service\AnonymizeOptions;
 use OCA\Filinq\Service\ConsentCrudService;
 use OCA\Filinq\Service\ConsentService;
 use OCA\Filinq\Service\EntityDetectionService;
@@ -143,13 +144,13 @@ class AnonymizationServicePublicationClearanceTest extends TestCase {
 			 *
 			 * @return array<string, mixed>|null Match record or null.
 			 */
-			public function matchProhibition(string $entityType, string $entityValue): ?array {
+			public function matchProhibitionHint(string $entityType, string $entityValue): ?array {
 				if ($entityValue === 'Verboden Persoon') {
 					return ['ruleId' => 'rule-x', 'ruleName' => 'Prohibited Rule X'];
 				}
 
 				return null;
-			}//end matchProhibition()
+			}//end matchProhibitionHint()
 		};
 
 		$container = $this->createMock(originalClassName: ContainerInterface::class);
@@ -176,8 +177,8 @@ class AnonymizationServicePublicationClearanceTest extends TestCase {
 	}//end testCheckUnredactedProhibitionsReturnsViolationsOnMatch()
 
 	/**
-	 * Both anonymise entry points accept an `unredactedEntities` argument, and
-	 * the prohibition-check entry point is part of the public contract.
+	 * Both anonymise entry points take the unredacted entities through their
+	 * options, and the prohibition-check entry point is part of the public contract.
 	 *
 	 * @return void
 	 *
@@ -185,17 +186,9 @@ class AnonymizationServicePublicationClearanceTest extends TestCase {
 	 * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-7
 	 */
 	public function testAnonymizeDocumentSignatureAcceptsUnredactedEntitiesParam(): void {
-		foreach (['anonymizeDocument', 'anonymizeDocumentWithBasisSummary'] as $entryPoint) {
-			$names = array_map(
-				static fn (\ReflectionParameter $p): string => $p->getName(),
-				(new \ReflectionMethod(AnonymizationService::class, $entryPoint))->getParameters()
-			);
-			$this->assertContains(
-				needle: 'unredactedEntities',
-				haystack: $names,
-				message: $entryPoint . '() must accept an $unredactedEntities argument.'
-			);
-		}
+		$options = (new AnonymizeOptions())->withConsents(unredactedEntities: [['text' => 'Gemeente']], overrides: []);
+		$this->assertSame([['text' => 'Gemeente']], $options->runFor(fileId: 1, entities: [])->options['unredactedEntities']);
+		$this->assertSame([['text' => 'Gemeente']], $options->summaryRunFor(fileId: 1, entities: [])->options['unredactedEntities']);
 
 		$this->assertTrue(
 			condition: method_exists(AnonymizationService::class, 'checkUnredactedProhibitions'),

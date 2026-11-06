@@ -1,13 +1,13 @@
 <template>
 	<div
-		class="text-viewer"
+		class="text-viewer dd-doc-viewer"
 		:class="{ 'dd-marking-cursor': isAddMode }"
 		@mouseup="captureSelection">
-		<div v-if="loading" class="text-viewer__loading">
+		<div v-if="loading" class="text-viewer__loading dd-doc-viewer__state">
 			<NcLoadingIcon :size="48" />
 			<span>{{ t('filinq', 'Loading document…') }}</span>
 		</div>
-		<div v-else-if="error" class="text-viewer__error">
+		<div v-else-if="error" class="text-viewer__error dd-doc-viewer__state">
 			{{ error }}
 		</div>
 		<pre v-else class="text-viewer__content"><span
@@ -21,8 +21,9 @@
 <script>
 import { translate as t } from '@nextcloud/l10n'
 import { NcLoadingIcon } from '@nextcloud/vue'
+import { documentViewer } from '../../mixins/documentViewer.js'
 import { entityTypeColor } from '../../services/entityTypes.js'
-import { fetchFileAsText } from '../../services/fileViewerService.js'
+import { fetchFileAsText, fetchUrlAsText } from '../../services/fileViewerService.js'
 import {
 	buildHighlightSegments,
 	PENDING_TYPE,
@@ -35,12 +36,7 @@ export default {
 		NcLoadingIcon,
 	},
 
-	props: {
-		path: {
-			type: String,
-			required: true,
-		},
-	},
+	mixins: [documentViewer],
 
 	data() {
 		return {
@@ -66,25 +62,6 @@ export default {
 					? [{ value: fileViewerStore.selection, type: PENDING_TYPE }]
 					: []
 			return buildHighlightSegments(this.content, [...pending, ...entities])
-		},
-
-		/**
-		 * Whether the viewer is in add mode — drives the marking (highlighter)
-		 * cursor so it is obvious the user can select text to add an entity.
-		 *
-		 * @return {boolean}
-		 */
-		isAddMode() {
-			return fileViewerStore.addMode
-		},
-	},
-
-	watch: {
-		path: {
-			immediate: true,
-			handler() {
-				this.load()
-			},
 		},
 	},
 
@@ -128,7 +105,9 @@ export default {
 			this.loading = true
 			this.error = null
 			try {
-				this.content = await fetchFileAsText(this.path)
+				this.content = this.url
+					? await fetchUrlAsText(this.url)
+					: await fetchFileAsText(this.path)
 			} catch (err) {
 				console.error('[TextViewer] failed to load text:', err)
 				this.error = err.message || t('filinq', 'Failed to load document')
@@ -136,38 +115,13 @@ export default {
 				this.loading = false
 			}
 		},
-
-		/**
-		 * Push the current text selection into the viewer store so future
-		 * features (e.g. "send selection to anonymisation") can pick it up.
-		 */
-		captureSelection() {
-			const text = window.getSelection()?.toString() || ''
-			fileViewerStore.setSelection(text)
-		},
 	},
 }
 </script>
 
+<style scoped src="./documentViewer.css"></style>
+
 <style scoped>
-.text-viewer {
-	display: flex;
-	justify-content: center;
-	padding: 16px;
-	background: var(--color-background-dark);
-	min-height: 100%;
-}
-
-.text-viewer__loading,
-.text-viewer__error {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	gap: 8px;
-	padding: 32px;
-	color: var(--color-text-maxcontrast);
-}
-
 .text-viewer__content {
 	background: white;
 	color: black;

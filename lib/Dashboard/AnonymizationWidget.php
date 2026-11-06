@@ -23,7 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Dashboard;
 
-use OCA\Filinq\AppInfo\Application;
+use OCA\Filinq\Kernel\AppIdentity;
 use OCP\Dashboard\IIconWidget;
 use OCP\Dashboard\IWidget;
 use OCP\IURLGenerator;
@@ -107,7 +107,7 @@ class AnonymizationWidget implements IWidget, IIconWidget {
 	 */
 	public function getIconUrl(): string {
 		return $this->urlGenerator->getAbsoluteURL(
-			$this->urlGenerator->imagePath(Application::APP_ID, 'app-dark.svg')
+			$this->urlGenerator->imagePath(AppIdentity::APP_ID, 'app-dark.svg')
 		);
 
 	}//end getIconUrl()
@@ -134,9 +134,9 @@ class AnonymizationWidget implements IWidget, IIconWidget {
 	 */
 	public function load(): void {
 		// Shared vendor chunks emitted by webpack splitChunks (see webpack.config.js).
-		Util::addScript(Application::APP_ID, Application::APP_ID . '-shared-vendor');
-		Util::addScript(Application::APP_ID, Application::APP_ID . '-shared-nc-vue');
-		Util::addScript(Application::APP_ID, 'filinq-dashboard');
+		Util::addScript(AppIdentity::APP_ID, AppIdentity::APP_ID . '-shared-vendor');
+		Util::addScript(AppIdentity::APP_ID, AppIdentity::APP_ID . '-shared-nc-vue');
+		Util::addScript(AppIdentity::APP_ID, 'filinq-dashboard');
 
 	}//end load()
 }//end class

@@ -1,0 +1,2967 @@
+{
+	"prohibitionCreate": {
+		"empty": {
+			"title": "Add publish-never rule",
+			"noClose": false,
+			"text": "ActiveMatch rulesAdd at least one match rule. Prefer stable identifiers (BSN/KvK) over name-only matches — names alone produce false positives.Add match rule",
+			"fields": [
+				{
+					"type": "x-nctextfield",
+					"label": "Primary name (Dutch)",
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Entity type",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Reason (markdown allowed)",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Legal authority (court order, statute, …)",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Case reference (optional)",
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Severity",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Jurisdiction (optional)",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Valid until (ISO 8601, optional)",
+					"disabled": false
+				},
+				{
+					"type": "x-nccheckboxradioswitch",
+					"label": null,
+					"disabled": false
+				}
+			],
+			"buttons": [
+				{
+					"label": "Cancel",
+					"variant": null,
+					"disabled": false,
+					"busyIcon": false
+				},
+				{
+					"label": "Create",
+					"variant": "primary",
+					"disabled": true,
+					"busyIcon": false
+				}
+			]
+		},
+		"filled": {
+			"title": "Add publish-never rule",
+			"noClose": false,
+			"text": "ActiveMatch rulesAdd match rule",
+			"fields": [
+				{
+					"type": "x-nctextfield",
+					"label": "Primary name (Dutch)",
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Entity type",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Reason (markdown allowed)",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Legal authority (court order, statute, …)",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Case reference (optional)",
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Severity",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Jurisdiction (optional)",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Valid until (ISO 8601, optional)",
+					"disabled": false
+				},
+				{
+					"type": "x-nccheckboxradioswitch",
+					"label": null,
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Match type",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Match value",
+					"disabled": false
+				}
+			],
+			"buttons": [
+				{
+					"label": "Cancel",
+					"variant": null,
+					"disabled": false,
+					"busyIcon": false
+				},
+				{
+					"label": "Create",
+					"variant": "primary",
+					"disabled": false,
+					"busyIcon": false
+				}
+			]
+		},
+		"callsBeforeClick": [],
+		"busy": {
+			"view": {
+				"title": "Add publish-never rule",
+				"noClose": false,
+				"text": "ActiveMatch rulesAdd match rule",
+				"fields": [
+					{
+						"type": "x-nctextfield",
+						"label": "Primary name (Dutch)",
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Entity type",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Reason (markdown allowed)",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Legal authority (court order, statute, …)",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Case reference (optional)",
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Severity",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Jurisdiction (optional)",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Valid until (ISO 8601, optional)",
+						"disabled": false
+					},
+					{
+						"type": "x-nccheckboxradioswitch",
+						"label": null,
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Match type",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Match value",
+						"disabled": false
+					}
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Create",
+						"variant": "primary",
+						"disabled": false,
+						"busyIcon": false
+					}
+				]
+			},
+			"calls": [],
+			"emitted": [
+				[
+					"submit",
+					{
+						"primaryName": "Jan Jansen",
+						"entityType": "PERSON",
+						"reason": "Court order",
+						"legalAuthority": "",
+						"caseReference": "",
+						"severity": "medium",
+						"jurisdiction": "",
+						"validUntil": "",
+						"active": true,
+						"matchRules": [
+							{
+								"type": "bsn",
+								"value": "123456782"
+							}
+						]
+					}
+				]
+			]
+		},
+		"done": {
+			"view": {
+				"title": "Add publish-never rule",
+				"noClose": false,
+				"text": "ActiveMatch rulesAdd match rule",
+				"fields": [
+					{
+						"type": "x-nctextfield",
+						"label": "Primary name (Dutch)",
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Entity type",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Reason (markdown allowed)",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Legal authority (court order, statute, …)",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Case reference (optional)",
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Severity",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Jurisdiction (optional)",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Valid until (ISO 8601, optional)",
+						"disabled": false
+					},
+					{
+						"type": "x-nccheckboxradioswitch",
+						"label": null,
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Match type",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Match value",
+						"disabled": false
+					}
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Create",
+						"variant": "primary",
+						"disabled": false,
+						"busyIcon": false
+					}
+				]
+			},
+			"emitted": []
+		},
+		"refused": {
+			"view": {
+				"title": "Add publish-never rule",
+				"noClose": false,
+				"text": "ActiveMatch rulesAdd match rule",
+				"fields": [
+					{
+						"type": "x-nctextfield",
+						"label": "Primary name (Dutch)",
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Entity type",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Reason (markdown allowed)",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Legal authority (court order, statute, …)",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Case reference (optional)",
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Severity",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Jurisdiction (optional)",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Valid until (ISO 8601, optional)",
+						"disabled": false
+					},
+					{
+						"type": "x-nccheckboxradioswitch",
+						"label": null,
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Match type",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Match value",
+						"disabled": false
+					}
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Create",
+						"variant": "primary",
+						"disabled": false,
+						"busyIcon": false
+					}
+				]
+			},
+			"emitted": []
+		},
+		"cancel": {
+			"emitted": [["update:open", false], ["cancel"]]
+		},
+		"parentBusy": {
+			"title": "Add publish-never rule",
+			"noClose": false,
+			"text": "ActiveMatch rulesAdd match ruleSave failed",
+			"fields": [
+				{
+					"type": "x-nctextfield",
+					"label": "Primary name (Dutch)",
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Entity type",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Reason (markdown allowed)",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Legal authority (court order, statute, …)",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Case reference (optional)",
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Severity",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Jurisdiction (optional)",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Valid until (ISO 8601, optional)",
+					"disabled": false
+				},
+				{
+					"type": "x-nccheckboxradioswitch",
+					"label": null,
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Match type",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Match value",
+					"disabled": false
+				}
+			],
+			"buttons": [
+				{
+					"label": "Cancel",
+					"variant": null,
+					"disabled": true,
+					"busyIcon": false
+				},
+				{
+					"label": "Create",
+					"variant": "primary",
+					"disabled": true,
+					"busyIcon": true
+				}
+			]
+		}
+	},
+	"prohibitionEdit": {
+		"empty": {
+			"title": "Edit publish-never rule",
+			"noClose": false,
+			"text": "ActiveMatch rulesAdd at least one match rule. Prefer stable identifiers (BSN/KvK) over name-only matches — names alone produce false positives.Add match rule",
+			"fields": [
+				{
+					"type": "x-nctextfield",
+					"label": "Primary name (Dutch)",
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Entity type",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Reason (markdown allowed)",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Legal authority (court order, statute, …)",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Case reference (optional)",
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Severity",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Jurisdiction (optional)",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Valid until (ISO 8601, optional)",
+					"disabled": false
+				},
+				{
+					"type": "x-nccheckboxradioswitch",
+					"label": null,
+					"disabled": false
+				}
+			],
+			"buttons": [
+				{
+					"label": "Cancel",
+					"variant": null,
+					"disabled": false,
+					"busyIcon": false
+				},
+				{
+					"label": "Save",
+					"variant": "primary",
+					"disabled": true,
+					"busyIcon": false
+				}
+			]
+		},
+		"filled": {
+			"title": "Edit publish-never rule",
+			"noClose": false,
+			"text": "ActiveMatch rulesAdd match rule",
+			"fields": [
+				{
+					"type": "x-nctextfield",
+					"label": "Primary name (Dutch)",
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Entity type",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Reason (markdown allowed)",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Legal authority (court order, statute, …)",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Case reference (optional)",
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Severity",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Jurisdiction (optional)",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Valid until (ISO 8601, optional)",
+					"disabled": false
+				},
+				{
+					"type": "x-nccheckboxradioswitch",
+					"label": null,
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Match type",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Match value",
+					"disabled": false
+				}
+			],
+			"buttons": [
+				{
+					"label": "Cancel",
+					"variant": null,
+					"disabled": false,
+					"busyIcon": false
+				},
+				{
+					"label": "Save",
+					"variant": "primary",
+					"disabled": false,
+					"busyIcon": false
+				}
+			]
+		},
+		"callsBeforeClick": [],
+		"busy": {
+			"view": {
+				"title": "Edit publish-never rule",
+				"noClose": false,
+				"text": "ActiveMatch rulesAdd match rule",
+				"fields": [
+					{
+						"type": "x-nctextfield",
+						"label": "Primary name (Dutch)",
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Entity type",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Reason (markdown allowed)",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Legal authority (court order, statute, …)",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Case reference (optional)",
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Severity",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Jurisdiction (optional)",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Valid until (ISO 8601, optional)",
+						"disabled": false
+					},
+					{
+						"type": "x-nccheckboxradioswitch",
+						"label": null,
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Match type",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Match value",
+						"disabled": false
+					}
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Save",
+						"variant": "primary",
+						"disabled": false,
+						"busyIcon": false
+					}
+				]
+			},
+			"calls": [],
+			"emitted": [
+				[
+					"submit",
+					{
+						"primaryName": "Jan Jansen",
+						"entityType": "PERSON",
+						"reason": "Court order",
+						"legalAuthority": "",
+						"caseReference": "",
+						"severity": "medium",
+						"jurisdiction": "",
+						"validUntil": "",
+						"active": true,
+						"matchRules": [
+							{
+								"type": "bsn",
+								"value": "123456782"
+							}
+						]
+					}
+				]
+			]
+		},
+		"done": {
+			"view": {
+				"title": "Edit publish-never rule",
+				"noClose": false,
+				"text": "ActiveMatch rulesAdd match rule",
+				"fields": [
+					{
+						"type": "x-nctextfield",
+						"label": "Primary name (Dutch)",
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Entity type",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Reason (markdown allowed)",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Legal authority (court order, statute, …)",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Case reference (optional)",
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Severity",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Jurisdiction (optional)",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Valid until (ISO 8601, optional)",
+						"disabled": false
+					},
+					{
+						"type": "x-nccheckboxradioswitch",
+						"label": null,
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Match type",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Match value",
+						"disabled": false
+					}
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Save",
+						"variant": "primary",
+						"disabled": false,
+						"busyIcon": false
+					}
+				]
+			},
+			"emitted": []
+		},
+		"refused": {
+			"view": {
+				"title": "Edit publish-never rule",
+				"noClose": false,
+				"text": "ActiveMatch rulesAdd match rule",
+				"fields": [
+					{
+						"type": "x-nctextfield",
+						"label": "Primary name (Dutch)",
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Entity type",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Reason (markdown allowed)",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Legal authority (court order, statute, …)",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Case reference (optional)",
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Severity",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Jurisdiction (optional)",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Valid until (ISO 8601, optional)",
+						"disabled": false
+					},
+					{
+						"type": "x-nccheckboxradioswitch",
+						"label": null,
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Match type",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Match value",
+						"disabled": false
+					}
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Save",
+						"variant": "primary",
+						"disabled": false,
+						"busyIcon": false
+					}
+				]
+			},
+			"emitted": []
+		},
+		"cancel": {
+			"emitted": [["update:open", false], ["cancel"]]
+		},
+		"parentBusy": {
+			"title": "Edit publish-never rule",
+			"noClose": false,
+			"text": "ActiveMatch rulesAdd match rule",
+			"fields": [
+				{
+					"type": "x-nctextfield",
+					"label": "Primary name (Dutch)",
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Entity type",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Reason (markdown allowed)",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Legal authority (court order, statute, …)",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Case reference (optional)",
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Severity",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Jurisdiction (optional)",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Valid until (ISO 8601, optional)",
+					"disabled": false
+				},
+				{
+					"type": "x-nccheckboxradioswitch",
+					"label": null,
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Match type",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Match value",
+					"disabled": false
+				}
+			],
+			"buttons": [
+				{
+					"label": "Cancel",
+					"variant": null,
+					"disabled": true,
+					"busyIcon": false
+				},
+				{
+					"label": "Save",
+					"variant": "primary",
+					"disabled": true,
+					"busyIcon": true
+				}
+			]
+		}
+	},
+	"standingConsentCreate": {
+		"empty": {
+			"title": "Add standing consent",
+			"noClose": false,
+			"text": "ActiveNo expiry set — this standing consent will remain in force indefinitely. Consider setting a \"Valid until\" date.Match rulesAdd at least one match rule. Prefer stable identifiers (BSN/KvK) over name-only matches.Add match rule",
+			"fields": [
+				{
+					"type": "x-nctextfield",
+					"label": "Entity text (display name)",
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Entity type",
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Consent method",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Consent document (file id or URL)",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Consent scope (e.g. '2024-2025 municipal decisions')",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Legal basis",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Valid from (ISO 8601, optional)",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Valid until (ISO 8601, optional)",
+					"disabled": false
+				},
+				{
+					"type": "x-nccheckboxradioswitch",
+					"label": null,
+					"disabled": false
+				}
+			],
+			"buttons": [
+				{
+					"label": "Cancel",
+					"variant": null,
+					"disabled": false,
+					"busyIcon": false
+				},
+				{
+					"label": "Create",
+					"variant": "primary",
+					"disabled": true,
+					"busyIcon": false
+				}
+			]
+		},
+		"filled": {
+			"title": "Add standing consent",
+			"noClose": false,
+			"text": "ActiveNo expiry set — this standing consent will remain in force indefinitely. Consider setting a \"Valid until\" date.Match rulesAdd match rule",
+			"fields": [
+				{
+					"type": "x-nctextfield",
+					"label": "Entity text (display name)",
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Entity type",
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Consent method",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Consent document (file id or URL)",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Consent scope (e.g. '2024-2025 municipal decisions')",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Legal basis",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Valid from (ISO 8601, optional)",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Valid until (ISO 8601, optional)",
+					"disabled": false
+				},
+				{
+					"type": "x-nccheckboxradioswitch",
+					"label": null,
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Match type",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Match value",
+					"disabled": false
+				}
+			],
+			"buttons": [
+				{
+					"label": "Cancel",
+					"variant": null,
+					"disabled": false,
+					"busyIcon": false
+				},
+				{
+					"label": "Create",
+					"variant": "primary",
+					"disabled": false,
+					"busyIcon": false
+				}
+			]
+		},
+		"callsBeforeClick": [],
+		"busy": {
+			"view": {
+				"title": "Add standing consent",
+				"noClose": false,
+				"text": "ActiveNo expiry set — this standing consent will remain in force indefinitely. Consider setting a \"Valid until\" date.Match rulesAdd match rule",
+				"fields": [
+					{
+						"type": "x-nctextfield",
+						"label": "Entity text (display name)",
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Entity type",
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Consent method",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Consent document (file id or URL)",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Consent scope (e.g. '2024-2025 municipal decisions')",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Legal basis",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Valid from (ISO 8601, optional)",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Valid until (ISO 8601, optional)",
+						"disabled": false
+					},
+					{
+						"type": "x-nccheckboxradioswitch",
+						"label": null,
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Match type",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Match value",
+						"disabled": false
+					}
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Create",
+						"variant": "primary",
+						"disabled": false,
+						"busyIcon": false
+					}
+				]
+			},
+			"calls": [],
+			"emitted": [
+				[
+					"submit",
+					{
+						"entityText": "Jan Jansen",
+						"entityType": "PERSON",
+						"consentMethod": "paper",
+						"consentDocument": "",
+						"consentScope": "",
+						"legalBasis": "",
+						"validFrom": "",
+						"validUntil": "",
+						"active": true,
+						"matchRules": [
+							{
+								"type": "bsn",
+								"value": "123456782"
+							}
+						],
+						"consentStatus": "consent_given",
+						"publicationDecision": "publish_with_consent",
+						"notificationStatus": "skipped"
+					}
+				]
+			]
+		},
+		"done": {
+			"view": {
+				"title": "Add standing consent",
+				"noClose": false,
+				"text": "ActiveNo expiry set — this standing consent will remain in force indefinitely. Consider setting a \"Valid until\" date.Match rulesAdd match rule",
+				"fields": [
+					{
+						"type": "x-nctextfield",
+						"label": "Entity text (display name)",
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Entity type",
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Consent method",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Consent document (file id or URL)",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Consent scope (e.g. '2024-2025 municipal decisions')",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Legal basis",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Valid from (ISO 8601, optional)",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Valid until (ISO 8601, optional)",
+						"disabled": false
+					},
+					{
+						"type": "x-nccheckboxradioswitch",
+						"label": null,
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Match type",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Match value",
+						"disabled": false
+					}
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Create",
+						"variant": "primary",
+						"disabled": false,
+						"busyIcon": false
+					}
+				]
+			},
+			"emitted": []
+		},
+		"refused": {
+			"view": {
+				"title": "Add standing consent",
+				"noClose": false,
+				"text": "ActiveNo expiry set — this standing consent will remain in force indefinitely. Consider setting a \"Valid until\" date.Match rulesAdd match rule",
+				"fields": [
+					{
+						"type": "x-nctextfield",
+						"label": "Entity text (display name)",
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Entity type",
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Consent method",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Consent document (file id or URL)",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Consent scope (e.g. '2024-2025 municipal decisions')",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Legal basis",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Valid from (ISO 8601, optional)",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Valid until (ISO 8601, optional)",
+						"disabled": false
+					},
+					{
+						"type": "x-nccheckboxradioswitch",
+						"label": null,
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Match type",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Match value",
+						"disabled": false
+					}
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Create",
+						"variant": "primary",
+						"disabled": false,
+						"busyIcon": false
+					}
+				]
+			},
+			"emitted": []
+		},
+		"cancel": {
+			"emitted": [["update:open", false], ["cancel"]]
+		},
+		"parentBusy": {
+			"title": "Add standing consent",
+			"noClose": false,
+			"text": "ActiveNo expiry set — this standing consent will remain in force indefinitely. Consider setting a \"Valid until\" date.Match rulesAdd match rule",
+			"fields": [
+				{
+					"type": "x-nctextfield",
+					"label": "Entity text (display name)",
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Entity type",
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Consent method",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Consent document (file id or URL)",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Consent scope (e.g. '2024-2025 municipal decisions')",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Legal basis",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Valid from (ISO 8601, optional)",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Valid until (ISO 8601, optional)",
+					"disabled": false
+				},
+				{
+					"type": "x-nccheckboxradioswitch",
+					"label": null,
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Match type",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Match value",
+					"disabled": false
+				}
+			],
+			"buttons": [
+				{
+					"label": "Cancel",
+					"variant": null,
+					"disabled": true,
+					"busyIcon": false
+				},
+				{
+					"label": "Create",
+					"variant": "primary",
+					"disabled": true,
+					"busyIcon": true
+				}
+			]
+		}
+	},
+	"standingConsentEdit": {
+		"empty": {
+			"title": "Edit standing consent",
+			"noClose": false,
+			"text": "ActiveNo expiry set — this standing consent will remain in force indefinitely. Consider setting a \"Valid until\" date.Match rulesAdd at least one match rule. Prefer stable identifiers (BSN/KvK) over name-only matches.Add match rule",
+			"fields": [
+				{
+					"type": "x-nctextfield",
+					"label": "Entity text (display name)",
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Entity type",
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Consent method",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Consent document (file id or URL)",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Consent scope (e.g. '2024-2025 municipal decisions')",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Legal basis",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Valid from (ISO 8601, optional)",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Valid until (ISO 8601, optional)",
+					"disabled": false
+				},
+				{
+					"type": "x-nccheckboxradioswitch",
+					"label": null,
+					"disabled": false
+				}
+			],
+			"buttons": [
+				{
+					"label": "Cancel",
+					"variant": null,
+					"disabled": false,
+					"busyIcon": false
+				},
+				{
+					"label": "Save",
+					"variant": "primary",
+					"disabled": true,
+					"busyIcon": false
+				}
+			]
+		},
+		"filled": {
+			"title": "Edit standing consent",
+			"noClose": false,
+			"text": "ActiveNo expiry set — this standing consent will remain in force indefinitely. Consider setting a \"Valid until\" date.Match rulesAdd match rule",
+			"fields": [
+				{
+					"type": "x-nctextfield",
+					"label": "Entity text (display name)",
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Entity type",
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Consent method",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Consent document (file id or URL)",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Consent scope (e.g. '2024-2025 municipal decisions')",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Legal basis",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Valid from (ISO 8601, optional)",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Valid until (ISO 8601, optional)",
+					"disabled": false
+				},
+				{
+					"type": "x-nccheckboxradioswitch",
+					"label": null,
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Match type",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Match value",
+					"disabled": false
+				}
+			],
+			"buttons": [
+				{
+					"label": "Cancel",
+					"variant": null,
+					"disabled": false,
+					"busyIcon": false
+				},
+				{
+					"label": "Save",
+					"variant": "primary",
+					"disabled": false,
+					"busyIcon": false
+				}
+			]
+		},
+		"callsBeforeClick": [],
+		"busy": {
+			"view": {
+				"title": "Edit standing consent",
+				"noClose": false,
+				"text": "ActiveNo expiry set — this standing consent will remain in force indefinitely. Consider setting a \"Valid until\" date.Match rulesAdd match rule",
+				"fields": [
+					{
+						"type": "x-nctextfield",
+						"label": "Entity text (display name)",
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Entity type",
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Consent method",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Consent document (file id or URL)",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Consent scope (e.g. '2024-2025 municipal decisions')",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Legal basis",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Valid from (ISO 8601, optional)",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Valid until (ISO 8601, optional)",
+						"disabled": false
+					},
+					{
+						"type": "x-nccheckboxradioswitch",
+						"label": null,
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Match type",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Match value",
+						"disabled": false
+					}
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Save",
+						"variant": "primary",
+						"disabled": false,
+						"busyIcon": false
+					}
+				]
+			},
+			"calls": [],
+			"emitted": [
+				[
+					"submit",
+					{
+						"entityText": "Jan Jansen",
+						"entityType": "PERSON",
+						"consentMethod": "paper",
+						"consentDocument": "",
+						"consentScope": "",
+						"legalBasis": "",
+						"validFrom": "",
+						"validUntil": "",
+						"active": true,
+						"matchRules": [
+							{
+								"type": "bsn",
+								"value": "123456782"
+							}
+						],
+						"consentStatus": "consent_given",
+						"publicationDecision": "publish_with_consent",
+						"notificationStatus": "skipped"
+					}
+				]
+			]
+		},
+		"done": {
+			"view": {
+				"title": "Edit standing consent",
+				"noClose": false,
+				"text": "ActiveNo expiry set — this standing consent will remain in force indefinitely. Consider setting a \"Valid until\" date.Match rulesAdd match rule",
+				"fields": [
+					{
+						"type": "x-nctextfield",
+						"label": "Entity text (display name)",
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Entity type",
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Consent method",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Consent document (file id or URL)",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Consent scope (e.g. '2024-2025 municipal decisions')",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Legal basis",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Valid from (ISO 8601, optional)",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Valid until (ISO 8601, optional)",
+						"disabled": false
+					},
+					{
+						"type": "x-nccheckboxradioswitch",
+						"label": null,
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Match type",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Match value",
+						"disabled": false
+					}
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Save",
+						"variant": "primary",
+						"disabled": false,
+						"busyIcon": false
+					}
+				]
+			},
+			"emitted": []
+		},
+		"refused": {
+			"view": {
+				"title": "Edit standing consent",
+				"noClose": false,
+				"text": "ActiveNo expiry set — this standing consent will remain in force indefinitely. Consider setting a \"Valid until\" date.Match rulesAdd match rule",
+				"fields": [
+					{
+						"type": "x-nctextfield",
+						"label": "Entity text (display name)",
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Entity type",
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Consent method",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Consent document (file id or URL)",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Consent scope (e.g. '2024-2025 municipal decisions')",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Legal basis",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Valid from (ISO 8601, optional)",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Valid until (ISO 8601, optional)",
+						"disabled": false
+					},
+					{
+						"type": "x-nccheckboxradioswitch",
+						"label": null,
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Match type",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Match value",
+						"disabled": false
+					}
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Save",
+						"variant": "primary",
+						"disabled": false,
+						"busyIcon": false
+					}
+				]
+			},
+			"emitted": []
+		},
+		"cancel": {
+			"emitted": [["update:open", false], ["cancel"]]
+		},
+		"parentBusy": {
+			"title": "Edit standing consent",
+			"noClose": false,
+			"text": "ActiveNo expiry set — this standing consent will remain in force indefinitely. Consider setting a \"Valid until\" date.Match rulesAdd match rule",
+			"fields": [
+				{
+					"type": "x-nctextfield",
+					"label": "Entity text (display name)",
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Entity type",
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Consent method",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Consent document (file id or URL)",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Consent scope (e.g. '2024-2025 municipal decisions')",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Legal basis",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Valid from (ISO 8601, optional)",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Valid until (ISO 8601, optional)",
+					"disabled": false
+				},
+				{
+					"type": "x-nccheckboxradioswitch",
+					"label": null,
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Match type",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Match value",
+					"disabled": false
+				}
+			],
+			"buttons": [
+				{
+					"label": "Cancel",
+					"variant": null,
+					"disabled": true,
+					"busyIcon": false
+				},
+				{
+					"label": "Save",
+					"variant": "primary",
+					"disabled": true,
+					"busyIcon": true
+				}
+			]
+		}
+	},
+	"customDictionaryCreate": {
+		"empty": {
+			"title": "Add custom dictionary",
+			"noClose": false,
+			"text": "ColourExact matches case-sensitively; case-insensitive (default) folds case; word boundary is case-insensitive but never matches inside a longer word.Active (used in automatic detection)",
+			"fields": [
+				{
+					"type": "x-nctextfield",
+					"label": "Label",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Description (optional)",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Hex value",
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Match mode",
+					"disabled": false
+				},
+				{
+					"type": "x-nccheckboxradioswitch",
+					"label": null,
+					"disabled": false
+				}
+			],
+			"buttons": [
+				{
+					"label": "Cancel",
+					"variant": null,
+					"disabled": false,
+					"busyIcon": false
+				},
+				{
+					"label": "Create",
+					"variant": "primary",
+					"disabled": true,
+					"busyIcon": false
+				}
+			]
+		},
+		"filled": {
+			"title": "Add custom dictionary",
+			"noClose": false,
+			"text": "ColourExact matches case-sensitively; case-insensitive (default) folds case; word boundary is case-insensitive but never matches inside a longer word.Active (used in automatic detection)",
+			"fields": [
+				{
+					"type": "x-nctextfield",
+					"label": "Label",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Description (optional)",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Hex value",
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Match mode",
+					"disabled": false
+				},
+				{
+					"type": "x-nccheckboxradioswitch",
+					"label": null,
+					"disabled": false
+				}
+			],
+			"buttons": [
+				{
+					"label": "Cancel",
+					"variant": null,
+					"disabled": false,
+					"busyIcon": false
+				},
+				{
+					"label": "Create",
+					"variant": "primary",
+					"disabled": false,
+					"busyIcon": false
+				}
+			]
+		},
+		"callsBeforeClick": [],
+		"busy": {
+			"view": {
+				"title": "Add custom dictionary",
+				"noClose": false,
+				"text": "ColourExact matches case-sensitively; case-insensitive (default) folds case; word boundary is case-insensitive but never matches inside a longer word.Active (used in automatic detection)",
+				"fields": [
+					{
+						"type": "x-nctextfield",
+						"label": "Label",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Description (optional)",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Hex value",
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Match mode",
+						"disabled": false
+					},
+					{
+						"type": "x-nccheckboxradioswitch",
+						"label": null,
+						"disabled": false
+					}
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Create",
+						"variant": "primary",
+						"disabled": false,
+						"busyIcon": false
+					}
+				]
+			},
+			"calls": [],
+			"emitted": [
+				[
+					"submit",
+					{
+						"label": "Woordenlijst",
+						"description": "",
+						"colour": "#0082C9",
+						"matchMode": "caseInsensitive",
+						"active": true
+					}
+				]
+			]
+		},
+		"done": {
+			"view": {
+				"title": "Add custom dictionary",
+				"noClose": false,
+				"text": "ColourExact matches case-sensitively; case-insensitive (default) folds case; word boundary is case-insensitive but never matches inside a longer word.Active (used in automatic detection)",
+				"fields": [
+					{
+						"type": "x-nctextfield",
+						"label": "Label",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Description (optional)",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Hex value",
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Match mode",
+						"disabled": false
+					},
+					{
+						"type": "x-nccheckboxradioswitch",
+						"label": null,
+						"disabled": false
+					}
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Create",
+						"variant": "primary",
+						"disabled": false,
+						"busyIcon": false
+					}
+				]
+			},
+			"emitted": []
+		},
+		"refused": {
+			"view": {
+				"title": "Add custom dictionary",
+				"noClose": false,
+				"text": "ColourExact matches case-sensitively; case-insensitive (default) folds case; word boundary is case-insensitive but never matches inside a longer word.Active (used in automatic detection)",
+				"fields": [
+					{
+						"type": "x-nctextfield",
+						"label": "Label",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Description (optional)",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Hex value",
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Match mode",
+						"disabled": false
+					},
+					{
+						"type": "x-nccheckboxradioswitch",
+						"label": null,
+						"disabled": false
+					}
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Create",
+						"variant": "primary",
+						"disabled": false,
+						"busyIcon": false
+					}
+				]
+			},
+			"emitted": []
+		},
+		"cancel": {
+			"emitted": [["cancel"]]
+		},
+		"parentBusy": {
+			"title": "Add custom dictionary",
+			"noClose": false,
+			"text": "ColourExact matches case-sensitively; case-insensitive (default) folds case; word boundary is case-insensitive but never matches inside a longer word.Active (used in automatic detection)",
+			"fields": [
+				{
+					"type": "x-nctextfield",
+					"label": "Label",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Description (optional)",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Hex value",
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Match mode",
+					"disabled": false
+				},
+				{
+					"type": "x-nccheckboxradioswitch",
+					"label": null,
+					"disabled": false
+				}
+			],
+			"buttons": [
+				{
+					"label": "Cancel",
+					"variant": null,
+					"disabled": true,
+					"busyIcon": false
+				},
+				{
+					"label": "Create",
+					"variant": "primary",
+					"disabled": true,
+					"busyIcon": true
+				}
+			]
+		}
+	},
+	"customDictionaryEdit": {
+		"empty": {
+			"title": "Edit dictionary",
+			"noClose": false,
+			"text": "ColourExact matches case-sensitively; case-insensitive (default) folds case; word boundary is case-insensitive but never matches inside a longer word.Active (used in automatic detection)",
+			"fields": [
+				{
+					"type": "x-nctextfield",
+					"label": "Label",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Description (optional)",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Hex value",
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Match mode",
+					"disabled": false
+				},
+				{
+					"type": "x-nccheckboxradioswitch",
+					"label": null,
+					"disabled": false
+				}
+			],
+			"buttons": [
+				{
+					"label": "Cancel",
+					"variant": null,
+					"disabled": false,
+					"busyIcon": false
+				},
+				{
+					"label": "Save",
+					"variant": "primary",
+					"disabled": false,
+					"busyIcon": false
+				}
+			]
+		},
+		"filled": {
+			"title": "Edit dictionary",
+			"noClose": false,
+			"text": "ColourExact matches case-sensitively; case-insensitive (default) folds case; word boundary is case-insensitive but never matches inside a longer word.Active (used in automatic detection)",
+			"fields": [
+				{
+					"type": "x-nctextfield",
+					"label": "Label",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Description (optional)",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Hex value",
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Match mode",
+					"disabled": false
+				},
+				{
+					"type": "x-nccheckboxradioswitch",
+					"label": null,
+					"disabled": false
+				}
+			],
+			"buttons": [
+				{
+					"label": "Cancel",
+					"variant": null,
+					"disabled": false,
+					"busyIcon": false
+				},
+				{
+					"label": "Save",
+					"variant": "primary",
+					"disabled": false,
+					"busyIcon": false
+				}
+			]
+		},
+		"callsBeforeClick": [],
+		"busy": {
+			"view": {
+				"title": "Edit dictionary",
+				"noClose": false,
+				"text": "ColourExact matches case-sensitively; case-insensitive (default) folds case; word boundary is case-insensitive but never matches inside a longer word.Active (used in automatic detection)",
+				"fields": [
+					{
+						"type": "x-nctextfield",
+						"label": "Label",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Description (optional)",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Hex value",
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Match mode",
+						"disabled": false
+					},
+					{
+						"type": "x-nccheckboxradioswitch",
+						"label": null,
+						"disabled": false
+					}
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Save",
+						"variant": "primary",
+						"disabled": false,
+						"busyIcon": false
+					}
+				]
+			},
+			"calls": [],
+			"emitted": [
+				[
+					"submit",
+					{
+						"label": "Woordenlijst",
+						"description": "",
+						"colour": "#0082C9",
+						"matchMode": "caseInsensitive",
+						"active": true
+					}
+				]
+			]
+		},
+		"done": {
+			"view": {
+				"title": "Edit dictionary",
+				"noClose": false,
+				"text": "ColourExact matches case-sensitively; case-insensitive (default) folds case; word boundary is case-insensitive but never matches inside a longer word.Active (used in automatic detection)",
+				"fields": [
+					{
+						"type": "x-nctextfield",
+						"label": "Label",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Description (optional)",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Hex value",
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Match mode",
+						"disabled": false
+					},
+					{
+						"type": "x-nccheckboxradioswitch",
+						"label": null,
+						"disabled": false
+					}
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Save",
+						"variant": "primary",
+						"disabled": false,
+						"busyIcon": false
+					}
+				]
+			},
+			"emitted": []
+		},
+		"refused": {
+			"view": {
+				"title": "Edit dictionary",
+				"noClose": false,
+				"text": "ColourExact matches case-sensitively; case-insensitive (default) folds case; word boundary is case-insensitive but never matches inside a longer word.Active (used in automatic detection)",
+				"fields": [
+					{
+						"type": "x-nctextfield",
+						"label": "Label",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Description (optional)",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextfield",
+						"label": "Hex value",
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Match mode",
+						"disabled": false
+					},
+					{
+						"type": "x-nccheckboxradioswitch",
+						"label": null,
+						"disabled": false
+					}
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Save",
+						"variant": "primary",
+						"disabled": false,
+						"busyIcon": false
+					}
+				]
+			},
+			"emitted": []
+		},
+		"cancel": {
+			"emitted": [["cancel"]]
+		},
+		"parentBusy": {
+			"title": "Edit dictionary",
+			"noClose": false,
+			"text": "ColourExact matches case-sensitively; case-insensitive (default) folds case; word boundary is case-insensitive but never matches inside a longer word.Active (used in automatic detection)",
+			"fields": [
+				{
+					"type": "x-nctextfield",
+					"label": "Label",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Description (optional)",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextfield",
+					"label": "Hex value",
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Match mode",
+					"disabled": false
+				},
+				{
+					"type": "x-nccheckboxradioswitch",
+					"label": null,
+					"disabled": false
+				}
+			],
+			"buttons": [
+				{
+					"label": "Cancel",
+					"variant": null,
+					"disabled": true,
+					"busyIcon": false
+				},
+				{
+					"label": "Save",
+					"variant": "primary",
+					"disabled": true,
+					"busyIcon": true
+				}
+			]
+		}
+	},
+	"dossierCreate": {
+		"empty": {
+			"title": "New dossier",
+			"noClose": false,
+			"text": "",
+			"fields": [
+				{
+					"type": "x-nctextfield",
+					"label": "Name",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextarea",
+					"label": "Description",
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Legal bases",
+					"disabled": false
+				}
+			],
+			"buttons": [
+				{
+					"label": "Cancel",
+					"variant": null,
+					"disabled": false,
+					"busyIcon": false
+				},
+				{
+					"label": "Create dossier",
+					"variant": "primary",
+					"disabled": true,
+					"busyIcon": false
+				}
+			]
+		},
+		"filled": {
+			"title": "New dossier",
+			"noClose": false,
+			"text": "",
+			"fields": [
+				{
+					"type": "x-nctextfield",
+					"label": "Name",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextarea",
+					"label": "Description",
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Legal bases",
+					"disabled": false
+				}
+			],
+			"buttons": [
+				{
+					"label": "Cancel",
+					"variant": null,
+					"disabled": false,
+					"busyIcon": false
+				},
+				{
+					"label": "Create dossier",
+					"variant": "primary",
+					"disabled": false,
+					"busyIcon": false
+				}
+			]
+		},
+		"callsBeforeClick": [],
+		"busy": {
+			"view": {
+				"title": "New dossier",
+				"noClose": false,
+				"text": "",
+				"fields": [
+					{
+						"type": "x-nctextfield",
+						"label": "Name",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextarea",
+						"label": "Description",
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Legal bases",
+						"disabled": false
+					}
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Create dossier",
+						"variant": "primary",
+						"disabled": false,
+						"busyIcon": false
+					}
+				]
+			},
+			"calls": [],
+			"emitted": [
+				[
+					"submit",
+					{
+						"name": "Bouwvergunning",
+						"description": "",
+						"bases": []
+					}
+				]
+			]
+		},
+		"done": {
+			"view": {
+				"title": "New dossier",
+				"noClose": false,
+				"text": "",
+				"fields": [
+					{
+						"type": "x-nctextfield",
+						"label": "Name",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextarea",
+						"label": "Description",
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Legal bases",
+						"disabled": false
+					}
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Create dossier",
+						"variant": "primary",
+						"disabled": false,
+						"busyIcon": false
+					}
+				]
+			},
+			"emitted": []
+		},
+		"refused": {
+			"view": {
+				"title": "New dossier",
+				"noClose": false,
+				"text": "",
+				"fields": [
+					{
+						"type": "x-nctextfield",
+						"label": "Name",
+						"disabled": false
+					},
+					{
+						"type": "x-nctextarea",
+						"label": "Description",
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Legal bases",
+						"disabled": false
+					}
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Create dossier",
+						"variant": "primary",
+						"disabled": false,
+						"busyIcon": false
+					}
+				]
+			},
+			"emitted": []
+		},
+		"cancel": {
+			"emitted": [["cancel"], ["update:open", false]]
+		},
+		"parentBusy": {
+			"title": "New dossier",
+			"noClose": false,
+			"text": "",
+			"fields": [
+				{
+					"type": "x-nctextfield",
+					"label": "Name",
+					"disabled": false
+				},
+				{
+					"type": "x-nctextarea",
+					"label": "Description",
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Legal bases",
+					"disabled": false
+				}
+			],
+			"buttons": [
+				{
+					"label": "Cancel",
+					"variant": null,
+					"disabled": true,
+					"busyIcon": false
+				},
+				{
+					"label": "Create dossier",
+					"variant": "primary",
+					"disabled": true,
+					"busyIcon": true
+				}
+			]
+		}
+	},
+	"dictionaryImport": {
+		"empty": {
+			"title": "Import terms",
+			"noClose": false,
+			"text": "Upload a CSV file (first column = term, optional second column = label) or paste a newline-separated list below. Blank lines and duplicates (case-insensitive) are skipped automatically.CSV fileor paste a newline-separated list",
+			"fields": [
+				{
+					"type": "x-nctextarea",
+					"label": "Terms (one per line)",
+					"disabled": false
+				}
+			],
+			"buttons": [
+				{
+					"label": "Close",
+					"variant": null,
+					"disabled": false,
+					"busyIcon": false
+				},
+				{
+					"label": "Import",
+					"variant": "primary",
+					"disabled": true,
+					"busyIcon": false
+				}
+			]
+		},
+		"filled": {
+			"title": "Import terms",
+			"noClose": false,
+			"text": "Upload a CSV file (first column = term, optional second column = label) or paste a newline-separated list below. Blank lines and duplicates (case-insensitive) are skipped automatically.CSV fileor paste a newline-separated list",
+			"fields": [
+				{
+					"type": "x-nctextarea",
+					"label": "Terms (one per line)",
+					"disabled": false
+				}
+			],
+			"buttons": [
+				{
+					"label": "Close",
+					"variant": null,
+					"disabled": false,
+					"busyIcon": false
+				},
+				{
+					"label": "Import",
+					"variant": "primary",
+					"disabled": false,
+					"busyIcon": false
+				}
+			]
+		},
+		"callsBeforeClick": [],
+		"busy": {
+			"view": {
+				"title": "Import terms",
+				"noClose": false,
+				"text": "Upload a CSV file (first column = term, optional second column = label) or paste a newline-separated list below. Blank lines and duplicates (case-insensitive) are skipped automatically.CSV fileor paste a newline-separated list",
+				"fields": [
+					{
+						"type": "x-nctextarea",
+						"label": "Terms (one per line)",
+						"disabled": false
+					}
+				],
+				"buttons": [
+					{
+						"label": "Close",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Import",
+						"variant": "primary",
+						"disabled": false,
+						"busyIcon": false
+					}
+				]
+			},
+			"calls": [],
+			"emitted": [
+				[
+					"submit",
+					{
+						"content": "Zilverreiger\nKarekiet",
+						"format": "newline"
+					}
+				]
+			]
+		},
+		"done": {
+			"view": {
+				"title": "Import terms",
+				"noClose": false,
+				"text": "Upload a CSV file (first column = term, optional second column = label) or paste a newline-separated list below. Blank lines and duplicates (case-insensitive) are skipped automatically.CSV fileor paste a newline-separated list",
+				"fields": [
+					{
+						"type": "x-nctextarea",
+						"label": "Terms (one per line)",
+						"disabled": false
+					}
+				],
+				"buttons": [
+					{
+						"label": "Close",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Import",
+						"variant": "primary",
+						"disabled": false,
+						"busyIcon": false
+					}
+				]
+			},
+			"emitted": []
+		},
+		"refused": {
+			"view": {
+				"title": "Import terms",
+				"noClose": false,
+				"text": "Upload a CSV file (first column = term, optional second column = label) or paste a newline-separated list below. Blank lines and duplicates (case-insensitive) are skipped automatically.CSV fileor paste a newline-separated list",
+				"fields": [
+					{
+						"type": "x-nctextarea",
+						"label": "Terms (one per line)",
+						"disabled": false
+					}
+				],
+				"buttons": [
+					{
+						"label": "Close",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Import",
+						"variant": "primary",
+						"disabled": false,
+						"busyIcon": false
+					}
+				]
+			},
+			"emitted": []
+		},
+		"cancel": {
+			"emitted": [["cancel"]]
+		},
+		"parentBusy": {
+			"title": "Import terms",
+			"noClose": false,
+			"text": "Upload a CSV file (first column = term, optional second column = label) or paste a newline-separated list below. Blank lines and duplicates (case-insensitive) are skipped automatically.CSV fileor paste a newline-separated list",
+			"fields": [
+				{
+					"type": "x-nctextarea",
+					"label": "Terms (one per line)",
+					"disabled": false
+				}
+			],
+			"buttons": [
+				{
+					"label": "Close",
+					"variant": null,
+					"disabled": true,
+					"busyIcon": false
+				},
+				{
+					"label": "Import",
+					"variant": "primary",
+					"disabled": true,
+					"busyIcon": true
+				}
+			]
+		}
+	}
+}

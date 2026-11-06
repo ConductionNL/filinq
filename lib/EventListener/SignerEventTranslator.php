@@ -3,12 +3,13 @@
 /**
  * Filinq Signer Event Translator
  *
- * Translates task-sequence transitions — already reduced to scalars by
- * `SigningTaskListener` — into Filinq's own typed signer events, and
- * notifies the configured signing provider when a position becomes enabled.
- * The listener keeps the OR event surface and the ownership filter; this
- * class is pure filinq: scalars in, `Signer*Event`s out. That split is what
- * keeps every OpenRegister type out of this file, so it loads with OR
+ * Translates task-sequence transitions — already reduced to scalars and
+ * filinq value objects by `SigningTaskListener` — into Filinq's own typed
+ * signer events, and notifies the configured signing provider when a
+ * position becomes enabled. The listener keeps the OR event surface and the
+ * ownership filter; this class is pure filinq: scalars and filinq values in,
+ * `Signer*Event`s out. That split is what keeps every OpenRegister type out
+ * of this file, so it loads with OR
  * older, newer or absent (openregister#3302, flow-approval-consolidation).
  *
  * @category  EventListener
@@ -33,7 +34,7 @@ use OCA\Filinq\Event\SignerChainCompletedEvent;
 use OCA\Filinq\Event\SignerStepApprovedEvent;
 use OCA\Filinq\Event\SignerStepPendingEvent;
 use OCA\Filinq\Event\SignerStepRejectedEvent;
-use OCA\Filinq\Service\Signing\SigningProviderFactory;
+use OCA\Filinq\Kernel\Contracts\ActiveSigningProviderInterface;
 use OCP\EventDispatcher\IEventDispatcher;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -53,11 +54,11 @@ class SignerEventTranslator {
 	/**
 	 * Constructor.
 	 *
-	 * @param SigningProviderFactory $providerFactory Provider factory for invoking
-	 *                                                the configured provider on
-	 *                                                position-enabled transitions.
-	 * @param IEventDispatcher $dispatcher Dispatcher used to re-emit
-	 *                                     typed filinq-side events.
+	 * @param ActiveSigningProviderInterface $providerFactory Names the configured
+	 *                                                        provider on
+	 *                                                        position-enabled transitions.
+	 * @param IEventDispatcher               $dispatcher      Dispatcher used to re-emit
+	 *                                                        typed filinq-side events.
 	 * @param LoggerInterface $logger Logger.
 	 *
 	 * @return void
@@ -65,7 +66,7 @@ class SignerEventTranslator {
 	 * @spec openspec/specs/signing-via-or-approval-with-provider-plugins/spec.md
 	 */
 	public function __construct(
-		private readonly SigningProviderFactory $providerFactory,
+		private readonly ActiveSigningProviderInterface $providerFactory,
 		private readonly IEventDispatcher $dispatcher,
 		private readonly LoggerInterface $logger,
 	) {
@@ -119,55 +120,56 @@ class SignerEventTranslator {
 	 * Handle a sequence task completing with a decision.
 	 *
 	 * Approving outcomes re-emit the typed approved event; rejecting
-	 * outcomes the typed rejected event. When an approval was not the final
+	 * outcomes the typed rejected event. An approval needs both an approving
+	 * outcome and a completing identity: any other completion (empty or
+	 * unknown outcome, no signer) dispatches nothing and logs a warning, so
+	 * the step stays undecided. When an approval was not the final
 	 * position, the next position's own enabled transition follows through
 	 * {@see onPositionEnabled()}; the final approval additionally arrives
 	 * through {@see onSequenceCompleted()}.
 	 *
-	 * @param string $sequenceUuid UUID of the OR task sequence.
-	 * @param string $taskUuid UUID of the completed task.
-	 * @param int $position Ordinal of the position (1-based).
-	 * @param string|null $userId The completing identity.
-	 * @param string|null $comment The completion comment, when one was given.
-	 * @param string $objectUuid Signing-request UUID.
-	 * @param bool $isRejecting TRUE when the outcome is in the rejecting
-	 *                          vocabulary.
+	 * @param SignerStepTask     $task     The completed task and its signing request.
+	 * @param SignerStepDecision $decision Who decided, the comment and whether it rejects or approves.
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/specs/signing-via-or-approval-with-provider-plugins/spec.md
 	 */
-	public function onTaskDecided(
-		string $sequenceUuid,
-		string $taskUuid,
-		int $position,
-		?string $userId,
-		?string $comment,
-		string $objectUuid,
-		bool $isRejecting,
-	): void {
-		if ($isRejecting === true) {
+	public function onTaskDecided(SignerStepTask $task, SignerStepDecision $decision): void {
+		if ($decision->isRejecting === true) {
 			$this->dispatcher->dispatchTyped(
 				new SignerStepRejectedEvent(
-					sequenceUuid: $sequenceUuid,
-					taskUuid: $taskUuid,
-					position: $position,
-					userId: $userId,
-					comment: $comment,
-					objectUuid: $objectUuid
+					sequenceUuid: $task->sequenceUuid,
+					taskUuid: $task->taskUuid,
+					position: $task->position,
+					userId: $decision->userId,
+					comment: $decision->comment,
+					objectUuid: $task->objectUuid
 				)
+			);
+			return;
+		}
+
+		if ($decision->isApproving === false || trim((string) $decision->userId) === '') {
+			$this->logger->warning(
+				'SigningTaskListener: completed task without an approving outcome and signer; no signer event dispatched',
+				[
+					'sequenceUuid' => $task->sequenceUuid,
+					'taskUuid' => $task->taskUuid,
+					'objectUuid' => $task->objectUuid,
+				]
 			);
 			return;
 		}
 
 		$this->dispatcher->dispatchTyped(
 			new SignerStepApprovedEvent(
-				sequenceUuid: $sequenceUuid,
-				taskUuid: $taskUuid,
-				position: $position,
-				userId: $userId,
-				comment: $comment,
-				objectUuid: $objectUuid
+				sequenceUuid: $task->sequenceUuid,
+				taskUuid: $task->taskUuid,
+				position: $task->position,
+				userId: $decision->userId,
+				comment: $decision->comment,
+				objectUuid: $task->objectUuid
 			)
 		);
 
@@ -222,9 +224,9 @@ class SignerEventTranslator {
 	 */
 	private function invokeProviderForEnabledPosition(string $objectUuid, int $position): void {
 		try {
-			$provider = $this->providerFactory->getActiveProvider();
+			$providerId = $this->providerFactory->getActiveProviderIdentifier();
 			$this->logger->debug(
-				'SigningTaskListener: provider ' . $provider->getIdentifier()
+				'SigningTaskListener: provider ' . $providerId
 				. ' notified that position ' . $position . ' is enabled for sign-request ' . $objectUuid
 			);
 		} catch (Throwable $e) {

@@ -102,6 +102,66 @@ class DocumentSigningRequestedListenerTest extends TestCase {
 	}//end testHandleSuccessWritesResultSlot()
 
 	/**
+	 * A learner-facing consumer's guardian fields reach createRequest() untouched
+	 * (signer-identity-rails REQ-DDSIR-011).
+	 *
+	 * A contract pin rather than a red-first test: the listener forwards the
+	 * signer list as it is today. This fails the day someone narrows it to
+	 * userId/displayName/email/order and drops the guardian link in silence.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 */
+	public function testTheGuardianFieldsOfALearnerFacingRequestReachCreateRequest(): void {
+		$signers = [
+			['userId' => 'sanne', 'displayName' => 'Sanne de Vries', 'birthDate' => '2012-06-01'],
+			[
+				'userId' => 'mark',
+				'displayName' => 'Mark de Vries',
+				'role' => 'guardian',
+				'guardianFor' => 'sanne',
+				'guardianAct' => 'co-sign',
+				'guardianRef' => 'learniq/guardian/0001',
+			],
+		];
+
+		$signingService = $this->createMock(SigningService::class);
+		$signingService->expects($this->once())
+			->method('createRequest')
+			->willReturnCallback(
+				function (array $data) use ($signers): array {
+					$this->assertSame($signers, $data['signers']);
+					$this->assertSame('learniq', $data['sourceApp']);
+					return ['id' => 'req-opp-1'];
+				}
+			);
+
+		$listener = new DocumentSigningRequestedListener(
+			signingService: $signingService,
+			logger: $this->createMock(LoggerInterface::class)
+		);
+
+		$event = new DocumentSigningRequestedEvent(
+			provenance: new SigningProvenance(
+				sourceApp: 'learniq',
+				subjectRegister: 'learniq',
+				subjectSchema: 'LearningPlan',
+				subjectId: 'plan-1',
+				externalReference: 'opp-2026-sanne',
+				correlationId: 'corr-opp-1'
+			),
+			subjectLabel: 'OPP Sanne de Vries',
+			documentReference: 'file-opp-1',
+			signers: $signers
+		);
+		$listener->handle($event);
+
+		$this->assertTrue($event->isHandled());
+
+	}//end testTheGuardianFieldsOfALearnerFacingRequestReachCreateRequest()
+
+	/**
 	 * A service failure is swallowed; the event is left unhandled.
 	 *
 	 * @return void

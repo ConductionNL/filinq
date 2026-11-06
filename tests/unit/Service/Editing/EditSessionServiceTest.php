@@ -18,6 +18,7 @@
 namespace OCA\Filinq\Tests\Unit\Service\Editing;
 
 use OCA\Filinq\Service\Editing\AgentArtefactMarker;
+use OCA\Filinq\Service\Editing\AgentFileRequest;
 use OCA\Filinq\Service\Editing\DocumentCodecs;
 use OCA\Filinq\Service\Editing\DocumentGuard;
 use OCA\Filinq\Service\Editing\EditSessionService;
@@ -347,6 +348,40 @@ class EditSessionServiceTest extends TestCase {
 	}//end testReadReturnsAnchorsAndTheVersionAnEditWillNeed()
 
 	/**
+	 * A read past the block cap reports the full count, says it is truncated and
+	 * returns only the first 400 blocks, with the file's identity and user path.
+	 *
+	 * @return void
+	 */
+	public function testALongReadIsTruncatedToTheBlockCap(): void {
+		$path = tempnam(sys_get_temp_dir(), 'filinq-session-');
+		$this->spilled[] = $path;
+		unlink($path);
+		$zip = new ZipArchive();
+		$zip->open($path, ZipArchive::CREATE);
+		$paragraphs = '';
+		for ($i = 1; $i <= 401; $i++) {
+			$paragraphs .= '<w:p><w:r><w:t>Paragraph ' . $i . '</w:t></w:r></w:p>';
+		}
+
+		$zip->addFromString('word/document.xml', '<w:document xmlns:w="urn:w"><w:body>' . $paragraphs . '</w:body></w:document>');
+		$zip->close();
+		$this->attach($this->file((string)file_get_contents($path), 'etag-long'));
+
+		$outline = $this->service()->openForAgent(uid: self::UID, fileId: self::FILE_ID);
+
+		$this->assertSame(self::FILE_ID, $outline['fileId']);
+		$this->assertSame('letter.docx', $outline['name']);
+		$this->assertSame('letter.docx', $outline['path']);
+		$this->assertSame(401, $outline['blockCount']);
+		$this->assertTrue($outline['truncated']);
+		$this->assertCount(400, $outline['blocks']);
+		$this->assertSame('Paragraph 400', $outline['blocks'][399]['text']);
+		$this->assertArrayHasKey('format', $outline);
+
+	}//end testALongReadIsTruncatedToTheBlockCap()
+
+	/**
 	 * A read returns text, never bytes. A tool that hands a package back to the
 	 * model both poisons the prompt and moves document content somewhere with
 	 * different access rules.
@@ -375,10 +410,8 @@ class EditSessionServiceTest extends TestCase {
 		$this->marker->expects($this->once())->method('mark')->with(self::FILE_ID)->willReturn(true);
 
 		$result = $this->service()->editForAgent(
-			uid: self::UID,
-			fileId: self::FILE_ID,
-			edits: $this->edit(),
-			version: $this->attachedVersion()
+			request: new AgentFileRequest(uid: self::UID, fileId: self::FILE_ID, version: $this->attachedVersion()),
+			edits: $this->edit()
 		);
 
 		$this->assertSame(EditSessionService::MODE_IN_PLACE, $result['outputMode']);
@@ -407,10 +440,8 @@ class EditSessionServiceTest extends TestCase {
 		$this->expectExceptionMessageMatches('/changed since you read it/');
 
 		$this->service()->editForAgent(
-			uid: self::UID,
-			fileId: self::FILE_ID,
-			edits: $this->edit(),
-			version: 'a-stale-version'
+			request: new AgentFileRequest(uid: self::UID, fileId: self::FILE_ID, version: 'a-stale-version'),
+			edits: $this->edit()
 		);
 
 	}//end testAVersionThatMovedRefusesTheWrite()
@@ -426,10 +457,8 @@ class EditSessionServiceTest extends TestCase {
 
 		try {
 			$this->service()->editForAgent(
-				uid: self::UID,
-				fileId: self::FILE_ID,
-				edits: $this->edit(),
-				version: 'a-stale-version'
+				request: new AgentFileRequest(uid: self::UID, fileId: self::FILE_ID, version: 'a-stale-version'),
+				edits: $this->edit()
 			);
 		} catch (RuntimeException) {
 			// Expected; the assertion is the unlock expectation above.
@@ -451,7 +480,7 @@ class EditSessionServiceTest extends TestCase {
 		$this->expectException(RuntimeException::class);
 		$this->expectExceptionMessageMatches('/Read the document first/');
 
-		$this->service()->editForAgent(uid: self::UID, fileId: self::FILE_ID, edits: $this->edit(), version: '');
+		$this->service()->editForAgent(request: new AgentFileRequest(uid: self::UID, fileId: self::FILE_ID, version: ''), edits: $this->edit());
 
 	}//end testAnEditWithoutAVersionIsRefused()
 
@@ -472,10 +501,8 @@ class EditSessionServiceTest extends TestCase {
 		$this->expectExceptionMessageMatches('/richdocuments/');
 
 		$this->service()->editForAgent(
-			uid: self::UID,
-			fileId: self::FILE_ID,
-			edits: $this->edit(),
-			version: $this->attachedVersion()
+			request: new AgentFileRequest(uid: self::UID, fileId: self::FILE_ID, version: $this->attachedVersion()),
+			edits: $this->edit()
 		);
 
 	}//end testAnotherOwnersLockIsARefusalNotAWait()
@@ -492,10 +519,8 @@ class EditSessionServiceTest extends TestCase {
 		$this->lockManager->expects($this->never())->method('unlock');
 
 		$result = $this->service()->editForAgent(
-			uid: self::UID,
-			fileId: self::FILE_ID,
-			edits: $this->edit(),
-			version: $this->attachedVersion()
+			request: new AgentFileRequest(uid: self::UID, fileId: self::FILE_ID, version: $this->attachedVersion()),
+			edits: $this->edit()
 		);
 
 		$this->assertNotEmpty($result['warnings']);
@@ -517,10 +542,8 @@ class EditSessionServiceTest extends TestCase {
 		$this->expectException(RuntimeException::class);
 
 		$this->service()->editForAgent(
-			uid: self::UID,
-			fileId: self::FILE_ID,
-			edits: $this->edit(),
-			version: $this->attachedVersion()
+			request: new AgentFileRequest(uid: self::UID, fileId: self::FILE_ID, version: $this->attachedVersion()),
+			edits: $this->edit()
 		);
 
 	}//end testAFileThatCannotBeMarkedIsNotWritten()
@@ -542,10 +565,8 @@ class EditSessionServiceTest extends TestCase {
 		$this->expectException(RuntimeException::class);
 
 		$this->service()->editForAgent(
-			uid: self::UID,
-			fileId: self::FILE_ID,
-			edits: $this->edit(),
-			version: $this->attachedVersion()
+			request: new AgentFileRequest(uid: self::UID, fileId: self::FILE_ID, version: $this->attachedVersion()),
+			edits: $this->edit()
 		);
 
 	}//end testAMarkIsRolledBackWhenTheWriteFails()
@@ -567,11 +588,8 @@ class EditSessionServiceTest extends TestCase {
 		$this->attach(node: $file, parent: $parent);
 
 		$result = $this->service()->editForAgent(
-			uid: self::UID,
-			fileId: self::FILE_ID,
-			edits: $this->edit(),
-			version: $this->attachedVersion(),
-			requestedMode: EditSessionService::MODE_SIBLING
+			request: new AgentFileRequest(uid: self::UID, fileId: self::FILE_ID, version: $this->attachedVersion(), requestedMode: EditSessionService::MODE_SIBLING),
+			edits: $this->edit()
 		);
 
 		$this->assertSame(EditSessionService::MODE_SIBLING, $result['outputMode']);
@@ -600,11 +618,8 @@ class EditSessionServiceTest extends TestCase {
 		$this->attach(node: $file, parent: $parent);
 
 		$result = $this->service()->editForAgent(
-			uid: self::UID,
-			fileId: self::FILE_ID,
-			edits: $this->edit(),
-			version: $this->attachedVersion(),
-			requestedMode: EditSessionService::MODE_IN_PLACE
+			request: new AgentFileRequest(uid: self::UID, fileId: self::FILE_ID, version: $this->attachedVersion(), requestedMode: EditSessionService::MODE_IN_PLACE),
+			edits: $this->edit()
 		);
 
 		$this->assertSame(EditSessionService::MODE_SIBLING, $result['outputMode']);
@@ -621,11 +636,8 @@ class EditSessionServiceTest extends TestCase {
 		$this->expectExceptionMessageMatches('/Unknown output mode/');
 
 		$this->service()->editForAgent(
-			uid: self::UID,
-			fileId: self::FILE_ID,
-			edits: $this->edit(),
-			version: $this->attachedVersion(),
-			requestedMode: 'overwriteEverything'
+			request: new AgentFileRequest(uid: self::UID, fileId: self::FILE_ID, version: $this->attachedVersion(), requestedMode: 'overwriteEverything'),
+			edits: $this->edit()
 		);
 
 	}//end testAnUnknownOutputModeIsRefused()
@@ -645,10 +657,8 @@ class EditSessionServiceTest extends TestCase {
 		$this->expectExceptionMessageMatches('/signing request/');
 
 		$this->service()->editForAgent(
-			uid: self::UID,
-			fileId: self::FILE_ID,
-			edits: $this->edit(),
-			version: $this->attachedVersion()
+			request: new AgentFileRequest(uid: self::UID, fileId: self::FILE_ID, version: $this->attachedVersion()),
+			edits: $this->edit()
 		);
 
 	}//end testADocumentUnderSignatureIsRefusedBeforeAnythingIsTouched()
@@ -667,10 +677,8 @@ class EditSessionServiceTest extends TestCase {
 		$this->expectExceptionMessageMatches('/anonymisation output/');
 
 		$this->service()->editForAgent(
-			uid: self::UID,
-			fileId: self::FILE_ID,
-			edits: $this->edit(),
-			version: $this->attachedVersion()
+			request: new AgentFileRequest(uid: self::UID, fileId: self::FILE_ID, version: $this->attachedVersion()),
+			edits: $this->edit()
 		);
 
 	}//end testAnonymisationOutputIsRefused()
@@ -712,10 +720,8 @@ class EditSessionServiceTest extends TestCase {
 		$this->expectExceptionMessageMatches('/permission/');
 
 		$this->service()->editForAgent(
-			uid: self::UID,
-			fileId: self::FILE_ID,
-			edits: $this->edit(),
-			version: $this->attachedVersion()
+			request: new AgentFileRequest(uid: self::UID, fileId: self::FILE_ID, version: $this->attachedVersion()),
+			edits: $this->edit()
 		);
 
 	}//end testAReadOnlyFileIsRefusedForInPlaceOutput()

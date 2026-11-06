@@ -36,7 +36,9 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\AnonymizationController;
+use OCA\Filinq\Controller\Support\AnonymizationServices;
 use OCA\Filinq\Service\AnonymizationService;
+use OCA\Filinq\Service\AnonymizeRequestService;
 use OCA\Filinq\Service\FileListingService;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -166,16 +168,14 @@ class AnonymizationControllerContractTest extends TestCase {
 		$rootFolder = $this->createMock(IRootFolder::class);
 		$rootFolder->method('getUserFolder')->willReturn($folder);
 
+		$logger = $this->createMock(LoggerInterface::class);
 		return new AnonymizationController(
-			appName: 'filinq',
+			services: new AnonymizationServices(anonymization: $this->anonService, files: $this->fileService),
 			request: $this->request,
-			logger: $this->createMock(LoggerInterface::class),
-			anonymizationService: $this->anonService,
-			fileListingService: $this->fileService,
+			logger: $logger,
 			l10n: $this->l10n,
 			appConfig: $this->createMock(IAppConfig::class),
-			userSession: $session,
-			rootFolder: $rootFolder
+			anonymizeRequest: new AnonymizeRequestService(logger: $logger, anonymizationService: $this->anonService, l10n: $this->l10n, rootFolder: $rootFolder, userSession: $session)
 		);
 
 	}//end buildController()

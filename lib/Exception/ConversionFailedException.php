@@ -40,7 +40,7 @@ use Throwable;
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://www.filinq.app
  */
-class ConversionFailedException extends RuntimeException {
+class ConversionFailedException extends RuntimeException implements ErrorDetailsInterface {
 
 	/**
 	 * Per-backend attempt records. Each entry has the shape
@@ -85,4 +85,17 @@ class ConversionFailedException extends RuntimeException {
 	public function getAttempts(): array {
 		return $this->attempts;
 	}//end getAttempts()
+
+	/**
+	 * The error body names which backend was tried and why it could not,
+	 * e.g. an accessible request without LibreOffice.
+	 *
+	 * @return array{attempts: array<int, array{name:string,available:bool,supports:bool,reason:string}>}
+	 *
+	 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#2-4
+	 */
+	public function getErrorDetails(): array {
+		return ['attempts' => $this->attempts];
+
+	}//end getErrorDetails()
 }//end class

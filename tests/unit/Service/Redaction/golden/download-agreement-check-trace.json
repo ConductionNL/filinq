@@ -1,0 +1,211 @@
+{
+    "the terms cannot be read": {
+        "verdict": {
+            "mayDownload": false,
+            "gated": true,
+            "reason": "not_known",
+            "message": "The conditions on this file could not be read, so it was not downloaded. Try again in a moment.",
+            "error": "terms store offline"
+        },
+        "calls": [
+            [
+                "forDocument",
+                "doc-1"
+            ]
+        ]
+    },
+    "no terms": {
+        "verdict": {
+            "mayDownload": true,
+            "gated": false
+        },
+        "calls": [
+            [
+                "forDocument",
+                "doc-1"
+            ]
+        ]
+    },
+    "terms, no acceptance": {
+        "verdict": {
+            "mayDownload": false,
+            "gated": true,
+            "reason": "not_accepted",
+            "message": "Read the conditions and accept them before this file is downloaded.",
+            "agreement": {
+                "version": " 3 ",
+                "text": "Niet verder verspreiden.",
+                "locale": "nl"
+            }
+        },
+        "calls": [
+            [
+                "forDocument",
+                "doc-1"
+            ],
+            [
+                "acceptanceOf",
+                "doc-1",
+                "burger-7"
+            ]
+        ]
+    },
+    "terms, no acceptance, translated": {
+        "verdict": {
+            "mayDownload": false,
+            "gated": true,
+            "reason": "not_accepted",
+            "message": "[nl] Read the conditions and accept them before this file is downloaded.",
+            "agreement": {
+                "version": " 3 ",
+                "text": "Niet verder verspreiden.",
+                "locale": "nl"
+            }
+        },
+        "calls": [
+            [
+                "forDocument",
+                "doc-1"
+            ],
+            [
+                "acceptanceOf",
+                "doc-1",
+                "burger-7"
+            ]
+        ]
+    },
+    "the acceptances cannot be read": {
+        "verdict": {
+            "mayDownload": false,
+            "gated": true,
+            "reason": "not_known",
+            "message": "The conditions on this file could not be read, so it was not downloaded. Try again in a moment.",
+            "error": "acceptance store offline"
+        },
+        "calls": [
+            [
+                "forDocument",
+                "doc-1"
+            ],
+            [
+                "acceptanceOf",
+                "doc-1",
+                "burger-7"
+            ]
+        ]
+    },
+    "an acceptance without a version": {
+        "verdict": {
+            "mayDownload": false,
+            "gated": true,
+            "reason": "not_accepted",
+            "message": "Read the conditions and accept them before this file is downloaded.",
+            "agreement": {
+                "version": " 3 ",
+                "text": "Niet verder verspreiden.",
+                "locale": "nl"
+            }
+        },
+        "calls": [
+            [
+                "forDocument",
+                "doc-1"
+            ],
+            [
+                "acceptanceOf",
+                "doc-1",
+                "burger-7"
+            ]
+        ]
+    },
+    "an acceptance of an older version": {
+        "verdict": {
+            "mayDownload": false,
+            "gated": true,
+            "reason": "version_moved_on",
+            "message": "The conditions have changed since you accepted them. You accepted version 2 and these are version 3. Read them and accept again.",
+            "agreement": {
+                "version": " 3 ",
+                "text": "Niet verder verspreiden.",
+                "locale": "nl"
+            }
+        },
+        "calls": [
+            [
+                "forDocument",
+                "doc-1"
+            ],
+            [
+                "acceptanceOf",
+                "doc-1",
+                "burger-7"
+            ]
+        ]
+    },
+    "an older version, translated": {
+        "verdict": {
+            "mayDownload": false,
+            "gated": true,
+            "reason": "version_moved_on",
+            "message": "[nl] The conditions have changed since you accepted them. You accepted version 2 and these are version 3. Read them and accept again.",
+            "agreement": {
+                "version": " 3 ",
+                "text": "Niet verder verspreiden.",
+                "locale": "nl"
+            }
+        },
+        "calls": [
+            [
+                "forDocument",
+                "doc-1"
+            ],
+            [
+                "acceptanceOf",
+                "doc-1",
+                "burger-7"
+            ]
+        ]
+    },
+    "an acceptance of this version": {
+        "verdict": {
+            "mayDownload": true,
+            "gated": true,
+            "acceptedVersion": "3"
+        },
+        "calls": [
+            [
+                "forDocument",
+                "doc-1"
+            ],
+            [
+                "acceptanceOf",
+                "doc-1",
+                "burger-7"
+            ]
+        ]
+    },
+    "terms without a version or text": {
+        "verdict": {
+            "mayDownload": false,
+            "gated": true,
+            "reason": "version_moved_on",
+            "message": "The conditions have changed since you accepted them. You accepted version 1 and these are version . Read them and accept again.",
+            "agreement": {
+                "version": "",
+                "text": "",
+                "locale": "en"
+            }
+        },
+        "calls": [
+            [
+                "forDocument",
+                "doc-1"
+            ],
+            [
+                "acceptanceOf",
+                "doc-1",
+                "burger-7"
+            ]
+        ]
+    }
+}

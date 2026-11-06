@@ -1,0 +1,556 @@
+{
+    "info: a full answer": {
+        "verdict": {
+            "available": true,
+            "reason": "CheckFileInfo succeeded",
+            "suite": "Collabora"
+        },
+        "requests": [
+            [
+                "https://office.example.nl/wopi/files/1",
+                {
+                    "timeout": 5,
+                    "connect_timeout": 5,
+                    "allow_redirects": false,
+                    "http_errors": false
+                }
+            ]
+        ],
+        "logs": []
+    },
+    "info: a host edit url": {
+        "verdict": {
+            "available": true,
+            "reason": "CheckFileInfo succeeded",
+            "suite": "https://x"
+        },
+        "requests": [
+            [
+                "https://office.example.nl/wopi/files/1",
+                {
+                    "timeout": 5,
+                    "connect_timeout": 5,
+                    "allow_redirects": false,
+                    "http_errors": false
+                }
+            ]
+        ],
+        "logs": []
+    },
+    "info: no brand": {
+        "verdict": {
+            "available": true,
+            "reason": "CheckFileInfo succeeded",
+            "suite": null
+        },
+        "requests": [
+            [
+                "https://office.example.nl/wopi/files/1",
+                {
+                    "timeout": 5,
+                    "connect_timeout": 5,
+                    "allow_redirects": false,
+                    "http_errors": false
+                }
+            ]
+        ],
+        "logs": []
+    },
+    "info: no size": {
+        "verdict": {
+            "available": false,
+            "reason": "CheckFileInfo response is missing the required field \"Size\"",
+            "suite": null
+        },
+        "requests": [
+            [
+                "https://office.example.nl/wopi/files/1",
+                {
+                    "timeout": 5,
+                    "connect_timeout": 5,
+                    "allow_redirects": false,
+                    "http_errors": false
+                }
+            ]
+        ],
+        "logs": [
+            [
+                "debug",
+                "[Filinq] WOPI capability resolved absent: CheckFileInfo response is missing the required field \"Size\"",
+                {
+                    "app": "filinq"
+                }
+            ]
+        ]
+    },
+    "info: no name": {
+        "verdict": {
+            "available": false,
+            "reason": "CheckFileInfo response is missing the required field \"BaseFileName\"",
+            "suite": null
+        },
+        "requests": [
+            [
+                "https://office.example.nl/wopi/files/1",
+                {
+                    "timeout": 5,
+                    "connect_timeout": 5,
+                    "allow_redirects": false,
+                    "http_errors": false
+                }
+            ]
+        ],
+        "logs": [
+            [
+                "debug",
+                "[Filinq] WOPI capability resolved absent: CheckFileInfo response is missing the required field \"BaseFileName\"",
+                {
+                    "app": "filinq"
+                }
+            ]
+        ]
+    },
+    "info: a null field": {
+        "verdict": {
+            "available": true,
+            "reason": "CheckFileInfo succeeded",
+            "suite": null
+        },
+        "requests": [
+            [
+                "https://office.example.nl/wopi/files/1",
+                {
+                    "timeout": 5,
+                    "connect_timeout": 5,
+                    "allow_redirects": false,
+                    "http_errors": false
+                }
+            ]
+        ],
+        "logs": []
+    },
+    "info: not json": {
+        "verdict": {
+            "available": false,
+            "reason": "CheckFileInfo returned a non-JSON body",
+            "suite": null
+        },
+        "requests": [
+            [
+                "https://office.example.nl/wopi/files/1",
+                {
+                    "timeout": 5,
+                    "connect_timeout": 5,
+                    "allow_redirects": false,
+                    "http_errors": false
+                }
+            ]
+        ],
+        "logs": [
+            [
+                "debug",
+                "[Filinq] WOPI capability resolved absent: CheckFileInfo returned a non-JSON body",
+                {
+                    "app": "filinq"
+                }
+            ]
+        ]
+    },
+    "info: a json scalar": {
+        "verdict": {
+            "available": false,
+            "reason": "CheckFileInfo returned a non-JSON body",
+            "suite": null
+        },
+        "requests": [
+            [
+                "https://office.example.nl/wopi/files/1",
+                {
+                    "timeout": 5,
+                    "connect_timeout": 5,
+                    "allow_redirects": false,
+                    "http_errors": false
+                }
+            ]
+        ],
+        "logs": [
+            [
+                "debug",
+                "[Filinq] WOPI capability resolved absent: CheckFileInfo returned a non-JSON body",
+                {
+                    "app": "filinq"
+                }
+            ]
+        ]
+    },
+    "info: 404": {
+        "verdict": {
+            "available": false,
+            "reason": "CheckFileInfo returned 404",
+            "suite": null
+        },
+        "requests": [
+            [
+                "https://office.example.nl/wopi/files/1",
+                {
+                    "timeout": 5,
+                    "connect_timeout": 5,
+                    "allow_redirects": false,
+                    "http_errors": false
+                }
+            ]
+        ],
+        "logs": [
+            [
+                "debug",
+                "[Filinq] WOPI capability resolved absent: CheckFileInfo returned 404",
+                {
+                    "app": "filinq"
+                }
+            ]
+        ]
+    },
+    "info: 199": {
+        "verdict": {
+            "available": false,
+            "reason": "CheckFileInfo returned 199",
+            "suite": null
+        },
+        "requests": [
+            [
+                "https://office.example.nl/wopi/files/1",
+                {
+                    "timeout": 5,
+                    "connect_timeout": 5,
+                    "allow_redirects": false,
+                    "http_errors": false
+                }
+            ]
+        ],
+        "logs": [
+            [
+                "debug",
+                "[Filinq] WOPI capability resolved absent: CheckFileInfo returned 199",
+                {
+                    "app": "filinq"
+                }
+            ]
+        ]
+    },
+    "info: 300": {
+        "verdict": {
+            "available": false,
+            "reason": "CheckFileInfo returned 300",
+            "suite": null
+        },
+        "requests": [
+            [
+                "https://office.example.nl/wopi/files/1",
+                {
+                    "timeout": 5,
+                    "connect_timeout": 5,
+                    "allow_redirects": false,
+                    "http_errors": false
+                }
+            ]
+        ],
+        "logs": [
+            [
+                "debug",
+                "[Filinq] WOPI capability resolved absent: CheckFileInfo returned 300",
+                {
+                    "app": "filinq"
+                }
+            ]
+        ]
+    },
+    "info: 299": {
+        "verdict": {
+            "available": true,
+            "reason": "CheckFileInfo succeeded",
+            "suite": null
+        },
+        "requests": [
+            [
+                "https://office.example.nl/wopi/files/1",
+                {
+                    "timeout": 5,
+                    "connect_timeout": 5,
+                    "allow_redirects": false,
+                    "http_errors": false
+                }
+            ]
+        ],
+        "logs": []
+    },
+    "info: refused": {
+        "verdict": {
+            "available": false,
+            "reason": "probe could not complete: connection refused",
+            "suite": null
+        },
+        "requests": [
+            [
+                "https://office.example.nl/wopi/files/1",
+                {
+                    "timeout": 5,
+                    "connect_timeout": 5,
+                    "allow_redirects": false,
+                    "http_errors": false
+                }
+            ]
+        ],
+        "logs": [
+            [
+                "debug",
+                "[Filinq] WOPI capability resolved absent: probe could not complete: connection refused",
+                {
+                    "app": "filinq"
+                }
+            ]
+        ]
+    },
+    "info: blank url": {
+        "verdict": {
+            "available": false,
+            "reason": "no WOPI endpoint configured",
+            "suite": null
+        },
+        "requests": [],
+        "logs": [
+            [
+                "debug",
+                "[Filinq] WOPI capability resolved absent: no WOPI endpoint configured",
+                {
+                    "app": "filinq"
+                }
+            ]
+        ]
+    },
+    "discovery: served": {
+        "verdict": {
+            "available": true,
+            "reason": "WOPI discovery served",
+            "suite": "Euro-Office"
+        },
+        "requests": [
+            [
+                "https://office.example.nl/hosting/discovery",
+                {
+                    "timeout": 5,
+                    "connect_timeout": 5,
+                    "allow_redirects": false,
+                    "http_errors": false
+                }
+            ]
+        ],
+        "logs": []
+    },
+    "discovery: no app name": {
+        "verdict": {
+            "available": true,
+            "reason": "WOPI discovery served",
+            "suite": null
+        },
+        "requests": [
+            [
+                "https://office.example.nl/hosting/discovery",
+                {
+                    "timeout": 5,
+                    "connect_timeout": 5,
+                    "allow_redirects": false,
+                    "http_errors": false
+                }
+            ]
+        ],
+        "logs": []
+    },
+    "discovery: no actions": {
+        "verdict": {
+            "available": false,
+            "reason": "WOPI discovery declares no actions",
+            "suite": null
+        },
+        "requests": [
+            [
+                "https://office.example.nl/hosting/discovery",
+                {
+                    "timeout": 5,
+                    "connect_timeout": 5,
+                    "allow_redirects": false,
+                    "http_errors": false
+                }
+            ]
+        ],
+        "logs": [
+            [
+                "debug",
+                "[Filinq] WOPI capability resolved absent: WOPI discovery declares no actions",
+                {
+                    "app": "filinq"
+                }
+            ]
+        ]
+    },
+    "discovery: an error page": {
+        "verdict": {
+            "available": false,
+            "reason": "response is not a WOPI discovery document",
+            "suite": null
+        },
+        "requests": [
+            [
+                "https://office.example.nl/hosting/discovery",
+                {
+                    "timeout": 5,
+                    "connect_timeout": 5,
+                    "allow_redirects": false,
+                    "http_errors": false
+                }
+            ]
+        ],
+        "logs": [
+            [
+                "debug",
+                "[Filinq] WOPI capability resolved absent: response is not a WOPI discovery document",
+                {
+                    "app": "filinq"
+                }
+            ]
+        ]
+    },
+    "discovery: 404": {
+        "verdict": {
+            "available": false,
+            "reason": "discovery returned 404",
+            "suite": null
+        },
+        "requests": [
+            [
+                "https://office.example.nl/hosting/discovery",
+                {
+                    "timeout": 5,
+                    "connect_timeout": 5,
+                    "allow_redirects": false,
+                    "http_errors": false
+                }
+            ]
+        ],
+        "logs": [
+            [
+                "debug",
+                "[Filinq] WOPI capability resolved absent: discovery returned 404",
+                {
+                    "app": "filinq"
+                }
+            ]
+        ]
+    },
+    "discovery: 302": {
+        "verdict": {
+            "available": false,
+            "reason": "discovery returned 302",
+            "suite": null
+        },
+        "requests": [
+            [
+                "https://office.example.nl/hosting/discovery",
+                {
+                    "timeout": 5,
+                    "connect_timeout": 5,
+                    "allow_redirects": false,
+                    "http_errors": false
+                }
+            ]
+        ],
+        "logs": [
+            [
+                "debug",
+                "[Filinq] WOPI capability resolved absent: discovery returned 302",
+                {
+                    "app": "filinq"
+                }
+            ]
+        ]
+    },
+    "discovery: 200 edge": {
+        "verdict": {
+            "available": true,
+            "reason": "WOPI discovery served",
+            "suite": null
+        },
+        "requests": [
+            [
+                "https://office.example.nl/hosting/discovery",
+                {
+                    "timeout": 5,
+                    "connect_timeout": 5,
+                    "allow_redirects": false,
+                    "http_errors": false
+                }
+            ]
+        ],
+        "logs": []
+    },
+    "discovery: refused": {
+        "verdict": {
+            "available": false,
+            "reason": "probe could not complete: connection refused",
+            "suite": null
+        },
+        "requests": [
+            [
+                "https://office.example.nl/hosting/discovery",
+                {
+                    "timeout": 5,
+                    "connect_timeout": 5,
+                    "allow_redirects": false,
+                    "http_errors": false
+                }
+            ]
+        ],
+        "logs": [
+            [
+                "debug",
+                "[Filinq] WOPI capability resolved absent: probe could not complete: connection refused",
+                {
+                    "app": "filinq"
+                }
+            ]
+        ]
+    },
+    "discovery: blank url": {
+        "verdict": {
+            "available": false,
+            "reason": "no WOPI endpoint configured",
+            "suite": null
+        },
+        "requests": [],
+        "logs": [
+            [
+                "debug",
+                "[Filinq] WOPI capability resolved absent: no WOPI endpoint configured",
+                {
+                    "app": "filinq"
+                }
+            ]
+        ]
+    },
+    "discovery: a whitespace url": {
+        "verdict": {
+            "available": false,
+            "reason": "no WOPI endpoint configured",
+            "suite": null
+        },
+        "requests": [],
+        "logs": [
+            [
+                "debug",
+                "[Filinq] WOPI capability resolved absent: no WOPI endpoint configured",
+                {
+                    "app": "filinq"
+                }
+            ]
+        ]
+    }
+}

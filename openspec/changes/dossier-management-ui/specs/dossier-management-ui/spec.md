@@ -87,15 +87,18 @@ MUST carry all schema fields forward — a rename MUST NOT null `bases`,
 
 ### Requirement: Add and remove documents in a dossier (REQ-DDDMU-004)
 
-The dossier detail MUST offer a "+ Document toevoegen" CTA (GH #48) that adds
-an uploaded or picked file to the dossier: an uploaded/copied file lands in
-the dossier's bound home folder and is recorded in `documents[]`; a file
-picked from elsewhere is added by reference (its node id appended to
-`documents[]`) without being moved (see REQ-DDDMU-008). The documents list
-MUST update immediately without a page reload. Removing a document (GH #50)
-MUST require confirmation; the confirmation MUST state whether the file will
-be trashed or merely unlinked. When the document lives in this dossier's home
-folder and is a member of no other dossier, removal MUST move the file to the
+The dossier detail MUST offer an "Add document" action (GH #48) that takes
+the operator to Folder Analysis, the surface that owns upload and folder
+selection; the dossier page itself carries no second uploader or picker
+(the filinq dossier board `FqDossier` draws none; decision 130). The
+membership API it feeds MUST add an uploaded or copied file to the bound
+home folder and record it in `documents[]`, and MUST add a file picked from
+elsewhere by reference (its node id appended to `documents[]`) without
+moving it (see REQ-DDDMU-008). The documents list MUST show a member
+without a page reload. Removing a document (GH #50) MUST require
+confirmation; the confirmation MUST state whether the file will be trashed
+or merely unlinked. When the document lives in this dossier's home folder
+and is a member of no other dossier, removal MUST move the file to the
 Nextcloud trashbin (recoverable) — never a silent hard delete; when the
 document is a referenced member (lives elsewhere or is also a member of
 another dossier), removal MUST drop only this dossier's membership reference
@@ -104,8 +107,9 @@ and MUST NOT delete the underlying file.
 #### Scenario: Added document appears immediately
 
 - GIVEN an open dossier detail
-- WHEN the operator uses "+ Document toevoegen" and uploads a PDF
-- THEN the file lands in the dossier folder and the documents list shows it without a page reload
+- WHEN the operator uses "Add document"
+- THEN Folder Analysis opens, where the upload happens
+- AND a file added to the dossier through the membership API is listed on the detail without a page reload
 - @e2e tests/e2e/workflows/dossier-management.spec.ts
 
 #### Scenario: Removal is confirmed and recoverable
@@ -118,20 +122,21 @@ and MUST NOT delete the underlying file.
 
 ### Requirement: Auto-dossier on multi-upload (REQ-DDDMU-005)
 
-The app MUST show the auto-dossier modal (GH #47) when more than one document
-is uploaded in a single action on a Filinq upload surface: dossier
-name (prefilled), optional description, and a "grondslagen allemaal
-geselecteerd" toggle that, when on, preselects all six canonical `base`
-grondslagen. Confirming MUST create the dossier bound to a new folder
-containing the uploads; cancelling MUST upload the files without creating a
-dossier. Uploading a single document MUST NOT show the modal.
+The upload dialog of a Filinq upload surface MUST offer to create a dossier
+(GH #47) when more than one document is uploaded in a single action: it
+asks for a dossier name beside the grondslagen choice it already confirms
+for every upload. One dialog serves both cases (the filinq boards draw no
+separate auto-dossier modal; decision 130). Confirming with a name MUST
+create the dossier bound to a new folder containing the uploads; leaving
+the name empty or cancelling MUST NOT create a dossier. A single-document
+upload MUST NOT ask for a dossier name.
 
 #### Scenario: Multi-upload triggers the modal, single upload does not
 
 - GIVEN a Filinq upload surface
-- WHEN the operator uploads three documents in one action, fills a name and confirms with the toggle on
-- THEN a dossier exists with the three documents in its folder and all six canonical grondslagen selected
-- AND a subsequent single-document upload shows no modal
+- WHEN the operator uploads three documents in one action, fills a name and confirms
+- THEN a dossier exists with the three documents in its folder
+- AND a subsequent single-document upload asks for no dossier name
 - @e2e tests/e2e/workflows/dossier-management.spec.ts
 
 ### Requirement: Dossier-level actions wire existing capabilities (REQ-DDDMU-006)
@@ -209,7 +214,7 @@ and MUST NOT null the dossier's other fields.
 #### Scenario: One document is a member of two dossiers
 
 - GIVEN dossier A whose home folder holds a document, and dossier B
-- WHEN the operator adds that document to dossier B via "+ Document toevoegen" (pick from elsewhere)
+- WHEN that document is added to dossier B by reference (`POST api/dossiers/{id}/documents`, pick from elsewhere)
 - THEN B's `documents[]` gains the file's node reference, the file is not moved out of A's home folder, and both A and B list the document in their detail
 - @e2e tests/e2e/workflows/dossier-management.spec.ts
 

@@ -168,6 +168,40 @@ class Pdfa3ConversionServiceTest extends TestCase {
 	}//end testConvertExistingPdfImportsPagesAndProducesPdfa3()
 
 	/**
+	 * An imported PDF without a title is titled after its file name, without the extension.
+	 *
+	 * @return void
+	 */
+	public function testConvertExistingPdfTitlesAfterTheFile(): void {
+		$sourceBytes = $this->pdfService->generatePdfFromHtml(html: '<h1>Source</h1>', options: []);
+
+		$mockFile = $this->createMock(File::class);
+		$mockFile->method('getSize')->willReturn(strlen($sourceBytes));
+		$mockFile->method('getContent')->willReturn($sourceBytes);
+		$mockFile->method('getName')->willReturn('besluit-2026.pdf');
+
+		$result = $this->service->convertExistingPdf(source: $mockFile);
+
+		$this->assertStringContainsString('besluit-2026', $result['content']);
+		$this->assertStringNotContainsString('besluit-2026.pdf', $result['content']);
+
+	}//end testConvertExistingPdfTitlesAfterTheFile()
+
+	/**
+	 * The orientation option reaches mPDF for rendered HTML.
+	 *
+	 * @return void
+	 */
+	public function testConvertHtmlHonoursOrientation(): void {
+		$portrait  = $this->service->convertHtml(html: '<p>x</p>', metadata: ['title' => 'P']);
+		$landscape = $this->service->convertHtml(html: '<p>x</p>', metadata: ['title' => 'L'], options: ['orientation' => 'L']);
+
+		$this->assertMatchesRegularExpression('#/MediaBox \[0 0 595\.2\d+ 841\.8\d+\]#', $portrait['content']);
+		$this->assertMatchesRegularExpression('#/MediaBox \[0 0 841\.8\d+ 595\.2\d+\]#', $landscape['content']);
+
+	}//end testConvertHtmlHonoursOrientation()
+
+	/**
 	 * Test attachment embedding: a caller-supplied attachment ends up
 	 * in the output as a genuine PDF/A-3 embedded file (the feature
 	 * that actually distinguishes PDF/A-3 from PDF/A-1/A-2).

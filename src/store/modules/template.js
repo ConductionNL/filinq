@@ -1,7 +1,31 @@
-/* eslint-disable no-console */
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 import { defineStore } from 'pinia'
+import { quietRequest, storeRequest } from '../storeRequest.js'
+
+/**
+ * The edit lock URL of a template.
+ *
+ * @param {string} id the template
+ * @return {string} the URL
+ * @spec openspec/changes/advanced-template-management/tasks.md#task-7
+ */
+function lockUrl(id) {
+	return generateUrl(`/apps/filinq/api/templates/${id}/lock`)
+}
+
+/**
+ * Keep the template a response carries as the store's current template.
+ *
+ * @param {object} store the template store
+ * @param {object} response the response
+ * @return {object} the template
+ * @spec openspec/changes/advanced-template-management/tasks.md#task-7
+ */
+function keepItem(store, response) {
+	store.templateItem = response.data
+	return response.data
+}
 
 export const useTemplateStore = defineStore('template', {
 	state: () => ({
@@ -64,259 +88,223 @@ export const useTemplateStore = defineStore('template', {
 		/**
 		 * Fetch templates with optional category/tag/search filters.
 		 *
-		 * @param filters
+		 * @param {object} filters the filters, by field
 		 * @spec openspec/changes/advanced-template-management/tasks.md#task-6
 		 */
-		async fetchTemplates(filters = {}) {
-			this.loading = true
-			this.error = null
-			try {
-				const params = new URLSearchParams()
-				Object.entries(filters).forEach(([key, value]) => {
-					if (value !== undefined && value !== null && value !== '') {
-						params.append(key, value)
-					}
-				})
-				const response = await axios.get(
-					generateUrl('/apps/filinq/api/templates')
-						+ '?'
-						+ params.toString(),
-					{ headers: this.buildLanguageHeaders() },
-				)
-				this.templates = response.data.results || []
-				this.total = response.data.total || 0
-				this.recordResponseLanguage(response)
-			} catch (err) {
-				console.error('Failed to fetch templates:', err)
-				this.error = err.message
-			} finally {
-				this.loading = false
-			}
+		fetchTemplates(filters = {}) {
+			return storeRequest(this, {
+				failure: 'Failed to fetch templates:',
+				run: async () => {
+					const params = new URLSearchParams()
+					Object.entries(filters).forEach(([key, value]) => {
+						if (value !== undefined && value !== null && value !== '') {
+							params.append(key, value)
+						}
+					})
+					const response = await axios.get(
+						generateUrl('/apps/filinq/api/templates')
+							+ '?'
+							+ params.toString(),
+						{ headers: this.buildLanguageHeaders() },
+					)
+					this.templates = response.data.results || []
+					this.total = response.data.total || 0
+					this.recordResponseLanguage(response)
+				},
+			})
 		},
 		/**
 		 * Fetch a single template by ID.
 		 *
-		 * @param id
+		 * @param {string} id the template
 		 * @spec openspec/changes/advanced-template-management/tasks.md#task-6
 		 */
-		async fetchTemplate(id) {
-			this.loading = true
-			this.error = null
-			try {
-				const response = await axios.get(
-					generateUrl(`/apps/filinq/api/templates/${id}`),
-					{ headers: this.buildLanguageHeaders() },
-				)
-				this.templateItem = response.data
-				this.recordResponseLanguage(response)
-				return response.data
-			} catch (err) {
-				console.error('Failed to fetch template:', err)
-				this.error = err.message
-				return null
-			} finally {
-				this.loading = false
-			}
+		fetchTemplate(id) {
+			return storeRequest(this, {
+				failure: 'Failed to fetch template:',
+				fallback: null,
+				run: async () => {
+					const response = await axios.get(
+						generateUrl(`/apps/filinq/api/templates/${id}`),
+						{ headers: this.buildLanguageHeaders() },
+					)
+					this.templateItem = response.data
+					this.recordResponseLanguage(response)
+					return response.data
+				},
+			})
 		},
 		/**
 		 * Create a new template.
 		 *
-		 * @param data
+		 * @param {object} data the template fields
 		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
 		 */
-		async createTemplate(data) {
-			this.loading = true
-			this.error = null
-			try {
-				const response = await axios.post(
-					generateUrl('/apps/filinq/api/templates'),
-					data,
-				)
-				this.templateItem = response.data
-				return response.data
-			} catch (err) {
-				console.error('Failed to create template:', err)
-				this.error = err.message
-				return null
-			} finally {
-				this.loading = false
-			}
+		createTemplate(data) {
+			return storeRequest(this, {
+				failure: 'Failed to create template:',
+				fallback: null,
+				run: async () =>
+					keepItem(
+						this,
+						await axios.post(
+							generateUrl('/apps/filinq/api/templates'),
+							data,
+						),
+					),
+			})
 		},
 		/**
 		 * Update an existing template.
 		 *
-		 * @param id
-		 * @param data
+		 * @param {string} id the template
+		 * @param {object} data the template fields
 		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
 		 */
-		async updateTemplate(id, data) {
-			this.loading = true
-			this.error = null
-			try {
-				const response = await axios.put(
-					generateUrl(`/apps/filinq/api/templates/${id}`),
-					data,
-				)
-				this.templateItem = response.data
-				return response.data
-			} catch (err) {
-				console.error('Failed to update template:', err)
-				this.error = err.message
-				return null
-			} finally {
-				this.loading = false
-			}
+		updateTemplate(id, data) {
+			return storeRequest(this, {
+				failure: 'Failed to update template:',
+				fallback: null,
+				run: async () =>
+					keepItem(
+						this,
+						await axios.put(
+							generateUrl(`/apps/filinq/api/templates/${id}`),
+							data,
+						),
+					),
+			})
 		},
 		/**
 		 * Delete a template by ID.
 		 *
-		 * @param id
+		 * @param {string} id the template
 		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
 		 */
-		async deleteTemplate(id) {
-			this.loading = true
-			this.error = null
-			try {
-				await axios.delete(generateUrl(`/apps/filinq/api/templates/${id}`))
-				this.templates = this.templates.filter((t) => t.id !== id)
-				return true
-			} catch (err) {
-				console.error('Failed to delete template:', err)
-				this.error = err.message
-				return false
-			} finally {
-				this.loading = false
-			}
+		deleteTemplate(id) {
+			return storeRequest(this, {
+				failure: 'Failed to delete template:',
+				fallback: false,
+				run: async () => {
+					await axios.delete(
+						generateUrl(`/apps/filinq/api/templates/${id}`),
+					)
+					this.templates = this.templates.filter((t) => t.id !== id)
+					return true
+				},
+			})
 		},
 		/**
 		 * Duplicate an existing template into a new draft.
 		 *
-		 * @param id
+		 * @param {string} id the template
 		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
 		 */
-		async duplicateTemplate(id) {
-			this.loading = true
-			this.error = null
-			try {
-				const response = await axios.post(
-					generateUrl(`/apps/filinq/api/templates/${id}/duplicate`),
-				)
-				return response.data
-			} catch (err) {
-				console.error('Failed to duplicate template:', err)
-				this.error = err.message
-				return null
-			} finally {
-				this.loading = false
-			}
+		duplicateTemplate(id) {
+			return storeRequest(this, {
+				failure: 'Failed to duplicate template:',
+				fallback: null,
+				run: async () => {
+					const response = await axios.post(
+						generateUrl(`/apps/filinq/api/templates/${id}/duplicate`),
+					)
+					return response.data
+				},
+			})
 		},
 		/**
 		 * Fetch the version history for a template.
 		 *
-		 * @param id
+		 * @param {string} id the template
 		 * @spec openspec/changes/advanced-template-management/tasks.md#task-4
 		 */
-		async fetchVersions(id) {
-			this.loading = true
-			this.error = null
-			try {
-				const response = await axios.get(
-					generateUrl(`/apps/filinq/api/templates/${id}/versions`),
-				)
-				this.versions = response.data.results || []
-				return response.data
-			} catch (err) {
-				console.error('Failed to fetch versions:', err)
-				this.error = err.message
-				return null
-			} finally {
-				this.loading = false
-			}
+		fetchVersions(id) {
+			return storeRequest(this, {
+				failure: 'Failed to fetch versions:',
+				fallback: null,
+				run: async () => {
+					const response = await axios.get(
+						generateUrl(`/apps/filinq/api/templates/${id}/versions`),
+					)
+					this.versions = response.data.results || []
+					return response.data
+				},
+			})
 		},
 		/**
 		 * Restore a template to a prior version.
 		 *
-		 * @param templateId
-		 * @param versionId
+		 * @param {string} templateId the template
+		 * @param {string} versionId the version
 		 * @spec openspec/changes/advanced-template-management/tasks.md#task-4
 		 */
-		async restoreVersion(templateId, versionId) {
-			this.loading = true
-			this.error = null
-			try {
-				const response = await axios.post(
-					generateUrl(
-						`/apps/filinq/api/templates/${templateId}/versions/${versionId}/restore`,
+		restoreVersion(templateId, versionId) {
+			return storeRequest(this, {
+				failure: 'Failed to restore version:',
+				fallback: null,
+				run: async () =>
+					keepItem(
+						this,
+						await axios.post(
+							generateUrl(
+								`/apps/filinq/api/templates/${templateId}/versions/${versionId}/restore`,
+							),
+						),
 					),
-				)
-				this.templateItem = response.data
-				return response.data
-			} catch (err) {
-				console.error('Failed to restore version:', err)
-				this.error = err.message
-				return null
-			} finally {
-				this.loading = false
-			}
+			})
 		},
 		/**
-		 * Render a live preview of template content with sample data.
+		 * Render a live preview of template content with sample data, with
+		 * its accessibility lint.
 		 *
-		 * @param content
-		 * @param data
+		 * @param {string} content the template content
+		 * @param {object} data the sample data
+		 * @return {Promise<{html: string, lint: Array<object>}|null>} The preview, null on failure.
 		 * @spec openspec/changes/advanced-template-management/tasks.md#task-5
+		 * @spec openspec/changes/archive/2026-09-29-pdfua-accessible-output/tasks.md#task-3.3
 		 */
-		async previewTemplate(content, data = {}) {
-			this.error = null
-			try {
-				const response = await axios.post(
-					generateUrl('/apps/filinq/api/templates/preview'),
-					{ content, data },
-				)
-				return response.data.html
-			} catch (err) {
-				console.error('Failed to preview template:', err)
-				this.error = err.message
-				return null
-			}
+		previewTemplate(content, data = {}) {
+			return quietRequest(this, {
+				failure: 'Failed to preview template:',
+				fallback: null,
+				run: async () => {
+					const response = await axios.post(
+						generateUrl('/apps/filinq/api/templates/preview'),
+						{ content, data },
+					)
+					return {
+						html: response.data.html,
+						lint: response.data.lint || [],
+					}
+				},
+			})
 		},
 		/**
 		 * Acquire an edit lock on a template.
 		 *
-		 * @param id
+		 * @param {string} id the template
 		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
 		 */
-		async acquireLock(id) {
-			this.error = null
-			try {
-				const response = await axios.post(
-					generateUrl(`/apps/filinq/api/templates/${id}/lock`),
-				)
-				return response.data
-			} catch (err) {
-				console.error('Failed to acquire lock:', err)
-				this.error = err.response?.data?.error || err.message
-				return null
-			}
+		acquireLock(id) {
+			return quietRequest(this, {
+				failure: 'Failed to acquire lock:',
+				fallback: null,
+				serverError: true,
+				run: async () => (await axios.post(lockUrl(id))).data,
+			})
 		},
 		/**
 		 * Release the edit lock on a template.
 		 *
-		 * @param id
+		 * @param {string} id the template
 		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
 		 */
-		async releaseLock(id) {
-			this.error = null
-			try {
-				const response = await axios.delete(
-					generateUrl(`/apps/filinq/api/templates/${id}/lock`),
-				)
-				return response.data
-			} catch (err) {
-				console.error('Failed to release lock:', err)
-				this.error = err.message
-				return null
-			}
+		releaseLock(id) {
+			return quietRequest(this, {
+				failure: 'Failed to release lock:',
+				fallback: null,
+				run: async () => (await axios.delete(lockUrl(id))).data,
+			})
 		},
 	},
 })

@@ -6,7 +6,9 @@ status: done
 
 ## Purpose
 Governs where folder-driven anonymisation writes its redacted outputs, placing them in a configured subfolder (default `anonymised`) alongside the source files using the same layout and suffix-stripping rules as the batch flow. Source discovery excludes legacy `_anonymized`-suffixed files so prior runs are never re-redacted, and background anonymisation jobs honour the same layout. This keeps anonymised outputs predictably organised and consistent across the folder and batch flows.
+
 ## Requirements
+
 ### Requirement: Folder-driven anonymisation MUST write outputs to the configured subfolder
 
 The folder analysis flow (orchestrating extraction + anonymisation across all files in a target folder) MUST emit redacted outputs at `<source-folder>/<subfolder>/<cleanBase>.<ext>`, using the same `filinq.anonymisation.output_subfolder_name` configuration key as the batch flow (default `anonymised`). The same `_anonymized` suffix-stripping rules from the `batch-anonymization` delta apply.
@@ -44,3 +46,16 @@ When a target folder contains legacy `_anonymized`-suffixed redactions from a pr
 - **THEN** both flows discover the same set of sources (excluding legacy `_anonymized`-suffixed files)
 - **AND** both flows produce the same destinations in the subfolder
 
+### Requirement: Folder decisions pass the publication prohibition check
+
+A skip or legal-basis decision made on the folder anonymisation screen MUST be
+saved through filinq's relation route, so the same prohibition check applies
+as on the single-file screen. The browser MUST NOT write an entity relation
+directly to OpenRegister.
+
+#### Scenario: skipping a prohibited person from the folder screen
+- GIVEN a detected person who matches a publish-never rule below the high-confidence threshold
+- WHEN a user marks that person as skipped on the folder screen and starts the anonymisation
+- THEN the decision is sent to `/apps/filinq/api/anonymization/relations/{id}`
+- AND the refusal is shown on that person's row
+- AND the person stays included

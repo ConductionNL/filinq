@@ -12,15 +12,7 @@
 			:objects="dossierStore.dossiers"
 			:columns="tableColumns"
 			:loading="dossierStore.loading"
-			:selectable="false"
-			:showEditAction="false"
-			:showCopyAction="false"
-			:showDeleteAction="false"
-			:showMassImport="false"
-			:showMassExport="false"
-			:showMassCopy="false"
-			:showMassDelete="false"
-			:showViewToggle="false"
+			v-bind="$options.listOnlyIndexPage"
 			:showAdd="true"
 			rowKey="id"
 			:emptyText="
@@ -93,6 +85,7 @@
 import { CnIndexPage, CnStatusBadge } from '@conduction/nextcloud-vue'
 import { translatePlural as n, translate as t } from '@nextcloud/l10n'
 import DossierFormModal from '../../dialogs/DossierFormModal.vue'
+import { LIST_ONLY_INDEX_PAGE } from '../../constants/indexPage.js'
 import { dossierStore } from '../../store/store.js'
 
 /**
@@ -105,6 +98,7 @@ import { dossierStore } from '../../store/store.js'
  */
 export default {
 	name: 'DossierIndex',
+	listOnlyIndexPage: LIST_ONLY_INDEX_PAGE,
 	components: {
 		CnIndexPage,
 		CnStatusBadge,

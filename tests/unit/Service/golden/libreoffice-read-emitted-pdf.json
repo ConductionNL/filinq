@@ -1,0 +1,84 @@
+{
+    "a pdf": {
+        "bytes": "%PDF-1.7 pdf"
+    },
+    "a docx": {
+        "bytes": "PK docx"
+    },
+    "nothing": {
+        "error": [
+            "soffice reported success but output PDF was not found.",
+            422,
+            [
+                {
+                    "name": "libreoffice_headless",
+                    "available": true,
+                    "supports": true,
+                    "reason": "expected output at <tmp>/input.pdf but file is missing"
+                }
+            ]
+        ]
+    },
+    "another extension": {
+        "error": [
+            "soffice reported success but output PDF was not found.",
+            422,
+            [
+                {
+                    "name": "libreoffice_headless",
+                    "available": true,
+                    "supports": true,
+                    "reason": "expected output at <tmp>/input.pdf but file is missing"
+                }
+            ]
+        ]
+    },
+    "an empty file": {
+        "error": [
+            "soffice emitted an empty PDF file.",
+            422,
+            [
+                {
+                    "name": "libreoffice_headless",
+                    "available": true,
+                    "supports": true,
+                    "reason": "output PDF was empty"
+                }
+            ]
+        ]
+    },
+    "a link out of the sandbox": {
+        "error": [
+            "soffice output path escaped the conversion sandbox.",
+            422,
+            [
+                {
+                    "name": "libreoffice_headless",
+                    "available": true,
+                    "supports": true,
+                    "reason": "output path not contained in tmp dir"
+                }
+            ]
+        ]
+    },
+    "a link inside the sandbox": {
+        "bytes": "%PDF-linked"
+    },
+    "a dangling link": {
+        "error": [
+            "soffice reported success but output PDF was not found.",
+            422,
+            [
+                {
+                    "name": "libreoffice_headless",
+                    "available": true,
+                    "supports": true,
+                    "reason": "expected output at <tmp>/input.pdf but file is missing"
+                }
+            ]
+        ]
+    },
+    "a sandbox that is a link": {
+        "bytes": "%PDF-real"
+    }
+}

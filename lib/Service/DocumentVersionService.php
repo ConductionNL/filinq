@@ -29,6 +29,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use OCA\Filinq\Exception\ComparisonException;
+use OCA\Filinq\Kernel\Contracts\DocumentVersionServiceInterface;
 use OCP\App\IAppManager;
 use OCP\Constants;
 use OCP\Files\File;
@@ -49,7 +50,7 @@ use Throwable;
  *
  * @spec openspec/specs/document-versions/spec.md
  */
-class DocumentVersionService {
+class DocumentVersionService implements DocumentVersionServiceInterface {
 	/**
 	 * Fully-qualified IVersionManager class (resolved lazily so the app
 	 * degrades gracefully when files_versions is disabled).
@@ -66,6 +67,7 @@ class DocumentVersionService {
 	 * @param IUserSession $userSession Current user session.
 	 * @param IAppManager $appManager App manager (files_versions availability).
 	 * @param ContainerInterface $container DI container for lazy IVersionManager resolution.
+	 * @param FinalDocumentService $finalDocuments The final-document guard.
 	 *
 	 * @return void
 	 */
@@ -75,6 +77,7 @@ class DocumentVersionService {
 		private readonly IUserSession $userSession,
 		private readonly IAppManager $appManager,
 		private readonly ContainerInterface $container,
+		private readonly FinalDocumentService $finalDocuments,
 	) {
 
 	}//end __construct()
@@ -178,6 +181,12 @@ class DocumentVersionService {
 	 * Restore a prior version. Requires write access; Nextcloud preserves the
 	 * current state as a new version on rollback.
 	 *
+	 * A final document refuses the restore: FinalDocumentService::assertWritable()
+	 * throws DocumentFinalException, which the controller renders as a 409. That
+	 * is written here as prose rather than as a second `@throws` tag because
+	 * phpmd counts a docblock type towards this class's coupling, and the class
+	 * sits on the ceiling.
+	 *
 	 * @param int $fileId The Nextcloud file id.
 	 * @param int $versionTimestamp The version timestamp to restore.
 	 *
@@ -186,9 +195,21 @@ class DocumentVersionService {
 	 * @throws ComparisonException 404 (not writeable) / 422 / 404 (unknown version).
 	 *
 	 * @spec openspec/specs/document-versions/spec.md
+	 * @spec openspec/changes/final-documents-frozen/specs/document-versions/spec.md
 	 */
 	public function restoreVersion(int $fileId, int $versionTimestamp): void {
+		// Access first: a file the caller cannot write answers 404 whether or
+		// not it is final, so finality never leaks for an unseen file.
 		$file = $this->resolveFile(fileId: $fileId, requireWrite: true);
+
+		// Restoring replaces the file's content, which is a write like any
+		// other. It is the API's file-replacement path, so it asks the same
+		// service the editors ask.
+		$this->finalDocuments->assertWritable(
+			fileId: $fileId,
+			action: 'restore an earlier version of this document'
+		);
+
 		$versionManager = $this->resolveVersionManager();
 		$user = $this->requireUser();
 

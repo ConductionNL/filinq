@@ -37,6 +37,8 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\DossierManagementServiceInterface;
+use OCA\Filinq\Service\LegalHold\LegalHoldFanOut;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
@@ -50,7 +52,7 @@ use Throwable;
  *     wires existing capabilities (bases, folder enumeration, batch state,
  *     anonymisation links) rather than reimplementing any of them.
  */
-class DossierManagementService {
+class DossierManagementService implements DossierManagementServiceInterface {
 
 	/**
 	 * The register every filinq schema lives in.
@@ -106,6 +108,7 @@ class DossierManagementService {
 	 * @param DossierContextService $context The live context a dossier is shown with.
 	 * @param DossierObjectReader $reader Object-shape reading.
 	 * @param LoggerInterface $logger Logger.
+	 * @param LegalHoldFanOut $holds Whether the dossier is under a legal hold.
 	 */
 	public function __construct(
 		private readonly DossierObjectRepository $repository,
@@ -113,6 +116,7 @@ class DossierManagementService {
 		private readonly DossierContextService $context,
 		private readonly DossierObjectReader $reader,
 		private readonly LoggerInterface $logger,
+		private readonly LegalHoldFanOut $holds,
 	) {
 
 	}//end __construct()
@@ -379,12 +383,15 @@ class DossierManagementService {
 	 *
 	 * @return array<string, mixed> The refreshed detail shape.
 	 *
-	 * @throws RuntimeException When the caller cannot read the dossier.
+	 * @throws RuntimeException When the caller cannot read the dossier, or with 423 while it is under a legal hold.
 	 *
 	 * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md
 	 */
 	public function removeDocument(string $dossierId, int $fileId): array {
 		$object = $this->requireReadable(dossierId: $dossierId);
+		if ($this->holds->heldAsSeenBy(ref: $dossierId) === true) {
+			throw new RuntimeException('This dossier is under a legal hold; its documents cannot be removed.', 423);
+		}
 		$payload = $this->reader->payloadOf(object: $object);
 
 		$documents = $this->reader->documentRefs(payload: $payload);

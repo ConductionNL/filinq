@@ -19,6 +19,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Tests\Unit\Service;
 
+use OCA\Filinq\Service\LegalHold\LegalHoldFanOut;
 use OCA\Filinq\Service\DossierContextService;
 use OCA\Filinq\Service\DossierFileService;
 use OCA\Filinq\Service\DossierManagementService;
@@ -81,6 +82,13 @@ final class DossierManagementServiceTest extends TestCase {
 	private DossierManagementService $service;
 
 	/**
+	 * Whether a dossier is under a legal hold.
+	 *
+	 * @var LegalHoldFanOut&MockObject
+	 */
+	private LegalHoldFanOut&MockObject $holds;
+
+	/**
 	 * Objects the fake ObjectService will return from findAll()/find().
 	 *
 	 * @var array<int, object>
@@ -116,6 +124,7 @@ final class DossierManagementServiceTest extends TestCase {
 		$this->repository = $this->createMock(DossierObjectRepository::class);
 		$this->rootFolder = $this->createMock(IRootFolder::class);
 		$this->userSession = $this->createMock(IUserSession::class);
+		$this->holds = $this->createMock(LegalHoldFanOut::class);
 
 		$user = $this->createMock(IUser::class);
 		$user->method('getUID')->willReturn('alice');
@@ -146,6 +155,7 @@ final class DossierManagementServiceTest extends TestCase {
 			),
 			$reader,
 			$this->createMock(LoggerInterface::class),
+			$this->holds,
 		);
 
 	}//end setUp()
@@ -633,6 +643,30 @@ final class DossierManagementServiceTest extends TestCase {
 		self::assertSame(['42'], $this->saved[0]['documents']);
 
 	}//end testRemovalDropsOnlyThisDossiersReference()
+
+	/**
+	 * A dossier under a legal hold keeps its documents, whatever the page shows.
+	 *
+	 * @return void
+	 */
+	public function testRemovalIsRefusedWhileTheDossierIsHeld(): void {
+		$this->seedDossier([
+			'@self' => ['id' => 'd1', 'folder' => null],
+			'name' => 'Dossier A',
+			'documents' => ['42', '77'],
+		]);
+		$this->holds->method('heldAsSeenBy')->willReturn(true);
+
+		try {
+			$this->service->removeDocument(dossierId: 'd1', fileId: 77);
+			self::fail(message: 'A held dossier lost a document.');
+		} catch (\RuntimeException $e) {
+			self::assertSame(expected: 423, actual: $e->getCode());
+		}
+
+		self::assertSame(expected: [], actual: $this->saved);
+
+	}//end testRemovalIsRefusedWhileTheDossierIsHeld()
 
 	/**
 	 * Creating without a name is refused before any folder is made.

@@ -236,4 +236,54 @@ class PresentationCodecTest extends TestCase {
 
 		$this->codec->readShapes($this->odp, 'docx');
 	}//end testANonPresentationExtensionIsRefused()
+	/**
+	 * @return array<string, array{0: array<int|string, mixed>}>
+	 */
+	public static function shapeEditSets(): array {
+		$many = array_fill(0, 101, ['slide' => 'page1', 'shape' => 'Titel', 'text' => 'x']);
+		return [
+			'no edits' => [[]],
+			'one over the limit' => [$many],
+			'no slide' => [[['shape' => 'Titel', 'text' => 'x']]],
+			'no shape' => [[['slide' => 'page1', 'text' => 'x']]],
+			'an unknown region' => [[['slide' => 'page1', 'shape' => 'Notitie', 'region' => 'notez', 'text' => 'x']]],
+			'notes in capitals' => [[['slide' => 'page1', 'shape' => 'Notitie', 'region' => 'NOTES', 'text' => 'Nieuwe spreektekst']]],
+			'two edits' => [[['slide' => 'page1', 'shape' => 'Titel', 'text' => 'Een'], ['slide' => 'page2', 'shape' => 'Titel', 'text' => 'Twee']]],
+			'no text' => [[['slide' => 'page2', 'shape' => 'Titel']]],
+			'a later edit refused' => [['a' => ['slide' => 'page1', 'shape' => 'Titel', 'text' => 'Een'], 'b' => ['slide' => 'page2', 'shape' => '']]],
+			'an unknown shape' => [[['slide' => 'page1', 'shape' => 'Bestaat niet', 'text' => 'x']]],
+		];
+	}
+
+	/**
+	 * Each edit set's applied list and resulting shapes, or its refusal, as recorded before applyShapeEdits() was split.
+	 *
+	 * @dataProvider shapeEditSets
+	 *
+	 * @param array<int|string, mixed> $edits The edits.
+	 *
+	 * @return void
+	 */
+	public function testShapeEditsMatchTheRecordedOnes(array $edits): void {
+		try {
+			$result = $this->codec->applyShapeEdits($this->odp, 'odp', $edits);
+			$trace = ['applied' => $result['applied'], 'shapes' => $this->codec->readShapes($result['bytes'], 'odp')];
+		} catch (RuntimeException $e) {
+			$trace = ['refused' => $e->getMessage()];
+		}
+
+		$path = __DIR__ . '/golden/shape-edits.json';
+		$recorded = [];
+		if (is_file($path) === true) {
+			$recorded = json_decode((string) file_get_contents($path), true);
+		}
+
+		$name = (string) $this->dataName();
+		if (getenv('GOLDEN_RECORD') === '1') {
+			$recorded[$name] = $trace;
+			file_put_contents($path, json_encode($recorded, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n");
+		}
+
+		$this->assertSame($recorded[$name] ?? null, $trace);
+	}
 }//end class

@@ -1,0 +1,273 @@
+{
+    "one series": {
+        "result": {
+            "labels": [
+                "jan",
+                "feb",
+                "mrt"
+            ],
+            "series": [
+                {
+                    "name": "A",
+                    "values": [
+                        1.0,
+                        2.5,
+                        3.0
+                    ]
+                }
+            ]
+        }
+    },
+    "two series, one empty": {
+        "result": {
+            "labels": [
+                "jan",
+                "feb",
+                "mrt"
+            ],
+            "series": [
+                {
+                    "name": "A",
+                    "values": [
+                        null,
+                        null,
+                        null
+                    ]
+                },
+                {
+                    "name": "B",
+                    "values": [
+                        null,
+                        4.0,
+                        null
+                    ]
+                }
+            ]
+        }
+    },
+    "every value a gap": {
+        "error": [
+            "chart error: no data",
+            []
+        ]
+    },
+    "values not a list": {
+        "result": {
+            "labels": [
+                "jan",
+                "feb",
+                "mrt"
+            ],
+            "series": [
+                {
+                    "name": "A",
+                    "values": [
+                        null,
+                        null,
+                        null
+                    ]
+                },
+                {
+                    "name": "B",
+                    "values": [
+                        1.0,
+                        null,
+                        null
+                    ]
+                }
+            ]
+        }
+    },
+    "no values key": {
+        "error": [
+            "chart error: no data",
+            []
+        ]
+    },
+    "a series that is not an array": {
+        "result": {
+            "labels": [
+                "jan",
+                "feb",
+                "mrt"
+            ],
+            "series": [
+                {
+                    "name": "B",
+                    "values": [
+                        1.0,
+                        2.0,
+                        3.0
+                    ]
+                }
+            ]
+        }
+    },
+    "only series that are not arrays": {
+        "error": [
+            "chart error: no data",
+            []
+        ]
+    },
+    "no name": {
+        "result": {
+            "labels": [
+                "jan",
+                "feb",
+                "mrt"
+            ],
+            "series": [
+                {
+                    "name": "",
+                    "values": [
+                        1.0,
+                        null,
+                        null
+                    ]
+                }
+            ]
+        }
+    },
+    "a numeric name": {
+        "result": {
+            "labels": [
+                "jan",
+                "feb",
+                "mrt"
+            ],
+            "series": [
+                {
+                    "name": "12",
+                    "values": [
+                        1.0,
+                        null,
+                        null
+                    ]
+                }
+            ]
+        }
+    },
+    "numeric labels with keys": {
+        "result": {
+            "labels": [
+                "1",
+                "2.5",
+                "1"
+            ],
+            "series": [
+                {
+                    "name": "A",
+                    "values": [
+                        1.0,
+                        2.0,
+                        3.0
+                    ]
+                }
+            ]
+        }
+    },
+    "keyed values": {
+        "result": {
+            "labels": [
+                "jan",
+                "feb",
+                "mrt"
+            ],
+            "series": [
+                {
+                    "name": "A",
+                    "values": [
+                        null,
+                        2.0,
+                        null
+                    ]
+                }
+            ]
+        }
+    },
+    "more values than labels": {
+        "result": {
+            "labels": [
+                "jan"
+            ],
+            "series": [
+                {
+                    "name": "A",
+                    "values": [
+                        1.0
+                    ]
+                }
+            ]
+        }
+    },
+    "no labels key": {
+        "error": [
+            "chart error: data must include \"labels\" and \"series\"",
+            []
+        ]
+    },
+    "no series key": {
+        "error": [
+            "chart error: data must include \"labels\" and \"series\"",
+            []
+        ]
+    },
+    "empty labels": {
+        "error": [
+            "chart error: no data",
+            []
+        ]
+    },
+    "empty series": {
+        "error": [
+            "chart error: no data",
+            []
+        ]
+    },
+    "at the budget": {
+        "result": {
+            "labels": [
+                "jan",
+                "feb",
+                "mrt"
+            ],
+            "series": [
+                {
+                    "name": "A",
+                    "values": [
+                        1.0,
+                        2.0,
+                        3.0
+                    ]
+                }
+            ]
+        }
+    },
+    "over the budget": {
+        "error": [
+            "chart error: too many data points (max %s)",
+            [
+                2
+            ]
+        ]
+    },
+    "numeric strings": {
+        "result": {
+            "labels": [
+                "jan",
+                "feb",
+                "mrt"
+            ],
+            "series": [
+                {
+                    "name": "A",
+                    "values": [
+                        1000.0,
+                        2.0,
+                        null
+                    ]
+                }
+            ]
+        }
+    }
+}
