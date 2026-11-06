@@ -116,14 +116,14 @@ class SanitizationException extends \Exception {
 }//end class
 }
 
-namespace OCA\OpenRegister\Service\File {
+namespace OCA\OpenRegister\Files\Service\File {
 use JsonSerializable;
 
 /**
  * Immutable value object capturing the per-category sanitisation counts.
  *
  * @category Service
- * @package  OCA\OpenRegister\Service\File
+ * @package  OCA\OpenRegister\Files\Service\File
  *
  * @author    Conduction Development Team <dev@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -189,7 +189,7 @@ final class SanitizationReport implements JsonSerializable {
  * Immutable result of an Office document sanitisation pass.
  *
  * @category Service
- * @package  OCA\OpenRegister\Service\File
+ * @package  OCA\OpenRegister\Files\Service\File
  *
  * @author    Conduction Development Team <dev@conduction.nl>
  * @copyright 2026 Conduction B.V.
