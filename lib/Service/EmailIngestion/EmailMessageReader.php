@@ -39,7 +39,7 @@ use Throwable;
  */
 class EmailMessageReader {
 
-	private const PARSER = 'OCA\\OpenRegister\\Service\\TextExtractionService';
+	private const PARSER = 'OCA\\OpenRegister\\Files\\Service\\TextExtractionService';
 
 	/**
 	 * Constructor.

@@ -18,7 +18,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  */
 
-namespace OCA\OpenRegister\Service;
+namespace OCA\OpenRegister\Files\Service;
 
 /**
  * Stub for ObjectService
@@ -406,11 +406,11 @@ class TextExtractionService {
 	 *
 	 * @param \OCP\Files\File $file The EML file.
 	 *
-	 * @return \OCA\OpenRegister\Service\TextExtraction\EmlStructure
+	 * @return \OCA\OpenRegister\Files\Service\TextExtraction\EmlStructure
 	 *
 	 * @throws \OCA\OpenRegister\Exception\EmlParseException On malformed input.
 	 */
-	public function parseEmlStructured(\OCP\Files\File $file): \OCA\OpenRegister\Service\TextExtraction\EmlStructure {
+	public function parseEmlStructured(\OCP\Files\File $file): \OCA\OpenRegister\Files\Service\TextExtraction\EmlStructure {
 		throw new \OCA\OpenRegister\Exception\EmlParseException('stub');
 	}//end parseEmlStructured()
 }//end class

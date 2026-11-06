@@ -138,7 +138,7 @@
                 <referencedClass name="OCA\OpenRegister\Service\ConfigurationService"/>
                 <referencedClass name="OCA\OpenRegister\Service\RegisterService"/>
                 <referencedClass name="OCA\OpenRegister\Service\FileService"/>
-                <referencedClass name="OCA\OpenRegister\Service\File\PlaceholderIdTranslator"/>
+                <referencedClass name="OCA\OpenRegister\Files\Service\File\PlaceholderIdTranslator"/>
                 <referencedClass name="OCA\OpenRegister\Service\CalendarEventService"/>
                 <referencedClass name="OCA\OpenRegister\Mcp\IMcpToolProvider"/>
                 <!--
@@ -149,7 +149,7 @@
                 -->
                 <referencedClass name="OCA\OpenRegister\Mcp\IMcpScannableServices"/>
                 <referencedClass name="OCA\OpenRegister\Db\EntityRelationMapper"/>
-                <referencedClass name="OCA\OpenRegister\Service\RiskLevelService"/>
+                <referencedClass name="OCA\OpenRegister\Files\Service\RiskLevelService"/>
                 <!--
                   Thrown by OpenRegister's ObjectService::deleteObject() for any
                   user-driven delete on a schema declaring x-openregister-archival.

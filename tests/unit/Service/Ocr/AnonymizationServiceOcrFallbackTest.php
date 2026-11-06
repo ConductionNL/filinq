@@ -22,7 +22,7 @@ use OCA\Filinq\Service\Ocr\OcrExtractionFallback;
 use OCA\Filinq\Service\OcrService;
 use OCA\Filinq\Tests\Unit\Service\BuildsAnonymizationService;
 use OCA\OpenRegister\Db\EntityRelationMapper;
-use OCA\OpenRegister\Service\TextExtractionService;
+use OCA\OpenRegister\Files\Service\TextExtractionService;
 use OCP\App\IAppManager;
 use OCP\Files\IRootFolder;
 use PHPUnit\Framework\TestCase;
@@ -165,7 +165,7 @@ class AnonymizationServiceOcrFallbackTest extends TestCase {
 		$container = $this->createMock(ContainerInterface::class);
 		$container->method('get')->willReturnCallback(
 			static fn (string $class) => match ($class) {
-				'OCA\OpenRegister\Service\TextExtractionService' => $extractor,
+				'OCA\OpenRegister\Files\Service\TextExtractionService' => $extractor,
 				'OCA\OpenRegister\Db\EntityRelationMapper' => $mapper,
 				'OCA\Filinq\Service\LegalBasisProposalService' => $basis,
 				default => throw new \RuntimeException('Unknown service: ' . $class),
