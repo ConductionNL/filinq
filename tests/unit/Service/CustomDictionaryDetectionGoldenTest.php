@@ -123,7 +123,7 @@ class CustomDictionaryDetectionGoldenTest extends TestCase {
 		);
 
 		$services = [
-			'OCA\OpenRegister\Db\ChunkMapper' => $this->chunkMapper($chunks),
+			'OCA\OpenRegister\Files\Db\ChunkMapper' => $this->chunkMapper($chunks),
 			'OCA\OpenRegister\Db\EntityRelationMapper' => $this->relationMapper(),
 			'OCA\OpenRegister\Db\GdprEntityMapper' => $this->entityMapper(),
 		];

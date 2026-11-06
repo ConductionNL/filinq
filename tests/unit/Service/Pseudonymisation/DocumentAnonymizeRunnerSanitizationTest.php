@@ -94,8 +94,8 @@ class DocumentAnonymizeRunnerSanitizationTest extends TestCase {
 			 *
 			 * @return \JsonSerializable|null
 			 */
-			public function getLastSanitizationReport(): ?\OCA\OpenRegister\Service\File\SanitizationReport {
-				return $this->report === null ? null : new \OCA\OpenRegister\Service\File\SanitizationReport(commentsRemoved: 3, metadataFieldsScrubbed: 5);
+			public function getLastSanitizationReport(): ?\OCA\OpenRegister\Files\Service\File\SanitizationReport {
+				return $this->report === null ? null : new \OCA\OpenRegister\Files\Service\File\SanitizationReport(commentsRemoved: 3, metadataFieldsScrubbed: 5);
 			}
 
 			public function getLastStructurePreservation(): ?\JsonSerializable {

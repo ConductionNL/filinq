@@ -58,7 +58,7 @@ class SubjectErasureEraser {
 	 */
 	public const MARK = '[VERWIJDERD]';
 
-	private const PROCESSOR = 'OCA\OpenRegister\Service\File\DocumentProcessingHandler';
+	private const PROCESSOR = 'OCA\OpenRegister\Files\Service\File\DocumentProcessingHandler';
 
 	private const VERSION_MANAGER = 'OCA\Files_Versions\Versions\IVersionManager';
 

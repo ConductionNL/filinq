@@ -56,7 +56,7 @@ class DossierPlaceholderRanker {
 	 *
 	 * @var string
 	 */
-	private const PLACEHOLDER_TRANSLATOR_CLASS = '\OCA\OpenRegister\Service\File\PlaceholderIdTranslator';
+	private const PLACEHOLDER_TRANSLATOR_CLASS = '\OCA\OpenRegister\Files\Service\File\PlaceholderIdTranslator';
 
 	/**
 	 * Folder names holding redacted OUTPUT, excluded from the source-file walk.

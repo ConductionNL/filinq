@@ -381,6 +381,8 @@ class ConfigurationService {
 	}//end importFromApp()
 }//end class
 
+namespace OCA\OpenRegister\Files\Service;
+
 /**
  * Stub for TextExtractionService
  *
@@ -406,14 +408,16 @@ class TextExtractionService {
 	 *
 	 * @param \OCP\Files\File $file The EML file.
 	 *
-	 * @return \OCA\OpenRegister\Service\TextExtraction\EmlStructure
+	 * @return \OCA\OpenRegister\Files\Service\TextExtraction\EmlStructure
 	 *
 	 * @throws \OCA\OpenRegister\Exception\EmlParseException On malformed input.
 	 */
-	public function parseEmlStructured(\OCP\Files\File $file): \OCA\OpenRegister\Service\TextExtraction\EmlStructure {
+	public function parseEmlStructured(\OCP\Files\File $file): \OCA\OpenRegister\Files\Service\TextExtraction\EmlStructure {
 		throw new \OCA\OpenRegister\Exception\EmlParseException('stub');
 	}//end parseEmlStructured()
 }//end class
+
+namespace OCA\OpenRegister\Service;
 
 /**
  * Stub for FileService
@@ -426,6 +430,8 @@ class TextExtractionService {
  */
 class FileService {
 }//end class
+
+namespace OCA\OpenRegister\Files\Service;
 
 /**
  * Stub for RiskLevelService
@@ -448,6 +454,8 @@ class RiskLevelService {
 		return 'none';
 	}//end getRiskLevel()
 }//end class
+
+namespace OCA\OpenRegister\Service;
 
 /**
  * Stub for LanguageService
@@ -1451,6 +1459,8 @@ class GdprEntityMapper {
 	}//end insert()
 }//end class
 
+namespace OCA\OpenRegister\Files\Db;
+
 /**
  * Stub for Chunk (custom-dictionary-recognition text-chunk matching).
  *
@@ -1580,6 +1590,8 @@ class ChunkMapper {
 		return [];
 	}//end findBySource()
 }//end class
+
+namespace OCA\OpenRegister\Db;
 
 /**
  * Stub for EntityRelation entity.

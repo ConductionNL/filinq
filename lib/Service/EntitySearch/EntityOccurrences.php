@@ -47,7 +47,7 @@ class EntityOccurrences {
 	 *
 	 * @var string
 	 */
-	private const RISK = 'OCA\OpenRegister\Service\RiskLevelService';
+	private const RISK = 'OCA\OpenRegister\Files\Service\RiskLevelService';
 
 	/**
 	 * Constructor.

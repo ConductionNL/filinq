@@ -173,7 +173,7 @@ class OpenRegisterServiceLocator {
 		$source = $fileService;
 		if (method_exists($fileService, 'getLastSanitizationReport') === false) {
 			try {
-				$source = $this->get(className: 'OCA\OpenRegister\Service\File\DocumentProcessingHandler');
+				$source = $this->get(className: 'OCA\OpenRegister\Files\Service\File\DocumentProcessingHandler');
 			} catch (\Throwable) {
 				return null;
 			}

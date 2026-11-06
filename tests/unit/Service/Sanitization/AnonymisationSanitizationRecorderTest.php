@@ -26,7 +26,7 @@ namespace OCA\Filinq\Tests\Unit\Service\Sanitization;
 
 use OCA\Filinq\Service\Sanitization\AnonymisationSanitizationRecorder;
 use OCA\Filinq\Service\Sanitization\SanitizationRecordRepository;
-use OCA\OpenRegister\Service\File\SanitizationReport;
+use OCA\OpenRegister\Files\Service\File\SanitizationReport;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
