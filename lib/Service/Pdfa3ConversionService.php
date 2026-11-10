@@ -199,7 +199,7 @@ class Pdfa3ConversionService implements Pdfa3ConversionServiceInterface {
 		$result = $this->buildPdfa3(
 			job: new Pdfa3Job(
 				pageBuilder: function (Mpdf $mpdf) use ($raw, $deadline): void {
-					$this->importAllPages(mpdf: $mpdf, import: new PdfImport(raw: $raw, deadline: $deadline));
+					$this->importAllPages(mpdf: $mpdf, raw: $raw, deadline: $deadline);
 				},
 				deadline: $deadline,
 				defaultTitle: $this->stripExtension(name: $source->getName()),
@@ -550,18 +550,19 @@ class Pdfa3ConversionService implements Pdfa3ConversionServiceInterface {
 	 * a single synchronous mPDF call; the deadline is enforced at
 	 * page granularity).
 	 *
-	 * @param Mpdf      $mpdf   Target document (already PDF/A-3 configured).
-	 * @param PdfImport $import Raw PDF bytes of the source document and the absolute microtime(true) deadline.
+	 * @param Mpdf $mpdf Target document (already PDF/A-3 configured).
+	 * @param string $raw Raw PDF bytes of the source document.
+	 * @param float $deadline Absolute microtime(true) deadline.
 	 *
 	 * @return void
 	 *
 	 * @throws Pdfa3ConversionException REASON_SOURCE_UNREADABLE or REASON_TIME_LIMIT_EXCEEDED.
 	 */
-	private function importAllPages(Mpdf $mpdf, PdfImport $import): void {
-		$pageCount = $this->sourcePageCount(mpdf: $mpdf, raw: $import->raw);
+	private function importAllPages(Mpdf $mpdf, string $raw, float $deadline): void {
+		$pageCount = $this->sourcePageCount(mpdf: $mpdf, raw: $raw);
 
 		for ($pageNumber = 1; $pageNumber <= $pageCount; $pageNumber++) {
-			if ($this->now() > $import->deadline) {
+			if ($this->now() > $deadline) {
 				throw $this->timeLimitExceeded();
 			}
 
