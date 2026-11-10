@@ -26,8 +26,6 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
-use Imagick;
-
 /**
  * One PDF OCR pass and its progress.
  *
@@ -72,11 +70,12 @@ final class PdfOcrRun {
 	/**
 	 * Constructor: counts the pages of the loaded document and names the temp directory.
 	 *
-	 * @param Imagick    $imagick The document, already read.
+	 * @param \Imagick   $imagick The document, already read (an Imagick instance; typed as object
+	 *                            because the extension is optional).
 	 * @param OcrOptions $options The languages and DPI.
 	 */
 	public function __construct(
-		public readonly Imagick $imagick,
+		public readonly object $imagick,
 		public readonly OcrOptions $options,
 	) {
 		$this->pageCount = $imagick->getNumberImages();

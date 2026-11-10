@@ -336,10 +336,6 @@ class OcrService implements OcrServiceInterface {
 			return $this->skippedOcr(reason: 'Tesseract is not available, skipping OCR');
 		}
 
-		if (extension_loaded('imagick') === false) {
-			return $this->skippedOcr(reason: 'Imagick extension not available, cannot convert PDF to images');
-		}
-
 		try {
 			return $this->ocrPdf(filePath: $filePath, options: new OcrOptions(languages: $languages, dpi: $dpi));
 		} catch (Exception $e) {
@@ -387,7 +383,8 @@ class OcrService implements OcrServiceInterface {
 	}//end skippedOcr()
 
 	/**
-	 * Render every page of a PDF to an image, OCR it, and clean up after.
+	 * Render every page of a PDF to an image, OCR it, and clean up after;
+	 * without the Imagick extension nothing is rendered.
 	 *
 	 * @param string     $filePath Path to the PDF file.
 	 * @param OcrOptions $options  The languages and DPI.
@@ -397,6 +394,10 @@ class OcrService implements OcrServiceInterface {
 	 * @throws Exception When a page cannot be rendered or read.
 	 */
 	private function ocrPdf(string $filePath, OcrOptions $options): array {
+		if (extension_loaded('imagick') === false) {
+			return $this->skippedOcr(reason: 'Imagick extension not available, cannot convert PDF to images');
+		}
+
 		$imagick = new Imagick();
 		$imagick->setResolution($options->dpi, $options->dpi);
 		$imagick->readImage($filePath);
