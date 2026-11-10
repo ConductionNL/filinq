@@ -164,19 +164,19 @@ class EmlBackendTest extends TestCase {
 	}//end testCanHandleEml()
 
 	/**
-	 * isAvailable() is true when the flag is set, OR is installed, the
-	 * anonymise-EML API is present, and the assembly service is wired.
+	 * isAvailable() is false even with every dependency present: OpenRegister
+	 * main exposes no anonymise-EML API, so the backend never claims an EML.
 	 *
 	 * @return void
 	 */
-	public function testIsAvailableWhenBothDepsPresent(): void {
+	public function testIsUnavailableWithoutAnOpenRegisterAnonymiseApi(): void {
 		$this->appConfig->method('getValueString')->willReturn('true');
 		$this->appManager->method('getInstalledApps')->willReturn(['openregister', 'filinq']);
 		$this->container->method('get')->willReturn(new FakeOrFileService());
 
-		$this->assertTrue($this->backend()->isAvailable());
+		$this->assertFalse($this->backend()->isAvailable());
 
-	}//end testIsAvailableWhenBothDepsPresent()
+	}//end testIsUnavailableWithoutAnOpenRegisterAnonymiseApi()
 
 	/**
 	 * isAvailable() is false when the OR anonymise-EML API is absent.
