@@ -51,11 +51,11 @@ use Throwable;
 class GuardedWriter {
 
 	/**
-	 * Largest package this writer will load into memory.
+	 * Reads the edited file's bytes and names its path, built on first use.
 	 *
-	 * @var int
+	 * @var EditedFileReader|null
 	 */
-	private const MAX_BYTES = 26214400;
+	private ?EditedFileReader $fileReader = null;
 
 	/**
 	 * Write the change to a new file beside the source, leaving it untouched.
@@ -83,6 +83,16 @@ class GuardedWriter {
 		private readonly IRootFolder $rootFolder,
 	) {
 	}//end __construct()
+
+	/**
+	 * The reader for the edited file's bytes and user-relative path.
+	 *
+	 * @return EditedFileReader The reader over this writer's root folder.
+	 */
+	private function fileReader(): EditedFileReader {
+		$this->fileReader ??= new EditedFileReader(rootFolder: $this->rootFolder);
+		return $this->fileReader;
+	}//end fileReader()
 
 	/**
 	 * The version token for a package.
@@ -156,7 +166,7 @@ class GuardedWriter {
 			// and unlock path as a body edit. Copying this method for metadata would
 			// have meant two copies of the only code that stops an agent clobbering
 			// a concurrent human edit — and the copy would drift.
-			$bytes = $this->readBytes(file: $file);
+			$bytes = $this->fileReader()->readBytes(file: $file);
 			$edited = $transform($bytes, $file->getExtension());
 
 			// Re-read the version immediately before the write. The lock excludes
@@ -238,7 +248,7 @@ class GuardedWriter {
 		return [
 			'fileId' => $target->getId(),
 			'name' => $target->getName(),
-			'path' => $this->userPath(uid: $uid, file: $target),
+			'path' => $this->fileReader()->userPath(uid: $uid, file: $target),
 			// The version of what was WRITTEN, taken from the bytes rather than
 			// re-read from the node: `putContent()` does not refresh the
 			// in-memory FileInfo, so the etag here was the pre-write one and
@@ -334,45 +344,4 @@ class GuardedWriter {
 		}
 
 	}//end release()
-
-	/**
-	 * Read a file's bytes, refusing anything too large to hold in memory.
-	 *
-	 * @param File $file The file.
-	 *
-	 * @return string The bytes.
-	 *
-	 * @throws RuntimeException When the file is too large or unreadable.
-	 */
-	private function readBytes(File $file): string {
-		if ($file->getSize() > self::MAX_BYTES) {
-			throw new RuntimeException(
-				sprintf('"%s" is larger than %d MB and is not opened for editing.', $file->getName(), (int)(self::MAX_BYTES / 1048576))
-			);
-		}
-
-		$bytes = $file->getContent();
-		if (is_string($bytes) === false || $bytes === '') {
-			throw new RuntimeException(sprintf('"%s" could not be read.', $file->getName()));
-		}
-
-		return $bytes;
-	}//end readBytes()
-
-	/**
-	 * Express a file's path relative to the acting user's root, for a human-readable answer.
-	 *
-	 * @param string $uid The acting user id.
-	 * @param File $file The file.
-	 *
-	 * @return string The relative path, or the file name when it cannot be derived.
-	 */
-	private function userPath(string $uid, File $file): string {
-		try {
-			return $this->rootFolder->getUserFolder($uid)->getRelativePath($file->getPath()) ?? $file->getName();
-		} catch (Throwable) {
-			return $file->getName();
-		}
-
-	}//end userPath()
 }//end class
