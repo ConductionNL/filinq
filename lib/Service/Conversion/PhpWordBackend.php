@@ -67,13 +67,6 @@ class PhpWordBackend implements ConversionBackendInterface {
 	use StripsFileExtension;
 
 	/**
-	 * The failure builder, built on first use.
-	 *
-	 * @var BackendFailures|null
-	 */
-	private ?BackendFailures $failures = null;
-
-	/**
 	 * App config key controlling whether this backend is attempted.
 	 * Default true; tenants disable for testing or forced fall-through.
 	 */
@@ -201,7 +194,13 @@ class PhpWordBackend implements ConversionBackendInterface {
 		$html = $this->renderHtml(sourceTmp: $sourceTmp, readerName: $readerName);
 		$pdfBytes = $this->renderPdf(html: $html, name: $name);
 
-		return (new PdfBesideSource())->write(source: $source, pdfBytes: $pdfBytes);
+		$parent = $source->getParent();
+		$outputName = $this->stripExtension(name: $name) . '.pdf';
+		if ($parent->nodeExists($outputName) === true) {
+			$parent->get($outputName)->delete();
+		}
+
+		return $parent->newFile($outputName, $pdfBytes);
 	}//end convert()
 
 
@@ -268,12 +267,10 @@ class PhpWordBackend implements ConversionBackendInterface {
 
 		$bytes = $source->getContent();
 		if (is_string($bytes) === false) {
-			throw $this->failures()->failed(
-				failure: new BackendFailure(
-					message: 'PhpWord backend could not read source content.',
-					reason: 'getContent returned non-string'
-				)
-			);
+			throw (new BackendFailure(
+				message: 'PhpWord backend could not read source content.',
+				reason: 'getContent returned non-string'
+			))->exception(backendName: $this->name());
 		}
 
 		file_put_contents($sourceTmp, $bytes);
@@ -295,13 +292,10 @@ class PhpWordBackend implements ConversionBackendInterface {
 		try {
 			$phpWord = $this->phpWordIo->load($sourceTmp, $readerName);
 		} catch (Throwable $e) {
-			throw $this->failures()->failed(
-				failure: new BackendFailure(
-					message: 'PhpWord could not read source (' . $readerName . '): ' . $e->getMessage(),
-					reason: 'reader load failed: ' . $e->getMessage()
-				),
-				previous: $e
-			);
+			throw (new BackendFailure(
+				message: 'PhpWord could not read source (' . $readerName . '): ' . $e->getMessage(),
+				reason: 'reader load failed: ' . $e->getMessage()
+			))->exception(backendName: $this->name(), previous: $e);
 		}
 
 		return $this->writeHtml(phpWord: $phpWord);
@@ -320,37 +314,21 @@ class PhpWordBackend implements ConversionBackendInterface {
 		try {
 			$html = $this->stripAtPageRules(html: $this->phpWordIo->toHtml($phpWord));
 		} catch (Throwable $e) {
-			throw $this->failures()->failed(
-				failure: new BackendFailure(
-					message: 'PhpWord HTML writer failed: ' . $e->getMessage(),
-					reason: 'HTML writer getContent failed: ' . $e->getMessage()
-				),
-				previous: $e
-			);
+			throw (new BackendFailure(
+				message: 'PhpWord HTML writer failed: ' . $e->getMessage(),
+				reason: 'HTML writer getContent failed: ' . $e->getMessage()
+			))->exception(backendName: $this->name(), previous: $e);
 		}
 
 		if ($html === '') {
-			throw $this->failures()->failed(
-				failure: new BackendFailure(
-					message: 'PhpWord HTML writer produced empty output.',
-					reason: 'HTML writer getContent returned empty'
-				)
-			);
+			throw (new BackendFailure(
+				message: 'PhpWord HTML writer produced empty output.',
+				reason: 'HTML writer getContent returned empty'
+			))->exception(backendName: $this->name());
 		}
 
 		return $html;
 	}//end writeHtml()
-
-	/**
-	 * The failure builder for this backend, built on first use.
-	 *
-	 * @return BackendFailures The builder.
-	 */
-	private function failures(): BackendFailures {
-		$this->failures ??= new BackendFailures(backendName: $this->name());
-		return $this->failures;
-	}//end failures()
-
 	/**
 	 * Render the HTML intermediate to PDF/A-3b bytes.
 	 *

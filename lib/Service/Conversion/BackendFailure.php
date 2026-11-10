@@ -4,7 +4,8 @@
  * Backend Failure
  *
  * Why one conversion backend could not convert a source: the message the
- * caller sees and the reason recorded on its attempt.
+ * caller sees and the reason recorded on its attempt, and the
+ * ConversionFailedException that carries them as the backend's one attempt.
  *
  * @category  Service
  * @package   OCA\Filinq\Service\Conversion
@@ -21,6 +22,9 @@
 declare(strict_types=1);
 
 namespace OCA\Filinq\Service\Conversion;
+
+use OCA\Filinq\Exception\ConversionFailedException;
+use Throwable;
 
 /**
  * The message and attempt reason of one backend failure.
@@ -46,4 +50,31 @@ final class BackendFailure {
 	) {
 
 	}//end __construct()
+
+	/**
+	 * The exception for this failure, with the backend's single attempt record:
+	 * available, supporting the source, failed for this reason.
+	 *
+	 * @param string         $backendName The backend's name, as on its attempt record.
+	 * @param Throwable|null $previous    The underlying cause, if any.
+	 *
+	 * @return ConversionFailedException The exception to throw.
+	 *
+	 * @spec openspec/specs/pdf-conversion/spec.md
+	 */
+	public function exception(string $backendName, ?Throwable $previous = null): ConversionFailedException {
+		return new ConversionFailedException(
+			message: $this->message,
+			attempts: [
+				[
+					'name' => $backendName,
+					'available' => true,
+					'supports' => true,
+					'reason' => $this->reason,
+				],
+			],
+			previous: $previous
+		);
+
+	}//end exception()
 }//end class

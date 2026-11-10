@@ -53,13 +53,6 @@ class MpdfBackend implements ConversionBackendInterface {
 	use StripsFileExtension;
 
 	/**
-	 * The failure builder, built on first use.
-	 *
-	 * @var BackendFailures|null
-	 */
-	private ?BackendFailures $failures = null;
-
-	/**
 	 * App config key controlling whether this backend is attempted.
 	 * Default true; tenants disable for testing or to force fall-through.
 	 */
@@ -180,12 +173,10 @@ class MpdfBackend implements ConversionBackendInterface {
 	private function readContent(File $source): string {
 		$rawContent = $source->getContent();
 		if (is_string($rawContent) === false) {
-			throw $this->failures()->failed(
-				failure: new BackendFailure(
-					message: $this->name() . ' backend could not read source content.',
-					reason: 'getContent returned non-string'
-				)
-			);
+			throw (new BackendFailure(
+				message: $this->name() . ' backend could not read source content.',
+				reason: 'getContent returned non-string'
+			))->exception(backendName: $this->name());
 		}
 
 		return $rawContent;
@@ -237,27 +228,13 @@ class MpdfBackend implements ConversionBackendInterface {
 					'message' => $e->getMessage(),
 				]
 			);
-			throw $this->failures()->failed(
-				failure: new BackendFailure(
-					message: $this->name() . ' rendering threw: ' . $e->getMessage(),
-					reason: $this->name() . ' render exception: ' . $e->getMessage()
-				),
-				previous: $e
-			);
+			throw (new BackendFailure(
+				message: $this->name() . ' rendering threw: ' . $e->getMessage(),
+				reason: $this->name() . ' render exception: ' . $e->getMessage()
+			))->exception(backendName: $this->name(), previous: $e);
 		}//end try
 
 	}//end renderOrFail()
-
-	/**
-	 * The failure builder for this backend, built on first use.
-	 *
-	 * @return BackendFailures The builder.
-	 */
-	private function failures(): BackendFailures {
-		$this->failures ??= new BackendFailures(backendName: $this->name());
-		return $this->failures;
-
-	}//end failures()
 
 	/**
 	 * Render HTML to PDF/A-3b bytes through the shared PdfService.
