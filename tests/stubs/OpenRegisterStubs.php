@@ -3180,35 +3180,8 @@ final class BackendState implements \JsonSerializable {
 	}
 }//end class
 
-namespace OCA\OpenRegister\Kernel\Contracts\Value;
-
-/**
- * Stub for ObjectFindOptions (mirrors lib/Kernel/Contracts/Value/ObjectFindOptions.php, openregister #9116).
- *
- * @category Tests
- * @package  OCA\OpenRegister\Kernel\Contracts\Value
- * @author   Conduction B.V. <info@conduction.nl>
- * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.filinq.app
- */
-final class ObjectFindOptions {
-	/**
-	 * Constructor.
-	 *
-	 * @param mixed      $register Register.
-	 * @param mixed      $schema   Schema.
-	 * @param array|null $extend   Properties to extend.
-	 * @param bool       $files    Include files.
-	 * @param bool       $render   Render the object.
-	 * @param bool       $audit    Write the read audit entry.
-	 */
-	public function __construct(
-		public readonly mixed $register = null,
-		public readonly mixed $schema = null,
-		public readonly ?array $extend = [],
-		public readonly bool $files = false,
-		public readonly bool $render = true,
-		public readonly bool $audit = true,
-	) {
-	}//end __construct()
-}//end class
+// Stubs for the OpenRegister call shapes of the 2026-11 adaptations, one file
+// per openregister change, so the adaptations can land in any order.
+foreach (glob(__DIR__ . '/openregister-surface/*.php') as $surfaceStub) {
+	require_once $surfaceStub;
+}
