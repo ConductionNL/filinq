@@ -47,6 +47,10 @@ use RuntimeException;
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) OpenRegister's save call
+ *   takes three value objects (ObjectSaveOptions, ObjectFindTarget, SaveActor)
+ *   for what were three scalar arguments; they are one dependency in practice.
  */
 class DossierObjectRepository {
 

@@ -49,6 +49,10 @@ use Throwable;
  * @link     https://www.filinq.app
  *
  * @spec openspec/specs/anonymization/spec.md
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) OpenRegister's save call
+ *   takes three value objects (ObjectSaveOptions, ObjectFindTarget, SaveActor)
+ *   for what were three scalar arguments; they are one dependency in practice.
  */
 class AnonymizationPersistenceService {
 	/**

@@ -125,6 +125,9 @@ class SigningService implements SigningServiceInterface {
 	 *
 	 * @spec openspec/changes/digital-signing-integration/tasks.md#3-2
 	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 *
+	 * @SuppressWarnings(PHPMD.ExcessiveMethodLength) The OpenRegister save calls take
+	 *   ObjectSaveOptions now; the wider call shape is the only growth.
 	 */
 	public function createRequest(array $data): array {
 		// Throws RuntimeException('No authenticated user') when there is no
