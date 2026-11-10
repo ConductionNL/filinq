@@ -3,9 +3,9 @@
 /**
  * Filinq GuardedEdit
  *
- * One read-modify-write an agent asks GuardedWriter to run: who acts, on
- * which file, the codec pass that rewrites the package, the version the
- * caller read and the resolved output mode.
+ * One read-modify-write an agent asks GuardedWriter to run: the request
+ * (who acts, and the version the caller read) and where it writes (the
+ * source file and the resolved output mode).
  *
  * @category Service
  * @package  OCA\Filinq\Service\Editing
@@ -24,11 +24,9 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\Editing;
 
-use Closure;
-use OCP\Files\File;
 
 /**
- * The acting user, the file, the transform, the expected version and the output mode of one guarded edit.
+ * The request and the write target of one guarded edit.
  *
  * @spec openspec/specs/document-editing/spec.md#requirement-an-in-place-write-is-guarded-by-the-lock-and-a-version-precondition
  */
@@ -37,18 +35,12 @@ final class GuardedEdit {
 	/**
 	 * Constructor.
 	 *
-	 * @param string  $uid       The acting user id.
-	 * @param File    $file      The source file.
-	 * @param Closure $transform Given (bytes, extension), returns the rewritten package.
-	 * @param string  $version   The expected version.
-	 * @param string  $mode      The resolved output mode.
+	 * @param AgentFileRequest $request The acting user and the version the caller read.
+	 * @param WriteTarget      $target  The source file and the resolved output mode.
 	 */
 	public function __construct(
-		public readonly string $uid,
-		public readonly File $file,
-		public readonly Closure $transform,
-		public readonly string $version,
-		public readonly string $mode,
+		public readonly AgentFileRequest $request,
+		public readonly WriteTarget $target,
 	) {
 	}//end __construct()
 }//end class

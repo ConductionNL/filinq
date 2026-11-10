@@ -26,8 +26,10 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Service\Editing;
 
 use OCA\Filinq\Service\Editing\AgentArtefactMarker;
+use OCA\Filinq\Service\Editing\AgentFileRequest;
 use OCA\Filinq\Service\Editing\GuardedEdit;
 use OCA\Filinq\Service\Editing\GuardedWriter;
+use OCA\Filinq\Service\Editing\WriteTarget;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
 use OCP\Files\Lock\ILockManager;
@@ -98,15 +100,13 @@ class GuardedWriterTest extends TestCase {
 		try {
 			$this->writer()->runSession(
 				edit: new GuardedEdit(
-					uid: 'alice',
-					file: $this->file('etag-now'),
-					transform: static function (string $bytes, string $ext) use (&$transformed): array {
-						$transformed = true;
-						return ['bytes' => 'edited bytes', 'applied' => []];
-					},
-					version: 'etag-the-caller-read',
-					mode: 'inplace'
-				)
+					request: new AgentFileRequest(uid: 'alice', fileId: 42, version: 'etag-the-caller-read'),
+					target: new WriteTarget(file: $this->file('etag-now'), mode: 'inplace')
+				),
+				transform: static function (string $bytes, string $ext) use (&$transformed): array {
+					$transformed = true;
+					return ['bytes' => 'edited bytes', 'applied' => []];
+				}
 			);
 			$this->fail('a stale version must refuse the write');
 		} catch (RuntimeException $e) {
@@ -137,12 +137,10 @@ class GuardedWriterTest extends TestCase {
 
 		$this->writer(lockAvailable: false)->runSession(
 			edit: new GuardedEdit(
-				uid: 'alice',
-				file: $this->file('etag-now'),
-				transform: static fn (string $bytes, string $ext): array => ['bytes' => 'edited', 'applied' => []],
-				version: 'stale',
-				mode: 'inplace'
-			)
+				request: new AgentFileRequest(uid: 'alice', fileId: 42, version: 'stale'),
+				target: new WriteTarget(file: $this->file('etag-now'), mode: 'inplace')
+			),
+			transform: static fn (string $bytes, string $ext): array => ['bytes' => 'edited', 'applied' => []]
 		);
 	}//end testTheVersionGuardHoldsWithoutALockProvider()
 
@@ -159,15 +157,13 @@ class GuardedWriterTest extends TestCase {
 		try {
 			$this->writer()->runSession(
 				edit: new GuardedEdit(
-					uid: 'alice',
-					file: $this->file('etag-now'),
-					transform: static function (string $bytes, string $ext) use (&$seen): array {
-						$seen = ['bytes' => $bytes, 'ext' => $ext];
-						return ['bytes' => 'edited', 'applied' => []];
-					},
-					version: 'stale',
-					mode: 'inplace'
-				)
+					request: new AgentFileRequest(uid: 'alice', fileId: 42, version: 'stale'),
+					target: new WriteTarget(file: $this->file('etag-now'), mode: 'inplace')
+				),
+				transform: static function (string $bytes, string $ext) use (&$seen): array {
+					$seen = ['bytes' => $bytes, 'ext' => $ext];
+					return ['bytes' => 'edited', 'applied' => []];
+				}
 			);
 		} catch (RuntimeException) {
 			// The write is refused by the stale version; the transform still ran,
@@ -219,12 +215,10 @@ class GuardedWriterTest extends TestCase {
 
 		$writer->runSession(
 			edit: new GuardedEdit(
-				uid: 'alice',
-				file: $file,
-				transform: static fn (string $bytes, string $ext): array => ['bytes' => 'edited', 'applied' => []],
-				version: $read,
-				mode: 'inplace'
-			)
+				request: new AgentFileRequest(uid: 'alice', fileId: 42, version: $read),
+				target: new WriteTarget(file: $file, mode: 'inplace')
+			),
+			transform: static fn (string $bytes, string $ext): array => ['bytes' => 'edited', 'applied' => []]
 		);
 
 	}//end testAnUnchangedEtagOverChangedContentStillRefuses()
@@ -243,12 +237,10 @@ class GuardedWriterTest extends TestCase {
 
 		$result = $writer->runSession(
 			edit: new GuardedEdit(
-				uid: 'alice',
-				file: $this->file('etag-now'),
-				transform: static fn (string $bytes, string $ext): array => ['bytes' => 'edited bytes', 'applied' => []],
-				version: $writer->versionOf(packageBytes: 'original bytes'),
-				mode: 'inplace'
-			)
+				request: new AgentFileRequest(uid: 'alice', fileId: 42, version: $writer->versionOf(packageBytes: 'original bytes')),
+				target: new WriteTarget(file: $this->file('etag-now'), mode: 'inplace')
+			),
+			transform: static fn (string $bytes, string $ext): array => ['bytes' => 'edited bytes', 'applied' => []]
 		);
 
 		// The token answers for the bytes that were WRITTEN. It used to be

@@ -33,6 +33,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\Editing;
 
+use Closure;
 use OCA\Filinq\Kernel\AppIdentity;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
@@ -138,7 +139,8 @@ class GuardedWriter {
 	/**
 	 * Hold the lock across the whole read-modify-write, and release it on every exit path.
 	 *
-	 * @param GuardedEdit $edit Who acts, on which file, the transform, the expected version and the output mode.
+	 * @param GuardedEdit $edit      Who acts, the expected version, the source file and the output mode.
+	 * @param Closure     $transform Given (bytes, extension), returns the rewritten package.
 	 *
 	 * @return array<string, mixed> The outcome.
 	 *
@@ -146,13 +148,13 @@ class GuardedWriter {
 	 *
 	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#task-1.1
 	 */
-	public function runSession(GuardedEdit $edit): array {
-		$lock = new LockContext($edit->file, ILock::TYPE_APP, AppIdentity::APP_ID);
-		$held = $this->acquire(lock: $lock, file: $edit->file);
+	public function runSession(GuardedEdit $edit, Closure $transform): array {
+		$lock = new LockContext($edit->target->file, ILock::TYPE_APP, AppIdentity::APP_ID);
+		$held = $this->acquire(lock: $lock, file: $edit->target->file);
 		$warnings = $this->lockWarnings(held: $held);
 
 		try {
-			$outcome = $this->editUnderLock(run: new GuardedEditRun(edit: $edit, lock: $lock));
+			$outcome = $this->editUnderLock(run: new GuardedEditRun(edit: $edit, lock: $lock), transform: $transform);
 			$outcome['warnings'] = $warnings;
 			return $outcome;
 		} finally {
@@ -185,13 +187,14 @@ class GuardedWriter {
 	/**
 	 * Read, transform, re-check the version and write, while the run's lock is held.
 	 *
-	 * @param GuardedEditRun $run The edit and its lock.
+	 * @param GuardedEditRun $run       The edit and its lock.
+	 * @param Closure        $transform Given (bytes, extension), returns the rewritten package.
 	 *
 	 * @return array<string, mixed> The outcome, without the lock warnings.
 	 *
 	 * @throws RuntimeException On any refusal or failure.
 	 */
-	private function editUnderLock(GuardedEditRun $run): array {
+	private function editUnderLock(GuardedEditRun $run, Closure $transform): array {
 		$edit = $run->edit;
 
 		// The transform is a parameter rather than a fixed call so that a
@@ -199,10 +202,10 @@ class GuardedWriter {
 		// and unlock path as a body edit. Copying this method for metadata would
 		// have meant two copies of the only code that stops an agent clobbering
 		// a concurrent human edit — and the copy would drift.
-		$bytes = $this->fileReader()->readBytes(file: $edit->file);
-		$edited = ($edit->transform)($bytes, $edit->file->getExtension());
+		$bytes = $this->fileReader()->readBytes(file: $edit->target->file);
+		$edited = $transform($bytes, $edit->target->file->getExtension());
 
-		$this->refuseChangedDocument(bytes: $bytes, version: $edit->version);
+		$this->refuseChangedDocument(bytes: $bytes, version: $edit->request->version);
 
 		$written = $this->write(run: $run, bytes: $edited['bytes']);
 
@@ -210,7 +213,7 @@ class GuardedWriter {
 			'fileId' => $written['fileId'],
 			'name' => $written['name'],
 			'path' => $written['path'],
-			'outputMode' => $edit->mode,
+			'outputMode' => $edit->target->mode,
 			'appliedAnchors' => ($edited['applied'] ?? []),
 			'metadataWritten' => ($edited['written'] ?? []),
 			'version' => $written['version'],
@@ -266,9 +269,9 @@ class GuardedWriter {
 	 * @throws RuntimeException When marking or writing fails.
 	 */
 	private function write(GuardedEditRun $run, string $bytes): array {
-		$target = $run->edit->file;
-		if ($run->edit->mode === self::MODE_SIBLING) {
-			$target = $this->sibling(file: $run->edit->file);
+		$target = $run->edit->target->file;
+		if ($run->edit->target->mode === self::MODE_SIBLING) {
+			$target = $this->sibling(file: $run->edit->target->file);
 		}
 
 		$added = $this->marker->mark(fileId: $target->getId());
@@ -288,7 +291,7 @@ class GuardedWriter {
 		return [
 			'fileId' => $target->getId(),
 			'name' => $target->getName(),
-			'path' => $this->fileReader()->userPath(uid: $run->edit->uid, file: $target),
+			'path' => $this->fileReader()->userPath(uid: $run->edit->request->uid, file: $target),
 			// The version of what was WRITTEN, taken from the bytes rather than
 			// re-read from the node: `putContent()` does not refresh the
 			// in-memory FileInfo, so the etag here was the pre-write one and
