@@ -36,6 +36,8 @@ use OCA\Filinq\Service\TemplateService;
 use OCA\Filinq\Service\TemplateSlugResolver;
 use OCA\OpenRegister\Service\Flow\IFlowDirectlyInvokable;
 use OCA\OpenRegister\Service\Flow\IFlowNodeTaxonomy;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectPatch;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\IL10N;
@@ -287,7 +289,7 @@ class GenerateDocumentNodeTest extends TestCase {
 		);
 		$this->objects->expects($this->once())
 			->method('patchObject')
-			->with('obj-1', ['besluit' => 'Toegekend'], '5', '7');
+			->with(new ObjectPatch(objectId: 'obj-1', data: ['besluit' => 'Toegekend'], target: new ObjectFindTarget(register: '5', schema: '7')));
 
 		$out = $this->node->execute(
 			items: [['json' => ['@self' => ['id' => 'obj-1', 'register' => '5', 'schema' => '7']]]],

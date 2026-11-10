@@ -85,28 +85,20 @@ class ObjectService {
 	/**
 	 * Merge partial data into a stored object and save it.
 	 *
-	 * Signature pinned to the real OpenRegister ObjectService::patchObject()
-	 * on `development`, so a mock built from this stub refuses the named
-	 * arguments the real class would refuse.
+	 * Signature pinned to openregister #9096: one ObjectPatch, so a mock
+	 * built from this stub refuses the named arguments the real class would
+	 * refuse.
 	 *
-	 * @param string $objectId Object id, uuid or slug.
-	 * @param array $data Partial object data to merge.
-	 * @param mixed $register Optional register scope.
-	 * @param mixed $schema Optional schema scope.
+	 * @param \OCA\OpenRegister\Service\Object\ObjectPatch $patch The object id, data, scope and acting user.
 	 * @param bool $_rbac Whether to apply RBAC checks.
 	 * @param bool $_multitenancy Whether to apply multitenancy filtering.
-	 * @param mixed $currentUser Explicit acting user.
 	 *
 	 * @return mixed
 	 */
 	public function patchObject(
-		string $objectId,
-		array $data,
-		$register = null,
-		$schema = null,
+		\OCA\OpenRegister\Service\Object\ObjectPatch $patch,
 		bool $_rbac = true,
 		bool $_multitenancy = true,
-		$currentUser = null,
 	) {
 		return null;
 	}//end patchObject()
@@ -3184,4 +3176,56 @@ final class BackendState implements \JsonSerializable {
 			'backends' => $backends,
 		];
 	}
+}//end class
+
+namespace OCA\OpenRegister\Service\Object;
+
+/**
+ * Stub for ObjectFindTarget (mirrors lib/Service/Object/ObjectFindTarget.php, openregister #9096).
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Service\Object
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.filinq.app
+ */
+final class ObjectFindTarget {
+	/**
+	 * Constructor.
+	 *
+	 * @param mixed $register The register scope.
+	 * @param mixed $schema   The schema scope.
+	 */
+	public function __construct(
+		public readonly mixed $register = null,
+		public readonly mixed $schema = null,
+	) {
+	}//end __construct()
+}//end class
+
+/**
+ * Stub for ObjectPatch (mirrors lib/Service/Object/ObjectPatch.php, openregister #9096).
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Service\Object
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.filinq.app
+ */
+final class ObjectPatch {
+	/**
+	 * Constructor.
+	 *
+	 * @param string           $objectId    The object id, uuid or slug.
+	 * @param array            $data        The partial data to merge.
+	 * @param ObjectFindTarget $target      The register and schema scope.
+	 * @param mixed            $currentUser The explicit acting user.
+	 */
+	public function __construct(
+		public readonly string $objectId,
+		public readonly array $data,
+		public readonly ObjectFindTarget $target = new ObjectFindTarget(),
+		public readonly mixed $currentUser = null,
+	) {
+	}//end __construct()
 }//end class

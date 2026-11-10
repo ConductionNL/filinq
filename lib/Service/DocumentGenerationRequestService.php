@@ -41,6 +41,8 @@ namespace OCA\Filinq\Service;
 use OCA\Filinq\Event\DocumentGeneratedEvent;
 use OCA\Filinq\Kernel\Contracts\GenerationRequestServiceInterface;
 use OCA\Filinq\Service\Support\TemplateLookup;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectPatch;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\IUserSession;
 use RuntimeException;
@@ -307,10 +309,11 @@ class DocumentGenerationRequestService implements GenerationRequestServiceInterf
 		$object    = $job['object'];
 		$text      = (string)($generated['html'] ?? $generated['content'] ?? '');
 		$this->objectResolver->resolve()->patchObject(
-			objectId: $object['id'],
-			data: [$job['targetField'] => $text],
-			register: $object['register'],
-			schema: $object['schema']
+			patch: new ObjectPatch(
+				objectId: $object['id'],
+				data: [$job['targetField'] => $text],
+				target: new ObjectFindTarget(register: $object['register'], schema: $object['schema'])
+			)
 		);
 		$document['targetField'] = $job['targetField'];
 		$document['text'] = $text;
