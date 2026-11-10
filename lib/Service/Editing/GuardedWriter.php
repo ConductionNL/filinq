@@ -343,8 +343,10 @@ class GuardedWriter {
 	 * @return string The bytes.
 	 *
 	 * @throws RuntimeException When the file is too large or unreadable.
+	 *
+	 * @spec openspec/specs/document-editing/spec.md#requirement-an-in-place-write-is-guarded-by-the-lock-and-a-version-precondition
 	 */
-	private function readBytes(File $file): string {
+	public function readBytes(File $file): string {
 		if ($file->getSize() > self::MAX_BYTES) {
 			throw new RuntimeException(
 				sprintf('"%s" is larger than %d MB and is not opened for editing.', $file->getName(), (int)(self::MAX_BYTES / 1048576))
@@ -366,8 +368,10 @@ class GuardedWriter {
 	 * @param File $file The file.
 	 *
 	 * @return string The relative path, or the file name when it cannot be derived.
+	 *
+	 * @spec openspec/specs/document-editing/spec.md#requirement-an-in-place-write-is-guarded-by-the-lock-and-a-version-precondition
 	 */
-	private function userPath(string $uid, File $file): string {
+	public function userPath(string $uid, File $file): string {
 		try {
 			return $this->rootFolder->getUserFolder($uid)->getRelativePath($file->getPath()) ?? $file->getName();
 		} catch (Throwable) {
