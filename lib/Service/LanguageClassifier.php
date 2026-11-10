@@ -92,7 +92,7 @@ class LanguageClassifier {
 	 *
 	 * @spec openspec/specs/metadata-enrichment/spec.md
 	 */
-	private function countWordOccurrences(string $text, array $words): int {
+	public function countWordOccurrences(string $text, array $words): int {
 		$count = 0;
 		foreach ($words as $word) {
 			$count += substr_count($text, ' ' . $word . ' ');
