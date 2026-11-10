@@ -37,6 +37,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Flow;
 
 use OCA\Filinq\Kernel\Contracts\GenerationRequestServiceInterface;
+use OCA\OpenRegister\Service\Flow\FlowNodeCall;
 use OCA\OpenRegister\Service\Flow\IFlowNode;
 use OCA\OpenRegister\Service\Flow\IFlowNodeConfigForm;
 use OCA\OpenRegister\Service\Flow\IFlowNodeConfigKeys;
@@ -301,9 +302,8 @@ class GenerateDocumentNode implements IFlowNode, IFlowNodeConfigKeys, IFlowNodeC
 	 * the next step sees what this step just stored. Throws on the first
 	 * failure: the engine's `onError` policy decides what happens next.
 	 *
-	 * @param array<int, array<string, mixed>> $items   The incoming items.
-	 * @param array<string, mixed>             $config  The step configuration.
-	 * @param array<string, mixed>             $context The run context; `triggeredBy` tells a direct run.
+	 * @param FlowNodeCall $call The incoming items, the step configuration and
+	 *                           the run context; `triggeredBy` tells a direct run.
 	 *
 	 * @return array<int, array<string, mixed>> The items, each carrying its document.
 	 *
@@ -311,7 +311,11 @@ class GenerateDocumentNode implements IFlowNode, IFlowNodeConfigKeys, IFlowNodeC
 	 *
 	 * @spec openspec/changes/flow-generate-document-node/specs/flow-document-generation/spec.md#requirement-a-flow-step-generates-a-document-per-item
 	 */
-	public function execute(array $items, array $config, array $context): array {
+	public function execute(FlowNodeCall $call): array {
+		$items   = $call->items;
+		$config  = $call->config;
+		$context = $call->context;
+
 		// A direct run was authorized against its SUBJECT only (the caller's
 		// update right on that object), so the document may land nowhere else:
 		// a configured register/schema/objectId is not honoured there.
