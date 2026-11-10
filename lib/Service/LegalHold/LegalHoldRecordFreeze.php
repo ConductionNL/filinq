@@ -23,15 +23,20 @@ namespace OCA\Filinq\Service\LegalHold;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\OpenRegisterServiceLocator;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Service\Archival\LegalHoldServiceInterface;
+use OCA\OpenRegister\Service\HoldOrder;
 use Throwable;
 
 /**
  * Places and lifts OpenRegister legal holds for hold cases.
  *
- * OpenRegister keeps ONE hold per object (`retention.legalHold`), and its
- * DestructionCheckJob leaves every held object off the destruction list. This
- * class never overwrites a hold another party placed, and never lifts one:
- * the reason tells ours apart (`filinq-hold-case:<case uuid>`).
+ * OpenRegister keeps one hold per matter (`retention.legalHold.holds`), and
+ * its DestructionCheckJob leaves every held object off the destruction list.
+ * Filinq places a single hold per object under its own matter
+ * (OWNER_KEY); the reason names the case that holds it
+ * (`filinq-hold-case:<case uuid>`). Handing the hold to another case restates
+ * that same hold, so it never lapses. This class never overwrites a hold
+ * another party placed, and never lifts one: every release names our matter.
  */
 class LegalHoldRecordFreeze {
 
@@ -43,11 +48,19 @@ class LegalHoldRecordFreeze {
 	public const REASON_PREFIX = 'filinq-hold-case:';
 
 	/**
-	 * OpenRegister's legal hold service.
+	 * The matter every filinq hold is placed under.
 	 *
 	 * @var string
 	 */
-	private const HOLD_SERVICE = 'OCA\OpenRegister\Service\Archival\LegalHoldService';
+	public const OWNER_KEY = 'filinq:legalHoldCase';
+
+	/**
+	 * The matter OpenRegister files a hold under that names none, as every
+	 * hold placed before holds were kept per matter does.
+	 *
+	 * @var string
+	 */
+	private const LEGACY_OWNER = 'openregister:manual';
 
 	/**
 	 * Constructor.
@@ -122,7 +135,7 @@ class LegalHoldRecordFreeze {
 			return null;
 		}
 
-		return $this->currentReason(entity: $entity) !== null;
+		return $this->hasActiveHold(entity: $entity);
 
 	}//end heldAsSeenBy()
 
@@ -137,20 +150,20 @@ class LegalHoldRecordFreeze {
 	 * @spec openspec/changes/archive/2026-09-29-e-discovery-legal-hold/tasks.md#task-2.1
 	 */
 	public function place(object $entity, string $caseUuid): string {
-		$current = $this->currentReason(entity: $entity);
-		if ($current !== null) {
+		$own = $this->ownHold(entity: $entity);
+		if ($own !== null) {
 			// Another of our cases already holds it: covered, and the reason
-			// stays with the case that placed it. Another party's hold is left
-			// exactly as it is.
-			if (str_starts_with($current, self::REASON_PREFIX) === true) {
-				return 'held';
-			}
+			// stays with the case that placed it.
+			return 'held';
+		}
 
+		if ($this->hasActiveHold(entity: $entity) === true) {
+			// Another party's hold is left exactly as it is.
 			return 'held_by_other';
 		}
 
-		$held = $this->locator->get(className: self::HOLD_SERVICE)->placeHold($entity, self::reasonFor(caseUuid: $caseUuid));
-		if ($this->currentReason(entity: $held) === null) {
+		$held = $this->holds()->placeHold($entity, new HoldOrder(reason: self::reasonFor(caseUuid: $caseUuid), ownerKey: self::OWNER_KEY));
+		if ($this->ownHold(entity: $held) === null) {
 			return 'failed';
 		}
 
@@ -170,47 +183,115 @@ class LegalHoldRecordFreeze {
 	 * @spec openspec/changes/archive/2026-09-29-e-discovery-legal-hold/tasks.md#task-2.2
 	 */
 	public function release(object $entity, ?string $survivorUuid, string $releaseReason): string {
-		$current = $this->currentReason(entity: $entity);
-		if ($current === null) {
+		$own = $this->ownHold(entity: $entity);
+		if ($own === null) {
+			if ($this->hasActiveHold(entity: $entity) === true) {
+				return 'left_to_other_party';
+			}
+
 			return 'released';
 		}
 
-		if (str_starts_with($current, self::REASON_PREFIX) === false) {
-			return 'left_to_other_party';
-		}
-
-		$holds = $this->locator->get(className: self::HOLD_SERVICE);
+		$holds = $this->holds();
 		if ($survivorUuid !== null) {
-			// Re-stamp in place: placeHold keeps the hold active the whole
-			// time, where a release followed by a new hold would leave a gap
-			// a destruction run could fall into.
-			if ($current !== self::reasonFor(caseUuid: $survivorUuid)) {
-				$holds->placeHold($entity, self::reasonFor(caseUuid: $survivorUuid));
+			// Restate in place: the same matter placing again keeps its hold
+			// active the whole time, where a release followed by a new hold
+			// would leave a gap a destruction run could fall into.
+			if ($own['ownerKey'] !== self::OWNER_KEY || $own['reason'] !== self::reasonFor(caseUuid: $survivorUuid)) {
+				$holds->placeHold($entity, new HoldOrder(reason: self::reasonFor(caseUuid: $survivorUuid), ownerKey: self::OWNER_KEY));
+			}
+
+			if ($own['ownerKey'] !== self::OWNER_KEY) {
+				// A hold placed before holds were kept per matter: now that ours
+				// is in place, lift the old one, and only that one.
+				$holds->releaseHold($entity, new HoldOrder(reason: $releaseReason, ownerKey: $own['ownerKey']));
 			}
 
 			return 'kept_for_other_case';
 		}
 
-		$holds->releaseHold($entity, $releaseReason);
+		// Always name the matter: a release without one lifts every hold.
+		$holds->releaseHold($entity, new HoldOrder(reason: $releaseReason, ownerKey: $own['ownerKey']));
 
 		return 'released';
 
 	}//end release()
 
 	/**
-	 * The reason of the object's active hold, or null when it has none.
+	 * OpenRegister's legal hold service.
+	 *
+	 * @return LegalHoldServiceInterface The service.
+	 */
+	private function holds(): LegalHoldServiceInterface {
+		return $this->locator->get(className: LegalHoldServiceInterface::class);
+
+	}//end holds()
+
+	/**
+	 * The active holds on the object, one per matter.
+	 *
+	 * A hold written before holds were kept per matter has no `holds` list:
+	 * it counts as one hold of the legacy matter, as OpenRegister reads it.
 	 *
 	 * @param object $entity The object.
 	 *
-	 * @return string|null The reason.
+	 * @return array<int, array<string, mixed>> The holds.
 	 */
-	private function currentReason(object $entity): ?string {
+	private function activeHolds(object $entity): array {
 		$hold = ((array) ($entity->getRetention() ?? []))['legalHold'] ?? [];
-		if (is_array($hold) === false || ($hold['active'] ?? false) !== true) {
-			return null;
+		if (is_array($hold) === false) {
+			return [];
 		}
 
-		return (string) ($hold['reason'] ?? '');
+		if (is_array($hold['holds'] ?? null) === true) {
+			return array_values(array_filter($hold['holds'], 'is_array'));
+		}
 
-	}//end currentReason()
+		if (($hold['active'] ?? false) !== true) {
+			return [];
+		}
+
+		return [['ownerKey' => self::LEGACY_OWNER, 'reason' => ($hold['reason'] ?? null)]];
+
+	}//end activeHolds()
+
+	/**
+	 * Whether the object has any active hold, ours or another party's.
+	 *
+	 * @param object $entity The object.
+	 *
+	 * @return bool True when held.
+	 */
+	private function hasActiveHold(object $entity): bool {
+		return $this->activeHolds(entity: $entity) !== [];
+
+	}//end hasActiveHold()
+
+	/**
+	 * Our hold on the object, or null when we hold none.
+	 *
+	 * Ours is the one under our matter, or a hold of the legacy matter whose
+	 * reason names one of our cases.
+	 *
+	 * @param object $entity The object.
+	 *
+	 * @return array{ownerKey: string, reason: string}|null The hold.
+	 */
+	private function ownHold(object $entity): ?array {
+		$legacy = null;
+		foreach ($this->activeHolds(entity: $entity) as $hold) {
+			$ownerKey = (string) ($hold['ownerKey'] ?? '');
+			$reason   = (string) ($hold['reason'] ?? '');
+			if ($ownerKey === self::OWNER_KEY) {
+				return ['ownerKey' => $ownerKey, 'reason' => $reason];
+			}
+
+			if ($ownerKey === self::LEGACY_OWNER && str_starts_with($reason, self::REASON_PREFIX) === true) {
+				$legacy = ['ownerKey' => $ownerKey, 'reason' => $reason];
+			}
+		}
+
+		return $legacy;
+
+	}//end ownHold()
 }//end class
