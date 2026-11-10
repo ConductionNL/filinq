@@ -25,6 +25,14 @@ use OCP\Dashboard\IWidget;
 use OCP\IURLGenerator;
 use PHPUnit\Framework\TestCase;
 
+// The unit bootstrap does not autoload OCP's dashboard contracts; load the
+// two the widgets implement from the OCP package.
+foreach (['IWidget', 'IIconWidget'] as $ocpDashboardInterface) {
+	if (interface_exists('OCP\\Dashboard\\' . $ocpDashboardInterface) === false) {
+		require_once __DIR__ . '/../../../vendor/nextcloud/ocp/OCP/Dashboard/' . $ocpDashboardInterface . '.php';
+	}
+}
+
 /**
  * Pins what each dashboard widget reports to the Dashboard app.
  *
