@@ -1,0 +1,366 @@
+{
+    "no tesseract": {
+        "outcome": {
+            "result": {
+                "text": "",
+                "confidence": 0
+            }
+        },
+        "calls": [
+            [
+                "isTesseractAvailable"
+            ]
+        ],
+        "logs": [
+            [
+                "warning",
+                "Tesseract is not available, skipping OCR",
+                []
+            ]
+        ],
+        "leftover": []
+    },
+    "no imagick": {
+        "outcome": {
+            "result": {
+                "text": "",
+                "confidence": 0
+            }
+        },
+        "calls": [
+            [
+                "isTesseractAvailable"
+            ]
+        ],
+        "logs": [
+            [
+                "warning",
+                "Imagick extension not available, cannot convert PDF to images",
+                []
+            ]
+        ],
+        "leftover": []
+    },
+    "no pages": {
+        "outcome": {
+            "result": {
+                "text": "",
+                "confidence": 0
+            }
+        },
+        "calls": [
+            [
+                "isTesseractAvailable"
+            ],
+            [
+                "setResolution",
+                150,
+                150
+            ],
+            [
+                "readImage",
+                "/data/scan.pdf"
+            ],
+            [
+                "getNumberImages"
+            ],
+            [
+                "clear"
+            ],
+            [
+                "destroy"
+            ]
+        ],
+        "logs": [
+            [
+                "debug",
+                "OCR text extracted from PDF",
+                {
+                    "filePath": "/data/scan.pdf",
+                    "pages": 0,
+                    "textLength": 0,
+                    "confidence": 0
+                }
+            ]
+        ],
+        "leftover": []
+    },
+    "one page": {
+        "outcome": {
+            "result": {
+                "text": "Hallo",
+                "confidence": 91.3
+            }
+        },
+        "calls": [
+            [
+                "isTesseractAvailable"
+            ],
+            [
+                "setResolution",
+                150,
+                150
+            ],
+            [
+                "readImage",
+                "/data/scan.pdf"
+            ],
+            [
+                "getNumberImages"
+            ],
+            [
+                "setIteratorIndex",
+                0
+            ],
+            [
+                "setImageFormat",
+                "png"
+            ],
+            [
+                "writeImage",
+                "<tmp>/page_0.png",
+                true
+            ],
+            [
+                "extractTextFromImage",
+                "<tmp>/page_0.png",
+                true,
+                "deu+eng",
+                150
+            ],
+            [
+                "clear"
+            ],
+            [
+                "destroy"
+            ]
+        ],
+        "logs": [
+            [
+                "debug",
+                "OCR text extracted from PDF",
+                {
+                    "filePath": "/data/scan.pdf",
+                    "pages": 1,
+                    "textLength": 10,
+                    "confidence": 91.25
+                }
+            ]
+        ],
+        "leftover": [
+            [
+                "page_0.png",
+                false,
+                false
+            ]
+        ]
+    },
+    "three pages": {
+        "outcome": {
+            "result": {
+                "text": "Een\n\nDrie",
+                "confidence": 58.5
+            }
+        },
+        "calls": [
+            [
+                "isTesseractAvailable"
+            ],
+            [
+                "setResolution",
+                150,
+                150
+            ],
+            [
+                "readImage",
+                "/data/scan.pdf"
+            ],
+            [
+                "getNumberImages"
+            ],
+            [
+                "setIteratorIndex",
+                0
+            ],
+            [
+                "setImageFormat",
+                "png"
+            ],
+            [
+                "writeImage",
+                "<tmp>/page_0.png",
+                true
+            ],
+            [
+                "extractTextFromImage",
+                "<tmp>/page_0.png",
+                true,
+                "deu+eng",
+                150
+            ],
+            [
+                "setIteratorIndex",
+                1
+            ],
+            [
+                "setImageFormat",
+                "png"
+            ],
+            [
+                "writeImage",
+                "<tmp>/page_1.png",
+                true
+            ],
+            [
+                "extractTextFromImage",
+                "<tmp>/page_1.png",
+                true,
+                "deu+eng",
+                150
+            ],
+            [
+                "setIteratorIndex",
+                2
+            ],
+            [
+                "setImageFormat",
+                "png"
+            ],
+            [
+                "writeImage",
+                "<tmp>/page_2.png",
+                true
+            ],
+            [
+                "extractTextFromImage",
+                "<tmp>/page_2.png",
+                true,
+                "deu+eng",
+                150
+            ],
+            [
+                "clear"
+            ],
+            [
+                "destroy"
+            ]
+        ],
+        "logs": [
+            [
+                "debug",
+                "OCR text extracted from PDF",
+                {
+                    "filePath": "/data/scan.pdf",
+                    "pages": 3,
+                    "textLength": 10,
+                    "confidence": 58.51666666666667
+                }
+            ]
+        ],
+        "leftover": [
+            [
+                "page_0.png",
+                false,
+                false
+            ],
+            [
+                "page_1.png",
+                false,
+                false
+            ],
+            [
+                "page_2.png",
+                false,
+                false
+            ]
+        ]
+    },
+    "the second page fails": {
+        "outcome": {
+            "exception": [
+                "Exception",
+                "PDF OCR extraction failed: page unreadable",
+                "page unreadable"
+            ]
+        },
+        "calls": [
+            [
+                "isTesseractAvailable"
+            ],
+            [
+                "setResolution",
+                150,
+                150
+            ],
+            [
+                "readImage",
+                "/data/scan.pdf"
+            ],
+            [
+                "getNumberImages"
+            ],
+            [
+                "setIteratorIndex",
+                0
+            ],
+            [
+                "setImageFormat",
+                "png"
+            ],
+            [
+                "writeImage",
+                "<tmp>/page_0.png",
+                true
+            ],
+            [
+                "extractTextFromImage",
+                "<tmp>/page_0.png",
+                true,
+                "deu+eng",
+                150
+            ],
+            [
+                "setIteratorIndex",
+                1
+            ],
+            [
+                "setImageFormat",
+                "png"
+            ],
+            [
+                "writeImage",
+                "<tmp>/page_1.png",
+                true
+            ],
+            [
+                "extractTextFromImage",
+                "<tmp>/page_1.png",
+                true,
+                "deu+eng",
+                150
+            ]
+        ],
+        "logs": [
+            [
+                "error",
+                "OCR extraction failed for PDF",
+                {
+                    "filePath": "/data/scan.pdf",
+                    "exception": "page unreadable"
+                }
+            ]
+        ],
+        "leftover": [
+            [
+                "page_0.png",
+                false,
+                true
+            ],
+            [
+                "page_1.png",
+                true,
+                true
+            ]
+        ]
+    }
+}
