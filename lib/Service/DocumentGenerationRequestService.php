@@ -58,6 +58,9 @@ use UnexpectedValueException;
  * @link     https://www.filinq.app
  *
  * @spec openspec/changes/flow-generate-document-node/specs/flow-document-generation/spec.md#requirement-one-generation-path-for-the-flow-node-the-command-event-and-the-api
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) OpenRegister's call shapes take
+ *   value objects where they took scalars; each counts as a coupling.
  */
 class DocumentGenerationRequestService implements GenerationRequestServiceInterface {
 
