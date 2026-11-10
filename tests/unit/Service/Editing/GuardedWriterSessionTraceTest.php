@@ -26,6 +26,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Service\Editing;
 
 use OCA\Filinq\Service\Editing\AgentArtefactMarker;
+use OCA\Filinq\Service\Editing\GuardedEdit;
 use OCA\Filinq\Service\Editing\GuardedWriter;
 use OCP\Files\File;
 use OCP\Files\Folder;
@@ -163,11 +164,13 @@ class GuardedWriterSessionTraceTest extends TestCase {
 	 */
 	private function runSession(GuardedWriter $writer, array $session): array {
 		return $writer->runSession(
-			uid: 'anna',
-			file: $session[2],
-			transform: $session[3],
-			version: $session[1],
-			mode: $session[0]
+			edit: new GuardedEdit(
+				uid: 'anna',
+				file: $session[2],
+				transform: $session[3],
+				version: $session[1],
+				mode: $session[0]
+			)
 		);
 	}//end runSession()
 

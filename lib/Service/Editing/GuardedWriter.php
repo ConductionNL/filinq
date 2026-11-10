@@ -138,11 +138,7 @@ class GuardedWriter {
 	/**
 	 * Hold the lock across the whole read-modify-write, and release it on every exit path.
 	 *
-	 * @param string $uid The acting user id.
-	 * @param File $file The source file.
-	 * @param callable $transform Given (bytes, extension), returns the rewritten package.
-	 * @param string $version The expected version.
-	 * @param string $mode The resolved output mode.
+	 * @param GuardedEdit $edit Who acts, on which file, the transform, the expected version and the output mode.
 	 *
 	 * @return array<string, mixed> The outcome.
 	 *
@@ -150,56 +146,15 @@ class GuardedWriter {
 	 *
 	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#task-1.1
 	 */
-	public function runSession(string $uid, File $file, callable $transform, string $version, string $mode): array {
-		$lock = new LockContext($file, ILock::TYPE_APP, AppIdentity::APP_ID);
-		$held = $this->acquire(lock: $lock, file: $file);
-		$warnings = [];
-
-		if ($held === false) {
-			$warnings[] = 'No file-lock provider is available on this instance, so a concurrent '
-				. 'editing session could not be excluded. The version check still applies.';
-		}
+	public function runSession(GuardedEdit $edit): array {
+		$lock = new LockContext($edit->file, ILock::TYPE_APP, AppIdentity::APP_ID);
+		$held = $this->acquire(lock: $lock, file: $edit->file);
+		$warnings = $this->lockWarnings(held: $held);
 
 		try {
-			// The transform is a parameter rather than a fixed call so that a
-			// metadata write gets the IDENTICAL lock, version-recheck, tag-then-write
-			// and unlock path as a body edit. Copying this method for metadata would
-			// have meant two copies of the only code that stops an agent clobbering
-			// a concurrent human edit — and the copy would drift.
-			$bytes = $this->fileReader()->readBytes(file: $file);
-			$edited = $transform($bytes, $file->getExtension());
-
-			// Re-read the version immediately before the write. The lock excludes
-			// another editing SESSION; this closes the remaining window in which
-			// the file changed outside one. Refusing is correct -- this codec
-			// cannot merge, and guessing would be worse than stopping.
-			//
-			// The comparison is over the BYTES this session just read, not over
-			// the file's etag. An etag that fails to move after a write makes
-			// this check compare equal on a document that changed underneath
-			// the caller, and CI caught it doing exactly that. See
-			// versionOf() above for the measurement.
-			$current = $this->versionOf(packageBytes: $bytes);
-			if ($current !== $version) {
-				throw new RuntimeException(
-					'This document changed since you read it, so it was not edited. '
-					. 'Read it again and re-apply your changes to the current text.'
-				);
-			}
-
-			$written = $this->write(uid: $uid, file: $file, bytes: $edited['bytes'], mode: $mode, lock: $lock);
-
-			return ([
-				'fileId' => $written['fileId'],
-				'name' => $written['name'],
-				'path' => $written['path'],
-				'outputMode' => $mode,
-				'appliedAnchors' => ($edited['applied'] ?? []),
-				'metadataWritten' => ($edited['written'] ?? []),
-				'version' => $written['version'],
-				'agentAuthoredTag' => AgentArtefactMarker::TAG_NAME,
-				'warnings' => $warnings,
-			]);
+			$outcome = $this->editUnderLock(run: new GuardedEditRun(edit: $edit, lock: $lock));
+			$outcome['warnings'] = $warnings;
+			return $outcome;
 		} finally {
 			if ($held === true) {
 				$this->release(lock: $lock);
@@ -209,32 +164,117 @@ class GuardedWriter {
 	}//end runSession()
 
 	/**
+	 * The warnings a session reports about its lock.
+	 *
+	 * @param bool $held Whether the lock is held.
+	 *
+	 * @return array<int, string> One warning when no lock could be taken, none otherwise.
+	 */
+	private function lockWarnings(bool $held): array {
+		$warnings = [];
+
+		if ($held === false) {
+			$warnings[] = 'No file-lock provider is available on this instance, so a concurrent '
+				. 'editing session could not be excluded. The version check still applies.';
+		}
+
+		return $warnings;
+
+	}//end lockWarnings()
+
+	/**
+	 * Read, transform, re-check the version and write, while the run's lock is held.
+	 *
+	 * @param GuardedEditRun $run The edit and its lock.
+	 *
+	 * @return array<string, mixed> The outcome, without the lock warnings.
+	 *
+	 * @throws RuntimeException On any refusal or failure.
+	 */
+	private function editUnderLock(GuardedEditRun $run): array {
+		$edit = $run->edit;
+
+		// The transform is a parameter rather than a fixed call so that a
+		// metadata write gets the IDENTICAL lock, version-recheck, tag-then-write
+		// and unlock path as a body edit. Copying this method for metadata would
+		// have meant two copies of the only code that stops an agent clobbering
+		// a concurrent human edit — and the copy would drift.
+		$bytes = $this->fileReader()->readBytes(file: $edit->file);
+		$edited = ($edit->transform)($bytes, $edit->file->getExtension());
+
+		$this->refuseChangedDocument(bytes: $bytes, version: $edit->version);
+
+		$written = $this->write(run: $run, bytes: $edited['bytes']);
+
+		return [
+			'fileId' => $written['fileId'],
+			'name' => $written['name'],
+			'path' => $written['path'],
+			'outputMode' => $edit->mode,
+			'appliedAnchors' => ($edited['applied'] ?? []),
+			'metadataWritten' => ($edited['written'] ?? []),
+			'version' => $written['version'],
+			'agentAuthoredTag' => AgentArtefactMarker::TAG_NAME,
+		];
+
+	}//end editUnderLock()
+
+	/**
+	 * Refuse the write when the document changed since the caller read it.
+	 *
+	 * @param string $bytes   The package as read under the lock.
+	 * @param string $version The version the caller read.
+	 *
+	 * @return void
+	 *
+	 * @throws RuntimeException When the versions differ.
+	 */
+	private function refuseChangedDocument(string $bytes, string $version): void {
+		// Re-read the version immediately before the write. The lock excludes
+		// another editing SESSION; this closes the remaining window in which
+		// the file changed outside one. Refusing is correct -- this codec
+		// cannot merge, and guessing would be worse than stopping.
+		//
+		// The comparison is over the BYTES this session just read, not over
+		// the file's etag. An etag that fails to move after a write makes
+		// this check compare equal on a document that changed underneath
+		// the caller, and CI caught it doing exactly that. See
+		// versionOf() above for the measurement.
+		$current = $this->versionOf(packageBytes: $bytes);
+		if ($current !== $version) {
+			throw new RuntimeException(
+				'This document changed since you read it, so it was not edited. '
+				. 'Read it again and re-apply your changes to the current text.'
+			);
+		}
+
+	}//end refuseChangedDocument()
+
+	/**
 	 * Write the edited bytes, marking the artefact before it becomes visible.
 	 *
 	 * The mark goes on FIRST and is rolled back if the write then fails, so
 	 * neither an unmarked agent artefact nor a mark on an unchanged file can
 	 * survive this method.
 	 *
-	 * @param string $uid The acting user id.
-	 * @param File $file The source file.
-	 * @param string $bytes The edited package bytes.
-	 * @param string $mode The output mode.
-	 * @param LockContext $lock The held lock, so our own write is not refused by it.
+	 * @param GuardedEditRun $run   The edit (acting user, source file, output mode) and the held lock,
+	 *                              so our own write is not refused by it.
+	 * @param string         $bytes The edited package bytes.
 	 *
 	 * @return array{fileId: int, name: string, path: string, version: string}
 	 *
 	 * @throws RuntimeException When marking or writing fails.
 	 */
-	private function write(string $uid, File $file, string $bytes, string $mode, LockContext $lock): array {
-		$target = $file;
-		if ($mode === self::MODE_SIBLING) {
-			$target = $this->sibling(file: $file);
+	private function write(GuardedEditRun $run, string $bytes): array {
+		$target = $run->edit->file;
+		if ($run->edit->mode === self::MODE_SIBLING) {
+			$target = $this->sibling(file: $run->edit->file);
 		}
 
 		$added = $this->marker->mark(fileId: $target->getId());
 
 		try {
-			$this->lockManager->runInScope($lock, static function () use ($target, $bytes): void {
+			$this->lockManager->runInScope($run->lock, static function () use ($target, $bytes): void {
 				$target->putContent($bytes);
 			});
 		} catch (Throwable $e) {
@@ -248,7 +288,7 @@ class GuardedWriter {
 		return [
 			'fileId' => $target->getId(),
 			'name' => $target->getName(),
-			'path' => $this->fileReader()->userPath(uid: $uid, file: $target),
+			'path' => $this->fileReader()->userPath(uid: $run->edit->uid, file: $target),
 			// The version of what was WRITTEN, taken from the bytes rather than
 			// re-read from the node: `putContent()` does not refresh the
 			// in-memory FileInfo, so the etag here was the pre-write one and

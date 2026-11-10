@@ -518,11 +518,13 @@ class EditSessionService {
 		[$file, $mode] = $this->prepareWrite(request: $request);
 
 		return $this->writer->runSession(
-			uid: $request->uid,
-			file: $file,
-			transform: $transform,
-			version: $request->version,
-			mode: $mode
+			edit: new GuardedEdit(
+				uid: $request->uid,
+				file: $file,
+				transform: $transform(...),
+				version: $request->version,
+				mode: $mode
+			)
 		);
 	}//end runWrite()
 
