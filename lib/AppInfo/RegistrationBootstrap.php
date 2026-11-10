@@ -33,6 +33,7 @@ use OCA\Filinq\Mcp\FilinqScannableServices;
 use OCA\Filinq\Middleware\LanguageNegotiationMiddleware;
 use OCA\Filinq\Service\ServiceRegistrar;
 use OCA\OpenRegister\AppHost\Bootstrap;
+use OCA\OpenRegister\AppHost\LeafAdoption;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use Psr\Container\ContainerInterface;
@@ -217,8 +218,10 @@ class RegistrationBootstrap {
 			try {
 				Bootstrap::aliasStoreController(
 					context: $context,
-					appId: 'filinq',
-					controllerNs: 'OCA\\Filinq\\Controller'
+					adoption: new LeafAdoption(
+						appId: 'filinq',
+						options: ['namespace' => 'OCA\\Filinq', 'controllerNamespace' => 'OCA\\Filinq\\Controller']
+					)
 				);
 			} catch (\Throwable) {
 				// An OpenRegister older than the helper, or present but
