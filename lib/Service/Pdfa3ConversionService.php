@@ -191,40 +191,15 @@ class Pdfa3ConversionService implements Pdfa3ConversionServiceInterface {
 	 */
 	public function convertExistingPdf(File $source, array $metadata = [], array $attachments = [], array $options = []): array {
 		$this->assertAvailable();
-
-		$size = $source->getSize();
-		if ($size > $this->resolveMaxInputBytes()) {
-			throw new Pdfa3ConversionException(
-				reason: Pdfa3ConversionException::REASON_SOURCE_TOO_LARGE,
-				message: sprintf(
-					'Source PDF (%d bytes) exceeds the configured PDF/A-3 conversion cap (%d bytes).',
-					$size,
-					$this->resolveMaxInputBytes()
-				),
-				adminHint: sprintf(
-					'Increase %s in app config, or split the source document before converting.',
-					self::CFG_MAX_INPUT_BYTES
-				),
-				code: 413
-			);
-		}
-
-		$raw = $source->getContent();
-		if (is_string($raw) === false || $raw === '') {
-			throw new Pdfa3ConversionException(
-				reason: Pdfa3ConversionException::REASON_SOURCE_UNREADABLE,
-				message: 'Source file could not be read as PDF content.',
-				adminHint: 'Confirm the source node is a readable PDF file, not a folder or broken storage reference.',
-				code: 422
-			);
-		}
+		$this->refuseOversizedSource(source: $source);
+		$raw = $this->readSourcePdf(source: $source);
 
 		$deadline = $this->deadline();
 
 		$result = $this->buildPdfa3(
 			job: new Pdfa3Job(
 				pageBuilder: function (Mpdf $mpdf) use ($raw, $deadline): void {
-					$this->importAllPages(mpdf: $mpdf, raw: $raw, deadline: $deadline);
+					$this->importAllPages(mpdf: $mpdf, import: new PdfImport(raw: $raw, deadline: $deadline));
 				},
 				deadline: $deadline,
 				defaultTitle: $this->stripExtension(name: $source->getName()),
@@ -244,6 +219,59 @@ class Pdfa3ConversionService implements Pdfa3ConversionServiceInterface {
 		return $result;
 
 	}//end convertExistingPdf()
+
+	/**
+	 * Refuse a source larger than the configured conversion cap.
+	 *
+	 * @param File $source The source PDF.
+	 *
+	 * @return void
+	 *
+	 * @throws Pdfa3ConversionException When the source exceeds the cap (413).
+	 */
+	private function refuseOversizedSource(File $source): void {
+		$size = $source->getSize();
+		if ($size > $this->resolveMaxInputBytes()) {
+			throw new Pdfa3ConversionException(
+				reason: Pdfa3ConversionException::REASON_SOURCE_TOO_LARGE,
+				message: sprintf(
+					'Source PDF (%d bytes) exceeds the configured PDF/A-3 conversion cap (%d bytes).',
+					$size,
+					$this->resolveMaxInputBytes()
+				),
+				adminHint: sprintf(
+					'Increase %s in app config, or split the source document before converting.',
+					self::CFG_MAX_INPUT_BYTES
+				),
+				code: 413
+			);
+		}
+
+	}//end refuseOversizedSource()
+
+	/**
+	 * The source's PDF bytes, refusing a node that yields none.
+	 *
+	 * @param File $source The source PDF.
+	 *
+	 * @return string The bytes.
+	 *
+	 * @throws Pdfa3ConversionException When the content is empty or not a string (422).
+	 */
+	private function readSourcePdf(File $source): string {
+		$raw = $source->getContent();
+		if (is_string($raw) === false || $raw === '') {
+			throw new Pdfa3ConversionException(
+				reason: Pdfa3ConversionException::REASON_SOURCE_UNREADABLE,
+				message: 'Source file could not be read as PDF content.',
+				adminHint: 'Confirm the source node is a readable PDF file, not a folder or broken storage reference.',
+				code: 422
+			);
+		}
+
+		return $raw;
+
+	}//end readSourcePdf()
 
 	/**
 	 * Convert freshly rendered HTML directly to PDF/A-3b.
@@ -348,33 +376,7 @@ class Pdfa3ConversionService implements Pdfa3ConversionServiceInterface {
 		$tempDir = sys_get_temp_dir() . '/filinq-pdfa3';
 		$this->ensureTempDirectory(tempDir: $tempDir);
 
-		$margins = $options['margin'] ?? [];
-		$config = [
-			'tempDir' => $tempDir,
-			'format' => $options['format'] ?? 'A4',
-			'orientation' => $options['orientation'] ?? 'P',
-			'margin_top' => $margins['top'] ?? 15,
-			'margin_right' => $margins['right'] ?? 15,
-			'margin_bottom' => $margins['bottom'] ?? 15,
-			'margin_left' => $margins['left'] ?? 15,
-			'PDFA' => true,
-			'PDFAauto' => true,
-			'PDFAversion' => self::PDFA_VERSION,
-		];
-
-		$fontDir = $this->pdfService->getFontDirectory();
-		if ($fontDir !== null) {
-			$config['fontDir'] = [$fontDir];
-			$config['fontdata'] = [
-				'dejavusans' => [
-					'R' => 'DejaVuSans.ttf',
-					'B' => 'DejaVuSans-Bold.ttf',
-					'I' => 'DejaVuSans-Oblique.ttf',
-					'BI' => 'DejaVuSans-BoldOblique.ttf',
-				],
-			];
-			$config['default_font'] = 'dejavusans';
-		}
+		$config = $this->withEmbeddedFont(config: $this->pageConfig(tempDir: $tempDir, options: $options));
 
 		try {
 			return new Mpdf(config: $config);
@@ -395,6 +397,57 @@ class Pdfa3ConversionService implements Pdfa3ConversionServiceInterface {
 	}//end instantiateMpdf()
 
 	/**
+	 * The mPDF page setup for PDF/A-3: temp directory, format, orientation and margins.
+	 *
+	 * @param string $tempDir The writable temp directory.
+	 * @param array  $options format, orientation and margin overrides.
+	 *
+	 * @return array<string, mixed> The mPDF configuration so far.
+	 */
+	private function pageConfig(string $tempDir, array $options): array {
+		$margins = $options['margin'] ?? [];
+		return [
+			'tempDir' => $tempDir,
+			'format' => $options['format'] ?? 'A4',
+			'orientation' => $options['orientation'] ?? 'P',
+			'margin_top' => $margins['top'] ?? 15,
+			'margin_right' => $margins['right'] ?? 15,
+			'margin_bottom' => $margins['bottom'] ?? 15,
+			'margin_left' => $margins['left'] ?? 15,
+			'PDFA' => true,
+			'PDFAauto' => true,
+			'PDFAversion' => self::PDFA_VERSION,
+		];
+
+	}//end pageConfig()
+
+	/**
+	 * Add the bundled DejaVu font as the default when the font directory is there.
+	 *
+	 * @param array<string, mixed> $config The mPDF configuration so far.
+	 *
+	 * @return array<string, mixed> The configuration, with the font when available.
+	 */
+	private function withEmbeddedFont(array $config): array {
+		$fontDir = $this->pdfService->getFontDirectory();
+		if ($fontDir !== null) {
+			$config['fontDir'] = [$fontDir];
+			$config['fontdata'] = [
+				'dejavusans' => [
+					'R' => 'DejaVuSans.ttf',
+					'B' => 'DejaVuSans-Bold.ttf',
+					'I' => 'DejaVuSans-Oblique.ttf',
+					'BI' => 'DejaVuSans-BoldOblique.ttf',
+				],
+			];
+			$config['default_font'] = 'dejavusans';
+		}
+
+		return $config;
+
+	}//end withEmbeddedFont()
+
+	/**
 	 * Run the page builder against the deadline and capture the
 	 * rendered output. Isolated from buildPdfa3() so each concern
 	 * (config, metadata, rendering) stays independently readable.
@@ -409,15 +462,11 @@ class Pdfa3ConversionService implements Pdfa3ConversionServiceInterface {
 	 */
 	private function renderPages(Mpdf $mpdf, Pdfa3Job $job): array {
 		try {
-			if ($this->now() > $job->deadline) {
-				throw $this->timeLimitExceeded();
-			}
+			$this->refuseIfPastDeadline(job: $job);
 
 			($job->pageBuilder)($mpdf);
 
-			if ($this->now() > $job->deadline) {
-				throw $this->timeLimitExceeded();
-			}
+			$this->refuseIfPastDeadline(job: $job);
 
 			return [
 				'content' => $mpdf->Output(name: '', dest: self::OUTPUT_AS_STRING),
@@ -426,32 +475,72 @@ class Pdfa3ConversionService implements Pdfa3ConversionServiceInterface {
 		} catch (Pdfa3ConversionException $e) {
 			throw $e;
 		} catch (MpdfException $e) {
-			$this->logger->error(
-				'[Pdfa3ConversionService] mPDF render failed',
-				['exception' => $e]
-			);
-			throw new Pdfa3ConversionException(
-				reason: Pdfa3ConversionException::REASON_RENDER_FAILED,
-				message: 'PDF/A-3 rendering failed: ' . $e->getMessage(),
-				adminHint: 'Check the source content for unsupported constructs (fonts, embedded media) that mPDF could not process.',
-				code: 500,
-				previous: $e
-			);
+			throw $this->renderFailed(exception: $e);
 		} catch (Throwable $e) {
-			$this->logger->error(
-				'[Pdfa3ConversionService] Unexpected failure during PDF/A-3 assembly',
-				['exception' => $e]
-			);
-			throw new Pdfa3ConversionException(
-				reason: Pdfa3ConversionException::REASON_SOURCE_UNREADABLE,
-				message: 'PDF/A-3 conversion failed while importing the source: ' . $e->getMessage(),
-				adminHint: 'Confirm the source is a valid, non-encrypted PDF.',
-				code: 422,
-				previous: $e
-			);
+			throw $this->assemblyFailed(exception: $e);
 		}//end try
 
 	}//end renderPages()
+
+	/**
+	 * Refuse to go on once the job's time budget is spent.
+	 *
+	 * @param Pdfa3Job $job The job and its deadline.
+	 *
+	 * @return void
+	 *
+	 * @throws Pdfa3ConversionException When the deadline has passed.
+	 */
+	private function refuseIfPastDeadline(Pdfa3Job $job): void {
+		if ($this->now() > $job->deadline) {
+			throw $this->timeLimitExceeded();
+		}
+
+	}//end refuseIfPastDeadline()
+
+	/**
+	 * Log an mPDF rendering failure and describe it.
+	 *
+	 * @param MpdfException $exception What mPDF threw.
+	 *
+	 * @return Pdfa3ConversionException The failure to throw (500).
+	 */
+	private function renderFailed(MpdfException $exception): Pdfa3ConversionException {
+		$this->logger->error(
+			'[Pdfa3ConversionService] mPDF render failed',
+			['exception' => $exception]
+		);
+		return new Pdfa3ConversionException(
+			reason: Pdfa3ConversionException::REASON_RENDER_FAILED,
+			message: 'PDF/A-3 rendering failed: ' . $exception->getMessage(),
+			adminHint: 'Check the source content for unsupported constructs (fonts, embedded media) that mPDF could not process.',
+			code: 500,
+			previous: $exception
+		);
+
+	}//end renderFailed()
+
+	/**
+	 * Log an unexpected failure while assembling the PDF/A-3 and describe it.
+	 *
+	 * @param Throwable $exception What went wrong.
+	 *
+	 * @return Pdfa3ConversionException The failure to throw (422).
+	 */
+	private function assemblyFailed(Throwable $exception): Pdfa3ConversionException {
+		$this->logger->error(
+			'[Pdfa3ConversionService] Unexpected failure during PDF/A-3 assembly',
+			['exception' => $exception]
+		);
+		return new Pdfa3ConversionException(
+			reason: Pdfa3ConversionException::REASON_SOURCE_UNREADABLE,
+			message: 'PDF/A-3 conversion failed while importing the source: ' . $exception->getMessage(),
+			adminHint: 'Confirm the source is a valid, non-encrypted PDF.',
+			code: 422,
+			previous: $exception
+		);
+
+	}//end assemblyFailed()
 
 	/**
 	 * Import every page of a raw PDF byte string into the given mPDF
@@ -461,15 +550,39 @@ class Pdfa3ConversionService implements Pdfa3ConversionServiceInterface {
 	 * a single synchronous mPDF call; the deadline is enforced at
 	 * page granularity).
 	 *
-	 * @param Mpdf $mpdf Target document (already PDF/A-3 configured).
-	 * @param string $raw Raw PDF bytes of the source document.
-	 * @param float $deadline Absolute microtime(true) deadline.
+	 * @param Mpdf      $mpdf   Target document (already PDF/A-3 configured).
+	 * @param PdfImport $import Raw PDF bytes of the source document and the absolute microtime(true) deadline.
 	 *
 	 * @return void
 	 *
 	 * @throws Pdfa3ConversionException REASON_SOURCE_UNREADABLE or REASON_TIME_LIMIT_EXCEEDED.
 	 */
-	private function importAllPages(Mpdf $mpdf, string $raw, float $deadline): void {
+	private function importAllPages(Mpdf $mpdf, PdfImport $import): void {
+		$pageCount = $this->sourcePageCount(mpdf: $mpdf, raw: $import->raw);
+
+		for ($pageNumber = 1; $pageNumber <= $pageCount; $pageNumber++) {
+			if ($this->now() > $import->deadline) {
+				throw $this->timeLimitExceeded();
+			}
+
+			$mpdf->AddPage();
+			$templateId = $mpdf->importPage(pageNumber: $pageNumber);
+			$mpdf->useTemplate(tpl: $templateId, adjustPageSize: true);
+		}
+
+	}//end importAllPages()
+
+	/**
+	 * Load the source into mPDF and answer its page count, refusing one it cannot parse or that has no pages.
+	 *
+	 * @param Mpdf   $mpdf The document being built.
+	 * @param string $raw  The source PDF bytes.
+	 *
+	 * @return int The page count, at least 1.
+	 *
+	 * @throws Pdfa3ConversionException When the source cannot be parsed or has no pages (422).
+	 */
+	private function sourcePageCount(Mpdf $mpdf, string $raw): int {
 		try {
 			$pageCount = $mpdf->setSourceFile(file: $this->streamReaderFactory->fromString($raw));
 		} catch (Throwable $e) {
@@ -491,17 +604,9 @@ class Pdfa3ConversionService implements Pdfa3ConversionServiceInterface {
 			);
 		}
 
-		for ($pageNumber = 1; $pageNumber <= $pageCount; $pageNumber++) {
-			if ($this->now() > $deadline) {
-				throw $this->timeLimitExceeded();
-			}
+		return $pageCount;
 
-			$mpdf->AddPage();
-			$templateId = $mpdf->importPage(pageNumber: $pageNumber);
-			$mpdf->useTemplate(tpl: $templateId, adjustPageSize: true);
-		}
-
-	}//end importAllPages()
+	}//end sourcePageCount()
 
 	/**
 	 * Build a Pdfa3ConversionException for the time-budget guardrail.
