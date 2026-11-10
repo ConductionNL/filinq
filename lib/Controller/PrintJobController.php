@@ -28,6 +28,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
+use Closure;
 use Exception;
 use InvalidArgumentException;
 use OCA\Filinq\Kernel\Contracts\PrintJobServiceInterface;
@@ -115,21 +116,10 @@ class PrintJobController extends Controller {
 
 			$templateId = $this->request->getParam('templateId', '');
 			if (empty($templateId) === true) {
-				return new JSONResponse(
-					data: ['error' => 'templateId is required'],
-					statusCode: Http::STATUS_BAD_REQUEST
-				);
+				return $this->templateIdRequired();
 			}
 
-			$data = $this->arrayParam(name: 'data');
-			$options = $this->arrayParam(name: 'options');
-			$filename = $this->request->getParam('filename', 'document.pdf');
-
-			$result = $this->printJobSvc->createJob(
-				request: new PrintJobRequest(templateId: $templateId, options: $options, filename: (string) $filename),
-				data: $data,
-				userId: $user->getUID()
-			);
+			$result = $this->createSingleJob(templateId: $templateId, userId: $user->getUID());
 
 			return new JSONResponse(data: $result, statusCode: Http::STATUS_CREATED);
 		} catch (Exception $e) {
@@ -137,6 +127,40 @@ class PrintJobController extends Controller {
 		}//end try
 
 	}//end create()
+
+	/**
+	 * Create one print job from the request's data, options and filename.
+	 *
+	 * @param mixed  $templateId The template the job renders, as the request gave it.
+	 * @param string $userId     Who requests the job.
+	 *
+	 * @return array The created job.
+	 */
+	private function createSingleJob(mixed $templateId, string $userId): array {
+		$data = $this->arrayParam(name: 'data');
+		$options = $this->arrayParam(name: 'options');
+		$filename = $this->request->getParam('filename', 'document.pdf');
+
+		return $this->printJobSvc->createJob(
+			request: new PrintJobRequest(templateId: $templateId, options: $options, filename: (string) $filename),
+			data: $data,
+			userId: $userId
+		);
+
+	}//end createSingleJob()
+
+	/**
+	 * The 400 answer for a request without a template.
+	 *
+	 * @return JSONResponse The 400 answer.
+	 */
+	private function templateIdRequired(): JSONResponse {
+		return new JSONResponse(
+			data: ['error' => 'templateId is required'],
+			statusCode: Http::STATUS_BAD_REQUEST
+		);
+
+	}//end templateIdRequired()
 
 	/**
 	 * List the caller's own print jobs, newest first.
@@ -159,18 +183,30 @@ class PrintJobController extends Controller {
 		try {
 			return new JSONResponse(data: ['results' => $this->printJobSvc->listJobs(userId: $user->getUID())]);
 		} catch (Exception $e) {
-			$this->logger->error(
-				message: 'Print job list failed: ' . $e->getMessage(),
-				context: ['exception' => $e]
-			);
-
-			return new JSONResponse(
-				data: ['error' => 'Operation failed'],
-				statusCode: Http::STATUS_INTERNAL_SERVER_ERROR
-			);
+			return $this->listFailed(exception: $e);
 		}
 
 	}//end index()
+
+	/**
+	 * Log a failed job listing and answer 500.
+	 *
+	 * @param Exception $exception What went wrong.
+	 *
+	 * @return JSONResponse The 500 answer.
+	 */
+	private function listFailed(Exception $exception): JSONResponse {
+		$this->logger->error(
+			message: 'Print job list failed: ' . $exception->getMessage(),
+			context: ['exception' => $exception]
+		);
+
+		return new JSONResponse(
+			data: ['error' => 'Operation failed'],
+			statusCode: Http::STATUS_INTERNAL_SERVER_ERROR
+		);
+
+	}//end listFailed()
 
 	/**
 	 * Get print job info
@@ -187,41 +223,105 @@ class PrintJobController extends Controller {
 	 * @spec openspec/changes/print-functionality/tasks.md#task-5
 	 */
 	public function show(string $id): JSONResponse {
-		try {
-			$user = $this->userSession->getUser();
-			if ($user === null) {
-				return $this->notAuthenticated(message: 'Not authenticated');
-			}
-
-			$job = $this->printJobSvc->getJob(jobId: $id);
-			if ($job === null) {
-				return new JSONResponse(
-					data: ['error' => 'Job not found'],
-					statusCode: Http::STATUS_NOT_FOUND
-				);
-			}
-
-			$this->authorizeJobAccess(job: $job, userId: $user->getUID());
-
-			return new JSONResponse(data: $job);
-		} catch (OCSForbiddenException $e) {
-			return new JSONResponse(
-				data: ['error' => 'Not authorized'],
-				statusCode: Http::STATUS_FORBIDDEN
-			);
-		} catch (Exception $e) {
-			$this->logger->error(
-				message: 'Print job show failed: ' . $e->getMessage(),
-				context: ['jobId' => $id, 'exception' => $e]
-			);
-
-			return new JSONResponse(
-				data: ['error' => 'Operation failed'],
-				statusCode: Http::STATUS_INTERNAL_SERVER_ERROR
-			);
-		}//end try
+		return $this->onAuthorizedJob(
+			action: new PrintJobAction(jobId: $id, label: 'Print job show'),
+			respond: static fn (array $job): JSONResponse => new JSONResponse(data: $job)
+		);
 
 	}//end show()
+
+	/**
+	 * Run one action on a job the current user may reach.
+	 *
+	 * Answers 401 without a user, 404 for an unknown job and 403 when the
+	 * user neither owns the job nor is an admin; any other failure is logged
+	 * under the action's label and answers 500.
+	 *
+	 * @param PrintJobAction    $action  The job and the label failures are logged under.
+	 * @param Closure(array): T $respond Builds the answer from the authorized job.
+	 *
+	 * @return T|JSONResponse The action's answer, or the refusal.
+	 *
+	 * @template T of DataDownloadResponse|JSONResponse
+	 */
+	private function onAuthorizedJob(PrintJobAction $action, Closure $respond): DataDownloadResponse|JSONResponse {
+		try {
+			$job = $this->authorizedJob(jobId: $action->jobId);
+			if ($job instanceof JSONResponse) {
+				return $job;
+			}
+
+			return $respond($job);
+		} catch (OCSForbiddenException $e) {
+			return $this->notAuthorized();
+		} catch (Exception $e) {
+			return $this->jobActionFailed(exception: $e, action: $action);
+		}//end try
+
+	}//end onAuthorizedJob()
+
+	/**
+	 * Load a job and check that the current user may reach it.
+	 *
+	 * @param string $jobId Job UUID
+	 *
+	 * @return array|JSONResponse The job, or the 401/404 answer.
+	 *
+	 * @throws OCSForbiddenException When the user neither owns the job nor is an admin.
+	 */
+	private function authorizedJob(string $jobId): array|JSONResponse {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			return $this->notAuthenticated(message: 'Not authenticated');
+		}
+
+		$job = $this->printJobSvc->getJob(jobId: $jobId);
+		if ($job === null) {
+			return new JSONResponse(
+				data: ['error' => 'Job not found'],
+				statusCode: Http::STATUS_NOT_FOUND
+			);
+		}
+
+		$this->authorizeJobAccess(job: $job, userId: $user->getUID());
+
+		return $job;
+
+	}//end authorizedJob()
+
+	/**
+	 * The 403 answer for a job the user may not reach.
+	 *
+	 * @return JSONResponse The 403 answer.
+	 */
+	private function notAuthorized(): JSONResponse {
+		return new JSONResponse(
+			data: ['error' => 'Not authorized'],
+			statusCode: Http::STATUS_FORBIDDEN
+		);
+
+	}//end notAuthorized()
+
+	/**
+	 * Log a failed job action and answer 500.
+	 *
+	 * @param Exception      $exception What went wrong.
+	 * @param PrintJobAction $action    The job and the label to log under.
+	 *
+	 * @return JSONResponse The 500 answer.
+	 */
+	private function jobActionFailed(Exception $exception, PrintJobAction $action): JSONResponse {
+		$this->logger->error(
+			message: $action->label . ' failed: ' . $exception->getMessage(),
+			context: ['jobId' => $action->jobId, 'exception' => $exception]
+		);
+
+		return new JSONResponse(
+			data: ['error' => 'Operation failed'],
+			statusCode: Http::STATUS_INTERNAL_SERVER_ERROR
+		);
+
+	}//end jobActionFailed()
 
 	/**
 	 * Download the generated PDF for a completed print job
@@ -237,39 +337,10 @@ class PrintJobController extends Controller {
 	 * @spec openspec/changes/print-functionality/tasks.md#task-5
 	 */
 	public function download(string $id): DataDownloadResponse|JSONResponse {
-		try {
-			$user = $this->userSession->getUser();
-			if ($user === null) {
-				return $this->notAuthenticated(message: 'Not authenticated');
-			}
-
-			$job = $this->printJobSvc->getJob(jobId: $id);
-			if ($job === null) {
-				return new JSONResponse(
-					data: ['error' => 'Job not found'],
-					statusCode: Http::STATUS_NOT_FOUND
-				);
-			}
-
-			$this->authorizeJobAccess(job: $job, userId: $user->getUID());
-
-			return $this->renderedPdf(job: $job);
-		} catch (OCSForbiddenException $e) {
-			return new JSONResponse(
-				data: ['error' => 'Not authorized'],
-				statusCode: Http::STATUS_FORBIDDEN
-			);
-		} catch (Exception $e) {
-			$this->logger->error(
-				message: 'Print job download failed: ' . $e->getMessage(),
-				context: ['jobId' => $id, 'exception' => $e]
-			);
-
-			return new JSONResponse(
-				data: ['error' => 'Operation failed'],
-				statusCode: Http::STATUS_INTERNAL_SERVER_ERROR
-			);
-		}//end try
+		return $this->onAuthorizedJob(
+			action: new PrintJobAction(jobId: $id, label: 'Print job download'),
+			respond: fn (array $job): DataDownloadResponse|JSONResponse => $this->renderedPdf(job: $job)
+		);
 
 	}//end download()
 
@@ -288,6 +359,18 @@ class PrintJobController extends Controller {
 			);
 		}
 
+		return $this->pdfDownload(job: $job);
+
+	}//end renderedPdf()
+
+	/**
+	 * The stored PDF of a rendered job, the whole job or the requested item.
+	 *
+	 * @param array<string, mixed> $job The job, already authorised and rendered.
+	 *
+	 * @return DataDownloadResponse|JSONResponse The PDF, or 404 without a PDF.
+	 */
+	private function pdfDownload(array $job): DataDownloadResponse|JSONResponse {
 		$item = $this->request->getParam('item', null);
 		$download = $this->printJobSvc->download(job: $job, item: $this->itemIndex(item: $item));
 		if ($download === null) {
@@ -303,7 +386,7 @@ class PrintJobController extends Controller {
 			contentType: $download['contentType']
 		);
 
-	}//end renderedPdf()
+	}//end pdfDownload()
 
 	/**
 	 * Update job status (called by external print service to acknowledge)
@@ -321,39 +404,10 @@ class PrintJobController extends Controller {
 	 * @spec openspec/changes/print-functionality/tasks.md#task-5
 	 */
 	public function updateStatus(string $id): JSONResponse {
-		try {
-			$user = $this->userSession->getUser();
-			if ($user === null) {
-				return $this->notAuthenticated(message: 'Not authenticated');
-			}
-
-			$job = $this->printJobSvc->getJob(jobId: $id);
-			if ($job === null) {
-				return new JSONResponse(
-					data: ['error' => 'Job not found'],
-					statusCode: Http::STATUS_NOT_FOUND
-				);
-			}
-
-			$this->authorizeJobAccess(job: $job, userId: $user->getUID());
-
-			return $this->recordStatus(job: $job);
-		} catch (OCSForbiddenException $e) {
-			return new JSONResponse(
-				data: ['error' => 'Not authorized'],
-				statusCode: Http::STATUS_FORBIDDEN
-			);
-		} catch (Exception $e) {
-			$this->logger->error(
-				message: 'Print job status update failed: ' . $e->getMessage(),
-				context: ['jobId' => $id, 'exception' => $e]
-			);
-
-			return new JSONResponse(
-				data: ['error' => 'Operation failed'],
-				statusCode: Http::STATUS_INTERNAL_SERVER_ERROR
-			);
-		}//end try
+		return $this->onAuthorizedJob(
+			action: new PrintJobAction(jobId: $id, label: 'Print job status update'),
+			respond: fn (array $job): JSONResponse => $this->recordStatus(job: $job)
+		);
 
 	}//end updateStatus()
 
@@ -444,7 +498,7 @@ class PrintJobController extends Controller {
 	 */
 	private function batchRefusal(): ?JSONResponse {
 		if (empty($this->request->getParam('templateId', '')) === true) {
-			return new JSONResponse(data: ['error' => 'templateId is required'], statusCode: Http::STATUS_BAD_REQUEST);
+			return $this->templateIdRequired();
 		}
 
 		if ($this->arrayParam(name: 'items') === []) {
