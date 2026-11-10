@@ -53,6 +53,13 @@ class MpdfBackend implements ConversionBackendInterface {
 	use StripsFileExtension;
 
 	/**
+	 * The failure builder, built on first use.
+	 *
+	 * @var BackendFailures|null
+	 */
+	private ?BackendFailures $failures = null;
+
+	/**
 	 * App config key controlling whether this backend is attempted.
 	 * Default true; tenants disable for testing or to force fall-through.
 	 */
@@ -152,36 +159,75 @@ class MpdfBackend implements ConversionBackendInterface {
 	 */
 	public function convert(File $source): File {
 		$name = $source->getName();
-		$extension = $this->extractExtension(name: $name);
+		$html = $this->htmlOf(name: $name, content: $this->readContent(source: $source));
+		$pdfBinary = $this->renderOrFail(source: $source, html: $html);
 
+		// Write PDF beside the source. If a file with the target name
+		// already exists, delete it first — this is a fresh conversion,
+		// not an incremental update.
+		return (new PdfBesideSource())->write(source: $source, pdfBytes: $pdfBinary);
+	}//end convert()
+
+	/**
+	 * The source's content, refusing a node that yields none.
+	 *
+	 * @param File $source Source file node.
+	 *
+	 * @return string The content.
+	 *
+	 * @throws ConversionFailedException When the content is not a string.
+	 */
+	private function readContent(File $source): string {
 		$rawContent = $source->getContent();
 		if (is_string($rawContent) === false) {
-			throw new ConversionFailedException(
-				message: $this->name() . ' backend could not read source content.',
-				attempts: [
-					[
-						'name' => $this->name(),
-						'available' => true,
-						'supports' => true,
-						'reason' => 'getContent returned non-string',
-					],
-				]
+			throw $this->failures()->failed(
+				failure: new BackendFailure(
+					message: $this->name() . ' backend could not read source content.',
+					reason: 'getContent returned non-string'
+				)
 			);
 		}
 
+		return $rawContent;
+
+	}//end readContent()
+
+	/**
+	 * The HTML to render: plain text wrapped in a `<pre>` envelope, HTML as it is.
+	 *
+	 * @param string $name    Source file name.
+	 * @param string $content Source content.
+	 *
+	 * @return string HTML document.
+	 */
+	private function htmlOf(string $name, string $content): string {
 		$isPlainText = in_array(
-			$extension,
+			$this->extractExtension(name: $name),
 			['txt', 'md', 'markdown'],
 			true
 		);
 
-		$html = $rawContent;
 		if ($isPlainText === true) {
-			$html = $this->wrapPlainTextAsHtml(text: $rawContent);
+			return $this->wrapPlainTextAsHtml(text: $content);
 		}
 
+		return $content;
+
+	}//end htmlOf()
+
+	/**
+	 * Render the HTML to PDF bytes, logging and wrapping a rendering failure.
+	 *
+	 * @param File   $source Source file node, for the log line and the title.
+	 * @param string $html   HTML document.
+	 *
+	 * @return string PDF bytes.
+	 *
+	 * @throws ConversionFailedException When rendering throws.
+	 */
+	private function renderOrFail(File $source, string $html): string {
 		try {
-			$pdfBinary = $this->renderPdf(html: $html, title: $this->stripExtension(name: $name));
+			return $this->renderPdf(html: $html, title: $this->stripExtension(name: $source->getName()));
 		} catch (Throwable $e) {
 			$this->logger->error(
 				'[' . $this->name() . '] PDF rendering failed',
@@ -191,31 +237,27 @@ class MpdfBackend implements ConversionBackendInterface {
 					'message' => $e->getMessage(),
 				]
 			);
-			throw new ConversionFailedException(
-				message: $this->name() . ' rendering threw: ' . $e->getMessage(),
-				attempts: [
-					[
-						'name' => $this->name(),
-						'available' => true,
-						'supports' => true,
-						'reason' => $this->name() . ' render exception: ' . $e->getMessage(),
-					],
-				],
+			throw $this->failures()->failed(
+				failure: new BackendFailure(
+					message: $this->name() . ' rendering threw: ' . $e->getMessage(),
+					reason: $this->name() . ' render exception: ' . $e->getMessage()
+				),
 				previous: $e
 			);
 		}//end try
 
-		// Write PDF beside the source. If a file with the target name
-		// already exists, delete it first — this is a fresh conversion,
-		// not an incremental update.
-		$parent = $source->getParent();
-		$outputName = $this->stripExtension(name: $name) . '.pdf';
-		if ($parent->nodeExists($outputName) === true) {
-			$parent->get($outputName)->delete();
-		}
+	}//end renderOrFail()
 
-		return $parent->newFile($outputName, $pdfBinary);
-	}//end convert()
+	/**
+	 * The failure builder for this backend, built on first use.
+	 *
+	 * @return BackendFailures The builder.
+	 */
+	private function failures(): BackendFailures {
+		$this->failures ??= new BackendFailures(backendName: $this->name());
+		return $this->failures;
+
+	}//end failures()
 
 	/**
 	 * Render HTML to PDF/A-3b bytes through the shared PdfService.
@@ -257,21 +299,4 @@ class MpdfBackend implements ConversionBackendInterface {
 		);
 
 	}//end wrapPlainTextAsHtml()
-
-	/**
-	 * Return the lowercased extension of $name without the leading dot.
-	 *
-	 * @param string $name File name, with or without an extension.
-	 *
-	 * @return string Lowercased extension, or an empty string when the name
-	 *                carries no dot.
-	 */
-	private function extractExtension(string $name): string {
-		$dotPos = strrpos($name, '.');
-		if ($dotPos === false) {
-			return '';
-		}
-
-		return strtolower(substr($name, ($dotPos + 1)));
-	}//end extractExtension()
 }//end class
