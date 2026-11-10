@@ -51,7 +51,7 @@ class ReadableFileResolver {
 	 *
 	 * @var string
 	 */
-	public const OR_READ_SCOPE = 'OCA\OpenRegister\Service\File\FileReadScope';
+	public const OR_READ_SCOPE = 'OCA\OpenRegister\Files\Service\File\FileReadScope';
 
 	/**
 	 * OpenRegister's file service, which finds a file in an object's folder.

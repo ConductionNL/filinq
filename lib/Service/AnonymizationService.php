@@ -235,7 +235,7 @@ class AnonymizationService implements AnonymizationServiceInterface {
 	 */
 	private function extractAndDetect(int $fileId, mixed $force): array {
 		$textExtractor = $this->locator->get(
-			className: 'OCA\OpenRegister\Service\TextExtractionService'
+			className: 'OCA\OpenRegister\Files\Service\TextExtractionService'
 		);
 
 		// Resolve Filinq's grondslag service up front (via the container,

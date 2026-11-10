@@ -104,7 +104,7 @@ class AnonymizationExtractionOrderTest extends TestCase {
 		$container = $this->createMock(ContainerInterface::class);
 		$container->method('get')->willReturnCallback(
 			static fn (string $class) => match ($class) {
-				'OCA\OpenRegister\Service\TextExtractionService' => $extractor,
+				'OCA\OpenRegister\Files\Service\TextExtractionService' => $extractor,
 				'OCA\OpenRegister\Db\EntityRelationMapper' => $mapper,
 				'OCA\Filinq\Service\LegalBasisProposalService' => $basis,
 				default => throw new RuntimeException('Unknown service: ' . $class),

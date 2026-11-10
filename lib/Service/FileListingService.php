@@ -71,7 +71,7 @@ class FileListingService implements FileListingServiceInterface {
 	 *
 	 * @param \OCP\Files\File $file The file
 	 * @param \OCA\OpenRegister\Db\EntityRelationMapper|null $entityRelationMapper The mapper
-	 * @param \OCA\OpenRegister\Service\RiskLevelService|null $riskLevelService The service
+	 * @param \OCA\OpenRegister\Files\Service\RiskLevelService|null $riskLevelService The service
 	 *
 	 * @return array<string, mixed> File info
 	 *
@@ -81,7 +81,7 @@ class FileListingService implements FileListingServiceInterface {
 	private function buildFileInfo(
 		\OCP\Files\File $file,
 		?\OCA\OpenRegister\Db\EntityRelationMapper $entityRelationMapper,
-		?\OCA\OpenRegister\Service\RiskLevelService $riskLevelService,
+		?\OCA\OpenRegister\Files\Service\RiskLevelService $riskLevelService,
 	): array {
 		$fileId = $file->getId();
 		$entityStats = $this->entityStatsService->getEntityStats($fileId, $entityRelationMapper);

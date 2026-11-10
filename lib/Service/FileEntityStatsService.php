@@ -89,14 +89,14 @@ class FileEntityStatsService {
 	/**
 	 * Try to get the RiskLevelService, returning null on failure
 	 *
-	 * @return \OCA\OpenRegister\Service\RiskLevelService|null The service or null
+	 * @return \OCA\OpenRegister\Files\Service\RiskLevelService|null The service or null
 	 *
 	 * @spec openspec/specs/anonymization/spec.md
 	 */
-	public function tryGetRiskLevelService(): ?\OCA\OpenRegister\Service\RiskLevelService {
+	public function tryGetRiskLevelService(): ?\OCA\OpenRegister\Files\Service\RiskLevelService {
 		try {
 			if ($this->isOpenRegisterInstalled() === true) {
-				return $this->container->get('OCA\OpenRegister\Service\RiskLevelService');
+				return $this->container->get('OCA\OpenRegister\Files\Service\RiskLevelService');
 			}
 
 			return null;
@@ -182,7 +182,7 @@ class FileEntityStatsService {
 	 * Get risk level for a file
 	 *
 	 * @param int $fileId The file ID
-	 * @param \OCA\OpenRegister\Service\RiskLevelService|null $riskLevelService The service
+	 * @param \OCA\OpenRegister\Files\Service\RiskLevelService|null $riskLevelService The service
 	 *
 	 * @return string The risk level
 	 *
@@ -190,7 +190,7 @@ class FileEntityStatsService {
 	 */
 	public function getFileRiskLevel(
 		int $fileId,
-		?\OCA\OpenRegister\Service\RiskLevelService $riskLevelService,
+		?\OCA\OpenRegister\Files\Service\RiskLevelService $riskLevelService,
 	): string {
 		if ($riskLevelService === null) {
 			return 'none';
