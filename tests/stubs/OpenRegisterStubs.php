@@ -132,22 +132,20 @@ class ObjectService {
 	}//end findAll()
 
 	/**
-	 * Delete an object
+	 * Delete an object (openregister #9099 shape).
 	 *
-	 * @param string $uuid Object UUID
-	 * @param string $register Register slug
-	 * @param string $schema Schema slug
+	 * @param \OCA\OpenRegister\Service\Object\ObjectDeletion $deletion The uuid, scope, acting user and permanence.
 	 * @param bool $_rbac RBAC bypass flag.
 	 * @param bool $_multitenancy Multitenancy bypass flag.
+	 * @param bool $_retentionSweep Retention sweep flag.
 	 *
 	 * @return bool
 	 */
 	public function deleteObject(
-		string $uuid = '',
-		string $register = '',
-		string $schema = '',
+		\OCA\OpenRegister\Service\Object\ObjectDeletion $deletion,
 		bool $_rbac = true,
 		bool $_multitenancy = true,
+		bool $_retentionSweep = false,
 	) {
 		return true;
 	}//end deleteObject()
@@ -3184,4 +3182,35 @@ final class BackendState implements \JsonSerializable {
 			'backends' => $backends,
 		];
 	}
+}//end class
+
+namespace OCA\OpenRegister\Service\Object;
+
+require_once __DIR__ . '/openregister-object-target.stub.php';
+
+/**
+ * Stub for ObjectDeletion (mirrors lib/Service/Object/ObjectDeletion.php, openregister #9099).
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Service\Object
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.filinq.app
+ */
+final class ObjectDeletion {
+	/**
+	 * Constructor.
+	 *
+	 * @param string           $uuid        The UUID of the object to delete.
+	 * @param ObjectFindTarget $target      The register and schema scope.
+	 * @param mixed            $currentUser The explicit acting user.
+	 * @param bool             $permanent   Destroy the row rather than tombstone it.
+	 */
+	public function __construct(
+		public readonly string $uuid,
+		public readonly ObjectFindTarget $target = new ObjectFindTarget(),
+		public readonly mixed $currentUser = null,
+		public readonly bool $permanent = false,
+	) {
+	}//end __construct()
 }//end class

@@ -33,6 +33,8 @@ use DateTime;
 use Exception;
 use OCA\Filinq\Kernel\Contracts\TemplateServiceInterface;
 use OCA\Filinq\Service\Support\OpenRegisterAccess;
+use OCA\OpenRegister\Service\Object\ObjectDeletion;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
 use OCP\IAppConfig;
 use OCP\IUserSession;
 use RuntimeException;
@@ -439,9 +441,10 @@ class TemplateService implements TemplateServiceInterface {
 
 		try {
 			$objectService->deleteObject(
-				uuid: $id,
-				register: $config['register'],
-				schema: $config['schema']
+				deletion: new ObjectDeletion(
+					uuid: $id,
+					target: new ObjectFindTarget(register: $config['register'], schema: $config['schema'])
+				)
 			);
 		} catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
 			throw new Exception(message: 'Template not found', code: 404);

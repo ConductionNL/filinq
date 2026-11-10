@@ -47,6 +47,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Service\Object\ObjectDeletion;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\ICache;
@@ -356,22 +357,21 @@ class InMemoryObjectServiceFake extends ObjectService {
 	/**
 	 * Delete a stored object.
 	 *
-	 * @param string $uuid Object UUID.
-	 * @param string $register Register slug.
-	 * @param string $schema Schema slug.
-	 * @param bool $_rbac RBAC bypass flag.
-	 * @param bool $_multitenancy Multitenancy bypass flag.
+	 * @param ObjectDeletion $deletion        The uuid, scope, acting user and permanence.
+	 * @param bool           $_rbac           RBAC bypass flag.
+	 * @param bool           $_multitenancy   Multitenancy bypass flag.
+	 * @param bool           $_retentionSweep Retention sweep flag.
 	 *
 	 * @return bool Always true.
 	 */
 	public function deleteObject(
-		string $uuid = '',
-		string $register = '',
-		string $schema = '',
+		ObjectDeletion $deletion,
 		bool $_rbac = true,
 		bool $_multitenancy = true,
+		bool $_retentionSweep = false,
 	) {
-		unset($this->stored[$this->key(register: $register, schema: $schema, uuid: $uuid)]);
+		$uuid = $deletion->uuid;
+		unset($this->stored[$this->key(register: (string) $deletion->target->register, schema: (string) $deletion->target->schema, uuid: $uuid)]);
 		return true;
 	}//end deleteObject()
 
@@ -513,23 +513,22 @@ class RefusingObjectServiceFake extends ObjectService {
 	/**
 	 * Refuse the delete.
 	 *
-	 * @param string $uuid Object UUID.
-	 * @param string $register Register slug.
-	 * @param string $schema Schema slug.
-	 * @param bool $_rbac RBAC bypass flag.
-	 * @param bool $_multitenancy Multitenancy bypass flag.
+	 * @param ObjectDeletion $deletion        The uuid, scope, acting user and permanence.
+	 * @param bool           $_rbac           RBAC bypass flag.
+	 * @param bool           $_multitenancy   Multitenancy bypass flag.
+	 * @param bool           $_retentionSweep Retention sweep flag.
 	 *
 	 * @return bool Never returns.
 	 *
 	 * @throws RuntimeException Always.
 	 */
 	public function deleteObject(
-		string $uuid = '',
-		string $register = '',
-		string $schema = '',
+		ObjectDeletion $deletion,
 		bool $_rbac = true,
 		bool $_multitenancy = true,
+		bool $_retentionSweep = false,
 	) {
+		$uuid = $deletion->uuid;
 		$this->attemptedDeletes[] = $uuid;
 		throw new RuntimeException('The object store is unreachable');
 	}//end deleteObject()

@@ -24,6 +24,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Tests\Unit\Service\Wizard;
 
+use OCA\OpenRegister\Service\Object\ObjectDeletion;
 use OCA\OpenRegister\Service\ObjectService;
 use Opis\JsonSchema\Errors\ErrorFormatter;
 use Opis\JsonSchema\Validator;
@@ -164,21 +165,20 @@ class WizardObjectStore extends ObjectService {
 	/**
 	 * Delete one.
 	 *
-	 * @param string $uuid          The uuid.
-	 * @param string $register      The register.
-	 * @param string $schema        The schema.
-	 * @param bool   $_rbac         RBAC.
-	 * @param bool   $_multitenancy Multitenancy.
+	 * @param ObjectDeletion $deletion        The uuid, scope, acting user and permanence.
+	 * @param bool           $_rbac           RBAC bypass flag.
+	 * @param bool           $_multitenancy   Multitenancy bypass flag.
+	 * @param bool           $_retentionSweep Retention sweep flag.
 	 *
 	 * @return bool True.
 	 */
 	public function deleteObject(
-		string $uuid = '',
-		string $register = '',
-		string $schema = '',
+		ObjectDeletion $deletion,
 		bool $_rbac = true,
 		bool $_multitenancy = true,
+		bool $_retentionSweep = false,
 	) {
+		$uuid = $deletion->uuid;
 		unset($this->rows[$uuid]);
 		$this->deleted[] = $uuid;
 

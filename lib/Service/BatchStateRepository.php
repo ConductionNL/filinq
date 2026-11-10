@@ -39,6 +39,8 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\OpenRegister\Service\Object\ObjectDeletion;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
 use OCP\AppFramework\Db\DoesNotExistException;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -234,9 +236,10 @@ class BatchStateRepository {
 
 		try {
 			$this->openRegister->getObjectService()->deleteObject(
-				uuid: $batchId,
-				register: self::REGISTER,
-				schema: self::SCHEMA,
+				deletion: new ObjectDeletion(
+					uuid: $batchId,
+					target: new ObjectFindTarget(register: self::REGISTER, schema: self::SCHEMA)
+				),
 				_rbac: false,
 				_multitenancy: false
 			);

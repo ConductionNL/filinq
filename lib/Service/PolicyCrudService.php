@@ -34,6 +34,8 @@ namespace OCA\Filinq\Service;
 use Exception;
 use InvalidArgumentException;
 use OCA\Filinq\Kernel\Contracts\PolicyCrudServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectDeletion;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
 use OCP\IGroupManager;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
@@ -234,9 +236,10 @@ class PolicyCrudService implements PolicyCrudServiceInterface {
 
 		$objectService = $this->settingsService->getObjectService();
 		$objectService->deleteObject(
-			uuid: $uuid,
-			register: self::REGISTER,
-			schema: self::SCHEMA_PROHIBITION,
+			deletion: new ObjectDeletion(
+				uuid: $uuid,
+				target: new ObjectFindTarget(register: self::REGISTER, schema: self::SCHEMA_PROHIBITION)
+			),
 			_rbac: false,
 			_multitenancy: false
 		);
@@ -330,9 +333,10 @@ class PolicyCrudService implements PolicyCrudServiceInterface {
 
 		$objectService = $this->settingsService->getObjectService();
 		$objectService->deleteObject(
-			uuid: $uuid,
-			register: self::REGISTER,
-			schema: self::SCHEMA_CONSENT,
+			deletion: new ObjectDeletion(
+				uuid: $uuid,
+				target: new ObjectFindTarget(register: self::REGISTER, schema: self::SCHEMA_CONSENT)
+			),
 			_rbac: false,
 			_multitenancy: false
 		);

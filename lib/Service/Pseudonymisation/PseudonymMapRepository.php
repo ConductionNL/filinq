@@ -29,6 +29,8 @@ namespace OCA\Filinq\Service\Pseudonymisation;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\IntakeRepository;
 use OCA\Filinq\Service\ReadsStoredObjectRows;
+use OCA\OpenRegister\Service\Object\ObjectDeletion;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
 use RuntimeException;
 use Throwable;
 
@@ -223,9 +225,10 @@ class PseudonymMapRepository {
 	public function delete(string $uuid): void {
 		try {
 			$deleted = $this->objectResolver->resolve()->deleteObject(
-				uuid: $uuid,
-				register: IntakeRepository::REGISTER,
-				schema: self::SCHEMA,
+				deletion: new ObjectDeletion(
+					uuid: $uuid,
+					target: new ObjectFindTarget(register: IntakeRepository::REGISTER, schema: self::SCHEMA)
+				),
 				_rbac: false
 			);
 		} catch (Throwable $e) {

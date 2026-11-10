@@ -40,6 +40,7 @@ use OCA\Filinq\Service\Redaction\AnonymizationLinkReader;
 use OCA\OpenRegister\Db\AuditTrail;
 use OCA\OpenRegister\Db\AuditTrailMapper;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Service\Object\ObjectDeletion;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -184,7 +185,8 @@ trait PseudonymDoubles {
 			}
 		);
 		$objects->method('deleteObject')->willReturnCallback(
-			function (string $uuid = '', string $register = '', string $schema = '', bool $_rbac = true) {
+			function (ObjectDeletion $deletion, bool $_rbac = true) {
+				[$uuid, $schema] = [$deletion->uuid, (string) $deletion->target->schema];
 				if ($_rbac === false) {
 					$this->bypasses[] = 'delete:' . $schema;
 				}

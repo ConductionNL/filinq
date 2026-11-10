@@ -29,6 +29,8 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use Exception;
+use OCA\OpenRegister\Service\Object\ObjectDeletion;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -189,9 +191,10 @@ class CustomDictionaryRepository {
 		// parameter is named $uuid — verified against
 		// OCA\OpenRegister\Service\ObjectService::deleteObject() at HEAD.
 		$objectService->deleteObject(
-			uuid: $uuid,
-			register: self::REGISTER,
-			schema: $schema,
+			deletion: new ObjectDeletion(
+				uuid: $uuid,
+				target: new ObjectFindTarget(register: self::REGISTER, schema: $schema)
+			),
 			_rbac: false,
 			_multitenancy: false
 		);
