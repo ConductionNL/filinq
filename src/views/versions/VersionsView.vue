@@ -140,6 +140,115 @@ import {
 	versionDownloadUrl,
 } from '../../services/versionService.js'
 
+/**
+ * The reason dialog's copy when it issues a correction.
+ *
+ * @return {object} The dialog's title, explanation, placeholder and button label.
+ */
+function correctionCopy() {
+	return {
+		name: t('filinq', 'Issue a correction'),
+		explanation: t(
+			'filinq',
+			'The final version stays readable and stays final. The correction is a new document that says which version it supersedes.',
+		),
+
+		placeholder: t('filinq', 'What does this correction change?'),
+		confirmLabel: t('filinq', 'Issue a correction'),
+	}
+}
+
+/**
+ * The reason dialog's copy when it unfreezes the document.
+ *
+ * @return {object} The dialog's title, explanation, placeholder and button label.
+ */
+function unfreezeCopy() {
+	return {
+		name: t('filinq', 'Unfreeze this document'),
+		explanation: t(
+			'filinq',
+			'The document becomes editable again, and it carries a permanent mark that it was unfrozen. Your name, the moment and this reason stay on the record.',
+		),
+
+		placeholder: t(
+			'filinq',
+			'Why are you unfreezing this document?',
+		),
+
+		confirmLabel: t('filinq', 'Unfreeze'),
+	}
+}
+
+/**
+ * The reason dialog's copy when it makes the document final, the default.
+ *
+ * @return {object} The dialog's title, explanation, placeholder and button label.
+ */
+function finaliseCopy() {
+	return {
+		name: t('filinq', 'Make this document final'),
+		explanation: t(
+			'filinq',
+			'A final document refuses every edit, and there is no way back. Correct it later by issuing a correction.',
+		),
+
+		placeholder: t('filinq', 'What makes this document final?'),
+		confirmLabel: t('filinq', 'Make final'),
+	}
+}
+
+/**
+ * The reason dialog's copy per dialog; any other dialog shows the finalise copy.
+ */
+const PROMPT_COPY = new Map([
+	['correct', correctionCopy],
+	['unfreeze', unfreezeCopy],
+])
+
+/**
+ * Make the panel's document final.
+ *
+ * @param {object} vm The versions panel.
+ * @param {string} reason Why, as the user wrote it.
+ * @return {Promise<void>}
+ */
+async function finaliseFrom(vm, reason) {
+	await finaliseDocument(vm.fileId, reason)
+}
+
+/**
+ * Issue a correction of the panel's document and announce it.
+ *
+ * @param {object} vm The versions panel.
+ * @param {string} reason What the correction changes, as the user wrote it.
+ * @return {Promise<void>}
+ */
+async function correctFrom(vm, reason) {
+	const correction = await correctDocument(vm.fileId, reason)
+	vm.$emit('corrected', correction)
+}
+
+/**
+ * Unfreeze the panel's document.
+ *
+ * @param {object} vm The versions panel.
+ * @param {string} reason Why, as the user wrote it.
+ * @return {Promise<void>}
+ */
+async function unfreezeFrom(vm, reason) {
+	await unfreezeDocument(vm.fileId, reason)
+}
+
+/**
+ * What submitting each reason dialog carries out on the panel's document.
+ */
+const PROMPT_ACTIONS = new Map([
+	['finalise', finaliseFrom],
+	['correct', correctFrom],
+	['unfreeze', unfreezeFrom],
+])
+
 export default {
 	name: 'VersionsView',
 	components: {
@@ -309,46 +418,7 @@ export default {
 		 * @spec openspec/changes/final-documents-frozen/specs/document-versions/spec.md
 		 */
 		promptCopy() {
-			if (this.prompt === 'correct') {
-				return {
-					name: t('filinq', 'Issue a correction'),
-					explanation: t(
-						'filinq',
-						'The final version stays readable and stays final. The correction is a new document that says which version it supersedes.',
-					),
-
-					placeholder: t('filinq', 'What does this correction change?'),
-					confirmLabel: t('filinq', 'Issue a correction'),
-				}
-			}
-
-			if (this.prompt === 'unfreeze') {
-				return {
-					name: t('filinq', 'Unfreeze this document'),
-					explanation: t(
-						'filinq',
-						'The document becomes editable again, and it carries a permanent mark that it was unfrozen. Your name, the moment and this reason stay on the record.',
-					),
-
-					placeholder: t(
-						'filinq',
-						'Why are you unfreezing this document?',
-					),
-
-					confirmLabel: t('filinq', 'Unfreeze'),
-				}
-			}
-
-			return {
-				name: t('filinq', 'Make this document final'),
-				explanation: t(
-					'filinq',
-					'A final document refuses every edit, and there is no way back. Correct it later by issuing a correction.',
-				),
-
-				placeholder: t('filinq', 'What makes this document final?'),
-				confirmLabel: t('filinq', 'Make final'),
-			}
+			return (PROMPT_COPY.get(this.prompt) ?? finaliseCopy)()
 		},
 	},
 
@@ -375,18 +445,26 @@ export default {
 				this.versions = data.versions || []
 				await this.loadFinalState()
 			} catch (e) {
-				const reason =
-					e && e.response && e.response.data && e.response.data.reason
-				if (reason === 'versions-unavailable') {
-					this.unavailable = true
-				} else {
-					this.error =
-						(e && e.response && e.response.data && e.response.data.error)
-						|| t('filinq', 'Could not list versions')
-				}
+				this.showLoadFailure(e)
 			} finally {
 				this.loading = false
 			}
+		},
+
+		/**
+		 * Show why the version list could not be loaded: unavailable on this
+		 * instance, the server's message, or a generic one.
+		 *
+		 * @param {Error|null} e What listing the versions threw.
+		 * @spec openspec/specs/document-versions/spec.md
+		 */
+		showLoadFailure(e) {
+			const data = e?.response?.data
+			if (data?.reason === 'versions-unavailable') {
+				this.unavailable = true
+				return
+			}
+			this.error = data?.error || t('filinq', 'Could not list versions')
 		},
 
 		/**
@@ -498,20 +576,10 @@ export default {
 			this.error = ''
 
 			try {
-				if (action === 'finalise') {
-					await finaliseDocument(this.fileId, reason)
-				} else if (action === 'correct') {
-					const correction = await correctDocument(this.fileId, reason)
-					this.$emit('corrected', correction)
-				} else if (action === 'unfreeze') {
-					await unfreezeDocument(this.fileId, reason)
-				}
-
+				await PROMPT_ACTIONS.get(action)?.(this, reason)
 				await this.load()
 			} catch (e) {
-				this.error =
-					(e && e.response && e.response.data && e.response.data.error)
-					|| t('filinq', 'Could not carry that out')
+				this.error = e?.response?.data?.error || t('filinq', 'Could not carry that out')
 			}
 		},
 
