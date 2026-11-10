@@ -275,11 +275,7 @@ class OcrService implements OcrServiceInterface {
 		int $dpi = self::DEFAULT_DPI,
 	): array {
 		if ($this->isTesseractAvailable() === false) {
-			$this->logger->warning('Tesseract is not available, skipping OCR');
-			return [
-				'text' => '',
-				'confidence' => 0.0,
-			];
+			return $this->skippedOcr(reason: 'Tesseract is not available, skipping OCR');
 		}
 
 		try {
@@ -337,89 +333,160 @@ class OcrService implements OcrServiceInterface {
 		int $dpi = self::DEFAULT_DPI,
 	): array {
 		if ($this->isTesseractAvailable() === false) {
-			$this->logger->warning('Tesseract is not available, skipping OCR');
-			return [
-				'text' => '',
-				'confidence' => 0.0,
-			];
+			return $this->skippedOcr(reason: 'Tesseract is not available, skipping OCR');
 		}
 
 		if (extension_loaded('imagick') === false) {
-			$this->logger->warning('Imagick extension not available, cannot convert PDF to images');
-			return [
-				'text' => '',
-				'confidence' => 0.0,
-			];
+			return $this->skippedOcr(reason: 'Imagick extension not available, cannot convert PDF to images');
 		}
 
 		try {
-			$imagick = new Imagick();
-			$imagick->setResolution($dpi, $dpi);
-			$imagick->readImage($filePath);
-
-			$pageCount = $imagick->getNumberImages();
-			$allText = '';
-			$totalConfidence = 0.0;
-
-			$tempDir = sys_get_temp_dir() . '/filinq_ocr_' . uniqid();
-			mkdir($tempDir, 0700, true);
-
-			for ($page = 0; $page < $pageCount; $page++) {
-				$imagick->setIteratorIndex($page);
-				$imagick->setImageFormat('png');
-
-				$tempImage = $tempDir . '/page_' . $page . '.png';
-				$imagick->writeImage($tempImage);
-
-				$pageResult = $this->extractTextFromImage(filePath: $tempImage, languages: $languages, dpi: $dpi);
-				$allText .= $pageResult['text'] . "\n";
-				$totalConfidence += $pageResult['confidence'];
-
-				// Clean up temp image.
-				if (file_exists($tempImage) === true) {
-					unlink($tempImage);
-				}
-			}//end for
-
-			$imagick->clear();
-			$imagick->destroy();
-
-			// Clean up temp directory.
-			if (is_dir($tempDir) === true) {
-				rmdir($tempDir);
-			}
-
-			$avgConfidence = 0.0;
-			if ($pageCount > 0) {
-				$avgConfidence = ($totalConfidence / $pageCount);
-			}
-
-			$this->logger->debug(
-				'OCR text extracted from PDF',
-				[
-					'filePath' => $filePath,
-					'pages' => $pageCount,
-					'textLength' => strlen($allText),
-					'confidence' => $avgConfidence,
-				]
-			);
-
-			return [
-				'text' => trim($allText),
-				'confidence' => round($avgConfidence, 1),
-			];
+			return $this->ocrPdf(filePath: $filePath, options: new OcrOptions(languages: $languages, dpi: $dpi));
 		} catch (Exception $e) {
-			$this->logger->error(
-				'OCR extraction failed for PDF',
-				[
-					'filePath' => $filePath,
-					'exception' => $e->getMessage(),
-				]
-			);
-			throw new Exception('PDF OCR extraction failed: ' . $e->getMessage(), 0, $e);
-		}//end try
+			$this->failPdfOcr(exception: $e, filePath: $filePath);
+		}
 
 	}//end extractTextFromPdf()
+
+	/**
+	 * Log a failed PDF OCR pass and rethrow it wrapped.
+	 *
+	 * @param Exception $exception What went wrong.
+	 * @param string    $filePath  Path to the PDF file.
+	 *
+	 * @return never
+	 *
+	 * @throws Exception Always, wrapping the failure.
+	 */
+	private function failPdfOcr(Exception $exception, string $filePath): never {
+		$this->logger->error(
+			'OCR extraction failed for PDF',
+			[
+				'filePath' => $filePath,
+				'exception' => $exception->getMessage(),
+			]
+		);
+		throw new Exception('PDF OCR extraction failed: ' . $exception->getMessage(), 0, $exception);
+
+	}//end failPdfOcr()
+
+	/**
+	 * Log why OCR did not run and answer the empty result.
+	 *
+	 * @param string $reason The warning to log.
+	 *
+	 * @return array{text: string, confidence: float} No text, no confidence.
+	 */
+	private function skippedOcr(string $reason): array {
+		$this->logger->warning($reason);
+		return [
+			'text' => '',
+			'confidence' => 0.0,
+		];
+
+	}//end skippedOcr()
+
+	/**
+	 * Render every page of a PDF to an image, OCR it, and clean up after.
+	 *
+	 * @param string     $filePath Path to the PDF file.
+	 * @param OcrOptions $options  The languages and DPI.
+	 *
+	 * @return array{text: string, confidence: float} The joined text and average confidence.
+	 *
+	 * @throws Exception When a page cannot be rendered or read.
+	 */
+	private function ocrPdf(string $filePath, OcrOptions $options): array {
+		$imagick = new Imagick();
+		$imagick->setResolution($options->dpi, $options->dpi);
+		$imagick->readImage($filePath);
+
+		$run = new PdfOcrRun(imagick: $imagick, options: $options);
+		mkdir($run->tempDir, 0700, true);
+
+		for ($page = 0; $page < $run->pageCount; $page++) {
+			$this->ocrPdfPage(run: $run, page: $page);
+		}
+
+		$this->releasePdf(run: $run);
+
+		return $this->pdfOcrResult(filePath: $filePath, run: $run);
+
+	}//end ocrPdf()
+
+	/**
+	 * Free the loaded document and remove the emptied temp directory.
+	 *
+	 * @param PdfOcrRun $run The finished pass.
+	 *
+	 * @return void
+	 */
+	private function releasePdf(PdfOcrRun $run): void {
+		$run->imagick->clear();
+		$run->imagick->destroy();
+
+		// Clean up temp directory.
+		if (is_dir($run->tempDir) === true) {
+			rmdir($run->tempDir);
+		}
+
+	}//end releasePdf()
+
+	/**
+	 * Render one page to a temp image, OCR it, add its text and confidence to the run, and remove the image.
+	 *
+	 * @param PdfOcrRun $run  The pass.
+	 * @param int       $page The zero-based page.
+	 *
+	 * @return void
+	 *
+	 * @throws Exception When the page cannot be rendered or read.
+	 */
+	private function ocrPdfPage(PdfOcrRun $run, int $page): void {
+		$run->imagick->setIteratorIndex($page);
+		$run->imagick->setImageFormat('png');
+
+		$tempImage = $run->tempDir . '/page_' . $page . '.png';
+		$run->imagick->writeImage($tempImage);
+
+		$pageResult = $this->extractTextFromImage(filePath: $tempImage, languages: $run->options->languages, dpi: $run->options->dpi);
+		$run->text .= $pageResult['text'] . "\n";
+		$run->totalConfidence += $pageResult['confidence'];
+
+		// Clean up temp image.
+		if (file_exists($tempImage) === true) {
+			unlink($tempImage);
+		}
+
+	}//end ocrPdfPage()
+
+	/**
+	 * The pass's joined text and average confidence, logged.
+	 *
+	 * @param string    $filePath Path to the PDF file, for the log line.
+	 * @param PdfOcrRun $run      The finished pass.
+	 *
+	 * @return array{text: string, confidence: float} The trimmed text and the confidence rounded to one decimal.
+	 */
+	private function pdfOcrResult(string $filePath, PdfOcrRun $run): array {
+		$avgConfidence = $run->averageConfidence();
+
+		$this->logger->debug(
+			'OCR text extracted from PDF',
+			[
+				'filePath' => $filePath,
+				'pages' => $run->pageCount,
+				'textLength' => strlen($run->text),
+				'confidence' => $avgConfidence,
+			]
+		);
+
+		return [
+			'text' => trim($run->text),
+			'confidence' => round($avgConfidence, 1),
+		];
+
+	}//end pdfOcrResult()
 
 	/**
 	 * Process a file for OCR text extraction
