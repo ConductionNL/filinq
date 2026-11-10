@@ -135,6 +135,22 @@ import { hostObjectLeaf } from './hostObjectLeaf.js'
 let instanceCount = 0
 
 /**
+ * The outcome shown when the merge request never reached the server.
+ *
+ * @return {{failed: boolean, message: string, link: string}} The outcome.
+ */
+function unreachableOutcome() {
+	return {
+		failed: true,
+		message: t('filinq', 'The merge failed: {reason}', {
+			reason: t('filinq', 'the server could not be reached'),
+		}),
+
+		link: '',
+	}
+}
+
+/**
  * Merge the documents of one object into one PDF.
  *
  * Lists the host object's documents through Filinq's case-document list, which
@@ -278,7 +294,24 @@ export default {
 			}
 			this.busy = true
 			this.outcome = null
-			const payload = buildMergeRequest({
+			const payload = this.mergePayload()
+			try {
+				this.outcome = await this.postMerge(payload)
+			} catch {
+				this.outcome = unreachableOutcome()
+			} finally {
+				this.busy = false
+			}
+		},
+
+		/**
+		 * The merge request for the chosen documents and options, bound to the host object.
+		 *
+		 * @return {object} The request body.
+		 * @spec openspec/specs/document-merge/spec.md
+		 */
+		mergePayload() {
+			return buildMergeRequest({
 				rows: this.rows,
 				selection: this.selection,
 				coverTemplateRef: this.coverTemplateRef,
@@ -290,30 +323,27 @@ export default {
 					objectId: this.objectId,
 				},
 			})
-			try {
-				const response = await fetch(generateUrl('/apps/filinq/api/merge'), {
-					method: 'POST',
-					headers: {
-						requesttoken: this.requestToken(),
-						Accept: 'application/json',
-						'Content-Type': 'application/json',
-					},
-					body: JSON.stringify(payload),
-				})
-				const job = await response.json().catch(() => ({}))
-				this.outcome = this.describe(response.status, job)
-			} catch {
-				this.outcome = {
-					failed: true,
-					message: t('filinq', 'The merge failed: {reason}', {
-						reason: t('filinq', 'the server could not be reached'),
-					}),
+		},
 
-					link: '',
-				}
-			} finally {
-				this.busy = false
-			}
+		/**
+		 * Send the merge request and describe the server's answer.
+		 *
+		 * @param {object} payload The request body.
+		 * @return {Promise<object>} The outcome to show.
+		 * @spec openspec/specs/document-merge/spec.md
+		 */
+		async postMerge(payload) {
+			const response = await fetch(generateUrl('/apps/filinq/api/merge'), {
+				method: 'POST',
+				headers: {
+					requesttoken: this.requestToken(),
+					Accept: 'application/json',
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify(payload),
+			})
+			const job = await response.json().catch(() => ({}))
+			return this.describe(response.status, job)
 		},
 
 		/**
