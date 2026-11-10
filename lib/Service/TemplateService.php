@@ -33,6 +33,8 @@ use DateTime;
 use Exception;
 use OCA\Filinq\Kernel\Contracts\TemplateServiceInterface;
 use OCA\Filinq\Service\Support\OpenRegisterAccess;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCP\IAppConfig;
 use OCP\IUserSession;
 use RuntimeException;
@@ -297,8 +299,9 @@ class TemplateService implements TemplateServiceInterface {
 
 		$result = $objectService->saveObject(
 			object: $data,
-			register: $config['register'],
-			schema: $config['schema']
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $config['register'], schema: $config['schema'])
+			)
 		);
 
 		if (is_object($result) === true
@@ -356,8 +359,9 @@ class TemplateService implements TemplateServiceInterface {
 
 		$result = $objectService->saveObject(
 			object: $merged,
-			register: $config['register'],
-			schema: $config['schema']
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $config['register'], schema: $config['schema'])
+			)
 		);
 
 		// Snapshot the previous state only once the save has gone through, so
@@ -406,8 +410,9 @@ class TemplateService implements TemplateServiceInterface {
 
 		$result = $objectService->saveObject(
 			object: $merged,
-			register: $config['register'],
-			schema: $config['schema']
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $config['register'], schema: $config['schema'])
+			)
 		);
 
 		if (is_object($result) === true
@@ -504,8 +509,9 @@ class TemplateService implements TemplateServiceInterface {
 
 		$result = $objectService->saveObject(
 			object: $duplicateData,
-			register: $config['register'],
-			schema: $config['schema']
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $config['register'], schema: $config['schema'])
+			)
 		);
 
 		if (is_object($result) === true

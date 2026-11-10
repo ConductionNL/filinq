@@ -24,6 +24,9 @@ use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\IntakeRepository;
 use OCA\Filinq\Service\ReadsStoredObjectRows;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
+use OCA\OpenRegister\Service\Object\SaveActor;
 use RuntimeException;
 use Throwable;
 
@@ -154,11 +157,12 @@ class SubjectErasureStore {
 		try {
 			$stored = $this->objectResolver->resolve()->saveObject(
 				object: $row,
-				register: IntakeRepository::REGISTER,
-				schema: $schema,
-				uuid: $existing,
-				_rbac: false,
-				_unowned: true
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: IntakeRepository::REGISTER, schema: $schema),
+					uuid: $existing,
+					actor: new SaveActor(unowned: true)
+				),
+				_rbac: false
 			);
 		} catch (Throwable $e) {
 			throw new RuntimeException(message: 'The ' . $schema . ' could not be saved: ' . $e->getMessage(), code: 0, previous: $e);

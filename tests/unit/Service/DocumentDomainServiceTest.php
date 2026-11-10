@@ -77,7 +77,7 @@ class DocumentDomainServiceTest extends TestCase {
 				$object = ($arguments[0] ?? []);
 				$this->written[] = $object;
 
-				return ($object + ['uuid' => ($arguments[3] ?? 'record-1')]);
+				return ($object + ['uuid' => (($arguments[1] ?? null)?->uuid ?? 'record-1')]);
 			}
 		);
 

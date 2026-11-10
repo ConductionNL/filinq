@@ -26,11 +26,12 @@ namespace OCA\Filinq\Tests\Unit\Service;
 
 require_once __DIR__ . '/Wizard/WizardDoubles.php';
 
+use OCA\Filinq\Exception\WizardRefused;
 use OCA\Filinq\Service\Charts\SvgRasterizer;
 use OCA\Filinq\Service\DataResolverService;
+use OCA\Filinq\Service\DocumentJobStore;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\DocumentRenderPipeline;
-use OCA\Filinq\Service\DocumentJobStore;
 use OCA\Filinq\Service\DocumentService;
 use OCA\Filinq\Service\DocumentStorageService;
 use OCA\Filinq\Service\GeneratedDocumentLogger;
@@ -44,10 +45,11 @@ use OCA\Filinq\Service\TemplateService;
 use OCA\Filinq\Service\Wizard\WizardAnswers;
 use OCA\Filinq\Service\Wizard\WizardConditions;
 use OCA\Filinq\Service\Wizard\WizardGenerationGate;
-use OCA\Filinq\Exception\WizardRefused;
 use OCA\Filinq\Service\Wizard\WizardRepository;
 use OCA\Filinq\Tests\Unit\Service\Wizard\WizardFixtures;
 use OCA\Filinq\Tests\Unit\Service\Wizard\WizardObjectStore;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -85,7 +87,7 @@ class DocumentServiceWizardTest extends TestCase {
 	 */
 	private function service(): DocumentService {
 		$this->wizards = new WizardObjectStore();
-		$this->wizards->saveObject(object: WizardFixtures::seed(), register: 'filinq', schema: 'wizardDefinition', uuid: 'wizard-1');
+		$this->wizards->saveObject(object: WizardFixtures::seed(), options: new ObjectSaveOptions(target: new ObjectFindTarget(register: 'filinq', schema: 'wizardDefinition'), uuid: 'wizard-1'));
 
 		$log = $this->createMock(ObjectService::class);
 		$log->method('saveObject')->willReturnCallback(function (array $object): array {

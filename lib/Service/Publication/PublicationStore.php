@@ -21,6 +21,9 @@ namespace OCA\Filinq\Service\Publication;
 
 use OCA\Filinq\Kernel\Contracts\PublicationStoreInterface;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
+use OCA\OpenRegister\Service\Object\SaveActor;
 use RuntimeException;
 use Throwable;
 
@@ -220,11 +223,12 @@ class PublicationStore implements PublicationStoreInterface {
 			$stored = $this->normalise(
 				row: $this->objects->resolve()->saveObject(
 					object: $object,
-					register: $register,
-					schema: $schema,
-					uuid: $uuid,
-					_rbac: false,
-					_unowned: true
+					options: new ObjectSaveOptions(
+						target: new ObjectFindTarget(register: $register, schema: $schema),
+						uuid: $uuid,
+						actor: new SaveActor(unowned: true)
+					),
+					_rbac: false
 				)
 			);
 		} catch (Throwable $e) {

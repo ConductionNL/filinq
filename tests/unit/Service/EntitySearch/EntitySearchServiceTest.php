@@ -29,6 +29,7 @@ use OCA\Filinq\Service\EntitySearch\EntitySearchLog;
 use OCA\Filinq\Service\EntitySearch\EntitySearchService;
 use OCA\Filinq\Service\Redaction\AnonymizationLinkReader;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -366,7 +367,11 @@ class EntitySearchServiceTest extends TestCase {
 	private function objectService(): ObjectService {
 		$objects = $this->createMock(ObjectService::class);
 		$objects->method('saveObject')->willReturnCallback(
-			function (array $object = [], string $register = '', string $schema = '', ?string $uuid = null, bool $_rbac = true) {
+			function (array|object $object = [], ?ObjectSaveOptions $options = null, bool $_rbac = true) {
+				$options = ($options ?? new ObjectSaveOptions());
+				$register = (string) ($options->target->register);
+				$schema = (string) ($options->target->schema);
+				$uuid = ($options->uuid);
 				if ($this->logFails === true) {
 					throw new RuntimeException('database is locked');
 				}

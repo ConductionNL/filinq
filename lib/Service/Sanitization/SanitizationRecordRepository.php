@@ -25,6 +25,9 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\Sanitization;
 
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
+use OCA\OpenRegister\Service\Object\SaveActor;
 
 /**
  * Sanitization records in OpenRegister.
@@ -58,10 +61,11 @@ class SanitizationRecordRepository {
 	public function save(array $record): array {
 		$stored = $this->objectResolver->resolve()->saveObject(
 			object: $record,
-			register: 'filinq',
-			schema: self::SCHEMA,
-			_rbac: false,
-			_unowned: true
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: 'filinq', schema: self::SCHEMA),
+				actor: new SaveActor(unowned: true)
+			),
+			_rbac: false
 		);
 
 		return $this->normalise(row: $stored);

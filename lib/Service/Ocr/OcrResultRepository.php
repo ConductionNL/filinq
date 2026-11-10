@@ -28,6 +28,8 @@ use OCA\Filinq\Kernel\Contracts\OcrResultRepositoryInterface;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\IntakeRepository;
 use OCA\Filinq\Service\ReadsStoredObjectRows;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use RuntimeException;
 use Throwable;
 
@@ -115,7 +117,13 @@ class OcrResultRepository implements OcrResultRepositoryInterface {
 		}
 
 		try {
-			$stored = $this->objectResolver->resolve()->saveObject(...$arguments);
+			$stored = $this->objectResolver->resolve()->saveObject(
+				object: $arguments['object'],
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $arguments['register'], schema: $arguments['schema']),
+					uuid: ($arguments['uuid'] ?? null)
+				)
+			);
 		} catch (Throwable $e) {
 			throw new RuntimeException(
 				message: 'Could not store the OCR result: ' . $e->getMessage(),

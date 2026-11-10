@@ -25,6 +25,8 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use Exception;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -73,8 +75,9 @@ class GeneratedDocumentLogger {
 		try {
 			$result = $this->objectResolver->resolve()->saveObject(
 				object: $this->entryFor(generation: $generation, outcome: $outcome),
-				register: 'filinq',
-				schema: 'generatedDocument'
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: 'filinq', schema: 'generatedDocument')
+				)
 			);
 
 			return $this->asEntry(result: $result);

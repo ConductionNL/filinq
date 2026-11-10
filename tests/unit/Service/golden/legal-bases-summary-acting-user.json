@@ -455,9 +455,34 @@
                         }
                     }
                 },
-                "register": "filinq",
-                "schema": "dossier",
-                "uuid": "d-1",
+                "options": {
+                    "OCA\\OpenRegister\\Service\\Object\\ObjectSaveOptions": {
+                        "target": {
+                            "OCA\\OpenRegister\\Service\\Object\\ObjectFindTarget": {
+                                "register": "filinq",
+                                "schema": "dossier"
+                            }
+                        },
+                        "uuid": "d-1",
+                        "extend": [],
+                        "uploadedFiles": null,
+                        "policy": {
+                            "OCA\\OpenRegister\\Service\\Object\\SavePolicy": {
+                                "silent": false,
+                                "validation": true,
+                                "failIfExists": false,
+                                "dedupOverride": false
+                            }
+                        },
+                        "actor": {
+                            "OCA\\OpenRegister\\Service\\Object\\SaveActor": {
+                                "currentUser": null,
+                                "owner": null,
+                                "unowned": false
+                            }
+                        }
+                    }
+                },
                 "_rbac": false,
                 "_multitenancy": false
             }

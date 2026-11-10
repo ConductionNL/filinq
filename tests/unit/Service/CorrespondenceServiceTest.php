@@ -28,6 +28,8 @@ use OCA\Filinq\Service\Support\TemplateSources;
 use OCA\Filinq\Service\TemplateRenderer;
 use OCA\Filinq\Service\TemplateService;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
 use OCP\BackgroundJob\IJobList;
@@ -408,8 +410,7 @@ class CorrespondenceServiceTest extends TestCase {
 						&& $entry['status'] === 'generated'
 						&& $entry['format'] === 'pdf';
 				}),
-				$this->equalTo('filinq'),
-				$this->equalTo('correspondence')
+				$this->equalTo(new ObjectSaveOptions(target: new ObjectFindTarget(register: 'filinq', schema: 'correspondence')))
 			)
 			->willReturn($logEntity);
 

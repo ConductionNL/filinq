@@ -28,6 +28,8 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use Exception;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCP\App\IAppManager;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
@@ -241,9 +243,10 @@ class DossierObjectRepository {
 					payload: $payload,
 					dossierUuid: $dossierUuid
 				),
-				register: 'filinq',
-				schema: 'dossier',
-				uuid: $dossierUuid,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: 'filinq', schema: 'dossier'),
+					uuid: $dossierUuid
+				),
 				_rbac: false,
 				_multitenancy: false
 			);

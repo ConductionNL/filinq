@@ -144,9 +144,9 @@ class IntakeServiceTest extends TestCase {
 			function (...$arguments): array {
 				$object = ($arguments[0] ?? []);
 				$this->written[] = $object;
-				$this->writtenTo[] = ($arguments[3] ?? null);
+				$this->writtenTo[] = (($arguments[1] ?? null)?->uuid ?? null);
 
-				return ($object + ['uuid' => ($arguments[3] ?? 'intake-new')]);
+				return ($object + ['uuid' => (($arguments[1] ?? null)?->uuid ?? 'intake-new')]);
 			}
 		);
 

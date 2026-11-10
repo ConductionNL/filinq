@@ -43,6 +43,7 @@ use OCA\Filinq\Service\SigningRequestValidator;
 use OCA\Filinq\Service\SigningService;
 use OCA\Filinq\Service\Support\SigningGuards;
 use OCA\Filinq\Service\Support\SigningOutputs;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Files\IRootFolder;
@@ -114,15 +115,17 @@ class EnvelopeObjectStore extends ObjectService {
 	 * @return array
 	 */
 	public function saveObject(
-		array $object = [],
-		string $register = '',
-		string $schema = '',
-		?string $uuid = null,
+		array|object $object = [],
+		?ObjectSaveOptions $options = null,
 		bool $_rbac = true,
 		bool $_multitenancy = true,
-		bool $_unowned = false,
-		?string $_owner = null,
 	) {
+		$options = ($options ?? new ObjectSaveOptions());
+		$register = (string) $options->target->register;
+		$schema = (string) $options->target->schema;
+		$uuid = $options->uuid;
+		$_unowned = $options->actor->unowned;
+		$_owner = $options->actor->owner;
 		$this->saves[] = [$schema, $object];
 		$id = (string) ($uuid ?? ($object['id'] ?? ''));
 		if ($id === '') {

@@ -23,6 +23,7 @@ use OCA\Filinq\Service\AnonymizationPersistenceService;
 use OCA\Filinq\Service\ConsentCrudService;
 use OCA\Filinq\Service\ConsentService;
 use OCA\Filinq\Service\OpenRegisterServiceLocator;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCP\App\IAppManager;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -153,7 +154,16 @@ class AnonymizationLinkObjectGoldenTest extends TestCase {
 			 *
 			 * @return array<string, mixed>
 			 */
-			public function saveObject(array $object = [], string $register = '', string $schema = '', bool $_rbac = true, bool $_unowned = false): array {
+			public function saveObject(
+				array|object $object = [],
+				?ObjectSaveOptions $options = null,
+				bool $_rbac = true,
+				bool $_multitenancy = true,
+			): array {
+				$options = ($options ?? new ObjectSaveOptions());
+				$register = (string) $options->target->register;
+				$schema = (string) $options->target->schema;
+				$_unowned = $options->actor->unowned;
 				$this->saved = $object;
 				return ['@self' => ['id' => 'saved-1']];
 			}
@@ -266,7 +276,16 @@ class AnonymizationLinkObjectGoldenTest extends TestCase {
 			 *
 			 * @return array<string, mixed>
 			 */
-			public function saveObject(array $object = [], string $register = '', string $schema = '', bool $_rbac = true, bool $_unowned = false): array {
+			public function saveObject(
+				array|object $object = [],
+				?ObjectSaveOptions $options = null,
+				bool $_rbac = true,
+				bool $_multitenancy = true,
+			): array {
+				$options = ($options ?? new ObjectSaveOptions());
+				$register = (string) $options->target->register;
+				$schema = (string) $options->target->schema;
+				$_unowned = $options->actor->unowned;
 				$this->calls[] = ['save' => [$object, $register, $schema, $_rbac, $_unowned]];
 				return $object;
 			}

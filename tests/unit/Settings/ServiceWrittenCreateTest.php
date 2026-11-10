@@ -136,7 +136,7 @@ class ServiceWrittenCreateTest extends TestCase {
 		$root = dirname(__DIR__, 3);
 		foreach (self::UNOWNED_WRITERS as $file) {
 			$source = (string)file_get_contents($root.'/'.$file);
-			$this->assertMatchesRegularExpression(pattern: '/_unowned:\s*true/', string: $source, message: $file.' must save with _unowned: true');
+			$this->assertMatchesRegularExpression(pattern: '/(?:_unowned|SaveActor\(unowned):\s*true/', string: $source, message: $file.' must save with _unowned: true');
 		}
 	}//end testEvidenceWritersStoreRecordsUnowned()
 

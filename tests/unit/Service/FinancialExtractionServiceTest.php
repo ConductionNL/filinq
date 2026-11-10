@@ -35,6 +35,7 @@ use OCA\Filinq\Service\FinancialExtractionService;
 use OCA\Filinq\Service\OcrService;
 use OCA\Filinq\Service\OpenRegisterResolver;
 use OCA\Filinq\Service\SettingsService;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Files\File;
@@ -288,7 +289,10 @@ TEXT;
 
 		$this->objectService->expects($this->once())
 			->method('saveObject')
-			->willReturnCallback(function ($object, $register, $schema) {
+			->willReturnCallback(function (array|object $object = [], ?ObjectSaveOptions $options = null) {
+				$options = ($options ?? new ObjectSaveOptions());
+				$register = ($options->target->register);
+				$schema = ($options->target->schema);
 				$this->assertSame('filinq', $register);
 				$this->assertSame('financialExtraction', $schema);
 				$this->assertSame('supplier-invoice', $object['docType']);

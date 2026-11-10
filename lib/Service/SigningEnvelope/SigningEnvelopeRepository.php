@@ -26,6 +26,8 @@ namespace OCA\Filinq\Service\SigningEnvelope;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\IntakeRepository;
 use OCA\Filinq\Service\ReadsStoredObjectRows;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use RuntimeException;
 use Throwable;
 
@@ -88,9 +90,10 @@ class SigningEnvelopeRepository {
 		try {
 			$stored = $this->objectResolver->resolve()->saveObject(
 				object: $envelope,
-				register: IntakeRepository::REGISTER,
-				schema: self::SCHEMA,
-				uuid: $uuid,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: IntakeRepository::REGISTER, schema: self::SCHEMA),
+					uuid: $uuid
+				),
 				_rbac: false
 			);
 		} catch (Throwable $e) {

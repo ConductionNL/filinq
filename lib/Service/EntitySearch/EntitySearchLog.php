@@ -26,6 +26,8 @@ use OCA\Filinq\Exception\EntitySearchRefusedException;
 use OCA\Filinq\Kernel\EntitySearchQuery;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\IntakeRepository;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCP\AppFramework\Utility\ITimeFactory;
 use Throwable;
 
@@ -148,8 +150,9 @@ class EntitySearchLog {
 		try {
 			$stored = $this->objectResolver->resolve()->saveObject(
 				object: $row,
-				register: IntakeRepository::REGISTER,
-				schema: self::SCHEMA,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: IntakeRepository::REGISTER, schema: self::SCHEMA)
+				),
 				_rbac: false
 			);
 		} catch (Throwable $e) {

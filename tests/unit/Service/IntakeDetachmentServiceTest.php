@@ -95,9 +95,9 @@ class IntakeDetachmentServiceTest extends TestCase {
 		$objectService->method('saveObject')->willReturnCallback(
 			function (...$arguments): array {
 				$this->written[] = ($arguments[0] ?? []);
-				$this->writtenTo[] = ($arguments[3] ?? null);
+				$this->writtenTo[] = (($arguments[1] ?? null)?->uuid ?? null);
 
-				return (($arguments[0] ?? []) + ['uuid' => ($arguments[3] ?? 'intake-new')]);
+				return (($arguments[0] ?? []) + ['uuid' => (($arguments[1] ?? null)?->uuid ?? 'intake-new')]);
 			}
 		);
 

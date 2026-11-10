@@ -24,6 +24,9 @@ namespace OCA\Filinq\Service\Signing;
 use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\Filinq\Service\SettingsService;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
+use OCA\OpenRegister\Service\Object\SaveActor;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -498,7 +501,11 @@ class NativeSigningProvider implements SigningProviderInterface {
 			$session['id'] = $uuid;
 		}
 
-		$objectService->saveObject(object: $session, register: $register, schema: $schema, _rbac: false, _unowned: true);
+		$objectService->saveObject(
+			object: $session,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema), actor: new SaveActor(unowned: true)),
+			_rbac: false
+		);
 
 	}//end persistSession()
 

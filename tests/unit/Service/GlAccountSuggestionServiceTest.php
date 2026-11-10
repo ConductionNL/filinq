@@ -33,6 +33,8 @@ use OCA\Filinq\Service\Suggestion\CategoryKeywordMapper;
 use OCA\Filinq\Service\Suggestion\HistoryRanker;
 use OCA\Filinq\Service\Suggestion\SupplierIdentityResolver;
 use OCA\Filinq\Service\Support\SuggestionSignals;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\IAppConfig;
@@ -305,8 +307,7 @@ class GlAccountSuggestionServiceTest extends TestCase {
 						&& $object['accountCode'] === '4300'
 						&& $object['source'] === 'correction';
 				}),
-				'filinq',
-				'glAccountBooking'
+				new ObjectSaveOptions(target: new ObjectFindTarget(register: 'filinq', schema: 'glAccountBooking'))
 			);
 
 		$this->service->recordBooking(

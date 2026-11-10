@@ -38,6 +38,8 @@ namespace OCA\Filinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\Filinq\Kernel\Contracts\PartySuggestionServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -234,8 +236,9 @@ class PartySuggestionService implements PartySuggestionServiceInterface {
 		try {
 			$this->objectResolver->resolve()->saveObject(
 				object: $correction,
-				register: IntakeRepository::REGISTER,
-				schema: self::CORRECTION_SCHEMA
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: IntakeRepository::REGISTER, schema: self::CORRECTION_SCHEMA)
+				)
 			);
 		} catch (Throwable $e) {
 			// Fails LOUD on the write. This is the corpus the next suggestion

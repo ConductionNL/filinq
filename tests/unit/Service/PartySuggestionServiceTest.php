@@ -96,7 +96,7 @@ class PartySuggestionServiceTest extends TestCase {
 		$objectService->method('saveObject')->willReturnCallback(
 			function (...$arguments): array {
 				$this->written[] = ($arguments[0] ?? []);
-				$this->writtenTo[] = (string)($arguments[2] ?? '');
+				$this->writtenTo[] = (string)(($arguments[1] ?? null)?->target->schema ?? '');
 
 				return ($arguments[0] ?? []);
 			}

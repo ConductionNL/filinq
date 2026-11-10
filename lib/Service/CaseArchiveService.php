@@ -33,6 +33,8 @@ namespace OCA\Filinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\Filinq\Kernel\Contracts\CaseArchiveServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCP\IAppConfig;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
@@ -275,8 +277,9 @@ class CaseArchiveService implements CaseArchiveServiceInterface {
 		try {
 			$this->objectResolver->resolve()->saveObject(
 				object: $job,
-				register: IntakeRepository::REGISTER,
-				schema: self::SCHEMA
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: IntakeRepository::REGISTER, schema: self::SCHEMA)
+				)
 			);
 		} catch (Throwable $e) {
 			$this->logger->error(

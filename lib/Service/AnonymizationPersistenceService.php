@@ -32,6 +32,9 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use Exception;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
+use OCA\OpenRegister\Service\Object\SaveActor;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
@@ -107,10 +110,11 @@ class AnonymizationPersistenceService {
 
 			$saved = $objectService->saveObject(
 				object: $object,
-				register: 'filinq',
-				schema: 'anonymizationLink',
-				_rbac: false,
-				_unowned: true
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: 'filinq', schema: 'anonymizationLink'),
+					actor: new SaveActor(unowned: true)
+				),
+				_rbac: false
 			);
 			$linkId = $this->extractSavedObjectId(saved: $saved);
 			if ($linkId !== null) {
@@ -168,8 +172,9 @@ class AnonymizationPersistenceService {
 		$existing['mappingRef'] = $mappingRef;
 		$objectService->saveObject(
 			object: $existing,
-			register: 'filinq',
-			schema: 'anonymizationLink',
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: 'filinq', schema: 'anonymizationLink')
+			),
 			_rbac: false
 		);
 

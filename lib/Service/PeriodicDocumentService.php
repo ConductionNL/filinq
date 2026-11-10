@@ -33,6 +33,8 @@ namespace OCA\Filinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\Filinq\Kernel\Contracts\PeriodicDocumentServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
@@ -434,9 +436,10 @@ class PeriodicDocumentService implements PeriodicDocumentServiceInterface {
 		try {
 			$this->objectResolver->resolve()->saveObject(
 				object: $fields,
-				register: IntakeRepository::REGISTER,
-				schema: self::SCHEMA,
-				uuid: $uuid
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: IntakeRepository::REGISTER, schema: self::SCHEMA),
+					uuid: $uuid
+				)
 			);
 		} catch (Throwable $e) {
 			$this->logger->error(

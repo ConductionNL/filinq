@@ -27,6 +27,8 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use OCA\Filinq\Kernel\Contracts\IntakeRepositoryInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCP\AppFramework\Db\DoesNotExistException;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -220,7 +222,13 @@ class IntakeRepository implements IntakeRepositoryInterface {
 				$arguments['uuid'] = $uuid;
 			}
 
-			$stored = $this->objectResolver->resolve()->saveObject(...$arguments);
+			$stored = $this->objectResolver->resolve()->saveObject(
+				object: $arguments['object'],
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $arguments['register'], schema: $arguments['schema']),
+					uuid: ($arguments['uuid'] ?? null)
+				)
+			);
 		} catch (Throwable $e) {
 			$this->logger->error(
 				message: '[IntakeRepository] could not store an intake document',

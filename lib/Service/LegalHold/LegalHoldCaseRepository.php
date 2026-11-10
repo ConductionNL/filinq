@@ -23,6 +23,9 @@ namespace OCA\Filinq\Service\LegalHold;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\IntakeRepository;
 use OCA\Filinq\Service\ReadsStoredObjectRows;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
+use OCA\OpenRegister\Service\Object\SaveActor;
 use RuntimeException;
 use Throwable;
 
@@ -147,11 +150,12 @@ class LegalHoldCaseRepository {
 		try {
 			$stored = $this->objectResolver->resolve()->saveObject(
 				object: $case,
-				register: IntakeRepository::REGISTER,
-				schema: self::SCHEMA,
-				uuid: $existing,
-				_rbac: false,
-				_unowned: true
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: IntakeRepository::REGISTER, schema: self::SCHEMA),
+					uuid: $existing,
+					actor: new SaveActor(unowned: true)
+				),
+				_rbac: false
 			);
 		} catch (Throwable $e) {
 			throw new RuntimeException(message: 'The hold case could not be saved: ' . $e->getMessage(), code: 0, previous: $e);

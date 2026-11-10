@@ -55,8 +55,34 @@
                     "sourceApp": "dossiq",
                     "subjectSchema": "besluit"
                 },
-                "register": "filinq",
-                "schema": "signingRequest",
+                "options": {
+                    "OCA\\OpenRegister\\Service\\Object\\ObjectSaveOptions": {
+                        "target": {
+                            "OCA\\OpenRegister\\Service\\Object\\ObjectFindTarget": {
+                                "register": "filinq",
+                                "schema": "signingRequest"
+                            }
+                        },
+                        "uuid": null,
+                        "extend": [],
+                        "uploadedFiles": null,
+                        "policy": {
+                            "OCA\\OpenRegister\\Service\\Object\\SavePolicy": {
+                                "silent": false,
+                                "validation": true,
+                                "failIfExists": false,
+                                "dedupOverride": false
+                            }
+                        },
+                        "actor": {
+                            "OCA\\OpenRegister\\Service\\Object\\SaveActor": {
+                                "currentUser": null,
+                                "owner": null,
+                                "unowned": false
+                            }
+                        }
+                    }
+                },
                 "_rbac": false
             }
         },
@@ -290,10 +316,35 @@
                     "guardianConsentAge": 16,
                     "assuranceFloor": "low"
                 },
-                "register": "filinq",
-                "schema": "signingRequest",
-                "_rbac": false,
-                "_unowned": true
+                "options": {
+                    "OCA\\OpenRegister\\Service\\Object\\ObjectSaveOptions": {
+                        "target": {
+                            "OCA\\OpenRegister\\Service\\Object\\ObjectFindTarget": {
+                                "register": "filinq",
+                                "schema": "signingRequest"
+                            }
+                        },
+                        "uuid": null,
+                        "extend": [],
+                        "uploadedFiles": null,
+                        "policy": {
+                            "OCA\\OpenRegister\\Service\\Object\\SavePolicy": {
+                                "silent": false,
+                                "validation": true,
+                                "failIfExists": false,
+                                "dedupOverride": false
+                            }
+                        },
+                        "actor": {
+                            "OCA\\OpenRegister\\Service\\Object\\SaveActor": {
+                                "currentUser": null,
+                                "owner": null,
+                                "unowned": true
+                            }
+                        }
+                    }
+                },
+                "_rbac": false
             }
         },
         {
@@ -311,10 +362,35 @@
                     "order": 0,
                     "status": "PENDING"
                 },
-                "register": "filinq",
-                "schema": "signerRecord",
-                "_rbac": false,
-                "_unowned": true
+                "options": {
+                    "OCA\\OpenRegister\\Service\\Object\\ObjectSaveOptions": {
+                        "target": {
+                            "OCA\\OpenRegister\\Service\\Object\\ObjectFindTarget": {
+                                "register": "filinq",
+                                "schema": "signerRecord"
+                            }
+                        },
+                        "uuid": null,
+                        "extend": [],
+                        "uploadedFiles": null,
+                        "policy": {
+                            "OCA\\OpenRegister\\Service\\Object\\SavePolicy": {
+                                "silent": false,
+                                "validation": true,
+                                "failIfExists": false,
+                                "dedupOverride": false
+                            }
+                        },
+                        "actor": {
+                            "OCA\\OpenRegister\\Service\\Object\\SaveActor": {
+                                "currentUser": null,
+                                "owner": null,
+                                "unowned": true
+                            }
+                        }
+                    }
+                },
+                "_rbac": false
             }
         },
         {
@@ -335,8 +411,34 @@
                     "assuranceFloor": "low",
                     "id": "saved-11"
                 },
-                "register": "filinq",
-                "schema": "signingRequest",
+                "options": {
+                    "OCA\\OpenRegister\\Service\\Object\\ObjectSaveOptions": {
+                        "target": {
+                            "OCA\\OpenRegister\\Service\\Object\\ObjectFindTarget": {
+                                "register": "filinq",
+                                "schema": "signingRequest"
+                            }
+                        },
+                        "uuid": null,
+                        "extend": [],
+                        "uploadedFiles": null,
+                        "policy": {
+                            "OCA\\OpenRegister\\Service\\Object\\SavePolicy": {
+                                "silent": false,
+                                "validation": true,
+                                "failIfExists": false,
+                                "dedupOverride": false
+                            }
+                        },
+                        "actor": {
+                            "OCA\\OpenRegister\\Service\\Object\\SaveActor": {
+                                "currentUser": null,
+                                "owner": null,
+                                "unowned": false
+                            }
+                        }
+                    }
+                },
                 "_rbac": false
             }
         },
@@ -474,8 +576,34 @@
                     },
                     "declineReason": "onjuist"
                 },
-                "register": "filinq",
-                "schema": "signerRecord",
+                "options": {
+                    "OCA\\OpenRegister\\Service\\Object\\ObjectSaveOptions": {
+                        "target": {
+                            "OCA\\OpenRegister\\Service\\Object\\ObjectFindTarget": {
+                                "register": "filinq",
+                                "schema": "signerRecord"
+                            }
+                        },
+                        "uuid": null,
+                        "extend": [],
+                        "uploadedFiles": null,
+                        "policy": {
+                            "OCA\\OpenRegister\\Service\\Object\\SavePolicy": {
+                                "silent": false,
+                                "validation": true,
+                                "failIfExists": false,
+                                "dedupOverride": false
+                            }
+                        },
+                        "actor": {
+                            "OCA\\OpenRegister\\Service\\Object\\SaveActor": {
+                                "currentUser": null,
+                                "owner": null,
+                                "unowned": false
+                            }
+                        }
+                    }
+                },
                 "_rbac": false
             }
         },
@@ -493,8 +621,34 @@
                     "sourceApp": "dossiq",
                     "subjectSchema": "besluit"
                 },
-                "register": "filinq",
-                "schema": "signingRequest",
+                "options": {
+                    "OCA\\OpenRegister\\Service\\Object\\ObjectSaveOptions": {
+                        "target": {
+                            "OCA\\OpenRegister\\Service\\Object\\ObjectFindTarget": {
+                                "register": "filinq",
+                                "schema": "signingRequest"
+                            }
+                        },
+                        "uuid": null,
+                        "extend": [],
+                        "uploadedFiles": null,
+                        "policy": {
+                            "OCA\\OpenRegister\\Service\\Object\\SavePolicy": {
+                                "silent": false,
+                                "validation": true,
+                                "failIfExists": false,
+                                "dedupOverride": false
+                            }
+                        },
+                        "actor": {
+                            "OCA\\OpenRegister\\Service\\Object\\SaveActor": {
+                                "currentUser": null,
+                                "owner": null,
+                                "unowned": false
+                            }
+                        }
+                    }
+                },
                 "_rbac": false
             }
         },
@@ -842,8 +996,34 @@
                     "signedAt": "<time>",
                     "ipAddress": "192.0.2.10"
                 },
-                "register": "filinq",
-                "schema": "signerRecord",
+                "options": {
+                    "OCA\\OpenRegister\\Service\\Object\\ObjectSaveOptions": {
+                        "target": {
+                            "OCA\\OpenRegister\\Service\\Object\\ObjectFindTarget": {
+                                "register": "filinq",
+                                "schema": "signerRecord"
+                            }
+                        },
+                        "uuid": null,
+                        "extend": [],
+                        "uploadedFiles": null,
+                        "policy": {
+                            "OCA\\OpenRegister\\Service\\Object\\SavePolicy": {
+                                "silent": false,
+                                "validation": true,
+                                "failIfExists": false,
+                                "dedupOverride": false
+                            }
+                        },
+                        "actor": {
+                            "OCA\\OpenRegister\\Service\\Object\\SaveActor": {
+                                "currentUser": null,
+                                "owner": null,
+                                "unowned": false
+                            }
+                        }
+                    }
+                },
                 "_rbac": false
             }
         },
@@ -937,8 +1117,34 @@
                     "sourceApp": "dossiq",
                     "subjectSchema": "besluit"
                 },
-                "register": "filinq",
-                "schema": "signingRequest",
+                "options": {
+                    "OCA\\OpenRegister\\Service\\Object\\ObjectSaveOptions": {
+                        "target": {
+                            "OCA\\OpenRegister\\Service\\Object\\ObjectFindTarget": {
+                                "register": "filinq",
+                                "schema": "signingRequest"
+                            }
+                        },
+                        "uuid": null,
+                        "extend": [],
+                        "uploadedFiles": null,
+                        "policy": {
+                            "OCA\\OpenRegister\\Service\\Object\\SavePolicy": {
+                                "silent": false,
+                                "validation": true,
+                                "failIfExists": false,
+                                "dedupOverride": false
+                            }
+                        },
+                        "actor": {
+                            "OCA\\OpenRegister\\Service\\Object\\SaveActor": {
+                                "currentUser": null,
+                                "owner": null,
+                                "unowned": false
+                            }
+                        }
+                    }
+                },
                 "_rbac": false
             }
         },
@@ -1031,8 +1237,34 @@
                     "assurance": "low",
                     "signedDocumentRef": "file:11@v2"
                 },
-                "register": "filinq",
-                "schema": "signingRequest",
+                "options": {
+                    "OCA\\OpenRegister\\Service\\Object\\ObjectSaveOptions": {
+                        "target": {
+                            "OCA\\OpenRegister\\Service\\Object\\ObjectFindTarget": {
+                                "register": "filinq",
+                                "schema": "signingRequest"
+                            }
+                        },
+                        "uuid": null,
+                        "extend": [],
+                        "uploadedFiles": null,
+                        "policy": {
+                            "OCA\\OpenRegister\\Service\\Object\\SavePolicy": {
+                                "silent": false,
+                                "validation": true,
+                                "failIfExists": false,
+                                "dedupOverride": false
+                            }
+                        },
+                        "actor": {
+                            "OCA\\OpenRegister\\Service\\Object\\SaveActor": {
+                                "currentUser": null,
+                                "owner": null,
+                                "unowned": false
+                            }
+                        }
+                    }
+                },
                 "_rbac": false
             }
         },
@@ -1433,8 +1665,34 @@
                     "ipAddress": "192.0.2.10",
                     "signatureAssurance": "SES"
                 },
-                "register": "filinq",
-                "schema": "signerRecord",
+                "options": {
+                    "OCA\\OpenRegister\\Service\\Object\\ObjectSaveOptions": {
+                        "target": {
+                            "OCA\\OpenRegister\\Service\\Object\\ObjectFindTarget": {
+                                "register": "filinq",
+                                "schema": "signerRecord"
+                            }
+                        },
+                        "uuid": null,
+                        "extend": [],
+                        "uploadedFiles": null,
+                        "policy": {
+                            "OCA\\OpenRegister\\Service\\Object\\SavePolicy": {
+                                "silent": false,
+                                "validation": true,
+                                "failIfExists": false,
+                                "dedupOverride": false
+                            }
+                        },
+                        "actor": {
+                            "OCA\\OpenRegister\\Service\\Object\\SaveActor": {
+                                "currentUser": null,
+                                "owner": null,
+                                "unowned": false
+                            }
+                        }
+                    }
+                },
                 "_rbac": false
             }
         },
@@ -1533,8 +1791,34 @@
                     "sourceApp": "dossiq",
                     "subjectSchema": "besluit"
                 },
-                "register": "filinq",
-                "schema": "signingRequest",
+                "options": {
+                    "OCA\\OpenRegister\\Service\\Object\\ObjectSaveOptions": {
+                        "target": {
+                            "OCA\\OpenRegister\\Service\\Object\\ObjectFindTarget": {
+                                "register": "filinq",
+                                "schema": "signingRequest"
+                            }
+                        },
+                        "uuid": null,
+                        "extend": [],
+                        "uploadedFiles": null,
+                        "policy": {
+                            "OCA\\OpenRegister\\Service\\Object\\SavePolicy": {
+                                "silent": false,
+                                "validation": true,
+                                "failIfExists": false,
+                                "dedupOverride": false
+                            }
+                        },
+                        "actor": {
+                            "OCA\\OpenRegister\\Service\\Object\\SaveActor": {
+                                "currentUser": null,
+                                "owner": null,
+                                "unowned": false
+                            }
+                        }
+                    }
+                },
                 "_rbac": false
             }
         },
@@ -1632,8 +1916,34 @@
                     "assurance": "low",
                     "signedDocumentRef": "file:11@v2"
                 },
-                "register": "filinq",
-                "schema": "signingRequest",
+                "options": {
+                    "OCA\\OpenRegister\\Service\\Object\\ObjectSaveOptions": {
+                        "target": {
+                            "OCA\\OpenRegister\\Service\\Object\\ObjectFindTarget": {
+                                "register": "filinq",
+                                "schema": "signingRequest"
+                            }
+                        },
+                        "uuid": null,
+                        "extend": [],
+                        "uploadedFiles": null,
+                        "policy": {
+                            "OCA\\OpenRegister\\Service\\Object\\SavePolicy": {
+                                "silent": false,
+                                "validation": true,
+                                "failIfExists": false,
+                                "dedupOverride": false
+                            }
+                        },
+                        "actor": {
+                            "OCA\\OpenRegister\\Service\\Object\\SaveActor": {
+                                "currentUser": null,
+                                "owner": null,
+                                "unowned": false
+                            }
+                        }
+                    }
+                },
                 "_rbac": false
             }
         },

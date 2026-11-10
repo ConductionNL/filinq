@@ -26,9 +26,9 @@ use Exception;
 use FPDF;
 use OCA\Filinq\Service\Charts\SvgRasterizer;
 use OCA\Filinq\Service\DataResolverService;
+use OCA\Filinq\Service\DocumentJobStore;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\DocumentRenderPipeline;
-use OCA\Filinq\Service\DocumentJobStore;
 use OCA\Filinq\Service\DocumentService;
 use OCA\Filinq\Service\DocumentStorageService;
 use OCA\Filinq\Service\GeneratedDocumentLogger;
@@ -42,6 +42,7 @@ use OCA\Filinq\Service\Support\TemplateSources;
 use OCA\Filinq\Service\TemplateRenderer;
 use OCA\Filinq\Service\TemplateService;
 use OCA\Filinq\Service\TemplateVersionService;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -139,7 +140,10 @@ class TemplateVersionProvenanceTest extends TestCase {
 			}
 		);
 		$objects->method('saveObject')->willReturnCallback(
-			function (array $object, $register = null, $schema = null): array {
+			function (array|object $object = [], ?ObjectSaveOptions $options = null): array {
+				$options = ($options ?? new ObjectSaveOptions());
+				$register = ($options->target->register);
+				$schema = ($options->target->schema);
 				if ($schema === 'generatedDocument') {
 					$this->logged[] = $object;
 				} else {

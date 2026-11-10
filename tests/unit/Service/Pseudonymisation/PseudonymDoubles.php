@@ -40,6 +40,7 @@ use OCA\Filinq\Service\Redaction\AnonymizationLinkReader;
 use OCA\OpenRegister\Db\AuditTrail;
 use OCA\OpenRegister\Db\AuditTrailMapper;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -167,7 +168,11 @@ trait PseudonymDoubles {
 			}
 		);
 		$objects->method('saveObject')->willReturnCallback(
-			function (array $object = [], string $register = '', string $schema = '', ?string $uuid = null, bool $_rbac = true) {
+			function (array|object $object = [], ?ObjectSaveOptions $options = null, bool $_rbac = true) {
+				$options = ($options ?? new ObjectSaveOptions());
+				$register = (string) ($options->target->register);
+				$schema = (string) ($options->target->schema);
+				$uuid = ($options->uuid);
 				if ($this->registerRefusesWrites === true) {
 					throw new \RuntimeException('database is unreachable');
 				}

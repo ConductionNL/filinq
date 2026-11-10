@@ -35,6 +35,8 @@ namespace OCA\Filinq\Service;
 use Exception;
 use OCA\Filinq\Service\Support\ConsentRecordRules;
 use OCA\Filinq\Service\Support\OpenRegisterAccess;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 
@@ -229,8 +231,9 @@ class ConsentRecordWriter {
 
 		$savedObject = $this->getObjectService()->saveObject(
 			object: $updated,
-			register: $context['register'],
-			schema: $context['schema'],
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $context['register'], schema: $context['schema'])
+			),
 			_rbac: false
 		);
 
@@ -353,8 +356,9 @@ class ConsentRecordWriter {
 		// authenticated. Ownership is RECORDED here, not ENFORCED here.
 		$savedObject = $this->getObjectService()->saveObject(
 			object: $consentData,
-			register: $context['register'],
-			schema: $context['schema']
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $context['register'], schema: $context['schema'])
+			)
 		);
 
 		$this->logger->info(

@@ -39,6 +39,8 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCP\AppFramework\Db\DoesNotExistException;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -195,9 +197,10 @@ class BatchStateRepository {
 		try {
 			$objectService->saveObject(
 				object: $this->toStoredShape(batch: $batch),
-				register: self::REGISTER,
-				schema: self::SCHEMA,
-				uuid: $batchId,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: self::REGISTER, schema: self::SCHEMA),
+					uuid: $batchId
+				),
 				_rbac: false,
 				_multitenancy: false
 			);

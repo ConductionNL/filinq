@@ -31,6 +31,8 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use OCA\Filinq\Kernel\Contracts\PageLayoutServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
@@ -411,7 +413,13 @@ class PageLayoutService implements PageLayoutServiceInterface {
 				$arguments['uuid'] = $uuid;
 			}
 
-			$stored = $this->objectResolver->resolve()->saveObject(...$arguments);
+			$stored = $this->objectResolver->resolve()->saveObject(
+				object: $arguments['object'],
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $arguments['register'], schema: $arguments['schema']),
+					uuid: ($arguments['uuid'] ?? null)
+				)
+			);
 		} catch (Throwable $e) {
 			throw new RuntimeException(
 				message: 'Could not store the page layout: ' . $e->getMessage(),

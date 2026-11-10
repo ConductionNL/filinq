@@ -24,6 +24,8 @@ use OCA\Filinq\Exception\AgreementStoreUnreadableException;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\IntakeRepository;
 use OCA\Filinq\Service\ReadsStoredObjectRows;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCP\AppFramework\Db\DoesNotExistException;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -156,8 +158,9 @@ class DownloadAgreementRepository {
 					'acceptedAt' => gmdate(format: 'c'),
 					'acceptedVersion' => $version,
 				],
-				register: IntakeRepository::REGISTER,
-				schema: self::SCHEMA
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: IntakeRepository::REGISTER, schema: self::SCHEMA)
+				)
 			);
 		} catch (Throwable $e) {
 			throw new RuntimeException(
