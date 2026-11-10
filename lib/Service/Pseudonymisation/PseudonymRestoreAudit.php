@@ -95,22 +95,12 @@ class PseudonymRestoreAudit {
 			$subject->setUuid($linkId);
 		}
 
+		$at      = $this->time->getDateTime()->format(format: DATE_ATOM);
+		$context = array_merge(['anonymizationLink' => $linkId, 'actor' => $userId, 'at' => $at], $details);
+		$actor   = new ObjectAuditEventOptions(actor: new NamedActor(id: $userId));
+
 		try {
-			$this->auditTrail->recordObjectEvent(
-				event: new ObjectAuditEvent(
-					object: $subject,
-					action: $action,
-					context: array_merge(
-						[
-							'anonymizationLink' => $linkId,
-							'actor' => $userId,
-							'at' => $this->time->getDateTime()->format(format: DATE_ATOM),
-						],
-						$details
-					),
-					options: new ObjectAuditEventOptions(actor: new NamedActor(id: $userId))
-				)
-			);
+			$this->auditTrail->recordObjectEvent(event: new ObjectAuditEvent(object: $subject, action: $action, context: $context, options: $actor));
 		} catch (Throwable $e) {
 			throw new RuntimeException(message: 'The audit trail refused the restore entry: ' . $e->getMessage(), code: 0, previous: $e);
 		}

@@ -93,22 +93,12 @@ class SubjectErasureAudit {
 			$subject->setUuid($requestUuid);
 		}
 
+		$at      = $this->time->getDateTime()->format(format: DATE_ATOM);
+		$context = array_merge(['subjectErasureRequest' => $requestUuid, 'actor' => $userId, 'at' => $at], $details);
+		$actor   = new ObjectAuditEventOptions(actor: new NamedActor(id: $userId));
+
 		try {
-			$this->auditTrail->recordObjectEvent(
-				event: new ObjectAuditEvent(
-					object: $subject,
-					action: $action,
-					context: array_merge(
-						[
-							'subjectErasureRequest' => $requestUuid,
-							'actor' => $userId,
-							'at' => $this->time->getDateTime()->format(format: DATE_ATOM),
-						],
-						$details
-					),
-					options: new ObjectAuditEventOptions(actor: new NamedActor(id: $userId))
-				)
-			);
+			$this->auditTrail->recordObjectEvent(event: new ObjectAuditEvent(object: $subject, action: $action, context: $context, options: $actor));
 		} catch (Throwable $e) {
 			throw new SubjectErasureRefusedException(
 				reason: SubjectErasureRefusedException::REASON_AUDIT_UNAVAILABLE,
