@@ -139,7 +139,7 @@ trait LegalHoldDoubles {
 		$apps->method('getInstalledApps')->willReturn(['openregister']);
 		$container = $this->createMock(ContainerInterface::class);
 		$container->method('get')->willReturnCallback(
-			fn (string $class) => ($class === 'OCA\OpenRegister\Service\Archival\LegalHoldService' ? $this->holdService : throw new RuntimeException('Unknown ' . $class))
+			fn (string $class) => ($class === 'OCA\OpenRegister\Service\Archival\LegalHoldServiceInterface' ? $this->holdService : throw new RuntimeException('Unknown ' . $class))
 		);
 
 		$time = $this->createMock(ITimeFactory::class);
