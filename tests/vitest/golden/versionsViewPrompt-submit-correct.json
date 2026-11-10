@@ -1,0 +1,27 @@
+{
+	"calls": [
+		[
+			"correctDocument",
+			7,
+			"because"
+		],
+		[
+			"listVersions",
+			7
+		],
+		[
+			"readFinalState",
+			7
+		]
+	],
+	"emitted": [
+		[
+			"corrected",
+			{
+				"id": "correctDocument-result"
+			}
+		]
+	],
+	"prompt": "",
+	"error": ""
+}
