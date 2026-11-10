@@ -3180,28 +3180,7 @@ final class BackendState implements \JsonSerializable {
 
 namespace OCA\OpenRegister\Service\Object;
 
-/**
- * Stub for ObjectFindTarget (mirrors lib/Service/Object/ObjectFindTarget.php, openregister #9096).
- *
- * @category Tests
- * @package  OCA\OpenRegister\Service\Object
- * @author   Conduction B.V. <info@conduction.nl>
- * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.filinq.app
- */
-final class ObjectFindTarget {
-	/**
-	 * Constructor.
-	 *
-	 * @param mixed $register The register scope.
-	 * @param mixed $schema   The schema scope.
-	 */
-	public function __construct(
-		public readonly mixed $register = null,
-		public readonly mixed $schema = null,
-	) {
-	}//end __construct()
-}//end class
+require_once __DIR__ . '/openregister-object-target.stub.php';
 
 /**
  * Stub for ObjectPatch (mirrors lib/Service/Object/ObjectPatch.php, openregister #9096).
