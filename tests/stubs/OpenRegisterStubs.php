@@ -3184,33 +3184,8 @@ final class BackendState implements \JsonSerializable {
 	}
 }//end class
 
-namespace OCA\OpenRegister\Service\Object;
-
-require_once __DIR__ . '/openregister-object-target.stub.php';
-
-/**
- * Stub for ObjectDeletion (mirrors lib/Service/Object/ObjectDeletion.php, openregister #9099).
- *
- * @category Tests
- * @package  OCA\OpenRegister\Service\Object
- * @author   Conduction B.V. <info@conduction.nl>
- * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.filinq.app
- */
-final class ObjectDeletion {
-	/**
-	 * Constructor.
-	 *
-	 * @param string           $uuid        The UUID of the object to delete.
-	 * @param ObjectFindTarget $target      The register and schema scope.
-	 * @param mixed            $currentUser The explicit acting user.
-	 * @param bool             $permanent   Destroy the row rather than tombstone it.
-	 */
-	public function __construct(
-		public readonly string $uuid,
-		public readonly ObjectFindTarget $target = new ObjectFindTarget(),
-		public readonly mixed $currentUser = null,
-		public readonly bool $permanent = false,
-	) {
-	}//end __construct()
-}//end class
+// Stubs for the OpenRegister call shapes of the 2026-11 adaptations, one file
+// per openregister change, so the adaptations can land in any order.
+foreach (glob(__DIR__ . '/openregister-surface/*.php') as $surfaceStub) {
+	require_once $surfaceStub;
+}

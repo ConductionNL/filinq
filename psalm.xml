@@ -216,6 +216,26 @@
                 -->
                 <referencedClass name="PhpOffice\PhpWord\Settings"/>
                 <referencedClass name="PhpOffice\PhpWord\IOFactory"/>
+                <!--
+                  OpenRegister value objects of the 2026-11 call shapes
+                  (openregister #8908, #9058, #9078, #9096, #9099, #9103,
+                  #9116, #9123): cross-app classes, loaded at runtime.
+                -->
+                <referencedClass name="OCA\OpenRegister\AppHost\LeafAdoption"/>
+                <referencedClass name="OCA\OpenRegister\Db\AuditTrail\NamedActor"/>
+                <referencedClass name="OCA\OpenRegister\Db\AuditTrail\ObjectAuditEvent"/>
+                <referencedClass name="OCA\OpenRegister\Db\AuditTrail\ObjectAuditEventOptions"/>
+                <referencedClass name="OCA\OpenRegister\Files\Service\TextExtractionService"/>
+                <referencedClass name="OCA\OpenRegister\Kernel\Contracts\RegisterSchemaRef"/>
+                <referencedClass name="OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions"/>
+                <referencedClass name="OCA\OpenRegister\Service\Archival\LegalHoldServiceInterface"/>
+                <referencedClass name="OCA\OpenRegister\Service\HoldOrder"/>
+                <referencedClass name="OCA\OpenRegister\Service\Object\ObjectDeletion"/>
+                <referencedClass name="OCA\OpenRegister\Service\Object\ObjectFindTarget"/>
+                <referencedClass name="OCA\OpenRegister\Service\Object\ObjectPatch"/>
+                <referencedClass name="OCA\OpenRegister\Service\Object\ObjectSaveOptions"/>
+                <referencedClass name="OCA\OpenRegister\Service\Object\SaveActor"/>
+                <referencedClass name="OCA\OpenRegister\Service\Object\SavePolicy"/>
             </errorLevel>
         </UndefinedClass>
         <!--
