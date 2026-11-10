@@ -27,6 +27,9 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\Pseudonymisation;
 
 use OCA\Filinq\Service\Redaction\AnonymizationLinkReader;
+use OCA\OpenRegister\Db\AuditTrail\NamedActor;
+use OCA\OpenRegister\Db\AuditTrail\ObjectAuditEvent;
+use OCA\OpenRegister\Db\AuditTrail\ObjectAuditEventOptions;
 use OCA\OpenRegister\Db\AuditTrailMapper;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -93,18 +96,20 @@ class PseudonymRestoreAudit {
 		}
 
 		try {
-			$this->auditTrail->createAuditTrailEntry(
-				object: $subject,
-				action: $action,
-				context: array_merge(
-					[
-						'anonymizationLink' => $linkId,
-						'actor' => $userId,
-						'at' => $this->time->getDateTime()->format(format: DATE_ATOM),
-					],
-					$details
-				),
-				actorId: $userId
+			$this->auditTrail->recordObjectEvent(
+				event: new ObjectAuditEvent(
+					object: $subject,
+					action: $action,
+					context: array_merge(
+						[
+							'anonymizationLink' => $linkId,
+							'actor' => $userId,
+							'at' => $this->time->getDateTime()->format(format: DATE_ATOM),
+						],
+						$details
+					),
+					options: new ObjectAuditEventOptions(actor: new NamedActor(id: $userId))
+				)
 			);
 		} catch (Throwable $e) {
 			throw new RuntimeException(message: 'The audit trail refused the restore entry: ' . $e->getMessage(), code: 0, previous: $e);

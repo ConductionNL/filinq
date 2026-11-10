@@ -1091,32 +1091,20 @@ class AuditTrailMapper {
 	}//end findAll()
 
 	/**
-	 * Create an audit trail entry for a custom action.
+	 * Record a non-CRUD action on one object, with an explicit actor when one is named.
 	 *
-	 * @param ObjectEntity $object The object the entry relates to.
-	 * @param string $action The action type.
-	 * @param array $context Additional context data.
-	 * @param string|null $actorId The acting user, null for the session user.
-	 * @param string|null $actorName The acting user's display name.
-	 * @param string|null $ipAddress The request's address.
+	 * @param \OCA\OpenRegister\Db\AuditTrail\ObjectAuditEvent $event The object, action, context and options.
 	 *
 	 * @return AuditTrail
 	 */
-	public function createAuditTrailEntry(
-		ObjectEntity $object,
-		string $action,
-		array $context = [],
-		?string $actorId = null,
-		?string $actorName = null,
-		?string $ipAddress = null,
-	): AuditTrail {
+	public function recordObjectEvent(\OCA\OpenRegister\Db\AuditTrail\ObjectAuditEvent $event): AuditTrail {
 		$trail = new AuditTrail();
-		$trail->setObjectUuid($object->getUuid());
-		$trail->setAction($action);
-		$trail->setChanged($context);
+		$trail->setObjectUuid($event->object->getUuid());
+		$trail->setAction($event->action);
+		$trail->setChanged($event->context);
 		$trail->setCreated(new \DateTime());
 		return $trail;
-	}//end createAuditTrailEntry()
+	}//end recordObjectEvent()
 }//end class
 
 /**
@@ -3184,4 +3172,81 @@ final class BackendState implements \JsonSerializable {
 			'backends' => $backends,
 		];
 	}
+}//end class
+
+namespace OCA\OpenRegister\Db\AuditTrail;
+
+use OCA\OpenRegister\Db\ObjectEntity;
+
+/**
+ * Stub for NamedActor (mirrors lib/Db/AuditTrail/NamedActor.php).
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Db\AuditTrail
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.filinq.app
+ */
+final class NamedActor {
+	/**
+	 * Constructor.
+	 *
+	 * @param string|null $id   Explicit actor id; null uses the session user.
+	 * @param string|null $name Explicit actor display name.
+	 */
+	public function __construct(
+		public readonly ?string $id = null,
+		public readonly ?string $name = null,
+	) {
+	}//end __construct()
+}//end class
+
+/**
+ * Stub for ObjectAuditEventOptions (mirrors lib/Db/AuditTrail/ObjectAuditEventOptions.php).
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Db\AuditTrail
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.filinq.app
+ */
+final class ObjectAuditEventOptions {
+	/**
+	 * Constructor.
+	 *
+	 * @param NamedActor  $actor     The explicit actor.
+	 * @param string|null $ipAddress The calling address.
+	 */
+	public function __construct(
+		public readonly NamedActor $actor = new NamedActor(),
+		public readonly ?string $ipAddress = null,
+	) {
+	}//end __construct()
+}//end class
+
+/**
+ * Stub for ObjectAuditEvent (mirrors lib/Db/AuditTrail/ObjectAuditEvent.php).
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Db\AuditTrail
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.filinq.app
+ */
+final class ObjectAuditEvent {
+	/**
+	 * Constructor.
+	 *
+	 * @param ObjectEntity            $object  The object the entry relates to.
+	 * @param string                  $action  The action.
+	 * @param array                   $context Additional context data.
+	 * @param ObjectAuditEventOptions $options The explicit actor and address.
+	 */
+	public function __construct(
+		public readonly ObjectEntity $object,
+		public readonly string $action,
+		public readonly array $context = [],
+		public readonly ObjectAuditEventOptions $options = new ObjectAuditEventOptions(),
+	) {
+	}//end __construct()
 }//end class

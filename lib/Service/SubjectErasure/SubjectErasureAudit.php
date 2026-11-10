@@ -21,6 +21,9 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\SubjectErasure;
 
 use OCA\Filinq\Exception\SubjectErasureRefusedException;
+use OCA\OpenRegister\Db\AuditTrail\NamedActor;
+use OCA\OpenRegister\Db\AuditTrail\ObjectAuditEvent;
+use OCA\OpenRegister\Db\AuditTrail\ObjectAuditEventOptions;
 use OCA\OpenRegister\Db\AuditTrailMapper;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -91,18 +94,20 @@ class SubjectErasureAudit {
 		}
 
 		try {
-			$this->auditTrail->createAuditTrailEntry(
-				object: $subject,
-				action: $action,
-				context: array_merge(
-					[
-						'subjectErasureRequest' => $requestUuid,
-						'actor' => $userId,
-						'at' => $this->time->getDateTime()->format(format: DATE_ATOM),
-					],
-					$details
-				),
-				actorId: $userId
+			$this->auditTrail->recordObjectEvent(
+				event: new ObjectAuditEvent(
+					object: $subject,
+					action: $action,
+					context: array_merge(
+						[
+							'subjectErasureRequest' => $requestUuid,
+							'actor' => $userId,
+							'at' => $this->time->getDateTime()->format(format: DATE_ATOM),
+						],
+						$details
+					),
+					options: new ObjectAuditEventOptions(actor: new NamedActor(id: $userId))
+				)
 			);
 		} catch (Throwable $e) {
 			throw new SubjectErasureRefusedException(
