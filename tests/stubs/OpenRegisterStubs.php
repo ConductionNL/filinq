@@ -3178,33 +3178,8 @@ final class BackendState implements \JsonSerializable {
 	}
 }//end class
 
-namespace OCA\OpenRegister\Service\Object;
-
-require_once __DIR__ . '/openregister-object-target.stub.php';
-
-/**
- * Stub for ObjectPatch (mirrors lib/Service/Object/ObjectPatch.php, openregister #9096).
- *
- * @category Tests
- * @package  OCA\OpenRegister\Service\Object
- * @author   Conduction B.V. <info@conduction.nl>
- * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.filinq.app
- */
-final class ObjectPatch {
-	/**
-	 * Constructor.
-	 *
-	 * @param string           $objectId    The object id, uuid or slug.
-	 * @param array            $data        The partial data to merge.
-	 * @param ObjectFindTarget $target      The register and schema scope.
-	 * @param mixed            $currentUser The explicit acting user.
-	 */
-	public function __construct(
-		public readonly string $objectId,
-		public readonly array $data,
-		public readonly ObjectFindTarget $target = new ObjectFindTarget(),
-		public readonly mixed $currentUser = null,
-	) {
-	}//end __construct()
-}//end class
+// Stubs for the OpenRegister call shapes of the 2026-11 adaptations, one file
+// per openregister change, so the adaptations can land in any order.
+foreach (glob(__DIR__ . '/openregister-surface/*.php') as $surfaceStub) {
+	require_once $surfaceStub;
+}

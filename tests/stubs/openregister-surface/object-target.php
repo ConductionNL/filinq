@@ -1,21 +1,22 @@
 <?php
 
 /**
- * OpenRegister's ObjectFindTarget (lib/Service/Object/ObjectFindTarget.php),
- * shared by the ObjectPatch (openregister #9096) and ObjectDeletion
- * (openregister #9099) stubs.
+ * OpenRegister ObjectFindTarget, shared by ObjectPatch (#9096), ObjectDeletion (#9099) and ObjectSaveOptions (#9123).
+ *
+ * Loaded by tests/stubs/OpenRegisterStubs.php.
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
  * @category Tests
- * @package  OCA\OpenRegister\Service\Object
+ * @package  OCA\OpenRegister
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  */
 
 declare(strict_types=1);
+
 
 namespace OCA\OpenRegister\Service\Object;
 
