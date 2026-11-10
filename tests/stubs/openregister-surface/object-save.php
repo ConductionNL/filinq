@@ -1,14 +1,15 @@
 <?php
 
 /**
- * OpenRegister's save value objects after openregister #9123:
- * ObjectSaveOptions, SavePolicy and SaveActor (lib/Service/Object/).
+ * OpenRegister save value objects: ObjectSaveOptions, SavePolicy and SaveActor (openregister #9123).
+ *
+ * Loaded by tests/stubs/OpenRegisterStubs.php.
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
  * @category Tests
- * @package  OCA\OpenRegister\Service\Object
+ * @package  OCA\OpenRegister
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
@@ -16,9 +17,9 @@
 
 declare(strict_types=1);
 
+
 namespace OCA\OpenRegister\Service\Object;
 
-require_once __DIR__ . '/openregister-object-target.stub.php';
 
 /**
  * How a save treats the write.
