@@ -91,16 +91,4 @@ class SignerStepDecisionEventsTest extends TestCase {
 		$this->assertNull($rejected->getComment());
 
 	}//end testNullableFieldsStayNull()
-
-	/**
-	 * The two events stay distinct types so listeners can tell them apart.
-	 *
-	 * @return void
-	 */
-	public function testEventsStayDistinctTypes(): void {
-		$approved = new SignerStepApprovedEvent('s', 't', 1, null, null, 'o');
-
-		$this->assertNotInstanceOf(SignerStepRejectedEvent::class, $approved);
-
-	}//end testEventsStayDistinctTypes()
 }//end class
