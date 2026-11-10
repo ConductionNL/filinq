@@ -40,6 +40,7 @@ use OCA\Filinq\Service\Redaction\AnonymizationLinkReader;
 use OCA\OpenRegister\Db\AuditTrail;
 use OCA\OpenRegister\Db\AuditTrailMapper;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Kernel\Contracts\RegisterSchemaRef;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -126,7 +127,8 @@ trait PseudonymDoubles {
 	protected function objectService(): ObjectService {
 		$objects = $this->createMock(ObjectService::class);
 		$objects->method('searchObjectsBySlug')->willReturnCallback(
-			function (string $registerSlug, string $schemaSlug, array $filters = [], bool $_rbac = true) {
+			function (RegisterSchemaRef $target, array $filters = [], bool $_rbac = true) {
+				[$registerSlug, $schemaSlug] = [(string) $target->register, (string) $target->schema];
 				if ($_rbac === false) {
 					$this->bypasses[] = 'search:' . $schemaSlug;
 				}

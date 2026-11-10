@@ -34,6 +34,7 @@ namespace OCA\Filinq\Service;
 use Exception;
 use InvalidArgumentException;
 use OCA\Filinq\Kernel\Contracts\PolicyCrudServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\RegisterSchemaRef;
 use OCP\IGroupManager;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
@@ -485,8 +486,7 @@ class PolicyCrudService implements PolicyCrudServiceInterface {
 		// Use the slug-aware variant — OR's standard searchObjects requires
 		// numeric register/schema IDs and silently returns nothing otherwise.
 		$results = $objectService->searchObjectsBySlug(
-			registerSlug: $register,
-			schemaSlug: $schema,
+			target: new RegisterSchemaRef(register: $register, schema: $schema),
 			_rbac: false,
 			_multitenancy: false
 		);

@@ -32,6 +32,7 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use Exception;
 use OCA\Filinq\Kernel\Contracts\DocumentReviewServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\RegisterSchemaRef;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
@@ -196,8 +197,7 @@ class DocumentReviewService implements DocumentReviewServiceInterface {
 			// the review-due screen reported `total: 0` forever and a
 			// document past its review date reached nobody.
 			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: IntakeRepository::REGISTER,
-				schemaSlug: self::SCHEMA,
+				target: new RegisterSchemaRef(register: IntakeRepository::REGISTER, schema: self::SCHEMA),
 				filters: []
 			);
 		} catch (Throwable $e) {

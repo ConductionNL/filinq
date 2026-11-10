@@ -34,6 +34,7 @@ namespace OCA\Filinq\Service;
 use DateTimeImmutable;
 use OCA\Filinq\Exception\DocumentFinalException;
 use OCA\Filinq\Kernel\Contracts\DocumentFinalityRuleServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\RegisterSchemaRef;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
@@ -211,8 +212,7 @@ class DocumentFinalityRuleService implements DocumentFinalityRuleServiceInterfac
 			// app's state change. `$documentRole` is matched below rather
 			// than here, so it stays out of the filters.
 			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: self::REGISTER,
-				schemaSlug: self::SCHEMA,
+				target: new RegisterSchemaRef(register: self::REGISTER, schema: self::SCHEMA),
 				filters: [
 					'declaringApp' => $declaringApp,
 					'typeReference' => $typeReference,

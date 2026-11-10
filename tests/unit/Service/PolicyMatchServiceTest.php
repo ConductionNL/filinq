@@ -19,6 +19,7 @@ namespace OCA\Filinq\Tests\Unit\Service;
 
 use OCA\Filinq\Service\PolicyMatchService;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\RegisterSchemaRef;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -235,12 +236,12 @@ class PolicyMatchServiceTest extends TestCase {
 		$fakeObjectService = $this->createMock(ObjectServiceInterface::class);
 		$fakeObjectService->method('searchObjectsBySlug')->willReturnCallback(
 			static function (
-				string $registerSlug,
-				string $schemaSlug,
+				RegisterSchemaRef $target,
 				array $filters = [],
 				bool $_rbac = true,
 				bool $_multitenancy = true,
 			) use ($prohibitions, $standing): array {
+				[$registerSlug, $schemaSlug] = [(string) $target->register, (string) $target->schema];
 				if ($schemaSlug === 'publicationProhibition') {
 					return $prohibitions;
 				}

@@ -21,6 +21,7 @@ namespace OCA\Filinq\Tests\Unit\Service;
 
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\PageLayoutService;
+use OCA\OpenRegister\Kernel\Contracts\RegisterSchemaRef;
 use OCA\OpenRegister\Service\ObjectService;
 use Opis\JsonSchema\Validator;
 use PHPUnit\Framework\TestCase;
@@ -67,7 +68,8 @@ class PageLayoutServiceTest extends TestCase {
 		// 🔴 `searchObjectsBySlug`, not `searchObjects`: the service passes the
 		// slugs `filinq` and `pageLayout`.
 		$objectService->method('searchObjectsBySlug')->willReturnCallback(
-			static function (string $registerSlug, string $schemaSlug, array $filters) use ($versions): array {
+			static function (RegisterSchemaRef $target, array $filters) use ($versions): array {
+				[$registerSlug, $schemaSlug] = [(string) $target->register, (string) $target->schema];
 				// Every filter the service passes must match, as OpenRegister's
 				// search does, so a filter on `active` is honoured too.
 				return array_values(

@@ -33,6 +33,7 @@ namespace OCA\Filinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\Filinq\Kernel\Contracts\PeriodicDocumentServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\RegisterSchemaRef;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
@@ -304,8 +305,7 @@ class PeriodicDocumentService implements PeriodicDocumentServiceInterface {
 	private function activeSchedules(): array {
 		try {
 			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: IntakeRepository::REGISTER,
-				schemaSlug: self::SCHEMA,
+				target: new RegisterSchemaRef(register: IntakeRepository::REGISTER, schema: self::SCHEMA),
 				filters: ['active' => true]
 			);
 		} catch (Throwable $e) {

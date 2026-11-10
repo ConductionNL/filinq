@@ -24,6 +24,7 @@ use OCA\Filinq\Exception\AgreementStoreUnreadableException;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\IntakeRepository;
 use OCA\Filinq\Service\ReadsStoredObjectRows;
+use OCA\OpenRegister\Kernel\Contracts\RegisterSchemaRef;
 use OCP\AppFramework\Db\DoesNotExistException;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -198,8 +199,7 @@ class DownloadAgreementRepository {
 			// about. The document filter stays a BARE key beside the `@self`
 			// block, which is the spelling the objects path reads.
 			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: IntakeRepository::REGISTER,
-				schemaSlug: self::SCHEMA,
+				target: new RegisterSchemaRef(register: IntakeRepository::REGISTER, schema: self::SCHEMA),
 				filters: ['document' => $document]
 			);
 		} catch (DoesNotExistException $e) {

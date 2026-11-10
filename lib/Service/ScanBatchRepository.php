@@ -24,6 +24,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use OCA\Filinq\Kernel\Contracts\ScanBatchRepositoryInterface;
+use OCA\OpenRegister\Kernel\Contracts\RegisterSchemaRef;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
@@ -158,8 +159,7 @@ class ScanBatchRepository implements ScanBatchRepositoryInterface {
 			// re-splitting the same scanned PDF created a second one every
 			// time instead of resuming.
 			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: IntakeRepository::REGISTER,
-				schemaSlug: ScanBatchService::SCHEMA,
+				target: new RegisterSchemaRef(register: IntakeRepository::REGISTER, schema: ScanBatchService::SCHEMA),
 				filters: ['file' => $fileId]
 			);
 		} catch (Throwable $e) {

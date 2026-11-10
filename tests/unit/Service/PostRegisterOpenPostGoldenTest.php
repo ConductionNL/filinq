@@ -22,6 +22,7 @@ namespace OCA\Filinq\Tests\Unit\Service;
 use JsonSerializable;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\PostRegisterReader;
+use OCA\OpenRegister\Kernel\Contracts\RegisterSchemaRef;
 use OCA\OpenRegister\Service\ObjectService;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\AbstractLogger;
@@ -99,6 +100,11 @@ class PostRegisterOpenPostGoldenTest extends TestCase {
 		$calls = [];
 		$objects = $this->createMock(ObjectService::class);
 		$objects->method('searchObjectsBySlug')->willReturnCallback(function (...$args) use (&$calls, $rows) {
+			if (($args[0] ?? null) instanceof RegisterSchemaRef) {
+				// Recorded in the pre-#9103 shape: register and schema slug first.
+				$args = array_merge([$args[0]->register, $args[0]->schema], array_slice($args, 1));
+			}
+
 			$calls[] = ['search', $args];
 			if ($rows === 'fails') {
 				throw new RuntimeException('register offline');

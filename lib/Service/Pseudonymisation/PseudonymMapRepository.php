@@ -29,6 +29,7 @@ namespace OCA\Filinq\Service\Pseudonymisation;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\IntakeRepository;
 use OCA\Filinq\Service\ReadsStoredObjectRows;
+use OCA\OpenRegister\Kernel\Contracts\RegisterSchemaRef;
 use RuntimeException;
 use Throwable;
 
@@ -79,8 +80,7 @@ class PseudonymMapRepository {
 
 		try {
 			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: IntakeRepository::REGISTER,
-				schemaSlug: self::SCHEMA,
+				target: new RegisterSchemaRef(register: IntakeRepository::REGISTER, schema: self::SCHEMA),
 				filters: ['anonymizationLink' => $linkId],
 				_rbac: false
 			);
@@ -116,8 +116,7 @@ class PseudonymMapRepository {
 	public function findForSource(int $sourceFileId): array {
 		try {
 			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: IntakeRepository::REGISTER,
-				schemaSlug: self::SCHEMA,
+				target: new RegisterSchemaRef(register: IntakeRepository::REGISTER, schema: self::SCHEMA),
 				filters: ['sourceFileId' => $sourceFileId],
 				_rbac: false
 			);

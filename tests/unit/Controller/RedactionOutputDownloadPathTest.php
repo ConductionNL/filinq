@@ -44,9 +44,10 @@ use OCA\Filinq\Service\Redaction\DownloadAgreementGate;
 use OCA\Filinq\Service\Redaction\DownloadAgreementRepository;
 use OCA\Filinq\Service\Redaction\PublicationListComposer;
 use OCA\Filinq\Service\Redaction\RedactionOutputGuard;
+use OCA\OpenRegister\Kernel\Contracts\RegisterSchemaRef;
 use OCA\OpenRegister\Service\ObjectService;
-use OCP\AppFramework\Http;
 use OCP\AppFramework\Db\DoesNotExistException;
+use OCP\AppFramework\Http;
 use OCP\IRequest;
 use OCP\IUser;
 use OCP\IUserSession;
@@ -132,12 +133,12 @@ class RedactionOutputDownloadPathTest extends TestCase {
 
 		$objectService->method('searchObjectsBySlug')->willReturnCallback(
 			function (
-				string $registerSlug,
-				string $schemaSlug,
+				RegisterSchemaRef $target,
 				array $filters = [],
 				bool $_rbac = true,
 				bool $_multitenancy = true
 			) use ($readFails): array {
+				[$registerSlug, $schemaSlug] = [(string) $target->register, (string) $target->schema];
 				if ($readFails !== null) {
 					throw $readFails;
 				}

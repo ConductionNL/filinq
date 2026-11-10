@@ -22,6 +22,7 @@ use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\Ocr\OcrResultRepository;
 use OCA\Filinq\Service\Ocr\OcrRunService;
 use OCA\Filinq\Service\OcrService;
+use OCA\OpenRegister\Kernel\Contracts\RegisterSchemaRef;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -66,7 +67,7 @@ trait OcrDoubles {
 			}
 		);
 		$objects->method('searchObjectsBySlug')->willReturnCallback(
-			fn (string $registerSlug, string $schemaSlug, array $filters = []) => array_values(
+			fn (RegisterSchemaRef $target, array $filters = []) => array_values(
 				array_filter(
 					$this->ocrRows,
 					static fn (array $row): bool => ($row['fileId'] ?? null) === ($filters['fileId'] ?? null)

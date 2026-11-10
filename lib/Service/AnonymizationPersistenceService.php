@@ -32,6 +32,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use Exception;
+use OCA\OpenRegister\Kernel\Contracts\RegisterSchemaRef;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
@@ -317,8 +318,7 @@ class AnonymizationPersistenceService {
 		// The `@self` literal in linkForRun() belongs to the SAVED OBJECT,
 		// not to a query, and must stay.
 		$results = $objectService->searchObjectsBySlug(
-			registerSlug: 'filinq',
-			schemaSlug: 'anonymizationLink',
+			target: new RegisterSchemaRef(register: 'filinq', schema: 'anonymizationLink'),
 			filters: ['sourceFileId' => $fileId]
 		);
 

@@ -24,6 +24,7 @@ use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\IntakeRepository;
 use OCA\Filinq\Service\ReadsStoredObjectRows;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Kernel\Contracts\RegisterSchemaRef;
 use RuntimeException;
 use Throwable;
 
@@ -77,8 +78,7 @@ class SubjectErasureStore {
 	public function search(string $schema, array $filters = []): array {
 		try {
 			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: IntakeRepository::REGISTER,
-				schemaSlug: $schema,
+				target: new RegisterSchemaRef(register: IntakeRepository::REGISTER, schema: $schema),
 				filters: $filters,
 				_rbac: false
 			);

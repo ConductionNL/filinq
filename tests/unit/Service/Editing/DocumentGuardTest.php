@@ -20,6 +20,7 @@ namespace OCA\Filinq\Tests\Unit\Service\Editing;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\Editing\DocumentGuard;
 use OCA\Filinq\Service\FinalDocumentService;
+use OCA\OpenRegister\Kernel\Contracts\RegisterSchemaRef;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\Files\File;
 use PHPUnit\Framework\TestCase;
@@ -72,7 +73,8 @@ class DocumentGuardTest extends TestCase {
 			// signatureRefusal(), whose docblock says FAILS CLOSED, let every
 			// document under signature through.
 			$objectService->method('searchObjectsBySlug')->willReturnCallback(
-				static function (string $registerSlug, string $schemaSlug, array $filters) use ($bySchema): array {
+				static function (RegisterSchemaRef $target, array $filters) use ($bySchema): array {
+					[$registerSlug, $schemaSlug] = [(string) $target->register, (string) $target->schema];
 					return ($bySchema[$schemaSlug] ?? []);
 				}
 			);

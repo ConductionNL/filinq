@@ -29,6 +29,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use Exception;
+use OCA\OpenRegister\Kernel\Contracts\RegisterSchemaRef;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -84,8 +85,7 @@ class CustomDictionaryRepository {
 		// Slug-aware variant — OR's standard searchObjects requires numeric
 		// register/schema ids and silently returns nothing otherwise.
 		$results = $objectService->searchObjectsBySlug(
-			registerSlug: self::REGISTER,
-			schemaSlug: $schema,
+			target: new RegisterSchemaRef(register: self::REGISTER, schema: $schema),
 			_rbac: false,
 			_multitenancy: false
 		);

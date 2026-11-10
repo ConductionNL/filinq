@@ -23,6 +23,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use OCA\Filinq\Kernel\Contracts\PostRegisterReaderInterface;
+use OCA\OpenRegister\Kernel\Contracts\RegisterSchemaRef;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -88,8 +89,7 @@ class PostRegisterReader implements PostRegisterReaderInterface {
 			// `discharged: false` on every one, and openPostFor() never
 			// skipped a letter somebody had already replied to.
 			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: self::REGISTER,
-				schemaSlug: self::SCHEMA,
+				target: new RegisterSchemaRef(register: self::REGISTER, schema: self::SCHEMA),
 				filters: ['answers' => $uuid]
 			);
 		} catch (Throwable $e) {
@@ -182,8 +182,7 @@ class PostRegisterReader implements PostRegisterReaderInterface {
 			// method would report a unit with no post at all, confidently and
 			// with nothing in the log.
 			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: self::REGISTER,
-				schemaSlug: self::SCHEMA,
+				target: new RegisterSchemaRef(register: self::REGISTER, schema: self::SCHEMA),
 				filters: [
 					'unit' => $unitId,
 					'direction' => self::DIRECTION_INBOUND,
@@ -250,8 +249,7 @@ class PostRegisterReader implements PostRegisterReaderInterface {
 			// HTTP 200, which is exactly the answer the comment below says
 			// must never be given by accident.
 			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: self::REGISTER,
-				schemaSlug: self::SCHEMA,
+				target: new RegisterSchemaRef(register: self::REGISTER, schema: self::SCHEMA),
 				filters: ['unit' => $unitId]
 			);
 		} catch (Throwable $e) {

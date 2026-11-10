@@ -196,8 +196,7 @@ class ObjectService {
 	 * PHPUnit-generated mocks accept the named arguments the merged callers use
 	 * (PolicyMatchService, LegalBasisProposalService).
 	 *
-	 * @param string $registerSlug Register slug.
-	 * @param string $schemaSlug Schema slug.
+	 * @param \OCA\OpenRegister\Kernel\Contracts\RegisterSchemaRef $target The register and schema slugs.
 	 * @param array<string, mixed> $filters Optional filters.
 	 * @param bool $_rbac RBAC bypass flag.
 	 * @param bool $_multitenancy Multitenancy flag.
@@ -205,8 +204,7 @@ class ObjectService {
 	 * @return array|int
 	 */
 	public function searchObjectsBySlug(
-		string $registerSlug,
-		string $schemaSlug,
+		\OCA\OpenRegister\Kernel\Contracts\RegisterSchemaRef $target,
 		array $filters = [],
 		bool $_rbac = true,
 		bool $_multitenancy = true,
@@ -2903,7 +2901,7 @@ if (interface_exists(ObjectServiceInterface::class) === false) {
 
 		public function searchObjectsPaginated(array $query = [], bool $_rbac = true, bool $_multitenancy = true, bool $deleted = false, ?array $ids = null, ?string $uses = null, ?array $views = null): array;
 
-		public function searchObjectsBySlug(string $registerSlug, string $schemaSlug, array $filters = [], bool $_rbac = true, bool $_multitenancy = true): array|int;
+		public function searchObjectsBySlug(\OCA\OpenRegister\Kernel\Contracts\RegisterSchemaRef $target, array $filters = [], bool $_rbac = true, bool $_multitenancy = true): array|int;
 
 		public function clearCurrents(): void;
 
@@ -3185,3 +3183,5 @@ final class BackendState implements \JsonSerializable {
 		];
 	}
 }//end class
+
+require_once __DIR__ . '/openregister-register-schema-ref.stub.php';

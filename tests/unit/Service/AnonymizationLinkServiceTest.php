@@ -24,6 +24,7 @@ use OCA\Filinq\Service\AnonymizationPersistenceService;
 use OCA\Filinq\Service\ConsentCrudService;
 use OCA\Filinq\Service\ConsentService;
 use OCA\Filinq\Service\OpenRegisterServiceLocator;
+use OCA\OpenRegister\Kernel\Contracts\RegisterSchemaRef;
 use OCP\App\IAppManager;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -123,7 +124,8 @@ class AnonymizationLinkServiceTest extends TestCase {
 			 *
 			 * @return array<int, mixed>
 			 */
-			public function searchObjectsBySlug(string $registerSlug = '', string $schemaSlug = '', array $filters = []): array {
+			public function searchObjectsBySlug(RegisterSchemaRef $target, array $filters = []): array {
+				[$registerSlug, $schemaSlug] = [(string) $target->register, (string) $target->schema];
 				if ($this->searchThrows === true) {
 					throw new \RuntimeException('search boom');
 				}

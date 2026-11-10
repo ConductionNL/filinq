@@ -37,6 +37,7 @@ use OCA\Filinq\Service\PartySuggestionService;
 use OCA\Filinq\Service\Support\IntakeFiling;
 use OCA\Filinq\Service\Support\IntakeRouting;
 use OCA\Filinq\Tests\Unit\Service\Ocr\OcrDoubles;
+use OCA\OpenRegister\Kernel\Contracts\RegisterSchemaRef;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\IJobList;
@@ -110,7 +111,8 @@ class IntakeServiceTest extends TestCase {
 		// those as numeric ids and answers zero rows with no error. A double
 		// on the wrong method is a double that cannot fail.
 		$objectService->method('searchObjectsBySlug')->willReturnCallback(
-			static function (string $registerSlug, string $schemaSlug, array $filters) use ($rows): array {
+			static function (RegisterSchemaRef $target, array $filters) use ($rows): array {
+				[$registerSlug, $schemaSlug] = [(string) $target->register, (string) $target->schema];
 				$matches = [];
 				foreach ($rows as $row) {
 					$hit = true;

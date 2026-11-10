@@ -21,6 +21,7 @@ namespace OCA\Filinq\Tests\Unit\Service;
 
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\IntakeRoutingService;
+use OCA\OpenRegister\Kernel\Contracts\RegisterSchemaRef;
 use OCA\OpenRegister\Service\ObjectService;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -60,7 +61,8 @@ class IntakeRoutingServiceTest extends TestCase {
 		// slugs `filinq` and `intakeRoutingRule`, which `searchObjects`
 		// answers with zero rows and no error.
 		$objectService->method('searchObjectsBySlug')->willReturnCallback(
-			static function (string $registerSlug, string $schemaSlug, array $filters) use ($declarations): array {
+			static function (RegisterSchemaRef $target, array $filters) use ($declarations): array {
+				[$registerSlug, $schemaSlug] = [(string) $target->register, (string) $target->schema];
 				$matches = [];
 				foreach ($declarations as $row) {
 					if ((string)($row['declaringApp'] ?? '') !== (string)($filters['declaringApp'] ?? '')) {

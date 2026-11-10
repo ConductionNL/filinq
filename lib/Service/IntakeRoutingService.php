@@ -31,6 +31,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use OCA\Filinq\Kernel\Contracts\IntakeRoutingServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\RegisterSchemaRef;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
@@ -144,8 +145,7 @@ class IntakeRoutingService implements IntakeRoutingServiceInterface {
 			// `acceptance.required = false` on documents whose declaring app
 			// had asked for acceptance. Filters stay BARE keys.
 			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: IntakeRepository::REGISTER,
-				schemaSlug: self::SCHEMA,
+				target: new RegisterSchemaRef(register: IntakeRepository::REGISTER, schema: self::SCHEMA),
 				filters: [
 					'declaringApp' => $declaringApp,
 					'typeReference' => $typeReference,
