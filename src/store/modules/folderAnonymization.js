@@ -210,43 +210,52 @@ function createdObjectUuid(data) {
 	return data?.['@self']?.id || data?.id || data?.uuid || null
 }
 
+/**
+ * The store's fields as a fresh store and reset() have them; the poll timer
+ * is left out because reset() clears it through stopPolling(). Copied on
+ * every use, so a change to the store never reaches these defaults.
+ */
+const FOLDER_DEFAULTS = Object.freeze({
+	folderPath: '',
+	folderId: null,
+	batchId: null,
+	batchStatus: null,
+	files: [],
+	entities: [],
+	progress: 0,
+	totalFiles: 0,
+	totalEntities: 0,
+	error: null,
+	processing: false,
+	minConfidence: 0.0,
+	// Set when anonymise was asked for while no file was checked.
+	reviewRequired: false,
+	// Files the last anonymise run left alone because nobody checked them.
+	skippedUnreviewed: [],
+
+	// Wave 4a (anonymisation-grondslagen-summary) state.
+	// Operator can optionally create a dossier for the chosen folder so
+	// the per-dossier grondslagen report has something to operate on.
+	dossier: {
+		uuid: null,
+		name: '',
+		description: '',
+		bases: ['art-5-1-2-e'],
+		creating: false,
+		error: null,
+	},
+	appendBasisSummary: true,
+	report: {
+		generating: false,
+		result: null,
+		error: null,
+	},
+})
+
 export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 	state: () => ({
-		folderPath: '',
-		folderId: null,
-		batchId: null,
-		batchStatus: null,
-		files: [],
-		entities: [],
-		progress: 0,
-		totalFiles: 0,
-		totalEntities: 0,
-		error: null,
-		processing: false,
+		...structuredClone(FOLDER_DEFAULTS),
 		pollTimer: null,
-		minConfidence: 0.0,
-		// Set when anonymise was asked for while no file was checked.
-		reviewRequired: false,
-		// Files the last anonymise run left alone because nobody checked them.
-		skippedUnreviewed: [],
-
-		// Wave 4a (anonymisation-grondslagen-summary) state.
-		// Operator can optionally create a dossier for the chosen folder so
-		// the per-dossier grondslagen report has something to operate on.
-		dossier: {
-			uuid: null,
-			name: '',
-			description: '',
-			bases: ['art-5-1-2-e'],
-			creating: false,
-			error: null,
-		},
-		appendBasisSummary: true,
-		report: {
-			generating: false,
-			result: null,
-			error: null,
-		},
 	}),
 	getters: {
 		isActive: (state) => state.batchId !== null,
@@ -605,36 +614,7 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 		 */
 		reset() {
 			this.stopPolling()
-			Object.assign(this, {
-				folderPath: '',
-				folderId: null,
-				batchId: null,
-				batchStatus: null,
-				files: [],
-				entities: [],
-				progress: 0,
-				totalFiles: 0,
-				totalEntities: 0,
-				error: null,
-				processing: false,
-				minConfidence: 0.0,
-				reviewRequired: false,
-				skippedUnreviewed: [],
-				dossier: {
-					uuid: null,
-					name: '',
-					description: '',
-					bases: ['art-5-1-2-e'],
-					creating: false,
-					error: null,
-				},
-				appendBasisSummary: true,
-				report: {
-					generating: false,
-					result: null,
-					error: null,
-				},
-			})
+			Object.assign(this, structuredClone(FOLDER_DEFAULTS))
 		},
 	},
 })
