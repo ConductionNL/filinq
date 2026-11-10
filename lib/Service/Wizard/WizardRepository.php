@@ -28,8 +28,7 @@ namespace OCA\Filinq\Service\Wizard;
 
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\IntakeRepository;
-use OCA\OpenRegister\Service\Object\ObjectFindTarget;
-use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
+use OCA\Filinq\Service\Support\SavesArgumentArrays;
 use RuntimeException;
 use Throwable;
 
@@ -37,6 +36,8 @@ use Throwable;
  * CRUD of wizardDefinition objects.
  */
 class WizardRepository {
+	use SavesArgumentArrays;
+
 
 	/**
 	 * The schema slug.
@@ -164,13 +165,7 @@ class WizardRepository {
 		}
 
 		try {
-			$stored = $this->objectResolver->resolve()->saveObject(
-				object: $arguments['object'],
-				options: new ObjectSaveOptions(
-					target: new ObjectFindTarget(register: $arguments['register'], schema: $arguments['schema']),
-					uuid: ($arguments['uuid'] ?? null)
-				)
-			);
+			$stored = $this->saveArguments(objects: $this->objectResolver->resolve(), arguments: $arguments);
 		} catch (Throwable $e) {
 			$code = 422;
 			if (in_array($e->getCode(), [401, 403], true) === true) {

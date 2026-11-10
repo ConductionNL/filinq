@@ -26,8 +26,7 @@ namespace OCA\Filinq\Service\BulkSigning;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\IntakeRepository;
 use OCA\Filinq\Service\ReadsStoredObjectRows;
-use OCA\OpenRegister\Service\Object\ObjectFindTarget;
-use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
+use OCA\Filinq\Service\Support\SavesArgumentArrays;
 use RuntimeException;
 use Throwable;
 
@@ -46,6 +45,8 @@ use Throwable;
  * @spec openspec/specs/bulk-signing-field-builder/spec.md#requirement-batch-envelope-and-placement-data-live-in-the-signing-register-req-ddbsf-001
  */
 class BulkSigningBatchRepository {
+	use SavesArgumentArrays;
+
 	use ReadsStoredObjectRows;
 
 	/**
@@ -86,13 +87,7 @@ class BulkSigningBatchRepository {
 		}
 
 		try {
-			$stored = $this->objectResolver->resolve()->saveObject(
-				object: $arguments['object'],
-				options: new ObjectSaveOptions(
-					target: new ObjectFindTarget(register: $arguments['register'], schema: $arguments['schema']),
-					uuid: ($arguments['uuid'] ?? null)
-				)
-			);
+			$stored = $this->saveArguments(objects: $this->objectResolver->resolve(), arguments: $arguments);
 		} catch (Throwable $e) {
 			throw new RuntimeException(message: 'Could not store the bulk send: ' . $e->getMessage(), code: 0, previous: $e);
 		}

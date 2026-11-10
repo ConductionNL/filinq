@@ -125,9 +125,6 @@ class SigningService implements SigningServiceInterface {
 	 *
 	 * @spec openspec/changes/digital-signing-integration/tasks.md#3-2
 	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
-	 *
-	 * @SuppressWarnings(PHPMD.ExcessiveMethodLength) The OpenRegister save calls take
-	 *   ObjectSaveOptions now; the wider call shape is the only growth.
 	 */
 	public function createRequest(array $data): array {
 		// Throws RuntimeException('No authenticated user') when there is no
@@ -200,11 +197,9 @@ class SigningService implements SigningServiceInterface {
 		$request = $this->outputs->artifactProducer->delegate(request: $request, signers: $signers);
 
 		['register' => $register, 'schema' => $schema] = $this->requireSigningRequestBinding();
-		$savedRequest = $objectService->saveObject(
-			object: $request,
-			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema), actor: new SaveActor(unowned: true)),
-			_rbac: false
-		);
+		$target       = new ObjectFindTarget(register: $register, schema: $schema);
+		$unowned      = new ObjectSaveOptions(target: $target, actor: new SaveActor(unowned: true));
+		$savedRequest = $objectService->saveObject(object: $request, options: $unowned, _rbac: false);
 		$createdRequest = $this->toArray(object: $savedRequest);
 
 		$requestId = $createdRequest['id'] ?? $createdRequest['uuid'] ?? '';
@@ -212,11 +207,7 @@ class SigningService implements SigningServiceInterface {
 			requestId: (string)$requestId,
 			entries: new SignerEntries(entries: $signers, prepared: $prepared)
 		);
-		$objectService->saveObject(
-			object: $createdRequest,
-			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema)),
-			_rbac: false
-		);
+		$objectService->saveObject(object: $createdRequest, options: new ObjectSaveOptions(target: $target), _rbac: false);
 		$createdRequest['assuranceFloor'] = $this->guards->assuranceGate->floorFor(request: $request);
 
 		$this->outputs->auditService->logEvent(
