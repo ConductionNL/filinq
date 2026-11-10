@@ -49,9 +49,8 @@ use RuntimeException;
  *
  * @spec openspec/specs/metadata-enrichment/spec.md
  *
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects) OpenRegister's save call
- *   takes three value objects (ObjectSaveOptions, ObjectFindTarget, SaveActor)
- *   for what were three scalar arguments; they are one dependency in practice.
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) OpenRegister's call shapes take
+ *   value objects where they took scalars; each counts as a coupling.
  */
 class MetadataService implements MetadataServiceInterface {
 	/**
