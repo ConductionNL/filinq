@@ -178,6 +178,34 @@ class OcrPdfExtractionTraceTest extends TestCase {
 	}//end testTrace()
 
 	/**
+	 * Without Tesseract an image is not read: one warning and the empty answer.
+	 *
+	 * @return void
+	 */
+	public function testImageWithoutTesseractIsSkipped(): void {
+		$logger = $this->createMock(\Psr\Log\LoggerInterface::class);
+		$logger->expects($this->once())->method('warning')->with('Tesseract is not available, skipping OCR');
+		$service = new class (
+			$logger,
+			$this->createMock(IAppConfig::class),
+			$this->createMock(IRootFolder::class),
+			$this->createMock(IUserSession::class)
+		) extends OcrService {
+			/**
+			 * Tesseract is absent.
+			 *
+			 * @return bool False.
+			 */
+			public function isTesseractAvailable(): bool {
+				return false;
+			}
+		};
+
+		$this->assertSame(['text' => '', 'confidence' => 0.0], $service->extractTextFromImage(filePath: '/data/page.png'));
+
+	}//end testImageWithoutTesseractIsSkipped()
+
+	/**
 	 * The recorded trace of this scenario, recording it first when asked to.
 	 *
 	 * @param array<string, mixed> $trace The trace just made.
