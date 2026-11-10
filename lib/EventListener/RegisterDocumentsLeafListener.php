@@ -47,7 +47,10 @@ declare(strict_types=1);
 namespace OCA\Filinq\EventListener;
 
 use OCA\Filinq\Kernel\AppIdentity;
+use OCA\OpenRegister\Service\Integration\LeafAvailability;
 use OCA\OpenRegister\Service\Integration\LeafDescriptor;
+use OCA\OpenRegister\Service\Integration\LeafIdentity;
+use OCA\OpenRegister\Service\Integration\LeafRendering;
 
 /**
  * Contributes the `filinq-documents` render leaf to OpenRegister.
@@ -96,19 +99,23 @@ class RegisterDocumentsLeafListener extends MountedLeafListener {
 	 */
 	protected function descriptor(): LeafDescriptor {
 		return new LeafDescriptor(
-			id: self::LEAF_ID,
-			label: $this->l10n->t('Documents'),
-			icon: self::ICON,
+			identity: new LeafIdentity(
+				id: self::LEAF_ID,
+				label: $this->l10n->t('Documents'),
+				icon: self::ICON,
+				group: 'documents',
+			),
 			kinds: [LeafDescriptor::KIND_RENDER_SURFACE],
-			requiredApp: AppIdentity::APP_ID,
-			group: 'documents',
-			surfaces: self::SURFACES,
-			referenceType: self::LEAF_ID,
+			availability: new LeafAvailability(requiredApp: AppIdentity::APP_ID),
 			// Filinq is Vue 3 and a consuming host may still be Vue 2.7, so
 			// the JS half hands over a bare DOM element and roots its own
 			// app there. The server half MUST name the same mode under the
 			// shared id or the host renders the leaf the wrong way.
-			renderMode: LeafDescriptor::RENDER_MODE_MOUNT,
+			rendering: new LeafRendering(
+				surfaces: self::SURFACES,
+				referenceType: self::LEAF_ID,
+				renderMode: LeafDescriptor::RENDER_MODE_MOUNT,
+			),
 		);
 	}//end descriptor()
 }//end class
