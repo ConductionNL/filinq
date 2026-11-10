@@ -3184,4 +3184,8 @@ final class BackendState implements \JsonSerializable {
 	}
 }//end class
 
-require_once __DIR__ . '/openregister-register-schema-ref.stub.php';
+// Stubs for the OpenRegister call shapes of the 2026-11 adaptations, one file
+// per openregister change, so the adaptations can land in any order.
+foreach (glob(__DIR__ . '/openregister-surface/*.php') as $surfaceStub) {
+	require_once $surfaceStub;
+}
