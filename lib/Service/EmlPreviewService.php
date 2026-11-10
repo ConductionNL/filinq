@@ -29,6 +29,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use OCA\Filinq\Kernel\Contracts\EmlPreviewServiceInterface;
+use OCA\OpenRegister\Files\Service\TextExtractionService;
 use OCP\App\IAppManager;
 use OCP\Files\File;
 use Psr\Container\ContainerInterface;
@@ -49,7 +50,7 @@ use Throwable;
 class EmlPreviewService implements EmlPreviewServiceInterface {
 
 	/**
-	 * OpenRegister FileService FQCN — exposes anonymizeEmlStructured().
+	 * OpenRegister FileService FQCN — resolves the file node.
 	 */
 	private const OR_FILE_SERVICE = 'OCA\\OpenRegister\\Service\\FileService';
 
@@ -73,9 +74,9 @@ class EmlPreviewService implements EmlPreviewServiceInterface {
 	/**
 	 * Render the original EML identified by $fileId to a preview PDF/A-3b.
 	 *
-	 * An EMPTY entity set is passed so nothing is redacted: the assembled PDF
-	 * is a faithful preview of the source message (original headers, body and
-	 * renderable attachments). No file is written — the bytes are streamed by
+	 * The message is parsed by OpenRegister's structured EML parser and
+	 * nothing is redacted: the assembled PDF is a faithful preview of the
+	 * source message (original headers, body and renderable attachments). No file is written — the bytes are streamed by
 	 * the caller. `EmlPdfAssemblyService::assemble()` throws
 	 * `ConversionFailedException` on an unrecoverable render failure; that is
 	 * left to propagate so the controller can surface a 422.
@@ -85,8 +86,8 @@ class EmlPreviewService implements EmlPreviewServiceInterface {
 	 * @return string PDF/A-3b bytes of the original-message preview.
 	 *
 	 * @throws RuntimeException When OpenRegister is unavailable, the file
-	 *                          cannot be resolved, or the anonymise-EML API
-	 *                          is absent.
+	 *                          cannot be resolved, or the EML parser is
+	 *                          unavailable.
 	 */
 	public function renderOriginalPreview(int $fileId): string {
 		$fileService = $this->resolveFileService();
@@ -96,14 +97,10 @@ class EmlPreviewService implements EmlPreviewServiceInterface {
 			throw new RuntimeException('EML preview: file ' . $fileId . ' is not a readable file node.');
 		}
 
-		if (method_exists($fileService, 'anonymizeEmlStructured') === false) {
-			throw new RuntimeException('EML preview requires the OpenRegister anonymise-EML API.');
-		}
-
-		// Empty entity set → no redaction: the structure carries the original
-		// headers, body and attachment bytes, so the assembled PDF is a
-		// faithful preview of the source message.
-		$structure = $fileService->anonymizeEmlStructured($node, [], 'document', null);
+		// The parsed structure carries the original headers, body and
+		// attachment bytes, so the assembled PDF is a faithful preview of the
+		// source message.
+		$structure = $this->resolveTextExtraction()->parseEmlStructured($node);
 
 		$this->logger->debug('EML preview assembled', ['fileId' => $fileId]);
 
@@ -134,4 +131,26 @@ class EmlPreviewService implements EmlPreviewServiceInterface {
 		}
 
 	}//end resolveFileService()
+
+	/**
+	 * Resolve OpenRegister's TextExtractionService (the structured EML parser).
+	 *
+	 * @return TextExtractionService The service.
+	 *
+	 * @throws RuntimeException When the service cannot be resolved.
+	 */
+	private function resolveTextExtraction(): TextExtractionService {
+		try {
+			$service = $this->container->get(TextExtractionService::class);
+		} catch (Throwable $e) {
+			throw new RuntimeException('EML preview could not resolve the OpenRegister EML parser: ' . $e->getMessage(), 0, $e);
+		}
+
+		if (($service instanceof TextExtractionService) === false) {
+			throw new RuntimeException('EML preview could not resolve the OpenRegister EML parser.');
+		}
+
+		return $service;
+
+	}//end resolveTextExtraction()
 }//end class
