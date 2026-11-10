@@ -26,9 +26,9 @@ use Exception;
 use FPDF;
 use OCA\Filinq\Service\Charts\SvgRasterizer;
 use OCA\Filinq\Service\DataResolverService;
+use OCA\Filinq\Service\DocumentJobStore;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\DocumentRenderPipeline;
-use OCA\Filinq\Service\DocumentJobStore;
 use OCA\Filinq\Service\DocumentService;
 use OCA\Filinq\Service\DocumentStorageService;
 use OCA\Filinq\Service\GeneratedDocumentLogger;
@@ -42,6 +42,7 @@ use OCA\Filinq\Service\Support\TemplateSources;
 use OCA\Filinq\Service\TemplateRenderer;
 use OCA\Filinq\Service\TemplateService;
 use OCA\Filinq\Service\TemplateVersionService;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -116,7 +117,7 @@ class TemplateVersionProvenanceTest extends TestCase {
 	private function services(bool $chainReadable = true): array {
 		$objects = $this->createMock(ObjectService::class);
 		$objects->method('find')->willReturnCallback(
-			fn (string $id, ?string $register = null, ?string $schema = null): array => [
+			fn (int|string $id = '', ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): array => [
 				'id' => 'tmpl-1',
 				'name' => 'Besluit',
 				'content' => 'Versie 4 {{ naam }}',

@@ -87,8 +87,16 @@
         {
             "ObjectService::find": {
                 "id": "d-1",
-                "register": "filinq",
-                "schema": "dossier"
+                "options": {
+                    "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\ObjectFindOptions": {
+                        "register": "filinq",
+                        "schema": "dossier",
+                        "extend": [],
+                        "files": false,
+                        "render": true,
+                        "audit": true
+                    }
+                }
             }
         },
         {
@@ -107,8 +115,16 @@
         {
             "ObjectService::find": {
                 "id": "d-404",
-                "register": "filinq",
-                "schema": "dossier"
+                "options": {
+                    "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\ObjectFindOptions": {
+                        "register": "filinq",
+                        "schema": "dossier",
+                        "extend": [],
+                        "files": false,
+                        "render": true,
+                        "audit": true
+                    }
+                }
             }
         },
         {
@@ -306,8 +322,16 @@
         {
             "ObjectService::find": {
                 "id": "d-1",
-                "register": "filinq",
-                "schema": "dossier",
+                "options": {
+                    "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\ObjectFindOptions": {
+                        "register": "filinq",
+                        "schema": "dossier",
+                        "extend": [],
+                        "files": false,
+                        "render": true,
+                        "audit": true
+                    }
+                },
                 "_rbac": false,
                 "_multitenancy": false
             }
@@ -351,8 +375,16 @@
         {
             "ObjectService::find": {
                 "id": "d-1",
-                "register": "filinq",
-                "schema": "dossier",
+                "options": {
+                    "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\ObjectFindOptions": {
+                        "register": "filinq",
+                        "schema": "dossier",
+                        "extend": [],
+                        "files": false,
+                        "render": true,
+                        "audit": true
+                    }
+                },
                 "_rbac": false,
                 "_multitenancy": false
             }
@@ -433,8 +465,16 @@
         {
             "ObjectService::find": {
                 "id": "d-1",
-                "register": "filinq",
-                "schema": "dossier",
+                "options": {
+                    "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\ObjectFindOptions": {
+                        "register": "filinq",
+                        "schema": "dossier",
+                        "extend": [],
+                        "files": false,
+                        "render": true,
+                        "audit": true
+                    }
+                },
                 "_rbac": false,
                 "_multitenancy": false
             }
@@ -492,8 +532,16 @@
         {
             "ObjectService::find": {
                 "id": "d-1",
-                "register": "filinq",
-                "schema": "dossier",
+                "options": {
+                    "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\ObjectFindOptions": {
+                        "register": "filinq",
+                        "schema": "dossier",
+                        "extend": [],
+                        "files": false,
+                        "render": true,
+                        "audit": true
+                    }
+                },
                 "_rbac": false,
                 "_multitenancy": false
             }

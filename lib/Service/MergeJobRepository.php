@@ -27,6 +27,7 @@ namespace OCA\Filinq\Service;
 
 use OCA\Filinq\Exception\MergeJobStoreUnreadableException;
 use OCA\Filinq\Kernel\Contracts\MergeJobRepositoryInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
@@ -116,8 +117,7 @@ class MergeJobRepository implements MergeJobRepositoryInterface {
 		try {
 			$object = $this->objectResolver->resolve()->find(
 				id: $uuid,
-				register: IntakeRepository::REGISTER,
-				schema: DocumentMergeService::SCHEMA
+				options: new ObjectFindOptions(register: IntakeRepository::REGISTER, schema: DocumentMergeService::SCHEMA)
 			);
 		} catch (Throwable $e) {
 			// 🔴 A FAILED READ IS NOT "NO SUCH MERGE". Returning null here is

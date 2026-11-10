@@ -24,6 +24,7 @@ use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\IntakeRepository;
 use OCA\Filinq\Service\ReadsStoredObjectRows;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use RuntimeException;
 use Throwable;
 
@@ -190,8 +191,7 @@ class SubjectErasureStore {
 		try {
 			$entity = $this->objectResolver->resolve()->find(
 				id: $uuid,
-				register: IntakeRepository::REGISTER,
-				schema: self::REQUEST,
+				options: new ObjectFindOptions(register: IntakeRepository::REGISTER, schema: self::REQUEST),
 				_rbac: false,
 				_multitenancy: false
 			);

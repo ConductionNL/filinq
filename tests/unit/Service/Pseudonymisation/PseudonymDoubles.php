@@ -40,6 +40,7 @@ use OCA\Filinq\Service\Redaction\AnonymizationLinkReader;
 use OCA\OpenRegister\Db\AuditTrail;
 use OCA\OpenRegister\Db\AuditTrailMapper;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -148,7 +149,10 @@ trait PseudonymDoubles {
 			}
 		);
 		$objects->method('find')->willReturnCallback(
-			function (string $id = '', string $register = '', string $schema = '', bool $_rbac = true, bool $_multitenancy = true, bool $_render = true) {
+			function (int|string $id = '', ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true) {
+				$register = (string) ($options?->register ?? '');
+				$schema = (string) ($options?->schema ?? '');
+				$_render = ($options?->render ?? true);
 				if (isset($this->rows[$schema][$id]) === false) {
 					return null;
 				}

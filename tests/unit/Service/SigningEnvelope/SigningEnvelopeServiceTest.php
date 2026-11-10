@@ -43,6 +43,7 @@ use OCA\Filinq\Service\SigningRequestValidator;
 use OCA\Filinq\Service\SigningService;
 use OCA\Filinq\Service\Support\SigningGuards;
 use OCA\Filinq\Service\Support\SigningOutputs;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Files\IRootFolder;
@@ -78,24 +79,18 @@ class EnvelopeObjectStore extends ObjectService {
 	/**
 	 * Find an object.
 	 *
-	 * @param string $id            Id
-	 * @param string $register      Register
-	 * @param string $schema        Schema
-	 * @param bool   $_rbac         RBAC
-	 * @param bool   $_multitenancy Multitenancy
-	 * @param bool   $_render       Render
-	 * @param bool   $_audit        Audit
+	 * @param int|string             $id            Object id or UUID.
+	 * @param ObjectFindOptions|null $options       Register, schema, render, audit.
+	 * @param bool                   $_rbac         RBAC bypass flag.
+	 * @param bool                   $_multitenancy Multitenancy bypass flag.
 	 *
 	 * @return array|null
 	 */
 	public function find(
-		string $id = '',
-		string $register = '',
-		string $schema = '',
+		int|string $id,
+		?ObjectFindOptions $options = null,
 		bool $_rbac = true,
 		bool $_multitenancy = true,
-		bool $_render = true,
-		bool $_audit = true,
 	) {
 		return ($this->rows[$id][1] ?? null);
 

@@ -22,6 +22,7 @@ namespace OCA\Filinq\Tests\Unit\Service;
 use Exception;
 use JsonSerializable;
 use OCA\Filinq\Service\DataResolverService;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -101,7 +102,9 @@ class DataResolverReferenceGoldenTest extends TestCase {
 		];
 		$calls = [];
 		$objectService = $this->createMock(ObjectService::class);
-		$objectService->method('find')->willReturnCallback(function (string $id = '', string $register = '', string $schema = '') use (&$calls, $objects) {
+		$objectService->method('find')->willReturnCallback(function (int|string $id = '', ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true) use (&$calls, $objects) {
+				$register = (string) ($options?->register ?? '');
+				$schema = (string) ($options?->schema ?? '');
 			$calls[] = [$id, $register, $schema];
 			if ($id === 'boom') {
 				throw new Exception('register offline');

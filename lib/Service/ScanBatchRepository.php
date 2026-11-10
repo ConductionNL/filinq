@@ -24,6 +24,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use OCA\Filinq\Kernel\Contracts\ScanBatchRepositoryInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
@@ -117,8 +118,7 @@ class ScanBatchRepository implements ScanBatchRepositoryInterface {
 		try {
 			$object = $this->objectResolver->resolve()->find(
 				id: $uuid,
-				register: IntakeRepository::REGISTER,
-				schema: ScanBatchService::SCHEMA
+				options: new ObjectFindOptions(register: IntakeRepository::REGISTER, schema: ScanBatchService::SCHEMA)
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(

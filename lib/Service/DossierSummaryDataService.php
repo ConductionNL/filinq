@@ -29,6 +29,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use OCA\Filinq\Service\Support\DossierSummaryParts;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\App\IAppManager;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
@@ -188,8 +189,7 @@ class DossierSummaryDataService {
 
 		$dossier = $objectService->find(
 			id: $dossierId,
-			register: 'filinq',
-			schema: 'dossier'
+			options: new ObjectFindOptions(register: 'filinq', schema: 'dossier')
 		);
 
 		if ($dossier === null) {

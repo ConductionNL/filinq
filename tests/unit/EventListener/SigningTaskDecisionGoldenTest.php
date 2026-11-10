@@ -157,7 +157,13 @@ class SigningTaskDecisionGoldenTest extends TestCase {
 				}
 			}
 
-			$this->seen[] = ['find' => array_intersect_key($named, ['id' => 1, 'register' => 1, 'schema' => 1, '_rbac' => 1])];
+			if (($named['options'] ?? null) !== null) {
+				$named['register'] = $named['options']->register;
+				$named['schema']   = $named['options']->schema;
+			}
+
+			$named = array_merge(array_intersect_key($named, ['id' => 1]), array_intersect_key($named, ['register' => 1, 'schema' => 1]), array_intersect_key($named, ['_rbac' => 1]));
+			$this->seen[] = ['find' => $named];
 			if (($named['id'] ?? null) !== self::OWNED) {
 				throw new DoesNotExistException('Object not found');
 			}

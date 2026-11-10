@@ -34,6 +34,7 @@ namespace OCA\Filinq\Service;
 use Exception;
 use InvalidArgumentException;
 use OCA\Filinq\Kernel\Contracts\PolicyCrudServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\IGroupManager;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
@@ -525,8 +526,7 @@ class PolicyCrudService implements PolicyCrudServiceInterface {
 		$objectService = $this->settingsService->getObjectService();
 		$object = $objectService->find(
 			id: $uuid,
-			register: $register,
-			schema: $schema,
+			options: new ObjectFindOptions(register: $register, schema: $schema),
 			_rbac: false,
 			_multitenancy: false
 		);

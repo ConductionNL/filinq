@@ -31,26 +31,20 @@ namespace OCA\OpenRegister\Service;
  */
 class ObjectService {
 	/**
-	 * Find an object by id
+	 * Find an object by id (openregister #9116 shape).
 	 *
-	 * @param string $id Object UUID
-	 * @param string $register Register slug
-	 * @param string $schema Schema slug
+	 * @param int|string $id Object id or UUID.
+	 * @param \OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions|null $options Register, schema, extend, files, render, audit.
 	 * @param bool $_rbac RBAC bypass flag.
 	 * @param bool $_multitenancy Multitenancy bypass flag.
-	 * @param bool $_render False returns the stored row: no writeOnly strip, no RBAC projection.
-	 * @param bool $_audit False skips the read audit entry.
 	 *
 	 * @return mixed
 	 */
 	public function find(
-		string $id = '',
-		string $register = '',
-		string $schema = '',
+		int|string $id,
+		?\OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions $options = null,
 		bool $_rbac = true,
 		bool $_multitenancy = true,
-		bool $_render = true,
-		bool $_audit = true,
 	) {
 		return null;
 	}//end find()
@@ -2891,7 +2885,7 @@ if (interface_exists(ObjectServiceInterface::class) === false) {
 
 		public function setRegister(string|int $register): static;
 
-		public function find(int|string $id, ?array $_extend = [], bool $files = false, string|int|null $register = null, string|int|null $schema = null, bool $_rbac = true, bool $_multitenancy = true, bool $_render = true, bool $_audit = true): ?ObjectEntityInterface;
+		public function find(int|string $id, ?\OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?ObjectEntityInterface;
 
 		public function findAll(array $config = [], bool $_rbac = true, bool $_multitenancy = true): array;
 
@@ -2931,7 +2925,7 @@ if (interface_exists(ObjectServiceInterface::class) === false) {
 
 		public function findByRelations(string $search, bool $partialMatch = true): array;
 
-		public function findSilent(string $id, ?array $_extend = [], bool $files = false, string|int|null $register = null, string|int|null $schema = null, bool $_rbac = true, bool $_multitenancy = true): ObjectEntityInterface;
+		public function findSilent(string $id, ?\OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ObjectEntityInterface;
 
 		public function countSearchObjects(array $query = [], bool $_rbac = true, bool $_multitenancy = true, ?array $ids = null, ?string $uses = null): int;
 
@@ -3184,4 +3178,37 @@ final class BackendState implements \JsonSerializable {
 			'backends' => $backends,
 		];
 	}
+}//end class
+
+namespace OCA\OpenRegister\Kernel\Contracts\Value;
+
+/**
+ * Stub for ObjectFindOptions (mirrors lib/Kernel/Contracts/Value/ObjectFindOptions.php, openregister #9116).
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Kernel\Contracts\Value
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.filinq.app
+ */
+final class ObjectFindOptions {
+	/**
+	 * Constructor.
+	 *
+	 * @param mixed      $register Register.
+	 * @param mixed      $schema   Schema.
+	 * @param array|null $extend   Properties to extend.
+	 * @param bool       $files    Include files.
+	 * @param bool       $render   Render the object.
+	 * @param bool       $audit    Write the read audit entry.
+	 */
+	public function __construct(
+		public readonly mixed $register = null,
+		public readonly mixed $schema = null,
+		public readonly ?array $extend = [],
+		public readonly bool $files = false,
+		public readonly bool $render = true,
+		public readonly bool $audit = true,
+	) {
+	}//end __construct()
 }//end class

@@ -28,6 +28,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use Exception;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\App\IAppManager;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
@@ -221,8 +222,7 @@ class DossierObjectRepository {
 		try {
 			$object = $objectService->find(
 				id: $dossierUuid,
-				register: 'filinq',
-				schema: 'dossier',
+				options: new ObjectFindOptions(register: 'filinq', schema: 'dossier'),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -274,8 +274,7 @@ class DossierObjectRepository {
 		try {
 			$object = $objectService->find(
 				id: $dossierUuid,
-				register: 'filinq',
-				schema: 'dossier',
+				options: new ObjectFindOptions(register: 'filinq', schema: 'dossier'),
 				_rbac: false,
 				_multitenancy: false
 			);

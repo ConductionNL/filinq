@@ -22,6 +22,7 @@ use OCA\Filinq\Service\DossierSummaryDataService;
 use OCA\Filinq\Service\GrondslagenPdfWriter;
 use OCA\Filinq\Service\LegalBasesSummaryService;
 use OCA\Filinq\Tests\Unit\Support\RecordsCalls;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\App\IAppManager;
 use OCP\Files\File;
 use OCP\Files\Folder;
@@ -192,6 +193,10 @@ class LegalBasesSummaryActingUserTraceTest extends TestCase {
 			public function __call(string $name, array $arguments): mixed {
 				if (($arguments['object']['configuration']['grondslagen']['lastGeneratedAt'] ?? null) !== null) {
 					$arguments['object']['configuration']['grondslagen']['lastGeneratedAt'] = '<time>';
+				}
+
+				if (($arguments['options'] ?? null) instanceof ObjectFindOptions) {
+					$arguments['options'] = [ObjectFindOptions::class => get_object_vars($arguments['options'])];
 				}
 
 				$this->trace[] = ['ObjectService::'.$name => $arguments];

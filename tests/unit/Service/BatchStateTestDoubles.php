@@ -47,6 +47,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\ICache;
@@ -288,11 +289,10 @@ class InMemoryObjectServiceFake extends ObjectService {
 	/**
 	 * Find a stored object.
 	 *
-	 * @param string $id Object UUID.
-	 * @param string $register Register slug.
-	 * @param string $schema Schema slug.
-	 * @param bool $_rbac RBAC bypass flag.
-	 * @param bool $_multitenancy Multitenancy bypass flag.
+	 * @param int|string             $id            Object id or UUID.
+	 * @param ObjectFindOptions|null $options       Register, schema, render, audit.
+	 * @param bool                   $_rbac         RBAC bypass flag.
+	 * @param bool                   $_multitenancy Multitenancy bypass flag.
 	 *
 	 * @return mixed The stored object.
 	 *
@@ -300,15 +300,14 @@ class InMemoryObjectServiceFake extends ObjectService {
 	 *                               OpenRegister's behaviour on a miss.
 	 */
 	public function find(
-		string $id = '',
-		string $register = '',
-		string $schema = '',
+		int|string $id,
+		?ObjectFindOptions $options = null,
 		bool $_rbac = true,
 		bool $_multitenancy = true,
-		bool $_render = true,
-		bool $_audit = true,
 	) {
-		$key = $this->key(register: $register, schema: $schema, uuid: $id);
+		$register = (string) ($options?->register ?? '');
+		$schema   = (string) ($options?->schema ?? '');
+		$key      = $this->key(register: $register, schema: $schema, uuid: (string) $id);
 		if (array_key_exists($key, $this->stored) === false) {
 			throw new DoesNotExistException('No object with id ' . $id);
 		}
@@ -436,22 +435,18 @@ class FixedResultObjectServiceFake extends ObjectService {
 	/**
 	 * Answer with the configured result.
 	 *
-	 * @param string $id Object UUID.
-	 * @param string $register Register slug.
-	 * @param string $schema Schema slug.
-	 * @param bool $_rbac RBAC bypass flag.
-	 * @param bool $_multitenancy Multitenancy bypass flag.
+	 * @param int|string             $id            Object id or UUID.
+	 * @param ObjectFindOptions|null $options       Register, schema, render, audit.
+	 * @param bool                   $_rbac         RBAC bypass flag.
+	 * @param bool                   $_multitenancy Multitenancy bypass flag.
 	 *
 	 * @return mixed The configured result.
 	 */
 	public function find(
-		string $id = '',
-		string $register = '',
-		string $schema = '',
+		int|string $id,
+		?ObjectFindOptions $options = null,
 		bool $_rbac = true,
 		bool $_multitenancy = true,
-		bool $_render = true,
-		bool $_audit = true,
 	) {
 		$this->findCalls++;
 		return $this->result;

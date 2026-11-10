@@ -28,6 +28,7 @@ namespace OCA\Filinq\Service\Wizard;
 
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\IntakeRepository;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use RuntimeException;
 use Throwable;
 
@@ -71,7 +72,10 @@ class WizardRepository {
 		}
 
 		try {
-			$object = $this->objectResolver->resolve()->find(id: $uuid, register: IntakeRepository::REGISTER, schema: self::SCHEMA);
+			$object = $this->objectResolver->resolve()->find(
+				id: $uuid,
+				options: new ObjectFindOptions(register: IntakeRepository::REGISTER, schema: self::SCHEMA)
+			);
 		} catch (Throwable) {
 			return null;
 		}

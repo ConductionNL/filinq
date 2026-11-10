@@ -28,6 +28,7 @@ use DateTimeInterface;
 use Exception;
 use OCA\Filinq\Kernel\Contracts\TemplateServiceInterface;
 use OCA\Filinq\Kernel\Contracts\TemplateVersionServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
@@ -180,8 +181,7 @@ class TemplateVersionService implements TemplateVersionServiceInterface {
 
 		$result = $objectService->find(
 			id: $versionId,
-			register: $config['register'],
-			schema: $config['schema']
+			options: new ObjectFindOptions(register: $config['register'], schema: $config['schema'])
 		);
 
 		if (empty($result) === true) {
@@ -303,8 +303,7 @@ class TemplateVersionService implements TemplateVersionServiceInterface {
 		$config = $this->registerResolver->getRegisterAndSchema();
 		$template = $this->getObjectService()->find(
 			id: $templateId,
-			register: $config['register'],
-			schema: $config['schema']
+			options: new ObjectFindOptions(register: $config['register'], schema: $config['schema'])
 		);
 
 		if (empty($template) === true) {

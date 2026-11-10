@@ -31,6 +31,7 @@ use OCA\Filinq\Service\Charts\SvgRasterizer;
 use OCA\Filinq\Service\Conversion\HtmlToOfficeConverter;
 use OCA\Filinq\Service\Conversion\LibreOfficeHeadlessBackend;
 use OCA\Filinq\Service\Support\PdfRendering;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use Psr\Log\LoggerInterface;
 use setasign\Fpdi\Fpdi;
 
@@ -109,8 +110,7 @@ class DocumentRenderPipeline {
 			$objectService = $this->objectResolver->resolve();
 			$result = $objectService->find(
 				id: $huisstijlId,
-				register: 'filinq',
-				schema: 'huisstijl'
+				options: new ObjectFindOptions(register: 'filinq', schema: 'huisstijl')
 			);
 
 			if (empty($result) === true) {

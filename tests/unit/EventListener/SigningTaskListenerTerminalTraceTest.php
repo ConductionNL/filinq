@@ -25,13 +25,14 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\EventListener;
 
 use OCA\Filinq\EventListener\SignerEventTranslator;
+use OCA\Filinq\EventListener\SignerSequenceTasks;
 use OCA\Filinq\EventListener\SignerStepDecision;
 use OCA\Filinq\EventListener\SignerStepTask;
-use OCA\Filinq\EventListener\SignerSequenceTasks;
 use OCA\Filinq\EventListener\SigningTaskListener;
 use OCA\Filinq\Kernel\Contracts\SettingsServiceInterface;
 use OCA\OpenRegister\Db\Task;
 use OCA\OpenRegister\Event\TaskTerminalEvent;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -69,7 +70,9 @@ class SigningTaskListenerTerminalTraceTest extends TestCase {
 		$this->translator = $this->createMock(SignerEventTranslator::class);
 		$this->objects = $this->createMock(ObjectService::class);
 		$this->objects->method('find')->willReturnCallback(
-			function (string $id = '', string $register = '', string $schema = '', bool $_rbac = true): ?stdClass {
+			function (int|string $id = '', ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?stdClass {
+				$register = (string) ($options?->register ?? '');
+				$schema = (string) ($options?->schema ?? '');
 				$this->lookups[] = ['id' => $id, 'register' => $register, 'schema' => $schema, 'rbac' => $_rbac];
 				if ($id === self::OWNED && $register === 'filinq' && $schema === 'signingRequest' && $_rbac === false) {
 					return new stdClass();

@@ -30,6 +30,7 @@ use OCA\Filinq\Service\LegalHold\LegalHoldNotifications;
 use OCA\Filinq\Service\LegalHold\LegalHoldRecordFreeze;
 use OCA\Filinq\Service\OpenRegisterServiceLocator;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -228,7 +229,10 @@ trait LegalHoldDoubles {
 			}
 		);
 		$objects->method('find')->willReturnCallback(
-			function (string $id = '', string $register = '', string $schema = '', bool $_rbac = true, bool $_multitenancy = true, bool $_render = true) {
+			function (int|string $id = '', ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true) {
+				$register = (string) ($options?->register ?? '');
+				$schema = (string) ($options?->schema ?? '');
+				$_render = ($options?->render ?? true);
 				if ($_render !== false) {
 					throw new RuntimeException('Records are read unrendered, so the retention block is there.');
 				}
