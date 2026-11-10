@@ -1,0 +1,66 @@
+{
+	"isAdmin": false,
+	"anonymiserBackend": {
+		"known": false,
+		"activeMethod": "",
+		"effectiveMethod": "",
+		"warning": null,
+		"appApiInstalled": false,
+		"warningDismissed": false,
+		"showWarning": false
+	},
+	"dashboardLayout": [
+		{
+			"id": 1,
+			"widgetId": "total-consents",
+			"gridX": 0,
+			"gridY": 0,
+			"gridWidth": 3,
+			"gridHeight": 2,
+			"showTitle": false
+		},
+		{
+			"id": 2,
+			"widgetId": "pending",
+			"gridX": 3,
+			"gridY": 0,
+			"gridWidth": 3,
+			"gridHeight": 2,
+			"showTitle": false
+		},
+		{
+			"id": 3,
+			"widgetId": "approved",
+			"gridX": 6,
+			"gridY": 0,
+			"gridWidth": 3,
+			"gridHeight": 2,
+			"showTitle": false
+		},
+		{
+			"id": 4,
+			"widgetId": "objected",
+			"gridX": 9,
+			"gridY": 0,
+			"gridWidth": 3,
+			"gridHeight": 2,
+			"showTitle": false
+		},
+		{
+			"id": 5,
+			"widgetId": "pending-consents",
+			"gridX": 0,
+			"gridY": 2,
+			"gridWidth": 6,
+			"gridHeight": 5
+		},
+		{
+			"id": 6,
+			"widgetId": "anonymization",
+			"gridX": 6,
+			"gridY": 2,
+			"gridWidth": 6,
+			"gridHeight": 5
+		}
+	]
+}

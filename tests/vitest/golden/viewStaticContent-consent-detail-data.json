@@ -1,0 +1,80 @@
+{
+	"editData": {
+		"consentStatus": null,
+		"notificationStatus": null,
+		"publicationDecision": null
+	},
+	"evidence": "",
+	"anonymiseToggle": false,
+	"policyMatchKind": null,
+	"entityTypeColorMap": {
+		"person": "warning",
+		"organization": "primary"
+	},
+	"consentStatusOptions": [
+		{
+			"label": "[t] Pending",
+			"value": "pending"
+		},
+		{
+			"label": "[t] Consent Given",
+			"value": "consent_given"
+		},
+		{
+			"label": "[t] Objection Received",
+			"value": "objection_received"
+		},
+		{
+			"label": "[t] No Response",
+			"value": "no_response"
+		},
+		{
+			"label": "[t] Anonymized",
+			"value": "anonymized"
+		}
+	],
+	"notificationStatusOptions": [
+		{
+			"label": "[t] Pending",
+			"value": "pending"
+		},
+		{
+			"label": "[t] Sent",
+			"value": "sent"
+		},
+		{
+			"label": "[t] Delivered",
+			"value": "delivered"
+		},
+		{
+			"label": "[t] Failed",
+			"value": "failed"
+		},
+		{
+			"label": "[t] Skipped",
+			"value": "skipped"
+		}
+	],
+	"publicationDecisionOptions": [
+		{
+			"label": "[t] Pending",
+			"value": "pending"
+		},
+		{
+			"label": "[t] Anonymize",
+			"value": "anonymize"
+		},
+		{
+			"label": "[t] Publish with Consent",
+			"value": "publish_with_consent"
+		},
+		{
+			"label": "[t] Publish Anonymized",
+			"value": "publish_anonymized"
+		},
+		{
+			"label": "[t] Reject",
+			"value": "reject"
+		}
+	]
+}
