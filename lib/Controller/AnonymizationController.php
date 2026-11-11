@@ -31,6 +31,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use OCA\Filinq\Controller\Support\AnonymizationServices;
+use OCA\Filinq\Controller\Support\OutputFormatChoice;
 use OCA\Filinq\Exception\ConversionFailedException;
 use OCA\Filinq\Exception\RedactionNotReviewedException;
 use OCA\Filinq\Kernel\AnonymizeCall;
@@ -90,21 +91,10 @@ class AnonymizationController extends Controller {
 	}//end __construct()
 
 	/**
-	 * Default-output-format tenant config key. The per-call
-	 * `outputFormat` request param overrides this when supplied.
-	 */
-	private const DEFAULT_OUTPUT_FORMAT_KEY = 'filinq.anonymisation.default_output_format';
-
-	/**
 	 * Supported values for the `outputFormat` request param + tenant
-	 * config. Anything else from the request results in HTTP 400.
-	 *
-	 * - `pdf-only` (default): convert to PDF and delete the native
-	 *   anonymised intermediate so only the PDF remains.
-	 * - `pdf`: convert to PDF but keep the native intermediate too.
-	 * - `preserve`: skip conversion; native format is the only output.
+	 * config, as OutputFormatChoice resolves them.
 	 */
-	private const VALID_OUTPUT_FORMATS = ['pdf-only', 'pdf', 'preserve'];
+	private const VALID_OUTPUT_FORMATS = OutputFormatChoice::VALID_OUTPUT_FORMATS;
 
 	/**
 	 * List all processed files with entity counts and status
@@ -603,29 +593,7 @@ class AnonymizationController extends Controller {
 	 * @spec openspec/specs/anonymization/spec.md
 	 */
 	private function resolveOutputFormat(array $params): ?string {
-		if (array_key_exists('outputFormat', $params) === true) {
-			$value = $params['outputFormat'];
-			if (is_string($value) === false
-				|| in_array($value, self::VALID_OUTPUT_FORMATS, true) === false
-			) {
-				return null;
-			}
+		return (new OutputFormatChoice(appConfig: $this->appConfig))->resolve(params: $params);
 
-			return $value;
-		}
-
-		$tenantDefault = $this->appConfig->getValueString(
-			'filinq',
-			self::DEFAULT_OUTPUT_FORMAT_KEY,
-			'pdf-only'
-		);
-
-		if (in_array($tenantDefault, self::VALID_OUTPUT_FORMATS, true) === false) {
-			// Malformed tenant setting falls back to spec default
-			// rather than rejecting the call.
-			return 'pdf-only';
-		}
-
-		return $tenantDefault;
 	}//end resolveOutputFormat()
 }//end class
