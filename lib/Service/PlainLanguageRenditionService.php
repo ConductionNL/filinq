@@ -109,23 +109,10 @@ class PlainLanguageRenditionService {
 			return null;
 		}
 
-		$statements = [];
-		foreach ((array)($declared['requiredStatements'] ?? []) as $statement) {
-			$key = trim((string)$statement);
-			if ($key !== '') {
-				$statements[] = $key;
-			}
-		}
-
-		$source = trim((string)($declared['source'] ?? PlainRenditionAcceptanceGate::SOURCE_TEMPLATE));
-		if ($source === '') {
-			$source = PlainRenditionAcceptanceGate::SOURCE_TEMPLATE;
-		}
-
 		return [
 			'templateId' => $templateId,
-			'requiredStatements' => array_values(array_unique($statements)),
-			'source' => $source,
+			'requiredStatements' => $this->requiredStatementsOf(declared: $declared),
+			'source' => $this->sourceOf(declared: $declared),
 		];
 
 	}//end counterpartOf()
@@ -144,18 +131,7 @@ class PlainLanguageRenditionService {
 		$missing = [];
 
 		foreach ($required as $statement) {
-			$value = ($data[$statement] ?? null);
-
-			// 🔴 AN EMPTY STRING IS UNRESOLVED. A statement resolving to '' puts
-			// a blank where the term should be, and a blank reads as "there is
-			// no term" to the person holding the letter. `0` and `false` are
-			// left alone: those are answers.
-			if ($value === null || (is_string($value) === true && trim($value) === '')) {
-				$missing[] = $statement;
-				continue;
-			}
-
-			if (is_array($value) === true && $value === []) {
+			if ($this->isUnresolved(value: ($data[$statement] ?? null)) === true) {
 				$missing[] = $statement;
 			}
 		}
@@ -189,52 +165,170 @@ class PlainLanguageRenditionService {
 			return null;
 		}
 
-		$missing = $this->unresolved(required: $counterpart['requiredStatements'], data: $data);
-		if ($missing !== []) {
-			$them = 'them';
-			if (count($missing) === 1) {
-				$them = 'it';
-			}
-
-			throw new PlainRenditionRefusedException(
-				message: 'The plain-language version of this letter needs ' . implode(', ', $missing)
-					.', and the data does not answer ' . $them . '. Neither version was filed.',
-				unresolved: $missing
-			);
-		}
-
+		$this->refuseUnresolved(counterpart: $counterpart, data: $data);
 		$accepted = $this->gate->require(source: $counterpart['source'], acceptance: $acceptance);
 
-		try {
-			$counterpartTemplate = $this->templates->getTemplate(id: $counterpart['templateId']);
-		} catch (Throwable $e) {
-			// 🔴 A COUNTERPART THAT CANNOT BE READ REFUSES THE GENERATION. Filing
-			// the formal letter alone would quietly drop a rendition the
-			// template says every reader gets, and nobody would see the
-			// difference until somebody complained they could not read their
-			// besluit.
-			$this->logger->warning(
-				'filinq.plain-rendition.counterpart-unreadable',
-				['templateId' => $counterpart['templateId'], 'error' => $e->getMessage()]
-			);
+		return $this->planOf(counterpart: $counterpart, accepted: $accepted);
 
-			throw new PlainRenditionRefusedException(
-				message: 'The plain-language template this letter declares could not be read, so neither version was filed.',
-				unresolved: ['counterpart'],
-				previous: $e
-			);
+	}//end plan()
+
+	/**
+	 * The required statements a declaration names, trimmed, without blanks and without repeats.
+	 *
+	 * @param array<string, mixed> $declared The declaration.
+	 *
+	 * @return array<int, string> The statement keys, in declaration order.
+	 */
+	private function requiredStatementsOf(array $declared): array {
+		$statements = [];
+		foreach ((array)($declared['requiredStatements'] ?? []) as $statement) {
+			$key = trim((string)$statement);
+			if ($key !== '') {
+				$statements[] = $key;
+			}
 		}
+
+		return array_values(array_unique($statements));
+
+	}//end requiredStatementsOf()
+
+	/**
+	 * Where the declared plain text comes from; a blank source is the template.
+	 *
+	 * @param array<string, mixed> $declared The declaration.
+	 *
+	 * @return string The source.
+	 */
+	private function sourceOf(array $declared): string {
+		$source = trim((string)($declared['source'] ?? PlainRenditionAcceptanceGate::SOURCE_TEMPLATE));
+		if ($source === '') {
+			$source = PlainRenditionAcceptanceGate::SOURCE_TEMPLATE;
+		}
+
+		return $source;
+
+	}//end sourceOf()
+
+	/**
+	 * Whether a statement's value leaves the statement unanswered.
+	 *
+	 * @param mixed $value The resolved value, null when absent.
+	 *
+	 * @return bool True for null, a blank string or an empty array.
+	 */
+	private function isUnresolved(mixed $value): bool {
+		// 🔴 AN EMPTY STRING IS UNRESOLVED. A statement resolving to '' puts
+		// a blank where the term should be, and a blank reads as "there is
+		// no term" to the person holding the letter. `0` and `false` are
+		// left alone: those are answers.
+		return $value === null
+			|| (is_string($value) === true && trim($value) === '')
+			|| (is_array($value) === true && $value === []);
+
+	}//end isUnresolved()
+
+	/**
+	 * Refuse the generation when the data leaves a required statement unanswered.
+	 *
+	 * @param array<string, mixed> $counterpart The declared counterpart.
+	 * @param array<string, mixed> $data        The resolved generation data.
+	 *
+	 * @return void
+	 *
+	 * @throws PlainRenditionRefusedException When a statement is unresolved.
+	 */
+	private function refuseUnresolved(array $counterpart, array $data): void {
+		$missing = $this->unresolved(required: $counterpart['requiredStatements'], data: $data);
+		if ($missing === []) {
+			return;
+		}
+
+		$them = 'them';
+		if (count($missing) === 1) {
+			$them = 'it';
+		}
+
+		throw new PlainRenditionRefusedException(
+			message: 'The plain-language version of this letter needs ' . implode(', ', $missing)
+				.', and the data does not answer ' . $them . '. Neither version was filed.',
+			unresolved: $missing
+		);
+
+	}//end refuseUnresolved()
+
+	/**
+	 * The plan for an accepted counterpart, with the counterpart template's content.
+	 *
+	 * @param array<string, mixed> $counterpart The declared counterpart.
+	 * @param array<string, mixed> $accepted    Who accepted the plain text, and when.
+	 *
+	 * @return array{templateId: string, content: string, statements: array<int, string>, source: string,
+	 *               acceptedBy: string, acceptedAt: string} The plan.
+	 *
+	 * @throws PlainRenditionRefusedException When the counterpart template cannot be read.
+	 */
+	private function planOf(array $counterpart, array $accepted): array {
+		$content = $this->counterpartContent(templateId: $counterpart['templateId']);
 
 		return [
 			'templateId' => $counterpart['templateId'],
-			'content' => (string)($counterpartTemplate['content'] ?? ''),
+			'content' => $content,
 			'statements' => $counterpart['requiredStatements'],
 			'source' => $counterpart['source'],
 			'acceptedBy' => $accepted['acceptedBy'],
 			'acceptedAt' => $accepted['acceptedAt'],
 		];
 
-	}//end plan()
+	}//end planOf()
+
+	/**
+	 * The content of the counterpart template.
+	 *
+	 * @param string $templateId The counterpart template id.
+	 *
+	 * @return string The content.
+	 *
+	 * @throws PlainRenditionRefusedException When the template cannot be read.
+	 */
+	private function counterpartContent(string $templateId): string {
+		try {
+			$counterpartTemplate = $this->templates->getTemplate(id: $templateId);
+		} catch (Throwable $e) {
+			$this->refuseUnreadable(templateId: $templateId, error: $e);
+		}
+
+		return (string)($counterpartTemplate['content'] ?? '');
+
+	}//end counterpartContent()
+
+	/**
+	 * Log and refuse a counterpart template that cannot be read.
+	 *
+	 * @param string    $templateId The counterpart template id.
+	 * @param Throwable $error      Why it could not be read.
+	 *
+	 * @return never
+	 *
+	 * @throws PlainRenditionRefusedException Always.
+	 */
+	private function refuseUnreadable(string $templateId, Throwable $error): never {
+		// 🔴 A COUNTERPART THAT CANNOT BE READ REFUSES THE GENERATION. Filing
+		// the formal letter alone would quietly drop a rendition the
+		// template says every reader gets, and nobody would see the
+		// difference until somebody complained they could not read their
+		// besluit.
+		$this->logger->warning(
+			'filinq.plain-rendition.counterpart-unreadable',
+			['templateId' => $templateId, 'error' => $error->getMessage()]
+		);
+
+		throw new PlainRenditionRefusedException(
+			message: 'The plain-language template this letter declares could not be read, so neither version was filed.',
+			unresolved: ['counterpart'],
+			previous: $error
+		);
+
+	}//end refuseUnreadable()
 
 	/**
 	 * The record fields a produced plain rendition adds to the generation entry.
