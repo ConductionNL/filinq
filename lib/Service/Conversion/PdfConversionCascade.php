@@ -50,38 +50,55 @@ final class PdfConversionCascade extends BackendWalk {
 	private array $attempts = [];
 
 	/**
+	 * The file to convert.
+	 *
+	 * @var File
+	 */
+	private File $source;
+
+	/**
 	 * The source MIME type.
 	 *
 	 * @var string
 	 */
-	private readonly string $mimeType;
+	private string $mimeType = '';
 
 	/**
 	 * The source extension, or an empty string.
 	 *
 	 * @var string
 	 */
-	private readonly string $ext;
+	private string $ext = '';
 
 	/**
 	 * Constructor.
 	 *
 	 * @param array<int, mixed> $backends Ordered list of backends; first success wins.
 	 * @param LoggerInterface   $logger   Logger for per-attempt diagnostics.
-	 * @param File              $source   The file to convert.
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		array $backends,
 		private readonly LoggerInterface $logger,
-		private readonly File $source,
 	) {
 		parent::__construct(backends: $backends);
+
+	}//end __construct()
+
+	/**
+	 * Read the source's MIME type and extension once, before the walk.
+	 *
+	 * @param File $source The file to convert.
+	 *
+	 * @return void
+	 */
+	protected function start(File $source): void {
+		$this->source = $source;
 		$this->mimeType = (string)$source->getMimeType();
 		$this->ext = $this->extractExtension(name: $source->getName());
 
-	}//end __construct()
+	}//end start()
 
 	/**
 	 * Ask one backend; anything that is not a backend is skipped without an attempt record.

@@ -59,7 +59,9 @@ abstract class BackendWalk {
 	}//end __construct()
 
 	/**
-	 * Walk the backends.
+	 * Walk the backends for one source file.
+	 *
+	 * @param \OCP\Files\File $source The file to convert.
 	 *
 	 * @return array{file: \OCP\Files\File, backend: string} The PDF and the backend that produced it.
 	 *
@@ -67,7 +69,8 @@ abstract class BackendWalk {
 	 *
 	 * @spec openspec/specs/document-editing/spec.md#requirement-conversion-routes-through-the-nextcloud-conversion-broker
 	 */
-	public function run(): array {
+	public function run(\OCP\Files\File $source): array {
+		$this->start(source: $source);
 		foreach ($this->backends as $backend) {
 			$result = $this->tryBackend(backend: $backend);
 			if ($result !== null) {
@@ -78,6 +81,15 @@ abstract class BackendWalk {
 		throw $this->failure();
 
 	}//end run()
+
+	/**
+	 * Take in the source file before the first backend is asked.
+	 *
+	 * @param \OCP\Files\File $source The file to convert.
+	 *
+	 * @return void
+	 */
+	abstract protected function start(\OCP\Files\File $source): void;
 
 	/**
 	 * Ask one backend, recording why it could not answer.

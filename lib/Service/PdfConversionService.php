@@ -118,11 +118,11 @@ class PdfConversionService {
 	 */
 	public function convertToPdfReporting(File $source, array $opts = []): array {
 		if (($opts['accessible'] ?? false) === true) {
-			$tagged = new TaggedPdfConversion(backends: $this->backends, source: $source, pdfa: (($opts['pdfa'] ?? false) === true));
-			return $tagged->run();
+			$tagged = new TaggedPdfConversion(backends: $this->backends, pdfa: (($opts['pdfa'] ?? false) === true));
+			return $tagged->run(source: $source);
 		}
 
-		return (new PdfConversionCascade(backends: $this->backends, logger: $this->logger, source: $source))->run();
+		return (new PdfConversionCascade(backends: $this->backends, logger: $this->logger))->run(source: $source);
 
 	}//end convertToPdfReporting()
 

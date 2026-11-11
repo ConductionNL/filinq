@@ -48,22 +48,39 @@ final class TaggedPdfConversion extends BackendWalk {
 	private array $attempts = [];
 
 	/**
+	 * The file to convert.
+	 *
+	 * @var File
+	 */
+	private File $source;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param array<int, mixed> $backends Ordered list of backends.
-	 * @param File              $source   The file to convert.
 	 * @param bool              $pdfa     Whether to keep PDF/A as well.
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		array $backends,
-		private readonly File $source,
 		private readonly bool $pdfa,
 	) {
 		parent::__construct(backends: $backends);
 
 	}//end __construct()
+
+	/**
+	 * Take in the source file; nothing is read from it until LibreOffice is asked.
+	 *
+	 * @param File $source The file to convert.
+	 *
+	 * @return void
+	 */
+	protected function start(File $source): void {
+		$this->source = $source;
+
+	}//end start()
 
 	/**
 	 * Without a tagged PDF the conversion fails; it never falls back to an untagged one.
