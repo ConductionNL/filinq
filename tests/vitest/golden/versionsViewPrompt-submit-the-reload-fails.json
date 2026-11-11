@@ -1,0 +1,16 @@
+{
+	"calls": [
+		[
+			"unfreezeDocument",
+			7,
+			"because"
+		],
+		[
+			"listVersions",
+			7
+		]
+	],
+	"emitted": [],
+	"prompt": "",
+	"error": "listVersions refused"
+}
