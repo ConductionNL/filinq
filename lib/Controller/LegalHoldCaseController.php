@@ -22,6 +22,7 @@ namespace OCA\Filinq\Controller;
 
 use OCA\Filinq\Exception\LegalHoldRefusedException;
 use OCA\Filinq\Kernel\Contracts\LegalHoldCaseServiceInterface;
+use OCA\Filinq\Service\ReadsCurrentUserId;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -39,6 +40,8 @@ use Throwable;
  * which answers anyone who can read the record, without naming the matter.
  */
 class LegalHoldCaseController extends Controller {
+
+	use ReadsCurrentUserId;
 
 	/**
 	 * HTTP status per refusal.
@@ -94,7 +97,7 @@ class LegalHoldCaseController extends Controller {
 						'holdType' => (string) $this->request->getParam('holdType', ''),
 						'custodian' => (string) $this->request->getParam('custodian', ''),
 					],
-					userId: $this->userId()
+					userId: $this->currentUserId()
 				),
 			]
 		);
@@ -116,7 +119,7 @@ class LegalHoldCaseController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function show(string $id): JSONResponse {
-		return $this->answer(action: fn (): array => $this->holds->get(uuid: $id, userId: $this->userId()));
+		return $this->answer(action: fn (): array => $this->holds->get(uuid: $id, userId: $this->currentUserId()));
 
 	}//end show()
 
@@ -130,7 +133,7 @@ class LegalHoldCaseController extends Controller {
 	#[NoAdminRequired]
 	public function create(): JSONResponse {
 		return $this->answer(
-			action: fn (): array => $this->holds->place(input: $this->request->getParams(), userId: $this->userId()),
+			action: fn (): array => $this->holds->place(input: $this->request->getParams(), userId: $this->currentUserId()),
 			okStatus: Http::STATUS_CREATED
 		);
 
@@ -151,7 +154,7 @@ class LegalHoldCaseController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function addScope(string $id): JSONResponse {
-		return $this->answer(action: fn (): array => $this->holds->addScope(uuid: $id, input: $this->request->getParams(), userId: $this->userId()));
+		return $this->answer(action: fn (): array => $this->holds->addScope(uuid: $id, input: $this->request->getParams(), userId: $this->currentUserId()));
 
 	}//end addScope()
 
@@ -170,7 +173,7 @@ class LegalHoldCaseController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function retry(string $id): JSONResponse {
-		return $this->answer(action: fn (): array => $this->holds->retry(uuid: $id, userId: $this->userId()));
+		return $this->answer(action: fn (): array => $this->holds->retry(uuid: $id, userId: $this->currentUserId()));
 
 	}//end retry()
 
@@ -193,7 +196,7 @@ class LegalHoldCaseController extends Controller {
 			action: fn (): array => $this->holds->release(
 				uuid: $id,
 				releaseReason: (string) $this->request->getParam('releaseReason', ''),
-				userId: $this->userId()
+				userId: $this->currentUserId()
 			)
 		);
 
@@ -214,7 +217,7 @@ class LegalHoldCaseController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function status(string $objectId): JSONResponse {
-		return $this->answer(action: fn (): array => $this->holds->statusFor(ref: $objectId, userId: $this->userId()));
+		return $this->answer(action: fn (): array => $this->holds->statusFor(ref: $objectId, userId: $this->currentUserId()));
 
 	}//end status()
 
@@ -263,19 +266,4 @@ class LegalHoldCaseController extends Controller {
 		);
 
 	}//end refused()
-
-	/**
-	 * The signed-in user's id, '' when nobody is.
-	 *
-	 * @return string The user id.
-	 */
-	private function userId(): string {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return '';
-		}
-
-		return $user->getUID();
-
-	}//end userId()
 }//end class

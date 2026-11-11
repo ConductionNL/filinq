@@ -28,6 +28,7 @@ namespace OCA\Filinq\Controller;
 
 use Exception;
 use OCA\Filinq\Kernel\Contracts\CorrespondenceServiceInterface;
+use OCA\Filinq\Service\ReadsCurrentUserId;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataDownloadResponse;
@@ -49,6 +50,8 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/changes/letter-correspondence-generation/tasks.md#task-1
  */
 class CorrespondenceController extends Controller {
+
+	use ReadsCurrentUserId;
 	use AnswersNotAuthenticated;
 
 	/**
@@ -149,7 +152,7 @@ class CorrespondenceController extends Controller {
 			$options = [];
 		}
 
-		$options['userId'] = $this->getCurrentUserId();
+		$options['userId'] = $this->currentUserId();
 
 		return [
 			'templateId' => $templateId,
@@ -266,7 +269,7 @@ class CorrespondenceController extends Controller {
 				$options = [];
 			}
 
-			$options['userId'] = $this->getCurrentUserId();
+			$options['userId'] = $this->currentUserId();
 
 			$result = $this->corrSvc->generateBatch(
 				templateId: $templateId,
@@ -389,20 +392,6 @@ class CorrespondenceController extends Controller {
 		}//end try
 
 	}//end jobStatus()
-
-	/**
-	 * Get the current user ID from the session
-	 *
-	 * @return string The user ID or empty string if not logged in
-	 */
-	private function getCurrentUserId(): string {
-		$user = $this->userSession->getUser();
-		if ($user !== null) {
-			return $user->getUID();
-		}
-
-		return '';
-	}//end getCurrentUserId()
 
 	/**
 	 * Handle exceptions and return appropriate JSON error responses
