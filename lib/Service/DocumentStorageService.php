@@ -191,25 +191,16 @@ class DocumentStorageService {
 				'name' => $uniqueName,
 				'size' => $file->getSize(),
 			];
-		} catch (Exception $e) {
-			if ($e->getCode() === self::ERROR_CODE_STORAGE_FAILURE) {
+		} catch (Throwable $e) {
+			if ($e instanceof Exception && $e->getCode() === self::ERROR_CODE_STORAGE_FAILURE) {
 				// Already a properly-coded/-messaged failure raised by
 				// resolveFolder() itself (e.g. "path segment is not a
 				// folder") — rethrow unchanged instead of double-wrapping.
 				throw $e;
 			}
 
-			$this->logger->error(
-				message: 'Failed to store generated document: ' . $e->getMessage(),
-				context: ['userId' => $userId, 'targetPath' => $targetPath, 'exception' => $e]
-			);
-
-			throw new Exception(
-				message: 'Failed to store generated document in Files: ' . $e->getMessage(),
-				code: self::ERROR_CODE_STORAGE_FAILURE,
-				previous: $e
-			);
-		} catch (Throwable $e) {
+			// Any other exception or engine error is logged and wrapped as
+			// one storage failure.
 			$this->logger->error(
 				message: 'Failed to store generated document: ' . $e->getMessage(),
 				context: ['userId' => $userId, 'targetPath' => $targetPath, 'exception' => $e]
