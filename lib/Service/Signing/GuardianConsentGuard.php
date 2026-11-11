@@ -291,8 +291,7 @@ class GuardianConsentGuard {
 			}
 
 			$candidate = $this->loadSigner(signerId: $candidateId);
-			$standsHere = ($candidate['guardianForSignerId'] ?? '') === $signerId;
-			if (($candidate['role'] ?? '') === 'guardian' && $standsHere === true && ($candidate['status'] ?? '') !== 'DECLINED') {
+			if ($this->standsAsGuardianFor(candidate: $candidate, signerId: $signerId) === true) {
 				$guardianIds[] = $candidateId;
 			}
 		}
@@ -300,6 +299,21 @@ class GuardianConsentGuard {
 		return $guardianIds;
 
 	}//end guardiansFor()
+
+	/**
+	 * Whether a signer is a guardian for this signer who has not declined.
+	 *
+	 * @param array<string, mixed> $candidate The candidate's signer record.
+	 * @param string               $signerId  The signer they would stand beside.
+	 *
+	 * @return bool True when they stand as guardian.
+	 */
+	private function standsAsGuardianFor(array $candidate, string $signerId): bool {
+		$standsHere = ($candidate['guardianForSignerId'] ?? '') === $signerId;
+
+		return ($candidate['role'] ?? '') === 'guardian' && $standsHere === true && ($candidate['status'] ?? '') !== 'DECLINED';
+
+	}//end standsAsGuardianFor()
 
 	/**
 	 * Load a signer record that belongs to this request.
