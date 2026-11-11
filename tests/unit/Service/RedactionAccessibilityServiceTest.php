@@ -136,4 +136,93 @@ class RedactionAccessibilityServiceTest extends TestCase {
 	public function testOffRecordsOnly(): void {
 		$this->assertSame(['clear' => true, 'warning' => null], $this->service([RedactionAccessibilityService::CFG_GATE => 'off'])->gate('degraded'));
 	}
+
+	public function testTheReportIsNormalised(): void {
+		$outcome = $this->service()->assess(['requested' => 'yes', 'preserved' => false, 'tagCountBefore' => '-4', 'tagCountAfter' => 3, 'lossReasons' => 7]);
+		$expected = ['state' => 'not-applicable', 'requested' => false, 'preserved' => false, 'tagCountBefore' => 0, 'tagCountAfter' => 3, 'lossReasons' => ['7']];
+		$this->assertSame($expected, $outcome);
+
+		$minimal = $this->service()->assess(['preserved' => false, 'tagCountBefore' => 2]);
+		$this->assertSame(['state' => 'degraded', 'requested' => false, 'preserved' => false, 'tagCountBefore' => 2, 'tagCountAfter' => 0, 'lossReasons' => []], $minimal);
+
+		$keyed = $this->service()->assess(['preserved' => false, 'tagCountBefore' => 2, 'lossReasons' => ['a' => 'x', 'b' => 'input-not-tagged']]);
+		$this->assertSame('not-applicable', $keyed['state']);
+		$this->assertSame(['x', 'input-not-tagged'], $keyed['lossReasons']);
+		$this->assertSame(['state' => 'unknown'], $this->service()->assess(['preserved' => 1]));
+	}
+
+	public function testAnUnavailableVeraPdfOrNoBytesLeaveTheClaim(): void {
+		$veraPdf = $this->createMock(VeraPdfService::class);
+		$veraPdf->method('isAvailable')->willReturn(false);
+		$veraPdf->expects($this->never())->method('validateBytes');
+		$report = ['preserved' => true, 'tagCountBefore' => 5, 'tagCountAfter' => 5];
+
+		$this->assertSame('preserved', $this->service([], $veraPdf)->assess($report, '%PDF <pdfuaid:part>1</pdfuaid:part>')['state']);
+		$this->assertArrayNotHasKey('veraPdfVerified', $this->service([], $veraPdf)->assess($report));
+	}
+
+	public function testAssessOutputReadsOnlyAPdfNode(): void {
+		$report = ['preserved' => true, 'tagCountBefore' => 5, 'tagCountAfter' => 5];
+		$pdf = new class {
+			public function getName(): string {
+				return 'Besluit.PDF';
+			}
+
+			public function getContent(): string {
+				return '%PDF <pdfuaid:part>1</pdfuaid:part>';
+			}
+		};
+		$outcome = $this->service([], $this->veraPdf(false))->assessOutput($report, $pdf);
+		$this->assertSame('degraded', $outcome['state']);
+		$this->assertFalse($outcome['veraPdfVerified']);
+
+		$docx = new class {
+			public function getName(): string {
+				return 'Besluit.docx';
+			}
+
+			public function getContent(): string {
+				throw new \RuntimeException('not read');
+			}
+		};
+		$throws = new class {
+			public function getName(): string {
+				return 'a.pdf';
+			}
+
+			public function getContent(): string {
+				throw new \RuntimeException('gone');
+			}
+		};
+		$nameless = new class {
+			public function getContent(): string {
+				return '%PDF <pdfuaid:part>1</pdfuaid:part>';
+			}
+		};
+		$untouched = $this->createMock(VeraPdfService::class);
+		$untouched->method('isAvailable')->willReturn(true);
+		$untouched->expects($this->never())->method('validateBytes');
+		foreach ([$docx, $throws, $nameless, 'a.pdf', null] as $output) {
+			$this->assertSame('preserved', $this->service([], $untouched)->assessOutput($report, $output)['state']);
+		}
+
+		$this->assertSame(['state' => 'unknown'], $this->service()->assessOutput(null, $pdf));
+	}
+
+	public function testTheGateWarningTexts(): void {
+		$warn = 'The redacted copy lost its accessibility (unknown): screen readers may not read it';
+		$this->assertSame(['clear' => true, 'warning' => $warn], $this->service()->gate(null));
+		$this->assertSame(['clear' => true, 'warning' => $warn], $this->service()->gate('unknown', ''));
+
+		$block = $this->service([RedactionAccessibilityService::CFG_GATE => 'block']);
+		$blocked = 'The redacted copy lost its accessibility (degraded): screen readers may not read it. Record a reason to publish it anyway';
+		$this->assertSame(['clear' => false, 'warning' => $blocked], $block->gate('degraded'));
+		$this->assertSame(
+			['clear' => true, 'warning' => 'The redacted copy lost its accessibility (degraded): screen readers may not read it'],
+			$block->gate('degraded', 'reden')
+		);
+		$this->assertSame(['clear' => true, 'warning' => null], $block->gate('preserved'));
+		$this->assertSame(['clear' => true, 'warning' => null], $this->service([RedactionAccessibilityService::CFG_GATE => 'off'])->gate(null));
+		$this->assertSame(['clear' => true, 'warning' => $warn], $this->service([RedactionAccessibilityService::CFG_GATE => 'other'])->gate(null));
+	}
 }//end class
