@@ -147,50 +147,105 @@ class ConsentService implements ConsentServiceInterface {
 		string $schema,
 		array $extra = [],
 	): array {
+		$request = new ConsentRequest(
+			documentId: $documentId,
+			entityType: $entityType,
+			entityText: $entityText,
+			register: $register,
+			schema: $schema,
+			extra: $extra
+		);
+		return $this->requestConsent(request: $request);
+
+	}//end createConsentRequest()
+
+	/**
+	 * Create (or idempotently update) the consent record one request asks for.
+	 *
+	 * Behaves as {@see ConsentService::createConsentRequest()}, which builds the
+	 * request and delegates here.
+	 *
+	 * @param ConsentRequest $request The document, the detected entity and the consent register and schema.
+	 *
+	 * @return array<string, mixed> The created or updated consent record (includes `wasUpdated`).
+	 *
+	 * @throws PolicyRejectedException If a prohibition rule matches the entity.
+	 * @throws Exception If consent creation/update fails.
+	 *
+	 * @spec openspec/specs/consent-management/spec.md
+	 */
+	public function requestConsent(ConsentRequest $request): array {
 		try {
-			$this->recordWriter->requireOpenRegister();
-
-			$context = $this->buildRequestContext(
-				documentId: $documentId,
-				entityType: $entityType,
-				entityText: $entityText,
-				extra: $extra
-			);
-
-			// Policy check — prohibition match blocks the entire request.
-			$policyResult = $this->policyMatcher->match(
-				entityText: $entityText,
-				entityType: $entityType
-			);
-			if ($policyResult !== null && $policyResult['kind'] === PolicyMatchService::KIND_PROHIBITION) {
-				throw new PolicyRejectedException(
-					ruleUuid: (string)$policyResult['uuid'],
-					ruleName: (string)$policyResult['primaryName']
-				);
-			}
-
-			$context = $this->withPolicyMatch(context: $context, policyResult: $policyResult) + ['register' => $register, 'schema' => $schema];
-
-			// Idempotency lookup — find an existing scope=document record.
-			$existing = $this->recordWriter->findExistingConsent(context: $context);
-
-			if ($existing !== null) {
-				return $this->recordWriter->updateExistingConsent(existing: $existing, context: $context);
-			}
-
-			return $this->recordWriter->createNewConsent(context: $context);
+			return $this->recordConsent(request: $request);
 		} catch (PolicyRejectedException $e) {
 			// Re-throw without wrapping so callers can catch the typed exception.
 			throw $e;
 		} catch (Exception $e) {
 			$this->logger->error(
 				message: 'Failed to create consent request: ' . $e->getMessage(),
-				context: ['documentId' => $documentId, 'exception' => $e]
+				context: ['documentId' => $request->documentId, 'exception' => $e]
 			);
 			throw new Exception(message: 'Failed to create consent request: ' . $e->getMessage(), code: 0, previous: $e);
 		}//end try
 
-	}//end createConsentRequest()
+	}//end requestConsent()
+
+	/**
+	 * Check the policy, then write the consent record: an update when one exists, a new record otherwise.
+	 *
+	 * @param ConsentRequest $request The consent request.
+	 *
+	 * @return array<string, mixed> The created or updated consent record.
+	 *
+	 * @throws PolicyRejectedException If a prohibition rule matches the entity.
+	 * @throws Exception If OpenRegister is unavailable or the lookup or write fails.
+	 */
+	private function recordConsent(ConsentRequest $request): array {
+		$this->recordWriter->requireOpenRegister();
+
+		$context = $this->buildRequestContext(request: $request);
+
+		// Policy check — prohibition match blocks the entire request.
+		$policyResult = $this->refuseProhibitedEntity(request: $request);
+
+		$context = $this->withPolicyMatch(context: $context, policyResult: $policyResult)
+			+ ['register' => $request->register, 'schema' => $request->schema];
+
+		// Idempotency lookup — find an existing scope=document record.
+		$existing = $this->recordWriter->findExistingConsent(context: $context);
+
+		if ($existing !== null) {
+			return $this->recordWriter->updateExistingConsent(existing: $existing, context: $context);
+		}
+
+		return $this->recordWriter->createNewConsent(context: $context);
+
+	}//end recordConsent()
+
+	/**
+	 * Match the entity against the policy rules, refusing it when a prohibition matches.
+	 *
+	 * @param ConsentRequest $request The consent request.
+	 *
+	 * @return array<string, mixed>|null The matcher's result for any other match, or null.
+	 *
+	 * @throws PolicyRejectedException If a prohibition rule matches the entity.
+	 */
+	private function refuseProhibitedEntity(ConsentRequest $request): ?array {
+		$policyResult = $this->policyMatcher->match(
+			entityText: $request->entityText,
+			entityType: $request->entityType
+		);
+		if ($policyResult !== null && $policyResult['kind'] === PolicyMatchService::KIND_PROHIBITION) {
+			throw new PolicyRejectedException(
+				ruleUuid: (string)$policyResult['uuid'],
+				ruleName: (string)$policyResult['primaryName']
+			);
+		}
+
+		return $policyResult;
+
+	}//end refuseProhibitedEntity()
 
 	/**
 	 * Build the consent-request context from the caller's inputs.
@@ -199,19 +254,12 @@ class ConsentService implements ConsentServiceInterface {
 	 * writer consumes. The policy-match discriminators are filled in later, by
 	 * {@see ConsentService::withPolicyMatch()}, once the matcher has run.
 	 *
-	 * @param string $documentId The document UUID.
-	 * @param string $entityType The entity type.
-	 * @param string $entityText The detected entity text.
-	 * @param array<string, mixed> $extra Additional consent data.
+	 * @param ConsentRequest $request The consent request.
 	 *
 	 * @return array<string, mixed> The consent-request context.
 	 */
-	private function buildRequestContext(
-		string $documentId,
-		string $entityType,
-		string $entityText,
-		array $extra,
-	): array {
+	private function buildRequestContext(ConsentRequest $request): array {
+		$extra = $request->extra;
 		$publicationBases = [];
 		if (is_array($extra['publicationBases'] ?? null) === true) {
 			$publicationBases = array_values(
@@ -220,9 +268,9 @@ class ConsentService implements ConsentServiceInterface {
 		}
 
 		return [
-			'documentId' => $documentId,
-			'entityType' => $entityType,
-			'entityText' => $entityText,
+			'documentId' => $request->documentId,
+			'entityType' => $request->entityType,
+			'entityText' => $request->entityText,
 			'entityKey' => $this->optionalString(extra: $extra, key: 'entityKey'),
 			'publicationBases' => $publicationBases,
 			'contactEmail' => $this->optionalString(extra: $extra, key: 'contactEmail'),
