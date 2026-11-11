@@ -244,20 +244,7 @@ class LegalBasisProposalService {
 	 */
 	public function getMapping(): array {
 		$raw = $this->config->getValueString(self::APP_ID, self::CONFIG_KEY, '{}');
-		$decoded = json_decode($raw, true);
-		if (is_array($decoded) === false) {
-			return [];
-		}
-
-		$mapping = [];
-		foreach ($decoded as $type => $slugs) {
-			$clean = $this->cleanSlugs(type: $type, slugs: $slugs);
-			if (count($clean) > 0) {
-				$mapping[$type] = $clean;
-			}
-		}
-
-		return $mapping;
+		return (new BasisMappingReader())->fromJson(raw: $raw);
 	}//end getMapping()
 
 	/**
@@ -434,42 +421,6 @@ class LegalBasisProposalService {
 		return (int)($row['relation_id'] ?? $row['relationId'] ?? 0);
 
 	}//end relationIdOf()
-
-	/**
-	 * The non-empty string slugs of one mapping entry.
-	 *
-	 * @param mixed $type  The entry's key.
-	 * @param mixed $slugs The entry's value.
-	 *
-	 * @return array<int, string> The slugs, or none when the key or the value has the wrong shape.
-	 */
-	private function cleanSlugs(mixed $type, mixed $slugs): array {
-		if (is_string($type) === false || is_array($slugs) === false) {
-			return [];
-		}
-
-		return $this->nonEmptyStrings(values: $slugs);
-
-	}//end cleanSlugs()
-
-	/**
-	 * The non-empty strings of a list, in order.
-	 *
-	 * @param array<mixed> $values The list.
-	 *
-	 * @return array<int, string> The non-empty strings.
-	 */
-	private function nonEmptyStrings(array $values): array {
-		$clean = [];
-		foreach ($values as $value) {
-			if (is_string($value) === true && $value !== '') {
-				$clean[] = $value;
-			}
-		}
-
-		return $clean;
-
-	}//end nonEmptyStrings()
 
 	/**
 	 * Merge each relation's current `bases` into the detection rows.
