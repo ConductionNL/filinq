@@ -318,6 +318,34 @@ import { loadTemplateWizard } from '../../services/wizard.js'
 import { useTemplateStore } from '../../store/modules/template.js'
 import { sanitizeHtml } from '../../utils/sanitizeHtml.js'
 
+/**
+ * The editor form's defaults for the fields a stored template fills.
+ */
+const TEMPLATE_FORM_DEFAULTS = Object.freeze({
+	name: '',
+	namespace: '',
+	description: '',
+	content: '',
+	category: '',
+	format: 'A4',
+	orientation: 'P',
+})
+
+/**
+ * The editor form fields of a stored template, each falling back to its default.
+ *
+ * @param {object} tmpl The stored template.
+ * @return {object} The form fields, tags joined for the tags input.
+ */
+function templateFormFields(tmpl) {
+	const fields = {}
+	for (const [key, fallback] of Object.entries(TEMPLATE_FORM_DEFAULTS)) {
+		fields[key] = tmpl[key] || fallback
+	}
+	fields.tagsInput = (tmpl.tags || []).join(', ')
+	return fields
+}
+
 export default {
 	name: 'TemplateDetail',
 	components: {
@@ -439,38 +467,16 @@ export default {
 	 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
 	 */
 	async mounted() {
-		const routeId = this.$route?.params?.id
-		if (
-			routeId
-			&& routeId !== 'new'
-			&& this.templateStore.templateItem?.id !== routeId
-		) {
-			// Opened by URL (the Templates index links here): load the template
-			// the route names, so the Versions and Wizard tabs can render.
-			await this.templateStore.fetchTemplate(routeId)
-		}
+		await this.loadRoutedTemplate()
 
 		if (!this.isNew) {
 			const tmpl = this.templateStore.templateItem
-			this.form.name = tmpl.name || ''
-			this.form.namespace = tmpl.namespace || ''
-			this.form.description = tmpl.description || ''
-			this.form.content = tmpl.content || ''
-			this.form.category = tmpl.category || ''
-			this.form.tagsInput = (tmpl.tags || []).join(', ')
-			this.form.format = tmpl.format || 'A4'
-			this.form.orientation = tmpl.orientation || 'P'
+			Object.assign(this.form, templateFormFields(tmpl))
 			this.editorHtml = tmpl.content || ''
 			this.lockOwner = tmpl.lockedBy || null
 
-			// Acquire lock.
-			const locked = await this.templateStore.acquireLock(tmpl.id)
-			if (locked) {
-				this.lockOwner = locked.lockedBy || null
-			}
-
-			const wizard = await loadTemplateWizard(tmpl.id)
-			this.hasWizard = wizard.ok && Boolean(wizard.data?.wizard)
+			await this.acquireTemplateLock(tmpl.id)
+			await this.loadWizardPresence(tmpl.id)
 		}
 	},
 
@@ -479,6 +485,49 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * Opened by URL (the Templates index links here): load the template
+		 * the route names, so the Versions and Wizard tabs can render.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
+		 */
+		async loadRoutedTemplate() {
+			const routeId = this.$route?.params?.id
+			if (
+				routeId
+				&& routeId !== 'new'
+				&& this.templateStore.templateItem?.id !== routeId
+			) {
+				await this.templateStore.fetchTemplate(routeId)
+			}
+		},
+
+		/**
+		 * Take the template's edit lock and show who holds it.
+		 *
+		 * @param {string} templateId The template.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
+		 */
+		async acquireTemplateLock(templateId) {
+			const locked = await this.templateStore.acquireLock(templateId)
+			if (locked) {
+				this.lockOwner = locked.lockedBy || null
+			}
+		},
+
+		/**
+		 * Note whether the template has an active guided wizard.
+		 *
+		 * @param {string} templateId The template.
+		 * @return {Promise<void>}
+		 */
+		async loadWizardPresence(templateId) {
+			const wizard = await loadTemplateWizard(templateId)
+			this.hasWizard = wizard.ok && Boolean(wizard.data?.wizard)
+		},
+
 		t,
 		/**
 		 * Open the wizard runner for this template.
