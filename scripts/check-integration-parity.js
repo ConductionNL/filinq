@@ -802,30 +802,30 @@ function sameValue(a, b) {
 }
 
 /**
- * Run every rule and report.
+ * Map each item with a statically-read id by that id.
+ *
+ * @param {Array<{id: string|null}>} items The faces or registrations.
+ * @return {Map<string, object>} The items by id.
+ */
+function indexById(items) {
+	const byId = new Map()
+	for (const item of items) {
+		if (item.id !== null) {
+			byId.set(item.id, item)
+		}
+	}
+	return byId
+}
+
+/**
+ * R1: every registration declares the complete render pair for its renderMode.
+ *
+ * @param {object} ctx The collected faces, registrations, schemas and the shared failures and counts.
  *
  * @return {void}
  */
-function main() {
-	const failures = []
-	const counts = {}
-	const faces = collectServerFaces()
-	const regs = collectJsRegistrations()
-	const { schemas, files: schemaFiles } = collectOrSchemas()
-
-	const jsById = new Map()
-	for (const r of regs) {
-		if (r.id !== null) {
-			jsById.set(r.id, r)
-		}
-	}
-	const faceById = new Map()
-	for (const f of faces) {
-		if (f.id !== null) {
-			faceById.set(f.id, f)
-		}
-	}
-
+function checkRenderPairs(ctx) {
+	const { regs, failures, counts } = ctx
 	// --- R1: complete render pair for the declared renderMode ---------------
 	counts.R1 = 0
 	for (const r of regs) {
@@ -846,7 +846,17 @@ function main() {
 			}
 		}
 	}
+}
 
+/**
+ * R2: every server face has a JS registration and every registration a server face.
+ *
+ * @param {object} ctx The collected faces, registrations, schemas and the shared failures and counts.
+ *
+ * @return {void}
+ */
+function checkIdCorrelation(ctx) {
+	const { faces, regs, jsById, faceById, failures, counts } = ctx
 	// --- R2: server↔JS id correlation ---------------------------------------
 	counts.R2 = 0
 	for (const f of faces) {
@@ -881,7 +891,17 @@ function main() {
 			)
 		}
 	}
+}
 
+/**
+ * R3: server and JS agree on renderMode.
+ *
+ * @param {object} ctx The collected faces, registrations, schemas and the shared failures and counts.
+ *
+ * @return {void}
+ */
+function checkRenderModes(ctx) {
+	const { jsById, faceById, failures, counts } = ctx
 	// --- R3: renderMode agreement across layers -----------------------------
 	counts.R3 = 0
 	for (const [id, f] of faceById) {
@@ -898,7 +918,17 @@ function main() {
 			)
 		}
 	}
+}
 
+/**
+ * R4: server and JS agree on the compared metadata fields.
+ *
+ * @param {object} ctx The collected faces, registrations, schemas and the shared failures and counts.
+ *
+ * @return {void}
+ */
+function checkMetadata(ctx) {
+	const { jsById, faceById, failures, counts } = ctx
 	// --- R4: cross-layer metadata agreement ---------------------------------
 	const COMPARED = [
 		'label',
@@ -930,7 +960,17 @@ function main() {
 			}
 		}
 	}
+}
 
+/**
+ * R5: a spread registration spreads the owning package's descriptor.
+ *
+ * @param {object} ctx The collected faces, registrations, schemas and the shared failures and counts.
+ *
+ * @return {void}
+ */
+function checkSpreadSources(ctx) {
+	const { regs, failures, counts } = ctx
 	// --- R5: a spread registration must spread the OWNING package's descriptor
 	counts.R5 = 0
 	for (const r of regs) {
@@ -959,7 +999,17 @@ function main() {
 			)
 		}
 	}
+}
 
+/**
+ * R6: offlineConfig names schemas and properties this repo declares.
+ *
+ * @param {object} ctx The collected faces, registrations, schemas and the shared failures and counts.
+ *
+ * @return {void}
+ */
+function checkOfflineConfig(ctx) {
+	const { regs, schemas, schemaFiles, failures, counts } = ctx
 	// --- R6: offlineConfig names schemas/properties this repo declares -------
 	counts.R6 = 0
 	for (const r of regs) {
@@ -1009,7 +1059,17 @@ function main() {
 			}
 		}
 	}
+}
 
+/**
+ * Print the outcome and exit: 0 when every rule passed over real subject matter, 1 otherwise.
+ *
+ * @param {object} ctx The collected faces, registrations, schemas and the shared failures and counts.
+ *
+ * @return {void}
+ */
+function report(ctx) {
+	const { faces, regs, schemaFiles, failures, counts } = ctx
 	// --- report --------------------------------------------------------------
 	const scope =
 		`${faces.length} server leaf face(s), ${regs.length} JS registration(s), `
@@ -1044,6 +1104,31 @@ function main() {
 
 	console.error(`\nAssertions run per rule: ${perRule}`)
 	process.exit(1)
+}
+
+/**
+ * Run every rule and report.
+ *
+ * @return {void}
+ */
+function main() {
+	const faces = collectServerFaces()
+	const regs = collectJsRegistrations()
+	const { schemas, files: schemaFiles } = collectOrSchemas()
+	const ctx = {
+		faces,
+		regs,
+		schemas,
+		schemaFiles,
+		jsById: indexById(regs),
+		faceById: indexById(faces),
+		failures: [],
+		counts: {},
+	}
+	for (const rule of [checkRenderPairs, checkIdCorrelation, checkRenderModes, checkMetadata, checkSpreadSources, checkOfflineConfig]) {
+		rule(ctx)
+	}
+	report(ctx)
 }
 
 if (require.main === module) {
