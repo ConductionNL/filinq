@@ -51,6 +51,7 @@ use OCP\AppFramework\Http\Attribute\BruteForceProtection;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\Attribute\PublicPage;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\Files\File;
 use OCP\IRequest;
 use OCP\Security\Bruteforce\IThrottler;
 use Psr\Log\LoggerInterface;
@@ -150,6 +151,44 @@ class PortalSigningReceiverController extends Controller {
 
 		[$verifiedActor, $signerRecord] = $context;
 
+		try {
+			$signer = $this->recordSignature(verifiedActor: $verifiedActor, signerRecord: $signerRecord);
+		} catch (Throwable $e) {
+			return $this->signRefusalOrFailure(exception: $e);
+		}
+
+		return $this->signedAnswer(signer: $signer);
+
+	}//end signDocument()
+
+	/**
+	 * Drive the signing service as the verified signer, with the consent and drawn signature of the request.
+	 *
+	 * @param array<string, mixed> $verifiedActor The actor built from the verified assertion.
+	 * @param array<string, mixed> $signerRecord  The resolved, invited signerRecord.
+	 *
+	 * @return array<string, mixed> The signer as the signing service returns it.
+	 *
+	 * @throws Throwable When the signing service refuses or fails.
+	 */
+	private function recordSignature(array $verifiedActor, array $signerRecord): array {
+		$signatureData = $this->signatureData();
+
+		return $this->signingService->sign(
+			requestId: (string)$signerRecord['signingRequestId'],
+			signerId: (string)($signerRecord['id'] ?? $signerRecord['uuid'] ?? ''),
+			verifiedActor: $verifiedActor,
+			signatureData: $signatureData
+		);
+
+	}//end recordSignature()
+
+	/**
+	 * The signer's consent confirmation and, when drawn, the signature payload.
+	 *
+	 * @return array<string, mixed> The signature data handed to the signing service.
+	 */
+	private function signatureData(): array {
 		$consent = (bool)$this->request->getParam('consent', false);
 		$signature = $this->request->getParam('signature');
 
@@ -158,28 +197,42 @@ class PortalSigningReceiverController extends Controller {
 			$signatureData['signature'] = $signature;
 		}
 
-		try {
-			$signer = $this->signingService->sign(
-				requestId: (string)$signerRecord['signingRequestId'],
-				signerId: (string)($signerRecord['id'] ?? $signerRecord['uuid'] ?? ''),
-				verifiedActor: $verifiedActor,
-				signatureData: $signatureData
-			);
-		} catch (Throwable $e) {
-			// A refusal by the guardian consent rule (signer-identity-rails
-			// REQ-DDSIR-008/009) carries code 403: the act was refused, nothing
-			// failed downstream. It is not a rejected assertion either, so it
-			// does not go through forbidden() and the brute-force counter.
-			if ($e->getCode() === Http::STATUS_FORBIDDEN) {
-				$this->logger->info('Filinq: portal signing refused: ' . $e->getMessage());
-				return new JSONResponse(['error' => 'signing_refused'], Http::STATUS_FORBIDDEN);
-			}
+		return $signatureData;
 
-			return $this->downstreamFailure(context: 'signDocument', exception: $e);
+	}//end signatureData()
+
+	/**
+	 * Answer a failed signDocument act: a refusal or a downstream failure.
+	 *
+	 * @param Throwable $exception The caught failure.
+	 *
+	 * @return JSONResponse
+	 */
+	private function signRefusalOrFailure(Throwable $exception): JSONResponse {
+		// A refusal by the guardian consent rule (signer-identity-rails
+		// REQ-DDSIR-008/009) carries code 403: the act was refused, nothing
+		// failed downstream. It is not a rejected assertion either, so it
+		// does not go through forbidden() and the brute-force counter.
+		if ($exception->getCode() === Http::STATUS_FORBIDDEN) {
+			$this->logger->info('Filinq: portal signing refused: ' . $exception->getMessage());
+			return new JSONResponse(['error' => 'signing_refused'], Http::STATUS_FORBIDDEN);
 		}
 
-		// REQ-DDPSS-005: the answer names the assurance the signature
-		// recorded, which is never above the session trust and never QES.
+		return $this->downstreamFailure(context: 'signDocument', exception: $exception);
+
+	}//end signRefusalOrFailure()
+
+	/**
+	 * The answer to a recorded signature.
+	 *
+	 * REQ-DDPSS-005: the answer names the assurance the signature
+	 * recorded, which is never above the session trust and never QES.
+	 *
+	 * @param array<string, mixed> $signer The signer as the signing service returned it.
+	 *
+	 * @return JSONResponse
+	 */
+	private function signedAnswer(array $signer): JSONResponse {
 		return new JSONResponse(
 			[
 				'status' => ($signer['status'] ?? 'signed'),
@@ -187,7 +240,8 @@ class PortalSigningReceiverController extends Controller {
 			]
 		);
 
-	}//end signDocument()
+	}//end signedAnswer()
+
 
 	/**
 	 * POST /apps/filinq/api/portal/signing/decline
@@ -270,6 +324,18 @@ class PortalSigningReceiverController extends Controller {
 
 		[, $signerRecord] = $context;
 
+		return $this->requestDocumentAnswer(signerRecord: $signerRecord);
+
+	}//end viewDocument()
+
+	/**
+	 * Answer viewDocument for the signing request of an invited signer.
+	 *
+	 * @param array<string, mixed> $signerRecord The resolved, invited signerRecord.
+	 *
+	 * @return JSONResponse
+	 */
+	private function requestDocumentAnswer(array $signerRecord): JSONResponse {
 		try {
 			$signingRequest = $this->signingService->getRequest(requestId: (string)$signerRecord['signingRequestId']);
 		} catch (Throwable $e) {
@@ -281,11 +347,36 @@ class PortalSigningReceiverController extends Controller {
 			return $this->forbidden();
 		}
 
+		return $this->documentAnswer(signingRequest: $signingRequest);
+
+	}//end requestDocumentAnswer()
+
+	/**
+	 * Answer viewDocument with the target document of a resolved signing request.
+	 *
+	 * @param array<string, mixed> $signingRequest The signing request the signer is invited to.
+	 *
+	 * @return JSONResponse
+	 */
+	private function documentAnswer(array $signingRequest): JSONResponse {
 		$file = $this->documentResolver->resolve(signingRequest: $signingRequest);
 		if ($file === null) {
 			return new JSONResponse(['error' => 'document_unavailable'], Http::STATUS_NOT_FOUND);
 		}
 
+		return $this->fileAnswer(signingRequest: $signingRequest, file: $file);
+
+	}//end documentAnswer()
+
+	/**
+	 * The document as `{documentName, mimeType, contentBase64}`, or 502 when it cannot be read.
+	 *
+	 * @param array<string, mixed> $signingRequest The signing request, for its document name.
+	 * @param File                 $file           The resolved document.
+	 *
+	 * @return JSONResponse
+	 */
+	private function fileAnswer(array $signingRequest, File $file): JSONResponse {
 		try {
 			$content = $file->getContent();
 		} catch (Throwable $e) {
@@ -300,7 +391,8 @@ class PortalSigningReceiverController extends Controller {
 			]
 		);
 
-	}//end viewDocument()
+	}//end fileAnswer()
+
 
 	/**
 	 * Verify the assertion, derive identity, validate the target, and resolve
@@ -315,54 +407,131 @@ class PortalSigningReceiverController extends Controller {
 		// 1. Verify — the assertion is the ONLY credential (fail-closed 401).
 		$claims = $this->verifier->verify((string)$this->request->getHeader(PortalAssertionVerifier::HEADER));
 		if ($claims === null) {
-			// The assertion is the only credential, so a failed verify is a
-			// presented-secret failure -- exactly what the counter is for.
-			$this->registerRejectedAssertion();
-			return new JSONResponse(['error' => 'unauthorized'], Http::STATUS_UNAUTHORIZED);
+			return $this->unauthorised();
 		}
 
-		// 2. Derive scope from the verified claims — re-check audience + trust
-		// server-side as defence in depth (REQ-DDPSA-003); never trust that
-		// portaliq already gated this.
-		$audience = (string)($claims['audience'] ?? '');
-		if ($audience !== self::AUDIENCE_SIGNER) {
+		// 2. Derive scope from the verified claims.
+		$signerEmail = $this->authorisedSignerEmail(claims: $claims);
+		if ($signerEmail === null) {
 			return $this->forbidden();
 		}
 
-		$trust = (string)($claims['trust'] ?? '');
-		if ($this->trustAtLeast(trust: $trust, minimum: self::MIN_TRUST) === false) {
-			return $this->forbidden();
-		}
-
-		// The invited email is the assertion's resolved `signerEmail` scope
-		// claim (the same claim `portal-contribution` scopes the signer
-		// collections by) — sourced ONLY from the verified assertion, NEVER
-		// the request body. Until the named portaliq A6 amendment lands
-		// (design.md Open Question 1), this claim is absent and every act
-		// fails closed 403 here — which is the intended, safe posture.
-		$signerEmail = $claims['signerEmail'] ?? null;
-		if (is_string($signerEmail) === false || $signerEmail === '') {
-			return $this->forbidden();
-		}
-
-		// 3. Validate the client-chosen target: an opaque object reference
-		// ONLY — reject anything resembling a URL/path/scheme (SSRF hardening,
-		// REQ-DDPSA-004).
-		$signingRequestId = $this->request->getParam('signingRequestId');
-		if ($this->isValidOpaqueId(value: $signingRequestId) === false) {
-			return $this->forbidden();
-		}
-
-		// 4. Authorise against the domain row: the acting signer MUST be a
-		// genuinely invited signerRecord on the EXACT target request. Foreign
-		// request, wrong email, and non-existent request id all collapse to
-		// the SAME response (no existence oracle).
-		$signerRecord = $this->resolveInvitedSigner(email: $signerEmail, signingRequestId: (string)$signingRequestId);
+		// 3 + 4. Validate the target and resolve the invited signer on it.
+		$signerRecord = $this->invitedSignerForTarget(signerEmail: $signerEmail);
 		if ($signerRecord === null) {
 			return $this->forbidden();
 		}
 
-		$verifiedActor = [
+		return [$this->verifiedActor(claims: $claims, signerEmail: $signerEmail), $signerRecord];
+	}//end authoriseAct()
+
+	/**
+	 * The fail-closed 401 for an assertion that does not verify.
+	 *
+	 * @return JSONResponse
+	 */
+	private function unauthorised(): JSONResponse {
+		// The assertion is the only credential, so a failed verify is a
+		// presented-secret failure -- exactly what the counter is for.
+		$this->registerRejectedAssertion();
+		return new JSONResponse(['error' => 'unauthorized'], Http::STATUS_UNAUTHORIZED);
+
+	}//end unauthorised()
+
+	/**
+	 * The invited email of verified claims that authorise a signer act, or null.
+	 *
+	 * Re-checks audience + trust server-side as defence in depth
+	 * (REQ-DDPSA-003); never trusts that portaliq already gated this.
+	 *
+	 * @param array<string, mixed> $claims The verified assertion claims.
+	 *
+	 * @return string|null The signer email, or null when the claims do not authorise the act.
+	 */
+	private function authorisedSignerEmail(array $claims): ?string {
+		if ($this->claimsReachSigner(claims: $claims) === false) {
+			return null;
+		}
+
+		return $this->signerEmailClaim(claims: $claims);
+
+	}//end authorisedSignerEmail()
+
+	/**
+	 * Whether the claims carry the signer audience and at least the minimum trust.
+	 *
+	 * @param array<string, mixed> $claims The verified assertion claims.
+	 *
+	 * @return bool True when audience and trust both allow the act.
+	 */
+	private function claimsReachSigner(array $claims): bool {
+		$audience = (string)($claims['audience'] ?? '');
+		if ($audience !== self::AUDIENCE_SIGNER) {
+			return false;
+		}
+
+		$trust = (string)($claims['trust'] ?? '');
+		return $this->trustAtLeast(trust: $trust, minimum: self::MIN_TRUST);
+
+	}//end claimsReachSigner()
+
+	/**
+	 * The invited email from the assertion's resolved `signerEmail` scope claim.
+	 *
+	 * The same claim `portal-contribution` scopes the signer collections by,
+	 * sourced ONLY from the verified assertion, NEVER the request body. Until
+	 * the named portaliq A6 amendment lands (design.md Open Question 1), this
+	 * claim is absent and every act fails closed 403, which is the intended,
+	 * safe posture.
+	 *
+	 * @param array<string, mixed> $claims The verified assertion claims.
+	 *
+	 * @return string|null The signer email, or null when absent or empty.
+	 */
+	private function signerEmailClaim(array $claims): ?string {
+		$signerEmail = $claims['signerEmail'] ?? null;
+		if (is_string($signerEmail) === false || $signerEmail === '') {
+			return null;
+		}
+
+		return $signerEmail;
+
+	}//end signerEmailClaim()
+
+	/**
+	 * Validate the client-chosen target and resolve the invited signer on it.
+	 *
+	 * The target is an opaque object reference ONLY: anything resembling a
+	 * URL/path/scheme is rejected before any lookup (SSRF hardening,
+	 * REQ-DDPSA-004). The acting signer MUST be a genuinely invited
+	 * signerRecord on the EXACT target request; a foreign request, wrong
+	 * email and non-existent request id all collapse to the SAME null (no
+	 * existence oracle).
+	 *
+	 * @param string $signerEmail The verified assertion's signer email.
+	 *
+	 * @return array<string, mixed>|null The invited signerRecord, or null.
+	 */
+	private function invitedSignerForTarget(string $signerEmail): ?array {
+		$signingRequestId = $this->request->getParam('signingRequestId');
+		if ($this->isValidOpaqueId(value: $signingRequestId) === false) {
+			return null;
+		}
+
+		return $this->resolveInvitedSigner(email: $signerEmail, signingRequestId: (string)$signingRequestId);
+
+	}//end invitedSignerForTarget()
+
+	/**
+	 * The actor the signing service acts as, built from the verified claims only.
+	 *
+	 * @param array<string, mixed> $claims      The verified assertion claims.
+	 * @param string               $signerEmail The verified signer email.
+	 *
+	 * @return array<string, mixed> The verified actor.
+	 */
+	private function verifiedActor(array $claims, string $signerEmail): array {
+		return [
 			'email' => $signerEmail,
 			// The frozen A6 wire format carries only `sub` as the portal
 			// subject reference; there is no distinct `identityRef` claim.
@@ -373,12 +542,12 @@ class PortalSigningReceiverController extends Controller {
 			// verified value.
 			'subjectRef' => (string)$claims['sub'],
 			'identityRef' => (string)$claims['sub'],
-			'trust' => $trust,
+			'trust' => (string)($claims['trust'] ?? ''),
 			'jti' => (string)($claims['jti'] ?? ''),
 		];
 
-		return [$verifiedActor, $signerRecord];
-	}//end authoriseAct()
+	}//end verifiedActor()
+
 
 	/**
 	 * Resolve the invited signerRecord for the given email + target request.
@@ -394,68 +563,140 @@ class PortalSigningReceiverController extends Controller {
 	 * @return array<string, mixed>|null The resolved signerRecord, or null.
 	 */
 	private function resolveInvitedSigner(string $email, string $signingRequestId): ?array {
-		try {
-			$objectService = $this->settingsService->getObjectService();
-		} catch (Throwable $e) {
-			$objectService = null;
-		}
-
-		if ($objectService === null) {
-			return null;
-		}
-
-		// This is the anti-IDOR boundary (REQ-DDPSA-004), and the register and
-		// schema are two of the four filters that scope the lookup. They used
-		// to be read here with an empty-string default and passed straight
-		// through, so the boundary's correctness depended entirely on
-		// OpenRegister choosing to match nothing for an empty filter — an
-		// assumption this code never stated and does not control. If findAll
-		// ever read an empty register as "unscoped", this lookup would resolve
-		// a signerRecord from ANY register, which is precisely the
-		// cross-request signer resolution the requirement forbids.
-		//
-		// requireSignerRecordBinding() throws instead. The catch below already
-		// collapses any failure to null, which is the same answer the
-		// wrong-email and wrong-request cases give, so no new signal is
-		// exposed to a caller probing the endpoint.
-		try {
-			['register' => $register, 'schema' => $schema] = $this->registerResolver->getSignerRecordRegisterAndSchema();
-			$results = $objectService->findAll(
-				[
-					'filters' => [
-						'register' => $register,
-						'schema' => $schema,
-						'email' => $email,
-						'signingRequestId' => $signingRequestId,
-					],
-				],
-				_rbac: false,
-				_multitenancy: false
-			);
-		} catch (Throwable $e) {
-			$this->logger->debug('Filinq: portal signer lookup failed', ['reason' => $e->getMessage()]);
-			return null;
-		}
-
-		if (is_iterable($results) === false) {
-			return null;
-		}
-
-		foreach ($results as $entry) {
-			$row = $this->normalise(row: $entry);
-			if ($row === null) {
-				continue;
-			}
-
-			$rowEmail = (string)($row['email'] ?? '');
-			$rowReq = (string)($row['signingRequestId'] ?? '');
-			if (strcasecmp($rowEmail, $email) === 0 && $rowReq === $signingRequestId) {
+		$results = $this->findSignerRows(email: $email, signingRequestId: $signingRequestId);
+		foreach ($this->readableRows(results: $results) as $row) {
+			if ($this->hasEmail(row: $row, email: $email) === true && $this->isForRequest(row: $row, signingRequestId: $signingRequestId) === true) {
 				return $row;
 			}
 		}
 
 		return null;
 	}//end resolveInvitedSigner()
+
+	/**
+	 * The signerRecord rows OpenRegister returns for the email and target request.
+	 *
+	 * This is the anti-IDOR boundary (REQ-DDPSA-004), and the register and
+	 * schema are two of the four filters that scope the lookup. They used
+	 * to be read with an empty-string default and passed straight through,
+	 * so the boundary's correctness depended entirely on OpenRegister
+	 * choosing to match nothing for an empty filter — an assumption this
+	 * code never stated and does not control. If findAll ever read an empty
+	 * register as "unscoped", this lookup would resolve a signerRecord from
+	 * ANY register, which is precisely the cross-request signer resolution
+	 * the requirement forbids.
+	 *
+	 * requireSignerRecordBinding() throws instead. The catch collapses any
+	 * failure to no rows, which is the same answer the wrong-email and
+	 * wrong-request cases give, so no new signal is exposed to a caller
+	 * probing the endpoint.
+	 *
+	 * @param string $email            The verified assertion's signer email.
+	 * @param string $signingRequestId The client-supplied (opaque) target request id.
+	 *
+	 * @return mixed The rows as findAll returns them, empty when there is no store or the lookup fails.
+	 */
+	private function findSignerRows(string $email, string $signingRequestId): mixed {
+		$objectService = $this->objectServiceOrNull();
+		if ($objectService === null) {
+			return [];
+		}
+
+		try {
+			$filters = $this->signerFilters(email: $email, signingRequestId: $signingRequestId);
+			$results = $objectService->findAll(['filters' => $filters], _rbac: false, _multitenancy: false);
+		} catch (Throwable $e) {
+			$this->logger->debug('Filinq: portal signer lookup failed', ['reason' => $e->getMessage()]);
+			return [];
+		}
+
+		return $results;
+
+	}//end findSignerRows()
+
+	/**
+	 * OpenRegister's ObjectService, or null when it is not available.
+	 *
+	 * @return object|null
+	 */
+	private function objectServiceOrNull(): ?object {
+		try {
+			return $this->settingsService->getObjectService();
+		} catch (Throwable $e) {
+			return null;
+		}
+
+	}//end objectServiceOrNull()
+
+	/**
+	 * The four filters that scope the signerRecord lookup.
+	 *
+	 * @param string $email            The verified assertion's signer email.
+	 * @param string $signingRequestId The client-supplied (opaque) target request id.
+	 *
+	 * @return array<string, string> Register, schema, email and target request.
+	 *
+	 * @throws Throwable When the signerRecord register and schema are not configured.
+	 */
+	private function signerFilters(string $email, string $signingRequestId): array {
+		['register' => $register, 'schema' => $schema] = $this->registerResolver->getSignerRecordRegisterAndSchema();
+
+		return [
+			'register' => $register,
+			'schema' => $schema,
+			'email' => $email,
+			'signingRequestId' => $signingRequestId,
+		];
+
+	}//end signerFilters()
+
+	/**
+	 * The fetched rows that read as arrays, one at a time; nothing when the result is not iterable.
+	 *
+	 * @param mixed $results The fetched objects.
+	 *
+	 * @return \Generator<int, array<string, mixed>> The readable rows, in order.
+	 */
+	private function readableRows(mixed $results): \Generator {
+		if (is_iterable($results) === false) {
+			return;
+		}
+
+		foreach ($results as $entry) {
+			$row = $this->normalise(row: $entry);
+			if ($row !== null) {
+				yield $row;
+			}
+		}
+
+	}//end readableRows()
+
+	/**
+	 * Whether the row's email equals the verified email, ignoring case.
+	 *
+	 * @param array<string, mixed> $row   The signerRecord row.
+	 * @param string               $email The verified assertion's signer email.
+	 *
+	 * @return bool
+	 */
+	private function hasEmail(array $row, string $email): bool {
+		return strcasecmp((string)($row['email'] ?? ''), $email) === 0;
+
+	}//end hasEmail()
+
+	/**
+	 * Whether the row belongs to exactly the target request.
+	 *
+	 * @param array<string, mixed> $row              The signerRecord row.
+	 * @param string               $signingRequestId The target request id.
+	 *
+	 * @return bool
+	 */
+	private function isForRequest(array $row, string $signingRequestId): bool {
+		return (string)($row['signingRequestId'] ?? '') === $signingRequestId;
+
+	}//end isForRequest()
+
 
 	/**
 	 * Normalise an OpenRegister result (array or ObjectEntity) to an array.
@@ -469,15 +710,30 @@ class PortalSigningReceiverController extends Controller {
 			return $row;
 		}
 
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			$data = $row->jsonSerialize();
-			if (is_array($data) === true) {
-				return $data;
-			}
+		return $this->serialisedRow(row: $row);
+	}//end normalise()
+
+	/**
+	 * The array an ObjectEntity-like object serialises to, or null.
+	 *
+	 * @param mixed $row The fetched object.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function serialisedRow(mixed $row): ?array {
+		if (is_object($row) === false || method_exists($row, 'jsonSerialize') === false) {
+			return null;
 		}
 
-		return null;
-	}//end normalise()
+		$data = $row->jsonSerialize();
+		if (is_array($data) === false) {
+			return null;
+		}
+
+		return $data;
+
+	}//end serialisedRow()
+
 
 	/**
 	 * Check the client-supplied target is an opaque id — never a URL/path.
