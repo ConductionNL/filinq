@@ -37,6 +37,8 @@ namespace OCA\Filinq\Service;
  */
 final class StoredRecordFields {
 
+	use ReadsStoredObjectRows;
+
 	/**
 	 * Normalise an OpenRegister object (entity or array) to a flat record:
 	 * the payload under `object` (or the row itself), with `uuid` taken from
@@ -49,42 +51,17 @@ final class StoredRecordFields {
 	 * @spec exclude Shape adapter over an OpenRegister response; no behaviour of its own.
 	 */
 	public function read(mixed $row): array {
-		$data = $this->rowData(row: $row);
+		$data = $this->storedRowArray(row: $row);
 		if ($data === null) {
 			return [];
 		}
 
-		$fields = $data;
-		if (isset($data['object']) === true && is_array($data['object']) === true) {
-			$fields = $data['object'];
-		}
-
+		$fields = $this->storedRowPayload(data: $data);
 		$fields['uuid'] = (string)($fields['uuid'] ?? ($data['uuid'] ?? ($this->selfUuid(data: $data) ?? ($data['id'] ?? ''))));
 
 		return $fields;
 
 	}//end read()
-
-	/**
-	 * The stored row as an array, read through jsonSerialize() for an entity.
-	 *
-	 * @param mixed $row ObjectEntity or array.
-	 *
-	 * @return array<string, mixed>|null The row, or null when it is no array.
-	 */
-	private function rowData(mixed $row): ?array {
-		$data = $row;
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			$data = $row->jsonSerialize();
-		}
-
-		if (is_array($data) === false) {
-			return null;
-		}
-
-		return $data;
-
-	}//end rowData()
 
 	/**
 	 * The uuid in the row's `@self` block, when that block is an array.
