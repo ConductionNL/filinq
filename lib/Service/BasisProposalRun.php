@@ -35,19 +35,23 @@ namespace OCA\Filinq\Service;
 final class BasisProposalRun {
 
 	/**
-	 * Constructor.
+	 * The EntityRelationMapper.
 	 *
-	 * @param mixed                             $mapper  The EntityRelationMapper.
-	 * @param array<string, array<int, string>> $mapping Entity-type → base-slug[] mapping.
-	 * @param int                               $fileId  The file whose detections are filled.
-	 *
-	 * @return void
+	 * @var mixed
 	 */
-	public function __construct(
-		public readonly mixed $mapper,
-		public readonly array $mapping,
-		public readonly int $fileId,
-	) {
+	public mixed $mapper = null;
 
-	}//end __construct()
+	/**
+	 * Entity-type → base-slug[] mapping.
+	 *
+	 * @var array<string, array<int, string>>
+	 */
+	public array $mapping = [];
+
+	/**
+	 * The file whose detections are filled.
+	 *
+	 * @var int
+	 */
+	public int $fileId = 0;
 }//end class

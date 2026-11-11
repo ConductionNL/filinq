@@ -307,7 +307,11 @@ class LegalBasisProposalService {
 			return null;
 		}
 
-		return new BasisProposalRun(mapper: $mapper, mapping: $mapping, fileId: $fileId);
+		$run = new BasisProposalRun();
+		$run->mapper = $mapper;
+		$run->mapping = $mapping;
+		$run->fileId = $fileId;
+		return $run;
 
 	}//end proposalRun()
 
