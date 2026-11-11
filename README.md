@@ -23,6 +23,7 @@ Filinq adds GDPR-safe document processing to Nextcloud. It anonymizes sensitive 
 ## Test coverage
 
 <!-- coverage:start -->
+Measured test coverage: 85.8% of statements (PHP 85.8% of 33,984 statements), at commit `942580991` on 2026-11-11. The JavaScript frontend is not in this figure, because it has no coverage measurement yet. The figures come from [`coverage-summary.json`](coverage-summary.json); refresh them with `composer coverage:publish`.
 <!-- coverage:end -->
 
 ## Features
