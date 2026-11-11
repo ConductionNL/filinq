@@ -37,6 +37,7 @@ use OCA\Filinq\Exception\DocumentFinalException;
 use OCA\Filinq\Kernel\Contracts\FinalDocumentServiceInterface;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
+use OCP\IUser;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -163,19 +164,12 @@ class FinalDocumentService implements FinalDocumentServiceInterface {
 				. 'register is unreachable. The document is left as it is.';
 		}
 
-		foreach ($records as $record) {
-			if ((string)($record['versionLabel'] ?? '') !== '') {
-				continue;
-			}
-
-			if ($this->isFinal(record: $record) === false) {
-				continue;
-			}
-
-			return $this->refusalSentence(record: $record, action: $action);
+		$current = $this->finalCurrentRecord(records: $records);
+		if ($current === null) {
+			return null;
 		}
 
-		return null;
+		return $this->refusalSentence(record: $current, action: $action);
 
 	}//end refusalFor()
 
@@ -457,11 +451,7 @@ class FinalDocumentService implements FinalDocumentServiceInterface {
 	public function resolveActor(?string $actorId, ?string $actorName): array {
 		$user = $this->userSession->getUser();
 
-		$id = (string)$actorId;
-		if ($id === '' && $user !== null) {
-			$id = $user->getUID();
-		}
-
+		$id = $this->actorIdOf(actorId: $actorId, user: $user);
 		if ($id === '') {
 			throw new RuntimeException(
 				message: 'Making a document final needs a named person, and there is no acting user.'
@@ -469,15 +459,78 @@ class FinalDocumentService implements FinalDocumentServiceInterface {
 		}
 
 		$name = (string)$actorName;
-		if ($name === '' && $user !== null && $user->getUID() === $id) {
-			$name = $user->getDisplayName();
-		}
-
 		if ($name === '') {
-			$name = $id;
+			$name = $this->sessionNameFor(user: $user, id: $id);
 		}
 
 		return ['id' => $id, 'name' => $name];
 
 	}//end resolveActor()
+
+	/**
+	 * The acting user id: the one given, or else the session user's.
+	 *
+	 * @param string|null $actorId The acting user id, or null for the session user.
+	 * @param IUser|null  $user    The session user, if any.
+	 *
+	 * @return string The user id, or an empty string when there is none.
+	 */
+	private function actorIdOf(?string $actorId, ?IUser $user): string {
+		$id = (string)$actorId;
+		if ($id === '' && $user !== null) {
+			return $user->getUID();
+		}
+
+		return $id;
+
+	}//end actorIdOf()
+
+	/**
+	 * The display name of the session user when that user is the actor, otherwise the id.
+	 *
+	 * @param IUser|null $user The session user, if any.
+	 * @param string     $id   The acting user id.
+	 *
+	 * @return string The name to record.
+	 */
+	private function sessionNameFor(?IUser $user, string $id): string {
+		if ($user === null || $user->getUID() !== $id) {
+			return $id;
+		}
+
+		$displayName = $user->getDisplayName();
+		if ($displayName === '') {
+			return $id;
+		}
+
+		return $displayName;
+
+	}//end sessionNameFor()
+
+	/**
+	 * The first final record about the current content of the file.
+	 *
+	 * A record with a version label is about an earlier set of bytes and does
+	 * not freeze the current content.
+	 *
+	 * @param array<int, array<string, mixed>> $records The finalisation records of the file.
+	 *
+	 * @return array<string, mixed>|null The record, or null when the current content is not final.
+	 */
+	private function finalCurrentRecord(array $records): ?array {
+		foreach ($records as $record) {
+			if ((string)($record['versionLabel'] ?? '') !== '') {
+				continue;
+			}
+
+			if ($this->isFinal(record: $record) === false) {
+				continue;
+			}
+
+			return $record;
+		}
+
+		return null;
+
+	}//end finalCurrentRecord()
 }//end class
