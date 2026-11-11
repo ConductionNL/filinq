@@ -36,6 +36,7 @@ use Stringable;
  * implementation before it was split.
  *
  * @covers \OCA\Filinq\Controller\PrintJobController
+ * @uses   \OCA\Filinq\Controller\PrintJobAction
  */
 class PrintJobDownloadTraceTest extends TestCase {
 

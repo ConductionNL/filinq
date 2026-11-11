@@ -26,6 +26,8 @@ use PHPUnit\Framework\TestCase;
  * implementation before diff() and backtrack() were split.
  *
  * @covers \OCA\Filinq\Service\Comparison\WordDiffer
+ * @uses   \OCA\Filinq\Service\Comparison\HunkWalk
+ * @uses   \OCA\Filinq\Service\Comparison\LcsWalk
  */
 class WordHunksGoldenTest extends TestCase {
 
