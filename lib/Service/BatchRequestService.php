@@ -57,6 +57,13 @@ class BatchRequestService implements BatchRequestServiceInterface {
 	private readonly UnredactedEntitiesValidator $unredactedValidator;
 
 	/**
+	 * The shared request rules, built on first use.
+	 *
+	 * @var AnonymizeRequestRules|null
+	 */
+	private ?AnonymizeRequestRules $rules = null;
+
+	/**
 	 * Constructor for BatchRequestService
 	 *
 	 * @param IL10N $l10n Translator for the user-facing validation messages.
@@ -88,39 +95,60 @@ class BatchRequestService implements BatchRequestServiceInterface {
 	 * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-anonymization
 	 */
 	public function validateBody(array $params): array {
-		$entities = ($params['entities'] ?? []);
-		if (is_array($entities) === false || empty($entities) === true) {
-			return $this->rejected(error: $this->badRequest(message: $this->l10n->t('No entities provided')));
-		}
-
-		$appendBasisSummary = false;
-		if (array_key_exists('appendBasisSummary', $params) === true) {
-			$appendBasisSummary = $params['appendBasisSummary'];
-			if (is_bool($appendBasisSummary) === false) {
-				return $this->rejected(
-					error: $this->badRequest(message: $this->l10n->t('appendBasisSummary must be a boolean'))
-				);
-			}
-		}
-
-		$unredacted = ($params['unredactedEntities'] ?? []);
-		if (is_array($unredacted) === false) {
-			return $this->rejected(
-				error: $this->badRequest(message: $this->l10n->t('unredactedEntities must be an array'))
-			);
+		$refusal = $this->bodyRefusal(params: $params);
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		return [
 			'error' => null,
 			'request' => [
-				'entities' => $entities,
-				'hasStrayBases' => $this->hasStrayBases(entities: $entities),
-				'appendBasisSummary' => $appendBasisSummary,
-				'unredactedEntities' => $unredacted,
+				'entities' => $params['entities'],
+				'hasStrayBases' => $this->rules()->hasStrayBases(entities: $params['entities']),
+				'appendBasisSummary' => ($params['appendBasisSummary'] ?? false),
+				'unredactedEntities' => ($params['unredactedEntities'] ?? []),
 			],
 		];
 
 	}//end validateBody()
+
+	/**
+	 * The first refusal of a batch-anonymize body, in the order the checks ran inline.
+	 *
+	 * @param array<string, mixed> $params Request parameters.
+	 *
+	 * @return array{error: array{status: int, body: array<string, mixed>}, request: null}|null The
+	 *         rejection, or null when the entities, the flag and the unredacted list are acceptable.
+	 */
+	private function bodyRefusal(array $params): ?array {
+		if ($this->rules()->hasNoEntities(params: $params) === true) {
+			return $this->rules()->refused(message: $this->l10n->t('No entities provided'));
+		}
+
+		if ($this->hasNonBooleanSummaryFlag(params: $params) === true) {
+			return $this->rules()->refused(message: $this->l10n->t('appendBasisSummary must be a boolean'));
+		}
+
+		if (is_array($params['unredactedEntities'] ?? []) === false) {
+			return $this->rules()->refused(message: $this->l10n->t('unredactedEntities must be an array'));
+		}
+
+		return null;
+
+	}//end bodyRefusal()
+
+	/**
+	 * Whether the body sets appendBasisSummary to something other than a boolean.
+	 *
+	 * @param array<string, mixed> $params Request parameters.
+	 *
+	 * @return bool True when the key is present and not a boolean (null included).
+	 */
+	private function hasNonBooleanSummaryFlag(array $params): bool {
+		return array_key_exists('appendBasisSummary', $params) === true
+			&& is_bool($params['appendBasisSummary']) === false;
+
+	}//end hasNonBooleanSummaryFlag()
 
 	/**
 	 * Validate the structure of each unredactedEntities[] entry.
@@ -323,13 +351,13 @@ class BatchRequestService implements BatchRequestServiceInterface {
 	 */
 	private function validateFolderParams(?int $folderId, ?string $folderPath): ?array {
 		if ($folderId === null && $folderPath === null) {
-			return $this->badRequest(
+			return $this->rules()->badRequest(
 				message: $this->l10n->t('Either folderId or folderPath must be provided')
 			);
 		}
 
 		if ($folderId !== null && $folderPath !== null) {
-			return $this->badRequest(
+			return $this->rules()->badRequest(
 				message: $this->l10n->t('Provide only one of folderId or folderPath')
 			);
 		}
@@ -338,55 +366,12 @@ class BatchRequestService implements BatchRequestServiceInterface {
 	}//end validateFolderParams()
 
 	/**
-	 * Detect stray `bases[]` fields on entity entries.
+	 * The request rules this validator shares with the other anonymize validator.
 	 *
-	 * Bases are set through OpenRegister's PATCH /api/entity-relations/{id};
-	 * a stray field on the anonymize payload is ignored but reported back as
-	 * `ignoredFields` for GDPR accountability.
-	 *
-	 * @param array<int, mixed> $entities The submitted entity entries.
-	 *
-	 * @return bool True when at least one entry carries a `bases` key.
-	 *
-	 * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-1
+	 * @return AnonymizeRequestRules The rules.
 	 */
-	private function hasStrayBases(array $entities): bool {
-		foreach ($entities as $entity) {
-			if (is_array($entity) === true && array_key_exists('bases', $entity) === true) {
-				return true;
-			}
-		}
-
-		return false;
-	}//end hasStrayBases()
-
-	/**
-	 * Wrap a validation failure in the validateBody() return shape.
-	 *
-	 * @param array{status: int, body: array<string, mixed>} $error The failing status/body pair.
-	 *
-	 * @return array{error: array{status: int, body: array<string, mixed>}, request: null} The rejection.
-	 *
-	 * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-anonymization
-	 */
-	private function rejected(array $error): array {
-		return ['error' => $error, 'request' => null];
-	}//end rejected()
-
-	/**
-	 * Build the HTTP 400 status/body pair for a validation failure.
-	 *
-	 * @param string $message The already-translated error message.
-	 *
-	 * @return array{status: int, body: array<string, mixed>} The 400 payload.
-	 *
-	 * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-anonymization
-	 */
-	private function badRequest(string $message): array {
-		return [
-			'status' => 400,
-			'body' => ['error' => $message],
-		];
-
-	}//end badRequest()
+	private function rules(): AnonymizeRequestRules {
+		$this->rules ??= new AnonymizeRequestRules();
+		return $this->rules;
+	}//end rules()
 }//end class
