@@ -1,0 +1,198 @@
+{
+    "no rows": {
+        "entities": [],
+        "logs": []
+    },
+    "the mapper answers no list": {
+        "entities": [],
+        "logs": []
+    },
+    "one row, stored placeholder": {
+        "entities": [
+            {
+                "placeholder": "[PERSOON: 1]",
+                "entityId": 2,
+                "entityType": "PERSON",
+                "entityText": "Jan",
+                "count": 1,
+                "bases": [
+                    "5.1.2e"
+                ],
+                "baseLabels": [
+                    "Label 5.1.2e"
+                ],
+                "basesText": "Label 5.1.2e"
+            }
+        ],
+        "logs": []
+    },
+    "the caller map wins": {
+        "entities": [
+            {
+                "placeholder": "[PERSOON 7]",
+                "entityId": 2,
+                "entityType": "PERSON",
+                "entityText": "Jan",
+                "count": 1,
+                "bases": [
+                    "5.1.2e"
+                ],
+                "baseLabels": [
+                    "Label 5.1.2e"
+                ],
+                "basesText": "Label 5.1.2e"
+            }
+        ],
+        "logs": []
+    },
+    "repeated rows count and merge bases": {
+        "entities": [
+            {
+                "placeholder": "[PERSOON: 1]",
+                "entityId": 2,
+                "entityType": "PERSON",
+                "entityText": "Jan",
+                "count": 3,
+                "bases": [
+                    "5.1.2e",
+                    "5.1.1c"
+                ],
+                "baseLabels": [
+                    "Label 5.1.2e",
+                    "Label 5.1.1c"
+                ],
+                "basesText": "Label 5.1.2e, Label 5.1.1c"
+            }
+        ],
+        "logs": []
+    },
+    "a stale row is omitted and logged": {
+        "entities": [
+            {
+                "placeholder": "[PERSOON: 1]",
+                "entityId": 2,
+                "entityType": "PERSON",
+                "entityText": "Jan",
+                "count": 1,
+                "bases": [
+                    "5.1.2e"
+                ],
+                "baseLabels": [
+                    "Label 5.1.2e"
+                ],
+                "basesText": "Label 5.1.2e"
+            }
+        ],
+        "logs": [
+            [
+                "info",
+                "LegalBasesSummaryService: omitted entities with no scope-local placeholder (no global-id fallback)",
+                {
+                    "fileId": 42,
+                    "omitted": 2
+                }
+            ]
+        ]
+    },
+    "same id, other type is another group": {
+        "entities": [
+            {
+                "placeholder": "[ORG: 1]",
+                "entityId": 2,
+                "entityType": "ORG",
+                "entityText": "Jan",
+                "count": 1,
+                "bases": [
+                    "5.1.2e"
+                ],
+                "baseLabels": [
+                    "Label 5.1.2e"
+                ],
+                "basesText": "Label 5.1.2e"
+            },
+            {
+                "placeholder": "[PERSOON: 1]",
+                "entityId": 2,
+                "entityType": "PERSON",
+                "entityText": "Jan",
+                "count": 1,
+                "bases": [
+                    "5.1.2e"
+                ],
+                "baseLabels": [
+                    "Label 5.1.2e"
+                ],
+                "basesText": "Label 5.1.2e"
+            }
+        ],
+        "logs": []
+    },
+    "numeric base references": {
+        "entities": [
+            {
+                "placeholder": "[PERSOON: 1]",
+                "entityId": 2,
+                "entityType": "PERSON",
+                "entityText": "Jan",
+                "count": 1,
+                "bases": [
+                    7,
+                    8
+                ],
+                "baseLabels": [
+                    "Label 7",
+                    "Label 8"
+                ],
+                "basesText": "Label 7, Label 8"
+            }
+        ],
+        "logs": []
+    },
+    "ordering by placeholder": {
+        "entities": [
+            {
+                "placeholder": "[DATUM: 2]",
+                "entityId": 5,
+                "entityType": "DATE",
+                "entityText": "Jan",
+                "count": 1,
+                "bases": [
+                    "5.1.2e"
+                ],
+                "baseLabels": [
+                    "Label 5.1.2e"
+                ],
+                "basesText": "Label 5.1.2e"
+            },
+            {
+                "placeholder": "[PERSOON: 1]",
+                "entityId": 2,
+                "entityType": "PERSON",
+                "entityText": "Jan",
+                "count": 1,
+                "bases": [
+                    "5.1.2e"
+                ],
+                "baseLabels": [
+                    "Label 5.1.2e"
+                ],
+                "basesText": "Label 5.1.2e"
+            },
+            {
+                "placeholder": "[PERSOON: 10]",
+                "entityId": 9,
+                "entityType": "PERSON",
+                "entityText": "Jan",
+                "count": 1,
+                "bases": [
+                    "5.1.2e"
+                ],
+                "baseLabels": [
+                    "Label 5.1.2e"
+                ],
+                "basesText": "Label 5.1.2e"
+            }
+        ],
+        "logs": []
+    }
+}
