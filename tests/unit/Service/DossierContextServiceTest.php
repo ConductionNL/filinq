@@ -484,4 +484,86 @@ class DossierContextServiceTest extends TestCase {
 
 	}//end testPublicationReportsItsAbsenceRatherThanOfferingIt()
 
+	/**
+	 * Folder files come first, references after in their own order; a resolvable reference
+	 * listed twice appears once, an unresolvable one each time it is listed.
+	 *
+	 * @return void
+	 */
+	public function testReferencesKeepTheirOrderAndOnlyMissingOnesRepeat(): void {
+		$inFolder = $this->node(41, 'report.pdf');
+		$this->serveById([41 => $inFolder, 43 => $this->node(43, 'c.pdf'), 44 => $this->node(44, 'd.pdf')]);
+		$folder = $this->createMock(Folder::class);
+		$folder->method('getDirectoryListing')->willReturn([$inFolder]);
+		$this->repository->method('resolveDossierFolder')->willReturn($folder);
+
+		$members = $this->service->members((object)[], ['@self' => ['folder' => 1], 'documents' => [44, '43', 41, 99, 44, 99]]);
+
+		$this->assertSame([41, 44, 43, 99, 99], array_column($members['documents'], 'id'));
+		$this->assertSame([false, true, true, true, true], array_column($members['documents'], 'referenced'));
+		$this->assertSame(2, $members['missing']);
+		$this->assertSame(['id' => 99, 'name' => '', 'missing' => true, 'referenced' => true], $members['documents'][3]);
+
+	}//end testReferencesKeepTheirOrderAndOnlyMissingOnesRepeat()
+
+	/**
+	 * The `@self` slug wins over a top-level one, and a nameless entry is labelled with its slug.
+	 *
+	 * @return void
+	 */
+	public function testVocabularySlugAndNameFallbacks(): void {
+		$this->repository->method('objectService')->willReturn(
+			$this->objectService([
+				$this->object(['@self' => ['slug' => 'self-slug'], 'slug' => 'top-slug', 'name' => 'Eigen']),
+				$this->object(['slug' => 'no-name']),
+			])
+		);
+
+		$this->assertSame(['self-slug' => 'Eigen', 'no-name' => 'no-name'], $this->service->baseLabels());
+
+	}//end testVocabularySlugAndNameFallbacks()
+
+	/**
+	 * A vocabulary read that fails halfway keeps the labels read before the failure, and is not retried.
+	 *
+	 * @return void
+	 */
+	public function testAVocabularyReadFailingHalfwayKeepsWhatItRead(): void {
+		$broken = new class {
+			/**
+			 * A payload that cannot be read.
+			 *
+			 * @return array<string, mixed>
+			 */
+			public function jsonSerialize(): array {
+				throw new RuntimeException('connection dropped');
+			}
+		};
+		$service = $this->objectService([$this->object(['slug' => 'first', 'name' => 'Eerste']), $broken, $this->object(['slug' => 'third'])]);
+		$this->repository->expects(self::once())->method('objectService')->willReturn($service);
+
+		$labels = $this->service->baseLabels();
+
+		$this->assertSame(['first' => 'Eerste'], $labels);
+		$this->assertSame($labels, $this->service->baseLabels());
+		$this->assertSame(['DossierContextService: the grondslagen vocabulary could not be read'], $this->warnings);
+
+	}//end testAVocabularyReadFailingHalfwayKeepsWhatItRead()
+
+	/**
+	 * A run without fields reads as empty strings and zero.
+	 *
+	 * @return void
+	 */
+	public function testARunWithoutFieldsReadsAsEmpty(): void {
+		$folder = $this->createMock(Folder::class);
+		$folder->method('getId')->willReturn(4242);
+		$this->repository->method('resolveDossierFolder')->willReturn($folder);
+		$this->repository->method('objectService')->willReturn($this->objectService([$this->object(['folderId' => '4242'])]));
+
+		$runs = $this->service->batchRuns((object)[], ['@self' => ['folder' => 1]]);
+
+		$this->assertSame([['id' => '', 'status' => '', 'fileCount' => 0, 'created' => '']], $runs);
+
+	}//end testARunWithoutFieldsReadsAsEmpty()
 }//end class
