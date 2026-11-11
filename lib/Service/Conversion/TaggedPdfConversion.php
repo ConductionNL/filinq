@@ -3,13 +3,13 @@
 /**
  * Tagged PDF Conversion
  *
- * One accessible (PDF/UA) run of {@see PdfConversionService::convertToPdfReporting()}:
+ * One accessible (PDF/UA) run of {@see \OCA\Filinq\Service\PdfConversionService::convertToPdfReporting()}:
  * only LibreOffice can tag, so every other backend is recorded as unable and
  * never asked. Without LibreOffice the conversion fails; it never falls back
  * to an untagged PDF. Built per call by the service and never handed outside it.
  *
  * @category  Service
- * @package   OCA\Filinq\Service
+ * @package   OCA\Filinq\Service\Conversion
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
@@ -22,18 +22,17 @@
 
 declare(strict_types=1);
 
-namespace OCA\Filinq\Service;
+namespace OCA\Filinq\Service\Conversion;
 
 use OCA\Filinq\Exception\ConversionFailedException;
-use OCA\Filinq\Service\Conversion\ConversionBackendInterface;
-use OCA\Filinq\Service\Conversion\LibreOfficeHeadlessBackend;
+use OCA\Filinq\Service\StripsFileExtension;
 use OCP\Files\File;
 
 /**
  * The tagged export of one source file, written beside it as `<stem>.pdf`.
  *
  * @category Service
- * @package  OCA\Filinq\Service
+ * @package  OCA\Filinq\Service\Conversion
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
