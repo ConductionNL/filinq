@@ -1,0 +1,103 @@
+{
+	"calls": [
+		[
+			"PATCH",
+			"/apps/filinq/api/anonymization/relations/r1",
+			{
+				"bases": [
+					"5.1.2e"
+				],
+				"skipAnonymization": false
+			}
+		],
+		[
+			"PATCH",
+			"/apps/filinq/api/anonymization/relations/r2",
+			{
+				"bases": [
+					"5.1.2e"
+				],
+				"skipAnonymization": false
+			}
+		],
+		[
+			"POST",
+			"/apps/filinq/api/anonymization/anonymize/1",
+			{
+				"entities": [
+					{
+						"type": "PERSON",
+						"value": "Jan",
+						"confidence": 0.9
+					}
+				],
+				"scope": "dossier",
+				"dossierKey": "42",
+				"appendBasisSummary": true,
+				"outputFormat": "pdf-only"
+			}
+		],
+		[
+			"POST",
+			"/apps/filinq/api/anonymization/anonymize/3",
+			{
+				"entities": [
+					{
+						"type": "PERSON",
+						"value": "Jan",
+						"confidence": 0.9
+					}
+				],
+				"scope": "dossier",
+				"dossierKey": "42",
+				"appendBasisSummary": true,
+				"outputFormat": "pdf-only"
+			}
+		]
+	],
+	"batchStatus": "completed",
+	"error": null,
+	"processing": false,
+	"progress": 100,
+	"reviewRequired": false,
+	"skippedUnreviewed": [
+		{
+			"fileId": 2,
+			"fileName": "b.pdf"
+		}
+	],
+	"files": [
+		{
+			"fileId": 1,
+			"fileName": "a.pdf",
+			"status": "completed",
+			"reviewMark": "checked",
+			"anonymizedFileId": "anon-1",
+			"replacementCount": 2,
+			"complete": true,
+			"residualCount": 0,
+			"anonymizeError": null
+		},
+		{
+			"fileId": 2,
+			"fileName": "b.pdf",
+			"status": "extracted",
+			"reviewMark": "stale"
+		},
+		{
+			"fileId": 3,
+			"fileName": "c.pdf",
+			"status": "completed",
+			"reviewMark": "checked",
+			"anonymizedFileId": "anon-3",
+			"replacementCount": 2,
+			"complete": true,
+			"residualCount": 0,
+			"anonymizeError": null
+		}
+	],
+	"entityErrors": [
+		null,
+		null
+	]
+}
