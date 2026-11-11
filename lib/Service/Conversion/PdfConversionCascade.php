@@ -25,13 +25,12 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\Conversion;
 
 use OCA\Filinq\Exception\ConversionFailedException;
-use OCA\Filinq\Service\StripsFileExtension;
 use OCP\Files\File;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
 /**
- * The backend cascade for one source file; first success wins.
+ * The untagged backend cascade for one source file; first success wins.
  *
  * @category Service
  * @package  OCA\Filinq\Service\Conversion
@@ -41,8 +40,7 @@ use Throwable;
  *
  * @spec openspec/specs/document-editing/spec.md#requirement-conversion-routes-through-the-nextcloud-conversion-broker
  */
-final class PdfConversionCascade {
-	use StripsFileExtension;
+final class PdfConversionCascade extends BackendWalk {
 
 	/**
 	 * The attempt records of the backends tried so far.
@@ -75,46 +73,47 @@ final class PdfConversionCascade {
 	 * @return void
 	 */
 	public function __construct(
-		private readonly array $backends,
+		array $backends,
 		private readonly LoggerInterface $logger,
 		private readonly File $source,
 	) {
+		parent::__construct(backends: $backends);
 		$this->mimeType = (string)$source->getMimeType();
 		$this->ext = $this->extractExtension(name: $source->getName());
 
 	}//end __construct()
 
 	/**
-	 * Walk the cascade.
+	 * Ask one backend; anything that is not a backend is skipped without an attempt record.
 	 *
-	 * @return array{file: File, backend: string} The PDF and the backend that produced it.
+	 * @param mixed $backend The backend, as registered.
 	 *
-	 * @throws ConversionFailedException When no backend in the cascade succeeded.
-	 *
-	 * @spec openspec/specs/document-editing/spec.md#requirement-conversion-routes-through-the-nextcloud-conversion-broker
+	 * @return array{file: File, backend: string}|null The PDF, or null to try the next backend.
 	 */
-	public function run(): array {
-		foreach ($this->backends as $backend) {
-			if ($backend instanceof ConversionBackendInterface === false) {
-				// Defensive — DI should only register interface
-				// implementations; skip anything else without crashing
-				// the cascade.
-				continue;
-			}
-
-			$result = $this->tryBackend(backend: $backend);
-			if ($result !== null) {
-				return $result;
-			}
+	protected function tryBackend(mixed $backend): ?array {
+		if ($backend instanceof ConversionBackendInterface === false) {
+			// Defensive — DI should only register interface
+			// implementations; skip anything else without crashing
+			// the cascade.
+			return null;
 		}
 
-		// No backend succeeded — emit a structured failure.
-		throw new ConversionFailedException(
+		return $this->convertOrRecord(backend: $backend);
+
+	}//end tryBackend()
+
+	/**
+	 * No backend succeeded — the structured failure.
+	 *
+	 * @return ConversionFailedException The failure with every attempt record.
+	 */
+	protected function failure(): ConversionFailedException {
+		return new ConversionFailedException(
 			message: 'Conversion to PDF failed; no backend in the cascade succeeded.',
 			attempts: $this->attempts
 		);
 
-	}//end run()
+	}//end failure()
 
 	/**
 	 * Convert with one backend, or record why it was skipped or failed.
@@ -123,7 +122,7 @@ final class PdfConversionCascade {
 	 *
 	 * @return array{file: File, backend: string}|null The PDF, or null to try the next backend.
 	 */
-	private function tryBackend(ConversionBackendInterface $backend): ?array {
+	private function convertOrRecord(ConversionBackendInterface $backend): ?array {
 		$skipped = $this->unusableBackendAttempt(backend: $backend);
 		if ($skipped !== null) {
 			$this->attempts[] = $skipped;
@@ -137,7 +136,7 @@ final class PdfConversionCascade {
 			return null;
 		}
 
-	}//end tryBackend()
+	}//end convertOrRecord()
 
 	/**
 	 * The attempt record of a backend that cannot take this file, or null
