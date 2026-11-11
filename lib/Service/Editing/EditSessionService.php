@@ -3,6 +3,9 @@
 /**
  * Edit Session Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Owns the whole read-modify-write of an agent document edit: the lock, the
  * version precondition, the codec pass, the ADR-088 mark and the write. None of
  * these steps is separately agent-callable, and the model never sees a lock.
@@ -40,9 +43,6 @@
  * @link      https://www.filinq.app
  *
  * @spec openspec/changes/document-editing-tools/tasks.md#task-2-2
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);

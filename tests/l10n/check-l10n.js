@@ -2,6 +2,9 @@
 /**
  * l10n extraction / drift check.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Scans the frontend source for translation calls — t('<app>', '...'),
  * n('<app>', '...', '...', n) and the $t/$n template variants — and asserts
  * every literal source string is present as a key in l10n/en.json.
@@ -30,9 +33,6 @@
  *   L10N_APP_ID   override the app id (default: package.json "name")
  *   L10N_SRC_DIR  override the source dir to scan (default: src)
  *   L10N_FILE     override the en.json path (default: l10n/en.json)
- *
- * SPDX-License-Identifier: EUPL-1.2
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  */
 
 'use strict'

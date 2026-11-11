@@ -4,6 +4,9 @@
  * Unit tests for the `unified-search-provider` change: the searchable ⟺
  * deep-link invariant on `filinq_register.json` + `src/manifest.json`.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Filinq registers NO `OCP\Search\IProvider` of its own — it contributes to
  * OpenRegister's shared `openregister_objects` Unified Search provider (ADR-022)
  * purely by (a) marking a schema `searchable:true` and (b) declaring a manifest

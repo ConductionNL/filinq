@@ -3,6 +3,9 @@
 /**
  * Stub for OpenRegister's flow-node contract (the parts filinq implements).
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Used twice: PHPStan reads it through `scanFiles` and psalm through
  * `<stubs>`, and the unit bootstrap requires it so the node and its listener
  * can be exercised against the real interface shape. It is never loaded at
@@ -30,9 +33,6 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
  * @link https://www.filinq.app
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);

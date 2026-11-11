@@ -3,6 +3,9 @@
 /**
  * Dossier Controller
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * HTTP entry points for dossier-level operations. Currently surfaces a
  * single endpoint — `POST /api/anonymization/dossier/{dossierId}/grondslagen-pdf`
  * — which (re)generates the per-dossier grondslagen summary PDF aggregating
@@ -37,9 +40,6 @@
  * @link      https://www.filinq.app
  *
  * @spec openspec/specs/anonymisation-grondslagen-summary/spec.md
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);

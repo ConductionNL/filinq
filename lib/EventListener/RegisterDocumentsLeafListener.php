@@ -3,6 +3,9 @@
 /**
  * Filinq RegisterDocumentsLeafListener.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Contributes the `filinq-documents` leaf to OpenRegister's cross-app leaf
  * catalogue (`RegisterLeafProvidersEvent`, ADR-066), so the documents Filinq
  * holds for an object are visible on that object wherever it is shown, and not
@@ -35,9 +38,6 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
  * @link https://www.filinq.app
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @spec openspec/changes/leaf-integrations/specs/document-register/spec.md
  */

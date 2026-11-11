@@ -3,6 +3,9 @@
 /**
  * Which schemas may be created by any authenticated user, and why.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * 🔴 THE CASCADE IS THE EFFECTIVE PERMISSION WHEN THE SERVICE DOES NOT BYPASS
  * IT. Filinq's own writes mostly pass `_rbac: false`, which is why the v7.9.0
  * note says the cascade governs only direct OpenRegister API access. For a

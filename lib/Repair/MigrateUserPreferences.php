@@ -3,6 +3,9 @@
 /**
  * Filinq Migrate User Preferences Repair Step
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V.
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Repair step that carries this app's per-user preferences across the
  * `docudesk` -> `filinq` app-id rename.
  *
@@ -56,9 +59,6 @@
  * `appinfo/info.xml` alongside MigrateAppConfigKeys — see the ordering comment
  * there. This step has no ordering relationship with settings initialisation,
  * which never writes user values.
- *
- * SPDX-License-Identifier: EUPL-1.2
- * SPDX-FileCopyrightText: 2026 Conduction B.V.
  *
  * @category Repair
  * @package  OCA\Filinq\Repair

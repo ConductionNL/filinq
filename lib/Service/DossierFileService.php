@@ -3,6 +3,9 @@
 /**
  * Dossier File Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Everything the dossier surface does to the FILESYSTEM: the home folder it
  * creates, renames and lists, and the file nodes it resolves, tests for
  * membership and trashes.
@@ -29,9 +32,6 @@
  * @link      https://www.filinq.app
  *
  * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);

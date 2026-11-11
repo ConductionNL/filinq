@@ -11,6 +11,9 @@
  * @link     https://www.filinq.app
  *
  * @spec exclude test of controller construction, no behaviour of its own
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);

@@ -3,6 +3,9 @@
 /**
  * Health Controller — AppHost adopter by COMPOSITION, not inheritance.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * The `health#index` route resolves to this concrete Filinq class carrying
  * the ADR-006 auth posture (#[PublicPage]). The declarative
  * `observability.health` checks from src/manifest.json are still executed by
@@ -30,9 +33,6 @@
  * @link      https://www.filinq.app
  *
  * @spec openspec/specs/adopt-apphost/spec.md
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);

@@ -3,6 +3,9 @@
 /**
  * PhpWord Conversion Backend
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Reads Word-family inputs via PhpOffice\PhpWord, renders them to HTML
  * with PhpWord's HTML writer, then hands that HTML to PdfService for
  * mPDF rendering. Covers DOC (MsDoc, limited fidelity), DOCX (Word2007),
@@ -28,9 +31,6 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);

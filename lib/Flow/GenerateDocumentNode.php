@@ -3,6 +3,9 @@
 /**
  * Filinq Generate Document Flow Node
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * `filinq.generate-document`: renders a Filinq template over each flow item
  * and files the result against the item's object. Filinq owns document
  * generation for the fleet (hydra ADR-075), and OpenRegister owns the flow
@@ -27,9 +30,6 @@
  * @link https://www.filinq.app
  *
  * @spec openspec/changes/flow-generate-document-node/specs/flow-document-generation/spec.md#requirement-a-flow-step-generates-a-document-per-item
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);

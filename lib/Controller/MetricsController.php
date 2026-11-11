@@ -3,6 +3,9 @@
 /**
  * Metrics Controller — AppHost adopter by COMPOSITION, not inheritance.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * The `metrics#index` route resolves to this concrete Filinq class, which
  * owns the admin-only auth posture (no #[NoAdminRequired]) and drives the
  * OpenRegister AppHost metrics engine — pulled out of the DI container BY FQCN
@@ -27,9 +30,6 @@
  * @link      https://www.filinq.app
  *
  * @spec openspec/specs/adopt-apphost/spec.md
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
