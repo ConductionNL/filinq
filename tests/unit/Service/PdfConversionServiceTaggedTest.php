@@ -125,4 +125,114 @@ class PdfConversionServiceTaggedTest extends TestCase {
 
 		$this->assertSame([], $written);
 	}//end testWithoutLibreOfficeTheAccessibleConversionFailsWithEveryAttempt()
+
+	/**
+	 * A LibreOffice backend double whose tagged export answers or fails.
+	 *
+	 * @param string                         $name   Its name.
+	 * @param string|ConversionFailedException $answer The bytes, or the failure to throw.
+	 *
+	 * @return LibreOfficeHeadlessBackend
+	 */
+	private function taggedDouble(string $name, string|ConversionFailedException $answer): LibreOfficeHeadlessBackend {
+		$backend = $this->createMock(LibreOfficeHeadlessBackend::class);
+		$backend->method('name')->willReturn($name);
+		if ($answer instanceof ConversionFailedException) {
+			$backend->method('convertTagged')->willThrowException($answer);
+			return $backend;
+		}
+
+		$backend->method('convertTagged')->willReturn($answer);
+		return $backend;
+	}//end taggedDouble()
+
+	/**
+	 * A source file with the given name whose folder may already hold the PDF.
+	 *
+	 * @param string $name   The source name.
+	 * @param Folder $parent The folder.
+	 *
+	 * @return File
+	 */
+	private function namedSource(string $name, Folder $parent): File {
+		$source = $this->createMock(File::class);
+		$source->method('getName')->willReturn($name);
+		$source->method('getContent')->willReturn('source bytes');
+		$source->method('getParent')->willReturn($parent);
+		return $source;
+	}//end namedSource()
+
+	/**
+	 * A failing tagged export falls through to the next LibreOffice backend, foreign backends are skipped, an existing PDF is replaced.
+	 *
+	 * @return void
+	 */
+	public function testAFailingTaggedExportFallsThroughAndAnExistingPdfIsReplaced(): void {
+		$attempt = ['name' => 'lo1', 'available' => true, 'supports' => true, 'reason' => 'crash'];
+		$failure = new ConversionFailedException(message: 'x', attempts: [$attempt]);
+		$first = $this->taggedDouble('lo1', $failure);
+		$second = $this->taggedDouble('lo2', '%PDF tagged');
+		$second->expects($this->once())->method('convertTagged')->with('source bytes', '', false);
+
+		$existing = $this->createMock(File::class);
+		$existing->expects($this->once())->method('delete');
+		$written = $this->createMock(File::class);
+		$parent = $this->createMock(Folder::class);
+		$parent->method('nodeExists')->with('README.pdf')->willReturn(true);
+		$parent->method('get')->with('README.pdf')->willReturn($existing);
+		$parent->expects($this->once())->method('newFile')->with('README.pdf', '%PDF tagged')->willReturn($written);
+
+		$service = new PdfConversionService([$first, new \stdClass(), $second], $this->createMock(LoggerInterface::class));
+		$result = $service->convertToPdfReporting($this->namedSource('README', $parent), ['accessible' => true]);
+
+		$this->assertSame(['file' => $written, 'backend' => 'lo2'], $result);
+	}//end testAFailingTaggedExportFallsThroughAndAnExistingPdfIsReplaced()
+
+	/**
+	 * The PDF is named after the stem up to the last dot; the extension is lowercased.
+	 *
+	 * @return void
+	 */
+	public function testTheStemKeepsInnerDotsAndTheExtensionIsLowercased(): void {
+		$backend = $this->taggedDouble('lo', '%PDF');
+		$backend->expects($this->once())->method('convertTagged')->with('source bytes', 'docx', true);
+		$parent = $this->createMock(Folder::class);
+		$parent->method('nodeExists')->willReturn(false);
+		$parent->expects($this->never())->method('get');
+		$parent->expects($this->once())->method('newFile')->with('a.b.pdf', '%PDF')->willReturn($this->createMock(File::class));
+
+		$service = new PdfConversionService([$backend], $this->createMock(LoggerInterface::class));
+		$result = $service->convertToPdfReporting($this->namedSource('a.b.DOCX', $parent), ['accessible' => true, 'pdfa' => true]);
+		$this->assertSame('lo', $result['backend']);
+	}//end testTheStemKeepsInnerDotsAndTheExtensionIsLowercased()
+
+	/**
+	 * Without a working tagged export the failure carries every attempt, in order, and code 503.
+	 *
+	 * @return void
+	 */
+	public function testEveryFailedTaggedExportIsReportedWithCode503(): void {
+		$offline = $this->createMock(ConversionBackendInterface::class);
+		$offline->method('name')->willReturn('office_app');
+		$offline->method('isAvailable')->willReturn(false);
+		$first = $this->taggedDouble('lo1', new ConversionFailedException(message: 'a', attempts: [['name' => 'lo1', 'reason' => 'one']]));
+		$second = $this->taggedDouble('lo2', new ConversionFailedException(message: 'b', attempts: [['name' => 'lo2', 'reason' => 'two']]));
+		$parent = $this->createMock(Folder::class);
+		$parent->expects($this->never())->method('newFile');
+
+		$service = new PdfConversionService([$first, $offline, $second], $this->createMock(LoggerInterface::class));
+		try {
+			$service->convertToPdfReporting($this->namedSource('x.odt', $parent), ['accessible' => true]);
+			$this->fail('must fail closed');
+		} catch (ConversionFailedException $e) {
+			$this->assertSame('Accessible PDF output needs LibreOffice, which is not available; no untagged PDF is made instead.', $e->getMessage());
+			$this->assertSame(503, $e->getCode());
+			$expected = [
+				['name' => 'lo1', 'reason' => 'one'],
+				['name' => 'office_app', 'available' => false, 'supports' => false, 'reason' => 'cannot write tagged PDF'],
+				['name' => 'lo2', 'reason' => 'two'],
+			];
+			$this->assertSame($expected, $e->getAttempts());
+		}
+	}//end testEveryFailedTaggedExportIsReportedWithCode503()
 }//end class

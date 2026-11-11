@@ -95,4 +95,35 @@ class PdfConversionCapabilitiesTest extends TestCase {
 		$this->assertFalse($report[0]['available']);
 		$this->assertSame('availability probe failed: binary path unreadable', $report[0]['reason']);
 	}
+
+	/**
+	 * A probe failing midway keeps the inputs seen so far; a foreign backend is left out.
+	 *
+	 * @return void
+	 */
+	public function testAProbeFailingMidwayKeepsTheInputsSeenSoFarAndSkipsForeignBackends(): void {
+		$flaky = $this->createMock(ConversionBackendInterface::class);
+		$flaky->method('name')->willReturn('office_app');
+		$flaky->method('isAvailable')->willReturn(true);
+		$flaky->method('canHandle')->willReturnCallback(
+			static function (string $mime, string $ext): bool {
+				if ($ext === 'docx') {
+					throw new RuntimeException('probe crashed');
+				}
+
+				return true;
+			}
+		);
+
+		$report = (new PdfConversionService([new \stdClass(), $flaky], new NullLogger()))->getCapabilities();
+
+		$expected = [
+			'name' => 'office_app',
+			'available' => false,
+			'supports' => false,
+			'inputs' => ['html'],
+			'reason' => 'availability probe failed: probe crashed',
+		];
+		$this->assertSame([$expected], $report);
+	}
 }//end class
