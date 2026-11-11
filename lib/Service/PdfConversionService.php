@@ -28,6 +28,8 @@ namespace OCA\Filinq\Service;
 
 use OCA\Filinq\Exception\ConversionFailedException;
 use OCA\Filinq\Service\Conversion\ConversionBackendInterface;
+use OCA\Filinq\Service\Conversion\PdfConversionCascade;
+use OCA\Filinq\Service\Conversion\TaggedPdfConversion;
 use OCP\Files\File;
 use Psr\Log\LoggerInterface;
 use Throwable;

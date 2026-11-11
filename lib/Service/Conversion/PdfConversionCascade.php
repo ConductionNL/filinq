@@ -3,13 +3,13 @@
 /**
  * PDF Conversion Cascade
  *
- * One untagged run of {@see PdfConversionService::convertToPdfReporting()}:
+ * One untagged run of {@see \OCA\Filinq\Service\PdfConversionService::convertToPdfReporting()}:
  * walks the backends in order, records why each one that cannot take the
  * file was skipped or failed, and returns the first PDF. Built per call by
  * the service and never handed outside it.
  *
  * @category  Service
- * @package   OCA\Filinq\Service
+ * @package   OCA\Filinq\Service\Conversion
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
@@ -22,10 +22,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\Filinq\Service;
+namespace OCA\Filinq\Service\Conversion;
 
 use OCA\Filinq\Exception\ConversionFailedException;
-use OCA\Filinq\Service\Conversion\ConversionBackendInterface;
+use OCA\Filinq\Service\StripsFileExtension;
 use OCP\Files\File;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -34,7 +34,7 @@ use Throwable;
  * The backend cascade for one source file; first success wins.
  *
  * @category Service
- * @package  OCA\Filinq\Service
+ * @package  OCA\Filinq\Service\Conversion
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
