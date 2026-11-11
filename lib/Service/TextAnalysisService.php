@@ -38,6 +38,44 @@ namespace OCA\Filinq\Service;
  * @link     https://www.filinq.app
  */
 class TextAnalysisService {
+
+	/**
+	 * Words too common in Dutch and English to be keywords.
+	 *
+	 * @var array<int, string>
+	 */
+	private const STOP_WORDS = [
+		'the',
+		'be',
+		'to',
+		'of',
+		'and',
+		'a',
+		'in',
+		'that',
+		'have',
+		'it',
+		'de',
+		'het',
+		'een',
+		'en',
+		'van',
+		'is',
+		'zijn',
+		'op',
+		'voor',
+		'met',
+		'for',
+		'not',
+		'on',
+		'with',
+		'he',
+		'as',
+		'you',
+		'do',
+		'at',
+	];
+
 	/**
 	 * Constructor for TextAnalysisService
 	 *
@@ -62,12 +100,7 @@ class TextAnalysisService {
 	 * @spec openspec/specs/metadata-enrichment/spec.md
 	 */
 	public function countWordOccurrences(string $text, array $words): int {
-		$count = 0;
-		foreach ($words as $word) {
-			$count += substr_count($text, ' ' . $word . ' ');
-		}
-
-		return $count;
+		return $this->languageClassifier->countWordOccurrences(text: $text, words: $words);
 	}//end countWordOccurrences()
 
 	/**
@@ -96,39 +129,7 @@ class TextAnalysisService {
 		$words = str_word_count(strtolower($text), 1);
 		$wordCounts = array_count_values($words);
 
-		$stopWords = [
-			'the',
-			'be',
-			'to',
-			'of',
-			'and',
-			'a',
-			'in',
-			'that',
-			'have',
-			'it',
-			'de',
-			'het',
-			'een',
-			'en',
-			'van',
-			'is',
-			'zijn',
-			'op',
-			'voor',
-			'met',
-			'for',
-			'not',
-			'on',
-			'with',
-			'he',
-			'as',
-			'you',
-			'do',
-			'at',
-		];
-
-		foreach ($stopWords as $stopWord) {
+		foreach (self::STOP_WORDS as $stopWord) {
 			unset($wordCounts[$stopWord]);
 		}
 
