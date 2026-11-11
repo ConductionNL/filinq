@@ -25,7 +25,6 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\Conversion;
 
 use OCA\Filinq\Exception\ConversionFailedException;
-use OCA\Filinq\Service\StripsFileExtension;
 use OCP\Files\File;
 
 /**
@@ -39,8 +38,7 @@ use OCP\Files\File;
  *
  * @spec openspec/changes/archive/2026-09-29-pdfua-accessible-output/tasks.md#task-1.1
  */
-final class TaggedPdfConversion {
-	use StripsFileExtension;
+final class TaggedPdfConversion extends BackendWalk {
 
 	/**
 	 * The attempt records of the backends that could not tag.
@@ -59,37 +57,27 @@ final class TaggedPdfConversion {
 	 * @return void
 	 */
 	public function __construct(
-		private readonly array $backends,
+		array $backends,
 		private readonly File $source,
 		private readonly bool $pdfa,
 	) {
+		parent::__construct(backends: $backends);
 
 	}//end __construct()
 
 	/**
-	 * Run the tagged conversion.
+	 * Without a tagged PDF the conversion fails; it never falls back to an untagged one.
 	 *
-	 * @return array{file: File, backend: string} The PDF beside the source.
-	 *
-	 * @throws ConversionFailedException When no tagged PDF can be made.
-	 *
-	 * @spec openspec/changes/archive/2026-09-29-pdfua-accessible-output/tasks.md#task-1.1
+	 * @return ConversionFailedException The failure with every attempt record, code 503.
 	 */
-	public function run(): array {
-		foreach ($this->backends as $backend) {
-			$result = $this->tryBackend(backend: $backend);
-			if ($result !== null) {
-				return $result;
-			}
-		}
-
-		throw new ConversionFailedException(
+	protected function failure(): ConversionFailedException {
+		return new ConversionFailedException(
 			message: 'Accessible PDF output needs LibreOffice, which is not available; no untagged PDF is made instead.',
 			attempts: $this->attempts,
 			code: 503
 		);
 
-	}//end run()
+	}//end failure()
 
 	/**
 	 * Tag with one backend, or record why it could not.
@@ -98,7 +86,7 @@ final class TaggedPdfConversion {
 	 *
 	 * @return array{file: File, backend: string}|null The PDF, or null to try the next backend.
 	 */
-	private function tryBackend(mixed $backend): ?array {
+	protected function tryBackend(mixed $backend): ?array {
 		if ($backend instanceof LibreOfficeHeadlessBackend === false) {
 			$this->recordUntaggable(backend: $backend);
 			return null;
