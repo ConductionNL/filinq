@@ -7,11 +7,8 @@
  *     that a document with zero verifiable signatures is never reported as
  *     valid (previously returned true).
  *
- * L1: stripAssertionMac() must use preg_replace with preg_quote so that a MAC
- *     value that contains regex metacharacters is treated as a literal string
- *     (previously used str_replace which cannot handle regex patterns, but
- *     the intent was to strip literal occurrences — using preg_replace with
- *     preg_quote is the correct approach for safety and explicitness).
+ * L1: the MAC is recomputed over the canonical document bytes as they are, so
+ *     bytes added to a signed document fail verification, whatever they hold.
  *
  * @category Tests
  * @package  OCA\Filinq\Tests\Unit\Service
@@ -369,48 +366,29 @@ class SigningVerificationServiceTest extends TestCase {
 	}//end testExternalSignatureIsUnverifiableNotInvalid()
 
 	/**
-	 * stripAssertionMac() removes a plain MAC value from the content (finding L1).
+	 * Bytes added to a signed document fail verification, also when they are
+	 * the asserted MAC itself (finding L1).
 	 *
 	 * @return void
 	 */
-	public function testStripAssertionMacRemovesLiteralMac(): void {
-		$ref = new ReflectionClass($this->service);
-		$method = $ref->getMethod('stripAssertionMac');
-		$method->setAccessible(true);
+	public function testAddedMacBytesFailVerification(): void {
+		$secret = 'e2e-verification-secret';
+		$this->mockConfig->method('getValueString')->willReturnCallback(
+			function (string $app, string $key, string $default = '') use ($secret): string {
+				return $key === 'signing_verification_secret' ? $secret : $default;
+			}
+		);
 
-		$mac = 'abc123def456';
-		$content = 'prefix ' . $mac . ' suffix';
+		[$signed, $assertion] = $this->buildV2SignedArtifact(secret: $secret);
+		$tampered = str_replace('government besluit content', 'government besluit content' . $assertion['mac'], $signed);
 
-		$result = $method->invoke($this->service, $content, $mac);
+		$this->assertNotSame($signed, $tampered);
+		$result = $this->extract($tampered);
 
-		$this->assertStringNotContainsString($mac, $result);
-		$this->assertStringContainsString('prefix', $result);
-		$this->assertStringContainsString('suffix', $result);
+		$this->assertSame('invalid', $result[0]['status']);
+		$this->assertFalse($result[0]['valid']);
 
-	}//end testStripAssertionMacRemovesLiteralMac()
-
-	/**
-	 * stripAssertionMac() handles MAC values that contain regex metacharacters
-	 * (finding L1 — preg_quote ensures literal matching).
-	 *
-	 * @return void
-	 */
-	public function testStripAssertionMacHandlesRegexMetacharacters(): void {
-		$ref = new ReflectionClass($this->service);
-		$method = $ref->getMethod('stripAssertionMac');
-		$method->setAccessible(true);
-
-		// A MAC that happens to contain characters special to regex.
-		$mac = 'a.b+c(d)e$f';
-		$content = 'before' . $mac . 'after';
-
-		// Must not throw a regex error and must strip the literal text.
-		$result = $method->invoke($this->service, $content, $mac);
-
-		$this->assertStringNotContainsString($mac, $result);
-		$this->assertSame('beforeafter', $result);
-
-	}//end testStripAssertionMacHandlesRegexMetacharacters()
+	}//end testAddedMacBytesFailVerification()
 
 
 	/**
