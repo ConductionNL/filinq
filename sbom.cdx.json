@@ -2,10 +2,8 @@
   "$schema": "http://cyclonedx.org/schema/bom-1.5.schema.json",
   "bomFormat": "CycloneDX",
   "specVersion": "1.5",
-  "serialNumber": "urn:uuid:298f71a6-52e7-44b3-839b-dc53a6303ca3",
   "version": 1,
   "metadata": {
-    "timestamp": "2026-11-11T17:22:56Z",
     "tools": [
       {
         "name": "composer",
@@ -82,10 +80,10 @@
       }
     ],
     "component": {
-      "bom-ref": "conductionnl/filinq-dev-development",
+      "bom-ref": "conductionnl/filinq-1.0.0.0",
       "type": "application",
       "name": "filinq",
-      "version": "dev-development",
+      "version": "1.0.0",
       "group": "conductionnl",
       "description": "GDPR publication consent management and document metadata enrichment for Nextcloud",
       "author": "Conduction b.v.",
@@ -96,16 +94,8 @@
           }
         }
       ],
-      "purl": "pkg:composer/conductionnl/filinq@dev-development",
+      "purl": "pkg:composer/conductionnl/filinq@1.0.0",
       "properties": [
-        {
-          "name": "cdx:composer:package:distReference",
-          "value": "b1ec6d79861019151a41db0ef31dd000068a103f"
-        },
-        {
-          "name": "cdx:composer:package:sourceReference",
-          "value": "b1ec6d79861019151a41db0ef31dd000068a103f"
-        },
         {
           "name": "cdx:composer:package:type",
           "value": "library"
@@ -28879,7 +28869,7 @@
       ]
     },
     {
-      "ref": "conductionnl/filinq-dev-development",
+      "ref": "conductionnl/filinq-1.0.0.0",
       "dependsOn": [
         "adbario/php-dot-notation-3.5.0.0",
         "mpdf/mpdf-8.3.1.0",
