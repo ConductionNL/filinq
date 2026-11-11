@@ -491,7 +491,7 @@ class AnonymizationPersistenceService {
 	 * @spec openspec/specs/anonymization/spec.md
 	 */
 	private function extractObjectPayload(object $candidate): array {
-		return (new SavedObjectReader())->payloadOf(candidate: $candidate);
+		return (new ObjectResultExtractor())->extractRow(candidate: $candidate);
 	}//end extractObjectPayload()
 
 	/**

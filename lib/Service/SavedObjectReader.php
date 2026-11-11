@@ -3,10 +3,9 @@
 /**
  * Saved Object Reader
  *
- * Reads the identifier and the payload of an OpenRegister object as
- * ObjectService answers it: an entity with accessors, a serialisable object or
- * a plain array. Built by {@see AnonymizationPersistenceService} where it needs
- * one of them.
+ * Reads the identifier of an OpenRegister object as saveObject() answers
+ * it: an entity with accessors, a serialisable object or a plain array. Built
+ * by {@see AnonymizationPersistenceService} where it needs one.
  *
  * @category  Service
  * @package   OCA\Filinq\Service
@@ -27,7 +26,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 /**
- * Reads ids and payloads of saved OpenRegister objects, whatever shape they arrive in.
+ * Reads the id of a saved OpenRegister object, whatever shape it arrives in.
  *
  * @category Service
  * @package  OCA\Filinq\Service
@@ -38,87 +37,6 @@ namespace OCA\Filinq\Service;
  * @spec openspec/specs/anonymization/spec.md
  */
 final class SavedObjectReader {
-
-	/**
-	 * Read an OR entity object's payload, restoring its `@self` id when absent.
-	 *
-	 * @param object $candidate The OR entity object.
-	 *
-	 * @return array<string, mixed> The payload, or an empty array when it cannot be read.
-	 *
-	 * @spec openspec/specs/anonymization/spec.md
-	 */
-	public function payloadOf(object $candidate): array {
-		$payload = $this->objectPayloadOf(candidate: $candidate);
-		if ($payload !== null) {
-			return $payload;
-		}
-
-		return $this->serialisedPayloadOf(candidate: $candidate);
-	}//end payloadOf()
-
-	/**
-	 * The payload getObject() answers, with the uuid restored as `@self` when absent.
-	 *
-	 * @param object $candidate The OR entity object.
-	 *
-	 * @return array<string, mixed>|null The payload, or null when getObject() is missing or answers no array.
-	 */
-	private function objectPayloadOf(object $candidate): ?array {
-		if (method_exists(object_or_class: $candidate, method: 'getObject') === false) {
-			return null;
-		}
-
-		$payload = $candidate->getObject();
-		if (is_array($payload) === false) {
-			return null;
-		}
-
-		return $this->withSelfUuid(payload: $payload, candidate: $candidate);
-	}//end objectPayloadOf()
-
-	/**
-	 * Restore the candidate's uuid as the payload's `@self` id when the payload has no `@self`.
-	 *
-	 * @param array<string, mixed> $payload   The payload.
-	 * @param object               $candidate The OR entity object.
-	 *
-	 * @return array<string, mixed> The payload.
-	 */
-	private function withSelfUuid(array $payload, object $candidate): array {
-		if (isset($payload['@self']) === true
-			|| method_exists(object_or_class: $candidate, method: 'getUuid') === false
-		) {
-			return $payload;
-		}
-
-		$uuid = $candidate->getUuid();
-		if ($uuid !== null) {
-			$payload['@self'] = ['id' => $uuid];
-		}
-
-		return $payload;
-	}//end withSelfUuid()
-
-	/**
-	 * The payload jsonSerialize() answers.
-	 *
-	 * @param object $candidate The OR entity object.
-	 *
-	 * @return array<string, mixed> The payload, or an empty array when it is missing or not an array.
-	 */
-	private function serialisedPayloadOf(object $candidate): array {
-		if (method_exists(object_or_class: $candidate, method: 'jsonSerialize') === false) {
-			return [];
-		}
-
-		$payload = $candidate->jsonSerialize();
-		if (is_array($payload) === false) {
-			return [];
-		}
-
-		return $payload;
-	}//end serialisedPayloadOf()
 
 	/**
 	 * Extract the persisted object's identifier from a saveObject() return value.
