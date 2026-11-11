@@ -264,6 +264,32 @@ function splitTopLevel(body) {
 }
 
 /**
+ * The named arguments of the `new LeafDescriptor(` call whose `(` is at
+ * `open`, with its value objects read through: `identity: new LeafIdentity(…)`,
+ * `availability: new LeafAvailability(…)` and `rendering: new LeafRendering(…)`
+ * contribute their own named arguments, so the grouped form and the flat
+ * eleven-argument form yield the same fields.
+ *
+ * @param {string} src The file text.
+ * @param {number} open Index of the call's opening parenthesis.
+ *
+ * @return {string[]} The top-level arguments, value objects expanded.
+ */
+function leafDescriptorArgs(src, open) {
+	const out = []
+	for (const arg of splitTopLevel(balanced(src, open))) {
+		const group = /^\s*(?:identity|availability|rendering)\s*:\s*new\s+Leaf(?:Identity|Availability|Rendering)\s*\(/.exec(arg)
+		if (group === null) {
+			out.push(arg)
+			continue
+		}
+		const inner = arg.indexOf('(', group.index + group[0].length - 1)
+		out.push(...splitTopLevel(balanced(arg, inner)).map((a) => a.trim()))
+	}
+	return out
+}
+
+/**
  * Resolve a PHP expression to a string or array of strings, or null when it is
  * not statically knowable (which is never a failure — unknown values are simply
  * not compared).
@@ -390,7 +416,7 @@ function collectServerFaces() {
 		let idx = 0
 		while ((idx = src.indexOf('new LeafDescriptor(', idx)) !== -1) {
 			const open = src.indexOf('(', idx)
-			const args = splitTopLevel(balanced(src, open))
+			const args = leafDescriptorArgs(src, open)
 			const face = { kind: 'LeafDescriptor', file: rel, fields: {} }
 			for (const arg of args) {
 				const m = /^([A-Za-z_][A-Za-z0-9_]*)\s*:\s*([\s\S]+)$/.exec(arg)
