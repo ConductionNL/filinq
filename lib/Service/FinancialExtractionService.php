@@ -509,14 +509,14 @@ class FinancialExtractionService implements FinancialExtractionServiceInterface 
 			return $result;
 		}
 
-		$manager = $this->resolveAiManager();
+		$manager = $this->localAi()->manager();
 		if ($manager === null) {
 			return $result;
 		}
 
 		try {
 			$prompt = new AiPrompt(text: $this->buildPrompt(text: $text, fillable: $fillable), requestedBy: $requestedBy);
-			$decoded = json_decode($this->stripCodeFences(text: $this->runAiTask(manager: $manager, prompt: $prompt)), associative: true);
+			$decoded = json_decode($this->localAi()->stripCodeFences(text: $this->runAiTask(manager: $manager, prompt: $prompt)), associative: true);
 			if (is_array($decoded) === false) {
 				return $result;
 			}
@@ -807,41 +807,6 @@ class FinancialExtractionService implements FinancialExtractionServiceInterface 
 	}//end lockedFields()
 
 	/**
-	 * Resolve the preferred available local AI text-processing manager.
-	 *
-	 * Prefers `OCP\TaskProcessing\IManager` (NC 30+), falls back to the
-	 * deprecated `OCP\TextProcessing\IManager`. Both are resolved lazily and
-	 * guarded so this class loads cleanly when neither namespace exists.
-	 *
-	 * @return array{type: string, manager: object}|null Null when unavailable.
-	 */
-	private function resolveAiManager(): ?array {
-		if (interface_exists('OCP\\TaskProcessing\\IManager') === true) {
-			try {
-				return [
-					'type' => 'task',
-					'manager' => $this->container->get('OCP\\TaskProcessing\\IManager'),
-				];
-			} catch (Throwable $e) {
-				// Fall through to the legacy TextProcessing manager.
-			}
-		}
-
-		if (interface_exists('OCP\\TextProcessing\\IManager') === true) {
-			try {
-				return [
-					'type' => 'text',
-					'manager' => $this->container->get('OCP\\TextProcessing\\IManager'),
-				];
-			} catch (Throwable $e) {
-				return null;
-			}
-		}
-
-		return null;
-	}//end resolveAiManager()
-
-	/**
 	 * Run a single structured-extraction prompt through the resolved local
 	 * AI manager and return its raw text output.
 	 *
@@ -904,22 +869,6 @@ class FinancialExtractionService implements FinancialExtractionServiceInterface 
 			. 'confidence. Do not invent values.' . "\n\nDocument text:\n" . $excerpt;
 
 	}//end buildPrompt()
-
-	/**
-	 * Strip ```json ... ``` / ``` ... ``` code fences from a model response, if present.
-	 *
-	 * @param string $text Raw model output.
-	 *
-	 * @return string
-	 */
-	private function stripCodeFences(string $text): string {
-		$trimmed = trim($text);
-		if (preg_match('/^```(?:json)?\s*(.*?)\s*```$/s', $trimmed, $matches) === 1) {
-			return trim($matches[1]);
-		}
-
-		return $trimmed;
-	}//end stripCodeFences()
 
 	/**
 	 * Dispatch the canonical `nl.conduction.filinq.extraction.completed`
@@ -1124,6 +1073,16 @@ class FinancialExtractionService implements FinancialExtractionServiceInterface 
 
 		return $tempFile;
 	}//end writeToTemp()
+
+	/**
+	 * The local AI manager access, over this service's container.
+	 *
+	 * @return LocalTextAi
+	 */
+	private function localAi(): LocalTextAi {
+		return new LocalTextAi(container: $this->container);
+
+	}//end localAi()
 
 	/**
 	 * Normalise an ObjectService result to an array (mirrors

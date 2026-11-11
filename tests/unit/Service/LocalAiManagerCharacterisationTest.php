@@ -19,17 +19,14 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Tests\Unit\Service;
 
-use OCA\Filinq\Service\FinancialExtractionService;
-use OCA\Filinq\Service\GlAccountSuggestionService;
-use PHPUnit\Framework\Attributes\DataProvider;
+use OCA\Filinq\Service\LocalTextAi;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
-use ReflectionClass;
 use RuntimeException;
 
 /**
  * Pins the manager preference (TaskProcessing, then TextProcessing, then
- * none) and the code-fence stripping of both AI-assisted services.
+ * none) and the code-fence stripping the AI-assisted services share.
  *
  * @category Tests
  * @package  OCA\Filinq\Tests\Unit\Service
@@ -42,31 +39,15 @@ use RuntimeException;
 class LocalAiManagerCharacterisationTest extends TestCase {
 
 	/**
-	 * Both services that use the local AI manager.
-	 *
-	 * @return array<string,array{0:class-string}>
-	 */
-	public static function services(): array {
-		return [
-			'financial extraction'  => [FinancialExtractionService::class],
-			'gl account suggestion' => [GlAccountSuggestionService::class],
-		];
-
-	}//end services()
-
-	/**
 	 * The TaskProcessing manager wins when the container has it.
-	 *
-	 * @param class-string $class The service under test.
 	 *
 	 * @return void
 	 */
-	#[DataProvider('services')]
-	public function testTaskProcessingIsPreferred(string $class): void {
+	public function testTaskProcessingIsPreferred(): void {
 		$task = new \stdClass();
 		$this->assertSame(
 			['type' => 'task', 'manager' => $task],
-			$this->call($this->serviceWith($class, ['OCP\\TaskProcessing\\IManager' => $task, 'OCP\\TextProcessing\\IManager' => new \stdClass()]), ['resolveAiManager'])
+			$this->aiWith(['OCP\\TaskProcessing\\IManager' => $task, 'OCP\\TextProcessing\\IManager' => new \stdClass()])->manager()
 		);
 
 	}//end testTaskProcessingIsPreferred()
@@ -74,16 +55,13 @@ class LocalAiManagerCharacterisationTest extends TestCase {
 	/**
 	 * A failing TaskProcessing lookup falls back to TextProcessing.
 	 *
-	 * @param class-string $class The service under test.
-	 *
 	 * @return void
 	 */
-	#[DataProvider('services')]
-	public function testTextProcessingIsTheFallback(string $class): void {
+	public function testTextProcessingIsTheFallback(): void {
 		$text = new \stdClass();
 		$this->assertSame(
 			['type' => 'text', 'manager' => $text],
-			$this->call($this->serviceWith($class, ['OCP\\TextProcessing\\IManager' => $text]), ['resolveAiManager'])
+			$this->aiWith(['OCP\\TextProcessing\\IManager' => $text])->manager()
 		);
 
 	}//end testTextProcessingIsTheFallback()
@@ -91,13 +69,10 @@ class LocalAiManagerCharacterisationTest extends TestCase {
 	/**
 	 * With neither manager resolvable there is no AI.
 	 *
-	 * @param class-string $class The service under test.
-	 *
 	 * @return void
 	 */
-	#[DataProvider('services')]
-	public function testNoManagerIsNull(string $class): void {
-		$this->assertNull($this->call($this->serviceWith($class, []), ['resolveAiManager']));
+	public function testNoManagerIsNull(): void {
+		$this->assertNull($this->aiWith([])->manager());
 
 	}//end testNoManagerIsNull()
 
@@ -105,30 +80,26 @@ class LocalAiManagerCharacterisationTest extends TestCase {
 	 * A fenced answer is unwrapped, with or without the json tag; an
 	 * unfenced one is only trimmed.
 	 *
-	 * @param class-string $class The service under test.
-	 *
 	 * @return void
 	 */
-	#[DataProvider('services')]
-	public function testCodeFencesAreStripped(string $class): void {
-		$service = $this->serviceWith($class, []);
-		$this->assertSame('{"a":1}', $this->call($service, ['stripCodeFences', "  ```json\n{\"a\":1}\n```  "]));
-		$this->assertSame('x y', $this->call($service, ['stripCodeFences', "```\n x y \n```"]));
-		$this->assertSame('{"order":[]} tail', $this->call($service, ['stripCodeFences', " {\"order\":[]} tail \n"]));
-		$this->assertSame('```json {"a":1}', $this->call($service, ['stripCodeFences', '```json {"a":1}']));
+	public function testCodeFencesAreStripped(): void {
+		$ai = $this->aiWith([]);
+		$this->assertSame('{"a":1}', $ai->stripCodeFences("  ```json\n{\"a\":1}\n```  "));
+		$this->assertSame('x y', $ai->stripCodeFences("```\n x y \n```"));
+		$this->assertSame('{"order":[]} tail', $ai->stripCodeFences(" {\"order\":[]} tail \n"));
+		$this->assertSame('```json {"a":1}', $ai->stripCodeFences('```json {"a":1}'));
 
 	}//end testCodeFencesAreStripped()
 
 	/**
-	 * Build the service with only a container that holds the given entries;
-	 * every other lookup throws.
+	 * Build the local AI access over a container that holds the given
+	 * entries; every other lookup throws.
 	 *
-	 * @param class-string         $class   The service under test.
 	 * @param array<string,object> $entries The container entries.
 	 *
-	 * @return object The service.
+	 * @return LocalTextAi The local AI access.
 	 */
-	private function serviceWith(string $class, array $entries): object {
+	private function aiWith(array $entries): LocalTextAi {
 		$container = $this->createMock(ContainerInterface::class);
 		$container->method('get')->willReturnCallback(
 			static function (string $id) use ($entries): object {
@@ -140,27 +111,8 @@ class LocalAiManagerCharacterisationTest extends TestCase {
 			}
 		);
 
-		$service = (new ReflectionClass($class))->newInstanceWithoutConstructor();
-		(function (ContainerInterface $container): void {
-			$this->container = $container;
-		})->call($service, $container);
+		return new LocalTextAi(container: $container);
 
-		return $service;
-
-	}//end serviceWith()
-
-	/**
-	 * Call a private method of the service.
-	 *
-	 * @param object           $service The service under test.
-	 * @param array<int,mixed> $call    The method name followed by its arguments.
-	 *
-	 * @return mixed What the method returns.
-	 */
-	private function call(object $service, array $call): mixed {
-		$method = array_shift($call);
-		return (new ReflectionClass($service))->getMethod($method)->invoke($service, ...$call);
-
-	}//end call()
+	}//end aiWith()
 
 }//end class

@@ -389,14 +389,14 @@ class GlAccountSuggestionService implements GlAccountSuggestionServiceInterface 
 			return $suggestions;
 		}
 
-		$manager = $this->resolveAiManager();
+		$manager = $this->localAi()->manager();
 		if ($manager === null) {
 			return $suggestions;
 		}
 
 		try {
 			$raw = $this->runAiTask(manager: $manager, suggestions: $suggestions, fields: $fields);
-			$decoded = json_decode($this->stripCodeFences(text: $raw), associative: true);
+			$decoded = json_decode($this->localAi()->stripCodeFences(text: $raw), associative: true);
 			if (is_array($decoded) === false || is_array($decoded['order'] ?? null) === false) {
 				return $suggestions;
 			}
@@ -445,42 +445,6 @@ class GlAccountSuggestionService implements GlAccountSuggestionServiceInterface 
 
 		return $reordered;
 	}//end reorderByAi()
-
-	/**
-	 * Resolve the preferred available local AI text-processing manager.
-	 *
-	 * Mirrors FinancialExtractionService::resolveAiManager() exactly: prefers
-	 * `OCP\TaskProcessing\IManager` (NC 30+), falls back to the deprecated
-	 * `OCP\TextProcessing\IManager`. Both resolved lazily and guarded so this
-	 * class loads cleanly when neither namespace exists.
-	 *
-	 * @return array{type: string, manager: object}|null Null when unavailable.
-	 */
-	private function resolveAiManager(): ?array {
-		if (interface_exists('OCP\\TaskProcessing\\IManager') === true) {
-			try {
-				return [
-					'type' => 'task',
-					'manager' => $this->container->get('OCP\\TaskProcessing\\IManager'),
-				];
-			} catch (Throwable $e) {
-				// Fall through to the legacy TextProcessing manager.
-			}
-		}
-
-		if (interface_exists('OCP\\TextProcessing\\IManager') === true) {
-			try {
-				return [
-					'type' => 'text',
-					'manager' => $this->container->get('OCP\\TextProcessing\\IManager'),
-				];
-			} catch (Throwable $e) {
-				return null;
-			}
-		}
-
-		return null;
-	}//end resolveAiManager()
 
 	/**
 	 * Run a single re-rank prompt through the resolved local AI manager and
@@ -539,22 +503,6 @@ class GlAccountSuggestionService implements GlAccountSuggestionServiceInterface 
 	}//end buildPrompt()
 
 	/**
-	 * Strip ```json ... ``` / ``` ... ``` code fences from a model response, if present.
-	 *
-	 * @param string $text Raw model output.
-	 *
-	 * @return string
-	 */
-	private function stripCodeFences(string $text): string {
-		$trimmed = trim($text);
-		if (preg_match('/^```(?:json)?\s*(.*?)\s*```$/s', $trimmed, $matches) === 1) {
-			return trim($matches[1]);
-		}
-
-		return $trimmed;
-	}//end stripCodeFences()
-
-	/**
 	 * Dispatch the sibling `nl.conduction.filinq.gl-account.suggested`
 	 * event. Fail-soft: the already-computed result is still returned to the
 	 * caller even if event dispatch fails (mirrors
@@ -589,6 +537,16 @@ class GlAccountSuggestionService implements GlAccountSuggestionServiceInterface 
 		}
 
 	}//end dispatchSuggestedEvent()
+
+	/**
+	 * The local AI manager access, over this service's container.
+	 *
+	 * @return LocalTextAi
+	 */
+	private function localAi(): LocalTextAi {
+		return new LocalTextAi(container: $this->container);
+
+	}//end localAi()
 
 	/**
 	 * Normalise an ObjectService result to an array (mirrors
