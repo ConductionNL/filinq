@@ -87,6 +87,7 @@ import { translatePlural as n, translate as t } from '@nextcloud/l10n'
 import DossierFormModal from '../../dialogs/DossierFormModal.vue'
 import { LIST_ONLY_INDEX_PAGE } from '../../constants/indexPage.js'
 import { dossierStore } from '../../store/store.js'
+import { dossierStatusColors, dossierStatusLabel } from './dossierStatus.js'
 
 /**
  * Dossiers index.
@@ -110,13 +111,7 @@ export default {
 			dossierStore,
 			isRefreshing: false,
 			dialogOpen: false,
-			statusColorMap: {
-				[t('filinq', 'Open')]: 'default',
-				[t('filinq', 'In review')]: 'warning',
-				[t('filinq', 'Processed')]: 'primary',
-				[t('filinq', 'Published')]: 'success',
-				[t('filinq', 'Closed')]: 'default',
-			},
+			statusColorMap: dossierStatusColors(),
 		}
 	},
 
@@ -150,14 +145,7 @@ export default {
 		 * @return {string} The label.
 		 */
 		statusLabel(status) {
-			const labels = {
-				open: t('filinq', 'Open'),
-				'in-review': t('filinq', 'In review'),
-				processed: t('filinq', 'Processed'),
-				published: t('filinq', 'Published'),
-				closed: t('filinq', 'Closed'),
-			}
-			return labels[status] || t('filinq', 'Open')
+			return dossierStatusLabel(status)
 		},
 
 		/**
