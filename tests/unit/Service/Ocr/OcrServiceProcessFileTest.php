@@ -18,6 +18,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Service\Ocr;
 
 use OCA\Filinq\Service\OcrService;
+use OCA\Filinq\Service\SessionUserFile;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
 use OCP\IAppConfig;
@@ -82,7 +83,7 @@ class OcrServiceProcessFileTest extends TestCase {
 		$config->method('getValueString')->willReturnArgument(2);
 
 		$service = $this->getMockBuilder(OcrService::class)
-			->setConstructorArgs([new NullLogger(), $config, $root, $session])
+			->setConstructorArgs([new NullLogger(), $config, new SessionUserFile($root, $session)])
 			->onlyMethods(['isTesseractAvailable', 'extractTextFromImage', 'extractTextFromPdf'])
 			->getMock();
 		$service->method('isTesseractAvailable')->willReturn(true);

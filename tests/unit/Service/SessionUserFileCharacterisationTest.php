@@ -21,6 +21,7 @@ namespace OCA\Filinq\Tests\Unit\Service;
 
 use OCA\Filinq\Service\FinancialExtractionService;
 use OCA\Filinq\Service\OcrService;
+use OCA\Filinq\Service\SessionUserFile;
 use OCP\Files\File;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
@@ -136,10 +137,16 @@ class SessionUserFileCharacterisationTest extends TestCase {
 		$session->method('getUser')->willReturn($world['user']);
 		$reflection = new ReflectionClass($lookup[0]);
 		$service = $reflection->newInstanceWithoutConstructor();
-		(function (IRootFolder $root, IUserSession $session): void {
-			$this->rootFolder  = $root;
-			$this->userSession = $session;
-		})->call($service, $world['root'], $session);
+		if ($reflection->hasProperty('userFiles') === true) {
+			(function (SessionUserFile $files): void {
+				$this->userFiles = $files;
+			})->call($service, new SessionUserFile(rootFolder: $world['root'], userSession: $session));
+		} else {
+			(function (IRootFolder $root, IUserSession $session): void {
+				$this->rootFolder  = $root;
+				$this->userSession = $session;
+			})->call($service, $world['root'], $session);
+		}
 
 		return $reflection->getMethod($lookup[1])->invoke($service, 42);
 

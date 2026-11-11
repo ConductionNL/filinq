@@ -20,6 +20,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Service;
 
 use OCA\Filinq\Service\OcrService;
+use OCA\Filinq\Service\SessionUserFile;
 use OCA\Filinq\Service\TesseractCommand;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
@@ -120,7 +121,7 @@ class ShellArgReviewTest extends TestCase {
 	 */
 	public function testVersionCommands(): void {
 		$GLOBALS['tesseractExecStub']['output'] = ['tesseract 5.3.0', ' leptonica-1.82.0'];
-		$service = new OcrService(new NullLogger(), $this->createMock(IAppConfig::class), $this->createMock(IRootFolder::class), $this->createMock(IUserSession::class));
+		$service = new OcrService(new NullLogger(), $this->createMock(IAppConfig::class), new SessionUserFile($this->createMock(IRootFolder::class), $this->createMock(IUserSession::class)));
 
 		$this->assertTrue($service->isTesseractAvailable());
 		$this->assertSame('tesseract 5.3.0', $service->getTesseractVersion());
@@ -155,7 +156,7 @@ class ShellArgReviewTest extends TestCase {
 		$file->method('getMimeType')->willReturn('image/png');
 		$file->method('getContent')->willReturn('png bytes');
 
-		$service = new OcrService(new NullLogger(), $config, $this->createMock(IRootFolder::class), $this->createMock(IUserSession::class));
+		$service = new OcrService(new NullLogger(), $config, new SessionUserFile($this->createMock(IRootFolder::class), $this->createMock(IUserSession::class)));
 		try {
 			$result = $service->processNode(file: $file);
 		} finally {

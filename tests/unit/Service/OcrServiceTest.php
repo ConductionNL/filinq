@@ -18,6 +18,7 @@
 namespace OCA\Filinq\Tests\Unit\Service;
 
 use OCA\Filinq\Service\OcrService;
+use OCA\Filinq\Service\SessionUserFile;
 use OCP\Files\IRootFolder;
 use OCP\IAppConfig;
 use OCP\IUserSession;
@@ -92,8 +93,7 @@ class OcrServiceTest extends TestCase {
 		$this->ocrService = new OcrService(
 			logger: $this->mockLogger,
 			config: $this->mockConfig,
-			rootFolder: $this->mockRootFolder,
-			userSession: $this->mockUserSession
+			userFiles: new SessionUserFile(rootFolder: $this->mockRootFolder, userSession: $this->mockUserSession)
 		);
 
 	}//end setUp()
