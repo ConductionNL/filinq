@@ -223,6 +223,82 @@ class LegalHoldCaseServiceTest extends TestCase {
 	}//end testAPartialFanOutIsVisibleAndRetried()
 
 	/**
+	 * A retry with nothing failed and nothing unreached answers the case and touches nothing.
+	 *
+	 * @return void
+	 */
+	public function testARetryWithNothingPendingChangesNothing(): void {
+		$this->record(uuid: 'doc-1', fileId: 11);
+		$service = $this->service();
+		$case = $service->place(input: $this->input(documents: ['doc-1']), userId: 'alice');
+		$calls = $this->holdService->calls;
+		$stored = $this->cases[$case['uuid']];
+
+		$retried = $service->retry(uuid: $case['uuid'], userId: 'alice');
+
+		$this->assertSame($calls, $this->holdService->calls);
+		$this->assertSame($stored, $this->cases[$case['uuid']]);
+		$this->assertSame($stored['fanOut'], $retried['fanOut']);
+
+	}//end testARetryWithNothingPendingChangesNothing()
+
+	/**
+	 * A record in scope that has no fan-out entry was never reached, and a retry freezes it.
+	 *
+	 * @return void
+	 */
+	public function testARetryFreezesARecordThatWasNeverReached(): void {
+		$this->record(uuid: 'doc-1');
+		$this->record(uuid: 'doc-2');
+		$service = $this->service();
+		$case = $service->place(input: $this->input(documents: ['doc-1', 'doc-2']), userId: 'alice');
+		$this->cases[$case['uuid']]['fanOut'] = array_values(
+			array_filter($this->cases[$case['uuid']]['fanOut'], static fn (array $entry): bool => $entry['ref'] !== 'doc-2')
+		);
+		$before = count($this->holdService->calls);
+
+		$retried = $service->retry(uuid: $case['uuid'], userId: 'alice');
+
+		$entries = array_column($retried['fanOut'], null, 'ref');
+		$this->assertSame(['doc-1', 'doc-2'], array_keys($entries));
+		$this->assertSame(['held', 'no_files'], [$entries['doc-2']['record'], $entries['doc-2']['file']]);
+		$this->assertSame('complete', $retried['protection']);
+		$this->assertTrue($this->records['doc-2']->hasActiveLegalHold());
+		$this->assertSame($before, count($this->holdService->calls));
+
+	}//end testARetryFreezesARecordThatWasNeverReached()
+
+	/**
+	 * On a released case a retry unfreezes the records whose release failed, and only those.
+	 *
+	 * @return void
+	 */
+	public function testARetryOfAReleasedCaseUnfreezesTheFailures(): void {
+		$this->record(uuid: 'doc-1');
+		$this->record(uuid: 'doc-2');
+		$service = $this->service();
+		$case = $service->place(input: $this->input(documents: ['doc-1', 'doc-2']), userId: 'alice');
+		$service->release(uuid: $case['uuid'], releaseReason: 'Settled.', userId: 'alice');
+		foreach ($this->cases[$case['uuid']]['fanOut'] as $index => $entry) {
+			if ($entry['ref'] === 'doc-2') {
+				$this->cases[$case['uuid']]['fanOut'][$index]['record'] = 'failed';
+			}
+		}
+
+		$before = count($this->holdService->calls);
+
+		$retried = $service->retry(uuid: $case['uuid'], userId: 'alice');
+
+		$entries = array_column($retried['fanOut'], null, 'ref');
+		$this->assertSame(['released', 'unlocked'], [$entries['doc-2']['record'], $entries['doc-2']['file']]);
+		$this->assertSame(['released', 'unlocked'], [$entries['doc-1']['record'], $entries['doc-1']['file']]);
+		$this->assertSame('released', $retried['status']);
+		$this->assertFalse($this->records['doc-2']->hasActiveLegalHold());
+		$this->assertSame($before, count($this->holdService->calls));
+
+	}//end testARetryOfAReleasedCaseUnfreezesTheFailures()
+
+	/**
 	 * Two cases on one record: it stays frozen, file lock included, until the last one is released, in either order.
 	 *
 	 * @return void

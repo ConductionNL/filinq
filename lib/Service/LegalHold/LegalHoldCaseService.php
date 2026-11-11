@@ -211,19 +211,7 @@ class LegalHoldCaseService implements LegalHoldCaseServiceInterface {
 	public function retry(string $uuid, string $userId): array {
 		$this->authority->assertAuthority(userId: $userId);
 		$case = $this->existing(uuid: $uuid);
-		$pending = [];
-		foreach ((array) ($case['fanOut'] ?? []) as $entry) {
-			if (($entry['record'] ?? '') === 'failed' || ($entry['file'] ?? '') === 'failed') {
-				$pending[(string) $entry['ref']] = (string) $entry['kind'];
-			}
-		}
-
-		// A record in scope with no entry at all was never reached.
-		foreach ($this->shape->scope(case: $case) as $ref => $kind) {
-			if ($this->shape->entryFor(case: $case, ref: $ref) === null) {
-				$pending[$ref] = $kind;
-			}
-		}
+		$pending = $this->withUnreachedRefs(holdCase: $case, pending: $this->failedRefs(holdCase: $case));
 
 		if ($pending === []) {
 			return $case;
@@ -236,6 +224,44 @@ class LegalHoldCaseService implements LegalHoldCaseServiceInterface {
 		return $this->freezeRefs(case: $case, refs: $pending, subject: '');
 
 	}//end retry()
+
+	/**
+	 * The records whose freeze or unfreeze failed, on the record or on its files.
+	 *
+	 * @param array<string, mixed> $holdCase The case.
+	 *
+	 * @return array<string, string> Ref => kind.
+	 */
+	private function failedRefs(array $holdCase): array {
+		$failed = [];
+		foreach ((array) ($holdCase['fanOut'] ?? []) as $entry) {
+			if (($entry['record'] ?? '') === 'failed' || ($entry['file'] ?? '') === 'failed') {
+				$failed[(string) $entry['ref']] = (string) $entry['kind'];
+			}
+		}
+
+		return $failed;
+
+	}//end failedRefs()
+
+	/**
+	 * Add the records in scope that have no fan-out entry at all: they were never reached.
+	 *
+	 * @param array<string, mixed>  $holdCase The case.
+	 * @param array<string, string> $pending  Ref => kind found so far.
+	 *
+	 * @return array<string, string> Ref => kind, the unreached records added.
+	 */
+	private function withUnreachedRefs(array $holdCase, array $pending): array {
+		foreach ($this->shape->scope(case: $holdCase) as $ref => $kind) {
+			if ($this->shape->entryFor(case: $holdCase, ref: $ref) === null) {
+				$pending[$ref] = $kind;
+			}
+		}
+
+		return $pending;
+
+	}//end withUnreachedRefs()
 
 	/**
 	 * Release a case: a reason is required, and records another active case
