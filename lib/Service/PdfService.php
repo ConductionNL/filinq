@@ -54,6 +54,96 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/specs/pdfa3-conversion/spec.md
  */
 class PdfService implements PdfServiceInterface {
+
+	/**
+	 * The print stylesheet that leaves 3 mm bleed and places the four corner marks.
+	 *
+	 * @var string
+	 */
+	/**
+	 * The print layout hints every rendered document gets (see buildPrintCss()).
+	 *
+	 * @var string
+	 */
+	private const PRINT_CSS = '<style>
+@media print {
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: "DejaVu Sans", sans-serif;
+    }
+    figure, img, pre, blockquote {
+        page-break-inside: avoid;
+    }
+    /*
+     * Let large data tables flow across pages instead of being crammed
+     * onto one page. `page-break-inside: avoid` is applied to each ROW so
+     * rows are never split mid-cell, while the table itself may break at
+     * row boundaries. `thead { table-header-group }` makes mPDF repeat the
+     * column header on every page the table spans.
+     */
+    tr {
+        page-break-inside: avoid;
+    }
+    thead {
+        display: table-header-group;
+    }
+    h1, h2, h3, h4, h5, h6 {
+        page-break-after: avoid;
+    }
+    nav, .no-print {
+        display: none;
+    }
+}
+</style>
+';
+
+	/**
+	 * The print stylesheet that leaves 3 mm bleed and places the four corner marks.
+	 *
+	 * @var string
+	 */
+	private const CROP_MARKS_CSS = '<style>
+@media print {
+    body { margin: 3mm; padding: 0; }
+    .crop-mark-container {
+        position: relative;
+        margin: 3mm;
+    }
+    .crop-mark {
+        position: absolute;
+        width: 8mm;
+        height: 8mm;
+        overflow: visible;
+    }
+    .crop-mark-tl { top: -5mm; left: -5mm; }
+    .crop-mark-tr { top: -5mm; right: -5mm; }
+    .crop-mark-bl { bottom: -5mm; left: -5mm; }
+    .crop-mark-br { bottom: -5mm; right: -5mm; }
+}
+</style>';
+
+	/**
+	 * The four corner crop marks (top-left, top-right, bottom-left, bottom-right) as inline SVG.
+	 *
+	 * @var string
+	 */
+	private const CROP_MARKS_SVG = '<svg class="crop-mark crop-mark-tl" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">'
+		. '<line x1="12" y1="0" x2="12" y2="8" stroke="black" stroke-width="0.5"/>'
+		. '<line x1="0" y1="12" x2="8" y2="12" stroke="black" stroke-width="0.5"/>'
+		. '</svg>'
+		. '<svg class="crop-mark crop-mark-tr" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">'
+		. '<line x1="12" y1="0" x2="12" y2="8" stroke="black" stroke-width="0.5"/>'
+		. '<line x1="16" y1="12" x2="24" y2="12" stroke="black" stroke-width="0.5"/>'
+		. '</svg>'
+		. '<svg class="crop-mark crop-mark-bl" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">'
+		. '<line x1="12" y1="16" x2="12" y2="24" stroke="black" stroke-width="0.5"/>'
+		. '<line x1="0" y1="12" x2="8" y2="12" stroke="black" stroke-width="0.5"/>'
+		. '</svg>'
+		. '<svg class="crop-mark crop-mark-br" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">'
+		. '<line x1="12" y1="16" x2="12" y2="24" stroke="black" stroke-width="0.5"/>'
+		. '<line x1="16" y1="12" x2="24" y2="12" stroke="black" stroke-width="0.5"/>'
+		. '</svg>';
 	/**
 	 * Constructor for PdfService
 	 *
@@ -195,49 +285,11 @@ class PdfService implements PdfServiceInterface {
 	 * @spec openspec/changes/print-functionality/tasks.md#task-1
 	 */
 	public function buildCropMarksHtml(string $html): string {
-		$cropCss = '<style>
-@media print {
-    body { margin: 3mm; padding: 0; }
-    .crop-mark-container {
-        position: relative;
-        margin: 3mm;
-    }
-    .crop-mark {
-        position: absolute;
-        width: 8mm;
-        height: 8mm;
-        overflow: visible;
-    }
-    .crop-mark-tl { top: -5mm; left: -5mm; }
-    .crop-mark-tr { top: -5mm; right: -5mm; }
-    .crop-mark-bl { bottom: -5mm; left: -5mm; }
-    .crop-mark-br { bottom: -5mm; right: -5mm; }
-}
-</style>';
-
-		$cropMarkSvgTl = '<svg class="crop-mark crop-mark-tl" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">'
-			. '<line x1="12" y1="0" x2="12" y2="8" stroke="black" stroke-width="0.5"/>'
-			. '<line x1="0" y1="12" x2="8" y2="12" stroke="black" stroke-width="0.5"/>'
-			. '</svg>';
-		$cropMarkSvgTr = '<svg class="crop-mark crop-mark-tr" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">'
-			. '<line x1="12" y1="0" x2="12" y2="8" stroke="black" stroke-width="0.5"/>'
-			. '<line x1="16" y1="12" x2="24" y2="12" stroke="black" stroke-width="0.5"/>'
-			. '</svg>';
-		$cropMarkSvgBl = '<svg class="crop-mark crop-mark-bl" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">'
-			. '<line x1="12" y1="16" x2="12" y2="24" stroke="black" stroke-width="0.5"/>'
-			. '<line x1="0" y1="12" x2="8" y2="12" stroke="black" stroke-width="0.5"/>'
-			. '</svg>';
-		$cropMarkSvgBr = '<svg class="crop-mark crop-mark-br" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">'
-			. '<line x1="12" y1="16" x2="12" y2="24" stroke="black" stroke-width="0.5"/>'
-			. '<line x1="16" y1="12" x2="24" y2="12" stroke="black" stroke-width="0.5"/>'
-			. '</svg>';
-
-		$wrapper = '<div class="crop-mark-container">'
-			. $cropMarkSvgTl . $cropMarkSvgTr . $cropMarkSvgBl . $cropMarkSvgBr
+		return self::CROP_MARKS_CSS
+			. '<div class="crop-mark-container">'
+			. self::CROP_MARKS_SVG
 			. $html
 			. '</div>';
-
-		return $cropCss . $wrapper;
 	}//end buildCropMarksHtml()
 
 	/**
@@ -286,37 +338,50 @@ class PdfService implements PdfServiceInterface {
 		];
 
 		if ($isPdfA === true) {
-			$config['PDFA'] = true;
-			$config['PDFAauto'] = true;
-			// Fix (2026-07-16): mPDF defaults PDFAversion to '1-B' when the
-			// key is absent (see vendor/mpdf/mpdf/src/Config/ConfigVariables.php).
-			// This class's docblock has always promised PDF/A-3b output, and
-			// every caller (pdf#renderPdfA, print#downloadPdfA,
-			// DocumentService's `pdfOptions.pdfa`) relies on that promise for
-			// MDTO/archival compliance, but the version was never pinned —
-			// output was silently PDF/A-1B. Pin explicitly so the emitted
-			// XMP `pdfaid:part`/`pdfaid:conformance` markers actually say "3"/"B".
-			$config['PDFAversion'] = '3-B';
-
-			$fontDir = $this->getFontDirectory();
-			if ($fontDir !== null) {
-				$config['fontDir'] = [
-					$fontDir,
-				];
-				$config['fontdata'] = [
-					'dejavusans' => [
-						'R' => 'DejaVuSans.ttf',
-						'B' => 'DejaVuSans-Bold.ttf',
-						'I' => 'DejaVuSans-Oblique.ttf',
-						'BI' => 'DejaVuSans-BoldOblique.ttf',
-					],
-				];
-				$config['default_font'] = 'dejavusans';
-			}
-		}//end if
+			$config = $this->withPdfaSettings(config: $config);
+		}
 
 		return $config;
 	}//end buildMpdfConfig()
+
+	/**
+	 * Add the PDF/A-3b settings, and the embedded DejaVu font when its directory is there.
+	 *
+	 * @param array<string, mixed> $config The mPDF configuration so far.
+	 *
+	 * @return array<string, mixed> The configuration for PDF/A output.
+	 */
+	private function withPdfaSettings(array $config): array {
+		$config['PDFA'] = true;
+		$config['PDFAauto'] = true;
+		// Fix (2026-07-16): mPDF defaults PDFAversion to '1-B' when the
+		// key is absent (see vendor/mpdf/mpdf/src/Config/ConfigVariables.php).
+		// This class's docblock has always promised PDF/A-3b output, and
+		// every caller (pdf#renderPdfA, print#downloadPdfA,
+		// DocumentService's `pdfOptions.pdfa`) relies on that promise for
+		// MDTO/archival compliance, but the version was never pinned —
+		// output was silently PDF/A-1B. Pin explicitly so the emitted
+		// XMP `pdfaid:part`/`pdfaid:conformance` markers actually say "3"/"B".
+		$config['PDFAversion'] = '3-B';
+
+		$fontDir = $this->getFontDirectory();
+		if ($fontDir !== null) {
+			$config['fontDir'] = [
+				$fontDir,
+			];
+			$config['fontdata'] = [
+				'dejavusans' => [
+					'R' => 'DejaVuSans.ttf',
+					'B' => 'DejaVuSans-Bold.ttf',
+					'I' => 'DejaVuSans-Oblique.ttf',
+					'BI' => 'DejaVuSans-BoldOblique.ttf',
+				],
+			];
+			$config['default_font'] = 'dejavusans';
+		}
+
+		return $config;
+	}//end withPdfaSettings()
 
 	/**
 	 * Get the path to the bundled font directory
@@ -369,38 +434,7 @@ class PdfService implements PdfServiceInterface {
 		// since page sizing is delegated to the config path.
 		unset($format, $orientation);
 
-		return '<style>
-@media print {
-    body {
-        margin: 0;
-        padding: 0;
-        font-family: "DejaVu Sans", sans-serif;
-    }
-    figure, img, pre, blockquote {
-        page-break-inside: avoid;
-    }
-    /*
-     * Let large data tables flow across pages instead of being crammed
-     * onto one page. `page-break-inside: avoid` is applied to each ROW so
-     * rows are never split mid-cell, while the table itself may break at
-     * row boundaries. `thead { table-header-group }` makes mPDF repeat the
-     * column header on every page the table spans.
-     */
-    tr {
-        page-break-inside: avoid;
-    }
-    thead {
-        display: table-header-group;
-    }
-    h1, h2, h3, h4, h5, h6 {
-        page-break-after: avoid;
-    }
-    nav, .no-print {
-        display: none;
-    }
-}
-</style>
-';
+		return self::PRINT_CSS;
 
 	}//end buildPrintCss()
 
