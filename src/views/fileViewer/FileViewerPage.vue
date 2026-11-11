@@ -132,6 +132,15 @@ import {
 } from '../../services/viewerRouting.js'
 import { fileViewerStore } from '../../store/store.js'
 
+/**
+ * Header icon per viewer kind; any other kind shows the generic document icon.
+ */
+const FILE_TYPE_ICONS = new Map([
+	['pdf', 'FilePdfBox'],
+	['word', 'FileWordBox'],
+	['odt', 'FileWordBox'],
+])
+
 export default {
 	name: 'FileViewerPage',
 	components: {
@@ -261,16 +270,7 @@ export default {
 		 * @return {string}
 		 */
 		fileTypeIcon() {
-			switch (this.viewerKind) {
-				case 'pdf':
-					return 'FilePdfBox'
-				case 'word':
-					return 'FileWordBox'
-				case 'odt':
-					return 'FileWordBox'
-				default:
-					return 'FileDocumentOutline'
-			}
+			return FILE_TYPE_ICONS.get(this.viewerKind) ?? 'FileDocumentOutline'
 		},
 
 		/**
