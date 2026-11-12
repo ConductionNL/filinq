@@ -3,7 +3,7 @@
     "info": {
         "title": "Filinq",
         "version": "0.2.8-unstable.20261021160000",
-        "description": "The JSON API of Filinq, document management for Nextcloud: anonymisation of documents and folders, signing, templates, archiving and retention, legal holds, settings and the setup wizard. The documents' metadata objects are stored in OpenRegister and read and written through its API; this document covers the endpoints Filinq adds on top.\n\nEvery path is served under `/api/v1/`, the version this document describes. The unversioned `/api/` paths keep working, are deprecated, and name their `/api/v1/` successor in a `Link` header next to a `Deprecation` header. Errors are RFC 9457 problem details (`application/problem+json`), and every response carries an `API-Version` header. Paths that implement an external standard keep the formats of that standard and are not described here.",
+        "description": "The JSON API of Filinq, document management for Nextcloud: anonymisation of documents and folders, signing, templates, archiving and retention, legal holds, settings and the setup wizard. The documents' metadata objects are stored in OpenRegister and read and written through its API; this document covers the endpoints Filinq adds on top.\n\nEvery path is served under `/api/v1/`, the version this document describes. The unversioned `/api/` paths keep working, are deprecated, and name their `/api/v1/` successor in a `Link` header next to a `Deprecation` header. Errors are RFC 9457 problem details (`application/problem+json`), and every response carries an `API-Version` header. Paths that implement an external standard keep the formats of that standard and are not described here; where this app documents them, openapi.standards.json does.",
         "contact": {
             "name": "Conduction B.V.",
             "email": "info@conduction.nl",
@@ -132,10 +132,6 @@
             "description": "Controller for the GL-account suggestion endpoint"
         },
         {
-            "name": "health",
-            "description": "Public, declarative health endpoint backed by the AppHost engine"
-        },
-        {
             "name": "intake",
             "description": "Controller for the documents waiting for a record"
         },
@@ -150,10 +146,6 @@
         {
             "name": "metadata",
             "description": "Controller for metadata enrichment operations"
-        },
-        {
-            "name": "metrics",
-            "description": "Admin-only declarative Prometheus metrics endpoint backed by the AppHost engine"
         },
         {
             "name": "ocr",
@@ -4449,47 +4441,6 @@
                 ]
             }
         },
-        "/health": {
-            "servers": [
-                {
-                    "url": "https://{host}/index.php/apps/filinq/api",
-                    "description": "The unversioned base of the paths that implement an external standard, which keep their own URLs and formats.",
-                    "variables": {
-                        "host": {
-                            "default": "localhost",
-                            "description": "The host name of the Nextcloud instance."
-                        }
-                    }
-                }
-            ],
-            "get": {
-                "operationId": "health-index",
-                "summary": "GET /api/health, declarative health check (ADR-006)",
-                "description": "GET /api/health, declarative health check (ADR-006).  Public per ADR-006: an anonymous probe (load balancer, uptime monitor) must reach this without a session. Drives the AppHost engine, which runs the `observability.health` checks declared in src/manifest.json.  When the engine cannot be resolved, openregister absent or disabled, the endpoint still ANSWERS (the entire point of a health probe): `status: degraded`, `checks: {openregister: unavailable}`, HTTP 200.  Rate limiting is an anonymous CEILING rather than a per-account counter, because a liveness probe carries no credential to count against.",
-                "tags": [
-                    "health"
-                ],
-                "responses": {
-                    "200": {
-                        "description": "`{status, app, version, checks}`.",
-                        "headers": {
-                            "API-Version": {
-                                "$ref": "#/components/headers/API-Version"
-                            }
-                        },
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "additionalProperties": true
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": []
-            }
-        },
         "/intake/detached": {
             "get": {
                 "operationId": "intake-detached",
@@ -5246,49 +5197,6 @@
                     },
                     "500": {
                         "$ref": "#/components/responses/Problem500"
-                    }
-                }
-            }
-        },
-        "/metrics": {
-            "servers": [
-                {
-                    "url": "https://{host}/index.php/apps/filinq/api",
-                    "description": "The unversioned base of the paths that implement an external standard, which keep their own URLs and formats.",
-                    "variables": {
-                        "host": {
-                            "default": "localhost",
-                            "description": "The host name of the Nextcloud instance."
-                        }
-                    }
-                }
-            ],
-            "get": {
-                "operationId": "metrics-index",
-                "summary": "GET /api/metrics, declarative Prometheus metrics (admin-only, ADR-006)",
-                "description": "GET /api/metrics, declarative Prometheus metrics (admin-only, ADR-006).  Drives the AppHost metrics engine. Returns HTTP 503 with a Prometheus comment line when the engine is unavailable (openregister absent or disabled), never a 500.",
-                "tags": [
-                    "metrics"
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Prometheus text exposition 0.0.4.",
-                        "headers": {
-                            "API-Version": {
-                                "$ref": "#/components/headers/API-Version"
-                            }
-                        },
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "additionalProperties": true
-                                }
-                            }
-                        }
-                    },
-                    "503": {
-                        "$ref": "#/components/responses/Problem503"
                     }
                 }
             }
@@ -8522,46 +8430,6 @@
                     },
                     "500": {
                         "$ref": "#/components/responses/Problem500"
-                    }
-                }
-            }
-        },
-        "/signing/identity/callback": {
-            "servers": [
-                {
-                    "url": "https://{host}/index.php/apps/filinq/api",
-                    "description": "The unversioned base of the paths that implement an external standard, which keep their own URLs and formats.",
-                    "variables": {
-                        "host": {
-                            "default": "localhost",
-                            "description": "The host name of the Nextcloud instance."
-                        }
-                    }
-                }
-            ],
-            "get": {
-                "operationId": "signer-identity-callback",
-                "summary": "GET /api/signing/identity/callback  The session user must be the one who started the step-up (checked in the provider ag",
-                "description": "GET /api/signing/identity/callback  The session user must be the one who started the step-up (checked in the provider against the state's bound act).",
-                "tags": [
-                    "signer-identity"
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Back to the request page, with the outcome in the query.",
-                        "headers": {
-                            "API-Version": {
-                                "$ref": "#/components/headers/API-Version"
-                            }
-                        },
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "additionalProperties": true
-                                }
-                            }
-                        }
                     }
                 }
             }

@@ -1,0 +1,207 @@
+{
+    "openapi": "3.0.3",
+    "info": {
+        "title": "Filinq standard protocol endpoints",
+        "version": "0.2.8-unstable.20261021160000",
+        "description": "The endpoints of Filinq that implement an external standard (listed in lib/Middleware/Support/StandardProtocolPaths.php). Their URLs, request and error formats are the ones their standard defines, so they keep their unversioned paths and are not part of the versioned API that openapi.json describes.",
+        "contact": {
+            "name": "Conduction B.V.",
+            "email": "info@conduction.nl",
+            "url": "https://conduction.nl"
+        },
+        "license": {
+            "name": "EUPL-1.2",
+            "url": "https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12"
+        }
+    },
+    "servers": [
+        {
+            "url": "https://{host}/index.php/apps/filinq/api",
+            "description": "The unversioned base of the paths that implement an external standard, which keep their own URLs and formats.",
+            "variables": {
+                "host": {
+                    "default": "localhost",
+                    "description": "The host name of the Nextcloud instance."
+                }
+            }
+        }
+    ],
+    "security": [
+        {
+            "basic_auth": []
+        },
+        {
+            "bearer_auth": []
+        }
+    ],
+    "paths": {
+        "/health": {
+            "get": {
+                "operationId": "health-index",
+                "summary": "GET /api/health, declarative health check (ADR-006)",
+                "description": "GET /api/health, declarative health check (ADR-006).  Public per ADR-006: an anonymous probe (load balancer, uptime monitor) must reach this without a session. Drives the AppHost engine, which runs the `observability.health` checks declared in src/manifest.json.  When the engine cannot be resolved, openregister absent or disabled, the endpoint still ANSWERS (the entire point of a health probe): `status: degraded`, `checks: {openregister: unavailable}`, HTTP 200.  Rate limiting is an anonymous CEILING rather than a per-account counter, because a liveness probe carries no credential to count against.",
+                "tags": [
+                    "health"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`{status, app, version, checks}`.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": []
+            }
+        },
+        "/metrics": {
+            "get": {
+                "operationId": "metrics-index",
+                "summary": "GET /api/metrics, declarative Prometheus metrics (admin-only, ADR-006)",
+                "description": "GET /api/metrics, declarative Prometheus metrics (admin-only, ADR-006).  Drives the AppHost metrics engine. Returns HTTP 503 with a Prometheus comment line when the engine is unavailable (openregister absent or disabled), never a 500.",
+                "tags": [
+                    "metrics"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Prometheus text exposition 0.0.4.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "$ref": "#/components/responses/Problem503"
+                    }
+                }
+            }
+        },
+        "/signing/identity/callback": {
+            "get": {
+                "operationId": "signer-identity-callback",
+                "summary": "GET /api/signing/identity/callback  The session user must be the one who started the step-up (checked in the provider ag",
+                "description": "GET /api/signing/identity/callback  The session user must be the one who started the step-up (checked in the provider against the state's bound act).",
+                "tags": [
+                    "signer-identity"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Back to the request page, with the outcome in the query.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "Problem": {
+                "type": "object",
+                "description": "RFC 9457 problem details. Members the endpoint returned before, such as `error` or `message`, are kept.",
+                "required": [
+                    "type",
+                    "title",
+                    "status"
+                ],
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "description": "A URI that identifies the problem type.",
+                        "example": "about:blank"
+                    },
+                    "title": {
+                        "type": "string",
+                        "description": "The HTTP reason phrase of the status."
+                    },
+                    "status": {
+                        "type": "integer",
+                        "description": "The HTTP status code."
+                    },
+                    "detail": {
+                        "type": "string",
+                        "description": "What went wrong, for this occurrence."
+                    }
+                },
+                "additionalProperties": true
+            }
+        },
+        "responses": {
+            "Problem503": {
+                "description": "Service unavailable",
+                "content": {
+                    "application/problem+json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Problem"
+                        }
+                    }
+                }
+            }
+        },
+        "headers": {
+            "API-Version": {
+                "description": "The version of the API that answered, which is the installed app version.",
+                "schema": {
+                    "type": "string",
+                    "example": "1.0.0"
+                }
+            }
+        },
+        "securitySchemes": {
+            "basic_auth": {
+                "type": "http",
+                "scheme": "basic",
+                "description": "A Nextcloud user name with an app password."
+            },
+            "bearer_auth": {
+                "type": "http",
+                "scheme": "bearer",
+                "description": "A Nextcloud OAuth2 access token."
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "health",
+            "description": "Public, declarative health endpoint backed by the AppHost engine"
+        },
+        {
+            "name": "metrics",
+            "description": "Admin-only declarative Prometheus metrics endpoint backed by the AppHost engine"
+        },
+        {
+            "name": "signer-identity",
+            "description": "Start a step-up for a signing act, and receive the broker's callback"
+        }
+    ]
+}
