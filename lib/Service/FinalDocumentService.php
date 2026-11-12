@@ -163,19 +163,12 @@ class FinalDocumentService implements FinalDocumentServiceInterface {
 				. 'register is unreachable. The document is left as it is.';
 		}
 
-		foreach ($records as $record) {
-			if ((string)($record['versionLabel'] ?? '') !== '') {
-				continue;
-			}
-
-			if ($this->isFinal(record: $record) === false) {
-				continue;
-			}
-
-			return $this->refusalSentence(record: $record, action: $action);
+		$current = $this->finalCurrentRecord(records: $records);
+		if ($current === null) {
+			return null;
 		}
 
-		return null;
+		return $this->refusalSentence(record: $current, action: $action);
 
 	}//end refusalFor()
 
@@ -455,29 +448,35 @@ class FinalDocumentService implements FinalDocumentServiceInterface {
 	 * @spec openspec/changes/final-documents-frozen/specs/document-versions/spec.md
 	 */
 	public function resolveActor(?string $actorId, ?string $actorName): array {
-		$user = $this->userSession->getUser();
-
-		$id = (string)$actorId;
-		if ($id === '' && $user !== null) {
-			$id = $user->getUID();
-		}
-
-		if ($id === '') {
-			throw new RuntimeException(
-				message: 'Making a document final needs a named person, and there is no acting user.'
-			);
-		}
-
-		$name = (string)$actorName;
-		if ($name === '' && $user !== null && $user->getUID() === $id) {
-			$name = $user->getDisplayName();
-		}
-
-		if ($name === '') {
-			$name = $id;
-		}
-
-		return ['id' => $id, 'name' => $name];
+		return (new ActingPersonResolver(userSession: $this->userSession))
+			->resolve(actorId: $actorId, actorName: $actorName);
 
 	}//end resolveActor()
+
+	/**
+	 * The first final record about the current content of the file.
+	 *
+	 * A record with a version label is about an earlier set of bytes and does
+	 * not freeze the current content.
+	 *
+	 * @param array<int, array<string, mixed>> $records The finalisation records of the file.
+	 *
+	 * @return array<string, mixed>|null The record, or null when the current content is not final.
+	 */
+	private function finalCurrentRecord(array $records): ?array {
+		foreach ($records as $record) {
+			if ((string)($record['versionLabel'] ?? '') !== '') {
+				continue;
+			}
+
+			if ($this->isFinal(record: $record) === false) {
+				continue;
+			}
+
+			return $record;
+		}
+
+		return null;
+
+	}//end finalCurrentRecord()
 }//end class

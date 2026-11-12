@@ -139,4 +139,107 @@ class SvgRasterizerTest extends TestCase {
 		$this->assertMatchesRegularExpression('#^-env:UserInstallation=file://#', $seen[1]);
 		$this->assertStringEndsWith('.svg', end($seen));
 	}
+
+	/**
+	 * Soffice exiting 0 without a PNG, or with an empty one, is the same marker; the lock is released.
+	 *
+	 * @return void
+	 */
+	public function testAMissingOrEmptyPngIsTheSameMarker(): void {
+		$calls = 0;
+		$this->runner->method('run')->willReturnCallback(static function (array $argv, int $timeout, string $tmpDir) use (&$calls): int {
+			$calls++;
+			if ($calls === 2) {
+				file_put_contents($tmpDir . '/chart.png', '');
+			}
+
+			return 0;
+		});
+		$this->locking->expects($this->once())->method('releaseLock')->with('soffice:headless:convert', ILockingProvider::LOCK_EXCLUSIVE);
+
+		$result = $this->rasterizer()->rasterizeInlineSvg(html: $this->chart() . '|' . $this->chart(), format: 'docx');
+
+		$marker = '<span>[chart error: the chart could not be converted for docx]</span>';
+		$this->assertSame($marker . '|' . $marker, $result['html']);
+		$this->assertSame(2, $calls);
+
+	}//end testAMissingOrEmptyPngIsTheSameMarker()
+
+	/**
+	 * A busy converter is never released, and only the converted charts change.
+	 *
+	 * @return void
+	 */
+	public function testABusyConverterIsNotReleased(): void {
+		$this->locking->method('acquireLock')->willThrowException(new LockedException('soffice:headless:convert'));
+		$this->locking->expects($this->never())->method('releaseLock');
+
+		$result = $this->rasterizer()->rasterizeInlineSvg(html: '<p>a</p>' . $this->chart(), format: 'odf');
+
+		$this->assertSame('<p>a</p><span>[chart error: the chart could not be converted for odf]</span>', $result['html']);
+
+	}//end testABusyConverterIsNotReleased()
+
+	/**
+	 * The configured binary and timeout are used; an empty binary is soffice, a timeout under one second is one.
+	 *
+	 * @return void
+	 */
+	public function testTheConfiguredBinaryAndTimeout(): void {
+		$config = ['filinq.conversion.libreoffice_binary_path' => '/opt/lo/soffice', 'filinq.conversion.timeout_seconds' => '30'];
+		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig->method('getValueString')->willReturnCallback(
+			static function (string $app, string $key, string $default) use (&$config): string {
+				return $config[$key] ?? $default;
+			}
+		);
+		$seen = [];
+		$this->runner->method('run')->willReturnCallback(static function (array $argv, int $timeout, string $tmpDir, string $backend) use (&$seen): int {
+			$seen[] = [$argv[0], $timeout, $backend, $argv[count($argv) - 2] === $tmpDir, end($argv) === $tmpDir . '/chart.svg', is_dir($tmpDir)];
+			return 1;
+		});
+		$rasterizer = new SvgRasterizer($appConfig, $this->locking, new NullLogger(), $this->runner);
+
+		$rasterizer->rasterizeInlineSvg(html: $this->chart(), format: 'odf');
+		$config = ['filinq.conversion.libreoffice_binary_path' => '', 'filinq.conversion.timeout_seconds' => '0'];
+		$rasterizer->rasterizeInlineSvg(html: $this->chart(), format: 'odf');
+
+		$this->assertSame(
+			[
+				['/opt/lo/soffice', 30, 'svg-rasterizer', true, true, true],
+				['soffice', 1, 'svg-rasterizer', true, true, true],
+			],
+			$seen
+		);
+
+	}//end testTheConfiguredBinaryAndTimeout()
+
+	/**
+	 * The work directory is gone afterwards, also when soffice fails.
+	 *
+	 * @return void
+	 */
+	public function testTheWorkDirectoryIsRemoved(): void {
+		$dirs = [];
+		$this->runner->method('run')->willReturnCallback(static function (array $argv, int $timeout, string $tmpDir) use (&$dirs): int {
+			$dirs[] = $tmpDir;
+			mkdir($tmpDir . '/profile/user', 0700, true);
+			file_put_contents($tmpDir . '/profile/user/registry.xml', 'x');
+			if (count($dirs) === 2) {
+				throw new \OCA\Filinq\Exception\ConversionFailedException(message: 'crash', attempts: []);
+			}
+
+			file_put_contents($tmpDir . '/chart.png', base64_decode(self::PNG));
+			return 0;
+		});
+
+		$result = $this->rasterizer()->rasterizeInlineSvg(html: $this->chart() . $this->chart(), format: 'odf');
+
+		$this->assertCount(2, $dirs);
+		$this->assertFalse(is_dir($dirs[0]));
+		$this->assertFalse(is_dir($dirs[1]));
+		$this->assertStringStartsWith('<img src="data:image/png;base64,', $result['html']);
+		$this->assertSame(['chart error: the chart could not be converted for odf'], $result['warnings']);
+
+	}//end testTheWorkDirectoryIsRemoved()
 }

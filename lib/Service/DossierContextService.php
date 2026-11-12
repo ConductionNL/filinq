@@ -32,6 +32,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCP\Files\Folder;
 use OCP\Files\Node;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -81,46 +82,92 @@ class DossierContextService {
 	 * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md
 	 */
 	public function members(object $object, array $payload): array {
-		$documents = [];
-		$seen = [];
+		$documents = $this->folderRows(object: $object, payload: $payload);
+		$documents = $this->withReferences(documents: $documents, payload: $payload);
 
+		$missing = array_filter($documents, static fn (array $row): bool => $row['missing'] === true);
+
+		return ['documents' => $documents, 'missing' => count($missing)];
+
+	}//end members()
+
+	/**
+	 * The rows of the files in the dossier's home folder, when it has one.
+	 *
+	 * @param object               $object  The dossier object.
+	 * @param array<string, mixed> $payload Its payload.
+	 *
+	 * @return array<int, array<string, mixed>> The rows.
+	 */
+	private function folderRows(object $object, array $payload): array {
 		$folder = $this->files->homeFolder(object: $object, payload: $payload);
-		if ($folder !== null) {
-			foreach ($this->files->enumerateFolder(folder: $folder) as $node) {
-				$id = $node->getId();
-				$seen[$id] = true;
-				$documents[] = $this->documentRow(node: $node, referenced: false);
-			}
+		if ($folder === null) {
+			return [];
 		}
 
-		$missing = 0;
+		$rows = [];
+		foreach ($this->files->enumerateFolder(folder: $folder) as $node) {
+			$rows[] = $this->documentRow(node: $node, referenced: false);
+		}
+
+		return $rows;
+
+	}//end folderRows()
+
+	/**
+	 * Add a row per explicit reference not listed yet, in reference order.
+	 *
+	 * A resolved file is listed once; a reference that cannot be resolved is
+	 * listed, marked missing, each time it appears.
+	 *
+	 * @param array<int, array<string, mixed>> $documents The rows so far.
+	 * @param array<string, mixed>             $payload   The dossier payload.
+	 *
+	 * @return array<int, array<string, mixed>> The rows with the references.
+	 */
+	private function withReferences(array $documents, array $payload): array {
+		$seen = array_fill_keys(array_column($documents, 'id'), true);
 		foreach ($this->reader->documentRefs(payload: $payload) as $ref) {
 			$fileId = (int)$ref;
 			if (isset($seen[$fileId]) === true) {
 				continue;
 			}
 
-			$node = $this->files->nodeFor(fileId: $fileId);
-			if ($node === null) {
-				// Visible, never silently dropped: a reference the caller
-				// cannot resolve is information, not noise.
-				$documents[] = [
-					'id' => $fileId,
-					'name' => '',
-					'missing' => true,
-					'referenced' => true,
-				];
-				$missing++;
-				continue;
+			$row = $this->referenceRow(fileId: $fileId);
+			if ($row['missing'] === false) {
+				$seen[$fileId] = true;
 			}
 
-			$seen[$fileId] = true;
-			$documents[] = $this->documentRow(node: $node, referenced: true);
+			$documents[] = $row;
 		}
 
-		return ['documents' => $documents, 'missing' => $missing];
+		return $documents;
 
-	}//end members()
+	}//end withReferences()
+
+	/**
+	 * The row of one referenced file.
+	 *
+	 * @param int $fileId The referenced file id.
+	 *
+	 * @return array<string, mixed> The row; a missing row when the file cannot be resolved.
+	 */
+	private function referenceRow(int $fileId): array {
+		$node = $this->files->nodeFor(fileId: $fileId);
+		if ($node === null) {
+			// Visible, never silently dropped: a reference the caller
+			// cannot resolve is information, not noise.
+			return [
+				'id' => $fileId,
+				'name' => '',
+				'missing' => true,
+				'referenced' => true,
+			];
+		}
+
+		return $this->documentRow(node: $node, referenced: true);
+
+	}//end referenceRow()
 
 	/**
 	 * One document row.
@@ -200,32 +247,70 @@ class DossierContextService {
 		}
 
 		$this->baseLabels = [];
-
-		$objectService = $this->repository->objectService();
-		if ($objectService === null) {
-			return $this->baseLabels;
-		}
-
-		try {
-			foreach ($this->reader->findAllOf(objectService: $objectService, schema: 'base') as $base) {
-				$payload = $this->reader->payloadOf(object: $base);
-				$slug = (string)($payload['@self']['slug'] ?? $payload['slug'] ?? '');
-				if ($slug === '') {
-					continue;
-				}
-
-				$this->baseLabels[$slug] = (string)($payload['name'] ?? $slug);
-			}
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'DossierContextService: the grondslagen vocabulary could not be read',
-				['exception' => $e->getMessage()]
-			);
-		}
+		$this->baseLabels = $this->readBaseLabels();
 
 		return $this->baseLabels;
 
 	}//end baseLabels()
+
+	/**
+	 * Read the `base` vocabulary; a failing read is logged and keeps what was read before it.
+	 *
+	 * @return array<string, string> The labels, slug => name.
+	 */
+	private function readBaseLabels(): array {
+		$objectService = $this->repository->objectService();
+		if ($objectService === null) {
+			return [];
+		}
+
+		$labels = [];
+		try {
+			foreach ($this->reader->findAllOf(objectService: $objectService, schema: 'base') as $base) {
+				$labels = $this->withBaseLabel(labels: $labels, base: $base);
+			}
+		} catch (Throwable $e) {
+			$this->logVocabularyFailure(exception: $e);
+		}
+
+		return $labels;
+
+	}//end readBaseLabels()
+
+	/**
+	 * Log that the `base` vocabulary could not be read.
+	 *
+	 * @param Throwable $exception The failure.
+	 *
+	 * @return void
+	 */
+	private function logVocabularyFailure(Throwable $exception): void {
+		$this->logger->warning(
+			'DossierContextService: the grondslagen vocabulary could not be read',
+			['exception' => $exception->getMessage()]
+		);
+
+	}//end logVocabularyFailure()
+
+	/**
+	 * Add one vocabulary entry under its slug; an entry without a slug is skipped.
+	 *
+	 * @param array<string, string> $labels The labels so far.
+	 * @param object                $base   The `base` object.
+	 *
+	 * @return array<string, string> The labels.
+	 */
+	private function withBaseLabel(array $labels, object $base): array {
+		$payload = $this->reader->payloadOf(object: $base);
+		$slug = (string)($payload['@self']['slug'] ?? $payload['slug'] ?? '');
+		if ($slug === '') {
+			return $labels;
+		}
+
+		$labels[$slug] = (string)($payload['name'] ?? $slug);
+		return $labels;
+
+	}//end withBaseLabel()
 
 	/**
 	 * The folder-batch runs recorded against this dossier's folder.
@@ -248,32 +333,66 @@ class DossierContextService {
 			return [];
 		}
 
-		try {
-			$batches = $this->reader->findAllOf(objectService: $objectService, schema: 'anonymizationBatch');
-		} catch (Throwable $e) {
-			return [];
-		}
-
-		$runs = [];
-		foreach ($batches as $batch) {
-			$batchPayload = $this->reader->payloadOf(object: $batch);
-			if ((int)($batchPayload['folderId'] ?? 0) !== $folder->getId()) {
-				continue;
-			}
-
-			$runs[] = [
-				'id' => (string)($batchPayload['batchId'] ?? ''),
-				'status' => (string)($batchPayload['status'] ?? ''),
-				'fileCount' => (int)($batchPayload['fileCount'] ?? 0),
-				'created' => (string)($batchPayload['created'] ?? ''),
-			];
-		}
-
+		$runs = $this->runsInFolder(batches: $this->batchesOrNone(objectService: $objectService), folder: $folder);
 		usort($runs, static fn (array $a, array $b): int => strcmp($b['created'], $a['created']));
 
 		return $runs;
 
 	}//end batchRuns()
+
+	/**
+	 * Every anonymisation batch, or none when they cannot be read.
+	 *
+	 * @param object $objectService OpenRegister's object service.
+	 *
+	 * @return array<int, object> The batches.
+	 */
+	private function batchesOrNone(object $objectService): array {
+		try {
+			return $this->reader->findAllOf(objectService: $objectService, schema: 'anonymizationBatch');
+		} catch (Throwable $e) {
+			return [];
+		}
+
+	}//end batchesOrNone()
+
+	/**
+	 * The runs of the batches recorded against this folder, in batch order.
+	 *
+	 * @param array<int, object> $batches The batches.
+	 * @param Folder             $folder  The dossier's home folder.
+	 *
+	 * @return array<int, array<string, mixed>> The runs.
+	 */
+	private function runsInFolder(array $batches, Folder $folder): array {
+		$runs = [];
+		foreach ($batches as $batch) {
+			$batchPayload = $this->reader->payloadOf(object: $batch);
+			if ((int)($batchPayload['folderId'] ?? 0) === $folder->getId()) {
+				$runs[] = $this->runRow(batchPayload: $batchPayload);
+			}
+		}
+
+		return $runs;
+
+	}//end runsInFolder()
+
+	/**
+	 * One run as the detail shows it.
+	 *
+	 * @param array<string, mixed> $batchPayload The batch payload.
+	 *
+	 * @return array<string, mixed> The run.
+	 */
+	private function runRow(array $batchPayload): array {
+		return [
+			'id' => (string)($batchPayload['batchId'] ?? ''),
+			'status' => (string)($batchPayload['status'] ?? ''),
+			'fileCount' => (int)($batchPayload['fileCount'] ?? 0),
+			'created' => (string)($batchPayload['created'] ?? ''),
+		];
+
+	}//end runRow()
 
 	/**
 	 * The publication section, presence-gated on the Woo pipeline.

@@ -29,6 +29,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @covers \OCA\Filinq\Service\AnonymizeRequestValidator
  * @uses   \OCA\Filinq\Service\UnredactedEntitiesValidator
+ * @uses   \OCA\Filinq\Service\AnonymizeRequestRules
  */
 class AnonymizeBodyGoldenTest extends TestCase {
 

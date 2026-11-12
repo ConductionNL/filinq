@@ -126,10 +126,34 @@ class SignerSequenceTasks {
 		}
 
 		$earlier = $this->tasksBelow(tasks: $tasks, step: $step);
-		if ($earlier === null || array_keys($earlier) !== $declared) {
+		if ($this->coversDeclared(earlier: $earlier, declared: $declared) === false) {
 			return null;
 		}
 
+		return $this->onePerPosition(earlier: $earlier);
+	}//end earlierPositions()
+
+	/**
+	 * Whether the grouped earlier tasks sit at exactly the declared earlier positions.
+	 *
+	 * @param array<int, array<int, object>>|null $earlier  The grouped earlier tasks, null when unproven.
+	 * @param array<int, int>                     $declared The declared earlier positions, sorted.
+	 *
+	 * @return bool True when every declared position, and no other, holds tasks.
+	 */
+	private function coversDeclared(?array $earlier, array $declared): bool {
+		return $earlier !== null && array_keys($earlier) === $declared;
+
+	}//end coversDeclared()
+
+	/**
+	 * The one task at each earlier position, or null when a position holds more than one.
+	 *
+	 * @param array<int, array<int, object>> $earlier The grouped earlier tasks.
+	 *
+	 * @return array<int, object>|null The tasks in position order.
+	 */
+	private function onePerPosition(array $earlier): ?array {
 		$single = [];
 		foreach ($earlier as $atPosition) {
 			if (count($atPosition) !== 1) {
@@ -140,7 +164,8 @@ class SignerSequenceTasks {
 		}
 
 		return $single;
-	}//end earlierPositions()
+
+	}//end onePerPosition()
 
 	/**
 	 * The step's sequence tasks below its position, grouped and sorted by position.
@@ -153,28 +178,77 @@ class SignerSequenceTasks {
 	 *                                             belongs to another document.
 	 */
 	private function tasksBelow(array $tasks, SignerStepTask $step): ?array {
+		if ($this->allPositioned(tasks: $tasks) === false) {
+			return null;
+		}
+
+		$below = $this->groupBelow(tasks: $tasks, step: $step);
+		if ($this->allOnDocument(below: $below, objectUuid: $step->objectUuid) === false) {
+			return null;
+		}
+
+		return $below;
+	}//end tasksBelow()
+
+	/**
+	 * Whether every task of the sequence has a numeric position.
+	 *
+	 * @param array<int, object> $tasks The sequence's tasks.
+	 *
+	 * @return bool
+	 */
+	private function allPositioned(array $tasks): bool {
+		foreach ($tasks as $task) {
+			if (is_numeric($this->value(subject: $task, getter: 'getSequencePosition')) === false) {
+				return false;
+			}
+		}
+
+		return true;
+
+	}//end allPositioned()
+
+	/**
+	 * The tasks below the step's position, grouped and sorted by position.
+	 *
+	 * @param array<int, object> $tasks The sequence's tasks, every one with a numeric position.
+	 * @param SignerStepTask     $step  The enabled step.
+	 *
+	 * @return array<int, array<int, object>> The grouped tasks.
+	 */
+	private function groupBelow(array $tasks, SignerStepTask $step): array {
 		$below = [];
 		foreach ($tasks as $task) {
-			$position = $this->value(subject: $task, getter: 'getSequencePosition');
-			if (is_numeric($position) === false) {
-				return null;
+			$position = (int) $this->value(subject: $task, getter: 'getSequencePosition');
+			if ($position < $step->position) {
+				$below[$position][] = $task;
 			}
-
-			if ((int) $position >= $step->position) {
-				continue;
-			}
-
-			if ((string) ($this->value(subject: $task, getter: 'getObjectUuid') ?? '') !== $step->objectUuid) {
-				return null;
-			}
-
-			$below[(int) $position][] = $task;
 		}
 
 		ksort($below);
 
 		return $below;
-	}//end tasksBelow()
+
+	}//end groupBelow()
+
+	/**
+	 * Whether every grouped task belongs to the step's document.
+	 *
+	 * @param array<int, array<int, object>> $below      The grouped earlier tasks.
+	 * @param string                         $objectUuid The step's document.
+	 *
+	 * @return bool
+	 */
+	private function allOnDocument(array $below, string $objectUuid): bool {
+		foreach (array_merge(...array_values($below)) as $task) {
+			if ((string) ($this->value(subject: $task, getter: 'getObjectUuid') ?? '') !== $objectUuid) {
+				return false;
+			}
+		}
+
+		return true;
+
+	}//end allOnDocument()
 
 	/**
 	 * The declared positions before a step, sorted, when the step's sequence
@@ -185,8 +259,8 @@ class SignerSequenceTasks {
 	 * @return array<int, int>|null The earlier declared positions, or null.
 	 */
 	private function declaredOrdersBefore(SignerStepTask $step): ?array {
-		$sequence = $this->sequence(sequenceUuid: $step->sequenceUuid);
-		if ($sequence === null || (string) ($this->value(subject: $sequence, getter: 'getAnchorObjectUuid') ?? '') !== $step->objectUuid) {
+		$sequence = $this->anchoredSequence(step: $step);
+		if ($sequence === null) {
 			return null;
 		}
 
@@ -202,6 +276,23 @@ class SignerSequenceTasks {
 	}//end declaredOrdersBefore()
 
 	/**
+	 * The step's sequence, when it is anchored on the step's document.
+	 *
+	 * @param SignerStepTask $step The enabled step.
+	 *
+	 * @return object|null The sequence, or null when unreadable or anchored elsewhere.
+	 */
+	private function anchoredSequence(SignerStepTask $step): ?object {
+		$sequence = $this->sequence(sequenceUuid: $step->sequenceUuid);
+		if ($sequence === null || (string) ($this->value(subject: $sequence, getter: 'getAnchorObjectUuid') ?? '') !== $step->objectUuid) {
+			return null;
+		}
+
+		return $sequence;
+
+	}//end anchoredSequence()
+
+	/**
 	 * The position ordinals a sequence declares, the way OpenRegister numbers
 	 * them: an entry's `order`, else its place in the list.
 	 *
@@ -210,15 +301,39 @@ class SignerSequenceTasks {
 	 * @return array<int, int>|null The ordinals, or null when no usable declaration exists.
 	 */
 	private function declaredOrders(object $sequence): ?array {
+		$positions = $this->declaredPositions(sequence: $sequence);
+		if (is_array($positions) === false) {
+			return null;
+		}
+
+		return $this->ordinalsOf(positions: $positions);
+	}//end declaredOrders()
+
+	/**
+	 * The `positions` of the sequence's resolved tier, else of its template snapshot.
+	 *
+	 * @param object $sequence The OR task sequence.
+	 *
+	 * @return array<int, mixed>|null The positions, or null when neither declares any.
+	 */
+	private function declaredPositions(object $sequence): ?array {
 		$positions = $this->positionsOf(declaration: $this->value(subject: $sequence, getter: 'getResolvedTier'));
 		if ($positions === null) {
 			$positions = $this->positionsOf(declaration: $this->value(subject: $sequence, getter: 'getTemplateSnapshot'));
 		}
 
-		if (is_array($positions) === false) {
-			return null;
-		}
+		return $positions;
 
+	}//end declaredPositions()
+
+	/**
+	 * The ordinal of every declared position: its `order`, else its place in the list.
+	 *
+	 * @param array<int, mixed> $positions The declared positions.
+	 *
+	 * @return array<int, int>|null The ordinals, or null when an entry is not a list.
+	 */
+	private function ordinalsOf(array $positions): ?array {
 		$orders = [];
 		$index = 0;
 		foreach ($positions as $entry) {
@@ -231,7 +346,8 @@ class SignerSequenceTasks {
 		}
 
 		return $orders;
-	}//end declaredOrders()
+
+	}//end ordinalsOf()
 
 	/**
 	 * The `positions` list of a declaration, or null when it has none.

@@ -436,6 +436,25 @@ class AnonymizationPersistenceService {
 			return $object;
 		}
 
+		$object = $this->withSourceNames(object: $object, sourceNode: $sourceNode);
+
+		$owner = $this->ownerOf(sourceNode: $sourceNode);
+		if ($owner !== null && method_exists(object_or_class: $owner, method: 'getUID') === true) {
+			$object['anonymizedBy'] = (string)$owner->getUID();
+		}
+
+		return $object;
+	}//end applySourceNodeMetadata()
+
+	/**
+	 * Apply the source node's name and path, where the node offers them.
+	 *
+	 * @param array<string, mixed> $object     The link object being built.
+	 * @param object               $sourceNode The source file node.
+	 *
+	 * @return array<string, mixed> The object with the name and path applied.
+	 */
+	private function withSourceNames(array $object, object $sourceNode): array {
 		if (method_exists(object_or_class: $sourceNode, method: 'getName') === true) {
 			$object['sourceFileName'] = (string)$sourceNode->getName();
 		}
@@ -444,17 +463,23 @@ class AnonymizationPersistenceService {
 			$object['sourceFilePath'] = (string)$sourceNode->getPath();
 		}
 
-		$owner = null;
-		if (method_exists(object_or_class: $sourceNode, method: 'getOwner') === true) {
-			$owner = $sourceNode->getOwner();
-		}
-
-		if ($owner !== null && method_exists(object_or_class: $owner, method: 'getUID') === true) {
-			$object['anonymizedBy'] = (string)$owner->getUID();
-		}
-
 		return $object;
-	}//end applySourceNodeMetadata()
+	}//end withSourceNames()
+
+	/**
+	 * The source node's owner, where the node offers one.
+	 *
+	 * @param object $sourceNode The source file node.
+	 *
+	 * @return mixed The owner, or null.
+	 */
+	private function ownerOf(object $sourceNode): mixed {
+		if (method_exists(object_or_class: $sourceNode, method: 'getOwner') === true) {
+			return $sourceNode->getOwner();
+		}
+
+		return null;
+	}//end ownerOf()
 
 	/**
 	 * Read an OR entity object's payload, restoring its `@self` id when absent.
@@ -466,30 +491,7 @@ class AnonymizationPersistenceService {
 	 * @spec openspec/specs/anonymization/spec.md
 	 */
 	private function extractObjectPayload(object $candidate): array {
-		if (method_exists(object_or_class: $candidate, method: 'getObject') === true) {
-			$payload = $candidate->getObject();
-			if (is_array($payload) === true) {
-				if (isset($payload['@self']) === false
-					&& method_exists(object_or_class: $candidate, method: 'getUuid') === true
-				) {
-					$uuid = $candidate->getUuid();
-					if ($uuid !== null) {
-						$payload['@self'] = ['id' => $uuid];
-					}
-				}
-
-				return $payload;
-			}
-		}
-
-		if (method_exists(object_or_class: $candidate, method: 'jsonSerialize') === true) {
-			$payload = $candidate->jsonSerialize();
-			if (is_array($payload) === true) {
-				return $payload;
-			}
-		}
-
-		return [];
+		return (new ObjectResultExtractor())->extractRow(candidate: $candidate);
 	}//end extractObjectPayload()
 
 	/**
@@ -502,34 +504,6 @@ class AnonymizationPersistenceService {
 	 * @spec openspec/specs/anonymization/spec.md
 	 */
 	private function extractSavedObjectId(mixed $saved): ?string {
-		if (is_object($saved) === true) {
-			if (method_exists(object_or_class: $saved, method: 'getUuid') === true) {
-				$uuid = $saved->getUuid();
-				if (empty($uuid) === false) {
-					return (string)$uuid;
-				}
-			}
-
-			if (method_exists(object_or_class: $saved, method: 'getId') === true) {
-				$id = $saved->getId();
-				if (empty($id) === false) {
-					return (string)$id;
-				}
-			}
-
-			if (method_exists(object_or_class: $saved, method: 'jsonSerialize') === true) {
-				$saved = $saved->jsonSerialize();
-			}
-		}
-
-		if (is_array($saved) === true) {
-			$self = ($saved['@self'] ?? []);
-			$id = ($self['id'] ?? ($self['uuid'] ?? ($saved['id'] ?? null)));
-			if (empty($id) === false) {
-				return (string)$id;
-			}
-		}
-
-		return null;
+		return (new SavedObjectReader())->savedId(saved: $saved);
 	}//end extractSavedObjectId()
 }//end class

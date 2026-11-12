@@ -23,6 +23,7 @@ namespace OCA\Filinq\Service\SubjectErasure;
 use OCA\Filinq\Exception\SubjectErasureRefusedException;
 use OCA\Filinq\Service\FinalDocumentRepository;
 use OCA\Filinq\Service\Pseudonymisation\PseudonymMapService;
+use OCP\Files\File;
 use RuntimeException;
 
 /**
@@ -78,9 +79,50 @@ class SubjectErasureDocumentStep {
 	 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-4.1
 	 */
 	public function process(array $document, array $exclusions, string $requestUuid, string $userId): array {
-		$fileId = (int) $document['id'];
-		$result = [
-			'document' => (string) $fileId,
+		$run = $this->startRun(document: $document, requestUuid: $requestUuid);
+		$run->userId = $userId;
+
+		$untouched = $this->refusedOrExcluded(run: $run, exclusions: $exclusions);
+		if ($untouched !== null) {
+			return $untouched;
+		}
+
+		$run->values = $this->valuesToErase(document: $document, exclusions: $exclusions);
+		$this->eraseContent(run: $run);
+
+		return $this->closeTheWayBack(run: $run);
+
+	}//end process()
+
+	/**
+	 * Start the run for one document, its result still `excluded` with nothing done.
+	 *
+	 * @param array<string, mixed> $document    The document.
+	 * @param string               $requestUuid The request.
+	 *
+	 * @return DocumentErasureRun The run.
+	 */
+	private function startRun(array $document, string $requestUuid): DocumentErasureRun {
+		$run = new DocumentErasureRun();
+		$run->document = $document;
+		$run->fileId = (int) $document['id'];
+		$run->requestUuid = $requestUuid;
+		$run->result = $this->untouchedResult(document: $document);
+
+		return $run;
+
+	}//end startRun()
+
+	/**
+	 * The result of a document nothing was done to yet: `excluded`, no reason.
+	 *
+	 * @param array<string, mixed> $document The document.
+	 *
+	 * @return array<string, mixed> The result.
+	 */
+	private function untouchedResult(array $document): array {
+		return [
+			'document' => (string) (int) $document['id'],
 			'name' => (string) ($document['name'] ?? ''),
 			'outcome' => self::EXCLUDED,
 			'occurrences' => 0,
@@ -90,150 +132,274 @@ class SubjectErasureDocumentStep {
 			'mappingEntriesDestroyed' => 0,
 		];
 
-		$refusals = $this->rules->refusals(document: $document);
+	}//end untouchedResult()
+
+	/**
+	 * The result for a document that is refused or excluded as a whole, or null when it is to be erased.
+	 *
+	 * Refusals come first, read at run time: a hold placed after the preview still wins.
+	 *
+	 * @param DocumentErasureRun               $run        The run.
+	 * @param array<int, array<string, mixed>> $exclusions The request's exclusions.
+	 *
+	 * @return array<string, mixed>|null The result, or null.
+	 *
+	 * @throws SubjectErasureRefusedException When the audit trail refuses the entry.
+	 */
+	private function refusedOrExcluded(DocumentErasureRun $run, array $exclusions): ?array {
+		$refusals = $this->rules->refusals(document: $run->document);
 		if ($refusals !== []) {
-			// A held document is kept exactly as it is, its reversible key included.
-			$result['outcome'] = self::REFUSED;
-			$result['obligations'] = $refusals;
-			$result['reason'] = (string) $refusals[0]['reason'];
-			$this->audit->record(
-				requestUuid: $requestUuid,
-				action: SubjectErasureAudit::ACTION_DOCUMENT_REFUSED,
-				userId: $userId,
-				details: ['fileId' => $fileId, 'obligations' => array_column($refusals, 'obligation')]
-			);
-
-			return $result;
+			return $this->refuse(run: $run, refusals: $refusals);
 		}
 
-		$wholeReason = $this->wholeDocumentExclusion(fileId: $fileId, exclusions: $exclusions);
-		if ($wholeReason !== null) {
-			$result['reason'] = $wholeReason;
-
-			return $result;
+		$wholeReason = $this->wholeDocumentExclusion(fileId: $run->fileId, exclusions: $exclusions);
+		if ($wholeReason === null) {
+			return null;
 		}
 
-		$values = $this->valuesToErase(document: $document, exclusions: $exclusions);
-		$result = $this->eraseContent(document: $document, values: $values, result: $result, requestUuid: $requestUuid);
+		$run->result['reason'] = $wholeReason;
 
-		return $this->closeTheWayBack(fileId: $fileId, values: $values, result: $result, requestUuid: $requestUuid, userId: $userId);
+		return $run->result;
 
-	}//end process()
+	}//end refusedOrExcluded()
+
+	/**
+	 * Refuse a held document and audit the refusal.
+	 *
+	 * A held document is kept exactly as it is, its reversible key included.
+	 *
+	 * @param DocumentErasureRun               $run      The run.
+	 * @param array<int, array<string, mixed>> $refusals The obligations that refuse it.
+	 *
+	 * @return array<string, mixed> The result.
+	 *
+	 * @throws SubjectErasureRefusedException When the audit trail refuses the entry.
+	 */
+	private function refuse(DocumentErasureRun $run, array $refusals): array {
+		$run->result['outcome'] = self::REFUSED;
+		$run->result['obligations'] = $refusals;
+		$run->result['reason'] = (string) $refusals[0]['reason'];
+		$this->audit->record(
+			requestUuid: $run->requestUuid,
+			action: SubjectErasureAudit::ACTION_DOCUMENT_REFUSED,
+			userId: $run->userId,
+			details: ['fileId' => $run->fileId, 'obligations' => array_column($refusals, 'obligation')]
+		);
+
+		return $run->result;
+
+	}//end refuse()
 
 	/**
 	 * Rewrite the document, or say why it was not.
 	 *
-	 * @param array<string, mixed> $document    The document.
-	 * @param array<int, string>   $values      The values to take out.
-	 * @param array<string, mixed> $result      The result so far.
-	 * @param string               $requestUuid The request.
+	 * @param DocumentErasureRun $run The run.
 	 *
-	 * @return array<string, mixed> The result.
+	 * @return void
 	 */
-	private function eraseContent(array $document, array $values, array $result, string $requestUuid): array {
-		$fileId = (int) $document['id'];
-		if ($values === []) {
-			$result['reason'] = 'Every identifier found in this document was excluded.';
+	private function eraseContent(DocumentErasureRun $run): void {
+		if ($run->values === []) {
+			$run->result['reason'] = 'Every identifier found in this document was excluded.';
 
-			return $result;
+			return;
 		}
 
-		if ((string) ($document['unreadable'] ?? '') !== '') {
-			$result['outcome'] = self::FAILED;
-			$result['reason'] = (string) $document['unreadable'];
+		if ((string) ($run->document['unreadable'] ?? '') !== '') {
+			$run->result['outcome'] = self::FAILED;
+			$run->result['reason'] = (string) $run->document['unreadable'];
 
-			return $result;
+			return;
 		}
 
-		$file = $this->obligations->file(fileId: $fileId);
-		try {
-			if ($file === null) {
-				throw new RuntimeException('The file no longer exists.');
-			}
-
-			$record = null;
-			if (($document['finalVersion'] ?? false) === true) {
-				$record = $this->finalDocuments->findCurrent(fileId: $fileId);
-			}
-
-			$done = ['newVersionFileId' => 0];
-			if ($record === null) {
-				$this->eraser->erase(file: $file, values: $values);
-			}
-
-			if ($record !== null) {
-				$done = $this->eraser->eraseFinal(file: $file, values: $values, record: $record, requestUuid: $requestUuid);
-			}
-		} catch (RuntimeException $e) {
-			$result['outcome'] = self::FAILED;
-			$result['reason'] = $e->getMessage();
-
-			return $result;
-		}//end try
-
-		$result['outcome'] = self::ERASED;
-		$result['occurrences'] = (int) ($document['occurrences'] ?? 0);
-		$result['newVersionFileId'] = (int) $done['newVersionFileId'];
-
-		return $result;
+		$this->rewrite(run: $run);
 
 	}//end eraseContent()
 
 	/**
+	 * Rewrite a readable document, recording the erasure or the failure.
+	 *
+	 * @param DocumentErasureRun $run The run.
+	 *
+	 * @return void
+	 */
+	private function rewrite(DocumentErasureRun $run): void {
+		$file = $this->obligations->file(fileId: $run->fileId);
+		try {
+			$done = $this->rewriteFile(run: $run, file: $file);
+		} catch (RuntimeException $e) {
+			$run->result['outcome'] = self::FAILED;
+			$run->result['reason'] = $e->getMessage();
+
+			return;
+		}
+
+		$run->result['outcome'] = self::ERASED;
+		$run->result['occurrences'] = (int) ($run->document['occurrences'] ?? 0);
+		$run->result['newVersionFileId'] = (int) $done['newVersionFileId'];
+
+	}//end rewrite()
+
+	/**
+	 * Erase the values from the file: a final current version gets a new version beside it.
+	 *
+	 * @param DocumentErasureRun $run  The run.
+	 * @param File|null          $file The file, null when it no longer exists.
+	 *
+	 * @return array<string, mixed> What was done: at least `newVersionFileId`.
+	 *
+	 * @throws RuntimeException When the file is gone or cannot be rewritten.
+	 */
+	private function rewriteFile(DocumentErasureRun $run, ?File $file): array {
+		if ($file === null) {
+			throw new RuntimeException('The file no longer exists.');
+		}
+
+		$record = $this->currentFinalRecord(run: $run);
+		if ($record === null) {
+			$this->eraser->erase(file: $file, values: $run->values);
+
+			return ['newVersionFileId' => 0];
+		}
+
+		return $this->eraser->eraseFinal(file: $file, values: $run->values, record: $record, requestUuid: $run->requestUuid);
+
+	}//end rewriteFile()
+
+	/**
+	 * The finalisation record of a final version, or null.
+	 *
+	 * @param DocumentErasureRun $run The run.
+	 *
+	 * @return array<string, mixed>|null The current record, null for a document that is not final.
+	 */
+	private function currentFinalRecord(DocumentErasureRun $run): ?array {
+		if (($run->document['finalVersion'] ?? false) === true) {
+			return $this->finalDocuments->findCurrent(fileId: $run->fileId);
+		}
+
+		return null;
+
+	}//end currentFinalRecord()
+
+	/**
 	 * Destroy the person's entries in the reversible keys of this document, and audit the outcome.
 	 *
-	 * @param int                  $fileId      The document.
-	 * @param array<int, string>   $values      The erased values.
-	 * @param array<string, mixed> $result      The result so far.
-	 * @param string               $requestUuid The request.
-	 * @param string               $userId      The caller.
+	 * @param DocumentErasureRun $run The run.
 	 *
 	 * @return array<string, mixed> The result.
 	 *
 	 * @throws SubjectErasureRefusedException When the audit trail refuses an entry.
 	 */
-	private function closeTheWayBack(int $fileId, array $values, array $result, string $requestUuid, string $userId): array {
-		if ($values !== []) {
-			try {
-				$destroyed = $this->maps->forgetValues(sourceFileId: $fileId, values: $values);
-				$result['mappingEntriesDestroyed'] = $destroyed['entriesDestroyed'];
-				if ($destroyed['entriesDestroyed'] > 0) {
-					$this->audit->record(
-						requestUuid: $requestUuid,
-						action: SubjectErasureAudit::ACTION_MAPPING_DESTROYED,
-						userId: $userId,
-						details: array_merge(['fileId' => $fileId], $destroyed)
-					);
-				}
-			} catch (RuntimeException $e) {
-				// The way back is still open, so the document is not done.
-				$result['outcome'] = self::FAILED;
-				$result['reason'] = trim($result['reason'] . ' The reversible key could not be destroyed: ' . $e->getMessage());
-			}
+	private function closeTheWayBack(DocumentErasureRun $run): array {
+		if ($run->values !== []) {
+			$this->forgetMappings(run: $run);
 		}
 
-		$action = SubjectErasureAudit::ACTION_DOCUMENT_ERASED;
-		if ($result['outcome'] === self::FAILED) {
-			$action = SubjectErasureAudit::ACTION_DOCUMENT_FAILED;
-		}
+		$this->auditOutcome(run: $run);
 
-		if ($result['outcome'] !== self::EXCLUDED) {
-			$this->audit->record(
-				requestUuid: $requestUuid,
-				action: $action,
-				userId: $userId,
-				details: [
-					'fileId' => $fileId,
-					'occurrences' => $result['occurrences'],
-					'newVersionFileId' => $result['newVersionFileId'],
-					'reason' => $result['reason'],
-				]
-			);
-		}
-
-		return $result;
+		return $run->result;
 
 	}//end closeTheWayBack()
+
+	/**
+	 * Destroy the person's entries in the reversible keys, failing the document when that is impossible.
+	 *
+	 * @param DocumentErasureRun $run The run.
+	 *
+	 * @return void
+	 *
+	 * @throws SubjectErasureRefusedException When the audit trail refuses the entry.
+	 */
+	private function forgetMappings(DocumentErasureRun $run): void {
+		try {
+			$destroyed = $this->maps->forgetValues(sourceFileId: $run->fileId, values: $run->values);
+			$run->result['mappingEntriesDestroyed'] = $destroyed['entriesDestroyed'];
+			if ($destroyed['entriesDestroyed'] > 0) {
+				$this->auditMappingDestroyed(run: $run, destroyed: $destroyed);
+			}
+		} catch (RuntimeException $e) {
+			// The way back is still open, so the document is not done.
+			$run->result['outcome'] = self::FAILED;
+			$run->result['reason'] = trim($run->result['reason'] . ' The reversible key could not be destroyed: ' . $e->getMessage());
+		}
+
+	}//end forgetMappings()
+
+	/**
+	 * Audit the destroyed reversible key entries.
+	 *
+	 * @param DocumentErasureRun   $run       The run.
+	 * @param array<string, mixed> $destroyed What forgetValues() destroyed.
+	 *
+	 * @return void
+	 *
+	 * @throws SubjectErasureRefusedException When the audit trail refuses the entry.
+	 */
+	private function auditMappingDestroyed(DocumentErasureRun $run, array $destroyed): void {
+		$this->audit->record(
+			requestUuid: $run->requestUuid,
+			action: SubjectErasureAudit::ACTION_MAPPING_DESTROYED,
+			userId: $run->userId,
+			details: array_merge(['fileId' => $run->fileId], $destroyed)
+		);
+
+	}//end auditMappingDestroyed()
+
+	/**
+	 * Audit an erased or failed document; an operator's exclusion is not audited here.
+	 *
+	 * @param DocumentErasureRun $run The run.
+	 *
+	 * @return void
+	 *
+	 * @throws SubjectErasureRefusedException When the audit trail refuses the entry.
+	 */
+	private function auditOutcome(DocumentErasureRun $run): void {
+		if ($run->result['outcome'] === self::EXCLUDED) {
+			return;
+		}
+
+		$this->audit->record(
+			requestUuid: $run->requestUuid,
+			action: $this->outcomeAction(outcome: $run->result['outcome']),
+			userId: $run->userId,
+			details: $this->outcomeDetails(run: $run)
+		);
+
+	}//end auditOutcome()
+
+	/**
+	 * The audit details of a processed document.
+	 *
+	 * @param DocumentErasureRun $run The run.
+	 *
+	 * @return array<string, mixed> The details.
+	 */
+	private function outcomeDetails(DocumentErasureRun $run): array {
+		return [
+			'fileId' => $run->fileId,
+			'occurrences' => $run->result['occurrences'],
+			'newVersionFileId' => $run->result['newVersionFileId'],
+			'reason' => $run->result['reason'],
+		];
+
+	}//end outcomeDetails()
+
+	/**
+	 * The audit action for a processed document's outcome.
+	 *
+	 * @param string $outcome The outcome: erased or failed.
+	 *
+	 * @return string The action.
+	 */
+	private function outcomeAction(string $outcome): string {
+		if ($outcome === self::FAILED) {
+			return SubjectErasureAudit::ACTION_DOCUMENT_FAILED;
+		}
+
+		return SubjectErasureAudit::ACTION_DOCUMENT_ERASED;
+
+	}//end outcomeAction()
 
 	/**
 	 * The reason a whole document was excluded, or null.

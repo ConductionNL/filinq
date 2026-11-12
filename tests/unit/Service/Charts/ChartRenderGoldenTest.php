@@ -60,6 +60,8 @@ use PHPUnit\Framework\TestCase;
  * @uses   \OCA\Filinq\Service\Charts\SvgText
  * @uses   \OCA\Filinq\Service\Charts\SvgTextStyle
  * @uses   \OCA\Filinq\Service\Charts\ThousandsFormatter
+ * @uses   \OCA\Filinq\Service\Charts\CartesianChartRenderer
+ * @uses   \OCA\Filinq\Service\Charts\ChartInput
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
