@@ -1136,11 +1136,12 @@
 			"source": "own-code",
 			"filinq": "partial",
 			"built": {
-				"state": "built",
+				"state": "planned",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Service/ScanProfileService.php reads/writes 'scanProfiles' via IAppConfig; routed at scanIntake#listProfiles/declareProfiles (routes.php:120-121), route-reach.txt marks both 'none'. No admin-settings Vue component references 'scanProfiles' (checked src/views/settings/Settings.vue).",
+				"evidence": "Not built as the row says (verify pass 2026-11-12, decision 389): no screen lists or adds a scanner profile; the profile routes have no caller. Planned in openspec/changes/scan-intake-with-separator-sheets (task 4.2). Built so far: lib/Service/ScanProfileService.php reads/writes 'scanProfiles' via IAppConfig; routed at scanIntake#listProfiles/declareProfiles (routes.php:120-121), route-reach.txt marks both 'none'. No admin-settings Vue component references 'scanProfiles' (checked src/views/settings/Settings.vue).",
 				"change": "openspec/changes/scan-intake-with-separator-sheets",
-				"requirement": "openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake :: A scanner profile is saved per source and reused (REQ-SCI-05)"
+				"requirement": "openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake :: A scanner profile is saved per source and reused (REQ-SCI-05)",
+				"plan": "openspec/changes/scan-intake-with-separator-sheets"
 			},
 			"reachedOn": "nothing reaches it (no admin UI, no frontend caller)",
 			"provider": "filinq",
@@ -1386,12 +1387,13 @@
 			"sourceRef": "user story \"Route document to responsible department\"",
 			"filinq": "partial",
 			"built": {
-				"state": "built",
+				"state": "planned",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Service/IntakeService.php:285 assign() calls IntakeRoutingService::apply() on every assignment (real code path, not decorative). lib/Controller/IntakeController.php:325 declareRouting() -> IntakeRoutingService::declare() is routed at intake#declareRouting (routes.php:85, route-reach.txt='none'); no frontend caller found and no sibling reference to this route fragment turned up in the sibling greps performed for this pack.",
+				"evidence": "Not built as the row says (verify pass 2026-11-12, decision 389): nothing declares a routing rule: intake#declareRouting has no caller in filinq or a consuming app, so every assignment runs without routing. Planned in openspec/changes/specify-capability-rows (task 7.1). Built so far: lib/Service/IntakeService.php:285 assign() calls IntakeRoutingService::apply() on every assignment (real code path, not decorative). lib/Controller/IntakeController.php:325 declareRouting() -> IntakeRoutingService::declare() is routed at intake#declareRouting (routes.php:85, route-reach.txt='none'); no frontend caller found and no sibling reference to this route fragment turned up in the sibling greps performed for this pack.",
 				"change": "openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist",
 				"spec": "openspec/specs/inbound-auto-classification",
-				"requirement": "openspec/specs/inbound-auto-classification :: Routing and acceptance are declared by the consuming app (REQ-IDW-05)"
+				"requirement": "openspec/specs/inbound-auto-classification :: Routing and acceptance are declared by the consuming app (REQ-IDW-05)",
+				"plan": "openspec/changes/specify-capability-rows"
 			},
 			"reachedOn": "nothing reaches it for declaring a rule (no known caller); apply() runs on every assign() but has nothing to apply without a declared intakeRoutingRule",
 			"provider": "filinq",
@@ -1916,7 +1918,10 @@
 				"owner": "ConductionNL/filinq",
 				"evidence": "lib/Service/CorrespondenceService.php:678-684 produceOutput() 'pdf' case calls PdfService::renderPdf (lib/Service/PdfService.php:91). Default format (DEFAULT_FORMAT='pdf', line 71/138).",
 				"change": "openspec/changes/archive/2026-03-21-pdf-generation",
-				"requirement": "openspec/specs/pdf-generation :: PDF Rendering API Endpoint (REQ-PDF-05)"
+				"requirement": [
+					"openspec/specs/pdf-generation :: PDF Rendering API Endpoint (REQ-PDF-05)",
+					"openspec/specs/letter-correspondence-generation :: Output format selection"
+				]
 			},
 			"reachedOn": "/correspondence (CorrespondenceIndex.vue, format select defaults to PDF)",
 			"provider": "filinq",
@@ -2478,7 +2483,7 @@
 			"providerHow": "read-from-code",
 			"feature": "document-creatie-sjablonen",
 			"featureConfidence": "medium",
-			"note": "Backend logic is complete but genuinely un-triggerable: no cron/BackgroundJob, no occ command, no UI, no verified sibling caller.",
+			"note": "PeriodicDocumentJob is registered in appinfo/info.xml and runs hourly (verify pass 2026-11-12).",
 			"zylab": "unknown",
 			"datamask": "unknown",
 			"smartdocuments": "unknown",
@@ -2688,7 +2693,7 @@
 			"evidence": {
 				"paperless-ngx": "source read at v3.2.1, not driven: src/documents/views.py:4069 BulkDownloadView zips any selection (originals, archive or both; src/documents/bulk_download.py:14); share link bundles zip a selection (src/documents/models.py:1032). No case entity and no manifest; the exporter's manifest.json (document_exporter.py:389) covers the whole instance."
 			},
-			"note": "Own rating partial to no (corrections round 8, 2026-09-28): no archive is ever written, only a manifest, and the job is still recorded as completed, filinq#1210. The evidence said 'lib/Service/CaseArchiveService.php implemented in full'.",
+			"note": "The archive is written since 072f15b1 (filinq#1231): the bundle call writes the zip, and a job says completed only when it did (verify pass 2026-11-12).",
 			"screen": {
 				"canvas": "design-system",
 				"board": "FqZaakDocumenten"
@@ -2958,7 +2963,10 @@
 				"evidence": "lib/Settings/filinq_register.json ~line 721-732: template schema's authorization block: read=[authenticated], create=[authenticated], update/delete=[docudesk-template-editors]. Enforced by OpenRegister's PermissionHandler, per openspec/changes/archive/2026-10-09-consumer-schema-authorization-audit (8/9 tasks done; the 1 open task is a fleet-communication task, not code) which closed a proven cross-user write exploit (documented in the register's own v7.9.0 changelog: an unrestricted cascade let ddauth-bob overwrite ddauth-alice's private template via PUT).",
 				"change": "openspec/changes/archive/2026-10-09-consumer-schema-authorization-audit",
 				"spec": "openspec/specs/consumer-schema-authorization-audit",
-				"requirement": "openspec/specs/consumer-schema-authorization-audit :: Every owned schema MUST carry an explicit authorisation decision"
+				"requirement": [
+					"openspec/specs/consumer-schema-authorization-audit :: Every owned schema MUST carry an explicit authorisation decision",
+					"openspec/changes/specify-capability-rows/specs/template-management :: Only the editors of a template change it (REQ-SCR-019)"
+				]
 			},
 			"reachedOn": "OpenRegister's own permission/group mechanism (Nextcloud group membership of 'docudesk-template-editors'); no dedicated filinq settings page for this",
 			"provider": "openregister",
@@ -3404,11 +3412,12 @@
 			"source": "own-code",
 			"filinq": "partial",
 			"built": {
-				"state": "built",
+				"state": "planned",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Controller/DocumentProductionController.php:179 runPeriodic(), :194 dueForReview(), :215 markReviewed() are implemented over lib/Service/DocumentReviewService.php (listDue/markReviewed). Routes GET /api/documents/due-for-review and POST /api/documents/{uuid}/reviewed are both route-reach 'none' (no frontend literal).",
+				"evidence": "Not built as the row says (verify pass 2026-11-12, decision 389): no screen lists the documents due for review or offers the reviewed action; both routes have no caller. Planned in openspec/changes/specify-capability-rows (task 2.4). Built so far: lib/Controller/DocumentProductionController.php:179 runPeriodic(), :194 dueForReview(), :215 markReviewed() are implemented over lib/Service/DocumentReviewService.php (listDue/markReviewed). Routes GET /api/documents/due-for-review and POST /api/documents/{uuid}/reviewed are both route-reach 'none' (no frontend literal).",
 				"change": "openspec/changes/archive/2026-06-14-document-creatie-sjablonen",
-				"requirement": "openspec/changes/specify-capability-rows/specs/document-creatie-sjablonen :: The owner marks a due document reviewed (REQ-SCR-014)"
+				"requirement": "openspec/changes/specify-capability-rows/specs/document-creatie-sjablonen :: The owner marks a due document reviewed (REQ-SCR-014)",
+				"plan": "openspec/changes/specify-capability-rows"
 			},
 			"reachedOn": "nothing reaches it: no src/ component calls due-for-review or reviewed; appinfo/info.xml <background-jobs> registers only SigningExpirationJob, DomainFolderReconciliationJob, UploadFragmentReaperJob, none of which touch review or runPeriodic",
 			"provider": "filinq",
@@ -3470,7 +3479,8 @@
 				"spec": "openspec/specs/document-editing",
 				"requirement": [
 					"openspec/specs/document-editing :: Edits address stable anchors, never positional indexes",
-					"openspec/specs/document-editing :: Every produced file is marked as agent authored at write time"
+					"openspec/specs/document-editing :: Every produced file is marked as agent authored at write time",
+					"openspec/specs/document-rich-editing :: Style and layout MUST merge, never replace, existing properties"
 				],
 				"plan": [
 					"openspec/changes/document-chart-embedding",
@@ -3772,11 +3782,12 @@
 			"source": "own-code",
 			"filinq": "partial",
 			"built": {
-				"state": "built",
+				"state": "planned",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Controller/CaseDocumentsController.php:135 linkDomain() and :158 unlinkDomain() (POST/DELETE /api/case-documents/{uuid}/domains, routes.php:90-91) let one document record carry multiple {register,schema,id} domain links via lib/Service (DomainDirectory). Both routes are route-reach 'none'.",
+				"evidence": "Not built as the row says (verify pass 2026-11-12, decision 389): nothing lets a user link a document to a second record; the link and unlink routes have no caller. Planned in openspec/changes/specify-capability-rows (task 2.5). Built so far: lib/Controller/CaseDocumentsController.php:135 linkDomain() and :158 unlinkDomain() (POST/DELETE /api/case-documents/{uuid}/domains, routes.php:90-91) let one document record carry multiple {register,schema,id} domain links via lib/Service (DomainDirectory). Both routes are route-reach 'none'.",
 				"change": "openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list",
-				"requirement": "openspec/specs/document-register :: One document record serves several domains (REQ-CDF-04)"
+				"requirement": "openspec/specs/document-register :: One document record serves several domains (REQ-CDF-04)",
+				"plan": "openspec/changes/specify-capability-rows"
 			},
 			"reachedOn": "nothing reaches it: grep for linkDomain/unlinkDomain/case-documents...domains in src/ found no caller; checked dq-flow, procest, zaakafhandelapp (git grep on origin/development lib src) with no hits",
 			"provider": "filinq",
@@ -4076,7 +4087,7 @@
 			"providerHow": "read-from-code",
 			"feature": "ocr-document-scanning",
 			"featureConfidence": "medium",
-			"note": "OCR exists elsewhere in the app (financial extraction) but is not wired to PII detection, and that surface itself has no frontend caller.",
+			"note": "OCR feeds the detection since task 1.2 of finish-half-built-capabilities (verify pass 2026-11-12).",
 			"zylab": "partial",
 			"datamask": "unknown",
 			"smartdocuments": "unknown",
@@ -4881,16 +4892,17 @@
 			"source": "own-code",
 			"filinq": "partial",
 			"built": {
-				"state": "built",
+				"state": "planned",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Re-read 2026-10-30 on development: reachable since change anonymise-asks-for-the-review-mark (10/10 ticked). ReviewMarkCard.vue records the mark through POST api/redaction/documents/{fileId}/checked; RedactionOutputController::markChecked takes checkedBy from the session user and checks the caller can open the file first; GET api/redaction/documents/checked (routes.php:132, checkedStatus) feeds My documents' Status column ('Checked by {user} on {date}'). RedactionReviewGate::refuse() refuses a mark without checkedBy or for an older detection run. Partial: nothing requires the checker to be a different person from the one who ran the detection or the anonymise (no comparison of checkedBy with the runner in lib/Service/Redaction/), so a second person CAN check, but one person can also do both.",
+				"evidence": "Not built as the row says (verify pass 2026-11-12, decision 389): a person can mark the check, but nothing stops the same person from anonymising afterwards (REQ-RWB-09 and REQ-SET-12, no task ticked). Planned in openspec/changes/redaction-four-eyes-setting. Built so far: Re-read 2026-10-30 on development: reachable since change anonymise-asks-for-the-review-mark (10/10 ticked). ReviewMarkCard.vue records the mark through POST api/redaction/documents/{fileId}/checked; RedactionOutputController::markChecked takes checkedBy from the session user and checks the caller can open the file first; GET api/redaction/documents/checked (routes.php:132, checkedStatus) feeds My documents' Status column ('Checked by {user} on {date}'). RedactionReviewGate::refuse() refuses a mark without checkedBy or for an older detection run. Partial: nothing requires the checker to be a different person from the one who ran the detection or the anonymise (no comparison of checkedBy with the runner in lib/Service/Redaction/), so a second person CAN check, but one person can also do both.",
 				"change": "openspec/changes/redaction-four-eyes-setting",
 				"requirement": [
 					"openspec/specs/redaction-output-guarantee :: The screens record the check before they anonymise (REQ-RWB-06)",
 					"openspec/specs/redaction-output-guarantee :: My documents shows who checked a file (REQ-RWB-08)",
 					"openspec/changes/redaction-four-eyes-setting/specs/redaction-output-guarantee :: The person who anonymises differs from the person who checked (REQ-RWB-09)",
 					"openspec/changes/redaction-four-eyes-setting/specs/admin-settings :: The admin chooses when four eyes are required (REQ-SET-12)"
-				]
+				],
+				"plan": "openspec/changes/redaction-four-eyes-setting"
 			},
 			"reachedOn": "ReviewMarkCard in the file viewer sidebar; Status column on My documents",
 			"provider": "filinq",
@@ -5510,7 +5522,7 @@
 			"providerHow": "read-from-code",
 			"feature": "woo-request-workflow",
 			"featureConfidence": "medium",
-			"note": "See notes.md: this composer sits behind the same RedactionOutputGuard whose markChecked() step nothing in the frontend appears to call either.",
+			"note": "The review mark is recorded from the screens since 3c0c9d67 (16 Oct); the composer itself is reached through the API only (verify pass 2026-11-12).",
 			"zylab": "yes",
 			"datamask": "unknown",
 			"smartdocuments": "unknown",
@@ -5670,11 +5682,12 @@
 			"source": "own-code",
 			"filinq": "partial",
 			"built": {
-				"state": "built",
+				"state": "planned",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Controller/RedactionOutputController.php:151 agreement() (GET /api/redaction/agreement) and :169 acceptAgreement() (POST /api/redaction/agreement/accept) are implemented over DownloadAgreementGate, part of the mostly-complete (11/12 tasks) redaction-and-what-leaves-the-building change. Both routes are route-reach 'none'; grep for 'agreement' across all of src/ (.vue/.js) found zero references.",
+				"evidence": "Not built as the row says (verify pass 2026-11-12, decision 389): no download path asks for the agreement: the agreement routes have no caller and the change that added them is archived. Planned in openspec/changes/specify-capability-rows (task 3.3). Built so far: lib/Controller/RedactionOutputController.php:151 agreement() (GET /api/redaction/agreement) and :169 acceptAgreement() (POST /api/redaction/agreement/accept) are implemented over DownloadAgreementGate, part of the mostly-complete (11/12 tasks) redaction-and-what-leaves-the-building change. Both routes are route-reach 'none'; grep for 'agreement' across all of src/ (.vue/.js) found zero references.",
 				"change": "openspec/changes/archive/2026-10-07-redaction-and-what-leaves-the-building",
-				"requirement": "openspec/specs/redaction-output-guarantee :: A download can be gated on an accepted agreement (REQ-RWB-04)"
+				"requirement": "openspec/specs/redaction-output-guarantee :: A download can be gated on an accepted agreement (REQ-RWB-04)",
+				"plan": "openspec/changes/specify-capability-rows"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -5734,7 +5747,7 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "POST api/signing/requests (routes.php:240, FE, signing#createRequest) -> SigningController::createRequest -> SigningService::createRequest. Reached from src/views/signing/SigningRequestForm.vue. Corrections round 8 (2026-09-28), filinq#1209: the form at /signing/new cannot name a signer, it asks for file id, name, level and mode only (src/views/signing/SigningRequestForm.vue:12-54) and posts signers: [] (:80), so lib/Service/SigningService.php:189-193 saves a PENDING request with nobody to sign it; signers can only be passed by an API caller or by another app through the signing event (lib/EventListener/DocumentSigningRequestedListener.php:149), and each is then told by the signerRecord signingRequested notification (lib/Settings/filinq_register.json:2716), at 9fd042f.",
+				"evidence": "POST api/signing/requests (routes.php:240, FE, signing#createRequest) -> SigningController::createRequest -> SigningService::createRequest. Reached from src/views/signing/SigningRequestForm.vue, which lists signer rows (display name, e-mail or Nextcloud user, add and remove) and posts them with the request (src/views/signing/signerRows.js); each signer is told by the signerRecord signingRequested notification (lib/Settings/filinq_register.json). Re-read in the verify pass of 2026-11-12.",
 				"change": "openspec/changes/archive/2026-06-14-document-signing",
 				"requirement": "openspec/specs/document-signing :: Signing request creation",
 				"plan": "openspec/changes/migrate-signing-to-or-tasks"
@@ -5756,7 +5769,7 @@
 				"decos-join": "docs-only: intelligence.competitor_features#25496 (Decos JOIN, recorded 2026-04-10) \"Digital Signing: Built-in digital signing capabilities for case documents and decisions\"",
 				"paperless-ngx": "source read at v3.2.1, not driven: grep -riwE 'eidas|pades|pkcs7|x509|signers?' src/ src-ui/src/app docs/ returns nothing; 'signatur' finds only HMAC helpers (src/paperless/signed_pickle.py:23, src/documents/classifier.py:78); no document signing."
 			},
-			"note": "Own rating yes to partial (corrections round 8, 2026-09-28): the signing page creates requests with no signers and offers no way to add one, so only an API caller or another app can send a document for signature, filinq#1209.",
+			"note": "The form at /signing/new names signers again (signer rows with name, e-mail or Nextcloud user, since 9ac48d7c and de91689a); filinq#1209 is fixed (verify pass 2026-11-12).",
 			"screen": {
 				"canvas": "design-system",
 				"board": "FqNieuwOndertekenverzoek"
@@ -6723,7 +6736,10 @@
 				"owner": "ConductionNL/filinq",
 				"evidence": "Same engine as wk-to-pdfa: lib/Service/Pdfa3ConversionService.php / PdfConversionService produce genuine PDF/A-3b (mPDF PDFA/PDFAauto/PDFAversion=3-B, XMP pdfaid markers). Reached from /print-preview (PrintPreview.vue -> POST /api/print/pdf-a) and available as an opt-in output mode from anonymisation and document generation.",
 				"spec": "openspec/specs/pdf-conversion",
-				"requirement": "openspec/specs/pdf-conversion :: Output MUST be PDF/A-3b — backends that cannot guarantee this MUST fall through"
+				"requirement": [
+					"openspec/specs/pdf-conversion :: Output MUST be PDF/A-3b — backends that cannot guarantee this MUST fall through",
+					"openspec/specs/pdf-conversion :: A `PdfConversionService` MUST exist that converts files to PDF/A-3b"
+				]
 			},
 			"reachedOn": "/print-preview/:templateId? (PrintPreview)",
 			"provider": "filinq",
@@ -7085,7 +7101,10 @@
 				"owner": "ConductionNL/filinq",
 				"evidence": "Not built (closing audit 2026-11-12, decision 389): DocumentDownloadRecorder has no caller in lib/ (task 4.3). Built so far: lib/Service/DocumentDownloadRecorder.php:82 record() and :125 shouldNotify() are a complete, well-documented implementation (per its own docblock and openspec/changes/documents-in-and-out-of-the-building/tasks.md: 6 tasks done and 7 in progress), but grep for 'DocumentDownloadRecorder', 'recordDownload' across all of lib/ found ZERO references outside the class's own file: no controller, route, event listener or background job calls it. Corrections round 8 (2026-09-28), filinq#1185: the recorder still has no caller at 9fd042f; task 4.1 is in progress (openspec/changes/documents-in-and-out-of-the-building/tasks.md:213) and names what waits, wiring it into four filinq controllers (:235-236), and downloads served by Nextcloud itself stay unrecorded because the only platform download event fires for DAV direct links alone (:215-226).",
 				"change": "openspec/changes/documents-in-and-out-of-the-building",
-				"requirement": "openspec/changes/documents-in-and-out-of-the-building/specs/filinq-notifications :: A download is recorded with its route and its identity (REQ-DIO-06)",
+				"requirement": [
+					"openspec/changes/documents-in-and-out-of-the-building/specs/filinq-notifications :: A download is recorded with its route and its identity (REQ-DIO-06)",
+					"openspec/changes/documents-in-and-out-of-the-building/specs/filinq-notifications :: Who is told is declared on the schema, and is staff (REQ-DIO-07)"
+				],
 				"plan": "openspec/changes/documents-in-and-out-of-the-building"
 			},
 			"reachedOn": "nothing reaches it",
@@ -7159,11 +7178,12 @@
 			"sourceRef": "dossiq gap register 4.26",
 			"filinq": "partial",
 			"built": {
-				"state": "built",
+				"state": "planned",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Controller/PostRegisterController.php (openPost/answers/series, routes.php:99-101, all 'none' in route-reach.txt) -> lib/Service/PostRegisterReader.php implements the three derived reads over the postRegisterEntry schema. Controller docblock: 'THE LEAF IS NOT THIS. ADR-066's leaf for the open post list is blocked on filinq shipping no leaves webpack entry.' webpack.config.js:74 now DOES declare a leaves entry, but src/leaves.js only registers the documents leaf (registerDocumentsLeaf), not a post-register leaf - grep of src/ found no consumer of these three routes.",
+				"evidence": "Not built as the row says (verify pass 2026-11-12, decision 389): no screen or leaf shows the open post list or the answering letters; the three postRegister routes have no caller. Planned in openspec/changes/documents-in-and-out-of-the-building (task 2.2). Built so far: lib/Controller/PostRegisterController.php (openPost/answers/series, routes.php:99-101, all 'none' in route-reach.txt) -> lib/Service/PostRegisterReader.php implements the three derived reads over the postRegisterEntry schema. Controller docblock: 'THE LEAF IS NOT THIS. ADR-066's leaf for the open post list is blocked on filinq shipping no leaves webpack entry.' webpack.config.js:74 now DOES declare a leaves entry, but src/leaves.js only registers the documents leaf (registerDocumentsLeaf), not a post-register leaf - grep of src/ found no consumer of these three routes.",
 				"change": "openspec/changes/documents-in-and-out-of-the-building",
-				"requirement": "openspec/changes/documents-in-and-out-of-the-building/specs/document-register :: An outbound registration discharges the inbound one it answers (REQ-DIO-02)"
+				"requirement": "openspec/changes/documents-in-and-out-of-the-building/specs/document-register :: An outbound registration discharges the inbound one it answers (REQ-DIO-02)",
+				"plan": "openspec/changes/documents-in-and-out-of-the-building"
 			},
 			"reachedOn": "nothing reaches it (no leaf, no manifest page, no frontend caller)",
 			"provider": "filinq",
@@ -8317,24 +8337,25 @@
 			"sourceRef": "tender: https://www.tenderned.nl/aankondigingen/overzicht/407973 (requirement VPB-02)",
 			"origin": "tender",
 			"originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/407973",
-			"filinq": "yes",
+			"filinq": "partial",
 			"built": {
-				"state": "built",
+				"state": "planned",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Service/Publication/PublicationPipelineService.php with PublicationReadiness (redaction review mark + anonymizationLink, ConsentClearance over the document's publicationConsent records, PolicyMatchService prohibitions) and PublicationStore (publicationRecord + append-only publicationLogEntry in the filinq register, OpenCatalogi publication object via OpenRegister); PublicationController api/publications/*; src/views/publications/PublicationsPage.vue. The list has a Missing metadata column and the detail names the missing Woo fields; a hand-off is refused while officieleTitel, wooCategory or publicatiedatum is missing.",
+				"evidence": "Not built as the row says (verify pass 2026-11-12, decision 389): the publications list shows a missing-metadata column, but the Metadata incomplete filter and setting one value on a selection (REQ-WMW-001/002) are not built. Planned in openspec/changes/woo-metadata-worklist. Built so far: lib/Service/Publication/PublicationPipelineService.php with PublicationReadiness (redaction review mark + anonymizationLink, ConsentClearance over the document's publicationConsent records, PolicyMatchService prohibitions) and PublicationStore (publicationRecord + append-only publicationLogEntry in the filinq register, OpenCatalogi publication object via OpenRegister); PublicationController api/publications/*; src/views/publications/PublicationsPage.vue. The list has a Missing metadata column and the detail names the missing Woo fields; a hand-off is refused while officieleTitel, wooCategory or publicatiedatum is missing.",
 				"change": "openspec/changes/archive/2026-09-29-woo-publicatie-pipeline",
 				"readOn": "2026-09-29",
 				"requirement": [
 					"openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist :: Every publication record says which DiWoo fields it misses (REQ-WMW-001)",
 					"openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist :: A coordinator fills one value on a selection (REQ-WMW-002)"
-				]
+				],
+				"plan": "openspec/changes/woo-metadata-worklist"
 			},
 			"reachedOn": "Publications menu entry (/publications), Missing metadata column",
 			"provider": "filinq",
 			"providerHow": "read-from-code",
 			"feature": "woo-publication",
 			"featureConfidence": "high",
-			"note": "No record of documents waiting for publication exists yet (the publicationRecord schema is not in lib/Settings/filinq_register.json), so there is nothing to list gaps on.",
+			"note": "The publicationRecord schema is in the register; the gap is the worklist filter and the bulk fill.",
 			"zylab": "unknown",
 			"datamask": "unknown",
 			"smartdocuments": "unknown",
@@ -8662,7 +8683,7 @@
 			"providerHow": "read-from-code",
 			"feature": "document-signing",
 			"featureConfidence": "high",
-			"note": "Depends on sig-fields, which is also no. Corrections round 8 (2026-09-28): the signing form cannot even add a signer, so there is nobody to type in a field, filinq#1209; rating kept because it is already no.",
+			"note": "Depends on sig-fields, which is built: signers and their fields can be placed on the document (#1318). Validating what a signer types is the open part (verify pass 2026-11-12).",
 			"zylab": "unknown",
 			"datamask": "unknown",
 			"smartdocuments": "unknown",
@@ -8847,9 +8868,9 @@
 			"sourceRef": "paperless-ngx v3.2.1 source (reader rA)",
 			"filinq": "partial",
 			"built": {
-				"state": "built",
+				"state": "planned",
 				"owner": "ConductionNL/filinq",
-				"evidence": "per-document check only, for final documents: lib/Service/FinalDocumentService.php:241 verifyChecksum() compares the frozen checksum with the file now on storage, shown as a warning at src/views/versions/VersionsView.vue:37 via GET api/documents/{fileId}/final. The nightly job (appinfo/info.xml:106 DomainFolderReconciliationJob -> lib/Service/DomainFolderReconciler.php:80) reconciles domain folder existence and group access, not missing or orphaned document files. No collection-wide scan exists (grep -ri 'orphan|sanity|integrity' lib).",
+				"evidence": "Not built as the row says (verify pass 2026-11-12, decision 389): only a final document whose file changed is reported when it is opened; no scan finds missing, changed or orphaned files across the collection (REQ-DIS-01/02). Planned in openspec/changes/whole-collection-integrity-scan. Built so far: per-document check only, for final documents: lib/Service/FinalDocumentService.php:241 verifyChecksum() compares the frozen checksum with the file now on storage, shown as a warning at src/views/versions/VersionsView.vue:37 via GET api/documents/{fileId}/final. The nightly job (appinfo/info.xml:106 DomainFolderReconciliationJob -> lib/Service/DomainFolderReconciler.php:80) reconciles domain folder existence and group access, not missing or orphaned document files. No collection-wide scan exists (grep -ri 'orphan|sanity|integrity' lib).",
 				"change": "openspec/changes/whole-collection-integrity-scan",
 				"spec": "openspec/specs/document-versions",
 				"requirement": [
@@ -8857,7 +8878,8 @@
 					"openspec/specs/document-versions :: Final is a declared lifecycle state (REQ-FDF-01)",
 					"openspec/changes/whole-collection-integrity-scan/specs/document-versions :: A scan finds missing, changed and orphaned files across the collection (REQ-DIS-01)",
 					"openspec/changes/whole-collection-integrity-scan/specs/document-versions :: The scan runs nightly and on demand, and administrators see the result (REQ-DIS-02)"
-				]
+				],
+				"plan": "openspec/changes/whole-collection-integrity-scan"
 			},
 			"reachedOn": "/versions (VersionsView.vue) checksum warning for one final document at a time",
 			"provider": "filinq",
