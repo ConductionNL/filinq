@@ -33,6 +33,8 @@ use OCA\Filinq\Service\Support\TemplateLookup;
 use OCA\Filinq\Service\TemplateRenderer;
 use OCA\Filinq\Service\TemplateService;
 use OCA\Filinq\Service\TemplateSlugResolver;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectPatch;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\IUser;
@@ -312,7 +314,7 @@ class DocumentGenerationRequestServiceTest extends TestCase {
 
 		$this->objects->expects($this->once())
 			->method('patchObject')
-			->with('obj-1', ['besluitTekst' => 'Besluit: toegekend'], 'cases', 'case')
+			->with(new ObjectPatch(objectId: 'obj-1', data: ['besluitTekst' => 'Besluit: toegekend'], target: new ObjectFindTarget(register: 'cases', schema: 'case')))
 			->willReturn(null);
 
 		$result = $this->service->generate(
