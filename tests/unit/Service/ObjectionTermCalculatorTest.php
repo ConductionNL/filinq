@@ -129,4 +129,77 @@ class ObjectionTermCalculatorTest extends TestCase {
 		$this->assertNull($calculator->findDecisionDate(['zaak' => ['naam' => 'x']]));
 
 	}//end testTheDecisionDateIsFoundInTheData()
+
+	/**
+	 * Empty and non-string dates are skipped, at the top level and in objects; key order holds.
+	 *
+	 * @return void
+	 */
+	public function testEmptyOrNonStringDatesAreSkipped(): void {
+		$calculator = $this->calculator();
+
+		$this->assertSame('2026-03-04', $calculator->findDecisionDate(['besluitDatum' => '', 'decisionDate' => '2026-03-04']));
+		$nested = ['besluitDatum' => 20260101, 'zaak' => ['besluitDatum' => '', 'decisionDate' => '2026-05-06']];
+		$this->assertSame('2026-05-06', $calculator->findDecisionDate($nested));
+		$ordered = ['a' => 'text', 'b' => ['besluitDatum' => null], 'c' => ['besluitDatum' => '2026-07-08', 'decisionDate' => '2026-01-01']];
+		$this->assertSame('2026-07-08', $calculator->findDecisionDate($ordered));
+		$this->assertNull($calculator->findDecisionDate([]));
+
+	}//end testEmptyOrNonStringDatesAreSkipped()
+
+	/**
+	 * A Wednesday deadline stays where it is, and `vanaf` is the day after the decision.
+	 *
+	 * @return void
+	 */
+	public function testAWeekdayDeadlineIsNotMoved(): void {
+		$term = $this->calculator(1)->calculate('2026-09-02 18:00');
+
+		$expected = ['termijnWeken' => 1, 'vanaf' => '03-09-2026', 'uiterlijk' => '09-09-2026', 'uiterlijkIso' => '2026-09-09'];
+		$this->assertSame($expected, $term);
+		$this->assertNull($this->calculator()->calculate('   '));
+
+	}//end testAWeekdayDeadlineIsNotMoved()
+
+	/**
+	 * The context gains `grondslag` from `base` unless it has one, and `bezwaar` from the decision date.
+	 *
+	 * @return void
+	 */
+	public function testAddToContextAddsTheBasisAndTheTerm(): void {
+		$calculator = $this->calculator();
+
+		$result = $calculator->addToContext(['base' => ['naam' => 'Wet'], 'besluitDatum' => '2026-09-01'], '{{ bezwaar.uiterlijk }}');
+		$this->assertSame(['naam' => 'Wet'], $result['data']['grondslag']);
+		$this->assertSame('2026-10-13', $result['data']['bezwaar']['uiterlijkIso']);
+		$this->assertSame([], $result['warnings']);
+
+		$kept = $calculator->addToContext(['grondslag' => 'eigen', 'base' => ['naam' => 'Wet']], 'geen');
+		$this->assertSame(['data' => ['grondslag' => 'eigen', 'base' => ['naam' => 'Wet']], 'warnings' => []], $kept);
+
+		$scalarBase = $calculator->addToContext(['base' => 'tekst'], '');
+		$this->assertSame(['data' => ['base' => 'tekst'], 'warnings' => []], $scalarBase);
+
+	}//end testAddToContextAddsTheBasisAndTheTerm()
+
+	/**
+	 * An existing `bezwaar` block is kept; a missing or unreadable date warns only when the template uses `bezwaar`.
+	 *
+	 * @return void
+	 */
+	public function testAddToContextWarnsOnlyWhenTheTemplateNeedsTheTerm(): void {
+		$calculator = $this->calculator();
+
+		$existing = $calculator->addToContext(['bezwaar' => 'x', 'besluitDatum' => '2026-09-01', 'base' => ['a' => 1]], 'bezwaar');
+		$expected = ['bezwaar' => 'x', 'besluitDatum' => '2026-09-01', 'base' => ['a' => 1], 'grondslag' => ['a' => 1]];
+		$this->assertSame(['data' => $expected, 'warnings' => []], $existing);
+
+		$this->assertSame(['data' => [], 'warnings' => []], $calculator->addToContext([], 'Geachte heer'));
+
+		$warning = ['No decision date found (besluitDatum or decisionDate), so the objection deadline is left out.'];
+		$this->assertSame(['data' => [], 'warnings' => $warning], $calculator->addToContext([], '{{ bezwaar.uiterlijk }}'));
+		$unreadable = $calculator->addToContext(['besluitDatum' => 'not a date'], 'bezwaar');
+		$this->assertSame(['data' => ['besluitDatum' => 'not a date'], 'warnings' => $warning], $unreadable);
+
+	}//end testAddToContextWarnsOnlyWhenTheTemplateNeedsTheTerm()
 }//end class

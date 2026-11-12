@@ -57,6 +57,14 @@ class ObjectionTermCalculator {
 	private const DATE_KEYS = ['besluitDatum', 'decisionDate'];
 
 	/**
+	 * How far a deadline on a weekday (ISO number) moves: Saturday and Sunday go to the Monday.
+	 */
+	private const WEEKEND_SHIFT = [
+		6 => '+2 days',
+		7 => '+1 day',
+	];
+
+	/**
 	 * Constructor.
 	 *
 	 * @param IAppConfig $appConfig The app configuration holding the term
@@ -80,28 +88,13 @@ class ObjectionTermCalculator {
 	 * @spec openspec/changes/archive/2026-09-28-decision-letter-legal-basis-and-deadline/tasks.md#task-1.1
 	 */
 	public function calculate(string $decisionDate): ?array {
-		if (trim($decisionDate) === '') {
+		$decided = $this->parseDecisionDate(decisionDate: $decisionDate);
+		if ($decided === null) {
 			return null;
 		}
 
-		try {
-			$decided = new DateTimeImmutable($decisionDate);
-		} catch (Exception) {
-			return null;
-		}
-
-		$decided = $decided->setTime(0, 0);
 		$weeks = $this->configuredWeeks();
-		$deadline = $decided->modify('+' . $weeks . ' weeks');
-
-		// Algemene termijnenwet art. 1: a term ending on a Saturday or Sunday
-		// ends on the next working day, which for a weekend is the Monday.
-		$weekday = (int) $deadline->format('N');
-		if ($weekday === 6) {
-			$deadline = $deadline->modify('+2 days');
-		} else if ($weekday === 7) {
-			$deadline = $deadline->modify('+1 day');
-		}
+		$deadline = $this->nextWorkingDay(deadline: $decided->modify('+' . $weeks . ' weeks'));
 
 		return [
 			'termijnWeken' => $weeks,
@@ -125,25 +118,12 @@ class ObjectionTermCalculator {
 	 * @spec openspec/changes/archive/2026-09-28-decision-letter-legal-basis-and-deadline/tasks.md#task-1.2
 	 */
 	public function findDecisionDate(array $data): ?string {
-		foreach (self::DATE_KEYS as $key) {
-			if (is_string($data[$key] ?? null) === true && $data[$key] !== '') {
-				return $data[$key];
-			}
+		$topLevel = $this->dateIn(values: $data);
+		if ($topLevel !== null) {
+			return $topLevel;
 		}
 
-		foreach ($data as $value) {
-			if (is_array($value) === false) {
-				continue;
-			}
-
-			foreach (self::DATE_KEYS as $key) {
-				if (is_string($value[$key] ?? null) === true && $value[$key] !== '') {
-					return $value[$key];
-				}
-			}
-		}
-
-		return null;
+		return $this->firstNestedDate(data: $data);
 
 	}//end findDecisionDate()
 
@@ -163,35 +143,151 @@ class ObjectionTermCalculator {
 	 * @spec openspec/changes/archive/2026-09-28-decision-letter-legal-basis-and-deadline/tasks.md#task-1.2
 	 */
 	public function addToContext(array $data, string $templateContent): array {
-		if (isset($data['grondslag']) === false && is_array($data['base'] ?? null) === true) {
-			$data['grondslag'] = $data['base'];
-		}
-
+		$data = $this->withGrondslag(data: $data);
 		if (isset($data['bezwaar']) === true) {
 			return ['data' => $data, 'warnings' => []];
 		}
 
-		$decisionDate = $this->findDecisionDate(data: $data);
-		$term = null;
-		if ($decisionDate !== null) {
-			$term = $this->calculate(decisionDate: $decisionDate);
-		}
-
+		$term = $this->termFor(data: $data);
 		if ($term !== null) {
 			$data['bezwaar'] = $term;
 			return ['data' => $data, 'warnings' => []];
 		}
 
-		if (str_contains($templateContent, 'bezwaar') === false) {
-			return ['data' => $data, 'warnings' => []];
-		}
-
-		return [
-			'data' => $data,
-			'warnings' => ['No decision date found (besluitDatum or decisionDate), so the objection deadline is left out.'],
-		];
+		return ['data' => $data, 'warnings' => $this->missingTermWarnings(templateContent: $templateContent)];
 
 	}//end addToContext()
+
+	/**
+	 * Read a decision date as the start of that day.
+	 *
+	 * @param string $decisionDate The decision date, any format DateTimeImmutable reads
+	 *
+	 * @return DateTimeImmutable|null The date at midnight, or null when it is empty or unreadable.
+	 */
+	private function parseDecisionDate(string $decisionDate): ?DateTimeImmutable {
+		if (trim($decisionDate) === '') {
+			return null;
+		}
+
+		try {
+			return (new DateTimeImmutable($decisionDate))->setTime(0, 0);
+		} catch (Exception) {
+			return null;
+		}
+
+	}//end parseDecisionDate()
+
+	/**
+	 * Move a deadline that ends in the weekend to the Monday.
+	 *
+	 * Algemene termijnenwet art. 1: a term ending on a Saturday or Sunday
+	 * ends on the next working day, which for a weekend is the Monday.
+	 *
+	 * @param DateTimeImmutable $deadline The deadline as counted
+	 *
+	 * @return DateTimeImmutable The deadline on a working day.
+	 */
+	private function nextWorkingDay(DateTimeImmutable $deadline): DateTimeImmutable {
+		$shift = self::WEEKEND_SHIFT[(int) $deadline->format('N')] ?? null;
+		if ($shift === null) {
+			return $deadline;
+		}
+
+		return $deadline->modify($shift);
+
+	}//end nextWorkingDay()
+
+	/**
+	 * The first non-empty string under one of the date keys.
+	 *
+	 * @param array<mixed> $values The data or one resolved object
+	 *
+	 * @return string|null The decision date, or null when none of the keys holds one.
+	 */
+	private function dateIn(array $values): ?string {
+		foreach (self::DATE_KEYS as $key) {
+			if (is_string($values[$key] ?? null) === true && $values[$key] !== '') {
+				return $values[$key];
+			}
+		}
+
+		return null;
+
+	}//end dateIn()
+
+	/**
+	 * The first decision date held by one of the resolved objects in the data.
+	 *
+	 * @param array<string, mixed> $data The resolved template data
+	 *
+	 * @return string|null The decision date, or null when no object carries one.
+	 */
+	private function firstNestedDate(array $data): ?string {
+		foreach ($data as $value) {
+			if (is_array($value) === false) {
+				continue;
+			}
+
+			$nested = $this->dateIn(values: $value);
+			if ($nested !== null) {
+				return $nested;
+			}
+		}
+
+		return null;
+
+	}//end firstNestedDate()
+
+	/**
+	 * The warning for a context without a term, given only when the template uses `bezwaar`.
+	 *
+	 * @param string $templateContent The template source
+	 *
+	 * @return array<int, string> The warning, or nothing when the template does not need the term.
+	 */
+	private function missingTermWarnings(string $templateContent): array {
+		if (str_contains($templateContent, 'bezwaar') === false) {
+			return [];
+		}
+
+		return ['No decision date found (besluitDatum or decisionDate), so the objection deadline is left out.'];
+
+	}//end missingTermWarnings()
+
+	/**
+	 * Offer a resolved `base` object as `grondslag` when the data has no `grondslag` yet.
+	 *
+	 * @param array<string, mixed> $data The resolved template data
+	 *
+	 * @return array<string, mixed> The data, with `grondslag` when it applies.
+	 */
+	private function withGrondslag(array $data): array {
+		if (isset($data['grondslag']) === false && is_array($data['base'] ?? null) === true) {
+			$data['grondslag'] = $data['base'];
+		}
+
+		return $data;
+
+	}//end withGrondslag()
+
+	/**
+	 * The objection term for the decision date in the data.
+	 *
+	 * @param array<string, mixed> $data The resolved template data
+	 *
+	 * @return array{termijnWeken: int, vanaf: string, uiterlijk: string, uiterlijkIso: string}|null
+	 *         The term, or null when the data has no readable decision date.
+	 */
+	private function termFor(array $data): ?array {
+		$decisionDate = $this->findDecisionDate(data: $data);
+		if ($decisionDate === null) {
+			return null;
+		}
+
+		return $this->calculate(decisionDate: $decisionDate);
+
+	}//end termFor()
 
 	/**
 	 * Read the configured term, falling back to the statutory six weeks.
