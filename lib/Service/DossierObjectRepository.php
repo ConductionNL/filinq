@@ -28,6 +28,8 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use Exception;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCP\App\IAppManager;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
@@ -45,6 +47,9 @@ use RuntimeException;
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) OpenRegister's call shapes take
+ *   value objects where they took scalars; each counts as a coupling.
  */
 class DossierObjectRepository {
 
@@ -241,9 +246,10 @@ class DossierObjectRepository {
 					payload: $payload,
 					dossierUuid: $dossierUuid
 				),
-				register: 'filinq',
-				schema: 'dossier',
-				uuid: $dossierUuid,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: 'filinq', schema: 'dossier'),
+					uuid: $dossierUuid
+				),
 				_rbac: false,
 				_multitenancy: false
 			);

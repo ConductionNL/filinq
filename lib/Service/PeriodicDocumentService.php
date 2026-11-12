@@ -33,6 +33,8 @@ namespace OCA\Filinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\Filinq\Kernel\Contracts\PeriodicDocumentServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
@@ -47,6 +49,9 @@ use Throwable;
  * @link     https://www.filinq.app
  *
  * @spec openspec/specs/document-creatie-sjablonen/spec.md
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) OpenRegister's call shapes take
+ *   value objects where they took scalars; each counts as a coupling.
  */
 class PeriodicDocumentService implements PeriodicDocumentServiceInterface {
 
@@ -434,9 +439,10 @@ class PeriodicDocumentService implements PeriodicDocumentServiceInterface {
 		try {
 			$this->objectResolver->resolve()->saveObject(
 				object: $fields,
-				register: IntakeRepository::REGISTER,
-				schema: self::SCHEMA,
-				uuid: $uuid
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: IntakeRepository::REGISTER, schema: self::SCHEMA),
+					uuid: $uuid
+				)
 			);
 		} catch (Throwable $e) {
 			$this->logger->error(

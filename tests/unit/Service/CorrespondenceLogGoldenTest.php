@@ -31,6 +31,7 @@ use OCA\Filinq\Service\Support\PdfRendering;
 use OCA\Filinq\Service\Support\TemplateSources;
 use OCA\Filinq\Service\TemplateRenderer;
 use OCA\Filinq\Service\TemplateService;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -109,7 +110,7 @@ class CorrespondenceLogGoldenTest extends TestCase {
 		$objects = $this->createMock(ObjectService::class);
 		$objects->method('saveObject')->willReturnCallback(function (...$args) use (&$saved, $answer) {
 			$entry = $args['object'] ?? $args[0];
-			$saved[] = ['generatedAt is ISO 8601' => preg_match('/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d[+-]\d\d:\d\d$/', (string)($entry['generatedAt'] ?? '')) === 1] + array_diff_key($entry, ['generatedAt' => true]) + ['rest' => array_slice($args, 1)];
+			$saved[] = ['generatedAt is ISO 8601' => preg_match('/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d[+-]\d\d:\d\d$/', (string)($entry['generatedAt'] ?? '')) === 1] + array_diff_key($entry, ['generatedAt' => true]) + ['rest' => self::restInOldShape(args: $args)];
 			if ($answer === 'fails') {
 				throw new Exception('register offline');
 			}
@@ -162,4 +163,30 @@ class CorrespondenceLogGoldenTest extends TestCase {
 
 		$this->assertSame($recorded[$name] ?? null, $trace);
 	}//end testLog()
+
+	/**
+	 * The save arguments after the object, recorded in the pre-#9123 order:
+	 * register, schema, uuid, _rbac, _multitenancy, _unowned, _owner.
+	 *
+	 * @param array<int|string, mixed> $args The saveObject() arguments.
+	 *
+	 * @return array<int, mixed> The rest.
+	 */
+	private static function restInOldShape(array $args): array {
+		$options = ($args[1] ?? null);
+		if (($options instanceof ObjectSaveOptions) === false) {
+			return array_slice($args, 1);
+		}
+
+		return [
+			$options->target->register,
+			$options->target->schema,
+			$options->uuid,
+			($args[2] ?? true),
+			($args[3] ?? true),
+			$options->actor->unowned,
+			$options->actor->owner,
+		];
+
+	}//end restInOldShape()
 }//end class

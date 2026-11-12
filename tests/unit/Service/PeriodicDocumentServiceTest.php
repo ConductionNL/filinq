@@ -73,7 +73,7 @@ class PeriodicDocumentServiceTest extends TestCase {
 		$objectService = $this->createMock(ObjectService::class);
 		$objectService->method('saveObject')->willReturnCallback(
 			function (...$arguments): array {
-				$this->scheduleWrites[] = [($arguments[3] ?? null), ($arguments[0] ?? [])];
+				$this->scheduleWrites[] = [(($arguments[1] ?? null)?->uuid ?? null), ($arguments[0] ?? [])];
 				return ($arguments[0] ?? []);
 			}
 		);

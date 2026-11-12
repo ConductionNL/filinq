@@ -28,6 +28,7 @@ use OCA\Filinq\Kernel\Contracts\OcrResultRepositoryInterface;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\IntakeRepository;
 use OCA\Filinq\Service\ReadsStoredObjectRows;
+use OCA\Filinq\Service\Support\SavesArgumentArrays;
 use RuntimeException;
 use Throwable;
 
@@ -35,6 +36,8 @@ use Throwable;
  * The `ocrResult` rows, keyed by file id.
  */
 class OcrResultRepository implements OcrResultRepositoryInterface {
+	use SavesArgumentArrays;
+
 	use ReadsStoredObjectRows;
 
 	/**
@@ -115,7 +118,7 @@ class OcrResultRepository implements OcrResultRepositoryInterface {
 		}
 
 		try {
-			$stored = $this->objectResolver->resolve()->saveObject(...$arguments);
+			$stored = $this->saveArguments(objects: $this->objectResolver->resolve(), arguments: $arguments);
 		} catch (Throwable $e) {
 			throw new RuntimeException(
 				message: 'Could not store the OCR result: ' . $e->getMessage(),

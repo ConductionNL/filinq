@@ -39,6 +39,8 @@ use OCA\Filinq\Service\Extraction\IbanExtractor;
 use OCA\Filinq\Service\Extraction\KvkExtractor;
 use OCA\Filinq\Service\Extraction\TotalsReconciler;
 use OCA\Filinq\Service\Extraction\VatIdExtractor;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
@@ -264,7 +266,10 @@ class FinancialExtractionService implements FinancialExtractionServiceInterface 
 		// not.
 		['register' => $register, 'schema' => $schema] = $this->registerResolver->getFinancialExtractionRegisterAndSchema();
 
-		$saved = $objectService->saveObject(object: $payload, register: $register, schema: $schema);
+		$saved = $objectService->saveObject(
+			object: $payload,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema))
+		);
 		$savedArray = $this->toArray(object: $saved);
 
 		if ($request['callbackEvent'] === true) {
@@ -400,7 +405,10 @@ class FinancialExtractionService implements FinancialExtractionServiceInterface 
 		// `fieldConfidence`, `overallConfidence`) is left untouched.
 		$data['corrections'] = $corrections;
 
-		$saved = $objectService->saveObject(object: $data, register: $register, schema: $schema);
+		$saved = $objectService->saveObject(
+			object: $data,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema))
+		);
 
 		return $this->toArray(object: $saved);
 	}//end addCorrection()

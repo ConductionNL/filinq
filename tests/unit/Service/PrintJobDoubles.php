@@ -23,6 +23,7 @@ namespace OCA\Filinq\Tests\Unit\Service;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\PrintJobFileStore;
 use OCA\Filinq\Service\PrintJobRepository;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
 use OCP\Files\IAppData;
@@ -74,7 +75,11 @@ trait PrintJobDoubles {
 	protected function printJobRepository(bool $failWrites = false): PrintJobRepository {
 		$objects = $this->createMock(ObjectService::class);
 		$objects->method('saveObject')->willReturnCallback(
-			function (array $object = [], string $register = '', string $schema = '', ?string $uuid = null) use ($failWrites) {
+			function (array|object $object = [], ?ObjectSaveOptions $options = null) use ($failWrites) {
+				$options = ($options ?? new ObjectSaveOptions());
+				$register = (string) ($options->target->register);
+				$schema = (string) ($options->target->schema);
+				$uuid = ($options->uuid);
 				if ($failWrites === true) {
 					throw new \RuntimeException('Schema printJob not found');
 				}

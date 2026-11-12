@@ -30,6 +30,7 @@ use OCA\Filinq\Service\LegalHold\LegalHoldNotifications;
 use OCA\Filinq\Service\LegalHold\LegalHoldRecordFreeze;
 use OCA\Filinq\Service\OpenRegisterServiceLocator;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -211,7 +212,11 @@ trait LegalHoldDoubles {
 			}
 		);
 		$objects->method('saveObject')->willReturnCallback(
-			function (array $object = [], string $register = '', string $schema = '', ?string $uuid = null, bool $_rbac = true): array {
+			function (array|object $object = [], ?ObjectSaveOptions $options = null, bool $_rbac = true): array {
+				$options = ($options ?? new ObjectSaveOptions());
+				$register = (string) ($options->target->register);
+				$schema = (string) ($options->target->schema);
+				$uuid = ($options->uuid);
 				if ($schema !== 'legalHoldCase' || $_rbac !== false) {
 					throw new RuntimeException('Hold cases are written past RBAC only.');
 				}

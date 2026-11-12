@@ -36,6 +36,7 @@ use OCA\Filinq\Service\PolicyMatchService;
 use OCA\Filinq\Service\RegisterObjectRef;
 use OCA\Filinq\Service\Support\ConsentRecordRules;
 use OCA\Filinq\Service\Support\OpenRegisterAccess;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCP\App\IAppManager;
 use OCP\IUser;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -825,7 +826,10 @@ class ConsentServiceTest extends TestCase {
 				}
 			);
 			$objectService->method('saveObject')->willReturnCallback(
-				function (array $object, $register, $schema) use (&$writes): object {
+				function (array|object $object = [], ?ObjectSaveOptions $options = null) use (&$writes): object {
+					$options = ($options ?? new ObjectSaveOptions());
+					$register = ($options->target->register);
+					$schema = ($options->target->schema);
 					$writes[] = [$register, $schema];
 					return $this->buildSavedObject(data: $object);
 				}
@@ -983,7 +987,7 @@ class ConsentServiceTest extends TestCase {
 		$service->createConsentRequest(documentId: 'doc-1', entityType: 'PERSON', entityText: 'A', register: 'r', schema: 's');
 
 		$this->assertCount(1, $saves);
-		$this->assertFalse($saves[0][4], 'The update save must pass _rbac: false.');
+		$this->assertFalse($saves[0][2], 'The update save must pass _rbac: false.');
 
 	}//end testTheResubmitSaveBypassesRbac()
 

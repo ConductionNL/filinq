@@ -34,6 +34,9 @@ use OCA\Filinq\Service\Signing\SignerEntries;
 use OCA\Filinq\Service\Signing\SigningAct;
 use OCA\Filinq\Service\Support\SigningGuards;
 use OCA\Filinq\Service\Support\SigningOutputs;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
+use OCA\OpenRegister\Service\Object\SaveActor;
 use RuntimeException;
 
 /**
@@ -194,7 +197,9 @@ class SigningService implements SigningServiceInterface {
 		$request = $this->outputs->artifactProducer->delegate(request: $request, signers: $signers);
 
 		['register' => $register, 'schema' => $schema] = $this->requireSigningRequestBinding();
-		$savedRequest = $objectService->saveObject(object: $request, register: $register, schema: $schema, _rbac: false, _unowned: true);
+		$target       = new ObjectFindTarget(register: $register, schema: $schema);
+		$unowned      = new ObjectSaveOptions(target: $target, actor: new SaveActor(unowned: true));
+		$savedRequest = $objectService->saveObject(object: $request, options: $unowned, _rbac: false);
 		$createdRequest = $this->toArray(object: $savedRequest);
 
 		$requestId = $createdRequest['id'] ?? $createdRequest['uuid'] ?? '';
@@ -202,7 +207,7 @@ class SigningService implements SigningServiceInterface {
 			requestId: (string)$requestId,
 			entries: new SignerEntries(entries: $signers, prepared: $prepared)
 		);
-		$objectService->saveObject(object: $createdRequest, register: $register, schema: $schema, _rbac: false);
+		$objectService->saveObject(object: $createdRequest, options: new ObjectSaveOptions(target: $target), _rbac: false);
 		$createdRequest['assuranceFloor'] = $this->guards->assuranceGate->floorFor(request: $request);
 
 		$this->outputs->auditService->logEvent(
@@ -318,10 +323,11 @@ class SigningService implements SigningServiceInterface {
 			$created = $this->toArray(
 				object: $objectService->saveObject(
 					object: $signerRecord,
-					register: $signerRegister,
-					schema: $signerSchema,
-					_rbac: false,
-					_unowned: true
+					options: new ObjectSaveOptions(
+						target: new ObjectFindTarget(register: $signerRegister, schema: $signerSchema),
+						actor: new SaveActor(unowned: true)
+					),
+					_rbac: false
 				)
 			);
 			$ids[$index] = (string)($created['id'] ?? $created['uuid'] ?? '');
@@ -530,7 +536,11 @@ class SigningService implements SigningServiceInterface {
 
 		$signer = $act->stampSigned(signer: array_merge($signer, $consent['record']), ipAddress: $this->actorResolver->getClientIp());
 		$signer = (new PortalSignatureAssurance())->recordOn(signer: $signer, request: $request, verifiedActor: $verifiedActor);
-		$objectService->saveObject(object: $signer, register: $signerRegister, schema: $signerSchema, _rbac: false);
+		$objectService->saveObject(
+			object: $signer,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $signerRegister, schema: $signerSchema)),
+			_rbac: false
+		);
 
 		$this->logSigned(act: $act, metadata: array_merge($consent['audit'], ['identityEvidence' => $signer['identityEvidence']]));
 		$this->guards->assuranceGate->consume(requestId: $requestId, signerId: $signerId);
@@ -660,13 +670,21 @@ class SigningService implements SigningServiceInterface {
 
 		$signer['status'] = 'DECLINED';
 		$signer['declineReason'] = $reason;
-		$objectService->saveObject(object: $signer, register: $signerRegister, schema: $signerSchema, _rbac: false);
+		$objectService->saveObject(
+			object: $signer,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $signerRegister, schema: $signerSchema)),
+			_rbac: false
+		);
 
 		$signatureLevel = $request['signatureLevel'] ?? 'SES';
 		$provider = $request['provider'] ?? 'native';
 
 		$request['status'] = 'DECLINED';
-		$objectService->saveObject(object: $request, register: $register, schema: $schema, _rbac: false);
+		$objectService->saveObject(
+			object: $request,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema)),
+			_rbac: false
+		);
 
 		// Cross-app delegated-signing contract: a declined request is terminal —
 		// emit SigningConcludedEvent (status=declined) for a delegated request.
@@ -726,7 +744,11 @@ class SigningService implements SigningServiceInterface {
 		}
 
 		$request['status'] = 'CANCELLED';
-		$objectService->saveObject(object: $request, register: $register, schema: $schema, _rbac: false);
+		$objectService->saveObject(
+			object: $request,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema)),
+			_rbac: false
+		);
 
 		// Cross-app delegated-signing contract: a cancelled request is terminal
 		// — emit SigningConcludedEvent (status=cancelled) for a delegated request.
@@ -833,7 +855,11 @@ class SigningService implements SigningServiceInterface {
 
 		if ($allSigned === false) {
 			$freshRequest['status'] = 'IN_PROGRESS';
-			$objectService->saveObject(object: $freshRequest, register: $register, schema: $schema, _rbac: false);
+			$objectService->saveObject(
+				object: $freshRequest,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema)),
+				_rbac: false
+			);
 			return;
 		}
 
@@ -850,7 +876,11 @@ class SigningService implements SigningServiceInterface {
 		// declared `start` edge is taken rather than widening the state machine.
 		if (($freshRequest['status'] ?? '') === 'PENDING') {
 			$freshRequest['status'] = 'IN_PROGRESS';
-			$freshRequest = $this->toArray(object: $objectService->saveObject(object: $freshRequest, register: $register, schema: $schema, _rbac: false));
+			$freshRequest = $this->toArray(object: $objectService->saveObject(
+				object: $freshRequest,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema)),
+				_rbac: false
+			));
 		}
 
 		// Guardian consent (signer-identity-rails REQ-DDSIR-008/010): no
@@ -869,7 +899,11 @@ class SigningService implements SigningServiceInterface {
 
 		$freshRequest['status'] = 'COMPLETED';
 		$freshRequest['signedDocumentRef'] = $signedDocumentRef;
-		$objectService->saveObject(object: $freshRequest, register: $register, schema: $schema, _rbac: false);
+		$objectService->saveObject(
+			object: $freshRequest,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema)),
+			_rbac: false
+		);
 
 		// Cross-app delegated-signing contract: emit the terminal
 		// SigningConcludedEvent (status=signed) for a delegated request. The

@@ -250,8 +250,8 @@ class DocumentFinalityRuleServiceTest extends TestCase {
 		$service->declareRule(declaringApp: 'dossiq', typeReference: 'bezwaarschrift', finalStates: ['afgerond'], documentRole: 'besluit', reasonTemplate: 'Klaar');
 
 		$this->assertCount(1, $saved);
-		$this->assertSame('rule-1', $saved[0][3]);
-		$this->assertSame('documentFinalityRule', $saved[0][2]);
+		$this->assertSame('rule-1', $saved[0][1]->uuid);
+		$this->assertSame('documentFinalityRule', $saved[0][1]->target->schema);
 		$this->assertSame(['afgerond'], $saved[0][0]['finalStates']);
 		$this->assertSame('Klaar', $saved[0][0]['reasonTemplate']);
 		$this->assertSame('', $saved[0][0]['declaredBy']);

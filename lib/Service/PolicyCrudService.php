@@ -34,6 +34,8 @@ namespace OCA\Filinq\Service;
 use Exception;
 use InvalidArgumentException;
 use OCA\Filinq\Kernel\Contracts\PolicyCrudServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCP\IGroupManager;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
@@ -564,9 +566,10 @@ class PolicyCrudService implements PolicyCrudServiceInterface {
 			$objectService = $this->settingsService->getObjectService();
 			$saved = $objectService->saveObject(
 				object: $data,
-				register: $register,
-				schema: $schema,
-				uuid: $uuid,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $register, schema: $schema),
+					uuid: $uuid
+				),
 				_rbac: false,
 				_multitenancy: false
 			);

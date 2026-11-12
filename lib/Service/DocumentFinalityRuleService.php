@@ -34,6 +34,7 @@ namespace OCA\Filinq\Service;
 use DateTimeImmutable;
 use OCA\Filinq\Exception\DocumentFinalException;
 use OCA\Filinq\Kernel\Contracts\DocumentFinalityRuleServiceInterface;
+use OCA\Filinq\Service\Support\SavesArgumentArrays;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
@@ -50,6 +51,8 @@ use Throwable;
  * @spec openspec/changes/final-documents-frozen/specs/document-versions/spec.md
  */
 class DocumentFinalityRuleService implements DocumentFinalityRuleServiceInterface {
+	use SavesArgumentArrays;
+
 
 	/**
 	 * The OpenRegister register holding Filinq's schemas.
@@ -178,7 +181,7 @@ class DocumentFinalityRuleService implements DocumentFinalityRuleServiceInterfac
 				$arguments['uuid'] = $uuid;
 			}
 
-			$stored = $objectService->saveObject(...$arguments);
+			$stored = $this->saveArguments(objects: $objectService, arguments: $arguments);
 		} catch (Throwable $e) {
 			throw new RuntimeException(
 				message: 'Could not store the finality declaration: ' . $e->getMessage(),

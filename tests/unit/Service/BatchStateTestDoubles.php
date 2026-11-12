@@ -47,6 +47,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\ICache;
@@ -329,15 +330,17 @@ class InMemoryObjectServiceFake extends ObjectService {
 	 * @return mixed The stored object.
 	 */
 	public function saveObject(
-		array $object = [],
-		string $register = '',
-		string $schema = '',
-		?string $uuid = null,
+		array|object $object = [],
+		?ObjectSaveOptions $options = null,
 		bool $_rbac = true,
 		bool $_multitenancy = true,
-		bool $_unowned = false,
-		?string $_owner = null,
 	) {
+		$options = ($options ?? new ObjectSaveOptions());
+		$register = (string) $options->target->register;
+		$schema = (string) $options->target->schema;
+		$uuid = $options->uuid;
+		$_unowned = $options->actor->unowned;
+		$_owner = $options->actor->owner;
 		$this->saveCalls[] = [
 			'register' => $register,
 			'schema' => $schema,
@@ -498,15 +501,17 @@ class RefusingObjectServiceFake extends ObjectService {
 	 * @throws RuntimeException Always.
 	 */
 	public function saveObject(
-		array $object = [],
-		string $register = '',
-		string $schema = '',
-		?string $uuid = null,
+		array|object $object = [],
+		?ObjectSaveOptions $options = null,
 		bool $_rbac = true,
 		bool $_multitenancy = true,
-		bool $_unowned = false,
-		?string $_owner = null,
 	) {
+		$options = ($options ?? new ObjectSaveOptions());
+		$register = (string) $options->target->register;
+		$schema = (string) $options->target->schema;
+		$uuid = $options->uuid;
+		$_unowned = $options->actor->unowned;
+		$_owner = $options->actor->owner;
 		throw new RuntimeException('ValidationException: property status is not one of the declared values');
 	}//end saveObject()
 

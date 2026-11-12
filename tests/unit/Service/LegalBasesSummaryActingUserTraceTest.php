@@ -194,7 +194,15 @@ class LegalBasesSummaryActingUserTraceTest extends TestCase {
 					$arguments['object']['configuration']['grondslagen']['lastGeneratedAt'] = '<time>';
 				}
 
-				$this->trace[] = ['ObjectService::'.$name => $arguments];
+				// Value objects are recorded as [class => their fields], as the other acting-user traces record them.
+				$flatten = static function (mixed $value) use (&$flatten): mixed {
+					if (is_object($value) === true) {
+						return [get_class($value) => array_map($flatten, get_object_vars($value))];
+					}
+
+					return $value;
+				};
+				$this->trace[] = ['ObjectService::'.$name => array_map($flatten, $arguments)];
 				if ($name === 'find' && ($arguments['id'] ?? '') === 'd-1') {
 					return ['name' => 'Raadsbesluit', 'description' => 'Woo-verzoek', 'checkedOn' => 'yes', '@self' => ['folder' => 900]];
 				}

@@ -24,6 +24,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Tests\Unit\Service\Wizard;
 
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use Opis\JsonSchema\Errors\ErrorFormatter;
 use Opis\JsonSchema\Validator;
@@ -105,15 +106,17 @@ class WizardObjectStore extends ObjectService {
 	 * @return array<string, mixed> The stored object.
 	 */
 	public function saveObject(
-		array $object = [],
-		string $register = '',
-		string $schema = '',
-		?string $uuid = null,
+		array|object $object = [],
+		?ObjectSaveOptions $options = null,
 		bool $_rbac = true,
 		bool $_multitenancy = true,
-		bool $_unowned = false,
-		?string $_owner = null,
 	) {
+		$options = ($options ?? new ObjectSaveOptions());
+		$register = (string) $options->target->register;
+		$schema = (string) $options->target->schema;
+		$uuid = $options->uuid;
+		$_unowned = $options->actor->unowned;
+		$_owner = $options->actor->owner;
 		if ($register !== 'filinq' || $schema !== 'wizardDefinition') {
 			throw new RuntimeException('unexpected target ' . $register . '/' . $schema);
 		}

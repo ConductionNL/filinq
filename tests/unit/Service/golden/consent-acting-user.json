@@ -120,8 +120,34 @@
                     "notes": "<!-- docudesk:additional-publication-bases:begin -->\n**Aanvullende publicatiegrondslagen:**\n- 5.1.1c\n<!-- docudesk:additional-publication-bases:end -->",
                     "contactEmail": "jan@example.org"
                 },
-                "register": "filinq",
-                "schema": "publicationConsent"
+                "options": {
+                    "OCA\\OpenRegister\\Service\\Object\\ObjectSaveOptions": {
+                        "target": {
+                            "OCA\\OpenRegister\\Service\\Object\\ObjectFindTarget": {
+                                "register": "filinq",
+                                "schema": "publicationConsent"
+                            }
+                        },
+                        "uuid": null,
+                        "extend": [],
+                        "uploadedFiles": null,
+                        "policy": {
+                            "OCA\\OpenRegister\\Service\\Object\\SavePolicy": {
+                                "silent": false,
+                                "validation": true,
+                                "failIfExists": false,
+                                "dedupOverride": false
+                            }
+                        },
+                        "actor": {
+                            "OCA\\OpenRegister\\Service\\Object\\SaveActor": {
+                                "currentUser": null,
+                                "owner": null,
+                                "unowned": false
+                            }
+                        }
+                    }
+                }
             }
         },
         {
@@ -206,8 +232,34 @@
                     "legalBasis": "5.1.2e",
                     "contactEmail": "jan@example.org"
                 },
-                "register": "filinq",
-                "schema": "publicationConsent",
+                "options": {
+                    "OCA\\OpenRegister\\Service\\Object\\ObjectSaveOptions": {
+                        "target": {
+                            "OCA\\OpenRegister\\Service\\Object\\ObjectFindTarget": {
+                                "register": "filinq",
+                                "schema": "publicationConsent"
+                            }
+                        },
+                        "uuid": null,
+                        "extend": [],
+                        "uploadedFiles": null,
+                        "policy": {
+                            "OCA\\OpenRegister\\Service\\Object\\SavePolicy": {
+                                "silent": false,
+                                "validation": true,
+                                "failIfExists": false,
+                                "dedupOverride": false
+                            }
+                        },
+                        "actor": {
+                            "OCA\\OpenRegister\\Service\\Object\\SaveActor": {
+                                "currentUser": null,
+                                "owner": null,
+                                "unowned": false
+                            }
+                        }
+                    }
+                },
                 "_rbac": false
             }
         },
@@ -293,8 +345,34 @@
                     "objectionDeadline": "<time>",
                     "contactAddress": "Dorpsstraat 1"
                 },
-                "register": "filinq",
-                "schema": "publicationConsent"
+                "options": {
+                    "OCA\\OpenRegister\\Service\\Object\\ObjectSaveOptions": {
+                        "target": {
+                            "OCA\\OpenRegister\\Service\\Object\\ObjectFindTarget": {
+                                "register": "filinq",
+                                "schema": "publicationConsent"
+                            }
+                        },
+                        "uuid": null,
+                        "extend": [],
+                        "uploadedFiles": null,
+                        "policy": {
+                            "OCA\\OpenRegister\\Service\\Object\\SavePolicy": {
+                                "silent": false,
+                                "validation": true,
+                                "failIfExists": false,
+                                "dedupOverride": false
+                            }
+                        },
+                        "actor": {
+                            "OCA\\OpenRegister\\Service\\Object\\SaveActor": {
+                                "currentUser": null,
+                                "owner": null,
+                                "unowned": false
+                            }
+                        }
+                    }
+                }
             }
         },
         {

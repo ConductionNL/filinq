@@ -37,11 +37,12 @@ use OCA\Filinq\Service\EmailIngestion\EmailThreadHeaders;
 use OCA\Filinq\Service\PdfConversionService;
 use OCA\Filinq\Service\Support\EmailHandling;
 use OCA\OpenRegister\Exception\EmlParseException;
-use OCA\OpenRegister\Service\ObjectService;
 use OCA\OpenRegister\Files\Service\TextExtraction\EmlAttachment;
 use OCA\OpenRegister\Files\Service\TextExtraction\EmlBody;
 use OCA\OpenRegister\Files\Service\TextExtraction\EmlStructure;
 use OCA\OpenRegister\Files\Service\TextExtractionService;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
+use OCA\OpenRegister\Service\ObjectService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\Files\File;
 use OCP\Files\Folder;
@@ -117,15 +118,17 @@ class EmailObjectStore extends ObjectService {
 	 * @return array<string, mixed>
 	 */
 	public function saveObject(
-		array $object = [],
-		string $register = '',
-		string $schema = '',
-		?string $uuid = null,
+		array|object $object = [],
+		?ObjectSaveOptions $options = null,
 		bool $_rbac = true,
 		bool $_multitenancy = true,
-		bool $_unowned = false,
-		?string $_owner = null,
 	) {
+		$options = ($options ?? new ObjectSaveOptions());
+		$register = (string) $options->target->register;
+		$schema = (string) $options->target->schema;
+		$uuid = $options->uuid;
+		$_unowned = $options->actor->unowned;
+		$_owner = $options->actor->owner;
 		if ($register !== 'filinq' || $schema !== 'emailDocument') {
 			throw new RuntimeException('unexpected target ' . $register . '/' . $schema);
 		}

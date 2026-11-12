@@ -24,6 +24,7 @@ use OCA\Filinq\Service\AnonymizationPersistenceService;
 use OCA\Filinq\Service\ConsentCrudService;
 use OCA\Filinq\Service\ConsentService;
 use OCA\Filinq\Service\OpenRegisterServiceLocator;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCP\App\IAppManager;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -140,7 +141,16 @@ class AnonymizationLinkServiceTest extends TestCase {
 			 *
 			 * @return mixed
 			 */
-			public function saveObject(array $object = [], string $register = '', string $schema = '', bool $_rbac = true, bool $_unowned = false): mixed {
+			public function saveObject(
+				array|object $object = [],
+				?ObjectSaveOptions $options = null,
+				bool $_rbac = true,
+				bool $_multitenancy = true,
+			): mixed {
+				$options = ($options ?? new ObjectSaveOptions());
+				$register = (string) $options->target->register;
+				$schema = (string) $options->target->schema;
+				$_unowned = $options->actor->unowned;
 				$this->saveCalled = true;
 				$this->captured = $object;
 				if ($this->saveThrows === true) {

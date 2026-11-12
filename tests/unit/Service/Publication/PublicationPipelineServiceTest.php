@@ -25,19 +25,20 @@ namespace OCA\Filinq\Tests\Unit\Service\Publication;
 
 use DateTimeImmutable;
 use InvalidArgumentException;
+use OCA\Filinq\Exception\PublicationNotReadyException;
 use OCA\Filinq\Service\ConsentCrudService;
 use OCA\Filinq\Service\ConsentService;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\PolicyMatchService;
-use OCA\Filinq\Service\RedactionAccessibilityService;
 use OCA\Filinq\Service\Publication\ConsentClearance;
 use OCA\Filinq\Service\Publication\OpenCatalogiPlatform;
 use OCA\Filinq\Service\Publication\OpenCatalogiPublicationMap;
-use OCA\Filinq\Exception\PublicationNotReadyException;
 use OCA\Filinq\Service\Publication\PublicationPipelineService;
 use OCA\Filinq\Service\Publication\PublicationReadiness;
 use OCA\Filinq\Service\Publication\PublicationStore;
 use OCA\Filinq\Service\Redaction\RedactionReviewMarkRepository;
+use OCA\Filinq\Service\RedactionAccessibilityService;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -121,7 +122,11 @@ class PublicationPipelineServiceTest extends TestCase {
 	private function pipeline(): PublicationPipelineService {
 		$objects = $this->createMock(ObjectService::class);
 		$objects->method('saveObject')->willReturnCallback(
-			function (array $object = [], string $register = '', string $schema = '', ?string $uuid = null): array {
+			function (array|object $object = [], ?ObjectSaveOptions $options = null): array {
+				$options = ($options ?? new ObjectSaveOptions());
+				$register = (string) ($options->target->register);
+				$schema = (string) ($options->target->schema);
+				$uuid = ($options->uuid);
 				$this->saves[] = [$schema, $object];
 				$uuid = $uuid ?? ($schema . '-' . (count($this->rows[$schema] ?? []) + 1));
 				$this->rows[$schema][$uuid] = array_merge($object, ['uuid' => $uuid]);

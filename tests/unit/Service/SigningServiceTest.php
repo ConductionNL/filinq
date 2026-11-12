@@ -25,10 +25,14 @@ namespace OCA\Filinq\Tests\Unit\Service;
 
 require_once __DIR__ . '/SignerAuth/AssuranceGateHarness.php';
 
+use DateTimeImmutable;
 use OCA\Filinq\Event\SigningConcludedEventFactory;
+use OCA\Filinq\Exception\StepUpRequiredException;
+use OCA\Filinq\Kernel\SigningAuditEvent;
 use OCA\Filinq\Service\FinalDocumentService;
 use OCA\Filinq\Service\SettingsService;
 use OCA\Filinq\Service\SignedArtifactProducer;
+use OCA\Filinq\Service\SignerAuth\IdentityEvidence;
 use OCA\Filinq\Service\Signing\GuardianConsentGuard;
 use OCA\Filinq\Service\Signing\SigningProviderFactory;
 use OCA\Filinq\Service\SigningActorResolver;
@@ -41,6 +45,7 @@ use OCA\Filinq\Service\Support\SigningOutputs;
 use OCA\OpenRegister\Db\AuditTrail;
 use OCA\OpenRegister\Db\AuditTrailMapper;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Files\File;
@@ -53,10 +58,6 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
-use DateTimeImmutable;
-use OCA\Filinq\Exception\StepUpRequiredException;
-use OCA\Filinq\Kernel\SigningAuditEvent;
-use OCA\Filinq\Service\SignerAuth\IdentityEvidence;
 
 /**
  * Tests for SigningService signing request lifecycle
@@ -2624,7 +2625,10 @@ class SigningServiceTest extends TestCase {
 
 		$saved = [];
 		$this->objectService->method('saveObject')->willReturnCallback(
-			function (array $object, string $register, string $schema) use (&$saved): array {
+			function (array|object $object = [], ?ObjectSaveOptions $options = null) use (&$saved): array {
+				$options = ($options ?? new ObjectSaveOptions());
+				$register = (string) ($options->target->register);
+				$schema = (string) ($options->target->schema);
 				$saved[] = [$object, $register, $schema];
 				return $object;
 			}

@@ -31,6 +31,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use OCA\Filinq\Kernel\Contracts\PageLayoutServiceInterface;
+use OCA\Filinq\Service\Support\SavesArgumentArrays;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
@@ -47,6 +48,8 @@ use Throwable;
  * @spec openspec/specs/document-creatie-sjablonen/spec.md
  */
 class PageLayoutService implements PageLayoutServiceInterface {
+	use SavesArgumentArrays;
+
 
 	/**
 	 * Constructor.
@@ -411,7 +414,7 @@ class PageLayoutService implements PageLayoutServiceInterface {
 				$arguments['uuid'] = $uuid;
 			}
 
-			$stored = $this->objectResolver->resolve()->saveObject(...$arguments);
+			$stored = $this->saveArguments(objects: $this->objectResolver->resolve(), arguments: $arguments);
 		} catch (Throwable $e) {
 			throw new RuntimeException(
 				message: 'Could not store the page layout: ' . $e->getMessage(),

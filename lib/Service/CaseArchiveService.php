@@ -33,6 +33,8 @@ namespace OCA\Filinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\Filinq\Kernel\Contracts\CaseArchiveServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCP\IAppConfig;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
@@ -49,6 +51,9 @@ use Throwable;
  * @link     https://www.filinq.app
  *
  * @spec openspec/specs/document-creatie-sjablonen/spec.md
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) OpenRegister's call shapes take
+ *   value objects where they took scalars; each counts as a coupling.
  */
 class CaseArchiveService implements CaseArchiveServiceInterface {
 	use ReadsCurrentUserId;
@@ -275,8 +280,9 @@ class CaseArchiveService implements CaseArchiveServiceInterface {
 		try {
 			$this->objectResolver->resolve()->saveObject(
 				object: $job,
-				register: IntakeRepository::REGISTER,
-				schema: self::SCHEMA
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: IntakeRepository::REGISTER, schema: self::SCHEMA)
+				)
 			);
 		} catch (Throwable $e) {
 			$this->logger->error(

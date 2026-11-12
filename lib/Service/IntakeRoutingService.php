@@ -31,6 +31,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use OCA\Filinq\Kernel\Contracts\IntakeRoutingServiceInterface;
+use OCA\Filinq\Service\Support\SavesArgumentArrays;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
@@ -47,6 +48,8 @@ use Throwable;
  * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
  */
 class IntakeRoutingService implements IntakeRoutingServiceInterface {
+	use SavesArgumentArrays;
+
 
 	/**
 	 * Constructor.
@@ -108,7 +111,7 @@ class IntakeRoutingService implements IntakeRoutingServiceInterface {
 				$arguments['uuid'] = (string)$existing['uuid'];
 			}
 
-			$this->objectResolver->resolve()->saveObject(...$arguments);
+			$this->saveArguments(objects: $this->objectResolver->resolve(), arguments: $arguments);
 		} catch (Throwable $e) {
 			throw new RuntimeException(
 				message: 'Could not store the routing declaration: ' . $e->getMessage(),

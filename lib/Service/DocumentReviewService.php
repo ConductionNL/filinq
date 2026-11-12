@@ -32,6 +32,8 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use Exception;
 use OCA\Filinq\Kernel\Contracts\DocumentReviewServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
@@ -274,9 +276,10 @@ class DocumentReviewService implements DocumentReviewServiceInterface {
 		try {
 			$this->objectResolver->resolve()->saveObject(
 				object: $document,
-				register: IntakeRepository::REGISTER,
-				schema: self::SCHEMA,
-				uuid: $uuid
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: IntakeRepository::REGISTER, schema: self::SCHEMA),
+					uuid: $uuid
+				)
 			);
 		} catch (Throwable $e) {
 			throw new RuntimeException(

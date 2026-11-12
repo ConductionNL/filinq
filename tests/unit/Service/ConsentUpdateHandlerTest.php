@@ -23,6 +23,7 @@ namespace OCA\Filinq\Tests\Unit\Service;
 use OCA\Filinq\Service\ConsentStatusChange;
 use OCA\Filinq\Service\ConsentUpdateHandler;
 use OCA\Filinq\Service\RegisterObjectRef;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCP\App\IAppManager;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -418,7 +419,11 @@ class ConsentUpdateHandlerTest extends TestCase {
 		$objects = $this->createMock(originalClassName: \OCA\OpenRegister\Service\ObjectService::class);
 		$objects->method('find')->willReturn($stored);
 		$objects->method('saveObject')->willReturnCallback(
-			function (array $object = [], string $register = '', string $schema = '', ?string $uuid = null, bool $_rbac = true) use (&$saved) {
+			function (array|object $object = [], ?ObjectSaveOptions $options = null, bool $_rbac = true) use (&$saved) {
+				$options = ($options ?? new ObjectSaveOptions());
+				$register = (string) ($options->target->register);
+				$schema = (string) ($options->target->schema);
+				$uuid = ($options->uuid);
 				$saved[] = ['object' => $object, 'rbac' => $_rbac];
 				$entity = new \OCA\OpenRegister\Db\ObjectEntity();
 				$entity->setObject($object);

@@ -27,6 +27,7 @@ use OCA\Filinq\Kernel\SigningAuditEvent;
 use OCA\Filinq\Service\SettingsService;
 use OCA\Filinq\Service\SigningAuditService;
 use OCA\Filinq\Service\SigningService;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IAppConfig;
@@ -71,7 +72,9 @@ class SigningExpirationSweepTest extends TestCase {
 			return $answer;
 		});
 		$objects->method('saveObject')->willReturnCallback(function (...$arguments): array {
-			$this->calls[] = ['save', array_slice($arguments, 0, 5)];
+			// Recorded in the pre-#9123 order: object, register, schema, uuid, _rbac.
+			$options = ($arguments[1] ?? new ObjectSaveOptions());
+			$this->calls[] = ['save', [$arguments[0], $options->target->register, $options->target->schema, $options->uuid, ($arguments[2] ?? true)]];
 			return [];
 		});
 		$settings = $this->createMock(SettingsService::class);

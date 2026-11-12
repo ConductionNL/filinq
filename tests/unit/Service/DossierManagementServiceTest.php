@@ -19,12 +19,13 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Tests\Unit\Service;
 
-use OCA\Filinq\Service\LegalHold\LegalHoldFanOut;
 use OCA\Filinq\Service\DossierContextService;
 use OCA\Filinq\Service\DossierFileService;
 use OCA\Filinq\Service\DossierManagementService;
 use OCA\Filinq\Service\DossierObjectReader;
 use OCA\Filinq\Service\DossierObjectRepository;
+use OCA\Filinq\Service\LegalHold\LegalHoldFanOut;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCP\Files\File;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
@@ -232,7 +233,15 @@ final class DossierManagementServiceTest extends TestCase {
 			 *
 			 * @return object The saved object.
 			 */
-			public function saveObject(array $object, string $register = '', string $schema = ''): object {
+			public function saveObject(
+				array|object $object = [],
+				?ObjectSaveOptions $options = null,
+				bool $_rbac = true,
+				bool $_multitenancy = true,
+			): object {
+				$options = ($options ?? new ObjectSaveOptions());
+				$register = (string) $options->target->register;
+				$schema = (string) $options->target->schema;
 				if ($this->test->saveRefusal !== '') {
 					throw new RuntimeException($this->test->saveRefusal);
 				}

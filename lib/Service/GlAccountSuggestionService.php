@@ -42,6 +42,8 @@ use OCA\Filinq\Service\Suggestion\CategoryKeywordMapper;
 use OCA\Filinq\Service\Suggestion\HistoryRanker;
 use OCA\Filinq\Service\Suggestion\SupplierIdentityResolver;
 use OCA\Filinq\Service\Support\SuggestionSignals;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\TaskProcessing\Task as TaskProcessingTask;
 use OCP\TaskProcessing\TaskTypes\TextToText;
@@ -201,7 +203,7 @@ class GlAccountSuggestionService implements GlAccountSuggestionServiceInterface 
 		// correction silently, and the next suggestion is then wrong for a
 		// reason nobody can see.
 		['register' => $register, 'schema' => $schema] = $this->registerResolver->getGlAccountBookingRegisterAndSchema();
-		$objectService->saveObject(object: $booking, register: $register, schema: $schema);
+		$objectService->saveObject(object: $booking, options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema)));
 
 	}//end recordBooking()
 

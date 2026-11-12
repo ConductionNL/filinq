@@ -27,6 +27,7 @@ namespace OCA\Filinq\Service;
 
 use OCA\Filinq\Exception\MergeJobStoreUnreadableException;
 use OCA\Filinq\Kernel\Contracts\MergeJobRepositoryInterface;
+use OCA\Filinq\Service\Support\SavesArgumentArrays;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
@@ -43,6 +44,8 @@ use Throwable;
  * @spec openspec/specs/document-merge/spec.md
  */
 class MergeJobRepository implements MergeJobRepositoryInterface {
+	use SavesArgumentArrays;
+
 	use ReadsStoredObjectRows;
 
 	/**
@@ -220,7 +223,7 @@ class MergeJobRepository implements MergeJobRepositoryInterface {
 				$arguments['uuid'] = $uuid;
 			}
 
-			$stored = $this->objectResolver->resolve()->saveObject(...$arguments);
+			$stored = $this->saveArguments(objects: $this->objectResolver->resolve(), arguments: $arguments);
 		} catch (Throwable $e) {
 			throw new RuntimeException(
 				message: 'Could not store the merge job: ' . $e->getMessage(),

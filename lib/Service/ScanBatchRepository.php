@@ -24,6 +24,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use OCA\Filinq\Kernel\Contracts\ScanBatchRepositoryInterface;
+use OCA\Filinq\Service\Support\SavesArgumentArrays;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
@@ -40,6 +41,8 @@ use Throwable;
  * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
  */
 class ScanBatchRepository implements ScanBatchRepositoryInterface {
+	use SavesArgumentArrays;
+
 	use ReadsStoredObjectRows;
 
 	/**
@@ -82,7 +85,7 @@ class ScanBatchRepository implements ScanBatchRepositoryInterface {
 				$arguments['uuid'] = $uuid;
 			}
 
-			$stored = $this->objectResolver->resolve()->saveObject(...$arguments);
+			$stored = $this->saveArguments(objects: $this->objectResolver->resolve(), arguments: $arguments);
 		} catch (Throwable $e) {
 			throw new RuntimeException(
 				message: 'Could not store the scan batch: ' . $e->getMessage(),

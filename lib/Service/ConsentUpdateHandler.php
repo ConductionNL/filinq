@@ -25,6 +25,8 @@ namespace OCA\Filinq\Service;
 use DateTimeImmutable;
 use Exception;
 use InvalidArgumentException;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -38,6 +40,9 @@ use RuntimeException;
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) OpenRegister's call shapes take
+ *   value objects where they took scalars; each counts as a coupling.
  */
 class ConsentUpdateHandler {
 	/**
@@ -111,8 +116,9 @@ class ConsentUpdateHandler {
 
 			$savedObject = $objectService->saveObject(
 				object: array_merge($existing, $allowedData),
-				register: $consent->register,
-				schema: $consent->schema,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $consent->register, schema: $consent->schema)
+				),
 				_rbac: false
 			);
 

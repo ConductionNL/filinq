@@ -46,6 +46,8 @@ use DateTimeImmutable;
 use Exception;
 use OCA\Filinq\Kernel\Contracts\PolicyRetroactiveServiceInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -370,9 +372,10 @@ class PolicyRetroactiveService implements PolicyRetroactiveServiceInterface {
 
 			$this->objectService->saveObject(
 				object: $newData,
-				register: 'filinq',
-				schema: 'publicationConsent',
-				uuid: $uuid,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: 'filinq', schema: 'publicationConsent'),
+					uuid: $uuid
+				),
 				_rbac: false,
 				_multitenancy: false
 			);

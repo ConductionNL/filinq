@@ -27,6 +27,7 @@ use OCA\Filinq\Service\ConsentStatusChange;
 use OCA\Filinq\Service\ConsentUpdateHandler;
 use OCA\Filinq\Service\RegisterObjectRef;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
 use PHPUnit\Framework\TestCase;
@@ -72,7 +73,11 @@ class ConsentUpdateFlowTest extends TestCase {
 			}
 		);
 		$objects->method('saveObject')->willReturnCallback(
-			function (array $object, string $register, string $schema, ?string $uuid = null, bool $_rbac = true) use ($saveFails): ObjectEntity {
+			function (array|object $object = [], ?ObjectSaveOptions $options = null, bool $_rbac = true) use ($saveFails): ObjectEntity {
+				$options = ($options ?? new ObjectSaveOptions());
+				$register = (string) ($options->target->register);
+				$schema = (string) ($options->target->schema);
+				$uuid = ($options->uuid);
 				unset($object['statusEvents']);
 				$this->calls[] = ['save' => [$object, $register, $schema, $uuid, $_rbac]];
 				if ($saveFails === true) {

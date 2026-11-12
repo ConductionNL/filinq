@@ -24,6 +24,7 @@ use OCA\Filinq\Service\Intake\IntakeReadingProgress;
 use OCA\Filinq\Service\IntakeRepository;
 use OCA\Filinq\Service\OcrService;
 use OCA\Filinq\Tests\Unit\Service\Ocr\OcrDoubles;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\Files\IRootFolder;
@@ -143,7 +144,11 @@ class IntakeOcrJobTest extends TestCase {
 		$objects = $this->createMock(ObjectService::class);
 		$objects->method('find')->willReturn($stored);
 		$objects->method('saveObject')->willReturnCallback(
-			function (array $object = [], string $register = '', string $schema = '', ?string $uuid = null): array {
+			function (array|object $object = [], ?ObjectSaveOptions $options = null): array {
+				$options = ($options ?? new ObjectSaveOptions());
+				$register = (string) ($options->target->register);
+				$schema = (string) ($options->target->schema);
+				$uuid = ($options->uuid);
 				$this->saved[] = $object;
 
 				return $object + ['uuid' => $uuid];

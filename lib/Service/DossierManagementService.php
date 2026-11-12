@@ -39,6 +39,8 @@ namespace OCA\Filinq\Service;
 
 use OCA\Filinq\Kernel\Contracts\DossierManagementServiceInterface;
 use OCA\Filinq\Service\LegalHold\LegalHoldFanOut;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
@@ -244,8 +246,9 @@ class DossierManagementService implements DossierManagementServiceInterface {
 				// came back 409 "No transition allows moving from ''".
 				'status' => self::DEFAULT_STATUS,
 			],
-			register: self::REGISTER,
-			schema: self::SCHEMA
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: self::REGISTER, schema: self::SCHEMA)
+			)
 		);
 
 		$payload = $this->reader->payloadOf(object: $saved);
@@ -548,8 +551,9 @@ class DossierManagementService implements DossierManagementServiceInterface {
 		try {
 			$objectService->saveObject(
 				object: $next,
-				register: self::REGISTER,
-				schema: self::SCHEMA
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: self::REGISTER, schema: self::SCHEMA)
+				)
 			);
 		} catch (Throwable $e) {
 			// A lifecycle refusal arrives here. Surfacing the message keeps

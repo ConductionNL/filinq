@@ -30,6 +30,8 @@ namespace OCA\Filinq\Service;
 use Exception;
 use OCA\Filinq\Kernel\Contracts\MetadataServiceInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Db\DoesNotExistException;
 use Psr\Container\ContainerInterface;
@@ -46,6 +48,9 @@ use RuntimeException;
  * @link     https://www.filinq.app
  *
  * @spec openspec/specs/metadata-enrichment/spec.md
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) OpenRegister's call shapes take
+ *   value objects where they took scalars; each counts as a coupling.
  */
 class MetadataService implements MetadataServiceInterface {
 	/**
@@ -322,8 +327,9 @@ class MetadataService implements MetadataServiceInterface {
 
 		return $objectService->saveObject(
 			object: $objectData,
-			register: $register,
-			schema: $schema
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $register, schema: $schema)
+			)
 		);
 
 	}//end persistEnrichedMetadata()

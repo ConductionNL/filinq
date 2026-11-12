@@ -27,6 +27,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use OCA\Filinq\Kernel\Contracts\IntakeRepositoryInterface;
+use OCA\Filinq\Service\Support\SavesArgumentArrays;
 use OCP\AppFramework\Db\DoesNotExistException;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -44,6 +45,8 @@ use Throwable;
  * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
  */
 class IntakeRepository implements IntakeRepositoryInterface {
+	use SavesArgumentArrays;
+
 
 	/**
 	 * Constructor.
@@ -220,7 +223,7 @@ class IntakeRepository implements IntakeRepositoryInterface {
 				$arguments['uuid'] = $uuid;
 			}
 
-			$stored = $this->objectResolver->resolve()->saveObject(...$arguments);
+			$stored = $this->saveArguments(objects: $this->objectResolver->resolve(), arguments: $arguments);
 		} catch (Throwable $e) {
 			$this->logger->error(
 				message: '[IntakeRepository] could not store an intake document',

@@ -27,6 +27,8 @@ use OCA\Filinq\Service\SettingsService;
 use OCA\Filinq\Service\SignedArtifactProducer;
 use OCA\Filinq\Service\SigningAuditService;
 use OCA\Filinq\Service\SigningConclusionEmitter;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -141,7 +143,11 @@ class LibreSignCompletion implements LibreSignCompletionInterface {
 
 		if ($state['status'] === 'CANCELLED') {
 			$request['status'] = 'CANCELLED';
-			$objects->saveObject(object: $request, register: $binding['register'], schema: $binding['schema'], _rbac: false);
+			$objects->saveObject(
+				object: $request,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $binding['register'], schema: $binding['schema'])),
+				_rbac: false
+			);
 			$this->record(request: $request, action: 'CANCELLED', metadata: $metadata);
 			$this->emitter->emitIfDelegated(request: $request, status: 'cancelled');
 			return 1;
@@ -155,14 +161,22 @@ class LibreSignCompletion implements LibreSignCompletionInterface {
 		if ($request['status'] === 'PENDING') {
 			$request['status'] = 'IN_PROGRESS';
 			$request = $this->toArray(
-				result: $objects->saveObject(object: $request, register: $binding['register'], schema: $binding['schema'], _rbac: false)
+				result: $objects->saveObject(
+					object: $request,
+					options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $binding['register'], schema: $binding['schema'])),
+					_rbac: false
+				)
 			);
 		}
 
 		$reference = $this->producer->produce(request: $request);
 		$request['status'] = 'COMPLETED';
 		$request['signedDocumentRef'] = $reference;
-		$objects->saveObject(object: $request, register: $binding['register'], schema: $binding['schema'], _rbac: false);
+		$objects->saveObject(
+			object: $request,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $binding['register'], schema: $binding['schema'])),
+			_rbac: false
+		);
 		$this->record(request: $request, action: 'COMPLETED', metadata: $metadata);
 		$this->emitter->emitIfDelegated(request: $request, status: 'signed', signedDocumentRef: $reference);
 

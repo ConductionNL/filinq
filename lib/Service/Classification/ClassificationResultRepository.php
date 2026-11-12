@@ -29,6 +29,8 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\Classification;
 
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 
 /**
  * Storage of classificationResult records.
@@ -78,9 +80,10 @@ class ClassificationResultRepository {
 		unset($record['uuid']);
 		$stored = $this->objectResolver->resolve()->saveObject(
 			object: $record,
-			register: self::REGISTER,
-			schema: self::SCHEMA,
-			uuid: $uuid,
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: self::REGISTER, schema: self::SCHEMA),
+				uuid: $uuid
+			),
 			_rbac: false,
 			_multitenancy: false
 		);

@@ -56,28 +56,20 @@ class ObjectService {
 	}//end find()
 
 	/**
-	 * Save an object
+	 * Save an object (openregister #9123 shape).
 	 *
-	 * @param array $object Object data
-	 * @param string $register Register slug
-	 * @param string $schema Schema slug
-	 * @param string|null $uuid Optional UUID for updates.
+	 * @param array|object $object Object data or entity.
+	 * @param \OCA\OpenRegister\Service\Object\ObjectSaveOptions $options Scope, uuid, extend, files, policy and actor.
 	 * @param bool $_rbac RBAC bypass flag.
 	 * @param bool $_multitenancy Multitenancy bypass flag.
-	 * @param bool $_unowned Stamp the system identity as owner on a create.
-	 * @param string|null $_owner An explicit owner for a create.
 	 *
 	 * @return mixed
 	 */
 	public function saveObject(
-		array $object = [],
-		string $register = '',
-		string $schema = '',
-		?string $uuid = null,
+		array|object $object,
+		\OCA\OpenRegister\Service\Object\ObjectSaveOptions $options = new \OCA\OpenRegister\Service\Object\ObjectSaveOptions(),
 		bool $_rbac = true,
 		bool $_multitenancy = true,
-		bool $_unowned = false,
-		?string $_owner = null,
 	) {
 		return null;
 	}//end saveObject()

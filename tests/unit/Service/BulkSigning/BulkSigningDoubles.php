@@ -24,6 +24,7 @@ namespace OCA\Filinq\Tests\Unit\Service\BulkSigning;
 
 use OCA\Filinq\Service\BulkSigning\BulkSigningBatchRepository;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
@@ -55,7 +56,11 @@ trait BulkSigningDoubles {
 	protected function batchRepository(): BulkSigningBatchRepository {
 		$objects = $this->createMock(ObjectService::class);
 		$objects->method('saveObject')->willReturnCallback(
-			function (array $object = [], string $register = '', string $schema = '', ?string $uuid = null) {
+			function (array|object $object = [], ?ObjectSaveOptions $options = null) {
+				$options = ($options ?? new ObjectSaveOptions());
+				$register = (string) ($options->target->register);
+				$schema = (string) ($options->target->schema);
+				$uuid = ($options->uuid);
 				$this->batchWrites[] = $object;
 				$uuid = $uuid ?? ('batch-' . (count($this->batches) + 1));
 				$this->batches[$uuid] = array_merge($object, ['uuid' => $uuid]);
