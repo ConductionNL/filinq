@@ -28,6 +28,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use OCA\Filinq\Controller\Support\ControllerFeedback;
+use OCA\Filinq\Controller\Support\PdfResponses;
 use OCA\Filinq\Exception\Pdfa3ConversionException;
 use OCA\Filinq\Kernel\Contracts\Pdfa3ConversionServiceInterface;
 use OCP\AppFramework\Controller;
@@ -123,7 +124,7 @@ class Pdfa3ConversionController extends Controller {
 				attachments: $this->arrayParam(name: 'attachments')
 			);
 
-			return $this->downloadResponse(result: $result, filename: $filename);
+			return (new PdfResponses())->pdfa3Download(result: $result, filename: $filename);
 		} catch (Pdfa3ConversionException $e) {
 			return $this->conversionErrorResponse(exception: $e, fileId: $fileId);
 		} catch (Throwable $e) {
@@ -192,39 +193,6 @@ class Pdfa3ConversionController extends Controller {
 	}//end arrayParam()
 
 	/**
-	 * The PDF/A-3 download with its composition headers.
-	 *
-	 * Callers such as dossiq's archival pipeline read the composition
-	 * metadata ({checksumSha256, paginas}) off these headers without a second
-	 * round trip. THE `X-Docudesk-*` HEADER NAMES STAY ACROSS THE FILINQ RENAME:
-	 * they are a cross-app response contract, and a renamed header is not an
-	 * error to a consumer but an absent header, so the integration degrades
-	 * silently. Rename them only together with the consumers; the same applies
-	 * to the `X-Docudesk-File-*` headers in DocumentController.
-	 *
-	 * @param array<string, mixed> $result The conversion result.
-	 * @param string $filename The download file name.
-	 *
-	 * @return DataDownloadResponse The download.
-	 *
-	 * @spec openspec/specs/pdfa3-conversion/spec.md
-	 */
-	private function downloadResponse(array $result, string $filename): DataDownloadResponse {
-		$response = new DataDownloadResponse(
-			data: $result['content'],
-			filename: $filename,
-			contentType: 'application/pdf'
-		);
-		$response->addHeader('X-Docudesk-Pdfa3-Checksum-Sha256', $result['checksumSha256']);
-		$response->addHeader('X-Docudesk-Pdfa3-Pages', (string)$result['pages']);
-		$response->addHeader('X-Docudesk-Pdfa3-Conformance', $result['conformance']);
-		$response->addHeader('X-Docudesk-Pdfa3-Verified', (string) ($result['verified'] ?? 'skipped'));
-
-		return $response;
-
-	}//end downloadResponse()
-
-	/**
 	 * The typed error response for a conversion the service refused.
 	 *
 	 * @param Pdfa3ConversionException $exception The refusal.
@@ -244,32 +212,7 @@ class Pdfa3ConversionController extends Controller {
 			]
 		);
 
-		return new JSONResponse(
-			data: [
-				'error' => $exception->getMessage(),
-				'reason' => $exception->getReason(),
-				'adminHint' => $exception->getAdminHint(),
-			],
-			statusCode: $this->clampStatusCode(code: $exception->getCode())
-		);
+		return (new PdfResponses())->pdfa3Refusal(exception: $exception);
 
 	}//end conversionErrorResponse()
-
-	/**
-	 * Clamp an exception code to a valid HTTP status range, defaulting
-	 * to 500 for anything outside [400, 599].
-	 *
-	 * @param int $code Candidate status code.
-	 *
-	 * @return int Valid HTTP status code.
-	 *
-	 * @psalm-suppress InvalidArgument $statusCode is clamped to int<400, 599>; Psalm wants the literal HTTP status union.
-	 */
-	private function clampStatusCode(int $code): int {
-		if ($code >= 400 && $code < 600) {
-			return $code;
-		}
-
-		return Http::STATUS_INTERNAL_SERVER_ERROR;
-	}//end clampStatusCode()
 }//end class
