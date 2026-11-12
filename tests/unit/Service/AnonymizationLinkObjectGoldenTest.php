@@ -35,6 +35,7 @@ use Psr\Log\NullLogger;
  * @covers \OCA\Filinq\Service\AnonymizationPersistenceService
  * @uses   \OCA\Filinq\Service\OpenRegisterServiceLocator
  * @uses \OCA\Filinq\Service\SavedObjectReader
+ * @uses \OCA\Filinq\Service\ObjectResultExtractor
  */
 class AnonymizationLinkObjectGoldenTest extends TestCase {
 
