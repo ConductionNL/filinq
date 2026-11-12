@@ -232,6 +232,38 @@ class Pdfa3ConversionControllerTest extends TestCase {
 		$this->assertNotEmpty($result->getData()['adminHint']);
 
 	}//end testConvertMapsPdfa3ExceptionToTypedErrorResponse()
+
+	/**
+	 * Test convert answers a refusal whose code is outside the HTTP error
+	 * range with 500, carrying the exact message, reason and admin hint.
+	 *
+	 * @return void
+	 */
+	public function testConvertClampsAnOutOfRangeRefusalTo500(): void {
+		$this->mockRequest->method('getParam')
+			->willReturnMap(
+				[
+					['fileId', 0, 42],
+					['metadata', [], []],
+					['attachments', [], []],
+					['filename', 'document-pdfa3.pdf', 'document-pdfa3.pdf'],
+				]
+			);
+
+		$mockUserFolder = $this->createMock(Folder::class);
+		$mockUserFolder->method('getById')->with(42)->willReturn([$this->createMock(File::class)]);
+		$this->mockRootFolder->method('getUserFolder')->with('testuser')->willReturn($mockUserFolder);
+
+		$this->mockService->method('convertExistingPdf')->willThrowException(
+			new Pdfa3ConversionException(reason: 'render_failed', message: 'x', adminHint: 'h', code: 600)
+		);
+
+		$result = $this->controller->convert();
+
+		$this->assertSame(500, $result->getStatus());
+		$this->assertSame(['error' => 'x', 'reason' => 'render_failed', 'adminHint' => 'h'], $result->getData());
+
+	}//end testConvertClampsAnOutOfRangeRefusalTo500()
 	/**
 	 * Test convert returns 401 when nobody is signed in.
 	 *
