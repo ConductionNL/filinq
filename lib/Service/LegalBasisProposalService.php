@@ -3,6 +3,9 @@
 /**
  * Grondslag Proposal Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Proposes a grondslag (legal basis) per detected entity type. After PII
  * detection, for each EntityRelation whose `bases` is still empty, this
  * service pre-fills the operator-configured default base slug(s) for that

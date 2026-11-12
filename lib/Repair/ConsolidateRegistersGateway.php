@@ -3,6 +3,9 @@
 /**
  * The only place ConsolidateRegisters touches the database.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * WHY THE SQL LIVES IN ITS OWN CLASS. This is the riskiest step in the app: it
  * DELETEs rows, and it interpolates table names into statements because a table
  * name cannot be a bound parameter. Reviewing that safely means reading every
@@ -33,9 +36,6 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://conduction.nl
- *
- * SPDX-License-Identifier: EUPL-1.2
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  */
 
 declare(strict_types=1);

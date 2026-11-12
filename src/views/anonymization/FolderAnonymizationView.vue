@@ -1,3 +1,7 @@
+<!--
+  - SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
 <template>
 	<div class="folder-anonymization">
 		<h2>{{ t('filinq', 'Folder Analysis & Anonymization') }}</h2>

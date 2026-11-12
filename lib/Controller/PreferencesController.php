@@ -3,6 +3,9 @@
 /**
  * Per-user preferences controller.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Local implementation of the per-user key/value preference API, mirroring the
  * existing `HealthController` / `MetricsController` pattern. Behaviourally
  * identical to OpenRegister's AppHost `GenericPreferencesController` it used to
@@ -45,9 +48,6 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
  * @link https://www.filinq.app
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @spec openspec/specs/preferences-api/spec.md
  */

@@ -3,6 +3,9 @@
 /**
  * Consent Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Service for managing GDPR publication consent tracking.
  * Handles creating consent records for entities detected in documents.
  * Delegates deadline checking to ObjectionDeadlineChecker, update/query

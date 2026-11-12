@@ -3,6 +3,9 @@
 /**
  * PolicyMatchService — detection-time matcher for the publication policy layer.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Loads two policy surfaces from the consent register at first call:
  *
  *   - **Prohibitions** — `publicationProhibition` records with `active: true`
@@ -34,9 +37,6 @@
  *
  * @spec openspec/specs/entity-publication-policies/spec.md
  * @spec openspec/changes/anonymisation-entity-review-prohibition-hints/tasks.md#task-1
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);

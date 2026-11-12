@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+/**
  * Jest stub for `@nextcloud/axios`.
  *
  * The upstream package is `type: module` and only declares an `import` export

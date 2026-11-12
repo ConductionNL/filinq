@@ -3,6 +3,9 @@
 /**
  * Portal Signing Receiver Controller
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * The Filinq-side receiver for portaliq's ADR-046 contract-v2/v2.2 A6
  * endpoint-forward actions (`portal-signing-actions`, `portal-signing-surface`).
  * Gives an external, accountless **signer** a real signing surface: portaliq
@@ -27,9 +30,6 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @spec openspec/specs/portal-signing-actions/spec.md
  * @spec openspec/specs/portal-signing-surface/spec.md

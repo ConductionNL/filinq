@@ -3,6 +3,9 @@
 /**
  * SigningTaskListener
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Bridges OpenRegister's task-sequence events into filinq's typed
  * `Signer*Event` family, and triggers the matching
  * `SigningProviderInterface` invocation when a sequence position linked to a
@@ -36,9 +39,6 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @spec openspec/specs/signing-via-or-approval-with-provider-plugins/spec.md
  */

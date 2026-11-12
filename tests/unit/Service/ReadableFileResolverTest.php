@@ -15,6 +15,9 @@
  * @link https://www.filinq.app
  *
  * @spec openspec/specs/document-register/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\Filinq\Tests\Unit\Service;

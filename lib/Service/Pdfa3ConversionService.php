@@ -3,6 +3,9 @@
 /**
  * PDF/A-3 Conversion Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Converts an existing PDF (or freshly rendered HTML) into a genuinely
  * PDF/A-3b compliant file: XMP metadata identifying the conformance
  * level, an embedded ICC output intent, embedded fonts, and — the
@@ -35,9 +38,6 @@
  * @link      https://www.filinq.app
  *
  * @spec openspec/specs/pdfa3-conversion/spec.md
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
