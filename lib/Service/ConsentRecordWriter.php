@@ -264,39 +264,91 @@ class ConsentRecordWriter {
 		$updated['entityType'] = $context['entityType'];
 
 		// Resolve legalBasis + notes from publicationBases.
-		$publicationBases = $context['publicationBases'];
-		$additionalBases = [];
-		if (count($publicationBases) > 0) {
-			$updated['legalBasis'] = $this->rules->notesHelper->truncateAtWordBoundary(
-				value: $publicationBases[0]
-			);
-			$additionalBases = array_slice(array: $publicationBases, offset: 1);
+		[$legalBasis, $additionalBases] = $this->splitPublicationBases(publicationBases: $context['publicationBases']);
+		if ($legalBasis !== null) {
+			$updated['legalBasis'] = $legalBasis;
 		}
 
-		$currentNotes = (string)($existing['notes'] ?? '');
 		$updated['notes'] = $this->rules->notesHelper->updateSentinelRegion(
-			currentNotes: $currentNotes,
+			currentNotes: (string)($existing['notes'] ?? ''),
 			additionalBases: $additionalBases
 		);
 
+		$updated = $this->withNewPolicyMatch(record: $this->withContacts(record: $updated, context: $context), context: $context);
+
+		return $this->withPreservedFields(updated: $updated, existing: $existing);
+	}//end mergeResubmission()
+
+	/**
+	 * Split the publication bases into the legal basis and the bases that go to the notes.
+	 *
+	 * @param array<int, string> $publicationBases The bases, the first one being the legal basis.
+	 *
+	 * @return array{0: string|null, 1: array<int, string>} The truncated legal basis (null when there are no
+	 *                                                      bases) and the additional bases.
+	 */
+	private function splitPublicationBases(array $publicationBases): array {
+		if (count($publicationBases) === 0) {
+			return [null, []];
+		}
+
+		return [
+			$this->rules->notesHelper->truncateAtWordBoundary(value: $publicationBases[0]),
+			array_slice(array: $publicationBases, offset: 1),
+		];
+	}//end splitPublicationBases()
+
+	/**
+	 * Set the contact email and address the context carries.
+	 *
+	 * @param array<string, mixed> $record  The record being built.
+	 * @param array<string, mixed> $context The submission context.
+	 *
+	 * @return array<string, mixed> The record with the given contact fields.
+	 */
+	private function withContacts(array $record, array $context): array {
 		if ($context['contactEmail'] !== null) {
-			$updated['contactEmail'] = $context['contactEmail'];
+			$record['contactEmail'] = $context['contactEmail'];
 		}
 
 		if ($context['contactAddress'] !== null) {
-			$updated['contactAddress'] = $context['contactAddress'];
+			$record['contactAddress'] = $context['contactAddress'];
 		}
 
-		// Re-evaluate pre-emption discriminator: set policyMatch when newly
-		// applicable; never clear it when previously set (D2). Persist the
-		// matchKind marker alongside it so the standing-consent carve-out in
-		// ConsentUpdateHandler can fire on the idempotent-update path too.
-		if ($context['policyMatchUuid'] !== null && ($existing['policyMatch'] ?? null) === null) {
-			$updated['policyMatch'] = $context['policyMatchUuid'];
-			$updated['matchKind'] = (string)$context['policyMatchKind'];
+		return $record;
+	}//end withContacts()
+
+	/**
+	 * Set the policy match on a resubmitted record that has none yet.
+	 *
+	 * Re-evaluate pre-emption discriminator: set policyMatch when newly
+	 * applicable; never clear it when previously set (D2). Persist the
+	 * matchKind marker alongside it so the standing-consent carve-out in
+	 * ConsentUpdateHandler can fire on the idempotent-update path too.
+	 *
+	 * @param array<string, mixed> $record  The resubmitted record.
+	 * @param array<string, mixed> $context The submission context.
+	 *
+	 * @return array<string, mixed> The record with the match when it applies.
+	 */
+	private function withNewPolicyMatch(array $record, array $context): array {
+		if ($context['policyMatchUuid'] !== null && ($record['policyMatch'] ?? null) === null) {
+			$record['policyMatch'] = $context['policyMatchUuid'];
+			$record['matchKind'] = (string)$context['policyMatchKind'];
 		}
 
-		// Ensure all preserved workflow fields are kept (not overwritten).
+		return $record;
+	}//end withNewPolicyMatch()
+
+	/**
+	 * Keep the stored workflow fields; a resubmission never overwrites them.
+	 *
+	 * @param array<string, mixed> $updated  The resubmitted record.
+	 * @param array<string, mixed> $existing The stored record.
+	 *
+	 * @return array<string, mixed> The record with the stored workflow fields.
+	 */
+	private function withPreservedFields(array $updated, array $existing): array {
 		foreach (self::PRESERVED_FIELDS as $field) {
 			if (isset($existing[$field]) === true) {
 				$updated[$field] = $existing[$field];
@@ -304,7 +356,7 @@ class ConsentRecordWriter {
 		}
 
 		return $updated;
-	}//end mergeResubmission()
+	}//end withPreservedFields()
 
 	/**
 	 * Create a brand-new consent record.
@@ -400,22 +452,57 @@ class ConsentRecordWriter {
 	 */
 	private function buildNewConsentPayload(array $context): array {
 		$deadline = $this->rules->deadlineChecker->calculateDeadline();
+		$basisFields = $this->basisFields(context: $context);
 
-		// Resolve legalBasis and notes from publicationBases.
-		$publicationBases = $context['publicationBases'];
-		$legalBasis = null;
-		$additionalBases = [];
-		if (count($publicationBases) > 0) {
-			$legalBasis = $this->rules->notesHelper->truncateAtWordBoundary(value: $publicationBases[0]);
-			$additionalBases = array_slice(array: $publicationBases, offset: 1);
+		$consentData = $this->withStandingConsentPreEmption(
+			consentData: $this->pendingConsent(context: $context, deadline: $deadline),
+			context: $context
+		);
+
+		$entityKey = $context['entityKey'];
+		if ($entityKey !== null && $entityKey !== '') {
+			$consentData['entityKey'] = $entityKey;
 		}
 
+		return $this->withContacts(record: array_merge($consentData, $basisFields), context: $context);
+	}//end buildNewConsentPayload()
+
+	/**
+	 * The legal basis and notes of a new record, from its publication bases.
+	 *
+	 * @param array<string, mixed> $context The submission context.
+	 *
+	 * @return array<string, string> The legal basis when there is one, and the notes when they are not empty.
+	 */
+	private function basisFields(array $context): array {
+		[$legalBasis, $additionalBases] = $this->splitPublicationBases(publicationBases: $context['publicationBases']);
 		$notes = $this->rules->notesHelper->updateSentinelRegion(
 			currentNotes: '',
 			additionalBases: $additionalBases
 		);
 
-		$consentData = [
+		$fields = [];
+		if ($legalBasis !== null) {
+			$fields['legalBasis'] = $legalBasis;
+		}
+
+		if ($notes !== '') {
+			$fields['notes'] = $notes;
+		}
+
+		return $fields;
+	}//end basisFields()
+
+	/**
+	 * A new record as it starts: pending, with the objection deadline.
+	 *
+	 * @param array<string, mixed> $context  The submission context.
+	 * @param \DateTime            $deadline The objection deadline.
+	 *
+	 * @return array<string, mixed> The record.
+	 */
+	private function pendingConsent(array $context, \DateTime $deadline): array {
+		return [
 			'documentId' => $context['documentId'],
 			'entityType' => $context['entityType'],
 			'entityText' => $context['entityText'],
@@ -425,35 +512,7 @@ class ConsentRecordWriter {
 			'publicationDecision' => 'pending',
 			'objectionDeadline' => $deadline->format(format: 'c'),
 		];
-
-		$consentData = $this->withStandingConsentPreEmption(
-			consentData: $consentData,
-			context: $context
-		);
-
-		$entityKey = $context['entityKey'];
-		if ($entityKey !== null && $entityKey !== '') {
-			$consentData['entityKey'] = $entityKey;
-		}
-
-		if ($legalBasis !== null) {
-			$consentData['legalBasis'] = $legalBasis;
-		}
-
-		if ($notes !== '') {
-			$consentData['notes'] = $notes;
-		}
-
-		if ($context['contactEmail'] !== null) {
-			$consentData['contactEmail'] = $context['contactEmail'];
-		}
-
-		if ($context['contactAddress'] !== null) {
-			$consentData['contactAddress'] = $context['contactAddress'];
-		}
-
-		return $consentData;
-	}//end buildNewConsentPayload()
+	}//end pendingConsent()
 
 	/**
 	 * Apply standing-consent pre-emption to a new-record payload.
