@@ -25,6 +25,7 @@ namespace OCA\Filinq\Controller;
 
 use Exception;
 use InvalidArgumentException;
+use OCA\Filinq\Controller\Support\ServerErrorAnswer;
 use OCA\Filinq\Kernel\Contracts\PolicyCrudServiceInterface;
 use OCA\OpenRegister\Exception\ArchivalImmutableException;
 use OCP\AppFramework\Controller;
@@ -277,14 +278,7 @@ class PolicyController extends Controller {
 	 * @return JSONResponse
 	 */
 	private function error(string $message, Exception $exception): JSONResponse {
-		$this->logger->error(
-			$message . $exception->getMessage(),
-			['exception' => $exception]
-		);
-		return new JSONResponse(
-			['error' => $this->l10n->t($message . '%s', [$exception->getMessage()])],
-			500
-		);
+		return (new ServerErrorAnswer(logger: $this->logger, l10n: $this->l10n))->answer(message: $message, exception: $exception);
 
 	}//end error()
 }//end class
