@@ -126,12 +126,7 @@ class SigningController extends Controller {
 			// results to requests the caller initiated or is a signer on. An
 			// admin lists UNSCOPED, which the service spells as callerUserId=''
 			// — the single explicit bypass (see SigningService::listRequests()).
-			$uid = $user->getUID();
-			$isAdmin = $this->groupManager->isAdmin($uid);
-			$scope = $uid;
-			if ($isAdmin === true) {
-				$scope = '';
-			}
+			$scope = $this->callerScope(uid: $user->getUID());
 
 			$result = $this->services->signing->listRequests(callerUserId: $scope);
 			return new JSONResponse($result);
@@ -177,12 +172,7 @@ class SigningController extends Controller {
 			// and access-denied so we emit a single 404 (never a 404-vs-403
 			// split, which would be an existence-probing oracle). An admin
 			// reads UNSCOPED, which the service spells as callerUserId=''.
-			$uid = $user->getUID();
-			$isAdmin = $this->groupManager->isAdmin($uid);
-			$scope = $uid;
-			if ($isAdmin === true) {
-				$scope = '';
-			}
+			$scope = $this->callerScope(uid: $user->getUID());
 
 			$result = $this->services->signing->getRequest(requestId: $id, callerUserId: $scope);
 			if ($result === null) {
@@ -462,6 +452,24 @@ class SigningController extends Controller {
 		}//end try
 
 	}//end getAudit()
+
+	/**
+	 * The scope a signing request is read under: the caller's own uid, or ''
+	 * — the single explicit bypass the signing service knows — for an
+	 * administrator.
+	 *
+	 * @param string $uid The signed-in caller.
+	 *
+	 * @return string The caller uid, or '' for an administrator.
+	 */
+	private function callerScope(string $uid): string {
+		if ($this->groupManager->isAdmin($uid) === true) {
+			return '';
+		}
+
+		return $uid;
+
+	}//end callerScope()
 
 	/**
 	 * Build an error JSON response with logging
