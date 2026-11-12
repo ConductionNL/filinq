@@ -95,8 +95,8 @@ class PseudonymRestoreAudit {
 			$subject->setUuid($linkId);
 		}
 
-		$at      = $this->time->getDateTime()->format(format: DATE_ATOM);
-		$context = array_merge(['anonymizationLink' => $linkId, 'actor' => $userId, 'at' => $at], $details);
+		$moment  = $this->time->getDateTime()->format(format: DATE_ATOM);
+		$context = array_merge(['anonymizationLink' => $linkId, 'actor' => $userId, 'at' => $moment], $details);
 		$actor   = new ObjectAuditEventOptions(actor: new NamedActor(id: $userId));
 
 		try {

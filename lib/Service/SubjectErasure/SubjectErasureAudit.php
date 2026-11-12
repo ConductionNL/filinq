@@ -93,8 +93,8 @@ class SubjectErasureAudit {
 			$subject->setUuid($requestUuid);
 		}
 
-		$at      = $this->time->getDateTime()->format(format: DATE_ATOM);
-		$context = array_merge(['subjectErasureRequest' => $requestUuid, 'actor' => $userId, 'at' => $at], $details);
+		$moment  = $this->time->getDateTime()->format(format: DATE_ATOM);
+		$context = array_merge(['subjectErasureRequest' => $requestUuid, 'actor' => $userId, 'at' => $moment], $details);
 		$actor   = new ObjectAuditEventOptions(actor: new NamedActor(id: $userId));
 
 		try {
