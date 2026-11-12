@@ -132,6 +132,10 @@
             "description": "Controller for the GL-account suggestion endpoint"
         },
         {
+            "name": "health",
+            "description": "Public, declarative health endpoint backed by the AppHost engine"
+        },
+        {
             "name": "intake",
             "description": "Controller for the documents waiting for a record"
         },
@@ -146,6 +150,10 @@
         {
             "name": "metadata",
             "description": "Controller for metadata enrichment operations"
+        },
+        {
+            "name": "metrics",
+            "description": "Admin-only declarative Prometheus metrics endpoint backed by the AppHost engine"
         },
         {
             "name": "ocr",
@@ -3150,6 +3158,82 @@
                 ]
             }
         },
+        "/documents/render": {
+            "post": {
+                "operationId": "report-render-render",
+                "summary": "POST /api/v1/documents/render",
+                "description": "POST /api/v1/documents/render",
+                "tags": [
+                    "report-render"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                },
+                "security": []
+            }
+        },
+        "/documents/render/batch": {
+            "post": {
+                "operationId": "report-render-render-batch",
+                "summary": "POST /api/v1/documents/render/batch",
+                "description": "POST /api/v1/documents/render/batch",
+                "tags": [
+                    "report-render"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                },
+                "security": []
+            }
+        },
         "/documents/{fileId}/final": {
             "get": {
                 "operationId": "final-document-show",
@@ -4365,6 +4449,47 @@
                 ]
             }
         },
+        "/health": {
+            "servers": [
+                {
+                    "url": "https://{host}/index.php/apps/filinq/api",
+                    "description": "The unversioned base of the paths that implement an external standard, which keep their own URLs and formats.",
+                    "variables": {
+                        "host": {
+                            "default": "localhost",
+                            "description": "The host name of the Nextcloud instance."
+                        }
+                    }
+                }
+            ],
+            "get": {
+                "operationId": "health-index",
+                "summary": "GET /api/health, declarative health check (ADR-006)",
+                "description": "GET /api/health, declarative health check (ADR-006).  Public per ADR-006: an anonymous probe (load balancer, uptime monitor) must reach this without a session. Drives the AppHost engine, which runs the `observability.health` checks declared in src/manifest.json.  When the engine cannot be resolved, openregister absent or disabled, the endpoint still ANSWERS (the entire point of a health probe): `status: degraded`, `checks: {openregister: unavailable}`, HTTP 200.  Rate limiting is an anonymous CEILING rather than a per-account counter, because a liveness probe carries no credential to count against.",
+                "tags": [
+                    "health"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`{status, app, version, checks}`.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": []
+            }
+        },
         "/intake/detached": {
             "get": {
                 "operationId": "intake-detached",
@@ -5125,6 +5250,49 @@
                 }
             }
         },
+        "/metrics": {
+            "servers": [
+                {
+                    "url": "https://{host}/index.php/apps/filinq/api",
+                    "description": "The unversioned base of the paths that implement an external standard, which keep their own URLs and formats.",
+                    "variables": {
+                        "host": {
+                            "default": "localhost",
+                            "description": "The host name of the Nextcloud instance."
+                        }
+                    }
+                }
+            ],
+            "get": {
+                "operationId": "metrics-index",
+                "summary": "GET /api/metrics, declarative Prometheus metrics (admin-only, ADR-006)",
+                "description": "GET /api/metrics, declarative Prometheus metrics (admin-only, ADR-006).  Drives the AppHost metrics engine. Returns HTTP 503 with a Prometheus comment line when the engine is unavailable (openregister absent or disabled), never a 500.",
+                "tags": [
+                    "metrics"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Prometheus text exposition 0.0.4.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "$ref": "#/components/responses/Problem503"
+                    }
+                }
+            }
+        },
         "/ocr": {
             "get": {
                 "operationId": "ocr-index",
@@ -5245,6 +5413,47 @@
                         }
                     }
                 ]
+            }
+        },
+        "/openapi.json": {
+            "get": {
+                "operationId": "open-api-show",
+                "summary": "The OpenAPI document of this API",
+                "description": "Returns this document, with `info.version` set to the installed version. It needs no login and can be read from any origin.",
+                "tags": [
+                    "open-api"
+                ],
+                "security": [],
+                "responses": {
+                    "200": {
+                        "description": "The OpenAPI document.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            },
+                            "access-control-allow-origin": {
+                                "description": "Always `*`.",
+                                "schema": {
+                                    "type": "string",
+                                    "enum": [
+                                        "*"
+                                    ]
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    }
+                }
             }
         },
         "/page-layouts": {
@@ -8317,6 +8526,46 @@
                 }
             }
         },
+        "/signing/identity/callback": {
+            "servers": [
+                {
+                    "url": "https://{host}/index.php/apps/filinq/api",
+                    "description": "The unversioned base of the paths that implement an external standard, which keep their own URLs and formats.",
+                    "variables": {
+                        "host": {
+                            "default": "localhost",
+                            "description": "The host name of the Nextcloud instance."
+                        }
+                    }
+                }
+            ],
+            "get": {
+                "operationId": "signer-identity-callback",
+                "summary": "GET /api/signing/identity/callback  The session user must be the one who started the step-up (checked in the provider ag",
+                "description": "GET /api/signing/identity/callback  The session user must be the one who started the step-up (checked in the provider against the state's bound act).",
+                "tags": [
+                    "signer-identity"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Back to the request page, with the outcome in the query.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/signing/mandates": {
             "get": {
                 "operationId": "signing-folder-mandates",
@@ -8793,6 +9042,151 @@
                         }
                     }
                 ]
+            }
+        },
+        "/store/items": {
+            "get": {
+                "operationId": "store-search",
+                "summary": "Search the remote store",
+                "description": "Search the remote store. Login-required through an in-body guard so an anonymous caller gets an explicit 401 rather than a login redirect. Returns normalised cards and a generic outcome, NEVER the registry URL or token. With no registry configured the engine answers `not_configured` WITHOUT making a network call, which is what lets the page fall back to the app's built-in items (ADR-080 Decision 4). Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "store"
+                ],
+                "x-provided-by": "openregister",
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    }
+                }
+            }
+        },
+        "/store/items/{slug}/install": {
+            "post": {
+                "operationId": "store-install",
+                "summary": "Install one store item into this instance",
+                "description": "Install one store item into this instance. Administrative: the components written are the shape of the work every handler then operates against. The write runs as the calling administrator and NOT through `runAsSystem()`. That elevation is for operations whose inputs originate from code or the app's own seed data; a store payload is neither, it comes off the network. Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "store"
+                ],
+                "x-provided-by": "openregister",
+                "parameters": [
+                    {
+                        "name": "slug",
+                        "in": "path",
+                        "required": true,
+                        "description": "The remote item slug.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "item": {
+                                        "description": "The item."
+                                    }
+                                },
+                                "additionalProperties": false
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    }
+                }
+            }
+        },
+        "/store/publish": {
+            "post": {
+                "operationId": "store-publish",
+                "summary": "Publish one item of the app's store schema to its configured registry",
+                "description": "Publish one item of the app's store schema to its configured registry. The body is `{item: {...}}`, an object that carries its `slug`. Only a user the app's publish groups admit may publish (StoreActionAuthorizer::canPublish); the engine then sends the slug and the declared publish fields, and nothing else (GenericStoreService). Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "store"
+                ],
+                "x-provided-by": "openregister",
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "item": {
+                                        "description": "The item."
+                                    }
+                                },
+                                "additionalProperties": false
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    }
+                }
             }
         },
         "/subject-erasures": {
@@ -9636,82 +10030,6 @@
                 ]
             }
         },
-        "/documents/render": {
-            "post": {
-                "operationId": "report-render-render",
-                "summary": "POST /api/v1/documents/render",
-                "description": "POST /api/v1/documents/render",
-                "tags": [
-                    "report-render"
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "headers": {
-                            "API-Version": {
-                                "$ref": "#/components/headers/API-Version"
-                            }
-                        },
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "additionalProperties": true
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "$ref": "#/components/responses/Problem400"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/Problem401"
-                    },
-                    "500": {
-                        "$ref": "#/components/responses/Problem500"
-                    }
-                },
-                "security": []
-            }
-        },
-        "/documents/render/batch": {
-            "post": {
-                "operationId": "report-render-render-batch",
-                "summary": "POST /api/v1/documents/render/batch",
-                "description": "POST /api/v1/documents/render/batch",
-                "tags": [
-                    "report-render"
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "headers": {
-                            "API-Version": {
-                                "$ref": "#/components/headers/API-Version"
-                            }
-                        },
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "additionalProperties": true
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "$ref": "#/components/responses/Problem400"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/Problem401"
-                    },
-                    "500": {
-                        "$ref": "#/components/responses/Problem500"
-                    }
-                },
-                "security": []
-            }
-        },
         "/validation/conformance-status": {
             "get": {
                 "operationId": "conformance-status",
@@ -10193,192 +10511,6 @@
                                 }
                             }
                         }
-                    }
-                }
-            }
-        },
-        "/store/items": {
-            "get": {
-                "operationId": "store-search",
-                "summary": "Search the remote store",
-                "description": "Search the remote store. Login-required through an in-body guard so an anonymous caller gets an explicit 401 rather than a login redirect. Returns normalised cards and a generic outcome, NEVER the registry URL or token. With no registry configured the engine answers `not_configured` WITHOUT making a network call, which is what lets the page fall back to the app's built-in items (ADR-080 Decision 4). Needs a signed-in Nextcloud user.",
-                "tags": [
-                    "store"
-                ],
-                "x-provided-by": "openregister",
-                "responses": {
-                    "200": {
-                        "description": "The request succeeded.",
-                        "headers": {
-                            "API-Version": {
-                                "$ref": "#/components/headers/API-Version"
-                            }
-                        },
-                        "content": {
-                            "application/json": {
-                                "schema": {}
-                            }
-                        }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/Problem401"
-                    }
-                }
-            }
-        },
-        "/store/items/{slug}/install": {
-            "post": {
-                "operationId": "store-install",
-                "summary": "Install one store item into this instance",
-                "description": "Install one store item into this instance. Administrative: the components written are the shape of the work every handler then operates against. The write runs as the calling administrator and NOT through `runAsSystem()`. That elevation is for operations whose inputs originate from code or the app's own seed data; a store payload is neither, it comes off the network. Needs a signed-in Nextcloud user.",
-                "tags": [
-                    "store"
-                ],
-                "x-provided-by": "openregister",
-                "parameters": [
-                    {
-                        "name": "slug",
-                        "in": "path",
-                        "required": true,
-                        "description": "The remote item slug.",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": false,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "item": {
-                                        "description": "The item."
-                                    }
-                                },
-                                "additionalProperties": false
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "The request succeeded.",
-                        "headers": {
-                            "API-Version": {
-                                "$ref": "#/components/headers/API-Version"
-                            }
-                        },
-                        "content": {
-                            "application/json": {
-                                "schema": {}
-                            }
-                        }
-                    },
-                    "400": {
-                        "$ref": "#/components/responses/Problem400"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/Problem401"
-                    },
-                    "403": {
-                        "$ref": "#/components/responses/Problem403"
-                    },
-                    "404": {
-                        "$ref": "#/components/responses/Problem404"
-                    }
-                }
-            }
-        },
-        "/store/publish": {
-            "post": {
-                "operationId": "store-publish",
-                "summary": "Publish one item of the app's store schema to its configured registry",
-                "description": "Publish one item of the app's store schema to its configured registry. The body is `{item: {...}}`, an object that carries its `slug`. Only a user the app's publish groups admit may publish (StoreActionAuthorizer::canPublish); the engine then sends the slug and the declared publish fields, and nothing else (GenericStoreService). Needs a signed-in Nextcloud user.",
-                "tags": [
-                    "store"
-                ],
-                "x-provided-by": "openregister",
-                "requestBody": {
-                    "required": false,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "item": {
-                                        "description": "The item."
-                                    }
-                                },
-                                "additionalProperties": false
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "The request succeeded.",
-                        "headers": {
-                            "API-Version": {
-                                "$ref": "#/components/headers/API-Version"
-                            }
-                        },
-                        "content": {
-                            "application/json": {
-                                "schema": {}
-                            }
-                        }
-                    },
-                    "400": {
-                        "$ref": "#/components/responses/Problem400"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/Problem401"
-                    },
-                    "403": {
-                        "$ref": "#/components/responses/Problem403"
-                    }
-                }
-            }
-        },
-        "/openapi.json": {
-            "get": {
-                "operationId": "open-api-show",
-                "summary": "The OpenAPI document of this API",
-                "description": "Returns this document, with `info.version` set to the installed version. It needs no login and can be read from any origin.",
-                "tags": [
-                    "open-api"
-                ],
-                "security": [],
-                "responses": {
-                    "200": {
-                        "description": "The OpenAPI document.",
-                        "headers": {
-                            "API-Version": {
-                                "$ref": "#/components/headers/API-Version"
-                            },
-                            "access-control-allow-origin": {
-                                "description": "Always `*`.",
-                                "schema": {
-                                    "type": "string",
-                                    "enum": [
-                                        "*"
-                                    ]
-                                }
-                            }
-                        },
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "additionalProperties": true
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "$ref": "#/components/responses/Problem404"
                     }
                 }
             }
