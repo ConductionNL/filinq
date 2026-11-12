@@ -1104,7 +1104,10 @@
 					"openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake :: Separator sheets are printed by filinq and read by filinq (REQ-SCI-02)",
 					"openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake :: Every segment reaches the inbox through the intake event (REQ-SCI-03)"
 				],
-				"plan": "openspec/changes/scan-intake-with-separator-sheets"
+				"plan": [
+					"openspec/changes/scan-intake-with-separator-sheets",
+					"openspec/changes/scan-intake-from-a-watched-folder"
+				]
 			},
 			"reachedOn": "nothing reaches it (no watched-folder job registered, no frontend caller)",
 			"provider": "filinq",
@@ -1771,7 +1774,8 @@
 				"evidence": "lib/Controller/ExtractionController.php:91 financial() -> lib/Service/FinancialExtractionService.php:236 extractFinancial() (supplier/IBAN/KvK/BTW, invoice number, dates, currency, VAT breakdown) dispatches FinancialExtractionCompletedEvent at line 957. Route api/extraction/financial (routes.php:276) has no filinq frontend caller, but shillinq (dq-flow/procest sibling clone check n/a - verified in shillinq) calls it directly: lib/Service/Extraction/DocudeskExtractionClient.php:71 'POST /api/extraction/financial' and consumes the completion event via ExtractionCompletedListener (shillinq lib/Listener/ExtractionCompletedListener.php:117 matches OCA\\Filinq\\Event\\FinancialExtractionCompletedEvent).",
 				"change": "openspec/changes/archive/2026-07-12-financial-document-field-extraction",
 				"spec": "openspec/specs/financial-document-field-extraction",
-				"requirement": "openspec/specs/financial-document-field-extraction :: Extracted Field Set and Totals Reconciliation (REQ-FIN-03)"
+				"requirement": "openspec/specs/financial-document-field-extraction :: Extracted Field Set and Totals Reconciliation (REQ-FIN-03)",
+				"plan": "openspec/changes/extraction-receipt-photo-and-invoice-agent"
 			},
 			"reachedOn": "machine consumer: shillinq (lib/Service/Extraction/DocudeskExtractionClient.php POSTs api/extraction/financial directly; lib/Listener/ExtractionCompletedListener.php consumes filinq's FinancialExtractionCompletedEvent)",
 			"provider": "filinq",
@@ -1876,7 +1880,8 @@
 				"owner": "ConductionNL/filinq",
 				"evidence": "lib/Controller/CorrespondenceController.php:91 generate() -> lib/Service/CorrespondenceService.php:205 generate(templateId, dataRefs, options) resolves data via DataResolverService and renders via TemplateRenderer. Route correspondence#generate api/correspondence/generate (routes.php:220). Also reached headlessly by dossiq: procest/lib/Service/Beschikking/FilinqTemplateEngineAdapter.php:160 calls OCA\\Filinq\\Service\\DocumentService::generateDocument() directly via DI (lib/Service/DocumentService.php:168).",
 				"change": "openspec/changes/archive/2026-06-14-letter-correspondence-generation",
-				"requirement": "openspec/specs/letter-correspondence-generation :: Correspondence generation API"
+				"requirement": "openspec/specs/letter-correspondence-generation :: Correspondence generation API",
+				"plan": "openspec/changes/generate-document-runs-directly-on-an-object"
 			},
 			"reachedOn": "/correspondence (src/views/correspondence/CorrespondenceIndex.vue, via src/store/modules/correspondence.js:83); also machine consumer: dossiq (procest/dq-flow) BeschikkingComposerDialog.vue -> CaseDocumentGenerationController -> FilinqTemplateEngineAdapter",
 			"provider": "filinq",
@@ -1982,7 +1987,8 @@
 				"requirement": [
 					"openspec/specs/document-creatie-sjablonen :: Editable DOCX is a first-class document-generation format (REQ-DDMFO-003)",
 					"openspec/specs/letter-correspondence-generation :: Output format selection"
-				]
+				],
+				"plan": "openspec/changes/office-suite-portability"
 			},
 			"reachedOn": "/correspondence (CorrespondenceIndex.vue)",
 			"provider": "filinq",
@@ -2189,7 +2195,8 @@
 				"owner": "ConductionNL/filinq",
 				"evidence": "lib/Service/DocumentService.php:734 storeOutputIfRequested() + options.output.mode/caseId (line 258); reached by dossiq: procest/lib/Service/Beschikking/FilinqTemplateEngineAdapter.php:152-169 calls generateDocument(..., ['output'=>['mode'=>'both'], 'caseId'=>$caseId, ...]) for every beschikking, and dossiq's CaseDocumentGenerationController files the returned informatieobject on the case.",
 				"change": "openspec/changes/archive/2026-09-28-documents-from-a-template",
-				"requirement": "openspec/specs/document-creatie-sjablonen :: REQ-DCS-08 Zaaksysteem Integration (Priority: Should)"
+				"requirement": "openspec/specs/document-creatie-sjablonen :: REQ-DCS-08 Zaaksysteem Integration (Priority: Should)",
+				"plan": "openspec/changes/generate-store-in-case-system"
 			},
 			"reachedOn": "machine consumer: dossiq (procest/dq-flow) CaseDocumentGenerationController -> BeschikkingGenerationService/FilinqTemplateEngineAdapter",
 			"provider": "filinq",
@@ -2292,7 +2299,8 @@
 				"owner": "ConductionNL/filinq",
 				"evidence": "lib/Service/TemplateRenderer.php registers the sandboxed chart(), data_table() and nc_image() Twig functions (lib/Service/Charts/ChartSvgRenderer, TableHtmlRenderer, TemplateImageResolver). Charts reach HTML and PDF as SVG, and ODT documents (DocumentRenderPipeline) and DOCX letters (CorrespondenceService) as PNG through lib/Service/Charts/SvgRasterizer. Rating stays partial: office templates (${chart:key}, ${image:key}) wait on openspec/changes/office-charts-and-images, and there is no editor button, an author types the function in Edit HTML.",
 				"change": "openspec/changes/archive/2026-09-28-template-charts",
-				"requirement": "openspec/specs/template-charts :: Charts render in Twig templates from context data (REQ-DDTCH-002)"
+				"requirement": "openspec/specs/template-charts :: Charts render in Twig templates from context data (REQ-DDTCH-002)",
+				"plan": "openspec/changes/office-charts-and-images"
 			},
 			"reachedOn": "/templates/:id Edit HTML, then Preview with Sample data (JSON)",
 			"provider": "filinq",
@@ -2394,7 +2402,8 @@
 				"evidence": "pdfOptions.accessible on generation: PdfService routes it to Conversion\\AccessiblePdfRenderer (never mPDF), which sets <html lang> (option, template language, default_language; none -> 422) and <title> (option, template name), runs LibreOfficeHeadlessBackend::convertTagged (UseTaggedPDF + PDFUACompliance, PDF/A-3 kept with pdfa) and refuses output without tags, /Lang or title (502); no soffice -> 503 with attempts (DocumentController returns them). PdfConversionService::convertToPdf($file, ['accessible' => true]) for files. Validation: Validation\\AccessibilityChecks adds pdf-not-tagged, pdf-language-missing, pdf-title-missing, pdfua-identifier-missing (category accessibility, warning by default, presence heuristics, not certification). Publish on the file viewer warns on open accessibility findings (AccessibilityPublishWarningModal; blocking severity stops it). Template preview returns a lint (TemplateAccessibilityLint: alt text, heading jumps, table headers, language) shown as a checklist. Tests: AccessibilityChecksTest (fixture PDFs), AccessiblePdfRendererTest, LibreOfficeTaggedExportTest, PdfConversionServiceTaggedTest, TemplateAccessibilityLintTest, vitest accessibility.spec.js. Partial: office templates do not call the accessible path yet (office-template-authoring), no full PDF/UA validator.",
 				"change": "openspec/changes/archive/2026-09-29-pdfua-accessible-output",
 				"readOn": "2026-09-29",
-				"requirement": "openspec/specs/pdf-generation :: Accessible output routes through a tagged-capable backend (REQ-DDPUA-001)"
+				"requirement": "openspec/specs/pdf-generation :: Accessible output routes through a tagged-capable backend (REQ-DDPUA-001)",
+				"plan": "openspec/changes/pdfua-verapdf-matterhorn"
 			},
 			"reachedOn": "POST api/documents/generate with pdfOptions.accessible; validation result (Validate in My documents); Publish on the file viewer; template editor Preview tab",
 			"provider": "filinq",
@@ -2597,7 +2606,8 @@
 				"owner": "ConductionNL/filinq",
 				"evidence": "lib/Service/CorrespondenceService.php:190-205 #[McpTool(name: 'generateCorrespondence', ...)] on generate(). lib/Mcp/FilinqScannableServices.php:73-79 getScannableServiceClasses() returns [CorrespondenceService::class, DocumentAgentService::class], registered under IMcpScannableServices for OpenRegister's AttributeToolScanner. openspec/changes/filinq-mcp-adoption/tasks.md: 12/12 done.",
 				"change": "openspec/changes/archive/2026-10-07-filinq-mcp-adoption",
-				"requirement": "openspec/specs/filinq-mcp-surface :: Filinq exposes one curated document-generation tool"
+				"requirement": "openspec/specs/filinq-mcp-surface :: Filinq exposes one curated document-generation tool",
+				"plan": "openspec/changes/mcp-generation-tools"
 			},
 			"reachedOn": "machine consumer: MCP client (AI assistant) via OpenRegister's AttributeToolScanner; no Filinq UI page",
 			"provider": "filinq",
@@ -3038,7 +3048,8 @@
 				"owner": "ConductionNL/filinq",
 				"evidence": "Built by openspec/changes/archive/2026-09-28-documents-from-a-template (archived 2026-09-28): src/views/settings/PageLayoutSettings.vue on the admin settings page lists active layouts (GET api/page-layouts), creates one (POST api/page-layouts/new -> PageLayoutService::create()), saves an edit as the next version (POST api/page-layouts -> edit()) and lists the versions, with a drawn preview of the first and following pages. Earlier versions stay resolvable for templates that name them. Before: lib/Controller/DocumentProductionController.php:89 layoutVersions(), :105 editLayout() -> lib/Service/PageLayoutService.php (versioned page layouts, per documents-from-a-template's pageLayout schema). Route documentProduction#layoutVersions/editLayout api/page-layouts (routes.php:105-106), tagged 'none' in route-reach.txt; no FE literal '/api/page-layouts' found anywhere in src/.",
 				"change": "openspec/changes/archive/2026-09-28-documents-from-a-template",
-				"requirement": "openspec/specs/document-creatie-sjablonen :: The page layout is administered and versioned (REQ-DFT-01)"
+				"requirement": "openspec/specs/document-creatie-sjablonen :: The page layout is administered and versioned (REQ-DFT-01)",
+				"plan": "openspec/changes/templates-house-style-from-thematiq"
 			},
 			"reachedOn": "admin settings, Page layouts section (PageLayoutSettings.vue)",
 			"provider": "filinq",
@@ -3460,6 +3471,10 @@
 				"requirement": [
 					"openspec/specs/document-editing :: Edits address stable anchors, never positional indexes",
 					"openspec/specs/document-editing :: Every produced file is marked as agent authored at write time"
+				],
+				"plan": [
+					"openspec/changes/document-chart-embedding",
+					"openspec/changes/document-rich-editing"
 				]
 			},
 			"reachedOn": "machine consumer: an MCP client (e.g. an AI assistant) calling lib/Mcp/FilinqScannableServices.php -> Service/Editing/DocumentAgentService; not reached from any filinq page",
@@ -3976,7 +3991,8 @@
 				"owner": "ConductionNL/openregister",
 				"evidence": "AnonymiserBackendStateClient::getState() (lib/Service/AnonymiserBackendStateClient.php) only READS the current method; filinq's own Settings.vue (lines ~846, 1048) only displays the current backend and shows a warning when it is 'regex'. No picker/action anywhere in filinq lets a user or admin choose the engine. OpenRegister owns the actual choice: OR's FileSettingsController / AnonymisationBackendController (git grep on origin/development) implement the setting.",
 				"change": "openregister/anonymiser-backend-selection",
-				"requirement": "openregister:openspec/changes/anonymiser-backend-selection/specs/anonymiser-backend-selection :: An admin settings panel MUST exist where admins pick the active method and configure per-backend endpoints"
+				"requirement": "openregister:openspec/changes/anonymiser-backend-selection/specs/anonymiser-backend-selection :: An admin settings panel MUST exist where admins pick the active method and configure per-backend endpoints",
+				"plan": "openspec/changes/llm-entity-detection-provider"
 			},
 			"reachedOn": "nothing in filinq; the engine is chosen in OpenRegister's own admin settings",
 			"provider": "openregister",
@@ -4432,7 +4448,8 @@
 				"owner": "ConductionNL/filinq",
 				"evidence": "The mechanism is built: src/services/anonymizationUpload.js docblock describes true byte-level removal per format (PHPWord for docx, OpenRegister's in-place XML surgery for odt, byte-level replace for txt, the SAPP byte-replace pipeline for pdf), and lib/Service/Redaction/RedactionIrreversibilityVerifier.php verifies the produced bytes for every known leak route rather than trusting the claim. It runs inside DocumentAnonymizeRunner after the RedactionOutputGuard review gate. Re-read 2026-11-12: the review mark has a caller since 3c0c9d67 (16 Oct, change anonymise-asks-for-the-review-mark): src/components/ReviewMarkCard.vue in the file viewer and the folder run (src/store/modules/folderAnonymization.js) call markChecked() (POST api/redaction/documents/{fileId}/checked, routes.php:135), so RedactionOutputGuard lets a reviewed document through and an unreviewed one answers 409 reviewRequired. filinq#1178 is fixed.",
 				"change": "openspec/changes/archive/2026-03-21-anonymization",
-				"requirement": "openspec/specs/redaction-output-guarantee :: The written copy cannot be read back (REQ-RWB-01)"
+				"requirement": "openspec/specs/redaction-output-guarantee :: The written copy cannot be read back (REQ-RWB-01)",
+				"plan": "openspec/changes/redaction-guarantees-from-the-engine"
 			},
 			"reachedOn": "/anonymization (AnonymizationIndex.vue); blocked before the write",
 			"provider": "openregister",
@@ -4651,7 +4668,8 @@
 				"requirement": [
 					"openspec/specs/folder-batch-analysis :: Folder batch initiation from existing Nextcloud folder",
 					"openspec/specs/folder-batch-analysis :: Background extraction via QueuedJob"
-				]
+				],
+				"plan": "openspec/changes/anonymisation-batch-output-folder-layout"
 			},
 			"reachedOn": "/folder-anonymization (FolderAnonymizationView.vue); extraction/review/status/report all work, the anonymise step always fails per document",
 			"provider": "filinq",
@@ -4970,7 +4988,10 @@
 				"evidence": "Not built as the row says (spec coverage, 12 Nov 2026): one profile is stored for the whole instance; there is no profile per document type. Planned in openspec/changes/specify-capability-rows. Earlier evidence: lib/Service/WooProfileService.php persists ONE reusable anonymize/keep entity-type profile via IAppConfig (getProfile/saveProfile), exposed through GET/PUT api/anonymization/profiles (routes.php:165-166, FE, batchAnonymization#getProfiles/#updateProfiles).",
 				"spec": "openspec/specs/batch-anonymization",
 				"requirement": "openspec/changes/specify-capability-rows/specs/batch-anonymization :: An anonymisation profile is kept per document type (REQ-SCR-013)",
-				"plan": "openspec/changes/specify-capability-rows"
+				"plan": [
+					"openspec/changes/specify-capability-rows",
+					"openspec/changes/filinq-route-auth-explicit-attributes"
+				]
 			},
 			"reachedOn": "/folder-anonymization (FolderAnonymizationView.vue) profile settings",
 			"provider": "filinq",
@@ -5036,7 +5057,8 @@
 				"requirement": [
 					"openspec/specs/anonymization :: Grondslag pickers MUST source the list from the register",
 					"openspec/specs/anonymisation-grondslagen-summary :: The per-document summary MUST list anonymised entities and their bases"
-				]
+				],
+				"plan": "openspec/changes/grondslagen-read-from-dossiq"
 			},
 			"reachedOn": "/folder-anonymization (FolderAnonymizationView.vue -> EntityReviewTable.vue)",
 			"provider": "filinq",
@@ -5072,7 +5094,8 @@
 				"requirement": [
 					"openspec/specs/anonymisation-grondslagen-summary :: The per-document summary MUST list anonymised entities and their bases",
 					"openspec/specs/anonymisation-grondslagen-summary :: Both summary surfaces MUST produce PDF/A-3b"
-				]
+				],
+				"plan": "openspec/changes/fix-dossier-grondslagen-route-mismatch"
 			},
 			"reachedOn": "/dossiers/:id (DossierDetail.vue)",
 			"provider": "filinq",
@@ -5374,7 +5397,8 @@
 				"requirement": [
 					"openspec/specs/entity-publication-policies :: Detection-time matching MUST evaluate prohibitions before standing consents",
 					"openspec/specs/entity-publication-policies :: Conflict resolution MUST be prohibition-wins, deterministically"
-				]
+				],
+				"plan": "openspec/changes/filinq-policy-controller-test-coverage"
 			},
 			"reachedOn": "/policy/prohibitions (ProhibitionIndex.vue)",
 			"provider": "filinq",
@@ -5446,7 +5470,8 @@
 					"openspec/changes/anonymization-review-workbench/specs/anonymization-entity-review :: Consolidated entities carry `standingConsentMatch` (REQ-DDARW-010)",
 					"openspec/specs/anonymisation-prohibition-gate :: The anonymise endpoint MUST consult the prohibition cache before forwarding the request",
 					"openspec/specs/anonymisation-prohibition-gate :: High-confidence prohibition matches MUST be present in the to-be-anonymised set"
-				]
+				],
+				"plan": "openspec/changes/anonymise-prohibition-consent-guard"
 			},
 			"reachedOn": "/anonymization and /folder-anonymization (any anonymise action)",
 			"provider": "filinq",
@@ -5514,7 +5539,8 @@
 				"evidence": "Read at development b9e834e6. lib/Service/Publication/PublicationPipelineService.php:197 handoff() re-checks readiness (anonymisation reviewed, consent clear, prohibitions clear) and the metadata, reads the redacted copy, writes an OpenCatalogi publication object (register and schema 'publication') through OpenRegister via PublicationStore::savePlatformPublication() and attaches the redacted copy shared (OpenCatalogiPlatform.php:124 attach()); routes appinfo/routes.php:276-284 (api/publications/*, PublicationController). Reached from the Publish button in the file viewer (src/views/fileViewer/FileViewerPage.vue:64, startPublication) and the Publications page (/publications, src/views/publications/PublicationsPage.vue:196-222 'Hand off for publication'). Shipped by PR #1262.",
 				"change": "openspec/changes/archive/2026-09-29-woo-publicatie-pipeline",
 				"readOn": "2026-10-07",
-				"requirement": "openspec/specs/woo-publicatie-pipeline :: Handoff to OpenCatalogi as the publication endpoint (REQ-DDWPP-005)"
+				"requirement": "openspec/specs/woo-publicatie-pipeline :: Handoff to OpenCatalogi as the publication endpoint (REQ-DDWPP-005)",
+				"plan": "openspec/changes/diwoo-documentsoort-to-opencatalogi"
 			},
 			"reachedOn": "/publications (Hand off for publication) and the Publish button in the file viewer",
 			"provider": "filinq",
@@ -5710,7 +5736,8 @@
 				"owner": "ConductionNL/filinq",
 				"evidence": "POST api/signing/requests (routes.php:240, FE, signing#createRequest) -> SigningController::createRequest -> SigningService::createRequest. Reached from src/views/signing/SigningRequestForm.vue. Corrections round 8 (2026-09-28), filinq#1209: the form at /signing/new cannot name a signer, it asks for file id, name, level and mode only (src/views/signing/SigningRequestForm.vue:12-54) and posts signers: [] (:80), so lib/Service/SigningService.php:189-193 saves a PENDING request with nobody to sign it; signers can only be passed by an API caller or by another app through the signing event (lib/EventListener/DocumentSigningRequestedListener.php:149), and each is then told by the signerRecord signingRequested notification (lib/Settings/filinq_register.json:2716), at 9fd042f.",
 				"change": "openspec/changes/archive/2026-06-14-document-signing",
-				"requirement": "openspec/specs/document-signing :: Signing request creation"
+				"requirement": "openspec/specs/document-signing :: Signing request creation",
+				"plan": "openspec/changes/migrate-signing-to-or-tasks"
 			},
 			"reachedOn": "/signing/new (SigningRequestForm.vue)",
 			"provider": "filinq",
@@ -6053,7 +6080,8 @@
 				"owner": "ConductionNL/filinq",
 				"evidence": "GET api/signing/verify/{fileId} (routes.php:247, FE, signing#verify) -> SigningController::verify (line 389) -> SigningVerificationService::verifyDocument (line 73), which checks every embedded signature assertion (verifyAssertion, line 255) and works on any document, not only ones the caller signed themselves.",
 				"change": "openspec/changes/archive/2026-06-14-document-signing",
-				"requirement": "openspec/specs/document-signing :: Signature verification"
+				"requirement": "openspec/specs/document-signing :: Signature verification",
+				"plan": "openspec/changes/signature-verification-portal"
 			},
 			"reachedOn": "/signing/verify/:fileId (SignatureVerification.vue)",
 			"provider": "filinq",
@@ -6114,7 +6142,8 @@
 				"owner": "ConductionNL/filinq",
 				"evidence": "lib/Service/SigningVerificationService.php implements an honest tri-state verdict: 'invalid' maps to 'tampered' (lines 104-126), distinguished from 'unverifiable' (inability to check, e.g. legacy v1 assertions or unconfigured secret) so tampering is never confused with 'could not verify'. Reached via the same verify() endpoint as sig-verify.",
 				"change": "openspec/changes/archive/2026-06-14-document-signing",
-				"requirement": "openspec/specs/document-signing :: Verification reports three honest states (REQ-DDSTR-005)"
+				"requirement": "openspec/specs/document-signing :: Verification reports three honest states (REQ-DDSTR-005)",
+				"plan": "openspec/changes/signing-trust-rebuild"
 			},
 			"reachedOn": "/signing/verify/:fileId (SignatureVerification.vue)",
 			"provider": "filinq",
@@ -6489,7 +6518,8 @@
 				"owner": "ConductionNL/filinq",
 				"evidence": "lib/Settings/filinq_register.json declares 39 OpenRegister schemas (documentRegistration, template, correspondence, generatedDocument, signingRequest, dossier, intakeDocument, documentVersion, ...), each carrying structured metadata beyond the raw file bytes. Multiple own pages CRUD these objects (Templates, Correspondence, SigningRequests, Dossiers, Intake), all via OpenRegister's object API.",
 				"change": "openspec/changes/archive/2026-03-21-document-register",
-				"requirement": "openspec/specs/document-register :: Each document type declares its required metadata as a register schema (REQ-DREG-06)"
+				"requirement": "openspec/specs/document-register :: Each document type declares its required metadata as a register schema (REQ-DREG-06)",
+				"plan": "openspec/changes/document-register"
 			},
 			"reachedOn": "most manifest pages (e.g. /templates, /correspondence, /dossiers, /signing, /intake)",
 			"provider": "filinq",
@@ -7516,7 +7546,8 @@
 				"requirement": [
 					"openspec/specs/filinq-mcp-surface :: Filinq declares a curated read-only MCP schema allowlist",
 					"openspec/specs/filinq-mcp-surface :: Filinq exposes one curated document-generation tool"
-				]
+				],
+				"plan": "openspec/changes/hermiq-ai-tooling"
 			},
 			"reachedOn": "machine consumer: any MCP-capable agent client (curated tools via lib/Mcp/FilinqScannableServices.php; derived read tools via OpenRegister's MCP framework)",
 			"provider": "filinq",
@@ -7586,7 +7617,8 @@
 				"owner": "ConductionNL/filinq",
 				"evidence": "webpack.config.js:74-76 declares a dedicated 'leaves' entry (filename appId + '-leaves.js'); src/leaves.js calls registerDocumentsLeaf() from src/integrations/registerDocumentsLeaf.js, which mounts CnFilinqDocumentsWidget for SURFACES = ['detail-page','single-entity'] under integration id 'filinq-documents'. Its own docblock: 'This entry is what OpenRegister's LeafScriptListener enqueues on OTHER apps' pages, so a case page in another app can show the documents Filinq holds for that case.' The underlying data is caseDocuments#files (routes.php:89, FE in route-reach.txt).",
 				"change": "openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list",
-				"requirement": "openspec/specs/leaves-library-card :: The documents leaf reports to the library card and the linked card"
+				"requirement": "openspec/specs/leaves-library-card :: The documents leaf reports to the library card and the linked card",
+				"plan": "openspec/changes/leaf-integrations"
 			},
 			"reachedOn": "another app's record page (via OpenRegister's LeafScriptListener enqueuing filinq-leaves.js, integration id 'filinq-documents')",
 			"provider": "filinq",
@@ -7621,7 +7653,8 @@
 				"requirement": [
 					"openspec/specs/filinq-signing-events :: Listener maps a requested event to SigningService::createRequest",
 					"openspec/specs/filinq-signing-events :: Emit SigningConcludedEvent on a delegated terminal outcome"
-				]
+				],
+				"plan": "openspec/changes/one-signing-rail-for-the-fleet"
 			},
 			"reachedOn": "machine consumer: shillinq (SigningDelegationService dispatches DocumentSigningRequestedEvent; SigningConcludedListener consumes the outcome)",
 			"provider": "filinq",
@@ -7655,7 +7688,8 @@
 				"readOn": "2026-09-26",
 				"change": "openspec/changes/archive/2026-06-14-document-creatie-sjablonen",
 				"spec": "openspec/specs/document-creatie-sjablonen",
-				"requirement": "openspec/specs/document-creatie-sjablonen :: REQ-DCS-07 Document Generation API (Priority: Must)"
+				"requirement": "openspec/specs/document-creatie-sjablonen :: REQ-DCS-07 Document Generation API (Priority: Must)",
+				"plan": "openspec/changes/templates-employer-statement"
 			},
 			"reachedOn": "machine consumer: dossiq (FilinqTemplateEngineAdapter, via direct DI to DocumentService::generateDocument())",
 			"provider": "filinq",
@@ -7793,7 +7827,8 @@
 				"owner": "ConductionNL/filinq",
 				"evidence": "lib/Settings/FilinqAdmin.php:52 class FilinqAdmin implements IDelegatedSettings; :92 getForm(), :116 getSection(), :159 getAuthorizedAppConfig(). Registered as a Nextcloud admin settings section.",
 				"change": "openspec/changes/archive/2026-03-21-admin-settings",
-				"requirement": "openspec/specs/admin-settings :: Nextcloud Admin Panel Integration (REQ-SET-01)"
+				"requirement": "openspec/specs/admin-settings :: Nextcloud Admin Panel Integration (REQ-SET-01)",
+				"plan": "openspec/changes/filinq-adopt-buildmanifest-pipeline"
 			},
 			"reachedOn": "Nextcloud Administration settings > Filinq admin section",
 			"provider": "filinq",
@@ -8074,7 +8109,8 @@
 				"owner": "ConductionNL/filinq",
 				"evidence": "l10n/ contains de.json, en.json, es.json, fr.json, it.json, nl.json -- standard Nextcloud app translation files, applied automatically per the user's Nextcloud language preference.",
 				"spec": "openspec/specs/register-i18n",
-				"requirement": "openspec/specs/register-i18n :: REQ-I18N-06 Minimum Language Support (Priority: Must)"
+				"requirement": "openspec/specs/register-i18n :: REQ-I18N-06 Minimum Language Support (Priority: Must)",
+				"plan": "openspec/changes/filinq-nl-locale-parity"
 			},
 			"reachedOn": "automatic, driven by the user's Nextcloud language setting",
 			"provider": "filinq",
@@ -8404,7 +8440,8 @@
 				"owner": "ConductionNL/filinq",
 				"evidence": "Specified in openspec/changes/intake-acknowledge-and-stamp on 2026-09-27. Before: no visible stamp on a document: grep -ri 'stamp|stempel|watermark' lib src finds only metadata stamps (lib/Service/IntakeDefaultRuleService.php:135 stamps default metadata onto the record, lib/Service/PageLayoutService.php:208 attaches a layout to a generated document). A visible waarmerk stamp page is designed only: openspec/changes/document-waarmerk-certification/proposal.md:48 (0 tasks done).",
 				"change": "openspec/changes/intake-acknowledge-and-stamp",
-				"requirement": "openspec/changes/intake-acknowledge-and-stamp/specs/intake-acknowledgement :: A received stamp goes on a copy, never on what arrived (REQ-IAS-003)"
+				"requirement": "openspec/changes/intake-acknowledge-and-stamp/specs/intake-acknowledgement :: A received stamp goes on a copy, never on what arrived (REQ-IAS-003)",
+				"plan": "openspec/changes/work-stamp-text-on-every-page"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -8716,6 +8753,27 @@
 			}
 		},
 		{
+			"id": "rec-form-document",
+			"area": "records",
+			"name": "File a submitted form on its case as a document, and let a form field point at a document the organisation already holds.",
+			"source": "change-derived",
+			"sourceRef": "openspec/changes/forms-as-documents (closing audit 2026-11-12, decision 395)",
+			"filinq": "no",
+			"built": {
+				"state": "specified",
+				"owner": "ConductionNL/filinq",
+				"evidence": "Not built: forms-as-documents task 0.1 (which surface owns forms and the document-reference field type) is open; nothing below it has started.",
+				"plan": "openspec/changes/forms-as-documents",
+				"requirement": "openspec/changes/forms-as-documents/specs/document-creatie-sjablonen :: A file is a value a field can hold, and a form becomes a document (REQ-DFT-05)"
+			},
+			"reachedOn": "nothing reaches it yet",
+			"provider": "filinq",
+			"screen": {
+				"canvas": "design-system",
+				"board": null
+			}
+		},
+		{
 			"id": "wk-page-edit",
 			"area": "work",
 			"name": "Split, rotate, reorder and delete pages of a PDF.",
@@ -8865,7 +8923,8 @@
 				"evidence": "Declared in lib/Settings/filinq_register.json as x-openregister-notifications rules that OpenRegister's notification engine runs: signerRecord signingRequested (line 2994, trigger created, recipient the signer's userId), signingEnvelope envelopeRequested (line 10075, recipients the envelope's signers), signingRequest signingCompleted (line 2463, recipient initiatorUserId). Delivered by the filinq-notifications spec; not driven in a browser in this round.",
 				"readOn": "2026-10-07",
 				"spec": "openspec/specs/filinq-notifications",
-				"requirement": "openspec/changes/specify-capability-rows/specs/document-signing :: A signer is told a document waits, and the initiator is told it is complete (REQ-SCR-002)"
+				"requirement": "openspec/changes/specify-capability-rows/specs/document-signing :: A signer is told a document waits, and the initiator is told it is complete (REQ-SCR-002)",
+				"plan": "openspec/changes/signer-consent-notifications-to-email-leaf"
 			},
 			"provider": "filinq",
 			"providerHow": "read-from-code",
