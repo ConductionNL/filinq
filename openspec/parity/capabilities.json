@@ -1096,14 +1096,15 @@
 			"sourceRef": "dossiq gap register 1.6",
 			"filinq": "partial",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Service/ScanBatchService.php (receive/split over FPDI, QR + blank-page detection, dispatches IntakeDocumentReceivedEvent per segment) and lib/Service/SeparatorSheetService.php are implemented and unit-tested, routed at scanIntake#separators/split (routes.php:119,122), route-reach.txt marks both 'none'. openspec/changes/scan-intake-with-separator-sheets/tasks.md: task 3.2 'Point the watched-folder job at ScanBatchService::receive()' is unchecked and lib/BackgroundJob/ has no such job; task 2.2 'print action and dialog on the intake page' is unchecked. grep of src/ for scanIntake/separatorSheet/scanProfile: no match.",
+				"evidence": "Not built (closing audit 2026-11-12, decision 389): the cut is never triggered: no watched-folder job calls ScanBatchService::receive() (task 3.2 open); the intake page only prints separator sheets. Built so far: lib/Service/ScanBatchService.php (receive/split over FPDI, QR + blank-page detection, dispatches IntakeDocumentReceivedEvent per segment) and lib/Service/SeparatorSheetService.php are implemented and unit-tested, routed at scanIntake#separators/split (routes.php:119,122), route-reach.txt marks both 'none'. openspec/changes/scan-intake-with-separator-sheets/tasks.md: task 3.2 'Point the watched-folder job at ScanBatchService::receive()' is unchecked and lib/BackgroundJob/ has no such job; task 2.2 'print action and dialog on the intake page' is unchecked. grep of src/ for scanIntake/separatorSheet/scanProfile: no match.",
 				"change": "openspec/changes/scan-intake-with-separator-sheets",
 				"requirement": [
 					"openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake :: Separator sheets are printed by filinq and read by filinq (REQ-SCI-02)",
 					"openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake :: Every segment reaches the inbox through the intake event (REQ-SCI-03)"
-				]
+				],
+				"plan": "openspec/changes/scan-intake-with-separator-sheets"
 			},
 			"reachedOn": "nothing reaches it (no watched-folder job registered, no frontend caller)",
 			"provider": "filinq",
@@ -1276,11 +1277,12 @@
 			"sourceRef": "procest round 4 C-intake-32 (Visma Circle Djumalytics NAW)",
 			"filinq": "partial",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Service/IntakeService.php:148 receive() calls PartySuggestionService::suggestFor(fileId) automatically and stores 'partySuggestion' on the intake document; lib/Controller/IntakeController.php:271 decideParty() -> PartySuggestionService::recordDecision() is routed at intake#decideParty (FE per route-reach.txt) and exported as src/services/intakeService.js:97 decidePartySuggestion(), but grep of src/ for 'decidePartySuggestion|partySuggestion' shows only that export - no .vue component calls it or renders the suggestion. IntakeIndex.vue's tableColumns (channel/sender/subject/receivedAt) do not include partySuggestion.",
+				"evidence": "Not built (closing audit 2026-11-12, decision 389): the suggestion is stored on the intake document, but no screen shows it or calls decidePartySuggestion() (task 3.3). Built so far: lib/Service/IntakeService.php:148 receive() calls PartySuggestionService::suggestFor(fileId) automatically and stores 'partySuggestion' on the intake document; lib/Controller/IntakeController.php:271 decideParty() -> PartySuggestionService::recordDecision() is routed at intake#decideParty (FE per route-reach.txt) and exported as src/services/intakeService.js:97 decidePartySuggestion(), but grep of src/ for 'decidePartySuggestion|partySuggestion' shows only that export - no .vue component calls it or renders the suggestion. IntakeIndex.vue's tableColumns (channel/sender/subject/receivedAt) do not include partySuggestion.",
 				"change": "openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist",
-				"requirement": "openspec/specs/inbound-auto-classification :: Party details are suggested from the document, never written (REQ-IDW-03)"
+				"requirement": "openspec/specs/inbound-auto-classification :: Party details are suggested from the document, never written (REQ-IDW-03)",
+				"plan": "openspec/changes/intake-base-registry-enrichment"
 			},
 			"reachedOn": "nothing reaches it (suggestion computed and stored server-side; no UI displays it or calls decidePartySuggestion)",
 			"provider": "filinq",
@@ -1310,11 +1312,12 @@
 			"sourceRef": "dossiq gap register 4.26; user story \"Assign unique document number on registration\"",
 			"filinq": "partial",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Settings/filinq_register.json:127 postRegisterEntry.registrationNumber declares x-openregister-generated {sequence: 'filinq-post', format: '{year}-{seq:5}', resetOn: 'year'} (schema comment: 'Filinq keeps no counter... drawn from a platform sequence and reset each year'), enforced immutable by lib/EventListener/DocumentRegistrationWriteGuard.php (stops ObjectUpdatingEvent on a changed number). lib/Controller/PostRegisterController.php only exposes three READ endpoints (openPost/answers/series, all 'none' in route-reach.txt) and its docblock states 'THE LEAF IS NOT THIS. ADR-066's leaf... is blocked on filinq shipping no leaves webpack entry' - note webpack.config.js:74 DOES now declare a leaves entry, but src/leaves.js only registers the documents leaf (registerDocumentsLeaf), not a post-register leaf.",
+				"evidence": "Not built (closing audit 2026-11-12, decision 389): one instance-wide series only; no registration number per unit (task 1.5). Built so far: lib/Settings/filinq_register.json:127 postRegisterEntry.registrationNumber declares x-openregister-generated {sequence: 'filinq-post', format: '{year}-{seq:5}', resetOn: 'year'} (schema comment: 'Filinq keeps no counter... drawn from a platform sequence and reset each year'), enforced immutable by lib/EventListener/DocumentRegistrationWriteGuard.php (stops ObjectUpdatingEvent on a changed number). lib/Controller/PostRegisterController.php only exposes three READ endpoints (openPost/answers/series, all 'none' in route-reach.txt) and its docblock states 'THE LEAF IS NOT THIS. ADR-066's leaf... is blocked on filinq shipping no leaves webpack entry' - note webpack.config.js:74 DOES now declare a leaves entry, but src/leaves.js only registers the documents leaf (registerDocumentsLeaf), not a post-register leaf.",
 				"change": "openspec/changes/documents-in-and-out-of-the-building",
-				"requirement": "openspec/changes/documents-in-and-out-of-the-building/specs/document-register :: A registered document carries a direction, a unit and a number (REQ-DIO-01)"
+				"requirement": "openspec/changes/documents-in-and-out-of-the-building/specs/document-register :: A registered document carries a direction, a unit and a number (REQ-DIO-01)",
+				"plan": "openspec/changes/documents-in-and-out-of-the-building"
 			},
 			"reachedOn": "nothing reaches it (no manifest page, no leaf, no frontend caller; number issuance happens only via direct OpenRegister object-create calls, and the series is instance-wide not per-unit as the row describes)",
 			"provider": "filinq",
@@ -1553,12 +1556,16 @@
 			"sourceRef": "canonical ocr; Workflow OCR app; Paperless-ngx",
 			"filinq": "partial",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Run OCR on My documents (MyDocumentsIndex.vue row action) and in the file viewer (FileViewerPage.vue), POST/GET api/ocr/{fileId} and GET api/ocr?fileIds= (OcrController, caller's own files only), OcrRunService + ocrResult schema (confidence, languages, dpi, textLength, never the text); the file listing reads ocrProcessed/ocrConfidence from ocrResult. Still partial: the recognised text is not written back as a text layer, so the file itself does not become searchable.",
+				"evidence": "Not built (closing audit 2026-11-12, decision 389): the recognised text is not written back as a text layer, so the file does not become searchable (task 1.1). Built so far: Run OCR on My documents (MyDocumentsIndex.vue row action) and in the file viewer (FileViewerPage.vue), POST/GET api/ocr/{fileId} and GET api/ocr?fileIds= (OcrController, caller's own files only), OcrRunService + ocrResult schema (confidence, languages, dpi, textLength, never the text); the file listing reads ocrProcessed/ocrConfidence from ocrResult. Still partial: the recognised text is not written back as a text layer, so the file itself does not become searchable.",
 				"change": "openspec/changes/archive/2026-09-29-ocr-trigger-surface",
 				"readOn": "2026-09-29",
-				"requirement": "openspec/specs/ocr-document-scanning :: OCR Text Extraction (REQ-OCR-01)"
+				"requirement": [
+					"openspec/specs/ocr-document-scanning :: OCR Text Extraction (REQ-OCR-01)",
+					"openspec/changes/finish-half-built-capabilities/specs/ocr-document-scanning :: An OCR run makes the file itself searchable (REQ-FHB-01)"
+				],
+				"plan": "openspec/changes/finish-half-built-capabilities"
 			},
 			"reachedOn": "Run OCR on My documents and in the file viewer; OCR badge with confidence",
 			"provider": "filinq",
@@ -1611,7 +1618,7 @@
 			"evidence": {
 				"paperless-ngx": "source read at v3.2.1, not driven: src/documents/management/commands/document_consumer.py:377 watches the consume folder and queues consumption, which runs OCR with no user action (docs/usage.md:156); ignore patterns :447."
 			},
-			"note": "corrections round 9 (2026-09-28): no change carries this row at eade8329579d, so the state is none. scan-intake-with-separator-sheets gives a scanner a watched folder but puts OCR of the segments out of scope (proposal.md, Out of scope), ocr-trigger-surface runs OCR from a user action and inside the anonymisation pipeline only, inbound-documents-and-the-worklist task 4.2 hands the OCR path back to the scan feeder, and the archived 2026-06-14-ocr-document-scanning lists OCR during upload as a non-goal (design.md:24). Each leans on an OCR folder watch that does not exist: OcrService::processFile() has no caller in lib, and no job in lib/BackgroundJob watches a folder.",
+			"note": "Re-read 2026-11-12: built by the archived change 2026-09-29-intake-ocr-on-arrival; IntakeService::receive() queues IntakeOcrJob through IntakeOcrQueue (lib/Service/Intake/IntakeOcrQueue.php, JobQueue INTAKE_OCR). The round 9 note that no OCR job exists predates it.",
 			"screen": {
 				"canvas": "design-system",
 				"board": "FqIntake"
@@ -2246,11 +2253,12 @@
 			"source": "own-code",
 			"filinq": "partial",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Built by openspec/changes/archive/2026-09-28-document-generation-list-refs (archived 2026-09-28, 14 of 14 tasks): POST api/documents/generate and generate/preview accept options.listRefs (DocumentController -> DocumentService::generateDocument/generatePreview -> DataResolverService::resolve -> ListReferenceResolver), and templates render the collection with data_table(). Rated partial because the change scoped listRefs to those two endpoints (REQ-DDLR-004): CorrespondenceService::generate() and the template preview screen do not pass listRefs, and dossiq's FilinqTemplateEngineAdapter sends only dataRefs and adHocData. Before: lib/Service/DataResolverService.php:158 resolve(dataRefs, listRefs, adHocData) and lib/Service/TemplateRenderer.php:290 buildDataTableFunction() (data_table() Twig fn) are fully implemented (openspec/changes/document-generation-list-refs/tasks.md: 14/14 done). But lib/Service/CorrespondenceService.php's generate() calls dataResolver->resolve() WITHOUT listRefs, and TemplatePreviewController/TemplateDetail.vue's preview path never sends listRefs either -- only DocumentService::generateDocument()/generatePreview() accept it, and that controller has no verified FE or machine caller (dossiq's FilinqTemplateEngineAdapter passes only dataRefs+adHocData, no listRefs).",
+				"evidence": "Not built (closing audit 2026-11-12, decision 389): no generation path passes listRefs: CorrespondenceService::generate() and the template preview do not send it (task 3.1). Built so far: Built by openspec/changes/archive/2026-09-28-document-generation-list-refs (archived 2026-09-28, 14 of 14 tasks): POST api/documents/generate and generate/preview accept options.listRefs (DocumentController -> DocumentService::generateDocument/generatePreview -> DataResolverService::resolve -> ListReferenceResolver), and templates render the collection with data_table(). Rated partial because the change scoped listRefs to those two endpoints (REQ-DDLR-004): CorrespondenceService::generate() and the template preview screen do not pass listRefs, and dossiq's FilinqTemplateEngineAdapter sends only dataRefs and adHocData. Before: lib/Service/DataResolverService.php:158 resolve(dataRefs, listRefs, adHocData) and lib/Service/TemplateRenderer.php:290 buildDataTableFunction() (data_table() Twig fn) are fully implemented (openspec/changes/document-generation-list-refs/tasks.md: 14/14 done). But lib/Service/CorrespondenceService.php's generate() calls dataResolver->resolve() WITHOUT listRefs, and TemplatePreviewController/TemplateDetail.vue's preview path never sends listRefs either -- only DocumentService::generateDocument()/generatePreview() accept it, and that controller has no verified FE or machine caller (dossiq's FilinqTemplateEngineAdapter passes only dataRefs+adHocData, no listRefs).",
 				"change": "openspec/changes/archive/2026-09-28-document-generation-list-refs",
-				"requirement": "openspec/specs/document-creatie-sjablonen :: listRefs resolve collections into the Twig context (REQ-DDLR-001)"
+				"requirement": "openspec/specs/document-creatie-sjablonen :: listRefs resolve collections into the Twig context (REQ-DDLR-001)",
+				"plan": "openspec/changes/finish-half-built-capabilities"
 			},
 			"reachedOn": "nothing reaches the listRefs path; data_table() Twig fn is technically usable via TemplateDetail.vue's raw-HTML toggle but only against fields already in a single resolved dataRef object",
 			"provider": "filinq",
@@ -2349,7 +2357,7 @@
 			"built": {
 				"state": "building",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Built on feat/generated-document-template-version: TemplateService::getTemplate() returns the chain version (snapshots + 1), generateDocument() takes options.templateVersion and renders the stored snapshot (404 naming template and version when absent), the generatedDocument record names that version and leaves it out when unknown (templateVersion optional from generatedDocument 1.5.0), TemplateVersionService::versionInForceAt() answers from the chain's timestamps, and the result carries sha256 and a PDF pageCount (tests/unit/Service/TemplateVersionProvenanceTest.php). Open: the dossiq counterpart (task 7.2) is drafted, not filed, and the live check (task 6.4).",
+				"evidence": "On development: TemplateService::getTemplate() returns the chain version (snapshots + 1), generateDocument() takes options.templateVersion and renders the stored snapshot (404 naming template and version when absent), the generatedDocument record names that version and leaves it out when unknown (templateVersion optional from generatedDocument 1.5.0), TemplateVersionService::versionInForceAt() answers from the chain's timestamps, and the result carries sha256 and a PDF pageCount (tests/unit/Service/TemplateVersionProvenanceTest.php). Open: the dossiq counterpart (task 7.2) is drafted, not filed, and the live check (task 6.4).",
 				"change": "openspec/changes/generated-document-names-its-template-version",
 				"requirement": "openspec/changes/generated-document-names-its-template-version/specs/template-version-provenance :: A generated document records the version that produced it (REQ-DDTVP-002)"
 			},
@@ -2358,7 +2366,7 @@
 			"providerHow": "read-from-code",
 			"feature": "document-creatie-sjablonen",
 			"featureConfidence": "high",
-			"note": "Live defect: filinq's own audit trail cannot say which template version produced a document; a downstream consumer (dossiq) has already had to build its own workaround.",
+			"note": "Re-read 2026-11-12: filinq's half is on development (TemplateVersionService::versionInForceAt(), tests/unit/Service/TemplateVersionProvenanceTest.php); open are the live check (task 6.4) and the dossiq counterpart (task 7.2).",
 			"zylab": "unknown",
 			"datamask": "unknown",
 			"smartdocuments": "unknown",
@@ -2620,7 +2628,7 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Built by openspec/changes/archive/2026-09-28-merge-documents-to-pdf (archived 2026-09-28): src/integrations/CnFilinqMergeToPdfWidget.vue (leaf filinq-merge-to-pdf, registered by src/integrations/registerMergeToPdfLeaf.js in main.js and the filinq-leaves bundle, server half lib/EventListener/RegisterMergeToPdfLeafListener.php) lists an object's documents, orders them and calls POST api/merge -> MergeController::create() -> DocumentMergeService::merge()/queue(). Reached on any host page that places the leaf; dossiq placement asked in ConductionNL/dossiq#3185. Before: lib/Controller/MergeController.php:107 create() -> lib/Service/DocumentMergeService.php:134 merge()/170 queue() (background via BackgroundJob/MergeDocumentsJob.php) fully implemented; route merge#create api/merge (routes.php:114). No FE literal '/apps/filinq/api/merge' found anywhere in src/; no caller in dossiq/shillinq/opencatalogi/scholiq.",
+				"evidence": "Built by openspec/changes/archive/2026-09-28-merge-documents-to-pdf (archived 2026-09-28): src/integrations/CnFilinqMergeToPdfWidget.vue (leaf filinq-merge-to-pdf, registered by src/integrations/registerMergeToPdfLeaf.js in main.js and the filinq-leaves bundle, server half lib/EventListener/RegisterMergeToPdfLeafListener.php) lists an object's documents, orders them and calls POST api/merge -> MergeController::create() -> DocumentMergeService::merge()/queue(). Reached on any host page that places the leaf; dossiq placement asked in ConductionNL/dossiq#3185. Before: lib/Controller/MergeController.php:107 create() -> lib/Service/DocumentMergeService.php:134 merge()/170 queue() (background via BackgroundJob/MergeDocumentsJob.php) fully implemented; route merge#create api/merge (routes.php:114). Re-read 2026-11-12: reached through the filinq-merge-to-pdf leaf (lib/EventListener/RegisterMergeToPdfLeafListener.php, src/integrations/CnFilinqMergeToPdfWidget.vue, src/services/mergeSelection.js builds the POST api/merge body).",
 				"change": "openspec/changes/archive/2026-09-28-merge-documents-to-pdf",
 				"requirement": "openspec/specs/document-merge :: The merge converts, orders, bookmarks and stores (REQ-DMG-02)"
 			},
@@ -2652,7 +2660,7 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Built by openspec/changes/archive/2026-09-28-documents-from-a-template (archived 2026-09-28): src/integrations/CnFilinqDownloadAllFilesWidget.vue (leaf filinq-download-all-files, server half lib/EventListener/RegisterDownloadAllFilesLeafListener.php) calls GET api/case-archive/preflight, warns when exceedsCeiling, then POST api/case-archive/manifest -> CaseArchiveService::build() writes the archive and returns its fileId with the manifest of included and excluded files by reason. Before: lib/Controller/DocumentProductionController.php:123 archivePreflight()/151 archiveManifest() -> lib/Service/CaseArchiveService.php builds the manifest (:142 manifestFor) and records the job (:195 record), but writes no archive. Routes api/case-archive/preflight, api/case-archive/manifest (routes.php:107-108), tagged 'none' in route-reach.txt. No FE literal 'case-archive' found in src/; no caller in dossiq/shillinq/opencatalogi/scholiq. Corrections round 8 (2026-09-28), filinq#1210: archiveManifest() (lib/Controller/DocumentProductionController.php:151-167) returns the manifest and calls record(), which stores fileId 0 and status completed (lib/Service/CaseArchiveService.php:195-206) with no archive file behind it; nothing in lib/ writes a zip for it, and task 3.2, the page, is open (openspec/changes/documents-from-a-template/tasks.md:19), at 9fd042f.",
+				"evidence": "Built by openspec/changes/archive/2026-09-28-documents-from-a-template (archived 2026-09-28): src/integrations/CnFilinqDownloadAllFilesWidget.vue (leaf filinq-download-all-files, server half lib/EventListener/RegisterDownloadAllFilesLeafListener.php) calls GET api/case-archive/preflight, warns when exceedsCeiling, then POST api/case-archive/manifest -> CaseArchiveService::build() writes the archive and returns its fileId with the manifest of included and excluded files by reason. Before: lib/Controller/DocumentProductionController.php:123 archivePreflight()/151 archiveManifest() -> lib/Service/CaseArchiveService.php builds the manifest (:142 manifestFor) and records the job (:195 record), but writes no archive. Routes api/case-archive/preflight, api/case-archive/manifest (routes.php:107-108), tagged 'none' in route-reach.txt. Re-read 2026-11-12: reached through the filinq-download-all-files leaf (lib/EventListener/RegisterDownloadAllFilesLeafListener.php, src/integrations/CnFilinqDownloadAllFilesWidget.vue, src/services/archiveBundle.js reads preflight and manifest). Corrections round 8 (2026-09-28), filinq#1210: archiveManifest() (lib/Controller/DocumentProductionController.php:151-167) returns the manifest and calls record(), which stores fileId 0 and status completed (lib/Service/CaseArchiveService.php:195-206) with no archive file behind it; nothing in lib/ writes a zip for it, and task 3.2, the page, is open (openspec/changes/documents-from-a-template/tasks.md:19), at 9fd042f.",
 				"change": "openspec/changes/archive/2026-09-28-documents-from-a-template",
 				"requirement": "openspec/specs/document-creatie-sjablonen :: A dossier is downloaded as one bundle with a manifest (REQ-DFT-02)"
 			},
@@ -3351,11 +3359,12 @@
 			"source": "own-code",
 			"filinq": "partial",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Controller/FinalDocumentController.php:250 declareRule() and :306 applyStateChange() are fully implemented (stores a consuming app's finality rule, then finalises documents on a state change), exposed at POST /api/document-finality-rules (FE-tagged, but no caller in src/) and POST /api/document-finality-rules/apply (route-reach: none). src/services/finalDocumentService.js:84 exports declareFinalityRule() but grep found zero callers in src/.",
+				"evidence": "Not built (closing audit 2026-11-12, decision 389): POST api/document-finality-rules has no caller in filinq or in a consuming app, so no rule reaches a document (task 3.2). Built so far: lib/Controller/FinalDocumentController.php:250 declareRule() and :306 applyStateChange() are fully implemented (stores a consuming app's finality rule, then finalises documents on a state change), exposed at POST /api/document-finality-rules (FE-tagged, but no caller in src/) and POST /api/document-finality-rules/apply (route-reach: none). src/services/finalDocumentService.js:84 exports declareFinalityRule() but grep found zero callers in src/.",
 				"change": "openspec/changes/archive/2026-10-07-final-documents-frozen",
-				"requirement": "openspec/specs/document-versions :: The consuming app declares what makes a document final (REQ-FDF-04)"
+				"requirement": "openspec/specs/document-versions :: The consuming app declares what makes a document final (REQ-FDF-04)",
+				"plan": "openspec/changes/finish-half-built-capabilities"
 			},
 			"reachedOn": "nothing reaches it: no filinq page calls declareFinalityRule(); checked dq-flow, procest and zaakafhandelapp (git grep 'document-finality-rules|declareFinalityRule|applyStateChange' on origin/development lib src) with no hits either",
 			"provider": "filinq",
@@ -4034,16 +4043,17 @@
 			"sourceRef": "Presidio image redaction; CaseGuard handwriting OCR",
 			"filinq": "partial",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Service/Ocr/OcrExtractionFallback.php runs in AnonymizationService::runExtraction() after OpenRegister's extractFile(): when OcrService::needsOcr(mime, getExtractedText()) says a scan has no text, OcrRunService runs Tesseract (admin languages/DPI) and stores an ocrResult row; the text goes to OpenRegister's extractFromProvidedText when it exists. OpenRegister development has no such seam yet (ConductionNL/openregister#2033), so on today's OpenRegister every scan answers ocrDetectionPending: true and the review (FileViewerSidebar, anonymization store) keeps it open with a warning instead of marking it clean. Partial: entities in scans are not detected until OpenRegister takes the text. Tests: AnonymizationServiceOcrFallbackTest, jest anonymization.spec.js reanalyseEntry.",
+				"evidence": "Not built (closing audit 2026-11-12, decision 389): OpenRegister now has extractFromProvidedText(ProvidedTextRequest) (lib/Files/Service/TextExtractionService.php:209), but OcrExtractionFallback.php:153 calls it with two positional arguments, so the call throws, is caught, and every scan stays ocrDetectionPending (task 1.2). Built so far: lib/Service/Ocr/OcrExtractionFallback.php runs in AnonymizationService::runExtraction() after OpenRegister's extractFile(): when OcrService::needsOcr(mime, getExtractedText()) says a scan has no text, OcrRunService runs Tesseract (admin languages/DPI) and stores an ocrResult row; the text goes to OpenRegister's extractFromProvidedText when it exists. OpenRegister development has no such seam yet (ConductionNL/openregister#2033), so on today's OpenRegister every scan answers ocrDetectionPending: true and the review (FileViewerSidebar, anonymization store) keeps it open with a warning instead of marking it clean. Partial: entities in scans are not detected until OpenRegister takes the text. Tests: AnonymizationServiceOcrFallbackTest, jest anonymization.spec.js reanalyseEntry.",
 				"change": "openspec/changes/archive/2026-09-29-ocr-trigger-surface",
 				"readOn": "2026-09-29",
 				"spec": "openspec/specs/ocr-trigger-surface",
 				"requirement": [
 					"openspec/specs/ocr-trigger-surface :: Automatic OCR fallback in the anonymisation extract pipeline (REQ-DDOCR-003)",
 					"openspec/specs/ocr-trigger-surface :: \"Run OCR\" UI action (REQ-DDOCR-002)"
-				]
+				],
+				"plan": "openspec/changes/finish-half-built-capabilities"
 			},
 			"reachedOn": "anonymisation upload and review (POST api/anonymization/extract/{fileId}); the warning shows in the file viewer sidebar",
 			"provider": "filinq",
@@ -4167,7 +4177,7 @@
 			"providerHow": "read-from-code",
 			"feature": "personal-data-detection",
 			"featureConfidence": "medium",
-			"note": "Live defect, independently confirmed by dossiq's own source comments: a run with zero live detection currently still proceeds (subject to the separate, newer RedactionOutputGuard defect — see notes.md — which as of the redaction-and-what-leaves-the-building change now blocks nearly all writes anyway, for an unrelated reason).",
+			"note": "Re-read 2026-11-12: built by the archived change 2026-09-29-anonymisation-fails-closed-without-a-detector; requireLiveDetector() throws before anything is written. The earlier live-defect note predates it.",
 			"zylab": "unknown",
 			"datamask": "unknown",
 			"smartdocuments": "unknown",
@@ -4319,7 +4329,7 @@
 			"providerHow": "read-from-code",
 			"feature": "personal-data-detection",
 			"featureConfidence": "medium",
-			"note": "Detection is OR's; the EML-specific preview/assembly is filinq's own code. Final write is subject to the same RedactionOutputGuard defect as every other format — see notes.md.",
+			"note": "Detection is OR's; the EML-specific preview and assembly are filinq's own code. The final write passes the same review gate as every other format.",
 			"zylab": "yes",
 			"datamask": "unknown",
 			"smartdocuments": "unknown",
@@ -4357,7 +4367,7 @@
 			"providerHow": "read-from-code",
 			"feature": "anonymization-entity-review",
 			"featureConfidence": "high",
-			"note": "The live defect ConductionNL/filinq#1178 (no caller of markChecked, every anonymise refused NEVER_CHECKED) is fixed on development by anonymise-asks-for-the-review-mark; a live check on the dev instance is still to be recorded.",
+			"note": "filinq#1178 (no caller of markChecked) is fixed on development by anonymise-asks-for-the-review-mark (3c0c9d67, 16 Oct).",
 			"zylab": "partial",
 			"datamask": "yes",
 			"smartdocuments": "unknown",
@@ -4420,7 +4430,7 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "The mechanism is built: src/services/anonymizationUpload.js docblock describes true byte-level removal per format (PHPWord for docx, OpenRegister's in-place XML surgery for odt, byte-level replace for txt, the SAPP byte-replace pipeline for pdf), and lib/Service/Redaction/RedactionIrreversibilityVerifier.php verifies the produced bytes for every known leak route rather than trusting the claim. But this all runs inside DocumentAnonymizeRunner, downstream of the same RedactionOutputGuard::assertMayWrite() gate as red-review, which always refuses (see red-review evidence). So no copy is ever actually produced to verify.",
+				"evidence": "The mechanism is built: src/services/anonymizationUpload.js docblock describes true byte-level removal per format (PHPWord for docx, OpenRegister's in-place XML surgery for odt, byte-level replace for txt, the SAPP byte-replace pipeline for pdf), and lib/Service/Redaction/RedactionIrreversibilityVerifier.php verifies the produced bytes for every known leak route rather than trusting the claim. It runs inside DocumentAnonymizeRunner after the RedactionOutputGuard review gate. Re-read 2026-11-12: the review mark has a caller since 3c0c9d67 (16 Oct, change anonymise-asks-for-the-review-mark): src/components/ReviewMarkCard.vue in the file viewer and the folder run (src/store/modules/folderAnonymization.js) call markChecked() (POST api/redaction/documents/{fileId}/checked, routes.php:135), so RedactionOutputGuard lets a reviewed document through and an unreviewed one answers 409 reviewRequired. filinq#1178 is fixed.",
 				"change": "openspec/changes/archive/2026-03-21-anonymization",
 				"requirement": "openspec/specs/redaction-output-guarantee :: The written copy cannot be read back (REQ-RWB-01)"
 			},
@@ -4429,7 +4439,7 @@
 			"providerHow": "read-from-code",
 			"feature": "anonymization",
 			"featureConfidence": "high",
-			"note": "RedactionIrreversibilityVerifier.php's own docblock: 'Filinq does not produce these bytes... The redaction is performed by OpenRegister's anonymisation backend, which drives the anonymiq ExApp.' LIVE DEFECT: blocked by the same RedactionOutputGuard issue as red-review. Live defect filed as ConductionNL/filinq#1178: AnonymizationService.php:616 calls RedactionOutputGuard::assertMayWrite() on every write, and the only route that sets the review mark (routes.php:127, markChecked) has no caller, so every anonymise refuses with NEVER_CHECKED. Open Register's half shipped in ConductionNL/openregister openspec/changes/archive/2026-06-14-pdf-anonymisation; the missing half is filinq's own work, so the owner moved to ConductionNL/filinq (openregister lane, OpenSpec pass 2026-09-27; owner was ConductionNL/openregister).",
+			"note": "RedactionIrreversibilityVerifier.php's own docblock: 'Filinq does not produce these bytes... The redaction is performed by OpenRegister's anonymisation backend, which drives the anonymiq ExApp.' Open Register's half shipped in ConductionNL/openregister openspec/changes/archive/2026-06-14-pdf-anonymisation; the rest is filinq's own work, so the owner is ConductionNL/filinq (openregister lane, OpenSpec pass 2026-09-27).",
 			"zylab": "yes",
 			"datamask": "yes",
 			"smartdocuments": "yes",
@@ -4457,7 +4467,7 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "src/services/anonymizationUpload.js: ALLOWED_EXTENSIONS = ['docx','odt','txt','pdf','eml'], ALLOWED_MIMES covers Word/ODT/plain-text/PDF/eml — Word, PDF, OpenDocument and plain text are all accepted formats with real per-format handling described in the same file's docblock. But every one of those formats routes through AnonymizationService::runAnonymize -> RedactionOutputGuard::assertMayWrite (lib/Service/AnonymizationService.php:616), which always refuses (see red-review evidence), so no anonymised file is ever produced for any format today.",
+				"evidence": "src/services/anonymizationUpload.js: ALLOWED_EXTENSIONS = ['docx','odt','txt','pdf','eml'], ALLOWED_MIMES covers Word/ODT/plain-text/PDF/eml — Word, PDF, OpenDocument and plain text are all accepted formats with real per-format handling described in the same file's docblock. But every one of those formats routes through AnonymizationService::runAnonymize -> RedactionOutputGuard::assertMayWrite (lib/Service/AnonymizationService.php:616). Re-read 2026-11-12: the review mark has a caller since 3c0c9d67 (16 Oct, change anonymise-asks-for-the-review-mark): src/components/ReviewMarkCard.vue in the file viewer and the folder run (src/store/modules/folderAnonymization.js) call markChecked() (POST api/redaction/documents/{fileId}/checked, routes.php:135), so RedactionOutputGuard lets a reviewed document through and an unreviewed one answers 409 reviewRequired. filinq#1178 is fixed.",
 				"change": "openspec/changes/archive/2026-03-21-anonymization",
 				"requirement": "openspec/specs/anonymization :: The anonymisation upload widget MUST accept ODT files"
 			},
@@ -4466,7 +4476,7 @@
 			"providerHow": "read-from-code",
 			"feature": "anonymization",
 			"featureConfidence": "high",
-			"note": "LIVE DEFECT: same root cause as red-review (RedactionOutputGuard has no way to be satisfied). Format acceptance/conversion code itself is genuinely built. Live defect filed as ConductionNL/filinq#1178: AnonymizationService.php:616 calls RedactionOutputGuard::assertMayWrite() on every write, and the only route that sets the review mark (routes.php:127, markChecked) has no caller, so every anonymise refuses with NEVER_CHECKED.",
+			"note": "Format acceptance and conversion are built; the review gate that blocked every write (filinq#1178) is fixed since 16 Oct.",
 			"zylab": "unknown",
 			"datamask": "unknown",
 			"smartdocuments": "partial",
@@ -4492,7 +4502,7 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Service/AnonymisedPdfOutputService.php implements the pdf-only/pdf output-format cascade (convertResultToPdf/runPdfCascade, lines 85-162), selected via AnonymizationController::resolveOutputFormat (VALID_OUTPUT_FORMATS 'pdf-only'|'pdf'|'preserve', tenant default falls back to 'pdf-only'). This runs inside DocumentAnonymizeRunner, downstream of the same RedactionOutputGuard gate as red-review, so it never executes for a real request today.",
+				"evidence": "lib/Service/AnonymisedPdfOutputService.php implements the pdf-only/pdf output-format cascade (convertResultToPdf/runPdfCascade, lines 85-162), selected via AnonymizationController::resolveOutputFormat (VALID_OUTPUT_FORMATS 'pdf-only'|'pdf'|'preserve', tenant default falls back to 'pdf-only'). This runs inside DocumentAnonymizeRunner after the RedactionOutputGuard review gate. Re-read 2026-11-12: the review mark has a caller since 3c0c9d67 (16 Oct, change anonymise-asks-for-the-review-mark): src/components/ReviewMarkCard.vue in the file viewer and the folder run (src/store/modules/folderAnonymization.js) call markChecked() (POST api/redaction/documents/{fileId}/checked, routes.php:135), so RedactionOutputGuard lets a reviewed document through and an unreviewed one answers 409 reviewRequired. filinq#1178 is fixed.",
 				"change": "openspec/changes/archive/2026-03-21-anonymization",
 				"requirement": "openspec/specs/anonymization :: The anonymise endpoint MUST accept `outputFormat: \"pdf-only\"` and default to it"
 			},
@@ -4501,7 +4511,7 @@
 			"providerHow": "read-from-code",
 			"feature": "anonymization",
 			"featureConfidence": "high",
-			"note": "LIVE DEFECT: same root cause as red-review. Live defect filed as ConductionNL/filinq#1178: AnonymizationService.php:616 calls RedactionOutputGuard::assertMayWrite() on every write, and the only route that sets the review mark (routes.php:127, markChecked) has no caller, so every anonymise refuses with NEVER_CHECKED.",
+			"note": "The review gate that blocked every write (filinq#1178) is fixed since 16 Oct.",
 			"zylab": "yes",
 			"datamask": "yes",
 			"smartdocuments": "unknown",
@@ -4636,7 +4646,7 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "The folder job itself is built and reachable: /folder-anonymization (FolderAnonymizationView.vue) drives BatchAnonymizationController (routes.php:156-166: folderBatch, batchUpload, batchExtract, batchStatus, batchEntities, batchAnonymize, batchReport, all FE). But BatchAnonymizeService::processDocument (lib/Service/BatchAnonymizeService.php:346,356) calls AnonymizationService::anonymizeDocumentWithBasisSummary()/anonymizeDocument(), which funnel into the exact same runAnonymize -> RedactionOutputGuard::assertMayWrite gate as red-review, so every per-document anonymise call in the batch refuses.",
+				"evidence": "The folder job itself is built and reachable: /folder-anonymization (FolderAnonymizationView.vue) drives BatchAnonymizationController (routes.php:156-166: folderBatch, batchUpload, batchExtract, batchStatus, batchEntities, batchAnonymize, batchReport, all FE). But BatchAnonymizeService::processDocument (lib/Service/BatchAnonymizeService.php:346,356) calls AnonymizationService::anonymizeDocumentWithBasisSummary()/anonymizeDocument(), which pass the RedactionOutputGuard review gate; the folder run sends only the files marked as checked and lists the rest. Re-read 2026-11-12: the review mark has a caller since 3c0c9d67 (16 Oct, change anonymise-asks-for-the-review-mark): src/components/ReviewMarkCard.vue in the file viewer and the folder run (src/store/modules/folderAnonymization.js) call markChecked() (POST api/redaction/documents/{fileId}/checked, routes.php:135), so RedactionOutputGuard lets a reviewed document through and an unreviewed one answers 409 reviewRequired. filinq#1178 is fixed.",
 				"change": "openspec/changes/archive/2026-06-14-folder-analysis-anonymization",
 				"requirement": [
 					"openspec/specs/folder-batch-analysis :: Folder batch initiation from existing Nextcloud folder",
@@ -4648,7 +4658,7 @@
 			"providerHow": "read-from-code",
 			"feature": "folder-batch-analysis",
 			"featureConfidence": "medium",
-			"note": "LIVE DEFECT: same root cause as red-review, hitting every document in the batch. Live defect filed as ConductionNL/filinq#1178: AnonymizationService.php:616 calls RedactionOutputGuard::assertMayWrite() on every write, and the only route that sets the review mark (routes.php:127, markChecked) has no caller, so every anonymise refuses with NEVER_CHECKED.",
+			"note": "The review gate that blocked every document in the batch (filinq#1178) is fixed since 16 Oct.",
 			"zylab": "unknown",
 			"datamask": "partial",
 			"smartdocuments": "unknown",
@@ -4674,7 +4684,7 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "src/views/dossier/DossierDetail.vue has an 'Anonymise this dossier' button (line ~90); AnonymizationService.php:461-464 documents scope='dossier' forwarded to OpenRegister for 'consistent numbering across the dossier folder' with a stable dossierKey. This still calls anonymizeDocumentWithBasisSummary()/anonymizeDocument() -> runAnonymize -> the same RedactionOutputGuard gate as red-review, so it refuses.",
+				"evidence": "src/views/dossier/DossierDetail.vue has an 'Anonymise this dossier' button (line ~90); AnonymizationService.php:461-464 documents scope='dossier' forwarded to OpenRegister for 'consistent numbering across the dossier folder' with a stable dossierKey. This still calls anonymizeDocumentWithBasisSummary()/anonymizeDocument() -> runAnonymize -> the RedactionOutputGuard review gate. Re-read 2026-11-12: the review mark has a caller since 3c0c9d67 (16 Oct, change anonymise-asks-for-the-review-mark): src/components/ReviewMarkCard.vue in the file viewer and the folder run (src/store/modules/folderAnonymization.js) call markChecked() (POST api/redaction/documents/{fileId}/checked, routes.php:135), so RedactionOutputGuard lets a reviewed document through and an unreviewed one answers 409 reviewRequired. filinq#1178 is fixed.",
 				"change": "openspec/changes/archive/2026-03-21-anonymization",
 				"requirement": [
 					"openspec/specs/batch-anonymization :: Batch anonymization",
@@ -4686,7 +4696,7 @@
 			"providerHow": "read-from-code",
 			"feature": "folder-batch-analysis",
 			"featureConfidence": "medium",
-			"note": "LIVE DEFECT: same root cause as red-review. Live defect filed as ConductionNL/filinq#1178: AnonymizationService.php:616 calls RedactionOutputGuard::assertMayWrite() on every write, and the only route that sets the review mark (routes.php:127, markChecked) has no caller, so every anonymise refuses with NEVER_CHECKED.",
+			"note": "The review gate that blocked every write (filinq#1178) is fixed since 16 Oct.",
 			"zylab": "unknown",
 			"datamask": "unknown",
 			"smartdocuments": "unknown",
@@ -4722,7 +4732,7 @@
 			"providerHow": "read-from-code",
 			"feature": "batch-entity-review",
 			"featureConfidence": "medium",
-			"note": "Distinguished from red-folder: viewing/reviewing what a batch detected works; committing the anonymisation afterwards is what the RedactionOutputGuard defect blocks.",
+			"note": "Distinguished from red-folder: this row is viewing and reviewing what a batch detected; committing the anonymisation is red-folder.",
 			"zylab": "unknown",
 			"datamask": "unknown",
 			"smartdocuments": "unknown",
@@ -4894,7 +4904,7 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Service/Redaction/AnonymizationLinkReader.php reads 'anonymizationLink' rows pairing a source file with its redacted copy (SCHEMA constant, line 38), used by PublicationListComposer to resolve which redacted copy belongs to which original for a Woo publication list. But this link record is written only as part of a successful anonymise-and-write, which the RedactionOutputGuard defect (see red-review) blocks on every path today, so no new links are being created.",
+				"evidence": "lib/Service/Redaction/AnonymizationLinkReader.php reads 'anonymizationLink' rows pairing a source file with its redacted copy (SCHEMA constant, line 38), used by PublicationListComposer to resolve which redacted copy belongs to which original for a Woo publication list. But this link record is written only as part of a successful anonymise-and-write. Re-read 2026-11-12: the review mark has a caller since 3c0c9d67 (16 Oct, change anonymise-asks-for-the-review-mark): src/components/ReviewMarkCard.vue in the file viewer and the folder run (src/store/modules/folderAnonymization.js) call markChecked() (POST api/redaction/documents/{fileId}/checked, routes.php:135), so RedactionOutputGuard lets a reviewed document through and an unreviewed one answers 409 reviewRequired. filinq#1178 is fixed.",
 				"spec": "openspec/specs/anonymization-link",
 				"requirement": [
 					"openspec/specs/anonymization-link :: AnonymizationLink Schema — Data Model (REQ-ALINK-01)",
@@ -4906,7 +4916,7 @@
 			"providerHow": "read-from-code",
 			"feature": "anonymization",
 			"featureConfidence": "medium",
-			"note": "LIVE DEFECT: same root cause as red-review. Live defect filed as ConductionNL/filinq#1178: AnonymizationService.php:616 calls RedactionOutputGuard::assertMayWrite() on every write, and the only route that sets the review mark (routes.php:127, markChecked) has no caller, so every anonymise refuses with NEVER_CHECKED.",
+			"note": "Links are written again since the review gate defect (filinq#1178) was fixed on 16 Oct.",
 			"zylab": "unknown",
 			"datamask": "unknown",
 			"smartdocuments": "unknown",
@@ -5284,14 +5294,16 @@
 			"sourceRef": "procest round 4 C-decisions-20 (Visma Circle)",
 			"filinq": "partial",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "src/views/consent/ConsentIndex.vue lists PublicationConsent records with notificationStatus/consentStatus/objectionDeadline (columns at lines 101-210); lib/Service/ConsentService.php creates a consent record per detected entity with an automatic objectionDeadline (openspec/specs/consent-management/spec.md, status: implemented). But ConsentService's own docblock (lines 100-103) states 'CONS-049 reaffirmed: new records receive notificationStatus: \"pending\"... NO email or postal notification is dispatched' -- filinq tracks the objection period but does not itself ask the third party.",
+				"evidence": "Not built (closing audit 2026-11-12, decision 389): nothing is sent to the third party; ConsentService keeps notification dispatch stubbed, so only the record and the objection period are built (task 2.1). Built so far: src/views/consent/ConsentIndex.vue lists PublicationConsent records with notificationStatus/consentStatus/objectionDeadline (columns at lines 101-210); lib/Service/ConsentService.php creates a consent record per detected entity with an automatic objectionDeadline (openspec/specs/consent-management/spec.md, status: implemented). But ConsentService's own docblock (lines 100-103) states 'CONS-049 reaffirmed: new records receive notificationStatus: \"pending\"... NO email or postal notification is dispatched' -- filinq tracks the objection period but does not itself ask the third party.",
 				"change": "openspec/changes/archive/2026-03-21-consent-management",
 				"requirement": [
 					"openspec/specs/consent-management :: Consent Record Creation (REQ-CONS-01)",
-					"openspec/specs/consent-management :: WOO Objection Period Compliance (REQ-CONS-04)"
-				]
+					"openspec/specs/consent-management :: WOO Objection Period Compliance (REQ-CONS-04)",
+					"openspec/changes/finish-half-built-capabilities/specs/consent-management :: A consent request reaches the third party (REQ-FHB-02)"
+				],
+				"plan": "openspec/changes/finish-half-built-capabilities"
 			},
 			"reachedOn": "/consent (ConsentIndex.vue, ConsentDetail.vue)",
 			"provider": "filinq",
@@ -5357,7 +5369,7 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "src/views/policy/ProhibitionIndex.vue (manifest page Prohibitions, menu 'Publish never') manages prohibition rules via POST/PUT/DELETE /api/policy/prohibitions (routes.php:169-173, all FE-tagged) -> lib/Controller/PolicyController.php. lib/Service/ProhibitionPolicyService.php:94 runGate() is called from AnonymizationService during anonymisation with an $overrides array {ruleId, entityId, reason}, and lib/Service/ProhibitionGateService.php:94/129 writes an audit entry for every released override.",
+				"evidence": "src/views/policy/PolicyRuleIndex.vue (registered as ProhibitionIndex in src/registry.js) (manifest page Prohibitions, menu 'Publish never') manages prohibition rules via POST/PUT/DELETE /api/policy/prohibitions (routes.php:169-173, all FE-tagged) -> lib/Controller/PolicyController.php. lib/Service/ProhibitionPolicyService.php:94 runGate() is called from AnonymizationService during anonymisation with an $overrides array {ruleId, entityId, reason}, and lib/Service/ProhibitionGateService.php:94/129 writes an audit entry for every released override.",
 				"spec": "openspec/specs/entity-publication-policies",
 				"requirement": [
 					"openspec/specs/entity-publication-policies :: Detection-time matching MUST evaluate prohibitions before standing consents",
@@ -5392,7 +5404,7 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "src/views/policy/StandingConsentIndex.vue (manifest page StandingConsents, menu 'Publish always') manages standing-consent records via /api/policy/standing-consents (routes.php:176-180, FE-tagged) -> lib/Controller/StandingConsentController.php. lib/Service/ProhibitionPolicyService.php:104-108 (applyPolicyDecisions) auto-skips anonymisation for entities matching a standing-consent record on every later document.",
+				"evidence": "src/views/policy/PolicyRuleIndex.vue (registered as StandingConsentIndex in src/registry.js) (manifest page StandingConsents, menu 'Publish always') manages standing-consent records via /api/policy/standing-consents (routes.php:176-180, FE-tagged) -> lib/Controller/StandingConsentController.php. lib/Service/ProhibitionPolicyService.php:104-108 (applyPolicyDecisions) auto-skips anonymisation for entities matching a standing-consent record on every later document.",
 				"spec": "openspec/specs/entity-publication-policies",
 				"requirement": [
 					"openspec/specs/entity-publication-policies :: Adding a standing consent MUST NOT alter in-flight records",
@@ -5731,11 +5743,12 @@
 			"sourceRef": "LibreSign multi-document envelopes (order and roles); canonical signing-order",
 			"filinq": "no",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "src/views/signing/SigningRequestForm.vue:46-50 has a signingMode <select> with 'sequential'/'parallel' options (default 'sequential', line 79). lib/Service/SigningRequestValidator.php:87 validates signingMode against exactly ['sequential','parallel']; SigningService.php:154 persists it and :199 persists a per-signer 'order' field. Corrections round 8 (2026-09-28), filinq#1209: the mode on the form has nothing to order, because the form sends no signers (src/views/signing/SigningRequestForm.vue:80); and the choice is stored but never read: signingMode is written only at lib/Service/SigningService.php:154 and order only at :199, sign() (:383) lets any pending signer sign (:424), and every signerRecord is notified on creation (lib/Settings/filinq_register.json:2716), at 9fd042f.",
+				"evidence": "Not built (closing audit 2026-11-12, decision 389): signingMode and signer order are stored but sign() reads neither, so signers sign in any order (task 4.1). Built so far: src/views/signing/SigningRequestForm.vue:46-50 has a signingMode <select> with 'sequential'/'parallel' options (default 'sequential', line 79). lib/Service/SigningRequestValidator.php:87 validates signingMode against exactly ['sequential','parallel']; SigningService.php:154 persists it and :199 persists a per-signer 'order' field. Corrections round 8 (2026-09-28), filinq#1209: the mode on the form has nothing to order, because the form sends no signers (src/views/signing/SigningRequestForm.vue:80); and the choice is stored but never read: signingMode is written only at lib/Service/SigningService.php:154 and order only at :199, sign() (:383) lets any pending signer sign (:424), and every signerRecord is notified on creation (lib/Settings/filinq_register.json:2716), at 9fd042f.",
 				"change": "openspec/changes/archive/2026-06-14-document-signing",
-				"requirement": "openspec/specs/document-signing :: Signing request creation"
+				"requirement": "openspec/specs/document-signing :: Signing request creation",
+				"plan": "openspec/changes/finish-half-built-capabilities"
 			},
 			"reachedOn": "/signing/new (SigningRequestForm.vue)",
 			"provider": "filinq",
@@ -6332,14 +6345,15 @@
 			"source": "own-code",
 			"filinq": "no",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Reachable path: DELETE api/signing/requests/{id} (routes.php:243, FE, signing#cancelRequest) -> SigningController::cancelRequest (line 218) -> SigningService::cancelRequest (lib/Service/SigningService.php:557-594), which validates isValidTransition and flips the request's OWN status to CANCELLED, but never calls any provider. The class built to do that, SigningCancellationService.php (line 146: getActiveProvider()->cancelSigning($externalId)), is never referenced anywhere else in lib/ (grepped) — it has zero callers, so it never runs. ValidSignProvider::cancelSigning() itself was fixed to throw instead of the old 'return true' stub (per its own docblock, matching the signing-cancellation proposal's exact complaint), but that fix is unreachable because nothing calls it.",
+				"evidence": "Not built (closing audit 2026-11-12, decision 389): cancelling flips filinq's own status only; SigningCancellationService has no caller, so the provider is never told. Built so far: Reachable path: DELETE api/signing/requests/{id} (routes.php:243, FE, signing#cancelRequest) -> SigningController::cancelRequest (line 218) -> SigningService::cancelRequest (lib/Service/SigningService.php:557-594), which validates isValidTransition and flips the request's OWN status to CANCELLED, but never calls any provider. The class built to do that, SigningCancellationService.php (line 146: getActiveProvider()->cancelSigning($externalId)), is never referenced anywhere else in lib/ (grepped) — it has zero callers, so it never runs. ValidSignProvider::cancelSigning() itself was fixed to throw instead of the old 'return true' stub (per its own docblock, matching the signing-cancellation proposal's exact complaint), but that fix is unreachable because nothing calls it.",
 				"change": "openspec/changes/signing-cancellation",
 				"requirement": [
 					"openspec/changes/signing-cancellation/specs/signing-cancellation :: Only the creator of a signing request may cancel it",
 					"openspec/changes/signing-cancellation/specs/signing-cancellation :: A cancelled request MUST be visibly cancelled and MUST NOT be re-signable"
-				]
+				],
+				"plan": "openspec/changes/signing-cancellation"
 			},
 			"reachedOn": "/signing/:id (SigningRequestDetail.vue) cancel action flips filinq's own status only",
 			"provider": "filinq",
@@ -6935,11 +6949,12 @@
 			"sourceRef": "canonical audit-trail (5 competitors)",
 			"filinq": "yes",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "src/views/signing/SigningRequestDetail.vue:33-43 renders signingStore.auditTrail, fetched from GET /api/signing/requests/{id}/audit (routes.php:248) -> lib/Controller/SigningController.php:418 getAudit() -> lib/Service/SigningAuditService.php, which writes every signing action through OpenRegister's native, hash-chained AuditTrailMapper (openspec/specs/signing-audit-via-or/spec.md, status: done). A second, more general mechanism -- src/sidebars/FileViewerSidebar.vue:448-455 <DocumentLeafTabs register=\"filinq\" schema=\"anonymizationLink\"> -- renders OpenRegister's own generic per-object activity leaf.",
+				"evidence": "Not built (closing audit 2026-11-12, decision 389): only signing actions are traced to an audit trail; an entry for every action on a document (REQ-SCR-007) is not built (task 2.3). Built so far: src/views/signing/SigningRequestDetail.vue:33-43 renders signingStore.auditTrail, fetched from GET /api/signing/requests/{id}/audit (routes.php:248) -> lib/Controller/SigningController.php:418 getAudit() -> lib/Service/SigningAuditService.php, which writes every signing action through OpenRegister's native, hash-chained AuditTrailMapper (openspec/specs/signing-audit-via-or/spec.md, status: done). A second, more general mechanism -- src/sidebars/FileViewerSidebar.vue:448-455 <DocumentLeafTabs register=\"filinq\" schema=\"anonymizationLink\"> -- renders OpenRegister's own generic per-object activity leaf.",
 				"spec": "openspec/specs/signing-audit-via-or",
-				"requirement": "openspec/changes/specify-capability-rows/specs/document-register :: Every action on a document is in its audit trail (REQ-SCR-007)"
+				"requirement": "openspec/changes/specify-capability-rows/specs/document-register :: Every action on a document is in its audit trail (REQ-SCR-007)",
+				"plan": "openspec/changes/specify-capability-rows"
 			},
 			"reachedOn": "/signing/:id (SigningRequestDetail.vue) for signing actions; the file viewer sidebar's activity tab for anonymizationLink objects",
 			"provider": "filinq",
@@ -7036,11 +7051,12 @@
 			"sourceRef": "dossiq gap register 13.39",
 			"filinq": "no",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Service/DocumentDownloadRecorder.php:82 record() and :125 shouldNotify() are a complete, well-documented implementation (per its own docblock and openspec/changes/documents-in-and-out-of-the-building/tasks.md: 6 tasks done and 7 in progress), but grep for 'DocumentDownloadRecorder', 'recordDownload' across all of lib/ found ZERO references outside the class's own file: no controller, route, event listener or background job calls it. Corrections round 8 (2026-09-28), filinq#1185: the recorder still has no caller at 9fd042f; task 4.1 is in progress (openspec/changes/documents-in-and-out-of-the-building/tasks.md:213) and names what waits, wiring it into four filinq controllers (:235-236), and downloads served by Nextcloud itself stay unrecorded because the only platform download event fires for DAV direct links alone (:215-226).",
+				"evidence": "Not built (closing audit 2026-11-12, decision 389): DocumentDownloadRecorder has no caller in lib/ (task 4.3). Built so far: lib/Service/DocumentDownloadRecorder.php:82 record() and :125 shouldNotify() are a complete, well-documented implementation (per its own docblock and openspec/changes/documents-in-and-out-of-the-building/tasks.md: 6 tasks done and 7 in progress), but grep for 'DocumentDownloadRecorder', 'recordDownload' across all of lib/ found ZERO references outside the class's own file: no controller, route, event listener or background job calls it. Corrections round 8 (2026-09-28), filinq#1185: the recorder still has no caller at 9fd042f; task 4.1 is in progress (openspec/changes/documents-in-and-out-of-the-building/tasks.md:213) and names what waits, wiring it into four filinq controllers (:235-236), and downloads served by Nextcloud itself stay unrecorded because the only platform download event fires for DAV direct links alone (:215-226).",
 				"change": "openspec/changes/documents-in-and-out-of-the-building",
-				"requirement": "openspec/changes/documents-in-and-out-of-the-building/specs/filinq-notifications :: A download is recorded with its route and its identity (REQ-DIO-06)"
+				"requirement": "openspec/changes/documents-in-and-out-of-the-building/specs/filinq-notifications :: A download is recorded with its route and its identity (REQ-DIO-06)",
+				"plan": "openspec/changes/documents-in-and-out-of-the-building"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -7070,9 +7086,9 @@
 			"sourceRef": "journey \"Send Official Correspondence by Email\"",
 			"filinq": "partial",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "src/views/correspondence/CorrespondenceIndex.vue -> src/store/modules/correspondence.js:83 -> POST api/correspondence/generate (routes.php:220, FE) -> lib/Controller/CorrespondenceController.php:91 generate() -> lib/Service/CorrespondenceService.php (VALID_FORMATS = ['pdf','docx','html','email'], line 78) composes from an approved template. Composition returns a DataDownloadResponse|JSONResponse (download or content) - grep of lib/ for IMailer/OCP\\Mail found no match, so the 'email' format only produces email-safe HTML (line 670 case 'email', line 690 strips page CSS for email clients); nothing dispatches it.",
+				"evidence": "Not built (closing audit 2026-11-12, decision 389): composing works; sending the letter does not exist yet (DECISIONS row 268). Built so far: src/views/correspondence/CorrespondenceIndex.vue -> src/store/modules/correspondence.js:83 -> POST api/correspondence/generate (routes.php:220, FE) -> lib/Controller/CorrespondenceController.php:91 generate() -> lib/Service/CorrespondenceService.php (VALID_FORMATS = ['pdf','docx','html','email'], line 78) composes from an approved template. Composition returns a DataDownloadResponse|JSONResponse (download or content) - grep of lib/ for IMailer/OCP\\Mail found no match, so the 'email' format only produces email-safe HTML (line 670 case 'email', line 690 strips page CSS for email clients); nothing dispatches it.",
 				"change": "openspec/changes/letter-email-sending",
 				"spec": "openspec/specs/letter-correspondence-generation",
 				"requirement": [
@@ -7080,7 +7096,8 @@
 					"openspec/specs/letter-correspondence-generation :: Email body generation",
 					"openspec/changes/letter-email-sending/specs/letter-correspondence-generation :: A composed letter can be sent by email (REQ-LCS-01)",
 					"openspec/changes/letter-email-sending/specs/letter-correspondence-generation :: A send that cannot happen says why and records nothing as sent (REQ-LCS-02)"
-				]
+				],
+				"plan": "openspec/changes/letter-email-sending"
 			},
 			"reachedOn": "/correspondence (CorrespondenceIndex.vue)",
 			"provider": "filinq",
@@ -7457,11 +7474,12 @@
 			"sourceRef": "Paperless-ngx trigger-action pipelines; Workflow OCR",
 			"filinq": "partial",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"owner": "ConductionNL/openregister",
-				"evidence": "Grepped lib/ for WorkflowEngine/IOperation/IEntity: no match, so filinq registers no operations into Nextcloud's core Workflow Engine app. Filinq does ship a 'Flows' page (src/manifest.json:1199-1213, /flows and /flows/:id, CnFlowDetail canvas + useFlowStore) and declares 'openregister.flows' as an installable store type (src/manifest.json store.types) - this is OpenRegister's own flow/automation engine, a different system from NC's core Workflow app.",
+				"evidence": "Not built (closing audit 2026-11-12, decision 389): filinq registers no Nextcloud Workflow Engine operation; the /flows pages are OpenRegister's own flow engine, a different system (flow-operations is open). Built so far: Grepped lib/ for WorkflowEngine/IOperation/IEntity: no match, so filinq registers no operations into Nextcloud's core Workflow Engine app. Filinq does ship a 'Flows' page (src/manifest.json:1199-1213, /flows and /flows/:id, CnFlowDetail canvas + useFlowStore) and declares 'openregister.flows' as an installable store type (src/manifest.json store.types) - this is OpenRegister's own flow/automation engine, a different system from NC's core Workflow app.",
 				"spec": "ConductionNL/openregister openspec/specs/flow-engine",
-				"requirement": "openspec/changes/flow-operations/specs/flow-operations :: Four Flow operations are registered with the workflow engine (REQ-DDFLO-001)"
+				"requirement": "openspec/changes/flow-operations/specs/flow-operations :: Four Flow operations are registered with the workflow engine (REQ-DDFLO-001)",
+				"plan": "openspec/changes/flow-operations"
 			},
 			"reachedOn": "/flows (Flows/FlowDetail pages) - via OpenRegister's flow engine, not Nextcloud's core Workflow app",
 			"provider": "openregister",
@@ -7633,7 +7651,7 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "dossiq's lib/Service/Beschikking/FilinqTemplateEngineAdapter.php resolves filinq's DocumentService via FleetAppId and calls generateDocument() (filinq lib/Service/DocumentService.php:168) directly through PHP DI, described as 'Filinq owns document generation for the fleet (ADR-075)'. Counter-evidence: learniq (formerly scholiq) lib/Service/ReportCardPdfDelegationService.php:199-200 now resolves the app id through FleetAppId::path($this->appManager, 'filinq', ...) and POSTs to the documents/render path under it, but that render endpoint still does not exist in filinq, so the report-card half is unbuilt on filinq's side (corrected 2026-09-26).",
+				"evidence": "dossiq's lib/Service/Beschikking/FilinqTemplateEngineAdapter.php resolves filinq's DocumentService via FleetAppId and calls generateDocument() (filinq lib/Service/DocumentService.php:168) directly through PHP DI, described as 'Filinq owns document generation for the fleet (ADR-075)'. Counter-evidence: learniq (formerly scholiq) lib/Service/ReportCardPdfDelegationService.php:199-200 now resolves the app id through FleetAppId::path($this->appManager, 'filinq', ...) and POSTs to the documents/render path under it, and that endpoint now exists in filinq: reportRender#render POST api/v1/documents/render and renderBatch (appinfo/routes.php:305-306; re-read 2026-11-12).",
 				"readOn": "2026-09-26",
 				"change": "openspec/changes/archive/2026-06-14-document-creatie-sjablonen",
 				"spec": "openspec/specs/document-creatie-sjablonen",
@@ -7644,7 +7662,7 @@
 			"providerHow": "read-from-code",
 			"feature": "document-creatie-sjablonen",
 			"featureConfidence": "high",
-			"note": "Works for dossiq's beschikking generation; the report-card path learniq expects is not implemented on filinq's side (its HTTP call targets a render route that does not exist).",
+			"note": "Works for dossiq's beschikking generation and for learniq's report cards through api/v1/documents/render.",
 			"zylab": "unknown",
 			"datamask": "unknown",
 			"smartdocuments": "unknown",
@@ -8074,7 +8092,7 @@
 				"validsign": "docs-only, read 2026-09-26: https://kb.validsign.eu/nl/release-notes/release-notes-2026-09-08 Hungarian added as a language option in the Sender UI and signing screen besides the existing ones; the product and knowledge base run in Dutch and English (validsign.eu/nl, validsign.eu)",
 				"smartdocuments": "docs-only, read 2026-09-26: https://smartdocuments.com/productfeatures/ SmartWizard languages NL, DE, SE, EN, ES, FR, HU, CZ"
 			},
-			"note": "spec stays none (decision 81): translation runs on Nextcloud's l10n mechanism, not filinq code. The open change filinq-nl-locale-parity (0 of 14 tasks on 7 Oct 2026) is about the completeness of the Dutch strings and did not deliver this row.",
+			"note": "Translation runs on Nextcloud's l10n mechanism, recorded against REQ-I18N-06. The open change filinq-nl-locale-parity is about the completeness of the Dutch strings.",
 			"screen": {
 				"board": null,
 				"reason": "The language follows the user's Nextcloud setting; no screen of its own."
@@ -8090,7 +8108,7 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Both dropzones carry a real <button type=\"button\"> that opens the hidden file input (src/views/anonymization/AnonymizationWidget.vue, src/views/widgets/AnonymizationDashboardWidget.vue), and tests/vitest/uploadTriggerKeyboard.spec.js audits every component with a file input so a new one without a keyboard route fails the suite. Rating stays partial: no full keyboard or screen-reader audit of the app was run.",
+				"evidence": "Both dropzones carry a real <button type=\"button\"> that opens the hidden file input (src/views/anonymization/AnonymizationWidget.vue, the dashboard widget, merged into AnonymizationWidget.vue by bca5ecd7), and tests/vitest/uploadTriggerKeyboard.spec.js audits every component with a file input so a new one without a keyboard route fails the suite. Rating stays partial: no full keyboard or screen-reader audit of the app was run.",
 				"change": "openspec/changes/archive/2026-09-28-filinq-upload-dropzone-keyboard-access",
 				"readOn": "2026-09-28",
 				"requirement": "openspec/changes/specify-capability-rows/specs/keyboard-and-screen-reader-access :: Every screen works with a keyboard and with a screen reader (REQ-SCR-017)"

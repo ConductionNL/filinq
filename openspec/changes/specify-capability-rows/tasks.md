@@ -1,6 +1,6 @@
 # Tasks: specify-capability-rows
 
-<!-- HYDRA CAP: max 20 unindented `- [ ]` lines. This file uses 9. -->
+<!-- HYDRA CAP: max 20 unindented `- [ ]` lines. This file uses 11. -->
 
 ## 1. Signing
 
@@ -11,6 +11,7 @@
 
 - [ ] 2.1 Make the columns of `src/integrations/CnFilinqDocumentsWidget.vue` sortable (REQ-SCR-005). Verify: Vitest sorts on date both ways.
 - [ ] 2.2 Show `GET api/case-documents/mine` and a Waiting for me view on `src/views/myDocuments/MyDocumentsIndex.vue` (REQ-SCR-006). Verify: Playwright on `/my-documents`.
+- [ ] 2.3 Write an audit entry for every action on a document (open, download, edit, version, share, anonymise, sign, delete) through OpenRegister's audit trail from the services in `lib/Service/`, and show it on the document's activity tab (REQ-SCR-007). Verify: PHPUnit that each action writes one entry with actor and moment.
 
 ## 3. Woo and reports
 

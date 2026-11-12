@@ -51,7 +51,7 @@
       and read the exit code, not the summary line.
 - [x] 6.2 Run `openspec validate generated-document-names-its-template-version --strict`.
 - [x] 6.3 Run `composer check:strict`.
-- [ ] 6.4 Generate a document on the dev instance and confirm the recorded
+- [ ] 6.4 Generate a document through `DocumentService::generateDocument()` on the dev instance and confirm the recorded
       version matches the template's OpenRegister version, and that the
       reported checksum matches the stored file's bytes. NOT DONE: the lane
       clone is not mounted on the dev instance; recipe in the PR body.
