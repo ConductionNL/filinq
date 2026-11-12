@@ -71,7 +71,7 @@ Every route under `/api/` MUST also be served under `/api/v1/`, with the same co
 
 ### Requirement: Standard protocol paths keep their own formats
 
-Paths that implement a protocol defined elsewhere (Identity provider callbacks, Health check, Prometheus metrics) MUST NOT get a `/api/v1/` alias, a `Deprecation` header, an `API-Version` header or a problem details rewrite: their formats belong to their standard. They are listed in `lib/Middleware/Support/StandardProtocolPaths.php` and are not described in the OpenAPI document.
+Paths that implement a protocol defined elsewhere (Identity provider callbacks, Health check, Prometheus metrics) MUST NOT get a `/api/v1/` alias or a `Deprecation` header: their paths belong to their standard. They keep the `API-Version` header and problem details they already had. They are listed in `lib/Middleware/Support/StandardProtocolPaths.php` and are not described in the OpenAPI document.
 
 #### Scenario: A protocol path is left alone
 

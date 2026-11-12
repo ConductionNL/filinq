@@ -30,6 +30,8 @@ use ReflectionProperty;
  * Pins the `API-Version` header and the problem details shape of API errors.
  *
  * @covers \OCA\Filinq\Middleware\ApiContractMiddleware
+ * @uses   \OCA\Filinq\Middleware\Support\ApiPathAliases
+ * @uses   \OCA\Filinq\Middleware\Support\StandardProtocolPaths
  */
 class ApiContractMiddlewareTest extends TestCase {
 
@@ -194,21 +196,25 @@ class ApiContractMiddlewareTest extends TestCase {
 	}//end testVersionedPathIsNotDeprecated()
 
 	/**
-	 * A path that speaks a protocol defined elsewhere keeps that protocol's formats.
+	 * A path that speaks a protocol defined elsewhere keeps its version header and
+	 * problem details, and gets no successor.
 	 *
 	 * @return void
 	 */
-	public function testStandardProtocolPathIsUntouched(): void {
+	public function testStandardProtocolPathKeepsItsContractButGetsNoSuccessor(): void {
 		$response = $this->decorate(
 			path: '/apps/filinq/api/signing/identity/callback',
 			response: new JSONResponse(data: ['error' => 'x'], statusCode: 400)
 		);
 		$headers  = $this->headersOf(response: $response);
+		$data     = $response->getData();
 
-		$this->assertSame(expected: ['error' => 'x'], actual: $response->getData());
-		$this->assertArrayNotHasKey(key: 'API-Version', array: $headers);
+		$this->assertSame(expected: '1.2.3', actual: $headers['API-Version']);
+		$this->assertSame(expected: 'x', actual: $data['error']);
+		$this->assertSame(expected: 400, actual: $data['status']);
 		$this->assertArrayNotHasKey(key: 'Deprecation', array: $headers);
-	}//end testStandardProtocolPathIsUntouched()
+		$this->assertArrayNotHasKey(key: 'Link', array: $headers);
+	}//end testStandardProtocolPathKeepsItsContractButGetsNoSuccessor()
 
 	/**
 	 * The headers a response set, read without the server container that
