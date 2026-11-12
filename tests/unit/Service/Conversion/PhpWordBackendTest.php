@@ -25,7 +25,9 @@
 
 namespace OCA\Filinq\Tests\Unit\Service\Conversion;
 
+use OCA\Filinq\Exception\ConversionFailedException;
 use OCA\Filinq\Service\Conversion\PhpWordBackend;
+use OCA\Filinq\Service\Conversion\PhpWordIo;
 use OCA\Filinq\Service\PdfService;
 use OCP\Files\File;
 use OCP\Files\Folder;
@@ -332,4 +334,96 @@ class PhpWordBackendTest extends TestCase {
 		@unlink($sourceTmp);
 
 	}//end testConvertRequestsPdfAOutput()
+
+	/**
+	 * A backend over the given reader/writer, with a temp file and a parent that has the old PDF.
+	 *
+	 * @param PhpWordIo $io     The reader/writer double.
+	 * @param Folder    $parent The source's parent folder.
+	 *
+	 * @return array{0: PhpWordBackend, 1: File, 2: string} The backend, the source and the temp path.
+	 */
+	private function backendOver(PhpWordIo $io, Folder $parent): array {
+		$sourceTmp = tempnam(sys_get_temp_dir(), 'ddsrc_') . '.docx';
+		$tempManager = $this->createMock(ITempManager::class);
+		$tempManager->method('getTemporaryFile')->willReturn($sourceTmp);
+		$pdfService = $this->createMock(PdfService::class);
+		$pdfService->method('generatePdfFromHtml')->willReturn('PDF-BYTES');
+		$source = $this->createMock(File::class);
+		$source->method('getName')->willReturn('sample.docx');
+		$source->method('getContent')->willReturn('docx-bytes');
+		$source->method('getParent')->willReturn($parent);
+		$backend = new PhpWordBackend(
+			appConfig: $this->createMock(IAppConfig::class),
+			tempManager: $tempManager,
+			pdfService: $pdfService,
+			logger: $this->createMock(LoggerInterface::class),
+			phpWordIo: $io,
+		);
+		return [$backend, $source, $sourceTmp];
+
+	}//end backendOver()
+
+	/**
+	 * Each reader/writer failure carries its message, one attempt record and its cause.
+	 *
+	 * @return void
+	 */
+	public function testReaderAndWriterFailuresAreRecorded(): void {
+		$cases = [
+			'load' => [new \RuntimeException('bad zip'), null, 'PhpWord could not read source (Word2007): bad zip', 'reader load failed: bad zip', true],
+			'html' => [null, new \RuntimeException('writer broke'), 'PhpWord HTML writer failed: writer broke', 'HTML writer getContent failed: writer broke', true],
+			'empty' => [null, '@page { size: A4; }', 'PhpWord HTML writer produced empty output.', 'HTML writer getContent returned empty', false],
+		];
+		foreach ($cases as $name => [$loadFails, $html, $message, $reason, $hasCause]) {
+			$io = $this->createMock(PhpWordIo::class);
+			if ($loadFails !== null) {
+				$io->method('load')->willThrowException($loadFails);
+			} else {
+				$io->method('load')->willReturn(new PhpWord());
+			}
+
+			if ($html instanceof \Throwable) {
+				$io->method('toHtml')->willThrowException($html);
+			} else {
+				$io->method('toHtml')->willReturn((string) $html);
+			}
+
+			[$backend, $source, $sourceTmp] = $this->backendOver(io: $io, parent: $this->createMock(Folder::class));
+			try {
+				$backend->convert($source);
+				$this->fail($name . ': expected a conversion failure');
+			} catch (ConversionFailedException $e) {
+				$this->assertSame($message, $e->getMessage(), $name);
+				$this->assertSame([['name' => 'phpword', 'available' => true, 'supports' => true, 'reason' => $reason]], $e->getAttempts(), $name);
+				$this->assertSame($hasCause, $e->getPrevious() !== null, $name);
+			}
+
+			@unlink($sourceTmp);
+		}//end foreach
+
+	}//end testReaderAndWriterFailuresAreRecorded()
+
+	/**
+	 * An earlier PDF of the same name is deleted before the new one is written.
+	 *
+	 * @return void
+	 */
+	public function testAnEarlierPdfIsReplaced(): void {
+		$io = $this->createMock(PhpWordIo::class);
+		$io->method('load')->willReturn(new PhpWord());
+		$io->method('toHtml')->willReturn('<p>hi</p>');
+		$old = $this->createMock(File::class);
+		$old->expects($this->once())->method('delete');
+		$written = $this->createMock(File::class);
+		$parent = $this->createMock(Folder::class);
+		$parent->method('nodeExists')->with('sample.pdf')->willReturn(true);
+		$parent->method('get')->with('sample.pdf')->willReturn($old);
+		$parent->expects($this->once())->method('newFile')->with('sample.pdf', 'PDF-BYTES')->willReturn($written);
+
+		[$backend, $source, $sourceTmp] = $this->backendOver(io: $io, parent: $parent);
+		$this->assertSame($written, $backend->convert($source));
+		@unlink($sourceTmp);
+
+	}//end testAnEarlierPdfIsReplaced()
 }//end class

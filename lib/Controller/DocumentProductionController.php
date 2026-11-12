@@ -25,6 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
+use OCA\Filinq\Controller\Support\HandlerAnswer;
 use OCA\Filinq\Kernel\AppIdentity;
 use OCA\Filinq\Kernel\Contracts\CaseArchiveServiceInterface;
 use OCA\Filinq\Kernel\Contracts\DocumentReviewServiceInterface;
@@ -36,7 +37,6 @@ use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
 use OCP\IUserSession;
-use Throwable;
 
 /**
  * Controller for layouts, bundles, periodic documents and reviews.
@@ -291,14 +291,7 @@ class DocumentProductionController extends Controller {
 			return $this->notAuthenticated(message: 'You must be logged in.');
 		}
 
-		try {
-			return new JSONResponse(data: $handler(), statusCode: Http::STATUS_OK);
-		} catch (Throwable $e) {
-			return new JSONResponse(
-				data: ['error' => $e->getMessage()],
-				statusCode: Http::STATUS_BAD_REQUEST
-			);
-		}
+		return (new HandlerAnswer())->answer(handler: $handler);
 
 	}//end answer()
 }//end class

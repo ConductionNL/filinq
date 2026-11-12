@@ -1,3 +1,7 @@
+/**
+ * SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
 const path = require('path')
 const fs = require('fs')
 const TerserPlugin = require('terser-webpack-plugin')

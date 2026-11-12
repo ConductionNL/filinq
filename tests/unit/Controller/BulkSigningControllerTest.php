@@ -157,4 +157,26 @@ class BulkSigningControllerTest extends TestCase {
 		$this->assertSame('Bulk send failed', $response->getData()['error']);
 
 	}//end testAnUnexpectedFailureHidesItsMessage()
+
+	/**
+	 * The unexpected failure is logged with its message and the exception; a missing batch names the bulk send.
+	 *
+	 * @return void
+	 */
+	public function testTheFailureIsLoggedAndTheMissingBatchNamed(): void {
+		$failure = new RuntimeException('SQLSTATE secret');
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())->method('error')->with('Bulk send failed: SQLSTATE secret', ['exception' => $failure]);
+		$service = $this->createMock(BulkSigningService::class);
+		$service->method('cancel')->willThrowException($failure);
+		$service->method('confirm')->willReturn(null);
+		$session = $this->createMock(IUserSession::class);
+		$session->method('getUser')->willReturn(null);
+		$controller = new BulkSigningController('filinq', $this->createMock(IRequest::class), $service, $session, $this->createMock(IGroupManager::class), $logger);
+
+		$this->assertSame(500, $controller->cancel(id: 'b1')->getStatus());
+		$missing = $controller->confirm(id: 'b1');
+		$this->assertSame([404, ['error' => 'Bulk send not found']], [$missing->getStatus(), $missing->getData()]);
+
+	}//end testTheFailureIsLoggedAndTheMissingBatchNamed()
 }//end class

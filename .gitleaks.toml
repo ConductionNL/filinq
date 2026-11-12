@@ -1,0 +1,47 @@
+# gitleaks configuration: the default rules, plus allowlists for findings
+# that are not secrets. Each allowlist names the exact files and only the
+# rules that fire there, so anything else in those files is still reported.
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Documentation examples: the default admin:admin login of the local development and demo containers."
+targetRules = ["curl-auth-user"]
+paths = [
+  '''(^|/)docs/Installation/demo\-environment\.md$''',
+]
+
+[[allowlists]]
+description = "E2E seed script: curl login built from the ADMIN_USER/ADMIN_PASSWORD environment variables, not a literal."
+targetRules = ["curl-auth-user"]
+paths = [
+  '''(^|/)tests/e2e/ci\-seed\.sh$''',
+]
+
+[[allowlists]]
+description = "E2E fixture: the throwaway key of the mock OIDC broker the spec starts itself; it protects nothing."
+targetRules = ["private-key"]
+paths = [
+  '''(^|/)tests/e2e/fixtures/mock\-oidc/test\-key\.pem$''',
+]
+
+[[allowlists]]
+description = "Fail-closed contract test: unsigned (alg none) forged assertions the receiver must refuse."
+targetRules = ["jwt"]
+paths = [
+  '''(^|/)tests/integration/portal\-signing\-actions\.postman_collection\.json$''',
+]
+
+[[allowlists]]
+description = "Unit tests: made-up shared secrets, attacker secrets and credential reference UUIDs for the assertion and signer tests."
+targetRules = ["generic-api-key"]
+paths = [
+  '''(^|/)tests/unit/Controller/PortalSigningReceiverControllerTest\.php$''',
+  '''(^|/)tests/unit/Controller/PortalSigningReceiverSignerLookupTraceTest\.php$''',
+  '''(^|/)tests/unit/Portal/PortalAssertionVerifierReasonOrderTest\.php$''',
+  '''(^|/)tests/unit/Portal/PortalAssertionVerifierReasonTraceTest\.php$''',
+  '''(^|/)tests/unit/Portal/PortalAssertionVerifierTest\.php$''',
+  '''(^|/)tests/unit/Service/LegalBasesSummaryServiceTest\.php$''',
+  '''(^|/)tests/unit/Service/SignerAuth/OidcBrokerHarness\.php$''',
+]

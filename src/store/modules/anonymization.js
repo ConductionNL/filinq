@@ -1,3 +1,7 @@
+/**
+ * SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
 /* eslint-disable no-console */
 import { getCurrentUser } from '@nextcloud/auth'
 import axios from '@nextcloud/axios'
@@ -163,6 +167,72 @@ function encodePath(path) {
 }
 
 /**
+ * The fields every queue entry starts with, in one shape: a fresh id, the
+ * given name, status, file and dossier, no entities yet and no result.
+ *
+ * @param {{name: string, status: string, fileId: number|null, filePath: string|null, dossier: string|null}} start Where the entry starts.
+ * @return {object}
+ */
+function queueEntry(start) {
+	return {
+		id: `file-${++fileCounter}`,
+		name: start.name,
+		status: start.status,
+		error: null,
+		fileId: start.fileId,
+		filePath: start.filePath,
+		entities: [],
+		entityCount: 0,
+		replacementCount: 0,
+		anonymizedFileId: null,
+		anonymizedFileName: null,
+		anonymizedFilePath: null,
+		dossier: start.dossier,
+		// Read-only files_confidential sensitivity signal (files-confidential-labels).
+		// Both stay null until an extract response resolves a label.
+		confidentialityLabel: null,
+		confidentialityLevel: null,
+	}
+}
+
+/**
+ * Upload the entry's file into /DocuDesk/ and note where it landed.
+ *
+ * @param {object} entry Queue entry with its source `_file`.
+ * @return {Promise<void>}
+ */
+async function uploadToDocuDesk(entry) {
+	entry.status = 'uploading'
+	const formData = new FormData()
+	formData.append('file', entry._file)
+	const uploadResponse = await axios.post(
+		generateUrl('/apps/filinq/api/anonymization/upload'),
+		formData,
+		{ headers: { 'Content-Type': 'multipart/form-data' } },
+	)
+	entry.fileId = uploadResponse.data.fileId
+	entry.filePath = uploadResponse.data.filePath
+	delete entry._file
+}
+
+/**
+ * Run entity extraction on the entry's file and seed per-row review state
+ * on every detected entity, in the shape `EntityReviewTable` expects. The
+ * grouped rows are counted, not the raw append-bug rows.
+ *
+ * @param {object} entry Queue entry with a file id.
+ * @return {Promise<{found: number, unseen: boolean}>} What the extraction found.
+ */
+async function extractEntities(entry) {
+	const extractResponse = await axios.post(
+		generateUrl(
+			`/apps/filinq/api/anonymization/extract/${entry.fileId}`,
+		),
+	)
+	return applyExtractResponse(entry, extractResponse.data)
+}
+
+/**
  * Build a fresh queue entry. Shared between addFiles + addFilesAsDossier
  * so the entry shape stays a single source of truth.
  *
@@ -172,23 +242,7 @@ function encodePath(path) {
  */
 function makeEntry(file, dossier) {
 	return {
-		id: `file-${++fileCounter}`,
-		name: file.name,
-		status: 'queued',
-		error: null,
-		fileId: null,
-		filePath: null,
-		entities: [],
-		entityCount: 0,
-		replacementCount: 0,
-		anonymizedFileId: null,
-		anonymizedFileName: null,
-		anonymizedFilePath: null,
-		dossier,
-		// Read-only files_confidential sensitivity signal (files-confidential-labels).
-		// Both stay null until an extract response resolves a label.
-		confidentialityLabel: null,
-		confidentialityLevel: null,
+		...queueEntry({ name: file.name, status: 'queued', fileId: null, filePath: null, dossier }),
 		_file: file,
 	}
 }
@@ -207,25 +261,13 @@ function makeEntry(file, dossier) {
  * @return {object}
  */
 function makeSyntheticEntry(fileMeta) {
-	const dossier = inferDossier(fileMeta.path)
-	return {
-		id: `file-${++fileCounter}`,
+	return queueEntry({
 		name: fileMeta.fileName,
 		status: 'extracting',
-		error: null,
 		fileId: fileMeta.fileId,
 		filePath: fileMeta.path,
-		entities: [],
-		entityCount: 0,
-		replacementCount: 0,
-		anonymizedFileId: null,
-		anonymizedFileName: null,
-		anonymizedFilePath: null,
-		dossier,
-		// Read-only files_confidential sensitivity signal (files-confidential-labels).
-		confidentialityLabel: null,
-		confidentialityLevel: null,
-	}
+		dossier: inferDossier(fileMeta.path),
+	})
 }
 
 /**
@@ -1247,17 +1289,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 		async uploadAndExtract(entry) {
 			try {
 				// Step 1: upload. Always lands in /DocuDesk/ root first.
-				entry.status = 'uploading'
-				const formData = new FormData()
-				formData.append('file', entry._file)
-				const uploadResponse = await axios.post(
-					generateUrl('/apps/filinq/api/anonymization/upload'),
-					formData,
-					{ headers: { 'Content-Type': 'multipart/form-data' } },
-				)
-				entry.fileId = uploadResponse.data.fileId
-				entry.filePath = uploadResponse.data.filePath
-				delete entry._file
+				await uploadToDocuDesk(entry)
 
 				// Step 1b: MOVE into the dossier folder when applicable.
 				// The fileId is preserved by MOVE, so later pipeline
@@ -1268,28 +1300,11 @@ export const useAnonymizationStore = defineStore('anonymization', {
 					entry.filePath = `/DocuDesk/${entry.dossier}/${entry.name}`
 				}
 
-				// Step 2: extract.
+				// Step 2: extract. Nothing to anonymise skips review and
+				// marks the entry done.
 				entry.status = 'extracting'
-				const extractResponse = await axios.post(
-					generateUrl(
-						`/apps/filinq/api/anonymization/extract/${entry.fileId}`,
-					),
-				)
-				// Seed per-row review state on every detected entity, in the
-				// shape `EntityReviewTable` expects. The grouped rows are
-				// counted, not the raw append-bug rows.
-				const { found, unseen } = applyExtractResponse(
-					entry,
-					extractResponse.data,
-				)
-
-				if (found === 0 && !unseen) {
-					// Nothing to anonymise; skip review and mark done.
-					entry.status = 'completed'
-					return
-				}
-
-				entry.status = 'extracted'
+				const { found, unseen } = await extractEntities(entry)
+				entry.status = found === 0 && !unseen ? 'completed' : 'extracted'
 			} catch (err) {
 				console.error(`Failed to upload/extract ${entry.name}:`, err)
 				entry.error = err.response?.data?.error || err.message
@@ -1466,15 +1481,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 			this.files.push(entry)
 
 			try {
-				const extractResponse = await axios.post(
-					generateUrl(
-						`/apps/filinq/api/anonymization/extract/${entry.fileId}`,
-					),
-				)
-				const { found, unseen } = applyExtractResponse(
-					entry,
-					extractResponse.data,
-				)
+				const { found, unseen } = await extractEntities(entry)
 				entry.status = found === 0 && !unseen ? 'completed' : 'extracted'
 			} catch (err) {
 				console.error(`Failed to load entities for ${entry.name}:`, err)
@@ -1554,12 +1561,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 			entry.status = 'extracting'
 			entry.error = null
 			try {
-				const extractResponse = await axios.post(
-					generateUrl(
-						`/apps/filinq/api/anonymization/extract/${entry.fileId}`,
-					),
-				)
-				applyExtractResponse(entry, extractResponse.data)
+				await extractEntities(entry)
 				restoreDecisions(entry.entities, priorDecisions)
 				// A new detection run needs a new check.
 				entry.reviewMark = null

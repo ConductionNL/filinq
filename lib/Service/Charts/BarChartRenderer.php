@@ -36,60 +36,7 @@ namespace OCA\Filinq\Service\Charts;
  *
  * @spec openspec/changes/archive/2026-09-28-template-charts/tasks.md#task-1.1
  */
-class BarChartRenderer {
-
-	/**
-	 * SVG element builders.
-	 *
-	 * @var SvgPrimitives
-	 */
-	private readonly SvgPrimitives $svg;
-
-	/**
-	 * Label text formatter.
-	 *
-	 * @var ChartLabelFormatter
-	 */
-	private readonly ChartLabelFormatter $labels;
-
-	/**
-	 * Axis scaling arithmetic.
-	 *
-	 * @var ChartScale
-	 */
-	private readonly ChartScale $scale;
-
-	/**
-	 * Plot geometry and chrome.
-	 *
-	 * @var CartesianFrame
-	 */
-	private readonly CartesianFrame $frame;
-
-	/**
-	 * Series legend renderer.
-	 *
-	 * @var ChartLegendRenderer
-	 */
-	private readonly ChartLegendRenderer $legend;
-
-	/**
-	 * Constructor.
-	 *
-	 * Collaborators are pure, stateless helpers with no I/O, so they are
-	 * composed here rather than injected — this keeps the public constructor
-	 * argument-free for both the DI container and direct instantiation.
-	 *
-	 * @return void
-	 */
-	public function __construct() {
-		$this->svg = new SvgPrimitives();
-		$this->labels = new ChartLabelFormatter();
-		$this->scale = new ChartScale();
-		$this->frame = new CartesianFrame();
-		$this->legend = new ChartLegendRenderer();
-
-	}//end __construct()
+class BarChartRenderer extends CartesianChartRenderer {
 
 	/**
 	 * Render a bar chart (vertical, grouped by series; or horizontal, first
@@ -106,11 +53,8 @@ class BarChartRenderer {
 			return $this->renderHorizontal(chart: $chart);
 		}
 
-		$series = $chart->normalized['series'];
-		$showLegend = (bool)($chart->options['showLegend'] ?? (count($series) > 1));
-
-		$plot = $this->frame->layout(chart: $chart, showLegend: $showLegend);
-		$plot['niceMax'] = $this->scale->axisCeiling(value: $this->scale->seriesMax(series: $series));
+		$showLegend = $this->showsLegend(chart: $chart);
+		$plot = $this->scaledPlot(chart: $chart, showLegend: $showLegend);
 
 		$parts = [];
 		$parts[] = $this->frame->render(chart: $chart, plot: $plot);

@@ -3,6 +3,9 @@
 /**
  * Filinq Portal Contribution Provider
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Filinq's contribution to the shared Portaliq external portal (hydra
  * ADR-046, contribution contract v2.1, extended by v2.2 `rowActions`).
  * Portaliq — the ONE shared portal for people WITHOUT Nextcloud accounts —
@@ -52,9 +55,6 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
  * @spec openspec/specs/portal-signing-surface/spec.md

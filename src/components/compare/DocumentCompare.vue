@@ -1,3 +1,7 @@
+<!--
+  - SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
 <template>
 	<div class="document-compare" data-testid="document-compare">
 		<section
@@ -34,9 +38,6 @@
 
 <script>
 /**
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- *
  * The original and the delivered file side by side, each in the viewer the
  * file viewer uses for its type. Mounted by other apps through
  * `OCA.Filinq.mountCompare` (src/compare.js).

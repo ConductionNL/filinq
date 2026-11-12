@@ -40,7 +40,7 @@ The dashboard serves as the default landing page displaying consent statistics, 
 - GIVEN the dashboard is displayed
 - WHEN the user scrolls to the Quick Anonymization section
 - THEN the AnonymizationWidget is embedded with drag-and-drop upload
-- AND files can be processed without navigating away from the dashboard
+- AND a confirmed upload opens the first file on My documents, as on the Anonymisation page
 
 | ID | Requirement | Priority | Status |
 |----|------------|----------|--------|

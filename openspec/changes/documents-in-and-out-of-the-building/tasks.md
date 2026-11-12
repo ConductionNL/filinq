@@ -2,7 +2,7 @@
 
 > Archive pass 2026-10-07: left open; partial: 1.2, 1.4, 2.2, 3.3, 4.1, 4.2, 5.1 (marked [~]: each note names an OpenRegister platform gap or a missing download route, so the requirements are not fully met)
 
-<!-- HYDRA CAP: max 20 unindented `- [ ]` lines. This file uses 12. -->
+<!-- HYDRA CAP: max 20 unindented `- [ ]` lines. This file uses 2. -->
 
 ## 1. The registration entry
 
@@ -74,6 +74,8 @@
   - What would make it sound is the platform guaranteeing issuance ordering, or
     exposing "this schema declares an identifier" as a question filinq can ask
     before the write. Named rather than guessed.
+
+- [ ] 1.5 Number a registration per unit as well as per year, once OpenRegister names a generated sequence per unit; until then the register keeps one instance-wide series (row in-number, REQ-DIO-01). Verify: PHPUnit that two units each start at 1 in a new year.
 
 ## 2. Discharge and the open post list
 
@@ -255,6 +257,8 @@
     requirement exists to prevent; noise is the cheaper error.
   - WHAT WAITS: the declaration itself, once somebody decides whether to add a
     window to the dialect or leave collapsing to the app. Not guessed at here.
+
+- [ ] 4.3 Call `lib/Service/DocumentDownloadRecorder.php` from every download path (file download, public share link, case archive) so a download is recorded and its notification queued (row rec-download-alert, REQ-DIO-06). Verify: PHPUnit per route that one download record is written.
 
 ## 5. Quality
 

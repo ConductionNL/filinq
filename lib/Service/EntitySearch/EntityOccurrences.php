@@ -210,19 +210,50 @@ class EntityOccurrences {
 			return null;
 		}
 
+		return $this->readableFileIn(userFolder: $userFolder, fileId: $fileId);
+
+	}//end readable()
+
+	/**
+	 * The file with this id in the caller's folder, when the caller may read it.
+	 *
+	 * @param Folder $userFolder The caller's folder.
+	 * @param int    $fileId     The file.
+	 *
+	 * @return File|null The file, or null.
+	 */
+	private function readableFileIn(Folder $userFolder, int $fileId): ?File {
+		$file = $this->fileById(userFolder: $userFolder, fileId: $fileId);
+		if ($file === null || $file->isReadable() === false) {
+			return null;
+		}
+
+		return $file;
+
+	}//end readableFileIn()
+
+	/**
+	 * The file with this id in the caller's folder.
+	 *
+	 * @param Folder $userFolder The caller's folder.
+	 * @param int    $fileId     The file.
+	 *
+	 * @return File|null The file, or null when it is gone, unreachable or not a file.
+	 */
+	private function fileById(Folder $userFolder, int $fileId): ?File {
 		try {
 			$node = $userFolder->getFirstNodeById($fileId);
 		} catch (Throwable) {
 			return null;
 		}
 
-		if ($node instanceof File === false || $node->isReadable() === false) {
+		if ($node instanceof File === false) {
 			return null;
 		}
 
 		return $node;
 
-	}//end readable()
+	}//end fileById()
 
 	/**
 	 * Folder id => dossier, for the dossiers the caller may read.
@@ -267,22 +298,35 @@ class EntityOccurrences {
 		}
 
 		try {
-			// Walk up until a dossier folder or the root, whose getParent() throws.
-			$parent = $node->getParent();
-			for ($depth = 0; $depth < 64; $depth++) {
-				if (isset($dossiers[(int) $parent->getId()]) === true) {
-					return $dossiers[(int) $parent->getId()];
-				}
-
-				$parent = $parent->getParent();
-			}
+			return $this->nearestDossier(parent: $node->getParent(), dossiers: $dossiers);
 		} catch (Throwable) {
 			return null;
 		}
 
+	}//end dossierOf()
+
+	/**
+	 * The first dossier at or above a folder, at most 64 levels up.
+	 *
+	 * Walks up until a dossier folder or the root, whose getParent() throws.
+	 *
+	 * @param Folder                           $parent   The folder to start at.
+	 * @param array<int, array<string, mixed>> $dossiers The dossiers by folder id.
+	 *
+	 * @return array<string, mixed>|null The dossier, or null when none is found in time.
+	 */
+	private function nearestDossier(Folder $parent, array $dossiers): ?array {
+		for ($depth = 0; $depth < 64; $depth++) {
+			if (isset($dossiers[(int) $parent->getId()]) === true) {
+				return $dossiers[(int) $parent->getId()];
+			}
+
+			$parent = $parent->getParent();
+		}
+
 		return null;
 
-	}//end dossierOf()
+	}//end nearestDossier()
 
 	/**
 	 * Whether the file was anonymised, or is itself a redacted copy. The other
@@ -294,21 +338,7 @@ class EntityOccurrences {
 	 * @return array{state: string, counterpartFileId: int|null} The state.
 	 */
 	private function anonymisation(?Folder $userFolder, int $fileId): array {
-		$state = 'none';
-		$counterpart = 0;
-		$source = $this->links->forSource(sourceFileId: $fileId);
-		if ($source !== null) {
-			$state = 'anonymised';
-			$counterpart = (int) ($source['anonymizedFileId'] ?? 0);
-		}
-
-		if ($source === null) {
-			$copy = $this->links->forAnonymized(anonymizedFileId: $fileId);
-			if ($copy !== null) {
-				$state = 'derivative';
-				$counterpart = (int) ($copy['sourceFileId'] ?? 0);
-			}
-		}
+		[$state, $counterpart] = $this->linkStateOf(fileId: $fileId);
 
 		if ($counterpart <= 0 || $this->readable(userFolder: $userFolder, fileId: $counterpart) === null) {
 			return ['state' => $state, 'counterpartFileId' => null];
@@ -317,6 +347,28 @@ class EntityOccurrences {
 		return ['state' => $state, 'counterpartFileId' => $counterpart];
 
 	}//end anonymisation()
+
+	/**
+	 * Whether the file is a source with an anonymised copy, a redacted copy, or neither, and the other file.
+	 *
+	 * @param int $fileId The file.
+	 *
+	 * @return array{0: string, 1: int} The state and the other file's id (0 when there is none).
+	 */
+	private function linkStateOf(int $fileId): array {
+		$source = $this->links->forSource(sourceFileId: $fileId);
+		if ($source !== null) {
+			return ['anonymised', (int) ($source['anonymizedFileId'] ?? 0)];
+		}
+
+		$copy = $this->links->forAnonymized(anonymizedFileId: $fileId);
+		if ($copy !== null) {
+			return ['derivative', (int) ($copy['sourceFileId'] ?? 0)];
+		}
+
+		return ['none', 0];
+
+	}//end linkStateOf()
 
 	/**
 	 * OpenRegister's risk level for the file, 'unknown' when it cannot say.

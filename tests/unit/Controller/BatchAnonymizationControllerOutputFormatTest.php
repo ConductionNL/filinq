@@ -13,6 +13,9 @@
  * @version GIT: <git_id>
  *
  * @link https://www.filinq.app
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\Filinq\Tests\Unit\Controller;
@@ -49,7 +52,7 @@ class BatchAnonymizationControllerOutputFormatTest extends TestCase {
 		);
 		$this->assertMatchesRegularExpression(
 			"/'pdf-only'\\s*,\\s*'pdf'\\s*,\\s*'preserve'/",
-			$content,
+			file_get_contents(__DIR__ . '/../../../lib/Controller/Support/OutputFormatChoice.php'),
 			'Batch VALID_OUTPUT_FORMATS must contain pdf-only, pdf and preserve'
 		);
 
@@ -63,7 +66,7 @@ class BatchAnonymizationControllerOutputFormatTest extends TestCase {
 	 * @return void
 	 */
 	public function testBatchDefaultsToPdfOnly(): void {
-		$content = file_get_contents(__DIR__ . '/../../../lib/Controller/BatchAnonymizationController.php');
+		$content = file_get_contents(__DIR__ . '/../../../lib/Controller/Support/OutputFormatChoice.php');
 
 		$this->assertMatchesRegularExpression(
 			"/self::DEFAULT_OUTPUT_FORMAT_KEY\\s*,\\s*'pdf-only'/s",
@@ -85,7 +88,7 @@ class BatchAnonymizationControllerOutputFormatTest extends TestCase {
 	 * @return void
 	 */
 	public function testBatchReadsTenantDefaultOutputFormat(): void {
-		$content = file_get_contents(__DIR__ . '/../../../lib/Controller/BatchAnonymizationController.php');
+		$content = file_get_contents(__DIR__ . '/../../../lib/Controller/Support/OutputFormatChoice.php');
 
 		$this->assertStringContainsString(
 			'filinq.anonymisation.default_output_format',

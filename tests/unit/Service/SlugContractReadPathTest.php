@@ -3,6 +3,9 @@
 /**
  * The slug contract of OpenRegister's object reads
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Every other suite in this repository doubles the read that the service under
  * test happens to call, so it can only report that the service called it.
  * That is how eighteen reads spread over fourteen files could ask

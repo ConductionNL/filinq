@@ -3,6 +3,9 @@
 /**
  * Filinq Generate Document Flow Node, directly invokable
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * The same `filinq.generate-document` node, opted in to OpenRegister's direct
  * invocation (`POST /api/flows/{flowId}/nodes/{nodeId}/run`, or-flow-run-node):
  * an app button can generate one document on one object without running the
@@ -27,9 +30,6 @@
  * @link https://www.filinq.app
  *
  * @spec openspec/changes/generate-document-runs-directly-on-an-object/specs/flow-document-generation/spec.md#requirement-the-generate-document-step-can-be-run-directly-on-one-object
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);

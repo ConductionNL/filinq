@@ -26,6 +26,7 @@ use ReflectionMethod;
  * the implementation before backtrack() was split.
  *
  * @covers \OCA\Filinq\Service\Comparison\WordDiffer
+ * @uses   \OCA\Filinq\Service\Comparison\LcsWalk
  */
 class WordOpsGoldenTest extends TestCase {
 

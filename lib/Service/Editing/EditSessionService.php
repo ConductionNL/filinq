@@ -3,6 +3,9 @@
 /**
  * Edit Session Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Owns the whole read-modify-write of an agent document edit: the lock, the
  * version precondition, the codec pass, the ADR-088 mark and the write. None of
  * these steps is separately agent-callable, and the model never sees a lock.
@@ -40,9 +43,6 @@
  * @link      https://www.filinq.app
  *
  * @spec openspec/changes/document-editing-tools/tasks.md#task-2-2
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -95,13 +95,6 @@ class EditSessionService {
 	 * @var string
 	 */
 	public const CONFIG_OUTPUT_MODE = 'agent_edit_output_mode';
-
-	/**
-	 * Largest package this service will load into memory.
-	 *
-	 * @var int
-	 */
-	private const MAX_BYTES = 26214400;
 
 	/**
 	 * Largest number of blocks returned to a caller in one read.
@@ -192,7 +185,7 @@ class EditSessionService {
 	 */
 	private function openListing(AgentFileRequest $request, DocumentListing $listing): array {
 		$file = $this->resolveFile(request: $request);
-		$packageBytes = $this->readBytes(file: $file);
+		$packageBytes = $this->writer->readBytes(file: $file);
 		$read = ($listing->read)($packageBytes, $file->getExtension());
 
 		$items = $read['items'];
@@ -205,7 +198,7 @@ class EditSessionService {
 		return ([
 			'fileId' => $file->getId(),
 			'name' => $file->getName(),
-			'path' => $this->userPath(uid: $request->uid, file: $file),
+			'path' => $this->writer->userPath(uid: $request->uid, file: $file),
 			// The token is minted from the BYTES that produced these items, so
 			// what the caller hands back names the document it actually read.
 			// It was the etag, which does not always move on a write — see
@@ -416,12 +409,12 @@ class EditSessionService {
 	 */
 	public function readMetadataForAgent(string $uid, int $fileId): array {
 		$file = $this->resolveFile(request: new AgentFileRequest(uid: $uid, fileId: $fileId));
-		$bytes = $this->readBytes(file: $file);
+		$bytes = $this->writer->readBytes(file: $file);
 
 		return [
 			'fileId' => $file->getId(),
 			'name' => $file->getName(),
-			'path' => $this->userPath(uid: $uid, file: $file),
+			'path' => $this->writer->userPath(uid: $uid, file: $file),
 			'version' => $this->writer->versionOf(packageBytes: $bytes),
 			'editable' => ($file->isUpdateable() === true),
 			'metadata' => $this->metadata->readMetadata(
@@ -690,45 +683,4 @@ class EditSessionService {
 		}
 
 	}//end refuseUneditableFormat()
-
-	/**
-	 * Read a file's bytes, refusing anything too large to hold in memory.
-	 *
-	 * @param File $file The file.
-	 *
-	 * @return string The bytes.
-	 *
-	 * @throws RuntimeException When the file is too large or unreadable.
-	 */
-	private function readBytes(File $file): string {
-		if ($file->getSize() > self::MAX_BYTES) {
-			throw new RuntimeException(
-				sprintf('"%s" is larger than %d MB and is not opened for editing.', $file->getName(), (int)(self::MAX_BYTES / 1048576))
-			);
-		}
-
-		$bytes = $file->getContent();
-		if (is_string($bytes) === false || $bytes === '') {
-			throw new RuntimeException(sprintf('"%s" could not be read.', $file->getName()));
-		}
-
-		return $bytes;
-	}//end readBytes()
-
-	/**
-	 * Express a file's path relative to the acting user's root, for a human-readable answer.
-	 *
-	 * @param string $uid The acting user id.
-	 * @param File $file The file.
-	 *
-	 * @return string The relative path, or the file name when it cannot be derived.
-	 */
-	private function userPath(string $uid, File $file): string {
-		try {
-			return $this->rootFolder->getUserFolder($uid)->getRelativePath($file->getPath()) ?? $file->getName();
-		} catch (Throwable) {
-			return $file->getName();
-		}
-
-	}//end userPath()
 }//end class

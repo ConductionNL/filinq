@@ -32,6 +32,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use DOMDocument;
+use DOMElement;
 use Mpdf\Mpdf;
 use OCA\Filinq\Exception\Pdfa3ConversionException;
 use OCP\IAppConfig;
@@ -256,21 +257,9 @@ class Pdfa3MetadataAssembler {
 		}
 
 		$xml = '   <rdf:Description rdf:about="" xmlns:docudesk="https://www.docudesk.app/ns/mdto/1.0/">' . "\n";
-		foreach ($archivalFields as $key => $value) {
-			if (is_array($value) === true || is_object($value) === true) {
-				$value = json_encode($value);
-				if ($value === false) {
-					continue;
-				}
-			}
-
-			$tag = $this->sanitiseXmlLocalName(name: (string)$key);
-			if ($tag === '') {
-				continue;
-			}
-
-			$escaped = htmlspecialchars((string)$value, (ENT_QUOTES | ENT_XML1), 'UTF-8');
-			$xml .= '    <docudesk:' . $tag . '>' . $escaped . '</docudesk:' . $tag . '>' . "\n";
+		foreach ($this->textFields(metadata: $archivalFields) as $field) {
+			$escaped = htmlspecialchars($field['text'], (ENT_QUOTES | ENT_XML1), 'UTF-8');
+			$xml .= '    <docudesk:' . $field['tag'] . '>' . $escaped . '</docudesk:' . $field['tag'] . '>' . "\n";
 		}
 
 		$xml .= '   </rdf:Description>' . "\n";
@@ -297,23 +286,7 @@ class Pdfa3MetadataAssembler {
 		$root = $doc->createElement('docudeskMetadata');
 		$doc->appendChild($root);
 
-		foreach ($metadata as $key => $value) {
-			$tag = $this->sanitiseXmlLocalName(name: (string)$key);
-			if ($tag === '') {
-				continue;
-			}
-
-			if (is_array($value) === true || is_object($value) === true) {
-				$value = json_encode($value);
-				if ($value === false) {
-					continue;
-				}
-			}
-
-			$element = $doc->createElement($tag);
-			$element->appendChild($doc->createTextNode((string)$value));
-			$root->appendChild($element);
-		}
+		$this->appendFields(root: $root, metadata: $metadata);
 
 		$xml = $doc->saveXML();
 		if ($xml === false) {
@@ -322,6 +295,65 @@ class Pdfa3MetadataAssembler {
 
 		return $xml;
 	}//end buildMetadataSidecarXml()
+
+	/**
+	 * Add one element per writable metadata field to the sidecar's root, in order.
+	 *
+	 * @param DOMElement          $root     The sidecar's document element.
+	 * @param array<string,mixed> $metadata Caller-supplied metadata.
+	 *
+	 * @return void
+	 */
+	private function appendFields(DOMElement $root, array $metadata): void {
+		$doc = $root->ownerDocument;
+		foreach ($this->textFields(metadata: $metadata) as $field) {
+			$element = $doc->createElement($field['tag']);
+			$element->appendChild($doc->createTextNode($field['text']));
+			$root->appendChild($element);
+		}
+	}//end appendFields()
+
+	/**
+	 * Every metadata field that can be written out: its key as an XML local
+	 * name and its value as text, in order. A key with nothing usable left
+	 * and a value that cannot be JSON-encoded are left out.
+	 *
+	 * @param array<string,mixed> $metadata Caller-supplied metadata.
+	 *
+	 * @return array<int,array{tag: string, text: string}> The fields.
+	 */
+	private function textFields(array $metadata): array {
+		$fields = [];
+		foreach ($metadata as $key => $value) {
+			$tag = $this->sanitiseXmlLocalName(name: (string)$key);
+			$text = $this->valueText(value: $value);
+			if ($tag !== '' && $text !== null) {
+				$fields[] = ['tag' => $tag, 'text' => $text];
+			}
+		}
+
+		return $fields;
+	}//end textFields()
+
+	/**
+	 * A metadata value as text: lists and objects as JSON.
+	 *
+	 * @param mixed $value The value.
+	 *
+	 * @return string|null The text, or null when the value cannot be JSON-encoded.
+	 */
+	private function valueText(mixed $value): ?string {
+		if (is_array($value) === false && is_object($value) === false) {
+			return (string)$value;
+		}
+
+		$json = json_encode($value);
+		if ($json === false) {
+			return null;
+		}
+
+		return $json;
+	}//end valueText()
 
 	/**
 	 * Sanitise a metadata key into a valid XML local name (letters,

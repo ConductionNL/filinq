@@ -15,6 +15,9 @@
  * @link https://www.filinq.app
  *
  * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-2
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\Filinq\Tests\Unit\Service;
@@ -98,6 +101,13 @@ class DocumentServiceTest extends TestCase {
 	private IJobList $jobList;
 
 	/**
+	 * The app config the job store writes job statuses to.
+	 *
+	 * @var IAppConfig&MockObject
+	 */
+	private IAppConfig $appConfig;
+
+	/**
 	 * Mock object service.
 	 *
 	 * @var ObjectService&MockObject
@@ -131,6 +141,7 @@ class DocumentServiceTest extends TestCase {
 		$appManager = $this->createMock(IAppManager::class);
 		$logger = $this->createMock(LoggerInterface::class);
 		$appConfig = $this->createMock(IAppConfig::class);
+		$this->appConfig = $appConfig;
 
 		$appManager->method('getInstalledApps')
 			->willReturn(['openregister']);
@@ -568,6 +579,57 @@ class DocumentServiceTest extends TestCase {
 		);
 
 	}//end testAsyncBulkQueuesTheFullArgument()
+
+	/**
+	 * An async bulk job stores its queued status, with the per-job options, before the job is queued.
+	 *
+	 * @return void
+	 */
+	public function testAsyncBulkStoresTheQueuedStatus(): void {
+		$this->templateSvc->method('getTemplate')->willReturn(['id' => 'tmpl-1', 'namespace' => 'ns']);
+
+		$stored = [];
+		$this->appConfig->method('setValueString')->willReturnCallback(
+			function (string $app, string $key, string $value) use (&$stored): bool {
+				$stored[] = [$app, $key, json_decode($value, true)];
+				return true;
+			}
+		);
+		$this->jobList->expects($this->once())->method('add')->willReturnCallback(
+			function () use (&$stored): void {
+				$stored[] = 'queued';
+			}
+		);
+
+		$objectIds = array_map(static fn (int $i): string => 'o' . $i, range(1, 11));
+		$result    = $this->service->generateBulk(
+			templateId: 'tmpl-1',
+			objectIds: $objectIds,
+			options: ['output' => ['mode' => 'files', 'targetPath' => 'Custom/dir'], 'userId' => 'u1']
+		);
+
+		$this->assertSame(
+			[
+				[
+					'filinq',
+					'document_job_' . $result['jobId'],
+					[
+						'jobId' => $result['jobId'],
+						'status' => 'queued',
+						'total' => 11,
+						'completed' => 0,
+						'errors' => 0,
+						'results' => [],
+						'options' => ['output' => ['mode' => 'files', 'targetPath' => 'Custom/dir/' . $result['jobId']], 'userId' => 'u1'],
+					],
+				],
+				'queued',
+			],
+			$stored
+		);
+		$this->assertSame(['jobId' => $result['jobId'], 'status' => 'queued', 'total' => 11], $result);
+
+	}//end testAsyncBulkStoresTheQueuedStatus()
 
 	/**
 	 * A preview turns failed data references into warnings, before the renderer's own.

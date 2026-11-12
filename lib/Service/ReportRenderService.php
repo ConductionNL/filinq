@@ -3,6 +3,9 @@
 /**
  * Report Render Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Implements the external, slug-addressed render contract
  * (`POST /api/v1/documents/render` and `.../render/batch`) that other
  * Conduction apps call to turn ad-hoc data into a stored, school-styled
@@ -26,9 +29,6 @@
  * @link      https://www.filinq.app
  *
  * @spec openspec/changes/filinq-configurable-report-templates/specs/report-render-api/spec.md
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);

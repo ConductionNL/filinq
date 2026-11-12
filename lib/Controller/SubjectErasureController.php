@@ -24,6 +24,7 @@ use OCA\Filinq\Exception\SubjectErasureRefusedException;
 use OCA\Filinq\Kernel\AppIdentity;
 use OCA\Filinq\Kernel\Contracts\SubjectErasureRunInterface;
 use OCA\Filinq\Kernel\Contracts\SubjectErasureServiceInterface;
+use OCA\Filinq\Service\ReadsCurrentUserId;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -40,6 +41,8 @@ use Throwable;
  * `subject_erasure_groups`, fail closed), recording every denial.
  */
 class SubjectErasureController extends Controller {
+
+	use ReadsCurrentUserId;
 
 	/**
 	 * HTTP status per refusal.
@@ -89,7 +92,7 @@ class SubjectErasureController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function index(): JSONResponse {
-		return $this->answer(action: fn (): array => ['results' => $this->requests->list(userId: $this->userId())]);
+		return $this->answer(action: fn (): array => ['results' => $this->requests->list(userId: $this->currentUserId())]);
 
 	}//end index()
 
@@ -108,7 +111,7 @@ class SubjectErasureController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function show(string $id): JSONResponse {
-		return $this->answer(action: fn (): array => $this->requests->get(uuid: $id, userId: $this->userId()));
+		return $this->answer(action: fn (): array => $this->requests->get(uuid: $id, userId: $this->currentUserId()));
 
 	}//end show()
 
@@ -122,7 +125,7 @@ class SubjectErasureController extends Controller {
 	#[NoAdminRequired]
 	public function create(): JSONResponse {
 		return $this->answer(
-			action: fn (): array => $this->requests->create(input: $this->request->getParams(), userId: $this->userId()),
+			action: fn (): array => $this->requests->create(input: $this->request->getParams(), userId: $this->currentUserId()),
 			okStatus: Http::STATUS_CREATED
 		);
 
@@ -143,7 +146,7 @@ class SubjectErasureController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function preview(string $id): JSONResponse {
-		return $this->answer(action: fn (): array => $this->requests->preview(uuid: $id, userId: $this->userId()));
+		return $this->answer(action: fn (): array => $this->requests->preview(uuid: $id, userId: $this->currentUserId()));
 
 	}//end preview()
 
@@ -166,7 +169,7 @@ class SubjectErasureController extends Controller {
 			action: fn (): array => $this->requests->exclude(
 				uuid: $id,
 				exclusions: (array) $this->request->getParam('exclusions', []),
-				userId: $this->userId()
+				userId: $this->currentUserId()
 			)
 		);
 
@@ -187,7 +190,7 @@ class SubjectErasureController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function run(string $id): JSONResponse {
-		return $this->answer(action: fn (): array => $this->runs->run(uuid: $id, userId: $this->userId()));
+		return $this->answer(action: fn (): array => $this->runs->run(uuid: $id, userId: $this->currentUserId()));
 
 	}//end run()
 
@@ -206,7 +209,7 @@ class SubjectErasureController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function certificate(string $id): JSONResponse {
-		return $this->answer(action: fn (): array => $this->runs->certificate(uuid: $id, userId: $this->userId()));
+		return $this->answer(action: fn (): array => $this->runs->certificate(uuid: $id, userId: $this->currentUserId()));
 
 	}//end certificate()
 
@@ -262,19 +265,4 @@ class SubjectErasureController extends Controller {
 		);
 
 	}//end refused()
-
-	/**
-	 * The signed-in user's id, '' when nobody is.
-	 *
-	 * @return string The user id.
-	 */
-	private function userId(): string {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return '';
-		}
-
-		return $user->getUID();
-
-	}//end userId()
 }//end class

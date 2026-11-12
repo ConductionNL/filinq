@@ -25,6 +25,7 @@ namespace OCA\Filinq\Controller;
 use OCA\Filinq\Exception\EntitySearchRefusedException;
 use OCA\Filinq\Kernel\Contracts\EntitySearchServiceInterface;
 use OCA\Filinq\Kernel\EntitySearchQuery;
+use OCA\Filinq\Service\ReadsCurrentUserId;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -44,6 +45,8 @@ use Throwable;
  * the framework level and runs the gate first, in the service.
  */
 class EntitySearchController extends Controller {
+
+	use ReadsCurrentUserId;
 
 	/**
 	 * HTTP status per refusal.
@@ -92,7 +95,7 @@ class EntitySearchController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function access(): JSONResponse {
-		return $this->answer(action: fn (): array => $this->search->access(userId: $this->userId()));
+		return $this->answer(action: fn (): array => $this->search->access(userId: $this->currentUserId()));
 
 	}//end access()
 
@@ -107,7 +110,7 @@ class EntitySearchController extends Controller {
 	public function index(): JSONResponse {
 		return $this->answer(
 			action: fn (): array => $this->search->search(
-				userId: $this->userId(),
+				userId: $this->currentUserId(),
 				query: new EntitySearchQuery(
 					text: (string) $this->request->getParam('query', ''),
 					type: (string) $this->request->getParam('type', ''),
@@ -135,7 +138,7 @@ class EntitySearchController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function show(string $entityUuid): JSONResponse {
-		return $this->answer(action: fn (): array => $this->search->detail(userId: $this->userId(), uuid: $entityUuid));
+		return $this->answer(action: fn (): array => $this->search->detail(userId: $this->currentUserId(), uuid: $entityUuid));
 
 	}//end show()
 
@@ -184,19 +187,4 @@ class EntitySearchController extends Controller {
 		);
 
 	}//end refused()
-
-	/**
-	 * The signed-in user's id, '' when nobody is.
-	 *
-	 * @return string The user id.
-	 */
-	private function userId(): string {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return '';
-		}
-
-		return $user->getUID();
-
-	}//end userId()
 }//end class

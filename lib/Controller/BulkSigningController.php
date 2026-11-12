@@ -24,6 +24,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
+use OCA\Filinq\Controller\Support\OperationAnswer;
 use OCA\Filinq\Kernel\Contracts\BulkSigningServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -33,7 +34,6 @@ use OCP\IGroupManager;
 use OCP\IRequest;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
-use Throwable;
 
 /**
  * Every endpoint is for a signed-in user and reaches only the caller's own
@@ -86,18 +86,12 @@ class BulkSigningController extends Controller {
 	#[NoAdminRequired]
 	public function create(): JSONResponse {
 		$uid = $this->callerId();
-		$upload = $this->request->getUploadedFile('file');
-		if (is_array($upload) === false || ($upload['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+		$upload = $this->recipientList();
+		if ($upload === null) {
 			return new JSONResponse(data: ['error' => 'Upload a .csv or .xlsx recipient list as "file"'], statusCode: Http::STATUS_BAD_REQUEST);
 		}
 
-		$settings = [];
-		foreach (['title', 'documentFileId', 'documentName', 'signatureLevel', 'signingMode', 'provider'] as $key) {
-			$value = $this->request->getParam($key);
-			if ($value !== null && $value !== '') {
-				$settings[$key] = (string) $value;
-			}
-		}
+		$settings = $this->documentSettings();
 
 		return $this->answer(
 			operation: fn (): array => $this->bulkSigning->createBatch(
@@ -182,6 +176,39 @@ class BulkSigningController extends Controller {
 	}//end cancel()
 
 	/**
+	 * The uploaded recipient list, or null when none arrived intact.
+	 *
+	 * @return array|null The upload entry of `file`
+	 */
+	private function recipientList(): ?array {
+		$upload = $this->request->getUploadedFile('file');
+		if (is_array($upload) === false || ($upload['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+			return null;
+		}
+
+		return $upload;
+
+	}//end recipientList()
+
+	/**
+	 * The non-empty document settings of the request, as strings.
+	 *
+	 * @return array<string,string>
+	 */
+	private function documentSettings(): array {
+		$settings = [];
+		foreach (['title', 'documentFileId', 'documentName', 'signatureLevel', 'signingMode', 'provider'] as $key) {
+			$value = $this->request->getParam($key);
+			if ($value !== null && $value !== '') {
+				$settings[$key] = (string) $value;
+			}
+		}
+
+		return $settings;
+
+	}//end documentSettings()
+
+	/**
 	 * The caller's uid ('' only if the framework let an anonymous call through).
 	 *
 	 * @return string
@@ -200,23 +227,8 @@ class BulkSigningController extends Controller {
 	 * @return JSONResponse
 	 */
 	private function answer(callable $operation, int $status = Http::STATUS_OK): JSONResponse {
-		try {
-			$result = $operation();
-		} catch (Throwable $e) {
-			$code = (int) $e->getCode();
-			if (in_array($code, [Http::STATUS_BAD_REQUEST, Http::STATUS_CONFLICT], true) === true) {
-				return new JSONResponse(data: ['error' => $e->getMessage()], statusCode: $code);
-			}
-
-			$this->logger->error('Bulk send failed: ' . $e->getMessage(), ['exception' => $e]);
-			return new JSONResponse(data: ['error' => 'Bulk send failed'], statusCode: Http::STATUS_INTERNAL_SERVER_ERROR);
-		}
-
-		if ($result === null) {
-			return new JSONResponse(data: ['error' => 'Bulk send not found'], statusCode: Http::STATUS_NOT_FOUND);
-		}
-
-		return new JSONResponse(data: $result, statusCode: $status);
+		$answers = new OperationAnswer(logger: $this->logger, failure: 'Bulk send failed', notFound: 'Bulk send not found');
+		return $answers->answer(operation: $operation, status: $status);
 
 	}//end answer()
 }//end class

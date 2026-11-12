@@ -30,9 +30,11 @@ use OCA\Filinq\EventListener\ListenerRegistrar;
 use OCA\Filinq\Kernel\Contracts\SettingsServiceInterface;
 use OCA\Filinq\Kernel\JobQueueInterface;
 use OCA\Filinq\Mcp\FilinqScannableServices;
+use OCA\Filinq\Middleware\ApiContractMiddleware;
 use OCA\Filinq\Middleware\LanguageNegotiationMiddleware;
 use OCA\Filinq\Service\ServiceRegistrar;
 use OCA\OpenRegister\AppHost\Bootstrap;
+use OCA\OpenRegister\AppHost\LeafAdoption;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use Psr\Container\ContainerInterface;
@@ -127,6 +129,9 @@ class RegistrationBootstrap {
 		// objects to the right variant.
 		$context->registerMiddleware(LanguageNegotiationMiddleware::class);
 
+		// API-Version header and problem details on the JSON API (spec api-contract).
+		$context->registerMiddleware(ApiContractMiddleware::class);
+
 		// Legal holds (e-discovery-legal-hold): renders the place and release notifications.
 		// Named by string to keep this class's coupling where it is.
 		$context->registerNotifierService('OCA\\Filinq\\Notification\\LegalHoldNotifier');
@@ -217,8 +222,10 @@ class RegistrationBootstrap {
 			try {
 				Bootstrap::aliasStoreController(
 					context: $context,
-					appId: 'filinq',
-					controllerNs: 'OCA\\Filinq\\Controller'
+					adoption: new LeafAdoption(
+						appId: 'filinq',
+						options: ['namespace' => 'OCA\\Filinq', 'controllerNamespace' => 'OCA\\Filinq\\Controller']
+					)
 				);
 			} catch (\Throwable) {
 				// An OpenRegister older than the helper, or present but

@@ -3,6 +3,9 @@
 /**
  * Stub for OpenRegister's flow-node contract (the parts filinq implements).
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Used twice: PHPStan reads it through `scanFiles` and psalm through
  * `<stubs>`, and the unit bootstrap requires it so the node and its listener
  * can be exercised against the real interface shape. It is never loaded at
@@ -30,9 +33,6 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
  * @link https://www.filinq.app
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -96,14 +96,32 @@ interface IFlowNode {
 	/**
 	 * Do the work: items in, items out.
 	 *
-	 * @param array $items The input items.
-	 * @param array $config The step's authored configuration.
-	 * @param array $context Run-level metadata.
+	 * @param FlowNodeCall $call The input items, the step's authored
+	 *                           configuration and the run-level metadata.
 	 *
 	 * @return array The output items.
 	 */
-	public function execute(array $items, array $config, array $context): array;
+	public function execute(FlowNodeCall $call): array;
 }//end interface
+
+/**
+ * One call of a node (mirrors lib/Service/Flow/FlowNodeCall.php, openregister #9090).
+ */
+final class FlowNodeCall {
+	/**
+	 * Constructor.
+	 *
+	 * @param array $items   The input items.
+	 * @param array $config  The step's authored configuration.
+	 * @param array $context Run-level metadata.
+	 */
+	public function __construct(
+		public readonly array $items = [],
+		public readonly array $config = [],
+		public readonly array $context = [],
+	) {
+	}//end __construct()
+}//end class
 
 /**
  * Declares which configuration keys a node reads.

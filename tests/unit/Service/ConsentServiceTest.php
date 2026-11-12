@@ -1263,4 +1263,76 @@ class ConsentServiceTest extends TestCase {
 		);
 
 	}//end serviceOverStoredConsent()
+
+	/**
+	 * A failure inside the request is logged once with the document id and rethrown wrapped, keeping its cause.
+	 *
+	 * @return void
+	 */
+	public function testAFailedConsentRequestIsLoggedAndWrappedWithItsCause(): void {
+		$noOrAppManager = $this->createMock(IAppManager::class);
+		$noOrAppManager->method('getInstalledApps')->willReturn([]);
+
+		$logged = [];
+		$this->mockLogger->method('error')->willReturnCallback(
+			function (string $message, array $context = []) use (&$logged): void {
+				$logged[] = [$message, $context];
+			}
+		);
+
+		$bag = $this->buildService(appManager: $noOrAppManager);
+		try {
+			$bag['service']->createConsentRequest(documentId: 'doc-7', entityType: 'PERSON', entityText: 'Jan', register: 'reg-1', schema: 'sch-1');
+			$this->fail('Expected the request to fail.');
+		} catch (PolicyRejectedException $e) {
+			$this->fail('A missing OpenRegister is not a policy refusal.');
+		} catch (\Exception $e) {
+			$cause = $e->getPrevious();
+			$this->assertNotNull($cause);
+			$this->assertSame('Failed to create consent request: ' . $cause->getMessage(), $e->getMessage());
+			$this->assertSame(0, $e->getCode());
+			$this->assertCount(1, $logged);
+			$this->assertSame('Failed to create consent request: ' . $cause->getMessage(), $logged[0][0]);
+			$this->assertSame('doc-7', $logged[0][1]['documentId']);
+			$this->assertSame($cause, $logged[0][1]['exception']);
+		}
+
+	}//end testAFailedConsentRequestIsLoggedAndWrappedWithItsCause()
+
+	/**
+	 * A prohibition refuses the request unwrapped and unlogged, before any lookup or write.
+	 *
+	 * @return void
+	 */
+	public function testAProhibitionIsRefusedBeforeAnyLookupAndIsNotLogged(): void {
+		$objectService = $this->createMock(\OCA\OpenRegister\Service\ObjectService::class);
+		$objectService->expects($this->never())->method('searchObjects');
+		$objectService->expects($this->never())->method('saveObject');
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->willReturn($objectService);
+
+		$policyMatcher = $this->createMock(PolicyMatchService::class);
+		$policyMatcher->expects($this->once())->method('match')
+			->with('Getuige', 'PERSON')
+			->willReturn(['uuid' => 'rule-1', 'kind' => PolicyMatchService::KIND_PROHIBITION, 'primaryName' => 'Getuige']);
+		$this->mockLogger->expects($this->never())->method('error');
+
+		$service = new ConsentService(
+			logger: $this->mockLogger,
+			deadlineChecker: $this->mockDeadlineChecker,
+			updateHandler: $this->mockUpdateHandler,
+			policyMatcher: $policyMatcher,
+			scopeValidator: $this->mockScopeValidator,
+			recordWriter: $this->buildRecordWriter(container: $container)
+		);
+
+		try {
+			$service->createConsentRequest(documentId: 'doc-1', entityType: 'PERSON', entityText: 'Getuige', register: 'reg-1', schema: 'sch-1');
+			$this->fail('Expected the prohibition to refuse the request.');
+		} catch (PolicyRejectedException $e) {
+			$this->assertSame(PolicyRejectedException::class, $e::class);
+			$this->assertNull($e->getPrevious());
+		}
+
+	}//end testAProhibitionIsRefusedBeforeAnyLookupAndIsNotLogged()
 }//end class

@@ -78,59 +78,75 @@ class RedactionAnnotator {
 	 * @spec openspec/specs/document-comparison/spec.md
 	 */
 	public function annotate(array $hunks, int $sourceFileId): array {
-		$result = [
-			'hunks' => $hunks,
-			'status' => 'none',
-			'unredactedEntities' => [],
-		];
-
-		$mapper = $this->resolveMapper();
-		if ($mapper === null) {
-			$result['status'] = 'unavailable';
-			return $result;
-		}
-
-		$lookup = $this->lookupRelations(mapper: $mapper, sourceFileId: $sourceFileId);
+		$lookup = $this->lookupForFile(sourceFileId: $sourceFileId);
 		if ($lookup === null) {
-			$result['status'] = 'unavailable';
-			return $result;
+			return $this->plainDiff(hunks: $hunks, status: 'unavailable');
 		}
 
 		if (empty($lookup['relations']) === true) {
 			// No anonymisation link for this file: plain diff, no annotation.
-			return $result;
+			return $this->plainDiff(hunks: $hunks, status: 'none');
 		}
 
-		// Index entity metadata (type + canonical value/name) by entity id.
-		$entityMeta = $this->indexEntityMeta(joined: $lookup['joined']);
-
-		// Build the anonymise set: non-skip relations with their replacement keys.
-		$anonymiseSet = $this->buildAnonymiseSet(relations: $lookup['relations']);
-
-		// Annotate hunks: match inserted (replacement key) or removed (value) spans.
-		$annotatedHunks = [];
-		foreach ($result['hunks'] as $hunk) {
-			$match = $this->matchHunkToEntity(hunk: $hunk, anonymiseSet: $anonymiseSet, entityMeta: $entityMeta);
-			if ($match !== null) {
-				$hunk['redaction'] = [
-					'entityId' => $match['entityId'],
-					'entityType' => $match['entityType'],
-					'matchedBy' => $match['matchedBy'],
-				];
-				$anonymiseSet[$match['entityId']]['matched'] = true;
-			}
-
-			$annotatedHunks[] = $hunk;
-		}
-
-		$result['hunks'] = $annotatedHunks;
-		$result['status'] = 'annotated';
-
-		// Completeness signal: anonymise-set entities that matched zero hunks.
-		$result['unredactedEntities'] = $this->unredactedEntities(anonymiseSet: $anonymiseSet, entityMeta: $entityMeta);
-
-		return $result;
+		return $this->annotateLinked(hunks: $hunks, lookup: $lookup);
 	}//end annotate()
+
+	/**
+	 * The hunks as they are, with no annotation.
+	 *
+	 * @param array<int, array<string, mixed>> $hunks  The diff hunks.
+	 * @param string                           $status Why there is no annotation: unavailable or none.
+	 *
+	 * @return array{hunks: array<int, array<string, mixed>>, status: string, unredactedEntities: array<int, array<string, mixed>>}
+	 */
+	private function plainDiff(array $hunks, string $status): array {
+		return [
+			'hunks' => $hunks,
+			'status' => $status,
+			'unredactedEntities' => [],
+		];
+	}//end plainDiff()
+
+	/**
+	 * Annotate the hunks of a file that has entity relations.
+	 *
+	 * Inserted spans match a replacement key, removed spans an entity value;
+	 * anonymise-set entities that matched zero hunks are the completeness signal.
+	 *
+	 * @param array<int, array<string, mixed>> $hunks  The diff hunks.
+	 * @param array{relations: mixed, joined: mixed} $lookup The relations and joined entity rows.
+	 *
+	 * @return array{hunks: array<int, array<string, mixed>>, status: string, unredactedEntities: array<int, array<string, mixed>>}
+	 */
+	private function annotateLinked(array $hunks, array $lookup): array {
+		$entityMeta = $this->indexEntityMeta(joined: $lookup['joined']);
+		$matchSet = new RedactionMatchSet(
+			anonymiseSet: $this->buildAnonymiseSet(relations: $lookup['relations']),
+			entityMeta: $entityMeta
+		);
+
+		return [
+			'hunks' => $matchSet->annotateHunks(hunks: $hunks),
+			'status' => 'annotated',
+			'unredactedEntities' => $matchSet->unmatchedEntities(),
+		];
+	}//end annotateLinked()
+
+	/**
+	 * Read the relations for a source file, or null when OpenRegister or the lookup is unavailable.
+	 *
+	 * @param int $sourceFileId The source (left) file id.
+	 *
+	 * @return array{relations: mixed, joined: mixed}|null The rows, or null.
+	 */
+	private function lookupForFile(int $sourceFileId): ?array {
+		$mapper = $this->resolveMapper();
+		if ($mapper === null) {
+			return null;
+		}
+
+		return $this->lookupRelations(mapper: $mapper, sourceFileId: $sourceFileId);
+	}//end lookupForFile()
 
 	/**
 	 * Resolve the OpenRegister EntityRelationMapper, or null when unavailable.
@@ -215,116 +231,6 @@ class RedactionAnnotator {
 
 		return $anonymiseSet;
 	}//end buildAnonymiseSet()
-
-	/**
-	 * Collect the anonymise-set entities that matched zero hunks.
-	 *
-	 * @param array<int, array{replacement:string, matched:bool}> $anonymiseSet The anonymise set.
-	 * @param array<int, array{entityType:string, entityName:string, value:string}> $entityMeta Entity metadata.
-	 *
-	 * @return array<int, array<string, mixed>> The unredacted entities.
-	 */
-	private function unredactedEntities(array $anonymiseSet, array $entityMeta): array {
-		$unredacted = [];
-		foreach ($anonymiseSet as $eid => $info) {
-			if ($info['matched'] === false) {
-				$unredacted[] = [
-					'entityId' => $eid,
-					'entityName' => ($entityMeta[$eid]['entityName'] ?? ''),
-				];
-			}
-		}
-
-		return $unredacted;
-	}//end unredactedEntities()
-
-	/**
-	 * Match a hunk to an entity by replacement-key (insert) or value (delete).
-	 *
-	 * @param array<string, mixed> $hunk A diff hunk.
-	 * @param array<int, array{replacement:string, matched:bool}> $anonymiseSet The anonymise set.
-	 * @param array<int, array{entityType:string, entityName:string, value:string}> $entityMeta Entity metadata.
-	 *
-	 * @return array{entityId:int, entityType:string, matchedBy:string}|null The match or null.
-	 */
-	private function matchHunkToEntity(array $hunk, array $anonymiseSet, array $entityMeta): ?array {
-		if ($hunk['type'] === 'unchanged') {
-			return null;
-		}
-
-		// Key-based: inserted span equals an entity's replacement key.
-		$match = $this->matchByReplacementKey(
-			insertedText: (string)($hunk['rightText'] ?? ''),
-			anonymiseSet: $anonymiseSet,
-			entityMeta: $entityMeta
-		);
-		if ($match !== null) {
-			return $match;
-		}
-
-		// Value-based fallback: removed span equals an entity canonical value.
-		return $this->matchByCanonicalValue(
-			removedText: (string)($hunk['leftText'] ?? ''),
-			anonymiseSet: $anonymiseSet,
-			entityMeta: $entityMeta
-		);
-
-	}//end matchHunkToEntity()
-
-	/**
-	 * Match an inserted span against the entities' replacement keys.
-	 *
-	 * @param string $insertedText The inserted span.
-	 * @param array<int, array{replacement:string, matched:bool}> $anonymiseSet The anonymise set.
-	 * @param array<int, array{entityType:string, entityName:string, value:string}> $entityMeta Entity metadata.
-	 *
-	 * @return array{entityId:int, entityType:string, matchedBy:string}|null The match or null.
-	 */
-	private function matchByReplacementKey(string $insertedText, array $anonymiseSet, array $entityMeta): ?array {
-		if ($insertedText === '') {
-			return null;
-		}
-
-		foreach ($anonymiseSet as $eid => $info) {
-			if ($info['replacement'] !== '' && str_contains($insertedText, $info['replacement']) === true) {
-				return [
-					'entityId' => $eid,
-					'entityType' => ($entityMeta[$eid]['entityType'] ?? ''),
-					'matchedBy' => 'key',
-				];
-			}
-		}
-
-		return null;
-	}//end matchByReplacementKey()
-
-	/**
-	 * Match a removed span against the entities' canonical values.
-	 *
-	 * @param string $removedText The removed span.
-	 * @param array<int, array{replacement:string, matched:bool}> $anonymiseSet The anonymise set.
-	 * @param array<int, array{entityType:string, entityName:string, value:string}> $entityMeta Entity metadata.
-	 *
-	 * @return array{entityId:int, entityType:string, matchedBy:string}|null The match or null.
-	 */
-	private function matchByCanonicalValue(string $removedText, array $anonymiseSet, array $entityMeta): ?array {
-		if ($removedText === '') {
-			return null;
-		}
-
-		foreach (array_keys($anonymiseSet) as $eid) {
-			$value = (string)($entityMeta[$eid]['value'] ?? '');
-			if ($value !== '' && str_contains($removedText, $value) === true) {
-				return [
-					'entityId' => $eid,
-					'entityType' => ($entityMeta[$eid]['entityType'] ?? ''),
-					'matchedBy' => 'value',
-				];
-			}
-		}
-
-		return null;
-	}//end matchByCanonicalValue()
 
 	/**
 	 * Determine whether a relation is skip-flagged (operator-released override).

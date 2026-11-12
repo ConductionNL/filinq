@@ -3,6 +3,9 @@
 /**
  * Filinq Dashboard Controller.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * SPA host: renders the SPA from `templates/index.php` and serves the Vue
  * history-mode catch-all. Behaviourally identical to the OpenRegister AppHost
  * `GenericDashboardController` it used to subclass, but implemented locally and
@@ -27,9 +30,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-License-Identifier: EUPL-1.2
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
  * @link https://filinq.conduction.nl
  */

@@ -3,6 +3,9 @@
 /**
  * Running an erasure, and what a half-finished one leaves behind.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * 🔴 THIS RUN CANNOT BE ALL-OR-NOTHING, AND THAT IS THE DIFFERENCE FROM THE
  * PLATFORM. OpenRegister's anonymisation prepares every target before applying
  * any, so a record is never half done. It can do that because the unit is ONE
@@ -34,9 +37,6 @@
  * delayed job, it is a missed legal deadline with a person on the other end of
  * it. `resumeFrom()` exists so the answer to "what now" is a resume rather than
  * a restart over documents already done.
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @category  Service
  * @package   OCA\Filinq\Service\SubjectErasure

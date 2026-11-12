@@ -3,6 +3,9 @@
 /**
  * Wire-contract tests for AnonymizationController::upload() and updateRelation()
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Covers `anonymization#upload` (POST api/anonymization/upload) and
  * `anonymization#updateRelation` (PATCH api/anonymization/relations/{id}).
  *
@@ -26,9 +29,6 @@
  *
  * @spec openspec/specs/anonymization/spec.md
  * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-6
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);

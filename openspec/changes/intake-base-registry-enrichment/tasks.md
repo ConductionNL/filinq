@@ -1,6 +1,6 @@
 # Tasks: intake-base-registry-enrichment
 
-<!-- HYDRA CAP: max 20 unindented `- [ ]` lines. This file uses 8. -->
+<!-- HYDRA CAP: max 20 unindented `- [ ]` lines. This file uses 9. -->
 
 ## 1. Register and settings
 
@@ -17,6 +17,8 @@
 
 - [ ] 3.1 Add accept and dismiss of a registry suggestion to `IntakeController` beside `decideParty()`, session user only (D4) (REQ-IBR-004). Verify: Newman for accept and dismiss; PHPUnit that accept writes the party fields and `written: true`.
 - [ ] 3.2 Show the registry suggestion in the assign dialog of `src/views/intake/IntakeIndex.vue` with accept, correct and dismiss (REQ-IBR-004). Verify: Playwright accepts the seeded KvK suggestion.
+
+- [ ] 3.3 Show the party suggestion (`partySuggestion` on the intake document) in `src/views/intake/IntakeIndex.vue` with confirm, correct and dismiss through `decidePartySuggestion()` in `src/services/intakeService.js` (row in-party, REQ-IDW-03). Verify: Playwright confirms a suggested sender.
 
 ## 4. Quality
 

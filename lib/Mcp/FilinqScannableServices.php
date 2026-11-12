@@ -3,6 +3,9 @@
 /**
  * Filinq scannable-services opt-in (ADR-063 chain 3/3).
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Declares which of Filinq's own service classes OpenRegister's
  * `AttributeToolScanner` may reflect for `#[McpTool]`-attributed methods.
  * Registered under the `OCA\OpenRegister\Mcp\IMcpScannableServices::filinq`
@@ -30,9 +33,6 @@
  * @link      https://www.filinq.app
  *
  * @spec openspec/changes/filinq-mcp-adoption/tasks.md#task-2-2
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);

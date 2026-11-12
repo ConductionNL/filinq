@@ -1,0 +1,26 @@
+[
+	{
+		"code": "docudesk-anonymisation",
+		"name": "[t] Anonymisation of documents",
+		"purpose": "[t] Pseudonymise / redact personal data detected in documents for Wet Open Overheid publication.",
+		"retention": "[t] P7Y (selectielijst category to be confirmed)"
+	},
+	{
+		"code": "docudesk-ocr",
+		"name": "[t] OCR text extraction",
+		"purpose": "[t] Extract machine-readable text from scanned documents and images.",
+		"retention": "[t] not declared"
+	},
+	{
+		"code": "docudesk-metadata-enrichment",
+		"name": "[t] Document metadata enrichment",
+		"purpose": "[t] Language detection, keyword extraction, and topic classification.",
+		"retention": "[t] not declared"
+	},
+	{
+		"code": "docudesk-signing",
+		"name": "[t] Digital document signing",
+		"purpose": "[t] Maintain a tamper-evident audit trail of electronic signing activities.",
+		"retention": "[t] P10Y (Archiefwet 1995 selectielijst cat. 5.1.3)"
+	}
+]

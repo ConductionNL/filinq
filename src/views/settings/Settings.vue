@@ -1,3 +1,7 @@
+<!--
+  - SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
 <template>
 	<CnAdminSettingsShell
 		appId="filinq"
@@ -857,6 +861,7 @@
 
 <script>
 import { CnAdminSettingsShell } from '@conduction/nextcloud-vue'
+import { getRequestToken } from '@nextcloud/auth'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import {
 	NcButton,
@@ -897,6 +902,93 @@ import { initialSections } from '../../services/settingsSections.js'
 
 /** The object types whose register and schema this page binds. */
 const OBJECT_TYPES = ['publicationConsent']
+
+/**
+ * The Art. 30 processing activity: Anonymisation of documents.
+ *
+ * @return {{code: string, name: string, purpose: string, retention: string}} The activity, translated.
+ */
+function anonymisationActivity() {
+	return {
+		// ⚠️ The four `code` values below deliberately keep the
+		// pre-rename `docudesk-` spelling. They are the AVG Art. 30
+		// processing-activity CODES declared in
+		// lib/Settings/filinq_register.json and already recorded on
+		// every OpenRegister read-log row this app has attributed.
+		// Renaming them would detach the existing log rows from the
+		// catalogue entry that describes them, so an Art. 30 export
+		// would silently show an activity with no history and
+		// history with no activity.
+		code: 'docudesk-anonymisation',
+		name: t('filinq', 'Anonymisation of documents'),
+		purpose: t(
+			'filinq',
+			'Pseudonymise / redact personal data detected in documents for Wet Open Overheid publication.',
+		),
+
+		retention: t(
+			'filinq',
+			'P7Y (selectielijst category to be confirmed)',
+		),
+	}
+}
+
+/**
+ * The Art. 30 processing activity: OCR text extraction.
+ *
+ * @return {{code: string, name: string, purpose: string, retention: string}} The activity, translated.
+ */
+function ocrActivity() {
+	return {
+		code: 'docudesk-ocr',
+		name: t('filinq', 'OCR text extraction'),
+		purpose: t(
+			'filinq',
+			'Extract machine-readable text from scanned documents and images.',
+		),
+
+		retention: t('filinq', 'not declared'),
+	}
+}
+
+/**
+ * The Art. 30 processing activity: Document metadata enrichment.
+ *
+ * @return {{code: string, name: string, purpose: string, retention: string}} The activity, translated.
+ */
+function metadataEnrichmentActivity() {
+	return {
+		code: 'docudesk-metadata-enrichment',
+		name: t('filinq', 'Document metadata enrichment'),
+		purpose: t(
+			'filinq',
+			'Language detection, keyword extraction, and topic classification.',
+		),
+
+		retention: t('filinq', 'not declared'),
+	}
+}
+
+/**
+ * The Art. 30 processing activity: Digital document signing.
+ *
+ * @return {{code: string, name: string, purpose: string, retention: string}} The activity, translated.
+ */
+function signingActivity() {
+	return {
+		code: 'docudesk-signing',
+		name: t('filinq', 'Digital document signing'),
+		purpose: t(
+			'filinq',
+			'Maintain a tamper-evident audit trail of electronic signing activities.',
+		),
+
+		retention: t(
+			'filinq',
+			'P10Y (Archiefwet 1995 selectielijst cat. 5.1.3)',
+		),
+	}
+}
 
 export default {
 	name: 'Settings',
@@ -1026,61 +1118,10 @@ export default {
 		 */
 		processingActivities() {
 			return [
-				{
-					// ⚠️ The four `code` values below deliberately keep the
-					// pre-rename `docudesk-` spelling. They are the AVG Art. 30
-					// processing-activity CODES declared in
-					// lib/Settings/filinq_register.json and already recorded on
-					// every OpenRegister read-log row this app has attributed.
-					// Renaming them would detach the existing log rows from the
-					// catalogue entry that describes them, so an Art. 30 export
-					// would silently show an activity with no history and
-					// history with no activity.
-					code: 'docudesk-anonymisation',
-					name: t('filinq', 'Anonymisation of documents'),
-					purpose: t(
-						'filinq',
-						'Pseudonymise / redact personal data detected in documents for Wet Open Overheid publication.',
-					),
-
-					retention: t(
-						'filinq',
-						'P7Y (selectielijst category to be confirmed)',
-					),
-				},
-				{
-					code: 'docudesk-ocr',
-					name: t('filinq', 'OCR text extraction'),
-					purpose: t(
-						'filinq',
-						'Extract machine-readable text from scanned documents and images.',
-					),
-
-					retention: t('filinq', 'not declared'),
-				},
-				{
-					code: 'docudesk-metadata-enrichment',
-					name: t('filinq', 'Document metadata enrichment'),
-					purpose: t(
-						'filinq',
-						'Language detection, keyword extraction, and topic classification.',
-					),
-
-					retention: t('filinq', 'not declared'),
-				},
-				{
-					code: 'docudesk-signing',
-					name: t('filinq', 'Digital document signing'),
-					purpose: t(
-						'filinq',
-						'Maintain a tamper-evident audit trail of electronic signing activities.',
-					),
-
-					retention: t(
-						'filinq',
-						'P10Y (Archiefwet 1995 selectielijst cat. 5.1.3)',
-					),
-				},
+				anonymisationActivity(),
+				ocrActivity(),
+				metadataEnrichmentActivity(),
+				signingActivity(),
 			]
 		},
 	},
@@ -1332,7 +1373,7 @@ export default {
 
 			fetch('/index.php/apps/filinq/api/settings', {
 				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
+				headers: { requesttoken: getRequestToken(), 'Content-Type': 'application/json' },
 				body: JSON.stringify(payload),
 			})
 				.then((response) => response.json())
@@ -1455,7 +1496,7 @@ export default {
 
 			fetch('/index.php/apps/filinq/api/settings', {
 				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
+				headers: { requesttoken: getRequestToken(), 'Content-Type': 'application/json' },
 				body: JSON.stringify(payload),
 			})
 				.then(async (response) => {
@@ -1541,7 +1582,7 @@ export default {
 			try {
 				const response = await fetch(
 					'/index.php/apps/filinq/api/admin/anonymiser-warning/reset',
-					{ method: 'POST' },
+					{ method: 'POST', headers: { requesttoken: getRequestToken() } },
 				)
 				if (response.ok === false) {
 					throw new Error('HTTP ' + response.status)

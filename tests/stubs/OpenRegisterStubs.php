@@ -384,6 +384,44 @@ class ConfigurationService {
 namespace OCA\OpenRegister\Files\Service;
 
 /**
+ * Mirrors OpenRegister's FileExtractionOptions at main 332104db.
+ */
+final class FileExtractionOptions {
+	/**
+	 * Constructor.
+	 *
+	 * @param bool $forceReExtract Re-extract even when the chunks are up to date.
+	 * @param array<int, string>|null $entityTypes Entity types to detect; null for all.
+	 */
+	public function __construct(
+		public readonly bool $forceReExtract = false,
+		public readonly ?array $entityTypes = null,
+	) {
+	}//end __construct()
+}//end class
+
+/**
+ * Mirrors OpenRegister's ProvidedTextRequest at main 332104db.
+ */
+final class ProvidedTextRequest {
+	/**
+	 * Constructor.
+	 *
+	 * @param int $fileId The file id.
+	 * @param string $text The provided text.
+	 * @param array<int, string>|null $entityTypes Entity types to detect; null for all.
+	 * @param string $method The extraction method.
+	 */
+	public function __construct(
+		public readonly int $fileId,
+		public readonly string $text,
+		public readonly ?array $entityTypes = null,
+		public readonly string $method = 'ocr',
+	) {
+	}//end __construct()
+}//end class
+
+/**
  * Stub for TextExtractionService
  *
  * @category Tests
@@ -393,8 +431,26 @@ namespace OCA\OpenRegister\Files\Service;
  * @link     https://www.filinq.app
  */
 class TextExtractionService {
-	public function extractFile(int $fileId, bool $forceReExtract = false, ?array $entityTypes = null): void {
+	/**
+	 * Mirrors OpenRegister's extractFile(int, FileExtractionOptions) at main 332104db.
+	 *
+	 * @param int $fileId The file id.
+	 * @param FileExtractionOptions $options The options.
+	 *
+	 * @return void
+	 */
+	public function extractFile(int $fileId, FileExtractionOptions $options = new FileExtractionOptions()): void {
 	}//end extractFile()
+
+	/**
+	 * Mirrors OpenRegister's extractFromProvidedText(ProvidedTextRequest) at main 332104db.
+	 *
+	 * @param ProvidedTextRequest $request The provided text.
+	 *
+	 * @return void
+	 */
+	public function extractFromProvidedText(ProvidedTextRequest $request): void {
+	}//end extractFromProvidedText()
 
 	/**
 	 * Mirrors OpenRegister's getExtractedText(int $fileId): ?string at development 910471dc.
@@ -2998,18 +3054,42 @@ class LeafDescriptor {
 		self::RENDER_MODE_MOUNT,
 	];
 
+	private string $id;
+
+	private string $label;
+
+	private string $icon;
+
+	private ?string $requiredApp;
+
+	private ?string $group;
+
+	private array $surfaces;
+
+	private ?string $referenceType;
+
+	private ?string $requiresPermission;
+
+	private string $renderMode;
+
 	public function __construct(
-		private string $id,
-		private string $label,
-		private string $icon,
+		LeafIdentity $identity,
 		private array $kinds,
-		private ?string $requiredApp = null,
-		private ?string $group = null,
-		private array $surfaces = [],
-		private ?string $referenceType = null,
-		private ?string $requiresPermission = null,
-		private string $renderMode = self::RENDER_MODE_COMPONENT,
+		?LeafAvailability $availability = null,
+		?LeafRendering $rendering = null,
 	) {
+		$availability = $availability ?? new LeafAvailability();
+		$rendering = $rendering ?? new LeafRendering();
+		$this->id = $identity->id;
+		$this->label = $identity->label;
+		$this->icon = $identity->icon;
+		$this->requiredApp = $availability->requiredApp;
+		$this->group = $identity->group;
+		$this->surfaces = $rendering->surfaces;
+		$this->referenceType = $rendering->referenceType;
+		$this->requiresPermission = $availability->requiresPermission;
+		$this->renderMode = $rendering->renderMode;
+
 		if ($kinds === []) {
 			throw new \InvalidArgumentException('A leaf must declare at least one kind');
 		}
@@ -3020,14 +3100,14 @@ class LeafDescriptor {
 			}
 		}
 
-		foreach ($surfaces as $surface) {
+		foreach ($this->surfaces as $surface) {
 			if (in_array($surface, self::VALID_SURFACES, true) === false) {
 				throw new \InvalidArgumentException('Unknown leaf surface: ' . (string)$surface);
 			}
 		}
 
-		if (in_array($renderMode, self::VALID_RENDER_MODES, true) === false) {
-			throw new \InvalidArgumentException('Unknown render mode: ' . $renderMode);
+		if (in_array($this->renderMode, self::VALID_RENDER_MODES, true) === false) {
+			throw new \InvalidArgumentException('Unknown render mode: ' . $this->renderMode);
 		}
 	}
 
@@ -3071,6 +3151,37 @@ class LeafDescriptor {
 		return $this->renderMode;
 	}
 }//end class
+
+final class LeafIdentity {
+	public function __construct(
+		public readonly string $id,
+		public readonly string $label,
+		public readonly string $icon,
+		public readonly ?string $group = null,
+	) {
+	}
+}
+
+final class LeafAvailability {
+	public function __construct(
+		public readonly ?string $requiredApp = null,
+		public readonly ?string $requiresPermission = null,
+	) {
+	}
+}
+
+final class LeafRendering {
+	/**
+	 * @param array<int, string> $surfaces Surfaces.
+	 */
+	public function __construct(
+		public readonly array $surfaces = [],
+		public readonly ?string $referenceType = null,
+		public readonly string $renderMode = 'component',
+		public readonly ?string $loadStrategy = null,
+	) {
+	}
+}
 
 namespace OCA\OpenRegister\Event;
 

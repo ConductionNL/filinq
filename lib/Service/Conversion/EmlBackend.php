@@ -3,6 +3,9 @@
 /**
  * EML Conversion Backend
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Cascade slot for EML (`message/rfc822`) inputs. EML is anonymised by
  * OpenRegister (which redacts headers, body, attachment bytes and inline
  * images) and assembled into a PDF/A-3b by Filinq's
@@ -32,9 +35,6 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -70,16 +70,6 @@ class EmlBackend implements ConversionBackendInterface {
 	use StripsFileExtension;
 
 	/**
-	 * App config key for the tenant observability flag.
-	 */
-	private const ENABLED_KEY = 'filinq.conversion.backends.eml_enabled';
-
-	/**
-	 * App identifier used for IAppConfig reads/writes.
-	 */
-	private const APP_ID = 'filinq';
-
-	/**
 	 * OpenRegister FileService FQCN — exposes anonymizeEmlStructured().
 	 */
 	private const OR_FILE_SERVICE = 'OCA\\OpenRegister\\Service\\FileService';
@@ -113,30 +103,21 @@ class EmlBackend implements ConversionBackendInterface {
 	}//end name()
 
 	/**
-	 * Available iff the tenant flag is set AND OpenRegister exposes its
-	 * anonymise-EML API (`anonymizeEmlStructured`) AND the assembly service
-	 * is present. The tenant flag is read for observability and lets tenants
-	 * force fall-through.
+	 * Never available on the OpenRegister of today.
+	 *
+	 * OpenRegister exposes no anonymise-EML API: its FileService has no
+	 * `anonymizeEmlStructured`, and its structured parser
+	 * (`TextExtractionService::parseEmlStructured`) redacts nothing. Without
+	 * the anonymise API this backend has nothing safe to assemble, so it
+	 * reports itself unavailable outright, and the cascade falls through
+	 * (422 for EML), as design D9 requires: never un-redacted content.
+	 * Earlier this was a runtime method_exists() probe that always came out
+	 * false on OpenRegister main; the result is the same, now stated.
 	 *
 	 * @return bool
 	 */
 	public function isAvailable(): bool {
-		$flag = $this->appConfig->getValueString(self::APP_ID, self::ENABLED_KEY, 'true');
-		if ($flag === 'false') {
-			return false;
-		}
-
-		if (in_array('openregister', $this->appManager->getInstalledApps(), true) === false) {
-			return false;
-		}
-
-		try {
-			$fileService = $this->container->get(self::OR_FILE_SERVICE);
-		} catch (Throwable $e) {
-			return false;
-		}
-
-		return method_exists($fileService, 'anonymizeEmlStructured');
+		return false;
 	}//end isAvailable()
 
 	/**

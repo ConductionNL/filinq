@@ -3,6 +3,9 @@
 /**
  * Boot proof: the signing wiring loads with the retired approval surface absent.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Run standalone (`php tests/scripts/boot-without-openregister.php`), and by
  * `RetiredApprovalSurfaceTest` as a subprocess. The process autoloads
  * filinq's `lib/` (composer) plus the Nextcloud stubs, and deliberately does
@@ -27,9 +30,6 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @spec openspec/changes/migrate-signing-to-or-tasks/tasks.md#4-2
  */

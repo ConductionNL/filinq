@@ -1,0 +1,26 @@
+{
+	"calls": [
+		[
+			"acquireLock",
+			"t1"
+		],
+		[
+			"loadTemplateWizard",
+			"t1"
+		]
+	],
+	"form": {
+		"name": "Brief",
+		"namespace": "zaken",
+		"description": "Een brief",
+		"content": "<p>Hallo</p>",
+		"category": "brieven",
+		"tagsInput": "a, b",
+		"changelog": "",
+		"format": "A5",
+		"orientation": "L"
+	},
+	"editorHtml": "<p>Hallo</p>",
+	"lockOwner": "anna",
+	"hasWizard": false
+}

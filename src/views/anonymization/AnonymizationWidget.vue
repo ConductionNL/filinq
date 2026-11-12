@@ -1,3 +1,7 @@
+<!--
+  - SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
 <script setup>
 import { translate as t } from '@nextcloud/l10n'
 import {
@@ -104,6 +108,61 @@ import DdDocumentCard from '../../components/DdDocumentCard.vue'
 import AnonymizationUploadDialog from '../../dialogs/AnonymizationUploadDialog.vue'
 import uploadIcon from '../../assets/upload.png'
 import { dossierPlan, partitionFiles } from '../../services/anonymizationUpload.js'
+
+/**
+ * Upload the chosen files: as a new dossier folder bound to OpenRegister
+ * when there is a title, otherwise loose under /DocuDesk/.
+ *
+ * @param {Array<File>} files The files to upload.
+ * @param {string} name The dossier title, empty for a loose upload.
+ * @return {Promise<void>}
+ * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md#requirement-auto-dossier-on-multi-upload-req-dddmu-005
+ */
+async function uploadPendingFiles(files, name) {
+	if (!name) {
+		await anonymizationStore.addFiles(files)
+		return
+	}
+
+	await anonymizationStore.addFilesAsDossier(files, name)
+
+	// Bind the WebDAV folder to an OpenRegister dossier
+	// object (PROPFIND + POST). Best-effort: files are
+	// uploaded fine regardless of OR binding, so we surface
+	// the error in the dialog but don't roll the upload back.
+	try {
+		await anonymizationStore.bindDossier(name)
+	} catch (err) {
+		console.error('Failed to bind dossier to OpenRegister:', err)
+	}
+
+	await openDossierFolder(name)
+}
+
+/**
+ * What the dialog shows when the upload itself threw.
+ *
+ * @param {object} err What was thrown.
+ * @return {string} The server's message, the error's message, or a generic one.
+ */
+function uploadFailureMessage(err) {
+	return err?.response?.data?.error || err?.message || 'Failed to upload'
+}
+
+/**
+ * Switch the left-hand navigation to the new dossier folder so
+ * `FolderFilesNavigation` lists every file just put inside it.
+ *
+ * @param {string} name The dossier title.
+ * @return {Promise<void>}
+ */
+async function openDossierFolder(name) {
+	try {
+		await myDocumentsStore.fetchDocuments(`/DocuDesk/${name}`)
+	} catch (err) {
+		console.error('Failed to open dossier folder:', err)
+	}
+}
 
 // Widget only handles upload + the dossier dialog. After upload the user is
 // routed to the file viewer (/my-documents host), where `FileViewerSidebar`
@@ -409,69 +468,62 @@ export default {
 			try {
 				// Capture metadata before the store consumes the File blobs —
 				// used to seed the file viewer afterwards.
-				const firstMime = this.pendingFiles[0]?.type || ''
-				const before = anonymizationStore.files.length
-
-				if (name) {
-					await anonymizationStore.addFilesAsDossier(
-						this.pendingFiles,
-						name,
-					)
-
-					// Bind the WebDAV folder to an OpenRegister dossier
-					// object (PROPFIND + POST). Best-effort: files are
-					// uploaded fine regardless of OR binding, so we surface
-					// the error in the dialog but don't roll the upload back.
-					try {
-						await anonymizationStore.bindDossier(name)
-					} catch (err) {
-						console.error('Failed to bind dossier to OpenRegister:', err)
-					}
-
-					// Switch the left-hand navigation to the new dossier
-					// folder so `FolderFilesNavigation` lists every file we
-					// just put inside it.
-					try {
-						await myDocumentsStore.fetchDocuments(`/DocuDesk/${name}`)
-					} catch (err) {
-						console.error('Failed to open dossier folder:', err)
-					}
-				} else {
-					await anonymizationStore.addFiles(this.pendingFiles)
+				const upload = {
+					firstMime: this.pendingFiles[0]?.type || '',
+					before: anonymizationStore.files.length,
 				}
 
-				// The store marks a failed upload on its entry instead of
-				// throwing: keep the dialog open and show that error.
-				const failed = anonymizationStore.files
-					.slice(before)
-					.find((entry) => entry.status === 'error')
-				if (failed) {
-					this.dossierError = failed.error || 'Failed to upload'
-					return
-				}
-
-				// Open the first uploaded file in the viewer.
-				const firstEntry = anonymizationStore.files[before]
-				if (firstEntry && firstEntry.fileId) {
-					fileViewerStore.open(
-						{
-							fileId: firstEntry.fileId,
-							fileName: firstEntry.name,
-							mimeType: firstMime,
-							path: firstEntry.filePath,
-						},
-						{ grondslagen: this.grondslagen },
-					)
-					this.gotoViewer()
-				}
-
-				this.closeDossierDialog()
+				await uploadPendingFiles(this.pendingFiles, name)
+				this.finishUpload(upload)
 			} catch (err) {
-				this.dossierError =
-					err?.response?.data?.error || err?.message || 'Failed to upload'
+				this.dossierError = uploadFailureMessage(err)
 			} finally {
 				this.dossierSubmitting = false
 			}
+		},
+
+		/**
+		 * After the upload: keep the dialog open on a failed entry, otherwise
+		 * open the first uploaded file and close the dialog.
+		 *
+		 * @param {{before: number, firstMime: string}} upload The queue length before the upload and the first file's type.
+		 * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md#requirement-auto-dossier-on-multi-upload-req-dddmu-005
+		 */
+		finishUpload(upload) {
+			// The store marks a failed upload on its entry instead of
+			// throwing: keep the dialog open and show that error.
+			const failed = anonymizationStore.files
+				.slice(upload.before)
+				.find((entry) => entry.status === 'error')
+			if (failed) {
+				this.dossierError = failed.error || 'Failed to upload'
+				return
+			}
+
+			this.openFirstUploaded(upload)
+			this.closeDossierDialog()
+		},
+
+		/**
+		 * Open the first uploaded file in the viewer, when it has a file id.
+		 *
+		 * @param {{before: number, firstMime: string}} upload The queue length before the upload and the first file's type.
+		 */
+		openFirstUploaded(upload) {
+			const firstEntry = anonymizationStore.files[upload.before]
+			if (!firstEntry?.fileId) {
+				return
+			}
+			fileViewerStore.open(
+				{
+					fileId: firstEntry.fileId,
+					fileName: firstEntry.name,
+					mimeType: upload.firstMime,
+					path: firstEntry.filePath,
+				},
+				{ grondslagen: this.grondslagen },
+			)
+			this.gotoViewer()
 		},
 
 		/**

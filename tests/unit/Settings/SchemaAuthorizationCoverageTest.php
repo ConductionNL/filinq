@@ -3,6 +3,9 @@
 /**
  * Coverage ratchet for the `consumer-schema-authorization-audit` change.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * OpenRegister treats an UNCONFIGURED authorization cascade as OPEN:
  * `PermissionHandler::resolveAuthorization()` returns null and every caller is
  * admitted. `_rbac: true` means "apply the cascade"; it does not mean "a cascade
