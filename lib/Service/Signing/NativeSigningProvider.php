@@ -533,40 +533,9 @@ class NativeSigningProvider implements SigningProviderInterface {
 	 */
 	private function loadRawSessionByExternalId(string $externalId): ?array {
 		try {
-			$objectService = $this->settingsService->getObjectService();
-			if ($objectService === null) {
-				return null;
-			}
+			$results = $this->findSessionRows(externalId: $externalId);
 
-			[$register, $schema] = $this->resolveSessionRegisterSchema();
-
-			$results = $objectService->findAll(
-				[
-					'filters' => [
-						'register' => $register,
-						'schema' => $schema,
-						'externalId' => $externalId,
-					],
-				],
-				_rbac: false
-			);
-
-			if (is_iterable($results) === false) {
-				return null;
-			}
-
-			foreach ($results as $entry) {
-				$row = $this->normaliseEntry(entry: $entry);
-				if ($row === null) {
-					continue;
-				}
-
-				if (($row['externalId'] ?? null) === $externalId) {
-					return $row;
-				}
-			}
-
-			return null;
+			return (new SessionRowMatcher())->matching(results: $results, externalId: $externalId);
 		} catch (Throwable $e) {
 			$this->logger->error(
 				'Failed to load signing session ' . $externalId . ': ' . $e->getMessage(),
@@ -578,33 +547,45 @@ class NativeSigningProvider implements SigningProviderInterface {
 	}//end loadRawSessionByExternalId()
 
 	/**
-	 * Normalise an OR entry (ObjectEntity or array) into a plain array
+	 * Ask the session register for the rows carrying an externalId
 	 *
-	 * @param mixed $entry The raw entry from findAll()
+	 * @param string $externalId The externalId to look up
 	 *
-	 * @return array<string, mixed>|null The normalised row, or null on failure
+	 * @return iterable<mixed> The raw entries, or nothing when OpenRegister is missing or the answer is not iterable
 	 */
-	private function normaliseEntry(mixed $entry): ?array {
-		if (is_array($entry) === true) {
-			return $entry;
+	private function findSessionRows(string $externalId): iterable {
+		$objectService = $this->settingsService->getObjectService();
+		if ($objectService === null) {
+			return [];
 		}
 
-		if (is_object($entry) === true && method_exists($entry, 'jsonSerialize') === true) {
-			$serialised = $entry->jsonSerialize();
-			if (is_array($serialised) === true) {
-				return $serialised;
-			}
+		$results = $objectService->findAll($this->sessionQuery(externalId: $externalId), _rbac: false);
+		if (is_iterable($results) === false) {
+			return [];
 		}
 
-		if (is_object($entry) === true && method_exists($entry, 'getObject') === true) {
-			$inner = $entry->getObject();
-			if (is_array($inner) === true) {
-				return $inner;
-			}
-		}
+		return $results;
+	}//end findSessionRows()
 
-		return null;
-	}//end normaliseEntry()
+	/**
+	 * The findAll() configuration that filters the session register on an externalId
+	 *
+	 * @param string $externalId The externalId to look up
+	 *
+	 * @return array{filters: array{register: string, schema: string, externalId: string}} The configuration
+	 */
+	private function sessionQuery(string $externalId): array {
+		[$register, $schema] = $this->resolveSessionRegisterSchema();
+
+		return [
+			'filters' => [
+				'register' => $register,
+				'schema' => $schema,
+				'externalId' => $externalId,
+			],
+		];
+	}//end sessionQuery()
+
 
 	/**
 	 * Resolve the OR register/schema pair used to persist sessions
