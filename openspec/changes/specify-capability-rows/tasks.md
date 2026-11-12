@@ -25,3 +25,7 @@
 ## 5. Portal
 
 - [ ] 5.1 Add a data-subject documents manifest to `lib/Portal/PortalContributionProvider.php` (REQ-SCR-016). Verify: PHPUnit lists only released documents of the requester.
+
+## 6. Copy to another record
+
+- [ ] 6.1 Add a copy action to the documents list and to a finished merge job, with the read and write checks on the server before the file is written, and an audit entry on both records (REQ-SCR-018). Verify: PHPUnit for a copy that lands and for a refused target.

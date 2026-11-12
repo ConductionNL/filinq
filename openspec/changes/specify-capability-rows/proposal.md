@@ -13,7 +13,7 @@ This change writes those requirements. Each one names its row.
 
 ## What changes
 
-ADDED requirements, REQ-SCR-001 to REQ-SCR-017, in these capabilities:
+ADDED requirements, REQ-SCR-001 to REQ-SCR-018, in these capabilities:
 
 - `document-signing`: reminders, the completion notification, delegated signing authority, a phone code for signers.
 - `document-register`: sorting the flat file list, documents that wait for me, the audit trail of a document.
@@ -26,6 +26,7 @@ ADDED requirements, REQ-SCR-001 to REQ-SCR-017, in these capabilities:
 - `template-management`: draft template versions tried with sample data.
 - `portal-contribution`: a citizen's own documents in the portal.
 - `keyboard-and-screen-reader-access`: keyboard and screen reader use of every screen.
+- `document-merge`: copying a merged PDF or any document to another record (dossiq row 4.14).
 
 Rows that are already built and match their requirement keep `built`.
 Rows whose requirement goes past what the code does are set to `planned`
