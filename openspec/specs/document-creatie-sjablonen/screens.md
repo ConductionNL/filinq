@@ -5,3 +5,5 @@
 - FqCorrespondentie https://identity.conduction.nl/screens/board?id=filinq/FqCorrespondentie
 - FqInstellingen https://identity.conduction.nl/screens/board?id=filinq/FqInstellingen
 - FqMijnDocumenten https://identity.conduction.nl/screens/board?id=filinq/FqMijnDocumenten
+- FqDossier https://identity.conduction.nl/screens/board?id=filinq/FqDossier (a submitted form filed as a document on the case)
+- FqDocument https://identity.conduction.nl/screens/board?id=filinq/FqDocument (a document referenced by a form field)
