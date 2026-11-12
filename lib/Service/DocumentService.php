@@ -958,42 +958,42 @@ class DocumentService implements DocumentServiceInterface {
 	 * @spec openspec/changes/document-output-destinations-and-bulk-retention/specs/document-creatie-sjablonen/spec.md#req-ddob-006
 	 */
 	private function dispatchBulkJob(array $run): array {
-		$templateId = $run['templateId'];
-		$objectIds = $run['objectIds'];
-		$options = $run['options'];
 		$jobId = $this->production->jobs->newId();
-
-		$baseTargetPath = $this->buildOutputTargetPath(
-			templateId: $templateId,
-			explicitTargetPath: ($options['output']['targetPath'] ?? null)
-		);
-		$options['output']['targetPath'] = $baseTargetPath . '/' . $jobId;
-
-		$initialStatus = [
+		$argument = [
 			'jobId' => $jobId,
-			'status' => 'queued',
-			'total' => count($objectIds),
-			'completed' => 0,
-			'errors' => 0,
-			'results' => [],
-			'options' => $options,
+			'templateId' => $run['templateId'],
+			'objectIds' => $run['objectIds'],
+			'options' => $this->perJobOptions(run: $run, jobId: $jobId),
 		];
-		$this->production->jobs->enqueue(
-			jobId: $jobId,
-			status: $initialStatus,
-			argument: [
-				'jobId' => $jobId,
-				'templateId' => $templateId,
-				'objectIds' => $objectIds,
-				'options' => $options,
-			]
-		);
+
+		$this->production->jobs->enqueue(jobId: $jobId, status: (new BulkJobStatus())->queued(argument: $argument), argument: $argument);
 
 		return [
 			'jobId' => $jobId,
 			'status' => 'queued',
-			'total' => count($objectIds),
+			'total' => count($run['objectIds']),
 		];
 
 	}//end dispatchBulkJob()
+
+	/**
+	 * The bulk run's options with the output target path fixed to the job's own folder.
+	 *
+	 * @param array<string, mixed> $run   The bulk run: templateId, objectIds and options.
+	 * @param string               $jobId The job id.
+	 *
+	 * @return array<string, mixed> The options every per-object generation of the job uses.
+	 */
+	private function perJobOptions(array $run, string $jobId): array {
+		$options = $run['options'];
+		$baseTargetPath = $this->buildOutputTargetPath(
+			templateId: $run['templateId'],
+			explicitTargetPath: ($options['output']['targetPath'] ?? null)
+		);
+		$options['output']['targetPath'] = $baseTargetPath . '/' . $jobId;
+
+		return $options;
+
+	}//end perJobOptions()
+
 }//end class
