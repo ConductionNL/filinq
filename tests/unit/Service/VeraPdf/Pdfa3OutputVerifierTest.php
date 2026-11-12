@@ -58,7 +58,7 @@ class Pdfa3OutputVerifierTest extends TestCase {
 	 * @return Pdfa3ConversionService The converter.
 	 */
 	private function converter(bool $verified = true): Pdfa3ConversionService {
-		$pdf = $this->createMock(PdfService::class);
+		$pdf = $this->createPartialMock(PdfService::class, ['getFontDirectory']);
 		$pdf->method('getFontDirectory')->willReturn(null);
 		$verifier = null;
 		if ($verified === true) {
