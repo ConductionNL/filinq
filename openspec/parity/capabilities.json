@@ -5055,12 +5055,13 @@
 			"filinq": "no",
 			"built": {
 				"state": "specified",
-				"owner": "ConductionNL/filinq",
+				"owner": "ConductionNL/dossiq",
 				"evidence": "openspec/changes/woo-request-workflow/proposal.md states explicitly: Filinq 'has no request object: no intake with statutory deadlines, no candidate-document collection, no dedupe, no per-document exemption assessment, no inventarislijst, no disclosure package, no lifecycle.' tasks.md: 0 of 15 tasks checked. No wooRequest/requestDocument schema, controller or service found in lib/.",
-				"change": "openspec/changes/woo-request-workflow"
+				"change": "dossiq/woo-request-takes-over-from-opencatalogi",
+				"note": "decision 392 (12 Nov): dossiq owns the Woo request, its intake, document gathering and statutory term (decision D1 of 5 Oct); filinq keeps only the decision letter and the inventory (openspec/changes/woo-request-workflow). Provider row for the dossiq lane."
 			},
 			"reachedOn": "nothing reaches it",
-			"provider": "filinq",
+			"provider": "dossiq",
 			"providerHow": "read-from-code",
 			"feature": "woo-request-workflow",
 			"featureConfidence": "high",
@@ -5078,7 +5079,8 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "FqWooVerzoek"
+				"board": "dossiq/DqZaakBesluiten",
+				"note": "was filinq/FqWooVerzoek; the screen is dossiq's case page since decision 392"
 			}
 		},
 		{
@@ -5090,12 +5092,13 @@
 			"filinq": "no",
 			"built": {
 				"state": "specified",
-				"owner": "ConductionNL/filinq",
+				"owner": "ConductionNL/dossiq",
 				"evidence": "openspec/changes/woo-request-workflow/tasks.md:19 '2.2 Implement collection + hash dedupe' is unchecked. No email-threading or duplicate-detection code found in lib/ (only unrelated DocumentStorageService filename-dedupe and notification trigger.dedupeFields).",
-				"change": "openspec/changes/woo-request-workflow"
+				"change": "dossiq/woo-requests-gather-documents-from-sources",
+				"note": "decision 392 (12 Nov): dossiq owns the Woo request, its intake, document gathering and statutory term (decision D1 of 5 Oct); filinq keeps only the decision letter and the inventory (openspec/changes/woo-request-workflow). Provider row for the dossiq lane."
 			},
 			"reachedOn": "nothing reaches it",
-			"provider": "filinq",
+			"provider": "dossiq",
 			"providerHow": "read-from-code",
 			"feature": "woo-request-workflow",
 			"featureConfidence": "high",
@@ -5111,7 +5114,8 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "FqWooVerzoek"
+				"board": "dossiq/DqZaakDocumenten",
+				"note": "was filinq/FqWooVerzoek; the screen is dossiq's case page since decision 392"
 			}
 		},
 		{
@@ -5123,12 +5127,13 @@
 			"filinq": "no",
 			"built": {
 				"state": "specified",
-				"owner": "ConductionNL/filinq",
+				"owner": "ConductionNL/dossiq",
 				"evidence": "openspec/changes/woo-request-workflow/proposal.md:43 'Intake: register a request with subject, scope and received date' and the Why section state Filinq has 'no candidate-document collection'. No cross-system search or scope-collection code exists in lib/ (checked alongside entity-search: 0 of its 11 tasks done, and woo-request-workflow's own tasks.md: 0 of 15 done).",
-				"change": "openspec/changes/woo-request-workflow"
+				"change": "dossiq/woo-requests-gather-documents-from-sources",
+				"note": "decision 392 (12 Nov): dossiq owns the Woo request, its intake, document gathering and statutory term (decision D1 of 5 Oct); filinq keeps only the decision letter and the inventory (openspec/changes/woo-request-workflow). Provider row for the dossiq lane."
 			},
 			"reachedOn": "nothing reaches it",
-			"provider": "filinq",
+			"provider": "dossiq",
 			"providerHow": "read-from-code",
 			"feature": "woo-request-workflow",
 			"featureConfidence": "high",
@@ -5144,7 +5149,8 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "FqWooVerzoek"
+				"board": "dossiq/DqZaakDocumenten",
+				"note": "was filinq/FqWooVerzoek; the screen is dossiq's case page since decision 392"
 			}
 		},
 		{
@@ -5156,12 +5162,13 @@
 			"filinq": "no",
 			"built": {
 				"state": "specified",
-				"owner": "ConductionNL/filinq",
+				"owner": "ConductionNL/dossiq",
 				"evidence": "openspec/changes/woo-request-workflow/proposal.md:34 describes the unbuilt `wooRequest` schema carrying 'statutory decision deadline (Woo Art. 4.4: 4 weeks, one extension of at most 2 weeks with reason)'. tasks.md: 0 of 15 tasks checked; no wooRequest schema/controller/service exists in lib/. (This is distinct from the built third-party OBJECTION-period tracking under woo-consent/woo-period, which is a different deadline.)",
-				"change": "openspec/changes/woo-request-workflow"
+				"change": "dossiq/one-term-engine",
+				"note": "decision 392 (12 Nov): dossiq owns the Woo request, its intake, document gathering and statutory term (decision D1 of 5 Oct); filinq keeps only the decision letter and the inventory (openspec/changes/woo-request-workflow). Provider row for the dossiq lane."
 			},
 			"reachedOn": "nothing reaches it",
-			"provider": "filinq",
+			"provider": "dossiq",
 			"providerHow": "read-from-code",
 			"feature": "woo-request-workflow",
 			"featureConfidence": "high",
@@ -5176,7 +5183,8 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "FqWooVerzoek"
+				"board": "dossiq/DqZaakTermijn",
+				"note": "was filinq/FqWooVerzoek; the screen is dossiq's case page since decision 392"
 			}
 		},
 		{
