@@ -199,7 +199,10 @@ class ApiContractMiddlewareTest extends TestCase {
 	 * @return void
 	 */
 	public function testStandardProtocolPathIsUntouched(): void {
-		$response = $this->decorate(path: '/apps/filinq/api/signing/identity/callback', response: new JSONResponse(data: ['error' => 'x'], statusCode: 400));
+		$response = $this->decorate(
+			path: '/apps/filinq/api/signing/identity/callback',
+			response: new JSONResponse(data: ['error' => 'x'], statusCode: 400)
+		);
 		$headers  = $this->headersOf(response: $response);
 
 		$this->assertSame(expected: ['error' => 'x'], actual: $response->getData());

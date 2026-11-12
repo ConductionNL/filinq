@@ -175,7 +175,7 @@ class PublicationControllerTest extends TestCase {
 		$publication = array_values(array_filter($routes['routes'], static fn (array $r): bool => str_starts_with($r['name'], 'publication#')));
 
 		// Each route is declared once and served at its /api/v1/ twin too (ApiPathAliasesTest).
-		$this->assertCount(18, $publication);
+		$this->assertCount(expectedCount: 18, haystack: $publication);
 		foreach ($publication as $route) {
 			$this->assertStringNotContainsString('log', $route['url']);
 			$this->assertNotSame('DELETE', $route['verb']);
