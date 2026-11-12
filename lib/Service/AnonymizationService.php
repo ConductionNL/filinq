@@ -249,7 +249,7 @@ class AnonymizationService implements AnonymizationServiceInterface {
 		// manually-added type is still anonymised even when its automatic
 		// detection is disabled here.
 		$entityTypes = $legalBasisProposal->getEntityTypeWhitelist();
-		$textExtractor->extractFile($fileId, $force, $entityTypes);
+		(new OpenRegisterTextExtractionCall())->extractFile(extractor: $textExtractor, fileId: $fileId, force: (bool) $force, entityTypes: $entityTypes);
 
 		// OpenRegister does no OCR, so a scan comes back without text and
 		// would read as "nothing to redact". The fallback runs OCR for it
