@@ -25,19 +25,20 @@ namespace OCA\Filinq\Tests\Unit\Service\Publication;
 
 use DateTimeImmutable;
 use InvalidArgumentException;
+use OCA\Filinq\Exception\PublicationNotReadyException;
 use OCA\Filinq\Service\ConsentCrudService;
 use OCA\Filinq\Service\ConsentService;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\PolicyMatchService;
-use OCA\Filinq\Service\RedactionAccessibilityService;
 use OCA\Filinq\Service\Publication\ConsentClearance;
 use OCA\Filinq\Service\Publication\OpenCatalogiPlatform;
 use OCA\Filinq\Service\Publication\OpenCatalogiPublicationMap;
-use OCA\Filinq\Exception\PublicationNotReadyException;
 use OCA\Filinq\Service\Publication\PublicationPipelineService;
 use OCA\Filinq\Service\Publication\PublicationReadiness;
 use OCA\Filinq\Service\Publication\PublicationStore;
 use OCA\Filinq\Service\Redaction\RedactionReviewMarkRepository;
+use OCA\Filinq\Service\RedactionAccessibilityService;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -129,7 +130,7 @@ class PublicationPipelineServiceTest extends TestCase {
 			}
 		);
 		$objects->method('find')->willReturnCallback(
-			fn (string $id = '', ?string $register = null, ?string $schema = null): ?array => $this->rows[$schema][$id] ?? null
+			fn (int|string $id = '', ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array => $this->rows[($options?->schema ?? null)][$id] ?? null
 		);
 		$objects->method('searchObjectsBySlug')->willReturnCallback(
 			fn (string $registerSlug, string $schemaSlug, array $filters = []): array => array_values(

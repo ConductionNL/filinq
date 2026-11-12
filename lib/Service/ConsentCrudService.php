@@ -28,6 +28,7 @@ namespace OCA\Filinq\Service;
 use Exception;
 use OCA\Filinq\Kernel\ConsentUpdate;
 use OCA\Filinq\Kernel\Contracts\ConsentCrudServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -163,8 +164,7 @@ class ConsentCrudService implements ConsentCrudServiceInterface {
 		$objectService = $this->settingsService->getObjectService();
 		$object = $objectService->find(
 			id: $consentId,
-			register: $register,
-			schema: $schema
+			options: new ObjectFindOptions(register: $register, schema: $schema)
 		);
 
 		if ($object === null) {

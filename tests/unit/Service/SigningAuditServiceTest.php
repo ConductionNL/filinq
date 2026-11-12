@@ -40,6 +40,7 @@ use OCA\Filinq\Service\SigningAuditService;
 use OCA\OpenRegister\Db\AuditTrail;
 use OCA\OpenRegister\Db\AuditTrailMapper;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -344,8 +345,7 @@ class SigningAuditServiceTest extends TestCase {
 			->method('find')
 			->with(
 				$this->identicalTo(value: 'sign-001'),
-				$this->identicalTo(value: 'signing'),
-				$this->identicalTo(value: 'signingRequest'),
+				$this->equalTo(value: new ObjectFindOptions(register: 'signing', schema: 'signingRequest')),
 				$this->identicalTo(value: false)
 			)
 			->willReturn($realEntity);

@@ -18,8 +18,16 @@
         {
             "ObjectService::find": {
                 "id": "req-1",
-                "register": "filinq",
-                "schema": "signingRequest",
+                "options": {
+                    "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\ObjectFindOptions": {
+                        "register": "filinq",
+                        "schema": "signingRequest",
+                        "extend": [],
+                        "files": false,
+                        "render": true,
+                        "audit": true
+                    }
+                },
                 "_rbac": false
             }
         },
@@ -428,8 +436,16 @@
         {
             "ObjectService::find": {
                 "id": "req-1",
-                "register": "filinq",
-                "schema": "signingRequest",
+                "options": {
+                    "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\ObjectFindOptions": {
+                        "register": "filinq",
+                        "schema": "signingRequest",
+                        "extend": [],
+                        "files": false,
+                        "render": true,
+                        "audit": true
+                    }
+                },
                 "_rbac": false
             }
         },
@@ -625,8 +641,16 @@
         {
             "ObjectService::find": {
                 "id": "req-1",
-                "register": "filinq",
-                "schema": "signingRequest",
+                "options": {
+                    "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\ObjectFindOptions": {
+                        "register": "filinq",
+                        "schema": "signingRequest",
+                        "extend": [],
+                        "files": false,
+                        "render": true,
+                        "audit": true
+                    }
+                },
                 "_rbac": false
             }
         },
@@ -662,8 +686,16 @@
         {
             "ObjectService::find": {
                 "id": "req-1",
-                "register": "filinq",
-                "schema": "signingRequest",
+                "options": {
+                    "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\ObjectFindOptions": {
+                        "register": "filinq",
+                        "schema": "signingRequest",
+                        "extend": [],
+                        "files": false,
+                        "render": true,
+                        "audit": true
+                    }
+                },
                 "_rbac": false
             }
         },
@@ -728,8 +760,16 @@
         {
             "ObjectService::find": {
                 "id": "req-1",
-                "register": "filinq",
-                "schema": "signingRequest",
+                "options": {
+                    "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\ObjectFindOptions": {
+                        "register": "filinq",
+                        "schema": "signingRequest",
+                        "extend": [],
+                        "files": false,
+                        "render": true,
+                        "audit": true
+                    }
+                },
                 "_rbac": false
             }
         },
@@ -910,16 +950,32 @@
         {
             "ObjectService::find": {
                 "id": "s-1",
-                "register": "filinq",
-                "schema": "signerRecord",
+                "options": {
+                    "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\ObjectFindOptions": {
+                        "register": "filinq",
+                        "schema": "signerRecord",
+                        "extend": [],
+                        "files": false,
+                        "render": true,
+                        "audit": true
+                    }
+                },
                 "_rbac": false
             }
         },
         {
             "ObjectService::find": {
                 "id": "req-1",
-                "register": "filinq",
-                "schema": "signingRequest",
+                "options": {
+                    "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\ObjectFindOptions": {
+                        "register": "filinq",
+                        "schema": "signingRequest",
+                        "extend": [],
+                        "files": false,
+                        "render": true,
+                        "audit": true
+                    }
+                },
                 "_rbac": false
             }
         },
@@ -1158,8 +1214,16 @@
         {
             "ObjectService::find": {
                 "id": "req-1",
-                "register": "filinq",
-                "schema": "signingRequest",
+                "options": {
+                    "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\ObjectFindOptions": {
+                        "register": "filinq",
+                        "schema": "signingRequest",
+                        "extend": [],
+                        "files": false,
+                        "render": true,
+                        "audit": true
+                    }
+                },
                 "_rbac": false
             }
         },
@@ -1235,8 +1299,16 @@
         {
             "ObjectService::find": {
                 "id": "req-1",
-                "register": "filinq",
-                "schema": "signingRequest",
+                "options": {
+                    "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\ObjectFindOptions": {
+                        "register": "filinq",
+                        "schema": "signingRequest",
+                        "extend": [],
+                        "files": false,
+                        "render": true,
+                        "audit": true
+                    }
+                },
                 "_rbac": false
             }
         },
@@ -1322,8 +1394,16 @@
         {
             "ObjectService::find": {
                 "id": "req-1",
-                "register": "filinq",
-                "schema": "signingRequest",
+                "options": {
+                    "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\ObjectFindOptions": {
+                        "register": "filinq",
+                        "schema": "signingRequest",
+                        "extend": [],
+                        "files": false,
+                        "render": true,
+                        "audit": true
+                    }
+                },
                 "_rbac": false
             }
         },
@@ -1506,16 +1586,32 @@
         {
             "ObjectService::find": {
                 "id": "s-1",
-                "register": "filinq",
-                "schema": "signerRecord",
+                "options": {
+                    "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\ObjectFindOptions": {
+                        "register": "filinq",
+                        "schema": "signerRecord",
+                        "extend": [],
+                        "files": false,
+                        "render": true,
+                        "audit": true
+                    }
+                },
                 "_rbac": false
             }
         },
         {
             "ObjectService::find": {
                 "id": "req-1",
-                "register": "filinq",
-                "schema": "signingRequest",
+                "options": {
+                    "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\ObjectFindOptions": {
+                        "register": "filinq",
+                        "schema": "signingRequest",
+                        "extend": [],
+                        "files": false,
+                        "render": true,
+                        "audit": true
+                    }
+                },
                 "_rbac": false
             }
         },

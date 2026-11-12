@@ -39,6 +39,7 @@ namespace OCA\Filinq\Service;
 
 use OCA\Filinq\Kernel\Contracts\DossierManagementServiceInterface;
 use OCA\Filinq\Service\LegalHold\LegalHoldFanOut;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
@@ -482,8 +483,7 @@ class DossierManagementService implements DossierManagementServiceInterface {
 
 		$object = $objectService->find(
 			id: $dossierId,
-			register: self::REGISTER,
-			schema: self::SCHEMA
+			options: new ObjectFindOptions(register: self::REGISTER, schema: self::SCHEMA)
 		);
 
 		if ($object === null) {

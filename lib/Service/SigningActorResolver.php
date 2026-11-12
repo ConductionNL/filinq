@@ -31,6 +31,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\IAppConfig;
 use OCP\IRequest;
 use OCP\IUserSession;
@@ -103,7 +104,7 @@ class SigningActorResolver {
 		$objectService = $this->settingsService->getObjectService();
 		$signerRegister = $this->config->getValueString('filinq', 'signerRecord_register', '');
 		$signerSchema = $this->config->getValueString('filinq', 'signerRecord_schema', '');
-		$signerObject = $objectService->find(id: $signerId, register: $signerRegister, schema: $signerSchema, _rbac: false);
+		$signerObject = $objectService->find(id: $signerId, options: new ObjectFindOptions(register: $signerRegister, schema: $signerSchema), _rbac: false);
 
 		if ($signerObject === null) {
 			throw new RuntimeException('Signer record not found: ' . $signerId);
@@ -197,7 +198,7 @@ class SigningActorResolver {
 		$signerSchema = $this->config->getValueString('filinq', 'signerRecord_schema', '');
 
 		foreach ($signerIds as $signerId) {
-			$signerObj = $objectService->find(id: $signerId, register: $signerRegister, schema: $signerSchema, _rbac: false);
+			$signerObj = $objectService->find(id: $signerId, options: new ObjectFindOptions(register: $signerRegister, schema: $signerSchema), _rbac: false);
 			$signer = $this->toArray(object: $signerObj);
 
 			if (($signer['userId'] ?? '') === $userId && ($signer['status'] ?? '') === 'PENDING') {
@@ -233,7 +234,11 @@ class SigningActorResolver {
 
 		foreach ($signerIds as $signerId) {
 			$signer = $this->toArray(
-				object: $objectService->find(id: (string)$signerId, register: $signerRegister, schema: $signerSchema, _rbac: false)
+				object: $objectService->find(
+					id: (string)$signerId,
+					options: new ObjectFindOptions(register: $signerRegister, schema: $signerSchema),
+					_rbac: false
+				)
 			);
 
 			if (($signer['userId'] ?? '') === $userId && (string)($signer['signingRequestId'] ?? '') === $requestId) {

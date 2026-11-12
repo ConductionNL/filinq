@@ -24,6 +24,7 @@ use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\IntakeRepository;
 use OCA\Filinq\Service\ReadsStoredObjectRows;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -168,8 +169,7 @@ class AnonymizationLinkReader {
 		try {
 			$entity = $this->objectResolver->resolve()->find(
 				id: $linkId,
-				register: IntakeRepository::REGISTER,
-				schema: self::SCHEMA,
+				options: new ObjectFindOptions(register: IntakeRepository::REGISTER, schema: self::SCHEMA),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -207,8 +207,7 @@ class AnonymizationLinkReader {
 		try {
 			$entity = $this->objectResolver->resolve()->find(
 				id: $linkId,
-				register: IntakeRepository::REGISTER,
-				schema: self::SCHEMA
+				options: new ObjectFindOptions(register: IntakeRepository::REGISTER, schema: self::SCHEMA)
 			);
 		} catch (Throwable $e) {
 			$this->logger->info(

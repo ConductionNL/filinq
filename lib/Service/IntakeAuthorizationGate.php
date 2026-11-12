@@ -32,6 +32,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\IGroupManager;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
@@ -148,7 +149,7 @@ class IntakeAuthorizationGate {
 		}
 
 		try {
-			return $this->objectResolver->resolve()->find(id: $id, register: $register, schema: $schema) !== null;
+			return $this->objectResolver->resolve()->find(id: $id, options: new ObjectFindOptions(register: $register, schema: $schema)) !== null;
 		} catch (Throwable $e) {
 			return false;
 		}

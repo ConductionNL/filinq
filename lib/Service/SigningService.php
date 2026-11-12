@@ -34,6 +34,7 @@ use OCA\Filinq\Service\Signing\SignerEntries;
 use OCA\Filinq\Service\Signing\SigningAct;
 use OCA\Filinq\Service\Support\SigningGuards;
 use OCA\Filinq\Service\Support\SigningOutputs;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use RuntimeException;
 
 /**
@@ -367,7 +368,7 @@ class SigningService implements SigningServiceInterface {
 		// request that does exist.
 		['register' => $register, 'schema' => $schema] = $this->requireSigningRequestBinding();
 
-		$object = $objectService->find(id: $requestId, register: $register, schema: $schema, _rbac: false);
+		$object = $objectService->find(id: $requestId, options: new ObjectFindOptions(register: $register, schema: $schema), _rbac: false);
 		if ($object === null) {
 			// The same null as for a request that is not the caller's, so no
 			// answer tells "does not exist" from "not yours".
@@ -638,7 +639,7 @@ class SigningService implements SigningServiceInterface {
 		// Same latent defect as getRequest(): unconfigured, find() returns null
 		// and this reports "not found" for a request that exists.
 		['register' => $register, 'schema' => $schema] = $this->requireSigningRequestBinding();
-		$requestObject = $objectService->find(id: $requestId, register: $register, schema: $schema, _rbac: false);
+		$requestObject = $objectService->find(id: $requestId, options: new ObjectFindOptions(register: $register, schema: $schema), _rbac: false);
 		if ($requestObject === null) {
 			throw new RuntimeException('Signing request not found: ' . $requestId);
 		}
@@ -828,7 +829,7 @@ class SigningService implements SigningServiceInterface {
 		['register' => $register, 'schema' => $schema] = $this->requireSigningRequestBinding();
 		['allSigned' => $allSigned, 'signers' => $signers] = $this->signerProgress(request: $act->request);
 
-		$freshObj = $objectService->find(id: $requestId, register: $register, schema: $schema, _rbac: false);
+		$freshObj = $objectService->find(id: $requestId, options: new ObjectFindOptions(register: $register, schema: $schema), _rbac: false);
 		$freshRequest = $this->toArray(object: $freshObj);
 
 		if ($allSigned === false) {
@@ -898,7 +899,7 @@ class SigningService implements SigningServiceInterface {
 		$signers = [];
 
 		foreach (($request['signerIds'] ?? []) as $signerId) {
-			$signerObj = $objectService->find(id: $signerId, register: $signerRegister, schema: $signerSchema, _rbac: false);
+			$signerObj = $objectService->find(id: $signerId, options: new ObjectFindOptions(register: $signerRegister, schema: $signerSchema), _rbac: false);
 			$signer = $this->toArray(object: $signerObj);
 			$signers[(string)$signerId] = $signer;
 

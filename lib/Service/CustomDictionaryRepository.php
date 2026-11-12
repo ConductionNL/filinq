@@ -29,6 +29,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use Exception;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -121,8 +122,7 @@ class CustomDictionaryRepository {
 		$objectService = $this->settingsService->getObjectService();
 		$object = $objectService->find(
 			id: $uuid,
-			register: self::REGISTER,
-			schema: $schema,
+			options: new ObjectFindOptions(register: self::REGISTER, schema: $schema),
 			_rbac: false,
 			_multitenancy: false
 		);

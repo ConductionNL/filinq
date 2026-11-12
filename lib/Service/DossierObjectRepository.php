@@ -28,6 +28,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use Exception;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\App\IAppManager;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
@@ -45,6 +46,9 @@ use RuntimeException;
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) OpenRegister's call shapes take
+ *   value objects where they took scalars; each counts as a coupling.
  */
 class DossierObjectRepository {
 
@@ -221,8 +225,7 @@ class DossierObjectRepository {
 		try {
 			$object = $objectService->find(
 				id: $dossierUuid,
-				register: 'filinq',
-				schema: 'dossier',
+				options: new ObjectFindOptions(register: 'filinq', schema: 'dossier'),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -274,8 +277,7 @@ class DossierObjectRepository {
 		try {
 			$object = $objectService->find(
 				id: $dossierUuid,
-				register: 'filinq',
-				schema: 'dossier',
+				options: new ObjectFindOptions(register: 'filinq', schema: 'dossier'),
 				_rbac: false,
 				_multitenancy: false
 			);

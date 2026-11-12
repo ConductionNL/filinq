@@ -22,6 +22,7 @@ namespace OCA\Filinq\Service\LegalHold;
 
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\OpenRegisterServiceLocator;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Service\Archival\LegalHoldServiceInterface;
 use OCA\OpenRegister\Service\HoldOrder;
 use Throwable;
@@ -102,7 +103,7 @@ class LegalHoldRecordFreeze {
 	 * @spec openspec/changes/archive/2026-09-29-e-discovery-legal-hold/tasks.md#task-2.1
 	 */
 	public function load(string $ref): ?object {
-		$entity = $this->objectResolver->resolve()->find(id: $ref, _rbac: false, _render: false);
+		$entity = $this->objectResolver->resolve()->find(id: $ref, options: new ObjectFindOptions(render: false), _rbac: false);
 		if (is_object($entity) === false || method_exists($entity, 'getRetention') === false) {
 			return null;
 		}
@@ -125,7 +126,7 @@ class LegalHoldRecordFreeze {
 	 */
 	public function heldAsSeenBy(string $ref): ?bool {
 		try {
-			$entity = $this->objectResolver->resolve()->find(id: $ref, _render: false);
+			$entity = $this->objectResolver->resolve()->find(id: $ref, options: new ObjectFindOptions(render: false));
 		} catch (Throwable) {
 			return null;
 		}

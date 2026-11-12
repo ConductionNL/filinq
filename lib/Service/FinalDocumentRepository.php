@@ -30,6 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
@@ -409,8 +410,7 @@ class FinalDocumentRepository {
 			// would have answered null for every record that exists.
 			$object = $this->objectResolver->resolve()->find(
 				id: $uuid,
-				register: self::REGISTER,
-				schema: self::SCHEMA
+				options: new ObjectFindOptions(register: self::REGISTER, schema: self::SCHEMA)
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(

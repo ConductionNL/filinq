@@ -29,6 +29,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use OCA\Filinq\Service\Support\DossierSummaryParts;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\App\IAppManager;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
@@ -47,6 +48,9 @@ use RuntimeException;
  * @link     https://www.filinq.app
  *
  * @spec openspec/specs/anonymisation-grondslagen-summary/spec.md
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) OpenRegister's call shapes take
+ *   value objects where they took scalars; each counts as a coupling.
  */
 class DossierSummaryDataService {
 
@@ -188,8 +192,7 @@ class DossierSummaryDataService {
 
 		$dossier = $objectService->find(
 			id: $dossierId,
-			register: 'filinq',
-			schema: 'dossier'
+			options: new ObjectFindOptions(register: 'filinq', schema: 'dossier')
 		);
 
 		if ($dossier === null) {

@@ -333,8 +333,16 @@
         {
             "ObjectService::find": {
                 "id": "c-1",
-                "register": "filinq",
-                "schema": "publicationConsent"
+                "options": {
+                    "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\ObjectFindOptions": {
+                        "register": "filinq",
+                        "schema": "publicationConsent",
+                        "extend": [],
+                        "files": false,
+                        "render": true,
+                        "audit": true
+                    }
+                }
             }
         },
         {
@@ -378,8 +386,16 @@
         {
             "ObjectService::find": {
                 "id": "c-1",
-                "register": "filinq",
-                "schema": "publicationConsent"
+                "options": {
+                    "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\ObjectFindOptions": {
+                        "register": "filinq",
+                        "schema": "publicationConsent",
+                        "extend": [],
+                        "files": false,
+                        "render": true,
+                        "audit": true
+                    }
+                }
             }
         },
         {
@@ -402,8 +418,16 @@
         {
             "ObjectService::find": {
                 "id": "c-1",
-                "register": "filinq",
-                "schema": "publicationConsent"
+                "options": {
+                    "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\ObjectFindOptions": {
+                        "register": "filinq",
+                        "schema": "publicationConsent",
+                        "extend": [],
+                        "files": false,
+                        "render": true,
+                        "audit": true
+                    }
+                }
             }
         },
         {
@@ -447,8 +471,16 @@
         {
             "ObjectService::find": {
                 "id": "c-1",
-                "register": "filinq",
-                "schema": "publicationConsent"
+                "options": {
+                    "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\ObjectFindOptions": {
+                        "register": "filinq",
+                        "schema": "publicationConsent",
+                        "extend": [],
+                        "files": false,
+                        "render": true,
+                        "audit": true
+                    }
+                }
             }
         },
         {
@@ -492,8 +524,16 @@
         {
             "ObjectService::find": {
                 "id": "c-1",
-                "register": "filinq",
-                "schema": "publicationConsent"
+                "options": {
+                    "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\ObjectFindOptions": {
+                        "register": "filinq",
+                        "schema": "publicationConsent",
+                        "extend": [],
+                        "files": false,
+                        "render": true,
+                        "audit": true
+                    }
+                }
             }
         },
         {
@@ -533,8 +573,16 @@
         {
             "ObjectService::find": {
                 "id": "c-1",
-                "register": "filinq",
-                "schema": "publicationConsent"
+                "options": {
+                    "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\ObjectFindOptions": {
+                        "register": "filinq",
+                        "schema": "publicationConsent",
+                        "extend": [],
+                        "files": false,
+                        "render": true,
+                        "audit": true
+                    }
+                }
             }
         },
         {
@@ -595,8 +643,16 @@
         {
             "ObjectService::find": {
                 "id": "c-1",
-                "register": "filinq",
-                "schema": "publicationConsent"
+                "options": {
+                    "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\ObjectFindOptions": {
+                        "register": "filinq",
+                        "schema": "publicationConsent",
+                        "extend": [],
+                        "files": false,
+                        "render": true,
+                        "audit": true
+                    }
+                }
             }
         },
         {

@@ -36,6 +36,7 @@ use OCA\Filinq\Service\PolicyMatchService;
 use OCA\Filinq\Service\RegisterObjectRef;
 use OCA\Filinq\Service\Support\ConsentRecordRules;
 use OCA\Filinq\Service\Support\OpenRegisterAccess;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\App\IAppManager;
 use OCP\IUser;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -871,7 +872,7 @@ class ConsentServiceTest extends TestCase {
 	public function testValidateAndUpdateGatesAStandingConsentAndDelegates(): void {
 		$objectService = $this->createMock(originalClassName: \OCA\OpenRegister\Service\ObjectService::class);
 		$objectService->expects($this->once())->method('find')
-			->with('c-1', 'reg-1', 'sch-1')
+			->with('c-1', new ObjectFindOptions(register: 'reg-1', schema: 'sch-1'))
 			->willReturn($this->buildSavedObject(data: ['scope' => 'entity', 'consentStatus' => 'granted']));
 		$container = $this->createMock(originalClassName: ContainerInterface::class);
 		$container->method('get')->willReturn($objectService);

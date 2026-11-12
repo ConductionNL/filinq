@@ -21,6 +21,7 @@ namespace OCA\Filinq\Service\Publication;
 
 use OCA\Filinq\Kernel\Contracts\PublicationStoreInterface;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use RuntimeException;
 use Throwable;
 
@@ -254,7 +255,7 @@ class PublicationStore implements PublicationStoreInterface {
 		}
 
 		try {
-			$object = $this->objects->resolve()->find(id: $uuid, register: $register, schema: $schema);
+			$object = $this->objects->resolve()->find(id: $uuid, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (Throwable) {
 			return null;
 		}

@@ -39,6 +39,7 @@ use OCA\Filinq\Service\Extraction\IbanExtractor;
 use OCA\Filinq\Service\Extraction\KvkExtractor;
 use OCA\Filinq\Service\Extraction\TotalsReconciler;
 use OCA\Filinq\Service\Extraction\VatIdExtractor;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
@@ -376,7 +377,7 @@ class FinancialExtractionService implements FinancialExtractionServiceInterface 
 		// unconfigured instance denied corrections for extractions that exist.
 		['register' => $register, 'schema' => $schema] = $this->registerResolver->getFinancialExtractionRegisterAndSchema();
 
-		$object = $objectService->find(id: $id, register: $register, schema: $schema);
+		$object = $objectService->find(id: $id, options: new ObjectFindOptions(register: $register, schema: $schema));
 		if ($object === null) {
 			throw new RuntimeException('Financial extraction not found: ' . $id, 404);
 		}

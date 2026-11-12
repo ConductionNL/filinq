@@ -33,6 +33,7 @@ use DateTime;
 use Exception;
 use OCA\Filinq\Kernel\Contracts\TemplateServiceInterface;
 use OCA\Filinq\Service\Support\OpenRegisterAccess;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\IAppConfig;
 use OCP\IUserSession;
 use RuntimeException;
@@ -169,8 +170,7 @@ class TemplateService implements TemplateServiceInterface {
 		try {
 			$result = $objectService->find(
 				id: $id,
-				register: $config['register'],
-				schema: $config['schema']
+				options: new ObjectFindOptions(register: $config['register'], schema: $config['schema'])
 			);
 		} catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
 			throw new Exception(message: 'Template not found', code: 404);

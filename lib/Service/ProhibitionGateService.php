@@ -34,6 +34,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use OCA\Filinq\Exception\ProhibitionGateException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -648,8 +649,7 @@ class ProhibitionGateService {
 			);
 			$entity = $objectService->find(
 				id: (string)$entityId,
-				register: 'entities',
-				schema: 'entity'
+				options: new ObjectFindOptions(register: 'entities', schema: 'entity')
 			);
 
 			if (is_array($entity) === false) {

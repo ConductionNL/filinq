@@ -27,6 +27,7 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use InvalidArgumentException;
 use OCA\Filinq\Service\SettingsService;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use RuntimeException;
 
 /**
@@ -426,8 +427,7 @@ class GuardianConsentGuard {
 
 		$object = $this->settingsService->getObjectService()->find(
 			id: $signerId,
-			register: $binding['register'],
-			schema: $binding['schema'],
+			options: new ObjectFindOptions(register: $binding['register'], schema: $binding['schema']),
 			_rbac: false
 		);
 

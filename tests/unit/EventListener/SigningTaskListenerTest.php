@@ -35,13 +35,14 @@ use OCA\Filinq\Event\SignerStepRejectedEvent;
 use OCA\Filinq\EventListener\SignerEventTranslator;
 use OCA\Filinq\EventListener\SignerSequenceTasks;
 use OCA\Filinq\EventListener\SigningTaskListener;
-use OCA\Filinq\Service\SettingsService;
 use OCA\Filinq\Kernel\Contracts\ActiveSigningProviderInterface;
+use OCA\Filinq\Service\SettingsService;
 use OCA\OpenRegister\Db\Task;
 use OCA\OpenRegister\Db\TaskSequence;
 use OCA\OpenRegister\Event\TaskSequenceCompletedEvent;
 use OCA\OpenRegister\Event\TaskTerminalEvent;
 use OCA\OpenRegister\Event\TaskTransitionedEvent;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventDispatcher;
@@ -157,7 +158,9 @@ final class SigningTaskListenerTest extends TestCase {
 		$this->settingsService->method('getObjectService')
 			->willReturn($this->objectService);
 		$this->objectService->method('find')->willReturnCallback(
-			function (string $id = '', string $register = '', string $schema = ''): ?stdClass {
+			function (int|string $id = '', ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?stdClass {
+				$register = (string) ($options?->register ?? '');
+				$schema = (string) ($options?->schema ?? '');
 				if ($id === self::OWNED_OBJECT && $register === 'filinq' && $schema === 'signingRequest') {
 					return new stdClass();
 				}

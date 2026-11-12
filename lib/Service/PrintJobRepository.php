@@ -26,6 +26,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use OCA\Filinq\Kernel\Contracts\PrintJobRepositoryInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use RuntimeException;
 use Throwable;
 
@@ -120,8 +121,7 @@ class PrintJobRepository implements PrintJobRepositoryInterface {
 		try {
 			$object = $this->objectResolver->resolve()->find(
 				id: $uuid,
-				register: IntakeRepository::REGISTER,
-				schema: self::SCHEMA,
+				options: new ObjectFindOptions(register: IntakeRepository::REGISTER, schema: self::SCHEMA),
 				_rbac: false
 			);
 		} catch (Throwable $e) {

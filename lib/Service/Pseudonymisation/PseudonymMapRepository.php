@@ -29,6 +29,7 @@ namespace OCA\Filinq\Service\Pseudonymisation;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\IntakeRepository;
 use OCA\Filinq\Service\ReadsStoredObjectRows;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use RuntimeException;
 use Throwable;
 
@@ -157,10 +158,8 @@ class PseudonymMapRepository {
 		try {
 			$entity = $this->objectResolver->resolve()->find(
 				id: $uuid,
-				register: IntakeRepository::REGISTER,
-				schema: self::SCHEMA,
-				_rbac: false,
-				_render: false
+				options: new ObjectFindOptions(register: IntakeRepository::REGISTER, schema: self::SCHEMA, render: false),
+				_rbac: false
 			);
 		} catch (Throwable $e) {
 			throw new RuntimeException(message: 'The pseudonym map could not be read: ' . $e->getMessage(), code: 0, previous: $e);

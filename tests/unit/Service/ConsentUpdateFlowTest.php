@@ -27,6 +27,7 @@ use OCA\Filinq\Service\ConsentStatusChange;
 use OCA\Filinq\Service\ConsentUpdateHandler;
 use OCA\Filinq\Service\RegisterObjectRef;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
 use PHPUnit\Framework\TestCase;
@@ -60,7 +61,9 @@ class ConsentUpdateFlowTest extends TestCase {
 	private function handler(?array $stored, bool $saveFails=false): ConsentUpdateHandler {
 		$objects = $this->createMock(originalClassName: ObjectService::class);
 		$objects->method('find')->willReturnCallback(
-			function (string $id, string $register, string $schema, bool $_rbac) use ($stored): ?ObjectEntity {
+			function (int|string $id = '', ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true) use ($stored): ?ObjectEntity {
+				$register = (string) ($options?->register ?? '');
+				$schema = (string) ($options?->schema ?? '');
 				$this->calls[] = ['find' => [$id, $register, $schema, $_rbac]];
 				if ($stored === null) {
 					return null;

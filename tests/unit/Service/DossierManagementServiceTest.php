@@ -19,12 +19,13 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Tests\Unit\Service;
 
-use OCA\Filinq\Service\LegalHold\LegalHoldFanOut;
 use OCA\Filinq\Service\DossierContextService;
 use OCA\Filinq\Service\DossierFileService;
 use OCA\Filinq\Service\DossierManagementService;
 use OCA\Filinq\Service\DossierObjectReader;
 use OCA\Filinq\Service\DossierObjectRepository;
+use OCA\Filinq\Service\LegalHold\LegalHoldFanOut;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\Files\File;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
@@ -185,13 +186,12 @@ final class DossierManagementServiceTest extends TestCase {
 			/**
 			 * Find one object by uuid.
 			 *
-			 * @param string $id The uuid.
-			 * @param string $register The register slug.
-			 * @param string $schema The schema slug.
+			 * @param int|string             $id      The uuid.
+			 * @param ObjectFindOptions|null $options The register and schema.
 			 *
 			 * @return object|null The object.
 			 */
-			public function find(string $id, string $register = '', string $schema = ''): ?object {
+			public function find(int|string $id, ?ObjectFindOptions $options = null): ?object {
 				foreach ($this->test->objectsForTest() as $object) {
 					if (($object->jsonSerialize()['@self']['id'] ?? '') === $id) {
 						return $object;

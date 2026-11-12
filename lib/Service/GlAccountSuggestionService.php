@@ -42,6 +42,7 @@ use OCA\Filinq\Service\Suggestion\CategoryKeywordMapper;
 use OCA\Filinq\Service\Suggestion\HistoryRanker;
 use OCA\Filinq\Service\Suggestion\SupplierIdentityResolver;
 use OCA\Filinq\Service\Support\SuggestionSignals;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\TaskProcessing\Task as TaskProcessingTask;
 use OCP\TaskProcessing\TaskTypes\TextToText;
@@ -296,7 +297,7 @@ class GlAccountSuggestionService implements GlAccountSuggestionServiceInterface 
 		// error response instead of a wrong answer.
 		['register' => $register, 'schema' => $schema] = $this->registerResolver->getFinancialExtractionRegisterAndSchema();
 
-		$object = $objectService->find(id: $extractionId, register: $register, schema: $schema);
+		$object = $objectService->find(id: $extractionId, options: new ObjectFindOptions(register: $register, schema: $schema));
 		if ($object === null) {
 			return null;
 		}

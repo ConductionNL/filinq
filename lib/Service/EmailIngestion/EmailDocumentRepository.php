@@ -29,6 +29,7 @@ namespace OCA\Filinq\Service\EmailIngestion;
 
 use OCA\Filinq\Kernel\Contracts\EmailDocumentRepositoryInterface;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 /**
  * Email documents in OpenRegister.
@@ -129,7 +130,12 @@ class EmailDocumentRepository implements EmailDocumentRepositoryInterface {
 	 * @spec openspec/changes/archive/2026-10-01-email-ingestion/tasks.md#2-3
 	 */
 	public function findByUuid(string $uuid): ?array {
-		$row = $this->objectResolver->resolve()->find(id: $uuid, register: self::REGISTER, schema: self::SCHEMA, _rbac: false, _multitenancy: false);
+		$row = $this->objectResolver->resolve()->find(
+			id: $uuid,
+			options: new ObjectFindOptions(register: self::REGISTER, schema: self::SCHEMA),
+			_rbac: false,
+			_multitenancy: false
+		);
 		if ($row === null) {
 			return null;
 		}

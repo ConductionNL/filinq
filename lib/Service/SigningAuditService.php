@@ -26,6 +26,7 @@ use OCA\Filinq\Kernel\SigningAuditEvent;
 use OCA\OpenRegister\Db\AuditTrail;
 use OCA\OpenRegister\Db\AuditTrailMapper;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -168,7 +169,7 @@ class SigningAuditService implements SigningAuditServiceInterface {
 			$register = $this->config->getValueString('filinq', 'signingRequest_register', '');
 			$schema = $this->config->getValueString('filinq', 'signingRequest_schema', '');
 
-			$object = $objectService->find(id: $signingRequestId, register: $register, schema: $schema, _rbac: false);
+			$object = $objectService->find(id: $signingRequestId, options: new ObjectFindOptions(register: $register, schema: $schema), _rbac: false);
 			if ($object instanceof ObjectEntity) {
 				return $object;
 			}

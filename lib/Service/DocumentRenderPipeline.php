@@ -31,6 +31,7 @@ use OCA\Filinq\Service\Charts\SvgRasterizer;
 use OCA\Filinq\Service\Conversion\HtmlToOfficeConverter;
 use OCA\Filinq\Service\Conversion\LibreOfficeHeadlessBackend;
 use OCA\Filinq\Service\Support\PdfRendering;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use Psr\Log\LoggerInterface;
 use setasign\Fpdi\Fpdi;
 
@@ -42,6 +43,9 @@ use setasign\Fpdi\Fpdi;
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) OpenRegister's call shapes take
+ *   value objects where they took scalars; each counts as a coupling.
  */
 class DocumentRenderPipeline {
 	/**
@@ -109,8 +113,7 @@ class DocumentRenderPipeline {
 			$objectService = $this->objectResolver->resolve();
 			$result = $objectService->find(
 				id: $huisstijlId,
-				register: 'filinq',
-				schema: 'huisstijl'
+				options: new ObjectFindOptions(register: 'filinq', schema: 'huisstijl')
 			);
 
 			if (empty($result) === true) {

@@ -35,6 +35,7 @@ namespace OCA\Filinq\Service;
 use Exception;
 use OCA\Filinq\Service\Support\ConsentRecordRules;
 use OCA\Filinq\Service\Support\OpenRegisterAccess;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 
@@ -133,8 +134,7 @@ class ConsentRecordWriter {
 	public function loadConsentRecord(string $consentId, string $register, string $schema): array {
 		$object = $this->getObjectService()->find(
 			id: $consentId,
-			register: $register,
-			schema: $schema
+			options: new ObjectFindOptions(register: $register, schema: $schema)
 		);
 
 		if ($object === null) {
