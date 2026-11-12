@@ -861,6 +861,7 @@
 
 <script>
 import { CnAdminSettingsShell } from '@conduction/nextcloud-vue'
+import { getRequestToken } from '@nextcloud/auth'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import {
 	NcButton,
@@ -1372,7 +1373,7 @@ export default {
 
 			fetch('/index.php/apps/filinq/api/settings', {
 				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
+				headers: { requesttoken: getRequestToken(), 'Content-Type': 'application/json' },
 				body: JSON.stringify(payload),
 			})
 				.then((response) => response.json())
@@ -1495,7 +1496,7 @@ export default {
 
 			fetch('/index.php/apps/filinq/api/settings', {
 				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
+				headers: { requesttoken: getRequestToken(), 'Content-Type': 'application/json' },
 				body: JSON.stringify(payload),
 			})
 				.then(async (response) => {
@@ -1581,7 +1582,7 @@ export default {
 			try {
 				const response = await fetch(
 					'/index.php/apps/filinq/api/admin/anonymiser-warning/reset',
-					{ method: 'POST' },
+					{ method: 'POST', headers: { requesttoken: getRequestToken() } },
 				)
 				if (response.ok === false) {
 					throw new Error('HTTP ' + response.status)
