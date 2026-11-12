@@ -554,4 +554,115 @@ class DossierFileServiceTest extends TestCase {
 
 	}//end testCreatingAFolderWithoutASessionIsRefused()
 
+	/**
+	 * A Filinq folder the user folder does not have yet is created first, and
+	 * the dossier folder is created inside it under its safe name.
+	 *
+	 * @return void
+	 */
+	public function testCreatingAFolderMakesFilinqAndTheDossierFolder(): void {
+		$created = $this->createMock(Folder::class);
+
+		$parent = $this->createMock(Folder::class);
+		$parent->method('nodeExists')->with('Woo-2026')->willReturn(false);
+		$parent->expects($this->once())->method('newFolder')->with('Woo-2026')->willReturn($created);
+
+		$userFolder = $this->createMock(Folder::class);
+		$userFolder->method('nodeExists')->with('Filinq')->willReturn(false);
+		$userFolder->expects($this->once())->method('newFolder')->with('Filinq');
+		$userFolder->method('get')->with('Filinq')->willReturn($parent);
+
+		$this->rootFolder->expects($this->once())->method('getUserFolder')->with('alice')->willReturn($userFolder);
+
+		$this->assertSame($created, $this->service->createHomeFolder('Woo/2026'));
+
+	}//end testCreatingAFolderMakesFilinqAndTheDossierFolder()
+
+	/**
+	 * An existing dossier folder is reused, and an existing Filinq folder is not created again.
+	 *
+	 * @return void
+	 */
+	public function testAnExistingDossierFolderIsReused(): void {
+		$existing = $this->createMock(Folder::class);
+
+		$parent = $this->createMock(Folder::class);
+		$parent->method('nodeExists')->willReturn(true);
+		$parent->expects($this->never())->method('newFolder');
+		$parent->method('get')->with('Woo 2026-001')->willReturn($existing);
+
+		$userFolder = $this->createMock(Folder::class);
+		$userFolder->method('nodeExists')->willReturn(true);
+		$userFolder->expects($this->never())->method('newFolder');
+		$userFolder->method('get')->willReturn($parent);
+		$this->rootFolder->method('getUserFolder')->willReturn($userFolder);
+
+		$this->assertSame($existing, $this->service->createHomeFolder('  Woo 2026-001 '));
+
+	}//end testAnExistingDossierFolderIsReused()
+
+	/**
+	 * A file where the Filinq folder should be is named as the cause.
+	 *
+	 * @return void
+	 */
+	public function testAFilinqFileIsRefusedAsNotAFolder(): void {
+		$userFolder = $this->createMock(Folder::class);
+		$userFolder->method('nodeExists')->willReturn(true);
+		$userFolder->method('get')->willReturn($this->createMock(File::class));
+		$this->rootFolder->method('getUserFolder')->willReturn($userFolder);
+
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionCode(500);
+		$this->expectExceptionMessage('Could not create the dossier folder: Filinq is not a folder.');
+
+		$this->service->createHomeFolder('Woo');
+
+	}//end testAFilinqFileIsRefusedAsNotAFolder()
+
+	/**
+	 * A file carrying the dossier folder's name is named as the cause.
+	 *
+	 * @return void
+	 */
+	public function testAFileWithTheDossierNameIsRefused(): void {
+		$parent = $this->createMock(Folder::class);
+		$parent->method('nodeExists')->willReturn(true);
+		$parent->method('get')->willReturn($this->createMock(File::class));
+
+		$userFolder = $this->createMock(Folder::class);
+		$userFolder->method('nodeExists')->willReturn(true);
+		$userFolder->method('get')->willReturn($parent);
+		$this->rootFolder->method('getUserFolder')->willReturn($userFolder);
+
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionCode(500);
+		$this->expectExceptionMessage(
+			'Could not create the dossier folder: Filinq/Mijn dossier already exists and is a file, not a folder.'
+		);
+
+		$this->service->createHomeFolder('Mijn dossier');
+
+	}//end testAFileWithTheDossierNameIsRefused()
+
+	/**
+	 * Any other failure is wrapped with its cause and keeps the original as previous.
+	 *
+	 * @return void
+	 */
+	public function testAFailingUserFolderIsWrapped(): void {
+		$cause = new RuntimeException('storage down');
+		$this->rootFolder->method('getUserFolder')->willThrowException($cause);
+
+		try {
+			$this->service->createHomeFolder('Woo');
+			$this->fail('Expected the failure to be raised.');
+		} catch (RuntimeException $e) {
+			$this->assertSame('Could not create the dossier folder: storage down', $e->getMessage());
+			$this->assertSame(500, $e->getCode());
+			$this->assertSame($cause, $e->getPrevious());
+		}
+
+	}//end testAFailingUserFolderIsWrapped()
+
 }//end class
