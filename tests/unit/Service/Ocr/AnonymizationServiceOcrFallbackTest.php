@@ -25,6 +25,8 @@ use OCA\Filinq\Service\Ocr\OcrExtractionFallback;
 use OCA\Filinq\Service\OcrService;
 use OCA\Filinq\Tests\Unit\Service\BuildsAnonymizationService;
 use OCA\OpenRegister\Db\EntityRelationMapper;
+use OCA\OpenRegister\Files\Service\FileExtractionOptions;
+use OCA\OpenRegister\Files\Service\ProvidedTextRequest;
 use OCA\OpenRegister\Files\Service\TextExtractionService;
 use OCP\App\IAppManager;
 use OCP\Files\IRootFolder;
@@ -92,17 +94,85 @@ class AnonymizationServiceOcrFallbackTest extends TestCase {
 	}//end testAScanWithOcrUnavailableIsFlagged()
 
 	/**
-	 * With the seam OpenRegister gets the recovered text before the entities are read.
-	 *
-	 * The seam is the contract ConductionNL/openregister#2033 names; OpenRegister
-	 * does not ship it yet, so this double is the only place it exists.
+	 * With the seam OpenRegister gets the recovered text before the entities are read,
+	 * as the ProvidedTextRequest OpenRegister 2.2 takes.
 	 *
 	 * @return void
 	 */
 	public function testWithTheSeamOpenRegisterGetsTheText(): void {
 		$extractor = new class extends TextExtractionService {
+			/**
+			 * The file id and text of every provided-text call.
+			 *
+			 * @var array<int, array{0: int, 1: string}>
+			 */
 			public array $ingested = [];
 
+			/**
+			 * Record the request.
+			 *
+			 * @param ProvidedTextRequest $request The provided text.
+			 *
+			 * @return void
+			 */
+			public function extractFromProvidedText(ProvidedTextRequest $request): void {
+				$this->ingested[] = [$request->fileId, $request->text];
+			}
+		};
+
+		$result = $this->serviceOver(ocr: $this->ocrService(), extractor: $extractor)->extractAndDetectEntities(fileId: 812004);
+
+		$this->assertSame(expected: [[812004, 'Jan Jansen, BSN 111222333']], actual: $extractor->ingested);
+		$this->assertFalse(condition: $result['ocrDetectionPending']);
+		$this->assertTrue(condition: $result['ocr']['ingested']);
+
+	}//end testWithTheSeamOpenRegisterGetsTheText()
+
+	/**
+	 * An OpenRegister before 2.2 takes the file id and text as positional arguments.
+	 *
+	 * @return void
+	 */
+	public function testAPositionalSeamStillGetsTheText(): void {
+		$extractor = new class {
+			/**
+			 * The file id and text of every provided-text call.
+			 *
+			 * @var array<int, array{0: int, 1: string}>
+			 */
+			public array $ingested = [];
+
+			/**
+			 * Extract nothing, in the positional shape.
+			 *
+			 * @param int $fileId The file id.
+			 * @param bool $force Whether to re-extract.
+			 * @param array<int, string>|null $entityTypes The entity types.
+			 *
+			 * @return void
+			 */
+			public function extractFile(int $fileId, bool $force = false, ?array $entityTypes = null): void {
+			}
+
+			/**
+			 * No text: the file is a scan.
+			 *
+			 * @param int $fileId The file id.
+			 *
+			 * @return string|null Always null.
+			 */
+			public function getExtractedText(int $fileId): ?string {
+				return null;
+			}
+
+			/**
+			 * Record the positional call.
+			 *
+			 * @param int $fileId The file id.
+			 * @param string $text The provided text.
+			 *
+			 * @return void
+			 */
 			public function extractFromProvidedText(int $fileId, string $text): void {
 				$this->ingested[] = [$fileId, $text];
 			}
@@ -110,11 +180,10 @@ class AnonymizationServiceOcrFallbackTest extends TestCase {
 
 		$result = $this->serviceOver(ocr: $this->ocrService(), extractor: $extractor)->extractAndDetectEntities(fileId: 812004);
 
-		$this->assertSame([[812004, 'Jan Jansen, BSN 111222333']], $extractor->ingested);
-		$this->assertFalse($result['ocrDetectionPending']);
-		$this->assertTrue($result['ocr']['ingested']);
+		$this->assertSame(expected: [[812004, 'Jan Jansen, BSN 111222333']], actual: $extractor->ingested);
+		$this->assertFalse(condition: $result['ocrDetectionPending']);
 
-	}//end testWithTheSeamOpenRegisterGetsTheText()
+	}//end testAPositionalSeamStillGetsTheText()
 
 	/**
 	 * Reopening a scan whose text had nowhere to go does not run Tesseract again.
@@ -135,19 +204,45 @@ class AnonymizationServiceOcrFallbackTest extends TestCase {
 	}//end testReopeningDoesNotRunOcrAgain()
 
 	/**
-	 * OpenRegister's TextExtractionService with a fixed extracted text.
+	 * An OpenRegister TextExtractionService without the provided-text seam,
+	 * with a fixed extracted text.
 	 *
 	 * @param string|null $text What getExtractedText() answers.
 	 *
-	 * @return TextExtractionService The double.
+	 * @return object The double.
 	 */
-	private function extractorWith(?string $text): TextExtractionService {
-		$extractor = $this->getMockBuilder(TextExtractionService::class)
-			->onlyMethods(['extractFile', 'getExtractedText'])
-			->getMock();
-		$extractor->method('getExtractedText')->willReturn($text);
+	private function extractorWith(?string $text): object {
+		return new class($text) {
+			/**
+			 * Constructor.
+			 *
+			 * @param string|null $text What getExtractedText() answers.
+			 */
+			public function __construct(private readonly ?string $text) {
+			}
 
-		return $extractor;
+			/**
+			 * Extract nothing.
+			 *
+			 * @param int $fileId The file id.
+			 * @param FileExtractionOptions $options The options.
+			 *
+			 * @return void
+			 */
+			public function extractFile(int $fileId, FileExtractionOptions $options = new FileExtractionOptions()): void {
+			}
+
+			/**
+			 * The fixed text.
+			 *
+			 * @param int $fileId The file id.
+			 *
+			 * @return string|null The text.
+			 */
+			public function getExtractedText(int $fileId): ?string {
+				return $this->text;
+			}
+		};
 
 	}//end extractorWith()
 
@@ -155,11 +250,11 @@ class AnonymizationServiceOcrFallbackTest extends TestCase {
 	 * The service with a real fallback over the given engine and extractor.
 	 *
 	 * @param OcrService $ocr The engine.
-	 * @param TextExtractionService $extractor OpenRegister's extractor.
+	 * @param object $extractor OpenRegister's extractor.
 	 *
 	 * @return AnonymizationService The service.
 	 */
-	private function serviceOver(OcrService $ocr, TextExtractionService $extractor): AnonymizationService {
+	private function serviceOver(OcrService $ocr, object $extractor): AnonymizationService {
 		$mapper = $this->createMock(EntityRelationMapper::class);
 		$mapper->method('findEntitiesForFile')->willReturn([]);
 		$basis = $this->createMock(\OCA\Filinq\Service\LegalBasisProposalService::class);
