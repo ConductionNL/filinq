@@ -21,6 +21,7 @@ namespace OCA\Filinq\Tests\Unit\Service;
 
 use Exception;
 use OCA\Filinq\Service\OcrService;
+use OCA\Filinq\Service\SessionUserFile;
 use OCP\Files\File;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
@@ -130,7 +131,7 @@ class OcrProcessFileGoldenTest extends TestCase {
 
 		$runs = 0;
 		$service = $this->getMockBuilder(OcrService::class)
-			->setConstructorArgs([$logger, $config, $root, $session])
+			->setConstructorArgs([$logger, $config, new SessionUserFile($root, $session)])
 			->onlyMethods(['isTesseractAvailable', 'processNode'])
 			->getMock();
 		$service->method('isTesseractAvailable')->willReturn($tesseract);

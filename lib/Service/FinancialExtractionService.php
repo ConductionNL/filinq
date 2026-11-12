@@ -1034,23 +1034,8 @@ class FinancialExtractionService implements FinancialExtractionServiceInterface 
 	 * @return File|null The file, or null when not found/not accessible.
 	 */
 	private function resolveFile(int $fileId): ?File {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return null;
-		}
+		return (new SessionUserFile(rootFolder: $this->rootFolder, userSession: $this->userSession))->find(fileId: $fileId);
 
-		$userFolder = $this->rootFolder->getUserFolder($user->getUID());
-		$nodes = $userFolder->getById($fileId);
-		if (empty($nodes) === true) {
-			return null;
-		}
-
-		$node = $nodes[0];
-		if ($node instanceof File === false) {
-			return null;
-		}
-
-		return $node;
 	}//end resolveFile()
 
 	/**
