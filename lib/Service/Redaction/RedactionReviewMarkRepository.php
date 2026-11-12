@@ -23,6 +23,7 @@ namespace OCA\Filinq\Service\Redaction;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\IntakeRepository;
 use OCA\Filinq\Service\ReadsStoredObjectRows;
+use OCA\OpenRegister\Kernel\Contracts\RegisterSchemaRef;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
@@ -84,8 +85,7 @@ class RedactionReviewMarkRepository {
 			// checked. The sibling `DownloadAgreementRepository` had the same
 			// call and failed the other way, which is how it was found.
 			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: IntakeRepository::REGISTER,
-				schemaSlug: self::SCHEMA,
+				target: new RegisterSchemaRef(register: IntakeRepository::REGISTER, schema: self::SCHEMA),
 				filters: ['document' => $document]
 			);
 		} catch (Throwable $e) {

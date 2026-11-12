@@ -36,6 +36,7 @@ namespace OCA\Filinq\Tests\Unit\Service;
 
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\PostRegisterReader;
+use OCA\OpenRegister\Kernel\Contracts\RegisterSchemaRef;
 use OCA\OpenRegister\Service\ObjectService;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
@@ -89,7 +90,8 @@ class PostRegisterReaderTest extends TestCase {
 		// error. Doubling `searchObjects` here is what let every assertion in
 		// this file pass while production read nothing at all.
 		$objectService->method('searchObjectsBySlug')->willReturnCallback(
-			function (string $registerSlug, string $schemaSlug, array $filters) use ($rows): array {
+			function (RegisterSchemaRef $target, array $filters) use ($rows): array {
+				[$registerSlug, $schemaSlug] = [(string) $target->register, (string) $target->schema];
 				$this->lastRegisterSlug = $registerSlug;
 				$this->lastSchemaSlug   = $schemaSlug;
 				$this->lastQuery        = $filters;
@@ -262,7 +264,8 @@ class PostRegisterReaderTest extends TestCase {
 	private function readerWithPost(array $inbound, array $answers, string $throwsOn = ''): PostRegisterReader {
 		$objectService = $this->createMock(ObjectService::class);
 		$objectService->method('searchObjectsBySlug')->willReturnCallback(
-			function (string $registerSlug, string $schemaSlug, array $filters) use ($inbound, $answers, $throwsOn): array {
+			function (RegisterSchemaRef $target, array $filters) use ($inbound, $answers, $throwsOn): array {
+				[$registerSlug, $schemaSlug] = [(string) $target->register, (string) $target->schema];
 				$this->lastRegisterSlug = $registerSlug;
 				$this->lastSchemaSlug   = $schemaSlug;
 				$this->lastQuery        = $filters;
@@ -343,7 +346,8 @@ class PostRegisterReaderTest extends TestCase {
 		$directions = [];
 		$objectService = $this->createMock(ObjectService::class);
 		$objectService->method('searchObjectsBySlug')->willReturnCallback(
-			static function (string $registerSlug, string $schemaSlug, array $filters) use (&$directions): array {
+			static function (RegisterSchemaRef $target, array $filters) use (&$directions): array {
+				[$registerSlug, $schemaSlug] = [(string) $target->register, (string) $target->schema];
 				if (isset($filters['direction']) === true) {
 					$directions[] = (string)$filters['direction'];
 				}

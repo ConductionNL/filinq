@@ -24,6 +24,7 @@ use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\IntakeRepository;
 use OCA\Filinq\Service\ReadsStoredObjectRows;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Kernel\Contracts\RegisterSchemaRef;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -81,8 +82,7 @@ class AnonymizationLinkReader {
 			// "N of N records have no redacted copy yet" even when every one
 			// had been redacted.
 			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: IntakeRepository::REGISTER,
-				schemaSlug: self::SCHEMA,
+				target: new RegisterSchemaRef(register: IntakeRepository::REGISTER, schema: self::SCHEMA),
 				filters: ['sourceFileId' => $sourceFileId]
 			);
 		} catch (Throwable $e) {
@@ -123,8 +123,7 @@ class AnonymizationLinkReader {
 
 		try {
 			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: IntakeRepository::REGISTER,
-				schemaSlug: self::SCHEMA,
+				target: new RegisterSchemaRef(register: IntakeRepository::REGISTER, schema: self::SCHEMA),
 				filters: ['anonymizedFileId' => $anonymizedFileId]
 			);
 		} catch (Throwable $e) {

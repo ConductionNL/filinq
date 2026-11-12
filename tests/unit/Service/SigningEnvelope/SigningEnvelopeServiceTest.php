@@ -43,6 +43,7 @@ use OCA\Filinq\Service\SigningRequestValidator;
 use OCA\Filinq\Service\SigningService;
 use OCA\Filinq\Service\Support\SigningGuards;
 use OCA\Filinq\Service\Support\SigningOutputs;
+use OCA\OpenRegister\Kernel\Contracts\RegisterSchemaRef;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Files\IRootFolder;
@@ -139,8 +140,7 @@ class EnvelopeObjectStore extends ObjectService {
 	/**
 	 * Search by slug.
 	 *
-	 * @param string $registerSlug  Register
-	 * @param string $schemaSlug    Schema
+	 * @param RegisterSchemaRef $target The register and schema slugs.
 	 * @param array  $filters       Field filters
 	 * @param bool   $_rbac         RBAC
 	 * @param bool   $_multitenancy Multitenancy
@@ -148,12 +148,12 @@ class EnvelopeObjectStore extends ObjectService {
 	 * @return array
 	 */
 	public function searchObjectsBySlug(
-		string $registerSlug,
-		string $schemaSlug,
+		RegisterSchemaRef $target,
 		array $filters = [],
 		bool $_rbac = true,
 		bool $_multitenancy = true,
 	) {
+		[$registerSlug, $schemaSlug] = [(string) $target->register, (string) $target->schema];
 		$out = [];
 		foreach ($this->rows as [$schema, $data]) {
 			if ($schema === $schemaSlug && array_intersect_assoc($filters, $data) === $filters) {

@@ -30,6 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\RegisterSchemaRef;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
@@ -131,8 +132,7 @@ class FinalDocumentRepository {
 			// an empty list, returns no refusal, and assertWritable() lets the
 			// write through. Every final document was writable.
 			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: self::REGISTER,
-				schemaSlug: self::SCHEMA,
+				target: new RegisterSchemaRef(register: self::REGISTER, schema: self::SCHEMA),
 				filters: ['fileId' => $fileId]
 			);
 		} catch (DoesNotExistException $e) {
@@ -219,8 +219,7 @@ class FinalDocumentRepository {
 		try {
 			// Slugs, so `searchObjectsBySlug`. See findForFile() above.
 			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: self::REGISTER,
-				schemaSlug: self::SCHEMA,
+				target: new RegisterSchemaRef(register: self::REGISTER, schema: self::SCHEMA),
 				filters: ['createdByUser' => $userId]
 			);
 		} catch (Throwable $e) {
@@ -272,8 +271,7 @@ class FinalDocumentRepository {
 	public function dossierIndex(): DossierFileIndex {
 		try {
 			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: self::REGISTER,
-				schemaSlug: self::DOSSIER_SCHEMA,
+				target: new RegisterSchemaRef(register: self::REGISTER, schema: self::DOSSIER_SCHEMA),
 				filters: []
 			);
 		} catch (Throwable $e) {
@@ -359,8 +357,7 @@ class FinalDocumentRepository {
 			// Slugs, so `searchObjectsBySlug`. See findForFile() above. No
 			// filter: the domain match is done in PHP below, deliberately.
 			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: self::REGISTER,
-				schemaSlug: self::SCHEMA,
+				target: new RegisterSchemaRef(register: self::REGISTER, schema: self::SCHEMA),
 				filters: []
 			);
 		} catch (Throwable $e) {

@@ -40,6 +40,7 @@ use OCA\Filinq\Service\FinalDocumentRepository;
 use OCA\Filinq\Service\FinalDocumentService;
 use OCA\Filinq\Service\IntakeRepository;
 use OCA\Filinq\Service\UploadPolicyService;
+use OCA\OpenRegister\Kernel\Contracts\RegisterSchemaRef;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\Files\File;
@@ -117,7 +118,8 @@ class SlugContractReadPathTest extends TestCase {
 		);
 
 		$objectService->method('searchObjectsBySlug')->willReturnCallback(
-			function (string $registerSlug, string $schemaSlug, array $filters = []) use ($rows): array {
+			function (RegisterSchemaRef $target, array $filters = []) use ($rows): array {
+				[$registerSlug, $schemaSlug] = [(string) $target->register, (string) $target->schema];
 				$this->calls[] = 'searchObjectsBySlug';
 
 				return $rows;

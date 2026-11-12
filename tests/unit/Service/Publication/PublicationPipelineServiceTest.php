@@ -25,19 +25,20 @@ namespace OCA\Filinq\Tests\Unit\Service\Publication;
 
 use DateTimeImmutable;
 use InvalidArgumentException;
+use OCA\Filinq\Exception\PublicationNotReadyException;
 use OCA\Filinq\Service\ConsentCrudService;
 use OCA\Filinq\Service\ConsentService;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\PolicyMatchService;
-use OCA\Filinq\Service\RedactionAccessibilityService;
 use OCA\Filinq\Service\Publication\ConsentClearance;
 use OCA\Filinq\Service\Publication\OpenCatalogiPlatform;
 use OCA\Filinq\Service\Publication\OpenCatalogiPublicationMap;
-use OCA\Filinq\Exception\PublicationNotReadyException;
 use OCA\Filinq\Service\Publication\PublicationPipelineService;
 use OCA\Filinq\Service\Publication\PublicationReadiness;
 use OCA\Filinq\Service\Publication\PublicationStore;
 use OCA\Filinq\Service\Redaction\RedactionReviewMarkRepository;
+use OCA\Filinq\Service\RedactionAccessibilityService;
+use OCA\OpenRegister\Kernel\Contracts\RegisterSchemaRef;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -132,9 +133,9 @@ class PublicationPipelineServiceTest extends TestCase {
 			fn (string $id = '', ?string $register = null, ?string $schema = null): ?array => $this->rows[$schema][$id] ?? null
 		);
 		$objects->method('searchObjectsBySlug')->willReturnCallback(
-			fn (string $registerSlug, string $schemaSlug, array $filters = []): array => array_values(
+			fn (RegisterSchemaRef $target, array $filters = []): array => array_values(
 				array_filter(
-					$this->rows[$schemaSlug] ?? [],
+					$this->rows[((string) $target->schema)] ?? [],
 					static function (array $row) use ($filters): bool {
 						foreach ($filters as $key => $value) {
 							if (($row[$key] ?? null) !== $value) {

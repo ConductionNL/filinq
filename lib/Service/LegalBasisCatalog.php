@@ -32,6 +32,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use Exception;
+use OCA\OpenRegister\Kernel\Contracts\RegisterSchemaRef;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -122,8 +123,7 @@ class LegalBasisCatalog {
 
 		try {
 			$result = $objectService->searchObjectsBySlug(
-				registerSlug: 'filinq',
-				schemaSlug: 'base',
+				target: new RegisterSchemaRef(register: 'filinq', schema: 'base'),
 				filters: [],
 				_rbac: false,
 				_multitenancy: false

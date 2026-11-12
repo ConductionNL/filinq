@@ -27,6 +27,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use OCA\Filinq\Kernel\Contracts\IntakeRepositoryInterface;
+use OCA\OpenRegister\Kernel\Contracts\RegisterSchemaRef;
 use OCP\AppFramework\Db\DoesNotExistException;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -269,8 +270,7 @@ class IntakeRepository implements IntakeRepositoryInterface {
 			// the row it exists to find, so a channel redelivering a message
 			// wrote a second inbox document every time.
 			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: self::REGISTER,
-				schemaSlug: self::SCHEMA,
+				target: new RegisterSchemaRef(register: self::REGISTER, schema: self::SCHEMA),
 				filters: $filters
 			);
 		} catch (DoesNotExistException $e) {

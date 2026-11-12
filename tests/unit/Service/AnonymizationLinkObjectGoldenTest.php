@@ -23,6 +23,7 @@ use OCA\Filinq\Service\AnonymizationPersistenceService;
 use OCA\Filinq\Service\ConsentCrudService;
 use OCA\Filinq\Service\ConsentService;
 use OCA\Filinq\Service\OpenRegisterServiceLocator;
+use OCA\OpenRegister\Kernel\Contracts\RegisterSchemaRef;
 use OCP\App\IAppManager;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -137,7 +138,8 @@ class AnonymizationLinkObjectGoldenTest extends TestCase {
 			 *
 			 * @return mixed
 			 */
-			public function searchObjectsBySlug(string $registerSlug = '', string $schemaSlug = '', array $filters = []): mixed {
+			public function searchObjectsBySlug(RegisterSchemaRef $target, array $filters = []): mixed {
+				[$registerSlug, $schemaSlug] = [(string) $target->register, (string) $target->schema];
 				$this->search = ['registerSlug' => $registerSlug, 'schemaSlug' => $schemaSlug, 'filters' => $filters];
 				return $this->result;
 			}
@@ -250,7 +252,8 @@ class AnonymizationLinkObjectGoldenTest extends TestCase {
 			 *
 			 * @return mixed
 			 */
-			public function searchObjectsBySlug(string $registerSlug = '', string $schemaSlug = '', array $filters = []): mixed {
+			public function searchObjectsBySlug(RegisterSchemaRef $target, array $filters = []): mixed {
+				[$registerSlug, $schemaSlug] = [(string) $target->register, (string) $target->schema];
 				$this->calls[] = ['search' => [$registerSlug, $schemaSlug, $filters]];
 				return $this->result;
 			}

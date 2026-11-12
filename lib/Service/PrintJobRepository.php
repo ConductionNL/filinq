@@ -26,6 +26,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use OCA\Filinq\Kernel\Contracts\PrintJobRepositoryInterface;
+use OCA\OpenRegister\Kernel\Contracts\RegisterSchemaRef;
 use RuntimeException;
 use Throwable;
 
@@ -160,8 +161,7 @@ class PrintJobRepository implements PrintJobRepositoryInterface {
 			// Slugs go through searchObjectsBySlug: searchObjects answers a
 			// slug with zero rows and no error.
 			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: IntakeRepository::REGISTER,
-				schemaSlug: self::SCHEMA,
+				target: new RegisterSchemaRef(register: IntakeRepository::REGISTER, schema: self::SCHEMA),
 				filters: ['requestedBy' => $userId],
 				_rbac: false
 			);

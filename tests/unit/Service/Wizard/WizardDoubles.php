@@ -24,6 +24,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Tests\Unit\Service\Wizard;
 
+use OCA\OpenRegister\Kernel\Contracts\RegisterSchemaRef;
 use OCA\OpenRegister\Service\ObjectService;
 use Opis\JsonSchema\Errors\ErrorFormatter;
 use Opis\JsonSchema\Validator;
@@ -131,8 +132,7 @@ class WizardObjectStore extends ObjectService {
 	/**
 	 * Search by equality filters.
 	 *
-	 * @param string               $registerSlug  The register.
-	 * @param string               $schemaSlug    The schema.
+	 * @param RegisterSchemaRef $target The register and schema slugs.
 	 * @param array<string, mixed> $filters       The filters.
 	 * @param bool                 $_rbac         RBAC.
 	 * @param bool                 $_multitenancy Multitenancy.
@@ -140,12 +140,12 @@ class WizardObjectStore extends ObjectService {
 	 * @return array<int, array<string, mixed>> The hits.
 	 */
 	public function searchObjectsBySlug(
-		string $registerSlug,
-		string $schemaSlug,
+		RegisterSchemaRef $target,
 		array $filters = [],
 		bool $_rbac = true,
 		bool $_multitenancy = true,
 	) {
+		[$registerSlug, $schemaSlug] = [(string) $target->register, (string) $target->schema];
 		$hits = [];
 		foreach (array_keys($this->rows) as $id) {
 			foreach ($filters as $key => $value) {

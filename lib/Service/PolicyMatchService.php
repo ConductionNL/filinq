@@ -45,6 +45,7 @@ namespace OCA\Filinq\Service;
 
 use Exception;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\RegisterSchemaRef;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 
@@ -366,8 +367,7 @@ class PolicyMatchService {
 		// _multitenancy is off so this safety policy is not scoped away by the
 		// active organisation.
 		$result = $this->objectService->searchObjectsBySlug(
-			registerSlug: 'filinq',
-			schemaSlug: 'publicationProhibition',
+			target: new RegisterSchemaRef(register: 'filinq', schema: 'publicationProhibition'),
 			_rbac: false,
 			_multitenancy: false
 		);
@@ -403,8 +403,7 @@ class PolicyMatchService {
 		// index on the column. The defensive PHP scope check is retained as
 		// a belt-and-braces in case the filter is later dropped.
 		$result = $this->objectService->searchObjectsBySlug(
-			registerSlug: 'filinq',
-			schemaSlug: 'publicationConsent',
+			target: new RegisterSchemaRef(register: 'filinq', schema: 'publicationConsent'),
 			filters: ['scope' => 'entity', 'active' => true],
 			_rbac: false,
 			_multitenancy: false

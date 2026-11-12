@@ -37,11 +37,12 @@ use OCA\Filinq\Service\EmailIngestion\EmailThreadHeaders;
 use OCA\Filinq\Service\PdfConversionService;
 use OCA\Filinq\Service\Support\EmailHandling;
 use OCA\OpenRegister\Exception\EmlParseException;
-use OCA\OpenRegister\Service\ObjectService;
 use OCA\OpenRegister\Files\Service\TextExtraction\EmlAttachment;
 use OCA\OpenRegister\Files\Service\TextExtraction\EmlBody;
 use OCA\OpenRegister\Files\Service\TextExtraction\EmlStructure;
 use OCA\OpenRegister\Files\Service\TextExtractionService;
+use OCA\OpenRegister\Kernel\Contracts\RegisterSchemaRef;
+use OCA\OpenRegister\Service\ObjectService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\Files\File;
 use OCP\Files\Folder;
@@ -145,8 +146,7 @@ class EmailObjectStore extends ObjectService {
 	/**
 	 * Equality search.
 	 *
-	 * @param string               $registerSlug  Register
-	 * @param string               $schemaSlug    Schema
+	 * @param RegisterSchemaRef $target The register and schema slugs.
 	 * @param array<string, mixed> $filters       Filters
 	 * @param bool                 $_rbac         RBAC
 	 * @param bool                 $_multitenancy Multitenancy
@@ -154,12 +154,12 @@ class EmailObjectStore extends ObjectService {
 	 * @return array<int, array<string, mixed>>
 	 */
 	public function searchObjectsBySlug(
-		string $registerSlug,
-		string $schemaSlug,
+		RegisterSchemaRef $target,
 		array $filters = [],
 		bool $_rbac = true,
 		bool $_multitenancy = true,
 	) {
+		[$registerSlug, $schemaSlug] = [(string) $target->register, (string) $target->schema];
 		$hits = [];
 		foreach ($this->rows as $id => $row) {
 			foreach ($filters as $key => $value) {

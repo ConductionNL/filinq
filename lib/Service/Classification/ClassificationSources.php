@@ -29,6 +29,7 @@ namespace OCA\Filinq\Service\Classification;
 
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\FileEntityStatsService;
+use OCA\OpenRegister\Kernel\Contracts\RegisterSchemaRef;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -98,8 +99,7 @@ class ClassificationSources {
 		try {
 			// Slugs go through searchObjectsBySlug: searchObjects answers slugs with zero rows.
 			$rows = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: 'filinq',
-				schemaSlug: 'dossier',
+				target: new RegisterSchemaRef(register: 'filinq', schema: 'dossier'),
 				filters: [],
 				_rbac: false,
 				_multitenancy: false

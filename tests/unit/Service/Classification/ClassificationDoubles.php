@@ -27,6 +27,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Service\Classification;
 
 use OCA\Filinq\Tests\Unit\Service\Wizard\WizardObjectStore;
+use OCA\OpenRegister\Kernel\Contracts\RegisterSchemaRef;
 use OCA\OpenRegister\Service\ObjectService;
 use RuntimeException;
 
@@ -87,8 +88,7 @@ class ClassificationObjectStore extends ObjectService {
 	/**
 	 * Rows of one schema matching every filter exactly.
 	 *
-	 * @param string $registerSlug  The register slug.
-	 * @param string $schemaSlug    The schema slug.
+	 * @param RegisterSchemaRef $target The register and schema slugs.
 	 * @param array  $filters       Field filters.
 	 * @param bool   $_rbac         Ignored.
 	 * @param bool   $_multitenancy Ignored.
@@ -96,12 +96,12 @@ class ClassificationObjectStore extends ObjectService {
 	 * @return array The rows.
 	 */
 	public function searchObjectsBySlug(
-		string $registerSlug,
-		string $schemaSlug,
+		RegisterSchemaRef $target,
 		array $filters = [],
 		bool $_rbac = true,
 		bool $_multitenancy = true,
 	) {
+		[$registerSlug, $schemaSlug] = [(string) $target->register, (string) $target->schema];
 		$hits = [];
 		foreach ($this->rows[$schemaSlug] ?? [] as $id => $row) {
 			foreach ($filters as $key => $value) {

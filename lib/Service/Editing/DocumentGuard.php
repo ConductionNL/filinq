@@ -27,6 +27,7 @@ namespace OCA\Filinq\Service\Editing;
 
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\FinalDocumentService;
+use OCA\OpenRegister\Kernel\Contracts\RegisterSchemaRef;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\Files\File;
 use Psr\Log\LoggerInterface;
@@ -209,8 +210,7 @@ class DocumentGuard {
 			// request was editable. The docblock above it says FAILS CLOSED;
 			// with the slug call it failed open.
 			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: self::REGISTER,
-				schemaSlug: $schema,
+				target: new RegisterSchemaRef(register: self::REGISTER, schema: $schema),
 				filters: $filter,
 				_rbac: false
 			);

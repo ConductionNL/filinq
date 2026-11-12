@@ -23,16 +23,17 @@
 
 namespace OCA\Filinq\Tests\Unit\Service;
 
-use OCP\IGroupManager;
 use OCA\Filinq\Service\CustomDictionaryAccessGate;
 use OCA\Filinq\Service\CustomDictionaryPayloadNormaliser;
 use OCA\Filinq\Service\CustomDictionaryRepository;
 use OCA\Filinq\Service\CustomDictionaryService;
 use OCA\Filinq\Service\SettingsService;
+use OCA\OpenRegister\Kernel\Contracts\RegisterSchemaRef;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\OpenRegister\Service\OrganisationService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Db\DoesNotExistException;
+use OCP\IGroupManager;
 use OCP\IUser;
 use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
@@ -142,7 +143,8 @@ class CustomDictionaryServiceTest extends TestCase {
 
 		$objectService = $this->createMock(ObjectService::class);
 		$objectService->method('searchObjectsBySlug')->willReturnCallback(
-			static function (string $registerSlug, string $schemaSlug) use ($dictionaries): array {
+			static function (RegisterSchemaRef $target) use ($dictionaries): array {
+				[$registerSlug, $schemaSlug] = [(string) $target->register, (string) $target->schema];
 				if ($schemaSlug === CustomDictionaryService::SCHEMA_DICTIONARY) {
 					return $dictionaries;
 				}
@@ -261,7 +263,8 @@ class CustomDictionaryServiceTest extends TestCase {
 		$objectService = $this->createMock(ObjectService::class);
 		$objectService->method('find')->willReturn($dictionary);
 		$objectService->method('searchObjectsBySlug')->willReturnCallback(
-			static function (string $registerSlug, string $schemaSlug) use ($existingTerm): array {
+			static function (RegisterSchemaRef $target) use ($existingTerm): array {
+				[$registerSlug, $schemaSlug] = [(string) $target->register, (string) $target->schema];
 				if ($schemaSlug === CustomDictionaryService::SCHEMA_TERM) {
 					return [$existingTerm];
 				}
@@ -347,7 +350,8 @@ class CustomDictionaryServiceTest extends TestCase {
 
 		$objectService = $this->createMock(ObjectService::class);
 		$objectService->method('searchObjectsBySlug')->willReturnCallback(
-			static function (string $registerSlug, string $schemaSlug) use ($active, $inactive, $empty, $terms): array {
+			static function (RegisterSchemaRef $target) use ($active, $inactive, $empty, $terms): array {
+				[$registerSlug, $schemaSlug] = [(string) $target->register, (string) $target->schema];
 				if ($schemaSlug === CustomDictionaryService::SCHEMA_DICTIONARY) {
 					return [$active, $inactive, $empty];
 				}

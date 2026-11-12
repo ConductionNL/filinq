@@ -24,6 +24,7 @@ use OCA\Filinq\Service\FinalDocumentRepository;
 use OCA\Filinq\Service\FlatFileListService;
 use OCA\Filinq\Service\OpenRegisterServiceLocator;
 use OCA\Filinq\Service\ReadableFileResolver;
+use OCA\OpenRegister\Kernel\Contracts\RegisterSchemaRef;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\Files\File;
 use OCP\Files\Folder;
@@ -62,7 +63,8 @@ class FlatFileListServiceTest extends TestCase {
 	private function service(array $records, array $files, array $dossiers=[], array $objectFiles=[], array $parents=[]): FlatFileListService {
 		$objectService = $this->createMock(ObjectService::class);
 		$objectService->method('searchObjectsBySlug')->willReturnCallback(
-			function (string $registerSlug, string $schemaSlug) use ($records, $dossiers): array {
+			function (RegisterSchemaRef $target) use ($records, $dossiers): array {
+				[$registerSlug, $schemaSlug] = [(string) $target->register, (string) $target->schema];
 				if ($schemaSlug === 'dossier') {
 					return $dossiers;
 				}

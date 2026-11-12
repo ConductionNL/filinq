@@ -32,6 +32,7 @@ namespace OCA\Filinq\Service;
 use finfo;
 use OCA\Filinq\Exception\UploadRefusedException;
 use OCA\Filinq\Kernel\Contracts\UploadPolicyServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\RegisterSchemaRef;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -235,8 +236,7 @@ class UploadPolicyService implements UploadPolicyServiceInterface {
 			// `checked: false` and every upload passed unexamined on an
 			// instance that had declared a policy.
 			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: IntakeRepository::REGISTER,
-				schemaSlug: self::SCHEMA,
+				target: new RegisterSchemaRef(register: IntakeRepository::REGISTER, schema: self::SCHEMA),
 				filters: ['active' => true]
 			);
 		} catch (Throwable $e) {

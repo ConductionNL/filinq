@@ -30,6 +30,7 @@ use OCA\Filinq\Service\LegalHold\LegalHoldNotifications;
 use OCA\Filinq\Service\LegalHold\LegalHoldRecordFreeze;
 use OCA\Filinq\Service\OpenRegisterServiceLocator;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Kernel\Contracts\RegisterSchemaRef;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -191,7 +192,8 @@ trait LegalHoldDoubles {
 	protected function objectService(): ObjectService {
 		$objects = $this->createMock(ObjectService::class);
 		$objects->method('searchObjectsBySlug')->willReturnCallback(
-			function (string $registerSlug, string $schemaSlug, array $filters = [], bool $_rbac = true): array {
+			function (RegisterSchemaRef $target, array $filters = [], bool $_rbac = true): array {
+				[$registerSlug, $schemaSlug] = [(string) $target->register, (string) $target->schema];
 				if ($schemaSlug !== 'legalHoldCase' || $_rbac !== false) {
 					throw new RuntimeException('Hold cases are read past RBAC only.');
 				}

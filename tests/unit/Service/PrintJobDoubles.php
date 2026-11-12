@@ -23,6 +23,7 @@ namespace OCA\Filinq\Tests\Unit\Service;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\PrintJobFileStore;
 use OCA\Filinq\Service\PrintJobRepository;
+use OCA\OpenRegister\Kernel\Contracts\RegisterSchemaRef;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
 use OCP\Files\IAppData;
@@ -90,7 +91,7 @@ trait PrintJobDoubles {
 			fn (string $id = '') => $this->rows[$id] ?? null
 		);
 		$objects->method('searchObjectsBySlug')->willReturnCallback(
-			fn (string $registerSlug, string $schemaSlug, array $filters = []) => array_values(
+			fn (RegisterSchemaRef $target, array $filters = []) => array_values(
 				array_filter(
 					$this->rows,
 					static fn (array $row): bool => ($row['requestedBy'] ?? null) === ($filters['requestedBy'] ?? null)

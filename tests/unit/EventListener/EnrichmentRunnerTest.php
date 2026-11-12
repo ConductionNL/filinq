@@ -35,6 +35,7 @@ use OCA\Filinq\Service\SettingsService;
 use OCA\Filinq\Tests\Unit\Service\Classification\ClassificationObjectStore;
 use OCA\Filinq\Tests\Unit\Service\Classification\InboundClassificationFixture;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Kernel\Contracts\RegisterSchemaRef;
 use OCP\AppFramework\Db\DoesNotExistException;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -170,7 +171,8 @@ class EnrichmentRunnerTest extends TestCase {
 			 *
 			 * @return array Never.
 			 */
-			public function searchObjectsBySlug(string $registerSlug, string $schemaSlug, array $filters = [], bool $_rbac = true, bool $_multitenancy = true) {
+			public function searchObjectsBySlug(RegisterSchemaRef $target, array $filters = [], bool $_rbac = true, bool $_multitenancy = true) {
+				[$registerSlug, $schemaSlug] = [(string) $target->register, (string) $target->schema];
 				throw new RuntimeException('register unavailable');
 			}
 		};

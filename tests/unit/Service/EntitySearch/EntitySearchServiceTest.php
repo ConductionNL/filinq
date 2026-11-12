@@ -29,6 +29,7 @@ use OCA\Filinq\Service\EntitySearch\EntitySearchLog;
 use OCA\Filinq\Service\EntitySearch\EntitySearchService;
 use OCA\Filinq\Service\Redaction\AnonymizationLinkReader;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Kernel\Contracts\RegisterSchemaRef;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -380,7 +381,8 @@ class EntitySearchServiceTest extends TestCase {
 			}
 		);
 		$objects->method('searchObjectsBySlug')->willReturnCallback(
-			static function (string $registerSlug, string $schemaSlug, array $filters = []) {
+			static function (RegisterSchemaRef $target, array $filters = []) {
+				[$registerSlug, $schemaSlug] = [(string) $target->register, (string) $target->schema];
 				if ($schemaSlug === 'anonymizationLink' && ($filters['sourceFileId'] ?? null) === 12) {
 					return [['sourceFileId' => 12, 'anonymizedFileId' => 13, '@self' => ['id' => 'link-1']]];
 				}

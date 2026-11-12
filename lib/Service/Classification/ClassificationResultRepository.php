@@ -29,6 +29,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\Classification;
 
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
+use OCA\OpenRegister\Kernel\Contracts\RegisterSchemaRef;
 
 /**
  * Storage of classificationResult records.
@@ -126,8 +127,7 @@ class ClassificationResultRepository {
 	public function search(array $filters): array {
 		// Slugs go through searchObjectsBySlug: searchObjects answers slugs with zero rows.
 		$rows = $this->objectResolver->resolve()->searchObjectsBySlug(
-			registerSlug: self::REGISTER,
-			schemaSlug: self::SCHEMA,
+			target: new RegisterSchemaRef(register: self::REGISTER, schema: self::SCHEMA),
 			filters: $filters,
 			_rbac: false,
 			_multitenancy: false

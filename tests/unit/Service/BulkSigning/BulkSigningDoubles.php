@@ -24,6 +24,7 @@ namespace OCA\Filinq\Tests\Unit\Service\BulkSigning;
 
 use OCA\Filinq\Service\BulkSigning\BulkSigningBatchRepository;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
+use OCA\OpenRegister\Kernel\Contracts\RegisterSchemaRef;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
@@ -67,7 +68,7 @@ trait BulkSigningDoubles {
 			fn (string $id = '') => $this->batches[$id] ?? null
 		);
 		$objects->method('searchObjectsBySlug')->willReturnCallback(
-			fn (string $registerSlug, string $schemaSlug, array $filters = []) => array_values(
+			fn (RegisterSchemaRef $target, array $filters = []) => array_values(
 				array_filter(
 					$this->batches,
 					static fn (array $row): bool => isset($filters['createdBy']) === false || ($row['createdBy'] ?? null) === $filters['createdBy']

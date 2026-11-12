@@ -27,6 +27,7 @@ namespace OCA\Filinq\Service;
 
 use OCA\Filinq\Exception\MergeJobStoreUnreadableException;
 use OCA\Filinq\Kernel\Contracts\MergeJobRepositoryInterface;
+use OCA\OpenRegister\Kernel\Contracts\RegisterSchemaRef;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
@@ -161,8 +162,7 @@ class MergeJobRepository implements MergeJobRepositoryInterface {
 			// MergeDocumentsJob iterated nothing, logged nothing and reported
 			// a clean run every interval while every queued merge sat there.
 			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: IntakeRepository::REGISTER,
-				schemaSlug: DocumentMergeService::SCHEMA,
+				target: new RegisterSchemaRef(register: IntakeRepository::REGISTER, schema: DocumentMergeService::SCHEMA),
 				filters: ['status' => DocumentMergeService::STATUS_QUEUED]
 			);
 		} catch (Throwable $e) {
