@@ -3,7 +3,7 @@
 ## 1. OCR
 
 - [ ] 1.1 Write the recognised text back as a text layer on the PDF in `lib/Service/Ocr/OcrRunService.php`, keeping the original as a file version (REQ-FHB-01). Verify: PHPUnit that a scanned PDF has extractable text after the run.
-- [ ] 1.2 Call `extractFromProvidedText()` with OpenRegister's `ProvidedTextRequest` in `lib/Service/Ocr/OcrExtractionFallback.php` (row det-scans, REQ-DDOCR-003). Verify: PHPUnit against a stub with the real signature; the scan is no longer `ocrDetectionPending`.
+- [x] 1.2 Call `extractFromProvidedText()` with OpenRegister's `ProvidedTextRequest` in `lib/Service/Ocr/OcrExtractionFallback.php` (row det-scans, REQ-DDOCR-003). Verify: PHPUnit against a stub with the real signature; the scan is no longer `ocrDetectionPending`.
 
 ## 2. Woo consent
 

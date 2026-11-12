@@ -384,6 +384,44 @@ class ConfigurationService {
 namespace OCA\OpenRegister\Files\Service;
 
 /**
+ * Mirrors OpenRegister's FileExtractionOptions at main 332104db.
+ */
+final class FileExtractionOptions {
+	/**
+	 * Constructor.
+	 *
+	 * @param bool $forceReExtract Re-extract even when the chunks are up to date.
+	 * @param array<int, string>|null $entityTypes Entity types to detect; null for all.
+	 */
+	public function __construct(
+		public readonly bool $forceReExtract = false,
+		public readonly ?array $entityTypes = null,
+	) {
+	}//end __construct()
+}//end class
+
+/**
+ * Mirrors OpenRegister's ProvidedTextRequest at main 332104db.
+ */
+final class ProvidedTextRequest {
+	/**
+	 * Constructor.
+	 *
+	 * @param int $fileId The file id.
+	 * @param string $text The provided text.
+	 * @param array<int, string>|null $entityTypes Entity types to detect; null for all.
+	 * @param string $method The extraction method.
+	 */
+	public function __construct(
+		public readonly int $fileId,
+		public readonly string $text,
+		public readonly ?array $entityTypes = null,
+		public readonly string $method = 'ocr',
+	) {
+	}//end __construct()
+}//end class
+
+/**
  * Stub for TextExtractionService
  *
  * @category Tests
@@ -393,8 +431,26 @@ namespace OCA\OpenRegister\Files\Service;
  * @link     https://www.filinq.app
  */
 class TextExtractionService {
-	public function extractFile(int $fileId, bool $forceReExtract = false, ?array $entityTypes = null): void {
+	/**
+	 * Mirrors OpenRegister's extractFile(int, FileExtractionOptions) at main 332104db.
+	 *
+	 * @param int $fileId The file id.
+	 * @param FileExtractionOptions $options The options.
+	 *
+	 * @return void
+	 */
+	public function extractFile(int $fileId, FileExtractionOptions $options = new FileExtractionOptions()): void {
 	}//end extractFile()
+
+	/**
+	 * Mirrors OpenRegister's extractFromProvidedText(ProvidedTextRequest) at main 332104db.
+	 *
+	 * @param ProvidedTextRequest $request The provided text.
+	 *
+	 * @return void
+	 */
+	public function extractFromProvidedText(ProvidedTextRequest $request): void {
+	}//end extractFromProvidedText()
 
 	/**
 	 * Mirrors OpenRegister's getExtractedText(int $fileId): ?string at development 910471dc.

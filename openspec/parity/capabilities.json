@@ -4059,11 +4059,11 @@
 			"sourceRef": "Presidio image redaction; CaseGuard handwriting OCR",
 			"filinq": "partial",
 			"built": {
-				"state": "specified",
+				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Not built (closing audit 2026-11-12, decision 389): OpenRegister now has extractFromProvidedText(ProvidedTextRequest) (lib/Files/Service/TextExtractionService.php:209), but OcrExtractionFallback.php:153 calls it with two positional arguments, so the call throws, is caught, and every scan stays ocrDetectionPending (task 1.2). Built so far: lib/Service/Ocr/OcrExtractionFallback.php runs in AnonymizationService::runExtraction() after OpenRegister's extractFile(): when OcrService::needsOcr(mime, getExtractedText()) says a scan has no text, OcrRunService runs Tesseract (admin languages/DPI) and stores an ocrResult row; the text goes to OpenRegister's extractFromProvidedText when it exists. OpenRegister development has no such seam yet (ConductionNL/openregister#2033), so on today's OpenRegister every scan answers ocrDetectionPending: true and the review (FileViewerSidebar, anonymization store) keeps it open with a warning instead of marking it clean. Partial: entities in scans are not detected until OpenRegister takes the text. Tests: AnonymizationServiceOcrFallbackTest, jest anonymization.spec.js reanalyseEntry.",
+				"evidence": "Built (fix 2026-11-12, task 1.2 of finish-half-built-capabilities): lib/Service/OpenRegisterTextExtractionCall.php calls OpenRegister's extractFromProvidedText with a ProvidedTextRequest and extractFile with a FileExtractionOptions when the installed OpenRegister declares them (main 332104db, 2.2.0-dev), and with positional arguments on OpenRegister before 2.2. lib/Service/Ocr/OcrExtractionFallback.php runs in AnonymizationService::runExtraction() after extractFile(): when OcrService::needsOcr(mime, getExtractedText()) says a scan has no text, OcrRunService runs Tesseract (admin languages/DPI), stores an ocrResult row and hands the text to OpenRegister, which chunks it and runs entity detection; the result then carries ocrDetectionPending: false. Before this fix both calls threw a TypeError on OpenRegister main, so every scan stayed ocrDetectionPending. Tests: AnonymizationServiceOcrFallbackTest (2.2 and positional seams), OpenRegisterTextExtractionCallTest, both against stubs with OpenRegister main's signatures; not driven on a live instance.",
 				"change": "openspec/changes/archive/2026-09-29-ocr-trigger-surface",
-				"readOn": "2026-09-29",
+				"readOn": "2026-11-12",
 				"spec": "openspec/specs/ocr-trigger-surface",
 				"requirement": [
 					"openspec/specs/ocr-trigger-surface :: Automatic OCR fallback in the anonymisation extract pipeline (REQ-DDOCR-003)",
