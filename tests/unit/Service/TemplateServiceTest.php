@@ -23,6 +23,8 @@ use OCA\Filinq\Service\Support\OpenRegisterAccess;
 use OCA\Filinq\Service\TemplateService;
 use OCA\Filinq\Service\TemplateVersionService;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Service\Object\ObjectDeletion;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -494,7 +496,7 @@ class TemplateServiceTest extends TestCase {
 		$mockObjectService = $this->createMock(ObjectService::class);
 		$mockObjectService->expects($this->once())
 			->method('deleteObject')
-			->with('uuid-to-delete', 'reg-1', 'schema-1')
+			->with(new ObjectDeletion(uuid: 'uuid-to-delete', target: new ObjectFindTarget(register: 'reg-1', schema: 'schema-1')))
 			->willReturn(true);
 
 		$this->setUpWithOpenRegister($mockObjectService);

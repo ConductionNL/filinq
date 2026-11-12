@@ -28,6 +28,7 @@ namespace OCA\Filinq\Service\Wizard;
 
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\IntakeRepository;
+use OCA\OpenRegister\Service\Object\ObjectDeletion;
 use RuntimeException;
 use Throwable;
 
@@ -194,7 +195,7 @@ class WizardRepository {
 	 */
 	public function delete(string $uuid): void {
 		try {
-			$this->objectResolver->resolve()->deleteObject(uuid: $uuid);
+			$this->objectResolver->resolve()->deleteObject(deletion: new ObjectDeletion(uuid: $uuid));
 		} catch (Throwable $e) {
 			throw new RuntimeException(message: 'The wizard could not be deleted: ' . $e->getMessage(), code: 403, previous: $e);
 		}

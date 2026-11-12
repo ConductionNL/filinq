@@ -132,22 +132,20 @@ class ObjectService {
 	}//end findAll()
 
 	/**
-	 * Delete an object
+	 * Delete an object (openregister #9099 shape).
 	 *
-	 * @param string $uuid Object UUID
-	 * @param string $register Register slug
-	 * @param string $schema Schema slug
+	 * @param \OCA\OpenRegister\Service\Object\ObjectDeletion $deletion The uuid, scope, acting user and permanence.
 	 * @param bool $_rbac RBAC bypass flag.
 	 * @param bool $_multitenancy Multitenancy bypass flag.
+	 * @param bool $_retentionSweep Retention sweep flag.
 	 *
 	 * @return bool
 	 */
 	public function deleteObject(
-		string $uuid = '',
-		string $register = '',
-		string $schema = '',
+		\OCA\OpenRegister\Service\Object\ObjectDeletion $deletion,
 		bool $_rbac = true,
 		bool $_multitenancy = true,
+		bool $_retentionSweep = false,
 	) {
 		return true;
 	}//end deleteObject()

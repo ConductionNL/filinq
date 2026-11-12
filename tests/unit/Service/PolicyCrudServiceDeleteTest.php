@@ -24,6 +24,7 @@ namespace OCA\Filinq\Tests\Unit\Service;
 use OCA\Filinq\Service\ConsentService;
 use OCA\Filinq\Service\PolicyCrudService;
 use OCA\Filinq\Service\SettingsService;
+use OCA\OpenRegister\Service\Object\ObjectDeletion;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\IGroupManager;
 use OCP\IUser;
@@ -102,8 +103,8 @@ class PolicyCrudServiceDeleteTest extends TestCase {
 
 		$objectService = $this->createMock(ObjectService::class);
 		$objectService->method('deleteObject')->willReturnCallback(
-			function (string $uuid = '', ...$rest) use (&$captured): bool {
-				$captured = $uuid;
+			function (ObjectDeletion $deletion, ...$rest) use (&$captured): bool {
+				$captured = $deletion->uuid;
 				return true;
 			}
 		);
