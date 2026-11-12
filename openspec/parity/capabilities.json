@@ -3847,7 +3847,8 @@
 				"state": "specified",
 				"owner": "ConductionNL/openregister",
 				"evidence": "lib/Service/EntityDetectionService.php:51-52 TYPED_PII_TYPES includes 'BSN' and 'IBAN' (always redacted regardless of length, closes #285). No detector produces a licence plate: filinq lists KENTEKEN as a selectable type (src/services/entityTypes.js:31, lib/Service/LegalBasisProposalService.php:103), but OpenRegister has no plate pattern and drops every type it cannot map before calling Presidio or anonymiq (lib/Service/TextExtraction/EntityRecognitionHandler.php:873-876 at 555af72), and anonymiq defines DutchLicensePlateRecognizer without registering it (src/api/services/text_analyzer.py:70-79 at eb4e7b0). Corrections round 8 (2026-09-28), openregister#4104: TYPED_PII_TYPES is a filter over the entities OpenRegister returns (lib/Service/EntityDetectionService.php:177 at 9fd042f) and produces none itself, and OpenRegister never returns a BSN entity: its regex set is e-mail, phone and IBAN only (lib/Service/TextExtraction/EntityRecognitionHandler.php:505-526 at 555af72), so a BSN is at best labelled PHONE (:515); Presidio is asked for US_SSN (:869); and anonymiq's own BSN recogniser is never asked for, because its default entities omit BSN (anonymiq src/api/config.py:17 at eb4e7b0) and a whitelist that names BSN loses it at EntityRecognitionHandler.php:873-876. IBAN is recognised (EntityRecognitionHandler.php:520).",
-				"change": "openregister/detection-dutch-licence-plates"
+				"change": "openregister/detection-dutch-licence-plates",
+				"requirement": "openregister:openspec/changes/detection-dutch-licence-plates/specs/pii-entity-detection :: Jurisdiction identifiers come from a pattern set per country"
 			},
 			"reachedOn": "/anonymization (AnonymizationIndex.vue) via the same detect/extract pipeline as det-auto",
 			"provider": "openregister",
@@ -3916,7 +3917,8 @@
 				"state": "specified",
 				"owner": "ConductionNL/openregister",
 				"evidence": "AnonymiserBackendStateClient::getState() (lib/Service/AnonymiserBackendStateClient.php) only READS the current method; filinq's own Settings.vue (lines ~846, 1048) only displays the current backend and shows a warning when it is 'regex'. No picker/action anywhere in filinq lets a user or admin choose the engine. OpenRegister owns the actual choice: OR's FileSettingsController / AnonymisationBackendController (git grep on origin/development) implement the setting.",
-				"change": "openregister/anonymiser-backend-selection"
+				"change": "openregister/anonymiser-backend-selection",
+				"requirement": "openregister:openspec/changes/anonymiser-backend-selection/specs/anonymiser-backend-selection :: An admin settings panel MUST exist where admins pick the active method and configure per-backend endpoints"
 			},
 			"reachedOn": "nothing in filinq; the engine is chosen in OpenRegister's own admin settings",
 			"provider": "openregister",
@@ -5057,7 +5059,12 @@
 				"state": "specified",
 				"owner": "ConductionNL/filinq",
 				"evidence": "openspec/changes/woo-request-workflow/proposal.md states explicitly: Filinq 'has no request object: no intake with statutory deadlines, no candidate-document collection, no dedupe, no per-document exemption assessment, no inventarislijst, no disclosure package, no lifecycle.' tasks.md: 0 of 15 tasks checked. No wooRequest/requestDocument schema, controller or service found in lib/.",
-				"change": "openspec/changes/woo-request-workflow"
+				"change": "openspec/changes/woo-request-workflow",
+				"requirement": [
+					"dossiq:openspec/specs/woo-case-type :: Document collection and inventory",
+					"dossiq:openspec/specs/woo-case-type :: Redaction via Docudesk integration",
+					"dossiq:openspec/specs/woo-case-type :: Publication to reading room"
+				]
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -5092,7 +5099,11 @@
 				"state": "specified",
 				"owner": "ConductionNL/filinq",
 				"evidence": "openspec/changes/woo-request-workflow/tasks.md:19 '2.2 Implement collection + hash dedupe' is unchecked. No email-threading or duplicate-detection code found in lib/ (only unrelated DocumentStorageService filename-dedupe and notification trigger.dedupeFields).",
-				"change": "openspec/changes/woo-request-workflow"
+				"change": "openspec/changes/woo-request-workflow",
+				"requirement": [
+					"dossiq:openspec/changes/woo-request-corpus-collection/specs/woo-case-type :: Every exclusion before review is kept with its reason (REQ-WRC-003)",
+					"dossiq:openspec/changes/woo-request-corpus-collection/specs/woo-case-type :: Collected e-mails are grouped into the conversation they belong to (REQ-WRC-006)"
+				]
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -5125,7 +5136,11 @@
 				"state": "specified",
 				"owner": "ConductionNL/filinq",
 				"evidence": "openspec/changes/woo-request-workflow/proposal.md:43 'Intake: register a request with subject, scope and received date' and the Why section state Filinq has 'no candidate-document collection'. No cross-system search or scope-collection code exists in lib/ (checked alongside entity-search: 0 of its 11 tasks done, and woo-request-workflow's own tasks.md: 0 of 15 done).",
-				"change": "openspec/changes/woo-request-workflow"
+				"change": "openspec/changes/woo-request-workflow",
+				"requirement": [
+					"dossiq:openspec/changes/woo-requests-gather-documents-from-sources/specs/woo-case-type :: A handler searches the organisation's sources from a Woo case (REQ-WOO-012)",
+					"dossiq:openspec/changes/woo-request-corpus-collection/specs/woo-case-type :: A search plan is recorded before collection (REQ-WRC-001)"
+				]
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -5158,7 +5173,8 @@
 				"state": "specified",
 				"owner": "ConductionNL/filinq",
 				"evidence": "openspec/changes/woo-request-workflow/proposal.md:34 describes the unbuilt `wooRequest` schema carrying 'statutory decision deadline (Woo Art. 4.4: 4 weeks, one extension of at most 2 weeks with reason)'. tasks.md: 0 of 15 tasks checked; no wooRequest schema/controller/service exists in lib/. (This is distinct from the built third-party OBJECTION-period tracking under woo-consent/woo-period, which is a different deadline.)",
-				"change": "openspec/changes/woo-request-workflow"
+				"change": "openspec/changes/woo-request-workflow",
+				"requirement": "dossiq:openspec/specs/woo-case-type :: WOO deadline tracking and extension"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -7322,7 +7338,8 @@
 				"state": "built",
 				"owner": "ConductionNL/openregister",
 				"evidence": "Grepped lib/ for WorkflowEngine/IOperation/IEntity: no match, so filinq registers no operations into Nextcloud's core Workflow Engine app. Filinq does ship a 'Flows' page (src/manifest.json:1199-1213, /flows and /flows/:id, CnFlowDetail canvas + useFlowStore) and declares 'openregister.flows' as an installable store type (src/manifest.json store.types) - this is OpenRegister's own flow/automation engine, a different system from NC's core Workflow app.",
-				"spec": "ConductionNL/openregister openspec/specs/flow-engine"
+				"spec": "ConductionNL/openregister openspec/specs/flow-engine",
+				"requirement": "openregister:openspec/specs/flow-engine :: A TRIGGER is a node, and a flow may carry several"
 			},
 			"reachedOn": "/flows (Flows/FlowDetail pages) - via OpenRegister's flow engine, not Nextcloud's core Workflow app",
 			"provider": "openregister",
@@ -8258,7 +8275,8 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "filinq offers no list export: its document lists switch the shared export off (src/views/intake/IntakeIndex.vue:27 and src/views/dossier/DossierIndex.vue:20 :showMassExport=\"false\"), and no manifest index page lists documentRegistration (lib/Settings/filinq_register.json:71). openregister@86a2fb87 exports any schema's objects as Excel or CSV: appinfo/routes.php:1172 GET /api/objects/{register}/{schema}/export, from src/modals/register/ExportRegister.vue:89 opened in src/components/cards/RegisterSchemaCard.vue:304.",
-				"spec": "ConductionNL/openregister openspec/specs/data-import-export"
+				"spec": "ConductionNL/openregister openspec/specs/data-import-export",
+				"requirement": "openregister:openspec/specs/data-import-export :: The system MUST support structured export to CSV, Excel (XLSX), JSON, XML, and ODS formats @e2e exclude REST API export — covered by Newman"
 			},
 			"reachedOn": "OpenRegister's own register page (RegisterSchemaCard export action), not a filinq page",
 			"provider": "openregister",
@@ -8569,7 +8587,8 @@
 				"state": "specified",
 				"owner": "ConductionNL/openregister",
 				"evidence": "filinq has no export or import of its own (grep -ri 'function export|function import' lib/Controller finds only a custom dictionary term import, lib/Controller/CustomDictionaryController.php:271). openregister@86a2fb87 exports a configuration with its objects: src/modals/configuration/ExportConfiguration.vue:23 'Include related objects' -> :140 includeObjects -> GET /api/configurations/{id}/export (appinfo/routes.php:1715), and imports through src/modals/configuration/ImportConfiguration.vue:940 POST /api/configurations/import. The metadata objects travel; the document files live in Nextcloud storage and are not in that export (no file content handling in lib/Service/Configuration).",
-				"change": "openregister/import-preview-and-conflict-policy"
+				"change": "openregister/import-preview-and-conflict-policy",
+				"requirement": "openregister:openspec/changes/import-preview-and-conflict-policy/specs/data-import-export :: The instance serialises and loads, without secrets (REQ-IPC-005)"
 			},
 			"reachedOn": "OpenRegister's own configuration page (ExportConfiguration and ImportConfiguration modals), not a filinq page",
 			"provider": "openregister",
