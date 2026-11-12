@@ -37,6 +37,8 @@ use RuntimeException;
  *
  * @covers \OCA\Filinq\Service\SigningEnvelope\SigningEnvelopeService
  * @uses   \OCA\Filinq\Service\SigningEnvelope\SigningEnvelopeRollUp
+ * @uses \OCA\Filinq\Service\SigningEnvelope\EnvelopeCaller
+ * @uses \OCA\Filinq\Service\SigningEnvelope\SigningEnvelopeDraft
  */
 final class SigningEnvelopeServiceGoldenTest extends TestCase {
 

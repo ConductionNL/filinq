@@ -49,6 +49,7 @@ use Stringable;
  * @covers \OCA\Filinq\Service\Support\PdfRendering
  * @covers \OCA\Filinq\Service\Support\OpenRegisterAccess
  * @uses   \OCA\Filinq\Service\CorrespondenceRequest
+ * @uses \OCA\Filinq\Service\DocumentObjectServiceResolver
  */
 class CorrespondenceLogGoldenTest extends TestCase {
 

@@ -56,6 +56,7 @@ use Psr\Log\LoggerInterface;
  * @covers \OCA\Filinq\Service\Support\PdfRendering
  * @covers \OCA\Filinq\Service\Support\OpenRegisterAccess
  * @uses   \OCA\Filinq\BackgroundJob\JobQueue
+ * @uses \OCA\Filinq\Service\DocumentObjectServiceResolver
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */

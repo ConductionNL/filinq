@@ -44,6 +44,7 @@ use Psr\Log\LoggerInterface;
  *
  * @covers \OCA\Filinq\Controller\PdfController
  * @covers \OCA\Filinq\Controller\Support\PdfServices
+ * @uses \OCA\Filinq\Controller\Support\PdfResponses
  */
 class PdfControllerRenderTraceTest extends TestCase {
 
