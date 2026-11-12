@@ -87,10 +87,7 @@ class StandingConsentController extends Controller {
 		}
 
 		try {
-			$this->crudService->requirePolicyPermission(
-				surface: PolicyCrudServiceInterface::SURFACE_STANDING_CONSENT,
-				action: 'read'
-			);
+			$this->requireStandingConsentPermission(action: 'read');
 			return new JSONResponse($this->crudService->listStandingConsents());
 		} catch (Exception $e) {
 			return $this->error(message: 'Failed to list standing consents: ', exception: $e);
@@ -116,10 +113,7 @@ class StandingConsentController extends Controller {
 		}
 
 		try {
-			$this->crudService->requirePolicyPermission(
-				surface: PolicyCrudServiceInterface::SURFACE_STANDING_CONSENT,
-				action: 'read'
-			);
+			$this->requireStandingConsentPermission(action: 'read');
 			$record = $this->crudService->getStandingConsent(uuid: $id);
 			if ($record === null) {
 				return new JSONResponse(['error' => $this->l10n->t('Standing consent not found')], 404);
@@ -147,10 +141,7 @@ class StandingConsentController extends Controller {
 		}
 
 		try {
-			$this->crudService->requirePolicyPermission(
-				surface: PolicyCrudServiceInterface::SURFACE_STANDING_CONSENT,
-				action: 'create'
-			);
+			$this->requireStandingConsentPermission(action: 'create');
 			$data = $this->request->getParams();
 			return new JSONResponse($this->crudService->createStandingConsent(data: $data), 201);
 		} catch (RuntimeException $e) {
@@ -180,10 +171,7 @@ class StandingConsentController extends Controller {
 		}
 
 		try {
-			$this->crudService->requirePolicyPermission(
-				surface: PolicyCrudServiceInterface::SURFACE_STANDING_CONSENT,
-				action: 'update'
-			);
+			$this->requireStandingConsentPermission(action: 'update');
 			$data = $this->request->getParams();
 			return new JSONResponse(
 				$this->crudService->updateStandingConsent(uuid: $id, data: $data)
@@ -215,10 +203,7 @@ class StandingConsentController extends Controller {
 		}
 
 		try {
-			$this->crudService->requirePolicyPermission(
-				surface: PolicyCrudServiceInterface::SURFACE_STANDING_CONSENT,
-				action: 'delete'
-			);
+			$this->requireStandingConsentPermission(action: 'delete');
 			$this->crudService->deleteStandingConsent(uuid: $id);
 			return new JSONResponse(['deleted' => $id]);
 		} catch (RuntimeException $e) {
@@ -228,6 +213,22 @@ class StandingConsentController extends Controller {
 		}
 
 	}//end destroy()
+
+	/**
+	 * Require the caller's permission for this verb on the standing consent surface;
+	 * throws when it is refused, before the action does anything.
+	 *
+	 * @param string $action The verb: read, create, update or delete.
+	 *
+	 * @return void
+	 */
+	private function requireStandingConsentPermission(string $action): void {
+		$this->crudService->requirePolicyPermission(
+			surface: PolicyCrudServiceInterface::SURFACE_STANDING_CONSENT,
+			action: $action
+		);
+
+	}//end requireStandingConsentPermission()
 
 	/**
 	 * Wrap an exception into a 500 JSON response and log it.
