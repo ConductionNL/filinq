@@ -26,6 +26,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use Exception;
+use OCA\Filinq\Controller\Support\TranslatedErrorAnswer;
 use OCA\Filinq\Kernel\AppIdentity;
 use OCA\Filinq\Kernel\Contracts\FinancialExtractionServiceInterface;
 use OCA\Filinq\Kernel\Contracts\GlAccountSuggestionServiceInterface;
@@ -201,17 +202,7 @@ class ExtractionController extends Controller {
 	 * @return JSONResponse The error response.
 	 */
 	private function errorResponse(string $message, Exception $exception): JSONResponse {
-		$this->logger->error($message . ': ' . $exception->getMessage(), ['exception' => $exception]);
-
-		$statusCode = Http::STATUS_INTERNAL_SERVER_ERROR;
-		if ($exception->getCode() >= 400 && $exception->getCode() < 600) {
-			$statusCode = $exception->getCode();
-		}
-
-		return new JSONResponse(
-			['error' => $this->l10n->t($message)],
-			$statusCode
-		);
+		return (new TranslatedErrorAnswer(logger: $this->logger, l10n: $this->l10n))->answer(message: $message, exception: $exception);
 
 	}//end errorResponse()
 }//end class

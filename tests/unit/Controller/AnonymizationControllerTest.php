@@ -229,7 +229,7 @@ class AnonymizationControllerTest extends TestCase {
 		);
 		$this->assertMatchesRegularExpression(
 			"/'pdf-only'\\s*,\\s*'pdf'\\s*,\\s*'preserve'/",
-			$content,
+			file_get_contents(__DIR__ . '/../../../lib/Controller/Support/OutputFormatChoice.php'),
 			'VALID_OUTPUT_FORMATS must contain pdf-only, pdf and preserve'
 		);
 		$this->assertStringContainsString(
@@ -248,7 +248,7 @@ class AnonymizationControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testControllerDefaultsToPdfOnly(): void {
-		$content = file_get_contents(__DIR__ . '/../../../lib/Controller/AnonymizationController.php');
+		$content = file_get_contents(__DIR__ . '/../../../lib/Controller/Support/OutputFormatChoice.php');
 
 		// Both the IAppConfig read default and the malformed-tenant fallback
 		// must resolve to 'pdf-only'; 'pdf' must NOT be the resolved default.
@@ -300,7 +300,7 @@ class AnonymizationControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testControllerReadsTenantDefaultOutputFormat(): void {
-		$content = file_get_contents(__DIR__ . '/../../../lib/Controller/AnonymizationController.php');
+		$content = file_get_contents(__DIR__ . '/../../../lib/Controller/Support/OutputFormatChoice.php');
 
 		$this->assertStringContainsString(
 			'filinq.anonymisation.default_output_format',

@@ -143,6 +143,29 @@ class SettingsController extends Controller {
 	}//end environment()
 
 	/**
+	 * The refusal for a caller who may not change the settings: 401 without a
+	 * session, 403 for a signed-in user who is no administrator.
+	 *
+	 * @return JSONResponse|null The refusal, or null for an administrator.
+	 */
+	private function adminRefusal(): ?JSONResponse {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			return $this->notAuthenticated(message: 'Not authenticated');
+		}
+
+		if ($this->groupManager->isAdmin($user->getUID()) === false) {
+			return new JSONResponse(
+				data: ['error' => 'Admin privileges required'],
+				statusCode: Http::STATUS_FORBIDDEN
+			);
+		}
+
+		return null;
+
+	}//end adminRefusal()
+
+	/**
 	 * Log a failure and answer 500 with its message.
 	 *
 	 * @param string    $message   The log line.
@@ -206,16 +229,9 @@ class SettingsController extends Controller {
 	#[AuthorizedAdminSetting(FilinqAdmin::class)]
 	public function create(): JSONResponse {
 		try {
-			$user = $this->userSession->getUser();
-			if ($user === null) {
-				return $this->notAuthenticated(message: 'Not authenticated');
-			}
-
-			if ($this->groupManager->isAdmin($user->getUID()) === false) {
-				return new JSONResponse(
-					data: ['error' => 'Admin privileges required'],
-					statusCode: Http::STATUS_FORBIDDEN
-				);
+			$refusal = $this->adminRefusal();
+			if ($refusal !== null) {
+				return $refusal;
 			}
 
 			$data = $this->request->getParams();
@@ -261,16 +277,9 @@ class SettingsController extends Controller {
 	#[AuthorizedAdminSetting(FilinqAdmin::class)]
 	public function load(): JSONResponse {
 		try {
-			$user = $this->userSession->getUser();
-			if ($user === null) {
-				return $this->notAuthenticated(message: 'Not authenticated');
-			}
-
-			if ($this->groupManager->isAdmin($user->getUID()) === false) {
-				return new JSONResponse(
-					data: ['error' => 'Admin privileges required'],
-					statusCode: Http::STATUS_FORBIDDEN
-				);
+			$refusal = $this->adminRefusal();
+			if ($refusal !== null) {
+				return $refusal;
 			}
 
 			return new JSONResponse($this->backends->settings->initialize());
