@@ -1,7 +1,3 @@
-/**
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- */
 OC.L10N.register(
     "filinq",
     {
@@ -2791,7 +2787,37 @@ OC.L10N.register(
         "The value before the change.": "The value before the change.",
         "When the change was made.": "When the change was made.",
         "Merge fields": "Merge fields",
-        "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you.": "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you."
+        "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you.": "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you.",
+        "%n day left": ["%n day left","%n days left"],
+        "%n days left": "%n days left",
+        "%n day overdue": ["%n day overdue","%n days overdue"],
+        "%n days overdue": "%n days overdue",
+        "Change deadline": "Change deadline",
+        "Documents past their handling deadline that are not handled yet, the longest overdue first.": "Documents past their handling deadline that are not handled yet, the longest overdue first.",
+        "Due today": "Due today",
+        "Duplicate of {subject}": "Duplicate of {subject}",
+        "New deadline": "New deadline",
+        "Nothing is overdue.": "Nothing is overdue.",
+        "Overdue": "Overdue",
+        "Pick the new deadline for \"{subject}\" and say why it moves. The reason stays with the document.": "Pick the new deadline for \"{subject}\" and say why it moves. The reason stays with the document.",
+        "Possible duplicate": "Possible duplicate",
+        "Reject as duplicate": "Reject as duplicate",
+        "The deadline was not changed.": "The deadline was not changed.",
+        "The same file arrived before as \"{subject}\"": "The same file arrived before as \"{subject}\"",
+        "Waiting for the attachment": "Waiting for the attachment",
+        "Handling deadline": "Handling deadline",
+        "The date by which the document has to be handled. Set on arrival from the matching intake default rule's handling period in working days, or from the admin default; a registrar may move it with a reason.": "The date by which the document has to be handled. Set on arrival from the matching intake default rule's handling period in working days, or from the admin default; a registrar may move it with a reason.",
+        "Deadline reason": "Deadline reason",
+        "Why a registrar moved the handling deadline. Moving it without a reason is refused.": "Why a registrar moved the handling deadline. Moving it without a reason is refused.",
+        "Days left": "Days left",
+        "Days until the handling deadline, negative when it has passed. Computed on every read, never stored.": "Days until the handling deadline, negative when it has passed. Computed on every read, never stored.",
+        "SHA-256 of the file's bytes at arrival. An arrival whose hash matches an earlier intake document that was not rejected is marked as a possible duplicate of it.": "SHA-256 of the file's bytes at arrival. An arrival whose hash matches an earlier intake document that was not rejected is marked as a possible duplicate of it.",
+        "Duplicate of": "Duplicate of",
+        "The earlier intake document with the same content, when there is one. The arrival is kept either way; the registrar decides.": "The earlier intake document with the same content, when there is one. The arrival is kept either way; the registrar decides.",
+        "Handling days": "Handling days",
+        "How many working days a document this rule matches may wait, counted from its arrival. Empty uses the admin default.": "How many working days a document this rule matches may wait, counted from its arrival. Empty uses the admin default.",
+        "Handled when": "Handled when",
+        "When a document this rule matches counts as handled: once it is assigned to a record, or once an outgoing letter answers it. A rejected document is always handled.": "When a document this rule matches counts as handled: once it is assigned to a record, or once an outgoing letter answers it. A rejected document is always handled."
     },
     "nplurals=2; plural=(n != 1);"
 )

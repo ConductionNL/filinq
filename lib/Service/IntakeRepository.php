@@ -46,6 +46,13 @@ use Throwable;
 class IntakeRepository implements IntakeRepositoryInterface {
 
 	/**
+	 * The post register's schema: inbound and outbound registrations.
+	 *
+	 * @var string
+	 */
+	private const REGISTRATION_SCHEMA = 'documentRegistration';
+
+	/**
 	 * Constructor.
 	 *
 	 * @param DocumentObjectServiceResolver $objectResolver Resolver for OpenRegister's ObjectService.
@@ -196,6 +203,137 @@ class IntakeRepository implements IntakeRepositoryInterface {
 	}//end findByUuid()
 
 	/**
+	 * The earliest intake document with this content that was not rejected.
+	 *
+	 * A rejected copy is no reason to warn: it already left the inbox as not
+	 * belonging here.
+	 *
+	 * @param string $contentHash The SHA-256 of the file's bytes.
+	 *
+	 * @return array<string, mixed>|null The document, or null when none came before.
+	 *
+	 * @spec openspec/changes/intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-an-arrival-whose-content-came-before-is-marked-never-refused-req-iws-003
+	 */
+	public function findByContentHash(string $contentHash): ?array {
+		if ($contentHash === '') {
+			return null;
+		}
+
+		$earlier = array_values(
+			array_filter(
+				$this->search(filters: ['contentHash' => $contentHash]),
+				static fn (array $document): bool => ($document['status'] ?? '') !== self::STATUS_REJECTED
+			)
+		);
+		if ($earlier === []) {
+			return null;
+		}
+
+		usort(
+			$earlier,
+			static fn (array $left, array $right): int => strcmp((string)($left['receivedAt'] ?? ''), (string)($right['receivedAt'] ?? ''))
+		);
+
+		return $earlier[0];
+
+	}//end findByContentHash()
+
+	/**
+	 * Every document past its handling deadline that is not handled yet.
+	 *
+	 * A rejected document is always handled. A waiting or detached one never
+	 * is. An assigned one is handled under its rule's `handledWhen`:
+	 * `assigned` (the default, also for a document no rule stamped) at once,
+	 * `answered` only once an outbound registration answers its inbound one.
+	 *
+	 * @param string                $today       Today as Y-m-d; a deadline before it has passed.
+	 * @param array<string, string> $handledWhen Rule uuid => `assigned` or `answered`.
+	 *
+	 * @return array<int, array<string, mixed>> The overdue documents, the longest overdue first.
+	 *
+	 * @spec openspec/changes/intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-the-worklist-shows-what-is-overdue-req-iws-002
+	 */
+	public function findOverdue(string $today, array $handledWhen): array {
+		$overdue = [];
+		foreach ([self::STATUS_RECEIVED, self::STATUS_DETACHED, self::STATUS_ASSIGNED] as $status) {
+			foreach ($this->search(filters: ['status' => $status]) as $document) {
+				$deadline = (string)($document['handlingDeadline'] ?? '');
+				if ($deadline === '' || substr($deadline, 0, 10) >= $today) {
+					continue;
+				}
+
+				if ($status === self::STATUS_ASSIGNED
+					&& $this->assignedIsOpen(document: $document, handledWhen: $handledWhen) === false
+				) {
+					continue;
+				}
+
+				$overdue[] = $document;
+			}
+		}
+
+		usort(
+			$overdue,
+			static fn (array $left, array $right): int => strcmp((string)$left['handlingDeadline'], (string)$right['handlingDeadline'])
+		);
+
+		return $overdue;
+
+	}//end findOverdue()
+
+	/**
+	 * Whether an assigned document is still open under its rule.
+	 *
+	 * @param array<string, mixed>  $document    The assigned document.
+	 * @param array<string, string> $handledWhen Rule uuid => `assigned` or `answered`.
+	 *
+	 * @return bool True when its rule waits for an answer that has not been registered.
+	 */
+	private function assignedIsOpen(array $document, array $handledWhen): bool {
+		$rule = (string)($document['defaultRule'] ?? '');
+		if (($handledWhen[$rule] ?? 'assigned') !== 'answered') {
+			return false;
+		}
+
+		return $this->isAnswered(uuid: (string)($document['uuid'] ?? '')) === false;
+
+	}//end assignedIsOpen()
+
+	/**
+	 * Whether an outbound registration answers an inbound registration of this document.
+	 *
+	 * The discharge is read from the `answers` link of the post register and
+	 * never written as a status on the inbound entry.
+	 *
+	 * @param string $uuid The intake document.
+	 *
+	 * @return bool True when it was answered.
+	 *
+	 * @spec openspec/changes/intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-the-worklist-shows-what-is-overdue-req-iws-002
+	 */
+	private function isAnswered(string $uuid): bool {
+		if ($uuid === '') {
+			return false;
+		}
+
+		$inbound = $this->search(filters: ['document' => $uuid, 'direction' => 'inbound'], schema: self::REGISTRATION_SCHEMA);
+		foreach ($inbound as $registration) {
+			$registrationUuid = (string)($registration['uuid'] ?? '');
+			if ($registrationUuid === '') {
+				continue;
+			}
+
+			$answers = $this->search(filters: ['answers' => $registrationUuid, 'direction' => 'outbound'], schema: self::REGISTRATION_SCHEMA);
+			if ($answers !== []) {
+				return true;
+			}
+		}
+
+		return false;
+
+	}//end isAnswered()
+
+	/**
 	 * Write an intake document, creating it when its uuid is not known yet.
 	 *
 	 * @param array<string, mixed> $document The document to store.
@@ -252,6 +390,7 @@ class IntakeRepository implements IntakeRepositoryInterface {
 	 * an error (openregister#3611).
 	 *
 	 * @param array<string, mixed> $filters Field equality filters.
+	 * @param string $schema The schema slug; the intake documents unless another is named.
 	 *
 	 * @return array<int, array<string, mixed>> The matching documents.
 	 *
@@ -259,7 +398,7 @@ class IntakeRepository implements IntakeRepositoryInterface {
 	 *
 	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
-	private function search(array $filters): array {
+	private function search(array $filters, string $schema=self::SCHEMA): array {
 		try {
 			// 🔴 SLUGS GO THROUGH `searchObjectsBySlug`, NEVER `searchObjects`.
 			// `self::REGISTER` is `filinq` and `self::SCHEMA` is
@@ -270,7 +409,7 @@ class IntakeRepository implements IntakeRepositoryInterface {
 			// wrote a second inbox document every time.
 			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
 				registerSlug: self::REGISTER,
-				schemaSlug: self::SCHEMA,
+				schemaSlug: $schema,
 				filters: $filters
 			);
 		} catch (DoesNotExistException $e) {

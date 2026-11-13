@@ -54,6 +54,20 @@ class IntakeDefaultRuleService {
 	public const SCHEMA = 'intakeDefaultRule';
 
 	/**
+	 * A document counts as handled once it is assigned to a record.
+	 *
+	 * @var string
+	 */
+	public const HANDLED_ASSIGNED = 'assigned';
+
+	/**
+	 * A document counts as handled once an outgoing letter answers it.
+	 *
+	 * @var string
+	 */
+	public const HANDLED_ANSWERED = 'answered';
+
+	/**
 	 * Constructor.
 	 *
 	 * @param DocumentObjectServiceResolver $objectResolver Resolver for OpenRegister's ObjectService.
@@ -152,6 +166,34 @@ class IntakeDefaultRuleService {
 		return $document;
 
 	}//end stamp()
+
+	/**
+	 * When a document counts as handled, per rule uuid.
+	 *
+	 * `assigned` unless a rule says `answered`; an unreadable rule set answers
+	 * no rules, so every document falls back to `assigned`.
+	 *
+	 * @return array<string, string> Rule uuid => `assigned` or `answered`.
+	 *
+	 * @spec openspec/changes/intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-the-worklist-shows-what-is-overdue-req-iws-002
+	 */
+	public function handledWhenByRule(): array {
+		$handledWhen = [];
+		foreach ($this->rules() as $rule) {
+			$uuid = (string)($rule['uuid'] ?? '');
+			if ($uuid === '') {
+				continue;
+			}
+
+			$handledWhen[$uuid] = self::HANDLED_ASSIGNED;
+			if (($rule['handledWhen'] ?? null) === self::HANDLED_ANSWERED) {
+				$handledWhen[$uuid] = self::HANDLED_ANSWERED;
+			}
+		}
+
+		return $handledWhen;
+
+	}//end handledWhenByRule()
 
 	/**
 	 * Every rule in the register.
