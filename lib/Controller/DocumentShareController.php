@@ -77,11 +77,15 @@ class DocumentShareController extends Controller {
 	#[NoAdminRequired]
 	public function create(): JSONResponse {
 		$password = $this->request->getParam('password');
+		if (is_string($password) === false || $password === '') {
+			$password = null;
+		}
+
 		try {
 			$result = $this->shares->shareDocument(
 				fileId: (int) $this->request->getParam('fileId', 0),
 				expiresOn: (string) $this->request->getParam('expiresOn', ''),
-				password: is_string($password) === true && $password !== '' ? $password : null,
+				password: $password,
 				note: (string) $this->request->getParam('note', ''),
 				labelConfirmed: filter_var($this->request->getParam('labelConfirmed', false), FILTER_VALIDATE_BOOLEAN)
 			);

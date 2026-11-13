@@ -11436,7 +11436,7 @@
                 "description": "One link to one or several documents, made for someone outside the organisation. It records what left, by whom and until when; the link itself (its token and URL) stays in Nextcloud, so this record cannot be used to open it.",
                 "version": "1.0.0",
                 "summary": "",
-                "icon": "LinkVariant",
+                "icon": "FileLinkOutline",
                 "required": [
                     "kind",
                     "files",
@@ -11615,15 +11615,9 @@
                     "read": [
                         "authenticated"
                     ],
-                    "create": [
-                        "authenticated"
-                    ],
-                    "update": [
-                        "admin"
-                    ],
-                    "delete": [
-                        "admin"
-                    ]
+                    "create": [],
+                    "update": [],
+                    "delete": []
                 },
                 "deleted": null,
                 "configuration": {
@@ -11637,15 +11631,15 @@
                     "initial": "active",
                     "states": {
                         "active": {
-                            "label": "Actief",
+                            "label": "Active",
                             "terminal": false
                         },
                         "expired": {
-                            "label": "Verlopen",
+                            "label": "Expired",
                             "terminal": true
                         },
                         "revoked": {
-                            "label": "Ingetrokken",
+                            "label": "Taken back",
                             "terminal": true
                         }
                     },
@@ -11653,12 +11647,12 @@
                         "expire": {
                             "from": "active",
                             "to": "expired",
-                            "label": "Laten verlopen"
+                            "label": "Expire"
                         },
                         "revoke": {
                             "from": "active",
                             "to": "revoked",
-                            "label": "Intrekken"
+                            "label": "Take back"
                         }
                     }
                 }
@@ -12679,29 +12673,6 @@
                     "consentClear": true,
                     "prohibitionsClear": true
                 }
-            },
-            {
-                "@self": {
-                    "register": "filinq",
-                    "schema": "documentShare",
-                    "slug": "document-share-seed-expired"
-                },
-                "kind": "document",
-                "files": [
-                    {
-                        "fileId": 0,
-                        "name": "besluit-2026-114.pdf",
-                        "version": "seed",
-                        "label": ""
-                    }
-                ],
-                "shareId": "seed",
-                "sharedBy": "admin",
-                "sharedAt": "2026-10-01T09:00:00+00:00",
-                "expiresAt": "2026-10-15",
-                "note": "Advies bezwaarcommissie",
-                "labelConfirmed": false,
-                "status": "expired"
             }
         ]
     }

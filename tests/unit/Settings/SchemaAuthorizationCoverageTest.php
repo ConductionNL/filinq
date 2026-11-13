@@ -111,6 +111,7 @@ class SchemaAuthorizationCoverageTest extends TestCase {
 		'lib/Service/Publication/PublicationStore.php' => 1,
 		'lib/Service/Redaction/AnonymizationLinkReader.php' => 1,
 		'lib/Service/Sanitization/SanitizationRecordRepository.php' => 1,
+		'lib/Service/Share/DocumentShareStore.php' => 1,
 		'lib/Service/Signing/GuardianConsentGuard.php' => 1,
 		'lib/Service/Signing/LibreSignCompletion.php' => 4,
 		'lib/Service/Signing/NativeSigningProvider.php' => 2,
