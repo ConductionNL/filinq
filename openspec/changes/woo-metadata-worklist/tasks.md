@@ -4,9 +4,12 @@
 
 ## 1. Register and service
 
-- [ ] 1.1 Add the `diwooMissing` calculation with backend `filinq.diwoo` to `publicationRecord` and the D1 seed records (REQ-WMW-001). Verify: `GET` on the seeded records returns the missing field names.
-- [ ] 1.2 Add `PublicationPipelineService::updateMetadata()` with one log entry per record and skipping of records past handoff (D2) (REQ-WMW-002). Verify: PHPUnit for three records, one past handoff.
-- [ ] 1.3 Add the admin setting `woo.default_publisher` and prefill on create (D3) (REQ-WMW-003). Verify: PHPUnit creates a record and reads the default publisher.
+- [x] 1.1 Add the `diwooMissing` calculation with backend `filinq.diwoo` to `publicationRecord` and the D1 seed records (REQ-WMW-001). Verify: `GET` on the seeded records returns the missing field names.
+  - Built: `DiwooMissingFields` computes `diwooMissing` (backend `filinq.diwoo`, declared on `publicationRecord` 1.3.0, never stored); `GET api/publications` and `GET api/publications/{id}` carry it and `?incomplete=1` filters on it; three seed records (complete, no Woo category, no publisher and documentsoort).
+- [x] 1.2 Add `PublicationPipelineService::updateMetadata()` with one log entry per record and skipping of records past handoff (D2) (REQ-WMW-002). Verify: PHPUnit for three records, one past handoff.
+  - Built as `updateMetadataMany()` beside the per-record `updateMetadata()`, which it reuses for the log entry; served at `PUT api/publications/metadata` with a per-record access check.
+- [x] 1.3 Add the admin setting `woo.default_publisher` and prefill on create (D3) (REQ-WMW-003). Verify: PHPUnit creates a record and reads the default publisher.
+  - Built: the app setting `woo.default_publisher` prefills `publisher` on create. Its admin settings field is not built; it is set with `occ config:app:set filinq woo.default_publisher --value=<TOOI URI>` until the settings page has one.
 
 ## 2. Screens
 

@@ -82,6 +82,22 @@ interface PublicationPipelineServiceInterface {
 	public function updateMetadata(array $record, array $metadata, string $actor): array;
 
 	/**
+	 * Set one value on many records, each with its own log entry; a record
+	 * past handoff is skipped and reported.
+	 *
+	 * @param array<int, array<string, mixed>> $records The selected records
+	 * @param array<string, mixed>             $values  `wooCategory`, `documentsoort` and/or `publisher`
+	 * @param string                           $actor   Who sets them
+	 *
+	 * @return array{updated: array<int, array<string, mixed>>, skipped: array<int, array{uuid: string, reason: string}>} The outcome.
+	 *
+	 * @throws InvalidArgumentException When a field may not be bulk-set, a value is blank, or the category is unknown.
+	 *
+	 * @spec openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-a-coordinator-fills-one-value-on-a-selection-req-wmw-002
+	 */
+	public function updateMetadataMany(array $records, array $values, string $actor): array;
+
+	/**
 	 * Hand a ready publication to the platform with its redacted copy.
 	 *
 	 * @param array<string, mixed> $record The record

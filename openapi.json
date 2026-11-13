@@ -6839,6 +6839,40 @@
                 }
             }
         },
+        "/publications/metadata": {
+            "put": {
+                "operationId": "publication-bulkMetadata",
+                "summary": "Set one Woo metadata value on a selection",
+                "description": "Set `wooCategory`, `documentsoort` or `publisher` on the selected publication records. Each changed record gets its own log entry; a record already handed off, or one the caller may not act on, is reported under `skipped`.",
+                "tags": [
+                    "publication"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The updated and the skipped records",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                }
+            }
+        },
         "/publications/{id}": {
             "get": {
                 "operationId": "publication-show",
