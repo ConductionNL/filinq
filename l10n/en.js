@@ -2791,7 +2791,21 @@ OC.L10N.register(
         "The value before the change.": "The value before the change.",
         "When the change was made.": "When the change was made.",
         "Merge fields": "Merge fields",
-        "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you.": "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you."
+        "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you.": "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you.",
+        "Anonymised copies whose source document is gone.": "Anonymised copies whose source document is gone.",
+        "Changed": "Changed",
+        "Each finding: its kind, the record's schema and id, its name and the file id.": "Each finding: its kind, the record's schema and id, its name and the file id.",
+        "Final documents whose file no longer matches the frozen checksum.": "Final documents whose file no longer matches the frozen checksum.",
+        "Findings": "Findings",
+        "How many records the run looked at.": "How many records the run looked at.",
+        "Integrity scan": "Integrity scan",
+        "Missing": "Missing",
+        "Orphaned": "Orphaned",
+        "Records checked": "Records checked",
+        "Records whose file no longer resolves.": "Records whose file no longer resolves.",
+        "Started at": "Started at",
+        "What started the run: the nightly job, the occ command or an administrator.": "What started the run: the nightly job, the occ command or an administrator.",
+        "When the run started.": "When the run started."
     },
     "nplurals=2; plural=(n != 1);"
 )

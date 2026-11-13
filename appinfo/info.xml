@@ -256,6 +256,7 @@ Create a [feature request](https://github.com/ConductionNL/filinq/issues/new)
     </repair-steps>
     <commands>
         <command>OCA\Filinq\Command\OfficeProbeCommand</command>
+        <command>OCA\Filinq\Command\IntegrityScanCommand</command>
     </commands>
     <settings>
         <admin>OCA\Filinq\Settings\FilinqAdmin</admin>

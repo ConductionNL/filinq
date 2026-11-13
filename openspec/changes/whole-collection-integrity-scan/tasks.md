@@ -8,8 +8,8 @@
   - GIVEN a dossier member whose file id does not resolve THEN one `missing` finding naming the dossier
   - GIVEN a link whose source is gone THEN one `orphaned` finding
   - GIVEN a clean set THEN a stored run with zero counts
-- [ ] Implement
-- [ ] Test
+- [x] Implement
+- [x] Test
 
 ### Task 2: Nightly job, occ command and notification
 - **spec_ref**: `openspec/changes/whole-collection-integrity-scan/specs/document-versions/spec.md#requirement-the-scan-runs-nightly-and-on-demand-and-administrators-see-the-result-req-dis-02`
