@@ -5,19 +5,19 @@
 
 ## 1. Register & seed data
 
-- [ ] 1.1 Add the `accessibilityConformanceReport` schema (`fileId`, `flavour`, `compliant`, `failedCheckCount`, `failedChecks` clause/test/checkpoint references, `validatorVersion`, `validatedAt`, `trigger`) to `lib/Settings/filinq_register.json` — additive, union-merge only; references only, never document content (REQ-DDPUM-002)
+- [x] 1.1 Add the `accessibilityConformanceReport` schema (`fileId`, `flavour`, `compliant`, `failedCheckCount`, `failedChecks` clause/test/checkpoint references, `validatorVersion`, `validatedAt`, `trigger`) to `lib/Settings/filinq_register.json` — additive, union-merge only; references only, never document content (REQ-DDPUM-002)
 - [ ] 1.2 Seed two `tests/sample-documents/` fixtures (generated, no personal data): one genuinely PDF/UA-1-conformant tagged PDF; one that passes the wave-1 heuristics but fails Matterhorn checkpoints (untagged content + figure without alt) — the "heuristics ≠ conformance" fixture
 
 ## 2. Shared backend (verapdf-validation)
 
-- [ ] 2.1 Extend `verapdf-validation`'s `VeraPdfService` with `validateUa(File): array` invoking the same probed binary with `--flavour ua1`, parsing the same JSON shape (flavour/compliant/failedChecks/validatorVersion), typed error on timeout/crash/unparseable — NO second binary, probe, config or admin row (REQ-DDPUM-001)
+- [x] 2.1 Extend `verapdf-validation`'s `VeraPdfService` with `validateUa(File): array` invoking the same probed binary with `--flavour ua1`, parsing the same JSON shape (flavour/compliant/failedChecks/validatorVersion), typed error on timeout/crash/unparseable — NO second binary, probe, config or admin row (REQ-DDPUM-001)
   - Hard build dependency on `verapdf-validation`; verify `VeraPdfService` exists at apply time — apply the two together (see design D1 / Open Questions).
 
 ## 3. Backend
 
 - [ ] 3.1 Add `accessibility`-category validator checks to `DocumentValidationService`: `pdfua-conformance-failed`, `accessibility-validator-unavailable` — PDF-only, per-profile opt-in, default `off`, validator-presence-gated, references only; wave-1 heuristic checks untouched (REQ-DDPUM-005)
-- [ ] 3.2 New accessibility conformance endpoint `POST /api/validation/accessibility/{fileId}` — auth attribute, IDOR-safe user-folder resolution (404, no existence disclosure), persists/updates the `accessibilityConformanceReport` distinct from the PDF/A `conformanceReport` (REQ-DDPUM-002)
-- [ ] 3.3 Remediation guidance from failure shape (Filinq-generated → regenerate accessible; imported/mPDF → re-author from accessible source, no retag of imported pages), i18n-keyed; verdict never claims certification (REQ-DDPUM-003)
+- [x] 3.2 New accessibility conformance endpoint `POST /api/validation/accessibility/{fileId}` — auth attribute, IDOR-safe user-folder resolution (404, no existence disclosure), persists/updates the `accessibilityConformanceReport` distinct from the PDF/A `conformanceReport` (REQ-DDPUM-002)
+- [x] 3.3 Remediation guidance from failure shape (Filinq-generated → regenerate accessible; imported/mPDF → re-author from accessible source, no retag of imported pages), i18n-keyed; verdict never claims certification (REQ-DDPUM-003)
 - [ ] 3.4 Surface the validator verdict as the authoritative accessibility conformance when available; heuristics remain the labelled floor when absent; heuristic-pass + validator-fail surfaces as fail (REQ-DDPUM-004)
 
 ## 4. Frontend

@@ -36,6 +36,10 @@
     ],
     "tags": [
         {
+            "name": "accessibility-conformance",
+            "description": "PDF/UA-1 accessibility conformance checks of a PDF, through the shared veraPDF validator"
+        },
+        {
             "name": "anonymiser-warning",
             "description": "Admin endpoints to dismiss or restore the anonymiser backend warning banner"
         },
@@ -9980,6 +9984,57 @@
                 "responses": {
                     "200": {
                         "description": "The report; 400 for a file that is not a PDF, \t *                      404 for one the caller cannot open, 503 when \t *                      veraPDF gives no verdict.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    },
+                    "503": {
+                        "$ref": "#/components/responses/Problem503"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "fileId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The fileId.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/validation/accessibility/{fileId}": {
+            "post": {
+                "operationId": "accessibility_conformance-check",
+                "summary": "Validate a file against PDF/UA-1 and store the report",
+                "description": "Validate a file against PDF/UA-1 (veraPDF ua1, the Matterhorn Protocol) and store the accessibility conformance report, apart from the PDF/A report.",
+                "tags": [
+                    "accessibility-conformance"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{validated: true, report}; 400 for a file that is not a PDF, 404 for one the caller cannot open, 503 with validated:false when veraPDF gives no verdict, 500 when the report cannot be stored.",
                         "headers": {
                             "API-Version": {
                                 "$ref": "#/components/headers/API-Version"
