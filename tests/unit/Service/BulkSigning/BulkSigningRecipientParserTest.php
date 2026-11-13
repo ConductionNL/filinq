@@ -184,4 +184,86 @@ class BulkSigningRecipientParserTest extends TestCase {
 		return $bytes;
 
 	}//end xlsx()
+
+	/**
+	 * An empty upload is refused as a whole.
+	 *
+	 * @return void
+	 */
+	public function testAnEmptyListIsRefused(): void {
+		$this->expectException(InvalidArgumentException::class);
+		$this->expectExceptionCode(400);
+		$this->expectExceptionMessage('The recipient list is empty');
+
+		(new BulkSigningRecipientParser())->parse(content: '', filename: 'x.csv');
+
+	}//end testAnEmptyListIsRefused()
+
+	/**
+	 * A list over 2 MB is refused before it is read.
+	 *
+	 * @return void
+	 */
+	public function testAListOverTwoMegabytesIsRefused(): void {
+		$this->expectException(InvalidArgumentException::class);
+		$this->expectExceptionCode(400);
+		$this->expectExceptionMessage('The recipient list is larger than 2 MB');
+
+		(new BulkSigningRecipientParser())->parse(content: "email\n" . str_repeat('a', 2 * 1024 * 1024), filename: 'x.csv');
+
+	}//end testAListOverTwoMegabytesIsRefused()
+
+	/**
+	 * A sheet with only inline strings reads without a shared-strings table, and a
+	 * corrupt shared-strings table does not stop inline cells from reading.
+	 *
+	 * @return void
+	 */
+	public function testAnXlsxWithoutUsableSharedStringsStillReadsInlineCells(): void {
+		$sheet = '<?xml version="1.0"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>'
+			. '<row r="1"><c r="A1" t="inlineStr"><is><t>email</t></is></c></row>'
+			. '<row r="2"><c r="A2" t="inlineStr"><is><t>an@example.invalid</t></is></c></row>'
+			. '</sheetData></worksheet>';
+		$expected = [['row' => 2, 'userId' => '', 'email' => 'an@example.invalid', 'displayName' => '']];
+
+		$parser = new BulkSigningRecipientParser();
+		$this->assertSame($expected, $parser->parse(content: $this->zip(['xl/worksheets/sheet1.xml' => $sheet]), filename: 'a.xlsx'));
+		// Keep libxml's parse error of the corrupt table out of PHP's warning channel.
+		$previous = libxml_use_internal_errors(true);
+		try {
+			$rows = $parser->parse(
+				content: $this->zip(['xl/worksheets/sheet1.xml' => $sheet, 'xl/sharedStrings.xml' => '<sst><si>']),
+				filename: 'b.xlsx'
+			);
+		} finally {
+			libxml_clear_errors();
+			libxml_use_internal_errors($previous);
+		}
+
+		$this->assertSame($expected, $rows);
+
+	}//end testAnXlsxWithoutUsableSharedStringsStillReadsInlineCells()
+
+	/**
+	 * Zip the given entries into XLSX bytes.
+	 *
+	 * @param array<string, string> $entries Path => content
+	 *
+	 * @return string The file bytes
+	 */
+	private function zip(array $entries): string {
+		$path = tempnam(sys_get_temp_dir(), 'xlsx');
+		$zip = new ZipArchive();
+		$zip->open($path, ZipArchive::OVERWRITE);
+		foreach ($entries as $name => $content) {
+			$zip->addFromString($name, $content);
+		}
+
+		$zip->close();
+		$bytes = (string) file_get_contents($path);
+		unlink($path);
+
+		return $bytes;
+
+	}//end zip()
 }//end class
