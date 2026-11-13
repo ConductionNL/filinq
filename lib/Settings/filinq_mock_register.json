@@ -7525,6 +7525,170 @@
         "method": "rules",
         "correspondentPending": true,
         "status": "suggested"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "fieldFillProfile",
+          "slug": "demostad-velden-subsidie"
+        },
+        "declaringApp": "dossiq",
+        "register": "dossiq",
+        "schema": "subsidieaanvraag",
+        "fields": [
+          "aanvrager",
+          "bedrag",
+          "gewensteStartdatum"
+        ],
+        "active": true
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "fieldFillProfile",
+          "slug": "demostad-velden-factuur"
+        },
+        "declaringApp": "shillinq",
+        "register": "shillinq",
+        "schema": "inkoopfactuur",
+        "fields": [
+          "leverancier",
+          "factuurnummer",
+          "factuurdatum"
+        ],
+        "active": true
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "fieldFillProfile",
+          "slug": "demostad-velden-dossier"
+        },
+        "declaringApp": "filinq",
+        "register": "filinq",
+        "schema": "dossier",
+        "fields": [
+          "name",
+          "description"
+        ],
+        "active": false
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "fieldSuggestion",
+          "slug": "demostad-suggestie-subsidie-1"
+        },
+        "fileId": 1001,
+        "register": "dossiq",
+        "schema": "subsidieaanvraag",
+        "objectId": "demostad-subsidie-2026-014",
+        "requestedBy": "demo-registrar",
+        "suggestions": {
+          "aanvrager": {
+            "value": "Stichting Groen Dorp",
+            "confidence": 0.75,
+            "foundInText": true,
+            "passage": "Aanvrager: Stichting Groen Dorp, Dorpsstraat 4"
+          },
+          "bedrag": {
+            "value": 12500,
+            "confidence": 0.55,
+            "foundInText": false,
+            "passage": null
+          }
+        },
+        "droppedFields": 1,
+        "truncated": false,
+        "provider": "Local large language model",
+        "decisions": [],
+        "status": "suggested"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "fieldSuggestion",
+          "slug": "demostad-suggestie-subsidie-2"
+        },
+        "fileId": 1002,
+        "register": "dossiq",
+        "schema": "subsidieaanvraag",
+        "objectId": "demostad-subsidie-2026-015",
+        "requestedBy": "demo-registrar",
+        "suggestions": {
+          "aanvrager": {
+            "value": "Buurtvereniging De Linde",
+            "confidence": 0.75,
+            "foundInText": true,
+            "passage": "namens Buurtvereniging De Linde vragen wij"
+          }
+        },
+        "droppedFields": 0,
+        "truncated": false,
+        "provider": "Local large language model",
+        "decisions": [
+          {
+            "field": "aanvrager",
+            "decision": "accept",
+            "suggested": "Buurtvereniging De Linde",
+            "written": "Buurtvereniging De Linde",
+            "decidedBy": "demo-registrar",
+            "decidedAt": "2026-11-02T10:14:00+01:00"
+          }
+        ],
+        "decidedBy": "demo-registrar",
+        "decidedAt": "2026-11-02T10:14:00+01:00",
+        "status": "decided"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "fieldSuggestion",
+          "slug": "demostad-suggestie-factuur-1"
+        },
+        "fileId": 1003,
+        "register": "shillinq",
+        "schema": "inkoopfactuur",
+        "objectId": "demostad-factuur-88231",
+        "requestedBy": "demo-crediteuren",
+        "suggestions": {
+          "leverancier": {
+            "value": "Drukkerij Van Dam B.V.",
+            "confidence": 0.75,
+            "foundInText": true,
+            "passage": "Drukkerij Van Dam B.V. Industrieweg 12"
+          },
+          "factuurdatum": {
+            "value": "2026-10-28",
+            "confidence": 0.75,
+            "foundInText": true,
+            "passage": "Factuurdatum 2026-10-28"
+          }
+        },
+        "droppedFields": 0,
+        "truncated": false,
+        "provider": "Local large language model",
+        "decisions": [
+          {
+            "field": "leverancier",
+            "decision": "accept",
+            "suggested": "Drukkerij Van Dam B.V.",
+            "written": "Drukkerij Van Dam B.V.",
+            "decidedBy": "demo-crediteuren",
+            "decidedAt": "2026-10-29T09:02:00+01:00"
+          },
+          {
+            "field": "factuurdatum",
+            "decision": "reject",
+            "suggested": "2026-10-28",
+            "written": null,
+            "decidedBy": "demo-crediteuren",
+            "decidedAt": "2026-10-29T09:02:00+01:00"
+          }
+        ],
+        "decidedBy": "demo-crediteuren",
+        "decidedAt": "2026-10-29T09:02:00+01:00",
+        "status": "decided"
       }
     ]
   }

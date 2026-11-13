@@ -1,7 +1,8 @@
 <?php
 
 /**
- * Unit tests for how the financial extraction and the OCR service find a file
+ * Unit tests for how the document text source (behind the financial
+ * extraction) and the OCR service find a file
  * in the session user's own folder
  *
  * @category  Tests
@@ -19,7 +20,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Tests\Unit\Service;
 
-use OCA\Filinq\Service\FinancialExtractionService;
+use OCA\Filinq\Service\DocumentTextSource;
 use OCA\Filinq\Service\OcrService;
 use OCA\Filinq\Service\SessionUserFile;
 use OCP\Files\File;
@@ -52,7 +53,7 @@ class SessionUserFileCharacterisationTest extends TestCase {
 	 */
 	public static function services(): array {
 		return [
-			'financial extraction' => [FinancialExtractionService::class, 'resolveFile'],
+			'document text source' => [DocumentTextSource::class, 'resolveFile'],
 			'ocr'                  => [OcrService::class, 'getFileById'],
 		];
 

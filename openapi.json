@@ -10382,6 +10382,438 @@
                     }
                 }
             }
+        },
+        "/extraction/fields": {
+            "post": {
+                "operationId": "fieldFill-fields",
+                "summary": "Suggest the declared fields of a record from one of its files (REQ-EMF-001, REQ-EMF-002)",
+                "description": "A text model reads the file and suggests values for the fields an active field fill profile declares for the record's schema. Every value is checked against its field, carries the passage it came from or foundInText false, and is stored as a fieldSuggestion in status suggested. Nothing is written to the record.",
+                "tags": [
+                    "extraction"
+                ],
+                "responses": {
+                    "201": {
+                        "description": "The stored suggestion, with the record's current values.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Problem409"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Problem422"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    },
+                    "503": {
+                        "$ref": "#/components/responses/Problem503"
+                    }
+                },
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "fileId",
+                                    "register",
+                                    "schema",
+                                    "objectId"
+                                ],
+                                "properties": {
+                                    "fileId": {
+                                        "type": "integer"
+                                    },
+                                    "register": {
+                                        "type": "string"
+                                    },
+                                    "schema": {
+                                        "type": "string"
+                                    },
+                                    "objectId": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/extraction/fields/status": {
+            "get": {
+                "operationId": "fieldFill-status",
+                "summary": "Whether model filling is on, and which provider reads the documents (REQ-EMF-004)",
+                "description": "The switch, the task-processing provider for text-to-text, and whether suggestions can be asked for.",
+                "tags": [
+                    "extraction"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The state.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                }
+            },
+            "put": {
+                "operationId": "fieldFill-setEnabled",
+                "summary": "Switch model filling on or off (admin, REQ-EMF-004)",
+                "description": "Switching on without a text-to-text provider is refused with 503.",
+                "tags": [
+                    "extraction"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The state after the change.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    },
+                    "503": {
+                        "$ref": "#/components/responses/Problem503"
+                    }
+                },
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "enabled": {
+                                        "type": "boolean"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/extraction/fields/{id}/decide": {
+            "post": {
+                "operationId": "fieldFill-decide",
+                "summary": "Decide a field suggestion, field by field (REQ-EMF-003)",
+                "description": "Takes per suggested field accept, change with a value, or reject. Accepted and changed values are written to the record as the session user, with that user's rights; every decision is recorded on the suggestion.",
+                "tags": [
+                    "extraction"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The decided suggestion.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Problem409"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "decisions": {
+                                        "type": "object",
+                                        "additionalProperties": true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/extraction/field-profiles": {
+            "get": {
+                "operationId": "fieldFill-profiles",
+                "summary": "List the field fill profiles (admin)",
+                "description": "Every declared profile, active or not.",
+                "tags": [
+                    "extraction"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The profiles under results.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "fieldFill-saveProfile",
+                "summary": "Store a field fill profile (admin, REQ-EMF-001)",
+                "description": "A profile names a register, a schema and the fields a model may suggest. A field the schema lacks, or one with the bsn format, is refused with 400.",
+                "tags": [
+                    "extraction"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The stored profile.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                },
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "register",
+                                    "schema",
+                                    "fields"
+                                ],
+                                "properties": {
+                                    "declaringApp": {
+                                        "type": "string"
+                                    },
+                                    "register": {
+                                        "type": "string"
+                                    },
+                                    "schema": {
+                                        "type": "string"
+                                    },
+                                    "fields": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "active": {
+                                        "type": "boolean"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/extraction/field-profiles/{id}": {
+            "put": {
+                "operationId": "fieldFill-saveProfile-update",
+                "summary": "Replace a field fill profile (admin, REQ-EMF-001)",
+                "description": "As storing a new one, replacing the profile with this id.",
+                "tags": [
+                    "extraction"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The stored profile.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "register",
+                                    "schema",
+                                    "fields"
+                                ],
+                                "properties": {
+                                    "declaringApp": {
+                                        "type": "string"
+                                    },
+                                    "register": {
+                                        "type": "string"
+                                    },
+                                    "schema": {
+                                        "type": "string"
+                                    },
+                                    "fields": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "active": {
+                                        "type": "boolean"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "components": {
