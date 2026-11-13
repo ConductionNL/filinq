@@ -159,6 +159,8 @@ deliberately.
 | `printJob` | the requester (`requestedBy` = `$userId`) | **nobody** (server only) | nobody | A print job holds a user's rendered letters. Only `PrintJobRepository` writes it, owned by the system, so `requestedBy` is no longer a field the requester (or anyone) can rewrite. The endpoints show a job to the person in `requestedBy` or an admin only. |
 
 | `scanBatch` | authenticated | authenticated | admins | The batch is created by the watched-folder job on behalf of the instance and read by the clerk who sorts out what came off the scanner, so both are open. Only an admin deletes one: the batch is the trace that says which documents a delivered PDF was cut into, and a missing segment is only findable through it. |
+| `document` | authenticated | authenticated | authenticated / admin | A governed document is everyday work: whoever drafts or handles one must be able to create and edit it, and the lifecycle (`x-openregister-lifecycle`) governs what may happen to its status. Deleting a record that carries archival retention is an administrator's act. |
+| `documentType` | authenticated | admin | admin | The classification vocabulary every document refers to: readable by everybody who classifies, changed only by administrators because a type carries the retention and selectielijst category documents inherit. |
 
 ## Deliberate RBAC bypasses
 

@@ -7525,6 +7525,90 @@
         "method": "rules",
         "correspondentPending": true,
         "status": "suggested"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "documentType",
+          "slug": "voorbeeld-brief"
+        },
+        "name": "Voorbeeld brief",
+        "description": "Voorbeeld documenttype 1",
+        "identifier": "voorbeeld-brief",
+        "category": "voorbeeld",
+        "retentionPeriod": "P7Y",
+        "selectielijstCategory": "TODO-voorbeeld-brief",
+        "confidentiality": "intern",
+        "active": true
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "documentType",
+          "slug": "voorbeeld-besluit"
+        },
+        "name": "Voorbeeld besluit",
+        "description": "Voorbeeld documenttype 2",
+        "identifier": "voorbeeld-besluit",
+        "category": "voorbeeld",
+        "retentionPeriod": "P20Y",
+        "selectielijstCategory": "TODO-voorbeeld-besluit",
+        "confidentiality": "intern",
+        "active": true
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "documentType",
+          "slug": "voorbeeld-rapport"
+        },
+        "name": "Voorbeeld rapport",
+        "description": "Voorbeeld documenttype 3",
+        "identifier": "voorbeeld-rapport",
+        "category": "voorbeeld",
+        "retentionPeriod": "P10Y",
+        "selectielijstCategory": "TODO-voorbeeld-rapport",
+        "confidentiality": "intern",
+        "active": true
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "document",
+          "slug": "document-voorbeeld-1"
+        },
+        "title": "Voorbeeld document 1",
+        "identifier": "DOC-VB-1",
+        "status": "concept",
+        "confidentiality": "intern",
+        "documentType": "voorbeeld-brief",
+        "creationDate": "2026-03-01"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "document",
+          "slug": "document-voorbeeld-2"
+        },
+        "title": "Voorbeeld document 2",
+        "identifier": "DOC-VB-2",
+        "status": "definitief",
+        "confidentiality": "openbaar",
+        "documentType": "voorbeeld-besluit",
+        "creationDate": "2026-03-02"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "document",
+          "slug": "document-voorbeeld-3"
+        },
+        "title": "Voorbeeld document 3",
+        "identifier": "DOC-VB-3",
+        "status": "ter_vaststelling",
+        "confidentiality": "vertrouwelijk",
+        "documentType": "voorbeeld-rapport",
+        "creationDate": "2026-03-03"
       }
     ]
   }
