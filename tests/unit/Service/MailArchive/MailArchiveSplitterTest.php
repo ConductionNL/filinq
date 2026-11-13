@@ -20,6 +20,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Tests\Unit\Service\MailArchive;
 
+use OCA\Filinq\Service\MailArchive\MailArchiveRead;
 use OCA\Filinq\Service\MailArchive\MailArchiveRefused;
 use OCA\Filinq\Service\MailArchive\MailArchiveSplitter;
 use OCA\Filinq\Service\MailArchive\ReadpstCommand;
@@ -148,7 +149,7 @@ class MailArchiveSplitterTest extends TestCase {
 	 * @return void
 	 */
 	public function testAnMboxSplitsOnFromLinesAndUnescapesQuotedOnes(): void {
-		$unit = $this->splitter()->next(['format' => 'mbox', 'path' => $this->mbox()], 'mailbox-jansen', [], 50);
+		$unit = $this->splitter()->next(['format' => 'mbox', 'path' => $this->mbox()], new MailArchiveRead('mailbox-jansen', 50));
 
 		$this->assertTrue($unit['done']);
 		$this->assertCount(5, $unit['messages']);
@@ -170,14 +171,14 @@ class MailArchiveSplitterTest extends TestCase {
 	public function testAnMboxResumesAtTheSavedCursor(): void {
 		$source = ['format' => 'mbox', 'path' => $this->mbox()];
 
-		$first = $this->splitter()->next($source, 'box', [], 2);
+		$first = $this->splitter()->next($source, new MailArchiveRead('box', 2));
 		$this->assertFalse($first['done']);
 		$this->assertSame(['box-000001.eml', 'box-000002.eml'], array_column($first['messages'], 'name'));
 		$this->assertSame(2, $first['cursor']['ordinal']);
 
 		// A new splitter, as after a crash: only the saved cursor carries over.
-		$second = $this->splitter()->next($source, 'box', $first['cursor'], 2);
-		$third = $this->splitter()->next($source, 'box', $second['cursor'], 2);
+		$second = $this->splitter()->next($source, (new MailArchiveRead('box', 2))->from($first['cursor']));
+		$third = $this->splitter()->next($source, (new MailArchiveRead('box', 2))->from($second['cursor']));
 
 		$this->assertSame("Message-ID: <m3@example.org>\nSubject: Bericht 3\n\nFrom the archive: hello\n>From deeper\nFrom-like but not a separator\n", $second['messages'][0]['raw']);
 		$this->assertSame(['box-000005.eml'], array_column($third['messages'], 'name'));
@@ -191,7 +192,7 @@ class MailArchiveSplitterTest extends TestCase {
 	 * @return void
 	 */
 	public function testAZipYieldsItsEmlEntriesAndFailsAMsgVisibly(): void {
-		$unit = $this->splitter()->next(['format' => 'zip', 'path' => $this->zip()], 'export', [], 50);
+		$unit = $this->splitter()->next(['format' => 'zip', 'path' => $this->zip()], new MailArchiveRead('export', 50));
 
 		$this->assertTrue($unit['done']);
 		$this->assertSame(
@@ -213,8 +214,8 @@ class MailArchiveSplitterTest extends TestCase {
 	 */
 	public function testAZipResumesAtTheNextEntry(): void {
 		$source = ['format' => 'zip', 'path' => $this->zip()];
-		$first = $this->splitter()->next($source, 'export', [], 1);
-		$rest = $this->splitter()->next($source, 'export', $first['cursor'], 10);
+		$first = $this->splitter()->next($source, new MailArchiveRead('export', 1));
+		$rest = $this->splitter()->next($source, (new MailArchiveRead('export', 10))->from($first['cursor']));
 
 		$this->assertSame(['a.eml'], array_column($first['messages'], 'name'));
 		$this->assertFalse($first['done']);
@@ -296,9 +297,9 @@ class MailArchiveSplitterTest extends TestCase {
 		$source = $this->splitter()->prepare($this->dir . '/archief.pst', 'pst', $out);
 		$this->assertSame(['format' => 'dir', 'path' => $out], $source);
 
-		$unit = $this->splitter()->next($source, 'archief', [], 1);
+		$unit = $this->splitter()->next($source, new MailArchiveRead('archief', 1));
 		$this->assertSame([['folder' => 'Postvak IN', 'name' => '1.eml', 'raw' => "Subject: 1\n\n1\n"]], $unit['messages']);
-		$rest = $this->splitter()->next($source, 'archief', $unit['cursor'], 5);
+		$rest = $this->splitter()->next($source, (new MailArchiveRead('archief', 5))->from($unit['cursor']));
 		$this->assertSame('Postvak IN/Projecten', $rest['messages'][0]['folder']);
 		$this->assertTrue($rest['done']);
 
@@ -325,7 +326,7 @@ class MailArchiveSplitterTest extends TestCase {
 		$this->expectException(MailArchiveRefused::class);
 		$this->expectExceptionMessage('the archive could not be opened');
 
-		$this->splitter()->next(['format' => 'zip', 'path' => $this->dir . '/missing.zip'], 'x', [], 5);
+		$this->splitter()->next(['format' => 'zip', 'path' => $this->dir . '/missing.zip'], new MailArchiveRead('x', 5));
 
 	}//end testAnUnreadableArchiveIsRefused()
 

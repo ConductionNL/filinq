@@ -163,14 +163,14 @@ class MailArchiveSplitter {
 	 */
 	public function folders(array $source, string $rootName): array {
 		$folders = [];
-		$cursor = [];
+		$read = (new MailArchiveRead(rootName: $rootName, limit: 500))->countingOnly();
 		do {
-			$unit = $this->next(source: $source, rootName: $rootName, cursor: $cursor, limit: 500, withContent: false);
+			$unit = $this->next(source: $source, read: $read);
 			foreach ($unit['messages'] as $message) {
 				$folders[$message['folder']] = (($folders[$message['folder']] ?? 0) + 1);
 			}
 
-			$cursor = $unit['cursor'];
+			$read = $read->from(cursor: $unit['cursor']);
 		} while ($unit['done'] === false);
 
 		ksort($folders, SORT_STRING);
@@ -185,11 +185,8 @@ class MailArchiveSplitter {
 	 * A message is `{folder, name, raw}`, or `{folder, name, reason}` for an
 	 * entry that is not an RFC 5322 message (a `.msg` fails visibly).
 	 *
-	 * @param array{format:string, path:string} $source      The source.
-	 * @param string                            $rootName    The folder name for messages outside any folder.
-	 * @param array<string, int>                $cursor      Where the previous unit stopped; [] to start.
-	 * @param int                               $limit       The most messages in this unit.
-	 * @param bool                              $withContent False to leave out `raw`, for counting.
+	 * @param array{format:string, path:string} $source The source.
+	 * @param MailArchiveRead                   $read   The folder name, limit, cursor and whether to read the bytes.
 	 *
 	 * @return array{messages: list<array<string, string>>, cursor: array<string, int>, done: bool} The unit.
 	 *
@@ -197,19 +194,11 @@ class MailArchiveSplitter {
 	 *
 	 * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#2-1
 	 */
-	public function next(array $source, string $rootName, array $cursor, int $limit, bool $withContent = true): array {
-		$limit = max(1, $limit);
-
+	public function next(array $source, MailArchiveRead $read): array {
 		return match ($source['format']) {
-			self::FORMAT_MBOX => $this->nextFromMbox(path: $source['path'], rootName: $rootName, cursor: $cursor, limit: $limit, withContent: $withContent),
-			self::FORMAT_ZIP => $this->nextFromZip(path: $source['path'], rootName: $rootName, cursor: $cursor, limit: $limit, withContent: $withContent),
-			self::SOURCE_DIRECTORY => $this->nextFromDirectory(
-				path: $source['path'],
-				rootName: $rootName,
-				cursor: $cursor,
-				limit: $limit,
-				withContent: $withContent
-			),
+			self::FORMAT_MBOX => $this->nextFromMbox(path: $source['path'], read: $read),
+			self::FORMAT_ZIP => $this->nextFromZip(path: $source['path'], read: $read),
+			self::SOURCE_DIRECTORY => $this->nextFromDirectory(path: $source['path'], read: $read),
 			default => throw new MailArchiveRefused(self::UNKNOWN_FORMAT),
 		};
 
@@ -221,22 +210,19 @@ class MailArchiveSplitter {
 	 * Quoted `>From ` lines are unescaped by one level, which reads both
 	 * mboxrd and mboxo correctly.
 	 *
-	 * @param string             $path        The MBOX file.
-	 * @param string             $rootName    The archive's single folder.
-	 * @param array<string, int> $cursor      `offset` and `ordinal`.
-	 * @param int                $limit       The most messages.
-	 * @param bool               $withContent Whether to return the message bytes.
+	 * @param string          $path The MBOX file.
+	 * @param MailArchiveRead $read The archive's single folder, the limit, the cursor (`offset` and `ordinal`) and whether to return the bytes.
 	 *
 	 * @return array{messages: list<array<string, string>>, cursor: array<string, int>, done: bool} The unit.
 	 */
-	private function nextFromMbox(string $path, string $rootName, array $cursor, int $limit, bool $withContent): array {
+	private function nextFromMbox(string $path, MailArchiveRead $read): array {
 		$handle = @fopen($path, 'rb');
 		if ($handle === false) {
 			throw new MailArchiveRefused(self::UNREADABLE);
 		}
 
-		$position = (int) ($cursor['offset'] ?? 0);
-		$ordinal = (int) ($cursor['ordinal'] ?? 0);
+		$position = (int) ($read->cursor()['offset'] ?? 0);
+		$ordinal = (int) ($read->cursor()['ordinal'] ?? 0);
 		fseek($handle, $position);
 
 		$messages = [];
@@ -246,8 +232,8 @@ class MailArchiveSplitter {
 			$position += strlen($line);
 			if (str_starts_with($line, 'From ') === true) {
 				if ($current !== null) {
-					$messages[] = $this->mboxMessage(rootName: $rootName, ordinal: ++$ordinal, raw: $current, withContent: $withContent);
-					if (count($messages) >= $limit) {
+					$messages[] = $this->mboxMessage(read: $read, ordinal: ++$ordinal, raw: $current);
+					if (count($messages) >= $read->limit) {
 						fclose($handle);
 						return ['messages' => $messages, 'cursor' => ['offset' => $lineStart, 'ordinal' => $ordinal], 'done' => false];
 					}
@@ -264,7 +250,7 @@ class MailArchiveSplitter {
 
 		fclose($handle);
 		if ($current !== null) {
-			$messages[] = $this->mboxMessage(rootName: $rootName, ordinal: ++$ordinal, raw: $current, withContent: $withContent);
+			$messages[] = $this->mboxMessage(read: $read, ordinal: ++$ordinal, raw: $current);
 		}
 
 		return ['messages' => $messages, 'cursor' => ['offset' => $position, 'ordinal' => $ordinal], 'done' => true];
@@ -274,22 +260,21 @@ class MailArchiveSplitter {
 	/**
 	 * One MBOX message, without the blank separator line before the next `From `.
 	 *
-	 * @param string $rootName    The folder.
-	 * @param int    $ordinal     The message's position in the archive, from 1.
-	 * @param string $raw         The message lines.
-	 * @param bool   $withContent Whether to return the bytes.
+	 * @param MailArchiveRead $read    The folder, and whether to return the bytes.
+	 * @param int             $ordinal The message's position in the archive, from 1.
+	 * @param string          $raw     The message lines.
 	 *
 	 * @return array<string, string> The message.
 	 */
-	private function mboxMessage(string $rootName, int $ordinal, string $raw, bool $withContent): array {
+	private function mboxMessage(MailArchiveRead $read, int $ordinal, string $raw): array {
 		if (str_ends_with($raw, "\r\n\r\n") === true) {
 			$raw = substr($raw, 0, -2);
 		} else if (str_ends_with($raw, "\n\n") === true) {
 			$raw = substr($raw, 0, -1);
 		}
 
-		$message = ['folder' => $rootName, 'name' => sprintf('%s-%06d.eml', $rootName, $ordinal)];
-		if ($withContent === true) {
+		$message = ['folder' => $read->rootName, 'name' => sprintf('%s-%06d.eml', $read->rootName, $ordinal)];
+		if ($read->withContent() === true) {
 			$message['raw'] = $raw;
 		}
 
@@ -300,23 +285,20 @@ class MailArchiveSplitter {
 	/**
 	 * Read ZIP entries from an entry index; the entry's directory is its folder.
 	 *
-	 * @param string             $path        The ZIP file.
-	 * @param string             $rootName    The folder for entries at the top.
-	 * @param array<string, int> $cursor      `index`.
-	 * @param int                $limit       The most messages.
-	 * @param bool               $withContent Whether to return the message bytes.
+	 * @param string          $path The ZIP file.
+	 * @param MailArchiveRead $read The folder for entries at the top, the limit, the cursor (`index`) and whether to return the bytes.
 	 *
 	 * @return array{messages: list<array<string, string>>, cursor: array<string, int>, done: bool} The unit.
 	 */
-	private function nextFromZip(string $path, string $rootName, array $cursor, int $limit, bool $withContent): array {
+	private function nextFromZip(string $path, MailArchiveRead $read): array {
 		$zip = new ZipArchive();
 		if ($zip->open($path, ZipArchive::RDONLY) !== true) {
 			throw new MailArchiveRefused(self::UNREADABLE);
 		}
 
 		$messages = [];
-		$index = (int) ($cursor['index'] ?? 0);
-		for (; $index < $zip->numFiles && count($messages) < $limit; $index++) {
+		$index = (int) ($read->cursor()['index'] ?? 0);
+		for (; $index < $zip->numFiles && count($messages) < $read->limit; $index++) {
 			$name = (string) $zip->getNameIndex($index);
 			if ($name === '' || str_ends_with($name, '/') === true) {
 				continue;
@@ -324,9 +306,8 @@ class MailArchiveSplitter {
 
 			$messages[] = $this->entry(
 				relativePath: $name,
-				rootName: $rootName,
-				read: static fn (): string => (string) $zip->getFromIndex($index),
-				withContent: $withContent
+				read: $read,
+				bytes: static fn (): string => (string) $zip->getFromIndex($index)
 			);
 		}
 
@@ -340,15 +321,12 @@ class MailArchiveSplitter {
 	/**
 	 * Read the files under a converted PST's directory, sorted by path.
 	 *
-	 * @param string             $path        The directory.
-	 * @param string             $rootName    The folder for files at the top.
-	 * @param array<string, int> $cursor      `index`.
-	 * @param int                $limit       The most messages.
-	 * @param bool               $withContent Whether to return the message bytes.
+	 * @param string          $path The directory.
+	 * @param MailArchiveRead $read The folder for files at the top, the limit, the cursor (`index`) and whether to return the bytes.
 	 *
 	 * @return array{messages: list<array<string, string>>, cursor: array<string, int>, done: bool} The unit.
 	 */
-	private function nextFromDirectory(string $path, string $rootName, array $cursor, int $limit, bool $withContent): array {
+	private function nextFromDirectory(string $path, MailArchiveRead $read): array {
 		if (is_dir($path) === false) {
 			throw new MailArchiveRefused(self::UNREADABLE);
 		}
@@ -364,15 +342,14 @@ class MailArchiveSplitter {
 
 		sort($files, SORT_STRING);
 
-		$index = (int) ($cursor['index'] ?? 0);
+		$index = (int) ($read->cursor()['index'] ?? 0);
 		$messages = [];
-		for (; $index < count($files) && count($messages) < $limit; $index++) {
+		for (; $index < count($files) && count($messages) < $read->limit; $index++) {
 			$relative = $files[$index];
 			$messages[] = $this->entry(
 				relativePath: $relative,
-				rootName: $rootName,
-				read: static fn (): string => (string) file_get_contents($base . $relative),
-				withContent: $withContent
+				read: $read,
+				bytes: static fn (): string => (string) file_get_contents($base . $relative)
 			);
 		}
 
@@ -383,17 +360,16 @@ class MailArchiveSplitter {
 	/**
 	 * One archive entry: a message when it is `.eml`, else a visible failure.
 	 *
-	 * @param string   $relativePath The entry's path inside the archive.
-	 * @param string   $rootName     The folder for entries at the top.
-	 * @param callable $read         Returns the entry's bytes.
-	 * @param bool     $withContent  Whether to return the bytes.
+	 * @param string          $relativePath The entry's path inside the archive.
+	 * @param MailArchiveRead $read         The folder for entries at the top, and whether to return the bytes.
+	 * @param callable        $bytes        Returns the entry's bytes.
 	 *
 	 * @return array<string, string> The message.
 	 */
-	private function entry(string $relativePath, string $rootName, callable $read, bool $withContent): array {
+	private function entry(string $relativePath, MailArchiveRead $read, callable $bytes): array {
 		$folder = dirname($relativePath);
 		if ($folder === '.' || $folder === '') {
-			$folder = $rootName;
+			$folder = $read->rootName;
 		}
 
 		$message = ['folder' => $folder, 'name' => basename($relativePath)];
@@ -403,8 +379,8 @@ class MailArchiveSplitter {
 			return $message;
 		}
 
-		if ($withContent === true) {
-			$message['raw'] = $read();
+		if ($read->withContent() === true) {
+			$message['raw'] = $bytes();
 		}
 
 		return $message;
