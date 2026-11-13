@@ -290,4 +290,66 @@ class PackageMetadataCodecTest extends TestCase {
 		$this->expectException(RuntimeException::class);
 		$this->codec->writeMetadata($bytes, 'docx', ['created' => '2020-01-01T00:00:00Z']);
 	}//end testTimestampsAreNotWritable()
+
+	/**
+	 * Support is decided per extension, case-insensitively.
+	 *
+	 * @return void
+	 */
+	public function testSupportIsPerExtension(): void {
+		$this->assertTrue($this->codec->supports('DOCX'));
+		$this->assertTrue($this->codec->supports('odt'));
+		$this->assertFalse($this->codec->supports('pdf'));
+	}//end testSupportIsPerExtension()
+
+	/**
+	 * Writing nothing is refused rather than rewriting the package for no change.
+	 *
+	 * @return void
+	 */
+	public function testWritingNoFieldsIsRefused(): void {
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessage('At least one metadata field is required.');
+		$this->codec->writeMetadata($this->package(['word/document.xml' => '<w:document/>']), 'docx', []);
+	}//end testWritingNoFieldsIsRefused()
+
+	/**
+	 * An empty field serialised as a self-closing element is filled in place.
+	 *
+	 * @return void
+	 */
+	public function testASelfClosingFieldIsFilledInPlace(): void {
+		$bytes = $this->package(
+			[
+				'word/document.xml' => '<w:document/>',
+				'docProps/core.xml' => '<cp:coreProperties xmlns:cp="x" xmlns:dc="y"><dc:title/><dc:creator>Anna</dc:creator></cp:coreProperties>',
+			]
+		);
+
+		$result = $this->codec->writeMetadata($bytes, 'docx', ['title' => 'Besluit']);
+
+		$this->assertSame(['title'], $result['written']);
+		$this->assertSame(
+			'<cp:coreProperties xmlns:cp="x" xmlns:dc="y"><dc:title>Besluit</dc:title><dc:creator>Anna</dc:creator></cp:coreProperties>',
+			$this->entry($result['bytes'], 'docProps/core.xml')
+		);
+	}//end testASelfClosingFieldIsFilledInPlace()
+
+	/**
+	 * A metadata part without a closing root element is reported as corrupt.
+	 *
+	 * @return void
+	 */
+	public function testAPartWithoutAClosingRootIsReportedAsCorrupt(): void {
+		$bytes = $this->package(
+			[
+				'word/document.xml' => '<w:document/>',
+				'docProps/core.xml' => '<cp:coreProperties xmlns:cp="x"><dc:creator>Anna</dc:creator><cp:keywords>cut off',
+			]
+		);
+
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessage('The metadata part has no closing root element; it may be corrupt.');
+		$this->codec->writeMetadata($bytes, 'docx', ['title' => 'Besluit']);
+	}//end testAPartWithoutAClosingRootIsReportedAsCorrupt()
 }//end class
