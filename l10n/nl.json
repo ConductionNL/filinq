@@ -2898,7 +2898,21 @@
         "The value before the change.": "De waarde voor de wijziging.",
         "When the change was made.": "Wanneer de wijziging is gedaan.",
         "Merge fields": "Samenvoegvelden",
-        "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you.": "De velden die het sjabloon invult, met een naam en een herkomst voor mensen: wat een voorbeeld onder Voor je ingevuld toont"
+        "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you.": "De velden die het sjabloon invult, met een naam en een herkomst voor mensen: wat een voorbeeld onder Voor je ingevuld toont",
+        "Anonymised copies whose source document is gone.": "Geanonimiseerde kopieën waarvan het brondocument weg is.",
+        "Changed": "Gewijzigd",
+        "Each finding: its kind, the record's schema and id, its name and the file id.": "Elke bevinding: de soort, het schema en de id van het record, de naam en de bestands-ID.",
+        "Final documents whose file no longer matches the frozen checksum.": "Definitieve documenten waarvan het bestand niet meer overeenkomt met de vastgelegde controlesom.",
+        "Findings": "Bevindingen",
+        "How many records the run looked at.": "Hoeveel records de controle heeft bekeken.",
+        "Integrity scan": "Integriteitscontrole",
+        "Missing": "Ontbrekend",
+        "Orphaned": "Verweesd",
+        "Records checked": "Gecontroleerde records",
+        "Records whose file no longer resolves.": "Records waarvan het bestand niet meer te vinden is.",
+        "Started at": "Gestart op",
+        "What started the run: the nightly job, the occ command or an administrator.": "Wat de controle startte: de nachtelijke taak, het occ-commando of een beheerder.",
+        "When the run started.": "Wanneer de controle begon."
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }
