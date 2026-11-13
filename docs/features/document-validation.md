@@ -123,3 +123,22 @@ Full-text search across documents is **OpenRegister's domain** (ADR-022) and is
 surfaced through Nextcloud's unified search — Filinq does not ship a separate
 search integration. (The previous Apache Solr document was removed; no Solr
 integration exists in the codebase.)
+
+## Removing the password of a locked PDF
+
+A PDF with the `pdf-encrypted` finding cannot be read, checked or anonymised until its password is removed. A clerk who knows the password can unlock it into a copy:
+
+```
+POST /apps/filinq/api/documents/{fileId}/remove-password
+{ "password": "…" }
+```
+
+- The copy is written beside the original as `<name> (unlocked).pdf`. The original stays as it arrived.
+- The copy is checked at once: the answer carries its `fileId`, `name`, `validationStatus` and `validationFindings`, so a scan without a text layer shows "Missing text layer" straight away.
+- A wrong password answers 422 "The password is not correct" and writes nothing. A final document answers 409. A file the caller cannot open answers 404.
+- The password is used once: it reaches the `qpdf` tool on its standard input and is never logged, stored, audited or put on the command line.
+
+The server needs `qpdf` (for example `apt-get install qpdf`), next to Tesseract. Without it the action answers 503 "qpdf is not installed on this server".
+
+An intake document keeps what arrived: its `lockedOriginal` names the file that came in locked, and `file` names the unlocked copy.
+

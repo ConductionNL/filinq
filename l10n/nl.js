@@ -2876,7 +2876,15 @@ OC.L10N.register(
         "The value before the change.": "De waarde voor de wijziging.",
         "When the change was made.": "Wanneer de wijziging is gedaan.",
         "Merge fields": "Samenvoegvelden",
-        "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you.": "De velden die het sjabloon invult, met een naam en een herkomst voor mensen: wat een voorbeeld onder Voor je ingevuld toont"
+        "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you.": "De velden die het sjabloon invult, met een naam en een herkomst voor mensen: wat een voorbeeld onder Voor je ingevuld toont",
+        "Type the password of the PDF.": "Typ het wachtwoord van de pdf.",
+        "The password is not correct": "Het wachtwoord is niet juist",
+        "This document is final and cannot be changed": "Dit document is definitief en kan niet worden gewijzigd",
+        "qpdf is not installed on this server": "qpdf is niet geïnstalleerd op deze server",
+        "This file is not a PDF.": "Dit bestand is geen pdf.",
+        "The password could not be removed from this PDF.": "Het wachtwoord kon niet van deze pdf worden verwijderd.",
+        "Locked original": "Vergrendeld origineel",
+        "Nextcloud file id of the file that arrived locked with a password. Set when the password is removed: `file` then points at the unlocked copy and this keeps what came in.": "Nextcloud-bestands-ID van het bestand dat met een wachtwoord vergrendeld binnenkwam. Wordt gezet als het wachtwoord is verwijderd: `file` wijst dan naar de ontgrendelde kopie en dit veld bewaart wat binnenkwam."
     },
     "nplurals=2; plural=(n != 1);"
 )
