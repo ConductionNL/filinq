@@ -135,6 +135,7 @@ deliberately.
 | `pageLayout` | authenticated | **admins** | admins | Every generated document renders through a layout, so it is read on every render. A layout is the paper the organisation goes out on; editing one is administrative, and an edit makes a new version rather than changing the one existing documents name. |
 | `periodicDocument` | authenticated | **admins** | admins | The schedule says which template renders over which saved view, on what cadence. It is read by the run and by anyone looking at what the list is made of; changing it changes a document the whole organisation reads. |
 | `archiveJob` | authenticated | authenticated | admins | A bundle is asked for by an ordinary handler, so `create` is theirs, and the job records who asked because the archive holds what THAT person may read. The job is the evidence of what was handed over, so only an admin may remove one. |
+| `documentShare` | authenticated | **nobody** (server only) | nobody | What left the organisation by link: the files and their versions, the sharer, the expiry and who took it back. Only `DocumentShareStore` writes it, owned by the system, after `DocumentShareService` made the link as the session user (Nextcloud refuses a file the user may not share) or checked that the person taking it back made it or is an admin. It never holds the link's token or URL, so reading it opens nothing. |
 
 | `mergeJob` | authenticated | authenticated | admins | A merge is an ordinary handler's act, so `create` and `update` are theirs; the job records who asked because every input is read as that person and the result holds only what they could read. Only an admin may delete one: the job is the trace of what was bundled and handed over. |
 
@@ -163,7 +164,7 @@ deliberately.
 ## Deliberate RBAC bypasses
 
 A cascade only guards callers that go through it. `ObjectService::find()` and
-`findAll()` accept `_rbac: false`, and Filinq passes it at **35 call sites in 14
+`findAll()` accept `_rbac: false`, and Filinq passes it at **87 call sites in 37
 files**. Each is paired with a compensating control rather than being an oversight,
 and the coverage test pins the set: **a new bypass fails the test until it is added
 here with a reason.**
@@ -196,6 +197,7 @@ here with a reason.**
 | `Service/ProhibitionOverrideCommitter.php` | 1 | Writes the `prohibitionOverrideAudit` entry before an override is committed; a failed write aborts the override. |
 | `Service/AnonymizationPersistenceService.php` | 2 | Writes the `anonymizationLink` after an anonymise the operator was allowed to run on a file in their folder, and sets its key reference; links are owned by the system. |
 | `Service/Sanitization/SanitizationRecordRepository.php` | 1 | Writes the record of a sanitize run on a file the caller could open; owned by the system. |
+| `Service/Share/DocumentShareStore.php` | 1 | One save for share records, reached only from `DocumentShareService`: a new record after Nextcloud made the link as the session user, a revocation after the service checked the caller made the link or is an admin. Owned by the system so the owner bypass cannot reopen a record. |
 | `Service/SigningService.php` | 15 | Every signing request and signer record read and write. `createRequest` resolves the file in the initiator's folder (403 otherwise); `getRequest`/`listRequests` scope a non-admin to initiator or signer by the signer records; `sign`/`decline` load the signer record through `SigningActorResolver::loadAuthorisedSigner`; `cancelRequest` is initiator-or-admin in the controller. Creates are owned by the system. |
 | `Service/SigningActorResolver.php` | 4 | Reads signer records to check that one belongs to the request and to the caller; returns ids and booleans, never record content to the caller. |
 | `Service/Signing/NativeSigningProvider.php` | 2 | Reads and writes the `signingSession` of a sign act that `SigningService` already authorised. |

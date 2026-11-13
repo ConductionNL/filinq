@@ -274,6 +274,10 @@
         {
             "name": "wizard",
             "description": "Document wizards of templates"
+        },
+        {
+            "name": "document-share",
+            "description": "Share documents outside the organisation by a link that runs out."
         }
     ],
     "paths": {
@@ -10379,6 +10383,140 @@
                                 }
                             }
                         }
+                    }
+                }
+            }
+        },
+        "/shares": {
+            "post": {
+                "operationId": "document-share-create",
+                "summary": "Share one document by a read-only link that runs out, as the session user",
+                "description": "Share one document by a read-only Nextcloud link that runs out, as the session user, and record what left in a documentShare. The answer carries the link; the record never does (share-document-links REQ-SDL-001, REQ-SDL-003, REQ-SDL-005).",
+                "tags": [
+                    "document-share"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "fileId": {
+                                        "type": "integer"
+                                    },
+                                    "expiresOn": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "password": {
+                                        "type": "string"
+                                    },
+                                    "note": {
+                                        "type": "string"
+                                    },
+                                    "labelConfirmed": {
+                                        "type": "boolean"
+                                    }
+                                },
+                                "required": [
+                                    "fileId"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "The share record, the link and the expiry used.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Problem409"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    },
+                    "503": {
+                        "$ref": "#/components/responses/Problem503"
+                    }
+                }
+            }
+        },
+        "/shares/{id}": {
+            "delete": {
+                "operationId": "document-share-revoke",
+                "summary": "Take a link back: only its sharer or an admin may",
+                "description": "Take a link back: delete the Nextcloud share and mark the documentShare revoked. Only the person who made the link, or an admin, may (share-document-links REQ-SDL-004).",
+                "tags": [
+                    "document-share"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The documentShare uuid.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The revoked share record.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Problem409"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
                     }
                 }
             }

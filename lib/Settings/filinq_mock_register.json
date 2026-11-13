@@ -7525,6 +7525,77 @@
         "method": "rules",
         "correspondentPending": true,
         "status": "suggested"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "documentShare",
+          "slug": "demostad-share-expired"
+        },
+        "kind": "document",
+        "files": [
+          {
+            "fileId": 0,
+            "name": "besluit-2026-114.pdf",
+            "version": "seed",
+            "label": ""
+          }
+        ],
+        "shareId": "seed",
+        "sharedBy": "seed-user-dia",
+        "sharedAt": "2026-10-01T09:00:00+00:00",
+        "expiresAt": "2026-10-15",
+        "note": "Advies bezwaarcommissie",
+        "labelConfirmed": false,
+        "status": "expired"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "documentShare",
+          "slug": "demostad-share-active"
+        },
+        "kind": "document",
+        "files": [
+          {
+            "fileId": 0,
+            "name": "advies-wob-2026-031.pdf",
+            "version": "seed",
+            "label": ""
+          }
+        ],
+        "shareId": "seed-2",
+        "sharedBy": "seed-user-dia",
+        "sharedAt": "2026-11-10T10:00:00+00:00",
+        "expiresAt": "2026-11-24",
+        "note": "Juridisch adviseur",
+        "labelConfirmed": false,
+        "status": "active"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "documentShare",
+          "slug": "demostad-share-revoked"
+        },
+        "kind": "document",
+        "files": [
+          {
+            "fileId": 0,
+            "name": "rapport-inspectie-2026.pdf",
+            "version": "seed",
+            "label": "Confidential"
+          }
+        ],
+        "shareId": "seed-3",
+        "sharedBy": "seed-user-dia",
+        "sharedAt": "2026-10-20T14:00:00+00:00",
+        "expiresAt": "2026-11-03",
+        "note": "Inspecteur provincie",
+        "labelConfirmed": true,
+        "revokedBy": "seed-user-dia",
+        "revokedAt": "2026-10-22T08:15:00+00:00",
+        "status": "revoked"
       }
     ]
   }
