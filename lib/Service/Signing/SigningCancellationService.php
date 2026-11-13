@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\Signing;
 
 use OCA\Filinq\Exception\SigningCancellationNotSupportedException;
+use OCA\Filinq\Exception\SigningCancellationRefusedException;
 use OCA\Filinq\Service\SigningService;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -99,17 +100,34 @@ class SigningCancellationService {
 	 *
 	 * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md
 	 *
-	 * @orphaned-write-capability exclude shipped ahead of its caller. The
-	 * HTTP route signing#cancelRequest still runs the older path
-	 * (SigningService::cancelRequest) with its authorization inline in the
-	 * controller, so nothing reaches this service yet. Rewiring is NOT
-	 * mechanical and is deliberately not done here: this service refuses
-	 * every non-creator, while the controller currently lets an ADMIN cancel
-	 * any request, so swapping them silently removes an admin capability.
-	 * Tracked in filinq#628.
+	 * The order is fixed: authorise, then the state check, then the provider,
+	 * then the request's own transition. Nothing reaches the provider for an
+	 * actor who may not cancel or for a request that can no longer be withdrawn,
+	 * and the request is only marked CANCELLED once the provider has withdrawn it.
 	 */
 	public function cancel(string $uid, string $requestId): array {
 		$request = $this->creatorsRequest(uid: $uid, requestId: $requestId);
+
+		$status = strtoupper((string)($request['status'] ?? ''));
+		if ($status === 'CANCELLED') {
+			// A double-click, not an error: nothing is asked of the provider again.
+			$this->recordAttempt(uid: $uid, requestId: $requestId, outcome: 'already-cancelled', detail: '');
+			return ['requestId' => $requestId, 'status' => NativeSigningProvider::STATUS_CANCELLED, 'alreadyCancelled' => true];
+		}
+
+		if ($this->requests->isValidTransition(currentStatus: $status, newStatus: 'CANCELLED') === false) {
+			$this->recordAttempt(uid: $uid, requestId: $requestId, outcome: 'refused-final-state', detail: $status);
+			$state = 'is ' . strtolower($status);
+			if ($status === '') {
+				$state = 'has no status';
+			}
+
+			throw new SigningCancellationRefusedException(
+				message: 'This signing request ' . $state . ' and can no longer be withdrawn.',
+				code: SigningCancellationRefusedException::FINAL_STATE
+			);
+		}
+
 		$externalId = $this->providerReference(request: $request);
 
 		try {
@@ -142,14 +160,25 @@ class SigningCancellationService {
 			);
 		}//end try
 
-		$already = (($request['status'] ?? '') === NativeSigningProvider::STATUS_CANCELLED);
+		try {
+			// The request's own transition: status, the cross-app conclusion
+			// event and the CANCELLED audit entry, as on every other path.
+			$this->requests->cancelRequest(requestId: $requestId);
+		} catch (Throwable $e) {
+			$this->recordAttempt(uid: $uid, requestId: $requestId, outcome: 'failed-transition', detail: $e->getMessage());
+			throw new RuntimeException(
+				'The provider withdrew the signing request, but its status could not be recorded: ' . $e->getMessage(),
+				0,
+				$e
+			);
+		}
 
 		$this->recordAttempt(uid: $uid, requestId: $requestId, outcome: 'cancelled', detail: '');
 
 		return [
 			'requestId' => $requestId,
 			'status' => NativeSigningProvider::STATUS_CANCELLED,
-			'alreadyCancelled' => $already,
+			'alreadyCancelled' => false,
 		];
 	}//end cancel()
 
@@ -187,7 +216,10 @@ class SigningCancellationService {
 				detail: 'actor is not the creator, or the request does not exist'
 			);
 
-			throw new RuntimeException($this->refusalMessage(request: $request));
+			throw new SigningCancellationRefusedException(
+				message: $this->refusalMessage(request: $request),
+				code: SigningCancellationRefusedException::NOT_CREATOR
+			);
 		}
 
 		return $request;
