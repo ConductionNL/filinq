@@ -114,4 +114,56 @@ final class SigningProvenance {
 	public function getCorrelationId(): string {
 		return $this->correlationId;
 	}//end getCorrelationId()
+
+	/**
+	 * The noun the request signs, read from the subject schema the consumer
+	 * already supplies: the schema slug, or the last segment of a path-shaped
+	 * one. A dossiq beschikking and decidiq minutes therefore read apart on the
+	 * record without anybody reading the consumer's code. Empty when no schema
+	 * was given.
+	 *
+	 * @return string The subject noun.
+	 *
+	 * @spec openspec/changes/one-signing-rail-for-the-fleet/specs/signing-rail-consolidation/spec.md#requirement-a-signing-request-records-the-noun-it-signs-req-ddsrc-002
+	 */
+	public function getSubjectNoun(): string {
+		$schema = trim((string)$this->subjectSchema);
+		if ($schema === '') {
+			return '';
+		}
+
+		$segments = explode('/', rtrim($schema, '/'));
+
+		return (string)end($segments);
+	}//end getSubjectNoun()
+
+	/**
+	 * Whether another app raised the request: it names a source app.
+	 *
+	 * @return bool True for a delegated request.
+	 *
+	 * @spec openspec/changes/one-signing-rail-for-the-fleet/specs/signing-rail-consolidation/spec.md#requirement-an-unattributed-delegated-request-is-refused-req-ddsrc-003
+	 */
+	public function isDelegated(): bool {
+		return trim($this->sourceApp) !== '';
+	}//end isDelegated()
+
+	/**
+	 * The subject fields a delegated request leaves empty, in the order
+	 * register, schema, id. A request raised inside filinq names no source app
+	 * and is never asked for them.
+	 *
+	 * @return array<int, string> The missing field names.
+	 *
+	 * @spec openspec/changes/one-signing-rail-for-the-fleet/specs/signing-rail-consolidation/spec.md#requirement-an-unattributed-delegated-request-is-refused-req-ddsrc-003
+	 */
+	public function missingSubjectFields(): array {
+		if ($this->isDelegated() === false) {
+			return [];
+		}
+
+		$fields = ['subjectRegister' => $this->subjectRegister, 'subjectSchema' => $this->subjectSchema, 'subjectId' => $this->subjectId];
+
+		return array_keys(array_filter($fields, static fn (?string $value): bool => trim((string)$value) === ''));
+	}//end missingSubjectFields()
 }//end class

@@ -503,6 +503,8 @@
         "Next page": "Next page",
         "Remove field {number}": "Remove field {number}",
         "Signer {number}": "Signer {number}",
+        "Signed noun": "Signed noun",
+        "What the request signs, read from the record type the requesting app supplied (for example beschikking or minutes), so two apps' requests read apart on the record.": "What the request signs, read from the record type the requesting app supplied (for example beschikking or minutes), so two apps' requests read apart on the record.",
         "Signature": "Signature",
         "Initials": "Initials",
         "Checkbox": "Checkbox",

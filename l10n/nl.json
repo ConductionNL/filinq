@@ -499,6 +499,8 @@
         "Next page": "Volgende pagina",
         "Remove field {number}": "Veld {number} verwijderen",
         "Signer {number}": "Ondertekenaar {number}",
+        "Signed noun": "Ondertekend onderwerp",
+        "What the request signs, read from the record type the requesting app supplied (for example beschikking or minutes), so two apps' requests read apart on the record.": "Wat het verzoek ondertekent, gelezen uit het recordtype dat de aanvragende app meegaf (bijvoorbeeld beschikking of notulen), zodat verzoeken van twee apps op het record uit elkaar te houden zijn.",
         "Signature": "Handtekening",
         "Initials": "Initialen",
         "Checkbox": "Vinkje",
