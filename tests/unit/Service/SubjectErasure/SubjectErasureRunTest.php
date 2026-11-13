@@ -464,4 +464,64 @@ class SubjectErasureRunTest extends TestCase {
 		$this->assertSame($this->rows['subjectErasureRequest'][$uuid]['certificate'], $services['run']->certificate(uuid: $uuid, userId: 'petra')['uuid']);
 
 	}//end testACompletedRequestDoesNotRunAgain()
+
+	/**
+	 * A valid due date is kept as given; an impossible one falls back to a month after the request.
+	 *
+	 * @return void
+	 */
+	public function testAnExplicitDueDateIsKeptAndAnImpossibleOneFallsBack(): void {
+		$services = $this->erasure();
+
+		$given = (string) $services['service']->create(
+			input: ['subject' => self::PERSON, 'identifiers' => [], 'ground' => 'AVG artikel 17 lid 1 onder a', 'dueAt' => '2026-12-01'],
+			userId: 'petra'
+		)['uuid'];
+		$impossible = (string) $services['service']->create(
+			input: ['subject' => self::PERSON, 'identifiers' => [], 'ground' => 'AVG artikel 17 lid 1 onder a', 'dueAt' => '2026-02-30'],
+			userId: 'petra'
+		)['uuid'];
+
+		$this->assertSame('2026-12-01T00:00:00+00:00', $this->rows['subjectErasureRequest'][$given]['dueAt']);
+		$this->assertSame('2026-10-29T10:00:00+00:00', $this->rows['subjectErasureRequest'][$impossible]['dueAt']);
+
+	}//end testAnExplicitDueDateIsKeptAndAnImpossibleOneFallsBack()
+
+	/**
+	 * An exclusion that does not name a document id is refused and nothing is recorded.
+	 *
+	 * @return void
+	 */
+	public function testAMalformedExclusionIsRefused(): void {
+		$services = $this->erasure();
+		$uuid = $this->placed(services: $services);
+		$services['service']->preview(uuid: $uuid, userId: 'petra');
+
+		foreach (['', 'abc', '0:x', '-1'] as $occurrence) {
+			$refusal = $this->refusal(fn () => $services['service']->exclude(uuid: $uuid, exclusions: [['occurrence' => $occurrence, 'reason' => 'Andere persoon.']], userId: 'petra'));
+
+			$this->assertSame(SubjectErasureRefusedException::REASON_INVALID, $refusal->getReason());
+			$this->assertSame('An exclusion names a document id, or a document id and an identifier.', $refusal->getMessage());
+		}
+
+		$this->assertSame([], $this->rows['subjectErasureRequest'][$uuid]['excluded']);
+
+	}//end testAMalformedExclusionIsRefused()
+
+	/**
+	 * Asking for the certificate before the run is refused as not found.
+	 *
+	 * @return void
+	 */
+	public function testThereIsNoCertificateBeforeTheRun(): void {
+		$services = $this->erasure();
+		$uuid = $this->placed(services: $services);
+		$services['service']->preview(uuid: $uuid, userId: 'petra');
+
+		$refusal = $this->refusal(fn () => $services['run']->certificate(uuid: $uuid, userId: 'petra'));
+
+		$this->assertSame(SubjectErasureRefusedException::REASON_NOT_FOUND, $refusal->getReason());
+		$this->assertSame('This request has no certificate yet.', $refusal->getMessage());
+
+	}//end testThereIsNoCertificateBeforeTheRun()
 }//end class
