@@ -5,15 +5,15 @@
 
 ## 1. Register + seed data
 
-- [ ] 1.1 Add the `signatureVerification` schema to the `document` register in `lib/Settings/filinq_register.json` (REQ-DDSVP-003)
+- [x] 1.1 Add the `signatureVerification` schema to the `document` register in `lib/Settings/filinq_register.json` (REQ-DDSVP-003)
   - Properties per design.md D1 (`token`, `fileRef`, `contentHash`, `signatures[]` with `level`/`method`/`signerAsserted`/`integrityVerified`/`identityBound`, `waarmerkRef`, `createdAt`, `revoked`); register-i18n tags on user-facing strings; register version bump with changelog entry; one nil-token seed (design.md Seed Data); schema refs use slugs.
 
 ## 2. Backend
 
-- [ ] 2.1 Implement `SignatureVerificationLinkService` (mint + lookup by token) (REQ-DDSVP-003)
+- [x] 2.1 Implement `SignatureVerificationLinkService` (mint + lookup by token) (REQ-DDSVP-003)
   - High-entropy non-enumerable token (`bin2hex(random_bytes(16))`); mint on signing completion and on waarmerk sealing; store outcome (never the signing secret, never document bytes); OR ObjectService save/find on `signatureVerification`.
 
-- [ ] 2.2 Add a record-based verify path to `SigningVerificationService` (REQ-DDSVP-001, REQ-DDSVP-002)
+- [x] 2.2 Add a record-based verify path to `SigningVerificationService` (REQ-DDSVP-001, REQ-DDSVP-002)
   - `verifyByRecord(array $record)` returning tri-state per-signature (`verified`/`unverifiable`/`invalid`) with separate `integrityVerified` and `identityBound` flags; no `userId`/file-read dependency; external `/Type /Sig` reported `unverifiable`, not `invalid`.
 
 - [ ] 2.3 Implement `PublicVerificationController` with `verify/{token}` + `api/verify/{token}` as `#[PublicPage]` (REQ-DDSVP-001, REQ-DDSVP-004)
@@ -29,7 +29,7 @@
 
 ## 4. Quality
 
-- [ ] 4.1 PHPUnit unit tests: token non-enumerability, unknown-token non-oracle parity, record-based tri-state verify, honest identity boundary (identity never `verified` while `identityBound` false), presence-gated waarmerk status — min 75% on new code
+- [x] 4.1 PHPUnit unit tests: token non-enumerability, unknown-token non-oracle parity, record-based tri-state verify, honest identity boundary (identity never `verified` while `identityBound` false), presence-gated waarmerk status — min 75% on new code
   - Run in the container: `docker exec -w /var/www/html/custom_apps/filinq nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`; include a mutation-style test that a rewritten signer field is NOT presented as verified identity.
 
 - [ ] 4.2 Playwright e2e `tests/e2e/spec-coverage/signature-verification-portal.spec.ts` covering the `@e2e` scenarios anonymously (logged-out browser context) (REQ-DDSVP-001, REQ-DDSVP-004)

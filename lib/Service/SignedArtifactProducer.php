@@ -48,6 +48,7 @@ use OCP\Files\File;
 use OCP\Files\IRootFolder;
 use OCP\IRequest;
 use OCP\IUserSession;
+use Psr\Log\LoggerInterface;
 use RuntimeException;
 
 /**
@@ -70,6 +71,8 @@ class SignedArtifactProducer {
 	 * @param IRequest $request HTTP request (client IP for the evidence context).
 	 * @param IRootFolder $rootFolder Root folder (reads the document, stores the signed version).
 	 * @param FinalDocumentService $finalDocuments The final-document guard.
+	 * @param SignatureVerificationLinkService|null $verificationLinks Mints the public verification record.
+	 * @param LoggerInterface|null $logger Logger for a verification record that could not be minted.
 	 *
 	 * @return void
 	 */
@@ -79,6 +82,8 @@ class SignedArtifactProducer {
 		private readonly IRequest $request,
 		private readonly IRootFolder $rootFolder,
 		private readonly FinalDocumentService $finalDocuments,
+		private readonly ?SignatureVerificationLinkService $verificationLinks = null,
+		private readonly ?LoggerInterface $logger = null,
 	) {
 
 	}//end __construct()
@@ -155,6 +160,46 @@ class SignedArtifactProducer {
 		// original file id.
 		return $fileId . ':signed:' . substr(hash('sha256', $signedBytes), 0, 16);
 	}//end produce()
+
+	/**
+	 * Mint the public verification record for a request's stored signed artifact.
+	 *
+	 * Reads the signed version back as the initiator, so the record's content
+	 * hash and signature outcome are those of the bytes actually stored. The
+	 * signature itself is already complete: a record that cannot be minted is
+	 * logged and leaves the request without a verification token, it does not
+	 * undo the signing.
+	 *
+	 * @param array<string, mixed> $request The completing signing-request array.
+	 * @param string $signedDocumentRef The reference produce() returned.
+	 *
+	 * @return string|null The verification token, or null when none was minted.
+	 *
+	 * @spec openspec/changes/signature-verification-portal/tasks.md#task-2.4
+	 */
+	public function recordVerification(array $request, string $signedDocumentRef): ?string {
+		if ($this->verificationLinks === null) {
+			return null;
+		}
+
+		try {
+			$file = $this->resolveDocumentFile(fileId: (int)($request['documentFileId'] ?? 0), request: $request);
+			$record = $this->verificationLinks->mint(
+				signedBytes: $file->getContent(),
+				fileRef: $signedDocumentRef,
+				fileName: $file->getName()
+			);
+		} catch (\Throwable $e) {
+			$this->logger?->warning(
+				'SignedArtifactProducer: the signature verification record could not be minted',
+				['signedDocumentRef' => $signedDocumentRef, 'error' => $e->getMessage()]
+			);
+			return null;
+		}
+
+		return (string)$record['token'];
+
+	}//end recordVerification()
 
 	/**
 	 * Hand a new request to a provider that runs the signer flow itself.

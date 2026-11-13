@@ -7525,6 +7525,75 @@
         "method": "rules",
         "correspondentPending": true,
         "status": "suggested"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "signatureVerification",
+          "slug": "seed-signature-verification-001"
+        },
+        "token": "00000000000000000000000000000000",
+        "fileName": "besluit-demo-ondertekend.pdf",
+        "contentHash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "signatures": [
+          {
+            "status": "unverifiable",
+            "level": "SES",
+            "method": "native",
+            "signerAsserted": "demo-signer",
+            "signedAt": "2026-07-01T09:00:00+00:00",
+            "integrityVerified": false,
+            "identityBound": false
+          }
+        ],
+        "revoked": false,
+        "createdAt": "2026-07-01T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "signatureVerification",
+          "slug": "seed-signature-verification-002"
+        },
+        "token": "00000000000000000000000000000001",
+        "fileName": "vergunning-demo-ondertekend.pdf",
+        "contentHash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "signatures": [
+          {
+            "status": "verified",
+            "level": "SES",
+            "method": "native",
+            "signerAsserted": "W. de Vries",
+            "signedAt": "2026-07-01T09:00:00+00:00",
+            "integrityVerified": true,
+            "identityBound": true
+          }
+        ],
+        "revoked": true,
+        "createdAt": "2026-07-01T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "signatureVerification",
+          "slug": "seed-signature-verification-003"
+        },
+        "token": "00000000000000000000000000000002",
+        "fileName": "brief-demo-ondertekend.pdf",
+        "contentHash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "signatures": [
+          {
+            "status": "invalid",
+            "level": "SES",
+            "method": "native",
+            "signerAsserted": "J. Jansen",
+            "signedAt": "2026-07-01T09:00:00+00:00",
+            "integrityVerified": false,
+            "identityBound": false
+          }
+        ],
+        "revoked": true,
+        "createdAt": "2026-07-01T09:00:00+00:00"
       }
     ]
   }
