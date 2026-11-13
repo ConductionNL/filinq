@@ -2876,7 +2876,8 @@ OC.L10N.register(
         "The value before the change.": "De waarde voor de wijziging.",
         "When the change was made.": "Wanneer de wijziging is gedaan.",
         "Merge fields": "Samenvoegvelden",
-        "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you.": "De velden die het sjabloon invult, met een naam en een herkomst voor mensen: wat een voorbeeld onder Voor je ingevuld toont"
+        "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you.": "De velden die het sjabloon invult, met een naam en een herkomst voor mensen: wat een voorbeeld onder Voor je ingevuld toont",
+        "Linked apps": "Gekoppelde apps"
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -9,6 +9,12 @@
 			:size="44" />
 		<template v-else-if="signingStore.signingRequest">
 			<h2>{{ signingStore.signingRequest.documentName }}</h2>
+			<NcButton
+				v-if="leafSidebarAvailable"
+				variant="tertiary"
+				@click="toggleLeafSidebar">
+				{{ t('filinq', 'Linked apps') }}
+			</NcButton>
 			<div class="detail-grid">
 				<div>
 					<strong>{{ t('filinq', 'Status') }}</strong
@@ -100,6 +106,7 @@ import { NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 import SignerStepUpModal from '../../modals/SignerStepUpModal.vue'
 import SigningEnvelopePanel from './SigningEnvelopePanel.vue'
 import { stepUpReturn } from '../../services/signerStepUp.js'
+import { recordLeafSidebarMixin } from '../../sidebars/recordSidebar.js'
 import { useSigningStore } from '../../store/modules/signing.js'
 
 export default {
@@ -111,6 +118,9 @@ export default {
 		SignerStepUpModal,
 		SigningEnvelopePanel,
 	},
+
+	// leaf-integrations: the registry's leaves (Mail, Calendar) for this request.
+	mixins: [recordLeafSidebarMixin({ schema: 'signingRequest', record: (vm) => vm.signingStore.signingRequest, title: (request) => request.documentName })],
 
 	props: {
 		/**

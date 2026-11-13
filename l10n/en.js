@@ -2791,7 +2791,8 @@ OC.L10N.register(
         "The value before the change.": "The value before the change.",
         "When the change was made.": "When the change was made.",
         "Merge fields": "Merge fields",
-        "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you.": "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you."
+        "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you.": "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you.",
+        "Linked apps": "Linked apps"
     },
     "nplurals=2; plural=(n != 1);"
 )
