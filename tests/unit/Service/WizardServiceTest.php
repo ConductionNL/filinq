@@ -227,6 +227,79 @@ class WizardServiceTest extends TestCase {
 	}//end testATemplateLockedByAnotherUserRefuses423()
 
 	/**
+	 * Changing a wizard that does not exist is refused with 404 and nothing is stored.
+	 *
+	 * @return void
+	 */
+	public function testSavingAnUnknownWizardRefuses404(): void {
+		$refused = $this->refusal(fn () => $this->service()->save(wizard: WizardFixtures::seed(), userId: 'alice', uuid: 'no-such-wizard'));
+
+		$this->assertSame(404, $refused->getCode());
+		$this->assertSame('Wizard not found', $refused->getMessage());
+		$this->assertSame([], $this->store->saves);
+
+	}//end testSavingAnUnknownWizardRefuses404()
+
+	/**
+	 * A template id the store cannot find, or a blank one, is refused with 422 and not stored.
+	 *
+	 * @return void
+	 */
+	public function testAnUnknownTemplateRefuses422(): void {
+		foreach (['missing-template', ''] as $templateId) {
+			$wizard = WizardFixtures::seed();
+			$wizard['templateId'] = $templateId;
+
+			$refused = $this->refusal(fn () => $this->service()->save(wizard: $wizard, userId: 'alice'));
+
+			$this->assertSame(422, $refused->getCode());
+		}
+
+		$this->assertSame([], $this->store->saves);
+
+	}//end testAnUnknownTemplateRefuses422()
+
+	/**
+	 * An unreadable lock time counts as a live lock held by someone else.
+	 *
+	 * @return void
+	 */
+	public function testAnUnreadableLockTimeRefuses423(): void {
+		$this->template += ['lockedBy' => 'bob', 'lockedAt' => 'not a date'];
+
+		$this->assertSame(423, $this->refusal(fn () => $this->service()->save(wizard: WizardFixtures::seed(), userId: 'alice'))->getCode());
+		$this->assertSame([], $this->store->saves);
+
+	}//end testAnUnreadableLockTimeRefuses423()
+
+	/**
+	 * A bound schema that cannot be read, or reads as no schema, skips the binding check and saves.
+	 *
+	 * @return void
+	 */
+	public function testAnUnreadableBoundSchemaSkipsTheBindingCheck(): void {
+		$this->template += ['boundRegister' => 'filinq', 'boundSchema' => 'dossier'];
+		$this->schemas = $this->createMock(SchemaMapper::class);
+		$this->schemas->method('find')->willReturnOnConsecutiveCalls(
+			$this->throwException(new \RuntimeException('no schema')),
+			'not an object'
+		);
+
+		foreach ([1, 2] as $attempt) {
+			$wizard = WizardFixtures::seed();
+			$wizard['active'] = false;
+			$wizard['questions'][] = ['key' => 'foo' . $attempt, 'label' => 'Foo', 'type' => 'text', 'required' => false, 'mapsTo' => 'foo.bar'];
+
+			$saved = $this->service()->save(wizard: $wizard, userId: 'alice');
+
+			$this->assertSame([], $saved['warnings']);
+		}
+
+		$this->assertCount(2, $this->store->saves);
+
+	}//end testAnUnreadableBoundSchemaSkipsTheBindingCheck()
+
+	/**
 	 * A template bound to a schema warns about a mapsTo path the schema lacks, and saves.
 	 *
 	 * @return void
