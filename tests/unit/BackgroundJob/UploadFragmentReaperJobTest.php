@@ -28,12 +28,14 @@ namespace OCA\Filinq\Tests\Unit\BackgroundJob;
 use OCA\Filinq\BackgroundJob\UploadFragmentReaperJob;
 use OCA\Filinq\Service\UploadFragmentReaper;
 use OCP\AppFramework\Utility\ITimeFactory;
+use OCP\Files\File;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
 use OCP\IAppConfig;
 use OCP\IUser;
 use OCP\IUserManager;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use ReflectionClass;
 
@@ -203,6 +205,84 @@ class UploadFragmentReaperJobTest extends TestCase {
 
 		$this->invokeRun(job: $job);
 	}//end testAUserWithoutADocumentsFolderIsPassedOver()
+
+	/**
+	 * A documents entry that is a file, not a folder, is passed over.
+	 *
+	 * @return void
+	 */
+	public function testADocumentsEntryThatIsNotAFolderIsPassedOver(): void {
+		$reaper = $this->getMockBuilder(UploadFragmentReaper::class)
+			->disableOriginalConstructor()
+			->onlyMethods(['reap'])
+			->getMock();
+		$reaper->expects(self::never())->method('reap');
+
+		$userFolder = $this->createMock(Folder::class);
+		$userFolder->method('nodeExists')->willReturn(true);
+		$userFolder->expects(self::once())
+			->method('get')
+			->with(UploadFragmentReaperJob::DOCUMENTS_FOLDER)
+			->willReturn($this->createMock(File::class));
+		$root = $this->createMock(IRootFolder::class);
+		$root->method('getUserFolder')->willReturn($userFolder);
+
+		$this->invokeRun(job: $this->job(24, $reaper, $root, $this->users(['anne'])));
+	}//end testADocumentsEntryThatIsNotAFolderIsPassedOver()
+
+	/**
+	 * An unreachable folder is logged and the sweep goes on to the next user.
+	 *
+	 * @return void
+	 */
+	public function testAnUnreachableFolderIsLoggedAndTheSweepContinues(): void {
+		$reaper = $this->getMockBuilder(UploadFragmentReaper::class)
+			->disableOriginalConstructor()
+			->onlyMethods(['reap'])
+			->getMock();
+		$reaper->expects(self::once())
+			->method('reap')
+			->willReturn(['removed' => 2, 'bytes' => 30, 'kept' => 1, 'refused' => ['x']]);
+
+		$documents = $this->createMock(Folder::class);
+		$userFolder = $this->createMock(Folder::class);
+		$userFolder->method('nodeExists')->willReturn(true);
+		$userFolder->method('get')->willReturn($documents);
+		$root = $this->createMock(IRootFolder::class);
+		$root->method('getUserFolder')->willReturnCallback(
+			static function (string $uid) use ($userFolder): Folder {
+				if ($uid === 'anne') {
+					throw new \RuntimeException('storage offline');
+				}
+
+				return $userFolder;
+			}
+		);
+
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects(self::once())
+			->method('warning')
+			->with('filinq.upload-fragments.folder-unreachable', ['user' => 'anne', 'error' => 'storage offline']);
+		$logger->expects(self::once())
+			->method('info')
+			->with(
+				'filinq.upload-fragments.swept',
+				['removed' => 2, 'bytes' => 30, 'refused' => 1, 'maxAgeSeconds' => (24 * 3600)]
+			);
+
+		$config = $this->createMock(IAppConfig::class);
+		$config->method('getValueInt')->willReturn(24);
+		$job = new UploadFragmentReaperJob(
+			$this->createMock(ITimeFactory::class),
+			$reaper,
+			$root,
+			$this->users(['anne', 'bram']),
+			$config,
+			$logger
+		);
+
+		$this->invokeRun(job: $job);
+	}//end testAnUnreachableFolderIsLoggedAndTheSweepContinues()
 
 	/**
 	 * Call the protected run(), which is what the scheduler calls.
