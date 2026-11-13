@@ -2926,7 +2926,18 @@
         "When the seal was revoked.": "Wanneer het waarmerk is ingetrokken.",
         "Why the seal was revoked; required with a revocation.": "Waarom het waarmerk is ingetrokken; verplicht bij een intrekking.",
         "active, or revoked; a revoked seal never verifies as valid.": "actief of ingetrokken; een ingetrokken waarmerk is bij controle nooit geldig.",
-        "sha256 (hex) over the sealed artifact, stamp page included.": "sha256 (hex) over het gewaarmerkte bestand, inclusief de waarmerkpagina."
+        "sha256 (hex) over the sealed artifact, stamp page included.": "sha256 (hex) over het gewaarmerkte bestand, inclusief de waarmerkpagina.",
+        "Checked by": "Gecontroleerd door",
+        "Document review": "Documentcontrole",
+        "Findings at check": "Bevindingen bij controle",
+        "Grondslagen (slugs of `base` objects, as on `dossier.bases`) this rule applies under; proposed to the reviewer on a matching finding (anonymization-review-workbench D1).": "Grondslagen (slugs van `base`-objecten, zoals op `dossier.bases`) waaronder deze regel valt; bij een passende bevinding voorgesteld aan de controleur (anonymization-review-workbench D1).",
+        "How many findings the document had when it was checked.": "Hoeveel bevindingen het document had toen het werd gecontroleerd.",
+        "How many of those the reviewer added by hand.": "Hoeveel daarvan de controleur met de hand toevoegde.",
+        "Manual findings": "Handmatige bevindingen",
+        "The Nextcloud file id of the reviewed document; one review per file.": "Het Nextcloud-bestands-ID van het gecontroleerde document; één controle per bestand.",
+        "The reviewer's note.": "De notitie van de controleur.",
+        "The user who marked the document checked.": "De gebruiker die het document als gecontroleerd markeerde.",
+        "When the reviewer marked the document checked.": "Wanneer de controleur het document als gecontroleerd markeerde."
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

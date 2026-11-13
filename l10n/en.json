@@ -2838,7 +2838,18 @@
         "When the seal was revoked.": "When the seal was revoked.",
         "Why the seal was revoked; required with a revocation.": "Why the seal was revoked; required with a revocation.",
         "active, or revoked; a revoked seal never verifies as valid.": "active, or revoked; a revoked seal never verifies as valid.",
-        "sha256 (hex) over the sealed artifact, stamp page included.": "sha256 (hex) over the sealed artifact, stamp page included."
+        "sha256 (hex) over the sealed artifact, stamp page included.": "sha256 (hex) over the sealed artifact, stamp page included.",
+        "Checked by": "Checked by",
+        "Document review": "Document review",
+        "Findings at check": "Findings at check",
+        "Grondslagen (slugs of `base` objects, as on `dossier.bases`) this rule applies under; proposed to the reviewer on a matching finding (anonymization-review-workbench D1).": "Grondslagen (slugs of `base` objects, as on `dossier.bases`) this rule applies under; proposed to the reviewer on a matching finding (anonymization-review-workbench D1).",
+        "How many findings the document had when it was checked.": "How many findings the document had when it was checked.",
+        "How many of those the reviewer added by hand.": "How many of those the reviewer added by hand.",
+        "Manual findings": "Manual findings",
+        "The Nextcloud file id of the reviewed document; one review per file.": "The Nextcloud file id of the reviewed document; one review per file.",
+        "The reviewer's note.": "The reviewer's note.",
+        "The user who marked the document checked.": "The user who marked the document checked.",
+        "When the reviewer marked the document checked.": "When the reviewer marked the document checked."
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }
