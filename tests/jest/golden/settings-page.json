@@ -89,6 +89,13 @@
 			"</x-nccheckboxradioswitch>",
 			"<div class=\"setting-description\">Suggest a document type, a sender and a dossier for documents that come in. A suggestion changes nothing until somebody confirms it.</div>",
 			"</div>",
+			"<!-- BRP lookup of a BSN on an arriving document (intake-base-registry-enrichment D3): off by default. -->",
+			"<div class=\"setting-item\">",
+			"<div class=\"setting-label\">Look up BSNs in the BRP</div>",
+			"<x-nccheckboxradioswitch aria-label=\"Look up BSNs in the BRP\" modelvalue=\"false\" type=\"switch\" data-testid=\"settings-brp-lookup\" data-on-onupdate:modelvalue=\"\">",
+			"</x-nccheckboxradioswitch>",
+			"<div class=\"setting-description\">Ask the BRP for the name and address behind a BSN on an arriving document. Only for intake rules that state a purpose, and only as a suggestion somebody accepts.</div>",
+			"</div>",
 			"</x-slot>",
 			"</x-ncsettingssection>",
 			"<x-ncsettingssection name=\"OCR Document Scanning\" description=\"Configure Tesseract OCR for extracting text from scanned documents and images\">",
@@ -299,22 +306,28 @@
 				}
 			},
 			{
+				"label": "Look up BSNs in the BRP",
+				"writes": {
+					"settings.intake.brp_lookup_enabled": "SENTINEL-8"
+				}
+			},
+			{
 				"label": "Enable OCR",
 				"writes": {
-					"settings.ocr_enabled": "SENTINEL-8"
+					"settings.ocr_enabled": "SENTINEL-9"
 				}
 			},
 			{
 				"label": "Read scans on arrival",
 				"writes": {
-					"settings.ocr_on_arrival": "SENTINEL-9"
+					"settings.ocr_on_arrival": "SENTINEL-10"
 				}
 			},
 			{
 				"label": null,
 				"writes": {
 					"ocrLanguages": {
-						"nld": "SENTINEL-10",
+						"nld": "SENTINEL-11",
 						"eng": true,
 						"deu": false,
 						"fra": false
@@ -325,8 +338,8 @@
 				"label": null,
 				"writes": {
 					"ocrLanguages": {
-						"nld": "SENTINEL-10",
-						"eng": "SENTINEL-11",
+						"nld": "SENTINEL-11",
+						"eng": "SENTINEL-12",
 						"deu": false,
 						"fra": false
 					}
@@ -336,9 +349,9 @@
 				"label": null,
 				"writes": {
 					"ocrLanguages": {
-						"nld": "SENTINEL-10",
-						"eng": "SENTINEL-11",
-						"deu": "SENTINEL-12",
+						"nld": "SENTINEL-11",
+						"eng": "SENTINEL-12",
+						"deu": "SENTINEL-13",
 						"fra": false
 					}
 				}
@@ -347,23 +360,23 @@
 				"label": null,
 				"writes": {
 					"ocrLanguages": {
-						"nld": "SENTINEL-10",
-						"eng": "SENTINEL-11",
-						"deu": "SENTINEL-12",
-						"fra": "SENTINEL-13"
+						"nld": "SENTINEL-11",
+						"eng": "SENTINEL-12",
+						"deu": "SENTINEL-13",
+						"fra": "SENTINEL-14"
 					}
 				}
 			},
 			{
 				"label": "Prioritise higher-confidentiality files in batch/folder analysis",
 				"writes": {
-					"settings.filinq.confidentiality.prioritise_analysis": "SENTINEL-14"
+					"settings.filinq.confidentiality.prioritise_analysis": "SENTINEL-15"
 				}
 			},
 			{
 				"label": "Enable Digital Signing",
 				"writes": {
-					"settings.signing_enabled": "SENTINEL-15"
+					"settings.signing_enabled": "SENTINEL-16"
 				}
 			}
 		]
@@ -461,6 +474,13 @@
 			"<x-nccheckboxradioswitch aria-label=\"Inbound classification\" modelvalue=\"false\" type=\"switch\" data-testid=\"settings-inbound-classification\" data-on-onupdate:modelvalue=\"\">",
 			"</x-nccheckboxradioswitch>",
 			"<div class=\"setting-description\">Suggest a document type, a sender and a dossier for documents that come in. A suggestion changes nothing until somebody confirms it.</div>",
+			"</div>",
+			"<!-- BRP lookup of a BSN on an arriving document (intake-base-registry-enrichment D3): off by default. -->",
+			"<div class=\"setting-item\">",
+			"<div class=\"setting-label\">Look up BSNs in the BRP</div>",
+			"<x-nccheckboxradioswitch aria-label=\"Look up BSNs in the BRP\" modelvalue=\"true\" type=\"switch\" data-testid=\"settings-brp-lookup\" data-on-onupdate:modelvalue=\"\">",
+			"</x-nccheckboxradioswitch>",
+			"<div class=\"setting-description\">Ask the BRP for the name and address behind a BSN on an arriving document. Only for intake rules that state a purpose, and only as a suggestion somebody accepts.</div>",
 			"</div>",
 			"</x-slot>",
 			"</x-ncsettingssection>",
@@ -747,22 +767,28 @@
 				}
 			},
 			{
+				"label": "Look up BSNs in the BRP",
+				"writes": {
+					"settings.intake.brp_lookup_enabled": "SENTINEL-8"
+				}
+			},
+			{
 				"label": "Enable OCR",
 				"writes": {
-					"settings.ocr_enabled": "SENTINEL-8"
+					"settings.ocr_enabled": "SENTINEL-9"
 				}
 			},
 			{
 				"label": "Read scans on arrival",
 				"writes": {
-					"settings.ocr_on_arrival": "SENTINEL-9"
+					"settings.ocr_on_arrival": "SENTINEL-10"
 				}
 			},
 			{
 				"label": null,
 				"writes": {
 					"ocrLanguages": {
-						"nld": "SENTINEL-10",
+						"nld": "SENTINEL-11",
 						"eng": true,
 						"deu": false,
 						"fra": false
@@ -773,8 +799,8 @@
 				"label": null,
 				"writes": {
 					"ocrLanguages": {
-						"nld": "SENTINEL-10",
-						"eng": "SENTINEL-11",
+						"nld": "SENTINEL-11",
+						"eng": "SENTINEL-12",
 						"deu": false,
 						"fra": false
 					}
@@ -784,9 +810,9 @@
 				"label": null,
 				"writes": {
 					"ocrLanguages": {
-						"nld": "SENTINEL-10",
-						"eng": "SENTINEL-11",
-						"deu": "SENTINEL-12",
+						"nld": "SENTINEL-11",
+						"eng": "SENTINEL-12",
+						"deu": "SENTINEL-13",
 						"fra": false
 					}
 				}
@@ -795,23 +821,23 @@
 				"label": null,
 				"writes": {
 					"ocrLanguages": {
-						"nld": "SENTINEL-10",
-						"eng": "SENTINEL-11",
-						"deu": "SENTINEL-12",
-						"fra": "SENTINEL-13"
+						"nld": "SENTINEL-11",
+						"eng": "SENTINEL-12",
+						"deu": "SENTINEL-13",
+						"fra": "SENTINEL-14"
 					}
 				}
 			},
 			{
 				"label": "Prioritise higher-confidentiality files in batch/folder analysis",
 				"writes": {
-					"settings.filinq.confidentiality.prioritise_analysis": "SENTINEL-14"
+					"settings.filinq.confidentiality.prioritise_analysis": "SENTINEL-15"
 				}
 			},
 			{
 				"label": "Enable Digital Signing",
 				"writes": {
-					"settings.signing_enabled": "SENTINEL-15"
+					"settings.signing_enabled": "SENTINEL-16"
 				}
 			},
 			{
@@ -821,7 +847,7 @@
 			{
 				"label": "LibreSign certificate is qualified",
 				"writes": {
-					"settings.libresign_qualified": "SENTINEL-17"
+					"settings.libresign_qualified": "SENTINEL-18"
 				}
 			}
 		]
@@ -915,6 +941,13 @@
 			"<x-nccheckboxradioswitch aria-label=\"Inbound classification\" modelvalue=\"true\" type=\"switch\" data-testid=\"settings-inbound-classification\" data-on-onupdate:modelvalue=\"\">",
 			"</x-nccheckboxradioswitch>",
 			"<div class=\"setting-description\">Suggest a document type, a sender and a dossier for documents that come in. A suggestion changes nothing until somebody confirms it.</div>",
+			"</div>",
+			"<!-- BRP lookup of a BSN on an arriving document (intake-base-registry-enrichment D3): off by default. -->",
+			"<div class=\"setting-item\">",
+			"<div class=\"setting-label\">Look up BSNs in the BRP</div>",
+			"<x-nccheckboxradioswitch aria-label=\"Look up BSNs in the BRP\" modelvalue=\"false\" type=\"switch\" data-testid=\"settings-brp-lookup\" data-on-onupdate:modelvalue=\"\">",
+			"</x-nccheckboxradioswitch>",
+			"<div class=\"setting-description\">Ask the BRP for the name and address behind a BSN on an arriving document. Only for intake rules that state a purpose, and only as a suggestion somebody accepts.</div>",
 			"</div>",
 			"</x-slot>",
 			"</x-ncsettingssection>",
@@ -1126,22 +1159,28 @@
 				}
 			},
 			{
+				"label": "Look up BSNs in the BRP",
+				"writes": {
+					"settings.intake.brp_lookup_enabled": "SENTINEL-8"
+				}
+			},
+			{
 				"label": "Enable OCR",
 				"writes": {
-					"settings.ocr_enabled": "SENTINEL-8"
+					"settings.ocr_enabled": "SENTINEL-9"
 				}
 			},
 			{
 				"label": "Read scans on arrival",
 				"writes": {
-					"settings.ocr_on_arrival": "SENTINEL-9"
+					"settings.ocr_on_arrival": "SENTINEL-10"
 				}
 			},
 			{
 				"label": null,
 				"writes": {
 					"ocrLanguages": {
-						"nld": "SENTINEL-10",
+						"nld": "SENTINEL-11",
 						"eng": true,
 						"deu": false,
 						"fra": false
@@ -1152,8 +1191,8 @@
 				"label": null,
 				"writes": {
 					"ocrLanguages": {
-						"nld": "SENTINEL-10",
-						"eng": "SENTINEL-11",
+						"nld": "SENTINEL-11",
+						"eng": "SENTINEL-12",
 						"deu": false,
 						"fra": false
 					}
@@ -1163,9 +1202,9 @@
 				"label": null,
 				"writes": {
 					"ocrLanguages": {
-						"nld": "SENTINEL-10",
-						"eng": "SENTINEL-11",
-						"deu": "SENTINEL-12",
+						"nld": "SENTINEL-11",
+						"eng": "SENTINEL-12",
+						"deu": "SENTINEL-13",
 						"fra": false
 					}
 				}
@@ -1174,23 +1213,23 @@
 				"label": null,
 				"writes": {
 					"ocrLanguages": {
-						"nld": "SENTINEL-10",
-						"eng": "SENTINEL-11",
-						"deu": "SENTINEL-12",
-						"fra": "SENTINEL-13"
+						"nld": "SENTINEL-11",
+						"eng": "SENTINEL-12",
+						"deu": "SENTINEL-13",
+						"fra": "SENTINEL-14"
 					}
 				}
 			},
 			{
 				"label": "Prioritise higher-confidentiality files in batch/folder analysis",
 				"writes": {
-					"settings.filinq.confidentiality.prioritise_analysis": "SENTINEL-14"
+					"settings.filinq.confidentiality.prioritise_analysis": "SENTINEL-15"
 				}
 			},
 			{
 				"label": "Enable Digital Signing",
 				"writes": {
-					"settings.signing_enabled": "SENTINEL-15"
+					"settings.signing_enabled": "SENTINEL-16"
 				}
 			}
 		]
@@ -1285,6 +1324,13 @@
 			"<x-nccheckboxradioswitch aria-label=\"Inbound classification\" modelvalue=\"true\" type=\"switch\" data-testid=\"settings-inbound-classification\" data-on-onupdate:modelvalue=\"\">",
 			"</x-nccheckboxradioswitch>",
 			"<div class=\"setting-description\">Suggest a document type, a sender and a dossier for documents that come in. A suggestion changes nothing until somebody confirms it.</div>",
+			"</div>",
+			"<!-- BRP lookup of a BSN on an arriving document (intake-base-registry-enrichment D3): off by default. -->",
+			"<div class=\"setting-item\">",
+			"<div class=\"setting-label\">Look up BSNs in the BRP</div>",
+			"<x-nccheckboxradioswitch aria-label=\"Look up BSNs in the BRP\" modelvalue=\"false\" type=\"switch\" data-testid=\"settings-brp-lookup\" data-on-onupdate:modelvalue=\"\">",
+			"</x-nccheckboxradioswitch>",
+			"<div class=\"setting-description\">Ask the BRP for the name and address behind a BSN on an arriving document. Only for intake rules that state a purpose, and only as a suggestion somebody accepts.</div>",
 			"</div>",
 			"</x-slot>",
 			"</x-ncsettingssection>",
@@ -1507,22 +1553,28 @@
 				}
 			},
 			{
+				"label": "Look up BSNs in the BRP",
+				"writes": {
+					"settings.intake.brp_lookup_enabled": "SENTINEL-8"
+				}
+			},
+			{
 				"label": "Enable OCR",
 				"writes": {
-					"settings.ocr_enabled": "SENTINEL-8"
+					"settings.ocr_enabled": "SENTINEL-9"
 				}
 			},
 			{
 				"label": "Read scans on arrival",
 				"writes": {
-					"settings.ocr_on_arrival": "SENTINEL-9"
+					"settings.ocr_on_arrival": "SENTINEL-10"
 				}
 			},
 			{
 				"label": null,
 				"writes": {
 					"ocrLanguages": {
-						"nld": "SENTINEL-10",
+						"nld": "SENTINEL-11",
 						"eng": true,
 						"deu": false,
 						"fra": false
@@ -1533,8 +1585,8 @@
 				"label": null,
 				"writes": {
 					"ocrLanguages": {
-						"nld": "SENTINEL-10",
-						"eng": "SENTINEL-11",
+						"nld": "SENTINEL-11",
+						"eng": "SENTINEL-12",
 						"deu": false,
 						"fra": false
 					}
@@ -1544,9 +1596,9 @@
 				"label": null,
 				"writes": {
 					"ocrLanguages": {
-						"nld": "SENTINEL-10",
-						"eng": "SENTINEL-11",
-						"deu": "SENTINEL-12",
+						"nld": "SENTINEL-11",
+						"eng": "SENTINEL-12",
+						"deu": "SENTINEL-13",
 						"fra": false
 					}
 				}
@@ -1555,23 +1607,23 @@
 				"label": null,
 				"writes": {
 					"ocrLanguages": {
-						"nld": "SENTINEL-10",
-						"eng": "SENTINEL-11",
-						"deu": "SENTINEL-12",
-						"fra": "SENTINEL-13"
+						"nld": "SENTINEL-11",
+						"eng": "SENTINEL-12",
+						"deu": "SENTINEL-13",
+						"fra": "SENTINEL-14"
 					}
 				}
 			},
 			{
 				"label": "Prioritise higher-confidentiality files in batch/folder analysis",
 				"writes": {
-					"settings.filinq.confidentiality.prioritise_analysis": "SENTINEL-14"
+					"settings.filinq.confidentiality.prioritise_analysis": "SENTINEL-15"
 				}
 			},
 			{
 				"label": "Enable Digital Signing",
 				"writes": {
-					"settings.signing_enabled": "SENTINEL-15"
+					"settings.signing_enabled": "SENTINEL-16"
 				}
 			}
 		]

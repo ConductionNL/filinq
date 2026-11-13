@@ -92,6 +92,7 @@ class IntakeService implements IntakeServiceInterface {
 	 *
 	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
 	 * @spec openspec/changes/archive/2026-09-29-intake-ocr-on-arrival/tasks.md#task-1.3
+	 * @spec openspec/changes/intake-base-registry-enrichment/specs/intake-registry-enrichment/spec.md#requirement-a-kvk-number-on-an-arrival-becomes-a-registry-suggestion-req-ibr-001
 	 */
 	public function receive(IntakeDocumentReceivedEvent $event): array {
 		$channel = $event->getChannel();
@@ -137,6 +138,9 @@ class IntakeService implements IntakeServiceInterface {
 		// stored and read by a background job after, so nobody has to start it.
 		$stored = $this->repository->save(document: $this->filing->ocrQueue->mark(document: $document));
 		$this->filing->ocrQueue->queue(document: $stored);
+		// The base registry lookup runs after the save, in the background: a
+		// slow registry never holds the channel's delivery (registry enrichment D1).
+		$this->filing->registryQueue?->queue(document: $stored);
 
 		return $stored;
 

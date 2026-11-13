@@ -40,6 +40,7 @@ interface JobQueueInterface {
 	public const BULK_SIGNING         = 'bulk-signing';
 	public const FOLDER_EXTRACTION    = 'folder-extraction';
 	public const INTAKE_OCR           = 'intake-ocr';
+	public const INTAKE_REGISTRY      = 'intake-registry-enrichment';
 
 	/**
 	 * Queue a job.

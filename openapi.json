@@ -4717,6 +4717,96 @@
                 }
             }
         },
+        "/intake/documents/{uuid}/registry-decisions": {
+            "post": {
+                "operationId": "intake-decide-registry",
+                "summary": "Accept, correct or dismiss a registry suggestion",
+                "description": "Accept, correct or dismiss one registry suggestion on an intake document. Accepting writes the fields the way an accepted party suggestion is written and marks the suggestion written.",
+                "tags": [
+                    "intake"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The intake document with the decided suggestion, or the refusal.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Problem409"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true,
+                        "description": "The uuid.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "index": {
+                                        "type": "integer"
+                                    },
+                                    "decision": {
+                                        "type": "string",
+                                        "enum": [
+                                            "accepted",
+                                            "dismissed"
+                                        ]
+                                    },
+                                    "fields": {
+                                        "type": "object",
+                                        "properties": {
+                                            "name": {
+                                                "type": "string"
+                                            },
+                                            "address": {
+                                                "type": "string"
+                                            },
+                                            "kvkNumber": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/intake/routing-rules": {
             "post": {
                 "operationId": "intake-declare-routing",

@@ -27,6 +27,7 @@ describe('defaultSettings', () => {
 			['enable_inbound_classification', true],
 			['ocr_enabled', true],
 			['ocr_on_arrival', true],
+			['intake.brp_lookup_enabled', false],
 			['ocr_dpi', 300],
 			['signing_enabled', false],
 			['signing_provider', 'native'],

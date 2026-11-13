@@ -17,6 +17,7 @@
         "ocr_languages": "x",
         "ocr_dpi": 0,
         "ocr_on_arrival": false,
+        "intake.brp_lookup_enabled": false,
         "pseudonymisation_restore_allowed_groups": [],
         "legal_hold_authority_groups": [],
         "filinq.grondslagen.entity_type_bases": {
@@ -53,6 +54,7 @@
         "ocr_languages": "string",
         "ocr_dpi": "int",
         "ocr_on_arrival": "bool",
+        "intake.brp_lookup_enabled": "bool",
         "pseudonymisation_restore_allowed_groups": "array",
         "legal_hold_authority_groups": "array",
         "filinq.grondslagen.entity_type_bases": "array",
@@ -78,6 +80,7 @@
         "string ocr_languages nld+eng",
         "string ocr_dpi 300",
         "string ocr_on_arrival 1",
+        "string intake.brp_lookup_enabled 0",
         "string pseudonymisation_restore_allowed_groups []",
         "string legal_hold_authority_groups []",
         "string filinq.confidentiality.label_vocabulary ",

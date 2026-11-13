@@ -49,6 +49,7 @@ class JobQueue implements JobQueueInterface {
 		self::BULK_SIGNING         => BulkSigningJob::class,
 		self::FOLDER_EXTRACTION    => FolderExtractionJob::class,
 		self::INTAKE_OCR           => IntakeOcrJob::class,
+		self::INTAKE_REGISTRY      => IntakeRegistryEnrichmentJob::class,
 	];
 
 	/**

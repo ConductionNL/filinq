@@ -4,18 +4,18 @@
 
 ## 1. Register and settings
 
-- [ ] 1.1 Add `registrySuggestion` and `registryLookupNote` to `intakeDocument`, `brpPurpose` to `intakeDefaultRule`, the BRP lookup to the `x-openregister-processing` entry, seed and version bump (REQ-IBR-001, REQ-IBR-002). Verify: `occ maintenance:repair` imports them and the seed shows in `/intake`.
-- [ ] 1.2 Add the admin switch `intake.brp_lookup_enabled`, default off (D3) (REQ-IBR-002). Verify: Playwright on the admin settings page reads the switch off.
+- [x] 1.1 Add `registrySuggestion` and `registryLookupNote` to `intakeDocument`, `brpPurpose` to `intakeDefaultRule`, the BRP lookup to the `x-openregister-processing` entry, seed and version bump (REQ-IBR-001, REQ-IBR-002). Verify: `occ maintenance:repair` imports them and the seed shows in `/intake`.
+- [x] 1.2 Add the admin switch `intake.brp_lookup_enabled`, default off (D3) (REQ-IBR-002). Verify: Playwright on the admin settings page reads the switch off.
 
 ## 2. Lookup
 
-- [ ] 2.1 Add `lib/Service/RegistryEnrichmentService.php` resolving `KvkProvider` and `BrpPersonProvider` duck-typed (D2) and writing suggestions or a note (D4) (REQ-IBR-001, REQ-IBR-003). Verify: PHPUnit with both providers present, absent and failing.
-- [ ] 2.2 Queue the enrichment job from `IntakeService::receive()` after the save (D1) (REQ-IBR-001). Verify: PHPUnit asserts the job is queued and `receive()` returns before any lookup.
-- [ ] 2.3 Guard the BRP path: rule purpose, admin switch, elfproef through openregister's `BsnFormat`, no BSN in logs or notes (D3) (REQ-IBR-002). Verify: PHPUnit captures the logger and asserts the BSN never appears.
+- [x] 2.1 Add `lib/Service/RegistryEnrichmentService.php` resolving `KvkProvider` and `BrpPersonProvider` duck-typed (D2) and writing suggestions or a note (D4) (REQ-IBR-001, REQ-IBR-003). Verify: PHPUnit with both providers present, absent and failing.
+- [x] 2.2 Queue the enrichment job from `IntakeService::receive()` after the save (D1) (REQ-IBR-001). Verify: PHPUnit asserts the job is queued and `receive()` returns before any lookup.
+- [x] 2.3 Guard the BRP path: rule purpose, admin switch, elfproef through openregister's `BsnFormat`, no BSN in logs or notes (D3) (REQ-IBR-002). Verify: PHPUnit captures the logger and asserts the BSN never appears.
 
 ## 3. Decision
 
-- [ ] 3.1 Add accept and dismiss of a registry suggestion to `IntakeController` beside `decideParty()`, session user only (D4) (REQ-IBR-004). Verify: Newman for accept and dismiss; PHPUnit that accept writes the party fields and `written: true`.
+- [x] 3.1 Add accept and dismiss of a registry suggestion to `IntakeController` beside `decideParty()`, session user only (D4) (REQ-IBR-004). Verify: Newman for accept and dismiss; PHPUnit that accept writes the party fields and `written: true`.
 - [ ] 3.2 Show the registry suggestion in the assign dialog of `src/views/intake/IntakeIndex.vue` with accept, correct and dismiss (REQ-IBR-004). Verify: Playwright accepts the seeded KvK suggestion.
 
 - [ ] 3.3 Show the party suggestion (`partySuggestion` on the intake document) in `src/views/intake/IntakeIndex.vue` with confirm, correct and dismiss through `decidePartySuggestion()` in `src/services/intakeService.js` (row in-party, REQ-IDW-03). Verify: Playwright confirms a suggested sender.
