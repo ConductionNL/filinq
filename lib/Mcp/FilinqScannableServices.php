@@ -39,8 +39,10 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Mcp;
 
+use OCA\Filinq\Service\AnonymizationService;
 use OCA\Filinq\Service\CorrespondenceService;
 use OCA\Filinq\Service\Editing\DocumentAgentService;
+use OCA\Filinq\Service\FileListingService;
 use OCA\OpenRegister\Mcp\IMcpScannableServices;
 
 /**
@@ -62,16 +64,21 @@ class FilinqScannableServices implements IMcpScannableServices {
 	 *
 	 * `CorrespondenceService` carries `generateCorrespondence`;
 	 * `DocumentAgentService` carries `readDocument`, `editDocument` and
-	 * `convertDocumentToPdf`.
+	 * `convertDocumentToPdf`. `FileListingService` carries the read-only
+	 * `getDocumentStatus` and `AnonymizationService` the intake-only
+	 * `anonymizeDocument`; both answer counts and statuses, never entity values.
 	 *
 	 * @return list<class-string> The scannable classes.
 	 *
 	 * @spec openspec/specs/filinq-mcp-surface/spec.md#requirement-filinq-exposes-one-curated-document-generation-tool
+	 * @spec openspec/changes/mcp-generation-tools/tasks.md#task-1.4
 	 */
 	public function getScannableServiceClasses(): array {
 		return [
 			CorrespondenceService::class,
 			DocumentAgentService::class,
+			FileListingService::class,
+			AnonymizationService::class,
 		];
 
 	}//end getScannableServiceClasses()

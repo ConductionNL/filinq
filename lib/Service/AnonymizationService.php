@@ -45,8 +45,11 @@ use OCA\Filinq\Exception\RedactionNotReviewedException;
 use OCA\Filinq\Kernel\Contracts\AnonymizationServiceInterface;
 use OCA\Filinq\Service\Ocr\OcrExtractionFallback;
 use OCA\Filinq\Service\Redaction\RedactionOutputGuard;
+use OCA\OpenRegister\Mcp\Attribute\McpTool;
+use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use Throwable;
 
 /**
  * Service for orchestrating the document anonymization pipeline
@@ -72,6 +75,21 @@ use Psr\Log\LoggerInterface;
  * a bag would hide which of them a given instance actually needs.
  */
 class AnonymizationService implements AnonymizationServiceInterface {
+
+	/**
+	 * The trigger an agent's intake run is attributed to, next to `manual` and `flow`.
+	 *
+	 * @var string
+	 */
+	public const MCP_TRIGGER = 'mcp';
+
+	/**
+	 * The reason an agent's intake is refused when a publication prohibition applies.
+	 *
+	 * @var string
+	 */
+	public const PROHIBITION_REASON = 'A publication prohibition applies to this document. '
+		. 'The detection is in the review queue; a person decides there.';
 	/**
 	 * Constructor for AnonymizationService
 	 *
@@ -152,6 +170,111 @@ class AnonymizationService implements AnonymizationServiceInterface {
 	public function extractAndDetectEntities(int $fileId): array {
 		return $this->runExtraction(fileId: $fileId, options: ['force' => false]);
 	}//end extractAndDetectEntities()
+
+	#[McpTool(
+		name: 'anonymizeDocument',
+		subject: 'document',
+		action: 'anonymize',
+		description: 'Start anonymisation of one document: detect the personal data in it and put it '
+			. 'in the review queue, where a person decides what is redacted. Takes only the file id. '
+			. 'It never produces the anonymised copy and never marks the document reviewed; it answers '
+			. 'with the number of entities found per type, never their values. A publication '
+			. 'prohibition on the document is answered as refused, with the reason.',
+		readOnlyHint: false,
+		destructiveHint: false,
+		idempotentHint: false,
+		scope: 'create'
+	)]
+	/**
+	 * Anonymisation intake for an agent: detection and review-queue routing only.
+	 *
+	 * The file id is the whole input: no entity list, no override and no
+	 * output choice, so nothing an agent sends can steer what is redacted or
+	 * lift a gate. The run never writes an anonymised copy, never marks the
+	 * review and never changes the source file. The answer holds counts and
+	 * statuses only, never an entity value. A file the caller may not read
+	 * answers not_found, like one that does not exist.
+	 *
+	 * @param int $fileId The Nextcloud file id.
+	 *
+	 * @return array<string, mixed> `status`, `entityCounts`, `reviewRequired`, and `refusedReason` when refused.
+	 *
+	 * @spec openspec/changes/mcp-generation-tools/tasks.md#task-1.3
+	 */
+	public function anonymizeViaAgent(int $fileId): array {
+		$uid = $this->agentUid();
+		if ($uid === '' || $this->container->get(ReadableFileResolver::class)->node(fileId: $fileId) === null) {
+			return ['status' => 'not_found', 'entityCounts' => [], 'reviewRequired' => false];
+		}
+
+		$this->logger->info(
+			'Filinq: anonymisation intake started',
+			['fileId' => $fileId, 'triggeredBy' => self::MCP_TRIGGER, 'uid' => $uid]
+		);
+
+		try {
+			$detected = $this->extractAndDetectEntities(fileId: $fileId);
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'Filinq: anonymisation intake failed',
+				['fileId' => $fileId, 'triggeredBy' => self::MCP_TRIGGER, 'uid' => $uid, 'exception' => $e->getMessage()]
+			);
+			return ['status' => 'failed', 'entityCounts' => [], 'reviewRequired' => false];
+		}
+
+		$counts = FileEntityStatsService::countByType(entities: (array)($detected['entities'] ?? []));
+
+		if ($this->prohibited(fileId: $fileId) === true) {
+			return [
+				'status' => 'refused',
+				'entityCounts' => $counts,
+				'reviewRequired' => true,
+				'refusedReason' => self::PROHIBITION_REASON,
+			];
+		}
+
+		return ['status' => 'review_required', 'entityCounts' => $counts, 'reviewRequired' => true];
+
+	}//end anonymizeViaAgent()
+
+	/**
+	 * Whether an absolute publication prohibition applies to the file. A gate
+	 * that cannot be asked counts as applying: the agent path fails closed.
+	 *
+	 * @param int $fileId The file.
+	 *
+	 * @return bool True when the prohibition gate refuses the file.
+	 *
+	 * @spec openspec/changes/mcp-generation-tools/tasks.md#task-1.3
+	 */
+	private function prohibited(int $fileId): bool {
+		try {
+			return $this->absoluteProhibitionViolations(fileId: $fileId) !== [];
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'Filinq: the prohibition gate could not be asked; the agent intake is refused',
+				['fileId' => $fileId, 'exception' => $e->getMessage()]
+			);
+			return true;
+		}
+
+	}//end prohibited()
+
+	/**
+	 * The user the agent acts for, or an empty string without one.
+	 *
+	 * @return string The user id.
+	 *
+	 * @spec openspec/changes/mcp-generation-tools/tasks.md#task-1.3
+	 */
+	private function agentUid(): string {
+		try {
+			return (string)($this->container->get(IUserSession::class)->getUser()?->getUID() ?? '');
+		} catch (Throwable $e) {
+			return '';
+		}
+
+	}//end agentUid()
 
 	/**
 	 * Force a fresh extraction + detection even when the file is unchanged.
