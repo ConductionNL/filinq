@@ -507,10 +507,16 @@
         "double SigningRequestValidator",
         null,
         {
-            "distinct objects built by the class": 0
+            "built OCA\\Filinq\\Service\\Signing\\FieldValueChecker": [
+                "built Closure"
+            ]
+        },
+        {
+            "distinct objects built by the class": 2
         }
     ],
     "SigningService given": [
+        "double FieldValueChecker",
         "double GuardianConsentGuard",
         "double SettingsService",
         "double SignedArtifactProducer",

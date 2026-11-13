@@ -124,6 +124,9 @@ interface SigningServiceInterface {
 	 *                                                 (portal-signing-surface REQ-DDPSS-002:
 	 *                                                 consent confirmation + optional drawn
 	 *                                                 signature). Never trusted for identity.
+	 * @param array<array-key, mixed>|null $fields     What the signer typed into the text fields
+	 *                                                 placed for them, keyed by placement position;
+	 *                                                 null when the act carries no fields.
 	 *
 	 * @return array<string, mixed> The updated signer record
 	 *
@@ -140,7 +143,7 @@ interface SigningServiceInterface {
 	 * @spec openspec/specs/portal-signing-surface/spec.md
 	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
-	public function sign(string $requestId, string $signerId, ?array $verifiedActor = null, ?array $signatureData = null): array;
+	public function sign(string $requestId, string $signerId, ?array $verifiedActor = null, ?array $signatureData = null, ?array $fields = null): array;
 
 	/**
 	 * Decline a signing request

@@ -41,6 +41,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Filinq\Exception\SigningFieldsRefusedException;
 use OCA\Filinq\Exception\StepUpRequiredException;
 
 /**
@@ -221,6 +222,67 @@ class SigningControllerTest extends TestCase {
 		$this->assertArrayNotHasKey('stepUp', $response->getData());
 
 	}//end testAnOrdinaryRefusalCarriesNoHint()
+
+	/**
+	 * The sign route passes the typed fields on, and a refused value answers 422 with a message per field.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.3
+	 */
+	public function testARefusedFieldAnswers422WithTheMessageOnThatField(): void {
+		$request = $this->createMock(IRequest::class);
+		$request->method('getParam')->willReturnCallback(
+			fn (string $key, mixed $default = null): mixed => match ($key) {
+				'signerId' => 'signer-1',
+				'fields' => ['0' => 'NL91 ABNA 0417 1643 01'],
+				default => $default,
+			}
+		);
+		$user = $this->createMock(IUser::class);
+		$session = $this->createMock(IUserSession::class);
+		$session->method('getUser')->willReturn($user);
+		$l10n = $this->createMock(IL10N::class);
+		$l10n->method('t')->willReturnCallback(fn (string $text): string => '['.$text.']');
+		$controller = new SigningController(
+			$request,
+			new SigningServices(signing: $this->signingService, audit: $this->createMock(SigningAuditService::class), verification: $this->createMock(SigningVerificationService::class)),
+			$session,
+			$this->logger,
+			$l10n,
+			$this->createMock(IGroupManager::class)
+		);
+
+		$this->signingService->expects($this->once())->method('sign')
+			->with('req-1', 'signer-1', null, null, ['0' => 'NL91 ABNA 0417 1643 01'])
+			->willThrowException(new SigningFieldsRefusedException(fieldErrors: [0 => 'Type a valid Dutch IBAN, for example NL91 ABNA 0417 1643 00']));
+
+		$response = $controller->sign('req-1');
+
+		$this->assertSame(422, $response->getStatus());
+		$this->assertSame([0 => '[Type a valid Dutch IBAN, for example NL91 ABNA 0417 1643 00]'], $response->getData()['fieldErrors'] ?? null);
+		$this->assertStringNotContainsString('1643 01', (string) json_encode($response->getData()));
+
+	}//end testARefusedFieldAnswers422WithTheMessageOnThatField()
+
+	/**
+	 * Without a `fields` object the act carries none, and the answer has no field messages.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.3
+	 */
+	public function testWithoutFieldsTheActCarriesNone(): void {
+		$this->signingService->expects($this->once())->method('sign')
+			->with('req-1', '', null, null, null)
+			->willReturn(['status' => 'SIGNED']);
+
+		$response = $this->controller->sign('req-1');
+
+		$this->assertSame(200, $response->getStatus());
+		$this->assertArrayNotHasKey('fieldErrors', $response->getData());
+
+	}//end testWithoutFieldsTheActCarriesNone()
 
 
 	/**

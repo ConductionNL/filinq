@@ -29,6 +29,7 @@ use OCA\Filinq\Kernel\Contracts\SigningServiceInterface;
 use OCA\Filinq\Kernel\SigningAuditActor;
 use OCA\Filinq\Kernel\SigningAuditEvent;
 use OCA\Filinq\Kernel\SigningAuditSubject;
+use OCA\Filinq\Service\Signing\FieldValueChecker;
 use OCA\Filinq\Service\Signing\PortalSignatureAssurance;
 use OCA\Filinq\Service\Signing\SignerEntries;
 use OCA\Filinq\Service\Signing\SigningAct;
@@ -80,6 +81,7 @@ class SigningService implements SigningServiceInterface {
 	 * @param SigningActorResolver $actorResolver Resolves the acting identity + authorises it
 	 * @param SigningGuards $guards The request validator, guardian consent rule, identity gate and mandate
 	 * @param SigningOutputs $outputs The audit trail, signed artifact producer and conclusion emitter
+	 * @param FieldValueChecker $fieldValueChecker Checks what a signer typed into the fields placed for them
 	 *
 	 * @return void
 	 */
@@ -88,6 +90,7 @@ class SigningService implements SigningServiceInterface {
 		private readonly SigningActorResolver $actorResolver,
 		private readonly SigningGuards $guards,
 		private readonly SigningOutputs $outputs,
+		private readonly FieldValueChecker $fieldValueChecker = new FieldValueChecker(),
 	) {
 
 	}//end __construct()
@@ -461,6 +464,10 @@ class SigningService implements SigningServiceInterface {
 	 *                                                 (portal-signing-surface REQ-DDPSS-002:
 	 *                                                 consent confirmation + optional drawn
 	 *                                                 signature). Never trusted for identity.
+	 * @param array<array-key, mixed>|null $fields     What the signer typed into the text fields
+	 *                                                 placed for them, keyed by placement position
+	 *                                                 (signing-field-validation REQ-SFV-003); null
+	 *                                                 when the act carries no fields.
 	 *
 	 * @return array<string, mixed> The updated signer record
 	 *
@@ -476,8 +483,9 @@ class SigningService implements SigningServiceInterface {
 	 * @spec openspec/specs/portal-signing-actions/spec.md
 	 * @spec openspec/specs/portal-signing-surface/spec.md
 	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.2
 	 */
-	public function sign(string $requestId, string $signerId, ?array $verifiedActor = null, ?array $signatureData = null): array {
+	public function sign(string $requestId, string $signerId, ?array $verifiedActor = null, ?array $signatureData = null, ?array $fields = null): array {
 		[$actorUserId, $actorDisplayName] = $this->actorResolver->resolveActingIdentity(verifiedActor: $verifiedActor);
 
 		$objectService = $this->settingsService->getObjectService();
@@ -513,6 +521,9 @@ class SigningService implements SigningServiceInterface {
 			throw new RuntimeException('Signer has already responded to this request');
 		}
 
+		// Typed field values are checked before anything is written (REQ-SFV-003).
+		$typed = $this->fieldValueChecker->valuesForAct(request: $request, signerId: $signerId, fields: $fields);
+
 		$signer['identityEvidence'] = $this->guards->assuranceGate->evidenceForAct(
 			request: $request + ['id' => $requestId],
 			signer: $signer + ['id' => $signerId],
@@ -530,6 +541,7 @@ class SigningService implements SigningServiceInterface {
 
 		$signer = $act->stampSigned(signer: array_merge($signer, $consent['record']), ipAddress: $this->actorResolver->getClientIp());
 		$signer = (new PortalSignatureAssurance())->recordOn(signer: $signer, request: $request, verifiedActor: $verifiedActor);
+		$signer = array_merge($signer, $typed);
 		$objectService->saveObject(object: $signer, register: $signerRegister, schema: $signerSchema, _rbac: false);
 
 		$this->logSigned(act: $act, metadata: array_merge($consent['audit'], ['identityEvidence' => $signer['identityEvidence']]));

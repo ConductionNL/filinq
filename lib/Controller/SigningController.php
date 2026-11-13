@@ -24,6 +24,7 @@ namespace OCA\Filinq\Controller;
 use Exception;
 use OCA\Filinq\Controller\Support\SigningServices;
 use OCA\Filinq\Exception\RegisterNotConfiguredException;
+use OCA\Filinq\Exception\SigningFieldsRefusedException;
 use OCA\Filinq\Exception\StepUpRequiredException;
 use OCA\Filinq\Kernel\AppIdentity;
 use OCP\AppFramework\Controller;
@@ -295,6 +296,7 @@ class SigningController extends Controller {
 	 *
 	 * @NoAdminRequired
 	 *
+	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.3
 	 * @spec openspec/changes/digital-signing-integration/tasks.md#6-1
 	 *
 	 * @no-admin-idor-exempt SigningActorResolver::loadAuthorisedSigner() refuses unless the signer record
@@ -308,7 +310,13 @@ class SigningController extends Controller {
 			}
 
 			$signerId = $this->request->getParam('signerId', '');
-			$result = $this->services->signing->sign(requestId: $id, signerId: $signerId);
+			// A missing `fields` object means the act carries none (D7).
+			$fields = $this->request->getParam('fields');
+			if (is_array($fields) === false) {
+				$fields = null;
+			}
+
+			$result = $this->services->signing->sign(requestId: $id, signerId: $signerId, fields: $fields);
 			return new JSONResponse($result);
 		} catch (Exception $e) {
 			return $this->errorResponse(message: 'Failed to sign document', exception: $e);
@@ -511,6 +519,13 @@ class SigningController extends Controller {
 		// check, so only the signer the record belongs to ever sees it.
 		if ($exception instanceof StepUpRequiredException) {
 			$body['stepUp'] = $exception->stepUp();
+		}
+
+		// Signer-filled fields (signing-field-validation REQ-SFV-003): the
+		// dialog shows a message on each refused field. Thrown only after the
+		// ownership check, and no message carries what was typed.
+		if ($exception instanceof SigningFieldsRefusedException) {
+			$body['fieldErrors'] = array_map(fn (string $message): string => $this->l10n->t($message), $exception->fieldErrors());
 		}
 
 		return new JSONResponse($body, $statusCode);

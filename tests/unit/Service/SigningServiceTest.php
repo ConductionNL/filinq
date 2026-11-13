@@ -2539,6 +2539,188 @@ class SigningServiceTest extends TestCase {
 		$this->assertSame(['Bob Smit', 'Alice Jansen'], $context['signerLabels'] ?? null);
 
 	}//end testCompletionHandsThePlacementsAndSignerNamesToTheProvider()
+
+	/**
+	 * A request whose second signer has a required "Reference" text field.
+	 *
+	 * @param string $firstStatus The first signer's status.
+	 * @param array<int, array<string, mixed>> $firstValues What the first signer typed.
+	 *
+	 * @return array{request: array<string, mixed>, records: array<string, array<string, mixed>>}
+	 */
+	private function requestWithFields(string $firstStatus = 'PENDING', array $firstValues = []): array {
+		$placements = [
+			['signerIndex' => 0, 'page' => 1, 'x' => 0.1, 'y' => 0.1, 'width' => 0.2, 'height' => 0.1, 'type' => 'text', 'label' => 'Note'],
+			['signerIndex' => 1, 'page' => 1, 'x' => 0.1, 'y' => 0.3, 'width' => 0.2, 'height' => 0.1, 'type' => 'text', 'label' => 'Reference', 'required' => true],
+			['signerIndex' => 1, 'page' => 1, 'x' => 0.1, 'y' => 0.5, 'width' => 0.2, 'height' => 0.1, 'type' => 'signature'],
+		];
+		$first = ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'bob', 'displayName' => 'Bob Smit', 'status' => $firstStatus];
+		if ($firstValues !== []) {
+			$first['fieldValues'] = $firstValues;
+		}
+
+		return [
+			'request' => ['id' => 'req-001', 'status' => 'IN_PROGRESS', 'signatureLevel' => 'SES', 'provider' => 'native', 'initiatorUserId' => 'alice', 'documentFileId' => '42', 'signerIds' => ['signer-001', 'signer-002'], 'signingMode' => 'parallel', 'fieldPlacements' => $placements],
+			'records' => [
+				'signer-001' => $first,
+				'signer-002' => ['id' => 'signer-002', 'signingRequestId' => 'req-001', 'userId' => 'alice', 'displayName' => 'Alice Jansen', 'status' => 'PENDING'],
+			],
+		];
+
+	}//end requestWithFields()
+
+	/**
+	 * Answer the object store from the given request and records, keeping every save.
+	 *
+	 * @param array<string, mixed>                $request The request.
+	 * @param array<string, array<string, mixed>> $records The signer records.
+	 *
+	 * @return \ArrayObject<int, array<string, mixed>> The saved objects, in order.
+	 */
+	private function storeWith(array $request, array $records): \ArrayObject {
+		$saved = new \ArrayObject();
+		$this->objectService->method('saveObject')->willReturnCallback(
+			function (array $object) use ($saved): array {
+				$saved->append($object);
+				return $object;
+			}
+		);
+		$this->objectService->method('find')->willReturnCallback(
+			function (string $id) use ($request, $records, $saved): array {
+				if ($id === 'req-001') {
+					return $request;
+				}
+
+				foreach (array_reverse($saved->getArrayCopy()) as $object) {
+					if (($object['id'] ?? '') === $id) {
+						return $object;
+					}
+				}
+
+				return $records[$id];
+			}
+		);
+		$this->objectService->method('findAll')->willReturnCallback(
+			function () use ($records, $saved): array {
+				foreach ($saved as $object) {
+					if (isset($records[$object['id'] ?? '']) === true) {
+						$records[$object['id']] = $object;
+					}
+				}
+
+				return array_values($records);
+			}
+		);
+
+		return $saved;
+
+	}//end storeWith()
+
+	/**
+	 * The values a signer typed are stored, normalised, in the same save as SIGNED.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.2
+	 */
+	public function testSignStoresTheTypedValuesWithTheSignature(): void {
+		['request' => $request, 'records' => $records] = $this->requestWithFields();
+		$saved = $this->storeWith(request: $request, records: $records);
+
+		$signer = $this->service->sign(requestId: 'req-001', signerId: 'signer-002', fields: ['1' => '  ref-7 ', '0' => 'not mine']);
+
+		$this->assertSame('SIGNED', $signer['status']);
+		$this->assertSame([['placement' => 1, 'label' => 'Reference', 'value' => 'ref-7']], $signer['fieldValues']);
+		$this->assertSame('SIGNED', $saved[0]['status']);
+		$this->assertSame($signer['fieldValues'], $saved[0]['fieldValues']);
+
+	}//end testSignStoresTheTypedValuesWithTheSignature()
+
+	/**
+	 * A refused value writes nothing: no signer record, no request, no audit entry.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.2
+	 */
+	public function testARefusedValueWritesNothing(): void {
+		['request' => $request, 'records' => $records] = $this->requestWithFields();
+		$saved = $this->storeWith(request: $request, records: $records);
+		$this->auditService->expects($this->never())->method('logEvent');
+
+		try {
+			$this->service->sign(requestId: 'req-001', signerId: 'signer-002', fields: ['1' => '   ']);
+			$this->fail('A required field left empty must refuse the signature');
+		} catch (\OCA\Filinq\Exception\SigningFieldsRefusedException $e) {
+			$this->assertSame(422, $e->getCode());
+			$this->assertSame([1 => 'Fill in this field'], $e->fieldErrors());
+		}
+
+		$this->assertCount(0, $saved);
+
+	}//end testARefusedValueWritesNothing()
+
+	/**
+	 * A sign act without fields, such as a folder selection, leaves a document with fields out.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/signing-field-validation/tasks.md#task-3.2
+	 */
+	public function testSigningWithoutFieldsIsRefusedWhenTheSignerHasSome(): void {
+		['request' => $request, 'records' => $records] = $this->requestWithFields();
+		$saved = $this->storeWith(request: $request, records: $records);
+		$this->auditService->expects($this->never())->method('logEvent');
+
+		try {
+			$this->service->sign(requestId: 'req-001', signerId: 'signer-002');
+			$this->fail('A document with fields must not be signed without them');
+		} catch (RuntimeException $e) {
+			$this->assertSame('This document has fields to fill in. Open it to sign.', $e->getMessage());
+			$this->assertSame(422, $e->getCode());
+		}
+
+		$this->assertCount(0, $saved);
+
+	}//end testSigningWithoutFieldsIsRefusedWhenTheSignerHasSome()
+
+	/**
+	 * At completion each typed value travels to the provider in its own field block.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.4
+	 */
+	public function testCompletionHandsTheTypedValuesToTheProvider(): void {
+		['request' => $request, 'records' => $records] = $this->requestWithFields(
+			firstStatus: 'SIGNED',
+			firstValues: [['placement' => 0, 'label' => 'Note', 'value' => 'from bob'], ['placement' => 1, 'label' => 'Reference', 'value' => 'not bob\'s field']]
+		);
+		$this->storeWith(request: $request, records: $records);
+
+		$context = null;
+		$provider = $this->createMock(\OCA\Filinq\Service\Signing\SigningProviderInterface::class);
+		$provider->method('produceSignedArtifact')->willReturnCallback(
+			function (string $bytes, array $ctx) use (&$context): string {
+				$context = $ctx;
+				return 'SIGNED-BYTES';
+			}
+		);
+		$this->providerFactory->method('getProvider')->willReturn($provider);
+		$file = $this->createMock(\OCP\Files\File::class);
+		$file->method('getContent')->willReturn('original-bytes');
+		$folder = $this->createMock(\OCP\Files\Folder::class);
+		$folder->method('getById')->willReturn([$file]);
+		$this->userFolder = $folder;
+
+		$this->service->sign(requestId: 'req-001', signerId: 'signer-002', fields: [1 => 'ref-7']);
+
+		$this->assertNotNull($context, 'The artifact was produced');
+		$this->assertSame('from bob', $context['fieldPlacements'][0]['value'] ?? null);
+		$this->assertSame('ref-7', $context['fieldPlacements'][1]['value'] ?? null);
+		$this->assertArrayNotHasKey('value', $context['fieldPlacements'][2]);
+
+	}//end testCompletionHandsTheTypedValuesToTheProvider()
 	/**
 	 * sign() refuses a request that does not exist, before any write.
 	 *

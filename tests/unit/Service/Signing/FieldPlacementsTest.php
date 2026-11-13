@@ -93,7 +93,7 @@ class FieldPlacementsTest extends TestCase {
 	 * @return void
 	 */
 	public function testAPlacementMustHoldOnlyKnownKeysAndAType(): void {
-		$keys = 'fieldPlacements[1] must hold only signerIndex, page, x, y, width, height, type';
+		$keys = 'fieldPlacements[1] must hold only signerIndex, page, x, y, width, height, type, label, required, validation';
 		$this->assertRefused([self::VALID, 'box'], $keys);
 		$this->assertRefused([self::VALID, self::VALID + ['colour' => 'red']], $keys);
 		$this->assertRefused(
@@ -125,4 +125,47 @@ class FieldPlacementsTest extends TestCase {
 		$this->assertRefused([array_merge(self::VALID, ['width' => 0])], 'fieldPlacements[0] must be a box of some size that stays on the page');
 		$this->assertRefused([array_merge(self::VALID, ['x' => 0.5, 'width' => 0.6])], 'fieldPlacements[0] must be a box of some size that stays on the page');
 	}//end testTheBoxMustBeSizedAndOnThePage()
+
+	/**
+	 * A text field keeps its label, required flag and check (signing-field-validation REQ-SFV-001).
+	 *
+	 * @return void
+	 */
+	public function testATextFieldKeepsItsLabelRequiredFlagAndCheck(): void {
+		$text = array_merge(self::VALID, ['type' => 'text', 'label' => ' Account for the payment ', 'required' => true, 'validation' => 'iban-nl']);
+
+		self::assertSame(
+			[['signerIndex' => 1, 'page' => 2, 'x' => 0.0, 'y' => 0.5, 'width' => 1.0, 'height' => 0.5, 'type' => 'text', 'label' => 'Account for the payment', 'required' => true, 'validation' => 'iban-nl']],
+			(new FieldPlacements())->normalise(placements: [$text], signerCount: 2)
+		);
+		self::assertSame(
+			[['signerIndex' => 1, 'page' => 2, 'x' => 0.0, 'y' => 0.5, 'width' => 1.0, 'height' => 0.5, 'type' => 'text', 'required' => false]],
+			(new FieldPlacements())->normalise(placements: [array_merge(self::VALID, ['type' => 'text', 'required' => false, 'validation' => null])], signerCount: 2)
+		);
+	}//end testATextFieldKeepsItsLabelRequiredFlagAndCheck()
+
+	/**
+	 * Other field types ignore the three text settings.
+	 *
+	 * @return void
+	 */
+	public function testOtherTypesIgnoreTheTextSettings(): void {
+		self::assertSame(
+			[['signerIndex' => 1, 'page' => 2, 'x' => 0.0, 'y' => 0.5, 'width' => 1.0, 'height' => 0.5, 'type' => 'signature']],
+			(new FieldPlacements())->normalise(placements: [self::VALID + ['label' => 7, 'required' => 'yes', 'validation' => 'bsn']], signerCount: 2)
+		);
+	}//end testOtherTypesIgnoreTheTextSettings()
+
+	/**
+	 * A text field's settings must have the right shape and a known check.
+	 *
+	 * @return void
+	 */
+	public function testATextFieldsSettingsMustHaveTheRightShape(): void {
+		$text = array_merge(self::VALID, ['type' => 'text']);
+		$this->assertRefused([$text + ['label' => 7]], 'fieldPlacements[0].label must be text of at most 200 characters');
+		$this->assertRefused([$text + ['label' => str_repeat('a', 201)]], 'fieldPlacements[0].label must be text of at most 200 characters');
+		$this->assertRefused([$text + ['required' => 'yes']], 'fieldPlacements[0].required must be true or false');
+		$this->assertRefused([$text + ['validation' => 'bsn']], 'fieldPlacements[0].validation must be one of iban-nl, iban');
+	}//end testATextFieldsSettingsMustHaveTheRightShape()
 }//end class
