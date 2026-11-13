@@ -5804,6 +5804,71 @@
       {
         "@self": {
           "register": "filinq",
+          "schema": "accessibilityConformanceReport",
+          "slug": "accessibilityconformancereport-1"
+        },
+        "fileId": 814001,
+        "flavour": "ua1",
+        "compliant": true,
+        "failedCheckCount": 0,
+        "failedChecks": [],
+        "guidance": "none",
+        "validatorVersion": "veraPDF 1.30.2",
+        "validatedAt": "2026-11-13T09:05:00+00:00",
+        "trigger": "generation"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "accessibilityConformanceReport",
+          "slug": "accessibilityconformancereport-2"
+        },
+        "fileId": 814002,
+        "flavour": "ua1",
+        "compliant": false,
+        "failedCheckCount": 2,
+        "failedChecks": [
+          {
+            "clause": "7.1",
+            "testNumber": 3,
+            "checkpoint": "ISO14289-1_7.1-3"
+          },
+          {
+            "clause": "7.3",
+            "testNumber": 1,
+            "checkpoint": "ISO14289-1_7.3-1"
+          }
+        ],
+        "guidance": "reauthorFromSource",
+        "validatorVersion": "veraPDF 1.30.2",
+        "validatedAt": "2026-11-13T09:20:00+00:00",
+        "trigger": "manual"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "accessibilityConformanceReport",
+          "slug": "accessibilityconformancereport-3"
+        },
+        "fileId": 814003,
+        "flavour": "ua1",
+        "compliant": false,
+        "failedCheckCount": 1,
+        "failedChecks": [
+          {
+            "clause": "7.18.1",
+            "testNumber": 2,
+            "checkpoint": "ISO14289-1_7.18.1-2"
+          }
+        ],
+        "guidance": "regenerateAccessible",
+        "validatorVersion": "veraPDF 1.30.2",
+        "validatedAt": "2026-11-13T09:41:00+00:00",
+        "trigger": "validation"
+      },
+      {
+        "@self": {
+          "register": "filinq",
           "schema": "intakeDocument",
           "slug": "intakedocument-1"
         },
