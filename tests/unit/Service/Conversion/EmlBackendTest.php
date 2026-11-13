@@ -258,6 +258,45 @@ class EmlBackendTest extends TestCase {
 	}//end testConvertCallsOrApiAndDelegatesToAssembly()
 
 	/**
+	 * An earlier anonymised PDF beside the source is deleted before the new one is written.
+	 *
+	 * @return void
+	 */
+	public function testConvertReplacesAnEarlierOutput(): void {
+		$structure = (object)['headers' => [], 'body' => (object)['plain' => null, 'html' => null], 'attachments' => [], 'inlineImages' => []];
+
+		$or = new FakeOrFileService();
+		$or->toReturn = $structure;
+		$this->container->method('get')->willReturn($or);
+		$this->assembly->method('assemble')->willReturn('%PDF-1.4 new');
+
+		$order = [];
+		$earlier = $this->createMock(File::class);
+		$earlier->expects($this->once())->method('delete')->willReturnCallback(function () use (&$order): void {
+			$order[] = 'delete';
+		});
+		$outFile = $this->createMock(File::class);
+		$parent = $this->createMock(Folder::class);
+		$parent->method('nodeExists')->with('mail.v2_anonymized.pdf')->willReturn(true);
+		$parent->method('get')->with('mail.v2_anonymized.pdf')->willReturn($earlier);
+		$parent->expects($this->once())
+			->method('newFile')
+			->with('mail.v2_anonymized.pdf', '%PDF-1.4 new')
+			->willReturnCallback(function () use (&$order, $outFile): File {
+				$order[] = 'write';
+				return $outFile;
+			});
+
+		$source = $this->createMock(File::class);
+		$source->method('getName')->willReturn('mail.v2.eml');
+		$source->method('getParent')->willReturn($parent);
+
+		$this->assertSame($outFile, $this->backend()->convert($source));
+		$this->assertSame(['delete', 'write'], $order);
+
+	}//end testConvertReplacesAnEarlierOutput()
+
+	/**
 	 * OR API failure surfaces as ConversionFailedException with NO raw-parse
 	 * fallback (the assembly service is never invoked).
 	 *
