@@ -104,4 +104,59 @@ class AmountExtractorTest extends TestCase {
 		$this->assertNull($this->extractor->parseAmount('geen bedrag'));
 
 	}//end testUnparseableAmountYieldsNull()
+
+	/**
+	 * Separator-only grouping: two trailing digits are decimals, three are
+	 * thousands, for commas and dots alike.
+	 *
+	 * @return void
+	 */
+	public function testSingleSeparatorKindIsReadByTheDigitsAfterIt(): void {
+		$this->assertSame(1234.0, $this->extractor->parseAmount('1,234'));
+		$this->assertSame(1234567.0, $this->extractor->parseAmount('1,234,567'));
+		$this->assertSame(100.5, $this->extractor->parseAmount('100.50'));
+		$this->assertSame(1234.0, $this->extractor->parseAmount('€ 1.234'));
+		$this->assertSame(42.0, $this->extractor->parseAmount('EUR 42'));
+
+	}//end testSingleSeparatorKindIsReadByTheDigitsAfterIt()
+
+	/**
+	 * A currency mark without digits is no amount.
+	 *
+	 * @return void
+	 */
+	public function testCurrencyMarkAloneYieldsNull(): void {
+		$this->assertNull($this->extractor->parseAmount(' € '));
+		$this->assertNull($this->extractor->parseAmount('EUR'));
+
+	}//end testCurrencyMarkAloneYieldsNull()
+
+	/**
+	 * extractAll() returns each amount token with its raw text and value, and
+	 * an empty list when the text holds none.
+	 *
+	 * @return void
+	 */
+	public function testExtractAllReturnsEveryAmountToken(): void {
+		$results = $this->extractor->extractAll('Totaal € 1.210,00 waarvan btw 210,00');
+
+		$this->assertSame([1210.0, 210.0], array_column($results, 'value'));
+		$this->assertSame('€ 1.210,00', $results[0]['raw']);
+		$this->assertSame([], $this->extractor->extractAll('geen bedragen hier'));
+
+	}//end testExtractAllReturnsEveryAmountToken()
+
+	/**
+	 * Without labels, or when no label is followed by an amount, nothing is
+	 * extracted and confidence is zero.
+	 *
+	 * @return void
+	 */
+	public function testLabelledExtractionWithoutLabelOrMatchIsEmpty(): void {
+		$empty = ['value' => null, 'confidence' => 0.0];
+
+		$this->assertSame($empty, $this->extractor->extractLabelled('Totaal: 100,00', []));
+		$this->assertSame($empty, $this->extractor->extractLabelled('Totaal: n.v.t.', ['totaal']));
+
+	}//end testLabelledExtractionWithoutLabelOrMatchIsEmpty()
 }//end class

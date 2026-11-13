@@ -127,4 +127,39 @@ class DateExtractorTest extends TestCase {
 		$this->assertNull($result['value']);
 
 	}//end testLabelBoundaryDoesNotMatchSubstring()
+
+	/**
+	 * Without labels nothing is extracted and confidence is zero.
+	 *
+	 * @return void
+	 */
+	public function testLabelledExtractionWithoutLabelsIsEmpty(): void {
+		$this->assertSame(
+			['value' => null, 'confidence' => 0.0],
+			$this->extractor->extractLabelled('Factuurdatum: 15-03-2024', [])
+		);
+
+	}//end testLabelledExtractionWithoutLabelsIsEmpty()
+
+	/**
+	 * extractAll() drops repeated and impossible dates, accepts every form and
+	 * month-name case, and returns nothing for text without dates.
+	 *
+	 * @return void
+	 */
+	public function testExtractAllSkipsDuplicatesAndImpossibleDates(): void {
+		$results = $this->extractor->extractAll(
+			'Datum 2024-03-15, nogmaals 15-03-2024, ongeldig 31-02-2024 en 2024-13-01, betaald 1 APRIL 2024.'
+		);
+
+		$this->assertSame(
+			[
+				['value' => '2024-03-15', 'confidence' => 0.6],
+				['value' => '2024-04-01', 'confidence' => 0.6],
+			],
+			$results
+		);
+		$this->assertSame([], $this->extractor->extractAll('geen datum'));
+
+	}//end testExtractAllSkipsDuplicatesAndImpossibleDates()
 }//end class
