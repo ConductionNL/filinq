@@ -1,5 +1,7 @@
 {
     "translations": {
+        "Data contract": "Datacontract",
+        "The data contract the render data must meet, checked before anything is rendered. `woo-decision` requires data.wooDecision with the request, the decision and its assessed documents, each withheld or partly disclosed document citing a refusal ground. Empty: the template renders whatever data it is given.": "Het datacontract waaraan de gegevens voor het renderen moeten voldoen, gecontroleerd voordat er iets wordt gerenderd. `woo-decision` vereist data.wooDecision met het verzoek, het besluit en de beoordeelde documenten, waarbij elk geweigerd of deels openbaar gemaakt document een weigeringsgrond noemt. Leeg: het sjabloon rendert de gegevens die het krijgt.",
         "Original": "Origineel",
         "All documents in the folder have been anonymized. The anonymized copies are in a separate subfolder next to the originals.": "Alle documenten in de map zijn geanonimiseerd. De geanonimiseerde kopieën staan in een aparte submap naast de originelen.",
         "Subfolder for anonymised copies": "Submap voor geanonimiseerde kopieën",

@@ -21,12 +21,12 @@ renders any data it is given.
 
 ## 2. The contract
 
-- [ ] 2.1 `WooDecisionContextBuilder` and its hook in the generator (REQ-DDWRW-010, design R1). Files: `lib/Service/Woo/WooDecisionContextBuilder.php`, `lib/Exception/WooDecisionContractException.php`, `lib/Service/DocumentGenerationRequestService.php` (call the builder only for `dataContract: woo-decision`).
+- [x] 2.1 `WooDecisionContextBuilder` and its hook in the generator (REQ-DDWRW-010, design R1). Files: `lib/Service/Woo/WooDecisionContextBuilder.php`, `lib/Exception/WooDecisionContractException.php`, `lib/Service/DocumentGenerationRequestService.php` (call the builder only for `dataContract: woo-decision`).
   - GIVEN a withheld document without a ground WHEN dispatched THEN refused naming it, and no file.
   - GIVEN a missing `decisionDate` and a duplicate inventory number WHEN dispatched THEN both named in one error.
   - GIVEN a template without the contract WHEN generated THEN behaviour is as today.
   - Test: PHPUnit `WooDecisionContextBuilderTest::testAWithheldDocumentNeedsAGround`, `::testAllProblemsAreReported`, `::testOtherTemplatesAreUntouched`. `testAWithheldDocumentNeedsAGround` must be shown failing on `development` first; paste the line in the PR body.
-- [ ] 2.2 Grounds by label (REQ-DDWRW-011). Files: `lib/Service/Woo/WooDecisionContextBuilder.php`, the grounds resolver class shared with `grondslagen-read-from-dossiq` (`lib/Service/Grounds/RefusalGroundsResolver.php`; whichever change lands first creates it, the other reuses it).
+- [x] 2.2 Grounds by label (REQ-DDWRW-011). Files: `lib/Service/Woo/WooDecisionContextBuilder.php`, the grounds resolver class shared with `grondslagen-read-from-dossiq` (`lib/Service/Grounds/RefusalGroundsResolver.php`; whichever change lands first creates it, the other reuses it).
   - GIVEN code `5.1.2.e` WHEN resolved THEN `{code, article, label}` reaches the template.
   - GIVEN an unknown code, or a retired one without `allowRetiredGrounds` WHEN dispatched THEN refused naming it.
   - Test: PHPUnit `WooDecisionContextBuilderTest::testGroundsAreResolvedToLabels`, `::testAnUnknownGroundIsRefused`, `::testARetiredGroundNeedsTheFlag`. Double the resolver from the real return shape of `OCA\Dossiq\Woo\WooRefusalGrounds::byCode()` (keys `id, code, article, paragraph, letter, label, description, parent, status, legalSource`, as `dossiq/woo-refusal-grounds-list` design D-3 fixes it). Read the class on dossiq `development` before writing the double; if it is not merged yet, say so in the PR body.

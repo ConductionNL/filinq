@@ -5,6 +5,8 @@
 OC.L10N.register(
     "filinq",
     {
+        "Data contract": "Data contract",
+        "The data contract the render data must meet, checked before anything is rendered. `woo-decision` requires data.wooDecision with the request, the decision and its assessed documents, each withheld or partly disclosed document citing a refusal ground. Empty: the template renders whatever data it is given.": "The data contract the render data must meet, checked before anything is rendered. `woo-decision` requires data.wooDecision with the request, the decision and its assessed documents, each withheld or partly disclosed document citing a refusal ground. Empty: the template renders whatever data it is given.",
         "Marketplace": "Marketplace",
         "documents": "documents",
         "Original": "Original",
