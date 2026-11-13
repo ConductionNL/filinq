@@ -334,6 +334,8 @@ $extra = [
         ['name' => 'signing#decline', 'url' => 'api/signing/requests/{id}/decline', 'verb' => 'POST'],
         ['name' => 'signing#bulkSign', 'url' => 'api/signing/bulk', 'verb' => 'POST'],
         ['name' => 'signing#verify', 'url' => 'api/signing/verify/{fileId}', 'verb' => 'GET'],
+        // Public, account-free signature verification by token (signature-verification-portal REQ-DDSVP-001/004).
+        ['name' => 'publicVerification#verify', 'url' => 'api/verify/{token}', 'verb' => 'GET'],
         ['name' => 'signing#getAudit', 'url' => 'api/signing/requests/{id}/audit', 'verb' => 'GET'],
         // Bulk send (bulk-signing-field-builder REQ-DDBSF-002): upload + report, confirm, progress, cancel.
         ['name' => 'bulkSigning#index', 'url' => 'api/signing/batches', 'verb' => 'GET'],

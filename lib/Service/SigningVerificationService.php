@@ -99,6 +99,147 @@ class SigningVerificationService implements SigningVerificationServiceInterface 
 	}//end verifyDocument()
 
 	/**
+	 * The per-signature outcome of a document's bytes, as a verification record keeps it.
+	 *
+	 * Runs the same fail-closed check as verifyDocument() over bytes the caller
+	 * already holds, such as the artifact signing has just written, and keeps
+	 * only what the public verification page may show: no key id, no IP.
+	 * `identityBound` is true only for a `verified` signature, because only a
+	 * v2 assertion verifies and its MAC covers the signer fields; anything
+	 * else leaves the signer as asserted.
+	 *
+	 * @param string $pdfContent The document bytes.
+	 *
+	 * @return array<int, array<string, mixed>> One summary per signature.
+	 *
+	 * @spec openspec/changes/signature-verification-portal/tasks.md#task-2.2
+	 */
+	public function summarise(string $pdfContent): array {
+		$summaries = [];
+		foreach ($this->extractSignatures(pdfContent: $pdfContent) as $signature) {
+			$verified = ($signature['status'] === 'verified');
+			$summaries[] = [
+				'status' => (string)$signature['status'],
+				'level' => (string)$signature['level'],
+				'method' => (string)$signature['method'],
+				'signerAsserted' => (string)$signature['signer'],
+				'signedAt' => (string)$signature['timestamp'],
+				'integrityVerified' => $verified,
+				'identityBound' => $verified,
+			];
+		}
+
+		return $summaries;
+	}//end summarise()
+
+	/**
+	 * The public verdict of a stored verification record, without a user or a file.
+	 *
+	 * Fail-closed: a revoked record, or one without a signature list, answers
+	 * exactly like an unknown token. Per signature the status is one of
+	 * `verified`, `invalid` or `unverifiable` (anything else reads as
+	 * `unverifiable`); content integrity counts only for a `verified`
+	 * signature, and the signer is bound only when integrity is too. A record
+	 * that claims a bound signer on an unverified signature is not believed.
+	 *
+	 * @param array<string, mixed> $record The stored signatureVerification fields.
+	 *
+	 * @return array<string, mixed> The verdict, in the shape unknownVerdict() also has.
+	 *
+	 * @spec openspec/changes/signature-verification-portal/tasks.md#task-2.2
+	 */
+	public function verifyByRecord(array $record): array {
+		$stored = ($record['signatures'] ?? null);
+		if (($record['revoked'] ?? false) !== false || is_array($stored) === false) {
+			return self::unknownVerdict();
+		}
+
+		$signatures = [];
+		foreach ($stored as $entry) {
+			if (is_array($entry) === true) {
+				$signatures[] = $this->publicSignature(entry: $entry);
+			}
+		}
+
+		$verdict = self::unknownVerdict();
+		$verdict['status'] = $this->computeVerdict(signatures: $signatures);
+		$verdict['fileName'] = (string)($record['fileName'] ?? '');
+		$verdict['contentHash'] = (string)($record['contentHash'] ?? '');
+		$verdict['recordedAt'] = (string)($record['createdAt'] ?? '');
+		$verdict['signatures'] = $signatures;
+		$verdict['audit'] = [
+			'signatureCount' => count($signatures),
+			'verifiedCount' => count(array_filter($signatures, static fn (array $one): bool => $one['status'] === 'verified')),
+		];
+		$verdict['seal'] = $this->sealStatus(waarmerkRef: $record['waarmerkRef'] ?? null);
+
+		return $verdict;
+	}//end verifyByRecord()
+
+	/**
+	 * The verdict for a token that resolves to nothing, in the shape of every other verdict.
+	 *
+	 * @return array<string, mixed> The neutral `unknown` verdict.
+	 *
+	 * @spec openspec/changes/signature-verification-portal/tasks.md#task-2.3
+	 */
+	public static function unknownVerdict(): array {
+		return [
+			'status' => 'unknown',
+			'fileName' => '',
+			'contentHash' => '',
+			'recordedAt' => '',
+			'signatures' => [],
+			'audit' => ['signatureCount' => 0, 'verifiedCount' => 0],
+			'seal' => null,
+		];
+	}//end unknownVerdict()
+
+	/**
+	 * One stored signature summary, as the public page may show it.
+	 *
+	 * @param array<string, mixed> $entry The stored summary.
+	 *
+	 * @return array<string, mixed> Status, level, method, the signer as asserted and the two guarantees.
+	 */
+	private function publicSignature(array $entry): array {
+		$status = (string)($entry['status'] ?? '');
+		if (in_array($status, ['verified', 'invalid', 'unverifiable'], true) === false) {
+			$status = 'unverifiable';
+		}
+
+		$integrity = ($status === 'verified' && ($entry['integrityVerified'] ?? false) === true);
+
+		return [
+			'status' => $status,
+			'level' => (string)($entry['level'] ?? ''),
+			'method' => (string)($entry['method'] ?? ''),
+			'signerAsserted' => (string)($entry['signerAsserted'] ?? ''),
+			'signedAt' => (string)($entry['signedAt'] ?? ''),
+			'integrityVerified' => $integrity,
+			'identityBound' => ($integrity === true && ($entry['identityBound'] ?? false) === true),
+		];
+	}//end publicSignature()
+
+	/**
+	 * The seal status for a record that names a seal.
+	 *
+	 * No seal verification exists in this app yet, so a named seal is reported
+	 * as not checkable here rather than as sealed.
+	 *
+	 * @param mixed $waarmerkRef The record's seal reference.
+	 *
+	 * @return array<string, string>|null Null when the record names no seal.
+	 */
+	private function sealStatus(mixed $waarmerkRef): ?array {
+		if (is_string($waarmerkRef) === false || $waarmerkRef === '') {
+			return null;
+		}
+
+		return ['status' => 'unverifiable', 'reason' => 'seal-check-unavailable'];
+	}//end sealStatus()
+
+	/**
 	 * Compute the document-level tri-state verdict from per-signature status.
 	 *
 	 * `isValid` keeps its strict pre-existing meaning (at least one signature,

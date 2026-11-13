@@ -869,6 +869,11 @@ class SigningService implements SigningServiceInterface {
 
 		$freshRequest['status'] = 'COMPLETED';
 		$freshRequest['signedDocumentRef'] = $signedDocumentRef;
+		$verificationToken = $this->outputs->artifactProducer->recordVerification(request: $freshRequest, signedDocumentRef: $signedDocumentRef);
+		if ($verificationToken !== null) {
+			$freshRequest['verificationToken'] = $verificationToken;
+		}
+
 		$objectService->saveObject(object: $freshRequest, register: $register, schema: $schema, _rbac: false);
 
 		// Cross-app delegated-signing contract: emit the terminal

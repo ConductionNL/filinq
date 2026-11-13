@@ -199,7 +199,7 @@ class SigningServiceActingUserTraceTest extends TestCase {
 			),
 			outputs: new SigningOutputs(
 				auditService: $this->recorder(SigningAuditService::class, ['logEvent' => []]),
-				artifactProducer: $this->recorder(SignedArtifactProducer::class, ['initiatorDocument' => $file, 'delegate' => static fn (array $request): array => $request, 'produce' => 'file:11@v2']),
+				artifactProducer: $this->recorder(SignedArtifactProducer::class, ['initiatorDocument' => $file, 'delegate' => static fn (array $request): array => $request, 'produce' => 'file:11@v2', 'recordVerification' => '0123456789abcdef0123456789abcdef']),
 				emitter: $this->recorder(SigningConclusionEmitter::class, ['emitIfDelegated' => null])
 			)
 		);

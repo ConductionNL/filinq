@@ -10382,6 +10382,49 @@
                     }
                 }
             }
+        },
+        "/verify/{token}": {
+            "get": {
+                "operationId": "publicVerification-verify",
+                "summary": "Verify a signed document by its verification token",
+                "description": "Public, account-free. Answers the outcome recorded for one signed document: file name, content hash, and per signature the status, level, the signer as asserted and whether content integrity and the signer are covered by the check. An unknown, malformed or revoked token answers 200 with status unknown, in the same shape. Rate-limited and throttled.",
+                "tags": [
+                    "signing"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The verdict, or status unknown",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "token",
+                        "in": "path",
+                        "required": true,
+                        "description": "The 32-character verification token.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "security": []
+            }
         }
     },
     "components": {
