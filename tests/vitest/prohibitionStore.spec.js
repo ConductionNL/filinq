@@ -38,12 +38,17 @@ beforeEach(() => {
 
 const { useProhibitionStore } = await import('../../src/store/modules/prohibition.js')
 
-function list () {
-  return [
-	{ '@self': { id: 'p1' }, active: true },
-	{ id: 'p2', active: false },
-	{ uuid: 'p3' },
-]
+/**
+ * A fresh list with each id form.
+ *
+ * @return {Array<object>}
+ */
+function list() {
+	return [
+		{ '@self': { id: 'p1' }, active: true },
+		{ id: 'p2', active: false },
+		{ uuid: 'p3' },
+	]
 }
 
 describe('prohibition store', () => {

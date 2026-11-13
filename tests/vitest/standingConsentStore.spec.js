@@ -38,12 +38,17 @@ beforeEach(() => {
 
 const { useStandingConsentStore } = await import('../../src/store/modules/standingConsent.js')
 
-function list () {
-  return [
-	{ '@self': { id: 's1' } },
-	{ id: 's2', active: false },
-	{ uuid: 's3', active: true },
-]
+/**
+ * A fresh list with each id form.
+ *
+ * @return {Array<object>}
+ */
+function list() {
+	return [
+		{ '@self': { id: 's1' } },
+		{ id: 's2', active: false },
+		{ uuid: 's3', active: true },
+	]
 }
 
 describe('standing consent store', () => {
