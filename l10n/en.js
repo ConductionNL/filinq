@@ -1,10 +1,10 @@
-/**
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- */
 OC.L10N.register(
     "filinq",
     {
+        "%n note": "%n note",
+        "%n notes": "%n notes",
+        "Notes on {name}": "Notes on {name}",
+        "This document has no file to leave notes on.": "This document has no file to leave notes on.",
         "Marketplace": "Marketplace",
         "documents": "documents",
         "Original": "Original",

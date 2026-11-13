@@ -1,5 +1,9 @@
 {
     "translations": {
+        "%n note": "%n note",
+        "%n notes": "%n notes",
+        "Notes on {name}": "Notes on {name}",
+        "This document has no file to leave notes on.": "This document has no file to leave notes on.",
         "Marketplace": "Marketplace",
         "documents": "documents",
         "Original": "Original",

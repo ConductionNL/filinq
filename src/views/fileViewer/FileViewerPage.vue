@@ -72,23 +72,32 @@
 			</template>
 		</DdFileViewerHeader>
 
-		<div class="file-viewer-page__body">
-			<component
-				:is="viewerComponent"
-				v-if="viewerComponent && fileViewerStore.currentFile"
-				v-bind="viewerProps" />
-			<div
-				v-else-if="fileViewerStore.currentFile"
-				class="file-viewer-page__unsupported">
-				<FileAlertOutline :size="48" />
-				<p>{{ t('filinq', 'This file type cannot be previewed.') }}</p>
-				<NcButton variant="primary" @click="downloadCurrent">
-					<template #icon>
-						<Download :size="18" />
-					</template>
-					{{ t('filinq', 'Download') }}
-				</NcButton>
+		<div class="file-viewer-page__main">
+			<div class="file-viewer-page__body">
+				<component
+					:is="viewerComponent"
+					v-if="viewerComponent && fileViewerStore.currentFile"
+					v-bind="viewerProps" />
+				<div
+					v-else-if="fileViewerStore.currentFile"
+					class="file-viewer-page__unsupported">
+					<FileAlertOutline :size="48" />
+					<p>{{ t('filinq', 'This file type cannot be previewed.') }}</p>
+					<NcButton variant="primary" @click="downloadCurrent">
+						<template #icon>
+							<Download :size="18" />
+						</template>
+						{{ t('filinq', 'Download') }}
+					</NcButton>
+				</div>
 			</div>
+			<!-- Notes for colleagues: the file's Nextcloud comments, so the same notes show in Files (work-document-notes D1, D3). -->
+			<aside
+				v-if="notesFileId"
+				class="file-viewer-page__notes"
+				data-testid="file-viewer-notes">
+				<CnNotesCard :key="notesFileId" :fileId="notesFileId" />
+			</aside>
 		</div>
 		<AccessibilityPublishWarningModal
 			:show="publishWarning.show"
@@ -105,6 +114,7 @@
 </template>
 
 <script>
+import { CnNotesCard } from '@conduction/nextcloud-vue'
 import { showError } from '@nextcloud/dialogs'
 import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
@@ -148,6 +158,7 @@ const FILE_TYPE_ICONS = new Map([
 export default {
 	name: 'FileViewerPage',
 	components: {
+		CnNotesCard,
 		NcLoadingIcon,
 		TextRecognition,
 		NcButton,
@@ -188,6 +199,19 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The file whose notes show beside the viewer: the file as opened, never
+		 * the anonymised copy toggled into view, which carries no notes of its own
+		 * (work-document-notes D5).
+		 *
+		 * @return {string|null} The file id, or null when nothing is open.
+		 * @spec openspec/changes/work-document-notes/specs/document-notes/spec.md#requirement-notes-sit-beside-the-document-on-filinqs-screens-req-wdn-002
+		 */
+		notesFileId() {
+			const fileId = fileViewerStore.currentFile?.fileId
+			return fileId ? String(fileId) : null
+		},
+
 		/**
 		 * Whether the PDF/A report is offered: a stored PDF.
 		 *
@@ -424,6 +448,34 @@ export default {
 	flex-direction: column;
 	height: 100%;
 	min-height: 0;
+}
+
+.file-viewer-page__main {
+	display: flex;
+	flex: 1;
+	min-height: 0;
+}
+
+.file-viewer-page__notes {
+	width: 320px;
+	flex-shrink: 0;
+	overflow: auto;
+	padding: 8px;
+	border-top: 1px solid var(--color-border);
+	border-inline-start: 1px solid var(--color-border);
+	background: var(--color-main-background);
+}
+
+@media (max-width: 1024px) {
+	.file-viewer-page__main {
+		flex-direction: column;
+	}
+
+	.file-viewer-page__notes {
+		width: auto;
+		max-height: 40vh;
+		border-inline-start: 0;
+	}
 }
 
 .file-viewer-page__body {

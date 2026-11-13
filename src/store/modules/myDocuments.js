@@ -36,6 +36,8 @@ const LISTING_PROPS = [
 	'<d:getlastmodified />',
 	'<oc:fileid />',
 	'<oc:size />',
+	// How many notes (Nextcloud file comments) the document has, in the same request (work-document-notes D4).
+	'<oc:comments-count />',
 ]
 
 /** WebDAV properties of the recent anonymized list. */
@@ -134,7 +136,8 @@ function davEntry(resp) {
  *
  * @param {Element} resp PROPFIND response element.
  * @param {Set<number>} anonymizedIds File ids that are anonymized outputs.
- * @return {object|null}
+ * @return {object|null} The document; `notesCount` is the number of file comments on it.
+ * @spec openspec/changes/work-document-notes/specs/document-notes/spec.md#requirement-my-documents-shows-which-documents-have-notes-req-wdn-004
  */
 function listingDocument(resp, anonymizedIds) {
 	const fileName = decodeURIComponent(davHref(resp).split('/').pop() || '')
@@ -147,6 +150,7 @@ function listingDocument(resp, anonymizedIds) {
 		fileName,
 		fileSize: davNumber(resp, ['getcontentlength', 'size']),
 		isAnonymized: anonymizedIds.has(entry.fileId),
+		notesCount: davNumber(resp, ['comments-count']),
 	}
 }
 

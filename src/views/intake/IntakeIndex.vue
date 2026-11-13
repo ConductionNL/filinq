@@ -95,6 +95,16 @@ to a record or rejects it with a reason, and either way it leaves the inbox.
 						</template>
 						{{ t('filinq', 'Assign') }}
 					</NcActionButton>
+					<NcActionButton
+						v-if="row.file"
+						closeAfterClick
+						data-testid="intake-open-notes"
+						@click="openNotes(row)">
+						<template #icon>
+							<CommentTextOutline :size="20" />
+						</template>
+						{{ t('filinq', 'Notes') }}
+					</NcActionButton>
 					<NcActionButton closeAfterClick @click="openReject(row)">
 						<template #icon>
 							<Delete :size="20" />
@@ -122,6 +132,11 @@ to a record or rejects it with a reason, and either way it leaves the inbox.
 			@confirm="reject"
 			@cancel="closeDialogs" />
 
+		<IntakeNotesDialog
+			v-if="notesTarget"
+			:document="notesTarget"
+			@close="notesTarget = null" />
+
 		<SeparatorSheetsDialog
 			v-if="separatorsOpen"
 			@close="separatorsOpen = false" />
@@ -132,11 +147,13 @@ to a record or rejects it with a reason, and either way it leaves the inbox.
 import { CnIndexPage, CnStatusBadge } from '@conduction/nextcloud-vue'
 import { translate as t } from '@nextcloud/l10n'
 import { NcActionButton, NcActions, NcButton, NcNoteCard } from '@nextcloud/vue'
+import CommentTextOutline from 'vue-material-design-icons/CommentTextOutline.vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
 import FolderOutline from 'vue-material-design-icons/FolderOutline.vue'
 import FinalDocumentReasonDialog from '../../dialogs/FinalDocumentReasonDialog.vue'
 import IntakeAssignDialog from '../../dialogs/IntakeAssignDialog.vue'
+import IntakeNotesDialog from '../../dialogs/IntakeNotesDialog.vue'
 import SeparatorSheetsDialog from '../../dialogs/SeparatorSheetsDialog.vue'
 import {
 	reachWarning,
@@ -157,11 +174,13 @@ export default {
 		CnIndexPage,
 		CnStatusBadge,
 		NcButton,
+		CommentTextOutline,
 		Delete,
 		DotsHorizontal,
 		FinalDocumentReasonDialog,
 		FolderOutline,
 		IntakeAssignDialog,
+		IntakeNotesDialog,
 		SeparatorSheetsDialog,
 		NcActionButton,
 		NcActions,
@@ -176,6 +195,7 @@ export default {
 			saving: false,
 			assignTarget: null,
 			rejectTarget: null,
+			notesTarget: null,
 			actionError: '',
 			loadError: '',
 			notificationReach: null,
@@ -353,6 +373,19 @@ export default {
 			this.actionError = ''
 			this.rejectTarget = null
 			this.assignTarget = row
+		},
+
+		/**
+		 * Open the notes of one waiting document.
+		 *
+		 * @param {object} row The intake document.
+		 * @return {void}
+		 * @spec openspec/changes/work-document-notes/specs/document-notes/spec.md#requirement-notes-sit-beside-the-document-on-filinqs-screens-req-wdn-002
+		 */
+		openNotes(row) {
+			this.assignTarget = null
+			this.rejectTarget = null
+			this.notesTarget = row
 		},
 
 		openReject(row) {

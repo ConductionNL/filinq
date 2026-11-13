@@ -27,7 +27,7 @@
 				"method": "PROPFIND",
 				"url": "http://localhost/remote.php/dav/files/admin/DocuDesk",
 				"depth": "1",
-				"body": "<?xml version=\"1.0\"?> <d:propfind xmlns:d=\"DAV:\" xmlns:oc=\"http://owncloud.org/ns\" xmlns:nc=\"http://nextcloud.org/ns\"> <d:prop> <d:resourcetype /> <d:getcontenttype /> <d:getcontentlength /> <d:getlastmodified /> <oc:fileid /> <oc:size /> </d:prop> </d:propfind>",
+				"body": "<?xml version=\"1.0\"?> <d:propfind xmlns:d=\"DAV:\" xmlns:oc=\"http://owncloud.org/ns\" xmlns:nc=\"http://nextcloud.org/ns\"> <d:prop> <d:resourcetype /> <d:getcontenttype /> <d:getcontentlength /> <d:getlastmodified /> <oc:fileid /> <oc:size /> <oc:comments-count /> </d:prop> </d:propfind>",
 				"params": null
 			}
 		]
