@@ -257,6 +257,7 @@ class RenameDutchColumnsTest extends TestCase {
 		?string $failOn = null,
 		bool $registersThrow = false,
 		bool $tablesThrow = false,
+		bool $columnsThrow = false,
 	): RenameDutchColumns {
 		$this->executed = [];
 		$this->info = [];
@@ -280,7 +281,7 @@ class RenameDutchColumnsTest extends TestCase {
 			$db->method('prepare')->willThrowException(new Exception('information_schema unavailable'));
 		} else {
 			$db->method('prepare')->willReturnCallback(
-				static function (string $sql) use ($tables, $columns): IPreparedStatement {
+				static function (string $sql) use ($tables, $columns, $columnsThrow): IPreparedStatement {
 					if (str_contains($sql, 'information_schema.tables') === true) {
 						return new FakeStatement(
 							static fn (): array => array_map(
@@ -288,6 +289,10 @@ class RenameDutchColumnsTest extends TestCase {
 								$tables
 							)
 						);
+					}
+
+					if ($columnsThrow === true) {
+						throw new Exception('columns unavailable');
 					}
 
 					return new FakeStatement(
@@ -559,4 +564,21 @@ class RenameDutchColumnsTest extends TestCase {
 			$this->assertSame(['RenameDutchColumns: statement failed; leaving the column as it was.'], $this->warnings, $failOn);
 		}
 	}//end testFailedStatementsAreNotCounted()
+
+	/**
+	 * A table whose columns cannot be read is skipped with a warning; the
+	 * step neither throws nor issues any statement for it.
+	 *
+	 * @return void
+	 */
+	public function testUnreadableColumnsSkipTheTable(): void {
+		$a = 'oc_openregister_table_7_1';
+		$step = $this->step([7], [$a], [$a => ['zaak_id']], columnsThrow: true);
+
+		$step->run($this->repairOutput());
+
+		$this->assertSame([], $this->executed);
+		$this->assertSame(['RenameDutchColumns: could not read columns; skipping table.'], $this->warnings);
+		$this->assertSame(['RenameDutchColumns: 0 renamed, 0 back-filled, 0 refused, across 1 shard table(s).'], $this->info);
+	}//end testUnreadableColumnsSkipTheTable()
 }//end class
