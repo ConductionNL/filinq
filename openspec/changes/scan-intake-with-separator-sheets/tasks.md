@@ -26,6 +26,7 @@
   - The intake dialog pre-selects; the `filinq-document-intake` leaf (built 2026-10-09) lists documents whose `sourceRef` names the host record first and marks them (`orderForHost()` in `src/services/intakeLeaf.js`, tests/vitest/documentIntakeLeaf.spec.js).
 
 - [ ] 4.2 List and add scanner profiles on the intake channels page as the board `filinq/FqInvoerkanalen` draws it, over the existing `scanIntake#listProfiles` and `scanIntake#declareProfiles` routes; extend `ScanProfileService` with `resolution`, `colourMode` and separator mode `none` (one document per batch, no split) (REQ-SCI-05)
+  - 2026-11-13: backend half built: `ScanProfileService` stores and validates `resolution` (75–1200 dpi, default 300) and `colourMode` (`colour`, `greyscale`, `blackAndWhite`), and accepts separator mode `none`; `ScanBatchService` delivers a `none` batch as one document; `scanBatch` 1.1.0 admits `none` (register 8.52.0). Open: the intake channels page. No such page is in `src/manifest.json` yet, so the board's page has to be configured there first.
 
 ## 5. Quality
 

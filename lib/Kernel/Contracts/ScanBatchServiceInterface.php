@@ -59,6 +59,13 @@ interface ScanBatchServiceInterface {
 	public const MODE_BLANK = 'blankPage';
 
 	/**
+	 * Do not cut: the whole batch is one document.
+	 *
+	 * @var string
+	 */
+	public const MODE_NONE = 'none';
+
+	/**
 	 * A batch as it arrived, not yet cut.
 	 *
 	 * @var string
