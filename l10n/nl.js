@@ -1,10 +1,24 @@
-/**
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- */
 OC.L10N.register(
     "filinq",
     {
+        "Registry suggestions": "Suggesties uit basisregistraties",
+        "What the base registries answered about the KvK numbers and BSNs on the document: per identifier its source (kvk or brp), the identifier (a BSN masked), the name and address found, when it was retrieved and whether a person accepted (written) or dismissed it. A suggestion is never a party record: somebody accepts it first.": "Wat de basisregistraties antwoordden over de KvK-nummers en BSN's op het document: per nummer de bron (kvk of brp), het nummer (een BSN gemaskeerd), de gevonden naam en het adres, wanneer het is opgehaald en of iemand het heeft overgenomen (vastgelegd) of afgewezen. Een suggestie is nooit een partijrecord: iemand neemt haar eerst over.",
+        "Identifier": "Kenmerk",
+        "The KvK number, or the BSN masked to its last three digits.": "Het KvK-nummer, of het BSN gemaskeerd tot de laatste drie cijfers.",
+        "Name, address and for a company its KvK number, as the registry answered.": "Naam, adres en voor een bedrijf het KvK-nummer, zoals het register antwoordde.",
+        "Purpose": "Doel",
+        "The purpose a BRP lookup was made under.": "Het doel waaronder de BRP is bevraagd.",
+        "Retrieved at": "Opgehaald op",
+        "Written to the party": "Vastgelegd bij de partij",
+        "Dismissed": "Afgewezen",
+        "Accepted fields": "Overgenomen velden",
+        "The fields as the person accepted them, corrected or not.": "De velden zoals iemand ze overnam, al dan niet verbeterd.",
+        "Registry lookup note": "Toelichting bij de registeropvraging",
+        "Why a base registry lookup could not run for this document, such as \"KvK lookup is not configured\". Never carries a BSN.": "Waarom een opvraging bij een basisregistratie voor dit document niet kon, zoals \"KvK lookup is not configured\". Bevat nooit een BSN.",
+        "BRP purpose": "Doel voor BRP-opvraging",
+        "The purpose (doelbinding) under which a BSN on a document this rule matches may be looked up in the BRP. Empty means no BRP lookup for these documents.": "Het doel (doelbinding) waaronder een BSN op een document waarop deze regel past in de BRP mag worden opgevraagd. Leeg betekent geen BRP-opvraging voor deze documenten.",
+        "Look up BSNs in the BRP": "BSN's opvragen in de BRP",
+        "Ask the BRP for the name and address behind a BSN on an arriving document. Only for intake rules that state a purpose, and only as a suggestion somebody accepts.": "Vraag de BRP om de naam en het adres bij een BSN op een binnengekomen document. Alleen voor intakeregels die een doel noemen, en alleen als suggestie die iemand overneemt.",
         "Original": "Origineel",
         "All documents in the folder have been anonymized. The anonymized copies are in a separate subfolder next to the originals.": "Alle documenten in de map zijn geanonimiseerd. De geanonimiseerde kopieën staan in een aparte submap naast de originelen.",
         "Subfolder for anonymised copies": "Submap voor geanonimiseerde kopieën",

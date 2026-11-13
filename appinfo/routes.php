@@ -88,6 +88,7 @@ $extra = [
         ['name' => 'intake#detached', 'url' => 'api/intake/detached', 'verb' => 'GET'],
         ['name' => 'intake#detach', 'url' => 'api/intake/documents/detach', 'verb' => 'POST'],
         ['name' => 'intake#decideParty', 'url' => 'api/intake/party-decisions', 'verb' => 'POST'],
+        ['name' => 'intake#decideRegistry', 'url' => 'api/intake/documents/{uuid}/registry-decisions', 'verb' => 'POST'],
         ['name' => 'intake#declareRouting', 'url' => 'api/intake/routing-rules', 'verb' => 'POST'],
 
         // Case documents: the flat list, the domains and the upload policy

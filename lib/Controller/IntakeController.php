@@ -342,6 +342,52 @@ class IntakeController extends Controller {
 	}//end decideParty()
 
 	/**
+	 * Accept, correct or dismiss one registry suggestion on an intake document.
+	 *
+	 * @param string $uuid     The intake document.
+	 * @param int    $index    The suggestion's position on the document.
+	 * @param string $decision `accepted` or `dismissed`.
+	 * @param array  $fields   Corrections to name, address or KvK number before accepting.
+	 *
+	 * @return JSONResponse The saved intake document.
+	 *
+	 * @spec openspec/changes/intake-base-registry-enrichment/specs/intake-registry-enrichment/spec.md#requirement-a-person-accepts-or-dismisses-a-registry-suggestion-req-ibr-004
+	 */
+	#[NoAdminRequired]
+	public function decideRegistry(
+		string $uuid,
+		int $index = -1,
+		string $decision = '',
+		array $fields = [],
+	): JSONResponse {
+		$unauthenticated = $this->requireUser();
+		if ($unauthenticated !== null) {
+			return $unauthenticated;
+		}
+
+		if ($this->handling->registry === null) {
+			return new JSONResponse(
+				data: ['error' => 'Registry suggestions are not available.'],
+				statusCode: Http::STATUS_SERVICE_UNAVAILABLE
+			);
+		}
+
+		try {
+			$document = $this->handling->registry->decide(
+				uuid: $uuid,
+				index: $index,
+				decision: $decision,
+				fields: $fields
+			);
+
+			return new JSONResponse(data: $document, statusCode: Http::STATUS_OK);
+		} catch (Throwable $e) {
+			return $this->failure(error: $e);
+		}
+
+	}//end decideRegistry()
+
+	/**
 	 * Store what a consuming app declares about one of its record types.
 	 *
 	 * @param string $declaringApp The app making the declaration.

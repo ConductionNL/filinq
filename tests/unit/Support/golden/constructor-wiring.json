@@ -458,6 +458,7 @@
         "double IntakeRoutingService",
         "double LoggerInterface",
         "double PartySuggestionService",
+        null,
         {
             "distinct objects built by the class": 0
         }
@@ -472,6 +473,7 @@
         "double IntakeRoutingService",
         "double LoggerInterface",
         "double PartySuggestionService",
+        "double RegistryEnrichmentQueue",
         {
             "distinct objects built by the class": 0
         }
