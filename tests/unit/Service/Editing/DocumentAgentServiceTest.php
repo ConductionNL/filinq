@@ -26,6 +26,7 @@ use OCA\Filinq\Service\Editing\AgentArtefactMarker;
 use OCA\Filinq\Service\Editing\AgentFileRequest;
 use OCA\Filinq\Service\Editing\DocumentAgentService;
 use OCA\Filinq\Service\Editing\EditSessionService;
+use OCA\Filinq\Service\Editing\EditorSessionProbe;
 use OCA\Filinq\Service\DocumentGenerationRecord;
 use OCA\Filinq\Service\GeneratedDocumentLogger;
 use OCA\Filinq\Service\PdfConversionService;
@@ -150,7 +151,8 @@ class DocumentAgentServiceTest extends TestCase {
 			$this->documentLogger,
 			$this->rootFolder,
 			$this->userSession,
-			$this->createMock(LoggerInterface::class)
+			$this->createMock(LoggerInterface::class),
+			$this->createMock(EditorSessionProbe::class)
 		);
 
 	}//end service()
