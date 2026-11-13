@@ -74,14 +74,18 @@ class BatchPrintJobArgumentsTest extends TestCase {
 	 *
 	 * @param mixed $argument The job argument.
 	 *
+	 * @param IUserManager|null $users The user manager; null for the default alice/mallory one.
+	 *
 	 * @return void
 	 */
-	private function runWith(mixed $argument): void {
+	private function runWith(mixed $argument, ?IUserManager $users = null): void {
 		$this->previous = $this->createMock(originalClassName: IUser::class);
 		$alice          = $this->createMock(originalClassName: IUser::class);
 
-		$users = $this->createMock(originalClassName: IUserManager::class);
-		$users->method('get')->willReturnMap([['alice', $alice], ['mallory', null]]);
+		if ($users === null) {
+			$users = $this->createMock(originalClassName: IUserManager::class);
+			$users->method('get')->willReturnMap([['alice', $alice], ['mallory', null]]);
+		}
 
 		$session = $this->createMock(originalClassName: IUserSession::class);
 		$session->method('getUser')->willReturn($this->previous);
@@ -164,6 +168,26 @@ class BatchPrintJobArgumentsTest extends TestCase {
 
 		$this->assertSame(expected: [$this->previous], actual: $this->activeUsers);
 	}//end testAnUnknownRequesterIsNotRendered()
+
+	/**
+	 * A job that names no requester is not rendered, and no user is looked up.
+	 *
+	 * @return void
+	 */
+	public function testAJobWithoutARequesterIsNotRendered(): void {
+		$this->printJobs->expects($this->once())->method('getJob')->with('j')->willReturn(['status' => 'queued']);
+		$this->printJobs->expects($this->never())->method('renderJob');
+		$this->logger->expects($this->once())
+			->method('error')
+			->with('BatchPrintJob: the user who asked for the job is not known', ['jobId' => 'j']);
+
+		$users = $this->createMock(originalClassName: IUserManager::class);
+		$users->expects($this->never())->method('get');
+
+		$this->runWith(argument: ['jobId' => 'j', 'templateId' => 't'], users: $users);
+
+		$this->assertSame(expected: [$this->previous], actual: $this->activeUsers);
+	}//end testAJobWithoutARequesterIsNotRendered()
 
 	/**
 	 * The job renders as its requester with its items and options, logs the
