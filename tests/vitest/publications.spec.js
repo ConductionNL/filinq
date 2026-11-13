@@ -23,7 +23,7 @@ const ready = {
 	consentClear: true,
 	prohibitionsClear: true,
 	officieleTitel: 'Besluit',
-	wooCategory: 'c_8c840238',
+	wooCategory: 'infocat009',
 	publicatiedatum: '2026-10-01',
 }
 
