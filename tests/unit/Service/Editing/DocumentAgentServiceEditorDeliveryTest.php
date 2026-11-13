@@ -119,6 +119,30 @@ class DocumentAgentServiceEditorDeliveryTest extends TestCase {
 	}//end service()
 
 	/**
+	 * A document the agent may not edit directly is not handed to its editor
+	 * either: the refusal comes back and nothing is read, delivered or recorded.
+	 *
+	 * @return void
+	 */
+	public function testAGuardedOpenDocumentIsRefusedBeforeDelivery(): void {
+		$this->editors->method('attachedTo')->willReturn(['owner' => 'declared-editor', 'suite' => 'Declared Suite', 'adapter' => 'connector']);
+		$this->editSession->expects($this->once())->method('assertAgentMayEdit')->with('alice', 12)
+			->willThrowException(new RuntimeException('This document is part of a signing request.'));
+		$this->editSession->expects($this->never())->method('openForAgent');
+		$this->documentLogger->expects($this->never())->method($this->anything());
+
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessage('This document is part of a signing request.');
+
+		$this->service()->editDocument(
+			fileId: 12,
+			edits: [['anchor' => 'b2-1', 'action' => 'replace', 'text' => 'Gewijzigd.']],
+			version: 'sha256:v1'
+		);
+
+	}//end testAGuardedOpenDocumentIsRefusedBeforeDelivery()
+
+	/**
 	 * An edit to an open document is handed to the editor as text replacements; nothing is written.
 	 *
 	 * @return void

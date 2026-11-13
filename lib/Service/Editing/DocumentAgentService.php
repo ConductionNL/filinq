@@ -273,6 +273,11 @@ class DocumentAgentService {
 	 * @spec openspec/changes/edit-through-the-open-editor/specs/edit-through-the-open-editor/spec.md#requirement-an-agent-proposed-edit-must-remain-attributable-after-the-editor-saves-it
 	 */
 	private function deliverThroughEditor(string $uid, int $fileId, array $edits, string $version, array $editor): array {
+		// The same gate as a direct write: the editor saves this under the
+		// user's account, so a document the user could not change, or one that
+		// is final, signed, anonymised or macro-bearing, is refused here too.
+		$this->editSession->assertAgentMayEdit(uid: $uid, fileId: $fileId);
+
 		$read = $this->editSession->openForAgent(uid: $uid, fileId: $fileId);
 		$name = (string)($read['name'] ?? '');
 
