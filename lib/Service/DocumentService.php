@@ -50,6 +50,12 @@ use OCA\Filinq\Service\Wizard\WizardGenerationGate;
  * @link     https://www.filinq.app
  *
  * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
+ *
+ * @SuppressWarnings(PHPMD.TooManyMethods) generateFromHtml() has to live here: it shares
+ *   the private produce, file and log steps with generateFromTemplate(), so a finished
+ *   draft and a direct generation cannot drift apart (generate-draft-and-attended-edit D3).
+ * @SuppressWarnings(PHPMD.ExcessiveClassLength) Same reason.
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Same reason.
  */
 class DocumentService implements DocumentServiceInterface {
 
@@ -274,6 +280,100 @@ class DocumentService implements DocumentServiceInterface {
 		return $this->generationResult(run: $run, outcome: $outcome);
 
 	}//end generateFromTemplate()
+
+	/**
+	 * Produce, file and log a document from HTML that was already rendered.
+	 *
+	 * The tail of {@see generateFromTemplate()} for a draft a clerk edited:
+	 * the HTML is turned into bytes by the same `produceOutput()`, filed by
+	 * the same `storeOutputIfRequested()` and logged by the same logger. It
+	 * is never rendered through Twig again, so braces a clerk typed stay
+	 * text. A wizard draft's `options.wizardContext` runs through the same
+	 * wizard check as a direct generation. Pass `$log` false when the caller
+	 * logs the result in a register of its own (a correspondence draft).
+	 *
+	 * @param string $templateId The template the HTML was rendered from.
+	 * @param string $html The rendered (and edited, sanitised) HTML.
+	 * @param array $dataRefs The data references the HTML was rendered with, for the record.
+	 * @param array $options The same options {@see generateDocument()} takes (format, userId,
+	 *                       filename, output, huisstijlId, templateVersion, wizardContext, caseId).
+	 * @param array $recordFields Extra fields for the generatedDocument record (draftId, editedBy).
+	 * @param bool $log Whether to write the generatedDocument record.
+	 *
+	 * @return array<string, mixed> The same result shape as {@see generateDocument()}.
+	 *
+	 * @throws Exception On an unsupported format or output mode, or a storage failure.
+	 *
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) `$log` only chooses the register the
+	 *   record goes to; production and filing are the same either way.
+	 *
+	 * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-2.2
+	 */
+	public function generateFromHtml(
+		string $templateId,
+		string $html,
+		array $dataRefs = [],
+		array $options = [],
+		array $recordFields = [],
+		bool $log = true,
+	): array {
+		$run = [
+			'templateId' => $templateId,
+			'dataRefs' => $dataRefs,
+			'options' => $options,
+			'format' => ($options['format'] ?? self::DEFAULT_FORMAT),
+		];
+		$this->validateFormat(format: $run['format']);
+		$run['outputMode'] = $this->resolveOutputMode(options: $options);
+		$run['template'] = $this->templateFor(templateId: $templateId, options: $options);
+
+		if (isset($options['wizardContext']) === true && $this->wizardGate !== null) {
+			$recordFields = array_merge(
+				$recordFields,
+				$this->wizardGate->check(templateId: $templateId, dataRefs: $dataRefs, context: $options['wizardContext'])
+			);
+		}
+
+		$run['recordFields'] = $recordFields;
+
+		$huisstijl  = $this->production->pipeline->loadHuisstijl(huisstijlId: ($options['huisstijlId'] ?? null));
+		$pdfOptions = $this->production->pipeline->buildPdfOptions(template: $run['template'], huisstijl: $huisstijl, options: $options);
+		$content    = $this->production->pipeline->produceOutput(htmlContent: $html, format: $run['format'], pdfOptions: $pdfOptions);
+		$rendered   = ['html' => $html, 'content' => $content, 'warnings' => $this->production->pipeline->getLastOutputWarnings()];
+		$stored     = $this->storeOutputIfRequested(run: $run, output: $rendered);
+
+		$outcome = [
+			'rendered' => $rendered,
+			'stored' => $stored,
+			'plain' => ['rendition' => null, 'record' => [], 'warnings' => []],
+			'warnings' => $stored['warnings'],
+			'metadata' => [],
+		];
+		if ($log === true) {
+			$outcome['metadata'] = $this->logGenerated(run: $run, outcome: $outcome);
+		}
+
+		return $this->generationResult(run: $run, outcome: $outcome);
+
+	}//end generateFromHtml()
+
+	/**
+	 * The template of a generation: the stored version the options name, else the head.
+	 *
+	 * @param string $templateId The template UUID.
+	 * @param array<string, mixed> $options The generation options (templateVersion).
+	 *
+	 * @return array<string, mixed> The template.
+	 *
+	 * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-2.2
+	 */
+	private function templateFor(string $templateId, array $options): array {
+		if (isset($options['templateVersion']) === true) {
+			return $this->sources->templates->getTemplateAtVersion(id: $templateId, version: (int) $options['templateVersion']);
+		}
+
+		return $this->sources->templates->getTemplate(id: $templateId);
+	}//end templateFor()
 
 	/**
 	 * Resolve the data a generation renders, turning failed references into warnings.

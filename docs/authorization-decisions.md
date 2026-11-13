@@ -160,6 +160,8 @@ deliberately.
 
 | `scanBatch` | authenticated | authenticated | admins | The batch is created by the watched-folder job on behalf of the instance and read by the clerk who sorts out what came off the scanner, so both are open. Only an admin deletes one: the batch is the trace that says which documents a delivered PDF was cut into, and a missing segment is only findable through it. |
 
+| `documentDraft` | its owner (`authorization.scope: private`: the clerk who made it, and admins) | authenticated, for themselves | its owner | A draft is a rendered document before it is stored and holds personal data merged from the records, so nobody but its maker reads it, not even a manager while the clerk is away. `DocumentDraftService::finish()` answers 404 unless the session user owns the draft, the same answer as for one that does not exist. `DocumentDraftExpiryJob` lists and deletes drafts past `expiresAt` with RBAC off, as the system from a cron tick with no user; it touches this schema only. |
+
 ## Deliberate RBAC bypasses
 
 A cascade only guards callers that go through it. `ObjectService::find()` and

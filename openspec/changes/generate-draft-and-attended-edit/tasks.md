@@ -4,15 +4,15 @@
 
 ## 1. Register
 
-- [ ] 1.1 Add `documentDraft` to `lib/Settings/filinq_register.json` with `authorization.scope: private`, an `x-openregister-lifecycle` on `stage`, an `x-openregister-processing` activity and no archival annotation; add `draftId` and `editedBy` to `generatedDocument` and `correspondence`; seed one editing draft; bump the register version (D1, D2, D6) (REQ-GDA-004). Verify: `occ maintenance:repair` imports it, the seed draft shows on `/drafts` for the demo user and not for a second user.
+- [x] 1.1 Add `documentDraft` to `lib/Settings/filinq_register.json` with `authorization.scope: private`, an `x-openregister-lifecycle` on `stage`, an `x-openregister-processing` activity and no archival annotation; add `draftId` and `editedBy` to `generatedDocument` and `correspondence`; seed one editing draft; bump the register version (D1, D2, D6) (REQ-GDA-004). Verify: `occ maintenance:repair` imports it, the seed draft shows on `/drafts` for the demo user and not for a second user.
 
 ## 2. Service and routes
 
-- [ ] 2.1 Add `lib/Service/DocumentDraftService.php` and `POST api/documents/drafts`: render through `generatePreview()`, save the draft, refuse a template with `plainLanguage` with 409 (D3, D8) (REQ-GDA-001, REQ-GDA-005). Verify: PHPUnit asserts no `generatedDocument` or `correspondence` write and the 409 answer.
-- [ ] 2.2 Add public `DocumentService::generateFromHtml()` sharing `produceOutput()`, `storeOutputIfRequested()` and the logger with `generateDocument()`, and `CorrespondenceService::logFinishedDraft()` (D3) (REQ-GDA-002). Verify: PHPUnit asserts one filing and one log per finish, with `draftId` and `editedBy` set.
-- [ ] 2.3 Add `POST api/documents/drafts/{id}/finish` with `#[NoAdminRequired]`, owner check through OpenRegister, server-side sanitising, no Twig call, and the move to `finished` (D4, D6) (REQ-GDA-002). Verify: PHPUnit with a draft containing `{{ naam }}` and a `<script>` tag; Newman answers 404 for a non-owner.
-- [ ] 2.4 Pass wizard answers from a wizard draft as `options.wizardContext` on finish (REQ-GDA-003). Verify: PHPUnit asserts the wizard validation runs and a missing required answer answers 422.
-- [ ] 2.5 Add `lib/BackgroundJob/DocumentDraftExpiryJob.php`, daily, deleting drafts past `expiresAt`, and set `expiresAt` on every save (D2) (REQ-GDA-004). Verify: PHPUnit with a fixed clock deletes the 31-day draft and keeps the 29-day one.
+- [x] 2.1 Add `lib/Service/DocumentDraftService.php` and `POST api/documents/drafts`: render through `generatePreview()`, save the draft, refuse a template with `plainLanguage` with 409 (D3, D8) (REQ-GDA-001, REQ-GDA-005). Verify: PHPUnit asserts no `generatedDocument` or `correspondence` write and the 409 answer.
+- [x] 2.2 Add public `DocumentService::generateFromHtml()` sharing `produceOutput()`, `storeOutputIfRequested()` and the logger with `generateDocument()`, and `CorrespondenceService::logFinishedDraft()` (D3) (REQ-GDA-002). Verify: PHPUnit asserts one filing and one log per finish, with `draftId` and `editedBy` set.
+- [x] 2.3 Add `POST api/documents/drafts/{id}/finish` with `#[NoAdminRequired]`, owner check through OpenRegister, server-side sanitising, no Twig call, and the move to `finished` (D4, D6) (REQ-GDA-002). Verify: PHPUnit with a draft containing `{{ naam }}` and a `<script>` tag; Newman answers 404 for a non-owner.
+- [x] 2.4 Pass wizard answers from a wizard draft as `options.wizardContext` on finish (REQ-GDA-003). Verify: PHPUnit asserts the wizard validation runs and a missing required answer answers 422.
+- [x] 2.5 Add `lib/BackgroundJob/DocumentDraftExpiryJob.php`, daily, deleting drafts past `expiresAt`, and set `expiresAt` on every save (D2) (REQ-GDA-004). Verify: PHPUnit with a fixed clock deletes the 31-day draft and keeps the 29-day one.
 
 ## 3. Screens
 

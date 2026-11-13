@@ -7525,6 +7525,63 @@
         "method": "rules",
         "correspondentPending": true,
         "status": "suggested"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "documentDraft",
+          "slug": "draft-brief-algemeen-editing",
+          "owner": "demo"
+        },
+        "origin": "correspondence",
+        "stage": "editing",
+        "templateId": "brief-algemeen",
+        "templateName": "Algemene Correspondentiebrief",
+        "dataRefs": [],
+        "adHocData": {},
+        "format": "pdf",
+        "outputOptions": {},
+        "html": "<p>Geachte heer, mevrouw,</p><p>Naar aanleiding van uw verzoek ontvangt u hierbij de gevraagde informatie.</p><p>Met vriendelijke groet,</p>",
+        "warnings": [],
+        "expiresAt": "2099-12-31T00:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "documentDraft",
+          "slug": "draft-beschikking-editing",
+          "owner": "demo"
+        },
+        "origin": "document",
+        "stage": "editing",
+        "templateId": "beschikking-standaard",
+        "templateName": "Beschikking Standaard",
+        "dataRefs": [],
+        "adHocData": {},
+        "format": "pdf",
+        "outputOptions": {},
+        "html": "<h1>Beschikking</h1><p>Op uw aanvraag van 1 november 2026 hebben wij besloten uw verzoek toe te kennen.</p>",
+        "warnings": [],
+        "expiresAt": "2099-12-31T00:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "documentDraft",
+          "slug": "draft-rapportage-editing",
+          "owner": "demo"
+        },
+        "origin": "document",
+        "stage": "editing",
+        "templateId": "rapportage-kwartaal",
+        "templateName": "Kwartaalrapportage",
+        "dataRefs": [],
+        "adHocData": {},
+        "format": "pdf",
+        "outputOptions": {},
+        "html": "<h1>Kwartaalrapportage</h1><p>In dit kwartaal zijn 42 verzoeken afgehandeld, waarvan 38 binnen de termijn.</p>",
+        "warnings": [],
+        "expiresAt": "2099-12-31T00:00:00+00:00"
       }
     ]
   }

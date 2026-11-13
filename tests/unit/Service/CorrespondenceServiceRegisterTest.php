@@ -154,6 +154,43 @@ class CorrespondenceServiceRegisterTest extends TestCase {
 	}//end setUp()
 
 	/**
+	 * A letter finished from a draft logs the same entry, plus the draft and its editor.
+	 *
+	 * @return void
+	 */
+	public function testAFinishedDraftLogsTheEntryWithTheDraftAndEditor(): void {
+		$entry = $this->service->logFinishedDraft(
+			templateId: 'tmpl-1',
+			templateName: 'Brief',
+			dataRefs: [['register' => 'brp', 'schema' => 'p', 'id' => 'abc']],
+			options: ['format' => 'pdf', 'recipientType' => 'person', 'caseReference' => 'Z-1', 'userId' => 'alice'],
+			draftId: 'draft-9',
+			editedBy: 'alice'
+		);
+
+		$this->assertSame(['id' => 'log-1'], $entry);
+		$this->assertCount(1, $this->saved);
+		$logged = $this->saved[0];
+		unset($logged['generatedAt']);
+		$this->assertSame(
+			[
+				'templateId' => 'tmpl-1',
+				'templateName' => 'Brief',
+				'recipientId' => 'abc',
+				'recipientType' => 'person',
+				'caseReference' => 'Z-1',
+				'format' => 'pdf',
+				'status' => 'generated',
+				'generatedBy' => 'alice',
+				'errorMessage' => null,
+				'draftId' => 'draft-9',
+				'editedBy' => 'alice',
+			],
+			$logged
+		);
+	}//end testAFinishedDraftLogsTheEntryWithTheDraftAndEditor()
+
+	/**
 	 * A generated letter logs one entry with every request field it carries.
 	 *
 	 * @return void

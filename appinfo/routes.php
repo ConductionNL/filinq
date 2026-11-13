@@ -297,6 +297,10 @@ $extra = [
         ['name' => 'document#generateBulk', 'url' => 'api/documents/generate/bulk', 'verb' => 'POST'],
         ['name' => 'document#jobStatus', 'url' => 'api/documents/jobs/{jobId}', 'verb' => 'GET'],
 
+        // Document drafts (generate-draft-and-attended-edit): open a generation for editing, finish it.
+        ['name' => 'documentDraft#create', 'url' => 'api/documents/drafts', 'verb' => 'POST'],
+        ['name' => 'documentDraft#finish', 'url' => 'api/documents/drafts/{id}/finish', 'verb' => 'POST'],
+
         // External render contract (filinq-configurable-report-templates): a
         // stable, slug-addressed endpoint for server-to-server callers (e.g.
         // learniq's ReportCardPdfDelegationService) that already hold their
