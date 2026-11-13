@@ -2661,4 +2661,224 @@ class SigningServiceTest extends TestCase {
 
 	}//end testSignRecordsSignatureDataAndAuditDefaults()
 
+
+	/**
+	 * signing-accept-only-recipient: a mixed request stores the accept-only role,
+	 * a signer entry stores none (it reads as signing).
+	 *
+	 * @return void
+	 */
+	public function testAMixedRequestStoresTheAcceptOnlyRole(): void {
+		$saved = [];
+		$this->providerFactory->method('getProvider')->willReturn($this->makeSupportingProvider());
+		$this->objectService->method('saveObject')->willReturnCallback(
+			function (array $object) use (&$saved): array {
+				$saved[] = $object;
+				$object['id'] = (isset($object['initiatorUserId']) === true) ? 'req-sao' : 'signer-'.count($saved);
+				return $object;
+			}
+		);
+
+		$this->service->createRequest(
+			data: [
+				'documentFileId' => '1001',
+				'documentName' => 'huurovereenkomst.pdf',
+				'signatureLevel' => 'SES',
+				'signingMode' => 'sequential',
+				'signers' => [
+					['displayName' => 'Huurder', 'userId' => 'tenant', 'role' => 'sign'],
+					['displayName' => 'Ambtenaar', 'userId' => 'officer', 'role' => 'accept'],
+				],
+			]
+		);
+
+		$records = array_values(array_filter($saved, static fn (array $o) => isset($o['signingRequestId']) === true));
+		$this->assertSame('signer', ($records[0]['role'] ?? 'signer'));
+		$this->assertSame('accept', $records[1]['role']);
+		$this->assertSame('officer', $records[1]['userId']);
+
+	}//end testAMixedRequestStoresTheAcceptOnlyRole()
+
+	/**
+	 * A request of accept-only recipients is refused before anything is stored.
+	 *
+	 * @return void
+	 */
+	public function testARequestWhereNobodySignsIsRefused(): void {
+		$this->providerFactory->method('getProvider')->willReturn($this->makeSupportingProvider());
+		$this->objectService->expects($this->never())->method('saveObject');
+
+		try {
+			$this->service->createRequest(
+				data: [
+					'documentFileId' => '1001',
+					'documentName' => 'huurovereenkomst.pdf',
+					'signatureLevel' => 'SES',
+					'signingMode' => 'parallel',
+					'signers' => [['displayName' => 'Ambtenaar', 'userId' => 'officer', 'role' => 'accept']],
+				]
+			);
+			$this->fail('a request without a signer must be refused');
+		} catch (\InvalidArgumentException $e) {
+			$this->assertSame(400, $e->getCode());
+			$this->assertSame('A signing request needs at least one recipient who signs', $e->getMessage());
+		}
+
+	}//end testARequestWhereNobodySignsIsRefused()
+
+	/**
+	 * Rows of a request with a signer and an accept-only recipient, in this state.
+	 *
+	 * @param string $signerStatus    The signer's status.
+	 * @param string $accepterStatus  The accepter's status.
+	 * @param string $mode            The signing mode.
+	 *
+	 * @return array<string, array<string, mixed>>
+	 */
+	private static function acceptRows(string $signerStatus, string $accepterStatus = 'PENDING', string $mode = 'sequential'): array {
+		return [
+			'req-sao' => [
+				'id' => 'req-sao', 'status' => 'IN_PROGRESS', 'signatureLevel' => 'SES', 'provider' => 'native',
+				'initiatorUserId' => 'carol', 'documentFileId' => '42', 'signingMode' => $mode,
+				'signerIds' => ['signer-tenant', 'signer-officer'],
+			],
+			'signer-tenant' => ['id' => 'signer-tenant', 'signingRequestId' => 'req-sao', 'userId' => 'tenant', 'order' => 0, 'status' => $signerStatus],
+			'signer-officer' => ['id' => 'signer-officer', 'signingRequestId' => 'req-sao', 'userId' => 'alice', 'order' => 1, 'role' => 'accept', 'status' => $accepterStatus],
+		];
+
+	}//end acceptRows()
+
+	/**
+	 * Serve these rows from find(), and record every save.
+	 *
+	 * @param array<string, array<string, mixed>> $rows  The rows by id.
+	 * @param array<int, array<string, mixed>>    $saved Receives every saved object.
+	 *
+	 * @return void
+	 */
+	private function serveRows(array &$rows, array &$saved): void {
+		$this->objectService->method('find')->willReturnCallback(
+			static function (string $id) use (&$rows): ?array {
+				return ($rows[$id] ?? null);
+			}
+		);
+		$this->objectService->method('saveObject')->willReturnCallback(
+			static function (array $object) use (&$saved, &$rows): array {
+				$saved[] = $object;
+				if (isset($object['id']) === true) {
+					$rows[$object['id']] = $object;
+				}
+
+				return $object;
+			}
+		);
+
+	}//end serveRows()
+
+	/**
+	 * The accept-only recipient accepts after the signer signed: ACCEPTED,
+	 * acceptedAt, no signature data, the audit entry ACCEPTED, and the request completes.
+	 *
+	 * @return void
+	 */
+	public function testAnAcceptanceIsRecordedAndCompletesTheRequest(): void {
+		$rows = self::acceptRows(signerStatus: 'SIGNED');
+		$saved = [];
+		$this->serveRows($rows, $saved);
+		$provider = $this->createMock(\OCA\Filinq\Service\Signing\SigningProviderInterface::class);
+		$provider->method('produceSignedArtifact')->willReturn('SIGNED-BYTES');
+		$this->providerFactory->method('getProvider')->willReturn($provider);
+		$file = $this->createMock(\OCP\Files\File::class);
+		$file->method('getContent')->willReturn('original-bytes');
+		$folder = $this->createMock(\OCP\Files\Folder::class);
+		$folder->method('getById')->willReturn([$file]);
+		$this->userFolder = $folder;
+		$this->auditService->expects($this->once())->method('logEvent')->with(
+			$this->callback(static fn (SigningAuditEvent $event): bool => $event->action === 'ACCEPTED')
+		);
+
+		$accepted = $this->service->accept(requestId: 'req-sao', signerId: 'signer-officer');
+
+		$this->assertSame('ACCEPTED', $accepted['status']);
+		$this->assertNotEmpty($accepted['acceptedAt']);
+		$this->assertArrayNotHasKey('signatureData', $accepted);
+		$this->assertArrayNotHasKey('signedAt', $accepted);
+		$this->assertSame('COMPLETED', $rows['req-sao']['status']);
+
+	}//end testAnAcceptanceIsRecordedAndCompletesTheRequest()
+
+	/**
+	 * In sequential mode an accepter placed after a signer who has not signed waits.
+	 *
+	 * @return void
+	 */
+	public function testASequentialRequestRefusesAnEarlyAcceptance(): void {
+		$rows = self::acceptRows(signerStatus: 'PENDING');
+		$saved = [];
+		$this->serveRows($rows, $saved);
+
+		try {
+			$this->service->accept(requestId: 'req-sao', signerId: 'signer-officer');
+			$this->fail('an early acceptance must be refused');
+		} catch (RuntimeException $e) {
+			$this->assertSame(409, $e->getCode());
+		}
+
+		$this->assertSame([], $saved);
+
+		// In parallel mode the order does not hold.
+		$rows = self::acceptRows(signerStatus: 'PENDING', mode: 'parallel');
+		$this->auditService->expects($this->once())->method('logEvent');
+		$this->assertSame('ACCEPTED', $this->service->accept(requestId: 'req-sao', signerId: 'signer-officer')['status']);
+		$this->assertSame('IN_PROGRESS', $rows['req-sao']['status'], 'the signer has not signed yet');
+
+	}//end testASequentialRequestRefusesAnEarlyAcceptance()
+
+	/**
+	 * An accept-only recipient cannot sign, and a signer cannot accept; nothing is written.
+	 *
+	 * @return void
+	 */
+	public function testEachRoleIsRefusedTheOtherAct(): void {
+		$rows = self::acceptRows(signerStatus: 'SIGNED');
+		$rows['signer-tenant']['userId'] = 'alice';
+		$saved = [];
+		$this->serveRows($rows, $saved);
+
+		foreach ([['sign', 'signer-officer', SigningService::ACCEPT_NOT_SIGN], ['accept', 'signer-tenant', SigningService::SIGN_NOT_ACCEPT]] as [$act, $signerId, $message]) {
+			if ($act === 'sign') {
+				$rows['signer-tenant']['status'] = 'SIGNED';
+			} else {
+				$rows['signer-tenant']['status'] = 'PENDING';
+			}
+
+			try {
+				$this->service->{$act}(requestId: 'req-sao', signerId: $signerId);
+				$this->fail($act . ' must be refused for ' . $signerId);
+			} catch (RuntimeException $e) {
+				$this->assertSame(422, $e->getCode());
+				$this->assertSame($message, $e->getMessage());
+			}
+		}
+
+		$this->assertSame([], $saved);
+
+	}//end testEachRoleIsRefusedTheOtherAct()
+
+	/**
+	 * Another user cannot accept for the invited recipient.
+	 *
+	 * @return void
+	 */
+	public function testAnotherUserCannotAccept(): void {
+		$rows = self::acceptRows(signerStatus: 'SIGNED');
+		$rows['signer-officer']['userId'] = 'officer';
+		$saved = [];
+		$this->serveRows($rows, $saved);
+
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessage('Not authorized to accept as this signer');
+		$this->service->accept(requestId: 'req-sao', signerId: 'signer-officer');
+
+	}//end testAnotherUserCannotAccept()
 }//end class

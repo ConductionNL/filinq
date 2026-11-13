@@ -2810,7 +2810,11 @@
         "The value before the change.": "The value before the change.",
         "When the change was made.": "When the change was made.",
         "Merge fields": "Merge fields",
-        "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you.": "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you."
+        "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you.": "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you.",
+        "Accepted at": "Accepted at",
+        "Signs as a party (signer), signs as guardian of a signer under the age of consent (guardian), or accepts without signing (accept). No role signs as a party.": "Signs as a party (signer), signs as guardian of a signer under the age of consent (guardian), or accepts without signing (accept). No role signs as a party.",
+        "When an accept-only recipient accepted": "When an accept-only recipient accepted",
+        "Failed to accept the document": "Failed to accept the document"
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

@@ -2898,7 +2898,11 @@
         "The value before the change.": "De waarde voor de wijziging.",
         "When the change was made.": "Wanneer de wijziging is gedaan.",
         "Merge fields": "Samenvoegvelden",
-        "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you.": "De velden die het sjabloon invult, met een naam en een herkomst voor mensen: wat een voorbeeld onder Voor je ingevuld toont"
+        "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you.": "De velden die het sjabloon invult, met een naam en een herkomst voor mensen: wat een voorbeeld onder Voor je ingevuld toont",
+        "Accepted at": "Geaccepteerd op",
+        "Signs as a party (signer), signs as guardian of a signer under the age of consent (guardian), or accepts without signing (accept). No role signs as a party.": "Ondertekent als partij (signer), ondertekent als wettelijk vertegenwoordiger van een ondertekenaar onder de toestemmingsleeftijd (guardian), of accepteert zonder te ondertekenen (accept). Zonder rol ondertekent de ontvanger als partij.",
+        "When an accept-only recipient accepted": "Wanneer een ontvanger die alleen accepteert heeft geaccepteerd",
+        "Failed to accept the document": "Het document kon niet worden geaccepteerd"
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

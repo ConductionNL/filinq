@@ -117,7 +117,7 @@ class SchemaAuthorizationCoverageTest extends TestCase {
 		'lib/Service/SigningActorResolver.php' => 4,
 		'lib/Service/SigningAuditService.php' => 1,
 		'lib/Service/SigningEnvelope/SigningEnvelopeRepository.php' => 3,
-		'lib/Service/SigningService.php' => 15,
+		'lib/Service/SigningService.php' => 17,
 		'lib/Service/SubjectErasure/SubjectErasureStore.php' => 3,
 	];
 

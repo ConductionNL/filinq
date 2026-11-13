@@ -30,6 +30,7 @@ use OCA\Filinq\Kernel\SigningAuditActor;
 use OCA\Filinq\Kernel\SigningAuditEvent;
 use OCA\Filinq\Kernel\SigningAuditSubject;
 use OCA\Filinq\Service\Signing\PortalSignatureAssurance;
+use OCA\Filinq\Service\Signing\RecipientRole;
 use OCA\Filinq\Service\Signing\SignerEntries;
 use OCA\Filinq\Service\Signing\SigningAct;
 use OCA\Filinq\Service\Support\SigningGuards;
@@ -57,6 +58,16 @@ use RuntimeException;
  * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
  */
 class SigningService implements SigningServiceInterface {
+
+	/**
+	 * The refusal when an accept-only recipient tries to sign.
+	 */
+	public const ACCEPT_NOT_SIGN = 'This document asks you to accept it, not to sign it';
+
+	/**
+	 * The refusal when a recipient who signs tries to accept.
+	 */
+	public const SIGN_NOT_ACCEPT = 'This document asks you to sign it, not to accept it';
 
 	/**
 	 * Valid status transitions for signing requests
@@ -176,6 +187,8 @@ class SigningService implements SigningServiceInterface {
 		// A request that names nobody who can sign is refused before anything
 		// is stored, instead of being saved as PENDING for ever (#1209).
 		$this->guards->validator->validateSigners(signers: $signers);
+		// A request of accept-only recipients signs nothing (signing-accept-only-recipient D1).
+		RecipientRole::assertSomeoneSigns(entries: $signers);
 		$prepared = $this->guards->consentGuard->prepareSigners(
 			signers: $signers,
 			age: $request['guardianConsentAge'],
@@ -313,6 +326,11 @@ class SigningService implements SigningServiceInterface {
 
 			if (isset($links[$index]) === true) {
 				$signerRecord['guardianForSignerId'] = $ids[$links[$index]];
+			}
+
+			// An accept-only recipient (signing-accept-only-recipient D1).
+			if (RecipientRole::accepts(recipient: $signerData) === true) {
+				$signerRecord['role'] = RecipientRole::ACCEPT;
 			}
 
 			$created = $this->toArray(
@@ -494,6 +512,11 @@ class SigningService implements SigningServiceInterface {
 			action: 'sign'
 		);
 
+		// Accepting is not signing: an accept-only recipient accepts (D2).
+		if (RecipientRole::accepts(recipient: $signer) === true) {
+			throw new RuntimeException(self::ACCEPT_NOT_SIGN, 422);
+		}
+
 		$request = $this->loadSignableRequest(requestId: $requestId);
 
 		// The mandate is declared in Nextcloud groups, which an invited portal
@@ -538,6 +561,108 @@ class SigningService implements SigningServiceInterface {
 
 		return $signer;
 	}//end sign()
+
+	/**
+	 * Accept a request as an accept-only recipient (signing-accept-only-recipient D2, D4).
+	 *
+	 * The same checks as sign(): the authorised recipient, a request that can
+	 * still be acted on, and a recipient still PENDING; in sequential mode
+	 * every recipient before this one has signed or accepted. It writes
+	 * ACCEPTED and acceptedAt, never signatureData, and the audit entry
+	 * ACCEPTED. The signing mandate is not asked: accepting is not signing.
+	 *
+	 * @param string                    $requestId     The signing request ID.
+	 * @param string                    $signerId      The recipient's signer record ID.
+	 * @param array<string, mixed>|null $verifiedActor The verified portal actor, or null for the session user.
+	 *
+	 * @return array<string, mixed> The updated recipient record.
+	 *
+	 * @throws RuntimeException With code 422 for a recipient who signs, or when the request or recipient cannot accept.
+	 *
+	 * @spec openspec/changes/signing-accept-only-recipient/tasks.md#2-service-and-routes
+	 */
+	public function accept(string $requestId, string $signerId, ?array $verifiedActor = null): array {
+		[$actorUserId, $actorDisplayName] = $this->actorResolver->resolveActingIdentity(verifiedActor: $verifiedActor);
+		['register' => $signerRegister, 'schema' => $signerSchema] = $this->requireSignerRecordBinding();
+
+		$signer = $this->actorResolver->loadAuthorisedSigner(
+			requestId: $requestId,
+			signerId: $signerId,
+			verifiedActor: $verifiedActor,
+			actorUserId: $actorUserId,
+			action: 'accept'
+		);
+		if (RecipientRole::accepts(recipient: $signer) === false) {
+			throw new RuntimeException(self::SIGN_NOT_ACCEPT, 422);
+		}
+
+		$request = $this->loadSignableRequest(requestId: $requestId);
+		if (($signer['status'] ?? '') !== 'PENDING') {
+			throw new RuntimeException('Signer has already responded to this request');
+		}
+
+		$this->assertEarlierRecipientsDone(request: $request, signerId: $signerId, signer: $signer);
+
+		$act = new SigningAct(
+			request: $request,
+			target: ['requestId' => $requestId, 'signerId' => $signerId],
+			actor: ['userId' => $actorUserId, 'displayName' => $actorDisplayName, 'verified' => $verifiedActor],
+			signatureData: null
+		);
+		$signer['status'] = RecipientRole::ACCEPTED;
+		$signer['acceptedAt'] = $act->now->format(DateTimeInterface::ATOM);
+		$signer['ipAddress'] = $this->actorResolver->getClientIp();
+		$this->settingsService->getObjectService()->saveObject(object: $signer, register: $signerRegister, schema: $signerSchema, _rbac: false);
+
+		$this->outputs->auditService->logEvent(
+			event: new SigningAuditEvent(
+				request: new SigningAuditSubject(
+					id: $requestId,
+					signatureLevel: $request['signatureLevel'] ?? 'SES',
+					provider: $request['provider'] ?? 'native'
+				),
+				action: 'ACCEPTED',
+				actor: new SigningAuditActor(userId: $actorUserId, displayName: $actorDisplayName, ipAddress: $signer['ipAddress']),
+				metadata: $this->actorResolver->actorAuditMetadata(verifiedActor: $verifiedActor)
+			)
+		);
+		$this->updateRequestStatus(act: $act);
+
+		return $signer;
+	}//end accept()
+
+	/**
+	 * In sequential mode, refuse to act before every earlier recipient signed or accepted.
+	 *
+	 * @param array<string, mixed> $request  The signing request.
+	 * @param string               $signerId The acting recipient's record ID.
+	 * @param array<string, mixed> $signer   The acting recipient's record.
+	 *
+	 * @return void
+	 *
+	 * @throws RuntimeException With code 409 when an earlier recipient has not responded.
+	 *
+	 * @spec openspec/changes/signing-accept-only-recipient/tasks.md#2-service-and-routes
+	 */
+	private function assertEarlierRecipientsDone(array $request, string $signerId, array $signer): void {
+		if (($request['signingMode'] ?? 'sequential') !== 'sequential') {
+			return;
+		}
+
+		$objectService = $this->settingsService->getObjectService();
+		['register' => $signerRegister, 'schema' => $signerSchema] = $this->requireSignerRecordBinding();
+		$order = (int)($signer['order'] ?? 0);
+		foreach (($request['signerIds'] ?? []) as $otherId) {
+			if ((string)$otherId === $signerId) {
+				continue;
+			}
+
+			$other = $this->toArray(object: $objectService->find(id: (string)$otherId, register: $signerRegister, schema: $signerSchema, _rbac: false));
+			if ((int)($other['order'] ?? 0) < $order && RecipientRole::isDone(recipient: $other) === false) {
+				throw new RuntimeException('It is not your turn yet: an earlier recipient has not responded', 409);
+			}
+		}
+	}//end assertEarlierRecipientsDone()
 
 	/**
 	 * Load a signing request that can still be signed.
@@ -902,7 +1027,8 @@ class SigningService implements SigningServiceInterface {
 			$signer = $this->toArray(object: $signerObj);
 			$signers[(string)$signerId] = $signer;
 
-			if (($signer['status'] ?? '') !== 'SIGNED') {
+			// A signer is done when SIGNED, an accept-only recipient when ACCEPTED (D3).
+			if (RecipientRole::isDone(recipient: $signer) === false) {
 				$allSigned = false;
 				break;
 			}
