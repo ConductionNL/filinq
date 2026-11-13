@@ -36,6 +36,7 @@ use OCA\Filinq\Kernel\Contracts\IntakeServiceInterface;
 use OCA\Filinq\Service\Intake\IntakeOcrQueue;
 use OCA\Filinq\Service\Support\IntakeFiling;
 use OCA\Filinq\Service\Support\IntakeRouting;
+use OCA\Filinq\Service\Support\IntakeSignals;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 
@@ -62,6 +63,7 @@ class IntakeService implements IntakeServiceInterface {
 	 * @param IntakeRouting $routingRules The default rules, routing and party suggestions
 	 * @param IUserSession $userSession The current session.
 	 * @param LoggerInterface $logger Logger for diagnostics.
+	 * @param IntakeSignals $signals The handling deadline and the content hash of an arrival.
 	 *
 	 * @return void
 	 */
@@ -72,6 +74,7 @@ class IntakeService implements IntakeServiceInterface {
 		private readonly IntakeRouting $routingRules,
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
+		private readonly IntakeSignals $signals,
 	) {
 
 	}//end __construct()
@@ -92,6 +95,7 @@ class IntakeService implements IntakeServiceInterface {
 	 *
 	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
 	 * @spec openspec/changes/archive/2026-09-29-intake-ocr-on-arrival/tasks.md#task-1.3
+	 * @spec openspec/changes/intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-an-arrival-whose-content-came-before-is-marked-never-refused-req-iws-003
 	 */
 	public function receive(IntakeDocumentReceivedEvent $event): array {
 		$channel = $event->getChannel();
@@ -133,6 +137,8 @@ class IntakeService implements IntakeServiceInterface {
 			$document['partySuggestion'] = $this->routingRules->parties->suggestFor(fileId: $fileId);
 		}
 
+		$document = $this->withSignals(document: $document, event: $event);
+
 		// Reading on arrival: a scan or photo is marked `queued` before it is
 		// stored and read by a background job after, so nobody has to start it.
 		$stored = $this->repository->save(document: $this->filing->ocrQueue->mark(document: $document));
@@ -141,6 +147,49 @@ class IntakeService implements IntakeServiceInterface {
 		return $stored;
 
 	}//end receive()
+
+	/**
+	 * The handling deadline and, when the file can be read, the content hash.
+	 *
+	 * Runs after the `sourceRef` skip, so a re-delivery never reaches it. A
+	 * file whose bytes came before is marked with `duplicateOf`; the arrival
+	 * is never refused for it, because two identical files may belong to two
+	 * cases and the registrar decides.
+	 *
+	 * @param array<string, mixed>        $document The document being taken in.
+	 * @param IntakeDocumentReceivedEvent $event    What the channel delivered.
+	 *
+	 * @return array<string, mixed> The document with its signals.
+	 *
+	 * @spec openspec/changes/intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-every-waiting-document-has-a-handling-deadline-req-iws-001
+	 * @spec openspec/changes/intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-an-arrival-whose-content-came-before-is-marked-never-refused-req-iws-003
+	 */
+	private function withSignals(array $document, IntakeDocumentReceivedEvent $event): array {
+		$document['handlingDeadline'] = $this->signals->deadlines->deadlineFor(
+			channel: $event->getChannel(),
+			sender: $event->getSender(),
+			receivedAt: (string)$document['receivedAt']
+		);
+
+		$fileId = $event->getFileId();
+		if ($fileId === null) {
+			return $document;
+		}
+
+		$contentHash = $this->signals->hasher->hashOf(fileId: $fileId);
+		if ($contentHash === null) {
+			return $document;
+		}
+
+		$document['contentHash'] = $contentHash;
+		$earlier = $this->repository->findByContentHash(contentHash: $contentHash);
+		if ($earlier !== null && ($earlier['uuid'] ?? '') !== '') {
+			$document['duplicateOf'] = (string)$earlier['uuid'];
+		}
+
+		return $document;
+
+	}//end withSignals()
 
 	/**
 	 * The inbox row a delivery starts as, before defaults are stamped on it.
@@ -253,6 +302,50 @@ class IntakeService implements IntakeServiceInterface {
 		return $this->repository->findWaiting();
 
 	}//end listWaiting()
+
+	/**
+	 * Move a waiting document's handling deadline, with the reason it moved.
+	 *
+	 * @param string $uuid     The intake document.
+	 * @param string $deadline The new deadline (Y-m-d).
+	 * @param string $reason   Why it moved.
+	 *
+	 * @return array<string, mixed> The document.
+	 *
+	 * @throws IntakeRefusedException When the reason is missing, the date is not
+	 *                                a date, the document left the inbox, or the
+	 *                                registrar may not write the intake register.
+	 *
+	 * @spec openspec/changes/intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-every-waiting-document-has-a-handling-deadline-req-iws-001
+	 */
+	public function changeDeadline(string $uuid, string $deadline, string $reason): array {
+		$reason = trim($reason);
+		if ($reason === '') {
+			throw new IntakeRefusedException(
+				message: 'Moving a deadline says why it moved.',
+				status: 400
+			);
+		}
+
+		$parts = [];
+		if (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $deadline, $parts) !== 1
+			|| checkdate((int)$parts[2], (int)$parts[3], (int)$parts[1]) === false
+		) {
+			throw new IntakeRefusedException(
+				message: 'A deadline is a date written as YYYY-MM-DD.',
+				status: 400
+			);
+		}
+
+		$document = $this->waiting(uuid: $uuid);
+		$this->requireWrite(register: IntakeRepository::REGISTER, schema: IntakeRepository::SCHEMA);
+
+		$document['handlingDeadline'] = $deadline;
+		$document['deadlineReason'] = $reason;
+
+		return $this->repository->save(document: $document, uuid: $uuid);
+
+	}//end changeDeadline()
 
 	/**
 	 * Assign one waiting document to a record.

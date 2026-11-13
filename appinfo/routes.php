@@ -83,6 +83,7 @@ $extra = [
         ['name' => 'intake#index', 'url' => 'api/intake/documents', 'verb' => 'GET'],
         ['name' => 'intake#assign', 'url' => 'api/intake/documents/{uuid}/assign', 'verb' => 'POST'],
         ['name' => 'intake#reject', 'url' => 'api/intake/documents/{uuid}/reject', 'verb' => 'POST'],
+        ['name' => 'intake#changeDeadline', 'url' => 'api/intake/documents/{uuid}/deadline', 'verb' => 'POST'],
 
         // Inbound worklist, party suggestions and routing (inbound-documents-and-the-worklist).
         ['name' => 'intake#detached', 'url' => 'api/intake/detached', 'verb' => 'GET'],

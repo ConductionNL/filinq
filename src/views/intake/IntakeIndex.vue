@@ -12,6 +12,7 @@ to a record or rejects it with a reason, and either way it leaves the inbox.
 	by the CI Playwright project.
 
 @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+@spec openspec/changes/intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md
 -->
 
 <template>
@@ -58,6 +59,12 @@ to a record or rejects it with a reason, and either way it leaves the inbox.
 						{{ t('filinq', 'Taken off a record') }}
 					</NcButton>
 					<NcButton
+						:variant="mode === 'overdue' ? 'primary' : 'secondary'"
+						data-testid="intake-mode-overdue"
+						@click="setMode('overdue')">
+						{{ t('filinq', 'Overdue') }}
+					</NcButton>
+					<NcButton
 						variant="tertiary"
 						data-testid="intake-print-separators"
 						@click="separatorsOpen = true">
@@ -84,6 +91,26 @@ to a record or rejects it with a reason, and either way it leaves the inbox.
 				{{ formatDate(row.receivedAt) }}
 			</template>
 
+			<template #column-handlingDeadline="{ row }">
+				<span v-if="row.handlingDeadline" class="intake-deadline" :title="row.deadlineReason || ''">
+					{{ formatDay(row.handlingDeadline) }}
+					<CnStatusBadge
+						:label="countdownLabel(row.handlingDeadline, today)"
+						:colorMap="{ [countdownLabel(row.handlingDeadline, today)]: countdownTone(row.handlingDeadline, today) }"
+						data-testid="intake-countdown" />
+				</span>
+				<span v-else>-</span>
+			</template>
+
+			<template #column-duplicateOf="{ row }">
+				<CnStatusBadge
+					v-if="row.duplicateOf"
+					:label="t('filinq', 'Possible duplicate')"
+					:colorMap="{ [t('filinq', 'Possible duplicate')]: 'warning' }"
+					:title="duplicateTitle(row)"
+					data-testid="intake-duplicate-badge" />
+			</template>
+
 			<template #row-actions="{ row }">
 				<NcActions>
 					<template #icon>
@@ -100,6 +127,25 @@ to a record or rejects it with a reason, and either way it leaves the inbox.
 							<Delete :size="20" />
 						</template>
 						{{ t('filinq', 'Reject') }}
+					</NcActionButton>
+					<NcActionButton
+						v-if="row.duplicateOf"
+						closeAfterClick
+						data-testid="intake-reject-duplicate"
+						@click="rejectAsDuplicate(row)">
+						<template #icon>
+							<ContentDuplicate :size="20" />
+						</template>
+						{{ t('filinq', 'Reject as duplicate') }}
+					</NcActionButton>
+					<NcActionButton
+						closeAfterClick
+						data-testid="intake-change-deadline"
+						@click="openDeadline(row)">
+						<template #icon>
+							<CalendarClock :size="20" />
+						</template>
+						{{ t('filinq', 'Change deadline') }}
 					</NcActionButton>
 				</NcActions>
 			</template>
@@ -122,6 +168,14 @@ to a record or rejects it with a reason, and either way it leaves the inbox.
 			@confirm="reject"
 			@cancel="closeDialogs" />
 
+		<IntakeDeadlineDialog
+			v-if="deadlineTarget"
+			:document="deadlineTarget"
+			:saving="saving"
+			:error="actionError"
+			@confirm="changeDeadline"
+			@cancel="closeDialogs" />
+
 		<SeparatorSheetsDialog
 			v-if="separatorsOpen"
 			@close="separatorsOpen = false" />
@@ -132,12 +186,20 @@ to a record or rejects it with a reason, and either way it leaves the inbox.
 import { CnIndexPage, CnStatusBadge } from '@conduction/nextcloud-vue'
 import { translate as t } from '@nextcloud/l10n'
 import { NcActionButton, NcActions, NcButton, NcNoteCard } from '@nextcloud/vue'
+import CalendarClock from 'vue-material-design-icons/CalendarClock.vue'
+import ContentDuplicate from 'vue-material-design-icons/ContentDuplicate.vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
 import FolderOutline from 'vue-material-design-icons/FolderOutline.vue'
 import FinalDocumentReasonDialog from '../../dialogs/FinalDocumentReasonDialog.vue'
 import IntakeAssignDialog from '../../dialogs/IntakeAssignDialog.vue'
+import IntakeDeadlineDialog from '../../dialogs/IntakeDeadlineDialog.vue'
 import SeparatorSheetsDialog from '../../dialogs/SeparatorSheetsDialog.vue'
+import {
+	countdownLabel,
+	countdownTone,
+	localToday,
+} from '../../services/intakeDeadline.js'
 import {
 	reachWarning,
 	readingColorMap,
@@ -145,8 +207,10 @@ import {
 } from '../../services/intakeReading.js'
 import {
 	assignIntakeDocument,
+	changeIntakeDeadline,
 	fetchWaitingInbox,
 	listDetachedDocuments,
+	listOverdueDocuments,
 	rejectIntakeDocument,
 } from '../../services/intakeService.js'
 
@@ -157,11 +221,14 @@ export default {
 		CnIndexPage,
 		CnStatusBadge,
 		NcButton,
+		CalendarClock,
+		ContentDuplicate,
 		Delete,
 		DotsHorizontal,
 		FinalDocumentReasonDialog,
 		FolderOutline,
 		IntakeAssignDialog,
+		IntakeDeadlineDialog,
 		SeparatorSheetsDialog,
 		NcActionButton,
 		NcActions,
@@ -176,6 +243,8 @@ export default {
 			saving: false,
 			assignTarget: null,
 			rejectTarget: null,
+			deadlineTarget: null,
+			today: localToday(),
 			actionError: '',
 			loadError: '',
 			notificationReach: null,
@@ -201,12 +270,21 @@ export default {
 		},
 
 		title() {
+			if (this.mode === 'overdue') {
+				return t('filinq', 'Overdue')
+			}
 			return this.mode === 'detached'
 				? t('filinq', 'Taken off a record')
 				: t('filinq', 'Intake')
 		},
 
 		description() {
+			if (this.mode === 'overdue') {
+				return t(
+					'filinq',
+					'Documents past their handling deadline that are not handled yet, the longest overdue first.',
+				)
+			}
 			if (this.mode === 'detached') {
 				return t(
 					'filinq',
@@ -235,6 +313,12 @@ export default {
 					label: t('filinq', 'Received'),
 					sortable: true,
 				},
+				{
+					key: 'handlingDeadline',
+					label: t('filinq', 'Deadline'),
+					sortable: true,
+				},
+				{ key: 'duplicateOf', label: t('filinq', 'Duplicate') },
 				{ key: 'readingState', label: t('filinq', 'Text') },
 			]
 			if (this.mode === 'detached') {
@@ -253,6 +337,9 @@ export default {
 			}
 			if (this.mode === 'detached') {
 				return t('filinq', 'No document has been taken off a record.')
+			}
+			if (this.mode === 'overdue') {
+				return t('filinq', 'Nothing is overdue.')
 			}
 			return t(
 				'filinq',
@@ -292,6 +379,44 @@ export default {
 		},
 
 		readingLabel,
+		countdownLabel,
+		countdownTone,
+
+		/**
+		 * A deadline date in the browser's own format.
+		 *
+		 * @param {string} value The date (Y-m-d).
+		 * @return {string} The date as the reader writes it.
+		 */
+		formatDay(value) {
+			const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(value || ''))
+			if (!match) {
+				return value || '-'
+			}
+			return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3])).toLocaleDateString()
+		},
+
+		/**
+		 * The tooltip of a possible duplicate, naming the document it arrived as before.
+		 *
+		 * @param {object} row The possible duplicate.
+		 * @return {string} The tooltip.
+		 */
+		duplicateTitle(row) {
+			return t('filinq', 'The same file arrived before as "{subject}"', { subject: this.firstSubject(row) })
+		},
+
+		/**
+		 * The subject of the document a possible duplicate arrived as before.
+		 *
+		 * @param {object} row The possible duplicate.
+		 * @return {string} The first document's subject, or its id when it is not in this list.
+		 * @spec openspec/changes/intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-a-registrar-resolves-a-duplicate-in-one-step-req-iws-004
+		 */
+		firstSubject(row) {
+			const first = this.documents.find((document) => document.uuid === row.duplicateOf)
+			return first?.subject || row.duplicateOf
+		},
 
 		channelLabel(channel) {
 			const labels = {
@@ -325,6 +450,9 @@ export default {
 			try {
 				if (this.mode === 'detached') {
 					this.documents = await listDetachedDocuments()
+					this.notificationReach = null
+				} else if (this.mode === 'overdue') {
+					this.documents = await listOverdueDocuments()
 					this.notificationReach = null
 				} else {
 					const inbox = await fetchWaitingInbox()
@@ -361,10 +489,57 @@ export default {
 			this.rejectTarget = row
 		},
 
+		openDeadline(row) {
+			this.actionError = ''
+			this.assignTarget = null
+			this.rejectTarget = null
+			this.deadlineTarget = row
+		},
+
 		closeDialogs() {
 			this.assignTarget = null
 			this.rejectTarget = null
+			this.deadlineTarget = null
 			this.actionError = ''
+		},
+
+		/**
+		 * Move the open document's deadline.
+		 *
+		 * @param {object} change The new deadline and the reason.
+		 * @return {Promise<void>} Resolves once the server has answered.
+		 * @spec openspec/changes/intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-every-waiting-document-has-a-handling-deadline-req-iws-001
+		 */
+		async changeDeadline(change) {
+			const uuid = this.deadlineTarget?.uuid
+			if (!uuid) {
+				return
+			}
+			this.saving = true
+			this.actionError = ''
+			try {
+				await changeIntakeDeadline(uuid, change.deadline, change.reason)
+				this.closeDialogs()
+				await this.load()
+			} catch (error) {
+				this.actionError =
+					error?.response?.data?.error
+					|| t('filinq', 'The deadline was not changed.')
+			} finally {
+				this.saving = false
+			}
+		},
+
+		/**
+		 * Reject a possible duplicate through the existing reject, naming the first document.
+		 *
+		 * @param {object} row The possible duplicate.
+		 * @return {Promise<void>} Resolves once the server has answered.
+		 * @spec openspec/changes/intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-a-registrar-resolves-a-duplicate-in-one-step-req-iws-004
+		 */
+		async rejectAsDuplicate(row) {
+			this.rejectTarget = row
+			await this.reject(t('filinq', 'Duplicate of {subject}', { subject: this.firstSubject(row) }))
 		},
 
 		/**
@@ -429,5 +604,11 @@ export default {
 	display: flex;
 	gap: 8px;
 	margin-bottom: 12px;
+}
+
+.intake-deadline {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
 }
 </style>

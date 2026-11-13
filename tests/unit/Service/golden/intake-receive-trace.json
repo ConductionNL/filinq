@@ -45,6 +45,7 @@
             "partySuggestion": {
                 "party": "p-1"
             },
+            "handlingDeadline": "2026-11-13",
             "ocrStatus": "queued"
         },
         "calls": [
@@ -88,6 +89,7 @@
                     "partySuggestion": {
                         "party": "p-1"
                     },
+                    "handlingDeadline": "2026-11-13",
                     "ocrStatus": "queued"
                 }
             ],
@@ -110,6 +112,7 @@
             "status": "received",
             "arrivedWith": "msg-0",
             "confidentiality": "intern",
+            "handlingDeadline": "2026-11-13",
             "ocrStatus": "queued"
         },
         "calls": [
@@ -144,6 +147,7 @@
                     "status": "received",
                     "arrivedWith": "msg-0",
                     "confidentiality": "intern",
+                    "handlingDeadline": "2026-11-13",
                     "ocrStatus": "queued"
                 }
             ],
@@ -169,6 +173,7 @@
             "partySuggestion": {
                 "party": "p-1"
             },
+            "handlingDeadline": "2026-11-13",
             "ocrStatus": "queued"
         },
         "calls": [
@@ -210,6 +215,7 @@
                     "partySuggestion": {
                         "party": "p-1"
                     },
+                    "handlingDeadline": "2026-11-13",
                     "ocrStatus": "queued"
                 }
             ],
@@ -236,6 +242,7 @@
             "partySuggestion": {
                 "party": "p-1"
             },
+            "handlingDeadline": "2026-11-13",
             "ocrStatus": "queued"
         },
         "calls": [
@@ -279,6 +286,7 @@
                     "partySuggestion": {
                         "party": "p-1"
                     },
+                    "handlingDeadline": "2026-11-13",
                     "ocrStatus": "queued"
                 }
             ],

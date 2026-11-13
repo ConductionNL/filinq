@@ -4475,8 +4475,8 @@
         "/intake/documents": {
             "get": {
                 "operationId": "intake-index",
-                "summary": "List the documents waiting for a clerk",
-                "description": "List the documents waiting for a clerk.",
+                "summary": "List the documents waiting for a clerk, or the overdue ones",
+                "description": "List the documents waiting for a clerk. With `mode=overdue`, list the documents past their handling deadline that their rule does not count as handled yet, the longest overdue first.",
                 "tags": [
                     "intake"
                 ],
@@ -4500,7 +4500,22 @@
                     "401": {
                         "$ref": "#/components/responses/Problem401"
                     }
-                }
+                },
+                "parameters": [
+                    {
+                        "name": "mode",
+                        "in": "query",
+                        "required": false,
+                        "description": "`waiting` (the default) or `overdue`.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "waiting",
+                                "overdue"
+                            ]
+                        }
+                    }
+                ]
             }
         },
         "/intake/documents/detach": {
@@ -4644,6 +4659,67 @@
                             "schema": {
                                 "type": "object",
                                 "properties": {
+                                    "reason": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/intake/documents/{uuid}/deadline": {
+            "post": {
+                "operationId": "intake-changeDeadline",
+                "summary": "Move a waiting document's handling deadline, with a reason",
+                "description": "Move a waiting document's handling deadline, with a reason. `deadline` is a date written as YYYY-MM-DD; `reason` is required and stays on the document. A missing reason or a value that is not a date answers 400, a document that left the inbox 409, and a caller who may not write the intake register 403.",
+                "tags": [
+                    "intake"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The document with its new deadline, or the refusal.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true,
+                        "description": "The uuid.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "deadline": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
                                     "reason": {
                                         "type": "string"
                                     }

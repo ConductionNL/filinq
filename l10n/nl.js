@@ -1,7 +1,3 @@
-/**
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- */
 OC.L10N.register(
     "filinq",
     {
@@ -2876,7 +2872,37 @@ OC.L10N.register(
         "The value before the change.": "De waarde voor de wijziging.",
         "When the change was made.": "Wanneer de wijziging is gedaan.",
         "Merge fields": "Samenvoegvelden",
-        "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you.": "De velden die het sjabloon invult, met een naam en een herkomst voor mensen: wat een voorbeeld onder Voor je ingevuld toont"
+        "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you.": "De velden die het sjabloon invult, met een naam en een herkomst voor mensen: wat een voorbeeld onder Voor je ingevuld toont",
+        "%n day left": ["%n werkdag over","%n werkdagen over"],
+        "%n days left": "%n werkdagen over",
+        "%n day overdue": ["%n werkdag te laat","%n werkdagen te laat"],
+        "%n days overdue": "%n werkdagen te laat",
+        "Change deadline": "Termijn wijzigen",
+        "Documents past their handling deadline that are not handled yet, the longest overdue first.": "Documenten waarvan de afhandeltermijn verstreken is en die nog niet zijn afgehandeld, de langst verlopen eerst.",
+        "Due today": "Vandaag uiterlijk",
+        "Duplicate of {subject}": "Dubbel van {subject}",
+        "New deadline": "Nieuwe termijn",
+        "Nothing is overdue.": "Niets is te laat.",
+        "Overdue": "Te laat",
+        "Pick the new deadline for \"{subject}\" and say why it moves. The reason stays with the document.": "Kies de nieuwe termijn voor \"{subject}\" en geef aan waarom die verschuift. De reden blijft bij het document.",
+        "Possible duplicate": "Mogelijk dubbel",
+        "Reject as duplicate": "Afwijzen als dubbel",
+        "The deadline was not changed.": "De termijn is niet gewijzigd.",
+        "The same file arrived before as \"{subject}\"": "Hetzelfde bestand kwam eerder binnen als \"{subject}\"",
+        "Waiting for the attachment": "Wachten op de bijlage",
+        "Handling deadline": "Afhandeltermijn",
+        "The date by which the document has to be handled. Set on arrival from the matching intake default rule's handling period in working days, or from the admin default; a registrar may move it with a reason.": "De datum waarop het document afgehandeld moet zijn. Bij binnenkomst gezet uit de afhandeltermijn in werkdagen van de passende standaardregel, of uit de standaard van de beheerder; een registrator kan hem met een reden verschuiven.",
+        "Deadline reason": "Reden termijnwijziging",
+        "Why a registrar moved the handling deadline. Moving it without a reason is refused.": "Waarom een registrator de afhandeltermijn verschoof. Verschuiven zonder reden wordt geweigerd.",
+        "Days left": "Dagen over",
+        "Days until the handling deadline, negative when it has passed. Computed on every read, never stored.": "Dagen tot de afhandeltermijn, negatief als die verstreken is. Bij elke lezing berekend, nooit opgeslagen.",
+        "SHA-256 of the file's bytes at arrival. An arrival whose hash matches an earlier intake document that was not rejected is marked as a possible duplicate of it.": "SHA-256 van de bytes van het bestand bij binnenkomst. Een binnenkomst waarvan de hash gelijk is aan een eerder, niet afgewezen binnengekomen document wordt gemarkeerd als mogelijk dubbel daarvan.",
+        "Duplicate of": "Dubbel van",
+        "The earlier intake document with the same content, when there is one. The arrival is kept either way; the registrar decides.": "Het eerder binnengekomen document met dezelfde inhoud, als dat er is. De binnenkomst blijft hoe dan ook bewaard; de registrator beslist.",
+        "Handling days": "Afhandeldagen",
+        "How many working days a document this rule matches may wait, counted from its arrival. Empty uses the admin default.": "Hoeveel werkdagen een document dat deze regel treft mag wachten, gerekend vanaf binnenkomst. Leeg gebruikt de standaard van de beheerder.",
+        "Handled when": "Afgehandeld wanneer",
+        "When a document this rule matches counts as handled: once it is assigned to a record, or once an outgoing letter answers it. A rejected document is always handled.": "Wanneer een document dat deze regel treft als afgehandeld telt: zodra het aan een dossier is toegewezen, of zodra een uitgaande brief het beantwoordt. Een afgewezen document is altijd afgehandeld."
     },
     "nplurals=2; plural=(n != 1);"
 )
