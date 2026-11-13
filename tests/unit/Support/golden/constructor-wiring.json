@@ -329,6 +329,7 @@
         "double SettingsService",
         "double TotalsReconciler",
         "double VatIdExtractor",
+        null,
         {
             "distinct objects built by the class": 0
         }
@@ -347,6 +348,7 @@
         "double OpenRegisterResolver",
         "double SettingsService",
         "double TotalsReconciler",
+        "double UnattendedVerdict",
         "double VatIdExtractor",
         {
             "distinct objects built by the class": 0

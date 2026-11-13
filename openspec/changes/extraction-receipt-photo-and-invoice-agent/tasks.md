@@ -4,7 +4,9 @@
 
 ## 1. Register
 
-- [ ] 1.1 Add `unattendedVerdict`, `verdictReasons`, `verdictThreshold` and `capturedFileId` to `financialExtraction` in `lib/Settings/filinq_register.json` (to 1.1.0) and bump the register version (REQ-ERP-001, REQ-ERP-003). Verify: `occ maintenance:repair` imports it and an extraction saves the four fields.
+- [x] 1.1 Add `unattendedVerdict`, `verdictReasons`, `verdictThreshold` and `capturedFileId` to `financialExtraction` in `lib/Settings/filinq_register.json` (to 1.1.0) and bump the register version (REQ-ERP-001, REQ-ERP-003). Verify: `occ maintenance:repair` imports it and an extraction saves the four fields.
+
+Built in this pass: the register moves to 8.52.0 with `financialExtraction` 1.1.0 and its four fields (`occ maintenance:repair` not run here, no instance). `UnattendedVerdict` judges every extraction in `extractFinancial()` before the save with the reason codes of D3; `ExtractionDuplicateLookup` finds an earlier extraction with the same supplier identifier and invoice number and counts a lookup that cannot run as a duplicate. `ExtractionVerdictEvent` is dispatched after the completed event when `callbackEvent` is true, and a failure is logged. The threshold is read from `extraction_unattended_threshold` (default 0.9, a value outside 0.6 to 1.0 reads as the default); writing it from the admin settings with the refusal message is task 3.3, still open.
 
 ## 2. Capture
 
@@ -13,8 +15,8 @@
 
 ## 3. Verdict
 
-- [ ] 3.1 Add `lib/Service/Extraction/UnattendedVerdict.php` with the checks and reason codes of D3, and call it from `extractFinancial()` before the save (REQ-ERP-003). Verify: PHPUnit per reason code, the clean pass, and a verdict unchanged after a threshold change.
-- [ ] 3.2 Add `lib/Event/ExtractionVerdictEvent.php` and dispatch it after the completed event, logging and continuing on failure (D4) (REQ-ERP-004). Verify: PHPUnit snapshot of both payloads; the completed payload is byte-identical to before.
+- [x] 3.1 Add `lib/Service/Extraction/UnattendedVerdict.php` with the checks and reason codes of D3, and call it from `extractFinancial()` before the save (REQ-ERP-003). Verify: PHPUnit per reason code, the clean pass, and a verdict unchanged after a threshold change.
+- [x] 3.2 Add `lib/Event/ExtractionVerdictEvent.php` and dispatch it after the completed event, logging and continuing on failure (D4) (REQ-ERP-004). Verify: PHPUnit snapshot of both payloads; the completed payload is byte-identical to before.
 - [ ] 3.3 Add the threshold setting `extraction_unattended_threshold` with its bounds to the settings service and `Settings.vue` (D5) (REQ-ERP-005). Verify: Playwright `tests/e2e/extraction-verdict-settings.spec.ts`.
 
 ## 4. Cross-app, strings, tests and docs

@@ -29,7 +29,9 @@ namespace OCA\Filinq\Service;
 
 use DateTimeImmutable;
 use DateTimeInterface;
+use OCA\Filinq\Event\ExtractionVerdictEvent;
 use OCA\Filinq\Event\FinancialExtractionCompletedEvent;
+use OCA\Filinq\Event\UnattendedOutcome;
 use OCA\Filinq\Event\Support\RequestOrigin;
 use OCA\Filinq\Kernel\Contracts\FinancialExtractionServiceInterface;
 use OCA\Filinq\Service\Extraction\AiPrompt;
@@ -38,6 +40,7 @@ use OCA\Filinq\Service\Extraction\DateExtractor;
 use OCA\Filinq\Service\Extraction\IbanExtractor;
 use OCA\Filinq\Service\Extraction\KvkExtractor;
 use OCA\Filinq\Service\Extraction\TotalsReconciler;
+use OCA\Filinq\Service\Extraction\UnattendedVerdict;
 use OCA\Filinq\Service\Extraction\VatIdExtractor;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Files\File;
@@ -202,6 +205,7 @@ class FinancialExtractionService implements FinancialExtractionServiceInterface 
 	 * @param DateExtractor $dateExtractor Pure date extractor.
 	 * @param AmountExtractor $amountExtractor Pure amount extractor.
 	 * @param TotalsReconciler $totalsReconciler Pure totals reconciler.
+	 * @param UnattendedVerdict|null $unattendedVerdict Judges whether an extraction can be trusted without a person (REQ-ERP-003).
 	 *
 	 * @return void
 	 */
@@ -220,6 +224,7 @@ class FinancialExtractionService implements FinancialExtractionServiceInterface 
 		private readonly DateExtractor $dateExtractor,
 		private readonly AmountExtractor $amountExtractor,
 		private readonly TotalsReconciler $totalsReconciler,
+		private readonly ?UnattendedVerdict $unattendedVerdict = null,
 	) {
 
 	}//end __construct()
@@ -241,8 +246,8 @@ class FinancialExtractionService implements FinancialExtractionServiceInterface 
 
 		$textResult = $this->resolveText(fileId: $request['resolvedFileId']);
 
-		$pipeline = $this->runExtraction(text: $textResult['text'], docType: $request['docType']);
-		$pipeline = $this->applyAiEnhancement(text: $textResult['text'], result: $pipeline, requestedBy: $requestedBy);
+		$heuristic = $this->runExtraction(text: $textResult['text'], docType: $request['docType']);
+		$pipeline  = $this->applyAiEnhancement(text: $textResult['text'], result: $heuristic, requestedBy: $requestedBy);
 
 		$payload = [
 			'documentUri' => $request['effectiveDocumentUri'],
@@ -254,6 +259,13 @@ class FinancialExtractionService implements FinancialExtractionServiceInterface 
 			'overallConfidence' => $pipeline['overallConfidence'],
 			'corrections' => [],
 		];
+
+		// The unattended verdict, judged once and stored with the threshold it
+		// used, so it says what held when a consumer acted (REQ-ERP-003).
+		$outcome = $this->unattendedOutcome(heuristic: $heuristic, pipeline: $pipeline);
+		if ($outcome !== null) {
+			$payload = $payload + $outcome->toStored();
+		}
 
 		$objectService = $this->settingsService->getObjectService();
 		// Fails closed when unbound. An administrator sets these in the admin
@@ -269,10 +281,94 @@ class FinancialExtractionService implements FinancialExtractionServiceInterface 
 
 		if ($request['callbackEvent'] === true) {
 			$this->dispatchCompletionEvent(payload: $payload);
+			if ($outcome !== null) {
+				$this->dispatchVerdictEvent(saved: $savedArray, payload: $payload, outcome: $outcome);
+			}
 		}
 
 		return $savedArray;
 	}//end extractFinancial()
+
+	/**
+	 * The unattended verdict of a pipeline result, or null when no verdict service is wired.
+	 *
+	 * @param array<string, mixed> $heuristic The result before the model step.
+	 * @param array<string, mixed> $pipeline  The result after it.
+	 *
+	 * @return UnattendedOutcome|null The verdict.
+	 *
+	 * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/specs/financial-document-field-extraction/spec.md#requirement-each-extraction-carries-an-unattended-verdict-with-its-reasons-req-erp-003
+	 */
+	private function unattendedOutcome(array $heuristic, array $pipeline): ?UnattendedOutcome {
+		if ($this->unattendedVerdict === null) {
+			return null;
+		}
+
+		return $this->unattendedVerdict->judge(
+			result: $pipeline,
+			modelFilled: self::modelFilledFields(heuristic: $heuristic['fields'], final: $pipeline['fields'])
+		);
+	}//end unattendedOutcome()
+
+	/**
+	 * The fields the model filled that the heuristics left empty.
+	 *
+	 * @param array<string, mixed> $heuristic The fields before the model step.
+	 * @param array<string, mixed> $final     The fields after it.
+	 *
+	 * @return list<string> The field names.
+	 *
+	 * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/specs/financial-document-field-extraction/spec.md#requirement-each-extraction-carries-an-unattended-verdict-with-its-reasons-req-erp-003
+	 */
+	public static function modelFilledFields(array $heuristic, array $final): array {
+		$filled = [];
+		foreach ($final as $field => $value) {
+			$before = ($heuristic[$field] ?? null);
+			$empty  = ($before === null || $before === '' || $before === []);
+			if ($empty === true && $value !== null && $value !== '' && $value !== []) {
+				$filled[] = (string)$field;
+			}
+		}
+
+		return $filled;
+	}//end modelFilledFields()
+
+	/**
+	 * Dispatch `nl.conduction.filinq.extraction.verdict` after the completed
+	 * event. A failure is logged and never fails the extraction (REQ-ERP-004).
+	 *
+	 * @param array<string, mixed> $saved   The saved extraction.
+	 * @param array<string, mixed> $payload The persisted payload.
+	 * @param UnattendedOutcome    $outcome The verdict.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/specs/financial-document-field-extraction/spec.md#requirement-the-verdict-is-sent-as-a-sibling-event-req-erp-004
+	 */
+	private function dispatchVerdictEvent(array $saved, array $payload, UnattendedOutcome $outcome): void {
+		try {
+			$meta = ($saved['@self'] ?? []);
+			if (is_array($meta) === false) {
+				$meta = [];
+			}
+
+			$id = (string)(($meta['id'] ?? null) ?? ($saved['id'] ?? null) ?? ($saved['uuid'] ?? ''));
+			$this->eventDispatcher->dispatchTyped(
+				new ExtractionVerdictEvent(
+					extractionId: $id,
+					documentUri: (string)$payload['documentUri'],
+					sourceApp: (string)$payload['sourceApp'],
+					docType: (string)$payload['docType'],
+					outcome: $outcome,
+				)
+			);
+		} catch (Throwable $e) {
+			$this->logger->error(
+				'Filinq: financial extraction completed but the verdict event could not be dispatched: '.$e->getMessage(),
+				['exception' => $e]
+			);
+		}
+	}//end dispatchVerdictEvent()
 
 	/**
 	 * Validate and normalise the extraction request body: docType, the
