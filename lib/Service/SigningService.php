@@ -34,6 +34,7 @@ use OCA\Filinq\Service\Signing\SignerEntries;
 use OCA\Filinq\Service\Signing\SigningAct;
 use OCA\Filinq\Service\Support\SigningGuards;
 use OCA\Filinq\Service\Support\SigningOutputs;
+use OCA\OpenRegister\Mcp\Attribute\McpTool;
 use RuntimeException;
 
 /**
@@ -109,6 +110,27 @@ class SigningService implements SigningServiceInterface {
 		'correlationId',
 	];
 
+	// The attribute stands before the docblock for the reason DocumentAgentService
+	// gives: the spec-coverage gate cannot walk past a multi-line attribute's `)]`.
+	//
+	// This is the only signing method an agent may reach, and only to START a
+	// request: sign(), decline(), bulkSign(), cancelRequest() and every class
+	// under Service/Signing/ stay attribute-free. The write hints route the tool
+	// through Hermiq's human-approval gate; Filinq adds no gate of its own.
+
+	#[McpTool(
+		name: 'startSigningRequest',
+		subject: 'signingRequest',
+		action: 'create',
+		description: 'Start a signing request for a document in your Files: give documentFileId, the signers '
+			. '(each with a name and email) and optionally signatureLevel (SES/AES/QES), signingMode '
+			. '(sequential/parallel), provider and deadline. Creates the request and notifies the signers, '
+			. 'so a person must approve the resolved request first. It never signs, declines or cancels.',
+		readOnlyHint: false,
+		destructiveHint: false,
+		idempotentHint: false,
+		scope: 'create'
+	)]
 	/**
 	 * Create a new signing request
 	 *
@@ -122,6 +144,7 @@ class SigningService implements SigningServiceInterface {
 	 *
 	 * @spec openspec/changes/digital-signing-integration/tasks.md#3-2
 	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/hermiq-ai-tooling/specs/filinq-mcp-surface/spec.md#requirement-an-approval-gated-signing-request-initiation-tool-exists-req-ddhat-001
 	 */
 	public function createRequest(array $data): array {
 		// Throws RuntimeException('No authenticated user') when there is no
