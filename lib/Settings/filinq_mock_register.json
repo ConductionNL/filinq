@@ -7525,6 +7525,59 @@
         "method": "rules",
         "correspondentPending": true,
         "status": "suggested"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "organisationSettings",
+          "slug": "organisationsettings-demostad-1"
+        },
+        "name": "Demostad",
+        "consentPeriodDays": 42,
+        "anonymizationProfile": {
+          "anonymize": [
+            "PERSON",
+            "BSN",
+            "PHONE",
+            "EMAIL",
+            "IBAN",
+            "ADDRESS"
+          ],
+          "keepVisible": [
+            "ORGANIZATION",
+            "LOCATION",
+            "DATE"
+          ]
+        },
+        "defaultHuisstijl": "00000000-0000-0000-0000-000000000001",
+        "notes": "Voorbeeld: zes weken bezwaartermijn voor Demostad."
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "organisationSettings",
+          "slug": "organisationsettings-voorbeeld-2"
+        },
+        "name": "Voorbeeldgemeente",
+        "consentPeriodDays": 28,
+        "notes": "Voorbeeld: alleen de bezwaartermijn wijkt af."
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "organisationSettings",
+          "slug": "organisationsettings-voorbeeld-3"
+        },
+        "name": "Voorbeeldwaterschap",
+        "anonymizationProfile": {
+          "anonymize": [
+            "PERSON",
+            "BSN"
+          ],
+          "keepVisible": [
+            "ORGANIZATION"
+          ]
+        }
       }
     ]
   }
