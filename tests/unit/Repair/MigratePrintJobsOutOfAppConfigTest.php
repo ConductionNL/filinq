@@ -122,4 +122,27 @@ class MigratePrintJobsOutOfAppConfigTest extends TestCase {
 		$this->assertSame($before, $this->config);
 
 	}//end testNothingIsDeletedWhenTheJobCannotBeStored()
+
+	/**
+	 * An entry whose JSON cannot be read still moves, with the defaults, so a
+	 * corrupt setting does not keep its PDF in app configuration forever.
+	 *
+	 * @return void
+	 */
+	public function testAnUnreadableEntryMovesWithTheDefaults(): void {
+		$this->config = [
+			'print_job_ccc' => '{not json',
+			'print_job_pdf_ccc' => base64_encode('%PDF-c'),
+		];
+		$step = new MigratePrintJobsOutOfAppConfig($this->appConfig(), $this->printJobRepository(), $this->printJobFileStore(), $this->createMock(LoggerInterface::class));
+
+		$step->run($this->createMock(IOutput::class));
+
+		$this->assertSame([], $this->config);
+		$this->assertSame('', $this->rows['ccc']['requestedBy']);
+		$this->assertSame('print-job.pdf', $this->rows['ccc']['filename']);
+		$this->assertSame('rendering', $this->rows['ccc']['status']);
+		$this->assertSame('%PDF-c', $this->stored[$this->rows['ccc']['files'][0]]);
+
+	}//end testAnUnreadableEntryMovesWithTheDefaults()
 }//end class

@@ -156,4 +156,27 @@ class RenameRoleGroupsTest extends TestCase {
 		$this->assertSame(expected: '1', actual: $this->settings[RenameRoleGroups::DONE_KEY]);
 
 	}//end testItRunsOnce()
+
+	/**
+	 * A group-list setting that is not a JSON list (an object, or text that
+	 * is no JSON) is left exactly as it was; a list whose renamed entries
+	 * collapse into one is de-duplicated.
+	 *
+	 * @return void
+	 */
+	public function testOnlyJsonListSettingsAreRewritten(): void {
+		$this->settings = [
+			'subject_erasure_groups' => '{"a":"docudesk-policy-admins"}',
+			'legal_hold_authority_groups' => 'docudesk-policy-admins',
+			'prohibition_override_groups' => '["docudesk-woo-officers","filinq-woo-officers",7]',
+		];
+
+		$this->step()->run(output: $this->createMock(originalClassName: IOutput::class));
+
+		$this->assertSame(expected: '{"a":"docudesk-policy-admins"}', actual: $this->settings['subject_erasure_groups']);
+		$this->assertSame(expected: 'docudesk-policy-admins', actual: $this->settings['legal_hold_authority_groups']);
+		$this->assertSame(expected: '["filinq-woo-officers",7]', actual: $this->settings['prohibition_override_groups']);
+		$this->assertArrayNotHasKey(key: 'publication_publisher_groups', array: $this->settings);
+
+	}//end testOnlyJsonListSettingsAreRewritten()
 }//end class
