@@ -4,11 +4,11 @@
 
 ## 1. Register
 
-- [ ] 1.1 Add `caseSystemDestination` and `caseSystemDelivery` (with the `x-openregister-lifecycle`, relation and failure notification of design ADR-031 table) to `lib/Settings/filinq_register.json` in the register the bridge lands in; add `caseSystemDeliveryId` to `generatedDocument`; seed one inactive `hrmq` destination and one `written_back` delivery; bump the register version (REQ-GSC-001, REQ-GSC-003). Verify: `occ maintenance:repair` imports both schemas and the seeds show on the bridge panel.
+- [x] 1.1 Add `caseSystemDestination` and `caseSystemDelivery` (with the `x-openregister-lifecycle`, relation and failure notification of design ADR-031 table) to `lib/Settings/filinq_register.json` in the register the bridge lands in; add `caseSystemDeliveryId` to `generatedDocument`; seed one inactive `hrmq` destination and one `written_back` delivery; bump the register version (REQ-GSC-001, REQ-GSC-003). Verify: `occ maintenance:repair` imports both schemas and the seeds show on the bridge panel. — As built: register 8.52.0, `generatedDocument` 1.7.0; the two links are plain uuids like `caseId` (no schema in this register declares a typed relation yet); the seeds are the demo set in `filinq_mock_register.json` (three destinations, all inactive, `hrmq` among them, and three deliveries, one per status), because the main register seeds no `generatedDocument` to point at. Not run: `occ maintenance:repair` (needs a live instance).
 
 ## 2. Service and route
 
-- [ ] 2.1 Add `lib/Service/CaseSystemDeliveryService.php`: pick the destination (template before namespace, request override), refuse a second active destination, write one delivery per document and destination (D2, D5) (REQ-GSC-001, REQ-GSC-002). Verify: PHPUnit on precedence, the duplicate refusal and idempotency.
+- [x] 2.1 Add `lib/Service/CaseSystemDeliveryService.php`: pick the destination (template before namespace, request override), refuse a second active destination, write one delivery per document and destination (D2, D5) (REQ-GSC-001, REQ-GSC-002). Verify: PHPUnit on precedence, the duplicate refusal and idempotency.
 - [ ] 2.2 Call it from `DocumentService::generateDocument()` and `generateBulkSync()` after a successful store; answer 400 for `caseSystem` with mode `return`; turn a delivery write failure into a warning (D3, D4) (REQ-GSC-002). Verify: PHPUnit on each mode and on a failing object write; Newman on the 400.
 - [ ] 2.3 Add `POST api/bridge/deliveries/{id}/retry` with `#[AuthorizedAdminSetting]`, moving only `writeback_failed` to `ready_for_writeback` (REQ-GSC-003). Verify: Newman answers 409 for a delivery in any other state.
 

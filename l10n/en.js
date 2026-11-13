@@ -1,7 +1,3 @@
-/**
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- */
 OC.L10N.register(
     "filinq",
     {
@@ -2791,7 +2787,35 @@ OC.L10N.register(
         "The value before the change.": "The value before the change.",
         "When the change was made.": "When the change was made.",
         "Merge fields": "Merge fields",
-        "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you.": "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you."
+        "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you.": "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you.",
+        "Bridge source": "Bridge source",
+        "Case System Delivery": "Case System Delivery",
+        "Case System Destination": "Case System Destination",
+        "Case system delivery": "Case system delivery",
+        "Confidentiality": "Confidentiality",
+        "Destination": "Destination",
+        "Document metadata": "Document metadata",
+        "Documents from this template are delivered here; a template match wins over a namespace match.": "Documents from this template are delivered here; a template match wins over a namespace match.",
+        "Generated document": "Generated document",
+        "In the case system": "In the case system",
+        "Only an active destination receives deliveries; at most one is active per template or namespace.": "Only an active destination receives deliveries; at most one is active per template or namespace.",
+        "RSIN of the organisation that creates the document.": "RSIN of the organisation that creates the document.",
+        "Source organisation": "Source organisation",
+        "Templates in this namespace are delivered here, unless a template-specific destination matches.": "Templates in this namespace are delivered here, unless a template-specific destination matches.",
+        "The Nextcloud file id of the stored document.": "The Nextcloud file id of the stored document.",
+        "The bridge source (case system connection) the delivery goes through.": "The bridge source (case system connection) the delivery goes through.",
+        "The bridge source the push synchronisation sends through.": "The bridge source the push synchronisation sends through.",
+        "The case in the case system the document is attached to, when the request named one.": "The case in the case system the document is attached to, when the request named one.",
+        "The case system's informatieobjecttype URL for these documents.": "The case system's informatieobjecttype URL for these documents.",
+        "The case system's message when the delivery failed.": "The case system's message when the delivery failed.",
+        "The confidentiality level the case system enforces.": "The confidentiality level the case system enforces.",
+        "The delivery of this document to the case system, when a destination applied.": "The delivery of this document to the case system, when a destination applied.",
+        "The destination the document goes to; one delivery per document and destination.": "The destination the document goes to; one delivery per document and destination.",
+        "The document's address in the case system, once written back.": "The document's address in the case system, once written back.",
+        "The stored document this delivery sends.": "The stored document this delivery sends.",
+        "The user who generated the document; told when the delivery fails.": "The user who generated the document; told when the delivery fails.",
+        "Where the delivery is: waiting, written back, or failed.": "Where the delivery is: waiting, written back, or failed.",
+        "titel, bestandsnaam, formaat, taal, creatiedatum, auteur and the destination fields, for integriq to map.": "titel, bestandsnaam, formaat, taal, creatiedatum, auteur and the destination fields, for integriq to map."
     },
     "nplurals=2; plural=(n != 1);"
 )
