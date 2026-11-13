@@ -4,6 +4,7 @@
  */
 
 import {
+	buildManifest,
 	CnPageRenderer,
 	defaultPageTypes,
 	registerBuiltinDashboardWidgets,
@@ -26,10 +27,10 @@ import { registerDownloadAllFilesLeaf } from './integrations/registerDownloadAll
 import { registerMergeToPdfLeaf } from './integrations/registerMergeToPdfLeaf.js'
 import { registerSigningFolderLeaf } from './integrations/registerSigningFolderLeaf.js'
 import bundledManifest from './manifest.json'
+import fragments from './manifestFragments.js'
 import menuLayout from './menu-layout.json'
 import pinia from './pinia.js'
 import registry from './registry.js'
-import { applyMenuRelocations } from './services/menuRelocations.js'
 import { initializeStores } from './store/store.js'
 
 // Must stay first: sets __webpack_public_path__ / __webpack_nonce__ before
@@ -94,122 +95,11 @@ function tryLoadTranslations() {
 // handing them an extensible copy keeps this independent of bundle shape.
 const RoutePageRenderer = { ...CnPageRenderer }
 
-/**
- * Assign top-level menu leaves to a navigation section declared by
- * `src/menu-layout.json#sections` (`{ menuEntryId: sectionName }`). Only
- * top-level entries are sectioned; unknown ids are inert.
- *
- * @param {Array<object>} menu The merged menu (mutated in place).
- * @param {Record<string, string>|undefined} sections Menu-entry id → section name.
- * @return {Array<object>} The menu with sections applied.
- */
-function applyMenuSections(menu, sections) {
-	if (!sections || typeof sections !== 'object') return menu
-	menu.forEach((node) => {
-		const section = sections[node.id]
-		if (section) node.section = section
-	})
-	return menu
-}
-
-/**
- * Remove individual menu entries by id after relocation — used to retire
- * duplicate navigation entries whose PAGE must stay routable (deep links
- * and e2e specs hit the route directly). Declared in
- * `src/menu-layout.json#removals`. Only leaf entries are removed; group ids
- * are ignored so a removal can never silently hide a whole cluster.
- *
- * @param {Array<object>} menu The merged menu (mutated in place).
- * @param {Array<string>|undefined} removals Menu-entry ids to drop.
- * @return {Array<object>} The menu without the removed entries.
- */
-function applyMenuRemovals(menu, removals) {
-	if (!Array.isArray(removals) || removals.length === 0) return menu
-	const drop = new Set(removals)
-	const isLeaf = (n) => !Array.isArray(n.children) || n.children.length === 0
-	menu.forEach((node) => {
-		if (Array.isArray(node.children)) {
-			node.children = node.children.filter(
-				(c) => !(drop.has(c.id) && isLeaf(c)),
-			)
-		}
-	})
-	return menu.filter((node) => !(drop.has(node.id) && isLeaf(node)))
-}
-
-/**
- * Promote the menu entries listed in `src/menu-layout.json#settingsSection`
- * into Nextcloud's settings foldout — the NcAppNavigationSettings gear at the
- * bottom-left of the navigation, OUTSIDE the scrollable list. CnAppNav renders
- * every TOP-LEVEL item carrying `section: "settings"` as a flat entry inside
- * that foldout (with an auto-prepended "Personal settings"). This lifts each
- * listed id out of wherever it currently sits, tags it `section: "settings"`,
- * flattens it (the foldout has no nested groups), and appends it to the top
- * level. Empty non-clickable groups left behind are dropped; a clickable group
- * (one with route/href/action) is kept.
- *
- * @param {Array<object>} menu        The merged + relocated + pruned menu.
- * @param {Array<string>|undefined} settingsIds Entry ids to move to the foldout.
- * @return {Array<object>} The menu with the settings entries lifted out.
- */
-function applySettingsSection(menu, settingsIds) {
-	if (!Array.isArray(settingsIds) || settingsIds.length === 0) return menu
-	const want = new Set(settingsIds)
-	const isClickable = (n) =>
-		n.route !== undefined || n.href !== undefined || n.action !== undefined
-	const lifted = []
-	const strip = (nodes) =>
-		nodes.reduce((acc, n) => {
-			if (want.has(n.id)) {
-				const { children, ...leaf } = n
-				lifted.push({ ...leaf, section: 'settings' })
-				return acc
-			}
-			if (Array.isArray(n.children)) {
-				const children = strip(n.children)
-				if (
-					children.length === 0
-					&& n.children.length > 0
-					&& !isClickable(n)
-				)
-					return acc
-				acc.push({ ...n, children })
-				return acc
-			}
-			acc.push(n)
-			return acc
-		}, [])
-	const remaining = strip(menu)
-	return [...remaining, ...lifted]
-}
-
-/**
- * Apply the canonical navigation layout (src/menu-layout.json) to the bundled
- * manifest's menu and return a shallow-cloned manifest carrying the rewritten
- * menu. Filinq ships a monolithic manifest (no manifest.d fragments), so the
- * four canonical passes run directly on a deep copy of `manifest.menu`:
- * relocations → sections → removals → settingsSection. The manifest stays the
- * source of WHAT exists (ADR-037); menu-layout.json is the single place deciding
- * WHERE entries live, including which config/admin entries fold into the
- * Nextcloud settings gear (applySettingsSection). Currently every map in
- * menu-layout.json is empty (Filinq's in-app menu is wholly operational and
- * its admin surface lives in NC's settings framework), so this is an identity
- * transform today — the wiring exists for fleet parity so any future in-menu
- * config entry folds in by listing its id in menu-layout.json alone.
- *
- * @param {object} manifest The bundled base manifest (with `menu[]`).
- * @return {object} A manifest clone whose `menu` reflects the canonical layout.
- */
-function applyMenuLayout(manifest) {
-	let menu = JSON.parse(JSON.stringify(manifest.menu || []))
-	menu = applyMenuRelocations(menu, menuLayout.relocations)
-	menu = applyMenuSections(menu, menuLayout.sections)
-	menu = applyMenuRemovals(menu, menuLayout.removals)
-	menu = applySettingsSection(menu, menuLayout.settingsSection)
-	return { ...manifest, menu }
-}
-
-const manifest = applyMenuLayout(bundledManifest)
+// The effective manifest: the bundled base, its manifest.d fragments (ADR-037)
+// and the canonical navigation layout (src/menu-layout.json), assembled by the
+// shared pipeline (ADR-044) rather than a local copy of it. The manifest stays
+// the source of WHAT exists; menu-layout.json decides WHERE entries live.
+const manifest = buildManifest(bundledManifest, fragments, menuLayout)
 
 /**
  * Build the vue-router config from the manifest. Each manifest page

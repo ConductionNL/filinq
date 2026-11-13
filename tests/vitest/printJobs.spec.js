@@ -14,6 +14,7 @@ import {
 	canDownload,
 	printJobStatusLabel,
 } from '../../src/services/printJobs.js'
+import { effectiveManifest } from './support/effectiveManifest.js'
 
 describe('buildPrintRequest', () => {
 	it('turns three selected recipients into one request with three letters', () => {
@@ -71,12 +72,7 @@ describe('the print jobs page', () => {
 	})
 
 	it('is a routed page with a menu entry, and Correspondence sends to print', () => {
-		const manifest = JSON.parse(
-			readFileSync(
-				new URL('../../src/manifest.json', import.meta.url),
-				'utf8',
-			),
-		)
+		const manifest = effectiveManifest()
 		const page = manifest.pages.find((p) => p.id === 'PrintJobs')
 		expect(page.component).toBe('PrintJobs')
 		expect(manifest.menu.some((m) => m.route === 'PrintJobs')).toBe(true)
