@@ -31,6 +31,7 @@ namespace OCA\Filinq\Tests\Unit\Service\Editing;
 use OCA\Filinq\Service\Editing\PackagePartIo;
 use OCA\Filinq\Service\Editing\PptxPresentationCodec;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 /**
  * Tests for the OOXML presentation codec.
@@ -228,4 +229,64 @@ class PptxPresentationCodecTest extends TestCase {
 		$this->assertFalse($codec->supports(extension: 'odp'));
 		$this->assertFalse($codec->supports(extension: 'xlsx'));
 	}//end testItSupportsOnlyItsOwnFormat()
+
+	/**
+	 * Only the addressed shape is rewritten; its run formatting is kept and
+	 * the new text is escaped. A shape without an id is not reported.
+	 *
+	 * @return void
+	 */
+	public function testOnlyTheAddressedShapeIsRewrittenKeepingItsFormatting(): void {
+		$io = $this->io(
+			[
+				'ppt/slides/slide1.xml' => '<p:sld>'
+					. '<p:sp><p:nvSpPr><p:cNvPr id="2" name="Title"/></p:nvSpPr><p:txBody><a:p><a:t>Welcome</a:t></a:p></p:txBody></p:sp>'
+					. '<p:sp><p:nvSpPr><p:cNvPr id="4" name="Body"/></p:nvSpPr><p:txBody><a:p><a:r><a:rPr lang="nl-NL" b="1"/><a:t>Old</a:t></a:r></a:p></p:txBody></p:sp>'
+					. '<p:sp><p:nvSpPr><p:cNvPr name="Anonymous"/></p:nvSpPr><p:txBody><a:p><a:t>Ghost</a:t></a:p></p:txBody></p:sp>'
+					. '</p:sld>',
+			]
+		);
+		$codec = new PptxPresentationCodec($io);
+
+		$this->assertSame(['2', '4'], array_column($codec->readShapes(packageBytes: 'ignored'), 'shape'));
+
+		$codec->writeShape(packageBytes: 'ignored', slide: 'slide1', shape: '4', region: 'slide', text: 'Kosten & baten');
+
+		$xml = $io->parts['ppt/slides/slide1.xml'];
+		$this->assertStringContainsString('<a:p><a:t>Welcome</a:t></a:p>', $xml);
+		$this->assertStringContainsString('<a:p><a:r><a:rPr lang="nl-NL" b="1"/><a:t>Kosten &amp; baten</a:t></a:r></a:p>', $xml);
+		$this->assertStringContainsString('<a:t>Ghost</a:t>', $xml);
+	}//end testOnlyTheAddressedShapeIsRewrittenKeepingItsFormatting()
+
+	/**
+	 * A shape id that is not on the slide is refused and nothing is written.
+	 *
+	 * @return void
+	 */
+	public function testAnUnknownShapeIsRefused(): void {
+		$io = $this->io($this->deck());
+		$before = $io->parts;
+
+		try {
+			(new PptxPresentationCodec($io))->writeShape(packageBytes: 'ignored', slide: 'slide1', shape: '9', region: 'slide', text: 'x');
+			$this->fail('An unknown shape was written');
+		} catch (RuntimeException $e) {
+			$this->assertSame('Shape 9 was not found on slide1 (slide).', $e->getMessage());
+		}
+
+		$this->assertSame($before, $io->parts);
+	}//end testAnUnknownShapeIsRefused()
+
+	/**
+	 * A slide or region the deck does not have is refused.
+	 *
+	 * @return void
+	 */
+	public function testAnUnknownRegionIsRefused(): void {
+		$codec = new PptxPresentationCodec($this->io($this->deck()));
+
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessage('slide2 has no "notes" region in this deck.');
+		$codec->writeShape(packageBytes: 'ignored', slide: 'slide2', shape: '3', region: 'notes', text: 'x');
+	}//end testAnUnknownRegionIsRefused()
 }//end class

@@ -178,4 +178,40 @@ class BlockStyleCodecsTest extends TestCase {
 
 		$this->assertStringContainsString('<w:t>one</w:t>', $result['markup']);
 	}//end testOoxmlAcceptsAListThatOdfRefuses()
+
+	/**
+	 * Italic, underline and a page break each land in the ODF automatic
+	 * style, both when switched on and when explicitly switched off.
+	 *
+	 * @return void
+	 */
+	public function testOdfWritesPostureUnderlineAndPageBreak(): void {
+		$codec = new OdfBlockStyleCodec();
+
+		$on = $codec->applyStyle(
+			markup: '<text:p>one</text:p>',
+			style: ['alignment' => 'right', 'pageBreakBefore' => true, 'italic' => true, 'underline' => true],
+			styleName: 'P7'
+		);
+		$this->assertSame(
+			'<style:style style:name="P7" style:family="paragraph">'
+			. '<style:paragraph-properties fo:text-align="end" fo:break-before="page"/>'
+			. '<style:text-properties fo:font-style="italic" style:text-underline-style="solid"/>'
+			. '</style:style>',
+			$on['automaticStyle']
+		);
+		$this->assertStringContainsString('P7', $on['markup']);
+
+		$off = $codec->applyStyle(
+			markup: '<text:p>one</text:p>',
+			style: ['italic' => false, 'underline' => false, 'pageBreakBefore' => false],
+			styleName: 'P8'
+		);
+		$this->assertSame(
+			'<style:style style:name="P8" style:family="paragraph">'
+			. '<style:text-properties fo:font-style="normal" style:text-underline-style="none"/>'
+			. '</style:style>',
+			$off['automaticStyle']
+		);
+	}//end testOdfWritesPostureUnderlineAndPageBreak()
 }//end class

@@ -214,4 +214,19 @@ class PackagePartIoTest extends TestCase {
 
 		$this->assertSame($before, $after);
 	}//end testWritingDoesNotAddOrDropParts()
+
+	/**
+	 * Bytes that are not a package hold no part, and cannot be written to.
+	 *
+	 * @return void
+	 */
+	public function testBytesThatAreNoPackageHoldNothingAndCannotBeWritten(): void {
+		$io = new PackagePartIo();
+
+		$this->assertFalse($io->hasPart(packageBytes: 'plain text, not a zip', part: 'content.xml'));
+
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessage('The file is not a writable document package.');
+		$io->writePart(packageBytes: 'plain text, not a zip', part: 'content.xml', xml: '<x/>');
+	}//end testBytesThatAreNoPackageHoldNothingAndCannotBeWritten()
 }//end class

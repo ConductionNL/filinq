@@ -356,4 +356,46 @@ class BlockStyleCodecTest extends TestCase {
 
 		$this->apply([]);
 	}//end testEmptyStyleIsRefused()
+
+	/**
+	 * A package family without a style codec is not supported, and styling
+	 * it is refused by name before the style itself is looked at.
+	 *
+	 * @return void
+	 */
+	public function testAFamilyWithoutACodecIsRefusedByName(): void {
+		$this->assertTrue($this->codec->supports(format: PackageCodec::FORMAT_OOXML));
+		$this->assertTrue($this->codec->supports(format: PackageCodec::FORMAT_ODF));
+		$this->assertFalse($this->codec->supports(format: 'pdf'));
+
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessage('Style and layout are not supported for the "pdf" package family.');
+		$this->codec->applyStyle(markup: self::PARAGRAPH, style: ['nonsense' => 1], format: 'pdf');
+	}//end testAFamilyWithoutACodecIsRefusedByName()
+
+	/**
+	 * Turning a list and a page break off removes their elements and keeps
+	 * the rest of the paragraph properties.
+	 *
+	 * @return void
+	 */
+	public function testTurningListAndPageBreakOffRemovesThem(): void {
+		$markup = '<w:p><w:pPr><w:jc w:val="center"/><w:numPr><w:ilvl w:val="0"/><w:numId w:val="3"/></w:numPr>'
+			. '<w:pageBreakBefore/></w:pPr><w:r><w:t>x</w:t></w:r></w:p>';
+
+		$this->assertSame(
+			'<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:t>x</w:t></w:r></w:p>',
+			$this->apply(style: ['list' => false, 'pageBreakBefore' => false], markup: $markup)
+		);
+	}//end testTurningListAndPageBreakOffRemovesThem()
+
+	/**
+	 * Turning a list off on a paragraph without properties adds no empty
+	 * property element.
+	 *
+	 * @return void
+	 */
+	public function testTurningAListOffWithoutPropertiesChangesNothing(): void {
+		$this->assertSame(self::PARAGRAPH, $this->apply(style: ['list' => false]));
+	}//end testTurningAListOffWithoutPropertiesChangesNothing()
 }//end class
