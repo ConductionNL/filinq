@@ -7525,6 +7525,45 @@
         "method": "rules",
         "correspondentPending": true,
         "status": "suggested"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "documentReview",
+          "slug": "review-demostad-beschikking-2024-0042"
+        },
+        "fileId": 1001,
+        "checkedOn": "2026-03-14T10:20:00+01:00",
+        "checkedBy": "w.devries",
+        "entityCountAtCheck": 14,
+        "manualEntityCount": 1,
+        "note": "Eén BSN-passage handmatig toegevoegd op p. 2."
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "documentReview",
+          "slug": "review-demostad-adviesrapport-2025-003"
+        },
+        "fileId": 1003,
+        "checkedOn": "2026-03-15T09:05:00+01:00",
+        "checkedBy": "w.devries",
+        "entityCountAtCheck": 37,
+        "manualEntityCount": 2,
+        "note": "Twee handmatige namen toegevoegd op p. 4."
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "documentReview",
+          "slug": "review-demostad-raadsbrief-2025-011"
+        },
+        "fileId": 1005,
+        "checkedOn": "2026-03-16T15:40:00+01:00",
+        "checkedBy": "a.jansen",
+        "entityCountAtCheck": 6,
+        "manualEntityCount": 0,
+        "note": ""
       }
     ]
   }
