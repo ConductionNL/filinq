@@ -16,6 +16,7 @@ import {
 	publicationStatusLabel,
 	readinessChecks,
 } from '../../src/services/publicationRecord.js'
+import { effectiveManifest } from './support/effectiveManifest.js'
 
 const ready = {
 	status: 'ready',
@@ -78,12 +79,7 @@ describe('a publication record', () => {
 
 describe('where the pages hang', () => {
 	it('has a routed Publications page, a menu entry and a Publish action on a document', () => {
-		const manifest = JSON.parse(
-			readFileSync(
-				new URL('../../src/manifest.json', import.meta.url),
-				'utf8',
-			),
-		)
+		const manifest = effectiveManifest()
 		const page = manifest.pages.find((p) => p.id === 'Publications')
 		expect(page.route).toBe('/publications/:id?')
 		expect(page.component).toBe('PublicationsPage')
