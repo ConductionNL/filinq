@@ -52,9 +52,8 @@ class DefaultDetectionProvider implements DetectionProviderInterface {
 	/**
 	 * Report the default engine; OpenRegister already wrote its entities during extraction.
 	 *
-	 * @param int                     $fileId      The file (unused: OpenRegister owns this run).
-	 * @param string                  $text        The text (unused).
-	 * @param array<int, string>|null $entityTypes The enabled types (unused).
+	 * @param DetectionRequest $request The file and enabled types (unused: OpenRegister owns this run).
+	 * @param string           $text    The text (unused).
 	 *
 	 * @return DetectionResult An empty entity list from the default provider.
 	 *
@@ -62,7 +61,7 @@ class DefaultDetectionProvider implements DetectionProviderInterface {
 	 *
  * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-1.1
 	 */
-	public function detect(int $fileId, string $text, ?array $entityTypes): DetectionResult {
+	public function detect(DetectionRequest $request, string $text): DetectionResult {
 		return new DetectionResult(entities: [], providerUsed: self::ID);
 	}//end detect()
 

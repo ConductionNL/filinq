@@ -60,11 +60,9 @@ class HermiqAgentflowClient {
 	/**
 	 * Run the agentflow over one text.
 	 *
-	 * @param string                  $endpoint    The agentflow-run URL.
-	 * @param string                  $agentflow   The agentflow reference.
+	 * @param AgentflowTarget         $target      The agentflow-run URL, the agentflow and the timeout.
 	 * @param string                  $text        The text.
 	 * @param array<int, string>|null $entityTypes The enabled types, or null for all.
-	 * @param int                     $timeout     Seconds before the call is abandoned.
 	 *
 	 * @return mixed The `state.entities` value, unvalidated.
 	 *
@@ -73,16 +71,16 @@ class HermiqAgentflowClient {
 	 *
 	 * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-2.1
 	 */
-	public function entities(string $endpoint, string $agentflow, string $text, ?array $entityTypes, int $timeout): mixed {
+	public function entities(AgentflowTarget $target, string $text, ?array $entityTypes): mixed {
 		try {
 			$response = $this->clientService->newClient()->post(
-				$endpoint,
+				$target->endpoint,
 				[
 					'json'      => [
-						'agentflow' => $agentflow,
+						'agentflow' => $target->agentflow,
 						'input'     => ['text' => $text, 'entityTypes' => $entityTypes],
 					],
-					'timeout'   => $timeout,
+					'timeout'   => $target->timeout,
 					'nextcloud' => ['allow_local_address' => true],
 				]
 			);
@@ -90,7 +88,20 @@ class HermiqAgentflowClient {
 			throw new RuntimeException('The agentflow could not be reached: '.$e->getMessage(), 0, $e);
 		}
 
-		$decoded = json_decode((string) $response->getBody(), true);
+		return self::stateEntities(body: (string) $response->getBody());
+	}//end entities()
+
+	/**
+	 * The `state.entities` value of an agentflow answer.
+	 *
+	 * @param string $body The answer body.
+	 *
+	 * @return mixed The value, unvalidated.
+	 *
+	 * @throws UnexpectedValueException When the answer carries no `state.entities`.
+	 */
+	private static function stateEntities(string $body): mixed {
+		$decoded = json_decode($body, true);
 		if (is_array($decoded) === false
 			|| is_array($decoded['state'] ?? null) === false
 			|| array_key_exists('entities', $decoded['state']) === false
@@ -99,7 +110,7 @@ class HermiqAgentflowClient {
 		}
 
 		return $decoded['state']['entities'];
-	}//end entities()
+	}//end stateEntities()
 
 	/**
 	 * Whether the endpoint answers at all. Any HTTP answer counts; only a failed connection does not.

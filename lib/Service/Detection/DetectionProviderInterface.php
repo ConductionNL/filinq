@@ -43,9 +43,8 @@ interface DetectionProviderInterface {
 	/**
 	 * Detect entities in a piece of a document's text.
 	 *
-	 * @param int                     $fileId      The Nextcloud file the text belongs to.
-	 * @param string                  $text        The text to search.
-	 * @param array<int, string>|null $entityTypes The enabled entity types, or null for all.
+	 * @param DetectionRequest $request The file the text belongs to and the enabled entity types.
+	 * @param string           $text    The text to search.
 	 *
 	 * @return DetectionResult The entities, positions relative to $text.
 	 *
@@ -53,7 +52,7 @@ interface DetectionProviderInterface {
 	 *
  * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-1.1
 	 */
-	public function detect(int $fileId, string $text, ?array $entityTypes): DetectionResult;
+	public function detect(DetectionRequest $request, string $text): DetectionResult;
 
 	/**
 	 * The provider's stable id: `default` or `llm`.

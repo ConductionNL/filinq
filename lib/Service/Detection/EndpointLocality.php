@@ -82,7 +82,17 @@ class EndpointLocality {
 			return $this->isLocalAddress(address: $host);
 		}
 
-		$addresses = $this->resolve(host: $host);
+		return $this->allLocal(addresses: $this->resolve(host: $host));
+	}//end isLocal()
+
+	/**
+	 * Whether a host's addresses are all loopback or private; a host that resolves to none is not local.
+	 *
+	 * @param array<int, string> $addresses The resolved addresses.
+	 *
+	 * @return bool
+	 */
+	private function allLocal(array $addresses): bool {
 		if ($addresses === []) {
 			return false;
 		}
@@ -94,7 +104,7 @@ class EndpointLocality {
 		}
 
 		return true;
-	}//end isLocal()
+	}//end allLocal()
 
 	/**
 	 * Whether one IP address is loopback or private.

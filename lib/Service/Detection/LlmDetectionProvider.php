@@ -71,30 +71,29 @@ class LlmDetectionProvider implements DetectionProviderInterface {
 	/**
 	 * Detect entities in a text through the agentflow.
 	 *
-	 * @param int                     $fileId      The file (not sent; the text is).
-	 * @param string                  $text        The text.
-	 * @param array<int, string>|null $entityTypes The enabled types, or null for all.
+	 * @param DetectionRequest $request The file (not sent; the text is) and the enabled types.
+	 * @param string           $text    The text.
 	 *
 	 * @return DetectionResult The mapped entities, positions relative to $text.
 	 *
 	 * @throws RuntimeException When the provider is unavailable, the call fails, or the answer is malformed.
 	 *
-	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) The file id is part of the interface; only text is sent.
-	 *
 	 * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-2.1
 	 */
-	public function detect(int $fileId, string $text, ?array $entityTypes): DetectionResult {
+	public function detect(DetectionRequest $request, string $text): DetectionResult {
 		$reason = $this->unavailableReason();
 		if ($reason !== null) {
 			throw new RuntimeException('LLM detection is unavailable: '.$reason);
 		}
 
 		$items = $this->client->entities(
-			endpoint: $this->config->endpoint(),
-			agentflow: $this->config->agentflow(),
+			target: new AgentflowTarget(
+				endpoint: $this->config->endpoint(),
+				agentflow: $this->config->agentflow(),
+				timeout: $this->config->timeout()
+			),
 			text: $text,
-			entityTypes: $entityTypes,
-			timeout: $this->config->timeout()
+			entityTypes: $request->entityTypes
 		);
 
 		return new DetectionResult(
@@ -138,12 +137,27 @@ class LlmDetectionProvider implements DetectionProviderInterface {
 			return 'unconfigured';
 		}
 
-		if ($this->config->requireLocal() === true && $this->locality->isLocal(url: $endpoint) === false) {
+		if ($this->allowedEndpoint(endpoint: $endpoint) === false) {
 			return 'not-local';
 		}
 
 		return null;
 	}//end unavailableReason()
+
+	/**
+	 * Whether the endpoint may be called: any endpoint when require-local is off, else a local one.
+	 *
+	 * @param string $endpoint The configured endpoint.
+	 *
+	 * @return bool
+	 */
+	private function allowedEndpoint(string $endpoint): bool {
+		if ($this->config->requireLocal() === false) {
+			return true;
+		}
+
+		return $this->locality->isLocal(url: $endpoint);
+	}//end allowedEndpoint()
 
 	/**
 	 * Test the configuration: the reason it may not be called, else whether the endpoint answers.

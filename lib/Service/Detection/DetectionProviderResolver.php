@@ -91,88 +91,102 @@ class DetectionProviderResolver {
 	/**
 	 * Run the organisation's provider over a file that OpenRegister has extracted.
 	 *
-	 * @param string|null             $organisationUuid The organisation, or null when none is active.
-	 * @param int                     $fileId           The file.
-	 * @param array<int, string>|null $entityTypes      The enabled types, or null for all.
-	 * @param bool                    $force            A re-analysis. Without it, a file that already
-	 *                                                  has LLM relations keeps them, with the
-	 *                                                  operator's decisions on them.
+	 * @param string|null      $organisationUuid The organisation, or null when none is active.
+	 * @param DetectionRequest $request          The file, the enabled types and whether it is a
+	 *                                           re-analysis. Without `force`, a file that already
+	 *                                           has LLM relations keeps them, with the operator's
+	 *                                           decisions on them.
 	 *
 	 * @return DetectionResult What ran, and the entities the LLM provider wrote (empty for default or kept).
 	 *
 	 * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-3.1
 	 */
-	public function run(?string $organisationUuid, int $fileId, ?array $entityTypes, bool $force=false): DetectionResult {
+	public function run(?string $organisationUuid, DetectionRequest $request): DetectionResult {
 		$provider = $this->forOrganisation(organisationUuid: $organisationUuid);
 		if ($provider->id() !== LlmDetectionProvider::ID) {
-			return $this->defaultProvider->detect(fileId: $fileId, text: '', entityTypes: $entityTypes);
+			return $this->defaultProvider->detect(request: $request, text: '');
 		}
 
-		if ($force === false && $this->catalogue->hasLlmRelations(fileId: $fileId) === true) {
+		if ($this->resumes(request: $request) === true) {
 			// Resuming: the LLM already ran on this file. Rerunning would replace
 			// its relations and lose the operator's skip and bases decisions.
 			return new DetectionResult(entities: [], providerUsed: LlmDetectionProvider::ID);
 		}
 
 		if ($provider->isAvailable() === false) {
-			return $this->fallBack(fileId: $fileId, entityTypes: $entityTypes, cause: 'unavailable');
+			return $this->fallBack(request: $request, cause: 'unavailable');
 		}
 
+		return $this->runLlm(provider: $provider, request: $request);
+	}//end run()
+
+	/**
+	 * Whether this is a resumed run over a file the LLM already ran on.
+	 *
+	 * @param DetectionRequest $request The request.
+	 *
+	 * @return bool True when it is not a re-analysis and the file has LLM relations.
+	 */
+	private function resumes(DetectionRequest $request): bool {
+		if ($request->force === true) {
+			return false;
+		}
+
+		return $this->catalogue->hasLlmRelations(fileId: $request->fileId);
+	}//end resumes()
+
+	/**
+	 * Run the LLM provider and store what it found, or fall back when it fails.
+	 *
+	 * @param DetectionProviderInterface $provider The LLM provider.
+	 * @param DetectionRequest           $request  The file and the enabled types.
+	 *
+	 * @return DetectionResult The LLM's entities, or the fallback result.
+	 *
+	 * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-3.1
+	 */
+	private function runLlm(DetectionProviderInterface $provider, DetectionRequest $request): DetectionResult {
 		try {
-			$entities = $this->detectAcrossChunks(provider: $provider, fileId: $fileId, entityTypes: $entityTypes);
-			$this->catalogue->replace(fileId: $fileId, entities: $entities);
+			$entities = $this->detectAcrossChunks(provider: $provider, request: $request);
+			$this->catalogue->replace(fileId: $request->fileId, entities: $entities);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'[DetectionProviderResolver] LLM detection failed; falling back to the default provider.',
-				['fileId' => $fileId, 'exception' => $e]
+				['fileId' => $request->fileId, 'exception' => $e]
 			);
-			return $this->fallBack(fileId: $fileId, entityTypes: $entityTypes, cause: $e->getMessage());
+			return $this->fallBack(request: $request, cause: $e->getMessage());
 		}
 
 		return new DetectionResult(entities: $entities, providerUsed: LlmDetectionProvider::ID);
-	}//end run()
+	}//end runLlm()
 
 	/**
 	 * Run the provider of the current user's active organisation.
 	 *
-	 * @param int                     $fileId      The file.
-	 * @param array<int, string>|null $entityTypes The enabled types, or null for all.
-	 * @param bool                    $force       A re-analysis.
+	 * @param DetectionRequest $request The file, the enabled types and whether it is a re-analysis.
 	 *
 	 * @return DetectionResult What ran.
 	 *
 	 * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-3.2
 	 */
-	public function runForActiveOrganisation(int $fileId, ?array $entityTypes, bool $force): DetectionResult {
-		return $this->run(
-			organisationUuid: $this->catalogue->activeOrganisationUuid(),
-			fileId: $fileId,
-			entityTypes: $entityTypes,
-			force: $force
-		);
+	public function runForActiveOrganisation(DetectionRequest $request): DetectionResult {
+		return $this->run(organisationUuid: $this->catalogue->activeOrganisationUuid(), request: $request);
 	}//end runForActiveOrganisation()
 
 	/**
 	 * Detect over every chunk; positions become absolute and each entity keeps its chunk.
 	 *
-	 * @param DetectionProviderInterface $provider    The provider.
-	 * @param int                        $fileId      The file.
-	 * @param array<int, string>|null    $entityTypes The enabled types.
+	 * @param DetectionProviderInterface $provider The provider.
+	 * @param DetectionRequest           $request  The file and the enabled types.
 	 *
 	 * @return list<array<string, mixed>> The entities, de-duplicated across overlapping chunks.
 	 */
-	private function detectAcrossChunks(DetectionProviderInterface $provider, int $fileId, ?array $entityTypes): array {
+	private function detectAcrossChunks(DetectionProviderInterface $provider, DetectionRequest $request): array {
 		$entities = [];
-		foreach ($this->catalogue->chunks(fileId: $fileId) as $chunk) {
-			$result = $provider->detect(fileId: $fileId, text: $chunk['text'], entityTypes: $entityTypes);
-			foreach ($result->entities as $entity) {
-				if ($entity['positionStart'] !== null) {
-					$entity['positionStart'] += $chunk['startOffset'];
-					$entity['positionEnd']   += $chunk['startOffset'];
-				}
-
-				$entity['chunkId'] = $chunk['id'];
-				$key = implode("\0", [$entity['type'], $entity['value'], (string) $entity['positionStart'], (string) $entity['positionEnd']]);
+		foreach ($this->catalogue->chunks(fileId: $request->fileId) as $chunk) {
+			foreach ($provider->detect(request: $request, text: $chunk['text'])->entities as $entity) {
+				$entity = self::inChunk(entity: $entity, chunk: $chunk);
+				$key    = implode("\0", [$entity['type'], $entity['value'], (string) $entity['positionStart'], (string) $entity['positionEnd']]);
 				$entities[$key] ??= $entity;
 			}
 		}
@@ -181,17 +195,35 @@ class DetectionProviderResolver {
 	}//end detectAcrossChunks()
 
 	/**
+	 * An entity found in a chunk, with positions made absolute and the chunk it came from.
+	 *
+	 * @param array<string, mixed> $entity The entity, positions relative to the chunk.
+	 * @param array<string, mixed> $chunk  The chunk: `id`, `startOffset`.
+	 *
+	 * @return array<string, mixed> The entity.
+	 */
+	private static function inChunk(array $entity, array $chunk): array {
+		if ($entity['positionStart'] !== null) {
+			$entity['positionStart'] += $chunk['startOffset'];
+			$entity['positionEnd']   += $chunk['startOffset'];
+		}
+
+		$entity['chunkId'] = $chunk['id'];
+
+		return $entity;
+	}//end inChunk()
+
+	/**
 	 * The default provider's result, marked as a fallback with the operator warning.
 	 *
-	 * @param int                     $fileId      The file.
-	 * @param array<int, string>|null $entityTypes The enabled types.
-	 * @param string                  $cause       Why, for the log only.
+	 * @param DetectionRequest $request The file and the enabled types.
+	 * @param string           $cause   Why, for the log only.
 	 *
 	 * @return DetectionResult The fallback result.
 	 */
-	private function fallBack(int $fileId, ?array $entityTypes, string $cause): DetectionResult {
-		$this->logger->info('[DetectionProviderResolver] Fell back to the default provider.', ['fileId' => $fileId, 'cause' => $cause]);
-		$default = $this->defaultProvider->detect(fileId: $fileId, text: '', entityTypes: $entityTypes);
+	private function fallBack(DetectionRequest $request, string $cause): DetectionResult {
+		$this->logger->info('[DetectionProviderResolver] Fell back to the default provider.', ['fileId' => $request->fileId, 'cause' => $cause]);
+		$default = $this->defaultProvider->detect(request: $request, text: '');
 
 		return new DetectionResult(
 			entities: $default->entities,

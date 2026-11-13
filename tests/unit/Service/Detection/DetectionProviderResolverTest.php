@@ -22,6 +22,7 @@ use OCA\Filinq\Service\Detection\DefaultDetectionProvider;
 use OCA\Filinq\Service\Detection\DetectionCatalogue;
 use OCA\Filinq\Service\Detection\DetectionProviderConfig;
 use OCA\Filinq\Service\Detection\DetectionProviderResolver;
+use OCA\Filinq\Service\Detection\DetectionRequest;
 use OCA\Filinq\Service\Detection\DetectionResult;
 use OCA\Filinq\Service\Detection\LlmDetectionProvider;
 use OCP\IL10N;
@@ -35,6 +36,7 @@ use UnexpectedValueException;
  * @covers \OCA\Filinq\Service\Detection\DetectionProviderResolver
  * @uses   \OCA\Filinq\Service\Detection\DetectionResult
  * @uses   \OCA\Filinq\Service\Detection\DefaultDetectionProvider
+ * @uses   \OCA\Filinq\Service\Detection\DetectionRequest
  */
 class DetectionProviderResolverTest extends TestCase {
 
@@ -126,7 +128,7 @@ class DetectionProviderResolverTest extends TestCase {
 
 		$this->llm->expects($this->never())->method('detect');
 		$this->catalogue->expects($this->never())->method('replace');
-		$result = $this->resolver->run(organisationUuid: 'org-b', fileId: 7, entityTypes: null);
+		$result = $this->resolver->run(organisationUuid: 'org-b', request: new DetectionRequest(fileId: 7, entityTypes: null));
 
 		$this->assertSame(['detectionProvider' => 'default', 'detectionFellBack' => false, 'detectionWarning' => null], $result->toPayload());
 	}
@@ -141,7 +143,7 @@ class DetectionProviderResolverTest extends TestCase {
 		$this->llm->expects($this->never())->method('detect');
 		$this->catalogue->expects($this->never())->method('replace');
 
-		$this->assertFellBack($this->resolver->run(organisationUuid: 'org-a', fileId: 7, entityTypes: null));
+		$this->assertFellBack($this->resolver->run(organisationUuid: 'org-a', request: new DetectionRequest(fileId: 7, entityTypes: null)));
 	}
 
 	/**
@@ -155,7 +157,7 @@ class DetectionProviderResolverTest extends TestCase {
 		$this->llm->method('detect')->willThrowException(new UnexpectedValueException('The agentflow did not return an entity list.'));
 		$this->catalogue->expects($this->never())->method('replace');
 
-		$this->assertFellBack($this->resolver->run(organisationUuid: 'org-a', fileId: 7, entityTypes: null));
+		$this->assertFellBack($this->resolver->run(organisationUuid: 'org-a', request: new DetectionRequest(fileId: 7, entityTypes: null)));
 	}
 
 	/**
@@ -175,7 +177,7 @@ class DetectionProviderResolverTest extends TestCase {
 		);
 		$this->catalogue->expects($this->never())->method('replace');
 
-		$this->assertFellBack($this->resolver->run(organisationUuid: 'org-a', fileId: 7, entityTypes: null));
+		$this->assertFellBack($this->resolver->run(organisationUuid: 'org-a', request: new DetectionRequest(fileId: 7, entityTypes: null)));
 	}
 
 	/**
@@ -203,7 +205,7 @@ class DetectionProviderResolverTest extends TestCase {
 			}
 		);
 
-		$result = $this->resolver->run(organisationUuid: 'org-a', fileId: 7, entityTypes: ['PERSON'], force: true);
+		$result = $this->resolver->run(organisationUuid: 'org-a', request: new DetectionRequest(fileId: 7, entityTypes: ['PERSON'], force: true));
 
 		$this->assertSame(7, $written[0]);
 		$this->assertSame(
@@ -225,7 +227,7 @@ class DetectionProviderResolverTest extends TestCase {
 		$this->llm->expects($this->never())->method('detect');
 		$this->catalogue->expects($this->never())->method('replace');
 
-		$result = $this->resolver->run(organisationUuid: 'org-a', fileId: 7, entityTypes: null);
+		$result = $this->resolver->run(organisationUuid: 'org-a', request: new DetectionRequest(fileId: 7, entityTypes: null));
 
 		$this->assertSame(['detectionProvider' => 'llm', 'detectionFellBack' => false, 'detectionWarning' => null], $result->toPayload());
 	}
@@ -239,7 +241,7 @@ class DetectionProviderResolverTest extends TestCase {
 		$this->catalogue->method('activeOrganisationUuid')->willReturn('org-a');
 		$this->llm->method('isAvailable')->willReturn(false);
 
-		$this->assertFellBack($this->resolver->runForActiveOrganisation(fileId: 7, entityTypes: null, force: false));
+		$this->assertFellBack($this->resolver->runForActiveOrganisation(request: new DetectionRequest(fileId: 7)));
 	}
 
 	/**

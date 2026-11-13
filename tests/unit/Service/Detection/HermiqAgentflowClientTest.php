@@ -27,9 +27,11 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 use UnexpectedValueException;
+use OCA\Filinq\Service\Detection\AgentflowTarget;
 
 /**
  * @covers \OCA\Filinq\Service\Detection\HermiqAgentflowClient
+ * @uses \OCA\Filinq\Service\Detection\AgentflowTarget
  */
 class HermiqAgentflowClientTest extends TestCase {
 
@@ -93,7 +95,7 @@ class HermiqAgentflowClientTest extends TestCase {
 
 		$this->assertSame(
 			[['value' => 'Jan', 'type' => 'PER']],
-			$this->client->entities(endpoint: 'http://hermiq:8000/run', agentflow: 'detect', text: 'Jan', entityTypes: ['PERSON'], timeout: 9)
+			$this->client->entities(target: new AgentflowTarget(endpoint: 'http://hermiq:8000/run', agentflow: 'detect', timeout: 9), text: 'Jan', entityTypes: ['PERSON'])
 		);
 	}
 
@@ -108,7 +110,7 @@ class HermiqAgentflowClientTest extends TestCase {
 		$this->expectException(RuntimeException::class);
 		$this->expectExceptionMessage('The agentflow could not be reached: Connection refused');
 
-		$this->client->entities(endpoint: 'http://hermiq/run', agentflow: 'detect', text: 'x', entityTypes: null, timeout: 5);
+		$this->client->entities(target: new AgentflowTarget(endpoint: 'http://hermiq/run', agentflow: 'detect', timeout: 5), text: 'x', entityTypes: null);
 	}
 
 	/**
@@ -122,7 +124,7 @@ class HermiqAgentflowClientTest extends TestCase {
 			$this->http->method('post')->willReturn($this->response(body: $body));
 
 			try {
-				$this->client->entities(endpoint: 'http://hermiq/run', agentflow: 'detect', text: 'x', entityTypes: null, timeout: 5);
+				$this->client->entities(target: new AgentflowTarget(endpoint: 'http://hermiq/run', agentflow: 'detect', timeout: 5), text: 'x', entityTypes: null);
 				$this->fail('Expected a refusal for '.$body);
 			} catch (UnexpectedValueException $e) {
 				$this->assertSame('The agentflow answer carries no state.entities.', $e->getMessage());

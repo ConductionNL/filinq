@@ -44,6 +44,7 @@ use OCA\Filinq\Exception\ProhibitionGateException;
 use OCA\Filinq\Exception\RedactionNotReviewedException;
 use OCA\Filinq\Kernel\Contracts\AnonymizationServiceInterface;
 use OCA\Filinq\Service\Detection\DetectionProviderResolver;
+use OCA\Filinq\Service\Detection\DetectionRequest;
 use OCA\Filinq\Service\Ocr\OcrExtractionFallback;
 use OCA\Filinq\Service\Redaction\RedactionOutputGuard;
 use Psr\Container\ContainerInterface;
@@ -275,7 +276,9 @@ class AnonymizationService implements AnonymizationServiceInterface {
 		// the LLM provider gets its entities added here, or an explicit fallback
 		// warning when it could not run. Before the read-back below, so the LLM
 		// relations are included.
-		$providerFields = $this->runDetectionProvider(fileId: $fileId, entityTypes: $entityTypes, force: (bool) $force);
+		$providerFields = $this->runDetectionProvider(
+			request: new DetectionRequest(fileId: $fileId, entityTypes: $entityTypes, force: (bool) $force)
+		);
 
 		// Custom-dictionary pass (custom-dictionary-recognition, design.md
 		// §D3): runs after OR extraction and before the entities are read
@@ -295,25 +298,19 @@ class AnonymizationService implements AnonymizationServiceInterface {
 	/**
 	 * Run the organisation's detection provider and return the payload fields naming it.
 	 *
-	 * @param int                     $fileId      The file.
-	 * @param array<int, string>|null $entityTypes The enabled entity types, or null for all.
-	 * @param bool                    $force       Whether this is a re-analysis.
+	 * @param DetectionRequest $request The file, the enabled entity types and whether this is a re-analysis.
 	 *
 	 * @return array<string, mixed> `detectionProvider`, `detectionFellBack`, `detectionWarning`;
 	 *                              empty when no resolver is wired.
 	 *
 	 * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-3.2
 	 */
-	private function runDetectionProvider(int $fileId, ?array $entityTypes, bool $force): array {
+	private function runDetectionProvider(DetectionRequest $request): array {
 		if ($this->detectionResolver === null) {
 			return [];
 		}
 
-		return $this->detectionResolver->runForActiveOrganisation(
-			fileId: $fileId,
-			entityTypes: $entityTypes,
-			force: $force
-		)->toPayload();
+		return $this->detectionResolver->runForActiveOrganisation(request: $request)->toPayload();
 	}//end runDetectionProvider()
 
 	/**

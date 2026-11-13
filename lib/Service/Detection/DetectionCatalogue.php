@@ -106,6 +106,17 @@ class DetectionCatalogue {
 			return null;
 		}
 
+		return self::uuidOf(organisation: $organisation);
+	}//end activeOrganisationUuid()
+
+	/**
+	 * An organisation's UUID, or null when it has none.
+	 *
+	 * @param mixed $organisation The active organisation, as OpenRegister returned it.
+	 *
+	 * @return string|null
+	 */
+	private static function uuidOf(mixed $organisation): ?string {
 		if (is_object($organisation) === false || method_exists($organisation, 'getUuid') === false) {
 			return null;
 		}
@@ -116,7 +127,7 @@ class DetectionCatalogue {
 		}
 
 		return $uuid;
-	}//end activeOrganisationUuid()
+	}//end uuidOf()
 
 	/**
 	 * Whether the file already has relations the LLM provider wrote.
@@ -155,11 +166,7 @@ class DetectionCatalogue {
 		$relationMapper = $this->service(className: 'OCA\OpenRegister\Db\EntityRelationMapper');
 		$entityMapper   = $this->service(className: 'OCA\OpenRegister\Db\GdprEntityMapper');
 
-		foreach ($relationMapper->findByFileId($fileId) as $relation) {
-			if ($relation->getDetectionMethod() === LlmEntityMapper::DETECTION_METHOD) {
-				$relationMapper->delete($relation);
-			}
-		}
+		self::deleteLlmRelations(relationMapper: $relationMapper, fileId: $fileId);
 
 		$rows = [];
 		$ids  = [];
@@ -189,6 +196,22 @@ class DetectionCatalogue {
 
 		return count($rows);
 	}//end replace()
+
+	/**
+	 * Delete the file's relations the LLM provider wrote; every other relation stays.
+	 *
+	 * @param object $relationMapper OpenRegister's EntityRelationMapper.
+	 * @param int    $fileId         The file.
+	 *
+	 * @return void
+	 */
+	private static function deleteLlmRelations(object $relationMapper, int $fileId): void {
+		foreach ($relationMapper->findByFileId($fileId) as $relation) {
+			if ($relation->getDetectionMethod() === LlmEntityMapper::DETECTION_METHOD) {
+				$relationMapper->delete($relation);
+			}
+		}
+	}//end deleteLlmRelations()
 
 	/**
 	 * The catalogue id for an entity's value and type, created when absent.

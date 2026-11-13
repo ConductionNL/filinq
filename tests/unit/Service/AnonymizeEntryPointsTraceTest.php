@@ -60,6 +60,7 @@ use ReflectionMethod;
  * @uses   \OCA\Filinq\Service\AnonymizeRun
  * @uses   \OCA\Filinq\Service\BatchAnonymizeRequest
  * @uses   \OCA\Filinq\Service\UnredactedEntitiesValidator
+ * @uses   \OCA\Filinq\Service\Detection\DetectionRequest
  *
  * @spec openspec/specs/anonymization/spec.md
  */

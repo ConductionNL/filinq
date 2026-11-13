@@ -164,15 +164,8 @@ class LlmEntityMapper {
 			throw new UnexpectedValueException(sprintf('Entity %d is not an object.', $index));
 		}
 
-		$value = $item['value'] ?? null;
-		if (is_string($value) === false || trim($value) === '') {
-			throw new UnexpectedValueException(sprintf('Entity %d has no value.', $index));
-		}
-
-		$type = $item['type'] ?? null;
-		if (is_string($type) === false || trim($type) === '') {
-			throw new UnexpectedValueException(sprintf('Entity %d has no type.', $index));
-		}
+		$value = self::requiredText(value: ($item['value'] ?? null), refusal: sprintf('Entity %d has no value.', $index));
+		$type  = self::requiredText(value: ($item['type'] ?? null), refusal: sprintf('Entity %d has no type.', $index));
 
 		$mappedType = $this->mapType(type: $type);
 		[$start, $end] = $this->positions(start: ($item['start'] ?? null), end: ($item['end'] ?? null));
@@ -187,6 +180,24 @@ class LlmEntityMapper {
 			'detectionMethod' => self::DETECTION_METHOD,
 		];
 	}//end mapOne()
+
+	/**
+	 * A non-blank string field of an item.
+	 *
+	 * @param mixed  $value   The field.
+	 * @param string $refusal The message when it is missing or blank.
+	 *
+	 * @return string The value as given.
+	 *
+	 * @throws UnexpectedValueException When it is not a non-blank string.
+	 */
+	private static function requiredText(mixed $value, string $refusal): string {
+		if (is_string($value) === false || trim($value) === '') {
+			throw new UnexpectedValueException($refusal);
+		}
+
+		return $value;
+	}//end requiredText()
 
 	/**
 	 * Both positions when they form a valid range, else both null.

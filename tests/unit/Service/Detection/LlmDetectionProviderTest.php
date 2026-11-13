@@ -18,8 +18,10 @@
 declare(strict_types=1);
 
 namespace OCA\Filinq\Tests\Unit\Service\Detection;
+use OCA\Filinq\Service\Detection\AgentflowTarget;
 use OCA\Filinq\Service\Detection\DefaultDetectionProvider;
 use OCA\Filinq\Service\Detection\DetectionProviderConfig;
+use OCA\Filinq\Service\Detection\DetectionRequest;
 use OCA\Filinq\Service\Detection\EndpointLocality;
 use OCA\Filinq\Service\Detection\HermiqAgentflowClient;
 use OCA\Filinq\Service\Detection\LlmDetectionProvider;
@@ -33,6 +35,8 @@ use RuntimeException;
  * @covers \OCA\Filinq\Service\Detection\DefaultDetectionProvider
  * @uses   \OCA\Filinq\Service\Detection\DetectionResult
  * @uses   \OCA\Filinq\Service\Detection\LlmEntityMapper
+ * @uses   \OCA\Filinq\Service\Detection\DetectionRequest
+ * @uses   \OCA\Filinq\Service\Detection\AgentflowTarget
  */
 class LlmDetectionProviderTest extends TestCase {
 
@@ -99,7 +103,7 @@ class LlmDetectionProviderTest extends TestCase {
 		$this->assertSame('default', $default->id());
 		$this->assertTrue($default->isAvailable());
 
-		$result = $default->detect(fileId: 1, text: 'Jan', entityTypes: null);
+		$result = $default->detect(request: new DetectionRequest(fileId: 1, entityTypes: null), text: 'Jan');
 		$this->assertSame([], $result->entities);
 		$this->assertSame('default', $result->providerUsed);
 		$this->assertFalse($result->fellBack);
@@ -123,7 +127,7 @@ class LlmDetectionProviderTest extends TestCase {
 
 		$this->expectException(RuntimeException::class);
 		$this->expectExceptionMessage('LLM detection is unavailable: not-local');
-		$provider->detect(fileId: 3, text: 'secret text', entityTypes: null);
+		$provider->detect(request: new DetectionRequest(fileId: 3, entityTypes: null), text: 'secret text');
 	}
 
 	/**
@@ -148,10 +152,10 @@ class LlmDetectionProviderTest extends TestCase {
 		$this->locality->method('isLocal')->willReturn(true);
 		$this->client->expects($this->once())
 			->method('entities')
-			->with('http://hermiq:8000/run', 'detect-entities', 'Jan woont hier', ['PERSON'], 12)
+			->with(new AgentflowTarget(endpoint: 'http://hermiq:8000/run', agentflow: 'detect-entities', timeout: 12), 'Jan woont hier', ['PERSON'])
 			->willReturn([['value' => 'Jan', 'type' => 'PER', 'start' => 0, 'end' => 3]]);
 
-		$result = $this->provider()->detect(fileId: 3, text: 'Jan woont hier', entityTypes: ['PERSON']);
+		$result = $this->provider()->detect(request: new DetectionRequest(fileId: 3, entityTypes: ['PERSON']), text: 'Jan woont hier');
 
 		$this->assertSame('llm', $result->providerUsed);
 		$this->assertFalse($result->fellBack);

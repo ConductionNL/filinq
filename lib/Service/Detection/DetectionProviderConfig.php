@@ -267,6 +267,21 @@ class DetectionProviderConfig {
 	 * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-4.1
 	 */
 	public function update(array $data): void {
+		foreach ($this->writesFor(data: $data) as $key => $value) {
+			$this->appConfig->setValueString(AppIdentity::APP_ID, $key, $value);
+		}
+	}//end update()
+
+	/**
+	 * The stored values the submitted fields become, validated before anything is written.
+	 *
+	 * @param array<string, mixed> $data The submitted fields.
+	 *
+	 * @return array<string, string> Config key to value.
+	 *
+	 * @throws InvalidArgumentException When a field is invalid.
+	 */
+	private function writesFor(array $data): array {
 		$writes = [];
 
 		if (array_key_exists('provider', $data) === true) {
@@ -278,21 +293,32 @@ class DetectionProviderConfig {
 		}
 
 		if (array_key_exists('agentflow', $data) === true) {
-			if (is_string($data['agentflow']) === false) {
-				throw new InvalidArgumentException('agentflow must be a string.');
-			}
-
-			$writes[self::KEY_AGENTFLOW] = trim($data['agentflow']);
+			$writes[self::KEY_AGENTFLOW] = self::validAgentflow(value: $data['agentflow']);
 		}
 
 		if (array_key_exists('requireLocal', $data) === true) {
 			$writes[self::KEY_REQUIRE_LOCAL] = $this->flag(value: $data['requireLocal']);
 		}
 
-		foreach ($writes as $key => $value) {
-			$this->appConfig->setValueString(AppIdentity::APP_ID, $key, $value);
+		return $writes;
+	}//end writesFor()
+
+	/**
+	 * An agentflow reference as stored.
+	 *
+	 * @param mixed $value The submitted value.
+	 *
+	 * @return string The trimmed reference.
+	 *
+	 * @throws InvalidArgumentException When it is not a string.
+	 */
+	private static function validAgentflow(mixed $value): string {
+		if (is_string($value) === false) {
+			throw new InvalidArgumentException('agentflow must be a string.');
 		}
-	}//end update()
+
+		return trim($value);
+	}//end validAgentflow()
 
 	/**
 	 * The provider map with one organisation's choice applied, JSON-encoded.
@@ -309,10 +335,7 @@ class DetectionProviderConfig {
 			throw new InvalidArgumentException('An organisation is required to choose its provider.');
 		}
 
-		$provider = $data['provider'];
-		if (is_string($provider) === false || in_array($provider, self::PROVIDERS, true) === false) {
-			throw new InvalidArgumentException('Unknown detection provider.');
-		}
+		$provider = self::validProvider(value: $data['provider']);
 
 		$map = $this->providerMap();
 		unset($map[trim($organisation)]);
@@ -322,6 +345,23 @@ class DetectionProviderConfig {
 
 		return (string) json_encode((object) $map);
 	}//end updatedProviderMap()
+
+	/**
+	 * A provider id as stored.
+	 *
+	 * @param mixed $value The submitted value.
+	 *
+	 * @return string `default` or `llm`.
+	 *
+	 * @throws InvalidArgumentException When it names no known provider.
+	 */
+	private static function validProvider(mixed $value): string {
+		if (is_string($value) === false || in_array($value, self::PROVIDERS, true) === false) {
+			throw new InvalidArgumentException('Unknown detection provider.');
+		}
+
+		return $value;
+	}//end validProvider()
 
 	/**
 	 * An endpoint as stored: empty, or an http(s) URL with a host.
