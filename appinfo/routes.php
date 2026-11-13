@@ -313,6 +313,7 @@ $extra = [
         // Template routes.
         ['name' => 'templates#index', 'url' => 'api/templates', 'verb' => 'GET'],
         ['name' => 'templates#create', 'url' => 'api/templates', 'verb' => 'POST'],
+        ['name' => 'officeTemplates#create', 'url' => 'api/templates/office', 'verb' => 'POST'],
         ['name' => 'templatePreview#preview', 'url' => 'api/templates/preview', 'verb' => 'POST'],
         ['name' => 'templates#show', 'url' => 'api/templates/{id}', 'verb' => 'GET'],
         ['name' => 'templates#update', 'url' => 'api/templates/{id}', 'verb' => 'PUT'],

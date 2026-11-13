@@ -152,6 +152,10 @@
             "description": "Text recognition of files"
         },
         {
+            "name": "office-templates",
+            "description": "Templates made from Word or LibreOffice files with merge tags"
+        },
+        {
             "name": "open-api",
             "description": "The OpenAPI document that describes this API"
         },
@@ -9364,6 +9368,50 @@
                 "responses": {
                     "200": {
                         "description": "JSON response with the created template object",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/templates/office": {
+            "post": {
+                "operationId": "office-templates-create",
+                "summary": "Create a template from an uploaded DOCX or ODT with merge tags",
+                "description": "Multipart upload: `file` (DOCX or ODT), `name`, `namespace`, and optionally `description`, `category`, `tags`, `slug`, `tenantId`, `boundRegister` and `boundSchema`. Answers the created template, whether an ODT was converted to DOCX, and the tag report. A macro-enabled file, a file over the size cap, a file that is not what its extension says, or unknown tags under blocking severity answer 422 with the reason.",
+                "tags": [
+                    "office-templates"
+                ],
+                "responses": {
+                    "201": {
+                        "description": "The created template, the conversion flag and the tag report",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "The file or its merge tags were refused",
                         "headers": {
                             "API-Version": {
                                 "$ref": "#/components/headers/API-Version"
