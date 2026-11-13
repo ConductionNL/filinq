@@ -4,7 +4,7 @@
 
 ## 1. Scope
 
-- [ ] 1.1 Add `scope[]` (`{register, schema}`) to the `template` schema in `lib/Settings/filinq_register.json` and `TemplateService::listForObject()` (REQ-TMPL-13)
+- [x] 1.1 Add `scope[]` (`{register, schema}`) to the `template` schema in `lib/Settings/filinq_register.json` and `TemplateService::listForObject()` (REQ-TMPL-13)
 
 ## 2. Leaves
 
