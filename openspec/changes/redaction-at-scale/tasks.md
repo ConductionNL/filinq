@@ -5,9 +5,9 @@
 
 ## 1. Register & seed data
 
-- [ ] 1.1 Re-verify against HEAD whether the REQ-BANON-00 OR-state migration (`docudesk-adopt-or-abstractions`) has landed; land or absorb the `batchAnonymizationJob` + `batchAnonymizationFile` schemas in `lib/Settings/filinq_register.json`
+- [x] 1.1 Re-verify against HEAD whether the REQ-BANON-00 OR-state migration (`docudesk-adopt-or-abstractions`) has landed; land or absorb the `batchAnonymizationJob` + `batchAnonymizationFile` schemas in `lib/Settings/filinq_register.json`
   - Spec-says-done is not proof — check the register JSON and `BatchStateService` on the apply branch.
-- [ ] 1.2 Extend the batch schemas with progress, cancellation and QA fields (`totalFiles`, succeeded/failed counters at read time, `qaSampleRate`, `qaSampleSeed`, `throttled`; per-file `qaSampled`, `qaOutcome`, `durationMs`, retry count) — additive, union-merge only
+- [x] 1.2 Extend the batch schemas with progress, cancellation and QA fields (`totalFiles`, succeeded/failed counters at read time, `qaSampleRate`, `qaSampleSeed`, `throttled`; per-file `qaSampled`, `qaOutcome`, `durationMs`, retry count) — additive, union-merge only
 - [ ] 1.3 Seed one demo batch (12 files, 1 error, 1 QA sample) per design.md Seed Data
 
 ## 2. Backend — durable state & work units
