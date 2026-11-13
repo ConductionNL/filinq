@@ -72,6 +72,8 @@ $extra = [
         ['name' => 'version#restore', 'url' => 'api/documents/{fileId}/versions/{versionTimestamp}/restore', 'verb' => 'POST'],
 
         // Final document routes (final-documents-frozen).
+        // intake-pdf-password-removal: unlock a password-protected PDF into a copy beside it.
+        ['name' => 'pdfPassword#remove', 'url' => 'api/documents/{fileId}/remove-password', 'verb' => 'POST', 'requirements' => ['fileId' => '\\d+']],
         ['name' => 'finalDocument#show', 'url' => 'api/documents/{fileId}/final', 'verb' => 'GET'],
         ['name' => 'finalDocument#finalise', 'url' => 'api/documents/{fileId}/final', 'verb' => 'POST'],
         ['name' => 'finalDocument#correct', 'url' => 'api/documents/{fileId}/final/correction', 'verb' => 'POST'],

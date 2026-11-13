@@ -2791,7 +2791,15 @@ OC.L10N.register(
         "The value before the change.": "The value before the change.",
         "When the change was made.": "When the change was made.",
         "Merge fields": "Merge fields",
-        "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you.": "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you."
+        "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you.": "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you.",
+        "Type the password of the PDF.": "Type the password of the PDF.",
+        "The password is not correct": "The password is not correct",
+        "This document is final and cannot be changed": "This document is final and cannot be changed",
+        "qpdf is not installed on this server": "qpdf is not installed on this server",
+        "This file is not a PDF.": "This file is not a PDF.",
+        "The password could not be removed from this PDF.": "The password could not be removed from this PDF.",
+        "Locked original": "Locked original",
+        "Nextcloud file id of the file that arrived locked with a password. Set when the password is removed: `file` then points at the unlocked copy and this keeps what came in.": "Nextcloud file id of the file that arrived locked with a password. Set when the password is removed: `file` then points at the unlocked copy and this keeps what came in."
     },
     "nplurals=2; plural=(n != 1);"
 )
