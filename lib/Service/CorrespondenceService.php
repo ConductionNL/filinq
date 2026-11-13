@@ -265,7 +265,12 @@ class CorrespondenceService implements CorrespondenceServiceInterface {
 		}
 
 		// Apply huisstijl if configured.
-		$huisstijl = $this->loadHuisstijl(huisstijlId: ($options['huisstijlId'] ?? null));
+		$requester = null;
+		if (is_string($options['userId'] ?? null) === true) {
+			$requester = $options['userId'];
+		}
+
+		$huisstijl = $this->loadHuisstijl(huisstijlId: ($options['huisstijlId'] ?? null), uid: $requester);
 		$pdfOptions = $this->buildPdfOptions(
 			template: $template,
 			huisstijl: $huisstijl,
@@ -572,15 +577,20 @@ class CorrespondenceService implements CorrespondenceServiceInterface {
 	/**
 	 * Load huisstijl configuration from OpenRegister
 	 *
+	 * Without an id the managed house style of the user's thematiq token set
+	 * applies; a named id always wins.
+	 *
 	 * @param string|null $huisstijlId Optional specific huisstijl UUID
+	 * @param string|null $uid The requesting user; null for the signed-in user
 	 *
 	 * @return array|null The huisstijl configuration or null if not found
 	 *
 	 * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-huisstijl-default-configuration
+	 * @spec openspec/changes/templates-house-style-from-thematiq/tasks.md#task-2.1
 	 */
-	private function loadHuisstijl(?string $huisstijlId): ?array {
-		if ($huisstijlId === null) {
-			return null;
+	private function loadHuisstijl(?string $huisstijlId, ?string $uid = null): ?array {
+		if ($huisstijlId === null || $huisstijlId === '') {
+			return $this->managedHuisstijl(uid: $uid);
 		}
 
 		try {
@@ -613,6 +623,30 @@ class CorrespondenceService implements CorrespondenceServiceInterface {
 	}//end loadHuisstijl()
 
 	/**
+	 * The managed house style of the user's token set, or null without thematiq.
+	 *
+	 * @param string|null $uid The requesting user; null for the signed-in user
+	 *
+	 * @return array|null The managed house style
+	 *
+	 * @spec openspec/changes/templates-house-style-from-thematiq/tasks.md#task-2.1
+	 */
+	private function managedHuisstijl(?string $uid): ?array {
+		try {
+			$sync = $this->container->get(HuisstijlProfileSync::class);
+		} catch (\Throwable) {
+			return null;
+		}
+
+		if (($sync instanceof HuisstijlProfileSync) === false) {
+			return null;
+		}
+
+		return $sync->syncFor(uid: $uid);
+
+	}//end managedHuisstijl()
+
+	/**
 	 * Build PDF options from template, huisstijl, and request options
 	 *
 	 * @param array $template The template object
@@ -633,6 +667,9 @@ class CorrespondenceService implements CorrespondenceServiceInterface {
 		if ($huisstijl !== null && isset($huisstijl['defaultMargins']) === true) {
 			$pdfOptions['margin'] = $huisstijl['defaultMargins'];
 		}
+
+		// The house style's fonts, and its cover when the template asks for one.
+		$pdfOptions = array_merge($pdfOptions, (new HuisstijlProfileMapper())->pdfAssets(template: $template, huisstijl: $huisstijl));
 
 		// Request options override.
 		if (isset($options['pdfOptions']) === true) {
