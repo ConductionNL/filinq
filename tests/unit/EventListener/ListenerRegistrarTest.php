@@ -112,7 +112,8 @@ class ListenerRegistrarTest extends TestCase {
 	}//end testRegisterDelegatesToEveryAreaInOrder()
 
 	/**
-	 * Boot hands the container to the object-event step, which subscribes the dossier listener.
+	 * Boot hands the container to the object-event step, which subscribes the dossier
+	 * listener and the document event translator.
 	 *
 	 * @return void
 	 */
@@ -120,8 +121,11 @@ class ListenerRegistrarTest extends TestCase {
 		self::assertFalse(class_exists('OCA\OpenRegister\Event\ObjectEventSubscription'), 'This test needs the subscription class absent.');
 
 		$dispatcher = $this->createMock(IEventDispatcher::class);
-		$dispatcher->expects(self::once())->method('addServiceListener')
-			->with(ObjectUpdatedEvent::class, DossierCheckedOnListener::class);
+		$added = [];
+		$dispatcher->expects(self::exactly(3))->method('addServiceListener')
+			->willReturnCallback(static function (string $event, string $listener) use (&$added): void {
+				$added[] = [$event, $listener];
+			});
 		$container = $this->createMock(ContainerInterface::class);
 		$container->expects(self::once())->method('get')->with(IEventDispatcher::class)->willReturn($dispatcher);
 		$server = $this->createMock(ContainerInterface::class);
@@ -129,5 +133,15 @@ class ListenerRegistrarTest extends TestCase {
 		\OC::$server = $server;
 
 		(new ListenerRegistrar())->boot($container, 'filinq');
+
+		$translator = 'OCA\\Filinq\\EventListener\\DocumentEventTranslator';
+		self::assertSame(
+			[
+				[ObjectUpdatedEvent::class, DossierCheckedOnListener::class],
+				['OCA\\OpenRegister\\Event\\ObjectTransitionedEvent', $translator],
+				['OCA\\OpenRegister\\Event\\ObjectCreatedEvent', $translator],
+			],
+			$added
+		);
 	}//end testBootRunsTheObjectEventBootStep()
 }//end class

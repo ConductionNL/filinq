@@ -105,24 +105,46 @@ class ObjectEventRegistrarTest extends TestCase {
 	public function testBootFallsBackToAnUnfilteredListenerAndWarns(): void {
 		self::assertFalse(class_exists('OCA\OpenRegister\Event\ObjectEventSubscription'), 'This test needs the subscription class absent.');
 
+		$translator = 'OCA\Filinq\EventListener\DocumentEventTranslator';
+		$transitioned = 'OCA\OpenRegister\Event\ObjectTransitionedEvent';
+		$expected = [
+			[ObjectUpdatedEvent::class, DossierCheckedOnListener::class],
+			[$transitioned, $translator],
+			[ObjectCreatedEvent::class, $translator],
+		];
+
+		$added = [];
 		$dispatcher = $this->createMock(IEventDispatcher::class);
-		$dispatcher->expects(self::once())->method('addServiceListener')
-			->with(ObjectUpdatedEvent::class, DossierCheckedOnListener::class);
+		$dispatcher->expects(self::exactly(3))->method('addServiceListener')
+			->willReturnCallback(static function (string $event, string $listener) use (&$added): void {
+				$added[] = [$event, $listener];
+			});
 		$container = $this->createMock(ContainerInterface::class);
 		$container->expects(self::once())->method('get')->with(IEventDispatcher::class)->willReturn($dispatcher);
 
+		$warnings = [];
 		$logger = $this->createMock(LoggerInterface::class);
-		$logger->expects(self::once())->method('warning')->with(
-			'OpenRegister ObjectEventSubscription unavailable: ' . DossierCheckedOnListener::class
-			. ' fell back to an UNFILTERED registration for ' . ObjectUpdatedEvent::class
-			. ' and will be invoked on every object write instance-wide.',
-			['app' => 'filinq']
-		);
+		$logger->expects(self::exactly(3))->method('warning')
+			->willReturnCallback(static function (string $message, array $context) use (&$warnings): void {
+				$warnings[] = [$message, $context];
+			});
 		$server = $this->createMock(ContainerInterface::class);
 		$server->method('get')->with(LoggerInterface::class)->willReturn($logger);
 		\OC::$server = $server;
 
 		(new ObjectEventRegistrar())->boot($container, 'filinq');
+
+		self::assertSame($expected, $added);
+		$expectedWarnings = array_map(
+			static fn (array $pair): array => [
+				'OpenRegister ObjectEventSubscription unavailable: ' . $pair[1]
+				. ' fell back to an UNFILTERED registration for ' . $pair[0]
+				. ' and will be invoked on every object write instance-wide.',
+				['app' => 'filinq'],
+			],
+			$expected
+		);
+		self::assertSame($expectedWarnings, $warnings);
 	}//end testBootFallsBackToAnUnfilteredListenerAndWarns()
 
 	/**
@@ -145,8 +167,13 @@ class ObjectEventRegistrarTest extends TestCase {
 
 		(new ObjectEventRegistrar())->boot($container, 'filinq');
 
+		$translator = 'OCA\Filinq\EventListener\DocumentEventTranslator';
 		self::assertSame(
-			[[$dispatcher, ObjectUpdatedEvent::class, DossierCheckedOnListener::class, ['filinq'], ['dossier']]],
+			[
+				[$dispatcher, ObjectUpdatedEvent::class, DossierCheckedOnListener::class, ['filinq'], ['dossier']],
+				[$dispatcher, 'OCA\OpenRegister\Event\ObjectTransitionedEvent', $translator, ['filinq'], ['signingRequest']],
+				[$dispatcher, ObjectCreatedEvent::class, $translator, ['filinq'], ['anonymizationLink', 'generatedDocument', 'documentRegistration']],
+			],
 			\OCA\OpenRegister\Event\ObjectEventSubscription::$calls
 		);
 	}//end testBootSubscribesFilteredWhenOpenRegisterOffersIt()

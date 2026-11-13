@@ -132,7 +132,8 @@ class ObjectEventRegistrar {
 	}//end register()
 
 	/**
-	 * Declare the register/schema-filtered dossier listener.
+	 * Declare the register/schema-filtered listeners: the dossier listener and
+	 * the document event translator.
 	 *
 	 * Auto-regen the dossier grondslagen summary when `checkedOn` is updated.
 	 * Declared from boot() rather than register() so the OpenRegister guard is
@@ -142,14 +143,40 @@ class ObjectEventRegistrar {
 	 * @param string $appName The filinq app id, for log context.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/changes/connect-document-webhooks/specs/document-webhooks/spec.md#requirement-filinq-raises-four-document-events-whatever-path-wrote-the-record-req-cdw-001
 	 */
 	public function boot(ContainerInterface $container, string $appName): void {
+		$dispatcher = $container->get(IEventDispatcher::class);
 		$this->registerFilteredObjectListener(
-			dispatcher: $container->get(IEventDispatcher::class),
+			dispatcher: $dispatcher,
 			event: ObjectUpdatedEvent::class,
 			listener: DossierCheckedOnListener::class,
 			registers: ['filinq'],
 			schemas: ['dossier'],
+			appName: $appName
+		);
+
+		// Outward document events (connect-document-webhooks): a completed
+		// signing request, and a newly created anonymisation link, generated
+		// document or registration. Narrowed to those four schemas so the
+		// translator is never built for any other write. Both names are
+		// strings to keep this registrar's coupling where it is.
+		$translator = 'OCA\\Filinq\\EventListener\\DocumentEventTranslator';
+		$this->registerFilteredObjectListener(
+			dispatcher: $dispatcher,
+			event: 'OCA\\OpenRegister\\Event\\ObjectTransitionedEvent',
+			listener: $translator,
+			registers: ['filinq'],
+			schemas: ['signingRequest'],
+			appName: $appName
+		);
+		$this->registerFilteredObjectListener(
+			dispatcher: $dispatcher,
+			event: ObjectCreatedEvent::class,
+			listener: $translator,
+			registers: ['filinq'],
+			schemas: ['anonymizationLink', 'generatedDocument', 'documentRegistration'],
 			appName: $appName
 		);
 
