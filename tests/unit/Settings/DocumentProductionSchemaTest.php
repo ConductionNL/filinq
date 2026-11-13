@@ -160,9 +160,11 @@ class DocumentProductionSchemaTest extends TestCase {
 		// 1.4.0 since filinq-configurable-report-templates, which added `slug`
 		// and `tenantId`; 1.4.1 since both moved inside `properties` (see
 		// SchemaSlugIntegrityTest); 1.5.0 since template-merge-preview added
-		// `mergeFields`. An importer skips an unchanged version, so this pin
-		// moves whenever the schema actually does.
-		$this->assertSame(expected: '1.5.0', actual: $schemas['template']['version']);
+		// `mergeFields`; 1.6.0 since office-template-authoring added
+		// `templateType`, the office source and the tag report. An importer
+		// skips an unchanged version, so this pin moves whenever the schema
+		// actually does.
+		$this->assertSame(expected: '1.6.0', actual: $schemas['template']['version']);
 
 		foreach (['templateId', 'requiredStatements', 'source'] as $part) {
 			$this->assertArrayHasKey(

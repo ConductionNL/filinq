@@ -5442,6 +5442,92 @@
       {
         "@self": {
           "register": "filinq",
+          "schema": "textFragment",
+          "slug": "textfragment-ondertekening-burgemeester"
+        },
+        "name": "Ondertekening burgemeester",
+        "slug": "ondertekening-burgemeester",
+        "namespace": "filinq",
+        "content": "Hoogachtend,\nde burgemeester van Demostad,\nnamens deze,",
+        "category": "ondertekening",
+        "tags": ["ondertekening"],
+        "language": "nl"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "textFragment",
+          "slug": "textfragment-bezwaarclausule"
+        },
+        "name": "Bezwaarclausule",
+        "slug": "bezwaarclausule",
+        "namespace": "filinq",
+        "content": "Bent u het niet eens met dit besluit? Dan kunt u binnen zes weken na de dag van verzending bezwaar maken bij het college van burgemeester en wethouders van Demostad.",
+        "category": "rechtsmiddelen",
+        "tags": ["bezwaar", "beschikking"],
+        "language": "nl"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "textFragment",
+          "slug": "textfragment-contactgegevens"
+        },
+        "name": "Contactgegevens",
+        "slug": "contactgegevens",
+        "namespace": "filinq",
+        "content": "Heeft u vragen? Bel 14 0123 en noem zaaknummer ${zaaknummer}.",
+        "category": "contact",
+        "tags": ["contact"],
+        "language": "nl"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "templateImportJob",
+          "slug": "templateimportjob-huisstijl-2026"
+        },
+        "status": "completed",
+        "totalFiles": 3,
+        "imported": 3,
+        "failed": 0,
+        "startedBy": "demo-communicatie",
+        "report": [
+          {"file": "beschikking-parkeervergunning.docx", "tags": 4, "unknownTags": 0}
+        ]
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "templateImportJob",
+          "slug": "templateimportjob-brieven-archief"
+        },
+        "status": "completed",
+        "totalFiles": 2,
+        "imported": 1,
+        "failed": 1,
+        "startedBy": "demo-communicatie",
+        "report": [
+          {"file": "ontvangstbevestiging.docx", "tags": 2, "unknownTags": 1},
+          {"file": "oud-sjabloon.doc", "failed": true, "reason": "Only DOCX and ODT files can be office templates."}
+        ]
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "templateImportJob",
+          "slug": "templateimportjob-bouwstenen"
+        },
+        "status": "queued",
+        "totalFiles": 12,
+        "imported": 0,
+        "failed": 0,
+        "startedBy": "demo-communicatie",
+        "report": []
+      },
+      {
+        "@self": {
+          "register": "filinq",
           "schema": "documentFinalityRule",
           "slug": "documentfinalityrule-documentfinalityrule-1-1"
         },

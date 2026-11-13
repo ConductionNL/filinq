@@ -2247,6 +2247,31 @@ interface IRootFolder {
 	 * @return \OCP\Files\Node|null
 	 */
 	public function getFirstNodeById(int $id): ?\OCP\Files\Node;
+
+	/**
+	 * A node by its path (the real IRootFolder has it through Folder).
+	 *
+	 * @param string $path The path
+	 *
+	 * @return \OCP\Files\Node
+	 */
+	public function get($path);
+
+	/**
+	 * Make a folder (the real IRootFolder has it through Folder).
+	 *
+	 * @param string $path The path
+	 *
+	 * @return \OCP\Files\Folder
+	 */
+	public function newFolder($path);
+
+	/**
+	 * The name of the instance's app data directory.
+	 *
+	 * @return string
+	 */
+	public function getAppDataDirectoryName(): string;
 }//end interface
 
 // ICache and ICacheFactory are defined in NextcloudStubs.php — no duplicate here.

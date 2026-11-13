@@ -5,8 +5,9 @@
 
 ## 1. Register & data model
 
-- [ ] 1.1 Extend `lib/Settings/filinq_register.json`: `template` schema (+`templateType`, `sourceFileId`, `contentHash`, `boundRegister`, `boundSchema`, `mergeFields`, `fieldMap`, `tagReport`), `templateVersion` (+`sourceFileId`, `contentHash`), new `textFragment` and `templateImportJob` schemas; bump templates register to 2.1.0
+- [x] 1.1 Extend `lib/Settings/filinq_register.json`: `template` schema (+`templateType`, `sourceFileId`, `contentHash`, `boundRegister`, `boundSchema`, `mergeFields`, `fieldMap`, `tagReport`), `templateVersion` (+`sourceFileId`, `contentHash`), new `textFragment` and `templateImportJob` schemas; bump templates register to 2.1.0
   - All new properties optional; absent `templateType` reads as `twig`; schema refs by slug (not PascalCase)
+  - Built: register 8.52.0, `template` 1.6.0, `templateVersion` 1.2.0. `textFragment` is `searchable: false` until it has a page to deep-link to. Three demo objects each for `textFragment` and `templateImportJob` in `filinq_mock_register.json`.
   - `tests/validate-manifest.js` and register import on boot both pass
 
 - [ ] 1.2 Ship seed data: demo office template object + seed DOCX in `tests/sample-documents/`, demo `textFragment`, demo `templateImportJob` (nil-UUID pattern, Demostad flavour per design.md Seed Data)
@@ -14,10 +15,11 @@
 
 ## 2. Backend services
 
-- [ ] 2.1 `OfficeTemplateService`: upload intake (multipart), macro/`vbaProject.bin` rejection, size cap + mime sniff, ODT→DOCX normalisation via `LibreOfficeHeadlessBackend`, source storage in app folder + `sourceFileId`/`contentHash`, tag extraction via PhpWord `TemplateProcessor::getVariables()` (REQ-DDOTA-001)
+- [x] 2.1 `OfficeTemplateService`: upload intake (multipart), macro/`vbaProject.bin` rejection, size cap + mime sniff, ODT→DOCX normalisation via `LibreOfficeHeadlessBackend`, source storage in app folder + `sourceFileId`/`contentHash`, tag extraction via PhpWord `TemplateProcessor::getVariables()` (REQ-DDOTA-001)
   - HTTP 422 paths for macro/size/mime; `converted: true` flag on ODT normalisation
+  - Built: `OfficeSourceGuard`, `MergeTagReader`, `OfficeSourceStore` (app data folder, named by checksum), `OfficeTemplateService::create()`, `LibreOfficeHeadlessBackend::convertDocument()`, and `POST api/templates/office` (`OfficeTemplatesController`). Nothing is stored before every check passes.
 
-- [ ] 2.2 Tag validation against bound schema: classify known/fragment/unknown by reading schema properties from OpenRegister; persist `tagReport`; honour `filinq.templates.unknown_tag_severity` (warning default, blocking refuses upload) (REQ-DDOTA-002)
+- [x] 2.2 Tag validation against bound schema: classify known/fragment/unknown by reading schema properties from OpenRegister; persist `tagReport`; honour `filinq.templates.unknown_tag_severity` (warning default, blocking refuses upload) (REQ-DDOTA-002)
 
 - [ ] 2.3 Office render path in `DocumentService::generateDocument()`/`generatePreview()`: fragments pre-pass → `TemplateProcessor` fill (setValue/cloneBlock/cloneRow, `fieldMap` aliasing) → `docx` output or `PdfConversionService::convertToPdf()` for pdf/pdfa; missing-data warnings; `generatedDocument` logging with template type (REQ-DDOTA-003)
   - `huisstijlId` ignored for office templates with a warning
