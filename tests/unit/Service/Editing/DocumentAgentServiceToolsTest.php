@@ -19,6 +19,7 @@ namespace OCA\Filinq\Tests\Unit\Service\Editing;
 
 use OCA\Filinq\Service\DocumentGenerationRecord;
 use OCA\Filinq\Service\Editing\AgentArtefactMarker;
+use OCA\Filinq\Service\Editing\EditorSessionProbe;
 use OCA\Filinq\Service\Editing\AgentFileRequest;
 use OCA\Filinq\Service\Editing\DocumentAgentService;
 use OCA\Filinq\Service\Editing\EditSessionService;
@@ -103,7 +104,8 @@ class DocumentAgentServiceToolsTest extends TestCase {
 			documentLogger: $this->documentLogger,
 			rootFolder: $this->rootFolder,
 			userSession: $session,
-			logger: $this->createMock(LoggerInterface::class)
+			logger: $this->createMock(LoggerInterface::class),
+			editors: $this->createMock(EditorSessionProbe::class)
 		);
 	}//end service()
 
