@@ -48,6 +48,7 @@ use RuntimeException;
  * Characterization of the batch anonymise endpoint.
  *
  * @covers \OCA\Filinq\Controller\BatchAnonymizationController
+ * @uses \OCA\Filinq\Controller\Support\OutputFormatChoice
  */
 class BatchAnonymizationControllerAnonymizeTraceTest extends TestCase {
 

@@ -38,6 +38,7 @@ use Stringable;
  *
  * @covers \OCA\Filinq\Service\OcrService
  * @uses   \OCA\Filinq\Service\TesseractCommand
+ * @uses \OCA\Filinq\Service\SessionUserFile
  */
 class OcrProcessFileGoldenTest extends TestCase {
 

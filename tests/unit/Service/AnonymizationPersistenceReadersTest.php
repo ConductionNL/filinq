@@ -31,6 +31,8 @@ use ReflectionMethod;
  * Pins the id, payload and source-metadata readers on every shape they accept.
  *
  * @covers \OCA\Filinq\Service\AnonymizationPersistenceService
+ * @uses \OCA\Filinq\Service\SavedObjectReader
+ * @uses \OCA\Filinq\Service\ObjectResultExtractor
  */
 class AnonymizationPersistenceReadersTest extends TestCase {
 
