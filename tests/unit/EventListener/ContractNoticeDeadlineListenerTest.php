@@ -29,11 +29,15 @@ use OCA\Filinq\Service\Contract\ContractDates;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
+use OCP\EventDispatcher\Event;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 
 /**
  * A contract saved without a notice deadline gets one; nothing else does.
+ *
+ * @covers \OCA\Filinq\EventListener\ContractNoticeDeadlineListener
+ * @uses   \OCA\Filinq\Service\Contract\ContractDates
  */
 class ContractNoticeDeadlineListenerTest extends TestCase {
 
@@ -134,4 +138,57 @@ class ContractNoticeDeadlineListenerTest extends TestCase {
 		$this->assertSame([], $other->getModifiedData());
 
 	}//end testAManualDeadlineAndOtherSchemasAreLeftAlone()
+
+	/**
+	 * An object without a schema reference is never looked up and gets no deadline.
+	 *
+	 * @return void
+	 */
+	public function testAnObjectWithoutASchemaIsNotLookedUp(): void {
+		$container = $this->createMock(ContainerInterface::class);
+		$container->expects($this->never())->method('get');
+		$listener = new ContractNoticeDeadlineListener(container: $container, dates: new ContractDates());
+
+		$creating = new ObjectCreatingEvent($this->entity(data: ['endDate' => '2026-12-31', 'noticePeriodDays' => 72], schema: ''));
+		$listener->handle($creating);
+		$this->assertSame([], $creating->getModifiedData());
+
+	}//end testAnObjectWithoutASchemaIsNotLookedUp()
+
+	/**
+	 * An event that cannot carry modified data is left alone before any lookup.
+	 *
+	 * @return void
+	 */
+	public function testAnEventThatCannotCarryModifiedDataIsIgnored(): void {
+		$container = $this->createMock(ContainerInterface::class);
+		$container->expects($this->never())->method('get');
+		$listener = new ContractNoticeDeadlineListener(container: $container, dates: new ContractDates());
+
+		$entity = $this->entity(data: ['endDate' => '2026-12-31', 'noticePeriodDays' => 72], schema: '17');
+		$event = new class ($entity) extends Event {
+			/**
+			 * Constructor.
+			 *
+			 * @param ObjectEntity $object The object.
+			 */
+			public function __construct(private ObjectEntity $object) {
+				parent::__construct();
+			}
+
+			/**
+			 * The object.
+			 *
+			 * @return ObjectEntity The object.
+			 */
+			public function getObject(): ObjectEntity {
+				return $this->object;
+			}
+		};
+		$listener->handle($event);
+		$this->assertSame(['endDate' => '2026-12-31', 'noticePeriodDays' => 72], $entity->getObject());
+
+		$listener->handle(new Event());
+
+	}//end testAnEventThatCannotCarryModifiedDataIsIgnored()
 }//end class
