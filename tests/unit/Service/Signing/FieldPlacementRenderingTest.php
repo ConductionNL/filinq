@@ -289,6 +289,52 @@ class FieldPlacementRenderingTest extends TestCase {
 	}//end testPlacementRules()
 
 	/**
+	 * At most 200 fields are accepted; one more is refused as a whole.
+	 *
+	 * @return void
+	 */
+	public function testMoreThanTheMaximumOfFieldsIsRefused(): void {
+		$rules = new FieldPlacements();
+		$field = ['signerIndex' => 0, 'page' => 1, 'x' => 0, 'y' => 0, 'width' => 0.1, 'height' => 0.1, 'type' => 'checkbox'];
+
+		$this->assertCount(FieldPlacements::MAX, $rules->normalise(placements: array_fill(0, FieldPlacements::MAX, $field), signerCount: 1));
+
+		$this->expectException(InvalidArgumentException::class);
+		$this->expectExceptionMessage('fieldPlacements holds more than 200 fields');
+		$rules->normalise(placements: array_fill(0, (FieldPlacements::MAX + 1), $field), signerCount: 1);
+
+	}//end testMoreThanTheMaximumOfFieldsIsRefused()
+
+	/**
+	 * Without placements the renderer hands the PDF back untouched; a date
+	 * field shows the day of the timestamp and a checkbox an X.
+	 *
+	 * @return void
+	 */
+	public function testTheRendererDrawsDatesAndCheckboxes(): void {
+		$renderer = new FieldPlacementRenderer();
+		$original = $this->threePagePdf();
+
+		$this->assertSame($original, $renderer->render(pdf: $original, placements: [], signers: ['Bram Jansen'], timestamp: '2026-06-01T10:00:00+00:00'));
+
+		$rendered = $renderer->render(
+			pdf: $original,
+			placements: [
+				['signerIndex' => 0, 'page' => 1, 'x' => 0.1, 'y' => 0.1, 'width' => 0.3, 'height' => 0.05, 'type' => 'date'],
+				['signerIndex' => 0, 'page' => 2, 'x' => 0.1, 'y' => 0.1, 'width' => 0.05, 'height' => 0.05, 'type' => 'checkbox'],
+			],
+			signers: ['Bram Jansen'],
+			timestamp: '2026-06-01T10:00:00+00:00'
+		);
+
+		$this->assertStringContainsString('(2026-06-01)', $this->pageText(pdf: $rendered, page: 1));
+		$this->assertStringNotContainsString('T10:00', $this->pageText(pdf: $rendered, page: 1));
+		$this->assertStringContainsString('(X)', $this->pageText(pdf: $rendered, page: 2));
+		$this->assertStringNotContainsString('Bram Jansen', $this->pageText(pdf: $rendered, page: 2));
+
+	}//end testTheRendererDrawsDatesAndCheckboxes()
+
+	/**
 	 * The text operators on one page, decompressed.
 	 *
 	 * @param string $pdf  The PDF.

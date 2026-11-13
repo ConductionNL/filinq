@@ -265,6 +265,63 @@ class LibreSignProviderTest extends TestCase {
 		$this->assertSame(['deleteRequest', 77], end($this->client->calls));
 
 	}//end testCancelDeletesTheLibreSignRequest()
+
+	/**
+	 * An answer without a uuid is not a request LibreSign can be asked about
+	 * later, so it is refused.
+	 *
+	 * @return void
+	 */
+	public function testAnAnswerWithoutAUuidIsRefused(): void {
+		$this->client->uuid = '';
+
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessage('LibreSign accepted the signature request but returned no uuid');
+		$this->provider()->initiateSigning('', 'Besluit', [['email' => 'a@example.org']], 'AdES', ['fileId' => 12]);
+
+	}//end testAnAnswerWithoutAUuidIsRefused()
+
+	/**
+	 * Cancelling a request LibreSign reports no file for deletes nothing.
+	 *
+	 * @return void
+	 */
+	public function testCancelWithoutAFileIsRefused(): void {
+		$this->client->nodeId = 0;
+
+		try {
+			$this->provider()->cancelSigning('ls-1');
+			$this->fail('A request without a file was cancelled');
+		} catch (RuntimeException $e) {
+			$this->assertSame('LibreSign returned no file for request ls-1', $e->getMessage());
+		}
+
+		$this->assertSame([['validate', 'ls-1']], $this->client->calls);
+
+	}//end testCancelWithoutAFileIsRefused()
+
+	/**
+	 * The document travels as its bytes when given, else as a file id, else
+	 * as the path.
+	 *
+	 * @return void
+	 */
+	public function testTheDocumentIsSentAsBytesFileIdOrPath(): void {
+		$signers = [['email' => 'a@example.org']];
+		$this->provider()->initiateSigning('/docs/b.pdf', 'Besluit', $signers, 'AdES', ['content' => '%PDF-x', 'fileId' => 12]);
+		$this->provider()->initiateSigning('/docs/b.pdf', 'Besluit', $signers, 'AdES', ['content' => '', 'fileId' => 12]);
+		$this->provider()->initiateSigning('/docs/b.pdf', 'Besluit', $signers, 'AdES', ['fileId' => 0]);
+
+		$this->assertSame(
+			[
+				['base64' => base64_encode('%PDF-x'), 'name' => 'Besluit'],
+				['nodeId' => 12],
+				['path' => '/docs/b.pdf'],
+			],
+			array_map(static fn (array $call): array => $call[1], $this->client->calls)
+		);
+
+	}//end testTheDocumentIsSentAsBytesFileIdOrPath()
 }//end class
 
 /**
@@ -300,11 +357,25 @@ class FakeLibreSignClient implements LibreSignClient {
 	public string $signed = '%PDF-1.7 signed by LibreSign';
 
 	/**
+	 * The uuid requestSignature() answers with.
+	 *
+	 * @var string
+	 */
+	public string $uuid = 'ls-uuid-1';
+
+	/**
+	 * The file id validate() reports.
+	 *
+	 * @var int
+	 */
+	public int $nodeId = 77;
+
+	/**
 	 * {@inheritDoc}
 	 */
 	public function requestSignature(array $file, string $name, array $signers): array {
 		$this->calls[] = ['requestSignature', $file, $name, $signers];
-		return ['uuid' => 'ls-uuid-1', 'status' => 1, 'nodeId' => 12];
+		return ['uuid' => $this->uuid, 'status' => 1, 'nodeId' => 12];
 
 	}//end requestSignature()
 
@@ -316,7 +387,7 @@ class FakeLibreSignClient implements LibreSignClient {
 		return [
 			'uuid' => $uuid,
 			'status' => $this->status,
-			'nodeId' => 77,
+			'nodeId' => $this->nodeId,
 			'signers' => [['displayName' => 'Jan', 'sign_date' => '2026-09-29T10:00:00+00:00']],
 		];
 
