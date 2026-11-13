@@ -28,6 +28,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\EventListener;
 
 use OCA\Filinq\Event\DocumentGenerationRequestedEvent;
+use OCA\Filinq\Event\DocumentStampRequestedEvent;
 use OCA\Filinq\Flow\FilinqFlowNodeListener;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 
@@ -75,6 +76,14 @@ class DocumentGenerationRegistrar {
 		$context->registerEventListener(
 			event: DocumentGenerationRequestedEvent::class,
 			listener: DocumentGenerationRequestedListener::class
+		);
+
+		// Cross-app stamping (work-stamp-text-on-every-page): a sibling app
+		// dispatches DocumentStampRequestedEvent with a PDF and a text and
+		// reads the PDF with the text on every page back from the event.
+		$context->registerEventListener(
+			event: DocumentStampRequestedEvent::class,
+			listener: DocumentStampRequestedListener::class
 		);
 
 	}//end register()

@@ -23,6 +23,9 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Tests\Unit;
 
+use OCA\Filinq\Service\Signing\SigningProviderInterface;
+use OCA\Filinq\Service\Signing\SigningProviderFactory;
+use OCA\Filinq\Service\Signing\SigningCancellationService;
 use OCA\Filinq\Controller\CorrespondenceController;
 use OCA\Filinq\Controller\SigningController;
 use OCA\Filinq\Controller\Support\SigningServices;
@@ -160,9 +163,22 @@ class Wave12SecurityRegressionTest extends TestCase {
 		IUserSession $userSession,
 		IGroupManager $groupManager,
 	): SigningController {
+		// The cancel endpoint runs through SigningCancellationService over the
+		// same SigningService double; its transition rule is the real one.
+		$signingService->method('isValidTransition')->willReturnCallback(
+			static fn (string $currentStatus, string $newStatus): bool => in_array($currentStatus, ['DRAFT', 'PENDING', 'IN_PROGRESS'], true) && $newStatus === 'CANCELLED'
+		);
+		$providers = $this->createMock(SigningProviderFactory::class);
+		$providers->method('getActiveProvider')->willReturn($this->createMock(SigningProviderInterface::class));
+
 		return new SigningController(
 			$this->createMock(IRequest::class),
-			new SigningServices(signing: $signingService, audit: $this->createMock(SigningAuditService::class), verification: $this->createMock(SigningVerificationService::class)),
+			new SigningServices(
+				signing: $signingService,
+				audit: $this->createMock(SigningAuditService::class),
+				verification: $this->createMock(SigningVerificationService::class),
+				cancellation: new SigningCancellationService(providers: $providers, requests: $signingService, logger: $this->createMock(LoggerInterface::class))
+			),
 			$userSession,
 			$this->createMock(LoggerInterface::class),
 			$this->makeL10n(),
@@ -301,7 +317,7 @@ class Wave12SecurityRegressionTest extends TestCase {
 	}//end testJobStatusDeniesAccessWhenOwnerUserIdIsEmpty()
 
 	// ─────────────────────────────────────────────────────────────────────────
-	// WF1 — cancelRequest requires initiator-or-admin
+	// WF1 — cancelRequest requires the creator (signing-cancellation: not an admin)
 	// ─────────────────────────────────────────────────────────────────────────
 
 	/**
@@ -311,6 +327,8 @@ class Wave12SecurityRegressionTest extends TestCase {
 	 */
 	public function testCancelRequestReturns403ForNonInitiator(): void {
 		$signingService = $this->createMock(SigningService::class);
+		// cancelRequest must NOT be called.
+		$signingService->expects($this->never())->method('cancelRequest');
 		$signingService->method('getRequest')->willReturn(
 			[
 				'id' => 'req-1',
@@ -330,8 +348,6 @@ class Wave12SecurityRegressionTest extends TestCase {
 
 		$this->assertInstanceOf(JSONResponse::class, $response);
 		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
-		// cancelRequest must NOT have been called.
-		$signingService->expects($this->never())->method('cancelRequest');
 
 	}//end testCancelRequestReturns403ForNonInitiator()
 
@@ -346,11 +362,12 @@ class Wave12SecurityRegressionTest extends TestCase {
 			[
 				'id' => 'req-1',
 				'initiatorUserId' => 'alice',
+				'externalId' => 'ext-1',
 				'signerIds' => [],
 				'status' => 'PENDING',
 			]
 		);
-		$signingService->method('cancelRequest')->willReturn(
+		$signingService->expects($this->once())->method('cancelRequest')->with('req-1')->willReturn(
 			['id' => 'req-1', 'status' => 'CANCELLED']
 		);
 
@@ -368,17 +385,18 @@ class Wave12SecurityRegressionTest extends TestCase {
 	}//end testCancelRequestReturns200ForInitiator()
 
 	/**
-	 * WF1: admin can cancel any request regardless of initiator.
+	 * WF1: an administrator who did not create the request is refused like
+	 * anybody else (signing-cancellation, decided 2026-08-16: administering an
+	 * application is not being a party to the agreement).
 	 *
 	 * @return void
 	 */
-	public function testCancelRequestReturns200ForAdmin(): void {
+	public function testCancelRequestRefusesAnAdminWhoDidNotCreateIt(): void {
 		$signingService = $this->createMock(SigningService::class);
-		// getRequest should NOT be called for admins (they bypass the check).
-		$signingService->expects($this->never())->method('getRequest');
-		$signingService->method('cancelRequest')->willReturn(
-			['id' => 'req-1', 'status' => 'CANCELLED']
+		$signingService->method('getRequest')->willReturn(
+			['id' => 'req-1', 'initiatorUserId' => 'alice', 'externalId' => 'ext-1', 'signerIds' => [], 'status' => 'PENDING']
 		);
+		$signingService->expects($this->never())->method('cancelRequest');
 
 		$controller = $this->makeSigningController(
 			$signingService,
@@ -389,9 +407,9 @@ class Wave12SecurityRegressionTest extends TestCase {
 		$response = $controller->cancelRequest('req-1');
 
 		$this->assertInstanceOf(JSONResponse::class, $response);
-		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
 
-	}//end testCancelRequestReturns200ForAdmin()
+	}//end testCancelRequestRefusesAnAdminWhoDidNotCreateIt()
 
 	// ─────────────────────────────────────────────────────────────────────────
 	// WF2 — listRequests and getRequest scoped to caller

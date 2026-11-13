@@ -1,0 +1,8 @@
+{
+  "description": "Office editors that can take an agent edit while they hold a document open. Keyed by the owner name of the app lock the editor takes on the file. Each entry names the suite (for messages) and the delivery adapter the companion uses on the editor page. An editor whose lock owner is not listed here is still detected, and an edit to its document is refused by name.",
+  "editors": {
+    "richdocuments": { "suite": "Collabora Online", "adapter": "postMessage" },
+    "onlyoffice": { "suite": "ONLYOFFICE", "adapter": "connector" },
+    "eurooffice": { "suite": "Euro-Office", "adapter": "connector" }
+  }
+}
