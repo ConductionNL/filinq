@@ -156,4 +156,22 @@ class HistoryRankerTest extends TestCase {
 		$this->assertCount(3, $result);
 
 	}//end testResultCappedToThreeSuggestions()
+
+	/**
+	 * Bookings that carry no account code are not ranked; when none has a code
+	 * the result is empty.
+	 *
+	 * @return void
+	 */
+	public function testBookingsWithoutAccountCodeAreIgnored(): void {
+		$bookings = [
+			['accountCode' => '', 'bookedAt' => '2024-03-01'],
+			['accountCode' => '   ', 'bookedAt' => '2024-03-02'],
+			['bookedAt' => '2024-03-03'],
+		];
+
+		$this->assertSame([], $this->ranker->rank(bookings: $bookings));
+
+	}//end testBookingsWithoutAccountCodeAreIgnored()
+
 }//end class
