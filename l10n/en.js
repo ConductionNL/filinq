@@ -1,7 +1,3 @@
-/**
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- */
 OC.L10N.register(
     "filinq",
     {
@@ -1513,8 +1509,6 @@ OC.L10N.register(
         "Good afternoon {name},": "Good afternoon {name},",
         "Good evening {name},": "Good evening {name},",
         "Good morning {name},": "Good morning {name},",
-        "Grondslag (bases)": "Grondslag (bases)",
-        "Grondslagen": "Grondslagen",
         "Heading 1": "Heading 1",
         "Heading 2": "Heading 2",
         "Hex value": "Hex value",

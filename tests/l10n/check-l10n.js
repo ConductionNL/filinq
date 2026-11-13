@@ -25,9 +25,16 @@
  *              Nextcloud convention) and re-sort. This is the reproducible
  *              "run extraction" step; run it, review the diff, commit.
  *
+ * It also asserts en/nl key parity (ADR-007): every en.json key has a
+ * non-empty value in nl.json, and a plural key an array of non-empty forms.
+ * The other shipped locales (de, es, fr, it) are reported as a warning only,
+ * so their drift is visible without blocking.
+ *
  * Exit codes:
- *   0  every used key is present in en.json (or --write made it so)
- *   1  one or more used keys are missing from en.json (hard failure)
+ *   0  every used key is present in en.json (or --write made it so) and
+ *      nl.json covers every en.json key
+ *   1  one or more used keys are missing from en.json, or nl.json lacks or
+ *      leaves empty one or more en.json keys (hard failure)
  *
  * Env:
  *   L10N_APP_ID   override the app id (default: package.json "name")
@@ -163,9 +170,60 @@ console.log(`l10n-check [${appId}]: scanned ${files.length} files, `
 	+ `${used.size} distinct literal keys used, `
 	+ `${Object.keys(translations).length} keys in en.json`)
 
+// en/nl parity (ADR-007). A value counts when it is a non-empty string, or,
+// for a plural key, a non-empty array of non-empty strings.
+const REQUIRED_LOCALE = 'nl'
+const WARN_LOCALES = ['de', 'es', 'fr', 'it']
+
+function filled (value) {
+	if (Array.isArray(value)) {
+		return value.length > 0 && value.every((form) => typeof form === 'string' && form.trim() !== '')
+	}
+	return typeof value === 'string' && value.trim() !== ''
+}
+
+function parityGaps (locale) {
+	const file = path.join(path.dirname(enFile), `${locale}.json`)
+	if (!fs.existsSync(file)) {
+		return null
+	}
+	const other = readJson(file).translations || {}
+	return Object.keys(translations).filter((key) => !filled(other[key]))
+}
+
+for (const locale of WARN_LOCALES) {
+	const gaps = parityGaps(locale)
+	if (gaps !== null && gaps.length > 0) {
+		console.warn(`l10n-check: WARN — l10n/${locale}.json lacks or leaves empty ${gaps.length} `
+			+ 'key(s) of l10n/en.json (reported only, not enforced)')
+	}
+}
+
+const requiredGaps = parityGaps(REQUIRED_LOCALE)
+
+// Prints the nl parity result; answers whether nl.json covers en.json.
+function parityHolds () {
+	if (requiredGaps === null) {
+		console.error(`l10n-check: FAIL — l10n/${REQUIRED_LOCALE}.json does not exist`)
+		return false
+	}
+	if (requiredGaps.length === 0) {
+		console.log(`l10n-check: OK — l10n/${REQUIRED_LOCALE}.json has a value for every key of l10n/en.json`)
+		return true
+	}
+	console.error(`\nl10n-check: FAIL — ${requiredGaps.length} key(s) of l10n/en.json `
+		+ `are MISSING or EMPTY in l10n/${REQUIRED_LOCALE}.json:`)
+	for (const key of requiredGaps.slice().sort((a, b) => a.localeCompare(b))) {
+		console.error(`  • ${JSON.stringify(key)}`)
+	}
+	console.error(`\nAdd a real ${REQUIRED_LOCALE} translation for each (never the English text as a `
+		+ 'placeholder), then run `npm run l10n:build`.')
+	return false
+}
+
 if (missing.length === 0) {
 	console.log('l10n-check: OK — every used translation key is present in l10n/en.json')
-	process.exit(0)
+	process.exit(parityHolds() ? 0 : 1)
 }
 
 if (WRITE) {
@@ -199,4 +257,5 @@ for (const { key, locations } of missing.sort((a, b) => a.key.localeCompare(b.ke
 }
 console.error('\nAdd the missing source strings to l10n/en.json (key === English source), '
 	+ 'or run `node tests/l10n/check-l10n.js --write` to extract them automatically.')
+parityHolds()
 process.exit(1)

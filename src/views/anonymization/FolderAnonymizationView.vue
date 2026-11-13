@@ -119,7 +119,7 @@
 					<div
 						v-if="store.dossier.bases && store.dossier.bases.length"
 						class="muted">
-						{{ t('filinq', 'Grondslagen') }}:
+						{{ t('filinq', 'Legal bases') }}:
 						{{ store.dossier.bases.join(', ') }}
 					</div>
 				</NcNoteCard>
