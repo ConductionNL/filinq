@@ -367,7 +367,9 @@ class DocumentAgentService {
 			. 'of categories, and one or more series each carrying exactly one value per category (a pie chart '
 			. 'takes one series). Call readDocument first and pass back the version; pass an anchor to place the '
 			. 'chart after that paragraph, or omit it to append at the end. Charts need a .docx -- .odt is '
-			. 'refused by name. The file is tagged "Agent authored" and the previous version stays restorable.',
+			. 'refused by name. The file is tagged "Agent authored" and the previous version stays restorable. '
+			. 'The values live in the chart itself and no spreadsheet is embedded, so "Edit data" in the office '
+			. 'suite has no worksheet to open; tell the user this if they want to edit the numbers there.',
 		readOnlyHint: false,
 		destructiveHint: false,
 		idempotentHint: false,
