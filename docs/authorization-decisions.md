@@ -99,6 +99,7 @@ deliberately.
 | `template` | authenticated | authenticated | template-editors | Templates exist to be **used** across the organisation, so read stays open; the measured defect was a foreign user rewriting one. |
 | `templateVersion` | authenticated | authenticated | template-editors | Snapshots follow their template. `create` must be as open as template create, because a version row is written as a side effect of editing. |
 | `huisstijl` | authenticated | template-editors | template-editors | Branding must be readable or nothing renders; changing the organisation's house style is a managed act. |
+| `organisationSettings` | authenticated | admin | admin | Every member reads the effective settings of their organisation; overriding them is an admin act. The organisation-admin check (`OrganisationService::isOrganisationAdmin()`) belongs at the single service write path, added with the settings surface; until then only instance admins write. |
 | `correspondence` | authenticated | authenticated | template-editors | Audit row written as a side effect of generating, so `create` follows the generator. |
 | `generatedDocument` | authenticated | authenticated | template-editors | Same. |
 | `batchCorrespondenceJob` | authenticated | authenticated | authenticated / template-editors | Job state is advanced by the worker running **as the submitting user**, so `update` must stay open; deletion is not part of running a job. |

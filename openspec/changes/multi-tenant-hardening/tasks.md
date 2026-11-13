@@ -5,16 +5,16 @@
 
 ## 1. Register + seed data
 
-- [ ] 1.1 Add the `organisationSettings` schema to the `document` register in `lib/Settings/filinq_register.json` (REQ-DDMTH-007)
+- [x] 1.1 Add the `organisationSettings` schema to the `document` register in `lib/Settings/filinq_register.json` (REQ-DDMTH-007)
   - Properties per design.md D4, all overrides nullable; no organisation property (REQ-DDMTH-001); additive register version bump with changelog entry; `authorization` block limiting write to the admin surface.
   - Verify against HEAD before editing: schema list and register slugs may have moved since this spec was authored.
 
-- [ ] 1.2 Add seed data: one `organisationSettings` object (42-day period, WOO profile, huisstijl ref) per design.md Seed Data
+- [x] 1.2 Add seed data: one `organisationSettings` object (42-day period, WOO profile, huisstijl ref) per design.md Seed Data
   - Placeholder identifiers only (nil UUID / `seed-*`/`demostad-*`); validates on boot import.
 
 ## 2. Backend — enforcement
 
-- [ ] 2.1 Implement the system-context seam (REQ-DDMTH-002)
+- [x] 2.1 Implement the system-context seam (REQ-DDMTH-002)
   - Single named wrapper, literal reason string required, every use logged with reason + caller; unreachable from request parameters; PHPUnit covers logging + guard.
 
 - [ ] 2.2 Remove `_rbac:false` / `_multitenancy:false` from `BasesResolverService`, `PolicyMatchService`, `PolicyRetroactiveService`, `GrondslagProposalService` (REQ-DDMTH-002)
@@ -47,7 +47,7 @@
 
 ## 5. Spec maintenance
 
-- [ ] 5.1 Update `openspec/specs/admin-settings/spec.md`: set Status in-progress and append this change to its OpenSpec changes list
+- [x] 5.1 Update `openspec/specs/admin-settings/spec.md`: set Status in-progress and append this change to its OpenSpec changes list
   - Delta REQ-DDMTH-007/-008 merge into the canonical spec at archive time.
 
 ## 6. Quality
