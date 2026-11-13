@@ -138,6 +138,8 @@ deliberately.
 
 | `mergeJob` | authenticated | authenticated | admins | A merge is an ordinary handler's act, so `create` and `update` are theirs; the job records who asked because every input is read as that person and the result holds only what they could read. Only an admin may delete one: the job is the trace of what was bundled and handed over. |
 
+| `flowOperationRun` | authenticated | **nobody** (server only) | admins | The processing log of a Filinq operation a Nextcloud Flow rule started. Only the background job that runs the operation writes a run, as the file owner it acts for; no person adds or edits one, so a log cannot claim a run that did not happen. The row holds the file id and name and counts or verdicts, never extracted text or detected personal data. Only an admin deletes one; the log is otherwise rotated by its retention. |
+
 | `publicationLogEntry` | authenticated | **nobody** (server only) | nobody | The publication history. `PublicationStore` writes every entry past the cascade with the system as owner, after `PublicationAccess`; nobody can add an entry with another `actor` or `timestamp`. |
 
 | `publicationRecord` | authenticated | **nobody** (server only) | nobody | Only `PublicationStore` writes a record, after `PublicationAccess`, and owned by the system. Readiness always derives the redacted copy from the anonymisation link, so a `redactedFileRef` written onto the record can never make the original get published. |
