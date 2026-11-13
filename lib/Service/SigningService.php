@@ -32,6 +32,7 @@ use OCA\Filinq\Kernel\SigningAuditSubject;
 use OCA\Filinq\Service\Signing\PortalSignatureAssurance;
 use OCA\Filinq\Service\Signing\SignerEntries;
 use OCA\Filinq\Service\Signing\SigningAct;
+use OCA\Filinq\Service\Signing\SigningTurn;
 use OCA\Filinq\Service\Support\SigningGuards;
 use OCA\Filinq\Service\Support\SigningOutputs;
 use RuntimeException;
@@ -513,6 +514,16 @@ class SigningService implements SigningServiceInterface {
 			throw new RuntimeException('Signer has already responded to this request');
 		}
 
+		// Before any evidence is taken or anything is written: a sequential
+		// signer whose turn has not come is refused outright.
+		if ((string)($request['signingMode'] ?? '') !== SigningTurn::PARALLEL) {
+			SigningTurn::assertTurn(
+				request: $request,
+				signerId: $signerId,
+				signers: $this->signerRecords(request: $request, known: [$signerId => $signer])
+			);
+		}
+
 		$signer['identityEvidence'] = $this->guards->assuranceGate->evidenceForAct(
 			request: $request + ['id' => $requestId],
 			signer: $signer + ['id' => $signerId],
@@ -882,6 +893,54 @@ class SigningService implements SigningServiceInterface {
 		);
 
 	}//end updateRequestStatus()
+
+	/**
+	 * The signer records listed before one signer on a request, plus that signer, by id.
+	 *
+	 * Only the signers listed before this one are read: a signer listed after
+	 * it is placed after it unless its own order says otherwise, and reading
+	 * every record on every signature would load the whole request each time.
+	 * A record that cannot be read is kept as UNREADABLE, so it holds the turn
+	 * rather than being skipped.
+	 *
+	 * @param array<string, mixed>                $request The signing request.
+	 * @param array<string, array<string, mixed>> $known   The signing signer's record, by id.
+	 *
+	 * @return array<string, array<string, mixed>> The records, by id.
+	 *
+	 * @spec openspec/changes/finish-half-built-capabilities/tasks.md#4-signing
+	 */
+	private function signerRecords(array $request, array $known): array {
+		$earlier = [];
+		foreach (($request['signerIds'] ?? []) as $signerId) {
+			$signerId = (string)$signerId;
+			if (isset($known[$signerId]) === true) {
+				break;
+			}
+
+			$earlier[] = $signerId;
+		}
+
+		if ($earlier === []) {
+			return $known;
+		}
+
+		$objectService = $this->settingsService->getObjectService();
+		['register' => $signerRegister, 'schema' => $signerSchema] = $this->requireSignerRecordBinding();
+
+		$records = [];
+		foreach ($earlier as $signerId) {
+			try {
+				$records[$signerId] = $this->toArray(
+					object: $objectService->find(id: $signerId, register: $signerRegister, schema: $signerSchema, _rbac: false)
+				);
+			} catch (\Throwable $e) {
+				$records[$signerId] = ['status' => 'UNREADABLE'];
+			}
+		}
+
+		return $records + $known;
+	}//end signerRecords()
 
 	/**
 	 * Read the signer records of a request in order, stopping at the first that has not signed.

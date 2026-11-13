@@ -5,6 +5,8 @@
 OC.L10N.register(
     "filinq",
     {
+        "Related records for tables (listRefs, JSON)": "Related records for tables (listRefs, JSON)",
+        "The related records are not valid JSON.": "The related records are not valid JSON.",
         "Marketplace": "Marketplace",
         "documents": "documents",
         "Original": "Original",
