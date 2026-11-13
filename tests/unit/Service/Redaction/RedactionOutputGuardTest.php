@@ -160,6 +160,62 @@ class RedactionOutputGuardTest extends TestCase {
 	}//end testAnEarlierCheckDoesNotCoverANewDetectionRun()
 
 	/**
+	 * The refusal carries what the caller needs to explain it: the document,
+	 * the run that was checked, the run now asking to be written, the reason
+	 * and the instruction.
+	 *
+	 * @return void
+	 */
+	public function testARefusalNamesTheDocumentAndBothRuns(): void {
+		$checkedRun = $this->runs->of(fileId: 42, entities: self::FOUND);
+		$this->marks->method('findFor')->with('42')->willReturn(
+			[
+				'document' => '42',
+				'detectionRun' => $checkedRun,
+				'checkedBy' => 'noor',
+				'checkedAt' => '2026-09-18T09:00:00+00:00',
+			]
+		);
+		$foundAgain = array_merge(
+			self::FOUND,
+			[['entityType' => 'PERSON', 'text' => 'Henk Bakker', 'start' => 900, 'end' => 911]]
+		);
+
+		try {
+			$this->guard->assertMayWrite(fileId: 42, entities: $foundAgain, etag: 'etag-2');
+			$this->fail('A check of an older run must not cover the new one.');
+		} catch (RedactionNotReviewedException $e) {
+			$this->assertSame('42', $e->getDocument());
+			$this->assertSame($checkedRun, $e->getCheckedRun());
+			$this->assertSame($this->runs->of(fileId: 42, entities: $foundAgain, etag: 'etag-2'), $e->getCurrentRun());
+			$this->assertNotSame($e->getCheckedRun(), $e->getCurrentRun());
+			$this->assertSame(RedactionReviewGate::CHECKED_AN_OLDER_RUN, $e->getReason());
+			$this->assertSame('The detected data changed after the check. Check them again before anonymising.', $e->getInstruction());
+		}
+
+	}//end testARefusalNamesTheDocumentAndBothRuns()
+
+	/**
+	 * A document nobody checked is refused with no checked run to name.
+	 *
+	 * @return void
+	 */
+	public function testARefusalForAnUncheckedDocumentNamesNoCheckedRun(): void {
+		$this->marks->method('findFor')->willReturn(null);
+
+		try {
+			$this->guard->assertMayWrite(fileId: 7, entities: self::FOUND);
+			$this->fail('An unchecked document must be refused.');
+		} catch (RedactionNotReviewedException $e) {
+			$this->assertSame('7', $e->getDocument());
+			$this->assertSame('', $e->getCheckedRun());
+			$this->assertSame($this->runs->of(fileId: 7, entities: self::FOUND), $e->getCurrentRun());
+			$this->assertSame(RedactionReviewGate::NEVER_CHECKED, $e->getReason());
+		}
+
+	}//end testARefusalForAnUncheckedDocumentNamesNoCheckedRun()
+
+	/**
 	 * The same findings in a different order are the same run.
 	 *
 	 * Refusing here would train an operator to re-confirm a document that has
