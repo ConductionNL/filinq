@@ -7525,6 +7525,119 @@
         "method": "rules",
         "correspondentPending": true,
         "status": "suggested"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "caseSystemDestination",
+          "slug": "casesystemdestination-hrmq"
+        },
+        "templateNamespace": "hrmq",
+        "sourceId": "zgw-demo",
+        "informatieobjecttype": "https://zaken.example.nl/catalogi/api/v1/informatieobjecttypen/arbeidsovereenkomst",
+        "vertrouwelijkheidaanduiding": "vertrouwelijk",
+        "bronorganisatie": "002220647",
+        "active": false
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "caseSystemDestination",
+          "slug": "casesystemdestination-woo"
+        },
+        "templateNamespace": "woo",
+        "sourceId": "zgw-demo",
+        "informatieobjecttype": "https://zaken.example.nl/catalogi/api/v1/informatieobjecttypen/besluit",
+        "vertrouwelijkheidaanduiding": "openbaar",
+        "bronorganisatie": "002220647",
+        "active": false
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "caseSystemDestination",
+          "slug": "casesystemdestination-vergunning"
+        },
+        "templateId": "5b2f8a1e-3c4d-4e5f-8a9b-0c1d2e3f4a5b",
+        "sourceId": "zgw-demo",
+        "informatieobjecttype": "https://zaken.example.nl/catalogi/api/v1/informatieobjecttypen/vergunning",
+        "vertrouwelijkheidaanduiding": "zaakvertrouwelijk",
+        "bronorganisatie": "002220647",
+        "active": false
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "caseSystemDelivery",
+          "slug": "casesystemdelivery-written-back"
+        },
+        "generatedDocumentId": "a1d3c5e7-1111-4a2b-8c3d-000000000001",
+        "destinationId": "b2e4d6f8-2222-4b3c-9d4e-000000000001",
+        "sourceId": "zgw-demo",
+        "fileId": 4711,
+        "metadata": {
+          "titel": "Arbeidsovereenkomst Jansen",
+          "bestandsnaam": "Arbeidsovereenkomst Jansen.pdf",
+          "formaat": "application/pdf",
+          "taal": "dut",
+          "creatiedatum": "2026-11-02",
+          "auteur": "Anna de Vries",
+          "informatieobjecttype": "https://zaken.example.nl/catalogi/api/v1/informatieobjecttypen/arbeidsovereenkomst",
+          "vertrouwelijkheidaanduiding": "vertrouwelijk",
+          "bronorganisatie": "002220647"
+        },
+        "deliveryStatus": "written_back",
+        "externalUrl": "https://zaken.example.nl/documenten/api/v1/enkelvoudiginformatieobjecten/1",
+        "generatedBy": "anna"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "caseSystemDelivery",
+          "slug": "casesystemdelivery-waiting"
+        },
+        "generatedDocumentId": "a1d3c5e7-1111-4a2b-8c3d-000000000002",
+        "destinationId": "b2e4d6f8-2222-4b3c-9d4e-000000000001",
+        "sourceId": "zgw-demo",
+        "fileId": 4712,
+        "metadata": {
+          "titel": "Arbeidsovereenkomst de Boer",
+          "bestandsnaam": "Arbeidsovereenkomst de Boer.pdf",
+          "formaat": "application/pdf",
+          "taal": "dut",
+          "creatiedatum": "2026-11-02",
+          "auteur": "Anna de Vries",
+          "informatieobjecttype": "https://zaken.example.nl/catalogi/api/v1/informatieobjecttypen/arbeidsovereenkomst",
+          "vertrouwelijkheidaanduiding": "vertrouwelijk",
+          "bronorganisatie": "002220647"
+        },
+        "deliveryStatus": "ready_for_writeback",
+        "generatedBy": "anna"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "caseSystemDelivery",
+          "slug": "casesystemdelivery-failed"
+        },
+        "generatedDocumentId": "a1d3c5e7-1111-4a2b-8c3d-000000000003",
+        "destinationId": "b2e4d6f8-2222-4b3c-9d4e-000000000001",
+        "sourceId": "zgw-demo",
+        "fileId": 4713,
+        "metadata": {
+          "titel": "Arbeidsovereenkomst Smit",
+          "bestandsnaam": "Arbeidsovereenkomst Smit.pdf",
+          "formaat": "application/pdf",
+          "taal": "dut",
+          "creatiedatum": "2026-11-02",
+          "auteur": "Anna de Vries",
+          "informatieobjecttype": "https://zaken.example.nl/catalogi/api/v1/informatieobjecttypen/arbeidsovereenkomst",
+          "vertrouwelijkheidaanduiding": "vertrouwelijk",
+          "bronorganisatie": "002220647"
+        },
+        "deliveryStatus": "writeback_failed",
+        "errorMessage": "Het informatieobjecttype is niet bekend in de catalogus.",
+        "generatedBy": "anna"
       }
     ]
   }

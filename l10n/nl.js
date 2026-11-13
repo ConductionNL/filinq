@@ -1,7 +1,3 @@
-/**
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- */
 OC.L10N.register(
     "filinq",
     {
@@ -2876,7 +2872,35 @@ OC.L10N.register(
         "The value before the change.": "De waarde voor de wijziging.",
         "When the change was made.": "Wanneer de wijziging is gedaan.",
         "Merge fields": "Samenvoegvelden",
-        "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you.": "De velden die het sjabloon invult, met een naam en een herkomst voor mensen: wat een voorbeeld onder Voor je ingevuld toont"
+        "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you.": "De velden die het sjabloon invult, met een naam en een herkomst voor mensen: wat een voorbeeld onder Voor je ingevuld toont",
+        "Bridge source": "Brugbron",
+        "Case System Delivery": "Levering aan zaaksysteem",
+        "Case System Destination": "Bestemming in zaaksysteem",
+        "Case system delivery": "Levering aan zaaksysteem",
+        "Confidentiality": "Vertrouwelijkheid",
+        "Destination": "Bestemming",
+        "Document metadata": "Documentmetadata",
+        "Documents from this template are delivered here; a template match wins over a namespace match.": "Documenten van dit sjabloon worden hier afgeleverd; een sjabloon gaat voor een namespace.",
+        "Generated document": "Gegenereerd document",
+        "In the case system": "In het zaaksysteem",
+        "Only an active destination receives deliveries; at most one is active per template or namespace.": "Alleen een actieve bestemming ontvangt leveringen; per sjabloon of namespace is er hooguit één actief.",
+        "RSIN of the organisation that creates the document.": "RSIN van de organisatie die het document maakt.",
+        "Source organisation": "Bronorganisatie",
+        "Templates in this namespace are delivered here, unless a template-specific destination matches.": "Sjablonen in deze namespace worden hier afgeleverd, tenzij een bestemming voor het sjabloon zelf past.",
+        "The Nextcloud file id of the stored document.": "Het Nextcloud-bestands-id van het opgeslagen document.",
+        "The bridge source (case system connection) the delivery goes through.": "De brugbron (koppeling met het zaaksysteem) waarlangs de levering gaat.",
+        "The bridge source the push synchronisation sends through.": "De brugbron waarlangs de push-synchronisatie verstuurt.",
+        "The case in the case system the document is attached to, when the request named one.": "De zaak in het zaaksysteem waaraan het document wordt gekoppeld, als het verzoek er een noemde.",
+        "The case system's informatieobjecttype URL for these documents.": "De informatieobjecttype-URL van het zaaksysteem voor deze documenten.",
+        "The case system's message when the delivery failed.": "De melding van het zaaksysteem als de levering mislukte.",
+        "The confidentiality level the case system enforces.": "Het vertrouwelijkheidsniveau dat het zaaksysteem afdwingt.",
+        "The delivery of this document to the case system, when a destination applied.": "De levering van dit document aan het zaaksysteem, als er een bestemming van toepassing was.",
+        "The destination the document goes to; one delivery per document and destination.": "De bestemming van het document; één levering per document en bestemming.",
+        "The document's address in the case system, once written back.": "Het adres van het document in het zaaksysteem, zodra het is teruggeschreven.",
+        "The stored document this delivery sends.": "Het opgeslagen document dat deze levering verstuurt.",
+        "The user who generated the document; told when the delivery fails.": "De gebruiker die het document genereerde; krijgt bericht als de levering mislukt.",
+        "Where the delivery is: waiting, written back, or failed.": "Waar de levering staat: wachtend, teruggeschreven of mislukt.",
+        "titel, bestandsnaam, formaat, taal, creatiedatum, auteur and the destination fields, for integriq to map.": "titel, bestandsnaam, formaat, taal, creatiedatum, auteur en de bestemmingsvelden, voor integriq om te vertalen."
     },
     "nplurals=2; plural=(n != 1);"
 )
