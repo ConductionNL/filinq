@@ -2810,7 +2810,16 @@
         "The value before the change.": "The value before the change.",
         "When the change was made.": "When the change was made.",
         "Merge fields": "Merge fields",
-        "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you.": "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you."
+        "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you.": "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you.",
+        "It is not known who is anonymising this document, so it cannot be shown that someone else checked it. Sign in and try again.": "It is not known who is anonymising this document, so it cannot be shown that someone else checked it. Sign in and try again.",
+        "You checked the findings of this document yourself. Four eyes are required: a colleague must anonymise it.": "You checked the findings of this document yourself. Four eyes are required: a colleague must anonymise it.",
+        "A colleague must anonymise this document": "A colleague must anonymise this document",
+        "Sign in to anonymise this document": "Sign in to anonymise this document",
+        "Four eyes when anonymising": "Four eyes when anonymising",
+        "Only for Woo cases": "Only for Woo cases",
+        "Always": "Always",
+        "Off": "Off",
+        "Whether the person who checked the findings of a document may also anonymise it. With four eyes a colleague must anonymise it. A Woo case is a dossier run, or a document a case system flags as one.": "Whether the person who checked the findings of a document may also anonymise it. With four eyes a colleague must anonymise it. A Woo case is a dossier run, or a document a case system flags as one."
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

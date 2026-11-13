@@ -36,6 +36,7 @@ describe('defaultSettings', () => {
 			['signing_guardian_consent_age', 16],
 			['filinq.anonymisation.default_output_format', 'pdf-only'],
 			['anonymisation.output_subfolder_name', 'anonymised'],
+			['redaction_four_eyes', 'woo'],
 			['filinq.confidentiality.prioritise_analysis', false],
 			[
 				'filinq.confidentiality.label_vocabulary',

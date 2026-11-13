@@ -38,6 +38,7 @@ use OCP\IGroupManager;
 use OCP\IRequest;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 
 /**
  * Controller for handling settings-related operations
@@ -225,6 +226,7 @@ class SettingsController extends Controller {
 	 * @return JSONResponse JSON response containing the updated settings
 	 *
 	 * @spec openspec/specs/admin-settings/spec.md
+	 * @spec openspec/changes/redaction-four-eyes-setting/tasks.md#task-1
 	 */
 	#[AuthorizedAdminSetting(FilinqAdmin::class)]
 	public function create(): JSONResponse {
@@ -240,6 +242,12 @@ class SettingsController extends Controller {
 
 			return new JSONResponse($updatedData);
 		} catch (Exception $e) {
+			// A refused value (an unknown four-eyes choice, a bad subfolder
+			// name) is the caller's mistake and nothing was written: 400.
+			if ($e instanceof RuntimeException && $e->getCode() === 400) {
+				return new JSONResponse(['error' => $e->getMessage()], 400);
+			}
+
 			return $this->failed(message: 'Failed to update settings', exception: $e);
 		}//end try
 

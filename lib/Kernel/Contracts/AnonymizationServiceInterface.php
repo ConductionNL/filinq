@@ -199,4 +199,24 @@ interface AnonymizationServiceInterface {
 	 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-2.2
 	 */
 	public function anonymizeDocument(int $fileId, array $entities): array;
+
+	/**
+	 * Anonymize a document on behalf of a named user.
+	 *
+	 * The same run as {@see anonymizeDocument()}, with `$userId` as the acting
+	 * user, so a background job that runs for whoever started it is held to the
+	 * four-eyes rule like a request from that person.
+	 *
+	 * @param int                         $fileId   The Nextcloud file ID
+	 * @param array<array<string, mixed>> $entities The entities to anonymize
+	 * @param string                      $userId   The acting user.
+	 *
+	 * @return array<string, mixed> Anonymization result
+	 *
+	 * @throws Exception If anonymization fails.
+	 * @throws RedactionNotReviewedException When the review gate refuses the run.
+	 *
+	 * @spec openspec/changes/redaction-four-eyes-setting/tasks.md#task-3
+	 */
+	public function anonymizeDocumentAs(int $fileId, array $entities, string $userId): array;
 }//end interface
