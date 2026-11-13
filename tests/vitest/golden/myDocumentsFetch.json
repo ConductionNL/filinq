@@ -9,7 +9,8 @@
 				"modified": 1704103200,
 				"isFolder": true,
 				"isAnonymized": false,
-				"allChildrenAnonymized": true
+				"allChildrenAnonymized": true,
+				"notesCount": 0
 			},
 			{
 				"fileId": 21,
@@ -19,7 +20,8 @@
 				"modified": null,
 				"isFolder": true,
 				"isAnonymized": false,
-				"allChildrenAnonymized": false
+				"allChildrenAnonymized": false,
+				"notesCount": 0
 			},
 			{
 				"fileId": 22,
@@ -29,7 +31,8 @@
 				"modified": null,
 				"isFolder": true,
 				"isAnonymized": false,
-				"allChildrenAnonymized": false
+				"allChildrenAnonymized": false,
+				"notesCount": 0
 			},
 			{
 				"fileId": 30,
@@ -38,7 +41,8 @@
 				"fileSize": 0,
 				"modified": 1704268800,
 				"isFolder": false,
-				"isAnonymized": false
+				"isAnonymized": false,
+				"notesCount": 0
 			},
 			{
 				"fileId": 12,
@@ -47,7 +51,8 @@
 				"fileSize": 55,
 				"modified": 1704186000,
 				"isFolder": false,
-				"isAnonymized": true
+				"isAnonymized": true,
+				"notesCount": 0
 			},
 			{
 				"fileId": 11,
@@ -56,7 +61,8 @@
 				"fileSize": 100,
 				"modified": 1704099600,
 				"isFolder": false,
-				"isAnonymized": false
+				"isAnonymized": false,
+				"notesCount": 0
 			},
 			{
 				"fileId": 14,
@@ -65,7 +71,8 @@
 				"fileSize": 0,
 				"modified": 1704096000,
 				"isFolder": false,
-				"isAnonymized": true
+				"isAnonymized": true,
+				"notesCount": 0
 			},
 			{
 				"fileId": 15,
@@ -74,7 +81,8 @@
 				"fileSize": 0,
 				"modified": 1704013200,
 				"isFolder": false,
-				"isAnonymized": true
+				"isAnonymized": true,
+				"notesCount": 0
 			},
 			{
 				"fileId": 0,
@@ -83,7 +91,8 @@
 				"fileSize": 7,
 				"modified": null,
 				"isFolder": false,
-				"isAnonymized": false
+				"isAnonymized": false,
+				"notesCount": 0
 			}
 		],
 		"total": 9,
@@ -125,7 +134,7 @@
 				"method": "PROPFIND",
 				"url": "http://localhost/remote.php/dav/files/admin/DocuDesk/Sub%3F%20A",
 				"depth": "1",
-				"body": "<?xml version=\"1.0\"?> <d:propfind xmlns:d=\"DAV:\" xmlns:oc=\"http://owncloud.org/ns\" xmlns:nc=\"http://nextcloud.org/ns\"> <d:prop> <d:resourcetype /> <d:getcontenttype /> <d:getcontentlength /> <d:getlastmodified /> <oc:fileid /> <oc:size /> </d:prop> </d:propfind>",
+				"body": "<?xml version=\"1.0\"?> <d:propfind xmlns:d=\"DAV:\" xmlns:oc=\"http://owncloud.org/ns\" xmlns:nc=\"http://nextcloud.org/ns\"> <d:prop> <d:resourcetype /> <d:getcontenttype /> <d:getcontentlength /> <d:getlastmodified /> <oc:fileid /> <oc:size /> <oc:comments-count /> </d:prop> </d:propfind>",
 				"params": null
 			},
 			{
@@ -161,7 +170,8 @@
 				"modified": 1704103200,
 				"isFolder": true,
 				"isAnonymized": false,
-				"allChildrenAnonymized": true
+				"allChildrenAnonymized": true,
+				"notesCount": 0
 			},
 			{
 				"fileId": 21,
@@ -171,7 +181,8 @@
 				"modified": null,
 				"isFolder": true,
 				"isAnonymized": false,
-				"allChildrenAnonymized": false
+				"allChildrenAnonymized": false,
+				"notesCount": 0
 			},
 			{
 				"fileId": 22,
@@ -181,7 +192,8 @@
 				"modified": null,
 				"isFolder": true,
 				"isAnonymized": false,
-				"allChildrenAnonymized": false
+				"allChildrenAnonymized": false,
+				"notesCount": 0
 			},
 			{
 				"fileId": 30,
@@ -190,7 +202,8 @@
 				"fileSize": 0,
 				"modified": 1704268800,
 				"isFolder": false,
-				"isAnonymized": false
+				"isAnonymized": false,
+				"notesCount": 0
 			},
 			{
 				"fileId": 12,
@@ -199,7 +212,8 @@
 				"fileSize": 55,
 				"modified": 1704186000,
 				"isFolder": false,
-				"isAnonymized": true
+				"isAnonymized": true,
+				"notesCount": 0
 			},
 			{
 				"fileId": 11,
@@ -208,7 +222,8 @@
 				"fileSize": 100,
 				"modified": 1704099600,
 				"isFolder": false,
-				"isAnonymized": false
+				"isAnonymized": false,
+				"notesCount": 0
 			},
 			{
 				"fileId": 14,
@@ -217,7 +232,8 @@
 				"fileSize": 0,
 				"modified": 1704096000,
 				"isFolder": false,
-				"isAnonymized": true
+				"isAnonymized": true,
+				"notesCount": 0
 			},
 			{
 				"fileId": 15,
@@ -226,7 +242,8 @@
 				"fileSize": 0,
 				"modified": 1704013200,
 				"isFolder": false,
-				"isAnonymized": true
+				"isAnonymized": true,
+				"notesCount": 0
 			},
 			{
 				"fileId": 0,
@@ -235,7 +252,8 @@
 				"fileSize": 7,
 				"modified": null,
 				"isFolder": false,
-				"isAnonymized": false
+				"isAnonymized": false,
+				"notesCount": 0
 			}
 		],
 		"total": 9,
@@ -277,7 +295,7 @@
 				"method": "PROPFIND",
 				"url": "http://localhost/remote.php/dav/files/admin/DocuDesk/Sub%3F%20A",
 				"depth": "1",
-				"body": "<?xml version=\"1.0\"?> <d:propfind xmlns:d=\"DAV:\" xmlns:oc=\"http://owncloud.org/ns\" xmlns:nc=\"http://nextcloud.org/ns\"> <d:prop> <d:resourcetype /> <d:getcontenttype /> <d:getcontentlength /> <d:getlastmodified /> <oc:fileid /> <oc:size /> </d:prop> </d:propfind>",
+				"body": "<?xml version=\"1.0\"?> <d:propfind xmlns:d=\"DAV:\" xmlns:oc=\"http://owncloud.org/ns\" xmlns:nc=\"http://nextcloud.org/ns\"> <d:prop> <d:resourcetype /> <d:getcontenttype /> <d:getcontentlength /> <d:getlastmodified /> <oc:fileid /> <oc:size /> <oc:comments-count /> </d:prop> </d:propfind>",
 				"params": null
 			},
 			{
