@@ -25,6 +25,7 @@ use OCA\Filinq\Controller\Support\PublicationFlow;
 use OCA\Filinq\Service\Publication\OpenCatalogiPlatform;
 use OCA\Filinq\Service\Publication\PublicationAccess;
 use OCA\Filinq\Exception\PublicationNotReadyException;
+use OCA\Filinq\Service\Publication\DiwooMissingFields;
 use OCA\Filinq\Service\Publication\PublicationPipelineService;
 use OCA\Filinq\Service\Publication\PublicationStore;
 use OCP\Files\Folder;
@@ -175,7 +176,7 @@ class PublicationControllerTest extends TestCase {
 		$publication = array_values(array_filter($routes['routes'], static fn (array $r): bool => str_starts_with($r['name'], 'publication#')));
 
 		// Each route is declared once and served at its /api/v1/ twin too (ApiPathAliasesTest).
-		$this->assertCount(expectedCount: 18, haystack: $publication);
+		$this->assertCount(expectedCount: 20, haystack: $publication);
 		foreach ($publication as $route) {
 			$this->assertStringNotContainsString('log', $route['url']);
 			$this->assertNotSame('DELETE', $route['verb']);
@@ -183,6 +184,69 @@ class PublicationControllerTest extends TestCase {
 		}
 
 	}//end testNoRouteChangesTheLog()
+
+	/**
+	 * The index carries each record's missing DiWoo fields, and `incomplete`
+	 * keeps only the records that miss one.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-every-publication-record-says-which-diwoo-fields-it-misses-req-wmw-001
+	 */
+	public function testTheIndexShowsAndFiltersMissingMetadata(): void {
+		$complete = [
+			'wooCategory' => 'c_8c840238', 'documentsoort' => 'advies', 'publisher' => 'gm0000',
+			'officieleTitel' => 'Advies', 'creatiedatum' => '2025-03-12', 'publicatiedatum' => '2026-11-20',
+		];
+		$pipeline = $this->createMock(PublicationPipelineService::class);
+		$pipeline->method('sync')->willReturnCallback(static fn (array $record): array => $record + $complete);
+
+		$all = $this->controller(pipeline: $pipeline, record: null)->index()->getData()['results'];
+		$this->assertSame([[]], array_column($all, 'diwooMissing'), 'the caller sees only their own record, and it is complete');
+
+		$incomplete = $this->controller(pipeline: $pipeline, record: null, params: ['incomplete' => 'true'])->index()->getData()['results'];
+		$this->assertSame([], $incomplete);
+
+		$bare = $this->createMock(PublicationPipelineService::class);
+		$bare->method('sync')->willReturnArgument(0);
+		$listed = $this->controller(pipeline: $bare, record: null, params: ['incomplete' => '1'])->index()->getData()['results'];
+		$this->assertSame(['mine'], array_column($listed, 'uuid'));
+		$this->assertSame(DiwooMissingFields::MANDATORY, $listed[0]['diwooMissing']);
+
+	}//end testTheIndexShowsAndFiltersMissingMetadata()
+
+	/**
+	 * A bulk change reaches only records the caller may act on; the others are
+	 * reported as skipped and never passed on.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-a-coordinator-fills-one-value-on-a-selection-req-wmw-002
+	 */
+	public function testABulkChangeReachesOnlyRecordsTheCallerMayActOn(): void {
+		$mine = ['uuid' => 'mine', 'documentFileRef' => '42'];
+		$pipeline = $this->createMock(PublicationPipelineService::class);
+		$pipeline->expects($this->once())->method('updateMetadataMany')
+			->with([$mine, $mine], ['publisher' => 'gm0363'], 'anna')
+			->willReturn(['updated' => [$mine, $mine], 'skipped' => []]);
+
+		$response = $this->controller(pipeline: $pipeline, record: $mine, params: ['ids' => ['a', 'b', 'a'], 'values' => ['publisher' => 'gm0363']])->bulkMetadata();
+		$this->assertSame(200, $response->getStatus());
+		$this->assertCount(2, $response->getData()['updated']);
+
+		$theirs = ['uuid' => 'theirs', 'documentFileRef' => '99'];
+		$untouched = $this->createMock(PublicationPipelineService::class);
+		$untouched->expects($this->once())->method('updateMetadataMany')
+			->with([], ['publisher' => 'gm0363'], 'anna')
+			->willReturn(['updated' => [], 'skipped' => []]);
+		$refused = $this->controller(pipeline: $untouched, record: $theirs, params: ['ids' => ['x'], 'values' => ['publisher' => 'gm0363']])->bulkMetadata();
+		$this->assertSame([['uuid' => 'x', 'reason' => 'not found']], $refused->getData()['skipped']);
+
+		$none = $this->createMock(PublicationPipelineService::class);
+		$none->expects($this->never())->method('updateMetadataMany');
+		$this->assertSame(400, $this->controller(pipeline: $none, record: $mine, params: ['ids' => [], 'values' => ['publisher' => 'x']])->bulkMetadata()->getStatus());
+
+	}//end testABulkChangeReachesOnlyRecordsTheCallerMayActOn()
 	/**
 	 * A publication starts only for a document the caller may act on: not for a
 	 * file outside the caller's folder, not for a reader who is no publisher.

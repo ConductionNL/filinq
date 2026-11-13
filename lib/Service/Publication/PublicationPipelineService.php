@@ -25,6 +25,7 @@ use InvalidArgumentException;
 use OCA\Filinq\Exception\PublicationNotReadyException;
 use OCA\Filinq\Kernel\Contracts\PublicationPipelineServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
+use OCP\IAppConfig;
 use RuntimeException;
 
 /**
@@ -47,6 +48,27 @@ class PublicationPipelineService implements PublicationPipelineServiceInterface 
 	/**
 	 * The Woo metadata an operator may set.
 	 */
+	/**
+	 * The admin setting holding the organisation's default publisher (a TOOI URI).
+	 *
+	 * @var string
+	 */
+	public const CFG_DEFAULT_PUBLISHER = 'woo.default_publisher';
+
+	/**
+	 * The fields one bulk action may set on a selection.
+	 *
+	 * @var array<int, string>
+	 */
+	public const BULK_FIELDS = ['wooCategory', 'documentsoort', 'publisher'];
+
+	/**
+	 * Statuses past handoff: a bulk change skips them.
+	 *
+	 * @var array<int, string>
+	 */
+	public const PAST_HANDOFF = ['handed_off', 'published', 'depublication_requested', 'depublished'];
+
 	public const METADATA = [
 		'wooCategory',
 		'documentsoort',
@@ -65,6 +87,7 @@ class PublicationPipelineService implements PublicationPipelineServiceInterface 
 	 * @param OpenCatalogiPublicationMap $map        The platform's field names
 	 * @param OpenCatalogiPlatform       $platform   Whether it is there, its categories, attachments
 	 * @param ITimeFactory               $clock      The moment
+	 * @param IAppConfig|null            $config     App settings; the default publisher is read from them
 	 *
 	 * @return void
 	 */
@@ -74,6 +97,7 @@ class PublicationPipelineService implements PublicationPipelineServiceInterface 
 		private readonly OpenCatalogiPublicationMap $map,
 		private readonly OpenCatalogiPlatform $platform,
 		private readonly ITimeFactory $clock,
+		private readonly ?IAppConfig $config = null,
 	) {
 
 	}//end __construct()
@@ -106,7 +130,7 @@ class PublicationPipelineService implements PublicationPipelineServiceInterface 
 				'documentFileRef' => $documentFileRef,
 				'dossierRef' => $dossierRef,
 				'status' => 'draft',
-			]
+			] + $this->defaultPublisher()
 		);
 		$this->log(record: $record, action: 'created', actor: $actor, details: '');
 
@@ -158,11 +182,7 @@ class PublicationPipelineService implements PublicationPipelineServiceInterface 
 	 * @spec openspec/changes/archive/2026-09-29-accessible-redaction-output/tasks.md#task-2.3
 	 */
 	public function updateMetadata(array $record, array $metadata, string $actor): array {
-		$category = (string) ($metadata['wooCategory'] ?? '');
-		$codes = array_column($this->platform->categories(), 'code');
-		if ($category !== '' && $codes !== [] && in_array($category, $codes, true) === false) {
-			throw new InvalidArgumentException('Unknown Woo information category: ' . $category, 400);
-		}
+		$this->assertKnownCategory(category: (string) ($metadata['wooCategory'] ?? ''));
 
 		foreach (self::METADATA as $field) {
 			if (array_key_exists($field, $metadata) === true) {
@@ -182,6 +202,111 @@ class PublicationPipelineService implements PublicationPipelineServiceInterface 
 		return $record;
 
 	}//end updateMetadata()
+
+	/**
+	 * Set one value on many records, each with its own log entry.
+	 *
+	 * Only `wooCategory` (from the TOOI list), `documentsoort` and `publisher`
+	 * may be set; a value is never blank. A record past handoff is skipped and
+	 * reported, not changed (woo-metadata-worklist D2).
+	 *
+	 * @param array<int, array<string, mixed>> $records The selected records.
+	 * @param array<string, mixed>             $values  The field values to set.
+	 * @param string                           $actor   Who sets them.
+	 *
+	 * @return array{updated: array<int, array<string, mixed>>, skipped: array<int, array{uuid: string, reason: string}>} The outcome.
+	 *
+	 * @throws InvalidArgumentException When a field may not be bulk-set, a value is blank, or the category is unknown.
+	 *
+	 * @spec openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-a-coordinator-fills-one-value-on-a-selection-req-wmw-002
+	 */
+	public function updateMetadataMany(array $records, array $values, string $actor): array {
+		$metadata = $this->bulkValues(values: $values);
+		$this->assertKnownCategory(category: (string) ($metadata['wooCategory'] ?? ''));
+
+		$outcome = ['updated' => [], 'skipped' => []];
+		foreach ($records as $record) {
+			$uuid = (string) ($record['uuid'] ?? '');
+			if (in_array((string) ($record['status'] ?? ''), self::PAST_HANDOFF, true) === true) {
+				$outcome['skipped'][] = ['uuid' => $uuid, 'reason' => 'already handed off'];
+				continue;
+			}
+
+			$outcome['updated'][] = $this->updateMetadata(record: $record, metadata: $metadata, actor: $actor);
+		}
+
+		return $outcome;
+
+	}//end updateMetadataMany()
+
+	/**
+	 * The values a bulk action may set, checked before any record is touched.
+	 *
+	 * @param array<string, mixed> $values The requested values.
+	 *
+	 * @return array<string, string> The values to write.
+	 *
+	 * @throws InvalidArgumentException When a field is not bulk-settable or a value is blank.
+	 */
+	private function bulkValues(array $values): array {
+		if ($values === []) {
+			throw new InvalidArgumentException('Name at least one field to set', 400);
+		}
+
+		$metadata = [];
+		foreach ($values as $field => $value) {
+			if (in_array($field, self::BULK_FIELDS, true) === false) {
+				throw new InvalidArgumentException('This field cannot be set on a selection: ' . $field, 400);
+			}
+
+			if (is_scalar($value) === false || trim((string) $value) === '') {
+				throw new InvalidArgumentException('A value for ' . $field . ' is required', 400);
+			}
+
+			$metadata[$field] = trim((string) $value);
+		}
+
+		return $metadata;
+
+	}//end bulkValues()
+
+	/**
+	 * Refuse a Woo category that is not in OpenCatalogi's TOOI list.
+	 *
+	 * @param string $category The category code; '' when none is set.
+	 *
+	 * @return void
+	 *
+	 * @throws InvalidArgumentException When the category is unknown.
+	 */
+	private function assertKnownCategory(string $category): void {
+		$codes = array_column($this->platform->categories(), 'code');
+		if ($category !== '' && $codes !== [] && in_array($category, $codes, true) === false) {
+			throw new InvalidArgumentException('Unknown Woo information category: ' . $category, 400);
+		}
+
+	}//end assertKnownCategory()
+
+	/**
+	 * The default publisher for a new record, when an admin set one.
+	 *
+	 * @return array<string, string> `['publisher' => uri]`, or [] when none is set.
+	 *
+	 * @spec openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-new-records-start-with-the-organisations-publisher-req-wmw-003
+	 */
+	private function defaultPublisher(): array {
+		if ($this->config === null) {
+			return [];
+		}
+
+		$publisher = trim($this->config->getValueString('filinq', self::CFG_DEFAULT_PUBLISHER, ''));
+		if ($publisher === '') {
+			return [];
+		}
+
+		return ['publisher' => $publisher];
+
+	}//end defaultPublisher()
 
 	/**
 	 * Hand a ready publication to the platform with its redacted copy.
