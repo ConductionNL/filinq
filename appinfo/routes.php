@@ -383,6 +383,15 @@ $extra = [
         ['name' => 'portalSigningReceiver#viewDocument', 'url' => 'api/portal/signing/viewDocument', 'verb' => 'GET'],
 
         // Financial extraction routes (scan-en-herken).
+        // Schema field suggestions (extraction-model-filled-fields). The literal
+        // `fields` and `field-profiles` paths come before the `{id}` routes.
+        ['name' => 'fieldFill#fields', 'url' => 'api/extraction/fields', 'verb' => 'POST'],
+        ['name' => 'fieldFill#status', 'url' => 'api/extraction/fields/status', 'verb' => 'GET'],
+        ['name' => 'fieldFill#setEnabled', 'url' => 'api/extraction/fields/status', 'verb' => 'PUT'],
+        ['name' => 'fieldFill#decide', 'url' => 'api/extraction/fields/{id}/decide', 'verb' => 'POST'],
+        ['name' => 'fieldFill#profiles', 'url' => 'api/extraction/field-profiles', 'verb' => 'GET'],
+        ['name' => 'fieldFill#saveProfile', 'url' => 'api/extraction/field-profiles', 'verb' => 'POST'],
+        ['name' => 'fieldFill#saveProfile', 'url' => 'api/extraction/field-profiles/{id}', 'verb' => 'PUT', 'postfix' => 'update'],
         ['name' => 'extraction#financial', 'url' => 'api/extraction/financial', 'verb' => 'POST'],
         ['name' => 'extraction#corrections', 'url' => 'api/extraction/{id}/corrections', 'verb' => 'POST'],
 
