@@ -110,6 +110,17 @@ class SofficeProcessRunnerTest extends TestCase {
 	}//end testStderrIsTruncatedInTheLog()
 
 	/**
+	 * A child killed by a signal has no exit status; the runner reports it as failure 1.
+	 *
+	 * @return void
+	 */
+	public function testASignalledChildIsReportedAsFailure(): void {
+		$this->logger->expects($this->never())->method('warning');
+
+		$this->assertSame(1, $this->runScript(script: 'kill -9 $$'));
+	}//end testASignalledChildIsReportedAsFailure()
+
+	/**
 	 * A child that outlives the timeout is killed and reported as a failed attempt.
 	 *
 	 * @return void
