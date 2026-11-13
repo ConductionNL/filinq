@@ -7525,6 +7525,106 @@
         "method": "rules",
         "correspondentPending": true,
         "status": "suggested"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "bridgeSource",
+          "slug": "demostad-zaaksysteem"
+        },
+        "name": "Demostad zaaksysteem",
+        "sourceType": "zgw-drc",
+        "vendor": "Rx.Enterprise",
+        "synchronizationId": "00000000-0000-0000-0000-000000000000",
+        "syncIntervalMinutes": 60,
+        "lastSyncAt": "2026-11-12T06:00:00+00:00",
+        "lastSyncStatus": "success",
+        "active": true
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "bridgeSource",
+          "slug": "demostad-stuf"
+        },
+        "name": "Demostad StUF-koppeling",
+        "sourceType": "stuf-zds",
+        "vendor": "Djuma",
+        "synchronizationId": "00000000-0000-0000-0000-000000000000",
+        "syncIntervalMinutes": 60,
+        "lastSyncAt": "2026-11-12T06:00:00+00:00",
+        "lastSyncStatus": "error",
+        "active": true,
+        "lastSyncError": "Verbinding geweigerd door het zaaksysteem"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "bridgeSource",
+          "slug": "demostad-archief"
+        },
+        "name": "Oud archief",
+        "sourceType": "zgw-drc",
+        "vendor": "zaaksysteem.nl",
+        "synchronizationId": "00000000-0000-0000-0000-000000000000",
+        "syncIntervalMinutes": 60,
+        "lastSyncAt": "2026-11-12T06:00:00+00:00",
+        "lastSyncStatus": "success",
+        "active": false
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "externalDocument",
+          "slug": "demostad-besluit-staged"
+        },
+        "sourceId": "00000000-0000-0000-0000-000000000000",
+        "externalId": "ZAAK-2026-0042-IO-1",
+        "zaakIdentificatie": "ZAAK-2026-0042",
+        "title": "Besluit omgevingsvergunning",
+        "filename": "demostad-besluit-staged.pdf",
+        "format": "application/pdf",
+        "creatiedatum": "2026-11-01",
+        "vertrouwelijkheidaanduiding": "intern",
+        "versie": 1,
+        "processingStatus": "staged"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "externalDocument",
+          "slug": "demostad-advies-processed"
+        },
+        "sourceId": "00000000-0000-0000-0000-000000000000",
+        "externalId": "ZAAK-2026-0042-IO-2",
+        "zaakIdentificatie": "ZAAK-2026-0042",
+        "title": "Advies welstandscommissie",
+        "filename": "demostad-advies-processed.pdf",
+        "format": "application/pdf",
+        "creatiedatum": "2026-11-02",
+        "vertrouwelijkheidaanduiding": "intern",
+        "versie": 1,
+        "processingStatus": "processed",
+        "resultFileRef": 4242
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "externalDocument",
+          "slug": "demostad-brief-written-back"
+        },
+        "sourceId": "00000000-0000-0000-0000-000000000000",
+        "externalId": "ZAAK-2026-0042-IO-3",
+        "zaakIdentificatie": "ZAAK-2026-0042",
+        "title": "Brief aan aanvrager",
+        "filename": "demostad-brief-written-back.pdf",
+        "format": "application/pdf",
+        "creatiedatum": "2026-11-03",
+        "vertrouwelijkheidaanduiding": "intern",
+        "versie": 1,
+        "processingStatus": "written_back",
+        "resultFileRef": 4243,
+        "resultExternalId": "ZAAK-2026-0042-IO-7"
       }
     ]
   }
