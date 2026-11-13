@@ -87,6 +87,13 @@ class ObjectEventRegistrar {
 			\OCA\OpenRegister\Event\ObjectUpdatingEvent::class,
 			DocumentRegistrationWriteGuard::class
 		);
+		// A house style managed by thematiq is changed only in thematiq
+		// (templates-house-style-from-thematiq); named by string to keep this
+		// class's coupling where it is.
+		$context->registerEventListener(
+			\OCA\OpenRegister\Event\ObjectUpdatingEvent::class,
+			'OCA\\Filinq\\EventListener\\ManagedHuisstijlWriteGuard'
+		);
 		// A contract saved without a notice deadline gets end date minus
 		// notice period, however it is saved (contract-lifecycle-management).
 		foreach (['ObjectCreatingEvent', 'ObjectUpdatingEvent'] as $preWrite) {

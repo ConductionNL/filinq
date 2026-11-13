@@ -42,6 +42,11 @@ use setasign\Fpdi\Fpdi;
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
+ *
+ * The house style default (templates-house-style-from-thematiq) adds the
+ * profile sync and its mapper to the classes the pipeline touches.
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class DocumentRenderPipeline {
 	/**
@@ -75,6 +80,7 @@ class DocumentRenderPipeline {
 	 * @param SvgRasterizer $svgRasterizer Turns chart SVG into PNG before an ODF conversion
 	 * @param ObjectionTermCalculator|null $objectionTerm Adds the legal basis and the objection deadline of a decision letter
 	 * @param HtmlToOfficeConverter|null $officeConverter Makes DOCX and ODT; without it both answer 503
+	 * @param HuisstijlProfileSync|null $profileSync The managed house style used when a request names none
 	 *
 	 * @return void
 	 */
@@ -85,6 +91,7 @@ class DocumentRenderPipeline {
 		private readonly SvgRasterizer $svgRasterizer,
 		private readonly ?ObjectionTermCalculator $objectionTerm = null,
 		private readonly ?HtmlToOfficeConverter $officeConverter = null,
+		private readonly ?HuisstijlProfileSync $profileSync = null,
 	) {
 		$this->templateRenderer = $rendering->renderer;
 		$this->pdfService = $rendering->pdf;
@@ -94,15 +101,20 @@ class DocumentRenderPipeline {
 	/**
 	 * Load the huisstijl configuration from OpenRegister.
 	 *
+	 * Without an id the managed house style of the user's thematiq token set
+	 * applies; a named id always wins.
+	 *
 	 * @param string|null $huisstijlId UUID of the huisstijl object, or null
+	 * @param string|null $uid The requesting user; null for the signed-in user
 	 *
 	 * @return array|null The huisstijl configuration or null if not configured
 	 *
 	 * @spec openspec/specs/document-register/spec.md
+	 * @spec openspec/changes/templates-house-style-from-thematiq/tasks.md#task-2.1
 	 */
-	public function loadHuisstijl(?string $huisstijlId): ?array {
+	public function loadHuisstijl(?string $huisstijlId, ?string $uid = null): ?array {
 		if (empty($huisstijlId) === true) {
-			return null;
+			return $this->profileSync?->syncFor(uid: $uid);
 		}
 
 		try {
@@ -144,6 +156,7 @@ class DocumentRenderPipeline {
 	 * @return array The merged PDF options
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-pdfua-accessible-output/tasks.md#task-1.3
+	 * @spec openspec/changes/templates-house-style-from-thematiq/tasks.md#task-2.1
 	 */
 	public function buildPdfOptions(array $template, ?array $huisstijl, array $options): array {
 		$pdfOptions = [
@@ -154,6 +167,8 @@ class DocumentRenderPipeline {
 		if ($huisstijl !== null && isset($huisstijl['defaultMargins']) === true) {
 			$pdfOptions['margin'] = $huisstijl['defaultMargins'];
 		}
+
+		$pdfOptions = array_merge($pdfOptions, (new HuisstijlProfileMapper())->pdfAssets(template: $template, huisstijl: $huisstijl));
 
 		// What accessible output needs from the template: its name as the
 		// fallback title, its language when it has one. The caller's own
