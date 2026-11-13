@@ -31,6 +31,10 @@ use OCA\Filinq\Service\Extraction\IbanExtractor;
 use OCA\Filinq\Service\Extraction\KvkExtractor;
 use OCA\Filinq\Service\Extraction\TotalsReconciler;
 use OCA\Filinq\Service\Extraction\VatIdExtractor;
+use OCA\Filinq\Service\Extraction\ExtractionDuplicateLookup;
+use OCA\Filinq\Service\Extraction\UnattendedVerdict;
+use OCA\Filinq\Event\ExtractionVerdictEvent;
+use OCA\Filinq\Event\FinancialExtractionCompletedEvent;
 use OCA\Filinq\Service\FinancialExtractionService;
 use OCA\Filinq\Service\OcrService;
 use OCA\Filinq\Service\OpenRegisterResolver;
@@ -783,4 +787,183 @@ TEXT;
 		$this->ocrService->method('extractTextFromImage')->willReturn(['text' => $text, 'confidence' => 92.0]);
 
 	}//end mockResolvableImageFile()
+
+	/**
+	 * A service with the unattended verdict wired (extraction-receipt-photo-and-invoice-agent 3.1, 3.2).
+	 *
+	 * @param bool                 $duplicate Whether the duplicate lookup finds an earlier extraction.
+	 * @param LoggerInterface|null $logger    The logger.
+	 *
+	 * @return FinancialExtractionService
+	 */
+	private function serviceWithVerdict(bool $duplicate = false, ?LoggerInterface $logger = null): FinancialExtractionService {
+		$config = $this->createMock(IAppConfig::class);
+		$config->method('getValueString')->willReturnCallback(
+			static fn (string $app, string $key, string $default = ''): string => $key === UnattendedVerdict::SETTING_KEY ? '0.8' : $default
+		);
+		$duplicates = $this->createMock(ExtractionDuplicateLookup::class);
+		$duplicates->method('hasEarlier')->willReturn($duplicate);
+
+		return new FinancialExtractionService(
+			settingsService: $this->settingsService,
+			registerResolver: new OpenRegisterResolver(settingsService: $this->settingsService),
+			userSession: $this->userSession,
+			rootFolder: $this->rootFolder,
+			ocrService: $this->ocrService,
+			eventDispatcher: $this->eventDispatcher,
+			container: $this->container,
+			logger: $logger ?? $this->createMock(LoggerInterface::class),
+			ibanExtractor: new IbanExtractor(),
+			kvkExtractor: new KvkExtractor(),
+			vatIdExtractor: new VatIdExtractor(),
+			dateExtractor: new DateExtractor(),
+			amountExtractor: new AmountExtractor(),
+			totalsReconciler: new TotalsReconciler(),
+			unattendedVerdict: new UnattendedVerdict($config, $duplicates),
+		);
+	}
+
+	/**
+	 * The verdict is stored on the extraction with the threshold it used (REQ-ERP-003).
+	 *
+	 * @return void
+	 */
+	public function testTheVerdictIsStoredWithItsThreshold(): void {
+		$this->mockResolvableImageFile(fileId: 7, text: self::INVOICE_TEXT);
+		$saved = [];
+		$this->objectService->method('saveObject')->willReturnCallback(
+			function ($object) use (&$saved) {
+				$saved = $object;
+				return $object + ['id' => 'extraction-3'];
+			}
+		);
+		$service = $this->serviceWithVerdict(duplicate: true);
+
+		$service->extractFinancial(data: ['fileId' => 7, 'docType' => 'supplier-invoice', 'sourceApp' => 'shillinq'], requestedBy: 'annemarie');
+
+		$pipeline = $service->runExtraction(text: self::INVOICE_TEXT, docType: 'supplier-invoice');
+		$expected = UnattendedVerdict::decide(
+			fields: $pipeline['fields'],
+			confidence: $pipeline['fieldConfidence'],
+			reconciled: $pipeline['reconciled'],
+			modelFilled: [],
+			duplicate: true,
+			threshold: 0.8
+		);
+		$this->assertSame('review', $saved['unattendedVerdict']);
+		$this->assertContains('possible-duplicate', $saved['verdictReasons']);
+		$this->assertSame($expected->reasons, $saved['verdictReasons']);
+		$this->assertSame(0.8, $saved['verdictThreshold']);
+	}
+
+	/**
+	 * Without the verdict wired, the stored extraction is what it was.
+	 *
+	 * @return void
+	 */
+	public function testWithoutAVerdictServiceNothingIsAdded(): void {
+		$this->mockResolvableImageFile(fileId: 7, text: self::INVOICE_TEXT);
+		$saved = [];
+		$this->objectService->method('saveObject')->willReturnCallback(
+			function ($object) use (&$saved) {
+				$saved = $object;
+				return $object;
+			}
+		);
+
+		$this->service->extractFinancial(data: ['fileId' => 7, 'docType' => 'receipt'], requestedBy: 'annemarie');
+
+		$this->assertArrayNotHasKey('unattendedVerdict', $saved);
+		$this->assertArrayNotHasKey('verdictReasons', $saved);
+	}
+
+	/**
+	 * The verdict event follows the completed event, which keeps its own payload (REQ-ERP-004).
+	 *
+	 * @return void
+	 */
+	public function testTheVerdictEventFollowsAnUnchangedCompletedEvent(): void {
+		$this->mockResolvableImageFile(fileId: 7, text: self::INVOICE_TEXT);
+		$this->objectService->method('saveObject')->willReturnCallback(fn ($object) => $object + ['@self' => ['id' => 'extraction-4']]);
+		$events = [];
+		$this->eventDispatcher->method('dispatchTyped')->willReturnCallback(
+			function ($event) use (&$events): void {
+				$events[] = $event;
+			}
+		);
+
+		$this->serviceWithVerdict()->extractFinancial(
+			data: ['documentUri' => 'nc://file/7', 'docType' => 'supplier-invoice', 'sourceApp' => 'shillinq', 'callbackEvent' => true],
+			requestedBy: 'annemarie'
+		);
+
+		$this->assertCount(2, $events);
+		$this->assertInstanceOf(FinancialExtractionCompletedEvent::class, $events[0]);
+		$this->assertInstanceOf(ExtractionVerdictEvent::class, $events[1]);
+		$this->assertSame(
+			['documentUri', 'requestedBy', 'sourceApp', 'docType', 'fields', 'fieldConfidence', 'overallConfidence'],
+			array_keys($events[0]->toPayload())
+		);
+		$verdict = $events[1]->toPayload();
+		$this->assertSame('extraction-4', $verdict['extractionId']);
+		$this->assertSame('nc://file/7', $verdict['documentUri']);
+		$this->assertSame('shillinq', $verdict['sourceApp']);
+		$this->assertSame('supplier-invoice', $verdict['docType']);
+		$this->assertSame(0.8, $verdict['threshold']);
+	}
+
+	/**
+	 * No callback, no verdict event.
+	 *
+	 * @return void
+	 */
+	public function testNoCallbackSendsNoVerdictEvent(): void {
+		$this->mockResolvableImageFile(fileId: 7, text: self::INVOICE_TEXT);
+		$this->objectService->method('saveObject')->willReturnCallback(fn ($object) => $object);
+		$this->eventDispatcher->expects($this->never())->method('dispatchTyped');
+
+		$this->serviceWithVerdict()->extractFinancial(data: ['fileId' => 7, 'docType' => 'receipt'], requestedBy: 'annemarie');
+	}
+
+	/**
+	 * A failing verdict dispatch is logged and does not fail the extraction.
+	 *
+	 * @return void
+	 */
+	public function testAFailingVerdictEventIsLoggedAndTheExtractionStands(): void {
+		$this->mockResolvableImageFile(fileId: 7, text: self::INVOICE_TEXT);
+		$this->objectService->method('saveObject')->willReturnCallback(fn ($object) => $object + ['id' => 'extraction-5']);
+		$this->eventDispatcher->method('dispatchTyped')->willReturnCallback(
+			function ($event): void {
+				if ($event instanceof ExtractionVerdictEvent) {
+					throw new RuntimeException('bus down');
+				}
+			}
+		);
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())->method('error')->with($this->stringContains('verdict event'));
+
+		$result = $this->serviceWithVerdict(logger: $logger)->extractFinancial(
+			data: ['fileId' => 7, 'docType' => 'receipt', 'callbackEvent' => true],
+			requestedBy: 'annemarie'
+		);
+
+		$this->assertSame('extraction-5', $result['id']);
+		$this->assertSame('review', $result['unattendedVerdict']);
+	}
+
+	/**
+	 * A field the heuristics left empty and the model filled is model-only.
+	 *
+	 * @return void
+	 */
+	public function testModelFilledFieldsAreThoseTheHeuristicsLeftEmpty(): void {
+		$this->assertSame(
+			['dueDate', 'lines'],
+			FinancialExtractionService::modelFilledFields(
+				heuristic: ['supplierName' => 'A', 'dueDate' => null, 'lines' => [], 'currency' => 'EUR', 'totalVat' => null],
+				final: ['supplierName' => 'B', 'dueDate' => '2026-05-01', 'lines' => [['x' => 1]], 'currency' => 'EUR', 'totalVat' => null]
+			)
+		);
+	}
 }//end class
