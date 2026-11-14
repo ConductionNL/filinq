@@ -26,6 +26,7 @@ namespace OCA\Filinq\Service\Signing;
 
 use OCA\Filinq\Exception\SigningCancellationNotSupportedException;
 use OCA\Filinq\Exception\SigningCancellationRefusedException;
+use OCA\Filinq\Kernel\Contracts\SigningCancellationServiceInterface;
 use OCA\Filinq\Service\SigningService;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -70,7 +71,7 @@ use Throwable;
  *
  * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md
  */
-class SigningCancellationService {
+class SigningCancellationService implements SigningCancellationServiceInterface {
 
 	/**
 	 * Constructor.
