@@ -15,3 +15,15 @@
 ## 3. Docs
 
 - [ ] 3.1 Add a section to `docs/features/` on house styles from Theming, with a screenshot of a letter in the house style (REQ-HSP-002). Verify: the docs page renders with the screenshot.
+
+## Build notes (continuation)
+
+- 2.1: `PdfService::applyHouseStyle()` now applies `pdfAssets()` to the PDF:
+  the heading and body font families as CSS with DejaVu Sans after them, and
+  the cover image on its own page for a template with `coverPage`. Left open:
+  embedding the uploaded font file itself. thematiq serves it only through an
+  authenticated route (`thematiq.font.serve`), which mPDF cannot fetch, and
+  mPDF needs a TTF/OTF file on disk; that needs thematiq to hand filinq the
+  file, not a URL. The local run with two token sets was not done.
+- 3.1: the section is in `docs/features/letter-correspondence-generation.md`;
+  the screenshot of a letter is not, so 3.1 stays open.
