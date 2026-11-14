@@ -3073,7 +3073,18 @@ OC.L10N.register(
         "The test arrived": "De test is aangekomen",
         "The test did not arrive": "De test is niet aangekomen",
         "Type a name and a URL and pick at least one event": "Typ een naam en een URL en kies minstens één gebeurtenis",
-        "Type a secret so the receiver can check each delivery": "Typ een geheim zodat de ontvanger elke bezorging kan controleren"
+        "Type a secret so the receiver can check each delivery": "Typ een geheim zodat de ontvanger elke bezorging kan controleren",
+        "Show": "Tonen",
+        "My records": "Mijn registraties",
+        "Waiting for me": "Wacht op mij",
+        "Nothing is waiting for you": "Er wacht niets op je",
+        "You have not created any document records yet": "Je hebt nog geen documentregistraties gemaakt",
+        "The list could not be loaded": "De lijst kon niet worden geladen",
+        "Waiting for your acceptance": "Wacht op je acceptatie",
+        "Routed to your group, waiting for acceptance": "Naar je groep gerouteerd, wacht op acceptatie",
+        "Untitled": "Zonder titel",
+        "On %n record": ["Op %n registratie","Op %n registraties"],
+        "On %n records": "Op %n registraties"
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -282,6 +282,7 @@ import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
 			@confirm="executeBulkDelete"
 			@close="cancelBulkDelete" />
 
+		<WaitingForMeList />
 		<DueForReviewList />
 	</div>
 </template>
@@ -311,6 +312,7 @@ import DdIndexPage from '../../components/DdIndexPage.vue'
 import DdPageHeader from '../../components/DdPageHeader.vue'
 import DdSearchBar from '../../components/DdSearchBar.vue'
 import DueForReviewList from '../../components/myDocuments/DueForReviewList.vue'
+import WaitingForMeList from '../../components/myDocuments/WaitingForMeList.vue'
 import SanitizationReportModal from '../../modals/SanitizationReportModal.vue'
 import ValidationResultModal from '../../modals/ValidationResultModal.vue'
 import FileViewerPage from '../fileViewer/FileViewerPage.vue'
@@ -346,6 +348,7 @@ export default {
 	name: 'MyDocumentsIndex',
 	components: {
 		DueForReviewList,
+		WaitingForMeList,
 		DdIndexPage,
 		CnStatusBadge,
 		NcActions,

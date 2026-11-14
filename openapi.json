@@ -1312,6 +1312,37 @@
                 }
             }
         },
+        "/documents/waiting": {
+            "get": {
+                "operationId": "waiting-work-index",
+                "summary": "What waits for the caller: signatures and acceptances, routed intake documents, and their documents due for review. Ever",
+                "description": "What waits for the caller: signatures and acceptances, routed intake documents, and their documents due for review. Every item is the caller's own.",
+                "tags": [
+                    "waiting-work"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "What waits for them.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    }
+                }
+            }
+        },
         "/case-documents/upload-policy": {
             "get": {
                 "operationId": "case-documents-upload-policy",

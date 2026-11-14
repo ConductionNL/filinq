@@ -2942,7 +2942,18 @@ OC.L10N.register(
         "The test arrived": "The test arrived",
         "The test did not arrive": "The test did not arrive",
         "Type a name and a URL and pick at least one event": "Type a name and a URL and pick at least one event",
-        "Type a secret so the receiver can check each delivery": "Type a secret so the receiver can check each delivery"
+        "Type a secret so the receiver can check each delivery": "Type a secret so the receiver can check each delivery",
+        "Show": "Show",
+        "My records": "My records",
+        "Waiting for me": "Waiting for me",
+        "Nothing is waiting for you": "Nothing is waiting for you",
+        "You have not created any document records yet": "You have not created any document records yet",
+        "The list could not be loaded": "The list could not be loaded",
+        "Waiting for your acceptance": "Waiting for your acceptance",
+        "Routed to your group, waiting for acceptance": "Routed to your group, waiting for acceptance",
+        "Untitled": "Untitled",
+        "On %n record": ["On %n record","On %n records"],
+        "On %n records": "On %n records"
     },
     "nplurals=2; plural=(n != 1);"
 )
