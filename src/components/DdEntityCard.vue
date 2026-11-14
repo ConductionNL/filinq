@@ -97,7 +97,7 @@ import { entityTypeColor, entityTypeLabel } from '../services/entityTypes.js'
 				label="label"
 				:reduce="(o) => o.value"
 				:multiple="true"
-				:inputLabel="t('filinq', 'Grondslagen')"
+				:inputLabel="t('filinq', 'Legal bases')"
 				:placeholder="t('filinq', 'Pick grondslagen…')"
 				:disabled="!editable || !hasRelation"
 				@update:modelValue="$emit('set-bases', $event)" />

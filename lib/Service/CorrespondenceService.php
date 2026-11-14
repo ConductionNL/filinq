@@ -251,8 +251,11 @@ class CorrespondenceService implements CorrespondenceServiceInterface {
 		$template = $this->templateService->getTemplate(id: $templateId);
 
 		// Resolve data from OpenRegister.
+		// listRefs fill a template's tables from related records, as on the
+		// document generation path (REQ-DDLR-001).
 		$resolution = $this->dataResolver->resolve(
 			dataRefs: $dataRefs,
+			listRefs: ($options['listRefs'] ?? []),
 			adHocData: ($options['adHocData'] ?? [])
 		);
 		$data = $resolution['data'];
