@@ -32,7 +32,7 @@ const PAGES_BEFORE = [
 	['StandingConsents', '/policy/standing-consents'], ['Reports', '/reports'], ['SigningReport', '/reports/signing'],
 	['AnonymizationReport', '/reports/anonymization'], ['ProducedDocumentsReport', '/reports/documents'],
 	['Intake', '/intake'], ['ClassificationPending', '/classification'], ['FeaturesRoadmap', '/features-roadmap'],
-	['Flows', '/flows'], ['FlowDetail', '/flows/:id'],
+	['Flows', '/flows'], ['FlowDetail', '/flows/:id'], ['FlowRuns', '/flow-runs'],
 ]
 
 const MENU_BEFORE = [
@@ -42,7 +42,7 @@ const MENU_BEFORE = [
 	['Publications', 57], ['PrintJobs', 56], ['LegalHolds', 58], ['SubjectErasures', 59], ['EmailIngestion', 94],
 	['EntitySearch', 59], ['SigningRequests', 60], ['SigningFolder', 65], ['BulkSigningBatches', 66],
 	['SigningEnvelopes', 67], ['CustomDictionary', 70], ['Documentation', 90], ['StoreMenu', 92],
-	['ReportsMenu', 95], ['FeaturesRoadmapMenu', 100], ['FlowsMenu', 96],
+	['ReportsMenu', 95], ['FeaturesRoadmapMenu', 100], ['FlowsMenu', 96], ['FlowRunsMenu', 97],
 ]
 
 /**

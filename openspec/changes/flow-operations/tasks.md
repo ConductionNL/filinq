@@ -24,8 +24,8 @@
 
 ## 3. Frontend
 
-- [ ] 3.1 Flow operator-registration script (loaded via `LoadSettingsScriptsEvent`) rendering the four operations in the Flow rule builder, with the `targetFolder` (PDF/A) and `documentType` (validation) options (REQ-DDFLO-001, REQ-DDFLO-005..007)
-- [ ] 3.2 Flow-runs listing (operation, file, status, timing, reason) using standard Cn/Nc components; NL Design System tokens only (REQ-DDFLO-008, ADR-012, ADR-003)
+- [x] 3.1 Flow operator-registration script (loaded via `LoadSettingsScriptsEvent`) rendering the four operations in the Flow rule builder, with the `targetFolder` (PDF/A) and `documentType` (validation) options (REQ-DDFLO-001, REQ-DDFLO-005..007)
+- [x] 3.2 Flow-runs listing (operation, file, status, timing, reason) using standard Cn/Nc components; NL Design System tokens only (REQ-DDFLO-008, ADR-012, ADR-003)
 - [x] 3.3 Add `<category>workflow</category>` to `appinfo/info.xml` (REQ-DDFLO-009)
 
 ## 4. Quality
@@ -34,6 +34,6 @@
   - Run in container: `docker exec -w /var/www/html/custom_apps/filinq nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`.
   - Live-verify on Postgres (8080) with OpenRegister: build a real Flow rule, drop a scan in the folder, run cron, see the run + notification.
 - [ ] 4.2 Playwright spec `tests/e2e/spec-coverage/flow-operations.spec.ts` for the `@e2e`-referenced scenarios
-- [ ] 4.3 i18n EN + NL for all new UI strings (keys in English); nldesign theme check (ADR-005, ADR-003)
+- [x] 4.3 i18n EN + NL for all new UI strings (keys in English); nldesign theme check (ADR-005, ADR-003)
 - [ ] 4.4 Docs: `docs/features/flow-operations.md` with Playwright screenshots (rule builder with a Filinq operation, runs listing, failure notification) (ADR-010)
 - [ ] 4.5 Validate: `openspec validate flow-operations --strict` passes; the REQ-DDFLO-010 register-lint passes (no `P1Y` placeholder remains); hydra gates green

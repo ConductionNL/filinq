@@ -87,6 +87,14 @@ webpackConfig.entry = {
 		import: path.join(__dirname, 'src', 'compare.js'),
 		filename: appId + '-compare.js',
 	},
+	// The Filinq operations in the Nextcloud Flow rule builder (flow-operations
+	// task 3.1). Loaded by RegisterFlowOperationsListener on the Flow settings
+	// page, which Filinq does not own; kept out of the shared chunks like
+	// `compare`, so that page loads this one file.
+	flowOperations: {
+		import: path.join(__dirname, 'src', 'flowOperations.js'),
+		filename: appId + '-flow-operations.js',
+	},
 }
 
 // Use local source when available (monorepo dev), otherwise fall back to npm package.
@@ -215,9 +223,10 @@ webpackConfig.optimization = {
 	minimizer: [new TerserPlugin({ parallel: 2 })],
 	splitChunks: {
 		...(webpackConfig.optimization?.splitChunks || {}),
-		// Every entry shares the framework chunks except `compare`: another app
-		// loads that bundle on its own page and cannot know these chunk names.
-		chunks: (chunk) => chunk.name !== 'compare',
+		// Every entry shares the framework chunks except `compare` and
+		// `flowOperations`: another app's page loads those bundles and cannot
+		// know these chunk names.
+		chunks: (chunk) => chunk.name !== 'compare' && chunk.name !== 'flowOperations',
 		cacheGroups: {
 			default: false,
 			defaultVendors: false,
