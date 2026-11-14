@@ -1,0 +1,49 @@
+{
+	"$comment": "filinq's letter template for pipelinq in the Zuiddrecht set (namespace pipelinq, so pipelinq's letter dialog lists it): 'Uitnodiging gesprek vergunning', as PqBriefOpstellen draws it, with its four merge fields labelled Aanhef, Adres, Kenmerk and Afspraak. The paths read the data pipelinq hands filinq: client, ticket and, once pipelinq passes it, the appointment. content keeps its print tags for filinq, so it is verbatim.",
+	"objects": [
+		{
+			"key": "sjabloon-uitnodiging-gesprek-vergunning",
+			"register": "filinq",
+			"schema": "template",
+			"verbatimFields": [
+				"content"
+			],
+			"data": {
+				"name": "Uitnodiging gesprek vergunning",
+				"description": "Nodigt de aanvrager van een vergunning uit voor een gesprek in het Stadhuis.",
+				"namespace": "pipelinq",
+				"category": "brieven",
+				"tags": [
+					"brief",
+					"vergunning",
+					"uitnodiging"
+				],
+				"format": "A4",
+				"orientation": "P",
+				"content": "<p>Gemeente Zuiddrecht</p>\n<p>{{ client.address }}</p>\n<p>Ons kenmerk: {{ ticket.reference }}</p>\n<p>{{ client.salutation }}</p>\n<p>U heeft bij ons een vergunning aangevraagd. Wij nodigen u uit voor een gesprek op {{ appointmentBooking.startAt }} in het Stadhuis.</p>\n<p>Met vriendelijke groet,</p>\n<p>Klantcontactcentrum, Gemeente Zuiddrecht</p>\n",
+				"mergeFields": [
+					{
+						"path": "client.salutation",
+						"label": "Aanhef",
+						"source": "op basis van het opgegeven geslacht"
+					},
+					{
+						"path": "client.address",
+						"label": "Adres",
+						"source": "uit de klantgegevens"
+					},
+					{
+						"path": "ticket.reference",
+						"label": "Kenmerk",
+						"source": "het open ticket"
+					},
+					{
+						"path": "appointmentBooking.startAt",
+						"label": "Afspraak",
+						"source": "uit Afspraken"
+					}
+				]
+			}
+		}
+	]
+}
