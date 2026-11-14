@@ -76,34 +76,19 @@ class DocumentSanitizationService implements DocumentSanitizationServiceInterfac
 	public function sanitize(int $fileId, string $userId, string $trigger='manual'): array {
 		$file = $this->resolve(fileId: $fileId, userId: $userId);
 		$mime = $file->getMimeType();
-		$engineName = 'OfficeDocumentSanitizer';
-		if ($mime === 'application/pdf') {
-			$engine = $this->engine(className: self::PDF_ENGINE);
-			if ($engine === null) {
-				return $this->skipped(fileId: $fileId, reason: 'pdf_sanitizer_unavailable');
-			}
-
-			$engineName = 'PdfDocumentSanitizer';
-		} else {
-			$engine = $this->engine(className: self::OFFICE_ENGINE);
-			if ($engine === null || $engine->isSanitizable($mime) === false) {
-				throw new InvalidArgumentException(message: 'unsupported_format', code: 415);
-			}
+		[$engine, $engineName] = $this->selectEngine(mime: $mime);
+		if ($engine === null) {
+			return $this->skipped(fileId: $fileId, reason: 'pdf_sanitizer_unavailable');
 		}
 
 		$result = $this->runEngine(engine: $engine, fileId: $fileId);
-		try {
-			$derivative = $this->writeDerivative(source: $file, tempPath: $result->path);
-		} finally {
-			if (is_file($result->path) === true) {
-				unlink($result->path);
-			}
-		}
+		$derivative = $this->writeAndDiscard(source: $file, tempPath: $result->path);
 
 		$report = $result->report->jsonSerialize();
 		if ($engineName === 'PdfDocumentSanitizer') {
 			$report = self::pdfReport(report: $report);
 		}
+
 		$record = $this->records->save(
 			record: [
 				'fileId'          => $fileId,
@@ -127,6 +112,51 @@ class DocumentSanitizationService implements DocumentSanitizationServiceInterfac
 		];
 
 	}//end sanitize()
+
+	/**
+	 * The engine for a mime type and its name.
+	 *
+	 * A PDF engine that is not installed comes back null, so the caller skips;
+	 * any other format the office engine cannot sanitize is refused.
+	 *
+	 * @param string $mime The file's mime type.
+	 *
+	 * @return array{0: mixed, 1: string} The engine (null: PDF engine unavailable) and its name.
+	 *
+	 * @throws InvalidArgumentException 415 when the format is not supported.
+	 */
+	private function selectEngine(string $mime): array {
+		if ($mime === 'application/pdf') {
+			return [$this->engine(className: self::PDF_ENGINE), 'PdfDocumentSanitizer'];
+		}
+
+		$engine = $this->engine(className: self::OFFICE_ENGINE);
+		if ($engine === null || $engine->isSanitizable($mime) === false) {
+			throw new InvalidArgumentException(message: 'unsupported_format', code: 415);
+		}
+
+		return [$engine, 'OfficeDocumentSanitizer'];
+
+	}//end selectEngine()
+
+	/**
+	 * Write the derivative beside the source, then remove the engine's temp file.
+	 *
+	 * @param File   $source   The source file.
+	 * @param string $tempPath The engine's output.
+	 *
+	 * @return File The derivative.
+	 */
+	private function writeAndDiscard(File $source, string $tempPath): File {
+		try {
+			return $this->writeDerivative(source: $source, tempPath: $tempPath);
+		} finally {
+			if (is_file($tempPath) === true) {
+				unlink($tempPath);
+			}
+		}
+
+	}//end writeAndDiscard()
 
 	/**
 	 * The file, through the user's folder: not found and not allowed read the same.

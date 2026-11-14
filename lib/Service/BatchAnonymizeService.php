@@ -45,6 +45,20 @@ use OCA\Filinq\Service\Conversion\OutputLayoutMover;
  */
 class BatchAnonymizeService implements BatchAnonymizeServiceInterface {
 	/**
+	 * Result fields a batch entry carries over when the anonymise result has them, in entry order.
+	 *
+	 * @var list<string>
+	 */
+	private const OPTIONAL_RESULT_KEYS = [
+		'warning',
+		'summaryFileId',
+		'createdConsents',
+		'sanitization',
+		'sanitizationWarning',
+		'detection',
+	];
+
+	/**
 	 * Constructor for BatchAnonymizeService
 	 *
 	 * @param AnonymizationService $anonService Service that performs single-document anonymization.
@@ -453,32 +467,20 @@ class BatchAnonymizeService implements BatchAnonymizeServiceInterface {
 		$entry['anonymizedFileId'] = $result['anonymizedFileId'] ?? null;
 		$entry['anonymizedFilePath'] = $result['anonymizedFilePath'] ?? null;
 
-		if (isset($result['warning']) === true) {
-			$entry['warning'] = $result['warning'];
-		}
+		// Optional result fields, copied in this order when present: the warning,
+		// the basis summary, created consents, the opt-in final-artifact pass (the
+		// derivative, or why the kept file is unsanitized), and which backend looked
+		// and what it found, so a batch reader can tell "nothing to redact" from
+		// "nothing looked".
+		foreach (self::OPTIONAL_RESULT_KEYS as $key) {
+			if (isset($result[$key]) === false) {
+				continue;
+			}
 
-		if (isset($result['summaryFileId']) === true) {
-			$entry['summaryFileId'] = $result['summaryFileId'];
-			$entry['summaryFilePath'] = $result['summaryFilePath'] ?? null;
-		}
-
-		if (isset($result['createdConsents']) === true) {
-			$entry['createdConsents'] = $result['createdConsents'];
-		}
-
-		// The opt-in final-artifact pass: the derivative, or why the kept file is unsanitized.
-		if (isset($result['sanitization']) === true) {
-			$entry['sanitization'] = $result['sanitization'];
-		}
-
-		if (isset($result['sanitizationWarning']) === true) {
-			$entry['sanitizationWarning'] = $result['sanitizationWarning'];
-		}
-
-		// Which backend looked and what it found, so a batch reader can tell
-		// "nothing to redact" from "nothing looked".
-		if (isset($result['detection']) === true) {
-			$entry['detection'] = $result['detection'];
+			$entry[$key] = $result[$key];
+			if ($key === 'summaryFileId') {
+				$entry['summaryFilePath'] = $result['summaryFilePath'] ?? null;
+			}
 		}
 
 		return $entry;

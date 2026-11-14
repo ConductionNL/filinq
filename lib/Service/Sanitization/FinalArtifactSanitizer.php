@@ -81,16 +81,7 @@ class FinalArtifactSanitizer {
 		try {
 			$outcome = $this->sanitizer->sanitize(fileId: $fileId, userId: $userId, trigger: 'anonymisation');
 		} catch (Throwable $e) {
-			$this->logger->warning(
-				'Final-artifact sanitization failed; the anonymised file is kept unsanitized',
-				['fileId' => $fileId, 'reason' => $e->getMessage()]
-			);
-			$code = $e->getMessage();
-			if ($code === '') {
-				$code = 'internal';
-			}
-
-			return self::warn(resultInfo: $resultInfo, code: $code, fileId: $fileId);
+			return self::warn(resultInfo: $resultInfo, code: $this->failureCode(fileId: $fileId, exception: $e), fileId: $fileId);
 		}
 
 		if (($outcome['sanitized'] ?? false) !== true) {
@@ -111,6 +102,28 @@ class FinalArtifactSanitizer {
 	}//end apply()
 
 	/**
+	 * Log a failed pass and name why it failed.
+	 *
+	 * @param int       $fileId    The anonymised file that stays unsanitized.
+	 * @param Throwable $exception What the pass threw.
+	 *
+	 * @return string The warning code: the exception message, `internal` when it has none.
+	 */
+	private function failureCode(int $fileId, Throwable $exception): string {
+		$this->logger->warning(
+			'Final-artifact sanitization failed; the anonymised file is kept unsanitized',
+			['fileId' => $fileId, 'reason' => $exception->getMessage()]
+		);
+		$code = $exception->getMessage();
+		if ($code === '') {
+			return 'internal';
+		}
+
+		return $code;
+
+	}//end failureCode()
+
+	/**
 	 * Who the pass runs for: the acting user, else the owner of the delivered file.
 	 *
 	 * The folder job and the batch path run without an acting user; the file
@@ -126,7 +139,18 @@ class FinalArtifactSanitizer {
 			return $userId;
 		}
 
-		$node = ($context['anonymisedNode'] ?? null);
+		return self::ownerOf(node: ($context['anonymisedNode'] ?? null));
+
+	}//end actingUser()
+
+	/**
+	 * The user id of the owner of a node.
+	 *
+	 * @param mixed $node The delivered file node, or anything else.
+	 *
+	 * @return string The owner's user id, '' when the node has no readable owner.
+	 */
+	private static function ownerOf(mixed $node): string {
 		if (is_object($node) === false || method_exists($node, 'getOwner') === false) {
 			return '';
 		}
@@ -137,13 +161,25 @@ class FinalArtifactSanitizer {
 			return '';
 		}
 
+		return self::uidOf(owner: $owner);
+
+	}//end ownerOf()
+
+	/**
+	 * The user id of an owner object.
+	 *
+	 * @param mixed $owner The owner, or anything else.
+	 *
+	 * @return string The user id, '' when the owner has none.
+	 */
+	private static function uidOf(mixed $owner): string {
 		if (is_object($owner) === false || method_exists($owner, 'getUID') === false) {
 			return '';
 		}
 
 		return (string) $owner->getUID();
 
-	}//end actingUser()
+	}//end uidOf()
 
 	/**
 	 * The result with the anonymised file kept and flagged unsanitized.
