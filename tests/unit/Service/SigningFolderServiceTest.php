@@ -587,4 +587,46 @@ class SigningFolderServiceTest extends TestCase {
 
 	}//end testADocumentNeedingAStrongerIdentityCarriesTheStepUpHint()
 
+	/**
+	 * A folder entry carries only this signer's text fields, with the settings
+	 * the "Fill in and sign" dialog needs (signing-field-validation task 3.2).
+	 *
+	 * @return void
+	 */
+	public function testAnEntryCarriesOnlyThisSignersTextFields(): void {
+		$request = $this->request(
+			id: 'fields',
+			overrides: [
+				'signerIds' => ['signer-other', 'signer-me'],
+				'fieldPlacements' => [
+					['signerIndex' => 1, 'page' => 1, 'type' => 'signature', 'x' => 0.1, 'y' => 0.1, 'width' => 0.3, 'height' => 0.06],
+					['signerIndex' => 0, 'page' => 1, 'type' => 'text', 'label' => 'Not mine', 'x' => 0.1, 'y' => 0.2, 'width' => 0.3, 'height' => 0.04],
+					[
+						'signerIndex' => 1, 'page' => 1, 'type' => 'text', 'label' => 'Account for the payment',
+						'required' => true, 'validation' => 'iban-nl', 'x' => 0.1, 'y' => 0.3, 'width' => 0.3, 'height' => 0.04,
+					],
+					['signerIndex' => 1, 'page' => 2, 'type' => 'text', 'x' => 0.1, 'y' => 0.3, 'width' => 0.3, 'height' => 0.04],
+				],
+			]
+		);
+		$plain = $this->request(id: 'plain');
+
+		$this->signingService->method('listRequests')->willReturn([$request, $plain]);
+		$this->actorResolver->method('findSignerForUser')->willReturnCallback(
+			static fn (array $signerIds, string $userId): ?string => end(array: $signerIds)
+		);
+
+		$entries = array_column(array: $this->service->folder(userId: 'wethouder')['entries'], column_key: null, index_key: 'requestId');
+
+		$this->assertSame(
+			expected: [
+				['placement' => 2, 'label' => 'Account for the payment', 'required' => true, 'validation' => 'iban-nl'],
+				['placement' => 3, 'label' => '', 'required' => false, 'validation' => null],
+			],
+			actual: $entries['fields']['fields']
+		);
+		$this->assertSame(expected: [], actual: $entries['plain']['fields']);
+
+	}//end testAnEntryCarriesOnlyThisSignersTextFields()
+
 }//end class

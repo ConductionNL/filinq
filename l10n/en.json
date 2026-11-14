@@ -2859,7 +2859,19 @@
         "The Nextcloud file id of the reviewed document; one review per file.": "The Nextcloud file id of the reviewed document; one review per file.",
         "The reviewer's note.": "The reviewer's note.",
         "The user who marked the document checked.": "The user who marked the document checked.",
-        "When the reviewer marked the document checked.": "When the reviewer marked the document checked."
+        "When the reviewer marked the document checked.": "When the reviewer marked the document checked.",
+        "{document} asks you to fill in these fields. They are checked and sealed with your signature.": "{document} asks you to fill in these fields. They are checked and sealed with your signature.",
+        "A Dutch IBAN, for example NL91 ABNA 0417 1643 00": "A Dutch IBAN, for example NL91 ABNA 0417 1643 00",
+        "An IBAN, for example NL91 ABNA 0417 1643 00": "An IBAN, for example NL91 ABNA 0417 1643 00",
+        "Any IBAN": "Any IBAN",
+        "Dutch IBAN": "Dutch IBAN",
+        "Field {number}": "Field {number}",
+        "Fill in and sign": "Fill in and sign",
+        "Label for the signer": "Label for the signer",
+        "No check": "No check",
+        "The document could not be signed.": "The document could not be signed.",
+        "The signer must fill this in": "The signer must fill this in",
+        "This document has fields to fill in. Open it to sign.": "This document has fields to fill in. Open it to sign."
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

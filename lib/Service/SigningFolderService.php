@@ -305,6 +305,7 @@ class SigningFolderService implements SigningFolderServiceInterface {
 			'requestedBy' => (string)($request['initiatorUserId'] ?? ''),
 			'requestedAt' => $this->requestedAt(request: $request),
 			'deadline' => (string)($request['deadline'] ?? ''),
+			'fields' => $this->fieldsOf(request: $request, signerId: $signerId),
 			'record' => [
 				'app' => (string)($request['sourceApp'] ?? ''),
 				'register' => (string)($request['subjectRegister'] ?? ''),
@@ -317,6 +318,59 @@ class SigningFolderService implements SigningFolderServiceInterface {
 		];
 
 	}//end project()
+
+	/**
+	 * The text fields this signer fills in, so the folder can open the "Fill in
+	 * and sign" dialog for them and keep the document out of selection signing.
+	 *
+	 * Only the settings the dialog needs leave the request: where the field
+	 * is (its placement position), its label, whether it is required and its
+	 * check. No other signer's fields are included.
+	 *
+	 * @param array<string, mixed> $request  The signing request.
+	 * @param string               $signerId The caller's pending signer record.
+	 *
+	 * @return list<array{placement: int, label: string, required: bool, validation: string|null}> The fields.
+	 *
+	 * @spec openspec/changes/signing-field-validation/tasks.md#task-3.2
+	 */
+	private function fieldsOf(array $request, string $signerId): array {
+		$placements = ($request['fieldPlacements'] ?? []);
+		$position   = array_search($signerId, array_map('strval', array_values((array)($request['signerIds'] ?? []))), true);
+		if (is_array($placements) === false || $position === false) {
+			return [];
+		}
+
+		$fields = [];
+		foreach ($placements as $index => $placement) {
+			if (is_array($placement) === false
+				|| ($placement['type'] ?? null) !== 'text'
+				|| (int)($placement['signerIndex'] ?? -1) !== $position
+			) {
+				continue;
+			}
+
+			$label = ($placement['label'] ?? '');
+			if (is_string($label) === false) {
+				$label = '';
+			}
+
+			$validation = ($placement['validation'] ?? null);
+			if (is_string($validation) === false) {
+				$validation = null;
+			}
+
+			$fields[] = [
+				'placement' => (int)$index,
+				'label' => $label,
+				'required' => ($placement['required'] ?? false) === true,
+				'validation' => $validation,
+			];
+		}
+
+		return $fields;
+
+	}//end fieldsOf()
 
 	/**
 	 * When the signature was asked for.

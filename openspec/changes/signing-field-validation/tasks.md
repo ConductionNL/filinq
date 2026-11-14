@@ -15,8 +15,8 @@
 
 ## 3. Screens
 
-- [ ] 3.1 Add the three settings to the placement editor for `text` fields (REQ-SFV-001). Verify: Playwright places a required "Account for the payment" field with the Dutch IBAN check and reads it back on the request.
-- [ ] 3.2 Add `src/modals/FillInAndSignDialog.vue`, open it from `SigningFolder.vue` for requests with fields for this signer, and keep them out of folder selection signing (D7) (REQ-SFV-003). Verify: Playwright types an IBAN with a wrong check digit, reads the message on the field, corrects it and signs.
+- [x] 3.1 Add the three settings to the placement editor for `text` fields (REQ-SFV-001). Verify: Playwright places a required "Account for the payment" field with the Dutch IBAN check and reads it back on the request.
+- [x] 3.2 Add `src/modals/FillInAndSignDialog.vue`, open it from `SigningFolder.vue` for requests with fields for this signer, and keep them out of folder selection signing (D7) (REQ-SFV-003). Verify: Playwright types an IBAN with a wrong check digit, reads the message on the field, corrects it and signs.
 
 ## 4. Strings, docs and siblings
 
@@ -36,7 +36,17 @@
   A sign act without fields (folder selection, bulk sign) is refused for a
   signer who has fields, which is the server half of 3.2.
 - 2.3: PHPUnit covers both routes; the Newman run was not done.
-- Left open: 3.1 and 3.2 (placement editor settings and the "Fill in and
-  sign" dialog), 4.1 (frontend strings, docs and screenshot; the schema
-  strings are in `l10n/en.json` / `nl.json`) and 4.2 (filing the
-  openregister and portaliq issues).
+- 3.1: the placement editor sets label, required and check on a text
+  field; `toRequestPlacements` sends them (vitest). The Playwright run was
+  not done.
+- 3.2: folder entries carry this signer's text fields
+  (`SigningFolderService`, PHPUnit); the folder disables selection for
+  them and opens `FillInAndSignDialog`, which sends the values and shows
+  the 422 message per field (vitest on `fillInAndSign.js`). The Playwright
+  run was not done.
+- 4.1: Dutch and English frontend strings, `@spec` tags and a section in
+  `docs/features/signing-field-placement.md` are done; the screenshot,
+  `composer check:strict` and the coverage measurement are not, so 4.1 stays
+  open.
+- Left open: 4.1 (screenshot and measurements) and 4.2 (filing the
+  openregister and portaliq issues, which a build worker does not do).

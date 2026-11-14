@@ -2967,7 +2967,19 @@ OC.L10N.register(
         "The Nextcloud file id of the reviewed document; one review per file.": "Het Nextcloud-bestands-ID van het gecontroleerde document; één controle per bestand.",
         "The reviewer's note.": "De notitie van de controleur.",
         "The user who marked the document checked.": "De gebruiker die het document als gecontroleerd markeerde.",
-        "When the reviewer marked the document checked.": "Wanneer de controleur het document als gecontroleerd markeerde."
+        "When the reviewer marked the document checked.": "Wanneer de controleur het document als gecontroleerd markeerde.",
+        "{document} asks you to fill in these fields. They are checked and sealed with your signature.": "{document} vraagt u deze velden in te vullen. Ze worden gecontroleerd en met uw handtekening verzegeld.",
+        "A Dutch IBAN, for example NL91 ABNA 0417 1643 00": "Een Nederlands IBAN, bijvoorbeeld NL91 ABNA 0417 1643 00",
+        "An IBAN, for example NL91 ABNA 0417 1643 00": "Een IBAN, bijvoorbeeld NL91 ABNA 0417 1643 00",
+        "Any IBAN": "Elk IBAN",
+        "Dutch IBAN": "Nederlands IBAN",
+        "Field {number}": "Veld {number}",
+        "Fill in and sign": "Invullen en ondertekenen",
+        "Label for the signer": "Label voor de ondertekenaar",
+        "No check": "Geen controle",
+        "The document could not be signed.": "Het document kon niet worden ondertekend.",
+        "The signer must fill this in": "De ondertekenaar moet dit invullen",
+        "This document has fields to fill in. Open it to sign.": "Dit document heeft velden om in te vullen. Open het om te ondertekenen."
     },
     "nplurals=2; plural=(n != 1);"
 )
