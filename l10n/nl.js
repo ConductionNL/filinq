@@ -2885,7 +2885,10 @@ OC.L10N.register(
         "Given to me": "Aan mij gegeven",
         "Until": "Tot en met",
         "Delegation not found": "Machtiging niet gevonden",
-        "Delegated signing is not available": "Gemachtigd ondertekenen is niet beschikbaar"
+        "Delegated signing is not available": "Gemachtigd ondertekenen is niet beschikbaar",
+        "Sort documents": "Documenten sorteren",
+        "ascending": "oplopend",
+        "descending": "aflopend"
     },
     "nplurals=2; plural=(n != 1);"
 )

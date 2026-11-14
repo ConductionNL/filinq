@@ -2800,7 +2800,10 @@ OC.L10N.register(
         "Given to me": "Given to me",
         "Until": "Until",
         "Delegation not found": "Delegation not found",
-        "Delegated signing is not available": "Delegated signing is not available"
+        "Delegated signing is not available": "Delegated signing is not available",
+        "Sort documents": "Sort documents",
+        "ascending": "ascending",
+        "descending": "descending"
     },
     "nplurals=2; plural=(n != 1);"
 )

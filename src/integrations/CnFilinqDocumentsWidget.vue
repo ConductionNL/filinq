@@ -17,14 +17,33 @@
 			class="filinq-documents-leaf__state">
 			{{ t('filinq', 'No documents yet') }}
 		</p>
-		<ul v-else-if="rows.length > 0" class="filinq-documents-leaf__list">
+		<div
+			v-if="!loading && !error && rows.length > 1"
+			class="filinq-documents-leaf__sort"
+			role="group"
+			:aria-label="t('filinq', 'Sort documents')">
+			<button
+				v-for="column in sortColumns"
+				:key="column.key"
+				type="button"
+				class="filinq-documents-leaf__sort-button"
+				:aria-pressed="sort.key === column.key ? 'true' : 'false'"
+				:data-testid="'documents-sort-' + column.key"
+				@click="sortOn(column.key)">
+				{{ column.label }}
+				<span v-if="sort.key === column.key" aria-hidden="true">{{ sort.direction === 'asc' ? '↑' : '↓' }}</span>
+				<span v-if="sort.key === column.key" class="hidden-visually">{{ sort.direction === 'asc' ? t('filinq', 'ascending') : t('filinq', 'descending') }}</span>
+			</button>
+		</div>
+		<ul v-if="!loading && !error && rows.length > 0" class="filinq-documents-leaf__list">
 			<li
-				v-for="row in rows"
+				v-for="row in sortedRows"
 				:key="row.fileId"
 				class="filinq-documents-leaf__item">
 				<a class="filinq-documents-leaf__link" :href="fileLink(row)">{{
 					row.name
 				}}</a>
+				<span v-if="row.mtime" class="filinq-documents-leaf__date">{{ asDate(row.mtime) }}</span>
 				<span
 					v-if="row.record && row.record.status"
 					class="filinq-documents-leaf__status">
@@ -39,6 +58,7 @@
 import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 import { documentLinkRows } from './documentLinkRows.js'
+import { nextSort, sortDocumentRows } from './documentRowSort.js'
 import { hostObjectLeaf } from './hostObjectLeaf.js'
 import { leafReportMixin } from './leafReport.js'
 
@@ -61,10 +81,36 @@ export default {
 			rows: [],
 			loading: true,
 			error: false,
+			sort: { key: 'name', direction: 'asc' },
 		}
 	},
 
 	computed: {
+		/**
+		 * The rows in the order the user chose; it lasts while the case stays open.
+		 *
+		 * @return {Array<object>} The sorted rows.
+		 * @spec openspec/changes/specify-capability-rows/tasks.md#task-2.1
+		 */
+		sortedRows() {
+			return sortDocumentRows(this.rows, this.sort)
+		},
+
+		/**
+		 * The columns to sort on, with their labels.
+		 *
+		 * @return {Array<{key: string, label: string}>} The columns.
+		 * @spec openspec/changes/specify-capability-rows/tasks.md#task-2.1
+		 */
+		sortColumns() {
+			return [
+				{ key: 'name', label: t('filinq', 'Name') },
+				{ key: 'mtime', label: t('filinq', 'Date') },
+				{ key: 'size', label: t('filinq', 'Size') },
+				{ key: 'status', label: t('filinq', 'Status') },
+			]
+		},
+
 		/**
 		 * What this leaf reports to a carding host or a "linked" card.
 		 *
@@ -86,6 +132,26 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * Sort on a column; choosing it again flips the order.
+		 *
+		 * @param {string} key The column.
+		 * @spec openspec/changes/specify-capability-rows/tasks.md#task-2.1
+		 */
+		sortOn(key) {
+			this.sort = nextSort(this.sort, key)
+		},
+
+		/**
+		 * A modification time as a local date.
+		 *
+		 * @param {number} mtime Seconds since the epoch.
+		 * @return {string} The date.
+		 */
+		asDate(mtime) {
+			return new Date(mtime * 1000).toLocaleDateString()
+		},
+
 		/**
 		 * The Files deep link for one row.
 		 *
@@ -128,6 +194,27 @@ export default {
 	border-bottom: 1px solid var(--color-border);
 }
 
+.filinq-documents-leaf__sort {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px;
+	margin-bottom: 4px;
+}
+
+.filinq-documents-leaf__sort-button {
+	background: var(--color-main-background);
+	color: var(--color-main-text);
+	border: 1px solid var(--color-border-dark);
+	border-radius: var(--border-radius);
+	padding: 2px 8px;
+	cursor: pointer;
+}
+
+.filinq-documents-leaf__sort-button[aria-pressed='true'] {
+	border-color: var(--color-primary-element);
+}
+
+.filinq-documents-leaf__date,
 .filinq-documents-leaf__status {
 	color: var(--color-text-maxcontrast);
 	font-size: 0.9em;

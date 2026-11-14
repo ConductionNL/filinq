@@ -1763,7 +1763,10 @@ OC.L10N.register(
         "Given to me": "Mir erteilt",
         "Until": "Bis",
         "Delegation not found": "Delegierung nicht gefunden",
-        "Delegated signing is not available": "Delegiertes Unterzeichnen ist nicht verfügbar"
+        "Delegated signing is not available": "Delegiertes Unterzeichnen ist nicht verfügbar",
+        "Sort documents": "Dokumente sortieren",
+        "ascending": "aufsteigend",
+        "descending": "absteigend"
     },
     "nplurals=2; plural=(n != 1);"
 )

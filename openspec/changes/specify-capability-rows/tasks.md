@@ -11,7 +11,8 @@
 
 ## 2. Documents
 
-- [ ] 2.1 Make the columns of `src/integrations/CnFilinqDocumentsWidget.vue` sortable (REQ-SCR-005). Verify: Vitest sorts on date both ways.
+- [x] 2.1 Make the columns of `src/integrations/CnFilinqDocumentsWidget.vue` sortable (REQ-SCR-005). Verify: Vitest sorts on date both ways.
+  - Built: the widget sorts on name, date, size and status (`src/integrations/documentRowSort.js`); choosing a column again flips the order, a date starts newest first, and the order lasts while the widget stays open. Pinned by `tests/vitest/documentRowSort.spec.js`.
 - [ ] 2.2 Show `GET api/case-documents/mine` and a Waiting for me view on `src/views/myDocuments/MyDocumentsIndex.vue` (REQ-SCR-006). Verify: Playwright on `/my-documents`.
 - [ ] 2.3 Write an audit entry for every action on a document (open, download, edit, version, share, anonymise, sign, delete) through OpenRegister's audit trail from the services in `lib/Service/`, and show it on the document's activity tab (REQ-SCR-007). Verify: PHPUnit that each action writes one entry with actor and moment.
 - [ ] 2.4 Add a Due for review list to `src/views/myDocuments/MyDocumentsIndex.vue` over `GET api/documents/due-for-review`, with a Mark reviewed action over `POST api/documents/{uuid}/reviewed` for the owner (REQ-SCR-014, row wk-review-due). Verify: Playwright marks a due document reviewed and it leaves the list.
