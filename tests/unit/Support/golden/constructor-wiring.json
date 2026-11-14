@@ -123,6 +123,7 @@
         null,
         null,
         null,
+        null,
         {
             "distinct objects built by the class": 0
         }
@@ -133,6 +134,7 @@
         "double DocumentRenderPipeline",
         "double DocumentStorageService",
         "double GeneratedDocumentLogger",
+        "double OfficeTemplateRenderer",
         "double PlainLanguageRenditionService",
         "double TemplateMergeFieldService",
         "double TemplateService",

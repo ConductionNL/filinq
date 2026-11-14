@@ -35,6 +35,7 @@ namespace OCA\Filinq\Service;
 
 use Exception;
 use OCA\Filinq\Kernel\Contracts\DocumentServiceInterface;
+use OCA\Filinq\Service\OfficeTemplate\OfficeTemplateRenderer;
 use OCA\Filinq\Service\Support\DocumentOutput;
 use OCA\Filinq\Service\Support\DocumentProduction;
 use OCA\Filinq\Service\Support\TemplateSources;
@@ -114,6 +115,7 @@ class DocumentService implements DocumentServiceInterface {
 	 * @param PlainLanguageRenditionService|null $plainRendition The plain-language counterpart, when a template declares one
 	 * @param WizardGenerationGate|null $wizardGate Checks a wizard run before it renders (options.wizardContext)
 	 * @param TemplateMergeFieldService|null $mergeFields Names the fields a template fills, for the merge preview
+	 * @param OfficeTemplateRenderer|null $officeRenderer Fills office templates and resolves text fragments
 	 *
 	 * @return void
 	 */
@@ -124,6 +126,7 @@ class DocumentService implements DocumentServiceInterface {
 		private readonly ?PlainLanguageRenditionService $plainRendition = null,
 		private readonly ?WizardGenerationGate $wizardGate = null,
 		private readonly ?TemplateMergeFieldService $mergeFields = null,
+		private readonly ?OfficeTemplateRenderer $officeRenderer = null,
 	) {
 
 	}//end __construct()
@@ -312,10 +315,15 @@ class DocumentService implements DocumentServiceInterface {
 	 * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
 	 */
 	private function renderDocument(array $run, array $resolved): array {
+		if ($this->officeRenderer !== null && $this->officeRenderer->isOffice(template: $run['template']) === true) {
+			return $this->renderOfficeDocument(run: $run, resolved: $resolved);
+		}
+
 		$huisstijl    = $this->production->pipeline->loadHuisstijl(huisstijlId: ($run['options']['huisstijlId'] ?? null));
 		$pdfOptions   = $this->production->pipeline->buildPdfOptions(template: $run['template'], huisstijl: $huisstijl, options: $run['options']);
+		$twig         = $this->twigContent(template: $run['template']);
 		$renderResult = $this->production->pipeline->renderWithHuisstijl(
-			templateContent: $run['template']['content'],
+			templateContent: $twig['content'],
 			data: $resolved['data'],
 			huisstijl: $huisstijl
 		);
@@ -331,9 +339,70 @@ class DocumentService implements DocumentServiceInterface {
 			'pdfOptions' => $pdfOptions,
 			'html' => $renderResult['html'],
 			'content' => $content,
-			'warnings' => array_merge($resolved['warnings'], $renderResult['warnings'], $this->production->pipeline->getLastOutputWarnings()),
+			'warnings' => array_merge(
+				$resolved['warnings'],
+				$twig['warnings'],
+				$renderResult['warnings'],
+				$this->production->pipeline->getLastOutputWarnings()
+			),
+			'fragments' => $twig['fragments'],
 		];
 	}//end renderDocument()
+
+	/**
+	 * Fill an office template and produce the output bytes.
+	 *
+	 * An office template carries its own house style, so a requested
+	 * huisstijl is not applied and the warnings say so.
+	 *
+	 * @param array<string, mixed> $run      The generation run: template, format and options.
+	 * @param array<string, mixed> $resolved The resolved data and the warnings so far.
+	 *
+	 * @return array<string, mixed> The rendering, in the shape renderDocument() returns.
+	 *
+	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md#requirement-office-templates-render-through-the-conversion-cascade-req-ddota-003
+	 */
+	private function renderOfficeDocument(array $run, array $resolved): array {
+		$warnings = $resolved['warnings'];
+		if (empty($run['options']['huisstijlId']) === false) {
+			$warnings[] = 'A huisstijl is not applied to an office template; the document keeps its own house style.';
+		}
+
+		$rendered = $this->officeRenderer->render(
+			template: $run['template'],
+			data: $resolved['data'],
+			format: $run['format'],
+			options: $run['options']
+		);
+
+		return [
+			'data' => $resolved['data'],
+			'huisstijl' => null,
+			'pdfOptions' => [],
+			'html' => $rendered['html'],
+			'content' => $rendered['content'],
+			'warnings' => array_merge($warnings, $rendered['warnings']),
+			'fragments' => $rendered['fragments'],
+		];
+	}//end renderOfficeDocument()
+
+	/**
+	 * A Twig template's text with its fragment references resolved.
+	 *
+	 * @param array<string, mixed> $template The template.
+	 *
+	 * @return array{content: string, warnings: array<int, string>, fragments: array<int, string>}
+	 *
+	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md#requirement-reusable-text-fragments-bouwstenen-resolve-in-templates-req-ddota-004
+	 */
+	private function twigContent(array $template): array {
+		$content = (string) ($template['content'] ?? '');
+		if ($this->officeRenderer === null) {
+			return ['content' => $content, 'warnings' => [], 'fragments' => []];
+		}
+
+		return $this->officeRenderer->resolveTwigFragments(content: $content, namespace: (string) ($template['namespace'] ?? ''));
+	}//end twigContent()
 
 	/**
 	 * Write the generatedDocument audit entry for a generation.
@@ -356,7 +425,7 @@ class DocumentService implements DocumentServiceInterface {
 				dataRefs: $run['dataRefs'],
 				format: $run['format'],
 				userId: (string)($run['options']['userId'] ?? ''),
-				extra: array_merge($run['recordFields'], $outcome['plain']['record'])
+				extra: array_merge($run['recordFields'], $outcome['plain']['record'], $this->templateRecord(run: $run, outcome: $outcome))
 			),
 			outcome: [
 				'status' => 'generated',
@@ -368,6 +437,33 @@ class DocumentService implements DocumentServiceInterface {
 			]
 		);
 	}//end logGenerated()
+
+	/**
+	 * What the audit entry records about the template's type and fragments.
+	 *
+	 * A Twig template without fragments adds nothing, so its entry is as before.
+	 *
+	 * @param array<string, mixed> $run     The generation run.
+	 * @param array<string, mixed> $outcome The rendering.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md#requirement-office-templates-render-through-the-conversion-cascade-req-ddota-003
+	 */
+	private function templateRecord(array $run, array $outcome): array {
+		$record = [];
+		if ($this->officeRenderer !== null && $this->officeRenderer->isOffice(template: $run['template']) === true) {
+			$record['templateType'] = OfficeTemplateRenderer::TYPE_OFFICE;
+		}
+
+		$fragments = ($outcome['rendered']['fragments'] ?? []);
+		if ($fragments !== []) {
+			$record['templateType'] ??= 'twig';
+			$record['fragments'] = $fragments;
+		}
+
+		return $record;
+	}//end templateRecord()
 
 	/**
 	 * The answer of a generation: the bytes, the audit entry and where the output went.
@@ -488,17 +584,28 @@ class DocumentService implements DocumentServiceInterface {
 	 */
 	private function renderPreview(array $run): array {
 		$resolved = $this->resolveTemplateData(run: $run);
+		if ($this->officeRenderer !== null && $this->officeRenderer->isOffice(template: $run['template']) === true) {
+			// An office preview shows the filled document's text; the PDF of the
+			// same fill comes from a generation with format pdf.
+			$filled = $this->officeRenderer->fill(template: $run['template'], data: $resolved['data']);
+			return [
+				'html' => $filled['html'],
+				'warnings' => array_merge($resolved['warnings'], $filled['warnings']),
+				'data' => $resolved['data'],
+			];
+		}
 
 		$huisstijl = $this->production->pipeline->loadHuisstijl(huisstijlId: ($run['options']['huisstijlId'] ?? null));
+		$twig = $this->twigContent(template: $run['template']);
 		$renderResult = $this->production->pipeline->renderWithHuisstijl(
-			templateContent: $run['template']['content'],
+			templateContent: $twig['content'],
 			data: $resolved['data'],
 			huisstijl: $huisstijl
 		);
 
 		return [
 			'html' => $renderResult['html'],
-			'warnings' => array_merge($resolved['warnings'], $renderResult['warnings']),
+			'warnings' => array_merge($resolved['warnings'], $twig['warnings'], $renderResult['warnings']),
 			'data' => $resolved['data'],
 		];
 

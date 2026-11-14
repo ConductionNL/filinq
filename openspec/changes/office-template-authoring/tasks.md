@@ -21,10 +21,12 @@
 
 - [x] 2.2 Tag validation against bound schema: classify known/fragment/unknown by reading schema properties from OpenRegister; persist `tagReport`; honour `filinq.templates.unknown_tag_severity` (warning default, blocking refuses upload) (REQ-DDOTA-002)
 
-- [ ] 2.3 Office render path in `DocumentService::generateDocument()`/`generatePreview()`: fragments pre-pass → `TemplateProcessor` fill (setValue/cloneBlock/cloneRow, `fieldMap` aliasing) → `docx` output or `PdfConversionService::convertToPdf()` for pdf/pdfa; missing-data warnings; `generatedDocument` logging with template type (REQ-DDOTA-003)
+- [x] 2.3 Office render path in `DocumentService::generateDocument()`/`generatePreview()`: fragments pre-pass → `TemplateProcessor` fill (setValue/cloneBlock/cloneRow, `fieldMap` aliasing) → `docx` output or `PdfConversionService::convertToPdf()` for pdf/pdfa; missing-data warnings; `generatedDocument` logging with template type (REQ-DDOTA-003)
   - `huisstijlId` ignored for office templates with a warning
+  - Built: `OfficeTemplateFiller` (fragments → `cloneBlock` → `cloneRow` → `setValue`, every value XML-escaped, gaps named in the warnings), `OfficeTemplateRenderer` (stored source → fill → `docx` as-is, `pdf` through `PdfConversionService::convertToPdf()`, `odf`/`html` through `LibreOfficeHeadlessBackend::convertDocument()`), and the office branch in `DocumentService` for generate, bulk and preview. `generatedDocument` 1.7.0 records `templateType` and `fragments`.
 
-- [ ] 2.4 `textFragment` CRUD + fragment resolution pre-pass for both office and Twig paths, missing-fragment marker + warning; NO change to the Twig sandbox whitelists (REQ-DDOTA-004)
+- [x] 2.4 `textFragment` CRUD + fragment resolution pre-pass for both office and Twig paths, missing-fragment marker + warning; NO change to the Twig sandbox whitelists (REQ-DDOTA-004)
+  - Built: `TextFragmentService` (slug unique per namespace, through `TemplatesRegisterObjects` in the templates register) and the Twig pre-pass `OfficeTemplateRenderer::resolveTwigFragments()`, which turns a fragment's `${field}` into a Twig print and strips any other Twig syntax from it. The HTTP routes are task 3.1.
 
 - [ ] 2.5 `TemplateImportService` + background job: ZIP/folder unpack, per-file template+fragment creation, per-file report, skip-and-continue on failure; `templateImportJob` state via ObjectService (REQ-DDOTA-005)
 

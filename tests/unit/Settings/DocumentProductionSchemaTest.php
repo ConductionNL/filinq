@@ -129,7 +129,10 @@ class DocumentProductionSchemaTest extends TestCase {
 		// the next. 1.4.0 since `multi-format-output` (`outputs`). 1.5.0 since
 		// `generated-document-names-its-template-version` (optional templateVersion).
 		// 1.6.0 since `guided-document-wizard` (optional wizardContext).
-		$this->assertSame('1.6.0', $document['version']);
+		// 1.7.0 since `office-template-authoring` (optional templateType and fragments).
+		$this->assertSame('1.7.0', $document['version']);
+		$this->assertSame(['twig', 'office'], $document['properties']['templateType']['enum']);
+		$this->assertSame('array', $document['properties']['fragments']['type']);
 		$this->assertArrayHasKey(
 			'documentDueForReview',
 			$document['x-openregister-notifications'],

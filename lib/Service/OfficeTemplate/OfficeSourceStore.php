@@ -113,6 +113,23 @@ class OfficeSourceStore {
 	}//end read()
 
 	/**
+	 * Write a short-lived working file, such as a filled DOCX on its way to
+	 * the conversion cascade. The caller deletes it when done.
+	 *
+	 * @param string $bytes     The file's content.
+	 * @param string $extension The file's extension.
+	 *
+	 * @return File
+	 *
+	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md#requirement-office-templates-render-through-the-conversion-cascade-req-ddota-003
+	 */
+	public function scratch(string $bytes, string $extension): File {
+		$folder = $this->child(parent: $this->folder(), name: 'work');
+
+		return $folder->newFile(bin2hex(random_bytes(12)).'.'.$extension, $bytes);
+	}//end scratch()
+
+	/**
 	 * The sources folder, made when it does not exist yet.
 	 *
 	 * @return Folder

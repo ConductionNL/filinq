@@ -113,6 +113,15 @@ class LibreOfficeHeadlessBackend implements ConversionBackendInterface {
 	];
 
 	/**
+	 * The outputs an office document converts to: the editable formats plus
+	 * HTML, which the office rows of multi-format output take from a filled
+	 * DOCX (office-template-authoring task 2.7).
+	 */
+	private const DOCUMENT_EXPORT_FILTERS = self::EXPORT_FILTERS + [
+		'html' => 'html:XHTML Writer File:UTF8',
+	];
+
+	/**
 	 * Why an editable format cannot be made: the one sentence the format
 	 * matrix reports and a forced conversion fails with.
 	 */
@@ -404,7 +413,7 @@ class LibreOfficeHeadlessBackend implements ConversionBackendInterface {
 	 *
 	 * @param string $bytes         The source document.
 	 * @param string $fromExtension The source's extension, such as odt.
-	 * @param string $toExtension   The output: docx or odt.
+	 * @param string $toExtension   The output: docx, odt or html.
 	 *
 	 * @return string The output bytes.
 	 *
@@ -413,14 +422,14 @@ class LibreOfficeHeadlessBackend implements ConversionBackendInterface {
 	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
 	 */
 	public function convertDocument(string $bytes, string $fromExtension, string $toExtension): string {
-		if ($this->isAvailable() === false || isset(self::EXPORT_FILTERS[$toExtension]) === false) {
+		if ($this->isAvailable() === false || isset(self::DOCUMENT_EXPORT_FILTERS[$toExtension]) === false) {
 			throw new ConversionFailedException(
 				message: self::UNAVAILABLE_REASON,
 				attempts: [
 					[
 						'name' => $this->name(),
 						'available' => $this->isAvailable(),
-						'supports' => isset(self::EXPORT_FILTERS[$toExtension]),
+						'supports' => isset(self::DOCUMENT_EXPORT_FILTERS[$toExtension]),
 						'reason' => 'backend disabled, soffice binary not found or no such output',
 					],
 				],
@@ -436,7 +445,7 @@ class LibreOfficeHeadlessBackend implements ConversionBackendInterface {
 				export: new SofficeExport(
 					bytes: $bytes,
 					extension: strtolower($fromExtension),
-					convertTo: self::EXPORT_FILTERS[$toExtension],
+					convertTo: self::DOCUMENT_EXPORT_FILTERS[$toExtension],
 					outputExtension: $toExtension
 				),
 				command: new SofficeCommand(binary: $binary, timeout: $timeout)
