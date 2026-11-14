@@ -77,7 +77,7 @@ class SigningCancellationTraceTest extends TestCase {
 	 * @return void
 	 */
 	public function testTrace(string $uid, array|string|null $request, string $provider): void {
-		$trace = ['lookups' => [], 'providers' => [], 'cancelled' => [], 'logs' => []];
+		$trace = ['lookups' => [], 'providers' => [], 'cancelled' => [], 'transitioned' => [], 'logs' => []];
 
 		$requests = $this->createMock(SigningService::class);
 		$requests->method('getRequest')->willReturnCallback(
@@ -88,6 +88,16 @@ class SigningCancellationTraceTest extends TestCase {
 				}
 
 				return $request;
+			}
+		);
+
+		$requests->method('isValidTransition')->willReturnCallback(
+			static fn (string $currentStatus, string $newStatus): bool => in_array($currentStatus, ['DRAFT', 'PENDING', 'IN_PROGRESS'], true) && $newStatus === 'CANCELLED'
+		);
+		$requests->method('cancelRequest')->willReturnCallback(
+			static function (string $requestId) use (&$trace): array {
+				$trace['transitioned'][] = $requestId;
+				return ['id' => $requestId, 'status' => 'CANCELLED'];
 			}
 		);
 

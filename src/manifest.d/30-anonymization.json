@@ -1,0 +1,74 @@
+{
+	"menu": [
+		{
+			"id": "Anonymization",
+			"label": "Anonymization",
+			"icon": "EyeOffOutline",
+			"route": "Anonymization",
+			"order": 30
+		},
+		{
+			"id": "MyDocuments",
+			"label": "My Documents",
+			"icon": "FileDocumentMultipleOutline",
+			"route": "MyDocuments",
+			"order": 35
+		},
+		{
+			"id": "FolderAnonymization",
+			"label": "Folder Analysis",
+			"icon": "FolderOutline",
+			"route": "FolderAnonymization",
+			"order": 40
+		},
+		{
+			"id": "CustomDictionary",
+			"label": "Custom dictionaries",
+			"icon": "Domain",
+			"route": "CustomDictionary",
+			"order": 70
+		}
+	],
+	"pages": [
+		{
+			"id": "CustomDictionary",
+			"route": "/custom-dictionaries",
+			"type": "custom",
+			"title": "Custom dictionaries",
+			"component": "CustomDictionaryIndex",
+			"_note": "Dictionaries are fetched from filinq's own PHP controller (organisation-gated, term-count-enriched) not a plain OR index endpoint — same rationale as ConsentIndex; type:custom preserves that data path."
+		},
+		{
+			"id": "CustomDictionaryDetail",
+			"route": "/custom-dictionaries/:id",
+			"type": "custom",
+			"title": "Custom Dictionary Detail",
+			"component": "CustomDictionaryDetail",
+			"_note": "Term management (add/remove/import) + metadata edit for one dictionary, fetched via customDictionaryStore. type:custom preserves the filinq-controller data path."
+		},
+		{
+			"id": "Anonymization",
+			"route": "/anonymization",
+			"type": "custom",
+			"title": "Anonymization",
+			"component": "AnonymizationIndex",
+			"_note": "Anonymization uses the anonymization store (filinq API) not OpenRegister; type:custom preserves the existing data path."
+		},
+		{
+			"id": "FolderAnonymization",
+			"route": "/folder-anonymization",
+			"type": "custom",
+			"title": "Folder Analysis",
+			"component": "FolderAnonymizationView",
+			"_note": "Folder-level anonymization scan; fetches via folderAnonymizationStore (filinq API); type:custom preserves the existing data path."
+		},
+		{
+			"id": "MyDocuments",
+			"route": "/my-documents",
+			"type": "custom",
+			"title": "My Documents",
+			"component": "MyDocumentsIndex",
+			"_note": "Hosts the in-app file viewer (FileViewerPage renders when fileViewerStore.currentFile is set). The anonymisation widget routes here after upload so the user reviews detected entities next to the document contents."
+		}
+	]
+}

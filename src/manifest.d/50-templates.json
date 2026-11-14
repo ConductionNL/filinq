@@ -1,0 +1,78 @@
+{
+	"menu": [
+		{
+			"id": "Templates",
+			"label": "Templates",
+			"icon": "FileReplaceOutline",
+			"route": "Templates",
+			"order": 50
+		},
+		{
+			"id": "Correspondence",
+			"label": "Letters & correspondence",
+			"icon": "EmailOutline",
+			"route": "Correspondence",
+			"order": 55
+		}
+	],
+	"pages": [
+		{
+			"id": "Templates",
+			"route": "/templates",
+			"type": "index",
+			"title": "Templates",
+			"config": {
+				"register": "filinq",
+				"schema": "template",
+				"columns": [
+					"name",
+					"category",
+					"format",
+					"namespace",
+					"description"
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"documentationUrl": "https://filinq.conduction.nl",
+				"showTitle": true,
+				"addLabel": "New template",
+				"emptyText": "No templates found"
+			},
+			"_note": "Decomposed to type:index (Phase 8): the template schema is OR-registered, so CnIndexPage lists the template objects directly. The bespoke lock/unlock/editor lives on TemplateDetail. `register` MUST be a register SLUG from lib/Settings/filinq_register.json — it was `filinq` from Phase 8 until 2026-08-03, a register Filinq has never shipped (the definition has declared `templates` since before Phase 8 landed), so this page listed a register that holds nothing while TemplatesController wrote to the `templates` register resolved from app config `template_register`."
+		},
+		{
+			"id": "TemplateDetail",
+			"route": "/templates/:id",
+			"type": "custom",
+			"title": "Template Detail",
+			"component": "TemplateDetail",
+			"_note": "Template detail view with lock/unlock, editor, and preview. Hybrid data path via templateStore."
+		},
+		{
+			"id": "WizardRunner",
+			"route": "/templates/:id/wizard",
+			"type": "custom",
+			"title": "Guided document wizard",
+			"component": "WizardRunner",
+			"_note": "The guided document wizard of a template (guided-document-wizard): one question per step with skip logic, a review step, then one call to api/documents/generate, which checks the answers again. type:custom because it reads the wizard through api/templates/{id}/wizard and prefills through api/wizards/{id}/prefill, filinq endpoints rather than object operations."
+		},
+		{
+			"id": "Correspondence",
+			"route": "/correspondence",
+			"type": "custom",
+			"title": "Letters & correspondence",
+			"component": "CorrespondenceIndex",
+			"_note": "Letter/correspondence generation from templates with merge data (single or batch), via correspondenceStore + CorrespondenceController (generate/generateBatch/jobStatus). Hybrid data path; type:custom preserves it. Restored reachability — openspec/changes/orphaned-surface-restoration (REQ-DDOSR-003); the component and backend already existed, only the manifest/registry/menu wiring was missing."
+		},
+		{
+			"id": "PrintPreview",
+			"route": "/print-preview/:templateId?",
+			"type": "custom",
+			"title": "Print Preview",
+			"component": "PrintPreview",
+			"_note": "Standalone print-preview page; no nav item; launched programmatically."
+		}
+	]
+}

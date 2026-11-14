@@ -2,8 +2,8 @@
 
 ## 1. Know whether an editor holds the document
 
-- [ ] Detect an attached editor session and which suite it is
-- [ ] Route to editor-delivery when one is attached, to the existing file path when not
+- [x] Detect an attached editor session and which suite it is
+- [x] Route to editor-delivery when one is attached, to the existing file path when not
 
 Acceptance criteria:
 - The existing in-process path, lock included, MUST be untouched for the no-editor case. It was always correct there.
@@ -12,7 +12,7 @@ Acceptance criteria:
 ## 2. Make the document current before reading it
 
 - [ ] Ask the editor to flush unsaved state, then read
-- [ ] Have the agent announce the save before it happens
+- [x] Have the agent announce the save before it happens
 
 Acceptance criteria:
 - Anchors hash the STORED bytes; with unsaved changes pending they describe text that is no longer there.
@@ -21,7 +21,7 @@ Acceptance criteria:
 ## 3. Deliver the edit through the editor
 
 - [ ] Define one delivery interface; implement an adapter per suite
-- [ ] Express edits as text-to-match, never as offsets
+- [x] Express edits as text-to-match, never as offsets
 - [ ] Fail loudly and specifically when the target text is not found
 - [ ] Relay the edit from the companion, which already runs on the editor's page
 
@@ -32,7 +32,7 @@ Acceptance criteria:
 
 ## 4. Keep the agent attributable
 
-- [ ] Record agent authorship for editor-delivered edits
+- [x] Record agent authorship for editor-delivered edits
 
 Acceptance criteria:
 - The direct path writes a `generatedDocument` row; an editor-delivered change is saved by the editor under the USER's account, so authorship vanishes exactly when this becomes the normal route.

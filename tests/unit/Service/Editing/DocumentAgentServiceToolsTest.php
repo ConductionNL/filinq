@@ -19,6 +19,7 @@ namespace OCA\Filinq\Tests\Unit\Service\Editing;
 
 use OCA\Filinq\Service\DocumentGenerationRecord;
 use OCA\Filinq\Service\Editing\AgentArtefactMarker;
+use OCA\Filinq\Service\Editing\EditorSessionProbe;
 use OCA\Filinq\Service\Editing\AgentFileRequest;
 use OCA\Filinq\Service\Editing\DocumentAgentService;
 use OCA\Filinq\Service\Editing\EditSessionService;
@@ -103,7 +104,8 @@ class DocumentAgentServiceToolsTest extends TestCase {
 			documentLogger: $this->documentLogger,
 			rootFolder: $this->rootFolder,
 			userSession: $session,
-			logger: $this->createMock(LoggerInterface::class)
+			logger: $this->createMock(LoggerInterface::class),
+			editors: $this->createMock(EditorSessionProbe::class)
 		);
 	}//end service()
 
@@ -291,4 +293,27 @@ class DocumentAgentServiceToolsTest extends TestCase {
 		$this->assertSame('brief.pdf', $result['path']);
 		$this->assertSame('mpdf', $result['backend']);
 	}//end testConvertFallsBackToTheFileNameForThePath()
+
+	/**
+	 * The chart tool tells the model that no workbook is embedded, so it can tell the user.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/document-chart-embedding/tasks.md#3-agent-surface
+	 */
+	public function testAddDocumentChartDescriptionNamesTheMissingWorkbook(): void {
+		$method     = new \ReflectionMethod(DocumentAgentService::class, 'addDocumentChart');
+		$attributes = array_values(
+			array_filter(
+				$method->getAttributes(),
+				static fn (\ReflectionAttribute $attribute): bool => str_ends_with($attribute->getName(), '\\McpTool')
+			)
+		);
+
+		$this->assertCount(1, $attributes);
+		$arguments = $attributes[0]->getArguments();
+		$this->assertSame('addDocumentChart', $arguments['name']);
+		$this->assertStringContainsString('no spreadsheet is embedded', $arguments['description']);
+		$this->assertStringContainsString('"Edit data"', $arguments['description']);
+	}//end testAddDocumentChartDescriptionNamesTheMissingWorkbook()
 }//end class

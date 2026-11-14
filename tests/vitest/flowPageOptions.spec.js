@@ -9,7 +9,9 @@
  */
 
 import { describe, expect, it } from 'vitest'
-import manifest from '../../src/manifest.json'
+import { effectiveManifest } from './support/effectiveManifest.js'
+
+const manifest = effectiveManifest()
 
 const flowPages = manifest.pages.filter((page) => page.type === 'flow')
 

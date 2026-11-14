@@ -27,6 +27,7 @@ namespace OCA\Filinq\Controller;
 
 use Exception;
 use OCA\Filinq\Kernel\Contracts\TemplatePreviewServiceInterface;
+use OCA\Filinq\Service\DataResolverService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -53,6 +54,7 @@ class TemplatePreviewController extends Controller {
 	 * @param TemplateRequestHandler $requestHandler Request param parser and error handler
 	 * @param TemplatePreviewServiceInterface $previewService Service for preview rendering
 	 * @param IUserSession $userSession User session for current user
+	 * @param DataResolverService|null $dataResolver Resolves listRefs for a preview the way generation does
 	 *
 	 * @return void
 	 */
@@ -62,6 +64,7 @@ class TemplatePreviewController extends Controller {
 		private readonly TemplateRequestHandler $requestHandler,
 		private readonly TemplatePreviewServiceInterface $previewService,
 		private readonly IUserSession $userSession,
+		private readonly ?DataResolverService $dataResolver = null,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 
@@ -89,6 +92,13 @@ class TemplatePreviewController extends Controller {
 
 			if (empty($content) === true) {
 				throw new Exception(message: 'Content is required for preview', code: 400);
+			}
+
+			$listRefs = ($data['listRefs'] ?? []);
+			if (is_array($listRefs) === true && $listRefs !== [] && $this->dataResolver !== null) {
+				// The same resolution the generate path runs, so a table filled
+				// from related records previews the way it will be produced.
+				$context = $this->dataResolver->resolve(dataRefs: [], listRefs: $listRefs, adHocData: (array)$context)['data'];
 			}
 
 			return new JSONResponse(data: $this->previewService->previewWithLint(content: $content, data: $context));
