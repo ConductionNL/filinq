@@ -13,10 +13,10 @@
 
 ## 2. Backend
 
-- [ ] 2.1 Implement `lib/Service/MdtoMappingService.php` — prefill (REQ-DDTMM-003)
+- [ ] 2.1 Implement `lib/Service/MdtoMappingService.php` — prefill (REQ-DDTMM-003) — partial: `prefill()` proposes `aggregatieniveau` and `dekkingInTijd` (dossier: min/max over members), flagged `proposed`; the `beperkingGebruik` proposals from consent, prohibition and anonymised-derivative state are not built yet.
   - `aggregatieniveau` from record type; `dekkingInTijd` from document/dossier dates; `beperkingGebruik` proposals from consent (`objection_received`/unresolved), prohibition matches and anonymised derivatives; proposals flagged, never exported unconfirmed; `betrokkene` values are references only.
 
-- [ ] 2.2 Implement completeness validation (REQ-DDTMM-004)
+- [ ] 2.2 Implement completeness validation (REQ-DDTMM-004) — partial: `validateCompleteness()` returns `{complete, missing}` over the minimum set (an unconfirmed proposal does not count). Left: the pin against OpenRegister's generator (it no longer has `validateRequiredFields()`; its preconditions moved to a separate class) and the wiring into the overbrenging surface.
   - `{complete, missing[]}` against the MDTO minimum set (+ dekkingInTijd for bewaren); verify against OR HEAD that the gate is a superset of `MdtoXmlGenerator::validateRequiredFields()` (pin with a unit test, not this spec's snapshot); wire the gate into the overbrenging surface from archiefwet-retention-engine.
 
 - [ ] 2.3 Implement sidecar assembly + JSON projection (REQ-DDTMM-005)
