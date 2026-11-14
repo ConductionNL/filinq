@@ -92,13 +92,7 @@ class PublicationSourceDestroyedListener implements IEventListener {
 		}
 
 		$uuid = (string) $object->getUuid();
-		$refs = [$uuid];
-		$data = (array) $object->getObject();
-		foreach (self::FILE_FIELDS as $field) {
-			if (is_scalar($data[$field] ?? null) === true) {
-				$refs[] = (string) $data[$field];
-			}
-		}
+		$refs = array_merge([$uuid], $this->fileRefs(data: (array) $object->getObject()));
 
 		try {
 			$this->pipeline->withdrawDestroyedSource(sourceRefs: $refs, detail: '(object ' . $uuid . ')');
@@ -110,6 +104,27 @@ class PublicationSourceDestroyedListener implements IEventListener {
 		}
 
 	}//end handle()
+
+	/**
+	 * The file references the destroyed object carried, in FILE_FIELDS order.
+	 *
+	 * @param array<string, mixed> $data The object's data
+	 *
+	 * @return list<string> The references of the scalar file fields.
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/woo-publicatie-pipeline/spec.md#requirement-a-publication-goes-offline-when-its-source-document-is-destroyed-req-scr-009
+	 */
+	private function fileRefs(array $data): array {
+		$refs = [];
+		foreach (self::FILE_FIELDS as $field) {
+			if (is_scalar($data[$field] ?? null) === true) {
+				$refs[] = (string) $data[$field];
+			}
+		}
+
+		return $refs;
+
+	}//end fileRefs()
 
 	/**
 	 * Whether OpenRegister is running a destruction right now.

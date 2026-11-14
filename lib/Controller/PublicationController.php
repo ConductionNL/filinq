@@ -149,8 +149,8 @@ class PublicationController extends Controller {
 	#[NoCSRFRequired]
 	public function download(string $id): Response {
 		$record = $this->readable(id: $id);
-		$copy = (string) ($record['redactedFileRef'] ?? '');
-		if ($record === null || in_array($record['status'] ?? '', ['handed_off', 'published'], true) === false || $copy === '') {
+		$copy = $this->publishedCopy(record: $record);
+		if ($record === null || $copy === '') {
 			return $this->forbidden();
 		}
 
@@ -159,15 +159,9 @@ class PublicationController extends Controller {
 		}
 
 		$uid = $this->uid();
-		foreach (array_unique([$copy, (string) ($record['documentFileRef'] ?? '')]) as $document) {
-			if ($document === '') {
-				continue;
-			}
-
-			$decision = $this->agreements->check(document: $document, person: $uid);
-			if (($decision['mayDownload'] ?? false) !== true) {
-				return new JSONResponse($decision + ['document' => $document], Http::STATUS_CONFLICT);
-			}
+		$unaccepted = $this->unacceptedAgreement(agreements: $this->agreements, documents: [$copy, (string) ($record['documentFileRef'] ?? '')], uid: $uid);
+		if ($unaccepted !== null) {
+			return $unaccepted;
 		}
 
 		try {
@@ -181,6 +175,51 @@ class PublicationController extends Controller {
 		}
 
 	}//end download()
+
+	/**
+	 * The published copy of a record that has been handed off or published, or '' when there is none.
+	 *
+	 * @param array<string, mixed>|null $record The record, or null when not visible
+	 *
+	 * @return string The published copy's file reference, or ''
+	 *
+	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-3.3
+	 */
+	private function publishedCopy(?array $record): string {
+		if ($record === null || in_array($record['status'] ?? '', ['handed_off', 'published'], true) === false) {
+			return '';
+		}
+
+		return (string) ($record['redactedFileRef'] ?? '');
+
+	}//end publishedCopy()
+
+	/**
+	 * The 409 answer for the first document whose download agreement the caller has not accepted, or null.
+	 *
+	 * @param DownloadAgreementGateInterface $agreements The download conditions
+	 * @param list<string>                   $documents  The published copy and its source document
+	 * @param string                         $uid        The caller
+	 *
+	 * @return JSONResponse|null 409 with the agreement to accept, or null when every agreement is accepted
+	 *
+	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-3.3
+	 */
+	private function unacceptedAgreement(DownloadAgreementGateInterface $agreements, array $documents, string $uid): ?JSONResponse {
+		foreach (array_unique($documents) as $document) {
+			if ($document === '') {
+				continue;
+			}
+
+			$decision = $agreements->check(document: $document, person: $uid);
+			if (($decision['mayDownload'] ?? false) !== true) {
+				return new JSONResponse($decision + ['document' => $document], Http::STATUS_CONFLICT);
+			}
+		}
+
+		return null;
+
+	}//end unacceptedAgreement()
 
 	/**
 	 * The Woo information categories to choose from.

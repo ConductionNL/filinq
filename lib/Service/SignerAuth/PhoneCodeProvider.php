@@ -182,25 +182,11 @@ class PhoneCodeProvider implements SignerAuthenticationProviderInterface {
 		}
 
 		$key = $this->key(requestId: $requestId, signerId: $signerId);
-		$pending = $this->cache()->get($key);
-		if (is_array($pending) === false) {
-			throw new RuntimeException('No phone code is pending for this signer, or it was used');
-		}
-
 		$now = $this->clock->getTime();
-		if ((int) ($pending['expiresAt'] ?? 0) < $now) {
-			$this->cache()->remove($key);
-			throw new RuntimeException('The phone code has expired');
-		}
+		$pending = $this->pendingCode(key: $key, now: $now);
 
 		if (hash_equals((string) ($pending['hash'] ?? ''), $this->hash(requestId: $requestId, signerId: $signerId, code: $code)) === false) {
-			$pending['attempts'] = ((int) ($pending['attempts'] ?? 0) + 1);
-			if ($pending['attempts'] >= self::MAX_ATTEMPTS) {
-				$this->cache()->remove($key);
-			} else {
-				$this->cache()->set($key, $pending, max(1, ((int) $pending['expiresAt'] - $now)));
-			}
-
+			$this->countWrongAttempt(key: $key, pending: $pending, now: $now);
 			throw new RuntimeException('The phone code is wrong');
 		}
 
@@ -220,6 +206,55 @@ class PhoneCodeProvider implements SignerAuthenticationProviderInterface {
 	}//end completeAuthentication()
 
 	/**
+	 * The code pending for this signer and act, refused when there is none or it has expired.
+	 *
+	 * @param string $key The cache key of the signer and act
+	 * @param int    $now Now, as a timestamp
+	 *
+	 * @return array<string, mixed> The pending code.
+	 *
+	 * @throws RuntimeException When no code is pending, or it has expired (and is then dropped).
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-can-be-verified-with-a-code-sent-to-their-phone-req-scr-004
+	 */
+	private function pendingCode(string $key, int $now): array {
+		$pending = $this->cache()->get($key);
+		if (is_array($pending) === false) {
+			throw new RuntimeException('No phone code is pending for this signer, or it was used');
+		}
+
+		if ((int) ($pending['expiresAt'] ?? 0) < $now) {
+			$this->cache()->remove($key);
+			throw new RuntimeException('The phone code has expired');
+		}
+
+		return $pending;
+
+	}//end pendingCode()
+
+	/**
+	 * Count a wrong code: the code is dropped after the last allowed attempt, else kept until it expires.
+	 *
+	 * @param string               $key     The cache key of the signer and act
+	 * @param array<string, mixed> $pending The pending code
+	 * @param int                  $now     Now, as a timestamp
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-can-be-verified-with-a-code-sent-to-their-phone-req-scr-004
+	 */
+	private function countWrongAttempt(string $key, array $pending, int $now): void {
+		$pending['attempts'] = ((int) ($pending['attempts'] ?? 0) + 1);
+		if ($pending['attempts'] >= self::MAX_ATTEMPTS) {
+			$this->cache()->remove($key);
+			return;
+		}
+
+		$this->cache()->set($key, $pending, max(1, ((int) $pending['expiresAt'] - $now)));
+
+	}//end countWrongAttempt()
+
+	/**
 	 * The phone number on the signer record of this request.
 	 *
 	 * @param string $requestId The request
@@ -230,18 +265,7 @@ class PhoneCodeProvider implements SignerAuthenticationProviderInterface {
 	 * @throws RuntimeException When the record is not this request's, or carries no number.
 	 */
 	private function phoneOf(string $requestId, string $signerId): string {
-		$binding = $this->settings->resolveSignerRecordBinding();
-		$objects = $this->settings->getObjectService();
-		if ($binding === null || $objects === null) {
-			throw new RuntimeException('Signer records are not configured');
-		}
-
-		$record = $objects->find(id: $signerId, register: $binding['register'], schema: $binding['schema'], _rbac: false);
-		if (is_object($record) === true && method_exists($record, 'jsonSerialize') === true) {
-			$record = $record->jsonSerialize();
-		}
-
-		$record = (array) $record;
+		$record = $this->signerRecord(signerId: $signerId);
 		if ((string) ($record['signingRequestId'] ?? '') !== $requestId) {
 			throw new RuntimeException('Signer record does not belong to this signing request');
 		}
@@ -254,6 +278,33 @@ class PhoneCodeProvider implements SignerAuthenticationProviderInterface {
 		return $phone;
 
 	}//end phoneOf()
+
+	/**
+	 * The signer record, read without RBAC from the configured signer register.
+	 *
+	 * @param string $signerId The signer record
+	 *
+	 * @return array<string, mixed> The record.
+	 *
+	 * @throws RuntimeException When signer records are not configured.
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-can-be-verified-with-a-code-sent-to-their-phone-req-scr-004
+	 */
+	private function signerRecord(string $signerId): array {
+		$binding = $this->settings->resolveSignerRecordBinding();
+		$objects = $this->settings->getObjectService();
+		if ($binding === null || $objects === null) {
+			throw new RuntimeException('Signer records are not configured');
+		}
+
+		$record = $objects->find(id: $signerId, register: $binding['register'], schema: $binding['schema'], _rbac: false);
+		if (is_object($record) === true && method_exists($record, 'jsonSerialize') === true) {
+			$record = $record->jsonSerialize();
+		}
+
+		return (array) $record;
+
+	}//end signerRecord()
 
 	/**
 	 * The cache holding pending codes.

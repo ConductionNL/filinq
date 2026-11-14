@@ -161,14 +161,29 @@ class ActivePublicationList {
 			$blockers[] = self::BLOCK_CONSENT;
 		}
 
-		foreach (self::REQUIRED_METADATA as $field) {
-			if (trim((string) ($record[$field] ?? '')) === '') {
-				$blockers[] = self::BLOCK_METADATA;
-				break;
-			}
+		if ($this->lacksMetadata(record: $record) === true) {
+			$blockers[] = self::BLOCK_METADATA;
 		}
 
 		return $blockers;
 
 	}//end blockers()
+
+	/**
+	 * Whether a required metadata field of the record is empty.
+	 *
+	 * @param array<string, mixed> $record The record
+	 *
+	 * @return bool
+	 */
+	private function lacksMetadata(array $record): bool {
+		foreach (self::REQUIRED_METADATA as $field) {
+			if (trim((string) ($record[$field] ?? '')) === '') {
+				return true;
+			}
+		}
+
+		return false;
+
+	}//end lacksMetadata()
 }//end class

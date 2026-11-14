@@ -86,35 +86,9 @@ class SigningDelegationService {
 	public function declare(string $delegator, string $delegate, string $from, string $until, array $types): array {
 		$delegator = trim($delegator);
 		$delegate = trim($delegate);
-		if ($delegator === '' || $delegate === '') {
-			throw new InvalidArgumentException('A delegation names the signer and the colleague');
-		}
-
-		if ($delegator === $delegate) {
-			throw new InvalidArgumentException('A signer cannot delegate to themselves');
-		}
-
-		if ($this->isDate(value: $from) === false || $this->isDate(value: $until) === false) {
-			throw new InvalidArgumentException('A delegation needs a start and an end date (YYYY-MM-DD)');
-		}
-
-		if ($until < $from) {
-			throw new InvalidArgumentException('A delegation cannot end before it starts');
-		}
-
-		$cleanTypes = [];
-		foreach ($types as $type) {
-			$type = trim((string) $type);
-			if (preg_match('#^[a-z0-9_-]+/[A-Za-z0-9_-]+$#', $type) !== 1) {
-				throw new InvalidArgumentException('A delegated document type is an <app>/<schema> reference');
-			}
-
-			$cleanTypes[] = $type;
-		}
-
-		if ($cleanTypes === []) {
-			throw new InvalidArgumentException('A delegation names at least one document type');
-		}
+		$this->assertParties(delegator: $delegator, delegate: $delegate);
+		$this->assertPeriod(from: $from, until: $until);
+		$cleanTypes = $this->cleanTypes(types: $types);
 
 		$delegation = [
 			'id' => bin2hex(random_bytes(8)),
@@ -134,6 +108,82 @@ class SigningDelegationService {
 	}//end declare()
 
 	/**
+	 * Refuse a delegation that does not name two different parties.
+	 *
+	 * @param string $delegator The signer giving the authority, trimmed
+	 * @param string $delegate  The colleague receiving it, trimmed
+	 *
+	 * @return void
+	 *
+	 * @throws InvalidArgumentException When a party is missing or both are the same.
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
+	 */
+	private function assertParties(string $delegator, string $delegate): void {
+		if ($delegator === '' || $delegate === '') {
+			throw new InvalidArgumentException('A delegation names the signer and the colleague');
+		}
+
+		if ($delegator === $delegate) {
+			throw new InvalidArgumentException('A signer cannot delegate to themselves');
+		}
+
+	}//end assertParties()
+
+	/**
+	 * Refuse a delegation period that is not two real dates in order.
+	 *
+	 * @param string $from  First day, Y-m-d
+	 * @param string $until Last day, Y-m-d
+	 *
+	 * @return void
+	 *
+	 * @throws InvalidArgumentException When a date is missing or wrong, or the period ends before it starts.
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
+	 */
+	private function assertPeriod(string $from, string $until): void {
+		if ($this->isDate(value: $from) === false || $this->isDate(value: $until) === false) {
+			throw new InvalidArgumentException('A delegation needs a start and an end date (YYYY-MM-DD)');
+		}
+
+		if ($until < $from) {
+			throw new InvalidArgumentException('A delegation cannot end before it starts');
+		}
+
+	}//end assertPeriod()
+
+	/**
+	 * The delegated document types, trimmed, each an `<app>/<schema>` reference.
+	 *
+	 * @param array<int, mixed> $types The types as given
+	 *
+	 * @return list<string> The trimmed types, in the given order.
+	 *
+	 * @throws InvalidArgumentException When a type is not a reference, or none is given.
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
+	 */
+	private function cleanTypes(array $types): array {
+		$cleanTypes = [];
+		foreach ($types as $type) {
+			$type = trim((string) $type);
+			if (preg_match('#^[a-z0-9_-]+/[A-Za-z0-9_-]+$#', $type) !== 1) {
+				throw new InvalidArgumentException('A delegated document type is an <app>/<schema> reference');
+			}
+
+			$cleanTypes[] = $type;
+		}
+
+		if ($cleanTypes === []) {
+			throw new InvalidArgumentException('A delegation names at least one document type');
+		}
+
+		return $cleanTypes;
+
+	}//end cleanTypes()
+
+	/**
 	 * Withdraw a delegation the signer gave.
 	 *
 	 * @param string $id        The delegation
@@ -147,7 +197,7 @@ class SigningDelegationService {
 		$kept = [];
 		$found = false;
 		foreach ($this->all() as $delegation) {
-			if ($delegation['id'] === $id && $delegation['delegator'] === $delegator && $delegator !== '') {
+			if ($this->isGivenBy(delegation: $delegation, id: $id, delegator: $delegator) === true) {
 				$found = true;
 				continue;
 			}
@@ -164,6 +214,22 @@ class SigningDelegationService {
 	}//end withdraw()
 
 	/**
+	 * Whether this is the delegation with this id, given by this signer.
+	 *
+	 * @param array<string, mixed> $delegation The stored delegation
+	 * @param string               $id         The delegation id asked for
+	 * @param string               $delegator  The signer asking; an empty one gave nothing
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
+	 */
+	private function isGivenBy(array $delegation, string $id, string $delegator): bool {
+		return $delegation['id'] === $id && $delegation['delegator'] === $delegator && $delegator !== '';
+
+	}//end isGivenBy()
+
+	/**
 	 * The delegations a user gave and received.
 	 *
 	 * @param string $userId The user
@@ -175,12 +241,17 @@ class SigningDelegationService {
 	public function forUser(string $userId): array {
 		$given = [];
 		$received = [];
-		foreach ($this->all() as $delegation) {
-			if ($userId !== '' && $delegation['delegator'] === $userId) {
+		$all = $this->all();
+		if ($userId === '') {
+			$all = [];
+		}
+
+		foreach ($all as $delegation) {
+			if ($delegation['delegator'] === $userId) {
 				$given[] = $delegation;
 			}
 
-			if ($userId !== '' && $delegation['delegate'] === $userId) {
+			if ($delegation['delegate'] === $userId) {
 				$received[] = $delegation;
 			}
 		}
@@ -204,36 +275,86 @@ class SigningDelegationService {
 		$today = $this->today();
 		$reason = 'No delegation from ' . $delegator . ' to ' . $delegate;
 		foreach ($this->all() as $delegation) {
-			if ($delegation['delegator'] !== $delegator || $delegation['delegate'] !== $delegate) {
+			if ($this->isBetween(delegation: $delegation, delegator: $delegator, delegate: $delegate) === false) {
 				continue;
 			}
 
-			if ($today > $delegation['until']) {
-				$reason = 'The delegation from ' . $delegator . ' ended on ' . $delegation['until'];
-				continue;
+			$why = $this->delegationRefusal(delegation: $delegation, today: $today, typeReference: $typeReference);
+			if ($why === null) {
+				return null;
 			}
 
-			if ($today < $delegation['from']) {
-				$reason = 'The delegation from ' . $delegator . ' starts on ' . $delegation['from'];
-				continue;
-			}
-
-			if ($typeReference !== null && in_array($typeReference, $delegation['types'], true) === false) {
-				$type = $typeReference;
-				if ($type === '') {
-					$type = 'documents without a type';
-				}
-
-				$reason = 'The delegation from ' . $delegator . ' does not cover ' . $type;
-				continue;
-			}
-
-			return null;
+			$reason = $why;
 		}//end foreach
 
 		return $reason;
 
 	}//end refusal()
+
+	/**
+	 * Why this one delegation does not cover the signature, or null when it does.
+	 *
+	 * @param array<string, mixed> $delegation    The delegation from the signer to the delegate
+	 * @param string               $today         Today, Y-m-d
+	 * @param string|null          $typeReference The document type, or null to check the period only
+	 *
+	 * @return string|null The refusal, naming the delegation; null when it covers the signature.
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
+	 */
+	private function delegationRefusal(array $delegation, string $today, ?string $typeReference): ?string {
+		$delegator = $delegation['delegator'];
+		if ($today > $delegation['until']) {
+			return 'The delegation from ' . $delegator . ' ended on ' . $delegation['until'];
+		}
+
+		if ($today < $delegation['from']) {
+			return 'The delegation from ' . $delegator . ' starts on ' . $delegation['from'];
+		}
+
+		return $this->typeRefusal(delegation: $delegation, typeReference: $typeReference);
+
+	}//end delegationRefusal()
+
+	/**
+	 * Why this delegation does not cover the document type, or null when it does.
+	 *
+	 * @param array<string, mixed> $delegation    The delegation
+	 * @param string|null          $typeReference The document type, or null when only the period counts
+	 *
+	 * @return string|null The refusal naming the type; null when the type is covered or not asked.
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
+	 */
+	private function typeRefusal(array $delegation, ?string $typeReference): ?string {
+		if ($typeReference === null || in_array($typeReference, $delegation['types'], true) === true) {
+			return null;
+		}
+
+		$type = $typeReference;
+		if ($type === '') {
+			$type = 'documents without a type';
+		}
+
+		return 'The delegation from ' . $delegation['delegator'] . ' does not cover ' . $type;
+
+	}//end typeRefusal()
+
+	/**
+	 * Whether this delegation runs from this signer to this delegate.
+	 *
+	 * @param array<string, mixed> $delegation The delegation
+	 * @param string               $delegator  The signer
+	 * @param string               $delegate   The colleague acting
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
+	 */
+	private function isBetween(array $delegation, string $delegator, string $delegate): bool {
+		return $delegation['delegator'] === $delegator && $delegation['delegate'] === $delegate;
+
+	}//end isBetween()
 
 	/**
 	 * Refuse a delegated signature the delegation does not cover.
@@ -313,15 +434,33 @@ class SigningDelegationService {
 
 		$delegations = [];
 		foreach ((array) $decoded as $row) {
-			if (is_array($row) === true && isset($row['id'], $row['delegator'], $row['delegate'], $row['from'], $row['until']) === true) {
-				$row['types'] = array_values(array_map('strval', (array) ($row['types'] ?? [])));
-				$delegations[] = $row;
+			$delegation = $this->storedDelegation(row: $row);
+			if ($delegation !== null) {
+				$delegations[] = $delegation;
 			}
 		}
 
 		return $delegations;
 
 	}//end all()
+
+	/**
+	 * A stored row as a delegation, or null when it is not one.
+	 *
+	 * @param mixed $row The decoded row
+	 *
+	 * @return array<string, mixed>|null The delegation with its types as strings, or null.
+	 */
+	private function storedDelegation(mixed $row): ?array {
+		if (is_array($row) === false || isset($row['id'], $row['delegator'], $row['delegate'], $row['from'], $row['until']) === false) {
+			return null;
+		}
+
+		$row['types'] = array_values(array_map('strval', (array) ($row['types'] ?? [])));
+
+		return $row;
+
+	}//end storedDelegation()
 
 	/**
 	 * Write the delegations back.
