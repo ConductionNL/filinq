@@ -127,6 +127,17 @@ class SettingsService implements SettingsServiceInterface {
 	}//end isOpenRegisterInstalled()
 
 	/**
+	 * OpenRegister's lifecycle transition engine, or null when this OpenRegister has none.
+	 *
+	 * @return object|null The engine, exposing `transitionAsSystem()`.
+	 *
+	 * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md#requirement-a-cancelled-request-must-be-visibly-cancelled-and-must-not-be-re-signable
+	 */
+	public function getTransitionEngine(): ?object {
+		return $this->openRegister->getTransitionEngine();
+	}//end getTransitionEngine()
+
+	/**
 	 * Attempts to retrieve the OpenRegister service from the container
 	 *
 	 * @return \OCA\OpenRegister\Service\ObjectService|null The OpenRegister service
