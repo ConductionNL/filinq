@@ -33,6 +33,8 @@ const PAGES_BEFORE = [
 	['AnonymizationReport', '/reports/anonymization'], ['ProducedDocumentsReport', '/reports/documents'],
 	['Intake', '/intake'], ['ClassificationPending', '/classification'], ['FeaturesRoadmap', '/features-roadmap'],
 	['Flows', '/flows'], ['FlowDetail', '/flows/:id'],
+	// Added after the split: the anonymisation review workbench.
+	['ReviewWorkbench', '/review/:fileId'],
 ]
 
 const MENU_BEFORE = [

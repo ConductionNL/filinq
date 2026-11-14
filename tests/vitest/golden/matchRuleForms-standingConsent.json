@@ -41,6 +41,7 @@
 			"consentStatus": "consent_given",
 			"publicationDecision": "publish_with_consent",
 			"notificationStatus": "skipped",
+			"bases": [],
 			"primaryName": " "
 		},
 		"editing": false,
@@ -84,6 +85,7 @@
 			"consentStatus": "consent_given",
 			"publicationDecision": "publish_with_consent",
 			"notificationStatus": "skipped",
+			"bases": [],
 			"primaryName": " "
 		},
 		"editing": false,
@@ -112,6 +114,7 @@
 			"consentStatus": "consent_given",
 			"publicationDecision": "publish_with_consent",
 			"notificationStatus": "skipped",
+			"bases": [],
 			"primaryName": "X",
 			"reason": ""
 		},
@@ -141,6 +144,7 @@
 			"consentStatus": "consent_given",
 			"publicationDecision": "publish_with_consent",
 			"notificationStatus": "skipped",
+			"bases": [],
 			"primaryName": "X",
 			"reason": ""
 		},
@@ -170,6 +174,7 @@
 			"consentStatus": "consent_given",
 			"publicationDecision": "publish_with_consent",
 			"notificationStatus": "skipped",
+			"bases": [],
 			"primaryName": "X",
 			"reason": ""
 		},
@@ -199,6 +204,7 @@
 			"consentStatus": "consent_given",
 			"publicationDecision": "publish_with_consent",
 			"notificationStatus": "skipped",
+			"bases": [],
 			"primaryName": "X",
 			"reason": ""
 		},
@@ -228,6 +234,7 @@
 			"consentStatus": "consent_given",
 			"publicationDecision": "publish_with_consent",
 			"notificationStatus": "skipped",
+			"bases": [],
 			"primaryName": "X",
 			"reason": ""
 		},
@@ -257,6 +264,7 @@
 			"consentStatus": "consent_given",
 			"publicationDecision": "publish_with_consent",
 			"notificationStatus": "skipped",
+			"bases": [],
 			"primaryName": "X",
 			"reason": ""
 		},
@@ -286,6 +294,7 @@
 			"consentStatus": "consent_given",
 			"publicationDecision": "publish_with_consent",
 			"notificationStatus": "skipped",
+			"bases": [],
 			"primaryName": "X",
 			"reason": ""
 		},
@@ -315,6 +324,7 @@
 			"consentStatus": "consent_given",
 			"publicationDecision": "publish_with_consent",
 			"notificationStatus": "skipped",
+			"bases": [],
 			"primaryName": "X",
 			"reason": ""
 		},
@@ -344,6 +354,7 @@
 			"consentStatus": "consent_given",
 			"publicationDecision": "publish_with_consent",
 			"notificationStatus": "skipped",
+			"bases": [],
 			"primaryName": "X",
 			"reason": ""
 		},
@@ -373,6 +384,7 @@
 					"consentStatus": "consent_given",
 					"publicationDecision": "publish_with_consent",
 					"notificationStatus": "skipped",
+					"bases": [],
 					"primaryName": "X",
 					"reason": ""
 				}
@@ -399,6 +411,7 @@
 			"consentStatus": "consent_given",
 			"publicationDecision": "publish_with_consent",
 			"notificationStatus": "skipped",
+			"bases": [],
 			"primaryName": "X",
 			"reason": ""
 		},
@@ -440,6 +453,7 @@
 			"consentStatus": "consent_given",
 			"publicationDecision": "publish_with_consent",
 			"notificationStatus": "skipped",
+			"bases": [],
 			"primaryName": "Jan",
 			"reason": "court order",
 			"severity": "high"
@@ -492,6 +506,7 @@
 			"consentStatus": "consent_given",
 			"publicationDecision": "publish_with_consent",
 			"notificationStatus": "skipped",
+			"bases": [],
 			"primaryName": "Jan",
 			"reason": "court order",
 			"severity": "high"
@@ -526,6 +541,7 @@
 					"consentStatus": "consent_given",
 					"publicationDecision": "publish_with_consent",
 					"notificationStatus": "skipped",
+					"bases": [],
 					"primaryName": "Jan",
 					"reason": "court order",
 					"severity": "high"
@@ -547,7 +563,8 @@
 			"matchRules": [],
 			"consentStatus": "consent_given",
 			"publicationDecision": "publish_with_consent",
-			"notificationStatus": "skipped"
+			"notificationStatus": "skipped",
+			"bases": []
 		},
 		"editing": true,
 		"dialogTitle": "[Edit standing consent]",

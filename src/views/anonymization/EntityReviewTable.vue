@@ -100,7 +100,21 @@
 					<td>
 						<span class="badge">{{ entityTypeLabel(item.e.type) }}</span>
 					</td>
-					<td>{{ item.e.value }}</td>
+					<td>
+						{{ item.e.value }}
+						<router-link
+							v-for="badge in policyBadges(item.e)"
+							:key="badge.kind"
+							:to="badge.route"
+							class="policy-badge" :class="['policy-badge--' + badge.kind]"
+							:data-testid="'policy-badge-' + badge.kind">
+							{{
+								badge.kind === 'prohibition'
+									? t('filinq', 'Always anonymise: {rule}', { rule: badge.ruleName })
+									: t('filinq', 'Never anonymise: {rule}', { rule: badge.ruleName })
+							}}
+						</router-link>
+					</td>
 					<td>
 						{{ ((item.e.highestConfidence || 0) * 100).toFixed(1) }}%
 					</td>
@@ -119,6 +133,12 @@
 								|| item.e.relationIds.length === 0
 							"
 							@update:modelValue="onBasesChange(item.idx, $event)" />
+						<div
+							v-if="basesAreProposed(item.e)"
+							class="proposed-text"
+							data-testid="bases-proposed">
+							{{ t('filinq', 'Proposed') }}
+						</div>
 						<div
 							v-if="
 								!Array.isArray(item.e.relationIds)
@@ -173,6 +193,7 @@ import { translate as t } from '@nextcloud/l10n'
 import { NcButton, NcCheckboxRadioSwitch, NcSelect } from '@nextcloud/vue'
 import ProhibitionBlockedDialog from '../../dialogs/ProhibitionBlockedDialog.vue'
 import { fetchBaseOptions } from '../../services/bases.js'
+import { basesAreProposed, policyBadges } from '../../services/documentReview.js'
 import { entityTypeLabel } from '../../services/entityTypes.js'
 import { anonymizationStore } from '../../store/store.js'
 
@@ -270,6 +291,8 @@ export default {
 	methods: {
 		t,
 		entityTypeLabel,
+		policyBadges,
+		basesAreProposed,
 		sortBy(f) {
 			if (this.sf === f) {
 				this.sa = !this.sa
@@ -284,6 +307,8 @@ export default {
 			if (!entity) {
 				return
 			}
+			// The reviewer's own pick wins over a proposal and is no longer one.
+			entity._basesConfirmed = true
 			this.persistBases(entity, Array.isArray(value) ? value : [])
 		},
 
@@ -443,6 +468,36 @@ export default {
 
 .entity-table th.bases-col {
 	cursor: default;
+}
+
+.policy-badge {
+	display: inline-block;
+	margin-inline-start: 6px;
+	padding: 0 6px;
+	border-radius: var(--border-radius-pill);
+	font-size: 0.85em;
+	text-decoration: underline;
+}
+
+.policy-badge--prohibition,
+.policy-badge--standingConsent {
+	/* Main text on the main background keeps AA contrast in both themes;
+	 * the kind is told by the border and the wording, not by colour alone. */
+	background: var(--color-main-background);
+	color: var(--color-main-text);
+}
+
+.policy-badge--prohibition {
+	border: 2px solid var(--color-warning);
+}
+
+.policy-badge--standingConsent {
+	border: 2px solid var(--color-primary-element);
+}
+
+.proposed-text {
+	font-size: 0.85em;
+	color: var(--color-text-maxcontrast);
 }
 
 .badge {

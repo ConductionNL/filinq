@@ -1,7 +1,3 @@
-/**
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- */
 OC.L10N.register(
     "filinq",
     {
@@ -2830,7 +2826,37 @@ OC.L10N.register(
         "The Nextcloud file id of the reviewed document; one review per file.": "The Nextcloud file id of the reviewed document; one review per file.",
         "The reviewer's note.": "The reviewer's note.",
         "The user who marked the document checked.": "The user who marked the document checked.",
-        "When the reviewer marked the document checked.": "When the reviewer marked the document checked."
+        "When the reviewer marked the document checked.": "When the reviewer marked the document checked.",
+        "Add as entity": "Add as entity",
+        "Add selection as entity": "Add selection as entity",
+        "Always anonymise (publish-never rules)": "Always anonymise (publish-never rules)",
+        "Always anonymise: {rule}": "Always anonymise: {rule}",
+        "Anonymisation has not been committed for this document yet.": "Anonymisation has not been committed for this document yet.",
+        "Anonymised": "Anonymised",
+        "Findings": "Findings",
+        "Last marked by {user} on {date}": "Last marked by {user} on {date}",
+        "Legal bases (grondslagen)": "Legal bases (grondslagen)",
+        "Loading findings…": "Loading findings…",
+        "Mark as reviewed": "Mark as reviewed",
+        "Never anonymise (standing consents)": "Never anonymise (standing consents)",
+        "Never anonymise: {rule}": "Never anonymise: {rule}",
+        "Nothing has been committed for this side yet.": "Nothing has been committed for this side yet.",
+        "Open in review workbench": "Open in review workbench",
+        "Proposed for this entity type; change it if another ground applies.": "Proposed for this entity type; change it if another ground applies.",
+        "Remove reviewed mark": "Remove reviewed mark",
+        "Review again and mark as reviewed": "Review again and mark as reviewed",
+        "Review workbench": "Review workbench",
+        "Rule lists": "Rule lists",
+        "Rules pre-apply: an always-anonymise rule pre-selects a finding, a never-anonymise rule pre-excludes it. Your choice overrides both.": "Rules pre-apply: an always-anonymise rule pre-selects a finding, a never-anonymise rule pre-excludes it. Your choice overrides both.",
+        "The findings changed after the last review. Review the document again before it is anonymised.": "The findings changed after the last review. Review the document again before it is anonymised.",
+        "The review state could not be read.": "The review state could not be read.",
+        "This document has not been marked as reviewed yet.": "This document has not been marked as reviewed yet.",
+        "This document is marked as reviewed.": "This document is marked as reviewed.",
+        "This text was not found in the document, so nothing was added.": "This text was not found in the document, so nothing was added.",
+        "This document has no extracted findings yet; run detection before marking it reviewed.": "This document has no extracted findings yet; run detection before marking it reviewed.",
+        "The review state could not be saved or read. Try again.": "The review state could not be saved or read. Try again.",
+        "This document has not been marked as reviewed since its findings last changed. Review it before anonymising.": "This document has not been marked as reviewed since its findings last changed. Review it before anonymising.",
+        "Not every document in this batch has been marked as reviewed since its findings last changed. Nothing was anonymised.": "Not every document in this batch has been marked as reviewed since its findings last changed. Nothing was anonymised."
     },
     "nplurals=2; plural=(n != 1);"
 )

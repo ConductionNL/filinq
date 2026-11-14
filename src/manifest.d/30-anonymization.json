@@ -69,6 +69,14 @@
 			"title": "My Documents",
 			"component": "MyDocumentsIndex",
 			"_note": "Hosts the in-app file viewer (FileViewerPage renders when fileViewerStore.currentFile is set). The anonymisation widget routes here after upload so the user reviews detected entities next to the document contents."
+		},
+		{
+			"id": "ReviewWorkbench",
+			"route": "/review/:fileId",
+			"type": "custom",
+			"title": "Review workbench",
+			"component": "ReviewWorkbench",
+			"_note": "Per-document anonymisation review: the original beside the anonymised result (DocumentCompare), the findings table as the decision panel, selection to a manual entity, and the reviewed mark the commit gate reads (/api/review/{fileId}). Opened from the file viewer's sidebar, which passes name, path and mime in the query; type:custom because the data comes from the anonymisation store and filinq's review endpoints, not a plain OR index."
 		}
 	]
 }

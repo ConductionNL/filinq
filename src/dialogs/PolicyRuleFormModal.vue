@@ -178,6 +178,7 @@ export default {
 	data() {
 		return {
 			entityTypeOptions: ['PERSON', 'ORGANIZATION', 'OTHER'],
+			basesOptions: [],
 			...FORMS[this.surface].choices,
 		}
 	},
@@ -272,6 +273,18 @@ export default {
 		},
 	},
 
+	async created() {
+		// Grondslagen are `base` objects (label = name, value = slug), the same
+		// list the entity review picks from; slug fallback on error. Loaded
+		// lazily so the form also mounts where no HTTP client is available.
+		try {
+			const { fetchBaseOptions } = await import('../services/bases.js')
+			this.basesOptions = await fetchBaseOptions()
+		} catch {
+			this.basesOptions = []
+		}
+	},
+
 	methods: {
 		t,
 
@@ -310,6 +323,16 @@ export default {
 					:label="field.label"
 					:required="field.required" />
 			</template>
+			<NcSelect
+				:modelValue="form.bases || []"
+				:options="basesOptions"
+				label="label"
+				:reduce="(o) => o.value"
+				:multiple="true"
+				:inputLabel="t('filinq', 'Legal bases (grondslagen)')"
+				:placeholder="t('filinq', 'Pick grondslagen…')"
+				data-testid="policy-rule-bases"
+				@update:modelValue="form.bases = Array.isArray($event) ? $event : []" />
 			<NcCheckboxRadioSwitch v-model="form.active" type="switch">
 				{{ t('filinq', 'Active') }}
 			</NcCheckboxRadioSwitch>

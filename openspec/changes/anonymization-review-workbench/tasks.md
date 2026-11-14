@@ -24,13 +24,13 @@
 
 ## 3. Frontend
 
-- [ ] 3.1 Build `src/views/anonymization/ReviewWorkbench.vue`: original/anonymized split view reusing the existing viewers, `EntityReviewTable` as decision panel, anonymized pane resolved via `anonymizationLink` (REQ-DDARW-001, REQ-DDARW-002)
+- [x] 3.1 Build `src/views/anonymization/ReviewWorkbench.vue`: original/anonymized split view reusing the existing viewers, `EntityReviewTable` as decision panel, anonymized pane resolved via `anonymizationLink` (REQ-DDARW-001, REQ-DDARW-002)
   - One shared entity state model; pending placeholder when no anonymized result; unsupported types degrade to the existing message.
   - Slice built 2026-10-10 for dossiq woo-delivered-set 4.2 (decision 156, REQ-DDARW-014): the split view itself, `src/components/compare/DocumentCompare.vue` over the existing viewers (Word, ODT and text viewers now also read from a `url`), exposed as `OCA.Filinq.mountCompare` from the self-contained `filinq-compare` entry; tests `tests/vitest/compareView.spec.js`, `src/components/compare/DocumentCompare.spec.js`. Still owed for 3.1: `ReviewWorkbench.vue` hosting it with `EntityReviewTable` as decision panel and the anonymized pane resolved via `anonymizationLink`.
-- [ ] 3.2 Implement preview text-selection → pre-filled `AddManualEntityModal` (value, type picker, grondslag pre-fill from the proposal mapping), submitting to the existing OR manual-entities endpoint (REQ-DDARW-003)
+- [x] 3.2 Implement preview text-selection → pre-filled `AddManualEntityModal` (value, type picker, grondslag pre-fill from the proposal mapping), submitting to the existing OR manual-entities endpoint (REQ-DDARW-003)
   - No client-side offsets; new rows appear without reload; zero-match notice preserved.
-- [ ] 3.3 Render prohibition/standing-consent badges with rule links and pre-applied include/exclude state; show proposed grondslag as pre-filled + marked, reviewer override wins (REQ-DDARW-004, REQ-DDARW-006)
-- [ ] 3.4 Add checked-gate UI (mark reviewed / re-review prompt on invalidation) and wire nav entries for the workbench and the existing `ProhibitionIndex`/`StandingConsentIndex` views; add the `bases` picker to both policy form modals (REQ-DDARW-007, REQ-DDARW-009)
+- [x] 3.3 Render prohibition/standing-consent badges with rule links and pre-applied include/exclude state; show proposed grondslag as pre-filled + marked, reviewer override wins (REQ-DDARW-004, REQ-DDARW-006)
+- [x] 3.4 Add checked-gate UI (mark reviewed / re-review prompt on invalidation) and wire nav entries for the workbench and the existing `ProhibitionIndex`/`StandingConsentIndex` views; add the `bases` picker to both policy form modals (REQ-DDARW-007, REQ-DDARW-009)
   - NcSelect fields carry `inputLabel`; modals stay in their own files (modal-isolation gate).
 
 ## 4. Quality
@@ -39,8 +39,8 @@
   - Run in container: `docker exec -w /var/www/html/custom_apps/filinq nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`.
   - End-to-end verify with OpenRegister on Postgres (8080): detection → pre-application → gate → commit.
 - [ ] 4.2 Playwright spec `tests/e2e/spec-coverage/review-workbench.spec.ts` covering the `@e2e`-referenced scenarios
-- [ ] 4.3 Vitest coverage for the workbench store wiring (shared entity model, selection pre-fill)
-- [ ] 4.4 i18n: EN + NL translations for all new UI strings (keys in English) (ADR-005)
+- [x] 4.3 Vitest coverage for the workbench store wiring (shared entity model, selection pre-fill)
+- [x] 4.4 i18n: EN + NL translations for all new UI strings (keys in English) (ADR-005)
   - Test with the nldesign theme enabled for accessibility compliance.
 - [ ] 4.5 Docs: `docs/features/review-workbench.md` with Playwright MCP screenshots of the split view, badges, grondslag pickers and the checked gate (ADR-010)
 - [ ] 4.6 Validate: `openspec validate anonymization-review-workbench --strict` passes; hydra gates green on the branch

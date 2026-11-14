@@ -28,6 +28,12 @@
 					:is="pane.component"
 					v-if="pane.component"
 					v-bind="pane.props" />
+				<p
+					v-else-if="pane.pending"
+					class="document-compare__pending"
+					data-testid="document-compare-pending">
+					{{ pendingText || t('filinq', 'Nothing has been committed for this side yet.') }}
+				</p>
 				<p v-else class="document-compare__unsupported">
 					{{ t('filinq', 'This file type cannot be previewed.') }}
 				</p>
@@ -65,9 +71,17 @@ export default {
 			required: true,
 		},
 
+		// Null while the other side does not exist yet (the review workbench
+		// before a commit); the pane then shows `pendingText`.
 		delivered: {
 			type: Object,
-			required: true,
+			default: null,
+		},
+
+		// What the empty side says while `delivered` is null.
+		pendingText: {
+			type: String,
+			default: '',
 		},
 
 		// Optional `{ original, delivered }` pane titles from the host.
@@ -91,6 +105,17 @@ export default {
 			}
 			return COMPARE_SIDES.map((side) => {
 				const file = this[side]
+				if (!file) {
+					return {
+						side,
+						label: this.labels[side] || defaults[side],
+						fileName: '',
+						component: null,
+						props: {},
+						downloadUrl: '',
+						pending: true,
+					}
+				}
 				return {
 					side,
 					label: this.labels[side] || defaults[side],
@@ -167,6 +192,7 @@ export default {
 	background: var(--color-background-dark);
 }
 
+.document-compare__pending,
 .document-compare__unsupported {
 	padding: 48px 16px;
 	color: var(--color-text-maxcontrast);

@@ -63,6 +63,7 @@ import PrintPreview from './components/PrintPreview.vue'
 import DossierFormModal from './dialogs/DossierFormModal.vue'
 import AnonymizationIndex from './views/anonymization/AnonymizationIndex.vue'
 import FolderAnonymizationView from './views/anonymization/FolderAnonymizationView.vue'
+import ReviewWorkbench from './views/anonymization/ReviewWorkbench.vue'
 import ClassificationPending from './views/classification/ClassificationPending.vue'
 import ComparisonView from './views/comparison/ComparisonView.vue'
 import ConsentDetail from './views/consent/ConsentDetail.vue'
@@ -105,6 +106,7 @@ export default {
 	ConsentIndex: { kind: 'page', component: ConsentIndex },
 	ConsentDetail: { kind: 'page', component: ConsentDetail },
 	AnonymizationIndex: { kind: 'page', component: AnonymizationIndex },
+	ReviewWorkbench: { kind: 'page', component: ReviewWorkbench },
 	FolderAnonymizationView: { kind: 'page', component: FolderAnonymizationView },
 	TemplateDetail: { kind: 'page', component: TemplateDetail },
 	WizardRunner: { kind: 'page', component: WizardRunner },

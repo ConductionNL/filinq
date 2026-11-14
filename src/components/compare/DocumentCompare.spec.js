@@ -116,4 +116,14 @@ describe('DocumentCompare', () => {
 			'/x/plan',
 		)
 	})
+
+	it('shows the pending text on the other side while there is none yet', () => {
+		const el = render({ original, delivered: null, pendingText: 'Not committed yet.' })
+		const panes = el.querySelectorAll('.document-compare__pane')
+		expect(panes).toHaveLength(2)
+		expect(panes[0].querySelector('.viewer').dataset.viewer).toBe('PdfViewer')
+		expect(panes[1].querySelector('.viewer')).toBeNull()
+		expect(panes[1].querySelector('[data-testid="document-compare-pending"]').textContent.trim()).toBe('Not committed yet.')
+		expect(panes[1].querySelector('.document-compare__download')).toBeNull()
+	})
 })
