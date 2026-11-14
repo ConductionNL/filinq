@@ -224,13 +224,7 @@ class TemplatesLeafProvider implements IntegrationProvider {
 	public function list(string $register, string $schema, string $objectId, array $filters=[]): array {
 		$rows = [];
 		foreach ($this->templates->listForObject(register: $register, schema: $schema) as $template) {
-			$template = (array) $template;
-			$rows[] = [
-				'id' => (string) ($template['id'] ?? $template['uuid'] ?? ''),
-				'name' => (string) ($template['name'] ?? ''),
-				'format' => (string) ($template['format'] ?? ''),
-				'description' => (string) ($template['description'] ?? ''),
-			];
+			$rows[] = TemplateLeafRow::fromTemplate(template: $template);
 		}
 
 		return $rows;

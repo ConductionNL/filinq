@@ -9,7 +9,8 @@
 ## 2. Leaves
 
 - [x] 2.1 Add `lib/Integration/TemplatesLeafProvider.php` (app-local, `list` only) and the `RegisterLeafProvidersEvent` listener (REQ-TMPL-14)
-- [ ] 2.2 Add `src/integrations/generateDocumentLeaf.js` with widget and tab under id `filinq-generate-document`, plus the PHP descriptor (REQ-TMPL-15)
+- [x] 2.2 Add `src/integrations/generateDocumentLeaf.js` with widget and tab under id `filinq-generate-document`, plus the PHP descriptor (REQ-TMPL-15)
+  - Built as `src/integrations/registerGenerateDocumentLeaf.js` + `CnFilinqGenerateDocumentWidget.vue`, following the app's other leaves (mount render mode, surfaces `detail-page` and `single-entity`, which are the widget and the tab), and `RegisterGenerateDocumentLeafListener` as the PHP half. The widget lists the templates from `GET /api/templates/for-object` (the same rows as the `filinq-templates` provider, through `TemplateLeafRow`) and generates the chosen one through `POST /api/documents/generate` with the host object as the data source, stored as a file (`output.mode: files`). Tests: `TemplatesControllerForObjectTest`, `MountedLeafListenersTest`, `tests/vitest/generateDocumentLeaf.spec.js`, the leaf registration golden.
 - [ ] 2.3 Seed the generated document with `sourceObject` and place it in the host folder
 
 ## 3. Quality

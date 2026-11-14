@@ -37,6 +37,7 @@ use PHPUnit\Framework\TestCase;
  * @link     https://www.filinq.app
  *
  * @covers \OCA\Filinq\Integration\TemplatesLeafProvider
+ * @uses   \OCA\Filinq\Integration\TemplateLeafRow
  */
 class TemplatesLeafProviderTest extends TestCase {
 

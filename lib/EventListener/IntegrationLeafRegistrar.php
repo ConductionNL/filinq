@@ -88,6 +88,11 @@ class IntegrationLeafRegistrar {
 
 		$context->registerEventListener(
 			event: self::LEAF_EVENT,
+			listener: RegisterGenerateDocumentLeafListener::class
+		);
+
+		$context->registerEventListener(
+			event: self::LEAF_EVENT,
 			listener: RegisterDownloadAllFilesLeafListener::class
 		);
 
