@@ -12,6 +12,9 @@
         "cancelled": [
             "ext-1"
         ],
+        "transitioned": [
+            "req-1"
+        ],
         "logs": [
             [
                 "warning",
@@ -38,21 +41,18 @@
                 "alice"
             ]
         ],
-        "providers": [
-            "active"
-        ],
-        "cancelled": [
-            "ext-1"
-        ],
+        "providers": [],
+        "cancelled": [],
+        "transitioned": [],
         "logs": [
             [
                 "warning",
-                "[Filinq] signing cancellation cancelled",
+                "[Filinq] signing cancellation already-cancelled",
                 {
                     "app": "filinq",
                     "actor": "alice",
                     "requestId": "req-1",
-                    "outcome": "cancelled",
+                    "outcome": "already-cancelled",
                     "detail": ""
                 }
             ]
@@ -75,6 +75,9 @@
         ],
         "cancelled": [
             "ext-1"
+        ],
+        "transitioned": [
+            "req-1"
         ],
         "logs": [
             [
@@ -104,6 +107,7 @@
         ],
         "providers": [],
         "cancelled": [],
+        "transitioned": [],
         "logs": [
             [
                 "warning",
@@ -118,7 +122,7 @@
             ]
         ],
         "thrown": [
-            "RuntimeException",
+            "OCA\\Filinq\\Exception\\SigningCancellationRefusedException",
             "Only the person who created this signing request can withdraw it: alice. Administrators cannot withdraw it on their behalf.",
             null
         ]
@@ -132,6 +136,7 @@
         ],
         "providers": [],
         "cancelled": [],
+        "transitioned": [],
         "logs": [
             [
                 "warning",
@@ -146,7 +151,7 @@
             ]
         ],
         "thrown": [
-            "RuntimeException",
+            "OCA\\Filinq\\Exception\\SigningCancellationRefusedException",
             "Only the person who created this signing request can withdraw it.",
             null
         ]
@@ -160,6 +165,7 @@
         ],
         "providers": [],
         "cancelled": [],
+        "transitioned": [],
         "logs": [
             [
                 "warning",
@@ -174,7 +180,7 @@
             ]
         ],
         "thrown": [
-            "RuntimeException",
+            "OCA\\Filinq\\Exception\\SigningCancellationRefusedException",
             "Only the person who created this signing request can withdraw it.",
             null
         ]
@@ -188,6 +194,7 @@
         ],
         "providers": [],
         "cancelled": [],
+        "transitioned": [],
         "logs": [
             [
                 "warning",
@@ -202,7 +209,7 @@
             ]
         ],
         "thrown": [
-            "RuntimeException",
+            "OCA\\Filinq\\Exception\\SigningCancellationRefusedException",
             "Only the person who created this signing request can withdraw it.",
             null
         ]
@@ -216,6 +223,7 @@
         ],
         "providers": [],
         "cancelled": [],
+        "transitioned": [],
         "logs": [
             [
                 "warning",
@@ -230,7 +238,7 @@
             ]
         ],
         "thrown": [
-            "RuntimeException",
+            "OCA\\Filinq\\Exception\\SigningCancellationRefusedException",
             "Only the person who created this signing request can withdraw it.",
             null
         ]
@@ -244,6 +252,7 @@
         ],
         "providers": [],
         "cancelled": [],
+        "transitioned": [],
         "logs": [],
         "thrown": [
             "RuntimeException",
@@ -260,10 +269,23 @@
         ],
         "providers": [],
         "cancelled": [],
-        "logs": [],
+        "transitioned": [],
+        "logs": [
+            [
+                "warning",
+                "[Filinq] signing cancellation refused-final-state",
+                {
+                    "app": "filinq",
+                    "actor": "alice",
+                    "requestId": "req-1",
+                    "outcome": "refused-final-state",
+                    "detail": ""
+                }
+            ]
+        ],
         "thrown": [
-            "RuntimeException",
-            "This signing request has no provider reference, so it cannot be withdrawn at the provider.",
+            "OCA\\Filinq\\Exception\\SigningCancellationRefusedException",
+            "This signing request has no status and can no longer be withdrawn.",
             null
         ]
     },
@@ -280,6 +302,7 @@
         "cancelled": [
             "ext-1"
         ],
+        "transitioned": [],
         "logs": [
             [
                 "warning",
@@ -312,6 +335,7 @@
         "cancelled": [
             "ext-1"
         ],
+        "transitioned": [],
         "logs": [
             [
                 "warning",
@@ -346,6 +370,9 @@
         ],
         "cancelled": [
             "ext-9"
+        ],
+        "transitioned": [
+            "req-1"
         ],
         "logs": [
             [

@@ -25,8 +25,8 @@ import { go } from './_helpers.ts'
 const PublicationsPage = 'publications/pub-1'
 
 const CATEGORIES = [
-	{ code: 'c_139c6280', label: 'Wetten en algemeen verbindende voorschriften' },
-	{ code: 'c_8c840238', label: 'Adviezen' },
+	{ code: 'infocat001', label: 'Wetten en algemeen verbindende voorschriften' },
+	{ code: 'infocat009', label: 'Adviezen' },
 ]
 
 /**
@@ -83,7 +83,7 @@ test.describe('woo publications page', () => {
 		const select = page.getByLabel('Information category')
 		await expect(select).toHaveJSProperty('tagName', 'SELECT')
 		await expect(select.locator('option')).toHaveCount(CATEGORIES.length + 1)
-		await select.selectOption('c_8c840238')
+		await select.selectOption('infocat009')
 		await expect(
 			page.getByRole('button', { name: 'Hand off for publication' }),
 		).toBeEnabled()
@@ -93,7 +93,7 @@ test.describe('woo publications page', () => {
 		page,
 	}) => {
 		// @e2e openspec/specs/woo-publicatie-pipeline/spec.md#endpoint-absent
-		await withRecord(page, { ...ready, wooCategory: 'c_8c840238' }, false)
+		await withRecord(page, { ...ready, wooCategory: 'infocat009' }, false)
 		await go(page, PublicationsPage)
 		await expect(page.getByText('OpenCatalogi is not installed')).toBeVisible()
 		await expect(
@@ -105,7 +105,7 @@ test.describe('woo publications page', () => {
 		// @e2e openspec/specs/woo-publicatie-pipeline/spec.md#empty-reason-is-refused
 		await withRecord(page, {
 			...ready,
-			wooCategory: 'c_8c840238',
+			wooCategory: 'infocat009',
 			status: 'published',
 		})
 		await go(page, PublicationsPage)

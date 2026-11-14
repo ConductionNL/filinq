@@ -27,6 +27,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
+import { effectiveManifest } from '../vitest/support/effectiveManifest.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = path.resolve(__dirname, '../..')
@@ -387,9 +388,7 @@ function findShadowedRoutes(manifest) {
 // ---------------------------------------------------------------------------
 
 describe('reachability guard — current repo state', () => {
-	const manifest = JSON.parse(
-		fs.readFileSync(path.join(SRC_DIR, 'manifest.json'), 'utf8'),
-	)
+	const manifest = effectiveManifest()
 	const registryText = fs.readFileSync(path.join(SRC_DIR, 'registry.js'), 'utf8')
 	const registryEntries = parseRegistrySource(registryText, SRC_DIR)
 	const reachableSet = buildReachableSet(ROOT_FILES)
