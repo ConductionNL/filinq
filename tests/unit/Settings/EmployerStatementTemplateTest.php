@@ -164,4 +164,31 @@ class EmployerStatementTemplateTest extends TestCase {
 		$this->assertStringNotContainsString('123456782', $html);
 
 	}//end testAFixedTermContractWithMissingItemsSaysNotStated()
+
+	/**
+	 * The name and description carry a Dutch and an English form through the
+	 * template's translatable fields; the statement itself stays Dutch.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/templates-employer-statement/specs/hr-document-templates/spec.md
+	 */
+	public function testTheNameAndDescriptionHaveADutchAndAnEnglishForm(): void {
+		$register = json_decode((string)file_get_contents(__DIR__ . '/../../../lib/Settings/filinq_register.json'), true);
+		$properties = $register['components']['schemas']['template']['properties'];
+		$seed = $this->seed();
+
+		foreach (['name', 'description'] as $field) {
+			$this->assertTrue($properties[$field]['translatable'] ?? false, $field . ' is translatable on the schema');
+			$this->assertIsArray($seed[$field], $field . ' is language-keyed');
+			$this->assertSame(['nl', 'en'], array_keys($seed[$field]));
+			$this->assertNotSame($seed[$field]['nl'], $seed[$field]['en'], 'the English form is written out, not copied');
+		}
+
+		$this->assertSame('Werkgeversverklaring (standaard)', $seed['name']['nl']);
+		$this->assertSame('Employer statement (standard)', $seed['name']['en']);
+		$this->assertIsString($seed['content'], 'the statement text stays Dutch only');
+		$this->assertStringContainsString('Werkgeversverklaring', $seed['content']);
+
+	}//end testTheNameAndDescriptionHaveADutchAndAnEnglishForm()
 }//end class

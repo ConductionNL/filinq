@@ -6,7 +6,7 @@
 
 - [x] 1.1 Add the `werkgeversverklaring-standaard` template to `components.objects` in `lib/Settings/filinq_register.json` (namespace `hrmq`, category `werkgeversverklaring`, `@self.version` 1.0.0, Dutch content per design D2 and D4) and bump the register version (REQ-TES-001, REQ-TES-002). Verify: `occ maintenance:repair` imports it and `GET api/templates?namespace=hrmq` returns exactly one template.
   - Built: `werkgeversverklaring-standaard` in `components.objects` (`@self.version` 1.0.0, namespace `hrmq`, category `werkgeversverklaring`, A4 portrait), register 8.52.0. Dates are guarded, so a missing one reads "niet opgegeven" rather than today. The `occ maintenance:repair` import check is live work.
-- [ ] 1.2 Give the template name and description an English form through the translatable fields (ADR-005). Verify: `/templates` in English shows the English name; `npm run check:l10n` passes.
+- [x] 1.2 Give the template name and description an English form through the translatable fields (ADR-005). Verify: `/templates` in English shows the English name; `npm run check:l10n` passes. (Done as language-keyed `nl`/`en` maps on the seed; `EmployerStatementTemplateTest::testTheNameAndDescriptionHaveADutchAndAnEnglishForm`. The `/templates` check in English is a live check.)
 
 ## 2. Tests
 

@@ -11,6 +11,10 @@ humaniq looks for templates in namespace `hrmq` whose category is `werkgeversver
 
 An organisation that keeps its own variant can instead set humaniq's template id, which humaniq reads first.
 
+## Language
+
+The statement itself is Dutch, because it goes to Dutch lenders and landlords. The template's name and description have a Dutch and an English form, so `/templates` lists it as "Employer statement (standard)" for someone working in English and as "Werkgeversverklaring (standaard)" in Dutch.
+
 ## What it merges
 
 | From | Fields |
