@@ -1,10 +1,7 @@
-/**
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- */
 OC.L10N.register(
     "filinq",
     {
+        "Formatting": "Formatting",
         "Related records for tables (listRefs, JSON)": "Related records for tables (listRefs, JSON)",
         "The related records are not valid JSON.": "The related records are not valid JSON.",
         "Marketplace": "Marketplace",

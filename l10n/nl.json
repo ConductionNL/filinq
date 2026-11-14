@@ -1,5 +1,6 @@
 {
     "translations": {
+        "Formatting": "Opmaak",
         "Related records for tables (listRefs, JSON)": "Gerelateerde records voor tabellen (listRefs, JSON)",
         "The related records are not valid JSON.": "De gerelateerde records zijn geen geldige JSON.",
         "Original": "Origineel",

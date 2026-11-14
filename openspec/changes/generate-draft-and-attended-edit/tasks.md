@@ -16,7 +16,8 @@
 
 ## 3. Screens
 
-- [ ] 3.1 Move the editing area of `TemplateDetail.vue:162-187` into `src/components/HtmlDocumentEditor.vue` and use it from both the template page and the draft editor (D7). Verify: Playwright on `/templates/:id` still edits and saves a template.
+- [x] 3.1 Move the editing area of `TemplateDetail.vue:162-187` into `src/components/HtmlDocumentEditor.vue` and use it from both the template page and the draft editor (D7). Verify: Playwright on `/templates/:id` still edits and saves a template.
+  - Built: `src/components/HtmlDocumentEditor.vue` (toolbar, sanitised contenteditable area, raw-HTML toggle, v-model, a read-only mode and a `toolbarExtra` slot) now used by `TemplateDetail.vue`, which keeps its merge-field and condition buttons in that slot. Jest: `src/components/HtmlDocumentEditor.spec.js`. The Playwright run on `/templates/:id` needs a live instance and is left.
 - [ ] 3.2 Add `src/views/drafts/DraftIndex.vue` (`/drafts`) and `DraftEditor.vue` (`/drafts/:id`) with save, finish and discard, and their pages in `src/manifest.json` (REQ-GDA-001, REQ-GDA-003). Verify: Playwright `tests/e2e/generation-drafts.spec.ts` covers open, edit, finish and resume.
 - [ ] 3.3 Add "Open for editing" beside "Generate letter" on `CorrespondenceIndex.vue`, hidden for a template with `plainLanguage` (REQ-GDA-001, REQ-GDA-005). Verify: Playwright on `/correspondence`.
 - [ ] 3.4 Add "Open for editing" to the wizard's review step and "Save and finish later" to every wizard step, resuming at the saved step (REQ-GDA-003). Verify: Playwright resumes a wizard at question four.
