@@ -82,26 +82,76 @@ class RefusalGroundsResolver {
 	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-one-resolver-reads-the-grounds-from-dossiq-or-from-a-read-only-snapshot-req-grd-001
 	 */
 	public function list(): array {
-		$fromDossiq = $this->fromDossiq();
+		$fromDossiq = $this->fromDossiq(withRetired: false);
 		if ($fromDossiq !== null) {
 			return $fromDossiq;
 		}
 
-		return $this->fromSnapshot();
+		return $this->fromSnapshot(withRetired: false);
 	}//end list()
+
+	/**
+	 * Every ground, retired ones included: from dossiq when it can answer, else from the snapshot.
+	 *
+	 * A decision may cite a ground that has since been retired; this is the
+	 * list such a citation is looked up in.
+	 *
+	 * @return array{source: string, version: string, grounds: list<array<string, mixed>>}
+	 *
+	 * @throws RuntimeException When the snapshot is needed and cannot be read; an empty list is never answered.
+	 *
+	 * @spec openspec/changes/woo-request-workflow
+	 */
+	public function listWithRetired(): array {
+		$fromDossiq = $this->fromDossiq(withRetired: true);
+		if ($fromDossiq !== null) {
+			return $fromDossiq;
+		}
+
+		return $this->fromSnapshot(withRetired: true);
+	}//end listWithRetired()
+
+	/**
+	 * One ground by code, retired ones included, or null when no ground carries it.
+	 *
+	 * @param string $code The code, such as 5.1.2.e.
+	 *
+	 * @return array<string, mixed>|null The ground.
+	 *
+	 * @throws RuntimeException When the snapshot is needed and cannot be read.
+	 *
+	 * @spec openspec/changes/woo-request-workflow
+	 */
+	public function byCode(string $code): ?array {
+		$code = trim($code);
+		foreach ($this->listWithRetired()['grounds'] as $ground) {
+			if (is_array($ground) === true && ($ground['code'] ?? null) === $code) {
+				return $ground;
+			}
+		}
+
+		return null;
+	}//end byCode()
 
 	/**
 	 * dossiq's list, or null when dossiq is absent, disabled or says it cannot read it.
 	 *
+	 * @param bool $withRetired Whether retired grounds are included.
+	 *
 	 * @return array{source: string, version: string, grounds: list<array<string, mixed>>}|null
 	 */
-	private function fromDossiq(): ?array {
+	private function fromDossiq(bool $withRetired): ?array {
 		if ($this->appManager->isEnabledForAnyone('dossiq') === false || class_exists($this->groundsClass) === false) {
 			return null;
 		}
 
 		try {
-			$grounds = $this->container->get($this->groundsClass)->list();
+			$list = $this->container->get($this->groundsClass);
+			if ($withRetired === true) {
+				$grounds = $list->listWithRetired();
+			} else {
+				$grounds = $list->list();
+			}
 		} catch (Throwable $e) {
 			$reason = $e->getMessage();
 			if (is_a($e, self::DOSSIQ_UNAVAILABLE) === false) {
@@ -125,13 +175,15 @@ class RefusalGroundsResolver {
 	}//end fromDossiq()
 
 	/**
-	 * The snapshot's active grounds.
+	 * The snapshot's grounds: the active ones, or all of them with retired ones included.
+	 *
+	 * @param bool $withRetired Whether retired grounds are included.
 	 *
 	 * @return array{source: string, version: string, grounds: list<array<string, mixed>>}
 	 *
 	 * @throws RuntimeException When the snapshot cannot be read or holds no grounds.
 	 */
-	private function fromSnapshot(): array {
+	private function fromSnapshot(bool $withRetired): array {
 		$snapshot = null;
 		if (is_readable($this->snapshotPath) === true) {
 			$raw = file_get_contents($this->snapshotPath);
@@ -147,7 +199,7 @@ class RefusalGroundsResolver {
 		$grounds = array_values(
 			array_filter(
 				$snapshot['grounds'],
-				static fn (mixed $ground): bool => is_array($ground) === true && ($ground['status'] ?? '') === 'active'
+				static fn (mixed $ground): bool => is_array($ground) === true && ($withRetired === true || ($ground['status'] ?? '') === 'active')
 			)
 		);
 		if ($grounds === []) {

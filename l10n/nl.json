@@ -1,5 +1,7 @@
 {
     "translations": {
+        "Data contract": "Datacontract",
+        "The data contract the render data must meet, checked before anything is rendered. `woo-decision` requires data.wooDecision with the request, the decision and its assessed documents, each withheld or partly disclosed document citing a refusal ground. Empty: the template renders whatever data it is given.": "Het datacontract waaraan de gegevens voor het renderen moeten voldoen, gecontroleerd voordat er iets wordt gerenderd. `woo-decision` vereist data.wooDecision met het verzoek, het besluit en de beoordeelde documenten, waarbij elk geweigerd of deels openbaar gemaakt document een weigeringsgrond noemt. Leeg: het sjabloon rendert de gegevens die het krijgt.",
         "Related records for tables (listRefs, JSON)": "Gerelateerde records voor tabellen (listRefs, JSON)",
         "The related records are not valid JSON.": "De gerelateerde records zijn geen geldige JSON.",
         "Original": "Origineel",

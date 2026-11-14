@@ -160,9 +160,10 @@ class DocumentProductionSchemaTest extends TestCase {
 		// 1.4.0 since filinq-configurable-report-templates, which added `slug`
 		// and `tenantId`; 1.4.1 since both moved inside `properties` (see
 		// SchemaSlugIntegrityTest); 1.5.0 since template-merge-preview added
-		// `mergeFields`. An importer skips an unchanged version, so this pin
+		// `mergeFields`; 1.6.0 since woo-request-workflow added `dataContract`.
+		// An importer skips an unchanged version, so this pin
 		// moves whenever the schema actually does.
-		$this->assertSame(expected: '1.5.0', actual: $schemas['template']['version']);
+		$this->assertSame(expected: '1.6.0', actual: $schemas['template']['version']);
 
 		foreach (['templateId', 'requiredStatements', 'source'] as $part) {
 			$this->assertArrayHasKey(
