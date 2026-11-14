@@ -10957,14 +10957,16 @@
                     "ingestSource": {
                         "type": "string",
                         "title": "Arrived through",
-                        "description": "The watched folder, or a re-scan started by hand.",
+                        "description": "The watched folder, a re-scan started by hand, or a mail archive import.",
                         "enum": [
                             "watched-folder",
-                            "manual"
+                            "manual",
+                            "archive-import"
                         ],
                         "x-enum-labels": {
                             "watched-folder": "Watched folder",
-                            "manual": "By hand"
+                            "manual": "By hand",
+                            "archive-import": "Mail archive import"
                         }
                     },
                     "ingestedAt": {

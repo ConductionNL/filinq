@@ -68,7 +68,7 @@ class EmailDocumentSchemaTest extends TestCase {
 		$this->assertSame(['sourceFileRef', 'status', 'ingestedAt'], $schema['required']);
 		$this->assertSame('subject', $schema['configuration']['objectNameField']);
 		$this->assertSame(['received', 'filed', 'failed'], $schema['properties']['status']['enum']);
-		$this->assertSame(['watched-folder', 'manual'], $schema['properties']['ingestSource']['enum']);
+		$this->assertSame(['watched-folder', 'manual', 'archive-import'], $schema['properties']['ingestSource']['enum']);
 		foreach (['pdfFileRef', 'dossierRef', 'fromAddress', 'toAddresses', 'ccAddresses', 'sentAt', 'messageId', 'inReplyTo', 'references', 'threadKey', 'attachmentCount', 'attachmentNames', 'contentHash', 'failureReason'] as $field) {
 			$this->assertArrayHasKey($field, $schema['properties'], $field);
 		}
