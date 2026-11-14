@@ -88,6 +88,10 @@
             "description": "Answers whether the caller maintains custom dictionaries"
         },
         {
+            "name": "office-capabilities",
+            "description": "Answers which office suites have a usable WOPI host"
+        },
+        {
             "name": "document",
             "description": "Controller for document generation endpoints"
         },
@@ -2482,6 +2486,34 @@
                 "responses": {
                     "200": {
                         "description": "`{ canMaintain: bool }`",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/office/capabilities": {
+            "get": {
+                "operationId": "office-capabilities-show",
+                "summary": "Whether WOPI is usable, overall and per suite",
+                "description": "Whether WOPI is usable, overall and per suite.",
+                "tags": [
+                    "office-capabilities"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`{ available: bool, suites: { <name>: { available: bool, configured: bool } } }`",
                         "headers": {
                             "API-Version": {
                                 "$ref": "#/components/headers/API-Version"

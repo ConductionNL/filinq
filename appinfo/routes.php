@@ -191,6 +191,8 @@ $extra = [
         // (custom-dictionary-recognition).
         ['name' => 'customDictionary#index', 'url' => 'api/custom-dictionaries', 'verb' => 'GET'],
         ['name' => 'customDictionaryCapabilities#show', 'url' => 'api/custom-dictionaries/capabilities', 'verb' => 'GET'],
+        // Office suite WOPI availability (office-suite-portability).
+        ['name' => 'officeCapabilities#show', 'url' => 'api/office/capabilities', 'verb' => 'GET'],
         ['name' => 'customDictionary#create', 'url' => 'api/custom-dictionaries', 'verb' => 'POST'],
         ['name' => 'customDictionary#show', 'url' => 'api/custom-dictionaries/{id}', 'verb' => 'GET'],
         ['name' => 'customDictionary#update', 'url' => 'api/custom-dictionaries/{id}', 'verb' => 'PUT'],
