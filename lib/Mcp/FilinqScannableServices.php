@@ -41,11 +41,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Mcp;
 
-use OCA\Filinq\Service\AnonymizationService;
-use OCA\Filinq\Service\CorrespondenceService;
-use OCA\Filinq\Service\Editing\DocumentAgentService;
-use OCA\Filinq\Service\FileListingService;
-use OCA\Filinq\Service\SigningService;
+use OCA\Filinq\Service\McpToolServices;
 use OCA\OpenRegister\Mcp\IMcpScannableServices;
 
 /**
@@ -82,13 +78,7 @@ class FilinqScannableServices implements IMcpScannableServices {
 	 * @spec openspec/changes/hermiq-ai-tooling/specs/filinq-mcp-surface/spec.md#requirement-an-approval-gated-signing-request-initiation-tool-exists-req-ddhat-001
 	 */
 	public function getScannableServiceClasses(): array {
-		return [
-			CorrespondenceService::class,
-			DocumentAgentService::class,
-			FileListingService::class,
-			AnonymizationService::class,
-			SigningService::class,
-		];
+		return McpToolServices::CLASSES;
 
 	}//end getScannableServiceClasses()
 }//end class
