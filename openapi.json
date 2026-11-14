@@ -10540,6 +10540,77 @@
                     }
                 ]
             }
+        },
+        "/bridge/case-system": {
+            "get": {
+                "operationId": "case-system-delivery-index",
+                "summary": "The case-system destinations and the waiting and failed deliveries",
+                "description": "The case-system destinations and the waiting and failed deliveries, for the admin bridge panel. Admin only.",
+                "tags": [
+                    "case-system-delivery"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`destinations` and `deliveries`.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    }
+                }
+            }
+        },
+        "/bridge/destinations": {
+            "post": {
+                "operationId": "case-system-delivery-save-destination",
+                "summary": "Declare or update a case-system destination",
+                "description": "Declare a case-system destination, or update the one named by `id`. A second active destination for the same template or namespace is refused. Admin only.",
+                "tags": [
+                    "case-system-delivery"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The destination as stored.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    }
+                }
+            }
         }
     },
     "components": {

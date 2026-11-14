@@ -33,10 +33,12 @@ use OCP\AppFramework\Http\JSONResponse;
 use OCP\IGroupManager;
 use OCP\IRequest;
 use OCP\IUserSession;
+use InvalidArgumentException;
 use RuntimeException;
 
 /**
- * Puts a failed delivery back in the queue, for admins only.
+ * Lists and declares case-system destinations, lists the waiting and failed
+ * deliveries, and puts a failed delivery back in the queue, for admins only.
  *
  * Fail-closed twice: the route attribute admits admins of Filinq's admin
  * section only, and the method also checks that the caller is signed in (401)
@@ -72,6 +74,53 @@ class CaseSystemDeliveryController extends Controller {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 
 	}//end __construct()
+
+	/**
+	 * GET /api/bridge/case-system
+	 *
+	 * @return JSONResponse 200 with `destinations` and the waiting and failed `deliveries`; 401 or 403.
+	 *
+	 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-deliverys-outcome-is-visible-and-a-failure-can-be-retried-req-gsc-003
+	 */
+	#[AuthorizedAdminSetting(FilinqAdmin::class)]
+	public function index(): JSONResponse {
+		$refusal = $this->refusal();
+		if ($refusal !== null) {
+			return $refusal;
+		}
+
+		return new JSONResponse(
+			[
+				'destinations' => $this->deliveries->listDestinations(),
+				'deliveries' => $this->deliveries->openDeliveries(),
+			]
+		);
+
+	}//end index()
+
+	/**
+	 * POST /api/bridge/destinations
+	 *
+	 * Creates a destination, or updates the one named by `id`.
+	 *
+	 * @return JSONResponse 200 with the destination; 400 naming what is wrong, such as a second active destination; 401 or 403.
+	 *
+	 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-an-admin-declares-where-generated-documents-go-in-the-case-system-req-gsc-001
+	 */
+	#[AuthorizedAdminSetting(FilinqAdmin::class)]
+	public function saveDestination(): JSONResponse {
+		$refusal = $this->refusal();
+		if ($refusal !== null) {
+			return $refusal;
+		}
+
+		try {
+			return new JSONResponse($this->deliveries->saveDestination(input: $this->request->getParams()));
+		} catch (InvalidArgumentException $e) {
+			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_BAD_REQUEST);
+		}
+
+	}//end saveDestination()
 
 	/**
 	 * POST /api/bridge/deliveries/{id}/retry

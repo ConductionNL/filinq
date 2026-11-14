@@ -365,8 +365,11 @@ $extra = [
         ['name' => 'detectionProviderSettings#test', 'url' => 'api/detection-provider/test', 'verb' => 'POST'],
 
         // Case-system deliveries (generate-store-in-case-system REQ-GSC-003):
-        // an admin puts a failed delivery back in the queue. Admin only: the
+        // the admin bridge panel's destinations and open deliveries, and the
+        // retry that puts a failed delivery back in the queue. Admin only: the
         // attribute and an in-method guard both refuse anyone else.
+        ['name' => 'caseSystemDelivery#index', 'url' => 'api/bridge/case-system', 'verb' => 'GET'],
+        ['name' => 'caseSystemDelivery#saveDestination', 'url' => 'api/bridge/destinations', 'verb' => 'POST'],
         ['name' => 'caseSystemDelivery#retry', 'url' => 'api/bridge/deliveries/{id}/retry', 'verb' => 'POST'],
 
         // Signing folder routes (signing-folder-across-cases): everything

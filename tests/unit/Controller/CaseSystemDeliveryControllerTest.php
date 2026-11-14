@@ -53,12 +53,18 @@ class CaseSystemDeliveryControllerTest extends TestCase {
 	 * @param array<string, array<string, mixed>> $deliveries Deliveries by id.
 	 * @param string|null                         $userId     The signed-in user, or null.
 	 * @param bool                                $admin      Whether that user is an admin.
+	 * @param array<int, array<string, mixed>>    $rows       Rows findAll answers, filtered by schema and status.
+	 * @param array<string, mixed>                $params     The request parameters.
 	 *
 	 * @return CaseSystemDeliveryController
 	 */
-	private function controller(array $deliveries, ?string $userId='admin', bool $admin=true): CaseSystemDeliveryController {
+	private function controller(array $deliveries, ?string $userId='admin', bool $admin=true, array $rows=[], array $params=[]): CaseSystemDeliveryController {
 		$this->saved = [];
-		$objects     = $this->getMockBuilder(ObjectService::class)->onlyMethods(['find', 'saveObject'])->getMock();
+		$objects     = $this->getMockBuilder(ObjectService::class)->onlyMethods(['find', 'findAll', 'saveObject'])->getMock();
+		$objects->method('findAll')->willReturnCallback(static function (array $config=[]) use ($rows): array {
+			$filters = $config['filters'];
+			return array_values(array_filter($rows, static fn (array $row): bool => $row['_schema'] === $filters['schema'] && (isset($filters['deliveryStatus']) === false || $row['deliveryStatus'] === $filters['deliveryStatus'])));
+		});
 		$objects->method('find')->willReturnCallback(static fn (string $id='', string $register='', string $schema=''): ?array => ($deliveries[$id] ?? null));
 		$objects->method('saveObject')->willReturnCallback(function (array $object=[], string $register='', string $schema='', ?string $uuid=null): array {
 			$this->saved[] = ['object' => $object, 'uuid' => $uuid, 'schema' => $schema];
@@ -78,8 +84,11 @@ class CaseSystemDeliveryControllerTest extends TestCase {
 		$groups = $this->createMock(IGroupManager::class);
 		$groups->method('isAdmin')->willReturn($admin);
 
+		$request = $this->createMock(IRequest::class);
+		$request->method('getParams')->willReturn($params);
+
 		return new CaseSystemDeliveryController(
-			$this->createMock(IRequest::class),
+			$request,
 			new CaseSystemDeliveryService($resolver),
 			$session,
 			$groups
@@ -87,13 +96,83 @@ class CaseSystemDeliveryControllerTest extends TestCase {
 
 	}//end controller()
 
-	public function testRetryIsGatedByTheAdminSettingAttribute(): void {
-		$attributes = (new ReflectionMethod(CaseSystemDeliveryController::class, 'retry'))->getAttributes(AuthorizedAdminSetting::class);
+	public function testEveryEndpointIsGatedByTheAdminSettingAttribute(): void {
+		foreach (['index', 'saveDestination', 'retry'] as $method) {
+			$attributes = (new ReflectionMethod(CaseSystemDeliveryController::class, $method))->getAttributes(AuthorizedAdminSetting::class);
 
-		$this->assertCount(1, $attributes);
-		$this->assertSame([FilinqAdmin::class], $attributes[0]->getArguments());
+			$this->assertCount(1, $attributes, $method);
+			$this->assertSame([FilinqAdmin::class], $attributes[0]->getArguments(), $method);
+		}
 
-	}//end testRetryIsGatedByTheAdminSettingAttribute()
+	}//end testEveryEndpointIsGatedByTheAdminSettingAttribute()
+
+	public function testThePanelListsDestinationsAndOnlyWaitingAndFailedDeliveries(): void {
+		$rows = [
+			['_schema' => 'caseSystemDestination', 'id' => 'ns', 'templateNamespace' => 'hrmq', 'deliveryStatus' => null],
+			['_schema' => 'caseSystemDelivery', 'id' => 'a', 'deliveryStatus' => 'writeback_failed'],
+			['_schema' => 'caseSystemDelivery', 'id' => 'b', 'deliveryStatus' => 'written_back'],
+			['_schema' => 'caseSystemDelivery', 'id' => 'c', 'deliveryStatus' => 'ready_for_writeback'],
+		];
+
+		$data = $this->controller([], 'admin', true, $rows)->index()->getData();
+
+		$this->assertSame(['ns'], array_column($data['destinations'], 'id'));
+		$this->assertSame(['c', 'a'], array_column($data['deliveries'], 'id'));
+
+	}//end testThePanelListsDestinationsAndOnlyWaitingAndFailedDeliveries()
+
+	public function testANewDestinationIsSavedWithOnlyItsOwnFields(): void {
+		$params = ['templateNamespace' => ' hrmq ', 'sourceId' => 'zgw-delft', 'informatieobjecttype' => 'https://x/iot/1', 'active' => true, 'owner' => 'mallory', '_route' => 'x'];
+
+		$response = $this->controller([], 'admin', true, [], $params)->saveDestination();
+
+		$this->assertSame(200, $response->getStatus());
+		$this->assertCount(1, $this->saved);
+		$this->assertNull($this->saved[0]['uuid']);
+		$this->assertSame('caseSystemDestination', $this->saved[0]['schema']);
+		$this->assertSame(
+			[
+				'templateNamespace' => 'hrmq',
+				'templateId' => '',
+				'sourceId' => 'zgw-delft',
+				'informatieobjecttype' => 'https://x/iot/1',
+				'vertrouwelijkheidaanduiding' => '',
+				'bronorganisatie' => '',
+				'active' => true,
+			],
+			$this->saved[0]['object']
+		);
+
+	}//end testANewDestinationIsSavedWithOnlyItsOwnFields()
+
+	public function testASecondActiveDestinationOrAnIncompleteOneAnswers400(): void {
+		$rows = [['_schema' => 'caseSystemDestination', 'id' => 'ns', 'templateNamespace' => 'hrmq', 'active' => true, 'deliveryStatus' => null]];
+		$cases = [
+			'An active destination for this template already exists.' => ['templateNamespace' => 'hrmq', 'sourceId' => 's', 'active' => true],
+			'A destination names a template or a template namespace.' => ['sourceId' => 's'],
+			'A destination names a bridge source.' => ['templateId' => 'template-1'],
+		];
+
+		foreach ($cases as $message => $params) {
+			$response = $this->controller([], 'admin', true, $rows, $params)->saveDestination();
+
+			$this->assertSame(400, $response->getStatus(), $message);
+			$this->assertSame(['error' => $message], $response->getData());
+			$this->assertSame([], $this->saved);
+		}
+
+	}//end testASecondActiveDestinationOrAnIncompleteOneAnswers400()
+
+	public function testUpdatingTheActiveDestinationItselfIsAllowed(): void {
+		$rows = [['_schema' => 'caseSystemDestination', 'id' => 'ns', 'templateNamespace' => 'hrmq', 'active' => true, 'deliveryStatus' => null]];
+
+		$response = $this->controller([], 'admin', true, $rows, ['id' => 'ns', 'templateNamespace' => 'hrmq', 'sourceId' => 's2', 'active' => true])->saveDestination();
+
+		$this->assertSame(200, $response->getStatus());
+		$this->assertSame('ns', $this->saved[0]['uuid']);
+		$this->assertSame('s2', $this->saved[0]['object']['sourceId']);
+
+	}//end testUpdatingTheActiveDestinationItselfIsAllowed()
 
 	public function testAFailedDeliveryIsWaitingAgainOnTheSameObject(): void {
 		$failed = [
@@ -143,6 +222,9 @@ class CaseSystemDeliveryControllerTest extends TestCase {
 
 		$this->assertSame(401, $this->controller($failed, null)->retry('d')->getStatus());
 		$this->assertSame(403, $this->controller($failed, 'clerk', false)->retry('d')->getStatus());
+		$this->assertSame(403, $this->controller($failed, 'clerk', false)->index()->getStatus());
+		$this->assertSame(403, $this->controller($failed, 'clerk', false, [], ['templateId' => 't', 'sourceId' => 's'])->saveDestination()->getStatus());
+		$this->assertSame(401, $this->controller($failed, null)->index()->getStatus());
 		$this->assertSame([], $this->saved);
 
 	}//end testAnonymousAndNonAdminCallersAreRefusedBeforeAnyRead()

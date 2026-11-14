@@ -2895,7 +2895,27 @@
         "The Nextcloud file id of the reviewed document; one review per file.": "The Nextcloud file id of the reviewed document; one review per file.",
         "The reviewer's note.": "The reviewer's note.",
         "The user who marked the document checked.": "The user who marked the document checked.",
-        "When the reviewer marked the document checked.": "When the reviewer marked the document checked."
+        "When the reviewer marked the document checked.": "When the reviewer marked the document checked.",
+        "A destination for one template wins over one for its namespace.": "A destination for one template wins over one for its namespace.",
+        "Add destination": "Add destination",
+        "Applies to": "Applies to",
+        "Case system": "Case system",
+        "Choose where generated documents go in the case system. Integriq sends them; Filinq keeps track of each delivery.": "Choose where generated documents go in the case system. Integriq sends them; Filinq keeps track of each delivery.",
+        "Could not load the case-system settings": "Could not load the case-system settings",
+        "Could not retry the delivery": "Could not retry the delivery",
+        "Could not save the destination": "Could not save the destination",
+        "Deliveries waiting or failed": "Deliveries waiting or failed",
+        "Destination saved": "Destination saved",
+        "Destinations": "Destinations",
+        "Document type in the case system": "Document type in the case system",
+        "Edit destination": "Edit destination",
+        "Namespace {namespace}": "Namespace {namespace}",
+        "No destinations yet.": "No destinations yet.",
+        "Nothing is waiting for the case system.": "Nothing is waiting for the case system.",
+        "Save destination": "Save destination",
+        "Source organisation (RSIN)": "Source organisation (RSIN)",
+        "Template {template}": "Template {template}",
+        "The delivery is waiting again": "The delivery is waiting again"
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

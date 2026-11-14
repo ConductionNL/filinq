@@ -231,6 +231,98 @@ class CaseSystemDeliveryService {
 	}//end recordGeneration()
 
 	/**
+	 * The fields an admin may set on a destination.
+	 */
+	private const DESTINATION_INPUT = [
+		'templateNamespace',
+		'templateId',
+		'sourceId',
+		'informatieobjecttype',
+		'vertrouwelijkheidaanduiding',
+		'bronorganisatie',
+	];
+
+	/**
+	 * The statuses the bridge panel lists: waiting and failed.
+	 */
+	private const OPEN_STATUSES = [self::READY, self::FAILED];
+
+	/**
+	 * Every declared destination, for the bridge panel.
+	 *
+	 * @return array<int, array<string, mixed>> The destinations.
+	 *
+	 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-an-admin-declares-where-generated-documents-go-in-the-case-system-req-gsc-001
+	 */
+	public function listDestinations(): array {
+		return $this->destinations();
+
+	}//end listDestinations()
+
+	/**
+	 * The waiting and failed deliveries, for the bridge panel.
+	 *
+	 * @return array<int, array<string, mixed>> The deliveries, waiting ones first.
+	 *
+	 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-deliverys-outcome-is-visible-and-a-failure-can-be-retried-req-gsc-003
+	 */
+	public function openDeliveries(): array {
+		$open = [];
+		foreach (self::OPEN_STATUSES as $status) {
+			$rows = $this->rows(schema: self::DELIVERY_SCHEMA, filters: ['deliveryStatus' => $status], limit: self::DESTINATION_LIMIT);
+			$open = array_merge($open, $rows);
+		}
+
+		return $open;
+
+	}//end openDeliveries()
+
+	/**
+	 * Create or update a destination; a second active one for the same template or namespace is refused.
+	 *
+	 * @param array<string, mixed> $input The destination fields, with `id` to update an existing one.
+	 *
+	 * @return array<string, mixed> The destination as stored.
+	 *
+	 * @throws InvalidArgumentException When it names neither a template nor a namespace, has no source,
+	 *                                  or would be a second active destination.
+	 *
+	 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-an-admin-declares-where-generated-documents-go-in-the-case-system-req-gsc-001
+	 */
+	public function saveDestination(array $input): array {
+		$destination = [];
+		foreach (self::DESTINATION_INPUT as $field) {
+			$destination[$field] = trim((string) ($input[$field] ?? ''));
+		}
+
+		$destination['active'] = ($input['active'] ?? false) === true;
+		if ($destination['templateId'] === '' && $destination['templateNamespace'] === '') {
+			throw new InvalidArgumentException('A destination names a template or a template namespace.');
+		}
+
+		if ($destination['sourceId'] === '') {
+			throw new InvalidArgumentException('A destination names a bridge source.');
+		}
+
+		$id = trim((string) ($input['id'] ?? ''));
+		$this->assertSingleActive(destination: $destination + ['id' => $id]);
+		$uuid = null;
+		if ($id !== '') {
+			$uuid = $id;
+		}
+
+		$saved = $this->objects->resolve()->saveObject(
+			object: $destination,
+			register: self::REGISTER,
+			schema: self::DESTINATION_SCHEMA,
+			uuid: $uuid
+		);
+
+		return (self::rowOf(entry: $saved) ?? ($destination + ['id' => $id]));
+
+	}//end saveDestination()
+
+	/**
 	 * Put a failed delivery back in the queue, on the same object (REQ-GSC-003, design D5).
 	 *
 	 * @param string $id The delivery id.
