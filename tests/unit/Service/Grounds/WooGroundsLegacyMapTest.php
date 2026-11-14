@@ -67,7 +67,7 @@ class WooGroundsLegacyMapTest extends TestCase {
 	}//end mapOf()
 
 	/**
-	 * The shipped map holds exactly the 19 Woo slugs of the seed, and every mapped code is in the snapshot.
+	 * The shipped map holds exactly the 19 Woo slugs of the former seed, none of which is still seeded, and every mapped code is in the snapshot.
 	 *
 	 * @return void
 	 */
@@ -86,7 +86,16 @@ class WooGroundsLegacyMapTest extends TestCase {
 		$map = (new WooGroundsLegacyMap())->all();
 
 		$this->assertCount(19, $map);
-		$this->assertSame($seeded, array_keys($map));
+		$this->assertSame(
+			[
+				'art-5-1-1-a', 'art-5-1-1-b', 'art-5-1-1-c', 'art-5-1-1-d', 'art-5-1-1-e',
+				'art-5-1-2-a', 'art-5-1-2-b', 'art-5-1-2-c', 'art-5-1-2-d', 'art-5-1-2-e',
+				'art-5-1-2-f', 'art-5-1-2-g', 'art-5-1-2-h', 'art-5-1-2-i',
+				'art-5-1-4', 'art-5-1-5', 'art-5-1-6', 'art-5-2-1', 'art-5-2-2',
+			],
+			array_keys($map)
+		);
+		$this->assertSame([], array_intersect($seeded, array_keys($map)), 'A retired Woo slug is still seeded');
 		foreach ($map as $slug => $code) {
 			if ($code === WooGroundsLegacyMap::UNMAPPED) {
 				continue;
