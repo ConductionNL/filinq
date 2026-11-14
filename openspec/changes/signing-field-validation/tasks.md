@@ -45,8 +45,18 @@
   the 422 message per field (vitest on `fillInAndSign.js`). The Playwright
   run was not done.
 - 4.1: Dutch and English frontend strings, `@spec` tags and a section in
-  `docs/features/signing-field-placement.md` are done; the screenshot,
-  `composer check:strict` and the coverage measurement are not, so 4.1 stays
-  open.
-- Left open: 4.1 (screenshot and measurements) and 4.2 (filing the
-  openregister and portaliq issues, which a build worker does not do).
+  `docs/features/signing-field-placement.md` are done. Measured on the
+  branch: `npm run check:l10n` OK (every used key in en, nl complete);
+  eslint clean on the touched JS/Vue; php -l, phpcs, phpstan and psalm clean
+  on the touched lib files, phpmd only the findings development already has
+  (SigningService size and complexity, SigningController import); PHPUnit
+  6722 tests, 0 failures; vitest 763 passed. Coverage (pcov) of the new PHP:
+  `FieldValueChecker` 98.8%, `PortalSignAct` and
+  `SigningFieldsRefusedException` 100%, 98.9% together (touched
+  `FieldPlacements`, `FieldPlacementCheck`, `FieldPlacementRenderer` 100%,
+  `SigningFolderService` 95.1%). The dialog screenshot needs a live instance,
+  so 4.1 stays open for it.
+- 4.2: the openregister half is built rather than filed:
+  ConductionNL/openregister#10571 adds `IbanFormat` (schema format `iban`),
+  linked in `proposal.md`. The portaliq row-action inputs are not filed yet.
+- Left open: 4.1 (the screenshot) and 4.2 (the portaliq issue).
