@@ -5,6 +5,10 @@
 OC.L10N.register(
     "filinq",
     {
+        "Withdraw request": "Anfrage zurückziehen",
+        "Withdraw this signing request?": "Diese Signaturanfrage zurückziehen?",
+        "Every signatory loses access, and nobody can sign it any more. This cannot be undone.": "Alle Unterzeichnenden verlieren den Zugriff, und niemand kann sie mehr unterschreiben. Das kann nicht rückgängig gemacht werden.",
+        "The signing request was withdrawn.": "Die Signaturanfrage wurde zurückgezogen.",
         "Original": "Original",
         "All documents in the folder have been anonymized. The anonymized copies are in a separate subfolder next to the originals.": "Alle Dokumente im Ordner wurden anonymisiert. Die anonymisierten Kopien liegen in einem eigenen Unterordner neben den Originalen.",
         "Subfolder for anonymised copies": "Unterordner für anonymisierte Kopien",
