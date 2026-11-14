@@ -17,8 +17,9 @@
 - **acceptance_criteria**:
   - GIVEN a run with three `changed` findings THEN one notification per administrator
   - GIVEN a clean run THEN no notification and the command exits 0
-- [ ] Implement
-- [ ] Test
+- [x] Implement
+- [x] Test
+- Built: `IntegrityScanJob` (daily, trigger `nightly`, one notification per member of `admin` for a run with findings, none for a clean or failed run) and `IntegrityScanNotifier` (counts per kind, link to Filinq's admin section), registered in `info.xml` and `RegistrationBootstrap`; the occ command came with task 1's commit. PHPUnit `IntegrityScanJobTest`, `IntegrityScanNotifierTest`, `IntegrityScanCommandTest`.
 
 ### Task 3: The admin section reads and starts a scan
 - **spec_ref**: `openspec/changes/whole-collection-integrity-scan/specs/document-versions/spec.md#requirement-the-scan-runs-nightly-and-on-demand-and-administrators-see-the-result-req-dis-02`

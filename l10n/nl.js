@@ -1,7 +1,3 @@
-/**
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- */
 OC.L10N.register(
     "filinq",
     {
@@ -2890,7 +2886,9 @@ OC.L10N.register(
         "Records whose file no longer resolves.": "Records waarvan het bestand niet meer te vinden is.",
         "Started at": "Gestart op",
         "What started the run: the nightly job, the occ command or an administrator.": "Wat de controle startte: de nachtelijke taak, het occ-commando of een beheerder.",
-        "When the run started.": "Wanneer de controle begon."
+        "When the run started.": "Wanneer de controle begon.",
+        "Integrity check": "Integriteitscontrole",
+        "The integrity check found %1$s missing, %2$s changed and %3$s orphaned files.": "De integriteitscontrole vond %1$s ontbrekende, %2$s gewijzigde en %3$s verweesde bestanden."
     },
     "nplurals=2; plural=(n != 1);"
 )

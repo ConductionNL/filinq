@@ -108,6 +108,8 @@ Create a [feature request](https://github.com/ConductionNL/filinq/issues/new)
         <job>OCA\Filinq\BackgroundJob\PeriodicDocumentJob</job>
         <job>OCA\Filinq\BackgroundJob\LibreSignCompletionJob</job>
         <job>OCA\Filinq\BackgroundJob\EmailIngestionJob</job>
+        <!-- whole-collection-integrity-scan: nightly, notifies the administrators of findings. -->
+        <job>OCA\Filinq\BackgroundJob\IntegrityScanJob</job>
     </background-jobs>
     <!--
         info.xsd fixes the order of these elements: background-jobs, repair-steps,
