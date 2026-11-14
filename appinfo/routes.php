@@ -356,6 +356,8 @@ $extra = [
         ['name' => 'signerIdentity#callback', 'url' => 'api/signing/identity/callback', 'verb' => 'GET'],
         ['name' => 'signerIdentitySettings#index', 'url' => 'api/settings/signer-identity', 'verb' => 'GET'],
         ['name' => 'signerIdentitySettings#update', 'url' => 'api/settings/signer-identity', 'verb' => 'PUT'],
+        // one-signing-rail-for-the-fleet REQ-DDSRC-004: which apps raise signing requests, admin only.
+        ['name' => 'signingSourcesSettings#index', 'url' => 'api/settings/signing-sources', 'verb' => 'GET'],
 
         // Signing folder routes (signing-folder-across-cases): everything
         // pending for one signer across every record, and the pass that signs

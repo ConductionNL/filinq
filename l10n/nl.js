@@ -1,7 +1,3 @@
-/**
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- */
 OC.L10N.register(
     "filinq",
     {
@@ -2878,7 +2874,13 @@ OC.L10N.register(
         "The value before the change.": "De waarde voor de wijziging.",
         "When the change was made.": "Wanneer de wijziging is gedaan.",
         "Merge fields": "Samenvoegvelden",
-        "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you.": "De velden die het sjabloon invult, met een naam en een herkomst voor mensen: wat een voorbeeld onder Voor je ingevuld toont"
+        "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you.": "De velden die het sjabloon invult, met een naam en een herkomst voor mensen: wat een voorbeeld onder Voor je ingevuld toont",
+        "Apps that request signatures": "Apps die om handtekeningen vragen",
+        "Other apps ask filinq for signatures through one shared rail. These apps have raised signing requests here.": "Andere apps vragen filinq om handtekeningen via één gedeelde route. Deze apps hebben hier ondertekeningsverzoeken gedaan.",
+        "The signing requests could not be counted.": "De ondertekeningsverzoeken konden niet worden geteld.",
+        "No app has raised a signing request yet.": "Nog geen app heeft een ondertekeningsverzoek gedaan.",
+        "App": "App",
+        "Only the first requests were counted; there are more.": "Alleen de eerste verzoeken zijn geteld; er zijn er meer."
     },
     "nplurals=2; plural=(n != 1);"
 )

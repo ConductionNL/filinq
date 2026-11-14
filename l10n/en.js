@@ -1,7 +1,3 @@
-/**
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- */
 OC.L10N.register(
     "filinq",
     {
@@ -2793,7 +2789,13 @@ OC.L10N.register(
         "The value before the change.": "The value before the change.",
         "When the change was made.": "When the change was made.",
         "Merge fields": "Merge fields",
-        "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you.": "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you."
+        "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you.": "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you.",
+        "Apps that request signatures": "Apps that request signatures",
+        "Other apps ask filinq for signatures through one shared rail. These apps have raised signing requests here.": "Other apps ask filinq for signatures through one shared rail. These apps have raised signing requests here.",
+        "The signing requests could not be counted.": "The signing requests could not be counted.",
+        "No app has raised a signing request yet.": "No app has raised a signing request yet.",
+        "App": "App",
+        "Only the first requests were counted; there are more.": "Only the first requests were counted; there are more."
     },
     "nplurals=2; plural=(n != 1);"
 )

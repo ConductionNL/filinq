@@ -228,6 +228,10 @@
             "description": "Reads and writes the `signer_auth_*` settings, for admins only"
         },
         {
+            "description": "Which apps use the signing rail.",
+            "name": "signing-sources-settings"
+        },
+        {
             "name": "signing",
             "description": "Controller for signing-specific endpoints"
         },
@@ -7840,6 +7844,34 @@
                     },
                     "400": {
                         "$ref": "#/components/responses/Problem400"
+                    }
+                }
+            }
+        },
+        "/settings/signing-sources": {
+            "get": {
+                "operationId": "signing-sources-settings-index",
+                "summary": "GET /api/settings/signing-sources",
+                "description": "GET /api/settings/signing-sources",
+                "tags": [
+                    "signing-sources-settings"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The apps that raised signing requests, each with its count, most requests first.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
                     }
                 }
             }

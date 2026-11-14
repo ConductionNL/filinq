@@ -34,9 +34,12 @@
 
 ## 5. The admin surface (REQ-DDSRC-004)
 
-- [ ] 5.1 List source apps and request counts on the signing settings surface.
-- [ ] 5.2 Show the empty case as an empty case, not as an error.
-- [ ] 5.3 Add Dutch and English strings.
+- [x] 5.1 List source apps and request counts on the signing settings surface.
+      Done (2026-11-14): `SigningSourceTally` counts signing requests per `sourceApp` (paged, filinq-internal requests not counted); `GET api/settings/signing-sources` (`SigningSourcesSettingsController`, admin setting only, app names and counts only); `SigningSourcesSettings.vue` in the admin settings. Tests: `SigningSourceTallyTest` (6), `SigningSourcesSettingsControllerTest` (3), `SigningSourcesSettings.spec.js` (4).
+- [x] 5.2 Show the empty case as an empty case, not as an error.
+      Done: no request (or no configured register) answers an empty list and the section says no app has raised one; only a failed load shows an error.
+- [x] 5.3 Add Dutch and English strings.
+      Done: `l10n/en.json` and `l10n/nl.json`, `.js` rebuilt.
 - [ ] 5.4 Add the Playwright spec the requirement names.
 
 ## 6. Verification
