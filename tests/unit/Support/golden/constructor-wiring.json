@@ -12,6 +12,7 @@
         "double OpenRegisterServiceLocator",
         "double ProhibitionPolicyService",
         "double RedactionOutputGuard",
+        null,
         {
             "distinct objects built by the class": 0
         }
@@ -21,6 +22,7 @@
         "double ConfidentialityLabelService",
         "double ContainerInterface",
         "double CustomDictionaryDetectionRunner",
+        "double DetectionProviderResolver",
         "double DocumentAnonymizeRunner",
         "double EntityDetectionService",
         "double FileEntityStatsService",

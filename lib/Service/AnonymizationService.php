@@ -43,6 +43,8 @@ use OCA\Filinq\Exception\DetectionUnavailableException;
 use OCA\Filinq\Exception\ProhibitionGateException;
 use OCA\Filinq\Exception\RedactionNotReviewedException;
 use OCA\Filinq\Kernel\Contracts\AnonymizationServiceInterface;
+use OCA\Filinq\Service\Detection\DetectionProviderResolver;
+use OCA\Filinq\Service\Detection\DetectionRequest;
 use OCA\Filinq\Service\Ocr\OcrExtractionFallback;
 use OCA\Filinq\Service\Redaction\RedactionOutputGuard;
 use OCA\OpenRegister\Mcp\Attribute\McpTool;
@@ -124,6 +126,9 @@ class AnonymizationService implements AnonymizationServiceInterface {
 	 *                                                   once per run: no live detector, no file.
 	 * @param OcrExtractionFallback $ocrFallback Runs OCR on a scan OpenRegister extracted no
 	 *                                           text from, and flags what detection missed.
+	 * @param DetectionProviderResolver|null $detectionResolver The organisation's detection
+	 *                                                          provider; null leaves OpenRegister's
+	 *                                                          detection as the only one.
 	 *
 	 * @return void
 	 *
@@ -142,6 +147,7 @@ class AnonymizationService implements AnonymizationServiceInterface {
 		private readonly RedactionOutputGuard $reviewGuard,
 		private readonly AnonymiserBackendStateClient $backendState,
 		private readonly OcrExtractionFallback $ocrFallback,
+		private readonly ?DetectionProviderResolver $detectionResolver=null,
 	) {
 
 	}//end __construct()
@@ -388,6 +394,15 @@ class AnonymizationService implements AnonymizationServiceInterface {
 			['fileId' => $fileId, 'entityTypes' => $entityTypes]
 		);
 
+		// The organisation's detection provider (llm-entity-detection-provider):
+		// OpenRegister's own detection ran during extraction; an organisation on
+		// the LLM provider gets its entities added here, or an explicit fallback
+		// warning when it could not run. Before the read-back below, so the LLM
+		// relations are included.
+		$providerFields = $this->runDetectionProvider(
+			request: new DetectionRequest(fileId: $fileId, entityTypes: $entityTypes, force: (bool) $force)
+		);
+
 		// Custom-dictionary pass (custom-dictionary-recognition, design.md
 		// §D3): runs after OR extraction and before the entities are read
 		// back below, so freshly-written CUSTOM_DICTIONARY relations are
@@ -398,9 +413,28 @@ class AnonymizationService implements AnonymizationServiceInterface {
 
 		return array_merge(
 			$this->buildExtractionResult(fileId: $fileId, detected: $detected),
-			$ocrFields
+			$ocrFields,
+			$providerFields
 		);
 	}//end extractAndDetect()
+
+	/**
+	 * Run the organisation's detection provider and return the payload fields naming it.
+	 *
+	 * @param DetectionRequest $request The file, the enabled entity types and whether this is a re-analysis.
+	 *
+	 * @return array<string, mixed> `detectionProvider`, `detectionFellBack`, `detectionWarning`;
+	 *                              empty when no resolver is wired.
+	 *
+	 * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-3.2
+	 */
+	private function runDetectionProvider(DetectionRequest $request): array {
+		if ($this->detectionResolver === null) {
+			return [];
+		}
+
+		return $this->detectionResolver->runForActiveOrganisation(request: $request)->toPayload();
+	}//end runDetectionProvider()
 
 	/**
 	 * Read the file's detected entities back, with proposed bases and the
