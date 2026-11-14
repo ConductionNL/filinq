@@ -63,6 +63,7 @@ import PrintPreview from './components/PrintPreview.vue'
 import DossierFormModal from './dialogs/DossierFormModal.vue'
 import AnonymizationIndex from './views/anonymization/AnonymizationIndex.vue'
 import FolderAnonymizationView from './views/anonymization/FolderAnonymizationView.vue'
+import BatchOperationDetail from './views/batchOperations/BatchOperationDetail.vue'
 import ClassificationPending from './views/classification/ClassificationPending.vue'
 import ComparisonView from './views/comparison/ComparisonView.vue'
 import ConsentDetail from './views/consent/ConsentDetail.vue'
@@ -116,6 +117,7 @@ export default {
 	PrintJobs: { kind: 'page', component: PrintJobs },
 	LegalHolds: { kind: 'page', component: LegalHolds },
 	ContractDetail: { kind: 'page', component: ContractDetail },
+	BatchOperationDetail: { kind: 'page', component: BatchOperationDetail },
 	ContractPipeline: { kind: 'page', component: ContractPipeline },
 	SubjectErasures: { kind: 'page', component: SubjectErasures },
 	EmailIngestion: { kind: 'page', component: EmailIngestion },

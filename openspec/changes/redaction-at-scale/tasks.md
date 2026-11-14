@@ -32,8 +32,9 @@
 
 ## 4. Frontend
 
-- [ ] 4.1 Batch operations view (`CnIndexPage`/`CnDataTable`): active/recent batches, phase, progress %, throughput, throttled indicator; owner-scoped with admin overview (REQ-DDRAS-003)
-- [ ] 4.2 Cancel/resume actions with confirmation dialogs (own modal files) and QA-sample badges linking to the review workbench (REQ-DDRAS-004, REQ-DDRAS-005, REQ-DDRAS-007)
+- [x] 4.1 Batch operations view (`CnIndexPage`/`CnDataTable`): active/recent batches, phase, progress %, throughput, throttled indicator; owner-scoped with admin overview (REQ-DDRAS-003)
+- [x] 4.2 Cancel/resume actions with confirmation dialogs (own modal files) and QA-sample badges linking to the review workbench (REQ-DDRAS-004, REQ-DDRAS-005, REQ-DDRAS-007)
+  - Done: manifest `index` page `BatchOperations` over the `anonymizationBatch` objects (OR's cascade scopes it: owners their own, admins all; progress and documents per hour are written with each batch write by `BatchProgress`), row route to the custom `BatchOperationDetail` (polls status while running; cancel/resume through `src/dialogs/CancelBatchDialog.vue` / `ResumeBatchDialog.vue`; QA samples with their outcome badge). The badge links to the anonymization view with the file id until the workbench view (`anonymization-review-workbench` 3.1) exists.
 
 ## 5. Quality
 

@@ -27,6 +27,13 @@
 			"icon": "Domain",
 			"route": "CustomDictionary",
 			"order": 70
+		},
+		{
+			"id": "BatchOperations",
+			"label": "Batch operations",
+			"icon": "ProgressClock",
+			"route": "BatchOperations",
+			"order": 42
 		}
 	],
 	"pages": [
@@ -69,6 +76,45 @@
 			"title": "My Documents",
 			"component": "MyDocumentsIndex",
 			"_note": "Hosts the in-app file viewer (FileViewerPage renders when fileViewerStore.currentFile is set). The anonymisation widget routes here after upload so the user reviews detected entities next to the document contents."
+		},
+		{
+			"id": "BatchOperations",
+			"route": "/batch-operations",
+			"type": "index",
+			"title": "Batch operations",
+			"config": {
+				"register": "filinq",
+				"schema": "anonymizationBatch",
+				"columns": [
+					"folderPath",
+					"status",
+					"progressPercent",
+					"documentsPerHour",
+					"throttled",
+					"totalFiles",
+					"startedAt"
+				],
+				"rowRoute": "BatchOperationDetail",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"documentationUrl": "https://filinq.conduction.nl",
+				"showTitle": true,
+				"emptyText": "No anonymisation batches yet",
+				"actionToggles": {
+					"showAdd": false
+				}
+			},
+			"_note": "redaction-at-scale REQ-DDRAS-003: OpenRegister lists the anonymizationBatch objects directly, and its cascade decides who sees which: the owner bypass gives a user their own batches, policy-admins and admins see all. Progress and documents per hour are written with every batch write from the batch's own files (BatchProgress). A row opens BatchOperationDetail, which polls the status endpoint and carries cancel, resume and the QA sample."
+		},
+		{
+			"id": "BatchOperationDetail",
+			"route": "/batch-operations/:id",
+			"type": "custom",
+			"title": "Batch",
+			"component": "BatchOperationDetail",
+			"_note": "One batch (REQ-DDRAS-003/004/005/007): phase, progress, throughput and throttled flag polled from GET api/anonymization/batch/{id}/status while it runs; cancel and resume behind their own confirmation dialogs (POST .../cancel, .../resume); the QA-sampled files with their review outcome."
 		}
 	]
 }

@@ -33,6 +33,8 @@ const PAGES_BEFORE = [
 	['AnonymizationReport', '/reports/anonymization'], ['ProducedDocumentsReport', '/reports/documents'],
 	['Intake', '/intake'], ['ClassificationPending', '/classification'], ['FeaturesRoadmap', '/features-roadmap'],
 	['Flows', '/flows'], ['FlowDetail', '/flows/:id'],
+	// Added after the split by redaction-at-scale (REQ-DDRAS-003).
+	['BatchOperations', '/batch-operations'], ['BatchOperationDetail', '/batch-operations/:id'],
 ]
 
 const MENU_BEFORE = [
@@ -43,6 +45,8 @@ const MENU_BEFORE = [
 	['EntitySearch', 59], ['SigningRequests', 60], ['SigningFolder', 65], ['BulkSigningBatches', 66],
 	['SigningEnvelopes', 67], ['CustomDictionary', 70], ['Documentation', 90], ['StoreMenu', 92],
 	['ReportsMenu', 95], ['FeaturesRoadmapMenu', 100], ['FlowsMenu', 96],
+	// Added after the split by redaction-at-scale (REQ-DDRAS-003).
+	['BatchOperations', 42],
 ]
 
 /**
