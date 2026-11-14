@@ -57,7 +57,7 @@ service exists. Acceptance lines are plain bullets, so the checkbox cap holds.
   - GIVEN veraPDF absent, a timeout or unparseable output WHEN the job runs THEN `pdfua-niet-gecontroleerd` and no compliant report.
   - Test: PHPUnit `PdfUaAttachCheckJobTest::testACompliantFileIsTaggedConform`, `::testNoValidatorTagsNotChecked`, `::testTheTagsAreExclusive`. `testNoValidatorTagsNotChecked` must be shown failing on `development` first; paste the line in the PR body.
   - Cross-app: one Playwright step opens the publication in opencatalogi and reads the label in its file list, so the claim "the officer sees it" is tested through the app the officer uses, not through filinq.
-- [ ] 6.3 Readiness reason (REQ-DDPUM-007). Files: `lib/Service/Publication/PublicationReadiness.php`.
+- [x] 6.3 Readiness reason (REQ-DDPUM-007). Files: `lib/Service/Publication/PublicationReadiness.php`.
   - GIVEN a record with a non-compliant or unchecked PDF WHEN evaluated THEN `readinessReasons` names the file; with severity `blocking` THEN `isReady()` is false.
   - Test: PHPUnit `PublicationReadinessTest::testAFailedPdfUaVerdictIsAReason`, `::testABlockingSeverityStopsTheHandOff`, `::testAMissingReportCountsAsNotPassed`.
 - [ ] 6.4 Regenerate as PDF/UA, generated documents only (REQ-DDPUM-008, D5). Files: `lib/Service/VeraPdf/AccessibleRegenerationService.php`, `lib/Controller/ConformanceController.php` (`POST /api/validation/accessibility/{fileId}/regenerate`, IDOR-safe resolution, auth attribute), `appinfo/routes.php`, the conformance card.
