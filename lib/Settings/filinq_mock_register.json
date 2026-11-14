@@ -7678,6 +7678,80 @@
         "statusReason": "own_output",
         "triggerEvent": "postCreate",
         "resultSummary": {}
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "mdtoSupplement",
+          "slug": "demostad-vergunning-mdto"
+        },
+        "objectRef": "00000000-0000-0000-0000-000000000011",
+        "objectType": "document",
+        "aggregatieniveau": "archiefstuk",
+        "omschrijving": "Omgevingsvergunning Dorpsstraat 12 (demo)",
+        "taal": "nl",
+        "dekkingInTijdBegin": "2025-02-10",
+        "dekkingInTijdEind": "2025-04-22",
+        "beperkingGebruik": [
+          {
+            "type": "avg-persoonsgegevens",
+            "grondslag": "AVG art. 6 lid 1 sub e",
+            "omschrijving": "Bezwaar van een betrokkene tegen publicatie.",
+            "proposed": true,
+            "source": "consent"
+          }
+        ],
+        "betrokkene": [
+          {
+            "rol": "aanvrager",
+            "naamRef": "00000000-0000-0000-0000-0000000000c1"
+          }
+        ],
+        "proposals": [
+          "dekkingInTijdBegin",
+          "dekkingInTijdEind"
+        ]
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "mdtoSupplement",
+          "slug": "demostad-woo-dossier-mdto"
+        },
+        "objectRef": "00000000-0000-0000-0000-000000000012",
+        "objectType": "dossier",
+        "aggregatieniveau": "dossier",
+        "omschrijving": "Woo-verzoek subsidietoekenningen cultuur 2024 (demo)",
+        "taal": "nl",
+        "dekkingInTijdBegin": "2024-01-15",
+        "dekkingInTijdEind": "2024-12-20",
+        "beperkingGebruik": [
+          {
+            "type": "woo-uitzondering",
+            "grondslag": "Woo art. 5.1 lid 2 sub e",
+            "omschrijving": "Persoonlijke levenssfeer van ontvangers.",
+            "proposed": false,
+            "source": "prohibition"
+          }
+        ],
+        "betrokkene": [],
+        "proposals": []
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "mdtoSupplement",
+          "slug": "demostad-brief-mdto-incompleet"
+        },
+        "objectRef": "00000000-0000-0000-0000-000000000013",
+        "objectType": "document",
+        "aggregatieniveau": "archiefstuk",
+        "taal": "en",
+        "beperkingGebruik": [],
+        "betrokkene": [],
+        "proposals": [
+          "aggregatieniveau"
+        ]
       }
     ]
   }

@@ -5,10 +5,10 @@
 
 ## 1. Register + seed data
 
-- [ ] 1.1 Add the `mdtoSupplement` schema to the document register in `lib/Settings/filinq_register.json` (REQ-DDTMM-002, REQ-DDTMM-020)
+- [x] 1.1 Add the `mdtoSupplement` schema to the document register in `lib/Settings/filinq_register.json` (REQ-DDTMM-002, REQ-DDTMM-020)
   - All properties/enums per design.md D1; `hardValidation: true`; no retention-owned attribute duplicated; no `x-openregister-archival`; register version bump.
 
-- [ ] 1.2 Seed one demo supplement (design.md Seed Data)
+- [x] 1.2 Seed one demo supplement (design.md Seed Data)
   - Nil-UUID `objectRef`; one `avg-persoonsgegevens` beperkingGebruik; validates on import.
 
 ## 2. Backend
