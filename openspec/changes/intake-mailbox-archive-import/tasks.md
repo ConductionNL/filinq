@@ -8,8 +8,8 @@
 
 ## 2. Splitting
 
-- [ ] 2.1 Add `lib/Service/MailArchiveSplitter.php` for MBOX (streamed), ZIP and PST through a probed `readpst` (D1) (REQ-MAI-002). Verify: PHPUnit with a fixture MBOX of five messages including an escaped `>From` line, a ZIP of three `.eml`, and a missing `readpst`.
-- [ ] 2.2 List the archive's folders into `folderMap` for the mapping step (D4) (REQ-MAI-003). Verify: PHPUnit on a fixture with two folders.
+- [x] 2.1 Add `lib/Service/MailArchiveSplitter.php` for MBOX (streamed), ZIP and PST through a probed `readpst` (D1) (REQ-MAI-002). Verify: PHPUnit with a fixture MBOX of five messages including an escaped `>From` line, a ZIP of three `.eml`, and a missing `readpst`.
+- [x] 2.2 List the archive's folders into `folderMap` for the mapping step (D4) (REQ-MAI-003). Verify: PHPUnit on a fixture with two folders.
 
 ## 3. Import
 
