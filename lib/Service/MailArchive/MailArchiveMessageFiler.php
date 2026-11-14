@@ -28,12 +28,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\MailArchive;
 
-use OCA\Filinq\Event\IntakeDocumentReceivedEvent;
-use OCA\Filinq\Event\Support\IntakeArrival;
 use OCA\Filinq\Kernel\Contracts\EmailDocumentRepositoryInterface;
-use OCA\Filinq\Kernel\Contracts\EmailIngestionServiceInterface;
-use OCA\Filinq\Kernel\Contracts\IntakeRepositoryInterface;
-use OCA\Filinq\Kernel\Contracts\IntakeServiceInterface;
 use OCA\Filinq\Service\EmailIngestion\EmailNotFiled;
 use OCA\Filinq\Service\EmailIngestion\EmailThreadHeaders;
 use OCA\Filinq\Service\Support\EmailHandling;
@@ -59,14 +54,15 @@ class MailArchiveMessageFiler {
 
 	public const INGEST_SOURCE = 'archive-import';
 
+	public const REASON_FILING_FAILED = 'filing-failed';
+
 	/**
 	 * Constructor.
 	 *
 	 * @param EmailThreadHeaders               $headers        Reads the Message-ID before anything is written.
 	 * @param EmailHandling                    $handling       Reads and files an email the way email ingestion does.
 	 * @param EmailDocumentRepositoryInterface $emailDocuments The filed emails.
-	 * @param IntakeRepositoryInterface        $intake         The intake inbox, for the duplicate check.
-	 * @param IntakeServiceInterface           $intakeService  Receives a message into the inbox.
+	 * @param MailArchiveInboxDelivery         $inbox          The intake inbox.
 	 * @param MailArchiveWorkspace             $workspace      Writes the message beside the archive.
 	 * @param ITimeFactory                     $clock          The clock.
 	 * @param LoggerInterface                  $logger         The logger.
@@ -77,8 +73,7 @@ class MailArchiveMessageFiler {
 		private readonly EmailThreadHeaders $headers,
 		private readonly EmailHandling $handling,
 		private readonly EmailDocumentRepositoryInterface $emailDocuments,
-		private readonly IntakeRepositoryInterface $intake,
-		private readonly IntakeServiceInterface $intakeService,
+		private readonly MailArchiveInboxDelivery $inbox,
 		private readonly MailArchiveWorkspace $workspace,
 		private readonly ITimeFactory $clock,
 		private readonly LoggerInterface $logger,
@@ -107,17 +102,16 @@ class MailArchiveMessageFiler {
 		$failure['messageId'] = mb_substr($this->headers->read(raw: $raw)['messageId'], 0, 998);
 
 		try {
-			if ($dossier !== '') {
-				$outcome = $this->toDossier(archive: $archive, message: $message, dossier: $dossier, messageId: $failure['messageId']);
-			} else {
-				$outcome = $this->toInbox(archive: $archive, message: $message, messageId: $failure['messageId']);
-			}
+			$outcome = match ($dossier) {
+				'' => $this->toInbox(archive: $archive, message: $message, messageId: $failure['messageId']),
+				default => $this->toDossier(archive: $archive, message: $message, dossier: $dossier, messageId: $failure['messageId']),
+			};
 		} catch (EmailNotFiled $e) {
 			return ['outcome' => self::FAILED, 'failure' => $failure + ['reason' => $e->getMessage()]];
 		} catch (Throwable $e) {
 			$this->logger->warning('[MailArchiveMessageFiler] a message could not be filed', ['name' => $failure['name'], 'exception' => $e->getMessage()]);
 
-			return ['outcome' => self::FAILED, 'failure' => $failure + ['reason' => EmailIngestionServiceInterface::REASON_FILING_FAILED]];
+			return ['outcome' => self::FAILED, 'failure' => $failure + ['reason' => self::REASON_FILING_FAILED]];
 		}
 
 		return ['outcome' => $outcome];
@@ -190,28 +184,18 @@ class MailArchiveMessageFiler {
 			$sourceRef = 'sha256:' . hash('sha256', $message['raw']);
 		}
 
-		if ($this->intake->findBySourceRef(sourceRef: $sourceRef) !== null) {
+		if ($this->inbox->received(sourceRef: $sourceRef) === true) {
 			return self::SKIPPED_DUPLICATE;
 		}
 
 		$staged = $this->workspace->stage(archive: $archive, folder: $message['folder'], name: $message['name'], raw: $message['raw']);
 		try {
 			$fields = $this->handling->reader->read(file: $staged);
+			$this->inbox->deliver(message: $staged, fields: $fields, sourceRef: $sourceRef);
 		} catch (Throwable $e) {
 			$this->removeQuietly(file: $staged);
 			throw $e;
 		}
-
-		$this->intakeService->receiveMessage(
-			message: new IntakeDocumentReceivedEvent(
-				channel: IntakeDocumentReceivedEvent::CHANNEL_MAIL,
-				fileId: (int) $staged->getId(),
-				fileName: $staged->getName(),
-				subject: (string) ($fields['subject'] ?? ''),
-				sender: (string) ($fields['fromAddress'] ?? ''),
-				arrival: new IntakeArrival(sourceRef: $sourceRef, receivedAt: ($fields['sentAt'] ?? null))
-			)
-		);
 
 		return self::TO_INBOX;
 

@@ -139,7 +139,7 @@ class MailArchiveWorkspace {
 			return ['format' => MailArchiveSplitter::SOURCE_DIRECTORY, 'path' => $workDir];
 		}
 
-		if (is_dir($workDir) === false && @mkdir($workDir, 0700, true) === false) {
+		if (is_dir($workDir) === false && mkdir($workDir, 0700, true) === false) {
 			throw new MailArchiveRefused(MailArchiveSplitter::UNREADABLE);
 		}
 
@@ -258,7 +258,9 @@ class MailArchiveWorkspace {
 	 */
 	public function releaseCopies(): void {
 		foreach ($this->copies as $copy) {
-			@unlink($copy);
+			if (is_file($copy) === true) {
+				unlink($copy);
+			}
 		}
 
 		$this->copies = [];
@@ -369,14 +371,14 @@ class MailArchiveWorkspace {
 		);
 		foreach ($iterator as $entry) {
 			if ($entry->isDir() === true) {
-				@rmdir($entry->getPathname());
+				rmdir($entry->getPathname());
 				continue;
 			}
 
-			@unlink($entry->getPathname());
+			unlink($entry->getPathname());
 		}
 
-		@rmdir($path);
+		rmdir($path);
 
 	}//end remove()
 }//end class

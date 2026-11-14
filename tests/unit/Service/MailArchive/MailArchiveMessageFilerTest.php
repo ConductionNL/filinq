@@ -26,6 +26,7 @@ use OCA\Filinq\Kernel\Contracts\IntakeServiceInterface;
 use OCA\Filinq\Service\EmailIngestion\EmailFiling;
 use OCA\Filinq\Service\EmailIngestion\EmailMessageReader;
 use OCA\Filinq\Service\EmailIngestion\EmailThreadHeaders;
+use OCA\Filinq\Service\MailArchive\MailArchiveInboxDelivery;
 use OCA\Filinq\Service\MailArchive\MailArchiveMessageFiler;
 use OCA\Filinq\Service\MailArchive\MailArchiveWorkspace;
 use OCA\Filinq\Service\Support\EmailHandling;
@@ -65,8 +66,7 @@ class MailArchiveMessageFilerTest extends TestCase {
 			headers: new EmailThreadHeaders(),
 			handling: new EmailHandling(reader: $reader, filing: $filing),
 			emailDocuments: $emails,
-			intake: $this->createMock(IntakeRepositoryInterface::class),
-			intakeService: $this->createMock(IntakeServiceInterface::class),
+			inbox: new MailArchiveInboxDelivery(intake: $this->createMock(IntakeRepositoryInterface::class), intakeService: $this->createMock(IntakeServiceInterface::class)),
 			workspace: $workspace,
 			clock: $this->createMock(ITimeFactory::class),
 			logger: $logger

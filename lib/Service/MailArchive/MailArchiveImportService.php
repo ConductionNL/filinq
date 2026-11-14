@@ -297,12 +297,11 @@ class MailArchiveImportService {
 
 		$record = $this->apply(record: $record, archive: $archive, messages: $unit['messages']);
 		$record['cursor'] = $unit['cursor'];
+		$this->workspace->releaseCopies();
 		if ($unit['done'] === true) {
 			$record['status'] = self::STATUS_DONE;
 			$record['finishedAt'] = $this->now();
 			$this->workspace->discard(importKey: $uuid);
-		} else {
-			$this->workspace->releaseCopies();
 		}
 
 		return $this->repository->save(record: $this->keepingACancel(record: $record, uuid: $uuid), uuid: $uuid);

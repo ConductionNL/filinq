@@ -36,6 +36,7 @@ use OCA\Filinq\Service\EmailIngestion\EmailThreadHeaders;
 use OCA\Filinq\Service\IntakeAuthorizationGate;
 use OCA\Filinq\Service\MailArchive\MailArchiveImportRepository;
 use OCA\Filinq\Service\MailArchive\MailArchiveImportService;
+use OCA\Filinq\Service\MailArchive\MailArchiveInboxDelivery;
 use OCA\Filinq\Service\MailArchive\MailArchiveMessageFiler;
 use OCA\Filinq\Service\MailArchive\MailArchiveSettings;
 use OCA\Filinq\Service\MailArchive\MailArchiveSplitter;
@@ -278,8 +279,7 @@ class MailArchiveImportServiceTest extends TestCase {
 				headers: new EmailThreadHeaders(),
 				handling: new EmailHandling(reader: $this->reader(), filing: $this->filing()),
 				emailDocuments: new EmailDocumentRepository(objectResolver: $emailResolver),
-				intake: $this->intakeRepository(),
-				intakeService: $this->intakeService(),
+				inbox: new MailArchiveInboxDelivery(intake: $this->intakeRepository(), intakeService: $this->intakeService()),
 				workspace: $workspace,
 				clock: $clock,
 				logger: $logger
