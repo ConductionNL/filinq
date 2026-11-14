@@ -20,7 +20,9 @@ namespace OCA\Filinq\Controller;
 
 use OCA\Filinq\Exception\VeraPdfException;
 use OCA\Filinq\Kernel\AppIdentity;
+use OCA\Filinq\Service\Validation\AccessibilityChecks;
 use OCA\Filinq\Service\VeraPdf\AccessibilityConformanceService;
+use OCA\Filinq\Service\VeraPdf\AccessibilityConformanceState;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -47,6 +49,7 @@ class AccessibilityConformanceController extends Controller {
 	 * @param IUserSession                    $userSession   The session.
 	 * @param IL10N                           $l10n          Translations.
 	 * @param LoggerInterface                 $logger        The log.
+	 * @param AccessibilityConformanceState   $states        Which accessibility signal is surfaced.
 	 *
 	 * @return void
 	 */
@@ -57,6 +60,7 @@ class AccessibilityConformanceController extends Controller {
 		private readonly IUserSession $userSession,
 		private readonly IL10N $l10n,
 		private readonly LoggerInterface $logger,
+		private readonly AccessibilityConformanceState $states = new AccessibilityConformanceState(),
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 
@@ -110,6 +114,78 @@ class AccessibilityConformanceController extends Controller {
 		return new JSONResponse(['validated' => true, 'report' => $report]);
 
 	}//end check()
+
+	/**
+	 * The accessibility state of a file: its stored PDF/UA-1 report, the
+	 * heuristic findings, and which of the two is surfaced. The validator's
+	 * verdict wins when there is one; without it the heuristics are labelled
+	 * as heuristic. Runs no validation.
+	 *
+	 * @param int $fileId The file id.
+	 *
+	 * @return JSONResponse {report, conformance, heuristicFindings}; 400 for a
+	 *                      file that is not a PDF, 404 for one the caller
+	 *                      cannot open, 500 when the report cannot be read.
+	 *
+	 * @spec openspec/changes/pdfua-verapdf-matterhorn/specs/pdfua-verapdf-matterhorn/spec.md#requirement-validator-verdict-is-the-authoritative-conformance-heuristics-remain-the-floor-req-ddpum-004
+	 */
+	#[NoAdminRequired]
+	public function show(int $fileId): JSONResponse {
+		$file = $this->ownFile(fileId: $fileId);
+		if ($file === null) {
+			return new JSONResponse(['error' => $this->l10n->t('File not found')], Http::STATUS_NOT_FOUND);
+		}
+
+		if ($file->getMimetype() !== 'application/pdf') {
+			return new JSONResponse(['error' => $this->l10n->t('Only a PDF can be checked against the PDF/UA standard.')], Http::STATUS_BAD_REQUEST);
+		}
+
+		try {
+			$report = $this->accessibility->reportFor(fileId: $fileId);
+		} catch (Throwable $e) {
+			$this->logger->error(
+				message: '[AccessibilityConformanceController] the report could not be read',
+				context: ['fileId' => $fileId, 'error' => $e->getMessage()]
+			);
+			return new JSONResponse(
+				['error' => $this->l10n->t('The accessibility report could not be read. Try again later.')],
+				Http::STATUS_INTERNAL_SERVER_ERROR
+			);
+		}
+
+		$heuristic = $this->heuristicFindings(file: $file);
+
+		return new JSONResponse(
+			[
+				'report' => $report,
+				'conformance' => $this->states->resolve(
+					report: $report,
+					heuristicFindings: $heuristic,
+					validatorAvailable: $this->accessibility->isAvailable()
+				),
+				'heuristicFindings' => $heuristic,
+			]
+		);
+
+	}//end show()
+
+	/**
+	 * The heuristic accessibility findings of a file at default severities.
+	 *
+	 * @param File $file The PDF.
+	 *
+	 * @return array<int, array<string, mixed>> The findings; none when the file cannot be read.
+	 */
+	private function heuristicFindings(File $file): array {
+		try {
+			$content = $file->getContent();
+		} catch (Throwable) {
+			return [];
+		}
+
+		return (new AccessibilityChecks())->findings(profile: [], mime: 'application/pdf', content: $content);
+
+	}//end heuristicFindings()
 
 	/**
 	 * The file with this id in the caller's own folder.

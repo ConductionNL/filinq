@@ -15,10 +15,10 @@
 
 ## 3. Backend
 
-- [ ] 3.1 Add `accessibility`-category validator checks to `DocumentValidationService`: `pdfua-conformance-failed`, `accessibility-validator-unavailable` — PDF-only, per-profile opt-in, default `off`, validator-presence-gated, references only; wave-1 heuristic checks untouched (REQ-DDPUM-005)
+- [x] 3.1 Add `accessibility`-category validator checks to `DocumentValidationService`: `pdfua-conformance-failed`, `accessibility-validator-unavailable` — PDF-only, per-profile opt-in, default `off`, validator-presence-gated, references only; wave-1 heuristic checks untouched (REQ-DDPUM-005)
 - [x] 3.2 New accessibility conformance endpoint `POST /api/validation/accessibility/{fileId}` — auth attribute, IDOR-safe user-folder resolution (404, no existence disclosure), persists/updates the `accessibilityConformanceReport` distinct from the PDF/A `conformanceReport` (REQ-DDPUM-002)
 - [x] 3.3 Remediation guidance from failure shape (Filinq-generated → regenerate accessible; imported/mPDF → re-author from accessible source, no retag of imported pages), i18n-keyed; verdict never claims certification (REQ-DDPUM-003)
-- [ ] 3.4 Surface the validator verdict as the authoritative accessibility conformance when available; heuristics remain the labelled floor when absent; heuristic-pass + validator-fail surfaces as fail (REQ-DDPUM-004)
+- [x] 3.4 Surface the validator verdict as the authoritative accessibility conformance when available; heuristics remain the labelled floor when absent; heuristic-pass + validator-fail surfaces as fail (REQ-DDPUM-004)
 
 ## 4. Frontend
 

@@ -10077,6 +10077,52 @@
                         }
                     }
                 ]
+            },
+            "get": {
+                "operationId": "accessibility_conformance-show",
+                "summary": "The accessibility state of a file",
+                "description": "The stored PDF/UA-1 report of a file, its heuristic accessibility findings, and which of the two is surfaced: the validator's verdict when there is one, else the heuristics labelled as heuristic. Runs no validation.",
+                "tags": [
+                    "accessibility-conformance"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{report, conformance: {source, state, validated, validatorAvailable}, heuristicFindings}; 400 for a file that is not a PDF, 404 for one the caller cannot open, 500 when the report cannot be read.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "fileId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The fileId.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
             }
         },
         "/validation/validate": {

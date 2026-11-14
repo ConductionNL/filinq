@@ -48,6 +48,8 @@ use RuntimeException;
  * @covers \OCA\Filinq\Controller\AccessibilityConformanceController
  * @covers \OCA\Filinq\Service\VeraPdf\AccessibilityConformanceService
  * @covers \OCA\Filinq\Service\VeraPdf\AccessibilityConformanceReportRepository
+ * @uses   \OCA\Filinq\Service\VeraPdf\AccessibilityConformanceState
+ * @uses   \OCA\Filinq\Service\Validation\AccessibilityChecks
  */
 class AccessibilityConformanceControllerTest extends TestCase {
 	use SubjectErasureDoubles;
@@ -61,6 +63,7 @@ class AccessibilityConformanceControllerTest extends TestCase {
 	private array $own = [
 		42 => ['application/pdf', "%PDF-1.7\n<< /Creator (Word) >>\n<< /StructTreeRoot 4 0 R >>"],
 		43 => ['text/plain', 'tekst'],
+		44 => ['application/pdf', "%PDF-1.7\n<< /Type /Catalog /StructTreeRoot 5 0 R /MarkInfo << /Marked true >> /Lang (nl-NL) >>\n<< /Title (Besluit) >>\n<pdfuaid:part>1</pdfuaid:part>"],
 	];
 
 	protected function tearDown(): void {
@@ -281,4 +284,50 @@ class AccessibilityConformanceControllerTest extends TestCase {
 		$this->assertSame('The check ran, but its report could not be stored. Try again later.', $response->getData()['error']);
 
 	}//end testAReportThatCannotBeStoredIs500()
+
+	public function testShowSurfacesTheValidatorFailOverAHeuristicPass(): void {
+		putenv('FAKE_VERAPDF_REPORT=pdfua1-not-conformant.json');
+		$this->controller()->check(fileId: 44);
+
+		$response = $this->controller()->show(fileId: 44);
+
+		$this->assertSame(200, $response->getStatus());
+		$data = $response->getData();
+		$this->assertSame([], $data['heuristicFindings'], 'Every heuristic passes.');
+		$this->assertSame(['source' => 'validator', 'state' => 'non-conformant', 'validated' => true, 'validatorAvailable' => true], $data['conformance']);
+		$this->assertFalse($data['report']['compliant']);
+		$this->assertCount(1, $this->storedReports(), 'Show runs no validation.');
+
+	}//end testShowSurfacesTheValidatorFailOverAHeuristicPass()
+
+	public function testShowWithoutAReportLabelsTheHeuristics(): void {
+		$this->config[VeraPdfService::CFG_BINARY_PATH] = '/nonexistent/verapdf';
+
+		$data = $this->controller()->show(fileId: 42)->getData();
+
+		$this->assertNull($data['report']);
+		$this->assertSame(['source' => 'heuristic', 'state' => 'heuristic-issues', 'validated' => false, 'validatorAvailable' => false], $data['conformance']);
+		$this->assertSame(['pdf-not-tagged', 'pdf-language-missing', 'pdf-title-missing'], array_column($data['heuristicFindings'], 'checkId'));
+		$this->assertSame(['heuristic'], array_values(array_unique(array_column($data['heuristicFindings'], 'source'))));
+		$this->assertSame([], $this->storedReports());
+
+	}//end testShowWithoutAReportLabelsTheHeuristics()
+
+	public function testShowRefusesWhatCheckRefuses(): void {
+		$this->assertSame(404, $this->controller()->show(fileId: 99)->getStatus());
+		$this->assertSame(['error' => 'File not found'], $this->controller()->show(fileId: 99)->getData());
+		$this->assertSame(400, $this->controller()->show(fileId: 43)->getStatus());
+
+	}//end testShowRefusesWhatCheckRefuses()
+
+	public function testShowIs500WhenTheReportCannotBeRead(): void {
+		$service = $this->createMock(AccessibilityConformanceService::class);
+		$service->method('reportFor')->willThrowException(new RuntimeException('register down'));
+
+		$response = $this->controller(service: $service)->show(fileId: 42);
+
+		$this->assertSame(500, $response->getStatus());
+		$this->assertSame('The accessibility report could not be read. Try again later.', $response->getData()['error']);
+
+	}//end testShowIs500WhenTheReportCannotBeRead()
 }//end class
