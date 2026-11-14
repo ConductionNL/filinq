@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "filinq demo data",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "description": "Demo data covering every schema this app supplies, offered as the first step of the app's setup walkthrough. Generated from the schemas themselves, so every object satisfies the schema that will validate it."
   },
   "x-openregister": {
@@ -4391,19 +4391,19 @@
         "@self": {
           "register": "filinq",
           "schema": "base",
-          "slug": "base-voorbeeld-name-1-1"
+          "slug": "woo-art-5-1-2-e"
         },
-        "name": "Voorbeeld Name 1",
-        "description": "Voorbeeld Description 1"
+        "name": "Woo art. 5.1.2.e — eerbiediging persoonlijke levenssfeer",
+        "description": "Uitzonderingsgrond voor persoonsgegevens in Woo-publicaties (AVG art. 4/6)."
       },
       {
         "@self": {
           "register": "filinq",
           "schema": "base",
-          "slug": "base-voorbeeld-name-2-2"
+          "slug": "woo-art-5-1-2-i"
         },
-        "name": "Voorbeeld Name 2",
-        "description": "Voorbeeld Description 2"
+        "name": "Woo art. 5.1.2.i — goed functioneren van de overheid",
+        "description": "Uitzonderingsgrond voor informatie waarvan openbaarmaking het goed functioneren van het bestuursorgaan onevenredig schaadt (Woo art. 5.1 lid 2 sub i)."
       },
       {
         "@self": {
@@ -4952,9 +4952,9 @@
           "slug": "publicationconsent-publicationconsent-2-2"
         },
         "entityType": "ORGANIZATION",
-        "entityText": "Voorbeeld Entitytext 2",
+        "entityText": "Gemeente Voorbeeldstad",
         "scope": "entity",
-        "documentId": "Voorbeeld Documentid 2",
+        "documentId": "00000000-0000-0000-0000-000000000000",
         "entityKey": "Voorbeeld Entitykey 2",
         "contactEmail": "voorbeeld1@example.invalid",
         "contactAddress": "Voorbeeld Contactaddress 2",
@@ -4966,20 +4966,23 @@
         "objectionReceivedAt": "2026-03-02T09:00:00+00:00",
         "objectionReason": "Voorbeeld markdown 1",
         "publicationDecision": "anonymize",
-        "legalBasis": "Voorbeeld Legalbasis 2",
-        "notes": "Voorbeeld markdown 1",
+        "legalBasis": "Bestuursorgaan zelf — geen derde-belanghebbende",
+        "notes": "Demo voor de reviewwerkbank: nooit anonimiseren (staande toestemming), met grondslag.",
         "matchRules": [
           {
             "type": "normalized",
-            "value": "Voorbeeld Value 2"
+            "value": "Gemeente Voorbeeldstad"
           }
         ],
-        "validFrom": "2026-03-02T09:00:00+00:00",
-        "validUntil": "2026-03-02T09:00:00+00:00",
+        "validFrom": "2026-01-01T00:00:00+00:00",
+        "validUntil": "2099-12-31T23:59:59+00:00",
         "active": true,
         "consentMethod": "digital_signature",
         "consentDocument": "https://example.invalid/resource/1",
-        "consentScope": "Voorbeeld Consentscope 2"
+        "consentScope": "Voorbeeld Consentscope 2",
+        "bases": [
+          "woo-art-5-1-2-e"
+        ]
       },
       {
         "@self": {
@@ -5023,24 +5026,27 @@
           "schema": "publicationProhibition",
           "slug": "publicationprohibition-publicationprohibition-1-1"
         },
-        "primaryName": "Voorbeeld Primaryname 1",
+        "primaryName": "Beschermde getuige zaak KG ZA 24/123",
         "entityType": "PERSON",
         "matchRules": [
           {
-            "type": "exact",
-            "value": "Voorbeeld Value 1"
+            "type": "normalized",
+            "value": "Beschermde Getuige A"
           }
         ],
-        "reason": "Voorbeeld Reason 1",
+        "reason": "gerechtelijk bevel",
         "active": true,
-        "legalAuthority": "Voorbeeld Legalauthority 1",
-        "caseReference": "Voorbeeld Casereference 1",
+        "legalAuthority": "Rechtbank Den Haag KG ZA 24/123",
+        "caseReference": "KG ZA 24/123",
         "severity": "critical",
         "jurisdiction": "Voorbeeld Jurisdiction 1",
         "addedBy": "Voorbeeld Addedby 1",
-        "validFrom": "2026-03-01T09:00:00+00:00",
-        "validUntil": "2026-03-01T09:00:00+00:00",
-        "notes": "Voorbeeld Notes 1"
+        "validFrom": "2026-01-01T00:00:00+00:00",
+        "validUntil": "2099-12-31T23:59:59+00:00",
+        "notes": "Demo voor de reviewwerkbank: altijd anonimiseren, met grondslag.",
+        "bases": [
+          "woo-art-5-1-2-e"
+        ]
       },
       {
         "@self": {

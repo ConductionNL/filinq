@@ -8,7 +8,7 @@
 - [x] 1.1 Add the `documentReview` schema and the optional `bases` array on `publicationProhibition` and `publicationConsent` to `lib/Settings/filinq_register.json`
   - Additive only; union-merge, never hand-pick; existing objects stay valid without `bases`.
   - `documentReview`: `fileId` (integer, idempotency key), `checkedOn`, `checkedBy`, `entityCountAtCheck`, `manualEntityCount`, `note`.
-- [ ] 1.2 Extend the register seed with workbench demo data (two `base` grondslagen, one prohibition and one standing consent carrying `bases`) per the design.md Seed Data section
+- [x] 1.2 Extend the register seed with workbench demo data (two `base` grondslagen, one prohibition and one standing consent carrying `bases`) per the design.md Seed Data section
   - A clean install demos rule pre-application without manual setup.
 
 ## 2. Backend
