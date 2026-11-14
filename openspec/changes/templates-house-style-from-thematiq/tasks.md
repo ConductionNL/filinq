@@ -25,5 +25,12 @@
   authenticated route (`thematiq.font.serve`), which mPDF cannot fetch, and
   mPDF needs a TTF/OTF file on disk; that needs thematiq to hand filinq the
   file, not a URL. The local run with two token sets was not done.
+  Checked again (c3): thematiq's `FontService` accepts and stores WOFF2
+  only (`FontValidator` refuses anything without the `wOF2` magic), and mPDF
+  reads TTF/OTF only, so even reading the bytes server side through
+  `FontService::readFontBytes()` gives mPDF nothing it can embed. Embedding
+  the uploaded font needs a TTF/OTF from thematiq (a decision there), not
+  more code in filinq; the PDF keeps the family name with DejaVu Sans as
+  the embedded fallback.
 - 3.1: the section is in `docs/features/letter-correspondence-generation.md`;
   the screenshot of a letter is not, so 3.1 stays open.
