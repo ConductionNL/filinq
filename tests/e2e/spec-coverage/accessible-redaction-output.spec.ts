@@ -33,12 +33,12 @@ test.describe('accessible-redaction-output', () => {
 			readinessReasons: [],
 			accessibilityState: 'degraded',
 			officieleTitel: 'Besluit 2025-017',
-			wooCategory: 'c_8c840238',
+			wooCategory: 'infocat009',
 			publicatiedatum: '2026-09-29',
 		}
 		await page.route('**/apps/filinq/api/publications/categories', (route) =>
 			route.fulfill({
-				json: { results: [{ code: 'c_8c840238', label: 'Adviezen' }] },
+				json: { results: [{ code: 'infocat009', label: 'Adviezen' }] },
 			}),
 		)
 		await page.route(
