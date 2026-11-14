@@ -1145,6 +1145,69 @@ class SigningService implements SigningServiceInterface {
 	}//end emitExpiredConclusion()
 
 	/**
+	 * The recipients of a request, in order, with their role and state.
+	 *
+	 * The caller has already been allowed to read the request. The projection
+	 * is an allow-list: no e-mail address, IP address or signature data of a
+	 * co-recipient leaves this method. A record that cannot be read is listed
+	 * as UNREADABLE, so the list keeps every place in the order.
+	 *
+	 * @param array<string, mixed> $request The signing request, as getRequest() returned it.
+	 *
+	 * @return list<array<string, mixed>> The recipients.
+	 *
+	 * @spec openspec/changes/signing-accept-only-recipient/tasks.md#4-screens
+	 */
+	public function recipientsOf(array $request): array {
+		$signerIds = (array)($request['signerIds'] ?? []);
+		if ($signerIds === []) {
+			return [];
+		}
+
+		$objectService = $this->settingsService->getObjectService();
+		['register' => $signerRegister, 'schema' => $signerSchema] = $this->requireSignerRecordBinding();
+
+		$recipients = [];
+		foreach (array_values($signerIds) as $index => $signerId) {
+			$signerId = (string)$signerId;
+			try {
+				$record = $this->toArray(
+					object: $objectService->find(id: $signerId, register: $signerRegister, schema: $signerSchema, _rbac: false)
+				);
+			} catch (\Throwable $e) {
+				$record = [];
+			}
+
+			$accepts = RecipientRole::accepts(recipient: $record);
+			$name    = (string)($record['displayName'] ?? '');
+			if ($name === '') {
+				$name = (string)($record['userId'] ?? '');
+			}
+
+			$at = ($record['signedAt'] ?? '');
+			if ($accepts === true) {
+				$at = ($record['acceptedAt'] ?? '');
+			}
+
+			$role = 'sign';
+			if ($accepts === true) {
+				$role = RecipientRole::ACCEPT;
+			}
+
+			$recipients[] = [
+				'id' => $signerId,
+				'name' => $name,
+				'role' => $role,
+				'status' => (string)($record['status'] ?? 'UNREADABLE'),
+				'order' => (int)($record['order'] ?? $index),
+				'at' => (string)$at,
+			];
+		}//end foreach
+
+		return $recipients;
+	}//end recipientsOf()
+
+	/**
 	 * Normalise an ObjectService result to an array
 	 *
 	 * OpenRegister's ObjectService::saveObject()/find() return an ObjectEntity

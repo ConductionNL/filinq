@@ -33,6 +33,28 @@
 					>: {{ signingStore.signingRequest.provider }}
 				</div>
 			</div>
+			<h3>{{ t('filinq', 'Recipients') }}</h3>
+			<table v-if="recipients.length > 0" class="audit-table">
+				<thead>
+					<tr>
+						<th scope="col">{{ t('filinq', 'Name') }}</th>
+						<th scope="col">{{ t('filinq', 'Role') }}</th>
+						<th scope="col">{{ t('filinq', 'State') }}</th>
+						<th scope="col">{{ t('filinq', 'Signed or accepted at') }}</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr v-for="recipient in recipients" :key="recipient.id">
+						<td>{{ recipient.name }}</td>
+						<td>{{ recipient.role }}</td>
+						<td>{{ recipient.status }}</td>
+						<td>{{ recipient.at }}</td>
+					</tr>
+				</tbody>
+			</table>
+			<p v-else>
+				{{ t('filinq', 'No recipients yet.') }}
+			</p>
 			<SigningEnvelopePanel
 				v-if="signingStore.signingRequest.envelopeRef"
 				:envelopeId="signingStore.signingRequest.envelopeRef"
@@ -108,6 +130,7 @@ import SigningEnvelopePanel from './SigningEnvelopePanel.vue'
 import { stepUpReturn } from '../../services/signerStepUp.js'
 import { recordLeafSidebarMixin } from '../../sidebars/recordSidebar.js'
 import { useSigningStore } from '../../store/modules/signing.js'
+import { recipientRows } from './recipientList.js'
 
 export default {
 	name: 'SigningRequestDetail',
@@ -179,6 +202,17 @@ export default {
 		 */
 		stepUpDone() {
 			return this.returned.status === 'done' && this.returned.signerId !== ''
+		},
+
+		/**
+		 * Who signs and who only accepts, with their state and time (REQ-SAO-001..003).
+		 *
+		 * @return {Array<object>} The recipient rows.
+		 *
+		 * @spec openspec/changes/signing-accept-only-recipient/tasks.md#4-screens
+		 */
+		recipients() {
+			return recipientRows(this.signingStore.signingRequest?.recipients)
 		},
 	},
 

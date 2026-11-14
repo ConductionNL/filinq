@@ -124,6 +124,34 @@ export const useSigningStore = defineStore('signing', {
 			}
 		},
 		/**
+		 * Accept a document as an accept-only recipient, without signing it
+		 * (signing-accept-only-recipient REQ-SAO-002).
+		 *
+		 * @param {string} requestId The signing request.
+		 * @param {string} signerId The caller's recipient record.
+		 * @return {Promise<object|null>} The updated recipient record, or null on failure.
+		 * @spec openspec/changes/signing-accept-only-recipient/tasks.md#4-screens
+		 */
+		async acceptDocument(requestId, signerId) {
+			this.loading = true
+			this.error = null
+			try {
+				const response = await axios.post(
+					generateUrl(
+						`/apps/filinq/api/signing/requests/${requestId}/accept`,
+					),
+					{ signerId },
+				)
+				return response.data
+			} catch (err) {
+				console.error('Failed to accept the document:', err)
+				this.error = err.message
+				return null
+			} finally {
+				this.loading = false
+			}
+		},
+		/**
 		 * Decline a signing request for a given signer with a reason.
 		 *
 		 * @param requestId

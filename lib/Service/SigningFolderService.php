@@ -26,6 +26,7 @@ namespace OCA\Filinq\Service;
 use Exception;
 use OCA\Filinq\Exception\StepUpRequiredException;
 use OCA\Filinq\Kernel\Contracts\SigningFolderServiceInterface;
+use OCA\Filinq\Service\Signing\RecipientRole;
 use RuntimeException;
 
 /**
@@ -266,13 +267,22 @@ class SigningFolderService implements SigningFolderServiceInterface {
 			return null;
 		}
 
-		if ($this->mandateService->maySign(request: $request, userId: $userId) === false) {
+		// Accepting is not signing, so it asks no signing mandate
+		// (signing-accept-only-recipient D2).
+		$role = 'sign';
+		if ($this->actorResolver->recipientRole(signerId: $signerId) === RecipientRole::ACCEPT) {
+			$role = RecipientRole::ACCEPT;
+		}
+
+		if ($role !== RecipientRole::ACCEPT
+			&& $this->mandateService->maySign(request: $request, userId: $userId) === false
+		) {
 			// Outside the mandate the consuming app declared, so absent from
 			// the folder rather than present and unsignable.
 			return null;
 		}
 
-		return $this->project(request: $request, signerId: $signerId);
+		return $this->project(request: $request, signerId: $signerId) + ['role' => $role];
 
 	}//end entryFor()
 

@@ -12,7 +12,7 @@ SPDX-License-Identifier: EUPL-1.2
 			{{
 				t(
 					'filinq',
-					'Everything still waiting for your signature, from every case.',
+					'Everything still waiting for your signature or acceptance, from every case.',
 				)
 			}}
 		</p>
@@ -79,7 +79,22 @@ SPDX-License-Identifier: EUPL-1.2
 				<tbody>
 					<tr v-for="entry in entries" :key="entry.requestId">
 						<td>
+							<!-- An accept-only recipient accepts here; it is
+							     never part of a signing pass (REQ-SAO-002). -->
+							<NcButton
+								v-if="acceptsOnly(entry)"
+								variant="secondary"
+								:disabled="signingStore.loading"
+								:aria-label="
+									t('filinq', 'Accept {document}', {
+										document: entry.documentName,
+									})
+								"
+								@click="acceptEntry(entry)">
+								{{ t('filinq', 'Accept') }}
+							</NcButton>
 							<input
+								v-else
 								type="checkbox"
 								:aria-label="
 									t('filinq', 'Select {document}', {
@@ -110,7 +125,14 @@ SPDX-License-Identifier: EUPL-1.2
 			<h3>{{ t('filinq', 'What the last pass did') }}</h3>
 			<ul>
 				<li v-for="result in results" :key="result.requestId">
-					<span v-if="result.signed">
+					<span v-if="result.accepted">
+						{{
+							t('filinq', 'Accepted: {document}', {
+								document: result.documentName || result.requestId,
+							})
+						}}
+					</span>
+					<span v-else-if="result.signed">
 						{{
 							t('filinq', 'Signed: {document}', {
 								document: result.documentName || result.requestId,
@@ -220,6 +242,48 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * Whether the caller only accepts this document instead of signing it.
+		 *
+		 * @param {object} entry The folder entry.
+		 * @return {boolean}
+		 *
+		 * @spec openspec/changes/signing-accept-only-recipient/tasks.md#4-screens
+		 */
+		acceptsOnly(entry) {
+			return entry?.role === 'accept'
+		},
+
+		/**
+		 * Accept one document as an accept-only recipient, then read the folder again.
+		 *
+		 * @param {object} entry The folder entry.
+		 *
+		 * @spec openspec/changes/signing-accept-only-recipient/tasks.md#4-screens
+		 */
+		async acceptEntry(entry) {
+			const recipient = await this.signingStore.acceptDocument(
+				entry.requestId,
+				entry.signerId,
+			)
+			this.results = recipient
+				? [
+					{
+						requestId: entry.requestId,
+						documentName: entry.documentName,
+						accepted: true,
+					},
+				]
+				: [
+					{
+						requestId: entry.requestId,
+						signed: false,
+						reason: t('filinq', 'Failed to accept the document'),
+					},
+				]
+			await this.signingStore.fetchSigningFolder()
+		},
+
 		/**
 		 * Add or remove one document from the selection.
 		 *

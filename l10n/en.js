@@ -2907,7 +2907,17 @@ OC.L10N.register(
         "The test arrived": "The test arrived",
         "The test did not arrive": "The test did not arrive",
         "Type a name and a URL and pick at least one event": "Type a name and a URL and pick at least one event",
-        "Type a secret so the receiver can check each delivery": "Type a secret so the receiver can check each delivery"
+        "Type a secret so the receiver can check each delivery": "Type a secret so the receiver can check each delivery",
+        "A recipient who only accepts confirms the document without signing it. At least one recipient signs.": "A recipient who only accepts confirms the document without signing it. At least one recipient signs.",
+        "Accept only": "Accept only",
+        "A signing request needs at least one signer": "A signing request needs at least one signer",
+        "Accept {document}": "Accept {document}",
+        "Accepted: {document}": "Accepted: {document}",
+        "Everything still waiting for your signature or acceptance, from every case.": "Everything still waiting for your signature or acceptance, from every case.",
+        "Declined": "Declined",
+        "Recipient {number}": "Recipient {number}",
+        "Signed or accepted at": "Signed or accepted at",
+        "No recipients yet.": "No recipients yet."
     },
     "nplurals=2; plural=(n != 1);"
 )

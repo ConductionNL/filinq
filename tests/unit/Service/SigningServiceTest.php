@@ -2870,6 +2870,90 @@ class SigningServiceTest extends TestCase {
 	}//end serveRows()
 
 	/**
+	 * The detail page's recipient list: every recipient in order, with role,
+	 * state and the time they signed or accepted, and no address, IP or
+	 * signature data of a co-recipient (task 4.2).
+	 *
+	 * @return void
+	 */
+	public function testRecipientsOfListsEachRecipientWithRoleAndState(): void {
+		$rows = self::acceptRows(signerStatus: 'SIGNED', accepterStatus: 'ACCEPTED');
+		$rows['signer-tenant'] += ['displayName' => 'Tenant', 'email' => 'tenant@example.org', 'signedAt' => '2026-11-01T10:00:00+00:00', 'ipAddress' => '10.0.0.1', 'signatureData' => ['consent' => true]];
+		$rows['signer-officer'] += ['acceptedAt' => '2026-11-02T10:00:00+00:00'];
+		$saved = [];
+		$this->serveRows($rows, $saved);
+
+		$recipients = $this->service->recipientsOf(request: $rows['req-sao']);
+
+		$this->assertSame(
+			[
+				['id' => 'signer-tenant', 'name' => 'Tenant', 'role' => 'sign', 'status' => 'SIGNED', 'order' => 0, 'at' => '2026-11-01T10:00:00+00:00'],
+				['id' => 'signer-officer', 'name' => 'alice', 'role' => 'accept', 'status' => 'ACCEPTED', 'order' => 1, 'at' => '2026-11-02T10:00:00+00:00'],
+			],
+			$recipients
+		);
+		$this->assertSame([], $saved, 'listing writes nothing');
+
+	}//end testRecipientsOfListsEachRecipientWithRoleAndState()
+
+	/**
+	 * A recipient record that cannot be read keeps its place as UNREADABLE,
+	 * and a request without recipients lists none.
+	 *
+	 * @return void
+	 */
+	public function testRecipientsOfKeepsAnUnreadableRecordsPlace(): void {
+		$this->objectService->method('find')->willThrowException(new RuntimeException('gone'));
+
+		$this->assertSame(
+			[['id' => 'signer-x', 'name' => '', 'role' => 'sign', 'status' => 'UNREADABLE', 'order' => 0, 'at' => '']],
+			$this->service->recipientsOf(request: ['signerIds' => ['signer-x']])
+		);
+		$this->assertSame([], $this->service->recipientsOf(request: ['signerIds' => []]));
+
+	}//end testRecipientsOfKeepsAnUnreadableRecordsPlace()
+
+	/**
+	 * The actor resolver reads a recipient's role from its record: `accept`
+	 * for an accept-only recipient, `sign` otherwise and when unreadable.
+	 *
+	 * @return void
+	 */
+	public function testTheActorResolverReadsTheRecipientRole(): void {
+		$rows = self::acceptRows(signerStatus: 'PENDING');
+		$saved = [];
+		$this->serveRows($rows, $saved);
+		$resolver = new SigningActorResolver(
+			settingsService: $this->settingsService,
+			config: $this->config,
+			userSession: $this->userSession,
+			request: $this->request
+		);
+
+		$this->assertSame('accept', $resolver->recipientRole(signerId: 'signer-officer'));
+		$this->assertSame('sign', $resolver->recipientRole(signerId: 'signer-tenant'));
+
+	}//end testTheActorResolverReadsTheRecipientRole()
+
+	/**
+	 * An unreadable recipient record reads as `sign`.
+	 *
+	 * @return void
+	 */
+	public function testAnUnreadableRecipientReadsAsSign(): void {
+		$this->objectService->method('find')->willThrowException(new RuntimeException('gone'));
+		$resolver = new SigningActorResolver(
+			settingsService: $this->settingsService,
+			config: $this->config,
+			userSession: $this->userSession,
+			request: $this->request
+		);
+
+		$this->assertSame('sign', $resolver->recipientRole(signerId: 'signer-x'));
+
+	}//end testAnUnreadableRecipientReadsAsSign()
+
+	/**
 	 * The accept-only recipient accepts after the signer signed: ACCEPTED,
 	 * acceptedAt, no signature data, the audit entry ACCEPTED, and the request completes.
 	 *

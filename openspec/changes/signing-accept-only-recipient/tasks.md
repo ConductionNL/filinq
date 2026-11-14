@@ -21,8 +21,10 @@
 
 ## 4. Screens
 
-- [ ] 4.1 Add recipient rows with name, user or e-mail and role to `SigningRequestForm.vue` (D6) (REQ-SAO-001). Verify: Playwright creates a request with a signer and an accept-only recipient and reads both roles on the detail page.
-- [ ] 4.2 Show "Accept" instead of "Sign" on accept-only rows in `SigningFolder.vue`, and add a recipient list with role, state and time to `SigningRequestDetail.vue`, which lists no recipients today (REQ-SAO-001, REQ-SAO-002, REQ-SAO-003). Verify: Playwright as the seeded accepter accepts from the folder and the request then reads completed.
+- [x] 4.1 Add recipient rows with name, user or e-mail and role to `SigningRequestForm.vue` (D6) (REQ-SAO-001). Verify: Playwright creates a request with a signer and an accept-only recipient and reads both roles on the detail page.
+  - Built: each recipient row on `SigningRequestForm.vue` has a Role select (Sign / Accept only); `signerRows.js` sends `role: 'accept'` for an accept-only recipient and refuses to submit without a recipient who signs (`tests/vitest/signerRows.spec.js`). The Playwright check is left for a live run.
+- [x] 4.2 Show "Accept" instead of "Sign" on accept-only rows in `SigningFolder.vue`, and add a recipient list with role, state and time to `SigningRequestDetail.vue`, which lists no recipients today (REQ-SAO-001, REQ-SAO-002, REQ-SAO-003). Verify: Playwright as the seeded accepter accepts from the folder and the request then reads completed.
+  - Built: folder entries carry `role` (`SigningActorResolver::recipientRole()`), an accept-only entry needs no signing mandate and shows an Accept button instead of the sign checkbox (`acceptDocument` store action); `showRequest` returns `recipients` from `SigningService::recipientsOf()` (id, name, role, status, order, time; no address, IP or signature data), listed on `SigningRequestDetail.vue` (`recipientList.js`). Tests: `SigningFolderServiceTest`, `SigningServiceTest::testRecipientsOf*`, `SigningControllerScopeGoldenTest`, `recipientList.spec.js`, `signingFolderStore.spec.js`. The Playwright check is left for a live run.
 
 ## 5. Strings and docs
 

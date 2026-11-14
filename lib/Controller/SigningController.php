@@ -160,6 +160,7 @@ class SigningController extends Controller {
 	 * @NoAdminRequired
 	 *
 	 * @spec openspec/changes/digital-signing-integration/tasks.md#6-1
+	 * @spec openspec/changes/signing-accept-only-recipient/tasks.md#4-screens
 	 */
 	public function showRequest(string $id): JSONResponse {
 		try {
@@ -180,6 +181,9 @@ class SigningController extends Controller {
 			if ($result === null) {
 				return $this->notFoundResponse();
 			}
+
+			// The detail page lists who signs and who accepts (signing-accept-only-recipient 4.2).
+			$result['recipients'] = $this->services->signing->recipientsOf(request: $result);
 
 			return new JSONResponse($result);
 		} catch (Exception $e) {

@@ -3038,7 +3038,17 @@ OC.L10N.register(
         "The test arrived": "De test is aangekomen",
         "The test did not arrive": "De test is niet aangekomen",
         "Type a name and a URL and pick at least one event": "Typ een naam en een URL en kies minstens één gebeurtenis",
-        "Type a secret so the receiver can check each delivery": "Typ een geheim zodat de ontvanger elke bezorging kan controleren"
+        "Type a secret so the receiver can check each delivery": "Typ een geheim zodat de ontvanger elke bezorging kan controleren",
+        "A recipient who only accepts confirms the document without signing it. At least one recipient signs.": "Een ontvanger die alleen accepteert, bevestigt het document zonder het te ondertekenen. Minstens één ontvanger ondertekent.",
+        "Accept only": "Alleen accepteren",
+        "A signing request needs at least one signer": "Een ondertekenverzoek heeft minstens één ondertekenaar nodig",
+        "Accept {document}": "{document} accepteren",
+        "Accepted: {document}": "Geaccepteerd: {document}",
+        "Everything still waiting for your signature or acceptance, from every case.": "Alles wat nog op uw handtekening of acceptatie wacht, uit elke zaak.",
+        "Declined": "Geweigerd",
+        "Recipient {number}": "Ontvanger {number}",
+        "Signed or accepted at": "Ondertekend of geaccepteerd op",
+        "No recipients yet.": "Nog geen ontvangers."
     },
     "nplurals=2; plural=(n != 1);"
 )
