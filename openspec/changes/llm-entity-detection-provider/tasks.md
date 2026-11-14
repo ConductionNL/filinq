@@ -47,4 +47,4 @@
 
 - [ ] 5.3 i18n EN + NL for settings + the fallback warning banner, and documentation `docs/features/llm-entity-detection-provider.md` (ADR-010); run `openspec validate llm-entity-detection-provider --strict`
   - Keys in English; docs cover on-prem/no-cloud positioning, the honest-fallback rule, and the hermiq endpoint dependency.
-  - Partly: EN + NL keys for the settings section, the review notice and the server-side fallback warning (`l10n/en.*`, `l10n/nl.*`), and `docs/features/llm-entity-detection-provider.md`. `openspec validate --strict` was not run here (the CLI is not available in this environment).
+  - Partly: EN + NL keys for the settings section, the review notice and the server-side fallback warning (`l10n/en.*`, `l10n/nl.*`), and `docs/features/llm-entity-detection-provider.md`. `openspec validate llm-entity-detection-provider --strict` (OpenSpec CLI via npx) reports no errors and five warnings that fail strict mode: text above the first `##` section of the spec delta, and four requirement texts over 500 characters (REQ-DDLED-003, -004, -005, -006). Those are spec-wording edits for the change's author, so this box stays open.
