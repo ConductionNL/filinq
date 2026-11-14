@@ -32,6 +32,9 @@ use OCP\AppFramework\Http\Attribute\BruteForceProtection;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\Attribute\PublicPage;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\AppFramework\Http\Template\PublicTemplateResponse;
+use OCP\AppFramework\Http\TemplateResponse;
+use OCP\IL10N;
 use OCP\IRequest;
 use OCP\Security\Bruteforce\IThrottler;
 use Psr\Log\LoggerInterface;
@@ -71,6 +74,7 @@ class PublicVerificationController extends Controller {
 	 * @param SigningVerificationService       $verifier Turns a record into the public verdict.
 	 * @param IThrottler                       $throttler Counts tokens that name nothing.
 	 * @param LoggerInterface                  $logger   Logger.
+	 * @param IL10N                            $l10n     The page title's language.
 	 *
 	 * @return void
 	 */
@@ -81,6 +85,7 @@ class PublicVerificationController extends Controller {
 		private readonly SigningVerificationService $verifier,
 		private readonly IThrottler $throttler,
 		private readonly LoggerInterface $logger,
+		private readonly IL10N $l10n,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 
@@ -128,6 +133,29 @@ class PublicVerificationController extends Controller {
 
 		return new JSONResponse(data: $verdict);
 	}//end verify()
+
+	/**
+	 * GET /apps/filinq/verify/{token}
+	 *
+	 * The public page a QR stamp points at, for a visitor with no account.
+	 * It resolves nothing itself: the page reads the token from its own
+	 * address and asks verify() for the verdict, so every token, known or
+	 * not, gets the same page and the page is no existence oracle.
+	 *
+	 * @return TemplateResponse The public page.
+	 *
+	 * @spec openspec/changes/signature-verification-portal/tasks.md#task-2.3
+	 */
+	#[PublicPage]
+	#[NoCSRFRequired]
+	#[AnonRateLimit(limit: 30, period: 60)]
+	public function page(): TemplateResponse {
+		$response = new PublicTemplateResponse(appName: $this->appName, templateName: 'verify');
+		$response->setHeaderTitle($this->l10n->t('Check a signed document'));
+		$response->setFooterVisible(true);
+
+		return $response;
+	}//end page()
 
 	/**
 	 * Count a token that named nothing against this client.

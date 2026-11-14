@@ -16,7 +16,7 @@
 - [x] 2.2 Add a record-based verify path to `SigningVerificationService` (REQ-DDSVP-001, REQ-DDSVP-002)
   - `verifyByRecord(array $record)` returning tri-state per-signature (`verified`/`unverifiable`/`invalid`) with separate `integrityVerified` and `identityBound` flags; no `userId`/file-read dependency; external `/Type /Sig` reported `unverifiable`, not `invalid`.
 
-- [ ] 2.3 Implement `PublicVerificationController` with `verify/{token}` + `api/verify/{token}` as `#[PublicPage]` (REQ-DDSVP-001, REQ-DDSVP-004)
+- [x] 2.3 Implement `PublicVerificationController` with `verify/{token}` + `api/verify/{token}` as `#[PublicPage]` (REQ-DDSVP-001, REQ-DDSVP-004)
   - `#[PublicPage] #[NoCSRFRequired]` + brute-force/rate-limit keyed by token+IP; unknown/malformed token returns a `status:unknown` body identical in shape to a valid verdict (no existence oracle); serves file name only, no bytes, no download; consumes the waarmerk verification primitive (presence-gated) to include seal status.
 
 - [ ] 2.4 Mint the verification record + stamp the QR on signing/seal completion (REQ-DDSVP-005)
@@ -24,7 +24,7 @@
 
 ## 3. Frontend
 
-- [ ] 3.1 Public portal page registered in the manifest V2 shell (REQ-DDSVP-001, REQ-DDSVP-002)
+- [x] 3.1 (BUILT as its own public entry `filinq-verify` + `templates/verify.php`, served by `PublicVerificationController::page()`: the manifest V2 shell is the signed-in app and cannot load for a visitor with no account; NOT in `src/router/index.js`) Public portal page registered in the manifest V2 shell (REQ-DDSVP-001, REQ-DDSVP-002)
   - Register in `src/manifest.json` + `src/registry.js` (NOT `src/router/index.js`); ADR-012 Cn components, NL Design tokens; renders content-integrity vs signer-identity as distinct guarantees with an explicit "not cryptographically bound" badge while `identityBound` is false; tri-state per-signature chips; audit rollup; waarmerk seal status; optional WebCrypto no-upload re-hash of a locally selected file.
 
 ## 4. Quality

@@ -27,6 +27,8 @@ use OCP\AppFramework\Http\Attribute\AnonRateLimit;
 use OCP\AppFramework\Http\Attribute\BruteForceProtection;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\Attribute\PublicPage;
+use OCP\AppFramework\Http\Template\PublicTemplateResponse;
+use OCP\IL10N;
 use OCP\IRequest;
 use OCP\Security\Bruteforce\IThrottler;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -90,6 +92,8 @@ class PublicVerificationControllerTest extends TestCase {
 		$this->throttler = $this->createMock(IThrottler::class);
 		$this->logger = $this->createMock(LoggerInterface::class);
 
+		$l10n = $this->createMock(IL10N::class);
+		$l10n->method('t')->willReturnCallback(static fn (string $text): string => 'NL:' . $text);
 		$this->controller = new PublicVerificationController(
 			appName: 'filinq',
 			request: $request,
@@ -100,6 +104,7 @@ class PublicVerificationControllerTest extends TestCase {
 			),
 			throttler: $this->throttler,
 			logger: $this->logger,
+			l10n: $l10n,
 		);
 
 	}//end setUp()
@@ -224,6 +229,16 @@ class PublicVerificationControllerTest extends TestCase {
 			['name' => 'publicVerification#verify', 'url' => 'api/verify/{token}', 'verb' => 'GET'],
 			$routes
 		);
+		$this->assertContains(
+			['name' => 'publicVerification#page', 'url' => 'verify/{token}', 'verb' => 'GET'],
+			$routes
+		);
+		$names = array_column($routes, 'name');
+		$this->assertLessThan(
+			array_search('dashboard#catchAll', $names, true),
+			array_search('publicVerification#page', $names, true),
+			'the page route must come before the signed-in catch-all'
+		);
 
 		$info = simplexml_load_file($root . '/appinfo/info.xml');
 		$this->assertNotFalse($info);
@@ -231,4 +246,37 @@ class PublicVerificationControllerTest extends TestCase {
 		$this->assertCount(0, $info->xpath('//default_enable/groups'));
 
 	}//end testThePublicRouteIsReachableWithoutAnAccount()
+
+	/**
+	 * The page is the same public template for every token, resolves nothing and counts nothing.
+	 *
+	 * @return void
+	 */
+	public function testThePageIsOnePublicTemplateForEveryToken(): void {
+		$this->links->expects($this->never())->method('findByToken');
+		$this->throttler->expects($this->never())->method('registerAttempt');
+
+		$response = $this->controller->page();
+
+		$this->assertInstanceOf(PublicTemplateResponse::class, $response);
+		$this->assertSame('verify', $response->getTemplateName());
+		$this->assertSame('filinq', $response->getApp());
+		$this->assertSame('NL:Check a signed document', $response->getHeaderTitle());
+
+	}//end testThePageIsOnePublicTemplateForEveryToken()
+
+	/**
+	 * The page is public, CSRF-free and rate-limited like the endpoint it reads.
+	 *
+	 * @return void
+	 */
+	public function testThePageIsPublicAndRateLimited(): void {
+		$method = new ReflectionMethod(PublicVerificationController::class, 'page');
+		$names = array_map(static fn ($attribute): string => $attribute->getName(), $method->getAttributes());
+
+		$this->assertContains(PublicPage::class, $names);
+		$this->assertContains(NoCSRFRequired::class, $names);
+		$this->assertContains(AnonRateLimit::class, $names);
+
+	}//end testThePageIsPublicAndRateLimited()
 }//end class
