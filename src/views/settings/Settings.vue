@@ -711,11 +711,11 @@
 
 		<EmailIngestionSettings v-if="isAdmin" />
 
-		<!-- Entity detection provider (llm-entity-detection-provider): its own admin endpoint -->
-		<DetectionProviderSettings v-if="isAdmin" />
-
 		<!-- Page layouts (documents-from-a-template REQ-DFT-01): their own endpoints -->
 		<PageLayoutSettings v-if="isAdmin" />
+
+		<!-- Entity detection provider (llm-entity-detection-provider): its own admin endpoint -->
+		<DetectionProviderSettings v-if="isAdmin" />
 
 		<!-- AVG Art. 30 processing-activity register (provided by OpenRegister) -->
 		<NcSettingsSection
