@@ -96,7 +96,7 @@ class ReceivedStampService {
 			$document->AddPage($size['orientation'], [$size['width'], $size['height']]);
 			$document->useTemplate($template);
 			if ($page === 1) {
-				$this->drawStamp(document: $document, width: (float)$size['width'], lines: $this->lines(date: $date, number: $number));
+				$this->drawStamp(document: $document, lines: $this->lines(date: $date, number: $number));
 			}
 		}
 
@@ -178,13 +178,13 @@ class ReceivedStampService {
 	/**
 	 * Draw the bordered stamp in the top right corner of the current page.
 	 *
-	 * @param Fpdi         $document The document.
-	 * @param float        $width    The page width in points.
+	 * @param Fpdi         $document The document, on the page to stamp.
 	 * @param list<string> $lines    The lines.
 	 *
 	 * @return void
 	 */
-	private function drawStamp(Fpdi $document, float $width, array $lines): void {
+	private function drawStamp(Fpdi $document, array $lines): void {
+		$width     = (float)$document->GetPageWidth();
 		$boxWidth  = 150.0;
 		$lineHigh  = 14.0;
 		$margin    = 24.0;

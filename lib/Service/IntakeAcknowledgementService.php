@@ -98,14 +98,14 @@ class IntakeAcknowledgementService {
 			$body = $this->render(template: $template, document: $document);
 			$subject = $this->l10n->t('Acknowledgement of receipt: %s', [(string)($document['subject'] ?? '')]);
 
-			return $this->reachSender(document: $document, subject: $subject, body: $body);
+			return $this->reachSender(document: $document, message: ['subject' => $subject, 'body' => $body]);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				message: '[IntakeAcknowledgementService] the acknowledgement could not be sent',
 				context: ['file' => __FILE__, 'line' => __LINE__, 'uuid' => ($document['uuid'] ?? ''), 'error' => $e->getMessage()]
 			);
 
-			return $this->outcome(status: self::STATUS_FAILED, address: null, reason: $e->getMessage());
+			return $this->outcome(status: self::STATUS_FAILED, details: ['reason' => $e->getMessage()]);
 		}
 	}//end acknowledge()
 
@@ -138,13 +138,13 @@ class IntakeAcknowledgementService {
 	/**
 	 * Reach the sender in the order of design D3.
 	 *
-	 * @param array<string, mixed> $document The intake document.
-	 * @param string               $subject  The subject line.
-	 * @param string               $body     The body.
+	 * @param array<string, mixed>                $document The intake document.
+	 * @param array{subject: string, body: string} $message  The subject line and the body.
 	 *
 	 * @return array<string, mixed> The outcome.
 	 */
-	private function reachSender(array $document, string $subject, string $body): array {
+	private function reachSender(array $document, array $message): array {
+		['subject' => $subject, 'body' => $body] = $message;
 		$parties = $this->reach->notifySenderParties(objectUuid: (string)($document['uuid'] ?? ''), subject: $subject, body: $body);
 		foreach ($parties as $party) {
 			$outcome = (string)($party['outcome'] ?? '');
@@ -160,7 +160,7 @@ class IntakeAcknowledgementService {
 			return $this->fromSendOutcome(outcome: $this->reach->mailAddress(address: $address, subject: $subject, body: $body), address: $address);
 		}
 
-		return $this->outcome(status: self::STATUS_QUEUED_AS_LETTER, address: null, reason: null);
+		return $this->outcome(status: self::STATUS_QUEUED_AS_LETTER);
 	}//end reachSender()
 
 	/**
@@ -173,31 +173,30 @@ class IntakeAcknowledgementService {
 	 */
 	private function fromSendOutcome(string $outcome, ?string $address): array {
 		if (in_array($outcome, self::DISPATCHED, true) === true) {
-			return $this->outcome(status: self::STATUS_SENT, address: $address, reason: null);
+			return $this->outcome(status: self::STATUS_SENT, details: ['address' => $address]);
 		}
 
 		if (in_array($outcome, self::REFUSALS, true) === true) {
-			return $this->outcome(status: self::STATUS_REFUSED, address: null, reason: $outcome);
+			return $this->outcome(status: self::STATUS_REFUSED, details: ['reason' => $outcome]);
 		}
 
-		return $this->outcome(status: self::STATUS_FAILED, address: $address, reason: $outcome);
+		return $this->outcome(status: self::STATUS_FAILED, details: ['address' => $address, 'reason' => $outcome]);
 	}//end fromSendOutcome()
 
 	/**
 	 * One acknowledgement record.
 	 *
-	 * @param string      $status  sent, queued-as-letter, refused or failed.
-	 * @param string|null $address Where it went.
-	 * @param string|null $reason  Why it did not go.
+	 * @param string                                          $status  sent, queued-as-letter, refused or failed.
+	 * @param array{address?: string|null, reason?: string|null} $details Where it went and why it did not go; absent is null.
 	 *
 	 * @return array<string, mixed> status, address, at, reason.
 	 */
-	private function outcome(string $status, ?string $address, ?string $reason): array {
+	private function outcome(string $status, array $details=[]): array {
 		return [
 			'status' => $status,
-			'address' => $address,
+			'address' => ($details['address'] ?? null),
 			'at' => $this->time->getDateTime('now', new \DateTimeZone('UTC'))->format('c'),
-			'reason' => $reason,
+			'reason' => ($details['reason'] ?? null),
 		];
 	}//end outcome()
 }//end class
