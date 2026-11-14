@@ -220,4 +220,21 @@ class DocumentServiceOfficeTemplateTest extends TestCase {
 
 		$this->assertSame(['html' => '<p>Jan</p>', 'warnings' => ['gap']], $this->service->generatePreview(templateId: 't-1', dataRefs: []));
 	}//end testAnOfficePreviewShowsTheFilledText()
+
+	/**
+	 * Filling for a multi-format run resolves the data, fills once and
+	 * stores and logs nothing.
+	 *
+	 * @return void
+	 */
+	public function testFillingAnOfficeTemplateStoresAndLogsNothing(): void {
+		$template = ['id' => 't-1', 'templateType' => 'office', 'sourceFileId' => 5];
+		$this->office->expects($this->once())->method('fill')->with($template, ['aanvrager' => ['naam' => 'Jan']])
+			->willReturn(['docx' => 'FILLED', 'html' => '<p>Jan</p>', 'warnings' => ['gap'], 'fragments' => []]);
+
+		$filled = $this->service->fillOfficeTemplate(template: $template, dataRefs: []);
+
+		$this->assertSame(['docx' => 'FILLED', 'html' => '<p>Jan</p>', 'warnings' => ['gap'], 'fragments' => []], $filled);
+		$this->assertSame([], $this->logged);
+	}//end testFillingAnOfficeTemplateStoresAndLogsNothing()
 }//end class

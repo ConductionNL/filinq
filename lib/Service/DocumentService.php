@@ -612,6 +612,34 @@ class DocumentService implements DocumentServiceInterface {
 	}//end renderPreview()
 
 	/**
+	 * Resolve the data of an office template and fill its DOCX, without
+	 * converting, storing or logging anything: the one fill every format of
+	 * a multi-format run is made from.
+	 *
+	 * @param array<string, mixed> $template The office template.
+	 * @param array                $dataRefs Data references: [{register, schema, id}, ...].
+	 * @param array                $options  Options: adHocData, listRefs.
+	 *
+	 * @return array{docx: string, html: string, warnings: array<int, string>, fragments: array<int, string>}
+	 *
+	 * @throws Exception When no office renderer is wired (501), or the source is missing (404) or unreadable (422).
+	 *
+	 * @spec openspec/changes/office-template-authoring/specs/document-creatie-sjablonen/spec.md
+	 */
+	public function fillOfficeTemplate(array $template, array $dataRefs, array $options = []): array {
+		if ($this->officeRenderer === null) {
+			throw new Exception(message: 'Office templates cannot be rendered on this server', code: 501);
+		}
+
+		$resolved = $this->resolveTemplateData(run: ['dataRefs' => $dataRefs, 'options' => $options]);
+		$filled = $this->officeRenderer->fill(template: $template, data: $resolved['data']);
+		$filled['warnings'] = array_merge($resolved['warnings'], $filled['warnings']);
+
+		return $filled;
+
+	}//end fillOfficeTemplate()
+
+	/**
 	 * Generate documents for multiple objects in a single request.
 	 *
 	 * For batches <= SYNC_BATCH_LIMIT objects processing is synchronous.

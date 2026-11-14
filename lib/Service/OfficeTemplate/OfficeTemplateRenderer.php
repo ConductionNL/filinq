@@ -107,21 +107,37 @@ class OfficeTemplateRenderer {
 	 */
 	public function render(array $template, array $data, string $format, array $options=[]): array {
 		$filled = $this->fill(template: $template, data: $data);
-		$content = match ($format) {
-			'docx' => $filled['docx'],
-			'pdf' => $this->toPdf(docx: $filled['docx'], options: (array) ($options['pdfOptions'] ?? [])),
-			'odf' => $this->libreOffice->convertDocument(bytes: $filled['docx'], fromExtension: 'docx', toExtension: 'odt'),
-			'html' => $this->libreOffice->convertDocument(bytes: $filled['docx'], fromExtension: 'docx', toExtension: 'html'),
-			default => throw new Exception(message: 'Office templates render to docx, pdf, odf or html, not '.$format, code: 400),
-		};
 
 		return [
-			'html' => $this->textHtml(docx: $filled['docx']),
-			'content' => $content,
+			'html' => $filled['html'],
+			'content' => $this->convert(docx: $filled['docx'], format: $format, options: $options),
 			'warnings' => $filled['warnings'],
 			'fragments' => $filled['fragments'],
 		];
 	}//end render()
+
+	/**
+	 * Turn a filled DOCX into an output format.
+	 *
+	 * @param string               $docx    The filled DOCX.
+	 * @param string               $format  docx, pdf, odf or html.
+	 * @param array<string, mixed> $options `pdfOptions.accessible` / `pdfOptions.pdfa` for the PDF.
+	 *
+	 * @return string The output bytes.
+	 *
+	 * @throws Exception With code 400 for another format; the conversion's own failure (503 without LibreOffice).
+	 *
+	 * @spec openspec/changes/office-template-authoring/specs/document-creatie-sjablonen/spec.md
+	 */
+	public function convert(string $docx, string $format, array $options=[]): string {
+		return match ($format) {
+			'docx' => $docx,
+			'pdf' => $this->toPdf(docx: $docx, options: (array) ($options['pdfOptions'] ?? [])),
+			'odf' => $this->libreOffice->convertDocument(bytes: $docx, fromExtension: 'docx', toExtension: 'odt'),
+			'html' => $this->libreOffice->convertDocument(bytes: $docx, fromExtension: 'docx', toExtension: 'html'),
+			default => throw new Exception(message: 'Office templates render to docx, pdf, odf or html, not '.$format, code: 400),
+		};
+	}//end convert()
 
 	/**
 	 * Fill an office template without converting it.
