@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: EUPL-1.2
 // Copyright (C) 2026 Conduction B.V.
 //
-// validate-manifest.js — schema-validates src/manifest.json against the
+// validate-manifest.js — schema-validates src/manifest.json, with the
+// src/manifest.d/ fragments merged onto it, against the
 // @conduction/nextcloud-vue v2 app-manifest schema using Ajv.
 //
 // Usage:
@@ -32,6 +33,9 @@ const path = require('path')
 const REPO_ROOT = path.resolve(__dirname, '..')
 
 const MANIFEST_PATH = path.join(REPO_ROOT, 'src', 'manifest.json')
+
+// The ADR-037 fragments the SPA merges onto the base (src/manifestFragments.js).
+const FRAGMENTS_DIR = path.join(REPO_ROOT, 'src', 'manifest.d')
 
 // THE INSTALLED SCHEMA WINS OVER THE VENDORED COPY.
 //
@@ -179,13 +183,32 @@ function structuralLint(manifest) {
 	return errors
 }
 
+// The base with every fragment's pages and menu entries appended, in file-name
+// order, as buildManifest assembles them. Fragments carry only `pages` and
+// `menu`; a page or menu id declared twice is left for the schema's and the
+// structural lint's duplicate checks to report rather than merged away here.
+function withFragments(base) {
+	if (!fs.existsSync(FRAGMENTS_DIR)) {
+		return base
+	}
+	const files = fs.readdirSync(FRAGMENTS_DIR).filter((file) => file.endsWith('.json')).sort()
+	const merged = { ...base, pages: [...(base.pages || [])], menu: [...(base.menu || [])] }
+	for (const file of files) {
+		const fragment = loadJson(path.join(FRAGMENTS_DIR, file))
+		merged.pages.push(...(fragment.pages || []))
+		merged.menu.push(...(fragment.menu || []))
+	}
+	console.log(`[validate-manifest] fragments: ${files.length} (${FRAGMENTS_DIR})`)
+	return merged
+}
+
 function main() {
 	if (!fs.existsSync(MANIFEST_PATH)) {
 		console.error(`[validate-manifest] manifest not found: ${MANIFEST_PATH}`)
 		process.exit(1)
 	}
 
-	const manifest = loadJson(MANIFEST_PATH)
+	const manifest = withFragments(loadJson(MANIFEST_PATH))
 	console.log(`[validate-manifest] manifest: ${MANIFEST_PATH}`)
 	console.log(`[validate-manifest] manifest.version: ${manifest.version}`)
 	console.log(`[validate-manifest] pages: ${(manifest.pages || []).length}`)
