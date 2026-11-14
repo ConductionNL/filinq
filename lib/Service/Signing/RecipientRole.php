@@ -99,4 +99,48 @@ final class RecipientRole {
 
 		throw new InvalidArgumentException('A signing request needs at least one recipient who signs', 400);
 	}//end assertSomeoneSigns()
+	/**
+	 * The ids of the accept-only recipients among a request's recipient
+	 * records, in their order (D3).
+	 *
+	 * @param array<string, array<string, mixed>> $signers The recipient records, keyed by id.
+	 *
+	 * @return list<string>
+	 *
+	 * @spec openspec/changes/signing-accept-only-recipient/tasks.md#2-backend
+	 */
+	public static function accepterIds(array $signers): array {
+		$ids = [];
+		foreach ($signers as $id => $signer) {
+			if (is_array($signer) === true && self::accepts(recipient: $signer) === true) {
+				$ids[] = (string) $id;
+			}
+		}
+
+		return $ids;
+
+	}//end accepterIds()
+
+	/**
+	 * A request's signers without its accept-only recipients, and those
+	 * recipients apart: an accepter is never listed as a signer (D3).
+	 *
+	 * @param array<string, mixed> $request A request carrying `signerIds` and, when known, `accepterIds`.
+	 *
+	 * @return array{signers: list<mixed>, accepted: list<string>}
+	 *
+	 * @spec openspec/changes/signing-accept-only-recipient/tasks.md#2-backend
+	 */
+	public static function split(array $request): array {
+		$accepted = array_values(array_map('strval', (array) ($request['accepterIds'] ?? [])));
+		$signers  = [];
+		foreach ((array) ($request['signerIds'] ?? []) as $id) {
+			if (in_array((string) $id, $accepted, true) === false) {
+				$signers[] = $id;
+			}
+		}
+
+		return ['signers' => $signers, 'accepted' => $accepted];
+
+	}//end split()
 }//end class

@@ -1024,7 +1024,12 @@ class SigningService implements SigningServiceInterface {
 		// MAC-covered assertion and into the completion payload.
 		$freshRequest = $this->guards->assuranceGate->withResolvedAssurance(request: $freshRequest, signers: $signers);
 
-		$signedDocumentRef = $this->outputs->artifactProducer->produce(request: $freshRequest, verifiedActor: $act->verifiedActor, signers: $signers);
+		// Accept-only recipients are listed as accepted, never as signers, in
+		// the artifact's evidence and the concluded event (D3). Carried on a
+		// copy, so the stored request does not gain the key.
+		$withRoles = ($freshRequest + ['accepterIds' => RecipientRole::accepterIds(signers: $signers)]);
+
+		$signedDocumentRef = $this->outputs->artifactProducer->produce(request: $withRoles, verifiedActor: $act->verifiedActor, signers: $signers);
 
 		$freshRequest['status'] = 'COMPLETED';
 		$freshRequest['signedDocumentRef'] = $signedDocumentRef;
@@ -1035,7 +1040,7 @@ class SigningService implements SigningServiceInterface {
 		// signed reference is the stored artifact (file id + version), never
 		// the unsigned original documentFileId.
 		$this->outputs->emitter->emitIfDelegated(
-			request: $freshRequest,
+			request: (['status' => $freshRequest['status'], 'signedDocumentRef' => $signedDocumentRef] + $withRoles),
 			status: 'signed',
 			signedDocumentRef: $signedDocumentRef
 		);

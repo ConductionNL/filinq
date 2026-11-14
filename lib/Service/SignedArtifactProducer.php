@@ -43,6 +43,7 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\Filinq\Exception\DocumentFinalException;
 use OCA\Filinq\Service\Signing\LibreSignProvider;
+use OCA\Filinq\Service\Signing\RecipientRole;
 use OCA\Filinq\Service\Signing\SigningProviderFactory;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
@@ -250,7 +251,9 @@ class SignedArtifactProducer {
 	private function buildContext(array $request, ?array $verifiedActor): array {
 		$context = [
 			'signer' => $this->resolveSignerLabel(verifiedActor: $verifiedActor),
-			'signers' => ($request['signerIds'] ?? []),
+			// Signers and accept-only recipients apart (signing-accept-only-recipient D3).
+			'signers' => RecipientRole::split(request: $request)['signers'],
+			'accepted' => RecipientRole::split(request: $request)['accepted'],
 			'timestamp' => (new DateTimeImmutable())->format(DateTimeInterface::ATOM),
 			'ip' => $this->request->getRemoteAddress(),
 			'level' => (string)($request['signatureLevel'] ?? 'SES'),

@@ -1003,7 +1003,8 @@
                     "sourceApp": "dossiq",
                     "subjectSchema": "besluit",
                     "consentBasis": "adult",
-                    "assurance": "low"
+                    "assurance": "low",
+                    "accepterIds": []
                 },
                 "signers": {
                     "s-1": {
@@ -1039,8 +1040,9 @@
         {
             "SigningConclusionEmitter::emitIfDelegated": {
                 "request": {
-                    "id": "req-1",
                     "status": "COMPLETED",
+                    "signedDocumentRef": "file:11@v2",
+                    "id": "req-1",
                     "signatureLevel": "AdES",
                     "provider": "native",
                     "initiatorUserId": "griffier",
@@ -1051,7 +1053,7 @@
                     "subjectSchema": "besluit",
                     "consentBasis": "adult",
                     "assurance": "low",
-                    "signedDocumentRef": "file:11@v2"
+                    "accepterIds": []
                 },
                 "status": "signed",
                 "signedDocumentRef": "file:11@v2"
@@ -1599,7 +1601,8 @@
                     "sourceApp": "dossiq",
                     "subjectSchema": "besluit",
                     "consentBasis": "adult",
-                    "assurance": "low"
+                    "assurance": "low",
+                    "accepterIds": []
                 },
                 "verifiedActor": {
                     "userId": "portal:s-1",
@@ -1640,8 +1643,9 @@
         {
             "SigningConclusionEmitter::emitIfDelegated": {
                 "request": {
-                    "id": "req-1",
                     "status": "COMPLETED",
+                    "signedDocumentRef": "file:11@v2",
+                    "id": "req-1",
                     "signatureLevel": "AdES",
                     "provider": "native",
                     "initiatorUserId": "griffier",
@@ -1652,7 +1656,7 @@
                     "subjectSchema": "besluit",
                     "consentBasis": "adult",
                     "assurance": "low",
-                    "signedDocumentRef": "file:11@v2"
+                    "accepterIds": []
                 },
                 "status": "signed",
                 "signedDocumentRef": "file:11@v2"
