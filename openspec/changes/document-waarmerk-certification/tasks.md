@@ -17,16 +17,16 @@
 - [x] 2.2 `WaarmerkService::seal()`: stamp-page composition via `PdfService` (Twig template, brandable) + local QR SVG, canonicalised sha256 over sealed artifact, detached CMS via `openssl_cms_sign` (pkcs7 fallback), write-once `waarmerk` record via ObjectService (REQ-DDWMK-002)
   - Stamp appended as final page only; fail-closed on unresolvable key (503, no artifact)
 
-- [ ] 2.3 `ProcessingCertificateService`: anonymization certificate PDF from `anonymizationLink` + run entity-type counts + backend id + acting user; types/counts only — never entity values; sealed with `sealType: processing-certificate` + `anonymizationLinkId` (REQ-DDWMK-003)
+- [x] 2.3 `ProcessingCertificateService`: anonymization certificate PDF from `anonymizationLink` + run entity-type counts + backend id + acting user; types/counts only — never entity values; sealed with `sealType: processing-certificate` + `anonymizationLinkId` (REQ-DDWMK-003)
 
-- [ ] 2.4 Verification: `POST /api/waarmerk/verify` (`{code, sha256}` → `valid|hash-mismatch|revoked|unknown`, CMS validation via `openssl_cms_verify`, fail-closed, oracle-free response parity, rate-limited) and revocation endpoint with in-method admin-or-sealer guard, reason mandatory, irreversible (REQ-DDWMK-004/005)
+- [x] 2.4 Verification: `POST /api/waarmerk/verify` (`{code, sha256}` → `valid|hash-mismatch|revoked|unknown`, CMS validation via `openssl_cms_verify`, fail-closed, oracle-free response parity, rate-limited) and revocation endpoint with in-method admin-or-sealer guard, reason mandatory, irreversible (REQ-DDWMK-004/005)
 
-- [ ] 2.5 `SigningEvidenceService`: builds the evidence PDF/A for a terminal `signingRequest` from its `signerRecord` objects and `signingAuditEntry` trail through `PdfService`, seals it with `sealType: signing-evidence` via `WaarmerkService::seal()`, refuses an open request with 409 (REQ-DDWMK-006)
+- [x] 2.5 `SigningEvidenceService`: builds the evidence PDF/A for a terminal `signingRequest` from its `signerRecord` objects and `signingAuditEntry` trail through `PdfService`, seals it with `sealType: signing-evidence` via `WaarmerkService::seal()`, refuses an open request with 409 (REQ-DDWMK-006)
   - Titles and checksums only, never document content; covered by `tests/unit/Service/SigningEvidenceServiceTest.php`
 
 ## 3. Routes & controller
 
-- [ ] 3.1 `WaarmerkController` + routes in `appinfo/routes.php`: seal, list/show, revoke (authenticated, explicit attributes); `GET /verify/{code}` page + `POST /api/waarmerk/verify` as `#[PublicPage]` with brute-force protection
+- [x] 3.1 `WaarmerkController` + routes in `appinfo/routes.php`: seal, list/show, revoke (authenticated, explicit attributes); `GET /verify/{code}` page + `POST /api/waarmerk/verify` as `#[PublicPage]` with brute-force protection
   - route-auth/semantic-auth/no-admin-idor gates pass; public endpoints serve no document content
 
 ## 4. Frontend (ADR-012)
