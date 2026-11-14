@@ -276,6 +276,25 @@ class SettingsServiceTest extends TestCase {
 	}//end testOutputSubfolderNameIsWritable()
 
 	/**
+	 * The default Woo publisher is writable from the admin settings page.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist/spec.md
+	 */
+	public function testTheDefaultWooPublisherIsWritable(): void {
+		$this->mockConfig->expects($this->once())
+			->method('setValueString')
+			->with('filinq', 'woo.default_publisher', 'https://identifier.overheid.nl/tooi/id/gemeente/gm0363');
+		$this->mockConfig->method('getValueString')->willReturn('https://identifier.overheid.nl/tooi/id/gemeente/gm0363');
+
+		$result = $this->settingsService->updateSettings(['woo.default_publisher' => 'https://identifier.overheid.nl/tooi/id/gemeente/gm0363']);
+
+		$this->assertSame('https://identifier.overheid.nl/tooi/id/gemeente/gm0363', $result['woo.default_publisher']);
+
+	}//end testTheDefaultWooPublisherIsWritable()
+
+	/**
 	 * A traversal attempt is refused before anything is written, naming the characters.
 	 *
 	 * @return void

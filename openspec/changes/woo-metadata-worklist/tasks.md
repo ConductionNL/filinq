@@ -13,8 +13,10 @@
 
 ## 2. Screens
 
-- [ ] 2.1 Add the "Metadata incomplete" filter and the missing-fields column to the publications index (REQ-WMW-001). Verify: Playwright filters and sees the two incomplete seed records.
-- [ ] 2.2 Add the bulk action "Set metadata" for a selection with the Woo category from the TOOI list (REQ-WMW-002). Verify: Playwright sets a publisher on two records and both leave the filter.
+- [x] 2.1 Add the "Metadata incomplete" filter and the missing-fields column to the publications index (REQ-WMW-001). Verify: Playwright filters and sees the two incomplete seed records.
+- [x] 2.2 Add the bulk action "Set metadata" for a selection with the Woo category from the TOOI list (REQ-WMW-002). Verify: Playwright sets a publisher on two records and both leave the filter.
+  - Built (2.1, 2.2): the "Metadata incomplete" filter (`?incomplete=1`), the missing-fields column reading `diwooMissing`, row selection and "Set metadata" (`src/dialogs/PublicationBulkMetadataDialog.vue`: information category from the TOOI list, document type or publisher), with what was updated and skipped. Test: `src/views/publications/PublicationsPage.worklist.spec.js`. The Playwright checks need a live instance.
+  - 1.3's admin settings field is built too: "Publisher (TOOI identifier)" on the admin settings page writes `woo.default_publisher`.
 
 ## 3. Quality
 

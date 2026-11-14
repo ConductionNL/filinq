@@ -5,6 +5,9 @@
 OC.L10N.register(
     "filinq",
     {
+        "A new publication starts with this publisher.": "A new publication starts with this publisher.",
+        "Metadata incomplete": "Metadata incomplete",
+        "Set metadata": "Set metadata",
         "Marketplace": "Marketplace",
         "documents": "documents",
         "Original": "Original",

@@ -5,6 +5,9 @@
 OC.L10N.register(
     "filinq",
     {
+        "A new publication starts with this publisher.": "Una nuova pubblicazione inizia con questo editore.",
+        "Metadata incomplete": "Metadati incompleti",
+        "Set metadata": "Imposta metadati",
         "Original": "Originale",
         "All documents in the folder have been anonymized. The anonymized copies are in a separate subfolder next to the originals.": "Tutti i documenti della cartella sono stati anonimizzati. Le copie anonimizzate si trovano in una sottocartella separata, accanto agli originali.",
         "Subfolder for anonymised copies": "Sottocartella per le copie anonimizzate",

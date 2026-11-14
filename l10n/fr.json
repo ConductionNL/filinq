@@ -1,5 +1,8 @@
 {
     "translations": {
+        "A new publication starts with this publisher.": "Une nouvelle publication commence avec cet éditeur.",
+        "Metadata incomplete": "Métadonnées incomplètes",
+        "Set metadata": "Définir les métadonnées",
         "Original": "Original",
         "All documents in the folder have been anonymized. The anonymized copies are in a separate subfolder next to the originals.": "Tous les documents du dossier ont été anonymisés. Les copies anonymisées se trouvent dans un sous-dossier distinct, à côté des originaux.",
         "Subfolder for anonymised copies": "Sous-dossier pour les copies anonymisées",

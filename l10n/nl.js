@@ -5,6 +5,9 @@
 OC.L10N.register(
     "filinq",
     {
+        "A new publication starts with this publisher.": "Een nieuwe publicatie begint met deze publicerende organisatie.",
+        "Metadata incomplete": "Metadata onvolledig",
+        "Set metadata": "Metadata instellen",
         "Original": "Origineel",
         "All documents in the folder have been anonymized. The anonymized copies are in a separate subfolder next to the originals.": "Alle documenten in de map zijn geanonimiseerd. De geanonimiseerde kopieën staan in een aparte submap naast de originelen.",
         "Subfolder for anonymised copies": "Submap voor geanonimiseerde kopieën",
