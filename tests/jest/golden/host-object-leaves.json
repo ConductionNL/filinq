@@ -2,7 +2,7 @@
 	"documents.absent": {
 		"mounted": {
 			"calls": [],
-			"html": "<div class=\"filinq-documents-leaf\"><p class=\"filinq-documents-leaf__state\">No documents yet</p></div>"
+			"html": "<div class=\"filinq-documents-leaf\"><p class=\"filinq-documents-leaf__state\">No documents yet</p><!--v-if--><!--v-if--></div>"
 		}
 	},
 	"documents.ok": {
@@ -21,7 +21,7 @@
 					]
 				]
 			],
-			"html": "<div class=\"filinq-documents-leaf\"><ul class=\"filinq-documents-leaf__list\"><li class=\"filinq-documents-leaf__item\"><a class=\"filinq-documents-leaf__link\" href=\"url:/f/{fileId}{&quot;fileId&quot;:11}\">a.pdf</a><span class=\"filinq-documents-leaf__status\">final</span></li><li class=\"filinq-documents-leaf__item\"><a class=\"filinq-documents-leaf__link\" href=\"url:/f/{fileId}{&quot;fileId&quot;:12}\">b.docx</a><!--v-if--></li></ul></div>"
+			"html": "<div class=\"filinq-documents-leaf\"><!--v-if--><div class=\"filinq-documents-leaf__sort\" role=\"group\" aria-label=\"Sort documents\"><button type=\"button\" class=\"filinq-documents-leaf__sort-button\" aria-pressed=\"true\" data-testid=\"documents-sort-name\">Name <span aria-hidden=\"true\">↑</span><span class=\"hidden-visually\">ascending</span></button><button type=\"button\" class=\"filinq-documents-leaf__sort-button\" aria-pressed=\"false\" data-testid=\"documents-sort-mtime\">Date <!--v-if--><!--v-if--></button><button type=\"button\" class=\"filinq-documents-leaf__sort-button\" aria-pressed=\"false\" data-testid=\"documents-sort-size\">Size <!--v-if--><!--v-if--></button><button type=\"button\" class=\"filinq-documents-leaf__sort-button\" aria-pressed=\"false\" data-testid=\"documents-sort-status\">Status <!--v-if--><!--v-if--></button></div><ul class=\"filinq-documents-leaf__list\"><li class=\"filinq-documents-leaf__item\"><a class=\"filinq-documents-leaf__link\" href=\"url:/f/{fileId}{&quot;fileId&quot;:11}\">a.pdf</a><!--v-if--><span class=\"filinq-documents-leaf__status\">final</span></li><li class=\"filinq-documents-leaf__item\"><a class=\"filinq-documents-leaf__link\" href=\"url:/f/{fileId}{&quot;fileId&quot;:12}\">b.docx</a><!--v-if--><!--v-if--></li></ul></div>"
 		}
 	},
 	"documents.refused": {
@@ -40,7 +40,7 @@
 					]
 				]
 			],
-			"html": "<div class=\"filinq-documents-leaf\"><p class=\"filinq-documents-leaf__state filinq-documents-leaf__state--error\">The documents could not be loaded</p></div>"
+			"html": "<div class=\"filinq-documents-leaf\"><p class=\"filinq-documents-leaf__state filinq-documents-leaf__state--error\">The documents could not be loaded</p><!--v-if--><!--v-if--></div>"
 		}
 	},
 	"documents.unreachable": {
@@ -59,7 +59,7 @@
 					]
 				]
 			],
-			"html": "<div class=\"filinq-documents-leaf\"><p class=\"filinq-documents-leaf__state filinq-documents-leaf__state--error\">The documents could not be loaded</p></div>"
+			"html": "<div class=\"filinq-documents-leaf\"><p class=\"filinq-documents-leaf__state filinq-documents-leaf__state--error\">The documents could not be loaded</p><!--v-if--><!--v-if--></div>"
 		}
 	},
 	"documents.badJson": {
@@ -78,7 +78,7 @@
 					]
 				]
 			],
-			"html": "<div class=\"filinq-documents-leaf\"><p class=\"filinq-documents-leaf__state\">No documents yet</p></div>"
+			"html": "<div class=\"filinq-documents-leaf\"><p class=\"filinq-documents-leaf__state\">No documents yet</p><!--v-if--><!--v-if--></div>"
 		}
 	},
 	"documents.noToken": {
@@ -97,7 +97,7 @@
 					]
 				]
 			],
-			"html": "<div class=\"filinq-documents-leaf\"><ul class=\"filinq-documents-leaf__list\"><li class=\"filinq-documents-leaf__item\"><a class=\"filinq-documents-leaf__link\" href=\"url:/f/{fileId}{&quot;fileId&quot;:11}\">a.pdf</a><span class=\"filinq-documents-leaf__status\">final</span></li><li class=\"filinq-documents-leaf__item\"><a class=\"filinq-documents-leaf__link\" href=\"url:/f/{fileId}{&quot;fileId&quot;:12}\">b.docx</a><!--v-if--></li></ul></div>"
+			"html": "<div class=\"filinq-documents-leaf\"><!--v-if--><div class=\"filinq-documents-leaf__sort\" role=\"group\" aria-label=\"Sort documents\"><button type=\"button\" class=\"filinq-documents-leaf__sort-button\" aria-pressed=\"true\" data-testid=\"documents-sort-name\">Name <span aria-hidden=\"true\">↑</span><span class=\"hidden-visually\">ascending</span></button><button type=\"button\" class=\"filinq-documents-leaf__sort-button\" aria-pressed=\"false\" data-testid=\"documents-sort-mtime\">Date <!--v-if--><!--v-if--></button><button type=\"button\" class=\"filinq-documents-leaf__sort-button\" aria-pressed=\"false\" data-testid=\"documents-sort-size\">Size <!--v-if--><!--v-if--></button><button type=\"button\" class=\"filinq-documents-leaf__sort-button\" aria-pressed=\"false\" data-testid=\"documents-sort-status\">Status <!--v-if--><!--v-if--></button></div><ul class=\"filinq-documents-leaf__list\"><li class=\"filinq-documents-leaf__item\"><a class=\"filinq-documents-leaf__link\" href=\"url:/f/{fileId}{&quot;fileId&quot;:11}\">a.pdf</a><!--v-if--><span class=\"filinq-documents-leaf__status\">final</span></li><li class=\"filinq-documents-leaf__item\"><a class=\"filinq-documents-leaf__link\" href=\"url:/f/{fileId}{&quot;fileId&quot;:12}\">b.docx</a><!--v-if--><!--v-if--></li></ul></div>"
 		}
 	},
 	"downloadAll.absent": {
