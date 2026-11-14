@@ -1,6 +1,11 @@
 OC.L10N.register(
     "filinq",
     {
+        "Save and finish later": "Save and finish later",
+        "The saved answers could not be found. The wizard starts again.": "The saved answers could not be found. The wizard starts again.",
+        "The answers could not be saved.": "The answers could not be saved.",
+        "Saved. Continue from Drafts.": "Saved. Continue from Drafts.",
+        "The document could not be opened for editing.": "The document could not be opened for editing.",
         "Opening…": "Opening…",
         "Open for editing": "Open for editing",
         "This template has a plain-language version. Generate it directly.": "This template has a plain-language version. Generate it directly.",

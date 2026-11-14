@@ -1,5 +1,10 @@
 {
     "translations": {
+        "Save and finish later": "Opslaan en later afronden",
+        "The saved answers could not be found. The wizard starts again.": "De opgeslagen antwoorden zijn niet gevonden. De wizard begint opnieuw.",
+        "The answers could not be saved.": "De antwoorden konden niet worden opgeslagen.",
+        "Saved. Continue from Drafts.": "Opgeslagen. Ga verder vanuit Concepten.",
+        "The document could not be opened for editing.": "Het document kon niet worden geopend om te bewerken.",
         "Opening…": "Openen…",
         "Open for editing": "Openen om te bewerken",
         "This template has a plain-language version. Generate it directly.": "Dit sjabloon heeft een versie in eenvoudige taal. Genereer het direct.",
