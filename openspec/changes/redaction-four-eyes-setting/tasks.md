@@ -49,8 +49,8 @@
 - **files**: dossiq `lib/Service/FilinqRedactionClient.php` (`anonymize()` passes `wooCase`), dossiq `lib/Service/Redaction/DocumentRedactionService.php` (reads the case type's Woo flag; maps `same_person` to an outcome, not an exception), the DqLakken page
 - **acceptance_criteria**:
   - GIVEN a Woo case and the same officer for check and redact THEN the outcome is `same_person` and the page asks for a colleague
-- [ ] Implement
-- [ ] Test
+- [x] Implement (ConductionNL/dossiq#6513. `FilinqRedactionClient::anonymize()` passes `AnonymizeOptions` with the officer and `wooCase`, and every dossiq redaction is a Woo run, since only a Woo assessment asks for one. `same_person` and `anonymiser_unknown` become outcomes, which `FilinqRedaction` turns into the refusals `same-person` and `anonymiser-unknown` with a sentence asking for a colleague)
+- [x] Test (dossiq `FilinqRedactionClientTest`, `FilinqRedactionTest`)
 
 ### Task 7: Verification and the row
 - **files**: `tests/e2e/spec-coverage/redaction-four-eyes-setting.spec.ts` (two users: Fenna checks, Fenna is refused, Daan anonymises), `openspec/parity/capabilities.json`
