@@ -1,10 +1,12 @@
 OC.L10N.register(
     "filinq",
     {
+        "Failed to reach the case system": "Niet in het zaaksysteem aangekomen",
         "Original": "Origineel",
         "All documents in the folder have been anonymized. The anonymized copies are in a separate subfolder next to the originals.": "Alle documenten in de map zijn geanonimiseerd. De geanonimiseerde kopieën staan in een aparte submap naast de originelen.",
         "Subfolder for anonymised copies": "Submap voor geanonimiseerde kopieën",
         "Batch and folder anonymisation put the redacted copies in this subfolder, next to the originals.": "Anonimiseren per batch of map zet de gelakte kopieën in deze submap, naast de originelen.",
+        "The case system holds this document": "Het zaaksysteem bewaart dit document",
         "Use lowercase letters, digits, hyphens and underscores only.": "Gebruik alleen kleine letters, cijfers, koppeltekens en liggende streepjes.",
         "The subfolder name cannot contain: {characters}": "De naam van de submap mag dit niet bevatten: {characters}",
         "Enter a name for the subfolder.": "Vul een naam in voor de submap.",
@@ -25,6 +27,7 @@ OC.L10N.register(
         "Print %n sheet": ["%n vel afdrukken","%n vellen afdrukken"],
         "The scan profiles could not be read.": "De scanprofielen konden niet worden gelezen.",
         "The separator sheets could not be made. Check the case numbers and try again.": "De scheidingsvellen konden niet worden gemaakt. Controleer de zaaknummers en probeer het opnieuw.",
+        "Waiting for the case system": "Wacht op het zaaksysteem",
         "Waiting for your signature": "Wacht op je handtekening",
         "Reading the signing folder": "De ondertekenmap wordt gelezen",
         "The signing folder could not be read.": "De ondertekenmap kon niet worden gelezen.",
