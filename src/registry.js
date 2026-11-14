@@ -80,6 +80,7 @@ import EntitySearch from './views/entitySearch/EntitySearch.vue'
 import FlowDetailSidebar from './views/flows/FlowDetailSidebar.vue'
 import ComponentGallery from './views/gallery/ComponentGallery.vue'
 import IntakeIndex from './views/intake/IntakeIndex.vue'
+import IntakeChannels from './views/intakeChannels/IntakeChannels.vue'
 import LegalHolds from './views/legalHolds/LegalHolds.vue'
 import MyDocumentsIndex from './views/myDocuments/MyDocumentsIndex.vue'
 import PolicyRuleIndex from './views/policy/PolicyRuleIndex.vue'
@@ -119,6 +120,7 @@ export default {
 	ContractPipeline: { kind: 'page', component: ContractPipeline },
 	SubjectErasures: { kind: 'page', component: SubjectErasures },
 	EmailIngestion: { kind: 'page', component: EmailIngestion },
+	IntakeChannels: { kind: 'page', component: IntakeChannels },
 	ClassificationPending: { kind: 'page', component: ClassificationPending },
 	EntitySearch: { kind: 'page', component: EntitySearch },
 	PublicationsPage: { kind: 'page', component: PublicationsPage },

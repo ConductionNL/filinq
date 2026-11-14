@@ -21,9 +21,25 @@
 			"route": "EmailIngestion",
 			"section": "settings",
 			"order": 94
+		},
+		{
+			"id": "IntakeChannels",
+			"label": "Intake channels",
+			"icon": "Scanner",
+			"route": "IntakeChannels",
+			"section": "settings",
+			"order": 95
 		}
 	],
 	"pages": [
+		{
+			"id": "IntakeChannels",
+			"route": "/intake-channels",
+			"type": "custom",
+			"title": "Intake channels",
+			"component": "IntakeChannels",
+			"_note": "The scanner profiles: which folder a scanner writes to and how a batch that lands there is cut (scan-intake-with-separator-sheets REQ-SCI-05). type:custom because profiles are instance settings read and declared through api/scan/profiles, not OpenRegister objects."
+		},
 		{
 			"id": "EmailIngestion",
 			"route": "/email-ingestion",
