@@ -710,6 +710,8 @@
 		<SignerIdentitySettings v-if="isAdmin" />
 		<CaseSystemDeliverySettings v-if="isAdmin" />
 
+		<DocumentWebhooksSection v-if="isAdmin" />
+
 		<EmailIngestionSettings v-if="isAdmin" />
 
 		<!-- Page layouts (documents-from-a-template REQ-DFT-01): their own endpoints -->
@@ -884,6 +886,7 @@ import Restart from 'vue-material-design-icons/Restart.vue'
 import AnonymiserBackendWarning from '../../components/AnonymiserBackendWarning.vue'
 import CaseSystemDeliverySettings from './CaseSystemDeliverySettings.vue'
 import DetectionProviderSettings from './DetectionProviderSettings.vue'
+import DocumentWebhooksSection from './DocumentWebhooksSection.vue'
 import EmailIngestionSettings from './EmailIngestionSettings.vue'
 import EntityTypeSelector from './EntityTypeSelector.vue'
 import PageLayoutSettings from './PageLayoutSettings.vue'
@@ -999,6 +1002,7 @@ function signingActivity() {
 export default {
 	name: 'Settings',
 	components: {
+		DocumentWebhooksSection,
 		NcSettingsSection,
 		NcNoteCard,
 		NcSelect,

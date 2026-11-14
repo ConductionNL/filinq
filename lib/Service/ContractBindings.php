@@ -38,6 +38,7 @@ use OCA\Filinq\Kernel\Contracts\BatchUploadServiceInterface;
 use OCA\Filinq\Kernel\Contracts\BulkSigningRunnerInterface;
 use OCA\Filinq\Kernel\Contracts\BulkSigningServiceInterface;
 use OCA\Filinq\Kernel\Contracts\CaseArchiveServiceInterface;
+use OCA\Filinq\Kernel\Contracts\CaseSystemDeliveryServiceInterface;
 use OCA\Filinq\Kernel\Contracts\ClassificationDecisionServiceInterface;
 use OCA\Filinq\Kernel\Contracts\ConformanceServiceInterface;
 use OCA\Filinq\Kernel\Contracts\ConsentCrudServiceInterface;
@@ -51,7 +52,9 @@ use OCA\Filinq\Kernel\Contracts\ContractTermSuggestionServiceInterface;
 use OCA\Filinq\Kernel\Contracts\CorrespondenceServiceInterface;
 use OCA\Filinq\Kernel\Contracts\CustomDictionaryAccessGateInterface;
 use OCA\Filinq\Kernel\Contracts\CustomDictionaryServiceInterface;
+use OCA\Filinq\Kernel\Contracts\DataResolverServiceInterface;
 use OCA\Filinq\Kernel\Contracts\DemoDataServiceInterface;
+use OCA\Filinq\Kernel\Contracts\DetectionProviderConfigInterface;
 use OCA\Filinq\Kernel\Contracts\DocumentComparisonServiceInterface;
 use OCA\Filinq\Kernel\Contracts\DocumentDomainServiceInterface;
 use OCA\Filinq\Kernel\Contracts\DocumentFinalityRuleServiceInterface;
@@ -94,6 +97,7 @@ use OCA\Filinq\Kernel\Contracts\LegalBasesSummaryServiceInterface;
 use OCA\Filinq\Kernel\Contracts\LegalHoldCaseServiceInterface;
 use OCA\Filinq\Kernel\Contracts\LegalHoldNotificationsInterface;
 use OCA\Filinq\Kernel\Contracts\LibreSignCompletionInterface;
+use OCA\Filinq\Kernel\Contracts\LlmDetectionProviderInterface;
 use OCA\Filinq\Kernel\Contracts\MergeJobRepositoryInterface;
 use OCA\Filinq\Kernel\Contracts\MetadataServiceInterface;
 use OCA\Filinq\Kernel\Contracts\MultiFormatOutputProducerInterface;
@@ -110,6 +114,7 @@ use OCA\Filinq\Kernel\Contracts\PageLayoutServiceInterface;
 use OCA\Filinq\Kernel\Contracts\PartySuggestionServiceInterface;
 use OCA\Filinq\Kernel\Contracts\Pdfa3ConversionServiceInterface;
 use OCA\Filinq\Kernel\Contracts\PdfServiceInterface;
+use OCA\Filinq\Kernel\Contracts\PdfStampServiceInterface;
 use OCA\Filinq\Kernel\Contracts\PeriodicDocumentServiceInterface;
 use OCA\Filinq\Kernel\Contracts\PolicyCrudServiceInterface;
 use OCA\Filinq\Kernel\Contracts\PolicyRetroactiveServiceInterface;
@@ -135,6 +140,7 @@ use OCA\Filinq\Kernel\Contracts\SettingsServiceInterface;
 use OCA\Filinq\Kernel\Contracts\SignerAuthSettingsInterface;
 use OCA\Filinq\Kernel\Contracts\SignerStepUpServiceInterface;
 use OCA\Filinq\Kernel\Contracts\SigningAuditServiceInterface;
+use OCA\Filinq\Kernel\Contracts\SigningCancellationServiceInterface;
 use OCA\Filinq\Kernel\Contracts\SigningEnvelopeServiceInterface;
 use OCA\Filinq\Kernel\Contracts\SigningFolderServiceInterface;
 use OCA\Filinq\Kernel\Contracts\SigningMandateServiceInterface;
@@ -159,6 +165,8 @@ use OCA\Filinq\Service\Contract\ContractSigningLink;
 use OCA\Filinq\Service\Contract\ContractTermSuggestionService;
 use OCA\Filinq\Service\Conversion\OutputLayoutMover;
 use OCA\Filinq\Service\Conversion\OutputLayoutResolver;
+use OCA\Filinq\Service\Detection\DetectionProviderConfig;
+use OCA\Filinq\Service\Detection\LlmDetectionProvider;
 use OCA\Filinq\Service\EmailIngestion\EmailDocumentRepository;
 use OCA\Filinq\Service\EmailIngestion\EmailIngestionService;
 use OCA\Filinq\Service\EmailIngestion\EmailIngestionSettings;
@@ -185,6 +193,7 @@ use OCA\Filinq\Service\Sanitization\SanitizationStatus;
 use OCA\Filinq\Service\SignerAuth\SignerAuthSettings;
 use OCA\Filinq\Service\SignerAuth\SignerStepUpService;
 use OCA\Filinq\Service\Signing\LibreSignCompletion;
+use OCA\Filinq\Service\Signing\SigningCancellationService;
 use OCA\Filinq\Service\Signing\SigningProviderFactory;
 use OCA\Filinq\Service\SigningEnvelope\SigningEnvelopeService;
 use OCA\Filinq\Service\SubjectErasure\SubjectErasureRun;
@@ -226,6 +235,7 @@ final class ContractBindings {
 		BulkSigningRunnerInterface::class              => BulkSigningRunner::class,
 		BulkSigningServiceInterface::class             => BulkSigningService::class,
 		CaseArchiveServiceInterface::class             => CaseArchiveService::class,
+		CaseSystemDeliveryServiceInterface::class      => CaseSystemDeliveryService::class,
 		ClassificationDecisionServiceInterface::class  => ClassificationDecisionService::class,
 		ConformanceServiceInterface::class             => ConformanceService::class,
 		ConsentCrudServiceInterface::class             => ConsentCrudService::class,
@@ -239,7 +249,9 @@ final class ContractBindings {
 		CorrespondenceServiceInterface::class          => CorrespondenceService::class,
 		CustomDictionaryAccessGateInterface::class     => CustomDictionaryAccessGate::class,
 		CustomDictionaryServiceInterface::class        => CustomDictionaryService::class,
+		DataResolverServiceInterface::class            => DataResolverService::class,
 		DemoDataServiceInterface::class                => DemoDataService::class,
+		DetectionProviderConfigInterface::class        => DetectionProviderConfig::class,
 		DocumentComparisonServiceInterface::class      => DocumentComparisonService::class,
 		DocumentDomainServiceInterface::class          => DocumentDomainService::class,
 		DocumentFinalityRuleServiceInterface::class    => DocumentFinalityRuleService::class,
@@ -282,6 +294,7 @@ final class ContractBindings {
 		LegalHoldCaseServiceInterface::class           => LegalHoldCaseService::class,
 		LegalHoldNotificationsInterface::class         => LegalHoldNotifications::class,
 		LibreSignCompletionInterface::class            => LibreSignCompletion::class,
+		LlmDetectionProviderInterface::class           => LlmDetectionProvider::class,
 		MergeJobRepositoryInterface::class             => MergeJobRepository::class,
 		MetadataServiceInterface::class                => MetadataService::class,
 		MultiFormatOutputProducerInterface::class      => MultiFormatOutputProducer::class,
@@ -298,6 +311,7 @@ final class ContractBindings {
 		PartySuggestionServiceInterface::class         => PartySuggestionService::class,
 		Pdfa3ConversionServiceInterface::class         => Pdfa3ConversionService::class,
 		PdfServiceInterface::class                     => PdfService::class,
+		PdfStampServiceInterface::class                => PdfStampService::class,
 		PeriodicDocumentServiceInterface::class        => PeriodicDocumentService::class,
 		PolicyCrudServiceInterface::class              => PolicyCrudService::class,
 		PolicyRetroactiveServiceInterface::class       => PolicyRetroactiveService::class,
@@ -323,6 +337,7 @@ final class ContractBindings {
 		SignerAuthSettingsInterface::class             => SignerAuthSettings::class,
 		SignerStepUpServiceInterface::class            => SignerStepUpService::class,
 		SigningAuditServiceInterface::class            => SigningAuditService::class,
+		SigningCancellationServiceInterface::class     => SigningCancellationService::class,
 		SigningEnvelopeServiceInterface::class         => SigningEnvelopeService::class,
 		SigningFolderServiceInterface::class           => SigningFolderService::class,
 		SigningMandateServiceInterface::class          => SigningMandateService::class,
