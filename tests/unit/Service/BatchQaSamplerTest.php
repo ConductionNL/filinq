@@ -22,6 +22,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Tests\Unit\Service;
 
+use OCA\Filinq\Service\BatchQaDraw;
 use OCA\Filinq\Service\BatchQaSampler;
 use PHPUnit\Framework\TestCase;
 
@@ -30,6 +31,7 @@ use PHPUnit\Framework\TestCase;
  * reproducible from the stored seed.
  *
  * @covers \OCA\Filinq\Service\BatchQaSampler
+ * @covers \OCA\Filinq\Service\BatchQaDraw
  */
 class BatchQaSamplerTest extends TestCase {
 
@@ -60,7 +62,7 @@ class BatchQaSamplerTest extends TestCase {
 	 * @return void
 	 */
 	public function testFivePercentOfTwoHundredIsTen(): void {
-		$sample = (new BatchQaSampler())->select(self::files(200, 20), 5, 'seed-a');
+		$sample = (new BatchQaSampler())->select(self::files(200, 20), new BatchQaDraw(5, 'seed-a'));
 
 		$this->assertCount(10, $sample);
 		$this->assertCount(10, array_unique($sample));
@@ -78,10 +80,10 @@ class BatchQaSamplerTest extends TestCase {
 		$sampler = new BatchQaSampler();
 		$files = self::files(200);
 
-		$first = $sampler->select($files, 5, 'seed-a');
+		$first = $sampler->select($files, new BatchQaDraw(5, 'seed-a'));
 
-		$this->assertSame($first, $sampler->select(array_reverse($files), 5, 'seed-a'));
-		$this->assertNotSame($first, $sampler->select($files, 5, 'seed-b'));
+		$this->assertSame($first, $sampler->select(array_reverse($files), new BatchQaDraw(5, 'seed-a')));
+		$this->assertNotSame($first, $sampler->select($files, new BatchQaDraw(5, 'seed-b')));
 	}//end testTheSampleIsReproducibleFromTheSeed()
 
 	/**
@@ -92,11 +94,11 @@ class BatchQaSamplerTest extends TestCase {
 	public function testRateZeroMinimumOneAndNoSuccesses(): void {
 		$sampler = new BatchQaSampler();
 
-		$this->assertSame([], $sampler->select(self::files(200), 0, 'seed'));
-		$this->assertCount(1, $sampler->select(self::files(3), 5, 'seed'));
-		$this->assertSame([], $sampler->select(self::files(0, 4), 50, 'seed'));
-		$this->assertCount(3, $sampler->select(self::files(3), 250, 'seed'));
-		$this->assertSame([], $sampler->select(self::files(3), -5, 'seed'));
+		$this->assertSame([], $sampler->select(self::files(200), new BatchQaDraw(0, 'seed')));
+		$this->assertCount(1, $sampler->select(self::files(3), new BatchQaDraw(5, 'seed')));
+		$this->assertSame([], $sampler->select(self::files(0, 4), new BatchQaDraw(50, 'seed')));
+		$this->assertCount(3, $sampler->select(self::files(3), new BatchQaDraw(250, 'seed')));
+		$this->assertSame([], $sampler->select(self::files(3), new BatchQaDraw(-5, 'seed')));
 	}//end testRateZeroMinimumOneAndNoSuccesses()
 
 	/**
@@ -108,10 +110,10 @@ class BatchQaSamplerTest extends TestCase {
 	public function testMarkFlagsTheSampleAndStoresTheSeed(): void {
 		$sampler = new BatchQaSampler();
 		$files = self::files(40, 2);
-		$sample = $sampler->select($files, 10, 'audit-seed');
+		$sample = $sampler->select($files, new BatchQaDraw(10, 'audit-seed'));
 		$files[(int)$sample[0] - 1]['qaOutcome'] = 'confirmed';
 
-		$batch = $sampler->mark(['batchId' => 'b-1', 'files' => $files], 10, 'audit-seed');
+		$batch = $sampler->mark(['batchId' => 'b-1', 'files' => $files], new BatchQaDraw(10, 'audit-seed'));
 
 		$this->assertSame([10, 'audit-seed'], [$batch['qaSampleRate'], $batch['qaSampleSeed']]);
 		$flagged = [];
@@ -127,4 +129,15 @@ class BatchQaSamplerTest extends TestCase {
 		ksort($flagged);
 		$this->assertSame($expected, $flagged);
 	}//end testMarkFlagsTheSampleAndStoresTheSeed()
+	/**
+	 * A draw holds its rate between 0 and 100 and keeps its seed.
+	 *
+	 * @return void
+	 */
+	public function testADrawClampsItsRate(): void {
+		$this->assertSame(0, (new BatchQaDraw(-5, 's'))->rate);
+		$this->assertSame(100, (new BatchQaDraw(250, 's'))->rate);
+		$this->assertSame(7, (new BatchQaDraw(7, 's'))->rate);
+		$this->assertSame('s', (new BatchQaDraw(7, 's'))->seed);
+	}//end testADrawClampsItsRate()
 }//end class

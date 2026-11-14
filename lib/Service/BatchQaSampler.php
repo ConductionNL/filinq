@@ -46,20 +46,19 @@ class BatchQaSampler {
 	 * The file ids to sample, in a stable order.
 	 *
 	 * @param array<int, array<string, mixed>> $files The batch's per-file entries.
-	 * @param int                              $rate  Percent of the succeeded files, 0 to 100.
-	 * @param string                           $seed  The seed stored on the batch.
+	 * @param BatchQaDraw                      $draw  The rate and the seed stored on the batch.
 	 *
 	 * @return array<int, string> The sampled file ids, as strings.
 	 *
 	 * @spec openspec/changes/redaction-at-scale/specs/redaction-at-scale/spec.md#requirement-sampling-qa-routed-to-human-review-req-ddras-007
 	 */
-	public function select(array $files, int $rate, string $seed): array {
-		$rate = max(0, min(100, $rate));
+	public function select(array $files, BatchQaDraw $draw): array {
+		$rate = $draw->rate;
 		$succeeded = [];
 		foreach ($files as $file) {
 			$id = (string)($file['fileId'] ?? '');
 			if ($id !== '' && ($file['status'] ?? '') === self::SUCCEEDED) {
-				$succeeded[$id] = hash('sha256', $seed . '|' . $id);
+				$succeeded[$id] = hash('sha256', $draw->seed . '|' . $id);
 			}
 		}
 
@@ -79,16 +78,15 @@ class BatchQaSampler {
 	 * A file that already has an outcome keeps it.
 	 *
 	 * @param array<string, mixed> $batch The batch, with its `files`.
-	 * @param int                  $rate  Percent of the succeeded files.
-	 * @param string               $seed  The seed to store and sample with.
+	 * @param BatchQaDraw          $draw  The rate and the seed to store and sample with.
 	 *
 	 * @return array<string, mixed> The marked batch.
 	 *
 	 * @spec openspec/changes/redaction-at-scale/specs/redaction-at-scale/spec.md#requirement-sampling-qa-routed-to-human-review-req-ddras-007
 	 */
-	public function mark(array $batch, int $rate, string $seed): array {
+	public function mark(array $batch, BatchQaDraw $draw): array {
 		$files = (array)($batch['files'] ?? []);
-		$sampled = array_flip($this->select(files: $files, rate: $rate, seed: $seed));
+		$sampled = array_flip($this->select(files: $files, draw: $draw));
 
 		foreach ($files as $index => $file) {
 			if (isset($sampled[(string)($file['fileId'] ?? '')]) === false) {
@@ -100,8 +98,8 @@ class BatchQaSampler {
 		}
 
 		$batch['files'] = $files;
-		$batch['qaSampleRate'] = max(0, min(100, $rate));
-		$batch['qaSampleSeed'] = $seed;
+		$batch['qaSampleRate'] = $draw->rate;
+		$batch['qaSampleSeed'] = $draw->seed;
 
 		return $batch;
 	}//end mark()

@@ -161,8 +161,29 @@ class BatchLifecycleService {
 			return ['status' => 409, 'reason' => 'not-resumable', 'batchStatus' => $current];
 		}
 
+		$requeue = $this->requeueUnfinished(batch: $batch);
+		$batch = $requeue['batch'];
+		$this->stateService->updateBatch($batchId, $batch);
+
+		return ['status' => 202, 'batchId' => $batchId, 'batchStatus' => $batch['status'], 'requeued' => $requeue['requeued']];
+
+	}//end resume()
+
+	/**
+	 * The batch with every unfinished file queued again: a file that failed
+	 * before extraction goes back to `uploaded` with one more retry, an
+	 * extracted one waits for review as it is. The batch extracts again when
+	 * any file went back, else it returns to review.
+	 *
+	 * @param array<string, mixed> $batch The stored batch.
+	 *
+	 * @return array{batch: array<string, mixed>, requeued: int}
+	 *
+	 * @spec openspec/changes/redaction-at-scale/specs/redaction-at-scale/spec.md#requirement-idempotent-resume-req-ddras-005
+	 */
+	private function requeueUnfinished(array $batch): array {
 		$requeued = 0;
-		$needsExtraction = false;
+		$batch['status'] = 'review';
 		foreach ((array)($batch['files'] ?? []) as $index => $file) {
 			$status = (string)($file['status'] ?? '');
 			if ($status === self::FILE_SUCCEEDED) {
@@ -178,17 +199,10 @@ class BatchLifecycleService {
 			$file['retryCount'] = ((int)($file['retryCount'] ?? 0) + 1);
 			unset($file['error']);
 			$batch['files'][$index] = $file;
-			$needsExtraction = true;
-		}
-
-		$batch['status'] = 'review';
-		if ($needsExtraction === true) {
 			$batch['status'] = 'extracting';
 		}
 
-		$this->stateService->updateBatch($batchId, $batch);
+		return ['batch' => $batch, 'requeued' => $requeued];
 
-		return ['status' => 202, 'batchId' => $batchId, 'batchStatus' => $batch['status'], 'requeued' => $requeued];
-
-	}//end resume()
+	}//end requeueUnfinished()
 }//end class

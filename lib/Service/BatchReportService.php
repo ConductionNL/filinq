@@ -89,21 +89,9 @@ class BatchReportService implements BatchReportServiceInterface {
 				'qaOutcome',
 			]
 		);
+		$timestamp = date('c', $batch['createdAt'] ?? time());
 		foreach ($batch['files'] as $f) {
-			fputcsv(
-				$output,
-				[
-					$f['fileName'] ?? '',
-					$f['fileId'] ?? '',
-					$f['anonymizedFileId'] ?? '',
-					$f['entityCount'] ?? 0,
-					$f['replacementCount'] ?? 0,
-					$f['status'] ?? '',
-					date('c', $batch['createdAt'] ?? time()),
-					$this->reasonColumn(file: $f),
-					$f['qaOutcome'] ?? '',
-				]
-			);
+			fputcsv($output, $this->fileRow(file: $f, timestamp: $timestamp));
 		}
 
 		$this->writeSummary(output: $output, summary: $this->aggregator->summarise(batch: $batch));
@@ -113,6 +101,29 @@ class BatchReportService implements BatchReportServiceInterface {
 		fclose($output);
 		return $csv;
 	}//end generateReport()
+
+	/**
+	 * One file's row of the report, in the header's column order.
+	 *
+	 * @param array<string, mixed> $file      The per-file entry.
+	 * @param string               $timestamp The batch's creation time, ISO 8601.
+	 *
+	 * @return array<int, mixed>
+	 */
+	private function fileRow(array $file, string $timestamp): array {
+		return [
+			$file['fileName'] ?? '',
+			$file['fileId'] ?? '',
+			$file['anonymizedFileId'] ?? '',
+			$file['entityCount'] ?? 0,
+			$file['replacementCount'] ?? 0,
+			$file['status'] ?? '',
+			$timestamp,
+			$this->reasonColumn(file: $file),
+			$file['qaOutcome'] ?? '',
+		];
+	}//end fileRow()
+
 	/**
 	 * The failure group of a failed file, empty for a file that did not fail.
 	 *

@@ -24,6 +24,7 @@ namespace OCA\Filinq\Tests\Unit\Service;
 
 use OCA\Filinq\Service\AnonymizationService;
 use OCA\Filinq\Service\BatchAnonymizeService;
+use OCA\Filinq\Service\BatchQaDraw;
 use OCA\Filinq\Service\BatchQaSampler;
 use OCA\Filinq\Service\BatchStateService;
 use OCA\Filinq\Service\Conversion\OutputLayoutMover;
@@ -38,6 +39,7 @@ use PHPUnit\Framework\TestCase;
  * @uses   \OCA\Filinq\Service\BatchAnonymizeRun
  * @uses   \OCA\Filinq\Service\BatchAnonymizeRequest
  * @uses   \OCA\Filinq\Service\BatchQaSampler
+ * @uses   \OCA\Filinq\Service\BatchQaDraw
  * @uses   \OCA\Filinq\Service\AnonymizeOptions
  */
 class BatchAnonymizeServiceScaleTest extends TestCase {
@@ -163,7 +165,7 @@ class BatchAnonymizeServiceScaleTest extends TestCase {
 		$sampled = array_values(array_filter($last['files'], static fn (array $f): bool => ($f['qaSampled'] ?? false) === true));
 		self::assertCount(2, $sampled);
 		self::assertSame(['pending', 'pending'], array_column($sampled, 'qaOutcome'));
-		$expected = (new BatchQaSampler())->select(files: $last['files'], rate: 10, seed: 'seed-1');
+		$expected = (new BatchQaSampler())->select(files: $last['files'], draw: new BatchQaDraw(rate: 10, seed: 'seed-1'));
 		self::assertEqualsCanonicalizing($expected, array_map('strval', array_column($sampled, 'fileId')));
 
 	}//end testCompletionMarksTheQaSampleWithTheConfiguredRate()

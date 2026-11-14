@@ -256,7 +256,7 @@ class BatchAnonymizeService implements BatchAnonymizeServiceInterface {
 			$seed = bin2hex(random_bytes(16));
 		}
 
-		return $this->qaSampler->mark(batch: $batch, rate: $rate, seed: $seed);
+		return $this->qaSampler->mark(batch: $batch, draw: new BatchQaDraw(rate: $rate, seed: $seed));
 
 	}//end markQaSample()
 
