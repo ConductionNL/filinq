@@ -72,6 +72,16 @@ class SigningService implements SigningServiceInterface {
 	public const SIGN_NOT_ACCEPT = 'This document asks you to sign it, not to accept it';
 
 	/**
+	 * The app a lifecycle move made on filinq's behalf is recorded against.
+	 */
+	private const APP_ID = 'filinq';
+
+	/**
+	 * The `signingRequest` lifecycle's transition to CANCELLED.
+	 */
+	private const CANCEL_TRANSITION = 'cancel';
+
+	/**
 	 * Valid status transitions for signing requests
 	 *
 	 * @var array<string, array<string>>
@@ -884,8 +894,8 @@ class SigningService implements SigningServiceInterface {
 			throw new RuntimeException('Cannot cancel request in status: ' . ($request['status'] ?? 'unknown'));
 		}
 
+		$this->moveToCancelled(request: $request, requestId: $requestId, store: [$objectService, $register, $schema]);
 		$request['status'] = 'CANCELLED';
-		$objectService->saveObject(object: $request, register: $register, schema: $schema, _rbac: false);
 
 		// Cross-app delegated-signing contract: a cancelled request is terminal
 		// — emit SigningConcludedEvent (status=cancelled) for a delegated request.
@@ -901,6 +911,38 @@ class SigningService implements SigningServiceInterface {
 
 		return $request;
 	}//end cancelRequest()
+
+	/**
+	 * Move a signing request to CANCELLED through its declared lifecycle.
+	 *
+	 * The `signingRequest` schema declares `x-openregister-lifecycle` with a
+	 * `cancel` transition, so the move belongs there (ADR-031): the lifecycle
+	 * engine applies the named transition, its declared guards and actions, and
+	 * the transitioned event. It runs as the system on filinq's behalf because
+	 * the caller was already checked (SigningCancellationService admits only the
+	 * creator, the bulk and envelope paths their own owner), as the save it
+	 * replaces did with `_rbac: false`. An OpenRegister without the engine gets
+	 * that save, so the request is still cancelled.
+	 *
+	 * @param array<string, mixed>                       $request   The request as read.
+	 * @param string                                     $requestId The request id.
+	 * @param array{0: object, 1: string, 2: string}     $store     The object service, register and schema of the fallback save.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md#requirement-a-cancelled-request-must-be-visibly-cancelled-and-must-not-be-re-signable
+	 */
+	private function moveToCancelled(array $request, string $requestId, array $store): void {
+		$engine = $this->settingsService->getTransitionEngine();
+		if ($engine !== null) {
+			$engine->transitionAsSystem(objectId: $requestId, action: self::CANCEL_TRANSITION, app: self::APP_ID);
+			return;
+		}
+
+		[$objectService, $register, $schema] = $store;
+		$request['status'] = 'CANCELLED';
+		$objectService->saveObject(object: $request, register: $register, schema: $schema, _rbac: false);
+	}//end moveToCancelled()
 
 	/**
 	 * Bulk sign multiple signing requests
