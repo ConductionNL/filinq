@@ -7626,6 +7626,58 @@
         "revokedAt": "2026-06-03T10:00:00+02:00",
         "revokedBy": "demo-woo-officer",
         "revocationReason": "Verkeerde versie gewaarmerkt; vervangen door de definitieve versie."
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "flowOperationRun",
+          "slug": "demostad-flow-run-ocr-example"
+        },
+        "operation": "ocr",
+        "fileId": 812006,
+        "fileName": "scan-bezwaarschrift.pdf",
+        "ownerUserId": "w.devries",
+        "status": "succeeded",
+        "triggerEvent": "postCreate",
+        "startedAt": "2026-07-17T09:12:04Z",
+        "finishedAt": "2026-07-17T09:12:31Z",
+        "resultSummary": {
+          "confidence": 88.2,
+          "textLength": 3120
+        }
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "flowOperationRun",
+          "slug": "demostad-flow-run-pdfa-example"
+        },
+        "operation": "pdfa",
+        "fileId": 812007,
+        "fileName": "besluit-2026-114.pdf",
+        "ownerUserId": "w.devries",
+        "status": "failed",
+        "statusReason": "conversion_error",
+        "triggerEvent": "tag_assigned",
+        "startedAt": "2026-07-17T09:14:00Z",
+        "finishedAt": "2026-07-17T09:14:09Z",
+        "resultSummary": {},
+        "errorMessage": "The source PDF is encrypted and cannot be converted."
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "flowOperationRun",
+          "slug": "demostad-flow-run-skipped-example"
+        },
+        "operation": "pdfa",
+        "fileId": 812008,
+        "fileName": "besluit-2026-114.pdfa.pdf",
+        "ownerUserId": "w.devries",
+        "status": "skipped",
+        "statusReason": "own_output",
+        "triggerEvent": "postCreate",
+        "resultSummary": {}
       }
     ]
   }
