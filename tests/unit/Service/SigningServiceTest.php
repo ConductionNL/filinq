@@ -1664,6 +1664,79 @@ class SigningServiceTest extends TestCase {
 	}//end testCancelRequestTransitionsToCancel()
 
 	/**
+	 * With OpenRegister's lifecycle engine, cancelRequest() applies the declared
+	 * `cancel` transition on filinq's behalf instead of hand-setting the status.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md#requirement-a-cancelled-request-must-be-visibly-cancelled-and-must-not-be-re-signable
+	 */
+	public function testCancelRequestUsesTheDeclaredLifecycleTransition(): void {
+		$engine = new class {
+			/**
+			 * @var array<int, array<int, string>>
+			 */
+			public array $calls = [];
+
+			/**
+			 * @param string $objectId The object.
+			 * @param string $action   The transition.
+			 * @param string $app      The app.
+			 *
+			 * @return null
+			 */
+			public function transitionAsSystem(string $objectId, string $action, string $app) {
+				$this->calls[] = [$objectId, $action, $app];
+				return null;
+			}
+		};
+		$this->settingsService->method('getTransitionEngine')->willReturn($engine);
+		$this->objectService->method('find')->willReturn(['id' => 'req-001', 'status' => 'PENDING']);
+		$this->objectService->expects($this->never())->method('saveObject');
+		$this->persistAuditsThroughTheRealService();
+
+		$result = $this->service->cancelRequest(requestId: 'req-001');
+
+		$this->assertSame([['req-001', 'cancel', 'filinq']], $engine->calls);
+		$this->assertSame('CANCELLED', $result['status']);
+		$this->assertCount(1, $this->persistedAudits);
+
+	}//end testCancelRequestUsesTheDeclaredLifecycleTransition()
+
+	/**
+	 * A transition the lifecycle refuses leaves no CANCELLED audit entry behind.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md#requirement-a-cancelled-request-must-be-visibly-cancelled-and-must-not-be-re-signable
+	 */
+	public function testARefusedTransitionRecordsNoCancellation(): void {
+		$engine = new class {
+			/**
+			 * @param string $objectId The object.
+			 * @param string $action   The transition.
+			 * @param string $app      The app.
+			 *
+			 * @return never
+			 */
+			public function transitionAsSystem(string $objectId, string $action, string $app) {
+				throw new RuntimeException('Transition "cancel" is not allowed from COMPLETED');
+			}
+		};
+		$this->settingsService->method('getTransitionEngine')->willReturn($engine);
+		$this->objectService->method('find')->willReturn(['id' => 'req-001', 'status' => 'PENDING']);
+		$this->auditService->expects($this->never())->method('logEvent');
+
+		try {
+			$this->service->cancelRequest(requestId: 'req-001');
+			$this->fail('the refusal must surface');
+		} catch (RuntimeException $e) {
+			$this->assertStringContainsString('not allowed', $e->getMessage());
+		}
+
+	}//end testARefusedTransitionRecordsNoCancellation()
+
+	/**
 	 * cancelRequest() answers null for a request that does not exist, and writes nothing.
 	 *
 	 * @return void
