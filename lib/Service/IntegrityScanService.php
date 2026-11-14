@@ -65,6 +65,8 @@ class IntegrityScanService {
 	 * @param IRootFolder                   $rootFolder     Resolves file ids across all storage.
 	 * @param FinalDocumentService          $finalDocuments Compares a final document with its frozen checksum.
 	 * @param LoggerInterface               $logger         Records what could not be read.
+	 *
+	 * @spec openspec/changes/whole-collection-integrity-scan/tasks.md#task-1-the-scan-service-finds-the-three-kinds
 	 */
 	public function __construct(
 		private readonly DocumentObjectServiceResolver $objects,
@@ -134,6 +136,8 @@ class IntegrityScanService {
 	 * @param int $checked Counts the records looked at.
 	 *
 	 * @return array<int, array<string, mixed>> The findings.
+	 *
+	 * @spec openspec/changes/whole-collection-integrity-scan/tasks.md#task-1-the-scan-service-finds-the-three-kinds
 	 */
 	private function dossierFindings(int &$checked): array {
 		$findings = [];
@@ -156,6 +160,8 @@ class IntegrityScanService {
 	 * @param int $checked Counts the records looked at.
 	 *
 	 * @return array<int, array<string, mixed>> The findings.
+	 *
+	 * @spec openspec/changes/whole-collection-integrity-scan/tasks.md#task-1-the-scan-service-finds-the-three-kinds
 	 */
 	private function finalDocumentFindings(int &$checked): array {
 		$findings = [];
@@ -185,6 +191,8 @@ class IntegrityScanService {
 	 * @param int $checked Counts the records looked at.
 	 *
 	 * @return array<int, array<string, mixed>> The findings.
+	 *
+	 * @spec openspec/changes/whole-collection-integrity-scan/tasks.md#task-1-the-scan-service-finds-the-three-kinds
 	 */
 	private function anonymizationFindings(int &$checked): array {
 		$findings = [];
@@ -212,6 +220,8 @@ class IntegrityScanService {
 	 * @param int $fileId The file id.
 	 *
 	 * @return bool
+	 *
+	 * @spec openspec/changes/whole-collection-integrity-scan/tasks.md#task-1-the-scan-service-finds-the-three-kinds
 	 */
 	private function matchesChecksum(int $fileId): bool {
 		try {
@@ -228,6 +238,8 @@ class IntegrityScanService {
 	 * @param int $fileId The file id.
 	 *
 	 * @return bool
+	 *
+	 * @spec openspec/changes/whole-collection-integrity-scan/tasks.md#task-1-the-scan-service-finds-the-three-kinds
 	 */
 	private function resolves(int $fileId): bool {
 		if ($fileId <= 0) {
@@ -247,6 +259,8 @@ class IntegrityScanService {
 	 * @param string $schema The schema slug.
 	 *
 	 * @return array<int, array<string, mixed>> The rows.
+	 *
+	 * @spec openspec/changes/whole-collection-integrity-scan/tasks.md#task-1-the-scan-service-finds-the-three-kinds
 	 */
 	private function rows(string $schema): array {
 		try {
@@ -286,6 +300,8 @@ class IntegrityScanService {
 	 * @param int                  $fileId The file id.
 	 *
 	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/changes/whole-collection-integrity-scan/tasks.md#task-1-the-scan-service-finds-the-three-kinds
 	 */
 	private function finding(string $kind, string $schema, array $record, int $fileId): array {
 		return [
