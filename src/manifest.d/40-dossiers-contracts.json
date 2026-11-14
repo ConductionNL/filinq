@@ -1,0 +1,87 @@
+{
+	"menu": [
+		{
+			"id": "Dossiers",
+			"label": "Dossiers",
+			"icon": "FolderAccount",
+			"route": "Dossiers",
+			"order": 45
+		},
+		{
+			"id": "Contracts",
+			"label": "Contracts",
+			"icon": "FileSign",
+			"route": "Contracts",
+			"order": 46
+		},
+		{
+			"id": "ContractPipeline",
+			"label": "Renewal pipeline",
+			"icon": "CalendarSync",
+			"route": "ContractPipeline",
+			"order": 47
+		}
+	],
+	"pages": [
+		{
+			"id": "Dossiers",
+			"route": "/dossiers",
+			"type": "custom",
+			"title": "Dossiers",
+			"component": "DossierIndex",
+			"_note": "The dossier is Filinq's unit of municipal work — folder batches run on it, the legal-bases summary reports on it — and until 2026-09-07 it had a schema, a spec and a controller but NO surface: a user could not create or open one anywhere in the app. type:custom rather than type:index because the row context (document count as home-folder ∪ documents[], resolved legal-basis chips, lifecycle status) is aggregated by DossierManagementController, not readable from a plain OR index."
+		},
+		{
+			"id": "DossierDetail",
+			"route": "/dossiers/:id",
+			"type": "custom",
+			"title": "Dossier",
+			"component": "DossierDetail",
+			"_note": "Aggregates documents, legal bases, anonymisation runs and publication state. Selecting a document swaps the inline viewer through store state, never a route push, so switching causes no reload. Every dossier-level action calls the endpoint that already owns it — nothing here reimplements batch, report or publication logic."
+		},
+		{
+			"id": "Contracts",
+			"route": "/contracts",
+			"type": "index",
+			"title": "Contracts",
+			"config": {
+				"register": "filinq",
+				"schema": "documentContract",
+				"columns": [
+					"title",
+					"contractType",
+					"status",
+					"endDate",
+					"noticeDeadline",
+					"value"
+				],
+				"rowRoute": "ContractDetail",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"documentationUrl": "https://filinq.conduction.nl",
+				"showTitle": true,
+				"addLabel": "New contract",
+				"emptyText": "No contracts yet"
+			},
+			"_note": "contract-lifecycle-management REQ-DDCLM-006: OpenRegister lists the documentContract objects directly (its RBAC decides who sees them: filinq-contract-managers and admins); a row opens ContractDetail through rowRoute, because the detail is a custom page, not type:detail. Create and edit are the object API's own dialog; status starts at draft and only the declared lifecycle moves it."
+		},
+		{
+			"id": "ContractPipeline",
+			"route": "/contracts/pipeline",
+			"type": "custom",
+			"title": "Renewal pipeline",
+			"component": "ContractPipeline",
+			"_note": "The renewal pipeline (REQ-DDCLM-006): active contracts bucketed in the browser (src/services/contractPipeline.js) into expired, notice due within 30 days, ending within 90 days and later, from the objects the caller can read; renew and end on every row. MUST stay declared BEFORE /contracts/:id: vue-router matches in declaration order, so the :id route would swallow /contracts/pipeline."
+		},
+		{
+			"id": "ContractDetail",
+			"route": "/contracts/:id",
+			"type": "custom",
+			"title": "Contract",
+			"component": "ContractDetail",
+			"_note": "One contract (REQ-DDCLM-001/002/004/005): terms, parties named from their contacts (GET api/contracts/{id}/parties), documents (attach from Files, generate from a template through api/documents/generate), send for signature (an ordinary signing request, recorded through POST api/contracts/{id}/signing, which also links the signed document back once the request completed), suggested terms with accept and reject, and put in force, renew and end."
+		}
+	]
+}

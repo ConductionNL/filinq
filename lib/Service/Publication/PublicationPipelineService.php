@@ -171,6 +171,7 @@ class PublicationPipelineService implements PublicationPipelineServiceInterface 
 		}
 
 		$record = $this->store->saveRecord(record: $record, uuid: (string) $record['uuid']);
+		$this->moveHandedOffCategory(record: $record, metadata: $metadata);
 		$details = '';
 		if (trim((string) ($metadata['accessibilityOverrideReason'] ?? '')) !== '') {
 			// The reason to publish a copy that lost its accessibility goes in the log as well.
@@ -182,6 +183,32 @@ class PublicationPipelineService implements PublicationPipelineServiceInterface 
 		return $record;
 
 	}//end updateMetadata()
+
+	/**
+	 * A handed-off record whose category changed moves its publication to
+	 * the new category, so the right category sitemap lists it.
+	 *
+	 * @param array<string, mixed> $record   The saved record
+	 * @param array<string, mixed> $metadata The metadata that was saved
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/woo-hand-off-files-its-category/tasks.md#task-1.3
+	 */
+	private function moveHandedOffCategory(array $record, array $metadata): void {
+		$publicationRef = (string) ($record['endpointPublicationRef'] ?? '');
+		if ($publicationRef === '' || array_key_exists('wooCategory', $metadata) === false) {
+			return;
+		}
+
+		$category = $this->platform->toPlatformCode(value: (string) $metadata['wooCategory']);
+		if ($category === null) {
+			return;
+		}
+
+		$this->store->savePlatformPublication(publication: ['wooCategory' => $category], uuid: $publicationRef);
+
+	}//end moveHandedOffCategory()
 
 	/**
 	 * Hand a ready publication to the platform with its redacted copy.
@@ -214,9 +241,17 @@ class PublicationPipelineService implements PublicationPipelineServiceInterface 
 			throw new PublicationNotReadyException(reasons: $reasons);
 		}
 
+		// The publication carries OpenCatalogi's own category code, which its
+		// category sitemaps match on; a record from before the codes holds the
+		// TOOI basename and is translated here (REQ-DDWPP-010).
+		$category = $this->platform->toPlatformCode(value: (string) $record['wooCategory']);
+		if ($category === null) {
+			throw new PublicationNotReadyException(reasons: ['Unknown Woo category']);
+		}
+
 		$copy = $this->platform->readCopy(fileId: (string) $record['redactedFileRef'], actor: $actor);
 		$publication = $this->store->savePlatformPublication(
-			publication: $this->map->toPublication(record: $record),
+			publication: $this->map->toPublication(record: ['wooCategory' => $category] + $record),
 			uuid: (string) ($record['endpointPublicationRef'] ?? '')
 		);
 		$this->platform->attach(publicationUuid: (string) $publication['uuid'], fileName: $copy->getName(), content: $copy->getContent());

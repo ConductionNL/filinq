@@ -11,9 +11,9 @@
 
 ## 3. Generation and finality
 
-- [ ] 3.1 Pass `listRefs` from `lib/Service/CorrespondenceService.php` generate() and from the preview in `src/views/templates/TemplateDetail.vue` (row gen-lists, REQ-DDLR-001). Verify: PHPUnit that a template table is filled from two related records.
+- [x] 3.1 Pass `listRefs` from `lib/Service/CorrespondenceService.php` generate() and from the preview in `src/views/templates/TemplateDetail.vue` (row gen-lists, REQ-DDLR-001). Verify: PHPUnit that a template table is filled from two related records.
 - [ ] 3.2 Give `POST /api/document-finality-rules` a caller: a rule section on the admin settings, or the dossiq case type configuration calling it (row wk-final-rule, REQ-FDF-04). Verify: Playwright declares a rule and a status change makes the document final.
 
 ## 4. Signing
 
-- [ ] 4.1 Read `signingMode` and each signer's `order` in `lib/Service/SigningService.php` sign(), and refuse a sequential signer whose turn has not come (row sig-order). Verify: PHPUnit that B cannot sign before A in sequential mode and can in parallel mode.
+- [x] 4.1 Read `signingMode` and each signer's `order` in `lib/Service/SigningService.php` sign(), and refuse a sequential signer whose turn has not come (row sig-order). Verify: PHPUnit that B cannot sign before A in sequential mode and can in parallel mode.
