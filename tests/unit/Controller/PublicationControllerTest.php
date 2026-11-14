@@ -148,14 +148,14 @@ class PublicationControllerTest extends TestCase {
 	 */
 	public function testCategoriesReadinessAndDestructionDate(): void {
 		$platform = $this->createMock(OpenCatalogiPlatform::class);
-		$platform->method('categories')->willReturn([['code' => 'c_8c840238', 'label' => 'Adviezen']]);
+		$platform->method('categories')->willReturn([['code' => 'infocat009', 'label' => 'Adviezen']]);
 		$pipeline = $this->createMock(PublicationPipelineService::class);
 		$pipeline->method('evaluate')->willReturn(['uuid' => 'mine', 'status' => 'ready']);
 		$pipeline->method('setDestructionDate')->willThrowException(new \InvalidArgumentException('A destruction date needs a date (YYYY-MM-DD) and its source', 400));
 
 		$controller = $this->controller(pipeline: $pipeline, record: ['uuid' => 'mine', 'documentFileRef' => '42'], platform: $platform);
 
-		$this->assertSame('c_8c840238', $controller->categories()->getData()['results'][0]['code']);
+		$this->assertSame('infocat009', $controller->categories()->getData()['results'][0]['code']);
 		$this->assertSame('ready', $controller->readiness('mine')->getData()['status']);
 		$this->assertSame(400, $controller->destructionDate('mine')->getStatus());
 
