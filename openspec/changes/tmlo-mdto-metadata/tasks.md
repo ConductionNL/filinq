@@ -30,10 +30,10 @@
 
 ## 3. Frontend
 
-- [ ] 3.1 MDTO panel on document detail (REQ-DDTMM-001/002/003)
+- [x] 3.1 MDTO panel on document detail (REQ-DDTMM-001/002/003)
   - Read-only core block from `retention`; supplement editing via `CnFormDialog`; proposal chips accept/edit/reject; NC CSS variables; NcSelect with `inputLabel`; modals in `src/modals/`.
 
-- [ ] 3.2 Completeness banner + export/overbrengen actions on the overbrenging surface (REQ-DDTMM-004/005/006)
+- [x] 3.2 Completeness banner + export/overbrengen actions on the overbrenging surface (REQ-DDTMM-004/005/006)
   - Missing-field list rendered verbatim; export XML + JSON; manual-delivery state when no transport configured.
 
 ## 4. Quality
@@ -45,7 +45,7 @@
 - [ ] 4.2 Playwright e2e `tests/e2e/workflows/tmlo-mdto-metadata.spec.ts` covering the `@e2e`-referenced scenarios
   - MDTO panel, proposal confirmation, blocked transfer with missing-field banner, sidecar export, manual-delivery degradation; verify on the Postgres dev instance (port 8080); test through the UI.
 
-- [ ] 4.3 i18n: EN + NL translations for all new UI strings (ADR-005)
+- [x] 4.3 i18n: EN + NL translations for all new UI strings (ADR-005)
   - Keys in English; MDTO domain vocabulary (waardering, beperkingGebruik, overbrenging, archiefvormer) preserved in both locales.
 
 - [ ] 4.4 Documentation `docs/features/tmlo-mdto-metadata.md` with Playwright MCP screenshots (ADR-010)

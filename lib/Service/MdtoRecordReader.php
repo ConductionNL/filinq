@@ -257,11 +257,21 @@ class MdtoRecordReader {
 		);
 		$objects = [];
 		foreach ((array) $rows as $row) {
+			$uuid = null;
 			if (is_object($row) === true && method_exists($row, 'getObject') === true) {
+				if (method_exists($row, 'getUuid') === true) {
+					$uuid = $row->getUuid();
+				}
+
 				$row = $row->getObject();
 			}
 
-			$objects[] = (array) $row;
+			$object = (array) $row;
+			if ($uuid !== null && isset($object['id']) === false) {
+				$object['id'] = (string) $uuid;
+			}
+
+			$objects[] = $object;
 		}
 
 		return $objects;

@@ -12096,6 +12096,12 @@
                                         "anonymisation",
                                         "operator"
                                     ]
+                                },
+                                "rejected": {
+                                    "title": "Rejected",
+                                    "description": "Whether an operator rejected this proposal. A rejected proposal is kept so it is not proposed again, and is never exported.",
+                                    "type": "boolean",
+                                    "default": false
                                 }
                             }
                         }
