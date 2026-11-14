@@ -19,11 +19,13 @@ import {
 	draftId,
 	expiresAt,
 	finishDraft,
+	hasPlainLanguage,
 	isOpen,
 	loadDraft,
 	resumeRoute,
 	saveDraft,
 	saveWizardDraft,
+	templateEditability,
 } from '../../src/services/drafts.js'
 
 const http = vi.hoisted(() => ({ calls: [], answer: null }))
@@ -174,5 +176,27 @@ describe('finishing a draft', () => {
 		http.answer = refused(500, new Blob(['<html>']))
 
 		expect(await finishDraft('d1')).toEqual({ ok: false, status: 500, error: '', errors: {} })
+	})
+})
+
+describe('whether a template may be opened for editing (REQ-GDA-005)', () => {
+	it('refuses a template that declares a plain-language version', async () => {
+		http.answer = { data: { id: 't1', plainLanguage: { requiredStatements: ['decision'] } } }
+		expect(await templateEditability('t1')).toEqual({ known: true, editable: false })
+		expect(http.calls[0].slice(0, 2)).toEqual(['get', '/index.php/apps/filinq/api/templates/t1'])
+
+		http.answer = { data: { id: 't2', plainLanguage: null } }
+		expect(await templateEditability('t2')).toEqual({ known: true, editable: true })
+	})
+
+	it('keeps the action when the template cannot be read, and has nothing to say without one', async () => {
+		http.answer = refused(404, {})
+		expect(await templateEditability('t9')).toEqual({ known: false, editable: true })
+		expect(await templateEditability('')).toEqual({ known: false, editable: false })
+	})
+
+	it('reads an empty declaration as none', () => {
+		expect([null, undefined, false, '', {}, []].map(hasPlainLanguage)).toEqual([false, false, false, false, false, false])
+		expect([{ x: 1 }, ['a'], 'b1', true].map(hasPlainLanguage)).toEqual([true, true, true, true])
 	})
 })

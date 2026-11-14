@@ -1,6 +1,10 @@
 OC.L10N.register(
     "filinq",
     {
+        "Opening…": "Opening…",
+        "Open for editing": "Open for editing",
+        "This template has a plain-language version. Generate it directly.": "This template has a plain-language version. Generate it directly.",
+        "The letter could not be opened for editing.": "The letter could not be opened for editing.",
         "Back to drafts": "Back to drafts",
         "Discard": "Discard",
         "Discard this draft?": "Discard this draft?",

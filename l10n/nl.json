@@ -1,5 +1,9 @@
 {
     "translations": {
+        "Opening…": "Openen…",
+        "Open for editing": "Openen om te bewerken",
+        "This template has a plain-language version. Generate it directly.": "Dit sjabloon heeft een versie in eenvoudige taal. Genereer het direct.",
+        "The letter could not be opened for editing.": "De brief kon niet worden geopend om te bewerken.",
         "Back to drafts": "Terug naar concepten",
         "Discard": "Weggooien",
         "Discard this draft?": "Dit concept weggooien?",

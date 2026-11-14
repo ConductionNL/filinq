@@ -250,3 +250,45 @@ export async function finishDraft(id) {
 		}
 	}
 }
+
+/**
+ * Whether a template may be opened for editing: a template with a
+ * plain-language counterpart is generated directly (REQ-GDA-005).
+ *
+ * @param {string} templateId The template.
+ * @return {Promise<{known: boolean, editable: boolean}>} `known` false when the
+ *         template could not be read; the server still refuses a plain one then.
+ * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-3.3
+ */
+export async function templateEditability(templateId) {
+	if (!templateId) {
+		return { known: false, editable: false }
+	}
+	const result = await answer(
+		axios.get(generateUrl(`/apps/filinq/api/templates/${encodeURIComponent(templateId)}`)),
+	)
+	if (!result.ok || !result.data || typeof result.data !== 'object') {
+		return { known: false, editable: true }
+	}
+	return { known: true, editable: !hasPlainLanguage(result.data.plainLanguage) }
+}
+
+/**
+ * Whether a template's `plainLanguage` declares a counterpart.
+ *
+ * @param {unknown} plain The template's `plainLanguage`.
+ * @return {boolean} False for nothing, an empty object or an empty list.
+ * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-3.3
+ */
+export function hasPlainLanguage(plain) {
+	if (plain === null || plain === undefined || plain === false || plain === '') {
+		return false
+	}
+	if (Array.isArray(plain)) {
+		return plain.length > 0
+	}
+	if (typeof plain === 'object') {
+		return Object.keys(plain).length > 0
+	}
+	return true
+}
