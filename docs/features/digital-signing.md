@@ -286,6 +286,14 @@ POST /apps/filinq/api/signing/requests/{id}/accept
 
 On `signerRecord`, `role` was already `signer` or `guardian`; `accept` is its third value, and no role signs as a party. A consumer that treats `status == SIGNED` as "done" should also count `ACCEPTED` for an accept-only recipient.
 
+In the app:
+
+- **New signing request**: every recipient row has a *Role*, *Sign* or *Accept only*. The form will not create a request without a recipient who signs.
+- **Signing folder**: a document you only accept shows an *Accept* button instead of the selection box, and is never part of *Sign selected*.
+- **Request detail**: the *Recipients* table lists each recipient in order with their role, state and when they signed or accepted. `GET /apps/filinq/api/signing/requests/{id}` returns that list as `recipients` (id, name, role, status, order, at); it holds no e-mail address, IP address or signature data.
+
+On the portal, the signer manifest declares a third act, `accept`, beside `sign` and `decline` (`POST /apps/filinq/api/portal/signing/accept`, `minTrust: substantial`). The receiver checks the portal assertion and the invited recipient exactly as for signing. The wrong act for a recipient's role answers 422 `wrong_act` with the message above, on both the sign and the accept act.
+
 ## Signer identity: DigiD, eHerkenning and iDIN
 
 A Nextcloud login tells Filinq which account is signing. It does not say how strongly that
