@@ -2,7 +2,8 @@
 
 /**
  * Unit tests for the `unified-search-provider` change: the searchable ⟺
- * deep-link invariant on `filinq_register.json` + `src/manifest.json`.
+ * deep-link invariant on `filinq_register.json` + `src/manifest.json` (with its
+ * `src/manifest.d/` fragments).
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -71,6 +72,17 @@ class UnifiedSearchConsistencyTest extends TestCase {
 		$manifest = json_decode($manifestRaw, true);
 		$this->assertIsArray($register, 'filinq_register.json must be valid JSON');
 		$this->assertIsArray($manifest, 'src/manifest.json must be valid JSON');
+
+		// The SPA merges the src/manifest.d/ fragments (ADR-037) onto the
+		// base in file-name order; their pages are part of the manifest.
+		$fragments = glob(__DIR__ . '/../../../src/manifest.d/*.json');
+		$this->assertIsArray(actual: $fragments, message: 'src/manifest.d must be listable');
+		sort($fragments);
+		foreach ($fragments as $file) {
+			$fragment = json_decode((string) file_get_contents($file), true);
+			$this->assertIsArray(actual: $fragment, message: basename($file) . ' must be valid JSON');
+			$manifest['pages'] = array_merge(($manifest['pages'] ?? []), ($fragment['pages'] ?? []));
+		}
 
 		$this->register = $register;
 		$this->manifest = $manifest;
