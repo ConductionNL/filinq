@@ -2838,7 +2838,14 @@
         "Accept and download": "Accept and download",
         "Download the published copy": "Download the published copy",
         "The agreement could not be recorded": "The agreement could not be recorded",
-        "The published copy could not be downloaded": "The published copy could not be downloaded"
+        "The published copy could not be downloaded": "The published copy could not be downloaded",
+        "Due for review": "Due for review",
+        "Loading…": "Loading…",
+        "Mark reviewed": "Mark reviewed",
+        "No documents are due for review": "No documents are due for review",
+        "Review by {date}": "Review by {date}",
+        "The document could not be marked reviewed": "The document could not be marked reviewed",
+        "The documents due for review could not be loaded": "The documents due for review could not be loaded"
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

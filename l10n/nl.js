@@ -2900,7 +2900,14 @@ OC.L10N.register(
         "Accept and download": "Accepteren en downloaden",
         "Download the published copy": "De gepubliceerde kopie downloaden",
         "The agreement could not be recorded": "De aanvaarding kon niet worden vastgelegd",
-        "The published copy could not be downloaded": "De gepubliceerde kopie kon niet worden gedownload"
+        "The published copy could not be downloaded": "De gepubliceerde kopie kon niet worden gedownload",
+        "Due for review": "Te herzien",
+        "Loading…": "Laden…",
+        "Mark reviewed": "Markeren als herzien",
+        "No documents are due for review": "Er zijn geen documenten te herzien",
+        "Review by {date}": "Herzien vóór {date}",
+        "The document could not be marked reviewed": "Het document kon niet als herzien worden gemarkeerd",
+        "The documents due for review could not be loaded": "De te herziene documenten konden niet worden geladen"
     },
     "nplurals=2; plural=(n != 1);"
 )

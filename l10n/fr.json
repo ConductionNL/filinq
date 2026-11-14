@@ -1780,7 +1780,14 @@
         "Accept and download": "Accepter et télécharger",
         "Download the published copy": "Télécharger la copie publiée",
         "The agreement could not be recorded": "Impossible d'enregistrer l'acceptation",
-        "The published copy could not be downloaded": "Impossible de télécharger la copie publiée"
+        "The published copy could not be downloaded": "Impossible de télécharger la copie publiée",
+        "Due for review": "À réviser",
+        "Loading…": "Chargement…",
+        "Mark reviewed": "Marquer comme révisé",
+        "No documents are due for review": "Aucun document n'est à réviser",
+        "Review by {date}": "À réviser avant le {date}",
+        "The document could not be marked reviewed": "Impossible de marquer le document comme révisé",
+        "The documents due for review could not be loaded": "Impossible de charger les documents à réviser"
     },
     "pluralForm": "nplurals=2; plural=(n > 1);"
 }

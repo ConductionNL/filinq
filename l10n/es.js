@@ -1778,7 +1778,14 @@ OC.L10N.register(
         "Accept and download": "Aceptar y descargar",
         "Download the published copy": "Descargar la copia publicada",
         "The agreement could not be recorded": "No se pudo registrar la aceptación",
-        "The published copy could not be downloaded": "No se pudo descargar la copia publicada"
+        "The published copy could not be downloaded": "No se pudo descargar la copia publicada",
+        "Due for review": "Pendiente de revisión",
+        "Loading…": "Cargando…",
+        "Mark reviewed": "Marcar como revisado",
+        "No documents are due for review": "No hay documentos pendientes de revisión",
+        "Review by {date}": "Revisar antes del {date}",
+        "The document could not be marked reviewed": "No se pudo marcar el documento como revisado",
+        "The documents due for review could not be loaded": "No se pudieron cargar los documentos pendientes de revisión"
     },
     "nplurals=2; plural=(n != 1);"
 )

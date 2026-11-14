@@ -1778,7 +1778,14 @@ OC.L10N.register(
         "Accept and download": "Akzeptieren und herunterladen",
         "Download the published copy": "Die veröffentlichte Kopie herunterladen",
         "The agreement could not be recorded": "Die Zustimmung konnte nicht gespeichert werden",
-        "The published copy could not be downloaded": "Die veröffentlichte Kopie konnte nicht heruntergeladen werden"
+        "The published copy could not be downloaded": "Die veröffentlichte Kopie konnte nicht heruntergeladen werden",
+        "Due for review": "Zur Überprüfung fällig",
+        "Loading…": "Wird geladen…",
+        "Mark reviewed": "Als überprüft markieren",
+        "No documents are due for review": "Keine Dokumente sind zur Überprüfung fällig",
+        "Review by {date}": "Überprüfen bis {date}",
+        "The document could not be marked reviewed": "Das Dokument konnte nicht als überprüft markiert werden",
+        "The documents due for review could not be loaded": "Die zur Überprüfung fälligen Dokumente konnten nicht geladen werden"
     },
     "nplurals=2; plural=(n != 1);"
 )

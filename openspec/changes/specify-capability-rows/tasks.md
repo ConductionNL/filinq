@@ -16,6 +16,7 @@
 - [ ] 2.2 Show `GET api/case-documents/mine` and a Waiting for me view on `src/views/myDocuments/MyDocumentsIndex.vue` (REQ-SCR-006). Verify: Playwright on `/my-documents`.
 - [ ] 2.3 Write an audit entry for every action on a document (open, download, edit, version, share, anonymise, sign, delete) through OpenRegister's audit trail from the services in `lib/Service/`, and show it on the document's activity tab (REQ-SCR-007). Verify: PHPUnit that each action writes one entry with actor and moment.
 - [ ] 2.4 Add a Due for review list to `src/views/myDocuments/MyDocumentsIndex.vue` over `GET api/documents/due-for-review`, with a Mark reviewed action over `POST api/documents/{uuid}/reviewed` for the owner (REQ-SCR-014, row wk-review-due). Verify: Playwright marks a due document reviewed and it leaves the list.
+  - Built so far: a Due for review list on My documents (`src/components/myDocuments/DueForReviewList.vue`) over `GET api/documents/due-for-review`, with Mark reviewed for the owner over `POST api/documents/{uuid}/reviewed`; a marked document leaves the list. Left: the Playwright verification, which needs a live instance.
 - [ ] 2.5 Add Link to another record and Remove link on the document view, over `POST` and `DELETE api/case-documents/{uuid}/domains`, with the write check on the target before the link is stored (REQ-CDF-04, row wk-multi-link). Verify: Playwright links one document to two cases and both cases list it.
 
 ## 3. Woo and reports

@@ -1778,7 +1778,14 @@ OC.L10N.register(
         "Accept and download": "Accetta e scarica",
         "Download the published copy": "Scarica la copia pubblicata",
         "The agreement could not be recorded": "Impossibile registrare l'accettazione",
-        "The published copy could not be downloaded": "Impossibile scaricare la copia pubblicata"
+        "The published copy could not be downloaded": "Impossibile scaricare la copia pubblicata",
+        "Due for review": "Da rivedere",
+        "Loading…": "Caricamento…",
+        "Mark reviewed": "Segna come rivisto",
+        "No documents are due for review": "Nessun documento da rivedere",
+        "Review by {date}": "Da rivedere entro il {date}",
+        "The document could not be marked reviewed": "Impossibile segnare il documento come rivisto",
+        "The documents due for review could not be loaded": "Impossibile caricare i documenti da rivedere"
     },
     "nplurals=2; plural=(n != 1);"
 )
