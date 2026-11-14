@@ -23,6 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\Detection;
 
+use OCA\Filinq\Kernel\Contracts\LlmDetectionProviderInterface;
 use RuntimeException;
 
 /**
@@ -41,7 +42,7 @@ use RuntimeException;
  *
  * @spec openspec/changes/llm-entity-detection-provider/specs/llm-entity-detection-provider/spec.md
  */
-class LlmDetectionProvider implements DetectionProviderInterface {
+class LlmDetectionProvider implements DetectionProviderInterface, LlmDetectionProviderInterface {
 
 	/**
 	 * The provider id.
