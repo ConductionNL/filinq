@@ -62,6 +62,25 @@ class FieldPlacements {
 	public const MAX = 200;
 
 	/**
+	 * The settings a `text` field may carry (signing-field-validation D1).
+	 *
+	 * @var list<string>
+	 */
+	public const TEXT_SETTINGS = ['label', 'required', 'validation'];
+
+	/**
+	 * The checks a `text` field may declare.
+	 *
+	 * @var list<string>
+	 */
+	public const VALIDATIONS = ['iban-nl', 'iban'];
+
+	/**
+	 * The longest label, in characters.
+	 */
+	public const MAX_LABEL = 200;
+
+	/**
 	 * Validate the placements a caller sent and return them normalised.
 	 *
 	 * A placement names a signer by position in the request's signer list, a
@@ -114,7 +133,7 @@ class FieldPlacements {
 	 */
 	private function normaliseOne(mixed $placement, int $signerCount, int $position): array {
 		$where = 'fieldPlacements[' . $position . ']';
-		$keys  = ['signerIndex', 'page', 'x', 'y', 'width', 'height', 'type'];
+		$keys  = ['signerIndex', 'page', 'x', 'y', 'width', 'height', 'type', ...self::TEXT_SETTINGS];
 		if (is_array($placement) === false || array_diff(array_keys($placement), $keys) !== []) {
 			throw new InvalidArgumentException($where . ' must hold only ' . implode(', ', $keys));
 		}
@@ -131,7 +150,7 @@ class FieldPlacements {
 
 		$box = $this->box(placement: $placement, where: $where);
 
-		return [
+		$normalised = [
 			'signerIndex' => $signerIndex,
 			'page'        => $this->integer(value: ($placement['page'] ?? null), minimum: 1, where: $where . '.page'),
 			'x'           => $box['x'],
@@ -141,7 +160,59 @@ class FieldPlacements {
 			'type'        => $type,
 		];
 
+		if ($type !== 'text') {
+			return $normalised;
+		}
+
+		return array_merge($normalised, $this->textSettings(placement: $placement, where: $where));
+
 	}//end normaliseOne()
+
+	/**
+	 * The label, required flag and check of a text field, when set.
+	 *
+	 * Other field types ignore the three (REQ-SFV-001).
+	 *
+	 * @param array<string, mixed> $placement The raw placement.
+	 * @param string               $where     The placement's path, for messages.
+	 *
+	 * @return array<string, mixed> `label`, `required` and `validation`, each only when given.
+	 *
+	 * @throws InvalidArgumentException When a setting has the wrong shape.
+	 *
+	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.2
+	 */
+	private function textSettings(array $placement, string $where): array {
+		$settings = [];
+		if (array_key_exists('label', $placement) === true) {
+			$label = $placement['label'];
+			if (is_string($label) === false || mb_strlen($label) > self::MAX_LABEL) {
+				throw new InvalidArgumentException($where . '.label must be text of at most ' . self::MAX_LABEL . ' characters');
+			}
+
+			$settings['label'] = trim($label);
+		}
+
+		if (array_key_exists('required', $placement) === true) {
+			if (is_bool($placement['required']) === false) {
+				throw new InvalidArgumentException($where . '.required must be true or false');
+			}
+
+			$settings['required'] = $placement['required'];
+		}
+
+		$validation = ($placement['validation'] ?? null);
+		if ($validation !== null) {
+			if (in_array($validation, self::VALIDATIONS, true) === false) {
+				throw new InvalidArgumentException($where . '.validation must be one of ' . implode(', ', self::VALIDATIONS));
+			}
+
+			$settings['validation'] = $validation;
+		}
+
+		return $settings;
+
+	}//end textSettings()
 
 	/**
 	 * Read a placement's box: four shares of the page that keep it on the page.

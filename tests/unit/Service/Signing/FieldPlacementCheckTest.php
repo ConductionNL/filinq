@@ -17,10 +17,12 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Tests\Unit\Service\Signing;
 
+use OCA\Filinq\Exception\SigningFieldsRefusedException;
 use OCA\Filinq\Service\SignedArtifactProducer;
 use OCA\Filinq\Service\Signing\FieldPlacementCheck;
 use OCA\Filinq\Service\Signing\FieldPlacementRenderer;
 use OCA\Filinq\Service\Signing\FieldPlacements;
+use OCA\Filinq\Service\Signing\FieldValueChecker;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
@@ -30,6 +32,8 @@ use RuntimeException;
  *
  * @covers \OCA\Filinq\Service\Signing\FieldPlacementCheck
  * @uses   \OCA\Filinq\Service\Signing\FieldPlacements
+ * @uses   \OCA\Filinq\Service\Signing\FieldValueChecker
+ * @uses   \OCA\Filinq\Exception\SigningFieldsRefusedException
  */
 class FieldPlacementCheckTest extends TestCase {
 
@@ -168,4 +172,36 @@ class FieldPlacementCheckTest extends TestCase {
 			$result
 		);
 	}//end testApplyStoresNormalisedPlacements()
+
+	/**
+	 * A text field whose check OpenRegister cannot run is refused at creation (REQ-SFV-002).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.1
+	 */
+	public function testACheckThisServerCannotRunIsRefused(): void {
+		$field = ['type' => 'text', 'label' => 'Account for the payment', 'required' => true, 'validation' => 'iban-nl'] + $this->placement(page: 1);
+		$missing = new FieldPlacementCheck(
+			rules: new FieldPlacements(),
+			renderer: $this->renderer,
+			valueChecker: new FieldValueChecker(formatLookup: fn (string $name): ?object => null)
+		);
+
+		try {
+			$missing->accept(placements: [$this->placement(page: 1), $field], signerCount: 1, provider: 'native');
+			$this->fail('Expected the unavailable check to be refused');
+		} catch (SigningFieldsRefusedException $e) {
+			$this->assertSame(400, $e->getCode());
+			$this->assertSame([1 => 'This check is not available on this server'], $e->fieldErrors());
+		}
+
+		$present = new FieldPlacementCheck(
+			rules: new FieldPlacements(),
+			renderer: $this->renderer,
+			valueChecker: new FieldValueChecker(formatLookup: fn (string $name): ?object => new class { public function validate(mixed $data): bool { return true; } })
+		);
+		$accepted = $present->accept(placements: [$field], signerCount: 1, provider: 'native');
+		$this->assertSame('iban-nl', $accepted[0]['validation']);
+	}//end testACheckThisServerCannotRunIsRefused()
 }//end class

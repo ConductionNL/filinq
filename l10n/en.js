@@ -1,10 +1,16 @@
-/**
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- */
 OC.L10N.register(
     "filinq",
     {
+        "What a text field asks the signer for, such as \"Account for the payment\". Only text fields use it.": "What a text field asks the signer for, such as \"Account for the payment\". Only text fields use it.",
+        "Whether the signer must fill the text field in before signing. Only text fields use it.": "Whether the signer must fill the text field in before signing. Only text fields use it.",
+        "Check": "Check",
+        "The check a text field's value must pass before the signature is written: a Dutch IBAN or any IBAN, checked by OpenRegister's iban format. Only text fields use it.": "The check a text field's value must pass before the signature is written: a Dutch IBAN or any IBAN, checked by OpenRegister's iban format. Only text fields use it.",
+        "Filled-in fields": "Filled-in fields",
+        "What the signer typed into the text fields placed for them, checked on the server and stored with the signature. Readable only by those who may read signer records.": "What the signer typed into the text fields placed for them, checked on the server and stored with the signature. Readable only by those who may read signer records.",
+        "The position of the field in the request's fieldPlacements, counting from 0.": "The position of the field in the request's fieldPlacements, counting from 0.",
+        "The field's label when it was filled in.": "The field's label when it was filled in.",
+        "The value, normalised: an IBAN in capitals without spaces.": "The value, normalised: an IBAN in capitals without spaces.",
+        "The check the value passed, if the field had one.": "The check the value passed, if the field had one.",
         "Related records for tables (listRefs, JSON)": "Related records for tables (listRefs, JSON)",
         "The related records are not valid JSON.": "The related records are not valid JSON.",
         "Marketplace": "Marketplace",

@@ -39,6 +39,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
+use OCA\Filinq\Controller\Support\PortalSignAct;
 use OCA\Filinq\Kernel\Contracts\OpenRegisterResolverInterface;
 use OCA\Filinq\Kernel\Contracts\PortalSigningDocumentResolverInterface;
 use OCA\Filinq\Kernel\Contracts\SettingsServiceInterface;
@@ -60,6 +61,11 @@ use Throwable;
  * Receives portaliq's forwarded signing actions on the `signer` audience.
  *
  * @spec openspec/specs/portal-signing-actions/spec.md
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The thirteenth type is
+ * PortalSignAct, which reads the sign act's consent, drawn signature and typed
+ * field values and answers a refused value with 422, so the controller itself
+ * stays one call and one branch.
  */
 class PortalSigningReceiverController extends Controller {
 	/**
@@ -137,6 +143,7 @@ class PortalSigningReceiverController extends Controller {
 	 * @spec openspec/specs/portal-signing-actions/spec.md
 	 * @spec openspec/specs/portal-signing-surface/spec.md
 	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.3
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
@@ -150,22 +157,25 @@ class PortalSigningReceiverController extends Controller {
 
 		[$verifiedActor, $signerRecord] = $context;
 
-		$consent = (bool)$this->request->getParam('consent', false);
-		$signature = $this->request->getParam('signature');
-
-		$signatureData = ['consent' => $consent];
-		if (is_string($signature) === true && $signature !== '') {
-			$signatureData['signature'] = $signature;
-		}
+		// Consent, the optional drawn signature and the typed field values
+		// (signing-field-validation D7).
+		$act = new PortalSignAct(request: $this->request);
 
 		try {
 			$signer = $this->signingService->sign(
 				requestId: (string)$signerRecord['signingRequestId'],
 				signerId: (string)($signerRecord['id'] ?? $signerRecord['uuid'] ?? ''),
 				verifiedActor: $verifiedActor,
-				signatureData: $signatureData
+				signatureData: $act->signatureData,
+				fields: $act->fields
 			);
 		} catch (Throwable $e) {
+			// A value that fails its check: nothing was signed (REQ-SFV-003).
+			$refused = $act->refusal(exception: $e);
+			if ($refused !== null) {
+				return new JSONResponse($refused, Http::STATUS_UNPROCESSABLE_ENTITY);
+			}
+
 			// A refusal by the guardian consent rule (signer-identity-rails
 			// REQ-DDSIR-008/009) carries code 403: the act was refused, nothing
 			// failed downstream. It is not a rejected assertion either, so it

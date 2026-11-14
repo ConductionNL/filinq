@@ -335,6 +335,79 @@ class FieldPlacementRenderingTest extends TestCase {
 	}//end testTheRendererDrawsDatesAndCheckboxes()
 
 	/**
+	 * A context where signer 1 typed an IBAN into a text field on page 2.
+	 *
+	 * @param string $iban The IBAN as stored.
+	 *
+	 * @return array<string, mixed> The context.
+	 */
+	private function contextWithIban(string $iban): array {
+		$context = $this->context();
+		$context['fieldPlacements'][] = ['signerIndex' => 1, 'page' => 2, 'x' => 0.1, 'y' => 0.5, 'width' => 0.5, 'height' => 0.05, 'type' => 'text', 'validation' => 'iban-nl', 'value' => $iban];
+		$context['fieldPlacements'][] = ['signerIndex' => 0, 'page' => 2, 'x' => 0.1, 'y' => 0.7, 'width' => 0.5, 'height' => 0.05, 'type' => 'text', 'value' => 'ref-7'];
+
+		return $context;
+
+	}//end contextWithIban()
+
+	/**
+	 * A typed value is drawn in its block, an IBAN in groups of four, and the artifact verifies.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.4
+	 */
+	public function testATypedValueIsDrawnInItsBlock(): void {
+		$signed = $this->provider()->produceSignedArtifact(documentContent: $this->threePagePdf(), context: $this->contextWithIban(iban: 'NL91ABNA0417164300'));
+
+		$page2 = $this->pageText(pdf: $signed, page: 2);
+		$this->assertStringContainsString('(NL91 ABNA 0417 1643 00)', $page2);
+		$this->assertStringContainsString('(ref-7)', $page2);
+		$this->assertSame('verified', $this->verify(signed: $signed)[0]['status']);
+
+	}//end testATypedValueIsDrawnInItsBlock()
+
+	/**
+	 * Changing the typed value in the signed file trips verification.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.4
+	 */
+	public function testAnAlteredValueFailsVerification(): void {
+		$original = $this->threePagePdf();
+		$signed   = $this->provider()->produceSignedArtifact(documentContent: $original, context: $this->contextWithIban(iban: 'NL91ABNA0417164300'));
+		$altered  = $this->provider()->produceSignedArtifact(documentContent: $original, context: $this->contextWithIban(iban: 'NL20INGB0001234567'));
+
+		$markerAt = strrpos($signed, "\n1 0 obj\n<< /Type /Sig");
+		$forged   = substr($altered, 0, (int) strrpos($altered, "\n1 0 obj\n<< /Type /Sig")) . substr($signed, (int) $markerAt);
+
+		$signatures = $this->verify(signed: $forged);
+		$this->assertSame('invalid', $signatures[0]['status']);
+		$this->assertFalse($signatures[0]['valid']);
+
+	}//end testAnAlteredValueFailsVerification()
+
+	/**
+	 * A text field nobody typed into shows the signer's name, as before.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.4
+	 */
+	public function testATextFieldWithoutAValueShowsTheSignersName(): void {
+		$rendered = (new FieldPlacementRenderer())->render(
+			pdf: $this->threePagePdf(),
+			placements: [['signerIndex' => 0, 'page' => 1, 'x' => 0.1, 'y' => 0.1, 'width' => 0.5, 'height' => 0.05, 'type' => 'text', 'value' => '']],
+			signers: ['Bram Jansen'],
+			timestamp: '2026-06-01T10:00:00+00:00'
+		);
+
+		$this->assertStringContainsString('(Bram Jansen)', $this->pageText(pdf: $rendered, page: 1));
+
+	}//end testATextFieldWithoutAValueShowsTheSignersName()
+
+	/**
 	 * The text operators on one page, decompressed.
 	 *
 	 * @param string $pdf  The PDF.

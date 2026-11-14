@@ -47,12 +47,14 @@ class FieldPlacementCheck {
 	 *
 	 * @param FieldPlacements        $rules    The placement rules.
 	 * @param FieldPlacementRenderer $renderer Reads the page count a placement must stay within.
+	 * @param FieldValueChecker      $valueChecker Refuses a field check this server cannot run.
 	 *
 	 * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.1
 	 */
 	public function __construct(
 		private readonly FieldPlacements $rules = new FieldPlacements(),
 		private readonly FieldPlacementRenderer $renderer = new FieldPlacementRenderer(),
+		private readonly FieldValueChecker $valueChecker = new FieldValueChecker(),
 	) {
 
 	}//end __construct()
@@ -72,7 +74,9 @@ class FieldPlacementCheck {
 	 * @return list<array<string, mixed>> The placements, empty when there are none.
 	 *
 	 * @throws RuntimeException 400 when a placement breaks a rule or the provider cannot carry placements.
+	 * @throws \OCA\Filinq\Exception\SigningFieldsRefusedException 400 when a field's check is not available.
 	 *
+	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.1
 	 * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.1
 	 */
 	public function accept(mixed $placements, int $signerCount, string $provider): array {
@@ -85,6 +89,10 @@ class FieldPlacementCheck {
 		if ($normalised !== [] && $provider === LibreSignProvider::IDENTIFIER) {
 			throw new RuntimeException(message: 'LibreSign places its own fields: send this request without field placements', code: 400);
 		}
+
+		// A check OpenRegister cannot run is refused here, at creation, so a
+		// signer never meets it (signing-field-validation D2).
+		$this->valueChecker->assertAvailable(placements: $normalised);
 
 		return $normalised;
 

@@ -1,10 +1,16 @@
-/**
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- */
 OC.L10N.register(
     "filinq",
     {
+        "What a text field asks the signer for, such as \"Account for the payment\". Only text fields use it.": "Waar een tekstveld de ondertekenaar om vraagt, zoals \"Rekening voor de betaling\". Alleen tekstvelden gebruiken dit.",
+        "Whether the signer must fill the text field in before signing. Only text fields use it.": "Of de ondertekenaar het tekstveld moet invullen voordat er ondertekend wordt. Alleen tekstvelden gebruiken dit.",
+        "Check": "Controle",
+        "The check a text field's value must pass before the signature is written: a Dutch IBAN or any IBAN, checked by OpenRegister's iban format. Only text fields use it.": "De controle waaraan de waarde van een tekstveld moet voldoen voordat de handtekening wordt vastgelegd: een Nederlands IBAN of een willekeurig IBAN, gecontroleerd met het iban-formaat van OpenRegister. Alleen tekstvelden gebruiken dit.",
+        "Filled-in fields": "Ingevulde velden",
+        "What the signer typed into the text fields placed for them, checked on the server and stored with the signature. Readable only by those who may read signer records.": "Wat de ondertekenaar invulde in de tekstvelden die voor die ondertekenaar zijn geplaatst, gecontroleerd op de server en bewaard bij de handtekening. Alleen leesbaar voor wie ondertekenaarsgegevens mag lezen.",
+        "The position of the field in the request's fieldPlacements, counting from 0.": "De positie van het veld in de fieldPlacements van het verzoek, geteld vanaf 0.",
+        "The field's label when it was filled in.": "Het label van het veld toen het werd ingevuld.",
+        "The value, normalised: an IBAN in capitals without spaces.": "De waarde, genormaliseerd: een IBAN in hoofdletters zonder spaties.",
+        "The check the value passed, if the field had one.": "De controle waaraan de waarde voldeed, als het veld er een had.",
         "Related records for tables (listRefs, JSON)": "Gerelateerde records voor tabellen (listRefs, JSON)",
         "The related records are not valid JSON.": "De gerelateerde records zijn geen geldige JSON.",
         "Original": "Origineel",
