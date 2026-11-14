@@ -26,6 +26,7 @@ namespace OCA\Filinq\Service\Detection;
 
 use InvalidArgumentException;
 use OCA\Filinq\Kernel\AppIdentity;
+use OCA\Filinq\Kernel\Contracts\DetectionProviderConfigInterface;
 use OCP\IAppConfig;
 
 /**
@@ -44,7 +45,7 @@ use OCP\IAppConfig;
  *
  * @spec openspec/changes/llm-entity-detection-provider/specs/llm-entity-detection-provider/spec.md
  */
-class DetectionProviderConfig {
+class DetectionProviderConfig implements DetectionProviderConfigInterface {
 
 	/**
 	 * Per-organisation provider map key.
