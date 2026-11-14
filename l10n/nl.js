@@ -1,7 +1,3 @@
-/**
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- */
 OC.L10N.register(
     "filinq",
     {
@@ -2876,7 +2872,20 @@ OC.L10N.register(
         "The value before the change.": "De waarde voor de wijziging.",
         "When the change was made.": "Wanneer de wijziging is gedaan.",
         "Merge fields": "Samenvoegvelden",
-        "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you.": "De velden die het sjabloon invult, met een naam en een herkomst voor mensen: wat een voorbeeld onder Voor je ingevuld toont"
+        "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you.": "De velden die het sjabloon invult, met een naam en een herkomst voor mensen: wat een voorbeeld onder Voor je ingevuld toont",
+        "{person}, {from} to {until}: {types}": "{person}, {from} tot en met {until}: {types}",
+        "Colleague (user ID)": "Collega (gebruikers-ID)",
+        "Delegate": "Machtigen",
+        "Delegated signing": "Gemachtigd ondertekenen",
+        "Document types (app/schema, comma separated)": "Documenttypen (app/schema, gescheiden door komma's)",
+        "Failed to read the delegations": "De machtigingen konden niet worden gelezen",
+        "Failed to record the delegation": "De machtiging kon niet worden vastgelegd",
+        "Failed to withdraw the delegation": "De machtiging kon niet worden ingetrokken",
+        "Given by me": "Door mij gegeven",
+        "Given to me": "Aan mij gegeven",
+        "Until": "Tot en met",
+        "Delegation not found": "Machtiging niet gevonden",
+        "Delegated signing is not available": "Gemachtigd ondertekenen is niet beschikbaar"
     },
     "nplurals=2; plural=(n != 1);"
 )

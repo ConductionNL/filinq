@@ -368,6 +368,9 @@ $extra = [
         ['name' => 'signingFolder#mandates', 'url' => 'api/signing/mandates', 'verb' => 'GET'],
         ['name' => 'signingFolder#declareMandate', 'url' => 'api/signing/mandates', 'verb' => 'POST'],
         ['name' => 'signingFolder#withdrawMandate', 'url' => 'api/signing/mandates/{typeApp}/{typeSchema}', 'verb' => 'DELETE'],
+        ['name' => 'signingFolder#delegations', 'url' => 'api/signing/delegations', 'verb' => 'GET'],
+        ['name' => 'signingFolder#declareDelegation', 'url' => 'api/signing/delegations', 'verb' => 'POST'],
+        ['name' => 'signingFolder#withdrawDelegation', 'url' => 'api/signing/delegations/{id}', 'verb' => 'DELETE'],
 
         // Portal signing receiver routes (portal-signing-actions,
         // portal-signing-surface): the A6 endpoint-forward targets portaliq

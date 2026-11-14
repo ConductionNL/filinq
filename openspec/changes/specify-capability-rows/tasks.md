@@ -4,7 +4,8 @@
 
 ## 1. Signing
 
-- [ ] 1.1 Add a delegation period to the mandate in `lib/Controller/SigningFolderController.php` and a screen to declare and withdraw one in `src/views/signing/` (REQ-SCR-003). Verify: PHPUnit refuses a delegate after the end date.
+- [x] 1.1 Add a delegation period to the mandate in `lib/Controller/SigningFolderController.php` and a screen to declare and withdraw one in `src/views/signing/` (REQ-SCR-003). Verify: PHPUnit refuses a delegate after the end date.
+  - Built: `SigningDelegationService` keeps delegations (signer, colleague, first and last day, `<app>/<schema>` types) in app config; the signer declares and withdraws them over `GET/POST api/signing/delegations` and `DELETE api/signing/delegations/{id}`, on a Delegated signing section of the signing folder (`src/views/signing/SigningDelegations.vue`). Inside the period and for its types the delegate sees the signer's pending documents in the folder (`onBehalfOf`) and signs them through `SigningService::signOnBehalfOf()`, which refuses an ended, future or other-type delegation naming it before any record is read; the signer record keeps `signedBy` and `signedOnBehalfOf` (signerRecord 1.8.0). Pinned by `SigningDelegationTest`.
 - [ ] 1.2 Add a phone code provider behind the signer-authentication seam in `lib/Service/Signing/` (REQ-SCR-004). Verify: PHPUnit for a right, a wrong and an expired code.
 
 ## 2. Documents

@@ -1752,7 +1752,20 @@
         "Document checks": "Vérifications du document",
         "Archival checks (PDF/A)": "Vérifications d'archivage (PDF/A)",
         "Not PDF/A": "Pas PDF/A",
-        "Not checked against PDF/A": "Non vérifié par rapport à PDF/A"
+        "Not checked against PDF/A": "Non vérifié par rapport à PDF/A",
+        "{person}, {from} to {until}: {types}": "{person}, du {from} au {until} : {types}",
+        "Colleague (user ID)": "Collègue (identifiant utilisateur)",
+        "Delegate": "Déléguer",
+        "Delegated signing": "Signature déléguée",
+        "Document types (app/schema, comma separated)": "Types de document (app/schéma, séparés par des virgules)",
+        "Failed to read the delegations": "Impossible de lire les délégations",
+        "Failed to record the delegation": "Impossible d'enregistrer la délégation",
+        "Failed to withdraw the delegation": "Impossible de retirer la délégation",
+        "Given by me": "Données par moi",
+        "Given to me": "Données à moi",
+        "Until": "Jusqu'au",
+        "Delegation not found": "Délégation introuvable",
+        "Delegated signing is not available": "La signature déléguée n'est pas disponible"
     },
     "pluralForm": "nplurals=2; plural=(n > 1);"
 }

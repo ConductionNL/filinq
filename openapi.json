@@ -8576,6 +8576,111 @@
                 ]
             }
         },
+        "/signing/delegations": {
+            "get": {
+                "operationId": "signing-folder-delegations",
+                "summary": "The delegations the caller gave and received",
+                "description": "The delegations the caller gave and received.",
+                "tags": [
+                    "signing-folder"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{given: delegation[], received: delegation[]}",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "signing-folder-declare-delegation",
+                "summary": "Delegate the caller's signing authority to a colleague for a period and document types",
+                "description": "Delegate the caller's signing authority to a colleague for a period and document types.",
+                "tags": [
+                    "signing-folder"
+                ],
+                "responses": {
+                    "201": {
+                        "description": "The stored delegation.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                }
+            }
+        },
+        "/signing/delegations/{id}": {
+            "delete": {
+                "operationId": "signing-folder-withdraw-delegation",
+                "summary": "Withdraw a delegation the caller gave",
+                "description": "Withdraw a delegation the caller gave.",
+                "tags": [
+                    "signing-folder"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{withdrawn: true}",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
         "/signing/requests": {
             "post": {
                 "operationId": "signing-create-request",

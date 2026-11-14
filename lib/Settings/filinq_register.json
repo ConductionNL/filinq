@@ -3145,7 +3145,7 @@
                 "slug": "signerRecord",
                 "title": "Signer Record",
                 "description": "Individueel ondertekeningsrecord",
-                "version": "1.7.0",
+                "version": "1.8.0",
                 "summary": "",
                 "icon": "AccountEdit",
                 "required": [
@@ -3390,6 +3390,24 @@
                         "facetable": true,
                         "title": "Envelope",
                         "order": 20
+                    },
+                    "signedBy": {
+                        "description": "The colleague who signed for this signer under a delegation. Empty when the signer signed themselves.",
+                        "type": "string",
+                        "maxLength": 64,
+                        "visible": true,
+                        "facetable": false,
+                        "title": "Signed by",
+                        "order": 21
+                    },
+                    "signedOnBehalfOf": {
+                        "description": "The signer a delegate signed for: the user id of this record's signer, kept next to signedBy so the record names both.",
+                        "type": "string",
+                        "maxLength": 64,
+                        "visible": true,
+                        "facetable": false,
+                        "title": "Signed on behalf of",
+                        "order": 22
                     }
                 },
                 "archive": [],

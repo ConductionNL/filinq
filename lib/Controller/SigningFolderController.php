@@ -28,6 +28,7 @@ use OCA\Filinq\Kernel\AppIdentity;
 use OCA\Filinq\Kernel\Contracts\SigningFolderServiceInterface;
 use OCA\Filinq\Kernel\Contracts\SigningMandateServiceInterface;
 use OCA\Filinq\Service\ReadsCurrentUserId;
+use OCA\Filinq\Service\Signing\SigningDelegationService;
 use OCA\Filinq\Settings\FilinqAdmin;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -62,6 +63,7 @@ class SigningFolderController extends Controller {
 	 * @param IUserSession $userSession User session.
 	 * @param LoggerInterface $logger Logger.
 	 * @param IL10N $l10n Localisation.
+	 * @param SigningDelegationService|null $delegations Delegated signing authority (REQ-SCR-003).
 	 *
 	 * @return void
 	 */
@@ -72,6 +74,7 @@ class SigningFolderController extends Controller {
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
 		private readonly IL10N $l10n,
+		private readonly ?SigningDelegationService $delegations = null,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 
@@ -212,6 +215,105 @@ class SigningFolderController extends Controller {
 		}
 
 	}//end withdrawMandate()
+
+	/**
+	 * The delegations the caller gave and received.
+	 *
+	 * @return JSONResponse {given: delegation[], received: delegation[]}
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
+	 */
+	#[NoAdminRequired]
+	public function delegations(): JSONResponse {
+		$userId = $this->currentUserId();
+		if ($userId === '' || $this->delegations === null) {
+			return $this->noDelegations(userId: $userId);
+		}
+
+		try {
+			return new JSONResponse($this->delegations->forUser(userId: $userId));
+		} catch (Exception $e) {
+			return $this->errorResponse(message: 'Failed to read the delegations', exception: $e);
+		}
+
+	}//end delegations()
+
+	/**
+	 * Delegate the caller's signing authority to a colleague for a period and document types.
+	 *
+	 * @return JSONResponse The stored delegation, 201.
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
+	 */
+	#[NoAdminRequired]
+	public function declareDelegation(): JSONResponse {
+		$userId = $this->currentUserId();
+		if ($userId === '' || $this->delegations === null) {
+			return $this->noDelegations(userId: $userId);
+		}
+
+		try {
+			$delegation = $this->delegations->declare(
+				delegator: $userId,
+				delegate: (string) $this->request->getParam('delegate', ''),
+				from: (string) $this->request->getParam('from', ''),
+				until: (string) $this->request->getParam('until', ''),
+				types: (array) $this->request->getParam('types', [])
+			);
+
+			return new JSONResponse(data: $delegation, statusCode: Http::STATUS_CREATED);
+		} catch (InvalidArgumentException $e) {
+			// About the caller's own input; it names no record.
+			return new JSONResponse(data: ['error' => $e->getMessage()], statusCode: Http::STATUS_BAD_REQUEST);
+		} catch (Exception $e) {
+			return $this->errorResponse(message: 'Failed to record the delegation', exception: $e);
+		}
+
+	}//end declareDelegation()
+
+	/**
+	 * Withdraw a delegation the caller gave.
+	 *
+	 * @param string $id The delegation.
+	 *
+	 * @return JSONResponse {withdrawn: true}, or 404 when the caller gave no such delegation.
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
+	 */
+	#[NoAdminRequired]
+	public function withdrawDelegation(string $id): JSONResponse {
+		$userId = $this->currentUserId();
+		if ($userId === '' || $this->delegations === null) {
+			return $this->noDelegations(userId: $userId);
+		}
+
+		try {
+			if ($this->delegations->withdraw(id: $id, delegator: $userId) === false) {
+				return new JSONResponse(data: ['error' => $this->l10n->t('Delegation not found')], statusCode: Http::STATUS_NOT_FOUND);
+			}
+
+			return new JSONResponse(['withdrawn' => true]);
+		} catch (Exception $e) {
+			return $this->errorResponse(message: 'Failed to withdraw the delegation', exception: $e);
+		}
+
+	}//end withdrawDelegation()
+
+	/**
+	 * The answer without a session, or without the delegation store.
+	 *
+	 * @param string $userId The caller, '' without a session.
+	 *
+	 * @return JSONResponse 401 or 503.
+	 */
+	private function noDelegations(string $userId): JSONResponse {
+		if ($userId === '') {
+			return new JSONResponse(data: ['error' => $this->l10n->t('Not authenticated')], statusCode: Http::STATUS_UNAUTHORIZED);
+		}
+
+		return new JSONResponse(data: ['error' => $this->l10n->t('Delegated signing is not available')], statusCode: Http::STATUS_SERVICE_UNAVAILABLE);
+
+	}//end noDelegations()
 
 	/**
 	 * One generic error body, with the detail in the log.

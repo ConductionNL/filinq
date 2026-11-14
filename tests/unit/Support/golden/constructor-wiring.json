@@ -506,6 +506,7 @@
         "double SigningConclusionEmitter",
         "double SigningRequestValidator",
         null,
+        null,
         {
             "distinct objects built by the class": 0
         }
@@ -518,6 +519,7 @@
         "double SigningAssuranceGate",
         "double SigningAuditService",
         "double SigningConclusionEmitter",
+        "double SigningDelegationService",
         "double SigningMandateService",
         "double SigningRequestValidator",
         {

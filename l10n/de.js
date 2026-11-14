@@ -1,7 +1,3 @@
-/**
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- */
 OC.L10N.register(
     "filinq",
     {
@@ -1754,7 +1750,20 @@ OC.L10N.register(
         "Document checks": "Dokumentprüfungen",
         "Archival checks (PDF/A)": "Archivprüfungen (PDF/A)",
         "Not PDF/A": "Kein PDF/A",
-        "Not checked against PDF/A": "Nicht gegen PDF/A geprüft"
+        "Not checked against PDF/A": "Nicht gegen PDF/A geprüft",
+        "{person}, {from} to {until}: {types}": "{person}, {from} bis {until}: {types}",
+        "Colleague (user ID)": "Kollege (Benutzer-ID)",
+        "Delegate": "Delegieren",
+        "Delegated signing": "Delegiertes Unterzeichnen",
+        "Document types (app/schema, comma separated)": "Dokumenttypen (App/Schema, durch Kommas getrennt)",
+        "Failed to read the delegations": "Die Delegierungen konnten nicht gelesen werden",
+        "Failed to record the delegation": "Die Delegierung konnte nicht gespeichert werden",
+        "Failed to withdraw the delegation": "Die Delegierung konnte nicht zurückgezogen werden",
+        "Given by me": "Von mir erteilt",
+        "Given to me": "Mir erteilt",
+        "Until": "Bis",
+        "Delegation not found": "Delegierung nicht gefunden",
+        "Delegated signing is not available": "Delegiertes Unterzeichnen ist nicht verfügbar"
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -1,7 +1,3 @@
-/**
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- */
 OC.L10N.register(
     "filinq",
     {
@@ -2791,7 +2787,20 @@ OC.L10N.register(
         "The value before the change.": "The value before the change.",
         "When the change was made.": "When the change was made.",
         "Merge fields": "Merge fields",
-        "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you.": "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you."
+        "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you.": "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you.",
+        "{person}, {from} to {until}: {types}": "{person}, {from} to {until}: {types}",
+        "Colleague (user ID)": "Colleague (user ID)",
+        "Delegate": "Delegate",
+        "Delegated signing": "Delegated signing",
+        "Document types (app/schema, comma separated)": "Document types (app/schema, comma separated)",
+        "Failed to read the delegations": "Failed to read the delegations",
+        "Failed to record the delegation": "Failed to record the delegation",
+        "Failed to withdraw the delegation": "Failed to withdraw the delegation",
+        "Given by me": "Given by me",
+        "Given to me": "Given to me",
+        "Until": "Until",
+        "Delegation not found": "Delegation not found",
+        "Delegated signing is not available": "Delegated signing is not available"
     },
     "nplurals=2; plural=(n != 1);"
 )
