@@ -42,6 +42,9 @@ use setasign\Fpdi\Fpdi;
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The pipeline meets every rendering collaborator
+ *     (templates, PDF, charts, office conversion, the organisation's huisstijl) at one seam.
  */
 class DocumentRenderPipeline {
 	/**
@@ -75,6 +78,7 @@ class DocumentRenderPipeline {
 	 * @param SvgRasterizer $svgRasterizer Turns chart SVG into PNG before an ODF conversion
 	 * @param ObjectionTermCalculator|null $objectionTerm Adds the legal basis and the objection deadline of a decision letter
 	 * @param HtmlToOfficeConverter|null $officeConverter Makes DOCX and ODT; without it both answer 503
+	 * @param EffectiveSettings|null $effective The organisation's default huisstijl (multi-tenant-hardening REQ-DDMTH-004).
 	 *
 	 * @return void
 	 */
@@ -85,6 +89,7 @@ class DocumentRenderPipeline {
 		private readonly SvgRasterizer $svgRasterizer,
 		private readonly ?ObjectionTermCalculator $objectionTerm = null,
 		private readonly ?HtmlToOfficeConverter $officeConverter = null,
+		private readonly ?EffectiveSettings $effective = null,
 	) {
 		$this->templateRenderer = $rendering->renderer;
 		$this->pdfService = $rendering->pdf;
@@ -94,13 +99,19 @@ class DocumentRenderPipeline {
 	/**
 	 * Load the huisstijl configuration from OpenRegister.
 	 *
-	 * @param string|null $huisstijlId UUID of the huisstijl object, or null
+	 * @param string|null $huisstijlId UUID of the huisstijl object, or null for the organisation's default
 	 *
 	 * @return array|null The huisstijl configuration or null if not configured
 	 *
 	 * @spec openspec/specs/document-register/spec.md
+	 * @spec openspec/changes/multi-tenant-hardening/tasks.md#task-3.1
 	 */
 	public function loadHuisstijl(?string $huisstijlId): ?array {
+		// A request that names no huisstijl uses its organisation's default (REQ-DDMTH-004).
+		if (empty($huisstijlId) === true) {
+			$huisstijlId = $this->effective?->defaultHuisstijl();
+		}
+
 		if (empty($huisstijlId) === true) {
 			return null;
 		}

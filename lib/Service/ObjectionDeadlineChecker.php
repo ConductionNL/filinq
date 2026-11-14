@@ -58,6 +58,7 @@ class ObjectionDeadlineChecker {
 	 * @param ContainerInterface $container Container for dependency injection
 	 * @param IAppManager $appManager App manager interface
 	 * @param IAppConfig $config App configuration interface
+	 * @param EffectiveSettings|null $effective The per-organisation settings (multi-tenant-hardening REQ-DDMTH-008).
 	 *
 	 * @return void
 	 */
@@ -66,6 +67,7 @@ class ObjectionDeadlineChecker {
 		private readonly ContainerInterface $container,
 		private readonly IAppManager $appManager,
 		private readonly IAppConfig $config,
+		private readonly ?EffectiveSettings $effective = null,
 	) {
 		$this->appName = 'filinq';
 
@@ -92,8 +94,14 @@ class ObjectionDeadlineChecker {
 	 * @return int Number of days for the objection period
 	 *
 	 * @spec openspec/specs/consent-management/spec.md
+	 * @spec openspec/changes/multi-tenant-hardening/tasks.md#task-3.1
 	 */
 	public function getObjectionPeriodDays(): int {
+		// The active organisation's own period first (REQ-DDMTH-008).
+		if ($this->effective !== null) {
+			return $this->effective->consentPeriodDays();
+		}
+
 		return (int)$this->config->getValueString(
 			$this->appName,
 			'publication_objection_period_days',

@@ -33,6 +33,7 @@
 
 - [ ] 3.1 Add the effective-settings helper to `SettingsService` and route consumers through it (REQ-DDMTH-008)
   - Resolution order org override → IAppConfig → code default; consent deadline computation, `WooProfileService` profile lookup, and huisstijl resolution for generation (REQ-DDMTH-004) all read through it; org-admin write guard via `OrganisationService::isOrganisationAdmin()`.
+  - Built: `EffectiveSettings` (its own class: `SettingsService` is at the complexity limit) with the resolution order, read by `ObjectionDeadlineChecker`, `WooProfileService` and `DocumentRenderPipeline::loadHuisstijl()`; `EffectiveSettingsTest`, `DocumentRenderPipelineHuisstijlTest`. Left: the organisation-admin write guard, which belongs with the settings section of 4.1.
 
 - [ ] 3.2 Scope dashboard counters and batch/anonymisation reports to the active organisation; label reports with organisation name + UUID (REQ-DDMTH-005)
   - Instance-wide variant admin-only through the seam, labelled "all organisations".
