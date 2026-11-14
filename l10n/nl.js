@@ -2884,7 +2884,14 @@ OC.L10N.register(
         "This file is not a PDF.": "Dit bestand is geen pdf.",
         "The password could not be removed from this PDF.": "Het wachtwoord kon niet van deze pdf worden verwijderd.",
         "Locked original": "Vergrendeld origineel",
-        "Nextcloud file id of the file that arrived locked with a password. Set when the password is removed: `file` then points at the unlocked copy and this keeps what came in.": "Nextcloud-bestands-ID van het bestand dat met een wachtwoord vergrendeld binnenkwam. Wordt gezet als het wachtwoord is verwijderd: `file` wijst dan naar de ontgrendelde kopie en dit veld bewaart wat binnenkwam."
+        "Nextcloud file id of the file that arrived locked with a password. Set when the password is removed: `file` then points at the unlocked copy and this keeps what came in.": "Nextcloud-bestands-ID van het bestand dat met een wachtwoord vergrendeld binnenkwam. Wordt gezet als het wachtwoord is verwijderd: `file` wijst dan naar de ontgrendelde kopie en dit veld bewaart wat binnenkwam.",
+        "Remove password": "Wachtwoord verwijderen",
+        "Type the password of the PDF. The original stays as it is; an unlocked copy is saved beside it.": "Typ het wachtwoord van de pdf. Het origineel blijft zoals het is; er wordt een ontgrendelde kopie naast opgeslagen.",
+        "Password": "Wachtwoord",
+        "Removing password…": "Wachtwoord verwijderen…",
+        "Unlocked copy saved as {name}": "Ontgrendelde kopie opgeslagen als {name}",
+        "qpdf is installed: {version}": "qpdf is geïnstalleerd: {version}",
+        "qpdf is not installed. Install qpdf on the server to remove the password of a locked PDF.": "qpdf is niet geïnstalleerd. Installeer qpdf op de server om het wachtwoord van een beveiligde pdf te verwijderen."
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -2799,7 +2799,14 @@ OC.L10N.register(
         "This file is not a PDF.": "This file is not a PDF.",
         "The password could not be removed from this PDF.": "The password could not be removed from this PDF.",
         "Locked original": "Locked original",
-        "Nextcloud file id of the file that arrived locked with a password. Set when the password is removed: `file` then points at the unlocked copy and this keeps what came in.": "Nextcloud file id of the file that arrived locked with a password. Set when the password is removed: `file` then points at the unlocked copy and this keeps what came in."
+        "Nextcloud file id of the file that arrived locked with a password. Set when the password is removed: `file` then points at the unlocked copy and this keeps what came in.": "Nextcloud file id of the file that arrived locked with a password. Set when the password is removed: `file` then points at the unlocked copy and this keeps what came in.",
+        "Remove password": "Remove password",
+        "Type the password of the PDF. The original stays as it is; an unlocked copy is saved beside it.": "Type the password of the PDF. The original stays as it is; an unlocked copy is saved beside it.",
+        "Password": "Password",
+        "Removing password…": "Removing password…",
+        "Unlocked copy saved as {name}": "Unlocked copy saved as {name}",
+        "qpdf is installed: {version}": "qpdf is installed: {version}",
+        "qpdf is not installed. Install qpdf on the server to remove the password of a locked PDF.": "qpdf is not installed. Install qpdf on the server to remove the password of a locked PDF."
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -10,9 +10,11 @@
 
 ## 2. Screens
 
-- [ ] 2.1 Add a "Remove password" action to the `pdf-encrypted` finding in `ValidationFindingsPanel.vue`, with a password dialog in `src/modals/` (REQ-PPR-001). Verify: Playwright on `/my-documents` unlocks the fixture and shows the copy.
+- [x] 2.1 Add a "Remove password" action to the `pdf-encrypted` finding in `ValidationFindingsPanel.vue`, with a password dialog in `src/modals/` (REQ-PPR-001). Verify: Playwright on `/my-documents` unlocks the fixture and shows the copy.
+  - Done: the `pdf-encrypted` finding in `ValidationFindingsPanel.vue` offers "Remove password" (event `removePassword`, passed on by `ValidationResultModal`); `src/modals/PdfPasswordModal.vue` asks for the password (cleared on every close) and posts it through `src/services/pdfPassword.js`; on `/my-documents` the copy's findings replace the original's and the list reloads. Jest: `src/services/pdfPassword.spec.js`; en/nl strings. Not done here: the Playwright run.
 - [ ] 2.2 Add the same row action on `IntakeIndex.vue` when the intake file is locked, and write `file` and `lockedOriginal` (D5) (REQ-PPR-004). Verify: Playwright on `/intake` unlocks a locked intake document and the row opens the copy.
-- [ ] 2.3 Show whether qpdf is installed on the admin settings page next to the Tesseract line (REQ-PPR-003). Verify: Playwright reads the status line.
+- [x] 2.3 Show whether qpdf is installed on the admin settings page next to the Tesseract line (REQ-PPR-003). Verify: Playwright reads the status line.
+  - Done: `SettingsService::getQpdfStatus()` (optional `QpdfDecryptor`, `qpdfStatus` in the settings payload) and a status line beside Tesseract's in `Settings.vue`. Tests: two `SettingsServiceTest` cases, `tests/vitest/settingsDefaults.spec.js`, the re-recorded settings golden. Not done here: the Playwright read.
 
 ## 3. Register, strings and docs
 
