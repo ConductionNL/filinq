@@ -32,6 +32,7 @@ namespace OCA\Filinq\Service;
 
 use DateTimeImmutable;
 use DateTimeInterface;
+use OCP\Files\File;
 use OCA\Filinq\Kernel\Contracts\CaseArchiveServiceInterface;
 use OCP\IAppConfig;
 use OCP\IUserSession;
@@ -62,6 +63,7 @@ class CaseArchiveService implements CaseArchiveServiceInterface {
 	 * @param LoggerInterface $logger Logger for diagnostics.
 	 * @param CaseArchiveWriter $writer Writes the archive into the requester's Files.
 	 * @param IAppConfig $appConfig Holds the administered ceiling.
+	 * @param ReadableFileResolver $readable Chosen files, as the requester may read them.
 	 *
 	 * @return void
 	 */
@@ -72,6 +74,7 @@ class CaseArchiveService implements CaseArchiveServiceInterface {
 		private readonly LoggerInterface $logger,
 		private readonly CaseArchiveWriter $writer,
 		private readonly IAppConfig $appConfig,
+		private readonly ReadableFileResolver $readable,
 	) {
 
 	}//end __construct()
@@ -272,8 +275,186 @@ class CaseArchiveService implements CaseArchiveServiceInterface {
 			$job['errorMessage'] = 'No archive was written.';
 		}
 
+		$this->storeJob(job: $job);
+
+		return $job;
+
+	}//end record()
+
+	/**
+	 * What a bundle of chosen files would be, before anybody builds it.
+	 *
+	 * @param array<int, int|string> $fileIds The chosen files.
+	 * @param int                    $ceiling The ceiling in force, in bytes.
+	 *
+	 * @return array<string, mixed> The preflight (files, bytes, ceilingBytes, exceedsCeiling), with what would go in
+	 *                              (included) and what would be left out (excluded).
+	 *
+	 * @spec openspec/changes/share-document-links/tasks.md#task-2.4
+	 */
+	public function preflightFiles(array $fileIds, int $ceiling = self::DEFAULT_CEILING): array {
+		$rows  = $this->chosenFiles(fileIds: $fileIds);
+		$bytes = 0;
+		foreach ($rows['readable'] as $row) {
+			$bytes += (int) $row['size'];
+		}
+
+		$manifest = $this->manifestForFiles(fileIds: $fileIds, ceiling: $ceiling);
+
+		return [
+			'files' => count($rows['readable']),
+			'bytes' => $bytes,
+			'ceilingBytes' => $ceiling,
+			'exceedsCeiling' => ($bytes > $ceiling),
+			'included' => $manifest['included'],
+			'excluded' => $manifest['excluded'],
+		];
+
+	}//end preflightFiles()
+
+	/**
+	 * The manifest of a bundle of chosen files: what goes in, and what does not.
+	 *
+	 * The same rules as manifestFor(): files in name order up to the ceiling,
+	 * the rest left out with `ceiling`, and a file the requester may not read
+	 * left out with `permission`.
+	 *
+	 * @param array<int, int|string> $fileIds The chosen files.
+	 * @param int                    $ceiling The ceiling in force, in bytes.
+	 *
+	 * @return array{included: array<int, array<string, mixed>>, excluded: array<int, array<string, mixed>>, bytes: int} The manifest.
+	 *
+	 * @spec openspec/changes/share-document-links/tasks.md#task-2.4
+	 */
+	public function manifestForFiles(array $fileIds, int $ceiling = self::DEFAULT_CEILING): array {
+		$rows     = $this->chosenFiles(fileIds: $fileIds);
+		$included = [];
+		$excluded = [];
+		$bytes    = 0;
+
+		foreach ($rows['readable'] as $row) {
+			if (($bytes + $row['size']) > $ceiling) {
+				$excluded[] = [
+					'fileId' => $row['fileId'],
+					'name' => $row['name'],
+					'record' => '',
+					'reason' => self::REASON_CEILING,
+					'explanation' => 'The bundle would go over the administered ceiling.',
+				];
+				continue;
+			}
+
+			$bytes     += $row['size'];
+			$included[] = [
+				'fileId' => $row['fileId'],
+				'name' => $row['name'],
+				'record' => '',
+				'size' => $row['size'],
+				'version' => $row['version'],
+			];
+		}
+
+		foreach ($rows['unreadable'] as $fileId) {
+			$excluded[] = [
+				'fileId' => $fileId,
+				'name' => '',
+				'record' => '',
+				'reason' => self::REASON_PERMISSION,
+				'explanation' => 'The person asking for the bundle may not read this file.',
+			];
+		}
+
+		return ['included' => $included, 'excluded' => $excluded, 'bytes' => $bytes];
+
+	}//end manifestForFiles()
+
+	/**
+	 * Build one archive of chosen files with its manifest, recorded as a job.
+	 *
+	 * The archive is written to the folder given, under the requester's Files.
+	 * When the job cannot be recorded the archive is deleted again and the
+	 * call fails, so a share never goes out on an unrecorded bundle (D4).
+	 *
+	 * @param array<int, int|string> $fileIds          The chosen files.
+	 * @param string                 $folderPath       The folder, relative to the requester's Files root.
+	 * @param string                 $name             The bundle's name; `.zip` is added.
+	 * @param int                    $requestedCeiling A lower ceiling the caller asks for, or 0.
+	 *
+	 * @return array<string, mixed> The manifest, plus `archive` (fileId, name, path) and `job` (the stored job, with its uuid).
+	 *
+	 * @throws RuntimeException When nothing can go in (400), there is no user (401), or the archive or job cannot be written (500).
+	 *
+	 * @spec openspec/changes/share-document-links/tasks.md#task-2.4
+	 */
+	public function buildFromFiles(array $fileIds, string $folderPath, string $name, int $requestedCeiling = 0): array {
+		$ceiling  = $this->ceiling(requested: $requestedCeiling);
+		$manifest = $this->manifestForFiles(fileIds: $fileIds, ceiling: $ceiling);
+
+		$userId = $this->currentUserId();
+		if ($userId === '') {
+			throw new RuntimeException('No authenticated user', 401);
+		}
+
+		if ($manifest['included'] === []) {
+			throw new RuntimeException('None of the chosen files can go into the bundle', 400);
+		}
+
+		$subject = ['kind' => 'files', 'name' => $name, 'fileIds' => array_column($manifest['included'], 'fileId')];
+		$written = $this->writer->writeTo(
+			userId: $userId,
+			subject: $subject,
+			manifest: $manifest,
+			ceiling: $ceiling,
+			folderPath: $folderPath,
+			archiveName: $name
+		);
+		$archive  = $written['file'];
+		$manifest = $written['manifest'];
+
+		$job = [
+			'subject' => $subject,
+			'requestedBy' => $userId,
+			'requestedAt' => (new DateTimeImmutable())->format(DateTimeInterface::ATOM),
+			'ceilingBytes' => $ceiling,
+			'includedCount' => count($manifest['included']),
+			'excludedCount' => count(($manifest['excluded'] ?? [])),
+			'totalBytes' => (int) ($manifest['bytes'] ?? 0),
+			'manifest' => array_merge($manifest['included'], ($manifest['excluded'] ?? [])),
+			'fileId' => (int) $archive->getId(),
+			'status' => 'completed',
+		];
+
 		try {
-			$this->objectResolver->resolve()->saveObject(
+			$job['uuid'] = $this->storeJob(job: $job);
+		} catch (RuntimeException $e) {
+			$this->writer->discard(file: $archive);
+			throw $e;
+		}
+
+		$manifest['ceilingBytes'] = $ceiling;
+		$manifest['archive']      = [
+			'fileId' => (int) $archive->getId(),
+			'name'   => $archive->getName(),
+			'path'   => $written['path'],
+		];
+		$manifest['job']          = $job;
+
+		return $manifest;
+
+	}//end buildFromFiles()
+
+	/**
+	 * Save one archive job.
+	 *
+	 * @param array<string, mixed> $job The job.
+	 *
+	 * @return string The stored job's uuid, or an empty string when OpenRegister did not say.
+	 *
+	 * @throws RuntimeException When the job cannot be stored.
+	 */
+	private function storeJob(array $job): string {
+		try {
+			$stored = $this->objectResolver->resolve()->saveObject(
 				object: $job,
 				register: IntakeRepository::REGISTER,
 				schema: self::SCHEMA
@@ -288,9 +469,67 @@ class CaseArchiveService implements CaseArchiveServiceInterface {
 			throw new RuntimeException('The archive job could not be recorded', 500, $e);
 		}
 
-		return $job;
+		if (is_object($stored) === true && method_exists($stored, 'getUuid') === true) {
+			return (string) $stored->getUuid();
+		}
 
-	}//end record()
+		if (is_array($stored) === true) {
+			return (string) ($stored['uuid'] ?? ($stored['id'] ?? ''));
+		}
+
+		return '';
+
+	}//end storeJob()
+
+	/**
+	 * The chosen files, split into those the requester can read and those not.
+	 *
+	 * Ids are taken once each; readable files come back in name order.
+	 *
+	 * @param array<int, int|string> $fileIds The chosen files.
+	 *
+	 * @return array{readable: array<int, array{fileId: int, name: string, size: int, version: string}>, unreadable: array<int, int>} The split.
+	 */
+	private function chosenFiles(array $fileIds): array {
+		$readable   = [];
+		$unreadable = [];
+		$seen       = [];
+		foreach ($fileIds as $raw) {
+			$fileId = (int) $raw;
+			if ($fileId <= 0 || isset($seen[$fileId]) === true) {
+				continue;
+			}
+
+			$seen[$fileId] = true;
+			$node = $this->readable->node(fileId: $fileId);
+			if (($node instanceof File) === false) {
+				$unreadable[] = $fileId;
+				continue;
+			}
+
+			$readable[] = [
+				'fileId' => $fileId,
+				'name' => (string) $node->getName(),
+				'size' => (int) $node->getSize(),
+				'version' => (string) $node->getEtag(),
+			];
+		}
+
+		usort(
+			$readable,
+			static function (array $a, array $b): int {
+				$byName = strnatcasecmp($a['name'], $b['name']);
+				if ($byName !== 0) {
+					return $byName;
+				}
+
+				return ($a['fileId'] <=> $b['fileId']);
+			}
+		);
+
+		return ['readable' => $readable, 'unreadable' => $unreadable];
+
+	}//end chosenFiles()
 
 	/**
 	 * The files of the object this person can actually read.

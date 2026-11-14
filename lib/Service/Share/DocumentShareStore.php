@@ -133,6 +133,47 @@ class DocumentShareStore {
 	}//end find()
 
 	/**
+	 * Every share record that is still active, for the job that closes them.
+	 *
+	 * Read without the caller's rights: the job runs without a session.
+	 *
+	 * @return array<int, array<string, mixed>> The active records, each with its uuid.
+	 *
+	 * @throws RuntimeException When OpenRegister cannot be read.
+	 *
+	 * @spec openspec/changes/share-document-links/tasks.md#task-2.5
+	 */
+	public function active(): array {
+		try {
+			// Slugs go through searchObjectsBySlug: searchObjects reads them as ids.
+			$rows = $this->objects->resolve()->searchObjectsBySlug(
+				registerSlug: self::REGISTER,
+				schemaSlug: self::SCHEMA,
+				filters: ['status' => 'active'],
+				_rbac: false,
+				_multitenancy: false
+			);
+		} catch (Throwable $e) {
+			throw new RuntimeException('The share records could not be read: ' . $e->getMessage(), 500, $e);
+		}
+
+		if (is_array($rows) === false) {
+			return [];
+		}
+
+		$records = [];
+		foreach ($rows as $row) {
+			$record = $this->normalise(row: $row);
+			if (($record['uuid'] ?? '') !== '' && ($record['status'] ?? '') === 'active') {
+				$records[] = $record;
+			}
+		}
+
+		return $records;
+
+	}//end active()
+
+	/**
 	 * A stored row as a plain array with its uuid on top.
 	 *
 	 * @param mixed $row The row OpenRegister answered.

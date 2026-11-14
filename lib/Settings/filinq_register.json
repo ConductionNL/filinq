@@ -12039,6 +12039,15 @@
                         "title": "Archive job",
                         "maxLength": 64
                     },
+                    "archiveFileId": {
+                        "description": "For a bundle, the file id of the archive in the sharer's Shared bundles folder, deleted when the link ends.",
+                        "type": "integer",
+                        "required": false,
+                        "visible": false,
+                        "order": 4,
+                        "facetable": false,
+                        "title": "Archive file"
+                    },
                     "sharedBy": {
                         "description": "User id of the person who made the link.",
                         "type": "string",

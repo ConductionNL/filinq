@@ -92,6 +92,118 @@ class CaseArchiveWriter {
 	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function write(string $userId, array $domain, array $manifest, int $ceiling): array {
+		return $this->writeArchive(
+			userId: $userId,
+			subject: $domain,
+			manifest: $manifest,
+			ceiling: $ceiling,
+			folderPath: self::BUNDLE_FOLDER,
+			archiveName: $this->archiveName(domain: $domain)
+		);
+
+	}//end write()
+
+	/**
+	 * Write an archive of chosen files into a folder of the requester's Files.
+	 *
+	 * The same archive as write(): every included file that can still be read
+	 * and `manifest.json`, with a file that cannot be read moved to excluded
+	 * with reason `missing`. The folder path may be nested and is created when
+	 * missing; the name is made unique in that folder.
+	 *
+	 * @param string               $userId      The requester, whose Files are read and written.
+	 * @param array<string, mixed> $subject     What the archive is of, written into the manifest.
+	 * @param array<string, mixed> $manifest    The manifest to honour.
+	 * @param int                  $ceiling     The ceiling in force.
+	 * @param string               $folderPath  The folder, relative to the requester's Files root.
+	 * @param string               $archiveName The wanted file name, without or with `.zip`.
+	 *
+	 * @return array{file: File, manifest: array<string, mixed>, path: string} The archive, the manifest as written, and its path in Files.
+	 *
+	 * @throws RuntimeException When the archive cannot be written.
+	 *
+	 * @spec openspec/changes/share-document-links/tasks.md#task-2.4
+	 */
+	public function writeTo(
+		string $userId,
+		array $subject,
+		array $manifest,
+		int $ceiling,
+		string $folderPath,
+		string $archiveName
+	): array {
+		return $this->writeArchive(
+			userId: $userId,
+			subject: $subject,
+			manifest: $manifest,
+			ceiling: $ceiling,
+			folderPath: $folderPath,
+			archiveName: $this->zipName(name: $archiveName)
+		);
+
+	}//end writeTo()
+
+	/**
+	 * Delete an archive by its file id in a user's Files.
+	 *
+	 * An archive that is already gone is not an error: the link it served
+	 * ends either way.
+	 *
+	 * @param string $userId The user whose Files hold the archive.
+	 * @param int    $fileId The archive's file id.
+	 *
+	 * @return bool True when an archive was found and deleted.
+	 *
+	 * @spec openspec/changes/share-document-links/tasks.md#task-2.5
+	 */
+	public function discardById(string $userId, int $fileId): bool {
+		if ($userId === '' || $fileId <= 0) {
+			return false;
+		}
+
+		try {
+			$nodes = $this->rootFolder->getUserFolder($userId)->getById($fileId);
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				message: '[CaseArchiveWriter] could not look up an archive to delete',
+				context: ['file' => __FILE__, 'line' => __LINE__, 'fileId' => $fileId, 'error' => $e->getMessage()]
+			);
+			return false;
+		}
+
+		foreach ($nodes as $node) {
+			if ($node instanceof File) {
+				$this->discard(file: $node);
+				return true;
+			}
+		}
+
+		return false;
+
+	}//end discardById()
+
+	/**
+	 * Build the zip in a temporary file and store it in the folder.
+	 *
+	 * @param string               $userId      The requester.
+	 * @param array<string, mixed> $subject     What the archive is of.
+	 * @param array<string, mixed> $manifest    The manifest to honour.
+	 * @param int                  $ceiling     The ceiling in force.
+	 * @param string               $folderPath  The folder, relative to the requester's Files root.
+	 * @param string               $archiveName The file name.
+	 *
+	 * @return array{file: File, manifest: array<string, mixed>, path: string} The archive, the manifest as written, and its path.
+	 *
+	 * @throws RuntimeException When the archive cannot be written.
+	 */
+	private function writeArchive(
+		string $userId,
+		array $subject,
+		array $manifest,
+		int $ceiling,
+		string $folderPath,
+		string $archiveName
+	): array {
 		$userFolder = $this->rootFolder->getUserFolder($userId);
 		$zipPath    = $this->tempPath(suffix: '.zip');
 
@@ -105,7 +217,7 @@ class CaseArchiveWriter {
 			'manifest.json',
 			(string) json_encode(
 				[
-					'subject' => $domain,
+					'subject' => $subject,
 					'requestedBy' => $userId,
 					'requestedAt' => (new DateTimeImmutable())->format(DateTimeInterface::ATOM),
 					'ceilingBytes' => $ceiling,
@@ -120,8 +232,8 @@ class CaseArchiveWriter {
 		}
 
 		try {
-			$folder = $this->bundleFolder(userFolder: $userFolder);
-			$file   = $folder->newFile($folder->getNonExistingName($this->archiveName(domain: $domain)));
+			$folder = $this->folderAt(userFolder: $userFolder, path: $folderPath);
+			$file   = $folder->newFile($folder->getNonExistingName($archiveName));
 			$file->putContent(fopen($zipPath, 'rb'));
 		} catch (Throwable $e) {
 			throw new RuntimeException('Could not store the archive', 500, $e);
@@ -133,7 +245,7 @@ class CaseArchiveWriter {
 			'path' => (string) $userFolder->getRelativePath($file->getPath()),
 		];
 
-	}//end write()
+	}//end writeArchive()
 
 	/**
 	 * Delete an archive that must not be handed over, logging a failure.
@@ -192,23 +304,56 @@ class CaseArchiveWriter {
 	}//end addFiles()
 
 	/**
-	 * The requester's bundle folder, created when missing.
+	 * A folder under the requester's Files root, each missing level created.
 	 *
 	 * @param Folder $userFolder The requester's Files root.
+	 * @param string $path       The folder path, segments separated by `/`.
 	 *
 	 * @return Folder The folder.
+	 *
+	 * @throws RuntimeException When a segment exists as a file.
 	 */
-	private function bundleFolder(Folder $userFolder): Folder {
-		if ($userFolder->nodeExists(self::BUNDLE_FOLDER) === true) {
-			$node = $userFolder->get(self::BUNDLE_FOLDER);
-			if ($node instanceof Folder) {
-				return $node;
+	private function folderAt(Folder $userFolder, string $path): Folder {
+		$folder = $userFolder;
+		foreach (explode('/', trim($path, '/')) as $segment) {
+			if ($segment === '' || $segment === '.' || $segment === '..') {
+				continue;
 			}
+
+			if ($folder->nodeExists($segment) === false) {
+				$folder = $folder->newFolder($segment);
+				continue;
+			}
+
+			$node = $folder->get($segment);
+			if (($node instanceof Folder) === false) {
+				throw new RuntimeException('The bundle folder path is taken by a file', 500);
+			}
+
+			$folder = $node;
 		}
 
-		return $userFolder->newFolder(self::BUNDLE_FOLDER);
+		return $folder;
 
-	}//end bundleFolder()
+	}//end folderAt()
+
+	/**
+	 * A bundle name as a safe zip file name.
+	 *
+	 * @param string $name The wanted name, with or without `.zip`.
+	 *
+	 * @return string The file name.
+	 */
+	private function zipName(string $name): string {
+		$name = trim((string) preg_replace('/\.zip$/i', '', trim($name)));
+		$name = trim((string) preg_replace('#[\\\\/:*?"<>|\x00-\x1F]+#', '-', $name), " .-");
+		if ($name === '') {
+			$name = 'bundle-'.(new DateTimeImmutable())->format('Ymd-His');
+		}
+
+		return mb_substr($name, 0, 120).'.zip';
+
+	}//end zipName()
 
 	/**
 	 * The archive's file name: schema, object id and the moment, safe for Files.

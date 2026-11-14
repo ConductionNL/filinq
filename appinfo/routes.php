@@ -115,6 +115,7 @@ $extra = [
         ['name' => 'documentProduction#archiveManifest', 'url' => 'api/case-archive/manifest', 'verb' => 'POST'],
         // Share documents outside the organisation by a link that runs out (share-document-links).
         ['name' => 'documentShare#create', 'url' => 'api/shares', 'verb' => 'POST'],
+        ['name' => 'documentShare#preflight', 'url' => 'api/shares/preflight', 'verb' => 'POST'],
         ['name' => 'documentShare#revoke', 'url' => 'api/shares/{id}', 'verb' => 'DELETE'],
         ['name' => 'documentProduction#runPeriodic', 'url' => 'api/periodic-documents/run', 'verb' => 'POST'],
         ['name' => 'documentProduction#dueForReview', 'url' => 'api/documents/due-for-review', 'verb' => 'GET'],

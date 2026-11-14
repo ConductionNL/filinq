@@ -153,16 +153,17 @@ class CaseArchiveServiceTest extends TestCase {
 		$root    = $this->rootFolder();
 		$locator = $this->createMock(originalClassName: OpenRegisterServiceLocator::class);
 		$locator->method('get')->willThrowException(exception: new RuntimeException(message: 'OpenRegister is not available.'));
+		$readable = new ReadableFileResolver(
+			rootFolder: $root,
+			userSession: $session,
+			locator: $locator,
+			logger: $this->createMock(originalClassName: LoggerInterface::class)
+		);
 		$writer = new CaseArchiveWriter(
 			rootFolder: $root,
 			tempManager: $temp,
 			logger: $this->createMock(originalClassName: LoggerInterface::class),
-			files: new ReadableFileResolver(
-				rootFolder: $root,
-				userSession: $session,
-				locator: $locator,
-				logger: $this->createMock(originalClassName: LoggerInterface::class)
-			)
+			files: $readable
 		);
 
 		return new CaseArchiveService(
@@ -171,7 +172,8 @@ class CaseArchiveServiceTest extends TestCase {
 			$session,
 			$this->createMock(LoggerInterface::class),
 			$writer,
-			$appConfig
+			$appConfig,
+			$readable
 		);
 
 	}//end service()

@@ -18,6 +18,8 @@ namespace OCA\Filinq\Tests\Unit\Service\Share;
 use DateTime;
 use DateTimeImmutable;
 use InvalidArgumentException;
+use OCA\Filinq\Service\CaseArchiveService;
+use OCA\Filinq\Service\CaseArchiveWriter;
 use OCA\Filinq\Service\ConfidentialityLabel;
 use OCA\Filinq\Service\ConfidentialityLabelService;
 use OCA\Filinq\Service\ReadableFileResolver;
@@ -129,6 +131,10 @@ class DocumentShareServiceTest extends TestCase {
 
 	private IGroupManager&MockObject $groups;
 
+	private CaseArchiveService&MockObject $archives;
+
+	private CaseArchiveWriter&MockObject $archiveFiles;
+
 	private ?string $uid = 'clara';
 
 	/**
@@ -150,6 +156,8 @@ class DocumentShareServiceTest extends TestCase {
 		$this->files  = $this->createMock(ReadableFileResolver::class);
 		$this->labels = $this->createMock(ConfidentialityLabelService::class);
 		$this->groups = $this->createMock(IGroupManager::class);
+		$this->archives = $this->createMock(CaseArchiveService::class);
+		$this->archiveFiles = $this->createMock(CaseArchiveWriter::class);
 	}
 
 	private function service(): DocumentShareService {
@@ -164,7 +172,7 @@ class DocumentShareServiceTest extends TestCase {
 		$clock = $this->createMock(ITimeFactory::class);
 		$clock->method('getDateTime')->willReturnCallback(static fn (): DateTime => new DateTime('2026-11-13T15:30:00+00:00'));
 
-		return new DocumentShareService($this->links, $this->store, $this->files, $this->labels, $session, $this->groups, $clock, $this->createMock(LoggerInterface::class));
+		return new DocumentShareService($this->links, $this->store, $this->files, $this->labels, $session, $this->groups, $clock, $this->createMock(LoggerInterface::class), $this->archives, $this->archiveFiles);
 	}
 
 	private function document(): void {
@@ -377,5 +385,195 @@ class DocumentShareServiceTest extends TestCase {
 		}
 
 		$this->assertSame([], $this->saved);
+	}
+	/**
+	 * The archive CaseArchiveService builds for files 7, 8 and 9.
+	 *
+	 * @return array<string, mixed> The build result.
+	 */
+	private function built(): array {
+		return [
+			'included' => [
+				['fileId' => 7, 'name' => 'a.pdf', 'record' => '', 'size' => 10, 'version' => 'e7'],
+				['fileId' => 8, 'name' => 'b.pdf', 'record' => '', 'size' => 20, 'version' => 'e8'],
+			],
+			'excluded' => [['fileId' => 9, 'name' => '', 'record' => '', 'reason' => 'permission', 'explanation' => 'x']],
+			'bytes' => 30,
+			'archive' => ['fileId' => 9001, 'name' => 'Bezwaar 2026-031.zip', 'path' => '/DocuDesk/Shared bundles/Bezwaar 2026-031.zip'],
+			'job' => ['uuid' => 'job-1', 'fileId' => 9001],
+		];
+	}
+
+	public function testSeveralDocumentsLeaveAsOneArchiveThroughOneLink(): void {
+		$this->labels->method('getLabelForFile')->willReturnCallback(
+			static fn (int $fileId): ?ConfidentialityLabel => ($fileId === 8 ? new ConfidentialityLabel('Confidential', 3) : null)
+		);
+		$this->archives->expects($this->once())->method('buildFromFiles')
+			->with([7, 8, 9], 'DocuDesk/Shared bundles', 'Bezwaar 2026-031')
+			->willReturn($this->built());
+
+		$result = $this->service()->share(['7', 8, '9', 7, 'x', -1], ' Bezwaar 2026-031 ', '2026-11-20', null, 'Bezwaarcommissie', true);
+
+		$this->assertSame(['101' => ['fileId' => 9001, 'uid' => 'clara', 'expires' => '2026-11-20', 'password' => null, 'note' => 'Bezwaarcommissie']], $this->links->shares);
+		$this->assertSame(
+			[
+				'kind' => 'bundle',
+				'files' => [
+					['fileId' => 7, 'name' => 'a.pdf', 'version' => 'e7', 'label' => ''],
+					['fileId' => 8, 'name' => 'b.pdf', 'version' => 'e8', 'label' => 'Confidential'],
+				],
+				'shareId' => '101',
+				'archiveJob' => 'job-1',
+				'archiveFileId' => 9001,
+				'sharedBy' => 'clara',
+				'sharedAt' => '2026-11-13T15:30:00+00:00',
+				'expiresAt' => '2026-11-20',
+				'note' => 'Bezwaarcommissie',
+				'labelConfirmed' => true,
+				'status' => 'active',
+			],
+			$this->saved[0][0]
+		);
+		$this->assertSame('https://cloud.example/s/token101', $result['url']);
+		$this->assertSame('permission', $result['manifest']['excluded'][0]['reason']);
+	}
+
+	public function testOneChosenDocumentIsSharedAsItselfAndNoneIsRefused(): void {
+		$this->document();
+		$this->archives->expects($this->never())->method('buildFromFiles');
+
+		$this->assertSame('document', $this->service()->share([42, '42'], 'ignored', '', null, '', false)['share']['kind']);
+
+		$this->expectException(InvalidArgumentException::class);
+		$this->expectExceptionCode(400);
+		$this->service()->share(['abc', 0], '', '', null, '', false);
+	}
+
+	public function testABundleNeedsANameAndAConfirmationForItsLabels(): void {
+		$this->labels->method('getLabelForFile')->willReturnCallback(
+			static fn (int $fileId): ?ConfidentialityLabel => new ConfidentialityLabel($fileId === 7 ? 'Confidential' : 'Secret', 3)
+		);
+		$this->archives->expects($this->never())->method('buildFromFiles');
+
+		foreach ([['  ', 400, 'A bundle needs a name'], ['Bundel', 409, 'This bundle holds documents labelled "Confidential", "Secret". Confirm before sharing it by link.']] as [$name, $code, $message]) {
+			try {
+				$this->service()->share([7, 8], $name, '', null, '', false);
+				$this->fail('The bundle must be refused: ' . $message);
+			} catch (InvalidArgumentException $e) {
+				$this->assertSame([$code, $message], [$e->getCode(), $e->getMessage()]);
+			}
+		}
+
+		$this->assertSame([[], []], [$this->links->shares, $this->saved]);
+	}
+
+	public function testARefusedJobWriteStopsTheBundleShare(): void {
+		$this->archives->method('buildFromFiles')->willThrowException(new RuntimeException('The archive job could not be recorded', 500));
+
+		try {
+			$this->service()->share([7, 8], 'Bundel', '', null, '', false);
+			$this->fail('A refused job write must stop the share');
+		} catch (RuntimeException $e) {
+			$this->assertSame('The archive job could not be recorded', $e->getMessage());
+		}
+
+		$this->assertSame([[], []], [$this->links->shares, $this->saved]);
+	}
+
+	public function testARefusedLinkOrRecordDeletesTheArchiveAgain(): void {
+		$this->archives->method('buildFromFiles')->willReturn($this->built());
+		$this->archiveFiles->expects($this->exactly(2))->method('discardById')->with('clara', 9001)->willReturn(true);
+
+		$this->links->refuse = 'Sharing is not allowed';
+		try {
+			$this->service()->share([7, 8], 'Bundel', '', null, '', false);
+			$this->fail('Nextcloud refused the link');
+		} catch (RuntimeException $e) {
+			$this->assertSame([403, 'Sharing is not allowed'], [$e->getCode(), $e->getMessage()]);
+		}
+
+		$this->links->refuse = null;
+		$store = $this->createMock(DocumentShareStore::class);
+		$store->method('save')->willThrowException(new RuntimeException('OpenRegister refused the share record', 500));
+		$this->store = $store;
+		try {
+			$this->service()->share([7, 8], 'Bundel', '', null, '', false);
+			$this->fail('The record write failed');
+		} catch (RuntimeException $e) {
+			$this->assertSame('The share could not be recorded, so the link was taken back again', $e->getMessage());
+		}
+
+		$this->assertSame([], $this->links->shares, 'the link was taken back again');
+	}
+
+	public function testThePreflightNamesTheRulesTheLabelsAndWhatTheBundleHolds(): void {
+		$this->links->policy = ['maxDays' => 7, 'passwordRequired' => true];
+		$this->labels->method('getLabelForFile')->willReturnCallback(
+			static fn (int $fileId): ?ConfidentialityLabel => ($fileId === 8 ? new ConfidentialityLabel('Confidential', 3) : null)
+		);
+		$this->archives->method('ceiling')->willReturn(1000);
+		$this->archives->expects($this->once())->method('preflightFiles')->with([7, 8], 1000)
+			->willReturn(['files' => 2, 'bytes' => 1200, 'ceilingBytes' => 1000, 'exceedsCeiling' => true, 'included' => [], 'excluded' => []]);
+
+		$preflight = $this->service()->preflight([7, 8]);
+
+		$this->assertSame(
+			[7, true, '2026-11-20', [['fileId' => 8, 'label' => 'Confidential']], true],
+			[$preflight['maxDays'], $preflight['passwordRequired'], $preflight['defaultExpiresAt'], $preflight['labels'], $preflight['bundle']['exceedsCeiling']]
+		);
+		$this->assertNull($this->service()->preflight([8])['bundle'], 'one document is no bundle');
+	}
+
+	public function testTakingABundleBackDeletesItsArchive(): void {
+		$this->links->shares['101'] = ['fileId' => 9001];
+		$this->store->method('find')->willReturn(['uuid' => 'share-1', 'kind' => 'bundle', 'sharedBy' => 'clara', 'shareId' => '101', 'archiveFileId' => 9001, 'status' => 'active']);
+		$this->archiveFiles->expects($this->once())->method('discardById')->with('clara', 9001)->willReturn(true);
+
+		$this->assertSame('revoked', $this->service()->revoke('share-1')['status']);
+		$this->assertSame([], $this->links->shares);
+	}
+
+	public function testTheJobClosesWhatRanOutAndWhatWasRemovedInFiles(): void {
+		$this->links->shares['202'] = ['fileId' => 1];
+		$this->links->shares['203'] = ['fileId' => 2];
+		$this->store->method('active')->willReturn(
+			[
+				['uuid' => 'ran-out', 'kind' => 'bundle', 'sharedBy' => 'dirk', 'shareId' => '201', 'archiveFileId' => 77, 'expiresAt' => '2026-11-12', 'status' => 'active'],
+				['uuid' => 'last-day', 'kind' => 'document', 'sharedBy' => 'dirk', 'shareId' => '202', 'expiresAt' => '2026-11-13', 'status' => 'active'],
+				['uuid' => 'removed', 'kind' => 'document', 'sharedBy' => 'dirk', 'shareId' => '204', 'expiresAt' => '2026-11-30', 'status' => 'active'],
+				['uuid' => 'open', 'kind' => 'document', 'sharedBy' => 'dirk', 'shareId' => '203', 'expiresAt' => '2026-11-30', 'status' => 'active'],
+			]
+		);
+		$this->archiveFiles->expects($this->once())->method('discardById')->with('dirk', 77)->willReturn(true);
+
+		$this->assertSame(['expired' => 1, 'revoked' => 1, 'failed' => 0], $this->service()->closeLapsed());
+
+		$this->assertSame(
+			[['ran-out', 'expired', null], ['removed', 'revoked', 'removed in Files']],
+			array_map(static fn (array $save): array => [$save[1], $save[0]['status'], ($save[0]['revokedBy'] ?? null)], $this->saved)
+		);
+		$this->assertSame('2026-11-13T15:30:00+00:00', $this->saved[1][0]['revokedAt']);
+	}
+
+	public function testOneRecordThatCannotBeClosedDoesNotStopTheOthers(): void {
+		$store = $this->createMock(DocumentShareStore::class);
+		$store->method('active')->willReturn(
+			[
+				['uuid' => 'a', 'kind' => 'document', 'shareId' => '1', 'expiresAt' => '2026-01-01', 'status' => 'active'],
+				['uuid' => 'b', 'kind' => 'document', 'shareId' => '2', 'expiresAt' => '2026-01-01', 'status' => 'active'],
+			]
+		);
+		$store->method('save')->willReturnCallback(
+			static function (array $record, ?string $uuid = null): array {
+				if ($uuid === 'a') {
+					throw new RuntimeException('refused', 500);
+				}
+
+				return $record;
+			}
+		);
+		$this->store = $store;
+
+		$this->assertSame(['expired' => 1, 'revoked' => 0, 'failed' => 1], $this->service()->closeLapsed());
 	}
 }

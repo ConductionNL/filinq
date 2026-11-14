@@ -10497,8 +10497,8 @@
         "/shares": {
             "post": {
                 "operationId": "document-share-create",
-                "summary": "Share one document by a read-only link that runs out, as the session user",
-                "description": "Share one document by a read-only Nextcloud link that runs out, as the session user, and record what left in a documentShare. The answer carries the link; the record never does (share-document-links REQ-SDL-001, REQ-SDL-003, REQ-SDL-005).",
+                "summary": "Share one document, or several as one archive, by a read-only link that runs out, as the session user",
+                "description": "Share one document by a read-only Nextcloud link that runs out, or two or more as one archive with a manifest, as the session user, and record what left in a documentShare. The answer carries the link; the record never does (share-document-links REQ-SDL-001, REQ-SDL-002, REQ-SDL-003, REQ-SDL-005).",
                 "tags": [
                     "document-share"
                 ],
@@ -10509,8 +10509,20 @@
                             "schema": {
                                 "type": "object",
                                 "properties": {
+                                    "fileIds": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        },
+                                        "description": "The documents; two or more become one archive."
+                                    },
                                     "fileId": {
-                                        "type": "integer"
+                                        "type": "integer",
+                                        "description": "One document, when fileIds is not sent."
+                                    },
+                                    "name": {
+                                        "type": "string",
+                                        "description": "The bundle name, required for two or more documents."
                                     },
                                     "expiresOn": {
                                         "type": "string",
@@ -10525,10 +10537,7 @@
                                     "labelConfirmed": {
                                         "type": "boolean"
                                     }
-                                },
-                                "required": [
-                                    "fileId"
-                                ]
+                                }
                             }
                         }
                     }
@@ -10564,6 +10573,69 @@
                     },
                     "409": {
                         "$ref": "#/components/responses/Problem409"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    },
+                    "503": {
+                        "$ref": "#/components/responses/Problem503"
+                    }
+                }
+            }
+        },
+        "/shares/preflight": {
+            "post": {
+                "operationId": "document-share-preflight",
+                "summary": "What a share would be before it is made: Nextcloud's link rules, the labels and the bundle",
+                "description": "Nextcloud's enforced link maximum and password rule, the default expiry, the confidentiality label of each chosen document, and for two or more what the archive would hold and whether it goes over the ceiling. Nothing is built or shared (share-document-links REQ-SDL-002, REQ-SDL-003, REQ-SDL-006).",
+                "tags": [
+                    "document-share"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "fileIds": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        },
+                                        "description": "The documents; two or more become one archive."
+                                    },
+                                    "fileId": {
+                                        "type": "integer",
+                                        "description": "One document, when fileIds is not sent."
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The link rules, the default expiry, the labels and, for a bundle, the preflight.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
                     },
                     "500": {
                         "$ref": "#/components/responses/Problem500"

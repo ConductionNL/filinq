@@ -58,6 +58,20 @@ class DocumentShareStoreAndControllerTest extends TestCase {
 		$this->store($objects)->save(['kind' => 'document']);
 	}
 
+	public function testTheActiveRecordsAreReadBySlugWithoutTheCallersRights(): void {
+		$objects = $this->createMock(ObjectService::class);
+		$objects->expects($this->once())->method('searchObjectsBySlug')
+			->with('filinq', 'documentShare', ['status' => 'active'], false, false)
+			->willReturn([['@self' => ['id' => 'a'], 'status' => 'active'], ['@self' => ['id' => 'b'], 'status' => 'revoked'], ['status' => 'active'], 'junk']);
+
+		$this->assertSame([['@self' => ['id' => 'a'], 'status' => 'active', 'uuid' => 'a']], $this->store($objects)->active());
+
+		$down = $this->createMock(ObjectService::class);
+		$down->method('searchObjectsBySlug')->willThrowException(new RuntimeException('down'));
+		$this->expectExceptionMessage('The share records could not be read: down');
+		$this->store($down)->active();
+	}
+
 	public function testARecordIsFoundOrNot(): void {
 		$objects = $this->createMock(ObjectService::class);
 		$objects->method('find')->willReturnCallback(
@@ -85,8 +99,8 @@ class DocumentShareStoreAndControllerTest extends TestCase {
 
 	public function testASharedDocumentAnswers201WithTheLink(): void {
 		$shares = $this->createMock(DocumentShareService::class);
-		$shares->expects($this->once())->method('shareDocument')
-			->with(42, '2026-11-27', null, 'Advies', true)
+		$shares->expects($this->once())->method('share')
+			->with(['42'], '', '2026-11-27', null, 'Advies', true)
 			->willReturn(['share' => ['uuid' => 's-1'], 'url' => 'https://cloud.example/s/x', 'expiresAt' => '2026-11-27', 'expiryShortened' => false]);
 
 		$response = $this->controller($shares, ['fileId' => '42', 'expiresOn' => '2026-11-27', 'password' => '', 'note' => 'Advies', 'labelConfirmed' => 'true'])->create();
@@ -97,7 +111,7 @@ class DocumentShareStoreAndControllerTest extends TestCase {
 
 	public function testARefusalKeepsItsStatusAndReason(): void {
 		$shares = $this->createMock(DocumentShareService::class);
-		$shares->method('shareDocument')->willThrowException(new InvalidArgumentException('This document is labelled "Confidential". Confirm before sharing it by link.', 409));
+		$shares->method('share')->willThrowException(new InvalidArgumentException('This document is labelled "Confidential". Confirm before sharing it by link.', 409));
 		$shares->method('revoke')->willThrowException(new RuntimeException('Only the person who made the link, or an admin, can take it back', 403));
 		$controller = $this->controller($shares, ['fileId' => 42, 'password' => 'p']);
 
@@ -117,6 +131,36 @@ class DocumentShareStoreAndControllerTest extends TestCase {
 		$response = $this->controller($shares, [], $logger)->revoke('s-1');
 
 		$this->assertSame([500, ['error' => 'The link could not be made or taken back']], [$response->getStatus(), $response->getData()]);
+	}
+
+	public function testSeveralDocumentsGoToTheServiceAsOneListWithTheBundleName(): void {
+		$shares = $this->createMock(DocumentShareService::class);
+		$shares->expects($this->once())->method('share')
+			->with([7, 8, 9], 'Bezwaar 2026-031', '', 'pw', '', false)
+			->willReturn(['share' => ['uuid' => 's-2'], 'url' => 'https://cloud.example/s/y', 'expiresAt' => '2026-11-27', 'expiryShortened' => false]);
+
+		$response = $this->controller($shares, ['fileIds' => ['a' => 7, 'b' => 8, 'c' => 9], 'name' => 'Bezwaar 2026-031', 'password' => 'pw'])->create();
+
+		$this->assertSame(201, $response->getStatus());
+	}
+
+	public function testThePreflightAnswers200OrItsRefusal(): void {
+		$shares = $this->createMock(DocumentShareService::class);
+		$shares->expects($this->exactly(2))->method('preflight')->willReturnCallback(
+			static function (array $fileIds): array {
+				if ($fileIds === []) {
+					throw new InvalidArgumentException('Choose at least one document to share', 400);
+				}
+
+				return ['maxDays' => 7, 'labels' => [], 'bundle' => null, 'fileIds' => $fileIds];
+			}
+		);
+
+		$ok = $this->controller($shares, ['fileId' => 42])->preflight();
+		$this->assertSame([200, [42]], [$ok->getStatus(), $ok->getData()['fileIds']]);
+
+		$refused = $this->controller($shares, ['fileId' => ['nested']])->preflight();
+		$this->assertSame([400, ['error' => 'Choose at least one document to share']], [$refused->getStatus(), $refused->getData()]);
 	}
 
 	public function testATakenBackLinkAnswers200(): void {

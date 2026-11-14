@@ -34,7 +34,7 @@ use RuntimeException;
 use Throwable;
 
 /**
- * `POST api/shares` and `DELETE api/shares/{id}`. The session user is the
+ * `POST api/shares`, `POST api/shares/preflight` and `DELETE api/shares/{id}`. The session user is the
  * sharer; whether a user may take a link back is decided by the service
  * (the sharer or an admin).
  *
@@ -82,8 +82,9 @@ class DocumentShareController extends Controller {
 		}
 
 		try {
-			$result = $this->shares->shareDocument(
-				fileId: (int) $this->request->getParam('fileId', 0),
+			$result = $this->shares->share(
+				fileIds: $this->fileIds(),
+				name: (string) $this->request->getParam('name', ''),
 				expiresOn: (string) $this->request->getParam('expiresOn', ''),
 				password: $password,
 				note: (string) $this->request->getParam('note', ''),
@@ -96,6 +97,23 @@ class DocumentShareController extends Controller {
 		return new JSONResponse(data: $result, statusCode: Http::STATUS_CREATED);
 
 	}//end create()
+
+	/**
+	 * What the dialog shows before sharing: Nextcloud's link rules, the labels, and what a bundle would hold.
+	 *
+	 * @return JSONResponse The preflight, or the refusal with its reason.
+	 *
+	 * @spec openspec/changes/share-document-links/tasks.md#task-2.3
+	 */
+	#[NoAdminRequired]
+	public function preflight(): JSONResponse {
+		try {
+			return new JSONResponse(data: $this->shares->preflight(fileIds: $this->fileIds()), statusCode: Http::STATUS_OK);
+		} catch (Throwable $e) {
+			return $this->refusal(exception: $e);
+		}
+
+	}//end preflight()
 
 	/**
 	 * Take a link back. Only its sharer or an admin may.
@@ -115,6 +133,28 @@ class DocumentShareController extends Controller {
 		}
 
 	}//end revoke()
+
+	/**
+	 * The chosen file ids: `fileIds` as a list, or one `fileId`.
+	 *
+	 * @return array<int, mixed> The ids as sent; the service checks them.
+	 *
+	 * @spec openspec/changes/share-document-links/tasks.md#task-2.3
+	 */
+	private function fileIds(): array {
+		$fileIds = $this->request->getParam('fileIds');
+		if (is_array($fileIds) === true) {
+			return array_values($fileIds);
+		}
+
+		$fileId = $this->request->getParam('fileId');
+		if (is_int($fileId) === true || is_string($fileId) === true) {
+			return [$fileId];
+		}
+
+		return [];
+
+	}//end fileIds()
 
 	/**
 	 * A refusal as a response: its own status and reason, or 500 without detail.
