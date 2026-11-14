@@ -26,8 +26,8 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use Exception;
+use OCA\Filinq\Kernel\Contracts\DataResolverServiceInterface;
 use OCA\Filinq\Kernel\Contracts\TemplatePreviewServiceInterface;
-use OCA\Filinq\Service\DataResolverService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -54,7 +54,7 @@ class TemplatePreviewController extends Controller {
 	 * @param TemplateRequestHandler $requestHandler Request param parser and error handler
 	 * @param TemplatePreviewServiceInterface $previewService Service for preview rendering
 	 * @param IUserSession $userSession User session for current user
-	 * @param DataResolverService|null $dataResolver Resolves listRefs for a preview the way generation does
+	 * @param DataResolverServiceInterface|null $dataResolver Resolves listRefs for a preview the way generation does
 	 *
 	 * @return void
 	 */
@@ -64,7 +64,7 @@ class TemplatePreviewController extends Controller {
 		private readonly TemplateRequestHandler $requestHandler,
 		private readonly TemplatePreviewServiceInterface $previewService,
 		private readonly IUserSession $userSession,
-		private readonly ?DataResolverService $dataResolver = null,
+		private readonly ?DataResolverServiceInterface $dataResolver = null,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 
