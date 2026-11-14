@@ -47,12 +47,12 @@ Build after sections 1 to 5. Every test named here fails on `development`
 today: no attach listener, attach job, readiness reason or regeneration
 service exists. Acceptance lines are plain bullets, so the checkbox cap holds.
 
-- [ ] 6.1 Attach listener and job (REQ-DDPUM-006). Files: `lib/EventListener/PdfUaAttachListener.php`, `lib/BackgroundJob/PdfUaAttachCheckJob.php`, `lib/AppInfo/Application.php` (register on `NodeCreatedEvent` and `NodeWrittenEvent`), `lib/Service/VeraPdf/ConformanceService.php` (trigger `attach`, a `ua1` run).
+- [x] 6.1 Attach listener and job (REQ-DDPUM-006). Files: `lib/EventListener/PdfUaAttachListener.php`, `lib/BackgroundJob/PdfUaAttachCheckJob.php`, `lib/AppInfo/Application.php` (register on `NodeCreatedEvent` and `NodeWrittenEvent`), `lib/Service/VeraPdf/ConformanceService.php` (trigger `attach`, a `ua1` run).
   - GIVEN a PDF under `Open Registers/` WHEN the real `NodeCreatedEvent` is handled THEN one job is added and `ConformanceService` is not called.
   - GIVEN a PDF elsewhere, or a non-PDF WHEN handled THEN nothing is queued.
   - Test: PHPUnit `PdfUaAttachListenerTest::testTheListenerOnlyQueues`, `::testAFileOutsideOpenRegisterIsIgnored`, constructing the real `OCP\Files\Events\Node\NodeCreatedEvent` (constructor `(Node $node)`).
   - Wiring: a test that boots `Application::register()` with a registration context double and asserts the listener is registered for both events. A listener with a green suite and no registration is the defect this line prevents.
-- [ ] 6.2 Verdict tags (REQ-DDPUM-006). Files: `lib/BackgroundJob/PdfUaAttachCheckJob.php`, `lib/Service/VeraPdf/PdfUaVerdictTagger.php` (through `ISystemTagManager` and `ISystemTagObjectMapper`, object type `files`).
+- [x] 6.2 Verdict tags (REQ-DDPUM-006). Files: `lib/BackgroundJob/PdfUaAttachCheckJob.php`, `lib/Service/VeraPdf/PdfUaVerdictTagger.php` (through `ISystemTagManager` and `ISystemTagObjectMapper`, object type `files`).
   - GIVEN a compliant report WHEN the job runs THEN the file carries `pdfua-conform` and neither other tag.
   - GIVEN veraPDF absent, a timeout or unparseable output WHEN the job runs THEN `pdfua-niet-gecontroleerd` and no compliant report.
   - Test: PHPUnit `PdfUaAttachCheckJobTest::testACompliantFileIsTaggedConform`, `::testNoValidatorTagsNotChecked`, `::testTheTagsAreExclusive`. `testNoValidatorTagsNotChecked` must be shown failing on `development` first; paste the line in the PR body.

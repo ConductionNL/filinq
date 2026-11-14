@@ -9085,7 +9085,7 @@
                         "format": "date-time"
                     },
                     "trigger": {
-                        "description": "Whether a person started the check, document validation did, or document generation did.",
+                        "description": "Whether a person started the check, document validation did, document generation did, or attaching the PDF to a register object did.",
                         "type": "string",
                         "required": true,
                         "visible": true,
@@ -9095,12 +9095,14 @@
                         "enum": [
                             "manual",
                             "validation",
-                            "generation"
+                            "generation",
+                            "attach"
                         ],
                         "x-enum-labels": {
                             "manual": "A person",
                             "validation": "Document validation",
-                            "generation": "Document generation"
+                            "generation": "Document generation",
+                            "attach": "Attached to a register object"
                         }
                     }
                 },

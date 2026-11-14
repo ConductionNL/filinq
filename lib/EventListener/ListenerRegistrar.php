@@ -53,6 +53,7 @@ class ListenerRegistrar {
 		(new SigningEventRegistrar())->register(context: $context);
 		(new IntegrationLeafRegistrar())->register(context: $context);
 		(new DocumentGenerationRegistrar())->register(context: $context);
+		(new PdfUaEventRegistrar())->register(context: $context);
 
 	}//end register()
 

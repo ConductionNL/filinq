@@ -38,6 +38,11 @@ class AccessibilityConformanceService {
 	public const TRIGGER_GENERATION = 'generation';
 
 	/**
+	 * The PDF was attached to an OpenRegister object (REQ-DDPUM-006).
+	 */
+	public const TRIGGER_ATTACH = 'attach';
+
+	/**
 	 * The most failed checks kept on a report.
 	 */
 	public const MAX_FAILED_CHECKS = VeraPdfReportParser::MAX_RULES;
