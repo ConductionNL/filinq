@@ -96,6 +96,14 @@ class ObjectEventRegistrar {
 			);
 		}
 
+		// A saved intake document is acknowledged to its sender after the save,
+		// never inside receive() (intake-acknowledge-and-stamp D2). Named by
+		// string, like the listeners below, to keep this class's coupling.
+		$context->registerEventListener(
+			ObjectCreatedEvent::class,
+			'OCA\Filinq\EventListener\IntakeArrivalFollowUpListener'
+		);
+
 		$context->registerEventListener(ObjectDeletedEvent::class, FilinqEventListener::class);
 
 		// A deleted anonymisation link takes its reversible-pseudonymisation
