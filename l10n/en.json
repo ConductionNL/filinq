@@ -1,5 +1,11 @@
 {
     "translations": {
+        "Woo refusal grounds": "Woo refusal grounds",
+        "Where the Woo refusal grounds used for redaction come from.": "Where the Woo refusal grounds used for redaction come from.",
+        "The Woo refusal grounds cannot be read.": "The Woo refusal grounds cannot be read.",
+        "The Woo refusal grounds are maintained in dossiq. Filinq reads them and does not edit them.": "The Woo refusal grounds are maintained in dossiq. Filinq reads them and does not edit them.",
+        "Open the Woo refusal grounds in dossiq": "Open the Woo refusal grounds in dossiq",
+        "Read-only list, version {version}. Install dossiq to maintain the Woo refusal grounds.": "Read-only list, version {version}. Install dossiq to maintain the Woo refusal grounds.",
         "Withdraw request": "Withdraw request",
         "Withdraw this signing request?": "Withdraw this signing request?",
         "Every signatory loses access, and nobody can sign it any more. This cannot be undone.": "Every signatory loses access, and nobody can sign it any more. This cannot be undone.",

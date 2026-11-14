@@ -148,6 +148,12 @@
 		</NcSettingsSection>
 
 		<NcSettingsSection
+			:name="t('filinq', 'Woo refusal grounds')"
+			:description="t('filinq', 'Where the Woo refusal grounds used for redaction come from.')">
+			<WooGroundsSource />
+		</NcSettingsSection>
+
+		<NcSettingsSection
 			:name="t('filinq', 'Legal basis per entity type')"
 			:description="
 				t(
@@ -888,6 +894,7 @@ import EntityTypeSelector from './EntityTypeSelector.vue'
 import PageLayoutSettings from './PageLayoutSettings.vue'
 import SettingSwitchRow from './SettingSwitchRow.vue'
 import SignerIdentitySettings from './SignerIdentitySettings.vue'
+import WooGroundsSource from './WooGroundsSource.vue'
 import {
 	backendStateFromSettings,
 	emptyBackendState,
@@ -999,6 +1006,7 @@ export default {
 	name: 'Settings',
 	components: {
 		DocumentWebhooksSection,
+		WooGroundsSource,
 		NcSettingsSection,
 		NcNoteCard,
 		NcSelect,

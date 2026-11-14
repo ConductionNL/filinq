@@ -37,8 +37,10 @@ pickers read `base` objects.
   - GIVEN the snapshot WHEN the page opens THEN read-only, version shown, no add or edit action, and the line naming dossiq.
   - GIVEN dossiq WHEN the page opens THEN a link to dossiq's grounds page and no editor.
   - Test: Playwright `tests/e2e/spec-coverage/grondslagen-read-from-dossiq.spec.ts` (both states; the dossiq-absent state on an instance with dossiq disabled).
-- [ ] 6 Docs. Files: `docs/features/grondslagen.md` (one list in dossiq, the snapshot for redaction only, the repair report).
+  - Built (c3): the read-only **Woo refusal grounds** section (`src/views/settings/WooGroundsSource.vue` over `src/services/groundsSource.js`, reading `/api/grounds`): with dossiq a link to dossiq's grounds page, without it the snapshot's version and grounds; no editor. Strings in en and nl; Vitest `groundsSource.spec.js`; the settings golden re-recorded. Left: the Playwright spec (live, both states).
+- [x] 6 Docs. Files: `docs/features/grondslagen.md` (one list in dossiq, the snapshot for redaction only, the repair report).
   - Test: the docs build.
+  - Built (c3): `docs/features/grondslagen.md`, linked from `docs/features/README.md`.
 
 Verification (plain bullets on purpose). The building agent follows `openspec/woo-build-rules.md`:
 

@@ -49,7 +49,7 @@ export async function fetchBaseOptions() {
 		const response = await axios.get(generateUrl('/apps/filinq/api/grounds'))
 		const grounds = Array.isArray(response.data?.grounds) ? response.data.grounds : []
 		return grounds.map(groundOption).filter(Boolean)
-	} catch (err) {
+	} catch {
 		return []
 	}
 }
