@@ -1,7 +1,3 @@
-/**
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- */
 OC.L10N.register(
     "filinq",
     {
@@ -2830,7 +2826,15 @@ OC.L10N.register(
         "The Nextcloud file id of the reviewed document; one review per file.": "The Nextcloud file id of the reviewed document; one review per file.",
         "The reviewer's note.": "The reviewer's note.",
         "The user who marked the document checked.": "The user who marked the document checked.",
-        "When the reviewer marked the document checked.": "When the reviewer marked the document checked."
+        "When the reviewer marked the document checked.": "When the reviewer marked the document checked.",
+        "Confidence for unattended receipts and invoices": "Confidence for unattended receipts and invoices",
+        "A read receipt or invoice passes without a person only when every field it needs is read at least this sure. Between 0.6 and 1.0; 0.9 by default.": "A read receipt or invoice passes without a person only when every field it needs is read at least this sure. Between 0.6 and 1.0; 0.9 by default.",
+        "Choose a value between 0.6 and 1.0.": "Choose a value between 0.6 and 1.0.",
+        "Send the photo as the file field.": "Send the photo as the file field.",
+        "This photo is larger than 20 MB. Take it again at a lower resolution.": "This photo is larger than 20 MB. Take it again at a lower resolution.",
+        "Only a JPEG, PNG or HEIC photo or a PDF can be captured.": "Only a JPEG, PNG or HEIC photo or a PDF can be captured.",
+        "This photo format cannot be read on this server. Take the photo as JPEG.": "This photo format cannot be read on this server. Take the photo as JPEG.",
+        "Failed to capture the receipt": "Failed to capture the receipt"
     },
     "nplurals=2; plural=(n != 1);"
 )

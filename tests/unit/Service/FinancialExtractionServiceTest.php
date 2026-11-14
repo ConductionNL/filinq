@@ -326,6 +326,39 @@ TEXT;
 	}//end testExtractFinancialHappyPathPersistsWithoutEvent()
 
 	/**
+	 * A receipt that came in through the capture route keeps the photo it was read from (REQ-ERP-001);
+	 * any other extraction carries no capturedFileId.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/tasks.md#task-2.1
+	 */
+	public function testACapturedReceiptKeepsItsPhoto(): void {
+		$this->mockResolvableImageFile(fileId: 42, text: self::INVOICE_TEXT);
+		$stored = [];
+		$this->objectService->expects($this->exactly(2))
+			->method('saveObject')
+			->willReturnCallback(function ($object) use (&$stored) {
+				$stored[] = $object;
+				return new class($object) implements \JsonSerializable {
+					public function __construct(
+						private array $data,
+					) {
+					}
+					public function jsonSerialize(): array {
+						return $this->data;
+					}
+				};
+			});
+
+		$this->service->extractFinancial(data: ['fileId' => 42, 'capturedFileId' => '42', 'docType' => 'receipt'], requestedBy: 'annemarie');
+		$this->service->extractFinancial(data: ['fileId' => 42, 'capturedFileId' => 'x', 'docType' => 'receipt'], requestedBy: 'annemarie');
+
+		$this->assertSame(42, $stored[0]['capturedFileId']);
+		$this->assertArrayNotHasKey('capturedFileId', $stored[1]);
+	}//end testACapturedReceiptKeepsItsPhoto()
+
+	/**
 	 * callbackEvent: true dispatches the canonical completion event exactly
 	 * once (REQ-FIN-05).
 	 *

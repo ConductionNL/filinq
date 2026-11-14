@@ -232,7 +232,8 @@ class FinancialExtractionService implements FinancialExtractionServiceInterface 
 	/**
 	 * Run the full extraction pipeline for a request and persist the result.
 	 *
-	 * @param array<string, mixed> $data Request body: `fileId|documentUri`, `docType`, `callbackEvent`.
+	 * @param array<string, mixed> $data Request body: `fileId|documentUri`, `docType`, `callbackEvent`, and
+	 *                                   `capturedFileId` when the receipt came in through the capture route.
 	 * @param string $requestedBy Nextcloud user id that initiated the extraction.
 	 *
 	 * @return array<string, mixed> The persisted `financialExtraction` object.
@@ -259,6 +260,11 @@ class FinancialExtractionService implements FinancialExtractionServiceInterface 
 			'overallConfidence' => $pipeline['overallConfidence'],
 			'corrections' => [],
 		];
+
+		// The photo a captured receipt was read from (REQ-ERP-001).
+		if (is_numeric($data['capturedFileId'] ?? null) === true && (int)$data['capturedFileId'] > 0) {
+			$payload['capturedFileId'] = (int)$data['capturedFileId'];
+		}
 
 		// The unattended verdict, judged once and stored with the threshold it
 		// used, so it says what held when a consumer acted (REQ-ERP-003).
