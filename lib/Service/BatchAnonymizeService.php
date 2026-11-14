@@ -52,6 +52,11 @@ class BatchAnonymizeService implements BatchAnonymizeServiceInterface {
 	 * @var integer
 	 */
 	private const DEFAULT_QA_SAMPLE_RATE = 5;
+
+	/**
+	 * The status of a batch stopped on request.
+	 */
+	private const CANCELLED = 'cancelled';
 	/**
 	 * Constructor for BatchAnonymizeService
 	 *
@@ -60,6 +65,9 @@ class BatchAnonymizeService implements BatchAnonymizeServiceInterface {
 	 * @param OutputLayoutMover $layoutMover Moves each redacted output into the output subfolder.
 	 * @param BatchQaSampler|null $qaSampler Picks the batch's QA sample on completion; null samples nothing.
 	 * @param IAppConfig|null $appConfig Reads `batch.qa_sample_rate`; null uses the default rate.
+	 * @param BatchBackgroundPath|null $background Sends a batch above the synchronous cap to the background
+	 *                                             path and finds a resumed file's existing copy; null keeps
+	 *                                             every batch in-request.
 	 *
 	 * @return void
 	 */
@@ -69,6 +77,7 @@ class BatchAnonymizeService implements BatchAnonymizeServiceInterface {
 		private readonly OutputLayoutMover $layoutMover,
 		private readonly ?BatchQaSampler $qaSampler=null,
 		private readonly ?IAppConfig $appConfig=null,
+		private readonly ?BatchBackgroundPath $background=null,
 	) {
 
 	}//end __construct()
@@ -185,6 +194,10 @@ class BatchAnonymizeService implements BatchAnonymizeServiceInterface {
 			throw new Exception('Batch not found or expired', 404);
 		}
 
+		if ($this->background !== null && $this->background->takes(batch: $batch) === true) {
+			return $this->background->enqueue(batchId: $batchId, batch: $batch, request: $request);
+		}
+
 		$batch['status'] = 'anonymizing';
 		$this->stateService->updateBatch($batchId, $batch);
 
@@ -197,7 +210,7 @@ class BatchAnonymizeService implements BatchAnonymizeServiceInterface {
 			// Cooperative cancellation: checked between files, never inside
 			// one, so the file in progress always finishes (REQ-DDRAS-004).
 			if ($this->cancelRequested(batchId: $batchId) === true) {
-				$run->batch['status'] = BatchLifecycleService::CANCELLED;
+				$run->batch['status'] = self::CANCELLED;
 				$this->stateService->updateBatch($batchId, $run->batch);
 				return $run->summary(batchId: $batchId);
 			}
@@ -205,11 +218,47 @@ class BatchAnonymizeService implements BatchAnonymizeServiceInterface {
 			$this->processFile(run: $run, index: $index);
 		}
 
-		$run->batch = $this->markQaSample(batch: $run->batch);
-		$run->batch['status'] = 'completed';
+		$run->batch = $this->complete(batch: $run->batch);
 		$this->stateService->updateBatch($batchId, $run->batch);
 		return $run->summary(batchId: $batchId);
 	}//end runBatch()
+
+	/**
+	 * Anonymize one file of a background batch.
+	 *
+	 * The same per-file step as the in-request path; the work unit applies
+	 * the background path's retry rule to the outcome.
+	 *
+	 * @param array<string, mixed>  $batch   The batch.
+	 * @param int|string            $index   The file's index in `files`.
+	 * @param BatchAnonymizeRequest $request The stored request.
+	 *
+	 * @return array<string, mixed> The batch with that file's entry updated.
+	 *
+	 * @spec openspec/changes/redaction-at-scale/specs/redaction-at-scale/spec.md#requirement-chunked-background-processing-under-cron-req-ddras-002
+	 * @spec openspec/changes/redaction-at-scale/specs/redaction-at-scale/spec.md#requirement-resource-guards-on-extractconvert-backends-req-ddras-008
+	 */
+	public function anonymizeAt(array $batch, int|string $index, BatchAnonymizeRequest $request): array {
+		$run = new BatchAnonymizeRun(batch: $batch, request: $request);
+		$this->processFile(run: $run, index: $index);
+		return $run->batch;
+	}//end anonymizeAt()
+
+	/**
+	 * Close the anonymize phase: draw the QA sample and mark the batch completed.
+	 *
+	 * @param array<string, mixed> $batch The batch.
+	 *
+	 * @return array<string, mixed> The completed batch.
+	 *
+	 * @spec openspec/changes/redaction-at-scale/specs/redaction-at-scale/spec.md#requirement-sampling-qa-routed-to-human-review-req-ddras-007
+	 */
+	public function complete(array $batch): array {
+		$batch = $this->markQaSample(batch: $batch);
+		$batch['status'] = 'completed';
+		$batch['completedAt'] = time();
+		return $batch;
+	}//end complete()
 
 	/**
 	 * Whether the batch was asked to stop since this run read it.
@@ -224,7 +273,7 @@ class BatchAnonymizeService implements BatchAnonymizeServiceInterface {
 		$stored = $this->stateService->getBatch($batchId);
 		$status = (string)($stored['status'] ?? '');
 
-		return in_array($status, [BatchLifecycleService::CANCELLING, BatchLifecycleService::CANCELLED], true);
+		return in_array($status, ['cancelling', self::CANCELLED], true);
 
 	}//end cancelRequested()
 
@@ -278,6 +327,18 @@ class BatchAnonymizeService implements BatchAnonymizeServiceInterface {
 		}
 
 		if ($file['status'] !== 'extracted') {
+			return;
+		}
+
+		$link = $this->background?->existingOutput(batch: $run->batch, entry: $file);
+		if ($link !== null) {
+			$file['status'] = 'anonymized';
+			$file['anonymizedFileId'] = $link['anonymizedFileId'];
+			$file['anonymizedFilePath'] = ($link['anonymizedFilePath'] ?? null);
+			$file['replacementCount'] = (int)($link['replacementCount'] ?? ($file['replacementCount'] ?? 0));
+			$file['resumedFromLink'] = true;
+			$run->batch['files'][$index] = $file;
+			$run->processed++;
 			return;
 		}
 

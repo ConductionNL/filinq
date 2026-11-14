@@ -88,6 +88,11 @@ class BatchStateRepository {
 	private const DOCUMENTS_PROPERTY = 'documents';
 
 	/**
+	 * The most batches one listing reads.
+	 */
+	private const LIST_LIMIT = 500;
+
+	/**
 	 * Constructor for BatchStateRepository
 	 *
 	 * The OpenRegister handle is a CONSTRUCTOR dependency (ADR-083): a bare
@@ -163,6 +168,54 @@ class BatchStateRepository {
 
 		return $this->fromStoredShape(stored: $this->toArray(value: $object));
 	}//end find()
+
+	/**
+	 * Every stored batch matching the filters, in creation order.
+	 *
+	 * @param array<string, mixed> $filters Property filters, e.g. `['userId' => 'alice']`; empty lists all.
+	 *
+	 * @return array<int, array<string, mixed>> The batches, in the app's shape (`files`, not `documents`).
+	 *
+	 * @throws RuntimeException When OpenRegister is not available.
+	 *
+	 * @spec openspec/changes/redaction-at-scale/specs/redaction-at-scale/spec.md#requirement-per-batch-progress-reporting-req-ddras-003
+	 */
+	public function findAll(array $filters=[]): array {
+		if ($this->isAvailable() === false) {
+			throw new RuntimeException(
+				'Cannot list anonymization batches: OpenRegister is not available.'
+			);
+		}
+
+		if (isset($filters['_limit']) === false) {
+			$filters['_limit'] = self::LIST_LIMIT;
+		}
+
+		$rows = $this->openRegister->getObjectService()->searchObjectsBySlug(
+			registerSlug: self::REGISTER,
+			schemaSlug: self::SCHEMA,
+			filters: $filters,
+			_rbac: false,
+			_multitenancy: false
+		);
+		if (is_array($rows) === false) {
+			return [];
+		}
+
+		$batches = [];
+		foreach ($rows as $row) {
+			$batch = $this->fromStoredShape(stored: $this->toArray(value: $row));
+			if ((string)($batch['batchId'] ?? '') !== '') {
+				$batches[] = $batch;
+			}
+		}
+
+		usort(
+			$batches,
+			static fn (array $a, array $b): int => ((int)($a['createdAt'] ?? 0) <=> (int)($b['createdAt'] ?? 0))
+		);
+		return $batches;
+	}//end findAll()
 
 	/**
 	 * Persist a batch record, creating it when it does not exist yet.

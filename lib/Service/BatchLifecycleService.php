@@ -163,11 +163,36 @@ class BatchLifecycleService {
 
 		$requeue = $this->requeueUnfinished(batch: $batch);
 		$batch = $requeue['batch'];
+		// Marks the run as resumed: a file whose redacted copy was made after
+		// the batch started is then taken from its anonymizationLink instead
+		// of being anonymized again (REQ-DDRAS-005).
+		$batch['resumedAt'] = time();
+		if ($batch['status'] === 'review' && $this->continuesInBackground(batch: $batch) === true) {
+			$batch['status'] = 'anonymizing';
+		}
+
 		$this->stateService->updateBatch($batchId, $batch);
 
 		return ['status' => 202, 'batchId' => $batchId, 'batchStatus' => $batch['status'], 'requeued' => $requeue['requeued']];
 
 	}//end resume()
+
+	/**
+	 * Whether a resumed batch goes straight back to the background anonymize phase.
+	 *
+	 * True for a background batch that carries its reviewed request: nothing
+	 * is left for a person to review, so the coordinator carries on.
+	 *
+	 * @param array<string, mixed> $batch The batch.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/redaction-at-scale/specs/redaction-at-scale/spec.md#requirement-idempotent-resume-req-ddras-005
+	 */
+	private function continuesInBackground(array $batch): bool {
+		return ($batch['background'] ?? false) === true && is_array($batch['anonymizeRequest'] ?? null) === true;
+
+	}//end continuesInBackground()
 
 	/**
 	 * The batch with every unfinished file queued again: a file that failed

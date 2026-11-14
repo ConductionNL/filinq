@@ -363,6 +363,7 @@
         "double IUserSession",
         "double JobQueueInterface",
         "double LoggerInterface",
+        null,
         {
             "built OCA\\Filinq\\Service\\FolderFileEnumerator": [
                 "double ConfidentialityLabelService",
@@ -376,6 +377,7 @@
     ],
     "FolderBatchService given": [
         "double AnonymizationService",
+        "double BatchRouting",
         "double BatchStateService",
         "double IRootFolder",
         "double IUserSession",

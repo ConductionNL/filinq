@@ -240,4 +240,46 @@ class BatchLifecycleServiceTest extends TestCase {
 		);
 
 	}//end testResumeOfABatchNotErroredOrCancelledIsRefused()
+	/**
+	 * A resume marks the run resumed, so a file finished out of band is taken from its link.
+	 *
+	 * @return void
+	 */
+	public function testResumeMarksTheRunResumed(): void {
+		$this->state->method('getBatch')->willReturn(
+			self::batch(status: 'error', files: [['fileId' => 1, 'status' => 'extracted']])
+		);
+		$written = null;
+		$this->state->method('updateBatch')->willReturnCallback(
+			static function (string $id, array $batch) use (&$written): void {
+				$written = $batch;
+			}
+		);
+
+		$this->service->resume(batchId: 'b-1');
+
+		self::assertIsInt($written['resumedAt']);
+		self::assertSame('review', $written['status']);
+
+	}//end testResumeMarksTheRunResumed()
+
+	/**
+	 * A background batch with its stored request resumes straight into the anonymize phase.
+	 *
+	 * @return void
+	 */
+	public function testABackgroundBatchWithItsRequestResumesIntoAnonymizing(): void {
+		$batch = self::batch(status: 'cancelled', files: [['fileId' => 1, 'status' => 'anonymized'], ['fileId' => 2, 'status' => 'extracted']]);
+		$batch['background'] = true;
+		$batch['anonymizeRequest'] = ['entities' => [], 'callOptions' => []];
+		$this->state->method('getBatch')->willReturn($batch);
+		$this->state->expects(self::once())->method('updateBatch')
+			->with('b-1', self::callback(static fn (array $b): bool => $b['status'] === 'anonymizing'));
+
+		$result = $this->service->resume(batchId: 'b-1');
+
+		self::assertSame('anonymizing', $result['batchStatus']);
+		self::assertSame(1, $result['requeued']);
+
+	}//end testABackgroundBatchWithItsRequestResumesIntoAnonymizing()
 }//end class

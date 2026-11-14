@@ -1117,6 +1117,24 @@ abstract class TimedJob {
 	}//end setInterval()
 
 	/**
+	 * Whether the job may run in parallel with itself.
+	 *
+	 * @var boolean
+	 */
+	public bool $allowParallelRuns = true;
+
+	/**
+	 * Allow or forbid parallel runs (OCP\BackgroundJob\Job::setAllowParallelRuns).
+	 *
+	 * @param bool $allow Whether parallel runs are allowed
+	 *
+	 * @return void
+	 */
+	public function setAllowParallelRuns(bool $allow): void {
+		$this->allowParallelRuns = $allow;
+	}//end setAllowParallelRuns()
+
+	/**
 	 * Set the time sensitivity.
 	 *
 	 * @param int $sensitivity Sensitivity flag
