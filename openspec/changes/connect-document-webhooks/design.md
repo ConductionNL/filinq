@@ -63,7 +63,13 @@ inbound callbacks; more than four events in this change.
 `OCA\Filinq\Event\DocumentSignedEvent`, `DocumentAnonymisedEvent`,
 `DocumentGeneratedEvent` and `DocumentRegisteredEvent` extend one base,
 `DocumentWebhookEvent`, which returns the payload. A receiver can subscribe
-to one, or to all four with `OCA\Filinq\Event\Document*Event`.
+to one, or to all four with `OCA\Filinq\Event\Webhook\*`.
+
+As built, the four classes and their base live in `OCA\Filinq\Event\Webhook\`:
+`OCA\Filinq\Event\DocumentGeneratedEvent` already exists (the in-process
+event of flow-generate-document-node, with a different payload), and the
+`Document*Event` pattern would also have matched
+`DocumentGenerationRequestedEvent` and `DocumentSigningRequestedEvent`.
 
 Alternative considered: preset filters on OpenRegister's object events
 ("Object Updated" where schema is `signingRequest` and status is
