@@ -27,7 +27,9 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
+use OCA\Filinq\Exception\IntakeRefusedException;
 use OCA\Filinq\Kernel\AppIdentity;
+use OCA\Filinq\Service\Intake\IntakePasswordRemoval;
 use OCA\Filinq\Service\PdfPasswordRemovalService;
 use OCA\Filinq\Service\SessionUserFile;
 use OCP\AppFramework\Controller;
@@ -51,12 +53,14 @@ class PdfPasswordController extends Controller {
 	 * @param PdfPasswordRemovalService $removal Unlocks the PDF into a copy.
 	 * @param SessionUserFile           $files   The signed-in user's own files.
 	 * @param IL10N                     $l10n    Translations.
+	 * @param IntakePasswordRemoval|null $intake Unlocks an intake document's file and points the document at the copy.
 	 */
 	public function __construct(
 		IRequest $request,
 		private readonly PdfPasswordRemovalService $removal,
 		private readonly SessionUserFile $files,
 		private readonly IL10N $l10n,
+		private readonly ?IntakePasswordRemoval $intake = null,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
@@ -90,6 +94,53 @@ class PdfPasswordController extends Controller {
 		$result = $this->removal->unlock(file: $file, password: $password);
 		unset($password);
 
+		return $this->answer(result: $result);
+	}//end remove()
+
+	/**
+	 * Unlock the file of a waiting intake document; the document then names
+	 * the copy as its `file` and keeps the arrived file as `lockedOriginal`.
+	 *
+	 * The same answers as remove(), plus 403 for a caller who may not change
+	 * intake documents and 409 for a document that left the inbox.
+	 *
+	 * @param string $uuid The intake document.
+	 *
+	 * @return JSONResponse
+	 *
+	 * @spec openspec/changes/intake-pdf-password-removal/tasks.md#2-screens
+	 */
+	#[NoAdminRequired]
+	public function removeForIntake(string $uuid): JSONResponse {
+		$password = $this->request->getParam('password', '');
+		if (is_string($password) === false || $password === '') {
+			return new JSONResponse(['error' => $this->l10n->t('Type the password of the PDF.')], Http::STATUS_BAD_REQUEST);
+		}
+
+		if ($this->intake === null) {
+			return new JSONResponse(['error' => $this->l10n->t('File not found')], Http::STATUS_NOT_FOUND);
+		}
+
+		try {
+			$result = $this->intake->unlock(uuid: $uuid, password: $password);
+		} catch (IntakeRefusedException $e) {
+			// The same refusal text the other intake routes answer.
+			return new JSONResponse(['error' => $e->getMessage()], $e->getStatus());
+		} finally {
+			unset($password);
+		}
+
+		return $this->answer(result: $result);
+	}//end removeForIntake()
+
+	/**
+	 * Each outcome of the removal as its own answer.
+	 *
+	 * @param array<string, mixed> $result The removal's answer.
+	 *
+	 * @return JSONResponse
+	 */
+	private function answer(array $result): JSONResponse {
 		$t = fn (string $text): array => ['error' => $this->l10n->t($text)];
 
 		return match ($result['outcome']) {
@@ -99,7 +150,7 @@ class PdfPasswordController extends Controller {
 			PdfPasswordRemovalService::NO_TOOL => new JSONResponse($t('qpdf is not installed on this server'), Http::STATUS_SERVICE_UNAVAILABLE),
 			default => $this->failed(message: (string)($result['message'] ?? '')),
 		};
-	}//end remove()
+	}//end answer()
 
 	/**
 	 * The answer to a file that is not a PDF (400) or could not be unlocked (500).

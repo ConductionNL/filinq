@@ -74,6 +74,8 @@ $extra = [
         // Final document routes (final-documents-frozen).
         // intake-pdf-password-removal: unlock a password-protected PDF into a copy beside it.
         ['name' => 'pdfPassword#remove', 'url' => 'api/documents/{fileId}/remove-password', 'verb' => 'POST', 'requirements' => ['fileId' => '\\d+']],
+        // ...and the same for a waiting intake document, which then names the copy (REQ-PPR-004).
+        ['name' => 'pdfPassword#removeForIntake', 'url' => 'api/intake/documents/{uuid}/remove-password', 'verb' => 'POST'],
         ['name' => 'finalDocument#show', 'url' => 'api/documents/{fileId}/final', 'verb' => 'GET'],
         ['name' => 'finalDocument#finalise', 'url' => 'api/documents/{fileId}/final', 'verb' => 'POST'],
         ['name' => 'finalDocument#correct', 'url' => 'api/documents/{fileId}/final/correction', 'verb' => 'POST'],

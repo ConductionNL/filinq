@@ -40,7 +40,7 @@ is held only while the dialog is open and is cleared on every close.
 
 <script>
 import { NcButton, NcDialog, NcNoteCard, NcPasswordField } from '@nextcloud/vue'
-import { removePassword, removePasswordError } from '../services/pdfPassword.js'
+import { removeIntakePassword, removePassword, removePasswordError } from '../services/pdfPassword.js'
 
 export default {
 	name: 'PdfPasswordModal',
@@ -48,6 +48,8 @@ export default {
 	props: {
 		show: { type: Boolean, default: false },
 		fileId: { type: [Number, String], default: null },
+		/** An intake document: its file is unlocked and the document then names the copy. */
+		intakeUuid: { type: String, default: '' },
 	},
 
 	emits: ['close', 'unlocked'],
@@ -64,13 +66,15 @@ export default {
 		 * @spec openspec/changes/intake-pdf-password-removal/tasks.md#2-screens
 		 */
 		async submit() {
-			if (this.busy || this.password === '' || !this.fileId) {
+			if (this.busy || this.password === '' || (!this.fileId && !this.intakeUuid)) {
 				return
 			}
 			this.busy = true
 			this.error = ''
 			try {
-				const copy = await removePassword(this.fileId, this.password)
+				const copy = this.intakeUuid
+					? await removeIntakePassword(this.intakeUuid, this.password)
+					: await removePassword(this.fileId, this.password)
 				this.password = ''
 				this.$emit('unlocked', copy)
 				this.$emit('close')

@@ -15,6 +15,8 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\PdfPasswordController;
+use OCA\Filinq\Exception\IntakeRefusedException;
+use OCA\Filinq\Service\Intake\IntakePasswordRemoval;
 use OCA\Filinq\Service\PdfPasswordRemovalService;
 use OCA\Filinq\Service\SessionUserFile;
 use OCP\AppFramework\Http;
@@ -30,6 +32,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * @covers \OCA\Filinq\Controller\PdfPasswordController
  * @uses   \OCA\Filinq\Service\SessionUserFile
+ * @uses   \OCA\Filinq\Exception\IntakeRefusedException
  */
 class PdfPasswordControllerTest extends TestCase {
 
@@ -42,7 +45,7 @@ class PdfPasswordControllerTest extends TestCase {
 	 *
 	 * @return PdfPasswordController
 	 */
-	private function controller(?File $file, mixed $password, PdfPasswordRemovalService $removal): PdfPasswordController {
+	private function controller(?File $file, mixed $password, PdfPasswordRemovalService $removal, ?IntakePasswordRemoval $intake = null): PdfPasswordController {
 		$request = $this->createMock(IRequest::class);
 		$request->method('getParam')->willReturnCallback(static fn (string $key, $default = null) => ($key === 'password' ? $password : $default));
 		// SessionUserFile is final: a real one over the caller's own folder.
@@ -58,7 +61,7 @@ class PdfPasswordControllerTest extends TestCase {
 		$l10n = $this->createMock(IL10N::class);
 		$l10n->method('t')->willReturnArgument(0);
 
-		return new PdfPasswordController($request, $removal, $files, $l10n);
+		return new PdfPasswordController($request, $removal, $files, $l10n, $intake);
 	}
 
 	public function testAFileTheCallerCannotOpenIs404AndNothingRuns(): void {
@@ -95,5 +98,45 @@ class PdfPasswordControllerTest extends TestCase {
 			$this->assertSame($status, $response->getStatus());
 			$this->assertSame($body, $response->getData());
 		}
+	}
+
+	/**
+	 * An intake document's file is unlocked through the intake service and answers the copy and the document.
+	 *
+	 * @return void
+	 */
+	public function testAnIntakeDocumentIsUnlockedThroughTheIntakeService(): void {
+		$removal = $this->createMock(PdfPasswordRemovalService::class);
+		$removal->expects($this->never())->method('unlock');
+		$intake = $this->createMock(IntakePasswordRemoval::class);
+		$intake->expects($this->once())->method('unlock')->with('doc-1', 'geheim')
+			->willReturn(['outcome' => 'unlocked', 'fileId' => 77, 'name' => 'scan (unlocked).pdf', 'intakeDocument' => ['file' => 77, 'lockedOriginal' => 41]]);
+
+		$response = $this->controller(null, 'geheim', $removal, $intake)->removeForIntake('doc-1');
+
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame(['fileId' => 77, 'name' => 'scan (unlocked).pdf', 'intakeDocument' => ['file' => 77, 'lockedOriginal' => 41]], $response->getData());
+	}
+
+	/**
+	 * Without a password nothing runs; a refusal keeps its status; a wrong password is 422.
+	 *
+	 * @return void
+	 */
+	public function testIntakeRefusalsKeepTheirStatus(): void {
+		$removal = $this->createMock(PdfPasswordRemovalService::class);
+		$intake = $this->createMock(IntakePasswordRemoval::class);
+		$intake->expects($this->never())->method('unlock');
+		$this->assertSame(Http::STATUS_BAD_REQUEST, $this->controller(null, '', $removal, $intake)->removeForIntake('doc-1')->getStatus());
+
+		$refusing = $this->createMock(IntakePasswordRemoval::class);
+		$refusing->method('unlock')->willThrowException(new IntakeRefusedException(message: 'You may not change intake documents.', status: 403));
+		$response = $this->controller(null, 'geheim', $removal, $refusing)->removeForIntake('doc-1');
+		$this->assertSame(403, $response->getStatus());
+		$this->assertSame(['error' => 'You may not change intake documents.'], $response->getData());
+
+		$wrong = $this->createMock(IntakePasswordRemoval::class);
+		$wrong->method('unlock')->willReturn(['outcome' => 'wrong-password']);
+		$this->assertSame(Http::STATUS_UNPROCESSABLE_ENTITY, $this->controller(null, 'fout', $removal, $wrong)->removeForIntake('doc-1')->getStatus());
 	}
 }

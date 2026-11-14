@@ -142,3 +142,16 @@ The server needs `qpdf` (for example `apt-get install qpdf`), next to Tesseract.
 
 An intake document keeps what arrived: its `lockedOriginal` names the file that came in locked, and `file` names the unlocked copy.
 
+### Where the action is
+
+- **My documents**: the `pdf-encrypted` finding in the validation result offers **Remove password**. The copy's findings replace the original's and the list reloads.
+- **Intake** (`/intake`): a waiting PDF whose password was not removed yet offers **Remove password** in its row menu. It calls
+
+  ```
+  POST /apps/filinq/api/intake/documents/{uuid}/remove-password
+  { "password": "…" }
+  ```
+
+  which answers like the route above, plus the stored `intakeDocument`. Only someone who may change intake documents can use it, and that is checked before the file is read (403 otherwise); a document that has left the inbox answers 409. Unlocking an already unlocked document again keeps the first arrival in `lockedOriginal`.
+- **Admin settings**: the line next to Tesseract's says whether `qpdf` is installed.
+
