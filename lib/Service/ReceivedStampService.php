@@ -215,12 +215,10 @@ class ReceivedStampService {
 	 * @return string
 	 */
 	private function latin1(string $text): string {
-		$converted = @iconv('UTF-8', 'windows-1252//TRANSLIT', $text);
-
-		if ($converted === false) {
+		if (function_exists('mb_convert_encoding') === false) {
 			return $text;
 		}
 
-		return $converted;
+		return (string)mb_convert_encoding($text, 'Windows-1252', 'UTF-8');
 	}//end latin1()
 }//end class

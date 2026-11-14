@@ -21,6 +21,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\EventListener;
 
+use DateTimeImmutable;
 use OCA\Filinq\Service\IntakeAcknowledgementService;
 use OCA\Filinq\Service\IntakeDefaultRuleService;
 use OCA\Filinq\Service\IntakeRepository;
@@ -167,9 +168,9 @@ class IntakeArrivalFollowUpListener implements IEventListener {
 	 */
 	private static function receivedDate(string $receivedAt): string {
 		try {
-			return (new \DateTimeImmutable($receivedAt))->format('d-m-Y');
+			return (new DateTimeImmutable($receivedAt))->format('d-m-Y');
 		} catch (Throwable) {
-			return (new \DateTimeImmutable())->format('d-m-Y');
+			return (new DateTimeImmutable())->format('d-m-Y');
 		}
 	}//end receivedDate()
 
