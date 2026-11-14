@@ -1,10 +1,8 @@
-/**
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- */
 OC.L10N.register(
     "filinq",
     {
+        "This batch can no longer be cancelled": "This batch can no longer be cancelled",
+        "Only an errored or cancelled batch can be resumed": "Only an errored or cancelled batch can be resumed",
         "Marketplace": "Marketplace",
         "documents": "documents",
         "Original": "Original",

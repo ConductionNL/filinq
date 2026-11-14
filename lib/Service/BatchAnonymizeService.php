@@ -31,6 +31,7 @@ use Exception;
 use OCA\Filinq\Exception\ConversionFailedException;
 use OCA\Filinq\Kernel\Contracts\BatchAnonymizeServiceInterface;
 use OCA\Filinq\Service\Conversion\OutputLayoutMover;
+use OCP\IAppConfig;
 
 /**
  * Applies a user-reviewed entity list across every file in a batch.
@@ -44,12 +45,21 @@ use OCA\Filinq\Service\Conversion\OutputLayoutMover;
  * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-5
  */
 class BatchAnonymizeService implements BatchAnonymizeServiceInterface {
+
+	/**
+	 * QA sample rate in percent when `batch.qa_sample_rate` is not set.
+	 *
+	 * @var integer
+	 */
+	private const DEFAULT_QA_SAMPLE_RATE = 5;
 	/**
 	 * Constructor for BatchAnonymizeService
 	 *
 	 * @param AnonymizationService $anonService Service that performs single-document anonymization.
 	 * @param BatchStateService $stateService Service that persists per-batch state between calls.
 	 * @param OutputLayoutMover $layoutMover Moves each redacted output into the output subfolder.
+	 * @param BatchQaSampler|null $qaSampler Picks the batch's QA sample on completion; null samples nothing.
+	 * @param IAppConfig|null $appConfig Reads `batch.qa_sample_rate`; null uses the default rate.
 	 *
 	 * @return void
 	 */
@@ -57,6 +67,8 @@ class BatchAnonymizeService implements BatchAnonymizeServiceInterface {
 		private readonly AnonymizationService $anonService,
 		private readonly BatchStateService $stateService,
 		private readonly OutputLayoutMover $layoutMover,
+		private readonly ?BatchQaSampler $qaSampler=null,
+		private readonly ?IAppConfig $appConfig=null,
 	) {
 
 	}//end __construct()
@@ -182,13 +194,71 @@ class BatchAnonymizeService implements BatchAnonymizeServiceInterface {
 		// consistently across the batch.
 		$run = new BatchAnonymizeRun(batch: $batch, request: $request);
 		foreach (array_keys($batch['files']) as $index) {
+			// Cooperative cancellation: checked between files, never inside
+			// one, so the file in progress always finishes (REQ-DDRAS-004).
+			if ($this->cancelRequested(batchId: $batchId) === true) {
+				$run->batch['status'] = BatchLifecycleService::CANCELLED;
+				$this->stateService->updateBatch($batchId, $run->batch);
+				return $run->summary(batchId: $batchId);
+			}
+
 			$this->processFile(run: $run, index: $index);
 		}
 
+		$run->batch = $this->markQaSample(batch: $run->batch);
 		$run->batch['status'] = 'completed';
 		$this->stateService->updateBatch($batchId, $run->batch);
 		return $run->summary(batchId: $batchId);
 	}//end runBatch()
+
+	/**
+	 * Whether the batch was asked to stop since this run read it.
+	 *
+	 * @param string $batchId The batch id.
+	 *
+	 * @return bool True when the stored batch is `cancelling` or `cancelled`.
+	 *
+	 * @spec openspec/changes/redaction-at-scale/specs/redaction-at-scale/spec.md#requirement-cooperative-cancellation-req-ddras-004
+	 */
+	private function cancelRequested(string $batchId): bool {
+		$stored = $this->stateService->getBatch($batchId);
+		$status = (string)($stored['status'] ?? '');
+
+		return in_array($status, [BatchLifecycleService::CANCELLING, BatchLifecycleService::CANCELLED], true);
+
+	}//end cancelRequested()
+
+	/**
+	 * Mark the batch's QA sample, reusing a stored seed so a re-run picks the same files.
+	 *
+	 * @param array<string, mixed> $batch The batch after its anonymize phase.
+	 *
+	 * @return array<string, mixed> The batch with `qaSampled` files, `qaSampleRate` and `qaSampleSeed`.
+	 *
+	 * @spec openspec/changes/redaction-at-scale/specs/redaction-at-scale/spec.md#requirement-sampling-qa-routed-to-human-review-req-ddras-007
+	 */
+	private function markQaSample(array $batch): array {
+		if ($this->qaSampler === null) {
+			return $batch;
+		}
+
+		$rate = self::DEFAULT_QA_SAMPLE_RATE;
+		if ($this->appConfig !== null) {
+			$rate = (int)$this->appConfig->getValueString(
+				'filinq',
+				'batch.qa_sample_rate',
+				(string)self::DEFAULT_QA_SAMPLE_RATE
+			);
+		}
+
+		$seed = (string)($batch['qaSampleSeed'] ?? '');
+		if ($seed === '') {
+			$seed = bin2hex(random_bytes(16));
+		}
+
+		return $this->qaSampler->mark(batch: $batch, rate: $rate, seed: $seed);
+
+	}//end markQaSample()
 
 	/**
 	 * Skip, refuse or anonymise one file of the batch, by its status and the prohibition gate.

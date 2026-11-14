@@ -1,5 +1,7 @@
 {
     "translations": {
+        "This batch can no longer be cancelled": "This batch can no longer be cancelled",
+        "Only an errored or cancelled batch can be resumed": "Only an errored or cancelled batch can be resumed",
         "Marketplace": "Marketplace",
         "documents": "documents",
         "Original": "Original",

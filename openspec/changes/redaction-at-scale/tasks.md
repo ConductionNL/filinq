@@ -20,6 +20,7 @@
   - Anonymize endpoint returns HTTP 202 + persisted entity list above the sync cap; pre-change contract below it.
 - [ ] 2.4 Implement cancel and resume endpoints + worker-side cooperative cancellation and `anonymizationLink`-keyed idempotent resume (REQ-DDRAS-004, REQ-DDRAS-005)
   - Auth attributes + owner/admin guards on every new route (route-auth, no-admin-idor gates).
+  - Progress: `BatchLifecycleService` + `BatchLifecycleController` (`POST .../cancel`, `POST .../resume`, 202/401/404/409, ownership through `BatchStateService::getBatch()`), and `BatchAnonymizeService` checks for a cancel between files. A resumed run skips files whose status is already `anonymized`. Left: the out-of-band `anonymizationLink.sourceFileId` lookup.
 - [ ] 2.5 Treat soffice lock misses as bounded-retry per-file outcomes; migrate `FolderExtractionJob` processing into the coordinator work units; add `recursive` folder enumeration with relative paths (REQ-DDRAS-008, REQ-DDRAS-010, REQ-DDRAS-011)
 
 ## 3. Backend — reporting & QA
@@ -27,6 +28,7 @@
 - [ ] 3.1 Extend `BatchReportService` with read-time throughput, per-phase durations and failure grouping; keep entity values out of the report (REQ-DDRAS-006)
 - [ ] 3.2 Implement the seeded-PRNG QA sampler marking N% of succeeded files `qaSampled` and creating their review-queue routing via the `documentReview` gate; record outcomes on the report (REQ-DDRAS-007)
   - Depends on `anonymization-review-workbench` (documentReview schema); coordinate landing order.
+  - Progress: `BatchAnonymizeService` marks the sample on completion through `BatchQaSampler`, using `batch.qa_sample_rate` (default 5) and a stored or newly generated `qaSampleSeed`. Left: routing into the review queue, because the `documentReview` schema is not in the register yet.
 
 ## 4. Frontend
 

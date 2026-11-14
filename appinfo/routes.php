@@ -168,6 +168,8 @@ $extra = [
         ['name' => 'batchAnonymization#batchEntities', 'url' => 'api/anonymization/batch/{batchId}/entities', 'verb' => 'GET'],
         ['name' => 'batchAnonymization#batchAnonymize', 'url' => 'api/anonymization/batch/{batchId}/anonymize', 'verb' => 'POST'],
         ['name' => 'batchAnonymization#batchReport', 'url' => 'api/anonymization/batch/{batchId}/report', 'verb' => 'GET'],
+        ['name' => 'batchLifecycle#cancel', 'url' => 'api/anonymization/batch/{batchId}/cancel', 'verb' => 'POST'],
+        ['name' => 'batchLifecycle#resume', 'url' => 'api/anonymization/batch/{batchId}/resume', 'verb' => 'POST'],
 
         // WOO entity profile routes.
         ['name' => 'batchAnonymization#getProfiles', 'url' => 'api/anonymization/profiles', 'verb' => 'GET'],

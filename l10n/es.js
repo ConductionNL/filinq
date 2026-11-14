@@ -1,10 +1,8 @@
-/**
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- */
 OC.L10N.register(
     "filinq",
     {
+        "This batch can no longer be cancelled": "Este lote ya no se puede cancelar",
+        "Only an errored or cancelled batch can be resumed": "Solo se puede reanudar un lote con errores o cancelado",
         "Original": "Original",
         "All documents in the folder have been anonymized. The anonymized copies are in a separate subfolder next to the originals.": "Todos los documentos de la carpeta se han anonimizado. Las copias anonimizadas están en una subcarpeta aparte, junto a los originales.",
         "Subfolder for anonymised copies": "Subcarpeta para copias anonimizadas",
