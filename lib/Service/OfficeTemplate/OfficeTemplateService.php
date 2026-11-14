@@ -180,6 +180,56 @@ class OfficeTemplateService {
 	}//end replaceSource()
 
 	/**
+	 * Set which data path each tag of an office template reads, such as an
+	 * imported template's `naam_aanvrager` reading `aanvrager.naam`.
+	 *
+	 * An empty path removes that tag's mapping. Saved as a template change,
+	 * so the edit lock and the version history apply.
+	 *
+	 * @param string               $id       The template's id.
+	 * @param array<string, mixed> $fieldMap Tag => data path.
+	 *
+	 * @return array<string, mixed> The saved template.
+	 *
+	 * @throws Exception With code 400 for a tag the template does not have or a
+	 *                   path that is no field path, 404 for an unknown template,
+	 *                   409 for a Twig or locked template.
+	 *
+	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md#requirement-bulk-import-migrates-existing-template-estates-req-ddota-005
+	 */
+	public function setFieldMap(string $id, array $fieldMap): array {
+		$template = $this->templates->getTemplate(id: $id);
+		if (($template['templateType'] ?? 'twig') !== 'office') {
+			throw new Exception(message: 'Only an office template has a field mapping', code: 409);
+		}
+
+		$tags = [];
+		foreach ((array) ($template['mergeFields'] ?? []) as $field) {
+			$tags[] = (string) ($field['path'] ?? '');
+		}
+
+		$map = [];
+		foreach ($fieldMap as $tag => $path) {
+			if (is_string($tag) === false || in_array($tag, $tags, true) === false) {
+				throw new Exception(message: 'The template has no merge tag "'.$tag.'"', code: 400);
+			}
+
+			$path = trim((string) $path);
+			if ($path === '') {
+				continue;
+			}
+
+			if (preg_match('/^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z0-9_]+)*$/', $path) !== 1) {
+				throw new Exception(message: '"'.$path.'" is not a field path', code: 400);
+			}
+
+			$map[$tag] = $path;
+		}
+
+		return $this->templates->updateTemplate(id: $id, data: ['fieldMap' => (object) $map, '_changelog' => 'Field mapping changed']);
+	}//end setFieldMap()
+
+	/**
 	 * Check an uploaded file and its tags, storing nothing.
 	 *
 	 * @param string $fileName    The uploaded file's name.

@@ -370,4 +370,45 @@ class OfficeTemplateServiceTest extends TestCase {
 
 		$this->service->replaceSource(id: 't-1', fileName: 'brief.docx', bytes: OfficeFixtures::docx(paragraphs: ['${onbekend}']));
 	}//end testABlockedNewSourceLeavesTheTemplateAlone()
+	/**
+	 * A field mapping is checked against the template's tags and saved as a
+	 * template change; an empty path drops that tag's mapping.
+	 *
+	 * @return void
+	 */
+	public function testAFieldMappingIsCheckedAndSaved(): void {
+		$this->templates->method('getTemplate')->willReturn(['id' => 't-1', 'templateType' => 'office', 'mergeFields' => [['path' => 'naam_aanvrager'], ['path' => 'datum']]]);
+		$this->templates->expects($this->once())->method('updateTemplate')
+			->with('t-1', ['fieldMap' => (object) ['naam_aanvrager' => 'aanvrager.naam'], '_changelog' => 'Field mapping changed'])
+			->willReturn(['id' => 't-1']);
+
+		$this->assertSame(['id' => 't-1'], $this->service->setFieldMap(id: 't-1', fieldMap: ['naam_aanvrager' => ' aanvrager.naam ', 'datum' => '']));
+	}//end testAFieldMappingIsCheckedAndSaved()
+
+	/**
+	 * A tag the template lacks, a path that is no field path, or a Twig
+	 * template is refused and nothing is saved.
+	 *
+	 * @return void
+	 */
+	public function testABadFieldMappingIsRefused(): void {
+		$this->templates->method('getTemplate')->willReturnMap([
+			['t-1', ['id' => 't-1', 'templateType' => 'office', 'mergeFields' => [['path' => 'naam']]]],
+			['t-2', ['id' => 't-2']],
+		]);
+		$this->templates->expects($this->never())->method('updateTemplate');
+		$cases = [
+			['t-1', ['onbekend' => 'a'], 'The template has no merge tag "onbekend"', 400],
+			['t-1', ['naam' => 'a b'], '"a b" is not a field path', 400],
+			['t-2', ['naam' => 'a'], 'Only an office template has a field mapping', 409],
+		];
+		foreach ($cases as [$id, $map, $message, $code]) {
+			try {
+				$this->service->setFieldMap(id: $id, fieldMap: $map);
+				$this->fail('Accepted: '.$message);
+			} catch (\Exception $e) {
+				$this->assertSame([$message, $code], [$e->getMessage(), $e->getCode()]);
+			}
+		}
+	}//end testABadFieldMappingIsRefused()
 }//end class

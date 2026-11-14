@@ -314,6 +314,9 @@ $extra = [
         ['name' => 'templates#index', 'url' => 'api/templates', 'verb' => 'GET'],
         ['name' => 'templates#create', 'url' => 'api/templates', 'verb' => 'POST'],
         ['name' => 'officeTemplates#create', 'url' => 'api/templates/office', 'verb' => 'POST'],
+        // Bulk import of office templates and fragments (office-template-authoring REQ-DDOTA-005).
+        ['name' => 'templateImports#create', 'url' => 'api/templates/import', 'verb' => 'POST'],
+        ['name' => 'templateImports#show', 'url' => 'api/templates/import/{jobId}', 'verb' => 'GET'],
         ['name' => 'templatePreview#preview', 'url' => 'api/templates/preview', 'verb' => 'POST'],
         ['name' => 'templates#show', 'url' => 'api/templates/{id}', 'verb' => 'GET'],
         ['name' => 'templates#update', 'url' => 'api/templates/{id}', 'verb' => 'PUT'],
@@ -325,6 +328,19 @@ $extra = [
         ['name' => 'templates#duplicate', 'url' => 'api/templates/{id}/duplicate', 'verb' => 'POST'],
         ['name' => 'templates#lock', 'url' => 'api/templates/{id}/lock', 'verb' => 'POST'],
         ['name' => 'templates#unlock', 'url' => 'api/templates/{id}/lock', 'verb' => 'DELETE'],
+        // Office template source, preview and field mapping (office-template-authoring).
+        ['name' => 'officeTemplates#newSource', 'url' => 'api/templates/{id}/office', 'verb' => 'POST'],
+        ['name' => 'officeTemplates#source', 'url' => 'api/templates/{id}/office/source', 'verb' => 'GET'],
+        ['name' => 'officeTemplates#preview', 'url' => 'api/templates/{id}/office/preview', 'verb' => 'GET'],
+        ['name' => 'officeTemplates#preview', 'url' => 'api/templates/{id}/office/preview', 'verb' => 'POST', 'postfix' => 'withData'],
+        ['name' => 'officeTemplates#fieldMap', 'url' => 'api/templates/{id}/field-map', 'verb' => 'PUT'],
+
+        // Text fragments (bouwstenen), office-template-authoring REQ-DDOTA-004.
+        ['name' => 'textFragments#index', 'url' => 'api/text-fragments', 'verb' => 'GET'],
+        ['name' => 'textFragments#create', 'url' => 'api/text-fragments', 'verb' => 'POST'],
+        ['name' => 'textFragments#show', 'url' => 'api/text-fragments/{id}', 'verb' => 'GET'],
+        ['name' => 'textFragments#update', 'url' => 'api/text-fragments/{id}', 'verb' => 'PUT'],
+        ['name' => 'textFragments#destroy', 'url' => 'api/text-fragments/{id}', 'verb' => 'DELETE'],
 
         // Signing routes.
         ['name' => 'signing#createRequest', 'url' => 'api/signing/requests', 'verb' => 'POST'],

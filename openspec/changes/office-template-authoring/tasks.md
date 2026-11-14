@@ -31,14 +31,16 @@
 - [x] 2.5 `TemplateImportService` + background job: ZIP/folder unpack, per-file template+fragment creation, per-file report, skip-and-continue on failure; `templateImportJob` state via ObjectService (REQ-DDOTA-005)
   - Built: `TemplateImportService` (`start()` stores the ZIP in the app data folder or names a Files folder, saves a queued `templateImportJob` and queues `TemplateImportJob`; `run()` creates one office template per DOCX/ODT, with the first folder as category, and one fragment per `fragments/*.txt|html`, and writes a report row per file: imported, failed with its reason, or skipped). The job runs as the user who started the import. `templateImportJob` gains `skipped`, `namespace`, `boundRegister`, `boundSchema`, `archiveFileId`, `sourcePath`, `startedAt`, `finishedAt`.
 
-- [ ] 2.6 Lifecycle parity: version snapshot + restore re-pointing `sourceFileId`/`contentHash`, lock gating source re-upload, preview via cascade, duplicate copying the source file (REQ-DDOTA-006/007)
+- [x] 2.6 Lifecycle parity: version snapshot + restore re-pointing `sourceFileId`/`contentHash`, lock gating source re-upload, preview via cascade, duplicate copying the source file (REQ-DDOTA-006/007)
+  - Built: `templateVersion` snapshots keep `sourceFileId`/`contentHash` and a restore re-points both; `getTemplateAtVersion()` renders an older version from its own source; `OfficeTemplateService::replaceSource()` saves a new source as a new version through `updateTemplate()`, which enforces the edit lock; a duplicate carries the office fields and points at the same immutable checksum-named source; `GET/POST api/templates/{id}/office/preview` is the cascade's PDF of the filled template.
 
 - [ ] 2.7 Office rows of multi-format output (moved from multi-format-output, built 2026-09-29): `docx` of an office template is the filled source DOCX; `html` via a DOCX-input sibling of `LibreOfficeHeadlessBackend::convertHtml()` behind the matrix; `FormatMatrixService::forTemplate()` gates office `html` on LibreOffice; `MultiFormatOutputProducer` starts from the filled DOCX for an office template (REQ-DDMFO-007 and the office scenarios in specs/document-creatie-sjablonen)
 
 ## 3. Routes & controller
 
-- [ ] 3.1 Routes + `TemplatesController` actions: `POST api/templates/office`, `POST api/templates/{id}/office` (new source version), `POST api/templates/import`, `GET api/templates/import/{jobId}`, fragment CRUD routes; explicit auth attributes on every method; error shaping via `TemplateRequestHandler`
+- [x] 3.1 Routes + `TemplatesController` actions: `POST api/templates/office`, `POST api/templates/{id}/office` (new source version), `POST api/templates/import`, `GET api/templates/import/{jobId}`, fragment CRUD routes; explicit auth attributes on every method; error shaping via `TemplateRequestHandler`
   - Every route registered in `appinfo/routes.php`; gate route-reachability/route-auth pass
+  - Built in `OfficeTemplatesController` (`newSource`, `source`, `preview`, `fieldMap`), `TemplateImportsController` and `TextFragmentsController` (`/api/text-fragments`), each method `@NoAdminRequired` with OpenRegister's schema authorisation deciding the rest; documented in `openapi.json`.
 
 ## 4. Frontend (ADR-012)
 
