@@ -712,6 +712,8 @@
 		<!-- Finality rules (finish-half-built-capabilities 3.2): the caller of POST /api/document-finality-rules -->
 		<DocumentFinalityRuleSettings v-if="isAdmin" />
 
+		<DocumentWebhooksSection v-if="isAdmin" />
+
 		<EmailIngestionSettings v-if="isAdmin" />
 
 		<!-- Page layouts (documents-from-a-template REQ-DFT-01): their own endpoints -->
@@ -883,6 +885,7 @@ import Restart from 'vue-material-design-icons/Restart.vue'
 import AnonymiserBackendWarning from '../../components/AnonymiserBackendWarning.vue'
 import CaseSystemDeliverySettings from './CaseSystemDeliverySettings.vue'
 import DocumentFinalityRuleSettings from './DocumentFinalityRuleSettings.vue'
+import DocumentWebhooksSection from './DocumentWebhooksSection.vue'
 import EmailIngestionSettings from './EmailIngestionSettings.vue'
 import EntityTypeSelector from './EntityTypeSelector.vue'
 import PageLayoutSettings from './PageLayoutSettings.vue'
@@ -998,6 +1001,7 @@ function signingActivity() {
 export default {
 	name: 'Settings',
 	components: {
+		DocumentWebhooksSection,
 		NcSettingsSection,
 		NcNoteCard,
 		NcSelect,
