@@ -26,7 +26,7 @@
 - [ ] 2.4 Add the grep-shaped guardrail test: zero bypass flags in `lib/Service/**` outside the seam (REQ-DDMTH-002)
   - PHPUnit scans the source tree; failure message names the offending file/line.
 
-- [ ] 2.5 Implement the legacy-organisation backfill repair step (REQ-DDMTH-006)
+- [x] 2.5 Implement the legacy-organisation backfill repair step (REQ-DDMTH-006)
   - Envelope-only, idempotent, skips `signingAuditEntry`, per-schema counts logged; unit-tested against seeded null-organisation fixtures.
 
 ## 3. Backend — per-organisation behaviour
