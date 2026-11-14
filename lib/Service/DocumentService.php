@@ -114,6 +114,7 @@ class DocumentService implements DocumentServiceInterface {
 	 * @param PlainLanguageRenditionService|null $plainRendition The plain-language counterpart, when a template declares one
 	 * @param WizardGenerationGate|null $wizardGate Checks a wizard run before it renders (options.wizardContext)
 	 * @param TemplateMergeFieldService|null $mergeFields Names the fields a template fills, for the merge preview
+	 * @param CaseSystemDeliveryService|null $caseSystem Records a stored document's delivery to the case system
 	 *
 	 * @return void
 	 */
@@ -124,6 +125,7 @@ class DocumentService implements DocumentServiceInterface {
 		private readonly ?PlainLanguageRenditionService $plainRendition = null,
 		private readonly ?WizardGenerationGate $wizardGate = null,
 		private readonly ?TemplateMergeFieldService $mergeFields = null,
+		private readonly ?CaseSystemDeliveryService $caseSystem = null,
 	) {
 
 	}//end __construct()
@@ -145,7 +147,9 @@ class DocumentService implements DocumentServiceInterface {
 	 *                       order?, as?}, ...] — each resolves to an array
 	 *                       of objects under the Twig context key 'as'
 	 *                       (default: schema + '_list')
-	 *                       output: {mode?: return|files|both, targetPath?}
+	 *                       output: {mode?: return|files|both, targetPath?, caseSystem?}
+	 *                       — caseSystem names a case-system destination for the
+	 *                       stored document and needs mode files or both
 	 *                       — defaults to mode 'return' (byte-identical to
 	 *                       this method's behaviour before output support
 	 *                       existed)
@@ -245,6 +249,7 @@ class DocumentService implements DocumentServiceInterface {
 		];
 		$this->validateFormat(format: $run['format']);
 		$run['outputMode'] = $this->resolveOutputMode(options: $options);
+		CaseSystemDeliveryService::assertStoredMode(options: $options, mode: $run['outputMode']);
 
 		$resolved = $this->resolveTemplateData(run: $run);
 
@@ -271,6 +276,7 @@ class DocumentService implements DocumentServiceInterface {
 			'warnings' => array_merge($stored['warnings'], $plain['warnings']),
 		];
 		$outcome['metadata'] = $this->logGenerated(run: $run, outcome: $outcome);
+		$outcome = $this->deliverToCaseSystem(run: $run, outcome: $outcome);
 
 		return $this->generationResult(run: $run, outcome: $outcome);
 
@@ -369,6 +375,36 @@ class DocumentService implements DocumentServiceInterface {
 			]
 		);
 	}//end logGenerated()
+
+	/**
+	 * Hand a stored document to the case system when a destination applies (REQ-GSC-002).
+	 *
+	 * Only a filed document is delivered; recording the delivery never fails
+	 * the generation, it adds a warning instead (design D3, D4).
+	 *
+	 * @param array<string, mixed> $run     The generation run.
+	 * @param array<string, mixed> $outcome The filed documents, the audit entry and the warnings.
+	 *
+	 * @return array<string, mixed> The outcome with the linked audit entry and any delivery warning.
+	 *
+	 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-stored-document-gets-a-delivery-for-its-destination-req-gsc-002
+	 */
+	private function deliverToCaseSystem(array $run, array $outcome): array {
+		if ($this->caseSystem === null || $run['outputMode'] === 'return') {
+			return $outcome;
+		}
+
+		$sent = $this->caseSystem->recordGeneration(
+			template: ['id' => $run['templateId'], 'namespace' => ($run['template']['namespace'] ?? '')],
+			document: $outcome['metadata'],
+			generation: ['stored' => $outcome['stored'], 'options' => $run['options'], 'format' => $run['format']]
+		);
+
+		$outcome['metadata'] = $sent['document'];
+		$outcome['warnings'] = array_merge($outcome['warnings'], $sent['warnings']);
+
+		return $outcome;
+	}//end deliverToCaseSystem()
 
 	/**
 	 * The answer of a generation: the bytes, the audit entry and where the output went.

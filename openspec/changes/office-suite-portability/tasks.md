@@ -5,7 +5,7 @@
 - [x] Add `lib/Service/Office/OfficeSuiteCapabilityService.php` probing WOPI via a real `CheckFileInfo`
 - [x] Resolve absent on every non-success: refused, timeout, non-2xx, unparseable body, or a 2xx body missing `BaseFileName`/`Size`
 - [x] Bound the probe with an explicit timeout and never propagate its failure to the caller
-- [ ] Surface the result as a capability so the feature degrades visibly (ADR-075 §4) — open: the verdict is only reported by `occ filinq:office:probe`; no runtime capability consumes `OfficeSuiteCapabilityServiceInterface` yet
+- [x] Surface the result as a capability so the feature degrades visibly (ADR-075 §4) — `OfficeSuiteAvailabilityService` resolves each suite on demand (never on app load), caches the verdict for 5 minutes, and `GET /api/office/capabilities` reports it as booleans; `occ filinq:office:probe` shares the same suite registry
 
 Acceptance criteria:
 - An installed-but-WOPI-disabled suite — ONLYOFFICE's shipped default — resolves ABSENT.

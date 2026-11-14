@@ -49,6 +49,31 @@ use Psr\Log\LoggerInterface;
  * registration number before the write lands.
  */
 class ObjectEventRegistrar {
+
+	/**
+	 * The document events handed to OpenRegister's webhooks: class => [name, description].
+	 *
+	 * @var array<string, array{0: string, 1: string}>
+	 */
+	private const WEBHOOK_EVENTS = [
+		'OCA\\Filinq\\Event\\Webhook\\DocumentSignedEvent' => [
+			'Document signed',
+			'A signing request completed; names the signed file and the signing request',
+		],
+		'OCA\\Filinq\\Event\\Webhook\\DocumentAnonymisedEvent' => [
+			'Document anonymised',
+			'An anonymised copy was stored; names the source and anonymised files and the verification verdict',
+		],
+		'OCA\\Filinq\\Event\\Webhook\\DocumentGeneratedEvent' => [
+			'Document generated',
+			'A document was generated from a template; a failed generation raises nothing',
+		],
+		'OCA\\Filinq\\Event\\Webhook\\DocumentRegisteredEvent' => [
+			'Document registered',
+			'A document was registered as incoming or outgoing post with its registration number',
+		],
+	];
+
 	/**
 	 * Register the unfiltered object-lifecycle listeners.
 	 *
@@ -139,7 +164,8 @@ class ObjectEventRegistrar {
 	}//end register()
 
 	/**
-	 * Declare the register/schema-filtered dossier listener.
+	 * Declare the register/schema-filtered listeners: the dossier listener and
+	 * the document event translator.
 	 *
 	 * Auto-regen the dossier grondslagen summary when `checkedOn` is updated.
 	 * Declared from boot() rather than register() so the OpenRegister guard is
@@ -149,10 +175,13 @@ class ObjectEventRegistrar {
 	 * @param string $appName The filinq app id, for log context.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/changes/connect-document-webhooks/specs/document-webhooks/spec.md#requirement-filinq-raises-four-document-events-whatever-path-wrote-the-record-req-cdw-001
 	 */
 	public function boot(ContainerInterface $container, string $appName): void {
+		$dispatcher = $container->get(IEventDispatcher::class);
 		$this->registerFilteredObjectListener(
-			dispatcher: $container->get(IEventDispatcher::class),
+			dispatcher: $dispatcher,
 			event: ObjectUpdatedEvent::class,
 			listener: DossierCheckedOnListener::class,
 			registers: ['filinq'],
@@ -160,7 +189,66 @@ class ObjectEventRegistrar {
 			appName: $appName
 		);
 
+		// Outward document events (connect-document-webhooks): a completed
+		// signing request, and a newly created anonymisation link, generated
+		// document or registration. Narrowed to those four schemas so the
+		// translator is never built for any other write. Both names are
+		// strings to keep this registrar's coupling where it is.
+		$translator = 'OCA\\Filinq\\EventListener\\DocumentEventTranslator';
+		$this->registerFilteredObjectListener(
+			dispatcher: $dispatcher,
+			event: 'OCA\\OpenRegister\\Event\\ObjectTransitionedEvent',
+			listener: $translator,
+			registers: ['filinq'],
+			schemas: ['signingRequest'],
+			appName: $appName
+		);
+		$this->registerFilteredObjectListener(
+			dispatcher: $dispatcher,
+			event: ObjectCreatedEvent::class,
+			listener: $translator,
+			registers: ['filinq'],
+			schemas: ['anonymizationLink', 'generatedDocument', 'documentRegistration'],
+			appName: $appName
+		);
+
+		$this->declareWebhookEvents(dispatcher: $dispatcher);
+
 	}//end boot()
+
+	/**
+	 * Hand the four document events to OpenRegister's webhook delivery.
+	 *
+	 * Each is declared with its name, description and the method returning its
+	 * envelope, so OpenRegister delivers it and lists it in its event
+	 * catalogue. An OpenRegister without app-declared webhook events is left
+	 * alone: the events still fire in-process, and the settings section says
+	 * delivery is not available.
+	 *
+	 * @param IEventDispatcher $dispatcher The live event dispatcher.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/connect-document-webhooks/specs/document-webhooks/spec.md#requirement-delivery-is-openregister-s-req-cdw-004
+	 */
+	private function declareWebhookEvents(IEventDispatcher $dispatcher): void {
+		$registry = '\\OCA\\OpenRegister\\Event\\AppWebhookEvents';
+		if (class_exists($registry) === false) {
+			return;
+		}
+
+		foreach (self::WEBHOOK_EVENTS as $event => [$name, $description]) {
+			$registry::declare(
+				dispatcher: $dispatcher,
+				event: $event,
+				name: $name,
+				description: $description,
+				category: 'Filinq',
+				payload: 'getPayload'
+			);
+		}
+
+	}//end declareWebhookEvents()
 
 	/**
 	 * Register an object-lifecycle listener that declares its interest up front.
