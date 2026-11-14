@@ -155,6 +155,7 @@ class FolderExtractionJob extends QueuedJob {
 	 *
 	 * @spec openspec/changes/anonymisation-folder-output-folder-layout/tasks.md#task-2
 	 * @spec openspec/changes/archive/2026-09-29-anonymisation-fails-closed-without-a-detector/tasks.md#task-3
+	 * @spec openspec/changes/redaction-four-eyes-setting/tasks.md#task-3
 	 */
 	private function processFileEntry(array $fileEntry, array $batch): array {
 		$fileName = ($fileEntry['fileName'] ?? '');
@@ -172,9 +173,12 @@ class FolderExtractionJob extends QueuedJob {
 			$fileEntry['entityCount'] = ($extraction['entityCount'] ?? 0);
 
 			$step = 'anonymization';
-			$anonResult = $this->anonService->anonymizeDocument(
+			// The folder's starter is the acting user, so the four-eyes rule
+			// can compare them with whoever checked the document.
+			$anonResult = $this->anonService->anonymizeDocumentAs(
 				(int)$fileEntry['fileId'],
-				($extraction['entities'] ?? [])
+				($extraction['entities'] ?? []),
+				(string)$batch['userId']
 			);
 		} catch (Exception $e) {
 			return $this->markEntryFailed(

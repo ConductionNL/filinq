@@ -6,8 +6,8 @@
 - **acceptance_criteria**:
   - GIVEN no stored key WHEN `getFourEyesMode()` is read THEN `woo`
   - GIVEN `sometimes` WHEN settings are updated THEN 400 and the stored value is unchanged
-- [ ] Implement
-- [ ] Test
+- [x] Implement
+- [x] Test
 
 ### Task 2: The gate refuses the checker as anonymiser when the setting applies
 - **spec_ref**: `openspec/changes/redaction-four-eyes-setting/specs/redaction-output-guarantee/spec.md#requirement-the-person-who-anonymises-differs-from-the-person-who-checked-req-rwb-09`
@@ -17,23 +17,23 @@
   - GIVEN `woo`, a non-Woo run and checker = actor THEN no refusal
   - GIVEN `always` and checker = actor THEN `same_person`; GIVEN `off` THEN no refusal
   - GIVEN the setting applies and an empty actor THEN `anonymiser_unknown`
-- [ ] Implement
-- [ ] Test
+- [x] Implement
+- [x] Test
 
 ### Task 3: The batch and folder paths report `same_person` per document
 - **spec_ref**: `openspec/changes/redaction-four-eyes-setting/specs/redaction-output-guarantee/spec.md#requirement-the-person-who-anonymises-differs-from-the-person-who-checked-req-rwb-09`
 - **files**: `lib/Service/BatchAnonymizeService.php`, `lib/BackgroundJob/FolderExtractionJob.php` (pass the starter as `userId`), `lib/Service/Redaction/RedactionReviewGate.php` (`screenBatch` takes the actor), `tests/unit/Service/BatchAnonymizeServiceTest.php`
 - **acceptance_criteria**:
   - GIVEN a dossier run by Fenna over one document Fenna checked and one Daan checked THEN one written, one refused with `same_person`
-- [ ] Implement
-- [ ] Test
+- [x] Implement
+- [x] Test
 
 ### Task 4: The admin page offers the choice
 - **spec_ref**: `openspec/changes/redaction-four-eyes-setting/specs/admin-settings/spec.md#requirement-the-admin-chooses-when-four-eyes-are-required-req-set-12`
 - **files**: `src/views/settings/Settings.vue` (Anonymisation section: `NcCheckboxRadioSwitch` radio group "Vier ogen bij anonimiseren"), `l10n/nl.json`, `l10n/en.json`
 - **acceptance_criteria**:
   - GIVEN a fresh install WHEN the section opens THEN "Alleen bij Woo-zaken" is selected; picking "Uit" saves `off`
-- [ ] Implement
+- [x] Implement
 - [ ] Test
 
 ### Task 5: The review card says a colleague must anonymise

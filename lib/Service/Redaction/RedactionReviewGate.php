@@ -43,6 +43,9 @@ use OCP\IL10N;
 
 /**
  * Decides whether a redacted copy may be written yet.
+ *
+ * @spec openspec/changes/redaction-and-what-leaves-the-building/specs/redaction-output-guarantee/spec.md
+ * @spec openspec/changes/redaction-four-eyes-setting/specs/redaction-output-guarantee/spec.md
  */
 class RedactionReviewGate {
 
@@ -85,6 +88,20 @@ class RedactionReviewGate {
 	 * @var string
 	 */
 	public const UNATTRIBUTED = 'unattributed';
+
+	/**
+	 * The person anonymising is the person who checked, and four eyes are required.
+	 *
+	 * @var string
+	 */
+	public const SAME_PERSON = 'same_person';
+
+	/**
+	 * Four eyes are required and the run does not say who is anonymising.
+	 *
+	 * @var string
+	 */
+	public const ANONYMISER_UNKNOWN = 'anonymiser_unknown';
 
 	/**
 	 * Why this document may not be written yet, if it may not.
@@ -156,6 +173,46 @@ class RedactionReviewGate {
 
 		return null;
 	}//end refuse()
+
+	/**
+	 * Why the person anonymising may not, under four eyes, if they may not.
+	 *
+	 * Asked only when the four-eyes rule applies to the run and the document
+	 * passed {@see refuse()}, so the mark names who checked this run. A run
+	 * that does not say who is anonymising is refused: a missing name cannot
+	 * be shown to differ from the checker's.
+	 *
+	 * @param array<string, mixed> $mark  The review mark of this run.
+	 * @param string               $actor Who is anonymising, '' when unknown.
+	 *
+	 * @return array<string, mixed>|null The refusal, or null when a colleague anonymises.
+	 *
+	 * @spec openspec/changes/redaction-four-eyes-setting/tasks.md#task-2
+	 */
+	public function refuseFourEyes(array $mark, string $actor): ?array {
+		$actor = trim($actor);
+		if ($actor === '') {
+			return $this->refusal(
+				reason: self::ANONYMISER_UNKNOWN,
+				message: $this->say(
+					message: 'It is not known who is anonymising this document, so it cannot be shown that '
+						.'someone else checked it. Sign in and try again.'
+				)
+			);
+		}
+
+		if ($actor === trim((string)($mark['checkedBy'] ?? ''))) {
+			return $this->refusal(
+				reason: self::SAME_PERSON,
+				message: $this->say(
+					message: 'You checked the findings of this document yourself. Four eyes are required: '
+						.'a colleague must anonymise it.'
+				)
+			);
+		}
+
+		return null;
+	}//end refuseFourEyes()
 
 	/**
 	 * Whether a redacted copy may be written for this document.
@@ -241,6 +298,8 @@ class RedactionReviewGate {
 		$instructions = [
 			self::CHECKED_AN_OLDER_RUN => 'The detected data changed after the check. Check them again before anonymising.',
 			self::UNATTRIBUTED => 'The check does not say who did it. Check the detected data again before anonymising.',
+			self::SAME_PERSON => 'A colleague must anonymise this document',
+			self::ANONYMISER_UNKNOWN => 'Sign in to anonymise this document',
 		];
 
 		return [

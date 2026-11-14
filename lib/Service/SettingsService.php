@@ -80,6 +80,7 @@ class SettingsService implements SettingsServiceInterface {
 		'signing_request_expiry_days'                => ['30', 'int'],
 		'signing_guardian_consent_age'               => ['16', 'text'],
 		'filinq.anonymisation.default_output_format' => ['pdf-only', 'text'],
+		self::FOUR_EYES_KEY                          => [self::FOUR_EYES_DEFAULT, 'text'],
 	];
 
 	/**
@@ -413,6 +414,28 @@ class SettingsService implements SettingsServiceInterface {
 	private const SUBFOLDER_KEY = 'anonymisation.output_subfolder_name';
 
 	/**
+	 * Config key of the four-eyes rule for anonymising (REQ-SET-12): whether the
+	 * person who checked a document's findings may also anonymise it.
+	 *
+	 * @var string
+	 */
+	public const FOUR_EYES_KEY = 'redaction_four_eyes';
+
+	/**
+	 * The four-eyes choices: only in Woo runs, in every run, or never.
+	 *
+	 * @var array<int, string>
+	 */
+	public const FOUR_EYES_MODES = ['woo', 'always', 'off'];
+
+	/**
+	 * The four-eyes choice of an install that never set one.
+	 *
+	 * @var string
+	 */
+	public const FOUR_EYES_DEFAULT = 'woo';
+
+	/**
 	 * Keys that are permitted to be written via the settings endpoint.
 	 *
 	 * This allowlist prevents any authenticated user (wave-3 C1) from
@@ -450,6 +473,7 @@ class SettingsService implements SettingsServiceInterface {
 		'filinq.confidentiality.label_vocabulary',
 		'filinq.confidentiality.prioritise_analysis',
 		self::SUBFOLDER_KEY,
+		self::FOUR_EYES_KEY,
 	];
 
 	/**
@@ -468,9 +492,11 @@ class SettingsService implements SettingsServiceInterface {
 	 *
 	 * @spec openspec/specs/admin-settings/spec.md
 	 * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-2
+	 * @spec openspec/changes/redaction-four-eyes-setting/tasks.md#task-1
 	 */
 	public function updateSettings(array $data): array {
 		$this->assertValidSubfolderName(data: $data);
+		$this->assertValidFourEyesMode(data: $data);
 
 		try {
 			foreach ($data as $key => $value) {
@@ -552,6 +578,57 @@ class SettingsService implements SettingsServiceInterface {
 		);
 
 	}//end assertValidSubfolderName()
+
+	/**
+	 * Refuse a four-eyes choice that is not one of the three offered.
+	 *
+	 * Checked before anything is written, so a refused save changes nothing.
+	 *
+	 * @param array<string, mixed> $data The settings data to update.
+	 *
+	 * @return void
+	 *
+	 * @throws RuntimeException With code 400 when the value is not woo, always or off.
+	 *
+	 * @spec openspec/changes/redaction-four-eyes-setting/tasks.md#task-1
+	 */
+	private function assertValidFourEyesMode(array $data): void {
+		if (array_key_exists(self::FOUR_EYES_KEY, $data) === false) {
+			return;
+		}
+
+		$value = $data[self::FOUR_EYES_KEY];
+		if (is_string($value) === true && in_array($value, self::FOUR_EYES_MODES, true) === true) {
+			return;
+		}
+
+		throw new RuntimeException(
+			self::FOUR_EYES_KEY . ' must be one of ' . implode(', ', self::FOUR_EYES_MODES) . '.',
+			400
+		);
+
+	}//end assertValidFourEyesMode()
+
+	/**
+	 * When the person who checked a document may not also anonymise it.
+	 *
+	 * `woo` (the default when unset): in Woo runs only; `always`: in every run;
+	 * `off`: never. A stored value that is none of these reads as the default,
+	 * since the settings API refuses to store one.
+	 *
+	 * @return string One of woo, always or off.
+	 *
+	 * @spec openspec/changes/redaction-four-eyes-setting/tasks.md#task-1
+	 */
+	public function getFourEyesMode(): string {
+		$mode = trim($this->config->getValueString($this->appName, self::FOUR_EYES_KEY, self::FOUR_EYES_DEFAULT));
+		if (in_array($mode, self::FOUR_EYES_MODES, true) === false) {
+			return self::FOUR_EYES_DEFAULT;
+		}
+
+		return $mode;
+
+	}//end getFourEyesMode()
 
 	/**
 	 * Resolve the signingRequest register/schema binding, or null when unset.

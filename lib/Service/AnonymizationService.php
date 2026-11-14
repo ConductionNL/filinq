@@ -512,6 +512,28 @@ class AnonymizationService implements AnonymizationServiceInterface {
 	}//end anonymizeDocument()
 
 	/**
+	 * Anonymize a document on behalf of a named user.
+	 *
+	 * @param int                         $fileId   The Nextcloud file ID
+	 * @param array<array<string, mixed>> $entities The entities to anonymize
+	 * @param string                      $userId   The acting user.
+	 *
+	 * @return array<string, mixed> Anonymization result
+	 *
+	 * @throws Exception If anonymization fails.
+	 *
+	 * @spec openspec/changes/redaction-four-eyes-setting/tasks.md#task-3
+	 */
+	public function anonymizeDocumentAs(int $fileId, array $entities, string $userId): array {
+		return $this->anonymizeDocument(
+			fileId: $fileId,
+			entities: $entities,
+			options: (new AnonymizeOptions())->withUserId(userId: $userId)
+		);
+
+	}//end anonymizeDocumentAs()
+
+	/**
 	 * Anonymize entities in a document AND append the grondslagen summary.
 	 *
 	 * Identical to {@see anonymizeDocument()} except that LegalBasesSummaryService
@@ -564,6 +586,7 @@ class AnonymizationService implements AnonymizationServiceInterface {
 	 * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-3
 	 * @spec openspec/changes/redaction-and-what-leaves-the-building/specs/redaction-output-guarantee/spec.md
 	 * @spec openspec/changes/archive/2026-09-29-anonymisation-fails-closed-without-a-detector/tasks.md#task-2
+	 * @spec openspec/changes/redaction-four-eyes-setting/tasks.md#task-2
 	 */
 	private function runAnonymize(AnonymizeRun $run): array {
 		$fileId = $run->fileId;
@@ -584,7 +607,15 @@ class AnonymizationService implements AnonymizationServiceInterface {
 		// somebody has looked at THIS detection run and said so. It throws
 		// before the runner, which means a refused document produces no file
 		// at all rather than one nobody checked.
-		$this->reviewGuard->assertMayWrite(fileId: $fileId, entities: $entities);
+		//
+		// Under the four-eyes rule the person anonymising must not be the one
+		// who checked (REQ-RWB-09); the guard asks that of the same mark.
+		$this->reviewGuard->assertMayWrite(
+			fileId: $fileId,
+			entities: $entities,
+			actor: $run->userId(),
+			wooRun: $run->isWooRun()
+		);
 
 		// THE DETECTOR GATE. Zero detections from no detector look exactly like
 		// zero detections from a clean document, and the runner would file a

@@ -26,9 +26,11 @@ namespace OCA\Filinq\Tests\Unit\Service\Redaction;
 
 use OCA\Filinq\Exception\RedactionNotReviewedException;
 use OCA\Filinq\Service\Redaction\DetectionRunIdentity;
+use OCA\Filinq\Service\Redaction\FourEyesPolicy;
 use OCA\Filinq\Service\Redaction\RedactionOutputGuard;
 use OCA\Filinq\Service\Redaction\RedactionReviewGate;
 use OCA\Filinq\Service\Redaction\RedactionReviewMarkRepository;
+use OCA\Filinq\Service\SettingsService;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -86,7 +88,8 @@ class RedactionOutputGuardTest extends TestCase {
 		$this->guard = new RedactionOutputGuard(
 			gate: new RedactionReviewGate(),
 			marks: $this->marks,
-			runs: $this->runs
+			runs: $this->runs,
+			fourEyes: new FourEyesPolicy(settings: $this->createConfiguredMock(SettingsService::class, ['getFourEyesMode' => 'off']))
 		);
 
 	}//end setUp()

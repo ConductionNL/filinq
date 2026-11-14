@@ -292,7 +292,8 @@ class AnonymizeRequestService implements AnonymizeRequestServiceInterface {
 			->withOutputFormat(outputFormat: $call->outputFormat)
 			->withConsents(unredactedEntities: $request['unredactedEntities'], overrides: $request['overrides'])
 			->withUserId(userId: $userId)
-			->withScope(scope: $this->resolveScope(params: $call->params), dossierKey: $this->resolveDossierKey(params: $call->params));
+			->withScope(scope: $this->resolveScope(params: $call->params), dossierKey: $this->resolveDossierKey(params: $call->params))
+			->withWooCase(wooCase: $this->isWooCase(params: $call->params));
 		if (($request['reversible'] ?? false) === true) {
 			$options = $options->reversible();
 		}
@@ -462,6 +463,22 @@ class AnonymizeRequestService implements AnonymizeRequestServiceInterface {
 		];
 
 	}//end fileNotFound()
+
+	/**
+	 * Whether the caller flagged the document as part of a Woo case.
+	 *
+	 * Only a real true (or the strings "true"/"1" a form post sends) counts.
+	 *
+	 * @param array<string, mixed> $params The request parameters.
+	 *
+	 * @return bool True when `wooCase` is set.
+	 *
+	 * @spec openspec/changes/redaction-four-eyes-setting/tasks.md#task-2
+	 */
+	private function isWooCase(array $params): bool {
+		$flag = ($params['wooCase'] ?? false);
+		return $flag === true || $flag === 'true' || $flag === '1' || $flag === 1;
+	}//end isWooCase()
 
 	/**
 	 * Resolve the placeholder-numbering scope forwarded to OpenRegister.

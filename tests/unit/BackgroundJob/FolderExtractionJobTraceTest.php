@@ -68,8 +68,8 @@ class FolderExtractionJobTraceTest extends TestCase {
 	 */
 	public function testOutputMovesIntoTheBatchOwnersFolder(): void {
 		$this->anon->method('extractAndDetectEntities')->with(10)->willReturn(['entityCount' => 2, 'entities' => [['text' => 'Jan']]]);
-		$this->anon->expects($this->once())->method('anonymizeDocument')
-			->with(10, [['text' => 'Jan']])
+		$this->anon->expects($this->once())->method('anonymizeDocumentAs')
+			->with(10, [['text' => 'Jan']], 'owner')
 			->willReturn(['anonymizedFileId' => 999, 'anonymizedFilePath' => '/owner/files/a_anonymized.pdf', 'detection' => 'ok']);
 		$this->mover->expects($this->once())->method('relocate')
 			->with('owner', 999, '/owner/files/a_anonymized.pdf')
@@ -91,7 +91,7 @@ class FolderExtractionJobTraceTest extends TestCase {
 	 */
 	public function testMoveWarningIsRecorded(): void {
 		$this->anon->method('extractAndDetectEntities')->willReturn(['entityCount' => 0, 'entities' => []]);
-		$this->anon->method('anonymizeDocument')->willReturn(['anonymizedFileId' => 5, 'anonymizedFilePath' => '/legacy.pdf']);
+		$this->anon->method('anonymizeDocumentAs')->willReturn(['anonymizedFileId' => 5, 'anonymizedFilePath' => '/legacy.pdf']);
 		$this->mover->method('relocate')->willReturn(['path' => '/legacy.pdf', 'warning' => 'MOVE_FAILED']);
 
 		$entry = $this->runOne(entry: ['fileId' => 10, 'fileName' => 'a.pdf', 'status' => 'uploaded']);
@@ -109,7 +109,7 @@ class FolderExtractionJobTraceTest extends TestCase {
 	 */
 	public function testNoOutputNodeMeansNoMove(): void {
 		$this->anon->method('extractAndDetectEntities')->willReturn(['entityCount' => 0, 'entities' => []]);
-		$this->anon->method('anonymizeDocument')->willReturn(['anonymizedFilePath' => '/legacy.pdf']);
+		$this->anon->method('anonymizeDocumentAs')->willReturn(['anonymizedFilePath' => '/legacy.pdf']);
 		$this->mover->expects($this->never())->method('relocate');
 
 		$entry = $this->runOne(entry: ['fileId' => 10, 'fileName' => 'a.pdf', 'status' => 'uploaded']);
@@ -126,7 +126,7 @@ class FolderExtractionJobTraceTest extends TestCase {
 	 */
 	public function testFailingExtractionIsLoggedWithTheBatch(): void {
 		$this->anon->method('extractAndDetectEntities')->willThrowException(new Exception('ocr down'));
-		$this->anon->expects($this->never())->method('anonymizeDocument');
+		$this->anon->expects($this->never())->method('anonymizeDocumentAs');
 		$this->logger->expects($this->once())->method('warning')
 			->with('FolderExtractionJob: extraction failed for file', ['batchId' => 'b-1', 'fileId' => 10, 'error' => 'ocr down']);
 
@@ -143,7 +143,7 @@ class FolderExtractionJobTraceTest extends TestCase {
 	 */
 	public function testFailingAnonymisationKeepsTheCount(): void {
 		$this->anon->method('extractAndDetectEntities')->willReturn(['entityCount' => 4, 'entities' => []]);
-		$this->anon->method('anonymizeDocument')->willThrowException(new Exception('no detector'));
+		$this->anon->method('anonymizeDocumentAs')->willThrowException(new Exception('no detector'));
 		$this->mover->expects($this->never())->method('relocate');
 		$this->logger->expects($this->once())->method('warning')
 			->with('FolderExtractionJob: anonymization failed for file', ['batchId' => 'b-1', 'fileId' => 10, 'error' => 'no detector']);
