@@ -12771,7 +12771,7 @@
                 },
                 "x-openregister-lifecycle": {
                     "field": "processingStatus",
-                    "initialState": "staged",
+                    "initial": "staged",
                     "states": {
                         "staged": {
                             "label": "Staged",

@@ -5,7 +5,7 @@
 
 ## 1. Register + seed data
 
-- [x] 1.1 Add the `bridge` register with `bridgeSource` and `externalDocument` schemas to `lib/Settings/filinq_register.json` (REQ-DDZGW-001)
+- [x] 1.1 Add the `bridgeSource` and `externalDocument` schemas to the `filinq` register in `lib/Settings/filinq_register.json` (REQ-DDZGW-001; Filinq keeps all objects in its one register, consolidated by `ConsolidateRegisters`, so the bridge is not a register of its own)
   - All properties from design.md D1 with titles, descriptions, enums; `hardValidation: true`; register description documents the bridge contract and bumps the register version.
   - `x-openregister-lifecycle` on `externalDocument` uses the canonical `initial: staged` key and exactly the REQ-DDZGW-004 transition list.
 
@@ -15,7 +15,7 @@
 ## 2. Backend
 
 - [x] 2.1 Implement `lib/Service/BridgeService.php` (REQ-DDZGW-002/003/004/007)
-  - Source + staged-document queries via `SettingsService::getObjectService()` with `@self.register = bridge`; clock-injected `getSourceHealth()` (fresh/stale/failing/inactive, 24h SLA); status transitions with full-object PUT-semantic saves.
+  - Source + staged-document queries via `SettingsService::getObjectService()` with `@self.register = filinq`; clock-injected `getSourceHealth()` (fresh/stale/failing/inactive, 24h SLA); status transitions with full-object PUT-semantic saves.
   - No ZGW/StUF/HTTP client code anywhere in the service.
 
 - [x] 2.2 Implement dossier pick-up: attach staged documents to a dossier (REQ-DDZGW-006)
