@@ -23,8 +23,9 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
+use InvalidArgumentException;
 use OCA\Filinq\Kernel\AppIdentity;
-use OCA\Filinq\Service\CaseSystemDeliveryService;
+use OCA\Filinq\Kernel\Contracts\CaseSystemDeliveryServiceInterface;
 use OCA\Filinq\Settings\FilinqAdmin;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -33,7 +34,6 @@ use OCP\AppFramework\Http\JSONResponse;
 use OCP\IGroupManager;
 use OCP\IRequest;
 use OCP\IUserSession;
-use InvalidArgumentException;
 use RuntimeException;
 
 /**
@@ -59,7 +59,7 @@ class CaseSystemDeliveryController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest                  $request      The request.
-	 * @param CaseSystemDeliveryService $deliveries   The deliveries.
+	 * @param CaseSystemDeliveryServiceInterface $deliveries   The deliveries.
 	 * @param IUserSession              $userSession  The session.
 	 * @param IGroupManager             $groupManager The admin check.
 	 *
@@ -67,7 +67,7 @@ class CaseSystemDeliveryController extends Controller {
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly CaseSystemDeliveryService $deliveries,
+		private readonly CaseSystemDeliveryServiceInterface $deliveries,
 		private readonly IUserSession $userSession,
 		private readonly IGroupManager $groupManager,
 	) {
