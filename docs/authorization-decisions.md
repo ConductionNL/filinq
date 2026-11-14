@@ -175,6 +175,12 @@ files**. Each is paired with a compensating control rather than being an oversig
 and the coverage test pins the set: **a new bypass fails the test until it is added
 here with a reason.**
 
+Removed by multi-tenant-hardening (D2): `Service/BasesResolverService.php` (a user reading
+the dossiers of a folder; dossier read is open to every user) and
+`Service/PolicyRetroactiveService.php` (runs in the request of the policy admin who changed
+the prohibition, who may read and change the records). OpenRegister now scopes both to the
+user and the active organisation.
+
 | File | Sites | Compensating control |
 |---|---|---|
 | `Service/PolicyCrudService.php` | 5 | `requirePolicyPermission()` asserts membership in `filinq-policy-admins` / `filinq-standing-consent-admins` for **every** action including `read`, before the lookup runs. |
@@ -188,9 +194,7 @@ here with a reason.**
 | `Service/Classification/ClassificationSources.php` | 1 | Reads the dossier names to propose a dossier on an exact name match. Only the matched dossier's uuid is stored on the suggestion, never its content, and confirming one moves the file only into a dossier folder the reviewer can open themselves; otherwise the filing is recorded, not done. |
 | `Service/PolicyMatchService.php` | 2 | Matching must see every prohibition regardless of the acting user, or an anonymisation silently under-redacts. Fail-closed by design. |
 | `Service/ConsentPolicyReferentValidator.php` | 1 | Validation-only; returns a boolean, never record content. |
-| `Service/PolicyRetroactiveService.php` | 2 | Background re-application over records the triggering user may not own. |
 | `Service/BaseLabelResolver.php` | 1 | Resolves a legal-basis label for display; `base` is organisation-readable anyway. |
-| `Service/BasesResolverService.php` | 1 | Same. |
 | `Service/LegalBasisCatalog.php` | 1 | Static Woo Art. 5 catalogue. |
 | `Service/LegalHold/LegalHoldCaseRepository.php` | 2 | The schema grants admins only. The app reads and writes cases only from `LegalHoldCaseService`, and every public method there starts with `LegalHoldAuthority::assertAuthority()` (admins plus `legal_hold_authority_groups`; a setting that does not parse refuses everyone). The status route reads cases only to name the matter to someone who passed the same check. |
 | `Service/EntitySearch/EntitySearchLog.php` | 1 | Creates one `entitySearchLog` row per entity search or detail view, after `EntitySearchGate::assertMaySearch()` (admins plus `entity_search.allowed_groups`, fail closed). The searcher need not be allowed to read the log they add to, and a lookup whose row does not land is refused. Create only: no update or delete call exists. |

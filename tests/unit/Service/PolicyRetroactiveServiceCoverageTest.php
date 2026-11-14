@@ -149,8 +149,7 @@ class PolicyRetroactiveServiceCoverageTest extends TestCase {
 						'schema' => 'publicationConsent',
 						'scope' => 'document',
 					],
-				],
-				false
+				]
 			)
 			->willReturn(['results' => $rows]);
 
@@ -234,8 +233,9 @@ class PolicyRetroactiveServiceCoverageTest extends TestCase {
 				'filinq',
 				'publicationConsent',
 				'rec-x',
-				false,
-				false
+				// multi-tenant-hardening D2: no RBAC or multitenancy bypass.
+				true,
+				true
 			);
 
 		$resolved = $this->service()->applyProhibitionMutation(

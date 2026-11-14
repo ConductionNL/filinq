@@ -285,6 +285,10 @@ class PolicyRetroactiveService implements PolicyRetroactiveServiceInterface {
 			// `scope=document` to the filter bounds the result set to
 			// what this method actually needs. The defensive PHP scope
 			// check below is retained as a belt-and-braces.
+			// No RBAC or multitenancy bypass (multi-tenant-hardening D2): this
+			// runs in the request of the policy admin who changed the
+			// prohibition, so OpenRegister scopes the records to what that
+			// admin may read and change in the active organisation.
 			$result = $this->objectService->findAll(
 				config: [
 					'filters' => [
@@ -293,7 +297,6 @@ class PolicyRetroactiveService implements PolicyRetroactiveServiceInterface {
 						'scope' => 'document',
 					],
 				],
-				_rbac: false
 			);
 
 			$records = $this->resultExtractor->extractRows(result: $result);
@@ -373,8 +376,6 @@ class PolicyRetroactiveService implements PolicyRetroactiveServiceInterface {
 				register: 'filinq',
 				schema: 'publicationConsent',
 				uuid: $uuid,
-				_rbac: false,
-				_multitenancy: false
 			);
 			return true;
 		} catch (Exception $e) {

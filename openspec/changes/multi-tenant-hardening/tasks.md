@@ -19,6 +19,7 @@
 
 - [ ] 2.2 Remove `_rbac:false` / `_multitenancy:false` from `BasesResolverService`, `PolicyMatchService`, `PolicyRetroactiveService`, `GrondslagProposalService` (REQ-DDMTH-002)
   - Classify each call site per design.md D2 before removing; user-request paths get no replacement; argument-capture unit tests pin the flags stay absent.
+  - Built: `BasesResolverService::loadDossierBasesForFolder()` (user request, dossier read is open to every user) and both `PolicyRetroactiveService` sites (run in the request of the policy admin who changed the prohibition) pass no bypass flag; `BasesResolverServiceFolderTest` and `PolicyRetroactiveServiceCoverageTest` pin it. `GrondslagProposalService` holds no flag at HEAD. Left: `PolicyMatchService::loadProhibitions()` / `loadStandingConsents()`. Their schemas grant read to policy admins only, and they run in an ordinary user's anonymisation: dropping the flags would hide the safety rules from that user and let entities through. They need a decision first (seam, or a read grant for the matcher), not a strip.
 
 - [ ] 2.3 Remove `_rbac:false` / `_multitenancy:false` from `ConsentService`, `PolicyCrudService`, `GrondslagenSummaryService`; route the objection-deadline sweep through the seam (REQ-DDMTH-002, REQ-DDMTH-003)
   - Re-verify `ConsentUpdateHandler` / `ConsentCrudService` call paths named in GH #283; do not absorb the CSRF/field-whitelist fixes owned by the security wave (GH #282–#304).
