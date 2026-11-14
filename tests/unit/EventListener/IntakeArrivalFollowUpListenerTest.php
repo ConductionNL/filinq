@@ -26,6 +26,7 @@ use OCA\Filinq\EventListener\IntakeArrivalFollowUpListener;
 use OCA\Filinq\Service\IntakeAcknowledgementService;
 use OCA\Filinq\Service\IntakeDefaultRuleService;
 use OCA\Filinq\Service\IntakeRepository;
+use OCA\Filinq\Service\ReceivedStampService;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\OpenRegister\Db\ObjectEntity;
@@ -74,14 +75,16 @@ class IntakeArrivalFollowUpListenerTest extends TestCase {
 		IntakeAcknowledgementService $ack,
 		IntakeRepository $repository,
 		?LoggerInterface $logger = null,
-		?ContainerInterface $container = null
+		?ContainerInterface $container = null,
+		?ReceivedStampService $stamp = null
 	): IntakeArrivalFollowUpListener {
 		return new IntakeArrivalFollowUpListener(
 			($container ?? $this->createMock(ContainerInterface::class)),
 			$rules,
 			$ack,
 			$repository,
-			($logger ?? $this->createMock(LoggerInterface::class))
+			($logger ?? $this->createMock(LoggerInterface::class)),
+			$stamp
 		);
 	}//end listener()
 
@@ -108,6 +111,54 @@ class IntakeArrivalFollowUpListenerTest extends TestCase {
 
 		$this->listener($rules, $ack, $repository)->handle(new ObjectCreatedEvent(self::saved()));
 	}//end testTheOutcomeIsWrittenOntoTheDocument()
+
+	/**
+	 * A rule with the stamp on writes the stamped copy's id beside the
+	 * acknowledgement, stamped with the received date (REQ-IAS-003).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#requirement-an-arriving-pdf-may-get-a-stamped-copy-req-ias-003
+	 */
+	public function testAStampingRuleStoresTheStampedCopy(): void {
+		$entity = self::saved();
+		$entity->setObject(['channel' => 'mail', 'status' => 'received', 'defaultRule' => 'rule-mail', 'file' => 41, 'receivedAt' => '2026-10-02T08:15:00+02:00']);
+		$rules = $this->createMock(IntakeDefaultRuleService::class);
+		$rules->method('findRule')->willReturn(['uuid' => 'rule-mail', 'stampReceived' => true]);
+		$ack = $this->createMock(IntakeAcknowledgementService::class);
+		$ack->method('acknowledge')->willThrowException(new RuntimeException('mail down'));
+		$stamp = $this->createMock(ReceivedStampService::class);
+		$stamp->expects($this->once())->method('stampFile')->with(41, '02-10-2026')->willReturn(77);
+		$repository = $this->createMock(IntakeRepository::class);
+		$repository->expects($this->once())->method('save')->with(
+			['channel' => 'mail', 'status' => 'received', 'defaultRule' => 'rule-mail', 'file' => 41, 'receivedAt' => '2026-10-02T08:15:00+02:00', 'stampedRendition' => 77],
+			'doc-1'
+		)->willReturn([]);
+
+		$this->listener($rules, $ack, $repository, stamp: $stamp)->handle(new ObjectCreatedEvent($entity));
+	}//end testAStampingRuleStoresTheStampedCopy()
+
+	/**
+	 * Without the stamp on the rule, or without a file, no copy is asked for.
+	 *
+	 * @return void
+	 */
+	public function testNoStampWithoutTheSwitchOrAFile(): void {
+		$stamp = $this->createMock(ReceivedStampService::class);
+		$stamp->expects($this->never())->method('stampFile');
+		$ack = $this->createMock(IntakeAcknowledgementService::class);
+		$ack->method('acknowledge')->willReturn(null);
+		$repository = $this->createMock(IntakeRepository::class);
+		$repository->expects($this->never())->method('save');
+
+		foreach ([[['uuid' => 'r', 'stampReceived' => false], 41], [['uuid' => 'r', 'stampReceived' => true], null]] as [$rule, $file]) {
+			$entity = self::saved();
+			$entity->setObject(['defaultRule' => 'r', 'file' => $file]);
+			$rules = $this->createMock(IntakeDefaultRuleService::class);
+			$rules->method('findRule')->willReturn($rule);
+			$this->listener($rules, $ack, $repository, stamp: $stamp)->handle(new ObjectCreatedEvent($entity));
+		}
+	}//end testNoStampWithoutTheSwitchOrAFile()
 
 	/**
 	 * A schema given by id is resolved to its slug before anything runs.
