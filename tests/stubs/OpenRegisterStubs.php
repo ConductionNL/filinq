@@ -3195,6 +3195,34 @@ final class LeafRendering {
 	}
 }
 
+/**
+ * OpenRegister's integration provider contract, verbatim in shape: the data
+ * half of a data-provider leaf (template-library-leaf REQ-TMPL-14).
+ */
+interface IntegrationProvider {
+	public function getId(): string;
+
+	public function getLabel(): string;
+
+	public function getIcon(): string;
+
+	public function getGroup(): ?string;
+
+	public function getRequiredApp(): ?string;
+
+	public function getStorageStrategy(): string;
+
+	public function getOpenConnectorSource(): ?string;
+
+	public function isEnabled(): bool;
+
+	public function requiresPermission(): ?string;
+
+	public function authRequirements(): array;
+
+	public function health(): array;
+}
+
 namespace OCA\OpenRegister\Event;
 
 use OCA\OpenRegister\Service\Integration\LeafDescriptor;
