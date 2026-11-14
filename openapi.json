@@ -88,6 +88,10 @@
             "description": "Answers whether the caller maintains custom dictionaries"
         },
         {
+            "name": "office-capabilities",
+            "description": "Answers which office suites have a usable WOPI host"
+        },
+        {
             "name": "document",
             "description": "Controller for document generation endpoints"
         },
@@ -2482,6 +2486,34 @@
                 "responses": {
                     "200": {
                         "description": "`{ canMaintain: bool }`",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/office/capabilities": {
+            "get": {
+                "operationId": "office-capabilities-show",
+                "summary": "Whether WOPI is usable, overall and per suite",
+                "description": "Whether WOPI is usable, overall and per suite.",
+                "tags": [
+                    "office-capabilities"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`{ available: bool, suites: { <name>: { available: bool, configured: bool } } }`",
                         "headers": {
                             "API-Version": {
                                 "$ref": "#/components/headers/API-Version"
@@ -10560,6 +10592,128 @@
                                 }
                             }
                         }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    }
+                }
+            }
+        },
+        "/bridge/deliveries/{id}/retry": {
+            "post": {
+                "operationId": "case-system-delivery-retry",
+                "summary": "Put a failed case-system delivery back in the queue",
+                "description": "Put a failed case-system delivery back in the queue, on the same object. Admin only.",
+                "tags": [
+                    "case-system-delivery"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The delivery, waiting for the case system again.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Problem409"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The delivery id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/bridge/case-system": {
+            "get": {
+                "operationId": "case-system-delivery-index",
+                "summary": "The case-system destinations and the waiting and failed deliveries",
+                "description": "The case-system destinations and the waiting and failed deliveries, for the admin bridge panel. Admin only.",
+                "tags": [
+                    "case-system-delivery"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`destinations` and `deliveries`.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    }
+                }
+            }
+        },
+        "/bridge/destinations": {
+            "post": {
+                "operationId": "case-system-delivery-save-destination",
+                "summary": "Declare or update a case-system destination",
+                "description": "Declare a case-system destination, or update the one named by `id`. A second active destination for the same template or namespace is refused. Admin only.",
+                "tags": [
+                    "case-system-delivery"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The destination as stored.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
                     },
                     "401": {
                         "$ref": "#/components/responses/Problem401"
