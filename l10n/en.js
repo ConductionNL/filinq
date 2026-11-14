@@ -2884,7 +2884,16 @@ OC.L10N.register(
         "Where the import is: received, mapping, importing, done, failed or cancelled.": "Where the import is: received, mapping, importing, done, failed or cancelled.",
         "Where the splitter stopped: byte offset and ordinal (MBOX) or entry index (ZIP, PST).": "Where the splitter stopped: byte offset and ordinal (MBOX) or entry index (ZIP, PST).",
         "Why a failed import stopped, as shown to the archivist.": "Why a failed import stopped, as shown to the archivist.",
-        "found, filed, toInbox, skippedDuplicate and failed, updated after every work unit.": "found, filed, toInbox, skippedDuplicate and failed, updated after every work unit."
+        "found, filed, toInbox, skippedDuplicate and failed, updated after every work unit.": "found, filed, toInbox, skippedDuplicate and failed, updated after every work unit.",
+        "At most this many messages of an archive are handled per background run, so a large archive is imported over many runs.": "At most this many messages of an archive are handled per background run, so a large archive is imported over many runs.",
+        "Mail archive import settings saved": "Mail archive import settings saved",
+        "MBOX and ZIP archives are split by filinq itself. Outlook PST archives need the readpst tool (libpst) on the server. No message is sent to an outside service.": "MBOX and ZIP archives are split by filinq itself. Outlook PST archives need the readpst tool (libpst) on the server. No message is sent to an outside service.",
+        "Messages per run": "Messages per run",
+        "readpst is installed: PST archives can be imported.": "readpst is installed: PST archives can be imported.",
+        "readpst is not installed on this server: a PST import fails at once. MBOX and ZIP archives still work.": "readpst is not installed on this server: a PST import fails at once. MBOX and ZIP archives still work.",
+        "Save mail archive import settings": "Save mail archive import settings",
+        "The mail archive import settings could not be loaded.": "The mail archive import settings could not be loaded.",
+        "The mail archive import settings could not be saved.": "The mail archive import settings could not be saved."
     },
     "nplurals=2; plural=(n != 1);"
 )

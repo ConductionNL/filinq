@@ -16,9 +16,11 @@ import {
 	formatLabel,
 	listImports,
 	loadDossierOptions,
+	loadImportSettings,
 	mapFolders,
 	mappingPayload,
 	progressPercent,
+	saveImportSettings,
 	startImport,
 	statusColorMap,
 	STATUSES,
@@ -31,7 +33,7 @@ vi.mock('@nextcloud/axios', () => {
 		http.calls.push([name, url, body])
 		return http.answer()
 	}
-	return { default: { get: verb('get'), post: verb('post') } }
+	return { default: { get: verb('get'), post: verb('post'), put: verb('put') } }
 })
 vi.mock('@nextcloud/router', () => ({ generateUrl: (path) => path }))
 vi.mock('@nextcloud/l10n', () => ({
@@ -55,6 +57,16 @@ describe('mail archive import service', () => {
 			['get', '/apps/filinq/api/mail-archive-imports', undefined],
 			['post', '/apps/filinq/api/mail-archive-imports/a%2Fb/start', { folderMap: [{ archiveFolder: 'Inbox', dossier: '' }] }],
 			['post', '/apps/filinq/api/mail-archive-imports/a%2Fb/cancel', undefined],
+		])
+	})
+
+	it('reads and stores the admin settings', async () => {
+		await loadImportSettings()
+		await saveImportSettings('50')
+
+		expect(http.calls).toEqual([
+			['get', '/apps/filinq/api/mail-archive-imports/settings', undefined],
+			['put', '/apps/filinq/api/mail-archive-imports/settings', { messagesPerRun: 50 }],
 		])
 	})
 

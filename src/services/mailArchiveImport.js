@@ -259,3 +259,28 @@ export async function loadDossierOptions() {
 			|| t('filinq', 'Unnamed dossier'),
 	}))
 }
+
+/**
+ * The admin settings: the per-run limit and whether readpst is installed.
+ *
+ * @return {Promise<object>} { ok, data: { messagesPerRun, readpstInstalled } }.
+ * @spec openspec/changes/intake-mailbox-archive-import/specs/mailbox-archive-import/spec.md#requirement-the-container-format-is-detected-and-split-on-the-server-req-mai-002
+ */
+export function loadImportSettings() {
+	return answer(axios.get(generateUrl(`${BASE}/settings`)))
+}
+
+/**
+ * Store the per-run limit.
+ *
+ * @param {number|string} messagesPerRun The limit; the server clamps it to 1..2000.
+ * @return {Promise<object>} { ok, data: { messagesPerRun, readpstInstalled } }.
+ * @spec openspec/changes/intake-mailbox-archive-import/specs/mailbox-archive-import/spec.md#requirement-a-large-archive-drains-in-resumable-units-req-mai-004
+ */
+export function saveImportSettings(messagesPerRun) {
+	return answer(
+		axios.put(generateUrl(`${BASE}/settings`), {
+			messagesPerRun: Number(messagesPerRun),
+		}),
+	)
+}

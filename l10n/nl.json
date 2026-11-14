@@ -3036,7 +3036,16 @@
         "Where the import is: received, mapping, importing, done, failed or cancelled.": "Waar de import is: ontvangen, mappen koppelen, bezig met importeren, gereed, mislukt of geannuleerd.",
         "Where the splitter stopped: byte offset and ordinal (MBOX) or entry index (ZIP, PST).": "Waar het splitsen is gestopt: byte-positie en volgnummer (MBOX) of itemnummer (ZIP, PST).",
         "Why a failed import stopped, as shown to the archivist.": "Waarom een mislukte import is gestopt, zoals de archivaris het ziet.",
-        "found, filed, toInbox, skippedDuplicate and failed, updated after every work unit.": "found, filed, toInbox, skippedDuplicate en failed, bijgewerkt na elke werkeenheid."
+        "found, filed, toInbox, skippedDuplicate and failed, updated after every work unit.": "found, filed, toInbox, skippedDuplicate en failed, bijgewerkt na elke werkeenheid.",
+        "At most this many messages of an archive are handled per background run, so a large archive is imported over many runs.": "Per achtergrondronde worden hoogstens zoveel berichten van een archief verwerkt, zodat een groot archief over veel rondes wordt geïmporteerd.",
+        "Mail archive import settings saved": "Instellingen voor het importeren van mailarchieven opgeslagen",
+        "MBOX and ZIP archives are split by filinq itself. Outlook PST archives need the readpst tool (libpst) on the server. No message is sent to an outside service.": "MBOX- en ZIP-archieven splitst filinq zelf. Voor Outlook-PST-archieven is het programma readpst (libpst) op de server nodig. Er wordt geen bericht naar een externe dienst gestuurd.",
+        "Messages per run": "Berichten per ronde",
+        "readpst is installed: PST archives can be imported.": "readpst is geïnstalleerd: PST-archieven kunnen worden geïmporteerd.",
+        "readpst is not installed on this server: a PST import fails at once. MBOX and ZIP archives still work.": "readpst is niet geïnstalleerd op deze server: een PST-import mislukt meteen. MBOX- en ZIP-archieven werken wel.",
+        "Save mail archive import settings": "Instellingen voor het importeren van mailarchieven opslaan",
+        "The mail archive import settings could not be loaded.": "De instellingen voor het importeren van mailarchieven konden niet worden geladen.",
+        "The mail archive import settings could not be saved.": "De instellingen voor het importeren van mailarchieven konden niet worden opgeslagen."
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }
