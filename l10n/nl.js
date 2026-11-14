@@ -3038,7 +3038,22 @@ OC.L10N.register(
         "The test arrived": "De test is aangekomen",
         "The test did not arrive": "De test is niet aangekomen",
         "Type a name and a URL and pick at least one event": "Typ een naam en een URL en kies minstens één gebeurtenis",
-        "Type a secret so the receiver can check each delivery": "Typ een geheim zodat de ontvanger elke bezorging kan controleren"
+        "Type a secret so the receiver can check each delivery": "Typ een geheim zodat de ontvanger elke bezorging kan controleren",
+        "Zaaksysteem: {vendor}": "Zaaksysteem: {vendor}",
+        "Up to date": "Bijgewerkt",
+        "Not synced in the last day": "De afgelopen dag niet gesynchroniseerd",
+        "Failing": "Mislukt",
+        "ZGW Documenten API": "ZGW Documenten API",
+        "StUF-ZDS": "StUF-ZDS",
+        "Case system sources": "Zaaksysteembronnen",
+        "The case systems Filinq takes documents from, and whether each one is still syncing.": "De zaaksystemen waar Filinq documenten uit haalt, en of elk ervan nog synchroniseert.",
+        "No case system sources yet. Sources are set up in OpenConnector, which syncs the documents into Filinq.": "Nog geen zaaksysteembronnen. Bronnen worden ingesteld in OpenConnector, dat de documenten naar Filinq synchroniseert.",
+        "Vendor": "Leverancier",
+        "Last sync": "Laatste synchronisatie",
+        "Health": "Gezondheid",
+        "Could not load the case system sources": "De zaaksysteembronnen konden niet worden geladen",
+        "Never": "Nooit",
+        "The master record of this document is in the case system": "Het brondocument hiervan staat in het zaaksysteem"
     },
     "nplurals=2; plural=(n != 1);"
 )

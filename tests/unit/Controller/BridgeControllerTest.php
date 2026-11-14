@@ -26,6 +26,7 @@ use InvalidArgumentException;
 use OCA\Filinq\Controller\BridgeController;
 use OCA\Filinq\Service\BridgeDossierPickUp;
 use OCA\Filinq\Service\BridgeService;
+use OCA\Filinq\Service\BridgeSourceBadges;
 use OCA\Filinq\Settings\FilinqAdmin;
 use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -119,4 +120,25 @@ final class BridgeControllerTest extends TestCase {
 		$this->assertSame(500, $response->getStatus());
 		$this->assertSame(['error' => 'The bridge request failed.'], $response->getData());
 	}//end testAnyOtherFailureIsA500WithoutDetails()
+
+	public function testBadgesComeFromOneLookupForTheListedFiles(): void {
+		$controller = $this->controller();
+		$this->request->method('getParam')->with('fileIds', '')->willReturn('10,11');
+		$badges = $this->createMock(BridgeSourceBadges::class);
+		$badges->expects($this->once())->method('forFiles')->with(['10', '11'])->willReturn([10 => 'zaaksysteem.nl']);
+		$controller = new BridgeController(request: $this->request, bridge: $this->bridge, pickUp: $this->pickUp, logger: $this->logger, badges: $badges);
+
+		$response = $controller->badges();
+
+		$this->assertSame(200, $response->getStatus());
+		$this->assertSame('{"badges":{"10":"zaaksysteem.nl"}}', json_encode($response->getData()));
+		$this->assertNotEmpty((new ReflectionMethod(BridgeController::class, 'badges'))->getAttributes(\OCP\AppFramework\Http\Attribute\NoAdminRequired::class));
+	}//end testBadgesComeFromOneLookupForTheListedFiles()
+
+	public function testNoBadgesAnswerAnEmptyObject(): void {
+		$controller = $this->controller();
+		$this->request->method('getParam')->willReturn(['12']);
+
+		$this->assertSame('{"badges":{}}', json_encode($controller->badges()->getData()));
+	}//end testNoBadgesAnswerAnEmptyObject()
 }//end class

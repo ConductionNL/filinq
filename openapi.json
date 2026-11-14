@@ -10756,6 +10756,45 @@
                 }
             }
         },
+        "/bridge/badges": {
+            "get": {
+                "operationId": "bridge-badges",
+                "summary": "The source badge of a listing page's files",
+                "description": "The case-system vendor of each listed file that came in through the bridge, in one lookup. Only files the caller can open are answered for.",
+                "tags": [
+                    "bridge"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`badges`: the vendor per file id.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "fileIds",
+                        "in": "query",
+                        "required": false,
+                        "description": "Comma-separated file ids of the listing page.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
         "/bridge/dossiers/{dossierId}/attach": {
             "post": {
                 "operationId": "bridge-attach",

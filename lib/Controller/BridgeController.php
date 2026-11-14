@@ -28,6 +28,7 @@ use InvalidArgumentException;
 use OCA\Filinq\Kernel\AppIdentity;
 use OCA\Filinq\Service\BridgeDossierPickUp;
 use OCA\Filinq\Service\BridgeService;
+use OCA\Filinq\Service\BridgeSourceBadges;
 use OCA\Filinq\Settings\FilinqAdmin;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -58,6 +59,7 @@ class BridgeController extends Controller {
 	 * @param BridgeService       $bridge  The bridge register.
 	 * @param BridgeDossierPickUp $pickUp  Attaches staged documents to a dossier.
 	 * @param LoggerInterface     $logger  Logs an unexpected failure.
+	 * @param BridgeSourceBadges|null $badges The source badge per file, for a listing page.
 	 *
 	 * @return void
 	 */
@@ -66,6 +68,7 @@ class BridgeController extends Controller {
 		private readonly BridgeService $bridge,
 		private readonly BridgeDossierPickUp $pickUp,
 		private readonly LoggerInterface $logger,
+		private readonly ?BridgeSourceBadges $badges = null,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 
@@ -98,6 +101,29 @@ class BridgeController extends Controller {
 		return $this->answer(work: fn (): array => ['results' => $this->bridge->stagedDocuments(sourceId: $sourceId)]);
 
 	}//end externalDocuments()
+
+	/**
+	 * GET /api/bridge/badges?fileIds=1,2,3
+	 *
+	 * One lookup per listing page: the case-system vendor of each listed file
+	 * that came in through the bridge, for the source badge.
+	 *
+	 * @return JSONResponse `{badges: {fileId: vendor}}`, only for files the caller can open.
+	 *
+	 * @spec openspec/changes/zgw-document-bridge/tasks.md#3-2
+	 */
+	#[NoAdminRequired]
+	public function badges(): JSONResponse {
+		$ids = $this->request->getParam('fileIds', '');
+		if (is_array($ids) === false) {
+			$ids = explode(',', (string)$ids);
+		}
+
+		return $this->answer(
+			work: fn (): array => ['badges' => (object)($this->badges?->forFiles(fileIds: $ids) ?? [])]
+		);
+
+	}//end badges()
 
 	/**
 	 * POST /api/bridge/dossiers/{dossierId}/attach with `documentIds`.

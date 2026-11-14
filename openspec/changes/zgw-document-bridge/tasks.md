@@ -34,10 +34,10 @@
 
 ## 3. Frontend
 
-- [ ] 3.1 Bridge status panel in admin settings (`src/views/settings/`) (REQ-DDZGW-008)
+- [x] 3.1 Bridge status panel in admin settings (`src/views/settings/`) (REQ-DDZGW-008) (`BridgeSourcesSettings.vue` in `Settings.vue`: name, vendor, type, last sync and a `CnStatusBadge` health chip per source, the error of a failing one, an empty state pointing at OpenConnector)
   - `CnDataTable` listing with health chips using NC CSS variables; empty state when no sources; data from `api/bridge/sources`.
 
-- [ ] 3.2 Source badge in MyDocuments + document detail (REQ-DDZGW-009)
+- [x] 3.2 Source badge in MyDocuments + document detail (REQ-DDZGW-009) (`GET api/bridge/badges` → `BridgeSourceBadges`, one lookup per page for the files the caller can open; "Zaaksysteem: {vendor}" on the MyDocuments row and the file viewer header)
   - Batched lookup (one bridge query per listing page); badge text "Zaaksysteem: {vendor}"; provenance detail links to OR synced-from tab.
 
 ## 4. Quality
@@ -49,7 +49,7 @@
 - [ ] 4.2 Playwright e2e specs `tests/e2e/spec-coverage/zgw-bridge.spec.ts` + `tests/e2e/workflows/zgw-bridge-workflow.spec.ts` covering the `@e2e`-referenced scenarios
   - Verify end-to-end with OpenRegister on the Postgres dev instance (port 8080); test through the UI.
 
-- [ ] 4.3 i18n: EN + NL translations for all new UI strings (badge, panel, statuses, empty state)
+- [x] 4.3 i18n: EN + NL translations for all new UI strings (badge, panel, statuses, empty state)
   - Keys in English; `l10n/` updated for both languages.
 
 - [ ] 4.4 Documentation `docs/features/zgw-document-bridge.md` with Playwright MCP screenshots (ADR-010) of the admin panel and source badge; run `openspec validate zgw-document-bridge --strict`
