@@ -19,7 +19,7 @@
 - [ ] 2.2 Implement completeness validation (REQ-DDTMM-004) — partial: `validateCompleteness()` is at least as strict as OpenRegister's `MdtoPreconditions` (appraisal the generator maps, `bewaartermijn` as xsd:duration, organisation identifier, file inputs), pinned by a data-provider test of every input OR refuses. Left: the wiring into the overbrenging surface.
   - `{complete, missing[]}` against the MDTO minimum set (+ dekkingInTijd for bewaren); verify against OR HEAD that the gate is a superset of `MdtoXmlGenerator::validateRequiredFields()` (pin with a unit test, not this spec's snapshot); wire the gate into the overbrenging surface from archiefwet-retention-engine.
 
-- [ ] 2.3 Implement sidecar assembly + JSON projection (REQ-DDTMM-005)
+- [x] 2.3 Implement sidecar assembly + JSON projection (REQ-DDTMM-005)
   - Core elements fixture-pinned against OR's generator output for identical input; reuse `TmloService::MDTO_NAMESPACE`; bestand section with sha256; deterministic output; dossier aggregation reads through the dossier capability's surface (no dossier-register schema change — sibling ownership).
 
 - [ ] 2.4 Implement the overbrenging handoff via OR's `EdepotTransferService` (REQ-DDTMM-006)
