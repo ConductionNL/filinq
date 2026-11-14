@@ -243,7 +243,7 @@ const documentRecordId = computed(() =>
 					label="label"
 					:reduce="(o) => o.value"
 					:multiple="true"
-					:inputLabel="t('filinq', 'Grondslagen')"
+					:inputLabel="t('filinq', 'Legal bases')"
 					:placeholder="t('filinq', 'Pick grondslagen…')" />
 				<NcNoteCard v-if="saveError" type="error">
 					{{ saveError }}
