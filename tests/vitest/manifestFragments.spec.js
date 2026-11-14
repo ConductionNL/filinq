@@ -33,6 +33,8 @@ const PAGES_BEFORE = [
 	['AnonymizationReport', '/reports/anonymization'], ['ProducedDocumentsReport', '/reports/documents'],
 	['Intake', '/intake'], ['ClassificationPending', '/classification'], ['FeaturesRoadmap', '/features-roadmap'],
 	['Flows', '/flows'], ['FlowDetail', '/flows/:id'],
+	// office-template-authoring added these two after the split.
+	['TextFragments', '/text-fragments'], ['TemplateImport', '/templates-import'],
 ]
 
 const MENU_BEFORE = [
@@ -43,6 +45,8 @@ const MENU_BEFORE = [
 	['EntitySearch', 59], ['SigningRequests', 60], ['SigningFolder', 65], ['BulkSigningBatches', 66],
 	['SigningEnvelopes', 67], ['CustomDictionary', 70], ['Documentation', 90], ['StoreMenu', 92],
 	['ReportsMenu', 95], ['FeaturesRoadmapMenu', 100], ['FlowsMenu', 96],
+	// office-template-authoring added these two after the split.
+	['TextFragments', 51], ['TemplateImport', 52],
 ]
 
 /**

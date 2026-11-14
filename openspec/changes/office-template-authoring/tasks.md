@@ -46,11 +46,14 @@
 
 ## 4. Frontend (ADR-012)
 
-- [ ] 4.1 `TemplateIndex.vue`: type column/filter, office-upload entry, fragments tab (`CnDataTable`), import-wizard entry; dialogs as separate components in `src/modals/`
+- [x] 4.1 `TemplateIndex.vue`: type column/filter, office-upload entry, fragments tab (`CnDataTable`), import-wizard entry; dialogs as separate components in `src/modals/`
+  - Built as manifest configuration: the Templates index (a `type:index` page since Phase 8, `TemplateIndex.vue` is no longer routed) gains the `templateType` column (facetable) and an "Import Word templates" primary action; a `TextFragments` index page lists and edits `textFragment` objects; the `TemplateImport` page holds the upload entry, which opens `src/modals/OfficeTemplateUploadModal.vue`.
 
-- [ ] 4.2 `TemplateDetail.vue`: office panels — source download, tag report with unknown-tag warnings, field-mapping editor, cascade preview; NL Design System tokens only (ADR-003)
+- [x] 4.2 `TemplateDetail.vue`: office panels — source download, tag report with unknown-tag warnings, field-mapping editor, cascade preview; NL Design System tokens only (ADR-003)
+  - Built: a "Word file" tab on office templates (`src/components/templates/OfficeTemplatePanel.vue`): download, PDF preview through the cascade, new-version upload with changelog, the tag report with unknown-tag warnings, and `FieldMapEditor.vue`; Nextcloud CSS variables only.
 
-- [ ] 4.3 Import wizard: ZIP upload, job progress, per-file report, interactive unknown-tag → schema-property mapping persisted to `fieldMap`
+- [x] 4.3 Import wizard: ZIP upload, job progress, per-file report, interactive unknown-tag → schema-property mapping persisted to `fieldMap`
+  - Built: `src/views/templates/TemplateImport.vue` (ZIP or Files folder, job progress polled from `GET api/templates/import/{jobId}`, per-file report, "Map tags" per template with unknown tags, saved through `PUT api/templates/{id}/field-map`); client in `src/services/officeTemplates.js` with `tests/vitest/officeTemplates.spec.js`.
 
 ## 5. Quality, i18n, docs
 
@@ -59,7 +62,8 @@
 
 - [ ] 5.2 Playwright e2e `tests/e2e/spec-coverage/office-template-authoring.spec.ts` + extend `templates.spec.ts` for the parity scenarios; verify on Postgres (8080), test with nldesign theme enabled
 
-- [ ] 5.3 i18n: all new UI strings with English source keys + NL translations (ADR-005)
+- [x] 5.3 i18n: all new UI strings with English source keys + NL translations (ADR-005)
+  - Built: every new UI and schema string in `l10n/en.json` and `l10n/nl.json`, `.js` rebuilt with `npm run l10n:build`.
 
 - [ ] 5.4 Docs in `docs/features/` (office templates, fragments, bulk import) with Playwright MCP screenshots (ADR-010); `openspec validate office-template-authoring --strict` passes
 
