@@ -359,6 +359,32 @@ class ConsentRecordWriter {
 	}//end withPreservedFields()
 
 	/**
+	 * Store how a consent request went on its record: the channel, when, and the
+	 * objection deadline counted from then; or why nothing was sent.
+	 *
+	 * @param array<string, mixed> $record   The stored record (carries its id).
+	 * @param array<string, mixed> $fields   The outcome fields.
+	 * @param string               $register The register.
+	 * @param string               $schema   The schema.
+	 *
+	 * @return array<string, mixed> The record as stored.
+	 *
+	 * @spec openspec/changes/finish-half-built-capabilities/specs/consent-management/spec.md
+	 */
+	public function recordNotification(array $record, array $fields, string $register, string $schema): array {
+		$updated = array_replace($record, $fields);
+		unset($updated['wasUpdated']);
+
+		$savedObject = $this->getObjectService()->saveObject(
+			object: $updated,
+			register: $register,
+			schema: $schema
+		);
+
+		return $savedObject->getObject();
+	}//end recordNotification()
+
+	/**
 	 * Create a brand-new consent record.
 	 *
 	 * On the WOO fall-through path (no policy match) the record is created with

@@ -7,7 +7,7 @@
 
 ## 2. Woo consent
 
-- [ ] 2.1 Send the consent request to the third party by letter or email from `lib/Service/ConsentService.php`, through the email leaf or the letter composer, and record when and how it went (REQ-FHB-02). Verify: PHPUnit that a request with an email address produces one message and a sent record.
+- [x] 2.1 Send the consent request to the third party by letter or email from `lib/Service/ConsentService.php`, through the email leaf or the letter composer, and record when and how it went (REQ-FHB-02). Verify: PHPUnit that a request with an email address produces one message and a sent record.
 
 ## 3. Generation and finality
 
