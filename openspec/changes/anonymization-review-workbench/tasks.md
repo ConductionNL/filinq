@@ -5,7 +5,7 @@
 
 ## 1. Register & seed data
 
-- [ ] 1.1 Add the `documentReview` schema and the optional `bases` array on `publicationProhibition` and `publicationConsent` to `lib/Settings/filinq_register.json`
+- [x] 1.1 Add the `documentReview` schema and the optional `bases` array on `publicationProhibition` and `publicationConsent` to `lib/Settings/filinq_register.json`
   - Additive only; union-merge, never hand-pick; existing objects stay valid without `bases`.
   - `documentReview`: `fileId` (integer, idempotency key), `checkedOn`, `checkedBy`, `entityCountAtCheck`, `manualEntityCount`, `note`.
 - [ ] 1.2 Extend the register seed with workbench demo data (two `base` grondslagen, one prohibition and one standing consent carrying `bases`) per the design.md Seed Data section
@@ -15,7 +15,7 @@
 
 - [ ] 2.1 Attach `standingConsentMatch` next to `prohibitionMatch` in `AnonymizationService::extractAndDetectEntities()` and in the batch consolidated-entities path, from the single existing `PolicyMatchService::match()` pass (REQ-DDARW-010)
   - Prohibition wins on conflict; standing-consent match pre-sets `included: false`; additive response shape.
-- [ ] 2.2 Accept/persist/return `bases` in `PolicyCrudService` + `PolicyController` for both rule kinds; invalidate the matcher cache on rule writes (REQ-DDARW-005, REQ-DDARW-009)
+- [x] 2.2 Accept/persist/return `bases` in `PolicyCrudService` + `PolicyController` for both rule kinds; invalidate the matcher cache on rule writes (REQ-DDARW-005, REQ-DDARW-009)
   - Pre-change rules without `bases` match unchanged (regression test).
 - [ ] 2.3 Add `DocumentReviewController` with routes `GET /api/review/{fileId}`, `POST /api/review/{fileId}/check`, `DELETE /api/review/{fileId}/check`, storing `documentReview` OR objects; invalidate the check on any post-check entity mutation (REQ-DDARW-007)
   - Auth attributes on every method (route-auth gate); per-object authorization guard (no-admin-idor gate).

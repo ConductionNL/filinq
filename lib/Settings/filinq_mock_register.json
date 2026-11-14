@@ -7525,6 +7525,107 @@
         "method": "rules",
         "correspondentPending": true,
         "status": "suggested"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "documentReview",
+          "slug": "review-demostad-beschikking-2024-0042"
+        },
+        "fileId": 1001,
+        "checkedOn": "2026-03-14T10:20:00+01:00",
+        "checkedBy": "w.devries",
+        "entityCountAtCheck": 14,
+        "manualEntityCount": 1,
+        "note": "Eén BSN-passage handmatig toegevoegd op p. 2."
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "documentReview",
+          "slug": "review-demostad-adviesrapport-2025-003"
+        },
+        "fileId": 1003,
+        "checkedOn": "2026-03-15T09:05:00+01:00",
+        "checkedBy": "w.devries",
+        "entityCountAtCheck": 37,
+        "manualEntityCount": 2,
+        "note": "Twee handmatige namen toegevoegd op p. 4."
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "documentReview",
+          "slug": "review-demostad-raadsbrief-2025-011"
+        },
+        "fileId": 1005,
+        "checkedOn": "2026-03-16T15:40:00+01:00",
+        "checkedBy": "a.jansen",
+        "entityCountAtCheck": 6,
+        "manualEntityCount": 0,
+        "note": ""
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "waarmerk",
+          "slug": "demostad-waarmerk-woo-2025-017",
+          "id": "00000000-0000-0000-0000-000000000201"
+        },
+        "documentFileId": 0,
+        "documentName": "woo-besluit-2025-017-geanonimiseerd.pdf",
+        "documentHash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "sealType": "waarmerk",
+        "cmsSignature": "PLACEHOLDER_BASE64_CMS",
+        "certificateFingerprint": "00:11:22:33:44:55:66:77:88:99:AA:BB:CC:DD:EE:FF",
+        "certificateSubject": "O=Gemeente Demostad, C=NL",
+        "verificationCode": "00000000-0000-0000-0000-000000000202",
+        "sealedAt": "2026-07-16T12:00:00+02:00",
+        "sealedBy": "demo-woo-officer",
+        "status": "active",
+        "anonymizationLinkId": "00000000-0000-0000-0000-000000000203"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "waarmerk",
+          "slug": "demostad-waarmerk-woo-2025-017-certificaat",
+          "id": "00000000-0000-0000-0000-000000000204"
+        },
+        "documentFileId": 0,
+        "documentName": "verwerkingscertificaat-woo-besluit-2025-017.pdf",
+        "documentHash": "1111111111111111111111111111111111111111111111111111111111111111",
+        "sealType": "processing-certificate",
+        "cmsSignature": "PLACEHOLDER_BASE64_CMS",
+        "certificateFingerprint": "00:11:22:33:44:55:66:77:88:99:AA:BB:CC:DD:EE:FF",
+        "certificateSubject": "O=Gemeente Demostad, C=NL",
+        "verificationCode": "00000000-0000-0000-0000-000000000205",
+        "sealedAt": "2026-07-16T12:05:00+02:00",
+        "sealedBy": "demo-woo-officer",
+        "status": "active",
+        "anonymizationLinkId": "00000000-0000-0000-0000-000000000203"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "waarmerk",
+          "slug": "demostad-waarmerk-raadsvoorstel-2025-031",
+          "id": "00000000-0000-0000-0000-000000000206"
+        },
+        "documentFileId": 0,
+        "documentName": "raadsvoorstel-2025-031.pdf",
+        "documentHash": "2222222222222222222222222222222222222222222222222222222222222222",
+        "sealType": "waarmerk",
+        "cmsSignature": "PLACEHOLDER_BASE64_CMS",
+        "certificateFingerprint": "00:11:22:33:44:55:66:77:88:99:AA:BB:CC:DD:EE:FF",
+        "certificateSubject": "O=Gemeente Demostad, C=NL",
+        "verificationCode": "00000000-0000-0000-0000-000000000207",
+        "sealedAt": "2026-06-02T09:30:00+02:00",
+        "sealedBy": "demo-woo-officer",
+        "status": "revoked",
+        "revokedAt": "2026-06-03T10:00:00+02:00",
+        "revokedBy": "demo-woo-officer",
+        "revocationReason": "Verkeerde versie gewaarmerkt; vervangen door de definitieve versie."
       }
     ]
   }

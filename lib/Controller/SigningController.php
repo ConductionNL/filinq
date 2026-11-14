@@ -24,6 +24,8 @@ namespace OCA\Filinq\Controller;
 use Exception;
 use OCA\Filinq\Controller\Support\SigningServices;
 use OCA\Filinq\Exception\RegisterNotConfiguredException;
+use OCA\Filinq\Exception\SigningCancellationNotSupportedException;
+use OCA\Filinq\Exception\SigningCancellationRefusedException;
 use OCA\Filinq\Exception\StepUpRequiredException;
 use OCA\Filinq\Kernel\AppIdentity;
 use OCP\AppFramework\Controller;
@@ -187,15 +189,21 @@ class SigningController extends Controller {
 	}//end showRequest()
 
 	/**
-	 * Cancel a signing request
+	 * Withdraw a signing request.
+	 *
+	 * Only the person who created the request may withdraw it: not an
+	 * administrator and not a signer (decided 2026-08-16). The refusal for "not
+	 * yours" and "does not exist" is one 403, so request ids cannot be probed.
+	 * A request in a final state answers 409, and a provider that cannot
+	 * withdraw answers 409 naming the provider, with the request still live.
 	 *
 	 * @param string $id The signing request ID
 	 *
-	 * @return JSONResponse The cancelled request
+	 * @return JSONResponse The withdrawal, or the refusal.
 	 *
 	 * @NoAdminRequired
 	 *
-	 * @spec openspec/changes/digital-signing-integration/tasks.md#6-1
+	 * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md
 	 */
 	public function cancelRequest(string $id): JSONResponse {
 		try {
@@ -204,72 +212,20 @@ class SigningController extends Controller {
 				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 			}
 
-			// WF1 fix (filinq#100): only the initiator or an admin may
-			// cancel a signing request. A non-initiator, non-admin caller is
-			// rejected with 403 BEFORE cancelRequest() is ever called.
-			//
-			// getRequest() is invoked WITHOUT caller scoping (callerUserId='')
-			// so the record itself comes back and the controller can apply the
-			// tighter initiator gate locally — a signer (in-scope for READ) is
-			// still not allowed to perform the destructive cancel. A genuinely
-			// not-found request throws RuntimeException('Signing request not
-			// found'), which we catch here and map to a single 404 (no UUID is
-			// echoed, so existence is not leaked).
-			$uid = $user->getUID();
-			if ($this->groupManager->isAdmin($uid) === false) {
-				$refusal = $this->cancelRefusal(uid: $uid, id: $id);
-				if ($refusal !== null) {
-					return $refusal;
-				}
+			if ($this->services->cancellation === null) {
+				throw new \RuntimeException('Signing cancellation is not available.');
 			}
 
-			$result = $this->services->signing->cancelRequest(requestId: $id);
-			if ($result === null) {
-				// Admin path or post-recheck null — race / vanished
-				// between fetch and cancel. Same generic 404.
-				return $this->notFoundResponse();
-			}
-
-			return new JSONResponse($result);
+			return new JSONResponse($this->services->cancellation->cancel(uid: $user->getUID(), requestId: $id));
+		} catch (SigningCancellationRefusedException $e) {
+			return new JSONResponse(data: ['error' => $e->getMessage()], statusCode: $e->getCode());
+		} catch (SigningCancellationNotSupportedException $e) {
+			return new JSONResponse(data: ['error' => $e->getMessage()], statusCode: Http::STATUS_CONFLICT);
 		} catch (Exception $e) {
 			return $this->errorResponse(message: 'Failed to cancel signing request', exception: $e);
 		}//end try
 
 	}//end cancelRequest()
-
-	/**
-	 * Refuse a non-admin cancel unless the caller started the request.
-	 *
-	 * The record is read without caller scoping so the initiator gate applies
-	 * here: a signer may read a request but not cancel it.
-	 *
-	 * @param string $uid The session user.
-	 * @param string $id The signing request id.
-	 *
-	 * @return JSONResponse|null A 404 for a missing request, a 403 for a non-initiator, or null.
-	 *
-	 * @spec openspec/changes/digital-signing-integration/tasks.md#6-1
-	 */
-	private function cancelRefusal(string $uid, string $id): ?JSONResponse {
-		try {
-			$request = $this->services->signing->getRequest(requestId: $id);
-		} catch (Exception $e) {
-			return $this->notFoundResponse();
-		}
-
-		if ($request === null) {
-			return $this->notFoundResponse();
-		}
-
-		if (($request['initiatorUserId'] ?? '') !== $uid) {
-			return new JSONResponse(
-				data: ['error' => $this->l10n->t('You are not allowed to cancel this signing request')],
-				statusCode: Http::STATUS_FORBIDDEN
-			);
-		}
-
-		return null;
-	}//end cancelRefusal()
 
 	/**
 	 * The single 404 for a signing request that is missing or out of reach.

@@ -2,14 +2,14 @@
 
 ## 1. The signing-request initiation tool (code)
 
-- [ ] 1.1 Add `#[McpTool(name: 'startSigningRequest', scope: 'create', readOnlyHint:
+- [x] 1.1 Add `#[McpTool(name: 'startSigningRequest', scope: 'create', readOnlyHint:
   false, destructiveHint: false, idempotentHint: false)]` to
   `SigningService::createRequest()`; logic and signature unchanged.
-- [ ] 1.2 Append `SigningService::class` to
+- [x] 1.2 Append `SigningService::class` to
   `FilinqScannableServices::getScannableServiceClasses()`, updating the class docblock
   that currently documents "nothing under `Service/Signing/`, no `SigningService`" to
   state the narrowed boundary (initiation gated, the act never).
-- [ ] 1.3 Extend `DocumentAgentServiceTest::testNoSigningServiceIsReachableByAnAgent` to
+- [x] 1.3 Extend `DocumentAgentServiceTest::testNoSigningServiceIsReachableByAnAgent` to
   assert exactly one signing-domain method carries `#[McpTool]` and that it is
   `createRequest()` — `sign()`, `decline()`, `bulkSign()`, `cancelRequest()`,
   `SigningVerificationService`, `SigningAuditService`, and everything under
