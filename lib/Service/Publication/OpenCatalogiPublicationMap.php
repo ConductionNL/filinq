@@ -58,6 +58,7 @@ class OpenCatalogiPublicationMap {
 	public const FIELDS = [
 		'title',
 		'summary',
+		'wooCategory',
 		'publicationDate',
 		'depublicationDate',
 		'retentionExpiresAt',
@@ -78,6 +79,11 @@ class OpenCatalogiPublicationMap {
 			'title' => (string) ($record['officieleTitel'] ?? ''),
 			'summary' => (string) ($record['documentsoort'] ?? ''),
 		];
+
+		$category = (string) ($record['wooCategory'] ?? '');
+		if ($category !== '') {
+			$publication['wooCategory'] = $category;
+		}
 
 		$date = (string) ($record['publicatiedatum'] ?? '');
 		if ($date !== '') {

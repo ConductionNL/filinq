@@ -20,6 +20,8 @@ namespace OCA\Filinq\Tests\Unit\EventListener;
 use OCA\Filinq\Event\DocumentGenerationRequestedEvent;
 use OCA\Filinq\Event\DocumentSigningRequestedEvent;
 use OCA\Filinq\EventListener\DocumentGenerationRequestedListener;
+use OCA\Filinq\EventListener\DocumentStampRequestedListener;
+use OCA\Filinq\Event\DocumentStampRequestedEvent;
 use OCA\Filinq\EventListener\DocumentSigningRequestedListener;
 use OCA\Filinq\EventListener\DossierCheckedOnListener;
 use OCA\Filinq\EventListener\IntegrationLeafRegistrar;
@@ -87,7 +89,7 @@ class ListenerRegistrarTest extends TestCase {
 
 		(new ListenerRegistrar())->register($context);
 
-		self::assertCount(20, $registered);
+		self::assertCount(21, $registered);
 		self::assertSame(['OCA\Filinq\Event\IntakeDocumentReceivedEvent', 'OCA\Filinq\EventListener\IntakeDocumentReceivedListener'], $registered[0]);
 		self::assertSame(
 			[
@@ -106,6 +108,7 @@ class ListenerRegistrarTest extends TestCase {
 			[
 				['OCA\OpenRegister\Service\Flow\RegisterFlowNodesEvent', FilinqFlowNodeListener::class],
 				[DocumentGenerationRequestedEvent::class, DocumentGenerationRequestedListener::class],
+				[DocumentStampRequestedEvent::class, DocumentStampRequestedListener::class],
 			],
 			array_slice($registered, 18)
 		);

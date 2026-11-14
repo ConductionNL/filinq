@@ -23,6 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller\Support;
 
+use OCA\Filinq\Service\Signing\SigningCancellationService;
 use OCA\Filinq\Kernel\Contracts\SigningAuditServiceInterface;
 use OCA\Filinq\Kernel\Contracts\SigningServiceInterface;
 use OCA\Filinq\Kernel\Contracts\SigningVerificationServiceInterface;
@@ -46,6 +47,7 @@ final class SigningServices {
 	 * @param SigningServiceInterface             $signing      Runs signing requests
 	 * @param SigningAuditServiceInterface        $audit        The signing audit trail
 	 * @param SigningVerificationServiceInterface $verification Verifies signed documents
+	 * @param SigningCancellationService|null     $cancellation Withdraws a request, creator only
 	 *
 	 * @return void
 	 *
@@ -55,6 +57,7 @@ final class SigningServices {
 		public readonly SigningServiceInterface $signing,
 		public readonly SigningAuditServiceInterface $audit,
 		public readonly SigningVerificationServiceInterface $verification,
+		public readonly ?SigningCancellationService $cancellation = null,
 	) {
 
 	}//end __construct()

@@ -5,10 +5,10 @@
 
 ## 1. Register & data model
 
-- [ ] 1.1 Add the `certification` register + `waarmerk` schema to `lib/Settings/filinq_register.json` (fields per design.md: document refs, `documentHash`, `sealType` enum, `cmsSignature`, certificate fingerprint/subject, `verificationCode`, `sealedAt`/`sealedBy`, `status` enum, revocation fields, optional `anonymizationLinkId` relation)
+- [x] 1.1 Add the `certification` register + `waarmerk` schema to `lib/Settings/filinq_register.json` (fields per design.md: document refs, `documentHash`, `sealType` enum, `cmsSignature`, certificate fingerprint/subject, `verificationCode`, `sealedAt`/`sealedBy`, `status` enum, revocation fields, optional `anonymizationLinkId` relation)
   - Additive import on boot; `tests/validate-manifest.js` passes; NO key material fields anywhere (ADR-064)
 
-- [ ] 1.2 Seed data: demo `waarmerk` object (nil-UUID, Demostad, placeholder CMS/fingerprint per design.md Seed Data); test bootstrap generates a throwaway self-signed org certificate at runtime — no PEM/key fixture committed
+- [x] 1.2 Seed data: demo `waarmerk` object (nil-UUID, Demostad, placeholder CMS/fingerprint per design.md Seed Data); test bootstrap generates a throwaway self-signed org certificate at runtime — no PEM/key fixture committed
 
 ## 2. Backend
 

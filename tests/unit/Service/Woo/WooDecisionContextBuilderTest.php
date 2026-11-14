@@ -84,10 +84,10 @@ final class WooDecisionContextBuilderTest extends TestCase {
 	 */
 	private function builder(): WooDecisionContextBuilder {
 		$apps = $this->createMock(IAppManager::class);
-		$apps->method('isInstalled')->willReturn(false);
+		$apps->method('isEnabledForAnyone')->willReturn(false);
 
 		return new WooDecisionContextBuilder(
-			new RefusalGroundsResolver($this->createMock(ContainerInterface::class), $apps, new NullLogger(), $this->snapshot)
+			new RefusalGroundsResolver($apps, $this->createMock(ContainerInterface::class), new NullLogger(), RefusalGroundsResolver::DOSSIQ_GROUNDS, $this->snapshot)
 		);
 	}//end builder()
 
