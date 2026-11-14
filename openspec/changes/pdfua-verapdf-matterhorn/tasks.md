@@ -60,7 +60,7 @@ service exists. Acceptance lines are plain bullets, so the checkbox cap holds.
 - [x] 6.3 Readiness reason (REQ-DDPUM-007). Files: `lib/Service/Publication/PublicationReadiness.php`.
   - GIVEN a record with a non-compliant or unchecked PDF WHEN evaluated THEN `readinessReasons` names the file; with severity `blocking` THEN `isReady()` is false.
   - Test: PHPUnit `PublicationReadinessTest::testAFailedPdfUaVerdictIsAReason`, `::testABlockingSeverityStopsTheHandOff`, `::testAMissingReportCountsAsNotPassed`.
-- [ ] 6.4 Regenerate as PDF/UA, generated documents only (REQ-DDPUM-008, D5). Files: `lib/Service/VeraPdf/AccessibleRegenerationService.php`, `lib/Controller/ConformanceController.php` (`POST /api/validation/accessibility/{fileId}/regenerate`, IDOR-safe resolution, auth attribute), `appinfo/routes.php`, the conformance card.
+- [x] 6.4 Regenerate as PDF/UA, generated documents only (REQ-DDPUM-008, D5). Files: `lib/Service/VeraPdf/AccessibleRegenerationService.php`, `lib/Controller/ConformanceController.php` (`POST /api/validation/accessibility/{fileId}/regenerate`, IDOR-safe resolution, auth attribute), `appinfo/routes.php`, the conformance card.
   - GIVEN a generated PDF WHEN regenerated and the copy passes `ua1` THEN a new file version is stored and tagged `pdfua-conform`.
   - GIVEN the copy fails THEN the original and its version are unchanged.
   - GIVEN an imported PDF WHEN the route is called THEN 409 with `not-generated-by-filinq`, and the card offers no action.

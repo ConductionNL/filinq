@@ -98,23 +98,56 @@ class AccessibilityConformanceService {
 			throw new VeraPdfException(reason: VeraPdfException::REASON_FAILED, message: 'The document could not be read.', previous: $e);
 		}
 
-		$verdict = $this->veraPdf->validateUaBytes(bytes: $bytes);
-
-		return $this->reports->save(
-			report: [
-				'fileId' => (int) $file->getId(),
-				'flavour' => VeraPdfService::UA_FLAVOUR,
-				'compliant' => (bool) $verdict['compliant'],
-				'failedCheckCount' => (int) $verdict['failedRuleCount'],
-				'failedChecks' => $this->failedChecks(rules: (array) $verdict['failedRules']),
-				'guidance' => $this->guidance->for(verdict: $verdict, bytes: $bytes),
-				'validatorVersion' => (string) $verdict['validatorVersion'],
-				'validatedAt' => $this->time->getDateTime()->format(DateTimeInterface::ATOM),
-				'trigger' => $trigger,
-			]
-		);
+		return $this->reports->save(report: $this->checkBytes(bytes: $bytes, fileId: (int) $file->getId(), trigger: $trigger));
 
 	}//end checkFile()
+
+	/**
+	 * Check PDF bytes against PDF/UA-1 without storing anything: the report
+	 * a check of these bytes would store.
+	 *
+	 * @param string $bytes   The PDF.
+	 * @param int    $fileId  The file the bytes are meant for.
+	 * @param string $trigger One of the TRIGGER_* constants.
+	 *
+	 * @return array<string, mixed> The report, not stored.
+	 *
+	 * @throws VeraPdfException When veraPDF gives no verdict.
+	 *
+	 * @spec openspec/changes/pdfua-verapdf-matterhorn/specs/pdfua-verapdf-matterhorn/spec.md#requirement-a-document-filinq-generated-can-be-regenerated-as-pdfua-an-imported-one-cannot-req-ddpum-008
+	 */
+	public function checkBytes(string $bytes, int $fileId, string $trigger): array {
+		$verdict = $this->veraPdf->validateUaBytes(bytes: $bytes);
+
+		return [
+			'fileId' => $fileId,
+			'flavour' => VeraPdfService::UA_FLAVOUR,
+			'compliant' => (bool) $verdict['compliant'],
+			'failedCheckCount' => (int) $verdict['failedRuleCount'],
+			'failedChecks' => $this->failedChecks(rules: (array) $verdict['failedRules']),
+			'guidance' => $this->guidance->for(verdict: $verdict, bytes: $bytes),
+			'validatorVersion' => (string) $verdict['validatorVersion'],
+			'validatedAt' => $this->time->getDateTime()->format(DateTimeInterface::ATOM),
+			'trigger' => $trigger,
+		];
+
+	}//end checkBytes()
+
+	/**
+	 * Store a report made by {@see checkBytes()}.
+	 *
+	 * @param array<string, mixed> $report The report, fileId set.
+	 *
+	 * @return array<string, mixed> The stored report.
+	 *
+	 * @throws RuntimeException When the report cannot be stored.
+	 *
+	 * @spec openspec/changes/pdfua-verapdf-matterhorn/specs/pdfua-verapdf-matterhorn/spec.md#requirement-a-document-filinq-generated-can-be-regenerated-as-pdfua-an-imported-one-cannot-req-ddpum-008
+	 */
+	public function store(array $report): array {
+		return $this->reports->save(report: $report);
+
+	}//end store()
 
 	/**
 	 * The report stored for a file.

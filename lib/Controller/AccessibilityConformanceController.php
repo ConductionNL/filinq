@@ -18,11 +18,13 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
+use OCA\Filinq\Exception\AccessibleRegenerationRefused;
 use OCA\Filinq\Exception\VeraPdfException;
 use OCA\Filinq\Kernel\AppIdentity;
 use OCA\Filinq\Service\Validation\AccessibilityChecks;
 use OCA\Filinq\Service\VeraPdf\AccessibilityConformanceService;
 use OCA\Filinq\Service\VeraPdf\AccessibilityConformanceState;
+use OCA\Filinq\Service\VeraPdf\AccessibleRegenerationService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -50,6 +52,7 @@ class AccessibilityConformanceController extends Controller {
 	 * @param IL10N                           $l10n          Translations.
 	 * @param LoggerInterface                 $logger        The log.
 	 * @param AccessibilityConformanceState   $states        Which accessibility signal is surfaced.
+	 * @param AccessibleRegenerationService|null $regeneration Regenerates a generated PDF as PDF/UA.
 	 *
 	 * @return void
 	 */
@@ -61,6 +64,7 @@ class AccessibilityConformanceController extends Controller {
 		private readonly IL10N $l10n,
 		private readonly LoggerInterface $logger,
 		private readonly AccessibilityConformanceState $states = new AccessibilityConformanceState(),
+		private readonly ?AccessibleRegenerationService $regeneration = null,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 
@@ -164,10 +168,80 @@ class AccessibilityConformanceController extends Controller {
 					validatorAvailable: $this->accessibility->isAvailable()
 				),
 				'heuristicFindings' => $heuristic,
+				'regenerable' => ($this->regeneration !== null && $this->regeneration->provenanceOf(fileId: $fileId) !== null),
 			]
 		);
 
 	}//end show()
+
+	/**
+	 * Regenerate a PDF Filinq generated as PDF/UA: a new version is stored
+	 * only when the new copy passes the check, otherwise the original stays.
+	 *
+	 * @param int $fileId The file id.
+	 *
+	 * @return JSONResponse {replaced, report}; 400 for a file that is not a PDF,
+	 *                      403 for one the caller cannot change, 404 for one
+	 *                      they cannot open, 409 with not-generated-by-filinq
+	 *                      for a PDF Filinq did not generate, 503 when veraPDF
+	 *                      gives no verdict, 500 when the copy cannot be made.
+	 *
+	 * @spec openspec/changes/pdfua-verapdf-matterhorn/specs/pdfua-verapdf-matterhorn/spec.md#requirement-a-document-filinq-generated-can-be-regenerated-as-pdfua-an-imported-one-cannot-req-ddpum-008
+	 */
+	#[NoAdminRequired]
+	public function regenerate(int $fileId): JSONResponse {
+		$file = $this->ownFile(fileId: $fileId);
+		if ($file === null) {
+			return new JSONResponse(['error' => $this->l10n->t('File not found')], Http::STATUS_NOT_FOUND);
+		}
+
+		if ($file->getMimetype() !== 'application/pdf') {
+			return new JSONResponse(['error' => $this->l10n->t('Only a PDF can be checked against the PDF/UA standard.')], Http::STATUS_BAD_REQUEST);
+		}
+
+		if ($file->isUpdateable() === false) {
+			return new JSONResponse(['error' => $this->l10n->t('You cannot change this file.')], Http::STATUS_FORBIDDEN);
+		}
+
+		if ($this->regeneration === null) {
+			return new JSONResponse(
+				['error' => $this->l10n->t('The document could not be made accessible. Try again later.')],
+				Http::STATUS_INTERNAL_SERVER_ERROR
+			);
+		}
+
+		$user = $this->userSession->getUser();
+		try {
+			$result = $this->regeneration->regenerate(file: $file, userId: (string) $user?->getUID());
+		} catch (AccessibleRegenerationRefused $e) {
+			return new JSONResponse(
+				[
+					'reason' => $e->getReason(),
+					'error' => $this->l10n->t(
+						'Filinq did not generate this PDF and does not retag imported pages, so it cannot make it accessible. Re-author it from an accessible source.'
+					),
+				],
+				Http::STATUS_CONFLICT
+			);
+		} catch (VeraPdfException $e) {
+			return new JSONResponse(
+				['validated' => false, 'reason' => $e->getReason(), 'error' => $this->unavailableMessage(reason: $e->getReason())],
+				Http::STATUS_SERVICE_UNAVAILABLE
+			);
+		} catch (Throwable $e) {
+			$this->logger->error(
+				message: '[AccessibilityConformanceController] the accessible copy could not be made',
+				context: ['fileId' => $fileId, 'error' => $e->getMessage()]
+			);
+			return new JSONResponse(
+				['error' => $this->l10n->t('The document could not be made accessible. Try again later.')],
+				Http::STATUS_INTERNAL_SERVER_ERROR
+			);
+		}//end try
+
+		return new JSONResponse($result);
+
+	}//end regenerate()
 
 	/**
 	 * The heuristic accessibility findings of a file at default severities.

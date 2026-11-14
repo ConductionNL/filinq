@@ -24,6 +24,9 @@ use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\VeraPdf\AccessibilityConformanceReportRepository;
 use OCA\Filinq\Service\VeraPdf\AccessibilityConformanceService;
 use OCA\Filinq\Service\VeraPdf\AccessibilityGuidance;
+use OCA\Filinq\Service\VeraPdf\AccessibleRegenerationService;
+use OCA\Filinq\Exception\AccessibleRegenerationRefused;
+use OCA\Filinq\Exception\VeraPdfException;
 use OCA\Filinq\Service\VeraPdf\ConformanceGuidance;
 use OCA\Filinq\Service\VeraPdf\ConformanceReportRepository;
 use OCA\Filinq\Service\VeraPdf\ConformanceService;
@@ -50,6 +53,7 @@ use RuntimeException;
  * @covers \OCA\Filinq\Service\VeraPdf\AccessibilityConformanceReportRepository
  * @uses   \OCA\Filinq\Service\VeraPdf\AccessibilityConformanceState
  * @uses   \OCA\Filinq\Service\Validation\AccessibilityChecks
+ * @uses   \OCA\Filinq\Exception\AccessibleRegenerationRefused
  */
 class AccessibilityConformanceControllerTest extends TestCase {
 	use SubjectErasureDoubles;
@@ -65,6 +69,13 @@ class AccessibilityConformanceControllerTest extends TestCase {
 		43 => ['text/plain', 'tekst'],
 		44 => ['application/pdf', "%PDF-1.7\n<< /Type /Catalog /StructTreeRoot 5 0 R /MarkInfo << /Marked true >> /Lang (nl-NL) >>\n<< /Title (Besluit) >>\n<pdfuaid:part>1</pdfuaid:part>"],
 	];
+
+	/**
+	 * The files alice may read but not change.
+	 *
+	 * @var array<int, int>
+	 */
+	private array $readOnly = [];
 
 	protected function tearDown(): void {
 		putenv('FAKE_VERAPDF_REPORT');
@@ -118,6 +129,7 @@ class AccessibilityConformanceControllerTest extends TestCase {
 		$file->method('getId')->willReturn($id);
 		$file->method('getMimetype')->willReturn($mime);
 		$file->method('getContent')->willReturn($bytes);
+		$file->method('isUpdateable')->willReturn(in_array($id, $this->readOnly, true) === false);
 
 		return [$file];
 
@@ -130,7 +142,7 @@ class AccessibilityConformanceControllerTest extends TestCase {
 	 *
 	 * @return AccessibilityConformanceController The controller.
 	 */
-	private function controller(?AccessibilityConformanceService $service = null): AccessibilityConformanceController {
+	private function controller(?AccessibilityConformanceService $service = null, ?AccessibleRegenerationService $regeneration = null): AccessibilityConformanceController {
 		$folder = $this->createMock(Folder::class);
 		$folder->method('getById')->willReturnCallback(fn (int $id): array => $this->filesById(id: $id));
 		$root = $this->createMock(IRootFolder::class);
@@ -142,7 +154,16 @@ class AccessibilityConformanceControllerTest extends TestCase {
 		$l10n = $this->createMock(IL10N::class);
 		$l10n->method('t')->willReturnArgument(0);
 
-		return new AccessibilityConformanceController($this->createMock(IRequest::class), $service ?? $this->service(), $root, $session, $l10n, new NullLogger());
+		return new AccessibilityConformanceController(
+			$this->createMock(IRequest::class),
+			$service ?? $this->service(),
+			$root,
+			$session,
+			$l10n,
+			new NullLogger(),
+			new \OCA\Filinq\Service\VeraPdf\AccessibilityConformanceState(),
+			$regeneration
+		);
 
 	}//end controller()
 
@@ -330,4 +351,70 @@ class AccessibilityConformanceControllerTest extends TestCase {
 		$this->assertSame('The accessibility report could not be read. Try again later.', $response->getData()['error']);
 
 	}//end testShowIs500WhenTheReportCannotBeRead()
+
+	public function testRegenerateAnswersWithTheOutcome(): void {
+		$regeneration = $this->createMock(AccessibleRegenerationService::class);
+		$regeneration->expects($this->once())->method('regenerate')
+			->with($this->callback(static fn (File $f): bool => $f->getId() === 42), 'alice')
+			->willReturn(['replaced' => false, 'report' => ['compliant' => false]]);
+
+		$response = $this->controller(regeneration: $regeneration)->regenerate(fileId: 42);
+
+		$this->assertSame(200, $response->getStatus());
+		$this->assertSame(['replaced' => false, 'report' => ['compliant' => false]], $response->getData());
+
+	}//end testRegenerateAnswersWithTheOutcome()
+
+	public function testRegenerateRefusesAnImportedPdfWith409(): void {
+		$regeneration = $this->createMock(AccessibleRegenerationService::class);
+		$regeneration->method('regenerate')->willThrowException(new AccessibleRegenerationRefused(reason: AccessibleRegenerationService::NOT_GENERATED));
+
+		$response = $this->controller(regeneration: $regeneration)->regenerate(fileId: 42);
+
+		$this->assertSame(409, $response->getStatus());
+		$this->assertSame('not-generated-by-filinq', $response->getData()['reason']);
+		$this->assertStringContainsString('does not retag imported pages', $response->getData()['error']);
+
+	}//end testRegenerateRefusesAnImportedPdfWith409()
+
+	public function testRegenerateRefusesWhatTheCallerCannotOpenOrChange(): void {
+		$regeneration = $this->createMock(AccessibleRegenerationService::class);
+		$regeneration->expects($this->never())->method('regenerate');
+		$this->readOnly = [42];
+		$controller = $this->controller(regeneration: $regeneration);
+
+		$this->assertSame(404, $controller->regenerate(fileId: 99)->getStatus());
+		$this->assertSame(400, $controller->regenerate(fileId: 43)->getStatus());
+		$this->assertSame(403, $controller->regenerate(fileId: 42)->getStatus());
+
+	}//end testRegenerateRefusesWhatTheCallerCannotOpenOrChange()
+
+	public function testRegenerateWithoutAVerdictIs503AndAFailureIs500(): void {
+		$regeneration = $this->createMock(AccessibleRegenerationService::class);
+		$regeneration->method('regenerate')->willReturnOnConsecutiveCalls(
+			$this->throwException(new VeraPdfException(reason: VeraPdfException::REASON_TIMEOUT, message: 'slow')),
+			$this->throwException(new RuntimeException('render down'))
+		);
+		$controller = $this->controller(regeneration: $regeneration);
+
+		$noVerdict = $controller->regenerate(fileId: 42);
+		$this->assertSame(503, $noVerdict->getStatus());
+		$this->assertFalse($noVerdict->getData()['validated']);
+		$this->assertSame(500, $controller->regenerate(fileId: 42)->getStatus());
+		$this->assertSame(500, $this->controller()->regenerate(fileId: 42)->getStatus(), 'Without the service nothing is changed.');
+
+	}//end testRegenerateWithoutAVerdictIs503AndAFailureIs500()
+
+	public function testShowOffersRegenerationOnlyForAGeneratedPdf(): void {
+		$regeneration = $this->createMock(AccessibleRegenerationService::class);
+		$regeneration->method('provenanceOf')->willReturnCallback(
+			static fn (int $id): ?array => ($id === 44 ? ['templateId' => 't', 'templateVersion' => 1, 'dataRefs' => []] : null)
+		);
+		$controller = $this->controller(regeneration: $regeneration);
+
+		$this->assertTrue($controller->show(fileId: 44)->getData()['regenerable']);
+		$this->assertFalse($controller->show(fileId: 42)->getData()['regenerable']);
+		$this->assertFalse($this->controller()->show(fileId: 44)->getData()['regenerable']);
+
+	}//end testShowOffersRegenerationOnlyForAGeneratedPdf()
 }//end class
