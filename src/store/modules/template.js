@@ -263,18 +263,23 @@ export const useTemplateStore = defineStore('template', {
 		 *
 		 * @param {string} content the template content
 		 * @param {object} data the sample data
+		 * @param {Array<object>} listRefs related records that fill the template's tables; sent only when given
 		 * @return {Promise<{html: string, lint: Array<object>}|null>} The preview, null on failure.
 		 * @spec openspec/changes/advanced-template-management/tasks.md#task-5
 		 * @spec openspec/changes/archive/2026-09-29-pdfua-accessible-output/tasks.md#task-3.3
 		 */
-		previewTemplate(content, data = {}) {
+		previewTemplate(content, data = {}, listRefs = []) {
 			return quietRequest(this, {
 				failure: 'Failed to preview template:',
 				fallback: null,
 				run: async () => {
+					const body = { content, data }
+					if (Array.isArray(listRefs) && listRefs.length > 0) {
+						body.listRefs = listRefs
+					}
 					const response = await axios.post(
 						generateUrl('/apps/filinq/api/templates/preview'),
-						{ content, data },
+						body,
 					)
 					return {
 						html: response.data.html,
