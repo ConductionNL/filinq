@@ -35,7 +35,7 @@
 - [ ] 4.2 Playwright e2e `tests/e2e/spec-coverage/signature-verification-portal.spec.ts` covering the `@e2e` scenarios anonymously (logged-out browser context) (REQ-DDSVP-001, REQ-DDSVP-004)
   - Scans/opens a QR-linked `verify/{token}`; asserts the honest-trust copy; asserts unknown token shows `unknown` not 404; nldesign-theme accessibility pass; test through the UI.
 
-- [ ] 4.3 Assert the `#[PublicPage]` precondition and rate-limit (REQ-DDSVP-004)
+- [x] 4.3 Assert the `#[PublicPage]` precondition and rate-limit (REQ-DDSVP-004)
   - Test the public routes are reachable logged-out; assert `info.xml` carries no group restriction (regression guard for the app-group-vs-PublicPage gotcha); assert brute-force throttling engages.
 
 - [ ] 4.4 i18n (EN + NL) for all portal strings incl. the trust-boundary copy; docs `docs/features/signature-verification-portal.md` with MCP screenshots; run `openspec validate signature-verification-portal --strict`
