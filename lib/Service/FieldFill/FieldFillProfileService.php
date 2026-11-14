@@ -124,21 +124,7 @@ class FieldFillProfileService {
 	 * @spec openspec/changes/extraction-model-filled-fields/specs/schema-field-suggestions/spec.md
 	 */
 	public function save(array $profile, ?string $uuid = null): array {
-		$clean = [
-			'declaringApp' => trim((string)($profile['declaringApp'] ?? 'filinq')),
-			'register' => trim((string)($profile['register'] ?? '')),
-			'schema' => trim((string)($profile['schema'] ?? '')),
-			'fields' => $this->fieldNames(profile: $profile),
-			'active' => (($profile['active'] ?? false) === true),
-		];
-
-		if ($clean['declaringApp'] === '') {
-			$clean['declaringApp'] = 'filinq';
-		}
-
-		if ($clean['register'] === '' || $clean['schema'] === '' || $clean['fields'] === []) {
-			throw new FieldFillRefused(message: 'A profile names a register, a schema and at least one field.', code: 400);
-		}
+		$clean = $this->cleaned(profile: $profile);
 
 		$this->refuseFields(fields: $clean['fields'], properties: $this->properties(schema: $clean['schema']));
 
@@ -153,6 +139,36 @@ class FieldFillProfileService {
 		return ($row ?? $clean);
 
 	}//end save()
+
+	/**
+	 * A profile as it is stored: trimmed, `filinq` as the declaring app by default.
+	 *
+	 * @param array<string, mixed> $profile The profile as given.
+	 *
+	 * @return array<string, mixed> The profile to store.
+	 *
+	 * @throws FieldFillRefused 400 without a register, a schema or a field.
+	 */
+	private function cleaned(array $profile): array {
+		$clean = [
+			'declaringApp' => trim((string)($profile['declaringApp'] ?? '')),
+			'register' => trim((string)($profile['register'] ?? '')),
+			'schema' => trim((string)($profile['schema'] ?? '')),
+			'fields' => $this->fieldNames(profile: $profile),
+			'active' => (($profile['active'] ?? false) === true),
+		];
+
+		if ($clean['declaringApp'] === '') {
+			$clean['declaringApp'] = 'filinq';
+		}
+
+		if ($clean['register'] === '' || $clean['schema'] === '' || $clean['fields'] === []) {
+			throw new FieldFillRefused(message: 'A profile names a register, a schema and at least one field.', code: 400);
+		}
+
+		return $clean;
+
+	}//end cleaned()
 
 	/**
 	 * The property definitions of a schema, by property name.

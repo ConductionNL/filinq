@@ -429,9 +429,22 @@ export default {
 		 * @spec openspec/changes/extraction-model-filled-fields/specs/schema-field-suggestions/spec.md
 		 */
 		canFill(row) {
-			const target = row?.assignedTo
-			return this.fieldFillAvailable && this.mode === 'waiting' && Boolean(row?.file)
-				&& Boolean(target?.register && target?.schema && target?.id)
+			return this.fieldFillAvailable && this.mode === 'waiting' && Boolean(row?.file) && onRecord(row?.assignedTo)
+		},
+
+		/**
+		 * Offer the fields of a document that was just assigned to a record
+		 * (REQ-EMF-003); quiet when the schema has no profile.
+		 *
+		 * @param {object} document The intake document.
+		 * @param {{register: string, schema: string, id: string}} target The record.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/extraction-model-filled-fields/specs/schema-field-suggestions/spec.md
+		 */
+		async offerFields(document, target) {
+			if (this.fieldFillAvailable && document?.file) {
+				await this.fill(document, target, true)
+			}
 		},
 
 		/**
@@ -508,11 +521,7 @@ export default {
 				await assignIntakeDocument(uuid, target)
 				this.closeDialogs()
 				await this.load()
-				if (this.fieldFillAvailable && document?.file) {
-					// The document now sits on a record: offer its fields
-					// straight away (REQ-EMF-003).
-					await this.fill(document, target, true)
-				}
+				await this.offerFields(document, target)
 			} catch (error) {
 				this.actionError =
 					error?.response?.data?.error
@@ -549,6 +558,15 @@ export default {
 			}
 		},
 	},
+}
+/**
+ * Whether a target names a whole record.
+ *
+ * @param {object} target `{register, schema, id}`.
+ * @return {boolean}
+ */
+function onRecord(target) {
+	return Boolean(target?.register && target?.schema && target?.id)
 }
 </script>
 

@@ -193,10 +193,7 @@ class SchemaFieldFillService {
 	 * @spec openspec/changes/extraction-model-filled-fields/specs/schema-field-suggestions/spec.md
 	 */
 	public function suggest(int $fileId, string $register, string $schema, string $objectId, string $userId): array {
-		$manager = $this->textModel->manager();
-		if ($manager === null || $this->status()['available'] === false) {
-			throw new FieldFillRefused(message: self::NO_MODEL, code: 503);
-		}
+		$manager = $this->availableModel();
 
 		$record = $this->decisions->record(register: $register, schema: $schema, objectId: $objectId);
 
@@ -247,6 +244,23 @@ class SchemaFieldFillService {
 	}//end suggest()
 
 	/**
+	 * The text model, when model filling is on and one is there.
+	 *
+	 * @return array<string, mixed> The task manager.
+	 *
+	 * @throws FieldFillRefused 503 when it is off or no model is there.
+	 */
+	private function availableModel(): array {
+		$manager = $this->textModel->manager();
+		if ($manager === null || $this->status()['available'] === false) {
+			throw new FieldFillRefused(message: self::NO_MODEL, code: 503);
+		}
+
+		return $manager;
+
+	}//end availableModel()
+
+	/**
 	 * Take the person's decision on every suggested field and write what they accepted or changed.
 	 *
 	 * @param string               $id        The suggestion.
@@ -279,18 +293,7 @@ class SchemaFieldFillService {
 	public function buildPrompt(string $text, array $properties): string {
 		$lines = [];
 		foreach ($properties as $name => $property) {
-			$line = '- ' . $name;
-			foreach (['type', 'format', 'title', 'description'] as $key) {
-				if (isset($property[$key]) === true && is_scalar($property[$key]) === true && (string)$property[$key] !== '') {
-					$line .= '; ' . $key . ': ' . (string)$property[$key];
-				}
-			}
-
-			if (isset($property['enum']) === true && is_array($property['enum']) === true) {
-				$line .= '; one of: ' . implode(', ', array_map(static fn (mixed $v): string => (string)json_encode($v), $property['enum']));
-			}
-
-			$lines[] = $line;
+			$lines[] = self::promptLine(name: (string)$name, property: (array)$property);
 		}
 
 		return 'You fill in the fields of a record from the text of a document filed on it. '
@@ -300,6 +303,31 @@ class SchemaFieldFillService {
 			. "\n\nDocument text:\n" . mb_substr($text, 0, self::PROMPT_LIMIT);
 
 	}//end buildPrompt()
+
+	/**
+	 * One field of the prompt: its name, type, format, title, description and choices.
+	 *
+	 * @param string               $name     The field name.
+	 * @param array<string, mixed> $property The field's property.
+	 *
+	 * @return string The line.
+	 */
+	private static function promptLine(string $name, array $property): string {
+		$line = '- ' . $name;
+		foreach (['type', 'format', 'title', 'description'] as $key) {
+			$value = ($property[$key] ?? null);
+			if (is_scalar($value) === true && (string)$value !== '') {
+				$line .= '; ' . $key . ': ' . (string)$value;
+			}
+		}
+
+		if (is_array($property['enum'] ?? null) === true) {
+			$line .= '; one of: ' . implode(', ', array_map(static fn (mixed $v): string => (string)json_encode($v), $property['enum']));
+		}
+
+		return $line;
+
+	}//end promptLine()
 
 	/**
 	 * The model's answer as an array of values by field.
@@ -359,24 +387,35 @@ class SchemaFieldFillService {
 				continue;
 			}
 
-			$found = $this->passage->around(text: $text, value: $value);
-
-			$confidence = self::AI_FILL_CONFIDENCE;
-			if ($found !== null) {
-				$confidence += self::FOUND_BOOST;
-			}
-
-			$suggestions[$name] = [
-				'value' => $value,
-				'confidence' => round($confidence, 2),
-				'foundInText' => ($found !== null),
-				'passage' => $found,
-			];
+			$suggestions[$name] = $this->suggestionOf(value: $value, found: $this->passage->around(text: $text, value: $value));
 		}//end foreach
 
 		return ['suggestions' => $suggestions, 'dropped' => $dropped];
 
 	}//end checked()
+
+	/**
+	 * One checked value with its passage and confidence (design D3).
+	 *
+	 * @param mixed       $value The value.
+	 * @param string|null $found The passage around it, or null when it is not in the text.
+	 *
+	 * @return array{value: mixed, confidence: float, foundInText: bool, passage: string|null}
+	 */
+	private function suggestionOf(mixed $value, ?string $found): array {
+		$confidence = self::AI_FILL_CONFIDENCE;
+		if ($found !== null) {
+			$confidence += self::FOUND_BOOST;
+		}
+
+		return [
+			'value' => $value,
+			'confidence' => round($confidence, 2),
+			'foundInText' => ($found !== null),
+			'passage' => $found,
+		];
+
+	}//end suggestionOf()
 
 	/**
 	 * The declared properties of a profile, leaving out any bsn field and any field the schema lacks.

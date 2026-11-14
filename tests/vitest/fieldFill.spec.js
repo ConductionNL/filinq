@@ -89,13 +89,14 @@ describe('the intake worklist', () => {
 
 	it('offers the action only when available and on a record', () => {
 		expect(page).toMatch(/v-if="canFill\(row\)"/)
-		expect(page).toMatch(/this\.fieldFillAvailable && this\.mode === 'waiting' && Boolean\(row\?\.file\)/)
-		expect(page).toMatch(/target\?\.register && target\?\.schema && target\?\.id/)
+		expect(page).toMatch(/this\.fieldFillAvailable && this\.mode === 'waiting' && Boolean\(row\?\.file\) && onRecord\(row\?\.assignedTo\)/)
+		expect(page).toMatch(/return Boolean\(target\?\.register && target\?\.schema && target\?\.id\)/)
 		expect(page).toMatch(/t\('filinq', 'Fill fields from document'\)/)
 	})
 
 	it('offers the fields after an assign, quietly when the schema has no profile', () => {
-		expect(page).toMatch(/await this\.fill\(document, target, true\)/)
+		expect(page).toMatch(/await this\.offerFields\(document, target\)/)
+		expect(page).toMatch(/if \(this\.fieldFillAvailable && document\?\.file\) \{\s*await this\.fill\(document, target, true\)/)
 		expect(page).toMatch(/offered && \[409, 503\]\.includes\(error\?\.response\?\.status\)/)
 		expect(page).toMatch(/<FieldSuggestionDialog/)
 	})
