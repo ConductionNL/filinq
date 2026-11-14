@@ -23,7 +23,8 @@
 
 ## 4. Anonymisation and templates
 
-- [ ] 4.1 Store several profiles keyed by document type in `lib/Service/WooProfileService.php` (REQ-SCR-013). Verify: PHPUnit picks the profile of the document type.
+- [x] 4.1 Store several profiles keyed by document type in `lib/Service/WooProfileService.php` (REQ-SCR-013). Verify: PHPUnit picks the profile of the document type.
+  - Built: `WooProfileService::getProfileFor()`, `typeProfiles()`, `saveProfileFor()`, `removeProfileFor()` and `shouldAnonymize(entityType, documentType)`; profiles per type in app config `filinq_woo_entity_profiles_by_type`, a type without one falls back to the default profile. Pinned by `WooProfileTypeProfilesTest`. Not yet built: the admin screen to manage them and passing the document type from the review (the existing callers keep the default profile).
 - [ ] 4.2 Add a draft and published status to the template schema in `lib/Settings/filinq_register.json` and offer only published versions in `lib/Service/TemplateService.php` (REQ-SCR-015). Verify: PHPUnit renders the last published version.
 
 ## 5. Portal
