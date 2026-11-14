@@ -1327,7 +1327,6 @@ OC.L10N.register(
         "Provide only one of folderId or folderPath": "Fournissez uniquement folderId ou folderPath",
         "Dossier Register": "Registre des dossiers",
         "Grondslag": "Base juridique (grondslag)",
-        "Grondslagen": "Bases juridiques (grondslagen)",
         "Naam": "Nom",
         "Omschrijving": "Description",
         "Beoordeeld op": "Évalué le",
@@ -1500,7 +1499,6 @@ OC.L10N.register(
         "Good afternoon {name},": "Bon après-midi {name},",
         "Good evening {name},": "Bonsoir {name},",
         "Good morning {name},": "Bonjour {name},",
-        "Grondslag (bases)": "Grondslag (bases)",
         "Grondslagen catalogue could not be loaded — falling back to the seeded list.": "Le catalogue des grondslagen n'a pas pu être chargé — repli sur la liste prédéfinie.",
         "Hide original values": "Masquer les valeurs d'origine",
         "inactive": "inactif",
@@ -1754,7 +1752,8 @@ OC.L10N.register(
         "Document checks": "Vérifications du document",
         "Archival checks (PDF/A)": "Vérifications d'archivage (PDF/A)",
         "Not PDF/A": "Pas PDF/A",
-        "Not checked against PDF/A": "Non vérifié par rapport à PDF/A"
+        "Not checked against PDF/A": "Non vérifié par rapport à PDF/A",
+        "Legal bases": "Bases juridiques"
     },
     "nplurals=2; plural=(n > 1);"
 )
