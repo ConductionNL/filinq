@@ -719,6 +719,9 @@
 		<!-- Page layouts (documents-from-a-template REQ-DFT-01): their own endpoints -->
 		<PageLayoutSettings v-if="isAdmin" />
 
+		<!-- Entity detection provider (llm-entity-detection-provider): its own admin endpoint -->
+		<DetectionProviderSettings v-if="isAdmin" />
+
 		<!-- AVG Art. 30 processing-activity register (provided by OpenRegister) -->
 		<NcSettingsSection
 			v-if="isAdmin"
@@ -884,6 +887,7 @@ import Plus from 'vue-material-design-icons/Plus.vue'
 import Restart from 'vue-material-design-icons/Restart.vue'
 import AnonymiserBackendWarning from '../../components/AnonymiserBackendWarning.vue'
 import CaseSystemDeliverySettings from './CaseSystemDeliverySettings.vue'
+import DetectionProviderSettings from './DetectionProviderSettings.vue'
 import DocumentWebhooksSection from './DocumentWebhooksSection.vue'
 import EmailIngestionSettings from './EmailIngestionSettings.vue'
 import EntityTypeSelector from './EntityTypeSelector.vue'
@@ -1018,6 +1022,7 @@ export default {
 		FileExportOutline,
 		AccountSearchOutline,
 		EntityTypeSelector,
+		DetectionProviderSettings,
 		EmailIngestionSettings,
 		PageLayoutSettings,
 		SettingSwitchRow,

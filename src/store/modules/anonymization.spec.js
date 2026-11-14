@@ -985,6 +985,49 @@ describe('reanalyseEntry — a scan detection could not read', () => {
 	})
 })
 
+describe('reanalyseEntry: which detection engine ran', () => {
+	// @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-3.2
+	beforeEach(() => {
+		setActivePinia(createPinia())
+		jest.clearAllMocks()
+	})
+
+	it('puts a fallback warning on the entry so the review names the engine', async () => {
+		const store = useAnonymizationStore()
+		const entry = makeEntry()
+		store.files = [entry]
+		axios.post.mockResolvedValue({
+			data: {
+				entities: [],
+				detectionProvider: 'default',
+				detectionFellBack: true,
+				detectionWarning: 'LLM detection unavailable.',
+			},
+		})
+
+		await store.reanalyseEntry(42)
+
+		expect(entry.detectionProvider).toBe('default')
+		expect(entry.detectionFellBack).toBe(true)
+		expect(entry.detectionWarning).toBe('LLM detection unavailable.')
+	})
+
+	it('records a language-model run without a warning', async () => {
+		const store = useAnonymizationStore()
+		const entry = makeEntry()
+		store.files = [entry]
+		axios.post.mockResolvedValue({
+			data: { entities: [], detectionProvider: 'llm', detectionFellBack: false, detectionWarning: null },
+		})
+
+		await store.reanalyseEntry(42)
+
+		expect(entry.detectionProvider).toBe('llm')
+		expect(entry.detectionFellBack).toBe(false)
+		expect(entry.detectionWarning).toBeNull()
+	})
+})
+
 describe('anonymiseEntry: characterization of the full run', () => {
 	beforeEach(() => {
 		setActivePinia(createPinia())
