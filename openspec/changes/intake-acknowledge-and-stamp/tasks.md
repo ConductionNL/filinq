@@ -4,7 +4,7 @@
 
 ## 1. Register
 
-- [ ] 1.1 Add `acknowledgeWith` and `stampReceived` to `intakeDefaultRule`, and `acknowledgement` and `stampedRendition` to `intakeDocument`, in `lib/Settings/filinq_register.json`, with the D1 seed and a version bump (REQ-IAS-001, REQ-IAS-003). Verify: `occ maintenance:repair` imports the fields and the seed rule shows on the rules list.
+- [x] 1.1 Add `acknowledgeWith` and `stampReceived` to `intakeDefaultRule`, and `acknowledgement` and `stampedRendition` to `intakeDocument`, in `lib/Settings/filinq_register.json`, with the D1 seed and a version bump (REQ-IAS-001, REQ-IAS-003). Verify: `occ maintenance:repair` imports the fields and the seed rule shows on the rules list.
 
 ## 2. Services
 
@@ -25,7 +25,7 @@
 
 ## Build notes
 
-- 1.1: the four fields are in `filinq_register.json` (register 8.55.0); the D1 seed is not written yet, so the box stays open.
+- 1.1: the four fields are in `filinq_register.json`; the D1 seed is written (register 8.57.0): the template `ontvangstbevestiging`, the mail rule `intake-default-mail-ontvangst` acknowledging with it and stamping, and a sent `acknowledgement` on the seeded mail document `intake-mail-voorbeeld`. That document names no `defaultRule`, so importing the seed sends nothing. `stampedRendition` is not seeded: it is a file id, and no stamped file exists at import; the live pass (4.2) produces one. The `occ maintenance:repair` check is left for the live pass.
 - 2.4 was built in the first commit of this PR (`IntakeArrivalFollowUpListener`) and is ticked now. 2.1 stays open: `queued-as-letter` is recorded, but the rendered letter is not yet stored in the outgoing post. The listener now also runs the stamp after a failed acknowledgement, and never throws into the arrival.
 - 2.3: `ReceivedStampService` imports every page with FPDI, draws "Ontvangen", the date (day-month-year from `receivedAt`) and the number on page 1 top right, and writes `<name> (ontvangen).pdf` beside the arrived file, which is only read. PHPUnit `ReceivedStampServiceTest` (pages and sizes kept, date and number on the stamp, the copy's name, the arrived checksum unchanged, no copy for a missing or non-PDF file), `IntakeArrivalFollowUpListenerTest::testAStampingRuleStoresTheStampedCopy`.
 - Left: 2.2 (the outbound registration, D4: no reader finds an inbound registration by document yet, so the stamp carries the date only), 3.1 and 3.2 (screens), 4.1 (docs with screenshots), 4.2 (live).
