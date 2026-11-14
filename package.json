@@ -126,7 +126,7 @@
       "minimatch": "^9.0.7"
     },
     "webdav": {
-      "minimatch": "^9.0.7"
+      "minimatch": "^11.0.1"
     },
     "editorconfig": {
       "minimatch": "^9.0.7"

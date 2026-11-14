@@ -58,6 +58,7 @@ class PolicyCrudService implements PolicyCrudServiceInterface {
 	 * @param IGroupManager $groupManager Group membership check.
 	 * @param IUserSession $userSession Current-user lookup.
 	 * @param LoggerInterface $logger Structured logger.
+	 * @param PolicyMatchService|null $matcher The rule matcher whose cache a rule write drops.
 	 *
 	 * @return void
 	 */
@@ -67,6 +68,7 @@ class PolicyCrudService implements PolicyCrudServiceInterface {
 		private readonly IGroupManager $groupManager,
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
+		private readonly ?PolicyMatchService $matcher = null,
 	) {
 
 	}//end __construct()
@@ -165,13 +167,12 @@ class PolicyCrudService implements PolicyCrudServiceInterface {
 	public function createProhibition(array $data): array {
 		$this->assertProhibitionPermission(action: 'create');
 
-		$payload = $this->stripFrameworkParams(data: $data);
+		$payload = self::withBases(data: $this->stripFrameworkParams(data: $data));
 
 		// Defaults the spec requires the record to carry.
 		$payload['active'] = ($payload['active'] ?? true);
 
-		return $this->saveObject(
-			register: self::REGISTER,
+		return $this->saveRule(
 			schema: self::SCHEMA_PROHIBITION,
 			data: $payload
 		);
@@ -191,9 +192,8 @@ class PolicyCrudService implements PolicyCrudServiceInterface {
 	public function updateProhibition(string $uuid, array $data): array {
 		$this->assertProhibitionPermission(action: 'update');
 
-		$payload = $this->stripFrameworkParams(data: $data);
-		return $this->saveObject(
-			register: self::REGISTER,
+		$payload = self::withBases(data: $this->stripFrameworkParams(data: $data));
+		return $this->saveRule(
 			schema: self::SCHEMA_PROHIBITION,
 			data: $payload,
 			uuid: $uuid
@@ -240,6 +240,7 @@ class PolicyCrudService implements PolicyCrudServiceInterface {
 			_rbac: false,
 			_multitenancy: false
 		);
+		$this->matcher?->invalidateCache();
 
 	}//end deleteProhibition()
 
@@ -258,14 +259,13 @@ class PolicyCrudService implements PolicyCrudServiceInterface {
 	public function createStandingConsent(array $data): array {
 		$this->assertStandingConsentPermission(action: 'create');
 
-		$payload = $this->stripFrameworkParams(data: $data);
+		$payload = self::withBases(data: $this->stripFrameworkParams(data: $data));
 		$payload['scope'] = 'entity';
 		$payload['active'] = ($payload['active'] ?? true);
 
 		$this->consentService->validatePublicationConsentData(data: $payload);
 
-		return $this->saveObject(
-			register: self::REGISTER,
+		return $this->saveRule(
 			schema: self::SCHEMA_CONSENT,
 			data: $payload
 		);
@@ -290,13 +290,12 @@ class PolicyCrudService implements PolicyCrudServiceInterface {
 			throw new Exception('Standing consent not found: ' . $uuid);
 		}
 
-		$payload = array_merge($existing, $this->stripFrameworkParams(data: $data));
+		$payload = array_merge($existing, self::withBases(data: $this->stripFrameworkParams(data: $data)));
 		$payload['scope'] = 'entity';
 
 		$this->consentService->validatePublicationConsentData(data: $payload);
 
-		return $this->saveObject(
-			register: self::REGISTER,
+		return $this->saveRule(
 			schema: self::SCHEMA_CONSENT,
 			data: $payload,
 			uuid: $uuid
@@ -336,6 +335,7 @@ class PolicyCrudService implements PolicyCrudServiceInterface {
 			_rbac: false,
 			_multitenancy: false
 		);
+		$this->matcher?->invalidateCache();
 
 	}//end deleteStandingConsent()
 
@@ -457,6 +457,69 @@ class PolicyCrudService implements PolicyCrudServiceInterface {
 		);
 
 	}//end assertProhibitionPermission()
+
+	/**
+	 * A rule payload with its `bases` as a list of grondslag slugs: trimmed,
+	 * without blanks or repeats. A payload without `bases` is left as it is.
+	 *
+	 * @param array<string, mixed> $data The rule payload.
+	 *
+	 * @return array<string, mixed> The payload.
+	 *
+	 * @throws InvalidArgumentException When `bases` is not a list of strings.
+	 *
+	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-2.2
+	 */
+	public static function withBases(array $data): array {
+		if (array_key_exists('bases', $data) === false) {
+			return $data;
+		}
+
+		$bases = $data['bases'];
+		if ($bases === null) {
+			$bases = [];
+		}
+
+		if (is_array($bases) === false || array_is_list($bases) === false) {
+			throw new InvalidArgumentException('bases must be a list of grondslag slugs');
+		}
+
+		$slugs = [];
+		foreach ($bases as $base) {
+			if (is_string($base) === false) {
+				throw new InvalidArgumentException('bases must be a list of grondslag slugs');
+			}
+
+			$slug = trim($base);
+			if ($slug !== '' && in_array($slug, $slugs, true) === false) {
+				$slugs[] = $slug;
+			}
+		}
+
+		$data['bases'] = $slugs;
+		return $data;
+	}//end withBases()
+
+	/**
+	 * Save a prohibition or standing consent and drop the matcher's cached
+	 * rules, so the next match reads the rule as written.
+	 *
+	 * @param string               $schema Schema slug.
+	 * @param array<string, mixed> $data   The rule payload.
+	 * @param string|null          $uuid   The rule's uuid on an update.
+	 *
+	 * @return array<string, mixed> The saved rule.
+	 *
+	 * @throws Exception On write failure.
+	 *
+	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-2.2
+	 */
+	private function saveRule(string $schema, array $data, ?string $uuid = null): array {
+		$saved = $this->saveObject(register: self::REGISTER, schema: $schema, data: $data, uuid: $uuid);
+		$this->matcher?->invalidateCache();
+
+		return $saved;
+	}//end saveRule()
 
 	/**
 	 * Strip framework-injected request params before persistence.
