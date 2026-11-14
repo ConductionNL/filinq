@@ -21,22 +21,34 @@
         "No scan profile is set up yet. An administrator adds one in the settings.": "Er is nog geen scanprofiel ingesteld. Een beheerder voegt er een toe in de instellingen.",
         "Scan profile": "Scanprofiel",
         "Case numbers, one per line": "Zaaknummers, één per regel",
-        "Dossier \"{name}\" (%n stuk)": ["Dossier \"{name}\" (%n stuk)", "Dossier \"{name}\" (%n stukken)"],
+        "Dossier \"{name}\" (%n stuk)": [
+            "Dossier \"{name}\" (%n stuk)",
+            "Dossier \"{name}\" (%n stukken)"
+        ],
         "Dossier \"{name}\" (%n documents)": "Dossier \"{name}\" (%n stukken)",
-        "Print %n sheet": ["%n vel afdrukken", "%n vellen afdrukken"],
+        "Print %n sheet": [
+            "%n vel afdrukken",
+            "%n vellen afdrukken"
+        ],
         "The scan profiles could not be read.": "De scanprofielen konden niet worden gelezen.",
         "The separator sheets could not be made. Check the case numbers and try again.": "De scheidingsvellen konden niet worden gemaakt. Controleer de zaaknummers en probeer het opnieuw.",
         "Waiting for your signature": "Wacht op je handtekening",
         "Reading the signing folder": "De ondertekenmap wordt gelezen",
         "The signing folder could not be read.": "De ondertekenmap kon niet worden gelezen.",
         "Nothing is waiting for your signature.": "Er wacht niets op je handtekening.",
-        "%n document is waiting for your signature": ["%n document wacht op je handtekening", "%n documenten wachten op je handtekening"],
+        "%n document is waiting for your signature": [
+            "%n document wacht op je handtekening",
+            "%n documenten wachten op je handtekening"
+        ],
         "Untitled document": "Document zonder titel",
         "sign by {date}": "tekenen vóór {date}",
         "Open the signing folder": "Open de ondertekenmap",
         "This dossier does not exist or you may not read it.": "Dit dossier bestaat niet of je mag het niet lezen.",
         "Nobody is in \"{group}\", so if a document cannot be read, no one will be told. Add at least one person to that group.": "Niemand zit in \"{group}\", dus als een document niet gelezen kan worden, hoort niemand het. Voeg minstens één persoon aan die groep toe.",
-        "%n document could not be read and nobody in \"{group}\" will be told. Add at least one person to that group.": ["%n document kon niet gelezen worden en niemand in \"{group}\" hoort het. Voeg minstens één persoon aan die groep toe.", "%n documenten konden niet gelezen worden en niemand in \"{group}\" hoort het. Voeg minstens één persoon aan die groep toe."],
+        "%n document could not be read and nobody in \"{group}\" will be told. Add at least one person to that group.": [
+            "%n document kon niet gelezen worden en niemand in \"{group}\" hoort het. Voeg minstens één persoon aan die groep toe.",
+            "%n documenten konden niet gelezen worden en niemand in \"{group}\" hoort het. Voeg minstens één persoon aan die groep toe."
+        ],
         "{count} suggestions could not be confirmed. Someone may have decided them already.": "{count} suggesties konden niet worden bevestigd. Misschien heeft iemand er al over beslist.",
         "Classification": "Classificatie",
         "Classification suggestions": "Classificatiesuggesties",
@@ -2869,12 +2881,18 @@
         "Mark as checked": "Markeren als gecontroleerd",
         "Checked by {user} on {date}": "Gecontroleerd door {user} op {date}",
         "Check the detected data first": "Controleer eerst de gevonden gegevens",
-        "%n file still needs a check before it can be anonymised:": ["%n bestand moet nog gecontroleerd worden voordat het geanonimiseerd kan worden:", "%n bestanden moeten nog gecontroleerd worden voordat ze geanonimiseerd kunnen worden:"],
+        "%n file still needs a check before it can be anonymised:": [
+            "%n bestand moet nog gecontroleerd worden voordat het geanonimiseerd kan worden:",
+            "%n bestanden moeten nog gecontroleerd worden voordat ze geanonimiseerd kunnen worden:"
+        ],
         "Anonymize checked files ({count})": "Gecontroleerde bestanden anonimiseren ({count})",
         "Check per file": "Controle per bestand",
         "Open each file, compare it with the findings above and mark it as checked. Only checked files are anonymised. Changing the selection asks for a new check.": "Open elk bestand, vergelijk het met de bevindingen hierboven en markeer het als gecontroleerd. Alleen gecontroleerde bestanden worden geanonimiseerd. Als u de selectie wijzigt, is een nieuwe controle nodig.",
         "Checked by {user}": "Gecontroleerd door {user}",
-        "The checked files are anonymised. %n file was not checked and was left alone:": ["De gecontroleerde bestanden zijn geanonimiseerd. %n bestand is niet gecontroleerd en is overgeslagen:", "De gecontroleerde bestanden zijn geanonimiseerd. %n bestanden zijn niet gecontroleerd en zijn overgeslagen:"],
+        "The checked files are anonymised. %n file was not checked and was left alone:": [
+            "De gecontroleerde bestanden zijn geanonimiseerd. %n bestand is niet gecontroleerd en is overgeslagen:",
+            "De gecontroleerde bestanden zijn geanonimiseerd. %n bestanden zijn niet gecontroleerd en zijn overgeslagen:"
+        ],
         "Checked": "Gecontroleerd",
         "The detected data changed after the check. Check them again before anonymising.": "De gevonden gegevens zijn na de controle gewijzigd. Controleer ze opnieuw voordat u anonimiseert.",
         "The check does not say who did it. Check the detected data again before anonymising.": "Bij de controle staat niet wie hem heeft gedaan. Controleer de gevonden gegevens opnieuw voordat u anonimiseert.",
@@ -2899,7 +2917,10 @@
         "When the change was made.": "Wanneer de wijziging is gedaan.",
         "Merge fields": "Samenvoegvelden",
         "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you.": "De velden die het sjabloon invult, met een naam en een herkomst voor mensen: wat een voorbeeld onder Voor je ingevuld toont",
-        "Dossier \"{name}\" (%n document)": ["Dossier \"{name}\" (%n stuk)", "Dossier \"{name}\" (%n stukken)"],
+        "Dossier \"{name}\" (%n document)": [
+            "Dossier \"{name}\" (%n stuk)",
+            "Dossier \"{name}\" (%n stukken)"
+        ],
         "Print %n sheets": "%n vellen afdrukken",
         "%n documents are waiting for your signature": "%n documenten wachten op je handtekening",
         "%n documents could not be read and nobody in \"{group}\" will be told. Add at least one person to that group.": "%n documenten konden niet gelezen worden en niemand in \"{group}\" hoort het. Voeg minstens één persoon aan die groep toe.",
@@ -2983,7 +3004,38 @@
         "The Nextcloud file id of the reviewed document; one review per file.": "Het Nextcloud-bestands-ID van het gecontroleerde document; één controle per bestand.",
         "The reviewer's note.": "De notitie van de controleur.",
         "The user who marked the document checked.": "De gebruiker die het document als gecontroleerd markeerde.",
-        "When the reviewer marked the document checked.": "Wanneer de controleur het document als gecontroleerd markeerde."
+        "When the reviewer marked the document checked.": "Wanneer de controleur het document als gecontroleerd markeerde.",
+        "A project that digitises a paper archive: its boxes, the scan profile its separator sheets are printed for, the record the scans are filed on and the share of scans a person checks (intake-paper-archive-digitisation REQ-PAD-001).": "Een project dat een papieren archief digitaliseert: de dozen, het scanprofiel waarvoor de scheidingsvellen worden afgedrukt, het record waarop de scans worden opgeslagen en het deel van de scans dat een mens controleert (intake-paper-archive-digitisation REQ-PAD-001).",
+        "Archive description": "Beschrijving van het archief",
+        "Box": "Doos",
+        "Boxes": "Dozen",
+        "Check": "Controle",
+        "Check share": "Controleaandeel",
+        "Date range": "Periode",
+        "Digitisation project": "Digitaliseringsproject",
+        "One paper original of a digitisation project: its box, shelf mark, description and date range, the scan it became and the check of that scan (intake-paper-archive-digitisation REQ-PAD-001, REQ-PAD-004).": "Eén papieren origineel van een digitaliseringsproject: de doos, het signatuur, de beschrijving en de periode, de scan die ervan is gemaakt en de controle van die scan (intake-paper-archive-digitisation REQ-PAD-001, REQ-PAD-004).",
+        "Paper original": "Papieren origineel",
+        "Project": "Project",
+        "Scanned at": "Gescand op",
+        "Shelf mark": "Signatuur",
+        "Target": "Bestemming",
+        "The Nextcloud file id of the scan.": "Het Nextcloud-bestands-ID van de scan.",
+        "The box the original is kept in.": "De doos waarin het origineel wordt bewaard.",
+        "The boxes of the archive, by their label as written on the box.": "De dozen van het archief, met het label zoals het op de doos staat.",
+        "The check of the scan: passed or rejected, by whom, when and with which note; checkedBy is sample-not-drawn for an original the sample did not draw.": "De controle van de scan: goedgekeurd of afgekeurd, door wie, wanneer en met welke notitie; checkedBy is sample-not-drawn voor een origineel dat niet in de steekproef viel.",
+        "The digitisation project the original belongs to.": "Het digitaliseringsproject waartoe het origineel hoort.",
+        "The name of the digitisation project.": "De naam van het digitaliseringsproject.",
+        "The percentage of scanned originals a person checks, 0 to 100.": "Het percentage gescande originelen dat een mens controleert, 0 tot 100.",
+        "The period the original covers, for example 1987-1992.": "De periode die het origineel beslaat, bijvoorbeeld 1987-1992.",
+        "The record the scans are filed on, as register, schema and id: typically a dossier.": "Het record waarop de scans worden opgeslagen, als register, schema en id: meestal een dossier.",
+        "The scan batch the original was scanned in.": "De scanbatch waarin het origineel is gescand.",
+        "The scan profile the separator sheets of this project are printed for.": "Het scanprofiel waarvoor de scheidingsvellen van dit project worden afgedrukt.",
+        "The shelf mark of the original, as printed on the separator sheet.": "Het signatuur van het origineel, zoals het op het scheidingsvel staat.",
+        "What the original is, as printed on the separator sheet.": "Wat het origineel is, zoals het op het scheidingsvel staat.",
+        "When the original was scanned.": "Wanneer het origineel is gescand.",
+        "Where the original stands: registered, scanned, checked or rejected (rejected goes back to registered on a rescan).": "Waar het origineel staat: geregistreerd, gescand, gecontroleerd of afgekeurd (afgekeurd gaat bij een nieuwe scan terug naar geregistreerd).",
+        "Where the project stands: open, scanning, checking or closed.": "Waar het project staat: open, scannen, controleren of gesloten.",
+        "Which paper archive is digitised: the creator, the period and where it is kept.": "Welk papieren archief wordt gedigitaliseerd: de archiefvormer, de periode en waar het wordt bewaard."
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

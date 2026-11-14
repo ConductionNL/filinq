@@ -142,6 +142,10 @@ deliberately.
 
 | `flowOperationRun` | authenticated | **nobody** (server only) | admins | The processing log of a Filinq operation a Nextcloud Flow rule started. Only the background job that runs the operation writes a run, as the file owner it acts for; no person adds or edits one, so a log cannot claim a run that did not happen. The row holds the file id and name and counts or verdicts, never extracted text or detected personal data. Only an admin deletes one; the log is otherwise rotated by its retention. |
 
+| `digitisationProject` | authenticated | authenticated | admins | An archivist sets up the digitisation of a paper archive and moves it from open to closed, so `create` and `update` are theirs; the project names only the archive, its boxes, the scan profile, the record the scans are filed on and the share to check, no document content. Only an admin deletes one: its originals point at it. |
+
+| `paperOriginal` | authenticated | authenticated | admins | An archivist registers the originals of a box by hand or from a box list, and a checker passes or rejects a scan, so `create` and `update` are theirs; the scan itself is a file under Nextcloud's own file rights, the original holds only its file id. Only an admin deletes one: it is the trace that the paper was scanned and checked. |
+
 | `publicationLogEntry` | authenticated | **nobody** (server only) | nobody | The publication history. `PublicationStore` writes every entry past the cascade with the system as owner, after `PublicationAccess`; nobody can add an entry with another `actor` or `timestamp`. |
 
 | `publicationRecord` | authenticated | **nobody** (server only) | nobody | Only `PublicationStore` writes a record, after `PublicationAccess`, and owned by the system. Readiness always derives the redacted copy from the anonymisation link, so a `redactedFileRef` written onto the record can never make the original get published. |

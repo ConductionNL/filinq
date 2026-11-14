@@ -7678,6 +7678,118 @@
         "statusReason": "own_output",
         "triggerEvent": "postCreate",
         "resultSummary": {}
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "digitisationProject",
+          "slug": "demostad-digitisation-bouwvergunningen"
+        },
+        "name": "Bouwvergunningen 1960-1990",
+        "archiveDescription": "Bouwvergunningen van de gemeente Demostad, 1960 tot 1990, depot stadhuis",
+        "boxes": [
+          "117",
+          "118"
+        ],
+        "scanProfile": "archief",
+        "target": {
+          "register": "filinq",
+          "schema": "dossier",
+          "id": "demostad-dossier-archief"
+        },
+        "checkShare": 10,
+        "status": "scanning"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "digitisationProject",
+          "slug": "demostad-digitisation-raadsbesluiten"
+        },
+        "name": "Raadsbesluiten 1945-1975",
+        "archiveDescription": "Raadsbesluiten en bijlagen, 1945 tot 1975",
+        "boxes": [
+          "R-01"
+        ],
+        "scanProfile": "archief",
+        "target": {
+          "register": "filinq",
+          "schema": "dossier",
+          "id": "demostad-dossier-archief"
+        },
+        "checkShare": 10,
+        "status": "open"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "digitisationProject",
+          "slug": "demostad-digitisation-personeelsdossiers"
+        },
+        "name": "Personeelsdossiers afgesloten",
+        "archiveDescription": "Afgesloten personeelsdossiers tot 2000",
+        "boxes": [
+          "P-12"
+        ],
+        "scanProfile": "archief",
+        "target": {
+          "register": "filinq",
+          "schema": "dossier",
+          "id": "demostad-dossier-archief"
+        },
+        "checkShare": 10,
+        "status": "checking"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "paperOriginal",
+          "slug": "demostad-original-117-001"
+        },
+        "project": "demostad-digitisation-bouwvergunningen",
+        "box": "117",
+        "shelfMark": "BV-1964-0012",
+        "description": "Bouwvergunning Marktstraat 4",
+        "dateRange": "1964",
+        "status": "registered"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "paperOriginal",
+          "slug": "demostad-original-117-002"
+        },
+        "project": "demostad-digitisation-bouwvergunningen",
+        "box": "117",
+        "shelfMark": "BV-1964-0013",
+        "description": "Bouwvergunning Kerkplein 1",
+        "dateRange": "1964-1965",
+        "status": "scanned",
+        "scanBatch": "batch-2026-10-01",
+        "document": 913004,
+        "scannedAt": "2026-10-01T14:00:00Z"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "paperOriginal",
+          "slug": "demostad-original-118-001"
+        },
+        "project": "demostad-digitisation-bouwvergunningen",
+        "box": "118",
+        "shelfMark": "BV-1971-0201",
+        "description": "Bouwvergunning Stationsweg 10",
+        "dateRange": "1971",
+        "status": "checked",
+        "scanBatch": "batch-2026-10-01",
+        "document": 913005,
+        "scannedAt": "2026-10-01T14:00:00Z",
+        "check": {
+          "result": "passed",
+          "checkedBy": "sample-not-drawn",
+          "checkedAt": "2026-10-02T10:00:00Z",
+          "note": ""
+        }
       }
     ]
   }

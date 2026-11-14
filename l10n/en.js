@@ -1,7 +1,3 @@
-/**
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- */
 OC.L10N.register(
     "filinq",
     {
@@ -2830,7 +2826,38 @@ OC.L10N.register(
         "The Nextcloud file id of the reviewed document; one review per file.": "The Nextcloud file id of the reviewed document; one review per file.",
         "The reviewer's note.": "The reviewer's note.",
         "The user who marked the document checked.": "The user who marked the document checked.",
-        "When the reviewer marked the document checked.": "When the reviewer marked the document checked."
+        "When the reviewer marked the document checked.": "When the reviewer marked the document checked.",
+        "A project that digitises a paper archive: its boxes, the scan profile its separator sheets are printed for, the record the scans are filed on and the share of scans a person checks (intake-paper-archive-digitisation REQ-PAD-001).": "A project that digitises a paper archive: its boxes, the scan profile its separator sheets are printed for, the record the scans are filed on and the share of scans a person checks (intake-paper-archive-digitisation REQ-PAD-001).",
+        "Archive description": "Archive description",
+        "Box": "Box",
+        "Boxes": "Boxes",
+        "Check": "Check",
+        "Check share": "Check share",
+        "Date range": "Date range",
+        "Digitisation project": "Digitisation project",
+        "One paper original of a digitisation project: its box, shelf mark, description and date range, the scan it became and the check of that scan (intake-paper-archive-digitisation REQ-PAD-001, REQ-PAD-004).": "One paper original of a digitisation project: its box, shelf mark, description and date range, the scan it became and the check of that scan (intake-paper-archive-digitisation REQ-PAD-001, REQ-PAD-004).",
+        "Paper original": "Paper original",
+        "Project": "Project",
+        "Scanned at": "Scanned at",
+        "Shelf mark": "Shelf mark",
+        "Target": "Target",
+        "The Nextcloud file id of the scan.": "The Nextcloud file id of the scan.",
+        "The box the original is kept in.": "The box the original is kept in.",
+        "The boxes of the archive, by their label as written on the box.": "The boxes of the archive, by their label as written on the box.",
+        "The check of the scan: passed or rejected, by whom, when and with which note; checkedBy is sample-not-drawn for an original the sample did not draw.": "The check of the scan: passed or rejected, by whom, when and with which note; checkedBy is sample-not-drawn for an original the sample did not draw.",
+        "The digitisation project the original belongs to.": "The digitisation project the original belongs to.",
+        "The name of the digitisation project.": "The name of the digitisation project.",
+        "The percentage of scanned originals a person checks, 0 to 100.": "The percentage of scanned originals a person checks, 0 to 100.",
+        "The period the original covers, for example 1987-1992.": "The period the original covers, for example 1987-1992.",
+        "The record the scans are filed on, as register, schema and id: typically a dossier.": "The record the scans are filed on, as register, schema and id: typically a dossier.",
+        "The scan batch the original was scanned in.": "The scan batch the original was scanned in.",
+        "The scan profile the separator sheets of this project are printed for.": "The scan profile the separator sheets of this project are printed for.",
+        "The shelf mark of the original, as printed on the separator sheet.": "The shelf mark of the original, as printed on the separator sheet.",
+        "What the original is, as printed on the separator sheet.": "What the original is, as printed on the separator sheet.",
+        "When the original was scanned.": "When the original was scanned.",
+        "Where the original stands: registered, scanned, checked or rejected (rejected goes back to registered on a rescan).": "Where the original stands: registered, scanned, checked or rejected (rejected goes back to registered on a rescan).",
+        "Where the project stands: open, scanning, checking or closed.": "Where the project stands: open, scanning, checking or closed.",
+        "Which paper archive is digitised: the creator, the period and where it is kept.": "Which paper archive is digitised: the creator, the period and where it is kept."
     },
     "nplurals=2; plural=(n != 1);"
 )

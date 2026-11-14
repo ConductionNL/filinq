@@ -1,7 +1,3 @@
-/**
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- */
 OC.L10N.register(
     "filinq",
     {
@@ -2961,7 +2957,38 @@ OC.L10N.register(
         "The Nextcloud file id of the reviewed document; one review per file.": "Het Nextcloud-bestands-ID van het gecontroleerde document; één controle per bestand.",
         "The reviewer's note.": "De notitie van de controleur.",
         "The user who marked the document checked.": "De gebruiker die het document als gecontroleerd markeerde.",
-        "When the reviewer marked the document checked.": "Wanneer de controleur het document als gecontroleerd markeerde."
+        "When the reviewer marked the document checked.": "Wanneer de controleur het document als gecontroleerd markeerde.",
+        "A project that digitises a paper archive: its boxes, the scan profile its separator sheets are printed for, the record the scans are filed on and the share of scans a person checks (intake-paper-archive-digitisation REQ-PAD-001).": "Een project dat een papieren archief digitaliseert: de dozen, het scanprofiel waarvoor de scheidingsvellen worden afgedrukt, het record waarop de scans worden opgeslagen en het deel van de scans dat een mens controleert (intake-paper-archive-digitisation REQ-PAD-001).",
+        "Archive description": "Beschrijving van het archief",
+        "Box": "Doos",
+        "Boxes": "Dozen",
+        "Check": "Controle",
+        "Check share": "Controleaandeel",
+        "Date range": "Periode",
+        "Digitisation project": "Digitaliseringsproject",
+        "One paper original of a digitisation project: its box, shelf mark, description and date range, the scan it became and the check of that scan (intake-paper-archive-digitisation REQ-PAD-001, REQ-PAD-004).": "Eén papieren origineel van een digitaliseringsproject: de doos, het signatuur, de beschrijving en de periode, de scan die ervan is gemaakt en de controle van die scan (intake-paper-archive-digitisation REQ-PAD-001, REQ-PAD-004).",
+        "Paper original": "Papieren origineel",
+        "Project": "Project",
+        "Scanned at": "Gescand op",
+        "Shelf mark": "Signatuur",
+        "Target": "Bestemming",
+        "The Nextcloud file id of the scan.": "Het Nextcloud-bestands-ID van de scan.",
+        "The box the original is kept in.": "De doos waarin het origineel wordt bewaard.",
+        "The boxes of the archive, by their label as written on the box.": "De dozen van het archief, met het label zoals het op de doos staat.",
+        "The check of the scan: passed or rejected, by whom, when and with which note; checkedBy is sample-not-drawn for an original the sample did not draw.": "De controle van de scan: goedgekeurd of afgekeurd, door wie, wanneer en met welke notitie; checkedBy is sample-not-drawn voor een origineel dat niet in de steekproef viel.",
+        "The digitisation project the original belongs to.": "Het digitaliseringsproject waartoe het origineel hoort.",
+        "The name of the digitisation project.": "De naam van het digitaliseringsproject.",
+        "The percentage of scanned originals a person checks, 0 to 100.": "Het percentage gescande originelen dat een mens controleert, 0 tot 100.",
+        "The period the original covers, for example 1987-1992.": "De periode die het origineel beslaat, bijvoorbeeld 1987-1992.",
+        "The record the scans are filed on, as register, schema and id: typically a dossier.": "Het record waarop de scans worden opgeslagen, als register, schema en id: meestal een dossier.",
+        "The scan batch the original was scanned in.": "De scanbatch waarin het origineel is gescand.",
+        "The scan profile the separator sheets of this project are printed for.": "Het scanprofiel waarvoor de scheidingsvellen van dit project worden afgedrukt.",
+        "The shelf mark of the original, as printed on the separator sheet.": "Het signatuur van het origineel, zoals het op het scheidingsvel staat.",
+        "What the original is, as printed on the separator sheet.": "Wat het origineel is, zoals het op het scheidingsvel staat.",
+        "When the original was scanned.": "Wanneer het origineel is gescand.",
+        "Where the original stands: registered, scanned, checked or rejected (rejected goes back to registered on a rescan).": "Waar het origineel staat: geregistreerd, gescand, gecontroleerd of afgekeurd (afgekeurd gaat bij een nieuwe scan terug naar geregistreerd).",
+        "Where the project stands: open, scanning, checking or closed.": "Waar het project staat: open, scannen, controleren of gesloten.",
+        "Which paper archive is digitised: the creator, the period and where it is kept.": "Welk papieren archief wordt gedigitaliseerd: de archiefvormer, de periode en waar het wordt bewaard."
     },
     "nplurals=2; plural=(n != 1);"
 )

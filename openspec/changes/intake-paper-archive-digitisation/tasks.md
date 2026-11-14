@@ -4,7 +4,8 @@
 
 ## 1. Register
 
-- [ ] 1.1 Add `digitisationProject` and `paperOriginal` with the D1 properties, lifecycles and the per-box aggregation to `lib/Settings/filinq_register.json`, seed and version bump (REQ-PAD-001). Verify: `occ maintenance:repair` imports them and the seed project shows its counts.
+- [x] 1.1 Add `digitisationProject` and `paperOriginal` with the D1 properties, lifecycles and the per-box aggregation to `lib/Settings/filinq_register.json`, seed and version bump (REQ-PAD-001). Verify: `occ maintenance:repair` imports them and the seed project shows its counts.
+  - Built: `digitisationProject` (name, archiveDescription, boxes, scanProfile, target, checkShare 0-100 default 10, status open/scanning/checking/closed) and `paperOriginal` (project, box, shelfMark, description, dateRange, scanBatch, document, scannedAt, check, status registered/scanned/checked/rejected, with `rescan` from rejected back to registered), register 8.55.0, three demo objects each in the mock register, and both cascades recorded in `docs/authorization-decisions.md`. The per-box counts are left to the project page (4.1), which counts the originals per box and status. Not verified here: the `occ maintenance:repair` import (needs a running instance).
 
 ## 2. Separators and splitting
 
