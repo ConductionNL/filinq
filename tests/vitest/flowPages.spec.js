@@ -7,12 +7,11 @@
  *
  * @spec exclude Structural invariant of the shipped manifest; no behavioural spec.
  */
-import * as fs from 'fs'
-import * as path from 'path'
 import { describe, expect, it } from 'vitest'
 import { createMemoryHistory, createRouter } from 'vue-router'
+import { effectiveManifest } from './support/effectiveManifest.js'
 
-const { pages } = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../src/manifest.json'), 'utf8'))
+const { pages } = effectiveManifest()
 const byId = new Map(pages.map((page) => [page.id, page]))
 const router = createRouter({
 	history: createMemoryHistory(),
