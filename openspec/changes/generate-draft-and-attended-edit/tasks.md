@@ -27,5 +27,7 @@
 
 ## 4. Strings, tests and docs
 
-- [ ] 4.1 Dutch and English strings (ADR-005) and `@spec` tags on every new method. Verify: `npm run lint`, `npm run check:l10n` and `composer check:strict` pass.
-- [ ] 4.2 PHPUnit on the new service, controller and job at 75% line coverage or more (ADR-009), and a section in `docs/features/` with a screenshot of the draft editor (ADR-010). Verify: the coverage report for the new files and the docs page render.
+- [x] 4.1 Dutch and English strings (ADR-005) and `@spec` tags on every new method. Verify: `npm run lint`, `npm run check:l10n` and `composer check:strict` pass.
+  - Done: English and Dutch strings for every new label and message, and `@spec` tags on every new method. `npm run lint` has 0 errors (124 warnings against 127 on development; its exit code comes from unused suppressions that development has too), `npm run test:l10n` passes, and phpcs, phpmd, psalm and phpstan are clean on the new and changed PHP files.
+- [x] 4.2 PHPUnit on the new service, controller and job at 75% line coverage or more (ADR-009), and a section in `docs/features/` with a screenshot of the draft editor (ADR-010). Verify: the coverage report for the new files and the docs page render.
+  - Done: line coverage of the new backend files with pcov: `DocumentDraftService` 97.3%, `DraftHtmlSanitizer` 96.5%, `DocumentDraftController` 98.2%, `DocumentDraftExpiryJob` 93.2%. `docs/features/generation-drafts.md` describes opening, editing, finishing, discarding and resuming drafts, and is listed in `docs/features/README.md`. The screenshot of the draft editor is captured from a running instance and is left.

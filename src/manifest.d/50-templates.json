@@ -19,7 +19,7 @@
 			"label": "Drafts",
 			"icon": "FileEdit",
 			"route": "Drafts",
-			"order": 56
+			"order": 54
 		}
 	],
 	"pages": [
