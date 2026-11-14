@@ -10,8 +10,9 @@
   - Built: register 8.52.0, `template` 1.6.0, `templateVersion` 1.2.0. `textFragment` is `searchable: false` until it has a page to deep-link to. Three demo objects each for `textFragment` and `templateImportJob` in `filinq_mock_register.json`.
   - `tests/validate-manifest.js` and register import on boot both pass
 
-- [ ] 1.2 Ship seed data: demo office template object + seed DOCX in `tests/sample-documents/`, demo `textFragment`, demo `templateImportJob` (nil-UUID pattern, Demostad flavour per design.md Seed Data)
+- [x] 1.2 Ship seed data: demo office template object + seed DOCX in `tests/sample-documents/`, demo `textFragment`, demo `templateImportJob` (nil-UUID pattern, Demostad flavour per design.md Seed Data)
   - Seed imports cleanly via the existing register-import mechanism
+  - Built: `tests/sample-documents/beschikking-parkeervergunning.docx` with the four tags of design.md, and the demo office template `template-beschikking-parkeervergunning` naming its checksum and tags (`sourceFileId: 0` as in design.md: the demo carries no stored file until its source is uploaded); the fragment and import-job demos came with 1.1. `OfficeTemplateSeedTest` keeps the demo and the file in step.
 
 ## 2. Backend services
 

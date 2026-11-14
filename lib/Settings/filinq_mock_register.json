@@ -5442,6 +5442,68 @@
       {
         "@self": {
           "register": "filinq",
+          "schema": "template",
+          "slug": "template-beschikking-parkeervergunning"
+        },
+        "name": "Beschikking parkeervergunning",
+        "description": "Demo office template: a Word file with merge tags. Its source is tests/sample-documents/beschikking-parkeervergunning.docx; upload that file as a new source to make it render on an instance.",
+        "content": "Gemeente Demostad\nBeschikking parkeervergunning\nAan: ${aanvrager.naam}\nAdres: ${aanvrager.adres}\nDatum besluit: ${besluit.datum}\nUw aanvraag voor een parkeervergunning is toegekend.\n${fragment:ondertekening-burgemeester}",
+        "namespace": "filinq",
+        "templateType": "office",
+        "sourceFileId": 0,
+        "contentHash": "6b7dd8ac207041a008d92edb7befc35f65815c35c6bc0ce217e03dc347f6049e",
+        "boundRegister": "dossier",
+        "boundSchema": "dossier",
+        "mergeFields": [
+          {
+            "path": "aanvrager.naam"
+          },
+          {
+            "path": "aanvrager.adres"
+          },
+          {
+            "path": "besluit.datum"
+          },
+          {
+            "path": "fragment:ondertekening-burgemeester"
+          }
+        ],
+        "fieldMap": {},
+        "tagReport": {
+          "validated": false,
+          "severity": "warning",
+          "tags": [
+            {
+              "tag": "aanvrager.naam",
+              "status": "unvalidated"
+            },
+            {
+              "tag": "aanvrager.adres",
+              "status": "unvalidated"
+            },
+            {
+              "tag": "besluit.datum",
+              "status": "unvalidated"
+            },
+            {
+              "tag": "fragment:ondertekening-burgemeester",
+              "status": "fragment"
+            }
+          ],
+          "unknown": [],
+          "notice": "Not validated: demo data is imported without checking the dossier schema; a new upload checks it."
+        },
+        "category": "beschikkingen",
+        "tags": [
+          "parkeren",
+          "huisstijl-2026"
+        ],
+        "format": "A4",
+        "orientation": "P"
+      },
+      {
+        "@self": {
+          "register": "filinq",
           "schema": "textFragment",
           "slug": "textfragment-ondertekening-burgemeester"
         },
