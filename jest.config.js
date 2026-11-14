@@ -12,6 +12,7 @@ module.exports = {
 	},
 	moduleFileExtensions: ['js', 'json', 'vue', 'ts'],
 	testEnvironment: 'jest-environment-jsdom',
+	setupFiles: ['<rootDir>/tests/jest/setup.js'],
 	// Playwright e2e specs have their own runner (npm run test:e2e).
 	// tests/unit/reachability.spec.js has its own runner too (npm run
 	// test:unit / vitest.config.js) — it's a pure Node fs/path static
