@@ -45,6 +45,9 @@ $extra = [
         // Settings routes.
         ['name' => 'settings#index', 'url' => 'api/settings', 'verb' => 'GET'],
         ['name' => 'settings#create', 'url' => 'api/settings', 'verb' => 'POST'],
+        // Whole-collection integrity scan (admin only): the last run, and start one now.
+        ['name' => 'settings#integrityScanLast', 'url' => 'api/settings/integrity-scan', 'verb' => 'GET'],
+        ['name' => 'settings#integrityScanStart', 'url' => 'api/settings/integrity-scan', 'verb' => 'POST'],
 
         // Consent routes.
         ['name' => 'consent#index', 'url' => 'api/consents', 'verb' => 'GET'],

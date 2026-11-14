@@ -114,7 +114,8 @@ class IntegrityScanJob extends TimedJob {
 		}
 
 		$admins = $this->groups->get('admin');
-		if (array_sum($counts) === 0 || $admins === null) {
+		// Only a missing or changed file calls for an administrator; an orphaned copy alone does not.
+		if (($counts['missing'] + $counts['changed']) === 0 || $admins === null) {
 			return 0;
 		}
 

@@ -712,6 +712,8 @@
 
 		<DocumentWebhooksSection v-if="isAdmin" />
 
+		<IntegrityScanSection v-if="isAdmin" />
+
 		<EmailIngestionSettings v-if="isAdmin" />
 
 		<!-- Page layouts (documents-from-a-template REQ-DFT-01): their own endpoints -->
@@ -885,6 +887,7 @@ import CaseSystemDeliverySettings from './CaseSystemDeliverySettings.vue'
 import DocumentWebhooksSection from './DocumentWebhooksSection.vue'
 import EmailIngestionSettings from './EmailIngestionSettings.vue'
 import EntityTypeSelector from './EntityTypeSelector.vue'
+import IntegrityScanSection from './IntegrityScanSection.vue'
 import PageLayoutSettings from './PageLayoutSettings.vue'
 import SettingSwitchRow from './SettingSwitchRow.vue'
 import SignerIdentitySettings from './SignerIdentitySettings.vue'
@@ -999,6 +1002,7 @@ export default {
 	name: 'Settings',
 	components: {
 		DocumentWebhooksSection,
+		IntegrityScanSection,
 		NcSettingsSection,
 		NcNoteCard,
 		NcSelect,

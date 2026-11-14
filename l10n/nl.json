@@ -3104,7 +3104,35 @@
         "The test arrived": "De test is aangekomen",
         "The test did not arrive": "De test is niet aangekomen",
         "Type a name and a URL and pick at least one event": "Typ een naam en een URL en kies minstens één gebeurtenis",
-        "Type a secret so the receiver can check each delivery": "Typ een geheim zodat de ontvanger elke bezorging kan controleren"
+        "Type a secret so the receiver can check each delivery": "Typ een geheim zodat de ontvanger elke bezorging kan controleren",
+        "Every night filinq checks every dossier, final document and anonymised copy for files that are missing, changed or orphaned. The check only reads; it changes no file.": "Elke nacht controleert filinq elk dossier, elk definitief document en elke geanonimiseerde kopie op bestanden die ontbreken, gewijzigd of verweesd zijn. De controle leest alleen; er wordt geen bestand gewijzigd.",
+        "No integrity scan has run yet.": "Er is nog geen integriteitscontrole uitgevoerd.",
+        "Last check: {time}": "Laatste controle: {time}",
+        "%n record checked": [
+            "%n record gecontroleerd",
+            "%n records gecontroleerd"
+        ],
+        "%n records checked": "%n records gecontroleerd",
+        "%n missing file": [
+            "%n ontbrekend",
+            "%n ontbrekend"
+        ],
+        "%n missing files": "%n ontbrekend",
+        "%n changed file": [
+            "%n gewijzigd",
+            "%n gewijzigd"
+        ],
+        "%n changed files": "%n gewijzigd",
+        "%n orphaned file": [
+            "%n verweesd",
+            "%n verweesd"
+        ],
+        "%n orphaned files": "%n verweesd",
+        "File {fileId}": "Bestand {fileId}",
+        "Check now": "Nu controleren",
+        "The last integrity scan could not be read": "De laatste integriteitscontrole kon niet worden gelezen",
+        "The integrity scan has finished": "De integriteitscontrole is klaar",
+        "The integrity scan could not run": "De integriteitscontrole kon niet worden uitgevoerd"
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

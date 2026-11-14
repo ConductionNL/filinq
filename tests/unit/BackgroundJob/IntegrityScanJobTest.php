@@ -168,6 +168,18 @@ class IntegrityScanJobTest extends TestCase {
 	}//end testACleanOrFailedRunNotifiesNobody()
 
 	/**
+	 * Only orphaned copies: the run is stored, but no administrator is called for it.
+	 *
+	 * @return void
+	 */
+	public function testAnOrphanedOnlyRunNotifiesNobody(): void {
+		self::runOnce(job: $this->job(run: ['missing' => 0, 'changed' => 0, 'orphaned' => 2, 'findings' => [[], []]]));
+
+		$this->assertSame(['nightly'], $this->triggers);
+		$this->assertSame([], $this->sent);
+	}//end testAnOrphanedOnlyRunNotifiesNobody()
+
+	/**
 	 * The job and the notifier are registered.
 	 *
 	 * @return void

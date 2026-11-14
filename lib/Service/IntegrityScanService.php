@@ -109,6 +109,26 @@ class IntegrityScanService {
 	}//end run()
 
 	/**
+	 * The most recent stored run, by its start time.
+	 *
+	 * Only reads: nothing is scanned or written.
+	 *
+	 * @return array<string, mixed>|null The run, or null when no run was stored yet.
+	 *
+	 * @spec openspec/changes/whole-collection-integrity-scan/tasks.md#task-3-the-admin-section-reads-and-starts-a-scan
+	 */
+	public function last(): ?array {
+		$last = null;
+		foreach ($this->rows(schema: self::SCHEMA) as $run) {
+			if ($last === null || strcmp((string) ($run['startedAt'] ?? ''), (string) ($last['startedAt'] ?? '')) > 0) {
+				$last = $run;
+			}
+		}
+
+		return $last;
+	}//end last()
+
+	/**
 	 * A dossier listing a file that does not resolve.
 	 *
 	 * @param int $checked Counts the records looked at.

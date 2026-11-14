@@ -2923,7 +2923,23 @@ OC.L10N.register(
         "The test arrived": "The test arrived",
         "The test did not arrive": "The test did not arrive",
         "Type a name and a URL and pick at least one event": "Type a name and a URL and pick at least one event",
-        "Type a secret so the receiver can check each delivery": "Type a secret so the receiver can check each delivery"
+        "Type a secret so the receiver can check each delivery": "Type a secret so the receiver can check each delivery",
+        "Every night filinq checks every dossier, final document and anonymised copy for files that are missing, changed or orphaned. The check only reads; it changes no file.": "Every night filinq checks every dossier, final document and anonymised copy for files that are missing, changed or orphaned. The check only reads; it changes no file.",
+        "No integrity scan has run yet.": "No integrity scan has run yet.",
+        "Last check: {time}": "Last check: {time}",
+        "%n record checked": ["%n record checked","%n records checked"],
+        "%n records checked": "%n records checked",
+        "%n missing file": ["%n missing file","%n missing files"],
+        "%n missing files": "%n missing files",
+        "%n changed file": ["%n changed file","%n changed files"],
+        "%n changed files": "%n changed files",
+        "%n orphaned file": ["%n orphaned file","%n orphaned files"],
+        "%n orphaned files": "%n orphaned files",
+        "File {fileId}": "File {fileId}",
+        "Check now": "Check now",
+        "The last integrity scan could not be read": "The last integrity scan could not be read",
+        "The integrity scan has finished": "The integrity scan has finished",
+        "The integrity scan could not run": "The integrity scan could not run"
     },
     "nplurals=2; plural=(n != 1);"
 )

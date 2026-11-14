@@ -27,8 +27,8 @@
 - **acceptance_criteria**:
   - GIVEN a non-administrator WHEN the start endpoint is called THEN 403 and no run
   - GIVEN a stored run with two missing files THEN the section shows "2 ontbrekend" and two links
-- [ ] Implement
-- [ ] Test
+- [x] Implement
+- [x] Test
 
 ### Task 4: Verification and the row
 - **files**: `tests/e2e/spec-coverage/whole-collection-integrity-scan.spec.ts` (seed a dossier with a deleted member, run "Nu controleren", read the finding), `openspec/parity/capabilities.json`

@@ -118,6 +118,27 @@ class IntegrityScanServiceTest extends TestCase {
 		$this->assertNotSame('', $run['startedAt']);
 	}
 
+	public function testLastAnswersTheMostRecentRunAndWritesNothing(): void {
+		$last = $this->scan(
+			[
+				'integrityScan' => [
+					['uuid' => 'r-1', 'startedAt' => '2026-11-10T02:00:00+00:00', 'missing' => 0],
+					['uuid' => 'r-3', 'startedAt' => '2026-11-12T09:15:00+00:00', 'missing' => 0, 'changed' => 1],
+					['uuid' => 'r-2', 'startedAt' => '2026-11-11T02:00:00+00:00', 'missing' => 2],
+				],
+			],
+			existing: []
+		)->last();
+
+		$this->assertSame('r-3', $last['uuid'] ?? null);
+		$this->assertSame(1, $last['changed']);
+		$this->assertSame([], $this->saved);
+	}
+
+	public function testLastIsNullBeforeTheFirstRun(): void {
+		$this->assertNull($this->scan([], existing: [])->last());
+	}
+
 	public function testTheScanWritesNothingButItsRun(): void {
 		$this->scan(
 			['documentVersion' => [['uuid' => 'v-1', 'status' => 'final', 'fileId' => 21]], 'anonymizationLink' => [['uuid' => 'a-1', 'sourceFileId' => 1, 'anonymizedFileId' => 2]]],

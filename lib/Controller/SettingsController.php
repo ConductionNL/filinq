@@ -288,4 +288,56 @@ class SettingsController extends Controller {
 		}//end try
 
 	}//end load()
+
+	/**
+	 * The last stored integrity scan run, for the Integriteitscontrole section.
+	 *
+	 * Admin only: 401 without a session, 403 for a signed-in user who is no administrator.
+	 *
+	 * @return JSONResponse `{run}`, the run or null when none was stored yet.
+	 *
+	 * @spec openspec/changes/whole-collection-integrity-scan/tasks.md#task-3-the-admin-section-reads-and-starts-a-scan
+	 */
+	#[AuthorizedAdminSetting(FilinqAdmin::class)]
+	public function integrityScanLast(): JSONResponse {
+		try {
+			$refusal = $this->adminRefusal();
+			if ($refusal !== null) {
+				return $refusal;
+			}
+
+			return new JSONResponse(['run' => $this->backends->integrityScan->last()]);
+		} catch (Exception $e) {
+			return $this->failed(message: 'Failed to read the last integrity scan', exception: $e);
+		}//end try
+
+	}//end integrityScanLast()
+
+	/**
+	 * Start an integrity scan now ("Nu controleren") and answer its stored run.
+	 *
+	 * Admin only: the refusal comes before the scan, so a refused caller starts nothing.
+	 * A run with missing or changed files notifies the administrators, as the nightly run does.
+	 *
+	 * @return JSONResponse `{run}`, the run just stored.
+	 *
+	 * @spec openspec/changes/whole-collection-integrity-scan/tasks.md#task-3-the-admin-section-reads-and-starts-a-scan
+	 */
+	#[AuthorizedAdminSetting(FilinqAdmin::class)]
+	public function integrityScanStart(): JSONResponse {
+		try {
+			$refusal = $this->adminRefusal();
+			if ($refusal !== null) {
+				return $refusal;
+			}
+
+			$run = $this->backends->integrityScan->run(trigger: 'admin');
+			$this->backends->integrityNotices->notifyAdministrators(run: $run);
+
+			return new JSONResponse(['run' => $run]);
+		} catch (Exception $e) {
+			return $this->failed(message: 'Failed to run the integrity scan', exception: $e);
+		}//end try
+
+	}//end integrityScanStart()
 }//end class
