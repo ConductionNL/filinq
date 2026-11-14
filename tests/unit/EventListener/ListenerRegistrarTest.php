@@ -31,6 +31,9 @@ use OCA\Filinq\Flow\FilinqFlowNodeListener;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use OCP\EventDispatcher\IEventDispatcher;
+use OCA\Filinq\Flow\RegisterFlowOperationsListener;
+use OCP\WorkflowEngine\Events\LoadSettingsScriptsEvent;
+use OCP\WorkflowEngine\Events\RegisterOperationsEvent;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -89,7 +92,7 @@ class ListenerRegistrarTest extends TestCase {
 
 		(new ListenerRegistrar())->register($context);
 
-		self::assertCount(21, $registered);
+		self::assertCount(23, $registered);
 		self::assertSame(['OCA\Filinq\Event\IntakeDocumentReceivedEvent', 'OCA\Filinq\EventListener\IntakeDocumentReceivedListener'], $registered[0]);
 		self::assertSame(
 			[
@@ -109,6 +112,8 @@ class ListenerRegistrarTest extends TestCase {
 				['OCA\OpenRegister\Service\Flow\RegisterFlowNodesEvent', FilinqFlowNodeListener::class],
 				[DocumentGenerationRequestedEvent::class, DocumentGenerationRequestedListener::class],
 				[DocumentStampRequestedEvent::class, DocumentStampRequestedListener::class],
+				[RegisterOperationsEvent::class, RegisterFlowOperationsListener::class],
+				[LoadSettingsScriptsEvent::class, RegisterFlowOperationsListener::class],
 			],
 			array_slice($registered, 18)
 		);

@@ -8638,7 +8638,7 @@
                         "title": "Processed at"
                     },
                     "triggeredBy": {
-                        "description": "Whether a person started the run or the anonymisation pipeline did.",
+                        "description": "Whether a person, the anonymisation pipeline or a Flow rule started the run.",
                         "type": "string",
                         "required": true,
                         "visible": true,
@@ -8647,11 +8647,13 @@
                         "title": "Started by",
                         "enum": [
                             "manual",
-                            "fallback"
+                            "fallback",
+                            "flow"
                         ],
                         "x-enum-labels": {
                             "manual": "A person",
-                            "fallback": "The anonymisation pipeline"
+                            "fallback": "The anonymisation pipeline",
+                            "flow": "A Flow rule"
                         }
                     },
                     "engineVersion": {
@@ -11486,7 +11488,7 @@
                 },
                 "deleted": null,
                 "configuration": {
-                    "objectNameField": "requestedBy",
+                    "objectNameField": "fileName",
                     "objectDescriptionField": "status",
                     "autoPublish": false
                 },
@@ -11663,6 +11665,12 @@
                             "to": "skipped",
                             "label": "Overslaan",
                             "description": "De run is niet uitgevoerd, bijvoorbeeld omdat het bestand door een eerdere run is gemaakt."
+                        },
+                        "pass": {
+                            "from": "running",
+                            "to": "skipped",
+                            "label": "Niets te doen",
+                            "description": "De bewerking is gestart maar had niets te doen, bijvoorbeeld een bestand waarop geen tekstherkenning van toepassing is."
                         }
                     }
                 },
@@ -11696,6 +11704,10 @@
                         "subject": {
                             "nl": "Automatische bewerking mislukt: {{fileName}}",
                             "en": "Automated operation failed: {{fileName}}"
+                        },
+                        "body": {
+                            "nl": "De bewerking {{operation}} op {{fileName}} is mislukt: {{errorMessage}}",
+                            "en": "The {{operation}} operation on {{fileName}} failed: {{errorMessage}}"
                         }
                     }
                 }

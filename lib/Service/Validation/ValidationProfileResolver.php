@@ -146,6 +146,21 @@ class ValidationProfileResolver {
 	}//end resolve()
 
 	/**
+	 * The document types a profile is configured for, `default` always among them.
+	 *
+	 * @return array<int, string> The profile keys.
+	 *
+	 * @spec openspec/changes/flow-operations/tasks.md#task-2.2
+	 */
+	public function documentTypes(): array {
+		$types = array_map('strval', array_keys($this->loadProfiles()));
+		$types[] = 'default';
+
+		return array_values(array_unique($types));
+
+	}//end documentTypes()
+
+	/**
 	 * Pick the raw profile entry for a document type, or the 'default' entry.
 	 *
 	 * @param string $documentType The document type.

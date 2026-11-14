@@ -49,6 +49,7 @@ Create a [feature request](https://github.com/ConductionNL/filinq/issues/new)
         <developer>https://filinq.conduction.nl</developer>
     </documentation>
     <category>organization</category>
+    <category>workflow</category>
     <website>https://github.com/ConductionNL/filinq</website>
     <bugs>https://github.com/ConductionNL/filinq/issues</bugs>
     <repository>https://github.com/ConductionNL/filinq</repository>
