@@ -2882,7 +2882,10 @@
         "Archive creator override": "Archive creator override",
         "The archive creator for this record when it is not the organisation configured in OpenRegister.": "The archive creator for this record when it is not the organisation configured in OpenRegister.",
         "Unconfirmed proposals": "Unconfirmed proposals",
-        "Names of the fields whose value Filinq proposed and nobody has confirmed yet. Such a field does not count towards completeness.": "Names of the fields whose value Filinq proposed and nobody has confirmed yet. Such a field does not count towards completeness."
+        "Names of the fields whose value Filinq proposed and nobody has confirmed yet. Such a field does not count towards completeness.": "Names of the fields whose value Filinq proposed and nobody has confirmed yet. Such a field does not count towards completeness.",
+        "Only archive staff may export or transfer a record.": "Only archive staff may export or transfer a record.",
+        "The record cannot be read.": "The record cannot be read.",
+        "The MDTO metadata could not be prepared.": "The MDTO metadata could not be prepared."
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

@@ -24,8 +24,6 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
-use DateTimeImmutable;
-
 /**
  * Design D2: an unresolved or objected consent proposes an AVG restriction
  * with its legal basis; an active matching prohibition proposes a Woo
@@ -136,12 +134,12 @@ final class MdtoRestrictionProposer {
 			return null;
 		}
 
-		$date = DateTimeImmutable::createFromFormat('!Y-m-d', substr($value, 0, 10));
-		if ($date === false) {
+		[$year, $month, $day] = array_map('intval', explode('-', substr($value, 0, 10)));
+		if (checkdate($month, $day, $year) === false) {
 			return null;
 		}
 
-		return $date->format('Y-m-d');
+		return substr($value, 0, 10);
 
 	}//end dateOf()
 

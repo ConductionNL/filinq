@@ -237,7 +237,7 @@ class MdtoMappingService {
 			'checksumDate' => preg_match(self::XSD_DATE_TIME, (string) ($file['checksumDate'] ?? '')) === 1,
 		];
 		$missing = [];
-		foreach (array_keys(array_filter($checks, static fn (bool $ok): bool => $ok === false)) as $input) {
+		foreach (array_keys(array_filter($checks, static fn (bool $passes): bool => $passes === false)) as $input) {
 			$missing[] = 'file[' . $index . '].' . $input;
 		}
 

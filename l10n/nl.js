@@ -2994,7 +2994,10 @@ OC.L10N.register(
         "Archive creator override": "Afwijkende archiefvormer",
         "The archive creator for this record when it is not the organisation configured in OpenRegister.": "De archiefvormer van dit record als dat niet de organisatie is die in OpenRegister is ingesteld.",
         "Unconfirmed proposals": "Onbevestigde voorstellen",
-        "Names of the fields whose value Filinq proposed and nobody has confirmed yet. Such a field does not count towards completeness.": "Namen van de velden waarvan Filinq de waarde heeft voorgesteld en nog niemand die heeft bevestigd. Zo'n veld telt niet mee voor de volledigheid."
+        "Names of the fields whose value Filinq proposed and nobody has confirmed yet. Such a field does not count towards completeness.": "Namen van de velden waarvan Filinq de waarde heeft voorgesteld en nog niemand die heeft bevestigd. Zo'n veld telt niet mee voor de volledigheid.",
+        "Only archive staff may export or transfer a record.": "Alleen archiefmedewerkers mogen een record exporteren of overbrengen.",
+        "The record cannot be read.": "Het record kan niet worden gelezen.",
+        "The MDTO metadata could not be prepared.": "De MDTO-metagegevens konden niet worden samengesteld."
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -26,11 +26,14 @@ use DOMDocument;
 use DOMXPath;
 use OCA\Filinq\Service\MdtoSidecarBuilder;
 use OCA\Filinq\Service\MdtoSidecarInput;
+use OCA\Filinq\Service\MdtoXmlWriter;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 #[CoversClass(MdtoSidecarBuilder::class)]
 #[CoversClass(MdtoSidecarInput::class)]
+#[UsesClass(MdtoXmlWriter::class)]
 class MdtoSidecarBuilderTest extends TestCase {
 
 	/**

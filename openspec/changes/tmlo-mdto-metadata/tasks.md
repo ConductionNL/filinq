@@ -16,13 +16,13 @@
 - [x] 2.1 Implement `lib/Service/MdtoMappingService.php` — prefill (REQ-DDTMM-003): `prefill()` proposes `aggregatieniveau`, `dekkingInTijd` and, from an `MdtoRestrictionSources` (consents, matching prohibitions, anonymised renditions), the `beperkingGebruik` entries built by `MdtoRestrictionProposer`; every derived value is flagged `proposed`.
   - `aggregatieniveau` from record type; `dekkingInTijd` from document/dossier dates; `beperkingGebruik` proposals from consent (`objection_received`/unresolved), prohibition matches and anonymised derivatives; proposals flagged, never exported unconfirmed; `betrokkene` values are references only.
 
-- [ ] 2.2 Implement completeness validation (REQ-DDTMM-004) — partial: `validateCompleteness()` is at least as strict as OpenRegister's `MdtoPreconditions` (appraisal the generator maps, `bewaartermijn` as xsd:duration, organisation identifier, file inputs), pinned by a data-provider test of every input OR refuses. Left: the wiring into the overbrenging surface.
+- [x] 2.2 Implement completeness validation (REQ-DDTMM-004): `validateCompleteness()` is at least as strict as OpenRegister's `MdtoPreconditions` (appraisal the generator maps, `bewaartermijn` as xsd:duration, organisation identifier, file inputs), pinned by a data-provider test of every input OR refuses, and wired into the overbrenging action (`MdtoTransferService::transfer()`, `POST /api/mdto/{id}/transfer`), which stops with the missing fields. The archiefwet-retention-engine's own overbrenging surface is not built yet; its action calls this endpoint.
   - `{complete, missing[]}` against the MDTO minimum set (+ dekkingInTijd for bewaren); verify against OR HEAD that the gate is a superset of `MdtoXmlGenerator::validateRequiredFields()` (pin with a unit test, not this spec's snapshot); wire the gate into the overbrenging surface from archiefwet-retention-engine.
 
 - [x] 2.3 Implement sidecar assembly + JSON projection (REQ-DDTMM-005)
   - Core elements fixture-pinned against OR's generator output for identical input; reuse `TmloService::MDTO_NAMESPACE`; bestand section with sha256; deterministic output; dossier aggregation reads through the dossier capability's surface (no dossier-register schema change — sibling ownership).
 
-- [ ] 2.4 Implement the overbrenging handoff via OR's `EdepotTransferService` (REQ-DDTMM-006)
+- [x] 2.4 Implement the overbrenging handoff via OR's `EdepotTransferService` (REQ-DDTMM-006)
   - Gate → sidecar → SIP transfer with configured transport/profile; on confirm: `archiefstatus = overgebracht` + sidecar attached as OR file attachment; degradation to explicit manual-export download when no transport is configured; zero transport/HTTP code in Filinq (architecture test).
 
 - [ ] 2.5 File the OpenRegister issues surfaced by this change (design.md)

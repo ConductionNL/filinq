@@ -50,20 +50,8 @@ use RuntimeException;
  */
 final class MdtoSidecarBuilder {
 
-	/**
-	 * OpenRegister's MDTO namespace constant, reused when OpenRegister is loaded.
-	 */
-	private const OR_NAMESPACE = 'OCA\\OpenRegister\\Service\\TmloService::MDTO_NAMESPACE';
 
-	/**
-	 * The MDTO namespace, for when OpenRegister is not loaded.
-	 */
-	private const NAMESPACE_FALLBACK = 'https://www.nationaalarchief.nl/mdto';
 
-	/**
-	 * The namespace prefix OpenRegister writes.
-	 */
-	private const PREFIX = 'mdto';
 
 	/**
 	 * The MDTO-XML schema the document declares.
@@ -91,6 +79,19 @@ final class MdtoSidecarBuilder {
 	private const RESTRICTION_UNRECORDED = 'Nader te bepalen';
 
 	/**
+	 * Constructor.
+	 *
+	 * @param MdtoXmlWriter $writer The MDTO element primitives.
+	 *
+	 * @spec openspec/changes/tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-deterministic-mdto-sidecar-per-document-and-dossier-req-ddtmm-005
+	 */
+	public function __construct(
+		private readonly MdtoXmlWriter $writer=new MdtoXmlWriter(),
+	) {
+
+	}//end __construct()
+
+	/**
 	 * The MDTO sidecar of a record as XML.
 	 *
 	 * @param MdtoSidecarInput $input The record, its supplement, files, members and organisation.
@@ -103,9 +104,7 @@ final class MdtoSidecarBuilder {
 		$dom = new DOMDocument('1.0', 'UTF-8');
 		$dom->formatOutput = true;
 
-		$root = $dom->createElementNS(self::mdtoNamespace(), self::PREFIX . ':MDTO');
-		$root->setAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'xsi:schemaLocation', self::mdtoNamespace() . ' ' . self::SCHEMA_LOCATION);
-		$dom->appendChild($root);
+		$root = $this->writer->root(dom: $dom, schemaLocation: self::SCHEMA_LOCATION);
 
 		$this->addInformatieobject(parent: $root, input: $input);
 		foreach ($input->files as $file) {
@@ -148,29 +147,29 @@ final class MdtoSidecarBuilder {
 	 * @return void
 	 */
 	private function addInformatieobject(DOMElement $parent, MdtoSidecarInput $input): void {
-		$object     = $this->element(parent: $parent, name: 'informatieobject');
+		$object     = $this->writer->element(parent: $parent, name: 'informatieobject');
 		$retention  = $input->retention();
 		$supplement = $input->supplement;
 
-		$this->identificatie(parent: $object, name: 'identificatie', kenmerk: $input->uuid(), bron: $input->organisationId);
-		$this->text(parent: $object, name: 'naam', content: $input->name());
+		$this->writer->identificatie(parent: $object, name: 'identificatie', kenmerk: $input->uuid(), bron: $input->organisationId);
+		$this->writer->text(parent: $object, name: 'naam', content: $input->name());
 		$level = (string) ($supplement['aggregatieniveau'] ?? '');
 		if (isset(self::AGGREGATION_LABEL[$level]) === true) {
-			$this->begrip(parent: $object, name: 'aggregatieniveau', label: self::AGGREGATION_LABEL[$level], list: 'Aggregatieniveaus');
+			$this->writer->begrip(parent: $object, name: 'aggregatieniveau', label: self::AGGREGATION_LABEL[$level], list: 'Aggregatieniveaus');
 		}
 
 		$classification = self::textOf(value: ($retention['classificatie'] ?? null));
 		if ($classification !== null) {
-			$this->begrip(parent: $object, name: 'classificatie', label: $classification, list: 'Classificatieschema');
+			$this->writer->begrip(parent: $object, name: 'classificatie', label: $classification, list: 'Classificatieschema');
 		}
 
-		$this->optionalText(parent: $object, name: 'omschrijving', content: self::textOf(value: ($supplement['omschrijving'] ?? null)));
+		$this->writer->optionalText(parent: $object, name: 'omschrijving', content: self::textOf(value: ($supplement['omschrijving'] ?? null)));
 		$this->addCoverage(parent: $object, supplement: $supplement);
-		$this->optionalText(parent: $object, name: 'taal', content: (self::textOf(value: ($supplement['taal'] ?? null)) ?? 'nl'));
+		$this->writer->optionalText(parent: $object, name: 'taal', content: (self::textOf(value: ($supplement['taal'] ?? null)) ?? 'nl'));
 		$this->addAppraisal(parent: $object, retention: $retention);
 
 		foreach ($input->members as $member) {
-			$this->verwijzing(
+			$this->writer->verwijzing(
 				parent: $object,
 				name: 'bevatOnderdeel',
 				naam: (string) (self::textOf(value: ($member['title'] ?? ($member['naam'] ?? null))) ?? ''),
@@ -180,7 +179,7 @@ final class MdtoSidecarBuilder {
 		}
 
 		foreach ($input->files as $file) {
-			$this->verwijzing(
+			$this->writer->verwijzing(
 				parent: $object,
 				name: 'heeftRepresentatie',
 				naam: (string) $file['name'],
@@ -209,10 +208,11 @@ final class MdtoSidecarBuilder {
 			return;
 		}
 
-		$coverage = $this->element(parent: $parent, name: 'dekkingInTijd');
-		$this->begrip(parent: $coverage, name: 'dekkingInTijdType', label: 'Inhoud', list: 'DekkingInTijdType');
-		$this->text(parent: $coverage, name: 'dekkingInTijdBegindatum', content: $start);
-		$this->optionalText(parent: $coverage, name: 'dekkingInTijdEinddatum', content: self::textOf(value: ($supplement['dekkingInTijdEind'] ?? null)));
+		$coverage = $this->writer->element(parent: $parent, name: 'dekkingInTijd');
+		$this->writer->begrip(parent: $coverage, name: 'dekkingInTijdType', label: 'Inhoud', list: 'DekkingInTijdType');
+		$this->writer->text(parent: $coverage, name: 'dekkingInTijdBegindatum', content: $start);
+		$end = self::textOf(value: ($supplement['dekkingInTijdEind'] ?? null));
+		$this->writer->optionalText(parent: $coverage, name: 'dekkingInTijdEinddatum', content: $end);
 
 	}//end addCoverage()
 
@@ -228,21 +228,21 @@ final class MdtoSidecarBuilder {
 		$appraisal = (string) ($retention['archiefnominatie'] ?? '');
 		if (isset(self::APPRAISAL_MAP[$appraisal]) === true) {
 			[$code, $label] = self::APPRAISAL_MAP[$appraisal];
-			$this->begrip(parent: $parent, name: 'waardering', label: $label, list: 'Waarderingen', code: $code);
+			$this->writer->begrip(parent: $parent, name: 'waardering', label: $label, list: 'Waarderingen', code: $code);
 		}
 
 		$period = self::textOf(value: ($retention['bewaartermijn'] ?? null));
 		$end    = self::textOf(value: ($retention['archiefactiedatum'] ?? null));
 		if ($period !== null || $end !== null) {
-			$term = $this->element(parent: $parent, name: 'bewaartermijn');
-			$this->optionalText(parent: $term, name: 'termijnLooptijd', content: $period);
-			$this->optionalText(parent: $term, name: 'termijnEinddatum', content: $end);
+			$term = $this->writer->element(parent: $parent, name: 'bewaartermijn');
+			$this->writer->optionalText(parent: $term, name: 'termijnLooptijd', content: $period);
+			$this->writer->optionalText(parent: $term, name: 'termijnEinddatum', content: $end);
 		}
 
 		$category = self::textOf(value: ($retention['vernietigingsCategorie'] ?? null));
 		if ($category !== null) {
 			$list = (self::textOf(value: ($retention['selectielijstBron'] ?? null)) ?? 'Selectielijst');
-			$this->begrip(parent: $parent, name: 'informatiecategorie', label: $category, list: $list);
+			$this->writer->begrip(parent: $parent, name: 'informatiecategorie', label: $category, list: $list);
 		}
 
 	}//end addAppraisal()
@@ -258,11 +258,17 @@ final class MdtoSidecarBuilder {
 	private function addArchiefvormer(DOMElement $parent, MdtoSidecarInput $input): void {
 		$override = self::textOf(value: ($input->supplement['archiefvormerOverride'] ?? null));
 		if ($override !== null) {
-			$this->verwijzing(parent: $parent, name: 'archiefvormer', naam: $override, kenmerk: '', bron: '');
+			$this->writer->verwijzing(parent: $parent, name: 'archiefvormer', naam: $override, kenmerk: '', bron: '');
 			return;
 		}
 
-		$this->verwijzing(parent: $parent, name: 'archiefvormer', naam: $input->organisationName, kenmerk: $input->organisationId, bron: 'OpenRegister');
+		$this->writer->verwijzing(
+			parent: $parent,
+			name: 'archiefvormer',
+			naam: $input->organisationName,
+			kenmerk: $input->organisationId,
+			bron: 'OpenRegister'
+		);
 
 	}//end addArchiefvormer()
 
@@ -281,10 +287,10 @@ final class MdtoSidecarBuilder {
 				continue;
 			}
 
-			$element = $this->element(parent: $parent, name: 'betrokkene');
+			$element = $this->writer->element(parent: $parent, name: 'betrokkene');
 			$role    = (self::textOf(value: ($party['rol'] ?? null)) ?? 'betrokkene');
-			$this->begrip(parent: $element, name: 'betrokkeneTypeRelatie', label: $role, list: 'Relatietypen betrokkenen');
-			$this->verwijzing(parent: $element, name: 'betrokkeneActor', naam: $reference, kenmerk: $reference, bron: 'Filinq');
+			$this->writer->begrip(parent: $element, name: 'betrokkeneTypeRelatie', label: $role, list: 'Relatietypen betrokkenen');
+			$this->writer->verwijzing(parent: $element, name: 'betrokkeneActor', naam: $reference, kenmerk: $reference, bron: 'Filinq');
 		}
 
 	}//end addParties()
@@ -307,23 +313,23 @@ final class MdtoSidecarBuilder {
 			)
 		);
 		if ($confirmed === []) {
-			$element = $this->element(parent: $parent, name: 'beperkingGebruik');
-			$this->begrip(parent: $element, name: 'beperkingGebruikType', label: self::RESTRICTION_UNRECORDED, list: 'BeperkingGebruikTypeLijst');
+			$element = $this->writer->element(parent: $parent, name: 'beperkingGebruik');
+			$this->writer->begrip(parent: $element, name: 'beperkingGebruikType', label: self::RESTRICTION_UNRECORDED, list: 'BeperkingGebruikTypeLijst');
 			return;
 		}
 
 		foreach ($confirmed as $entry) {
-			$element = $this->element(parent: $parent, name: 'beperkingGebruik');
-			$this->begrip(parent: $element, name: 'beperkingGebruikType', label: (string) $entry['type'], list: 'BeperkingGebruikTypeLijst');
+			$element = $this->writer->element(parent: $parent, name: 'beperkingGebruik');
+			$this->writer->begrip(parent: $element, name: 'beperkingGebruikType', label: (string) $entry['type'], list: 'BeperkingGebruikTypeLijst');
 			$described = array_filter([self::textOf(value: ($entry['grondslag'] ?? null)), self::textOf(value: ($entry['omschrijving'] ?? null))]);
 			if ($described !== []) {
-				$this->text(parent: $element, name: 'beperkingGebruikNadereBeschrijving', content: implode(' — ', $described));
+				$this->writer->text(parent: $element, name: 'beperkingGebruikNadereBeschrijving', content: implode(' — ', $described));
 			}
 
 			$until = self::textOf(value: ($entry['einddatum'] ?? null));
 			if ($until !== null) {
-				$term = $this->element(parent: $element, name: 'beperkingGebruikTermijn');
-				$this->text(parent: $term, name: 'termijnEinddatum', content: $until);
+				$term = $this->writer->element(parent: $element, name: 'beperkingGebruikTermijn');
+				$this->writer->text(parent: $term, name: 'termijnEinddatum', content: $until);
 			}
 		}
 
@@ -339,7 +345,7 @@ final class MdtoSidecarBuilder {
 	 * @return void
 	 */
 	private function addBestand(DOMElement $parent, array $file, MdtoSidecarInput $input): void {
-		$bestand  = $this->element(parent: $parent, name: 'bestand');
+		$bestand  = $this->writer->element(parent: $parent, name: 'bestand');
 		$checksum = strtolower((string) $file['checksum']);
 		$type     = strtolower(trim(explode(';', (string) $file['format'])[0]));
 		$slash    = strpos($type, '/');
@@ -348,124 +354,25 @@ final class MdtoSidecarBuilder {
 			$label = substr($type, ($slash + 1));
 		}
 
-		$this->identificatie(parent: $bestand, name: 'identificatie', kenmerk: $checksum, bron: 'SHA-256');
-		$this->text(parent: $bestand, name: 'naam', content: (string) $file['name']);
-		$this->text(parent: $bestand, name: 'omvang', content: (string) (int) $file['size']);
-		$this->begrip(parent: $bestand, name: 'bestandsformaat', label: $label, list: 'IANA Media types', code: $type);
+		$this->writer->identificatie(parent: $bestand, name: 'identificatie', kenmerk: $checksum, bron: 'SHA-256');
+		$this->writer->text(parent: $bestand, name: 'naam', content: (string) $file['name']);
+		$this->writer->text(parent: $bestand, name: 'omvang', content: (string) (int) $file['size']);
+		$this->writer->begrip(parent: $bestand, name: 'bestandsformaat', label: $label, list: 'IANA Media types', code: $type);
 
-		$sum = $this->element(parent: $bestand, name: 'checksum');
-		$this->begrip(parent: $sum, name: 'checksumAlgoritme', label: 'SHA-256', list: 'Begrippenlijst ChecksumAlgoritme MDTO');
-		$this->text(parent: $sum, name: 'checksumWaarde', content: $checksum);
-		$this->text(parent: $sum, name: 'checksumDatum', content: (string) $file['checksumDate']);
+		$sum = $this->writer->element(parent: $bestand, name: 'checksum');
+		$this->writer->begrip(parent: $sum, name: 'checksumAlgoritme', label: 'SHA-256', list: 'Begrippenlijst ChecksumAlgoritme MDTO');
+		$this->writer->text(parent: $sum, name: 'checksumWaarde', content: $checksum);
+		$this->writer->text(parent: $sum, name: 'checksumDatum', content: (string) $file['checksumDate']);
 
-		$this->verwijzing(parent: $bestand, name: 'isRepresentatieVan', naam: $input->name(), kenmerk: $input->uuid(), bron: $input->organisationId);
+		$this->writer->verwijzing(
+			parent: $bestand,
+			name: 'isRepresentatieVan',
+			naam: $input->name(),
+			kenmerk: $input->uuid(),
+			bron: $input->organisationId
+		);
 
 	}//end addBestand()
-
-	/**
-	 * A child element in the MDTO namespace.
-	 *
-	 * @param DOMElement $parent The parent.
-	 * @param string     $name   The local name.
-	 *
-	 * @return DOMElement
-	 */
-	private function element(DOMElement $parent, string $name): DOMElement {
-		$element = $parent->ownerDocument->createElementNS(self::mdtoNamespace(), self::PREFIX . ':' . $name);
-		$parent->appendChild($element);
-
-		return $element;
-
-	}//end element()
-
-	/**
-	 * A child element holding text.
-	 *
-	 * @param DOMElement $parent  The parent.
-	 * @param string     $name    The local name.
-	 * @param string     $content The text.
-	 *
-	 * @return void
-	 */
-	private function text(DOMElement $parent, string $name, string $content): void {
-		$this->element(parent: $parent, name: $name)->textContent = $content;
-
-	}//end text()
-
-	/**
-	 * A text element, only when there is text.
-	 *
-	 * @param DOMElement  $parent  The parent.
-	 * @param string      $name    The local name.
-	 * @param string|null $content The text or null.
-	 *
-	 * @return void
-	 */
-	private function optionalText(DOMElement $parent, string $name, ?string $content): void {
-		if ($content !== null) {
-			$this->text(parent: $parent, name: $name, content: $content);
-		}
-
-	}//end optionalText()
-
-	/**
-	 * A begrip: label, optional code, and the list it comes from.
-	 *
-	 * @param DOMElement $parent The parent.
-	 * @param string     $name   The local name.
-	 * @param string     $label  The label.
-	 * @param string     $list   The begrippenlijst.
-	 * @param string     $code   The code, '' for none.
-	 *
-	 * @return void
-	 */
-	private function begrip(DOMElement $parent, string $name, string $label, string $list, string $code=''): void {
-		$element = $this->element(parent: $parent, name: $name);
-		$this->text(parent: $element, name: 'begripLabel', content: $label);
-		if ($code !== '') {
-			$this->text(parent: $element, name: 'begripCode', content: $code);
-		}
-
-		$this->text(parent: $this->element(parent: $element, name: 'begripBegrippenlijst'), name: 'verwijzingNaam', content: $list);
-
-	}//end begrip()
-
-	/**
-	 * A verwijzing: a name and, when both are known, an identificatie.
-	 *
-	 * @param DOMElement $parent  The parent.
-	 * @param string     $name    The local name.
-	 * @param string     $naam    The name referred to.
-	 * @param string     $kenmerk The identifier, '' for none.
-	 * @param string     $bron    The identifier's source, '' for none.
-	 *
-	 * @return void
-	 */
-	private function verwijzing(DOMElement $parent, string $name, string $naam, string $kenmerk, string $bron): void {
-		$element = $this->element(parent: $parent, name: $name);
-		$this->text(parent: $element, name: 'verwijzingNaam', content: $naam);
-		if ($kenmerk !== '' && $bron !== '') {
-			$this->identificatie(parent: $element, name: 'verwijzingIdentificatie', kenmerk: $kenmerk, bron: $bron);
-		}
-
-	}//end verwijzing()
-
-	/**
-	 * An identificatie: kenmerk and bron.
-	 *
-	 * @param DOMElement $parent  The parent.
-	 * @param string     $name    The local name.
-	 * @param string     $kenmerk The identifier.
-	 * @param string     $bron    Its source.
-	 *
-	 * @return void
-	 */
-	private function identificatie(DOMElement $parent, string $name, string $kenmerk, string $bron): void {
-		$element = $this->element(parent: $parent, name: $name);
-		$this->text(parent: $element, name: 'identificatieKenmerk', content: $kenmerk);
-		$this->text(parent: $element, name: 'identificatieBron', content: $bron);
-
-	}//end identificatie()
 
 	/**
 	 * One element as JSON: its text, or its children by local name.
@@ -527,17 +434,4 @@ final class MdtoSidecarBuilder {
 
 	}//end textOf()
 
-	/**
-	 * The MDTO namespace: OpenRegister's constant when loaded.
-	 *
-	 * @return string
-	 */
-	private static function mdtoNamespace(): string {
-		if (defined(self::OR_NAMESPACE) === true) {
-			return (string) constant(self::OR_NAMESPACE);
-		}
-
-		return self::NAMESPACE_FALLBACK;
-
-	}//end mdtoNamespace()
 }//end class
