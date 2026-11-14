@@ -25,7 +25,7 @@ const PAGES_BEFORE = [
 	['WizardRunner', '/templates/:id/wizard'], ['Correspondence', '/correspondence'], ['SigningRequests', '/signing'],
 	['BulkSigningBatches', '/signing-batches'], ['SigningEnvelopes', '/signing-envelopes'], ['SigningFolder', '/signing-folder'],
 	['SigningRequestForm', '/signing/new'], ['SigningRequestDetail', '/signing/:id'], ['SignatureVerification', '/signing/verify/:fileId'],
-	['MyDocuments', '/my-documents'], ['Publications', '/publications/:id?'], ['PrintJobs', '/print-jobs'],
+	['MyDocuments', '/my-documents'], ['SharedLinks', '/my-documents/shared-links'], ['Publications', '/publications/:id?'], ['PrintJobs', '/print-jobs'],
 	['LegalHolds', '/legal-holds'], ['SubjectErasures', '/subject-erasures'], ['EmailIngestion', '/email-ingestion'],
 	['EntitySearch', '/entity-search'], ['PrintPreview', '/print-preview/:templateId?'], ['Comparison', '/comparison'],
 	['Versions', '/versions'], ['ComponentGallery', '/gallery'], ['Prohibitions', '/policy/prohibitions'],

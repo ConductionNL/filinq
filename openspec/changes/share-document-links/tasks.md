@@ -16,10 +16,10 @@
 
 ## 3. Screens
 
-- [ ] 3.1 Add "Share by link" as a row action and a bulk action in `MyDocumentsIndex.vue`, opening `src/modals/ShareByLinkDialog.vue` with expiry, optional password, a note and, for a bundle, a name and the preflight result (REQ-SDL-001, REQ-SDL-002, REQ-SDL-003). Verify: Playwright shares one document and then three, copies each link, and opens both in a logged-out context.
-- [ ] 3.2 Show a file's confidentiality label in the dialog and require a confirmation before sharing (D8) (REQ-SDL-006). Verify: Playwright on a labelled fixture reads the warning and cannot share without ticking the confirmation.
-- [ ] 3.3 Add the "Shared links" page (`SharedLinksIndex.vue`, a `CnIndexPage` over the user's `documentShare` objects) reached from a header action on My documents, with "Take back" per row (REQ-SDL-004). Verify: Playwright takes a link back and a logged-out context then gets Nextcloud's "not found" page.
+- [x] 3.1 (dialog, row and bulk actions, and jest/vitest specs done; the Playwright run is not done here) Add "Share by link" as a row action and a bulk action in `MyDocumentsIndex.vue`, opening `src/modals/ShareByLinkDialog.vue` with expiry, optional password, a note and, for a bundle, a name and the preflight result (REQ-SDL-001, REQ-SDL-002, REQ-SDL-003). Verify: Playwright shares one document and then three, copies each link, and opens both in a logged-out context.
+- [x] 3.2 (label warning and confirmation gate, covered by the jest spec; the Playwright run on a labelled fixture is not done here) Show a file's confidentiality label in the dialog and require a confirmation before sharing (D8) (REQ-SDL-006). Verify: Playwright on a labelled fixture reads the warning and cannot share without ticking the confirmation.
+- [x] 3.3 (page, registry and manifest entry under the My documents options menu; the Playwright run is not done here) Add the "Shared links" page (`SharedLinksIndex.vue`, a `CnIndexPage` over the user's `documentShare` objects) reached from a header action on My documents, with "Take back" per row (REQ-SDL-004). Verify: Playwright takes a link back and a logged-out context then gets Nextcloud's "not found" page.
 
 ## 4. Strings and docs
 
-- [ ] 4.1 Dutch and English strings (ADR-005), `@spec` tags on new methods, and a section in `docs/features/` with screenshots of the dialog and the Shared links page (ADR-010). Verify: `npm run check:l10n`, `npm run lint` and `composer check:strict` pass, and the docs page renders.
+- [ ] 4.1 (done: Dutch and English strings, `@spec` tags, `docs/features/share-document-links.md`; left: the screenshots, which need a running instance) Dutch and English strings (ADR-005), `@spec` tags on new methods, and a section in `docs/features/` with screenshots of the dialog and the Shared links page (ADR-010). Verify: `npm run check:l10n`, `npm run lint` and `composer check:strict` pass, and the docs page renders.
