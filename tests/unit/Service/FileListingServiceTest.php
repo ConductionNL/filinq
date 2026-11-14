@@ -82,7 +82,8 @@ class FileListingServiceTest extends TestCase {
 			$this->ocrResultRepository(),
 			$this->ocrRunService($this->ocrService()),
 			$this->createMock(\OCA\Filinq\Service\ReadableFileResolver::class),
-			$this->createMock(\OCA\Filinq\Kernel\Contracts\RedactionOutputGuardInterface::class)
+			$this->createMock(\OCA\Filinq\Kernel\Contracts\RedactionOutputGuardInterface::class),
+			$this->createMock(\OCA\Filinq\Service\FileRecordReferences::class)
 		);
 
 	}//end setUp()
@@ -168,7 +169,8 @@ class FileListingServiceTest extends TestCase {
 			$this->ocrResultRepository(),
 			$this->ocrRunService($this->ocrService()),
 			$this->createMock(\OCA\Filinq\Service\ReadableFileResolver::class),
-			$this->createMock(\OCA\Filinq\Kernel\Contracts\RedactionOutputGuardInterface::class)
+			$this->createMock(\OCA\Filinq\Kernel\Contracts\RedactionOutputGuardInterface::class),
+			$this->createMock(\OCA\Filinq\Service\FileRecordReferences::class)
 		);
 
 		$this->mockFileUploadService->method('getCurrentUserId')->willReturn('admin');
