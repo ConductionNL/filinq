@@ -19,10 +19,12 @@
  * The list is deliberately short. Filinq holds document content, signature
  * material and citizen contact data, and it can produce legally binding
  * artefacts, so what is absent matters as much as what is present: nothing
- * under `Service/Signing/`, no `SigningService`, no
- * `CorrespondenceService::generateBatch()` -- applying a signature is an act
- * with legal effect and a mail-merge over N recipients is a bulk personal-data
- * operation.
+ * under `Service/Signing/`, no `CorrespondenceService::generateBatch()`, and
+ * of `SigningService` only `createRequest()` (as `startSigningRequest`) --
+ * applying, declining, cancelling or verifying a signature is an act with
+ * legal effect and stays a human action, while initiating a request is a
+ * write Hermiq holds for human approval. A mail-merge over N recipients is a
+ * bulk personal-data operation.
  *
  * @category  Mcp
  * @package   OCA\Filinq\Mcp
@@ -41,6 +43,7 @@ namespace OCA\Filinq\Mcp;
 
 use OCA\Filinq\Service\CorrespondenceService;
 use OCA\Filinq\Service\Editing\DocumentAgentService;
+use OCA\Filinq\Service\SigningService;
 use OCA\OpenRegister\Mcp\IMcpScannableServices;
 
 /**
@@ -61,17 +64,22 @@ class FilinqScannableServices implements IMcpScannableServices {
 	 * The service classes OpenRegister may reflect for `#[McpTool]` methods.
 	 *
 	 * `CorrespondenceService` carries `generateCorrespondence`;
-	 * `DocumentAgentService` carries `readDocument`, `editDocument` and
-	 * `convertDocumentToPdf`.
+	 * `DocumentAgentService` carries the document read, edit, convert, status
+	 * and anonymisation tools; `SigningService` carries `startSigningRequest`
+	 * and nothing else. Initiating a request is the one way into the signing
+	 * domain, behind Hermiq's approval gate: the signing act itself (sign,
+	 * decline, bulk sign, cancel, verify) is never exposed.
 	 *
 	 * @return list<class-string> The scannable classes.
 	 *
 	 * @spec openspec/specs/filinq-mcp-surface/spec.md#requirement-filinq-exposes-one-curated-document-generation-tool
+	 * @spec openspec/changes/hermiq-ai-tooling/specs/filinq-mcp-surface/spec.md#requirement-an-approval-gated-signing-request-initiation-tool-exists-req-ddhat-001
 	 */
 	public function getScannableServiceClasses(): array {
 		return [
 			CorrespondenceService::class,
 			DocumentAgentService::class,
+			SigningService::class,
 		];
 
 	}//end getScannableServiceClasses()
