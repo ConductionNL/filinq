@@ -375,6 +375,7 @@ $extra = [
         ['name' => 'caseSystemDelivery#index', 'url' => 'api/bridge/case-system', 'verb' => 'GET'],
         ['name' => 'caseSystemDelivery#saveDestination', 'url' => 'api/bridge/destinations', 'verb' => 'POST'],
         ['name' => 'caseSystemDelivery#retry', 'url' => 'api/bridge/deliveries/{id}/retry', 'verb' => 'POST'],
+        ['name' => 'caseSystemFileStatus#index', 'url' => 'api/bridge/case-system/files', 'verb' => 'GET'],
 
         // Signing folder routes (signing-folder-across-cases): everything
         // pending for one signer across every record, and the pass that signs
