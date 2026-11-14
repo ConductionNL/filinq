@@ -22,3 +22,5 @@
 
 - [ ] 3.1 Dutch and English strings (ADR-005), `@spec` tags, `docs/features/` with screenshots (ADR-010). Verify: `npm run check:l10n`, `npm run lint`, `composer check:strict`.
 - [ ] 3.2 PHPUnit at 75% on new code inside the container (ADR-009). Verify: coverage report for the calculation backend and `updateMetadata()`.
+  - Built (3.1): the new strings are in en and nl (`npm run test:l10n` and `check:l10n-js` pass), every new method carries its `@spec` tag, and `docs/features/woo-metadata-worklist.md` describes the worklist. Left: the screenshots, which need a live instance.
+  - Left (3.2): the coverage measurement needs a coverage driver in the container; unit tests cover `DiwooMissingFields` and `updateMetadataMany()`.

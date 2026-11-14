@@ -248,6 +248,8 @@ class PublicationPipelineService implements PublicationPipelineServiceInterface 
 	 * @return array<string, string> The values to write.
 	 *
 	 * @throws InvalidArgumentException When a field is not bulk-settable or a value is blank.
+	 *
+	 * @spec openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-a-coordinator-fills-one-value-on-a-selection-req-wmw-002
 	 */
 	private function bulkValues(array $values): array {
 		if ($values === []) {
@@ -279,6 +281,8 @@ class PublicationPipelineService implements PublicationPipelineServiceInterface 
 	 * @return void
 	 *
 	 * @throws InvalidArgumentException When the category is unknown.
+	 *
+	 * @spec openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-a-coordinator-fills-one-value-on-a-selection-req-wmw-002
 	 */
 	private function assertKnownCategory(string $category): void {
 		$codes = array_column($this->platform->categories(), 'code');
