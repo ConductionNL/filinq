@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<title>Waarmerk</title>
+<style>
+  body { font-family: 'DejaVu Sans', sans-serif; font-size: 10pt; color: #1a1a1a; }
+  .mark { border: 1.5pt solid #154273; padding: 14pt; margin-top: 40pt; }
+  h1 { font-size: 18pt; color: #154273; margin: 0 0 8pt 0; }
+  table.facts { border-collapse: collapse; width: 100%; margin: 8pt 0; }
+  table.facts td { padding: 3pt 6pt 3pt 0; vertical-align: top; }
+  td.label { color: #555; width: 34%; }
+  .code { font-family: 'DejaVu Sans Mono', monospace; font-size: 11pt; }
+  .qr { width: 42mm; height: 42mm; }
+  .note { font-size: 8.5pt; color: #444; margin-top: 10pt; }
+</style>
+</head>
+<body>
+<div class="mark">
+  <h1>Waarmerk {{ stamp.organisation|escape }}</h1>
+  <table class="facts">
+    <tr><td class="label">Document</td><td>{{ stamp.documentName|escape }}</td></tr>
+    <tr><td class="label">Gewaarmerkt door</td><td>{{ stamp.organisation|escape }}</td></tr>
+    <tr><td class="label">Gewaarmerkt op</td><td>{{ stamp.sealedAt|escape }}</td></tr>
+    <tr><td class="label">Verificatiecode</td><td class="code">{{ stamp.verificationCode|escape }}</td></tr>
+    <tr><td class="label">Controleren</td><td>{{ stamp.verificationUrl|escape }}</td></tr>
+  </table>
+  <img class="qr" src="{{ stamp.qr }}" alt="QR-code naar de controlepagina">
+  <p class="note">Dit is een organisatiewaarmerk (elektronisch zegel van de organisatie, geen gekwalificeerd zegel). Het bevestigt dat dit document, inclusief deze pagina, ongewijzigd is sinds het waarmerken. Controleer het door de QR-code te scannen of de verificatiecode in te voeren op de controlepagina en uw eigen bestand te kiezen; het bestand wordt daarbij niet verstuurd.</p>
+</div>
+</body>
+</html>

@@ -105,6 +105,7 @@ class SchemaAuthorizationCoverageTest extends TestCase {
 		'lib/Service/PolicyCrudService.php' => 5,
 		'lib/Service/PolicyMatchService.php' => 2,
 		'lib/Service/PrintJobRepository.php' => 3,
+		'lib/Service/ProcessingCertificateService.php' => 1,
 		'lib/Service/PolicyRetroactiveService.php' => 2,
 		'lib/Service/ProhibitionOverrideCommitter.php' => 1,
 		'lib/Service/Pseudonymisation/PseudonymMapRepository.php' => 5,
@@ -117,8 +118,10 @@ class SchemaAuthorizationCoverageTest extends TestCase {
 		'lib/Service/SigningActorResolver.php' => 4,
 		'lib/Service/SigningAuditService.php' => 1,
 		'lib/Service/SigningEnvelope/SigningEnvelopeRepository.php' => 3,
+		'lib/Service/SigningEvidenceService.php' => 1,
 		'lib/Service/SigningService.php' => 15,
 		'lib/Service/SubjectErasure/SubjectErasureStore.php' => 3,
+		'lib/Service/Waarmerk/WaarmerkStore.php' => 2,
 	];
 
 	/**

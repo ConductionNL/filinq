@@ -325,6 +325,20 @@ $extra = [
         ['name' => 'templates#lock', 'url' => 'api/templates/{id}/lock', 'verb' => 'POST'],
         ['name' => 'templates#unlock', 'url' => 'api/templates/{id}/lock', 'verb' => 'DELETE'],
 
+        // Waarmerk: organisation seal (document-waarmerk-certification). Specific paths before {id}.
+        ['name' => 'waarmerkSettings#show', 'url' => 'api/waarmerk/settings', 'verb' => 'GET'],
+        ['name' => 'waarmerkSettings#update', 'url' => 'api/waarmerk/settings', 'verb' => 'PUT'],
+        ['name' => 'waarmerkSettings#testSeal', 'url' => 'api/waarmerk/settings/test', 'verb' => 'POST'],
+        ['name' => 'waarmerkVerify#verify', 'url' => 'api/waarmerk/verify', 'verb' => 'POST'],
+        ['name' => 'waarmerkVerify#verifyPage', 'url' => '/verify/{code}', 'verb' => 'GET'],
+        ['name' => 'waarmerk#seal', 'url' => 'api/waarmerk/seal', 'verb' => 'POST'],
+        ['name' => 'waarmerk#certify', 'url' => 'api/waarmerk/anonymization/{linkId}', 'verb' => 'POST'],
+        ['name' => 'waarmerk#index', 'url' => 'api/waarmerk', 'verb' => 'GET'],
+        ['name' => 'waarmerk#show', 'url' => 'api/waarmerk/{id}', 'verb' => 'GET'],
+        ['name' => 'waarmerk#revoke', 'url' => 'api/waarmerk/{id}/revoke', 'verb' => 'POST'],
+        ['name' => 'signingEvidence#download', 'url' => 'api/signing/{id}/evidence', 'verb' => 'GET'],
+        ['name' => 'signingEvidence#copy', 'url' => 'api/signing/{id}/evidence/copy', 'verb' => 'POST'],
+
         // Signing routes.
         ['name' => 'signing#createRequest', 'url' => 'api/signing/requests', 'verb' => 'POST'],
         ['name' => 'signing#listRequests', 'url' => 'api/signing/requests', 'verb' => 'GET'],

@@ -4452,7 +4452,7 @@
                 "slug": "anonymizationLink",
                 "title": "Anonymisation Link",
                 "description": "create is `authenticated` DELIBERATELY. The link is written by AnonymizationPersistenceService during an anonymise, which ordinary operators perform through #[NoAdminRequired] endpoints, and that write does not pass `_rbac: false`, so the acting user is the operator. Restricting create to a group would fail the write for every operator outside it, which is exactly what restricting prohibitionOverrideAudit.create did in v7.7.0: 500 on every use of a fail-closed path. Closing the forgery route means making the write system-asserted first; that is a service change with the #283 caveat, not a cascade edit. Koppeling tussen een bronbestand (niet-geanonimiseerd) en zijn geanonimiseerde tegenhanger. Eén record per bronbestand (idempotent op sourceFileId); her-anonimisering werkt hetzelfde record bij. Zowel sourceFileId als anonymizedFileId zijn facetable zodat de OpenRegister zoek-API de koppeling in beide richtingen oplost.",
-                "version": "1.4.0",
+                "version": "1.4.1",
                 "summary": "",
                 "icon": "FileLinkOutline",
                 "required": [
@@ -4706,6 +4706,19 @@
                                 "description": "Whether veraPDF confirmed the PDF/UA claim; absent when it did not run.",
                                 "type": "boolean"
                             }
+                        }
+                    },
+                    "entityTypeCounts": {
+                        "description": "How many values of each entity type the run redacted (e.g. BSN: 2, PERSON: 5). Types and counts only, never an entity value. Stated on the anonymisation processing certificate.",
+                        "type": "object",
+                        "required": false,
+                        "visible": true,
+                        "order": 20,
+                        "facetable": false,
+                        "title": "Redactions per entity type",
+                        "additionalProperties": {
+                            "type": "integer",
+                            "minimum": 0
                         }
                     }
                 },

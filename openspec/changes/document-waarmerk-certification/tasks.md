@@ -12,9 +12,9 @@
 
 ## 2. Backend
 
-- [ ] 2.1 Custody resolver + admin settings: certificate PEM storage (public material), fingerprint/expiry display, `credentialRef` storage; broker resolution with interim `ICrypto` local-custody mode behind the same interface, labelled in UI; expired-cert seal refusal; key never persisted or logged (REQ-DDWMK-001)
+- [x] 2.1 Custody resolver + admin settings: certificate PEM storage (public material), fingerprint/expiry display, `credentialRef` storage; broker resolution with interim `ICrypto` local-custody mode behind the same interface, labelled in UI; expired-cert seal refusal; key never persisted or logged (REQ-DDWMK-001)
 
-- [ ] 2.2 `WaarmerkService::seal()`: stamp-page composition via `PdfService` (Twig template, brandable) + local QR SVG, canonicalised sha256 over sealed artifact, detached CMS via `openssl_cms_sign` (pkcs7 fallback), write-once `waarmerk` record via ObjectService (REQ-DDWMK-002)
+- [x] 2.2 `WaarmerkService::seal()`: stamp-page composition via `PdfService` (Twig template, brandable) + local QR SVG, canonicalised sha256 over sealed artifact, detached CMS via `openssl_cms_sign` (pkcs7 fallback), write-once `waarmerk` record via ObjectService (REQ-DDWMK-002)
   - Stamp appended as final page only; fail-closed on unresolvable key (503, no artifact)
 
 - [ ] 2.3 `ProcessingCertificateService`: anonymization certificate PDF from `anonymizationLink` + run entity-type counts + backend id + acting user; types/counts only — never entity values; sealed with `sealType: processing-certificate` + `anonymizationLinkId` (REQ-DDWMK-003)

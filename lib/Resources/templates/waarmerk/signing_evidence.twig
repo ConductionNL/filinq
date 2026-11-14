@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<title>Bewijsdocument ondertekening</title>
+<style>
+  body { font-family: 'DejaVu Sans', sans-serif; font-size: 10pt; color: #1a1a1a; }
+  h1 { font-size: 18pt; color: #154273; margin: 0 0 6pt 0; }
+  h2 { font-size: 12pt; margin: 14pt 0 4pt 0; }
+  table { width: 100%; border-collapse: collapse; }
+  td, th { padding: 3pt 6pt; text-align: left; vertical-align: top; border-bottom: 0.4pt solid #ccc; }
+  td.label { color: #555; width: 34%; }
+  .mono { font-family: 'DejaVu Sans Mono', monospace; font-size: 8pt; }
+  .note { font-size: 8.5pt; color: #444; margin-top: 12pt; }
+</style>
+</head>
+<body>
+<h1>Bewijsdocument ondertekening</h1>
+<table>
+  <tr><td class="label">Document</td><td>{{ evidence.documentName|escape }}</td></tr>
+  <tr><td class="label">Status</td><td>{{ evidence.status|escape }}</td></tr>
+  <tr><td class="label">Ondertekenniveau</td><td>{{ evidence.signatureLevel|escape }} ({{ evidence.provider|escape }}, {{ evidence.signingMode|escape }})</td></tr>
+  <tr><td class="label">Controlegetal vóór ondertekening (sha256)</td><td class="mono">{{ evidence.hashBefore|default('niet vastgelegd')|escape }}</td></tr>
+  <tr><td class="label">Controlegetal na ondertekening (sha256)</td><td class="mono">{{ evidence.hashAfter|default('niet beschikbaar')|escape }}</td></tr>
+  <tr><td class="label">Kenmerk ondertekende versie</td><td class="mono">{{ evidence.signedVersionTag|default('—')|escape }}</td></tr>
+  <tr><td class="label">Verzoek</td><td class="mono">{{ evidence.requestId|escape }}</td></tr>
+</table>
+<h2>Ondertekenaars</h2>
+<table>
+  <tr><th>Naam</th><th>Rol</th><th>Methode</th><th>Niveau</th><th>Uitkomst</th><th>Moment</th></tr>
+  {% for signer in evidence.signers %}
+  <tr><td>{{ signer.name|escape }}</td><td>{{ signer.role|escape }}</td><td>{{ signer.method|default('—')|escape }}</td><td>{{ signer.assurance|default('—')|escape }}</td><td>{{ signer.status|escape }}</td><td>{{ signer.signedAt|default('—')|escape }}</td></tr>
+  {% endfor %}
+</table>
+<h2>Verloop</h2>
+<table>
+  <tr><th>Stap</th><th>Door</th><th>Moment</th></tr>
+  {% for step in evidence.steps %}
+  <tr><td>{{ step.action|escape }}</td><td>{{ step.actor|default('—')|escape }}</td><td>{{ step.at|escape }}</td></tr>
+  {% endfor %}
+</table>
+<p class="note">Dit bewijsdocument bevat geen inhoud van het ondertekende document behalve de titel en de controlegetallen. Het is voorzien van een organisatiewaarmerk (geen gekwalificeerd zegel); de laatste pagina bevat de verificatiecode.</p>
+</body>
+</html>
