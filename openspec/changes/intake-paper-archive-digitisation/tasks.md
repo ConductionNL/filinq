@@ -9,7 +9,8 @@
 
 ## 2. Separators and splitting
 
-- [ ] 2.1 Add the v2 separator per original to `SeparatorSheetService` with shelf mark and description in print (D2) (REQ-PAD-002). Verify: PHPUnit decodes the QR payload from the rendered page.
+- [x] 2.1 Add the v2 separator per original to `SeparatorSheetService` with shelf mark and description in print (D2) (REQ-PAD-002). Verify: PHPUnit decodes the QR payload from the rendered page.
+  - Built: `originalPayload()` (`filinq:sep:v2:<profileId>:po:<originalId>`) and `renderOriginals()`, one sheet per original with its shelf mark and description in print; `readPayload()` reads a v2 sheet as `po:<originalId>` beside the v1 payload, so the splitter cuts there. PHPUnit decodes the QR payloads from the rendered pages.
 - [ ] 2.2 File a segment that names an original on the project target with the original's metadata and set it `scanned`; keep v1 segments going to the inbox (D3) (REQ-PAD-003). Verify: PHPUnit on a fixture batch with one v2 and one v1 separator.
 
 ## 3. Project service
