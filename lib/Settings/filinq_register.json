@@ -1343,6 +1343,76 @@
                         "order": 6,
                         "facetable": false,
                         "title": "Report"
+                    },
+                    "skipped": {
+                        "description": "How many files were neither a template nor a fragment and were left out.",
+                        "type": "integer",
+                        "visible": true,
+                        "order": 7,
+                        "facetable": false,
+                        "title": "Skipped"
+                    },
+                    "namespace": {
+                        "description": "The namespace the imported templates and fragments are created in.",
+                        "type": "string",
+                        "visible": true,
+                        "order": 8,
+                        "facetable": true,
+                        "title": "Namespace",
+                        "maxLength": 64
+                    },
+                    "boundRegister": {
+                        "description": "The register every imported template is bound to, if any.",
+                        "type": "string",
+                        "visible": true,
+                        "order": 9,
+                        "facetable": false,
+                        "title": "Bound register",
+                        "maxLength": 255
+                    },
+                    "boundSchema": {
+                        "description": "The schema every imported template's tags are checked against, if any.",
+                        "type": "string",
+                        "visible": true,
+                        "order": 10,
+                        "facetable": false,
+                        "title": "Bound schema",
+                        "maxLength": 255
+                    },
+                    "archiveFileId": {
+                        "description": "The stored ZIP the import reads, when it came as an upload.",
+                        "type": "integer",
+                        "visible": true,
+                        "order": 11,
+                        "facetable": false,
+                        "title": "Archive file"
+                    },
+                    "sourcePath": {
+                        "description": "The folder in the starter's Files the import reads, when it came as a folder.",
+                        "type": "string",
+                        "visible": true,
+                        "order": 12,
+                        "facetable": false,
+                        "title": "Source folder",
+                        "maxLength": 4000
+                    },
+                    "startedAt": {
+                        "description": "When the import started.",
+                        "type": "string",
+                        "visible": true,
+                        "order": 13,
+                        "facetable": false,
+                        "title": "Started at",
+                        "format": "date-time"
+                    },
+                    "finishedAt": {
+                        "description": "When the import finished.",
+                        "type": "string",
+                        "visible": true,
+                        "order": 14,
+                        "facetable": false,
+                        "title": "Finished at",
+                        "format": "date-time"
                     }
                 },
                 "archive": [],

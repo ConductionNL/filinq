@@ -28,7 +28,8 @@
 - [x] 2.4 `textFragment` CRUD + fragment resolution pre-pass for both office and Twig paths, missing-fragment marker + warning; NO change to the Twig sandbox whitelists (REQ-DDOTA-004)
   - Built: `TextFragmentService` (slug unique per namespace, through `TemplatesRegisterObjects` in the templates register) and the Twig pre-pass `OfficeTemplateRenderer::resolveTwigFragments()`, which turns a fragment's `${field}` into a Twig print and strips any other Twig syntax from it. The HTTP routes are task 3.1.
 
-- [ ] 2.5 `TemplateImportService` + background job: ZIP/folder unpack, per-file template+fragment creation, per-file report, skip-and-continue on failure; `templateImportJob` state via ObjectService (REQ-DDOTA-005)
+- [x] 2.5 `TemplateImportService` + background job: ZIP/folder unpack, per-file template+fragment creation, per-file report, skip-and-continue on failure; `templateImportJob` state via ObjectService (REQ-DDOTA-005)
+  - Built: `TemplateImportService` (`start()` stores the ZIP in the app data folder or names a Files folder, saves a queued `templateImportJob` and queues `TemplateImportJob`; `run()` creates one office template per DOCX/ODT, with the first folder as category, and one fragment per `fragments/*.txt|html`, and writes a report row per file: imported, failed with its reason, or skipped). The job runs as the user who started the import. `templateImportJob` gains `skipped`, `namespace`, `boundRegister`, `boundSchema`, `archiveFileId`, `sourcePath`, `startedAt`, `finishedAt`.
 
 - [ ] 2.6 Lifecycle parity: version snapshot + restore re-pointing `sourceFileId`/`contentHash`, lock gating source re-upload, preview via cascade, duplicate copying the source file (REQ-DDOTA-006/007)
 
