@@ -411,7 +411,7 @@ export default {
 		 * is not shown otherwise (REQ-EMF-004).
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/extraction-model-filled-fields/specs/extraction-model-filled-fields/spec.md
+		 * @spec openspec/changes/extraction-model-filled-fields/specs/schema-field-suggestions/spec.md
 		 */
 		async loadFieldFill() {
 			try {
@@ -426,7 +426,7 @@ export default {
 		 *
 		 * @param {object} row The intake document.
 		 * @return {boolean}
-		 * @spec openspec/changes/extraction-model-filled-fields/specs/extraction-model-filled-fields/spec.md
+		 * @spec openspec/changes/extraction-model-filled-fields/specs/schema-field-suggestions/spec.md
 		 */
 		canFill(row) {
 			const target = row?.assignedTo
@@ -442,7 +442,7 @@ export default {
 		 * @param {boolean} [offered] Offered after an assign: a schema without a
 		 *     profile, or no model, then says nothing.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/extraction-model-filled-fields/specs/extraction-model-filled-fields/spec.md
+		 * @spec openspec/changes/extraction-model-filled-fields/specs/schema-field-suggestions/spec.md
 		 */
 		async fill(row, target, offered = false) {
 			this.fillError = ''
@@ -469,7 +469,7 @@ export default {
 		 *
 		 * @param {object} decisions Per field `{decision, value?}`.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/extraction-model-filled-fields/specs/extraction-model-filled-fields/spec.md
+		 * @spec openspec/changes/extraction-model-filled-fields/specs/schema-field-suggestions/spec.md
 		 */
 		async decide(decisions) {
 			const id = idOf(this.suggestion)

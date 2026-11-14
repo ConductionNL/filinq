@@ -7,7 +7,7 @@
  * feature is available and the document sits on a record (REQ-EMF-003,
  * REQ-EMF-004).
  *
- * @spec openspec/changes/extraction-model-filled-fields/specs/extraction-model-filled-fields/spec.md
+ * @spec openspec/changes/extraction-model-filled-fields/specs/schema-field-suggestions/spec.md
  */
 
 import { readFileSync } from 'node:fs'

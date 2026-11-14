@@ -6,7 +6,7 @@
  * a record from one of its files, the clerk's decisions, and the admin's
  * switch and profiles (extraction-model-filled-fields).
  *
- * @spec openspec/changes/extraction-model-filled-fields/specs/extraction-model-filled-fields/spec.md
+ * @spec openspec/changes/extraction-model-filled-fields/specs/schema-field-suggestions/spec.md
  */
 
 import axios from '@nextcloud/axios'
@@ -16,7 +16,7 @@ import { generateUrl } from '@nextcloud/router'
  * Whether model filling is switched on and a text model is there.
  *
  * @return {Promise<{enabled: boolean, provider: (string|null), available: boolean}>}
- * @spec openspec/changes/extraction-model-filled-fields/specs/extraction-model-filled-fields/spec.md
+ * @spec openspec/changes/extraction-model-filled-fields/specs/schema-field-suggestions/spec.md
  */
 export async function fetchFieldFillStatus() {
 	const { data } = await axios.get(generateUrl('/apps/filinq/api/extraction/fields/status'))
@@ -28,7 +28,7 @@ export async function fetchFieldFillStatus() {
  *
  * @param {boolean} enabled On or off.
  * @return {Promise<object>} The new status.
- * @spec openspec/changes/extraction-model-filled-fields/specs/extraction-model-filled-fields/spec.md
+ * @spec openspec/changes/extraction-model-filled-fields/specs/schema-field-suggestions/spec.md
  */
 export async function setFieldFillEnabled(enabled) {
 	const { data } = await axios.put(generateUrl('/apps/filinq/api/extraction/fields/status'), { enabled })
@@ -40,7 +40,7 @@ export async function setFieldFillEnabled(enabled) {
  *
  * @param {{fileId: number, register: string, schema: string, objectId: string}} target The file and the record.
  * @return {Promise<object>} The stored suggestion, with the record's current values.
- * @spec openspec/changes/extraction-model-filled-fields/specs/extraction-model-filled-fields/spec.md
+ * @spec openspec/changes/extraction-model-filled-fields/specs/schema-field-suggestions/spec.md
  */
 export async function suggestFields(target) {
 	const { data } = await axios.post(generateUrl('/apps/filinq/api/extraction/fields'), {
@@ -58,7 +58,7 @@ export async function suggestFields(target) {
  * @param {string} id The suggestion.
  * @param {object} decisions Per field `{decision: 'accept'|'change'|'reject', value?}`.
  * @return {Promise<object>} The decided suggestion.
- * @spec openspec/changes/extraction-model-filled-fields/specs/extraction-model-filled-fields/spec.md
+ * @spec openspec/changes/extraction-model-filled-fields/specs/schema-field-suggestions/spec.md
  */
 export async function decideFields(id, decisions) {
 	const { data } = await axios.post(generateUrl('/apps/filinq/api/extraction/fields/{id}/decide', { id }), { decisions })
@@ -69,7 +69,7 @@ export async function decideFields(id, decisions) {
  * The declared field fill profiles (admin).
  *
  * @return {Promise<Array<object>>}
- * @spec openspec/changes/extraction-model-filled-fields/specs/extraction-model-filled-fields/spec.md
+ * @spec openspec/changes/extraction-model-filled-fields/specs/schema-field-suggestions/spec.md
  */
 export async function listFieldProfiles() {
 	const { data } = await axios.get(generateUrl('/apps/filinq/api/extraction/field-profiles'))
@@ -82,7 +82,7 @@ export async function listFieldProfiles() {
  * @param {object} profile `{declaringApp, register, schema, fields, active}`.
  * @param {string} [id] The profile to update; a new one without.
  * @return {Promise<object>} The saved profile.
- * @spec openspec/changes/extraction-model-filled-fields/specs/extraction-model-filled-fields/spec.md
+ * @spec openspec/changes/extraction-model-filled-fields/specs/schema-field-suggestions/spec.md
  */
 export async function saveFieldProfile(profile, id = '') {
 	if (id) {

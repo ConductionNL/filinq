@@ -6,7 +6,7 @@
  * record holds now, the suggestion and where it came from, and Save sends a
  * decision per field only once the clerk decided every one.
  *
- * @spec openspec/changes/extraction-model-filled-fields/specs/extraction-model-filled-fields/spec.md
+ * @spec openspec/changes/extraction-model-filled-fields/specs/schema-field-suggestions/spec.md
  */
 
 const { nextTick } = require('vue')

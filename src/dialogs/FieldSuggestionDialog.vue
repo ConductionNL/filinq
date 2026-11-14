@@ -8,7 +8,7 @@ passage it came from (or that it was not found in the text), and the
 clerk's decision: accept, change or reject. Nothing is written until the
 clerk has decided every field (extraction-model-filled-fields REQ-EMF-003).
 
-@spec openspec/changes/extraction-model-filled-fields/specs/extraction-model-filled-fields/spec.md
+@spec openspec/changes/extraction-model-filled-fields/specs/schema-field-suggestions/spec.md
 -->
 
 <template>
@@ -102,7 +102,7 @@ export default {
 		 * The suggested fields with what the record holds now.
 		 *
 		 * @return {Array<{name: string, value: string, current: string, passage: string}>}
-		 * @spec openspec/changes/extraction-model-filled-fields/specs/extraction-model-filled-fields/spec.md
+		 * @spec openspec/changes/extraction-model-filled-fields/specs/schema-field-suggestions/spec.md
 		 */
 		fields() {
 			const current = this.suggestion.currentValues || {}
@@ -131,7 +131,7 @@ export default {
 		 * Every field decided, and a changed field has a value.
 		 *
 		 * @return {boolean}
-		 * @spec openspec/changes/extraction-model-filled-fields/specs/extraction-model-filled-fields/spec.md
+		 * @spec openspec/changes/extraction-model-filled-fields/specs/schema-field-suggestions/spec.md
 		 */
 		canSubmit() {
 			return this.fields.length > 0 && this.fields.every((field) => {
@@ -153,7 +153,7 @@ export default {
 		 * @param {string} name The field.
 		 * @param {string} decision accept, change or reject.
 		 * @return {void}
-		 * @spec openspec/changes/extraction-model-filled-fields/specs/extraction-model-filled-fields/spec.md
+		 * @spec openspec/changes/extraction-model-filled-fields/specs/schema-field-suggestions/spec.md
 		 */
 		choose(name, decision) {
 			this.decisions = { ...this.decisions, [name]: decision }
@@ -167,7 +167,7 @@ export default {
 		 * Emit the decisions as the decide route reads them.
 		 *
 		 * @return {void}
-		 * @spec openspec/changes/extraction-model-filled-fields/specs/extraction-model-filled-fields/spec.md
+		 * @spec openspec/changes/extraction-model-filled-fields/specs/schema-field-suggestions/spec.md
 		 */
 		submit() {
 			if (!this.canSubmit) {
