@@ -236,6 +236,8 @@ Create a [feature request](https://github.com/ConductionNL/filinq/issues/new)
                  boot after the repair steps: the first pass moves nothing and
                  keeps the entries, a later pass moves them. -->
             <step>OCA\Filinq\Repair\MigratePrintJobsOutOfAppConfig</step>
+            <!-- grondslagen-read-from-dossiq: re-points stored Woo `base` slugs to dossiq's codes; post-migration only, idempotent, deletes nothing. -->
+            <step>OCA\Filinq\Repair\RepointWooGrounds</step>
         </post-migration>
         <install>
             <step>OCA\Filinq\Repair\MigrateAppConfigKeys</step>
