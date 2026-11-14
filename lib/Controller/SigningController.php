@@ -273,6 +273,36 @@ class SigningController extends Controller {
 	}//end sign()
 
 	/**
+	 * Accept a signing request as an accept-only recipient
+	 *
+	 * @param string $id The signing request ID
+	 *
+	 * @return JSONResponse The updated recipient record
+	 *
+	 * @NoAdminRequired
+	 *
+	 * @spec openspec/changes/signing-accept-only-recipient/tasks.md#2-service-and-routes
+	 *
+	 * @no-admin-idor-exempt SigningActorResolver::loadAuthorisedSigner() refuses unless the signer record
+	 * belongs to this request and its userId is the session user.
+	 */
+	public function accept(string $id): JSONResponse {
+		try {
+			$user = $this->userSession->getUser();
+			if ($user === null) {
+				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
+			}
+
+			$signerId = $this->request->getParam('signerId', '');
+			$result = $this->services->signing->accept(requestId: $id, signerId: $signerId);
+			return new JSONResponse($result);
+		} catch (Exception $e) {
+			return $this->errorResponse(message: 'Failed to accept the document', exception: $e);
+		}
+
+	}//end accept()
+
+	/**
 	 * Decline a signing request
 	 *
 	 * @param string $id The signing request ID

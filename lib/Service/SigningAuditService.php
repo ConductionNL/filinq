@@ -56,6 +56,7 @@ class SigningAuditService implements SigningAuditServiceInterface {
 		'CREATED',
 		'START',
 		'SIGNED',
+		'ACCEPTED',
 		'DECLINED',
 		'CANCELLED',
 		'EXPIRED',

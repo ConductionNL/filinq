@@ -8783,6 +8783,48 @@
                 ]
             }
         },
+        "/signing/requests/{id}/accept": {
+            "post": {
+                "operationId": "signing-accept",
+                "summary": "Accept a signing request as an accept-only recipient",
+                "description": "Accept a signing request as an accept-only recipient. Recorded as ACCEPTED, never as a signature.",
+                "tags": [
+                    "signing"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The updated signer record",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
         "/signing/requests/{id}/identity": {
             "post": {
                 "operationId": "signer-identity-start",

@@ -5144,6 +5144,20 @@
         "signatureData": "Voorbeeld Signaturedata 3"
       },
       {
+          "@self": {
+              "register": "filinq",
+              "schema": "signerRecord",
+              "slug": "signerrecord-accept-2-4"
+          },
+          "signingRequestId": "Voorbeeld Signingrequestid 2",
+          "userId": "demo-accepter",
+          "displayName": "Ambtenaar Vergunningen",
+          "email": "vergunningen@demostad.example.nl",
+          "order": 1,
+          "status": "PENDING",
+          "role": "accept"
+      },
+      {
         "@self": {
           "register": "filinq",
           "schema": "signingAuditEntry",
