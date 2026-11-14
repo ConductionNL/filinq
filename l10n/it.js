@@ -1774,7 +1774,11 @@ OC.L10N.register(
         "Routing saved for {type}": "Instradamento salvato per {type}",
         "Save routing": "Salva instradamento",
         "The group accepts the document first": "Il gruppo accetta prima il documento",
-        "The routing could not be saved": "Impossibile salvare l'instradamento"
+        "The routing could not be saved": "Impossibile salvare l'instradamento",
+        "Accept and download": "Accetta e scarica",
+        "Download the published copy": "Scarica la copia pubblicata",
+        "The agreement could not be recorded": "Impossibile registrare l'accettazione",
+        "The published copy could not be downloaded": "Impossibile scaricare la copia pubblicata"
     },
     "nplurals=2; plural=(n != 1);"
 )

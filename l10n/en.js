@@ -2811,7 +2811,11 @@ OC.L10N.register(
         "Routing saved for {type}": "Routing saved for {type}",
         "Save routing": "Save routing",
         "The group accepts the document first": "The group accepts the document first",
-        "The routing could not be saved": "The routing could not be saved"
+        "The routing could not be saved": "The routing could not be saved",
+        "Accept and download": "Accept and download",
+        "Download the published copy": "Download the published copy",
+        "The agreement could not be recorded": "The agreement could not be recorded",
+        "The published copy could not be downloaded": "The published copy could not be downloaded"
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -1774,7 +1774,11 @@ OC.L10N.register(
         "Routing saved for {type}": "Weiterleitung für {type} gespeichert",
         "Save routing": "Weiterleitung speichern",
         "The group accepts the document first": "Die Gruppe nimmt das Dokument zuerst an",
-        "The routing could not be saved": "Die Weiterleitung konnte nicht gespeichert werden"
+        "The routing could not be saved": "Die Weiterleitung konnte nicht gespeichert werden",
+        "Accept and download": "Akzeptieren und herunterladen",
+        "Download the published copy": "Die veröffentlichte Kopie herunterladen",
+        "The agreement could not be recorded": "Die Zustimmung konnte nicht gespeichert werden",
+        "The published copy could not be downloaded": "Die veröffentlichte Kopie konnte nicht heruntergeladen werden"
     },
     "nplurals=2; plural=(n != 1);"
 )

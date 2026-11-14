@@ -1774,7 +1774,11 @@ OC.L10N.register(
         "Routing saved for {type}": "Acheminement enregistré pour {type}",
         "Save routing": "Enregistrer l'acheminement",
         "The group accepts the document first": "Le groupe accepte d'abord le document",
-        "The routing could not be saved": "Impossible d'enregistrer l'acheminement"
+        "The routing could not be saved": "Impossible d'enregistrer l'acheminement",
+        "Accept and download": "Accepter et télécharger",
+        "Download the published copy": "Télécharger la copie publiée",
+        "The agreement could not be recorded": "Impossible d'enregistrer l'acceptation",
+        "The published copy could not be downloaded": "Impossible de télécharger la copie publiée"
     },
     "nplurals=2; plural=(n > 1);"
 )

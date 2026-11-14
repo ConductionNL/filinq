@@ -288,6 +288,7 @@ $extra = [
         ['name' => 'publication#handoff', 'url' => 'api/publications/{id}/handoff', 'verb' => 'POST'],
         ['name' => 'publication#withdraw', 'url' => 'api/publications/{id}/withdraw', 'verb' => 'POST'],
         ['name' => 'publication#destructionDate', 'url' => 'api/publications/{id}/destruction-date', 'verb' => 'POST'],
+        ['name' => 'publication#download', 'url' => 'api/publications/{id}/download', 'verb' => 'GET'],
 
         // Document generation routes (document-creatie-sjablonen).
         ['name' => 'document#generate', 'url' => 'api/documents/generate', 'verb' => 'POST'],

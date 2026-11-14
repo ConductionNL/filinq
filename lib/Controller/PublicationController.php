@@ -21,13 +21,17 @@ namespace OCA\Filinq\Controller;
 
 use OCA\Filinq\Controller\Support\PublicationFlow;
 use OCA\Filinq\Kernel\AppIdentity;
+use OCA\Filinq\Kernel\Contracts\DownloadAgreementGateInterface;
 use OCA\Filinq\Kernel\Contracts\OpenCatalogiPlatformInterface;
 use OCA\Filinq\Kernel\Contracts\PublicationAccessInterface;
 use OCA\Filinq\Exception\PublicationNotReadyException;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
+use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
+use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\AppFramework\Http\Response;
 use OCP\IRequest;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
@@ -58,6 +62,7 @@ class PublicationController extends Controller {
 	 * @param PublicationAccessInterface          $access   Who may act
 	 * @param IUserSession               $session  The caller
 	 * @param LoggerInterface            $logger   Logger
+	 * @param DownloadAgreementGateInterface|null $agreements The download conditions (REQ-RWB-04)
 	 *
 	 * @return void
 	 */
@@ -68,6 +73,7 @@ class PublicationController extends Controller {
 		private readonly PublicationAccessInterface $access,
 		private readonly IUserSession $session,
 		private readonly LoggerInterface $logger,
+		private readonly ?DownloadAgreementGateInterface $agreements = null,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 
@@ -124,6 +130,57 @@ class PublicationController extends Controller {
 		);
 
 	}//end active()
+
+	/**
+	 * Download the published copy of a publication, once the caller accepted
+	 * the download agreement in force for it.
+	 *
+	 * The agreement is checked on the published copy and on its source
+	 * document; either one carrying terms the caller has not accepted in their
+	 * current version answers 409 with the terms to show, and no file is served.
+	 *
+	 * @param string $id The record
+	 *
+	 * @return Response The file, 404 when not visible or not published, 409 with the agreement to accept
+	 *
+	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-3.3
+	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
+	public function download(string $id): Response {
+		$record = $this->readable(id: $id);
+		$copy = (string) ($record['redactedFileRef'] ?? '');
+		if ($record === null || in_array($record['status'] ?? '', ['handed_off', 'published'], true) === false || $copy === '') {
+			return $this->forbidden();
+		}
+
+		if ($this->agreements === null) {
+			return new JSONResponse(['error' => 'Downloads are not available'], Http::STATUS_SERVICE_UNAVAILABLE);
+		}
+
+		$uid = $this->uid();
+		foreach (array_unique([$copy, (string) ($record['documentFileRef'] ?? '')]) as $document) {
+			if ($document === '') {
+				continue;
+			}
+
+			$decision = $this->agreements->check(document: $document, person: $uid);
+			if (($decision['mayDownload'] ?? false) !== true) {
+				return new JSONResponse($decision + ['document' => $document], Http::STATUS_CONFLICT);
+			}
+		}
+
+		try {
+			$file = $this->platform->readCopy(fileId: $copy, actor: $uid);
+
+			return new DataDownloadResponse($file->getContent(), $file->getName(), $file->getMimeType());
+		} catch (Throwable $e) {
+			$this->logger->warning('[PublicationController] the published copy could not be read', ['record' => $id, 'error' => $e->getMessage()]);
+
+			return $this->forbidden();
+		}
+
+	}//end download()
 
 	/**
 	 * The Woo information categories to choose from.

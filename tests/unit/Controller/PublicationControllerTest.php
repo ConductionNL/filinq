@@ -26,6 +26,9 @@ use OCA\Filinq\Service\Publication\ActivePublicationList;
 use OCA\Filinq\Service\Publication\OpenCatalogiPlatform;
 use OCA\Filinq\Service\Publication\PublicationAccess;
 use OCA\Filinq\Exception\PublicationNotReadyException;
+use OCA\Filinq\Kernel\Contracts\DownloadAgreementGateInterface;
+use OCP\AppFramework\Http\DataDownloadResponse;
+use OCP\Files\File;
 use OCA\Filinq\Service\Publication\PublicationPipelineService;
 use OCA\Filinq\Service\Publication\PublicationStore;
 use OCP\Files\Folder;
@@ -58,6 +61,7 @@ class PublicationControllerTest extends TestCase {
 	 * @param bool                       $publisher Whether the caller is in a publisher group
 	 * @param array<string, mixed>       $params    The request parameters
 	 * @param array<int, array<string, mixed>>|null $records What the store lists, null for one record per caller
+	 * @param DownloadAgreementGateInterface|null $agreements The download conditions
 	 *
 	 * @return PublicationController
 	 */
@@ -67,7 +71,8 @@ class PublicationControllerTest extends TestCase {
 		?OpenCatalogiPlatform $platform = null,
 		bool $publisher = true,
 		array $params = [],
-		?array $records = null
+		?array $records = null,
+		?DownloadAgreementGateInterface $agreements = null
 	): PublicationController {
 		$store = $this->createMock(PublicationStore::class);
 		$store->method('findRecord')->willReturn($record);
@@ -101,7 +106,8 @@ class PublicationControllerTest extends TestCase {
 			($platform ?? $this->createMock(OpenCatalogiPlatform::class)),
 			new PublicationAccess(rootFolder: $root, groups: $groups, appConfig: $config),
 			$session,
-			new NullLogger()
+			new NullLogger(),
+			$agreements
 		);
 
 	}//end controller()
@@ -178,7 +184,7 @@ class PublicationControllerTest extends TestCase {
 		$publication = array_values(array_filter($routes['routes'], static fn (array $r): bool => str_starts_with($r['name'], 'publication#')));
 
 		// Each route is declared once and served at its /api/v1/ twin too (ApiPathAliasesTest).
-		$this->assertCount(expectedCount: 20, haystack: $publication);
+		$this->assertCount(expectedCount: 22, haystack: $publication);
 		foreach ($publication as $route) {
 			$this->assertStringNotContainsString('log', $route['url']);
 			$this->assertNotSame('DELETE', $route['verb']);
@@ -251,4 +257,55 @@ class PublicationControllerTest extends TestCase {
 		$this->assertSame([ActivePublicationList::BLOCK_REDACTED_COPY], $data['results'][0]['blockers']);
 
 	}//end testTheActiveListHoldsWhatTheCallerMaySee()
+
+	/**
+	 * A published copy downloads only after the agreement in force is accepted.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-3.3
+	 */
+	public function testADownloadWaitsForTheAcceptedAgreement(): void {
+		$pipeline = $this->createMock(PublicationPipelineService::class);
+		$record = ['uuid' => 'mine', 'documentFileRef' => '42', 'redactedFileRef' => '43', 'status' => 'published'];
+		$file = $this->createMock(File::class);
+		$file->method('getContent')->willReturn('%PDF-redacted');
+		$file->method('getName')->willReturn('besluit-geanonimiseerd.pdf');
+		$file->method('getMimeType')->willReturn('application/pdf');
+		$platform = $this->createMock(OpenCatalogiPlatform::class);
+		$platform->method('readCopy')->with('43', 'anna')->willReturn($file);
+
+		$accepted = false;
+		$agreements = $this->createMock(DownloadAgreementGateInterface::class);
+		$agreements->method('check')->willReturnCallback(
+			static function (string $document, string $person) use (&$accepted): array {
+				if ($document === '43' && $accepted === false) {
+					return ['mayDownload' => false, 'gated' => true, 'agreement' => ['version' => '2']];
+				}
+
+				return ['mayDownload' => true, 'gated' => false];
+			}
+		);
+
+		$controller = $this->controller(pipeline: $pipeline, record: $record, platform: $platform, agreements: $agreements);
+
+		$refused = $controller->download('mine');
+		$this->assertSame(409, $refused->getStatus());
+		$this->assertSame('2', $refused->getData()['agreement']['version']);
+		$this->assertSame('43', $refused->getData()['document']);
+
+		$accepted = true;
+		$served = $controller->download('mine');
+		$this->assertInstanceOf(DataDownloadResponse::class, $served);
+		$this->assertSame(200, $served->getStatus());
+		$this->assertSame('%PDF-redacted', $served->getData());
+		$this->assertStringContainsString('besluit-geanonimiseerd.pdf', (string) ($served->getHeaders()['Content-Disposition'] ?? ''));
+
+		$draft = $this->controller(pipeline: $pipeline, record: ['status' => 'draft'] + $record, platform: $platform, agreements: $agreements);
+		$this->assertSame(404, $draft->download('mine')->getStatus());
+		$theirs = $this->controller(pipeline: $pipeline, record: ['documentFileRef' => '99'] + $record, platform: $platform, agreements: $agreements);
+		$this->assertSame(404, $theirs->download('mine')->getStatus());
+		$this->assertSame(503, $this->controller(pipeline: $pipeline, record: $record, platform: $platform)->download('mine')->getStatus());
+
+	}//end testADownloadWaitsForTheAcceptedAgreement()
 }//end class

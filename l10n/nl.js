@@ -2896,7 +2896,11 @@ OC.L10N.register(
         "Routing saved for {type}": "Routering opgeslagen voor {type}",
         "Save routing": "Routering opslaan",
         "The group accepts the document first": "De groep accepteert het document eerst",
-        "The routing could not be saved": "De routering kon niet worden opgeslagen"
+        "The routing could not be saved": "De routering kon niet worden opgeslagen",
+        "Accept and download": "Accepteren en downloaden",
+        "Download the published copy": "De gepubliceerde kopie downloaden",
+        "The agreement could not be recorded": "De aanvaarding kon niet worden vastgelegd",
+        "The published copy could not be downloaded": "De gepubliceerde kopie kon niet worden gedownload"
     },
     "nplurals=2; plural=(n != 1);"
 )

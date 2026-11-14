@@ -6957,6 +6957,48 @@
                 ]
             }
         },
+        "/publications/{id}/download": {
+            "get": {
+                "operationId": "publication-download",
+                "summary": "Download the published copy, once the caller accepted the download agreement in force",
+                "description": "Download the published copy, once the caller accepted the download agreement in force.",
+                "tags": [
+                    "publication"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The file",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/octet-stream": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
         "/publications/{id}/handoff": {
             "post": {
                 "operationId": "publication-handoff",
