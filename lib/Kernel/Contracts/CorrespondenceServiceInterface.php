@@ -96,4 +96,27 @@ interface CorrespondenceServiceInterface {
 	 * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-batch-correspondence-generation
 	 */
 	public function storeJobStatus(string $jobId, array $data): void;
+
+	/**
+	 * Log a letter finished from a draft the clerk edited.
+	 *
+	 * @param string $templateId The template the draft was rendered from.
+	 * @param string $templateName The template's name.
+	 * @param array $dataRefs The data references the draft was rendered with.
+	 * @param array $options The generation options.
+	 * @param string $draftId The documentDraft the letter was finished from.
+	 * @param string $editedBy The user who edited and finished it.
+	 *
+	 * @return array The created correspondence register entry, or [] when logging failed.
+	 *
+	 * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-2.2
+	 */
+	public function logFinishedDraft(
+		string $templateId,
+		string $templateName,
+		array $dataRefs,
+		array $options,
+		string $draftId,
+		string $editedBy,
+	): array;
 }//end interface

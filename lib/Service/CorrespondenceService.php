@@ -315,6 +315,44 @@ class CorrespondenceService implements CorrespondenceServiceInterface {
 	}//end generate()
 
 	/**
+	 * Log a letter finished from a draft the clerk edited.
+	 *
+	 * The same correspondence entry {@see generate()} writes, through the same
+	 * {@see logCorrespondence()}, plus the draft it came from and who edited it.
+	 *
+	 * @param string $templateId The template the draft was rendered from.
+	 * @param string $templateName The template's name.
+	 * @param array $dataRefs The data references the draft was rendered with.
+	 * @param array $options The generation options: format, userId, recipientType, caseReference.
+	 * @param string $draftId The documentDraft the letter was finished from.
+	 * @param string $editedBy The user who edited and finished it.
+	 *
+	 * @return array The created correspondence register entry, or [] when logging failed.
+	 *
+	 * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-2.2
+	 */
+	public function logFinishedDraft(
+		string $templateId,
+		string $templateName,
+		array $dataRefs,
+		array $options,
+		string $draftId,
+		string $editedBy,
+	): array {
+		return $this->logCorrespondence(
+			request: new CorrespondenceRequest(templateId: $templateId, options: $options),
+			outcome: [
+				'templateName' => $templateName,
+				'dataRefs' => $dataRefs,
+				'status' => 'generated',
+				'errorMessage' => null,
+				'extra' => ['draftId' => $draftId, 'editedBy' => $editedBy],
+			]
+		);
+
+	}//end logFinishedDraft()
+
+	/**
 	 * Generate correspondence for a batch of recipients
 	 *
 	 * For batches of 10 or fewer, generation is synchronous.
@@ -856,7 +894,7 @@ class CorrespondenceService implements CorrespondenceServiceInterface {
 			'status' => $outcome['status'],
 			'generatedBy' => $options['userId'] ?? '',
 			'errorMessage' => $outcome['errorMessage'],
-		];
+		] + ($outcome['extra'] ?? []);
 	}//end correspondenceEntry()
 
 	/**

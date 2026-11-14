@@ -92,6 +92,10 @@
             "description": "Controller for document generation endpoints"
         },
         {
+            "name": "documentDraft",
+            "description": "Controller for document drafts: open a generation for editing, finish it"
+        },
+        {
             "name": "document-production",
             "description": "Controller for layouts, bundles, periodic documents and reviews"
         },
@@ -10379,6 +10383,99 @@
                                 }
                             }
                         }
+                    }
+                }
+            }
+        },
+        "/documents/drafts": {
+            "post": {
+                "operationId": "documentDraft-create",
+                "summary": "Render a generation and save it as the session user's draft",
+                "description": "Render a generation and save it as the session user's draft. Request body: templateId (string, required), dataRefs (array), options (object: format, adHocData, listRefs, huisstijlId, output, filename, wizardContext), origin (correspondence | document | wizard). Nothing is filed or logged. Answers 409 for a template with a plain-language version.",
+                "tags": [
+                    "documentDraft"
+                ],
+                "responses": {
+                    "201": {
+                        "description": "The draft: id, stage, html, warnings, expiresAt",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Problem409"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                }
+            }
+        },
+        "/documents/drafts/{id}/finish": {
+            "post": {
+                "operationId": "documentDraft-finish",
+                "summary": "Produce, file and log a draft's edited text and close the draft",
+                "description": "Produce, file and log a draft's edited text and close the draft. The stored HTML is sanitised and never rendered through Twig again. Answers like a direct generation: the document as a download, JSON for HTML or output mode files. 404 for a draft that is not the session user's, 409 for a draft that is not being edited, 422 when a wizard draft's answers do not pass.",
+                "tags": [
+                    "documentDraft"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The finished document, or its stored-file refs",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Problem409"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Problem422"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
                     }
                 }
             }
