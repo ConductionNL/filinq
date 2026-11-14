@@ -44,6 +44,12 @@ to a record or rejects it with a reason, and either way it leaves the inbox.
 					data-testid="intake-reach-warning">
 					{{ reachWarningText }}
 				</NcNoteCard>
+				<NcNoteCard
+					v-if="fillError"
+					type="error"
+					data-testid="intake-fill-error">
+					{{ fillError }}
+				</NcNoteCard>
 				<div class="intake-modes">
 					<NcButton
 						:variant="mode === 'waiting' ? 'primary' : 'secondary'"
@@ -95,6 +101,16 @@ to a record or rejects it with a reason, and either way it leaves the inbox.
 						</template>
 						{{ t('filinq', 'Assign') }}
 					</NcActionButton>
+					<NcActionButton
+						v-if="canFill(row)"
+						closeAfterClick
+						data-testid="intake-fill-fields"
+						@click="fill(row, row.assignedTo)">
+						<template #icon>
+							<FormTextbox :size="20" />
+						</template>
+						{{ t('filinq', 'Fill fields from document') }}
+					</NcActionButton>
 					<NcActionButton closeAfterClick @click="openReject(row)">
 						<template #icon>
 							<Delete :size="20" />
@@ -122,6 +138,14 @@ to a record or rejects it with a reason, and either way it leaves the inbox.
 			@confirm="reject"
 			@cancel="closeDialogs" />
 
+		<FieldSuggestionDialog
+			v-if="suggestion"
+			:suggestion="suggestion"
+			:saving="saving"
+			:error="actionError"
+			@confirm="decide"
+			@cancel="closeDialogs" />
+
 		<SeparatorSheetsDialog
 			v-if="separatorsOpen"
 			@close="separatorsOpen = false" />
@@ -135,9 +159,17 @@ import { NcActionButton, NcActions, NcButton, NcNoteCard } from '@nextcloud/vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
 import FolderOutline from 'vue-material-design-icons/FolderOutline.vue'
+import FormTextbox from 'vue-material-design-icons/FormTextbox.vue'
+import FieldSuggestionDialog from '../../dialogs/FieldSuggestionDialog.vue'
 import FinalDocumentReasonDialog from '../../dialogs/FinalDocumentReasonDialog.vue'
 import IntakeAssignDialog from '../../dialogs/IntakeAssignDialog.vue'
 import SeparatorSheetsDialog from '../../dialogs/SeparatorSheetsDialog.vue'
+import {
+	decideFields,
+	fetchFieldFillStatus,
+	idOf,
+	suggestFields,
+} from '../../services/fieldFill.js'
 import {
 	reachWarning,
 	readingColorMap,
@@ -159,8 +191,10 @@ export default {
 		NcButton,
 		Delete,
 		DotsHorizontal,
+		FieldSuggestionDialog,
 		FinalDocumentReasonDialog,
 		FolderOutline,
+		FormTextbox,
 		IntakeAssignDialog,
 		SeparatorSheetsDialog,
 		NcActionButton,
@@ -180,6 +214,9 @@ export default {
 			loadError: '',
 			notificationReach: null,
 			separatorsOpen: false,
+			fieldFillAvailable: false,
+			suggestion: null,
+			fillError: '',
 			readingColorMap: readingColorMap(),
 			channelColorMap: {
 				[t('filinq', 'Scan')]: 'primary',
@@ -273,6 +310,7 @@ export default {
 
 	mounted() {
 		this.load()
+		this.loadFieldFill()
 	},
 
 	methods: {
@@ -364,7 +402,91 @@ export default {
 		closeDialogs() {
 			this.assignTarget = null
 			this.rejectTarget = null
+			this.suggestion = null
 			this.actionError = ''
+		},
+
+		/**
+		 * Whether model filling is on and a text model is there; the action
+		 * is not shown otherwise (REQ-EMF-004).
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/extraction-model-filled-fields/specs/extraction-model-filled-fields/spec.md
+		 */
+		async loadFieldFill() {
+			try {
+				this.fieldFillAvailable = (await fetchFieldFillStatus())?.available === true
+			} catch {
+				this.fieldFillAvailable = false
+			}
+		},
+
+		/**
+		 * Whether a row's document can fill the record it is on.
+		 *
+		 * @param {object} row The intake document.
+		 * @return {boolean}
+		 * @spec openspec/changes/extraction-model-filled-fields/specs/extraction-model-filled-fields/spec.md
+		 */
+		canFill(row) {
+			const target = row?.assignedTo
+			return this.fieldFillAvailable && this.mode === 'waiting' && Boolean(row?.file)
+				&& Boolean(target?.register && target?.schema && target?.id)
+		},
+
+		/**
+		 * Ask the model for the record's declared fields from a document.
+		 *
+		 * @param {object} row The intake document.
+		 * @param {{register: string, schema: string, id: string}} target The record it is on.
+		 * @param {boolean} [offered] Offered after an assign: a schema without a
+		 *     profile, or no model, then says nothing.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/extraction-model-filled-fields/specs/extraction-model-filled-fields/spec.md
+		 */
+		async fill(row, target, offered = false) {
+			this.fillError = ''
+			this.actionError = ''
+			try {
+				this.suggestion = await suggestFields({
+					fileId: row.file,
+					register: target.register,
+					schema: target.schema,
+					objectId: target.id,
+				})
+			} catch (error) {
+				this.suggestion = null
+				if (offered && [409, 503].includes(error?.response?.status)) {
+					return
+				}
+				this.fillError = error?.response?.data?.error
+					|| t('filinq', 'The fields could not be filled from the document.')
+			}
+		},
+
+		/**
+		 * Write the clerk's decisions to the record.
+		 *
+		 * @param {object} decisions Per field `{decision, value?}`.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/extraction-model-filled-fields/specs/extraction-model-filled-fields/spec.md
+		 */
+		async decide(decisions) {
+			const id = idOf(this.suggestion)
+			if (!id) {
+				return
+			}
+			this.saving = true
+			this.actionError = ''
+			try {
+				await decideFields(id, decisions)
+				this.closeDialogs()
+			} catch (error) {
+				this.actionError = error?.response?.data?.error
+					|| t('filinq', 'The decisions could not be saved.')
+			} finally {
+				this.saving = false
+			}
 		},
 
 		/**
@@ -382,9 +504,15 @@ export default {
 			this.saving = true
 			this.actionError = ''
 			try {
+				const document = this.assignTarget
 				await assignIntakeDocument(uuid, target)
 				this.closeDialogs()
 				await this.load()
+				if (this.fieldFillAvailable && document?.file) {
+					// The document now sits on a record: offer its fields
+					// straight away (REQ-EMF-003).
+					await this.fill(document, target, true)
+				}
 			} catch (error) {
 				this.actionError =
 					error?.response?.data?.error
