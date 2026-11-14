@@ -26,6 +26,10 @@
 		-->
 		<template #sidebar="{ pageSidebarComponent }">
 			<SideBars />
+			<!-- The registry-driven object sidebar of a custom record page
+			     (Mail, Calendar, Contacts, Deck, Files leaves). CnAppRoot would
+			     hoist it itself, but not while this slot is filled. -->
+			<RecordLeafSidebar />
 			<!-- The manifest page's own sidebar (pages[].sidebarComponent). Passed in
 			     as a slot prop because filling this slot suppresses CnAppRoot's
 			     fallback, which is what hid the flow sidebar. -->
@@ -43,6 +47,7 @@ import { CnAppRoot } from '@conduction/nextcloud-vue'
 import { translate as ncT } from '@nextcloud/l10n'
 import Dialogs from './dialogs/Dialogs.vue'
 import Modals from './modals/Modals.vue'
+import RecordLeafSidebar from './sidebars/RecordLeafSidebar.vue'
 import SideBars from './sidebars/SideBars.vue'
 import { mayUseEntitySearch } from './services/entitySearch.js'
 
@@ -54,6 +59,7 @@ export default {
 		Modals,
 		Dialogs,
 		SideBars,
+		RecordLeafSidebar,
 	},
 
 	props: {

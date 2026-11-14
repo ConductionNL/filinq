@@ -26,6 +26,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use Exception;
+use OCA\Filinq\Kernel\Contracts\DataResolverServiceInterface;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -43,7 +44,7 @@ use RuntimeException;
  *
  * @spec openspec/changes/letter-correspondence-generation/tasks.md#task-2
  */
-class DataResolverService {
+class DataResolverService implements DataResolverServiceInterface {
 
 	/**
 	 * Maximum depth for nested reference resolution
