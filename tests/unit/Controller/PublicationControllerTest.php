@@ -22,6 +22,7 @@ namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\PublicationController;
 use OCA\Filinq\Controller\Support\PublicationFlow;
+use OCA\Filinq\Service\Publication\ActivePublicationList;
 use OCA\Filinq\Service\Publication\OpenCatalogiPlatform;
 use OCA\Filinq\Service\Publication\PublicationAccess;
 use OCA\Filinq\Exception\PublicationNotReadyException;
@@ -56,6 +57,7 @@ class PublicationControllerTest extends TestCase {
 	 * @param OpenCatalogiPlatform|null  $platform The platform double
 	 * @param bool                       $publisher Whether the caller is in a publisher group
 	 * @param array<string, mixed>       $params    The request parameters
+	 * @param array<int, array<string, mixed>>|null $records What the store lists, null for one record per caller
 	 *
 	 * @return PublicationController
 	 */
@@ -64,11 +66,12 @@ class PublicationControllerTest extends TestCase {
 		?array $record,
 		?OpenCatalogiPlatform $platform = null,
 		bool $publisher = true,
-		array $params = []
+		array $params = [],
+		?array $records = null
 	): PublicationController {
 		$store = $this->createMock(PublicationStore::class);
 		$store->method('findRecord')->willReturn($record);
-		$store->method('listRecords')->willReturn([['uuid' => 'mine', 'documentFileRef' => '42'], ['uuid' => 'theirs', 'documentFileRef' => '99']]);
+		$store->method('listRecords')->willReturn($records ?? [['uuid' => 'mine', 'documentFileRef' => '42'], ['uuid' => 'theirs', 'documentFileRef' => '99']]);
 
 		$folder = $this->createMock(Folder::class);
 		$folder->method('getById')->willReturnCallback(static fn (int $id): array => ($id === 42) ? ['file'] : []);
@@ -81,7 +84,7 @@ class PublicationControllerTest extends TestCase {
 		);
 		$config = $this->createMock(IAppConfig::class);
 		$config->method('getValueString')->willReturnCallback(
-			static fn (string $app, string $key, string $default = ''): string => $default
+			static fn (string $app, string $key, string $default = ''): string => ($key === ActivePublicationList::CONFIG_KEY) ? '["c_active"]' : $default
 		);
 
 		$user = $this->createMock(IUser::class);
@@ -94,7 +97,7 @@ class PublicationControllerTest extends TestCase {
 
 		return new PublicationController(
 			$request,
-			new PublicationFlow(pipeline: $pipeline, store: $store),
+			new PublicationFlow(pipeline: $pipeline, store: $store, active: new ActivePublicationList($config)),
 			($platform ?? $this->createMock(OpenCatalogiPlatform::class)),
 			new PublicationAccess(rootFolder: $root, groups: $groups, appConfig: $config),
 			$session,
@@ -175,7 +178,7 @@ class PublicationControllerTest extends TestCase {
 		$publication = array_values(array_filter($routes['routes'], static fn (array $r): bool => str_starts_with($r['name'], 'publication#')));
 
 		// Each route is declared once and served at its /api/v1/ twin too (ApiPathAliasesTest).
-		$this->assertCount(expectedCount: 18, haystack: $publication);
+		$this->assertCount(expectedCount: 20, haystack: $publication);
 		foreach ($publication as $route) {
 			$this->assertStringNotContainsString('log', $route['url']);
 			$this->assertNotSame('DELETE', $route['verb']);
@@ -224,4 +227,28 @@ class PublicationControllerTest extends TestCase {
 		$this->assertSame(expected: 404, actual: $controller->handoff(id: 'mine')->getStatus());
 
 	}//end testAReaderWhoIsNoPublisherCannotAct()
+
+	/**
+	 * The active publication list holds the caller's records of an active category, with their blockers.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/woo-publicatie-pipeline/spec.md#requirement-documents-that-must-be-published-actively-are-listed-with-what-they-still-lack-req-scr-008
+	 */
+	public function testTheActiveListHoldsWhatTheCallerMaySee(): void {
+		$pipeline = $this->createMock(PublicationPipelineService::class);
+		$pipeline->method('sync')->willReturnArgument(0);
+		$records = [
+			['uuid' => 'mine', 'documentFileRef' => '42', 'wooCategory' => 'c_active', 'status' => 'draft', 'consentClear' => true, 'officieleTitel' => 'B', 'publicatiedatum' => '2026-11-01'],
+			['uuid' => 'theirs', 'documentFileRef' => '99', 'wooCategory' => 'c_active', 'status' => 'published'],
+		];
+
+		$data = $this->controller(pipeline: $pipeline, record: null, records: $records)->active()->getData();
+
+		$this->assertSame(['c_active'], $data['categories']);
+		$this->assertCount(1, $data['results']);
+		$this->assertSame('mine', $data['results'][0]['record']['uuid']);
+		$this->assertSame([ActivePublicationList::BLOCK_REDACTED_COPY], $data['results'][0]['blockers']);
+
+	}//end testTheActiveListHoldsWhatTheCallerMaySee()
 }//end class

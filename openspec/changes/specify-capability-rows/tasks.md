@@ -17,7 +17,8 @@
 
 ## 3. Woo and reports
 
-- [ ] 3.1 Add the active publication list and the withdraw-on-destruction listener to `lib/Service/Publication/PublicationPipelineService.php` (REQ-SCR-008, REQ-SCR-009). Verify: PHPUnit for a destroyed source.
+- [x] 3.1 Add the active publication list and the withdraw-on-destruction listener to `lib/Service/Publication/PublicationPipelineService.php` (REQ-SCR-008, REQ-SCR-009). Verify: PHPUnit for a destroyed source.
+  - Built: `ActivePublicationList` lists the records whose Woo category is in the app config key `woo_active_categories` (a JSON list of TOOI codes), each published or with its blockers (redacted copy, consent, metadata, withdrawn), served at `GET api/publications/active`. `PublicationPipelineService::withdrawDestroyedSource()` withdraws every handed-off publication of a destroyed document or dossier with the destruction as the logged reason; `PublicationSourceDestroyedListener` calls it on an OpenRegister delete that runs inside its retention-destruction frame only, so an ordinary delete or a held object leaves the publication. Pinned by `ActivePublicationListTest`, `PublicationSourceDestroyedListenerTest`, `PublicationPipelineServiceTest::testADestroyedSourceWithdrawsItsPublication`. Not built: a screen for the list and an admin field for the categories.
 - [ ] 3.2 Add the personal data report page to `src/manifest.json` (REQ-SCR-010). Verify: Playwright on `/reports`.
 - [ ] 3.3 Ask for the download agreement on every download of a published document that carries one (the publications page and the portal contribution), over `GET api/redaction/agreement` and `POST api/redaction/agreement/accept`, and serve the file only after the acceptance is recorded (REQ-RWB-04, row woo-agreement). Verify: PHPUnit that a download without an accepted current version is refused.
 

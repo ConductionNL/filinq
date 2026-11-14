@@ -6811,6 +6811,34 @@
                 }
             }
         },
+        "/publications/active": {
+            "get": {
+                "operationId": "publication-active",
+                "summary": "The publications the caller can see that must be published actively",
+                "description": "The publications the caller can see that must be published actively, each saying whether it is published and what still blocks it.",
+                "tags": [
+                    "publication"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{results: [{record, published, blockers}], categories: string[]}",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/publications/categories": {
             "get": {
                 "operationId": "publication-categories",

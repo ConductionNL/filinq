@@ -268,6 +268,47 @@ class PublicationPipelineService implements PublicationPipelineServiceInterface 
 	}//end withdraw()
 
 	/**
+	 * Withdraw every publication whose source was destroyed.
+	 *
+	 * A record is matched when its document or its dossier is one of the
+	 * destroyed sources. Only a publication that was handed off is withdrawn;
+	 * one that never left the building has nothing on the platform. Each
+	 * withdrawal names the destruction as its reason in the record log.
+	 *
+	 * @param list<string> $sourceRefs The destroyed object's uuid and file ids
+	 * @param string       $detail     What was destroyed, for the reason
+	 *
+	 * @return list<array<string, mixed>> The withdrawn records.
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/woo-publicatie-pipeline/spec.md#requirement-a-publication-goes-offline-when-its-source-document-is-destroyed-req-scr-009
+	 */
+	public function withdrawDestroyedSource(array $sourceRefs, string $detail): array {
+		$refs = array_values(array_filter(array_map('strval', $sourceRefs), static fn (string $ref): bool => $ref !== ''));
+		if ($refs === []) {
+			return [];
+		}
+
+		$reason = trim('Source document destroyed ' . trim($detail));
+		$withdrawn = [];
+		foreach ($this->store->listRecords() as $record) {
+			$document = (string) ($record['documentFileRef'] ?? '');
+			$dossier = (string) ($record['dossierRef'] ?? '');
+			if (in_array($document, $refs, true) === false && in_array($dossier, $refs, true) === false) {
+				continue;
+			}
+
+			if (in_array($record['status'] ?? '', ['handed_off', 'published'], true) === false) {
+				continue;
+			}
+
+			$withdrawn[] = $this->withdraw(record: $record, reason: $reason, actor: 'system');
+		}
+
+		return $withdrawn;
+
+	}//end withdrawDestroyedSource()
+
+	/**
 	 * Record a destruction date and pass it to the platform.
 	 *
 	 * @param array<string, mixed> $record The record

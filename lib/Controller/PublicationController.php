@@ -95,6 +95,37 @@ class PublicationController extends Controller {
 	}//end index()
 
 	/**
+	 * The publications the caller can see that must be published actively,
+	 * each saying whether it is published and what still blocks it.
+	 *
+	 * @return JSONResponse {results: [{record, published, blockers}], categories: string[]}
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/woo-publicatie-pipeline/spec.md#requirement-documents-that-must-be-published-actively-are-listed-with-what-they-still-lack-req-scr-008
+	 */
+	#[NoAdminRequired]
+	public function active(): JSONResponse {
+		if ($this->flow->active === null) {
+			return new JSONResponse(['results' => [], 'categories' => []]);
+		}
+
+		$uid = $this->uid();
+		$records = [];
+		foreach ($this->flow->store->listRecords() as $record) {
+			if ($this->access->maySee(uid: $uid, fileId: (string) ($record['documentFileRef'] ?? '')) === true) {
+				$records[] = $this->flow->pipeline->sync(record: $record);
+			}
+		}
+
+		return new JSONResponse(
+			[
+				'results' => $this->flow->active->entries(records: $records),
+				'categories' => $this->flow->active->categories(),
+			]
+		);
+
+	}//end active()
+
+	/**
 	 * The Woo information categories to choose from.
 	 *
 	 * @return JSONResponse {results: [{code, label}]}
