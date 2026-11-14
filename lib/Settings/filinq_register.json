@@ -2440,6 +2440,51 @@
                         "order": 19,
                         "facetable": false,
                         "title": "Recursive"
+                    },
+                    "filesSucceeded": {
+                        "description": "Files anonymized so far, computed from the documents on every write of the batch.",
+                        "type": "integer",
+                        "order": 20,
+                        "title": "Succeeded",
+                        "required": false,
+                        "visible": true,
+                        "facetable": false
+                    },
+                    "filesFailed": {
+                        "description": "Files that failed, computed from the documents on every write of the batch.",
+                        "type": "integer",
+                        "order": 21,
+                        "title": "Failed",
+                        "required": false,
+                        "visible": true,
+                        "facetable": false
+                    },
+                    "filesPending": {
+                        "description": "Files neither anonymized nor failed, computed from the documents on every write of the batch.",
+                        "type": "integer",
+                        "order": 22,
+                        "title": "Pending",
+                        "required": false,
+                        "visible": true,
+                        "facetable": false
+                    },
+                    "progressPercent": {
+                        "description": "How far the current phase is, in percent of the files, computed from the documents on every write of the batch.",
+                        "type": "number",
+                        "order": 23,
+                        "title": "Progress (%)",
+                        "required": false,
+                        "visible": true,
+                        "facetable": false
+                    },
+                    "documentsPerHour": {
+                        "description": "Documents anonymized per hour since the batch started, computed on every write of the batch; empty in its first minute.",
+                        "type": "number",
+                        "order": 24,
+                        "title": "Documents per hour",
+                        "required": false,
+                        "visible": true,
+                        "facetable": false
                     }
                 },
                 "archive": [],

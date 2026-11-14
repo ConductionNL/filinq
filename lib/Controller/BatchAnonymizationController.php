@@ -72,6 +72,22 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.ExcessiveParameterList)
  */
 class BatchAnonymizationController extends Controller {
+
+	/**
+	 * The progress figures a background batch carries, added to the status
+	 * answer when present (REQ-DDRAS-003); written with every batch write.
+	 */
+	private const PROGRESS_FIELDS = [
+		'background',
+		'throttled',
+		'startedAt',
+		'completedAt',
+		'filesSucceeded',
+		'filesFailed',
+		'filesPending',
+		'progressPercent',
+		'documentsPerHour',
+	];
 	use AnswersNotAuthenticated;
 
 	/**
@@ -308,7 +324,7 @@ class BatchAnonymizationController extends Controller {
 				'totalEntities' => $summary['totalEntities'],
 				'progress' => $summary['progress'],
 				'totalFiles' => $summary['totalFiles'],
-			]
+			] + array_intersect_key($batch, array_flip(self::PROGRESS_FIELDS))
 		);
 
 	}//end batchStatus()
