@@ -76,13 +76,19 @@ class DocumentSanitizationService implements DocumentSanitizationServiceInterfac
 	public function sanitize(int $fileId, string $userId, string $trigger='manual'): array {
 		$file = $this->resolve(fileId: $fileId, userId: $userId);
 		$mime = $file->getMimeType();
+		$engineName = 'OfficeDocumentSanitizer';
 		if ($mime === 'application/pdf') {
-			return $this->skipped(fileId: $fileId, reason: 'pdf_sanitizer_unavailable');
-		}
+			$engine = $this->engine(className: self::PDF_ENGINE);
+			if ($engine === null) {
+				return $this->skipped(fileId: $fileId, reason: 'pdf_sanitizer_unavailable');
+			}
 
-		$engine = $this->officeEngine();
-		if ($engine === null || $engine->isSanitizable($mime) === false) {
-			throw new InvalidArgumentException(message: 'unsupported_format', code: 415);
+			$engineName = 'PdfDocumentSanitizer';
+		} else {
+			$engine = $this->engine(className: self::OFFICE_ENGINE);
+			if ($engine === null || $engine->isSanitizable($mime) === false) {
+				throw new InvalidArgumentException(message: 'unsupported_format', code: 415);
+			}
 		}
 
 		$result = $this->runEngine(engine: $engine, fileId: $fileId);
@@ -95,12 +101,15 @@ class DocumentSanitizationService implements DocumentSanitizationServiceInterfac
 		}
 
 		$report = $result->report->jsonSerialize();
+		if ($engineName === 'PdfDocumentSanitizer') {
+			$report = self::pdfReport(report: $report);
+		}
 		$record = $this->records->save(
 			record: [
 				'fileId'          => $fileId,
 				'sanitizedFileId' => $derivative->getId(),
 				'trigger'         => $trigger,
-				'engine'          => 'OfficeDocumentSanitizer',
+				'engine'          => $engineName,
 				'report'          => $report,
 				'sanitizedAt'     => gmdate(format: 'Y-m-d\TH:i:s\Z'),
 				'sanitizedBy'     => $userId,
@@ -147,18 +156,53 @@ class DocumentSanitizationService implements DocumentSanitizationServiceInterfac
 	}//end resolve()
 
 	/**
-	 * OpenRegister's office sanitizer, or null when it is not there.
+	 * An OpenRegister sanitizer, or null when this OpenRegister does not have it.
+	 *
+	 * @param string $className OFFICE_ENGINE or PDF_ENGINE.
 	 *
 	 * @return mixed The engine.
 	 */
-	private function officeEngine(): mixed {
+	private function engine(string $className): mixed {
 		try {
-			return $this->locator->get(className: self::OFFICE_ENGINE);
+			return $this->locator->get(className: $className);
 		} catch (Throwable) {
 			return null;
 		}
 
-	}//end officeEngine()
+	}//end engine()
+
+	/**
+	 * OpenRegister's PDF report in the record's report shape: counts per
+	 * category, the full re-save, and the PDF/A-3 archival attachments kept.
+	 *
+	 * @param array<string, mixed> $report The PdfSanitizationReport as data.
+	 *
+	 * @return array<string, mixed> The record report.
+	 *
+	 * @spec openspec/changes/document-sanitization/specs/document-sanitization/spec.md#requirement-pdf-sanitization-removes-hidden-payload-through-a-full-re-save-req-ddsan-002
+	 */
+	private static function pdfReport(array $report): array {
+		$preserved = [];
+		foreach ((array) ($report['preservedAttachments'] ?? []) as $attachment) {
+			$preserved[] = [
+				'name' => mb_substr((string) ($attachment['name'] ?? ''), 0, 255),
+				'relationship' => (string) ($attachment['relationship'] ?? ''),
+			];
+		}
+
+		return [
+			'metadataFieldsScrubbed' => (int) ($report['metadataFieldsScrubbed'] ?? 0),
+			'xmpNamespacesStripped' => (int) (($report['xmpScrubbed'] ?? false) === true),
+			'annotationsRemoved' => (int) ($report['annotationsRemoved'] ?? 0),
+			'embeddedFilesRemoved' => (int) ($report['embeddedFilesRemoved'] ?? 0),
+			'scriptsRemoved' => (int) ($report['javascriptRemoved'] ?? 0)
+				+ (int) ($report['openActionsRemoved'] ?? 0)
+				+ (int) ($report['additionalActionsRemoved'] ?? 0),
+			'resaved' => true,
+			'preservedAttachments' => $preserved,
+		];
+
+	}//end pdfReport()
 
 	/**
 	 * Run the engine; map its refusals to statuses.

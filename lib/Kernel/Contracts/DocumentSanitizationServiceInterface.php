@@ -42,6 +42,11 @@ interface DocumentSanitizationServiceInterface {
 	public const OFFICE_ENGINE = 'OCA\OpenRegister\Files\Service\File\OfficeDocumentSanitizer';
 
 	/**
+	 * OpenRegister's PDF sanitizer; absent on an OpenRegister that predates it.
+	 */
+	public const PDF_ENGINE = 'OCA\OpenRegister\Files\Service\File\PdfDocumentSanitizer';
+
+	/**
 	 * Sanitize a file the user can read into a derivative beside it.
 	 *
 	 * @param int    $fileId  The file.

@@ -2849,7 +2849,9 @@
         "The Nextcloud file id of the reviewed document; one review per file.": "The Nextcloud file id of the reviewed document; one review per file.",
         "The reviewer's note.": "The reviewer's note.",
         "The user who marked the document checked.": "The user who marked the document checked.",
-        "When the reviewer marked the document checked.": "When the reviewer marked the document checked."
+        "When the reviewer marked the document checked.": "When the reviewer marked the document checked.",
+        "Archival attachments kept": "Archival attachments kept",
+        "The PDF/A-3 attachments kept because they are declared as the source or data of the document, by name and relationship.": "The PDF/A-3 attachments kept because they are declared as the source or data of the document, by name and relationship."
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

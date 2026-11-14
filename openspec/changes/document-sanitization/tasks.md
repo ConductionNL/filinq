@@ -10,7 +10,7 @@
 
 ## 2. Cross-app (OpenRegister)
 
-- [ ] 2.1 (OPEN: OpenRegister has no PDF sanitizer at development 2026-09-30; the ask is drafted for Ruben, build-all for-ruben/openregister-pdf-sanitizer-for-filinq.md) File the OR issue + PR for the standalone PDF sanitizer in the existing `Sanitizer` family: /Info + XMP scope of `PdfMetadataSanitizer`, annotations, embedded files (D2 exception: preserve only PDF/A-3 attachments declared `/AFRelationship Source|Data` plus their `/AF` association; strip all others), JavaScript/OpenAction/AA, full re-save; public per-file entry point like `OfficeDocumentSanitizer::sanitize()` (REQ-DDSAN-002)
+- [x] 2.1 (BUILT as ConductionNL/openregister#10561, `PdfDocumentSanitizer`; filinq routes PDFs to it when the installed OpenRegister has it) File the OR issue + PR for the standalone PDF sanitizer in the existing `Sanitizer` family: /Info + XMP scope of `PdfMetadataSanitizer`, annotations, embedded files (D2 exception: preserve only PDF/A-3 attachments declared `/AFRelationship Source|Data` plus their `/AF` association; strip all others), JavaScript/OpenAction/AA, full re-save; public per-file entry point like `OfficeDocumentSanitizer::sanitize()` (REQ-DDSAN-002)
   - Cross-app dependency; verify against OR HEAD at apply time — do not assume it landed.
 
 ## 3. Backend

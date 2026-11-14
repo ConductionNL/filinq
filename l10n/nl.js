@@ -2961,7 +2961,9 @@ OC.L10N.register(
         "The Nextcloud file id of the reviewed document; one review per file.": "Het Nextcloud-bestands-ID van het gecontroleerde document; één controle per bestand.",
         "The reviewer's note.": "De notitie van de controleur.",
         "The user who marked the document checked.": "De gebruiker die het document als gecontroleerd markeerde.",
-        "When the reviewer marked the document checked.": "Wanneer de controleur het document als gecontroleerd markeerde."
+        "When the reviewer marked the document checked.": "Wanneer de controleur het document als gecontroleerd markeerde.",
+        "Archival attachments kept": "Bewaarde archiefbijlagen",
+        "The PDF/A-3 attachments kept because they are declared as the source or data of the document, by name and relationship.": "De PDF/A-3-bijlagen die zijn bewaard omdat ze als bron of gegevens van het document zijn aangemerkt, met naam en relatie."
     },
     "nplurals=2; plural=(n != 1);"
 )
