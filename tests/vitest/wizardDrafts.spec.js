@@ -17,6 +17,19 @@ import { createInstance, loadSfcOptions } from './sfc/sfcOptions.js'
 
 const world = vi.hoisted(() => ({ calls: [], answers: {}, toasts: [] }))
 
+const WIZARD = vi.hoisted(() => ({
+	uuid: 'w1',
+	version: 2,
+	name: 'Besluit op aanvraag',
+	questions: [
+		{ key: 'naam', label: 'Naam', type: 'text', required: true },
+		{ key: 'adres', label: 'Adres', type: 'text', required: true },
+		{ key: 'datum', label: 'Datum', type: 'date', required: true },
+		{ key: 'besluit', label: 'Besluit', type: 'choice', required: true, choices: [{ value: 'toe', label: 'Toegekend' }] },
+		{ key: 'toelichting', label: 'Toelichting', type: 'text', required: false },
+	],
+}))
+
 vi.mock('@nextcloud/l10n', () => ({ translate: (app, text) => text }))
 vi.mock('@nextcloud/axios', () => ({ default: {} }))
 vi.mock('@nextcloud/dialogs', () => ({
@@ -51,19 +64,6 @@ vi.mock('../../src/services/wizard.js', async (original) => {
 		generateWithWizard: async () => ({ ok: true, data: { size: 1 }, filename: 'besluit.pdf' }),
 	}
 })
-
-const WIZARD = vi.hoisted(() => ({
-	uuid: 'w1',
-	version: 2,
-	name: 'Besluit op aanvraag',
-	questions: [
-		{ key: 'naam', label: 'Naam', type: 'text', required: true },
-		{ key: 'adres', label: 'Adres', type: 'text', required: true },
-		{ key: 'datum', label: 'Datum', type: 'date', required: true },
-		{ key: 'besluit', label: 'Besluit', type: 'choice', required: true, choices: [{ value: 'toe', label: 'Toegekend' }] },
-		{ key: 'toelichting', label: 'Toelichting', type: 'text', required: false },
-	],
-}))
 
 const FILE = join(import.meta.dirname, '../../src/views/wizard/WizardRunner.vue')
 
