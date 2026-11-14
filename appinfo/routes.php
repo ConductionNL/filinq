@@ -400,6 +400,7 @@ $extra = [
         // the segment spelled exactly as the class: `portalSigningReceiver`.
         ['name' => 'portalSigningReceiver#signDocument', 'url' => 'api/portal/signing/sign', 'verb' => 'POST'],
         ['name' => 'portalSigningReceiver#declineDocument', 'url' => 'api/portal/signing/decline', 'verb' => 'POST'],
+        ['name' => 'portalSigningReceiver#acceptDocument', 'url' => 'api/portal/signing/accept', 'verb' => 'POST'],
         ['name' => 'portalSigningReceiver#viewDocument', 'url' => 'api/portal/signing/viewDocument', 'verb' => 'GET'],
 
         // Financial extraction routes (scan-en-herken).

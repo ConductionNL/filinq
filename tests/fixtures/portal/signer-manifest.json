@@ -54,6 +54,13 @@
                     "endpoint": "/apps/filinq/api/portal/signing/decline",
                     "method": "POST",
                     "minTrust": "substantial"
+                },
+                {
+                    "id": "accept",
+                    "label": "nl:Accept",
+                    "endpoint": "/apps/filinq/api/portal/signing/accept",
+                    "method": "POST",
+                    "minTrust": "substantial"
                 }
             ]
         }
@@ -72,6 +79,15 @@
             "id": "decline",
             "label": "nl:Decline to sign",
             "endpoint": "/apps/filinq/api/portal/signing/decline",
+            "method": "POST",
+            "minTrust": "substantial",
+            "rowField": "signingRequestId",
+            "scopeClaim": "signerEmail"
+        },
+        {
+            "id": "accept",
+            "label": "nl:Accept",
+            "endpoint": "/apps/filinq/api/portal/signing/accept",
             "method": "POST",
             "minTrust": "substantial",
             "rowField": "signingRequestId",

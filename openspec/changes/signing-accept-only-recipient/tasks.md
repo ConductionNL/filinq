@@ -16,7 +16,8 @@
 
 ## 3. Portal
 
-- [ ] 3.1 Declare the `accept` row action and action in `PortalContributionProvider` at `minTrust: substantial`, and add `acceptDocument()` to `PortalSigningReceiverController` with the same assertion and scope checks as `signDocument()`, answering 422 for the wrong act (D5) (REQ-SAO-004). Verify: PHPUnit on the provider asserts three row actions, and PHPUnit on the receiver covers a valid acceptance, a wrong role, a foreign recipient and a missing assertion.
+- [x] 3.1 Declare the `accept` row action and action in `PortalContributionProvider` at `minTrust: substantial`, and add `acceptDocument()` to `PortalSigningReceiverController` with the same assertion and scope checks as `signDocument()`, answering 422 for the wrong act (D5) (REQ-SAO-004). Verify: PHPUnit on the provider asserts three row actions, and PHPUnit on the receiver covers a valid acceptance, a wrong role, a foreign recipient and a missing assertion.
+  - Built: `PortalContributionProvider` declares `accept` as a row action and an endpoint action (`rowField` `signingRequestId`, `scopeClaim` `signerEmail`, `minTrust: substantial`); `PortalSigningReceiverController::acceptDocument()` on `POST api/portal/signing/accept` runs the same `authoriseAct()` guard as `signDocument()`, and both acts answer 422 `wrong_act` with the service's message for the wrong role (`PortalContributionProviderTest`, `PortalSignerManifestGoldenTest`, `PortalSigningReceiverControllerTest::testAcceptDocument*`, `testSignDocumentByAccepterAnswers422`).
 
 ## 4. Screens
 

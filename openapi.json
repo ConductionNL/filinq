@@ -6086,6 +6086,47 @@
                 ]
             }
         },
+        "/portal/signing/accept": {
+            "post": {
+                "operationId": "portal-signing-receiver-accept-document",
+                "summary": "POST /apps/filinq/api/portal/signing/accept  The acceptDocument act (signing-accept-only-recipient REQ-SAO-004): an acce",
+                "description": "POST /apps/filinq/api/portal/signing/accept  The acceptDocument act (signing-accept-only-recipient REQ-SAO-004): an accept-only recipient accepts the document without signing it. Guarded by the same assertion and invited-recipient scope as signDocument, then drives `SigningService::accept()` acting as the verified recipient. A recipient who must sign gets 422 with the service's message, and nothing is written.",
+                "tags": [
+                    "portal-signing-receiver"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Problem422"
+                    },
+                    "502": {
+                        "$ref": "#/components/responses/Problem502"
+                    }
+                },
+                "security": []
+            }
+        },
         "/portal/signing/decline": {
             "post": {
                 "operationId": "portal-signing-receiver-decline-document",
@@ -6154,6 +6195,9 @@
                     },
                     "403": {
                         "$ref": "#/components/responses/Problem403"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Problem422"
                     },
                     "502": {
                         "$ref": "#/components/responses/Problem502"

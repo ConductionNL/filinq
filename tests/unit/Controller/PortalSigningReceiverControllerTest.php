@@ -682,4 +682,133 @@ class PortalSigningReceiverControllerTest extends TestCase {
 
 	}//end testAPortalSignerBelowTheRequestAssuranceIsRefused()
 
+	/**
+	 * acceptDocument happy path: an accept-only recipient accepts through
+	 * `SigningService::accept()` with the verified actor, and the answer
+	 * carries the recorded status (signing-accept-only-recipient REQ-SAO-004).
+	 *
+	 * @return void
+	 */
+	public function testAcceptDocumentAcceptsAsTheVerifiedRecipient(): void {
+		$this->withInvitedSigner();
+		$this->withRequest(assertion: $this->mintAssertion(), params: ['signingRequestId' => 'request-uuid-1']);
+
+		$this->mockSigningService->expects($this->never())->method('sign');
+		$this->mockSigningService->expects($this->once())
+			->method('accept')
+			// Positional: the real signature is accept(requestId, signerId, verifiedActor).
+			->with(
+				'request-uuid-1',
+				'signer-uuid-1',
+				$this->callback(
+					static fn (array $actor): bool => ($actor['email'] ?? null) === 'alice@example.com'
+						&& ($actor['trust'] ?? null) === 'substantial'
+						&& ($actor['jti'] ?? null) === 'jti-0000000000000000000000000000'
+				)
+			)
+			->willReturn(['status' => 'ACCEPTED']);
+
+		$result = $this->controller()->acceptDocument();
+
+		$this->assertSame(Http::STATUS_OK, $result->getStatus());
+		$this->assertSame(['status' => 'ACCEPTED'], $result->getData());
+
+	}//end testAcceptDocumentAcceptsAsTheVerifiedRecipient()
+
+	/**
+	 * A recipient who must sign cannot accept instead: the service's 422
+	 * refusal is answered 422 with its message, and it is not counted as a
+	 * rejected assertion (REQ-SAO-004).
+	 *
+	 * @return void
+	 */
+	public function testAcceptDocumentBySignerAnswers422(): void {
+		$this->withInvitedSigner();
+		$this->withRequest(assertion: $this->mintAssertion(), params: ['signingRequestId' => 'request-uuid-1']);
+
+		$this->mockSigningService->method('accept')->willThrowException(
+			new \RuntimeException(SigningService::SIGN_NOT_ACCEPT, 422)
+		);
+		$throttler = $this->createMock(IThrottler::class);
+		$throttler->expects($this->never())->method('registerAttempt');
+
+		$result = $this->controller(throttler: $throttler)->acceptDocument();
+
+		$this->assertSame(Http::STATUS_UNPROCESSABLE_ENTITY, $result->getStatus());
+		$this->assertSame(
+			['error' => 'wrong_act', 'message' => 'This document asks you to sign it, not to accept it'],
+			$result->getData()
+		);
+
+	}//end testAcceptDocumentBySignerAnswers422()
+
+	/**
+	 * An accept-only recipient who sends the sign act gets 422, not 502
+	 * (signing-accept-only-recipient D5).
+	 *
+	 * @return void
+	 */
+	public function testSignDocumentByAccepterAnswers422(): void {
+		$this->withInvitedSigner();
+		$this->withRequest(assertion: $this->mintAssertion(), params: ['signingRequestId' => 'request-uuid-1', 'consent' => true]);
+
+		$this->mockSigningService->method('sign')->willThrowException(
+			new \RuntimeException(SigningService::ACCEPT_NOT_SIGN, 422)
+		);
+
+		$result = $this->controller()->signDocument();
+
+		$this->assertSame(Http::STATUS_UNPROCESSABLE_ENTITY, $result->getStatus());
+		$this->assertSame(
+			['error' => 'wrong_act', 'message' => 'This document asks you to accept it, not to sign it'],
+			$result->getData()
+		);
+
+	}//end testSignDocumentByAccepterAnswers422()
+
+	/**
+	 * A recipient on another request, or with another e-mail, cannot accept:
+	 * the scope check refuses with 403 and `accept()` never runs.
+	 *
+	 * @return void
+	 */
+	public function testAcceptDocumentForAForeignRecipientIsRefused(): void {
+		$this->mockSigningService->expects($this->never())->method('accept');
+		$this->mockObjectService->method('findAll')->willReturn(
+			[
+				[
+					'id' => 'someone-elses-signer',
+					'email' => 'mallory@example.com',
+					'signingRequestId' => 'request-uuid-1',
+					'status' => 'PENDING',
+					'role' => 'accept',
+				],
+			]
+		);
+		$this->withRequest(assertion: $this->mintAssertion(), params: ['signingRequestId' => 'request-uuid-1']);
+
+		$result = $this->controller()->acceptDocument();
+
+		$this->assertSame(Http::STATUS_FORBIDDEN, $result->getStatus());
+
+	}//end testAcceptDocumentForAForeignRecipientIsRefused()
+
+	/**
+	 * Without the portal assertion the accept act answers 401, counts as a
+	 * rejected assertion, and `accept()` never runs.
+	 *
+	 * @return void
+	 */
+	public function testAcceptDocumentWithoutAssertionAnswers401(): void {
+		$this->mockSigningService->expects($this->never())->method('accept');
+		$this->withRequest(assertion: null, params: ['signingRequestId' => 'request-uuid-1']);
+		$throttler = $this->createMock(IThrottler::class);
+		$throttler->expects($this->once())->method('registerAttempt');
+
+		$result = $this->controller(throttler: $throttler)->acceptDocument();
+
+		$this->assertSame(Http::STATUS_UNAUTHORIZED, $result->getStatus());
+
+	}//end testAcceptDocumentWithoutAssertionAnswers401()
+
 }//end class
