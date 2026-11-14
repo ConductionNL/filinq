@@ -2888,7 +2888,15 @@ OC.L10N.register(
         "Delegated signing is not available": "Gemachtigd ondertekenen is niet beschikbaar",
         "Sort documents": "Documenten sorteren",
         "ascending": "oplopend",
-        "descending": "aflopend"
+        "descending": "aflopend",
+        "A document filed against a declared record type goes to its group, and waits for acceptance when you ask for it.": "Een document dat bij een gedeclareerd recordtype wordt ingediend, gaat naar de bijbehorende groep en wacht op acceptatie als je daarom vraagt.",
+        "App": "App",
+        "Route to group": "Doorsturen naar groep",
+        "Routing per record type": "Routering per recordtype",
+        "Routing saved for {type}": "Routering opgeslagen voor {type}",
+        "Save routing": "Routering opslaan",
+        "The group accepts the document first": "De groep accepteert het document eerst",
+        "The routing could not be saved": "De routering kon niet worden opgeslagen"
     },
     "nplurals=2; plural=(n != 1);"
 )

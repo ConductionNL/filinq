@@ -1768,6 +1768,14 @@
         "Delegated signing is not available": "Delegiertes Unterzeichnen ist nicht verfügbar",
         "Sort documents": "Dokumente sortieren",
         "ascending": "aufsteigend",
-        "descending": "absteigend"
+        "descending": "absteigend",
+        "A document filed against a declared record type goes to its group, and waits for acceptance when you ask for it.": "Ein Dokument, das einem deklarierten Datensatztyp zugeordnet wird, geht an dessen Gruppe und wartet auf Annahme, wenn Sie das verlangen.",
+        "App": "App",
+        "Route to group": "An Gruppe weiterleiten",
+        "Routing per record type": "Weiterleitung pro Datensatztyp",
+        "Routing saved for {type}": "Weiterleitung für {type} gespeichert",
+        "Save routing": "Weiterleitung speichern",
+        "The group accepts the document first": "Die Gruppe nimmt das Dokument zuerst an",
+        "The routing could not be saved": "Die Weiterleitung konnte nicht gespeichert werden"
     }
 }

@@ -2803,7 +2803,15 @@ OC.L10N.register(
         "Delegated signing is not available": "Delegated signing is not available",
         "Sort documents": "Sort documents",
         "ascending": "ascending",
-        "descending": "descending"
+        "descending": "descending",
+        "A document filed against a declared record type goes to its group, and waits for acceptance when you ask for it.": "A document filed against a declared record type goes to its group, and waits for acceptance when you ask for it.",
+        "App": "App",
+        "Route to group": "Route to group",
+        "Routing per record type": "Routing per record type",
+        "Routing saved for {type}": "Routing saved for {type}",
+        "Save routing": "Save routing",
+        "The group accepts the document first": "The group accepts the document first",
+        "The routing could not be saved": "The routing could not be saved"
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -1766,7 +1766,15 @@ OC.L10N.register(
         "Delegated signing is not available": "La firma delegata non è disponibile",
         "Sort documents": "Ordina documenti",
         "ascending": "crescente",
-        "descending": "decrescente"
+        "descending": "decrescente",
+        "A document filed against a declared record type goes to its group, and waits for acceptance when you ask for it.": "Un documento archiviato su un tipo di record dichiarato va al suo gruppo e attende l'accettazione quando lo richiedi.",
+        "App": "App",
+        "Route to group": "Instrada al gruppo",
+        "Routing per record type": "Instradamento per tipo di record",
+        "Routing saved for {type}": "Instradamento salvato per {type}",
+        "Save routing": "Salva instradamento",
+        "The group accepts the document first": "Il gruppo accetta prima il documento",
+        "The routing could not be saved": "Impossibile salvare l'instradamento"
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -42,7 +42,8 @@
 
 ## 7. Intake routing
 
-- [ ] 7.1 Offer the routing declaration per record type on the intake channels page over `intake#declareRouting`, so a document filed against a declared type is routed and waits for acceptance (REQ-IDW-05, row in-route). Verify: PHPUnit that a declared type routes and an undeclared type does not.
+- [x] 7.1 Offer the routing declaration per record type on the intake channels page over `intake#declareRouting`, so a document filed against a declared type is routed and waits for acceptance (REQ-IDW-05, row in-route). Verify: PHPUnit that a declared type routes and an undeclared type does not.
+  - Built: a Routing per record type form on the intake page (`src/components/intake/IntakeRoutingDeclaration.vue`) that declares app, record type, group and acceptance over `intake#declareRouting`. The routing itself was already there; `IntakeRoutingServiceTest` pins that a declared type routes and waits for acceptance and an undeclared type routes nowhere. There is no separate intake channels page, so the form sits on the intake inbox.
 
 ## 8. Template access
 

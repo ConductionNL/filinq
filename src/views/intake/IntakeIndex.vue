@@ -125,6 +125,8 @@ to a record or rejects it with a reason, and either way it leaves the inbox.
 		<SeparatorSheetsDialog
 			v-if="separatorsOpen"
 			@close="separatorsOpen = false" />
+
+		<IntakeRoutingDeclaration />
 	</div>
 </template>
 
@@ -135,6 +137,7 @@ import { NcActionButton, NcActions, NcButton, NcNoteCard } from '@nextcloud/vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
 import FolderOutline from 'vue-material-design-icons/FolderOutline.vue'
+import IntakeRoutingDeclaration from '../../components/intake/IntakeRoutingDeclaration.vue'
 import FinalDocumentReasonDialog from '../../dialogs/FinalDocumentReasonDialog.vue'
 import IntakeAssignDialog from '../../dialogs/IntakeAssignDialog.vue'
 import SeparatorSheetsDialog from '../../dialogs/SeparatorSheetsDialog.vue'
@@ -162,6 +165,7 @@ export default {
 		FinalDocumentReasonDialog,
 		FolderOutline,
 		IntakeAssignDialog,
+		IntakeRoutingDeclaration,
 		SeparatorSheetsDialog,
 		NcActionButton,
 		NcActions,
