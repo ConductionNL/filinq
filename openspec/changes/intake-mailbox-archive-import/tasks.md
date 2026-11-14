@@ -20,7 +20,7 @@
 
 ## 4. Screens
 
-- [ ] 4.1 Add the import page with file pick, folder mapping, progress and the failure list, and register it in `src/manifest.json` (REQ-MAI-001, REQ-MAI-003). Verify: Playwright starts an import of the fixture, maps one folder, and reads the counts after the job ran.
+- [x] 4.1 Add the import page with file pick, folder mapping, progress and the failure list, and register it in `src/manifest.json` (REQ-MAI-001, REQ-MAI-003). Verify: Playwright starts an import of the fixture, maps one folder, and reads the counts after the job ran.
 
 ## 5. Quality
 

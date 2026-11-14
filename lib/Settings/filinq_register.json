@@ -12145,7 +12145,7 @@
                         ],
                         "x-enum-labels": {
                             "mbox": "MBOX",
-                            "zip": "ZIP of .eml",
+                            "zip": "ZIP of .eml files",
                             "pst": "Outlook PST"
                         },
                         "visible": true,
