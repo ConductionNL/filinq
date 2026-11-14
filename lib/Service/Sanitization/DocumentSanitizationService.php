@@ -48,6 +48,7 @@ class DocumentSanitizationService implements DocumentSanitizationServiceInterfac
 	 * @param OpenRegisterServiceLocator   $locator    OpenRegister's services.
 	 * @param SanitizationRecordRepository $records    The run records.
 	 * @param LoggerInterface              $logger     The logger.
+	 * @param SealLookup|null              $seals      Whether the source carries an active waarmerk.
 	 *
 	 * @return void
 	 */
@@ -56,6 +57,7 @@ class DocumentSanitizationService implements DocumentSanitizationServiceInterfac
 		private readonly OpenRegisterServiceLocator $locator,
 		private readonly SanitizationRecordRepository $records,
 		private readonly LoggerInterface $logger,
+		private readonly ?SealLookup $seals=null,
 	) {
 
 	}//end __construct()
@@ -67,11 +69,12 @@ class DocumentSanitizationService implements DocumentSanitizationServiceInterfac
 	 * @param string $userId  Who asks.
 	 * @param string $trigger manual, anonymisation or publication.
 	 *
-	 * @return array<string, mixed> sanitized, sanitizedFileId, sanitizedFileName, report, recordId; or sanitizationSkipped with a reason.
+	 * @return array<string, mixed> sanitized, sanitizedFileId, sanitizedFileName, report, recordId, sourceSealed; or sanitizationSkipped with a reason.
 	 *
 	 * @throws InvalidArgumentException 404 unreachable, 415 unsupported, 422 encrypted, 500 engine failure.
 	 *
 	 * @spec openspec/changes/document-sanitization/tasks.md#3-1
+	 * @spec openspec/changes/document-sanitization/tasks.md#3-5
 	 */
 	public function sanitize(int $fileId, string $userId, string $trigger='manual'): array {
 		$file = $this->resolve(fileId: $fileId, userId: $userId);
@@ -124,6 +127,9 @@ class DocumentSanitizationService implements DocumentSanitizationServiceInterfac
 			'sanitizedFileName' => $derivative->getName(),
 			'report'            => $report,
 			'recordId'          => (string) ($record['uuid'] ?? ''),
+			// The clean copy never carries the source's seal: the caller warns
+			// that it must be sealed again (REQ-DDSAN-005). A warning, not a refusal.
+			'sourceSealed'      => $this->seals?->hasActiveSeal(fileId: $fileId) === true,
 		];
 
 	}//end sanitize()

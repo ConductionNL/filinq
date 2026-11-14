@@ -1776,7 +1776,8 @@
         "The test arrived": "Il test è arrivato",
         "The test did not arrive": "Il test non è arrivato",
         "Type a name and a URL and pick at least one event": "Inserisci un nome e un URL e scegli almeno un evento",
-        "Type a secret so the receiver can check each delivery": "Inserisci un segreto affinché il destinatario possa verificare ogni consegna"
+        "Type a secret so the receiver can check each delivery": "Inserisci un segreto affinché il destinatario possa verificare ogni consegna",
+        "The original carries a seal. This clean copy does not: seal it again before you publish it.": "L'originale è sigillato. Questa copia ripulita no: sigillala di nuovo prima di pubblicarla."
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

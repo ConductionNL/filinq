@@ -1774,7 +1774,8 @@ OC.L10N.register(
         "The test arrived": "Le test est arrivé",
         "The test did not arrive": "Le test n'est pas arrivé",
         "Type a name and a URL and pick at least one event": "Saisissez un nom et une URL et choisissez au moins un événement",
-        "Type a secret so the receiver can check each delivery": "Saisissez un secret pour que le destinataire puisse vérifier chaque livraison"
+        "Type a secret so the receiver can check each delivery": "Saisissez un secret pour que le destinataire puisse vérifier chaque livraison",
+        "The original carries a seal. This clean copy does not: seal it again before you publish it.": "L'original est scellé. Cette copie nettoyée ne l'est pas : scellez-la à nouveau avant de la publier."
     },
     "nplurals=2; plural=(n > 1);"
 )

@@ -3085,7 +3085,8 @@
         "The test arrived": "De test is aangekomen",
         "The test did not arrive": "De test is niet aangekomen",
         "Type a name and a URL and pick at least one event": "Typ een naam en een URL en kies minstens één gebeurtenis",
-        "Type a secret so the receiver can check each delivery": "Typ een geheim zodat de ontvanger elke bezorging kan controleren"
+        "Type a secret so the receiver can check each delivery": "Typ een geheim zodat de ontvanger elke bezorging kan controleren",
+        "The original carries a seal. This clean copy does not: seal it again before you publish it.": "Het origineel is gewaarmerkt. Deze schone kopie niet: waarmerk haar opnieuw voordat u haar publiceert."
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

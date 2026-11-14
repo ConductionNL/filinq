@@ -2906,7 +2906,8 @@ OC.L10N.register(
         "The test arrived": "The test arrived",
         "The test did not arrive": "The test did not arrive",
         "Type a name and a URL and pick at least one event": "Type a name and a URL and pick at least one event",
-        "Type a secret so the receiver can check each delivery": "Type a secret so the receiver can check each delivery"
+        "Type a secret so the receiver can check each delivery": "Type a secret so the receiver can check each delivery",
+        "The original carries a seal. This clean copy does not: seal it again before you publish it.": "The original carries a seal. This clean copy does not: seal it again before you publish it."
     },
     "nplurals=2; plural=(n != 1);"
 )

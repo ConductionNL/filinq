@@ -28,6 +28,7 @@ use InvalidArgumentException;
 use OCA\Filinq\Service\OpenRegisterServiceLocator;
 use OCA\Filinq\Service\Sanitization\DocumentSanitizationService;
 use OCA\Filinq\Service\Sanitization\SanitizationRecordRepository;
+use OCA\Filinq\Service\Sanitization\SealLookup;
 use OCA\OpenRegister\Exception\SanitizationException;
 use OCA\OpenRegister\Files\Service\File\OfficeDocumentSanitizer;
 use OCA\OpenRegister\Files\Service\File\SanitizationReport;
@@ -92,11 +93,12 @@ class DocumentSanitizationServiceTest extends TestCase {
 	/**
 	 * The service, with OpenRegister's office sanitizer and, when given, its PDF sanitizer.
 	 *
-	 * @param object|null $pdf OpenRegister's PDF sanitizer, null for an OpenRegister without it.
+	 * @param object|null     $pdf   OpenRegister's PDF sanitizer, null for an OpenRegister without it.
+	 * @param SealLookup|null $seals The seal lookup, null for none.
 	 *
 	 * @return DocumentSanitizationService
 	 */
-	private function service(?object $pdf = null): DocumentSanitizationService {
+	private function service(?object $pdf = null, ?SealLookup $seals = null): DocumentSanitizationService {
 		$userFolder = $this->createMock(Folder::class);
 		$userFolder->method('getById')->willReturnCallback(fn (int $id): array => isset($this->files[$id]) === true ? [$this->files[$id]] : []);
 		$root = $this->createMock(IRootFolder::class);
@@ -124,7 +126,8 @@ class DocumentSanitizationServiceTest extends TestCase {
 			rootFolder: $root,
 			locator: $locator,
 			records: $records,
-			logger: $this->createMock(LoggerInterface::class)
+			logger: $this->createMock(LoggerInterface::class),
+			seals: $seals
 		);
 
 	}//end service()
@@ -372,4 +375,45 @@ class DocumentSanitizationServiceTest extends TestCase {
 		$this->assertSame([], $this->records);
 
 	}//end testAnEncryptedPdfFailsClosed()
+
+	/**
+	 * Sanitizing a sealed file still writes the copy, and says the copy needs a new seal.
+	 *
+	 * @return void
+	 */
+	public function testASealedSourceIsSanitizedWithAWarning(): void {
+		$this->file(id: 41, name: 'a.docx', mime: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+		$seals = $this->createMock(SealLookup::class);
+		$seals->expects($this->once())->method('hasActiveSeal')->with(41)->willReturn(true);
+		$service = $this->service(seals: $seals);
+		$temp = tempnam(sys_get_temp_dir(), 'san');
+		$this->office->method('sanitize')->willReturn(new SanitizationResult(path: $temp, report: new SanitizationReport()));
+
+		$result = $service->sanitize(fileId: 41, userId: 'alice');
+
+		$this->assertTrue($result['sanitized']);
+		$this->assertTrue($result['sourceSealed']);
+		$this->assertSame(901, $result['sanitizedFileId']);
+		$this->assertCount(1, $this->records);
+
+	}//end testASealedSourceIsSanitizedWithAWarning()
+
+	/**
+	 * An unsealed source, or no seal lookup at all, carries no warning.
+	 *
+	 * @return void
+	 */
+	public function testAnUnsealedSourceCarriesNoWarning(): void {
+		$this->file(id: 41, name: 'a.docx', mime: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+		$seals = $this->createMock(SealLookup::class);
+		$seals->method('hasActiveSeal')->willReturn(false);
+		foreach ([$seals, null] as $lookup) {
+			$service = $this->service(seals: $lookup);
+			$temp = tempnam(sys_get_temp_dir(), 'san');
+			$this->office->method('sanitize')->willReturn(new SanitizationResult(path: $temp, report: new SanitizationReport()));
+
+			$this->assertFalse($service->sanitize(fileId: 41, userId: 'alice')['sourceSealed']);
+		}
+
+	}//end testAnUnsealedSourceCarriesNoWarning()
 }//end class

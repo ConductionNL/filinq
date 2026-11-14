@@ -1776,6 +1776,7 @@
         "The test arrived": "La prueba llegó",
         "The test did not arrive": "La prueba no llegó",
         "Type a name and a URL and pick at least one event": "Escriba un nombre y una URL y elija al menos un evento",
-        "Type a secret so the receiver can check each delivery": "Escriba un secreto para que el destinatario pueda comprobar cada entrega"
+        "Type a secret so the receiver can check each delivery": "Escriba un secreto para que el destinatario pueda comprobar cada entrega",
+        "The original carries a seal. This clean copy does not: seal it again before you publish it.": "El original está sellado. Esta copia limpia no: vuelva a sellarla antes de publicarla."
     }
 }
