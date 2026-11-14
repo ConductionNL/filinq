@@ -10382,6 +10382,176 @@
                     }
                 }
             }
+        },
+        "/bridge/sources": {
+            "get": {
+                "operationId": "bridge-sources",
+                "summary": "GET /api/bridge/sources",
+                "description": "GET /api/bridge/sources",
+                "tags": [
+                    "bridge"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Every bridge source with its health (admin setting).",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/bridge/external-documents": {
+            "get": {
+                "operationId": "bridge-external-documents",
+                "summary": "GET /api/bridge/external-documents",
+                "description": "GET /api/bridge/external-documents",
+                "tags": [
+                    "bridge"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The staged documents the caller may read, optionally of one source.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/bridge/dossiers/{dossierId}/attach": {
+            "post": {
+                "operationId": "bridge-attach",
+                "summary": "POST /api/bridge/dossiers/{dossierId}/attach",
+                "description": "POST /api/bridge/dossiers/{dossierId}/attach",
+                "tags": [
+                    "bridge"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The documents attached to the dossier.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "dossierId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/bridge/external-documents/{id}/release": {
+            "post": {
+                "operationId": "bridge-release",
+                "summary": "POST /api/bridge/external-documents/{id}/release",
+                "description": "POST /api/bridge/external-documents/{id}/release",
+                "tags": [
+                    "bridge"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The released document.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/bridge/external-documents/{id}/retry": {
+            "post": {
+                "operationId": "bridge-retry",
+                "summary": "POST /api/bridge/external-documents/{id}/retry",
+                "description": "POST /api/bridge/external-documents/{id}/retry",
+                "tags": [
+                    "bridge"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The document queued for write-back again.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
         }
     },
     "components": {

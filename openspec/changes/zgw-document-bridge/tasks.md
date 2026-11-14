@@ -18,13 +18,15 @@
   - Source + staged-document queries via `SettingsService::getObjectService()` with `@self.register = bridge`; clock-injected `getSourceHealth()` (fresh/stale/failing/inactive, 24h SLA); status transitions with full-object PUT-semantic saves.
   - No ZGW/StUF/HTTP client code anywhere in the service.
 
-- [ ] 2.2 Implement dossier pick-up: attach staged documents to a dossier (REQ-DDZGW-006)
+- [x] 2.2 Implement dossier pick-up: attach staged documents to a dossier (REQ-DDZGW-006)
+  - Done (2026-11-14): `BridgeDossierPickUp::attach()` checks every document is staged and its staged file readable, and resolves the dossier folder under the operator's view, before it copies anything; then copies each staged file into the folder (a free name when taken; the original is untouched) and records `dossierRef` + `in_processing` through `BridgeService::pickedUp()`. `BridgeDossierPickUpTest` (5), `BridgeServiceTest::testPickedUpRecordsTheDossierOnAStagedDocumentOnly`.
   - Copies staged file into the dossier folder, sets `dossierRef` + `in_processing`; existing `dossier` schema untouched.
 
 - [x] 2.3 Implement release/retry for write-back (REQ-DDZGW-005)
   - `processed → ready_for_writeback` with `resultFileRef` required; `writeback_failed → ready_for_writeback` retry; document the OpenConnector push-leg contract (new informatieobject + zaak relation, derivative metadata) in the service docblock.
 
-- [ ] 2.4 Add `lib/Controller/BridgeController.php` + routes under `api/bridge/*` (sources, external-documents listing, attach, release, retry)
+- [x] 2.4 Add `lib/Controller/BridgeController.php` + routes under `api/bridge/*` (sources, external-documents listing, attach, release, retry)
+  - Done (2026-11-14): `sources` needs the filinq admin setting; the others are `NoAdminRequired` and act with the caller's own OpenRegister access (RBAC-scoped listing, 404 for an unreadable document, the save checked by OpenRegister, the dossier folder and staged files under the caller's view). Refusals 400, missing 404, other failures 500 without details. Routes in `appinfo/routes.php` before the catch-all and in `openapi.json`. `BridgeControllerTest` (7).
   - Every method carries an explicit auth attribute and a per-object/admin guard; listing scoped by OR RBAC; routes registered in `appinfo/routes.php` before the catch-all.
 
 - [ ] 2.5 File an OpenConnector issue if the push mapping cannot express "create new informatieobject + relate to zaak" during verification (design.md D2 uncertainty)

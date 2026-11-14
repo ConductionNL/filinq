@@ -178,6 +178,29 @@ class BridgeServiceTest extends TestCase {
 	}//end testRetry()
 
 	/**
+	 * A staged document picked up into a dossier carries the dossier and is in processing; nothing else moves that way.
+	 *
+	 * @return void
+	 */
+	public function testPickedUpRecordsTheDossierOnAStagedDocumentOnly(): void {
+		$service = $this->service();
+		$this->objects->method('find')->willReturn(['uuid' => 'd-1', 'processingStatus' => 'staged', 'stagedFileRef' => 101]);
+		$this->objects->expects($this->once())->method('saveObject')->with(
+			['processingStatus' => 'in_processing', 'stagedFileRef' => 101, 'dossierRef' => 'dossier-21'],
+			'filinq',
+			'externalDocument',
+			'd-1'
+		)->willReturn(['uuid' => 'd-1', 'processingStatus' => 'in_processing', 'dossierRef' => 'dossier-21']);
+
+		$document = $service->find('d-1');
+		$this->assertSame('in_processing', $service->pickedUp($document, 'dossier-21')['processingStatus']);
+
+		$this->expectException(InvalidArgumentException::class);
+		$this->expectExceptionMessage('A processed document cannot be moved to in_processing.');
+		$service->pickedUp(['uuid' => 'd-2', 'processingStatus' => 'processed'], 'dossier-21');
+	}//end testPickedUpRecordsTheDossierOnAStagedDocumentOnly()
+
+	/**
 	 * An unknown document is not found.
 	 *
 	 * @return void

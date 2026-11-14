@@ -2108,6 +2108,15 @@ interface Node {
 	public function move(string $targetPath): \OCP\Files\Node;
 
 	/**
+	 * Copy the node to a path; the real OCP declares it here. BridgeDossierPickUp copies a staged file with it.
+	 *
+	 * @param string $targetPath The full target path.
+	 *
+	 * @return \OCP\Files\Node The copy.
+	 */
+	public function copy(string $targetPath): \OCP\Files\Node;
+
+	/**
 	 * Remove this node, through the trashbin when one is enabled.
 	 *
 	 * @return void

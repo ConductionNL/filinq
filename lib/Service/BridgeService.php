@@ -74,6 +74,7 @@ class BridgeService {
 	private const TRANSITIONS = [
 		'release' => ['processed', 'ready_for_writeback'],
 		'retry' => ['writeback_failed', 'ready_for_writeback'],
+		'pickUp' => ['staged', 'in_processing'],
 	];
 
 	/**
@@ -189,6 +190,37 @@ class BridgeService {
 	public function retry(string $id): array {
 		return $this->transition(document: $this->document(id: $id), action: 'retry', changes: ['writeBackError' => null]);
 	}//end retry()
+
+	/**
+	 * One external document by uuid, with its uuid.
+	 *
+	 * @param string $id The external document's uuid.
+	 *
+	 * @return array<string, mixed> The document.
+	 *
+	 * @throws RuntimeException When there is none (code 404).
+	 *
+	 * @spec openspec/changes/zgw-document-bridge
+	 */
+	public function find(string $id): array {
+		return $this->document(id: $id);
+	}//end find()
+
+	/**
+	 * Record that a staged document was picked up into a dossier (REQ-DDZGW-006).
+	 *
+	 * @param array<string, mixed> $document   The staged document as read, with its uuid.
+	 * @param string               $dossierRef The dossier object's uuid.
+	 *
+	 * @return array<string, mixed> The saved document, `in_processing` with its `dossierRef`.
+	 *
+	 * @throws InvalidArgumentException When the document is not staged.
+	 *
+	 * @spec openspec/changes/zgw-document-bridge
+	 */
+	public function pickedUp(array $document, string $dossierRef): array {
+		return $this->transition(document: $document, action: 'pickUp', changes: ['dossierRef' => $dossierRef]);
+	}//end pickedUp()
 
 	/**
 	 * Move a document along one of filinq's transitions and save the whole object.
