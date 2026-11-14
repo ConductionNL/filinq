@@ -16,9 +16,9 @@
 ## 3. Decision
 
 - [x] 3.1 Add accept and dismiss of a registry suggestion to `IntakeController` beside `decideParty()`, session user only (D4) (REQ-IBR-004). Verify: Newman for accept and dismiss; PHPUnit that accept writes the party fields and `written: true`.
-- [ ] 3.2 Show the registry suggestion in the assign dialog of `src/views/intake/IntakeIndex.vue` with accept, correct and dismiss (REQ-IBR-004). Verify: Playwright accepts the seeded KvK suggestion.
+- [x] 3.2 (`src/dialogs/IntakeAssignDialog.vue` lists the open registry suggestions and the lookup note through `src/components/intake/IntakeSuggestionCard.vue`, with accept, correct (name, address, KvK number) and dismiss, sent by `decideRegistrySuggestion()` in `src/services/intakeSuggestions.js`; `tests/vitest/intakeSuggestions.spec.js`; the Playwright run needs a live instance) Show the registry suggestion in the assign dialog of `src/views/intake/IntakeIndex.vue` with accept, correct and dismiss (REQ-IBR-004). Verify: Playwright accepts the seeded KvK suggestion.
 
-- [ ] 3.3 Show the party suggestion (`partySuggestion` on the intake document) in `src/views/intake/IntakeIndex.vue` with confirm, correct and dismiss through `decidePartySuggestion()` in `src/services/intakeService.js` (row in-party, REQ-IDW-03). Verify: Playwright confirms a suggested sender.
+- [x] 3.3 (the same dialog lists the party suggestions with confirm, correct and dismiss through `decidePartySuggestion()`. A confirmation is sent as `accepted`, a changed correction as `edited`, a dismissal as `rejected`. Same spec; the Playwright run needs a live instance) Show the party suggestion (`partySuggestion` on the intake document) in `src/views/intake/IntakeIndex.vue` with confirm, correct and dismiss through `decidePartySuggestion()` in `src/services/intakeService.js` (row in-party, REQ-IDW-03). Verify: Playwright confirms a suggested sender.
 
 ## 4. Quality
 

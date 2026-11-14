@@ -2975,7 +2975,17 @@ OC.L10N.register(
         "The Nextcloud file id of the reviewed document; one review per file.": "Het Nextcloud-bestands-ID van het gecontroleerde document; één controle per bestand.",
         "The reviewer's note.": "De notitie van de controleur.",
         "The user who marked the document checked.": "De gebruiker die het document als gecontroleerd markeerde.",
-        "When the reviewer marked the document checked.": "Wanneer de controleur het document als gecontroleerd markeerde."
+        "When the reviewer marked the document checked.": "Wanneer de controleur het document als gecontroleerd markeerde.",
+        "What the base registries found": "Wat de basisregistraties vonden",
+        "Senders read from the document": "Afzenders gelezen uit het document",
+        "Address": "Adres",
+        "KvK number": "KvK-nummer",
+        "Telephone": "Telefoon",
+        "BRP": "BRP",
+        "KvK": "KvK",
+        "The suggestion could not be saved.": "De suggestie kon niet worden opgeslagen.",
+        "Accept the correction": "Correctie accepteren",
+        "Dismiss the suggestion": "Suggestie afwijzen"
     },
     "nplurals=2; plural=(n != 1);"
 )

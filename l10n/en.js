@@ -2844,7 +2844,17 @@ OC.L10N.register(
         "The Nextcloud file id of the reviewed document; one review per file.": "The Nextcloud file id of the reviewed document; one review per file.",
         "The reviewer's note.": "The reviewer's note.",
         "The user who marked the document checked.": "The user who marked the document checked.",
-        "When the reviewer marked the document checked.": "When the reviewer marked the document checked."
+        "When the reviewer marked the document checked.": "When the reviewer marked the document checked.",
+        "What the base registries found": "What the base registries found",
+        "Senders read from the document": "Senders read from the document",
+        "Address": "Address",
+        "KvK number": "KvK number",
+        "Telephone": "Telephone",
+        "BRP": "BRP",
+        "KvK": "KvK",
+        "The suggestion could not be saved.": "The suggestion could not be saved.",
+        "Accept the correction": "Accept the correction",
+        "Dismiss the suggestion": "Dismiss the suggestion"
     },
     "nplurals=2; plural=(n != 1);"
 )

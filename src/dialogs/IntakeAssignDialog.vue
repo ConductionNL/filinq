@@ -22,6 +22,59 @@ copy of that judgement.
 		@closing="$emit('cancel')">
 		<template #default>
 			<p>{{ explanation }}</p>
+			<!-- What the base registries answered and the parties read out of the
+			     text, each accepted, corrected or dismissed before the document is
+			     assigned (intake-base-registry-enrichment REQ-IBR-004, REQ-IDW-03). -->
+			<section
+				v-if="registrySuggestions.length > 0 || registryNote"
+				class="intake-assign__suggestions"
+				data-testid="intake-registry-suggestions">
+				<h3 class="intake-assign__heading">
+					{{ t('filinq', 'What the base registries found') }}
+				</h3>
+				<p v-if="registryNote" data-testid="intake-registry-note">
+					{{ registryNote }}
+				</p>
+				<IntakeSuggestionCard
+					v-for="suggestion in registrySuggestions"
+					:key="`registry-${suggestion.index}`"
+					:title="registryTitle(suggestion)"
+					:fields="suggestion.fields"
+					:editableKeys="registryKeys"
+					:labels="fieldLabels"
+					:acceptLabel="t('filinq', 'Accept')"
+					:state="decisions[`registry-${suggestion.index}`] || ''"
+					:saving="deciding === `registry-${suggestion.index}`"
+					@accept="decideRegistry(suggestion, 'accepted', $event)"
+					@dismiss="decideRegistry(suggestion, 'dismissed')" />
+			</section>
+			<section
+				v-if="partySuggestions.length > 0"
+				class="intake-assign__suggestions"
+				data-testid="intake-party-suggestions">
+				<h3 class="intake-assign__heading">
+					{{ t('filinq', 'Senders read from the document') }}
+				</h3>
+				<IntakeSuggestionCard
+					v-for="suggestion in partySuggestions"
+					:key="`party-${suggestion.index}`"
+					:title="partyTitle(suggestion)"
+					:fields="suggestion.party"
+					:editableKeys="partyKeys"
+					:labels="fieldLabels"
+					:acceptLabel="t('filinq', 'Confirm')"
+					:state="decisions[`party-${suggestion.index}`] || ''"
+					:saving="deciding === `party-${suggestion.index}`"
+					@accept="decideParty(suggestion, 'confirm', $event)"
+					@dismiss="decideParty(suggestion, 'dismiss')" />
+			</section>
+			<p
+				v-if="suggestionError"
+				class="intake-assign__error"
+				role="alert"
+				data-testid="intake-suggestion-error">
+				{{ suggestionError }}
+			</p>
 			<CnRegisterSchemaSelect
 				:register="register"
 				:schema="schema"
@@ -61,10 +114,19 @@ import axios from '@nextcloud/axios'
 import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 import { NcDialog, NcSelect } from '@nextcloud/vue'
+import IntakeSuggestionCard from '../components/intake/IntakeSuggestionCard.vue'
+import {
+	decidePartyChoice,
+	decideRegistrySuggestion,
+	openPartySuggestions,
+	openRegistrySuggestions,
+	PARTY_FIELDS,
+	REGISTRY_FIELDS,
+} from '../services/intakeSuggestions.js'
 
 export default {
 	name: 'IntakeAssignDialog',
-	components: { CnDialogActions, CnRegisterSchemaSelect, NcDialog, NcSelect },
+	components: { CnDialogActions, CnRegisterSchemaSelect, IntakeSuggestionCard, NcDialog, NcSelect },
 
 	props: {
 		// The document being assigned, for the sentence above the pickers.
@@ -84,10 +146,45 @@ export default {
 			selected: null,
 			records: [],
 			loadingRecords: false,
+			// What the clerk decided per suggestion, keyed `registry-<i>` or `party-<i>`.
+			decisions: {},
+			deciding: '',
+			suggestionError: '',
 		}
 	},
 
 	computed: {
+		registrySuggestions() {
+			return openRegistrySuggestions(this.document)
+		},
+
+		partySuggestions() {
+			return openPartySuggestions(this.document)
+		},
+
+		registryNote() {
+			const note = this.document?.registryLookupNote
+			return typeof note === 'string' ? note.trim() : ''
+		},
+
+		registryKeys() {
+			return REGISTRY_FIELDS
+		},
+
+		partyKeys() {
+			return PARTY_FIELDS
+		},
+
+		fieldLabels() {
+			return {
+				name: t('filinq', 'Name'),
+				address: t('filinq', 'Address'),
+				kvkNumber: t('filinq', 'KvK number'),
+				email: t('filinq', 'Email'),
+				telephone: t('filinq', 'Telephone'),
+			}
+		},
+
 		explanation() {
 			const subject = this.document?.subject || t('filinq', 'this document')
 			return t('filinq', 'Pick the record "{subject}" belongs to.', {
@@ -123,6 +220,66 @@ export default {
 
 	methods: {
 		t,
+
+		registryTitle(suggestion) {
+			const source = suggestion.source === 'brp' ? t('filinq', 'BRP') : t('filinq', 'KvK')
+			return suggestion.identifier ? `${source}: ${suggestion.identifier}` : source
+		},
+
+		partyTitle(suggestion) {
+			return suggestion.party.name || suggestion.party.email || t('filinq', 'Sender')
+		},
+
+		/**
+		 * Accept or dismiss one registry suggestion through the server.
+		 *
+		 * @param {object} suggestion The suggestion.
+		 * @param {'accepted'|'dismissed'} decision The decision.
+		 * @param {object} [fields] The fields as the clerk accepted them.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/intake-base-registry-enrichment/tasks.md#task-3.2
+		 */
+		async decideRegistry(suggestion, decision, fields = {}) {
+			await this.decide(`registry-${suggestion.index}`, decision, () => decideRegistrySuggestion(this.document.uuid, suggestion.index, decision, fields))
+		},
+
+		/**
+		 * Confirm, correct or dismiss one party suggestion through the server.
+		 *
+		 * @param {object} suggestion The suggestion.
+		 * @param {'confirm'|'dismiss'} choice What the clerk chose.
+		 * @param {object} [fields] The fields as the clerk left them.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/intake-base-registry-enrichment/tasks.md#task-3.3
+		 */
+		async decideParty(suggestion, choice, fields = null) {
+			await this.decide(`party-${suggestion.index}`, choice === 'dismiss' ? 'dismissed' : 'accepted', () => decidePartyChoice(this.document, suggestion, choice, fields))
+		},
+
+		/**
+		 * Run one decision and keep its outcome, or say why it was refused.
+		 *
+		 * @param {string} key The suggestion's key.
+		 * @param {string} state The state it reads as once stored.
+		 * @param {() => Promise<unknown>} send Sends the decision.
+		 * @return {Promise<void>}
+		 */
+		async decide(key, state, send) {
+			if (this.deciding !== '') {
+				return
+			}
+			this.deciding = key
+			this.suggestionError = ''
+			try {
+				await send()
+				this.decisions = { ...this.decisions, [key]: state }
+			} catch (error) {
+				const answer = error?.response?.data
+				this.suggestionError = (answer && (answer.error || answer.message)) || t('filinq', 'The suggestion could not be saved.')
+			} finally {
+				this.deciding = ''
+			}
+		},
 
 		onRegister(value) {
 			this.register = value || ''
@@ -205,6 +362,15 @@ export default {
 </script>
 
 <style scoped>
+.intake-assign__suggestions {
+	margin-block: calc(var(--default-grid-baseline) * 3);
+}
+
+.intake-assign__heading {
+	font-size: var(--default-font-size);
+	margin: 0 0 calc(var(--default-grid-baseline) * 2);
+}
+
 .intake-assign__records {
 	margin-top: 12px;
 	width: 100%;
