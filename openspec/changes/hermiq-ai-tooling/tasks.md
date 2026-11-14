@@ -39,16 +39,22 @@
 
 ## 3. Attribution and governance wiring
 
-- [ ] 3.1 Record `mcp` attribution with the invoking principal on agent-initiated signing
+- [x] 3.1 Record `mcp` attribution with the invoking principal on agent-initiated signing
   requests and consent updates (mirror the anonymisation-intake attribution contract).
-  - Consent half built: each status event an agent writes carries `via: mcp` beside `by` (the
+  - Consent half: each status event an agent writes carries `via: mcp` beside `by` (the
     invoking principal), threaded from the tool through `ConsentCrudService`, `ConsentService` and
     `ConsentStatusChange` to `ConsentStatusEvents`, and not settable through the HTTP API
     (`publicationConsent` 1.6.0, register 8.55.0; `ConsentUpdateFlowTest::testAnAgentsStatusEventSaysItCameViaMcp`).
     The decision is also logged with `triggeredBy: mcp` and the uid, as the anonymisation intake does.
-    Left: the signing half. `startSigningRequest` is `createRequest()` itself (1.1), so the request
-    cannot tell an agent's call from the form's. Attributing it needs a separate agent entry point,
-    which changes what 1.1 and 1.3 pin.
+  - Signing half: `createRequest()` cannot tell an agent's call from the form's, so the tool moved
+    to a separate entry point, `SigningService::startSigningRequest()`, which runs the same creation
+    (one private `persistRequest()`, every check unchanged) and marks the request `initiatedVia: mcp`
+    and its CREATED audit entry `extra.via: mcp` beside the actor (the invoking principal).
+    `createRequest()` keeps its signature and carries no attribute; the request data cannot set the
+    attribution (`signingRequest` 1.12.0, register 8.56.0;
+    `SigningServiceTest::testAnAgentStartedRequestIsAttributedToMcp`,
+    `::testTheRequestDataCannotClaimMcpAttribution`). 1.1 and 1.3 now pin `startSigningRequest()`
+    as the one signing tool, and the spec delta names it.
 - [ ] 3.2 Verify in Hermiq's tool-governance grant editor that both tools classify as
   approval-required writes (hint-driven; no Filinq-side gate code), and that an
   ungranted agent does not see them.

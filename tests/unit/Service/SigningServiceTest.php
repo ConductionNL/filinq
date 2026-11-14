@@ -503,6 +503,90 @@ class SigningServiceTest extends TestCase {
 	}//end testCreateRequestInternalHasNoProvenance()
 
 	/**
+	 * Save the signing requests through a callback that keeps the first one.
+	 *
+	 * @param array<string, mixed> $captured Receives the first saved signing request.
+	 *
+	 * @return void
+	 */
+	private function captureTheCreatedRequest(array &$captured): void {
+		$this->providerFactory->method('getProvider')->willReturn($this->makeSupportingProvider());
+		$this->objectService->method('saveObject')->willReturnCallback(
+			function (array $object) use (&$captured): array {
+				if (isset($object['initiatorUserId']) === true && $captured === []) {
+					$captured = $object;
+				}
+
+				$object['id'] = 'req-via-1';
+				return $object;
+			}
+		);
+
+	}//end captureTheCreatedRequest()
+
+	/**
+	 * A request an agent starts says so: the persisted request carries
+	 * `initiatedVia: mcp` and its CREATED audit entry `via: mcp`, beside the
+	 * signed-in user as initiator and actor.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/hermiq-ai-tooling/specs/filinq-mcp-surface/spec.md#requirement-agent-initiated-writes-are-attributable-req-ddhat-003
+	 */
+	public function testAnAgentStartedRequestIsAttributedToMcp(): void {
+		$captured = [];
+		$this->captureTheCreatedRequest(captured: $captured);
+		$this->persistAuditsThroughTheRealService();
+
+		$result = $this->service->startSigningRequest(
+			data: [
+				'documentFileId' => '7',
+				'documentName' => 'internal.pdf',
+				'signatureLevel' => 'SES',
+				'signingMode' => 'sequential',
+				'signers' => [['displayName' => 'Bea', 'email' => 'bea@example.org']],
+			]
+		);
+
+		$this->assertSame('mcp', $captured['initiatedVia'] ?? null);
+		$this->assertSame('alice', $captured['initiatorUserId']);
+		$this->assertSame('mcp', $result['initiatedVia'] ?? null);
+		$this->assertSame(
+			[['docudesk.signing.CREATED', ['signRequestId' => 'req-via-1', 'actorUserId' => 'alice', 'actorDisplayName' => 'Alice', 'ipAddress' => '127.0.0.1', 'signatureLevel' => 'SES', 'provider' => 'native', 'extra' => ['via' => 'mcp']]]],
+			$this->persistedAudits
+		);
+
+	}//end testAnAgentStartedRequestIsAttributedToMcp()
+
+	/**
+	 * Filinq's own path never claims mcp, even when the request data asks it to.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/hermiq-ai-tooling/specs/filinq-mcp-surface/spec.md#requirement-agent-initiated-writes-are-attributable-req-ddhat-003
+	 */
+	public function testTheRequestDataCannotClaimMcpAttribution(): void {
+		$captured = [];
+		$this->captureTheCreatedRequest(captured: $captured);
+		$this->persistAuditsThroughTheRealService();
+
+		$this->service->createRequest(
+			data: [
+				'documentFileId' => '7',
+				'documentName' => 'internal.pdf',
+				'signatureLevel' => 'SES',
+				'signingMode' => 'sequential',
+				'signers' => [['displayName' => 'Bea', 'email' => 'bea@example.org']],
+				'initiatedVia' => 'mcp',
+			]
+		);
+
+		$this->assertArrayNotHasKey('initiatedVia', $captured);
+		$this->assertSame([], $this->persistedAudits[0][1]['extra']);
+
+	}//end testTheRequestDataCannotClaimMcpAttribution()
+
+	/**
 	 * Issue #1209: a request that names nobody to sign is refused with a 400
 	 * before anything is stored, instead of being saved as a PENDING request
 	 * nobody can ever sign.
