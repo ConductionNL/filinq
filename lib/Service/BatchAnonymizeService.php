@@ -90,6 +90,7 @@ class BatchAnonymizeService implements BatchAnonymizeServiceInterface {
 	 *                      the batch. Defaults to `"dossier"` because a batch IS a folder/dossier:
 	 *                      a person gets the SAME scope-local number across all the batch's files
 	 *                      (OpenRegister derives the dossier from each file's parent folder).
+	 * @param bool   $sanitize Sanitize each delivered artifact (document-sanitization 3.4).
 	 *
 	 * @return array<string, mixed> Summary of the run — see runBatch().
 	 *
@@ -105,8 +106,15 @@ class BatchAnonymizeService implements BatchAnonymizeServiceInterface {
 		array $unredactedEntities = [],
 		string $outputFormat = 'pdf-only',
 		string $scope = 'dossier',
+		bool $sanitize = false,
 	): array {
-		$callOptions = ['appendBasisSummary' => false, 'unredactedEntities' => $unredactedEntities, 'outputFormat' => $outputFormat, 'scope' => $scope];
+		$callOptions = [
+			'appendBasisSummary' => false,
+			'unredactedEntities' => $unredactedEntities,
+			'outputFormat' => $outputFormat,
+			'scope' => $scope,
+			'sanitize' => $sanitize,
+		];
 
 		return $this->runBatch(batchId: $batchId, request: new BatchAnonymizeRequest(entities: $entities, callOptions: $callOptions));
 	}//end anonymizeBatch()
@@ -125,6 +133,7 @@ class BatchAnonymizeService implements BatchAnonymizeServiceInterface {
 	 * @param string $outputFormat Per-batch output format gate
 	 *                             ('pdf-only'|'pdf'|'preserve', default 'pdf-only').
 	 * @param string $scope Placeholder-numbering scope forwarded to OpenRegister.
+	 * @param bool   $sanitize Sanitize each delivered artifact (document-sanitization 3.4).
 	 *
 	 * @return array<string, mixed> Summary of the run — see runBatch().
 	 *
@@ -140,8 +149,15 @@ class BatchAnonymizeService implements BatchAnonymizeServiceInterface {
 		array $unredactedEntities = [],
 		string $outputFormat = 'pdf-only',
 		string $scope = 'dossier',
+		bool $sanitize = false,
 	): array {
-		$callOptions = ['appendBasisSummary' => true, 'unredactedEntities' => $unredactedEntities, 'outputFormat' => $outputFormat, 'scope' => $scope];
+		$callOptions = [
+			'appendBasisSummary' => true,
+			'unredactedEntities' => $unredactedEntities,
+			'outputFormat' => $outputFormat,
+			'scope' => $scope,
+			'sanitize' => $sanitize,
+		];
 
 		return $this->runBatch(batchId: $batchId, request: new BatchAnonymizeRequest(entities: $entities, callOptions: $callOptions));
 	}//end anonymizeBatchWithBasisSummary()
@@ -341,6 +357,10 @@ class BatchAnonymizeService implements BatchAnonymizeServiceInterface {
 			->withConsents(unredactedEntities: $callOptions['unredactedEntities'], overrides: [])
 			->withOutputFormat(outputFormat: $callOptions['outputFormat'])
 			->withScope(scope: $callOptions['scope'], dossierKey: null);
+		if (($callOptions['sanitize'] ?? false) === true) {
+			$options = $options->sanitized();
+		}
+
 		if ($callOptions['appendBasisSummary'] === true) {
 			return $this->anonService->anonymizeDocumentWithBasisSummary(fileId: $fileId, entities: $request->entities, options: $options);
 		}
@@ -382,8 +402,39 @@ class BatchAnonymizeService implements BatchAnonymizeServiceInterface {
 			$entry['warning'] = $moved['warning'];
 		}
 
-		return $entry;
+		return $this->relocateSanitized(entry: $entry, userId: $userId);
 	}//end applyOutputLayout()
+
+	/**
+	 * Move the sanitized derivative of the final-artifact pass beside the moved anonymised file.
+	 *
+	 * Without a derivative the entry is returned as it is.
+	 *
+	 * @param array<string, mixed> $entry  The batch file entry after the layout move.
+	 * @param string               $userId Owner of the batch.
+	 *
+	 * @return array<string, mixed> The entry with the derivative's new path.
+	 *
+	 * @spec openspec/changes/document-sanitization/tasks.md#3-4
+	 */
+	private function relocateSanitized(array $entry, string $userId): array {
+		$sanitizedId = ($entry['sanitization']['sanitizedFileId'] ?? null);
+		if ($sanitizedId === null) {
+			return $entry;
+		}
+
+		$moved = $this->layoutMover->relocate(
+			userId: $userId,
+			anonymizedFileId: (int)$sanitizedId,
+			legacyPath: ''
+		);
+		$entry['sanitization']['sanitizedFilePath'] = $moved['path'];
+		if ($moved['warning'] !== null) {
+			$entry['sanitization']['moveWarning'] = $moved['warning'];
+		}
+
+		return $entry;
+	}//end relocateSanitized()
 
 	/**
 	 * Fold a successful anonymise result into the file's batch entry.
@@ -413,6 +464,15 @@ class BatchAnonymizeService implements BatchAnonymizeServiceInterface {
 
 		if (isset($result['createdConsents']) === true) {
 			$entry['createdConsents'] = $result['createdConsents'];
+		}
+
+		// The opt-in final-artifact pass: the derivative, or why the kept file is unsanitized.
+		if (isset($result['sanitization']) === true) {
+			$entry['sanitization'] = $result['sanitization'];
+		}
+
+		if (isset($result['sanitizationWarning']) === true) {
+			$entry['sanitizationWarning'] = $result['sanitizationWarning'];
 		}
 
 		// Which backend looked and what it found, so a batch reader can tell

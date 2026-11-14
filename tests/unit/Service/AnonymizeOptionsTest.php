@@ -67,7 +67,8 @@ class AnonymizeOptionsTest extends TestCase {
 			->withConsents(unredactedEntities: [['text' => 'Gemeente']], overrides: [['ruleId' => 'r1', 'entityId' => 'e1']])
 			->withUserId(userId: 'noor')
 			->withScope(scope: 'dossier', dossierKey: 'folder-3')
-			->reversible();
+			->reversible()
+			->sanitized();
 
 		$run = $changed->runFor(fileId: 8, entities: []);
 		$this->assertSame([['ruleId' => 'r1', 'entityId' => 'e1']], $run->overrides);
@@ -80,6 +81,7 @@ class AnonymizeOptionsTest extends TestCase {
 				'dossierKey' => 'folder-3',
 				'reversible' => true,
 				'userId' => 'noor',
+				'sanitize' => true,
 			],
 			$run->options
 		);
@@ -101,6 +103,7 @@ class AnonymizeOptionsTest extends TestCase {
 			$base->withUserId(userId: 'noor'),
 			$base->withScope(scope: 'dossier', dossierKey: 'k'),
 			$base->reversible(),
+			$base->sanitized(),
 		];
 
 		foreach ($copies as $copy) {

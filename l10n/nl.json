@@ -1751,6 +1751,7 @@
         "Custom dictionary not found": "Aangepaste woordenlijst niet gevonden",
         "No import content provided": "Geen importinhoud opgegeven",
         "Not authenticated": "Niet geauthenticeerd",
+        "Invalid sanitize: must be a boolean": "Ongeldige sanitize: moet een boolean zijn",
         "Term not found": "Term niet gevonden",
         "You do not have access to this custom dictionary": "U heeft geen toegang tot deze aangepaste woordenlijst",
         "External signature, not yet supported": "Externe handtekening, nog niet ondersteund",

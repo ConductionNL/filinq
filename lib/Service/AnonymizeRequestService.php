@@ -284,6 +284,7 @@ class AnonymizeRequestService implements AnonymizeRequestServiceInterface {
 	 * @spec openspec/specs/anonymization/spec.md
 	 * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-1
 	 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-2.2
+	 * @spec openspec/changes/document-sanitization/tasks.md#3-4
 	 */
 	private function callAnonymizeDocument(AnonymizeCall $call, string $userId): array {
 		$request = $call->request;
@@ -295,6 +296,10 @@ class AnonymizeRequestService implements AnonymizeRequestServiceInterface {
 			->withScope(scope: $this->resolveScope(params: $call->params), dossierKey: $this->resolveDossierKey(params: $call->params));
 		if (($request['reversible'] ?? false) === true) {
 			$options = $options->reversible();
+		}
+
+		if ($call->sanitize === true) {
+			$options = $options->sanitized();
 		}
 
 		if ($request['appendBasisSummary'] === true) {

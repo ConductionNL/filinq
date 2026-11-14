@@ -35,6 +35,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use OCA\Filinq\Controller\Support\OutputFormatChoice;
+use OCA\Filinq\Controller\Support\SanitizeChoice;
 use OCA\Filinq\Kernel\Contracts\AnonymizationProfileServiceInterface;
 use OCA\Filinq\Kernel\Contracts\BatchAnonymizeServiceInterface;
 use OCA\Filinq\Kernel\Contracts\BatchExtractionServiceInterface;
@@ -385,6 +386,12 @@ class BatchAnonymizationController extends Controller {
 				return $this->invalidOutputFormatResponse();
 			}
 
+			// Optional `sanitize`: per-batch value overrides the tenant default (false).
+			$sanitize = (new SanitizeChoice(appConfig: $this->appConfig))->resolve(params: $params);
+			if ($sanitize === null) {
+				return new JSONResponse(['error' => $this->l10n->t('Invalid sanitize: must be a boolean')], 400);
+			}
+
 			$unredactedError = $this->batchRequest->validateUnredactedEntries(
 				entries: $validated['request']['unredactedEntities']
 			);
@@ -398,6 +405,7 @@ class BatchAnonymizationController extends Controller {
 					'request' => $validated['request'],
 					'outputFormat' => $outputFormat,
 					'scope' => $this->batchRequest->resolveScope(params: $params),
+					'sanitize' => $sanitize,
 				]
 			);
 
@@ -419,7 +427,7 @@ class BatchAnonymizationController extends Controller {
 	 * BatchAnonymizeService entry point; every other value is forwarded verbatim.
 	 *
 	 * @param string $batchId Identifier of the batch to anonymize.
-	 * @param array{request: array<string, mixed>, outputFormat: string, scope: string} $run Request, format and scope.
+	 * @param array{request: array<string, mixed>, outputFormat: string, scope: string, sanitize?: bool} $run Request, format, scope and sanitize flag.
 	 *
 	 * @return array<string, mixed> The batch run summary.
 	 *
@@ -434,7 +442,8 @@ class BatchAnonymizationController extends Controller {
 				entities: $request['entities'],
 				unredactedEntities: $request['unredactedEntities'],
 				outputFormat: $run['outputFormat'],
-				scope: $run['scope']
+				scope: $run['scope'],
+				sanitize: ($run['sanitize'] ?? false)
 			);
 		}
 
@@ -443,7 +452,8 @@ class BatchAnonymizationController extends Controller {
 			entities: $request['entities'],
 			unredactedEntities: $request['unredactedEntities'],
 			outputFormat: $run['outputFormat'],
-			scope: $run['scope']
+			scope: $run['scope'],
+			sanitize: ($run['sanitize'] ?? false)
 		);
 
 	}//end runBatchAnonymize()

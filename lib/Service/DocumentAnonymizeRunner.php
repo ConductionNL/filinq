@@ -34,6 +34,7 @@ namespace OCA\Filinq\Service;
 
 use Exception;
 use OCA\Filinq\Exception\ConversionFailedException;
+use OCA\Filinq\Service\Sanitization\FinalArtifactSanitizer;
 use OCA\Filinq\Service\Support\AnonymisationRecords;
 use OCA\Filinq\Service\Support\AnonymisedOutputs;
 use Psr\Log\LoggerInterface;
@@ -74,6 +75,13 @@ class DocumentAnonymizeRunner {
 	 * @var GrondslagenSummaryAttacher
 	 */
 	private readonly GrondslagenSummaryAttacher $summaryAttacher;
+
+	/**
+	 * The opt-in sanitization pass on the delivered artifact, null when not wired.
+	 *
+	 * @var FinalArtifactSanitizer|null
+	 */
+	private readonly ?FinalArtifactSanitizer $finalSanitizer;
 
 	/**
 	 * Replacement statistics for a run.
@@ -122,6 +130,7 @@ class DocumentAnonymizeRunner {
 		$this->emlAnonymizer = $outputs->eml;
 		$this->pdfOutput = $outputs->pdf;
 		$this->summaryAttacher = $outputs->summary;
+		$this->finalSanitizer = $outputs->sanitizer;
 
 	}//end __construct()
 
@@ -184,6 +193,7 @@ class DocumentAnonymizeRunner {
 				'reversible' => (($options['reversible'] ?? false) === true),
 				'scope' => (string)($options['scope'] ?? 'document'),
 				'userId' => (string)($options['userId'] ?? ''),
+				'sanitize' => (($options['sanitize'] ?? false) === true),
 			];
 
 			// EML branch (eml-pdf-assembly): OR's anonymizeDocument() THROWS on
@@ -361,6 +371,7 @@ class DocumentAnonymizeRunner {
 	 *
 	 * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-2
 	 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-2.2
+	 * @spec openspec/changes/document-sanitization/tasks.md#3-4
 	 */
 	private function finaliseResult(array $resultInfo, array $context): array {
 		if ($context['appendBasisSummary'] === true) {
@@ -374,6 +385,44 @@ class DocumentAnonymizeRunner {
 
 		// LAST, after the summary: the verdict is about the bytes actually
 		// written, and the link and the key follow it (AnonymisationRunRecords).
-		return $this->runRecords->record(resultInfo: $resultInfo, context: $context);
+		$resultInfo = $this->runRecords->record(resultInfo: $resultInfo, context: $context);
+
+		// Opt-in, on the artifact as delivered: after the conversion and the
+		// summary, which both write bytes an earlier pass never saw. Without
+		// the flag nothing here runs and the result is what it always was.
+		if ($context['sanitize'] === true) {
+			$resultInfo = $this->sanitizeFinalArtifact(resultInfo: $resultInfo, context: $context);
+		}
+
+		return $resultInfo;
 	}//end finaliseResult()
+
+	/**
+	 * Run the sanitization pass on the delivered artifact, or warn that it cannot.
+	 *
+	 * A missing pass never discards the anonymised file: the result keeps it
+	 * and says it is unsanitized.
+	 *
+	 * @param array<string, mixed> $resultInfo The recorded run result.
+	 * @param array<string, mixed> $context    The run context.
+	 *
+	 * @return array<string, mixed> The result with the sanitization outcome.
+	 *
+	 * @spec openspec/changes/document-sanitization/tasks.md#3-4
+	 */
+	private function sanitizeFinalArtifact(array $resultInfo, array $context): array {
+		if ($this->finalSanitizer !== null) {
+			return $this->finalSanitizer->apply(resultInfo: $resultInfo, context: $context);
+		}
+
+		$fileId = $resultInfo['anonymizedFileId'] ?? null;
+		$resultInfo['sanitization'] = ['sanitized' => false, 'fileId' => $fileId, 'unsanitizedFileId' => $fileId];
+		$resultInfo['sanitizationWarning'] = [
+			'code' => 'sanitizer_unavailable',
+			'message' => 'The anonymised file was kept but not sanitized: sanitizer_unavailable',
+			'unsanitizedFileId' => $fileId,
+		];
+
+		return $resultInfo;
+	}//end sanitizeFinalArtifact()
 }//end class

@@ -1626,6 +1626,7 @@ OC.L10N.register(
         "None": "None",
         "Not a valid ODT document": "Not a valid ODT document",
         "Not authenticated": "Not authenticated",
+        "Invalid sanitize: must be a boolean": "Invalid sanitize: must be a boolean",
         "Not checked": "Not checked",
         "not declared": "not declared",
         "not equals": "not equals",

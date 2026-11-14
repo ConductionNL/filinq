@@ -65,6 +65,7 @@ interface BatchAnonymizeServiceInterface {
 	 *                      the batch. Defaults to `"dossier"` because a batch IS a folder/dossier:
 	 *                      a person gets the SAME scope-local number across all the batch's files
 	 *                      (OpenRegister derives the dossier from each file's parent folder).
+	 * @param bool   $sanitize Sanitize each delivered artifact (document-sanitization 3.4).
 	 *
 	 * @return array<string, mixed> Summary of the run — see runBatch().
 	 *
@@ -80,6 +81,7 @@ interface BatchAnonymizeServiceInterface {
 		array $unredactedEntities = [],
 		string $outputFormat = 'pdf-only',
 		string $scope = 'dossier',
+		bool $sanitize = false,
 	): array;
 
 	/**
@@ -96,6 +98,7 @@ interface BatchAnonymizeServiceInterface {
 	 * @param string $outputFormat Per-batch output format gate
 	 *                             ('pdf-only'|'pdf'|'preserve', default 'pdf-only').
 	 * @param string $scope Placeholder-numbering scope forwarded to OpenRegister.
+	 * @param bool   $sanitize Sanitize each delivered artifact (document-sanitization 3.4).
 	 *
 	 * @return array<string, mixed> Summary of the run — see runBatch().
 	 *
@@ -111,5 +114,6 @@ interface BatchAnonymizeServiceInterface {
 		array $unredactedEntities = [],
 		string $outputFormat = 'pdf-only',
 		string $scope = 'dossier',
+		bool $sanitize = false,
 	): array;
 }//end interface
