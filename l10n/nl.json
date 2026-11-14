@@ -2901,6 +2901,7 @@
         "When the change was made.": "Wanneer de wijziging is gedaan.",
         "Merge fields": "Samenvoegvelden",
         "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you.": "De velden die het sjabloon invult, met een naam en een herkomst voor mensen: wat een voorbeeld onder Voor je ingevuld toont",
+        "Linked apps": "Gekoppelde apps",
         "Base64 detached CMS (PKCS#7) signature over the sealed artifact.": "Losse CMS-handtekening (PKCS#7) in base64 over het gewaarmerkte bestand.",
         "CMS signature": "CMS-handtekening",
         "Certificate fingerprint": "Vingerafdruk certificaat",
