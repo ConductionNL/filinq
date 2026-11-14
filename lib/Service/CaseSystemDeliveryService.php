@@ -25,7 +25,10 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use Exception;
 use InvalidArgumentException;
+use OCP\IUserManager;
+use Throwable;
 
 /**
  * Destinations and deliveries (design D2, D5, D6).
@@ -72,6 +75,41 @@ class CaseSystemDeliveryService {
 	public const DUPLICATE_ACTIVE = 'An active destination for this template already exists.';
 
 	/**
+	 * The refusal of a case-system request that files nothing (design D3).
+	 */
+	public const MUST_STORE = 'A document sent to the case system must be stored first. Use output mode files or both.';
+
+	/**
+	 * The warning when a destination applied but the store failed (design D3).
+	 */
+	public const NOT_STORED = 'Not sent to the case system: the document was not stored.';
+
+	/**
+	 * The warning when the generatedDocument entry could not be written, so there is nothing to deliver.
+	 */
+	public const NO_RECORD = 'Not sent to the case system: the generated document could not be recorded.';
+
+	/**
+	 * The prefix of the warning when the delivery itself could not be written (design D4).
+	 */
+	public const NOT_RECORDED = 'Not sent to the case system: ';
+
+	/**
+	 * The generated document schema the delivery is linked from.
+	 */
+	public const DOCUMENT_SCHEMA = 'generatedDocument';
+
+	/**
+	 * The mime type of each output format.
+	 */
+	private const MIME_TYPES = [
+		'pdf' => 'application/pdf',
+		'odf' => 'application/vnd.oasis.opendocument.text',
+		'html' => 'text/html',
+		'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+	];
+
+	/**
 	 * The destination fields a delivery carries to integriq.
 	 */
 	private const DESTINATION_FIELDS = ['informatieobjecttype', 'vertrouwelijkheidaanduiding', 'bronorganisatie'];
@@ -85,11 +123,154 @@ class CaseSystemDeliveryService {
 	 * Constructor.
 	 *
 	 * @param DocumentObjectServiceResolver $objects OpenRegister's ObjectService.
+	 * @param IUserManager|null             $users   Names the generating user as the delivery's author.
 	 */
 	public function __construct(
 		private readonly DocumentObjectServiceResolver $objects,
+		private readonly ?IUserManager $users=null,
 	) {
 	}//end __construct()
+
+	/**
+	 * Refuse a request that names a case-system destination but files nothing (design D3).
+	 *
+	 * @param array<string, mixed> $options The generation options (`output.caseSystem`).
+	 * @param string               $mode    The resolved output mode.
+	 *
+	 * @return void
+	 *
+	 * @throws Exception Code 400 when `output.caseSystem` is set with mode `return`.
+	 *
+	 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-stored-document-gets-a-delivery-for-its-destination-req-gsc-002
+	 */
+	public static function assertStoredMode(array $options, string $mode): void {
+		$override = ($options['output']['caseSystem'] ?? null);
+		if ($mode === 'return' && is_array($override) === true && $override !== []) {
+			throw new Exception(message: self::MUST_STORE, code: 400);
+		}
+
+	}//end assertStoredMode()
+
+	/**
+	 * Record the delivery of one generation and link it from its generatedDocument (design D3, D4).
+	 *
+	 * Never throws: a failure to record becomes a warning, so the generation
+	 * itself still succeeds.
+	 *
+	 * @param array<string, mixed> $template   The template (`id`, `namespace`).
+	 * @param array<string, mixed> $document   The generatedDocument entry just written ([] when it failed).
+	 * @param array<string, mixed> $generation `stored` (`fileId`, `path`), `options` and `format` of the generation.
+	 *
+	 * @return array{document: array<string, mixed>, delivery: array<string, mixed>|null, warnings: array<int, string>}
+	 *         The entry (with `caseSystemDeliveryId` when linked), the delivery and any warnings.
+	 *
+	 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-stored-document-gets-a-delivery-for-its-destination-req-gsc-002
+	 */
+	public function recordGeneration(array $template, array $document, array $generation): array {
+		$outcome = ['document' => $document, 'delivery' => null, 'warnings' => []];
+		$options = (array) ($generation['options'] ?? []);
+
+		$override = ($options['output']['caseSystem'] ?? null);
+		if (is_array($override) === false) {
+			$override = null;
+		}
+
+		try {
+			$destination = $this->destinationFor(template: $template, override: $override);
+		} catch (Throwable $e) {
+			$outcome['warnings'][] = self::NOT_RECORDED . $e->getMessage();
+			return $outcome;
+		}
+
+		if ($destination === null) {
+			return $outcome;
+		}
+
+		$stored = (array) ($generation['stored'] ?? []);
+		if (($stored['fileId'] ?? null) === null) {
+			$outcome['warnings'][] = self::NOT_STORED;
+			return $outcome;
+		}
+
+		$document = self::rowOf(entry: $document) ?? [];
+		if ((string) ($document['id'] ?? '') === '') {
+			$outcome['warnings'][] = self::NO_RECORD;
+			return $outcome;
+		}
+
+		try {
+			$delivery = $this->deliver(
+				document: $document + ['fileId' => $stored['fileId'], 'filePath' => ($stored['path'] ?? '')],
+				destination: $destination,
+				context: $this->contextFor(options: $options, format: (string) ($generation['format'] ?? ''))
+			);
+			$outcome['delivery'] = $delivery;
+			$outcome['document'] = $this->link(document: $document, deliveryId: (string) ($delivery['id'] ?? ''));
+		} catch (Throwable $e) {
+			$outcome['warnings'][] = self::NOT_RECORDED . $e->getMessage();
+		}
+
+		return $outcome;
+
+	}//end recordGeneration()
+
+	/**
+	 * Who generated the document, when, and in which mime type (design D6).
+	 *
+	 * @param array<string, mixed> $options The generation options (`userId`).
+	 * @param string               $format  The output format.
+	 *
+	 * @return array<string, mixed> The context deliver() takes.
+	 */
+	private function contextFor(array $options, string $format): array {
+		$userId = (string) ($options['userId'] ?? '');
+		$author = $userId;
+		$user   = null;
+		if ($userId !== '' && $this->users !== null) {
+			$user = $this->users->get($userId);
+		}
+
+		if ($user !== null) {
+			$author = $user->getDisplayName();
+		}
+
+		return [
+			'author' => $author,
+			'generatedBy' => $userId,
+			'createdAt' => date('Y-m-d'),
+			'mimeType' => (self::MIME_TYPES[$format] ?? 'application/octet-stream'),
+		];
+
+	}//end contextFor()
+
+	/**
+	 * Put the delivery's id on its generatedDocument; unchanged when it is already there.
+	 *
+	 * @param array<string, mixed> $document   The generatedDocument entry, its id under `id`.
+	 * @param string               $deliveryId The delivery id.
+	 *
+	 * @return array<string, mixed> The entry as stored.
+	 */
+	private function link(array $document, string $deliveryId): array {
+		if ($deliveryId === '' || (string) ($document['caseSystemDeliveryId'] ?? '') === $deliveryId) {
+			return $document;
+		}
+
+		$documentId = (string) $document['id'];
+		$fields     = $document;
+		unset($fields['@self'], $fields['id']);
+		$fields['caseSystemDeliveryId'] = $deliveryId;
+
+		$saved = $this->objects->resolve()->saveObject(
+			object: $fields,
+			register: self::REGISTER,
+			schema: self::DOCUMENT_SCHEMA,
+			uuid: $documentId
+		);
+
+		return (self::rowOf(entry: $saved) ?? ($fields + ['id' => $documentId]));
+
+	}//end link()
 
 	/**
 	 * Where a document from this template goes, or null when nowhere.
@@ -336,15 +517,11 @@ class CaseSystemDeliveryService {
 	 * @return array<string, mixed>|null The row.
 	 */
 	private static function rowOf(mixed $entry): ?array {
-		if (is_array($entry) === true) {
-			return $entry;
+		$row = $entry;
+		if (is_object($entry) === true && method_exists($entry, 'jsonSerialize') === true) {
+			$row = $entry->jsonSerialize();
 		}
 
-		if (is_object($entry) === false || method_exists($entry, 'jsonSerialize') === false) {
-			return null;
-		}
-
-		$row = $entry->jsonSerialize();
 		if (is_array($row) === false) {
 			return null;
 		}

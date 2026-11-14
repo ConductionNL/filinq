@@ -22,10 +22,13 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Tests\Unit\Service;
 
+use Exception;
 use InvalidArgumentException;
 use OCA\Filinq\Service\CaseSystemDeliveryService;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\OpenRegister\Service\ObjectService;
+use OCP\IUser;
+use OCP\IUserManager;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
@@ -42,18 +45,20 @@ class CaseSystemDeliveryServiceTest extends TestCase {
 	/**
 	 * What was saved, in order.
 	 *
-	 * @var array<int, array{schema: string, object: array<string, mixed>}>
+	 * @var array<int, array{schema: string, object: array<string, mixed>, uuid: ?string}>
 	 */
 	private array $saved = [];
 
 	/**
 	 * The service over an object store holding the given rows.
 	 *
-	 * @param array<string, array<int, array<string, mixed>>> $stored Rows by schema.
+	 * @param array<string, array<int, array<string, mixed>>> $stored  Rows by schema.
+	 * @param IUserManager|null                               $users   The user manager, if any.
+	 * @param string|null                                     $failing A schema whose save throws.
 	 *
 	 * @return CaseSystemDeliveryService
 	 */
-	private function service(array $stored=[]): CaseSystemDeliveryService {
+	private function service(array $stored=[], ?IUserManager $users=null, ?string $failing=null): CaseSystemDeliveryService {
 		$this->stored = $stored;
 		$this->saved  = [];
 		$objects = $this->getMockBuilder(ObjectService::class)->onlyMethods(['findAll', 'saveObject'])->getMock();
@@ -72,15 +77,19 @@ class CaseSystemDeliveryServiceTest extends TestCase {
 				return true;
 			}));
 		});
-		$objects->method('saveObject')->willReturnCallback(function (array $object=[], string $register='', string $schema=''): array {
-			$this->saved[] = ['schema' => $schema, 'object' => $object];
-			return $object + ['id' => 'delivery-' . count($this->saved)];
+		$objects->method('saveObject')->willReturnCallback(function (array $object=[], string $register='', string $schema='', ?string $uuid=null) use ($failing): array {
+			if ($schema === $failing) {
+				throw new Exception('object store unavailable');
+			}
+
+			$this->saved[] = ['schema' => $schema, 'object' => $object, 'uuid' => $uuid];
+			return $object + ['id' => ($uuid ?? 'delivery-' . count($this->saved))];
 		});
 
 		$resolver = $this->createMock(DocumentObjectServiceResolver::class);
 		$resolver->method('resolve')->willReturn($objects);
 
-		return new CaseSystemDeliveryService($resolver);
+		return new CaseSystemDeliveryService($resolver, $users);
 
 	}//end service()
 
@@ -199,7 +208,7 @@ class CaseSystemDeliveryServiceTest extends TestCase {
 		$delivery = $service->deliver(['id' => 'doc-1', 'filePath' => '/x.pdf'], self::destination(['id' => 'ns']), []);
 
 		$this->assertSame($existing, $delivery);
-		$this->assertSame([], $this->saved);
+		$this->assertSame([], array_column($this->saved, 'object'));
 
 	}//end testAskingAgainAnswersTheExistingDeliveryAndWritesNothing()
 
@@ -213,4 +222,113 @@ class CaseSystemDeliveryServiceTest extends TestCase {
 		$this->assertSame('', $this->saved[0]['object']['destinationId']);
 
 	}//end testAnotherDestinationGetsItsOwnDeliveryAndACaseUrlIsCarried()
+
+	public function testACaseSystemRequestThatFilesNothingIsRefusedWith400(): void {
+		CaseSystemDeliveryService::assertStoredMode(['output' => ['mode' => 'both', 'caseSystem' => ['sourceId' => 'x']]], 'both');
+		CaseSystemDeliveryService::assertStoredMode(['output' => ['mode' => 'return']], 'return');
+		CaseSystemDeliveryService::assertStoredMode(['output' => ['caseSystem' => []]], 'return');
+		$this->addToAssertionCount(3);
+
+		try {
+			CaseSystemDeliveryService::assertStoredMode(['output' => ['caseSystem' => ['sourceId' => 'x']]], 'return');
+			$this->fail('A case-system request in mode return was not refused.');
+		} catch (Exception $e) {
+			$this->assertSame(400, $e->getCode());
+			$this->assertSame('A document sent to the case system must be stored first. Use output mode files or both.', $e->getMessage());
+		}
+
+	}//end testACaseSystemRequestThatFilesNothingIsRefusedWith400()
+
+	public function testAStoredGenerationIsDeliveredAndLinkedFromItsDocument(): void {
+		$user = $this->createMock(IUser::class);
+		$user->method('getDisplayName')->willReturn('Anna de Vries');
+		$users = $this->createMock(IUserManager::class);
+		$users->expects($this->once())->method('get')->with('anna')->willReturn($user);
+
+		$service = $this->service(['caseSystemDestination' => [self::destination(['id' => 'ns', 'templateNamespace' => 'hrmq'])]], $users);
+		$outcome = $service->recordGeneration(
+			['id' => 'template-1', 'namespace' => 'hrmq'],
+			['@self' => ['id' => 'doc-1'], 'templateId' => 'template-1', 'status' => 'generated'],
+			['stored' => ['fileId' => 4711, 'path' => '/HR/Contract.pdf'], 'options' => ['userId' => 'anna'], 'format' => 'pdf']
+		);
+
+		$this->assertSame([], $outcome['warnings']);
+		$this->assertSame('delivery-1', $outcome['delivery']['id']);
+		$this->assertCount(2, $this->saved);
+		$delivery = $this->saved[0]['object'];
+		$this->assertSame(['doc-1', 4711, 'ready_for_writeback', 'anna'], [$delivery['generatedDocumentId'], $delivery['fileId'], $delivery['deliveryStatus'], $delivery['generatedBy']]);
+		$this->assertSame(['Contract', 'Contract.pdf', 'application/pdf', 'Anna de Vries'], [
+			$delivery['metadata']['titel'],
+			$delivery['metadata']['bestandsnaam'],
+			$delivery['metadata']['formaat'],
+			$delivery['metadata']['auteur'],
+		]);
+		$this->assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}$/', $delivery['metadata']['creatiedatum']);
+
+		$this->assertSame('generatedDocument', $this->saved[1]['schema']);
+		$this->assertSame('doc-1', $this->saved[1]['uuid']);
+		$this->assertSame(['templateId' => 'template-1', 'status' => 'generated', 'caseSystemDeliveryId' => 'delivery-1'], $this->saved[1]['object']);
+		$this->assertSame('delivery-1', $outcome['document']['caseSystemDeliveryId']);
+
+	}//end testAStoredGenerationIsDeliveredAndLinkedFromItsDocument()
+
+	public function testNoDestinationMeansNoDeliveryAndNoWarning(): void {
+		$service = $this->service(['caseSystemDestination' => [self::destination(['id' => 'ns', 'templateNamespace' => 'finance'])]]);
+		$document = ['id' => 'doc-1'];
+
+		$outcome = $service->recordGeneration(['id' => 'template-1', 'namespace' => 'hrmq'], $document, ['stored' => ['fileId' => 1], 'options' => []]);
+
+		$this->assertSame(['document' => $document, 'delivery' => null, 'warnings' => []], $outcome);
+		$this->assertSame([], $this->saved);
+
+	}//end testNoDestinationMeansNoDeliveryAndNoWarning()
+
+	public function testAFailedStoreOrAMissingRecordIsAWarningNotADelivery(): void {
+		$service = $this->service(['caseSystemDestination' => [self::destination(['id' => 'ns', 'templateNamespace' => 'hrmq'])]]);
+		$template = ['id' => 'template-1', 'namespace' => 'hrmq'];
+
+		$unstored = $service->recordGeneration($template, ['id' => 'doc-1'], ['stored' => ['fileId' => null], 'options' => []]);
+		$this->assertSame(['Not sent to the case system: the document was not stored.'], $unstored['warnings']);
+
+		$unrecorded = $service->recordGeneration($template, [], ['stored' => ['fileId' => 7], 'options' => []]);
+		$this->assertSame(['Not sent to the case system: the generated document could not be recorded.'], $unrecorded['warnings']);
+
+		$this->assertNull($unrecorded['delivery']);
+		$this->assertSame([], $this->saved);
+
+	}//end testAFailedStoreOrAMissingRecordIsAWarningNotADelivery()
+
+	public function testAFailingDeliveryWriteBecomesAWarningAndLeavesTheDocumentUnlinked(): void {
+		$service  = $this->service(['caseSystemDestination' => [self::destination(['id' => 'ns', 'templateNamespace' => 'hrmq'])]], null, 'caseSystemDelivery');
+		$document = ['id' => 'doc-1'];
+
+		$outcome = $service->recordGeneration(
+			['id' => 'template-1', 'namespace' => 'hrmq'],
+			$document,
+			['stored' => ['fileId' => 7, 'path' => '/a.odt'], 'options' => ['userId' => 'anna'], 'format' => 'odf']
+		);
+
+		$this->assertSame(['Not sent to the case system: object store unavailable'], $outcome['warnings']);
+		$this->assertNull($outcome['delivery']);
+		$this->assertSame($document, $outcome['document']);
+		$this->assertSame([], $this->saved);
+
+	}//end testAFailingDeliveryWriteBecomesAWarningAndLeavesTheDocumentUnlinked()
+
+	public function testARequestDestinationIsUsedAndAnAlreadyLinkedDocumentIsNotRewritten(): void {
+		$existing = ['id' => 'delivery-9', 'generatedDocumentId' => 'doc-1', 'destinationId' => ''];
+		$service  = $this->service(['caseSystemDelivery' => [$existing]]);
+		$document = ['id' => 'doc-1', 'caseSystemDeliveryId' => 'delivery-9'];
+
+		$outcome = $service->recordGeneration(
+			['id' => 'template-1', 'namespace' => 'hrmq'],
+			$document,
+			['stored' => ['fileId' => 7], 'options' => ['userId' => 'anna', 'output' => ['caseSystem' => ['sourceId' => 'zgw-other']]], 'format' => 'pdf']
+		);
+
+		$this->assertSame($existing, $outcome['delivery']);
+		$this->assertSame($document, $outcome['document']);
+		$this->assertSame([], $this->saved);
+
+	}//end testARequestDestinationIsUsedAndAnAlreadyLinkedDocumentIsNotRewritten()
 }//end class

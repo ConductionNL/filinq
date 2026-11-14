@@ -9,7 +9,7 @@
 ## 2. Service and route
 
 - [x] 2.1 Add `lib/Service/CaseSystemDeliveryService.php`: pick the destination (template before namespace, request override), refuse a second active destination, write one delivery per document and destination (D2, D5) (REQ-GSC-001, REQ-GSC-002). Verify: PHPUnit on precedence, the duplicate refusal and idempotency.
-- [ ] 2.2 Call it from `DocumentService::generateDocument()` and `generateBulkSync()` after a successful store; answer 400 for `caseSystem` with mode `return`; turn a delivery write failure into a warning (D3, D4) (REQ-GSC-002). Verify: PHPUnit on each mode and on a failing object write; Newman on the 400.
+- [x] 2.2 Call it from `DocumentService::generateDocument()` and `generateBulkSync()` after a successful store; answer 400 for `caseSystem` with mode `return`; turn a delivery write failure into a warning (D3, D4) (REQ-GSC-002). Verify: PHPUnit on each mode and on a failing object write; Newman on the 400. — As built: `generateFromTemplate()` (which `generateDocument()`, the sync bulk path and the async job all go through) asks `CaseSystemDeliveryService::recordGeneration()` after the audit entry is written, and links `caseSystemDeliveryId` on it; the 400 comes from `assertStoredMode()` before anything renders. PHPUnit covers each mode, a failed store in `both` and a failing delivery write. Not run: Newman (needs a live instance).
 - [ ] 2.3 Add `POST api/bridge/deliveries/{id}/retry` with `#[AuthorizedAdminSetting]`, moving only `writeback_failed` to `ready_for_writeback` (REQ-GSC-003). Verify: Newman answers 409 for a delivery in any other state.
 
 ## 3. Screens
