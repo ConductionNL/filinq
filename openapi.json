@@ -274,6 +274,10 @@
         {
             "name": "wizard",
             "description": "Document wizards of templates"
+        },
+        {
+            "name": "detection-provider-settings",
+            "description": "Reads and writes the per-organisation entity-detection provider settings, for admins only"
         }
     ],
     "paths": {
@@ -10379,6 +10383,109 @@
                                 }
                             }
                         }
+                    }
+                }
+            }
+        },
+        "/detection-provider/settings": {
+            "get": {
+                "operationId": "detection-provider-settings-index",
+                "summary": "GET /api/detection-provider/settings",
+                "description": "GET /api/detection-provider/settings",
+                "tags": [
+                    "detection-provider-settings"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The detection-provider settings: per-organisation providers, the hermiq endpoint, agentflow and require-local toggle.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    }
+                }
+            },
+            "put": {
+                "operationId": "detection-provider-settings-update",
+                "summary": "PUT /api/detection-provider/settings",
+                "description": "PUT /api/detection-provider/settings",
+                "tags": [
+                    "detection-provider-settings"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The stored settings, or 400 naming the invalid field.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    }
+                }
+            }
+        },
+        "/detection-provider/test": {
+            "post": {
+                "operationId": "detection-provider-settings-test",
+                "summary": "POST /api/detection-provider/test",
+                "description": "POST /api/detection-provider/test",
+                "tags": [
+                    "detection-provider-settings"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Whether the LLM provider could be called now, and why not.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
                     }
                 }
             }

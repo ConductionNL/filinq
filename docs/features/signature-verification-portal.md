@@ -11,7 +11,7 @@ Filinq stores the outcome of the signatures under a random token (128 bits,
 ## What is built
 
 - **Record**: the `signatureVerification` schema in the `filinq` register
-  (register 8.52.0). It holds the file name, the SHA-256 of the signed bytes,
+  (register 8.55.0). It holds the file name, the SHA-256 of the signed bytes,
   and per signature its status, level, method, the signer as written in the
   signature, and two separate guarantees. It never holds the document, the
   signing key or a path. Only the server writes it; through the OpenRegister

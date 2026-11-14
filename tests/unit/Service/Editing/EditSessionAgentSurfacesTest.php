@@ -98,6 +98,13 @@ class EditSessionAgentSurfacesTest extends TestCase {
 	private string $written = '';
 
 	/**
+	 * The artefact marker a test wants to observe; a bare double otherwise.
+	 *
+	 * @var (MockObject&AgentArtefactMarker)|null
+	 */
+	private $marker = null;
+
+	/**
 	 * The user's folder root.
 	 *
 	 * @var MockObject&IRootFolder
@@ -308,7 +315,7 @@ class EditSessionAgentSurfacesTest extends TestCase {
 	private function writer(): GuardedWriter {
 		return new GuardedWriter(
 				$this->lockManager,
-				$this->createMock(AgentArtefactMarker::class),
+				($this->marker ?? $this->createMock(AgentArtefactMarker::class)),
 				$this->createMock(LoggerInterface::class),
 				$this->rootFolder
 		);
@@ -614,6 +621,52 @@ class EditSessionAgentSurfacesTest extends TestCase {
 		}
 
 	}//end testAGuardedDocumentRefusesAMetadataWrite()
+
+	/**
+	 * 🔴 A metadata write on a version that moved is refused, and nothing is
+	 * written: the same precondition as a body edit, verified rather than
+	 * assumed from the shared write path.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/document-rich-editing/tasks.md
+	 */
+	public function testAMetadataWriteOnAStaleVersionIsRefused(): void {
+		$this->attach('letter.docx', $this->docx());
+
+		try {
+			$this->service()->setMetadataForAgent(
+				request: new AgentFileRequest(uid: self::UID, fileId: self::FILE_ID, version: 'a-stale-version'),
+				values: ['title' => 'Revised quarterly report']
+			);
+			$this->fail('a stale version must refuse a metadata write');
+		} catch (RuntimeException $e) {
+			$this->assertMatchesRegularExpression('/changed since you read it/', $e->getMessage());
+			$this->assertSame('', $this->written, 'a refused metadata write must leave the file untouched');
+		}
+
+	}//end testAMetadataWriteOnAStaleVersionIsRefused()
+
+	/**
+	 * A metadata write tags the file "Agent authored", exactly like a body edit.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/document-rich-editing/tasks.md
+	 */
+	public function testAMetadataWriteTagsTheFileAgentAuthored(): void {
+		$this->attach('letter.docx', $this->docx());
+		$this->marker = $this->createMock(AgentArtefactMarker::class);
+		$this->marker->expects($this->once())->method('mark')->with(self::FILE_ID)->willReturn(true);
+
+		$this->service()->setMetadataForAgent(
+			request: new AgentFileRequest(uid: self::UID, fileId: self::FILE_ID, version: $this->attachedVersion()),
+			values: ['keywords' => 'finance, q3']
+		);
+
+		$this->assertStringContainsString('finance, q3', $this->partOf(package: $this->written, part: 'docProps/core.xml'));
+
+	}//end testAMetadataWriteTagsTheFileAgentAuthored()
 
 	/**
 	 * An unknown output mode is refused by name.

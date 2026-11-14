@@ -41,7 +41,7 @@ async function pipeline(
 	let record = { uuid: 'pub-1', platformAvailable: true, log: [], ...initial }
 	await page.route('**/apps/filinq/api/publications/categories', (route) =>
 		route.fulfill({
-			json: { results: [{ code: 'c_8c840238', label: 'Adviezen' }] },
+			json: { results: [{ code: 'infocat009', label: 'Adviezen' }] },
 		}),
 	)
 	await page.route('**/apps/filinq/api/publications/pub-1**', async (route) => {
@@ -66,7 +66,7 @@ const clear = {
 	prohibitionsClear: true,
 	readinessReasons: [],
 	officieleTitel: 'Besluit 2025-017',
-	wooCategory: 'c_8c840238',
+	wooCategory: 'infocat009',
 	publicatiedatum: '2026-09-29',
 }
 
