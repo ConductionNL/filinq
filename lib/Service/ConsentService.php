@@ -379,7 +379,8 @@ class ConsentService implements ConsentServiceInterface {
 			register: $update->register,
 			schema: $update->schema,
 			data: $update->data,
-			actor: (string) $user?->getUID()
+			actor: (string) $user?->getUID(),
+			via: $update->via
 		);
 
 	}//end validateAndUpdateConsent()
@@ -392,6 +393,7 @@ class ConsentService implements ConsentServiceInterface {
 	 * @param string $schema The schema ID
 	 * @param array<string, mixed> $data The data to update
 	 * @param string $actor The user making the change, recorded on each status event
+	 * @param string $via   How: `mcp` for an agent through Hermiq's gate, '' in Filinq itself
 	 *
 	 * @return array<string, mixed> The updated consent record
 	 *
@@ -405,10 +407,11 @@ class ConsentService implements ConsentServiceInterface {
 		string $schema,
 		array $data,
 		string $actor = '',
+		string $via = '',
 	): array {
 		return $this->updateHandler->updateConsentStatus(
 			consent: new RegisterObjectRef(id: $consentId, register: $register, schema: $schema),
-			change: new ConsentStatusChange(data: $data, actor: $actor)
+			change: new ConsentStatusChange(data: $data, actor: $actor, via: $via)
 		);
 
 	}//end updateConsentStatus()

@@ -44,6 +44,7 @@ final class ConsentUpdate {
 	 * @param string               $register  The register ID
 	 * @param string               $schema    The schema ID
 	 * @param array<string, mixed> $data      The update payload
+	 * @param string               $via       How the change was made: `mcp` for an agent through Hermiq's gate, '' in Filinq itself
 	 *
 	 * @return void
 	 */
@@ -52,6 +53,7 @@ final class ConsentUpdate {
 		public readonly string $register,
 		public readonly string $schema,
 		public readonly array $data,
+		public readonly string $via = '',
 	) {
 
 	}//end __construct()

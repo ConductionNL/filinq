@@ -193,7 +193,8 @@ class ConsentUpdateHandler {
 			changes: $allowedData,
 			actor: $change->actor,
 			evidence: (string) ($data['evidence'] ?? ''),
-			now: new DateTimeImmutable()
+			now: new DateTimeImmutable(),
+			via: $change->via
 		);
 	}//end consentChanges()
 

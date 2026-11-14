@@ -342,6 +342,7 @@ class ConsentCrudService implements ConsentCrudServiceInterface {
 	 * @param string $schema The schema ID
 	 * @param array<string, mixed> $data The data to update
 	 * @param \OCP\IUser|null $user The acting user, or null for system context
+	 * @param string $via How: `mcp` for an agent through Hermiq's gate, '' in Filinq itself
 	 *
 	 * @return array<string, mixed> The updated consent record
 	 *
@@ -357,9 +358,10 @@ class ConsentCrudService implements ConsentCrudServiceInterface {
 		string $schema,
 		array $data,
 		?\OCP\IUser $user = null,
+		string $via = '',
 	): array {
 		return $this->consentService->validateAndUpdateConsent(
-			new ConsentUpdate(consentId: $consentId, register: $register, schema: $schema, data: $data),
+			new ConsentUpdate(consentId: $consentId, register: $register, schema: $schema, data: $data, via: $via),
 			$user
 		);
 	}//end updateConsentStatus()

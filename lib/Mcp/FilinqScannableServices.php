@@ -42,6 +42,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Mcp;
 
 use OCA\Filinq\Service\AnonymizationService;
+use OCA\Filinq\Service\ConsentDecisionAgent;
 use OCA\Filinq\Service\CorrespondenceService;
 use OCA\Filinq\Service\Editing\DocumentAgentService;
 use OCA\Filinq\Service\FileListingService;
@@ -71,6 +72,8 @@ class FilinqScannableServices implements IMcpScannableServices {
 	 * `getDocumentStatus` and `AnonymizationService` the intake-only
 	 * `anonymizeDocument`; both answer counts and statuses, never entity values.
 	 * `SigningService` carries `startSigningRequest` and nothing else.
+	 * `ConsentDecisionAgent` carries `recordConsentDecision`: one consent
+	 * officer's decision by id, status fields back, never a list or a read.
 	 * Initiating a request is the one way into the signing domain, behind
 	 * Hermiq's approval gate: the signing act itself (sign, decline, bulk sign,
 	 * cancel, verify) is never exposed.
@@ -88,6 +91,7 @@ class FilinqScannableServices implements IMcpScannableServices {
 			FileListingService::class,
 			AnonymizationService::class,
 			SigningService::class,
+			ConsentDecisionAgent::class,
 		];
 
 	}//end getScannableServiceClasses()
