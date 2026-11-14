@@ -39,6 +39,7 @@ use Psr\Log\LoggerInterface;
  * Per-file processing of the folder extraction job.
  *
  * @covers \OCA\Filinq\BackgroundJob\FolderExtractionJob
+ * @uses \OCA\Filinq\Service\Detection\DetectionRequest
  */
 class FolderExtractionJobTraceTest extends TestCase {
 
