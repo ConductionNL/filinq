@@ -21,7 +21,10 @@
 				}}
 			</h2>
 			<div class="custom-dictionary-detail__header-actions">
-				<NcButton variant="secondary" @click="openEditDialog">
+				<NcButton
+					v-if="customDictionaryStore.canMaintain"
+					variant="secondary"
+					@click="openEditDialog">
 					{{ t('filinq', 'Edit') }}
 				</NcButton>
 			</div>
@@ -43,11 +46,7 @@
 						:label="matchModeLabel(dictionary.matchMode)"
 						:colorMap="matchModeColorMap" />
 					<CnStatusBadge
-						:label="
-							dictionary.active === false
-								? t('filinq', 'Inactive')
-								: t('filinq', 'Active')
-						"
+						:label="activeLabel(dictionary)"
 						:colorMap="activeColorMap" />
 					<span class="custom-dictionary-detail__term-count">
 						{{ t('filinq', '{count} terms', { count: terms.length }) }}
@@ -58,7 +57,9 @@
 			<div class="custom-dictionary-detail__terms-panel">
 				<div class="custom-dictionary-detail__terms-header">
 					<h3>{{ t('filinq', 'Terms') }}</h3>
-					<div class="custom-dictionary-detail__terms-actions">
+					<div
+						v-if="customDictionaryStore.canMaintain"
+						class="custom-dictionary-detail__terms-actions">
 						<NcButton
 							variant="secondary"
 							@click="importDialogOpen = true">
@@ -67,7 +68,9 @@
 					</div>
 				</div>
 
-				<div class="custom-dictionary-detail__add-term">
+				<div
+					v-if="customDictionaryStore.canMaintain"
+					class="custom-dictionary-detail__add-term">
 					<NcTextField
 						v-model="newTermValue"
 						:label="t('filinq', 'New term value')"
@@ -101,7 +104,9 @@
 						<tr>
 							<th scope="col">{{ t('filinq', 'Value') }}</th>
 							<th scope="col">{{ t('filinq', 'Label') }}</th>
-							<th scope="col">{{ t('filinq', 'Actions') }}</th>
+							<th v-if="customDictionaryStore.canMaintain" scope="col">
+								{{ t('filinq', 'Actions') }}
+							</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -110,7 +115,7 @@
 							:key="term['@self']?.id || term.id">
 							<td>{{ term.value }}</td>
 							<td>{{ displayValue(term.label, '-') }}</td>
-							<td>
+							<td v-if="customDictionaryStore.canMaintain">
 								<NcButton
 									variant="tertiary"
 									@click="removeTerm(term)">
@@ -147,30 +152,26 @@
 			runs only from @confirm, so an explicit confirmation is still
 			required before a term disappears.
 		-->
-		<ConfirmActionDialog
+		<CnConfirmDialog
 			v-if="removeTarget"
-			:name="t('filinq', 'Remove term')"
+			ref="confirmDialog"
+			:dialogTitle="t('filinq', 'Remove term')"
 			:message="removeMessage"
 			:confirmLabel="t('filinq', 'Remove')"
-			:busy="removing"
-			@confirm="executeRemoveTerm"
-			@cancel="cancelRemoveTerm" />
+			variant="error"
+			@confirm="executeRemoveTerm($refs.confirmDialog)"
+			@close="cancelRemoveTerm" />
 	</div>
 </template>
 
 <script>
-import {
-	CnStatusBadge,
-	NcButton,
-	NcEmptyContent,
-	NcLoadingIcon,
-	NcTextField,
-} from '@conduction/nextcloud-vue'
+import { CnConfirmDialog, CnStatusBadge } from '@conduction/nextcloud-vue'
 import { translate as t } from '@nextcloud/l10n'
+import { NcButton, NcEmptyContent, NcLoadingIcon, NcTextField } from '@nextcloud/vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
-import ConfirmActionDialog from '../../dialogs/ConfirmActionDialog.vue'
 import CustomDictionaryFormDialog from '../../dialogs/CustomDictionaryFormDialog.vue'
 import CustomDictionaryImportDialog from '../../dialogs/CustomDictionaryImportDialog.vue'
+import { customDictionaryBadges } from '../../mixins/customDictionaryBadges.js'
 import { customDictionaryStore } from '../../store/store.js'
 import { resolveI18nValue } from '../../utils/registerI18n.js'
 
@@ -185,8 +186,10 @@ export default {
 		Delete,
 		CustomDictionaryFormDialog,
 		CustomDictionaryImportDialog,
-		ConfirmActionDialog,
+		CnConfirmDialog,
 	},
+
+	mixins: [customDictionaryBadges],
 
 	data() {
 		return {
@@ -201,17 +204,6 @@ export default {
 			importing: false,
 			importError: '',
 			removeTarget: null, // term awaiting removal confirmation, or null
-			removing: false,
-			matchModeColorMap: {
-				exact: 'error',
-				caseInsensitive: 'primary',
-				wordBoundary: 'success',
-			},
-
-			activeColorMap: {
-				[t('filinq', 'Active')]: 'success',
-				[t('filinq', 'Inactive')]: 'default',
-			},
 		}
 	},
 
@@ -245,6 +237,7 @@ export default {
 	},
 
 	async mounted() {
+		customDictionaryStore.fetchCapabilities()
 		await customDictionaryStore.fetchDictionary(this.dictionaryId)
 		await customDictionaryStore.fetchTerms(this.dictionaryId)
 	},
@@ -265,23 +258,6 @@ export default {
 		 */
 		displayValue(value, fallback = '') {
 			return resolveI18nValue(value, fallback)
-		},
-
-		/**
-		 * Translated label for a dictionary match mode, falling back to the raw
-		 * value and finally to the schema default.
-		 *
-		 * @param {string} mode Stored match mode.
-		 * @return {string} Displayable label.
-		 * @spec openspec/specs/custom-dictionary-recognition/spec.md#requirement-custom-dictionary-admin-ui-req-ddcdr-006
-		 */
-		matchModeLabel(mode) {
-			const labels = {
-				exact: t('filinq', 'Exact'),
-				caseInsensitive: t('filinq', 'Case-insensitive'),
-				wordBoundary: t('filinq', 'Word boundary'),
-			}
-			return labels[mode] || mode || t('filinq', 'Case-insensitive')
 		},
 
 		handleBack() {
@@ -341,7 +317,7 @@ export default {
 		/**
 		 * Ask for confirmation before removing a term.
 		 *
-		 * Opens ConfirmActionDialog; nothing is removed here.
+		 * Opens the confirm dialog; nothing is removed here.
 		 *
 		 * @param {object} term - The term to remove.
 		 * @spec openspec/specs/custom-dictionary-recognition/spec.md
@@ -363,25 +339,25 @@ export default {
 		 * Remove the confirmed term. Reachable only from the dialog's
 		 *
 		 * @confirm, so a term is never removed without an explicit
-		 * confirmation.
+		 * confirmation. A failed removal puts the dialog back in its confirm
+		 * state.
 		 *
+		 * @param {object} [dialog] The confirm dialog that asked.
 		 * @return {Promise<void>}
 		 * @spec openspec/specs/custom-dictionary-recognition/spec.md
 		 */
-		async executeRemoveTerm() {
+		async executeRemoveTerm(dialog) {
 			const term = this.removeTarget
 			if (!term) {
 				return
 			}
 			const id = term['@self']?.id || term.id
-			this.removing = true
 			try {
 				await customDictionaryStore.deleteTerm(this.dictionaryId, id)
 				this.removeTarget = null
 			} catch (err) {
 				console.error('Failed to remove term:', err)
-			} finally {
-				this.removing = false
+				dialog?.setResult(null)
 			}
 		},
 

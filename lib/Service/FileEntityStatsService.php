@@ -89,14 +89,14 @@ class FileEntityStatsService {
 	/**
 	 * Try to get the RiskLevelService, returning null on failure
 	 *
-	 * @return \OCA\OpenRegister\Service\RiskLevelService|null The service or null
+	 * @return \OCA\OpenRegister\Files\Service\RiskLevelService|null The service or null
 	 *
 	 * @spec openspec/specs/anonymization/spec.md
 	 */
-	public function tryGetRiskLevelService(): ?\OCA\OpenRegister\Service\RiskLevelService {
+	public function tryGetRiskLevelService(): ?\OCA\OpenRegister\Files\Service\RiskLevelService {
 		try {
 			if ($this->isOpenRegisterInstalled() === true) {
-				return $this->container->get('OCA\OpenRegister\Service\RiskLevelService');
+				return $this->container->get('OCA\OpenRegister\Files\Service\RiskLevelService');
 			}
 
 			return null;
@@ -157,6 +157,68 @@ class FileEntityStatsService {
 	}//end getEntityStats()
 
 	/**
+	 * How many detected entities a file holds, per entity type. Counts only:
+	 * never an entity's value.
+	 *
+	 * @param int                                              $fileId               The file.
+	 * @param \OCA\OpenRegister\Db\EntityRelationMapper|null $entityRelationMapper The mapper, or null without OpenRegister.
+	 *
+	 * @return array<string, int> Per upper-case entity type, the number found.
+	 *
+	 * @spec openspec/changes/mcp-generation-tools/tasks.md#task-1.2
+	 */
+	public function entityCountsByType(
+		int $fileId,
+		?\OCA\OpenRegister\Db\EntityRelationMapper $entityRelationMapper,
+	): array {
+		if ($entityRelationMapper === null) {
+			return [];
+		}
+
+		try {
+			$entities = $entityRelationMapper->findEntitiesForFile($fileId);
+		} catch (\Exception $e) {
+			$this->logger->debug('Could not count entities for file ' . $fileId . ': ' . $e->getMessage());
+			return [];
+		}
+
+		return self::countByType(entities: $entities);
+
+	}//end entityCountsByType()
+
+	/**
+	 * Count entity rows per upper-case type, reading the type the way detection
+	 * normalises it.
+	 *
+	 * @param array<int, mixed> $entities Entity rows or entities.
+	 *
+	 * @return array<string, int> Per type, the number of rows.
+	 *
+	 * @spec openspec/changes/mcp-generation-tools/tasks.md#task-1.3
+	 */
+	public static function countByType(array $entities): array {
+		$counts = [];
+		foreach ($entities as $entity) {
+			$data = (array)$entity;
+			if (is_object($entity) === true && method_exists($entity, 'jsonSerialize') === true) {
+				$data = (array)$entity->jsonSerialize();
+			}
+
+			$type = strtoupper(trim((string)($data['entity_type'] ?? $data['entityType'] ?? $data['type'] ?? '')));
+			if ($type === '') {
+				$type = 'UNKNOWN';
+			}
+
+			$counts[$type] = (($counts[$type] ?? 0) + 1);
+		}
+
+		ksort($counts);
+
+		return $counts;
+
+	}//end countByType()
+
+	/**
 	 * Determine file status based on entity counts
 	 *
 	 * @param int $entityCount Total entity count
@@ -182,7 +244,7 @@ class FileEntityStatsService {
 	 * Get risk level for a file
 	 *
 	 * @param int $fileId The file ID
-	 * @param \OCA\OpenRegister\Service\RiskLevelService|null $riskLevelService The service
+	 * @param \OCA\OpenRegister\Files\Service\RiskLevelService|null $riskLevelService The service
 	 *
 	 * @return string The risk level
 	 *
@@ -190,7 +252,7 @@ class FileEntityStatsService {
 	 */
 	public function getFileRiskLevel(
 		int $fileId,
-		?\OCA\OpenRegister\Service\RiskLevelService $riskLevelService,
+		?\OCA\OpenRegister\Files\Service\RiskLevelService $riskLevelService,
 	): string {
 		if ($riskLevelService === null) {
 			return 'none';

@@ -27,25 +27,25 @@
 - [x] 3.2 Dossier detail: documents section with inline viewer switch + mini-menu, grondslagen, batch runs, publication sections (REQ-DDDMU-002, REQ-DDDMU-006)
   - No page reload on document switch (GH #50); mark-as-checked presence-gated on the review workbench; header actions batch-anonymize / grondslagen-PDF / publish (presence-gated); deep-link to redaction-at-scale progress when installed.
 
-- [ ] 3.3 Create dialog, inline title rename (with bound-folder sync), "+ Document toevoegen" CTA (upload + pick-from-elsewhere reference), remove-confirm dialog naming trash-vs-unlink (REQ-DDDMU-003, REQ-DDDMU-004, REQ-DDDMU-008, REQ-DDDMU-009)
-  - PARTIAL (2026-09-07). Delivered: the create dialog (`DossierFormModal`), the
-    inline title rename with best-effort bound-folder sync and a readable warning
-    on collision or missing permission, and the remove confirmation that names
-    trash-versus-unlink from `GET .../removal-mode` before the operator confirms.
-    OUTSTANDING: the "+ Document toevoegen" CTA currently routes to Folder
-    Analysis, which already owns upload and folder selection, rather than
-    uploading or picking in place. The link/unlink API it would call ships and is
-    covered (`POST/DELETE api/dossiers/{id}/documents`); only the in-page picker
-    is missing. Growing a second uploader here was deliberately not done in this
-    pass — it duplicates a surface rather than wiring one.
+- [x] 3.3 Create dialog, inline title rename (with bound-folder sync), "Add document" action, remove-confirm dialog naming trash-vs-unlink (REQ-DDDMU-003, REQ-DDDMU-004, REQ-DDDMU-008, REQ-DDDMU-009)
+  - Create dialog (`src/dialogs/DossierFormModal.vue`), inline rename with
+    bound-folder sync and its warning, and the remove confirmation reading
+    `GET .../removal-mode`, all in `src/views/dossier/DossierDetail.vue`.
+  - "Add document" routes to Folder Analysis, which owns upload and folder
+    selection. Decision 130 (Q-filinq-2, 9 Oct): the dossier board
+    `FqDossier` draws no in-page uploader or picker, so none is built and
+    REQ-DDDMU-004 is amended to the board. The link/unlink API
+    (`POST/DELETE api/dossiers/{id}/documents`) carries pick-from-elsewhere.
   - Full-payload PUT on every dossier update (PUT-semantic rule — rename must not null `bases`/`checkedOn`/`documents`); rename shows the folder-not-renamed warning on ACL/collision; remove-confirm states whether the file is trashed or the reference is unlinked; modals/dialogs in own files under `src/modals/`/`src/dialogs/`; `NcSelect` with `inputLabel`; NL Design tokens.
 
-- [ ] 3.4 Auto-dossier modal on multi-upload (REQ-DDDMU-005)
-  - NOT STARTED. `DossierFormModal` already takes `prefillName` and
-    `showSelectAllBases` for exactly this caller, so the modal half exists; what
-    is missing is the multi-upload detection on the Filinq upload surfaces that
-    decides when to open it.
-  - Shown only for >1 document in one action (GH #47); name prefill + "grondslagen allemaal geselecteerd" toggle preselecting the six canonical bases; cancel uploads without a dossier.
+- [x] 3.4 Auto-dossier on multi-upload (REQ-DDDMU-005)
+  - The anonymisation upload dialog (`src/dialogs/AnonymizationUploadDialog.vue`)
+    asks a dossier name for two or more documents and none for one;
+    `dossierPlan()` in `src/services/anonymizationUpload.js` decides it,
+    covered by `src/services/anonymizationUpload.spec.js`.
+  - Decision 130 (Q-filinq-2): no filinq board draws a separate auto-dossier
+    modal with a description and an all-grondslagen toggle, so one dialog
+    serves both cases and REQ-DDDMU-005 is amended to it.
 
 ## 4. Quality
 

@@ -1,0 +1,442 @@
+{
+	"FileEntitiesDashboardWidget.fileLink": [
+		[
+			"/admin/files/report.docx",
+			{
+				"out": "url:[\"/apps/files/?dir={dir}&scrollto={file}\",{\"dir\":\"/\",\"file\":\"report.docx\"}]"
+			}
+		],
+		[
+			"/admin/files/Dossier A/sub dir/b c?.pdf",
+			{
+				"out": "url:[\"/apps/files/?dir={dir}&scrollto={file}\",{\"dir\":\"/Dossier A/sub dir\",\"file\":\"b c?.pdf\"}]"
+			}
+		],
+		[
+			"/admin/files/#1 & more/x=y.txt",
+			{
+				"out": "url:[\"/apps/files/?dir={dir}&scrollto={file}\",{\"dir\":\"/#1 & more\",\"file\":\"x=y.txt\"}]"
+			}
+		],
+		[
+			"admin/files/top.txt",
+			{
+				"out": "url:[\"/apps/files/?dir={dir}&scrollto={file}\",{\"dir\":\"/\",\"file\":\"top.txt\"}]"
+			}
+		],
+		[
+			"/admin/files/",
+			{
+				"out": "url:[\"/apps/files/?dir={dir}&scrollto={file}\",{\"dir\":\"/\",\"file\":\"\"}]"
+			}
+		],
+		[
+			"/admin/files",
+			{
+				"out": "url:[\"/apps/files/?dir={dir}&scrollto={file}\",{\"dir\":\"/\",\"file\":\"\"}]"
+			}
+		],
+		[
+			"files/only.txt",
+			{
+				"out": "url:[\"/apps/files/?dir={dir}&scrollto={file}\",{\"dir\":\"/\",\"file\":\"only.txt\"}]"
+			}
+		],
+		[
+			"files",
+			{
+				"out": "url:[\"/apps/files/?dir={dir}&scrollto={file}\",{\"dir\":\"/\",\"file\":\"\"}]"
+			}
+		],
+		[
+			"/u/files/files/nested/files/x.txt",
+			{
+				"out": "url:[\"/apps/files/?dir={dir}&scrollto={file}\",{\"dir\":\"/files/nested/files\",\"file\":\"x.txt\"}]"
+			}
+		],
+		[
+			"/appdata_x/preview/a.png",
+			{
+				"out": "url:[\"/apps/files\",null]"
+			}
+		],
+		[
+			"/admin/Files/case.txt",
+			{
+				"out": "url:[\"/apps/files\",null]"
+			}
+		],
+		[
+			"/admin/files//double//slash.txt",
+			{
+				"out": "url:[\"/apps/files/?dir={dir}&scrollto={file}\",{\"dir\":\"//double/\",\"file\":\"slash.txt\"}]"
+			}
+		],
+		[
+			"/admin/files/dir/",
+			{
+				"out": "url:[\"/apps/files/?dir={dir}&scrollto={file}\",{\"dir\":\"/dir\",\"file\":\"\"}]"
+			}
+		],
+		[
+			"/üser/files/ünïcode %20 name.odt",
+			{
+				"out": "url:[\"/apps/files/?dir={dir}&scrollto={file}\",{\"dir\":\"/\",\"file\":\"ünïcode %20 name.odt\"}]"
+			}
+		],
+		[
+			"plain-name.docx",
+			{
+				"out": "url:[\"/apps/files\",null]"
+			}
+		],
+		[
+			"",
+			{
+				"out": "url:[\"/apps/files\",null]"
+			}
+		],
+		[
+			"/",
+			{
+				"out": "url:[\"/apps/files\",null]"
+			}
+		]
+	],
+	"FileViewerSidebar.downloadUrl": [
+		[
+			"/admin/files/report.docx",
+			{
+				"out": "remote:webdav/report.docx"
+			}
+		],
+		[
+			"/admin/files/Dossier A/sub dir/b c?.pdf",
+			{
+				"out": "remote:webdav/Dossier%20A/sub%20dir/b%20c%3F.pdf"
+			}
+		],
+		[
+			"/admin/files/#1 & more/x=y.txt",
+			{
+				"out": "remote:webdav/%231%20%26%20more/x%3Dy.txt"
+			}
+		],
+		[
+			"admin/files/top.txt",
+			{
+				"out": "remote:webdav/top.txt"
+			}
+		],
+		[
+			"/admin/files/",
+			{
+				"out": "remote:webdav/"
+			}
+		],
+		[
+			"/admin/files",
+			{
+				"out": "remote:webdav/"
+			}
+		],
+		[
+			"files/only.txt",
+			{
+				"out": "remote:webdav/only.txt"
+			}
+		],
+		[
+			"files",
+			{
+				"out": "remote:webdav/"
+			}
+		],
+		[
+			"/u/files/files/nested/files/x.txt",
+			{
+				"out": "remote:webdav/files/nested/files/x.txt"
+			}
+		],
+		[
+			"/appdata_x/preview/a.png",
+			{
+				"out": "remote:webdav"
+			}
+		],
+		[
+			"/admin/Files/case.txt",
+			{
+				"out": "remote:webdav"
+			}
+		],
+		[
+			"/admin/files//double//slash.txt",
+			{
+				"out": "remote:webdav//double//slash.txt"
+			}
+		],
+		[
+			"/admin/files/dir/",
+			{
+				"out": "remote:webdav/dir/"
+			}
+		],
+		[
+			"/üser/files/ünïcode %20 name.odt",
+			{
+				"out": "remote:webdav/%C3%BCn%C3%AFcode%20%2520%20name.odt"
+			}
+		],
+		[
+			"plain-name.docx",
+			{
+				"out": "remote:webdav"
+			}
+		],
+		[
+			"",
+			{
+				"out": ""
+			}
+		],
+		[
+			"/",
+			{
+				"out": "remote:webdav"
+			}
+		],
+		[
+			"null",
+			{
+				"out": ""
+			}
+		],
+		[
+			"undefined",
+			{
+				"out": ""
+			}
+		]
+	],
+	"FileViewerSidebar.downloadUrl(no entry)": [
+		[
+			"/admin/files/report.docx",
+			{
+				"out": ""
+			}
+		],
+		[
+			"/admin/files/Dossier A/sub dir/b c?.pdf",
+			{
+				"out": ""
+			}
+		],
+		[
+			"/admin/files/#1 & more/x=y.txt",
+			{
+				"out": ""
+			}
+		],
+		[
+			"admin/files/top.txt",
+			{
+				"out": ""
+			}
+		],
+		[
+			"/admin/files/",
+			{
+				"out": ""
+			}
+		],
+		[
+			"/admin/files",
+			{
+				"out": ""
+			}
+		],
+		[
+			"files/only.txt",
+			{
+				"out": ""
+			}
+		],
+		[
+			"files",
+			{
+				"out": ""
+			}
+		],
+		[
+			"/u/files/files/nested/files/x.txt",
+			{
+				"out": ""
+			}
+		],
+		[
+			"/appdata_x/preview/a.png",
+			{
+				"out": ""
+			}
+		],
+		[
+			"/admin/Files/case.txt",
+			{
+				"out": ""
+			}
+		],
+		[
+			"/admin/files//double//slash.txt",
+			{
+				"out": ""
+			}
+		],
+		[
+			"/admin/files/dir/",
+			{
+				"out": ""
+			}
+		],
+		[
+			"/üser/files/ünïcode %20 name.odt",
+			{
+				"out": ""
+			}
+		],
+		[
+			"plain-name.docx",
+			{
+				"out": ""
+			}
+		],
+		[
+			"",
+			{
+				"out": ""
+			}
+		],
+		[
+			"/",
+			{
+				"out": ""
+			}
+		]
+	],
+	"FileViewerSidebar.downloadUrlFor": [
+		[
+			"/admin/files/report.docx",
+			{
+				"out": "remote:webdav/report.docx"
+			}
+		],
+		[
+			"/admin/files/Dossier A/sub dir/b c?.pdf",
+			{
+				"out": "remote:webdav/Dossier%20A/sub%20dir/b%20c%3F.pdf"
+			}
+		],
+		[
+			"/admin/files/#1 & more/x=y.txt",
+			{
+				"out": "remote:webdav/%231%20%26%20more/x%3Dy.txt"
+			}
+		],
+		[
+			"admin/files/top.txt",
+			{
+				"out": "remote:webdav/top.txt"
+			}
+		],
+		[
+			"/admin/files/",
+			{
+				"out": "remote:webdav/"
+			}
+		],
+		[
+			"/admin/files",
+			{
+				"out": "remote:webdav/"
+			}
+		],
+		[
+			"files/only.txt",
+			{
+				"out": "remote:webdav/only.txt"
+			}
+		],
+		[
+			"files",
+			{
+				"out": "remote:webdav/"
+			}
+		],
+		[
+			"/u/files/files/nested/files/x.txt",
+			{
+				"out": "remote:webdav/files/nested/files/x.txt"
+			}
+		],
+		[
+			"/appdata_x/preview/a.png",
+			{
+				"out": "remote:webdav"
+			}
+		],
+		[
+			"/admin/Files/case.txt",
+			{
+				"out": "remote:webdav"
+			}
+		],
+		[
+			"/admin/files//double//slash.txt",
+			{
+				"out": "remote:webdav//double//slash.txt"
+			}
+		],
+		[
+			"/admin/files/dir/",
+			{
+				"out": "remote:webdav/dir/"
+			}
+		],
+		[
+			"/üser/files/ünïcode %20 name.odt",
+			{
+				"out": "remote:webdav/%C3%BCn%C3%AFcode%20%2520%20name.odt"
+			}
+		],
+		[
+			"plain-name.docx",
+			{
+				"out": "remote:webdav"
+			}
+		],
+		[
+			"",
+			{
+				"out": ""
+			}
+		],
+		[
+			"/",
+			{
+				"out": "remote:webdav"
+			}
+		],
+		[
+			"null",
+			{
+				"out": ""
+			}
+		],
+		[
+			"undefined",
+			{
+				"out": ""
+			}
+		]
+	]
+}

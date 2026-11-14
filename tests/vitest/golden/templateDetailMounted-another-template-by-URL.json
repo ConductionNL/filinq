@@ -1,0 +1,30 @@
+{
+	"calls": [
+		[
+			"fetchTemplate",
+			"t2"
+		],
+		[
+			"acquireLock",
+			"t2"
+		],
+		[
+			"loadTemplateWizard",
+			"t2"
+		]
+	],
+	"form": {
+		"name": "Factuur",
+		"namespace": "",
+		"description": "",
+		"content": "",
+		"category": "",
+		"tagsInput": "",
+		"changelog": "",
+		"format": "A4",
+		"orientation": "P"
+	},
+	"editorHtml": "",
+	"lockOwner": null,
+	"hasWizard": false
+}

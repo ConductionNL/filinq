@@ -15,7 +15,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/template-charts/specs/template-charts/spec.md
+ * @spec openspec/specs/template-charts/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -34,7 +34,7 @@ namespace OCA\Filinq\Service\Charts;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/template-charts/tasks.md#task-1.1
+ * @spec openspec/changes/archive/2026-09-28-template-charts/tasks.md#task-1.1
  */
 class CartesianFrame {
 
@@ -77,18 +77,16 @@ class CartesianFrame {
 	/**
 	 * Compute the plot-area geometry for a cartesian chart.
 	 *
-	 * @param bool $hasTitle Whether a chart title is drawn.
+	 * @param ChartRequest $chart The chart: its title and canvas size.
 	 * @param bool $showLegend Whether a legend row is drawn.
-	 * @param int $width Canvas width.
-	 * @param int $height Canvas height.
 	 *
 	 * @return array{marginTop: int, marginLeft: int, plotWidth: float, plotHeight: float, baselineY: float}
 	 *
-	 * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-001
+	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-001
 	 */
-	public function layout(bool $hasTitle, bool $showLegend, int $width, int $height): array {
+	public function layout(ChartRequest $chart, bool $showLegend): array {
 		$marginTop = 14;
-		if ($hasTitle === true) {
+		if ($chart->title() !== '') {
 			$marginTop = 34;
 		}
 
@@ -100,8 +98,8 @@ class CartesianFrame {
 		$marginLeft = 46;
 		$marginRight = 16;
 
-		$plotWidth = (float)max(1, $width - $marginLeft - $marginRight);
-		$plotHeight = (float)max(1, $height - $marginTop - $marginBottom);
+		$plotWidth = (float)max(1, $chart->width - $marginLeft - $marginRight);
+		$plotHeight = (float)max(1, $chart->height - $marginTop - $marginBottom);
 
 		return [
 			'marginTop' => $marginTop,
@@ -117,44 +115,40 @@ class CartesianFrame {
 	 * Render the chart chrome: background, optional title, y-axis gridlines
 	 * with tick labels, and the axis baseline.
 	 *
-	 * @param array $layout Geometry from {@see layout()}.
-	 * @param string $title Chart title ('' for none).
-	 * @param string $valueFmt Value format for the tick labels.
-	 * @param float $niceMax Axis ceiling value.
-	 * @param int $width Canvas width.
-	 * @param int $height Canvas height.
+	 * @param ChartRequest $chart The chart: its title, value format and canvas size.
+	 * @param array $plot Geometry from {@see layout()} plus the axis ceiling `niceMax`.
 	 *
 	 * @return string SVG markup fragment (opening tag included, not closed).
 	 *
-	 * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-001
+	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-001
 	 */
-	public function render(array $layout, string $title, string $valueFmt, float $niceMax, int $width, int $height): string {
+	public function render(ChartRequest $chart, array $plot): string {
 		$parts = [];
-		$parts[] = $this->svg->svgOpenTag(width: $width, height: $height);
+		$parts[] = $this->svg->svgOpenTag(width: $chart->width, height: $chart->height);
 
+		$title = $chart->title();
 		if ($title !== '') {
-			$parts[] = $this->svg->textEl(x: $width / 2, y: 18, text: $title, anchor: 'middle', size: 13, weight: 'bold');
+			$parts[] = $this->svg->textEl(position: new SvgPoint(x: $chart->width / 2, y: 18), text: new SvgText(content: $title, style: SvgTextStyle::Title));
 		}
 
-		$marginLeft = $layout['marginLeft'];
-		$plotWidth = $layout['plotWidth'];
+		$niceMax = $plot['niceMax'];
+		$valueFmt = $chart->valueFormat();
+		$marginLeft = $plot['marginLeft'];
+		$plotWidth = $plot['plotWidth'];
 
 		for ($t = 0; $t <= self::TICK_COUNT; $t++) {
 			$value = ($niceMax / self::TICK_COUNT) * $t;
-			$y = $layout['marginTop'] + $layout['plotHeight'] - (($value / $niceMax) * $layout['plotHeight']);
-			$valueLabel = $this->labels->formatValue(value: $value, format: $valueFmt);
-			$parts[] = $this->svg->lineEl(x1: $marginLeft, y1: $y, x2: $marginLeft + $plotWidth, y2: $y, color: '#E2E2E2', width: 1);
-			$parts[] = $this->svg->textEl(x: $marginLeft - 6, y: $y + 3, text: $valueLabel, anchor: 'end', size: 9, color: '#666666');
+			$y = $plot['marginTop'] + $plot['plotHeight'] - (($value / $niceMax) * $plot['plotHeight']);
+			$tickText = new SvgText(content: $this->labels->formatValue(value: $value, format: $valueFmt), style: SvgTextStyle::Axis);
+			$gridLine = new SvgSegment(from: new SvgPoint(x: $marginLeft, y: $y), to: new SvgPoint(x: $marginLeft + $plotWidth, y: $y));
+			$parts[] = $this->svg->lineEl(segment: $gridLine, color: '#E2E2E2');
+			$parts[] = $this->svg->textEl(position: new SvgPoint(x: $marginLeft - 6, y: $y + 3), text: $tickText);
 		}
 
-		$baselineY = $layout['baselineY'];
+		$baselineY = $plot['baselineY'];
 		$parts[] = $this->svg->lineEl(
-			x1: $marginLeft,
-			y1: $baselineY,
-			x2: $marginLeft + $plotWidth,
-			y2: $baselineY,
-			color: '#999999',
-			width: 1
+			segment: new SvgSegment(from: new SvgPoint(x: $marginLeft, y: $baselineY), to: new SvgPoint(x: $marginLeft + $plotWidth, y: $baselineY)),
+			color: '#999999'
 		);
 
 		return implode('', $parts);

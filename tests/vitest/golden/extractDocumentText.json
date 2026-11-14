@@ -1,0 +1,305 @@
+[
+	{
+		"file": {
+			"path": "/a/doc.pdf",
+			"mimeType": "application/pdf",
+			"fileName": "doc.pdf"
+		},
+		"text": "p1a  b\np2a  b",
+		"calls": [
+			[
+				"get",
+				"http://localhost/remote.php/dav/files/admin/a/doc.pdf",
+				"arraybuffer"
+			],
+			[
+				"pdf",
+				{
+					"bytesOf": "http://localhost/remote.php/dav/files/admin/a/doc.pdf"
+				}
+			]
+		]
+	},
+	{
+		"file": {
+			"path": "/a/empty.pdf",
+			"mimeType": "",
+			"fileName": "EMPTY.PDF"
+		},
+		"text": "",
+		"calls": [
+			[
+				"get",
+				"http://localhost/remote.php/dav/files/admin/a/empty.pdf",
+				"arraybuffer"
+			],
+			[
+				"pdf",
+				{
+					"bytesOf": "http://localhost/remote.php/dav/files/admin/a/empty.pdf"
+				}
+			]
+		]
+	},
+	{
+		"file": {
+			"path": "/a/x",
+			"mimeType": "APPLICATION/PDF"
+		},
+		"text": "p1a  b\np2a  b",
+		"calls": [
+			[
+				"get",
+				"http://localhost/remote.php/dav/files/admin/a/x",
+				"arraybuffer"
+			],
+			[
+				"pdf",
+				{
+					"bytesOf": "http://localhost/remote.php/dav/files/admin/a/x"
+				}
+			]
+		]
+	},
+	{
+		"file": {
+			"path": "/a/w.docx",
+			"mimeType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+			"fileName": "w.docx"
+		},
+		"text": "word text",
+		"calls": [
+			[
+				"get",
+				"http://localhost/remote.php/dav/files/admin/a/w.docx",
+				"arraybuffer"
+			],
+			[
+				"mammoth",
+				{
+					"bytesOf": "http://localhost/remote.php/dav/files/admin/a/w.docx"
+				}
+			]
+		]
+	},
+	{
+		"file": {
+			"path": "/a/old.doc",
+			"mimeType": "application/msword",
+			"fileName": "old.doc"
+		},
+		"text": "word text",
+		"calls": [
+			[
+				"get",
+				"http://localhost/remote.php/dav/files/admin/a/old.doc",
+				"arraybuffer"
+			],
+			[
+				"mammoth",
+				{
+					"bytesOf": "http://localhost/remote.php/dav/files/admin/a/old.doc"
+				}
+			]
+		]
+	},
+	{
+		"file": {
+			"path": "/a/blank.docx",
+			"fileName": "blank.DOCX"
+		},
+		"text": "",
+		"calls": [
+			[
+				"get",
+				"http://localhost/remote.php/dav/files/admin/a/blank.docx",
+				"arraybuffer"
+			],
+			[
+				"mammoth",
+				{
+					"bytesOf": "http://localhost/remote.php/dav/files/admin/a/blank.docx"
+				}
+			]
+		]
+	},
+	{
+		"file": {
+			"path": "/a/t.odt",
+			"mimeType": "application/vnd.oasis.opendocument.text",
+			"fileName": "t.odt"
+		},
+		"text": "Body line\nHeader",
+		"calls": [
+			[
+				"get",
+				"http://localhost/remote.php/dav/files/admin/a/t.odt",
+				"arraybuffer"
+			],
+			[
+				"zip",
+				{
+					"bytesOf": "http://localhost/remote.php/dav/files/admin/a/t.odt"
+				}
+			]
+		]
+	},
+	{
+		"file": {
+			"path": "/a/nostyles.odt",
+			"fileName": "nostyles.odt"
+		},
+		"text": "Body line",
+		"calls": [
+			[
+				"get",
+				"http://localhost/remote.php/dav/files/admin/a/nostyles.odt",
+				"arraybuffer"
+			],
+			[
+				"zip",
+				{
+					"bytesOf": "http://localhost/remote.php/dav/files/admin/a/nostyles.odt"
+				}
+			]
+		]
+	},
+	{
+		"file": {
+			"path": "/a/blankstyles.odt",
+			"fileName": "blankstyles.odt"
+		},
+		"text": "Body line",
+		"calls": [
+			[
+				"get",
+				"http://localhost/remote.php/dav/files/admin/a/blankstyles.odt",
+				"arraybuffer"
+			],
+			[
+				"zip",
+				{
+					"bytesOf": "http://localhost/remote.php/dav/files/admin/a/blankstyles.odt"
+				}
+			]
+		]
+	},
+	{
+		"file": {
+			"path": "/a/novalue.docx",
+			"fileName": "novalue.docx"
+		},
+		"text": "",
+		"calls": [
+			[
+				"get",
+				"http://localhost/remote.php/dav/files/admin/a/novalue.docx",
+				"arraybuffer"
+			],
+			[
+				"mammoth",
+				{
+					"bytesOf": "http://localhost/remote.php/dav/files/admin/a/novalue.docx"
+				}
+			]
+		]
+	},
+	{
+		"file": {
+			"path": "/a/n.txt",
+			"mimeType": "text/plain",
+			"fileName": "n.txt"
+		},
+		"text": "plain text of http://localhost/remote.php/dav/files/admin/a/n.txt",
+		"calls": [
+			[
+				"get",
+				"http://localhost/remote.php/dav/files/admin/a/n.txt",
+				"text"
+			]
+		]
+	},
+	{
+		"file": {
+			"path": "/a/n.md",
+			"fileName": "n.md"
+		},
+		"text": "plain text of http://localhost/remote.php/dav/files/admin/a/n.md",
+		"calls": [
+			[
+				"get",
+				"http://localhost/remote.php/dav/files/admin/a/n.md",
+				"text"
+			]
+		]
+	},
+	{
+		"file": {
+			"path": "/a/both.pdf",
+			"mimeType": "application/msword",
+			"fileName": "both.pdf"
+		},
+		"text": "p1a  b\np2a  b",
+		"calls": [
+			[
+				"get",
+				"http://localhost/remote.php/dav/files/admin/a/both.pdf",
+				"arraybuffer"
+			],
+			[
+				"pdf",
+				{
+					"bytesOf": "http://localhost/remote.php/dav/files/admin/a/both.pdf"
+				}
+			]
+		]
+	},
+	{
+		"file": {
+			"path": "/a/both.odt",
+			"mimeType": "application/msword",
+			"fileName": "both.odt"
+		},
+		"text": "word text",
+		"calls": [
+			[
+				"get",
+				"http://localhost/remote.php/dav/files/admin/a/both.odt",
+				"arraybuffer"
+			],
+			[
+				"mammoth",
+				{
+					"bytesOf": "http://localhost/remote.php/dav/files/admin/a/both.odt"
+				}
+			]
+		]
+	},
+	{
+		"file": {
+			"path": "/a/s.ods",
+			"mimeType": "application/vnd.oasis.opendocument.spreadsheet"
+		},
+		"text": "plain text of http://localhost/remote.php/dav/files/admin/a/s.ods",
+		"calls": [
+			[
+				"get",
+				"http://localhost/remote.php/dav/files/admin/a/s.ods",
+				"text"
+			]
+		]
+	},
+	{
+		"file": {
+			"path": "/a/none"
+		},
+		"text": "plain text of http://localhost/remote.php/dav/files/admin/a/none",
+		"calls": [
+			[
+				"get",
+				"http://localhost/remote.php/dav/files/admin/a/none",
+				"text"
+			]
+		]
+	}
+]

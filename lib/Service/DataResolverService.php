@@ -93,16 +93,7 @@ class DataResolverService {
 	 * @throws RuntimeException If OpenRegister is not available
 	 */
 	private function getObjectService(): \OCA\OpenRegister\Service\ObjectService {
-		if (in_array(
-			needle: 'openregister',
-			haystack: $this->appManager->getInstalledApps(),
-			strict: true
-		) === true
-		) {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-		}
-
-		throw new RuntimeException(message: 'OpenRegister service is not available.');
+		return (new DocumentObjectServiceResolver(container: $this->container, appManager: $this->appManager))->resolve();
 	}//end getObjectService()
 
 	/**
@@ -114,7 +105,7 @@ class DataResolverService {
 	 *
 	 * @return ListReferenceResolver The resolver for listRefs
 	 *
-	 * @spec openspec/changes/document-generation-list-refs/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	private function getListReferenceResolver(): ListReferenceResolver {
 		if ($this->listResolver === null) {
@@ -153,7 +144,7 @@ class DataResolverService {
 	 *                   failures
 	 *
 	 * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-correspondence-generation-api
-	 * @spec openspec/changes/document-generation-list-refs/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function resolve(array $dataRefs, array $listRefs = [], array $adHocData = []): array {
 		$this->resolvedCache = [];
@@ -246,27 +237,7 @@ class DataResolverService {
 			return $this->resolvedCache[$cacheKey];
 		}
 
-		$objectService = $this->getObjectService();
-
-		$result = $objectService->find(
-			id: $ref['id'],
-			register: $ref['register'],
-			schema: $ref['schema']
-		);
-
-		if (empty($result) === true) {
-			throw new Exception(
-				message: "Object not found: register={$ref['register']}, schema={$ref['schema']}, id={$ref['id']}"
-			);
-		}
-
-		$data = $result;
-		if (is_object($result) === true
-			&& method_exists(object_or_class: $result, method: 'jsonSerialize') === true
-		) {
-			$data = $result->jsonSerialize();
-		}
-
+		$data = $this->findReferenced(ref: $ref);
 		$this->resolvedCache[$cacheKey] = $data;
 
 		// Resolve nested references if within depth limit.
@@ -282,6 +253,37 @@ class DataResolverService {
 
 		return $data;
 	}//end resolveReference()
+
+	/**
+	 * The object a reference names, as a plain array.
+	 *
+	 * @param array $ref The reference with register, schema, and id
+	 *
+	 * @return array The object data
+	 *
+	 * @throws Exception If the object is not found
+	 */
+	private function findReferenced(array $ref): array {
+		$result = $this->getObjectService()->find(
+			id: $ref['id'],
+			register: $ref['register'],
+			schema: $ref['schema']
+		);
+
+		if (empty($result) === true) {
+			throw new Exception(
+				message: "Object not found: register={$ref['register']}, schema={$ref['schema']}, id={$ref['id']}"
+			);
+		}
+
+		if (is_object($result) === true
+			&& method_exists(object_or_class: $result, method: 'jsonSerialize') === true
+		) {
+			return $result->jsonSerialize();
+		}
+
+		return $result;
+	}//end findReferenced()
 
 	/**
 	 * Scan object data for nested UUID references and resolve them

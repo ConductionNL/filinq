@@ -1,0 +1,102 @@
+{
+    "the active one": {
+        "layout": {
+            "uuid": "b",
+            "layoutVersion": 2,
+            "active": true
+        },
+        "asked": [
+            "brief"
+        ]
+    },
+    "version 2": {
+        "layout": {
+            "uuid": "b",
+            "layoutVersion": 2,
+            "active": true
+        },
+        "asked": [
+            "brief"
+        ]
+    },
+    "version 1 as a string": {
+        "layout": {
+            "uuid": "a",
+            "layoutVersion": "1",
+            "active": false
+        },
+        "asked": [
+            "brief"
+        ]
+    },
+    "a version that does not exist": {
+        "layout": null,
+        "asked": [
+            "brief"
+        ]
+    },
+    "version 0 and one without a number": {
+        "layout": {
+            "uuid": "x"
+        },
+        "asked": [
+            "brief"
+        ]
+    },
+    "nothing active": {
+        "layout": {
+            "uuid": "c",
+            "layoutVersion": 3,
+            "active": false
+        },
+        "asked": [
+            "brief"
+        ]
+    },
+    "active as a string": {
+        "layout": {
+            "uuid": "c",
+            "layoutVersion": 3,
+            "active": false
+        },
+        "asked": [
+            "brief"
+        ]
+    },
+    "two active": {
+        "layout": {
+            "uuid": "b",
+            "layoutVersion": 2,
+            "active": true
+        },
+        "asked": [
+            "brief"
+        ]
+    },
+    "no versions": {
+        "layout": null,
+        "asked": [
+            "brief"
+        ]
+    },
+    "no versions, a version asked": {
+        "layout": null,
+        "asked": [
+            "brief"
+        ]
+    },
+    "no name": {
+        "layout": null,
+        "asked": []
+    },
+    "the first of two equal numbers": {
+        "layout": {
+            "uuid": "c",
+            "layoutVersion": 3,
+            "active": false
+        },
+        "asked": [
+            "brief"
+        ]
+    }
+}

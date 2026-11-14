@@ -27,7 +27,12 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use Exception;
+use OCA\Filinq\Service\Charts\SvgRasterizer;
+use OCA\Filinq\Service\Conversion\HtmlToOfficeConverter;
+use OCA\Filinq\Service\Conversion\LibreOfficeHeadlessBackend;
+use OCA\Filinq\Service\Support\PdfRendering;
 use Psr\Log\LoggerInterface;
+use setasign\Fpdi\Fpdi;
 
 /**
  * Renders template content and produces the requested output format.
@@ -40,21 +45,49 @@ use Psr\Log\LoggerInterface;
  */
 class DocumentRenderPipeline {
 	/**
+	 * Warnings raised by the most recent {@see produceOutput()} call, such as
+	 * a chart that could not be carried into an ODF file. Reset on every call.
+	 *
+	 * @var string[]
+	 */
+	private array $lastOutputWarnings = [];
+
+	/**
+	 * Service for Twig rendering.
+	 *
+	 * @var TemplateRenderer
+	 */
+	private readonly TemplateRenderer $templateRenderer;
+
+	/**
+	 * Service for PDF generation.
+	 *
+	 * @var PdfService
+	 */
+	private readonly PdfService $pdfService;
+
+	/**
 	 * Constructor.
 	 *
-	 * @param TemplateRenderer $templateRenderer Service for Twig rendering
-	 * @param PdfService $pdfService Service for PDF generation
+	 * @param PdfRendering $rendering The template renderer and the PDF generator.
 	 * @param DocumentObjectServiceResolver $objectResolver Resolver for OpenRegister's ObjectService
 	 * @param LoggerInterface $logger Logger for error reporting
+	 * @param SvgRasterizer $svgRasterizer Turns chart SVG into PNG before an ODF conversion
+	 * @param ObjectionTermCalculator|null $objectionTerm Adds the legal basis and the objection deadline of a decision letter
+	 * @param HtmlToOfficeConverter|null $officeConverter Makes DOCX and ODT; without it both answer 503
 	 *
 	 * @return void
 	 */
 	public function __construct(
-		private readonly TemplateRenderer $templateRenderer,
-		private readonly PdfService $pdfService,
+		PdfRendering $rendering,
 		private readonly DocumentObjectServiceResolver $objectResolver,
 		private readonly LoggerInterface $logger,
+		private readonly SvgRasterizer $svgRasterizer,
+		private readonly ?ObjectionTermCalculator $objectionTerm = null,
+		private readonly ?HtmlToOfficeConverter $officeConverter = null,
 	) {
+		$this->templateRenderer = $rendering->renderer;
+		$this->pdfService = $rendering->pdf;
 
 	}//end __construct()
 
@@ -109,6 +142,8 @@ class DocumentRenderPipeline {
 	 * @param array $options The request options
 	 *
 	 * @return array The merged PDF options
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-pdfua-accessible-output/tasks.md#task-1.3
 	 */
 	public function buildPdfOptions(array $template, ?array $huisstijl, array $options): array {
 		$pdfOptions = [
@@ -118,6 +153,17 @@ class DocumentRenderPipeline {
 
 		if ($huisstijl !== null && isset($huisstijl['defaultMargins']) === true) {
 			$pdfOptions['margin'] = $huisstijl['defaultMargins'];
+		}
+
+		// What accessible output needs from the template: its name as the
+		// fallback title, its language when it has one. The caller's own
+		// title and lang (below) win.
+		if (is_string($template['name'] ?? null) === true && $template['name'] !== '') {
+			$pdfOptions['templateName'] = $template['name'];
+		}
+
+		if (is_string($template['language'] ?? null) === true && $template['language'] !== '') {
+			$pdfOptions['templateLanguage'] = $template['language'];
 		}
 
 		if (isset($options['pdfOptions']) === true) {
@@ -139,7 +185,8 @@ class DocumentRenderPipeline {
 	 *
 	 * @throws Exception If rendering fails
 	 *
-	 * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-002
+	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-002
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function renderWithHuisstijl(
 		string $templateContent,
@@ -148,6 +195,12 @@ class DocumentRenderPipeline {
 	): array {
 		$fullContent = '';
 		$warnings = [];
+
+		if ($this->objectionTerm !== null) {
+			$decision = $this->objectionTerm->addToContext(data: $data, templateContent: $templateContent);
+			$data = $decision['data'];
+			$warnings = $decision['warnings'];
+		}
 
 		if ($huisstijl !== null && empty($huisstijl['headerHtml']) === false) {
 			$headerData = array_merge($data, ['huisstijl' => $huisstijl]);
@@ -187,19 +240,25 @@ class DocumentRenderPipeline {
 	 * Produce output in the requested format.
 	 *
 	 * @param string $htmlContent The rendered HTML content
-	 * @param string $format The output format (pdf, odf, html)
+	 * @param string $format The output format (pdf, odf, docx, html)
 	 * @param array $pdfOptions The PDF generation options
 	 *
-	 * @return string The generated content (binary for pdf/odf, string for html)
+	 * @return string The generated content (binary for pdf/odf/docx, string for html)
 	 *
 	 * @throws Exception If output generation fails
+	 *
+	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-007
+	 * @spec openspec/changes/archive/2026-09-29-multi-format-output/tasks.md#task-2.5
 	 */
 	public function produceOutput(string $htmlContent, string $format, array $pdfOptions): string {
+		$this->lastOutputWarnings = [];
+
 		switch ($format) {
 			case 'html':
 				return $htmlContent;
 			case 'odf':
-				return $this->convertToOdf(htmlContent: $htmlContent);
+			case 'docx':
+				return $this->convertToOffice(htmlContent: $htmlContent, format: $format);
 			case 'pdf':
 			default:
 				return $this->pdfService->renderPdf(
@@ -212,66 +271,82 @@ class DocumentRenderPipeline {
 	}//end produceOutput()
 
 	/**
-	 * Convert HTML to ODF (.odt) using LibreOffice headless.
+	 * What a caller needs to know about produced bytes without reading them again.
 	 *
-	 * @param string $htmlContent The HTML content to convert
+	 * A SHA-256 over the bytes always, and the page count for a PDF. DOCX, ODT
+	 * and HTML have no page structure filinq can count, so they carry no
+	 * `pageCount` at all rather than a zero that reads as an empty document. A
+	 * PDF the parser cannot read (a compressed cross-reference table) carries
+	 * none either, for the same reason.
 	 *
-	 * @return string The ODT binary content
+	 * @param string $content The produced bytes
+	 * @param string $format  The format they were produced in
 	 *
-	 * @throws Exception If LibreOffice is not available or conversion fails
+	 * @return array{sha256: string, pageCount?: int}
 	 *
-	 * @psalm-suppress ForbiddenCode shell_exec is required to locate the LibreOffice binary
+	 * @spec openspec/changes/generated-document-names-its-template-version/specs/template-version-provenance/spec.md#requirement-the-generation-result-reports-the-bytes-filinq-produced-req-ddtvp-005
 	 */
-	private function convertToOdf(string $htmlContent): string {
-		$soffice = trim((string)shell_exec('which soffice 2>/dev/null'));
-		if (empty($soffice) === true) {
-			throw new Exception(
-				message: 'ODF conversion service unavailable: LibreOffice is not installed',
-				code: 503
-			);
+	public function describeOutput(string $content, string $format): array {
+		$described = ['sha256' => hash('sha256', $content)];
+		if ($format !== 'pdf') {
+			return $described;
 		}
 
-		$tempDir = '/tmp/filinq_odf_convert';
-		if (file_exists($tempDir) === false) {
-			mkdir($tempDir, 0700, true);
-		}
-
-		$tempFile = $tempDir . '/' . uniqid('odf_') . '.html';
-		file_put_contents($tempFile, $htmlContent);
-
+		$stream = fopen('php://memory', 'r+');
 		try {
-			$outDir = escapeshellarg($tempDir);
-			$inFile = escapeshellarg($tempFile);
-			$command = escapeshellcmd($soffice) . " --headless --convert-to odt --outdir {$outDir} {$inFile} 2>&1";
-
-			$output = [];
-			$returnCode = 0;
-			exec($command, $output, $returnCode);
-
-			if ($returnCode !== 0) {
-				throw new Exception(
-					message: 'ODF conversion failed: ' . implode("\n", $output),
-					code: 500
-				);
-			}
-
-			$odtFile = preg_replace('/\.html$/', '.odt', $tempFile);
-			if (file_exists($odtFile) === false) {
-				throw new Exception(
-					message: 'ODF output file not found after conversion',
-					code: 500
-				);
-			}
-
-			$content = file_get_contents($odtFile);
-			unlink($odtFile);
-
-			return $content;
+			fwrite($stream, $content);
+			rewind($stream);
+			$described['pageCount'] = (new Fpdi())->setSourceFile($stream);
+		} catch (\Throwable $e) {
+			$this->logger->warning(message: 'Could not count the pages of a generated PDF: ' . $e->getMessage());
 		} finally {
-			if (file_exists($tempFile) === true) {
-				unlink($tempFile);
-			}
-		}//end try
+			fclose($stream);
+		}
 
-	}//end convertToOdf()
+		return $described;
+
+	}//end describeOutput()
+
+	/**
+	 * Warnings raised by the most recent {@see produceOutput()} call.
+	 *
+	 * @return string[]
+	 *
+	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-007
+	 */
+	public function getLastOutputWarnings(): array {
+		return $this->lastOutputWarnings;
+
+	}//end getLastOutputWarnings()
+
+	/**
+	 * Convert HTML to DOCX or ODT through the shared LibreOffice converter.
+	 *
+	 * Charts arrive as inline SVG, which an office file cannot carry, so they
+	 * are rasterised first; the warnings name what could not be.
+	 *
+	 * @param string $htmlContent The rendered HTML.
+	 * @param string $format      odf or docx.
+	 *
+	 * @return string The file's bytes.
+	 *
+	 * @throws Exception 503 with the matrix's reason when LibreOffice is unavailable.
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-multi-format-output/tasks.md#task-2.5
+	 */
+	private function convertToOffice(string $htmlContent, string $format): string {
+		if ($this->officeConverter === null || $this->officeConverter->isAvailable() === false) {
+			throw new Exception(message: LibreOfficeHeadlessBackend::UNAVAILABLE_REASON, code: 503);
+		}
+
+		$rasterized = $this->svgRasterizer->rasterizeInlineSvg(html: $htmlContent, format: $format);
+		$this->lastOutputWarnings = $rasterized['warnings'];
+
+		if ($format === 'docx') {
+			return $this->officeConverter->toDocx(html: $rasterized['html']);
+		}
+
+		return $this->officeConverter->toOdt(html: $rasterized['html']);
+
+	}//end convertToOffice()
 }//end class

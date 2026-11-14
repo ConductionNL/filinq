@@ -3,6 +3,9 @@
 /**
  * PolicyRetroactiveService — applies rule mutations to in-flight workflow records.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Spec §5 of `entity-publication-policies`. The retroactive layer is asymmetric:
  *
  *   - **Prohibition INSERT / re-activation / scope widening** → all in-flight
@@ -33,9 +36,6 @@
  * @link https://www.filinq.app
  *
  * @spec openspec/specs/entity-publication-policies/spec.md#requirement-adding-a-prohibition-must-force-resolve-in-flight-per-document-records
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -44,13 +44,14 @@ namespace OCA\Filinq\Service;
 
 use DateTimeImmutable;
 use Exception;
+use OCA\Filinq\Kernel\Contracts\PolicyRetroactiveServiceInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use Psr\Log\LoggerInterface;
 
 /**
  * Retroactive rule-mutation handler.
  */
-class PolicyRetroactiveService {
+class PolicyRetroactiveService implements PolicyRetroactiveServiceInterface {
 
 	/**
 	 * Statuses considered "in-flight" — eligible for retroactive force-resolve.
@@ -431,15 +432,7 @@ class PolicyRetroactiveService {
 	 * @return DateTimeImmutable|null
 	 */
 	private function parseDateTime(string $value): ?DateTimeImmutable {
-		if ($value === '') {
-			return null;
-		}
-
-		try {
-			return new DateTimeImmutable($value);
-		} catch (Exception) {
-			return null;
-		}
+		return (new PolicyRuleNormaliser())->parseDateTime(value: $value);
 
 	}//end parseDateTime()
 }//end class

@@ -1,0 +1,229 @@
+{
+    "no policy service, fail closed": {
+        "refused": [
+            [],
+            [],
+            "PolicyMatchService unavailable"
+        ],
+        "logs": [
+            [
+                "warning",
+                "ProhibitionGate: PolicyMatchService unavailable \u2014 failing closed",
+                {
+                    "fileId": 99
+                }
+            ]
+        ],
+        "audits": []
+    },
+    "no policy service, fail open": {
+        "passed": true,
+        "logs": [
+            [
+                "warning",
+                "ProhibitionGate: PolicyMatchService unavailable \u2014 fail-open (legacy mode)",
+                {
+                    "fileId": 99
+                }
+            ]
+        ],
+        "audits": []
+    },
+    "no entities, fail closed": {
+        "refused": [
+            [],
+            [],
+            "EntityRelationMapper unavailable: mapper offline"
+        ],
+        "logs": [
+            [
+                "warning",
+                "ProhibitionGate: failed to load entities for file \u2014 failing closed",
+                {
+                    "fileId": 99,
+                    "error": "mapper offline"
+                }
+            ]
+        ],
+        "audits": []
+    },
+    "no entities, fail open": {
+        "passed": true,
+        "logs": [
+            [
+                "warning",
+                "ProhibitionGate: failed to load entities for file \u2014 fail-open (legacy mode)",
+                {
+                    "fileId": 99,
+                    "error": "mapper offline"
+                }
+            ]
+        ],
+        "audits": []
+    },
+    "nothing prohibited": {
+        "passed": true,
+        "logs": [],
+        "audits": []
+    },
+    "a high match left out": {
+        "refused": [
+            [
+                {
+                    "entityId": 42,
+                    "entityName": "Jansen",
+                    "ruleId": "R-X",
+                    "ruleName": "Undercover",
+                    "confidence": 0.95
+                }
+            ],
+            [],
+            null
+        ],
+        "logs": [
+            [
+                "warning",
+                "ProhibitionGate: 422 \u2014 prohibition gate fired",
+                {
+                    "fileId": 99,
+                    "missingCount": 1,
+                    "rejectedOverrideCount": 0,
+                    "ruleIds": [
+                        "R-X"
+                    ],
+                    "entityIds": [
+                        42
+                    ]
+                }
+            ]
+        ],
+        "audits": []
+    },
+    "a high match in the request": {
+        "passed": true,
+        "logs": [],
+        "audits": []
+    },
+    "a high match named by text": {
+        "passed": true,
+        "logs": [],
+        "audits": []
+    },
+    "a high match with an override": {
+        "refused": [
+            [
+                {
+                    "entityId": 42,
+                    "entityName": "Jansen",
+                    "ruleId": "R-X",
+                    "ruleName": "Undercover",
+                    "confidence": 0.95
+                }
+            ],
+            [
+                {
+                    "ruleId": "R-X",
+                    "entityId": 42,
+                    "reason": "override not allowed for high-confidence matches"
+                }
+            ],
+            null
+        ],
+        "logs": [
+            [
+                "warning",
+                "ProhibitionGate: 422 \u2014 prohibition gate fired",
+                {
+                    "fileId": 99,
+                    "missingCount": 1,
+                    "rejectedOverrideCount": 1,
+                    "ruleIds": [
+                        "R-X"
+                    ],
+                    "entityIds": [
+                        42
+                    ]
+                }
+            ]
+        ],
+        "audits": []
+    },
+    "a low match without an override": {
+        "passed": true,
+        "logs": [],
+        "audits": []
+    },
+    "a low match released": {
+        "passed": true,
+        "logs": [],
+        "audits": [
+            {
+                "ruleId": "R-X",
+                "entityRelationId": 7,
+                "fileId": 99,
+                "reason": "press office approved",
+                "acknowledgedBy": "anna"
+            }
+        ]
+    },
+    "a low match, override without the role": {
+        "refused": [
+            [],
+            [
+                {
+                    "ruleId": "R-X",
+                    "entityId": 42,
+                    "reason": "only a policy admin may override a publication prohibition"
+                }
+            ],
+            null
+        ],
+        "logs": [
+            [
+                "warning",
+                "ProhibitionGate: 422 \u2014 prohibition gate fired",
+                {
+                    "fileId": 99,
+                    "missingCount": 0,
+                    "rejectedOverrideCount": 1,
+                    "ruleIds": [],
+                    "entityIds": []
+                }
+            ]
+        ],
+        "audits": []
+    },
+    "an override for another entity": {
+        "refused": [
+            [
+                {
+                    "entityId": 42,
+                    "entityName": "Jansen",
+                    "ruleId": "R-X",
+                    "ruleName": "Undercover",
+                    "confidence": 0.95
+                }
+            ],
+            [],
+            null
+        ],
+        "logs": [
+            [
+                "warning",
+                "ProhibitionGate: 422 \u2014 prohibition gate fired",
+                {
+                    "fileId": 99,
+                    "missingCount": 1,
+                    "rejectedOverrideCount": 0,
+                    "ruleIds": [
+                        "R-X"
+                    ],
+                    "entityIds": [
+                        42
+                    ]
+                }
+            ]
+        ],
+        "audits": []
+    }
+}

@@ -27,6 +27,7 @@ namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\VersionController;
 use OCA\Filinq\Exception\ComparisonException;
+use OCA\Filinq\Exception\DocumentFinalException;
 use OCA\Filinq\Service\DocumentVersionService;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -191,6 +192,24 @@ class VersionControllerTest extends TestCase {
 		$this->assertSame('versions-unavailable', $data['reason']);
 
 	}//end testRestoreReportsVersionsUnavailable()
+
+	/**
+	 * A final document refuses the restore with a 409 carrying the refusal.
+	 *
+	 * @return void
+	 */
+	public function testRestoreOfFinalDocumentAnswersConflict(): void {
+		$this->service->method('restoreVersion')
+			->willThrowException(new DocumentFinalException(message: 'This document is final.'));
+
+		$response = $this->controller->restore(1234, 1700000000);
+
+		$this->assertSame(Http::STATUS_CONFLICT, $response->getStatus());
+		$data = $response->getData();
+		$this->assertSame('This document is final.', $data['error']);
+		$this->assertSame('document-final', $data['reason']);
+
+	}//end testRestoreOfFinalDocumentAnswersConflict()
 
 	/**
 	 * Any other failure is contained as a localised 500 body — the Throwable

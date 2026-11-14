@@ -29,6 +29,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Event;
 
+use OCA\Filinq\Event\Support\RequestOrigin;
 use OCP\EventDispatcher\Event;
 
 /**
@@ -46,11 +47,24 @@ use OCP\EventDispatcher\Event;
  */
 class FinancialExtractionCompletedEvent extends Event {
 	/**
+	 * Nextcloud user id that initiated the extraction.
+	 *
+	 * @var string
+	 */
+	private readonly string $requestedBy;
+
+	/**
+	 * App id of the requester (e.g. 'shillinq').
+	 *
+	 * @var string
+	 */
+	private readonly string $sourceApp;
+
+	/**
 	 * Construct the completion event.
 	 *
 	 * @param string $documentUri URI of the source document/file.
-	 * @param string $requestedBy Nextcloud user id that initiated the extraction.
-	 * @param string $sourceApp App id of the requester (e.g. 'shillinq').
+	 * @param RequestOrigin $origin The requesting app and user
 	 * @param string $docType `receipt` or `supplier-invoice`.
 	 * @param array<string, mixed> $fields The REQ-FIN-03 field set.
 	 * @param array<string, float> $fieldConfidence Per-field confidence (0..1).
@@ -60,14 +74,15 @@ class FinancialExtractionCompletedEvent extends Event {
 	 */
 	public function __construct(
 		private readonly string $documentUri,
-		private readonly string $requestedBy,
-		private readonly string $sourceApp,
+		RequestOrigin $origin,
 		private readonly string $docType,
 		private readonly array $fields,
 		private readonly array $fieldConfidence,
 		private readonly float $overallConfidence,
 	) {
 		parent::__construct();
+		$this->requestedBy = $origin->requestedBy;
+		$this->sourceApp = $origin->sourceApp;
 
 	}//end __construct()
 

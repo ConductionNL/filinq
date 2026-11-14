@@ -1,3 +1,7 @@
+<!--
+  - SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
 <template>
 	<div class="anonymization-page">
 		<!--
@@ -13,7 +17,7 @@
 		<h2 class="anonymization-page__title">
 			{{ t('filinq', 'Anonymization') }}
 		</h2>
-		<AnonymizationWidget />
+		<AnonymizationWidget :showRecent="true" />
 	</div>
 </template>
 

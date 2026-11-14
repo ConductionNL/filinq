@@ -18,6 +18,9 @@
  * @link https://conduction.nl
  *
  * @spec openspec/changes/multi-format-editing-tools/tasks.md#0-phase-0--probe-what-the-installed-suite-actually-edits-hard-gate
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -29,6 +32,8 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * Tests for SupportedTypeProbe.
+ *
+ * @covers \OCA\Filinq\Service\Office\SupportedTypeProbe
  */
 class SupportedTypeProbeTest extends TestCase {
 
@@ -211,4 +216,50 @@ class SupportedTypeProbeTest extends TestCase {
 		$this->assertContains('rtf', $d['advertisedButUnhandled']);
 		$this->assertArrayNotHasKey('rtf', $d['types']);
 	}//end testUnhandledAdvertisedTypesAreSurfaced()
+	/**
+	 * The declaration carries its provenance and the suite's product version.
+	 *
+	 * @return void
+	 */
+	public function testTheDeclarationCarriesProvenanceAndProductVersion(): void {
+		// The plain version comes first, so only a product-version lookup finds 24.04.5.1.
+		$xml = '<wopi-discovery version="99"><net-zone><app name="Calc"><action name="edit" ext="ods" urlsrc="x"/></app></net-zone>'
+			. '<proof-key product-version="24.04.5.1"/></wopi-discovery>';
+
+		$d = $this->probe->declare($xml, 'collabora', '2026-08-18T00:00:00+00:00', 'http://suite/hosting/discovery');
+
+		$this->assertSame('collabora', $d['suite']);
+		$this->assertSame('24.04.5.1', $d['suiteVersion']);
+		$this->assertSame('2026-08-18T00:00:00+00:00', $d['probedAt']);
+		$this->assertSame('http://suite/hosting/discovery', $d['endpoint']);
+		$this->assertSame([], $d['advertisedButUnhandled']);
+	}//end testTheDeclarationCarriesProvenanceAndProductVersion()
+
+	/**
+	 * Without a product-version the plain version attribute is reported.
+	 *
+	 * @return void
+	 */
+	public function testAPlainVersionIsTheFallback(): void {
+		$xml = '<wopi-discovery version="7.6.2"><action name="edit" ext="docx" urlsrc="x"/></wopi-discovery>';
+
+		$d = $this->probe->declare($xml, null, '2026-08-18T00:00:00+00:00', 'http://suite/');
+
+		$this->assertSame('7.6.2', $d['suiteVersion']);
+		$this->assertNull($d['suite']);
+	}//end testAPlainVersionIsTheFallback()
+
+	/**
+	 * A discovery document with no version reports none rather than guessing.
+	 *
+	 * @return void
+	 */
+	public function testNoVersionIsNull(): void {
+		$xml = '<wopi-discovery><action name="edit" ext="docx" urlsrc="x"/></wopi-discovery>';
+
+		$d = $this->probe->declare($xml, 'onlyoffice', '2026-08-18T00:00:00+00:00', 'http://suite/');
+
+		$this->assertNull($d['suiteVersion']);
+		$this->assertTrue($d['types']['docx']['edit']);
+	}//end testNoVersionIsNull()
 }//end class

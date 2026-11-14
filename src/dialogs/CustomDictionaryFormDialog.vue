@@ -7,15 +7,14 @@
 	CustomDictionaryDetail (edit) — ADR-004 gate-13, own file, not inline.
 -->
 <script>
+import { CnDialogActions } from '@conduction/nextcloud-vue'
+import { translate as t } from '@nextcloud/l10n'
 import {
-	NcButton,
 	NcCheckboxRadioSwitch,
 	NcDialog,
-	NcLoadingIcon,
 	NcSelect,
 	NcTextField,
-} from '@conduction/nextcloud-vue'
-import { translate as t } from '@nextcloud/l10n'
+} from '@nextcloud/vue'
 
 /**
  *
@@ -33,10 +32,9 @@ function blankForm() {
 export default {
 	name: 'CustomDictionaryFormDialog',
 	components: {
-		NcButton,
+		CnDialogActions,
 		NcCheckboxRadioSwitch,
 		NcDialog,
-		NcLoadingIcon,
 		NcSelect,
 		NcTextField,
 	},
@@ -87,6 +85,22 @@ export default {
 
 		canSubmit() {
 			return this.form.label.trim() !== ''
+		},
+
+		/**
+		 * Saving, submittable and the create or save label, for the buttons.
+		 *
+		 * @return {object} The props of CnDialogActions.
+		 * @spec openspec/specs/custom-dictionary-recognition/spec.md#requirement-custom-dictionary-admin-ui-req-ddcdr-006
+		 */
+		formActions() {
+			return {
+				saving: this.saving,
+				canSubmit: this.canSubmit,
+				confirmLabel: this.editing
+					? t('filinq', 'Save')
+					: t('filinq', 'Create'),
+			}
 		},
 	},
 
@@ -155,7 +169,7 @@ export default {
 				dialog was written with the `caseInsensitive` default no matter
 				what the user chose, silently.
 
-				The sibling select in StandingConsentFormModal.vue already uses
+				The sibling select in PolicyRuleFormModal.vue already uses
 				`v-model` and works; this was the only `:value`-bound NcSelect
 				left in src/ (swept 2026-08-11).
 			-->
@@ -185,18 +199,10 @@ export default {
 		</div>
 
 		<template #actions>
-			<NcButton variant="tertiary" @click="onCancel">
-				{{ t('filinq', 'Cancel') }}
-			</NcButton>
-			<NcButton
-				variant="primary"
-				:disabled="saving || !canSubmit"
-				@click="submit">
-				<template v-if="saving" #icon>
-					<NcLoadingIcon :size="20" />
-				</template>
-				{{ editing ? t('filinq', 'Save') : t('filinq', 'Create') }}
-			</NcButton>
+			<CnDialogActions
+				v-bind="formActions"
+				@cancel="onCancel"
+				@submit="submit" />
 		</template>
 	</NcDialog>
 </template>

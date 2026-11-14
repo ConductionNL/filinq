@@ -27,6 +27,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use Exception;
+use OCA\Filinq\Kernel\Contracts\BatchExtractionServiceInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -38,7 +39,7 @@ use Psr\Log\LoggerInterface;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  */
-class BatchExtractionService {
+class BatchExtractionService implements BatchExtractionServiceInterface {
 	/**
 	 * Constructor for BatchExtractionService
 	 *

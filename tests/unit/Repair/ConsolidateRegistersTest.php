@@ -277,6 +277,22 @@ class ConsolidateRegistersTest extends TestCase {
 	}//end testAnUnreadableSourceStopsThePairInsteadOfLookingEmpty()
 
 	/**
+	 * An unreadable TARGET stops the pair too: without knowing which uuids the
+	 * target already holds, nothing can be told apart from a conflict.
+	 *
+	 * @return void
+	 */
+	public function testAnUnreadableTargetStopsThePair(): void {
+		$database = $this->oneDossierPair();
+		$database->failOn(fragment: 'SELECT _uuid FROM `nc_openregister_table_517_227`');
+
+		$result = $this->runStep(database: $database);
+
+		$this->assertSame(expected: ['u1', 'u2'], actual: $database->uuidsIn(table: 'nc_openregister_table_66_227'));
+		$this->assertStringContainsString(needle: '1 pair(s) refused', haystack: implode(' ', $result['output']));
+	}//end testAnUnreadableTargetStopsThePair()
+
+	/**
 	 * PROPERTY 4 — an unreadable REGISTER table stops the whole step.
 	 *
 	 * @return void
@@ -318,6 +334,26 @@ class ConsolidateRegistersTest extends TestCase {
 		$this->assertSame([], $database->uuidsIn(table: 'nc_openregister_table_517_227'));
 		$this->assertStringContainsString('NOT deleting the source rows', implode(' ', $result['warnings']));
 	}//end testAnInsertThatDoesNotArriveNeverAuthorisesTheDelete()
+
+	/**
+	 * PROPERTY 4 — a verification read that fails is not an answer, so it
+	 * never authorises the delete either: the inserted rows stay in the
+	 * target, the source keeps them too, and both failures are reported.
+	 *
+	 * @return void
+	 */
+	public function testAFailedVerificationReadNeverAuthorisesTheDelete(): void {
+		$database = $this->oneDossierPair();
+		$database->failOnAfter(fragment: 'SELECT _uuid FROM `nc_openregister_table_517_227` WHERE _uuid IN', passes: 1);
+
+		$result = $this->runStep(database: $database);
+
+		$this->assertSame(['u1', 'u2'], $database->uuidsIn(table: 'nc_openregister_table_66_227'));
+		$this->assertSame(['u1', 'u2'], $database->uuidsIn(table: 'nc_openregister_table_517_227'));
+		$warnings = implode(' ', $result['warnings']);
+		$this->assertStringContainsString('could not read the target table', $warnings);
+		$this->assertStringContainsString('NOT deleting the source rows', $warnings);
+	}//end testAFailedVerificationReadNeverAuthorisesTheDelete()
 
 	/**
 	 * PROPERTY 5 — a failing INSERT leaves both sides untouched.
@@ -527,6 +563,13 @@ class ConsolidateRegistersTest extends TestCase {
 final class ShardDatabase {
 
 	/**
+	 * Matching statements still allowed through before failOn applies.
+	 *
+	 * @var int
+	 */
+	private int $passesLeft = 0;
+
+	/**
 	 * When true, an INSERT is accepted and its rows are dropped on the floor.
 	 *
 	 * @var bool
@@ -586,6 +629,21 @@ final class ShardDatabase {
 	public function failOn(string $fragment): void {
 		$this->failOn = $fragment;
 	}//end failOn()
+
+	/**
+	 * Let the first matching statements through, then throw on the rest.
+	 *
+	 * Models a read that works before an insert and fails after it.
+	 *
+	 * @param string $fragment The SQL fragment.
+	 * @param int    $passes   How many matching statements succeed first.
+	 *
+	 * @return void
+	 */
+	public function failOnAfter(string $fragment, int $passes): void {
+		$this->failOn = $fragment;
+		$this->passesLeft = $passes;
+	}//end failOnAfter()
 
 	/**
 	 * Accept INSERTs and discard their rows.
@@ -731,6 +789,11 @@ final class ShardDatabase {
 		}
 
 		if ($this->failOn === '' || str_contains($sql, $this->failOn) === true) {
+			if ($this->passesLeft > 0) {
+				$this->passesLeft--;
+				return;
+			}
+
 			throw new class('database unavailable') extends \RuntimeException implements \Throwable {
 			};
 		}

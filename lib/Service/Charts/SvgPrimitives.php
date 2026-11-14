@@ -16,7 +16,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/template-charts/specs/template-charts/spec.md
+ * @spec openspec/specs/template-charts/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -35,7 +35,7 @@ namespace OCA\Filinq\Service\Charts;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/template-charts/tasks.md#task-1.1
+ * @spec openspec/changes/archive/2026-09-28-template-charts/tasks.md#task-1.1
  */
 class SvgPrimitives {
 	/**
@@ -46,7 +46,7 @@ class SvgPrimitives {
 	 *
 	 * @return string SVG open tag + background rect.
 	 *
-	 * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-001
+	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-001
 	 */
 	public function svgOpenTag(int $width, int $height): string {
 		return '<svg xmlns="http://www.w3.org/2000/svg" width="' . $width . '" height="' . $height . '" '
@@ -58,111 +58,98 @@ class SvgPrimitives {
 	/**
 	 * Build an escaped `<text>` element.
 	 *
-	 * @param float $x X position.
-	 * @param float $y Y position (baseline).
-	 * @param string $text Text content (escaped).
-	 * @param string $anchor 'start'|'middle'|'end'.
-	 * @param int $size Font size in user units.
-	 * @param string $color Fill color.
-	 * @param string $weight Font weight ('normal'|'bold').
+	 * @param SvgPoint $position Position (baseline).
+	 * @param SvgText $text Text content (escaped) and style.
 	 *
 	 * @return string SVG markup.
 	 *
-	 * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-001
+	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-001
 	 */
-	public function textEl(
-		float $x,
-		float $y,
-		string $text,
-		string $anchor = 'start',
-		int $size = 10,
-		string $color = '#000000',
-		string $weight = 'normal',
-	): string {
-		return '<text x="' . $this->num(value: $x) . '" y="' . $this->num(value: $y) . '" '
-			. 'font-family="sans-serif" font-size="' . $size . '" font-weight="' . $weight . '" '
-			. 'fill="' . $color . '" text-anchor="' . $anchor . '">'
-			. $this->escapeText(text: $text)
+	public function textEl(SvgPoint $position, SvgText $text): string {
+		return '<text x="' . $this->num(value: $position->x) . '" y="' . $this->num(value: $position->y) . '" '
+			. 'font-family="sans-serif" ' . $text->style->attributes() . '>'
+			. $this->escapeText(text: $text->content)
 			. '</text>';
 
 	}//end textEl()
 
 	/**
+	 * Build the body of a placeholder canvas: a light frame with a centered message.
+	 *
+	 * @param SvgSize $canvas Canvas width and height.
+	 * @param string $message Message text (escaped).
+	 *
+	 * @return string SVG markup.
+	 *
+	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-002
+	 */
+	public function placeholderEl(SvgSize $canvas, string $message): string {
+		$frame = new SvgBox(origin: new SvgPoint(x: 1, y: 1), size: new SvgSize(width: $canvas->width - 2, height: $canvas->height - 2));
+		$center = new SvgPoint(x: $canvas->width / 2, y: $canvas->height / 2);
+
+		return $this->rectEl(box: $frame, color: '#F5F5F5')
+			. $this->rectOutlineEl(box: $frame, color: '#CCCCCC')
+			. $this->textEl(position: $center, text: new SvgText(content: $message, style: SvgTextStyle::Placeholder));
+	}//end placeholderEl()
+
+	/**
 	 * Build a `<rect>` element.
 	 *
-	 * @param float $x X position.
-	 * @param float $y Y position.
-	 * @param float $width Rectangle width.
-	 * @param float $height Rectangle height.
+	 * @param SvgBox $box Position and size.
 	 * @param string $color Fill color.
 	 *
 	 * @return string SVG markup.
 	 *
-	 * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-001
+	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-001
 	 */
-	public function rectEl(float $x, float $y, float $width, float $height, string $color): string {
-		return '<rect x="' . $this->num(value: $x) . '" y="' . $this->num(value: $y) . '" '
-			. 'width="' . $this->num(value: $width) . '" height="' . $this->num(value: $height) . '" '
-			. 'fill="' . $color . '"/>';
-
+	public function rectEl(SvgBox $box, string $color): string {
+		return '<rect ' . $this->boxAttributes(box: $box) . ' fill="' . $color . '"/>';
 	}//end rectEl()
 
 	/**
 	 * Build an unfilled, stroked `<rect>` outline element.
 	 *
-	 * @param float $x X position.
-	 * @param float $y Y position.
-	 * @param float $width Rectangle width.
-	 * @param float $height Rectangle height.
+	 * @param SvgBox $box Position and size.
 	 * @param string $color Stroke color.
 	 *
 	 * @return string SVG markup.
 	 *
-	 * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-001
+	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-001
 	 */
-	public function rectOutlineEl(float $x, float $y, float $width, float $height, string $color): string {
-		return '<rect x="' . $this->num(value: $x) . '" y="' . $this->num(value: $y) . '" '
-			. 'width="' . $this->num(value: $width) . '" height="' . $this->num(value: $height) . '" '
-			. 'fill="none" stroke="' . $color . '" stroke-width="1"/>';
-
+	public function rectOutlineEl(SvgBox $box, string $color): string {
+		return '<rect ' . $this->boxAttributes(box: $box) . ' fill="none" stroke="' . $color . '" stroke-width="1"/>';
 	}//end rectOutlineEl()
 
 	/**
-	 * Build a `<line>` element.
+	 * Build a `<line>` element one unit wide.
 	 *
-	 * @param float $x1 Start x.
-	 * @param float $y1 Start y.
-	 * @param float $x2 End x.
-	 * @param float $y2 End y.
+	 * @param SvgSegment $segment Start and end point.
 	 * @param string $color Stroke color.
-	 * @param float $width Stroke width.
 	 *
 	 * @return string SVG markup.
 	 *
-	 * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-001
+	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-001
 	 */
-	public function lineEl(float $x1, float $y1, float $x2, float $y2, string $color, float $width): string {
-		return '<line x1="' . $this->num(value: $x1) . '" y1="' . $this->num(value: $y1) . '" '
-			. 'x2="' . $this->num(value: $x2) . '" y2="' . $this->num(value: $y2) . '" '
-			. 'stroke="' . $color . '" stroke-width="' . $this->num(value: $width) . '"/>';
+	public function lineEl(SvgSegment $segment, string $color): string {
+		return '<line x1="' . $this->num(value: $segment->from->x) . '" y1="' . $this->num(value: $segment->from->y) . '" '
+			. 'x2="' . $this->num(value: $segment->to->x) . '" y2="' . $this->num(value: $segment->to->y) . '" '
+			. 'stroke="' . $color . '" stroke-width="1"/>';
 
 	}//end lineEl()
 
 	/**
 	 * Build a filled `<circle>` element.
 	 *
-	 * @param float $cx Center x.
-	 * @param float $cy Center y.
-	 * @param float $radius Radius.
+	 * @param SvgCircle $circle Center and radius.
 	 * @param string $color Fill color.
 	 *
 	 * @return string SVG markup.
 	 *
-	 * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-001
+	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-001
 	 */
-	public function circleEl(float $cx, float $cy, float $radius, string $color): string {
-		return '<circle cx="' . $this->num(value: $cx) . '" cy="' . $this->num(value: $cy) . '" '
-			. 'r="' . $this->num(value: $radius) . '" fill="' . $color . '"/>';
+	public function circleEl(SvgCircle $circle, string $color): string {
+		return '<circle cx="' . $this->num(value: $circle->center->x) . '" cy="' . $this->num(value: $circle->center->y) . '" '
+			. 'r="' . $this->num(value: $circle->radius) . '" fill="' . $color . '"/>';
 
 	}//end circleEl()
 
@@ -174,7 +161,7 @@ class SvgPrimitives {
 	 *
 	 * @return string SVG markup.
 	 *
-	 * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-001
+	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-001
 	 */
 	public function polylineEl(array $points, string $color): string {
 		$pairs = [];
@@ -188,38 +175,56 @@ class SvgPrimitives {
 	/**
 	 * Build a pie slice as an SVG `<path>` arc sector.
 	 *
-	 * @param float $cx Center x.
-	 * @param float $cy Center y.
-	 * @param float $radius Slice radius.
-	 * @param float $startAngle Start angle in degrees (0 = 3 o'clock, -90 = 12 o'clock).
-	 * @param float $endAngle End angle in degrees.
+	 * @param SvgSector $sector The circle and the angles the slice spans.
 	 * @param string $color Fill color.
 	 *
 	 * @return string SVG markup.
 	 *
-	 * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-001
+	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-001
 	 */
-	public function pieSliceEl(float $cx, float $cy, float $radius, float $startAngle, float $endAngle, string $color): string {
-		$startRad = deg2rad($startAngle);
-		$endRad = deg2rad($endAngle);
-
-		$x1 = $cx + ($radius * cos($startRad));
-		$y1 = $cy + ($radius * sin($startRad));
-		$x2 = $cx + ($radius * cos($endRad));
-		$y2 = $cy + ($radius * sin($endRad));
+	public function pieSliceEl(SvgSector $sector, string $color): string {
+		$center = $sector->circle->center;
+		$radius = $this->num(value: $sector->circle->radius);
 
 		$largeArc = 0;
-		if (($endAngle - $startAngle) > 180.0) {
+		if (($sector->arc->endAngle - $sector->arc->startAngle) > 180.0) {
 			$largeArc = 1;
 		}
 
-		$path = 'M ' . $this->num(value: $cx) . ' ' . $this->num(value: $cy)
-			. ' L ' . $this->num(value: $x1) . ' ' . $this->num(value: $y1)
-			. ' A ' . $this->num(value: $radius) . ' ' . $this->num(value: $radius) . ' 0 ' . $largeArc . ' 1 '
-			. $this->num(value: $x2) . ' ' . $this->num(value: $y2) . ' Z';
+		$path = 'M ' . $this->num(value: $center->x) . ' ' . $this->num(value: $center->y)
+			. ' L ' . $this->pointOnCircle(circle: $sector->circle, angle: $sector->arc->startAngle)
+			. ' A ' . $radius . ' ' . $radius . ' 0 ' . $largeArc . ' 1 '
+			. $this->pointOnCircle(circle: $sector->circle, angle: $sector->arc->endAngle) . ' Z';
 
 		return '<path d="' . $path . '" fill="' . $color . '"/>';
 	}//end pieSliceEl()
+
+	/**
+	 * The `x y` path coordinates of the point on a circle at an angle.
+	 *
+	 * @param SvgCircle $circle The circle.
+	 * @param float $angle Angle in degrees.
+	 *
+	 * @return string Formatted `x y` pair.
+	 */
+	private function pointOnCircle(SvgCircle $circle, float $angle): string {
+		$rad = deg2rad($angle);
+
+		return $this->num(value: $circle->center->x + ($circle->radius * cos($rad)))
+			. ' ' . $this->num(value: $circle->center->y + ($circle->radius * sin($rad)));
+	}//end pointOnCircle()
+
+	/**
+	 * The x, y, width and height attributes of a box.
+	 *
+	 * @param SvgBox $box Position and size.
+	 *
+	 * @return string The four attributes.
+	 */
+	private function boxAttributes(SvgBox $box): string {
+		return 'x="' . $this->num(value: $box->origin->x) . '" y="' . $this->num(value: $box->origin->y) . '" '
+			. 'width="' . $this->num(value: $box->size->width) . '" height="' . $this->num(value: $box->size->height) . '"';
+	}//end boxAttributes()
 
 	/**
 	 * Format a coordinate/dimension number deterministically (2 decimal
@@ -229,9 +234,9 @@ class SvgPrimitives {
 	 *
 	 * @return string Formatted number.
 	 *
-	 * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-001
+	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-001
 	 */
-	public function num(float $value): string {
+	private function num(float $value): string {
 		$formatted = sprintf('%.2f', $value);
 		$formatted = rtrim($formatted, '0');
 		$formatted = rtrim($formatted, '.');
@@ -251,9 +256,9 @@ class SvgPrimitives {
 	 *
 	 * @return string Escaped text.
 	 *
-	 * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-001
+	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-001
 	 */
-	public function escapeText(string $text): string {
+	private function escapeText(string $text): string {
 		return htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 	}//end escapeText()
 }//end class

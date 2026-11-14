@@ -33,6 +33,9 @@ namespace OCA\Filinq\Service;
 use Exception;
 use Mpdf\Mpdf;
 use Mpdf\MpdfException;
+use OCA\Filinq\Exception\ConversionFailedException;
+use OCA\Filinq\Kernel\Contracts\PdfServiceInterface;
+use OCA\Filinq\Service\Conversion\AccessiblePdfRenderer;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -50,18 +53,110 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/pdfa3-conversion/spec.md
  */
-class PdfService {
+class PdfService implements PdfServiceInterface {
+
+	/**
+	 * The print stylesheet that leaves 3 mm bleed and places the four corner marks.
+	 *
+	 * @var string
+	 */
+	/**
+	 * The print layout hints every rendered document gets (see buildPrintCss()).
+	 *
+	 * @var string
+	 */
+	private const PRINT_CSS = '<style>
+@media print {
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: "DejaVu Sans", sans-serif;
+    }
+    figure, img, pre, blockquote {
+        page-break-inside: avoid;
+    }
+    /*
+     * Let large data tables flow across pages instead of being crammed
+     * onto one page. `page-break-inside: avoid` is applied to each ROW so
+     * rows are never split mid-cell, while the table itself may break at
+     * row boundaries. `thead { table-header-group }` makes mPDF repeat the
+     * column header on every page the table spans.
+     */
+    tr {
+        page-break-inside: avoid;
+    }
+    thead {
+        display: table-header-group;
+    }
+    h1, h2, h3, h4, h5, h6 {
+        page-break-after: avoid;
+    }
+    nav, .no-print {
+        display: none;
+    }
+}
+</style>
+';
+
+	/**
+	 * The print stylesheet that leaves 3 mm bleed and places the four corner marks.
+	 *
+	 * @var string
+	 */
+	private const CROP_MARKS_CSS = '<style>
+@media print {
+    body { margin: 3mm; padding: 0; }
+    .crop-mark-container {
+        position: relative;
+        margin: 3mm;
+    }
+    .crop-mark {
+        position: absolute;
+        width: 8mm;
+        height: 8mm;
+        overflow: visible;
+    }
+    .crop-mark-tl { top: -5mm; left: -5mm; }
+    .crop-mark-tr { top: -5mm; right: -5mm; }
+    .crop-mark-bl { bottom: -5mm; left: -5mm; }
+    .crop-mark-br { bottom: -5mm; right: -5mm; }
+}
+</style>';
+
+	/**
+	 * The four corner crop marks (top-left, top-right, bottom-left, bottom-right) as inline SVG.
+	 *
+	 * @var string
+	 */
+	private const CROP_MARKS_SVG = '<svg class="crop-mark crop-mark-tl" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">'
+		. '<line x1="12" y1="0" x2="12" y2="8" stroke="black" stroke-width="0.5"/>'
+		. '<line x1="0" y1="12" x2="8" y2="12" stroke="black" stroke-width="0.5"/>'
+		. '</svg>'
+		. '<svg class="crop-mark crop-mark-tr" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">'
+		. '<line x1="12" y1="0" x2="12" y2="8" stroke="black" stroke-width="0.5"/>'
+		. '<line x1="16" y1="12" x2="24" y2="12" stroke="black" stroke-width="0.5"/>'
+		. '</svg>'
+		. '<svg class="crop-mark crop-mark-bl" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">'
+		. '<line x1="12" y1="16" x2="12" y2="24" stroke="black" stroke-width="0.5"/>'
+		. '<line x1="0" y1="12" x2="8" y2="12" stroke="black" stroke-width="0.5"/>'
+		. '</svg>'
+		. '<svg class="crop-mark crop-mark-br" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">'
+		. '<line x1="12" y1="16" x2="12" y2="24" stroke="black" stroke-width="0.5"/>'
+		. '<line x1="16" y1="12" x2="24" y2="12" stroke="black" stroke-width="0.5"/>'
+		. '</svg>';
 	/**
 	 * Constructor for PdfService
 	 *
 	 * @param LoggerInterface $logger Logger for error reporting
 	 * @param TemplateRenderer $templateRenderer Template renderer for Twig
+	 * @param AccessiblePdfRenderer|null $accessibleRenderer Tagged (PDF/UA) output; without it an accessible request fails
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		private readonly LoggerInterface $logger,
 		private readonly TemplateRenderer $templateRenderer,
+		private readonly ?AccessiblePdfRenderer $accessibleRenderer = null,
 	) {
 
 	}//end __construct()
@@ -80,6 +175,8 @@ class PdfService {
 	 *                       - cropMarks: Add 3mm bleed and crop marks. Default: false
 	 *                       - author: Author name for XMP metadata. Default: Filinq
 	 *                       - caseReference: Case reference for XMP keywords. Default: empty
+	 *                       - accessible: Tagged PDF/UA output through LibreOffice, never mPDF. Default: false
+	 *                       - lang: Document language for accessible output (else the template's, else the instance's)
 	 *
 	 * @return string PDF binary content
 	 *
@@ -188,49 +285,11 @@ class PdfService {
 	 * @spec openspec/changes/print-functionality/tasks.md#task-1
 	 */
 	public function buildCropMarksHtml(string $html): string {
-		$cropCss = '<style>
-@media print {
-    body { margin: 3mm; padding: 0; }
-    .crop-mark-container {
-        position: relative;
-        margin: 3mm;
-    }
-    .crop-mark {
-        position: absolute;
-        width: 8mm;
-        height: 8mm;
-        overflow: visible;
-    }
-    .crop-mark-tl { top: -5mm; left: -5mm; }
-    .crop-mark-tr { top: -5mm; right: -5mm; }
-    .crop-mark-bl { bottom: -5mm; left: -5mm; }
-    .crop-mark-br { bottom: -5mm; right: -5mm; }
-}
-</style>';
-
-		$cropMarkSvgTl = '<svg class="crop-mark crop-mark-tl" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">'
-			. '<line x1="12" y1="0" x2="12" y2="8" stroke="black" stroke-width="0.5"/>'
-			. '<line x1="0" y1="12" x2="8" y2="12" stroke="black" stroke-width="0.5"/>'
-			. '</svg>';
-		$cropMarkSvgTr = '<svg class="crop-mark crop-mark-tr" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">'
-			. '<line x1="12" y1="0" x2="12" y2="8" stroke="black" stroke-width="0.5"/>'
-			. '<line x1="16" y1="12" x2="24" y2="12" stroke="black" stroke-width="0.5"/>'
-			. '</svg>';
-		$cropMarkSvgBl = '<svg class="crop-mark crop-mark-bl" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">'
-			. '<line x1="12" y1="16" x2="12" y2="24" stroke="black" stroke-width="0.5"/>'
-			. '<line x1="0" y1="12" x2="8" y2="12" stroke="black" stroke-width="0.5"/>'
-			. '</svg>';
-		$cropMarkSvgBr = '<svg class="crop-mark crop-mark-br" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">'
-			. '<line x1="12" y1="16" x2="12" y2="24" stroke="black" stroke-width="0.5"/>'
-			. '<line x1="16" y1="12" x2="24" y2="12" stroke="black" stroke-width="0.5"/>'
-			. '</svg>';
-
-		$wrapper = '<div class="crop-mark-container">'
-			. $cropMarkSvgTl . $cropMarkSvgTr . $cropMarkSvgBl . $cropMarkSvgBr
+		return self::CROP_MARKS_CSS
+			. '<div class="crop-mark-container">'
+			. self::CROP_MARKS_SVG
 			. $html
 			. '</div>';
-
-		return $cropCss . $wrapper;
 	}//end buildCropMarksHtml()
 
 	/**
@@ -250,6 +309,28 @@ class PdfService {
 		chmod(filename: $tempDir, permissions: 0777);
 
 	}//end ensureTempDirectory()
+
+	/**
+	 * Prepare the temp directory and build the mPDF configuration in it.
+	 *
+	 * Public so Pdfa3ConversionService, which needs the same PDF/A-3b page
+	 * setup and embedded DejaVu Sans set, builds its mPDF the same way
+	 * instead of re-deriving the configuration.
+	 *
+	 * @param string $tempDir The temp directory path
+	 * @param array  $options PDF configuration options (`format`, `orientation`,
+	 *                        `margin`, `pdfa`)
+	 *
+	 * @return array<string, mixed> mPDF configuration
+	 *
+	 * @spec openspec/specs/pdfa3-conversion/spec.md
+	 */
+	public function mpdfConfig(string $tempDir, array $options): array {
+		$this->ensureTempDirectory(tempDir: $tempDir);
+
+		return $this->buildMpdfConfig(tempDir: $tempDir, options: $options);
+
+	}//end mpdfConfig()
 
 	/**
 	 * Build mPDF configuration array from options
@@ -279,45 +360,57 @@ class PdfService {
 		];
 
 		if ($isPdfA === true) {
-			$config['PDFA'] = true;
-			$config['PDFAauto'] = true;
-			// Fix (2026-07-16): mPDF defaults PDFAversion to '1-B' when the
-			// key is absent (see vendor/mpdf/mpdf/src/Config/ConfigVariables.php).
-			// This class's docblock has always promised PDF/A-3b output, and
-			// every caller (pdf#renderPdfA, print#downloadPdfA,
-			// DocumentService's `pdfOptions.pdfa`) relies on that promise for
-			// MDTO/archival compliance, but the version was never pinned —
-			// output was silently PDF/A-1B. Pin explicitly so the emitted
-			// XMP `pdfaid:part`/`pdfaid:conformance` markers actually say "3"/"B".
-			$config['PDFAversion'] = '3-B';
-
-			$fontDir = $this->getFontDirectory();
-			if ($fontDir !== null) {
-				$config['fontDir'] = [
-					$fontDir,
-				];
-				$config['fontdata'] = [
-					'dejavusans' => [
-						'R' => 'DejaVuSans.ttf',
-						'B' => 'DejaVuSans-Bold.ttf',
-						'I' => 'DejaVuSans-Oblique.ttf',
-						'BI' => 'DejaVuSans-BoldOblique.ttf',
-					],
-				];
-				$config['default_font'] = 'dejavusans';
-			}
-		}//end if
+			$config = $this->withPdfaSettings(config: $config);
+		}
 
 		return $config;
 	}//end buildMpdfConfig()
 
 	/**
+	 * Add the PDF/A-3b settings, and the embedded DejaVu font when its directory is there.
+	 *
+	 * @param array<string, mixed> $config The mPDF configuration so far.
+	 *
+	 * @return array<string, mixed> The configuration for PDF/A output.
+	 */
+	private function withPdfaSettings(array $config): array {
+		$config['PDFA'] = true;
+		$config['PDFAauto'] = true;
+		// Fix (2026-07-16): mPDF defaults PDFAversion to '1-B' when the
+		// key is absent (see vendor/mpdf/mpdf/src/Config/ConfigVariables.php).
+		// This class's docblock has always promised PDF/A-3b output, and
+		// every caller (pdf#renderPdfA, print#downloadPdfA,
+		// DocumentService's `pdfOptions.pdfa`) relies on that promise for
+		// MDTO/archival compliance, but the version was never pinned —
+		// output was silently PDF/A-1B. Pin explicitly so the emitted
+		// XMP `pdfaid:part`/`pdfaid:conformance` markers actually say "3"/"B".
+		$config['PDFAversion'] = '3-B';
+
+		$fontDir = $this->getFontDirectory();
+		if ($fontDir !== null) {
+			$config['fontDir'] = [
+				$fontDir,
+			];
+			$config['fontdata'] = [
+				'dejavusans' => [
+					'R' => 'DejaVuSans.ttf',
+					'B' => 'DejaVuSans-Bold.ttf',
+					'I' => 'DejaVuSans-Oblique.ttf',
+					'BI' => 'DejaVuSans-BoldOblique.ttf',
+				],
+			];
+			$config['default_font'] = 'dejavusans';
+		}
+
+		return $config;
+	}//end withPdfaSettings()
+
+	/**
 	 * Get the path to the bundled font directory
 	 *
 	 * Public so other services that build their own mPDF configuration
-	 * (e.g. `Pdfa3ConversionService`, which needs the same embedded
-	 * DejaVu Sans set for PDF/A-3 font-embedding compliance) can reuse
-	 * this instead of re-deriving the path.
+	 * can reuse this instead of re-deriving the path; the PDF/A-3
+	 * conversion takes the whole configuration from mpdfConfig().
 	 *
 	 * @return string|null The font directory path, or null if not found
 	 *
@@ -362,38 +455,7 @@ class PdfService {
 		// since page sizing is delegated to the config path.
 		unset($format, $orientation);
 
-		return '<style>
-@media print {
-    body {
-        margin: 0;
-        padding: 0;
-        font-family: "DejaVu Sans", sans-serif;
-    }
-    figure, img, pre, blockquote {
-        page-break-inside: avoid;
-    }
-    /*
-     * Let large data tables flow across pages instead of being crammed
-     * onto one page. `page-break-inside: avoid` is applied to each ROW so
-     * rows are never split mid-cell, while the table itself may break at
-     * row boundaries. `thead { table-header-group }` makes mPDF repeat the
-     * column header on every page the table spans.
-     */
-    tr {
-        page-break-inside: avoid;
-    }
-    thead {
-        display: table-header-group;
-    }
-    h1, h2, h3, h4, h5, h6 {
-        page-break-after: avoid;
-    }
-    nav, .no-print {
-        display: none;
-    }
-}
-</style>
-';
+		return self::PRINT_CSS;
 
 	}//end buildPrintCss()
 
@@ -423,9 +485,7 @@ class PdfService {
 	 */
 	public function createMpdfInstance(array $options = []): Mpdf {
 		$tempDir = '/tmp/mpdf';
-		$this->ensureTempDirectory(tempDir: $tempDir);
-
-		$config = $this->buildMpdfConfig(tempDir: $tempDir, options: $options);
+		$config = $this->mpdfConfig(tempDir: $tempDir, options: $options);
 		$title = $options['title'] ?? '';
 		$isPdfA = ($options['pdfa'] ?? false) === true;
 
@@ -481,6 +541,33 @@ class PdfService {
 	}//end applyPrintCss()
 
 	/**
+	 * Accessible output: tagged, with language and title, through LibreOffice.
+	 * mPDF cannot tag, so it is never used for this; without LibreOffice the
+	 * request fails.
+	 *
+	 * @param string $html The rendered HTML.
+	 * @param array<string, mixed> $options The PDF options.
+	 *
+	 * @return string The PDF bytes.
+	 *
+	 * @throws ConversionFailedException When no tagged output can be made.
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-pdfua-accessible-output/tasks.md#task-1.2
+	 */
+	private function accessiblePdf(string $html, array $options): string {
+		if ($this->accessibleRenderer === null) {
+			throw new ConversionFailedException(
+				message: 'Accessible PDF output is not available here; no untagged PDF is made instead.',
+				attempts: [['name' => 'mpdf', 'available' => true, 'supports' => false, 'reason' => 'mPDF cannot write tagged PDF']],
+				code: 503
+			);
+		}
+
+		return $this->accessibleRenderer->render(html: $html, options: $options);
+
+	}//end accessiblePdf()
+
+	/**
 	 * Generate a PDF from rendered HTML content
 	 *
 	 * Creates the mPDF temp directory if it does not exist,
@@ -497,49 +584,20 @@ class PdfService {
 	 * @spec openspec/specs/pdf-generation/spec.md
 	 */
 	private function generatePdf(string $html, array $options): string {
-		$tempDir = '/tmp/mpdf';
-		$this->ensureTempDirectory(tempDir: $tempDir);
-
-		$config = $this->buildMpdfConfig(tempDir: $tempDir, options: $options);
-		$title = $options['title'] ?? '';
-		$isPdfA = ($options['pdfa'] ?? false) === true;
-
-		if ($isPdfA === true) {
-			$format = $options['format'] ?? 'A4';
-			$orientation = $options['orientation'] ?? 'P';
-			$printCss = $this->buildPrintCss(format: $format, orientation: $orientation);
-			$html = $printCss . $html;
+		if (($options['accessible'] ?? false) === true) {
+			return $this->accessiblePdf(html: $html, options: $options);
 		}
 
-		$author = (string)($options['author'] ?? 'Filinq');
-		$caseReference = (string)($options['caseReference'] ?? '');
-		$hasCropMarks = ($options['cropMarks'] ?? false) === true;
-
-		if ($hasCropMarks === true) {
+		$tempDir = '/tmp/mpdf';
+		$config = $this->mpdfConfig(tempDir: $tempDir, options: $options);
+		$html = $this->applyPrintCss(html: $html, options: $options);
+		if (($options['cropMarks'] ?? false) === true) {
 			$html = $this->buildCropMarksHtml(html: $html);
 		}
 
 		try {
 			$mpdf = new Mpdf(config: $config);
-
-			if ($title !== '') {
-				$mpdf->SetTitle($title);
-			}
-
-			$mpdf->SetAuthor($author);
-
-			if ($isPdfA === true) {
-				$mpdf->SetCreator('Filinq PDF/A Generator');
-
-				$keywords = 'Filinq';
-				if ($caseReference !== '') {
-					$keywords .= ' ' . $caseReference;
-				}
-
-				$mpdf->SetKeywords($keywords);
-				$mpdf->SetSubject($title);
-			}
-
+			$this->applyDocumentMetadata(mpdf: $mpdf, options: $options);
 			$mpdf->WriteHTML(html: $html);
 
 			return $mpdf->Output(name: '', dest: \Mpdf\Output\Destination::STRING_RETURN);
@@ -556,4 +614,37 @@ class PdfService {
 		}//end try
 
 	}//end generatePdf()
+
+	/**
+	 * Set the title, author and, for PDF/A, the creator, keywords and subject.
+	 *
+	 * @param Mpdf $mpdf The mPDF instance.
+	 * @param array<string, mixed> $options The PDF options (`title`, `author`, `pdfa`, `caseReference`).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/pdf-generation/spec.md
+	 */
+	private function applyDocumentMetadata(Mpdf $mpdf, array $options): void {
+		$title = $options['title'] ?? '';
+		if ($title !== '') {
+			$mpdf->SetTitle($title);
+		}
+
+		$mpdf->SetAuthor((string)($options['author'] ?? 'Filinq'));
+		if (($options['pdfa'] ?? false) !== true) {
+			return;
+		}
+
+		$mpdf->SetCreator('Filinq PDF/A Generator');
+		$caseReference = (string)($options['caseReference'] ?? '');
+		$keywords = 'Filinq';
+		if ($caseReference !== '') {
+			$keywords .= ' ' . $caseReference;
+		}
+
+		$mpdf->SetKeywords($keywords);
+		$mpdf->SetSubject($title);
+
+	}//end applyDocumentMetadata()
 }//end class

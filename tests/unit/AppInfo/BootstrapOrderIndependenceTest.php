@@ -120,7 +120,7 @@ class BootstrapOrderIndependenceTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheFilteredListenerProbeLivesInBootNotRegister(): void {
-		$class = 'OCA\\Filinq\\AppInfo\\ObjectEventRegistrar';
+		$class = 'OCA\\Filinq\\EventListener\\ObjectEventRegistrar';
 		$boot = $this->methodSource($class, 'boot');
 		$reg = $this->methodSource($class, 'register');
 		$needle = 'registerFilteredObjectListener(';
@@ -173,9 +173,13 @@ class BootstrapOrderIndependenceTest extends TestCase {
 	 */
 	public static function registerTimeRegistrarProvider(): array {
 		return [
-			'ObjectEventRegistrar' => ['OCA\\Filinq\\AppInfo\\ObjectEventRegistrar'],
-			'SigningEventRegistrar' => ['OCA\\Filinq\\AppInfo\\SigningEventRegistrar'],
-			'PdfConversionRegistrar' => ['OCA\\Filinq\\AppInfo\\PdfConversionRegistrar'],
+			'ObjectEventRegistrar' => ['OCA\\Filinq\\EventListener\\ObjectEventRegistrar'],
+			'SigningEventRegistrar' => ['OCA\\Filinq\\EventListener\\SigningEventRegistrar'],
+			'DocumentGenerationRegistrar' => ['OCA\\Filinq\\EventListener\\DocumentGenerationRegistrar'],
+			'PdfConversionRegistrar' => ['OCA\\Filinq\\Service\\Conversion\\PdfConversionRegistrar'],
+			'ServiceRegistrar' => ['OCA\\Filinq\\Service\\ServiceRegistrar'],
+			'DashboardRegistrar' => ['OCA\\Filinq\\Dashboard\\DashboardRegistrar'],
+			'ListenerRegistrar' => ['OCA\\Filinq\\EventListener\\ListenerRegistrar'],
 			'ObservabilityRegistrar' => ['OCA\\Filinq\\AppInfo\\ObservabilityRegistrar'],
 			'RegistrationBootstrap' => ['OCA\\Filinq\\AppInfo\\RegistrationBootstrap'],
 		];

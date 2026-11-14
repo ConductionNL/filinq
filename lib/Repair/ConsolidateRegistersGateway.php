@@ -3,6 +3,9 @@
 /**
  * The only place ConsolidateRegisters touches the database.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * WHY THE SQL LIVES IN ITS OWN CLASS. This is the riskiest step in the app: it
  * DELETEs rows, and it interpolates table names into statements because a table
  * name cannot be a bound parameter. Reviewing that safely means reading every
@@ -33,9 +36,6 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://conduction.nl
- *
- * SPDX-License-Identifier: EUPL-1.2
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  */
 
 declare(strict_types=1);
@@ -81,10 +81,8 @@ class ConsolidateRegistersGateway {
 	 * and both came out of an `information_schema` result. Every VALUE — the
 	 * new register id and every uuid — is bound.
 	 *
-	 * @param string $sourceTable Source table name.
-	 * @param string $targetTable Target table name.
-	 * @param int $targetId The new register id.
-	 * @param array<int, string> $columns Columns to carry.
+	 * @param array{sourceTable: string, targetTable: string, targetId: int, columns: array<int, string>} $pair The source
+	 *        and target table names, the new register id and the columns to carry.
 	 * @param array<int, string> $batch The uuids in this batch.
 	 *
 	 * @return bool True when the statement executed.
@@ -93,22 +91,18 @@ class ConsolidateRegistersGateway {
 	 *  OpenRegister registers into one. Pointing this at an existing spec would
 	 *  report conformance to a requirement that says nothing about it.
 	 */
-	public function insertBatch(
-		string $sourceTable,
-		string $targetTable,
-		int $targetId,
-		array $columns,
-		array $batch,
-	): bool {
+	public function insertBatch(array $pair, array $batch): bool {
+		$columns = $pair['columns'];
+		$targetTable = $pair['targetTable'];
 		$select = $this->decisions->selectExpressions(columns: $columns);
 		$sql = 'INSERT INTO `' . $targetTable . '` (' . implode(', ', $columns) . ') '
-			. 'SELECT ' . implode(', ', $select) . ' FROM `' . $sourceTable . '` '
+			. 'SELECT ' . implode(', ', $select) . ' FROM `' . $pair['sourceTable'] . '` '
 			. 'WHERE _uuid IN (' . $this->decisions->placeholders(count: count($batch)) . ')';
 
 		$params = [];
 		foreach ($columns as $column) {
 			if ($column === '_register') {
-				$params[] = (string)$targetId;
+				$params[] = (string)$pair['targetId'];
 			}
 		}
 

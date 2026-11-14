@@ -18,6 +18,9 @@
  * @version GIT: <git_id>
  *
  * @link https://www.filinq.app
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\Filinq\Tests\Unit\Service;
@@ -272,5 +275,65 @@ class PdfConversionServiceTest extends TestCase {
 		$this->assertSame($output, $service->convertToPdf($source));
 
 	}//end testNonInterfaceBackendIsSkipped()
+
+	/**
+	 * The attempt reasons are exact, an extensionless file is named `(none)`,
+	 * and the reporting call names the backend that produced the PDF.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/document-editing/spec.md#requirement-conversion-routes-through-the-nextcloud-conversion-broker
+	 */
+	public function testAttemptReasonsAndTheReportedBackend(): void {
+		$source = $this->fileMock(mime: 'application/octet-stream', name: 'README', path: '/u/admin/README');
+		$output = $this->fileMock(mime: 'application/pdf', name: 'README.pdf', path: '/u/admin/README.pdf');
+
+		$disabled = $this->stubBackend(name: 'office_app', available: false, supports: false, outcome: null);
+		$unsupported = $this->createMock(originalClassName: ConversionBackendInterface::class);
+		$unsupported->method('name')->willReturn('phpword');
+		$unsupported->method('isAvailable')->willReturn(true);
+		$unsupported->method('canHandle')
+			->with('application/octet-stream', '')
+			->willReturn(false);
+		$working = $this->stubBackend(name: 'mpdf', available: true, supports: true, outcome: $output);
+
+		$service = new PdfConversionService(
+			backends: [$disabled, $unsupported, $working],
+			logger: $this->createMock(originalClassName: LoggerInterface::class)
+		);
+
+		$this->assertSame(
+			expected: ['file' => $output, 'backend' => 'mpdf'],
+			actual: $service->convertToPdfReporting(source: $source)
+		);
+
+		$failing = new PdfConversionService(
+			backends: [$disabled, $unsupported],
+			logger: $this->createMock(originalClassName: LoggerInterface::class)
+		);
+		try {
+			$failing->convertToPdfReporting(source: $source);
+			$this->fail(message: 'Expected ConversionFailedException to be thrown.');
+		} catch (ConversionFailedException $e) {
+			$this->assertSame(
+				expected: [
+					[
+						'name' => 'office_app',
+						'available' => false,
+						'supports' => false,
+						'reason' => 'backend disabled or prerequisites not present',
+					],
+					[
+						'name' => 'phpword',
+						'available' => true,
+						'supports' => false,
+						'reason' => 'backend does not support MIME application/octet-stream / extension (none)',
+					],
+				],
+				actual: $e->getAttempts()
+			);
+		}//end try
+
+	}//end testAttemptReasonsAndTheReportedBackend()
 
 }//end class

@@ -3,6 +3,9 @@
 /**
  * PHPStan scan stub for OpenRegister's AppHost controller engine (ADR-040).
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Analysis-only — referenced from phpstan.neon `scanFiles` and NEVER loaded at
  * runtime (the runtime classes live in the openregister sibling app, which is
  * co-installed on the Nextcloud instance but is not a composer dependency of
@@ -28,9 +31,6 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
  * @link https://www.filinq.app
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);

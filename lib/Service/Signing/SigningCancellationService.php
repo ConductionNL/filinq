@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\Signing;
 
 use OCA\Filinq\Exception\SigningCancellationNotSupportedException;
+use OCA\Filinq\Exception\SigningCancellationRefusedException;
 use OCA\Filinq\Service\SigningService;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -99,51 +100,38 @@ class SigningCancellationService {
 	 *
 	 * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md
 	 *
-	 * @orphaned-write-capability exclude shipped ahead of its caller. The
-	 * HTTP route signing#cancelRequest still runs the older path
-	 * (SigningService::cancelRequest) with its authorization inline in the
-	 * controller, so nothing reaches this service yet. Rewiring is NOT
-	 * mechanical and is deliberately not done here: this service refuses
-	 * every non-creator, while the controller currently lets an ADMIN cancel
-	 * any request, so swapping them silently removes an admin capability.
-	 * Tracked in filinq#628.
+	 * The order is fixed: authorise, then the state check, then the provider,
+	 * then the request's own transition. Nothing reaches the provider for an
+	 * actor who may not cancel or for a request that can no longer be withdrawn,
+	 * and the request is only marked CANCELLED once the provider has withdrawn it.
 	 */
 	public function cancel(string $uid, string $requestId): array {
-		// Scoped lookup: getRequest() already collapses access-denied to null and
-		// throws an id-free message for a genuine miss, so neither shape leaks
-		// which request ids exist.
-		$request = null;
-		try {
-			$request = $this->requests->getRequest(requestId: $requestId, callerUserId: $uid);
-		} catch (Throwable $e) {
-			$request = null;
+		$request = $this->creatorsRequest(uid: $uid, requestId: $requestId);
+
+		$status = strtoupper((string)($request['status'] ?? ''));
+		if ($status === 'CANCELLED') {
+			// A double-click, not an error: nothing is asked of the provider again.
+			$this->recordAttempt(uid: $uid, requestId: $requestId, outcome: 'already-cancelled', detail: '');
+			return ['requestId' => $requestId, 'status' => NativeSigningProvider::STATUS_CANCELLED, 'alreadyCancelled' => true];
 		}
 
-		// ONE refusal for "not yours" and "does not exist". Distinguishing them
-		// would let an unauthorised caller enumerate valid request ids from the
-		// error text, so the two cases must be indistinguishable from outside.
-		// A SIGNER reaches this point too — getRequest() admits signers — and is
-		// refused here, because signing a document is not authority to withdraw it.
-		if ($request === null || $this->isCreator(uid: $uid, request: $request) === false) {
-			$this->recordAttempt(
-				uid: $uid,
-				requestId: $requestId,
-				outcome: 'refused-not-creator',
-				detail: 'actor is not the creator, or the request does not exist'
-			);
+		if ($this->requests->isValidTransition(currentStatus: $status, newStatus: 'CANCELLED') === false) {
+			$this->recordAttempt(uid: $uid, requestId: $requestId, outcome: 'refused-final-state', detail: $status);
+			$state = 'is ' . strtolower($status);
+			if ($status === '') {
+				$state = 'has no status';
+			}
 
-			throw new RuntimeException($this->refusalMessage(request: $request));
-		}
-
-		$externalId = (string)($request['externalId'] ?? '');
-		if ($externalId === '') {
-			throw new RuntimeException(
-				'This signing request has no provider reference, so it cannot be withdrawn at the provider.'
+			throw new SigningCancellationRefusedException(
+				message: 'This signing request ' . $state . ' and can no longer be withdrawn.',
+				code: SigningCancellationRefusedException::FINAL_STATE
 			);
 		}
 
+		$externalId = $this->providerReference(request: $request);
+
 		try {
-			$this->providers->getActiveProvider()->cancelSigning($externalId);
+			$this->providerFor(request: $request)->cancelSigning($externalId);
 		} catch (SigningCancellationNotSupportedException $e) {
 			// The provider CANNOT cancel. The request is still live, and the caller
 			// is told so rather than being shown a success they cannot rely on.
@@ -172,16 +160,90 @@ class SigningCancellationService {
 			);
 		}//end try
 
-		$already = (($request['status'] ?? '') === NativeSigningProvider::STATUS_CANCELLED);
+		try {
+			// The request's own transition: status, the cross-app conclusion
+			// event and the CANCELLED audit entry, as on every other path.
+			$this->requests->cancelRequest(requestId: $requestId);
+		} catch (Throwable $e) {
+			$this->recordAttempt(uid: $uid, requestId: $requestId, outcome: 'failed-transition', detail: $e->getMessage());
+			throw new RuntimeException(
+				'The provider withdrew the signing request, but its status could not be recorded: ' . $e->getMessage(),
+				0,
+				$e
+			);
+		}
 
 		$this->recordAttempt(uid: $uid, requestId: $requestId, outcome: 'cancelled', detail: '');
 
 		return [
 			'requestId' => $requestId,
 			'status' => NativeSigningProvider::STATUS_CANCELLED,
-			'alreadyCancelled' => $already,
+			'alreadyCancelled' => false,
 		];
 	}//end cancel()
+
+	/**
+	 * The request, when the actor created it; otherwise the one refusal, recorded.
+	 *
+	 * @param string $uid The acting user id.
+	 * @param string $requestId The signing request id.
+	 *
+	 * @return array<string, mixed> The request.
+	 *
+	 * @throws RuntimeException When the request does not exist or the actor did not create it.
+	 */
+	private function creatorsRequest(string $uid, string $requestId): array {
+		// Scoped lookup: getRequest() already collapses access-denied to null and
+		// throws an id-free message for a genuine miss, so neither shape leaks
+		// which request ids exist.
+		$request = null;
+		try {
+			$request = $this->requests->getRequest(requestId: $requestId, callerUserId: $uid);
+		} catch (Throwable $e) {
+			$request = null;
+		}
+
+		// ONE refusal for "not yours" and "does not exist". Distinguishing them
+		// would let an unauthorised caller enumerate valid request ids from the
+		// error text, so the two cases must be indistinguishable from outside.
+		// A SIGNER reaches this point too — getRequest() admits signers — and is
+		// refused here, because signing a document is not authority to withdraw it.
+		if ($request === null || $this->isCreator(uid: $uid, request: $request) === false) {
+			$this->recordAttempt(
+				uid: $uid,
+				requestId: $requestId,
+				outcome: 'refused-not-creator',
+				detail: 'actor is not the creator, or the request does not exist'
+			);
+
+			throw new SigningCancellationRefusedException(
+				message: $this->refusalMessage(request: $request),
+				code: SigningCancellationRefusedException::NOT_CREATOR
+			);
+		}
+
+		return $request;
+	}//end creatorsRequest()
+
+	/**
+	 * The provider's reference for the request.
+	 *
+	 * @param array<string, mixed> $request The request.
+	 *
+	 * @return string The external id.
+	 *
+	 * @throws RuntimeException When the request carries none.
+	 */
+	private function providerReference(array $request): string {
+		$externalId = (string)($request['externalId'] ?? '');
+		if ($externalId === '') {
+			throw new RuntimeException(
+				'This signing request has no provider reference, so it cannot be withdrawn at the provider.'
+			);
+		}
+
+		return $externalId;
+	}//end providerReference()
 
 	/**
 	 * Whether the actor created this request.
@@ -255,4 +317,25 @@ class SigningCancellationService {
 			]
 		);
 	}//end recordAttempt()
+	/**
+	 * The provider that holds this request: the one it names, else the active one.
+	 *
+	 * A request made while LibreSign was the provider stays at LibreSign after
+	 * the admin picks another, so the withdrawal must go there.
+	 *
+	 * @param array<string, mixed> $request The request
+	 *
+	 * @return SigningProviderInterface The provider.
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-libresign-signing-provider/tasks.md#task-3.1
+	 */
+	private function providerFor(array $request): SigningProviderInterface {
+		$named = (string)($request['provider'] ?? '');
+		if ($named !== '') {
+			return $this->providers->getProvider(identifier: $named);
+		}
+
+		return $this->providers->getActiveProvider();
+
+	}//end providerFor()
 }//end class

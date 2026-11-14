@@ -15,6 +15,9 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
  * @link https://conduction.nl
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -84,7 +87,6 @@ class EmlPreviewControllerTest extends TestCase {
 		$mockL10n->method('t')->willReturnArgument(0);
 
 		$this->controller = new EmlPreviewController(
-			'filinq',
 			$this->createMock(IRequest::class),
 			$this->mockService,
 			$this->createMock(LoggerInterface::class),

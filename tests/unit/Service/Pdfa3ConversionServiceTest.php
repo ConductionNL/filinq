@@ -168,6 +168,40 @@ class Pdfa3ConversionServiceTest extends TestCase {
 	}//end testConvertExistingPdfImportsPagesAndProducesPdfa3()
 
 	/**
+	 * An imported PDF without a title is titled after its file name, without the extension.
+	 *
+	 * @return void
+	 */
+	public function testConvertExistingPdfTitlesAfterTheFile(): void {
+		$sourceBytes = $this->pdfService->generatePdfFromHtml(html: '<h1>Source</h1>', options: []);
+
+		$mockFile = $this->createMock(File::class);
+		$mockFile->method('getSize')->willReturn(strlen($sourceBytes));
+		$mockFile->method('getContent')->willReturn($sourceBytes);
+		$mockFile->method('getName')->willReturn('besluit-2026.pdf');
+
+		$result = $this->service->convertExistingPdf(source: $mockFile);
+
+		$this->assertStringContainsString('besluit-2026', $result['content']);
+		$this->assertStringNotContainsString('besluit-2026.pdf', $result['content']);
+
+	}//end testConvertExistingPdfTitlesAfterTheFile()
+
+	/**
+	 * The orientation option reaches mPDF for rendered HTML.
+	 *
+	 * @return void
+	 */
+	public function testConvertHtmlHonoursOrientation(): void {
+		$portrait  = $this->service->convertHtml(html: '<p>x</p>', metadata: ['title' => 'P']);
+		$landscape = $this->service->convertHtml(html: '<p>x</p>', metadata: ['title' => 'L'], options: ['orientation' => 'L']);
+
+		$this->assertMatchesRegularExpression('#/MediaBox \[0 0 595\.2\d+ 841\.8\d+\]#', $portrait['content']);
+		$this->assertMatchesRegularExpression('#/MediaBox \[0 0 841\.8\d+ 595\.2\d+\]#', $landscape['content']);
+
+	}//end testConvertHtmlHonoursOrientation()
+
+	/**
 	 * Test attachment embedding: a caller-supplied attachment ends up
 	 * in the output as a genuine PDF/A-3 embedded file (the feature
 	 * that actually distinguishes PDF/A-3 from PDF/A-1/A-2).
@@ -280,6 +314,35 @@ class Pdfa3ConversionServiceTest extends TestCase {
 		}
 
 	}//end testConvertExistingPdfRejectsOversizedSource()
+
+	/**
+	 * Empty content and content that is no PDF are both refused as unreadable (422).
+	 *
+	 * @return void
+	 */
+	public function testConvertExistingPdfRefusesUnreadableSources(): void {
+		$cases = [
+			'empty' => ['', 'Source file could not be read as PDF content.', false],
+			'not a pdf' => ['plain text, not a PDF', 'Source could not be parsed as PDF: ', true],
+		];
+		foreach ($cases as $name => [$content, $message, $hasCause]) {
+			$mockFile = $this->createMock(File::class);
+			$mockFile->method('getSize')->willReturn(strlen($content));
+			$mockFile->method('getName')->willReturn('broken.pdf');
+			$mockFile->method('getContent')->willReturn($content);
+
+			try {
+				$this->service->convertExistingPdf(source: $mockFile);
+				$this->fail($name . ': expected a refusal');
+			} catch (Pdfa3ConversionException $e) {
+				$this->assertSame(Pdfa3ConversionException::REASON_SOURCE_UNREADABLE, $e->getReason(), $name);
+				$this->assertSame(422, $e->getCode(), $name);
+				$this->assertStringStartsWith($message, $e->getMessage(), $name);
+				$this->assertSame($hasCause, $e->getPrevious() !== null, $name);
+			}
+		}
+
+	}//end testConvertExistingPdfRefusesUnreadableSources()
 
 	/**
 	 * Test the per-attachment size guardrail.

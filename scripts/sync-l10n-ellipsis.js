@@ -1,5 +1,9 @@
 #!/usr/bin/env node
 /**
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+/**
  * Mirrors the @nextcloud/l10n-enforce-ellipsis lint fix into the l10n
  * translation catalogs. ESLint only touches source files; this rewrites
  * `...` (exactly three ASCII dots, not adjacent to another dot) to `…`

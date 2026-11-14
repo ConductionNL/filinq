@@ -98,6 +98,19 @@ class SigningConcludedEventFactory {
 	 * @return string One of low|substantial|high.
 	 */
 	private function resolveAssuranceLevel(array $request): string {
+		// Identity rails (signer-identity-rails REQ-DDSIR-007): a completed
+		// request carries the weakest assurance among its signers' RECORDED
+		// identity evidence, and that exact value is what consumers see. A
+		// value off the scale is never surfaced.
+		$recorded = $request['resolvedAssurance'] ?? null;
+		if (in_array($recorded, ['low', 'substantial', 'high'], true) === true) {
+			return (string)$recorded;
+		}
+
+		if (array_key_exists('resolvedAssurance', $request) === true) {
+			return 'low';
+		}
+
 		$provider = (string)($request['provider'] ?? 'native');
 		$level = (string)($request['signatureLevel'] ?? 'SES');
 

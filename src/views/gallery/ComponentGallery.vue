@@ -1,3 +1,7 @@
+<!--
+  - SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
 <template>
 	<div class="dd-gallery">
 		<header class="dd-gallery__masthead">
@@ -184,14 +188,7 @@
 			<div class="dd-demo">
 				<DdCardGrid :objects="documents" rowKey="id">
 					<template #card="{ object }">
-						<div class="dd-mini-card">
-							<DdIcon
-								:name="object.isFolder ? 'folder' : 'article'"
-								:size="24" />
-							<span class="dd-mini-card__name">{{
-								object.fileName
-							}}</span>
-						</div>
+						<GalleryMiniCard :item="object" />
 					</template>
 				</DdCardGrid>
 			</div>
@@ -240,13 +237,7 @@
 					@update:selectedKeys="onSelect"
 					@rowClick="noop">
 					<template #column-kind="{ row }">
-						<span class="dd-tag">{{
-							row.isFolder
-								? 'Dossier'
-								: row.isAnonymized
-									? 'Anonymized'
-									: 'Concept'
-						}}</span>
+						<span class="dd-tag">{{ kindLabel(row) }}</span>
 					</template>
 					<template #row-actions>
 						<DdButton variant="tertiary" icon="discover_tune" label="" />
@@ -318,23 +309,10 @@
 						<DdSearchBar v-model="indexSearch" placeholder="Filter…" />
 					</template>
 					<template #column-kind="{ row }">
-						<span class="dd-tag">{{
-							row.isFolder
-								? 'Dossier'
-								: row.isAnonymized
-									? 'Anonymized'
-									: 'Concept'
-						}}</span>
+						<span class="dd-tag">{{ kindLabel(row) }}</span>
 					</template>
 					<template #card="{ object }">
-						<div class="dd-mini-card">
-							<DdIcon
-								:name="object.isFolder ? 'folder' : 'article'"
-								:size="24" />
-							<span class="dd-mini-card__name">{{
-								object.fileName
-							}}</span>
-						</div>
+						<GalleryMiniCard :item="object" />
 					</template>
 				</DdIndexPage>
 			</div>
@@ -355,6 +333,8 @@ import DdPagination from '../../components/DdPagination.vue'
 import DdSearchBar from '../../components/DdSearchBar.vue'
 import DdSkeleton from '../../components/DdSkeleton.vue'
 import DdViewToggle from '../../components/DdViewToggle.vue'
+import GalleryMiniCard from './GalleryMiniCard.vue'
+import { GALLERY_FIXTURES } from './galleryFixtures.js'
 
 /**
  * Component gallery for Filinq.
@@ -374,6 +354,7 @@ export default {
 		DdButton,
 		DdIcon,
 		DdViewToggle,
+		GalleryMiniCard,
 		DdSearchBar,
 		DdSkeleton,
 		DdPagination,
@@ -387,114 +368,33 @@ export default {
 
 	data() {
 		return {
-			// Table of contents entries (id must match each section's id).
-			toc: [
-				{ id: 'dd-page-header', label: 'PageHeader' },
-				{ id: 'dd-button', label: 'Button' },
-				{ id: 'dd-icon', label: 'Icon' },
-				{ id: 'dd-view-toggle', label: 'ViewToggle' },
-				{ id: 'dd-search-bar', label: 'SearchBar' },
-				{ id: 'dd-skeleton', label: 'Skeleton' },
-				{ id: 'dd-pagination', label: 'Pagination' },
-				{ id: 'dd-card-grid', label: 'CardGrid' },
-				{ id: 'dd-document-card', label: 'DocumentCard' },
-				{ id: 'dd-data-table', label: 'DataTable' },
-				{ id: 'dd-entity-card', label: 'EntityCard' },
-				{ id: 'dd-index-page', label: 'IndexPage' },
-			],
-
-			// All SVG icons currently in src/assets/icons (png assets excluded —
-			// DdIcon only registers .svg files).
-			iconNames: [
-				'pdf',
-				'add',
-				'article',
-				'close',
-				'delete',
-				'discover_tune',
-				'download',
-				'edit_square',
-				'error',
-				'folder',
-				'information-circle-outline',
-				'list',
-				'lock',
-				'search',
-				'tiles',
-				'visibility_off',
-			],
-
+			...structuredClone(GALLERY_FIXTURES),
 			// Interactive demo state.
 			viewToggle: 'tiles',
 			searchValue: '',
 			indexSearch: '',
 			selectedKeys: [2],
 			pager: { page: 2, pages: 5, total: 96, limit: 20 },
-			// Mock documents for card/table demos.
-			documents: [
-				{
-					id: 1,
-					fileName: 'Project dossier',
-					isFolder: true,
-					isAnonymized: false,
-					modified: 1717500000,
-				},
-				{
-					id: 2,
-					fileName: 'Contract-2026.docx',
-					isFolder: false,
-					isAnonymized: false,
-					modified: 1717400000,
-					mimeType:
-						'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-				},
-				{
-					id: 3,
-					fileName: 'Verslag-anon.pdf',
-					isFolder: false,
-					isAnonymized: true,
-					modified: 1717300000,
-					mimeType: 'application/pdf',
-				},
-			],
-
-			// Column defs for the table demos.
-			tableColumns: [
-				{ key: 'fileName', label: 'Name' },
-				{ key: 'kind', label: 'Kind', width: '160px' },
-			],
-
-			// Entity-card demo data.
-			basesOptions: [
-				{ id: 'consent', label: 'Consent' },
-				{ id: 'contract', label: 'Contract' },
-				{ id: 'legal', label: 'Legal obligation' },
-			],
-
-			reviewEntity: {
-				type: 'PERSON',
-				value: 'Jane Doe',
-				confidence: 0.97,
-				included: true,
-				_decisionBases: [],
-				relationIds: ['rel-1'],
-				_patchError: null,
-			},
-
-			anonymizedEntity: {
-				type: 'PERSON',
-				value: 'Jane Doe',
-				placeholder: '[PERSON: 1]',
-				count: 3,
-				bases: ['Consent'],
-				_resolveError: null,
-			},
 		}
 	},
 
 	methods: {
 		/** No-op handler so interactive demos can emit without side effects. */
 		noop() {},
+
+		/**
+		 * The kind shown for a demo document.
+		 *
+		 * @param {object} row A demo document.
+		 * @return {string} Dossier, Anonymized or Concept.
+		 */
+		kindLabel(row) {
+			if (row.isFolder) {
+				return 'Dossier'
+			}
+			return row.isAnonymized ? 'Anonymized' : 'Concept'
+		},
+
 		/**
 		 * Reflect a pagination page change in the local demo state.
 		 *
@@ -647,17 +547,6 @@ export default {
 	color: var(--color-text-maxcontrast);
 	text-align: center;
 	overflow-wrap: break-word;
-}
-
-.dd-mini-card {
-	display: flex;
-	align-items: center;
-	gap: 10px;
-	padding: 16px;
-}
-
-.dd-mini-card__name {
-	font-weight: 500;
 }
 
 .dd-tag {

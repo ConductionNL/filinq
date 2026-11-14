@@ -9,6 +9,7 @@
 -->
 <script setup>
 import { translate as t } from '@nextcloud/l10n'
+import { LIST_ONLY_INDEX_PAGE } from '../../constants/indexPage.js'
 import { customDictionaryStore } from '../../store/store.js'
 import { resolveI18nValue } from '../../utils/registerI18n.js'
 </script>
@@ -29,16 +30,8 @@ import { resolveI18nValue } from '../../utils/registerI18n.js'
 			:columns="tableColumns"
 			:pagination="paginationData"
 			:loading="customDictionaryStore.loading"
-			:selectable="false"
-			:showEditAction="false"
-			:showCopyAction="false"
-			:showDeleteAction="false"
-			:showMassImport="false"
-			:showMassExport="false"
-			:showMassCopy="false"
-			:showMassDelete="false"
-			:showViewToggle="false"
-			:showAdd="true"
+			v-bind="LIST_ONLY_INDEX_PAGE"
+			:showAdd="customDictionaryStore.canMaintain"
 			rowKey="id"
 			:emptyText="emptyText"
 			:refreshing="isRefreshing"
@@ -68,11 +61,7 @@ import { resolveI18nValue } from '../../utils/registerI18n.js'
 
 			<template #column-active="{ row }">
 				<CnStatusBadge
-					:label="
-						row.active === false
-							? t('filinq', 'Inactive')
-							: t('filinq', 'Active')
-					"
+					:label="activeLabel(row)"
 					:colorMap="activeColorMap" />
 			</template>
 
@@ -87,7 +76,10 @@ import { resolveI18nValue } from '../../utils/registerI18n.js'
 						</template>
 						{{ t('filinq', 'Manage terms') }}
 					</NcActionButton>
-					<NcActionButton closeAfterClick @click="confirmDelete(row)">
+					<NcActionButton
+						v-if="customDictionaryStore.canMaintain"
+						closeAfterClick
+						@click="confirmDelete(row)">
 						<template #icon>
 							<Delete :size="20" />
 						</template>
@@ -110,28 +102,36 @@ import { resolveI18nValue } from '../../utils/registerI18n.js'
 			runs only from @confirm, so an explicit confirmation is still
 			required before anything is removed.
 		-->
-		<ConfirmActionDialog
+		<CnConfirmDialog
 			v-if="deleteTarget"
-			:name="t('filinq', 'Delete dictionary')"
+			ref="confirmDialog"
+			:dialogTitle="t('filinq', 'Delete dictionary')"
 			:message="deleteMessage"
-			:busy="deleting"
-			@confirm="executeDelete"
-			@cancel="cancelDelete" />
+			:confirmLabel="t('filinq', 'Delete')"
+			variant="error"
+			@confirm="executeDelete($refs.confirmDialog)"
+			@close="cancelDelete" />
 	</div>
 </template>
 
 <script>
 import {
+	CnConfirmDialog,
 	CnIndexPage,
 	CnStatusBadge,
-	NcActionButton,
-	NcActions,
 } from '@conduction/nextcloud-vue'
+import { NcActionButton, NcActions } from '@nextcloud/vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
 import Pencil from 'vue-material-design-icons/Pencil.vue'
-import ConfirmActionDialog from '../../dialogs/ConfirmActionDialog.vue'
 import CustomDictionaryFormDialog from '../../dialogs/CustomDictionaryFormDialog.vue'
+import { customDictionaryBadges } from '../../mixins/customDictionaryBadges.js'
+import {
+	indexPaging,
+	recordDeletion,
+	recordId,
+	saveErrorMessage,
+} from '../../mixins/recordIndexPage.js'
 
 export default {
 	name: 'CustomDictionaryIndex',
@@ -141,32 +141,20 @@ export default {
 		NcActions,
 		NcActionButton,
 		CustomDictionaryFormDialog,
-		ConfirmActionDialog,
+		CnConfirmDialog,
 		Delete,
 		DotsHorizontal,
 		Pencil,
 	},
 
+	mixins: [indexPaging, recordDeletion, customDictionaryBadges],
+	deleteFailedLog: 'Failed to delete custom dictionary:',
+
 	data() {
 		return {
-			isRefreshing: false,
-			currentPage: 1,
-			pageSize: 20,
 			dialogOpen: false,
 			saving: false,
 			formError: '',
-			deleteTarget: null, // row awaiting delete confirmation, or null
-			deleting: false,
-			matchModeColorMap: {
-				exact: 'error',
-				caseInsensitive: 'primary',
-				wordBoundary: 'success',
-			},
-
-			activeColorMap: {
-				[t('filinq', 'Active')]: 'success',
-				[t('filinq', 'Inactive')]: 'default',
-			},
 		}
 	},
 
@@ -228,6 +216,7 @@ export default {
 
 	mounted() {
 		customDictionaryStore.fetchDictionaries()
+		customDictionaryStore.fetchCapabilities()
 	},
 
 	methods: {
@@ -244,43 +233,37 @@ export default {
 		},
 
 		/**
-		 * Translated label for a dictionary match mode, falling back to the raw
-		 * value and finally to the schema default.
+		 * Load the dictionaries from the store.
 		 *
-		 * @param {string} mode Stored match mode.
-		 * @return {string} Displayable label.
+		 * @return {Promise<void>}
 		 * @spec openspec/specs/custom-dictionary-recognition/spec.md#requirement-custom-dictionary-admin-ui-req-ddcdr-006
 		 */
-		matchModeLabel(mode) {
-			const labels = {
-				exact: t('filinq', 'Exact'),
-				caseInsensitive: t('filinq', 'Case-insensitive'),
-				wordBoundary: t('filinq', 'Word boundary'),
-			}
-			return labels[mode] || mode || t('filinq', 'Case-insensitive')
+		reloadRecords() {
+			return customDictionaryStore.fetchDictionaries()
 		},
 
-		async handleRefresh() {
-			this.isRefreshing = true
-			try {
-				await customDictionaryStore.fetchDictionaries()
-			} finally {
-				this.isRefreshing = false
-			}
+		/**
+		 * Delete a dictionary and all its terms by id.
+		 *
+		 * @param {string} id The dictionary id.
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/custom-dictionary-recognition/spec.md
+		 */
+		deleteRecord(id) {
+			return customDictionaryStore.deleteDictionary(id)
 		},
 
-		onPageChanged(page) {
-			this.currentPage = page
-		},
-
-		onPageSizeChanged(size) {
-			this.pageSize = size
-			this.currentPage = 1
-		},
-
+		/**
+		 * Open a dictionary's detail page.
+		 *
+		 * @param {object} row The dictionary row.
+		 * @spec openspec/specs/custom-dictionary-recognition/spec.md#requirement-custom-dictionary-admin-ui-req-ddcdr-006
+		 */
 		viewDictionary(row) {
-			const id = row['@self']?.id || row.id || row.uuid
-			this.$router.push({ name: 'CustomDictionaryDetail', params: { id } })
+			this.$router.push({
+				name: 'CustomDictionaryDetail',
+				params: { id: recordId(row) },
+			})
 		},
 
 		openCreateDialog() {
@@ -305,58 +288,9 @@ export default {
 				this.dialogOpen = false
 				this.viewDictionary(created)
 			} catch (err) {
-				this.formError =
-					err.response?.data?.error
-					|| err.message
-					|| t('filinq', 'Save failed')
+				this.formError = saveErrorMessage(err)
 			} finally {
 				this.saving = false
-			}
-		},
-
-		/**
-		 * Ask for confirmation before deleting a dictionary.
-		 *
-		 * Opens ConfirmActionDialog; nothing is removed here.
-		 *
-		 * @param {object} row - The dictionary row to delete.
-		 * @spec openspec/specs/custom-dictionary-recognition/spec.md
-		 */
-		confirmDelete(row) {
-			this.deleteTarget = row
-		},
-
-		/**
-		 * Dismiss the delete confirmation without deleting anything.
-		 *
-		 * @spec openspec/specs/custom-dictionary-recognition/spec.md
-		 */
-		cancelDelete() {
-			this.deleteTarget = null
-		},
-
-		/**
-		 * Delete the confirmed dictionary and all its terms. Reachable only
-		 * from the dialog's @confirm, so the record is never removed without
-		 * an explicit confirmation.
-		 *
-		 * @return {Promise<void>}
-		 * @spec openspec/specs/custom-dictionary-recognition/spec.md
-		 */
-		async executeDelete() {
-			const row = this.deleteTarget
-			if (!row) {
-				return
-			}
-			const id = row['@self']?.id || row.id || row.uuid
-			this.deleting = true
-			try {
-				await customDictionaryStore.deleteDictionary(id)
-				this.deleteTarget = null
-			} catch (err) {
-				console.error('Failed to delete custom dictionary:', err)
-			} finally {
-				this.deleting = false
 			}
 		},
 	},

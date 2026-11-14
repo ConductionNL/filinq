@@ -96,3 +96,45 @@ supersedes the timestamp read.
 **Page counting stays format-specific.** Only PDF output has a page structure
 filinq can count. Other formats report no page count, and a caller that wants
 one must convert first.
+
+## Resolved at apply (2026-09-30)
+
+The design did not fit the code at HEAD in two places. Both are corrected here
+and in the spec delta.
+
+**D1 revised: the version is the chain number, not `@self.version`.**
+OpenRegister's object version is a semver string (`0.0.1`, patch bumped on
+every save), so it is not "version 4", and it moves on saves that make no
+template version (a restore's head write, a lock release). The
+`generatedDocument.templateVersion` property is an integer, and a pin resolves
+against `templateVersion` rows, which are numbered 1, 2, 3. So the one number
+that a record can store and a caller can pin is the chain's:
+`getTemplate()` sets `version` to `getNextVersionNumber()` (snapshots + 1) and
+leaves `@self` alone. The update paths drop `version` before saving, so the
+number is never stored on the template.
+
+**D2 needed a schema change.** `generatedDocument.templateVersion` was
+required; an unknown version must be absent, so it is optional from
+`generatedDocument` 1.5.0 (register 8.34.0). The multi-format producer and
+the agent's generation record wrote 1 and 0; both now write nothing.
+
+**D5 revised: a snapshot marks the END of its version.** `updateTemplate()`
+snapshots the old state before saving the new one, so snapshot N's creation
+time is when version N stopped being the head. The version in force at a
+moment is the lowest N whose snapshot is newer than the moment, else the head.
+Version 1 starts at the template's own `@self.created`; a moment before that
+returns null.
+
+**D3 addition.** `options.templateVersion` together with `options.formats` is
+refused (400): the multi-format producer renders the head once for every
+format, and ignoring the pin there would produce exactly the document D4
+forbids.
+
+**D6.** The page count comes from FPDI's parser (already used by
+`GrondslagenPdfWriter`) in `DocumentRenderPipeline::describeOutput()`. A PDF the
+free parser cannot read (a compressed cross-reference stream) reports no page
+count and logs a warning, rather than a guessed one.
+
+`DocumentService` gained six lines; the logic lives in `TemplateService`,
+`TemplateVersionService` and `DocumentRenderPipeline`, keeping DocumentService
+under phpmd's class-length limit.

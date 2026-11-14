@@ -13,6 +13,9 @@
  * @link https://conduction.nl
  *
  * @spec openspec/changes/register-i18n/tasks.md#task-3-2
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -40,6 +43,8 @@ use Psr\Log\LoggerInterface;
  * @link     https://conduction.nl
  *
  * @SuppressWarnings(PHPMD)
+ *
+ * @covers \OCA\Filinq\Middleware\LanguageNegotiationMiddleware
  */
 final class LanguageNegotiationMiddlewareTest extends TestCase {
 
@@ -207,5 +212,66 @@ final class LanguageNegotiationMiddlewareTest extends TestCase {
 		$result = $middleware->afterController(controller: null, methodName: 'index', response: $response);
 
 		self::assertSame('true', $result->getHeaders()['X-Content-Language-Fallback'] ?? null);
+	}
+	public function testWriteWithoutTargetLanguageHeaderSetsNothingAndLogsNothing(): void {
+		$this->logger->expects(self::never())->method('warning');
+
+		$request = $this->buildRequest(method: 'POST');
+		$middleware = $this->buildMiddleware($request);
+
+		$middleware->beforeController(controller: null, methodName: 'create');
+
+		self::assertNull($this->languageService->getTargetLanguage());
+	}
+
+	public function testTargetLanguageIsTrimmedAndCapturedForPutAndLowercasePatch(): void {
+		foreach (['PUT', 'patch'] as $method) {
+			$this->languageService = new LanguageService();
+			$request = $this->buildRequest(
+				headers: ['X-Translation-Target-Language' => '  pt-BR  '],
+				method:  $method
+			);
+
+			$this->buildMiddleware($request)->beforeController(controller: null, methodName: 'update');
+
+			self::assertSame('pt-BR', $this->languageService->getTargetLanguage(), $method);
+		}
+	}
+
+	public function testTargetLanguageIgnoredOnDelete(): void {
+		$request = $this->buildRequest(
+			headers: ['X-Translation-Target-Language' => 'es'],
+			method:  'DELETE'
+		);
+
+		$this->buildMiddleware($request)->beforeController(controller: null, methodName: 'destroy');
+
+		self::assertNull($this->languageService->getTargetLanguage());
+	}
+
+	public function testANonStringLangParameterIsSkippedForTheAlias(): void {
+		$this->logger->expects(self::never())->method('warning');
+
+		$request = $this->buildRequest(
+			headers: ['Accept-Language' => 'fr'],
+			params:  ['_lang' => ['nl'], 'language' => ' de ']
+		);
+
+		$this->buildMiddleware($request)->beforeController(controller: null, methodName: 'index');
+
+		self::assertSame('de', $this->languageService->getPreferredLanguage());
+		self::assertSame('query', $this->languageService->getRequestedLanguageSource());
+	}
+
+	public function testAnEmptyLangParameterFallsThroughToTheHeader(): void {
+		$request = $this->buildRequest(
+			headers: ['Accept-Language' => 'fr'],
+			params:  ['_lang' => '', 'language' => '']
+		);
+
+		$this->buildMiddleware($request)->beforeController(controller: null, methodName: 'index');
+
+		self::assertSame('fr', $this->languageService->getPreferredLanguage());
+		self::assertSame('header', $this->languageService->getRequestedLanguageSource());
 	}
 }//end class

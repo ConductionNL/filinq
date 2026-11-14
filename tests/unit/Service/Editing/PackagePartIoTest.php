@@ -19,6 +19,9 @@
  * @link https://conduction.nl
  *
  * @spec openspec/changes/multi-format-editing-tools/tasks.md#task-1.1
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -211,4 +214,19 @@ class PackagePartIoTest extends TestCase {
 
 		$this->assertSame($before, $after);
 	}//end testWritingDoesNotAddOrDropParts()
+
+	/**
+	 * Bytes that are not a package hold no part, and cannot be written to.
+	 *
+	 * @return void
+	 */
+	public function testBytesThatAreNoPackageHoldNothingAndCannotBeWritten(): void {
+		$io = new PackagePartIo();
+
+		$this->assertFalse($io->hasPart(packageBytes: 'plain text, not a zip', part: 'content.xml'));
+
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessage('The file is not a writable document package.');
+		$io->writePart(packageBytes: 'plain text, not a zip', part: 'content.xml', xml: '<x/>');
+	}//end testBytesThatAreNoPackageHoldNothingAndCannotBeWritten()
 }//end class

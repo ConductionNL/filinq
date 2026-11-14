@@ -1,3 +1,7 @@
+<!--
+  - SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
 <template>
 	<CnAdminSettingsShell
 		appId="filinq"
@@ -9,6 +13,10 @@
 			v-if="isAdmin"
 			:showWarning="anonymiserBackend.showWarning"
 			:appApiInstalled="anonymiserBackend.appApiInstalled"
+			:warning="anonymiserBackend.warning"
+			:activeMethod="anonymiserBackend.activeMethod"
+			:effectiveMethod="anonymiserBackend.effectiveMethod"
+			:showActiveBackend="true"
 			@dismissed="onAnonymiserWarningDismissed" />
 
 		<NcSettingsSection
@@ -76,48 +84,19 @@
 					}}
 				</div>
 				<NcCheckboxRadioSwitch
+					v-for="option in outputFormatOptions"
+					:key="option.value"
 					:modelValue="
 						settings['filinq.anonymisation.default_output_format']
 					"
-					value="pdf-only"
+					:value="option.value"
 					name="anonymisation_output_format"
 					type="radio"
 					@update:modelValue="
 						settings['filinq.anonymisation.default_output_format'] =
 							$event
 					">
-					{{
-						t(
-							'filinq',
-							'PDF only — delete the native anonymised file (recommended)',
-						)
-					}}
-				</NcCheckboxRadioSwitch>
-				<NcCheckboxRadioSwitch
-					:modelValue="
-						settings['filinq.anonymisation.default_output_format']
-					"
-					value="pdf"
-					name="anonymisation_output_format"
-					type="radio"
-					@update:modelValue="
-						settings['filinq.anonymisation.default_output_format'] =
-							$event
-					">
-					{{ t('filinq', 'PDF and native file — keep both') }}
-				</NcCheckboxRadioSwitch>
-				<NcCheckboxRadioSwitch
-					:modelValue="
-						settings['filinq.anonymisation.default_output_format']
-					"
-					value="preserve"
-					name="anonymisation_output_format"
-					type="radio"
-					@update:modelValue="
-						settings['filinq.anonymisation.default_output_format'] =
-							$event
-					">
-					{{ t('filinq', 'Native format only — no PDF conversion') }}
+					{{ option.label }}
 				</NcCheckboxRadioSwitch>
 				<div class="setting-description">
 					{{
@@ -139,6 +118,31 @@
 							'Conversion requires either a supported Office app integration (Collabora, OnlyOffice, or Euro Office) for the best fidelity, or the bundled PhpWord + mPDF fallback for DOC/DOCX/ODT/RTF/HTML/TXT. Spreadsheet and presentation formats are not supported in the fallback tier and will return an error unless an Office app is configured.',
 						)
 					}}</em>
+				</div>
+			</div>
+
+			<div class="setting-item">
+				<NcTextField
+					:modelValue="settings['anonymisation.output_subfolder_name']"
+					:label="t('filinq', 'Subfolder for anonymised copies')"
+					:error="!!outputSubfolderError"
+					:helperText="
+						outputSubfolderError
+						|| t(
+							'filinq',
+							'Use lowercase letters, digits, hyphens and underscores only.',
+						)
+					"
+					@update:modelValue="
+						settings['anonymisation.output_subfolder_name'] = $event
+					" />
+				<div class="setting-description">
+					{{
+						t(
+							'filinq',
+							'Batch and folder anonymisation put the redacted copies in this subfolder, next to the originals.',
+						)
+					}}
 				</div>
 			</div>
 		</NcSettingsSection>
@@ -199,60 +203,50 @@
 			:description="
 				t('filinq', 'Configure automatic metadata enrichment for documents')
 			">
-			<div class="setting-item">
-				<div class="setting-label">
-					{{ t('filinq', 'Language Detection') }}
-				</div>
-				<NcCheckboxRadioSwitch
-					:aria-label="t('filinq', 'Language Detection')"
-					:modelValue="settings.enable_language_detection"
-					type="switch"
-					@update:modelValue="
-						settings.enable_language_detection = $event
-					" />
-				<div class="setting-description">
-					{{
-						t('filinq', 'Automatically detect the language of documents')
-					}}
-				</div>
-			</div>
+			<SettingSwitchRow
+				v-model="settings.enable_language_detection"
+				:label="t('filinq', 'Language Detection')"
+				:description="
+					t('filinq', 'Automatically detect the language of documents')
+				" />
 
-			<div class="setting-item">
-				<div class="setting-label">
-					{{ t('filinq', 'Keyword Extraction') }}
-				</div>
-				<NcCheckboxRadioSwitch
-					:aria-label="t('filinq', 'Keyword Extraction')"
-					:modelValue="settings.enable_keyword_extraction"
-					type="switch"
-					@update:modelValue="
-						settings.enable_keyword_extraction = $event
-					" />
-				<div class="setting-description">
-					{{
-						t(
-							'filinq',
-							'Automatically extract keywords from document content',
-						)
-					}}
-				</div>
-			</div>
+			<SettingSwitchRow
+				v-model="settings.enable_keyword_extraction"
+				:label="t('filinq', 'Keyword Extraction')"
+				:description="
+					t(
+						'filinq',
+						'Automatically extract keywords from document content',
+					)
+				" />
 
-			<div class="setting-item">
-				<div class="setting-label">
-					{{ t('filinq', 'Topic Classification') }}
-				</div>
-				<NcCheckboxRadioSwitch
-					:aria-label="t('filinq', 'Topic Classification')"
-					:modelValue="settings.enable_topic_classification"
-					type="switch"
-					@update:modelValue="
-						settings.enable_topic_classification = $event
-					" />
-				<div class="setting-description">
-					{{ t('filinq', 'Automatically classify documents by topic') }}
-				</div>
-			</div>
+			<SettingSwitchRow
+				v-model="settings.enable_topic_classification"
+				:label="t('filinq', 'Topic Classification')"
+				:description="
+					t('filinq', 'Automatically classify documents by topic')
+				" />
+
+			<SettingSwitchRow
+				v-model="settings.enable_contract_term_extraction"
+				:label="t('filinq', 'Contract terms')"
+				:description="
+					t(
+						'filinq',
+						'Suggest dates, notice periods and values from contract documents. A suggestion changes nothing until somebody accepts it.',
+					)
+				" />
+
+			<SettingSwitchRow
+				v-model="settings.enable_inbound_classification"
+				:label="t('filinq', 'Inbound classification')"
+				:description="
+					t(
+						'filinq',
+						'Suggest a document type, a sender and a dossier for documents that come in. A suggestion changes nothing until somebody confirms it.',
+					)
+				"
+				data-testid="settings-inbound-classification" />
 		</NcSettingsSection>
 
 		<NcSettingsSection
@@ -285,24 +279,26 @@
 			</div>
 
 			<!-- OCR enable/disable toggle -->
-			<div class="setting-item">
-				<div class="setting-label">
-					{{ t('filinq', 'Enable OCR') }}
-				</div>
-				<NcCheckboxRadioSwitch
-					:aria-label="t('filinq', 'Enable OCR')"
-					:modelValue="settings.ocr_enabled"
-					type="switch"
-					@update:modelValue="settings.ocr_enabled = $event" />
-				<div class="setting-description">
-					{{
-						t(
-							'filinq',
-							'Automatically extract text from scanned documents and images using Tesseract OCR',
-						)
-					}}
-				</div>
-			</div>
+			<SettingSwitchRow
+				v-model="settings.ocr_enabled"
+				:label="t('filinq', 'Enable OCR')"
+				:description="
+					t(
+						'filinq',
+						'Automatically extract text from scanned documents and images using Tesseract OCR',
+					)
+				" />
+
+			<!-- Read arriving intake scans in the background (intake-ocr-on-arrival) -->
+			<SettingSwitchRow
+				v-model="settings.ocr_on_arrival"
+				:label="t('filinq', 'Read scans on arrival')"
+				:description="
+					t(
+						'filinq',
+						'Read the text of a scan or photo in the inbox as soon as it arrives, so it can be searched. Needs OCR on and Tesseract installed.',
+					)
+				" />
 
 			<!-- Language selection -->
 			<div class="setting-item">
@@ -364,6 +360,41 @@
 			</div>
 		</NcSettingsSection>
 
+		<NcSettingsSection
+			:name="t('filinq', 'PDF/A validation')"
+			:description="
+				t(
+					'filinq',
+					'Check documents against the PDF/A standard with veraPDF, installed on this server. Documents are never sent elsewhere.',
+				)
+			">
+			<div class="setting-item" data-testid="verapdf-status">
+				<NcNoteCard v-if="veraPdfStatus.available" type="success">
+					{{
+						t('filinq', 'The PDF/A validator is installed: {version}', {
+							version: veraPdfStatus.version,
+						})
+					}}
+				</NcNoteCard>
+				<NcNoteCard v-else-if="!veraPdfStatus.enabled" type="info">
+					{{
+						t(
+							'filinq',
+							'The PDF/A validator is switched off in the app config (filinq.verapdf.enabled).',
+						)
+					}}
+				</NcNoteCard>
+				<NcNoteCard v-else type="warning">
+					{{
+						t(
+							'filinq',
+							'The PDF/A validator (veraPDF) is not installed. Without it, Filinq only checks that a PDF claims to be PDF/A, not that it is.',
+						)
+					}}
+				</NcNoteCard>
+			</div>
+		</NcSettingsSection>
+
 		<!-- files-confidential-labels — read-only signal ingested from
 		     files_confidential (TSCP/BAILS system tags). No policy/enforcement
 		     of its own: the vocabulary controls which tag names are recognised,
@@ -377,39 +408,20 @@
 					'Consume confidentiality labels already assigned by files_confidential (TSCP/BAILS) as a read-only sensitivity signal. This never blocks, redacts or gates anything.',
 				)
 			">
-			<div class="setting-item">
-				<div class="setting-label">
-					{{
-						t(
-							'filinq',
-							'Prioritise higher-confidentiality files in batch/folder analysis',
-						)
-					}}
-				</div>
-				<NcCheckboxRadioSwitch
-					:aria-label="
-						t(
-							'filinq',
-							'Prioritise higher-confidentiality files in batch/folder analysis',
-						)
-					"
-					:modelValue="
-						settings['filinq.confidentiality.prioritise_analysis']
-					"
-					type="switch"
-					@update:modelValue="
-						settings['filinq.confidentiality.prioritise_analysis'] =
-							$event
-					" />
-				<div class="setting-description">
-					{{
-						t(
-							'filinq',
-							'Off by default. When enabled, files with a higher confidentiality label are analysed sooner — a suggestion only, it never skips, blocks or redacts files.',
-						)
-					}}
-				</div>
-			</div>
+			<SettingSwitchRow
+				v-model="settings['filinq.confidentiality.prioritise_analysis']"
+				:label="
+					t(
+						'filinq',
+						'Prioritise higher-confidentiality files in batch/folder analysis',
+					)
+				"
+				:description="
+					t(
+						'filinq',
+						'Off by default. When enabled, files with a higher confidentiality label are analysed sooner — a suggestion only, it never skips, blocks or redacts files.',
+					)
+				" />
 
 			<div class="setting-item">
 				<div class="input-field">
@@ -536,24 +548,15 @@
 					'Configure digital document signing capabilities (eIDAS SES, AdES, QES)',
 				)
 			">
-			<div class="setting-item">
-				<div class="setting-label">
-					{{ t('filinq', 'Enable Digital Signing') }}
-				</div>
-				<NcCheckboxRadioSwitch
-					:aria-label="t('filinq', 'Enable Digital Signing')"
-					:modelValue="settings.signing_enabled"
-					type="switch"
-					@update:modelValue="settings.signing_enabled = $event" />
-				<div class="setting-description">
-					{{
-						t(
-							'filinq',
-							'Allow users to create and manage digital signing requests',
-						)
-					}}
-				</div>
-			</div>
+			<SettingSwitchRow
+				v-model="settings.signing_enabled"
+				:label="t('filinq', 'Enable Digital Signing')"
+				:description="
+					t(
+						'filinq',
+						'Allow users to create and manage digital signing requests',
+					)
+				" />
 
 			<div class="setting-item">
 				<div class="input-field">
@@ -576,8 +579,24 @@
 						<option value="validsign">
 							{{ t('filinq', 'ValidSign') }}
 						</option>
+						<option v-if="libresignAvailable" value="libresign">
+							{{ t('filinq', 'LibreSign (certificate)') }}
+						</option>
 					</select>
 				</div>
+				<NcNoteCard
+					v-if="
+						settings.signing_provider === 'libresign'
+						&& !libresignAvailable
+					"
+					type="error">
+					{{
+						t(
+							'filinq',
+							'LibreSign is chosen but the LibreSign app is not enabled. Signing requests fail until you enable it or choose another provider.',
+						)
+					}}
+				</NcNoteCard>
 				<div class="setting-description">
 					{{
 						t(
@@ -587,6 +606,17 @@
 					}}
 				</div>
 			</div>
+
+			<SettingSwitchRow
+				v-if="settings.signing_provider === 'libresign'"
+				v-model="settings.libresign_qualified"
+				:label="t('filinq', 'LibreSign certificate is qualified')"
+				:description="
+					t(
+						'filinq',
+						'Turn this on only when LibreSign signs with a qualified certificate from a trust service provider. Only then can a request ask for a qualified signature (QES).',
+					)
+				" />
 
 			<div class="setting-item">
 				<div class="input-field">
@@ -651,7 +681,38 @@
 					}}
 				</div>
 			</div>
+
+			<div class="setting-item">
+				<div class="input-field">
+					<label for="signing-guardian-consent-age">{{
+						t('filinq', 'Guardian consent age')
+					}}</label>
+					<input
+						id="signing-guardian-consent-age"
+						v-model.number="settings.signing_guardian_consent_age"
+						type="number"
+						min="1"
+						max="21"
+						placeholder="16" />
+				</div>
+				<div class="setting-description">
+					{{
+						t(
+							'filinq',
+							'Signers under this age sign only with a parent or guardian on the request. The default is 16, the Dutch age of consent.',
+						)
+					}}
+				</div>
+			</div>
 		</NcSettingsSection>
+
+		<!-- Signer identity rails (signer-identity-rails): its own admin endpoint -->
+		<SignerIdentitySettings v-if="isAdmin" />
+
+		<EmailIngestionSettings v-if="isAdmin" />
+
+		<!-- Page layouts (documents-from-a-template REQ-DFT-01): their own endpoints -->
+		<PageLayoutSettings v-if="isAdmin" />
 
 		<!-- AVG Art. 30 processing-activity register (provided by OpenRegister) -->
 		<NcSettingsSection
@@ -800,6 +861,7 @@
 
 <script>
 import { CnAdminSettingsShell } from '@conduction/nextcloud-vue'
+import { getRequestToken } from '@nextcloud/auth'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import {
 	NcButton,
@@ -808,6 +870,7 @@ import {
 	NcNoteCard,
 	NcSelect,
 	NcSettingsSection,
+	NcTextField,
 } from '@nextcloud/vue'
 import AccountSearchOutline from 'vue-material-design-icons/AccountSearchOutline.vue'
 import FileExportOutline from 'vue-material-design-icons/FileExportOutline.vue'
@@ -815,7 +878,117 @@ import OpenInNew from 'vue-material-design-icons/OpenInNew.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import Restart from 'vue-material-design-icons/Restart.vue'
 import AnonymiserBackendWarning from '../../components/AnonymiserBackendWarning.vue'
+import EmailIngestionSettings from './EmailIngestionSettings.vue'
 import EntityTypeSelector from './EntityTypeSelector.vue'
+import PageLayoutSettings from './PageLayoutSettings.vue'
+import SettingSwitchRow from './SettingSwitchRow.vue'
+import SignerIdentitySettings from './SignerIdentitySettings.vue'
+import {
+	backendStateFromSettings,
+	emptyBackendState,
+} from '../../services/anonymiserBackendState.js'
+import { fetchValidatorStatus } from '../../services/conformance.js'
+import {
+	disallowedSubfolderCharacters,
+	isValidSubfolderName,
+} from '../../services/outputSubfolder.js'
+import {
+	defaultOcrLanguages,
+	defaultSettings,
+	emptyOcrStatus,
+	emptyVeraPdfStatus,
+} from '../../services/settingsDefaults.js'
+import { initialSections } from '../../services/settingsSections.js'
+
+/** The object types whose register and schema this page binds. */
+const OBJECT_TYPES = ['publicationConsent']
+
+/**
+ * The Art. 30 processing activity: Anonymisation of documents.
+ *
+ * @return {{code: string, name: string, purpose: string, retention: string}} The activity, translated.
+ */
+function anonymisationActivity() {
+	return {
+		// ⚠️ The four `code` values below deliberately keep the
+		// pre-rename `docudesk-` spelling. They are the AVG Art. 30
+		// processing-activity CODES declared in
+		// lib/Settings/filinq_register.json and already recorded on
+		// every OpenRegister read-log row this app has attributed.
+		// Renaming them would detach the existing log rows from the
+		// catalogue entry that describes them, so an Art. 30 export
+		// would silently show an activity with no history and
+		// history with no activity.
+		code: 'docudesk-anonymisation',
+		name: t('filinq', 'Anonymisation of documents'),
+		purpose: t(
+			'filinq',
+			'Pseudonymise / redact personal data detected in documents for Wet Open Overheid publication.',
+		),
+
+		retention: t(
+			'filinq',
+			'P7Y (selectielijst category to be confirmed)',
+		),
+	}
+}
+
+/**
+ * The Art. 30 processing activity: OCR text extraction.
+ *
+ * @return {{code: string, name: string, purpose: string, retention: string}} The activity, translated.
+ */
+function ocrActivity() {
+	return {
+		code: 'docudesk-ocr',
+		name: t('filinq', 'OCR text extraction'),
+		purpose: t(
+			'filinq',
+			'Extract machine-readable text from scanned documents and images.',
+		),
+
+		retention: t('filinq', 'not declared'),
+	}
+}
+
+/**
+ * The Art. 30 processing activity: Document metadata enrichment.
+ *
+ * @return {{code: string, name: string, purpose: string, retention: string}} The activity, translated.
+ */
+function metadataEnrichmentActivity() {
+	return {
+		code: 'docudesk-metadata-enrichment',
+		name: t('filinq', 'Document metadata enrichment'),
+		purpose: t(
+			'filinq',
+			'Language detection, keyword extraction, and topic classification.',
+		),
+
+		retention: t('filinq', 'not declared'),
+	}
+}
+
+/**
+ * The Art. 30 processing activity: Digital document signing.
+ *
+ * @return {{code: string, name: string, purpose: string, retention: string}} The activity, translated.
+ */
+function signingActivity() {
+	return {
+		code: 'docudesk-signing',
+		name: t('filinq', 'Digital document signing'),
+		purpose: t(
+			'filinq',
+			'Maintain a tamper-evident audit trail of electronic signing activities.',
+		),
+
+		retention: t(
+			'filinq',
+			'P10Y (Archiefwet 1995 selectielijst cat. 5.1.3)',
+		),
+	}
+}
 
 export default {
 	name: 'Settings',
@@ -826,6 +999,7 @@ export default {
 		NcButton,
 		NcLoadingIcon,
 		NcCheckboxRadioSwitch,
+		NcTextField,
 		CnAdminSettingsShell,
 		AnonymiserBackendWarning,
 		Plus,
@@ -834,6 +1008,10 @@ export default {
 		FileExportOutline,
 		AccountSearchOutline,
 		EntityTypeSelector,
+		EmailIngestionSettings,
+		PageLayoutSettings,
+		SettingSwitchRow,
+		SignerIdentitySettings,
 	},
 
 	data() {
@@ -842,19 +1020,15 @@ export default {
 			saving: false,
 			isAdmin: false,
 			openRegisterInstalled: false,
-			anonymiserBackend: {
-				method: 'regex',
-				appApiInstalled: false,
-				warningDismissed: false,
-				showWarning: false,
-			},
+			libresignAvailable: false,
+			anonymiserBackend: emptyBackendState(),
 
 			settingsData: {},
 			availableRegisters: [],
 			availableRegistersOptions: { options: [] },
 			globalSchemasOptions: {},
-			objectTypes: ['publicationConsent'],
-			sections: {},
+			objectTypes: OBJECT_TYPES,
+			sections: initialSections(OBJECT_TYPES),
 			// Propose-grondslag-per-entity-type: curated entity types, the
 			// available base records, and the operator-configured mapping
 			// (entity type → base slug[]). All supplied by the settings GET.
@@ -864,48 +1038,67 @@ export default {
 			// Entity types enabled for automatic detection (all-on by default).
 			// An empty or complete selection means "detect all types".
 			enabledEntityTypes: [],
-			settings: {
-				publication_objection_period_days: 28,
-				enable_language_detection: true,
-				enable_keyword_extraction: true,
-				enable_topic_classification: true,
-				ocr_enabled: true,
-				ocr_dpi: 300,
-				signing_enabled: false,
-				signing_provider: 'native',
-				signing_default_level: 'SES',
-				signing_request_expiry_days: 30,
-				'filinq.anonymisation.default_output_format': 'pdf-only',
-				// files-confidential-labels — off by default (design.md D3).
-				'filinq.confidentiality.prioritise_analysis': false,
-				'filinq.confidentiality.label_vocabulary': {
-					Public: 0,
-					Internal: 1,
-					Confidential: 2,
-					Secret: 3,
-				},
-			},
+			settings: defaultSettings(),
 
 			// Editable JSON text backing 'filinq.confidentiality.label_vocabulary'
 			// — kept separate from `settings` so an in-progress edit can be
 			// invalid JSON without corrupting the object that gets submitted.
 			confidentialityVocabularyText: '',
 			confidentialityVocabularyError: null,
-			ocrLanguages: {
-				nld: true,
-				eng: true,
-				deu: false,
-				fra: false,
-			},
-
-			ocrStatus: {
-				tesseractAvailable: false,
-				tesseractVersion: null,
-			},
+			ocrLanguages: defaultOcrLanguages(),
+			ocrStatus: emptyOcrStatus(),
+			veraPdfStatus: emptyVeraPdfStatus(),
 		}
 	},
 
 	computed: {
+		/**
+		 * Why the output subfolder name cannot be saved, or '' when it can.
+		 *
+		 * @return {string} Localised reason.
+		 * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-2
+		 */
+		outputSubfolderError() {
+			const name = this.settings['anonymisation.output_subfolder_name'] || ''
+			if (name === '') {
+				return t('filinq', 'Enter a name for the subfolder.')
+			}
+			if (isValidSubfolderName(name)) {
+				return ''
+			}
+			return t('filinq', 'The subfolder name cannot contain: {characters}', {
+				characters: disallowedSubfolderCharacters(name)
+					.map((c) => (c === ' ' ? '␣' : c))
+					.join(' '),
+			})
+		},
+
+		/**
+		 * The choices for the default output format of anonymised documents.
+		 *
+		 * @return {Array<{value: string, label: string}>} Radio options, in display order.
+		 * @spec openspec/specs/admin-settings/spec.md
+		 */
+		outputFormatOptions() {
+			return [
+				{
+					value: 'pdf-only',
+					label: t(
+						'filinq',
+						'PDF only — delete the native anonymised file (recommended)',
+					),
+				},
+				{
+					value: 'pdf',
+					label: t('filinq', 'PDF and native file — keep both'),
+				},
+				{
+					value: 'preserve',
+					label: t('filinq', 'Native format only — no PDF conversion'),
+				},
+			]
+		},
+
 		// `base` records as NcSelect options (value = slug, label = name).
 		grondslagBaseOptions() {
 			return (this.grondslagBases || []).map((base) => ({
@@ -925,70 +1118,38 @@ export default {
 		 */
 		processingActivities() {
 			return [
-				{
-					// ⚠️ The four `code` values below deliberately keep the
-					// pre-rename `docudesk-` spelling. They are the AVG Art. 30
-					// processing-activity CODES declared in
-					// lib/Settings/filinq_register.json and already recorded on
-					// every OpenRegister read-log row this app has attributed.
-					// Renaming them would detach the existing log rows from the
-					// catalogue entry that describes them, so an Art. 30 export
-					// would silently show an activity with no history and
-					// history with no activity.
-					code: 'docudesk-anonymisation',
-					name: t('filinq', 'Anonymisation of documents'),
-					purpose: t(
-						'filinq',
-						'Pseudonymise / redact personal data detected in documents for Wet Open Overheid publication.',
-					),
-
-					retention: t(
-						'filinq',
-						'P7Y (selectielijst category to be confirmed)',
-					),
-				},
-				{
-					code: 'docudesk-ocr',
-					name: t('filinq', 'OCR text extraction'),
-					purpose: t(
-						'filinq',
-						'Extract machine-readable text from scanned documents and images.',
-					),
-
-					retention: t('filinq', 'not declared'),
-				},
-				{
-					code: 'docudesk-metadata-enrichment',
-					name: t('filinq', 'Document metadata enrichment'),
-					purpose: t(
-						'filinq',
-						'Language detection, keyword extraction, and topic classification.',
-					),
-
-					retention: t('filinq', 'not declared'),
-				},
-				{
-					code: 'docudesk-signing',
-					name: t('filinq', 'Digital document signing'),
-					purpose: t(
-						'filinq',
-						'Maintain a tamper-evident audit trail of electronic signing activities.',
-					),
-
-					retention: t(
-						'filinq',
-						'P10Y (Archiefwet 1995 selectielijst cat. 5.1.3)',
-					),
-				},
+				anonymisationActivity(),
+				ocrActivity(),
+				metadataEnrichmentActivity(),
+				signingActivity(),
 			]
 		},
 	},
 
+	/**
+	 * Load the settings and the PDF/A validator's status.
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-verapdf-validation/tasks.md#task-3.2
+	 */
 	mounted() {
 		this.fetchAll()
+		this.fetchValidatorStatus()
 	},
 
 	methods: {
+		/**
+		 * Read the PDF/A validator's status for its row.
+		 *
+		 * @spec openspec/changes/archive/2026-09-29-verapdf-validation/tasks.md#task-3.2
+		 */
+		async fetchValidatorStatus() {
+			try {
+				this.veraPdfStatus = await fetchValidatorStatus()
+			} catch {
+				// Left as "not installed": the row then says so.
+			}
+		},
+
 		// Currently-selected base options for an entity type, derived from
 		// the slug[] mapping so the multi-select reflects saved state.
 		selectedBasesFor(entityType) {
@@ -1038,20 +1199,16 @@ export default {
 				.then((response) => response.json())
 				.then((data) => {
 					this.openRegisterInstalled = data.openRegisters
+					this.libresignAvailable = data.libresignAvailable === true
 					this.isAdmin = data.isAdmin ?? false
 					this.settingsData = data
 					this.availableRegisters = data.availableRegisters
 
 					// Backend warning state.
 					if (data.anonymiserBackend) {
-						this.anonymiserBackend = {
-							method: data.anonymiserBackend.method ?? 'regex',
-							appApiInstalled:
-								data.anonymiserBackend.appApiInstalled ?? false,
-							warningDismissed:
-								data.anonymiserBackend.warningDismissed ?? false,
-							showWarning: data.anonymiserBackend.showWarning ?? false,
-						}
+						this.anonymiserBackend = backendStateFromSettings(
+							data.anonymiserBackend,
+						)
 					}
 
 					// Update local settings
@@ -1063,20 +1220,32 @@ export default {
 						data.enable_keyword_extraction ?? true
 					this.settings.enable_topic_classification =
 						data.enable_topic_classification ?? true
+					this.settings.enable_contract_term_extraction =
+						data.enable_contract_term_extraction ?? true
+					this.settings.enable_inbound_classification =
+						data.enable_inbound_classification ?? true
 					this.settings.ocr_enabled = data.ocr_enabled ?? true
+					this.settings.ocr_on_arrival = data.ocr_on_arrival ?? true
 					this.settings.ocr_dpi = data.ocr_dpi ?? 300
 					// Signing settings
 					this.settings.signing_enabled =
 						data.signing_enabled === '1' || data.signing_enabled === true
 					this.settings.signing_provider =
 						data.signing_provider || 'native'
+					this.settings.libresign_qualified =
+						data.libresign_qualified === true
+						|| data.libresign_qualified === '1'
 					this.settings.signing_default_level =
 						data.signing_default_level || 'SES'
 					this.settings.signing_request_expiry_days =
 						parseInt(data.signing_request_expiry_days, 10) || 30
+					this.settings.signing_guardian_consent_age =
+						parseInt(data.signing_guardian_consent_age, 10) || 16
 					this.settings['filinq.anonymisation.default_output_format'] =
 						data['filinq.anonymisation.default_output_format']
 						?? 'pdf-only'
+					this.settings['anonymisation.output_subfolder_name'] =
+						data['anonymisation.output_subfolder_name'] || 'anonymised'
 					// Entity types enabled for automatic detection (all-on by default).
 					this.enabledEntityTypes =
 						data['filinq.anonymisation.enabled_entity_types'] || []
@@ -1204,7 +1373,7 @@ export default {
 
 			fetch('/index.php/apps/filinq/api/settings', {
 				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
+				headers: { requesttoken: getRequestToken(), 'Content-Type': 'application/json' },
 				body: JSON.stringify(payload),
 			})
 				.then((response) => response.json())
@@ -1227,6 +1396,11 @@ export default {
 		 * @spec openspec/specs/admin-settings/spec.md#requirement-settings-rest-api-req-set-06
 		 */
 		saveAll() {
+			if (this.outputSubfolderError) {
+				showError(this.outputSubfolderError)
+				return
+			}
+
 			this.saving = true
 
 			// Build OCR language string from checkboxes
@@ -1254,14 +1428,30 @@ export default {
 					? '1'
 					: '0',
 
+				enable_contract_term_extraction: this.settings
+					.enable_contract_term_extraction
+					? '1'
+					: '0',
+
+				enable_inbound_classification: this.settings
+					.enable_inbound_classification
+					? '1'
+					: '0',
+
 				ocr_enabled: this.settings.ocr_enabled ? '1' : '0',
+				ocr_on_arrival: this.settings.ocr_on_arrival ? '1' : '0',
 				ocr_languages: ocrLangs,
 				ocr_dpi: String(this.settings.ocr_dpi),
 				signing_enabled: this.settings.signing_enabled ? '1' : '0',
 				signing_provider: this.settings.signing_provider || 'native',
+				libresign_qualified: this.settings.libresign_qualified ? '1' : '0',
 				signing_default_level: this.settings.signing_default_level || 'SES',
 				signing_request_expiry_days: String(
 					this.settings.signing_request_expiry_days || 30,
+				),
+
+				signing_guardian_consent_age: String(
+					this.settings.signing_guardian_consent_age || 16,
 				),
 
 				'filinq.anonymisation.default_output_format': [
@@ -1273,6 +1463,9 @@ export default {
 				)
 					? this.settings['filinq.anonymisation.default_output_format']
 					: 'pdf-only',
+
+				'anonymisation.output_subfolder_name':
+					this.settings['anonymisation.output_subfolder_name'],
 
 				// Sent as an object; the backend json-encodes it for storage.
 				'filinq.grondslagen.entity_type_bases': this.entityTypeBases,
@@ -1303,10 +1496,17 @@ export default {
 
 			fetch('/index.php/apps/filinq/api/settings', {
 				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
+				headers: { requesttoken: getRequestToken(), 'Content-Type': 'application/json' },
 				body: JSON.stringify(payload),
 			})
-				.then((response) => response.json())
+				.then(async (response) => {
+					// A refused value comes back as 400 with an `error`; it
+					// must not read as saved.
+					const body = await response.json().catch(() => ({}))
+					if (!response.ok) {
+						throw new Error(body.error || response.statusText)
+					}
+				})
 				.then(() => {
 					showSuccess(t('filinq', 'All settings saved successfully'))
 				})
@@ -1382,7 +1582,7 @@ export default {
 			try {
 				const response = await fetch(
 					'/index.php/apps/filinq/api/admin/anonymiser-warning/reset',
-					{ method: 'POST' },
+					{ method: 'POST', headers: { requesttoken: getRequestToken() } },
 				)
 				if (response.ok === false) {
 					throw new Error('HTTP ' + response.status)
@@ -1390,7 +1590,7 @@ export default {
 				this.anonymiserBackend = {
 					...this.anonymiserBackend,
 					warningDismissed: false,
-					showWarning: true,
+					showWarning: this.anonymiserBackend.warning !== null,
 				}
 			} catch (err) {
 				showError(
@@ -1430,6 +1630,8 @@ export default {
 }
 </script>
 
+<style scoped src="./settingItem.css"></style>
+
 <style scoped>
 .selectionContainer {
 	display: grid;
@@ -1439,24 +1641,6 @@ export default {
 
 .selectionContainer > * {
 	margin-block-end: 10px;
-}
-
-.setting-item {
-	display: flex;
-	flex-direction: column;
-	gap: 8px;
-	padding: 8px 0;
-	border-bottom: 1px solid var(--color-border-dark-translucent);
-}
-
-.setting-label {
-	font-weight: bold;
-	color: var(--color-main-text);
-}
-
-.setting-description {
-	color: var(--color-text-lighter);
-	font-size: 0.9em;
 }
 
 .input-field {

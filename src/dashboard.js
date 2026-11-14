@@ -1,6 +1,10 @@
+/**
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
 import { translatePlural as n, translate as t } from '@nextcloud/l10n'
 import { createApp, h } from 'vue'
-import AnonymizationDashboardWidget from './views/widgets/AnonymizationDashboardWidget.vue'
+import AnonymizationWidget from './views/anonymization/AnonymizationWidget.vue'
 import FileEntitiesDashboardWidget from './views/widgets/FileEntitiesDashboardWidget.vue'
 import pinia from './pinia.js'
 
@@ -38,7 +42,7 @@ function mountWidget(component, el, title) {
    in each user's own layout: renaming them silently drops the widget from
    every dashboard that already has it. */
 OCA.Dashboard.register('docudesk-anonymization', (el, { widget }) =>
-	mountWidget(AnonymizationDashboardWidget, el, widget.title),
+	mountWidget(AnonymizationWidget, el, widget.title),
 )
 
 OCA.Dashboard.register('docudesk-file-entities', (el, { widget }) =>

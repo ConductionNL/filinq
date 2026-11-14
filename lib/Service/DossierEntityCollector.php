@@ -22,6 +22,9 @@
  * @link      https://www.filinq.app
  *
  * @spec openspec/specs/anonymisation-grondslagen-summary/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -148,7 +151,7 @@ class DossierEntityCollector {
 		}
 
 		return $this->shapeGroups(
-			grouped: $this->groupRows(rawRows: $rawRows, placeholderMap: $placeholderMap, fileId: $fileId),
+			grouped: $this->groupRows(run: new EntityGroupingRun(fileId: $fileId, placeholderMap: $placeholderMap), rawRows: $rawRows),
 			labelMap: $this->labelMapFor(rawRows: $rawRows)
 		);
 
@@ -201,13 +204,8 @@ class DossierEntityCollector {
 	private function labelMapFor(array $rawRows): array {
 		$allRefs = [];
 		foreach ($rawRows as $row) {
-			$bases = ($row['bases'] ?? null);
-			if (is_array($bases) === false) {
-				continue;
-			}
-
-			foreach ($bases as $ref) {
-				$allRefs[(string)$ref] = true;
+			foreach ($this->baseRefs(row: $row) as $ref) {
+				$allRefs[$ref] = true;
 			}
 		}
 
@@ -222,62 +220,93 @@ class DossierEntityCollector {
 	 * no resolvable scope-local placeholder are omitted and counted for a
 	 * PII-free log line.
 	 *
+	 * @param EntityGroupingRun                $run     The file and its placeholder map.
 	 * @param array<int, array<string, mixed>> $rawRows Raw relation rows.
-	 * @param array<string, string> $placeholderMap Scope-local placeholder map.
-	 * @param int $fileId The file id (log context).
 	 *
 	 * @return array<string, array<string, mixed>> The grouped entities.
 	 */
-	private function groupRows(array $rawRows, array $placeholderMap, int $fileId): array {
-		$grouped = [];
-		$omitted = 0;
+	private function groupRows(EntityGroupingRun $run, array $rawRows): array {
 		foreach ($rawRows as $row) {
-			$entityId = (int)($row['entity_id'] ?? 0);
-			$entityType = (string)($row['entity_type'] ?? '');
-			$key = $entityType . ':' . $entityId;
+			$this->addRow(run: $run, row: $row);
+		}
 
-			if (isset($grouped[$key]) === false) {
-				$placeholder = $this->resolvePlaceholder(
-					row: $row,
-					entityId: $entityId,
-					placeholderMap: $placeholderMap
-				);
-				if ($placeholder === null) {
-					$omitted++;
-					continue;
-				}
-
-				$grouped[$key] = [
-					'entityId' => $entityId,
-					'entityType' => $entityType,
-					'entityText' => (string)($row['entity_value'] ?? ''),
-					'placeholder' => $placeholder,
-					'count' => 0,
-					'basesSet' => [],
-				];
-			}//end if
-
-			$grouped[$key]['count']++;
-
-			$bases = ($row['bases'] ?? null);
-			if (is_array($bases) === true) {
-				foreach ($bases as $ref) {
-					$grouped[$key]['basesSet'][(string)$ref] = true;
-				}
-			}
-		}//end foreach
-
-		if ($omitted > 0) {
+		if ($run->omitted > 0) {
 			// PII-free: count only. Surfaces stale relations with no recoverable
 			// scope-local placeholder, deliberately left out of the summary.
 			$this->logger->info(
 				'LegalBasesSummaryService: omitted entities with no scope-local placeholder (no global-id fallback)',
-				['fileId' => $fileId, 'omitted' => $omitted]
+				['fileId' => $run->fileId, 'omitted' => $run->omitted]
 			);
 		}
 
-		return $grouped;
+		return $run->grouped;
 	}//end groupRows()
+
+	/**
+	 * Count one row into its group, opening the group on its first row; a
+	 * first row without a scope-local placeholder is counted as omitted.
+	 *
+	 * @param EntityGroupingRun    $run The pass.
+	 * @param array<string, mixed> $row One raw relation row.
+	 *
+	 * @return void
+	 */
+	private function addRow(EntityGroupingRun $run, array $row): void {
+		$key = (string)($row['entity_type'] ?? '') . ':' . (int)($row['entity_id'] ?? 0);
+
+		if (isset($run->grouped[$key]) === false) {
+			$placeholder = $this->resolvePlaceholder(row: $row, placeholderMap: $run->placeholderMap);
+			if ($placeholder === null) {
+				$run->omitted++;
+				return;
+			}
+
+			$run->grouped[$key] = $this->newGroup(row: $row, placeholder: $placeholder);
+		}
+
+		$run->grouped[$key]['count']++;
+		foreach ($this->baseRefs(row: $row) as $ref) {
+			$run->grouped[$key]['basesSet'][$ref] = true;
+		}
+
+	}//end addRow()
+
+	/**
+	 * A new, empty group for a row's entity.
+	 *
+	 * @param array<string, mixed> $row         The entity's first row.
+	 * @param string               $placeholder Its scope-local placeholder.
+	 *
+	 * @return array<string, mixed> The group.
+	 */
+	private function newGroup(array $row, string $placeholder): array {
+		return [
+			'entityId' => (int)($row['entity_id'] ?? 0),
+			'entityType' => (string)($row['entity_type'] ?? ''),
+			'entityText' => (string)($row['entity_value'] ?? ''),
+			'placeholder' => $placeholder,
+			'count' => 0,
+			'basesSet' => [],
+		];
+
+	}//end newGroup()
+
+	/**
+	 * The base references on a row, as strings; none when `bases` is not a list.
+	 *
+	 * @param array<string, mixed> $row One raw relation row.
+	 *
+	 * @return array<int, string> The references.
+	 */
+	private function baseRefs(array $row): array {
+		$bases = ($row['bases'] ?? null);
+		if (is_array($bases) === false) {
+			return [];
+		}
+
+		return array_map(static fn (mixed $ref): string => (string)$ref, array_values($bases));
+
+	}//end baseRefs()
 
 	/**
 	 * Resolve one relation's SCOPE-LOCAL placeholder, or null to omit it.
@@ -295,15 +324,15 @@ class DossierEntityCollector {
 	 * (e.g. a report regenerated long after anonymisation).
 	 *
 	 * @param array<string, mixed> $row One raw relation row.
-	 * @param int $entityId The row's global entity id.
 	 * @param array<string, string> $placeholderMap Scope-local placeholder map.
 	 *
 	 * @return string|null The placeholder, or null when the entity must be omitted.
 	 */
-	private function resolvePlaceholder(array $row, int $entityId, array $placeholderMap): ?string {
-		if (isset($placeholderMap[(string)$entityId]) === true) {
+	private function resolvePlaceholder(array $row, array $placeholderMap): ?string {
+		$entityId = (string)(int)($row['entity_id'] ?? 0);
+		if (isset($placeholderMap[$entityId]) === true) {
 			// Tier 1 — scope-correct map from the caller.
-			return $placeholderMap[(string)$entityId];
+			return $placeholderMap[$entityId];
 		}
 
 		// Tier 2 — the per-document placeholder OpenRegister persisted.

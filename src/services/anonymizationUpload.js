@@ -70,3 +70,24 @@ export function partitionFiles(files) {
 	}
 	return { accepted, rejected }
 }
+
+/**
+ * Decide what the upload dialog asks and whether a dossier is made.
+ *
+ * Two or more documents in one action ask for a dossier name; one document
+ * never does, so a name typed earlier is ignored. A dossier is created only
+ * when a non-blank name was given; otherwise the files stay separate.
+ *
+ * @param {FileList | File[]} files Files pending upload.
+ * @param {string} name The dossier name as typed.
+ * @return {{ asksDossierName: boolean, dossierName: string|null }}
+ * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md#requirement-auto-dossier-on-multi-upload-req-dddmu-005
+ */
+export function dossierPlan(files, name) {
+	const asksDossierName = Array.from(files).length > 1
+	const trimmed = (name || '').trim()
+	return {
+		asksDossierName,
+		dossierName: asksDossierName && trimmed !== '' ? trimmed : null,
+	}
+}

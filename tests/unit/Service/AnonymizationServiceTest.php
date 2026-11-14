@@ -22,10 +22,13 @@
 
 namespace OCA\Filinq\Tests\Unit\Service;
 
+use OCA\Filinq\Service\ProhibitionOverrideCommitter;
+use OCA\Filinq\Service\AnonymisationRunRecords;
 use OCA\Filinq\Service\AnonymisedPdfOutputService;
 use OCA\Filinq\Service\AnonymizationPersistenceService;
 use OCA\Filinq\Service\AnonymizationResultParser;
 use OCA\Filinq\Service\AnonymizationService;
+use OCA\Filinq\Service\AnonymizeOptions;
 use OCA\Filinq\Service\DocumentAnonymizeRunner;
 use OCA\Filinq\Service\EmlAnonymizationService;
 use OCA\Filinq\Service\EmlPdfAssemblyService;
@@ -37,9 +40,13 @@ use OCA\Filinq\Service\PdfConversionService;
 use OCA\Filinq\Service\PolicyMatchService;
 use OCA\Filinq\Service\ProhibitionGateService;
 use OCA\Filinq\Service\ProhibitionPolicyService;
+use OCA\Filinq\Service\Redaction\RedactionIrreversibilityVerifier;
+use OCA\Filinq\Service\Redaction\RedactionVerdictRecorder;
 use OCA\Filinq\Service\ProhibitionSkipTier;
 use OCA\Filinq\Service\RelationSkipDecisionService;
 use OCA\Filinq\Service\ReplacementVerificationService;
+use OCA\Filinq\Service\Support\AnonymisationRecords;
+use OCA\Filinq\Service\Support\AnonymisedOutputs;
 use OCA\OpenRegister\Db\EntityRelation;
 use OCA\OpenRegister\Db\EntityRelationMapper;
 use OCP\App\IAppManager;
@@ -66,6 +73,13 @@ use Psr\Log\NullLogger;
  */
 class AnonymizationServiceTest extends TestCase {
 	use BuildsAnonymizationService;
+
+	/**
+	 * prohibitionOverrideAudit entries the fake ObjectService stored.
+	 *
+	 * @var array<int, array<string, mixed>>
+	 */
+	private array $overrideAudits = [];
 
 	/**
 	 * The Nextcloud file id carried by the relation fixture — the acting user
@@ -121,7 +135,8 @@ class AnonymizationServiceTest extends TestCase {
 	 * Test the anonymise entry points expose the documented options.
 	 *
 	 * The grondslagen summary is no longer a boolean flag: it is selected by
-	 * calling the dedicated `anonymizeDocumentWithBasisSummary()` entry point.
+	 * calling the dedicated `anonymizeDocumentWithBasisSummary()` entry point,
+	 * and nothing on the options object can switch it on.
 	 *
 	 * @return void
 	 *
@@ -133,41 +148,29 @@ class AnonymizationServiceTest extends TestCase {
 			'The grondslagen-summary variant must be an explicit entry point.'
 		);
 
-		$names = $this->parameterNames(AnonymizationService::class, 'anonymizeDocument');
-		$this->assertContains('outputFormat', $names);
-		$this->assertNotContains(
-			'appendBasisSummary',
-			$names,
-			'anonymizeDocument() must not carry a summary flag argument.'
+		$this->assertSame(['fileId', 'entities', 'options'], $this->parameterNames(AnonymizationService::class, 'anonymizeDocument'));
+		$options = (new AnonymizeOptions())->withOutputFormat(outputFormat: 'pdf');
+		$this->assertSame('pdf', $options->runFor(fileId: 1, entities: [])->options['outputFormat']);
+		$this->assertFalse(
+			$options->runFor(fileId: 1, entities: [])->options['appendBasisSummary'],
+			'anonymizeDocument() must not carry a summary flag.'
 		);
+		$this->assertTrue($options->summaryRunFor(fileId: 1, entities: [])->options['appendBasisSummary']);
 
 	}//end testAnonymizeDocumentSignatureAcceptsNewParams()
 
 	/**
 	 * anonymise-pdf-only-output-mode: both anonymise entry points accept an
-	 * `$outputFormat` argument, and its default is the privacy-correct
-	 * 'pdf-only'.
+	 * output format, and its default is the privacy-correct 'pdf-only'.
 	 *
 	 * @return void
 	 */
 	public function testAnonymizeDocumentAcceptsOutputFormatArgument(): void {
-		foreach (['anonymizeDocument', 'anonymizeDocumentWithBasisSummary'] as $entryPoint) {
-			$params = (new \ReflectionMethod(AnonymizationService::class, $entryPoint))->getParameters();
-			$found = null;
-			foreach ($params as $param) {
-				if ($param->getName() === 'outputFormat') {
-					$found = $param;
-				}
-			}
+		$defaults = new AnonymizeOptions();
 
-			$this->assertNotNull($found, $entryPoint . '() must accept $outputFormat.');
-			$this->assertTrue($found->isDefaultValueAvailable());
-			$this->assertSame(
-				'pdf-only',
-				$found->getDefaultValue(),
-				$entryPoint . '() must default $outputFormat to \'pdf-only\''
-			);
-		}
+		$this->assertSame('pdf-only', $defaults->runFor(fileId: 1, entities: [])->options['outputFormat']);
+		$this->assertSame('pdf-only', $defaults->summaryRunFor(fileId: 1, entities: [])->options['outputFormat']);
+		$this->assertSame('preserve', $defaults->withOutputFormat(outputFormat: 'preserve')->runFor(fileId: 1, entities: [])->options['outputFormat']);
 
 	}//end testAnonymizeDocumentAcceptsOutputFormatArgument()
 
@@ -620,8 +623,161 @@ class AnonymizationServiceTest extends TestCase {
 		$allowed = $this->makeServiceWithMatcher($this->prohibitionMatcher(), $mapper)
 			->applyRelationSkipDecision(relationId: 7, skip: true, bases: null, force: true);
 		$this->assertSame(200, $allowed['status']);
+		$this->assertCount(expectedCount: 1, haystack: $this->overrideAudits);
+		$this->assertSame(expected: 'alice', actual: $this->overrideAudits[0]['acknowledgedBy']);
 
 	}//end testSkipSubThresholdProhibitedNeedsForce()
+
+	/**
+	 * A blocked skip answers the whole prohibition body: error, threshold and
+	 * the matched entity, rule and confidence.
+	 *
+	 * @return void
+	 */
+	public function testBlockedSkipAnswersTheFullProhibitionBody(): void {
+		$result = $this->makeServiceWithMatcher(matcher: $this->prohibitionMatcher(), mapper: $this->mapperWithProhibitedRelation(confidence: 0.62))
+			->applyRelationSkipDecision(relationId: 7, skip: true, bases: null, force: false);
+
+		$this->assertSame(
+			expected: [
+				'status' => 422,
+				'body' => [
+					'error' => 'Entity is on the publication prohibition list; skipping is not allowed.',
+					'threshold' => 0.85,
+					'prohibitionMatch' => [
+						'entityId' => 42,
+						'entityName' => 'Jansen',
+						'ruleId' => 'R-X',
+						'ruleName' => 'Undercover',
+						'confidence' => 0.62,
+						'absolute' => false,
+					],
+				],
+			],
+			actual: $result
+		);
+
+	}//end testBlockedSkipAnswersTheFullProhibitionBody()
+
+	/**
+	 * A forced release below the threshold records the rule, relation, file and reason.
+	 *
+	 * @return void
+	 */
+	public function testForcedReleaseRecordsTheRuleRelationAndFile(): void {
+		$this->makeServiceWithMatcher(matcher: $this->prohibitionMatcher(), mapper: $this->mapperWithProhibitedRelation(confidence: 0.62))
+			->applyRelationSkipDecision(relationId: 7, skip: true, bases: null, force: true);
+
+		$this->assertSame(expected: 'R-X', actual: $this->overrideAudits[0]['ruleId']);
+		$this->assertSame(expected: 7, actual: $this->overrideAudits[0]['entityRelationId']);
+		$this->assertSame(expected: self::RELATION_FILE_ID, actual: $this->overrideAudits[0]['fileId']);
+		$this->assertSame(expected: 'Released below the high-confidence threshold in the review', actual: $this->overrideAudits[0]['reason']);
+
+	}//end testForcedReleaseRecordsTheRuleRelationAndFile()
+
+	/**
+	 * The skip goes through when the guard cannot resolve a prohibition match:
+	 * no row for the relation, an empty value, or no matching rule.
+	 *
+	 * @return void
+	 */
+	public function testSkipIsForwardedWhenNoProhibitionMatchResolves(): void {
+		$rows = [
+			'no row for the relation' => [['relation_id' => 8, 'entity_value' => 'Jansen', 'confidence' => 0.97]],
+			'empty value' => [['relation_id' => 7, 'entity_value' => '', 'confidence' => 0.97]],
+			'no matching rule' => [['relation_id' => 7, 'entity_value' => 'Pietersen', 'confidence' => 0.97]],
+		];
+		foreach ($rows as $label => $entities) {
+			$relation = new EntityRelation();
+			$relation->setFileId(self::RELATION_FILE_ID);
+			$mapper = $this->createMock(originalClassName: EntityRelationMapper::class);
+			$mapper->method('find')->willReturn($relation);
+			$mapper->method('findEntitiesForFile')->willReturn($entities);
+			$mapper->expects($this->once())->method('updateDecisionMetadata');
+
+			$matcher = $this->createMock(originalClassName: PolicyMatchService::class);
+			$matcher->method('highConfidenceThreshold')->willReturn(0.85);
+			$matcher->method('matchProhibition')->willReturnCallback(
+				static function (string $entityText): ?array {
+					if (in_array($entityText, ['Jansen', ''], true) === true) {
+						return ['uuid' => 'R-X', 'primaryName' => 'Undercover'];
+					}
+
+					return null;
+				}
+			);
+
+			$result = $this->makeServiceWithMatcher(matcher: $matcher, mapper: $mapper)
+				->applyRelationSkipDecision(relationId: 7, skip: true, bases: null, force: false);
+
+			$this->assertSame(expected: 200, actual: $result['status'], message: $label);
+		}
+
+		$this->assertSame(expected: [], actual: $this->overrideAudits);
+
+	}//end testSkipIsForwardedWhenNoProhibitionMatchResolves()
+
+	/**
+	 * Without a policy matcher the guard is a no-op and the skip is forwarded.
+	 *
+	 * @return void
+	 */
+	public function testSkipIsForwardedWhenThePolicyMatcherIsUnavailable(): void {
+		$mapper = $this->mapperWithProhibitedRelation(confidence: 0.97);
+		$mapper->expects($this->once())->method('updateDecisionMetadata');
+		$container = $this->createMock(originalClassName: ContainerInterface::class);
+		$container->method('get')->willReturnCallback(
+			static function (string $id) use ($mapper) {
+				if ($id === 'OCA\Filinq\Service\PolicyMatchService') {
+					throw new \Exception('not registered');
+				}
+
+				if ($id === 'OCA\OpenRegister\Db\EntityRelationMapper') {
+					return $mapper;
+				}
+
+				return null;
+			}
+		);
+
+		$result = $this->makeAnonymizationServiceFrom(
+			deps: [
+				'logger' => $this->createMock(originalClassName: LoggerInterface::class),
+				'container' => $container,
+				'appManager' => $this->openRegisterAppManager(),
+				'userSession' => $this->grantingSession(),
+				'rootFolder' => $this->rootFolderResolving(resolvableFileId: self::RELATION_FILE_ID),
+			]
+		)->applyRelationSkipDecision(relationId: 7, skip: true, bases: null, force: false);
+
+		$this->assertSame(expected: 200, actual: $result['status']);
+
+	}//end testSkipIsForwardedWhenThePolicyMatcherIsUnavailable()
+
+	/**
+	 * Forcing past a prohibition needs the override role: file access is not enough.
+	 *
+	 * @return void
+	 */
+	public function testForcingPastAProhibitionNeedsTheOverrideRole(): void {
+		$mapper = $this->mapperWithProhibitedRelation(0.62);
+		$mapper->expects($this->never())->method('updateDecisionMetadata');
+
+		$result = $this->makeAnonymizationServiceFrom(
+			[
+				'logger' => $this->createMock(LoggerInterface::class),
+				'container' => $this->matcherContainer($this->prohibitionMatcher(), $mapper),
+				'appManager' => $this->openRegisterAppManager(),
+				'userSession' => $this->grantingSession(),
+				'rootFolder' => $this->rootFolderResolving(self::RELATION_FILE_ID),
+				'overrideAuthority' => $this->overrideAuthority(granted: false),
+			]
+		)->applyRelationSkipDecision(relationId: 7, skip: true, bases: null, force: true);
+
+		$this->assertSame(expected: 422, actual: $result['status']);
+		$this->assertSame(expected: [], actual: $this->overrideAudits);
+
+	}//end testForcingPastAProhibitionNeedsTheOverrideRole()
 
 	/**
 	 * Including an entity (skip=false) is always allowed and forwarded, with no
@@ -883,7 +1039,7 @@ class AnonymizationServiceTest extends TestCase {
 		$container->method('get')->willReturnCallback(
 			static function (string $class) use ($extractor, $mapper, $basis) {
 				return match ($class) {
-					'OCA\OpenRegister\Service\TextExtractionService' => $extractor,
+					'OCA\OpenRegister\Files\Service\TextExtractionService' => $extractor,
 					'OCA\OpenRegister\Db\EntityRelationMapper' => $mapper,
 					'OCA\Filinq\Service\LegalBasisProposalService' => $basis,
 					default => throw new \RuntimeException('Unknown service: ' . $class),
@@ -1036,30 +1192,41 @@ class AnonymizationServiceTest extends TestCase {
 		$locator = new OpenRegisterServiceLocator($appManager, $container);
 		$entityDetection = new EntityDetectionService(new AnonymizationResultParser());
 
-		$runner = new DocumentAnonymizeRunner(
+		$persistence = new AnonymizationPersistenceService(
 			logger: $logger,
 			locator: $locator,
-			entityDetection: $entityDetection,
-			emlAnonymizer: new EmlAnonymizationService(
+			consentCrud: $this->createMock(\OCA\Filinq\Service\ConsentCrudService::class),
+			consentService: $this->createMock(\OCA\Filinq\Service\ConsentService::class)
+		);
+		$runner = new DocumentAnonymizeRunner(
+			records: new AnonymisationRecords(verifier: new ReplacementVerificationService(logger: $logger), persistence: $persistence, runs: new AnonymisationRunRecords(
+				verdicts: new RedactionVerdictRecorder(
+					verifier: new RedactionIrreversibilityVerifier(),
+					logger: $logger
+				),
+				persistence: $persistence,
+				keys: new \OCA\Filinq\Service\Pseudonymisation\PseudonymMapRecorder(
+					pairs: new \OCA\Filinq\Service\Pseudonymisation\PseudonymPairs(),
+					maps: $this->createMock(\OCA\Filinq\Service\Pseudonymisation\PseudonymMapService::class),
+					persistence: $this->createMock(AnonymizationPersistenceService::class),
+					locator: $locator,
+					logger: $logger
+				)
+			)),
+			outputs: new AnonymisedOutputs(eml: new EmlAnonymizationService(
 				logger: $logger,
 				entityDetection: $entityDetection,
 				emlAssembly: $this->createMock(EmlPdfAssemblyService::class)
-			),
-			pdfOutput: new AnonymisedPdfOutputService(
+			), pdf: new AnonymisedPdfOutputService(
 				logger: $logger,
 				pdfConversion: $this->createMock(PdfConversionService::class)
-			),
-			replacementVerifier: new ReplacementVerificationService(logger: $logger),
-			persistence: new AnonymizationPersistenceService(
-				logger: $logger,
-				locator: $locator,
-				consentCrud: $this->createMock(\OCA\Filinq\Service\ConsentCrudService::class),
-				consentService: $this->createMock(\OCA\Filinq\Service\ConsentService::class)
-			),
-			summaryAttacher: new GrondslagenSummaryAttacher(
+			), summary: new GrondslagenSummaryAttacher(
 				logger: $logger,
 				grondslagenSummary: $this->createMock(LegalBasesSummaryService::class)
-			)
+			)),
+			logger: $logger,
+			locator: $locator,
+			entityDetection: $entityDetection
 		);
 
 		return $runner->run(
@@ -1167,14 +1334,17 @@ class AnonymizationServiceTest extends TestCase {
 				logger: $logger,
 				appConfig: $this->createMock(\OCP\IAppConfig::class),
 				container: $container,
-				locator: $locator
+				locator: $locator,
+				authority: $this->overrideAuthority(granted: true)
 			),
 			skipDecisions: new RelationSkipDecisionService(
 				logger: $logger,
 				container: $container,
 				locator: $locator,
 				userSession: $this->grantingSession(),
-				rootFolder: $this->rootFolderResolving(self::RELATION_FILE_ID)
+				rootFolder: $this->rootFolderResolving(self::RELATION_FILE_ID),
+				authority: $this->overrideAuthority(granted: true),
+				committer: new ProhibitionOverrideCommitter(logger: $logger, locator: $locator)
 			)
 		);
 
@@ -1189,12 +1359,20 @@ class AnonymizationServiceTest extends TestCase {
 	 * @return ContainerInterface The container double.
 	 */
 	private function matcherContainer(PolicyMatchService $matcher, ?EntityRelationMapper $mapper): ContainerInterface {
+		$objectService = $this->createMock(\OCA\OpenRegister\Service\ObjectService::class);
+		$objectService->method('saveObject')->willReturnCallback(
+			function (array $object = []): array {
+				$this->overrideAudits[] = $object;
+				return $object;
+			}
+		);
 		$container = $this->createMock(ContainerInterface::class);
 		$container->method('get')->willReturnCallback(
-			static function (string $id) use ($matcher, $mapper) {
+			static function (string $id) use ($matcher, $mapper, $objectService) {
 				return match ($id) {
 					'OCA\Filinq\Service\PolicyMatchService' => $matcher,
 					'OCA\OpenRegister\Db\EntityRelationMapper' => $mapper,
+					'OCA\OpenRegister\Service\ObjectService' => $objectService,
 					default => null,
 				};
 			}

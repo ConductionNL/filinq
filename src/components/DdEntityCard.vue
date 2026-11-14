@@ -1,3 +1,7 @@
+<!--
+  - SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
 <script setup>
 import { translate as t } from '@nextcloud/l10n'
 import { NcSelect } from '@nextcloud/vue'
@@ -93,7 +97,7 @@ import { entityTypeColor, entityTypeLabel } from '../services/entityTypes.js'
 				label="label"
 				:reduce="(o) => o.value"
 				:multiple="true"
-				:inputLabel="t('filinq', 'Grondslagen')"
+				:inputLabel="t('filinq', 'Legal bases')"
 				:placeholder="t('filinq', 'Pick grondslagen…')"
 				:disabled="!editable || !hasRelation"
 				@update:modelValue="$emit('set-bases', $event)" />

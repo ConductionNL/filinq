@@ -12,7 +12,7 @@
 <template>
 	<CnAppRoot
 		:aiCompanion="true"
-		:manifest="manifest"
+		:manifest="shellManifest"
 		:customComponents="customComponents"
 		:pageTypes="pageTypes"
 		:registry="registry"
@@ -44,6 +44,7 @@ import { translate as ncT } from '@nextcloud/l10n'
 import Dialogs from './dialogs/Dialogs.vue'
 import Modals from './modals/Modals.vue'
 import SideBars from './sidebars/SideBars.vue'
+import { mayUseEntitySearch } from './services/entitySearch.js'
 
 export default {
 	name: 'App',
@@ -96,6 +97,25 @@ export default {
 		},
 	},
 
+	data() {
+		return {
+			/**
+			 * The manifest with the runtime facts menu entries test in
+			 * `visibleIf`. `entitySearch.allowed` stays false until the server
+			 * says yes, so the entry never shows to someone the gate refuses.
+			 *
+			 * @spec openspec/changes/archive/2026-09-29-entity-search/tasks.md#task-3.1
+			 */
+			shellManifest: {
+				...this.manifest,
+				runtime: {
+					...(this.manifest.runtime || {}),
+					entitySearch: { allowed: false },
+				},
+			},
+		}
+	},
+
 	computed: {
 		/**
 		 * Current user's Nextcloud permission set, passed to the app shell.
@@ -105,6 +125,10 @@ export default {
 		permissions() {
 			return window.OC?.currentUser?.permissions ?? []
 		},
+	},
+
+	async mounted() {
+		this.shellManifest.runtime.entitySearch.allowed = await mayUseEntitySearch()
 	},
 
 	methods: {

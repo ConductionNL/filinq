@@ -39,6 +39,7 @@ SHALL produce a record in the normal initial consent state; it SHALL NOT set a
 - WHEN the caseworker links the message from the Mail sidebar
 - THEN the message SHALL appear on the consent record's leaf surface
 - AND `consentStatus`, `objectionDeadline`, and `publicationDecision` SHALL be unchanged
+- @e2e exclude NC Mail is not installed on the shared test instance, so the Mail sidebar this scenario drives does not exist there. The declaration it depends on is asserted live in tests/e2e/workflows/leaf-integrations.spec.ts, and the template keys in LeafIntegrationsConfigurationTest.
 
 ### Requirement: The Objection Window Surfaces On The Calendar Leaf
 
@@ -54,12 +55,14 @@ acted on by the leaf (decision flows stay in-app).
 - GIVEN a consent record with `objectionDeadline` four weeks after notification
 - WHEN the caseworker opens the consent record
 - THEN the calendar leaf SHALL be rendered with the objection deadline visible
+- @e2e exclude NC Calendar is not installed on the shared test instance, so the calendar leaf has no surface to render there. The declaration it depends on is asserted live in tests/e2e/workflows/leaf-integrations.spec.ts.
 
 #### Scenario: No deadline, no entry
 
 - GIVEN a consent record without an `objectionDeadline`
 - WHEN its record surface renders
 - THEN the calendar leaf SHALL render without an entry and SHALL NOT error
+- @e2e exclude NC Calendar is not installed on the shared test instance, so the calendar leaf has no surface to render there. The declaration it depends on is asserted live in tests/e2e/workflows/leaf-integrations.spec.ts.
 
 ### Requirement: Publication Follow-Ups Use The Deck Leaf
 
@@ -76,12 +79,14 @@ only: completing or moving a card SHALL NOT change `consentStatus` or
 - WHEN the caseworker creates a "publish after 2026-09-12" card via the deck leaf
 - THEN the card SHALL be linked to the consent record and visible on its leaf surface
 - AND the consent record's own status fields SHALL be unchanged
+- @e2e exclude NC Deck is not installed on the shared test instance, so the deck leaf has no surface to render there. The declaration it depends on is asserted live in tests/e2e/workflows/leaf-integrations.spec.ts.
 
 #### Scenario: Deck absent
 
 - GIVEN a host instance without the Deck app
 - WHEN the consent record surface renders
 - THEN the deck leaf SHALL NOT be present and the page SHALL render without error
+- @e2e exclude NC Deck is not installed on the shared test instance, so the deck leaf has no surface to render there. The declaration it depends on is asserted live in tests/e2e/workflows/leaf-integrations.spec.ts.
 
 ### Requirement: Consent Leaves Do Not Widen The Agent Surface
 

@@ -1,0 +1,995 @@
+[
+	[],
+	[],
+	[],
+	[],
+	[],
+	[],
+	[],
+	[],
+	[],
+	[],
+	[],
+	[],
+	[],
+	[],
+	[],
+	[],
+	[],
+	[],
+	[],
+	[],
+	[
+		{
+			"text": "Jan Jansen woont in Utrecht, bij jan.",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "Jan Jansen woont in Utrecht, bij jan.",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "Jan",
+			"type": "PERSON"
+		},
+		{
+			"text": " ",
+			"type": null
+		},
+		{
+			"text": "Jan",
+			"type": "PERSON"
+		},
+		{
+			"text": "sen woont in Utrecht, bij ",
+			"type": null
+		},
+		{
+			"text": "jan",
+			"type": "PERSON"
+		},
+		{
+			"text": ".",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "Jan Jansen",
+			"type": "PERSON"
+		},
+		{
+			"text": " woont in ",
+			"type": null
+		},
+		{
+			"text": "Utrecht",
+			"type": "LOCATION"
+		},
+		{
+			"text": ", bij ",
+			"type": null
+		},
+		{
+			"text": "jan",
+			"type": "PERSON"
+		},
+		{
+			"text": ".",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "J",
+			"type": null
+		},
+		{
+			"text": "a",
+			"type": "Y"
+		},
+		{
+			"text": "n J",
+			"type": null
+		},
+		{
+			"text": "a",
+			"type": "Y"
+		},
+		{
+			"text": "nsen woont in Utrecht, bij j",
+			"type": null
+		},
+		{
+			"text": "a",
+			"type": "Y"
+		},
+		{
+			"text": "n.",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "Jan Jansen woont in Utrecht, bij jan.",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "Jan Jansen woont in Utrecht, bij jan.",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "Jan",
+			"type": "A"
+		},
+		{
+			"text": " ",
+			"type": null
+		},
+		{
+			"text": "Jansen",
+			"type": "B"
+		},
+		{
+			"text": " woont in Utrecht, bij ",
+			"type": null
+		},
+		{
+			"text": "jan",
+			"type": "A"
+		},
+		{
+			"text": ".",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "Jan Jansen woont in Utrecht, bij jan.",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "Jan",
+			"type": null
+		},
+		{
+			"text": " ",
+			"type": "SP"
+		},
+		{
+			"text": "Jansen",
+			"type": null
+		},
+		{
+			"text": " ",
+			"type": "SP"
+		},
+		{
+			"text": "woont",
+			"type": null
+		},
+		{
+			"text": " ",
+			"type": "SP"
+		},
+		{
+			"text": "in",
+			"type": null
+		},
+		{
+			"text": " ",
+			"type": "SP"
+		},
+		{
+			"text": "Utrecht,",
+			"type": null
+		},
+		{
+			"text": " ",
+			"type": "SP"
+		},
+		{
+			"text": "bij",
+			"type": null
+		},
+		{
+			"text": " ",
+			"type": "SP"
+		},
+		{
+			"text": "jan.",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "aaaa",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "aaaa",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "aaaa",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "aaaa",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "aa",
+			"type": "X"
+		},
+		{
+			"text": "aa",
+			"type": "X"
+		}
+	],
+	[
+		{
+			"text": "aaaa",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "aaaa",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "aaaa",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "aa",
+			"type": "S"
+		},
+		{
+			"text": "aa",
+			"type": "S"
+		}
+	],
+	[
+		{
+			"text": "aaaa",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "Kuipers KUIPERS kuipers",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "Kuipers KUIPERS kuipers",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "Kuipers KUIPERS kuipers",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "Kuipers KUIPERS kuipers",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "Kuipers KUIPERS kuipers",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "Kuipers"
+		},
+		{
+			"text": " ",
+			"type": null
+		},
+		{
+			"text": "KUIPERS"
+		},
+		{
+			"text": " ",
+			"type": null
+		},
+		{
+			"text": "kuipers"
+		}
+	],
+	[
+		{
+			"text": "Kuipers",
+			"type": "__pending__"
+		},
+		{
+			"text": " ",
+			"type": null
+		},
+		{
+			"text": "KUIPERS",
+			"type": "__pending__"
+		},
+		{
+			"text": " ",
+			"type": null
+		},
+		{
+			"text": "kuipers",
+			"type": "__pending__"
+		}
+	],
+	[
+		{
+			"text": "Kuipers KUIPERS kuipers",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "Kuipers KUIPERS kuipers",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "Kuipers",
+			"type": null
+		},
+		{
+			"text": " ",
+			"type": "SP"
+		},
+		{
+			"text": "KUIPERS",
+			"type": null
+		},
+		{
+			"text": " ",
+			"type": "SP"
+		},
+		{
+			"text": "kuipers",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "no match here",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "no match here",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "no match here",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "no match here",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "no m",
+			"type": null
+		},
+		{
+			"text": "a",
+			"type": "Y"
+		},
+		{
+			"text": "tch here",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "no match here",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "no match here",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "no match here",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "no match here",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "no",
+			"type": null
+		},
+		{
+			"text": " ",
+			"type": "SP"
+		},
+		{
+			"text": "match",
+			"type": null
+		},
+		{
+			"text": " ",
+			"type": "SP"
+		},
+		{
+			"text": "here",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "İstanbul and istanbul",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "İstanbul and istanbul",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "İstanbul and istanbul",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "İstanbul and istanbul",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "İsta",
+			"type": null
+		},
+		{
+			"text": "n",
+			"type": "Y"
+		},
+		{
+			"text": "bul a",
+			"type": null
+		},
+		{
+			"text": "n",
+			"type": "Y"
+		},
+		{
+			"text": "d ista",
+			"type": null
+		},
+		{
+			"text": "n",
+			"type": "Y"
+		},
+		{
+			"text": "bul",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "İstanbul and istanbul",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "İs",
+			"type": "I"
+		},
+		{
+			"text": "tanbul and istanbul",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "İstanbul and istanbul",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "İstanbul and istanbul",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "İstanbul ",
+			"type": null
+		},
+		{
+			"text": "a",
+			"type": "SP"
+		},
+		{
+			"text": "nd ",
+			"type": null
+		},
+		{
+			"text": "i",
+			"type": "SP"
+		},
+		{
+			"text": "stanbul",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "Jan JansenJan",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "Jan JansenJan",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "Jan",
+			"type": "PERSON"
+		},
+		{
+			"text": " ",
+			"type": null
+		},
+		{
+			"text": "Jan",
+			"type": "PERSON"
+		},
+		{
+			"text": "sen",
+			"type": null
+		},
+		{
+			"text": "Jan",
+			"type": "PERSON"
+		}
+	],
+	[
+		{
+			"text": "Jan Jansen",
+			"type": "PERSON"
+		},
+		{
+			"text": "Jan",
+			"type": "PERSON"
+		}
+	],
+	[
+		{
+			"text": "J",
+			"type": null
+		},
+		{
+			"text": "a",
+			"type": "Y"
+		},
+		{
+			"text": "n J",
+			"type": null
+		},
+		{
+			"text": "a",
+			"type": "Y"
+		},
+		{
+			"text": "nsenJ",
+			"type": null
+		},
+		{
+			"text": "a",
+			"type": "Y"
+		},
+		{
+			"text": "n",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "Jan JansenJan",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "Jan JansenJan",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "Jan",
+			"type": "A"
+		},
+		{
+			"text": " ",
+			"type": null
+		},
+		{
+			"text": "Jansen",
+			"type": "B"
+		},
+		{
+			"text": "Jan",
+			"type": "A"
+		}
+	],
+	[
+		{
+			"text": "Jan JansenJan",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "Jan",
+			"type": null
+		},
+		{
+			"text": " ",
+			"type": "SP"
+		},
+		{
+			"text": "JansenJan",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "JanJansen",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "JanJansen",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "Jan",
+			"type": "PERSON"
+		},
+		{
+			"text": "Jan",
+			"type": "PERSON"
+		},
+		{
+			"text": "sen",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "Jan",
+			"type": "PERSON"
+		},
+		{
+			"text": "Jan",
+			"type": "PERSON"
+		},
+		{
+			"text": "sen",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "J",
+			"type": null
+		},
+		{
+			"text": "a",
+			"type": "Y"
+		},
+		{
+			"text": "nJ",
+			"type": null
+		},
+		{
+			"text": "a",
+			"type": "Y"
+		},
+		{
+			"text": "nsen",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "JanJansen",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "JanJansen",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "Jan",
+			"type": "A"
+		},
+		{
+			"text": "Jansen",
+			"type": "B"
+		}
+	],
+	[
+		{
+			"text": "JanJansen",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "JanJansen",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "xaaa",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "xaaa",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "xaaa",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "xaaa",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "x",
+			"type": null
+		},
+		{
+			"text": "aa",
+			"type": "X"
+		},
+		{
+			"text": "a",
+			"type": "Y"
+		}
+	],
+	[
+		{
+			"text": "xaaa",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "xaaa",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "xaaa",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "xa",
+			"type": "L"
+		},
+		{
+			"text": "aa",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "xaaa",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": " ",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": " ",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": " ",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": " ",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": " ",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": " ",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": " ",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": " ",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": " ",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": " ",
+			"type": "SP"
+		}
+	],
+	[
+		{
+			"text": "room 0",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "room 0",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "room 0",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "room 0",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "room 0",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "room 0",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "room 0",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "room 0",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "room 0",
+			"type": null
+		}
+	],
+	[
+		{
+			"text": "room",
+			"type": null
+		},
+		{
+			"text": " ",
+			"type": "SP"
+		},
+		{
+			"text": "0",
+			"type": null
+		}
+	]
+]

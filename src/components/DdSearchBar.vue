@@ -1,3 +1,7 @@
+<!--
+  - SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
 <template>
 	<div class="dd-search-bar" :class="{ 'dd-search-bar--has-value': hasValue }">
 		<DdIcon name="search" :size="24" class="dd-search-bar__icon" />

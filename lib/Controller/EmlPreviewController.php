@@ -15,13 +15,17 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
-use OCA\Filinq\Service\EmlPreviewService;
+use OCA\Filinq\Kernel\AppIdentity;
+use OCA\Filinq\Kernel\Contracts\EmlPreviewServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataDownloadResponse;
@@ -45,27 +49,27 @@ use Throwable;
  * @link      https://www.filinq.app
  */
 class EmlPreviewController extends Controller {
+	use AnswersNotAuthenticated;
+
 	/**
 	 * Constructor.
 	 *
-	 * @param string $appName App identifier.
 	 * @param IRequest $request The current request.
-	 * @param EmlPreviewService $emlPreviewService Renders the original EML to PDF.
+	 * @param EmlPreviewServiceInterface $emlPreviewService Renders the original EML to PDF.
 	 * @param LoggerInterface $logger Logger for diagnostics.
 	 * @param IUserSession $userSession Session user, for the file-access guard.
 	 * @param IRootFolder $rootFolder Root folder, for the file-access guard.
 	 * @param IL10N $l10n Translations for the guard responses.
 	 */
 	public function __construct(
-		string $appName,
 		IRequest $request,
-		private readonly EmlPreviewService $emlPreviewService,
+		private readonly EmlPreviewServiceInterface $emlPreviewService,
 		private readonly LoggerInterface $logger,
 		private readonly IUserSession $userSession,
 		private readonly IRootFolder $rootFolder,
 		private readonly IL10N $l10n,
 	) {
-		parent::__construct(appName: $appName, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 
 	}//end __construct()
 
@@ -96,10 +100,7 @@ class EmlPreviewController extends Controller {
 	private function verifyFileAccess(int $fileId): ?JSONResponse {
 		$user = $this->userSession->getUser();
 		if ($user === null) {
-			return new JSONResponse(
-				data: ['error' => $this->l10n->t('Not authenticated')],
-				statusCode: Http::STATUS_UNAUTHORIZED
-			);
+			return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 		}
 
 		$nodes = $this->rootFolder->getUserFolder($user->getUID())->getById($fileId);

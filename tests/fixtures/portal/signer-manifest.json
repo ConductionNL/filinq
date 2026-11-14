@@ -1,0 +1,89 @@
+{
+    "label": "Filinq",
+    "collections": [
+        {
+            "id": "signerRecords",
+            "register": "filinq",
+            "schema": "signerRecord",
+            "scopeField": "email",
+            "scopeClaim": "signerEmail",
+            "label": "nl:My signatures",
+            "listable": true,
+            "fields": [
+                "displayName",
+                "status",
+                "order",
+                "signedAt",
+                "declineReason"
+            ]
+        },
+        {
+            "id": "signerSigningRequests",
+            "register": "filinq",
+            "schema": "signingRequest",
+            "scopeField": "",
+            "scopeClaim": "signerEmail",
+            "via": {
+                "register": "filinq",
+                "schema": "signerRecord",
+                "scopeField": "email",
+                "targetField": "signingRequestId"
+            },
+            "label": "nl:Documents awaiting my signature",
+            "listable": true,
+            "minTrust": "substantial",
+            "fields": [
+                "documentName",
+                "signatureLevel",
+                "signingMode",
+                "status",
+                "deadline",
+                "provider"
+            ],
+            "rowActions": [
+                {
+                    "id": "sign",
+                    "label": "nl:Sign",
+                    "endpoint": "/apps/filinq/api/portal/signing/sign",
+                    "method": "POST",
+                    "minTrust": "substantial"
+                },
+                {
+                    "id": "decline",
+                    "label": "nl:Decline to sign",
+                    "endpoint": "/apps/filinq/api/portal/signing/decline",
+                    "method": "POST",
+                    "minTrust": "substantial"
+                }
+            ]
+        }
+    ],
+    "actions": [
+        {
+            "id": "sign",
+            "label": "nl:Sign",
+            "endpoint": "/apps/filinq/api/portal/signing/sign",
+            "method": "POST",
+            "minTrust": "substantial",
+            "rowField": "signingRequestId",
+            "scopeClaim": "signerEmail"
+        },
+        {
+            "id": "decline",
+            "label": "nl:Decline to sign",
+            "endpoint": "/apps/filinq/api/portal/signing/decline",
+            "method": "POST",
+            "minTrust": "substantial",
+            "rowField": "signingRequestId",
+            "scopeClaim": "signerEmail"
+        },
+        {
+            "id": "viewDocument",
+            "label": "nl:View document",
+            "endpoint": "/apps/filinq/api/portal/signing/viewDocument",
+            "method": "GET",
+            "minTrust": "substantial"
+        }
+    ],
+    "notifications": []
+}

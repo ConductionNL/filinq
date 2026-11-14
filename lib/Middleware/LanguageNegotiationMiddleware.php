@@ -3,6 +3,9 @@
 /**
  * Filinq Language Negotiation Middleware
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Bridges OpenRegister's request-scoped `LanguageService` to Filinq's
  * controllers. When a filinq endpoint is hit (e.g. `/apps/filinq/api/...`),
  * the OR `LanguageMiddleware` is NOT invoked because Nextcloud only runs
@@ -27,9 +30,6 @@
  * Emits `Content-Language` + `X-Content-Language-Fallback` on responses,
  * matching the OR contract documented in
  * `openregister/openspec/specs/register-i18n/spec.md`.
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @category Middleware
  * @package  OCA\Filinq\Middleware

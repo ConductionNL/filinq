@@ -33,6 +33,15 @@
             route table and carry the same call.
         -->
         <file name="vendor/conduction/hydra-gates/hydra-gates/stubs/openregister-apphost-bootstrap.stub.php" />
+        <!--
+            OpenRegister's flow-node contract (IFlowNode and its optional
+            companions, RegisterFlowNodesEvent). Filinq's GenerateDocumentNode
+            implements it and the listener registers on the event; the real
+            classes live in the openregister sibling app. A stub lets psalm
+            check the implementation against the contract instead of
+            suppressing every reference to it.
+        -->
+        <file name="tests/stubs/openregister-flow.stub.php" />
     </stubs>
     <issueHandlers>
         <UndefinedDocblockClass errorLevel="suppress"/>
@@ -102,6 +111,21 @@
                 <referencedClass name="OCA\OpenRegister\Event\ObjectUpdatingEvent"/>
                 <referencedClass name="OCA\OpenRegister\Event\ObjectUpdatedEvent"/>
                 <referencedClass name="OCA\OpenRegister\Event\ObjectDeletedEvent"/>
+                <!--
+                  The leaf-provider event OpenRegister dispatches so an app can
+                  contribute a leaf to another app's page. Filinq listens for it
+                  by class and returns early when the event is something else,
+                  which is exactly how the listener stays harmless on an
+                  instance where openregister is absent. Same category as the
+                  object events above.
+                -->
+                <referencedClass name="OCA\OpenRegister\Event\RegisterLeafProvidersEvent"/>
+                <!--
+                  The descriptor a leaf provider hands back on that event. Same
+                  package, same absence, and the listener returns before it
+                  constructs one when openregister is not installed.
+                -->
+                <referencedClass name="OCA\OpenRegister\Service\Integration\LeafDescriptor"/>
                 <referencedClass name="OCA\OpenRegister\Service\ObjectService"/>
                 <!--
                   ADR-084's published contract. Services type-hint this interface
@@ -114,7 +138,7 @@
                 <referencedClass name="OCA\OpenRegister\Service\ConfigurationService"/>
                 <referencedClass name="OCA\OpenRegister\Service\RegisterService"/>
                 <referencedClass name="OCA\OpenRegister\Service\FileService"/>
-                <referencedClass name="OCA\OpenRegister\Service\File\PlaceholderIdTranslator"/>
+                <referencedClass name="OCA\OpenRegister\Files\Service\File\PlaceholderIdTranslator"/>
                 <referencedClass name="OCA\OpenRegister\Service\CalendarEventService"/>
                 <referencedClass name="OCA\OpenRegister\Mcp\IMcpToolProvider"/>
                 <!--
@@ -125,7 +149,7 @@
                 -->
                 <referencedClass name="OCA\OpenRegister\Mcp\IMcpScannableServices"/>
                 <referencedClass name="OCA\OpenRegister\Db\EntityRelationMapper"/>
-                <referencedClass name="OCA\OpenRegister\Service\RiskLevelService"/>
+                <referencedClass name="OCA\OpenRegister\Files\Service\RiskLevelService"/>
                 <!--
                   Thrown by OpenRegister's ObjectService::deleteObject() for any
                   user-driven delete on a schema declaring x-openregister-archival.
@@ -192,6 +216,28 @@
                 -->
                 <referencedClass name="PhpOffice\PhpWord\Settings"/>
                 <referencedClass name="PhpOffice\PhpWord\IOFactory"/>
+                <!--
+                  OpenRegister value objects of the 2026-11 call shapes
+                  (openregister #8908, #9058, #9078, #9096, #9099, #9103,
+                  #9116, #9123): cross-app classes, loaded at runtime.
+                -->
+                <referencedClass name="OCA\OpenRegister\AppHost\LeafAdoption"/>
+                <referencedClass name="OCA\OpenRegister\Db\AuditTrail\NamedActor"/>
+                <referencedClass name="OCA\OpenRegister\Db\AuditTrail\ObjectAuditEvent"/>
+                <referencedClass name="OCA\OpenRegister\Db\AuditTrail\ObjectAuditEventOptions"/>
+                <referencedClass name="OCA\OpenRegister\Files\Service\FileExtractionOptions"/>
+                <referencedClass name="OCA\OpenRegister\Files\Service\ProvidedTextRequest"/>
+                <referencedClass name="OCA\OpenRegister\Files\Service\TextExtractionService"/>
+                <referencedClass name="OCA\OpenRegister\Kernel\Contracts\RegisterSchemaRef"/>
+                <referencedClass name="OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions"/>
+                <referencedClass name="OCA\OpenRegister\Service\Archival\LegalHoldServiceInterface"/>
+                <referencedClass name="OCA\OpenRegister\Service\HoldOrder"/>
+                <referencedClass name="OCA\OpenRegister\Service\Object\ObjectDeletion"/>
+                <referencedClass name="OCA\OpenRegister\Service\Object\ObjectFindTarget"/>
+                <referencedClass name="OCA\OpenRegister\Service\Object\ObjectPatch"/>
+                <referencedClass name="OCA\OpenRegister\Service\Object\ObjectSaveOptions"/>
+                <referencedClass name="OCA\OpenRegister\Service\Object\SaveActor"/>
+                <referencedClass name="OCA\OpenRegister\Service\Object\SavePolicy"/>
             </errorLevel>
         </UndefinedClass>
         <!--

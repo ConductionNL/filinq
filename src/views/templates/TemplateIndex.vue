@@ -1,3 +1,7 @@
+<!--
+  - SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
 <template>
 	<div class="template-index">
 		<div class="template-index__header">
@@ -18,7 +22,7 @@
 			<NcTextField
 				v-model="searchQuery"
 				:label="t('filinq', 'Search templates')"
-				:placeholder="t('filinq', 'Search by name...')"
+				:placeholder="t('filinq', 'Search by name…')"
 				class="template-index__search"
 				@update:modelValue="applyFilters" />
 		</div>
@@ -95,24 +99,28 @@
 				t('filinq', 'Create your first template to get started.')
 			" />
 
-		<ConfirmDeleteTemplateDialog
+		<CnConfirmDialog
 			v-if="deleteTarget"
-			:templateName="deleteTarget.name"
-			@confirm="executeDelete"
-			@cancel="deleteTarget = null" />
+			ref="confirmDialog"
+			:dialogTitle="t('filinq', 'Delete template')"
+			:message="deleteMessage"
+			:confirmLabel="t('filinq', 'Delete')"
+			variant="error"
+			@confirm="executeDelete($refs.confirmDialog)"
+			@close="deleteTarget = null" />
 	</div>
 </template>
 
 <script>
+import { CnConfirmDialog } from '@conduction/nextcloud-vue'
+import { translate as t } from '@nextcloud/l10n'
 import {
 	NcButton,
 	NcEmptyContent,
 	NcLoadingIcon,
 	NcSelect,
 	NcTextField,
-} from '@conduction/nextcloud-vue'
-import { translate as t } from '@nextcloud/l10n'
-import ConfirmDeleteTemplateDialog from '../../dialogs/ConfirmDeleteTemplateDialog.vue'
+} from '@nextcloud/vue'
 import { useTemplateStore } from '../../store/modules/template.js'
 
 export default {
@@ -123,7 +131,7 @@ export default {
 		NcLoadingIcon,
 		NcSelect,
 		NcTextField,
-		ConfirmDeleteTemplateDialog,
+		CnConfirmDialog,
 	},
 
 	data() {
@@ -157,6 +165,19 @@ export default {
 				{ label: t('filinq', 'All categories'), value: '' },
 				...[...cats].map((c) => ({ label: c, value: c })),
 			]
+		},
+
+		/**
+		 * Body text of the delete confirmation dialog.
+		 *
+		 * @spec openspec/changes/advanced-template-management/tasks.md#task-6
+		 */
+		deleteMessage() {
+			return t(
+				'filinq',
+				'Are you sure you want to delete "{name}"? This action cannot be undone.',
+				{ name: this.deleteTarget?.name },
+			)
 		},
 	},
 
@@ -227,13 +248,20 @@ export default {
 		},
 
 		/**
-		 * Execute deletion after user confirmed in the dialog.
+		 * Execute deletion after user confirmed in the dialog. A failed delete
+		 * puts the dialog back in its confirm state.
 		 *
+		 * @param {object} [dialog] The confirm dialog that asked.
 		 * @spec openspec/changes/advanced-template-management/tasks.md#task-6
 		 */
-		async executeDelete() {
+		async executeDelete(dialog) {
 			if (!this.deleteTarget) return
-			await this.templateStore.deleteTemplate(this.deleteTarget.id)
+			try {
+				await this.templateStore.deleteTemplate(this.deleteTarget.id)
+			} catch (err) {
+				dialog?.setResult(null)
+				throw err
+			}
 			this.deleteTarget = null
 			await this.templateStore.fetchTemplates()
 		},

@@ -1,0 +1,498 @@
+{
+	"documents.absent": {
+		"mounted": {
+			"calls": [],
+			"html": "<div class=\"filinq-documents-leaf\"><p class=\"filinq-documents-leaf__state\">No documents yet</p></div>"
+		}
+	},
+	"documents.ok": {
+		"mounted": {
+			"calls": [
+				[
+					"url:/apps/filinq/api/case-documents/files?register=cases&schema=case&id=obj-1",
+					{
+						"headers": {
+							"requesttoken": "token-1",
+							"Accept": "application/json"
+						}
+					},
+					[
+						"headers"
+					]
+				]
+			],
+			"html": "<div class=\"filinq-documents-leaf\"><ul class=\"filinq-documents-leaf__list\"><li class=\"filinq-documents-leaf__item\"><a class=\"filinq-documents-leaf__link\" href=\"url:/f/{fileId}{&quot;fileId&quot;:11}\">a.pdf</a><span class=\"filinq-documents-leaf__status\">final</span></li><li class=\"filinq-documents-leaf__item\"><a class=\"filinq-documents-leaf__link\" href=\"url:/f/{fileId}{&quot;fileId&quot;:12}\">b.docx</a><!--v-if--></li></ul></div>"
+		}
+	},
+	"documents.refused": {
+		"mounted": {
+			"calls": [
+				[
+					"url:/apps/filinq/api/case-documents/files?register=cases&schema=case&id=obj-1",
+					{
+						"headers": {
+							"requesttoken": "token-1",
+							"Accept": "application/json"
+						}
+					},
+					[
+						"headers"
+					]
+				]
+			],
+			"html": "<div class=\"filinq-documents-leaf\"><p class=\"filinq-documents-leaf__state filinq-documents-leaf__state--error\">The documents could not be loaded</p></div>"
+		}
+	},
+	"documents.unreachable": {
+		"mounted": {
+			"calls": [
+				[
+					"url:/apps/filinq/api/case-documents/files?register=cases&schema=case&id=obj-1",
+					{
+						"headers": {
+							"requesttoken": "token-1",
+							"Accept": "application/json"
+						}
+					},
+					[
+						"headers"
+					]
+				]
+			],
+			"html": "<div class=\"filinq-documents-leaf\"><p class=\"filinq-documents-leaf__state filinq-documents-leaf__state--error\">The documents could not be loaded</p></div>"
+		}
+	},
+	"documents.badJson": {
+		"mounted": {
+			"calls": [
+				[
+					"url:/apps/filinq/api/case-documents/files?register=cases&schema=case&id=obj-1",
+					{
+						"headers": {
+							"requesttoken": "token-1",
+							"Accept": "application/json"
+						}
+					},
+					[
+						"headers"
+					]
+				]
+			],
+			"html": "<div class=\"filinq-documents-leaf\"><p class=\"filinq-documents-leaf__state\">No documents yet</p></div>"
+		}
+	},
+	"documents.noToken": {
+		"mounted": {
+			"calls": [
+				[
+					"url:/apps/filinq/api/case-documents/files?register=cases&schema=a%26b+c&id=obj-1",
+					{
+						"headers": {
+							"requesttoken": "",
+							"Accept": "application/json"
+						}
+					},
+					[
+						"headers"
+					]
+				]
+			],
+			"html": "<div class=\"filinq-documents-leaf\"><ul class=\"filinq-documents-leaf__list\"><li class=\"filinq-documents-leaf__item\"><a class=\"filinq-documents-leaf__link\" href=\"url:/f/{fileId}{&quot;fileId&quot;:11}\">a.pdf</a><span class=\"filinq-documents-leaf__status\">final</span></li><li class=\"filinq-documents-leaf__item\"><a class=\"filinq-documents-leaf__link\" href=\"url:/f/{fileId}{&quot;fileId&quot;:12}\">b.docx</a><!--v-if--></li></ul></div>"
+		}
+	},
+	"downloadAll.absent": {
+		"mounted": {
+			"calls": [],
+			"html": "<div class=\"filinq-archive-leaf\"><p class=\"filinq-archive-leaf__state\">No documents yet</p></div>"
+		},
+		"download": {
+			"calls": [
+				[
+					"url:/apps/filinq/api/case-archive/manifest?register=cases&schema=case&id=",
+					{
+						"method": "POST",
+						"headers": {
+							"requesttoken": "token-1",
+							"Accept": "application/json"
+						}
+					},
+					[
+						"method",
+						"headers"
+					]
+				]
+			],
+			"html": "<div class=\"filinq-archive-leaf\"><p class=\"filinq-archive-leaf__state\">No documents yet</p></div>"
+		}
+	},
+	"downloadAll.ok": {
+		"mounted": {
+			"calls": [
+				[
+					"url:/apps/filinq/api/case-archive/preflight?register=cases&schema=case&id=obj-1",
+					{
+						"headers": {
+							"requesttoken": "token-1",
+							"Accept": "application/json"
+						}
+					},
+					[
+						"headers"
+					]
+				]
+			],
+			"html": "<div class=\"filinq-archive-leaf\"><div class=\"filinq-archive-leaf__body\"><p>{count} files, {size} MB {\"size\":\"0.0\"}</p><!--v-if--><button type=\"button\">Download all files</button><!--v-if--></div></div>"
+		},
+		"download": {
+			"calls": [
+				[
+					"url:/apps/filinq/api/case-archive/manifest?register=cases&schema=case&id=obj-1",
+					{
+						"method": "POST",
+						"headers": {
+							"requesttoken": "token-1",
+							"Accept": "application/json"
+						}
+					},
+					[
+						"method",
+						"headers"
+					]
+				]
+			],
+			"html": "<div class=\"filinq-archive-leaf\"><div class=\"filinq-archive-leaf__body\"><p>{count} files, {size} MB {\"size\":\"0.0\"}</p><!--v-if--><button type=\"button\">Download all files</button><div role=\"status\"><p>The archive holds {count} files and a manifest. {\"count\":2} <!--v-if--></p></div></div></div>"
+		}
+	},
+	"downloadAll.refused": {
+		"mounted": {
+			"calls": [
+				[
+					"url:/apps/filinq/api/case-archive/preflight?register=cases&schema=case&id=obj-1",
+					{
+						"headers": {
+							"requesttoken": "token-1",
+							"Accept": "application/json"
+						}
+					},
+					[
+						"headers"
+					]
+				]
+			],
+			"html": "<div class=\"filinq-archive-leaf\"><p class=\"filinq-archive-leaf__state filinq-archive-leaf__state--error\">The documents could not be loaded</p></div>"
+		},
+		"download": {
+			"calls": [
+				[
+					"url:/apps/filinq/api/case-archive/manifest?register=cases&schema=case&id=obj-1",
+					{
+						"method": "POST",
+						"headers": {
+							"requesttoken": "token-1",
+							"Accept": "application/json"
+						}
+					},
+					[
+						"method",
+						"headers"
+					]
+				]
+			],
+			"html": "<div class=\"filinq-archive-leaf\"><p class=\"filinq-archive-leaf__state filinq-archive-leaf__state--error\">The documents could not be loaded</p></div>"
+		}
+	},
+	"downloadAll.unreachable": {
+		"mounted": {
+			"calls": [
+				[
+					"url:/apps/filinq/api/case-archive/preflight?register=cases&schema=case&id=obj-1",
+					{
+						"headers": {
+							"requesttoken": "token-1",
+							"Accept": "application/json"
+						}
+					},
+					[
+						"headers"
+					]
+				]
+			],
+			"html": "<div class=\"filinq-archive-leaf\"><p class=\"filinq-archive-leaf__state filinq-archive-leaf__state--error\">The documents could not be loaded</p></div>"
+		},
+		"download": {
+			"calls": [
+				[
+					"url:/apps/filinq/api/case-archive/manifest?register=cases&schema=case&id=obj-1",
+					{
+						"method": "POST",
+						"headers": {
+							"requesttoken": "token-1",
+							"Accept": "application/json"
+						}
+					},
+					[
+						"method",
+						"headers"
+					]
+				]
+			],
+			"html": "<div class=\"filinq-archive-leaf\"><p class=\"filinq-archive-leaf__state filinq-archive-leaf__state--error\">The documents could not be loaded</p></div>"
+		}
+	},
+	"downloadAll.badJson": {
+		"mounted": {
+			"calls": [
+				[
+					"url:/apps/filinq/api/case-archive/preflight?register=cases&schema=case&id=obj-1",
+					{
+						"headers": {
+							"requesttoken": "token-1",
+							"Accept": "application/json"
+						}
+					},
+					[
+						"headers"
+					]
+				]
+			],
+			"html": "<div class=\"filinq-archive-leaf\"><div class=\"filinq-archive-leaf__body\"><p>{count} files, {size} MB {\"size\":\"0.0\"}</p><!--v-if--><button type=\"button\">Download all files</button><!--v-if--></div></div>"
+		},
+		"download": {
+			"calls": [
+				[
+					"url:/apps/filinq/api/case-archive/manifest?register=cases&schema=case&id=obj-1",
+					{
+						"method": "POST",
+						"headers": {
+							"requesttoken": "token-1",
+							"Accept": "application/json"
+						}
+					},
+					[
+						"method",
+						"headers"
+					]
+				]
+			],
+			"html": "<div class=\"filinq-archive-leaf\"><div class=\"filinq-archive-leaf__body\"><p>{count} files, {size} MB {\"size\":\"0.0\"}</p><!--v-if--><button type=\"button\">Download all files</button><div role=\"status\"><p>The archive holds {count} files and a manifest. {\"count\":0} <!--v-if--></p></div></div></div>"
+		}
+	},
+	"downloadAll.noToken": {
+		"mounted": {
+			"calls": [
+				[
+					"url:/apps/filinq/api/case-archive/preflight?register=cases&schema=a%26b+c&id=obj-1",
+					{
+						"headers": {
+							"requesttoken": "",
+							"Accept": "application/json"
+						}
+					},
+					[
+						"headers"
+					]
+				]
+			],
+			"html": "<div class=\"filinq-archive-leaf\"><div class=\"filinq-archive-leaf__body\"><p>{count} files, {size} MB {\"size\":\"0.0\"}</p><!--v-if--><button type=\"button\">Download all files</button><!--v-if--></div></div>"
+		},
+		"download": {
+			"calls": [
+				[
+					"url:/apps/filinq/api/case-archive/manifest?register=cases&schema=a%26b+c&id=obj-1",
+					{
+						"method": "POST",
+						"headers": {
+							"requesttoken": "",
+							"Accept": "application/json"
+						}
+					},
+					[
+						"method",
+						"headers"
+					]
+				]
+			],
+			"html": "<div class=\"filinq-archive-leaf\"><div class=\"filinq-archive-leaf__body\"><p>{count} files, {size} MB {\"size\":\"0.0\"}</p><!--v-if--><button type=\"button\">Download all files</button><div role=\"status\"><p class=\"filinq-archive-leaf__state filinq-archive-leaf__state--error\">The archive could not be built: {reason} {\"reason\":\"the server could not be reached\"}</p></div></div></div>"
+		}
+	},
+	"mergeToPdf.absent": {
+		"mounted": {
+			"calls": [
+				[
+					"url:/apps/filinq/api/templates",
+					{
+						"headers": {
+							"requesttoken": "token-1",
+							"Accept": "application/json"
+						}
+					},
+					[
+						"headers"
+					]
+				]
+			],
+			"html": "<div class=\"filinq-merge-leaf\"><p class=\"filinq-merge-leaf__state\">No documents yet</p></div>"
+		},
+		"token": "token-1"
+	},
+	"mergeToPdf.ok": {
+		"mounted": {
+			"calls": [
+				[
+					"url:/apps/filinq/api/case-documents/files?register=cases&schema=case&id=obj-1",
+					{
+						"headers": {
+							"requesttoken": "token-1",
+							"Accept": "application/json"
+						}
+					},
+					[
+						"headers"
+					]
+				],
+				[
+					"url:/apps/filinq/api/templates",
+					{
+						"headers": {
+							"requesttoken": "token-1",
+							"Accept": "application/json"
+						}
+					},
+					[
+						"headers"
+					]
+				]
+			],
+			"html": "<div class=\"filinq-merge-leaf\"><form class=\"filinq-merge-leaf__form\"><fieldset class=\"filinq-merge-leaf__fieldset\"><legend>Choose the documents to merge, then put them in order.</legend><label class=\"filinq-merge-leaf__choice\"><input type=\"checkbox\"> a.pdf</label><label class=\"filinq-merge-leaf__choice\"><input type=\"checkbox\"> b.docx</label></fieldset><!--v-if--><label class=\"filinq-merge-leaf__field\">Cover page <select><option value=\"\">No cover page</option><option value=\"t-1\">Cover</option><option value=\"7\"></option></select></label><label class=\"filinq-merge-leaf__choice\"><input type=\"checkbox\"> A bookmark per document</label><label class=\"filinq-merge-leaf__field\">Name of the PDF <input type=\"text\"></label><p class=\"filinq-merge-leaf__state\">Choose at least two documents</p><button type=\"submit\" disabled=\"\">Merge</button><!--v-if--></form></div>"
+		},
+		"token": "token-1"
+	},
+	"mergeToPdf.refused": {
+		"mounted": {
+			"calls": [
+				[
+					"url:/apps/filinq/api/case-documents/files?register=cases&schema=case&id=obj-1",
+					{
+						"headers": {
+							"requesttoken": "token-1",
+							"Accept": "application/json"
+						}
+					},
+					[
+						"headers"
+					]
+				],
+				[
+					"url:/apps/filinq/api/templates",
+					{
+						"headers": {
+							"requesttoken": "token-1",
+							"Accept": "application/json"
+						}
+					},
+					[
+						"headers"
+					]
+				]
+			],
+			"html": "<div class=\"filinq-merge-leaf\"><p class=\"filinq-merge-leaf__state filinq-merge-leaf__state--error\">The documents could not be loaded</p></div>"
+		},
+		"token": "token-1"
+	},
+	"mergeToPdf.unreachable": {
+		"mounted": {
+			"calls": [
+				[
+					"url:/apps/filinq/api/case-documents/files?register=cases&schema=case&id=obj-1",
+					{
+						"headers": {
+							"requesttoken": "token-1",
+							"Accept": "application/json"
+						}
+					},
+					[
+						"headers"
+					]
+				],
+				[
+					"url:/apps/filinq/api/templates",
+					{
+						"headers": {
+							"requesttoken": "token-1",
+							"Accept": "application/json"
+						}
+					},
+					[
+						"headers"
+					]
+				]
+			],
+			"html": "<div class=\"filinq-merge-leaf\"><p class=\"filinq-merge-leaf__state filinq-merge-leaf__state--error\">The documents could not be loaded</p></div>"
+		},
+		"token": "token-1"
+	},
+	"mergeToPdf.badJson": {
+		"mounted": {
+			"calls": [
+				[
+					"url:/apps/filinq/api/case-documents/files?register=cases&schema=case&id=obj-1",
+					{
+						"headers": {
+							"requesttoken": "token-1",
+							"Accept": "application/json"
+						}
+					},
+					[
+						"headers"
+					]
+				],
+				[
+					"url:/apps/filinq/api/templates",
+					{
+						"headers": {
+							"requesttoken": "token-1",
+							"Accept": "application/json"
+						}
+					},
+					[
+						"headers"
+					]
+				]
+			],
+			"html": "<div class=\"filinq-merge-leaf\"><p class=\"filinq-merge-leaf__state\">No documents yet</p></div>"
+		},
+		"token": "token-1"
+	},
+	"mergeToPdf.noToken": {
+		"mounted": {
+			"calls": [
+				[
+					"url:/apps/filinq/api/case-documents/files?register=cases&schema=a%26b+c&id=obj-1",
+					{
+						"headers": {
+							"requesttoken": "",
+							"Accept": "application/json"
+						}
+					},
+					[
+						"headers"
+					]
+				],
+				[
+					"url:/apps/filinq/api/templates",
+					{
+						"headers": {
+							"requesttoken": "",
+							"Accept": "application/json"
+						}
+					},
+					[
+						"headers"
+					]
+				]
+			],
+			"html": "<div class=\"filinq-merge-leaf\"><form class=\"filinq-merge-leaf__form\"><fieldset class=\"filinq-merge-leaf__fieldset\"><legend>Choose the documents to merge, then put them in order.</legend><label class=\"filinq-merge-leaf__choice\"><input type=\"checkbox\"> a.pdf</label><label class=\"filinq-merge-leaf__choice\"><input type=\"checkbox\"> b.docx</label></fieldset><!--v-if--><label class=\"filinq-merge-leaf__field\">Cover page <select><option value=\"\">No cover page</option></select></label><label class=\"filinq-merge-leaf__choice\"><input type=\"checkbox\"> A bookmark per document</label><label class=\"filinq-merge-leaf__field\">Name of the PDF <input type=\"text\"></label><p class=\"filinq-merge-leaf__state\">Choose at least two documents</p><button type=\"submit\" disabled=\"\">Merge</button><!--v-if--></form></div>"
+		},
+		"token": ""
+	}
+}

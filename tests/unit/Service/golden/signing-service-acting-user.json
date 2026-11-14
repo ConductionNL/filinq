@@ -1,0 +1,1681 @@
+{
+    "cancel as the initiator": [
+        {
+            "SigningActorResolver::resolveActingIdentity": []
+        },
+        {
+            "SettingsService::getObjectService": []
+        },
+        {
+            "SettingsService::resolveSigningRequestBinding": []
+        },
+        {
+            "SettingsService::getObjectService": []
+        },
+        {
+            "SettingsService::resolveSigningRequestBinding": []
+        },
+        {
+            "ObjectService::find": {
+                "id": "req-1",
+                "register": "filinq",
+                "schema": "signingRequest",
+                "_rbac": false
+            }
+        },
+        {
+            "SigningActorResolver::mayRead": {
+                "request": {
+                    "id": "req-1",
+                    "status": "PENDING",
+                    "signatureLevel": "AdES",
+                    "provider": "native",
+                    "initiatorUserId": "griffier",
+                    "signerIds": [
+                        "s-1"
+                    ],
+                    "sourceApp": "dossiq",
+                    "subjectSchema": "besluit"
+                },
+                "requestId": "req-1",
+                "userId": ""
+            }
+        },
+        {
+            "ObjectService::saveObject": {
+                "object": {
+                    "id": "req-1",
+                    "status": "CANCELLED",
+                    "signatureLevel": "AdES",
+                    "provider": "native",
+                    "initiatorUserId": "griffier",
+                    "signerIds": [
+                        "s-1"
+                    ],
+                    "sourceApp": "dossiq",
+                    "subjectSchema": "besluit"
+                },
+                "register": "filinq",
+                "schema": "signingRequest",
+                "_rbac": false
+            }
+        },
+        {
+            "SigningConclusionEmitter::emitIfDelegated": {
+                "request": {
+                    "id": "req-1",
+                    "status": "CANCELLED",
+                    "signatureLevel": "AdES",
+                    "provider": "native",
+                    "initiatorUserId": "griffier",
+                    "signerIds": [
+                        "s-1"
+                    ],
+                    "sourceApp": "dossiq",
+                    "subjectSchema": "besluit"
+                },
+                "status": "cancelled"
+            }
+        },
+        {
+            "SigningActorResolver::getClientIp": []
+        },
+        {
+            "SigningAuditService::logEvent": {
+                "event": {
+                    "OCA\\Filinq\\Kernel\\SigningAuditEvent": {
+                        "request": {
+                            "OCA\\Filinq\\Kernel\\SigningAuditSubject": {
+                                "id": "req-1",
+                                "signatureLevel": "",
+                                "provider": ""
+                            }
+                        },
+                        "action": "CANCELLED",
+                        "actor": {
+                            "OCA\\Filinq\\Kernel\\SigningAuditActor": {
+                                "userId": "griffier",
+                                "displayName": "Griffier",
+                                "ipAddress": "192.0.2.10"
+                            }
+                        },
+                        "metadata": []
+                    }
+                }
+            }
+        },
+        {
+            "result": {
+                "id": "req-1",
+                "status": "CANCELLED",
+                "signatureLevel": "AdES",
+                "provider": "native",
+                "initiatorUserId": "griffier",
+                "signerIds": [
+                    "s-1"
+                ],
+                "sourceApp": "dossiq",
+                "subjectSchema": "besluit"
+            }
+        }
+    ],
+    "create as the initiator": [
+        {
+            "SigningActorResolver::resolveActingIdentity": []
+        },
+        {
+            "SettingsService::getObjectService": []
+        },
+        {
+            "SettingsService::getFeatureToggles": []
+        },
+        {
+            "SigningRequestValidator::validateRequestData": {
+                "data": {
+                    "documentFileId": 11,
+                    "documentName": "",
+                    "initiatorUserId": "griffier",
+                    "signatureLevel": "AdES",
+                    "signingMode": "sequential",
+                    "status": "PENDING",
+                    "provider": "native",
+                    "deadline": "<time>",
+                    "signerIds": []
+                }
+            }
+        },
+        {
+            "SigningRequestValidator::validateProviderLevelPair": {
+                "provider": "native",
+                "level": "AdES"
+            }
+        },
+        {
+            "GuardianConsentGuard::appliedAge": {
+                "data": {
+                    "documentFileId": 11,
+                    "signers": [
+                        {
+                            "userId": "alice",
+                            "displayName": "Alice"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "SigningAssuranceGate::applyToRequest": {
+                "request": {
+                    "documentFileId": 11,
+                    "documentName": "",
+                    "initiatorUserId": "griffier",
+                    "signatureLevel": "AdES",
+                    "signingMode": "sequential",
+                    "status": "PENDING",
+                    "provider": "native",
+                    "deadline": "<time>",
+                    "signerIds": [],
+                    "guardianConsentAge": 16
+                },
+                "data": {
+                    "documentFileId": 11,
+                    "signers": [
+                        {
+                            "userId": "alice",
+                            "displayName": "Alice"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "SigningRequestValidator::validateSigners": {
+                "signers": [
+                    {
+                        "userId": "alice",
+                        "displayName": "Alice"
+                    }
+                ]
+            }
+        },
+        {
+            "GuardianConsentGuard::prepareSigners": {
+                "signers": [
+                    {
+                        "userId": "alice",
+                        "displayName": "Alice"
+                    }
+                ],
+                "age": 16,
+                "now": "<time>"
+            }
+        },
+        {
+            "SignedArtifactProducer::initiatorDocument": {
+                "fileId": "11",
+                "initiatorUserId": "griffier"
+            }
+        },
+        {
+            "File::getId": []
+        },
+        {
+            "File::getName": []
+        },
+        {
+            "SigningRequestValidator::withPlacements": {
+                "request": {
+                    "documentFileId": "11",
+                    "documentName": "besluit.pdf",
+                    "initiatorUserId": "griffier",
+                    "signatureLevel": "AdES",
+                    "signingMode": "sequential",
+                    "status": "PENDING",
+                    "provider": "native",
+                    "deadline": "<time>",
+                    "signerIds": [],
+                    "guardianConsentAge": 16,
+                    "assuranceFloor": "low"
+                },
+                "data": {
+                    "documentFileId": 11,
+                    "signers": [
+                        {
+                            "userId": "alice",
+                            "displayName": "Alice"
+                        }
+                    ]
+                },
+                "producer": "double SignedArtifactProducer"
+            }
+        },
+        {
+            "SignedArtifactProducer::delegate": {
+                "request": {
+                    "documentFileId": "11",
+                    "documentName": "besluit.pdf",
+                    "initiatorUserId": "griffier",
+                    "signatureLevel": "AdES",
+                    "signingMode": "sequential",
+                    "status": "PENDING",
+                    "provider": "native",
+                    "deadline": "<time>",
+                    "signerIds": [],
+                    "guardianConsentAge": 16,
+                    "assuranceFloor": "low"
+                },
+                "signers": [
+                    {
+                        "userId": "alice",
+                        "displayName": "Alice"
+                    }
+                ]
+            }
+        },
+        {
+            "SettingsService::resolveSigningRequestBinding": []
+        },
+        {
+            "ObjectService::saveObject": {
+                "object": {
+                    "documentFileId": "11",
+                    "documentName": "besluit.pdf",
+                    "initiatorUserId": "griffier",
+                    "signatureLevel": "AdES",
+                    "signingMode": "sequential",
+                    "status": "PENDING",
+                    "provider": "native",
+                    "deadline": "<time>",
+                    "signerIds": [],
+                    "guardianConsentAge": 16,
+                    "assuranceFloor": "low"
+                },
+                "register": "filinq",
+                "schema": "signingRequest",
+                "_rbac": false,
+                "_unowned": true
+            }
+        },
+        {
+            "SettingsService::getObjectService": []
+        },
+        {
+            "SettingsService::resolveSignerRecordBinding": []
+        },
+        {
+            "ObjectService::saveObject": {
+                "object": {
+                    "signingRequestId": "saved-11",
+                    "userId": "alice",
+                    "displayName": "Alice",
+                    "order": 0,
+                    "status": "PENDING"
+                },
+                "register": "filinq",
+                "schema": "signerRecord",
+                "_rbac": false,
+                "_unowned": true
+            }
+        },
+        {
+            "ObjectService::saveObject": {
+                "object": {
+                    "documentFileId": "11",
+                    "documentName": "besluit.pdf",
+                    "initiatorUserId": "griffier",
+                    "signatureLevel": "AdES",
+                    "signingMode": "sequential",
+                    "status": "PENDING",
+                    "provider": "native",
+                    "deadline": "<time>",
+                    "signerIds": [
+                        "saved-5"
+                    ],
+                    "guardianConsentAge": 16,
+                    "assuranceFloor": "low",
+                    "id": "saved-11"
+                },
+                "register": "filinq",
+                "schema": "signingRequest",
+                "_rbac": false
+            }
+        },
+        {
+            "SigningAssuranceGate::floorFor": {
+                "request": {
+                    "documentFileId": "11",
+                    "documentName": "besluit.pdf",
+                    "initiatorUserId": "griffier",
+                    "signatureLevel": "AdES",
+                    "signingMode": "sequential",
+                    "status": "PENDING",
+                    "provider": "native",
+                    "deadline": "<time>",
+                    "signerIds": [],
+                    "guardianConsentAge": 16,
+                    "assuranceFloor": "low"
+                }
+            }
+        },
+        {
+            "SigningActorResolver::getClientIp": []
+        },
+        {
+            "SigningAuditService::logEvent": {
+                "event": {
+                    "OCA\\Filinq\\Kernel\\SigningAuditEvent": {
+                        "request": {
+                            "OCA\\Filinq\\Kernel\\SigningAuditSubject": {
+                                "id": "saved-11",
+                                "signatureLevel": "AdES",
+                                "provider": "native"
+                            }
+                        },
+                        "action": "CREATED",
+                        "actor": {
+                            "OCA\\Filinq\\Kernel\\SigningAuditActor": {
+                                "userId": "griffier",
+                                "displayName": "Griffier",
+                                "ipAddress": "192.0.2.10"
+                            }
+                        },
+                        "metadata": []
+                    }
+                }
+            }
+        },
+        {
+            "result": {
+                "documentFileId": "11",
+                "documentName": "besluit.pdf",
+                "initiatorUserId": "griffier",
+                "signatureLevel": "AdES",
+                "signingMode": "sequential",
+                "status": "PENDING",
+                "provider": "native",
+                "deadline": "<time>",
+                "signerIds": [
+                    "saved-5"
+                ],
+                "guardianConsentAge": 16,
+                "assuranceFloor": "low",
+                "id": "saved-11"
+            }
+        }
+    ],
+    "decline as the signer": [
+        {
+            "SigningActorResolver::resolveActingIdentity": []
+        },
+        {
+            "SettingsService::getObjectService": []
+        },
+        {
+            "SettingsService::resolveSignerRecordBinding": []
+        },
+        {
+            "SigningActorResolver::loadAuthorisedSigner": {
+                "requestId": "req-1",
+                "signerId": "s-1",
+                "verifiedActor": null,
+                "actorUserId": "alice",
+                "action": "decline"
+            }
+        },
+        {
+            "SettingsService::resolveSigningRequestBinding": []
+        },
+        {
+            "ObjectService::find": {
+                "id": "req-1",
+                "register": "filinq",
+                "schema": "signingRequest",
+                "_rbac": false
+            }
+        },
+        {
+            "SigningAssuranceGate::evidenceForAct": {
+                "request": {
+                    "id": "req-1",
+                    "status": "PENDING",
+                    "signatureLevel": "AdES",
+                    "provider": "native",
+                    "initiatorUserId": "griffier",
+                    "signerIds": [
+                        "s-1"
+                    ],
+                    "sourceApp": "dossiq",
+                    "subjectSchema": "besluit"
+                },
+                "signer": {
+                    "signingRequestId": "req-1",
+                    "userId": "alice",
+                    "status": "PENDING",
+                    "id": "s-1"
+                },
+                "verifiedActor": null,
+                "actorUserId": "alice",
+                "now": "<time>"
+            }
+        },
+        {
+            "ObjectService::saveObject": {
+                "object": {
+                    "signingRequestId": "req-1",
+                    "userId": "alice",
+                    "status": "DECLINED",
+                    "identityEvidence": {
+                        "provider": "nextcloud",
+                        "means": "session",
+                        "assurance": "low",
+                        "subjectPseudonym": "pseudo-alice",
+                        "authenticatedAt": "<time>",
+                        "evidenceHash": "hash"
+                    },
+                    "declineReason": "onjuist"
+                },
+                "register": "filinq",
+                "schema": "signerRecord",
+                "_rbac": false
+            }
+        },
+        {
+            "ObjectService::saveObject": {
+                "object": {
+                    "id": "req-1",
+                    "status": "DECLINED",
+                    "signatureLevel": "AdES",
+                    "provider": "native",
+                    "initiatorUserId": "griffier",
+                    "signerIds": [
+                        "s-1"
+                    ],
+                    "sourceApp": "dossiq",
+                    "subjectSchema": "besluit"
+                },
+                "register": "filinq",
+                "schema": "signingRequest",
+                "_rbac": false
+            }
+        },
+        {
+            "SigningConclusionEmitter::emitIfDelegated": {
+                "request": {
+                    "id": "req-1",
+                    "status": "DECLINED",
+                    "signatureLevel": "AdES",
+                    "provider": "native",
+                    "initiatorUserId": "griffier",
+                    "signerIds": [
+                        "s-1"
+                    ],
+                    "sourceApp": "dossiq",
+                    "subjectSchema": "besluit"
+                },
+                "status": "declined"
+            }
+        },
+        {
+            "SigningActorResolver::actorAuditMetadata": {
+                "verifiedActor": null
+            }
+        },
+        {
+            "SigningActorResolver::getClientIp": []
+        },
+        {
+            "SigningAuditService::logEvent": {
+                "event": {
+                    "OCA\\Filinq\\Kernel\\SigningAuditEvent": {
+                        "request": {
+                            "OCA\\Filinq\\Kernel\\SigningAuditSubject": {
+                                "id": "req-1",
+                                "signatureLevel": "AdES",
+                                "provider": "native"
+                            }
+                        },
+                        "action": "DECLINED",
+                        "actor": {
+                            "OCA\\Filinq\\Kernel\\SigningAuditActor": {
+                                "userId": "alice",
+                                "displayName": "Alice",
+                                "ipAddress": "192.0.2.10"
+                            }
+                        },
+                        "metadata": {
+                            "reason": "onjuist",
+                            "identityEvidence": {
+                                "provider": "nextcloud",
+                                "means": "session",
+                                "assurance": "low",
+                                "subjectPseudonym": "pseudo-alice",
+                                "authenticatedAt": "<time>",
+                                "evidenceHash": "hash"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "result": {
+                "signingRequestId": "req-1",
+                "userId": "alice",
+                "status": "DECLINED",
+                "identityEvidence": {
+                    "provider": "nextcloud",
+                    "means": "session",
+                    "assurance": "low",
+                    "subjectPseudonym": "pseudo-alice",
+                    "authenticatedAt": "<time>",
+                    "evidenceHash": "hash"
+                },
+                "declineReason": "onjuist"
+            }
+        }
+    ],
+    "decline for a forged signer": [
+        {
+            "SigningActorResolver::resolveActingIdentity": []
+        },
+        {
+            "SettingsService::getObjectService": []
+        },
+        {
+            "SettingsService::resolveSignerRecordBinding": []
+        },
+        {
+            "SigningActorResolver::loadAuthorisedSigner": {
+                "requestId": "req-1",
+                "signerId": "s-1",
+                "verifiedActor": null,
+                "actorUserId": "mallory",
+                "action": "decline"
+            }
+        },
+        {
+            "threw": [
+                "RuntimeException",
+                "Not authorised to decline for signer s-1",
+                0
+            ]
+        }
+    ],
+    "emit an expired conclusion": [
+        {
+            "SigningConclusionEmitter::emitIfDelegated": {
+                "request": {
+                    "id": "req-1",
+                    "status": "EXPIRED"
+                },
+                "status": "expired"
+            }
+        },
+        {
+            "result": null
+        }
+    ],
+    "read as a forged caller": [
+        {
+            "SettingsService::getObjectService": []
+        },
+        {
+            "SettingsService::resolveSigningRequestBinding": []
+        },
+        {
+            "ObjectService::find": {
+                "id": "req-1",
+                "register": "filinq",
+                "schema": "signingRequest",
+                "_rbac": false
+            }
+        },
+        {
+            "SigningActorResolver::mayRead": {
+                "request": {
+                    "id": "req-1",
+                    "status": "PENDING",
+                    "signatureLevel": "AdES",
+                    "provider": "native",
+                    "initiatorUserId": "griffier",
+                    "signerIds": [
+                        "s-1"
+                    ],
+                    "sourceApp": "dossiq",
+                    "subjectSchema": "besluit"
+                },
+                "requestId": "req-1",
+                "userId": "mallory"
+            }
+        },
+        {
+            "result": null
+        }
+    ],
+    "read as the initiator": [
+        {
+            "SettingsService::getObjectService": []
+        },
+        {
+            "SettingsService::resolveSigningRequestBinding": []
+        },
+        {
+            "ObjectService::find": {
+                "id": "req-1",
+                "register": "filinq",
+                "schema": "signingRequest",
+                "_rbac": false
+            }
+        },
+        {
+            "SigningActorResolver::mayRead": {
+                "request": {
+                    "id": "req-1",
+                    "status": "PENDING",
+                    "signatureLevel": "AdES",
+                    "provider": "native",
+                    "initiatorUserId": "griffier",
+                    "signerIds": [
+                        "s-1"
+                    ],
+                    "sourceApp": "dossiq",
+                    "subjectSchema": "besluit"
+                },
+                "requestId": "req-1",
+                "userId": "griffier"
+            }
+        },
+        {
+            "result": {
+                "id": "req-1",
+                "status": "PENDING",
+                "signatureLevel": "AdES",
+                "provider": "native",
+                "initiatorUserId": "griffier",
+                "signerIds": [
+                    "s-1"
+                ],
+                "sourceApp": "dossiq",
+                "subjectSchema": "besluit"
+            }
+        }
+    ],
+    "sign as the signer holding the mandate": [
+        {
+            "SigningActorResolver::resolveActingIdentity": []
+        },
+        {
+            "SettingsService::getObjectService": []
+        },
+        {
+            "SettingsService::resolveSignerRecordBinding": []
+        },
+        {
+            "SigningActorResolver::loadAuthorisedSigner": {
+                "requestId": "req-1",
+                "signerId": "s-1",
+                "verifiedActor": null,
+                "actorUserId": "alice",
+                "action": "sign"
+            }
+        },
+        {
+            "SettingsService::getObjectService": []
+        },
+        {
+            "SettingsService::resolveSigningRequestBinding": []
+        },
+        {
+            "ObjectService::find": {
+                "id": "req-1",
+                "register": "filinq",
+                "schema": "signingRequest",
+                "_rbac": false
+            }
+        },
+        {
+            "SigningActorResolver::mayRead": {
+                "request": {
+                    "id": "req-1",
+                    "status": "PENDING",
+                    "signatureLevel": "AdES",
+                    "provider": "native",
+                    "initiatorUserId": "griffier",
+                    "signerIds": [
+                        "s-1"
+                    ],
+                    "sourceApp": "dossiq",
+                    "subjectSchema": "besluit"
+                },
+                "requestId": "req-1",
+                "userId": ""
+            }
+        },
+        {
+            "IAppConfig::getValueString": {
+                "app": "filinq",
+                "key": "signingMandates"
+            }
+        },
+        {
+            "IGroupManager::isInGroup": {
+                "userId": "alice",
+                "group": "portefeuillehouders"
+            }
+        },
+        {
+            "SigningAssuranceGate::evidenceForAct": {
+                "request": {
+                    "id": "req-1",
+                    "status": "PENDING",
+                    "signatureLevel": "AdES",
+                    "provider": "native",
+                    "initiatorUserId": "griffier",
+                    "signerIds": [
+                        "s-1"
+                    ],
+                    "sourceApp": "dossiq",
+                    "subjectSchema": "besluit"
+                },
+                "signer": {
+                    "signingRequestId": "req-1",
+                    "userId": "alice",
+                    "status": "PENDING",
+                    "id": "s-1"
+                },
+                "verifiedActor": null,
+                "actorUserId": "alice",
+                "now": "<time>"
+            }
+        },
+        {
+            "GuardianConsentGuard::guardSigningAct": {
+                "requestId": "req-1",
+                "request": {
+                    "id": "req-1",
+                    "status": "PENDING",
+                    "signatureLevel": "AdES",
+                    "provider": "native",
+                    "initiatorUserId": "griffier",
+                    "signerIds": [
+                        "s-1"
+                    ],
+                    "sourceApp": "dossiq",
+                    "subjectSchema": "besluit"
+                },
+                "signer": {
+                    "signingRequestId": "req-1",
+                    "userId": "alice",
+                    "status": "PENDING",
+                    "identityEvidence": {
+                        "provider": "nextcloud",
+                        "means": "session",
+                        "assurance": "low",
+                        "subjectPseudonym": "pseudo-alice",
+                        "authenticatedAt": "<time>",
+                        "evidenceHash": "hash"
+                    },
+                    "id": "s-1"
+                },
+                "verifiedActor": null,
+                "now": "<time>"
+            }
+        },
+        {
+            "SigningActorResolver::getClientIp": []
+        },
+        {
+            "ObjectService::saveObject": {
+                "object": {
+                    "signingRequestId": "req-1",
+                    "userId": "alice",
+                    "status": "SIGNED",
+                    "identityEvidence": {
+                        "provider": "nextcloud",
+                        "means": "session",
+                        "assurance": "low",
+                        "subjectPseudonym": "pseudo-alice",
+                        "authenticatedAt": "<time>",
+                        "evidenceHash": "hash"
+                    },
+                    "consentBasis": "adult",
+                    "signedAt": "<time>",
+                    "ipAddress": "192.0.2.10"
+                },
+                "register": "filinq",
+                "schema": "signerRecord",
+                "_rbac": false
+            }
+        },
+        {
+            "SigningActorResolver::getClientIp": []
+        },
+        {
+            "SigningActorResolver::actorAuditMetadata": {
+                "verifiedActor": null
+            }
+        },
+        {
+            "SigningAuditService::logEvent": {
+                "event": {
+                    "OCA\\Filinq\\Kernel\\SigningAuditEvent": {
+                        "request": {
+                            "OCA\\Filinq\\Kernel\\SigningAuditSubject": {
+                                "id": "req-1",
+                                "signatureLevel": "AdES",
+                                "provider": "native"
+                            }
+                        },
+                        "action": "SIGNED",
+                        "actor": {
+                            "OCA\\Filinq\\Kernel\\SigningAuditActor": {
+                                "userId": "alice",
+                                "displayName": "Alice",
+                                "ipAddress": "192.0.2.10"
+                            }
+                        },
+                        "metadata": {
+                            "consent": "adult",
+                            "identityEvidence": {
+                                "provider": "nextcloud",
+                                "means": "session",
+                                "assurance": "low",
+                                "subjectPseudonym": "pseudo-alice",
+                                "authenticatedAt": "<time>",
+                                "evidenceHash": "hash"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "SigningAssuranceGate::consume": {
+                "requestId": "req-1",
+                "signerId": "s-1"
+            }
+        },
+        {
+            "SettingsService::getObjectService": []
+        },
+        {
+            "SettingsService::resolveSigningRequestBinding": []
+        },
+        {
+            "SettingsService::getObjectService": []
+        },
+        {
+            "SettingsService::resolveSignerRecordBinding": []
+        },
+        {
+            "ObjectService::find": {
+                "id": "s-1",
+                "register": "filinq",
+                "schema": "signerRecord",
+                "_rbac": false
+            }
+        },
+        {
+            "ObjectService::find": {
+                "id": "req-1",
+                "register": "filinq",
+                "schema": "signingRequest",
+                "_rbac": false
+            }
+        },
+        {
+            "ObjectService::saveObject": {
+                "object": {
+                    "id": "req-1",
+                    "status": "IN_PROGRESS",
+                    "signatureLevel": "AdES",
+                    "provider": "native",
+                    "initiatorUserId": "griffier",
+                    "signerIds": [
+                        "s-1"
+                    ],
+                    "sourceApp": "dossiq",
+                    "subjectSchema": "besluit"
+                },
+                "register": "filinq",
+                "schema": "signingRequest",
+                "_rbac": false
+            }
+        },
+        {
+            "GuardianConsentGuard::withConsentBasis": {
+                "request": {
+                    "id": "req-1",
+                    "status": "IN_PROGRESS",
+                    "signatureLevel": "AdES",
+                    "provider": "native",
+                    "initiatorUserId": "griffier",
+                    "signerIds": [
+                        "s-1"
+                    ],
+                    "sourceApp": "dossiq",
+                    "subjectSchema": "besluit"
+                },
+                "signers": {
+                    "s-1": {
+                        "id": "s-1",
+                        "userId": "alice",
+                        "status": "SIGNED"
+                    }
+                }
+            }
+        },
+        {
+            "SigningAssuranceGate::withResolvedAssurance": {
+                "request": {
+                    "id": "req-1",
+                    "status": "IN_PROGRESS",
+                    "signatureLevel": "AdES",
+                    "provider": "native",
+                    "initiatorUserId": "griffier",
+                    "signerIds": [
+                        "s-1"
+                    ],
+                    "sourceApp": "dossiq",
+                    "subjectSchema": "besluit",
+                    "consentBasis": "adult"
+                },
+                "signers": {
+                    "s-1": {
+                        "id": "s-1",
+                        "userId": "alice",
+                        "status": "SIGNED"
+                    }
+                }
+            }
+        },
+        {
+            "SignedArtifactProducer::produce": {
+                "request": {
+                    "id": "req-1",
+                    "status": "IN_PROGRESS",
+                    "signatureLevel": "AdES",
+                    "provider": "native",
+                    "initiatorUserId": "griffier",
+                    "signerIds": [
+                        "s-1"
+                    ],
+                    "sourceApp": "dossiq",
+                    "subjectSchema": "besluit",
+                    "consentBasis": "adult",
+                    "assurance": "low"
+                },
+                "signers": {
+                    "s-1": {
+                        "id": "s-1",
+                        "userId": "alice",
+                        "status": "SIGNED"
+                    }
+                }
+            }
+        },
+        {
+            "ObjectService::saveObject": {
+                "object": {
+                    "id": "req-1",
+                    "status": "COMPLETED",
+                    "signatureLevel": "AdES",
+                    "provider": "native",
+                    "initiatorUserId": "griffier",
+                    "signerIds": [
+                        "s-1"
+                    ],
+                    "sourceApp": "dossiq",
+                    "subjectSchema": "besluit",
+                    "consentBasis": "adult",
+                    "assurance": "low",
+                    "signedDocumentRef": "file:11@v2"
+                },
+                "register": "filinq",
+                "schema": "signingRequest",
+                "_rbac": false
+            }
+        },
+        {
+            "SigningConclusionEmitter::emitIfDelegated": {
+                "request": {
+                    "id": "req-1",
+                    "status": "COMPLETED",
+                    "signatureLevel": "AdES",
+                    "provider": "native",
+                    "initiatorUserId": "griffier",
+                    "signerIds": [
+                        "s-1"
+                    ],
+                    "sourceApp": "dossiq",
+                    "subjectSchema": "besluit",
+                    "consentBasis": "adult",
+                    "assurance": "low",
+                    "signedDocumentRef": "file:11@v2"
+                },
+                "status": "signed",
+                "signedDocumentRef": "file:11@v2"
+            }
+        },
+        {
+            "result": {
+                "signingRequestId": "req-1",
+                "userId": "alice",
+                "status": "SIGNED",
+                "identityEvidence": {
+                    "provider": "nextcloud",
+                    "means": "session",
+                    "assurance": "low",
+                    "subjectPseudonym": "pseudo-alice",
+                    "authenticatedAt": "<time>",
+                    "evidenceHash": "hash"
+                },
+                "consentBasis": "adult",
+                "signedAt": "<time>",
+                "ipAddress": "192.0.2.10"
+            }
+        }
+    ],
+    "sign for a forged signer": [
+        {
+            "SigningActorResolver::resolveActingIdentity": []
+        },
+        {
+            "SettingsService::getObjectService": []
+        },
+        {
+            "SettingsService::resolveSignerRecordBinding": []
+        },
+        {
+            "SigningActorResolver::loadAuthorisedSigner": {
+                "requestId": "req-1",
+                "signerId": "s-1",
+                "verifiedActor": null,
+                "actorUserId": "mallory",
+                "action": "sign"
+            }
+        },
+        {
+            "threw": [
+                "RuntimeException",
+                "Not authorised to sign for signer s-1",
+                0
+            ]
+        }
+    ],
+    "sign for a forged signer, forged signatureData": [
+        {
+            "SigningActorResolver::resolveActingIdentity": []
+        },
+        {
+            "SettingsService::getObjectService": []
+        },
+        {
+            "SettingsService::resolveSignerRecordBinding": []
+        },
+        {
+            "SigningActorResolver::loadAuthorisedSigner": {
+                "requestId": "req-1",
+                "signerId": "s-1",
+                "verifiedActor": null,
+                "actorUserId": "mallory",
+                "action": "sign"
+            }
+        },
+        {
+            "threw": [
+                "RuntimeException",
+                "Not authorised to sign for signer s-1",
+                0
+            ]
+        }
+    ],
+    "sign outside the mandate": [
+        {
+            "SigningActorResolver::resolveActingIdentity": []
+        },
+        {
+            "SettingsService::getObjectService": []
+        },
+        {
+            "SettingsService::resolveSignerRecordBinding": []
+        },
+        {
+            "SigningActorResolver::loadAuthorisedSigner": {
+                "requestId": "req-1",
+                "signerId": "s-2",
+                "verifiedActor": null,
+                "actorUserId": "mallory",
+                "action": "sign"
+            }
+        },
+        {
+            "SettingsService::getObjectService": []
+        },
+        {
+            "SettingsService::resolveSigningRequestBinding": []
+        },
+        {
+            "ObjectService::find": {
+                "id": "req-1",
+                "register": "filinq",
+                "schema": "signingRequest",
+                "_rbac": false
+            }
+        },
+        {
+            "SigningActorResolver::mayRead": {
+                "request": {
+                    "id": "req-1",
+                    "status": "PENDING",
+                    "signatureLevel": "AdES",
+                    "provider": "native",
+                    "initiatorUserId": "griffier",
+                    "signerIds": [
+                        "s-1"
+                    ],
+                    "sourceApp": "dossiq",
+                    "subjectSchema": "besluit"
+                },
+                "requestId": "req-1",
+                "userId": ""
+            }
+        },
+        {
+            "IAppConfig::getValueString": {
+                "app": "filinq",
+                "key": "signingMandates"
+            }
+        },
+        {
+            "IGroupManager::isInGroup": {
+                "userId": "mallory",
+                "group": "portefeuillehouders"
+            }
+        },
+        {
+            "IAppConfig::getValueString": {
+                "app": "filinq",
+                "key": "signingMandates"
+            }
+        },
+        {
+            "threw": [
+                "RuntimeException",
+                "Signing refused by the mandate declared for dossiq/besluit: Only the portefeuillehouder signs a besluit (held by: portefeuillehouders)",
+                0
+            ]
+        }
+    ],
+    "sign outside the mandate, forged signatureData": [
+        {
+            "SigningActorResolver::resolveActingIdentity": []
+        },
+        {
+            "SettingsService::getObjectService": []
+        },
+        {
+            "SettingsService::resolveSignerRecordBinding": []
+        },
+        {
+            "SigningActorResolver::loadAuthorisedSigner": {
+                "requestId": "req-1",
+                "signerId": "s-2",
+                "verifiedActor": null,
+                "actorUserId": "mallory",
+                "action": "sign"
+            }
+        },
+        {
+            "SettingsService::getObjectService": []
+        },
+        {
+            "SettingsService::resolveSigningRequestBinding": []
+        },
+        {
+            "ObjectService::find": {
+                "id": "req-1",
+                "register": "filinq",
+                "schema": "signingRequest",
+                "_rbac": false
+            }
+        },
+        {
+            "SigningActorResolver::mayRead": {
+                "request": {
+                    "id": "req-1",
+                    "status": "PENDING",
+                    "signatureLevel": "AdES",
+                    "provider": "native",
+                    "initiatorUserId": "griffier",
+                    "signerIds": [
+                        "s-1"
+                    ],
+                    "sourceApp": "dossiq",
+                    "subjectSchema": "besluit"
+                },
+                "requestId": "req-1",
+                "userId": ""
+            }
+        },
+        {
+            "IAppConfig::getValueString": {
+                "app": "filinq",
+                "key": "signingMandates"
+            }
+        },
+        {
+            "IGroupManager::isInGroup": {
+                "userId": "mallory",
+                "group": "portefeuillehouders"
+            }
+        },
+        {
+            "IAppConfig::getValueString": {
+                "app": "filinq",
+                "key": "signingMandates"
+            }
+        },
+        {
+            "threw": [
+                "RuntimeException",
+                "Signing refused by the mandate declared for dossiq/besluit: Only the portefeuillehouder signs a besluit (held by: portefeuillehouders)",
+                0
+            ]
+        }
+    ],
+    "sign through the portal": [
+        {
+            "SigningActorResolver::resolveActingIdentity": {
+                "verifiedActor": {
+                    "userId": "portal:s-1",
+                    "displayName": "Ann Portal",
+                    "assurance": "substantial"
+                }
+            }
+        },
+        {
+            "SettingsService::getObjectService": []
+        },
+        {
+            "SettingsService::resolveSignerRecordBinding": []
+        },
+        {
+            "SigningActorResolver::loadAuthorisedSigner": {
+                "requestId": "req-1",
+                "signerId": "s-1",
+                "verifiedActor": {
+                    "userId": "portal:s-1",
+                    "displayName": "Ann Portal",
+                    "assurance": "substantial"
+                },
+                "actorUserId": "portal:s-1",
+                "action": "sign"
+            }
+        },
+        {
+            "SettingsService::getObjectService": []
+        },
+        {
+            "SettingsService::resolveSigningRequestBinding": []
+        },
+        {
+            "ObjectService::find": {
+                "id": "req-1",
+                "register": "filinq",
+                "schema": "signingRequest",
+                "_rbac": false
+            }
+        },
+        {
+            "SigningActorResolver::mayRead": {
+                "request": {
+                    "id": "req-1",
+                    "status": "PENDING",
+                    "signatureLevel": "AdES",
+                    "provider": "native",
+                    "initiatorUserId": "griffier",
+                    "signerIds": [
+                        "s-1"
+                    ],
+                    "sourceApp": "dossiq",
+                    "subjectSchema": "besluit"
+                },
+                "requestId": "req-1",
+                "userId": ""
+            }
+        },
+        {
+            "SigningAssuranceGate::evidenceForAct": {
+                "request": {
+                    "id": "req-1",
+                    "status": "PENDING",
+                    "signatureLevel": "AdES",
+                    "provider": "native",
+                    "initiatorUserId": "griffier",
+                    "signerIds": [
+                        "s-1"
+                    ],
+                    "sourceApp": "dossiq",
+                    "subjectSchema": "besluit"
+                },
+                "signer": {
+                    "signingRequestId": "req-1",
+                    "userId": "alice",
+                    "status": "PENDING",
+                    "id": "s-1"
+                },
+                "verifiedActor": {
+                    "userId": "portal:s-1",
+                    "displayName": "Ann Portal",
+                    "assurance": "substantial"
+                },
+                "actorUserId": "portal:s-1",
+                "now": "<time>"
+            }
+        },
+        {
+            "GuardianConsentGuard::guardSigningAct": {
+                "requestId": "req-1",
+                "request": {
+                    "id": "req-1",
+                    "status": "PENDING",
+                    "signatureLevel": "AdES",
+                    "provider": "native",
+                    "initiatorUserId": "griffier",
+                    "signerIds": [
+                        "s-1"
+                    ],
+                    "sourceApp": "dossiq",
+                    "subjectSchema": "besluit"
+                },
+                "signer": {
+                    "signingRequestId": "req-1",
+                    "userId": "alice",
+                    "status": "PENDING",
+                    "identityEvidence": {
+                        "provider": "nextcloud",
+                        "means": "session",
+                        "assurance": "low",
+                        "subjectPseudonym": "pseudo-",
+                        "authenticatedAt": "<time>",
+                        "evidenceHash": "hash"
+                    },
+                    "id": "s-1"
+                },
+                "verifiedActor": {
+                    "userId": "portal:s-1",
+                    "displayName": "Ann Portal",
+                    "assurance": "substantial"
+                },
+                "now": "<time>"
+            }
+        },
+        {
+            "SigningActorResolver::getClientIp": []
+        },
+        {
+            "ObjectService::saveObject": {
+                "object": {
+                    "signingRequestId": "req-1",
+                    "userId": "alice",
+                    "status": "SIGNED",
+                    "identityEvidence": {
+                        "provider": "nextcloud",
+                        "means": "session",
+                        "assurance": "low",
+                        "subjectPseudonym": "pseudo-",
+                        "authenticatedAt": "<time>",
+                        "evidenceHash": "hash"
+                    },
+                    "consentBasis": "adult",
+                    "signedAt": "<time>",
+                    "ipAddress": "192.0.2.10",
+                    "signatureAssurance": "SES"
+                },
+                "register": "filinq",
+                "schema": "signerRecord",
+                "_rbac": false
+            }
+        },
+        {
+            "SigningActorResolver::getClientIp": []
+        },
+        {
+            "SigningActorResolver::actorAuditMetadata": {
+                "verifiedActor": {
+                    "userId": "portal:s-1",
+                    "displayName": "Ann Portal",
+                    "assurance": "substantial"
+                }
+            }
+        },
+        {
+            "SigningAuditService::logEvent": {
+                "event": {
+                    "OCA\\Filinq\\Kernel\\SigningAuditEvent": {
+                        "request": {
+                            "OCA\\Filinq\\Kernel\\SigningAuditSubject": {
+                                "id": "req-1",
+                                "signatureLevel": "AdES",
+                                "provider": "native"
+                            }
+                        },
+                        "action": "SIGNED",
+                        "actor": {
+                            "OCA\\Filinq\\Kernel\\SigningAuditActor": {
+                                "userId": "portal:s-1",
+                                "displayName": "Ann Portal",
+                                "ipAddress": "192.0.2.10"
+                            }
+                        },
+                        "metadata": {
+                            "portal": true,
+                            "consent": "adult",
+                            "identityEvidence": {
+                                "provider": "nextcloud",
+                                "means": "session",
+                                "assurance": "low",
+                                "subjectPseudonym": "pseudo-",
+                                "authenticatedAt": "<time>",
+                                "evidenceHash": "hash"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "SigningAssuranceGate::consume": {
+                "requestId": "req-1",
+                "signerId": "s-1"
+            }
+        },
+        {
+            "SettingsService::getObjectService": []
+        },
+        {
+            "SettingsService::resolveSigningRequestBinding": []
+        },
+        {
+            "SettingsService::getObjectService": []
+        },
+        {
+            "SettingsService::resolveSignerRecordBinding": []
+        },
+        {
+            "ObjectService::find": {
+                "id": "s-1",
+                "register": "filinq",
+                "schema": "signerRecord",
+                "_rbac": false
+            }
+        },
+        {
+            "ObjectService::find": {
+                "id": "req-1",
+                "register": "filinq",
+                "schema": "signingRequest",
+                "_rbac": false
+            }
+        },
+        {
+            "ObjectService::saveObject": {
+                "object": {
+                    "id": "req-1",
+                    "status": "IN_PROGRESS",
+                    "signatureLevel": "AdES",
+                    "provider": "native",
+                    "initiatorUserId": "griffier",
+                    "signerIds": [
+                        "s-1"
+                    ],
+                    "sourceApp": "dossiq",
+                    "subjectSchema": "besluit"
+                },
+                "register": "filinq",
+                "schema": "signingRequest",
+                "_rbac": false
+            }
+        },
+        {
+            "GuardianConsentGuard::withConsentBasis": {
+                "request": {
+                    "id": "req-1",
+                    "status": "IN_PROGRESS",
+                    "signatureLevel": "AdES",
+                    "provider": "native",
+                    "initiatorUserId": "griffier",
+                    "signerIds": [
+                        "s-1"
+                    ],
+                    "sourceApp": "dossiq",
+                    "subjectSchema": "besluit"
+                },
+                "signers": {
+                    "s-1": {
+                        "id": "s-1",
+                        "userId": "alice",
+                        "status": "SIGNED"
+                    }
+                }
+            }
+        },
+        {
+            "SigningAssuranceGate::withResolvedAssurance": {
+                "request": {
+                    "id": "req-1",
+                    "status": "IN_PROGRESS",
+                    "signatureLevel": "AdES",
+                    "provider": "native",
+                    "initiatorUserId": "griffier",
+                    "signerIds": [
+                        "s-1"
+                    ],
+                    "sourceApp": "dossiq",
+                    "subjectSchema": "besluit",
+                    "consentBasis": "adult"
+                },
+                "signers": {
+                    "s-1": {
+                        "id": "s-1",
+                        "userId": "alice",
+                        "status": "SIGNED"
+                    }
+                }
+            }
+        },
+        {
+            "SignedArtifactProducer::produce": {
+                "request": {
+                    "id": "req-1",
+                    "status": "IN_PROGRESS",
+                    "signatureLevel": "AdES",
+                    "provider": "native",
+                    "initiatorUserId": "griffier",
+                    "signerIds": [
+                        "s-1"
+                    ],
+                    "sourceApp": "dossiq",
+                    "subjectSchema": "besluit",
+                    "consentBasis": "adult",
+                    "assurance": "low"
+                },
+                "verifiedActor": {
+                    "userId": "portal:s-1",
+                    "displayName": "Ann Portal",
+                    "assurance": "substantial"
+                },
+                "signers": {
+                    "s-1": {
+                        "id": "s-1",
+                        "userId": "alice",
+                        "status": "SIGNED"
+                    }
+                }
+            }
+        },
+        {
+            "ObjectService::saveObject": {
+                "object": {
+                    "id": "req-1",
+                    "status": "COMPLETED",
+                    "signatureLevel": "AdES",
+                    "provider": "native",
+                    "initiatorUserId": "griffier",
+                    "signerIds": [
+                        "s-1"
+                    ],
+                    "sourceApp": "dossiq",
+                    "subjectSchema": "besluit",
+                    "consentBasis": "adult",
+                    "assurance": "low",
+                    "signedDocumentRef": "file:11@v2"
+                },
+                "register": "filinq",
+                "schema": "signingRequest",
+                "_rbac": false
+            }
+        },
+        {
+            "SigningConclusionEmitter::emitIfDelegated": {
+                "request": {
+                    "id": "req-1",
+                    "status": "COMPLETED",
+                    "signatureLevel": "AdES",
+                    "provider": "native",
+                    "initiatorUserId": "griffier",
+                    "signerIds": [
+                        "s-1"
+                    ],
+                    "sourceApp": "dossiq",
+                    "subjectSchema": "besluit",
+                    "consentBasis": "adult",
+                    "assurance": "low",
+                    "signedDocumentRef": "file:11@v2"
+                },
+                "status": "signed",
+                "signedDocumentRef": "file:11@v2"
+            }
+        },
+        {
+            "result": {
+                "signingRequestId": "req-1",
+                "userId": "alice",
+                "status": "SIGNED",
+                "identityEvidence": {
+                    "provider": "nextcloud",
+                    "means": "session",
+                    "assurance": "low",
+                    "subjectPseudonym": "pseudo-",
+                    "authenticatedAt": "<time>",
+                    "evidenceHash": "hash"
+                },
+                "consentBasis": "adult",
+                "signedAt": "<time>",
+                "ipAddress": "192.0.2.10",
+                "signatureAssurance": "SES"
+            }
+        }
+    ]
+}

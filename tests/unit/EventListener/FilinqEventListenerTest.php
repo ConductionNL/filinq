@@ -29,6 +29,9 @@
 namespace OCA\Filinq\Tests\Unit\EventListener;
 
 use OCA\Filinq\EventListener\FilinqEventListener;
+use OCA\Filinq\Kernel\Contracts\MetadataServiceInterface;
+use OCA\Filinq\Kernel\Contracts\PolicyRetroactiveServiceInterface;
+use OCA\Filinq\Kernel\Contracts\SettingsServiceInterface;
 use OCA\Filinq\Service\MetadataService;
 use OCA\Filinq\Service\PolicyRetroactiveService;
 use OCA\Filinq\Service\SettingsService;
@@ -131,9 +134,9 @@ class FilinqEventListenerTest extends TestCase {
 	 */
 	private function installContainer(): void {
 		$this->registerService(LoggerInterface::class, fn (): object => $this->logger);
-		$this->registerService(MetadataService::class, fn (): object => $this->metadataService);
-		$this->registerService(SettingsService::class, fn (): object => $this->settingsService);
-		$this->registerService(PolicyRetroactiveService::class, fn (): object => $this->retroactive);
+		$this->registerService(MetadataServiceInterface::class, fn (): object => $this->metadataService);
+		$this->registerService(SettingsServiceInterface::class, fn (): object => $this->settingsService);
+		$this->registerService(PolicyRetroactiveServiceInterface::class, fn (): object => $this->retroactive);
 
 	}//end installContainer()
 
@@ -345,7 +348,7 @@ class FilinqEventListenerTest extends TestCase {
 		$this->assertSame(expected: 'Filinq: Error in event handler', actual: $captured[0]);
 		$this->assertSame(expected: ObjectCreatedEvent::class, actual: $captured[1]['eventType']);
 		$this->assertStringContainsString(
-			needle: MetadataService::class,
+			needle: MetadataServiceInterface::class,
 			haystack: $captured[1]['exception']
 		);
 

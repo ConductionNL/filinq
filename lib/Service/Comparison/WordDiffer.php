@@ -54,45 +54,37 @@ class WordDiffer {
 		$ops = $this->lcsDiff(a: $this->words(text: $leftText), b: $this->words(text: $rightText));
 
 		$hunks = [];
-		$leftOffset = 0;
-		$rightOffset = 0;
-		$cursor = 0;
+		$walk = new HunkWalk();
 		$count = count($ops);
 
-		while ($cursor < $count) {
-			// Coalesce consecutive ops of the same logical hunk type.
-			if ($ops[$cursor]['op'] === 'equal') {
-				$run = $this->takeEqualRun(ops: $ops, cursor: $cursor);
-				$cursor = $run['cursor'];
-
-				$hunks[] = $this->unchangedHunk(
-					text: $run['text'],
-					leftOffset: $leftOffset,
-					rightOffset: $rightOffset
-				);
-				$advance = (strlen($run['text']) + 1);
-				$leftOffset += $advance;
-				$rightOffset += $advance;
-				continue;
-			}
-
-			// A change block = a run of deletes and/or inserts.
-			$run = $this->takeChangeRun(ops: $ops, cursor: $cursor);
-			$cursor = $run['cursor'];
-
-			$built = $this->changeHunk(
-				removed: $run['removed'],
-				added: $run['added'],
-				leftOffset: $leftOffset,
-				rightOffset: $rightOffset
-			);
-			$hunks[] = $built['hunk'];
-			$leftOffset += $built['leftAdvance'];
-			$rightOffset += $built['rightAdvance'];
-		}//end while
+		while ($walk->cursor < $count) {
+			$hunks[] = $this->nextHunk(ops: $ops, walk: $walk);
+		}
 
 		return $hunks;
 	}//end diff()
+
+	/**
+	 * Take the run of ops at the cursor and build its hunk: equal words, or a block of deletes and inserts.
+	 *
+	 * @param array<int, array<string, mixed>> $ops The op list.
+	 * @param HunkWalk $walk The cursor and byte offsets, moved past the run.
+	 *
+	 * @return array<string, mixed> The hunk.
+	 */
+	private function nextHunk(array $ops, HunkWalk $walk): array {
+		// Coalesce consecutive ops of the same logical hunk type.
+		if ($ops[$walk->cursor]['op'] === 'equal') {
+			$run = $this->takeEqualRun(ops: $ops, cursor: $walk->cursor);
+			$walk->cursor = $run['cursor'];
+			return $this->unchangedHunk(text: $run['text'], offsets: $walk);
+		}
+
+		// A change block = a run of deletes and/or inserts.
+		$run = $this->takeChangeRun(ops: $ops, cursor: $walk->cursor);
+		$walk->cursor = $run['cursor'];
+		return $this->changeHunk(run: $run, offsets: $walk);
+	}//end nextHunk()
 
 	/**
 	 * Split normalised text into its word tokens.
@@ -164,78 +156,89 @@ class WordDiffer {
 	}//end takeChangeRun()
 
 	/**
-	 * Build an `unchanged` hunk for a run of equal words.
+	 * Build an `unchanged` hunk for a run of equal words and move both offsets past it.
 	 *
 	 * @param string $text The run text.
-	 * @param int $leftOffset Current left byte offset.
-	 * @param int $rightOffset Current right byte offset.
+	 * @param HunkWalk $offsets The current byte offsets.
 	 *
 	 * @return array<string, mixed> The hunk.
 	 */
-	private function unchangedHunk(string $text, int $leftOffset, int $rightOffset): array {
+	private function unchangedHunk(string $text, HunkWalk $offsets): array {
 		$length = strlen($text);
 
-		return [
+		$hunk = [
 			'type' => 'unchanged',
 			'left' => [
-				'offset' => $leftOffset,
+				'offset' => $offsets->left,
 				'length' => $length,
 			],
 			'right' => [
-				'offset' => $rightOffset,
+				'offset' => $offsets->right,
 				'length' => $length,
 			],
 			'leftText' => $text,
 			'rightText' => $text,
 		];
+		$offsets->advance(left: ($length + 1), right: ($length + 1));
+
+		return $hunk;
 
 	}//end unchangedHunk()
 
 	/**
-	 * Build a changed/added/removed hunk plus the offset advances it consumes.
+	 * Build a changed/added/removed hunk and move the offsets past what it consumes.
 	 *
-	 * @param array<int, string> $removed Removed words.
-	 * @param array<int, string> $added Added words.
-	 * @param int $leftOffset Current left byte offset.
-	 * @param int $rightOffset Current right byte offset.
+	 * @param array{removed: array<int, string>, added: array<int, string>} $run The change run.
+	 * @param HunkWalk $offsets The current byte offsets.
 	 *
-	 * @return array{hunk: array<string, mixed>, leftAdvance: int, rightAdvance: int}
+	 * @return array<string, mixed> The hunk.
 	 */
-	private function changeHunk(array $removed, array $added, int $leftOffset, int $rightOffset): array {
-		$removedText = implode(' ', $removed);
-		$addedText = implode(' ', $added);
+	private function changeHunk(array $run, HunkWalk $offsets): array {
+		$left = $this->changedSide(words: $run['removed'], offset: $offsets->left);
+		$right = $this->changedSide(words: $run['added'], offset: $offsets->right);
 
-		$hunk = ['type' => $this->hunkType(removed: $removed, added: $added)];
-		$leftAdvance = 0;
-		$rightAdvance = 0;
-
-		$hunk['left'] = null;
-		if ($removed !== []) {
-			$hunk['left'] = [
-				'offset' => $leftOffset,
-				'length' => strlen($removedText),
-			];
-			$hunk['leftText'] = $removedText;
-			$leftAdvance = (strlen($removedText) + 1);
+		$hunk = ['type' => $this->hunkType(removed: $run['removed'], added: $run['added'])];
+		$hunk['left'] = $left['span'];
+		if ($left['span'] !== null) {
+			$hunk['leftText'] = $left['text'];
 		}
 
-		$hunk['right'] = null;
-		if ($added !== []) {
-			$hunk['right'] = [
-				'offset' => $rightOffset,
-				'length' => strlen($addedText),
-			];
-			$hunk['rightText'] = $addedText;
-			$rightAdvance = (strlen($addedText) + 1);
+		$hunk['right'] = $right['span'];
+		if ($right['span'] !== null) {
+			$hunk['rightText'] = $right['text'];
 		}
 
-		return [
-			'hunk' => $hunk,
-			'leftAdvance' => $leftAdvance,
-			'rightAdvance' => $rightAdvance,
-		];
+		$offsets->advance(left: $left['advance'], right: $right['advance']);
+
+		return $hunk;
 
 	}//end changeHunk()
+
+	/**
+	 * One side of a change hunk: its span, its text and how far it moves that side's offset.
+	 *
+	 * @param array<int, string> $words The side's words (none for an untouched side).
+	 * @param int $offset The side's current byte offset.
+	 *
+	 * @return array{span: array{offset: int, length: int}|null, text: string, advance: int}
+	 */
+	private function changedSide(array $words, int $offset): array {
+		if ($words === []) {
+			return ['span' => null, 'text' => '', 'advance' => 0];
+		}
+
+		$text = implode(' ', $words);
+
+		return [
+			'span' => [
+				'offset' => $offset,
+				'length' => strlen($text),
+			],
+			'text' => $text,
+			'advance' => (strlen($text) + 1),
+		];
+
+	}//end changedSide()
 
 	/**
 	 * Classify a change run as changed, added, or removed.
@@ -266,7 +269,7 @@ class WordDiffer {
 	 * @return array<int, array{op:string, left?:string, right?:string}> Ops.
 	 */
 	private function lcsDiff(array $a, array $b): array {
-		return $this->backtrack(a: $a, b: $b, lcs: $this->lcsTable(a: $a, b: $b));
+		return $this->backtrack(a: $a, b: $b);
 	}//end lcsDiff()
 
 	/**
@@ -281,10 +284,7 @@ class WordDiffer {
 		$n = count($a);
 		$m = count($b);
 
-		$lcs = [];
-		for ($i = 0; $i <= $n; $i++) {
-			$lcs[$i] = array_fill(0, ($m + 1), 0);
-		}
+		$lcs = $this->zeroTable(rows: ($n + 1), columns: ($m + 1));
 
 		for ($i = ($n - 1); $i >= 0; $i--) {
 			for ($j = ($m - 1); $j >= 0; $j--) {
@@ -301,65 +301,56 @@ class WordDiffer {
 	}//end lcsTable()
 
 	/**
-	 * Backtrack an LCS length table into an ordered op list.
+	 * A table of zeros, one row per index.
+	 *
+	 * @param int $rows    How many rows.
+	 * @param int $columns How many cells each row holds.
+	 *
+	 * @return array<int, array<int, int>> The table.
+	 */
+	private function zeroTable(int $rows, int $columns): array {
+		$table = [];
+		for ($i = 0; $i < $rows; $i++) {
+			$table[$i] = array_fill(0, $columns, 0);
+		}
+
+		return $table;
+	}//end zeroTable()
+
+	/**
+	 * Backtrack the LCS length table of two word lists into an ordered op list.
 	 *
 	 * @param array<int, string> $a Left words.
 	 * @param array<int, string> $b Right words.
-	 * @param array<int, array<int, int>> $lcs The LCS length table.
 	 *
 	 * @return array<int, array{op:string, left?:string, right?:string}> Ops.
 	 */
-	private function backtrack(array $a, array $b, array $lcs): array {
-		$n = count($a);
-		$m = count($b);
+	private function backtrack(array $a, array $b): array {
+		$walk = new LcsWalk(a: $a, b: $b, lcs: $this->lcsTable(a: $a, b: $b));
 
 		$ops = [];
-		$leftPos = 0;
-		$rightPos = 0;
-		while ($leftPos < $n && $rightPos < $m) {
-			if ($a[$leftPos] === $b[$rightPos]) {
-				$ops[] = [
-					'op' => 'equal',
-					'left' => $a[$leftPos],
-					'right' => $b[$rightPos],
-				];
-				$leftPos++;
-				$rightPos++;
-				continue;
-			}
-
-			if ($lcs[($leftPos + 1)][$rightPos] >= $lcs[$leftPos][($rightPos + 1)]) {
-				$ops[] = [
-					'op' => 'delete',
-					'left' => $a[$leftPos],
-				];
-				$leftPos++;
-				continue;
-			}
-
-			$ops[] = [
-				'op' => 'insert',
-				'right' => $b[$rightPos],
-			];
-			$rightPos++;
-		}//end while
-
-		while ($leftPos < $n) {
-			$ops[] = [
-				'op' => 'delete',
-				'left' => $a[$leftPos],
-			];
-			$leftPos++;
+		while ($walk->inBoth() === true) {
+			$ops[] = $walk->step();
 		}
 
-		while ($rightPos < $m) {
-			$ops[] = [
-				'op' => 'insert',
-				'right' => $b[$rightPos],
-			];
-			$rightPos++;
-		}
-
-		return $ops;
+		return array_merge(
+			$ops,
+			$this->trailing(words: $walk->leftRest(), op: 'delete'),
+			$this->trailing(words: $walk->rightRest(), op: 'insert')
+		);
 	}//end backtrack()
+
+	/**
+	 * One op per word left over once the other side ran out: delete for the
+	 * left side, insert for the right.
+	 *
+	 * @param array<int, string> $words The words left over.
+	 * @param string             $op    'delete' or 'insert'.
+	 *
+	 * @return array<int, array{op:string, left?:string, right?:string}> Ops.
+	 */
+	private function trailing(array $words, string $op): array {
+		$side = ['delete' => 'left', 'insert' => 'right'][$op];
+		return array_map(static fn (string $word): array => ['op' => $op, $side => $word], $words);
+	}//end trailing()
 }//end class

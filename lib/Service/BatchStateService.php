@@ -3,6 +3,9 @@
 /**
  * Batch State Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Persists anonymization batch state in OpenRegister, with Nextcloud's
  * distributed cache in front of it as a read fast path. Each batch is keyed by
  * UUID; the cached copy is refreshed on every read so an active batch never
@@ -28,15 +31,13 @@
  *
  * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-creation-via-multi-file-upload
  * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-status-endpoint
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\BatchStateServiceInterface;
 use OCP\IAppConfig;
 use OCP\ICache;
 use OCP\ICacheFactory;
@@ -57,7 +58,7 @@ use RuntimeException;
  *
  * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-status-endpoint
  */
-class BatchStateService {
+class BatchStateService implements BatchStateServiceInterface {
 	private const CACHE_TTL = 7200;
 	private const DEFAULT_MAX_FILES = 100;
 	private const CACHE_PREFIX = 'filinq_batch_';

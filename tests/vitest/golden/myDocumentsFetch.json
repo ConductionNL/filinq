@@ -1,0 +1,306 @@
+{
+	"first": {
+		"documents": [
+			{
+				"fileId": 20,
+				"fileName": "Dossier",
+				"mimeType": "httpd/unix-directory",
+				"fileSize": 0,
+				"modified": 1704103200,
+				"isFolder": true,
+				"isAnonymized": false,
+				"allChildrenAnonymized": true
+			},
+			{
+				"fileId": 21,
+				"fileName": "Broken",
+				"mimeType": "httpd/unix-directory",
+				"fileSize": 0,
+				"modified": null,
+				"isFolder": true,
+				"isAnonymized": false,
+				"allChildrenAnonymized": false
+			},
+			{
+				"fileId": 22,
+				"fileName": "Empty",
+				"mimeType": "x/dir",
+				"fileSize": 0,
+				"modified": null,
+				"isFolder": true,
+				"isAnonymized": false,
+				"allChildrenAnonymized": false
+			},
+			{
+				"fileId": 30,
+				"fileName": "gone.pdf",
+				"mimeType": "application/octet-stream",
+				"fileSize": 0,
+				"modified": 1704268800,
+				"isFolder": false,
+				"isAnonymized": false
+			},
+			{
+				"fileId": 12,
+				"fileName": "a_anonymized.pdf",
+				"mimeType": "application/octet-stream",
+				"fileSize": 55,
+				"modified": 1704186000,
+				"isFolder": false,
+				"isAnonymized": true
+			},
+			{
+				"fileId": 11,
+				"fileName": "a.pdf",
+				"mimeType": "application/pdf",
+				"fileSize": 100,
+				"modified": 1704099600,
+				"isFolder": false,
+				"isAnonymized": false
+			},
+			{
+				"fileId": 14,
+				"fileName": "gone_anonymized.pdf",
+				"mimeType": "application/octet-stream",
+				"fileSize": 0,
+				"modified": 1704096000,
+				"isFolder": false,
+				"isAnonymized": true
+			},
+			{
+				"fileId": 15,
+				"fileName": "a_anonymized_old.pdf",
+				"mimeType": "application/octet-stream",
+				"fileSize": 0,
+				"modified": 1704013200,
+				"isFolder": false,
+				"isAnonymized": true
+			},
+			{
+				"fileId": 0,
+				"fileName": "café.txt",
+				"mimeType": "text/plain",
+				"fileSize": 7,
+				"modified": null,
+				"isFolder": false,
+				"isAnonymized": false
+			}
+		],
+		"total": 9,
+		"loading": false,
+		"error": null,
+		"currentPath": "/DocuDesk/Sub? A",
+		"breadcrumbs": [
+			{
+				"name": "DocuDesk",
+				"path": "/DocuDesk"
+			},
+			{
+				"name": "Sub? A",
+				"path": "/DocuDesk/Sub? A"
+			}
+		],
+		"visible": [
+			20,
+			21,
+			22,
+			30,
+			12,
+			0
+		],
+		"orphans": [
+			14
+		],
+		"calls": [
+			{
+				"method": "GET",
+				"url": "/index.php/apps/openregister/api/objects/filinq/anonymizationLink",
+				"depth": null,
+				"body": "",
+				"params": {
+					"_limit": 10000
+				}
+			},
+			{
+				"method": "PROPFIND",
+				"url": "http://localhost/remote.php/dav/files/admin/DocuDesk/Sub%3F%20A",
+				"depth": "1",
+				"body": "<?xml version=\"1.0\"?> <d:propfind xmlns:d=\"DAV:\" xmlns:oc=\"http://owncloud.org/ns\" xmlns:nc=\"http://nextcloud.org/ns\"> <d:prop> <d:resourcetype /> <d:getcontenttype /> <d:getcontentlength /> <d:getlastmodified /> <oc:fileid /> <oc:size /> </d:prop> </d:propfind>",
+				"params": null
+			},
+			{
+				"method": "PROPFIND",
+				"url": "http://localhost/remote.php/dav/files/admin/DocuDesk/Sub%3F%20A/Dossier",
+				"depth": "1",
+				"body": "<?xml version=\"1.0\"?> <d:propfind xmlns:d=\"DAV:\" xmlns:oc=\"http://owncloud.org/ns\" xmlns:nc=\"http://nextcloud.org/ns\"> <d:prop> <d:resourcetype /> <oc:fileid /> </d:prop> </d:propfind>",
+				"params": null
+			},
+			{
+				"method": "PROPFIND",
+				"url": "http://localhost/remote.php/dav/files/admin/DocuDesk/Sub%3F%20A/Broken",
+				"depth": "1",
+				"body": "<?xml version=\"1.0\"?> <d:propfind xmlns:d=\"DAV:\" xmlns:oc=\"http://owncloud.org/ns\" xmlns:nc=\"http://nextcloud.org/ns\"> <d:prop> <d:resourcetype /> <oc:fileid /> </d:prop> </d:propfind>",
+				"params": null
+			},
+			{
+				"method": "PROPFIND",
+				"url": "http://localhost/remote.php/dav/files/admin/DocuDesk/Sub%3F%20A/Empty",
+				"depth": "1",
+				"body": "<?xml version=\"1.0\"?> <d:propfind xmlns:d=\"DAV:\" xmlns:oc=\"http://owncloud.org/ns\" xmlns:nc=\"http://nextcloud.org/ns\"> <d:prop> <d:resourcetype /> <oc:fileid /> </d:prop> </d:propfind>",
+				"params": null
+			}
+		]
+	},
+	"again": {
+		"documents": [
+			{
+				"fileId": 20,
+				"fileName": "Dossier",
+				"mimeType": "httpd/unix-directory",
+				"fileSize": 0,
+				"modified": 1704103200,
+				"isFolder": true,
+				"isAnonymized": false,
+				"allChildrenAnonymized": true
+			},
+			{
+				"fileId": 21,
+				"fileName": "Broken",
+				"mimeType": "httpd/unix-directory",
+				"fileSize": 0,
+				"modified": null,
+				"isFolder": true,
+				"isAnonymized": false,
+				"allChildrenAnonymized": false
+			},
+			{
+				"fileId": 22,
+				"fileName": "Empty",
+				"mimeType": "x/dir",
+				"fileSize": 0,
+				"modified": null,
+				"isFolder": true,
+				"isAnonymized": false,
+				"allChildrenAnonymized": false
+			},
+			{
+				"fileId": 30,
+				"fileName": "gone.pdf",
+				"mimeType": "application/octet-stream",
+				"fileSize": 0,
+				"modified": 1704268800,
+				"isFolder": false,
+				"isAnonymized": false
+			},
+			{
+				"fileId": 12,
+				"fileName": "a_anonymized.pdf",
+				"mimeType": "application/octet-stream",
+				"fileSize": 55,
+				"modified": 1704186000,
+				"isFolder": false,
+				"isAnonymized": true
+			},
+			{
+				"fileId": 11,
+				"fileName": "a.pdf",
+				"mimeType": "application/pdf",
+				"fileSize": 100,
+				"modified": 1704099600,
+				"isFolder": false,
+				"isAnonymized": false
+			},
+			{
+				"fileId": 14,
+				"fileName": "gone_anonymized.pdf",
+				"mimeType": "application/octet-stream",
+				"fileSize": 0,
+				"modified": 1704096000,
+				"isFolder": false,
+				"isAnonymized": true
+			},
+			{
+				"fileId": 15,
+				"fileName": "a_anonymized_old.pdf",
+				"mimeType": "application/octet-stream",
+				"fileSize": 0,
+				"modified": 1704013200,
+				"isFolder": false,
+				"isAnonymized": true
+			},
+			{
+				"fileId": 0,
+				"fileName": "café.txt",
+				"mimeType": "text/plain",
+				"fileSize": 7,
+				"modified": null,
+				"isFolder": false,
+				"isAnonymized": false
+			}
+		],
+		"total": 9,
+		"loading": false,
+		"error": null,
+		"currentPath": "/DocuDesk/Sub? A",
+		"breadcrumbs": [
+			{
+				"name": "DocuDesk",
+				"path": "/DocuDesk"
+			},
+			{
+				"name": "Sub? A",
+				"path": "/DocuDesk/Sub? A"
+			}
+		],
+		"visible": [
+			20,
+			21,
+			22,
+			30,
+			12,
+			0
+		],
+		"orphans": [
+			14
+		],
+		"calls": [
+			{
+				"method": "GET",
+				"url": "/index.php/apps/openregister/api/objects/filinq/anonymizationLink",
+				"depth": null,
+				"body": "",
+				"params": {
+					"_limit": 10000
+				}
+			},
+			{
+				"method": "PROPFIND",
+				"url": "http://localhost/remote.php/dav/files/admin/DocuDesk/Sub%3F%20A",
+				"depth": "1",
+				"body": "<?xml version=\"1.0\"?> <d:propfind xmlns:d=\"DAV:\" xmlns:oc=\"http://owncloud.org/ns\" xmlns:nc=\"http://nextcloud.org/ns\"> <d:prop> <d:resourcetype /> <d:getcontenttype /> <d:getcontentlength /> <d:getlastmodified /> <oc:fileid /> <oc:size /> </d:prop> </d:propfind>",
+				"params": null
+			},
+			{
+				"method": "PROPFIND",
+				"url": "http://localhost/remote.php/dav/files/admin/DocuDesk/Sub%3F%20A/Dossier",
+				"depth": "1",
+				"body": "<?xml version=\"1.0\"?> <d:propfind xmlns:d=\"DAV:\" xmlns:oc=\"http://owncloud.org/ns\" xmlns:nc=\"http://nextcloud.org/ns\"> <d:prop> <d:resourcetype /> <oc:fileid /> </d:prop> </d:propfind>",
+				"params": null
+			},
+			{
+				"method": "PROPFIND",
+				"url": "http://localhost/remote.php/dav/files/admin/DocuDesk/Sub%3F%20A/Broken",
+				"depth": "1",
+				"body": "<?xml version=\"1.0\"?> <d:propfind xmlns:d=\"DAV:\" xmlns:oc=\"http://owncloud.org/ns\" xmlns:nc=\"http://nextcloud.org/ns\"> <d:prop> <d:resourcetype /> <oc:fileid /> </d:prop> </d:propfind>",
+				"params": null
+			},
+			{
+				"method": "PROPFIND",
+				"url": "http://localhost/remote.php/dav/files/admin/DocuDesk/Sub%3F%20A/Empty",
+				"depth": "1",
+				"body": "<?xml version=\"1.0\"?> <d:propfind xmlns:d=\"DAV:\" xmlns:oc=\"http://owncloud.org/ns\" xmlns:nc=\"http://nextcloud.org/ns\"> <d:prop> <d:resourcetype /> <oc:fileid /> </d:prop> </d:propfind>",
+				"params": null
+			}
+		]
+	}
+}

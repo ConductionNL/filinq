@@ -20,6 +20,9 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -178,28 +181,22 @@ class EmlAttachmentRenderer {
 	 * Render a divider/placeholder page for one attachment.
 	 *
 	 * @param \Mpdf\Mpdf $mpdf Shared mPDF instance.
-	 * @param int $index 1-based attachment index.
-	 * @param string $filename Attachment filename.
-	 * @param string $mimeType MIME type.
-	 * @param int|null $size Size in bytes, or null.
-	 * @param string $variant One of default|non_renderable|too_large|unsupported|depth_limit|render_failed.
+	 * @param array{index: int, filename: string, mimeType: string, size: int|null, variant: string} $divider The attachment:
+	 *        its 1-based index, file name, MIME type, size in bytes (or null) and the variant, one of
+	 *        default|non_renderable|too_large|unsupported|depth_limit|render_failed.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-06-14-eml-pdf-assembly/tasks.md
 	 */
-	public function writeDivider(
-		\Mpdf\Mpdf $mpdf,
-		int $index,
-		string $filename,
-		string $mimeType,
-		?int $size,
-		string $variant,
-	): void {
+	public function writeDivider(\Mpdf\Mpdf $mpdf, array $divider): void {
+		$index = $divider['index'];
 		$data = [
 			'index' => $index,
-			'filename' => $filename,
-			'mimeType' => $mimeType,
-			'size' => $size,
-			'variant' => $variant,
+			'filename' => $divider['filename'],
+			'mimeType' => $divider['mimeType'],
+			'size' => $divider['size'],
+			'variant' => $divider['variant'],
 		];
 
 		try {
@@ -208,7 +205,7 @@ class EmlAttachmentRenderer {
 				data: $data
 			);
 		} catch (Throwable $e) {
-			$html = '<p>Bijlage ' . $index . ': ' . htmlspecialchars($filename, ENT_QUOTES, 'UTF-8') . '</p>';
+			$html = '<p>Bijlage ' . $index . ': ' . htmlspecialchars($divider['filename'], ENT_QUOTES, 'UTF-8') . '</p>';
 		}
 
 		try {
@@ -228,22 +225,19 @@ class EmlAttachmentRenderer {
 	 * shared mPDF instance. No bytes are embedded as file attachments.
 	 *
 	 * @param \Mpdf\Mpdf $mpdf Shared mPDF instance.
-	 * @param string $bytes Decoded redacted bytes.
-	 * @param string $mimeType Lowercased MIME type.
-	 * @param string $filename Attachment filename (for text rendering).
+	 * @param array{bytes: string, mimeType: string, filename: string} $attachment The attachment:
+	 *        its decoded redacted bytes, lowercased MIME type and file name (for Word rendering).
 	 * @param array<string,mixed> $options PDF options.
 	 *
 	 * @return void
 	 *
 	 * @throws Throwable On unrecoverable render failure (caught by caller).
+	 *
+	 * @spec openspec/changes/archive/2026-06-14-eml-pdf-assembly/tasks.md
 	 */
-	public function renderBytes(
-		\Mpdf\Mpdf $mpdf,
-		string $bytes,
-		string $mimeType,
-		string $filename,
-		array $options,
-	): void {
+	public function renderBytes(\Mpdf\Mpdf $mpdf, array $attachment, array $options): void {
+		$bytes = $attachment['bytes'];
+		$mimeType = $attachment['mimeType'];
 		if ($mimeType === 'application/pdf') {
 			$this->importPdfPages(mpdf: $mpdf, bytes: $bytes);
 			return;
@@ -265,7 +259,7 @@ class EmlAttachmentRenderer {
 		}
 
 		if (in_array($mimeType, self::WORD_MIMES, true) === true) {
-			$html = $this->wordRenderer->renderToHtml(bytes: $bytes, mimeType: $mimeType, filename: $filename);
+			$html = $this->wordRenderer->renderToHtml(bytes: $bytes, mimeType: $mimeType, filename: $attachment['filename']);
 			$this->writeHtmlPage(mpdf: $mpdf, html: $html, options: $options);
 			return;
 		}

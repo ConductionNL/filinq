@@ -1,3 +1,7 @@
+<!--
+  - SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
 <template>
 	<div>
 		<CnIndexPage
@@ -12,15 +16,7 @@
 			:objects="dossierStore.dossiers"
 			:columns="tableColumns"
 			:loading="dossierStore.loading"
-			:selectable="false"
-			:showEditAction="false"
-			:showCopyAction="false"
-			:showDeleteAction="false"
-			:showMassImport="false"
-			:showMassExport="false"
-			:showMassCopy="false"
-			:showMassDelete="false"
-			:showViewToggle="false"
+			v-bind="$options.listOnlyIndexPage"
 			:showAdd="true"
 			rowKey="id"
 			:emptyText="
@@ -93,7 +89,9 @@
 import { CnIndexPage, CnStatusBadge } from '@conduction/nextcloud-vue'
 import { translatePlural as n, translate as t } from '@nextcloud/l10n'
 import DossierFormModal from '../../dialogs/DossierFormModal.vue'
+import { LIST_ONLY_INDEX_PAGE } from '../../constants/indexPage.js'
 import { dossierStore } from '../../store/store.js'
+import { dossierStatusColors, dossierStatusLabel } from './dossierStatus.js'
 
 /**
  * Dossiers index.
@@ -105,6 +103,7 @@ import { dossierStore } from '../../store/store.js'
  */
 export default {
 	name: 'DossierIndex',
+	listOnlyIndexPage: LIST_ONLY_INDEX_PAGE,
 	components: {
 		CnIndexPage,
 		CnStatusBadge,
@@ -116,13 +115,7 @@ export default {
 			dossierStore,
 			isRefreshing: false,
 			dialogOpen: false,
-			statusColorMap: {
-				[t('filinq', 'Open')]: 'default',
-				[t('filinq', 'In review')]: 'warning',
-				[t('filinq', 'Processed')]: 'primary',
-				[t('filinq', 'Published')]: 'success',
-				[t('filinq', 'Closed')]: 'default',
-			},
+			statusColorMap: dossierStatusColors(),
 		}
 	},
 
@@ -156,14 +149,7 @@ export default {
 		 * @return {string} The label.
 		 */
 		statusLabel(status) {
-			const labels = {
-				open: t('filinq', 'Open'),
-				'in-review': t('filinq', 'In review'),
-				processed: t('filinq', 'Processed'),
-				published: t('filinq', 'Published'),
-				closed: t('filinq', 'Closed'),
-			}
-			return labels[status] || t('filinq', 'Open')
+			return dossierStatusLabel(status)
 		},
 
 		/**

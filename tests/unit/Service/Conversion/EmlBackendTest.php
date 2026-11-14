@@ -20,6 +20,9 @@
  * @version GIT: <git_id>
  *
  * @link https://www.filinq.app
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\Filinq\Tests\Unit\Service\Conversion;
@@ -164,19 +167,19 @@ class EmlBackendTest extends TestCase {
 	}//end testCanHandleEml()
 
 	/**
-	 * isAvailable() is true when the flag is set, OR is installed, the
-	 * anonymise-EML API is present, and the assembly service is wired.
+	 * isAvailable() is false even with every dependency present: OpenRegister
+	 * main exposes no anonymise-EML API, so the backend never claims an EML.
 	 *
 	 * @return void
 	 */
-	public function testIsAvailableWhenBothDepsPresent(): void {
+	public function testIsUnavailableWithoutAnOpenRegisterAnonymiseApi(): void {
 		$this->appConfig->method('getValueString')->willReturn('true');
 		$this->appManager->method('getInstalledApps')->willReturn(['openregister', 'filinq']);
 		$this->container->method('get')->willReturn(new FakeOrFileService());
 
-		$this->assertTrue($this->backend()->isAvailable());
+		$this->assertFalse($this->backend()->isAvailable());
 
-	}//end testIsAvailableWhenBothDepsPresent()
+	}//end testIsUnavailableWithoutAnOpenRegisterAnonymiseApi()
 
 	/**
 	 * isAvailable() is false when the OR anonymise-EML API is absent.
@@ -253,6 +256,45 @@ class EmlBackendTest extends TestCase {
 		$this->assertTrue($or->called, 'OR anonymise-EML API must be called');
 
 	}//end testConvertCallsOrApiAndDelegatesToAssembly()
+
+	/**
+	 * An earlier anonymised PDF beside the source is deleted before the new one is written.
+	 *
+	 * @return void
+	 */
+	public function testConvertReplacesAnEarlierOutput(): void {
+		$structure = (object)['headers' => [], 'body' => (object)['plain' => null, 'html' => null], 'attachments' => [], 'inlineImages' => []];
+
+		$or = new FakeOrFileService();
+		$or->toReturn = $structure;
+		$this->container->method('get')->willReturn($or);
+		$this->assembly->method('assemble')->willReturn('%PDF-1.4 new');
+
+		$order = [];
+		$earlier = $this->createMock(File::class);
+		$earlier->expects($this->once())->method('delete')->willReturnCallback(function () use (&$order): void {
+			$order[] = 'delete';
+		});
+		$outFile = $this->createMock(File::class);
+		$parent = $this->createMock(Folder::class);
+		$parent->method('nodeExists')->with('mail.v2_anonymized.pdf')->willReturn(true);
+		$parent->method('get')->with('mail.v2_anonymized.pdf')->willReturn($earlier);
+		$parent->expects($this->once())
+			->method('newFile')
+			->with('mail.v2_anonymized.pdf', '%PDF-1.4 new')
+			->willReturnCallback(function () use (&$order, $outFile): File {
+				$order[] = 'write';
+				return $outFile;
+			});
+
+		$source = $this->createMock(File::class);
+		$source->method('getName')->willReturn('mail.v2.eml');
+		$source->method('getParent')->willReturn($parent);
+
+		$this->assertSame($outFile, $this->backend()->convert($source));
+		$this->assertSame(['delete', 'write'], $order);
+
+	}//end testConvertReplacesAnEarlierOutput()
 
 	/**
 	 * OR API failure surfaces as ConversionFailedException with NO raw-parse

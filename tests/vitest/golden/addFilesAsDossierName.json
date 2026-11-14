@@ -1,0 +1,24 @@
+[
+	{
+		"folder": null,
+		"error": "Folder name is required",
+		"created": []
+	},
+	{
+		"folder": "",
+		"error": "Folder name is required",
+		"created": []
+	},
+	{
+		"folder": "   ",
+		"error": "Folder name is required",
+		"created": []
+	},
+	{
+		"folder": " Dos ",
+		"error": "stop",
+		"created": [
+			"Dos"
+		]
+	}
+]

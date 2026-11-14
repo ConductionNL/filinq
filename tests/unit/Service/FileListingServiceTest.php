@@ -13,6 +13,9 @@
  * @version GIT: <git_id>
  *
  * @link https://www.filinq.app
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\Filinq\Tests\Unit\Service;
@@ -20,6 +23,7 @@ namespace OCA\Filinq\Tests\Unit\Service;
 use OCA\Filinq\Service\FileEntityStatsService;
 use OCA\Filinq\Service\FileListingService;
 use OCA\Filinq\Service\FileUploadService;
+use OCA\Filinq\Tests\Unit\Service\Ocr\OcrDoubles;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -36,6 +40,8 @@ use Psr\Log\LoggerInterface;
  * @psalm-suppress PropertyNotSetInConstructor
  */
 class FileListingServiceTest extends TestCase {
+
+	use OcrDoubles;
 
 	/**
 	 * @var FileListingService
@@ -72,7 +78,11 @@ class FileListingServiceTest extends TestCase {
 		$this->service = new FileListingService(
 			$this->mockLogger,
 			$this->mockFileUploadService,
-			$this->mockEntityStatsService
+			$this->mockEntityStatsService,
+			$this->ocrResultRepository(),
+			$this->ocrRunService($this->ocrService()),
+			$this->createMock(\OCA\Filinq\Service\ReadableFileResolver::class),
+			$this->createMock(\OCA\Filinq\Kernel\Contracts\RedactionOutputGuardInterface::class)
 		);
 
 	}//end setUp()
@@ -141,4 +151,47 @@ class FileListingServiceTest extends TestCase {
 
 	}//end testListProcessedFilesReturnsEmptyForEmptyFolder()
 
+	/**
+	 * A scan that was OCR'd reports its real confidence; a born-digital PDF
+	 * that was only extracted is no longer reported as OCR'd.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-2.4
+	 */
+	public function testTheListingReflectsRealOcrRunsOnly(): void {
+		$this->ocrRunService($this->ocrService())->run(file: $this->ocrFile(id: 812004), trigger: 'manual');
+		$service = new FileListingService(
+			$this->mockLogger,
+			$this->mockFileUploadService,
+			$this->mockEntityStatsService,
+			$this->ocrResultRepository(),
+			$this->ocrRunService($this->ocrService()),
+			$this->createMock(\OCA\Filinq\Service\ReadableFileResolver::class),
+			$this->createMock(\OCA\Filinq\Kernel\Contracts\RedactionOutputGuardInterface::class)
+		);
+
+		$this->mockFileUploadService->method('getCurrentUserId')->willReturn('admin');
+		$folder = $this->createMock(\OCP\Files\Folder::class);
+		$folder->method('getDirectoryListing')->willReturn(
+			[$this->ocrFile(id: 812004), $this->ocrFile(id: 7), $this->ocrFile(id: 8, mimeType: 'text/plain')]
+		);
+		$this->mockFileUploadService->method('getFilinqFolder')->willReturn($folder);
+		$this->mockEntityStatsService->method('getEntityStats')->willReturn(
+			['entityCount' => 2, 'anonymizedCount' => 0, 'status' => 'extracted']
+		);
+
+		$rows = [];
+		foreach ($service->listProcessedFiles() as $row) {
+			$rows[$row['fileId']] = $row;
+		}
+
+		$this->assertTrue($rows[812004]['ocrProcessed']);
+		$this->assertSame(91.4, $rows[812004]['ocrConfidence']);
+		$this->assertFalse($rows[7]['ocrProcessed']);
+		$this->assertNull($rows[7]['ocrConfidence']);
+		$this->assertTrue($rows[7]['ocrAvailable']);
+		$this->assertFalse($rows[8]['ocrAvailable']);
+
+	}//end testTheListingReflectsRealOcrRunsOnly()
 }//end class

@@ -1,0 +1,371 @@
+[
+	{
+		"entry": {
+			"name": "p.pdf",
+			"fileId": 3,
+			"status": "extracted",
+			"detailUnavailable": false,
+			"reviewMark": null,
+			"entities": [
+				{
+					"type": "PERSON",
+					"value": "Jan",
+					"relationId": 1,
+					"confidence": 0.9,
+					"included": false,
+					"highestConfidence": 0.9,
+					"fileCount": 1,
+					"count": 4,
+					"relationIds": [
+						1,
+						2
+					],
+					"bases": [
+						"5.1.2e"
+					],
+					"prohibitionMatch": null,
+					"_decisionBases": [
+						"kept"
+					],
+					"_decisionSkip": true,
+					"_patchError": null,
+					"skipAnonymization": true
+				},
+				{
+					"type": "EMAIL",
+					"value": "a@b.nl",
+					"relationId": 3,
+					"bases": [
+						"5.1.1d"
+					],
+					"skipAnonymization": true,
+					"included": false,
+					"confidence": 0,
+					"highestConfidence": 0,
+					"fileCount": 1,
+					"count": 2,
+					"relationIds": [
+						3,
+						4
+					],
+					"prohibitionMatch": null,
+					"_decisionBases": [],
+					"_decisionSkip": false,
+					"_patchError": null
+				},
+				{
+					"value": "no type",
+					"type": "UNKNOWN",
+					"included": true,
+					"confidence": 0,
+					"highestConfidence": 0,
+					"fileCount": 1,
+					"count": 1,
+					"relationId": null,
+					"relationIds": [],
+					"bases": null,
+					"prohibitionMatch": null,
+					"_decisionBases": [],
+					"_decisionSkip": false,
+					"_patchError": null
+				},
+				{
+					"type": "LOC",
+					"value": "",
+					"included": true,
+					"confidence": 0,
+					"highestConfidence": 0,
+					"fileCount": 1,
+					"count": 2,
+					"relationId": null,
+					"relationIds": [],
+					"bases": null,
+					"prohibitionMatch": null,
+					"_decisionBases": [],
+					"_decisionSkip": false,
+					"_patchError": null
+				},
+				{
+					"type": "IBAN",
+					"value": "NL00",
+					"relationId": 0,
+					"bases": "loose",
+					"prohibitionMatch": {
+						"ruleId": 9,
+						"ruleName": "r",
+						"highConfidence": true
+					},
+					"extra": "kept",
+					"included": true,
+					"confidence": 0,
+					"highestConfidence": 0,
+					"fileCount": 1,
+					"count": 2,
+					"relationIds": [
+						0
+					],
+					"_decisionBases": [],
+					"_decisionSkip": false,
+					"_patchError": null
+				}
+			],
+			"error": null,
+			"entityCount": 5,
+			"confidentialityLabel": "Secret",
+			"confidentialityLevel": 3,
+			"ocrWarning": null,
+			"reanonymize": true,
+			"none": {
+				"fileId": 0
+			},
+			"hasFile": false
+		},
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/filinq/api/anonymization/extract/3",
+				null
+			]
+		]
+	},
+	{
+		"entry": {
+			"name": "p.pdf",
+			"fileId": 3,
+			"status": "completed",
+			"detailUnavailable": false,
+			"reviewMark": null,
+			"entities": [],
+			"error": null,
+			"entityCount": 0,
+			"confidentialityLabel": null,
+			"confidentialityLevel": null,
+			"ocrWarning": null,
+			"reanonymize": true,
+			"none": {
+				"fileId": 0
+			},
+			"hasFile": false
+		},
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/filinq/api/anonymization/extract/3",
+				null
+			]
+		]
+	},
+	{
+		"entry": {
+			"name": "p.pdf",
+			"fileId": 3,
+			"status": "completed",
+			"detailUnavailable": false,
+			"reviewMark": null,
+			"entities": [],
+			"error": null,
+			"entityCount": 0,
+			"confidentialityLabel": null,
+			"confidentialityLevel": null,
+			"ocrWarning": "This document is a scan. OCR read its text, but entity detection could not check it yet. Review it by hand before you publish.",
+			"reanonymize": true,
+			"none": {
+				"fileId": 0
+			},
+			"hasFile": false
+		},
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/filinq/api/anonymization/extract/3",
+				null
+			]
+		]
+	},
+	{
+		"entry": {
+			"name": "p.pdf",
+			"fileId": 3,
+			"status": "completed",
+			"detailUnavailable": false,
+			"reviewMark": null,
+			"entities": [],
+			"error": null,
+			"entityCount": 0,
+			"confidentialityLabel": null,
+			"confidentialityLevel": null,
+			"ocrWarning": "This document is a scan and OCR is switched off, so it was not checked for personal data.",
+			"reanonymize": true,
+			"none": {
+				"fileId": 0
+			},
+			"hasFile": false
+		},
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/filinq/api/anonymization/extract/3",
+				null
+			]
+		]
+	},
+	{
+		"entry": {
+			"name": "p.pdf",
+			"fileId": 3,
+			"status": "extracted",
+			"detailUnavailable": false,
+			"reviewMark": null,
+			"entities": [
+				{
+					"type": "PERSON",
+					"value": "Piet",
+					"included": true,
+					"confidence": 0,
+					"highestConfidence": 0,
+					"fileCount": 1,
+					"count": 1,
+					"relationId": null,
+					"relationIds": [],
+					"bases": null,
+					"prohibitionMatch": null,
+					"_decisionBases": [],
+					"_decisionSkip": false,
+					"_patchError": null
+				}
+			],
+			"error": null,
+			"entityCount": 1,
+			"confidentialityLabel": null,
+			"confidentialityLevel": 0,
+			"ocrWarning": null,
+			"reanonymize": true,
+			"none": {
+				"fileId": 0
+			},
+			"hasFile": false
+		},
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/filinq/api/anonymization/extract/3",
+				null
+			]
+		]
+	},
+	{
+		"entry": {
+			"name": "p.pdf",
+			"fileId": 3,
+			"status": "completed",
+			"detailUnavailable": false,
+			"reviewMark": null,
+			"entities": [],
+			"error": null,
+			"entityCount": 0,
+			"confidentialityLabel": null,
+			"confidentialityLevel": null,
+			"ocrWarning": null,
+			"reanonymize": true,
+			"none": {
+				"fileId": 0
+			},
+			"hasFile": false
+		},
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/filinq/api/anonymization/extract/3",
+				null
+			]
+		]
+	},
+	{
+		"entry": {
+			"name": "p.pdf",
+			"fileId": 3,
+			"status": "error",
+			"viewMode": "anonymized",
+			"detailUnavailable": true,
+			"reviewMark": {
+				"by": "x"
+			},
+			"entities": [
+				{
+					"type": "PERSON",
+					"value": "Jan",
+					"_decisionBases": [
+						"kept"
+					],
+					"_decisionSkip": 1
+				},
+				{
+					"type": "EMAIL",
+					"value": "a@b.nl",
+					"_decisionBases": "no",
+					"_decisionSkip": 0
+				},
+				{
+					"type": "PERSON",
+					"value": "Piet"
+				}
+			],
+			"error": "extract failed",
+			"none": {
+				"fileId": 0
+			},
+			"hasFile": false
+		},
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/filinq/api/anonymization/extract/3",
+				null
+			]
+		]
+	},
+	{
+		"entry": {
+			"name": "p.pdf",
+			"fileId": 3,
+			"status": "error",
+			"viewMode": "anonymized",
+			"detailUnavailable": true,
+			"reviewMark": {
+				"by": "x"
+			},
+			"entities": [
+				{
+					"type": "PERSON",
+					"value": "Jan",
+					"_decisionBases": [
+						"kept"
+					],
+					"_decisionSkip": 1
+				},
+				{
+					"type": "EMAIL",
+					"value": "a@b.nl",
+					"_decisionBases": "no",
+					"_decisionSkip": 0
+				},
+				{
+					"type": "PERSON",
+					"value": "Piet"
+				}
+			],
+			"error": "plain",
+			"none": {
+				"fileId": 0
+			},
+			"hasFile": false
+		},
+		"calls": [
+			[
+				"POST",
+				"/index.php/apps/filinq/api/anonymization/extract/3",
+				null
+			]
+		]
+	}
+]

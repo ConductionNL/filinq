@@ -32,6 +32,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\Conversion;
 
 use OCA\Filinq\Exception\ConversionFailedException;
+use OCA\Filinq\Service\StripsFileExtension;
 use OCP\Files\Conversion\IConversionManager;
 use OCP\Files\File;
 use OCP\Files\Folder;
@@ -53,6 +54,7 @@ use Throwable;
  * @link      https://www.filinq.app
  */
 class OfficeAppBackend implements ConversionBackendInterface {
+	use StripsFileExtension;
 
 	/**
 	 * App config key controlling whether this backend is attempted.
@@ -201,78 +203,90 @@ class OfficeAppBackend implements ConversionBackendInterface {
 	 * @return File Newly written PDF file node.
 	 *
 	 * @throws ConversionFailedException On manager failure or path resolution failure.
+	 *
+	 * @spec openspec/specs/pdf-conversion/spec.md
 	 */
 	public function convert(File $source): File {
 		if ($this->conversionManager === null) {
 			throw new ConversionFailedException(
 				message: 'OfficeAppBackend reached convert() without IConversionManager bound.',
 				attempts: [
-					[
-						'name' => $this->name(),
-						'available' => false,
-						'supports' => false,
-						'reason' => 'IConversionManager not present (NC < 31?)',
-					],
+					array_merge(
+						$this->attempt(reason: 'IConversionManager not present (NC < 31?)'),
+						['available' => false, 'supports' => false]
+					),
 				]
 			);
 		}
 
-		$user = $this->userSession->getUser();
-		if ($user === null) {
+		if ($this->userSession->getUser() === null) {
 			throw new ConversionFailedException(
 				message: 'OfficeAppBackend requires a user session.',
-				attempts: [
-					[
-						'name' => $this->name(),
-						'available' => true,
-						'supports' => true,
-						'reason' => 'no active user session',
-					],
-				]
+				attempts: [$this->attempt(reason: 'no active user session')]
 			);
 		}
 
-		$sourceName = $source->getName();
-		$sourceFolder = $source->getParent();
-		$targetBaseName = $this->stripExtension(name: $sourceName) . '.pdf';
-		$destFullPath = $sourceFolder->getPath() . '/' . $targetBaseName;
+		$target = $this->clearTarget(source: $source);
+
+		// Manager returned a path; resolve it to a File node for the caller.
+		return $this->resolveConvertedFile(
+			target: $target,
+			writtenPath: $this->runManager(source: $source, target: $target)
+		);
+
+	}//end convert()
+
+	/**
+	 * The PDF's place next to the source, emptied of an earlier conversion.
+	 *
+	 * @param File $source Source file node.
+	 *
+	 * @return array{folder: Folder, baseName: string, fullPath: string} The folder, the PDF's basename and its full path.
+	 */
+	private function clearTarget(File $source): array {
+		$folder = $source->getParent();
+		$baseName = $this->stripExtension(name: $source->getName()) . '.pdf';
 
 		// If a previous conversion left a file behind, delete it —
 		// IConversionManager refuses to overwrite.
-		if ($sourceFolder->nodeExists($targetBaseName) === true) {
-			$sourceFolder->get($targetBaseName)->delete();
+		if ($folder->nodeExists($baseName) === true) {
+			$folder->get($baseName)->delete();
 		}
 
+		return [
+			'folder' => $folder,
+			'baseName' => $baseName,
+			'fullPath' => $folder->getPath() . '/' . $baseName,
+		];
+
+	}//end clearTarget()
+
+	/**
+	 * Have IConversionManager write the PDF.
+	 *
+	 * @param File                                                     $source Source file node.
+	 * @param array{folder: Folder, baseName: string, fullPath: string} $target Where the PDF goes.
+	 *
+	 * @return mixed Whatever the manager returned.
+	 *
+	 * @throws ConversionFailedException When the manager throws.
+	 */
+	private function runManager(File $source, array $target): mixed {
 		try {
-			$writtenPath = $this->conversionManager->convert(
+			return $this->conversionManager?->convert(
 				$source,
 				self::TARGET_MIME,
-				$destFullPath
+				$target['fullPath']
 			);
 		} catch (Throwable $e) {
 			throw new ConversionFailedException(
 				message: 'IConversionManager->convert threw: ' . $e->getMessage(),
-				attempts: [
-					[
-						'name' => $this->name(),
-						'available' => true,
-						'supports' => true,
-						'reason' => 'manager convert exception: ' . $e->getMessage(),
-					],
-				],
+				attempts: [$this->attempt(reason: 'manager convert exception: ' . $e->getMessage())],
 				previous: $e
 			);
 		}
 
-		// Manager returned a path; resolve it to a File node for the caller.
-		return $this->resolveConvertedFile(
-			sourceFolder: $sourceFolder,
-			targetBaseName: $targetBaseName,
-			destFullPath: $destFullPath,
-			writtenPath: $writtenPath
-		);
-
-	}//end convert()
+	}//end runManager()
 
 	/**
 	 * Resolve the file the conversion manager reported it wrote.
@@ -281,42 +295,28 @@ class OfficeAppBackend implements ConversionBackendInterface {
 	 * one depending on the provider, so the lookup is normalised by going
 	 * through the source's parent folder plus the target basename.
 	 *
-	 * @param Folder $sourceFolder Folder that holds the source (and the output).
-	 * @param string $targetBaseName Basename of the expected PDF.
-	 * @param string $destFullPath Full destination path handed to the manager.
-	 * @param mixed $writtenPath Whatever the manager returned, for diagnostics.
+	 * @param array{folder: Folder, baseName: string, fullPath: string} $target      Where the PDF was written.
+	 * @param mixed                                                     $writtenPath Whatever the manager returned, for diagnostics.
 	 *
 	 * @return File The converted PDF node.
 	 *
 	 * @throws ConversionFailedException When the node cannot be found or is not a file.
 	 */
-	private function resolveConvertedFile(
-		Folder $sourceFolder,
-		string $targetBaseName,
-		string $destFullPath,
-		mixed $writtenPath,
-	): File {
+	private function resolveConvertedFile(array $target, mixed $writtenPath): File {
 		try {
-			$resolved = $sourceFolder->get($targetBaseName);
+			$resolved = $target['folder']->get($target['baseName']);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'[OfficeAppBackend] Conversion reported success but result lookup failed',
 				[
-					'expected' => $destFullPath,
+					'expected' => $target['fullPath'],
 					'manager_ret' => $writtenPath,
 					'exception' => get_class($e),
 				]
 			);
 			throw new ConversionFailedException(
 				message: 'Office-app conversion reported success but the resulting PDF could not be located.',
-				attempts: [
-					[
-						'name' => $this->name(),
-						'available' => true,
-						'supports' => true,
-						'reason' => 'post-convert file lookup failed: ' . $e->getMessage(),
-					],
-				],
+				attempts: [$this->attempt(reason: 'post-convert file lookup failed: ' . $e->getMessage())],
 				previous: $e
 			);
 		}//end try
@@ -324,19 +324,30 @@ class OfficeAppBackend implements ConversionBackendInterface {
 		if ($resolved instanceof File === false) {
 			throw new ConversionFailedException(
 				message: 'Office-app conversion result is not a regular file node.',
-				attempts: [
-					[
-						'name' => $this->name(),
-						'available' => true,
-						'supports' => true,
-						'reason' => 'result node is not File',
-					],
-				]
+				attempts: [$this->attempt(reason: 'result node is not File')]
 			);
 		}
 
 		return $resolved;
 	}//end resolveConvertedFile()
+
+	/**
+	 * One attempt row for a ConversionFailedException, from a backend that
+	 * was available and supported the file.
+	 *
+	 * @param string $reason Why this backend did not convert.
+	 *
+	 * @return array{name: string, available: bool, supports: bool, reason: string} The attempt.
+	 */
+	private function attempt(string $reason): array {
+		return [
+			'name' => $this->name(),
+			'available' => true,
+			'supports' => true,
+			'reason' => $reason,
+		];
+
+	}//end attempt()
 
 	/**
 	 * Cached accessor for the provider list. Memoised per request to
@@ -367,20 +378,4 @@ class OfficeAppBackend implements ConversionBackendInterface {
 
 		return $this->providersCache;
 	}//end getProvidersCached()
-
-	/**
-	 * Return $name without its trailing `.ext`.
-	 *
-	 * @param string $name File name with extension.
-	 *
-	 * @return string
-	 */
-	private function stripExtension(string $name): string {
-		$dotPos = strrpos($name, '.');
-		if ($dotPos === false) {
-			return $name;
-		}
-
-		return substr($name, 0, $dotPos);
-	}//end stripExtension()
 }//end class

@@ -15,12 +15,16 @@
  * @link https://www.filinq.app
  *
  * @spec openspec/changes/document-output-destinations-and-bulk-retention/tasks.md#task-3
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\Filinq\Tests\Unit\Service;
 
 use Exception;
 use OCA\Filinq\Service\DocumentStorageService;
+use OCA\Filinq\Service\FinalDocumentService;
 use OCP\Files\File;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
@@ -65,6 +69,13 @@ class DocumentStorageServiceTest extends TestCase {
 	private LoggerInterface $logger;
 
 	/**
+	 * Mock final-document guard.
+	 *
+	 * @var FinalDocumentService&MockObject
+	 */
+	private FinalDocumentService $finalDocuments;
+
+	/**
 	 * Set up test fixtures.
 	 *
 	 * @return void
@@ -75,9 +86,12 @@ class DocumentStorageServiceTest extends TestCase {
 		$this->rootFolder = $this->createMock(IRootFolder::class);
 		$this->logger = $this->createMock(LoggerInterface::class);
 
+		$this->finalDocuments = $this->createMock(FinalDocumentService::class);
+
 		$this->service = new DocumentStorageService(
 			$this->rootFolder,
-			$this->logger
+			$this->logger,
+			$this->finalDocuments
 		);
 
 	}//end setUp()

@@ -25,6 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\BatchUploadServiceInterface;
 use OCP\IRequest;
 
 /**
@@ -36,7 +37,7 @@ use OCP\IRequest;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  */
-class BatchUploadService {
+class BatchUploadService implements BatchUploadServiceInterface {
 	/**
 	 * Constructor for BatchUploadService
 	 *

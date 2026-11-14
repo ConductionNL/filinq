@@ -13,6 +13,9 @@
  * @version GIT: <git_id>
  *
  * @link https://www.filinq.app
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\Filinq\Tests\Unit\Service\Editing;
@@ -20,10 +23,15 @@ namespace OCA\Filinq\Tests\Unit\Service\Editing;
 use OCA\Filinq\Mcp\FilinqScannableServices;
 use OCA\Filinq\Service\CorrespondenceService;
 use OCA\Filinq\Service\Editing\AgentArtefactMarker;
+use OCA\Filinq\Service\Editing\AgentFileRequest;
 use OCA\Filinq\Service\Editing\DocumentAgentService;
 use OCA\Filinq\Service\Editing\EditSessionService;
+use OCA\Filinq\Service\Editing\EditorSessionProbe;
+use OCA\Filinq\Service\DocumentGenerationRecord;
 use OCA\Filinq\Service\GeneratedDocumentLogger;
 use OCA\Filinq\Service\PdfConversionService;
+use OCA\Filinq\Service\SigningService;
+use OCA\Filinq\Service\Support\AgentArtefacts;
 use OCA\OpenRegister\Mcp\Attribute\McpTool;
 use OCP\Files\File;
 use OCP\Files\Folder;
@@ -140,12 +148,12 @@ class DocumentAgentServiceTest extends TestCase {
 	private function service(): DocumentAgentService {
 		return new DocumentAgentService(
 			$this->editSession,
-			$this->pdfConversion,
-			$this->marker,
+			new AgentArtefacts(pdfConversion: $this->pdfConversion, marker: $this->marker),
 			$this->documentLogger,
 			$this->rootFolder,
 			$this->userSession,
-			$this->createMock(LoggerInterface::class)
+			$this->createMock(LoggerInterface::class),
+			$this->createMock(EditorSessionProbe::class)
 		);
 
 	}//end service()
@@ -230,17 +238,25 @@ class DocumentAgentServiceTest extends TestCase {
 	}//end testGenerationIsExposedButTheBatchVariantIsNot()
 
 	/**
-	 * No signing service is scannable, and none carries a tool attribute.
-	 * Applying an electronic signature has legal effect and stays a deliberate
-	 * human action.
+	 * The signing domain has exactly one tool: starting a request, as an
+	 * approval-gated write. Applying, declining, cancelling or verifying a
+	 * signature has legal effect and stays a deliberate human action, so no
+	 * other signing method, and nothing under Service/Signing/, carries a tool
+	 * attribute or is scannable.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/changes/hermiq-ai-tooling/specs/filinq-mcp-surface/spec.md#requirement-signing-is-never-agent-writable
 	 */
 	public function testNoSigningServiceIsReachableByAnAgent(): void {
 		$scannable = (new FilinqScannableServices())->getScannableServiceClasses();
 
 		foreach ($scannable as $class) {
-			$this->assertStringNotContainsString('Signing', $class);
+			if ($class === SigningService::class) {
+				continue;
+			}
+
+			$this->assertStringNotContainsString('Signing', $class, $class . ' must not be scannable.');
 		}
 
 		$signingSources = glob(__DIR__ . '/../../../../lib/Service/Signing*.php');
@@ -248,15 +264,52 @@ class DocumentAgentServiceTest extends TestCase {
 
 		$this->assertNotEmpty($signingSources, 'The signing sources must be found, or this test proves nothing.');
 
+		$attributes = 0;
 		foreach ($signingSources as $path) {
-			$this->assertStringNotContainsString(
-				'#[McpTool',
-				(string)file_get_contents($path),
-				basename($path) . ' must not expose an MCP tool.'
-			);
+			$count = substr_count((string)file_get_contents($path), '#[McpTool');
+			if (basename($path) !== 'SigningService.php') {
+				$this->assertSame(0, $count, basename($path) . ' must not expose an MCP tool.');
+			}
+
+			$attributes += $count;
 		}
 
+		$this->assertSame(1, $attributes, 'The signing domain carries exactly one #[McpTool] attribute.');
+
+		$tools = [];
+		foreach ((new ReflectionClass(SigningService::class))->getMethods() as $method) {
+			if ($method->getAttributes(McpTool::class) !== []) {
+				$tools[] = $method->getName();
+			}
+		}
+
+		$this->assertSame(['createRequest'], $tools, 'Only createRequest() may be a tool; sign, decline, bulkSign and cancelRequest never.');
+
 	}//end testNoSigningServiceIsReachableByAnAgent()
+
+	/**
+	 * startSigningRequest declares honest write hints, so Hermiq classifies it
+	 * as a write that needs a human's approval before it runs.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/hermiq-ai-tooling/specs/filinq-mcp-surface/spec.md#requirement-an-approval-gated-signing-request-initiation-tool-exists-req-ddhat-001
+	 */
+	public function testStartingASigningRequestIsAnHonestlyHintedWrite(): void {
+		$this->assertContains(SigningService::class, (new FilinqScannableServices())->getScannableServiceClasses());
+
+		$attributes = (new ReflectionMethod(SigningService::class, 'createRequest'))->getAttributes(McpTool::class);
+		$this->assertCount(1, $attributes);
+
+		$tool = $attributes[0]->newInstance();
+		$this->assertSame('startSigningRequest', $tool->name);
+		$this->assertSame('create', $tool->scope);
+		$this->assertFalse($tool->readOnlyHint);
+		$this->assertFalse($tool->destructiveHint);
+		$this->assertFalse($tool->idempotentHint);
+		$this->assertStringContainsString('approve', (string)$tool->description);
+
+	}//end testStartingASigningRequestIsAnHonestlyHintedWrite()
 
 	/**
 	 * The scannable list names exactly the classes that carry attributes —
@@ -377,7 +430,7 @@ class DocumentAgentServiceTest extends TestCase {
 	public function testAnOmittedOutputModeMeansTheConfiguredOne(): void {
 		$this->editSession->expects($this->once())
 			->method('editForAgent')
-			->with('alice', 4711, $this->anything(), 'v1', null)
+			->with(new AgentFileRequest(uid: 'alice', fileId: 4711, version: 'v1', requestedMode: null), $this->anything())
 			->willReturn(
 				[
 					'fileId' => 4711,
@@ -469,4 +522,43 @@ class DocumentAgentServiceTest extends TestCase {
 		$this->assertSame(4711, $result['fileId']);
 
 	}//end testAFailedAuditRowDoesNotFailACompletedEdit()
+	/**
+	 * A completed edit is recorded in the document register: no template, the
+	 * note as its name, the acting user, and the produced file.
+	 *
+	 * @return void
+	 */
+	public function testACompletedEditIsRecorded(): void {
+		$this->editSession->method('editForAgent')->willReturn(
+			[
+				'fileId' => 4712,
+				'name' => 'letter.docx',
+				'path' => 'Docs/letter.docx',
+				'outputMode' => 'copy',
+				'appliedAnchors' => [],
+				'version' => 'v2',
+				'warnings' => [],
+			]
+		);
+		$note = 'Agent edit of file 4711 (copy output)';
+		$this->documentLogger->expects($this->once())->method('log')->with(
+			new DocumentGenerationRecord(
+				template: ['id' => '', 'version' => null, 'name' => $note],
+				dataRefs: [],
+				format: 'docx',
+				userId: 'alice'
+			),
+			[
+				'status' => 'generated',
+				'warnings' => [$note],
+				'caseId' => null,
+				'errorMessage' => null,
+				'fileId' => 4712,
+				'filePath' => 'Docs/letter.docx',
+			]
+		)->willReturn([]);
+
+		$this->service()->editDocument(4711, [['anchor' => 'b1-1', 'text' => 'x']], 'v1');
+
+	}//end testACompletedEditIsRecorded()
 }//end class

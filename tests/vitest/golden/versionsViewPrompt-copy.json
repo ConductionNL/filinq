@@ -1,0 +1,32 @@
+{
+	"finalise": {
+		"name": "[t] Make this document final",
+		"explanation": "[t] A final document refuses every edit, and there is no way back. Correct it later by issuing a correction.",
+		"placeholder": "[t] What makes this document final?",
+		"confirmLabel": "[t] Make final"
+	},
+	"correct": {
+		"name": "[t] Issue a correction",
+		"explanation": "[t] The final version stays readable and stays final. The correction is a new document that says which version it supersedes.",
+		"placeholder": "[t] What does this correction change?",
+		"confirmLabel": "[t] Issue a correction"
+	},
+	"unfreeze": {
+		"name": "[t] Unfreeze this document",
+		"explanation": "[t] The document becomes editable again, and it carries a permanent mark that it was unfrozen. Your name, the moment and this reason stay on the record.",
+		"placeholder": "[t] Why are you unfreezing this document?",
+		"confirmLabel": "[t] Unfreeze"
+	},
+	"(none)": {
+		"name": "[t] Make this document final",
+		"explanation": "[t] A final document refuses every edit, and there is no way back. Correct it later by issuing a correction.",
+		"placeholder": "[t] What makes this document final?",
+		"confirmLabel": "[t] Make final"
+	},
+	"constructor": {
+		"name": "[t] Make this document final",
+		"explanation": "[t] A final document refuses every edit, and there is no way back. Correct it later by issuing a correction.",
+		"placeholder": "[t] What makes this document final?",
+		"confirmLabel": "[t] Make final"
+	}
+}

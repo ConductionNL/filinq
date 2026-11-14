@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Service\Signing;
 
 use OCA\Filinq\Exception\SigningCancellationNotSupportedException;
+use OCA\Filinq\Exception\SigningCancellationRefusedException;
 use OCA\Filinq\Service\Signing\SigningCancellationService;
 use OCA\Filinq\Service\Signing\SigningProviderFactory;
 use OCA\Filinq\Service\Signing\SigningProviderInterface;
@@ -39,6 +40,21 @@ use RuntimeException;
 class SigningCancellationServiceTest extends TestCase {
 
 	/**
+	 * The requests the service moved to CANCELLED.
+	 *
+	 * @var array<int, string>
+	 */
+	private array $transitioned = [];
+
+	/**
+	 * Whether the request's own transition fails.
+	 *
+	 * @var bool
+	 */
+	private bool $transitionFails = false;
+
+
+	/**
 	 * Build the service over doubles.
 	 *
 	 * @param array|null $request What getRequest() returns, or null.
@@ -46,12 +62,28 @@ class SigningCancellationServiceTest extends TestCase {
 	 *
 	 * @return SigningCancellationService The service.
 	 */
-	private function service(?array $request, object $provider): SigningCancellationService {
+	private function service(?array $request, object $provider, ?object $named = null): SigningCancellationService {
 		$requests = $this->createMock(SigningService::class);
 		$requests->method('getRequest')->willReturn($request);
+		$requests->method('isValidTransition')->willReturnCallback(
+			static fn (string $currentStatus, string $newStatus): bool => in_array($currentStatus, ['DRAFT', 'PENDING', 'IN_PROGRESS'], true) && $newStatus === 'CANCELLED'
+		);
+		$requests->method('cancelRequest')->willReturnCallback(
+			function (string $requestId): array {
+				if ($this->transitionFails === true) {
+					throw new \RuntimeException('register down');
+				}
+
+				$this->transitioned[] = $requestId;
+				return ['id' => $requestId, 'status' => 'CANCELLED'];
+			}
+		);
 
 		$factory = $this->createMock(SigningProviderFactory::class);
 		$factory->method('getActiveProvider')->willReturn($provider);
+		if ($named !== null) {
+			$factory->method('getProvider')->with('libresign')->willReturn($named);
+		}
 
 		return new SigningCancellationService(
 			providers: $factory,
@@ -109,6 +141,8 @@ class SigningCancellationServiceTest extends TestCase {
 		$result = $this->service($this->request(), $provider)->cancel(uid: 'alice', requestId: 'req-1');
 
 		$this->assertSame('cancelled', $result['status']);
+		$this->assertFalse($result['alreadyCancelled']);
+		$this->assertSame(['req-1'], $this->transitioned, 'the request itself is moved to CANCELLED');
 	}//end testTheCreatorMayCancel()
 
 	/**
@@ -240,9 +274,67 @@ class SigningCancellationServiceTest extends TestCase {
 	 * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md
 	 */
 	public function testAlreadyCancelledIsIdempotent(): void {
-		$result = $this->service($this->request(status: 'cancelled'), $this->provider())
+		$provider = $this->provider();
+		$provider->expects($this->never())->method('cancelSigning');
+
+		$result = $this->service($this->request(status: 'CANCELLED'), $provider)
 			->cancel(uid: 'alice', requestId: 'req-1');
 
 		$this->assertTrue($result['alreadyCancelled']);
+		$this->assertSame([], $this->transitioned);
 	}//end testAlreadyCancelledIsIdempotent()
+
+	/**
+	 * REQ: a completed request is a refusal, before the provider is contacted.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md
+	 */
+	public function testACompletedRequestIsRefusedWithoutContactingTheProvider(): void {
+		$provider = $this->provider();
+		$provider->expects($this->never())->method('cancelSigning');
+
+		try {
+			$this->service($this->request(status: 'COMPLETED'), $provider)->cancel(uid: 'alice', requestId: 'req-1');
+			$this->fail('A completed request was withdrawn.');
+		} catch (SigningCancellationRefusedException $refusal) {
+			$this->assertSame(409, $refusal->getCode());
+			$this->assertSame('This signing request is completed and can no longer be withdrawn.', $refusal->getMessage());
+		}
+
+		$this->assertSame([], $this->transitioned);
+	}//end testACompletedRequestIsRefusedWithoutContactingTheProvider()
+
+	/**
+	 * A transition that fails after the provider withdrew says so.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md
+	 */
+	public function testAFailedTransitionSaysTheProviderWithdrewIt(): void {
+		$this->transitionFails = true;
+
+		$this->expectException(\RuntimeException::class);
+		$this->expectExceptionMessage('The provider withdrew the signing request, but its status could not be recorded: register down');
+
+		$this->service($this->request(), $this->provider())->cancel(uid: 'alice', requestId: 'req-1');
+	}//end testAFailedTransitionSaysTheProviderWithdrewIt()
+	/**
+	 * A LibreSign request is withdrawn at LibreSign, whatever the active provider is now.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-libresign-signing-provider/tasks.md#task-3.1
+	 */
+	public function testARequestIsWithdrawnAtTheProviderItNames(): void {
+		$active = $this->provider();
+		$active->expects($this->never())->method('cancelSigning');
+		$libreSign = $this->provider();
+		$libreSign->expects($this->once())->method('cancelSigning')->with('ext-1');
+
+		$this->service($this->request() + ['provider' => 'libresign'], $active, $libreSign)->cancel(uid: 'alice', requestId: 'req-1');
+
+	}//end testARequestIsWithdrawnAtTheProviderItNames()
 }//end class
