@@ -37,6 +37,7 @@ import { generateRemoteUrl, generateUrl } from '@nextcloud/router'
  */
 import { defineStore } from 'pinia'
 import { extractDocumentText } from '../../services/fileViewerService.js'
+import { FOUR_EYES_REASONS } from '../../services/fourEyes.js'
 import { applyOcrFlags } from '../../services/ocr.js'
 import {
 	markChecked,
@@ -1075,6 +1076,14 @@ async function resolveFaithfulMarkers(store, entry) {
 function applyAnonymizeFailure(entry, err) {
 	console.error(`Failed to anonymise ${entry.name}:`, err)
 	entry.error = err.response?.data?.error || err.message
+	// Four eyes (redaction-four-eyes-setting REQ-RWB-09): the document is
+	// checked, only by the person anonymising. The mark stays, so a colleague
+	// can anonymise it without checking it again.
+	if (FOUR_EYES_REASONS.includes(err.response?.data?.reviewRequired)) {
+		entry.fourEyes = err.response.data.reviewRequired
+		entry.status = 'extracted'
+		return
+	}
 	if (err.response?.data?.reviewRequired) {
 		entry.reviewMark = null
 		entry.reviewRequired = true
@@ -1385,6 +1394,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 				)
 				entry.reviewRequired = false
 				entry.error = null
+				entry.fourEyes = null
 			} catch (err) {
 				entry.reviewError = err.response?.data?.error || err.message
 			} finally {

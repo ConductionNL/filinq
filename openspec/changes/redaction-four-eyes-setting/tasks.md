@@ -34,15 +34,15 @@
 - **acceptance_criteria**:
   - GIVEN a fresh install WHEN the section opens THEN "Alleen bij Woo-zaken" is selected; picking "Uit" saves `off`
 - [x] Implement
-- [ ] Test
+- [x] Test (`tests/vitest/redactionFourEyesSetting.spec.js`: the three options with `woo` first, the radio binding, a fresh or unknown value read as `woo`, the choice sent on save, the Dutch labels)
 
 ### Task 5: The review card says a colleague must anonymise
 - **spec_ref**: `openspec/changes/redaction-four-eyes-setting/specs/redaction-output-guarantee/spec.md#requirement-the-person-who-anonymises-differs-from-the-person-who-checked-req-rwb-09`
 - **files**: `src/components/ReviewMarkCard.vue`, `src/store/modules/anonymization.js` (a 409 with `same_person` shows the message instead of a generic error), the spec next to the card
 - **acceptance_criteria**:
   - GIVEN the setting applies and the current user checked the document THEN the anonymise button is disabled with "Een collega moet dit document anonimiseren"
-- [ ] Implement
-- [ ] Test
+- [x] Implement (`src/services/fourEyes.js` decides who may anonymise. `ReviewMarkCard` shows "Een collega moet dit document anonimiseren" on a checked document, and `FileViewerSidebar` disables both anonymise buttons. A sidebar run is a single file, not a Woo run, so only `always` blocks it up front. A `same_person` or `anonymiser_unknown` 409 keeps the check mark and the server sentence in `src/store/modules/anonymization.js`)
+- [x] Test (`tests/vitest/redactionFourEyesCard.spec.js`)
 
 ### Task 6: dossiq flags Woo cases and shows the hint (built in ConductionNL/dossiq)
 - **spec_ref**: `openspec/changes/redaction-four-eyes-setting/specs/redaction-output-guarantee/spec.md#requirement-the-person-who-anonymises-differs-from-the-person-who-checked-req-rwb-09`
