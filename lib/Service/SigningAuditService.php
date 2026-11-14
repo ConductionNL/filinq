@@ -27,6 +27,7 @@ namespace OCA\Filinq\Service;
 use OCA\Filinq\Kernel\Contracts\SigningAuditServiceInterface;
 use OCA\Filinq\Kernel\SigningAuditEvent;
 use OCA\OpenRegister\Db\AuditTrail;
+use OCA\OpenRegister\Db\AuditTrail\ObjectAuditEvent;
 use OCA\OpenRegister\Db\AuditTrailMapper;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCP\IAppConfig;
@@ -136,10 +137,12 @@ class SigningAuditService implements SigningAuditServiceInterface {
 			'extra' => $event->metadata,
 		];
 
-		$entry = $this->auditTrailMapper->createAuditTrailEntry(
-			object:  $this->resolveSigningRequestObject(signingRequestId: $event->request->id),
-			action:  $actionType,
-			context: $context
+		$entry = $this->auditTrailMapper->recordObjectEvent(
+			event: new ObjectAuditEvent(
+				object: $this->resolveSigningRequestObject(signingRequestId: $event->request->id),
+				action: $actionType,
+				context: $context
+			)
 		);
 
 		return $entry->jsonSerialize();
@@ -149,7 +152,7 @@ class SigningAuditService implements SigningAuditServiceInterface {
 	 * Resolve the real signing-request ObjectEntity for audit binding.
 	 *
 	 * Uses OR's ObjectService so the returned entity carries a real
-	 * register/schema/object-id triple (`AuditTrailMapper::createAuditTrailEntry()`
+	 * register/schema/object-id triple (`AuditTrailMapper::recordObjectEvent()`
 	 * reads `getId()`/`getRegister()`/`getSchema()`/`getUuid()` off it). Falls
 	 * back to a uuid-only stub — WITH a logged warning — when the request has
 	 * vanished mid-flight, so an audit entry is still written (fail-soft: an

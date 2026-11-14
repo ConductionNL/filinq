@@ -42,6 +42,7 @@ use OCA\Filinq\Service\SubjectErasure\SubjectErasureService;
 use OCA\Filinq\Service\SubjectErasure\SubjectErasureStore;
 use OCA\Filinq\Tests\Unit\Service\Pseudonymisation\PseudonymDoubles;
 use OCA\OpenRegister\Db\AuditTrail;
+use OCA\OpenRegister\Db\AuditTrail\ObjectAuditEvent;
 use OCA\OpenRegister\Db\AuditTrailMapper;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Service\ObjectService;
@@ -603,8 +604,9 @@ trait SubjectErasureDoubles {
 	 */
 	protected function auditMapper(): AuditTrailMapper {
 		$mapper = $this->createMock(AuditTrailMapper::class);
-		$mapper->method('createAuditTrailEntry')->willReturnCallback(
-			function (ObjectEntity $object, string $action, array $context = []) {
+		$mapper->method('recordObjectEvent')->willReturnCallback(
+			function (ObjectAuditEvent $event) {
+				[$object, $action, $context] = [$event->object, $event->action, $event->context];
 				if ($this->auditFails !== null && ($this->auditFails)($action, $context) === true) {
 					throw new RuntimeException('audit table unavailable');
 				}

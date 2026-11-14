@@ -38,6 +38,7 @@ use OCA\Filinq\Service\Pseudonymisation\PseudonymRestoreGate;
 use OCA\Filinq\Service\Pseudonymisation\PseudonymRestoreService;
 use OCA\Filinq\Service\Redaction\AnonymizationLinkReader;
 use OCA\OpenRegister\Db\AuditTrail;
+use OCA\OpenRegister\Db\AuditTrail\ObjectAuditEvent;
 use OCA\OpenRegister\Db\AuditTrailMapper;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Service\ObjectService;
@@ -374,8 +375,9 @@ trait PseudonymDoubles {
 	 */
 	protected function audit(?ContainerInterface $container = null): PseudonymRestoreAudit {
 		$mapper = $this->createMock(AuditTrailMapper::class);
-		$mapper->method('createAuditTrailEntry')->willReturnCallback(
-			function (ObjectEntity $object, string $action, array $context = []) {
+		$mapper->method('recordObjectEvent')->willReturnCallback(
+			function (ObjectAuditEvent $event) {
+				[$object, $action, $context] = [$event->object, $event->action, $event->context];
 				if (in_array($action, $this->failingAuditActions, true) === true) {
 					throw new RuntimeException('audit table unavailable');
 				}
