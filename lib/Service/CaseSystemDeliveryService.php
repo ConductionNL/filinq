@@ -27,6 +27,7 @@ namespace OCA\Filinq\Service;
 
 use Exception;
 use InvalidArgumentException;
+use OCA\Filinq\Kernel\Contracts\CaseSystemDeliveryServiceInterface;
 use OCP\IUserManager;
 use RuntimeException;
 use Throwable;
@@ -48,7 +49,7 @@ use Throwable;
  *
  * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-stored-document-gets-a-delivery-for-its-destination-req-gsc-002
  */
-class CaseSystemDeliveryService {
+class CaseSystemDeliveryService implements CaseSystemDeliveryServiceInterface {
 
 	/**
 	 * The register the bridge lands in.
