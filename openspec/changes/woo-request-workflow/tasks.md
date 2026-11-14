@@ -14,10 +14,11 @@ renders any data it is given.
 
 ## 1. Templates
 
-- [ ] 1.1 Seed `woo-besluit` and `woo-inventarislijst` (REQ-DDWRW-006). Files: `lib/Settings/filinq_register.json` (two `template` seed objects, slug, `dataContract: woo-decision`, placeholder body; register version bump), the seed path that imports templates.
+- [x] 1.1 Seed `woo-besluit` and `woo-inventarislijst` (REQ-DDWRW-006). Files: `lib/Settings/filinq_register.json` (two `template` seed objects, slug, `dataContract: woo-decision`, placeholder body; register version bump), the seed path that imports templates.
   - GIVEN a fresh install WHEN the seed runs THEN both slugs exist.
   - GIVEN an edited `woo-besluit` WHEN the app is upgraded THEN the edit survives.
   - Test: PHPUnit `WooTemplateSeedTest::testBothTemplatesAreSeeded`, `::testAnEditedTemplateSurvivesAnUpgrade`. Add the seed rows by hand; do not run a generator over the register file.
+  - As built: two seed objects in `components.objects` of `lib/Settings/filinq_register.json` (namespace `woo`, register 8.56.0), imported by the existing OpenRegister configuration import. They carry no uuid and no version of their own, so OpenRegister matches them by slug and never overwrites an edited template; `WooTemplateSeedTest` pins that. A caller resolves them with `templateNamespace: woo` and the slug.
 
 ## 2. The contract
 
@@ -33,7 +34,7 @@ renders any data it is given.
 
 ## 3. The two documents
 
-- [ ] 3.1 Template bodies and agreement (REQ-DDWRW-007). Files: the two template bodies in the seed, `tests/fixtures/woo-decision.json` (three documents: disclose, partially disclose, withhold).
+- [x] 3.1 Template bodies and agreement (REQ-DDWRW-007). Files: the two template bodies in the seed, `tests/fixtures/woo-decision.json` (three documents: disclose, partially disclose, withhold).
   - GIVEN the fixture WHEN both templates render THEN the letter cites documents 2 and 3 with grounds in words, the inventory lists 1 to 3 with the same numbers and assessments, and document 2 is never shown as disclosed.
   - Test: PHPUnit `WooDecisionTemplatesTest::testTheLetterAndTheInventoryAgree` renders the real seeded bodies through the real generator with only storage doubled.
 - [ ] 3.2 Through the command, as dossiq calls it (wiring). Files: `tests/Unit/EventListener/DocumentGenerationRequestedListenerWooTest.php`, `docs/features/woo-decision-templates.md` (the `wooDecision` keys, the refusals, the result keys, and that dossiq or decidiq is the caller).
@@ -41,6 +42,7 @@ renders any data it is given.
   - GIVEN the same with a withheld document without a ground THEN `getError()` is set and `isHandled()` is false.
   - Test: the listener test above.
   - Cross-app: record in the PR body that dossiq's `FilinqTemplateEngineAdapter` (or decidiq's, if the besluit raise moves) must send `templateSlug` and `data.wooDecision` in this shape, with a test on that side using the same event class.
+  - As built: Dutch bodies (letter: decision kind, then disclosed / partly disclosed / withheld sections by inventory number with grounds as label, article and code; inventory: one row per document in the caller's order). `WooDecisionTemplatesTest` renders both through `DocumentService` with the real Twig renderer and the real contract builder over the shipped grounds snapshot; the template store and data resolver are doubled as well as storage.
 
 ## 4. Delivery
 
