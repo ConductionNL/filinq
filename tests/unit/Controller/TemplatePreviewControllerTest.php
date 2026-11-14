@@ -27,6 +27,7 @@ namespace OCA\Filinq\Tests\Unit\Controller;
 
 use Exception;
 use OCA\Filinq\Controller\TemplatePreviewController;
+use OCA\Filinq\Service\DataResolverService;
 use OCA\Filinq\Controller\TemplateRequestHandler;
 use OCA\Filinq\Kernel\Contracts\TemplatePreviewServiceInterface;
 use OCP\IRequest;
@@ -75,10 +76,11 @@ class TemplatePreviewControllerTest extends TestCase {
 	 *
 	 * @param array<string, mixed> $body     The request parameters.
 	 * @param bool                 $loggedIn Whether a user is logged in.
+	 * @param DataResolverService|null $dataResolver The listRefs resolver, when the test needs one.
 	 *
 	 * @return TemplatePreviewController The controller.
 	 */
-	private function controller(array $body, bool $loggedIn = true): TemplatePreviewController {
+	private function controller(array $body, bool $loggedIn = true, ?DataResolverService $dataResolver = null): TemplatePreviewController {
 		$request = $this->createMock(IRequest::class);
 		$request->method('getParams')->willReturn($body);
 		$session = $this->createMock(IUserSession::class);
@@ -90,6 +92,7 @@ class TemplatePreviewControllerTest extends TestCase {
 			requestHandler: new TemplateRequestHandler(logger: $this->logger),
 			previewService: $this->previews,
 			userSession: $session,
+			dataResolver: $dataResolver,
 		);
 	}//end controller()
 
@@ -122,6 +125,31 @@ class TemplatePreviewControllerTest extends TestCase {
 		$this->assertSame(200, $response->getStatus());
 		$this->assertSame(['html' => 'Dear Anna', 'lint' => []], $response->getData());
 	}//end testAPreviewRendersTheContentWithItsData()
+
+	/**
+	 * A preview with listRefs fills the template's table from the related
+	 * records, resolved the way generation resolves them; without listRefs the
+	 * resolver is not asked.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/finish-half-built-capabilities/tasks.md#3-generation-and-finality
+	 */
+	public function testAPreviewFillsATableFromRelatedRecords(): void {
+		$listRefs = [['register' => 'zaken', 'schema' => 'besluit', 'as' => 'besluiten']];
+		$resolver = $this->createMock(DataResolverService::class);
+		$resolver->expects($this->once())->method('resolve')
+			->with([], $listRefs, ['name' => 'Anna'])
+			->willReturn(['data' => ['name' => 'Anna', 'besluiten' => [['t' => 'A'], ['t' => 'B']]], 'errors' => [], 'warnings' => []]);
+		$this->previews->expects($this->exactly(2))->method('previewWithLint')
+			->willReturnCallback(static fn (string $content, array $data): array => ['html' => (string)count($data['besluiten'] ?? []), 'lint' => []]);
+
+		$filled = $this->controller(['content' => 'x', 'data' => ['name' => 'Anna'], 'listRefs' => $listRefs], dataResolver: $resolver)->preview();
+		$plain = $this->controller(['content' => 'x', 'data' => ['name' => 'Anna'], 'listRefs' => []], dataResolver: $resolver)->preview();
+
+		$this->assertSame('2', $filled->getData()['html']);
+		$this->assertSame('0', $plain->getData()['html']);
+	}//end testAPreviewFillsATableFromRelatedRecords()
 
 	/**
 	 * A preview without content is a logged 400.
