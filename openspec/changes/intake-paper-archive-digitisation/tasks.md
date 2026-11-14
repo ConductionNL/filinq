@@ -11,7 +11,8 @@
 
 - [x] 2.1 Add the v2 separator per original to `SeparatorSheetService` with shelf mark and description in print (D2) (REQ-PAD-002). Verify: PHPUnit decodes the QR payload from the rendered page.
   - Built: `originalPayload()` (`filinq:sep:v2:<profileId>:po:<originalId>`) and `renderOriginals()`, one sheet per original with its shelf mark and description in print; `readPayload()` reads a v2 sheet as `po:<originalId>` beside the v1 payload, so the splitter cuts there. PHPUnit decodes the QR payloads from the rendered pages.
-- [ ] 2.2 File a segment that names an original on the project target with the original's metadata and set it `scanned`; keep v1 segments going to the inbox (D3) (REQ-PAD-003). Verify: PHPUnit on a fixture batch with one v2 and one v1 separator.
+- [x] 2.2 File a segment that names an original on the project target with the original's metadata and set it `scanned`; keep v1 segments going to the inbox (D3) (REQ-PAD-003). Verify: PHPUnit on a fixture batch with one v2 and one v1 separator.
+  - Built: `ScanBatchService::split()` files a segment whose separator names an original (`po:<id>`) in the folder of the project's target record, named after the original's shelf mark and description, without the inbox event; `PaperOriginalFiling` finds the original, its project and that folder and records the file, the batch and the moment on the original, with the status `DigitisationProjectService::afterScan()` draws (`scanned` into the checking queue, or `checked` when not drawn). An original that cannot be found goes to the inbox as a v1 segment does. PHPUnit `ScanBatchServiceTest` (a batch with one v2 and one v1 separator) and `PaperOriginalFilingTest`.
 
 ## 3. Project service
 

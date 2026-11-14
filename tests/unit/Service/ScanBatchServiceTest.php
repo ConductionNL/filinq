@@ -23,6 +23,7 @@
 namespace OCA\Filinq\Tests\Unit\Service;
 
 use OCA\Filinq\Event\IntakeDocumentReceivedEvent;
+use OCA\Filinq\Service\PaperOriginalFiling;
 use OCA\Filinq\Service\PdfDocumentFactory;
 use OCA\Filinq\Service\ScanBatchRepository;
 use OCA\Filinq\Service\ScanBatchService;
@@ -109,6 +110,7 @@ class ScanBatchServiceTest extends TestCase {
 		bool $readerAvailable = true,
 		array $weights = [],
 		?\Throwable $readFails = null,
+		?PaperOriginalFiling $originals = null,
 	): ScanBatchService {
 		$pagesByBytes = [];
 		$pages = [];
@@ -157,7 +159,8 @@ class ScanBatchServiceTest extends TestCase {
 			new SeparatorSheetService($this->createMock(\OCA\Filinq\Service\PdfService::class)),
 			new PdfDocumentFactory(),
 			$events,
-			$this->createMock(LoggerInterface::class)
+			$this->createMock(LoggerInterface::class),
+			$originals
 		);
 
 	}//end service()
@@ -697,4 +700,79 @@ class ScanBatchServiceTest extends TestCase {
 		$this->assertCount(1, $this->dispatched);
 
 	}//end testASegmentThatCannotBeWrittenFailsTheBatch()
+
+	/**
+	 * A batch with one v2 and one v1 separator: the original's scan is filed
+	 * on the project record and recorded on the original; the other segment
+	 * goes to the inbox as before (REQ-PAD-003).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-scan-of-an-original-is-filed-on-the-projects-record-req-pad-003
+	 */
+	public function testAV2SegmentIsFiledOnTheProjectAndAV1SegmentGoesToTheInbox(): void {
+		$projectFiles = [];
+		$projectFolder = $this->createMock(Folder::class);
+		$projectFolder->method('getNonExistingName')->willReturnArgument(0);
+		$projectFolder->method('newFile')->willReturnCallback(
+			function (string $name, string $content) use (&$projectFiles): File {
+				$projectFiles[] = $name;
+				$file = $this->createMock(File::class);
+				$file->method('getId')->willReturn(777);
+				return $file;
+			}
+		);
+		$place = ['original' => ['id' => 'po-1', 'shelfMark' => 'Doos 12 / 3'], 'project' => ['id' => 'prj-1', 'checkShare' => 10], 'folder' => $projectFolder];
+		$originals = $this->createMock(PaperOriginalFiling::class);
+		$originals->expects($this->once())->method('placeFor')->with('po-1')->willReturn($place);
+		$originals->method('fileName')->willReturn('Doos 12 - 3.pdf');
+		$originals->expects($this->once())->method('markScanned')
+			->with($place, ['fileId' => 777, 'pages' => 2, 'batchId' => 'batch-1'])
+			->willReturn(['id' => 'po-1', 'status' => 'scanned']);
+
+		$service = $this->service(
+			texts: ['filinq:sep:v2:archief:po:po-1', 'akte 1', 'akte 2', 'filinq:sep:v1:archief', 'brief'],
+			originals: $originals
+		);
+		$batch = $service->split(
+			batch: ['uuid' => 'batch-1', 'scannerId' => 'archief'],
+			profile: ['id' => 'archief', 'separatorMode' => 'qr'],
+			file: $this->batchFile(),
+			target: $this->targetFolder()
+		);
+
+		$this->assertSame(['Doos 12 - 3.pdf'], $projectFiles);
+		$this->assertCount(1, $this->written, 'only the v1 segment reaches the inbox folder');
+		$this->assertCount(1, $this->dispatched, 'only the v1 segment is announced to the inbox');
+		$this->assertSame('po:po-1', $batch['segments'][0]['sourceRef']);
+		$this->assertSame('po-1', $batch['segments'][0]['paperOriginal']);
+		$this->assertSame('scanned', $batch['segments'][0]['originalStatus']);
+		$this->assertSame(2, $batch['segments'][0]['pages']);
+		$this->assertArrayNotHasKey('paperOriginal', $batch['segments'][1]);
+	}//end testAV2SegmentIsFiledOnTheProjectAndAV1SegmentGoesToTheInbox()
+
+	/**
+	 * An original that cannot be found, or no filing at all, leaves the segment in the inbox.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-scan-of-an-original-is-filed-on-the-projects-record-req-pad-003
+	 */
+	public function testAnOriginalThatCannotBePlacedGoesToTheInbox(): void {
+		$originals = $this->createMock(PaperOriginalFiling::class);
+		$originals->method('placeFor')->willReturn(null);
+		$originals->expects($this->never())->method('markScanned');
+
+		foreach ([$originals, null] as $filing) {
+			$this->service(texts: ['filinq:sep:v2:archief:po:po-9', 'akte'], originals: $filing)->split(
+				batch: ['uuid' => 'batch-1', 'scannerId' => 'archief'],
+				profile: ['id' => 'archief', 'separatorMode' => 'qr'],
+				file: $this->batchFile(),
+				target: $this->targetFolder()
+			);
+		}
+
+		$this->assertCount(2, $this->written);
+		$this->assertCount(2, $this->dispatched);
+	}//end testAnOriginalThatCannotBePlacedGoesToTheInbox()
 }//end class
