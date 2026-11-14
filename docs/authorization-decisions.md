@@ -142,6 +142,8 @@ deliberately.
 
 | `flowOperationRun` | authenticated | **nobody** (server only) | admins | The processing log of a Filinq operation a Nextcloud Flow rule started. Only the background job that runs the operation writes a run, as the file owner it acts for; no person adds or edits one, so a log cannot claim a run that did not happen. The row holds the file id and name and counts or verdicts, never extracted text or detected personal data. Only an admin deletes one; the log is otherwise rotated by its retention. |
 
+| `mailArchiveImport` | authenticated | **nobody** (server only) | admins | One bulk import of a mail archive. Only `MailArchiveImportService` writes it: the import routes as the user who started it, after checking they can read the archive file and write every mapped dossier, and the import job as the system. The routes answer only that user, so another user cannot read or cancel someone else's import. The row holds folder names, counts and the Message-IDs of failed messages, never message content. Only an admin deletes one; otherwise its retention rotates it. |
+
 | `publicationLogEntry` | authenticated | **nobody** (server only) | nobody | The publication history. `PublicationStore` writes every entry past the cascade with the system as owner, after `PublicationAccess`; nobody can add an entry with another `actor` or `timestamp`. |
 
 | `publicationRecord` | authenticated | **nobody** (server only) | nobody | Only `PublicationStore` writes a record, after `PublicationAccess`, and owned by the system. Readiness always derives the redacted copy from the anonymisation link, so a `redactedFileRef` written onto the record can never make the original get published. |

@@ -4,7 +4,7 @@
 
 ## 1. Register
 
-- [ ] 1.1 Add `mailArchiveImport` with the D2 properties, lifecycle and the finished notification to `lib/Settings/filinq_register.json`, seed and version bump (REQ-MAI-001). Verify: `occ maintenance:repair` imports it; the seeds show on the import page.
+- [x] 1.1 Add `mailArchiveImport` with the D2 properties, lifecycle and the finished notification to `lib/Settings/filinq_register.json`, seed and version bump (REQ-MAI-001). Verify: `occ maintenance:repair` imports it; the seeds show on the import page.
 
 ## 2. Splitting
 
