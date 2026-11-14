@@ -1,6 +1,12 @@
 OC.L10N.register(
     "filinq",
     {
+        "Withdraw request": "Withdraw request",
+        "Withdraw this signing request?": "Withdraw this signing request?",
+        "Every signatory loses access, and nobody can sign it any more. This cannot be undone.": "Every signatory loses access, and nobody can sign it any more. This cannot be undone.",
+        "The signing request was withdrawn.": "The signing request was withdrawn.",
+        "Related records for tables (listRefs, JSON)": "Related records for tables (listRefs, JSON)",
+        "The related records are not valid JSON.": "The related records are not valid JSON.",
         "Failed to reach the case system": "Failed to reach the case system",
         "Marketplace": "Marketplace",
         "documents": "documents",
@@ -2818,8 +2824,6 @@ OC.L10N.register(
         "The user who generated the document; told when the delivery fails.": "The user who generated the document; told when the delivery fails.",
         "Where the delivery is: waiting, written back, or failed.": "Where the delivery is: waiting, written back, or failed.",
         "titel, bestandsnaam, formaat, taal, creatiedatum, auteur and the destination fields, for integriq to map.": "titel, bestandsnaam, formaat, taal, creatiedatum, auteur and the destination fields, for integriq to map.",
-        "Related records for tables (listRefs, JSON)": "Related records for tables (listRefs, JSON)",
-        "The related records are not valid JSON.": "The related records are not valid JSON.",
         "Base64 detached CMS (PKCS#7) signature over the sealed artifact.": "Base64 detached CMS (PKCS#7) signature over the sealed artifact.",
         "CMS signature": "CMS signature",
         "Certificate fingerprint": "Certificate fingerprint",

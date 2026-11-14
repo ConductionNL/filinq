@@ -1,6 +1,12 @@
 OC.L10N.register(
     "filinq",
     {
+        "Withdraw request": "Verzoek intrekken",
+        "Withdraw this signing request?": "Dit ondertekeningsverzoek intrekken?",
+        "Every signatory loses access, and nobody can sign it any more. This cannot be undone.": "Alle ondertekenaars verliezen de toegang en niemand kan het nog ondertekenen. Dit kan niet ongedaan worden gemaakt.",
+        "The signing request was withdrawn.": "Het ondertekeningsverzoek is ingetrokken.",
+        "Related records for tables (listRefs, JSON)": "Gerelateerde records voor tabellen (listRefs, JSON)",
+        "The related records are not valid JSON.": "De gerelateerde records zijn geen geldige JSON.",
         "Failed to reach the case system": "Niet in het zaaksysteem aangekomen",
         "Original": "Origineel",
         "All documents in the folder have been anonymized. The anonymized copies are in a separate subfolder next to the originals.": "Alle documenten in de map zijn geanonimiseerd. De geanonimiseerde kopieën staan in een aparte submap naast de originelen.",
@@ -2904,8 +2910,6 @@ OC.L10N.register(
         "The user who generated the document; told when the delivery fails.": "De gebruiker die het document genereerde; krijgt bericht als de levering mislukt.",
         "Where the delivery is: waiting, written back, or failed.": "Waar de levering staat: wachtend, teruggeschreven of mislukt.",
         "titel, bestandsnaam, formaat, taal, creatiedatum, auteur and the destination fields, for integriq to map.": "titel, bestandsnaam, formaat, taal, creatiedatum, auteur en de bestemmingsvelden, voor integriq om te vertalen.",
-        "Related records for tables (listRefs, JSON)": "Gerelateerde records voor tabellen (listRefs, JSON)",
-        "The related records are not valid JSON.": "De gerelateerde records zijn geen geldige JSON.",
         "Print %n sheets": "%n vellen afdrukken",
         "%n documents are waiting for your signature": "%n documenten wachten op je handtekening",
         "%n documents could not be read and nobody in \"{group}\" will be told. Add at least one person to that group.": "%n documenten konden niet gelezen worden en niemand in \"{group}\" hoort het. Voeg minstens één persoon aan die groep toe.",
