@@ -2786,6 +2786,7 @@ OC.L10N.register(
         "When the change was made.": "When the change was made.",
         "Merge fields": "Merge fields",
         "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you.": "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you.",
+        "Linked apps": "Linked apps",
         "Bridge source": "Bridge source",
         "Case System Delivery": "Case System Delivery",
         "Case System Destination": "Case System Destination",
