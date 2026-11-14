@@ -33,7 +33,7 @@ use PHPUnit\Framework\TestCase;
 
 #[CoversClass(MdtoSidecarBuilder::class)]
 #[CoversClass(MdtoSidecarInput::class)]
-#[UsesClass(MdtoXmlWriter::class)]
+#[CoversClass(MdtoXmlWriter::class)]
 class MdtoSidecarBuilderTest extends TestCase {
 
 	/**

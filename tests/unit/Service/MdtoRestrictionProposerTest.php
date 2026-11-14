@@ -29,7 +29,7 @@ use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 #[CoversClass(MdtoRestrictionProposer::class)]
-#[UsesClass(MdtoRestrictionSources::class)]
+#[CoversClass(MdtoRestrictionSources::class)]
 class MdtoRestrictionProposerTest extends TestCase {
 
 	/**

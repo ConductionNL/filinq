@@ -38,7 +38,7 @@
 
 ## 4. Quality
 
-- [ ] 4.1 PHPUnit unit tests — minimum 75% coverage on new code (ADR-009)
+- [x] 4.1 PHPUnit unit tests — minimum 75% coverage on new code (ADR-009)
   - Run inside the container: `docker exec -w /var/www/html/custom_apps/filinq nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`.
   - Includes: prefill matrix (consent/prohibition/anonymisation states), gate-implies-generator pin, sidecar determinism (byte-identical rerun), dossier aggregation fixture, fake-TransportInterface transfer, register-lint (no retention duplication, no archival annotation), architecture tests (no retention/tmlo writes, no transport code).
 
