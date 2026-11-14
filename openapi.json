@@ -56,6 +56,10 @@
             "description": "Controller for the files, the domains and the personal documents list"
         },
         {
+            "name": "case-system-delivery",
+            "description": "The admin bridge panel: case-system destinations, open deliveries and retries"
+        },
+        {
             "name": "classification",
             "description": "Pending classification suggestions and their confirmation"
         },
