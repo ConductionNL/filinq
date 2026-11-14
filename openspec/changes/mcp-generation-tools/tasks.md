@@ -6,7 +6,7 @@
 ## 1. Backend
 
 - [x] 1.1 Confirm `filinq-mcp-adoption` is applied (dialect imported, `FilinqScannableServices` + `generateCorrespondence` live) — this change extends that artifact and MUST NOT proceed without it (depends_on)
-- [ ] 1.2 Add `FileListingService::getFileStatus(int $fileId): array` (public, reusing `buildFileInfo()` internals; principal-scoped file resolution; not-found indistinguishable from nonexistent) with `#[McpTool(name: 'getDocumentStatus', scope: 'read', readOnlyHint: true, destructiveHint: false, idempotentHint: true)]` (REQ-DDMGT-002)
+- [x] 1.2 Add `FileListingService::getFileStatus(int $fileId): array` (public, reusing `buildFileInfo()` internals; principal-scoped file resolution; not-found indistinguishable from nonexistent) with `#[McpTool(name: 'getDocumentStatus', scope: 'read', readOnlyHint: true, destructiveHint: false, idempotentHint: true)]` (REQ-DDMGT-002)
 - [x] 1.3 Add `AnonymizationService::anonymizeViaAgent(int $fileId): array` — fileId-only signature; intake pipeline via `extractAndDetectEntities()`; identical checked-gate + prohibition-gate rules as every surface; `ProhibitionGateException` mapped to a refused result; `mcp` attribution on the run — with `#[McpTool(name: 'anonymizeDocument', scope: 'create', readOnlyHint: false, destructiveHint: false, idempotentHint: false)]` (REQ-DDMGT-003, REQ-DDMGT-005)
   - Counts-only response shape: `{status, entityCounts, reviewRequired, refusedReason?}` — never entity values/placeholder maps/text (REQ-DDMGT-004).
 - [x] 1.4 Extend `lib/Mcp/FilinqScannableServices.php` to `[CorrespondenceService::class, FileListingService::class, AnonymizationService::class]` (REQ-DDMGT-002..003)

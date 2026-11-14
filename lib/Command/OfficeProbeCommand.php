@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Command;
 
 use OCA\Filinq\Kernel\Contracts\OfficeSuiteCapabilityServiceInterface;
+use OCA\Filinq\Service\Office\OfficeSuiteAvailabilityService;
 use OCP\IAppConfig;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -75,23 +76,7 @@ class OfficeProbeCommand extends Command {
 	 *
 	 * @var array<string, array{app: string, key: string, paths: array<int, string>}>
 	 */
-	private const SUITES = [
-		'onlyoffice' => [
-			'app' => 'onlyoffice',
-			'key' => 'DocumentServerInternalUrl',
-			'paths' => ['/hosting/discovery', '/hosting/capabilities'],
-		],
-		'eurooffice' => [
-			'app' => 'eurooffice',
-			'key' => 'DocumentServerInternalUrl',
-			'paths' => ['/hosting/discovery', '/hosting/capabilities'],
-		],
-		'collabora' => [
-			'app' => 'richdocuments',
-			'key' => 'wopi_url',
-			'paths' => ['/hosting/discovery'],
-		],
-	];
+	private const SUITES = OfficeSuiteAvailabilityService::SUITES;
 
 	/**
 	 * Constructor.
