@@ -24,16 +24,18 @@
 - [x] 3.1 Implement fallback-with-warning in the resolver (REQ-DDLED-005)
   - On unavailable/throw/timeout/malformed LLM output, run `DefaultDetectionProvider`, set `fellBack=true`, `providerUsed=default`, and an explicit warning; never a silent downgrade.
 
-- [ ] 3.2 Thread the resolver + `DetectionResult` into `AnonymizationService::extractAndDetectEntities` and the report (REQ-DDLED-005)
+- [x] 3.2 Thread the resolver + `DetectionResult` into `AnonymizationService::extractAndDetectEntities` and the report (REQ-DDLED-005)
   - Provider-used and fallback warning appear in the returned payload and the anonymisation report so the review UI shows which engine ran.
+  - Done: the extract payload carries `detectionProvider` / `detectionFellBack` / `detectionWarning`; the anonymisation store copies them onto the queue entry and the review sidebar shows the fallback warning (or notes a language-model run).
 
 ## 4. Config + UI
 
 - [x] 4.1 `lib/Controller/DetectionProviderSettingsController.php` + `api/detection-provider/*` config routes (REQ-DDLED-002)
   - Get/set per-org provider + hermiq endpoint/agentflow + `require_local`; test-connectivity action; fail-closed admin auth (explicit attributes + in-method guard); no secret stored in v1.
 
-- [ ] 4.2 Admin settings view in the Manifest-V2 shell (REQ-DDLED-006)
+- [x] 4.2 Admin settings view in the Manifest-V2 shell (REQ-DDLED-006)
   - Provider picker (`NcSelect` with `inputLabel`), endpoint/agentflow fields, require-local toggle, test button; registered in `src/manifest.json` + `registry.js` (not `src/router/index.js`); NL Design tokens.
+  - Done as `src/views/settings/DetectionProviderSettings.vue`, a section of filinq's admin settings page (`Settings.vue`, admin only) beside the other admin-endpoint sections. Admin settings are rendered by Nextcloud's settings framework, not as an in-app manifest route, so it is not a manifest page; it is not in `src/router/index.js` either.
 
 ## 5. Quality
 
@@ -45,3 +47,4 @@
 
 - [ ] 5.3 i18n EN + NL for settings + the fallback warning banner, and documentation `docs/features/llm-entity-detection-provider.md` (ADR-010); run `openspec validate llm-entity-detection-provider --strict`
   - Keys in English; docs cover on-prem/no-cloud positioning, the honest-fallback rule, and the hermiq endpoint dependency.
+  - Partly: EN + NL keys for the settings section, the review notice and the server-side fallback warning (`l10n/en.*`, `l10n/nl.*`), and `docs/features/llm-entity-detection-provider.md`. `openspec validate --strict` was not run here (the CLI is not available in this environment).
