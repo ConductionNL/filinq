@@ -373,6 +373,11 @@ class TemplateService implements TemplateServiceInterface {
 		unset($merged['version']);
 		// A changed version starts as a draft; users keep the last published one.
 		$merged['status'] = self::STATUS_DRAFT;
+		// A template users could generate from (published, or without a status
+		// because it predates drafts) stays generatable at the version it was on.
+		if (($existing['status'] ?? self::STATUS_PUBLISHED) !== self::STATUS_DRAFT && is_int($existing['version'] ?? null) === true) {
+			$merged['publishedVersion'] = $existing['version'];
+		}
 
 		// Release lock after successful save.
 		$merged['lockedBy'] = null;

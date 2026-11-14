@@ -160,6 +160,37 @@ class TemplatePublishedVersionTest extends TestCase {
 	}//end testAChangedTemplateBecomesADraftAndKeepsItsPublishedVersion()
 
 	/**
+	 * A template that predates drafts (no status, so counted as published)
+	 * stays generatable at the version it was on when it is edited.
+	 *
+	 * @return void
+	 */
+	public function testAnEditedTemplateWithoutStatusKeepsItsVersionPublished(): void {
+		$service = $this->service(['id' => 't1', 'name' => 'Brief', 'content' => '<p>v4</p>'], 4);
+
+		$service->updateTemplate('t1', ['content' => '<p>v5</p>']);
+
+		$this->assertSame('draft', $this->saved[0]['status']);
+		$this->assertSame(4, $this->saved[0]['publishedVersion']);
+
+	}//end testAnEditedTemplateWithoutStatusKeepsItsVersionPublished()
+
+	/**
+	 * Editing a draft leaves its last published version where it was.
+	 *
+	 * @return void
+	 */
+	public function testAnEditedDraftKeepsItsLastPublishedVersion(): void {
+		$service = $this->service(['id' => 't1', 'name' => 'Brief', 'content' => '<p>v4</p>', 'status' => 'draft', 'publishedVersion' => 2], 4);
+
+		$service->updateTemplate('t1', ['content' => '<p>v5</p>']);
+
+		$this->assertSame('draft', $this->saved[0]['status']);
+		$this->assertSame(2, $this->saved[0]['publishedVersion']);
+
+	}//end testAnEditedDraftKeepsItsLastPublishedVersion()
+
+	/**
 	 * Publishing releases the version the head is on, without a new version.
 	 *
 	 * @return void
