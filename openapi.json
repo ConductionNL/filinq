@@ -9724,6 +9724,45 @@
                 ]
             }
         },
+        "/templates/{id}/publish": {
+            "post": {
+                "operationId": "templates-publish",
+                "summary": "Publish the version a template is on, so users may generate from it",
+                "description": "Publish the version a template is on, so users may generate from it",
+                "tags": [
+                    "templates"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "JSON response with the published template",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
         "/templates/{id}/versions": {
             "get": {
                 "operationId": "template-versions-versions",

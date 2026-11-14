@@ -49,6 +49,21 @@ use RuntimeException;
 class TemplateService implements TemplateServiceInterface {
 
 	/**
+	 * A template version that only its authors see.
+	 *
+	 * @var string
+	 */
+	public const STATUS_DRAFT = 'draft';
+
+	/**
+	 * A template version users may generate documents from.
+	 *
+	 * @var string
+	 */
+	public const STATUS_PUBLISHED = 'published';
+
+
+	/**
 	 * Lock timeout in minutes
 	 *
 	 * @var int
@@ -292,6 +307,11 @@ class TemplateService implements TemplateServiceInterface {
 			);
 		}
 
+		// A new template starts as a draft; publishing is an explicit action
+		// of the author (REQ-SCR-015).
+		$data['status'] = self::STATUS_DRAFT;
+		unset($data['publishedVersion']);
+
 		$objectService = $this->getObjectService();
 		$config = $this->registerResolver->getRegisterAndSchema();
 
@@ -344,11 +364,15 @@ class TemplateService implements TemplateServiceInterface {
 
 		// Namespace is immutable after creation.
 		unset($data['namespace']);
+		// Only publishTemplate() moves the published version.
+		unset($data['status'], $data['publishedVersion']);
 
 		$data['id'] = $id;
 		$merged = array_merge($existing, $data);
 		// The version is read from the chain, never stored on the template.
 		unset($merged['version']);
+		// A changed version starts as a draft; users keep the last published one.
+		$merged['status'] = self::STATUS_DRAFT;
 
 		// Release lock after successful save.
 		$merged['lockedBy'] = null;
@@ -418,6 +442,65 @@ class TemplateService implements TemplateServiceInterface {
 
 		return $result;
 	}//end updateTemplateWithoutVersion()
+
+	/**
+	 * Publish the version the template is on, so users may generate from it.
+	 *
+	 * Publishing is the author's explicit action: the head version becomes the
+	 * one {@see getPublishedTemplate()} answers until the next publish. No new
+	 * version is made; the save goes through OpenRegister's update check.
+	 *
+	 * @param string $id The template UUID
+	 *
+	 * @return array The template, now published
+	 *
+	 * @throws Exception 404 when the template does not exist, 409 while another user holds its lock
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/template-management/spec.md#requirement-a-template-is-tried-with-sample-data-before-users-get-it-req-scr-015
+	 */
+	public function publishTemplate(string $id): array {
+		$existing = $this->getTemplate(id: $id);
+		if ($this->heldByAnother(template: $existing, userId: $this->getCurrentUserId()) === true) {
+			throw new Exception(message: 'Template is locked by another user', code: 409);
+		}
+
+		$data = ['status' => self::STATUS_PUBLISHED];
+		if (is_int($existing['version'] ?? null) === true) {
+			$data['publishedVersion'] = $existing['version'];
+		}
+
+		return $this->updateTemplateWithoutVersion(id: $id, data: $data);
+	}//end publishTemplate()
+
+	/**
+	 * Get the template as users generate from it: its last published version.
+	 *
+	 * A template without a status predates drafts and counts as published. A
+	 * draft answers the version it last published from the version chain; a
+	 * draft that was never published is refused, so a user never renders a
+	 * version its author has not released.
+	 *
+	 * @param string $id The template UUID
+	 *
+	 * @return array The template at its last published version
+	 *
+	 * @throws Exception 404 when the template does not exist, 409 when it has no published version
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/template-management/spec.md#requirement-a-template-is-tried-with-sample-data-before-users-get-it-req-scr-015
+	 */
+	public function getPublishedTemplate(string $id): array {
+		$template = $this->getTemplate(id: $id);
+		if (($template['status'] ?? self::STATUS_PUBLISHED) !== self::STATUS_DRAFT) {
+			return $template;
+		}
+
+		$published = $template['publishedVersion'] ?? null;
+		if (is_int($published) === false || $published < 1) {
+			throw new Exception(message: "Template {$id} has no published version", code: 409);
+		}
+
+		return $this->getTemplateAtVersion(id: $id, version: $published);
+	}//end getPublishedTemplate()
 
 	/**
 	 * Delete a template

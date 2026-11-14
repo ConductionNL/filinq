@@ -217,6 +217,24 @@ export const useTemplateStore = defineStore('template', {
 			})
 		},
 		/**
+		 * Publish the version a template is on, so users may generate from it.
+		 *
+		 * @param {string} id the template
+		 * @spec openspec/changes/specify-capability-rows/tasks.md#task-4.2
+		 */
+		publishTemplate(id) {
+			return storeRequest(this, {
+				failure: 'Failed to publish template:',
+				fallback: null,
+				run: async () => {
+					const response = await axios.post(
+						generateUrl(`/apps/filinq/api/templates/${id}/publish`),
+					)
+					return response.data
+				},
+			})
+		},
+		/**
 		 * Fetch the version history for a template.
 		 *
 		 * @param {string} id the template

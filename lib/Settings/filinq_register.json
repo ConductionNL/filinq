@@ -615,7 +615,7 @@
                 "slug": "template",
                 "title": "Document Template",
                 "description": "Herbruikbare Twig/HTML templates voor PDF-generatie. Templates zijn gescoped per app via het namespace-veld.",
-                "version": "1.5.0",
+                "version": "1.6.0",
                 "summary": "",
                 "icon": "FileDocument",
                 "required": [
@@ -765,6 +765,27 @@
                         "order": 10,
                         "facetable": false,
                         "title": "Locked at"
+                    },
+                    "status": {
+                        "description": "Whether the version the template is on is a draft only its authors see, or published so users may generate from it. A changed template starts as a draft; publishing is the author's explicit action. A template without a status counts as published.",
+                        "type": "string",
+                        "visible": true,
+                        "order": 10,
+                        "facetable": true,
+                        "title": "Status",
+                        "enum": [
+                            "draft",
+                            "published"
+                        ]
+                    },
+                    "publishedVersion": {
+                        "description": "The version number users generate from while the template is a draft: the version that was on when it was last published.",
+                        "type": "integer",
+                        "visible": true,
+                        "order": 10,
+                        "facetable": false,
+                        "title": "Published version",
+                        "minimum": 1
                     },
                     "plainLanguage": {
                         "description": "The plain-language counterpart of this template. A template that declares one produces both renditions from the same data in one generation; a template that declares none produces the formal rendition only and nothing is invented in its place. `requiredStatements` are the things the plain rendition must resolve before the generation may proceed, typically the decision, the term and where to object. `source` says whether the plain text comes from the counterpart template or from a machine draft: a machine draft is a suggestion and does not leave the building until a named person has accepted it.",

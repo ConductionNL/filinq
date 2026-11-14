@@ -25,7 +25,8 @@
 
 - [x] 4.1 Store several profiles keyed by document type in `lib/Service/WooProfileService.php` (REQ-SCR-013). Verify: PHPUnit picks the profile of the document type.
   - Built: `WooProfileService::getProfileFor()`, `typeProfiles()`, `saveProfileFor()`, `removeProfileFor()` and `shouldAnonymize(entityType, documentType)`; profiles per type in app config `filinq_woo_entity_profiles_by_type`, a type without one falls back to the default profile. Pinned by `WooProfileTypeProfilesTest`. Not yet built: the admin screen to manage them and passing the document type from the review (the existing callers keep the default profile).
-- [ ] 4.2 Add a draft and published status to the template schema in `lib/Settings/filinq_register.json` and offer only published versions in `lib/Service/TemplateService.php` (REQ-SCR-015). Verify: PHPUnit renders the last published version.
+- [x] 4.2 Add a draft and published status to the template schema in `lib/Settings/filinq_register.json` and offer only published versions in `lib/Service/TemplateService.php` (REQ-SCR-015). Verify: PHPUnit renders the last published version.
+  - Built: `status` (draft/published) and `publishedVersion` on the template schema (1.6.0); `createTemplate()` and `updateTemplate()` save a draft, `publishTemplate()` (`POST api/templates/{id}/publish`, a Publish button on the template editor) releases the head, `getPublishedTemplate()` answers the last published version and refuses a never-published draft; document generation uses it. Pinned by `TemplatePublishedVersionTest`. The sample-data preview already runs on the head.
 
 ## 5. Portal
 

@@ -161,8 +161,9 @@ class DocumentProductionSchemaTest extends TestCase {
 		// and `tenantId`; 1.4.1 since both moved inside `properties` (see
 		// SchemaSlugIntegrityTest); 1.5.0 since template-merge-preview added
 		// `mergeFields`. An importer skips an unchanged version, so this pin
-		// moves whenever the schema actually does.
-		$this->assertSame(expected: '1.5.0', actual: $schemas['template']['version']);
+		// moves whenever the schema actually does. 1.6.0 since
+		// specify-capability-rows added `status` and `publishedVersion`.
+		$this->assertSame(expected: '1.6.0', actual: $schemas['template']['version']);
 
 		foreach (['templateId', 'requiredStatements', 'source'] as $part) {
 			$this->assertArrayHasKey(
