@@ -22,10 +22,13 @@ namespace OCA\Filinq\Tests\Unit\Service\FieldFill;
 
 use OCA\Filinq\Exception\FieldFillRefused;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
+use OCA\Filinq\Service\DocumentTextSource;
 use OCA\Filinq\Service\FieldFill\FieldFillProfileService;
 use OCA\Filinq\Service\FieldFill\FieldValueCheck;
+use OCA\Filinq\Service\FieldFill\FieldSuggestionDecisions;
 use OCA\Filinq\Service\FieldFill\SchemaFieldFillService;
 use OCA\Filinq\Service\FieldFill\TextPassage;
+use OCA\Filinq\Service\LocalTextAi;
 use OCA\Filinq\Service\OcrService;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\Files\File;
@@ -229,17 +232,17 @@ class SchemaFieldFillServiceTest extends TestCase {
 		$groups->method('isAdmin')->willReturn($admin);
 		$logger = $this->createMock(LoggerInterface::class);
 
+		$profiles = new FieldFillProfileService(objectResolver: $resolver, container: $container, logger: $logger);
+
 		return new SchemaFieldFillService(
 			objectResolver: $resolver,
-			profiles: new FieldFillProfileService(objectResolver: $resolver, container: $container, logger: $logger),
+			profiles: $profiles,
 			valueCheck: new FieldValueCheck(),
 			passage: new TextPassage(),
-			container: $container,
-			rootFolder: $root,
-			userSession: $session,
-			ocrService: $ocr,
+			textModel: new LocalTextAi(container: $container),
+			documentText: new DocumentTextSource(rootFolder: $root, userSession: $session, ocrService: $ocr, logger: $logger),
+			decisions: new FieldSuggestionDecisions(objectResolver: $resolver, profiles: $profiles, groupManager: $groups, logger: $logger),
 			appConfig: $config,
-			groupManager: $groups,
 			logger: $logger
 		);
 

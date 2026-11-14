@@ -25,20 +25,13 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\FieldFill;
 
-use DateTimeImmutable;
-use DateTimeInterface;
 use OCA\Filinq\Exception\FieldFillRefused;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\DocumentTextSource;
 use OCA\Filinq\Service\Extraction\AiPrompt;
 use OCA\Filinq\Service\IntakeRepository;
 use OCA\Filinq\Service\LocalTextAi;
-use OCA\Filinq\Service\OcrService;
-use OCP\Files\IRootFolder;
 use OCP\IAppConfig;
-use OCP\IGroupManager;
-use OCP\IUserSession;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -116,16 +109,14 @@ class SchemaFieldFillService {
 	/**
 	 * Constructor.
 	 *
-	 * @param DocumentObjectServiceResolver $objectResolver Resolver for OpenRegister's ObjectService.
+	 * @param DocumentObjectServiceResolver $objectResolver Resolves OpenRegister's ObjectService.
 	 * @param FieldFillProfileService       $profiles       The declared profiles and their schemas.
 	 * @param FieldValueCheck               $valueCheck     Checks a value against its property.
 	 * @param TextPassage                   $passage        Finds a value in the text.
-	 * @param ContainerInterface            $container      DI container, for the text model.
-	 * @param IRootFolder                   $rootFolder     Root folder, to read the file.
-	 * @param IUserSession                  $userSession    The session user.
-	 * @param OcrService                    $ocrService     OCR for a file without embedded text.
+	 * @param LocalTextAi                   $textModel      The text model, through Nextcloud task processing.
+	 * @param DocumentTextSource            $documentText   The text of a file, with OCR for a scan.
+	 * @param FieldSuggestionDecisions      $decisions      Reads records and writes the clerk's decisions.
 	 * @param IAppConfig                    $appConfig      Holds the switch.
-	 * @param IGroupManager                 $groupManager   Tells an administrator apart.
 	 * @param LoggerInterface               $logger         Logger for diagnostics.
 	 *
 	 * @return void
@@ -135,12 +126,10 @@ class SchemaFieldFillService {
 		private readonly FieldFillProfileService $profiles,
 		private readonly FieldValueCheck $valueCheck,
 		private readonly TextPassage $passage,
-		private readonly ContainerInterface $container,
-		private readonly IRootFolder $rootFolder,
-		private readonly IUserSession $userSession,
-		private readonly OcrService $ocrService,
+		private readonly LocalTextAi $textModel,
+		private readonly DocumentTextSource $documentText,
+		private readonly FieldSuggestionDecisions $decisions,
 		private readonly IAppConfig $appConfig,
-		private readonly IGroupManager $groupManager,
 		private readonly LoggerInterface $logger,
 	) {
 
@@ -155,7 +144,7 @@ class SchemaFieldFillService {
 	 */
 	public function status(): array {
 		$enabled  = $this->appConfig->getValueBool('filinq', self::ENABLED_KEY, false);
-		$provider = $this->localAi()->textProviderName();
+		$provider = $this->textModel->textProviderName();
 
 		return [
 			'enabled' => $enabled,
@@ -177,7 +166,7 @@ class SchemaFieldFillService {
 	 * @spec openspec/changes/extraction-model-filled-fields/specs/schema-field-suggestions/spec.md
 	 */
 	public function setEnabled(bool $enabled): array {
-		if ($enabled === true && $this->localAi()->textProviderName() === null) {
+		if ($enabled === true && $this->textModel->textProviderName() === null) {
 			throw new FieldFillRefused(message: self::NO_MODEL, code: 503);
 		}
 
@@ -204,14 +193,14 @@ class SchemaFieldFillService {
 	 * @spec openspec/changes/extraction-model-filled-fields/specs/schema-field-suggestions/spec.md
 	 */
 	public function suggest(int $fileId, string $register, string $schema, string $objectId, string $userId): array {
-		$manager = $this->localAi()->manager();
+		$manager = $this->textModel->manager();
 		if ($manager === null || $this->status()['available'] === false) {
 			throw new FieldFillRefused(message: self::NO_MODEL, code: 503);
 		}
 
-		$record = $this->readRecord(register: $register, schema: $schema, objectId: $objectId);
+		$record = $this->decisions->record(register: $register, schema: $schema, objectId: $objectId);
 
-		$text = $this->textSource();
+		$text = $this->documentText;
 		if ($text->readable(fileId: $fileId) === false) {
 			throw new FieldFillRefused(message: 'The file was not found or you may not read it.', code: 404);
 		}
@@ -239,18 +228,18 @@ class SchemaFieldFillService {
 			'suggestions' => $result['suggestions'],
 			'droppedFields' => $result['dropped'],
 			'truncated' => (mb_strlen($content) > self::PROMPT_LIMIT),
-			'provider' => (string)$this->localAi()->textProviderName(),
+			'provider' => (string)$this->textModel->textProviderName(),
 			'decisions' => [],
 			'status' => 'suggested',
 		];
 
-		$saved = $this->toArray(object: $this->objectResolver->resolve()->saveObject(
+		$saved = $this->decisions->row(object: $this->objectResolver->resolve()->saveObject(
 			object: $suggestion,
 			register: IntakeRepository::REGISTER,
 			schema: self::SCHEMA
 		));
 
-		$stored = array_merge($suggestion, $this->fieldsOf(row: $saved));
+		$stored = array_merge($suggestion, $saved);
 		$stored['currentValues'] = $this->currentValues(record: $record, fields: array_keys($properties));
 
 		return $stored;
@@ -273,51 +262,7 @@ class SchemaFieldFillService {
 	 * @spec openspec/changes/extraction-model-filled-fields/specs/schema-field-suggestions/spec.md
 	 */
 	public function decide(string $id, array $decisions, string $userId): array {
-		$suggestion = $this->readSuggestion(id: $id, userId: $userId);
-		$properties = $this->profiles->properties(schema: (string)$suggestion['schema']);
-		$suggested  = (array)($suggestion['suggestions'] ?? []);
-		$now        = (new DateTimeImmutable())->format(DateTimeInterface::ATOM);
-
-		$updates = [];
-		$taken   = [];
-		foreach ($suggested as $field => $entry) {
-			$field    = (string)$field;
-			$decision = $this->decisionFor(decisions: $decisions, field: $field);
-			$value    = $this->decidedValue(decision: $decision, entry: (array)$entry, property: ($properties[$field] ?? []), field: $field);
-
-			if ($decision['decision'] !== 'reject') {
-				$updates[$field] = $value;
-			}
-
-			$taken[] = [
-				'field' => $field,
-				'decision' => $decision['decision'],
-				'suggested' => ($entry['value'] ?? null),
-				'written' => $value,
-				'decidedBy' => $userId,
-				'decidedAt' => $now,
-			];
-		}
-
-		if ($updates !== []) {
-			$this->writeRecord(suggestion: $suggestion, updates: $updates);
-		}
-
-		$suggestion['decisions'] = $taken;
-		$suggestion['decidedBy'] = $userId;
-		$suggestion['decidedAt'] = $now;
-		$suggestion['status']    = 'decided';
-
-		$object = $suggestion;
-		unset($object['uuid'], $object['@self'], $object['id']);
-		$this->objectResolver->resolve()->saveObject(
-			object: $object,
-			register: IntakeRepository::REGISTER,
-			schema: self::SCHEMA,
-			uuid: $id
-		);
-
-		return $suggestion;
+		return $this->decisions->decide(id: $id, decisions: $decisions, userId: $userId);
 
 	}//end decide()
 
@@ -368,11 +313,11 @@ class SchemaFieldFillService {
 	 */
 	private function ask(array $manager, string $text, array $properties, string $userId): array {
 		try {
-			$output  = $this->localAi()->run(
+			$output  = $this->textModel->run(
 				manager: $manager,
 				prompt: new AiPrompt(text: $this->buildPrompt(text: $text, properties: $properties), requestedBy: $userId)
 			);
-			$decoded = json_decode($this->localAi()->stripCodeFences(text: $output), associative: true);
+			$decoded = json_decode($this->textModel->stripCodeFences(text: $output), associative: true);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				message: '[SchemaFieldFillService] the text model failed',
@@ -461,169 +406,6 @@ class SchemaFieldFillService {
 	}//end declaredProperties()
 
 	/**
-	 * The record, read with the session user's rights.
-	 *
-	 * @param string $register The register.
-	 * @param string $schema   The schema.
-	 * @param string $objectId The record.
-	 *
-	 * @return array<string, mixed> The record.
-	 *
-	 * @throws FieldFillRefused 404 when it is not there or the user may not read it.
-	 */
-	private function readRecord(string $register, string $schema, string $objectId): array {
-		if ($register === '' || $schema === '' || $objectId === '') {
-			throw new FieldFillRefused(message: 'Name the record: register, schema and id.', code: 400);
-		}
-
-		try {
-			$found = $this->objectResolver->resolve()->find(id: $objectId, register: $register, schema: $schema);
-		} catch (Throwable $e) {
-			$found = null;
-		}
-
-		if ($found === null) {
-			throw new FieldFillRefused(message: 'The record was not found or you may not read it.', code: 404);
-		}
-
-		return $this->fieldsOf(row: $this->toArray(object: $found));
-
-	}//end readRecord()
-
-	/**
-	 * A suggestion the user may decide, still undecided.
-	 *
-	 * @param string $id     The suggestion.
-	 * @param string $userId The session user.
-	 *
-	 * @return array<string, mixed> The suggestion.
-	 *
-	 * @throws FieldFillRefused 404, 403 or 409.
-	 */
-	private function readSuggestion(string $id, string $userId): array {
-		try {
-			$found = $this->objectResolver->resolve()->find(id: $id, register: IntakeRepository::REGISTER, schema: self::SCHEMA);
-		} catch (Throwable $e) {
-			$found = null;
-		}
-
-		if ($found === null) {
-			throw new FieldFillRefused(message: 'The suggestion was not found.', code: 404);
-		}
-
-		$suggestion = $this->fieldsOf(row: $this->toArray(object: $found));
-		if ((string)($suggestion['requestedBy'] ?? '') !== $userId && $this->groupManager->isAdmin($userId) === false) {
-			throw new FieldFillRefused(message: 'Only the person who asked for the suggestion decides it.', code: 403);
-		}
-
-		if (($suggestion['status'] ?? 'suggested') !== 'suggested') {
-			throw new FieldFillRefused(message: 'This suggestion has already been decided.', code: 409);
-		}
-
-		return $suggestion;
-
-	}//end readSuggestion()
-
-	/**
-	 * The decision for one field.
-	 *
-	 * @param array<string, mixed> $decisions The decisions by field.
-	 * @param string               $field     The field.
-	 *
-	 * @return array{decision: string, value: mixed} The decision.
-	 *
-	 * @throws FieldFillRefused 400 when the field has no valid decision.
-	 */
-	private function decisionFor(array $decisions, string $field): array {
-		$given = ($decisions[$field] ?? null);
-		if (is_string($given) === true) {
-			$given = ['decision' => $given];
-		}
-
-		$decision = '';
-		if (is_array($given) === true) {
-			$decision = (string)($given['decision'] ?? '');
-		}
-		if (in_array($decision, self::DECISIONS, true) === false) {
-			throw new FieldFillRefused(
-				message: sprintf('The field "%s" needs a decision: accept, change or reject.', $field),
-				code: 400
-			);
-		}
-
-		return ['decision' => $decision, 'value' => ($given['value'] ?? null)];
-
-	}//end decisionFor()
-
-	/**
-	 * The value a decision writes.
-	 *
-	 * @param array{decision: string, value: mixed} $decision The decision.
-	 * @param array<string, mixed>                  $entry    The suggested entry.
-	 * @param array<string, mixed>                  $property The field's property.
-	 * @param string                                $field    The field.
-	 *
-	 * @return mixed The value; null for a rejection.
-	 *
-	 * @throws FieldFillRefused 400 when a changed value does not fit the field.
-	 */
-	private function decidedValue(array $decision, array $entry, array $property, string $field): mixed {
-		if ($decision['decision'] === 'reject') {
-			return null;
-		}
-
-		if ($decision['decision'] === 'accept') {
-			return ($entry['value'] ?? null);
-		}
-
-		if ($this->valueCheck->fits(value: $decision['value'], property: $property) === false) {
-			throw new FieldFillRefused(
-				message: sprintf('The changed value for "%s" does not fit the field.', $field),
-				code: 400
-			);
-		}
-
-		return $decision['value'];
-
-	}//end decidedValue()
-
-	/**
-	 * Write the accepted and changed values to the record, as the session user.
-	 *
-	 * @param array<string, mixed> $suggestion The suggestion.
-	 * @param array<string, mixed> $updates    The values by field.
-	 *
-	 * @return void
-	 *
-	 * @throws FieldFillRefused 404 or 403 when the record cannot be changed with the user's rights.
-	 */
-	private function writeRecord(array $suggestion, array $updates): void {
-		$register = (string)$suggestion['register'];
-		$schema   = (string)$suggestion['schema'];
-		$objectId = (string)$suggestion['objectId'];
-
-		$record = $this->readRecord(register: $register, schema: $schema, objectId: $objectId);
-		unset($record['@self'], $record['id'], $record['uuid']);
-
-		try {
-			// RBAC and multitenancy stay on: the write is the clerk's, with the clerk's rights (design D4).
-			$this->objectResolver->resolve()->saveObject(
-				object: array_merge($record, $updates),
-				register: $register,
-				schema: $schema,
-				uuid: $objectId
-			);
-		} catch (Throwable $e) {
-			$this->logger->info(
-				message: '[SchemaFieldFillService] the record write was refused',
-				context: ['error' => $e->getMessage()]
-			);
-			throw new FieldFillRefused(message: 'You may not change this record.', code: 403);
-		}
-
-	}//end writeRecord()
-
-	/**
 	 * The record's current value of each field.
 	 *
 	 * @param array<string, mixed> $record The record.
@@ -640,67 +422,4 @@ class SchemaFieldFillService {
 		return $values;
 
 	}//end currentValues()
-
-	/**
-	 * A row's fields: its wrapped `object` payload when it has one, with the uuid.
-	 *
-	 * @param array<string, mixed> $row The row.
-	 *
-	 * @return array<string, mixed> The fields.
-	 */
-	private function fieldsOf(array $row): array {
-		$fields = $row;
-		if (isset($row['object']) === true && is_array($row['object']) === true) {
-			$fields = $row['object'];
-		}
-
-		$uuid = (string)($fields['uuid'] ?? ($row['uuid'] ?? ($row['@self']['id'] ?? ($row['id'] ?? ''))));
-		if ($uuid !== '') {
-			$fields['uuid'] = $uuid;
-		}
-
-		return $fields;
-
-	}//end fieldsOf()
-
-	/**
-	 * An ObjectService result as an array.
-	 *
-	 * @param mixed $object The entity or array.
-	 *
-	 * @return array<string, mixed> The array.
-	 */
-	private function toArray(mixed $object): array {
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			return (array)$object->jsonSerialize();
-		}
-
-		return (array)$object;
-
-	}//end toArray()
-
-	/**
-	 * The text model access.
-	 *
-	 * @return LocalTextAi The access.
-	 */
-	private function localAi(): LocalTextAi {
-		return new LocalTextAi(container: $this->container);
-
-	}//end localAi()
-
-	/**
-	 * The file text access, for the session user.
-	 *
-	 * @return DocumentTextSource The access.
-	 */
-	private function textSource(): DocumentTextSource {
-		return new DocumentTextSource(
-			rootFolder: $this->rootFolder,
-			userSession: $this->userSession,
-			ocrService: $this->ocrService,
-			logger: $this->logger
-		);
-
-	}//end textSource()
 }//end class

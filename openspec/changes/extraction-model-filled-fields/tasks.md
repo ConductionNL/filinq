@@ -19,11 +19,16 @@
 
 ## 4. Screens
 
-- [ ] 4.1 Add "Fill fields from document" to the row actions of an assigned document in `IntakeIndex.vue` and `src/dialogs/FieldSuggestionDialog.vue` with accept, change and reject per field (REQ-EMF-003). Verify: Playwright `tests/e2e/schema-field-suggestions.spec.ts` with a stubbed provider.
-- [ ] 4.2 Add the model filling section to `Settings.vue`: the provider name, the switch (off by default) and the profiles list and form (REQ-EMF-001, REQ-EMF-004). Verify: Playwright on a server without a provider shows the switch disabled.
+- [x] 4.1 Add "Fill fields from document" to the row actions of an assigned document in `IntakeIndex.vue` and `src/dialogs/FieldSuggestionDialog.vue` with accept, change and reject per field (REQ-EMF-003). Verify: Playwright `tests/e2e/schema-field-suggestions.spec.ts` with a stubbed provider.
+  - Built: the row action on an intake document that sits on a record (`canFill()`: feature available, waiting mode, `file` and a full `assignedTo`), also offered right after an assign (quiet on 409/503); `src/dialogs/FieldSuggestionDialog.vue` shows per field the value now, the suggestion and its passage or "Not found in the document text", and saves only once every field has accept, change (with a value) or reject. Tests: `src/dialogs/FieldSuggestionDialog.spec.js`, `tests/vitest/fieldFill.spec.js`. The Playwright spec with a stubbed provider is not written: it needs a running instance.
+- [x] 4.2 Add the model filling section to `Settings.vue`: the provider name, the switch (off by default) and the profiles list and form (REQ-EMF-001, REQ-EMF-004). Verify: Playwright on a server without a provider shows the switch disabled.
+  - Built: `src/views/settings/ModelFillingSettings.vue` in the admin settings: the provider, the switch (disabled without a provider), the profiles table and the profile form. Test: `src/views/settings/ModelFillingSettings.spec.js` (no model: note shown, switch disabled and not sent). The Playwright run on a server without a provider needs a running instance.
 
 ## 5. Cross-app, strings, tests and docs
 
 - [ ] 5.1 File the hermiq issue for the free-prompt half of `plt-ai-fill`. Verify: the issue link is in the PR body.
-- [ ] 5.2 Dutch and English strings (ADR-005) and `@spec` tags on every new method. Verify: `npm run lint`, `npm run check:l10n` and `composer check:strict` pass.
+  - Not done by this build: filing an issue in another repository is outside what the build may do; the issue still needs filing.
+- [x] 5.2 Dutch and English strings (ADR-005) and `@spec` tags on every new method. Verify: `npm run lint`, `npm run check:l10n` and `composer check:strict` pass.
+  - The new UI strings in `l10n/en.json` and `l10n/nl.json` (`.js` rebuilt); `@spec` tags on the new methods. `npm run lint` (0 errors), `npm run test:l10n` and `check:l10n-js` pass; phpcs, phpstan and phpmd are clean on the change's PHP after `SchemaFieldFillService` was split: the decision half is `FieldSuggestionDecisions`, and the text model and document text are injected.
 - [ ] 5.3 PHPUnit at 75% or more on the new classes (ADR-009) and a section in `docs/features/` with a screenshot of the suggestion dialog, saying which provider reads the text (ADR-010). Verify: the coverage report and the docs page.
+  - Partly done: `docs/features/model-filled-fields.md` (who reads the text, switching it on, the profiles, the dialog, the routes) is written and listed in `docs/features/README.md`. Left: the screenshot of the dialog (needs a running instance) and the coverage report (no coverage driver in the build environment).

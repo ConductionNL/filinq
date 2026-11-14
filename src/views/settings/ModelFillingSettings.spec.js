@@ -23,8 +23,8 @@ jest.mock('../../services/fieldFill.js', () => ({
 	idOf: (row) => String(row?.uuid || row?.id || ''),
 }))
 
-const api = require('../../services/fieldFill.js')
 const { renderStubbed } = require('../../../tests/jest/renderGolden.js')
+const api = require('../../services/fieldFill.js')
 const ModelFillingSettings = require('./ModelFillingSettings.vue').default
 
 let rendered

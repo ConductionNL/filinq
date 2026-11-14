@@ -71,6 +71,7 @@ Features that are fully implemented and available in the current release.
 | [Consent Management](./consent-management.md) | consent-management.md | Documentregistratiecomponent | TEC-DMS-7 | Done |
 | [Publication Consent Process](./publication-consent-process.md) | publication-consent-process.md | Documentregistratiecomponent | TEC-DMS-7 | Done |
 | [Metadata Enrichment](./metadata-enrichment.md) | metadata-enrichment.md | Documentregistratiecomponent | TEC-DMS-4, TEC-DMS-9 | Done |
+| [Filling record fields from a document](./model-filled-fields.md) | model-filled-fields.md | Documentregistratiecomponent | TEC-DMS-4 | Done |
 | [Admin Settings](./admin-settings.md) | admin-settings.md | — | TEC-DMS-5 | Done |
 | [Dashboard](./dashboard.md) | dashboard.md | — | TEC-DMS-10 | Done |
 | [Document Register](./document-register.md) | document-register.md | Documentbeheercomponent | TEC-DMS-4 | Done |
