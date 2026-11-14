@@ -577,6 +577,48 @@
 						}
 					},
 					{
+						"id": "deliveries-waiting",
+						"title": "Waiting for the case system",
+						"type": "stat",
+						"content": {
+							"label": "Waiting for the case system",
+							"icon": "ClockOutline",
+							"format": {
+								"style": "decimal",
+								"decimals": 0
+							},
+							"source": {
+								"register": "filinq",
+								"schema": "caseSystemDelivery",
+								"metric": "count",
+								"filter": {
+									"deliveryStatus": "ready_for_writeback"
+								}
+							}
+						}
+					},
+					{
+						"id": "deliveries-failed",
+						"title": "Failed to reach the case system",
+						"type": "stat",
+						"content": {
+							"label": "Failed to reach the case system",
+							"icon": "AlertCircleOutline",
+							"format": {
+								"style": "decimal",
+								"decimals": 0
+							},
+							"source": {
+								"register": "filinq",
+								"schema": "caseSystemDelivery",
+								"metric": "count",
+								"filter": {
+									"deliveryStatus": "writeback_failed"
+								}
+							}
+						}
+					},
+					{
 						"id": "docs-by-format",
 						"title": "By format",
 						"type": "chart",
@@ -699,10 +741,28 @@
 						"showTitle": false
 					},
 					{
+						"id": "8",
+						"widgetId": "deliveries-waiting",
+						"gridX": 0,
+						"gridY": 2,
+						"gridWidth": 6,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": "9",
+						"widgetId": "deliveries-failed",
+						"gridX": 6,
+						"gridY": 2,
+						"gridWidth": 6,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
 						"id": "4",
 						"widgetId": "docs-by-format",
 						"gridX": 0,
-						"gridY": 2,
+						"gridY": 4,
 						"gridWidth": 4,
 						"gridHeight": 4,
 						"showTitle": true
@@ -711,7 +771,7 @@
 						"id": "5",
 						"widgetId": "letters-by-format",
 						"gridX": 4,
-						"gridY": 2,
+						"gridY": 4,
 						"gridWidth": 4,
 						"gridHeight": 4,
 						"showTitle": true
@@ -720,7 +780,7 @@
 						"id": "6",
 						"widgetId": "letters-by-recipient",
 						"gridX": 8,
-						"gridY": 2,
+						"gridY": 4,
 						"gridWidth": 4,
 						"gridHeight": 4,
 						"showTitle": true
@@ -729,7 +789,7 @@
 						"id": "7",
 						"widgetId": "docs-recent",
 						"gridX": 0,
-						"gridY": 6,
+						"gridY": 8,
 						"gridWidth": 12,
 						"gridHeight": 4,
 						"showTitle": true

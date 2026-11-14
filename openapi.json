@@ -10707,6 +10707,58 @@
                 }
             }
         },
+        "/bridge/case-system/files": {
+            "get": {
+                "operationId": "case-system-file-status",
+                "summary": "Which of the listed files are in the case system",
+                "description": "Which of the listed files the caller can open have a written-back case-system delivery. Files the caller cannot open are left out.",
+                "tags": [
+                    "case-system-delivery"
+                ],
+                "parameters": [
+                    {
+                        "name": "fileIds",
+                        "in": "query",
+                        "required": false,
+                        "description": "Comma separated file ids, at most 100.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The delivered file ids.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "delivered": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "integer"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    }
+                }
+            }
+        },
         "/bridge/destinations": {
             "post": {
                 "operationId": "case-system-delivery-save-destination",
