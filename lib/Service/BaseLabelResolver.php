@@ -30,9 +30,9 @@ namespace OCA\Filinq\Service;
 
 use Exception;
 use OCA\Filinq\Service\Grounds\RefusalGroundsResolver;
+use OCA\Filinq\Service\Grounds\WooGroundLabels;
 use OCA\Filinq\Service\Grounds\WooGroundsLegacyMap;
 use Psr\Log\LoggerInterface;
-use Throwable;
 
 /**
  * Resolves `base` references to display names and toelichtingen.
@@ -138,111 +138,25 @@ class BaseLabelResolver {
 	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-every-grounds-reader-in-filinq-goes-through-the-resolver-req-grd-002
 	 */
 	private function resolveThroughGrounds(array $baseRefs): array {
-		$byCode = $this->groundsByCode();
+		$woo = new WooGroundLabels(grounds: $this->grounds, legacy: $this->legacy, logger: $this->logger);
 
 		$labels = [];
-		$others = [];
+		$lookups = null;
 		foreach ($baseRefs as $ref) {
 			$refString = (string)$ref;
-			$code = $refString;
-			if (isset($byCode[$code]) === false && $this->legacy !== null) {
-				$code = ($this->safeLegacyCode(slug: $refString) ?? $refString);
-			}
-
-			if (isset($byCode[$code]) === true) {
-				$labels[$refString] = $byCode[$code];
+			$label = $woo->labelFor(ref: $refString);
+			if ($label !== null) {
+				$labels[$refString] = $label;
 				continue;
 			}
 
-			$others[] = $refString;
+			// A tenant's own basis: its `base` object, or the raw reference.
+			$lookups = ($lookups ?? $this->tenantBaseLookups());
+			$labels[$refString] = $this->labelFor(refString: $refString, lookups: $lookups);
 		}
 
-		$lookups = null;
-		foreach ($others as $refString) {
-			if ($this->isWooReference(ref: $refString) === false) {
-				// A tenant's own basis: its `base` object, or the raw reference.
-				$lookups = ($lookups ?? $this->tenantBaseLookups());
-				$labels[$refString] = $this->labelFor(refString: $refString, lookups: $lookups);
-				continue;
-			}
-
-			$labels[$refString] = ['name' => 'unknown ground ' . $refString, 'description' => ''];
-		}
-
-		// Keep the caller's order.
-		$ordered = [];
-		foreach ($baseRefs as $ref) {
-			$ordered[(string)$ref] = $labels[(string)$ref];
-		}
-
-		return $ordered;
+		return $labels;
 	}//end resolveThroughGrounds()
-
-	/**
-	 * The Woo grounds keyed by code, as labels; empty when no list can be read.
-	 *
-	 * @return array<string, array{name: string, description: string}>
-	 */
-	private function groundsByCode(): array {
-		try {
-			$list = $this->grounds?->list();
-		} catch (Throwable $e) {
-			$this->logger->warning('BaseLabelResolver: the Woo refusal grounds cannot be read', ['error' => $e->getMessage()]);
-			return [];
-		}
-
-		$byCode = [];
-		foreach ((array)($list['grounds'] ?? []) as $ground) {
-			if (is_array($ground) === false) {
-				continue;
-			}
-
-			$code = (string)($ground['code'] ?? '');
-			$label = (string)($ground['label'] ?? '');
-			if ($code === '' || $label === '') {
-				continue;
-			}
-
-			$byCode[$code] = ['name' => $label, 'description' => (string)($ground['description'] ?? '')];
-		}
-
-		return $byCode;
-	}//end groundsByCode()
-
-	/**
-	 * The code an old Woo slug re-points to, or null; an unreadable map re-points nothing.
-	 *
-	 * @param string $slug The reference.
-	 *
-	 * @return string|null The code.
-	 */
-	private function safeLegacyCode(string $slug): ?string {
-		try {
-			return $this->legacy?->codeFor(slug: $slug);
-		} catch (Throwable $e) {
-			$this->logger->warning('BaseLabelResolver: the Woo grounds legacy map cannot be read', ['error' => $e->getMessage()]);
-			return null;
-		}
-	}//end safeLegacyCode()
-
-	/**
-	 * Whether a reference names a Woo ground: an old Woo slug or a Woo article code.
-	 *
-	 * @param string $ref The reference.
-	 *
-	 * @return bool
-	 */
-	private function isWooReference(string $ref): bool {
-		if (preg_match('/^5\.\d/', $ref) === 1) {
-			return true;
-		}
-
-		try {
-			return ($this->legacy?->isLegacySlug(slug: $ref) === true);
-		} catch (Throwable) {
-			return false;
-		}
-	}//end isWooReference()
 
 	/**
 	 * The `base` lookups for a tenant's own (non-Woo) bases; empty without OpenRegister.

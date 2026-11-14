@@ -43,6 +43,7 @@ use RuntimeException;
  * @covers \OCA\Filinq\Service\BaseLabelResolver
  * @uses   \OCA\Filinq\Service\DossierObjectRepository
  * @uses   \OCA\Filinq\Service\Grounds\WooGroundsLegacyMap
+ * @uses   \OCA\Filinq\Service\Grounds\WooGroundLabels
  */
 class BaseLabelResolverTest extends TestCase {
 

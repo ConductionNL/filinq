@@ -32,6 +32,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Service\Grounds\WooGroundLabels;
 use OCP\Files\Folder;
 use OCP\Files\Node;
 use Psr\Log\LoggerInterface;
@@ -61,12 +62,15 @@ class DossierContextService {
 	 * @param DossierFileService $files The filesystem half.
 	 * @param DossierObjectReader $reader Object-shape reading.
 	 * @param LoggerInterface $logger Logger.
+	 * @param WooGroundLabels|null $wooGrounds The Woo refusal grounds (dossiq or the snapshot); when given,
+	 *                                         Woo grounds are labelled from it, never from `base`.
 	 */
 	public function __construct(
 		private readonly DossierObjectRepository $repository,
 		private readonly DossierFileService $files,
 		private readonly DossierObjectReader $reader,
 		private readonly LoggerInterface $logger,
+		private readonly ?WooGroundLabels $wooGrounds = null,
 	) {
 
 	}//end __construct()
@@ -221,7 +225,7 @@ class DossierContextService {
 		$out = [];
 		foreach ($slugs as $slug) {
 			$slug = (string)$slug;
-			$label = ($labels[$slug] ?? '');
+			$label = ($this->wooLabel(ref: $slug) ?? ($labels[$slug] ?? ''));
 
 			$out[] = [
 				'slug' => $slug,
@@ -233,6 +237,27 @@ class DossierContextService {
 		return $out;
 
 	}//end resolveBases()
+
+	/**
+	 * The label of a Woo ground reference from the grounds reader; '' for one
+	 * that resolves to no ground, null for a reference that is not a Woo
+	 * ground or when there is no grounds reader.
+	 *
+	 * @param string $ref The stored reference.
+	 *
+	 * @return string|null
+	 *
+	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-every-grounds-reader-in-filinq-goes-through-the-resolver-req-grd-002
+	 */
+	private function wooLabel(string $ref): ?string {
+		if ($this->wooGrounds === null || $this->wooGrounds->isWooReference(ref: $ref) === false) {
+			return null;
+		}
+
+		$code = ($this->wooGrounds->codeFor(ref: $ref) ?? $ref);
+
+		return ($this->wooGrounds->byCode()[$code]['name'] ?? '');
+	}//end wooLabel()
 
 	/**
 	 * The `base` vocabulary as slug => name.
