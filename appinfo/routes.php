@@ -323,10 +323,10 @@ $extra = [
         ['name' => 'templateVersions#diffVersions', 'url' => 'api/templates/{id}/versions/diff', 'verb' => 'GET'],
         ['name' => 'templateVersions#restoreVersion', 'url' => 'api/templates/{id}/versions/{versionId}/restore', 'verb' => 'POST'],
         ['name' => 'templatePreview#previewTemplate', 'url' => 'api/templates/{id}/preview', 'verb' => 'POST'],
+        ['name' => 'templates#publish', 'url' => 'api/templates/{id}/publish', 'verb' => 'POST'],
         ['name' => 'templates#duplicate', 'url' => 'api/templates/{id}/duplicate', 'verb' => 'POST'],
         ['name' => 'templates#lock', 'url' => 'api/templates/{id}/lock', 'verb' => 'POST'],
         ['name' => 'templates#unlock', 'url' => 'api/templates/{id}/lock', 'verb' => 'DELETE'],
-        ['name' => 'templates#publish', 'url' => 'api/templates/{id}/publish', 'verb' => 'POST'],
 
         // Signing routes.
         ['name' => 'signing#createRequest', 'url' => 'api/signing/requests', 'verb' => 'POST'],
