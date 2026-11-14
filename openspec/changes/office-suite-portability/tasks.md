@@ -2,10 +2,10 @@
 
 ## 1. The capability probe
 
-- [ ] Add `lib/Service/Office/OfficeSuiteCapabilityService.php` probing WOPI via a real `CheckFileInfo`
-- [ ] Resolve absent on every non-success: refused, timeout, non-2xx, unparseable body, or a 2xx body missing `BaseFileName`/`Size`
-- [ ] Bound the probe with an explicit timeout and never propagate its failure to the caller
-- [ ] Surface the result as a capability so the feature degrades visibly (ADR-075 §4)
+- [x] Add `lib/Service/Office/OfficeSuiteCapabilityService.php` probing WOPI via a real `CheckFileInfo`
+- [x] Resolve absent on every non-success: refused, timeout, non-2xx, unparseable body, or a 2xx body missing `BaseFileName`/`Size`
+- [x] Bound the probe with an explicit timeout and never propagate its failure to the caller
+- [ ] Surface the result as a capability so the feature degrades visibly (ADR-075 §4) — open: the verdict is only reported by `occ filinq:office:probe`; no runtime capability consumes `OfficeSuiteCapabilityServiceInterface` yet
 
 Acceptance criteria:
 - An installed-but-WOPI-disabled suite — ONLYOFFICE's shipped default — resolves ABSENT.
@@ -14,8 +14,8 @@ Acceptance criteria:
 
 ## 2. Keep §5 true
 
-- [ ] Add a conformance test rejecting any suite app id (`richdocuments`, `onlyoffice`, `documentserver`) in executable code under `lib/` and `src/`
-- [ ] Make the test comment-aware, and prove it by pointing it at `EditSessionService`, which names `richdocuments` in prose and MUST pass
+- [x] Add a conformance test rejecting any suite app id (`richdocuments`, `onlyoffice`, `documentserver`) in executable code under `lib/` and `src/`
+- [x] Make the test comment-aware, and prove it by pointing it at `EditSessionService`, which names `richdocuments` in prose and MUST pass
 
 Acceptance criteria:
 - The test passes at HEAD — it is a ratchet, not a fix.
@@ -23,10 +23,10 @@ Acceptance criteria:
 
 ## 3. Both suites, reproducibly
 
-- [ ] Add `docker-compose.office.yml` with `onlyoffice` and `collabora` profiles, neither running by default
-- [ ] Write `docs/office-suite-setup.md` covering bring-up, connector config and verification for BOTH suites
-- [ ] Document ONLYOFFICE's `wopi.enable: false` default and how to turn it on
-- [ ] Give the reader one command whose output distinguishes available from absent
+- [x] Add `docker-compose.office.yml` with `onlyoffice` and `collabora` profiles, neither running by default
+- [x] Write `docs/office-suite-setup.md` covering bring-up, connector config and verification for BOTH suites (since split per suite under `docs/office-suites/`)
+- [x] Document ONLYOFFICE's `wopi.enable: false` default and how to turn it on
+- [x] Give the reader one command whose output distinguishes available from absent (`occ filinq:office:probe`)
 
 Acceptance criteria:
 - Starting the environment with no profile leaves both suites stopped.

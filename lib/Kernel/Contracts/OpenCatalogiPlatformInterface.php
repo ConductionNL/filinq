@@ -49,11 +49,27 @@ interface OpenCatalogiPlatformInterface {
 	/**
 	 * The Woo information categories, from OpenCatalogi's own TOOI value list.
 	 *
+	 * The code is OpenCatalogi's own (`infocat001` to `infocat017`), the value
+	 * its publication schema accepts.
+	 *
 	 * @return list<array{code: string, label: string}> The categories, empty when OpenCatalogi is not there.
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-3.1
+	 * @spec openspec/changes/woo-hand-off-files-its-category/tasks.md#task-1.1
 	 */
 	public function categories(): array;
+
+	/**
+	 * OpenCatalogi's code for a stored category: the code itself, or the code
+	 * whose TOOI URI ends in the stored basename (records from before the codes).
+	 *
+	 * @param string $value The stored category.
+	 *
+	 * @return string|null The code, or null when the value is neither or OpenCatalogi is not there.
+	 *
+	 * @spec openspec/changes/woo-hand-off-files-its-category/tasks.md#task-1.1
+	 */
+	public function toPlatformCode(string $value): ?string;
 
 	/**
 	 * Attach the redacted copy to the platform's publication, shared so the public sees it.

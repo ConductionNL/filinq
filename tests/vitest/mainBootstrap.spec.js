@@ -1,7 +1,7 @@
 /**
- * The SPA entry: the bundled manifest's menu reshaped by menu-layout.json
- * (relocations, sections, removals, the settings foldout), a route per
- * manifest page under the app's base path, the app mounted with the page
+ * The SPA entry: the effective manifest built by the shared buildManifest
+ * pipeline from the bundled base, its manifest.d fragments and
+ * menu-layout.json, a route per manifest page under the app's base path, the app mounted with the page
  * components of the registry, the stores initialised and the leaves
  * registered, with every failure at boot logged instead of thrown.
  *
@@ -24,6 +24,7 @@ function recorder(name) {
 }
 
 vi.mock('@conduction/nextcloud-vue', () => ({
+	buildManifest: (...args) => s.buildManifest(...args),
 	CnPageRenderer: { name: 'CnPageRenderer' },
 	get defaultPageTypes() { return { index: 'IndexPage' } },
 	registerBuiltinDashboardWidgets: () => s.calls.push(['registerBuiltinDashboardWidgets']),
@@ -66,9 +67,7 @@ vi.mock('../../src/registry.js', () => ({
 		Broken: null,
 	},
 }))
-vi.mock('../../src/services/menuRelocations.js', () => ({
-	applyMenuRelocations: (menu, relocations) => { s.calls.push(['relocate', relocations]); return menu },
-}))
+vi.mock('../../src/manifestFragments.js', () => ({ get default() { return s.fragments } }))
 vi.mock('../../src/store/store.js', () => ({ initializeStores: () => s.initializeStores() }))
 vi.mock('../../src/integrations/registerDocumentsLeaf.js', () => ({ registerDocumentsLeaf: recorder('documents') }))
 vi.mock('../../src/integrations/registerMergeToPdfLeaf.js', () => ({ registerMergeToPdfLeaf: recorder('mergeToPdf') }))
@@ -92,6 +91,16 @@ beforeEach(() => {
 			{ id: 'DossierDetail', route: '/dossiers/:id' },
 		],
 	}
+	s.fragments = [{ pages: [{ id: 'Flows', route: '/flows' }] }]
+	s.built = {
+		version: '1',
+		menu: [{ id: 'dashboard', route: 'Dashboard' }],
+		pages: [
+			{ id: 'Dashboard', route: '/' },
+			{ id: 'DossierDetail', route: '/dossiers/:id' },
+		],
+	}
+	s.buildManifest = (...args) => { s.calls.push(['buildManifest', ...args]); return s.built }
 	s.registerTranslations = () => s.calls.push(['registerTranslations'])
 	s.loadTranslations = (...args) => { s.calls.push(['loadTranslations', ...args]); return Promise.resolve() }
 	s.initializeStores = () => { s.calls.push(['initializeStores']); return Promise.resolve() }
@@ -118,7 +127,7 @@ describe('booting the SPA', () => {
 		await boot()
 		expect(s.calls.map((c) => c[0])).toEqual([
 			'registerIcons', 'registerBuiltinDashboardWidgets', 'registerTranslations',
-			'relocate', 'loadTranslations', 'initializeStores', 'mount',
+			'buildManifest', 'loadTranslations', 'initializeStores', 'mount',
 			'documents', 'mergeToPdf', 'downloadAllFiles', 'signingFolder', 'documentIntake',
 		])
 		expect(s.calls[0][1]).toEqual({ Folder: 'FolderIcon' })
@@ -135,8 +144,7 @@ describe('booting the SPA', () => {
 		expect(props.customComponents).toEqual({ DashboardIndex: 'DashboardComponent' })
 		expect(props.pageTypes).toEqual({ index: 'IndexPage' })
 		expect(Object.keys(props.registry)).toEqual(['DashboardIndex', 'DossierFormModal', 'Broken'])
-		expect(props.manifest).toEqual(s.manifest)
-		expect(props.manifest.menu).not.toBe(s.manifest.menu)
+		expect(props.manifest).toBe(s.built)
 	})
 
 	it('routes every page through the page renderer, passes params as props, and sends the rest home', async () => {
@@ -188,65 +196,23 @@ describe('booting the SPA', () => {
 	})
 })
 
-describe('the menu layout', () => {
-	it('hands the relocations over, then puts top-level entries in their section', async () => {
-		s.manifest.menu = [{ id: 'docs' }, { id: 'roadmap' }, { id: 'dashboard' }, { id: 'group', children: [{ id: 'docs' }] }]
-		s.layout = { relocations: { a: 'b' }, sections: { docs: 'footer', roadmap: 'footer', unknown: 'footer' }, removals: [], settingsSection: [] }
+describe('the effective manifest', () => {
+	it('is built by the shared pipeline from the bundled base, the fragments and the menu layout', async () => {
 		const { manifest } = await boot()
-		expect(s.calls.find((c) => c[0] === 'relocate')[1]).toEqual({ a: 'b' })
-		expect(manifest.menu).toEqual([
-			{ id: 'docs', section: 'footer' },
-			{ id: 'roadmap', section: 'footer' },
-			{ id: 'dashboard' },
-			{ id: 'group', children: [{ id: 'docs' }] },
+		const call = s.calls.find((c) => c[0] === 'buildManifest')
+		expect(call[1]).toBe(s.manifest)
+		expect(call[2]).toBe(s.fragments)
+		expect(call[3]).toBe(s.layout)
+		expect(manifest).toBe(s.built)
+	})
+
+	it('takes its routes from the built manifest, not from the bundled base', async () => {
+		s.built = { ...s.built, pages: [{ id: 'Flows', route: '/flows' }, { id: 'FlowDetail', route: '/flows/:id' }] }
+		await boot()
+		expect(s.routerOptions.routes.map((r) => [r.name, r.path, r.props])).toEqual([
+			['Flows', '/flows', false],
+			['FlowDetail', '/flows/:id', true],
+			[undefined, '/:pathMatch(.*)*', undefined],
 		])
-		expect(s.manifest.menu[0]).toEqual({ id: 'docs' })
-	})
-
-	it('removes leaf entries by id at either level, but never a group with children', async () => {
-		s.manifest.menu = [
-			{ id: 'old-list' },
-			{ id: 'group', children: [{ id: 'keep' }, { id: 'old-child' }, { id: 'nested', children: [{ id: 'x' }] }] },
-			{ id: 'empty-group', children: [] },
-		]
-		s.layout = { sections: {}, removals: ['old-list', 'old-child', 'nested', 'group', 'empty-group'], settingsSection: [] }
-		const { manifest } = await boot()
-		expect(manifest.menu).toEqual([
-			{ id: 'group', children: [{ id: 'keep' }, { id: 'nested', children: [{ id: 'x' }] }] },
-		])
-	})
-
-	it('lifts the listed entries into the settings section at the end, dropping groups they empty unless clickable', async () => {
-		s.manifest.menu = [
-			{ id: 'dashboard', route: 'Dashboard' },
-			{ id: 'admin', children: [{ id: 'config', route: 'Config', children: [{ id: 'deep' }] }] },
-			{ id: 'tools', route: 'Tools', children: [{ id: 'integrations', href: '/x' }] },
-			{ id: 'reports', children: [{ id: 'monthly', route: 'Monthly' }, { id: 'yearly', route: 'Yearly' }] },
-			{ id: 'audit', route: 'Audit' },
-		]
-		s.layout = { sections: null, removals: null, settingsSection: ['config', 'integrations', 'yearly', 'audit'] }
-		const { manifest } = await boot()
-		expect(manifest.menu).toEqual([
-			{ id: 'dashboard', route: 'Dashboard' },
-			{ id: 'tools', route: 'Tools', children: [] },
-			{ id: 'reports', children: [{ id: 'monthly', route: 'Monthly' }] },
-			{ id: 'config', route: 'Config', section: 'settings' },
-			{ id: 'integrations', href: '/x', section: 'settings' },
-			{ id: 'yearly', route: 'Yearly', section: 'settings' },
-			{ id: 'audit', route: 'Audit', section: 'settings' },
-		])
-	})
-
-	it('keeps an emptied group that has an action of its own', async () => {
-		s.manifest.menu = [{ id: 'more', action: 'open', children: [{ id: 'gear' }] }]
-		s.layout = { settingsSection: ['gear'] }
-		const { manifest } = await boot()
-		expect(manifest.menu).toEqual([{ id: 'more', action: 'open', children: [] }, { id: 'gear', section: 'settings' }])
-	})
-
-	it('treats a manifest without a menu as an empty one', async () => {
-		delete s.manifest.menu
-		const { manifest } = await boot()
-		expect(manifest.menu).toEqual([])
 	})
 })
