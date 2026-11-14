@@ -129,8 +129,9 @@ class DocumentProductionSchemaTest extends TestCase {
 		// the next. 1.4.0 since `multi-format-output` (`outputs`). 1.5.0 since
 		// `generated-document-names-its-template-version` (optional templateVersion).
 		// 1.6.0 since `guided-document-wizard` (optional wizardContext).
-		// 1.7.0 since `generate-draft-and-attended-edit` (optional draftId and editedBy).
-		$this->assertSame('1.7.0', $document['version']);
+		// 1.7.0 since `generate-store-in-case-system` (optional caseSystemDeliveryId).
+		// 1.8.0 since `generate-draft-and-attended-edit` (optional draftId and editedBy).
+		$this->assertSame('1.8.0', $document['version']);
 		$this->assertArrayHasKey(
 			'documentDueForReview',
 			$document['x-openregister-notifications'],
