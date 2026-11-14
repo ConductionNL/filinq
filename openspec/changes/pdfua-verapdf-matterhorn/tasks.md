@@ -22,8 +22,8 @@
 
 ## 4. Frontend
 
-- [ ] 4.1 PDF/UA conformance card on document detail (flavour, verdict, failed checkpoints, guidance); validator findings rendered in the existing `accessibility` findings group, source-labelled (REQ-DDPUM-002, REQ-DDPUM-004)
-- [ ] 4.2 Heuristic-vs-validator labelling in the accessibility panel; "not validated" state when the binary is absent (REQ-DDPUM-001, REQ-DDPUM-004)
+- [x] 4.1 PDF/UA conformance card on document detail (flavour, verdict, failed checkpoints, guidance); validator findings rendered in the existing `accessibility` findings group, source-labelled (REQ-DDPUM-002, REQ-DDPUM-004)
+- [x] 4.2 Heuristic-vs-validator labelling in the accessibility panel; "not validated" state when the binary is absent (REQ-DDPUM-001, REQ-DDPUM-004)
 
 ## 5. Quality
 

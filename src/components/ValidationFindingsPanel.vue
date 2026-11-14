@@ -27,6 +27,12 @@ SPDX-License-Identifier: EUPL-1.2
 					<span class="validation-findings__check">{{
 						checkLabel(finding)
 					}}</span>
+					<span
+						v-if="sourceLabel(finding.source)"
+						class="validation-findings__source"
+						:data-testid="'finding-source-' + finding.source">{{
+							sourceLabel(finding.source)
+						}}</span>
 					<span class="validation-findings__message">{{
 						findingMessage(finding)
 					}}</span>
@@ -53,6 +59,7 @@ SPDX-License-Identifier: EUPL-1.2
 
 <script>
 import { CnStatusBadge } from '@conduction/nextcloud-vue'
+import { sourceLabel } from '../services/accessibilityConformance.js'
 import { guidanceText } from '../services/conformance.js'
 import { groupFindings, verdictColor } from '../services/validationService.js'
 
@@ -132,6 +139,12 @@ export default {
 					'filinq',
 					'Not checked against PDF/A',
 				),
+
+				'pdfua-conformance-failed': t('filinq', 'Not PDF/UA'),
+				'accessibility-validator-unavailable': t(
+					'filinq',
+					'Not checked against PDF/UA',
+				),
 			}
 			return map[finding.checkId] || finding.checkId
 		},
@@ -157,6 +170,18 @@ export default {
 		 */
 		adviceFor(finding) {
 			return guidanceText(finding.guidance || '')
+		},
+
+		/**
+		 * Where an accessibility finding comes from: the validator or the quick
+		 * (heuristic) check.
+		 *
+		 * @param {string} source The finding's source.
+		 * @return {string} The label, '' for none.
+		 * @spec openspec/changes/pdfua-verapdf-matterhorn/specs/pdfua-verapdf-matterhorn/spec.md#requirement-validator-verdict-is-the-authoritative-conformance-heuristics-remain-the-floor-req-ddpum-004
+		 */
+		sourceLabel(source) {
+			return sourceLabel(source || '')
 		},
 	},
 }
@@ -184,6 +209,14 @@ export default {
 
 .validation-findings__check {
 	font-weight: bold;
+}
+
+.validation-findings__source {
+	padding: 0 6px;
+	border: 1px solid var(--color-border-maxcontrast);
+	border-radius: var(--border-radius-pill);
+	color: var(--color-text-maxcontrast);
+	font-size: 0.9em;
 }
 
 .validation-findings__group-title {
