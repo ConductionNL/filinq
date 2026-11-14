@@ -236,6 +236,11 @@
 					:label="t('filinq', 'Sample data (JSON)')"
 					placeholder='{ "name": "Jan de Vries" }'
 					class="template-detail__field" />
+				<NcTextField
+					v-model="sampleListRefsJson"
+					:label="t('filinq', 'Related records for tables (listRefs, JSON)')"
+					placeholder='[{ "register": "zaken", "schema": "besluit", "as": "besluiten" }]'
+					class="template-detail__field" />
 			</div>
 			<TemplateLintChecklist
 				v-if="!previewLoading && previewHtml"
@@ -402,6 +407,7 @@ export default {
 			previewLint: [],
 			previewError: '',
 			sampleDataJson: '{}',
+			sampleListRefsJson: '',
 			// Versions
 			versions: [],
 			versionsLoading: false,
@@ -660,10 +666,21 @@ export default {
 			} catch {
 				// Ignore JSON parse error; use empty data.
 			}
+			let listRefs = []
+			if (this.sampleListRefsJson.trim() !== '') {
+				try {
+					listRefs = JSON.parse(this.sampleListRefsJson)
+				} catch {
+					this.previewError = t('filinq', 'The related records are not valid JSON.')
+					this.previewLoading = false
+					return
+				}
+			}
 			try {
 				const preview = await this.templateStore.previewTemplate(
 					this.form.content,
 					sampleData,
+					listRefs,
 				)
 				this.previewHtml = preview?.html || ''
 				this.previewLint = preview?.lint || []

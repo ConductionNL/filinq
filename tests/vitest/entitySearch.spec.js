@@ -18,6 +18,7 @@ import {
 	otherLabel,
 	searchEntities,
 } from '../../src/services/entitySearch.js'
+import { effectiveManifest } from './support/effectiveManifest.js'
 
 const calls = []
 let answer = () => Promise.resolve({ data: {} })
@@ -116,12 +117,7 @@ describe('entity search service', () => {
 	})
 
 	it('the menu entry is hidden unless the access route said yes', () => {
-		const manifest = JSON.parse(
-			readFileSync(
-				new URL('../../src/manifest.json', import.meta.url),
-				'utf8',
-			),
-		)
+		const manifest = effectiveManifest()
 		const entry = manifest.menu.find((item) => item.id === 'EntitySearch')
 		expect(entry.visibleIf).toEqual({ 'entitySearch.allowed': true })
 		const app = readFileSync(
