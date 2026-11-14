@@ -2,6 +2,12 @@
     "translations": {
         "This batch can no longer be cancelled": "Deze batch kan niet meer worden geannuleerd",
         "Only an errored or cancelled batch can be resumed": "Alleen een mislukte of geannuleerde batch kan worden hervat",
+        "Withdraw request": "Verzoek intrekken",
+        "Withdraw this signing request?": "Dit ondertekeningsverzoek intrekken?",
+        "Every signatory loses access, and nobody can sign it any more. This cannot be undone.": "Alle ondertekenaars verliezen de toegang en niemand kan het nog ondertekenen. Dit kan niet ongedaan worden gemaakt.",
+        "The signing request was withdrawn.": "Het ondertekeningsverzoek is ingetrokken.",
+        "Related records for tables (listRefs, JSON)": "Gerelateerde records voor tabellen (listRefs, JSON)",
+        "The related records are not valid JSON.": "De gerelateerde records zijn geen geldige JSON.",
         "Failed to reach the case system": "Niet in het zaaksysteem aangekomen",
         "Original": "Origineel",
         "All documents in the folder have been anonymized. The anonymized copies are in a separate subfolder next to the originals.": "Alle documenten in de map zijn geanonimiseerd. De geanonimiseerde kopieën staan in een aparte submap naast de originelen.",
