@@ -88,12 +88,20 @@
             "description": "Answers whether the caller maintains custom dictionaries"
         },
         {
+            "name": "detection-provider-settings",
+            "description": "Reads and writes the per-organisation entity-detection provider settings, for admins only"
+        },
+        {
             "name": "document",
             "description": "Controller for document generation endpoints"
         },
         {
             "name": "document-production",
             "description": "Controller for layouts, bundles, periodic documents and reviews"
+        },
+        {
+            "name": "document-review",
+            "description": "The per-document checked mark of the anonymisation review workbench."
         },
         {
             "name": "dossier",
@@ -274,10 +282,6 @@
         {
             "name": "wizard",
             "description": "Document wizards of templates"
-        },
-        {
-            "name": "detection-provider-settings",
-            "description": "Reads and writes the per-organisation entity-detection provider settings, for admins only"
         }
     ],
     "paths": {
@@ -10488,6 +10492,166 @@
                         "$ref": "#/components/responses/Problem403"
                     }
                 }
+            }
+        },
+        "/review/{fileId}": {
+            "get": {
+                "operationId": "document-review-show",
+                "summary": "Where one document's review stands",
+                "description": "Where one document's review stands: whether the checked mark exists and still holds, whether the findings changed after it, the counts and the gate mode.",
+                "tags": [
+                    "document-review"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The review status.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "fileId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The fileId.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/review/{fileId}/check": {
+            "post": {
+                "operationId": "document-review-check",
+                "summary": "Mark one document as reviewed by the signed-in user",
+                "description": "Mark one document as reviewed. The reviewer is the session, never the payload. Refused with 409 `not_extracted` when the document has no extracted findings.",
+                "tags": [
+                    "document-review"
+                ],
+                "responses": {
+                    "201": {
+                        "description": "The status after the check.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Problem409"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "fileId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The fileId.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "note": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "document-review-uncheck",
+                "summary": "Clear one document's reviewed mark",
+                "description": "Clear one document's reviewed mark; the document counts as unchecked afterwards.",
+                "tags": [
+                    "document-review"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The status after the uncheck.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "fileId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The fileId.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
             }
         }
     },

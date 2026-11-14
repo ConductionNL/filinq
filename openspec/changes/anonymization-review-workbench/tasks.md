@@ -17,7 +17,7 @@
   - Prohibition wins on conflict; standing-consent match pre-sets `included: false`; additive response shape.
 - [x] 2.2 Accept/persist/return `bases` in `PolicyCrudService` + `PolicyController` for both rule kinds; invalidate the matcher cache on rule writes (REQ-DDARW-005, REQ-DDARW-009)
   - Pre-change rules without `bases` match unchanged (regression test).
-- [ ] 2.3 Add `DocumentReviewController` with routes `GET /api/review/{fileId}`, `POST /api/review/{fileId}/check`, `DELETE /api/review/{fileId}/check`, storing `documentReview` OR objects; invalidate the check on any post-check entity mutation (REQ-DDARW-007)
+- [x] 2.3 Add `DocumentReviewController` with routes `GET /api/review/{fileId}`, `POST /api/review/{fileId}/check`, `DELETE /api/review/{fileId}/check`, storing `documentReview` OR objects; invalidate the check on any post-check entity mutation (REQ-DDARW-007)
   - Auth attributes on every method (route-auth gate); per-object authorization guard (no-admin-idor gate).
 - [ ] 2.4 Enforce the checked gate in `AnonymizationController::anonymize` and `BatchAnonymizationController::batchAnonymize` behind `IAppConfig` key `filinq.review.checked_gate` (`enforced` default | `advisory`) (REQ-DDARW-008, REQ-DDARW-011)
   - HTTP 409 with machine-readable reason + `uncheckedFiles`; advisory mode returns `checkedGate` verdict; runs in addition to the prohibition gate.

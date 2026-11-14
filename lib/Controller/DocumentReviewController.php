@@ -1,0 +1,224 @@
+<?php
+
+/**
+ * Document review controller.
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
+ * @category  Controller
+ * @package   OCA\Filinq\Controller
+ * @author    Conduction B.V. <info@conduction.nl>
+ * @copyright 2026 Conduction B.V.
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link      https://www.filinq.app
+ *
+ * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-2.3
+ */
+
+declare(strict_types=1);
+
+namespace OCA\Filinq\Controller;
+
+use OCA\Filinq\Exception\DocumentReviewRefusedException;
+use OCA\Filinq\Kernel\Contracts\AnonymizeRequestServiceInterface;
+use OCA\Filinq\Service\Review\DocumentReviewService;
+use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\NoAdminRequired;
+use OCP\AppFramework\Http\JSONResponse;
+use OCP\IL10N;
+use OCP\IRequest;
+use OCP\IUserSession;
+use Psr\Log\LoggerInterface;
+use Throwable;
+
+/**
+ * Reads, sets and clears the per-document checked mark of the review workbench.
+ *
+ * Every method signs in the session's user and checks the file against the
+ * caller's own file tree before anything is read or written.
+ *
+ * @category Controller
+ * @package  OCA\Filinq\Controller
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.filinq.app
+ *
+ * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-2.3
+ *
+ * @spec openspec/changes/anonymization-review-workbench/specs/anonymization-review-workbench/spec.md#requirement-per-document-checked-gate-req-ddarw-007
+ */
+class DocumentReviewController extends Controller {
+
+	/**
+	 * Constructor.
+	 *
+	 * @param string                           $appName     The app name.
+	 * @param IRequest                         $request     The request.
+	 * @param DocumentReviewService            $reviews     The checked mark.
+	 * @param IUserSession                     $userSession The current session.
+	 * @param AnonymizeRequestServiceInterface $access      The per-file access check.
+	 * @param IL10N                            $l10n        The translator.
+	 * @param LoggerInterface                  $logger      The logger.
+	 *
+	 * @return void
+	 */
+	public function __construct(
+		string $appName,
+		IRequest $request,
+		private readonly DocumentReviewService $reviews,
+		private readonly IUserSession $userSession,
+		private readonly AnonymizeRequestServiceInterface $access,
+		private readonly IL10N $l10n,
+		private readonly LoggerInterface $logger,
+	) {
+		parent::__construct(appName: $appName, request: $request);
+
+	}//end __construct()
+
+	/**
+	 * Where one document's review stands.
+	 *
+	 * @param int $fileId The document.
+	 *
+	 * @return JSONResponse The status: checked, stale, extracted, counts, the mark and the gate mode.
+	 *
+	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-2.3
+	 *
+	 * @no-admin-idor-exempt AnonymizeRequestService::verifyFileAccess() refuses a file outside the
+	 * caller's user folder before the mark is read.
+	 */
+	#[NoAdminRequired]
+	public function show(int $fileId): JSONResponse {
+		$refusal = $this->refusal(fileId: $fileId);
+		if ($refusal !== null) {
+			return $refusal;
+		}
+
+		try {
+			return new JSONResponse(
+				data: $this->reviews->status(fileId: $fileId) + ['gateMode' => $this->reviews->gateMode()]
+			);
+		} catch (Throwable $e) {
+			return $this->failed(message: 'The review state could not be read', fileId: $fileId, exception: $e);
+		}
+
+	}//end show()
+
+	/**
+	 * Mark one document as reviewed by the signed-in user.
+	 *
+	 * The reviewer is the session, never the payload: a `checkedBy` in the body is ignored.
+	 *
+	 * @param int    $fileId The document.
+	 * @param string $note   The reviewer's note.
+	 *
+	 * @return JSONResponse The status after the check, or the refusal.
+	 *
+	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-2.3
+	 *
+	 * @no-admin-idor-exempt AnonymizeRequestService::verifyFileAccess() refuses a file outside the
+	 * caller's user folder before anything is written, and the mark is saved with OpenRegister RBAC on
+	 * (documentReview create: filinq-woo-officers, filinq-policy-admins).
+	 */
+	#[NoAdminRequired]
+	public function check(int $fileId, string $note = ''): JSONResponse {
+		$refusal = $this->refusal(fileId: $fileId);
+		if ($refusal !== null) {
+			return $refusal;
+		}
+
+		try {
+			$status = $this->reviews->check(
+				fileId: $fileId,
+				userId: (string)$this->userSession->getUser()?->getUID(),
+				note: trim($note)
+			);
+		} catch (DocumentReviewRefusedException $e) {
+			return new JSONResponse(
+				data: [
+					'error' => $this->l10n->t('This document has no extracted findings yet; run detection before marking it reviewed.'),
+					'reason' => $e->getReason(),
+				],
+				statusCode: Http::STATUS_CONFLICT
+			);
+		} catch (Throwable $e) {
+			return $this->failed(message: 'The review mark could not be recorded', fileId: $fileId, exception: $e);
+		}
+
+		return new JSONResponse(data: $status, statusCode: Http::STATUS_CREATED);
+
+	}//end check()
+
+	/**
+	 * Clear one document's reviewed mark.
+	 *
+	 * @param int $fileId The document.
+	 *
+	 * @return JSONResponse The status after the uncheck, with `removed`.
+	 *
+	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-2.3
+	 *
+	 * @no-admin-idor-exempt AnonymizeRequestService::verifyFileAccess() refuses a file outside the
+	 * caller's user folder before the mark is removed.
+	 */
+	#[NoAdminRequired]
+	public function uncheck(int $fileId): JSONResponse {
+		$refusal = $this->refusal(fileId: $fileId);
+		if ($refusal !== null) {
+			return $refusal;
+		}
+
+		try {
+			$removed = $this->reviews->uncheck(fileId: $fileId);
+			return new JSONResponse(data: $this->reviews->status(fileId: $fileId) + ['removed' => $removed]);
+		} catch (Throwable $e) {
+			return $this->failed(message: 'The review mark could not be removed', fileId: $fileId, exception: $e);
+		}
+
+	}//end uncheck()
+
+	/**
+	 * The 401 or 404 that stops a request, or null to go on.
+	 *
+	 * @param int $fileId The document.
+	 *
+	 * @return JSONResponse|null The refusal.
+	 */
+	private function refusal(int $fileId): ?JSONResponse {
+		if ($this->userSession->getUser() === null) {
+			return new JSONResponse(
+				data: ['error' => $this->l10n->t('Not authenticated')],
+				statusCode: Http::STATUS_UNAUTHORIZED
+			);
+		}
+
+		$denied = $this->access->verifyFileAccess(fileId: $fileId);
+		if ($denied !== null) {
+			return new JSONResponse(data: $denied['body'], statusCode: $denied['status']);
+		}
+
+		return null;
+
+	}//end refusal()
+
+	/**
+	 * Log a failure and answer 500.
+	 *
+	 * @param string    $message   What failed.
+	 * @param int       $fileId    The document.
+	 * @param Throwable $exception The failure.
+	 *
+	 * @return JSONResponse The response.
+	 */
+	private function failed(string $message, int $fileId, Throwable $exception): JSONResponse {
+		$this->logger->error($message, ['fileId' => $fileId, 'exception' => $exception]);
+
+		return new JSONResponse(
+			data: ['error' => $this->l10n->t('The review state could not be saved or read. Try again.')],
+			statusCode: Http::STATUS_INTERNAL_SERVER_ERROR
+		);
+
+	}//end failed()
+}//end class

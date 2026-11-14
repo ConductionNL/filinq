@@ -131,6 +131,10 @@ $extra = [
         // What leaves the building: the review mark, the composed publication
         // list and the conditions a gated download waits on
         // (redaction-and-what-leaves-the-building).
+        // Anonymisation review workbench: the per-document checked mark.
+        ['name' => 'documentReview#show', 'url' => 'api/review/{fileId}', 'verb' => 'GET', 'requirements' => ['fileId' => '\\d+']],
+        ['name' => 'documentReview#check', 'url' => 'api/review/{fileId}/check', 'verb' => 'POST', 'requirements' => ['fileId' => '\\d+']],
+        ['name' => 'documentReview#uncheck', 'url' => 'api/review/{fileId}/check', 'verb' => 'DELETE', 'requirements' => ['fileId' => '\\d+']],
         ['name' => 'redactionOutput#checkedStatus', 'url' => 'api/redaction/documents/checked', 'verb' => 'GET'],
         ['name' => 'redactionOutput#markChecked', 'url' => 'api/redaction/documents/{fileId}/checked', 'verb' => 'POST', 'requirements' => ['fileId' => '\\d+']],
         ['name' => 'redactionOutput#composeList', 'url' => 'api/redaction/publication-list', 'verb' => 'POST'],
