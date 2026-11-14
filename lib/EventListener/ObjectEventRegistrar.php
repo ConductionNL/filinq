@@ -112,7 +112,7 @@ class ObjectEventRegistrar {
 			\OCA\OpenRegister\Event\ObjectUpdatingEvent::class,
 			DocumentRegistrationWriteGuard::class
 		);
-		// grondslagen-read-from-dossiq: a new Woo ground on `base` is refused;
+		// Grondslagen-read-from-dossiq: a new Woo ground on `base` is refused;
 		// the Woo grounds come from dossiq's list.
 		$context->registerEventListener(
 			'OCA\\OpenRegister\\Event\\ObjectCreatingEvent',
