@@ -201,6 +201,7 @@ here with a reason.**
 | `Service/Signing/NativeSigningProvider.php` | 2 | Reads and writes the `signingSession` of a sign act that `SigningService` already authorised. |
 | `Service/Signing/LibreSignCompletion.php` | 4 | Background sync of LibreSign requests; no user session to check against, and it only moves a request to the state LibreSign reports. |
 | `Service/Signing/GuardianConsentGuard.php` | 1 | Reads the signer record a guardian entry points at, inside an authorised create or sign. |
+| `Service/SignerAuth/PhoneCodeProvider.php` | 1 | Reads the phone number on the signer record of the act it sends a code for, refuses a record of another request, and returns neither the number nor the code. |
 | `Service/SigningAuditService.php` | 1 | Reads the signing request only to bind an audit entry to it. |
 | `Service/Editing/DocumentGuard.php` | 1 | Looks for a live signing request or anonymisation link on a file to REFUSE an edit; it must see every row whoever asks, or the guard fails open. Returns a refusal sentence only. |
 | `Service/ConsentUpdateHandler.php` | 2 | Reads and saves a consent record only after `ConsentController::update()` found it readable for the caller and confirmed a consent officer, policy admin or admin. Every status change must be a declared move and is appended to `statusEvents` with who, when and the evidence (`ConsentStatusEvents`). The whitelist of mutable fields and the policy pre-emption lock still apply. |

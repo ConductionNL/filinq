@@ -3408,6 +3408,15 @@
                         "facetable": false,
                         "title": "Signed on behalf of",
                         "order": 22
+                    },
+                    "phoneNumber": {
+                        "description": "The phone number a one-time signing code is sent to, when the request asks for a phone code. The code itself is never stored.",
+                        "type": "string",
+                        "maxLength": 32,
+                        "visible": false,
+                        "facetable": false,
+                        "title": "Phone number",
+                        "order": 23
                     }
                 },
                 "archive": [],
