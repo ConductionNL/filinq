@@ -34,6 +34,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
+use OCA\Filinq\Controller\Support\CheckedGateReport;
 use OCA\Filinq\Controller\Support\OutputFormatChoice;
 use OCA\Filinq\Kernel\Contracts\AnonymizationProfileServiceInterface;
 use OCA\Filinq\Kernel\Contracts\BatchAnonymizeServiceInterface;
@@ -44,6 +45,7 @@ use OCA\Filinq\Kernel\Contracts\BatchStateServiceInterface;
 use OCA\Filinq\Kernel\Contracts\BatchUploadServiceInterface;
 use OCA\Filinq\Kernel\Contracts\EntityConsolidationServiceInterface;
 use OCA\Filinq\Kernel\Contracts\FolderBatchServiceInterface;
+use OCA\Filinq\Service\Review\DocumentReviewService;
 use OCA\Filinq\Settings\FilinqAdmin;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -95,6 +97,9 @@ class BatchAnonymizationController extends Controller {
 	 * @param BatchRequestServiceInterface $batchRequest Request/response shaping for the batch endpoints: body
 	 *                                                   validation, folder-parameter coercion, progress
 	 *                                                   aggregation and the multi-status mapping.
+	 * @param DocumentReviewService|null $reviews The per-document checked gate. The container always
+	 *                                            supplies it; null only where a test builds the
+	 *                                            controller without the review workbench.
 	 *
 	 * @return void
 	 */
@@ -114,6 +119,7 @@ class BatchAnonymizationController extends Controller {
 		private readonly IAppConfig $appConfig,
 		private readonly IUserSession $userSession,
 		private readonly BatchRequestServiceInterface $batchRequest,
+		private readonly ?DocumentReviewService $reviews = null,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 
@@ -392,6 +398,16 @@ class BatchAnonymizationController extends Controller {
 				return new JSONResponse($unredactedError['body'], $unredactedError['status']);
 			}
 
+			// Every non-error file must hold a checked mark before anything is
+			// anonymised; in addition to the prohibition gate (REQ-DDARW-011).
+			$checkedGate = $this->reviews?->commitGate(
+				files: $this->reviews->batchFiles(batch: $this->stateService->getBatch($batchId)),
+				reason: DocumentReviewService::REASON_BATCH
+			);
+			if (isset($checkedGate['refusal']) === true) {
+				return new JSONResponse($checkedGate['refusal']['body'], $checkedGate['refusal']['status']);
+			}
+
 			$batchResult = $this->runBatchAnonymize(
 				batchId: $batchId,
 				run: [
@@ -404,6 +420,8 @@ class BatchAnonymizationController extends Controller {
 			if ($validated['request']['hasStrayBases'] === true) {
 				$batchResult['ignoredFields'] = ['bases'];
 			}
+
+			$batchResult = (new CheckedGateReport())->ontoArray(result: $batchResult, gate: $checkedGate);
 
 			return new JSONResponse($batchResult, $this->batchRequest->resolveHttpStatus(result: $batchResult));
 		} catch (\Throwable $e) {

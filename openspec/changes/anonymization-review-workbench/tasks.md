@@ -19,7 +19,7 @@
   - Pre-change rules without `bases` match unchanged (regression test).
 - [x] 2.3 Add `DocumentReviewController` with routes `GET /api/review/{fileId}`, `POST /api/review/{fileId}/check`, `DELETE /api/review/{fileId}/check`, storing `documentReview` OR objects; invalidate the check on any post-check entity mutation (REQ-DDARW-007)
   - Auth attributes on every method (route-auth gate); per-object authorization guard (no-admin-idor gate).
-- [ ] 2.4 Enforce the checked gate in `AnonymizationController::anonymize` and `BatchAnonymizationController::batchAnonymize` behind `IAppConfig` key `filinq.review.checked_gate` (`enforced` default | `advisory`) (REQ-DDARW-008, REQ-DDARW-011)
+- [x] 2.4 Enforce the checked gate in `AnonymizationController::anonymize` and `BatchAnonymizationController::batchAnonymize` behind `IAppConfig` key `filinq.review.checked_gate` (`enforced` default | `advisory`) (REQ-DDARW-008, REQ-DDARW-011)
   - HTTP 409 with machine-readable reason + `uncheckedFiles`; advisory mode returns `checkedGate` verdict; runs in addition to the prohibition gate.
 
 ## 3. Frontend

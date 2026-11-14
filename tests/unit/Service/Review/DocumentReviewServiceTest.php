@@ -29,6 +29,7 @@ use OCA\Filinq\Service\OpenRegisterServiceLocator;
 use OCA\Filinq\Service\Review\DocumentReviewRepository;
 use OCA\Filinq\Service\Review\DocumentReviewService;
 use OCP\IAppConfig;
+use OCP\IL10N;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -160,9 +161,21 @@ class DocumentReviewServiceTest extends TestCase {
 			repository: $repository,
 			locator: $locator,
 			appConfig: $config,
-			logger: $this->createMock(LoggerInterface::class)
+			logger: $this->createMock(LoggerInterface::class),
+			l10n: $this->l10n()
 		);
 	}//end service()
+
+	/**
+	 * A translator that returns the source string.
+	 *
+	 * @return IL10N The translator.
+	 */
+	private function l10n(): IL10N {
+		$l10n = $this->createMock(IL10N::class);
+		$l10n->method('t')->willReturnArgument(0);
+		return $l10n;
+	}//end l10n()
 
 	/**
 	 * The relations of a file, for the mapper double.
@@ -403,4 +416,74 @@ class DocumentReviewServiceTest extends TestCase {
 		$this->assertSame(2, $status['entityCount']);
 		$this->assertSame(1, $status['manualEntityCount']);
 	}//end testRelationShapes()
+
+	/**
+	 * Enforced and unchecked: a 409 refusal with the reason and the files, no report.
+	 *
+	 * @return void
+	 */
+	public function testCommitGateRefusesWhenEnforced(): void {
+		$service = $this->service();
+
+		$single = $service->commitGate(files: [['fileId' => 10]], reason: DocumentReviewService::REASON_DOCUMENT);
+		$batch = $service->commitGate(files: [['fileId' => 10, 'fileName' => 'a.pdf']], reason: DocumentReviewService::REASON_BATCH);
+
+		$this->assertNull($single['report']);
+		$this->assertSame(409, $single['refusal']['status']);
+		$this->assertSame('document_not_reviewed', $single['refusal']['body']['reason']);
+		$this->assertSame([['fileId' => 10, 'fileName' => '']], $single['refusal']['body']['uncheckedFiles']);
+		$this->assertStringContainsString('Review it before anonymising.', $single['refusal']['body']['error']);
+		$this->assertSame('documents_not_reviewed', $batch['refusal']['body']['reason']);
+		$this->assertStringContainsString('Nothing was anonymised.', $batch['refusal']['body']['error']);
+	}//end testCommitGateRefusesWhenEnforced()
+
+	/**
+	 * Enforced and checked: neither a refusal nor a report.
+	 *
+	 * @return void
+	 */
+	public function testCommitGatePassesSilentlyWhenChecked(): void {
+		$service = $this->service();
+		$service->check(fileId: 10, userId: 'u');
+
+		$this->assertSame(['refusal' => null, 'report' => null], $service->commitGate(files: [['fileId' => 10]], reason: DocumentReviewService::REASON_DOCUMENT));
+	}//end testCommitGatePassesSilentlyWhenChecked()
+
+	/**
+	 * Advisory: never a refusal, always the report.
+	 *
+	 * @return void
+	 */
+	public function testCommitGateReportsWhenAdvisory(): void {
+		$this->mode = 'advisory';
+
+		$this->assertSame(
+			['refusal' => null, 'report' => ['passed' => false, 'uncheckedFiles' => [['fileId' => 10, 'fileName' => '']]]],
+			$this->service()->commitGate(files: [['fileId' => 10]], reason: DocumentReviewService::REASON_DOCUMENT)
+		);
+	}//end testCommitGateReportsWhenAdvisory()
+
+	/**
+	 * A batch's non-error files are judged; an unknown batch has none.
+	 *
+	 * @return void
+	 */
+	public function testBatchFiles(): void {
+		$service = $this->service();
+
+		$this->assertSame(
+			[['fileId' => 1, 'fileName' => 'a.pdf'], ['fileId' => 2, 'fileName' => '']],
+			$service->batchFiles(
+				batch: [
+					'files' => [
+						['fileId' => '1', 'fileName' => 'a.pdf', 'status' => 'extracted'],
+						['fileId' => 2, 'status' => 'uploaded'],
+						['fileId' => 3, 'fileName' => 'c.pdf', 'status' => 'error'],
+						['fileName' => 'no-id.pdf', 'status' => 'extracted'],
+					],
+				]
+			)
+		);
+		$this->assertSame([], $service->batchFiles(batch: null));
+	}//end testBatchFiles()
 }//end class

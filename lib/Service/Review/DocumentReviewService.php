@@ -25,6 +25,7 @@ use DateTimeInterface;
 use OCA\Filinq\Exception\DocumentReviewRefusedException;
 use OCA\Filinq\Service\OpenRegisterServiceLocator;
 use OCP\IAppConfig;
+use OCP\IL10N;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -68,6 +69,20 @@ class DocumentReviewService {
 	public const MODE_ADVISORY = 'advisory';
 
 	/**
+	 * The refusal reason of a single-file commit.
+	 *
+	 * @var string
+	 */
+	public const REASON_DOCUMENT = 'document_not_reviewed';
+
+	/**
+	 * The refusal reason of a batch commit.
+	 *
+	 * @var string
+	 */
+	public const REASON_BATCH = 'documents_not_reviewed';
+
+	/**
 	 * The detection method OpenRegister records on a manual entity.
 	 *
 	 * @var string
@@ -88,6 +103,7 @@ class DocumentReviewService {
 	 * @param OpenRegisterServiceLocator $locator    Resolver for OpenRegister's relation mapper.
 	 * @param IAppConfig                 $appConfig  App config (gate mode).
 	 * @param LoggerInterface            $logger     Logger for diagnostics.
+	 * @param IL10N                      $l10n       Translator for the refusal message.
 	 *
 	 * @return void
 	 */
@@ -96,6 +112,7 @@ class DocumentReviewService {
 		private readonly OpenRegisterServiceLocator $locator,
 		private readonly IAppConfig $appConfig,
 		private readonly LoggerInterface $logger,
+		private readonly IL10N $l10n,
 	) {
 
 	}//end __construct()
@@ -241,6 +258,68 @@ class DocumentReviewService {
 		];
 
 	}//end gate()
+
+	/**
+	 * The commit gate for a set of files: a 409 refusal, an advisory report, or neither.
+	 *
+	 * Enforced and not every file checked: the refusal, and the commit must not run.
+	 * Advisory: no refusal, and the report the commit's answer carries as `checkedGate`.
+	 * Enforced and all checked: neither, so the commit's answer is unchanged.
+	 *
+	 * @param array<int, array{fileId: int|string, fileName?: string}> $files  The files the commit covers.
+	 * @param string                                                   $reason REASON_DOCUMENT or REASON_BATCH.
+	 *
+	 * @return array{refusal: array{status: int, body: array<string, mixed>}|null,
+	 *               report: array{passed: bool, uncheckedFiles: list<array{fileId: int, fileName: string}>}|null}
+	 *
+	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-2.4
+	 */
+	public function commitGate(array $files, string $reason): array {
+		$verdict = $this->gate(files: $files);
+		$report = ['passed' => $verdict['passed'], 'uncheckedFiles' => $verdict['uncheckedFiles']];
+		if ($verdict['mode'] === self::MODE_ADVISORY) {
+			return ['refusal' => null, 'report' => $report];
+		}
+
+		if ($verdict['passed'] === true) {
+			return ['refusal' => null, 'report' => null];
+		}
+
+		$message = $this->l10n->t('This document has not been marked as reviewed since its findings last changed. Review it before anonymising.');
+		if ($reason === self::REASON_BATCH) {
+			$message = $this->l10n->t('Not every document in this batch has been marked as reviewed since its findings last changed. Nothing was anonymised.');
+		}
+
+		return [
+			'refusal' => [
+				'status' => 409,
+				'body' => ['error' => $message, 'reason' => $reason, 'uncheckedFiles' => $verdict['uncheckedFiles']],
+			],
+			'report' => null,
+		];
+
+	}//end commitGate()
+
+	/**
+	 * The files of a batch the gate judges: every file not in error.
+	 *
+	 * @param array<string, mixed>|null $batch The batch record, or null when it is unknown.
+	 *
+	 * @return list<array{fileId: int, fileName: string}> The files.
+	 *
+	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-2.4
+	 */
+	public function batchFiles(?array $batch): array {
+		$files = [];
+		foreach ((array)($batch['files'] ?? []) as $file) {
+			if (($file['status'] ?? '') !== 'error' && isset($file['fileId']) === true) {
+				$files[] = ['fileId' => (int)$file['fileId'], 'fileName' => (string)($file['fileName'] ?? '')];
+			}
+		}
+
+		return $files;
+
+	}//end batchFiles()
 
 	/**
 	 * The file's entity decisions: their count, manual count and fingerprint.

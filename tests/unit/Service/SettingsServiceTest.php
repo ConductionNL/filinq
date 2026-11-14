@@ -276,6 +276,45 @@ class SettingsServiceTest extends TestCase {
 	}//end testOutputSubfolderNameIsWritable()
 
 	/**
+	 * The review gate mode is writable as `enforced` or `advisory`.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-2.4
+	 */
+	public function testCheckedGateModeIsWritable(): void {
+		$this->mockConfig->expects($this->once())
+			->method('setValueString')
+			->with('filinq', 'filinq.review.checked_gate', 'advisory');
+		$this->mockConfig->method('getValueString')->willReturn('advisory');
+
+		$result = $this->settingsService->updateSettings(['filinq.review.checked_gate' => 'advisory']);
+
+		$this->assertSame('advisory', $result['filinq.review.checked_gate']);
+
+	}//end testCheckedGateModeIsWritable()
+
+	/**
+	 * Any other review gate mode is refused before anything is written.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-2.4
+	 */
+	public function testAnUnknownCheckedGateModeIsRefused(): void {
+		$this->mockConfig->expects($this->never())->method('setValueString');
+
+		try {
+			$this->settingsService->updateSettings(['signing_provider' => 'native', 'filinq.review.checked_gate' => 'off']);
+			$this->fail('An unknown gate mode was accepted.');
+		} catch (\RuntimeException $e) {
+			$this->assertSame(400, $e->getCode());
+			$this->assertSame('The review gate mode must be "enforced" or "advisory".', $e->getMessage());
+		}
+
+	}//end testAnUnknownCheckedGateModeIsRefused()
+
+	/**
 	 * A traversal attempt is refused before anything is written, naming the characters.
 	 *
 	 * @return void
