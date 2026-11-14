@@ -31,13 +31,13 @@
 
 ## 4. Frontend (ADR-012)
 
-- [ ] 4.1 Document surfaces: "Waarmerk toevoegen" action + waarmerk badge on My Documents/anonymization results; anonymization-certificate action on runs; dialogs in `src/modals/`
+- [x] 4.1 Document surfaces: "Waarmerk toevoegen" action + waarmerk badge on My Documents/anonymization results; anonymization-certificate action on runs; dialogs in `src/modals/`
 
-- [ ] 4.2 Public verification page: standalone entry, client-side WebCrypto hash of a locally selected file (bytes never uploaded), status rendering incl. `certificateExpired` advisory; NL Design System tokens, WCAG AA (citizen-facing)
+- [x] 4.2 Public verification page: standalone entry, client-side WebCrypto hash of a locally selected file (bytes never uploaded), status rendering incl. `certificateExpired` advisory; NL Design System tokens, WCAG AA (citizen-facing)
 
-- [ ] 4.3 Admin settings panel (settings framework, NOT vue-router): PEM upload, fingerprint/expiry, `credentialRef`, custody-mode label, test-seal button
+- [x] 4.3 Admin settings panel (settings framework, NOT vue-router): PEM upload, fingerprint/expiry, `credentialRef`, custody-mode label, test-seal button
 
-- [ ] 4.4 Signing request page: "Bewijsdocument downloaden (pdf)" and "Kopie naar dossier" on the evidence card, as the board `filinq/FqOndertekenverzoek` draws it; route `GET /api/signing/{id}/evidence` (REQ-DDWMK-006)
+- [x] 4.4 Signing request page: "Bewijsdocument downloaden (pdf)" and "Kopie naar dossier" on the evidence card, as the board `filinq/FqOndertekenverzoek` draws it; route `GET /api/signing/{id}/evidence` (REQ-DDWMK-006)
 
 ## 5. Quality, i18n, docs
 
@@ -45,7 +45,7 @@
 
 - [ ] 5.2 Playwright e2e `tests/e2e/spec-coverage/document-waarmerk-certification.spec.ts` (seal → QR page → verify valid / tampered / revoked); verify on Postgres (8080); test with nldesign theme enabled
 
-- [ ] 5.3 i18n EN source + NL translations for all new strings, incl. the public page (citizen-facing Dutch first-class)
+- [x] 5.3 i18n EN source + NL translations for all new strings, incl. the public page (citizen-facing Dutch first-class)
 
 - [ ] 5.4 Docs in `docs/features/` (waarmerk, processing certificate, verification; explicit "organisation seal, not qualified seal" wording) with Playwright screenshots (ADR-010); `openspec validate document-waarmerk-certification --strict` passes
 

@@ -56,6 +56,13 @@ import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
 							class="my-documents-name__icon" />
 						<span>{{ displayName(row) }}</span>
 						<span
+							v-if="sealedIds[String(row.fileId)]"
+							class="my-documents-ocr-badge"
+							data-testid="waarmerk-badge"
+							:title="t('filinq', 'This file carries an organisation waarmerk')">
+							{{ t('filinq', 'Waarmerk') }}
+						</span>
+						<span
 							v-if="ocrBadgeFor(row)"
 							class="my-documents-ocr-badge"
 							:title="
@@ -209,6 +216,16 @@ import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
 							}}
 						</NcActionButton>
 						<NcActionButton
+							v-if="!row.isFolder && iconFor(row) === 'pdf'"
+							closeAfterClick
+							data-testid="document-waarmerk"
+							@click="openWaarmerk(row)">
+							<template #icon>
+								<CertificateOutline :size="20" />
+							</template>
+							{{ t('filinq', 'Add waarmerk') }}
+						</NcActionButton>
+						<NcActionButton
 							v-if="!row.isFolder"
 							closeAfterClick
 							@click="compareDocument(row)">
@@ -243,6 +260,12 @@ import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
 			:error="sanitization.error"
 			:result="sanitization.result"
 			@close="sanitization.show = false" />
+		<WaarmerkSealModal
+			:show="waarmerk.show"
+			:fileId="waarmerk.fileId"
+			:fileName="waarmerk.fileName"
+			@sealed="onSealed"
+			@close="waarmerk.show = false" />
 		<ValidationResultModal
 			:show="validation.show"
 			:loading="validation.loading"
@@ -283,6 +306,7 @@ import { showError, showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
 import { NcActionButton, NcActions } from '@nextcloud/vue'
 import BroomIcon from 'vue-material-design-icons/Broom.vue'
+import CertificateOutline from 'vue-material-design-icons/CertificateOutline.vue'
 import CheckboxMultipleMarkedOutline from 'vue-material-design-icons/CheckboxMultipleMarkedOutline.vue'
 import CheckDecagram from 'vue-material-design-icons/CheckDecagram.vue'
 import Cog from 'vue-material-design-icons/Cog.vue'
@@ -303,12 +327,14 @@ import DdPageHeader from '../../components/DdPageHeader.vue'
 import DdSearchBar from '../../components/DdSearchBar.vue'
 import SanitizationReportModal from '../../modals/SanitizationReportModal.vue'
 import ValidationResultModal from '../../modals/ValidationResultModal.vue'
+import WaarmerkSealModal from '../../modals/WaarmerkSealModal.vue'
 import FileViewerPage from '../fileViewer/FileViewerPage.vue'
 import { ocrRun } from '../../mixins/ocrRun.js'
 import { fetchOcrStatus, isOcrCandidate, ocrBadgeLabel } from '../../services/ocr.js'
 import { fetchReviewMarks } from '../../services/reviewMark.js'
 import { sanitizeFile } from '../../services/sanitization.js'
 import { validateFile } from '../../services/validationService.js'
+import { sealedFileIds } from '../../services/waarmerk.js'
 
 const VIEW_MODE_STORAGE_KEY = 'filinq:myDocuments:viewMode'
 const VALID_VIEW_MODES = ['table', 'cards']
@@ -361,6 +387,8 @@ export default {
 		Cog,
 		CheckboxMultipleMarkedOutline,
 		FilterOutline,
+		CertificateOutline,
+		WaarmerkSealModal,
 	},
 
 	mixins: [ocrRun],
@@ -404,6 +432,9 @@ export default {
 			// The latest review mark per file id on this page.
 			reviewMarks: {},
 			ocrRunning: {},
+			// Waarmerk (document-waarmerk-certification): the seal dialog and the sealed file ids.
+			waarmerk: { show: false, fileId: 0, fileName: '' },
+			sealedIds: {},
 		}
 	},
 
@@ -513,6 +544,7 @@ export default {
 
 	mounted() {
 		myDocumentsStore.fetchDocuments()
+		this.loadSealedIds()
 		window.addEventListener('keydown', this.onKeydown)
 	},
 
@@ -521,6 +553,44 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * Which files carry an active waarmerk, for the badge. A failure leaves no badges.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/document-waarmerk-certification/specs/document-waarmerk-certification/spec.md
+		 */
+		async loadSealedIds() {
+			try {
+				const ids = await sealedFileIds()
+				this.sealedIds = Object.fromEntries([...ids].map((id) => [String(id), true]))
+			} catch {
+				this.sealedIds = {}
+			}
+		},
+
+		/**
+		 * Open the "Add waarmerk" dialog for a PDF.
+		 *
+		 * @param {object} row The document row.
+		 * @return {void}
+		 * @spec openspec/changes/document-waarmerk-certification/specs/document-waarmerk-certification/spec.md
+		 */
+		openWaarmerk(row) {
+			this.waarmerk = { show: true, fileId: Number(row.fileId), fileName: this.displayName(row) }
+		},
+
+		/**
+		 * A seal was made: list the sealed copy and mark it.
+		 *
+		 * @param {object} result The seal result.
+		 * @return {void}
+		 * @spec openspec/changes/document-waarmerk-certification/specs/document-waarmerk-certification/spec.md
+		 */
+		onSealed(result) {
+			this.sealedIds = { ...this.sealedIds, [String(result.fileId)]: true }
+			myDocumentsStore.fetchDocuments()
+		},
+
 		/**
 		 * Read whether OCR can run, and the results for the images and PDFs on this page.
 		 *

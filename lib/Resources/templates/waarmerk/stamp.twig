@@ -22,11 +22,11 @@
     <tr><td class="label">Document</td><td>{{ stamp.documentName|escape }}</td></tr>
     <tr><td class="label">Gewaarmerkt door</td><td>{{ stamp.organisation|escape }}</td></tr>
     <tr><td class="label">Gewaarmerkt op</td><td>{{ stamp.sealedAt|escape }}</td></tr>
-    <tr><td class="label">Verificatiecode</td><td class="code">{{ stamp.verificationCode|escape }}</td></tr>
+    <tr><td class="label">Controlecode</td><td class="code">{{ stamp.verificationCode|escape }}</td></tr>
     <tr><td class="label">Controleren</td><td>{{ stamp.verificationUrl|escape }}</td></tr>
   </table>
   <img class="qr" src="{{ stamp.qr }}" alt="QR-code naar de controlepagina">
-  <p class="note">Dit is een organisatiewaarmerk (elektronisch zegel van de organisatie, geen gekwalificeerd zegel). Het bevestigt dat dit document, inclusief deze pagina, ongewijzigd is sinds het waarmerken. Controleer het door de QR-code te scannen of de verificatiecode in te voeren op de controlepagina en uw eigen bestand te kiezen; het bestand wordt daarbij niet verstuurd.</p>
+  <p class="note">Dit is een organisatiewaarmerk (elektronisch zegel van de organisatie, geen gekwalificeerd zegel). Het bevestigt dat dit document, inclusief deze pagina, ongewijzigd is sinds het waarmerken. Controleer het door de QR-code te scannen of de controlecode in te voeren op de controlepagina en je eigen bestand te kiezen; het bestand wordt daarbij niet verstuurd.</p>
 </div>
 </body>
 </html>

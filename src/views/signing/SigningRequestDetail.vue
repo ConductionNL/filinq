@@ -62,6 +62,9 @@
 				@click="openVerify">
 				{{ t('filinq', 'Verify') }}
 			</NcButton>
+			<SigningEvidenceCard
+				:requestId="id"
+				:status="signingStore.signingRequest.status || ''" />
 			<h3>{{ t('filinq', 'Audit Trail') }}</h3>
 			<table v-if="signingStore.auditTrail.length > 0" class="audit-table">
 				<thead>
@@ -99,6 +102,7 @@ import { translate as t } from '@nextcloud/l10n'
 import { NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 import SignerStepUpModal from '../../modals/SignerStepUpModal.vue'
 import SigningEnvelopePanel from './SigningEnvelopePanel.vue'
+import SigningEvidenceCard from './SigningEvidenceCard.vue'
 import { stepUpReturn } from '../../services/signerStepUp.js'
 import { useSigningStore } from '../../store/modules/signing.js'
 
@@ -110,6 +114,7 @@ export default {
 		NcNoteCard,
 		SignerStepUpModal,
 		SigningEnvelopePanel,
+		SigningEvidenceCard,
 	},
 
 	props: {

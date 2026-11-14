@@ -50,7 +50,9 @@ const RECOGNISED_KINDS = new Set([
  * Keep this list in sync with webpack.config.js `entry` if that ever adds
  * a fourth mount point.
  */
-const ROOT_FILES = ['src/main.js', 'src/settings.js', 'src/dashboard.js']
+// `waarmerkVerify.js` mounts the public waarmerk verification page (a guest
+// page outside the shell, document-waarmerk-certification).
+const ROOT_FILES = ['src/main.js', 'src/settings.js', 'src/dashboard.js', 'src/waarmerkVerify.js']
 
 /**
  * Page-level views the guard must not flag as orphaned, each with a

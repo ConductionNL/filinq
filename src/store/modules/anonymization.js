@@ -1019,6 +1019,8 @@ function applyAnonymizeResult(entry, data) {
 	entry.anonymizedFileId = data.anonymizedFileId
 	entry.anonymizedFileName = data.anonymizedFileName
 	entry.anonymizedFilePath = data.anonymizedFilePath
+	// The run's record, for its processing certificate (document-waarmerk-certification).
+	entry.anonymizationLinkId = data.anonymizationLinkId || entry.anonymizationLinkId || null
 	entry.replacementCount = data.replacementCount || 0
 	entry.complete = data.complete !== false
 	entry.residualCount = data.residualCount || 0

@@ -709,6 +709,9 @@
 		<!-- Signer identity rails (signer-identity-rails): its own admin endpoint -->
 		<SignerIdentitySettings v-if="isAdmin" />
 
+		<!-- Waarmerk organisation certificate (document-waarmerk-certification): its own admin endpoint -->
+		<WaarmerkSettings v-if="isAdmin" />
+
 		<EmailIngestionSettings v-if="isAdmin" />
 
 		<!-- Page layouts (documents-from-a-template REQ-DFT-01): their own endpoints -->
@@ -883,6 +886,7 @@ import EntityTypeSelector from './EntityTypeSelector.vue'
 import PageLayoutSettings from './PageLayoutSettings.vue'
 import SettingSwitchRow from './SettingSwitchRow.vue'
 import SignerIdentitySettings from './SignerIdentitySettings.vue'
+import WaarmerkSettings from './WaarmerkSettings.vue'
 import {
 	backendStateFromSettings,
 	emptyBackendState,
@@ -1012,6 +1016,7 @@ export default {
 		PageLayoutSettings,
 		SettingSwitchRow,
 		SignerIdentitySettings,
+		WaarmerkSettings,
 	},
 
 	data() {
