@@ -124,6 +124,73 @@ class OfficeTemplateService {
 
 		$this->resolver->validateNamespace(namespace: (string) $data['namespace']);
 
+		$source = $this->checkedSource(fileName: $fileName, bytes: $bytes, boundSchema: trim((string) ($data['boundSchema'] ?? '')));
+		$data = array_merge($data, $this->storedSource(source: $source, bytes: $bytes));
+		if ($data['content'] === '') {
+			$data['content'] = (string) $data['name'];
+		}
+
+		return [
+			'template' => $this->templates->createTemplate(data: $data),
+			'converted' => $source['kind'] === 'odt',
+			'tagReport' => $source['report'],
+		];
+	}//end create()
+
+	/**
+	 * Give an office template a new source file, as a new version.
+	 *
+	 * The previous source stays stored and its version keeps pointing at it.
+	 * The template's edit lock applies: a template locked by someone else is
+	 * refused (409) by the template service, which also snapshots the version.
+	 *
+	 * @param string      $id        The template's id.
+	 * @param string      $fileName  The uploaded file's name.
+	 * @param string      $bytes     The uploaded file's content.
+	 * @param string|null $changelog What changed, for the version history.
+	 *
+	 * @return array{template: array<string, mixed>, converted: bool, tagReport: array<string, mixed>}
+	 *
+	 * @throws OfficeSourceRefusedException When the file or its tags are refused (422).
+	 * @throws Exception                    When the template is unknown (404), not an office template (409) or locked (409).
+	 *
+	 * @spec openspec/changes/office-template-authoring/specs/template-management/spec.md
+	 */
+	public function replaceSource(string $id, string $fileName, string $bytes, ?string $changelog=null): array {
+		$template = $this->templates->getTemplate(id: $id);
+		if (($template['templateType'] ?? 'twig') !== 'office') {
+			throw new Exception(message: 'Only an office template takes a new source file', code: 409);
+		}
+
+		$source = $this->checkedSource(fileName: $fileName, bytes: $bytes, boundSchema: trim((string) ($template['boundSchema'] ?? '')));
+		$data = $this->storedSource(source: $source, bytes: $bytes);
+		if ($data['content'] === '') {
+			$data['content'] = (string) ($template['name'] ?? $fileName);
+		}
+
+		if ($changelog !== null && trim($changelog) !== '') {
+			$data['_changelog'] = trim($changelog);
+		}
+
+		return [
+			'template' => $this->templates->updateTemplate(id: $id, data: $data),
+			'converted' => $source['kind'] === 'odt',
+			'tagReport' => $source['report'],
+		];
+	}//end replaceSource()
+
+	/**
+	 * Check an uploaded file and its tags, storing nothing.
+	 *
+	 * @param string $fileName    The uploaded file's name.
+	 * @param string $bytes       The uploaded file's content.
+	 * @param string $boundSchema The bound schema's slug, or ''.
+	 *
+	 * @return array{kind: string, docx: string, tags: array<int, string>, report: array<string, mixed>}
+	 *
+	 * @throws OfficeSourceRefusedException When the file or its tags are refused (422).
+	 */
+	private function checkedSource(string $fileName, string $bytes, string $boundSchema): array {
 		$kind = $this->guard->inspect(fileName: $fileName, bytes: $bytes, maxBytes: $this->maxBytes());
 		$docx = $bytes;
 		if ($kind === 'odt') {
@@ -131,7 +198,7 @@ class OfficeTemplateService {
 		}
 
 		$tags = $this->reader->tags(docx: $docx);
-		$report = $this->tagReport(tags: $tags, boundSchema: trim((string) ($data['boundSchema'] ?? '')));
+		$report = $this->tagReport(tags: $tags, boundSchema: $boundSchema);
 		if ($this->classifier->blocks(report: $report) === true) {
 			throw new OfficeSourceRefusedException(
 				message: 'The file has merge tags the schema does not know: '.implode(', ', $report['unknown']).'.',
@@ -140,29 +207,33 @@ class OfficeTemplateService {
 			);
 		}
 
-		$source = $this->store->store(bytes: $docx, extension: 'docx');
-		if ($kind === 'odt') {
-			// The original is kept beside the DOCX it became, under the same name.
-			$this->store->store(bytes: $bytes, extension: 'odt', name: $source['contentHash']);
-		}
+		return ['kind' => $kind, 'docx' => $docx, 'tags' => $tags, 'report' => $report];
+	}//end checkedSource()
 
-		$text = $this->reader->text(docx: $docx);
-		$data['templateType'] = 'office';
-		$data['sourceFileId'] = $source['fileId'];
-		$data['contentHash'] = $source['contentHash'];
-		$data['mergeFields'] = array_map(static fn (string $tag): array => ['path' => $tag], $tags);
-		$data['tagReport'] = $report;
-		$data['content'] = $text;
-		if ($text === '') {
-			$data['content'] = (string) $data['name'];
+	/**
+	 * Store a checked source and describe it as template fields.
+	 *
+	 * @param array<string, mixed> $source The checked source.
+	 * @param string               $bytes  The uploaded bytes (the ODT original, when converted).
+	 *
+	 * @return array<string, mixed> templateType, sourceFileId, contentHash, mergeFields, tagReport and content.
+	 */
+	private function storedSource(array $source, string $bytes): array {
+		$stored = $this->store->store(bytes: $source['docx'], extension: 'docx');
+		if ($source['kind'] === 'odt') {
+			// The original is kept beside the DOCX it became, under the same name.
+			$this->store->store(bytes: $bytes, extension: 'odt', name: $stored['contentHash']);
 		}
 
 		return [
-			'template' => $this->templates->createTemplate(data: $data),
-			'converted' => $kind === 'odt',
-			'tagReport' => $report,
+			'templateType' => 'office',
+			'sourceFileId' => $stored['fileId'],
+			'contentHash' => $stored['contentHash'],
+			'mergeFields' => array_map(static fn (string $tag): array => ['path' => $tag], $source['tags']),
+			'tagReport' => $source['report'],
+			'content' => $this->reader->text(docx: $source['docx']),
 		];
-	}//end create()
+	}//end storedSource()
 
 	/**
 	 * The tag report against the bound schema, if there is one.

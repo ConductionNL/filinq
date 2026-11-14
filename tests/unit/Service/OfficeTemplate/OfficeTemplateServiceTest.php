@@ -301,4 +301,73 @@ class OfficeTemplateServiceTest extends TestCase {
 		$this->assertSame('Leeg', $result['template']['content']);
 		$this->assertSame([], $result['template']['mergeFields']);
 	}//end testADocxWithoutTextUsesItsNameAsContent()
+	/**
+	 * A new source becomes a new version of the template: checked against the
+	 * template's own bound schema, stored, and saved through the versioning
+	 * update with its changelog.
+	 *
+	 * @return void
+	 */
+	public function testANewSourceIsSavedAsANewVersion(): void {
+		$this->bindDossierSchema();
+		$docx = OfficeFixtures::docx(paragraphs: ['Geachte ${aanvrager.naam} ${aanvraagr.naam}']);
+		$this->templates->method('getTemplate')->with('t-1')->willReturn(['id' => 't-1', 'name' => 'Brief', 'templateType' => 'office', 'boundSchema' => 'dossier']);
+		$this->store->expects($this->once())->method('store')->with($docx, 'docx', '')->willReturn(['fileId' => 77, 'contentHash' => 'def']);
+		$this->templates->expects($this->once())->method('updateTemplate')
+			->with(
+				't-1',
+				$this->callback(
+					static fn (array $data): bool => $data['sourceFileId'] === 77
+						&& $data['contentHash'] === 'def'
+						&& $data['templateType'] === 'office'
+						&& $data['mergeFields'] === [['path' => 'aanvrager.naam'], ['path' => 'aanvraagr.naam']]
+						&& $data['tagReport']['unknown'] === ['aanvraagr.naam']
+						&& $data['content'] === 'Geachte ${aanvrager.naam} ${aanvraagr.naam}'
+						&& $data['_changelog'] === 'Nieuwe huisstijl'
+				)
+			)
+			->willReturn(['id' => 't-1', 'sourceFileId' => 77]);
+
+		$result = $this->service->replaceSource(id: 't-1', fileName: 'brief.docx', bytes: $docx, changelog: ' Nieuwe huisstijl ');
+
+		$this->assertSame(['id' => 't-1', 'sourceFileId' => 77], $result['template']);
+		$this->assertFalse($result['converted']);
+		$this->assertSame(['aanvraagr.naam'], $result['tagReport']['unknown']);
+	}//end testANewSourceIsSavedAsANewVersion()
+
+	/**
+	 * A Twig template takes no source file, and nothing is stored.
+	 *
+	 * @return void
+	 */
+	public function testATwigTemplateTakesNoSource(): void {
+		$this->templates->method('getTemplate')->willReturn(['id' => 't-2', 'content' => '{{ x }}']);
+		$this->store->expects($this->never())->method('store');
+		$this->templates->expects($this->never())->method('updateTemplate');
+
+		try {
+			$this->service->replaceSource(id: 't-2', fileName: 'brief.docx', bytes: OfficeFixtures::docx(paragraphs: ['x']));
+			$this->fail('A Twig template took a source file.');
+		} catch (\Exception $e) {
+			$this->assertSame(['Only an office template takes a new source file', 409], [$e->getMessage(), $e->getCode()]);
+		}
+	}//end testATwigTemplateTakesNoSource()
+
+	/**
+	 * Under blocking severity a new source with unknown tags is refused and
+	 * the template is not touched.
+	 *
+	 * @return void
+	 */
+	public function testABlockedNewSourceLeavesTheTemplateAlone(): void {
+		$this->bindDossierSchema();
+		$this->settings[OfficeTemplateService::SEVERITY_KEY] = 'blocking';
+		$this->templates->method('getTemplate')->willReturn(['id' => 't-1', 'templateType' => 'office', 'boundSchema' => 'dossier']);
+		$this->store->expects($this->never())->method('store');
+		$this->templates->expects($this->never())->method('updateTemplate');
+
+		$this->expectException(OfficeSourceRefusedException::class);
+
+		$this->service->replaceSource(id: 't-1', fileName: 'brief.docx', bytes: OfficeFixtures::docx(paragraphs: ['${onbekend}']));
+	}//end testABlockedNewSourceLeavesTheTemplateAlone()
 }//end class
