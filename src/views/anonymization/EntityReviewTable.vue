@@ -302,6 +302,15 @@ export default {
 			}
 		},
 
+		/**
+		 * Persist a reviewer's grondslag pick; it confirms a proposal, so the
+		 * row is no longer marked as proposed.
+		 *
+		 * @param {number} idx The row's index.
+		 * @param {Array<string>} value The chosen grondslagen.
+		 * @return {void}
+		 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-3.3
+		 */
 		onBasesChange(idx, value) {
 			const entity = this.entities[idx]
 			if (!entity) {

@@ -273,6 +273,12 @@ export default {
 		},
 	},
 
+	/**
+	 * Load the grondslag options of the bases picker.
+	 *
+	 * @return {Promise<void>}
+	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-3.4
+	 */
 	async created() {
 		// Grondslagen are `base` objects (label = name, value = slug), the same
 		// list the entity review picks from; slug fallback on error. Loaded

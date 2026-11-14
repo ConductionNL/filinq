@@ -134,6 +134,13 @@ export default {
 	},
 
 	watch: {
+		/**
+		 * A new selection replaces the value and clears the last outcome.
+		 *
+		 * @param {string} text The selected text.
+		 * @return {void}
+		 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-3.2
+		 */
 		selectedText(text) {
 			this.value = text
 			this.notice = ''
