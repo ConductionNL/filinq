@@ -709,6 +709,8 @@
 		<!-- Signer identity rails (signer-identity-rails): its own admin endpoint -->
 		<SignerIdentitySettings v-if="isAdmin" />
 		<CaseSystemDeliverySettings v-if="isAdmin" />
+		<!-- Finality rules (finish-half-built-capabilities 3.2): the caller of POST /api/document-finality-rules -->
+		<DocumentFinalityRuleSettings v-if="isAdmin" />
 
 		<EmailIngestionSettings v-if="isAdmin" />
 
@@ -880,6 +882,7 @@ import Plus from 'vue-material-design-icons/Plus.vue'
 import Restart from 'vue-material-design-icons/Restart.vue'
 import AnonymiserBackendWarning from '../../components/AnonymiserBackendWarning.vue'
 import CaseSystemDeliverySettings from './CaseSystemDeliverySettings.vue'
+import DocumentFinalityRuleSettings from './DocumentFinalityRuleSettings.vue'
 import EmailIngestionSettings from './EmailIngestionSettings.vue'
 import EntityTypeSelector from './EntityTypeSelector.vue'
 import PageLayoutSettings from './PageLayoutSettings.vue'
@@ -1015,6 +1018,7 @@ export default {
 		SettingSwitchRow,
 		SignerIdentitySettings,
 		CaseSystemDeliverySettings,
+		DocumentFinalityRuleSettings,
 	},
 
 	data() {

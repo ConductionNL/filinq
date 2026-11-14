@@ -3005,7 +3005,20 @@ OC.L10N.register(
         "Save destination": "Bestemming opslaan",
         "Source organisation (RSIN)": "Bronorganisatie (RSIN)",
         "Template {template}": "Sjabloon {template}",
-        "The delivery is waiting again": "De levering wacht weer"
+        "The delivery is waiting again": "De levering wacht weer",
+        "App that owns the record": "App waarvan het dossier is",
+        "Declare rule": "Regel vastleggen",
+        "Declare which states of a record make its documents final. When the app that owns the record reports one of these states, its documents get a frozen version.": "Leg vast welke statussen van een dossier de documenten ervan definitief maken. Meldt de app waarvan het dossier is een van deze statussen, dan krijgen de documenten een bevroren versie.",
+        "Final documents by record state": "Definitieve documenten per dossierstatus",
+        "Finality rule stored": "Regel voor definitieve documenten opgeslagen",
+        "Leave empty to cover every document of the record.": "Laat leeg voor alle documenten van het dossier.",
+        "Leave empty to name the state change.": "Laat leeg om de statuswijziging te noemen.",
+        "Reason on the frozen version": "Reden op de bevroren versie",
+        "Separate states with commas.": "Scheid statussen met komma's.",
+        "States that make a document final": "Statussen die een document definitief maken",
+        "Stored: {app} {type} becomes final in {states}.": "Opgeslagen: {app} {type} wordt definitief bij {states}.",
+        "The app id, for example dossiq.": "De app-id, bijvoorbeeld dossiq.",
+        "The record type as that app names it, such as a case type.": "Het dossiertype zoals die app het noemt, zoals een zaaktype."
     },
     "nplurals=2; plural=(n != 1);"
 )

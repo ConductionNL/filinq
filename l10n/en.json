@@ -2915,7 +2915,20 @@
         "Save destination": "Save destination",
         "Source organisation (RSIN)": "Source organisation (RSIN)",
         "Template {template}": "Template {template}",
-        "The delivery is waiting again": "The delivery is waiting again"
+        "The delivery is waiting again": "The delivery is waiting again",
+        "App that owns the record": "App that owns the record",
+        "Declare rule": "Declare rule",
+        "Declare which states of a record make its documents final. When the app that owns the record reports one of these states, its documents get a frozen version.": "Declare which states of a record make its documents final. When the app that owns the record reports one of these states, its documents get a frozen version.",
+        "Final documents by record state": "Final documents by record state",
+        "Finality rule stored": "Finality rule stored",
+        "Leave empty to cover every document of the record.": "Leave empty to cover every document of the record.",
+        "Leave empty to name the state change.": "Leave empty to name the state change.",
+        "Reason on the frozen version": "Reason on the frozen version",
+        "Separate states with commas.": "Separate states with commas.",
+        "States that make a document final": "States that make a document final",
+        "Stored: {app} {type} becomes final in {states}.": "Stored: {app} {type} becomes final in {states}.",
+        "The app id, for example dossiq.": "The app id, for example dossiq.",
+        "The record type as that app names it, such as a case type.": "The record type as that app names it, such as a case type."
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }
