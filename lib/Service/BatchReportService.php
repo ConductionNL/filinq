@@ -43,12 +43,15 @@ class BatchReportService implements BatchReportServiceInterface {
 	 *
 	 * @param BatchStateService     $stateService Service that exposes stored batch state.
 	 * @param BatchReportAggregator $aggregator   The read-time summary of a batch.
+	 * @param BatchQaOutcomes|null  $qaOutcomes   Reads each QA sample's outcome from its review; null
+	 *                                            reports the stored outcome.
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		private readonly BatchStateService $stateService,
 		private readonly BatchReportAggregator $aggregator = new BatchReportAggregator(),
+		private readonly ?BatchQaOutcomes $qaOutcomes = null,
 	) {
 
 	}//end __construct()
@@ -74,6 +77,10 @@ class BatchReportService implements BatchReportServiceInterface {
 			throw new Exception('Batch is not yet completed', 409);
 		}
 
+		if ($this->qaOutcomes !== null) {
+			$batch = $this->qaOutcomes->refresh(batch: $batch);
+		}
+
 		$output = fopen('php://temp', 'r+');
 		fputcsv(
 			$output,
@@ -94,7 +101,13 @@ class BatchReportService implements BatchReportServiceInterface {
 			fputcsv($output, $this->fileRow(file: $f, timestamp: $timestamp));
 		}
 
-		$this->writeSummary(output: $output, summary: $this->aggregator->summarise(batch: $batch));
+		$summary = $this->aggregator->summarise(batch: $batch);
+		$summary['qaSampling'] = 'enabled';
+		if (isset($batch['qaSampleRate']) === true && (int)$batch['qaSampleRate'] === 0) {
+			$summary['qaSampling'] = 'disabled';
+		}
+
+		$this->writeSummary(output: $output, summary: $summary);
 
 		rewind($output);
 		$csv = stream_get_contents($output);
@@ -161,6 +174,10 @@ class BatchReportService implements BatchReportServiceInterface {
 		fputcsv($output, ['summary', 'anonymizeMs', $summary['phaseMs']['anonymize'] ?? '']);
 		foreach ($summary['failures'] as $reason => $count) {
 			fputcsv($output, ['failures', (string)$reason, $count]);
+		}
+
+		if (($summary['qaSampling'] ?? '') === 'disabled') {
+			fputcsv($output, ['summary', 'qaSampling', 'disabled']);
 		}
 
 		foreach ($summary['qaSamples'] as $fileId => $outcome) {

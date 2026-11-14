@@ -26,9 +26,9 @@
 ## 3. Backend — reporting & QA
 
 - [x] 3.1 Extend `BatchReportService` with read-time throughput, per-phase durations and failure grouping; keep entity values out of the report (REQ-DDRAS-006)
-- [ ] 3.2 Implement the seeded-PRNG QA sampler marking N% of succeeded files `qaSampled` and creating their review-queue routing via the `documentReview` gate; record outcomes on the report (REQ-DDRAS-007)
+- [x] 3.2 Implement the seeded-PRNG QA sampler marking N% of succeeded files `qaSampled` and creating their review-queue routing via the `documentReview` gate; record outcomes on the report (REQ-DDRAS-007)
   - Depends on `anonymization-review-workbench` (documentReview schema); coordinate landing order.
-  - Progress: `BatchAnonymizeService` marks the sample on completion through `BatchQaSampler`, using `batch.qa_sample_rate` (default 5) and a stored or newly generated `qaSampleSeed`. Left: routing into the review queue, because the `documentReview` schema is not in the register yet.
+  - Done: `BatchAnonymizeService` marks the sample on completion through `BatchQaSampler`, using `batch.qa_sample_rate` (default 5) and a stored or newly generated `qaSampleSeed`. A sample's outcome is read from its `documentReview` (keyed on the source `fileId`) by `BatchQaOutcomes` when the report is generated: none = `pending`, manual entities added = `corrected`, else `confirmed`; rate 0 reports `qaSampling,disabled`. The workbench queue view that lists unchecked files is `anonymization-review-workbench` task 3.1.
 
 ## 4. Frontend
 
