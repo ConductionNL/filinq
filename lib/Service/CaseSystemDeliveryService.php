@@ -28,6 +28,7 @@ namespace OCA\Filinq\Service;
 use Exception;
 use InvalidArgumentException;
 use OCP\IUserManager;
+use RuntimeException;
 use Throwable;
 
 /**
@@ -73,6 +74,21 @@ class CaseSystemDeliveryService {
 	 * The refusal of a second active destination.
 	 */
 	public const DUPLICATE_ACTIVE = 'An active destination for this template already exists.';
+
+	/**
+	 * The status a delivery the case system refused waits in.
+	 */
+	public const FAILED = 'writeback_failed';
+
+	/**
+	 * The answer for a delivery that does not exist.
+	 */
+	public const NOT_FOUND = 'Delivery not found.';
+
+	/**
+	 * The refusal of a retry on a delivery that did not fail.
+	 */
+	public const NOT_FAILED = 'Only a failed delivery can be retried.';
 
 	/**
 	 * The refusal of a case-system request that files nothing (design D3).
@@ -213,6 +229,48 @@ class CaseSystemDeliveryService {
 		return $outcome;
 
 	}//end recordGeneration()
+
+	/**
+	 * Put a failed delivery back in the queue, on the same object (REQ-GSC-003, design D5).
+	 *
+	 * @param string $id The delivery id.
+	 *
+	 * @return array<string, mixed> The delivery, waiting again.
+	 *
+	 * @throws RuntimeException 404 when there is no such delivery, 409 when it is not in `writeback_failed`.
+	 *
+	 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-deliverys-outcome-is-visible-and-a-failure-can-be-retried-req-gsc-003
+	 */
+	public function retry(string $id): array {
+		$row = null;
+		if ($id !== '') {
+			$row = self::rowOf(
+				entry: $this->objects->resolve()->find(id: $id, register: self::REGISTER, schema: self::DELIVERY_SCHEMA, _rbac: false)
+			);
+		}
+
+		if ($row === null) {
+			throw new RuntimeException(self::NOT_FOUND, 404);
+		}
+
+		if (($row['deliveryStatus'] ?? '') !== self::FAILED) {
+			throw new RuntimeException(self::NOT_FAILED, 409);
+		}
+
+		$fields = $row;
+		unset($fields['@self'], $fields['id'], $fields['errorMessage']);
+		$fields['deliveryStatus'] = self::READY;
+
+		$saved = $this->objects->resolve()->saveObject(
+			object: $fields,
+			register: self::REGISTER,
+			schema: self::DELIVERY_SCHEMA,
+			uuid: (string) ($row['id'] ?? $id)
+		);
+
+		return (self::rowOf(entry: $saved) ?? ($fields + ['id' => $id]));
+
+	}//end retry()
 
 	/**
 	 * Who generated the document, when, and in which mime type (design D6).

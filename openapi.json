@@ -10489,6 +10489,57 @@
                     }
                 }
             }
+        },
+        "/bridge/deliveries/{id}/retry": {
+            "post": {
+                "operationId": "case-system-delivery-retry",
+                "summary": "Put a failed case-system delivery back in the queue",
+                "description": "Put a failed case-system delivery back in the queue, on the same object. Admin only.",
+                "tags": [
+                    "case-system-delivery"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The delivery, waiting for the case system again.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Problem409"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The delivery id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
         }
     },
     "components": {
