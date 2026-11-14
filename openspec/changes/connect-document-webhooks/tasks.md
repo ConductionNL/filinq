@@ -17,4 +17,4 @@
 
 - [x] 3.1 Dutch and English strings (ADR-005) and `@spec` tags on the new classes and methods. Verify: `npm run check:l10n`, `npm run lint` and `composer check:strict` pass; PHPUnit coverage on the new PHP is at least 75% (ADR-009).
 - [ ] 3.2 Add a section in `docs/features/` with a screenshot of the settings section and one example payload per event (ADR-010). Verify: the page renders in the docs build and each example matches the PHPUnit envelope fixture.
-- [ ] 3.3 File openregister's half (app-declared webhook events in the listener and the catalogue) as an issue on ConductionNL/openregister and link it in this change's proposal. Verify: the issue URL is in `proposal.md` under Cross-app dependencies.
+- [x] 3.3 File openregister's half (app-declared webhook events in the listener and the catalogue) as an issue on ConductionNL/openregister and link it in this change's proposal. Verify: the issue URL is in `proposal.md` under Cross-app dependencies. As built: openregister's half was built as ConductionNL/openregister#10558 instead of filed as an issue, linked in `proposal.md`; `ObjectEventRegistrar::boot()` declares the four events through it.

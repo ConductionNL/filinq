@@ -177,4 +177,43 @@ class ObjectEventRegistrarTest extends TestCase {
 			\OCA\OpenRegister\Event\ObjectEventSubscription::$calls
 		);
 	}//end testBootSubscribesFilteredWhenOpenRegisterOffersIt()
+
+	/**
+	 * With OpenRegister's app-declared webhook events, boot hands it the four
+	 * document events, each with its envelope method.
+	 *
+	 * @runInSeparateProcess
+	 * @preserveGlobalState disabled
+	 *
+	 * @return void
+	 */
+	public function testBootDeclaresTheFourDocumentEventsForWebhooks(): void {
+		require_once __DIR__ . '/../../fixtures/openregister/ObjectEventSubscription.php';
+		require_once __DIR__ . '/../../fixtures/openregister/AppWebhookEvents.php';
+
+		$dispatcher = $this->createMock(IEventDispatcher::class);
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->with(IEventDispatcher::class)->willReturn($dispatcher);
+		\OC::$server = null;
+
+		(new ObjectEventRegistrar())->boot($container, 'filinq');
+
+		$calls = \OCA\OpenRegister\Event\AppWebhookEvents::$calls;
+		self::assertSame(
+			[
+				'OCA\Filinq\Event\Webhook\DocumentSignedEvent',
+				'OCA\Filinq\Event\Webhook\DocumentAnonymisedEvent',
+				'OCA\Filinq\Event\Webhook\DocumentGeneratedEvent',
+				'OCA\Filinq\Event\Webhook\DocumentRegisteredEvent',
+			],
+			array_column($calls, 1)
+		);
+		self::assertSame(['Document signed', 'Document anonymised', 'Document generated', 'Document registered'], array_column($calls, 2));
+		foreach ($calls as $call) {
+			self::assertSame($dispatcher, $call[0]);
+			self::assertSame('Filinq', $call[4]);
+			self::assertSame('getPayload', $call[5]);
+			self::assertTrue(method_exists($call[1], 'getPayload'), $call[1] . ' has no getPayload()');
+		}
+	}//end testBootDeclaresTheFourDocumentEventsForWebhooks()
 }//end class
