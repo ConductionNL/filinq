@@ -100,6 +100,7 @@ use OCA\Filinq\Kernel\Contracts\MultiFormatOutputProducerInterface;
 use OCA\Filinq\Kernel\Contracts\OcrResultRepositoryInterface;
 use OCA\Filinq\Kernel\Contracts\OcrRunServiceInterface;
 use OCA\Filinq\Kernel\Contracts\OcrServiceInterface;
+use OCA\Filinq\Kernel\Contracts\OfficeSuiteAvailabilityServiceInterface;
 use OCA\Filinq\Kernel\Contracts\OfficeSuiteCapabilityServiceInterface;
 use OCA\Filinq\Kernel\Contracts\OpenCatalogiPlatformInterface;
 use OCA\Filinq\Kernel\Contracts\OpenRegisterResolverInterface;
@@ -168,6 +169,7 @@ use OCA\Filinq\Service\LegalHold\LegalHoldCaseService;
 use OCA\Filinq\Service\LegalHold\LegalHoldNotifications;
 use OCA\Filinq\Service\Ocr\OcrResultRepository;
 use OCA\Filinq\Service\Ocr\OcrRunService;
+use OCA\Filinq\Service\Office\OfficeSuiteAvailabilityService;
 use OCA\Filinq\Service\Office\OfficeSuiteCapabilityService;
 use OCA\Filinq\Service\Pseudonymisation\PseudonymMapService;
 use OCA\Filinq\Service\Pseudonymisation\PseudonymRestoreService;
@@ -286,6 +288,7 @@ final class ContractBindings {
 		OcrResultRepositoryInterface::class            => OcrResultRepository::class,
 		OcrRunServiceInterface::class                  => OcrRunService::class,
 		OcrServiceInterface::class                     => OcrService::class,
+		OfficeSuiteAvailabilityServiceInterface::class => OfficeSuiteAvailabilityService::class,
 		OfficeSuiteCapabilityServiceInterface::class   => OfficeSuiteCapabilityService::class,
 		OpenCatalogiPlatformInterface::class           => OpenCatalogiPlatform::class,
 		OpenRegisterResolverInterface::class           => OpenRegisterResolver::class,

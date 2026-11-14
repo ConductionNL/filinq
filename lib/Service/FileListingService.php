@@ -47,6 +47,9 @@ use Throwable;
  * @link     https://www.filinq.app
  *
  * @spec openspec/changes/ocr-document-scanning/tasks.md#task-3.5
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The status of a document reads every store that
+ *     keeps something about it (entities, OCR, review marks, generation and signing records).
  */
 class FileListingService implements FileListingServiceInterface {
 	/**
@@ -59,6 +62,7 @@ class FileListingService implements FileListingServiceInterface {
 	 * @param OcrRunService $ocrRuns Which MIME types OCR reads
 	 * @param ReadableFileResolver $readableFiles The file behind an id, as the current user may read it
 	 * @param RedactionOutputGuardInterface $reviewGuard The review marks of documents
+	 * @param FileRecordReferences $records The generation and signing records of a file, and its validation verdict
 	 *
 	 * @return void
 	 */
@@ -70,6 +74,7 @@ class FileListingService implements FileListingServiceInterface {
 		private readonly OcrRunService $ocrRuns,
 		private readonly ReadableFileResolver $readableFiles,
 		private readonly RedactionOutputGuardInterface $reviewGuard,
+		private readonly FileRecordReferences $records,
 	) {
 
 	}//end __construct()
@@ -209,8 +214,9 @@ class FileListingService implements FileListingServiceInterface {
 		subject: 'document',
 		action: 'get',
 		description: 'Report where one document stands in Filinq: its anonymisation status, how many '
-			. 'entities were detected per type, whether a person has checked the detection, and its OCR '
-			. 'state. Counts and statuses only -- never entity values, document text or file contents. '
+			. 'entities were detected per type, whether a person has checked the detection, its OCR '
+			. 'state, its validation verdict, and the ids and statuses of the generation and signing records '
+			. 'that refer to it. Counts and statuses only -- never entity values, document text or file contents. '
 			. 'A file you may not read answers not_found.',
 		readOnlyHint: true,
 		destructiveHint: false,
@@ -226,7 +232,8 @@ class FileListingService implements FileListingServiceInterface {
 	 *
 	 * @param int $fileId The Nextcloud file id.
 	 *
-	 * @return array<string, mixed> `status` not_found, or the pipeline status with entity counts, review mark and OCR state.
+	 * @return array<string, mixed> `status` not_found, or the pipeline status with entity counts, review mark,
+	 *                              OCR state, the validation verdict and the generation and signing references.
 	 *
 	 * @spec openspec/changes/mcp-generation-tools/tasks.md#task-1.2
 	 */
@@ -257,7 +264,7 @@ class FileListingService implements FileListingServiceInterface {
 			'ocrAvailable' => $info['ocrAvailable'],
 			'ocrProcessed' => $info['ocrProcessed'],
 			'ocrConfidence' => $info['ocrConfidence'],
-		];
+		] + $this->records->forFile(fileId: $fileId);
 
 	}//end getFileStatus()
 
