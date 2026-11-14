@@ -153,6 +153,21 @@
                         "double IUserSession",
                         "double LoggerInterface"
                     ]
+                },
+                {
+                    "built OCA\\Filinq\\Service\\Grounds\\RefusalGroundsResolver": [
+                        "OCA\\Dossiq\\Woo\\WooRefusalGrounds",
+                        "double ContainerInterface",
+                        "double IAppManager",
+                        "double LoggerInterface",
+                        null
+                    ]
+                },
+                {
+                    "built OCA\\Filinq\\Service\\Grounds\\WooGroundsLegacyMap": [
+                        null,
+                        null
+                    ]
                 }
             ]
         },
@@ -162,6 +177,8 @@
                 {
                     "built OCA\\Filinq\\Service\\BaseLabelResolver": [
                         "built OCA\\Filinq\\Service\\DossierObjectRepository",
+                        "built OCA\\Filinq\\Service\\Grounds\\RefusalGroundsResolver",
+                        "built OCA\\Filinq\\Service\\Grounds\\WooGroundsLegacyMap",
                         "double LoggerInterface"
                     ]
                 },
@@ -206,7 +223,7 @@
             ]
         },
         {
-            "distinct objects built by the class": 4
+            "distinct objects built by the class": 6
         }
     ],
     "DossierSummaryDataService given": [

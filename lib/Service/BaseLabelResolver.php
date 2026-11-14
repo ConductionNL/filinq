@@ -29,7 +29,10 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use Exception;
+use OCA\Filinq\Service\Grounds\RefusalGroundsResolver;
+use OCA\Filinq\Service\Grounds\WooGroundsLegacyMap;
 use Psr\Log\LoggerInterface;
+use Throwable;
 
 /**
  * Resolves `base` references to display names and toelichtingen.
@@ -57,12 +60,17 @@ class BaseLabelResolver {
 	 *
 	 * @param DossierObjectRepository $repository OpenRegister object access.
 	 * @param LoggerInterface $logger Structured logger.
+	 * @param RefusalGroundsResolver|null $grounds The Woo refusal grounds (dossiq or the snapshot); when
+	 *                                             given, Woo grounds are labelled from it, never from `base`.
+	 * @param WooGroundsLegacyMap|null $legacy Re-points an old Woo `base` slug the repair has not reached yet.
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		private readonly DossierObjectRepository $repository,
 		private readonly LoggerInterface $logger,
+		private readonly ?RefusalGroundsResolver $grounds = null,
+		private readonly ?WooGroundsLegacyMap $legacy = null,
 	) {
 
 	}//end __construct()
@@ -93,6 +101,10 @@ class BaseLabelResolver {
 			return [];
 		}
 
+		if ($this->grounds !== null) {
+			return $this->resolveThroughGrounds(baseRefs: $baseRefs);
+		}
+
 		$objectService = $this->repository->objectService();
 		if ($objectService === null) {
 			// ObjectService unavailable — best-effort: show the raw ref so
@@ -111,6 +123,140 @@ class BaseLabelResolver {
 
 		return $labels;
 	}//end resolve()
+
+	/**
+	 * Label references from the Woo refusal grounds: a dossiq code directly,
+	 * an old Woo slug through the legacy map. A Woo reference that resolves
+	 * to nothing reads "unknown ground" with the code. Anything else is not a
+	 * Woo ground and is looked up as a `base` object (a tenant's own basis),
+	 * falling back to the raw reference as before.
+	 *
+	 * @param array<int, string> $baseRefs The references.
+	 *
+	 * @return array<string, array{name: string, description: string}> Map from each reference to its label.
+	 *
+	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-every-grounds-reader-in-filinq-goes-through-the-resolver-req-grd-002
+	 */
+	private function resolveThroughGrounds(array $baseRefs): array {
+		$byCode = $this->groundsByCode();
+
+		$labels = [];
+		$others = [];
+		foreach ($baseRefs as $ref) {
+			$refString = (string)$ref;
+			$code = $refString;
+			if (isset($byCode[$code]) === false && $this->legacy !== null) {
+				$code = ($this->safeLegacyCode(slug: $refString) ?? $refString);
+			}
+
+			if (isset($byCode[$code]) === true) {
+				$labels[$refString] = $byCode[$code];
+				continue;
+			}
+
+			$others[] = $refString;
+		}
+
+		$lookups = null;
+		foreach ($others as $refString) {
+			if ($this->isWooReference(ref: $refString) === false) {
+				// A tenant's own basis: its `base` object, or the raw reference.
+				$lookups = ($lookups ?? $this->tenantBaseLookups());
+				$labels[$refString] = $this->labelFor(refString: $refString, lookups: $lookups);
+				continue;
+			}
+
+			$labels[$refString] = ['name' => 'unknown ground ' . $refString, 'description' => ''];
+		}
+
+		// Keep the caller's order.
+		$ordered = [];
+		foreach ($baseRefs as $ref) {
+			$ordered[(string)$ref] = $labels[(string)$ref];
+		}
+
+		return $ordered;
+	}//end resolveThroughGrounds()
+
+	/**
+	 * The Woo grounds keyed by code, as labels; empty when no list can be read.
+	 *
+	 * @return array<string, array{name: string, description: string}>
+	 */
+	private function groundsByCode(): array {
+		try {
+			$list = $this->grounds?->list();
+		} catch (Throwable $e) {
+			$this->logger->warning('BaseLabelResolver: the Woo refusal grounds cannot be read', ['error' => $e->getMessage()]);
+			return [];
+		}
+
+		$byCode = [];
+		foreach ((array)($list['grounds'] ?? []) as $ground) {
+			if (is_array($ground) === false) {
+				continue;
+			}
+
+			$code = (string)($ground['code'] ?? '');
+			$label = (string)($ground['label'] ?? '');
+			if ($code === '' || $label === '') {
+				continue;
+			}
+
+			$byCode[$code] = ['name' => $label, 'description' => (string)($ground['description'] ?? '')];
+		}
+
+		return $byCode;
+	}//end groundsByCode()
+
+	/**
+	 * The code an old Woo slug re-points to, or null; an unreadable map re-points nothing.
+	 *
+	 * @param string $slug The reference.
+	 *
+	 * @return string|null The code.
+	 */
+	private function safeLegacyCode(string $slug): ?string {
+		try {
+			return $this->legacy?->codeFor(slug: $slug);
+		} catch (Throwable $e) {
+			$this->logger->warning('BaseLabelResolver: the Woo grounds legacy map cannot be read', ['error' => $e->getMessage()]);
+			return null;
+		}
+	}//end safeLegacyCode()
+
+	/**
+	 * Whether a reference names a Woo ground: an old Woo slug or a Woo article code.
+	 *
+	 * @param string $ref The reference.
+	 *
+	 * @return bool
+	 */
+	private function isWooReference(string $ref): bool {
+		if (preg_match('/^5\.\d/', $ref) === 1) {
+			return true;
+		}
+
+		try {
+			return ($this->legacy?->isLegacySlug(slug: $ref) === true);
+		} catch (Throwable) {
+			return false;
+		}
+	}//end isWooReference()
+
+	/**
+	 * The `base` lookups for a tenant's own (non-Woo) bases; empty without OpenRegister.
+	 *
+	 * @return array<string, array<string,string>> The lookups.
+	 */
+	private function tenantBaseLookups(): array {
+		$objectService = $this->repository->objectService();
+		if ($objectService === null) {
+			return ['slugToName' => [], 'uuidToName' => [], 'slugToDesc' => [], 'uuidToDesc' => []];
+		}
+
+		return $this->loadBaseLookups(objectService: $objectService);
+	}//end tenantBaseLookups()
 
 	/**
 	 * Group resolved base labels by display name for the report legend.

@@ -23,6 +23,8 @@ namespace OCA\Filinq\Tests\Unit\Service;
 use Exception;
 use OCA\Filinq\Service\BaseLabelResolver;
 use OCA\Filinq\Service\DossierObjectRepository;
+use OCA\Filinq\Service\Grounds\RefusalGroundsResolver;
+use OCA\Filinq\Service\Grounds\WooGroundsLegacyMap;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
@@ -40,6 +42,7 @@ use RuntimeException;
  *
  * @covers \OCA\Filinq\Service\BaseLabelResolver
  * @uses   \OCA\Filinq\Service\DossierObjectRepository
+ * @uses   \OCA\Filinq\Service\Grounds\WooGroundsLegacyMap
  */
 class BaseLabelResolverTest extends TestCase {
 
@@ -321,4 +324,119 @@ class BaseLabelResolverTest extends TestCase {
 		$this->assertSame([], $this->resolverOver(null)->groupByName([]));
 
 	}//end testGroupByNameOfNothingIsEmpty()
+	/**
+	 * A resolver over the Woo grounds list, with the shipped legacy map.
+	 *
+	 * @param mixed       $list          The grounds list, or a Throwable the resolver throws.
+	 * @param object|null $objectService The ObjectService for tenant bases.
+	 *
+	 * @return BaseLabelResolver
+	 */
+	private function resolverOverGrounds(mixed $list, ?object $objectService = null): BaseLabelResolver {
+		$grounds = $this->createMock(RefusalGroundsResolver::class);
+		if ($list instanceof \Throwable) {
+			$grounds->method('list')->willThrowException($list);
+		} else {
+			$grounds->method('list')->willReturn($list);
+		}
+
+		$appManager = $this->createMock(IAppManager::class);
+		$appManager->method('getInstalledApps')->willReturn($objectService === null ? ['files'] : ['files', 'openregister']);
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->willReturn($objectService);
+		$repository = new DossierObjectRepository(
+			$appManager,
+			$container,
+			$this->createMock(IRootFolder::class),
+			$this->createMock(IUserSession::class),
+			$this->createMock(LoggerInterface::class)
+		);
+
+		return new BaseLabelResolver($repository, $this->logger, $grounds, new WooGroundsLegacyMap());
+
+	}//end resolverOverGrounds()
+
+	/**
+	 * Woo grounds take their label from the resolver, by code and by old slug, never from `base`.
+	 *
+	 * @return void
+	 */
+	public function testLabelsComeFromTheResolver(): void {
+		$objectService = $this->createMock(ObjectService::class);
+		$objectService->expects($this->never())->method('searchObjectsBySlug');
+		$list = [
+			'source'  => 'dossiq',
+			'version' => '2026-10-09',
+			'grounds' => [
+				['code' => '5.1.2.e', 'label' => 'Eerbiediging van de persoonlijke levenssfeer (gewijzigd)', 'description' => 'Privacy.'],
+				['code' => '5.1.1.a', 'label' => 'Eenheid van de Kroon', 'description' => ''],
+				['code' => '', 'label' => 'zonder code'],
+				'geen ground',
+			],
+		];
+
+		$this->assertSame(
+			[
+				'5.1.2.e'     => ['name' => 'Eerbiediging van de persoonlijke levenssfeer (gewijzigd)', 'description' => 'Privacy.'],
+				'art-5-1-1-a' => ['name' => 'Eenheid van de Kroon', 'description' => ''],
+			],
+			$this->resolverOverGrounds($list, $objectService)->resolve(['5.1.2.e', 'art-5-1-1-a'])
+		);
+
+	}//end testLabelsComeFromTheResolver()
+
+	/**
+	 * A Woo code or old slug that resolves to nothing reads "unknown ground" with the code.
+	 *
+	 * @return void
+	 */
+	public function testAnUnknownWooCodeIsShownAsAnUnknownGround(): void {
+		$list = ['source' => 'snapshot', 'version' => '1.0.0', 'grounds' => [['code' => '5.1.4', 'label' => 'Geadresseerde']]];
+
+		$this->assertSame(
+			[
+				'5.9.9'       => ['name' => 'unknown ground 5.9.9', 'description' => ''],
+				'art-5-1-2-e' => ['name' => 'unknown ground art-5-1-2-e', 'description' => ''],
+			],
+			$this->resolverOverGrounds($list)->resolve(['5.9.9', 'art-5-1-2-e'])
+		);
+
+	}//end testAnUnknownWooCodeIsShownAsAnUnknownGround()
+
+	/**
+	 * A tenant's own basis is still labelled from its `base` object, or shown raw.
+	 *
+	 * @return void
+	 */
+	public function testATenantBasisStillReadsItsBaseObject(): void {
+		$objectService = $this->objectServiceReturning(
+			[['@self' => ['slug' => 'eigen-grond'], 'name' => 'Eigen grond', 'description' => 'Lokaal.']]
+		);
+		$list = ['source' => 'snapshot', 'version' => '1.0.0', 'grounds' => [['code' => '5.1.4', 'label' => 'Geadresseerde']]];
+
+		$this->assertSame(
+			[
+				'eigen-grond' => ['name' => 'Eigen grond', 'description' => 'Lokaal.'],
+				'5.1.4'       => ['name' => 'Geadresseerde', 'description' => ''],
+				'onbekend'    => ['name' => 'onbekend', 'description' => ''],
+			],
+			$this->resolverOverGrounds($list, $objectService)->resolve(['eigen-grond', '5.1.4', 'onbekend'])
+		);
+
+	}//end testATenantBasisStillReadsItsBaseObject()
+
+	/**
+	 * An unreadable grounds list labels Woo references as unknown and logs it, without throwing.
+	 *
+	 * @return void
+	 */
+	public function testAnUnreadableListLeavesWooReferencesUnknown(): void {
+		$this->logger->expects($this->once())->method('warning');
+
+		$this->assertSame(
+			['5.1.4' => ['name' => 'unknown ground 5.1.4', 'description' => '']],
+			$this->resolverOverGrounds(new RuntimeException('no list'))->resolve(['5.1.4'])
+		);
+
+	}//end testAnUnreadableListLeavesWooReferencesUnknown()
 }//end class

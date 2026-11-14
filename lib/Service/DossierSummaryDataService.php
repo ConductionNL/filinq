@@ -31,6 +31,8 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Service\Grounds\RefusalGroundsResolver;
+use OCA\Filinq\Service\Grounds\WooGroundsLegacyMap;
 use OCA\Filinq\Service\Support\DossierSummaryParts;
 use OCP\App\IAppManager;
 use OCP\Files\Folder;
@@ -122,7 +124,12 @@ class DossierSummaryDataService {
 			$userSession,
 			$logger
 		);
-		$this->labelResolver = new BaseLabelResolver($this->repository, $logger);
+		$this->labelResolver = new BaseLabelResolver(
+			$this->repository,
+			$logger,
+			new RefusalGroundsResolver(appManager: $appManager, container: $container, logger: $logger),
+			new WooGroundsLegacyMap()
+		);
 		$this->ranker        = new DossierPlaceholderRanker($this->repository, $logger);
 		$this->collector     = new DossierEntityCollector($this->repository, $this->labelResolver, $this->ranker, $logger);
 

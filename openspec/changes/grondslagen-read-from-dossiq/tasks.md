@@ -19,11 +19,13 @@ pickers read `base` objects.
   - GIVEN an unknown code WHEN rendered THEN "unknown ground" with the code.
   - Test: PHPUnit `BaseLabelResolverTest::testLabelsComeFromTheResolver`, `GroundsControllerTest::testTheEndpointAnswersTheResolver`, `GroundsReadersTest::testNoClassReadsWooGroundsFromTheBaseSchema` (a scan of `lib/` for `base` schema reads outside the resolver); Vitest for `src/services/bases.js`.
   - Wiring: `GroundsControllerTest` goes through the route name in `appinfo/routes.php`, and the Playwright spec opens the review table's picker, so the claim is proven from the screen a reviewer uses.
+  - Partly: `GET /api/grounds` (`GroundsController`, route, OpenAPI) and `BaseLabelResolver` (Woo grounds from the resolver by code or old slug, "unknown ground" with the code, a tenant's own basis still from `base`), wired in `DossierSummaryDataService` and so in `DossierEntityCollector`. Left: `src/services/bases.js`, `LegalBasisCatalog`, `LegalBasisProposalService` and `GroundsReadersTest`; the picker switches to codes together with the repair (task 3), so stored slugs and offered codes never mix.
 - [ ] 3 The mapping file and the repair (REQ-GRD-003). Files: `lib/Settings/woo-grounds-legacy-map.json` (filinq's 19 slugs, each to one dossiq code or `unmapped`, from dossiq's settled mapping in `woo-refusal-grounds-list/design.md`), `lib/Repair/RepointWooGrounds.php` (registered post-migration in `appinfo/info.xml`).
   - GIVEN `art-5-1-2-e` mapped to `5.1.2.e` WHEN the repair runs THEN every reference is rewritten and a second run changes nothing.
   - GIVEN an `unmapped` slug WHEN the repair runs THEN references stay and the report names each.
   - GIVEN the map WHEN tested THEN it holds exactly the 19 slugs of the current seed and every mapped code exists in the snapshot.
   - Test: PHPUnit `RepointWooGroundsTest::testAOneToOneSlugIsRewritten`, `::testAnUnmappedSlugIsReported`, `::testTheRepairIsIdempotent`; `WooGroundsLegacyMapTest::testTheMapCoversTheSeedAndTheSnapshot`. Show `testAOneToOneSlugIsRewritten` failing on `development` first; paste the line in the PR body.
+  - Partly: `lib/Settings/woo-grounds-legacy-map.json` (19 slugs, one to one per dossiq's design §3) and its reader `WooGroundsLegacyMap`, with `WooGroundsLegacyMapTest`. Left: the repair `RepointWooGrounds`.
 - [ ] 4 Retire filinq's list (REQ-GRD-003). Files: `lib/Settings/filinq_register.json` (remove the 19 Woo `base` seed objects; the `base` schema description says Woo grounds come from dossiq; register version bump), the `base` save path (refuse a new Woo ground).
   - GIVEN a fresh install WHEN the seed runs THEN no Woo `base` object is created.
   - GIVEN an existing install WHEN upgraded THEN existing `base` objects stay readable.
