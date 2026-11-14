@@ -2,20 +2,20 @@
 
 ## 1. Build the chart
 
-- [ ] Add `ChartCodec` producing bar, line and pie charts as native DrawingML
-- [ ] Write values and labels into `<c:numCache>`/`<c:strCache>`, which is what suites render from
-- [ ] Omit axes for pie charts, which open with a repair prompt if they carry them
-- [ ] Validate the definition: one value per category, one series for a pie, known type
+- [x] Add `ChartCodec` producing bar, line and pie charts as native DrawingML
+- [x] Write values and labels into `<c:numCache>`/`<c:strCache>`, which is what suites render from
+- [x] Omit axes for pie charts, which open with a repair prompt if they carry them
+- [x] Validate the definition: one value per category, one series for a pie, known type
 
 Acceptance criteria:
 - A mismatched series length is refused naming both counts. Padding would draw a chart the caller did not describe; truncating would drop data.
 
 ## 2. Keep the package consistent
 
-- [ ] Write the chart part, the content-type Override, the relationship, and the body drawing
-- [ ] Derive the relationship id by scanning existing ones; never hard-code it
-- [ ] Append before the `sectPr`, which must remain the body's last child
-- [ ] Support placement after an anchored paragraph, refusing an unresolvable anchor
+- [x] Write the chart part, the content-type Override, the relationship, and the body drawing
+- [x] Derive the relationship id by scanning existing ones; never hard-code it
+- [x] Append before the `sectPr`, which must remain the body's last child
+- [x] Support placement after an anchored paragraph, refusing an unresolvable anchor
 
 Acceptance criteria:
 - On a document with six relationships the chart takes `rId7` and all six survive.
@@ -23,8 +23,8 @@ Acceptance criteria:
 
 ## 3. Agent surface
 
-- [ ] Add `addDocumentChart`, and `EditSessionService::embedChartForAgent()` running through the same session as a text edit
-- [ ] Name the no-embedded-workbook limitation in the tool description so the model can tell the user
+- [x] Add `addDocumentChart`, and `EditSessionService::embedChartForAgent()` running through the same session as a text edit
+- [x] Name the no-embedded-workbook limitation in the tool description so the model can tell the user
 
 Acceptance criteria:
 - Same lock, same version precondition, same `Agent authored` tag as a text edit.
@@ -41,7 +41,7 @@ Acceptance criteria:
 
 ## 5. Regression
 
-- [ ] Full unit suite green; `phpcs` clean across `lib/Service/Editing/`
+- [x] Full unit suite green; `phpcs` clean across `lib/Service/Editing/`
 
 Acceptance criteria:
 - The pre-existing editing tests pass unmodified.
