@@ -145,7 +145,8 @@ class PolicyMatchService {
 	 *   uuid: string,
 	 *   kind: 'prohibition'|'standing_consent',
 	 *   entityType: string,
-	 *   primaryName: string
+	 *   primaryName: string,
+	 *   bases?: list<string>
 	 * }
 	 *
 	 * @spec openspec/specs/entity-publication-policies/spec.md
@@ -187,7 +188,7 @@ class PolicyMatchService {
 	 *
 	 * @return array<string, mixed>|null Prohibition match, or null when none matches.
 	 *
-	 * @phpstan-return null|array{uuid: string, kind: 'prohibition', entityType: string, primaryName: string}
+	 * @phpstan-return null|array{uuid: string, kind: 'prohibition', entityType: string, primaryName: string, bases?: list<string>}
 	 *
 	 * @spec openspec/specs/entity-publication-policies/spec.md
 	 */
@@ -244,6 +245,7 @@ class PolicyMatchService {
 						'kind' => $rule['kind'],
 						'entityType' => $rule['entityType'],
 						'primaryName' => $rule['primaryName'],
+						'bases' => ($rule['bases'] ?? []),
 					];
 				}
 			}
@@ -458,6 +460,33 @@ class PolicyMatchService {
 		];
 
 	}//end matchProhibitionHint()
+
+	/**
+	 * Match a detected entity and return a standing-consent hint only.
+	 *
+	 * Runs the same {@see match} pass as {@see matchProhibitionHint}, so a
+	 * prohibition matching the same entity wins and this returns null.
+	 *
+	 * @param string $entityType 'PERSON', 'ORGANIZATION', or 'OTHER'.
+	 * @param string $entityValue Detected entity text.
+	 *
+	 * @return array{ruleId: string, ruleName: string, bases: list<string>}|null The hint, or null.
+	 *
+	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-2.1
+	 */
+	public function matchStandingConsentHint(string $entityType, string $entityValue): ?array {
+		$result = $this->match(entityText: $entityValue, entityType: $entityType);
+		if ($result === null || $result['kind'] !== self::KIND_STANDING_CONSENT) {
+			return null;
+		}
+
+		return [
+			'ruleId' => (string)$result['uuid'],
+			'ruleName' => (string)$result['primaryName'],
+			'bases' => array_values(($result['bases'] ?? [])),
+		];
+
+	}//end matchStandingConsentHint()
 
 	/**
 	 * Invalidate the in-memory rule cache.

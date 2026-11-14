@@ -13,7 +13,7 @@
 
 ## 2. Backend
 
-- [ ] 2.1 Attach `standingConsentMatch` next to `prohibitionMatch` in `AnonymizationService::extractAndDetectEntities()` and in the batch consolidated-entities path, from the single existing `PolicyMatchService::match()` pass (REQ-DDARW-010)
+- [x] 2.1 Attach `standingConsentMatch` next to `prohibitionMatch` in `AnonymizationService::extractAndDetectEntities()` and in the batch consolidated-entities path, from the single existing `PolicyMatchService::match()` pass (REQ-DDARW-010)
   - Prohibition wins on conflict; standing-consent match pre-sets `included: false`; additive response shape.
 - [x] 2.2 Accept/persist/return `bases` in `PolicyCrudService` + `PolicyController` for both rule kinds; invalidate the matcher cache on rule writes (REQ-DDARW-005, REQ-DDARW-009)
   - Pre-change rules without `bases` match unchanged (regression test).
