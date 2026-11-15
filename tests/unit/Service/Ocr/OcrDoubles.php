@@ -32,6 +32,7 @@ use OCP\Files\File;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Builders shared by the OCR tests.
@@ -60,7 +61,10 @@ trait OcrDoubles {
 	protected function ocrResultRepository(): OcrResultRepository {
 		$objects = $this->createMock(ObjectService::class);
 		$objects->method('saveObject')->willReturnCallback(
-			function (array $object = [], string $register = '', string $schema = '', ?string $uuid = null) {
+			function (array $object = [], ObjectSaveOptions $options = new ObjectSaveOptions()) {
+				$register = $options->target->register ?? '';
+				$schema = $options->target->schema ?? '';
+				$uuid = $options->uuid;
 				$this->ocrWritten[] = $object;
 				$uuid = $uuid ?? ('ocr-' . (count($this->ocrRows) + 1));
 				$this->ocrRows[$uuid] = array_merge($object, ['uuid' => $uuid]);

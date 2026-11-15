@@ -34,6 +34,7 @@ namespace OCA\Filinq\Service;
 use OCA\Filinq\Service\Grounds\RefusalGroundsResolver;
 use OCA\Filinq\Service\Grounds\WooGroundsLegacyMap;
 use OCA\Filinq\Service\Support\DossierSummaryParts;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\App\IAppManager;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
@@ -198,8 +199,7 @@ class DossierSummaryDataService {
 
 		$dossier = $objectService->find(
 			id: $dossierId,
-			register: 'filinq',
-			schema: 'dossier'
+			options: new ObjectFindOptions(register: 'filinq', schema: 'dossier')
 		);
 
 		if ($dossier === null) {

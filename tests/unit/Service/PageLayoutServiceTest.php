@@ -29,6 +29,7 @@ use Opis\JsonSchema\Validator;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Filinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Asserts that a layout edit makes a new version and rewrites no history: the
@@ -91,6 +92,7 @@ class PageLayoutServiceTest extends TestCase {
 		);
 		$objectService->method('saveObject')->willReturnCallback(
 			function (...$arguments): array {
+				$arguments = LegacyObjectArgs::positional(method: 'saveObject', args: $arguments);
 				$object = ($arguments[0] ?? []);
 				$this->written[] = $object;
 				$this->writtenTo[] = ($arguments[3] ?? null);

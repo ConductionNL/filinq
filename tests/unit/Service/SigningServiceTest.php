@@ -58,6 +58,7 @@ use DateTimeImmutable;
 use OCA\Filinq\Exception\StepUpRequiredException;
 use OCA\Filinq\Kernel\SigningAuditEvent;
 use OCA\Filinq\Service\SignerAuth\IdentityEvidence;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Tests for SigningService signing request lifecycle
@@ -2793,7 +2794,9 @@ class SigningServiceTest extends TestCase {
 
 		$saved = [];
 		$this->objectService->method('saveObject')->willReturnCallback(
-			function (array $object, string $register, string $schema) use (&$saved): array {
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()) use (&$saved): array {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
 				$saved[] = [$object, $register, $schema];
 				return $object;
 			}
