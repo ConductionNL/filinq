@@ -216,6 +216,10 @@
             "description": "Sanitize and sanitization status routes"
         },
         {
+            "name": "digitisation",
+            "description": "Digitising a paper archive: per-box progress, separator sheets, box lists and scan checks."
+        },
+        {
             "name": "scan-intake",
             "description": "Controller for separator sheets, scan profiles and batch splitting"
         },
@@ -10696,6 +10700,260 @@
                     },
                     "403": {
                         "$ref": "#/components/responses/Problem403"
+                    }
+                }
+            }
+        },
+        "/digitisation/projects/{id}/boxes": {
+            "get": {
+                "operationId": "digitisation-boxes",
+                "summary": "The project's originals counted per box and state",
+                "description": "The project's originals counted per box and state, read with the caller's own rights.",
+                "tags": [
+                    "digitisation"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "One row per box: registered, scanned, checked, rejected and total.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/digitisation/projects/{id}/separators": {
+            "get": {
+                "operationId": "digitisation-separators",
+                "summary": "The separator sheets of one box",
+                "description": "The separator sheets of one box: one page per original, as a PDF.",
+                "tags": [
+                    "digitisation"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The sheets.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/pdf": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "box",
+                        "in": "query",
+                        "required": false,
+                        "description": "The box.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/digitisation/projects/{id}/originals/import": {
+            "post": {
+                "operationId": "digitisation-import-originals",
+                "summary": "Import a CSV box list into the project",
+                "description": "Import a CSV box list into the project. Rows that cannot be imported are listed with their line and reason (422).",
+                "tags": [
+                    "digitisation"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{imported, failures}.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "422": {
+                        "description": "{imported, failures, message}: some rows failed.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "csv": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/digitisation/originals/{id}/check": {
+            "post": {
+                "operationId": "digitisation-check",
+                "summary": "Pass or reject the scan of an original",
+                "description": "Pass or reject the scan of an original. A rejection needs a note and sends the original back to registered.",
+                "tags": [
+                    "digitisation"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The original as saved.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "result": {
+                                        "type": "string",
+                                        "enum": [
+                                            "passed",
+                                            "rejected"
+                                        ]
+                                    },
+                                    "note": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }

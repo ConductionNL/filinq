@@ -22,10 +22,14 @@
 
 ## 4. Screens
 
-- [ ] 4.1 Add a project index and detail with per-box counts and a "Print separators for this box" action, in `src/manifest.json` (REQ-PAD-001, REQ-PAD-002). Verify: Playwright prints the separators of the seed box.
-- [ ] 4.2 Add the checking queue: scan beside the original's metadata, pass or reject with a note (REQ-PAD-004). Verify: Playwright rejects one seeded scan and sees the original back in `registered`.
+- [x] 4.1 Add a project index and detail with per-box counts and a "Print separators for this box" action, in `src/manifest.json` (REQ-PAD-001, REQ-PAD-002). Verify: Playwright prints the separators of the seed box.
+  - Built: `src/manifest.d/25-digitisation.json` (the manifest's fragment for this area): **Digitisation** (`DigitisationProjects`, `/digitisation`, an index over `digitisationProject`) opens `DigitisationProjectDetail` (`/digitisation/:id`): the project's data, a **Boxes** table over `GET api/digitisation/projects/{id}/boxes` (registered, scanned, checked, rejected and total per box; a rejected scan counts as rejected until it is rescanned) with the row action **Print separators for this box**, which downloads `GET api/digitisation/projects/{id}/separators?box=` (one sheet per original of the box), the project's originals, **Import box list** (3.2) and the declared lifecycle. PHPUnit `DigitisationWorklistTest`, `DigitisationControllerTest`; `npm run check:manifest`, vitest `manifestFragments.spec.js`. Not done: the Playwright check (needs a running instance).
+- [x] 4.2 Add the checking queue: scan beside the original's metadata, pass or reject with a note (REQ-PAD-004). Verify: Playwright rejects one seeded scan and sees the original back in `registered`.
+  - Built: **Scan checks** (`ScanChecks`, `/scan-checks`, an index over `paperOriginal` filtered on `scanned`, the originals the sample drew) opens `PaperOriginalDetail` (`/paper-originals/:id`): the original's metadata with **Open scan** (the filed scan in Files), **Pass** and **Reject** (a note is required), both posting to `POST api/digitisation/originals/{id}/check` with the checker's own rights. A rejection moves the original through the declared `reject` and `rescan` transitions back to `registered` with the note in `check`. PHPUnit `DigitisationWorklistTest`, `DigitisationControllerTest`. Not done: the Playwright check (needs a running instance).
 
 ## 5. Quality
 
 - [ ] 5.1 Dutch and English strings (ADR-005), `@spec` tags, `docs/features/` with screenshots (ADR-010). Verify: `npm run check:l10n`, `npm run lint`, `composer check:strict`.
+  - Partly built: English and Dutch strings for the new pages (`l10n/en.json`, `l10n/nl.json`, `.js` rebuilt), `@spec` tags on the new code, the routes in `openapi.json`, and `docs/features/intake-paper-archive-digitisation.md`. Open: the screenshots, which need a running instance. `npm run check:schema-l10n` reports 16 schema strings over its baseline that are not from this change's schemas (inherited from development).
 - [ ] 5.2 PHPUnit at 75% on new code inside the container (ADR-009). Verify: coverage report for the new service and the split branch.
+  - Open: a measurement in the container. The new classes have unit tests (`PaperOriginalImportTest`, `DigitisationWorklistTest`, `DigitisationControllerTest`).

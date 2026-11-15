@@ -2983,7 +2983,10 @@
         "Merge fields": "Samenvoegvelden",
         "The fields the template fills in, each with a name and a source people can read. A preview shows them under Filled in for you.": "De velden die het sjabloon invult, met een naam en een herkomst voor mensen: wat een voorbeeld onder Voor je ingevuld toont",
         "Linked apps": "Gekoppelde apps",
-        "Dossier \"{name}\" (%n document)": ["Dossier \"{name}\" (%n stuk)", "Dossier \"{name}\" (%n stukken)"],
+        "Dossier \"{name}\" (%n document)": [
+            "Dossier \"{name}\" (%n stuk)",
+            "Dossier \"{name}\" (%n stukken)"
+        ],
         "Bridge source": "Brugbron",
         "Case System Delivery": "Levering aan zaaksysteem",
         "Case System Destination": "Bestemming in zaaksysteem",
@@ -3012,12 +3015,6 @@
         "The user who generated the document; told when the delivery fails.": "De gebruiker die het document genereerde; krijgt bericht als de levering mislukt.",
         "Where the delivery is: waiting, written back, or failed.": "Waar de levering staat: wachtend, teruggeschreven of mislukt.",
         "titel, bestandsnaam, formaat, taal, creatiedatum, auteur and the destination fields, for integriq to map.": "titel, bestandsnaam, formaat, taal, creatiedatum, auteur en de bestemmingsvelden, voor integriq om te vertalen.",
-        "Related records for tables (listRefs, JSON)": "Gerelateerde records voor tabellen (listRefs, JSON)",
-        "The related records are not valid JSON.": "De gerelateerde records zijn geen geldige JSON.",
-        "Dossier \"{name}\" (%n document)": [
-            "Dossier \"{name}\" (%n stuk)",
-            "Dossier \"{name}\" (%n stukken)"
-        ],
         "Print %n sheets": "%n vellen afdrukken",
         "%n documents are waiting for your signature": "%n documenten wachten op je handtekening",
         "%n documents could not be read and nobody in \"{group}\" will be told. Add at least one person to that group.": "%n documenten konden niet gelezen worden en niemand in \"{group}\" hoort het. Voeg minstens één persoon aan die groep toe.",
@@ -3146,7 +3143,32 @@
         "The test arrived": "De test is aangekomen",
         "The test did not arrive": "De test is niet aangekomen",
         "Type a name and a URL and pick at least one event": "Typ een naam en een URL en kies minstens één gebeurtenis",
-        "Type a secret so the receiver can check each delivery": "Typ een geheim zodat de ontvanger elke bezorging kan controleren"
+        "Type a secret so the receiver can check each delivery": "Typ een geheim zodat de ontvanger elke bezorging kan controleren",
+        "Digitisation": "Digitalisering",
+        "Scan checks": "Scancontroles",
+        "Digitisation projects": "Digitaliseringsprojecten",
+        "New digitisation project": "Nieuw digitaliseringsproject",
+        "No digitisation projects yet": "Nog geen digitaliseringsprojecten",
+        "Import box list": "Dozenlijst importeren",
+        "Import a box list": "Een dozenlijst importeren",
+        "Box list (CSV)": "Dozenlijst (CSV)",
+        "Box list imported.": "Dozenlijst geïmporteerd.",
+        "Registered": "Geregistreerd",
+        "Scanned": "Gescand",
+        "Print separators for this box": "Scheidingsvellen voor deze doos afdrukken",
+        "No boxes yet": "Nog geen dozen",
+        "Paper originals": "Papieren originelen",
+        "No paper originals yet": "Nog geen papieren originelen",
+        "No scans wait for a check": "Er wachten geen scans op controle",
+        "Open scan": "Scan openen",
+        "Pass": "Goedkeuren",
+        "Scan passed.": "Scan goedgekeurd.",
+        "The check could not be saved.": "De controle kon niet worden opgeslagen.",
+        "Reject the scan": "De scan afkeuren",
+        "Scan rejected; the original is back to registered.": "Scan afgekeurd; het origineel staat weer op geregistreerd.",
+        "The scan matches the paper original.": "De scan komt overeen met het papieren origineel.",
+        "Paste the CSV with the columns box, shelfMark, description, dateFrom and dateTo. Rows that cannot be imported are listed with their reason.": "Plak de CSV met de kolommen box, shelfMark, description, dateFrom en dateTo. Rijen die niet geïmporteerd kunnen worden, worden met hun reden getoond.",
+        "Say what is wrong. The original goes back to registered to be scanned again.": "Geef aan wat er mis is. Het origineel gaat terug naar geregistreerd om opnieuw gescand te worden."
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }
