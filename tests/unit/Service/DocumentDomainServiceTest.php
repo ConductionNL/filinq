@@ -22,9 +22,11 @@
 
 namespace OCA\Filinq\Tests\Unit\Service;
 
+use OCA\Filinq\Exception\DomainLinkRefusedException;
 use OCA\Filinq\Service\DocumentDomainService;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\FinalDocumentRepository;
+use OCA\Filinq\Service\IntakeAuthorizationGate;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\IUser;
 use OCP\IUserSession;
@@ -54,13 +56,21 @@ class DocumentDomainServiceTest extends TestCase {
 	private array $written = [];
 
 	/**
+	 * The targets the write check was asked about, as register/schema/id.
+	 *
+	 * @var array<int, string>
+	 */
+	private array $checked = [];
+
+	/**
 	 * Build the service over a fake register holding the given records.
 	 *
 	 * @param array<int, array<string, mixed>> $rows The stored document records.
+	 * @param bool $mayWrite Whether the caller may write the record a link points at.
 	 *
 	 * @return DocumentDomainService The service under test.
 	 */
-	private function service(array $rows): DocumentDomainService {
+	private function service(array $rows, bool $mayWrite = true): DocumentDomainService {
 		$objectService = $this->createMock(ObjectService::class);
 		$objectService->method('searchObjectsBySlug')->willReturn($rows);
 		$objectService->method('find')->willReturnCallback(
@@ -92,10 +102,20 @@ class DocumentDomainServiceTest extends TestCase {
 		$session = $this->createMock(IUserSession::class);
 		$session->method('getUser')->willReturn($user);
 
+		$gate = $this->createMock(originalClassName: IntakeAuthorizationGate::class);
+		$gate->method('mayFileOnto')->willReturnCallback(
+			callback: function (string $register, string $schema, string $id) use ($mayWrite): bool {
+				$this->checked[] = $register . '/' . $schema . '/' . $id;
+
+				return $mayWrite;
+			}
+		);
+
 		return new DocumentDomainService(
 			new FinalDocumentRepository($resolver, $this->createMock(LoggerInterface::class)),
 			$session,
-			$this->createMock(LoggerInterface::class)
+			$this->createMock(LoggerInterface::class),
+			$gate
 		);
 
 	}//end service()
@@ -248,4 +268,65 @@ class DocumentDomainServiceTest extends TestCase {
 		$this->assertSame('record-1', $mine[0]['uuid']);
 
 	}//end testMyDocumentsHoldsTheRecordsIMade()
+
+	/**
+	 * A link to a record the caller may write is checked against that record, then stored.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-2.5
+	 */
+	public function testALinkIsCheckedAgainstTheTargetRecord(): void {
+		$service = $this->service(rows: [['uuid' => 'record-1', 'domains' => []]]);
+
+		$record = $service->link(uuid: 'record-1', domain: ['register' => 'zaken', 'schema' => 'zaak', 'id' => 'zaak-2']);
+
+		$this->assertSame(expected: ['zaken/zaak/zaak-2'], actual: $this->checked);
+		$this->assertSame(expected: [['register' => 'zaken', 'schema' => 'zaak', 'id' => 'zaak-2']], actual: $record['domains']);
+		$this->assertCount(expectedCount: 1, haystack: $this->written);
+
+	}//end testALinkIsCheckedAgainstTheTargetRecord()
+
+	/**
+	 * A link to a record the caller may not write is refused and stores nothing.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-2.5
+	 */
+	public function testALinkToARecordICannotWriteIsRefused(): void {
+		$service = $this->service(rows: [['uuid' => 'record-1', 'domains' => []]], mayWrite: false);
+
+		try {
+			$service->link(uuid: 'record-1', domain: ['register' => 'zaken', 'schema' => 'zaak', 'id' => 'zaak-9']);
+			$this->fail(message: 'A link to a record the caller may not write must be refused.');
+		} catch (DomainLinkRefusedException $e) {
+			$this->assertSame(expected: 'You may not change the documents of that record.', actual: $e->getMessage());
+		}
+
+		$this->assertSame(expected: [], actual: $this->written);
+
+	}//end testALinkToARecordICannotWriteIsRefused()
+
+	/**
+	 * Removing a link needs the same right on that record, and changes nothing without it.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-2.5
+	 */
+	public function testAnUnlinkFromARecordICannotWriteIsRefused(): void {
+		$service = $this->service(
+			rows: [['uuid' => 'record-1', 'domains' => [['register' => 'zaken', 'schema' => 'zaak', 'id' => 'zaak-1']]]],
+			mayWrite: false
+		);
+
+		$this->expectException(exception: DomainLinkRefusedException::class);
+		try {
+			$service->unlink(uuid: 'record-1', domain: ['register' => 'zaken', 'schema' => 'zaak', 'id' => 'zaak-1']);
+		} finally {
+			$this->assertSame(expected: [], actual: $this->written);
+		}
+
+	}//end testAnUnlinkFromARecordICannotWriteIsRefused()
 }//end class

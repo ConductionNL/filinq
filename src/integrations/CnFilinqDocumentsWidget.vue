@@ -49,14 +49,56 @@
 					class="filinq-documents-leaf__status">
 					{{ row.record.status }}
 				</span>
+				<span v-if="row.record && row.record.uuid" class="filinq-documents-leaf__actions">
+					<button
+						type="button"
+						class="filinq-documents-leaf__sort-button"
+						:aria-expanded="linking === row.record.uuid ? 'true' : 'false'"
+						:data-testid="'documents-link-' + row.fileId"
+						@click="toggleLinkForm(row)">
+						{{ t('filinq', 'Link to another record') }}
+					</button>
+					<button
+						type="button"
+						class="filinq-documents-leaf__sort-button"
+						:disabled="busy"
+						:data-testid="'documents-unlink-' + row.fileId"
+						@click="removeLink(row)">
+						{{ t('filinq', 'Remove link') }}
+					</button>
+				</span>
+				<form
+					v-if="row.record && linking === row.record.uuid"
+					class="filinq-documents-leaf__link-form"
+					@submit.prevent="linkToRecord(row)">
+					<label>
+						{{ t('filinq', 'Register') }}
+						<input v-model="linkForm.register" type="text" required>
+					</label>
+					<label>
+						{{ t('filinq', 'Record type') }}
+						<input v-model="linkForm.schema" type="text" required>
+					</label>
+					<label>
+						{{ t('filinq', 'Record ID') }}
+						<input v-model="linkForm.id" type="text" required>
+					</label>
+					<button type="submit" class="filinq-documents-leaf__sort-button" :disabled="busy">
+						{{ t('filinq', 'Link') }}
+					</button>
+				</form>
 			</li>
 		</ul>
+		<p v-if="linkMessage" class="filinq-documents-leaf__state" role="status">
+			{{ linkMessage }}
+		</p>
 	</div>
 </template>
 
 <script>
 import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
+import { changeDomainLink, linkTarget } from './documentDomainLinks.js'
 import { documentLinkRows } from './documentLinkRows.js'
 import { nextSort, sortDocumentRows } from './documentRowSort.js'
 import { hostObjectLeaf } from './hostObjectLeaf.js'
@@ -82,6 +124,10 @@ export default {
 			loading: true,
 			error: false,
 			sort: { key: 'name', direction: 'asc' },
+			linking: '',
+			linkForm: { register: '', schema: '', id: '' },
+			linkMessage: '',
+			busy: false,
 		}
 	},
 
@@ -165,6 +211,82 @@ export default {
 		},
 
 		/**
+		 * Open or close the link form of one document.
+		 *
+		 * @param {object} row One flat-list row.
+		 * @spec openspec/changes/specify-capability-rows/tasks.md#task-2.5
+		 */
+		toggleLinkForm(row) {
+			this.linkMessage = ''
+			this.linking = this.linking === row.record.uuid ? '' : row.record.uuid
+			this.linkForm = { register: '', schema: '', id: '' }
+		},
+
+		/**
+		 * Link a document to the record the form names. The server refuses a
+		 * record the user may not write, and nothing is stored then.
+		 *
+		 * @param {object} row One flat-list row.
+		 * @return {Promise<void>} Resolves once the answer is shown.
+		 * @spec openspec/changes/specify-capability-rows/tasks.md#task-2.5
+		 */
+		async linkToRecord(row) {
+			const target = linkTarget(this.linkForm)
+			if (target === null) {
+				this.linkMessage = t('filinq', 'Name the register, the record type and the ID of the record.')
+				return
+			}
+			this.busy = true
+			const answer = await changeDomainLink('POST', row.record.uuid, target, this.requestToken())
+			this.busy = false
+			if (answer.ok) {
+				this.linking = ''
+				this.linkMessage = t('filinq', '{name} is now also on the other record.', { name: row.name })
+				return
+			}
+			this.linkMessage = this.refusal(answer)
+		},
+
+		/**
+		 * Remove a document's link to this record; it leaves this list and
+		 * stays on its other records and with its creator.
+		 *
+		 * @param {object} row One flat-list row.
+		 * @return {Promise<void>} Resolves once the list reflects the answer.
+		 * @spec openspec/changes/specify-capability-rows/tasks.md#task-2.5
+		 */
+		async removeLink(row) {
+			this.busy = true
+			const answer = await changeDomainLink(
+				'DELETE',
+				row.record.uuid,
+				{ register: this.register, schema: this.schema, id: this.objectId },
+				this.requestToken(),
+			)
+			this.busy = false
+			if (answer.ok) {
+				this.rows = this.rows.filter((one) => one.fileId !== row.fileId)
+				this.linkMessage = t('filinq', '{name} is no longer linked to this record.', { name: row.name })
+				return
+			}
+			this.linkMessage = this.refusal(answer)
+		},
+
+		/**
+		 * The sentence for a link or unlink the server did not do.
+		 *
+		 * @param {{status: number, error: string}} answer The answer.
+		 * @return {string} The sentence.
+		 * @spec openspec/changes/specify-capability-rows/tasks.md#task-2.5
+		 */
+		refusal(answer) {
+			if (answer.status === 403) {
+				return t('filinq', 'You may not change the documents of that record.')
+			}
+			return t('filinq', 'The link could not be changed.')
+		},
+
+		/**
 		 * Read the flat list for the host object.
 		 *
 		 * @return {Promise<void>} Resolves once `rows` reflects the answer.
@@ -188,6 +310,7 @@ export default {
 .filinq-documents-leaf__item {
 	display: flex;
 	align-items: center;
+	flex-wrap: wrap;
 	justify-content: space-between;
 	gap: 8px;
 	padding: 4px 0;
@@ -212,6 +335,25 @@ export default {
 
 .filinq-documents-leaf__sort-button[aria-pressed='true'] {
 	border-color: var(--color-primary-element);
+}
+
+.filinq-documents-leaf__actions {
+	display: flex;
+	gap: 4px;
+}
+
+.filinq-documents-leaf__link-form {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-end;
+	gap: 8px;
+	flex-basis: 100%;
+}
+
+.filinq-documents-leaf__link-form label {
+	display: flex;
+	flex-direction: column;
+	font-size: 0.9em;
 }
 
 .filinq-documents-leaf__date,

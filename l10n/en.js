@@ -2980,7 +2980,16 @@ OC.L10N.register(
         "Routed to your group, waiting for acceptance": "Routed to your group, waiting for acceptance",
         "Untitled": "Untitled",
         "On %n record": ["On %n record","On %n records"],
-        "On %n records": "On %n records"
+        "On %n records": "On %n records",
+        "Link to another record": "Link to another record",
+        "Remove link": "Remove link",
+        "Record ID": "Record ID",
+        "Link": "Link",
+        "Name the register, the record type and the ID of the record.": "Name the register, the record type and the ID of the record.",
+        "{name} is now also on the other record.": "{name} is now also on the other record.",
+        "{name} is no longer linked to this record.": "{name} is no longer linked to this record.",
+        "You may not change the documents of that record.": "You may not change the documents of that record.",
+        "The link could not be changed.": "The link could not be changed."
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -3161,7 +3161,16 @@
         "Routed to your group, waiting for acceptance": "Naar je groep gerouteerd, wacht op acceptatie",
         "Untitled": "Zonder titel",
         "On %n record": ["Op %n registratie", "Op %n registraties"],
-        "On %n records": "Op %n registraties"
+        "On %n records": "Op %n registraties",
+        "Link to another record": "Koppelen aan een ander dossier",
+        "Remove link": "Koppeling verwijderen",
+        "Record ID": "ID van het dossier",
+        "Link": "Koppelen",
+        "Name the register, the record type and the ID of the record.": "Geef het register, de soort en het ID van het dossier op.",
+        "{name} is now also on the other record.": "{name} staat nu ook bij het andere dossier.",
+        "{name} is no longer linked to this record.": "{name} is niet meer gekoppeld aan dit dossier.",
+        "You may not change the documents of that record.": "U mag de documenten van dat dossier niet wijzigen.",
+        "The link could not be changed.": "De koppeling kon niet worden gewijzigd."
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }
