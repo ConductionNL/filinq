@@ -24,6 +24,9 @@ namespace OCA\Filinq\Service;
 use DateTimeImmutable;
 use DateTimeZone;
 use InvalidArgumentException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\AppFramework\Utility\ITimeFactory;
 use RuntimeException;
 use Throwable;
@@ -248,9 +251,10 @@ class BridgeService {
 		unset($document['uuid'], $document['@self']);
 		$saved = $this->objectResolver->resolve()->saveObject(
 			object: array_merge($document, $changes, ['processingStatus' => $to]),
-			register: self::REGISTER,
-			schema: self::SCHEMA_DOCUMENT,
-			uuid: $uuid
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: self::REGISTER, schema: self::SCHEMA_DOCUMENT),
+				uuid: $uuid
+			)
 		);
 
 		return (new StoredRecordFields())->read(row: $saved);
@@ -266,7 +270,10 @@ class BridgeService {
 	 * @throws RuntimeException When there is none.
 	 */
 	private function document(string $id): array {
-		$found = $this->objectResolver->resolve()->find(id: $id, register: self::REGISTER, schema: self::SCHEMA_DOCUMENT);
+		$found = $this->objectResolver->resolve()->find(
+			id: $id,
+			options: new ObjectFindOptions(register: self::REGISTER, schema: self::SCHEMA_DOCUMENT)
+		);
 		$document = (new StoredRecordFields())->read(row: $found);
 		if ($found === null || $document === []) {
 			throw new RuntimeException('External document not found.', 404);

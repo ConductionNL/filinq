@@ -27,6 +27,9 @@ use DateTimeImmutable;
 use InvalidArgumentException;
 use OCA\Filinq\Service\BridgeService;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -114,14 +117,12 @@ class BridgeServiceTest extends TestCase {
 	 */
 	public function testReleaseSavesTheWholeObject(): void {
 		$service = $this->service();
-		$this->objects->method('find')->with('d-1', 'filinq', 'externalDocument')->willReturn(
+		$this->objects->method('find')->with('d-1', $this->equalTo(new ObjectFindOptions(register: 'filinq', schema: 'externalDocument')))->willReturn(
 			['uuid' => 'd-1', 'title' => 'Besluit', 'contentHash' => 'abc', 'processingStatus' => 'processed', 'resultFileRef' => 42]
 		);
 		$this->objects->expects($this->once())->method('saveObject')->with(
 			['title' => 'Besluit', 'contentHash' => 'abc', 'processingStatus' => 'ready_for_writeback', 'resultFileRef' => 42],
-			'filinq',
-			'externalDocument',
-			'd-1'
+			$this->equalTo(new ObjectSaveOptions(target: new ObjectFindTarget(register: 'filinq', schema: 'externalDocument'), uuid: 'd-1'))
 		)->willReturn(['uuid' => 'd-1', 'processingStatus' => 'ready_for_writeback']);
 
 		$this->assertSame(['uuid' => 'd-1', 'processingStatus' => 'ready_for_writeback'], $service->release('d-1'));
@@ -165,9 +166,7 @@ class BridgeServiceTest extends TestCase {
 		);
 		$this->objects->expects($this->once())->method('saveObject')->with(
 			['processingStatus' => 'ready_for_writeback', 'writeBackError' => null],
-			'filinq',
-			'externalDocument',
-			'd-1'
+			$this->equalTo(new ObjectSaveOptions(target: new ObjectFindTarget(register: 'filinq', schema: 'externalDocument'), uuid: 'd-1'))
 		)->willReturn(['uuid' => 'd-1']);
 
 		$service->retry('d-1');
@@ -187,9 +186,7 @@ class BridgeServiceTest extends TestCase {
 		$this->objects->method('find')->willReturn(['uuid' => 'd-1', 'processingStatus' => 'staged', 'stagedFileRef' => 101]);
 		$this->objects->expects($this->once())->method('saveObject')->with(
 			['processingStatus' => 'in_processing', 'stagedFileRef' => 101, 'dossierRef' => 'dossier-21'],
-			'filinq',
-			'externalDocument',
-			'd-1'
+			$this->equalTo(new ObjectSaveOptions(target: new ObjectFindTarget(register: 'filinq', schema: 'externalDocument'), uuid: 'd-1'))
 		)->willReturn(['uuid' => 'd-1', 'processingStatus' => 'in_processing', 'dossierRef' => 'dossier-21']);
 
 		$document = $service->find('d-1');
@@ -237,9 +234,9 @@ class BridgeServiceTest extends TestCase {
 		$service = $this->service();
 		$saved = [];
 		$this->objects->method('saveObject')->willReturnCallback(
-			function (array $object, string $register, string $schema, string $uuid) use (&$saved): array {
+			function (array $object, ObjectSaveOptions $options) use (&$saved): array {
 				$saved[] = $object;
-				return ['uuid' => $uuid] + $object;
+				return ['uuid' => (string)$options->uuid] + $object;
 			}
 		);
 
