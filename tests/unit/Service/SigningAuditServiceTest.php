@@ -48,6 +48,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use ReflectionClass;
 use RuntimeException;
+use OCA\Filinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Unit tests for the migrated SigningAuditService.
@@ -346,12 +347,12 @@ class SigningAuditServiceTest extends TestCase {
 			->getMock();
 		$objectService->expects($this->once())
 			->method('find')
-			->with(
-				$this->identicalTo(value: 'sign-001'),
-				$this->identicalTo(value: 'signing'),
-				$this->identicalTo(value: 'signingRequest'),
-				$this->identicalTo(value: false)
-			)
+			->with(...LegacyObjectArgs::with(method: 'find', expected: [
+					'id' => $this->identicalTo(value: 'sign-001'),
+					'register' => $this->identicalTo(value: 'signing'),
+					'schema' => $this->identicalTo(value: 'signingRequest'),
+					'_rbac' => $this->identicalTo(value: false),
+				]))
 			->willReturn($realEntity);
 
 		$this->settingsServiceMock->method('getObjectService')->willReturn($objectService);

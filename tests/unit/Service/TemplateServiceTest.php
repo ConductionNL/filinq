@@ -34,6 +34,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
+use OCA\Filinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Unit tests for TemplateService
@@ -497,7 +498,11 @@ class TemplateServiceTest extends TestCase {
 		$mockObjectService = $this->createMock(ObjectService::class);
 		$mockObjectService->expects($this->once())
 			->method('deleteObject')
-			->with('uuid-to-delete', 'reg-1', 'schema-1')
+			->with(...LegacyObjectArgs::with(method: 'deleteObject', expected: [
+					'uuid' => 'uuid-to-delete',
+					'register' => 'reg-1',
+					'schema' => 'schema-1',
+				]))
 			->willReturn(true);
 
 		$this->setUpWithOpenRegister($mockObjectService);
