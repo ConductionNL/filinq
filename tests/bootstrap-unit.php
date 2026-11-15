@@ -40,7 +40,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
 // RESOLVABLE, not who registered first. Appending a fallback autoloader does
 // NOT work: spl_autoload_register appends relative to registration order, and
 // that order across independently loaded apps is what nobody controls.
-foreach (['ObjectEntityInterface', 'ObjectServiceInterface'] as $contract) {
+foreach (['ObjectEntityInterface'] as $contract) {
 	if (interface_exists('\\OCA\\OpenRegister\\Contract\\' . $contract) === false) {
 		$shipped = __DIR__ . '/../vendor/conduction/hydra-gates/hydra-gates/contracts/' . $contract . '.php';
 		if (file_exists($shipped) === true) {
@@ -319,3 +319,16 @@ foreach (['Share/IShare', 'Share/IManager'] as $ocpPath) {
 		require_once $ocpFile;
 	}
 }
+
+// OpenRegister's object-service option objects, from main, when OpenRegister itself is absent.
+spl_autoload_register(
+	static function (string $class): void {
+		$prefix = 'OCA\\OpenRegister\\Kernel\\Contracts\\Value\\';
+		if (str_starts_with($class, $prefix) === true) {
+			$file = __DIR__ . '/stubs/OpenRegister/Kernel/Contracts/Value/' . substr($class, strlen($prefix)) . '.php';
+			if (is_file($file) === true) {
+				require_once $file;
+			}
+		}
+	}
+);
