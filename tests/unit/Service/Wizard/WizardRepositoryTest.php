@@ -29,6 +29,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
+use OCA\Filinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Wizard definitions are read and written in filinq/wizardDefinition, come
@@ -89,7 +90,11 @@ class WizardRepositoryTest extends TestCase {
 		};
 		$this->objects->expects($this->once())
 			->method('find')
-			->with('w-1', 'filinq', 'wizardDefinition')
+			->with(...LegacyObjectArgs::with(method: 'find', expected: [
+					'id' => 'w-1',
+					'register' => 'filinq',
+					'schema' => 'wizardDefinition',
+				]))
 			->willReturn($entity);
 
 		$this->assertSame(
@@ -181,7 +186,12 @@ class WizardRepositoryTest extends TestCase {
 	public function testSaveStripsIdentityAndKeepsTheUuid(): void {
 		$this->objects->expects($this->once())
 			->method('saveObject')
-			->with(['name' => 'Intake'], 'filinq', 'wizardDefinition', 'w-5')
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+					'object' => ['name' => 'Intake'],
+					'register' => 'filinq',
+					'schema' => 'wizardDefinition',
+					'uuid' => 'w-5',
+				]))
 			->willReturn(['name' => 'Intake']);
 
 		$saved = $this->repository->save(
@@ -200,7 +210,11 @@ class WizardRepositoryTest extends TestCase {
 	public function testSaveWithoutAUuidCreates(): void {
 		$this->objects->expects($this->exactly(2))
 			->method('saveObject')
-			->with(['name' => 'New'], 'filinq', 'wizardDefinition')
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+					'object' => ['name' => 'New'],
+					'register' => 'filinq',
+					'schema' => 'wizardDefinition',
+				]))
 			->willReturn(['@self' => ['id' => 'w-new', 'version' => '1'], 'name' => 'New']);
 
 		$this->assertSame(['name' => 'New', 'uuid' => 'w-new', 'version' => '1'], $this->repository->save(wizard: ['name' => 'New']));
@@ -238,7 +252,9 @@ class WizardRepositoryTest extends TestCase {
 	 * @return void
 	 */
 	public function testDeleteRemovesTheObject(): void {
-		$this->objects->expects($this->once())->method('deleteObject')->with('w-7')->willReturn(true);
+		$this->objects->expects($this->once())->method('deleteObject')->with(...LegacyObjectArgs::with(method: 'deleteObject', expected: [
+				'uuid' => 'w-7',
+			]))->willReturn(true);
 
 		$this->repository->delete(uuid: 'w-7');
 	}//end testDeleteRemovesTheObject()

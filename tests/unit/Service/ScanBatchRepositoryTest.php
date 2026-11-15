@@ -32,6 +32,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Filinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * The repository writes and reads `scanBatch` rows in the `filinq` register
@@ -97,7 +98,12 @@ class ScanBatchRepositoryTest extends TestCase {
 	public function testSaveCreatesWithoutUuid(): void {
 		$this->objectService->expects($this->once())
 			->method('saveObject')
-			->with(['file' => 12, 'status' => 'pending'], 'filinq', 'scanBatch', null)
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+					'object' => ['file' => 12, 'status' => 'pending'],
+					'register' => 'filinq',
+					'schema' => 'scanBatch',
+					'uuid' => null,
+				]))
 			->willReturn(['@self' => ['id' => 'b-1'], 'file' => 12, 'status' => 'pending']);
 
 		$stored = $this->repository()->save(['uuid' => 'stale', 'file' => 12, 'status' => 'pending']);
@@ -128,7 +134,12 @@ class ScanBatchRepositoryTest extends TestCase {
 
 		$this->objectService->expects($this->once())
 			->method('saveObject')
-			->with(['status' => 'split'], 'filinq', 'scanBatch', 'b-2')
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+					'object' => ['status' => 'split'],
+					'register' => 'filinq',
+					'schema' => 'scanBatch',
+					'uuid' => 'b-2',
+				]))
 			->willReturn($entity);
 
 		$this->assertSame(['status' => 'split', 'uuid' => 'b-2'], $this->repository()->save(['status' => 'split'], 'b-2'));
@@ -213,7 +224,11 @@ class ScanBatchRepositoryTest extends TestCase {
 	public function testFindReturnsTheBatch(): void {
 		$this->objectService->expects($this->once())
 			->method('find')
-			->with('b-4', 'filinq', 'scanBatch')
+			->with(...LegacyObjectArgs::with(method: 'find', expected: [
+					'id' => 'b-4',
+					'register' => 'filinq',
+					'schema' => 'scanBatch',
+				]))
 			->willReturn(['@self' => ['id' => 'b-4'], 'status' => 'pending']);
 
 		$this->assertSame(

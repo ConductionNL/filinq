@@ -32,6 +32,9 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use Exception;
 use OCA\Filinq\Kernel\Contracts\DocumentReviewServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
@@ -240,8 +243,7 @@ class DocumentReviewService implements DocumentReviewServiceInterface {
 		try {
 			$found = $this->objectResolver->resolve()->find(
 				id: $uuid,
-				register: IntakeRepository::REGISTER,
-				schema: self::SCHEMA
+				options: new ObjectFindOptions(register: IntakeRepository::REGISTER, schema: self::SCHEMA)
 			);
 		} catch (Throwable $e) {
 			throw new RuntimeException(
@@ -274,9 +276,10 @@ class DocumentReviewService implements DocumentReviewServiceInterface {
 		try {
 			$this->objectResolver->resolve()->saveObject(
 				object: $document,
-				register: IntakeRepository::REGISTER,
-				schema: self::SCHEMA,
-				uuid: $uuid
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: IntakeRepository::REGISTER, schema: self::SCHEMA),
+					uuid: $uuid
+				)
 			);
 		} catch (Throwable $e) {
 			throw new RuntimeException(
