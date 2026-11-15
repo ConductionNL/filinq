@@ -30,6 +30,8 @@ namespace OCA\Filinq\Service;
 
 use InvalidArgumentException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use Throwable;
 
 /**
@@ -115,8 +117,7 @@ class PaperOriginalImport {
 			try {
 				$this->objectService->saveObject(
 					object: self::original(projectId: $projectId, row: $row),
-					register: self::REGISTER,
-					schema: self::SCHEMA
+					options: new ObjectSaveOptions(target: new ObjectFindTarget(register: self::REGISTER, schema: self::SCHEMA))
 				);
 				$imported++;
 			} catch (Throwable $e) {

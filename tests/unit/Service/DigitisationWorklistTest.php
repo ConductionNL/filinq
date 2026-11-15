@@ -31,6 +31,8 @@ use InvalidArgumentException;
 use OCA\Filinq\Service\DigitisationWorklist;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
@@ -90,8 +92,10 @@ class DigitisationWorklistTest extends TestCase {
 	private function worklist(): DigitisationWorklist {
 		$objects = $this->createMock(ObjectServiceInterface::class);
 		$objects->method('find')->willReturnCallback(
-			function (int|string $id, ?array $_extend = [], bool $files = false, string|int|null $register = null, string|int|null $schema = null, bool $_rbac = true): ?ObjectEntityInterface {
+			function (int|string $id, ?ObjectFindOptions $options = null, bool $_rbac = true): ?ObjectEntityInterface {
 				self::assertTrue($_rbac);
+				self::assertSame('filinq', $options?->register);
+				$schema = $options?->schema;
 				$payload = ($this->objects[$schema . '/' . $id] ?? null);
 				if ($payload === null) {
 					throw new RuntimeException('Object not found');
@@ -108,9 +112,9 @@ class DigitisationWorklistTest extends TestCase {
 			}
 		);
 		$objects->method('saveObject')->willReturnCallback(
-			function (array $object, ?array $extend = [], string|int|null $register = null, string|int|null $schema = null, ?string $uuid = null, bool $_rbac = true): ObjectEntityInterface {
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true): ObjectEntityInterface {
 				self::assertTrue($_rbac);
-				$this->saves[] = ['object' => $object, 'register' => $register, 'schema' => $schema, 'uuid' => $uuid];
+				$this->saves[] = ['object' => $object, 'register' => $options->target->register, 'schema' => $options->target->schema, 'uuid' => $options->uuid];
 				return $this->createMock(ObjectEntityInterface::class);
 			}
 		);

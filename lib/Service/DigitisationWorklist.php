@@ -31,6 +31,9 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use InvalidArgumentException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use Throwable;
 
 /**
@@ -256,7 +259,13 @@ class DigitisationWorklist {
 	private function save(array $original, string $uuid): void {
 		$saved = $original;
 		unset($saved['id']);
-		$this->objectService->saveObject(object: $saved, register: self::REGISTER, schema: self::ORIGINAL, uuid: $uuid);
+		$this->objectService->saveObject(
+			object: $saved,
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: self::REGISTER, schema: self::ORIGINAL),
+				uuid: $uuid
+			)
+		);
 
 	}//end save()
 
@@ -275,7 +284,7 @@ class DigitisationWorklist {
 		}
 
 		try {
-			$entity = $this->objectService->find(id: $id, register: self::REGISTER, schema: $schema);
+			$entity = $this->objectService->find(id: $id, options: new ObjectFindOptions(register: self::REGISTER, schema: $schema));
 		} catch (Throwable) {
 			return null;
 		}

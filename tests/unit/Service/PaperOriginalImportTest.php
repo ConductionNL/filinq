@@ -30,6 +30,7 @@ use InvalidArgumentException;
 use OCA\Filinq\Service\PaperOriginalImport;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
@@ -55,7 +56,10 @@ class PaperOriginalImportTest extends TestCase {
 	private function importer(array $refused = []): PaperOriginalImport {
 		$objects = $this->createMock(ObjectServiceInterface::class);
 		$objects->method('saveObject')->willReturnCallback(
-			function (array $object, ?array $extend = [], string|int|null $register = null, string|int|null $schema = null, ?string $uuid = null, bool $_rbac = true) use ($refused): ObjectEntityInterface {
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true) use ($refused): ObjectEntityInterface {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				if (in_array($object['shelfMark'], $refused, true) === true) {
 					throw new RuntimeException('You may not create this object');
 				}

@@ -31,6 +31,9 @@ namespace OCA\Filinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\Files\Folder;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -144,9 +147,10 @@ class PaperOriginalFiling {
 
 		$this->objectService->saveObject(
 			object: $original,
-			register: self::REGISTER,
-			schema: 'paperOriginal',
-			uuid: $uuid,
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: self::REGISTER, schema: 'paperOriginal'),
+				uuid: $uuid
+			),
 			_rbac: false,
 			_multitenancy: false
 		);
@@ -169,7 +173,12 @@ class PaperOriginalFiling {
 		}
 
 		try {
-			return $this->objectService->find(id: trim($id), register: $register, schema: $schema, _rbac: false, _multitenancy: false);
+			return $this->objectService->find(
+				id: trim($id),
+				options: new ObjectFindOptions(register: $register, schema: $schema),
+				_rbac: false,
+				_multitenancy: false
+			);
 		} catch (Throwable $e) {
 			return null;
 		}

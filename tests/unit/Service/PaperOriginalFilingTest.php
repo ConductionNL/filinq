@@ -32,6 +32,8 @@ use OCA\Filinq\Service\DossierFileService;
 use OCA\Filinq\Service\PaperOriginalFiling;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\Files\Folder;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -77,7 +79,10 @@ class PaperOriginalFilingTest extends TestCase {
 	private function filing(): PaperOriginalFiling {
 		$objects = $this->createMock(ObjectServiceInterface::class);
 		$objects->method('find')->willReturnCallback(
-			function (int|string $id, ?array $_extend = [], bool $files = false, string|int|null $register = null, string|int|null $schema = null): ?ObjectEntityInterface {
+			function (int|string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?ObjectEntityInterface {
+				self::assertFalse($_rbac);
+				$register = $options?->register;
+				$schema = $options?->schema;
 				$payload = ($this->objects[$register . '/' . $schema . '/' . $id] ?? null);
 				if ($payload === null) {
 					throw new \RuntimeException('Object not found');
@@ -89,8 +94,9 @@ class PaperOriginalFilingTest extends TestCase {
 			}
 		);
 		$objects->method('saveObject')->willReturnCallback(
-			function (array $object, ?array $extend = [], string|int|null $register = null, string|int|null $schema = null, ?string $uuid = null): ObjectEntityInterface {
-				$this->saves[] = ['object' => $object, 'register' => $register, 'schema' => $schema, 'uuid' => $uuid];
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): ObjectEntityInterface {
+				self::assertFalse($_rbac);
+				$this->saves[] = ['object' => $object, 'register' => $options->target->register, 'schema' => $options->target->schema, 'uuid' => $options->uuid];
 				return $this->createMock(ObjectEntityInterface::class);
 			}
 		);
