@@ -99,22 +99,46 @@ class SignatureVerificationLinkService {
 	}//end isWellFormed()
 
 	/**
-	 * Store the outcome of a signed document's signatures under a new random token.
+	 * A new random token: 128 bits, as 32 lowercase hex characters.
+	 *
+	 * Signing takes one before the document is signed, so the QR code that
+	 * links to the record can be part of the signed bytes.
+	 *
+	 * @return string The token.
+	 *
+	 * @spec openspec/changes/signature-verification-portal/tasks.md#task-2.4
+	 */
+	public function newToken(): string {
+		do {
+			$token = bin2hex(random_bytes(16));
+		} while (self::isWellFormed(token: $token) === false);
+
+		return $token;
+	}//end newToken()
+
+	/**
+	 * Store the outcome of a signed document's signatures under a token.
 	 *
 	 * @param string      $signedBytes The signed document as it was stored.
 	 * @param string      $fileRef     The stored signed-artifact reference.
 	 * @param string      $fileName    The file's name, the only thing about it the public page shows.
 	 * @param string|null $waarmerkRef A seal on the same document, when there is one.
+	 * @param string|null $token       The token taken with newToken() before signing; a new one when null.
 	 *
 	 * @return array<string, mixed> The stored record, with its token.
 	 *
-	 * @throws RuntimeException When the record cannot be stored.
+	 * @throws RuntimeException When the token is malformed or the record cannot be stored.
 	 *
 	 * @spec openspec/changes/signature-verification-portal/tasks.md#task-2.1
+	 * @spec openspec/changes/signature-verification-portal/tasks.md#task-2.4
 	 */
-	public function mint(string $signedBytes, string $fileRef, string $fileName, ?string $waarmerkRef = null): array {
+	public function mint(string $signedBytes, string $fileRef, string $fileName, ?string $waarmerkRef = null, ?string $token = null): array {
+		if ($token !== null && self::isWellFormed(token: $token) === false) {
+			throw new RuntimeException('A verification record needs a token of 32 lowercase hex characters');
+		}
+
 		$record = [
-			'token' => bin2hex(random_bytes(16)),
+			'token' => ($token ?? $this->newToken()),
 			'fileRef' => $fileRef,
 			'fileName' => $fileName,
 			'contentHash' => hash('sha256', $signedBytes),

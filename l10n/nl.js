@@ -3060,6 +3060,7 @@ OC.L10N.register(
         "Type a name and a URL and pick at least one event": "Typ een naam en een URL en kies minstens één gebeurtenis",
         "Type a secret so the receiver can check each delivery": "Typ een geheim zodat de ontvanger elke bezorging kan controleren",
         "Check a signed document": "Een ondertekend document controleren",
+        "Verify this document": "Dit document controleren",
         "The document content is unchanged since it was signed.": "De inhoud van het document is niet veranderd sinds het is ondertekend.",
         "The document content was changed after it was signed.": "De inhoud van het document is veranderd nadat het is ondertekend.",
         "Not every signature on this document could be confirmed.": "Niet elke handtekening op dit document kon worden bevestigd.",

@@ -164,6 +164,43 @@ class SignatureVerificationLinkServiceTest extends TestCase {
 	}//end testMintKeepsASealReference()
 
 	/**
+	 * A token taken before signing is the one the record is stored under.
+	 *
+	 * @return void
+	 */
+	public function testMintUsesATokenTakenBeforeSigning(): void {
+		$this->verifier->method('summarise')->willReturn([]);
+		$this->objects->expects($this->once())->method('saveObject')->willReturnArgument(0);
+		$token = $this->service->newToken();
+
+		$record = $this->service->mint(signedBytes: 'x', fileRef: 'r', fileName: 'f.pdf', token: $token);
+
+		$this->assertTrue(SignatureVerificationLinkService::isWellFormed(token: $token));
+		$this->assertSame($token, $record['token']);
+		$this->assertNotSame($token, $this->service->newToken(), 'every token is new');
+
+	}//end testMintUsesATokenTakenBeforeSigning()
+
+	/**
+	 * A malformed or nil token is refused before anything is stored.
+	 *
+	 * @return void
+	 */
+	public function testMintRefusesAMalformedToken(): void {
+		$this->objects->expects($this->never())->method('saveObject');
+
+		foreach (['ABC', SignatureVerificationLinkService::NIL_TOKEN] as $token) {
+			try {
+				$this->service->mint(signedBytes: 'x', fileRef: 'r', fileName: 'f.pdf', token: $token);
+				$this->fail('A malformed token was accepted: ' . $token);
+			} catch (RuntimeException $e) {
+				$this->assertSame('A verification record needs a token of 32 lowercase hex characters', $e->getMessage());
+			}
+		}
+
+	}//end testMintRefusesAMalformedToken()
+
+	/**
 	 * A failed write is raised, never swallowed.
 	 *
 	 * @return void

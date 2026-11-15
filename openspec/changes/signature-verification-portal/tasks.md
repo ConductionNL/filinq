@@ -19,7 +19,7 @@
 - [x] 2.3 Implement `PublicVerificationController` with `verify/{token}` + `api/verify/{token}` as `#[PublicPage]` (REQ-DDSVP-001, REQ-DDSVP-004)
   - `#[PublicPage] #[NoCSRFRequired]` + brute-force/rate-limit keyed by token+IP; unknown/malformed token returns a `status:unknown` body identical in shape to a valid verdict (no existence oracle); serves file name only, no bytes, no download; consumes the waarmerk verification primitive (presence-gated) to include seal status.
 
-- [ ] 2.4 Mint the verification record + stamp the QR on signing/seal completion (REQ-DDSVP-005)
+- [x] 2.4 (BUILT for signing completion: the token is taken before signing, `VerificationQrStamp` draws the QR (own encoder `Qr/QrCodeEncoder`, no new dependency) on the last page of a PDF, the stamped bytes are signed and the record is minted under that token; LibreSign is skipped because it returns its own signed file. Filinq has no waarmerk seal path yet (`document-waarmerk-certification` is not built), so there is nothing to hook there; `mint()` already takes a `waarmerkRef` for when it is) Mint the verification record + stamp the QR on signing/seal completion (REQ-DDSVP-005)
   - Hook `SigningService` completion and the waarmerk seal path to mint a record and compose a footer QR encoding the absolute `verify/{token}` URL into the produced PDF bytes (dependency-free QR per waarmerk D5); a single QR/token when both a signature and a seal exist.
 
 ## 3. Frontend

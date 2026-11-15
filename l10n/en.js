@@ -2929,6 +2929,7 @@ OC.L10N.register(
         "Revoked": "Revoked",
         "A revoked record answers as unknown on the public page.": "A revoked record answers as unknown on the public page.",
         "Check a signed document": "Check a signed document",
+        "Verify this document": "Verify this document",
         "The document content is unchanged since it was signed.": "The document content is unchanged since it was signed.",
         "The document content was changed after it was signed.": "The document content was changed after it was signed.",
         "Not every signature on this document could be confirmed.": "Not every signature on this document could be confirmed.",

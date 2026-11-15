@@ -990,6 +990,9 @@
             }
         },
         {
+            "SignedArtifactProducer::newVerificationToken": []
+        },
+        {
             "SignedArtifactProducer::produce": {
                 "request": {
                     "id": "req-1",
@@ -1011,7 +1014,8 @@
                         "userId": "alice",
                         "status": "SIGNED"
                     }
-                }
+                },
+                "verificationToken": "0123456789abcdef0123456789abcdef"
             }
         },
         {
@@ -1031,7 +1035,8 @@
                     "assurance": "low",
                     "signedDocumentRef": "file:11@v2"
                 },
-                "signedDocumentRef": "file:11@v2"
+                "signedDocumentRef": "file:11@v2",
+                "token": "0123456789abcdef0123456789abcdef"
             }
         },
         {
@@ -1608,6 +1613,9 @@
             }
         },
         {
+            "SignedArtifactProducer::newVerificationToken": []
+        },
+        {
             "SignedArtifactProducer::produce": {
                 "request": {
                     "id": "req-1",
@@ -1634,7 +1642,8 @@
                         "userId": "alice",
                         "status": "SIGNED"
                     }
-                }
+                },
+                "verificationToken": "0123456789abcdef0123456789abcdef"
             }
         },
         {
@@ -1654,7 +1663,8 @@
                     "assurance": "low",
                     "signedDocumentRef": "file:11@v2"
                 },
-                "signedDocumentRef": "file:11@v2"
+                "signedDocumentRef": "file:11@v2",
+                "token": "0123456789abcdef0123456789abcdef"
             }
         },
         {
