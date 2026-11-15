@@ -53,10 +53,18 @@
 					<button
 						type="button"
 						class="filinq-documents-leaf__sort-button"
-						:aria-expanded="linking === row.record.uuid ? 'true' : 'false'"
+						:aria-expanded="linking === row.record.uuid && linkMode === 'link' ? 'true' : 'false'"
 						:data-testid="'documents-link-' + row.fileId"
 						@click="toggleLinkForm(row)">
 						{{ t('filinq', 'Link to another record') }}
+					</button>
+					<button
+						type="button"
+						class="filinq-documents-leaf__sort-button"
+						:aria-expanded="linking === row.record.uuid && linkMode === 'copy' ? 'true' : 'false'"
+						:data-testid="'documents-copy-' + row.fileId"
+						@click="toggleLinkForm(row, 'copy')">
+						{{ t('filinq', 'Copy to another record') }}
 					</button>
 					<button
 						type="button"
@@ -70,7 +78,7 @@
 				<form
 					v-if="row.record && linking === row.record.uuid"
 					class="filinq-documents-leaf__link-form"
-					@submit.prevent="linkToRecord(row)">
+					@submit.prevent="linkMode === 'copy' ? copyToOtherRecord(row) : linkToRecord(row)">
 					<label>
 						{{ t('filinq', 'Register') }}
 						<input v-model="linkForm.register" type="text" required>
@@ -84,7 +92,7 @@
 						<input v-model="linkForm.id" type="text" required>
 					</label>
 					<button type="submit" class="filinq-documents-leaf__sort-button" :disabled="busy">
-						{{ t('filinq', 'Link') }}
+						{{ linkMode === 'copy' ? t('filinq', 'Copy') : t('filinq', 'Link') }}
 					</button>
 				</form>
 			</li>
@@ -98,7 +106,7 @@
 <script>
 import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
-import { changeDomainLink, linkTarget } from './documentDomainLinks.js'
+import { changeDomainLink, copyToRecord, linkTarget } from './documentDomainLinks.js'
 import { documentLinkRows } from './documentLinkRows.js'
 import { nextSort, sortDocumentRows } from './documentRowSort.js'
 import { hostObjectLeaf } from './hostObjectLeaf.js'
@@ -125,6 +133,7 @@ export default {
 			error: false,
 			sort: { key: 'name', direction: 'asc' },
 			linking: '',
+			linkMode: 'link',
 			linkForm: { register: '', schema: '', id: '' },
 			linkMessage: '',
 			busy: false,
@@ -211,15 +220,52 @@ export default {
 		},
 
 		/**
-		 * Open or close the link form of one document.
+		 * Open or close the link or copy form of one document.
 		 *
 		 * @param {object} row One flat-list row.
+		 * @param {'link'|'copy'} [mode] Link the document, or copy it.
 		 * @spec openspec/changes/specify-capability-rows/tasks.md#task-2.5
+		 * @spec openspec/changes/specify-capability-rows/tasks.md#task-6.1
 		 */
-		toggleLinkForm(row) {
+		toggleLinkForm(row, mode = 'link') {
 			this.linkMessage = ''
-			this.linking = this.linking === row.record.uuid ? '' : row.record.uuid
+			const open = this.linking === row.record.uuid && this.linkMode === mode
+			this.linking = open ? '' : row.record.uuid
+			this.linkMode = mode
 			this.linkForm = { register: '', schema: '', id: '' }
+		},
+
+		/**
+		 * Copy a document to the record the form names; it stays on this
+		 * record too. The server refuses a record the user may not write,
+		 * and nothing is written then.
+		 *
+		 * @param {object} row One flat-list row.
+		 * @return {Promise<void>} Resolves once the answer is shown.
+		 * @spec openspec/changes/specify-capability-rows/tasks.md#task-6.1
+		 */
+		async copyToOtherRecord(row) {
+			const target = linkTarget(this.linkForm)
+			if (target === null) {
+				this.linkMessage = t('filinq', 'Name the register, the record type and the ID of the record.')
+				return
+			}
+			this.busy = true
+			const answer = await copyToRecord(
+				row.fileId,
+				{ register: this.register, schema: this.schema, id: this.objectId },
+				target,
+				this.requestToken(),
+			)
+			this.busy = false
+			if (answer.ok) {
+				this.linking = ''
+				this.linkMessage = t('filinq', 'A copy of {name} is now on the other record.', { name: row.name })
+				return
+			}
+			this.linkMessage = answer.status === 403
+				? t('filinq', 'You may not copy this document to that record.')
+				: t('filinq', 'The document could not be copied.')
 		},
 
 		/**

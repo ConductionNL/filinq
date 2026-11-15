@@ -43,7 +43,8 @@
 
 ## 6. Copy to another record
 
-- [ ] 6.1 Add a copy action to the documents list and to a finished merge job, with the read and write checks on the server before the file is written, and an audit entry on both records (REQ-SCR-018). Verify: PHPUnit for a copy that lands and for a refused target.
+- [x] 6.1 Add a copy action to the documents list and to a finished merge job, with the read and write checks on the server before the file is written, and an audit entry on both records (REQ-SCR-018). Verify: PHPUnit for a copy that lands and for a refused target.
+  - Built: `POST api/case-documents/copy` (`DocumentCopyController`, `DocumentCopyService`) checks that the caller can read the source record and the file and may write the target record (`IntakeAuthorizationGate::mayFileOnto`) before anything is written, refuses with 403 otherwise, writes a new file with the same name and content in the target record's folder (`IntakeFilePlacement::folderFor`), links it to the target with a document record as an upload is, and writes `filinq.document.copied_to` / `copied_from` entries naming the other record in both records' OpenRegister audit trails. The documents leaf has Copy to another record per row and the merge leaf offers it on a finished PDF. Pinned by `DocumentCopyServiceTest` (a copy that lands, a refused target, an unreadable source), `DocumentCopyControllerTest`, `tests/vitest/documentsLeafWidget.spec.js`, `tests/vitest/mergeLeafSelection.spec.js`, `tests/vitest/documentDomainLinks.spec.js`.
 
 ## 7. Intake routing
 

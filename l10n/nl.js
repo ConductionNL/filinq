@@ -3138,7 +3138,13 @@ OC.L10N.register(
         "Who released the document.": "Wie het document vrijgaf.",
         "When the document was released.": "Wanneer het document werd vrijgegeven.",
         "Who withdrew the release.": "Wie de vrijgave introk.",
-        "When the release was withdrawn. A withdrawn release is no longer listed in the portal.": "Wanneer de vrijgave werd ingetrokken. Een ingetrokken vrijgave staat niet meer in het portaal."
+        "When the release was withdrawn. A withdrawn release is no longer listed in the portal.": "Wanneer de vrijgave werd ingetrokken. Een ingetrokken vrijgave staat niet meer in het portaal.",
+        "Copy to another record": "Kopiëren naar een ander dossier",
+        "Copy": "Kopiëren",
+        "A copy of {name} is now on the other record.": "Een kopie van {name} staat nu bij het andere dossier.",
+        "You may not copy this document to that record.": "U mag dit document niet naar dat dossier kopiëren.",
+        "The document could not be copied.": "Het document kon niet worden gekopieerd.",
+        "The PDF is now also on the other record.": "De pdf staat nu ook bij het andere dossier."
     },
     "nplurals=2; plural=(n != 1);"
 )

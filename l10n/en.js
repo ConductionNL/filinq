@@ -3007,7 +3007,13 @@ OC.L10N.register(
         "Who released the document.": "Who released the document.",
         "When the document was released.": "When the document was released.",
         "Who withdrew the release.": "Who withdrew the release.",
-        "When the release was withdrawn. A withdrawn release is no longer listed in the portal.": "When the release was withdrawn. A withdrawn release is no longer listed in the portal."
+        "When the release was withdrawn. A withdrawn release is no longer listed in the portal.": "When the release was withdrawn. A withdrawn release is no longer listed in the portal.",
+        "Copy to another record": "Copy to another record",
+        "Copy": "Copy",
+        "A copy of {name} is now on the other record.": "A copy of {name} is now on the other record.",
+        "You may not copy this document to that record.": "You may not copy this document to that record.",
+        "The document could not be copied.": "The document could not be copied.",
+        "The PDF is now also on the other record.": "The PDF is now also on the other record."
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -11077,6 +11077,76 @@
                     }
                 ]
             }
+        },
+        "/case-documents/copy": {
+            "post": {
+                "operationId": "case-documents-copy",
+                "summary": "Copy a document to another record",
+                "description": "Copy one file of a record to another record: a new file with the same name and content in the target record's folder, linked to the target, with an entry in both audit trails. The caller must be able to read the source and write the target; nothing is written otherwise.",
+                "tags": [
+                    "case-documents"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The copy.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    }
+                },
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "sourceRegister": {
+                                        "type": "string"
+                                    },
+                                    "sourceSchema": {
+                                        "type": "string"
+                                    },
+                                    "sourceId": {
+                                        "type": "string"
+                                    },
+                                    "register": {
+                                        "type": "string"
+                                    },
+                                    "schema": {
+                                        "type": "string"
+                                    },
+                                    "id": {
+                                        "type": "string"
+                                    },
+                                    "fileId": {
+                                        "type": "integer"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "components": {

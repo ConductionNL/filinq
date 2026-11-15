@@ -5,7 +5,7 @@
  * @spec openspec/changes/specify-capability-rows/tasks.md#task-2.5
  */
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { changeDomainLink, domainLinkUrl, linkTarget } from '../../src/integrations/documentDomainLinks.js'
+import { changeDomainLink, copyToRecord, domainLinkUrl, linkTarget } from '../../src/integrations/documentDomainLinks.js'
 
 vi.mock('@nextcloud/router', () => ({
 	generateUrl: (url, params = {}) => '/index.php' + url.replace(/\{(\w+)\}/g, (_, k) => String(params[k])),
@@ -52,5 +52,15 @@ describe('linking a document to another record', () => {
 		globalThis.fetch = vi.fn(async () => { throw new Error('offline') })
 
 		expect(await changeDomainLink('POST', 'rec-1', { register: 'a', schema: 'b', id: 'c' }, 'tok')).toEqual({ ok: false, status: 0, error: '' })
+	})
+
+	it('posts a copy naming the file and both records', async () => {
+		globalThis.fetch = vi.fn(async () => ({ ok: true, status: 200, json: async () => ({}) }))
+
+		const answer = await copyToRecord(5, { register: 'a', schema: 'b', id: 'c' }, { register: 'd', schema: 'e', id: 'f' }, 'tok')
+
+		expect(answer.ok).toBe(true)
+		expect(globalThis.fetch.mock.calls[0][0]).toBe('/index.php/apps/filinq/api/case-documents/copy?fileId=5&sourceRegister=a&sourceSchema=b&sourceId=c&register=d&schema=e&id=f')
+		expect(globalThis.fetch.mock.calls[0][1].method).toBe('POST')
 	})
 })

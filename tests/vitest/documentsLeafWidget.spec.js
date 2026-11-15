@@ -158,4 +158,28 @@ describe('documents leaf', () => {
 		expect(calls).toHaveLength(0)
 		expect(vm.linkMessage).toBe('[t] Name the register, the record type and the ID of the record.')
 	})
+
+	it('copies a document to the record the form names and keeps it here', async () => {
+		answerWith(200, { fileId: 99 })
+		const vm = await leaf()
+		const row = { fileId: 5, name: 'a.pdf', record: { uuid: 'rec-1' } }
+		vm.rows = [row]
+		vm.toggleLinkForm(row, 'copy')
+		expect(vm.linkMode).toBe('copy')
+		vm.linkForm = { register: 'zaken', schema: 'zaak', id: 'z-2' }
+		await vm.copyToOtherRecord(row)
+		expect(calls[0].url).toBe('/index.php/apps/filinq/api/case-documents/copy?fileId=5&sourceRegister=zaken&sourceSchema=zaak&sourceId=z-1&register=zaken&schema=zaak&id=z-2')
+		expect(vm.rows).toEqual([row])
+		expect(vm.linking).toBe('')
+	})
+
+	it('says so when the copy is refused', async () => {
+		answerWith(403, { error: 'no' })
+		const vm = await leaf()
+		const row = { fileId: 5, name: 'a.pdf', record: { uuid: 'rec-1' } }
+		vm.toggleLinkForm(row, 'copy')
+		vm.linkForm = { register: 'zaken', schema: 'zaak', id: 'z-2' }
+		await vm.copyToOtherRecord(row)
+		expect(vm.linkMessage).toBe('[t] You may not copy this document to that record.')
+	})
 })
