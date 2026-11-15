@@ -30,6 +30,7 @@ use OCP\Http\Client\IResponse;
 use OCP\IAppConfig;
 use OCP\IURLGenerator;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use RuntimeException;
 
@@ -168,4 +169,42 @@ class OcsLibreSignClientTest extends TestCase {
 		$this->client('<html>login</html>')->validate(uuid: 'ls-1');
 
 	}//end testAnAnswerWithoutOcsDataIsAnError()
+
+	/**
+	 * A transport failure is logged and surfaces as "could not be reached",
+	 * keeping the original exception as the cause.
+	 *
+	 * @return void
+	 */
+	public function testATransportFailureSaysLibreSignCouldNotBeReached(): void {
+		$cause = new RuntimeException('connection refused');
+		$http = $this->createMock(IClient::class);
+		$http->method('get')->willThrowException($cause);
+		$service = $this->createMock(IClientService::class);
+		$service->method('newClient')->willReturn($http);
+		$urls = $this->createMock(IURLGenerator::class);
+		$urls->method('getAbsoluteURL')->willReturnCallback(static fn (string $path): string => 'https://nc.example' . $path);
+		$config = $this->createMock(IAppConfig::class);
+		$config->method('getValueString')->willReturnCallback(
+			static fn (string $app, string $key, string $default = ''): string => [
+				'libresign_service_uid' => 'signbot',
+				'libresign_service_app_password' => 'app-pass',
+			][$key] ?? $default
+		);
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())->method('warning')->with(
+			'LibreSign call failed: connection refused',
+			['url' => '/ocs/v2.php/apps/libresign/api/v1/file/validate/uuid/ls-1']
+		);
+		$client = new OcsLibreSignClient(clientService: $service, urlGenerator: $urls, config: $config, logger: $logger);
+
+		try {
+			$client->validate(uuid: 'ls-1');
+			$this->fail('A transport failure was swallowed');
+		} catch (RuntimeException $exception) {
+			$this->assertSame('LibreSign could not be reached: connection refused', $exception->getMessage());
+			$this->assertSame($cause, $exception->getPrevious());
+		}
+
+	}//end testATransportFailureSaysLibreSignCouldNotBeReached()
 }//end class

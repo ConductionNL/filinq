@@ -119,6 +119,30 @@ final class MigrateSchemaApplicationIdRunTraceTest extends TestCase {
 	}//end testFailedReadLine()
 
 	/**
+	 * When the old application id cannot be read, the step logs it and does
+	 * nothing, rather than reporting a database error as "nothing to move".
+	 *
+	 * @return void
+	 */
+	public function testAFailedReadOfTheOldAppIdIsLoggedAndMovesNothing(): void {
+		$underNew = $this->createMock(IResult::class);
+		$underNew->method('fetchAll')->willReturn([['slug' => 'a']]);
+		$db = $this->createMock(IDBConnection::class);
+		$db->expects($this->exactly(2))->method('executeQuery')->willReturnOnConsecutiveCalls(
+			$underNew,
+			$this->throwException(new DbException('timeout'))
+		);
+		$db->expects($this->never())->method('executeStatement');
+		$this->logger->expects($this->once())->method('warning')->with(
+			'MigrateSchemaApplicationId: could not read schemas on the old application id; skipping.',
+			['exception' => 'timeout']
+		);
+
+		$this->assertSame(['MigrateSchemaApplicationId: no schemas on the old application id; nothing to do.'], $this->runStep(db: $db));
+
+	}//end testAFailedReadOfTheOldAppIdIsLoggedAndMovesNothing()
+
+	/**
 	 * Run the step and collect its output lines.
 	 *
 	 * @param IDBConnection $db The connection double.

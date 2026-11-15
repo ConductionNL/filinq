@@ -13,6 +13,9 @@
  * @version GIT: <git_id>
  *
  * @link https://www.filinq.app
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\Filinq\Tests\Unit\Service;
@@ -77,7 +80,10 @@ class FileListingServiceTest extends TestCase {
 			$this->mockFileUploadService,
 			$this->mockEntityStatsService,
 			$this->ocrResultRepository(),
-			$this->ocrRunService($this->ocrService())
+			$this->ocrRunService($this->ocrService()),
+			$this->createMock(\OCA\Filinq\Service\ReadableFileResolver::class),
+			$this->createMock(\OCA\Filinq\Kernel\Contracts\RedactionOutputGuardInterface::class),
+			$this->createMock(\OCA\Filinq\Service\FileRecordReferences::class)
 		);
 
 	}//end setUp()
@@ -161,7 +167,10 @@ class FileListingServiceTest extends TestCase {
 			$this->mockFileUploadService,
 			$this->mockEntityStatsService,
 			$this->ocrResultRepository(),
-			$this->ocrRunService($this->ocrService())
+			$this->ocrRunService($this->ocrService()),
+			$this->createMock(\OCA\Filinq\Service\ReadableFileResolver::class),
+			$this->createMock(\OCA\Filinq\Kernel\Contracts\RedactionOutputGuardInterface::class),
+			$this->createMock(\OCA\Filinq\Service\FileRecordReferences::class)
 		);
 
 		$this->mockFileUploadService->method('getCurrentUserId')->willReturn('admin');

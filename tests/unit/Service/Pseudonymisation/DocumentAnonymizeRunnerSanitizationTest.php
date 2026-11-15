@@ -11,6 +11,9 @@
  * @link      https://www.filinq.app
  *
  * @spec openspec/changes/document-sanitization/tasks.md#3-3
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);

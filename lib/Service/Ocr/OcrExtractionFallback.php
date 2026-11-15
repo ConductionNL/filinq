@@ -30,6 +30,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\Ocr;
 
 use OCA\Filinq\Service\OcrService;
+use OCA\Filinq\Service\OpenRegisterTextExtractionCall;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
 use Psr\Log\LoggerInterface;
@@ -43,8 +44,8 @@ use Throwable;
 class OcrExtractionFallback {
 
 	/**
-	 * The OpenRegister method that would take the recovered text
-	 * (ConductionNL/openregister#2033). Not on OpenRegister yet.
+	 * The OpenRegister method that takes the recovered text
+	 * (ConductionNL/openregister#2033).
 	 *
 	 * @var string
 	 */
@@ -150,7 +151,7 @@ class OcrExtractionFallback {
 		}
 
 		try {
-			$textExtractor->{self::INGEST_METHOD}($fileId, $outcome['text']);
+			(new OpenRegisterTextExtractionCall())->provideText(extractor: $textExtractor, fileId: $fileId, text: $outcome['text']);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'OpenRegister did not take the OCR text',

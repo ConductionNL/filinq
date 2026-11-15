@@ -32,8 +32,10 @@ use OCA\Filinq\Kernel\SigningAuditSubject;
 use OCA\Filinq\Service\Signing\PortalSignatureAssurance;
 use OCA\Filinq\Service\Signing\SignerEntries;
 use OCA\Filinq\Service\Signing\SigningAct;
+use OCA\Filinq\Service\Signing\SigningTurn;
 use OCA\Filinq\Service\Support\SigningGuards;
 use OCA\Filinq\Service\Support\SigningOutputs;
+use OCA\OpenRegister\Mcp\Attribute\McpTool;
 use RuntimeException;
 
 /**
@@ -57,6 +59,16 @@ use RuntimeException;
  * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
  */
 class SigningService implements SigningServiceInterface {
+
+	/**
+	 * The app a lifecycle move made on filinq's behalf is recorded against.
+	 */
+	private const APP_ID = 'filinq';
+
+	/**
+	 * The `signingRequest` lifecycle's transition to CANCELLED.
+	 */
+	private const CANCEL_TRANSITION = 'cancel';
 
 	/**
 	 * Valid status transitions for signing requests
@@ -109,6 +121,27 @@ class SigningService implements SigningServiceInterface {
 		'correlationId',
 	];
 
+	// The attribute stands before the docblock for the reason DocumentAgentService
+	// gives: the spec-coverage gate cannot walk past a multi-line attribute's `)]`.
+	//
+	// This is the only signing method an agent may reach, and only to START a
+	// request: sign(), decline(), bulkSign(), cancelRequest() and every class
+	// under Service/Signing/ stay attribute-free. The write hints route the tool
+	// through Hermiq's human-approval gate; Filinq adds no gate of its own.
+
+	#[McpTool(
+		name: 'startSigningRequest',
+		subject: 'signingRequest',
+		action: 'create',
+		description: 'Start a signing request for a document in your Files: give documentFileId, the signers '
+			. '(each with a name and email) and optionally signatureLevel (SES/AES/QES), signingMode '
+			. '(sequential/parallel), provider and deadline. Creates the request and notifies the signers, '
+			. 'so a person must approve the resolved request first. It never signs, declines or cancels.',
+		readOnlyHint: false,
+		destructiveHint: false,
+		idempotentHint: false,
+		scope: 'create'
+	)]
 	/**
 	 * Create a new signing request
 	 *
@@ -122,6 +155,7 @@ class SigningService implements SigningServiceInterface {
 	 *
 	 * @spec openspec/changes/digital-signing-integration/tasks.md#3-2
 	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/hermiq-ai-tooling/specs/filinq-mcp-surface/spec.md#requirement-an-approval-gated-signing-request-initiation-tool-exists-req-ddhat-001
 	 */
 	public function createRequest(array $data): array {
 		// Throws RuntimeException('No authenticated user') when there is no
@@ -513,6 +547,16 @@ class SigningService implements SigningServiceInterface {
 			throw new RuntimeException('Signer has already responded to this request');
 		}
 
+		// Before any evidence is taken or anything is written: a sequential
+		// signer whose turn has not come is refused outright.
+		if ((string)($request['signingMode'] ?? '') !== SigningTurn::PARALLEL) {
+			SigningTurn::assertTurn(
+				request: $request,
+				signerId: $signerId,
+				signers: $this->signerRecords(request: $request, known: [$signerId => $signer])
+			);
+		}
+
 		$signer['identityEvidence'] = $this->guards->assuranceGate->evidenceForAct(
 			request: $request + ['id' => $requestId],
 			signer: $signer + ['id' => $signerId],
@@ -725,8 +769,8 @@ class SigningService implements SigningServiceInterface {
 			throw new RuntimeException('Cannot cancel request in status: ' . ($request['status'] ?? 'unknown'));
 		}
 
+		$this->moveToCancelled(request: $request, requestId: $requestId, store: [$objectService, $register, $schema]);
 		$request['status'] = 'CANCELLED';
-		$objectService->saveObject(object: $request, register: $register, schema: $schema, _rbac: false);
 
 		// Cross-app delegated-signing contract: a cancelled request is terminal
 		// — emit SigningConcludedEvent (status=cancelled) for a delegated request.
@@ -742,6 +786,38 @@ class SigningService implements SigningServiceInterface {
 
 		return $request;
 	}//end cancelRequest()
+
+	/**
+	 * Move a signing request to CANCELLED through its declared lifecycle.
+	 *
+	 * The `signingRequest` schema declares `x-openregister-lifecycle` with a
+	 * `cancel` transition, so the move belongs there (ADR-031): the lifecycle
+	 * engine applies the named transition, its declared guards and actions, and
+	 * the transitioned event. It runs as the system on filinq's behalf because
+	 * the caller was already checked (SigningCancellationService admits only the
+	 * creator, the bulk and envelope paths their own owner), as the save it
+	 * replaces did with `_rbac: false`. An OpenRegister without the engine gets
+	 * that save, so the request is still cancelled.
+	 *
+	 * @param array<string, mixed>                       $request   The request as read.
+	 * @param string                                     $requestId The request id.
+	 * @param array{0: object, 1: string, 2: string}     $store     The object service, register and schema of the fallback save.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md#requirement-a-cancelled-request-must-be-visibly-cancelled-and-must-not-be-re-signable
+	 */
+	private function moveToCancelled(array $request, string $requestId, array $store): void {
+		$engine = $this->settingsService->getTransitionEngine();
+		if ($engine !== null) {
+			$engine->transitionAsSystem(objectId: $requestId, action: self::CANCEL_TRANSITION, app: self::APP_ID);
+			return;
+		}
+
+		[$objectService, $register, $schema] = $store;
+		$request['status'] = 'CANCELLED';
+		$objectService->saveObject(object: $request, register: $register, schema: $schema, _rbac: false);
+	}//end moveToCancelled()
 
 	/**
 	 * Bulk sign multiple signing requests
@@ -882,6 +958,54 @@ class SigningService implements SigningServiceInterface {
 		);
 
 	}//end updateRequestStatus()
+
+	/**
+	 * The signer records listed before one signer on a request, plus that signer, by id.
+	 *
+	 * Only the signers listed before this one are read: a signer listed after
+	 * it is placed after it unless its own order says otherwise, and reading
+	 * every record on every signature would load the whole request each time.
+	 * A record that cannot be read is kept as UNREADABLE, so it holds the turn
+	 * rather than being skipped.
+	 *
+	 * @param array<string, mixed>                $request The signing request.
+	 * @param array<string, array<string, mixed>> $known   The signing signer's record, by id.
+	 *
+	 * @return array<string, array<string, mixed>> The records, by id.
+	 *
+	 * @spec openspec/changes/finish-half-built-capabilities/tasks.md#4-signing
+	 */
+	private function signerRecords(array $request, array $known): array {
+		$earlier = [];
+		foreach (($request['signerIds'] ?? []) as $signerId) {
+			$signerId = (string)$signerId;
+			if (isset($known[$signerId]) === true) {
+				break;
+			}
+
+			$earlier[] = $signerId;
+		}
+
+		if ($earlier === []) {
+			return $known;
+		}
+
+		$objectService = $this->settingsService->getObjectService();
+		['register' => $signerRegister, 'schema' => $signerSchema] = $this->requireSignerRecordBinding();
+
+		$records = [];
+		foreach ($earlier as $signerId) {
+			try {
+				$records[$signerId] = $this->toArray(
+					object: $objectService->find(id: $signerId, register: $signerRegister, schema: $signerSchema, _rbac: false)
+				);
+			} catch (\Throwable $e) {
+				$records[$signerId] = ['status' => 'UNREADABLE'];
+			}
+		}
+
+		return $records + $known;
+	}//end signerRecords()
 
 	/**
 	 * Read the signer records of a request in order, stopping at the first that has not signed.

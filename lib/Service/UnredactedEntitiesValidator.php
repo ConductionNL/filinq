@@ -76,30 +76,36 @@ class UnredactedEntitiesValidator {
 	 */
 	public function validate(array $entries): ?array {
 		foreach ($entries as $idx => $entry) {
-			if (is_array($entry) === false) {
-				return $this->badRequest(
-					message: $this->l10n->t('Each unredactedEntities entry must be an object (index %s)', [$idx])
-				);
-			}
-
-			$error = $this->validateIdentityFields(entry: $entry, idx: $idx);
+			$error = $this->entryError(entry: $entry, idx: $idx);
 			if ($error !== null) {
 				return $error;
 			}
-
-			$error = $this->validatePublicationBases(entry: $entry, idx: $idx);
-			if ($error !== null) {
-				return $error;
-			}
-
-			$error = $this->validateContactFields(entry: $entry, idx: $idx);
-			if ($error !== null) {
-				return $error;
-			}
-		}//end foreach
+		}
 
 		return null;
 	}//end validate()
+
+	/**
+	 * Validate one entry: its shape, then its identity, publication basis and contact fields.
+	 *
+	 * @param mixed      $entry The entry being validated.
+	 * @param int|string $idx   The entry's index, used in the error message.
+	 *
+	 * @return array{status: int, body: array<string, mixed>}|null HTTP 400 payload, or null when valid.
+	 *
+	 * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-1
+	 */
+	private function entryError(mixed $entry, int|string $idx): ?array {
+		if (is_array($entry) === false) {
+			return $this->badRequest(
+				message: $this->l10n->t('Each unredactedEntities entry must be an object (index %s)', [$idx])
+			);
+		}
+
+		return $this->validateIdentityFields(entry: $entry, idx: $idx)
+			?? $this->validatePublicationBases(entry: $entry, idx: $idx)
+			?? $this->validateContactFields(entry: $entry, idx: $idx);
+	}//end entryError()
 
 	/**
 	 * Validate the required identity fields of one entry.
@@ -118,20 +124,34 @@ class UnredactedEntitiesValidator {
 			);
 		}
 
-		if (empty($entry['entityText']) === true || is_string($entry['entityText']) === false) {
+		return $this->validateTextFields(entry: $entry, idx: $idx);
+	}//end validateIdentityFields()
+
+	/**
+	 * Validate the required entity text and entity type of one entry.
+	 *
+	 * @param array<string, mixed> $entry The entry being validated.
+	 * @param int|string $idx The entry's index, used in the error message.
+	 *
+	 * @return array{status: int, body: array<string, mixed>}|null HTTP 400 payload, or null when valid.
+	 *
+	 * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-1
+	 */
+	private function validateTextFields(array $entry, int|string $idx): ?array {
+		if ($this->isFilledString(value: ($entry['entityText'] ?? null)) === false) {
 			return $this->badRequest(
 				message: $this->l10n->t('unredactedEntities[%s].entityText is required and must be a string', [$idx])
 			);
 		}
 
-		if (empty($entry['entityType']) === true || is_string($entry['entityType']) === false) {
+		if ($this->isFilledString(value: ($entry['entityType'] ?? null)) === false) {
 			return $this->badRequest(
 				message: $this->l10n->t('unredactedEntities[%s].entityType is required and must be a string', [$idx])
 			);
 		}
 
 		return null;
-	}//end validateIdentityFields()
+	}//end validateTextFields()
 
 	/**
 	 * Validate the publicationBases[] field of one entry.
@@ -150,22 +170,34 @@ class UnredactedEntitiesValidator {
 			);
 		}
 
-		if (empty($entry['publicationBases']) === true) {
+		return $this->validatePublicationBaseItems(bases: $entry['publicationBases'], idx: $idx);
+	}//end validatePublicationBases()
+
+	/**
+	 * Validate that a publicationBases[] list holds at least one basis, all strings.
+	 *
+	 * @param array<mixed> $bases The publication bases of one entry.
+	 * @param int|string   $idx   The entry's index, used in the error message.
+	 *
+	 * @return array{status: int, body: array<string, mixed>}|null HTTP 400 payload, or null when valid.
+	 *
+	 * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-1
+	 */
+	private function validatePublicationBaseItems(array $bases, int|string $idx): ?array {
+		if (empty($bases) === true) {
 			return $this->badRequest(
 				message: $this->l10n->t('unredactedEntities[%s].publicationBases must contain at least one basis', [$idx])
 			);
 		}
 
-		foreach ($entry['publicationBases'] as $base) {
-			if (is_string($base) === false) {
-				return $this->badRequest(
-					message: $this->l10n->t('Each entry in unredactedEntities[%s].publicationBases must be a string', [$idx])
-				);
-			}
+		if ($this->allStrings(values: $bases) === false) {
+			return $this->badRequest(
+				message: $this->l10n->t('Each entry in unredactedEntities[%s].publicationBases must be a string', [$idx])
+			);
 		}
 
 		return null;
-	}//end validatePublicationBases()
+	}//end validatePublicationBaseItems()
 
 	/**
 	 * Validate the optional contact fields of one entry.
@@ -178,13 +210,13 @@ class UnredactedEntitiesValidator {
 	 * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-1
 	 */
 	private function validateContactFields(array $entry, int|string $idx): ?array {
-		if (isset($entry['contactEmail']) === true && is_string($entry['contactEmail']) === false) {
+		if ($this->isGivenNonString(value: ($entry['contactEmail'] ?? null)) === true) {
 			return $this->badRequest(
 				message: $this->l10n->t('unredactedEntities[%s].contactEmail must be a string', [$idx])
 			);
 		}
 
-		if (isset($entry['contactAddress']) === true && is_string($entry['contactAddress']) === false) {
+		if ($this->isGivenNonString(value: ($entry['contactAddress'] ?? null)) === true) {
 			return $this->badRequest(
 				message: $this->l10n->t('unredactedEntities[%s].contactAddress must be a string', [$idx])
 			);
@@ -192,6 +224,48 @@ class UnredactedEntitiesValidator {
 
 		return null;
 	}//end validateContactFields()
+
+	/**
+	 * Whether a value is a non-empty string.
+	 *
+	 * @param mixed $value The field value, null when absent.
+	 *
+	 * @return bool True for a string that is not empty().
+	 */
+	private function isFilledString(mixed $value): bool {
+		return empty($value) === false && is_string($value) === true;
+
+	}//end isFilledString()
+
+	/**
+	 * Whether an optional field is given but is not a string.
+	 *
+	 * @param mixed $value The field value, null when absent.
+	 *
+	 * @return bool True when the value is set and not a string.
+	 */
+	private function isGivenNonString(mixed $value): bool {
+		return $value !== null && is_string($value) === false;
+
+	}//end isGivenNonString()
+
+	/**
+	 * Whether every value in a list is a string.
+	 *
+	 * @param array<mixed> $values The values.
+	 *
+	 * @return bool True when none of them is something else.
+	 */
+	private function allStrings(array $values): bool {
+		foreach ($values as $value) {
+			if (is_string($value) === false) {
+				return false;
+			}
+		}
+
+		return true;
+
+	}//end allStrings()
 
 	/**
 	 * Build the HTTP 400 status/body pair for a validation failure.

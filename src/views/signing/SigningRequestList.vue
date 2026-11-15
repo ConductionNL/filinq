@@ -1,4 +1,8 @@
 <!--
+  - SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
+<!--
 	@visual exclude Deliberately unregistered, so no route reaches it and no
 	browser can drive it. Superseded by the type:"index" SigningRequests page
 	(Phase 8 decomposition — see that page's _note in src/manifest.json),

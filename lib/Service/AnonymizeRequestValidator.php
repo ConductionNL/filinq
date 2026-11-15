@@ -50,6 +50,13 @@ class AnonymizeRequestValidator {
 	private readonly UnredactedEntitiesValidator $unredactedValidator;
 
 	/**
+	 * The shared request rules, built on first use.
+	 *
+	 * @var AnonymizeRequestRules|null
+	 */
+	private ?AnonymizeRequestRules $rules = null;
+
+	/**
 	 * Constructor for AnonymizeRequestValidator
 	 *
 	 * @param IL10N $l10n Translator for the user-facing validation messages.
@@ -81,11 +88,8 @@ class AnonymizeRequestValidator {
 	 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-2.2
 	 */
 	public function validateBody(array $params): array {
-		$entities = ($params['entities'] ?? []);
-		if (is_array($entities) === false || empty($entities) === true) {
-			return $this->rejected(
-				error: $this->badRequest(message: $this->l10n->t('No entities provided for anonymization'))
-			);
+		if ($this->rules()->hasNoEntities(params: $params) === true) {
+			return $this->rules()->refused(message: $this->l10n->t('No entities provided for anonymization'));
 		}
 
 		$flags = $this->validatedFlags(params: $params);
@@ -98,17 +102,10 @@ class AnonymizeRequestValidator {
 			return $lists;
 		}
 
-		return [
-			'error' => null,
-			'request' => [
-				'entities' => $entities,
-				'hasStrayBases' => $this->hasStrayBases(entities: $entities),
-				'appendBasisSummary' => $flags['request']['appendBasisSummary'],
-				'reversible' => $flags['request']['reversible'],
-				'unredactedEntities' => $lists['request']['unredactedEntities'],
-				'overrides' => $lists['request']['overrides'],
-			],
-		];
+		$entities = $params['entities'];
+		$request = ['entities' => $entities, 'hasStrayBases' => $this->rules()->hasStrayBases(entities: $entities)];
+
+		return ['error' => null, 'request' => $request + $flags['request'] + $lists['request']];
 
 	}//end validateBody()
 
@@ -123,12 +120,12 @@ class AnonymizeRequestValidator {
 	private function validatedFlags(array $params): array {
 		$appendBasisSummary = $this->extractAppendBasisSummary(params: $params);
 		if (is_bool($appendBasisSummary) === false) {
-			return $this->rejected(error: $appendBasisSummary);
+			return $this->rules()->rejected(error: $appendBasisSummary);
 		}
 
 		$reversible = $this->extractReversible(params: $params);
 		if (is_bool($reversible) === false) {
-			return $this->rejected(error: $reversible);
+			return $this->rules()->rejected(error: $reversible);
 		}
 
 		return ['error' => null, 'request' => ['appendBasisSummary' => $appendBasisSummary, 'reversible' => $reversible]];
@@ -146,26 +143,22 @@ class AnonymizeRequestValidator {
 	private function validatedLists(array $params): array {
 		$unredacted = ($params['unredactedEntities'] ?? []);
 		if (is_array($unredacted) === false) {
-			return $this->rejected(
-				error: $this->badRequest(message: $this->l10n->t('unredactedEntities must be an array'))
-			);
+			return $this->rules()->refused(message: $this->l10n->t('unredactedEntities must be an array'));
 		}
 
 		$unredactedError = $this->unredactedValidator->validate(entries: $unredacted);
 		if ($unredactedError !== null) {
-			return $this->rejected(error: $unredactedError);
+			return $this->rules()->rejected(error: $unredactedError);
 		}
 
 		$overrides = ($params['acknowledgedOverrides'] ?? []);
 		if (is_array($overrides) === false) {
-			return $this->rejected(
-				error: $this->badRequest(message: $this->l10n->t('acknowledgedOverrides must be an array'))
-			);
+			return $this->rules()->refused(message: $this->l10n->t('acknowledgedOverrides must be an array'));
 		}
 
 		$overridesError = $this->validateOverrides(overrides: $overrides);
 		if ($overridesError !== null) {
-			return $this->rejected(error: $overridesError);
+			return $this->rules()->rejected(error: $overridesError);
 		}
 
 		return ['error' => null, 'request' => ['unredactedEntities' => $unredacted, 'overrides' => $overrides]];
@@ -192,7 +185,7 @@ class AnonymizeRequestValidator {
 
 		$value = $params['appendBasisSummary'];
 		if (is_bool($value) === false) {
-			return $this->badRequest(message: $this->l10n->t('appendBasisSummary must be a boolean'));
+			return $this->rules()->badRequest(message: $this->l10n->t('appendBasisSummary must be a boolean'));
 		}
 
 		return $value;
@@ -219,7 +212,7 @@ class AnonymizeRequestValidator {
 		}
 
 		if (is_bool($params['reversible']) === false) {
-			return $this->badRequest(message: $this->l10n->t('reversible must be true or false'));
+			return $this->rules()->badRequest(message: $this->l10n->t('reversible must be true or false'));
 		}
 
 		return $params['reversible'];
@@ -245,7 +238,7 @@ class AnonymizeRequestValidator {
 		foreach ($overrides as $idx => $override) {
 			$message = $this->overrideProblem(idx: $idx, override: $override);
 			if ($message !== '') {
-				return $this->badRequest(message: $message);
+				return $this->rules()->badRequest(message: $message);
 			}
 		}
 
@@ -292,55 +285,12 @@ class AnonymizeRequestValidator {
 	}//end isNonEmptyString()
 
 	/**
-	 * Detect stray `bases[]` fields on entity entries.
+	 * The request rules this validator shares with the other anonymize validator.
 	 *
-	 * Bases are set through OpenRegister's PATCH /api/entity-relations/{id};
-	 * a stray field on the anonymize payload is ignored but reported back as
-	 * `ignoredFields` for GDPR accountability.
-	 *
-	 * @param array<int, mixed> $entities The submitted entity entries.
-	 *
-	 * @return bool True when at least one entry carries a `bases` key.
-	 *
-	 * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-1
+	 * @return AnonymizeRequestRules The rules.
 	 */
-	private function hasStrayBases(array $entities): bool {
-		foreach ($entities as $entity) {
-			if (is_array($entity) === true && array_key_exists('bases', $entity) === true) {
-				return true;
-			}
-		}
-
-		return false;
-	}//end hasStrayBases()
-
-	/**
-	 * Wrap a validation failure in the validateBody() return shape.
-	 *
-	 * @param array{status: int, body: array<string, mixed>} $error The failing status/body pair.
-	 *
-	 * @return array{error: array{status: int, body: array<string, mixed>}, request: null} The rejection.
-	 *
-	 * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-1
-	 */
-	private function rejected(array $error): array {
-		return ['error' => $error, 'request' => null];
-	}//end rejected()
-
-	/**
-	 * Build the HTTP 400 status/body pair for a validation failure.
-	 *
-	 * @param string $message The already-translated error message.
-	 *
-	 * @return array{status: int, body: array<string, mixed>} The 400 payload.
-	 *
-	 * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-1
-	 */
-	private function badRequest(string $message): array {
-		return [
-			'status' => 400,
-			'body' => ['error' => $message],
-		];
-
-	}//end badRequest()
+	private function rules(): AnonymizeRequestRules {
+		$this->rules ??= new AnonymizeRequestRules();
+		return $this->rules;
+	}//end rules()
 }//end class

@@ -13,6 +13,7 @@ import Settings from './Settings.vue'
 import { renderStubbed } from '../../../tests/jest/renderGolden.js'
 import { defaultSettings } from '../../services/settingsDefaults.js'
 
+jest.mock('@nextcloud/auth', () => ({ getRequestToken: () => 'test-token' }))
 jest.mock('@nextcloud/dialogs', () => ({
 	showError: () => {},
 	showSuccess: () => {},

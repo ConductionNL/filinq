@@ -39,7 +39,7 @@ class LanguageClassifier {
 	 *
 	 * @var string[]
 	 */
-	private const DUTCH_WORDS = [
+	public const DUTCH_WORDS = [
 		'de',
 		'het',
 		'een',
@@ -57,7 +57,7 @@ class LanguageClassifier {
 	 *
 	 * @var string[]
 	 */
-	private const ENGLISH_WORDS = [
+	public const ENGLISH_WORDS = [
 		'the',
 		'be',
 		'to',
@@ -92,7 +92,7 @@ class LanguageClassifier {
 	 *
 	 * @spec openspec/specs/metadata-enrichment/spec.md
 	 */
-	private function countWordOccurrences(string $text, array $words): int {
+	public function countWordOccurrences(string $text, array $words): int {
 		$count = 0;
 		foreach ($words as $word) {
 			$count += substr_count($text, ' ' . $word . ' ');

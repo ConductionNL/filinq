@@ -148,14 +148,14 @@ class PublicationControllerTest extends TestCase {
 	 */
 	public function testCategoriesReadinessAndDestructionDate(): void {
 		$platform = $this->createMock(OpenCatalogiPlatform::class);
-		$platform->method('categories')->willReturn([['code' => 'c_8c840238', 'label' => 'Adviezen']]);
+		$platform->method('categories')->willReturn([['code' => 'infocat009', 'label' => 'Adviezen']]);
 		$pipeline = $this->createMock(PublicationPipelineService::class);
 		$pipeline->method('evaluate')->willReturn(['uuid' => 'mine', 'status' => 'ready']);
 		$pipeline->method('setDestructionDate')->willThrowException(new \InvalidArgumentException('A destruction date needs a date (YYYY-MM-DD) and its source', 400));
 
 		$controller = $this->controller(pipeline: $pipeline, record: ['uuid' => 'mine', 'documentFileRef' => '42'], platform: $platform);
 
-		$this->assertSame('c_8c840238', $controller->categories()->getData()['results'][0]['code']);
+		$this->assertSame('infocat009', $controller->categories()->getData()['results'][0]['code']);
 		$this->assertSame('ready', $controller->readiness('mine')->getData()['status']);
 		$this->assertSame(400, $controller->destructionDate('mine')->getStatus());
 
@@ -174,7 +174,8 @@ class PublicationControllerTest extends TestCase {
 		$routes = require __DIR__ . '/../../../appinfo/routes.php';
 		$publication = array_values(array_filter($routes['routes'], static fn (array $r): bool => str_starts_with($r['name'], 'publication#')));
 
-		$this->assertCount(9, $publication);
+		// Each route is declared once and served at its /api/v1/ twin too (ApiPathAliasesTest).
+		$this->assertCount(expectedCount: 18, haystack: $publication);
 		foreach ($publication as $route) {
 			$this->assertStringNotContainsString('log', $route['url']);
 			$this->assertNotSame('DELETE', $route['verb']);

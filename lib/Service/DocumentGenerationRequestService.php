@@ -3,6 +3,9 @@
 /**
  * Document Generation Request Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * The one place a generation request from OUTSIDE Filinq's own UI is carried
  * out: the `filinq.generate-document` flow node and the
  * DocumentGenerationRequestedEvent command listener both call generate(), so
@@ -29,9 +32,6 @@
  * @link https://www.filinq.app
  *
  * @spec openspec/changes/flow-generate-document-node/specs/flow-document-generation/spec.md#requirement-one-generation-path-for-the-flow-node-the-command-event-and-the-api
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);

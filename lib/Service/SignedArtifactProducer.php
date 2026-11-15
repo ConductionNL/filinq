@@ -3,6 +3,9 @@
 /**
  * Signed Artifact Producer
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Produces and stores the verifiable signed artifact for a completing signing
  * request, and resolves the two inputs it needs: the target document's `File`
  * node and a human label for the completing signer.
@@ -27,9 +30,6 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @spec openspec/specs/document-signing/spec.md
  * @spec openspec/specs/portal-signing-surface/spec.md

@@ -56,6 +56,7 @@ use Psr\Log\NullLogger;
  * @covers \OCA\Filinq\Controller\TemplatesController
  * @covers \OCA\Filinq\Controller\ValidationController
  * @covers \OCA\Filinq\Controller\Support\ControllerFeedback
+ * @uses   \OCA\Filinq\Controller\PrintJobAction
  */
 class NotAuthenticatedResponseTest extends TestCase {
 

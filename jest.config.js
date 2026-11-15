@@ -1,3 +1,7 @@
+/**
+ * SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
 module.exports = {
 	transform: {
 		'^.+\\.vue$': '@vue/vue3-jest',
@@ -8,6 +12,7 @@ module.exports = {
 	},
 	moduleFileExtensions: ['js', 'json', 'vue', 'ts'],
 	testEnvironment: 'jest-environment-jsdom',
+	setupFiles: ['<rootDir>/tests/jest/setup.js'],
 	// Playwright e2e specs have their own runner (npm run test:e2e).
 	// tests/unit/reachability.spec.js has its own runner too (npm run
 	// test:unit / vitest.config.js) — it's a pure Node fs/path static
