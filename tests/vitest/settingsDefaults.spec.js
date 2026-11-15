@@ -12,6 +12,7 @@ import {
 	defaultOcrLanguages,
 	defaultSettings,
 	emptyOcrStatus,
+	emptyQpdfStatus,
 	emptyVeraPdfStatus,
 } from '../../src/services/settingsDefaults.js'
 
@@ -70,6 +71,8 @@ describe('the OCR and validator defaults', () => {
 			tesseractAvailable: false,
 			tesseractVersion: null,
 		})
+		expect(emptyQpdfStatus()).toEqual({ available: false, version: null })
+		expect(emptyQpdfStatus()).not.toBe(emptyQpdfStatus())
 		expect(emptyVeraPdfStatus()).toEqual({
 			enabled: true,
 			available: false,
