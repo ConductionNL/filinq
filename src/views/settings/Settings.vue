@@ -298,6 +298,17 @@
 				</NcNoteCard>
 			</div>
 
+			<!-- qpdf availability: unlocking a password-protected PDF needs it (REQ-PPR-003) -->
+			<div class="setting-item" data-testid="qpdf-status">
+				<NcNoteCard :type="qpdfStatus.available ? 'success' : 'warning'">
+					{{
+						qpdfStatus.available
+							? t('filinq', 'qpdf is installed: {version}', { version: qpdfStatus.version || 'unknown' })
+							: t('filinq', 'qpdf is not installed. Install qpdf on the server to remove the password of a locked PDF.')
+					}}
+				</NcNoteCard>
+			</div>
+
 			<!-- OCR enable/disable toggle -->
 			<SettingSwitchRow
 				v-model="settings.ocr_enabled"
@@ -925,6 +936,7 @@ import {
 	defaultOcrLanguages,
 	defaultSettings,
 	emptyOcrStatus,
+	emptyQpdfStatus,
 	emptyVeraPdfStatus,
 } from '../../services/settingsDefaults.js'
 import { initialSections } from '../../services/settingsSections.js'
@@ -1079,6 +1091,7 @@ export default {
 			confidentialityVocabularyError: null,
 			ocrLanguages: defaultOcrLanguages(),
 			ocrStatus: emptyOcrStatus(),
+			qpdfStatus: emptyQpdfStatus(),
 			veraPdfStatus: emptyVeraPdfStatus(),
 		}
 	},
@@ -1316,6 +1329,7 @@ export default {
 						tesseractAvailable: false,
 						tesseractVersion: null,
 					}
+					this.qpdfStatus = data.qpdfStatus || emptyQpdfStatus()
 
 					// Grondslag-per-entity-type: selectable types, available
 					// bases, and the saved mapping (object keyed by type).

@@ -77,6 +77,20 @@ export function emptyOcrStatus() {
 }
 
 /**
+ * The qpdf status before it is read: not installed.
+ *
+ * @return {{available: boolean, version: null}} The status.
+ *
+ * @spec openspec/changes/intake-pdf-password-removal/tasks.md#2-screens
+ */
+export function emptyQpdfStatus() {
+	return {
+		available: false,
+		version: null,
+	}
+}
+
+/**
  * The PDF/A validator status before it is read: enabled, not available.
  *
  * @return {{enabled: boolean, available: boolean, version: string}} The status.

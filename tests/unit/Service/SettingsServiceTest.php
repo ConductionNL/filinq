@@ -24,6 +24,7 @@ use OCA\Filinq\Service\LegalBasisProposalService;
 use OCA\Filinq\Service\OcrService;
 use OCA\Filinq\Service\OpenRegisterAvailabilityService;
 use OCA\Filinq\Service\OpenRegisterServiceLocator;
+use OCA\Filinq\Service\QpdfDecryptor;
 use OCA\Filinq\Service\RegisterDiscoveryService;
 use OCA\Filinq\Service\Review\CertaintyThresholds;
 use OCA\Filinq\Service\Review\ReviewSettingsRules;
@@ -115,6 +116,50 @@ class SettingsServiceTest extends TestCase {
 		);
 
 	}//end setUp()
+
+	/**
+	 * The settings service with this qpdf probe (null: none wired).
+	 *
+	 * @param QpdfDecryptor|null $qpdf The probe.
+	 *
+	 * @return SettingsService
+	 */
+	private function withQpdf(?QpdfDecryptor $qpdf): SettingsService {
+		return new SettingsService(
+			$this->mockConfig,
+			$this->mockLogger,
+			new RegisterSetup(discovery: $this->mockDiscoveryService, initializer: $this->mockInitializer),
+			$this->mockOcrService,
+			$this->mockBasisProposal,
+			$this->mockOpenRegister,
+			qpdf: $qpdf
+		);
+	}//end withQpdf()
+
+	/**
+	 * An installed qpdf is reported with its version line.
+	 *
+	 * @return void
+	 */
+	public function testQpdfStatusNamesTheInstalledVersion(): void {
+		$qpdf = $this->createMock(QpdfDecryptor::class);
+		$qpdf->method('version')->willReturn('qpdf version 11.9.0');
+
+		$this->assertSame(['available' => true, 'version' => 'qpdf version 11.9.0'], $this->withQpdf(qpdf: $qpdf)->getQpdfStatus());
+	}//end testQpdfStatusNamesTheInstalledVersion()
+
+	/**
+	 * qpdf that does not answer, or no probe at all, is reported as not installed.
+	 *
+	 * @return void
+	 */
+	public function testQpdfStatusWithoutQpdfIsNotInstalled(): void {
+		$qpdf = $this->createMock(QpdfDecryptor::class);
+		$qpdf->method('version')->willReturn(null);
+
+		$this->assertSame(['available' => false, 'version' => null], $this->withQpdf(qpdf: $qpdf)->getQpdfStatus());
+		$this->assertSame(['available' => false, 'version' => null], $this->withQpdf(qpdf: null)->getQpdfStatus());
+	}//end testQpdfStatusWithoutQpdfIsNotInstalled()
 
 	/**
 	 * Test getObjectService throws when OpenRegister not installed

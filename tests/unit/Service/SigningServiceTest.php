@@ -39,6 +39,7 @@ use OCA\Filinq\Service\SigningService;
 use OCA\Filinq\Service\Support\SigningGuards;
 use OCA\Filinq\Service\Support\SigningOutputs;
 use OCA\OpenRegister\Db\AuditTrail;
+use OCA\OpenRegister\Db\AuditTrail\ObjectAuditEvent;
 use OCA\OpenRegister\Db\AuditTrailMapper;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Service\ObjectService;
@@ -274,8 +275,9 @@ class SigningServiceTest extends TestCase {
 		$trail = $this->createMock(AuditTrail::class);
 		$trail->method('jsonSerialize')->willReturn([]);
 		$mapper = $this->createMock(AuditTrailMapper::class);
-		$mapper->method('createAuditTrailEntry')->willReturnCallback(
-			function (ObjectEntity $object, string $action, array $context) use ($trail): AuditTrail {
+		$mapper->method('recordObjectEvent')->willReturnCallback(
+			function (ObjectAuditEvent $event) use ($trail): AuditTrail {
+				[$action, $context] = [$event->action, $event->context];
 				$this->persistedAudits[] = [$action, $context];
 				return $trail;
 			}
