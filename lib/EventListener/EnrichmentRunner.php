@@ -26,9 +26,8 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\EventListener;
 
-use OCA\Filinq\Kernel\Contracts\MetadataServiceInterface;
+use OCA\Filinq\Kernel\Contracts\InboundClassificationServiceInterface;
 use OCA\Filinq\Kernel\Contracts\SettingsServiceInterface;
-use OCA\Filinq\Service\InboundClassificationService;
 use OCP\AppFramework\Db\DoesNotExistException;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -50,7 +49,7 @@ class EnrichmentRunner {
 	/**
 	 * Constructor.
 	 *
-	 * @param InboundClassificationService|null $classification Suggests a type, correspondent and dossier for an
+	 * @param InboundClassificationServiceInterface|null $classification Suggests a type, correspondent and dossier for an
 	 *                                                          inbound document; null leaves classification out.
 	 *
 	 * @return void
@@ -58,7 +57,7 @@ class EnrichmentRunner {
 	 * @spec openspec/changes/inbound-auto-classification/tasks.md#2-3
 	 */
 	public function __construct(
-		private readonly ?InboundClassificationService $classification = null,
+		private readonly ?InboundClassificationServiceInterface $classification = null,
 	) {
 
 	}//end __construct()
@@ -75,12 +74,12 @@ class EnrichmentRunner {
 	 */
 	public function withClassificationFrom(ContainerInterface $container): self {
 		try {
-			$service = $container->get(InboundClassificationService::class);
+			$service = $container->get(InboundClassificationServiceInterface::class);
 		} catch (Throwable) {
 			return $this;
 		}
 
-		if (($service instanceof InboundClassificationService) === false) {
+		if (($service instanceof InboundClassificationServiceInterface) === false) {
 			return $this;
 		}
 
@@ -151,81 +150,76 @@ class EnrichmentRunner {
 	/**
 	 * Enrich an object with metadata if enrichment is enabled
 	 *
-	 * @param mixed $object The OpenRegister object
-	 * @param MetadataServiceInterface $metadataService The metadata service
-	 * @param SettingsServiceInterface $settingsService The settings service
-	 * @param LoggerInterface $logger The logger instance
-	 * @param string $logContext Context string for logging
+	 * @param mixed               $object     The OpenRegister object
+	 * @param ObjectEventServices $services   The metadata, settings and logging services
+	 * @param string              $logContext Context string for logging
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/specs/metadata-enrichment/spec.md
 	 */
-	public function enrichObject(
-		mixed $object,
-		MetadataServiceInterface $metadataService,
-		SettingsServiceInterface $settingsService,
-		LoggerInterface $logger,
-		string $logContext,
-	): void {
+	public function enrichObject(mixed $object, ObjectEventServices $services, string $logContext): void {
+		$logger = $services->logger;
 		$objectId = $object->getUuid();
 
 		$logger->info(
 			'Filinq: Processing ' . $logContext,
-			[
-				'objectId' => $objectId,
-				'schemaId' => $object->getSchema(),
-				'registerId' => $object->getRegister(),
-			]
+			['objectId' => $objectId, 'schemaId' => $object->getSchema(), 'registerId' => $object->getRegister()]
 		);
 
 		$this->classify(object: $object, logger: $logger);
 
 		try {
-			if ($this->isEnrichmentEnabled(settingsService: $settingsService) === false) {
-				return;
+			$metadata = $this->enrichAndSave(object: $object, services: $services);
+			if ($metadata !== []) {
+				$logger->info(
+					'Filinq: Metadata enrichment completed for ' . $logContext,
+					['objectId' => $objectId, 'enrichedFields' => array_keys($metadata)]
+				);
 			}
-
-			$metadata = $metadataService->enhanceMetadata($object->getObject());
-
-			if (empty($metadata) === true) {
-				return;
-			}
-
-			// Event listeners run without a user session in webcron/background
-			// contexts; persist as a trusted system operation so OpenRegister
-			// RBAC does not deny the write as 'Anonymous'.
-			$metadataService->saveEnrichedMetadataAsSystem(
-				$objectId,
-				(string)$object->getRegister(),
-				(string)$object->getSchema(),
-				$metadata
-			);
-
-			$logger->info(
-				'Filinq: Metadata enrichment completed for ' . $logContext,
-				[
-					'objectId' => $objectId,
-					'enrichedFields' => array_keys($metadata),
-				]
-			);
 		} catch (DoesNotExistException $e) {
 			$logger->debug(
 				'Filinq: Skipped metadata enrichment for ' . $logContext . ', the object is not readable',
-				[
-					'objectId' => $objectId,
-					'exception' => $e->getMessage(),
-				]
+				['objectId' => $objectId, 'exception' => $e->getMessage()]
 			);
 		} catch (\Exception $e) {
 			$logger->error(
 				'Filinq: Failed to enrich metadata for ' . $logContext,
-				[
-					'objectId' => $objectId,
-					'exception' => $e->getMessage(),
-				]
+				['objectId' => $objectId, 'exception' => $e->getMessage()]
 			);
 		}//end try
 
 	}//end enrichObject()
+
+	/**
+	 * Enhance an object's metadata and write it back as a system operation.
+	 *
+	 * @param mixed               $object   The OpenRegister object
+	 * @param ObjectEventServices $services The metadata and settings services
+	 *
+	 * @return array<string, mixed> The metadata written; empty when enrichment is off or found nothing.
+	 */
+	private function enrichAndSave(mixed $object, ObjectEventServices $services): array {
+		if ($this->isEnrichmentEnabled(settingsService: $services->settingsService) === false) {
+			return [];
+		}
+
+		$metadata = $services->metadataService->enhanceMetadata($object->getObject());
+		if (empty($metadata) === true) {
+			return [];
+		}
+
+		// Event listeners run without a user session in webcron/background
+		// contexts; persist as a trusted system operation so OpenRegister
+		// RBAC does not deny the write as 'Anonymous'.
+		$services->metadataService->saveEnrichedMetadataAsSystem(
+			$object->getUuid(),
+			(string)$object->getRegister(),
+			(string)$object->getSchema(),
+			$metadata
+		);
+
+		return $metadata;
+
+	}//end enrichAndSave()
 }//end class

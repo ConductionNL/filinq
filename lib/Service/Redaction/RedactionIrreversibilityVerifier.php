@@ -70,6 +70,21 @@ class RedactionIrreversibilityVerifier {
 	public const UNVERIFIABLE = 'unverifiable';
 
 	/**
+	 * The opening and closing markers of the routes that live in a region of the file.
+	 *
+	 * Routes not listed here (text under the mark, EXIF and document properties)
+	 * search the whole file; the incremental update has its own rule.
+	 *
+	 * @var array<string, array<int, array{0: string, 1: string}>>
+	 */
+	private const REGION_MARKERS = [
+		RedactionLeakRoute::XMP => [['<x:xmpmeta', '</x:xmpmeta>']],
+		RedactionLeakRoute::EMBEDDED_PREVIEW => [['/thumb', 'endobj']],
+		RedactionLeakRoute::EMBEDDED_ATTACHMENT => [['/embeddedfile', 'endobj']],
+		RedactionLeakRoute::ANNOTATIONS_AND_FIELDS => [['/annots', 'endobj'], ['/acroform', 'endobj']],
+	];
+
+	/**
 	 * Verify one written copy against every leak route.
 	 *
 	 * @param string   $bytes           The produced file, exactly as written.
@@ -81,53 +96,15 @@ class RedactionIrreversibilityVerifier {
 	 * @spec openspec/changes/redaction-and-what-leaves-the-building/specs/redaction-output-guarantee/spec.md
 	 */
 	public function verify(string $bytes, array $redactedValues, string $outputMode = ''): array {
-		if (trim($bytes) === '') {
-			return $this->unverifiable(
-				outputMode: $outputMode,
-				why: 'the written copy is empty, so nothing could be examined'
-			);
-		}
-
 		$needles = $this->needles(values: $redactedValues);
-		if ($needles === []) {
-			// Verifying against nothing would pass every document, including
-			// one where the redaction never ran.
-			return $this->unverifiable(
-				outputMode: $outputMode,
-				why: 'no redacted values were supplied, so there was nothing to look for'
-			);
+		$why = $this->whyUnverifiable(bytes: $bytes, needles: $needles);
+		if ($why !== null) {
+			return $this->unverifiable(outputMode: $outputMode, why: $why);
 		}
 
-		$findings = [];
-		$checked = [];
-
-		foreach (RedactionLeakRoute::ALL as $route) {
-			$found = $this->examine(route: $route, bytes: $bytes, needles: $needles);
-			$checked[] = $route;
-			if ($found === []) {
-				continue;
-			}
-
-			$findings[] = [
-				'route' => $route,
-				'description' => RedactionLeakRoute::DESCRIPTIONS[$route],
-				'values' => $found,
-			];
-		}
-
-		$clean = ($findings === []);
-		$verdict = self::LEAKING;
-		if ($clean === true) {
-			$verdict = self::CLEAN;
-		}
-
-		return [
-			'verdict' => $verdict,
-			'outputMode' => $outputMode,
-			'routesChecked' => $checked,
-			'findings' => $findings,
-			'mayBePublished' => $clean,
-		];
+		$scan = $this->scan(bytes: $bytes, needles: $needles);
+		$scan['outputMode'] = $outputMode;
+		return $this->verdictFor(scan: $scan);
 	}//end verify()
 
 	/**
@@ -147,6 +124,89 @@ class RedactionIrreversibilityVerifier {
 	public function mayBePublished(array $result): bool {
 		return (($result['verdict'] ?? '') === self::CLEAN && ($result['mayBePublished'] ?? false) === true);
 	}//end mayBePublished()
+
+	/**
+	 * Why the bytes cannot be verified, or null when they can.
+	 *
+	 * @param string   $bytes   The produced file.
+	 * @param string[] $needles The values to look for.
+	 *
+	 * @return string|null The reason, in words.
+	 */
+	private function whyUnverifiable(string $bytes, array $needles): ?string {
+		if (trim($bytes) === '') {
+			return 'the written copy is empty, so nothing could be examined';
+		}
+
+		if ($needles === []) {
+			// Verifying against nothing would pass every document, including
+			// one where the redaction never ran.
+			return 'no redacted values were supplied, so there was nothing to look for';
+		}
+
+		return null;
+	}//end whyUnverifiable()
+
+	/**
+	 * Examine every route, in order, and collect the findings.
+	 *
+	 * @param string   $bytes   The produced file.
+	 * @param string[] $needles The values, lower-cased.
+	 *
+	 * @return array{routesChecked: string[], findings: array<int, array<string, mixed>>}
+	 */
+	private function scan(string $bytes, array $needles): array {
+		$findings = [];
+		$checked = [];
+		foreach (RedactionLeakRoute::ALL as $route) {
+			$found = $this->examine(route: $route, bytes: $bytes, needles: $needles);
+			$checked[] = $route;
+			if ($found !== []) {
+				$findings[] = $this->findingFor(route: $route, found: $found);
+			}
+		}
+
+		return ['routesChecked' => $checked, 'findings' => $findings];
+	}//end scan()
+
+	/**
+	 * One finding: the route, what it means in words, and the values found on it.
+	 *
+	 * @param string   $route The leak route.
+	 * @param string[] $found The values found on this route.
+	 *
+	 * @return array<string, mixed> The finding.
+	 */
+	private function findingFor(string $route, array $found): array {
+		return [
+			'route' => $route,
+			'description' => RedactionLeakRoute::DESCRIPTIONS[$route],
+			'values' => $found,
+		];
+	}//end findingFor()
+
+	/**
+	 * The result of an examined copy: clean and publishable only without findings.
+	 *
+	 * @param array{routesChecked: string[], findings: array<int, array<string, mixed>>, outputMode: string} $scan The scan.
+	 *
+	 * @return array<string, mixed> The verdict, the routes checked, and every finding.
+	 */
+	private function verdictFor(array $scan): array {
+		$clean = ($scan['findings'] === []);
+		$verdict = self::LEAKING;
+		if ($clean === true) {
+			$verdict = self::CLEAN;
+		}
+
+		return [
+			'verdict' => $verdict,
+			'outputMode' => $scan['outputMode'],
+			'routesChecked' => $scan['routesChecked'],
+			'findings' => $scan['findings'],
+			'mayBePublished' => $clean,
+		];
+	}//end verdictFor()
 
 	/**
 	 * Look for the needles on one route.
@@ -187,36 +247,52 @@ class RedactionIrreversibilityVerifier {
 	 */
 	private function regionFor(string $route, string $bytes): string {
 		$lower = strtolower($bytes);
-
 		if ($route === RedactionLeakRoute::INCREMENTAL_UPDATE) {
-			// More than one %%EOF means earlier revisions are still inside.
-			if (substr_count($lower, '%%eof') <= 1) {
-				return '';
-			}
-
-			return substr($lower, 0, (int)strrpos($lower, '%%eof'));
+			return $this->earlierRevisions(lower: $lower);
 		}
 
-		if ($route === RedactionLeakRoute::XMP) {
-			return $this->between(haystack: $lower, start: '<x:xmpmeta', end: '</x:xmpmeta>');
+		$markers = (self::REGION_MARKERS[$route] ?? null);
+		if ($markers === null) {
+			// Text under the mark, EXIF and document properties: the whole file.
+			return $lower;
 		}
 
-		if ($route === RedactionLeakRoute::EMBEDDED_PREVIEW) {
-			return $this->between(haystack: $lower, start: '/thumb', end: 'endobj');
-		}
-
-		if ($route === RedactionLeakRoute::EMBEDDED_ATTACHMENT) {
-			return $this->between(haystack: $lower, start: '/embeddedfile', end: 'endobj');
-		}
-
-		if ($route === RedactionLeakRoute::ANNOTATIONS_AND_FIELDS) {
-			return $this->between(haystack: $lower, start: '/annots', end: 'endobj')
-				. $this->between(haystack: $lower, start: '/acroform', end: 'endobj');
-		}
-
-		// Text under the mark, EXIF and document properties: the whole file.
-		return $lower;
+		return $this->regionsBetween(haystack: $lower, markers: $markers);
 	}//end regionFor()
+
+	/**
+	 * Everything before the last end-of-file marker, when there is more than one.
+	 *
+	 * More than one %%EOF means earlier revisions are still inside.
+	 *
+	 * @param string $lower The lower-cased file.
+	 *
+	 * @return string The earlier revisions, or an empty string.
+	 */
+	private function earlierRevisions(string $lower): string {
+		if (substr_count($lower, '%%eof') <= 1) {
+			return '';
+		}
+
+		return substr($lower, 0, (int)strrpos($lower, '%%eof'));
+	}//end earlierRevisions()
+
+	/**
+	 * The regions of every marker pair, in order.
+	 *
+	 * @param string                       $haystack The lower-cased file.
+	 * @param array<int, array{0: string, 1: string}> $markers  Opening and closing marker pairs.
+	 *
+	 * @return string The concatenated regions.
+	 */
+	private function regionsBetween(string $haystack, array $markers): string {
+		$out = '';
+		foreach ($markers as $pair) {
+			$out .= $this->between(haystack: $haystack, start: $pair[0], end: $pair[1]);
+		}
+
+		return $out;
+	}//end regionsBetween()
 
 	/**
 	 * Everything between two markers, every time they occur.

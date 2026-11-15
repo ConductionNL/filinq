@@ -1,0 +1,548 @@
+{
+	"prohibition": {
+		"mounted": {
+			"calls": [["prohibitionStore", "fetchProhibitions"]],
+			"dialog": null
+		},
+		"createOpened": {
+			"title": "Add publish-never rule",
+			"formClass": "prohibition-form",
+			"fields": [
+				"Primary name (Dutch)",
+				"Entity type",
+				"Reason (markdown allowed)",
+				"Legal authority (court order, statute, …)",
+				"Case reference (optional)",
+				"Severity",
+				"Jurisdiction (optional)",
+				"Valid until (ISO 8601, optional)",
+				"Active"
+			],
+			"notes": [
+				": Match rules",
+				"form-warning: Add at least one match rule. Prefer stable identifiers (BSN/KvK) over name-only matches — names alone produce false positives."
+			],
+			"buttons": [
+				{
+					"label": "Cancel",
+					"disabled": false
+				},
+				{
+					"label": "Create",
+					"disabled": true
+				}
+			]
+		},
+		"createFilled": {
+			"title": "Add publish-never rule",
+			"formClass": "prohibition-form",
+			"fields": [
+				"Primary name (Dutch)",
+				"Entity type",
+				"Reason (markdown allowed)",
+				"Legal authority (court order, statute, …)",
+				"Case reference (optional)",
+				"Severity",
+				"Jurisdiction (optional)",
+				"Valid until (ISO 8601, optional)",
+				"Active",
+				"Match type",
+				"Match value"
+			],
+			"notes": [": Match rules"],
+			"buttons": [
+				{
+					"label": "Cancel",
+					"disabled": false
+				},
+				{
+					"label": "Create",
+					"disabled": false
+				}
+			]
+		},
+		"created": {
+			"calls": [
+				[
+					"prohibitionStore",
+					"createProhibition",
+					{
+						"primaryName": " Jan Jansen ",
+						"entityType": "PERSON",
+						"reason": "Court order",
+						"legalAuthority": "",
+						"caseReference": "",
+						"severity": "high",
+						"jurisdiction": "",
+						"validUntil": "",
+						"active": true,
+						"matchRules": [
+							{
+								"type": "bsn",
+								"value": "123456782"
+							}
+						]
+					}
+				]
+			],
+			"page": {
+				"dialogOpen": false,
+				"formError": "",
+				"saving": false
+			}
+		},
+		"editOpened": {
+			"view": {
+				"title": "Edit publish-never rule",
+				"formClass": "prohibition-form",
+				"fields": [
+					"Primary name (Dutch)",
+					"Entity type",
+					"Reason (markdown allowed)",
+					"Legal authority (court order, statute, …)",
+					"Case reference (optional)",
+					"Severity",
+					"Jurisdiction (optional)",
+					"Valid until (ISO 8601, optional)",
+					"Active",
+					"Match type",
+					"Match value"
+				],
+				"notes": [
+					": Match rules",
+					"form-warning: Warning: only name-based rules are present. Names alone often produce false positives — consider adding a BSN or KvK match."
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"disabled": false
+					},
+					{
+						"label": "Save",
+						"disabled": false
+					}
+				]
+			},
+			"form": {
+				"primaryName": "Piet Pietersen",
+				"entityType": "PERSON",
+				"reason": "Threat",
+				"legalAuthority": "Rb Den Haag",
+				"caseReference": "C-1",
+				"severity": "low",
+				"jurisdiction": "NL",
+				"validUntil": "2030-01-01",
+				"active": true,
+				"matchRules": [
+					{
+						"type": "exact",
+						"value": "Piet"
+					}
+				]
+			}
+		},
+		"editChanged": {
+			"title": "Edit publish-never rule",
+			"formClass": "prohibition-form",
+			"fields": [
+				"Primary name (Dutch)",
+				"Entity type",
+				"Reason (markdown allowed)",
+				"Legal authority (court order, statute, …)",
+				"Case reference (optional)",
+				"Severity",
+				"Jurisdiction (optional)",
+				"Valid until (ISO 8601, optional)",
+				"Active",
+				"Match type",
+				"Match value"
+			],
+			"notes": [
+				": Match rules",
+				"form-warning: Warning: only name-based rules are present. Names alone often produce false positives — consider adding a BSN or KvK match."
+			],
+			"buttons": [
+				{
+					"label": "Cancel",
+					"disabled": false
+				},
+				{
+					"label": "Save",
+					"disabled": false
+				}
+			]
+		},
+		"updated": {
+			"calls": [
+				[
+					"prohibitionStore",
+					"updateProhibition",
+					"p-7",
+					{
+						"primaryName": "Piet Pietersen",
+						"entityType": "PERSON",
+						"reason": "Threat, renewed",
+						"legalAuthority": "Rb Den Haag",
+						"caseReference": "C-1",
+						"severity": "low",
+						"jurisdiction": "NL",
+						"validUntil": "2030-01-01",
+						"active": true,
+						"matchRules": [
+							{
+								"type": "exact",
+								"value": "Piet"
+							}
+						]
+					}
+				]
+			],
+			"page": {
+				"dialogOpen": false,
+				"formError": "",
+				"saving": false
+			}
+		},
+		"refused": {
+			"calls": [
+				[
+					"prohibitionStore",
+					"createProhibition",
+					{
+						"primaryName": " Jan Jansen ",
+						"entityType": "PERSON",
+						"reason": "Court order",
+						"legalAuthority": "",
+						"caseReference": "",
+						"severity": "high",
+						"jurisdiction": "",
+						"validUntil": "",
+						"active": true,
+						"matchRules": [
+							{
+								"type": "bsn",
+								"value": "123456782"
+							}
+						]
+					}
+				]
+			],
+			"page": {
+				"dialogOpen": true,
+				"formError": "Forbidden by policy permission",
+				"saving": false
+			},
+			"dialog": {
+				"title": "Add publish-never rule",
+				"formClass": "prohibition-form",
+				"fields": [
+					"Primary name (Dutch)",
+					"Entity type",
+					"Reason (markdown allowed)",
+					"Legal authority (court order, statute, …)",
+					"Case reference (optional)",
+					"Severity",
+					"Jurisdiction (optional)",
+					"Valid until (ISO 8601, optional)",
+					"Active",
+					"Match type",
+					"Match value"
+				],
+				"notes": [
+					": Match rules",
+					"form-error: Forbidden by policy permission"
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"disabled": false
+					},
+					{
+						"label": "Create",
+						"disabled": false
+					}
+				]
+			}
+		}
+	},
+	"standingConsent": {
+		"mounted": {
+			"calls": [["standingConsentStore", "fetchStandingConsents"]],
+			"dialog": null
+		},
+		"createOpened": {
+			"title": "Add standing consent",
+			"formClass": "standing-consent-form",
+			"fields": [
+				"Entity text (display name)",
+				"Entity type",
+				"Consent method",
+				"Consent document (file id or URL)",
+				"Consent scope (e.g. '2024-2025 municipal decisions')",
+				"Legal basis",
+				"Valid from (ISO 8601, optional)",
+				"Valid until (ISO 8601, optional)",
+				"Active"
+			],
+			"notes": [
+				"form-warning: No expiry set — this standing consent will remain in force indefinitely. Consider setting a \"Valid until\" date.",
+				": Match rules",
+				"form-warning: Add at least one match rule. Prefer stable identifiers (BSN/KvK) over name-only matches."
+			],
+			"buttons": [
+				{
+					"label": "Cancel",
+					"disabled": false
+				},
+				{
+					"label": "Create",
+					"disabled": true
+				}
+			]
+		},
+		"createFilled": {
+			"title": "Add standing consent",
+			"formClass": "standing-consent-form",
+			"fields": [
+				"Entity text (display name)",
+				"Entity type",
+				"Consent method",
+				"Consent document (file id or URL)",
+				"Consent scope (e.g. '2024-2025 municipal decisions')",
+				"Legal basis",
+				"Valid from (ISO 8601, optional)",
+				"Valid until (ISO 8601, optional)",
+				"Active",
+				"Match type",
+				"Match value"
+			],
+			"notes": [
+				"form-warning: No expiry set — this standing consent will remain in force indefinitely. Consider setting a \"Valid until\" date.",
+				": Match rules"
+			],
+			"buttons": [
+				{
+					"label": "Cancel",
+					"disabled": false
+				},
+				{
+					"label": "Create",
+					"disabled": false
+				}
+			]
+		},
+		"created": {
+			"calls": [
+				[
+					"standingConsentStore",
+					"createStandingConsent",
+					{
+						"entityText": " Gemeente Zuiddrecht ",
+						"entityType": "ORGANIZATION",
+						"consentMethod": "digital_signature",
+						"consentDocument": "",
+						"consentScope": "",
+						"legalBasis": "",
+						"validFrom": "",
+						"validUntil": "",
+						"active": true,
+						"matchRules": [
+							{
+								"type": "kvk",
+								"value": "12345678"
+							}
+						],
+						"consentStatus": "consent_given",
+						"publicationDecision": "publish_with_consent",
+						"notificationStatus": "skipped"
+					}
+				]
+			],
+			"page": {
+				"dialogOpen": false,
+				"formError": "",
+				"saving": false
+			}
+		},
+		"editOpened": {
+			"view": {
+				"title": "Edit standing consent",
+				"formClass": "standing-consent-form",
+				"fields": [
+					"Entity text (display name)",
+					"Entity type",
+					"Consent method",
+					"Consent document (file id or URL)",
+					"Consent scope (e.g. '2024-2025 municipal decisions')",
+					"Legal basis",
+					"Valid from (ISO 8601, optional)",
+					"Valid until (ISO 8601, optional)",
+					"Active",
+					"Match type",
+					"Match value"
+				],
+				"notes": [
+					"form-warning: No expiry set — this standing consent will remain in force indefinitely. Consider setting a \"Valid until\" date.",
+					": Match rules"
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"disabled": false
+					},
+					{
+						"label": "Save",
+						"disabled": false
+					}
+				]
+			},
+			"form": {
+				"entityText": "Bakkerij de Korst",
+				"entityType": "ORGANIZATION",
+				"consentMethod": "paper",
+				"consentDocument": "42",
+				"consentScope": "2024",
+				"legalBasis": "Art. 6",
+				"validFrom": "2024-01-01",
+				"validUntil": "",
+				"active": false,
+				"matchRules": [
+					{
+						"type": "kvk",
+						"value": "87654321"
+					}
+				],
+				"consentStatus": "consent_given",
+				"publicationDecision": "publish_with_consent",
+				"notificationStatus": "sent"
+			}
+		},
+		"editChanged": {
+			"title": "Edit standing consent",
+			"formClass": "standing-consent-form",
+			"fields": [
+				"Entity text (display name)",
+				"Entity type",
+				"Consent method",
+				"Consent document (file id or URL)",
+				"Consent scope (e.g. '2024-2025 municipal decisions')",
+				"Legal basis",
+				"Valid from (ISO 8601, optional)",
+				"Valid until (ISO 8601, optional)",
+				"Active",
+				"Match type",
+				"Match value"
+			],
+			"notes": [": Match rules"],
+			"buttons": [
+				{
+					"label": "Cancel",
+					"disabled": false
+				},
+				{
+					"label": "Save",
+					"disabled": false
+				}
+			]
+		},
+		"updated": {
+			"calls": [
+				[
+					"standingConsentStore",
+					"updateStandingConsent",
+					"c-9",
+					{
+						"entityText": "Bakkerij de Korst",
+						"entityType": "ORGANIZATION",
+						"consentMethod": "paper",
+						"consentDocument": "42",
+						"consentScope": "2024",
+						"legalBasis": "Art. 6",
+						"validFrom": "2024-01-01",
+						"validUntil": "2026-12-31",
+						"active": false,
+						"matchRules": [
+							{
+								"type": "kvk",
+								"value": "87654321"
+							}
+						],
+						"consentStatus": "consent_given",
+						"publicationDecision": "publish_with_consent",
+						"notificationStatus": "sent"
+					}
+				]
+			],
+			"page": {
+				"dialogOpen": false,
+				"formError": "",
+				"saving": false
+			}
+		},
+		"refused": {
+			"calls": [
+				[
+					"standingConsentStore",
+					"createStandingConsent",
+					{
+						"entityText": " Gemeente Zuiddrecht ",
+						"entityType": "ORGANIZATION",
+						"consentMethod": "digital_signature",
+						"consentDocument": "",
+						"consentScope": "",
+						"legalBasis": "",
+						"validFrom": "",
+						"validUntil": "",
+						"active": true,
+						"matchRules": [
+							{
+								"type": "kvk",
+								"value": "12345678"
+							}
+						],
+						"consentStatus": "consent_given",
+						"publicationDecision": "publish_with_consent",
+						"notificationStatus": "skipped"
+					}
+				]
+			],
+			"page": {
+				"dialogOpen": true,
+				"formError": "Forbidden by policy permission",
+				"saving": false
+			},
+			"dialog": {
+				"title": "Add standing consent",
+				"formClass": "standing-consent-form",
+				"fields": [
+					"Entity text (display name)",
+					"Entity type",
+					"Consent method",
+					"Consent document (file id or URL)",
+					"Consent scope (e.g. '2024-2025 municipal decisions')",
+					"Legal basis",
+					"Valid from (ISO 8601, optional)",
+					"Valid until (ISO 8601, optional)",
+					"Active",
+					"Match type",
+					"Match value"
+				],
+				"notes": [
+					"form-warning: No expiry set — this standing consent will remain in force indefinitely. Consider setting a \"Valid until\" date.",
+					": Match rules",
+					"form-error: Forbidden by policy permission"
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"disabled": false
+					},
+					{
+						"label": "Create",
+						"disabled": false
+					}
+				]
+			}
+		}
+	}
+}

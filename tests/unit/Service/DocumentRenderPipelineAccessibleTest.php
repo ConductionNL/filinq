@@ -27,6 +27,7 @@ use OCA\Filinq\Service\Charts\SvgRasterizer;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\DocumentRenderPipeline;
 use OCA\Filinq\Service\PdfService;
+use OCA\Filinq\Service\Support\PdfRendering;
 use OCA\Filinq\Service\TemplateRenderer;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -35,8 +36,7 @@ class DocumentRenderPipelineAccessibleTest extends TestCase {
 
 	private function pipeline(): DocumentRenderPipeline {
 		return new DocumentRenderPipeline(
-			$this->createMock(TemplateRenderer::class),
-			$this->createMock(PdfService::class),
+			new PdfRendering(renderer: $this->createMock(TemplateRenderer::class), pdf: $this->createMock(PdfService::class)),
 			$this->createMock(DocumentObjectServiceResolver::class),
 			$this->createMock(LoggerInterface::class),
 			$this->createMock(SvgRasterizer::class)

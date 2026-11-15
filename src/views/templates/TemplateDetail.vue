@@ -1,3 +1,7 @@
+<!--
+  - SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
 <template>
 	<div class="template-detail">
 		<!-- Header bar -->
@@ -218,6 +222,11 @@
 					:label="t('filinq', 'Sample data (JSON)')"
 					placeholder='{ "name": "Jan de Vries" }'
 					class="template-detail__field" />
+				<NcTextField
+					v-model="sampleListRefsJson"
+					:label="t('filinq', 'Related records for tables (listRefs, JSON)')"
+					placeholder='[{ "register": "zaken", "schema": "besluit", "as": "besluiten" }]'
+					class="template-detail__field" />
 			</div>
 			<TemplateLintChecklist
 				v-if="!previewLoading && previewHtml"
@@ -296,30 +305,55 @@
 			@close="showConditionalDialog = false"
 			@insert="insertConditionalSection" />
 
-		<ConfirmRestoreVersionDialog
+		<CnConfirmDialog
 			v-if="restoreTarget"
-			:versionNumber="restoreTarget ? restoreTarget.version : 0"
+			:dialogTitle="t('filinq', 'Restore version')"
+			:message="restoreMessage"
+			:confirmLabel="t('filinq', 'Restore')"
 			@confirm="executeRestore"
-			@cancel="restoreTarget = null" />
+			@close="restoreTarget = null" />
 	</div>
 </template>
 
 <script>
+import { CnConfirmDialog } from '@conduction/nextcloud-vue'
 import { translate as t } from '@nextcloud/l10n'
-import {
-	NcButton,
-	NcEmptyContent,
-	NcLoadingIcon,
-	NcTextField,
-} from '@nextcloud/vue'
+import { NcButton, NcEmptyContent, NcLoadingIcon, NcTextField } from '@nextcloud/vue'
 import TemplateLintChecklist from '../../components/TemplateLintChecklist.vue'
 import ConditionalSectionDialog from '../../dialogs/ConditionalSectionDialog.vue'
-import ConfirmRestoreVersionDialog from '../../dialogs/ConfirmRestoreVersionDialog.vue'
 import MergeFieldDialog from '../../dialogs/MergeFieldDialog.vue'
 import WizardAuthoringPanel from './WizardAuthoringPanel.vue'
 import { loadTemplateWizard } from '../../services/wizard.js'
 import { useTemplateStore } from '../../store/modules/template.js'
 import { sanitizeHtml } from '../../utils/sanitizeHtml.js'
+
+/**
+ * The editor form's defaults for the fields a stored template fills.
+ */
+const TEMPLATE_FORM_DEFAULTS = Object.freeze({
+	name: '',
+	namespace: '',
+	description: '',
+	content: '',
+	category: '',
+	format: 'A4',
+	orientation: 'P',
+})
+
+/**
+ * The editor form fields of a stored template, each falling back to its default.
+ *
+ * @param {object} tmpl The stored template.
+ * @return {object} The form fields, tags joined for the tags input.
+ */
+function templateFormFields(tmpl) {
+	const fields = {}
+	for (const [key, fallback] of Object.entries(TEMPLATE_FORM_DEFAULTS)) {
+		fields[key] = tmpl[key] || fallback
+	}
+	fields.tagsInput = (tmpl.tags || []).join(', ')
+	return fields
+}
 
 export default {
 	name: 'TemplateDetail',
@@ -330,7 +364,7 @@ export default {
 		NcTextField,
 		ConditionalSectionDialog,
 		MergeFieldDialog,
-		ConfirmRestoreVersionDialog,
+		CnConfirmDialog,
 		TemplateLintChecklist,
 		WizardAuthoringPanel,
 	},
@@ -359,6 +393,7 @@ export default {
 			previewLint: [],
 			previewError: '',
 			sampleDataJson: '{}',
+			sampleListRefsJson: '',
 			// Versions
 			versions: [],
 			versionsLoading: false,
@@ -376,6 +411,21 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * Question of the restore dialog, naming the template version.
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/advanced-template-management/tasks.md#task-6
+		 */
+		restoreMessage() {
+			const n = this.restoreTarget?.version
+			return t(
+				'filinq',
+				'Restore to version {n}? The current state will be saved as a new version first.',
+				{ n },
+			)
+		},
+
 		/**
 		 * The stored template HTML, sanitised before it is mounted in the editor.
 		 *
@@ -427,38 +477,16 @@ export default {
 	 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
 	 */
 	async mounted() {
-		const routeId = this.$route?.params?.id
-		if (
-			routeId
-			&& routeId !== 'new'
-			&& this.templateStore.templateItem?.id !== routeId
-		) {
-			// Opened by URL (the Templates index links here): load the template
-			// the route names, so the Versions and Wizard tabs can render.
-			await this.templateStore.fetchTemplate(routeId)
-		}
+		await this.loadRoutedTemplate()
 
 		if (!this.isNew) {
 			const tmpl = this.templateStore.templateItem
-			this.form.name = tmpl.name || ''
-			this.form.namespace = tmpl.namespace || ''
-			this.form.description = tmpl.description || ''
-			this.form.content = tmpl.content || ''
-			this.form.category = tmpl.category || ''
-			this.form.tagsInput = (tmpl.tags || []).join(', ')
-			this.form.format = tmpl.format || 'A4'
-			this.form.orientation = tmpl.orientation || 'P'
+			Object.assign(this.form, templateFormFields(tmpl))
 			this.editorHtml = tmpl.content || ''
 			this.lockOwner = tmpl.lockedBy || null
 
-			// Acquire lock.
-			const locked = await this.templateStore.acquireLock(tmpl.id)
-			if (locked) {
-				this.lockOwner = locked.lockedBy || null
-			}
-
-			const wizard = await loadTemplateWizard(tmpl.id)
-			this.hasWizard = wizard.ok && Boolean(wizard.data?.wizard)
+			await this.acquireTemplateLock(tmpl.id)
+			await this.loadWizardPresence(tmpl.id)
 		}
 	},
 
@@ -467,6 +495,49 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * Opened by URL (the Templates index links here): load the template
+		 * the route names, so the Versions and Wizard tabs can render.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
+		 */
+		async loadRoutedTemplate() {
+			const routeId = this.$route?.params?.id
+			if (
+				routeId
+				&& routeId !== 'new'
+				&& this.templateStore.templateItem?.id !== routeId
+			) {
+				await this.templateStore.fetchTemplate(routeId)
+			}
+		},
+
+		/**
+		 * Take the template's edit lock and show who holds it.
+		 *
+		 * @param {string} templateId The template.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
+		 */
+		async acquireTemplateLock(templateId) {
+			const locked = await this.templateStore.acquireLock(templateId)
+			if (locked) {
+				this.lockOwner = locked.lockedBy || null
+			}
+		},
+
+		/**
+		 * Note whether the template has an active guided wizard.
+		 *
+		 * @param {string} templateId The template.
+		 * @return {Promise<void>}
+		 */
+		async loadWizardPresence(templateId) {
+			const wizard = await loadTemplateWizard(templateId)
+			this.hasWizard = wizard.ok && Boolean(wizard.data?.wizard)
+		},
+
 		t,
 		/**
 		 * Open the wizard runner for this template.
@@ -571,10 +642,21 @@ export default {
 			} catch {
 				// Ignore JSON parse error; use empty data.
 			}
+			let listRefs = []
+			if (this.sampleListRefsJson.trim() !== '') {
+				try {
+					listRefs = JSON.parse(this.sampleListRefsJson)
+				} catch {
+					this.previewError = t('filinq', 'The related records are not valid JSON.')
+					this.previewLoading = false
+					return
+				}
+			}
 			try {
 				const preview = await this.templateStore.previewTemplate(
 					this.form.content,
 					sampleData,
+					listRefs,
 				)
 				this.previewHtml = preview?.html || ''
 				this.previewLint = preview?.lint || []

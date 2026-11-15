@@ -117,28 +117,21 @@ class OdpPresentationCodec implements PresentationFamilyCodec {
 	 */
 	public function writeShape(string $packageBytes, string $slide, string $shape, string $region, string $text): string {
 		$xml = $this->io->readPart(packageBytes: $packageBytes, part: self::PART);
-		$escaped = htmlspecialchars($text, ENT_QUOTES | ENT_XML1);
-		$rewritten = false;
+		$edit = new FrameRewrite(shape: $shape, region: $region, escaped: htmlspecialchars($text, ENT_QUOTES | ENT_XML1));
 
 		$updated = preg_replace_callback(
 			'/<draw:page\b[^>]*draw:name="([^"]*)"[^>]*>.*?<\/draw:page>/s',
-			function (array $page) use ($slide, $shape, $region, $escaped, &$rewritten): string {
+			function (array $page) use ($slide, $edit): string {
 				if ($page[1] !== $slide) {
 					return $page[0];
 				}
 
-				return $this->rewritePage(
-					markup: $page[0],
-					shape: $shape,
-					region: $region,
-					escaped: $escaped,
-					rewritten: $rewritten
-				);
+				return $this->rewritePage(markup: $page[0], edit: $edit);
 			},
 			$xml
 		);
 
-		if ($rewritten === false) {
+		if ($edit->rewritten === false) {
 			throw new RuntimeException(
 				sprintf('Shape "%s" was not found on "%s" (%s).', $shape, $slide, $region)
 			);
@@ -156,15 +149,12 @@ class OdpPresentationCodec implements PresentationFamilyCodec {
 	 * outside the page entirely. The reader then found no notes at all, so a
 	 * slide edit silently DELETED every speaker note on that slide.
 	 *
-	 * @param string $markup The page markup.
-	 * @param string $shape The frame name.
-	 * @param string $region Either `slide` or `notes`.
-	 * @param string $escaped The escaped replacement text.
-	 * @param bool $rewritten Set true when a frame was rewritten.
+	 * @param string       $markup The page markup.
+	 * @param FrameRewrite $edit   The frame, region and text; marked when a frame was rewritten.
 	 *
 	 * @return string The rewritten page markup.
 	 */
-	private function rewritePage(string $markup, string $shape, string $region, string $escaped, bool &$rewritten): string {
+	private function rewritePage(string $markup, FrameRewrite $edit): string {
 		$notesStart = null;
 		$notesLength = 0;
 		if (preg_match('/<presentation:notes\b.*?<\/presentation:notes>/s', $markup, $match, PREG_OFFSET_CAPTURE) === 1) {
@@ -172,17 +162,12 @@ class OdpPresentationCodec implements PresentationFamilyCodec {
 			$notesLength = strlen($match[0][0]);
 		}
 
-		if ($region === 'notes') {
+		if ($edit->region === 'notes') {
 			if ($notesStart === null) {
 				return $markup;
 			}
 
-			$rewrittenNotes = $this->rewriteFrame(
-				markup: substr($markup, $notesStart, $notesLength),
-				shape: $shape,
-				escaped: $escaped,
-				rewritten: $rewritten
-			);
+			$rewrittenNotes = $this->rewriteFrame(markup: substr($markup, $notesStart, $notesLength), edit: $edit);
 
 			return substr_replace($markup, $rewrittenNotes, $notesStart, $notesLength);
 		}
@@ -190,15 +175,10 @@ class OdpPresentationCodec implements PresentationFamilyCodec {
 		// Slide region: rewrite everything EXCEPT the notes span, leaving the
 		// notes bytes exactly where they were.
 		if ($notesStart === null) {
-			return $this->rewriteFrame(markup: $markup, shape: $shape, escaped: $escaped, rewritten: $rewritten);
+			return $this->rewriteFrame(markup: $markup, edit: $edit);
 		}
 
-		$head = $this->rewriteFrame(
-			markup: substr($markup, 0, $notesStart),
-			shape: $shape,
-			escaped: $escaped,
-			rewritten: $rewritten
-		);
+		$head = $this->rewriteFrame(markup: substr($markup, 0, $notesStart), edit: $edit);
 
 		return $head . substr($markup, $notesStart);
 	}//end rewritePage()
@@ -206,18 +186,16 @@ class OdpPresentationCodec implements PresentationFamilyCodec {
 	/**
 	 * Replace the first paragraph of a named frame.
 	 *
-	 * @param string $markup The markup to search.
-	 * @param string $shape The frame name.
-	 * @param string $escaped The escaped replacement text.
-	 * @param bool $rewritten Set true when a frame was rewritten.
+	 * @param string       $markup The markup to search.
+	 * @param FrameRewrite $edit   The frame and text; marked when a frame was rewritten.
 	 *
 	 * @return string The rewritten markup.
 	 */
-	private function rewriteFrame(string $markup, string $shape, string $escaped, bool &$rewritten): string {
+	private function rewriteFrame(string $markup, FrameRewrite $edit): string {
 		$updated = preg_replace_callback(
-			'/<draw:frame\b[^>]*draw:name="' . preg_quote($shape, '/') . '"[^>]*>.*?<\/draw:frame>/s',
-			function (array $frame) use ($escaped, &$rewritten): string {
-				$rewritten = true;
+			'/<draw:frame\b[^>]*draw:name="' . preg_quote($edit->shape, '/') . '"[^>]*>.*?<\/draw:frame>/s',
+			function (array $frame) use ($edit): string {
+				$edit->rewritten = true;
 
 				// A placeholder frame can be EMPTY (`<draw:text-box/>`), which
 				// has no paragraph to replace. Writing then requires creating
@@ -225,7 +203,7 @@ class OdpPresentationCodec implements PresentationFamilyCodec {
 				if (preg_match('/<text:p\b/', $frame[0]) !== 1) {
 					return preg_replace(
 						'/<draw:text-box\s*\/>/',
-						'<draw:text-box><text:p>' . $escaped . '</text:p></draw:text-box>',
+						'<draw:text-box><text:p>' . $edit->escaped . '</text:p></draw:text-box>',
 						$frame[0],
 						1
 					) ?? $frame[0];
@@ -233,7 +211,7 @@ class OdpPresentationCodec implements PresentationFamilyCodec {
 
 				return preg_replace(
 					'/<text:p\b[^>]*>.*?<\/text:p>/s',
-					'<text:p>' . $escaped . '</text:p>',
+					'<text:p>' . $edit->escaped . '</text:p>',
 					$frame[0],
 					1
 				) ?? $frame[0];

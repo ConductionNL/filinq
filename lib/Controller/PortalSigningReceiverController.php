@@ -3,6 +3,9 @@
 /**
  * Portal Signing Receiver Controller
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * The Filinq-side receiver for portaliq's ADR-046 contract-v2/v2.2 A6
  * endpoint-forward actions (`portal-signing-actions`, `portal-signing-surface`).
  * Gives an external, accountless **signer** a real signing surface: portaliq
@@ -28,9 +31,6 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- *
  * @spec openspec/specs/portal-signing-actions/spec.md
  * @spec openspec/specs/portal-signing-surface/spec.md
  */
@@ -39,11 +39,11 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
+use OCA\Filinq\Kernel\Contracts\OpenRegisterResolverInterface;
+use OCA\Filinq\Kernel\Contracts\PortalSigningDocumentResolverInterface;
 use OCA\Filinq\Kernel\Contracts\SettingsServiceInterface;
 use OCA\Filinq\Kernel\Contracts\SigningServiceInterface;
 use OCA\Filinq\Portal\PortalAssertionVerifier;
-use OCA\Filinq\Service\OpenRegisterResolver;
-use OCA\Filinq\Service\PortalSigningDocumentResolver;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
@@ -100,9 +100,9 @@ class PortalSigningReceiverController extends Controller {
 	 * @param PortalAssertionVerifier $verifier Verifies the X-Portal-Subject assertion.
 	 * @param SigningServiceInterface $signingService The honest signing primitive.
 	 * @param SettingsServiceInterface $settingsService Settings service (resolves OR's ObjectService).
-	 * @param OpenRegisterResolver $registerResolver Resolves register/schema bindings, failing closed.
+	 * @param OpenRegisterResolverInterface $registerResolver Resolves register/schema bindings, failing closed.
 	 * @param LoggerInterface $logger Logger.
-	 * @param PortalSigningDocumentResolver $documentResolver Resolves the target document for viewDocument.
+	 * @param PortalSigningDocumentResolverInterface $documentResolver Resolves the target document for viewDocument.
 	 * @param IThrottler $throttler Brute-force throttler; rejected portal assertions are registered against it.
 	 *
 	 * @return void
@@ -113,9 +113,9 @@ class PortalSigningReceiverController extends Controller {
 		private readonly PortalAssertionVerifier $verifier,
 		private readonly SigningServiceInterface $signingService,
 		private readonly SettingsServiceInterface $settingsService,
-		private readonly OpenRegisterResolver $registerResolver,
+		private readonly OpenRegisterResolverInterface $registerResolver,
 		private readonly LoggerInterface $logger,
-		private readonly PortalSigningDocumentResolver $documentResolver,
+		private readonly PortalSigningDocumentResolverInterface $documentResolver,
 		private readonly IThrottler $throttler,
 	) {
 		parent::__construct(appName: $appName, request: $request);

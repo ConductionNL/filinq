@@ -23,27 +23,15 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\EntitySearch;
 
 use OCA\Filinq\Exception\EntitySearchRefusedException;
+use OCA\Filinq\Kernel\Contracts\EntitySearchServiceInterface;
+use OCA\Filinq\Kernel\EntitySearchQuery;
 
 /**
  * The order is the control: the gate first, then the tenant scope, then the
  * read, then the log, and only then the answer. A lookup the log did not take
  * is refused, so nobody can look up a person without it being accounted for.
  */
-class EntitySearchService {
-
-	/**
-	 * The largest page.
-	 *
-	 * @var int
-	 */
-	public const MAX_LIMIT = 100;
-
-	/**
-	 * The page size when none is asked for.
-	 *
-	 * @var int
-	 */
-	public const DEFAULT_LIMIT = 25;
+class EntitySearchService implements EntitySearchServiceInterface {
 
 	/**
 	 * Constructor.
@@ -85,12 +73,8 @@ class EntitySearchService {
 	/**
 	 * Entities matching the query, logged before they are returned.
 	 *
-	 * @param string $userId   The caller.
-	 * @param string $query    Case-insensitive substring of the value.
-	 * @param string $type     Exact type, '' for any.
-	 * @param string $category Exact category, '' for any.
-	 * @param int    $limit    Page size.
-	 * @param int    $offset   Page start.
+	 * @param string            $userId The caller.
+	 * @param EntitySearchQuery $query  The value text, type and category filters, and page.
 	 *
 	 * @return array{results: array<int, array<string, mixed>>, total: int, limit: int, offset: int} The page.
 	 *
@@ -98,25 +82,21 @@ class EntitySearchService {
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-entity-search/tasks.md#task-2.1
 	 */
-	public function search(string $userId, string $query, string $type, string $category, int $limit, int $offset): array {
+	public function search(string $userId, EntitySearchQuery $query): array {
 		$this->gate->assertMaySearch(userId: $userId);
-		$query = trim($query);
-		$type = trim($type);
-		$category = trim($category);
-		if ($query === '' && $type === '' && $category === '') {
+		$query = $query->normalised(maxLimit: self::MAX_LIMIT);
+		if ($query->text === '' && $query->type === '' && $query->category === '') {
 			throw new EntitySearchRefusedException(
 				reason: EntitySearchRefusedException::REASON_INVALID,
 				message: 'A search needs a value, a type or a category.'
 			);
 		}
 
-		$limit = max(1, min(self::MAX_LIMIT, $limit));
-		$offset = max(0, $offset);
 		$scope = $this->catalogue->scope(isAdmin: $this->gate->isAdmin(userId: $userId));
-		$page = $this->catalogue->search(scope: $scope, query: $query, type: $type, category: $category, limit: $limit, offset: $offset);
-		$this->log->search(userId: $userId, query: $query, type: $type, category: $category, results: $page['total']);
+		$page = $this->catalogue->search(scope: $scope, query: $query);
+		$this->log->search(userId: $userId, query: $query, results: $page['total']);
 
-		return ['results' => $page['results'], 'total' => $page['total'], 'limit' => $limit, 'offset' => $offset];
+		return ['results' => $page['results'], 'total' => $page['total'], 'limit' => $query->limit, 'offset' => $query->offset];
 
 	}//end search()
 

@@ -293,4 +293,63 @@ class DomainFolderServiceTest extends TestCase {
 
 		$this->assertFalse($service->ensureFolder(domain: $this->domain([]), owner: 'beheerder')['created']);
 	}//end testAnExistingFolderIsNotMadeAgain()
+	/**
+	 * The whole outcome of a mixed run: one grant lands, one fails, one
+	 * revoke lands, one fails; and the whole outcome of an unreadable folder.
+	 *
+	 * @return void
+	 */
+	public function testTheWholeOutcomeOfAMixedRunAndOfAnUnreadableFolder(): void {
+		$gateway = $this->willingGateway(['groep-oud', 'groep-vast']);
+		$path = $this->service($gateway)->pathFor(domain: $this->domain([]));
+		$gateway->method('grant')->willReturnCallback(
+			function (string $p, string $owner, string $group) use ($path): void {
+				$this->assertSame($path, $p);
+				$this->assertSame('beheerder', $owner);
+				if ($group === 'groep-nee') {
+					throw new RuntimeException('grant refused');
+				}
+			}
+		);
+		$gateway->method('revoke')->willReturnCallback(
+			function (string $p, string $owner, string $group) use ($path): void {
+				$this->assertSame($path, $p);
+				$this->assertSame('beheerder', $owner);
+				if ($group === 'groep-vast') {
+					throw new RuntimeException('revoke refused');
+				}
+			}
+		);
+
+		$outcome = $this->service($gateway)->reconcile(domain: $this->domain(['groep-ja', 'groep-nee']), owner: 'beheerder');
+
+		$this->assertSame(
+			[
+				'state' => DomainFolderService::STATE_REFUSED,
+				'path' => $path,
+				'granted' => ['groep-ja'],
+				'revoked' => ['groep-oud'],
+				'refused' => [
+					['group' => 'groep-nee', 'action' => 'grant', 'reason' => 'grant refused'],
+					['group' => 'groep-vast', 'action' => 'revoke', 'reason' => 'revoke refused'],
+				],
+				'pinnedReason' => null,
+			],
+			$outcome
+		);
+
+		$unreadable = $this->createMock(DomainFolderGateway::class);
+		$unreadable->method('groupsWithAccess')->willThrowException(new RuntimeException('storage down'));
+		$this->assertSame(
+			[
+				'state' => DomainFolderService::STATE_REFUSED,
+				'path' => $path,
+				'granted' => [],
+				'revoked' => [],
+				'refused' => [['group' => '*', 'action' => 'read', 'reason' => 'storage down']],
+				'pinnedReason' => null,
+			],
+			$this->service($unreadable)->reconcile(domain: $this->domain(['groep-a']), owner: 'beheerder')
+		);
+	}//end testTheWholeOutcomeOfAMixedRunAndOfAnUnreadableFolder()
 }//end class

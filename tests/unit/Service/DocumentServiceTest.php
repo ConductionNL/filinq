@@ -15,16 +15,23 @@
  * @link https://www.filinq.app
  *
  * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-2
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\Filinq\Tests\Unit\Service;
 
 use Exception;
+use OCA\Filinq\BackgroundJob\JobQueue;
 use OCA\Filinq\Service\DataResolverService;
 use OCA\Filinq\Service\DocumentJobStore;
 use OCA\Filinq\Service\DocumentService;
 use OCA\Filinq\Service\DocumentStorageService;
 use OCA\Filinq\Service\PdfService;
+use OCA\Filinq\Service\Support\DocumentOutput;
+use OCA\Filinq\Service\Support\DocumentProduction;
+use OCA\Filinq\Service\Support\TemplateSources;
 use OCA\Filinq\Service\TemplateRenderer;
 use OCA\Filinq\Service\TemplateService;
 use OCA\OpenRegister\Db\ObjectEntity;
@@ -94,6 +101,13 @@ class DocumentServiceTest extends TestCase {
 	private IJobList $jobList;
 
 	/**
+	 * The app config the job store writes job statuses to.
+	 *
+	 * @var IAppConfig&MockObject
+	 */
+	private IAppConfig $appConfig;
+
+	/**
 	 * Mock object service.
 	 *
 	 * @var ObjectService&MockObject
@@ -127,6 +141,7 @@ class DocumentServiceTest extends TestCase {
 		$appManager = $this->createMock(IAppManager::class);
 		$logger = $this->createMock(LoggerInterface::class);
 		$appConfig = $this->createMock(IAppConfig::class);
+		$this->appConfig = $appConfig;
 
 		$appManager->method('getInstalledApps')
 			->willReturn(['openregister']);
@@ -150,21 +165,17 @@ class DocumentServiceTest extends TestCase {
 		);
 
 		$this->service = new DocumentService(
-			$this->templateSvc,
-			$this->dataResolver,
-			new \OCA\Filinq\Service\DocumentRenderPipeline(
-				$this->renderer,
-				$this->pdfService,
+			new TemplateSources(templates: $this->templateSvc, data: $this->dataResolver),
+			new DocumentProduction(pipeline: new \OCA\Filinq\Service\DocumentRenderPipeline(
+				new \OCA\Filinq\Service\Support\PdfRendering(renderer: $this->renderer, pdf: $this->pdfService),
 				$objectResolver,
 				$logger,
 				$this->passThroughRasterizer()
-			),
-			$this->storageService,
-			new \OCA\Filinq\Service\GeneratedDocumentLogger(
+			), jobs: new DocumentJobStore(appConfig: $appConfig, jobList: new JobQueue(jobList: $this->jobList), logger: $logger)),
+			new DocumentOutput(storage: $this->storageService, log: new \OCA\Filinq\Service\GeneratedDocumentLogger(
 				$objectResolver,
 				$logger
-			),
-			new DocumentJobStore(appConfig: $appConfig, jobList: $this->jobList, logger: $logger)
+			))
 		);
 
 	}//end setUp()
@@ -257,7 +268,7 @@ class DocumentServiceTest extends TestCase {
 	/**
 	 * The merge preview returns the preview and the fields the data fills.
 	 *
-	 * @spec openspec/changes/template-merge-preview/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 *
 	 * @return void
 	 */
@@ -532,6 +543,116 @@ class DocumentServiceTest extends TestCase {
 		$this->assertStringEndsNotWith('/', $targetPath);
 
 	}//end testAsyncBulkComputesPerJobTargetPath()
+
+	/**
+	 * An async bulk job is queued with exactly the template, objects and options, its target path suffixed by the job id.
+	 *
+	 * @return void
+	 */
+	public function testAsyncBulkQueuesTheFullArgument(): void {
+		$this->templateSvc->method('getTemplate')->willReturn(['id' => 'tmpl-1', 'namespace' => 'ns']);
+
+		$captured = null;
+		$this->jobList->expects($this->once())->method('add')->willReturnCallback(
+			function (string $job, array $argument) use (&$captured): void {
+				$captured = $argument;
+			}
+		);
+
+		$objectIds = array_map(static fn (int $i): string => 'o' . $i, range(1, 12));
+		$result    = $this->service->generateBulk(
+			templateId: 'tmpl-1',
+			objectIds: $objectIds,
+			options: ['output' => ['mode' => 'files', 'targetPath' => 'Custom/dir/'], 'userId' => 'u1']
+		);
+
+		$this->assertSame(['jobId', 'status', 'total'], array_keys($result));
+		$this->assertSame(12, $result['total']);
+		$this->assertSame(
+			[
+				'jobId' => $result['jobId'],
+				'templateId' => 'tmpl-1',
+				'objectIds' => $objectIds,
+				'options' => ['output' => ['mode' => 'files', 'targetPath' => 'Custom/dir/' . $result['jobId']], 'userId' => 'u1'],
+			],
+			$captured
+		);
+
+	}//end testAsyncBulkQueuesTheFullArgument()
+
+	/**
+	 * An async bulk job stores its queued status, with the per-job options, before the job is queued.
+	 *
+	 * @return void
+	 */
+	public function testAsyncBulkStoresTheQueuedStatus(): void {
+		$this->templateSvc->method('getTemplate')->willReturn(['id' => 'tmpl-1', 'namespace' => 'ns']);
+
+		$stored = [];
+		$this->appConfig->method('setValueString')->willReturnCallback(
+			function (string $app, string $key, string $value) use (&$stored): bool {
+				$stored[] = [$app, $key, json_decode($value, true)];
+				return true;
+			}
+		);
+		$this->jobList->expects($this->once())->method('add')->willReturnCallback(
+			function () use (&$stored): void {
+				$stored[] = 'queued';
+			}
+		);
+
+		$objectIds = array_map(static fn (int $i): string => 'o' . $i, range(1, 11));
+		$result    = $this->service->generateBulk(
+			templateId: 'tmpl-1',
+			objectIds: $objectIds,
+			options: ['output' => ['mode' => 'files', 'targetPath' => 'Custom/dir'], 'userId' => 'u1']
+		);
+
+		$this->assertSame(
+			[
+				[
+					'filinq',
+					'document_job_' . $result['jobId'],
+					[
+						'jobId' => $result['jobId'],
+						'status' => 'queued',
+						'total' => 11,
+						'completed' => 0,
+						'errors' => 0,
+						'results' => [],
+						'options' => ['output' => ['mode' => 'files', 'targetPath' => 'Custom/dir/' . $result['jobId']], 'userId' => 'u1'],
+					],
+				],
+				'queued',
+			],
+			$stored
+		);
+		$this->assertSame(['jobId' => $result['jobId'], 'status' => 'queued', 'total' => 11], $result);
+
+	}//end testAsyncBulkStoresTheQueuedStatus()
+
+	/**
+	 * A preview turns failed data references into warnings, before the renderer's own.
+	 *
+	 * @return void
+	 */
+	public function testPreviewReportsFailedReferencesAsWarnings(): void {
+		$this->templateSvc->method('getTemplate')->willReturn(['id' => 'tmpl-1', 'content' => '<p>x</p>']);
+		$this->dataResolver->method('resolve')->willReturn(
+			[
+				'data' => ['a' => 1],
+				'errors' => [['register' => 'r', 'schema' => 's', 'id' => 'i', 'message' => 'gone']],
+				'warnings' => ['first'],
+			]
+		);
+		$this->renderer->method('renderTemplate')->willReturn('<p>x</p>');
+
+		$result = $this->service->generatePreview(templateId: 'tmpl-1', dataRefs: [['register' => 'r']], options: []);
+
+		$this->assertSame('<p>x</p>', $result['html']);
+		$this->assertSame(['first', 'Data resolution failed for r/s/i: gone'], array_slice($result['warnings'], 0, 2));
+
+	}//end testPreviewReportsFailedReferencesAsWarnings()
 
 	/**
 	 * Test that invalid format raises exception (DCS-023).
@@ -1338,4 +1459,111 @@ class DocumentServiceTest extends TestCase {
 
 	}//end testSyncBulkItemsAndFailedEntryGolden()
 
+	/**
+	 * Store requests for the acting user in options.userId, with owner fields forged next to it.
+	 *
+	 * @return array<string, array{0: array<string, mixed>, 1: Exception|null}>
+	 */
+	public static function storeTraces(): array {
+		$forged = ['owner' => 'mallory', 'requestedBy' => 'mallory', 'user' => 'mallory'];
+		$forgedOutput = ['userId' => 'mallory', 'owner' => 'mallory', 'requestedBy' => 'mallory'];
+		$full = new Exception('quota exceeded', DocumentStorageService::ERROR_CODE_STORAGE_FAILURE);
+		return [
+			'files for the acting user' => [['userId' => 'clerk', 'filename' => 'besluit', 'output' => ['mode' => 'files']] + $forged, null],
+			'files for another acting user' => [['userId' => 'officer', 'owner' => 'clerk', 'requestedBy' => 'clerk', 'output' => ['mode' => 'files', 'userId' => 'clerk']], null],
+			'files with forged output owners' => [['userId' => 'clerk', 'output' => ['mode' => 'files', 'targetPath' => 'Zaken/7/'] + $forgedOutput] + $forged, null],
+			'both for the acting user' => [['userId' => 'clerk', 'output' => ['mode' => 'both']] + $forged, null],
+			'return never stores' => [['userId' => 'clerk', 'output' => ['mode' => 'return']] + $forged, null],
+			'return without a user' => [['output' => ['mode' => 'return']] + $forged, null],
+			'files without a user' => [['output' => ['mode' => 'files'] + $forgedOutput] + $forged, null],
+			'both without a user' => [['output' => ['mode' => 'both'] + $forgedOutput] + $forged, null],
+			'files with an empty user' => [['userId' => '', 'output' => ['mode' => 'files']] + $forged, null],
+			'files with a null user' => [['userId' => null, 'output' => ['mode' => 'files']], null],
+			'files with a full disk' => [['userId' => 'clerk', 'output' => ['mode' => 'files']], $full],
+			'both with a full disk' => [['userId' => 'clerk', 'output' => ['mode' => 'both']], $full],
+			'both with a refused path' => [['userId' => 'clerk', 'output' => ['mode' => 'both']], new Exception('bad path', 400)],
+			'both with another failure' => [['userId' => 'clerk', 'output' => ['mode' => 'both']], new Exception('boom', 500)],
+			'an html file name' => [['userId' => 'clerk', 'format' => 'html', 'filename' => 'brief.html', 'output' => ['mode' => 'files']], null],
+			'an empty target path' => [['userId' => 'clerk', 'output' => ['mode' => 'files', 'targetPath' => '']], null],
+		];
+	}//end storeTraces()
+
+	/**
+	 * Storing files the bytes under the acting user only, and its outcome matches the recorded one.
+	 *
+	 * @param array<string, mixed> $options The generation options.
+	 * @param Exception|null $failure What storing throws, if anything.
+	 *
+	 * @dataProvider storeTraces
+	 *
+	 * @return void
+	 */
+	public function testStoreTraceMatchesTheRecordedOne(array $options, ?Exception $failure): void {
+		$this->stubHappyPathGeneration();
+
+		$calls = [];
+		$this->storageService->method('store')->willReturnCallback(
+			static function (string $userId, string $targetPath, string $filename, string $content) use (&$calls, $failure, $options): array {
+				$calls[] = [$userId, $targetPath, $filename, $content];
+				if ($userId !== ($options['userId'] ?? null)) {
+					throw new Exception('stored for ' . $userId, 403);
+				}
+
+				if ($failure !== null) {
+					throw $failure;
+				}
+
+				return ['fileId' => 99, 'path' => '/' . $userId . '/files/' . $targetPath . '/' . $filename, 'name' => $filename, 'size' => 12, 'owner' => 'ignored'];
+			}
+		);
+
+		try {
+			$result = $this->service->generateDocument(templateId: 'tmpl-1', dataRefs: [], options: $options);
+			$outcome = ['output' => $result['output'], 'warnings' => $result['warnings'], 'content' => $result['content']];
+		} catch (Exception $e) {
+			$outcome = ['error' => [$e->getCode(), $e->getMessage()]];
+		}
+
+		$outcome['calls'] = $calls;
+
+		$path = __DIR__ . '/golden/document-store-trace.json';
+		$recorded = [];
+		if (is_file($path) === true) {
+			$recorded = json_decode((string)file_get_contents($path), true);
+		}
+
+		$name = (string)$this->dataName();
+		if (getenv('GOLDEN_RECORD') === '1') {
+			$recorded[$name] = $outcome;
+			file_put_contents($path, json_encode($recorded, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n");
+		}
+
+		$this->assertSame($recorded[$name] ?? null, $outcome);
+		foreach ($calls as $call) {
+			$this->assertSame($options['userId'], $call[0], 'Only the acting user may own a stored document.');
+		}
+	}//end testStoreTraceMatchesTheRecordedOne()
+	/**
+	 * A successful store answers exactly the filed refs and the warnings, whatever else storage returns.
+	 *
+	 * @return void
+	 */
+	public function testAStoredOutputCarriesOnlyItsRefs(): void {
+		$this->storageService->method('store')->willReturn(
+			['fileId' => 99, 'path' => '/clerk/files/Zaken/brief.pdf', 'name' => 'brief.pdf', 'size' => 12, 'owner' => 'mallory']
+		);
+
+		$run = [
+			'outputMode' => 'files',
+			'templateId' => 'tmpl-1',
+			'template' => ['namespace' => 'procest'],
+			'format' => 'pdf',
+			'options' => ['userId' => 'clerk', 'filename' => 'brief', 'output' => ['targetPath' => 'Zaken']],
+		];
+		$method = new \ReflectionMethod(DocumentService::class, 'storeOutputIfRequested');
+		$outcome = $method->invoke($this->service, $run, ['content' => '%PDF', 'warnings' => ['earlier']]);
+
+		$this->assertSame(['fileId', 'path', 'name', 'size', 'warnings'], array_keys($outcome));
+		$this->assertSame([99, '/clerk/files/Zaken/brief.pdf', 'brief.pdf', 12, ['earlier']], array_values($outcome));
+	}//end testAStoredOutputCarriesOnlyItsRefs()
 }//end class

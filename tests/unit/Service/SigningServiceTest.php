@@ -36,6 +36,12 @@ use OCA\Filinq\Service\SigningAuditService;
 use OCA\Filinq\Service\SigningConclusionEmitter;
 use OCA\Filinq\Service\SigningRequestValidator;
 use OCA\Filinq\Service\SigningService;
+use OCA\Filinq\Service\Support\SigningGuards;
+use OCA\Filinq\Service\Support\SigningOutputs;
+use OCA\OpenRegister\Db\AuditTrail;
+use OCA\OpenRegister\Db\AuditTrail\ObjectAuditEvent;
+use OCA\OpenRegister\Db\AuditTrailMapper;
+use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Files\File;
@@ -50,6 +56,7 @@ use Psr\Log\LoggerInterface;
 use RuntimeException;
 use DateTimeImmutable;
 use OCA\Filinq\Exception\StepUpRequiredException;
+use OCA\Filinq\Kernel\SigningAuditEvent;
 use OCA\Filinq\Service\SignerAuth\IdentityEvidence;
 
 /**
@@ -64,6 +71,13 @@ use OCA\Filinq\Service\SignerAuth\IdentityEvidence;
  * @psalm-suppress PropertyNotSetInConstructor
  */
 class SigningServiceTest extends TestCase {
+
+	/**
+	 * What the audit trail persisted: [action, context] per entry.
+	 *
+	 * @var array<int, array{0: string, 1: array<string, mixed>}>
+	 */
+	private array $persistedAudits = [];
 	use \OCA\Filinq\Tests\Unit\Service\SignerAuth\AssuranceGateHarness;
 
 
@@ -201,28 +215,32 @@ class SigningServiceTest extends TestCase {
 		// code paths end to end after they moved out of SigningService.
 		$this->service = new SigningService(
 			settingsService: $this->settingsService,
-			auditService: $this->auditService,
-			artifactProducer: new SignedArtifactProducer(
-				providerFactory: $this->providerFactory,
-				userSession: $this->userSession,
-				request: $this->request,
-				rootFolder: $this->rootFolder,
-				finalDocuments: $this->createMock(FinalDocumentService::class)
-			),
-			validator: new SigningRequestValidator(providerFactory: $this->providerFactory),
 			actorResolver: new SigningActorResolver(
 				settingsService: $this->settingsService,
 				config: $this->config,
 				userSession: $this->userSession,
 				request: $this->request
 			),
-			emitter: new SigningConclusionEmitter(
+			guards: new SigningGuards(
+				validator: new SigningRequestValidator(providerFactory: $this->providerFactory),
+				consentGuard: new GuardianConsentGuard(settingsService: $this->settingsService),
+				assuranceGate: $this->assuranceGate(userSession: $this->userSession)
+			),
+			outputs: new SigningOutputs(
+				auditService: $this->auditService,
+				artifactProducer: new SignedArtifactProducer(
+				providerFactory: $this->providerFactory,
+				userSession: $this->userSession,
+				request: $this->request,
+				rootFolder: $this->rootFolder,
+				finalDocuments: $this->createMock(FinalDocumentService::class)
+			),
+				emitter: new SigningConclusionEmitter(
 				eventDispatcher: $eventDispatcher,
 				logger: $logger,
 				eventFactory: new SigningConcludedEventFactory()
-			),
-			consentGuard: new GuardianConsentGuard(settingsService: $this->settingsService),
-			assuranceGate: $this->assuranceGate(userSession: $this->userSession)
+			)
+			)
 		);
 
 	}//end setUp()
@@ -246,6 +264,54 @@ class SigningServiceTest extends TestCase {
 
 		return $folder;
 	}//end defaultUserFolder()
+
+	/**
+	 * Let the audit double write through a real SigningAuditService, so the
+	 * test reads the action and context the audit trail persists.
+	 *
+	 * @return void
+	 */
+	private function persistAuditsThroughTheRealService(): void {
+		$trail = $this->createMock(AuditTrail::class);
+		$trail->method('jsonSerialize')->willReturn([]);
+		$mapper = $this->createMock(AuditTrailMapper::class);
+		$mapper->method('recordObjectEvent')->willReturnCallback(
+			function (ObjectAuditEvent $event) use ($trail): AuditTrail {
+				[$action, $context] = [$event->action, $event->context];
+				$this->persistedAudits[] = [$action, $context];
+				return $trail;
+			}
+		);
+		$real = new SigningAuditService(
+			auditTrailMapper: $mapper,
+			logger: $this->createMock(LoggerInterface::class),
+			settingsService: $this->createMock(SettingsService::class),
+			config: $this->createMock(IAppConfig::class)
+		);
+		$this->auditService->expects($this->once())->method('logEvent')->willReturnCallback(
+			static fn (...$arguments): array => $real->logEvent(...$arguments)
+		);
+
+	}//end persistAuditsThroughTheRealService()
+
+	/**
+	 * The one persisted audit entry has this action and context; of its
+	 * time-dependent `extra` only the keys and the evidence provider are compared.
+	 *
+	 * @param string               $action  The persisted action.
+	 * @param array<string, mixed> $context The context, with `extraKeys` in place of `extra`.
+	 *
+	 * @return void
+	 */
+	private function assertPersistedAudit(string $action, array $context): void {
+		$this->assertCount(1, $this->persistedAudits);
+		[$persistedAction, $persisted] = $this->persistedAudits[0];
+		$this->assertSame('nextcloud-session', $persisted['extra']['identityEvidence']['provider']);
+		$persisted['extraKeys'] = array_keys($persisted['extra']);
+		unset($persisted['extra']);
+		$this->assertSame([$action, $context], [$persistedAction, $persisted]);
+
+	}//end assertPersistedAudit()
 
 	/**
 	 * createRequest() with valid data creates and persists a signing request.
@@ -272,8 +338,7 @@ class SigningServiceTest extends TestCase {
 			->method('saveObject')
 			->willReturn($savedRequest);
 
-		$this->auditService->expects($this->once())
-			->method('logEvent');
+		$this->persistAuditsThroughTheRealService();
 
 		$result = $this->service->createRequest(
 			data: [
@@ -287,6 +352,7 @@ class SigningServiceTest extends TestCase {
 
 		$this->assertSame('PENDING', $result['status']);
 		$this->assertSame('alice', $result['initiatorUserId']);
+		$this->assertSame([['docudesk.signing.CREATED', ['signRequestId' => 'req-001', 'actorUserId' => 'alice', 'actorDisplayName' => 'Alice', 'ipAddress' => '127.0.0.1', 'signatureLevel' => 'SES', 'provider' => 'native', 'extra' => []]]], $this->persistedAudits);
 
 	}//end testCreateRequestHappyPath()
 
@@ -954,21 +1020,20 @@ class SigningServiceTest extends TestCase {
 		];
 
 		$this->objectService->method('find')->willReturnOnConsecutiveCalls(
-			$requestData,
 			$signerData,
+			$requestData,
 			$requestData,
 			$signerData
 		);
 		$this->objectService->method('saveObject')->willReturnArgument(0);
 
-		$this->auditService->expects($this->once())
-			->method('logEvent')
-			->with($this->equalTo('req-001'), $this->equalTo('SIGNED'));
+		$this->persistAuditsThroughTheRealService();
 
 		$result = $this->service->sign(requestId: 'req-001', signerId: 'signer-001');
 
 		$this->assertSame('SIGNED', $result['status']);
 		$this->assertArrayHasKey('signedAt', $result);
+		$this->assertPersistedAudit(action: 'docudesk.signing.SIGNED', context: ['signRequestId' => 'req-001', 'actorUserId' => 'alice', 'actorDisplayName' => 'Alice', 'ipAddress' => '127.0.0.1', 'signatureLevel' => 'SES', 'provider' => 'native', 'extraKeys' => ['identityEvidence']]);
 
 	}//end testSignHappyPath()
 
@@ -995,8 +1060,8 @@ class SigningServiceTest extends TestCase {
 		];
 
 		$this->objectService->method('find')->willReturnOnConsecutiveCalls(
-			$requestData,
 			$signerData,
+			$requestData,
 			$requestData,
 			$signerData
 		);
@@ -1049,8 +1114,8 @@ class SigningServiceTest extends TestCase {
 		];
 
 		$this->objectService->method('find')->willReturnOnConsecutiveCalls(
-			$requestData,
 			$signerData,
+			$requestData,
 			$requestData,
 			$signerData
 		);
@@ -1082,8 +1147,8 @@ class SigningServiceTest extends TestCase {
 		$signerSigned = ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'alice', 'status' => 'SIGNED'];
 
 		$this->objectService->method('find')->willReturnOnConsecutiveCalls(
-			$request,
 			$signerPending,
+			$request,
 			$signerSigned,
 			$request
 		);
@@ -1128,6 +1193,259 @@ class SigningServiceTest extends TestCase {
 	}//end testCompletingSignatureStoresArtifactAndSetsRef()
 
 	/**
+	 * A partial signature saves the request IN_PROGRESS and stops reading signers at the first unsigned one.
+	 *
+	 * @return void
+	 */
+	public function testAPartialSignatureMovesTheRequestInProgressAndStopsAtTheFirstUnsigned(): void {
+		$request = [
+			'id' => 'req-001',
+			'status' => 'PENDING',
+			'signatureLevel' => 'SES',
+			'provider' => 'native',
+			'initiatorUserId' => 'alice',
+			'documentFileId' => '42',
+			'signerIds' => ['signer-001', 'signer-002'],
+		];
+		$found = [];
+		$rows  = [
+			'req-001' => $request,
+			'signer-001' => ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'alice', 'status' => 'PENDING'],
+			'signer-002' => ['id' => 'signer-002', 'signingRequestId' => 'req-001', 'userId' => 'bob', 'status' => 'PENDING'],
+		];
+		$this->objectService->method('find')->willReturnCallback(
+			static function (string $id) use (&$found, $rows): ?array {
+				$found[] = $id;
+				return ($rows[$id] ?? null);
+			}
+		);
+		$saved = [];
+		$this->objectService->method('saveObject')->willReturnCallback(
+			static function (array $object) use (&$saved): array {
+				$saved[] = [($object['id'] ?? ''), ($object['status'] ?? '')];
+				return $object;
+			}
+		);
+
+		$this->service->sign(requestId: 'req-001', signerId: 'signer-001');
+
+		$this->assertNotContains('signer-002', $found);
+		$this->assertSame(['req-001', 'IN_PROGRESS'], end($saved));
+		$this->assertNotContains(['req-001', 'COMPLETED'], $saved);
+
+	}//end testAPartialSignatureMovesTheRequestInProgressAndStopsAtTheFirstUnsigned()
+
+	/**
+	 * Run alice's signature as the second signer of a two-signer request.
+	 *
+	 * @param array<string, mixed> $request The request fields over the defaults.
+	 * @param array<string, mixed> $first   The first signer's fields over the defaults.
+	 * @param array<string, mixed> $second  Alice's signer fields over the defaults.
+	 *
+	 * @return array<int, array{0: string, 1: string}> The saved [id, status] pairs.
+	 */
+	private function signAsSecond(array $request, array $first = [], array $second = []): array {
+		$rows = [
+			'req-001' => array_merge(
+				['id' => 'req-001', 'status' => 'IN_PROGRESS', 'signatureLevel' => 'SES', 'provider' => 'native', 'initiatorUserId' => 'carol', 'documentFileId' => '42', 'signerIds' => ['signer-001', 'signer-002']],
+				$request
+			),
+			'signer-001' => array_merge(['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'bob', 'displayName' => 'Bob', 'status' => 'PENDING'], $first),
+			'signer-002' => array_merge(['id' => 'signer-002', 'signingRequestId' => 'req-001', 'userId' => 'alice', 'status' => 'PENDING'], $second),
+		];
+		$this->objectService->method('find')->willReturnCallback(static fn (string $id): ?array => ($rows[$id] ?? null));
+		$saved = [];
+		$this->objectService->method('saveObject')->willReturnCallback(
+			static function (array $object) use (&$saved): array {
+				$saved[] = [($object['id'] ?? ''), ($object['status'] ?? '')];
+				return $object;
+			}
+		);
+
+		$this->service->sign(requestId: 'req-001', signerId: 'signer-002');
+
+		return $saved;
+	}//end signAsSecond()
+
+	/**
+	 * In sequential mode B cannot sign before A, and nothing is written.
+	 *
+	 * @return void
+	 */
+	public function testASequentialSignerCannotSignBeforeTheSignerBefore(): void {
+		$this->auditService->expects($this->never())->method('logEvent');
+
+		try {
+			$this->signAsSecond(request: ['signingMode' => 'sequential']);
+			$this->fail('The second signer signed first.');
+		} catch (\RuntimeException $refusal) {
+			$this->assertSame(
+				"It is not this signer's turn yet: this request is signed in order, and Bob must sign first.",
+				$refusal->getMessage()
+			);
+		}
+	}//end testASequentialSignerCannotSignBeforeTheSignerBefore()
+
+	/**
+	 * A request that names no mode is sequential, the schema's default.
+	 *
+	 * @return void
+	 */
+	public function testARequestWithoutAModeIsSignedInOrder(): void {
+		$this->expectException(\RuntimeException::class);
+		$this->expectExceptionMessage('Bob must sign first');
+
+		$this->signAsSecond(request: []);
+	}//end testARequestWithoutAModeIsSignedInOrder()
+
+	/**
+	 * In parallel mode B may sign before A.
+	 *
+	 * @return void
+	 */
+	public function testAParallelSignerMaySignBeforeTheOthers(): void {
+		$saved = $this->signAsSecond(request: ['signingMode' => 'parallel']);
+
+		$this->assertSame(['signer-002', 'SIGNED'], $saved[0]);
+	}//end testAParallelSignerMaySignBeforeTheOthers()
+
+	/**
+	 * Once A has signed, B may sign; and a signer ordered first may sign though listed second.
+	 *
+	 * @return void
+	 */
+	public function testASequentialSignerSignsOnceTheEarlierSignersHave(): void {
+		$this->assertSame(['signer-002', 'SIGNED'], $this->signAsSecond(request: ['signingMode' => 'sequential'], first: ['status' => 'SIGNED'])[0]);
+	}//end testASequentialSignerSignsOnceTheEarlierSignersHave()
+
+	/**
+	 * The order field, not the position in the list, places a signer.
+	 *
+	 * @return void
+	 */
+	public function testTheOrderFieldPlacesTheSigner(): void {
+		$saved = $this->signAsSecond(request: ['signingMode' => 'sequential'], first: ['order' => 2], second: ['order' => 1]);
+
+		$this->assertSame(['signer-002', 'SIGNED'], $saved[0]);
+	}//end testTheOrderFieldPlacesTheSigner()
+
+	/**
+	 * A single-signer request still PENDING is saved IN_PROGRESS before it is saved COMPLETED.
+	 *
+	 * @return void
+	 */
+	public function testASingleSignerRequestStepsThroughInProgressToCompleted(): void {
+		$request = [
+			'id' => 'req-001',
+			'status' => 'PENDING',
+			'signatureLevel' => 'SES',
+			'provider' => 'native',
+			'initiatorUserId' => 'alice',
+			'documentFileId' => '42',
+			'signerIds' => ['signer-001'],
+		];
+		$signerPending = ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'alice', 'status' => 'PENDING'];
+		$signerSigned  = ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'alice', 'status' => 'SIGNED'];
+		$this->objectService->method('find')->willReturnOnConsecutiveCalls($signerPending, $request, $signerSigned, $request);
+
+		$requestStatuses = [];
+		$this->objectService->method('saveObject')->willReturnCallback(
+			static function (array $object) use (&$requestStatuses): array {
+				if (($object['id'] ?? '') === 'req-001') {
+					$requestStatuses[] = ($object['status'] ?? '');
+				}
+
+				return $object;
+			}
+		);
+
+		$provider = $this->createMock(\OCA\Filinq\Service\Signing\SigningProviderInterface::class);
+		$provider->method('produceSignedArtifact')->willReturn('SIGNED-BYTES');
+		$this->providerFactory->method('getProvider')->willReturn($provider);
+		$file = $this->createMock(\OCP\Files\File::class);
+		$file->method('getContent')->willReturn('original-bytes');
+		$folder = $this->createMock(\OCP\Files\Folder::class);
+		$folder->method('getById')->willReturn([$file]);
+		$this->userFolder = $folder;
+
+		$this->service->sign(requestId: 'req-001', signerId: 'signer-001');
+
+		$this->assertSame(['IN_PROGRESS', 'COMPLETED'], $requestStatuses);
+
+	}//end testASingleSignerRequestStepsThroughInProgressToCompleted()
+
+	/**
+	 * A portal completion hands the verified actor to the artifact: the email is the signer and the portal evidence is bound.
+	 *
+	 * @return void
+	 */
+	public function testAPortalCompletionBindsThePortalActorInTheArtifact(): void {
+		$store = [
+			'req-001' => [
+				'id' => 'req-001',
+				'status' => 'IN_PROGRESS',
+				'signatureLevel' => 'SES',
+				'provider' => 'native',
+				'initiatorUserId' => 'bob',
+				'documentFileId' => '42',
+				'signerIds' => ['signer-001'],
+			],
+			'signer-001' => ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'email' => 'mark@home.example', 'status' => 'PENDING'],
+		];
+		$this->objectService->method('find')->willReturnCallback(
+			static function (string $id) use (&$store): ?array {
+				return ($store[$id] ?? null);
+			}
+		);
+		$this->objectService->method('saveObject')->willReturnCallback(
+			static function (array $object) use (&$store): array {
+				if (isset($object['id']) === true) {
+					$store[$object['id']] = $object;
+				}
+
+				return $object;
+			}
+		);
+
+		$context  = null;
+		$provider = $this->createMock(\OCA\Filinq\Service\Signing\SigningProviderInterface::class);
+		$provider->method('produceSignedArtifact')->willReturnCallback(
+			static function (string $content, array $ctx) use (&$context): string {
+				$context = $ctx;
+				return 'SIGNED-BYTES';
+			}
+		);
+		$this->providerFactory->method('getProvider')->willReturn($provider);
+		$file = $this->createMock(\OCP\Files\File::class);
+		$file->method('getContent')->willReturn('original-bytes');
+		$folder = $this->createMock(\OCP\Files\Folder::class);
+		$folder->method('getById')->willReturn([$file]);
+		$this->userFolder = $folder;
+
+		$this->service->sign(
+			requestId: 'req-001',
+			signerId: 'signer-001',
+			verifiedActor: [
+				'email' => 'mark@home.example',
+				'subjectRef' => 'sub-1',
+				'identityRef' => 'id-1',
+				'trust' => 'low',
+				'jti' => 'jti-1',
+			],
+			signatureData: ['consent' => true]
+		);
+
+		$this->assertSame('COMPLETED', $store['req-001']['status']);
+		$this->assertIsArray($context);
+		$this->assertSame('mark@home.example', $context['signer']);
+		$this->assertSame('sub-1', $context['portalSubjectRef'] ?? null);
+		$this->assertSame('id-1', $context['portalIdentityRef'] ?? null);
+		$this->assertSame('low', $context['portalTrust'] ?? null);
+		$this->assertSame('jti-1', $context['portalJti'] ?? null);
+
+	}//end testAPortalCompletionBindsThePortalActorInTheArtifact()
+
+	/**
 	 * Honest-completion gate: when the provider cannot produce an artifact the
 	 * completing signature fails and the request is NOT marked COMPLETED.
 	 *
@@ -1147,8 +1465,8 @@ class SigningServiceTest extends TestCase {
 		$signerSigned = ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'alice', 'status' => 'SIGNED'];
 
 		$this->objectService->method('find')->willReturnOnConsecutiveCalls(
-			$request,
 			$signerPending,
+			$request,
 			$signerSigned,
 			$request
 		);
@@ -1206,7 +1524,7 @@ class SigningServiceTest extends TestCase {
 			'status' => 'PENDING',
 		];
 
-		$this->objectService->method('find')->willReturnOnConsecutiveCalls($requestData, $signerData);
+		$this->objectService->method('find')->willReturnOnConsecutiveCalls($signerData, $requestData);
 
 		$this->expectException(RuntimeException::class);
 		$this->expectExceptionMessage('does not belong to this signing request');
@@ -1232,7 +1550,7 @@ class SigningServiceTest extends TestCase {
 			'status' => 'PENDING',
 		];
 
-		$this->objectService->method('find')->willReturnOnConsecutiveCalls($requestData, $signerData);
+		$this->objectService->method('find')->willReturnOnConsecutiveCalls($signerData, $requestData);
 
 		$this->expectException(RuntimeException::class);
 		$this->expectExceptionMessage('Not authorized to sign as this signer');
@@ -1254,12 +1572,100 @@ class SigningServiceTest extends TestCase {
 
 		$this->objectService->method('find')->willReturn($requestData);
 		$this->objectService->method('saveObject')->willReturnArgument(0);
+		$this->persistAuditsThroughTheRealService();
 
 		$result = $this->service->cancelRequest(requestId: 'req-001');
 
 		$this->assertSame('CANCELLED', $result['status']);
+		$this->assertSame([['docudesk.signing.CANCELLED', ['signRequestId' => 'req-001', 'actorUserId' => 'alice', 'actorDisplayName' => 'Alice', 'ipAddress' => '127.0.0.1', 'signatureLevel' => '', 'provider' => '', 'extra' => []]]], $this->persistedAudits);
 
 	}//end testCancelRequestTransitionsToCancel()
+
+	/**
+	 * With OpenRegister's lifecycle engine, cancelRequest() applies the declared
+	 * `cancel` transition on filinq's behalf instead of hand-setting the status.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md#requirement-a-cancelled-request-must-be-visibly-cancelled-and-must-not-be-re-signable
+	 */
+	public function testCancelRequestUsesTheDeclaredLifecycleTransition(): void {
+		$engine = new class {
+			/**
+			 * @var array<int, array<int, string>>
+			 */
+			public array $calls = [];
+
+			/**
+			 * @param string $objectId The object.
+			 * @param string $action   The transition.
+			 * @param string $app      The app.
+			 *
+			 * @return null
+			 */
+			public function transitionAsSystem(string $objectId, string $action, string $app) {
+				$this->calls[] = [$objectId, $action, $app];
+				return null;
+			}
+		};
+		$this->settingsService->method('getTransitionEngine')->willReturn($engine);
+		$this->objectService->method('find')->willReturn(['id' => 'req-001', 'status' => 'PENDING']);
+		$this->objectService->expects($this->never())->method('saveObject');
+		$this->persistAuditsThroughTheRealService();
+
+		$result = $this->service->cancelRequest(requestId: 'req-001');
+
+		$this->assertSame([['req-001', 'cancel', 'filinq']], $engine->calls);
+		$this->assertSame('CANCELLED', $result['status']);
+		$this->assertCount(1, $this->persistedAudits);
+
+	}//end testCancelRequestUsesTheDeclaredLifecycleTransition()
+
+	/**
+	 * A transition the lifecycle refuses leaves no CANCELLED audit entry behind.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md#requirement-a-cancelled-request-must-be-visibly-cancelled-and-must-not-be-re-signable
+	 */
+	public function testARefusedTransitionRecordsNoCancellation(): void {
+		$engine = new class {
+			/**
+			 * @param string $objectId The object.
+			 * @param string $action   The transition.
+			 * @param string $app      The app.
+			 *
+			 * @return never
+			 */
+			public function transitionAsSystem(string $objectId, string $action, string $app) {
+				throw new RuntimeException('Transition "cancel" is not allowed from COMPLETED');
+			}
+		};
+		$this->settingsService->method('getTransitionEngine')->willReturn($engine);
+		$this->objectService->method('find')->willReturn(['id' => 'req-001', 'status' => 'PENDING']);
+		$this->auditService->expects($this->never())->method('logEvent');
+
+		try {
+			$this->service->cancelRequest(requestId: 'req-001');
+			$this->fail('the refusal must surface');
+		} catch (RuntimeException $e) {
+			$this->assertStringContainsString('not allowed', $e->getMessage());
+		}
+
+	}//end testARefusedTransitionRecordsNoCancellation()
+
+	/**
+	 * cancelRequest() answers null for a request that does not exist, and writes nothing.
+	 *
+	 * @return void
+	 */
+	public function testCancelRequestAnswersNullForAMissingRequest(): void {
+		$this->objectService->method('find')->willReturn(null);
+		$this->objectService->expects($this->never())->method('saveObject');
+
+		$this->assertNull($this->service->cancelRequest(requestId: 'req-404'));
+
+	}//end testCancelRequestAnswersNullForAMissingRequest()
 
 	/**
 	 * cancelRequest() throws when the request is in a terminal state.
@@ -1419,8 +1825,9 @@ class SigningServiceTest extends TestCase {
 			'id' => 'req-001',
 			'status' => 'COMPLETED',
 		];
+		$signerData = ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'alice', 'status' => 'PENDING'];
 
-		$this->objectService->method('find')->willReturn($requestData);
+		$this->stubFindById(rows: ['req-001' => $requestData, 'signer-001' => $signerData]);
 		// The gate must reject BEFORE any signer/request mutation.
 		$this->objectService->expects($this->never())->method('saveObject');
 
@@ -1452,17 +1859,17 @@ class SigningServiceTest extends TestCase {
 			'status' => 'PENDING',
 		];
 
-		$this->objectService->method('find')->willReturnOnConsecutiveCalls($requestData, $signerData);
+		$this->stubFindById(rows: ['req-001' => $requestData, 'signer-001' => $signerData]);
 		$this->objectService->method('saveObject')->willReturnArgument(0);
 
-		$this->auditService->expects($this->once())
-			->method('logEvent')
-			->with($this->equalTo('req-001'), $this->equalTo('DECLINED'));
+		$this->persistAuditsThroughTheRealService();
 
 		$result = $this->service->decline(requestId: 'req-001', signerId: 'signer-001', reason: 'changed my mind');
 
 		$this->assertSame('DECLINED', $result['status']);
 		$this->assertSame('changed my mind', $result['declineReason']);
+		$this->assertPersistedAudit(action: 'docudesk.signing.DECLINED', context: ['signRequestId' => 'req-001', 'actorUserId' => 'alice', 'actorDisplayName' => 'Alice', 'ipAddress' => '127.0.0.1', 'signatureLevel' => 'SES', 'provider' => 'native', 'extraKeys' => ['reason', 'identityEvidence']]);
+		$this->assertSame('changed my mind', $this->persistedAudits[0][1]['extra']['reason']);
 
 	}//end testDeclineHappyPathFromInProgress()
 
@@ -1488,7 +1895,7 @@ class SigningServiceTest extends TestCase {
 			'status' => 'PENDING',
 		];
 
-		$this->objectService->method('find')->willReturnOnConsecutiveCalls($requestData, $signerData);
+		$this->stubFindById(rows: ['req-001' => $requestData, 'signer-001' => $signerData]);
 		$saved = [];
 		$this->objectService->method('saveObject')->willReturnCallback(
 			static function (array $object) use (&$saved): array {
@@ -1520,7 +1927,7 @@ class SigningServiceTest extends TestCase {
 			'status' => 'PENDING',
 		];
 
-		$this->objectService->method('find')->willReturnOnConsecutiveCalls($requestData, $signerData);
+		$this->stubFindById(rows: ['req-001' => $requestData, 'signer-001' => $signerData]);
 
 		$this->expectException(RuntimeException::class);
 		$this->expectExceptionMessage('does not belong to this signing request');
@@ -1528,6 +1935,92 @@ class SigningServiceTest extends TestCase {
 		$this->service->decline(requestId: 'req-001', signerId: 'signer-001', reason: 'no');
 
 	}//end testDeclineThrowsOnSignerRequestMismatch()
+
+	/**
+	 * Someone who is not the signer learns nothing about the request's status:
+	 * the signer check runs before the status check.
+	 *
+	 * @return void
+	 */
+	public function testDeclineByAnotherUserDoesNotRevealTheRequestStatus(): void {
+		$requestData = ['id' => 'req-001', 'status' => 'COMPLETED'];
+		$signerData = ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'bob', 'status' => 'PENDING'];
+		$this->stubFindById(rows: ['req-001' => $requestData, 'signer-001' => $signerData]);
+		$this->objectService->expects($this->never())->method('saveObject');
+
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessage('Not authorized to decline as this signer');
+
+		$this->service->decline(requestId: 'req-001', signerId: 'signer-001', reason: 'no');
+
+	}//end testDeclineByAnotherUserDoesNotRevealTheRequestStatus()
+
+	/**
+	 * Someone who is not the signer learns nothing about whether a request id
+	 * exists: an unknown request answers with the signer refusal too.
+	 *
+	 * @return void
+	 */
+	public function testDeclineByAnotherUserDoesNotRevealWhetherTheRequestExists(): void {
+		$signerData = ['id' => 'signer-001', 'signingRequestId' => 'req-404', 'userId' => 'bob', 'status' => 'PENDING'];
+		$this->stubFindById(rows: ['signer-001' => $signerData]);
+
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessage('Not authorized to decline as this signer');
+
+		$this->service->decline(requestId: 'req-404', signerId: 'signer-001', reason: 'no');
+
+	}//end testDeclineByAnotherUserDoesNotRevealWhetherTheRequestExists()
+
+	/**
+	 * Someone who is not the signer cannot learn a request's status by trying
+	 * to sign it: the signer check runs before the status check.
+	 *
+	 * @return void
+	 */
+	public function testSignByAnotherUserDoesNotRevealTheRequestStatus(): void {
+		$requestData = ['id' => 'req-001', 'status' => 'COMPLETED'];
+		$signerData = ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'bob', 'status' => 'PENDING'];
+		$this->stubFindById(rows: ['req-001' => $requestData, 'signer-001' => $signerData]);
+		$this->objectService->expects($this->never())->method('saveObject');
+
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessage('Not authorized to sign as this signer');
+
+		$this->service->sign(requestId: 'req-001', signerId: 'signer-001');
+
+	}//end testSignByAnotherUserDoesNotRevealTheRequestStatus()
+
+	/**
+	 * Someone who is not the signer cannot learn whether a request id exists
+	 * by trying to sign it.
+	 *
+	 * @return void
+	 */
+	public function testSignByAnotherUserDoesNotRevealWhetherTheRequestExists(): void {
+		$signerData = ['id' => 'signer-001', 'signingRequestId' => 'req-404', 'userId' => 'bob', 'status' => 'PENDING'];
+		$this->stubFindById(rows: ['signer-001' => $signerData]);
+
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessage('Not authorized to sign as this signer');
+
+		$this->service->sign(requestId: 'req-404', signerId: 'signer-001');
+
+	}//end testSignByAnotherUserDoesNotRevealWhetherTheRequestExists()
+
+	/**
+	 * Answer find() by object id, whatever order the service looks objects up in.
+	 *
+	 * @param array<string, array<string, mixed>> $rows The objects by id.
+	 *
+	 * @return void
+	 */
+	private function stubFindById(array $rows): void {
+		$this->objectService->method('find')->willReturnCallback(
+			static fn (string $id): ?array => ($rows[$id] ?? null)
+		);
+
+	}//end stubFindById()
 
 	/**
 	 * Provider/level honesty on the completion path (signing-trust-rebuild
@@ -1550,8 +2043,8 @@ class SigningServiceTest extends TestCase {
 		$signerSigned = ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'alice', 'status' => 'SIGNED'];
 
 		$this->objectService->method('find')->willReturnOnConsecutiveCalls(
-			$request,
 			$signerPending,
+			$request,
 			$signerSigned,
 			$request
 		);
@@ -1622,7 +2115,7 @@ class SigningServiceTest extends TestCase {
 	public function testASubstantialRequestRefusesASessionOnlySignerWithoutMutation(): void {
 		$request = ['id' => 'req-001', 'status' => 'PENDING', 'signatureLevel' => 'SES', 'requiredAssurance' => 'substantial', 'signerIds' => ['signer-001']];
 		$signer = ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'alice', 'status' => 'PENDING'];
-		$this->objectService->method('find')->willReturnOnConsecutiveCalls($request, $signer);
+		$this->objectService->method('find')->willReturnOnConsecutiveCalls($signer, $request);
 		$this->objectService->expects($this->never())->method('saveObject');
 		$this->auditService->expects($this->never())->method('logEvent');
 
@@ -1645,7 +2138,7 @@ class SigningServiceTest extends TestCase {
 		$this->keepStepUpEvidence(assurance: 'substantial', ageSeconds: 20 * 60);
 		$request = ['id' => 'req-001', 'status' => 'PENDING', 'signatureLevel' => 'SES', 'requiredAssurance' => 'substantial', 'signerIds' => ['signer-001']];
 		$signer = ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'alice', 'status' => 'PENDING'];
-		$this->objectService->method('find')->willReturnOnConsecutiveCalls($request, $signer);
+		$this->objectService->method('find')->willReturnOnConsecutiveCalls($signer, $request);
 		$this->objectService->expects($this->never())->method('saveObject');
 
 		$this->expectException(StepUpRequiredException::class);
@@ -1664,13 +2157,13 @@ class SigningServiceTest extends TestCase {
 		$request = ['id' => 'req-001', 'status' => 'PENDING', 'signatureLevel' => 'SES', 'requiredAssurance' => 'substantial', 'signerIds' => ['signer-001', 'signer-002']];
 		$signer = ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'alice', 'status' => 'PENDING'];
 		$other = ['id' => 'signer-002', 'signingRequestId' => 'req-001', 'userId' => 'bob', 'status' => 'PENDING'];
-		$this->objectService->method('find')->willReturnOnConsecutiveCalls($request, $signer, $signer + ['status' => 'SIGNED'], $other, $request);
+		$this->objectService->method('find')->willReturnOnConsecutiveCalls($signer, $request, $signer + ['status' => 'SIGNED'], $other, $request);
 		$this->objectService->method('saveObject')->willReturnArgument(0);
 
 		$metadata = null;
 		$this->auditService->expects($this->once())->method('logEvent')->willReturnCallback(
-			function (...$args) use (&$metadata): array {
-				$metadata = $args[7] ?? null;
+			function (SigningAuditEvent $event) use (&$metadata): array {
+				$metadata = $event->metadata;
 				return [];
 			}
 		);
@@ -1694,7 +2187,7 @@ class SigningServiceTest extends TestCase {
 	public function testDeclineIsGatedToo(): void {
 		$request = ['id' => 'req-001', 'status' => 'IN_PROGRESS', 'signatureLevel' => 'SES', 'requiredAssurance' => 'high'];
 		$signer = ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'alice', 'status' => 'PENDING'];
-		$this->objectService->method('find')->willReturnOnConsecutiveCalls($request, $signer);
+		$this->stubFindById(rows: ['req-001' => $request, 'signer-001' => $signer]);
 		$this->objectService->expects($this->never())->method('saveObject');
 
 		$this->expectException(StepUpRequiredException::class);
@@ -2221,7 +2714,7 @@ class SigningServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testSignRefusesAMissingRequest(): void {
-		$this->objectService->method('find')->willReturn(null);
+		$this->stubFindById(rows: ['signer-001' => ['id' => 'signer-001', 'signingRequestId' => 'req-404', 'userId' => 'alice', 'status' => 'PENDING']]);
 		$this->objectService->expects($this->never())->method('saveObject');
 		$this->auditService->expects($this->never())->method('logEvent');
 
@@ -2238,7 +2731,7 @@ class SigningServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testSignRefusesARequestThatIsNotSignable(): void {
-		$this->objectService->method('find')->willReturn(['id' => 'req-001', 'status' => 'COMPLETED']);
+		$this->stubFindById(rows: ['req-001' => ['id' => 'req-001', 'status' => 'COMPLETED'], 'signer-001' => ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'alice', 'status' => 'PENDING']]);
 		$this->objectService->expects($this->never())->method('saveObject');
 
 		$this->expectException(exception: RuntimeException::class);
@@ -2261,7 +2754,7 @@ class SigningServiceTest extends TestCase {
 			'userId' => 'alice',
 			'status' => 'SIGNED',
 		];
-		$this->objectService->method('find')->willReturnOnConsecutiveCalls($requestData, $signerData);
+		$this->objectService->method('find')->willReturnOnConsecutiveCalls($signerData, $requestData);
 		$this->objectService->expects($this->never())->method('saveObject');
 		$this->auditService->expects($this->never())->method('logEvent');
 
@@ -2292,8 +2785,8 @@ class SigningServiceTest extends TestCase {
 			'status' => 'PENDING',
 		];
 		$this->objectService->method('find')->willReturnOnConsecutiveCalls(
-			$requestData,
 			$signerData,
+			$requestData,
 			$requestData,
 			$signerData
 		);
@@ -2308,16 +2801,8 @@ class SigningServiceTest extends TestCase {
 
 		$audit = [];
 		$this->auditService->expects($this->once())->method('logEvent')->willReturnCallback(
-			function (
-				string $signingRequestId,
-				string $action,
-				string $actorUserId,
-				string $actorDisplayName,
-				string $ipAddress,
-				string $signatureLevel='',
-				string $provider='',
-				array $metadata=[]
-			) use (&$audit): array {
+			function (SigningAuditEvent $event) use (&$audit): array {
+				[$signingRequestId, $action, $actorUserId, $actorDisplayName, $ipAddress, $signatureLevel, $provider, $metadata] = [$event->request->id, $event->action, $event->actor->userId, $event->actor->displayName, $event->actor->ipAddress, $event->request->signatureLevel, $event->request->provider, $event->metadata];
 				$audit = compact('signingRequestId', 'action', 'actorUserId', 'actorDisplayName', 'ipAddress', 'signatureLevel', 'provider', 'metadata');
 				return $audit;
 			}

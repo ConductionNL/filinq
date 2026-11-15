@@ -97,7 +97,7 @@ class ReportRenderController extends Controller {
 	#[NoCSRFRequired]
 	#[AnonRateLimit(limit: 60, period: 60)]
 	public function render(): JSONResponse {
-		$unauthorised = $this->requireValidToken();
+		$unauthorised = $this->requireValidToken() ?? $this->refuseNamedStorageUser();
 		if ($unauthorised instanceof JSONResponse) {
 			return $unauthorised;
 		}
@@ -141,7 +141,7 @@ class ReportRenderController extends Controller {
 	#[NoCSRFRequired]
 	#[AnonRateLimit(limit: 20, period: 60)]
 	public function renderBatch(): JSONResponse {
-		$unauthorised = $this->requireValidToken();
+		$unauthorised = $this->requireValidToken() ?? $this->refuseNamedStorageUser();
 		if ($unauthorised instanceof JSONResponse) {
 			return $unauthorised;
 		}
@@ -192,24 +192,41 @@ class ReportRenderController extends Controller {
 	}//end resolveTenantId()
 
 	/**
-	 * Parse the optional `options` request parameter, folding in `userId`
-	 * when the caller supplied one at the top level.
+	 * Parse the optional `options` request parameter.
 	 *
 	 * @return array<string, mixed> The options array.
 	 */
 	private function resolveOptions(): array {
 		$options = $this->request->getParam('options', []);
 		if (is_array($options) === false) {
-			$options = [];
-		}
-
-		$userId = $this->request->getParam('userId');
-		if ($userId !== null) {
-			$options['userId'] = $userId;
+			return [];
 		}
 
 		return $options;
 	}//end resolveOptions()
+
+	/**
+	 * Refuse a request that names whose Files receive the output.
+	 *
+	 * The bearer token is one instance-wide secret and identifies no user, so
+	 * output always goes to the admin-configured `report_render_storage_user`.
+	 *
+	 * @return JSONResponse|null A 400 response when the request names a user; null otherwise.
+	 */
+	private function refuseNamedStorageUser(): ?JSONResponse {
+		$options = $this->request->getParam('options', []);
+		$named = $this->request->getParam('userId') !== null
+			|| (is_array($options) === true && array_key_exists('userId', $options) === true);
+
+		if ($named === false) {
+			return null;
+		}
+
+		return new JSONResponse(
+			data: ['error' => 'userId is not accepted; output is stored for the configured storage user'],
+			statusCode: Http::STATUS_BAD_REQUEST
+		);
+	}//end refuseNamedStorageUser()
 
 	/**
 	 * Verify the caller's bearer token against the configured shared secret.

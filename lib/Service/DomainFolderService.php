@@ -126,14 +126,6 @@ class DomainFolderService implements DomainFolderServiceInterface {
 	 *               refused: array<int, array{group: string, action: string, reason: string}>,
 	 *               pinnedReason: ?string} The outcome.
 	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Each branch here is one of the
-	 * outcomes REQ-CDF-02 names: pinned, unreadable, granted, revoked, refused,
-	 * already in step. Collapsing any two of them is exactly the "partly
-	 * reconciled reported as reconciled" this method exists to refuse.
-	 *
-	 * @SuppressWarnings(PHPMD.NPathComplexity) Same reason: the paths are the
-	 * outcome matrix, not nesting that could be flattened.
-	 *
 	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	public function reconcile(array $domain, string $owner): array {
@@ -159,56 +151,83 @@ class DomainFolderService implements DomainFolderServiceInterface {
 			);
 		}
 
-		$granted = [];
-		$revoked = [];
-		$refused = [];
+		$changes = $this->correct(
+			access: ['path' => $path, 'owner' => $owner],
+			moves: ['grant' => array_diff($declared, $observed), 'revoke' => array_diff($observed, $declared)]
+		);
 
-		foreach (array_diff($declared, $observed) as $group) {
-			try {
-				$this->gateway->grant(path: $path, owner: $owner, group: (string)$group);
-				$granted[] = (string)$group;
-			} catch (Throwable $e) {
-				$refused[] = ['group' => (string)$group, 'action' => 'grant', 'reason' => $e->getMessage()];
+		return $this->settled(path: $path, changes: $changes);
+	}//end reconcile()
+
+	/**
+	 * Grant and revoke group access, recording each change and each refusal.
+	 *
+	 * Grants run before revokes, so refusals are listed in that order.
+	 *
+	 * @param array{path: string, owner: string}                $access Where the folder is and whose storage holds it.
+	 * @param array{grant: array<string>, revoke: array<string>} $moves  The groups to grant and to revoke.
+	 *
+	 * @return array{grant: array<int, string>, revoke: array<int, string>,
+	 *               refused: array<int, array{group: string, action: string, reason: string}>} What happened.
+	 */
+	private function correct(array $access, array $moves): array {
+		$changes = ['grant' => [], 'revoke' => [], 'refused' => []];
+		foreach ($moves as $action => $groups) {
+			foreach ($groups as $group) {
+				try {
+					match ($action) {
+						'grant' => $this->gateway->grant(path: $access['path'], owner: $access['owner'], group: (string)$group),
+						'revoke' => $this->gateway->revoke(path: $access['path'], owner: $access['owner'], group: (string)$group),
+					};
+					$changes[$action][] = (string)$group;
+				} catch (Throwable $e) {
+					// 🔴 A REVOKE THAT FAILS IS THE ONE THAT MATTERS. A grant that
+					// fails leaves somebody without access, which they will report.
+					// A revoke that fails leaves somebody WITH access nobody meant
+					// them to have, and nobody reports that.
+					$changes['refused'][] = ['group' => (string)$group, 'action' => $action, 'reason' => $e->getMessage()];
+				}
 			}
 		}
 
-		foreach (array_diff($observed, $declared) as $group) {
-			try {
-				$this->gateway->revoke(path: $path, owner: $owner, group: (string)$group);
-				$revoked[] = (string)$group;
-			} catch (Throwable $e) {
-				// 🔴 A REVOKE THAT FAILS IS THE ONE THAT MATTERS. A grant that
-				// fails leaves somebody without access, which they will report.
-				// A revoke that fails leaves somebody WITH access nobody meant
-				// them to have, and nobody reports that.
-				$refused[] = ['group' => (string)$group, 'action' => 'revoke', 'reason' => $e->getMessage()];
-			}
-		}
+		return $changes;
+	}//end correct()
 
-		if ($refused !== []) {
+	/**
+	 * The outcome of a run of changes: refused, in step or corrected.
+	 *
+	 * @param string              $path    The folder.
+	 * @param array<string, array> $changes What happened: `grant`, `revoke` and `refused`, as correct() returns them.
+	 *
+	 * @return array{state: string, path: string, granted: array<int, string>, revoked: array<int, string>,
+	 *               refused: array<int, array{group: string, action: string, reason: string}>,
+	 *               pinnedReason: ?string} The outcome.
+	 */
+	private function settled(string $path, array $changes): array {
+		if ($changes['refused'] !== []) {
 			// Refused wins over corrected even when some corrections landed.
 			// "Partly reconciled" reported as reconciled is the line somebody
 			// reads and stops looking at.
 			return $this->outcome(
 				state: self::STATE_REFUSED,
 				path: $path,
-				granted: $granted,
-				revoked: $revoked,
-				refused: $refused
+				granted: $changes['grant'],
+				revoked: $changes['revoke'],
+				refused: $changes['refused']
 			);
 		}
 
-		if ($granted === [] && $revoked === []) {
+		if ($changes['grant'] === [] && $changes['revoke'] === []) {
 			return $this->outcome(state: self::STATE_IN_STEP, path: $path);
 		}
 
 		return $this->outcome(
 			state: self::STATE_CORRECTED,
 			path: $path,
-			granted: $granted,
-			revoked: $revoked
+			granted: $changes['grant'],
+			revoked: $changes['revoke']
 		);
-	}//end reconcile()
+	}//end settled()
 
 	/**
 	 * The groups a domain declares, as a clean list.
@@ -244,7 +263,9 @@ class DomainFolderService implements DomainFolderServiceInterface {
 	 * @param array<int, array{group: string, action: string, reason: string}> $refused    What could not be done, and why.
 	 * @param string|null                                                   $pinnedReason Why it was pinned out.
 	 *
-	 * @return array<string, mixed> The outcome.
+	 * @return array{state: string, path: string, granted: array<int, string>, revoked: array<int, string>,
+	 *               refused: array<int, array{group: string, action: string, reason: string}>,
+	 *               pinnedReason: ?string} The outcome.
 	 */
 	private function outcome(
 		string $state,

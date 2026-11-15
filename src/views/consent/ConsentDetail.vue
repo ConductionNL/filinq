@@ -1,3 +1,7 @@
+<!--
+  - SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
 <script setup>
 import { translate as t } from '@nextcloud/l10n'
 import { consentStore } from '../../store/store.js'
@@ -11,7 +15,14 @@ import { consentStore } from '../../store/store.js'
 		:loading="consentStore.loading"
 		:loadingLabel="t('filinq', 'Loading consent record...')"
 		:error="!consentStore.consentItem"
-		:errorMessage="t('filinq', 'No consent record selected.')">
+		:errorMessage="t('filinq', 'No consent record selected.')"
+		objectType="filinq-publicationConsent"
+		:objectId="consentStore.consentItem?.id || ''"
+		:sidebar="{
+			enabled: true,
+			register: 'filinq',
+			schema: 'publicationConsent',
+		}">
 		<!--
 			ENTITY INFORMATION IS A DEFAULT-SLOT SECTION, NOT A STATS TABLE, AND
 			THAT IS LOAD-BEARING.
@@ -184,7 +195,12 @@ import { consentStore } from '../../store/store.js'
 						<NcTextField
 							v-model="evidence"
 							:label="t('filinq', 'How did the answer reach you?')"
-							:placeholder="t('filinq', 'For example: signed form received by post on 20 October')" />
+							:placeholder="
+								t(
+									'filinq',
+									'For example: signed form received by post on 20 October',
+								)
+							" />
 					</td>
 				</tr>
 				<tr>
@@ -242,16 +258,24 @@ import { consentStore } from '../../store/store.js'
 			<ul class="status-events">
 				<li v-for="(event, index) in statusEvents" :key="index">
 					{{
-						t('filinq', '{when}: {who} changed {field} from {from} to {to}', {
-							when: formatDate(event.at),
-							who: event.by,
-							field: event.field,
-							from: event.from,
-							to: event.to,
-						})
+						t(
+							'filinq',
+							'{when}: {who} changed {field} from {from} to {to}',
+							{
+								when: formatDate(event.at),
+								who: event.by,
+								field: event.field,
+								from: event.from,
+								to: event.to,
+							},
+						)
 					}}
 					<span v-if="event.evidence">
-						{{ t('filinq', 'Evidence: {evidence}', { evidence: event.evidence }) }}
+						{{
+							t('filinq', 'Evidence: {evidence}', {
+								evidence: event.evidence,
+							})
+						}}
 					</span>
 				</li>
 			</ul>
@@ -303,6 +327,60 @@ import {
 } from '@nextcloud/vue'
 import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue'
 import ContentSave from 'vue-material-design-icons/ContentSave.vue'
+
+/**
+ * The consent statuses a record can be set to.
+ *
+ * @return {Array<{label: string, value: string}>} The options, labels translated.
+ */
+function consentStatusOptions() {
+	return [
+		{ label: t('filinq', 'Pending'), value: 'pending' },
+		{ label: t('filinq', 'Consent Given'), value: 'consent_given' },
+		{
+			label: t('filinq', 'Objection Received'),
+			value: 'objection_received',
+		},
+		{ label: t('filinq', 'No Response'), value: 'no_response' },
+		{ label: t('filinq', 'Anonymized'), value: 'anonymized' },
+	]
+}
+
+/**
+ * The notification statuses a record can be set to.
+ *
+ * @return {Array<{label: string, value: string}>} The options, labels translated.
+ */
+function notificationStatusOptions() {
+	return [
+		{ label: t('filinq', 'Pending'), value: 'pending' },
+		{ label: t('filinq', 'Sent'), value: 'sent' },
+		{ label: t('filinq', 'Delivered'), value: 'delivered' },
+		{ label: t('filinq', 'Failed'), value: 'failed' },
+		{ label: t('filinq', 'Skipped'), value: 'skipped' },
+	]
+}
+
+/**
+ * The publication decisions a record can be set to.
+ *
+ * @return {Array<{label: string, value: string}>} The options, labels translated.
+ */
+function publicationDecisionOptions() {
+	return [
+		{ label: t('filinq', 'Pending'), value: 'pending' },
+		{ label: t('filinq', 'Anonymize'), value: 'anonymize' },
+		{
+			label: t('filinq', 'Publish with Consent'),
+			value: 'publish_with_consent',
+		},
+		{
+			label: t('filinq', 'Publish Anonymized'),
+			value: 'publish_anonymized',
+		},
+		{ label: t('filinq', 'Reject'), value: 'reject' },
+	]
+}
 
 export default {
 	name: 'ConsentDetail',
@@ -359,38 +437,11 @@ export default {
 				organization: 'primary',
 			},
 
-			consentStatusOptions: [
-				{ label: t('filinq', 'Pending'), value: 'pending' },
-				{ label: t('filinq', 'Consent Given'), value: 'consent_given' },
-				{
-					label: t('filinq', 'Objection Received'),
-					value: 'objection_received',
-				},
-				{ label: t('filinq', 'No Response'), value: 'no_response' },
-				{ label: t('filinq', 'Anonymized'), value: 'anonymized' },
-			],
+			consentStatusOptions: consentStatusOptions(),
 
-			notificationStatusOptions: [
-				{ label: t('filinq', 'Pending'), value: 'pending' },
-				{ label: t('filinq', 'Sent'), value: 'sent' },
-				{ label: t('filinq', 'Delivered'), value: 'delivered' },
-				{ label: t('filinq', 'Failed'), value: 'failed' },
-				{ label: t('filinq', 'Skipped'), value: 'skipped' },
-			],
+			notificationStatusOptions: notificationStatusOptions(),
 
-			publicationDecisionOptions: [
-				{ label: t('filinq', 'Pending'), value: 'pending' },
-				{ label: t('filinq', 'Anonymize'), value: 'anonymize' },
-				{
-					label: t('filinq', 'Publish with Consent'),
-					value: 'publish_with_consent',
-				},
-				{
-					label: t('filinq', 'Publish Anonymized'),
-					value: 'publish_anonymized',
-				},
-				{ label: t('filinq', 'Reject'), value: 'reject' },
-			],
+			publicationDecisionOptions: publicationDecisionOptions(),
 		}
 	},
 
@@ -403,19 +454,21 @@ export default {
 		 * Recording consent or an objection needs evidence of how it came in.
 		 *
 		 * @return {boolean}
-		 * @spec openspec/changes/consent-changes-are-recorded-events/specs/consent-management/spec.md
+		 * @spec openspec/specs/consent-management/spec.md
 		 */
 		needsEvidence() {
 			const next = this.editData.consentStatus?.value
-			return ['consent_given', 'objection_received'].includes(next)
+			return (
+				['consent_given', 'objection_received'].includes(next)
 				&& next !== consentStore.consentItem?.consentStatus
+			)
 		},
 
 		/**
 		 * The recorded status changes, oldest first.
 		 *
 		 * @return {Array<object>}
-		 * @spec openspec/changes/consent-changes-are-recorded-events/specs/consent-management/spec.md
+		 * @spec openspec/specs/consent-management/spec.md
 		 */
 		statusEvents() {
 			return Array.isArray(consentStore.consentItem?.statusEvents)
@@ -609,7 +662,10 @@ export default {
 				this.evidence = ''
 				showSuccess(t('filinq', 'Consent record updated successfully'))
 			} else {
-				showError(consentStore.error || t('filinq', 'Failed to update consent record'))
+				showError(
+					consentStore.error
+						|| t('filinq', 'Failed to update consent record'),
+				)
 			}
 		},
 	},

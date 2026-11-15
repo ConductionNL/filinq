@@ -85,6 +85,17 @@ class ChartSvgRenderer {
 	private const DEFAULT_MAX_POINTS = 1000;
 
 	/**
+	 * The default of each integer option.
+	 *
+	 * @var array<string, int>
+	 */
+	private const INT_OPTION_DEFAULTS = [
+		'width' => self::DEFAULT_WIDTH,
+		'height' => self::DEFAULT_HEIGHT,
+		'maxPoints' => self::DEFAULT_MAX_POINTS,
+	];
+
+	/**
 	 * The failure reason recorded by the most recent {@see render()} call
 	 * that fell back to a placeholder, or null when the last call rendered
 	 * a real chart. Callers (the Twig `chart()` function) read this
@@ -185,52 +196,57 @@ class ChartSvgRenderer {
 	public function render(string $type, array $data, array $options = []): string {
 		$this->lastWarning = null;
 
-		$width = $this->intOption(options: $options, key: 'width', default: self::DEFAULT_WIDTH);
-		$height = $this->intOption(options: $options, key: 'height', default: self::DEFAULT_HEIGHT);
+		$outcome = $this->chartOrError(type: $type, input: new ChartInput(data: $data, options: $options));
+		if ($outcome instanceof ChartRenderError) {
+			return $this->placeholderFor(error: $outcome, options: $options);
+		}
 
+		return $outcome;
+	}//end render()
+
+	/**
+	 * The chart's SVG, or why it cannot be drawn: an unsupported type, data
+	 * that does not normalise, or a renderer refusal.
+	 *
+	 * @param string     $type  Chart type: 'bar', 'line', or 'pie'.
+	 * @param ChartInput $input The raw data and options.
+	 *
+	 * @return string|ChartRenderError The SVG, or the reason for a placeholder.
+	 */
+	private function chartOrError(string $type, ChartInput $input): string|ChartRenderError {
 		if (in_array(needle: $type, haystack: self::SUPPORTED_TYPES, strict: true) === false) {
-			return $this->renderPlaceholder(
-				width: $width,
-				height: $height,
-				message: 'chart error: unsupported chart type "%s"',
-				parameters: [$type]
-			);
+			return new ChartRenderError(message: 'chart error: unsupported chart type "%s"', parameters: [$type]);
 		}
 
 		$normalized = $this->normalizer->normalize(
-			data: $data,
-			maxPoints: $this->intOption(options: $options, key: 'maxPoints', default: self::DEFAULT_MAX_POINTS)
+			data: $input->data,
+			maxPoints: $this->intOption(options: $input->options, key: 'maxPoints')
 		);
 
 		if ($normalized instanceof ChartRenderError) {
-			return $this->renderPlaceholder(
-				width: $width,
-				height: $height,
-				message: $normalized->message,
-				parameters: $normalized->parameters
-			);
+			return $normalized;
 		}
 
-		$svg = $this->delegate(
-			type: $type,
+		return $this->delegate(type: $type, chart: $this->chartRequest(normalized: $normalized, options: $input->options));
+	}//end chartOrError()
+
+	/**
+	 * The request the per-type renderers draw from.
+	 *
+	 * @param array $normalized The normalised data.
+	 * @param array $options    The rendering options.
+	 *
+	 * @return ChartRequest The data, palette, canvas size and options.
+	 */
+	private function chartRequest(array $normalized, array $options): ChartRequest {
+		return new ChartRequest(
 			normalized: $normalized,
 			palette: $this->palette->resolve(options: $options),
-			width: $width,
-			height: $height,
+			width: $this->intOption(options: $options, key: 'width'),
+			height: $this->intOption(options: $options, key: 'height'),
 			options: $options
 		);
-
-		if ($svg instanceof ChartRenderError) {
-			return $this->renderPlaceholder(
-				width: $width,
-				height: $height,
-				message: $svg->message,
-				parameters: $svg->parameters
-			);
-		}
-
-		return $svg;
-	}//end render()
+	}//end chartRequest()
 
 	/**
 	 * The failure reason from the most recent {@see render()} call, or null
@@ -248,96 +264,75 @@ class ChartSvgRenderer {
 	 * Hand a normalized payload to the renderer for its chart type.
 	 *
 	 * @param string $type Chart type (already validated as supported).
-	 * @param array $normalized Normalized `{labels, series}` data.
-	 * @param array $palette Ordered hex colors.
-	 * @param int $width Canvas width.
-	 * @param int $height Canvas height.
-	 * @param array $options Rendering options.
+	 * @param ChartRequest $chart The normalized data, palette, canvas size and options.
 	 *
 	 * @return string|ChartRenderError SVG markup, or the reason no chart could
 	 *                                 be drawn.
 	 */
-	private function delegate(
-		string $type,
-		array $normalized,
-		array $palette,
-		int $width,
-		int $height,
-		array $options,
-	): string|ChartRenderError {
+	private function delegate(string $type, ChartRequest $chart): string|ChartRenderError {
 		if ($type === 'bar') {
-			return $this->bar->render(
-				normalized: $normalized,
-				palette: $palette,
-				width: $width,
-				height: $height,
-				options: $options
-			);
+			return $this->bar->render(chart: $chart);
 		}
 
 		if ($type === 'line') {
-			return $this->line->render(
-				normalized: $normalized,
-				palette: $palette,
-				width: $width,
-				height: $height,
-				options: $options
-			);
+			return $this->line->render(chart: $chart);
 		}
 
-		return $this->pie->render(
-			normalized: $normalized,
-			palette: $palette,
-			width: $width,
-			height: $height,
-			options: $options
-		);
+		return $this->pie->render(chart: $chart);
 
 	}//end delegate()
 
 	/**
-	 * Render an accessible placeholder box with a centered message — used
-	 * for chart errors and empty-data states. Always valid SVG so callers
-	 * can embed the result unconditionally.
+	 * A visible placeholder box carrying the (translated) reason; the reason
+	 * is also kept for {@see getLastWarning()}.
 	 *
-	 * @param int $width Canvas width.
-	 * @param int $height Canvas height.
-	 * @param string $message    English source message with `%s` slots (escaped on output).
-	 * @param array  $parameters Values for the slots.
+	 * @param ChartRenderError $error   Why no chart is drawn.
+	 * @param array            $options The rendering options (width, height).
 	 *
 	 * @return string SVG markup.
-	 *
-	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-002
 	 */
-	private function renderPlaceholder(int $width, int $height, string $message, array $parameters = []): string {
-		if ($this->l10n !== null) {
-			$message = $this->l10n->t($message, $parameters);
-		} elseif ($parameters !== []) {
-			$message = vsprintf($message, $parameters);
-		}
-
+	private function placeholderFor(ChartRenderError $error, array $options): string {
+		$message = $this->translated(error: $error);
 		$this->lastWarning = $message;
 
-		$parts = [];
-		$parts[] = $this->svg->svgOpenTag(width: $width, height: $height);
-		$parts[] = $this->svg->rectEl(x: 1, y: 1, width: $width - 2, height: $height - 2, color: '#F5F5F5');
-		$parts[] = $this->svg->rectOutlineEl(x: 1, y: 1, width: $width - 2, height: $height - 2, color: '#CCCCCC');
-		$parts[] = $this->svg->textEl(x: $width / 2, y: $height / 2, text: $message, anchor: 'middle', size: 11, color: '#888888');
-		$parts[] = '</svg>';
+		$width = $this->intOption(options: $options, key: 'width');
+		$height = $this->intOption(options: $options, key: 'height');
 
-		return implode('', $parts);
-	}//end renderPlaceholder()
+		return $this->svg->svgOpenTag(width: $width, height: $height)
+			. $this->svg->placeholderEl(canvas: new SvgSize(width: $width, height: $height), message: $message)
+			. '</svg>';
+	}//end placeholderFor()
 
 	/**
-	 * Read an integer option with a default and a sane positive floor.
+	 * The reason as the reader sees it: translated when a translator is
+	 * wired, its parameters filled in otherwise.
 	 *
-	 * @param array $options Options array.
-	 * @param string $key Option key.
-	 * @param int $default Default value.
+	 * @param ChartRenderError $error Why no chart is drawn.
 	 *
-	 * @return int Resolved value (always >= 1).
+	 * @return string The message.
 	 */
-	private function intOption(array $options, string $key, int $default): int {
+	private function translated(ChartRenderError $error): string {
+		if ($this->l10n !== null) {
+			return $this->l10n->t($error->message, $error->parameters);
+		}
+
+		if ($error->parameters !== []) {
+			return vsprintf($error->message, $error->parameters);
+		}
+
+		return $error->message;
+	}//end translated()
+
+	/**
+	 * A positive integer option, or its default when absent or not numeric.
+	 *
+	 * @param array  $options The rendering options.
+	 * @param string $key     'width', 'height' or 'maxPoints'.
+	 *
+	 * @return int The value, at least 1.
+	 */
+	private function intOption(array $options, string $key): int {
+		$default = self::INT_OPTION_DEFAULTS[$key];
 		$value = $options[$key] ?? $default;
 		if (is_numeric($value) === false) {
 			return $default;

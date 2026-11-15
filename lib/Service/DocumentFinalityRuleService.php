@@ -112,14 +112,7 @@ class DocumentFinalityRuleService implements DocumentFinalityRuleServiceInterfac
 			);
 		}
 
-		$states = [];
-		foreach ($finalStates as $state) {
-			$state = trim((string)$state);
-			if ($state !== '') {
-				$states[] = $state;
-			}
-		}
-
+		$states = $this->nonEmptyStates(finalStates: $finalStates);
 		if ($states === []) {
 			throw new RuntimeException(
 				message: 'A finality declaration names at least one state that makes a document final.'
@@ -138,6 +131,41 @@ class DocumentFinalityRuleService implements DocumentFinalityRuleServiceInterfac
 			'declaredAt' => (new DateTimeImmutable())->format(DATE_ATOM),
 		];
 
+		return $this->store(record: $record, existing: $existing);
+
+	}//end declareRule()
+
+	/**
+	 * The trimmed, non-empty states of a declaration.
+	 *
+	 * @param array<int, mixed> $finalStates The declared states.
+	 *
+	 * @return array<int, string> The states that remain.
+	 */
+	private function nonEmptyStates(array $finalStates): array {
+		$states = [];
+		foreach ($finalStates as $state) {
+			$state = trim((string)$state);
+			if ($state !== '') {
+				$states[] = $state;
+			}
+		}
+
+		return $states;
+
+	}//end nonEmptyStates()
+
+	/**
+	 * Save a declaration, over the existing record for the same type when there is one.
+	 *
+	 * @param array<string, mixed> $record The declaration to save.
+	 * @param array<string, mixed>|null $existing The stored declaration it replaces, or null.
+	 *
+	 * @return array<string, mixed> The stored declaration.
+	 *
+	 * @throws RuntimeException When the declaration cannot be stored.
+	 */
+	private function store(array $record, ?array $existing): array {
 		try {
 			$objectService = $this->objectResolver->resolve();
 			$uuid = (string)($existing['uuid'] ?? '');
@@ -161,7 +189,7 @@ class DocumentFinalityRuleService implements DocumentFinalityRuleServiceInterfac
 
 		return $this->flatten(row: $stored);
 
-	}//end declare()
+	}//end store()
 
 	/**
 	 * Find the declaration for one record type, if a consuming app made one.
@@ -260,6 +288,21 @@ class DocumentFinalityRuleService implements DocumentFinalityRuleServiceInterfac
 			$reason = sprintf('%s reached the status "%s".', $typeReference, $state);
 		}
 
+		return $this->finaliseAll(fileIds: $fileIds, reason: $reason);
+
+	}//end applyStateChange()
+
+	/**
+	 * Finalise each document, skipping invalid ids and documents that are already final.
+	 *
+	 * A failure on one document is logged and the rest still run.
+	 *
+	 * @param array<int, int> $fileIds The documents.
+	 * @param string $reason The reason written on each version.
+	 *
+	 * @return array<int, array<string, mixed>> The versions made final.
+	 */
+	private function finaliseAll(array $fileIds, string $reason): array {
 		$finalised = [];
 		foreach ($fileIds as $fileId) {
 			$fileId = (int)$fileId;
@@ -287,7 +330,7 @@ class DocumentFinalityRuleService implements DocumentFinalityRuleServiceInterfac
 
 		return $finalised;
 
-	}//end applyStateChange()
+	}//end finaliseAll()
 
 	/**
 	 * Read one OpenRegister row into a flat record.

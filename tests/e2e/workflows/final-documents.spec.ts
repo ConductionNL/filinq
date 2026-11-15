@@ -123,7 +123,7 @@ test.describe('Final documents are frozen against change', () => {
 			.getByTestId('final-reason-input')
 			.locator('input')
 			.fill('Het besluit is genomen')
-		await page.getByTestId('final-reason-confirm').click()
+		await page.getByTestId('cn-dialog-actions-submit').click()
 
 		const panel = page.getByTestId('document-final')
 		await expect(panel).toBeVisible({ timeout: 15000 })
@@ -240,7 +240,7 @@ test.describe('Final documents are frozen against change', () => {
 			.getByTestId('final-reason-input')
 			.locator('input')
 			.fill('De straatnaam klopte niet')
-		await page.getByTestId('final-reason-confirm').click()
+		await page.getByTestId('cn-dialog-actions-submit').click()
 		await expect(page.getByTestId('document-final')).toBeVisible({
 			timeout: 15000,
 		})

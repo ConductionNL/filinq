@@ -27,6 +27,7 @@ namespace OCA\Filinq\Controller;
 
 use Exception;
 use InvalidArgumentException;
+use OCA\Filinq\Controller\Support\ServerErrorAnswer;
 use OCA\Filinq\Kernel\Contracts\PolicyCrudServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -47,6 +48,7 @@ use RuntimeException;
  * @link     https://www.filinq.app
  */
 class StandingConsentController extends Controller {
+	use AnswersNotAuthenticated;
 	/**
 	 * Constructor.
 	 *
@@ -81,14 +83,11 @@ class StandingConsentController extends Controller {
 	 */
 	public function index(): JSONResponse {
 		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+			return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 		}
 
 		try {
-			$this->crudService->requirePolicyPermission(
-				surface: PolicyCrudServiceInterface::SURFACE_STANDING_CONSENT,
-				action: 'read'
-			);
+			$this->requireStandingConsentPermission(action: 'read');
 			return new JSONResponse($this->crudService->listStandingConsents());
 		} catch (Exception $e) {
 			return $this->error(message: 'Failed to list standing consents: ', exception: $e);
@@ -110,14 +109,11 @@ class StandingConsentController extends Controller {
 	 */
 	public function show(string $id): JSONResponse {
 		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+			return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 		}
 
 		try {
-			$this->crudService->requirePolicyPermission(
-				surface: PolicyCrudServiceInterface::SURFACE_STANDING_CONSENT,
-				action: 'read'
-			);
+			$this->requireStandingConsentPermission(action: 'read');
 			$record = $this->crudService->getStandingConsent(uuid: $id);
 			if ($record === null) {
 				return new JSONResponse(['error' => $this->l10n->t('Standing consent not found')], 404);
@@ -141,14 +137,11 @@ class StandingConsentController extends Controller {
 	 */
 	public function create(): JSONResponse {
 		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+			return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 		}
 
 		try {
-			$this->crudService->requirePolicyPermission(
-				surface: PolicyCrudServiceInterface::SURFACE_STANDING_CONSENT,
-				action: 'create'
-			);
+			$this->requireStandingConsentPermission(action: 'create');
 			$data = $this->request->getParams();
 			return new JSONResponse($this->crudService->createStandingConsent(data: $data), 201);
 		} catch (RuntimeException $e) {
@@ -174,14 +167,11 @@ class StandingConsentController extends Controller {
 	 */
 	public function update(string $id): JSONResponse {
 		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+			return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 		}
 
 		try {
-			$this->crudService->requirePolicyPermission(
-				surface: PolicyCrudServiceInterface::SURFACE_STANDING_CONSENT,
-				action: 'update'
-			);
+			$this->requireStandingConsentPermission(action: 'update');
 			$data = $this->request->getParams();
 			return new JSONResponse(
 				$this->crudService->updateStandingConsent(uuid: $id, data: $data)
@@ -209,14 +199,11 @@ class StandingConsentController extends Controller {
 	 */
 	public function destroy(string $id): JSONResponse {
 		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+			return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 		}
 
 		try {
-			$this->crudService->requirePolicyPermission(
-				surface: PolicyCrudServiceInterface::SURFACE_STANDING_CONSENT,
-				action: 'delete'
-			);
+			$this->requireStandingConsentPermission(action: 'delete');
 			$this->crudService->deleteStandingConsent(uuid: $id);
 			return new JSONResponse(['deleted' => $id]);
 		} catch (RuntimeException $e) {
@@ -228,6 +215,22 @@ class StandingConsentController extends Controller {
 	}//end destroy()
 
 	/**
+	 * Require the caller's permission for this verb on the standing consent surface;
+	 * throws when it is refused, before the action does anything.
+	 *
+	 * @param string $action The verb: read, create, update or delete.
+	 *
+	 * @return void
+	 */
+	private function requireStandingConsentPermission(string $action): void {
+		$this->crudService->requirePolicyPermission(
+			surface: PolicyCrudServiceInterface::SURFACE_STANDING_CONSENT,
+			action: $action
+		);
+
+	}//end requireStandingConsentPermission()
+
+	/**
 	 * Wrap an exception into a 500 JSON response and log it.
 	 *
 	 * @param string $message Log prefix and user-facing prefix.
@@ -236,14 +239,7 @@ class StandingConsentController extends Controller {
 	 * @return JSONResponse
 	 */
 	private function error(string $message, Exception $exception): JSONResponse {
-		$this->logger->error(
-			$message . $exception->getMessage(),
-			['exception' => $exception]
-		);
-		return new JSONResponse(
-			['error' => $this->l10n->t($message . '%s', [$exception->getMessage()])],
-			500
-		);
+		return (new ServerErrorAnswer(logger: $this->logger, l10n: $this->l10n))->answer(message: $message, exception: $exception);
 
 	}//end error()
 }//end class

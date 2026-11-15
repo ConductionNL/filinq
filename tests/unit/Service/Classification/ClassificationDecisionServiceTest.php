@@ -27,7 +27,7 @@ namespace OCA\Filinq\Tests\Unit\Service\Classification;
 
 require_once __DIR__ . '/ClassificationDecisionFixture.php';
 
-use OCA\Filinq\Service\Classification\ClassificationRefused;
+use OCA\Filinq\Exception\ClassificationRefused;
 use PHPUnit\Framework\TestCase;
 
 /**

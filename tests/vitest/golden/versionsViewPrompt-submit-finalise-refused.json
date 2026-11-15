@@ -1,0 +1,12 @@
+{
+	"calls": [
+		[
+			"finaliseDocument",
+			7,
+			"because"
+		]
+	],
+	"emitted": [],
+	"prompt": "",
+	"error": "finaliseDocument refused"
+}

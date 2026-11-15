@@ -56,20 +56,12 @@ class GeneratedDocumentLogger {
 	 * Log a generated document to the document register for audit trail (DCS-072).
 	 *
 	 * Stores template UUID + version number per DCS-051, data sources, format,
-	 * status, and generating user. The template identity and the generation
-	 * outcome are each passed as one cohesive bag rather than as a dozen loose
-	 * scalars.
+	 * status, and generating user. What was generated and how it went are each
+	 * passed as one cohesive value rather than as a dozen loose scalars.
 	 *
-	 * @param array $template The template identity: {id: string, version: int|null, name: string}; a null version is left out of the entry
-	 * @param array $dataRefs The data references used
-	 * @param string $format The output format
-	 * @param array $outcome The generation outcome: {status: string, warnings: string[],
-	 *                       zaakId: ?string, errorMessage: ?string, fileId: ?int, filePath: ?string}
-	 * @param string $userId The generating user's UID
-	 * @param array $extra Extra fields to carry on the entry, such as the plain-language
-	 *                     rendition a template declared. Merged over the entry, so a
-	 *                     caller cannot quietly overwrite the template identity or the
-	 *                     outcome: those are written after the merge.
+	 * @param DocumentGenerationRecord $generation The template, data, format, user and extra fields.
+	 * @param array                    $outcome    The generation outcome: {status: string, warnings: string[],
+	 *                                             caseId: ?string, errorMessage: ?string, fileId: ?int, filePath: ?string}
 	 *
 	 * @return array The created document register entry
 	 *
@@ -77,67 +69,21 @@ class GeneratedDocumentLogger {
 	 * @spec openspec/changes/document-output-destinations-and-bulk-retention/specs/document-creatie-sjablonen/spec.md#req-ddob-004
 	 * @spec openspec/changes/documents-in-and-out-of-the-building/specs/letter-correspondence-generation/spec.md
 	 */
-	public function log(
-		array $template,
-		array $dataRefs,
-		string $format,
-		array $outcome,
-		string $userId,
-		array $extra = [],
-	): array {
+	public function log(DocumentGenerationRecord $generation, array $outcome): array {
 		try {
-			$objectService = $this->objectResolver->resolve();
-
-			// 🔑 THE CANONICAL FIELDS WIN OVER THE EXTRA ONES. `+` keeps the LEFT
-			// operand's keys, so a caller passing `templateId` or `status` in
-			// `extra` adds nothing and overwrites nothing: the audit trail's own
-			// account of what was generated is the one thing this entry exists
-			// to be trusted about, and it is not a caller's to rewrite.
-			$entry = [
-				'templateId' => $template['id'],
-				'templateVersion' => $template['version'],
-				'templateName' => $template['name'],
-				'dataRefs' => $dataRefs,
-				'format' => $format,
-				'status' => $outcome['status'],
-				'generatedAt' => date('c'),
-				'generatedBy' => $userId,
-				'warnings' => $outcome['warnings'],
-				'caseId' => $outcome['caseId'],
-				'errorMessage' => $outcome['errorMessage'],
-				'fileId' => ($outcome['fileId'] ?? null),
-				'filePath' => ($outcome['filePath'] ?? null),
-			] + $extra;
-
-			// An unknown template version is left out, never written as a number
-			// (REQ-DDTVP-002): a default that reads as a fact is the defect.
-			if ($entry['templateVersion'] === null) {
-				unset($entry['templateVersion']);
-			}
-
-			$result = $objectService->saveObject(
-				object: $entry,
+			$result = $this->objectResolver->resolve()->saveObject(
+				object: $this->entryFor(generation: $generation, outcome: $outcome),
 				register: 'filinq',
 				schema: 'generatedDocument'
 			);
 
-			if (is_object($result) === true
-				&& method_exists(object_or_class: $result, method: 'jsonSerialize') === true
-			) {
-				return $result->jsonSerialize();
-			}
-
-			if (is_array($result) === true) {
-				return $result;
-			}
-
-			return [];
+			return $this->asEntry(result: $result);
 		} catch (Exception $e) {
 			$this->logger->error(
 				message: 'Failed to log generated document: ' . $e->getMessage(),
 				context: [
-					'templateId' => $template['id'],
-					'templateVersion' => $template['version'],
+					'templateId' => $generation->template['id'],
+					'templateVersion' => $generation->template['version'],
 					'status' => $outcome['status'],
 				]
 			);
@@ -145,6 +91,68 @@ class GeneratedDocumentLogger {
 		}//end try
 
 	}//end log()
+
+	/**
+	 * The audit entry of one generation.
+	 *
+	 * @param DocumentGenerationRecord $generation The template, data, format, user and extra fields.
+	 * @param array                    $outcome    The generation outcome.
+	 *
+	 * @return array<string, mixed> The entry.
+	 */
+	private function entryFor(DocumentGenerationRecord $generation, array $outcome): array {
+		// 🔑 THE CANONICAL FIELDS WIN OVER THE EXTRA ONES. `+` keeps the LEFT
+		// operand's keys, so a caller passing `templateId` or `status` in
+		// `extra` adds nothing and overwrites nothing: the audit trail's own
+		// account of what was generated is the one thing this entry exists
+		// to be trusted about, and it is not a caller's to rewrite.
+		$entry = [
+			'templateId' => $generation->template['id'],
+			'templateVersion' => $generation->template['version'],
+			'templateName' => $generation->template['name'],
+			'dataRefs' => $generation->dataRefs,
+			'format' => $generation->format,
+			'status' => $outcome['status'],
+			'generatedAt' => date('c'),
+			'generatedBy' => $generation->userId,
+			'warnings' => $outcome['warnings'],
+			'caseId' => $outcome['caseId'],
+			'errorMessage' => $outcome['errorMessage'],
+			'fileId' => ($outcome['fileId'] ?? null),
+			'filePath' => ($outcome['filePath'] ?? null),
+		] + $generation->extra;
+
+		// An unknown template version is left out, never written as a number
+		// (REQ-DDTVP-002): a default that reads as a fact is the defect.
+		if ($entry['templateVersion'] === null) {
+			unset($entry['templateVersion']);
+		}
+
+		return $entry;
+
+	}//end entryFor()
+
+	/**
+	 * The saved entry as an array, whatever shape the register answered in.
+	 *
+	 * @param mixed $result What saveObject returned.
+	 *
+	 * @return array The entry; empty when the answer is unreadable.
+	 */
+	private function asEntry(mixed $result): array {
+		if (is_object($result) === true
+			&& method_exists(object_or_class: $result, method: 'jsonSerialize') === true
+		) {
+			return $result->jsonSerialize();
+		}
+
+		if (is_array($result) === true) {
+			return $result;
+		}
+
+		return [];
+
+	}//end asEntry()
 
 	/**
 	 * Write the audit entry of a generation that failed before it produced a document.
@@ -158,9 +166,12 @@ class GeneratedDocumentLogger {
 	 */
 	public function logFailure(array $attempt, string $errorMessage): array {
 		return $this->log(
-			template: ['id' => $attempt['templateId'], 'version' => null, 'name' => ''],
-			dataRefs: $attempt['dataRefs'],
-			format: $attempt['format'],
+			generation: new DocumentGenerationRecord(
+				template: ['id' => $attempt['templateId'], 'version' => null, 'name' => ''],
+				dataRefs: $attempt['dataRefs'],
+				format: $attempt['format'],
+				userId: $attempt['userId']
+			),
 			outcome: [
 				'status' => 'failed',
 				'warnings' => [],
@@ -168,8 +179,7 @@ class GeneratedDocumentLogger {
 				'errorMessage' => $errorMessage,
 				'fileId' => null,
 				'filePath' => null,
-			],
-			userId: $attempt['userId']
+			]
 		);
 	}//end logFailure()
 }//end class

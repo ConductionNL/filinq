@@ -151,7 +151,7 @@ interface DocumentServiceInterface {
 	 *
 	 * @throws Exception If rendering fails
 	 *
-	 * @spec openspec/changes/template-merge-preview/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function generateMergePreview(string $templateId, array $dataRefs, array $options = []): array;
 

@@ -278,6 +278,42 @@ class AnonymizationLinkServiceTest extends TestCase {
 	}//end testRecordAnonymizationLinkUpdatesExistingRecord()
 
 	/**
+	 * A link of another file is never updated: this file gets its own link.
+	 *
+	 * @return void
+	 */
+	public function testALinkOfAnotherFileIsNotUpdated(): void {
+		$otherFilesLink = [
+			'@self' => ['id' => 'other-uuid-009'],
+			'sourceFileId' => 77,
+			'anonymizedFileId' => 91,
+			'runCount' => 3,
+			'status' => 'anonymized',
+		];
+
+		$os = $this->makeObjectService(searchResult: [$otherFilesLink], saveReturn: ['@self' => ['id' => 'new-uuid-002']]);
+		$service = $this->buildService(objectService: $os);
+
+		$this->invokeRecord(
+			service: $service,
+			fileId: 42,
+			sourceNode: null,
+			resultInfo: [
+				'anonymizedFileId' => 123,
+				'anonymizedFileName' => 'doc_anonymized.pdf',
+				'anonymizedFilePath' => '/u/doc_anonymized.pdf',
+				'replacementCount' => 8,
+			]
+		);
+
+		$this->assertTrue(condition: $os->saveCalled);
+		$this->assertSame(expected: 42, actual: $os->captured['sourceFileId']);
+		$this->assertSame(expected: 1, actual: $os->captured['runCount']);
+		$this->assertArrayNotHasKey(key: 'id', array: $os->captured['@self']);
+
+	}//end testALinkOfAnotherFileIsNotUpdated()
+
+	/**
 	 * Best-effort: a saveObject failure is swallowed and no link id is surfaced.
 	 *
 	 * @return void

@@ -1,0 +1,290 @@
+{
+    "not a maintainer": {
+        "thrown": [
+            "RuntimeException",
+            "Only dictionary maintainers may change dictionaries."
+        ],
+        "calls": [
+            [
+                "assertMayMaintain"
+            ]
+        ]
+    },
+    "no such dictionary": {
+        "thrown": [
+            "OCP\\AppFramework\\Db\\DoesNotExistException",
+            "Custom dictionary dict-a not found."
+        ],
+        "calls": [
+            [
+                "assertMayMaintain"
+            ],
+            [
+                "findOne",
+                "customDictionary",
+                "dict-a"
+            ]
+        ]
+    },
+    "no access to the dictionary": {
+        "thrown": [
+            "RuntimeException",
+            "You do not have access to this custom dictionary."
+        ],
+        "calls": [
+            [
+                "assertMayMaintain"
+            ],
+            [
+                "findOne",
+                "customDictionary",
+                "dict-a"
+            ]
+        ]
+    },
+    "too many bytes": {
+        "thrown": [
+            "InvalidArgumentException",
+            "Import payload exceeds the 2097152 byte limit."
+        ],
+        "calls": [
+            [
+                "assertMayMaintain"
+            ],
+            [
+                "findOne",
+                "customDictionary",
+                "dict-a"
+            ]
+        ]
+    },
+    "exactly the byte limit": {
+        "result": {
+            "added": 1,
+            "skipped": 0,
+            "total": 1
+        },
+        "calls": 4
+    },
+    "too many rows": {
+        "thrown": [
+            "InvalidArgumentException",
+            "Import exceeds the 2000 row limit."
+        ],
+        "calls": [
+            [
+                "assertMayMaintain"
+            ],
+            [
+                "findOne",
+                "customDictionary",
+                "dict-a"
+            ]
+        ]
+    },
+    "exactly the row limit": {
+        "result": {
+            "added": 2000,
+            "skipped": 0,
+            "total": 2000
+        },
+        "calls": 2003
+    },
+    "a list with blanks and duplicates": {
+        "result": {
+            "added": 2,
+            "skipped": 5,
+            "total": 7
+        },
+        "calls": [
+            [
+                "assertMayMaintain"
+            ],
+            [
+                "findOne",
+                "customDictionary",
+                "dict-a"
+            ],
+            [
+                "listBySchema",
+                "customDictionaryTerm"
+            ],
+            [
+                "save",
+                "customDictionaryTerm",
+                {
+                    "value": "Barendrecht",
+                    "label": null,
+                    "dictionary": "dict-a-id"
+                }
+            ],
+            [
+                "save",
+                "customDictionaryTerm",
+                {
+                    "value": "Delft",
+                    "label": null,
+                    "dictionary": "dict-a-id"
+                }
+            ]
+        ]
+    },
+    "a csv with labels": {
+        "result": {
+            "added": 3,
+            "skipped": 1,
+            "total": 4
+        },
+        "calls": [
+            [
+                "assertMayMaintain"
+            ],
+            [
+                "findOne",
+                "customDictionary",
+                "dict-a"
+            ],
+            [
+                "listBySchema",
+                "customDictionaryTerm"
+            ],
+            [
+                "save",
+                "customDictionaryTerm",
+                {
+                    "value": "Operatie Zilverreiger",
+                    "label": "Codenaam X",
+                    "dictionary": "dict-a-id"
+                }
+            ],
+            [
+                "save",
+                "customDictionaryTerm",
+                {
+                    "value": "Dossier Karekiet",
+                    "label": null,
+                    "dictionary": "dict-a-id"
+                }
+            ],
+            [
+                "save",
+                "customDictionaryTerm",
+                {
+                    "value": "zilverreiger",
+                    "label": null,
+                    "dictionary": "dict-a-id"
+                }
+            ]
+        ]
+    },
+    "a csv read as a list": {
+        "result": {
+            "added": 1,
+            "skipped": 0,
+            "total": 1
+        },
+        "calls": [
+            [
+                "assertMayMaintain"
+            ],
+            [
+                "findOne",
+                "customDictionary",
+                "dict-a"
+            ],
+            [
+                "listBySchema",
+                "customDictionaryTerm"
+            ],
+            [
+                "save",
+                "customDictionaryTerm",
+                {
+                    "value": "Operatie Zilverreiger,Codenaam X",
+                    "label": null,
+                    "dictionary": "dict-a-id"
+                }
+            ]
+        ]
+    },
+    "a dictionary without an id": {
+        "result": {
+            "added": 1,
+            "skipped": 2,
+            "total": 3
+        },
+        "calls": [
+            [
+                "assertMayMaintain"
+            ],
+            [
+                "findOne",
+                "customDictionary",
+                "dict-a"
+            ],
+            [
+                "listBySchema",
+                "customDictionaryTerm"
+            ],
+            [
+                "save",
+                "customDictionaryTerm",
+                {
+                    "value": "Leiden",
+                    "label": null,
+                    "dictionary": "dict-a"
+                }
+            ]
+        ]
+    },
+    "nothing to import": {
+        "result": {
+            "added": 0,
+            "skipped": 2,
+            "total": 2
+        },
+        "calls": [
+            [
+                "assertMayMaintain"
+            ],
+            [
+                "findOne",
+                "customDictionary",
+                "dict-a"
+            ],
+            [
+                "listBySchema",
+                "customDictionaryTerm"
+            ]
+        ]
+    },
+    "a save fails": {
+        "thrown": [
+            "RuntimeException",
+            "register down"
+        ],
+        "calls": [
+            [
+                "assertMayMaintain"
+            ],
+            [
+                "findOne",
+                "customDictionary",
+                "dict-a"
+            ],
+            [
+                "listBySchema",
+                "customDictionaryTerm"
+            ],
+            [
+                "save",
+                "customDictionaryTerm",
+                {
+                    "value": "Delft",
+                    "label": null,
+                    "dictionary": "dict-a-id"
+                }
+            ]
+        ]
+    }
+}

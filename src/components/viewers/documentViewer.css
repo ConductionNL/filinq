@@ -1,0 +1,40 @@
+/*
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
+ * The frame the document viewers share: a backdrop, the loading and error
+ * states, and a paper sheet for viewers that render HTML.
+ */
+
+.dd-doc-viewer {
+	display: flex;
+	justify-content: center;
+	padding: 16px;
+	background: var(--color-background-dark);
+	min-height: 100%;
+}
+
+.dd-doc-viewer__state {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 8px;
+	padding: 32px;
+	color: var(--color-text-maxcontrast);
+}
+
+.dd-doc-viewer__sheet {
+	background: white;
+	color: black;
+	max-width: 800px;
+	width: 100%;
+	padding: 48px;
+	box-shadow: var(--dd-shadow-doc);
+	border-radius: var(--border-radius);
+}
+
+.dd-doc-viewer__html {
+	font-family: 'Calibri', 'Arial', sans-serif;
+	font-size: 14px;
+	line-height: 1.6;
+}

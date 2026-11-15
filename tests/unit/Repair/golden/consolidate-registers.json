@@ -1,0 +1,253 @@
+{
+    "a conflict stays in place": {
+        "output": [
+            "ConsolidateRegisters: 1 object(s) moved into filinq, 1 conflict(s) left in place, 0 pair(s) skipped (no target table yet), 0 pair(s) refused."
+        ],
+        "warnings": [
+            [
+                "warning",
+                "ConsolidateRegisters: uuid(s) already present in the target table; leaving BOTH rows in place. This is either a previous run that inserted and then failed to delete, or two genuinely different objects sharing an identity. Those want opposite treatments and nothing here tells them apart, so neither row is touched. Resolve by hand.",
+                {
+                    "sourceTable": "oc_openregister_table_66_227",
+                    "targetTable": "oc_openregister_table_517_227",
+                    "uuids": [
+                        "b"
+                    ]
+                }
+            ]
+        ],
+        "tables": {
+            "oc_openregister_table_517_227": [
+                {
+                    "_id": 1,
+                    "_uuid": "b",
+                    "_register": "517",
+                    "_schema": "227",
+                    "name": "object b"
+                },
+                {
+                    "_register": "517",
+                    "_schema": "227",
+                    "_uuid": "a",
+                    "name": "object a"
+                }
+            ],
+            "oc_openregister_table_66_227": [
+                {
+                    "_id": 2,
+                    "_uuid": "b",
+                    "_register": "66",
+                    "_schema": "227",
+                    "name": "object b"
+                }
+            ]
+        }
+    },
+    "a pair without a target table": {
+        "output": [
+            "ConsolidateRegisters: 2 object(s) moved into filinq, 0 conflict(s) left in place, 1 pair(s) skipped (no target table yet), 0 pair(s) refused."
+        ],
+        "warnings": [
+            [
+                "warning",
+                "ConsolidateRegisters: no target shard table for this schema; skipping the pair. No table is created here \u2014 DDL a repair step does not own makes a rollback impossible.",
+                {
+                    "sourceTable": "oc_openregister_table_66_228",
+                    "schemaId": 228,
+                    "targetRegister": 517
+                }
+            ]
+        ],
+        "tables": {
+            "oc_openregister_table_3_11": [],
+            "oc_openregister_table_517_11": [
+                {
+                    "_register": "517",
+                    "_schema": "11",
+                    "_uuid": "x",
+                    "name": "object x"
+                }
+            ],
+            "oc_openregister_table_517_227": [
+                {
+                    "_register": "517",
+                    "_schema": "227",
+                    "_uuid": "a",
+                    "name": "object a"
+                }
+            ],
+            "oc_openregister_table_66_227": [],
+            "oc_openregister_table_66_228": [
+                {
+                    "_id": 1,
+                    "_uuid": "o",
+                    "_register": "66",
+                    "_schema": "228",
+                    "name": "object o"
+                }
+            ]
+        }
+    },
+    "every source register": {
+        "output": [
+            "ConsolidateRegisters: 6 object(s) moved into filinq, 0 conflict(s) left in place, 0 pair(s) skipped (no target table yet), 0 pair(s) refused."
+        ],
+        "warnings": [],
+        "tables": {
+            "oc_openregister_table_3_11": [],
+            "oc_openregister_table_4_15": [],
+            "oc_openregister_table_517_11": [
+                {
+                    "_register": "517",
+                    "_schema": "11",
+                    "_uuid": "r3",
+                    "name": "object r3"
+                }
+            ],
+            "oc_openregister_table_517_12": [
+                {
+                    "_register": "517",
+                    "_schema": "12",
+                    "_uuid": "r5",
+                    "name": "object r5"
+                }
+            ],
+            "oc_openregister_table_517_15": [
+                {
+                    "_register": "517",
+                    "_schema": "15",
+                    "_uuid": "r4",
+                    "name": "object r4"
+                }
+            ],
+            "oc_openregister_table_517_227": [
+                {
+                    "_register": "517",
+                    "_schema": "227",
+                    "_uuid": "r66",
+                    "name": "object r66"
+                }
+            ],
+            "oc_openregister_table_517_50": [
+                {
+                    "_register": "517",
+                    "_schema": "50",
+                    "_uuid": "r6",
+                    "name": "object r6"
+                }
+            ],
+            "oc_openregister_table_517_90": [
+                {
+                    "_register": "517",
+                    "_schema": "90",
+                    "_uuid": "r7",
+                    "name": "object r7"
+                }
+            ],
+            "oc_openregister_table_5_12": [],
+            "oc_openregister_table_66_227": [],
+            "oc_openregister_table_6_50": [],
+            "oc_openregister_table_7_90": []
+        }
+    },
+    "nothing to move": {
+        "output": [
+            "ConsolidateRegisters: 0 object(s) moved into filinq, 0 conflict(s) left in place, 0 pair(s) skipped (no target table yet), 0 pair(s) refused."
+        ],
+        "warnings": [],
+        "tables": {
+            "oc_openregister_table_517_227": [
+                {
+                    "_id": 1,
+                    "_uuid": "a",
+                    "_register": "517",
+                    "_schema": "227",
+                    "name": "object a"
+                }
+            ],
+            "oc_openregister_table_66_227": []
+        }
+    },
+    "the target has no shards yet": {
+        "output": [
+            "ConsolidateRegisters: target register `filinq` has no shard tables yet; nothing moved."
+        ],
+        "warnings": [],
+        "tables": {
+            "oc_openregister_table_66_227": [
+                {
+                    "_id": 1,
+                    "_uuid": "a",
+                    "_register": "66",
+                    "_schema": "227",
+                    "name": "object a"
+                }
+            ]
+        }
+    },
+    "the target register is a source too": {
+        "output": [
+            "ConsolidateRegisters: 1 object(s) moved into filinq, 0 conflict(s) left in place, 0 pair(s) skipped (no target table yet), 0 pair(s) refused."
+        ],
+        "warnings": [],
+        "tables": {
+            "oc_openregister_table_517_227": [
+                {
+                    "_id": 1,
+                    "_uuid": "t",
+                    "_register": "517",
+                    "_schema": "227",
+                    "name": "object t"
+                },
+                {
+                    "_register": "517",
+                    "_schema": "227",
+                    "_uuid": "a",
+                    "name": "object a"
+                }
+            ],
+            "oc_openregister_table_66_227": []
+        }
+    },
+    "two registers, three pairs": {
+        "output": [
+            "ConsolidateRegisters: 4 object(s) moved into filinq, 0 conflict(s) left in place, 0 pair(s) skipped (no target table yet), 0 pair(s) refused."
+        ],
+        "warnings": [],
+        "tables": {
+            "oc_openregister_table_4_15": [],
+            "oc_openregister_table_4_16": [],
+            "oc_openregister_table_517_15": [
+                {
+                    "_register": "517",
+                    "_schema": "15",
+                    "_uuid": "c",
+                    "name": "object c"
+                }
+            ],
+            "oc_openregister_table_517_16": [
+                {
+                    "_register": "517",
+                    "_schema": "16",
+                    "_uuid": "d",
+                    "name": "object d"
+                }
+            ],
+            "oc_openregister_table_517_227": [
+                {
+                    "_register": "517",
+                    "_schema": "227",
+                    "_uuid": "a",
+                    "name": "object a"
+                },
+                {
+                    "_register": "517",
+                    "_schema": "227",
+                    "_uuid": "b",
+                    "name": "object b"
+                }
+            ],
+            "oc_openregister_table_66_227": []
+        }
+    }
+}

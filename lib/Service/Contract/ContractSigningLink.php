@@ -27,6 +27,8 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\Contract;
 
 use InvalidArgumentException;
+use OCA\Filinq\Exception\ContractNotFoundException;
+use OCA\Filinq\Kernel\Contracts\ContractSigningLinkInterface;
 use OCA\Filinq\Service\SigningService;
 use OCP\IUserSession;
 use RuntimeException;
@@ -34,7 +36,7 @@ use RuntimeException;
 /**
  * Links a signing request, and its signed document, to a contract.
  */
-class ContractSigningLink {
+class ContractSigningLink implements ContractSigningLinkInterface {
 
 	/**
 	 * Constructor.

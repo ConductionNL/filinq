@@ -35,23 +35,20 @@ SPDX-License-Identifier: EUPL-1.2
 			</NcNoteCard>
 		</template>
 		<template #actions>
-			<NcButton :disabled="busy" @click="$emit('close')">
-				{{ t('filinq', 'Cancel') }}
-			</NcButton>
-			<NcButton
+			<CnDialogActions
 				variant="error"
-				:disabled="busy"
-				data-testid="subject-erasure-run"
-				@click="onRun">
-				{{ t('filinq', 'Erase') }}
-			</NcButton>
+				:saving="busy"
+				:confirmLabel="t('filinq', 'Erase')"
+				@cancel="$emit('close')"
+				@submit="onRun" />
 		</template>
 	</NcDialog>
 </template>
 
 <script>
+import { CnDialogActions } from '@conduction/nextcloud-vue'
 import { translate as t } from '@nextcloud/l10n'
-import { NcButton, NcDialog, NcNoteCard } from '@nextcloud/vue'
+import { NcDialog, NcNoteCard } from '@nextcloud/vue'
 import { runRequest } from '../services/subjectErasures.js'
 
 /**
@@ -62,7 +59,7 @@ import { runRequest } from '../services/subjectErasures.js'
  */
 export default {
 	name: 'RunSubjectErasureDialog',
-	components: { NcButton, NcDialog, NcNoteCard },
+	components: { CnDialogActions, NcDialog, NcNoteCard },
 
 	props: {
 		requestId: { type: String, required: true },

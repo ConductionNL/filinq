@@ -235,7 +235,7 @@ class RedactionReviewGate {
 	 *
 	 * @return array<string, mixed> The refusal.
 	 *
-	 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-1
 	 */
 	private function refusal(string $reason, string $message): array {
 		$instructions = [

@@ -32,6 +32,7 @@ use OCA\Filinq\Service\SettingsService;
 use OCA\Filinq\Service\Suggestion\CategoryKeywordMapper;
 use OCA\Filinq\Service\Suggestion\HistoryRanker;
 use OCA\Filinq\Service\Suggestion\SupplierIdentityResolver;
+use OCA\Filinq\Service\Support\SuggestionSignals;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\IAppConfig;
@@ -108,18 +109,16 @@ class GlAccountSuggestionServiceTest extends TestCase {
 		$logger = $this->createMock(LoggerInterface::class);
 
 		$this->service = new GlAccountSuggestionService(
-			settingsService: $settingsService,
 			// A REAL resolver over the stubbed SettingsService, not a mock: it
 			// is the piece that turns an unset binding into
 			// RegisterNotConfiguredException, so mocking it away would remove
 			// the behaviour these tests are meant to run through.
 			registerResolver: new OpenRegisterResolver(settingsService: $settingsService),
+			signals: new SuggestionSignals(identity: new SupplierIdentityResolver(), history: new HistoryRanker(), keywords: new CategoryKeywordMapper()),
+			settingsService: $settingsService,
 			eventDispatcher: $this->eventDispatcher,
 			container: $this->container,
 			logger: $logger,
-			identityResolver: new SupplierIdentityResolver(),
-			historyRanker: new HistoryRanker(),
-			keywordMapper: new CategoryKeywordMapper(),
 		);
 
 	}//end setUp()
@@ -140,7 +139,11 @@ class GlAccountSuggestionServiceTest extends TestCase {
 			['accountCode' => '4300', 'accountLabel' => 'Kantoorkosten', 'bookedAt' => '2024-02-01T00:00:00+00:00'],
 		]);
 
-		$this->eventDispatcher->expects($this->once())->method('dispatchTyped');
+		$dispatched = [];
+		$this->eventDispatcher->expects($this->once())->method('dispatchTyped')
+			->willReturnCallback(static function (object $event) use (&$dispatched): void {
+				$dispatched[] = $event;
+			});
 
 		$result = $this->service->suggest(
 			extractionId: 'extraction-1',
@@ -153,6 +156,8 @@ class GlAccountSuggestionServiceTest extends TestCase {
 		$this->assertSame('kvk', $result['identityType']);
 		$this->assertSame('history', $result['source']);
 		$this->assertSame('4300', $result['suggestedAccounts'][0]['code']);
+		$this->assertSame('shillinq', $dispatched[0]->getSourceApp());
+		$this->assertSame('annemarie', $dispatched[0]->getRequestedBy());
 
 	}//end testSuggestReturnsHistoryRankedResult()
 
@@ -417,18 +422,16 @@ class GlAccountSuggestionServiceTest extends TestCase {
 			->willReturn(['register' => 'filinq', 'schema' => 'glAccountMappingRule']);
 
 		$service = new GlAccountSuggestionService(
-			settingsService: $settingsService,
 			// A REAL resolver over the stubbed SettingsService, not a mock: it
 			// is the piece that turns an unset binding into
 			// RegisterNotConfiguredException, so mocking it away would remove
 			// the behaviour these tests are meant to run through.
 			registerResolver: new OpenRegisterResolver(settingsService: $settingsService),
+			signals: new SuggestionSignals(identity: new SupplierIdentityResolver(), history: new HistoryRanker(), keywords: new CategoryKeywordMapper()),
+			settingsService: $settingsService,
 			eventDispatcher: $this->eventDispatcher,
 			container: $this->container,
 			logger: $this->createMock(LoggerInterface::class),
-			identityResolver: new SupplierIdentityResolver(),
-			historyRanker: new HistoryRanker(),
-			keywordMapper: new CategoryKeywordMapper(),
 		);
 
 		$this->objectService->method('find')->willReturn([
@@ -475,18 +478,16 @@ class GlAccountSuggestionServiceTest extends TestCase {
 			->willReturn(['register' => 'filinq', 'schema' => 'glAccountMappingRule']);
 
 		$service = new GlAccountSuggestionService(
-			settingsService: $settingsService,
 			// A REAL resolver over the stubbed SettingsService, not a mock: it
 			// is the piece that turns an unset binding into
 			// RegisterNotConfiguredException, so mocking it away would remove
 			// the behaviour these tests are meant to run through.
 			registerResolver: new OpenRegisterResolver(settingsService: $settingsService),
+			signals: new SuggestionSignals(identity: new SupplierIdentityResolver(), history: new HistoryRanker(), keywords: new CategoryKeywordMapper()),
+			settingsService: $settingsService,
 			eventDispatcher: $this->eventDispatcher,
 			container: $this->container,
 			logger: $this->createMock(LoggerInterface::class),
-			identityResolver: new SupplierIdentityResolver(),
-			historyRanker: new HistoryRanker(),
-			keywordMapper: new CategoryKeywordMapper(),
 		);
 
 		$this->objectService->method('find')->willReturn([

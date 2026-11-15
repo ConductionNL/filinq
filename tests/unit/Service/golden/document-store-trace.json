@@ -1,0 +1,231 @@
+{
+    "files for the acting user": {
+        "output": {
+            "mode": "files",
+            "fileId": 99,
+            "path": "/clerk/files/DocuDesk/procest/besluit.pdf",
+            "name": "besluit.pdf",
+            "size": 12
+        },
+        "warnings": [],
+        "content": "%PDF-binary%",
+        "calls": [
+            [
+                "clerk",
+                "DocuDesk/procest",
+                "besluit.pdf",
+                "%PDF-binary%"
+            ]
+        ]
+    },
+    "files with forged output owners": {
+        "output": {
+            "mode": "files",
+            "fileId": 99,
+            "path": "/clerk/files/Zaken/7/document.pdf",
+            "name": "document.pdf",
+            "size": 12
+        },
+        "warnings": [],
+        "content": "%PDF-binary%",
+        "calls": [
+            [
+                "clerk",
+                "Zaken/7",
+                "document.pdf",
+                "%PDF-binary%"
+            ]
+        ]
+    },
+    "both for the acting user": {
+        "output": {
+            "mode": "both",
+            "fileId": 99,
+            "path": "/clerk/files/DocuDesk/procest/document.pdf",
+            "name": "document.pdf",
+            "size": 12
+        },
+        "warnings": [],
+        "content": "%PDF-binary%",
+        "calls": [
+            [
+                "clerk",
+                "DocuDesk/procest",
+                "document.pdf",
+                "%PDF-binary%"
+            ]
+        ]
+    },
+    "return never stores": {
+        "output": {
+            "mode": "return",
+            "fileId": null,
+            "path": null,
+            "name": null,
+            "size": null
+        },
+        "warnings": [],
+        "content": "%PDF-binary%",
+        "calls": []
+    },
+    "return without a user": {
+        "output": {
+            "mode": "return",
+            "fileId": null,
+            "path": null,
+            "name": null,
+            "size": null
+        },
+        "warnings": [],
+        "content": "%PDF-binary%",
+        "calls": []
+    },
+    "files without a user": {
+        "error": [
+            400,
+            "options.userId is required to store generated documents in Files"
+        ],
+        "calls": []
+    },
+    "both without a user": {
+        "error": [
+            400,
+            "options.userId is required to store generated documents in Files"
+        ],
+        "calls": []
+    },
+    "files with an empty user": {
+        "error": [
+            400,
+            "options.userId is required to store generated documents in Files"
+        ],
+        "calls": []
+    },
+    "files with a null user": {
+        "error": [
+            400,
+            "options.userId is required to store generated documents in Files"
+        ],
+        "calls": []
+    },
+    "files with a full disk": {
+        "error": [
+            507,
+            "quota exceeded"
+        ],
+        "calls": [
+            [
+                "clerk",
+                "DocuDesk/procest",
+                "document.pdf",
+                "%PDF-binary%"
+            ]
+        ]
+    },
+    "both with a full disk": {
+        "output": {
+            "mode": "both",
+            "fileId": null,
+            "path": null,
+            "name": null,
+            "size": null
+        },
+        "warnings": [
+            "Document generated but could not be stored in Files: quota exceeded"
+        ],
+        "content": "%PDF-binary%",
+        "calls": [
+            [
+                "clerk",
+                "DocuDesk/procest",
+                "document.pdf",
+                "%PDF-binary%"
+            ]
+        ]
+    },
+    "both with a refused path": {
+        "error": [
+            400,
+            "bad path"
+        ],
+        "calls": [
+            [
+                "clerk",
+                "DocuDesk/procest",
+                "document.pdf",
+                "%PDF-binary%"
+            ]
+        ]
+    },
+    "both with another failure": {
+        "error": [
+            500,
+            "boom"
+        ],
+        "calls": [
+            [
+                "clerk",
+                "DocuDesk/procest",
+                "document.pdf",
+                "%PDF-binary%"
+            ]
+        ]
+    },
+    "an html file name": {
+        "output": {
+            "mode": "files",
+            "fileId": 99,
+            "path": "/clerk/files/DocuDesk/procest/brief.html",
+            "name": "brief.html",
+            "size": 12
+        },
+        "warnings": [],
+        "content": "<h1>test</h1>",
+        "calls": [
+            [
+                "clerk",
+                "DocuDesk/procest",
+                "brief.html",
+                "<h1>test</h1>"
+            ]
+        ]
+    },
+    "an empty target path": {
+        "output": {
+            "mode": "files",
+            "fileId": 99,
+            "path": "/clerk/files/DocuDesk/procest/document.pdf",
+            "name": "document.pdf",
+            "size": 12
+        },
+        "warnings": [],
+        "content": "%PDF-binary%",
+        "calls": [
+            [
+                "clerk",
+                "DocuDesk/procest",
+                "document.pdf",
+                "%PDF-binary%"
+            ]
+        ]
+    },
+    "files for another acting user": {
+        "output": {
+            "mode": "files",
+            "fileId": 99,
+            "path": "/officer/files/DocuDesk/procest/document.pdf",
+            "name": "document.pdf",
+            "size": 12
+        },
+        "warnings": [],
+        "content": "%PDF-binary%",
+        "calls": [
+            [
+                "officer",
+                "DocuDesk/procest",
+                "document.pdf",
+                "%PDF-binary%"
+            ]
+        ]
+    }
+}

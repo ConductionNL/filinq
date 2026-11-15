@@ -96,24 +96,19 @@ SPDX-License-Identifier: EUPL-1.2
 			</div>
 		</template>
 		<template #actions>
-			<NcButton @click="$emit('close')">
-				{{ t('filinq', 'Cancel') }}
-			</NcButton>
-			<NcButton
-				variant="primary"
-				:disabled="problem !== ''"
-				data-testid="wizard-question-save"
-				@click="onSave">
-				{{ t('filinq', 'Keep question') }}
-			</NcButton>
+			<CnDialogActions
+				:canSubmit="problem === ''"
+				:confirmLabel="t('filinq', 'Keep question')"
+				@cancel="$emit('close')"
+				@submit="onSave" />
 		</template>
 	</NcDialog>
 </template>
 
 <script>
+import { CnDialogActions } from '@conduction/nextcloud-vue'
 import { translate as t } from '@nextcloud/l10n'
 import {
-	NcButton,
 	NcCheckboxRadioSwitch,
 	NcDialog,
 	NcNoteCard,
@@ -137,7 +132,7 @@ import {
 export default {
 	name: 'WizardQuestionDialog',
 	components: {
-		NcButton,
+		CnDialogActions,
 		NcCheckboxRadioSwitch,
 		NcDialog,
 		NcNoteCard,

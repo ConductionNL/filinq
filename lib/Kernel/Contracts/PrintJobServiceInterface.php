@@ -24,6 +24,7 @@ namespace OCA\Filinq\Kernel\Contracts;
 
 use Exception;
 use InvalidArgumentException;
+use OCA\Filinq\Kernel\PrintJobRequest;
 
 /**
  * Contract of PrintJobService.
@@ -52,11 +53,11 @@ interface PrintJobServiceInterface {
 	/**
 	 * Create a single-document print job.
 	 *
-	 * @param string $templateId Template UUID to render
-	 * @param array  $data       Data context for template rendering
-	 * @param array  $options    Print options: format, orientation, pdfa, duplex, color, paperTray, stapling
-	 * @param string $userId     UID of the requesting user
-	 * @param string $filename   Desired download filename
+	 * Without a download name the job and its letter are document.pdf.
+	 *
+	 * @param PrintJobRequest      $request The template, options and download name
+	 * @param array<string, mixed> $data    Data context for template rendering
+	 * @param string               $userId  UID of the requesting user
 	 *
 	 * @return array{jobId: string, status: string, total: int, printConfig: array}
 	 *
@@ -64,26 +65,19 @@ interface PrintJobServiceInterface {
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-print-jobs-in-the-app/tasks.md#task-1.2
 	 */
-	public function createJob(
-		string $templateId,
-		array $data = [],
-		array $options = [],
-		string $userId = '',
-		string $filename = 'document.pdf',
-	): array;
+	public function createJob(PrintJobRequest $request, array $data, string $userId): array;
 
 	/**
 	 * Create a print job for one or more letters.
 	 *
 	 * Each item carries `data`, `dataRefs` (resolved like a generation) or
 	 * both, and an optional `filename`. Up to SYNC_BATCH_LIMIT items are
-	 * rendered now; a larger batch is rendered by BatchPrintJob.
+	 * rendered now; a larger batch is rendered by BatchPrintJob. Without a
+	 * download name the job is print-job.pdf.
 	 *
-	 * @param string $templateId Template UUID to render
-	 * @param array  $items      The letters
-	 * @param array  $options    Print options (same as createJob)
-	 * @param string $userId     UID of the requesting user
-	 * @param string $filename   Name of the download
+	 * @param PrintJobRequest $request The template, options and download name
+	 * @param array           $items   The letters
+	 * @param string          $userId  UID of the requesting user
 	 *
 	 * @return array{jobId: string, status: string, total: int, printConfig: array}
 	 *
@@ -91,13 +85,7 @@ interface PrintJobServiceInterface {
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-print-jobs-in-the-app/tasks.md#task-1.2
 	 */
-	public function createBatchJob(
-		string $templateId,
-		array $items = [],
-		array $options = [],
-		string $userId = '',
-		string $filename = 'print-job.pdf',
-	): array;
+	public function createBatchJob(PrintJobRequest $request, array $items, string $userId): array;
 
 	/**
 	 * Render every letter of a job into app data and move it to queued.

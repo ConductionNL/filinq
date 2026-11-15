@@ -266,10 +266,10 @@
   {
     "row": "op-integrity",
     "matrix": "filinq",
-    "decision": "defer",
-    "reason": "Partial and built, no demand row and fewer than two competitors rate it yes, so the missing half is deferred (only paperless-ngx rates it yes).",
-    "change": null,
-    "decidedOn": "2026-09-27"
+    "decision": "build",
+    "reason": "Partial, plan accepted by Ruben 2026-10-30 (DECISIONS row 268): a whole-collection integrity scan.",
+    "change": "whole-collection-integrity-scan",
+    "decidedOn": "2026-10-30"
   },
   {
     "row": "rec-born-ready",
@@ -338,10 +338,10 @@
   {
     "row": "red-four-eyes",
     "matrix": "filinq",
-    "decision": "existing",
-    "reason": "Built, and dark since 18 September by live defect filinq#1178: RedactionOutputGuard refuses every write until a review mark exists, and no screen calls the only route that sets it (POST api/redaction/documents/{fileId}/checked). The screen that sets the mark is specified in open change anonymization-review-workbench (REQ-DDARW-007, 008). That change names a documentReview object and /api/review/{fileId}/check while the built gate reads redactionReviewMark, so the two need to be reconciled when it is built.",
-    "change": "anonymization-review-workbench",
-    "decidedOn": "2026-09-27"
+    "decision": "build",
+    "reason": "Ruben 2026-10-30 (DECISIONS row 266): an admin setting, on by default for Woo cases, under which the checker must differ from the anonymiser.",
+    "change": "redaction-four-eyes-setting",
+    "decidedOn": "2026-10-30"
   },
   {
     "row": "red-link",
@@ -363,9 +363,9 @@
     "row": "red-one-click",
     "matrix": "filinq",
     "decision": "existing",
-    "reason": "Built, and dark since 18 September by live defect filinq#1178: RedactionOutputGuard refuses every write until a review mark exists, and no screen calls the only route that sets it (POST api/redaction/documents/{fileId}/checked). The screen that sets the mark is specified in open change anonymization-review-workbench (REQ-DDARW-007, 008). That change names a documentReview object and /api/review/{fileId}/check while the built gate reads redactionReviewMark, so the two need to be reconciled when it is built.",
-    "change": "anonymization-review-workbench",
-    "decidedOn": "2026-09-27"
+    "reason": "Built: dossiq's Woo case page runs detect, check and redact through filinq (change anonymise-asks-for-the-review-mark). Row reworded to \"anonymise from inside the case system\" (DECISIONS row 268).",
+    "change": "anonymise-asks-for-the-review-mark",
+    "decidedOn": "2026-10-30"
   },
   {
     "row": "red-pdf-out",
@@ -466,10 +466,10 @@
   {
     "row": "sh-letter",
     "matrix": "filinq",
-    "decision": "defer",
-    "reason": "Partial and built, no demand row and fewer than two competitors rate it yes, so the missing half is deferred (only decos-join rates it yes).",
-    "change": null,
-    "decidedOn": "2026-09-27"
+    "decision": "build",
+    "reason": "Partial, plan accepted by Ruben 2026-10-30 (DECISIONS row 268): send the letter email.",
+    "change": "letter-email-sending",
+    "decidedOn": "2026-10-30"
   },
   {
     "row": "sh-link",

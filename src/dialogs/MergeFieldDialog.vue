@@ -1,3 +1,7 @@
+<!--
+  - SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
 <template>
 	<NcDialog :name="t('filinq', 'Insert merge field')" @closing="$emit('close')">
 		<template #default>
@@ -27,24 +31,24 @@
 			</p>
 		</template>
 		<template #actions>
-			<NcButton @click="$emit('close')">
-				{{ t('filinq', 'Cancel') }}
-			</NcButton>
-			<NcButton variant="primary" :disabled="!fieldName" @click="confirm">
-				{{ t('filinq', 'Insert') }}
-			</NcButton>
+			<CnDialogActions
+				:canSubmit="Boolean(fieldName)"
+				:confirmLabel="t('filinq', 'Insert')"
+				@cancel="$emit('close')"
+				@submit="confirm" />
 		</template>
 	</NcDialog>
 </template>
 
 <script>
+import { CnDialogActions } from '@conduction/nextcloud-vue'
 import { translate as t } from '@nextcloud/l10n'
 import { NcButton, NcDialog, NcTextField } from '@nextcloud/vue'
 import { suggestedMergeFields } from '../services/mergeFieldSuggestions.js'
 
 export default {
 	name: 'MergeFieldDialog',
-	components: { NcButton, NcDialog, NcTextField },
+	components: { CnDialogActions, NcButton, NcDialog, NcTextField },
 	emits: ['close', 'insert'],
 	data() {
 		return {

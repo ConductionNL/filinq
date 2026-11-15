@@ -27,6 +27,7 @@ namespace OCA\Filinq\Service\VeraPdf;
 
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\IntakeRepository;
+use OCA\Filinq\Service\ReadsStoredObjectRows;
 use RuntimeException;
 use Throwable;
 
@@ -34,6 +35,7 @@ use Throwable;
  * Read and write conformance reports.
  */
 class ConformanceReportRepository {
+	use ReadsStoredObjectRows;
 
 	public const SCHEMA = 'conformanceReport';
 
@@ -78,7 +80,7 @@ class ConformanceReportRepository {
 
 		$reports = [];
 		foreach ((array) $results as $result) {
-			$row = $this->normalise(row: $result);
+			$row = $this->storedFields(row: $result);
 			// The filter is the search's; the match is ours.
 			if ((int) ($row['fileId'] ?? 0) === $fileId && isset($reports[(string) ($row['subject'] ?? '')]) === false) {
 				$reports[(string) $row['subject']] = $row;
@@ -118,36 +120,7 @@ class ConformanceReportRepository {
 			throw new RuntimeException(message: 'Could not store the conformance report: ' . $e->getMessage(), code: 0, previous: $e);
 		}
 
-		return $this->normalise(row: $stored);
+		return $this->storedFields(row: $stored);
 
 	}//end save()
-
-	/**
-	 * An OpenRegister row as a flat array with its uuid.
-	 *
-	 * @param mixed $row An entity or an array.
-	 *
-	 * @return array<string, mixed> The fields.
-	 */
-	private function normalise(mixed $row): array {
-		$data = $row;
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			$data = $row->jsonSerialize();
-		}
-
-		if (is_array($data) === false) {
-			return [];
-		}
-
-		$fields = $data;
-		if (isset($data['object']) === true && is_array($data['object']) === true) {
-			$fields = $data['object'];
-		}
-
-		unset($fields['@self']);
-		$fields['uuid'] = (string) ($fields['uuid'] ?? ($data['uuid'] ?? ($data['@self']['id'] ?? ($data['id'] ?? ''))));
-
-		return $fields;
-
-	}//end normalise()
 }//end class

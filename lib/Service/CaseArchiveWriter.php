@@ -61,9 +61,10 @@ class CaseArchiveWriter {
 	/**
 	 * Constructor.
 	 *
-	 * @param IRootFolder $rootFolder Files, to read the bundled files and write the archive.
+	 * @param IRootFolder $rootFolder Files, to write the archive.
 	 * @param ITempManager $tempManager Temporary files for building the archive.
 	 * @param LoggerInterface $logger Logger for diagnostics.
+	 * @param ReadableFileResolver $files The bundled files, as the requester may read them.
 	 *
 	 * @return void
 	 */
@@ -71,6 +72,7 @@ class CaseArchiveWriter {
 		private readonly IRootFolder $rootFolder,
 		private readonly ITempManager $tempManager,
 		private readonly LoggerInterface $logger,
+		private readonly ReadableFileResolver $files,
 	) {
 
 	}//end __construct()
@@ -98,7 +100,7 @@ class CaseArchiveWriter {
 			throw new RuntimeException('Could not open the temporary archive', 500);
 		}
 
-		$manifest = $this->addFiles(zip: $zip, userFolder: $userFolder, manifest: $manifest);
+		$manifest = $this->addFiles(zip: $zip, manifest: $manifest);
 		$zip->addFromString(
 			'manifest.json',
 			(string) json_encode(
@@ -158,16 +160,15 @@ class CaseArchiveWriter {
 	 * Add every included file that can still be read; move the others to excluded.
 	 *
 	 * @param ZipArchive $zip The open archive.
-	 * @param Folder $userFolder The requester's Files root.
 	 * @param array<string, mixed> $manifest The manifest.
 	 *
 	 * @return array<string, mixed> The manifest as written.
 	 */
-	private function addFiles(ZipArchive $zip, Folder $userFolder, array $manifest): array {
+	private function addFiles(ZipArchive $zip, array $manifest): array {
 		$included = [];
 		$taken    = ['manifest.json' => true];
 		foreach (($manifest['included'] ?? []) as $entry) {
-			$copy = $this->copyToTemp(userFolder: $userFolder, fileId: (int) ($entry['fileId'] ?? 0));
+			$copy = $this->copyToTemp(fileId: (int) ($entry['fileId'] ?? 0));
 			if ($copy === null) {
 				$manifest['excluded'][] = [
 					'fileId' => ($entry['fileId'] ?? 0),
@@ -225,43 +226,35 @@ class CaseArchiveWriter {
 	}//end archiveName()
 
 	/**
-	 * Stream one of the requester's files to a temporary file, so a large
+	 * Stream one file the requester may read to a temporary file, so a large
 	 * file never sits in memory.
 	 *
-	 * @param Folder $userFolder The requester's Files root.
 	 * @param int $fileId The file id.
 	 *
 	 * @return string|null The temporary path, or null when the file cannot be read.
 	 */
-	private function copyToTemp(Folder $userFolder, int $fileId): ?string {
-		if ($fileId <= 0) {
+	private function copyToTemp(int $fileId): ?string {
+		$node = $this->files->node(fileId: $fileId);
+		if (($node instanceof File) === false) {
 			return null;
 		}
 
 		try {
-			foreach ($userFolder->getById($fileId) as $node) {
-				if (($node instanceof File) === false) {
-					continue;
-				}
-
-				$source = $node->fopen('rb');
-				if ($source === false) {
-					return null;
-				}
-
-				$path   = $this->tempPath(suffix: '');
-				$target = fopen($path, 'wb');
-				stream_copy_to_stream($source, $target);
-				fclose($source);
-				fclose($target);
-
-				return $path;
+			$source = $node->fopen('rb');
+			if ($source === false) {
+				return null;
 			}
+
+			$path   = $this->tempPath(suffix: '');
+			$target = fopen($path, 'wb');
+			stream_copy_to_stream($source, $target);
+			fclose($source);
+			fclose($target);
+
+			return $path;
 		} catch (Throwable $e) {
 			return null;
 		}
-
-		return null;
 
 	}//end copyToTemp()
 

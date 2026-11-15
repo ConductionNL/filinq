@@ -33,9 +33,10 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use Exception;
 use InvalidArgumentException;
-use OCA\Filinq\BackgroundJob\BatchPrintJob;
 use OCA\Filinq\Kernel\Contracts\PrintJobServiceInterface;
-use OCP\BackgroundJob\IJobList;
+use OCA\Filinq\Kernel\JobQueueInterface;
+use OCA\Filinq\Kernel\PrintJobRequest;
+use OCA\Filinq\Service\Support\TemplateSources;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -62,22 +63,20 @@ class PrintJobService implements PrintJobServiceInterface {
 	 * Constructor for PrintJobService
 	 *
 	 * @param PdfService          $pdfService   Service for PDF generation
-	 * @param TemplateService     $templateSvc  Service for template retrieval
-	 * @param DataResolverService $dataResolver Resolves an item's dataRefs into template data
+	 * @param TemplateSources $sources The template store and the data resolver.
 	 * @param PrintJobRepository  $jobs         The printJob rows
 	 * @param PrintJobFileStore   $files        The PDFs in app data
-	 * @param IJobList            $jobList      Nextcloud job list for async dispatch
+	 * @param JobQueueInterface            $jobList      Nextcloud job list for async dispatch
 	 * @param LoggerInterface     $logger       Logger for error reporting
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		private readonly PdfService $pdfService,
-		private readonly TemplateService $templateSvc,
-		private readonly DataResolverService $dataResolver,
+		private readonly TemplateSources $sources,
 		private readonly PrintJobRepository $jobs,
 		private readonly PrintJobFileStore $files,
-		private readonly IJobList $jobList,
+		private readonly JobQueueInterface $jobList,
 		private readonly LoggerInterface $logger,
 	) {
 
@@ -86,11 +85,11 @@ class PrintJobService implements PrintJobServiceInterface {
 	/**
 	 * Create a single-document print job.
 	 *
-	 * @param string $templateId Template UUID to render
-	 * @param array  $data       Data context for template rendering
-	 * @param array  $options    Print options: format, orientation, pdfa, duplex, color, paperTray, stapling
-	 * @param string $userId     UID of the requesting user
-	 * @param string $filename   Desired download filename
+	 * Without a download name the job and its letter are document.pdf.
+	 *
+	 * @param PrintJobRequest      $request The template, options and download name
+	 * @param array<string, mixed> $data    Data context for template rendering
+	 * @param string               $userId  UID of the requesting user
 	 *
 	 * @return array{jobId: string, status: string, total: int, printConfig: array}
 	 *
@@ -98,19 +97,13 @@ class PrintJobService implements PrintJobServiceInterface {
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-print-jobs-in-the-app/tasks.md#task-1.2
 	 */
-	public function createJob(
-		string $templateId,
-		array $data = [],
-		array $options = [],
-		string $userId = '',
-		string $filename = 'document.pdf',
-	): array {
+	public function createJob(PrintJobRequest $request, array $data, string $userId): array {
+		$filename = $request->filenameOr(default: 'document.pdf');
+
 		return $this->createBatchJob(
-			templateId: $templateId,
+			request: $request->named(filename: $filename),
 			items: [['data' => $data, 'filename' => $filename]],
-			options: $options,
-			userId: $userId,
-			filename: $filename
+			userId: $userId
 		);
 
 	}//end createJob()
@@ -120,13 +113,12 @@ class PrintJobService implements PrintJobServiceInterface {
 	 *
 	 * Each item carries `data`, `dataRefs` (resolved like a generation) or
 	 * both, and an optional `filename`. Up to SYNC_BATCH_LIMIT items are
-	 * rendered now; a larger batch is rendered by BatchPrintJob.
+	 * rendered now; a larger batch is rendered by BatchPrintJob. Without a
+	 * download name the job is print-job.pdf.
 	 *
-	 * @param string $templateId Template UUID to render
-	 * @param array  $items      The letters
-	 * @param array  $options    Print options (same as createJob)
-	 * @param string $userId     UID of the requesting user
-	 * @param string $filename   Name of the download
+	 * @param PrintJobRequest $request The template, options and download name
+	 * @param array           $items   The letters
+	 * @param string          $userId  UID of the requesting user
 	 *
 	 * @return array{jobId: string, status: string, total: int, printConfig: array}
 	 *
@@ -134,40 +126,20 @@ class PrintJobService implements PrintJobServiceInterface {
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-print-jobs-in-the-app/tasks.md#task-1.2
 	 */
-	public function createBatchJob(
-		string $templateId,
-		array $items = [],
-		array $options = [],
-		string $userId = '',
-		string $filename = 'print-job.pdf',
-	): array {
+	public function createBatchJob(PrintJobRequest $request, array $items, string $userId): array {
 		$items = array_values($items);
-		$now = $this->now();
-		$job = $this->jobs->save(
-			job: [
-				'status' => 'rendering',
-				'requestedBy' => $userId,
-				'requestedAt' => $now,
-				'templateId' => $templateId,
-				'filename' => $filename,
-				'total' => count($items),
-				'rendered' => 0,
-				'errors' => 0,
-				'files' => [],
-				'printConfig' => $this->buildPrintConfig(options: $options),
-				'manifest' => [],
-				'statusChangedAt' => $now,
-			]
-		);
+		$row = $this->newJob(request: $request, userId: $userId);
+		$row['total'] = count($items);
+		$job = $this->jobs->save(job: $row);
 
 		if (count($items) <= self::SYNC_BATCH_LIMIT) {
-			$job = $this->renderJob(jobId: $job['uuid'], templateId: $templateId, items: $items, options: $options);
+			$job = $this->renderJob(jobId: $job['uuid'], templateId: $request->templateId, items: $items, options: $request->options);
 		}
 
 		if (count($items) > self::SYNC_BATCH_LIMIT) {
 			$this->jobList->add(
-				BatchPrintJob::class,
-				['jobId' => $job['uuid'], 'templateId' => $templateId, 'items' => $items, 'options' => $options]
+				JobQueueInterface::BATCH_PRINT,
+				['jobId' => $job['uuid'], 'templateId' => $request->templateId, 'items' => $items, 'options' => $request->options]
 			);
 		}
 
@@ -204,7 +176,7 @@ class PrintJobService implements PrintJobServiceInterface {
 		}
 
 		try {
-			$template = $this->templateSvc->getTemplate(id: $templateId);
+			$template = $this->sources->templates->getTemplate(id: $templateId);
 		} catch (Exception $e) {
 			$this->logger->error(
 				message: 'Print job template could not be loaded: ' . $e->getMessage(),
@@ -366,6 +338,34 @@ class PrintJobService implements PrintJobServiceInterface {
 	}//end buildPrintConfig()
 
 	/**
+	 * A new job row in the rendering state, without letters yet.
+	 *
+	 * @param PrintJobRequest $request The template, options and download name
+	 * @param string          $userId  UID of the requesting user
+	 *
+	 * @return array<string, mixed> The row.
+	 */
+	private function newJob(PrintJobRequest $request, string $userId): array {
+		$now = $this->now();
+
+		return [
+			'status' => 'rendering',
+			'requestedBy' => $userId,
+			'requestedAt' => $now,
+			'templateId' => $request->templateId,
+			'filename' => $request->filenameOr(default: 'print-job.pdf'),
+			'total' => 0,
+			'rendered' => 0,
+			'errors' => 0,
+			'files' => [],
+			'printConfig' => $this->buildPrintConfig(options: $request->options),
+			'manifest' => [],
+			'statusChangedAt' => $now,
+		];
+
+	}//end newJob()
+
+	/**
 	 * Render the letters of a job, storing each PDF.
 	 *
 	 * @param string $jobId    The job uuid
@@ -419,7 +419,7 @@ class PrintJobService implements PrintJobServiceInterface {
 			return $data;
 		}
 
-		$resolution = $this->dataResolver->resolve(dataRefs: $refs, adHocData: $data);
+		$resolution = $this->sources->data->resolve(dataRefs: $refs, adHocData: $data);
 		if ($resolution['errors'] !== []) {
 			throw new InvalidArgumentException('Data could not be resolved: ' . (string) ($resolution['errors'][0]['message'] ?? ''));
 		}

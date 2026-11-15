@@ -53,6 +53,7 @@ MUST go to the intake inbox as before.
 - GIVEN a batch of box 117 scanned with its separator sheets
 - WHEN the batch is split
 - THEN 40 documents are in the dossier "Bouwvergunningen 1970-2000", each carrying its shelf mark, and none waits in `/intake`
+- AND each of the 40 paper originals of box 117 reads `scanned`, naming its file and the batch, and the project page counts box 117 as 40 scanned
 - @e2e exclude batch splitting runs in the background; covered by PHPUnit on `ScanBatchService::split()` with a fixture batch
 
 ### Requirement: A sampled share is checked by a person (REQ-PAD-004)

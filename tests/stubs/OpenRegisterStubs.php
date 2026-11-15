@@ -368,11 +368,57 @@ class ConfigurationService {
 	/**
 	 * Import from app
 	 *
-	 * @return void
+	 * @param string               $appId   The app id.
+	 * @param array<string, mixed> $data    The configuration data.
+	 * @param string               $version The configuration version.
+	 * @param bool                 $force   Whether to import an older or equal version.
+	 *
+	 * @return array<string, mixed>
 	 */
-	public function importFromApp() {
+	public function importFromApp(string $appId, array $data, string $version, bool $force=false): array {
+		return [];
 
 	}//end importFromApp()
+}//end class
+
+namespace OCA\OpenRegister\Files\Service;
+
+/**
+ * Mirrors OpenRegister's FileExtractionOptions at main 332104db.
+ */
+final class FileExtractionOptions {
+	/**
+	 * Constructor.
+	 *
+	 * @param bool $forceReExtract Re-extract even when the chunks are up to date.
+	 * @param array<int, string>|null $entityTypes Entity types to detect; null for all.
+	 */
+	public function __construct(
+		public readonly bool $forceReExtract = false,
+		public readonly ?array $entityTypes = null,
+	) {
+	}//end __construct()
+}//end class
+
+/**
+ * Mirrors OpenRegister's ProvidedTextRequest at main 332104db.
+ */
+final class ProvidedTextRequest {
+	/**
+	 * Constructor.
+	 *
+	 * @param int $fileId The file id.
+	 * @param string $text The provided text.
+	 * @param array<int, string>|null $entityTypes Entity types to detect; null for all.
+	 * @param string $method The extraction method.
+	 */
+	public function __construct(
+		public readonly int $fileId,
+		public readonly string $text,
+		public readonly ?array $entityTypes = null,
+		public readonly string $method = 'ocr',
+	) {
+	}//end __construct()
 }//end class
 
 /**
@@ -385,8 +431,26 @@ class ConfigurationService {
  * @link     https://www.filinq.app
  */
 class TextExtractionService {
-	public function extractFile(int $fileId, bool $forceReExtract = false, ?array $entityTypes = null): void {
+	/**
+	 * Mirrors OpenRegister's extractFile(int, FileExtractionOptions) at main 332104db.
+	 *
+	 * @param int $fileId The file id.
+	 * @param FileExtractionOptions $options The options.
+	 *
+	 * @return void
+	 */
+	public function extractFile(int $fileId, FileExtractionOptions $options = new FileExtractionOptions()): void {
 	}//end extractFile()
+
+	/**
+	 * Mirrors OpenRegister's extractFromProvidedText(ProvidedTextRequest) at main 332104db.
+	 *
+	 * @param ProvidedTextRequest $request The provided text.
+	 *
+	 * @return void
+	 */
+	public function extractFromProvidedText(ProvidedTextRequest $request): void {
+	}//end extractFromProvidedText()
 
 	/**
 	 * Mirrors OpenRegister's getExtractedText(int $fileId): ?string at development 910471dc.
@@ -400,14 +464,16 @@ class TextExtractionService {
 	 *
 	 * @param \OCP\Files\File $file The EML file.
 	 *
-	 * @return \OCA\OpenRegister\Service\TextExtraction\EmlStructure
+	 * @return \OCA\OpenRegister\Files\Service\TextExtraction\EmlStructure
 	 *
 	 * @throws \OCA\OpenRegister\Exception\EmlParseException On malformed input.
 	 */
-	public function parseEmlStructured(\OCP\Files\File $file): \OCA\OpenRegister\Service\TextExtraction\EmlStructure {
+	public function parseEmlStructured(\OCP\Files\File $file): \OCA\OpenRegister\Files\Service\TextExtraction\EmlStructure {
 		throw new \OCA\OpenRegister\Exception\EmlParseException('stub');
 	}//end parseEmlStructured()
 }//end class
+
+namespace OCA\OpenRegister\Service;
 
 /**
  * Stub for FileService
@@ -420,6 +486,8 @@ class TextExtractionService {
  */
 class FileService {
 }//end class
+
+namespace OCA\OpenRegister\Files\Service;
 
 /**
  * Stub for RiskLevelService
@@ -442,6 +510,8 @@ class RiskLevelService {
 		return 'none';
 	}//end getRiskLevel()
 }//end class
+
+namespace OCA\OpenRegister\Service;
 
 /**
  * Stub for LanguageService
@@ -1077,32 +1147,20 @@ class AuditTrailMapper {
 	}//end findAll()
 
 	/**
-	 * Create an audit trail entry for a custom action.
+	 * Record a non-CRUD action on one object, with an explicit actor when one is named.
 	 *
-	 * @param ObjectEntity $object The object the entry relates to.
-	 * @param string $action The action type.
-	 * @param array $context Additional context data.
-	 * @param string|null $actorId The acting user, null for the session user.
-	 * @param string|null $actorName The acting user's display name.
-	 * @param string|null $ipAddress The request's address.
+	 * @param \OCA\OpenRegister\Db\AuditTrail\ObjectAuditEvent $event The object, action, context and options.
 	 *
 	 * @return AuditTrail
 	 */
-	public function createAuditTrailEntry(
-		ObjectEntity $object,
-		string $action,
-		array $context = [],
-		?string $actorId = null,
-		?string $actorName = null,
-		?string $ipAddress = null,
-	): AuditTrail {
+	public function recordObjectEvent(\OCA\OpenRegister\Db\AuditTrail\ObjectAuditEvent $event): AuditTrail {
 		$trail = new AuditTrail();
-		$trail->setObjectUuid($object->getUuid());
-		$trail->setAction($action);
-		$trail->setChanged($context);
+		$trail->setObjectUuid($event->object->getUuid());
+		$trail->setAction($event->action);
+		$trail->setChanged($event->context);
 		$trail->setCreated(new \DateTime());
 		return $trail;
-	}//end createAuditTrailEntry()
+	}//end recordObjectEvent()
 }//end class
 
 /**
@@ -1445,6 +1503,8 @@ class GdprEntityMapper {
 	}//end insert()
 }//end class
 
+namespace OCA\OpenRegister\Files\Db;
+
 /**
  * Stub for Chunk (custom-dictionary-recognition text-chunk matching).
  *
@@ -1574,6 +1634,8 @@ class ChunkMapper {
 		return [];
 	}//end findBySource()
 }//end class
+
+namespace OCA\OpenRegister\Db;
 
 /**
  * Stub for EntityRelation entity.
@@ -2264,11 +2326,21 @@ class TaskSequence {
 		private readonly ?string $anchorObjectUuid = null,
 		private readonly ?string $outcome = null,
 		private readonly ?string $chainKey = null,
+		private readonly ?array $templateSnapshot = null,
+		private readonly ?array $resolvedTier = null,
 	) {
 	}
 
 	public function getUuid(): ?string {
 		return $this->uuid;
+	}
+
+	public function getTemplateSnapshot(): ?array {
+		return $this->templateSnapshot;
+	}
+
+	public function getResolvedTier(): ?array {
+		return $this->resolvedTier;
 	}
 
 	public function getAnchorObjectUuid(): ?string {
@@ -2982,18 +3054,42 @@ class LeafDescriptor {
 		self::RENDER_MODE_MOUNT,
 	];
 
+	private string $id;
+
+	private string $label;
+
+	private string $icon;
+
+	private ?string $requiredApp;
+
+	private ?string $group;
+
+	private array $surfaces;
+
+	private ?string $referenceType;
+
+	private ?string $requiresPermission;
+
+	private string $renderMode;
+
 	public function __construct(
-		private string $id,
-		private string $label,
-		private string $icon,
+		LeafIdentity $identity,
 		private array $kinds,
-		private ?string $requiredApp = null,
-		private ?string $group = null,
-		private array $surfaces = [],
-		private ?string $referenceType = null,
-		private ?string $requiresPermission = null,
-		private string $renderMode = self::RENDER_MODE_COMPONENT,
+		?LeafAvailability $availability = null,
+		?LeafRendering $rendering = null,
 	) {
+		$availability = $availability ?? new LeafAvailability();
+		$rendering = $rendering ?? new LeafRendering();
+		$this->id = $identity->id;
+		$this->label = $identity->label;
+		$this->icon = $identity->icon;
+		$this->requiredApp = $availability->requiredApp;
+		$this->group = $identity->group;
+		$this->surfaces = $rendering->surfaces;
+		$this->referenceType = $rendering->referenceType;
+		$this->requiresPermission = $availability->requiresPermission;
+		$this->renderMode = $rendering->renderMode;
+
 		if ($kinds === []) {
 			throw new \InvalidArgumentException('A leaf must declare at least one kind');
 		}
@@ -3004,14 +3100,14 @@ class LeafDescriptor {
 			}
 		}
 
-		foreach ($surfaces as $surface) {
+		foreach ($this->surfaces as $surface) {
 			if (in_array($surface, self::VALID_SURFACES, true) === false) {
 				throw new \InvalidArgumentException('Unknown leaf surface: ' . (string)$surface);
 			}
 		}
 
-		if (in_array($renderMode, self::VALID_RENDER_MODES, true) === false) {
-			throw new \InvalidArgumentException('Unknown render mode: ' . $renderMode);
+		if (in_array($this->renderMode, self::VALID_RENDER_MODES, true) === false) {
+			throw new \InvalidArgumentException('Unknown render mode: ' . $this->renderMode);
 		}
 	}
 
@@ -3055,6 +3151,37 @@ class LeafDescriptor {
 		return $this->renderMode;
 	}
 }//end class
+
+final class LeafIdentity {
+	public function __construct(
+		public readonly string $id,
+		public readonly string $label,
+		public readonly string $icon,
+		public readonly ?string $group = null,
+	) {
+	}
+}
+
+final class LeafAvailability {
+	public function __construct(
+		public readonly ?string $requiredApp = null,
+		public readonly ?string $requiresPermission = null,
+	) {
+	}
+}
+
+final class LeafRendering {
+	/**
+	 * @param array<int, string> $surfaces Surfaces.
+	 */
+	public function __construct(
+		public readonly array $surfaces = [],
+		public readonly ?string $referenceType = null,
+		public readonly string $renderMode = 'component',
+		public readonly ?string $loadStrategy = null,
+	) {
+	}
+}
 
 namespace OCA\OpenRegister\Event;
 
@@ -3157,3 +3284,9 @@ final class BackendState implements \JsonSerializable {
 		];
 	}
 }//end class
+
+// Stubs for the OpenRegister call shapes of the 2026-11 adaptations, one file
+// per openregister change, so the adaptations can land in any order.
+foreach (glob(__DIR__ . '/openregister-surface/*.php') as $surfaceStub) {
+	require_once $surfaceStub;
+}

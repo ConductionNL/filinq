@@ -86,46 +86,55 @@ class DocumentSigningRequestedListener implements IEventListener {
 		}
 
 		try {
-			$data = $this->buildRequestData(event: $event);
-			$created = $this->signingService->createRequest($data);
-
+			$created = $this->signingService->createRequest($this->buildRequestData(event: $event));
 			$requestId = (string)($created['id'] ?? $created['uuid'] ?? '');
 			if ($requestId !== '') {
-				$event->setSigningRequestId($requestId);
-				$event->setHandled(true);
-				$this->logger->info(
-					'Filinq: handled DocumentSigningRequestedEvent',
-					[
-						'sourceApp' => $event->getSourceApp(),
-						'subjectId' => $event->getSubjectId(),
-						'signingRequestId' => $requestId,
-					]
-				);
+				$this->markHandled(event: $event, requestId: $requestId);
 				return;
 			}
 
 			// No id on the created request: leave the event unhandled and log.
-			$this->logger->warning(
-				'Filinq: DocumentSigningRequestedEvent not handled (no request id)',
-				[
-					'sourceApp' => $event->getSourceApp(),
-					'subjectId' => $event->getSubjectId(),
-				]
-			);
+			$this->logger->warning('Filinq: DocumentSigningRequestedEvent not handled (no request id)', $this->provenanceOf(event: $event));
 		} catch (\Throwable $e) {
 			// The event bus must never surface a Filinq failure as an
 			// exception to the dispatching consumer; log and leave unhandled.
 			$this->logger->error(
 				'Filinq: DocumentSigningRequestedListener failed',
-				[
-					'sourceApp' => $event->getSourceApp(),
-					'subjectId' => $event->getSubjectId(),
-					'exception' => $e->getMessage(),
-				]
+				$this->provenanceOf(event: $event) + ['exception' => $e->getMessage()]
 			);
 		}//end try
 
 	}//end handle()
+
+	/**
+	 * Write the created request's id into the event, mark it handled and log it.
+	 *
+	 * @param DocumentSigningRequestedEvent $event     The request event
+	 * @param string                        $requestId The created signing request's id
+	 *
+	 * @return void
+	 */
+	private function markHandled(DocumentSigningRequestedEvent $event, string $requestId): void {
+		$event->setSigningRequestId($requestId);
+		$event->setHandled(true);
+		$this->logger->info(
+			'Filinq: handled DocumentSigningRequestedEvent',
+			$this->provenanceOf(event: $event) + ['signingRequestId' => $requestId]
+		);
+
+	}//end markHandled()
+
+	/**
+	 * The consumer and subject a log line names.
+	 *
+	 * @param DocumentSigningRequestedEvent $event The request event
+	 *
+	 * @return array{sourceApp: string, subjectId: string}
+	 */
+	private function provenanceOf(DocumentSigningRequestedEvent $event): array {
+		return ['sourceApp' => $event->getSourceApp(), 'subjectId' => $event->getSubjectId()];
+
+	}//end provenanceOf()
 
 	/**
 	 * Build the data array SigningService::createRequest() expects from the event.

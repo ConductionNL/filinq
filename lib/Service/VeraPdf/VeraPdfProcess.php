@@ -64,7 +64,7 @@ class VeraPdfProcess {
 		stream_set_blocking($pipes[1], false);
 		stream_set_blocking($pipes[2], false);
 
-		$outcome = $this->pump(proc: $proc, pipes: $pipes, deadline: (microtime(true) + max(1, $seconds)));
+		$outcome = $this->pump(proc: $proc, pipes: $pipes, deadline: (hrtime(true) + (max(1, $seconds) * 1000000000)));
 		fclose($pipes[1]);
 		fclose($pipes[2]);
 		$closed = proc_close($proc);
@@ -81,14 +81,14 @@ class VeraPdfProcess {
 	 *
 	 * @param resource             $proc     The process.
 	 * @param array<int, resource> $pipes    Its pipes.
-	 * @param float                $deadline When to give up.
+	 * @param int                  $deadline When to give up, on the monotonic hrtime() clock in nanoseconds.
 	 *
 	 * @return array{exitCode: int|null, stdout: string, stderr: string, timedOut: bool} What happened.
 	 */
-	private function pump($proc, array $pipes, float $deadline): array {
+	private function pump($proc, array $pipes, int $deadline): array {
 		$out = ['exitCode' => null, 'stdout' => '', 'stderr' => '', 'timedOut' => false];
 		while (true) {
-			$remaining = ($deadline - microtime(true));
+			$remaining = (($deadline - hrtime(true)) / 1000000000);
 			if ($remaining <= 0) {
 				proc_terminate($proc, 9);
 				$out['timedOut'] = true;
