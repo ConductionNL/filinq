@@ -16,27 +16,23 @@ SPDX-License-Identifier: EUPL-1.2
 				data-testid="final-reason-input" />
 		</template>
 		<template #actions>
-			<NcButton @click="$emit('cancel')">
-				{{ t('filinq', 'Cancel') }}
-			</NcButton>
-			<NcButton
-				variant="primary"
-				:disabled="reason.trim() === ''"
-				data-testid="final-reason-confirm"
-				@click="$emit('confirm', reason.trim())">
-				{{ confirmLabel }}
-			</NcButton>
+			<CnDialogActions
+				:canSubmit="reason.trim() !== ''"
+				:confirmLabel="confirmLabel"
+				@cancel="$emit('cancel')"
+				@submit="$emit('confirm', reason.trim())" />
 		</template>
 	</NcDialog>
 </template>
 
 <script>
+import { CnDialogActions } from '@conduction/nextcloud-vue'
 import { translate as t } from '@nextcloud/l10n'
-import { NcButton, NcDialog, NcTextField } from '@nextcloud/vue'
+import { NcDialog, NcTextField } from '@nextcloud/vue'
 
 export default {
 	name: 'FinalDocumentReasonDialog',
-	components: { NcButton, NcDialog, NcTextField },
+	components: { CnDialogActions, NcDialog, NcTextField },
 
 	props: {
 		// The dialog title.

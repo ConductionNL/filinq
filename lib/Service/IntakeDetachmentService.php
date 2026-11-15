@@ -34,6 +34,7 @@ namespace OCA\Filinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\Filinq\Exception\IntakeRefusedException;
+use OCA\Filinq\Kernel\Contracts\IntakeDetachmentServiceInterface;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 
@@ -48,7 +49,8 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
  */
-class IntakeDetachmentService {
+class IntakeDetachmentService implements IntakeDetachmentServiceInterface {
+	use ReadsCurrentUserId;
 
 	/**
 	 * Constructor.
@@ -166,21 +168,4 @@ class IntakeDetachmentService {
 		return $uuid;
 
 	}//end uuidOf()
-
-	/**
-	 * The user id of the person at the keyboard.
-	 *
-	 * @return string The user id, or an empty string when there is no session.
-	 *
-	 * @spec exclude Session accessor with no behaviour of its own.
-	 */
-	private function currentUserId(): string {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return '';
-		}
-
-		return $user->getUID();
-
-	}//end currentUserId()
 }//end class

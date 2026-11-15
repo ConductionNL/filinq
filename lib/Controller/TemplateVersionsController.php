@@ -45,6 +45,8 @@ use OCP\IUserSession;
  * @link     https://www.filinq.app
  */
 class TemplateVersionsController extends Controller {
+	use AnswersNotAuthenticated;
+
 	/**
 	 * Constructor for TemplateVersionsController
 	 *
@@ -80,15 +82,16 @@ class TemplateVersionsController extends Controller {
 	 * @NoCSRFRequired
 	 *
 	 * @spec openspec/specs/template-management/spec.md
+	 *
+	 * @no-admin-idor-exempt reads go through OpenRegister with RBAC and multitenancy on
+	 * (TemplateVersionService::getVersions()), and the templateVersion schema grants read to authenticated
+	 * users.
 	 */
 	public function versions(string $id): JSONResponse {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => 'Not authenticated'],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: 'Not authenticated');
 			}
 
 			$limit = (int)$this->request->getParam('_limit', '20');
@@ -121,10 +124,7 @@ class TemplateVersionsController extends Controller {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => 'Not authenticated'],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: 'Not authenticated');
 			}
 
 			$result = $this->versionService->restoreVersion(
@@ -153,15 +153,16 @@ class TemplateVersionsController extends Controller {
 	 * @NoCSRFRequired
 	 *
 	 * @spec openspec/specs/template-management/spec.md
+	 *
+	 * @no-admin-idor-exempt reads go through OpenRegister with RBAC and multitenancy on
+	 * (TemplateVersionService::getVersion()), and the templateVersion schema grants read to authenticated
+	 * users.
 	 */
 	public function diffVersions(): JSONResponse {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => 'Not authenticated'],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: 'Not authenticated');
 			}
 
 			$from = $this->request->getParam('from', '');

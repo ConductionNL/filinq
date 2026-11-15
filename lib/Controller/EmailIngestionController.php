@@ -27,9 +27,9 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use InvalidArgumentException;
+use OCA\Filinq\Kernel\Contracts\EmailDocumentRepositoryInterface;
 use OCA\Filinq\Kernel\Contracts\EmailIngestionServiceInterface;
 use OCA\Filinq\Kernel\Contracts\EmailIngestionSettingsInterface;
-use OCA\Filinq\Service\EmailIngestion\EmailDocumentRepository;
 use OCA\Filinq\Settings\FilinqAdmin;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -50,7 +50,7 @@ class EmailIngestionController extends Controller {
 	 * @param string                  $appName    The app id.
 	 * @param IRequest                $request    The request.
 	 * @param EmailIngestionServiceInterface   $ingestion  The ingestion.
-	 * @param EmailDocumentRepository $repository The records.
+	 * @param EmailDocumentRepositoryInterface $repository The records.
 	 * @param EmailIngestionSettingsInterface  $settings   The mapping.
 	 * @param LoggerInterface         $logger     The logger.
 	 *
@@ -60,7 +60,7 @@ class EmailIngestionController extends Controller {
 		string $appName,
 		IRequest $request,
 		private readonly EmailIngestionServiceInterface $ingestion,
-		private readonly EmailDocumentRepository $repository,
+		private readonly EmailDocumentRepositoryInterface $repository,
 		private readonly EmailIngestionSettingsInterface $settings,
 		private readonly LoggerInterface $logger,
 	) {

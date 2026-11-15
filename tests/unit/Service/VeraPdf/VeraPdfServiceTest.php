@@ -29,6 +29,8 @@ use OCA\Filinq\Service\VeraPdf\VeraPdfService;
 use OCP\Files\File;
 use PHPUnit\Framework\TestCase;
 
+require_once __DIR__ . '/WallClockStepBack.php';
+
 class VeraPdfServiceTest extends TestCase {
 	use VeraPdfDoubles;
 
@@ -44,6 +46,7 @@ class VeraPdfServiceTest extends TestCase {
 	protected function tearDown(): void {
 		putenv('FAKE_VERAPDF_ARGV');
 		putenv('FAKE_VERAPDF_SLEEP');
+		unset($GLOBALS['filinqWallClockStepBack']);
 		@unlink($this->argvLog);
 		parent::tearDown();
 
@@ -212,6 +215,39 @@ class VeraPdfServiceTest extends TestCase {
 		$this->assertLessThan(3.0, (microtime(true) - $started));
 
 	}//end testARunPastTheBudgetIsAnErrorNotAPass()
+
+	/**
+	 * A wall clock stepping back during a run never makes the elapsed time negative.
+	 *
+	 * @return void
+	 */
+	public function testElapsedTimeIsNeverNegativeWhenTheWallClockStepsBack(): void {
+		$GLOBALS['filinqWallClockStepBack'] = 1000000.0;
+
+		$verdict = $this->veraPdf()->validateBytes(bytes: $this->pdf(name: 'pdfa3b-rendered'));
+
+		$this->assertGreaterThanOrEqual(0, $verdict['elapsedMs']);
+
+	}//end testElapsedTimeIsNeverNegativeWhenTheWallClockStepsBack()
+
+	/**
+	 * A wall clock stepping back does not stretch the budget: the run still stops as a timeout.
+	 *
+	 * @return void
+	 */
+	public function testTheBudgetHoldsWhenTheWallClockStepsBack(): void {
+		$this->config[VeraPdfService::CFG_MAX_SECONDS] = '1';
+		$service = $this->veraPdf();
+		putenv('FAKE_VERAPDF_SLEEP=5');
+		$GLOBALS['filinqWallClockStepBack'] = 1000000.0;
+
+		$started = hrtime(true);
+		$error   = $this->failure(fn () => $service->validateBytes(bytes: $this->pdf(name: 'pdfa3b-rendered')));
+
+		$this->assertSame(VeraPdfException::REASON_TIMEOUT, $error->getReason());
+		$this->assertLessThan(3.0, ((hrtime(true) - $started) / 1e9));
+
+	}//end testTheBudgetHoldsWhenTheWallClockStepsBack()
 
 	/**
 	 * A document veraPDF cannot parse is an error, not a verdict.

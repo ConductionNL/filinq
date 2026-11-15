@@ -25,6 +25,7 @@ namespace OCA\Filinq\Service;
 
 use InvalidArgumentException;
 use JsonException;
+use OCA\Filinq\Kernel\Contracts\SigningMandateServiceInterface;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
 use RuntimeException;
@@ -52,7 +53,7 @@ use RuntimeException;
  *
  * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
  */
-class SigningMandateService {
+class SigningMandateService implements SigningMandateServiceInterface {
 
 	/**
 	 * App config key holding the declarations, as a JSON object keyed by type reference.

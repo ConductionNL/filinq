@@ -1,0 +1,18 @@
+{
+    "answer": {
+        "documents": [],
+        "noAccess": 5,
+        "other": [
+            {
+                "kind": "object",
+                "count": 2
+            },
+            {
+                "kind": "email",
+                "count": 2
+            }
+        ],
+        "occurrenceCount": 10
+    },
+    "dossierReads": 0
+}

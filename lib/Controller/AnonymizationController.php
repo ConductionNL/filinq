@@ -30,18 +30,18 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
+use OCA\Filinq\Controller\Support\AnonymizationServices;
+use OCA\Filinq\Controller\Support\OutputFormatChoice;
 use OCA\Filinq\Exception\ConversionFailedException;
 use OCA\Filinq\Exception\RedactionNotReviewedException;
-use OCA\Filinq\Kernel\Contracts\AnonymizationServiceInterface;
-use OCA\Filinq\Service\AnonymizeRequestService;
-use OCA\Filinq\Service\FileListingService;
+use OCA\Filinq\Kernel\AnonymizeCall;
+use OCA\Filinq\Kernel\AppIdentity;
+use OCA\Filinq\Kernel\Contracts\AnonymizeRequestServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\JSONResponse;
-use OCP\Files\IRootFolder;
 use OCP\IAppConfig;
 use OCP\IL10N;
 use OCP\IRequest;
-use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -58,74 +58,43 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The thirteenth type is
  * RedactionNotReviewedException, caught here so a document nobody checked is
  * answered with a 409 the reviewer can act on instead of falling through to
- * the catch-all 500.
+ * the catch-all 500. The fourteenth is AnonymizeCall, the one value a
+ * validated request is run with.
  */
 class AnonymizationController extends Controller {
 
 	/**
-	 * Workflow behind the anonymize endpoints: authentication, per-user file
-	 * access verification, body validation, the prohibition guards and the
-	 * anonymisation call itself.
-	 *
-	 * @var AnonymizeRequestService
-	 */
-	private readonly AnonymizeRequestService $anonymizeRequest;
-
-	/**
 	 * Constructor for AnonymizationController
 	 *
-	 * @param string $appName The application name
 	 * @param IRequest $request The request object
 	 * @param LoggerInterface $logger Logger for error reporting
-	 * @param AnonymizationServiceInterface $anonymizationService Service for anonymization operations
-	 * @param FileListingService $fileListingService Service for file listing operations
+	 * @param AnonymizationServices $services The anonymisation runner and the file listing.
 	 * @param IL10N $l10n The localization service
 	 * @param IAppConfig $appConfig Tenant configuration provider (reads
 	 *                              filinq.anonymisation.default_output_format)
-	 * @param IUserSession $userSession User session for authentication
-	 * @param IRootFolder $rootFolder Root folder for file access checks
+	 * @param AnonymizeRequestServiceInterface $anonymizeRequest Workflow behind the anonymize endpoints:
+	 *                                                          authentication, file access, body validation,
+	 *                                                          the prohibition guards and the anonymisation call.
 	 *
 	 * @return void
 	 */
 	public function __construct(
-		string $appName,
 		IRequest $request,
 		private readonly LoggerInterface $logger,
-		private readonly AnonymizationServiceInterface $anonymizationService,
-		private readonly FileListingService $fileListingService,
+		private readonly AnonymizationServices $services,
 		private readonly IL10N $l10n,
 		private readonly IAppConfig $appConfig,
-		private readonly IUserSession $userSession,
-		private readonly IRootFolder $rootFolder,
+		private readonly AnonymizeRequestServiceInterface $anonymizeRequest,
 	) {
-		parent::__construct(appName: $appName, request: $request);
-
-		$this->anonymizeRequest = new AnonymizeRequestService(
-			logger: $this->logger,
-			anonymizationService: $this->anonymizationService,
-			l10n: $this->l10n,
-			rootFolder: $this->rootFolder,
-			userSession: $this->userSession
-		);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 
 	}//end __construct()
 
 	/**
-	 * Default-output-format tenant config key. The per-call
-	 * `outputFormat` request param overrides this when supplied.
-	 */
-	private const DEFAULT_OUTPUT_FORMAT_KEY = 'filinq.anonymisation.default_output_format';
-
-	/**
 	 * Supported values for the `outputFormat` request param + tenant
-	 * config. Anything else from the request results in HTTP 400.
-	 *
-	 * - `pdf-only` (default): convert to PDF and delete the native
-	 *   anonymised intermediate so only the PDF remains.
-	 * - `pdf`: convert to PDF but keep the native intermediate too.
-	 * - `preserve`: skip conversion; native format is the only output.
+	 * config, as OutputFormatChoice resolves them.
 	 */
-	private const VALID_OUTPUT_FORMATS = ['pdf-only', 'pdf', 'preserve'];
+	private const VALID_OUTPUT_FORMATS = OutputFormatChoice::VALID_OUTPUT_FORMATS;
 
 	/**
 	 * List all processed files with entity counts and status
@@ -139,6 +108,9 @@ class AnonymizationController extends Controller {
 	 * @NoCSRFRequired
 	 *
 	 * @spec openspec/specs/anonymization/spec.md
+	 *
+	 * @no-admin-idor-exempt no id is taken. FileListingService::listProcessedFiles() lists the Filinq
+	 * folder inside the caller's own user folder.
 	 */
 	public function files(): JSONResponse {
 		try {
@@ -147,7 +119,7 @@ class AnonymizationController extends Controller {
 				return new JSONResponse($authError['body'], $authError['status']);
 			}
 
-			$result = $this->fileListingService->listProcessedFiles();
+			$result = $this->services->files->listProcessedFiles();
 
 			return new JSONResponse($result);
 		} catch (\Throwable $e) {
@@ -179,6 +151,9 @@ class AnonymizationController extends Controller {
 	 * @NoAdminRequired
 	 *
 	 * @spec openspec/specs/anonymization/spec.md
+	 *
+	 * @no-admin-idor-exempt no id is taken. FileUploadService::uploadFile() writes into the Filinq folder
+	 * inside the caller's own user folder.
 	 */
 	public function upload(): JSONResponse {
 		try {
@@ -187,52 +162,91 @@ class AnonymizationController extends Controller {
 				return new JSONResponse($authError['body'], $authError['status']);
 			}
 
-			$file = $this->request->getUploadedFile('file');
-
-			if (empty($file) === true || isset($file['tmp_name']) === false) {
-				return new JSONResponse(
-					['error' => $this->l10n->t('No file uploaded')],
-					400
-				);
-			}
-
-			if ($file['error'] !== UPLOAD_ERR_OK) {
-				return new JSONResponse(
-					['error' => $this->l10n->t('File upload failed with error code: %s', [$file['error']])],
-					400
-				);
-			}
-
-			$fileName = $file['name'];
-			$fileContent = file_get_contents($file['tmp_name']);
-
-			if ($fileContent === false) {
-				return new JSONResponse(
-					['error' => $this->l10n->t('Failed to read uploaded file')],
-					500
-				);
-			}
-
-			$result = $this->fileListingService->uploadFile($fileName, $fileContent);
-
-			return new JSONResponse($result);
+			return $this->storeUpload();
 		} catch (\Throwable $e) {
-			$statusCode = 500;
-			if ($e->getCode() >= 400 && $e->getCode() < 600) {
-				$statusCode = $e->getCode();
-			}
-
-			$this->logger->error(
-				'Failed to upload file: ' . $e->getMessage(),
-				['exception' => $e]
-			);
-			return new JSONResponse(
-				['error' => $this->l10n->t('Failed to upload file: %s', [$e->getMessage()])],
-				$statusCode
-			);
-		}//end try
+			return $this->uploadFailed(exception: $e);
+		}
 
 	}//end upload()
+
+	/**
+	 * Read the request's `file` part and store it in the caller's Filinq folder.
+	 *
+	 * @return JSONResponse The service's result, or a 400/500 refusal.
+	 *
+	 * @spec openspec/specs/anonymization/spec.md
+	 */
+	private function storeUpload(): JSONResponse {
+		$file = $this->request->getUploadedFile('file');
+
+		$refusal = $this->uploadRefusal(file: $file);
+		if ($refusal !== null) {
+			return $refusal;
+		}
+
+		$fileContent = file_get_contents($file['tmp_name']);
+		if ($fileContent === false) {
+			return new JSONResponse(
+				['error' => $this->l10n->t('Failed to read uploaded file')],
+				500
+			);
+		}
+
+		return new JSONResponse($this->services->files->uploadFile($file['name'], $fileContent));
+	}//end storeUpload()
+
+	/**
+	 * Refuse a missing upload or a transfer PHP flagged as failed.
+	 *
+	 * @param mixed $file The uploaded `file` part: an array, or null when absent.
+	 *
+	 * @return JSONResponse|null A 400 refusal, or null when the upload can be read.
+	 *
+	 * @spec openspec/specs/anonymization/spec.md
+	 */
+	private function uploadRefusal(mixed $file): ?JSONResponse {
+		if (empty($file) === true || isset($file['tmp_name']) === false) {
+			return new JSONResponse(
+				['error' => $this->l10n->t('No file uploaded')],
+				400
+			);
+		}
+
+		if ($file['error'] !== UPLOAD_ERR_OK) {
+			return new JSONResponse(
+				['error' => $this->l10n->t('File upload failed with error code: %s', [$file['error']])],
+				400
+			);
+		}
+
+		return null;
+	}//end uploadRefusal()
+
+	/**
+	 * Log a failed upload and answer with its HTTP-range code, else 500.
+	 *
+	 * @param \Throwable $exception The failure.
+	 *
+	 * @return JSONResponse The error response.
+	 *
+	 * @spec openspec/specs/anonymization/spec.md
+	 */
+	private function uploadFailed(\Throwable $exception): JSONResponse {
+		$statusCode = 500;
+		if ($exception->getCode() >= 400 && $exception->getCode() < 600) {
+			$statusCode = $exception->getCode();
+		}
+
+		$this->logger->error(
+			'Failed to upload file: ' . $exception->getMessage(),
+			['exception' => $exception]
+		);
+		return new JSONResponse(
+			['error' => $this->l10n->t('Failed to upload file: %s', [$exception->getMessage()])],
+			$statusCode
+		);
+
+	}//end uploadFailed()
 
 	/**
 	 * Extract text and detect entities in a file
@@ -246,6 +260,9 @@ class AnonymizationController extends Controller {
 	 * @NoAdminRequired
 	 *
 	 * @spec openspec/specs/anonymization/spec.md
+	 *
+	 * @no-admin-idor-exempt AnonymizeRequestService::verifyFileAccess() in the method body refuses a file
+	 * outside the caller's own user folder before anything is read.
 	 */
 	public function extract(int $fileId): JSONResponse {
 		try {
@@ -263,10 +280,10 @@ class AnonymizationController extends Controller {
 			// is unchanged. `force=true` requests an explicit re-analysis.
 			$force = filter_var($this->request->getParam('force', false), FILTER_VALIDATE_BOOLEAN);
 			if ($force === true) {
-				return new JSONResponse($this->anonymizationService->reExtractAndDetectEntities($fileId));
+				return new JSONResponse($this->services->anonymization->reExtractAndDetectEntities($fileId));
 			}
 
-			return new JSONResponse($this->anonymizationService->extractAndDetectEntities($fileId));
+			return new JSONResponse($this->services->anonymization->extractAndDetectEntities($fileId));
 		} catch (\Throwable $e) {
 			$this->logger->error(
 				'Failed to extract and detect entities: ' . $e->getMessage(),
@@ -301,7 +318,7 @@ class AnonymizationController extends Controller {
 	 * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-4
 	 * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-6
 	 * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-11
-	 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-1
 	 */
 	public function anonymize(int $fileId): JSONResponse {
 		try {
@@ -333,7 +350,9 @@ class AnonymizationController extends Controller {
 				return $this->invalidOutputFormatResponse();
 			}
 
-			return $this->runAnonymize(fileId: $fileId, params: $params, request: $validated['request'], outputFormat: $outputFormat);
+			return $this->runAnonymize(
+				call: new AnonymizeCall(fileId: $fileId, params: $params, request: $validated['request'], outputFormat: $outputFormat)
+			);
 		} catch (\Throwable $e) {
 			return $this->anonymizeFailedResponse(exception: $e);
 		}//end try
@@ -427,27 +446,21 @@ class AnonymizationController extends Controller {
 	 * A failed PDF conversion answers 422 (the run is rolled back) and a run
 	 * nobody checked answers 409. Any other failure reaches the caller.
 	 *
-	 * @param int $fileId The Nextcloud file ID.
-	 * @param array<array-key, mixed> $params The request parameters.
-	 * @param array<array-key, mixed> $request The validated request.
-	 * @param string $outputFormat The resolved output format.
+	 * @param AnonymizeCall $call The file, parameters, validated request and output format.
 	 *
 	 * @return JSONResponse The result.
 	 *
 	 * @spec openspec/specs/anonymization/spec.md
-	 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-1
 	 */
-	private function runAnonymize(int $fileId, array $params, array $request, string $outputFormat): JSONResponse {
+	private function runAnonymize(AnonymizeCall $call): JSONResponse {
 		try {
 			$result = $this->anonymizeRequest->executeAnonymize(
-				fileId: $fileId,
-				userId: $this->anonymizeRequest->currentUserId(),
-				params: $params,
-				request: $request,
-				outputFormat: $outputFormat
+				call: $call,
+				userId: $this->anonymizeRequest->currentUserId()
 			);
 		} catch (ConversionFailedException $e) {
-			return $this->conversionFailedResponse(exception: $e, outputFormat: $outputFormat);
+			return $this->conversionFailedResponse(exception: $e, outputFormat: $call->outputFormat);
 		} catch (RedactionNotReviewedException $e) {
 			return $this->reviewRefusal(refusal: $e);
 		}
@@ -497,7 +510,7 @@ class AnonymizationController extends Controller {
 	 *
 	 * @return JSONResponse The 409 with `error`, `reviewRequired` and `document`.
 	 *
-	 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-1
 	 */
 	private function reviewRefusal(RedactionNotReviewedException $refusal): JSONResponse {
 		$this->logger->info(
@@ -545,6 +558,9 @@ class AnonymizationController extends Controller {
 	 * @NoCSRFRequired
 	 *
 	 * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-6
+	 *
+	 * @no-admin-idor-exempt RelationSkipDecisionService::apply() refuses (404) a relation whose file is
+	 * not in the caller's own user folder (requireRelationAccess()) before the decision is written.
 	 */
 	public function updateRelation(int $id): JSONResponse {
 		$denied = $this->anonymizeRequest->requireAuthenticated();
@@ -577,29 +593,7 @@ class AnonymizationController extends Controller {
 	 * @spec openspec/specs/anonymization/spec.md
 	 */
 	private function resolveOutputFormat(array $params): ?string {
-		if (array_key_exists('outputFormat', $params) === true) {
-			$value = $params['outputFormat'];
-			if (is_string($value) === false
-				|| in_array($value, self::VALID_OUTPUT_FORMATS, true) === false
-			) {
-				return null;
-			}
+		return (new OutputFormatChoice(appConfig: $this->appConfig))->resolve(params: $params);
 
-			return $value;
-		}
-
-		$tenantDefault = $this->appConfig->getValueString(
-			'filinq',
-			self::DEFAULT_OUTPUT_FORMAT_KEY,
-			'pdf-only'
-		);
-
-		if (in_array($tenantDefault, self::VALID_OUTPUT_FORMATS, true) === false) {
-			// Malformed tenant setting falls back to spec default
-			// rather than rejecting the call.
-			return 'pdf-only';
-		}
-
-		return $tenantDefault;
 	}//end resolveOutputFormat()
 }//end class

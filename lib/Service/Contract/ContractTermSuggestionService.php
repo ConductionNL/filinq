@@ -26,6 +26,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\Contract;
 
+use OCA\Filinq\Kernel\Contracts\ContractTermSuggestionServiceInterface;
 use OCP\IAppConfig;
 
 /**
@@ -39,9 +40,7 @@ use OCP\IAppConfig;
  *
  * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/specs/contract-lifecycle-management/spec.md#requirement-key-term-extraction-is-suggestion-only-req-ddclm-005
  */
-class ContractTermSuggestionService {
-
-	public const TOGGLE = 'enable_contract_term_extraction';
+class ContractTermSuggestionService implements ContractTermSuggestionServiceInterface {
 
 	/**
 	 * Constructor.

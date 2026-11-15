@@ -3,6 +3,9 @@
 /**
  * Consolidates Filinq's five OpenRegister registers into one, MOVING THE ROWS.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * THIS STEP IS NOT LIKE ITS SIBLINGS. MigrateAppConfigKeys copies key/value
  * pairs; MigrateUserPreferences copies preference rows; a register-slug rename
  * is a one-column UPDATE on one row and re-points nothing. This one physically
@@ -78,9 +81,6 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://conduction.nl
- *
- * SPDX-License-Identifier: EUPL-1.2
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  */
 
 declare(strict_types=1);
@@ -153,6 +153,16 @@ class ConsolidateRegisters implements IRepairStep {
 	 */
 	public const TARGET_SLUG = 'filinq';
 
+	private const COLUMNS_UNREADABLE = 'ConsolidateRegisters: could not read the columns of one of the tables; refusing the pair. '
+		. 'An unreadable schema is not an empty one.';
+
+	private const NOT_SHARD_TABLES = 'ConsolidateRegisters: a table matching the shard-table name pattern is missing `_uuid` or '
+		. '`_register`; it is not one of ours whatever its name says. Refusing the pair.';
+
+	private const SOURCE_WIDER = 'ConsolidateRegisters: the source table carries column(s) the target does not; refusing the '
+		. 'pair. Copying anyway would drop those properties from every migrated object while every '
+		. 'row count still reconciled — a data loss no count can catch. Sync the schema first.';
+
 	/**
 	 * Constructor.
 	 *
@@ -216,13 +226,7 @@ class ConsolidateRegisters implements IRepairStep {
 				continue;
 			}
 
-			$this->consolidateRegister(
-				sourceId: $sourceId,
-				targetId: $plan['targetId'],
-				names: $plan['names'],
-				targetTables: $plan['targetTables'],
-				tally: $tally
-			);
+			$this->consolidateRegister(sourceId: $sourceId, plan: $plan, tally: $tally);
 		}
 
 		$output->info(
@@ -270,14 +274,26 @@ class ConsolidateRegisters implements IRepairStep {
 			return null;
 		}
 
+		return $this->withTargetTables(output: $output, located: ['ids' => $ids, 'targetId' => $targetId]);
+	}//end preflight()
+
+	/**
+	 * Add the table names and the target's shard tables, or null (reported) when there are none.
+	 *
+	 * @param IOutput $output Repair output, for the early-return messages.
+	 * @param array{ids: array<string, int>, targetId: int} $located The located target.
+	 *
+	 * @return array{ids: array<string, int>, targetId: int, names: array<int, string>, targetTables: array<int, string>}|null
+	 */
+	private function withTargetTables(IOutput $output, array $located): ?array {
 		$names = $this->gateway->tableNames();
 		if ($names === null) {
 			$output->info('ConsolidateRegisters: could not list tables; nothing moved.');
 			return null;
 		}
 
-		$target = $this->decisions->shardTablesFor(names: $names, registerId: $targetId);
-		$this->reportAmbiguous(schemaIds: $target['ambiguous'], registerId: $targetId);
+		$target = $this->decisions->shardTablesFor(names: $names, registerId: $located['targetId']);
+		$this->reportAmbiguous(schemaIds: $target['ambiguous'], registerId: $located['targetId']);
 
 		if ($target['tables'] === []) {
 			$output->info(
@@ -289,38 +305,27 @@ class ConsolidateRegisters implements IRepairStep {
 			return null;
 		}
 
-		return [
-			'ids' => $ids,
-			'targetId' => $targetId,
-			'names' => $names,
-			'targetTables' => $target['tables'],
-		];
-	}//end preflight()
+		return $located + ['names' => $names, 'targetTables' => $target['tables']];
+	}//end withTargetTables()
 
 	/**
 	 * Move every (schema) pair of one source register.
 	 *
 	 * @param int $sourceId The register being emptied.
-	 * @param int $targetId The register being filled.
-	 * @param array<int, string> $names Every table name the database reported.
-	 * @param array<int, string> $targetTables Schema id => target table name.
+	 * @param array{targetId: int, names: array<int, string>, targetTables: array<int, string>} $plan The register being
+	 *        filled, every table name the database reported, and schema id => target table name.
 	 * @param array<string, int> $tally Running totals, mutated in place.
 	 *
 	 * @return void
 	 */
-	private function consolidateRegister(
-		int $sourceId,
-		int $targetId,
-		array $names,
-		array $targetTables,
-		array &$tally,
-	): void {
-		$source = $this->decisions->shardTablesFor(names: $names, registerId: $sourceId);
+	private function consolidateRegister(int $sourceId, array $plan, array &$tally): void {
+		$targetId = $plan['targetId'];
+		$source = $this->decisions->shardTablesFor(names: $plan['names'], registerId: $sourceId);
 		$this->reportAmbiguous(schemaIds: $source['ambiguous'], registerId: $sourceId);
 		$tally['refused'] += count($source['ambiguous']);
 
 		foreach ($source['tables'] as $schemaId => $sourceTable) {
-			$targetTable = $targetTables[$schemaId] ?? null;
+			$targetTable = $plan['targetTables'][$schemaId] ?? null;
 			if ($targetTable === null) {
 				// The target register does not hold this schema. It may be a
 				// stale shard from a schema this app no longer declares, or the
@@ -472,46 +477,39 @@ class ConsolidateRegisters implements IRepairStep {
 	 * @return array<int, string>|null Columns to carry, `_id` excluded.
 	 */
 	private function agreedColumns(string $sourceTable, string $targetTable): ?array {
+		$pair = ['sourceTable' => $sourceTable, 'targetTable' => $targetTable];
 		$sourceColumns = $this->gateway->columnsOf(table: $sourceTable);
 		$targetColumns = $this->gateway->columnsOf(table: $targetTable);
-
 		if ($sourceColumns === null || $targetColumns === null) {
-			$this->logger->warning(
-				'ConsolidateRegisters: could not read the columns of one of the tables; refusing the pair. '
-				. 'An unreadable schema is not an empty one.',
-				['sourceTable' => $sourceTable, 'targetTable' => $targetTable]
-			);
-			return null;
+			return $this->refusePair(message: self::COLUMNS_UNREADABLE, context: $pair);
 		}
 
-		if ($this->decisions->looksLikeShardTable(columns: $sourceColumns) === false
-			|| $this->decisions->looksLikeShardTable(columns: $targetColumns) === false
-		) {
-			$this->logger->warning(
-				'ConsolidateRegisters: a table matching the shard-table name pattern is missing `_uuid` or '
-				. '`_register`; it is not one of ours whatever its name says. Refusing the pair.',
-				['sourceTable' => $sourceTable, 'targetTable' => $targetTable]
-			);
-			return null;
+		$shards = $this->decisions->looksLikeShardTable(columns: $sourceColumns) === true
+			&& $this->decisions->looksLikeShardTable(columns: $targetColumns) === true;
+		if ($shards === false) {
+			return $this->refusePair(message: self::NOT_SHARD_TABLES, context: $pair);
 		}
 
-		$missing = $this->decisions->missingColumns(
-			sourceColumns: $sourceColumns,
-			targetColumns: $targetColumns
-		);
-
+		$missing = $this->decisions->missingColumns(sourceColumns: $sourceColumns, targetColumns: $targetColumns);
 		if ($missing !== []) {
-			$this->logger->warning(
-				'ConsolidateRegisters: the source table carries column(s) the target does not; refusing the '
-				. 'pair. Copying anyway would drop those properties from every migrated object while every '
-				. 'row count still reconciled — a data loss no count can catch. Sync the schema first.',
-				['sourceTable' => $sourceTable, 'targetTable' => $targetTable, 'columns' => $missing]
-			);
-			return null;
+			return $this->refusePair(message: self::SOURCE_WIDER, context: $pair + ['columns' => $missing]);
 		}
 
 		return $this->decisions->insertColumns(sourceColumns: $sourceColumns);
 	}//end agreedColumns()
+
+	/**
+	 * Log why a pair is refused on its columns.
+	 *
+	 * @param string               $message The reason.
+	 * @param array<string, mixed> $context The pair's tables, and the columns at issue.
+	 *
+	 * @return null Always: the pair has no agreed columns.
+	 */
+	private function refusePair(string $message, array $context): null {
+		$this->logger->warning($message, $context);
+		return null;
+	}//end refusePair()
 
 	/**
 	 * Insert, verify, then delete — one batch at a time.
@@ -521,58 +519,16 @@ class ConsolidateRegisters implements IRepairStep {
 	 * rows still in place: the migration is then INCOMPLETE, which is
 	 * recoverable, rather than PARTIAL, which is not.
 	 *
-	 * @param array<string, mixed> $pair  The pair plus the columns to carry; targetId is written into `_register`.
-	 * @param array<int, string>   $uuids The movable uuids.
+	 * @param array<string, mixed> $pair The pair plus the columns to carry; targetId is written into `_register`.
+	 * @param array<int, string> $uuids The movable uuids.
 	 *
 	 * @return int How many rows were moved AND confirmed.
 	 */
 	private function moveBatches(array $pair, array $uuids): int {
-		$sourceTable = $pair['sourceTable'];
-		$targetTable = $pair['targetTable'];
-		$moved       = 0;
+		$moved = 0;
 
 		foreach ($this->decisions->chunk(items: $uuids) as $batch) {
-			$inserted = $this->gateway->insertBatch(
-				sourceTable: $sourceTable,
-				targetTable: $targetTable,
-				targetId: $pair['targetId'],
-				columns: $pair['columns'],
-				batch: $batch
-			);
-
-			if ($inserted === false) {
-				$this->logger->warning(
-					'ConsolidateRegisters: insert failed; the source rows are untouched and the pair is '
-					. 'left incomplete. Re-running is safe.',
-					['sourceTable' => $sourceTable, 'targetTable' => $targetTable, 'batch' => count($batch)]
-				);
-				return $moved;
-			}
-
-			$observed = $this->countPresent(table: $targetTable, uuids: $batch);
-			if ($this->decisions->reconciled(expected: count($batch), observed: $observed) === false) {
-				$this->logger->error(
-					'ConsolidateRegisters: the target does not hold every uuid of the batch after the insert; '
-					. 'NOT deleting the source rows. The pair is left incomplete and both sides now hold some '
-					. 'of these rows; a re-run will report the arrived ones as conflicts.',
-					[
-						'sourceTable' => $sourceTable,
-						'targetTable' => $targetTable,
-						'expected' => count($batch),
-						'observed' => $observed,
-					]
-				);
-				return $moved;
-			}
-
-			if ($this->gateway->deleteBatch(table: $sourceTable, uuids: $batch) === false) {
-				$this->logger->error(
-					'ConsolidateRegisters: rows were inserted and confirmed but could NOT be deleted from the '
-					. 'source. They now exist in BOTH tables. The app reads the target, so no object is lost, '
-					. 'but the source copies must be removed by hand: a re-run will see them as conflicts and '
-					. 'refuse, by design.',
-					['sourceTable' => $sourceTable, 'targetTable' => $targetTable, 'uuids' => $batch]
-				);
+			if ($this->moveBatch(pair: $pair, batch: $batch) === false) {
 				return $moved;
 			}
 
@@ -581,6 +537,97 @@ class ConsolidateRegisters implements IRepairStep {
 
 		return $moved;
 	}//end moveBatches()
+
+	/**
+	 * Move one batch: insert, confirm it arrived, then delete it from the source.
+	 *
+	 * @param array<string, mixed> $pair The pair plus the columns to carry.
+	 * @param array<int, string> $batch The uuids of this batch.
+	 *
+	 * @return bool True when the batch was moved AND confirmed; false stops the pair.
+	 *
+	 * @spec exclude No canonical spec covers the consolidation of Filinq's five
+	 *  OpenRegister registers into one.
+	 */
+	private function moveBatch(array $pair, array $batch): bool {
+		if ($this->insertConfirmed(pair: $pair, batch: $batch) === false) {
+			return false;
+		}
+
+		$sourceTable = $pair['sourceTable'];
+		if ($this->gateway->deleteBatch(table: $sourceTable, uuids: $batch) === false) {
+			$this->logger->error(
+				'ConsolidateRegisters: rows were inserted and confirmed but could NOT be deleted from the '
+				. 'source. They now exist in BOTH tables. The app reads the target, so no object is lost, '
+				. 'but the source copies must be removed by hand: a re-run will see them as conflicts and '
+				. 'refuse, by design.',
+				['sourceTable' => $sourceTable, 'targetTable' => $pair['targetTable'], 'uuids' => $batch]
+			);
+			return false;
+		}
+
+		return true;
+	}//end moveBatch()
+
+	/**
+	 * Insert one batch into the target and confirm every uuid arrived.
+	 *
+	 * @param array<string, mixed> $pair The pair plus the columns to carry; targetId is written into `_register`.
+	 * @param array<int, string> $batch The uuids of this batch.
+	 *
+	 * @return bool True when the target holds the whole batch; only then may the source rows go.
+	 *
+	 * @spec exclude No canonical spec covers the consolidation of Filinq's five
+	 *  OpenRegister registers into one.
+	 */
+	private function insertConfirmed(array $pair, array $batch): bool {
+		$sourceTable = $pair['sourceTable'];
+		$targetTable = $pair['targetTable'];
+
+		$inserted = $this->gateway->insertBatch(pair: $pair, batch: $batch);
+
+		if ($inserted === false) {
+			$this->logger->warning(
+				'ConsolidateRegisters: insert failed; the source rows are untouched and the pair is '
+				. 'left incomplete. Re-running is safe.',
+				['sourceTable' => $sourceTable, 'targetTable' => $targetTable, 'batch' => count($batch)]
+			);
+			return false;
+		}
+
+		return $this->arrivedInTarget(pair: $pair, batch: $batch);
+	}//end insertConfirmed()
+
+	/**
+	 * Confirm the target holds every uuid of the batch, counted back out of it.
+	 *
+	 * @param array<string, mixed> $pair The pair: sourceTable and targetTable.
+	 * @param array<int, string> $batch The uuids just inserted.
+	 *
+	 * @return bool True when the whole batch arrived.
+	 *
+	 * @spec exclude No canonical spec covers the consolidation of Filinq's five
+	 *  OpenRegister registers into one.
+	 */
+	private function arrivedInTarget(array $pair, array $batch): bool {
+		$observed = $this->countPresent(table: $pair['targetTable'], uuids: $batch);
+		if ($this->decisions->reconciled(expected: count($batch), observed: $observed) === false) {
+			$this->logger->error(
+				'ConsolidateRegisters: the target does not hold every uuid of the batch after the insert; '
+				. 'NOT deleting the source rows. The pair is left incomplete and both sides now hold some '
+				. 'of these rows; a re-run will report the arrived ones as conflicts.',
+				[
+					'sourceTable' => $pair['sourceTable'],
+					'targetTable' => $pair['targetTable'],
+					'expected' => count($batch),
+					'observed' => $observed,
+				]
+			);
+			return false;
+		}
+
+		return true;
+	}//end arrivedInTarget()
 
 	/**
 	 * How many of these uuids the target holds RIGHT NOW.

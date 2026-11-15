@@ -29,13 +29,13 @@ use OCA\Filinq\Service\CustomDictionaryMatchService;
 use OCA\Filinq\Service\CustomDictionaryService;
 use OCA\Filinq\Service\EntityDetectionService;
 use OCA\Filinq\Service\LegalBasisProposalService;
-use OCA\OpenRegister\Db\Chunk;
-use OCA\OpenRegister\Db\ChunkMapper;
+use OCA\OpenRegister\Files\Db\Chunk;
+use OCA\OpenRegister\Files\Db\ChunkMapper;
 use OCA\OpenRegister\Db\EntityRelation;
 use OCA\OpenRegister\Db\EntityRelationMapper;
 use OCA\OpenRegister\Db\GdprEntity;
 use OCA\OpenRegister\Db\GdprEntityMapper;
-use OCA\OpenRegister\Service\TextExtractionService;
+use OCA\OpenRegister\Files\Service\TextExtractionService;
 use OCP\App\IAppManager;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -111,7 +111,7 @@ class AnonymizationServiceCustomDictionaryTest extends TestCase {
 
 		$this->mockContainer->method('get')->willReturnCallback(
 			function (string $class) use ($mockExtractor, $chunkMapper, $gdprEntityMapper) {
-				if ($class === 'OCA\OpenRegister\Service\TextExtractionService') {
+				if ($class === 'OCA\OpenRegister\Files\Service\TextExtractionService') {
 					return $mockExtractor;
 				}
 
@@ -123,7 +123,7 @@ class AnonymizationServiceCustomDictionaryTest extends TestCase {
 					return $this->mockBasis;
 				}
 
-				if ($class === 'OCA\OpenRegister\Db\ChunkMapper' && $chunkMapper !== null) {
+				if ($class === 'OCA\OpenRegister\Files\Db\ChunkMapper' && $chunkMapper !== null) {
 					return $chunkMapper;
 				}
 

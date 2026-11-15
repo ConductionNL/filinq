@@ -6,7 +6,9 @@ status: done
 
 ## Purpose
 Enforces publication-prohibition policies during anonymisation by checking every detected entity against active prohibition rules before forwarding a request to OpenRegister. High-confidence prohibited entities must be included in the set to be anonymised or the request is rejected with HTTP 422, while low-confidence matches can be released through acknowledged overrides that record an audit entry and flag the entity to skip redaction. This ensures legally protected entities cannot be left unredacted without an explicit, audited operator decision.
+
 ## Requirements
+
 ### Requirement: The anonymise endpoint MUST consult the prohibition cache before forwarding the request
 
 When the anonymise endpoint is called, the controller / service MUST resolve every detected entity in the file via the same `PolicyMatchService` cache used by the publication-clearance flow, restricted to the prohibition portion of the cache. The matcher MUST NOT consult standing-consent records (those are publication-clearance-only). The matcher MUST NOT create `publicationConsent` records.
@@ -250,3 +252,23 @@ This capability MUST NOT introduce a parallel matcher implementation. The matchi
 - **THEN** there is exactly one `PolicyMatchService` (or equivalent) in the codebase
 - **AND** both this gate AND the publication-clearance flow consult it
 
+### Requirement: Releasing a prohibition match on the anonymise call needs the override role
+
+An override sent with an anonymise call MUST release a publish-never match
+below the high-confidence threshold only when the acting user holds the
+override role (admin or a member of `prohibition_override_groups`). Without it
+the override MUST be rejected and nothing MUST be recorded.
+
+#### Scenario: an editor without the role
+- GIVEN a detected person who matches a publish-never rule with confidence 0.5
+- AND a user who can open the file but is not in an override group
+- WHEN the user anonymises the file with an override for that match
+- THEN the call is refused with the override listed as rejected
+- AND no prohibitionOverrideAudit entry is written
+
+#### Scenario: a policy admin
+- GIVEN the same match
+- AND a user in an override group
+- WHEN the user anonymises the file with an override and a reason
+- THEN the match is released
+- AND a prohibitionOverrideAudit entry names the user, the rule and the reason

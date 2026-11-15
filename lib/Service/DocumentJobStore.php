@@ -29,8 +29,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use Exception;
-use OCA\Filinq\BackgroundJob\BatchDocumentJob;
-use OCP\BackgroundJob\IJobList;
+use OCA\Filinq\Kernel\JobQueueInterface;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 
@@ -43,14 +42,14 @@ class DocumentJobStore {
 	 * Constructor.
 	 *
 	 * @param IAppConfig      $appConfig Holds the status record per job.
-	 * @param IJobList        $jobList   Nextcloud job list for async processing.
+	 * @param JobQueueInterface        $jobList   Nextcloud job list for async processing.
 	 * @param LoggerInterface $logger    Logger for a status that cannot be read or written.
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		private readonly IAppConfig $appConfig,
-		private readonly IJobList $jobList,
+		private readonly JobQueueInterface $jobList,
 		private readonly LoggerInterface $logger,
 	) {
 
@@ -118,7 +117,7 @@ class DocumentJobStore {
 	 */
 	public function enqueue(string $jobId, array $status, array $argument): void {
 		$this->put(jobId: $jobId, status: $status);
-		$this->jobList->add(job: BatchDocumentJob::class, argument: $argument);
+		$this->jobList->add(job: JobQueueInterface::BATCH_DOCUMENT, argument: $argument);
 
 	}//end enqueue()
 

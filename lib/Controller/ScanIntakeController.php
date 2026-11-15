@@ -24,10 +24,13 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
+use OCA\Filinq\Controller\Support\ScanBatchCut;
+use OCA\Filinq\Controller\Support\ScanSetupServices;
+use OCA\Filinq\Kernel\AppIdentity;
+use OCA\Filinq\Kernel\Contracts\ScanBatchRepositoryInterface;
 use OCA\Filinq\Kernel\Contracts\ScanBatchServiceInterface;
-use OCA\Filinq\Service\ScanBatchRepository;
-use OCA\Filinq\Service\ScanProfileService;
-use OCA\Filinq\Service\SeparatorSheetService;
+use OCA\Filinq\Kernel\Contracts\ScanProfileServiceInterface;
+use OCA\Filinq\Kernel\Contracts\SeparatorSheetServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -57,32 +60,45 @@ use Throwable;
  * pages, which is the silent version of this refusal.
  */
 class ScanIntakeController extends Controller {
+	use AnswersNotAuthenticated;
+
+	/**
+	 * The sheets filinq prints and reads.
+	 *
+	 * @var SeparatorSheetServiceInterface
+	 */
+	private readonly SeparatorSheetServiceInterface $sheets;
+
+	/**
+	 * The declared scan profiles.
+	 *
+	 * @var ScanProfileServiceInterface
+	 */
+	private readonly ScanProfileServiceInterface $profiles;
 
 	/**
 	 * Constructor.
 	 *
-	 * @param string $appName The app name.
 	 * @param IRequest $request The request.
-	 * @param SeparatorSheetService $sheets The sheets filinq prints and reads.
-	 * @param ScanProfileService $profiles The declared scan profiles.
+	 * @param ScanSetupServices $setup Separator sheets and scan profiles.
 	 * @param ScanBatchServiceInterface $batches The splitter.
-	 * @param ScanBatchRepository $store The batch store.
+	 * @param ScanBatchRepositoryInterface $store The batch store.
 	 * @param IRootFolder $rootFolder The file tree.
 	 * @param IUserSession $userSession The current session.
 	 *
 	 * @return void
 	 */
 	public function __construct(
-		string $appName,
 		IRequest $request,
-		private readonly SeparatorSheetService $sheets,
-		private readonly ScanProfileService $profiles,
+		ScanSetupServices $setup,
 		private readonly ScanBatchServiceInterface $batches,
-		private readonly ScanBatchRepository $store,
+		private readonly ScanBatchRepositoryInterface $store,
 		private readonly IRootFolder $rootFolder,
 		private readonly IUserSession $userSession,
 	) {
-		parent::__construct(appName: $appName, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
+		$this->sheets = $setup->sheets;
+		$this->profiles = $setup->profiles;
 
 	}//end __construct()
 
@@ -107,10 +123,7 @@ class ScanIntakeController extends Controller {
 	#[NoAdminRequired]
 	public function separators(string $profileId = '', array $caseNumbers = []): DataDownloadResponse|JSONResponse {
 		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(
-				data: ['error' => 'You must be logged in to print separator sheets.'],
-				statusCode: Http::STATUS_UNAUTHORIZED
-			);
+			return $this->notAuthenticated(message: 'You must be logged in to print separator sheets.');
 		}
 
 		try {
@@ -136,10 +149,7 @@ class ScanIntakeController extends Controller {
 	#[NoAdminRequired]
 	public function listProfiles(): JSONResponse {
 		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(
-				data: ['error' => 'You must be logged in.'],
-				statusCode: Http::STATUS_UNAUTHORIZED
-			);
+			return $this->notAuthenticated(message: 'You must be logged in.');
 		}
 
 		$profiles = $this->profiles->all();
@@ -193,6 +203,10 @@ class ScanIntakeController extends Controller {
 	 * @return JSONResponse The batch, split or failed.
 	 *
 	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 *
+	 * @no-admin-idor-exempt the batch file is resolved by batchFile() from the session user's own user
+	 * folder, and the segments are written with the Node API into its parent folder, which enforces create
+	 * permission.
 	 */
 	#[NoAdminRequired]
 	public function split(int $fileId, string $profileId = ''): JSONResponse {
@@ -205,24 +219,9 @@ class ScanIntakeController extends Controller {
 		}
 
 		try {
-			$userFolder = $this->rootFolder->getUserFolder($user->getUID());
-			$nodes = $userFolder->getById($fileId);
-			if ($nodes === []) {
-				return new JSONResponse(
-					data: ['error' => 'You may not read that batch.'],
-					statusCode: Http::STATUS_FORBIDDEN
-				);
-			}
-
-			$file = $nodes[0];
-			if (($file instanceof File) === false) {
-				// The id answers with whatever node carries it, and a folder id
-				// is as valid an int as a file id. Passing a folder on would
-				// reach the reader as a batch with no pages.
-				return new JSONResponse(
-					data: ['error' => 'That id is not a scanned batch.'],
-					statusCode: Http::STATUS_BAD_REQUEST
-				);
+			$file = $this->batchFile(userId: $user->getUID(), fileId: $fileId);
+			if ($file instanceof JSONResponse) {
+				return $file;
 			}
 
 			$profile = $this->resolveProfile(profileId: $profileId, path: $file->getPath());
@@ -233,23 +232,7 @@ class ScanIntakeController extends Controller {
 				);
 			}
 
-			$batch = $this->store->findByFile(fileId: $fileId);
-			if ($batch === null) {
-				$batch = $this->batches->receive(file: $file, profile: $profile);
-			}
-
-			$target = $file->getParent();
-			if (($target instanceof Folder) === false) {
-				return new JSONResponse(
-					data: ['error' => 'The batch has no folder to write its segments to.'],
-					statusCode: Http::STATUS_BAD_REQUEST
-				);
-			}
-
-			return new JSONResponse(
-				data: $this->batches->split(batch: $batch, profile: $profile, file: $file, target: $target),
-				statusCode: Http::STATUS_OK
-			);
+			return $this->cut(cut: new ScanBatchCut(file: $file, profile: $profile));
 		} catch (Throwable $e) {
 			return new JSONResponse(
 				data: ['error' => $e->getMessage()],
@@ -258,6 +241,69 @@ class ScanIntakeController extends Controller {
 		}//end try
 
 	}//end split()
+
+	/**
+	 * The batch file, as the caller's own user folder resolves it, or the refusal.
+	 *
+	 * @param string $userId The caller.
+	 * @param int    $fileId The batch the scanner wrote.
+	 *
+	 * @return File|JSONResponse The file, or a 403 when the caller cannot see it and a 400 when it is no file.
+	 */
+	private function batchFile(string $userId, int $fileId): File|JSONResponse {
+		$nodes = $this->rootFolder->getUserFolder($userId)->getById($fileId);
+		if ($nodes === []) {
+			return new JSONResponse(
+				data: ['error' => 'You may not read that batch.'],
+				statusCode: Http::STATUS_FORBIDDEN
+			);
+		}
+
+		$file = $nodes[0];
+		if (($file instanceof File) === false) {
+			// The id answers with whatever node carries it, and a folder id
+			// is as valid an int as a file id. Passing a folder on would
+			// reach the reader as a batch with no pages.
+			return new JSONResponse(
+				data: ['error' => 'That id is not a scanned batch.'],
+				statusCode: Http::STATUS_BAD_REQUEST
+			);
+		}
+
+		return $file;
+
+	}//end batchFile()
+
+	/**
+	 * Receive the batch when it is new, then cut it into its parent folder.
+	 *
+	 * The batch is looked up by the id of the file batchFile() resolved, so
+	 * nothing reaches the store without that check.
+	 *
+	 * @param ScanBatchCut $cut The batch file and its profile.
+	 *
+	 * @return JSONResponse The split batch, or a 400 when it has no folder to write to.
+	 */
+	private function cut(ScanBatchCut $cut): JSONResponse {
+		$batch = $this->store->findByFile(fileId: (int)$cut->file->getId());
+		if ($batch === null) {
+			$batch = $this->batches->receive(file: $cut->file, profile: $cut->profile);
+		}
+
+		$target = $cut->file->getParent();
+		if (($target instanceof Folder) === false) {
+			return new JSONResponse(
+				data: ['error' => 'The batch has no folder to write its segments to.'],
+				statusCode: Http::STATUS_BAD_REQUEST
+			);
+		}
+
+		return new JSONResponse(
+			data: $this->batches->split(batch: $batch, profile: $cut->profile, file: $cut->file, target: $target),
+			statusCode: Http::STATUS_OK
+		);
+
+	}//end cut()
 
 	/**
 	 * The profile to cut a batch with.

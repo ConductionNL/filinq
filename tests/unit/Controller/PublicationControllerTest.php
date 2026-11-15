@@ -21,9 +21,10 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\PublicationController;
+use OCA\Filinq\Controller\Support\PublicationFlow;
 use OCA\Filinq\Service\Publication\OpenCatalogiPlatform;
 use OCA\Filinq\Service\Publication\PublicationAccess;
-use OCA\Filinq\Service\Publication\PublicationNotReadyException;
+use OCA\Filinq\Exception\PublicationNotReadyException;
 use OCA\Filinq\Service\Publication\PublicationPipelineService;
 use OCA\Filinq\Service\Publication\PublicationStore;
 use OCP\Files\Folder;
@@ -54,6 +55,7 @@ class PublicationControllerTest extends TestCase {
 	 * @param array<string, mixed>|null  $record   What the store finds
 	 * @param OpenCatalogiPlatform|null  $platform The platform double
 	 * @param bool                       $publisher Whether the caller is in a publisher group
+	 * @param array<string, mixed>       $params    The request parameters
 	 *
 	 * @return PublicationController
 	 */
@@ -61,7 +63,8 @@ class PublicationControllerTest extends TestCase {
 		PublicationPipelineService $pipeline,
 		?array $record,
 		?OpenCatalogiPlatform $platform = null,
-		bool $publisher = true
+		bool $publisher = true,
+		array $params = []
 	): PublicationController {
 		$store = $this->createMock(PublicationStore::class);
 		$store->method('findRecord')->willReturn($record);
@@ -86,11 +89,12 @@ class PublicationControllerTest extends TestCase {
 		$session = $this->createMock(IUserSession::class);
 		$session->method('getUser')->willReturn($user);
 
+		$request = $this->createMock(IRequest::class);
+		$request->method('getParam')->willReturnCallback(static fn (string $key, $default = null) => ($params[$key] ?? $default));
+
 		return new PublicationController(
-			'filinq',
-			$this->createMock(IRequest::class),
-			$pipeline,
-			$store,
+			$request,
+			new PublicationFlow(pipeline: $pipeline, store: $store),
 			($platform ?? $this->createMock(OpenCatalogiPlatform::class)),
 			new PublicationAccess(rootFolder: $root, groups: $groups, appConfig: $config),
 			$session,
@@ -144,14 +148,14 @@ class PublicationControllerTest extends TestCase {
 	 */
 	public function testCategoriesReadinessAndDestructionDate(): void {
 		$platform = $this->createMock(OpenCatalogiPlatform::class);
-		$platform->method('categories')->willReturn([['code' => 'c_8c840238', 'label' => 'Adviezen']]);
+		$platform->method('categories')->willReturn([['code' => 'infocat009', 'label' => 'Adviezen']]);
 		$pipeline = $this->createMock(PublicationPipelineService::class);
 		$pipeline->method('evaluate')->willReturn(['uuid' => 'mine', 'status' => 'ready']);
 		$pipeline->method('setDestructionDate')->willThrowException(new \InvalidArgumentException('A destruction date needs a date (YYYY-MM-DD) and its source', 400));
 
 		$controller = $this->controller(pipeline: $pipeline, record: ['uuid' => 'mine', 'documentFileRef' => '42'], platform: $platform);
 
-		$this->assertSame('c_8c840238', $controller->categories()->getData()['results'][0]['code']);
+		$this->assertSame('infocat009', $controller->categories()->getData()['results'][0]['code']);
 		$this->assertSame('ready', $controller->readiness('mine')->getData()['status']);
 		$this->assertSame(400, $controller->destructionDate('mine')->getStatus());
 
@@ -170,7 +174,8 @@ class PublicationControllerTest extends TestCase {
 		$routes = require __DIR__ . '/../../../appinfo/routes.php';
 		$publication = array_values(array_filter($routes['routes'], static fn (array $r): bool => str_starts_with($r['name'], 'publication#')));
 
-		$this->assertCount(9, $publication);
+		// Each route is declared once and served at its /api/v1/ twin too (ApiPathAliasesTest).
+		$this->assertCount(expectedCount: 18, haystack: $publication);
 		foreach ($publication as $route) {
 			$this->assertStringNotContainsString('log', $route['url']);
 			$this->assertNotSame('DELETE', $route['verb']);
@@ -178,6 +183,31 @@ class PublicationControllerTest extends TestCase {
 		}
 
 	}//end testNoRouteChangesTheLog()
+	/**
+	 * A publication starts only for a document the caller may act on: not for a
+	 * file outside the caller's folder, not for a reader who is no publisher.
+	 * A publisher starts one for a file of hers, as herself.
+	 *
+	 * @return void
+	 */
+	public function testAPublicationStartsOnlyWhereTheCallerMayAct(): void {
+		$refused = $this->createMock(PublicationPipelineService::class);
+		$refused->expects($this->never())->method('create');
+		$elsewhere = ['documentFileRef' => '99', 'userId' => 'admin'];
+
+		$this->assertSame(404, $this->controller(pipeline: $refused, record: null, params: $elsewhere)->create()->getStatus());
+		$this->assertSame(404, $this->controller(pipeline: $refused, record: null, publisher: false, params: ['documentFileRef' => '42'])->create()->getStatus());
+
+		$pipeline = $this->createMock(PublicationPipelineService::class);
+		$pipeline->expects($this->once())
+			->method('create')
+			->with('42', 'document', '', 'anna')
+			->willReturn(['uuid' => 'new', 'documentFileRef' => '42']);
+
+		$this->assertSame(201, $this->controller(pipeline: $pipeline, record: null, params: ['documentFileRef' => '42'])->create()->getStatus());
+
+	}//end testAPublicationStartsOnlyWhereTheCallerMayAct()
+
 	/**
 	 * A reader who can open the document sees its publication but cannot hand it off.
 	 *

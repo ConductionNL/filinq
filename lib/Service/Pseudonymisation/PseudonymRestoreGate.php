@@ -25,11 +25,10 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\Pseudonymisation;
 
-use OCA\Filinq\Kernel\AppIdentity;
+use OCA\Filinq\Service\AdmitsConfiguredGroups;
 use OCA\Filinq\Exception\PseudonymRestoreRefusedException;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
-use Throwable;
 
 /**
  * Who may restore the original of a reversibly anonymised copy.
@@ -41,6 +40,7 @@ use Throwable;
  * @link     https://www.filinq.app
  */
 class PseudonymRestoreGate {
+	use AdmitsConfiguredGroups;
 
 	/**
 	 * The app config key: a JSON list of Nextcloud group ids.
@@ -74,7 +74,7 @@ class PseudonymRestoreGate {
 	 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-3.2
 	 */
 	public function assertMayRestore(string $userId): void {
-		$groups = $this->allowedGroups();
+		$groups = $this->configuredGroups(key: self::CONFIG_KEY, default: '[]');
 		if ($groups === null) {
 			throw new PseudonymRestoreRefusedException(
 				reason: PseudonymRestoreRefusedException::REASON_CONFIG_UNREADABLE,
@@ -89,14 +89,8 @@ class PseudonymRestoreGate {
 			);
 		}
 
-		if ($this->groupManager->isAdmin($userId) === true) {
+		if ($this->isAdminOrMember(userId: $userId, groups: $groups) === true) {
 			return;
-		}
-
-		foreach ($groups as $group) {
-			if ($this->groupManager->isInGroup($userId, $group) === true) {
-				return;
-			}
 		}
 
 		throw new PseudonymRestoreRefusedException(
@@ -125,36 +119,4 @@ class PseudonymRestoreGate {
 		return true;
 
 	}//end mayRestore()
-
-	/**
-	 * The allowed group ids, or null when the setting cannot be read as a list.
-	 *
-	 * @return array<int, string>|null The groups; [] means admins only.
-	 */
-	private function allowedGroups(): ?array {
-		try {
-			$raw = $this->appConfig->getValueString(AppIdentity::APP_ID, self::CONFIG_KEY, '[]');
-			$decoded = json_decode(json: $raw, associative: true, flags: JSON_THROW_ON_ERROR);
-		} catch (Throwable) {
-			return null;
-		}
-
-		if (is_array($decoded) === false || array_is_list($decoded) === false) {
-			return null;
-		}
-
-		$groups = [];
-		foreach ($decoded as $group) {
-			if (is_string($group) === false) {
-				return null;
-			}
-
-			if (trim($group) !== '') {
-				$groups[] = trim($group);
-			}
-		}
-
-		return $groups;
-
-	}//end allowedGroups()
 }//end class

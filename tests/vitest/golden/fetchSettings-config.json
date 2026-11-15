@@ -1,0 +1,181 @@
+{
+	"config absent": {
+		"result": {
+			"openRegisters": false,
+			"extra": "x"
+		},
+		"during": {
+			"loading": true,
+			"error": null
+		},
+		"after": {
+			"config": {
+				"openRegisters": false,
+				"extra": "x"
+			},
+			"openRegisters": false,
+			"isAdmin": false,
+			"loading": false,
+			"error": null,
+			"initialized": true
+		},
+		"fetchCalls": [
+			[
+				"/index.php/apps/filinq/api/settings",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1",
+						"OCS-APIREQUEST": "true"
+					}
+				}
+			]
+		],
+		"consoleErrors": []
+	},
+	"config null": {
+		"result": {
+			"config": null,
+			"openRegisters": false,
+			"extra": "x"
+		},
+		"during": {
+			"loading": true,
+			"error": null
+		},
+		"after": {
+			"config": {
+				"config": null,
+				"openRegisters": false,
+				"extra": "x"
+			},
+			"openRegisters": false,
+			"isAdmin": false,
+			"loading": false,
+			"error": null,
+			"initialized": true
+		},
+		"fetchCalls": [
+			[
+				"/index.php/apps/filinq/api/settings",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1",
+						"OCS-APIREQUEST": "true"
+					}
+				}
+			]
+		],
+		"consoleErrors": []
+	},
+	"config zero": {
+		"result": {
+			"config": 0,
+			"openRegisters": false,
+			"extra": "x"
+		},
+		"during": {
+			"loading": true,
+			"error": null
+		},
+		"after": {
+			"config": {
+				"config": 0,
+				"openRegisters": false,
+				"extra": "x"
+			},
+			"openRegisters": false,
+			"isAdmin": false,
+			"loading": false,
+			"error": null,
+			"initialized": true
+		},
+		"fetchCalls": [
+			[
+				"/index.php/apps/filinq/api/settings",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1",
+						"OCS-APIREQUEST": "true"
+					}
+				}
+			]
+		],
+		"consoleErrors": []
+	},
+	"config empty": {
+		"result": {
+			"config": "",
+			"openRegisters": false,
+			"extra": "x"
+		},
+		"during": {
+			"loading": true,
+			"error": null
+		},
+		"after": {
+			"config": {
+				"config": "",
+				"openRegisters": false,
+				"extra": "x"
+			},
+			"openRegisters": false,
+			"isAdmin": false,
+			"loading": false,
+			"error": null,
+			"initialized": true
+		},
+		"fetchCalls": [
+			[
+				"/index.php/apps/filinq/api/settings",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1",
+						"OCS-APIREQUEST": "true"
+					}
+				}
+			]
+		],
+		"consoleErrors": []
+	},
+	"config object": {
+		"result": {
+			"foo": "bar"
+		},
+		"during": {
+			"loading": true,
+			"error": null
+		},
+		"after": {
+			"config": {
+				"foo": "bar"
+			},
+			"openRegisters": false,
+			"isAdmin": false,
+			"loading": false,
+			"error": null,
+			"initialized": true
+		},
+		"fetchCalls": [
+			[
+				"/index.php/apps/filinq/api/settings",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1",
+						"OCS-APIREQUEST": "true"
+					}
+				}
+			]
+		],
+		"consoleErrors": []
+	}
+}

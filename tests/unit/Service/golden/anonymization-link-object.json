@@ -1,0 +1,751 @@
+{
+    "a first run": {
+        "search": {
+            "registerSlug": "filinq",
+            "schemaSlug": "anonymizationLink",
+            "filters": {
+                "sourceFileId": 7
+            }
+        },
+        "saved": {
+            "@self": {
+                "register": "filinq",
+                "schema": "anonymizationLink"
+            },
+            "sourceFileId": 7,
+            "runCount": 1,
+            "anonymizedFileId": 12,
+            "anonymizedFileName": "brief_anonymized.pdf",
+            "anonymizedFilePath": "/u/files/brief_anonymized.pdf",
+            "status": "anonymized",
+            "replacementCount": 4,
+            "anonymizedAt": "<timestamp>",
+            "outputFormat": "pdf"
+        },
+        "linkId": "saved-1"
+    },
+    "no search result": {
+        "search": {
+            "registerSlug": "filinq",
+            "schemaSlug": "anonymizationLink",
+            "filters": {
+                "sourceFileId": 7
+            }
+        },
+        "saved": {
+            "@self": {
+                "register": "filinq",
+                "schema": "anonymizationLink"
+            },
+            "sourceFileId": 7,
+            "runCount": 1,
+            "anonymizedFileId": 12,
+            "anonymizedFileName": "brief_anonymized.pdf",
+            "anonymizedFilePath": "/u/files/brief_anonymized.pdf",
+            "status": "anonymized",
+            "replacementCount": 4,
+            "anonymizedAt": "<timestamp>",
+            "outputFormat": "pdf"
+        },
+        "linkId": "saved-1"
+    },
+    "a search result that is a string": {
+        "search": {
+            "registerSlug": "filinq",
+            "schemaSlug": "anonymizationLink",
+            "filters": {
+                "sourceFileId": 7
+            }
+        },
+        "saved": {
+            "@self": {
+                "register": "filinq",
+                "schema": "anonymizationLink"
+            },
+            "sourceFileId": 7,
+            "runCount": 1,
+            "anonymizedFileId": 12,
+            "anonymizedFileName": "brief_anonymized.pdf",
+            "anonymizedFilePath": "/u/files/brief_anonymized.pdf",
+            "status": "anonymized",
+            "replacementCount": 4,
+            "anonymizedAt": "<timestamp>",
+            "outputFormat": "pdf"
+        },
+        "linkId": "saved-1"
+    },
+    "an existing array link": {
+        "search": {
+            "registerSlug": "filinq",
+            "schemaSlug": "anonymizationLink",
+            "filters": {
+                "sourceFileId": 7
+            }
+        },
+        "saved": {
+            "@self": {
+                "id": "link-1",
+                "register": "filinq",
+                "schema": "anonymizationLink"
+            },
+            "sourceFileId": 7,
+            "runCount": 3,
+            "outputFormat": "pdf",
+            "verificationVerdict": "leaking",
+            "note": "kept",
+            "anonymizedFileId": 12,
+            "anonymizedFileName": "brief_anonymized.pdf",
+            "anonymizedFilePath": "/u/files/brief_anonymized.pdf",
+            "status": "anonymized",
+            "replacementCount": 4,
+            "anonymizedAt": "<timestamp>"
+        },
+        "linkId": "saved-1"
+    },
+    "an existing link without a count": {
+        "search": {
+            "registerSlug": "filinq",
+            "schemaSlug": "anonymizationLink",
+            "filters": {
+                "sourceFileId": 7
+            }
+        },
+        "saved": {
+            "sourceFileId": 7,
+            "note": "kept",
+            "runCount": 1,
+            "anonymizedFileId": 12,
+            "anonymizedFileName": "brief_anonymized.pdf",
+            "anonymizedFilePath": "/u/files/brief_anonymized.pdf",
+            "status": "anonymized",
+            "replacementCount": 4,
+            "anonymizedAt": "<timestamp>",
+            "outputFormat": "pdf"
+        },
+        "linkId": "saved-1"
+    },
+    "an existing link with a string count": {
+        "search": {
+            "registerSlug": "filinq",
+            "schemaSlug": "anonymizationLink",
+            "filters": {
+                "sourceFileId": 7
+            }
+        },
+        "saved": {
+            "sourceFileId": 7,
+            "runCount": 6,
+            "anonymizedFileId": 12,
+            "anonymizedFileName": "brief_anonymized.pdf",
+            "anonymizedFilePath": "/u/files/brief_anonymized.pdf",
+            "status": "anonymized",
+            "replacementCount": 4,
+            "anonymizedAt": "<timestamp>",
+            "outputFormat": "pdf"
+        },
+        "linkId": "saved-1"
+    },
+    "an existing entity object": {
+        "search": {
+            "registerSlug": "filinq",
+            "schemaSlug": "anonymizationLink",
+            "filters": {
+                "sourceFileId": 7
+            }
+        },
+        "saved": {
+            "sourceFileId": 7,
+            "runCount": 4,
+            "anonymizedFileId": 12,
+            "@self": {
+                "id": "uuid-9"
+            },
+            "anonymizedFileName": "brief_anonymized.pdf",
+            "anonymizedFilePath": "/u/files/brief_anonymized.pdf",
+            "status": "anonymized",
+            "replacementCount": 4,
+            "anonymizedAt": "<timestamp>",
+            "outputFormat": "pdf"
+        },
+        "linkId": "saved-1"
+    },
+    "an unreadable first result": {
+        "search": {
+            "registerSlug": "filinq",
+            "schemaSlug": "anonymizationLink",
+            "filters": {
+                "sourceFileId": 7
+            }
+        },
+        "saved": {
+            "@self": {
+                "register": "filinq",
+                "schema": "anonymizationLink"
+            },
+            "sourceFileId": 7,
+            "runCount": 1,
+            "anonymizedFileId": 12,
+            "anonymizedFileName": "brief_anonymized.pdf",
+            "anonymizedFilePath": "/u/files/brief_anonymized.pdf",
+            "status": "anonymized",
+            "replacementCount": 4,
+            "anonymizedAt": "<timestamp>",
+            "outputFormat": "pdf"
+        },
+        "linkId": "saved-1"
+    },
+    "only the first result counts": {
+        "search": {
+            "registerSlug": "filinq",
+            "schemaSlug": "anonymizationLink",
+            "filters": {
+                "sourceFileId": 7
+            }
+        },
+        "saved": {
+            "@self": {
+                "register": "filinq",
+                "schema": "anonymizationLink"
+            },
+            "sourceFileId": 7,
+            "runCount": 1,
+            "anonymizedFileId": 12,
+            "anonymizedFileName": "brief_anonymized.pdf",
+            "anonymizedFilePath": "/u/files/brief_anonymized.pdf",
+            "status": "anonymized",
+            "replacementCount": 4,
+            "anonymizedAt": "<timestamp>",
+            "outputFormat": "pdf"
+        },
+        "linkId": "saved-1"
+    },
+    "the bare minimum": {
+        "search": {
+            "registerSlug": "filinq",
+            "schemaSlug": "anonymizationLink",
+            "filters": {
+                "sourceFileId": 7
+            }
+        },
+        "saved": {
+            "@self": {
+                "register": "filinq",
+                "schema": "anonymizationLink"
+            },
+            "sourceFileId": 7,
+            "runCount": 1,
+            "anonymizedFileId": 12,
+            "anonymizedFileName": "",
+            "anonymizedFilePath": "",
+            "status": "anonymized",
+            "replacementCount": 0,
+            "anonymizedAt": "<timestamp>"
+        },
+        "linkId": "saved-1"
+    },
+    "an upper case docx": {
+        "search": {
+            "registerSlug": "filinq",
+            "schemaSlug": "anonymizationLink",
+            "filters": {
+                "sourceFileId": 7
+            }
+        },
+        "saved": {
+            "@self": {
+                "register": "filinq",
+                "schema": "anonymizationLink"
+            },
+            "sourceFileId": 7,
+            "runCount": 1,
+            "anonymizedFileId": 12,
+            "anonymizedFileName": "Brief.DOCX",
+            "anonymizedFilePath": "",
+            "status": "anonymized",
+            "replacementCount": 0,
+            "anonymizedAt": "<timestamp>",
+            "outputFormat": "docx"
+        },
+        "linkId": "saved-1"
+    },
+    "odt": {
+        "search": {
+            "registerSlug": "filinq",
+            "schemaSlug": "anonymizationLink",
+            "filters": {
+                "sourceFileId": 7
+            }
+        },
+        "saved": {
+            "@self": {
+                "register": "filinq",
+                "schema": "anonymizationLink"
+            },
+            "sourceFileId": 7,
+            "runCount": 1,
+            "anonymizedFileId": 12,
+            "anonymizedFileName": "brief.odt",
+            "anonymizedFilePath": "",
+            "status": "anonymized",
+            "replacementCount": 0,
+            "anonymizedAt": "<timestamp>",
+            "outputFormat": "odt"
+        },
+        "linkId": "saved-1"
+    },
+    "txt": {
+        "search": {
+            "registerSlug": "filinq",
+            "schemaSlug": "anonymizationLink",
+            "filters": {
+                "sourceFileId": 7
+            }
+        },
+        "saved": {
+            "@self": {
+                "register": "filinq",
+                "schema": "anonymizationLink"
+            },
+            "sourceFileId": 7,
+            "runCount": 1,
+            "anonymizedFileId": 12,
+            "anonymizedFileName": "brief.txt",
+            "anonymizedFilePath": "",
+            "status": "anonymized",
+            "replacementCount": 0,
+            "anonymizedAt": "<timestamp>",
+            "outputFormat": "txt"
+        },
+        "linkId": "saved-1"
+    },
+    "html": {
+        "search": {
+            "registerSlug": "filinq",
+            "schemaSlug": "anonymizationLink",
+            "filters": {
+                "sourceFileId": 7
+            }
+        },
+        "saved": {
+            "@self": {
+                "register": "filinq",
+                "schema": "anonymizationLink"
+            },
+            "sourceFileId": 7,
+            "runCount": 1,
+            "anonymizedFileId": 12,
+            "anonymizedFileName": "brief.html",
+            "anonymizedFilePath": "",
+            "status": "anonymized",
+            "replacementCount": 0,
+            "anonymizedAt": "<timestamp>",
+            "outputFormat": "html"
+        },
+        "linkId": "saved-1"
+    },
+    "an eml is no output format": {
+        "search": {
+            "registerSlug": "filinq",
+            "schemaSlug": "anonymizationLink",
+            "filters": {
+                "sourceFileId": 7
+            }
+        },
+        "saved": {
+            "@self": {
+                "register": "filinq",
+                "schema": "anonymizationLink"
+            },
+            "sourceFileId": 7,
+            "runCount": 1,
+            "anonymizedFileId": 12,
+            "anonymizedFileName": "brief.eml",
+            "anonymizedFilePath": "",
+            "status": "anonymized",
+            "replacementCount": 0,
+            "anonymizedAt": "<timestamp>"
+        },
+        "linkId": "saved-1"
+    },
+    "a name without an extension": {
+        "search": {
+            "registerSlug": "filinq",
+            "schemaSlug": "anonymizationLink",
+            "filters": {
+                "sourceFileId": 7
+            }
+        },
+        "saved": {
+            "@self": {
+                "register": "filinq",
+                "schema": "anonymizationLink"
+            },
+            "sourceFileId": 7,
+            "runCount": 1,
+            "anonymizedFileId": 12,
+            "anonymizedFileName": "brief",
+            "anonymizedFilePath": "",
+            "status": "anonymized",
+            "replacementCount": 0,
+            "anonymizedAt": "<timestamp>"
+        },
+        "linkId": "saved-1"
+    },
+    "an existing format and an unknown one": {
+        "search": {
+            "registerSlug": "filinq",
+            "schemaSlug": "anonymizationLink",
+            "filters": {
+                "sourceFileId": 7
+            }
+        },
+        "saved": {
+            "@self": {
+                "id": "link-1",
+                "register": "filinq",
+                "schema": "anonymizationLink"
+            },
+            "sourceFileId": 7,
+            "runCount": 3,
+            "outputFormat": "docx",
+            "verificationVerdict": "leaking",
+            "note": "kept",
+            "anonymizedFileId": 12,
+            "anonymizedFileName": "brief.md",
+            "anonymizedFilePath": "",
+            "status": "anonymized",
+            "replacementCount": 0,
+            "anonymizedAt": "<timestamp>"
+        },
+        "linkId": "saved-1"
+    },
+    "a verified copy": {
+        "search": {
+            "registerSlug": "filinq",
+            "schemaSlug": "anonymizationLink",
+            "filters": {
+                "sourceFileId": 7
+            }
+        },
+        "saved": {
+            "@self": {
+                "register": "filinq",
+                "schema": "anonymizationLink"
+            },
+            "sourceFileId": 7,
+            "runCount": 1,
+            "anonymizedFileId": 12,
+            "anonymizedFileName": "brief_anonymized.pdf",
+            "anonymizedFilePath": "/u/files/brief_anonymized.pdf",
+            "status": "anonymized",
+            "replacementCount": 4,
+            "anonymizedAt": "<timestamp>",
+            "outputFormat": "pdf",
+            "verificationVerdict": "clean",
+            "verificationOutputMode": "flattened",
+            "verificationRoutes": "text,ocr",
+            "verificationLeakRoutes": "",
+            "verifiedAt": "<timestamp>"
+        },
+        "linkId": "saved-1"
+    },
+    "a leaking copy": {
+        "search": {
+            "registerSlug": "filinq",
+            "schemaSlug": "anonymizationLink",
+            "filters": {
+                "sourceFileId": 7
+            }
+        },
+        "saved": {
+            "@self": {
+                "register": "filinq",
+                "schema": "anonymizationLink"
+            },
+            "sourceFileId": 7,
+            "runCount": 1,
+            "anonymizedFileId": 12,
+            "anonymizedFileName": "brief_anonymized.pdf",
+            "anonymizedFilePath": "/u/files/brief_anonymized.pdf",
+            "status": "anonymized",
+            "replacementCount": 4,
+            "anonymizedAt": "<timestamp>",
+            "outputFormat": "pdf",
+            "verificationVerdict": "leaking",
+            "verificationOutputMode": "",
+            "verificationRoutes": "text",
+            "verificationLeakRoutes": "text,ocr",
+            "verifiedAt": "<timestamp>"
+        },
+        "linkId": "saved-1"
+    },
+    "an empty verification": {
+        "search": {
+            "registerSlug": "filinq",
+            "schemaSlug": "anonymizationLink",
+            "filters": {
+                "sourceFileId": 7
+            }
+        },
+        "saved": {
+            "@self": {
+                "register": "filinq",
+                "schema": "anonymizationLink"
+            },
+            "sourceFileId": 7,
+            "runCount": 1,
+            "anonymizedFileId": 12,
+            "anonymizedFileName": "brief_anonymized.pdf",
+            "anonymizedFilePath": "/u/files/brief_anonymized.pdf",
+            "status": "anonymized",
+            "replacementCount": 4,
+            "anonymizedAt": "<timestamp>",
+            "outputFormat": "pdf",
+            "verificationVerdict": "",
+            "verificationOutputMode": "",
+            "verificationRoutes": "",
+            "verificationLeakRoutes": "",
+            "verifiedAt": "<timestamp>"
+        },
+        "linkId": "saved-1"
+    },
+    "a verification that is not an array": {
+        "search": {
+            "registerSlug": "filinq",
+            "schemaSlug": "anonymizationLink",
+            "filters": {
+                "sourceFileId": 7
+            }
+        },
+        "saved": {
+            "@self": {
+                "register": "filinq",
+                "schema": "anonymizationLink"
+            },
+            "sourceFileId": 7,
+            "runCount": 1,
+            "anonymizedFileId": 12,
+            "anonymizedFileName": "brief_anonymized.pdf",
+            "anonymizedFilePath": "/u/files/brief_anonymized.pdf",
+            "status": "anonymized",
+            "replacementCount": 4,
+            "anonymizedAt": "<timestamp>",
+            "outputFormat": "pdf"
+        },
+        "linkId": "saved-1"
+    },
+    "a prior verdict and no verification": {
+        "search": {
+            "registerSlug": "filinq",
+            "schemaSlug": "anonymizationLink",
+            "filters": {
+                "sourceFileId": 7
+            }
+        },
+        "saved": {
+            "@self": {
+                "id": "link-1",
+                "register": "filinq",
+                "schema": "anonymizationLink"
+            },
+            "sourceFileId": 7,
+            "runCount": 3,
+            "outputFormat": "pdf",
+            "verificationVerdict": "leaking",
+            "note": "kept",
+            "anonymizedFileId": 12,
+            "anonymizedFileName": "brief_anonymized.pdf",
+            "anonymizedFilePath": "/u/files/brief_anonymized.pdf",
+            "status": "anonymized",
+            "replacementCount": 4,
+            "anonymizedAt": "<timestamp>"
+        },
+        "linkId": "saved-1"
+    },
+    "structure preservation": {
+        "search": {
+            "registerSlug": "filinq",
+            "schemaSlug": "anonymizationLink",
+            "filters": {
+                "sourceFileId": 7
+            }
+        },
+        "saved": {
+            "@self": {
+                "register": "filinq",
+                "schema": "anonymizationLink"
+            },
+            "sourceFileId": 7,
+            "runCount": 1,
+            "anonymizedFileId": 12,
+            "anonymizedFileName": "brief_anonymized.pdf",
+            "anonymizedFilePath": "/u/files/brief_anonymized.pdf",
+            "status": "anonymized",
+            "replacementCount": 4,
+            "anonymizedAt": "<timestamp>",
+            "outputFormat": "pdf",
+            "structurePreservation": {
+                "tags": 3,
+                "lost": [
+                    "table"
+                ]
+            }
+        },
+        "linkId": "saved-1"
+    },
+    "everything": {
+        "search": {
+            "registerSlug": "filinq",
+            "schemaSlug": "anonymizationLink",
+            "filters": {
+                "sourceFileId": 7
+            }
+        },
+        "saved": {
+            "@self": {
+                "id": "link-1",
+                "register": "filinq",
+                "schema": "anonymizationLink"
+            },
+            "sourceFileId": 7,
+            "runCount": 3,
+            "outputFormat": "pdf",
+            "verificationVerdict": "clean",
+            "note": "kept",
+            "anonymizedFileId": 12,
+            "anonymizedFileName": "brief_anonymized.pdf",
+            "anonymizedFilePath": "/u/files/brief_anonymized.pdf",
+            "status": "anonymized",
+            "replacementCount": 4,
+            "anonymizedAt": "<timestamp>",
+            "verificationOutputMode": "flattened",
+            "verificationRoutes": "text,ocr",
+            "verificationLeakRoutes": "",
+            "verifiedAt": "<timestamp>",
+            "structurePreservation": {
+                "tags": 1
+            }
+        },
+        "linkId": "saved-1"
+    },
+    "a search result that is a number": {
+        "search": {
+            "registerSlug": "filinq",
+            "schemaSlug": "anonymizationLink",
+            "filters": {
+                "sourceFileId": 7
+            }
+        },
+        "saved": {
+            "@self": {
+                "register": "filinq",
+                "schema": "anonymizationLink"
+            },
+            "sourceFileId": 7,
+            "runCount": 1,
+            "anonymizedFileId": 12,
+            "anonymizedFileName": "brief_anonymized.pdf",
+            "anonymizedFilePath": "/u/files/brief_anonymized.pdf",
+            "status": "anonymized",
+            "replacementCount": 4,
+            "anonymizedAt": "<timestamp>",
+            "outputFormat": "pdf"
+        },
+        "linkId": "saved-1"
+    },
+    "an existing link with a fractional count": {
+        "search": {
+            "registerSlug": "filinq",
+            "schemaSlug": "anonymizationLink",
+            "filters": {
+                "sourceFileId": 7
+            }
+        },
+        "saved": {
+            "sourceFileId": 7,
+            "runCount": 3,
+            "anonymizedFileId": 12,
+            "anonymizedFileName": "brief_anonymized.pdf",
+            "anonymizedFilePath": "/u/files/brief_anonymized.pdf",
+            "status": "anonymized",
+            "replacementCount": 4,
+            "anonymizedAt": "<timestamp>",
+            "outputFormat": "pdf"
+        },
+        "linkId": "saved-1"
+    },
+    "a string replacement count": {
+        "search": {
+            "registerSlug": "filinq",
+            "schemaSlug": "anonymizationLink",
+            "filters": {
+                "sourceFileId": 7
+            }
+        },
+        "saved": {
+            "@self": {
+                "register": "filinq",
+                "schema": "anonymizationLink"
+            },
+            "sourceFileId": 7,
+            "runCount": 1,
+            "anonymizedFileId": 12,
+            "anonymizedFileName": "",
+            "anonymizedFilePath": "",
+            "status": "anonymized",
+            "replacementCount": 4,
+            "anonymizedAt": "<timestamp>"
+        },
+        "linkId": "saved-1"
+    },
+    "an existing link of another file": {
+        "search": {
+            "registerSlug": "filinq",
+            "schemaSlug": "anonymizationLink",
+            "filters": {
+                "sourceFileId": 7
+            }
+        },
+        "saved": {
+            "@self": {
+                "register": "filinq",
+                "schema": "anonymizationLink"
+            },
+            "sourceFileId": 7,
+            "runCount": 1,
+            "anonymizedFileId": 12,
+            "anonymizedFileName": "brief_anonymized.pdf",
+            "anonymizedFilePath": "/u/files/brief_anonymized.pdf",
+            "status": "anonymized",
+            "replacementCount": 4,
+            "anonymizedAt": "<timestamp>",
+            "outputFormat": "pdf"
+        },
+        "linkId": "saved-1"
+    },
+    "an existing link without a file id": {
+        "search": {
+            "registerSlug": "filinq",
+            "schemaSlug": "anonymizationLink",
+            "filters": {
+                "sourceFileId": 7
+            }
+        },
+        "saved": {
+            "@self": {
+                "register": "filinq",
+                "schema": "anonymizationLink"
+            },
+            "sourceFileId": 7,
+            "runCount": 1,
+            "anonymizedFileId": 12,
+            "anonymizedFileName": "brief_anonymized.pdf",
+            "anonymizedFilePath": "/u/files/brief_anonymized.pdf",
+            "status": "anonymized",
+            "replacementCount": 4,
+            "anonymizedAt": "<timestamp>",
+            "outputFormat": "pdf"
+        },
+        "linkId": "saved-1"
+    }
+}

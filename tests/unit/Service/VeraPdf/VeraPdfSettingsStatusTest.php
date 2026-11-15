@@ -48,7 +48,6 @@ class VeraPdfSettingsStatusTest extends TestCase {
 			$this->createMock(ITimeFactory::class)
 		);
 		$controller = new ConformanceController(
-			'filinq',
 			$this->createMock(IRequest::class),
 			$conformance,
 			$this->createMock(IRootFolder::class),

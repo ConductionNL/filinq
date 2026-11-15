@@ -27,6 +27,7 @@ use Exception;
 use InvalidArgumentException;
 use OCP\IUser;
 use OCA\Filinq\Exception\PolicyRejectedException;
+use OCA\Filinq\Kernel\ConsentUpdate;
 
 /**
  * Contract of ConsentService.
@@ -95,10 +96,7 @@ interface ConsentServiceInterface {
 	/**
 	 * Validate and update a consent record, enforcing policy-transition rules
 	 *
-	 * @param string $consentId The consent object UUID
-	 * @param string $register The register ID
-	 * @param string $schema The schema ID
-	 * @param array<string, mixed> $data The update payload
+	 * @param ConsentUpdate $update The consent record and the update payload
 	 * @param IUser|null $user The acting user, or null for system context
 	 *
 	 * @return array<string, mixed> The updated consent record
@@ -109,7 +107,7 @@ interface ConsentServiceInterface {
 	 * @spec openspec/changes/publication-consent-policy-fields/tasks.md#task-7
 	 * @spec openspec/changes/publication-consent-policy-fields/tasks.md#task-8
 	 */
-	public function validateAndUpdateConsent(string $consentId, string $register, string $schema, array $data, ?IUser $user = null): array;
+	public function validateAndUpdateConsent(ConsentUpdate $update, ?IUser $user = null): array;
 
 	/**
 	 * Update consent status for a consent record

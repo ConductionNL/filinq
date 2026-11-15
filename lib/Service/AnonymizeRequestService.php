@@ -40,7 +40,7 @@ namespace OCA\Filinq\Service;
 use Exception;
 use OCA\Filinq\Exception\DetectionUnavailableException;
 use OCA\Filinq\Exception\ProhibitionGateException;
-use OCA\Filinq\Kernel\Contracts\AnonymizationServiceInterface;
+use OCA\Filinq\Kernel\AnonymizeCall;
 use OCA\Filinq\Kernel\Contracts\AnonymizeRequestServiceInterface;
 use OCP\AppFramework\Http;
 use OCP\Files\File;
@@ -59,6 +59,9 @@ use Psr\Log\LoggerInterface;
  * @link     https://www.filinq.app
  *
  * @spec openspec/specs/anonymization/spec.md
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The thirteenth type is
+ * AnonymizeCall, the one value the contract runs a validated request with.
  */
 class AnonymizeRequestService implements AnonymizeRequestServiceInterface {
 
@@ -73,7 +76,7 @@ class AnonymizeRequestService implements AnonymizeRequestServiceInterface {
 	 * Constructor for AnonymizeRequestService
 	 *
 	 * @param LoggerInterface $logger Logger for gate failure reporting.
-	 * @param AnonymizationServiceInterface $anonymizationService Service for anonymization operations.
+	 * @param AnonymizationService $anonymizationService Service for anonymization operations.
 	 * @param IL10N $l10n The localization service.
 	 * @param IRootFolder $rootFolder Root folder for per-user file access checks.
 	 * @param IUserSession $userSession User session for authentication.
@@ -82,7 +85,7 @@ class AnonymizeRequestService implements AnonymizeRequestServiceInterface {
 	 */
 	public function __construct(
 		private readonly LoggerInterface $logger,
-		private readonly AnonymizationServiceInterface $anonymizationService,
+		private readonly AnonymizationService $anonymizationService,
 		private readonly IL10N $l10n,
 		private readonly IRootFolder $rootFolder,
 		private readonly IUserSession $userSession,
@@ -217,11 +220,8 @@ class AnonymizeRequestService implements AnonymizeRequestServiceInterface {
 	 * `ConversionFailedException` propagates to the caller by design — the
 	 * controller owns the documented 422 conversion body.
 	 *
-	 * @param int $fileId The Nextcloud file ID.
-	 * @param string $userId UID of the acting user (for override audit entries).
-	 * @param array<string, mixed> $params Raw request parameters (scope, dossierKey, filters).
-	 * @param array<string, mixed> $request The normalised body from validateBody().
-	 * @param string $outputFormat The resolved output format.
+	 * @param AnonymizeCall $call   The file, parameters, body and output format.
+	 * @param string        $userId UID of the acting user (for override audit entries).
 	 *
 	 * @return array{status: int, body: array<string, mixed>} The response payload.
 	 *
@@ -232,21 +232,13 @@ class AnonymizeRequestService implements AnonymizeRequestServiceInterface {
 	 * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-11
 	 * @spec openspec/changes/archive/2026-09-29-anonymisation-fails-closed-without-a-detector/tasks.md#task-2
 	 */
-	public function executeAnonymize(
-		int $fileId,
-		string $userId,
-		array $params,
-		array $request,
-		string $outputFormat,
-	): array {
-		$entities = $this->filterEntities(entities: $request['entities'], params: $params);
-
+	public function executeAnonymize(AnonymizeCall $call, string $userId): array {
 		// Defence-in-depth backstop (Robert): refuse if an absolute-tier
 		// prohibition entity would be left un-redacted (e.g. skipped by
 		// bypassing the guarded skip endpoint and PATCHing OpenRegister
 		// directly). Complements the request-payload prohibition gate that
 		// runProhibitionGate() enforces inside anonymizeDocument().
-		$violations = $this->anonymizationService->absoluteProhibitionViolations($fileId);
+		$violations = $this->anonymizationService->absoluteProhibitionViolations($call->fileId);
 		if (empty($violations) === false) {
 			return [
 				'status' => 422,
@@ -260,21 +252,14 @@ class AnonymizeRequestService implements AnonymizeRequestServiceInterface {
 		}
 
 		try {
-			$result = $this->callAnonymizeDocument(
-				fileId: $fileId,
-				entities: $entities,
-				userId: $userId,
-				params: $params,
-				request: $request,
-				outputFormat: $outputFormat
-			);
+			$result = $this->callAnonymizeDocument(call: $call, userId: $userId);
 		} catch (ProhibitionGateException $e) {
-			return $this->prohibitionGateResponse(gateError: $e, fileId: $fileId);
+			return $this->prohibitionGateResponse(gateError: $e, fileId: $call->fileId);
 		} catch (DetectionUnavailableException $e) {
-			return $this->detectionUnavailableResponse(refusal: $e, fileId: $fileId);
+			return $this->detectionUnavailableResponse(refusal: $e, fileId: $call->fileId);
 		}
 
-		if ($request['hasStrayBases'] === true) {
+		if ($call->request['hasStrayBases'] === true) {
 			$result['ignoredFields'] = ['bases'];
 		}
 
@@ -282,17 +267,13 @@ class AnonymizeRequestService implements AnonymizeRequestServiceInterface {
 	}//end executeAnonymize()
 
 	/**
-	 * Call the AnonymizationService entry point this request asked for.
+	 * Call the AnonymizationService entry point this request asked for, with its filtered entities.
 	 *
 	 * `appendBasisSummary` selects between the plain and the summary-producing
 	 * entry point; every other value is forwarded verbatim.
 	 *
-	 * @param int $fileId The Nextcloud file ID.
-	 * @param array<int, array<string, mixed>> $entities The filtered entities to anonymize.
-	 * @param string $userId UID of the acting user.
-	 * @param array<string, mixed> $params Request parameters (scope / dossierKey).
-	 * @param array<string, mixed> $request The validated request body.
-	 * @param string $outputFormat Resolved per-call output format.
+	 * @param AnonymizeCall $call   The file, parameters, body and output format.
+	 * @param string        $userId UID of the acting user.
 	 *
 	 * @return array<string, mixed> The AnonymizationService result payload.
 	 *
@@ -304,39 +285,23 @@ class AnonymizeRequestService implements AnonymizeRequestServiceInterface {
 	 * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-1
 	 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-2.2
 	 */
-	private function callAnonymizeDocument(
-		int $fileId,
-		array $entities,
-		string $userId,
-		array $params,
-		array $request,
-		string $outputFormat,
-	): array {
-		if ($request['appendBasisSummary'] === true) {
-			return $this->anonymizationService->anonymizeDocumentWithBasisSummary(
-				fileId: $fileId,
-				entities: $entities,
-				outputFormat: $outputFormat,
-				unredactedEntities: $request['unredactedEntities'],
-				overrides: $request['overrides'],
-				userId: $userId,
-				scope: $this->resolveScope(params: $params),
-				dossierKey: $this->resolveDossierKey(params: $params),
-				reversible: ($request['reversible'] ?? false) === true
-			);
+	private function callAnonymizeDocument(AnonymizeCall $call, string $userId): array {
+		$request = $call->request;
+		$entities = $this->filterEntities(entities: $request['entities'], params: $call->params);
+		$options = (new AnonymizeOptions())
+			->withOutputFormat(outputFormat: $call->outputFormat)
+			->withConsents(unredactedEntities: $request['unredactedEntities'], overrides: $request['overrides'])
+			->withUserId(userId: $userId)
+			->withScope(scope: $this->resolveScope(params: $call->params), dossierKey: $this->resolveDossierKey(params: $call->params));
+		if (($request['reversible'] ?? false) === true) {
+			$options = $options->reversible();
 		}
 
-		return $this->anonymizationService->anonymizeDocument(
-			fileId: $fileId,
-			entities: $entities,
-			outputFormat: $outputFormat,
-			unredactedEntities: $request['unredactedEntities'],
-			overrides: $request['overrides'],
-			userId: $userId,
-			scope: $this->resolveScope(params: $params),
-			dossierKey: $this->resolveDossierKey(params: $params),
-			reversible: ($request['reversible'] ?? false) === true
-		);
+		if ($request['appendBasisSummary'] === true) {
+			return $this->anonymizationService->anonymizeDocumentWithBasisSummary(fileId: $call->fileId, entities: $entities, options: $options);
+		}
+
+		return $this->anonymizationService->anonymizeDocument(fileId: $call->fileId, entities: $entities, options: $options);
 
 	}//end callAnonymizeDocument()
 

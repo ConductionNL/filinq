@@ -3,6 +3,9 @@
 /**
  * Unit tests for the Portaliq portal contribution provider.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Pins Filinq's ADR-046 contract-v2.1 contribution: the dependency-free
  * duck-typed shape (inert without portaliq), the v2 getAudiences() + v1
  * getAudience() pair, the per-audience read manifest (scoping map, claim
@@ -32,9 +35,6 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://www.filinq.app
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
  * @spec openspec/specs/portal-signing-surface/spec.md
@@ -319,13 +319,14 @@ final class PortalContributionProviderTest extends TestCase {
 		$this->assertArrayHasKey('rowActions', $request, 'The awaiting-signature collection must carry the sign/decline rowActions');
 
 		$rowActions = $this->indexById($request['rowActions']);
-		$this->assertSame(['decline', 'sign'], $this->sortedKeys($rowActions), 'Exactly sign + decline, no other rowAction');
+		$this->assertSame(['decline', 'sign', 'viewDocument'], $this->sortedKeys($rowActions), 'Exactly sign + decline + viewDocument, no other rowAction');
 
-		foreach (['sign', 'decline'] as $id) {
+		$expectedMethods = ['sign' => 'POST', 'decline' => 'POST', 'viewDocument' => 'GET'];
+		foreach ($expectedMethods as $id => $method) {
 			$action = $rowActions[$id];
 			$this->assertSame($id, $action['id']);
 			$this->assertSame('substantial', $action['minTrust'], "rowAction '{$id}' must be eIDAS-substantial gated");
-			$this->assertSame('POST', $action['method']);
+			$this->assertSame($method, $action['method']);
 			$this->assertIsString($action['endpoint']);
 			$this->assertNotSame('', $action['endpoint']);
 			$this->assertStringStartsWith('/', $action['endpoint'], "rowAction '{$id}' endpoint must be instance-local relative (leading slash)");
@@ -442,6 +443,36 @@ final class PortalContributionProviderTest extends TestCase {
 		$this->assertSame('signerEmail', $requests['scopeClaim'], 'the collection the rows come from is scoped by the same claim');
 
 	}//end testSignAndDeclineDeclareTheRowFieldAndScopeClaimTheReceiverReads()
+
+	/**
+	 * portaliq rebuilds a forwarded body from the action's `fields` alone, so
+	 * each act declares exactly what its dialog sends and the receiver reads:
+	 * `consent` to sign, `reason` to decline, nothing else to view the
+	 * document. `viewDocument` resolves as a row action like the other two
+	 * (rowField + scopeClaim, named in the collection's rowActions), so the
+	 * signing dialog can show the row's document (portaliq REQ-SGN-004).
+	 *
+	 * @return void
+	 */
+	public function testEachSigningActForwardsOnlyWhatItsReceiverReads(): void {
+		$manifest = $this->provider->getContribution(self::SIGNER_SUBJECT);
+		$this->assertIsArray($manifest);
+
+		$actions = $this->indexById($manifest['actions']);
+		$this->assertSame(['consent'], $actions['sign']['fields']);
+		$this->assertSame(['reason'], $actions['decline']['fields']);
+		$this->assertSame([], $actions['viewDocument']['fields']);
+
+		$this->assertSame('signingRequestId', ($actions['viewDocument']['rowField'] ?? null), 'viewDocument must be an endpoint row action');
+		$this->assertSame('signerEmail', ($actions['viewDocument']['scopeClaim'] ?? null), 'viewDocument must carry the signer in the assertion');
+
+		$rowActionIds = array_column($this->indexById($manifest['collections'])['signerSigningRequests']['rowActions'], 'id');
+		foreach ($rowActionIds as $id) {
+			$this->assertArrayHasKey($id, $actions, "row action '{$id}' must resolve to a top-level action of the same id");
+			$this->assertArrayHasKey('rowField', $actions[$id], "row action '{$id}' resolves only when its action names a rowField");
+		}
+
+	}//end testEachSigningActForwardsOnlyWhatItsReceiverReads()
 
 	/**
 	 * Pin the scoping map + whitelists against the shipped register JSON.
@@ -578,7 +609,7 @@ final class PortalContributionProviderTest extends TestCase {
 		$this->assertSame('nl:My publication consents', $subject['collections'][0]['label']);
 		$this->assertSame('nl:My signatures', $signer['collections'][0]['label']);
 		$this->assertSame('nl:Documents awaiting my signature', $signer['collections'][1]['label']);
-		$this->assertSame(['nl:Sign', 'nl:Decline to sign'], array_column($signer['collections'][1]['rowActions'], 'label'));
+		$this->assertSame(['nl:Sign', 'nl:Decline to sign', 'nl:View document'], array_column($signer['collections'][1]['rowActions'], 'label'));
 		$this->assertSame(['nl:Sign', 'nl:Decline to sign', 'nl:View document'], array_column($signer['actions'], 'label'));
 
 	}//end testLabelsAreTranslated()

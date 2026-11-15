@@ -17,7 +17,7 @@ jest.mock('@nextcloud/router', () => ({
 	generateUrl: (path) => path,
 }))
 
-// @spec openspec/changes/dictionary-actions-for-maintainers/specs/custom-dictionary-recognition/spec.md
+// @spec openspec/specs/custom-dictionary-recognition/spec.md
 describe('custom dictionary capabilities', () => {
 	beforeEach(() => {
 		setActivePinia(createPinia())
@@ -34,7 +34,9 @@ describe('custom dictionary capabilities', () => {
 
 		await store.fetchCapabilities()
 
-		expect(axios.get).toHaveBeenCalledWith('/apps/filinq/api/custom-dictionaries/capabilities')
+		expect(axios.get).toHaveBeenCalledWith(
+			'/apps/filinq/api/custom-dictionaries/capabilities',
+		)
 		expect(store.canMaintain).toBe(true)
 	})
 

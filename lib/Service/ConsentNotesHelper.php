@@ -3,6 +3,9 @@
 /**
  * Consent Notes Helper
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Manages the sentinel-tagged region in publicationConsent.notes
  * for additional publication bases (basis 2..N). The helper writes,
  * replaces, and removes the bracketed HTML-comment region while

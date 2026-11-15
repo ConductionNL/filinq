@@ -11,6 +11,7 @@
 import axios from '@nextcloud/axios'
 import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
+import { answer } from './apiAnswer.js'
 
 const BASE = '/apps/filinq/api/email-ingestion'
 
@@ -97,25 +98,6 @@ export function inThread(row, rows) {
 		return false
 	}
 	return rows.some((other) => other !== row && other.threadKey === row.threadKey)
-}
-
-/**
- * Run a call and answer { ok, data } or { ok: false, status }.
- *
- * @param {Promise<object>} call The axios call.
- * @return {Promise<object>} The answer.
- */
-async function answer(call) {
-	try {
-		const { data } = await call
-		return { ok: true, data }
-	} catch (error) {
-		return {
-			ok: false,
-			status: error?.response?.status ?? 0,
-			error: error?.response?.data?.error ?? '',
-		}
-	}
 }
 
 /**

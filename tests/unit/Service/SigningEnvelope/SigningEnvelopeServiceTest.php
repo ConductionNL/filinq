@@ -41,6 +41,8 @@ use OCA\Filinq\Service\SigningEnvelope\SigningEnvelopeRollUp;
 use OCA\Filinq\Service\SigningEnvelope\SigningEnvelopeService;
 use OCA\Filinq\Service\SigningRequestValidator;
 use OCA\Filinq\Service\SigningService;
+use OCA\Filinq\Service\Support\SigningGuards;
+use OCA\Filinq\Service\Support\SigningOutputs;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Files\IRootFolder;
@@ -263,23 +265,27 @@ class SigningEnvelopeServiceTest extends TestCase {
 
 		$this->signing = new SigningService(
 			settingsService: $settings,
-			auditService: $this->createMock(SigningAuditService::class),
-			artifactProducer: new SignedArtifactProducer(
+			actorResolver: new SigningActorResolver(settingsService: $settings, config: $config, userSession: $userSession, request: $request),
+			guards: new SigningGuards(
+				validator: new SigningRequestValidator(providerFactory: $providerFactory),
+				consentGuard: new GuardianConsentGuard(settingsService: $settings),
+				assuranceGate: $this->assuranceGate(userSession: $userSession)
+			),
+			outputs: new SigningOutputs(
+				auditService: $this->createMock(SigningAuditService::class),
+				artifactProducer: new SignedArtifactProducer(
 				providerFactory: $providerFactory,
 				userSession: $userSession,
 				request: $request,
 				rootFolder: $this->initiatorFolder(),
 				finalDocuments: $this->createMock(FinalDocumentService::class)
 			),
-			validator: new SigningRequestValidator(providerFactory: $providerFactory),
-			actorResolver: new SigningActorResolver(settingsService: $settings, config: $config, userSession: $userSession, request: $request),
-			emitter: new SigningConclusionEmitter(
+				emitter: new SigningConclusionEmitter(
 				eventDispatcher: $this->createMock(IEventDispatcher::class),
 				logger: $this->createMock(LoggerInterface::class),
 				eventFactory: new SigningConcludedEventFactory()
-			),
-			consentGuard: new GuardianConsentGuard(settingsService: $settings),
-			assuranceGate: $this->assuranceGate(userSession: $userSession)
+			)
+			)
 		);
 
 		$resolver = $this->createMock(DocumentObjectServiceResolver::class);

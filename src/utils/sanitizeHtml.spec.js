@@ -6,7 +6,9 @@ import { sanitizeHtml } from './sanitizeHtml.js'
 
 describe('sanitizeHtml', () => {
 	it('removes scripts, event handlers and javascript: links', () => {
-		const out = sanitizeHtml('<p onclick="steal()">Hi<script>steal()</script> <a href="javascript:steal()">link</a></p>')
+		const out = sanitizeHtml(
+			'<p onclick="steal()">Hi<script>steal()</script> <a href="javascript:steal()">link</a></p>',
+		)
 
 		expect(out).not.toContain('<script')
 		expect(out).not.toContain('onclick')
@@ -16,7 +18,8 @@ describe('sanitizeHtml', () => {
 	})
 
 	it('keeps formatting and ordinary links', () => {
-		const html = '<h1>Title</h1><p><strong>bold</strong> <a href="https://example.org">site</a></p>'
+		const html =
+			'<h1>Title</h1><p><strong>bold</strong> <a href="https://example.org">site</a></p>'
 
 		expect(sanitizeHtml(html)).toBe(html)
 	})

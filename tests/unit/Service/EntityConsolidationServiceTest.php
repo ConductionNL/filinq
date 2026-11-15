@@ -28,6 +28,7 @@ namespace OCA\Filinq\Tests\Unit\Service;
 use OCA\Filinq\Service\BasesResolverService;
 use OCA\Filinq\Service\EntityConsolidationService;
 use OCA\Filinq\Service\PolicyMatchService;
+use OCA\Filinq\Service\Support\OpenRegisterAccess;
 use OCA\Filinq\Service\WooProfileService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -122,10 +123,9 @@ class EntityConsolidationServiceTest extends TestCase {
 		$this->mockAppConfig = $this->createMock(originalClassName: IAppConfig::class);
 
 		$this->service = new EntityConsolidationService(
+			openRegister: new OpenRegisterAccess(apps: $this->mockAppManager, container: $this->mockContainer),
 			logger: $this->mockLogger,
 			wooProfile: $this->mockWooProfile,
-			appManager: $this->mockAppManager,
-			container: $this->mockContainer,
 			policyMatch: $this->mockPolicyMatch,
 			basesResolver: $this->mockBasesResolver,
 			appConfig: $this->mockAppConfig,

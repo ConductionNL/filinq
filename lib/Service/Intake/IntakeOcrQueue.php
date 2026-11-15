@@ -25,10 +25,9 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\Intake;
 
-use OCA\Filinq\BackgroundJob\IntakeOcrJob;
+use OCA\Filinq\Kernel\JobQueueInterface;
 use OCA\Filinq\Service\OcrService;
 use OCP\AppFramework\Utility\ITimeFactory;
-use OCP\BackgroundJob\IJobList;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
 use OCP\IAppConfig;
@@ -54,7 +53,7 @@ class IntakeOcrQueue {
 	 * @param IAppConfig $config The app settings.
 	 * @param OcrService $ocr Which files need OCR.
 	 * @param IRootFolder $rootFolder Resolves the file, with or without a session.
-	 * @param IJobList $jobs The background job queue.
+	 * @param JobQueueInterface $jobs The background job queue.
 	 * @param IntakeReadingProgress $progress The reading states.
 	 * @param ITimeFactory $time The clock.
 	 */
@@ -62,7 +61,7 @@ class IntakeOcrQueue {
 		private readonly IAppConfig $config,
 		private readonly OcrService $ocr,
 		private readonly IRootFolder $rootFolder,
-		private readonly IJobList $jobs,
+		private readonly JobQueueInterface $jobs,
 		private readonly IntakeReadingProgress $progress,
 		private readonly ITimeFactory $time,
 	) {
@@ -123,7 +122,7 @@ class IntakeOcrQueue {
 		}
 
 		$this->jobs->add(
-			IntakeOcrJob::class,
+			JobQueueInterface::INTAKE_OCR,
 			['uuid' => (string) $document['uuid'], 'fileId' => (int) $document['file']]
 		);
 
