@@ -7,7 +7,7 @@
     "tools": [
       {
         "name": "composer",
-        "version": "2.10.2"
+        "version": "2.8.12"
       },
       {
         "vendor": "cyclonedx",
@@ -384,10 +384,10 @@
       ]
     },
     {
-      "bom-ref": "opis/json-schema-2.6.0.0",
+      "bom-ref": "opis/json-schema-2.6.2.0",
       "type": "library",
       "name": "json-schema",
-      "version": "2.6.0",
+      "version": "2.6.2",
       "group": "opis",
       "description": "Json Schema Validator for PHP",
       "author": "Sorin Sarca, Marius Sarca",
@@ -398,17 +398,17 @@
           }
         }
       ],
-      "purl": "pkg:composer/opis/json-schema@2.6.0",
+      "purl": "pkg:composer/opis/json-schema@2.6.2",
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://api.github.com/repos/opis/json-schema/zipball/8458763e0dd0b6baa310e04f1829fc73da4e8c8a",
-          "comment": "dist reference: 8458763e0dd0b6baa310e04f1829fc73da4e8c8a"
+          "url": "https://api.github.com/repos/opis/json-schema/zipball/b87b424da3fbeaab09567910fda48dc88d9dcbd8",
+          "comment": "dist reference: b87b424da3fbeaab09567910fda48dc88d9dcbd8"
         },
         {
           "type": "vcs",
           "url": "https://github.com/opis/json-schema.git",
-          "comment": "source reference: 8458763e0dd0b6baa310e04f1829fc73da4e8c8a"
+          "comment": "source reference: b87b424da3fbeaab09567910fda48dc88d9dcbd8"
         },
         {
           "type": "website",
@@ -422,18 +422,18 @@
         },
         {
           "type": "vcs",
-          "url": "https://github.com/opis/json-schema/tree/2.6.0",
+          "url": "https://github.com/opis/json-schema/tree/2.6.2",
           "comment": "as detected from Composer manifest 'support.source'"
         }
       ],
       "properties": [
         {
           "name": "cdx:composer:package:distReference",
-          "value": "8458763e0dd0b6baa310e04f1829fc73da4e8c8a"
+          "value": "b87b424da3fbeaab09567910fda48dc88d9dcbd8"
         },
         {
           "name": "cdx:composer:package:sourceReference",
-          "value": "8458763e0dd0b6baa310e04f1829fc73da4e8c8a"
+          "value": "b87b424da3fbeaab09567910fda48dc88d9dcbd8"
         },
         {
           "name": "cdx:composer:package:type",
@@ -28711,7 +28711,7 @@
       "ref": "myclabs/deep-copy-1.13.4.0"
     },
     {
-      "ref": "opis/json-schema-2.6.0.0",
+      "ref": "opis/json-schema-2.6.2.0",
       "dependsOn": [
         "opis/string-2.1.0.0",
         "opis/uri-1.1.0.0"
@@ -28873,7 +28873,7 @@
       "dependsOn": [
         "adbario/php-dot-notation-3.5.0.0",
         "mpdf/mpdf-8.3.1.0",
-        "opis/json-schema-2.6.0.0",
+        "opis/json-schema-2.6.2.0",
         "phpoffice/phpword-1.4.0.0",
         "psr/log-3.0.2.0",
         "setasign/fpdf-1.9.0.0",
