@@ -50,6 +50,8 @@ use Opis\JsonSchema\Validator;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * The pipeline from a document to OpenCatalogi.
@@ -121,7 +123,10 @@ class PublicationPipelineServiceTest extends TestCase {
 	private function pipeline(): PublicationPipelineService {
 		$objects = $this->createMock(ObjectService::class);
 		$objects->method('saveObject')->willReturnCallback(
-			function (array $object = [], string $register = '', string $schema = '', ?string $uuid = null): array {
+			function (array $object = [], ObjectSaveOptions $options = new ObjectSaveOptions()): array {
+				$register = $options->target->register ?? '';
+				$schema = $options->target->schema ?? '';
+				$uuid = $options->uuid;
 				$this->saves[] = [$schema, $object];
 				$uuid = $uuid ?? ($schema . '-' . (count($this->rows[$schema] ?? []) + 1));
 				$this->rows[$schema][$uuid] = array_merge($object, ['uuid' => $uuid]);
@@ -129,7 +134,7 @@ class PublicationPipelineServiceTest extends TestCase {
 			}
 		);
 		$objects->method('find')->willReturnCallback(
-			fn (string $id = '', ?string $register = null, ?string $schema = null): ?array => $this->rows[$schema][$id] ?? null
+			fn (string $id = '', ?ObjectFindOptions $options = null): ?array => $this->rows[($options?->schema)][$id] ?? null
 		);
 		$objects->method('searchObjectsBySlug')->willReturnCallback(
 			fn (string $registerSlug, string $schemaSlug, array $filters = []): array => array_values(

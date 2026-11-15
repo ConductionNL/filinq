@@ -43,6 +43,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Filinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Tests for GlAccountSuggestionService.
@@ -298,16 +299,16 @@ class GlAccountSuggestionServiceTest extends TestCase {
 
 		$this->objectService->expects($this->once())
 			->method('saveObject')
-			->with(
-				$this->callback(function (array $object): bool {
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+					'object' => $this->callback(function (array $object): bool {
 					return $object['supplierIdentity'] === '12345678'
 						&& $object['identityType'] === 'kvk'
 						&& $object['accountCode'] === '4300'
 						&& $object['source'] === 'correction';
 				}),
-				'filinq',
-				'glAccountBooking'
-			);
+					'register' => 'filinq',
+					'schema' => 'glAccountBooking',
+				]));
 
 		$this->service->recordBooking(
 			extractionId: 'extraction-1',

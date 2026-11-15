@@ -53,6 +53,9 @@ use OCP\Security\ICrypto;
 use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * An in-memory OpenRegister, a crypto that visibly transforms, and the real
@@ -149,7 +152,10 @@ trait PseudonymDoubles {
 			}
 		);
 		$objects->method('find')->willReturnCallback(
-			function (string $id = '', string $register = '', string $schema = '', bool $_rbac = true, bool $_multitenancy = true, bool $_render = true) {
+			function (string $id = '', ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true) {
+				$register = $options?->register ?? '';
+				$schema = $options?->schema ?? '';
+				$_render = $options?->render ?? true;
 				if (isset($this->rows[$schema][$id]) === false) {
 					return null;
 				}
@@ -168,7 +174,10 @@ trait PseudonymDoubles {
 			}
 		);
 		$objects->method('saveObject')->willReturnCallback(
-			function (array $object = [], string $register = '', string $schema = '', ?string $uuid = null, bool $_rbac = true) {
+			function (array $object = [], ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true) {
+				$register = $options->target->register ?? '';
+				$schema = $options->target->schema ?? '';
+				$uuid = $options->uuid;
 				if ($this->registerRefusesWrites === true) {
 					throw new \RuntimeException('database is unreachable');
 				}
@@ -185,7 +194,10 @@ trait PseudonymDoubles {
 			}
 		);
 		$objects->method('deleteObject')->willReturnCallback(
-			function (string $uuid = '', string $register = '', string $schema = '', bool $_rbac = true) {
+			function (ObjectDeletion $deletion, bool $_rbac = true) {
+				$uuid = $deletion->uuid ?? '';
+				$register = $deletion->target->register ?? '';
+				$schema = $deletion->target->schema ?? '';
 				if ($_rbac === false) {
 					$this->bypasses[] = 'delete:' . $schema;
 				}

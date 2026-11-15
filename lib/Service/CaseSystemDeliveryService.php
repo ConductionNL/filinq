@@ -28,6 +28,9 @@ namespace OCA\Filinq\Service;
 use Exception;
 use InvalidArgumentException;
 use OCA\Filinq\Kernel\Contracts\CaseSystemDeliveryServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\IUserManager;
 use RuntimeException;
 use Throwable;
@@ -314,9 +317,10 @@ class CaseSystemDeliveryService implements CaseSystemDeliveryServiceInterface {
 
 		$saved = $this->objects->resolve()->saveObject(
 			object: $destination,
-			register: self::REGISTER,
-			schema: self::DESTINATION_SCHEMA,
-			uuid: $uuid
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: self::REGISTER, schema: self::DESTINATION_SCHEMA),
+				uuid: $uuid
+			)
 		);
 
 		return (self::rowOf(entry: $saved) ?? ($destination + ['id' => $id]));
@@ -338,7 +342,11 @@ class CaseSystemDeliveryService implements CaseSystemDeliveryServiceInterface {
 		$row = null;
 		if ($id !== '') {
 			$row = self::rowOf(
-				entry: $this->objects->resolve()->find(id: $id, register: self::REGISTER, schema: self::DELIVERY_SCHEMA, _rbac: false)
+				entry: $this->objects->resolve()->find(
+					id: $id,
+					options: new ObjectFindOptions(register: self::REGISTER, schema: self::DELIVERY_SCHEMA),
+					_rbac: false
+				)
 			);
 		}
 
@@ -356,9 +364,10 @@ class CaseSystemDeliveryService implements CaseSystemDeliveryServiceInterface {
 
 		$saved = $this->objects->resolve()->saveObject(
 			object: $fields,
-			register: self::REGISTER,
-			schema: self::DELIVERY_SCHEMA,
-			uuid: (string) ($row['id'] ?? $id)
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: self::REGISTER, schema: self::DELIVERY_SCHEMA),
+				uuid: (string) ($row['id'] ?? $id)
+			)
 		);
 
 		return (self::rowOf(entry: $saved) ?? ($fields + ['id' => $id]));
@@ -414,9 +423,10 @@ class CaseSystemDeliveryService implements CaseSystemDeliveryServiceInterface {
 
 		$saved = $this->objects->resolve()->saveObject(
 			object: $fields,
-			register: self::REGISTER,
-			schema: self::DOCUMENT_SCHEMA,
-			uuid: $documentId
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: self::REGISTER, schema: self::DOCUMENT_SCHEMA),
+				uuid: $documentId
+			)
 		);
 
 		return (self::rowOf(entry: $saved) ?? ($fields + ['id' => $documentId]));
@@ -541,8 +551,7 @@ class CaseSystemDeliveryService implements CaseSystemDeliveryServiceInterface {
 
 		$saved = $this->objects->resolve()->saveObject(
 			object: $delivery,
-			register: self::REGISTER,
-			schema: self::DELIVERY_SCHEMA
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: self::REGISTER, schema: self::DELIVERY_SCHEMA))
 		);
 
 		return (self::rowOf(entry: $saved) ?? $delivery);

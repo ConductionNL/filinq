@@ -51,6 +51,8 @@ use OCA\Filinq\Tests\Unit\Service\Wizard\WizardObjectStore;
 use OCA\OpenRegister\Service\ObjectService;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * generateDocument() with options.wizardContext.
@@ -85,7 +87,7 @@ class DocumentServiceWizardTest extends TestCase {
 	 */
 	private function service(): DocumentService {
 		$this->wizards = new WizardObjectStore();
-		$this->wizards->saveObject(object: WizardFixtures::seed(), register: 'filinq', schema: 'wizardDefinition', uuid: 'wizard-1');
+		$this->wizards->saveObject(object: WizardFixtures::seed(), options: new ObjectSaveOptions(target: new ObjectFindTarget(register: 'filinq', schema: 'wizardDefinition'), uuid: 'wizard-1'));
 
 		$log = $this->createMock(ObjectService::class);
 		$log->method('saveObject')->willReturnCallback(function (array $object): array {

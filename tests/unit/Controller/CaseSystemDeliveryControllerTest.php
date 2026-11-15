@@ -35,6 +35,8 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 #[CoversClass(CaseSystemDeliveryController::class)]
 #[UsesClass(CaseSystemDeliveryService::class)]
@@ -65,8 +67,11 @@ class CaseSystemDeliveryControllerTest extends TestCase {
 			$filters = $config['filters'];
 			return array_values(array_filter($rows, static fn (array $row): bool => $row['_schema'] === $filters['schema'] && (isset($filters['deliveryStatus']) === false || $row['deliveryStatus'] === $filters['deliveryStatus'])));
 		});
-		$objects->method('find')->willReturnCallback(static fn (string $id='', string $register='', string $schema=''): ?array => ($deliveries[$id] ?? null));
-		$objects->method('saveObject')->willReturnCallback(function (array $object=[], string $register='', string $schema='', ?string $uuid=null): array {
+		$objects->method('find')->willReturnCallback(static fn (string $id='', ?ObjectFindOptions $options = null): ?array => ($deliveries[$id] ?? null));
+		$objects->method('saveObject')->willReturnCallback(function (array $object=[], ObjectSaveOptions $options = new ObjectSaveOptions()): array {
+			$register = $options->target->register ?? '';
+			$schema = $options->target->schema ?? '';
+			$uuid = $options->uuid;
 			$this->saved[] = ['object' => $object, 'uuid' => $uuid, 'schema' => $schema];
 			return $object + ['id' => $uuid];
 		});
