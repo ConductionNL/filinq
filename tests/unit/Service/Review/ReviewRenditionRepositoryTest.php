@@ -26,6 +26,7 @@ namespace OCA\Filinq\Tests\Unit\Service\Review;
 
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\Review\ReviewRenditionRepository;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -115,7 +116,15 @@ class ReviewRenditionRepositoryTest extends TestCase {
 		$repository = $this->repository();
 		$this->objects->method('searchObjectsBySlug')->willReturn([]);
 		$this->objects->expects($this->once())->method('saveObject')
-			->with(['sourceFileId' => 7, 'fileId' => 9, 'sha256' => 'a1'], 'filinq', 'reviewRendition', null, false, true, true)
+			->with(
+				['sourceFileId' => 7, 'fileId' => 9, 'sha256' => 'a1'],
+				$this->callback(callback: static fn (ObjectSaveOptions $options): bool => $options->target->register === 'filinq'
+						&& $options->target->schema === 'reviewRendition'
+						&& $options->uuid === null
+						&& $options->actor->unowned === true
+				),
+				false
+			)
 			->willReturn(['id' => 'r-1', 'object' => ['sourceFileId' => 7, 'fileId' => 9, 'sha256' => 'a1']]);
 
 		$this->assertSame(
@@ -133,7 +142,15 @@ class ReviewRenditionRepositoryTest extends TestCase {
 		$repository = $this->repository();
 		$this->objects->method('searchObjectsBySlug')->willReturn([['id' => 'r-1', 'sourceFileId' => 7, 'sha256' => 'a1']]);
 		$this->objects->expects($this->once())->method('saveObject')
-			->with(['sourceFileId' => 7, 'sha256' => 'b2'], 'filinq', 'reviewRendition', 'r-1', false, true, true)
+			->with(
+				['sourceFileId' => 7, 'sha256' => 'b2'],
+				$this->callback(callback: static fn (ObjectSaveOptions $options): bool => $options->target->register === 'filinq'
+						&& $options->target->schema === 'reviewRendition'
+						&& $options->uuid === 'r-1'
+						&& $options->actor->unowned === true
+				),
+				false
+			)
 			->willReturn(['id' => 'r-1', 'object' => ['sourceFileId' => 7, 'sha256' => 'b2']]);
 
 		$this->assertSame('b2', $repository->saveFor(sourceFileId: 7, rendition: ['sha256' => 'b2'])['sha256']);

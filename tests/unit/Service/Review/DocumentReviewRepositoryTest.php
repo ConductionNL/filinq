@@ -26,6 +26,8 @@ namespace OCA\Filinq\Tests\Unit\Service\Review;
 
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\Review\DocumentReviewRepository;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -119,7 +121,13 @@ class DocumentReviewRepositoryTest extends TestCase {
 	public function testSave(): void {
 		$repository = $this->repository();
 		$this->objects->expects($this->once())->method('saveObject')
-			->with(['fileId' => 7], 'filinq', 'documentReview')
+			->with(
+				['fileId' => 7],
+				$this->callback(callback: static fn (ObjectSaveOptions $options): bool => $options->target->register === 'filinq'
+						&& $options->target->schema === 'documentReview'
+						&& $options->uuid === null
+				)
+			)
 			->willReturn(['id' => 'u-1', 'object' => ['fileId' => 7]]);
 
 		$this->assertSame(['fileId' => 7, 'uuid' => 'u-1'], $repository->save(mark: ['fileId' => 7]));
@@ -147,7 +155,13 @@ class DocumentReviewRepositoryTest extends TestCase {
 	public function testDelete(): void {
 		$repository = $this->repository();
 		$this->objects->expects($this->exactly(3))->method('deleteObject')
-			->with('u-1', 'filinq', 'documentReview', false)
+			->with(
+				$this->callback(callback: static fn (ObjectDeletion $deletion): bool => $deletion->uuid === 'u-1'
+						&& $deletion->target->register === 'filinq'
+						&& $deletion->target->schema === 'documentReview'
+				),
+				false
+			)
 			->willReturnOnConsecutiveCalls(true, false, $this->throwException(new RuntimeException('gone')));
 
 		$repository->delete(uuid: 'u-1');

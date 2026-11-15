@@ -23,6 +23,9 @@ namespace OCA\Filinq\Service\Review;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\IntakeRepository;
 use OCA\Filinq\Service\ReadsStoredObjectRows;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
@@ -125,8 +128,9 @@ class DocumentReviewRepository {
 		try {
 			$stored = $this->objectResolver->resolve()->saveObject(
 				object: $mark,
-				register: IntakeRepository::REGISTER,
-				schema: self::SCHEMA
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: IntakeRepository::REGISTER, schema: self::SCHEMA)
+				)
 			);
 		} catch (Throwable $e) {
 			throw new RuntimeException(
@@ -154,9 +158,10 @@ class DocumentReviewRepository {
 	public function delete(string $uuid): void {
 		try {
 			$deleted = $this->objectResolver->resolve()->deleteObject(
-				uuid: $uuid,
-				register: IntakeRepository::REGISTER,
-				schema: self::SCHEMA,
+				deletion: new ObjectDeletion(
+					uuid: $uuid,
+					target: new ObjectFindTarget(register: IntakeRepository::REGISTER, schema: self::SCHEMA)
+				),
 				_rbac: false
 			);
 		} catch (Throwable $e) {

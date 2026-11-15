@@ -23,6 +23,9 @@ namespace OCA\Filinq\Service\Review;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\IntakeRepository;
 use OCA\Filinq\Service\ReadsStoredObjectRows;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\SaveActor;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
@@ -120,24 +123,27 @@ class ReviewRenditionRepository {
 	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-5.1
 	 */
 	public function saveFor(int $sourceFileId, array $rendition): array {
-		$arguments = [
-			'object' => ['sourceFileId' => $sourceFileId] + $rendition,
-			'register' => IntakeRepository::REGISTER,
-			'schema' => self::SCHEMA,
-			// Server only: nobody writes a rendition by hand, so a check cannot be
-			// made to match a rendition the reviewer never saw.
-			'_rbac' => false,
-			'_unowned' => true,
-		];
-		unset($arguments['object']['uuid']);
+		$object = ['sourceFileId' => $sourceFileId] + $rendition;
+		unset($object['uuid']);
 
+		$uuid     = null;
 		$existing = $this->findFor(sourceFileId: $sourceFileId);
 		if ($existing !== null && (string) ($existing['uuid'] ?? '') !== '') {
-			$arguments['uuid'] = (string) $existing['uuid'];
+			$uuid = (string) $existing['uuid'];
 		}
 
 		try {
-			$stored = $this->objectResolver->resolve()->saveObject(...$arguments);
+			// Server only: nobody writes a rendition by hand, so a check cannot be
+			// made to match a rendition the reviewer never saw.
+			$stored = $this->objectResolver->resolve()->saveObject(
+				object: $object,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: IntakeRepository::REGISTER, schema: self::SCHEMA),
+					uuid: $uuid,
+					actor: new SaveActor(unowned: true)
+				),
+				_rbac: false
+			);
 		} catch (Throwable $e) {
 			throw new RuntimeException(
 				message: 'The review rendition could not be recorded: ' . $e->getMessage(),
