@@ -1,0 +1,144 @@
+<!--
+  - SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+  -->
+<template>
+	<div v-if="!summarised" class="filinq-documents-leaf">
+		<p v-if="loading" class="filinq-documents-leaf__state">
+			{{ t('filinq', 'Looking up documents') }}
+		</p>
+		<p
+			v-else-if="error"
+			class="filinq-documents-leaf__state filinq-documents-leaf__state--error">
+			{{ t('filinq', 'The documents could not be loaded') }}
+		</p>
+		<p
+			v-else-if="rows.length === 0 && !carded"
+			class="filinq-documents-leaf__state">
+			{{ t('filinq', 'No documents yet') }}
+		</p>
+		<ul v-else-if="rows.length > 0" class="filinq-documents-leaf__list">
+			<li
+				v-for="row in rows"
+				:key="row.fileId"
+				class="filinq-documents-leaf__item">
+				<a class="filinq-documents-leaf__link" :href="fileLink(row)">{{
+					row.name
+				}}</a>
+				<span
+					v-if="row.record && row.record.status"
+					class="filinq-documents-leaf__status">
+					{{ row.record.status }}
+				</span>
+			</li>
+		</ul>
+	</div>
+</template>
+
+<script>
+import { translate as t } from '@nextcloud/l10n'
+import { generateUrl } from '@nextcloud/router'
+import { documentLinkRows } from './documentLinkRows.js'
+import { hostObjectLeaf } from './hostObjectLeaf.js'
+import { leafReportMixin } from './leafReport.js'
+
+/**
+ * The documents Filinq holds for one object.
+ *
+ * Reads Filinq's own flat case-document list, which already takes exactly the
+ * object context a leaf is handed and already applies Filinq's access control:
+ * a record whose file the reader cannot see is left out by the server, so this
+ * component neither filters nor hides anything itself.
+ */
+export default {
+	name: 'CnFilinqDocumentsWidget',
+
+	extends: hostObjectLeaf,
+	mixins: [leafReportMixin],
+
+	data() {
+		return {
+			rows: [],
+			loading: true,
+			error: false,
+		}
+	},
+
+	computed: {
+		/**
+		 * What this leaf reports to a carding host or a "linked" card.
+		 *
+		 * @return {object} The report.
+		 * @spec openspec/specs/leaves-library-card/spec.md#requirement-the-documents-leaf-reports-to-the-library-card-and-the-linked-card
+		 */
+		leafReport() {
+			return {
+				count: this.rows.length,
+				emptyLabel: t('filinq', 'No documents yet'),
+				noun: t('filinq', 'documents'),
+				rows: documentLinkRows(this.rows),
+			}
+		},
+	},
+
+	mounted() {
+		this.load()
+	},
+
+	methods: {
+		/**
+		 * The Files deep link for one row.
+		 *
+		 * @param {object} row One flat-list row.
+		 * @return {string} A link to the file in Files.
+		 *
+		 * @spec openspec/changes/leaf-integrations/specs/document-register/spec.md
+		 */
+		fileLink(row) {
+			return generateUrl('/f/{fileId}', { fileId: row.fileId })
+		},
+
+		/**
+		 * Read the flat list for the host object.
+		 *
+		 * @return {Promise<void>} Resolves once `rows` reflects the answer.
+		 *
+		 * @spec openspec/changes/leaf-integrations/specs/document-register/spec.md
+		 */
+		load() {
+			return this.loadHostRows('/apps/filinq/api/case-documents/files')
+		},
+	},
+}
+</script>
+
+<style scoped>
+.filinq-documents-leaf__list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.filinq-documents-leaf__item {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	padding: 4px 0;
+	border-bottom: 1px solid var(--color-border);
+}
+
+.filinq-documents-leaf__status {
+	color: var(--color-text-maxcontrast);
+	font-size: 0.9em;
+}
+
+.filinq-documents-leaf__state {
+	color: var(--color-text-maxcontrast);
+	margin: 0;
+}
+
+.filinq-documents-leaf__state--error {
+	color: var(--color-error);
+}
+</style>

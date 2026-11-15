@@ -1,0 +1,23 @@
+# Tasks: intake-pdf-password-removal
+
+<!-- HYDRA CAP: max 20 unindented `- [ ]` lines. This file uses 8. -->
+
+## 1. Service and route
+
+- [x] 1.1 Add `lib/Service/PdfPasswordRemovalService.php`: probe `qpdf --version`, decrypt with the password on stdin into `<name> (unlocked).pdf` beside the original, refuse a final document (D1, D2, D3, D6) (REQ-PPR-001, REQ-PPR-003). Verify: PHPUnit with a fixture PDF locked with a known password, a wrong password, qpdf absent and a final document.
+- [x] 1.2 Add `POST api/documents/{fileId}/remove-password` with `#[NoAdminRequired]`, a read-access check on the file for the session user, and 422, 409 and 503 answers (REQ-PPR-001). Verify: Newman request for each answer; `grep -rn "password" lib/Service/PdfPasswordRemovalService.php` shows no logger call carrying it.
+- [x] 1.3 Run the validation checks on the copy and return the findings (D4) (REQ-PPR-002). Verify: PHPUnit asserts the response carries the copy's findings.
+
+## 2. Screens
+
+- [x] 2.1 Add a "Remove password" action to the `pdf-encrypted` finding in `ValidationFindingsPanel.vue`, with a password dialog in `src/modals/` (REQ-PPR-001). Verify: Playwright on `/my-documents` unlocks the fixture and shows the copy.
+  - Done: the `pdf-encrypted` finding in `ValidationFindingsPanel.vue` offers "Remove password" (event `removePassword`, passed on by `ValidationResultModal`); `src/modals/PdfPasswordModal.vue` asks for the password (cleared on every close) and posts it through `src/services/pdfPassword.js`; on `/my-documents` the copy's findings replace the original's and the list reloads. Jest: `src/services/pdfPassword.spec.js`; en/nl strings. Not done here: the Playwright run.
+- [x] 2.2 Add the same row action on `IntakeIndex.vue` when the intake file is locked, and write `file` and `lockedOriginal` (D5) (REQ-PPR-004). Verify: Playwright on `/intake` unlocks a locked intake document and the row opens the copy.
+  - Done: `POST api/intake/documents/{uuid}/remove-password` → `PdfPasswordController::removeForIntake()` → `Service/Intake/IntakePasswordRemoval` (the intake write right is checked before the file is read; on success `file` names the copy and `lockedOriginal` keeps the first arrival); a "Remove password" row action on `IntakeIndex.vue` for a PDF not unlocked yet, through `PdfPasswordModal`'s new `intakeUuid`. Tests: `IntakePasswordRemovalTest`, two `PdfPasswordControllerTest` cases, `pdfPassword.spec.js`. Not done here: the Playwright run.
+- [x] 2.3 Show whether qpdf is installed on the admin settings page next to the Tesseract line (REQ-PPR-003). Verify: Playwright reads the status line.
+  - Done: `SettingsService::getQpdfStatus()` (optional `QpdfDecryptor`, `qpdfStatus` in the settings payload) and a status line beside Tesseract's in `Settings.vue`. Tests: two `SettingsServiceTest` cases, `tests/vitest/settingsDefaults.spec.js`, the re-recorded settings golden. Not done here: the Playwright read.
+
+## 3. Register, strings and docs
+
+- [x] 3.1 Add `lockedOriginal` to `intakeDocument` in `lib/Settings/filinq_register.json`, a seed object that uses it, and a register version bump. Verify: `occ maintenance:repair` imports it and the seed object shows in `/intake`.
+- [ ] 3.2 (PARTLY: en/nl strings, `@spec` tags and the section in `docs/features/document-validation.md` done, with the intake route and screens; the screenshot needs a live instance) Dutch and English strings (ADR-005), `@spec` tags on the new methods, and a section in `docs/features/` with a screenshot (ADR-010). Verify: `npm run lint`, `composer check:strict` and `npm run check:l10n` pass.

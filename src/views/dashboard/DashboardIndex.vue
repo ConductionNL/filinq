@@ -1,3 +1,7 @@
+<!--
+  - SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
 <script setup>
 import { translate as t } from '@nextcloud/l10n'
 import { consentStore } from '../../store/store.js'
@@ -10,6 +14,9 @@ import { consentStore } from '../../store/store.js'
 			v-if="isAdmin"
 			:showWarning="anonymiserBackend.showWarning"
 			:appApiInstalled="anonymiserBackend.appApiInstalled"
+			:warning="anonymiserBackend.warning"
+			:activeMethod="anonymiserBackend.activeMethod"
+			:effectiveMethod="anonymiserBackend.effectiveMethod"
 			@dismissed="onAnonymiserWarningDismissed" />
 
 		<CnDashboardPage
@@ -110,7 +117,7 @@ import { consentStore } from '../../store/store.js'
 
 			<!-- Quick Anonymization -->
 			<template #widget-anonymization>
-				<AnonymizationDashboardWidget :inApp="true" />
+				<AnonymizationWidget />
 			</template>
 		</CnDashboardPage>
 	</div>
@@ -124,7 +131,70 @@ import {
 } from '@conduction/nextcloud-vue'
 import { NcEmptyContent } from '@nextcloud/vue'
 import AnonymiserBackendWarning from '../../components/AnonymiserBackendWarning.vue'
-import AnonymizationDashboardWidget from '../widgets/AnonymizationDashboardWidget.vue'
+import AnonymizationWidget from '../anonymization/AnonymizationWidget.vue'
+import {
+	backendStateFromSettings,
+	emptyBackendState,
+} from '../../services/anonymiserBackendState.js'
+
+/**
+ * Where each dashboard widget sits on the grid when the page opens. Copied
+ * into each page's own state, so moving a widget never changes it.
+ */
+const DASHBOARD_LAYOUT = Object.freeze([
+	{
+		id: 1,
+		widgetId: 'total-consents',
+		gridX: 0,
+		gridY: 0,
+		gridWidth: 3,
+		gridHeight: 2,
+		showTitle: false,
+	},
+	{
+		id: 2,
+		widgetId: 'pending',
+		gridX: 3,
+		gridY: 0,
+		gridWidth: 3,
+		gridHeight: 2,
+		showTitle: false,
+	},
+	{
+		id: 3,
+		widgetId: 'approved',
+		gridX: 6,
+		gridY: 0,
+		gridWidth: 3,
+		gridHeight: 2,
+		showTitle: false,
+	},
+	{
+		id: 4,
+		widgetId: 'objected',
+		gridX: 9,
+		gridY: 0,
+		gridWidth: 3,
+		gridHeight: 2,
+		showTitle: false,
+	},
+	{
+		id: 5,
+		widgetId: 'pending-consents',
+		gridX: 0,
+		gridY: 2,
+		gridWidth: 6,
+		gridHeight: 5,
+	},
+	{
+		id: 6,
+		widgetId: 'anonymization',
+		gridX: 6,
+		gridY: 2,
+		gridWidth: 6,
+		gridHeight: 5,
+	},
+])
 
 export default {
 	name: 'DashboardIndex',
@@ -133,74 +203,16 @@ export default {
 		CnStatsBlock,
 		CnDataTable,
 		NcEmptyContent,
-		AnonymizationDashboardWidget,
+		AnonymizationWidget,
 		AnonymiserBackendWarning,
 	},
 
 	data() {
 		return {
 			isAdmin: false,
-			anonymiserBackend: {
-				method: 'regex',
-				appApiInstalled: false,
-				warningDismissed: false,
-				showWarning: false,
-			},
+			anonymiserBackend: emptyBackendState(),
 
-			dashboardLayout: [
-				{
-					id: 1,
-					widgetId: 'total-consents',
-					gridX: 0,
-					gridY: 0,
-					gridWidth: 3,
-					gridHeight: 2,
-					showTitle: false,
-				},
-				{
-					id: 2,
-					widgetId: 'pending',
-					gridX: 3,
-					gridY: 0,
-					gridWidth: 3,
-					gridHeight: 2,
-					showTitle: false,
-				},
-				{
-					id: 3,
-					widgetId: 'approved',
-					gridX: 6,
-					gridY: 0,
-					gridWidth: 3,
-					gridHeight: 2,
-					showTitle: false,
-				},
-				{
-					id: 4,
-					widgetId: 'objected',
-					gridX: 9,
-					gridY: 0,
-					gridWidth: 3,
-					gridHeight: 2,
-					showTitle: false,
-				},
-				{
-					id: 5,
-					widgetId: 'pending-consents',
-					gridX: 0,
-					gridY: 2,
-					gridWidth: 6,
-					gridHeight: 5,
-				},
-				{
-					id: 6,
-					widgetId: 'anonymization',
-					gridX: 6,
-					gridY: 2,
-					gridWidth: 6,
-					gridHeight: 5,
-				},
-			],
+			dashboardLayout: structuredClone(DASHBOARD_LAYOUT),
 		}
 	},
 
@@ -266,16 +278,9 @@ export default {
 				const data = await response.json()
 				this.isAdmin = data.isAdmin ?? false
 				if (data.anonymiserBackend) {
-					this.anonymiserBackend = {
-						method: data.anonymiserBackend.method ?? 'regex',
-						appApiInstalled:
-							data.anonymiserBackend.appApiInstalled ?? false,
-
-						warningDismissed:
-							data.anonymiserBackend.warningDismissed ?? false,
-
-						showWarning: data.anonymiserBackend.showWarning ?? false,
-					}
+					this.anonymiserBackend = backendStateFromSettings(
+						data.anonymiserBackend,
+					)
 				}
 			} catch (_err) {
 				// Non-critical — dashboard still works without the warning.

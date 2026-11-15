@@ -3,6 +3,9 @@
 /**
  * Batch State Repository
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * OpenRegister persistence for anonymization batch state. The batch record is
  * stored as one object in the `document` register under the
  * `anonymizationBatch` schema, keyed by the batch UUID, so the multi-request
@@ -30,9 +33,6 @@
  *
  * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-creation-via-multi-file-upload
  * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-status-endpoint
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);

@@ -33,8 +33,8 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use Exception;
-use OCP\App\IAppManager;
-use Psr\Container\ContainerInterface;
+use OCA\Filinq\Service\Support\ConsentRecordRules;
+use OCA\Filinq\Service\Support\OpenRegisterAccess;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 
@@ -68,39 +68,19 @@ class ConsentRecordWriter {
 	];
 
 	/**
-	 * Service-level scope + referent validator.
-	 *
-	 * @var ConsentPolicyReferentValidator
-	 */
-	private readonly ConsentPolicyReferentValidator $referentValidator;
-
-	/**
 	 * Constructor.
 	 *
 	 * @param LoggerInterface $logger Logger for error reporting.
-	 * @param ContainerInterface $container Container for DI.
-	 * @param IAppManager $appManager App manager interface.
-	 * @param ObjectionDeadlineChecker $deadlineChecker Objection-deadline calculator.
-	 * @param ConsentNotesHelper $notesHelper Sentinel-tagged notes helper.
-	 * @param ConsentScopeValidator $scopeValidator Consent scope validator.
-	 * @param ConsentPolicyReferentValidator|null $referentValidator Scope + referent validator.
+	 * @param OpenRegisterAccess $openRegister The app manager and container that reach OpenRegister.
+	 * @param ConsentRecordRules $rules The deadline, notes, scope and referent rules a record is built and checked by.
 	 * @param ObjectResultExtractor $resultExtractor Coerces OpenRegister results to rows.
 	 */
 	public function __construct(
 		private readonly LoggerInterface $logger,
-		private readonly ContainerInterface $container,
-		private readonly IAppManager $appManager,
-		private readonly ObjectionDeadlineChecker $deadlineChecker,
-		private readonly ConsentNotesHelper $notesHelper,
-		private readonly ConsentScopeValidator $scopeValidator,
-		?ConsentPolicyReferentValidator $referentValidator = null,
+		private readonly OpenRegisterAccess $openRegister,
+		private readonly ConsentRecordRules $rules,
 		private readonly ObjectResultExtractor $resultExtractor = new ObjectResultExtractor(),
 	) {
-		$this->referentValidator = ($referentValidator ?? new ConsentPolicyReferentValidator(
-			logger: $logger,
-			container: $container,
-			appManager: $appManager
-		));
 
 	}//end __construct()
 
@@ -133,7 +113,7 @@ class ConsentRecordWriter {
 	 * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-3
 	 */
 	public function validatePublicationConsentData(array $data): void {
-		$this->referentValidator->validatePublicationConsentData(data: $data);
+		$this->rules->referentValidator->validatePublicationConsentData(data: $data);
 
 	}//end validatePublicationConsentData()
 
@@ -171,30 +151,15 @@ class ConsentRecordWriter {
 	 * Fallback key when entityKey is null: (documentId, entityText, scope=document).
 	 * scope=entity records are excluded from matching.
 	 *
-	 * @param string $documentId The document UUID.
-	 * @param string|null $entityKey OR entity UUID, or null.
-	 * @param string $entityText Detected entity text.
-	 * @param string $register Register ID.
-	 * @param string $schema Schema ID.
+	 * @param array<string, mixed> $context The consent-request context: documentId, entityKey
+	 *                                      (OR entity UUID, or null), entityText, register and schema.
 	 *
 	 * @return array<string, mixed>|null Existing record data or null if not found.
 	 *
 	 * @spec openspec/changes/consent-create-idempotency-and-notes/tasks.md#task-1
 	 */
-	public function findExistingConsent(
-		string $documentId,
-		?string $entityKey,
-		string $entityText,
-		string $register,
-		string $schema,
-	): ?array {
-		$filter = $this->buildIdempotencyFilter(
-			documentId: $documentId,
-			entityKey: $entityKey,
-			entityText: $entityText,
-			register: $register,
-			schema: $schema
-		);
+	public function findExistingConsent(array $context): ?array {
+		$filter = $this->buildIdempotencyFilter(context: $context);
 
 		try {
 			$results = $this->getObjectService()->searchObjects(query: $filter);
@@ -202,7 +167,7 @@ class ConsentRecordWriter {
 			// A failed lookup is non-fatal — fall through to create path.
 			$this->logger->warning(
 				message: 'ConsentService: idempotency lookup failed, falling through to create',
-				context: ['documentId' => $documentId, 'error' => $e->getMessage()]
+				context: ['documentId' => $context['documentId'], 'error' => $e->getMessage()]
 			);
 			return null;
 		}
@@ -221,27 +186,19 @@ class ConsentRecordWriter {
 	/**
 	 * Build the idempotency-lookup filter.
 	 *
-	 * @param string $documentId The document UUID.
-	 * @param string|null $entityKey OR entity UUID, or null.
-	 * @param string $entityText Detected entity text.
-	 * @param string $register Register ID.
-	 * @param string $schema Schema ID.
+	 * @param array<string, mixed> $context The consent-request context: documentId, entityKey,
+	 *                                      entityText, register and schema.
 	 *
 	 * @return array<string, mixed> The searchObjects() query.
 	 */
-	private function buildIdempotencyFilter(
-		string $documentId,
-		?string $entityKey,
-		string $entityText,
-		string $register,
-		string $schema,
-	): array {
+	private function buildIdempotencyFilter(array $context): array {
+		$entityKey = $context['entityKey'];
 		$filter = [
 			'@self' => [
-				'register' => $register,
-				'schema' => $schema,
+				'register' => $context['register'],
+				'schema' => $context['schema'],
 			],
-			'documentId' => $documentId,
+			'documentId' => $context['documentId'],
 			'scope' => 'document',
 		];
 
@@ -250,7 +207,7 @@ class ConsentRecordWriter {
 			return $filter;
 		}
 
-		$filter['entityText'] = $entityText;
+		$filter['entityText'] = $context['entityText'];
 		return $filter;
 	}//end buildIdempotencyFilter()
 
@@ -261,70 +218,20 @@ class ConsentRecordWriter {
 	 * Re-evaluates policyMatch: sets it if newly applicable, never clears it.
 	 *
 	 * @param array<string, mixed> $existing Current record data.
-	 * @param array<string, mixed> $context The consent-request context.
-	 * @param string $register Register ID.
-	 * @param string $schema Schema ID.
+	 * @param array<string, mixed> $context The consent-request context, including the register and schema.
 	 *
 	 * @return array<string, mixed> Updated record with `wasUpdated: true`.
 	 *
 	 * @spec openspec/changes/consent-create-idempotency-and-notes/tasks.md#task-2
 	 */
-	public function updateExistingConsent(
-		array $existing,
-		array $context,
-		string $register,
-		string $schema,
-	): array {
-		// Start from the preserved record so all stored values survive.
-		$updated = $existing;
-
-		// Update operator-set fields.
-		$updated['entityType'] = $context['entityType'];
-
-		// Resolve legalBasis + notes from publicationBases.
-		$publicationBases = $context['publicationBases'];
-		$additionalBases = [];
-		if (count($publicationBases) > 0) {
-			$updated['legalBasis'] = $this->notesHelper->truncateAtWordBoundary(
-				value: $publicationBases[0]
-			);
-			$additionalBases = array_slice(array: $publicationBases, offset: 1);
-		}
-
-		$currentNotes = (string)($existing['notes'] ?? '');
-		$updated['notes'] = $this->notesHelper->updateSentinelRegion(
-			currentNotes: $currentNotes,
-			additionalBases: $additionalBases
-		);
-
-		if ($context['contactEmail'] !== null) {
-			$updated['contactEmail'] = $context['contactEmail'];
-		}
-
-		if ($context['contactAddress'] !== null) {
-			$updated['contactAddress'] = $context['contactAddress'];
-		}
-
-		// Re-evaluate pre-emption discriminator: set policyMatch when newly
-		// applicable; never clear it when previously set (D2). Persist the
-		// matchKind marker alongside it so the standing-consent carve-out in
-		// ConsentUpdateHandler can fire on the idempotent-update path too.
-		if ($context['policyMatchUuid'] !== null && ($existing['policyMatch'] ?? null) === null) {
-			$updated['policyMatch'] = $context['policyMatchUuid'];
-			$updated['matchKind'] = (string)$context['policyMatchKind'];
-		}
-
-		// Ensure all preserved workflow fields are kept (not overwritten).
-		foreach (self::PRESERVED_FIELDS as $field) {
-			if (isset($existing[$field]) === true) {
-				$updated[$field] = $existing[$field];
-			}
-		}
+	public function updateExistingConsent(array $existing, array $context): array {
+		$updated = $this->mergeResubmission(existing: $existing, context: $context);
 
 		$savedObject = $this->getObjectService()->saveObject(
 			object: $updated,
-			register: $register,
-			schema: $schema
+			register: $context['register'],
+			schema: $context['schema'],
+			_rbac: false
 		);
 
 		$this->logger->info(
@@ -336,6 +243,120 @@ class ConsentRecordWriter {
 		$result['wasUpdated'] = true;
 		return $result;
 	}//end updateExistingConsent()
+
+	/**
+	 * Merge a re-submitted request into the stored record.
+	 *
+	 * Operator-set fields take the new values, the policy match is set when
+	 * newly applicable and never cleared, and workflow fields keep their
+	 * stored values.
+	 *
+	 * @param array<string, mixed> $existing Current record data.
+	 * @param array<string, mixed> $context The consent-request context.
+	 *
+	 * @return array<string, mixed> The record to save.
+	 */
+	private function mergeResubmission(array $existing, array $context): array {
+		// Start from the preserved record so all stored values survive.
+		$updated = $existing;
+
+		// Update operator-set fields.
+		$updated['entityType'] = $context['entityType'];
+
+		// Resolve legalBasis + notes from publicationBases.
+		[$legalBasis, $additionalBases] = $this->splitPublicationBases(publicationBases: $context['publicationBases']);
+		if ($legalBasis !== null) {
+			$updated['legalBasis'] = $legalBasis;
+		}
+
+		$updated['notes'] = $this->rules->notesHelper->updateSentinelRegion(
+			currentNotes: (string)($existing['notes'] ?? ''),
+			additionalBases: $additionalBases
+		);
+
+		$updated = $this->withNewPolicyMatch(record: $this->withContacts(record: $updated, context: $context), context: $context);
+
+		return $this->withPreservedFields(updated: $updated, existing: $existing);
+	}//end mergeResubmission()
+
+	/**
+	 * Split the publication bases into the legal basis and the bases that go to the notes.
+	 *
+	 * @param array<int, string> $publicationBases The bases, the first one being the legal basis.
+	 *
+	 * @return array{0: string|null, 1: array<int, string>} The truncated legal basis (null when there are no
+	 *                                                      bases) and the additional bases.
+	 */
+	private function splitPublicationBases(array $publicationBases): array {
+		if (count($publicationBases) === 0) {
+			return [null, []];
+		}
+
+		return [
+			$this->rules->notesHelper->truncateAtWordBoundary(value: $publicationBases[0]),
+			array_slice(array: $publicationBases, offset: 1),
+		];
+	}//end splitPublicationBases()
+
+	/**
+	 * Set the contact email and address the context carries.
+	 *
+	 * @param array<string, mixed> $record  The record being built.
+	 * @param array<string, mixed> $context The submission context.
+	 *
+	 * @return array<string, mixed> The record with the given contact fields.
+	 */
+	private function withContacts(array $record, array $context): array {
+		if ($context['contactEmail'] !== null) {
+			$record['contactEmail'] = $context['contactEmail'];
+		}
+
+		if ($context['contactAddress'] !== null) {
+			$record['contactAddress'] = $context['contactAddress'];
+		}
+
+		return $record;
+	}//end withContacts()
+
+	/**
+	 * Set the policy match on a resubmitted record that has none yet.
+	 *
+	 * Re-evaluate pre-emption discriminator: set policyMatch when newly
+	 * applicable; never clear it when previously set (D2). Persist the
+	 * matchKind marker alongside it so the standing-consent carve-out in
+	 * ConsentUpdateHandler can fire on the idempotent-update path too.
+	 *
+	 * @param array<string, mixed> $record  The resubmitted record.
+	 * @param array<string, mixed> $context The submission context.
+	 *
+	 * @return array<string, mixed> The record with the match when it applies.
+	 */
+	private function withNewPolicyMatch(array $record, array $context): array {
+		if ($context['policyMatchUuid'] !== null && ($record['policyMatch'] ?? null) === null) {
+			$record['policyMatch'] = $context['policyMatchUuid'];
+			$record['matchKind'] = (string)$context['policyMatchKind'];
+		}
+
+		return $record;
+	}//end withNewPolicyMatch()
+
+	/**
+	 * Keep the stored workflow fields; a resubmission never overwrites them.
+	 *
+	 * @param array<string, mixed> $updated  The resubmitted record.
+	 * @param array<string, mixed> $existing The stored record.
+	 *
+	 * @return array<string, mixed> The record with the stored workflow fields.
+	 */
+	private function withPreservedFields(array $updated, array $existing): array {
+		foreach (self::PRESERVED_FIELDS as $field) {
+			if (isset($existing[$field]) === true) {
+				$updated[$field] = $existing[$field];
+			}
+		}
+
+		return $updated;
+	}//end withPreservedFields()
 
 	/**
 	 * Create a brand-new consent record.
@@ -355,16 +376,15 @@ class ConsentRecordWriter {
 	 *   - `policyMatchUuid`, `policyMatchKind` (string|null): any policy match
 	 *   - `standingConsentUuid` (string|null): set only when the match was a
 	 *     standing consent, i.e. the only kind persisted on a new record
+	 *   - `register`, `schema` (string): where the record is written
 	 *
 	 * @param array<string, mixed> $context The consent-request context.
-	 * @param string $register Register ID.
-	 * @param string $schema Schema ID.
 	 *
 	 * @return array<string, mixed> Created record with `wasUpdated: false`.
 	 *
 	 * @spec openspec/changes/consent-create-idempotency-and-notes/tasks.md#task-5
 	 */
-	public function createNewConsent(array $context, string $register, string $schema): array {
+	public function createNewConsent(array $context): array {
 		$consentData = $this->buildNewConsentPayload(context: $context);
 
 		// Service-level scope contract (publication-consent-policy-fields
@@ -372,7 +392,7 @@ class ConsentRecordWriter {
 		// scope=entity but forbidden when scope=document". The validator
 		// throws InvalidArgumentException on violations, which the
 		// controller surfaces as HTTP 400.
-		$this->scopeValidator->assertValid($consentData);
+		$this->rules->scopeValidator->assertValid($consentData);
 
 		// Save WITHOUT the bypass flags so OpenRegister stamps `@self.owner`
 		// from the session user — that ownership stamp is what the read guard
@@ -385,8 +405,8 @@ class ConsentRecordWriter {
 		// authenticated. Ownership is RECORDED here, not ENFORCED here.
 		$savedObject = $this->getObjectService()->saveObject(
 			object: $consentData,
-			register: $register,
-			schema: $schema
+			register: $context['register'],
+			schema: $context['schema']
 		);
 
 		$this->logger->info(
@@ -431,23 +451,58 @@ class ConsentRecordWriter {
 	 * @spec openspec/specs/entity-publication-policies/spec.md
 	 */
 	private function buildNewConsentPayload(array $context): array {
-		$deadline = $this->deadlineChecker->calculateDeadline();
+		$deadline = $this->rules->deadlineChecker->calculateDeadline();
+		$basisFields = $this->basisFields(context: $context);
 
-		// Resolve legalBasis and notes from publicationBases.
-		$publicationBases = $context['publicationBases'];
-		$legalBasis = null;
-		$additionalBases = [];
-		if (count($publicationBases) > 0) {
-			$legalBasis = $this->notesHelper->truncateAtWordBoundary(value: $publicationBases[0]);
-			$additionalBases = array_slice(array: $publicationBases, offset: 1);
+		$consentData = $this->withStandingConsentPreEmption(
+			consentData: $this->pendingConsent(context: $context, deadline: $deadline),
+			context: $context
+		);
+
+		$entityKey = $context['entityKey'];
+		if ($entityKey !== null && $entityKey !== '') {
+			$consentData['entityKey'] = $entityKey;
 		}
 
-		$notes = $this->notesHelper->updateSentinelRegion(
+		return $this->withContacts(record: array_merge($consentData, $basisFields), context: $context);
+	}//end buildNewConsentPayload()
+
+	/**
+	 * The legal basis and notes of a new record, from its publication bases.
+	 *
+	 * @param array<string, mixed> $context The submission context.
+	 *
+	 * @return array<string, string> The legal basis when there is one, and the notes when they are not empty.
+	 */
+	private function basisFields(array $context): array {
+		[$legalBasis, $additionalBases] = $this->splitPublicationBases(publicationBases: $context['publicationBases']);
+		$notes = $this->rules->notesHelper->updateSentinelRegion(
 			currentNotes: '',
 			additionalBases: $additionalBases
 		);
 
-		$consentData = [
+		$fields = [];
+		if ($legalBasis !== null) {
+			$fields['legalBasis'] = $legalBasis;
+		}
+
+		if ($notes !== '') {
+			$fields['notes'] = $notes;
+		}
+
+		return $fields;
+	}//end basisFields()
+
+	/**
+	 * A new record as it starts: pending, with the objection deadline.
+	 *
+	 * @param array<string, mixed> $context  The submission context.
+	 * @param \DateTime            $deadline The objection deadline.
+	 *
+	 * @return array<string, mixed> The record.
+	 */
+	private function pendingConsent(array $context, \DateTime $deadline): array {
+		return [
 			'documentId' => $context['documentId'],
 			'entityType' => $context['entityType'],
 			'entityText' => $context['entityText'],
@@ -457,35 +512,7 @@ class ConsentRecordWriter {
 			'publicationDecision' => 'pending',
 			'objectionDeadline' => $deadline->format(format: 'c'),
 		];
-
-		$consentData = $this->withStandingConsentPreEmption(
-			consentData: $consentData,
-			context: $context
-		);
-
-		$entityKey = $context['entityKey'];
-		if ($entityKey !== null && $entityKey !== '') {
-			$consentData['entityKey'] = $entityKey;
-		}
-
-		if ($legalBasis !== null) {
-			$consentData['legalBasis'] = $legalBasis;
-		}
-
-		if ($notes !== '') {
-			$consentData['notes'] = $notes;
-		}
-
-		if ($context['contactEmail'] !== null) {
-			$consentData['contactEmail'] = $context['contactEmail'];
-		}
-
-		if ($context['contactAddress'] !== null) {
-			$consentData['contactAddress'] = $context['contactAddress'];
-		}
-
-		return $consentData;
-	}//end buildNewConsentPayload()
+	}//end pendingConsent()
 
 	/**
 	 * Apply standing-consent pre-emption to a new-record payload.
@@ -538,8 +565,8 @@ class ConsentRecordWriter {
 	 * @throws RuntimeException If OpenRegister is not available.
 	 */
 	private function getObjectService(): \OCA\OpenRegister\Service\ObjectService {
-		if (in_array(needle: 'openregister', haystack: $this->appManager->getInstalledApps(), strict: true) === true) {
-			return $this->container->get(id: 'OCA\OpenRegister\Service\ObjectService');
+		if (in_array(needle: 'openregister', haystack: $this->openRegister->apps->getInstalledApps(), strict: true) === true) {
+			return $this->openRegister->container->get(id: 'OCA\OpenRegister\Service\ObjectService');
 		}
 
 		throw new RuntimeException(message: 'OpenRegister service is not available.');

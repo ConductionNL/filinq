@@ -28,6 +28,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use DateTimeImmutable;
+use OCA\Filinq\Kernel\Contracts\FinalDocumentUnfreezeServiceInterface;
 use OCP\IGroupManager;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
@@ -44,20 +45,7 @@ use RuntimeException;
  *
  * @spec openspec/changes/final-documents-frozen/specs/document-versions/spec.md
  */
-class FinalDocumentUnfreezeService {
-
-	/**
-	 * The named right that unfreezing needs.
-	 *
-	 * The `docudesk-` prefix is the family every group in this app already
-	 * belongs to (`docudesk-policy-admins`, `docudesk-signing-admins`). Group
-	 * names are configuration an administrator has already typed on live
-	 * instances, so the family stays on the old prefix rather than splitting in
-	 * two when the app id moves.
-	 *
-	 * @var string
-	 */
-	public const UNFREEZE_GROUP = 'docudesk-final-document-admins';
+class FinalDocumentUnfreezeService implements FinalDocumentUnfreezeServiceInterface {
 
 	/**
 	 * Constructor.

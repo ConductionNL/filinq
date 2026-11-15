@@ -288,3 +288,12 @@ data migration is needed. Rollback = remove routes/UI; `status` and
   references (not just the home folder) — deferred; v1 keeps those steps
   keyed on the home folder and uses `documents[]` only for the browse/detail
   membership view.
+
+## Amendment, 9 Oct 2026 (decision 130)
+
+The filinq boards are the UI canon. `FqDossier` draws no in-page uploader or
+picker on the dossier, and no board draws a separate auto-dossier modal. So
+"Add document" routes to Folder Analysis (REQ-DDDMU-004), and the existing
+upload dialog asks the dossier name for two or more documents
+(REQ-DDDMU-005); the prefilled name, description and all-grondslagen toggle
+of GH #47 are not built.

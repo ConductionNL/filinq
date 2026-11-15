@@ -20,12 +20,17 @@
  * @spec openspec/changes/anonymisation-entity-review-prohibition-hints/tasks.md#task-1
  * @spec openspec/changes/anonymisation-entity-review-prohibition-hints/tasks.md#task-2
  * @spec openspec/changes/anonymisation-entity-review-prohibition-hints/tasks.md#task-3
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\EntityConsolidationServiceInterface;
+use OCA\Filinq\Service\Support\OpenRegisterAccess;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -43,7 +48,7 @@ use RuntimeException;
  *
  * @spec openspec/changes/anonymisation-entity-review-prohibition-hints/tasks.md#task-1
  */
-class EntityConsolidationService {
+class EntityConsolidationService implements EntityConsolidationServiceInterface {
 	/**
 	 * App config key for the high-confidence threshold.
 	 *
@@ -57,12 +62,25 @@ class EntityConsolidationService {
 	private const DEFAULT_HIGH_CONFIDENCE_THRESHOLD = 0.85;
 
 	/**
+	 * App manager used to check for OpenRegister availability.
+	 *
+	 * @var IAppManager
+	 */
+	private readonly IAppManager $appManager;
+
+	/**
+	 * DI container used to resolve OpenRegister mappers at runtime.
+	 *
+	 * @var ContainerInterface
+	 */
+	private readonly ContainerInterface $container;
+
+	/**
 	 * Constructor for EntityConsolidationService
 	 *
 	 * @param LoggerInterface $logger Logger for error reporting.
 	 * @param WooProfileService $wooProfile Profile service describing which entity types to anonymize.
-	 * @param IAppManager $appManager App manager used to check for OpenRegister availability.
-	 * @param ContainerInterface $container DI container used to resolve OpenRegister mappers at runtime.
+	 * @param OpenRegisterAccess $openRegister The app manager and container OpenRegister is reached through
 	 * @param PolicyMatchService $policyMatch Policy matcher for per-entity prohibition lookups.
 	 * @param BasesResolverService $basesResolver Resolver for suggested dossier bases.
 	 * @param IAppConfig $appConfig Tenant configuration (high-confidence threshold).
@@ -72,12 +90,13 @@ class EntityConsolidationService {
 	public function __construct(
 		private readonly LoggerInterface $logger,
 		private readonly WooProfileService $wooProfile,
-		private readonly IAppManager $appManager,
-		private readonly ContainerInterface $container,
+		OpenRegisterAccess $openRegister,
 		private readonly PolicyMatchService $policyMatch,
 		private readonly BasesResolverService $basesResolver,
 		private readonly IAppConfig $appConfig,
 	) {
+		$this->appManager = $openRegister->apps;
+		$this->container = $openRegister->container;
 
 	}//end __construct()
 

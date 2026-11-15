@@ -11,6 +11,50 @@ import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 import { defineStore } from 'pinia'
 
+/**
+ * Whether a format comes back as a file to download rather than as JSON.
+ *
+ * @param {string} format The output format.
+ * @return {boolean}
+ */
+function isFileFormat(format) {
+	return format === 'pdf' || format === 'docx'
+}
+
+/**
+ * The axios response type a format's generate request asks for.
+ *
+ * @param {string} format The output format.
+ * @return {string}
+ */
+function responseTypeOf(format) {
+	return isFileFormat(format) ? 'blob' : 'json'
+}
+
+/**
+ * The letter options every generate request sends; empty ids are left out.
+ *
+ * @param {object} state The store state.
+ * @return {{format: string, huisstijlId: (string|undefined), caseReference: (string|undefined)}}
+ */
+function letterOptions(state) {
+	return {
+		format: state.format,
+		huisstijlId: state.huisstijlId || undefined,
+		caseReference: state.caseReference || undefined,
+	}
+}
+
+/**
+ * The message to show for a failed request.
+ *
+ * @param {Error} err The request failure.
+ * @return {string}
+ */
+function requestError(err) {
+	return err.response?.data?.error || err.message
+}
+
 export const useCorrespondenceStore = defineStore('correspondence', {
 	state: () => ({
 		/** @type {string} */
@@ -86,28 +130,19 @@ export const useCorrespondenceStore = defineStore('correspondence', {
 					{
 						templateId: this.templateId,
 						dataRefs: this.dataRefs,
-						options: {
-							format: this.format,
-							huisstijlId: this.huisstijlId || undefined,
-							caseReference: this.caseReference || undefined,
-						},
+						options: letterOptions(this),
 						filename,
 					},
-					{
-						responseType:
-							this.format === 'pdf' || this.format === 'docx'
-								? 'blob'
-								: 'json',
-					},
+					{ responseType: responseTypeOf(this.format) },
 				)
 
-				if (this.format === 'pdf' || this.format === 'docx') {
+				if (isFileFormat(this.format)) {
 					this._triggerDownload(response.data, filename, this.format)
 				} else {
 					this.warnings = response.data.warnings || []
 				}
 			} catch (err) {
-				this.error = err.response?.data?.error || err.message
+				this.error = requestError(err)
 			} finally {
 				this.loading = false
 			}
@@ -135,13 +170,7 @@ export const useCorrespondenceStore = defineStore('correspondence', {
 				const response = await axios.post(url, {
 					templateId: this.templateId,
 					recipientIds: this.recipientIds,
-					options: {
-						register,
-						schema,
-						format: this.format,
-						huisstijlId: this.huisstijlId || undefined,
-						caseReference: this.caseReference || undefined,
-					},
+					options: { register, schema, ...letterOptions(this) },
 				})
 
 				if (response.data.jobId) {
@@ -156,7 +185,7 @@ export const useCorrespondenceStore = defineStore('correspondence', {
 					this.jobStatus = response.data
 				}
 			} catch (err) {
-				this.error = err.response?.data?.error || err.message
+				this.error = requestError(err)
 			} finally {
 				this.loading = false
 			}
@@ -182,7 +211,7 @@ export const useCorrespondenceStore = defineStore('correspondence', {
 				const response = await axios.get(url)
 				this.jobStatus = response.data
 			} catch (err) {
-				this.error = err.response?.data?.error || err.message
+				this.error = requestError(err)
 			}
 		},
 

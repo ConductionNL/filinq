@@ -21,6 +21,7 @@
 namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\PdfController;
+use OCA\Filinq\Controller\Support\PdfServices;
 use OCA\Filinq\Service\Pdfa3ConversionService;
 use OCA\Filinq\Service\PdfService;
 use OCP\AppFramework\Http\DataDownloadResponse;
@@ -108,8 +109,7 @@ class PdfControllerTest extends TestCase {
 			'filinq',
 			$this->mockRequest,
 			$this->mockLogger,
-			$this->mockPdfService,
-			$this->mockPdfa3Service,
+			new PdfServices(pdf: $this->mockPdfService, pdfa3: $this->mockPdfa3Service),
 			$this->mockL10n,
 			$this->mockUserSession
 		);
@@ -252,6 +252,8 @@ class PdfControllerTest extends TestCase {
 
 		$this->assertInstanceOf(DataDownloadResponse::class, $result);
 		$this->assertEquals('3-B', $result->getHeaders()['X-Docudesk-Pdfa3-Conformance']);
+		// No verdict from the service reads as skipped, never as verified.
+		$this->assertSame('skipped', $result->getHeaders()['X-Docudesk-Pdfa3-Verified']);
 
 	}//end testRenderPdfADelegatesToPdfa3ServiceWithMetadata()
 

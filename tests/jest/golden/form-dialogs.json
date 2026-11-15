@@ -1,0 +1,865 @@
+{
+	"prohibition.create": {
+		"html": [
+			"<x-ncdialog name=\"Add publish-never rule\" open=\"true\" size=\"normal\" data-on-onupdate:open=\"\">",
+			"<x-slot name=\"actions\">",
+			"<x-ncbutton disabled=\"false\" data-testid=\"cn-dialog-actions-cancel\" data-on-onclick=\"\">",
+			"<x-slot name=\"default\">Cancel</x-slot>",
+			"</x-ncbutton>",
+			"<x-ncbutton variant=\"primary\" disabled=\"true\" data-testid=\"cn-dialog-actions-submit\" data-on-onclick=\"\">",
+			"<x-slot name=\"default\"> Create</x-slot>",
+			"</x-ncbutton>",
+			"</x-slot>",
+			"<x-slot name=\"default\">",
+			"<div class=\"prohibition-form\">",
+			"<x-nctextfield modelvalue=\"\" data-on-onupdate:modelvalue=\"\" label=\"Primary name (Dutch)\" required=\"true\">",
+			"</x-nctextfield>",
+			"<x-ncselect modelvalue=\"PERSON\" data-on-onupdate:modelvalue=\"\" data-options=\"[&quot;PERSON&quot;,&quot;ORGANIZATION&quot;,&quot;OTHER&quot;]\" inputlabel=\"Entity type\" label=\"Entity type\" required=\"true\">",
+			"</x-ncselect>",
+			"<x-nctextfield modelvalue=\"\" data-on-onupdate:modelvalue=\"\" label=\"Reason (markdown allowed)\" required=\"true\">",
+			"</x-nctextfield>",
+			"<x-nctextfield modelvalue=\"\" data-on-onupdate:modelvalue=\"\" label=\"Legal authority (court order, statute, …)\">",
+			"</x-nctextfield>",
+			"<x-nctextfield modelvalue=\"\" data-on-onupdate:modelvalue=\"\" label=\"Case reference (optional)\">",
+			"</x-nctextfield>",
+			"<x-ncselect modelvalue=\"medium\" data-on-onupdate:modelvalue=\"\" data-options=\"[&quot;high&quot;,&quot;medium&quot;,&quot;low&quot;]\" inputlabel=\"Severity\" label=\"Severity\">",
+			"</x-ncselect>",
+			"<x-nctextfield modelvalue=\"\" data-on-onupdate:modelvalue=\"\" label=\"Jurisdiction (optional)\">",
+			"</x-nctextfield>",
+			"<x-nctextfield modelvalue=\"\" data-on-onupdate:modelvalue=\"\" label=\"Valid until (ISO 8601, optional)\">",
+			"</x-nctextfield>",
+			"<x-nccheckboxradioswitch modelvalue=\"true\" data-on-onupdate:modelvalue=\"\" type=\"switch\">",
+			"<x-slot name=\"default\">Active</x-slot>",
+			"</x-nccheckboxradioswitch>",
+			"<!--v-if-->",
+			"<h4>Match rules</h4>",
+			"<div class=\"form-warning\">Add at least one match rule. Prefer stable identifiers (BSN/KvK) over name-only matches — names alone produce false positives.</div>",
+			"<x-ncbutton variant=\"secondary\" data-on-onclick=\"\">",
+			"<x-slot name=\"default\">Add match rule</x-slot>",
+			"</x-ncbutton>",
+			"</div>",
+			"</x-slot>",
+			"</x-ncdialog>"
+		],
+		"buttons": [
+			{
+				"variant": null,
+				"emitted": [["onUpdate:open", false], ["onCancel"]]
+			},
+			{
+				"variant": "primary",
+				"emitted": [
+					[
+						"onSubmit",
+						{
+							"primaryName": "",
+							"entityType": "PERSON",
+							"reason": "",
+							"legalAuthority": "",
+							"caseReference": "",
+							"severity": "medium",
+							"jurisdiction": "",
+							"validUntil": "",
+							"active": true,
+							"matchRules": []
+						}
+					]
+				]
+			}
+		]
+	},
+	"prohibition.edit": {
+		"html": [
+			"<x-ncdialog name=\"Edit publish-never rule\" open=\"true\" size=\"normal\" data-on-onupdate:open=\"\">",
+			"<x-slot name=\"actions\">",
+			"<x-ncbutton disabled=\"false\" data-testid=\"cn-dialog-actions-cancel\" data-on-onclick=\"\">",
+			"<x-slot name=\"default\">Cancel</x-slot>",
+			"</x-ncbutton>",
+			"<x-ncbutton variant=\"primary\" disabled=\"false\" data-testid=\"cn-dialog-actions-submit\" data-on-onclick=\"\">",
+			"<x-slot name=\"default\"> Save</x-slot>",
+			"</x-ncbutton>",
+			"</x-slot>",
+			"<x-slot name=\"default\">",
+			"<div class=\"prohibition-form\">",
+			"<x-nctextfield modelvalue=\"Jan Jansen\" data-on-onupdate:modelvalue=\"\" label=\"Primary name (Dutch)\" required=\"true\">",
+			"</x-nctextfield>",
+			"<x-ncselect modelvalue=\"PERSON\" data-on-onupdate:modelvalue=\"\" data-options=\"[&quot;PERSON&quot;,&quot;ORGANIZATION&quot;,&quot;OTHER&quot;]\" inputlabel=\"Entity type\" label=\"Entity type\" required=\"true\">",
+			"</x-ncselect>",
+			"<x-nctextfield modelvalue=\"Court order\" data-on-onupdate:modelvalue=\"\" label=\"Reason (markdown allowed)\" required=\"true\">",
+			"</x-nctextfield>",
+			"<x-nctextfield modelvalue=\"\" data-on-onupdate:modelvalue=\"\" label=\"Legal authority (court order, statute, …)\">",
+			"</x-nctextfield>",
+			"<x-nctextfield modelvalue=\"\" data-on-onupdate:modelvalue=\"\" label=\"Case reference (optional)\">",
+			"</x-nctextfield>",
+			"<x-ncselect modelvalue=\"medium\" data-on-onupdate:modelvalue=\"\" data-options=\"[&quot;high&quot;,&quot;medium&quot;,&quot;low&quot;]\" inputlabel=\"Severity\" label=\"Severity\">",
+			"</x-ncselect>",
+			"<x-nctextfield modelvalue=\"\" data-on-onupdate:modelvalue=\"\" label=\"Jurisdiction (optional)\">",
+			"</x-nctextfield>",
+			"<x-nctextfield modelvalue=\"\" data-on-onupdate:modelvalue=\"\" label=\"Valid until (ISO 8601, optional)\">",
+			"</x-nctextfield>",
+			"<x-nccheckboxradioswitch modelvalue=\"true\" data-on-onupdate:modelvalue=\"\" type=\"switch\">",
+			"<x-slot name=\"default\">Active</x-slot>",
+			"</x-nccheckboxradioswitch>",
+			"<!--v-if-->",
+			"<h4>Match rules</h4>",
+			"<!--v-if-->",
+			"<div class=\"match-rule-row\">",
+			"<x-ncselect modelvalue=\"bsn\" data-on-onupdate:modelvalue=\"\" data-options=\"[&quot;exact&quot;,&quot;normalized&quot;,&quot;bsn&quot;,&quot;kvk&quot;]\" inputlabel=\"Match type\" label=\"Match type\">",
+			"</x-ncselect>",
+			"<x-nctextfield modelvalue=\"123456782\" data-on-onupdate:modelvalue=\"\" label=\"Match value\">",
+			"</x-nctextfield>",
+			"<!--",
+			"\t\t\t\t\tIcon-only, so it needs its own name. The row index is part of",
+			"\t\t\t\t\tit: every row renders the same icon, and \"Remove match rule\"",
+			"\t\t\t\t\trepeated N times tells a screen-reader user nothing about",
+			"\t\t\t\t\twhich row focus is on (WCAG 4.1.2).",
+			"\t\t\t\t-->",
+			"<x-ncbutton variant=\"tertiary\" aria-label=\"Remove match rule {number} {&quot;number&quot;:1}\" data-on-onclick=\"\">",
+			"<x-slot name=\"icon\">",
+			"<x-delete size=\"20\">",
+			"</x-delete>",
+			"</x-slot>",
+			"</x-ncbutton>",
+			"</div>",
+			"<x-ncbutton variant=\"secondary\" data-on-onclick=\"\">",
+			"<x-slot name=\"default\">Add match rule</x-slot>",
+			"</x-ncbutton>",
+			"</div>",
+			"</x-slot>",
+			"</x-ncdialog>"
+		],
+		"buttons": [
+			{
+				"variant": null,
+				"emitted": [["onUpdate:open", false], ["onCancel"]]
+			},
+			{
+				"variant": "primary",
+				"emitted": [
+					[
+						"onSubmit",
+						{
+							"primaryName": "Jan Jansen",
+							"entityType": "PERSON",
+							"reason": "Court order",
+							"legalAuthority": "",
+							"caseReference": "",
+							"severity": "medium",
+							"jurisdiction": "",
+							"validUntil": "",
+							"active": true,
+							"matchRules": [
+								{
+									"type": "bsn",
+									"value": "123456782"
+								}
+							],
+							"entityText": "Jan Jansen",
+							"label": "Woordenlijst",
+							"consentMethod": "paper"
+						}
+					]
+				]
+			},
+			{
+				"variant": "tertiary",
+				"emitted": []
+			}
+		]
+	},
+	"prohibition.saving": {
+		"html": [
+			"<x-ncdialog name=\"Edit publish-never rule\" open=\"true\" size=\"normal\" data-on-onupdate:open=\"\">",
+			"<x-slot name=\"actions\">",
+			"<x-ncbutton disabled=\"true\" data-testid=\"cn-dialog-actions-cancel\" data-on-onclick=\"\">",
+			"<x-slot name=\"default\">Cancel</x-slot>",
+			"</x-ncbutton>",
+			"<x-ncbutton variant=\"primary\" disabled=\"true\" data-testid=\"cn-dialog-actions-submit\" data-on-onclick=\"\">",
+			"<x-slot name=\"default\"> Save</x-slot>",
+			"<x-slot name=\"icon\">",
+			"<x-ncloadingicon size=\"20\" name=\"Loading&nbsp;…\">",
+			"</x-ncloadingicon>",
+			"</x-slot>",
+			"</x-ncbutton>",
+			"</x-slot>",
+			"<x-slot name=\"default\">",
+			"<div class=\"prohibition-form\">",
+			"<x-nctextfield modelvalue=\"Jan Jansen\" data-on-onupdate:modelvalue=\"\" label=\"Primary name (Dutch)\" required=\"true\">",
+			"</x-nctextfield>",
+			"<x-ncselect modelvalue=\"PERSON\" data-on-onupdate:modelvalue=\"\" data-options=\"[&quot;PERSON&quot;,&quot;ORGANIZATION&quot;,&quot;OTHER&quot;]\" inputlabel=\"Entity type\" label=\"Entity type\" required=\"true\">",
+			"</x-ncselect>",
+			"<x-nctextfield modelvalue=\"Court order\" data-on-onupdate:modelvalue=\"\" label=\"Reason (markdown allowed)\" required=\"true\">",
+			"</x-nctextfield>",
+			"<x-nctextfield modelvalue=\"\" data-on-onupdate:modelvalue=\"\" label=\"Legal authority (court order, statute, …)\">",
+			"</x-nctextfield>",
+			"<x-nctextfield modelvalue=\"\" data-on-onupdate:modelvalue=\"\" label=\"Case reference (optional)\">",
+			"</x-nctextfield>",
+			"<x-ncselect modelvalue=\"medium\" data-on-onupdate:modelvalue=\"\" data-options=\"[&quot;high&quot;,&quot;medium&quot;,&quot;low&quot;]\" inputlabel=\"Severity\" label=\"Severity\">",
+			"</x-ncselect>",
+			"<x-nctextfield modelvalue=\"\" data-on-onupdate:modelvalue=\"\" label=\"Jurisdiction (optional)\">",
+			"</x-nctextfield>",
+			"<x-nctextfield modelvalue=\"\" data-on-onupdate:modelvalue=\"\" label=\"Valid until (ISO 8601, optional)\">",
+			"</x-nctextfield>",
+			"<x-nccheckboxradioswitch modelvalue=\"true\" data-on-onupdate:modelvalue=\"\" type=\"switch\">",
+			"<x-slot name=\"default\">Active</x-slot>",
+			"</x-nccheckboxradioswitch>",
+			"<!--v-if-->",
+			"<h4>Match rules</h4>",
+			"<!--v-if-->",
+			"<div class=\"match-rule-row\">",
+			"<x-ncselect modelvalue=\"bsn\" data-on-onupdate:modelvalue=\"\" data-options=\"[&quot;exact&quot;,&quot;normalized&quot;,&quot;bsn&quot;,&quot;kvk&quot;]\" inputlabel=\"Match type\" label=\"Match type\">",
+			"</x-ncselect>",
+			"<x-nctextfield modelvalue=\"123456782\" data-on-onupdate:modelvalue=\"\" label=\"Match value\">",
+			"</x-nctextfield>",
+			"<!--",
+			"\t\t\t\t\tIcon-only, so it needs its own name. The row index is part of",
+			"\t\t\t\t\tit: every row renders the same icon, and \"Remove match rule\"",
+			"\t\t\t\t\trepeated N times tells a screen-reader user nothing about",
+			"\t\t\t\t\twhich row focus is on (WCAG 4.1.2).",
+			"\t\t\t\t-->",
+			"<x-ncbutton variant=\"tertiary\" aria-label=\"Remove match rule {number} {&quot;number&quot;:1}\" data-on-onclick=\"\">",
+			"<x-slot name=\"icon\">",
+			"<x-delete size=\"20\">",
+			"</x-delete>",
+			"</x-slot>",
+			"</x-ncbutton>",
+			"</div>",
+			"<x-ncbutton variant=\"secondary\" data-on-onclick=\"\">",
+			"<x-slot name=\"default\">Add match rule</x-slot>",
+			"</x-ncbutton>",
+			"<div class=\"form-error\">Save failed</div>",
+			"</div>",
+			"</x-slot>",
+			"</x-ncdialog>"
+		],
+		"buttons": [
+			{
+				"variant": null,
+				"emitted": [["onUpdate:open", false], ["onCancel"]]
+			},
+			{
+				"variant": "primary",
+				"emitted": [
+					[
+						"onSubmit",
+						{
+							"primaryName": "Jan Jansen",
+							"entityType": "PERSON",
+							"reason": "Court order",
+							"legalAuthority": "",
+							"caseReference": "",
+							"severity": "medium",
+							"jurisdiction": "",
+							"validUntil": "",
+							"active": true,
+							"matchRules": [
+								{
+									"type": "bsn",
+									"value": "123456782"
+								}
+							],
+							"entityText": "Jan Jansen",
+							"label": "Woordenlijst",
+							"consentMethod": "paper"
+						}
+					]
+				]
+			},
+			{
+				"variant": "tertiary",
+				"emitted": []
+			}
+		]
+	},
+	"prohibition.closed": {
+		"html": ["<!--v-if-->"],
+		"buttons": []
+	},
+	"standingConsent.create": {
+		"html": [
+			"<x-ncdialog name=\"Add standing consent\" open=\"true\" size=\"normal\" data-on-onupdate:open=\"\">",
+			"<x-slot name=\"actions\">",
+			"<x-ncbutton disabled=\"false\" data-testid=\"cn-dialog-actions-cancel\" data-on-onclick=\"\">",
+			"<x-slot name=\"default\">Cancel</x-slot>",
+			"</x-ncbutton>",
+			"<x-ncbutton variant=\"primary\" disabled=\"true\" data-testid=\"cn-dialog-actions-submit\" data-on-onclick=\"\">",
+			"<x-slot name=\"default\"> Create</x-slot>",
+			"</x-ncbutton>",
+			"</x-slot>",
+			"<x-slot name=\"default\">",
+			"<div class=\"standing-consent-form\">",
+			"<x-nctextfield modelvalue=\"\" data-on-onupdate:modelvalue=\"\" label=\"Entity text (display name)\" required=\"true\">",
+			"</x-nctextfield>",
+			"<x-ncselect modelvalue=\"PERSON\" data-on-onupdate:modelvalue=\"\" data-options=\"[&quot;PERSON&quot;,&quot;ORGANIZATION&quot;,&quot;OTHER&quot;]\" inputlabel=\"Entity type\" label=\"Entity type\" required=\"true\">",
+			"</x-ncselect>",
+			"<x-ncselect modelvalue=\"\" data-on-onupdate:modelvalue=\"\" data-options=\"[&quot;paper&quot;,&quot;digital_signature&quot;,&quot;verbal_recorded&quot;,&quot;opt_in_form&quot;]\" inputlabel=\"Consent method\" label=\"Consent method\" required=\"true\">",
+			"</x-ncselect>",
+			"<x-nctextfield modelvalue=\"\" data-on-onupdate:modelvalue=\"\" label=\"Consent document (file id or URL)\">",
+			"</x-nctextfield>",
+			"<x-nctextfield modelvalue=\"\" data-on-onupdate:modelvalue=\"\" label=\"Consent scope (e.g. '2024-2025 municipal decisions')\">",
+			"</x-nctextfield>",
+			"<x-nctextfield modelvalue=\"\" data-on-onupdate:modelvalue=\"\" label=\"Legal basis\">",
+			"</x-nctextfield>",
+			"<x-nctextfield modelvalue=\"\" data-on-onupdate:modelvalue=\"\" label=\"Valid from (ISO 8601, optional)\">",
+			"</x-nctextfield>",
+			"<x-nctextfield modelvalue=\"\" data-on-onupdate:modelvalue=\"\" label=\"Valid until (ISO 8601, optional)\">",
+			"</x-nctextfield>",
+			"<x-nccheckboxradioswitch modelvalue=\"true\" data-on-onupdate:modelvalue=\"\" type=\"switch\">",
+			"<x-slot name=\"default\">Active</x-slot>",
+			"</x-nccheckboxradioswitch>",
+			"<div class=\"form-warning\">No expiry set — this standing consent will remain in force indefinitely. Consider setting a \"Valid until\" date.</div>",
+			"<h4>Match rules</h4>",
+			"<div class=\"form-warning\">Add at least one match rule. Prefer stable identifiers (BSN/KvK) over name-only matches.</div>",
+			"<x-ncbutton variant=\"secondary\" data-on-onclick=\"\">",
+			"<x-slot name=\"default\">Add match rule</x-slot>",
+			"</x-ncbutton>",
+			"</div>",
+			"</x-slot>",
+			"</x-ncdialog>"
+		],
+		"buttons": [
+			{
+				"variant": null,
+				"emitted": [["onUpdate:open", false], ["onCancel"]]
+			},
+			{
+				"variant": "primary",
+				"emitted": [
+					[
+						"onSubmit",
+						{
+							"entityText": "",
+							"entityType": "PERSON",
+							"consentMethod": "",
+							"consentDocument": "",
+							"consentScope": "",
+							"legalBasis": "",
+							"validFrom": "",
+							"validUntil": "",
+							"active": true,
+							"matchRules": [],
+							"consentStatus": "consent_given",
+							"publicationDecision": "publish_with_consent",
+							"notificationStatus": "skipped"
+						}
+					]
+				]
+			}
+		]
+	},
+	"standingConsent.edit": {
+		"html": [
+			"<x-ncdialog name=\"Edit standing consent\" open=\"true\" size=\"normal\" data-on-onupdate:open=\"\">",
+			"<x-slot name=\"actions\">",
+			"<x-ncbutton disabled=\"false\" data-testid=\"cn-dialog-actions-cancel\" data-on-onclick=\"\">",
+			"<x-slot name=\"default\">Cancel</x-slot>",
+			"</x-ncbutton>",
+			"<x-ncbutton variant=\"primary\" disabled=\"false\" data-testid=\"cn-dialog-actions-submit\" data-on-onclick=\"\">",
+			"<x-slot name=\"default\"> Save</x-slot>",
+			"</x-ncbutton>",
+			"</x-slot>",
+			"<x-slot name=\"default\">",
+			"<div class=\"standing-consent-form\">",
+			"<x-nctextfield modelvalue=\"Jan Jansen\" data-on-onupdate:modelvalue=\"\" label=\"Entity text (display name)\" required=\"true\">",
+			"</x-nctextfield>",
+			"<x-ncselect modelvalue=\"PERSON\" data-on-onupdate:modelvalue=\"\" data-options=\"[&quot;PERSON&quot;,&quot;ORGANIZATION&quot;,&quot;OTHER&quot;]\" inputlabel=\"Entity type\" label=\"Entity type\" required=\"true\">",
+			"</x-ncselect>",
+			"<x-ncselect modelvalue=\"paper\" data-on-onupdate:modelvalue=\"\" data-options=\"[&quot;paper&quot;,&quot;digital_signature&quot;,&quot;verbal_recorded&quot;,&quot;opt_in_form&quot;]\" inputlabel=\"Consent method\" label=\"Consent method\" required=\"true\">",
+			"</x-ncselect>",
+			"<x-nctextfield modelvalue=\"\" data-on-onupdate:modelvalue=\"\" label=\"Consent document (file id or URL)\">",
+			"</x-nctextfield>",
+			"<x-nctextfield modelvalue=\"\" data-on-onupdate:modelvalue=\"\" label=\"Consent scope (e.g. '2024-2025 municipal decisions')\">",
+			"</x-nctextfield>",
+			"<x-nctextfield modelvalue=\"\" data-on-onupdate:modelvalue=\"\" label=\"Legal basis\">",
+			"</x-nctextfield>",
+			"<x-nctextfield modelvalue=\"\" data-on-onupdate:modelvalue=\"\" label=\"Valid from (ISO 8601, optional)\">",
+			"</x-nctextfield>",
+			"<x-nctextfield modelvalue=\"\" data-on-onupdate:modelvalue=\"\" label=\"Valid until (ISO 8601, optional)\">",
+			"</x-nctextfield>",
+			"<x-nccheckboxradioswitch modelvalue=\"true\" data-on-onupdate:modelvalue=\"\" type=\"switch\">",
+			"<x-slot name=\"default\">Active</x-slot>",
+			"</x-nccheckboxradioswitch>",
+			"<div class=\"form-warning\">No expiry set — this standing consent will remain in force indefinitely. Consider setting a \"Valid until\" date.</div>",
+			"<h4>Match rules</h4>",
+			"<!--v-if-->",
+			"<div class=\"match-rule-row\">",
+			"<x-ncselect modelvalue=\"bsn\" data-on-onupdate:modelvalue=\"\" data-options=\"[&quot;exact&quot;,&quot;normalized&quot;,&quot;bsn&quot;,&quot;kvk&quot;]\" inputlabel=\"Match type\" label=\"Match type\">",
+			"</x-ncselect>",
+			"<x-nctextfield modelvalue=\"123456782\" data-on-onupdate:modelvalue=\"\" label=\"Match value\">",
+			"</x-nctextfield>",
+			"<!--",
+			"\t\t\t\t\tIcon-only, so it needs its own name. The row index is part of",
+			"\t\t\t\t\tit: every row renders the same icon, and \"Remove match rule\"",
+			"\t\t\t\t\trepeated N times tells a screen-reader user nothing about",
+			"\t\t\t\t\twhich row focus is on (WCAG 4.1.2).",
+			"\t\t\t\t-->",
+			"<x-ncbutton variant=\"tertiary\" aria-label=\"Remove match rule {number} {&quot;number&quot;:1}\" data-on-onclick=\"\">",
+			"<x-slot name=\"icon\">",
+			"<x-delete size=\"20\">",
+			"</x-delete>",
+			"</x-slot>",
+			"</x-ncbutton>",
+			"</div>",
+			"<x-ncbutton variant=\"secondary\" data-on-onclick=\"\">",
+			"<x-slot name=\"default\">Add match rule</x-slot>",
+			"</x-ncbutton>",
+			"</div>",
+			"</x-slot>",
+			"</x-ncdialog>"
+		],
+		"buttons": [
+			{
+				"variant": null,
+				"emitted": [["onUpdate:open", false], ["onCancel"]]
+			},
+			{
+				"variant": "primary",
+				"emitted": [
+					[
+						"onSubmit",
+						{
+							"entityText": "Jan Jansen",
+							"entityType": "PERSON",
+							"consentMethod": "paper",
+							"consentDocument": "",
+							"consentScope": "",
+							"legalBasis": "",
+							"validFrom": "",
+							"validUntil": "",
+							"active": true,
+							"matchRules": [
+								{
+									"type": "bsn",
+									"value": "123456782"
+								}
+							],
+							"consentStatus": "consent_given",
+							"publicationDecision": "publish_with_consent",
+							"notificationStatus": "skipped",
+							"primaryName": "Jan Jansen",
+							"label": "Woordenlijst",
+							"reason": "Court order"
+						}
+					]
+				]
+			},
+			{
+				"variant": "tertiary",
+				"emitted": []
+			}
+		]
+	},
+	"standingConsent.saving": {
+		"html": [
+			"<x-ncdialog name=\"Edit standing consent\" open=\"true\" size=\"normal\" data-on-onupdate:open=\"\">",
+			"<x-slot name=\"actions\">",
+			"<x-ncbutton disabled=\"true\" data-testid=\"cn-dialog-actions-cancel\" data-on-onclick=\"\">",
+			"<x-slot name=\"default\">Cancel</x-slot>",
+			"</x-ncbutton>",
+			"<x-ncbutton variant=\"primary\" disabled=\"true\" data-testid=\"cn-dialog-actions-submit\" data-on-onclick=\"\">",
+			"<x-slot name=\"default\"> Save</x-slot>",
+			"<x-slot name=\"icon\">",
+			"<x-ncloadingicon size=\"20\" name=\"Loading&nbsp;…\">",
+			"</x-ncloadingicon>",
+			"</x-slot>",
+			"</x-ncbutton>",
+			"</x-slot>",
+			"<x-slot name=\"default\">",
+			"<div class=\"standing-consent-form\">",
+			"<x-nctextfield modelvalue=\"Jan Jansen\" data-on-onupdate:modelvalue=\"\" label=\"Entity text (display name)\" required=\"true\">",
+			"</x-nctextfield>",
+			"<x-ncselect modelvalue=\"PERSON\" data-on-onupdate:modelvalue=\"\" data-options=\"[&quot;PERSON&quot;,&quot;ORGANIZATION&quot;,&quot;OTHER&quot;]\" inputlabel=\"Entity type\" label=\"Entity type\" required=\"true\">",
+			"</x-ncselect>",
+			"<x-ncselect modelvalue=\"paper\" data-on-onupdate:modelvalue=\"\" data-options=\"[&quot;paper&quot;,&quot;digital_signature&quot;,&quot;verbal_recorded&quot;,&quot;opt_in_form&quot;]\" inputlabel=\"Consent method\" label=\"Consent method\" required=\"true\">",
+			"</x-ncselect>",
+			"<x-nctextfield modelvalue=\"\" data-on-onupdate:modelvalue=\"\" label=\"Consent document (file id or URL)\">",
+			"</x-nctextfield>",
+			"<x-nctextfield modelvalue=\"\" data-on-onupdate:modelvalue=\"\" label=\"Consent scope (e.g. '2024-2025 municipal decisions')\">",
+			"</x-nctextfield>",
+			"<x-nctextfield modelvalue=\"\" data-on-onupdate:modelvalue=\"\" label=\"Legal basis\">",
+			"</x-nctextfield>",
+			"<x-nctextfield modelvalue=\"\" data-on-onupdate:modelvalue=\"\" label=\"Valid from (ISO 8601, optional)\">",
+			"</x-nctextfield>",
+			"<x-nctextfield modelvalue=\"\" data-on-onupdate:modelvalue=\"\" label=\"Valid until (ISO 8601, optional)\">",
+			"</x-nctextfield>",
+			"<x-nccheckboxradioswitch modelvalue=\"true\" data-on-onupdate:modelvalue=\"\" type=\"switch\">",
+			"<x-slot name=\"default\">Active</x-slot>",
+			"</x-nccheckboxradioswitch>",
+			"<div class=\"form-warning\">No expiry set — this standing consent will remain in force indefinitely. Consider setting a \"Valid until\" date.</div>",
+			"<h4>Match rules</h4>",
+			"<!--v-if-->",
+			"<div class=\"match-rule-row\">",
+			"<x-ncselect modelvalue=\"bsn\" data-on-onupdate:modelvalue=\"\" data-options=\"[&quot;exact&quot;,&quot;normalized&quot;,&quot;bsn&quot;,&quot;kvk&quot;]\" inputlabel=\"Match type\" label=\"Match type\">",
+			"</x-ncselect>",
+			"<x-nctextfield modelvalue=\"123456782\" data-on-onupdate:modelvalue=\"\" label=\"Match value\">",
+			"</x-nctextfield>",
+			"<!--",
+			"\t\t\t\t\tIcon-only, so it needs its own name. The row index is part of",
+			"\t\t\t\t\tit: every row renders the same icon, and \"Remove match rule\"",
+			"\t\t\t\t\trepeated N times tells a screen-reader user nothing about",
+			"\t\t\t\t\twhich row focus is on (WCAG 4.1.2).",
+			"\t\t\t\t-->",
+			"<x-ncbutton variant=\"tertiary\" aria-label=\"Remove match rule {number} {&quot;number&quot;:1}\" data-on-onclick=\"\">",
+			"<x-slot name=\"icon\">",
+			"<x-delete size=\"20\">",
+			"</x-delete>",
+			"</x-slot>",
+			"</x-ncbutton>",
+			"</div>",
+			"<x-ncbutton variant=\"secondary\" data-on-onclick=\"\">",
+			"<x-slot name=\"default\">Add match rule</x-slot>",
+			"</x-ncbutton>",
+			"<div class=\"form-error\">Save failed</div>",
+			"</div>",
+			"</x-slot>",
+			"</x-ncdialog>"
+		],
+		"buttons": [
+			{
+				"variant": null,
+				"emitted": [["onUpdate:open", false], ["onCancel"]]
+			},
+			{
+				"variant": "primary",
+				"emitted": [
+					[
+						"onSubmit",
+						{
+							"entityText": "Jan Jansen",
+							"entityType": "PERSON",
+							"consentMethod": "paper",
+							"consentDocument": "",
+							"consentScope": "",
+							"legalBasis": "",
+							"validFrom": "",
+							"validUntil": "",
+							"active": true,
+							"matchRules": [
+								{
+									"type": "bsn",
+									"value": "123456782"
+								}
+							],
+							"consentStatus": "consent_given",
+							"publicationDecision": "publish_with_consent",
+							"notificationStatus": "skipped",
+							"primaryName": "Jan Jansen",
+							"label": "Woordenlijst",
+							"reason": "Court order"
+						}
+					]
+				]
+			},
+			{
+				"variant": "tertiary",
+				"emitted": []
+			}
+		]
+	},
+	"standingConsent.closed": {
+		"html": ["<!--v-if-->"],
+		"buttons": []
+	},
+	"customDictionary.create": {
+		"html": [
+			"<x-ncdialog name=\"Add custom dictionary\" open=\"true\" size=\"normal\" data-onupdate:open=\"[null,null]\">",
+			"<x-slot name=\"actions\">",
+			"<x-ncbutton disabled=\"false\" data-testid=\"cn-dialog-actions-cancel\" data-on-onclick=\"\">",
+			"<x-slot name=\"default\">Cancel</x-slot>",
+			"</x-ncbutton>",
+			"<x-ncbutton variant=\"primary\" disabled=\"true\" data-testid=\"cn-dialog-actions-submit\" data-on-onclick=\"\">",
+			"<x-slot name=\"default\"> Create</x-slot>",
+			"</x-ncbutton>",
+			"</x-slot>",
+			"<x-slot name=\"default\">",
+			"<div class=\"custom-dictionary-form\">",
+			"<x-nctextfield modelvalue=\"\" data-on-onupdate:modelvalue=\"\" label=\"Label\" required=\"\">",
+			"</x-nctextfield>",
+			"<x-nctextfield modelvalue=\"\" data-on-onupdate:modelvalue=\"\" label=\"Description (optional)\">",
+			"</x-nctextfield>",
+			"<div class=\"custom-dictionary-form__colour-row\">",
+			"<label class=\"custom-dictionary-form__colour-label\" for=\"custom-dictionary-colour\">Colour</label>",
+			"<input id=\"custom-dictionary-colour\" type=\"color\" class=\"custom-dictionary-form__colour-input\">",
+			"<x-nctextfield modelvalue=\"#0082C9\" data-on-onupdate:modelvalue=\"\" label=\"Hex value\" class=\"custom-dictionary-form__colour-hex\">",
+			"</x-nctextfield>",
+			"</div>",
+			"<!--",
+			"\t\t\t\t`v-model`, NOT `:value` + `@input`.",
+			"",
+			"\t\t\t\tThis was a Vue 2 binding left behind by the Vue 3 migration, and",
+			"\t\t\t\tit made the control INERT rather than merely mis-styled.",
+			"\t\t\t\t`@nextcloud/vue` 9.9.0's NcSelect declares a `modelValue` prop,",
+			"\t\t\t\tdeclares NO `value` prop at all, and its only declared emit is",
+			"\t\t\t\t`update:modelValue` (verified in the installed",
+			"\t\t\t\tdist/chunks/NcSelect-*.mjs). So `:value` bound nothing — the",
+			"\t\t\t\tselect rendered with no `.vs__selected` at all — and `@input`",
+			"\t\t\t\tnever fired, so picking a match mode did not change",
+			"\t\t\t\t`form.matchMode`. Every dictionary created or edited through this",
+			"\t\t\t\tdialog was written with the `caseInsensitive` default no matter",
+			"\t\t\t\twhat the user chose, silently.",
+			"",
+			"\t\t\t\tThe sibling select in PolicyRuleFormModal.vue already uses",
+			"\t\t\t\t`v-model` and works; this was the only `:value`-bound NcSelect",
+			"\t\t\t\tleft in src/ (swept 2026-08-11).",
+			"\t\t\t-->",
+			"<x-ncselect modelvalue=\"caseInsensitive\" data-on-onupdate:modelvalue=\"\" data-options=\"[{&quot;value&quot;:&quot;exact&quot;,&quot;label&quot;:&quot;Exact (case-sensitive)&quot;},{&quot;value&quot;:&quot;caseInsensitive&quot;,&quot;label&quot;:&quot;Case-insensitive&quot;},{&quot;value&quot;:&quot;wordBoundary&quot;,&quot;label&quot;:&quot;Word boundary&quot;}]\" label=\"label\" data-on-reduce=\"\" clearable=\"false\" inputlabel=\"Match mode\" required=\"\">",
+			"</x-ncselect>",
+			"<p class=\"custom-dictionary-form__hint\">Exact matches case-sensitively; case-insensitive (default) folds case; word boundary is case-insensitive but never matches inside a longer word.</p>",
+			"<x-nccheckboxradioswitch modelvalue=\"true\" data-on-onupdate:modelvalue=\"\" type=\"switch\">",
+			"<x-slot name=\"default\">Active (used in automatic detection)</x-slot>",
+			"</x-nccheckboxradioswitch>",
+			"<!--v-if-->",
+			"</div>",
+			"</x-slot>",
+			"</x-ncdialog>"
+		],
+		"buttons": [
+			{
+				"variant": null,
+				"emitted": [["onCancel"]]
+			},
+			{
+				"variant": "primary",
+				"emitted": []
+			}
+		]
+	},
+	"customDictionary.edit": {
+		"html": [
+			"<x-ncdialog name=\"Edit dictionary\" open=\"true\" size=\"normal\" data-onupdate:open=\"[null,null]\">",
+			"<x-slot name=\"actions\">",
+			"<x-ncbutton disabled=\"false\" data-testid=\"cn-dialog-actions-cancel\" data-on-onclick=\"\">",
+			"<x-slot name=\"default\">Cancel</x-slot>",
+			"</x-ncbutton>",
+			"<x-ncbutton variant=\"primary\" disabled=\"false\" data-testid=\"cn-dialog-actions-submit\" data-on-onclick=\"\">",
+			"<x-slot name=\"default\"> Save</x-slot>",
+			"</x-ncbutton>",
+			"</x-slot>",
+			"<x-slot name=\"default\">",
+			"<div class=\"custom-dictionary-form\">",
+			"<x-nctextfield modelvalue=\"Woordenlijst\" data-on-onupdate:modelvalue=\"\" label=\"Label\" required=\"\">",
+			"</x-nctextfield>",
+			"<x-nctextfield modelvalue=\"\" data-on-onupdate:modelvalue=\"\" label=\"Description (optional)\">",
+			"</x-nctextfield>",
+			"<div class=\"custom-dictionary-form__colour-row\">",
+			"<label class=\"custom-dictionary-form__colour-label\" for=\"custom-dictionary-colour\">Colour</label>",
+			"<input id=\"custom-dictionary-colour\" type=\"color\" class=\"custom-dictionary-form__colour-input\">",
+			"<x-nctextfield modelvalue=\"#0082C9\" data-on-onupdate:modelvalue=\"\" label=\"Hex value\" class=\"custom-dictionary-form__colour-hex\">",
+			"</x-nctextfield>",
+			"</div>",
+			"<!--",
+			"\t\t\t\t`v-model`, NOT `:value` + `@input`.",
+			"",
+			"\t\t\t\tThis was a Vue 2 binding left behind by the Vue 3 migration, and",
+			"\t\t\t\tit made the control INERT rather than merely mis-styled.",
+			"\t\t\t\t`@nextcloud/vue` 9.9.0's NcSelect declares a `modelValue` prop,",
+			"\t\t\t\tdeclares NO `value` prop at all, and its only declared emit is",
+			"\t\t\t\t`update:modelValue` (verified in the installed",
+			"\t\t\t\tdist/chunks/NcSelect-*.mjs). So `:value` bound nothing — the",
+			"\t\t\t\tselect rendered with no `.vs__selected` at all — and `@input`",
+			"\t\t\t\tnever fired, so picking a match mode did not change",
+			"\t\t\t\t`form.matchMode`. Every dictionary created or edited through this",
+			"\t\t\t\tdialog was written with the `caseInsensitive` default no matter",
+			"\t\t\t\twhat the user chose, silently.",
+			"",
+			"\t\t\t\tThe sibling select in PolicyRuleFormModal.vue already uses",
+			"\t\t\t\t`v-model` and works; this was the only `:value`-bound NcSelect",
+			"\t\t\t\tleft in src/ (swept 2026-08-11).",
+			"\t\t\t-->",
+			"<x-ncselect modelvalue=\"caseInsensitive\" data-on-onupdate:modelvalue=\"\" data-options=\"[{&quot;value&quot;:&quot;exact&quot;,&quot;label&quot;:&quot;Exact (case-sensitive)&quot;},{&quot;value&quot;:&quot;caseInsensitive&quot;,&quot;label&quot;:&quot;Case-insensitive&quot;},{&quot;value&quot;:&quot;wordBoundary&quot;,&quot;label&quot;:&quot;Word boundary&quot;}]\" label=\"label\" data-on-reduce=\"\" clearable=\"false\" inputlabel=\"Match mode\" required=\"\">",
+			"</x-ncselect>",
+			"<p class=\"custom-dictionary-form__hint\">Exact matches case-sensitively; case-insensitive (default) folds case; word boundary is case-insensitive but never matches inside a longer word.</p>",
+			"<x-nccheckboxradioswitch modelvalue=\"true\" data-on-onupdate:modelvalue=\"\" type=\"switch\">",
+			"<x-slot name=\"default\">Active (used in automatic detection)</x-slot>",
+			"</x-nccheckboxradioswitch>",
+			"<!--v-if-->",
+			"</div>",
+			"</x-slot>",
+			"</x-ncdialog>"
+		],
+		"buttons": [
+			{
+				"variant": null,
+				"emitted": [["onCancel"]]
+			},
+			{
+				"variant": "primary",
+				"emitted": [
+					[
+						"onSubmit",
+						{
+							"label": "Woordenlijst",
+							"description": "",
+							"colour": "#0082C9",
+							"matchMode": "caseInsensitive",
+							"active": true,
+							"primaryName": "Jan Jansen",
+							"entityText": "Jan Jansen",
+							"reason": "Court order",
+							"consentMethod": "paper",
+							"matchRules": [
+								{
+									"type": "bsn",
+									"value": "123456782"
+								}
+							]
+						}
+					]
+				]
+			}
+		]
+	},
+	"customDictionary.saving": {
+		"html": [
+			"<x-ncdialog name=\"Edit dictionary\" open=\"true\" size=\"normal\" data-onupdate:open=\"[null,null]\">",
+			"<x-slot name=\"actions\">",
+			"<x-ncbutton disabled=\"true\" data-testid=\"cn-dialog-actions-cancel\" data-on-onclick=\"\">",
+			"<x-slot name=\"default\">Cancel</x-slot>",
+			"</x-ncbutton>",
+			"<x-ncbutton variant=\"primary\" disabled=\"true\" data-testid=\"cn-dialog-actions-submit\" data-on-onclick=\"\">",
+			"<x-slot name=\"default\"> Save</x-slot>",
+			"<x-slot name=\"icon\">",
+			"<x-ncloadingicon size=\"20\" name=\"Loading&nbsp;…\">",
+			"</x-ncloadingicon>",
+			"</x-slot>",
+			"</x-ncbutton>",
+			"</x-slot>",
+			"<x-slot name=\"default\">",
+			"<div class=\"custom-dictionary-form\">",
+			"<x-nctextfield modelvalue=\"Woordenlijst\" data-on-onupdate:modelvalue=\"\" label=\"Label\" required=\"\">",
+			"</x-nctextfield>",
+			"<x-nctextfield modelvalue=\"\" data-on-onupdate:modelvalue=\"\" label=\"Description (optional)\">",
+			"</x-nctextfield>",
+			"<div class=\"custom-dictionary-form__colour-row\">",
+			"<label class=\"custom-dictionary-form__colour-label\" for=\"custom-dictionary-colour\">Colour</label>",
+			"<input id=\"custom-dictionary-colour\" type=\"color\" class=\"custom-dictionary-form__colour-input\">",
+			"<x-nctextfield modelvalue=\"#0082C9\" data-on-onupdate:modelvalue=\"\" label=\"Hex value\" class=\"custom-dictionary-form__colour-hex\">",
+			"</x-nctextfield>",
+			"</div>",
+			"<!--",
+			"\t\t\t\t`v-model`, NOT `:value` + `@input`.",
+			"",
+			"\t\t\t\tThis was a Vue 2 binding left behind by the Vue 3 migration, and",
+			"\t\t\t\tit made the control INERT rather than merely mis-styled.",
+			"\t\t\t\t`@nextcloud/vue` 9.9.0's NcSelect declares a `modelValue` prop,",
+			"\t\t\t\tdeclares NO `value` prop at all, and its only declared emit is",
+			"\t\t\t\t`update:modelValue` (verified in the installed",
+			"\t\t\t\tdist/chunks/NcSelect-*.mjs). So `:value` bound nothing — the",
+			"\t\t\t\tselect rendered with no `.vs__selected` at all — and `@input`",
+			"\t\t\t\tnever fired, so picking a match mode did not change",
+			"\t\t\t\t`form.matchMode`. Every dictionary created or edited through this",
+			"\t\t\t\tdialog was written with the `caseInsensitive` default no matter",
+			"\t\t\t\twhat the user chose, silently.",
+			"",
+			"\t\t\t\tThe sibling select in PolicyRuleFormModal.vue already uses",
+			"\t\t\t\t`v-model` and works; this was the only `:value`-bound NcSelect",
+			"\t\t\t\tleft in src/ (swept 2026-08-11).",
+			"\t\t\t-->",
+			"<x-ncselect modelvalue=\"caseInsensitive\" data-on-onupdate:modelvalue=\"\" data-options=\"[{&quot;value&quot;:&quot;exact&quot;,&quot;label&quot;:&quot;Exact (case-sensitive)&quot;},{&quot;value&quot;:&quot;caseInsensitive&quot;,&quot;label&quot;:&quot;Case-insensitive&quot;},{&quot;value&quot;:&quot;wordBoundary&quot;,&quot;label&quot;:&quot;Word boundary&quot;}]\" label=\"label\" data-on-reduce=\"\" clearable=\"false\" inputlabel=\"Match mode\" required=\"\">",
+			"</x-ncselect>",
+			"<p class=\"custom-dictionary-form__hint\">Exact matches case-sensitively; case-insensitive (default) folds case; word boundary is case-insensitive but never matches inside a longer word.</p>",
+			"<x-nccheckboxradioswitch modelvalue=\"true\" data-on-onupdate:modelvalue=\"\" type=\"switch\">",
+			"<x-slot name=\"default\">Active (used in automatic detection)</x-slot>",
+			"</x-nccheckboxradioswitch>",
+			"<div class=\"custom-dictionary-form__error\">Save failed</div>",
+			"</div>",
+			"</x-slot>",
+			"</x-ncdialog>"
+		],
+		"buttons": [
+			{
+				"variant": null,
+				"emitted": [["onCancel"]]
+			},
+			{
+				"variant": "primary",
+				"emitted": [
+					[
+						"onSubmit",
+						{
+							"label": "Woordenlijst",
+							"description": "",
+							"colour": "#0082C9",
+							"matchMode": "caseInsensitive",
+							"active": true,
+							"primaryName": "Jan Jansen",
+							"entityText": "Jan Jansen",
+							"reason": "Court order",
+							"consentMethod": "paper",
+							"matchRules": [
+								{
+									"type": "bsn",
+									"value": "123456782"
+								}
+							]
+						}
+					]
+				]
+			}
+		]
+	},
+	"customDictionary.closed": {
+		"html": [
+			"<x-ncdialog name=\"Add custom dictionary\" open=\"false\" size=\"normal\" data-onupdate:open=\"[null,null]\">",
+			"<x-slot name=\"actions\">",
+			"<x-ncbutton disabled=\"false\" data-testid=\"cn-dialog-actions-cancel\" data-on-onclick=\"\">",
+			"<x-slot name=\"default\">Cancel</x-slot>",
+			"</x-ncbutton>",
+			"<x-ncbutton variant=\"primary\" disabled=\"true\" data-testid=\"cn-dialog-actions-submit\" data-on-onclick=\"\">",
+			"<x-slot name=\"default\"> Create</x-slot>",
+			"</x-ncbutton>",
+			"</x-slot>",
+			"<x-slot name=\"default\">",
+			"<div class=\"custom-dictionary-form\">",
+			"<x-nctextfield modelvalue=\"\" data-on-onupdate:modelvalue=\"\" label=\"Label\" required=\"\">",
+			"</x-nctextfield>",
+			"<x-nctextfield modelvalue=\"\" data-on-onupdate:modelvalue=\"\" label=\"Description (optional)\">",
+			"</x-nctextfield>",
+			"<div class=\"custom-dictionary-form__colour-row\">",
+			"<label class=\"custom-dictionary-form__colour-label\" for=\"custom-dictionary-colour\">Colour</label>",
+			"<input id=\"custom-dictionary-colour\" type=\"color\" class=\"custom-dictionary-form__colour-input\">",
+			"<x-nctextfield modelvalue=\"#0082C9\" data-on-onupdate:modelvalue=\"\" label=\"Hex value\" class=\"custom-dictionary-form__colour-hex\">",
+			"</x-nctextfield>",
+			"</div>",
+			"<!--",
+			"\t\t\t\t`v-model`, NOT `:value` + `@input`.",
+			"",
+			"\t\t\t\tThis was a Vue 2 binding left behind by the Vue 3 migration, and",
+			"\t\t\t\tit made the control INERT rather than merely mis-styled.",
+			"\t\t\t\t`@nextcloud/vue` 9.9.0's NcSelect declares a `modelValue` prop,",
+			"\t\t\t\tdeclares NO `value` prop at all, and its only declared emit is",
+			"\t\t\t\t`update:modelValue` (verified in the installed",
+			"\t\t\t\tdist/chunks/NcSelect-*.mjs). So `:value` bound nothing — the",
+			"\t\t\t\tselect rendered with no `.vs__selected` at all — and `@input`",
+			"\t\t\t\tnever fired, so picking a match mode did not change",
+			"\t\t\t\t`form.matchMode`. Every dictionary created or edited through this",
+			"\t\t\t\tdialog was written with the `caseInsensitive` default no matter",
+			"\t\t\t\twhat the user chose, silently.",
+			"",
+			"\t\t\t\tThe sibling select in PolicyRuleFormModal.vue already uses",
+			"\t\t\t\t`v-model` and works; this was the only `:value`-bound NcSelect",
+			"\t\t\t\tleft in src/ (swept 2026-08-11).",
+			"\t\t\t-->",
+			"<x-ncselect modelvalue=\"caseInsensitive\" data-on-onupdate:modelvalue=\"\" data-options=\"[{&quot;value&quot;:&quot;exact&quot;,&quot;label&quot;:&quot;Exact (case-sensitive)&quot;},{&quot;value&quot;:&quot;caseInsensitive&quot;,&quot;label&quot;:&quot;Case-insensitive&quot;},{&quot;value&quot;:&quot;wordBoundary&quot;,&quot;label&quot;:&quot;Word boundary&quot;}]\" label=\"label\" data-on-reduce=\"\" clearable=\"false\" inputlabel=\"Match mode\" required=\"\">",
+			"</x-ncselect>",
+			"<p class=\"custom-dictionary-form__hint\">Exact matches case-sensitively; case-insensitive (default) folds case; word boundary is case-insensitive but never matches inside a longer word.</p>",
+			"<x-nccheckboxradioswitch modelvalue=\"true\" data-on-onupdate:modelvalue=\"\" type=\"switch\">",
+			"<x-slot name=\"default\">Active (used in automatic detection)</x-slot>",
+			"</x-nccheckboxradioswitch>",
+			"<!--v-if-->",
+			"</div>",
+			"</x-slot>",
+			"</x-ncdialog>"
+		],
+		"buttons": [
+			{
+				"variant": null,
+				"emitted": [["onCancel"]]
+			},
+			{
+				"variant": "primary",
+				"emitted": []
+			}
+		]
+	}
+}

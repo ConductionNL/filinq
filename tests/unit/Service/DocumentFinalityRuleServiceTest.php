@@ -15,6 +15,9 @@
  * @link https://www.filinq.app
  *
  * @spec openspec/changes/final-documents-frozen/specs/document-versions/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\Filinq\Tests\Unit\Service;
@@ -78,7 +81,7 @@ class DocumentFinalityRuleServiceTest extends TestCase {
 		$this->finalised = [];
 
 		$objectService = $this->createMock(ObjectService::class);
-		$objectService->method('searchObjects')->willReturn($rows);
+		$objectService->method('searchObjectsBySlug')->willReturn($rows);
 		$objectService->method('saveObject')->willReturnCallback(
 			static fn (...$arguments): array => (($arguments[0] ?? []) + ['uuid' => 'rule-1'])
 		);
@@ -227,4 +230,72 @@ class DocumentFinalityRuleServiceTest extends TestCase {
 		$this->assertSame('anna', $stored['declaredBy']);
 
 	}//end testAStoredDeclarationKeepsWhatTheConsumingAppDeclared()
+
+	/**
+	 * Declaring a rule for a type that already has one updates that record in place.
+	 *
+	 * @return void
+	 */
+	public function testARedeclarationUpdatesTheStoredRecord(): void {
+		$saved = [];
+		$objectService = $this->createMock(ObjectService::class);
+		$objectService->method('searchObjectsBySlug')->willReturn([$this->declaration()]);
+		$objectService->method('saveObject')->willReturnCallback(
+			static function (...$arguments) use (&$saved): array {
+				$saved[] = $arguments;
+				return $arguments[0];
+			}
+		);
+		$resolver = $this->createMock(DocumentObjectServiceResolver::class);
+		$resolver->method('resolve')->willReturn($objectService);
+		$service = new DocumentFinalityRuleService($resolver, $this->createMock(FinalDocumentService::class), $this->createMock(LoggerInterface::class));
+
+		$service->declareRule(declaringApp: 'dossiq', typeReference: 'bezwaarschrift', finalStates: ['afgerond'], documentRole: 'besluit', reasonTemplate: 'Klaar');
+
+		$this->assertCount(1, $saved);
+		$this->assertSame('rule-1', $saved[0][3]);
+		$this->assertSame('documentFinalityRule', $saved[0][2]);
+		$this->assertSame(['afgerond'], $saved[0][0]['finalStates']);
+		$this->assertSame('Klaar', $saved[0][0]['reasonTemplate']);
+		$this->assertSame('', $saved[0][0]['declaredBy']);
+
+	}//end testARedeclarationUpdatesTheStoredRecord()
+
+	/**
+	 * A state change skips invalid ids and documents already final, and keeps going past a failure.
+	 *
+	 * @return void
+	 */
+	public function testAStateChangeSkipsInvalidAndAlreadyFinalDocuments(): void {
+		$objectService = $this->createMock(ObjectService::class);
+		$objectService->method('searchObjectsBySlug')->willReturn([$this->declaration()]);
+		$resolver = $this->createMock(DocumentObjectServiceResolver::class);
+		$resolver->method('resolve')->willReturn($objectService);
+		$finalDocuments = $this->createMock(FinalDocumentService::class);
+		$finalDocuments->method('finalise')->willReturnCallback(
+			static function (int $fileId, string $reason): array {
+				if ($fileId === 5) {
+					throw new \OCA\Filinq\Exception\DocumentFinalException(message: 'already final');
+				}
+
+				if ($fileId === 6) {
+					throw new RuntimeException('storage gone');
+				}
+
+				return ['fileId' => $fileId, 'reason' => $reason];
+			}
+		);
+		$service = new DocumentFinalityRuleService($resolver, $finalDocuments, $this->createMock(LoggerInterface::class));
+
+		$finalised = $service->applyStateChange(
+			declaringApp: 'dossiq',
+			typeReference: 'bezwaarschrift',
+			state: 'besluit genomen',
+			fileIds: [0, -1, 5, 6, 7],
+			documentRole: 'besluit'
+		);
+
+		$this->assertSame([['fileId' => 7, 'reason' => 'bezwaarschrift reached the status "besluit genomen".']], $finalised);
+
+	}//end testAStateChangeSkipsInvalidAndAlreadyFinalDocuments()
 }//end class

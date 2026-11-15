@@ -15,6 +15,9 @@
  * @link https://www.filinq.app
  *
  * @spec openspec/changes/final-documents-frozen/specs/document-versions/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\Filinq\Tests\Unit\Service;
@@ -99,7 +102,7 @@ class FinalDocumentCorrectionServiceTest extends TestCase {
 		$this->frozenFileWasWritten = false;
 
 		$objectService = $this->createMock(ObjectService::class);
-		$objectService->method('searchObjects')->willReturn($rows);
+		$objectService->method('searchObjectsBySlug')->willReturn($rows);
 		$objectService->method('find')->willReturnCallback(
 			static function (...$arguments) use ($rows): ?array {
 				$id = (string)($arguments[0] ?? '');

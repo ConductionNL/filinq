@@ -49,6 +49,11 @@ use Throwable;
  * @link     https://www.filinq.app
  *
  * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-3
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) WMC 50 at threshold 50 on
+ * 2026-10-30. The fail-open and fail-closed paths of each backend are one
+ * decision each; splitting them across classes would hide the order in which
+ * the gate consults them.
  */
 class ProhibitionGateService {
 	/**
@@ -104,6 +109,7 @@ class ProhibitionGateService {
 	 * @param IAppConfig $appConfig App configuration for threshold + fail-mode settings.
 	 * @param ContainerInterface $container Container the PolicyMatchService is resolved from.
 	 * @param OpenRegisterServiceLocator $locator Resolver for OpenRegister services and mappers.
+	 * @param ProhibitionOverrideAuthority $authority Who may release a prohibition match.
 	 *
 	 * @return void
 	 */
@@ -112,6 +118,7 @@ class ProhibitionGateService {
 		private readonly IAppConfig $appConfig,
 		private readonly ContainerInterface $container,
 		private readonly OpenRegisterServiceLocator $locator,
+		private readonly ProhibitionOverrideAuthority $authority,
 	) {
 		$this->committer = new ProhibitionOverrideCommitter(
 			logger: $logger,
@@ -144,27 +151,15 @@ class ProhibitionGateService {
 	 * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-7
 	 */
 	public function run(int $fileId, array $requestEntities, array $overrides, string $userId): void {
-		$policyService = $this->resolvePolicyService(fileId: $fileId);
-		if ($policyService === null) {
-			return;
-		}
-
-		$rawEntities = $this->loadFileEntities(fileId: $fileId);
-		if ($rawEntities === null) {
-			return;
-		}
-
-		// Build prohibition matches: [ruleId, ruleName, entityId, entityRelationId, confidence, entityValue].
-		$matches = $this->buildProhibitionMatches(
-			rawEntities: $rawEntities,
-			policyService: $policyService
-		);
-
+		$matches = $this->matchesFor(fileId: $fileId);
 		if ($matches === []) {
 			return;
 		}
 
-		$split = $this->splitOverrides(matches: $matches, overrides: $overrides);
+		$split = $this->withoutUnauthorisedReleases(
+			split: $this->splitOverrides(matches: $matches, overrides: $overrides),
+			userId: $userId
+		);
 		$missing = $this->collectMissingMatches(
 			matches: $matches,
 			released: $split['released'],
@@ -199,6 +194,64 @@ class ProhibitionGateService {
 		}
 
 	}//end run()
+
+	/**
+	 * The file's prohibition matches, or none when the gate fails open.
+	 *
+	 * @param int $fileId Nextcloud file ID.
+	 *
+	 * @return array<int, array<string, mixed>> Match entries with ruleId, ruleName, entityId,
+	 *                                          entityRelationId, confidence, entityValue.
+	 *
+	 * @throws ProhibitionGateException When the gate is fail-closed and a backend is unavailable.
+	 */
+	private function matchesFor(int $fileId): array {
+		$policyService = $this->resolvePolicyService(fileId: $fileId);
+		if ($policyService === null) {
+			return [];
+		}
+
+		$rawEntities = $this->loadFileEntities(fileId: $fileId);
+		if ($rawEntities === null) {
+			return [];
+		}
+
+		// Build prohibition matches: [ruleId, ruleName, entityId, entityRelationId, confidence, entityValue].
+		return $this->buildProhibitionMatches(
+			rawEntities: $rawEntities,
+			policyService: $policyService
+		);
+
+	}//end matchesFor()
+
+	/**
+	 * Move every release to the rejected list unless the user may override.
+	 *
+	 * @param array<string, array<mixed>> $split  The overrides as splitOverrides() divided them.
+	 * @param string                      $userId The acting user.
+	 *
+	 * @return array<string, array<mixed>> The same shape, with unauthorised releases rejected.
+	 *
+	 * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-6
+	 */
+	private function withoutUnauthorisedReleases(array $split, string $userId): array {
+		if ($split['released'] === [] || $this->authority->mayOverride(userId: $userId) === true) {
+			return $split;
+		}
+
+		foreach ($split['released'] as $override) {
+			$split['rejected'][] = [
+				'ruleId' => $override['match']['ruleId'],
+				'entityId' => $override['match']['entityId'],
+				'reason' => 'only a policy admin may override a publication prohibition',
+			];
+		}
+
+		$split['released'] = [];
+
+		return $split;
+
+	}//end withoutUnauthorisedReleases()
 
 	/**
 	 * Read the high-confidence threshold from app config.
@@ -339,46 +392,98 @@ class ProhibitionGateService {
 	 * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-3
 	 */
 	private function buildProhibitionMatches(array $rawEntities, mixed $policyService): array {
+		$run = new ProhibitionMatchRun();
+		$run->policyService = $policyService;
+		$run->failClosed = $this->isFailClosed();
+
 		$matches = [];
-		$failClosed = $this->isFailClosed();
-
 		foreach ($rawEntities as $raw) {
-			$entityData = (array)$raw;
-			if (is_object($raw) === true && method_exists($raw, 'jsonSerialize') === true) {
-				$entityData = $raw->jsonSerialize();
+			$match = $this->prohibitionMatchFor(entityData: $this->entityDataOf(raw: $raw), run: $run);
+			if ($match !== null) {
+				$matches[] = $match;
 			}
-
-			$entityValue = (string)($entityData['entity_value'] ?? $entityData['entityValue'] ?? '');
-			if ($entityValue === '') {
-				continue;
-			}
-
-			$entityType = (string)($entityData['entity_type'] ?? $entityData['entityType'] ?? 'UNKNOWN');
-			$entityId = (int)($entityData['entity_id'] ?? $entityData['entityId'] ?? 0);
-
-			$match = $this->matchOrEscalate(
-				policyService: $policyService,
-				entityType: $entityType,
-				entityValue: $entityValue,
-				entityId: $entityId,
-				failClosed: $failClosed
-			);
-			if ($match === null) {
-				continue;
-			}
-
-			$matches[] = [
-				'ruleId' => (string)($match['ruleId'] ?? ''),
-				'ruleName' => (string)($match['ruleName'] ?? ''),
-				'entityId' => $entityId,
-				'entityRelationId' => (int)($entityData['relation_id'] ?? $entityData['relationId'] ?? 0),
-				'confidence' => (float)($entityData['confidence'] ?? 0.0),
-				'entityValue' => $entityValue,
-			];
-		}//end foreach
+		}
 
 		return $matches;
 	}//end buildProhibitionMatches()
+
+	/**
+	 * A detected entity as an array.
+	 *
+	 * @param mixed $raw The detected entity: an array, or an object that serialises to one.
+	 *
+	 * @return array<string, mixed> The entity's fields.
+	 */
+	private function entityDataOf(mixed $raw): array {
+		if (is_object($raw) === true && method_exists($raw, 'jsonSerialize') === true) {
+			return $raw->jsonSerialize();
+		}
+
+		return (array)$raw;
+	}//end entityDataOf()
+
+	/**
+	 * The prohibition match for one entity, when the policy prohibits it.
+	 *
+	 * @param array<string, mixed> $entityData The entity's fields.
+	 * @param ProhibitionMatchRun  $run        The policy service and fail mode of this pass.
+	 *
+	 * @return array<string, mixed>|null The match, or null when the entity has no value or is not prohibited.
+	 *
+	 * @throws ProhibitionGateException When the policy lookup fails and the gate fails closed.
+	 */
+	private function prohibitionMatchFor(array $entityData, ProhibitionMatchRun $run): ?array {
+		$entityValue = (string)($entityData['entity_value'] ?? $entityData['entityValue'] ?? '');
+		if ($entityValue === '') {
+			return null;
+		}
+
+		$match = $this->policyMatchFor(entityData: $entityData, run: $run);
+		if ($match === null) {
+			return null;
+		}
+
+		return $this->prohibitionMatchRow(match: $match, entityData: $entityData);
+	}//end prohibitionMatchFor()
+
+	/**
+	 * Ask the policy whether it prohibits the entity, escalating a failing lookup by the fail mode.
+	 *
+	 * @param array<string, mixed> $entityData The entity's fields.
+	 * @param ProhibitionMatchRun  $run        The policy service and fail mode of this pass.
+	 *
+	 * @return array<string, mixed>|null The matched rule, or null.
+	 *
+	 * @throws ProhibitionGateException When the policy lookup fails and the gate fails closed.
+	 */
+	private function policyMatchFor(array $entityData, ProhibitionMatchRun $run): ?array {
+		return $this->matchOrEscalate(
+			policyService: $run->policyService,
+			entityType: (string)($entityData['entity_type'] ?? $entityData['entityType'] ?? 'UNKNOWN'),
+			entityValue: (string)($entityData['entity_value'] ?? $entityData['entityValue'] ?? ''),
+			entityId: (int)($entityData['entity_id'] ?? $entityData['entityId'] ?? 0),
+			failClosed: $run->failClosed
+		);
+	}//end policyMatchFor()
+
+	/**
+	 * The stored shape of one prohibition match.
+	 *
+	 * @param array<string, mixed> $match      The matched prohibition rule.
+	 * @param array<string, mixed> $entityData The entity's fields.
+	 *
+	 * @return array<string, mixed> The match row.
+	 */
+	private function prohibitionMatchRow(array $match, array $entityData): array {
+		return [
+			'ruleId' => (string)($match['ruleId'] ?? ''),
+			'ruleName' => (string)($match['ruleName'] ?? ''),
+			'entityId' => (int)($entityData['entity_id'] ?? $entityData['entityId'] ?? 0),
+			'entityRelationId' => (int)($entityData['relation_id'] ?? $entityData['relationId'] ?? 0),
+			'confidence' => (float)($entityData['confidence'] ?? 0.0),
+			'entityValue' => (string)($entityData['entity_value'] ?? $entityData['entityValue'] ?? ''),
+		];
+	}//end prohibitionMatchRow()
 
 	/**
 	 * Match one entity against the prohibition rules, escalating when fail-closed.
@@ -407,14 +512,14 @@ class ProhibitionGateService {
 		bool $failClosed,
 	): ?array {
 		try {
-			return $policyService->matchProhibition(
+			return $policyService->matchProhibitionHint(
 				entityType: $entityType,
 				entityValue: $entityValue
 			);
 		} catch (Throwable $e) {
 			if ($failClosed === true) {
 				$this->logger->warning(
-					'ProhibitionGate: matchProhibition threw — failing closed',
+					'ProhibitionGate: matchProhibitionHint threw — failing closed',
 					[
 						'entityId' => $entityId,
 						'entityType' => $entityType,
@@ -424,12 +529,12 @@ class ProhibitionGateService {
 				throw new ProhibitionGateException(
 					missingMatches: [],
 					rejectedOverrides: [],
-					backendUnavailable: 'PolicyMatchService::matchProhibition threw: ' . $e->getMessage()
+					backendUnavailable: 'PolicyMatchService::matchProhibitionHint threw: ' . $e->getMessage()
 				);
 			}
 
 			$this->logger->debug(
-				'ProhibitionGate: matchProhibition threw; skipping entity (legacy fail-open)',
+				'ProhibitionGate: matchProhibitionHint threw; skipping entity (legacy fail-open)',
 				['exception' => $e->getMessage()]
 			);
 

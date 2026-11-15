@@ -1,0 +1,27 @@
+{
+	"$comment": "The quote template pipelinq's Voorbeeld pdf renders (PqOfferte): \"Offerte\" in the pipelinq namespace with the stable slug \"offerte\", so pipelinq's record_document_templates can name it without knowing this install's uuid. It reads the quote as `salesQuote` (its dataRef) and the lines as `lines` (each printed under its name, `line.name` of salesQuoteLine 1.1.0, else its product's name), a listRef on salesQuoteLine by quote that pipelinq passes with the render.",
+	"objects": [
+		{
+			"key": "sjabloon-pipelinq-offerte",
+			"register": "filinq",
+			"schema": "template",
+			"verbatimFields": [
+				"content"
+			],
+			"data": {
+				"name": "Offerte",
+				"slug": "offerte",
+				"namespace": "pipelinq",
+				"description": "Een offerte van Gemeente Zuiddrecht: nummer, klant en contactpersoon, datum, geldigheid en betaaltermijn, de regels (product of eigen regel, omschrijving, aantal, prijs, korting, totaal) en subtotaal, btw en totaal.",
+				"format": "A4",
+				"orientation": "P",
+				"category": "Offertes",
+				"tags": [
+					"offerte",
+					"pipelinq"
+				],
+				"content": "<h1>Offerte {{ salesQuote.number }}</h1><p><strong>{{ salesQuote.title }}</strong></p><p>Voor: {{ salesQuote.client.name }}{% if salesQuote.contact %}, t.a.v. {{ salesQuote.contact.name }}{% endif %}<br>Datum: {{ salesQuote['@self'].created|date('j-n-Y') }}{% if salesQuote.expiresAt %} &middot; geldig tot {{ salesQuote.expiresAt|date('j-n-Y') }}{% endif %}<br>Betaaltermijn: {{ salesQuote.paymentTerm }}</p><table><thead><tr><th>Omschrijving</th><th>Aantal</th><th>Prijs</th><th>Korting</th><th>Totaal</th></tr></thead><tbody>{% for line in lines|default([]) %}<tr><td><strong>{{ line.name ?: line.product.name }}</strong><br>{{ line.description }}</td><td>{{ line.quantity }}</td><td>&euro; {{ line.unitPrice|number_format(2, ',', '.') }}</td><td>{% if line.discount %}{{ line.discount }}%{% endif %}</td><td>&euro; {{ line.total|number_format(2, ',', '.') }}</td></tr>{% endfor %}</tbody></table><p>Subtotaal: &euro; {{ salesQuote.subtotal|number_format(2, ',', '.') }}<br>Btw {{ salesQuote.vatRate }}%: &euro; {{ salesQuote.vatAmount|number_format(2, ',', '.') }}<br><strong>Totaal: &euro; {{ salesQuote.total|number_format(2, ',', '.') }}</strong></p>"
+			}
+		}
+	]
+}

@@ -1,3 +1,7 @@
+<!--
+  - SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
 <script setup>
 import axios from '@nextcloud/axios'
 import { translate as t } from '@nextcloud/l10n'
@@ -99,6 +103,7 @@ import { generateUrl } from '@nextcloud/router'
 <script>
 import { NcLoadingIcon } from '@nextcloud/vue'
 import FileDocumentOutline from 'vue-material-design-icons/FileDocumentOutline.vue'
+import { filesAppLink } from '../../services/storagePathUrls.js'
 
 export default {
 	name: 'FileEntitiesDashboardWidget',
@@ -166,21 +171,7 @@ export default {
 		 * @spec openspec/specs/dashboard/spec.md#requirement-nextcloud-dashboard-widgets-req-dash-02
 		 */
 		fileLink(filePath) {
-			const parts = filePath.split('/')
-			const filesIndex = parts.indexOf('files')
-			if (filesIndex >= 0) {
-				const relativePath = '/' + parts.slice(filesIndex + 1).join('/')
-				const dir =
-					relativePath.substring(0, relativePath.lastIndexOf('/')) || '/'
-				const file = relativePath.substring(
-					relativePath.lastIndexOf('/') + 1,
-				)
-				return generateUrl('/apps/files/?dir={dir}&scrollto={file}', {
-					dir,
-					file,
-				})
-			}
-			return generateUrl('/apps/files')
+			return filesAppLink(filePath)
 		},
 
 		/**

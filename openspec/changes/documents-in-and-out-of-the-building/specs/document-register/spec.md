@@ -17,7 +17,8 @@ for. Parity register row 4.26, rating `no`, entered under decision D1.
 ### Requirement: A registered document carries a direction, a unit and a number (REQ-DIO-01)
 
 Filinq MUST offer a registration entry for a document, carrying the
-direction (`incoming`, `outgoing` or `internal`), the registration date,
+direction (`inbound` or `outbound`, with no third value: a document that
+never left the building is not registered here at all), the registration date,
 the organisational unit, the document it registers, and a registration
 number. The number MUST be rendered by OpenRegister's generated
 identifier annotation from a sequence named for the unit, with the year
@@ -28,7 +29,7 @@ its own. The number MUST be refused on update once it is set.
 
 - GIVEN a unit with no registrations in the current year
 - WHEN a handler registers an outgoing besluit for that unit
-- THEN the entry carries direction `outgoing`, the unit, today's date and the first number of the year for that unit
+- THEN the entry carries direction `outbound`, the unit, today's date and the first number of the year for that unit
 
 #### Scenario: Two units do not share a counter
 

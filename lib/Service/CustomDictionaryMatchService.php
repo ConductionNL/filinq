@@ -130,8 +130,29 @@ class CustomDictionaryMatchService {
 			return [];
 		}
 
-		// Longest-term-first so a shorter term cannot pre-empt a longer one.
-		// Ties keep their original relative order for deterministic output.
+		$run = new TermMatchRun(text: $text, mode: $normalizedMode);
+		foreach ($this->longestFirst(candidates: $candidates) as $candidate) {
+			$this->claimHits(run: $run, candidate: $candidate);
+		}
+
+		$occurrences = $run->occurrences;
+		usort(
+			$occurrences,
+			static fn (array $a, array $b): int => ($a['positionStart'] <=> $b['positionStart'])
+		);
+
+		return $occurrences;
+	}//end match()
+
+	/**
+	 * The candidates longest-term-first, so a shorter term cannot pre-empt a
+	 * longer one. Ties keep their original relative order for deterministic output.
+	 *
+	 * @param array<int, array{value: string, label: string, originalIndex: int}> $candidates The candidate terms.
+	 *
+	 * @return array<int, array{value: string, label: string, originalIndex: int}> The candidates, sorted.
+	 */
+	private function longestFirst(array $candidates): array {
 		usort(
 			$candidates,
 			static function (array $a, array $b): int {
@@ -144,39 +165,38 @@ class CustomDictionaryMatchService {
 			}
 		);
 
-		$claimed = [];
-		$occurrences = [];
+		return $candidates;
 
-		foreach ($candidates as $candidate) {
-			$pattern = $this->buildPattern(needle: $candidate['value'], mode: $normalizedMode);
-			$rawHits = $this->findRawHits(pattern: $pattern, text: $text);
+	}//end longestFirst()
 
-			foreach ($rawHits as $rawMatch) {
-				[$matchedText, $start] = $rawMatch;
-				$start = (int)$start;
-				$end = ($start + strlen((string)$matchedText));
+	/**
+	 * Record every hit of one candidate whose range nothing claimed before.
+	 *
+	 * @param TermMatchRun                                                   $run       The pass.
+	 * @param array{value: string, label: string, originalIndex: int}       $candidate The term.
+	 *
+	 * @return void
+	 */
+	private function claimHits(TermMatchRun $run, array $candidate): void {
+		$pattern = $this->buildPattern(needle: $candidate['value'], mode: $run->mode);
+		foreach ($this->findRawHits(pattern: $pattern, text: $run->text) as $rawMatch) {
+			[$matchedText, $start] = $rawMatch;
+			$start = (int)$start;
+			$end = ($start + strlen((string)$matchedText));
 
-				if ($this->overlapsClaimed(start: $start, end: $end, claimed: $claimed) === true) {
-					continue;
-				}
+			if ($run->ranges->claim(start: $start, end: $end) === false) {
+				continue;
+			}
 
-				$claimed[] = [$start, $end];
-				$occurrences[] = [
-					'value' => (string)$matchedText,
-					'label' => $candidate['label'],
-					'positionStart' => $start,
-					'positionEnd' => $end,
-				];
-			}//end foreach
-		}//end foreach
+			$run->occurrences[] = [
+				'value' => (string)$matchedText,
+				'label' => $candidate['label'],
+				'positionStart' => $start,
+				'positionEnd' => $end,
+			];
+		}
 
-		usort(
-			$occurrences,
-			static fn (array $a, array $b): int => ($a['positionStart'] <=> $b['positionStart'])
-		);
-
-		return $occurrences;
-	}//end match()
+	}//end claimHits()
 
 	/**
 	 * Run one term's compiled pattern over the text, returning the raw
@@ -295,23 +315,4 @@ class CustomDictionaryMatchService {
 
 		return '/' . $quoted . '/' . $flags;
 	}//end buildPattern()
-
-	/**
-	 * Whether `[start, end)` overlaps any already-claimed range.
-	 *
-	 * @param int $start Candidate match start.
-	 * @param int $end Candidate match end.
-	 * @param array<int, array{0:int,1:int}> $claimed Already-claimed `[start, end]` pairs.
-	 *
-	 * @return bool True when the candidate overlaps a claimed range.
-	 */
-	private function overlapsClaimed(int $start, int $end, array $claimed): bool {
-		foreach ($claimed as [$claimedStart, $claimedEnd]) {
-			if ($start < $claimedEnd && $end > $claimedStart) {
-				return true;
-			}
-		}
-
-		return false;
-	}//end overlapsClaimed()
 }//end class

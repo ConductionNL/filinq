@@ -31,8 +31,6 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Event;
 
-use OCP\EventDispatcher\Event;
-
 /**
  * Fired when a sequence position linked to a filinq sign-request is rejected.
  *
@@ -44,97 +42,8 @@ use OCP\EventDispatcher\Event;
  *
  * @spec openspec/specs/signing-via-or-approval-with-provider-plugins/spec.md
  */
-class SignerStepRejectedEvent extends Event {
-	/**
-	 * Constructor.
-	 *
-	 * @param string $sequenceUuid UUID of the OR task sequence.
-	 * @param string $taskUuid UUID of the completed task.
-	 * @param int $position Ordinal of the position (1-based).
-	 * @param string|null $userId The completing identity (`task.completedBy`).
-	 * @param string|null $comment The rejection comment (mandatory on OR's
-	 *                             side; null only when the payload lacked it).
-	 * @param string $objectUuid UUID of the filinq signing request.
-	 *
-	 * @return void
-	 *
-	 * @spec openspec/specs/signing-via-or-approval-with-provider-plugins/spec.md
-	 */
-	public function __construct(
-		private readonly string $sequenceUuid,
-		private readonly string $taskUuid,
-		private readonly int $position,
-		private readonly ?string $userId,
-		private readonly ?string $comment,
-		private readonly string $objectUuid,
-	) {
-		parent::__construct();
-
-	}//end __construct()
-
-	/**
-	 * Get the sequence UUID.
-	 *
-	 * @return string UUID of the OR task sequence.
-	 *
-	 * @spec openspec/specs/signing-via-or-approval-with-provider-plugins/spec.md
-	 */
-	public function getSequenceUuid(): string {
-		return $this->sequenceUuid;
-	}//end getSequenceUuid()
-
-	/**
-	 * Get the completed task's UUID.
-	 *
-	 * @return string UUID of the completed task.
-	 *
-	 * @spec openspec/specs/signing-via-or-approval-with-provider-plugins/spec.md
-	 */
-	public function getTaskUuid(): string {
-		return $this->taskUuid;
-	}//end getTaskUuid()
-
-	/**
-	 * Get the position ordinal.
-	 *
-	 * @return int Ordinal of the position (1-based).
-	 *
-	 * @spec openspec/specs/signing-via-or-approval-with-provider-plugins/spec.md
-	 */
-	public function getPosition(): int {
-		return $this->position;
-	}//end getPosition()
-
-	/**
-	 * Get the completing identity.
-	 *
-	 * @return string|null Who rejected the position, when known.
-	 *
-	 * @spec openspec/specs/signing-via-or-approval-with-provider-plugins/spec.md
-	 */
-	public function getUserId(): ?string {
-		return $this->userId;
-	}//end getUserId()
-
-	/**
-	 * Get the rejection comment.
-	 *
-	 * @return string|null The comment, or null when the payload lacked it.
-	 *
-	 * @spec openspec/specs/signing-via-or-approval-with-provider-plugins/spec.md
-	 */
-	public function getComment(): ?string {
-		return $this->comment;
-	}//end getComment()
-
-	/**
-	 * Get the signing-request object UUID.
-	 *
-	 * @return string UUID of the filinq signing request.
-	 *
-	 * @spec openspec/specs/signing-via-or-approval-with-provider-plugins/spec.md
-	 */
-	public function getObjectUuid(): string {
-		return $this->objectUuid;
-	}//end getObjectUuid()
+class SignerStepRejectedEvent extends SignerStepDecisionEvent {
+	// The payload and its getters live in SignerStepDecisionEvent; the
+	// comment is the rejection comment (mandatory on OR's side; null only
+	// when the payload lacked it).
 }//end class

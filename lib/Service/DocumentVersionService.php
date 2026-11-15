@@ -29,6 +29,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use OCA\Filinq\Exception\ComparisonException;
+use OCA\Filinq\Kernel\Contracts\DocumentVersionServiceInterface;
 use OCP\App\IAppManager;
 use OCP\Constants;
 use OCP\Files\File;
@@ -49,7 +50,7 @@ use Throwable;
  *
  * @spec openspec/specs/document-versions/spec.md
  */
-class DocumentVersionService {
+class DocumentVersionService implements DocumentVersionServiceInterface {
 	/**
 	 * Fully-qualified IVersionManager class (resolved lazily so the app
 	 * degrades gracefully when files_versions is disabled).
@@ -197,6 +198,10 @@ class DocumentVersionService {
 	 * @spec openspec/changes/final-documents-frozen/specs/document-versions/spec.md
 	 */
 	public function restoreVersion(int $fileId, int $versionTimestamp): void {
+		// Access first: a file the caller cannot write answers 404 whether or
+		// not it is final, so finality never leaks for an unseen file.
+		$file = $this->resolveFile(fileId: $fileId, requireWrite: true);
+
 		// Restoring replaces the file's content, which is a write like any
 		// other. It is the API's file-replacement path, so it asks the same
 		// service the editors ask.
@@ -205,7 +210,6 @@ class DocumentVersionService {
 			action: 'restore an earlier version of this document'
 		);
 
-		$file = $this->resolveFile(fileId: $fileId, requireWrite: true);
 		$versionManager = $this->resolveVersionManager();
 		$user = $this->requireUser();
 
@@ -239,13 +243,26 @@ class DocumentVersionService {
 	 * @throws ComparisonException 404 when not resolvable or insufficient access.
 	 */
 	private function resolveFile(int $fileId, bool $requireWrite): File {
-		$user = $this->userSession->getUser();
-		if ($user === null || $fileId <= 0) {
+		$node = $this->visibleFile(fileId: $fileId);
+		if ($this->grants(file: $node, requireWrite: $requireWrite) === false) {
+			// No write (or read) access — 404, no existence disclosure.
 			throw new ComparisonException(statusCode: 404, reason: 'not-found', message: 'Document not found.');
 		}
 
-		$userFolder = $this->rootFolder->getUserFolder($user->getUID());
-		$nodes = $userFolder->getById($fileId);
+		return $node;
+	}//end resolveFile()
+
+	/**
+	 * The file with this id in the requesting user's folder.
+	 *
+	 * @param int $fileId The Nextcloud file id.
+	 *
+	 * @return File The file.
+	 *
+	 * @throws ComparisonException 404 when there is no user, no such node, or the node is not a file.
+	 */
+	private function visibleFile(int $fileId): File {
+		$nodes = $this->userNodesById(fileId: $fileId);
 		if (empty($nodes) === true) {
 			throw new ComparisonException(statusCode: 404, reason: 'not-found', message: 'Document not found.');
 		}
@@ -255,18 +272,46 @@ class DocumentVersionService {
 			throw new ComparisonException(statusCode: 404, reason: 'not-found', message: 'Document not found.');
 		}
 
+		return $node;
+
+	}//end visibleFile()
+
+	/**
+	 * The nodes with this id in the requesting user's folder.
+	 *
+	 * @param int $fileId The Nextcloud file id.
+	 *
+	 * @return array<int, mixed> The nodes.
+	 *
+	 * @throws ComparisonException 404 when nobody is signed in or the id is not positive.
+	 */
+	private function userNodesById(int $fileId): array {
+		$user = $this->userSession->getUser();
+		if ($user === null || $fileId <= 0) {
+			throw new ComparisonException(statusCode: 404, reason: 'not-found', message: 'Document not found.');
+		}
+
+		return $this->rootFolder->getUserFolder($user->getUID())->getById($fileId);
+
+	}//end userNodesById()
+
+	/**
+	 * Whether the file's permissions include read, or update when writing.
+	 *
+	 * @param File $file         The file.
+	 * @param bool $requireWrite Whether write (update) permission is required.
+	 *
+	 * @return bool True when every needed permission bit is set.
+	 */
+	private function grants(File $file, bool $requireWrite): bool {
 		$needed = Constants::PERMISSION_READ;
 		if ($requireWrite === true) {
 			$needed = Constants::PERMISSION_UPDATE;
 		}
 
-		if (($node->getPermissions() & $needed) !== $needed) {
-			// No write (or read) access — 404, no existence disclosure.
-			throw new ComparisonException(statusCode: 404, reason: 'not-found', message: 'Document not found.');
-		}
+		return ($file->getPermissions() & $needed) === $needed;
 
-		return $node;
-	}//end resolveFile()
+	}//end grants()
 
 	/**
 	 * Resolve the IVersionManager, degrading gracefully when files_versions is off.
@@ -333,22 +378,50 @@ class DocumentVersionService {
 	 * @return string The author label.
 	 */
 	private function versionAuthor(mixed $version, string $fallback): string {
-		if (method_exists($version, 'getAuthor') === true) {
-			$author = $version->getAuthor();
-			if (is_string($author) === true && $author !== '') {
-				return $author;
-			}
-		}
-
-		if (method_exists($version, 'getUser') === true) {
-			$userObj = $version->getUser();
-			if ($userObj !== null && method_exists($userObj, 'getUID') === true) {
-				return (string)$userObj->getUID();
-			}
-		}
-
-		return $fallback;
+		return $this->declaredAuthor(version: $version) ?? $this->versionUserId(version: $version) ?? $fallback;
 	}//end versionAuthor()
+
+	/**
+	 * The author a version names itself, when it names a non-empty one.
+	 *
+	 * @param mixed $version The IVersion object.
+	 *
+	 * @return string|null The author, or null.
+	 */
+	private function declaredAuthor(mixed $version): ?string {
+		if (method_exists($version, 'getAuthor') === false) {
+			return null;
+		}
+
+		$author = $version->getAuthor();
+		if (is_string($author) === true && $author !== '') {
+			return $author;
+		}
+
+		return null;
+
+	}//end declaredAuthor()
+
+	/**
+	 * The id of the user a version belongs to, when the version exposes one.
+	 *
+	 * @param mixed $version The IVersion object.
+	 *
+	 * @return string|null The user id, or null.
+	 */
+	private function versionUserId(mixed $version): ?string {
+		if (method_exists($version, 'getUser') === false) {
+			return null;
+		}
+
+		$userObj = $version->getUser();
+		if ($userObj === null || method_exists($userObj, 'getUID') === false) {
+			return null;
+		}
+
+		return (string)$userObj->getUID();
+
+	}//end versionUserId()
 
 	/**
 	 * Best-effort size of a version.

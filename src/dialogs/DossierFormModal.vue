@@ -1,10 +1,13 @@
+<!--
+  - SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
 <script>
+import { CnDialogActions } from '@conduction/nextcloud-vue'
 import { translate as t } from '@nextcloud/l10n'
 import {
-	NcButton,
 	NcCheckboxRadioSwitch,
 	NcDialog,
-	NcLoadingIcon,
 	NcNoteCard,
 	NcSelect,
 	NcTextArea,
@@ -35,10 +38,9 @@ function blankForm() {
 export default {
 	name: 'DossierFormModal',
 	components: {
-		NcButton,
+		CnDialogActions,
 		NcCheckboxRadioSwitch,
 		NcDialog,
-		NcLoadingIcon,
 		NcNoteCard,
 		NcSelect,
 		NcTextArea,
@@ -178,18 +180,12 @@ export default {
 		</div>
 
 		<template #actions>
-			<NcButton variant="tertiary" :disabled="saving" @click="cancel">
-				{{ t('filinq', 'Cancel') }}
-			</NcButton>
-			<NcButton
-				variant="primary"
-				:disabled="saving || form.name.trim() === ''"
-				@click="submit">
-				<template v-if="saving" #icon>
-					<NcLoadingIcon :size="20" />
-				</template>
-				{{ t('filinq', 'Create dossier') }}
-			</NcButton>
+			<CnDialogActions
+				:saving="saving"
+				:canSubmit="form.name.trim() !== ''"
+				:confirmLabel="t('filinq', 'Create dossier')"
+				@cancel="cancel"
+				@submit="submit" />
 		</template>
 	</NcDialog>
 </template>

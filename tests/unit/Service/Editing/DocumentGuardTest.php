@@ -13,6 +13,9 @@
  * @version GIT: <git_id>
  *
  * @link https://www.filinq.app
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\Filinq\Tests\Unit\Service\Editing;
@@ -63,11 +66,17 @@ class DocumentGuardTest extends TestCase {
 		$objectService = $this->createMock(ObjectService::class);
 
 		if ($unreachable === true) {
-			$objectService->method('searchObjects')->willThrowException(new RuntimeException('no register'));
+			$objectService->method('searchObjectsBySlug')->willThrowException(new RuntimeException('no register'));
 		} else {
-			$objectService->method('searchObjects')->willReturnCallback(
-				static function (array $query) use ($bySchema): array {
-					return ($bySchema[($query['@self']['schema'] ?? '')] ?? []);
+			// 🔴 `searchObjectsBySlug`, not `searchObjects`. The guard passes
+			// the slugs `filinq` and `signingRequest` / `anonymizationLink`,
+			// and `searchObjects` answers a slug with zero rows and no error.
+			// Doubling `searchObjects` is why this suite went green while
+			// signatureRefusal(), whose docblock says FAILS CLOSED, let every
+			// document under signature through.
+			$objectService->method('searchObjectsBySlug')->willReturnCallback(
+				static function (string $registerSlug, string $schemaSlug, array $filters) use ($bySchema): array {
+					return ($bySchema[$schemaSlug] ?? []);
 				}
 			);
 		}

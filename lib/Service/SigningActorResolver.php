@@ -103,7 +103,7 @@ class SigningActorResolver {
 		$objectService = $this->settingsService->getObjectService();
 		$signerRegister = $this->config->getValueString('filinq', 'signerRecord_register', '');
 		$signerSchema = $this->config->getValueString('filinq', 'signerRecord_schema', '');
-		$signerObject = $objectService->find(id: $signerId, register: $signerRegister, schema: $signerSchema);
+		$signerObject = $objectService->find(id: $signerId, register: $signerRegister, schema: $signerSchema, _rbac: false);
 
 		if ($signerObject === null) {
 			throw new RuntimeException('Signer record not found: ' . $signerId);
@@ -197,7 +197,7 @@ class SigningActorResolver {
 		$signerSchema = $this->config->getValueString('filinq', 'signerRecord_schema', '');
 
 		foreach ($signerIds as $signerId) {
-			$signerObj = $objectService->find(id: $signerId, register: $signerRegister, schema: $signerSchema);
+			$signerObj = $objectService->find(id: $signerId, register: $signerRegister, schema: $signerSchema, _rbac: false);
 			$signer = $this->toArray(object: $signerObj);
 
 			if (($signer['userId'] ?? '') === $userId && ($signer['status'] ?? '') === 'PENDING') {
@@ -207,6 +207,116 @@ class SigningActorResolver {
 
 		return null;
 	}//end findSignerForUser()
+
+	/**
+	 * Is the user a signer of this request, by its signer records?
+	 *
+	 * `signerIds` holds signer record ids, never user ids, so membership is
+	 * decided by the `userId` on the records the request names.
+	 *
+	 * @param string        $requestId The signing request id.
+	 * @param array<string> $signerIds The signer record ids the request names.
+	 * @param string        $userId    The user to look for.
+	 *
+	 * @return bool True when one of the request's signer records belongs to the user.
+	 *
+	 * @spec openspec/specs/document-signing/spec.md
+	 */
+	public function isSignerOf(string $requestId, array $signerIds, string $userId): bool {
+		if ($userId === '') {
+			return false;
+		}
+
+		$objectService = $this->settingsService->getObjectService();
+		$signerRegister = $this->config->getValueString('filinq', 'signerRecord_register', '');
+		$signerSchema = $this->config->getValueString('filinq', 'signerRecord_schema', '');
+
+		foreach ($signerIds as $signerId) {
+			$signer = $this->toArray(
+				object: $objectService->find(id: (string)$signerId, register: $signerRegister, schema: $signerSchema, _rbac: false)
+			);
+
+			if (($signer['userId'] ?? '') === $userId && (string)($signer['signingRequestId'] ?? '') === $requestId) {
+				return true;
+			}
+		}
+
+		return false;
+
+	}//end isSignerOf()
+
+	/**
+	 * May the user read this request: are they its initiator or one of its signers?
+	 *
+	 * @param array<string, mixed> $request   The signing request.
+	 * @param string               $requestId Its id.
+	 * @param string               $userId    The user asking; '' reads unscoped.
+	 *
+	 * @return bool True for an unscoped read, the initiator or a signer.
+	 *
+	 * @spec openspec/specs/document-signing/spec.md
+	 */
+	public function mayRead(array $request, string $requestId, string $userId): bool {
+		if ($userId === '' || ($request['initiatorUserId'] ?? '') === $userId) {
+			return true;
+		}
+
+		return $this->isSignerOf(requestId: $requestId, signerIds: (array)($request['signerIds'] ?? []), userId: $userId);
+
+	}//end mayRead()
+
+	/**
+	 * Does a listed request belong in the user's list?
+	 *
+	 * @param array<string, mixed> $request          The signing request.
+	 * @param string               $userId           The user asking; '' lists unscoped.
+	 * @param list<string>         $signedRequestIds The requests the user signs, from requestIdsForSigner().
+	 *
+	 * @return bool True for an unscoped list, the initiator or a signer.
+	 *
+	 * @spec openspec/specs/document-signing/spec.md
+	 */
+	public function isListedFor(array $request, string $userId, array $signedRequestIds): bool {
+		if ($userId === '' || ($request['initiatorUserId'] ?? '') === $userId) {
+			return true;
+		}
+
+		return in_array((string)($request['id'] ?? ($request['uuid'] ?? '')), $signedRequestIds, true);
+
+	}//end isListedFor()
+
+	/**
+	 * The ids of every signing request the user is a signer on, in one search.
+	 *
+	 * @param string $userId The signer.
+	 *
+	 * @return list<string> The signing request ids named by the user's signer records.
+	 *
+	 * @spec openspec/specs/document-signing/spec.md
+	 */
+	public function requestIdsForSigner(string $userId): array {
+		if ($userId === '') {
+			return [];
+		}
+
+		$objectService = $this->settingsService->getObjectService();
+		$query = $objectService->buildSearchQuery(
+			requestParams: ['userId' => $userId, '_limit' => 1000],
+			register: $this->config->getValueString('filinq', 'signerRecord_register', ''),
+			schema: $this->config->getValueString('filinq', 'signerRecord_schema', '')
+		);
+
+		$ids = [];
+		foreach (($objectService->searchObjectsPaginated(query: $query, _rbac: false)['results'] ?? []) as $result) {
+			$signer = $this->toArray(object: $result);
+			if (($signer['userId'] ?? '') === $userId && (string)($signer['signingRequestId'] ?? '') !== '') {
+				$ids[] = (string)$signer['signingRequestId'];
+			}
+		}
+
+		return array_values(array_unique($ids));
+
+	}//end requestIdsForSigner()
 
 	/**
 	 * Build the audit `metadata` for a portal-originated act.

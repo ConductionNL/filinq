@@ -34,6 +34,12 @@ All tasks are `[filinq]`. Estimates: S = half-day.
   green in-process unit tests.
   - **Acceptance:** The Newman collection includes the case and it passes
     against a seeded dossier fixture.
+  - Written 2026-10-09: `tests/integration/filinq-api-negative.postman_collection.json`
+    folder "Dossier" POSTs an unknown dossier and asserts a JSON 403, never a 500.
+    Writing it showed the controller answered 500 for an unknown or unreadable
+    dossier too, so a broken route and a refused dossier looked the same;
+    `DossierController` now answers 403 for both (tests/unit/Controller/DossierControllerTest.php).
+    (not run: needs a running instance with this branch; CI's Newman job runs the collection)
 - [x] R-2.2 Confirm `tests/unit/Controller/DossierControllerTest.php` still
   passes unchanged (it already calls `generateGrondslagenSummary()` directly
   and needs no edits).

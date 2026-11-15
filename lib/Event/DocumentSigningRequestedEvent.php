@@ -79,11 +79,22 @@ class DocumentSigningRequestedEvent extends Event {
 	 * @param SigningProvenance $provenance Who asked, and about which object.
 	 * @param string $subjectLabel Human display label for the subject
 	 * @param string $documentReference NC Files file id / path or document content reference
-	 * @param array<int, mixed> $signers Ordered signers list (userId/displayName/email/order)
+	 * @param array<int, mixed> $signers Ordered signers list (userId/displayName/email/order).
+	 *                                   A learner-facing consumer (learniq OPP and POK,
+	 *                                   portaliq toestemmingsformulieren) may add, per
+	 *                                   entry: `birthDate` (YYYY-MM-DD), `role`
+	 *                                   (signer|guardian), `guardianFor` (the userId or
+	 *                                   email of another entry), `guardianAct`
+	 *                                   (co-sign|consent), `consentStatement` and
+	 *                                   `guardianRef`. A signer under the guardian consent
+	 *                                   age then signs only with a guardian beside them
+	 *                                   (signer-identity-rails REQ-DDSIR-008 to 011).
 	 * @param string $signatureLevel Signature level (SES|AdES|QES)
 	 * @param string $signingMode Signing mode (sequential|parallel)
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function __construct(
 		private readonly SigningProvenance $provenance,

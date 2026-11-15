@@ -15,6 +15,9 @@
  * @link https://www.filinq.app
  *
  * @spec openspec/changes/final-documents-frozen/specs/document-versions/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\Filinq\Tests\Unit\Service;
@@ -87,7 +90,7 @@ class FinalDocumentUnfreezeServiceTest extends TestCase {
 		$this->written = [];
 
 		$objectService = $this->createMock(ObjectService::class);
-		$objectService->method('searchObjects')->willReturn($rows);
+		$objectService->method('searchObjectsBySlug')->willReturn($rows);
 		$objectService->method('saveObject')->willReturnCallback(
 			function (...$arguments): array {
 				$object = ($arguments[0] ?? []);
@@ -147,7 +150,7 @@ class FinalDocumentUnfreezeServiceTest extends TestCase {
 		$service = $this->service(holdsRight: false, rows: [$this->finalRecord()]);
 
 		$this->expectException(RuntimeException::class);
-		$this->expectExceptionMessageMatches('/docudesk-final-document-admins/');
+		$this->expectExceptionMessageMatches('/filinq-final-document-admins/');
 
 		$service->unfreeze(fileId: 4711, reason: 'The besluit named the wrong street');
 

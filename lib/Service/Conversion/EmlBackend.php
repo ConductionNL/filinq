@@ -3,6 +3,9 @@
 /**
  * EML Conversion Backend
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Cascade slot for EML (`message/rfc822`) inputs. EML is anonymised by
  * OpenRegister (which redacts headers, body, attachment bytes and inline
  * images) and assembled into a PDF/A-3b by Filinq's
@@ -32,9 +35,6 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -43,6 +43,8 @@ namespace OCA\Filinq\Service\Conversion;
 
 use OCA\Filinq\Exception\ConversionFailedException;
 use OCA\Filinq\Service\EmlPdfAssemblyService;
+use OCA\Filinq\Service\RaisesEmlStructureFailures;
+use OCA\Filinq\Service\StripsFileExtension;
 use OCP\App\IAppManager;
 use OCP\Files\File;
 use OCP\IAppConfig;
@@ -64,16 +66,8 @@ use Throwable;
  * @link      https://www.filinq.app
  */
 class EmlBackend implements ConversionBackendInterface {
-
-	/**
-	 * App config key for the tenant observability flag.
-	 */
-	private const ENABLED_KEY = 'filinq.conversion.backends.eml_enabled';
-
-	/**
-	 * App identifier used for IAppConfig reads/writes.
-	 */
-	private const APP_ID = 'filinq';
+	use RaisesEmlStructureFailures;
+	use StripsFileExtension;
 
 	/**
 	 * OpenRegister FileService FQCN — exposes anonymizeEmlStructured().
@@ -109,30 +103,21 @@ class EmlBackend implements ConversionBackendInterface {
 	}//end name()
 
 	/**
-	 * Available iff the tenant flag is set AND OpenRegister exposes its
-	 * anonymise-EML API (`anonymizeEmlStructured`) AND the assembly service
-	 * is present. The tenant flag is read for observability and lets tenants
-	 * force fall-through.
+	 * Never available on the OpenRegister of today.
+	 *
+	 * OpenRegister exposes no anonymise-EML API: its FileService has no
+	 * `anonymizeEmlStructured`, and its structured parser
+	 * (`TextExtractionService::parseEmlStructured`) redacts nothing. Without
+	 * the anonymise API this backend has nothing safe to assemble, so it
+	 * reports itself unavailable outright, and the cascade falls through
+	 * (422 for EML), as design D9 requires: never un-redacted content.
+	 * Earlier this was a runtime method_exists() probe that always came out
+	 * false on OpenRegister main; the result is the same, now stated.
 	 *
 	 * @return bool
 	 */
 	public function isAvailable(): bool {
-		$flag = $this->appConfig->getValueString(self::APP_ID, self::ENABLED_KEY, 'true');
-		if ($flag === 'false') {
-			return false;
-		}
-
-		if (in_array('openregister', $this->appManager->getInstalledApps(), true) === false) {
-			return false;
-		}
-
-		try {
-			$fileService = $this->container->get(self::OR_FILE_SERVICE);
-		} catch (Throwable $e) {
-			return false;
-		}
-
-		return method_exists($fileService, 'anonymizeEmlStructured');
+		return false;
 	}//end isAvailable()
 
 	/**
@@ -163,24 +148,11 @@ class EmlBackend implements ConversionBackendInterface {
 	 * @return File Newly written PDF file node.
 	 *
 	 * @throws ConversionFailedException On OR API failure or assembly failure.
+	 *
+	 * @spec openspec/specs/pdf-conversion/spec.md
 	 */
 	public function convert(File $source): File {
-		try {
-			$fileService = $this->container->get(self::OR_FILE_SERVICE);
-		} catch (Throwable $e) {
-			throw new ConversionFailedException(
-				message: 'EML backend could not resolve OpenRegister FileService: ' . $e->getMessage(),
-				attempts: [
-					[
-						'name' => $this->name(),
-						'available' => false,
-						'supports' => true,
-						'reason' => 'OpenRegister FileService unavailable',
-					],
-				],
-				previous: $e
-			);
-		}
+		$fileService = $this->fileService();
 
 		try {
 			$structure = $fileService->anonymizeEmlStructured($source, [], 'document', null);
@@ -190,36 +162,42 @@ class EmlBackend implements ConversionBackendInterface {
 				'[EmlBackend] OR anonymizeEmlStructured failed; no raw-parse fallback',
 				['source' => $source->getPath(), 'exception' => get_class($e), 'message' => $e->getMessage()]
 			);
-			throw new ConversionFailedException(
-				message: 'OpenRegister anonymise-EML API failed: ' . $e->getMessage(),
-				attempts: [
-					[
-						'name' => $this->name(),
-						'available' => true,
-						'supports' => true,
-						'reason' => 'anonymizeEmlStructured threw: ' . $e->getMessage(),
-					],
-				],
-				previous: $e
-			);
-		}//end try
-
-		if (is_object($structure) === false) {
-			throw new ConversionFailedException(
-				message: 'OpenRegister anonymise-EML API returned no structure.',
-				attempts: [
-					[
-						'name' => $this->name(),
-						'available' => true,
-						'supports' => true,
-						'reason' => 'anonymizeEmlStructured returned non-object',
-					],
-				]
-			);
+			throw $this->emlApiFailed(error: $e);
 		}
 
-		$pdfBytes = $this->assembly->assemble(result: $structure, sourceFilename: $source->getName());
+		$pdfBytes = $this->assembly->assemble(result: $this->requireEmlStructure(structure: $structure), sourceFilename: $source->getName());
 
+		return $this->writeBesideSource(source: $source, pdfBytes: $pdfBytes);
+	}//end convert()
+
+	/**
+	 * OpenRegister's FileService, or a typed failure when it cannot be resolved.
+	 *
+	 * @return mixed The FileService.
+	 *
+	 * @throws ConversionFailedException When the container cannot provide it.
+	 */
+	private function fileService(): mixed {
+		try {
+			return $this->container->get(self::OR_FILE_SERVICE);
+		} catch (Throwable $e) {
+			throw new ConversionFailedException(
+				message: 'EML backend could not resolve OpenRegister FileService: ' . $e->getMessage(),
+				attempts: [$this->emlAttempt(available: false, reason: 'OpenRegister FileService unavailable')],
+				previous: $e
+			);
+		}
+	}//end fileService()
+
+	/**
+	 * Write the PDF beside the source as `<name>_anonymized.pdf`, replacing an earlier one.
+	 *
+	 * @param File $source The EML file.
+	 * @param string $pdfBytes The assembled PDF.
+	 *
+	 * @return File The written PDF.
+	 */
+	private function writeBesideSource(File $source, string $pdfBytes): File {
 		$parent = $source->getParent();
 		$outputName = $this->stripExtension(name: $source->getName()) . '_anonymized.pdf';
 		if ($parent->nodeExists($outputName) === true) {
@@ -227,21 +205,5 @@ class EmlBackend implements ConversionBackendInterface {
 		}
 
 		return $parent->newFile($outputName, $pdfBytes);
-	}//end convert()
-
-	/**
-	 * Return $name without its trailing `.ext`.
-	 *
-	 * @param string $name File name with extension.
-	 *
-	 * @return string
-	 */
-	private function stripExtension(string $name): string {
-		$dotPos = strrpos($name, '.');
-		if ($dotPos === false) {
-			return $name;
-		}
-
-		return substr($name, 0, $dotPos);
-	}//end stripExtension()
+	}//end writeBesideSource()
 }//end class

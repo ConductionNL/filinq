@@ -15,6 +15,9 @@
  * @link https://www.filinq.app
  *
  * @spec openspec/changes/final-documents-frozen/specs/document-versions/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\Filinq\Tests\Unit\Service;
@@ -76,9 +79,9 @@ class FinalDocumentServiceTest extends TestCase {
 
 		$objectService = $this->createMock(ObjectService::class);
 		if ($unreachable === true) {
-			$objectService->method('searchObjects')->willThrowException(new RuntimeException('no register'));
+			$objectService->method('searchObjectsBySlug')->willThrowException(new RuntimeException('no register'));
 		} else {
-			$objectService->method('searchObjects')->willReturnCallback(fn (): array => $this->rows);
+			$objectService->method('searchObjectsBySlug')->willReturnCallback(fn (): array => $this->rows);
 		}
 
 		$objectService->method('saveObject')->willReturnCallback(

@@ -1,0 +1,630 @@
+{
+	"generateContractDocument": {
+		"empty": {
+			"title": "Generate a document",
+			"noClose": false,
+			"text": "The template is filled in with this contract and saved as a PDF in your files. The contract keeps a link to it.",
+			"fields": [
+				{
+					"type": "x-ncselect",
+					"label": "Template",
+					"disabled": false
+				}
+			],
+			"buttons": [
+				{
+					"label": "Cancel",
+					"variant": null,
+					"disabled": false,
+					"busyIcon": false
+				},
+				{
+					"label": "Generate",
+					"variant": "primary",
+					"disabled": true,
+					"busyIcon": false
+				}
+			]
+		},
+		"filled": {
+			"title": "Generate a document",
+			"noClose": false,
+			"text": "The template is filled in with this contract and saved as a PDF in your files. The contract keeps a link to it.",
+			"fields": [
+				{
+					"type": "x-ncselect",
+					"label": "Template",
+					"disabled": false
+				}
+			],
+			"buttons": [
+				{
+					"label": "Cancel",
+					"variant": null,
+					"disabled": false,
+					"busyIcon": false
+				},
+				{
+					"label": "Generate",
+					"variant": "primary",
+					"disabled": false,
+					"busyIcon": false
+				}
+			]
+		},
+		"callsBeforeClick": [["contracts", "listTemplates"]],
+		"busy": {
+			"view": {
+				"title": "Generate a document",
+				"noClose": true,
+				"text": "The template is filled in with this contract and saved as a PDF in your files. The contract keeps a link to it.",
+				"fields": [
+					{
+						"type": "x-ncselect",
+						"label": "Template",
+						"disabled": false
+					}
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": true,
+						"busyIcon": false
+					},
+					{
+						"label": "Generate",
+						"variant": "primary",
+						"disabled": true,
+						"busyIcon": true
+					}
+				]
+			},
+			"calls": [
+				["contracts", "generateDocument", "t-1", "c-1", "Huurcontract"]
+			],
+			"emitted": []
+		},
+		"done": {
+			"view": {
+				"title": "Generate a document",
+				"noClose": false,
+				"text": "The template is filled in with this contract and saved as a PDF in your files. The contract keeps a link to it.",
+				"fields": [
+					{
+						"type": "x-ncselect",
+						"label": "Template",
+						"disabled": false
+					}
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Generate",
+						"variant": "primary",
+						"disabled": false,
+						"busyIcon": false
+					}
+				]
+			},
+			"emitted": [["generated", "f-9"]]
+		},
+		"refused": {
+			"view": {
+				"title": "Generate a document",
+				"noClose": false,
+				"text": "The template is filled in with this contract and saved as a PDF in your files. The contract keeps a link to it.No rights",
+				"fields": [
+					{
+						"type": "x-ncselect",
+						"label": "Template",
+						"disabled": false
+					}
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Generate",
+						"variant": "primary",
+						"disabled": false,
+						"busyIcon": false
+					}
+				]
+			},
+			"emitted": []
+		},
+		"cancel": {
+			"emitted": [["close"]]
+		}
+	},
+	"terminateContract": {
+		"empty": {
+			"title": "End contract",
+			"noClose": false,
+			"text": "Ending \"{title}\" early is final. The reason is kept on the contract. {\"title\":\"Huurcontract\"}",
+			"fields": [
+				{
+					"type": "x-nctextarea",
+					"label": "Why does the contract end?",
+					"disabled": false
+				}
+			],
+			"buttons": [
+				{
+					"label": "Cancel",
+					"variant": null,
+					"disabled": false,
+					"busyIcon": false
+				},
+				{
+					"label": "End contract",
+					"variant": "warning",
+					"disabled": true,
+					"busyIcon": false
+				}
+			]
+		},
+		"filled": {
+			"title": "End contract",
+			"noClose": false,
+			"text": "Ending \"{title}\" early is final. The reason is kept on the contract. {\"title\":\"Huurcontract\"}",
+			"fields": [
+				{
+					"type": "x-nctextarea",
+					"label": "Why does the contract end?",
+					"disabled": false
+				}
+			],
+			"buttons": [
+				{
+					"label": "Cancel",
+					"variant": null,
+					"disabled": false,
+					"busyIcon": false
+				},
+				{
+					"label": "End contract",
+					"variant": "warning",
+					"disabled": false,
+					"busyIcon": false
+				}
+			]
+		},
+		"callsBeforeClick": [],
+		"busy": {
+			"view": {
+				"title": "End contract",
+				"noClose": true,
+				"text": "Ending \"{title}\" early is final. The reason is kept on the contract. {\"title\":\"Huurcontract\"}",
+				"fields": [
+					{
+						"type": "x-nctextarea",
+						"label": "Why does the contract end?",
+						"disabled": false
+					}
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": true,
+						"busyIcon": false
+					},
+					{
+						"label": "End contract",
+						"variant": "warning",
+						"disabled": true,
+						"busyIcon": true
+					}
+				]
+			},
+			"calls": [["contracts", "terminateContract", "c-1", "Moved out"]],
+			"emitted": []
+		},
+		"done": {
+			"view": {
+				"title": "End contract",
+				"noClose": false,
+				"text": "Ending \"{title}\" early is final. The reason is kept on the contract. {\"title\":\"Huurcontract\"}",
+				"fields": [
+					{
+						"type": "x-nctextarea",
+						"label": "Why does the contract end?",
+						"disabled": false
+					}
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "End contract",
+						"variant": "warning",
+						"disabled": false,
+						"busyIcon": false
+					}
+				]
+			},
+			"emitted": [
+				[
+					"terminated",
+					{
+						"id": "c-1"
+					}
+				]
+			]
+		},
+		"refused": {
+			"view": {
+				"title": "End contract",
+				"noClose": false,
+				"text": "Ending \"{title}\" early is final. The reason is kept on the contract. {\"title\":\"Huurcontract\"}No rights",
+				"fields": [
+					{
+						"type": "x-nctextarea",
+						"label": "Why does the contract end?",
+						"disabled": false
+					}
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "End contract",
+						"variant": "warning",
+						"disabled": false,
+						"busyIcon": false
+					}
+				]
+			},
+			"emitted": []
+		},
+		"cancel": {
+			"emitted": [["close"]]
+		}
+	},
+	"intakeAssign": {
+		"empty": {
+			"title": "Assign to a record",
+			"noClose": false,
+			"text": "Pick the record \"{subject}\" belongs to. {\"subject\":\"Brief\"}",
+			"fields": [
+				{
+					"type": "x-ncselect",
+					"label": "Record",
+					"disabled": true
+				}
+			],
+			"buttons": [
+				{
+					"label": "Cancel",
+					"variant": null,
+					"disabled": false,
+					"busyIcon": false
+				},
+				{
+					"label": "Assign",
+					"variant": "primary",
+					"disabled": true,
+					"busyIcon": false
+				}
+			]
+		},
+		"filled": {
+			"title": "Assign to a record",
+			"noClose": false,
+			"text": "Pick the record \"{subject}\" belongs to. {\"subject\":\"Brief\"}",
+			"fields": [
+				{
+					"type": "x-ncselect",
+					"label": "Record",
+					"disabled": true
+				}
+			],
+			"buttons": [
+				{
+					"label": "Cancel",
+					"variant": null,
+					"disabled": false,
+					"busyIcon": false
+				},
+				{
+					"label": "Assign",
+					"variant": "primary",
+					"disabled": false,
+					"busyIcon": false
+				}
+			]
+		},
+		"callsBeforeClick": [],
+		"busy": {
+			"view": {
+				"title": "Assign to a record",
+				"noClose": false,
+				"text": "Pick the record \"{subject}\" belongs to. {\"subject\":\"Brief\"}",
+				"fields": [
+					{
+						"type": "x-ncselect",
+						"label": "Record",
+						"disabled": true
+					}
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Assign",
+						"variant": "primary",
+						"disabled": false,
+						"busyIcon": false
+					}
+				]
+			},
+			"calls": [],
+			"emitted": [
+				[
+					"confirm",
+					{
+						"register": "r",
+						"schema": "s",
+						"id": "rec-1"
+					}
+				]
+			]
+		},
+		"done": {
+			"view": {
+				"title": "Assign to a record",
+				"noClose": false,
+				"text": "Pick the record \"{subject}\" belongs to. {\"subject\":\"Brief\"}",
+				"fields": [
+					{
+						"type": "x-ncselect",
+						"label": "Record",
+						"disabled": true
+					}
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Assign",
+						"variant": "primary",
+						"disabled": false,
+						"busyIcon": false
+					}
+				]
+			},
+			"emitted": []
+		},
+		"refused": {
+			"view": {
+				"title": "Assign to a record",
+				"noClose": false,
+				"text": "Pick the record \"{subject}\" belongs to. {\"subject\":\"Brief\"}",
+				"fields": [
+					{
+						"type": "x-ncselect",
+						"label": "Record",
+						"disabled": true
+					}
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Assign",
+						"variant": "primary",
+						"disabled": false,
+						"busyIcon": false
+					}
+				]
+			},
+			"emitted": []
+		},
+		"cancel": {
+			"emitted": [["cancel"]]
+		},
+		"parentBusy": {
+			"title": "Assign to a record",
+			"noClose": false,
+			"text": "Pick the record \"{subject}\" belongs to. {\"subject\":\"Brief\"}Refused",
+			"fields": [
+				{
+					"type": "x-ncselect",
+					"label": "Record",
+					"disabled": true
+				}
+			],
+			"buttons": [
+				{
+					"label": "Cancel",
+					"variant": null,
+					"disabled": true,
+					"busyIcon": false
+				},
+				{
+					"label": "Assign",
+					"variant": "primary",
+					"disabled": true,
+					"busyIcon": true
+				}
+			]
+		}
+	},
+	"finalDocumentReason": {
+		"empty": {
+			"title": "Make final",
+			"noClose": false,
+			"text": "Why?",
+			"fields": [
+				{
+					"type": "x-nctextfield",
+					"label": "Reason",
+					"disabled": false
+				}
+			],
+			"buttons": [
+				{
+					"label": "Cancel",
+					"variant": null,
+					"disabled": false,
+					"busyIcon": false
+				},
+				{
+					"label": "Freeze",
+					"variant": "primary",
+					"disabled": true,
+					"busyIcon": false
+				}
+			]
+		},
+		"filled": {
+			"title": "Make final",
+			"noClose": false,
+			"text": "Why?",
+			"fields": [
+				{
+					"type": "x-nctextfield",
+					"label": "Reason",
+					"disabled": false
+				}
+			],
+			"buttons": [
+				{
+					"label": "Cancel",
+					"variant": null,
+					"disabled": false,
+					"busyIcon": false
+				},
+				{
+					"label": "Freeze",
+					"variant": "primary",
+					"disabled": false,
+					"busyIcon": false
+				}
+			]
+		},
+		"callsBeforeClick": [],
+		"busy": {
+			"view": {
+				"title": "Make final",
+				"noClose": false,
+				"text": "Why?",
+				"fields": [
+					{
+						"type": "x-nctextfield",
+						"label": "Reason",
+						"disabled": false
+					}
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Freeze",
+						"variant": "primary",
+						"disabled": false,
+						"busyIcon": false
+					}
+				]
+			},
+			"calls": [],
+			"emitted": [["confirm", "Signed"]]
+		},
+		"done": {
+			"view": {
+				"title": "Make final",
+				"noClose": false,
+				"text": "Why?",
+				"fields": [
+					{
+						"type": "x-nctextfield",
+						"label": "Reason",
+						"disabled": false
+					}
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Freeze",
+						"variant": "primary",
+						"disabled": false,
+						"busyIcon": false
+					}
+				]
+			},
+			"emitted": []
+		},
+		"refused": {
+			"view": {
+				"title": "Make final",
+				"noClose": false,
+				"text": "Why?",
+				"fields": [
+					{
+						"type": "x-nctextfield",
+						"label": "Reason",
+						"disabled": false
+					}
+				],
+				"buttons": [
+					{
+						"label": "Cancel",
+						"variant": null,
+						"disabled": false,
+						"busyIcon": false
+					},
+					{
+						"label": "Freeze",
+						"variant": "primary",
+						"disabled": false,
+						"busyIcon": false
+					}
+				]
+			},
+			"emitted": []
+		},
+		"cancel": {
+			"emitted": [["cancel"]]
+		}
+	}
+}

@@ -30,6 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Event;
 
+use OCA\Filinq\Event\Support\RequestOrigin;
 use OCP\EventDispatcher\Event;
 
 /**
@@ -47,6 +48,20 @@ use OCP\EventDispatcher\Event;
  */
 class GlAccountSuggestedEvent extends Event {
 	/**
+	 * App id of the requester.
+	 *
+	 * @var string
+	 */
+	private readonly string $sourceApp;
+
+	/**
+	 * Nextcloud user id that requested the.
+	 *
+	 * @var string
+	 */
+	private readonly string $requestedBy;
+
+	/**
 	 * Construct the suggestion event.
 	 *
 	 * @param string $extractionId The `financialExtraction` object id.
@@ -57,9 +72,7 @@ class GlAccountSuggestedEvent extends Event {
 	 * @param array<int, array<string, mixed>> $suggestedAccounts Ranked candidate accounts (each `{code,
 	 *                                                            label, confidence, rationale}`).
 	 * @param string $source `history`|`keyword-rule`|`none`.
-	 * @param string $sourceApp App id of the requester.
-	 * @param string $requestedBy Nextcloud user id that requested the
-	 *                            suggestion.
+	 * @param RequestOrigin $origin The requesting app and user
 	 *
 	 * @return void
 	 */
@@ -69,10 +82,11 @@ class GlAccountSuggestedEvent extends Event {
 		private readonly ?string $identityType,
 		private readonly array $suggestedAccounts,
 		private readonly string $source,
-		private readonly string $sourceApp,
-		private readonly string $requestedBy,
+		RequestOrigin $origin,
 	) {
 		parent::__construct();
+		$this->sourceApp = $origin->sourceApp;
+		$this->requestedBy = $origin->requestedBy;
 
 	}//end __construct()
 

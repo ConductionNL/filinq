@@ -117,7 +117,7 @@ Reads and writes go through OpenRegister with its RBAC engaged, so whatever the
 `dossier` schema's cascade declares is what is enforced. That cascade currently
 declares `read: ["authenticated"]`, so the read guard resolves to an existence
 test for any authenticated user in the organisation. `update` and `delete` are
-restricted to `docudesk-policy-admins` plus OpenRegister's owner bypass, so an
+restricted to `filinq-policy-admins` plus OpenRegister's owner bypass, so an
 operator can always manage the dossiers they created.
 
 The **file** half is real regardless: every document listing runs through the
