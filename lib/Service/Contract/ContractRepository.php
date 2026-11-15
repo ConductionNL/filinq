@@ -29,6 +29,9 @@ use OCA\Filinq\Kernel\Contracts\ContractRepositoryInterface;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\IntakeRepository;
 use OCA\Filinq\Service\ReadsStoredObjectRows;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use RuntimeException;
 use Throwable;
 
@@ -76,8 +79,7 @@ class ContractRepository implements ContractRepositoryInterface {
 		try {
 			$object = $this->objectResolver->resolve()->find(
 				id: $uuid,
-				register: IntakeRepository::REGISTER,
-				schema: self::SCHEMA
+				options: new ObjectFindOptions(register: IntakeRepository::REGISTER, schema: self::SCHEMA)
 			);
 		} catch (Throwable) {
 			// Not found and not allowed read the same, so nobody learns a contract exists.
@@ -116,7 +118,13 @@ class ContractRepository implements ContractRepositoryInterface {
 		}
 
 		try {
-			$stored = $this->objectResolver->resolve()->saveObject(...$arguments);
+			$stored = $this->objectResolver->resolve()->saveObject(
+				object: $arguments['object'],
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: ($arguments['register'] ?? null), schema: ($arguments['schema'] ?? null)),
+					uuid: $arguments['uuid'] ?? null
+				)
+			);
 		} catch (Throwable $e) {
 			throw new RuntimeException(
 				message: 'The contract could not be saved: ' . $e->getMessage(),

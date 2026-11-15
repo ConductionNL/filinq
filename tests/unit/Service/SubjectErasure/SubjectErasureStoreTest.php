@@ -24,6 +24,8 @@ use OCA\OpenRegister\Service\ObjectService;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
+use OCA\Filinq\Tests\Support\LegacyObjectArgs;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 /**
  * Reading, finding and saving erasure rows in the register.
@@ -121,7 +123,15 @@ class SubjectErasureStoreTest extends TestCase {
 		$stored->method('getObject')->willReturn(['status' => 'done', 'extra' => 1]);
 		$stored->method('getUuid')->willReturn('u-1');
 		$this->objects->expects($this->once())->method('saveObject')
-			->with(['status' => 'open', 'note' => 'n'], 'filinq', SubjectErasureStore::REQUEST, 'u-1', false, true, true)
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+				'object' => ['status' => 'open', 'note' => 'n'],
+				'register' => 'filinq',
+				'schema' => SubjectErasureStore::REQUEST,
+				'uuid' => 'u-1',
+				'_rbac' => false,
+				'_multitenancy' => true,
+				'_unowned' => true,
+			]))
 			->willReturn($stored);
 
 		$saved = $this->store()->save(
@@ -139,7 +149,12 @@ class SubjectErasureStoreTest extends TestCase {
 	 */
 	public function testSaveRefusesAStoredRowWithoutUuid(): void {
 		$this->objects->expects($this->once())->method('saveObject')
-			->with(['status' => 'new'], 'filinq', SubjectErasureStore::CERTIFICATE, null)
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+				'object' => ['status' => 'new'],
+				'register' => 'filinq',
+				'schema' => SubjectErasureStore::CERTIFICATE,
+				'uuid' => null,
+			]))
 			->willReturn(['status' => 'new']);
 
 		$this->expectException(RuntimeException::class);
@@ -170,7 +185,9 @@ class SubjectErasureStoreTest extends TestCase {
 	public function testStoredRequest(): void {
 		$entity = $this->createMock(ObjectEntity::class);
 		$this->objects->method('find')->willReturnCallback(
-			static function (string $id, string $register, string $schema, bool $_rbac, bool $_multitenancy) use ($entity) {
+			static function (string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true) use ($entity) {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				if ($register !== 'filinq' || $schema !== SubjectErasureStore::REQUEST || $_rbac !== false || $_multitenancy !== false) {
 					return null;
 				}

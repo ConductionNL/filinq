@@ -48,6 +48,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\EventListener;
 
 use OCA\Filinq\Kernel\Contracts\SettingsServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use Psr\Log\LoggerInterface;
@@ -501,8 +502,7 @@ class SigningTaskListener implements IEventListener {
 		try {
 			$object = $objectService->find(
 				id: $objectUuid,
-				register: $binding['register'],
-				schema: $binding['schema'],
+				options: new ObjectFindOptions(register: $binding['register'], schema: $binding['schema']),
 				_rbac: false
 			);
 		} catch (Throwable $e) {
