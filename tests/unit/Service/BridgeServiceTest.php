@@ -213,4 +213,70 @@ class BridgeServiceTest extends TestCase {
 		$this->expectExceptionCode(404);
 		$service->retry('gone');
 	}//end testAnUnknownDocumentIsNotFound()
+
+	/**
+	 * A document without a status names itself statusless in the refusal and is not saved.
+	 *
+	 * @return void
+	 */
+	public function testAStatuslessDocumentIsRefused(): void {
+		$service = $this->service();
+		$this->objects->expects($this->never())->method('saveObject');
+
+		$this->expectException(InvalidArgumentException::class);
+		$this->expectExceptionMessage('A statusless document cannot be moved to in_processing.');
+		$service->pickedUp(['uuid' => 'd-1'], 'dossier-21');
+	}//end testAStatuslessDocumentIsRefused()
+
+	/**
+	 * Processing keeps the staged original's content hash: the transition writes the whole stored object back.
+	 *
+	 * @return void
+	 */
+	public function testTheContentHashSurvivesEveryTransition(): void {
+		$service = $this->service();
+		$saved = [];
+		$this->objects->method('saveObject')->willReturnCallback(
+			function (array $object, string $register, string $schema, string $uuid) use (&$saved): array {
+				$saved[] = $object;
+				return ['uuid' => $uuid] + $object;
+			}
+		);
+
+		$service->pickedUp(['uuid' => 'd-1', 'processingStatus' => 'staged', 'contentHash' => 'sha256:aa'], 'dossier-21');
+		$this->objects->method('find')->willReturnOnConsecutiveCalls(
+			['uuid' => 'd-1', 'processingStatus' => 'processed', 'contentHash' => 'sha256:aa', 'resultFileRef' => 42],
+			['uuid' => 'd-1', 'processingStatus' => 'writeback_failed', 'contentHash' => 'sha256:aa', 'resultFileRef' => 42]
+		);
+		$service->release('d-1');
+		$service->retry('d-1');
+
+		$this->assertSame(['sha256:aa', 'sha256:aa', 'sha256:aa'], array_column($saved, 'contentHash'));
+	}//end testTheContentHashSurvivesEveryTransition()
+
+	/**
+	 * A stored object without its own uuid answers with the uuid it was asked for.
+	 *
+	 * @return void
+	 */
+	public function testAFoundDocumentWithoutAUuidCarriesTheRequestedOne(): void {
+		$service = $this->service();
+		$this->objects->method('find')->willReturn(['processingStatus' => 'staged']);
+
+		$this->assertSame('d-9', $service->find('d-9')['uuid']);
+	}//end testAFoundDocumentWithoutAUuidCarriesTheRequestedOne()
+
+	/**
+	 * A search that answers no list yields no sources.
+	 *
+	 * @return void
+	 */
+	public function testANonListSearchYieldsNothing(): void {
+		$service = $this->service();
+		$this->objects->method('searchObjectsBySlug')->willReturn(0);
+
+		$this->assertSame([], $service->sources());
+		$this->assertSame([], $service->stagedDocuments());
+	}//end testANonListSearchYieldsNothing()
+
 }//end class

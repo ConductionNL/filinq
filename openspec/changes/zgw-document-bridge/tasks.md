@@ -42,7 +42,7 @@
 
 ## 4. Quality
 
-- [ ] 4.1 PHPUnit unit tests for BridgeService, controller and lifecycle transitions — minimum 75% coverage on new code
+- [x] 4.1 PHPUnit unit tests for BridgeService, controller and lifecycle transitions — minimum 75% coverage on new code (161/161 statements of BridgeController, BridgeService, BridgeDossierPickUp, BridgeSourceBadges covered)
   - Run inside the container: `docker exec -w /var/www/html/custom_apps/filinq nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`.
   - Includes: health clock cases, PUT-semantics survival of a non-changed field, invalid-transition rejection, staged-original hash unchanged after processing.
 

@@ -110,7 +110,7 @@ final class BridgeDossierPickUpTest extends TestCase {
 		$this->dossiers = $this->createMock(DossierObjectRepository::class);
 	}//end setUp()
 
-	private function pickUp(?Folder $folder = null): BridgeDossierPickUp {
+	private function pickUp(?Folder $folder = null, ?LoggerInterface $logger = null): BridgeDossierPickUp {
 		if ($folder === null) {
 			$folder = $this->createMock(Folder::class);
 			$folder->method('getPath')->willReturn('/operator/files/Woo-verzoek 2026-021');
@@ -121,7 +121,13 @@ final class BridgeDossierPickUpTest extends TestCase {
 		$this->dossiers->method('resolveDossierFolder')->with(77)->willReturn($folder);
 
 		$userFolder = $this->createMock(Folder::class);
-		$userFolder->method('getById')->willReturnCallback(fn (int $id): array => isset($this->files[$id]) === true ? [$this->files[$id]] : []);
+		$userFolder->method('getById')->willReturnCallback(function (int $id): array {
+			if ($id === 500) {
+				throw new RuntimeException('storage unavailable');
+			}
+
+			return isset($this->files[$id]) === true ? [$this->files[$id]] : [];
+		});
 		$root = $this->createMock(IRootFolder::class);
 		$root->method('getUserFolder')->with('operator')->willReturn($userFolder);
 		$user = $this->createMock(IUser::class);
@@ -134,7 +140,7 @@ final class BridgeDossierPickUpTest extends TestCase {
 			dossiers: $this->dossiers,
 			rootFolder: $root,
 			session: $session,
-			logger: $this->createMock(LoggerInterface::class)
+			logger: ($logger ?? $this->createMock(LoggerInterface::class))
 		);
 	}//end pickUp()
 
@@ -198,4 +204,67 @@ final class BridgeDossierPickUpTest extends TestCase {
 
 		$this->pickUp()->attach(dossierUuid: 'dossier-21', documentIds: ['', ' ']);
 	}//end testNamingNoDocumentIsRefused()
+
+	/**
+	 * A file lookup that throws counts as a file the operator cannot read: nothing is copied.
+	 *
+	 * @return void
+	 */
+	public function testAThrowingFileLookupRefusesThePickUp(): void {
+		$this->documents['doc-5'] = ['uuid' => 'doc-5', 'processingStatus' => 'staged', 'stagedFileRef' => 500, 'filename' => 'y.pdf'];
+
+		try {
+			$this->pickUp()->attach(dossierUuid: 'dossier-21', documentIds: ['doc-5']);
+			$this->fail('A file whose lookup threw was picked up.');
+		} catch (InvalidArgumentException $e) {
+			$this->assertSame('The staged file of document doc-5 cannot be read.', $e->getMessage());
+		}
+
+		$this->assertSame([], $this->copies);
+		$this->assertSame([], $this->pickedUp);
+	}//end testAThrowingFileLookupRefusesThePickUp()
+
+	/**
+	 * A copy whose recording fails is logged with the copy's id, and the failure reaches the caller.
+	 *
+	 * @return void
+	 */
+	public function testACopyThatCannotBeRecordedIsLoggedAndRethrown(): void {
+		$bridge = $this->createMock(BridgeService::class);
+		$bridge->method('find')->willReturnCallback(fn (string $id): array => $this->documents[$id]);
+		$bridge->method('pickedUp')->willThrowException(new InvalidArgumentException('A processed document cannot be moved to in_processing.'));
+		$this->bridge = $bridge;
+
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())->method('warning')->with(
+			'[BridgeDossierPickUp] copied but not recorded',
+			['document' => 'doc-1', 'copy' => 1101, 'exception' => 'A processed document cannot be moved to in_processing.']
+		);
+
+		$this->expectException(InvalidArgumentException::class);
+		$this->expectExceptionMessage('A processed document cannot be moved to in_processing.');
+		try {
+			$this->pickUp(logger: $logger)->attach(dossierUuid: 'dossier-21', documentIds: ['doc-1', 'doc-2']);
+		} finally {
+			$this->assertSame(['/operator/files/Woo-verzoek 2026-021/besluit (2).pdf'], $this->copies);
+		}
+	}//end testACopyThatCannotBeRecordedIsLoggedAndRethrown()
+
+	/**
+	 * The pick-up copies the staged original and never writes to it, so its content hash stays what the bridge recorded.
+	 *
+	 * @return void
+	 */
+	public function testTheStagedOriginalIsOnlyCopiedNeverWritten(): void {
+		foreach ($this->files as $file) {
+			$file->expects($this->never())->method('putContent');
+			$file->expects($this->never())->method('delete');
+			$file->expects($this->never())->method('move');
+		}
+
+		$this->pickUp()->attach(dossierUuid: 'dossier-21', documentIds: ['doc-1', 'doc-2']);
+
+		$this->assertCount(2, $this->copies);
+	}//end testTheStagedOriginalIsOnlyCopiedNeverWritten()
+
 }//end class
