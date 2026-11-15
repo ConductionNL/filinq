@@ -3145,7 +3145,26 @@
         "The test arrived": "De test is aangekomen",
         "The test did not arrive": "De test is niet aangekomen",
         "Type a name and a URL and pick at least one event": "Typ een naam en een URL en kies minstens één gebeurtenis",
-        "Type a secret so the receiver can check each delivery": "Typ een geheim zodat de ontvanger elke bezorging kan controleren"
+        "Type a secret so the receiver can check each delivery": "Typ een geheim zodat de ontvanger elke bezorging kan controleren",
+        "{count} uncertain finding": ["{count} onzekere bevinding", "{count} onzekere bevindingen"],
+        "{count} uncertain findings": "{count} onzekere bevindingen",
+        "Certain": "Zeker",
+        "Uncertain": "Onzeker",
+        "Uncertain findings only": "Alleen onzekere bevindingen",
+        "Confirm that {entity} is anonymised": "Bevestig dat {entity} wordt geanonimiseerd",
+        "Found from {floor} (OpenRegister), certain from {certainFrom} (filinq)": "Gevonden vanaf {floor} (OpenRegister), zeker vanaf {certainFrom} (filinq)",
+        "This OpenRegister does not make its detection floor configurable; {floor} is its default.": "Deze OpenRegister laat de detectiedrempel niet instellen; {floor} is de standaardwaarde.",
+        "Detection could not read the pages of this document, so it found nothing on them. Read every page yourself.": "De detectie kon de pagina's van dit document niet lezen en heeft er dus niets op gevonden. Lees elke pagina zelf.",
+        "I read every page of this document by eye": "Ik heb elke pagina van dit document zelf gelezen",
+        "Reviewed as a PDF converted by {backend}: {name}": "Gecontroleerd als pdf, omgezet door {backend}: {name}",
+        "Reviewed as a scan with a text layer recognised by OCR ({backend})": "Gecontroleerd als scan met een tekstlaag herkend door OCR ({backend})",
+        "Reviewed as a scan without a text layer": "Gecontroleerd als scan zonder tekstlaag",
+        "Reviewed as the PDF itself, with its own text layer": "Gecontroleerd als de pdf zelf, met een eigen tekstlaag",
+        "Undecided: {findings}": "Nog geen besluit: {findings}",
+        "Detection could not read the pages of this document. Confirm that you read every page by eye before marking it reviewed.": "De detectie kon de pagina's van dit document niet lezen. Bevestig dat je elke pagina zelf hebt gelezen voordat je het als gecontroleerd markeert.",
+        "Decide on every uncertain finding before marking this document reviewed.": "Neem over elke onzekere bevinding een besluit voordat je dit document als gecontroleerd markeert.",
+        "Certain from (review workbench)": "Zeker vanaf (controlewerkbank)",
+        "A detected finding below this confidence is shown as uncertain and needs an explicit decision before the document can be marked as reviewed. It cannot be lower than the detection floor set in OpenRegister.": "Een gevonden gegeven onder deze betrouwbaarheid wordt als onzeker getoond en vraagt om een expliciet besluit voordat het document als gecontroleerd kan worden gemarkeerd. De waarde kan niet lager zijn dan de detectiedrempel die in OpenRegister is ingesteld."
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

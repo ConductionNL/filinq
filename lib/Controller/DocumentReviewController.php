@@ -114,6 +114,7 @@ class DocumentReviewController extends Controller {
 	 * @param int    $fileId The document.
 	 * @param string $note   The reviewer's note.
 	 * @param bool   $byEye  The reviewer confirms every page was read by eye (needed without a text layer).
+	 * @param array<int|string> $decided The relation ids of the uncertain findings the reviewer decided.
 	 *
 	 * @return JSONResponse The status after the check, or the refusal.
 	 *
@@ -128,7 +129,7 @@ class DocumentReviewController extends Controller {
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) The confirmation is the reviewer's own yes or no.
 	 */
 	#[NoAdminRequired]
-	public function check(int $fileId, string $note = '', bool $byEye = false): JSONResponse {
+	public function check(int $fileId, string $note = '', bool $byEye = false, array $decided = []): JSONResponse {
 		$refusal = $this->refusal(fileId: $fileId);
 		if ($refusal !== null) {
 			return $refusal;
@@ -139,7 +140,8 @@ class DocumentReviewController extends Controller {
 				fileId: $fileId,
 				userId: (string)$this->userSession->getUser()?->getUID(),
 				note: trim($note),
-				byEye: $byEye
+				byEye: $byEye,
+				decided: array_values(array_filter($decided, 'is_numeric'))
 			);
 		} catch (DocumentReviewRefusedException $e) {
 			return new JSONResponse(

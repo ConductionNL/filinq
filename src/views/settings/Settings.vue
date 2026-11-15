@@ -145,6 +145,26 @@
 					}}
 				</div>
 			</div>
+
+			<div class="setting-item">
+				<NcTextField
+					:modelValue="String(settings['filinq.review.certain_from'])"
+					type="number"
+					min="0"
+					max="1"
+					step="0.05"
+					:label="t('filinq', 'Certain from (review workbench)')"
+					:helperText="
+						t(
+							'filinq',
+							'A detected finding below this confidence is shown as uncertain and needs an explicit decision before the document can be marked as reviewed. It cannot be lower than the detection floor set in OpenRegister.',
+						)
+					"
+					data-testid="certain-from"
+					@update:modelValue="
+						settings['filinq.review.certain_from'] = $event
+					" />
+			</div>
 		</NcSettingsSection>
 
 		<NcSettingsSection
@@ -1258,6 +1278,8 @@ export default {
 						?? 'pdf-only'
 					this.settings['anonymisation.output_subfolder_name'] =
 						data['anonymisation.output_subfolder_name'] || 'anonymised'
+					this.settings['filinq.review.certain_from'] =
+						data['filinq.review.certain_from'] ?? 0.85
 					// Entity types enabled for automatic detection (all-on by default).
 					this.enabledEntityTypes =
 						data['filinq.anonymisation.enabled_entity_types'] || []
@@ -1478,6 +1500,9 @@ export default {
 
 				'anonymisation.output_subfolder_name':
 					this.settings['anonymisation.output_subfolder_name'],
+
+				// Refused by the backend below OpenRegister's detection floor.
+				'filinq.review.certain_from': Number(this.settings['filinq.review.certain_from']),
 
 				// Sent as an object; the backend json-encodes it for storage.
 				'filinq.grondslagen.entity_type_bases': this.entityTypeBases,

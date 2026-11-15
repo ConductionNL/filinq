@@ -2964,7 +2964,26 @@ OC.L10N.register(
         "The test arrived": "The test arrived",
         "The test did not arrive": "The test did not arrive",
         "Type a name and a URL and pick at least one event": "Type a name and a URL and pick at least one event",
-        "Type a secret so the receiver can check each delivery": "Type a secret so the receiver can check each delivery"
+        "Type a secret so the receiver can check each delivery": "Type a secret so the receiver can check each delivery",
+        "{count} uncertain finding": ["{count} uncertain finding","{count} uncertain findings"],
+        "{count} uncertain findings": "{count} uncertain findings",
+        "Certain": "Certain",
+        "Uncertain": "Uncertain",
+        "Uncertain findings only": "Uncertain findings only",
+        "Confirm that {entity} is anonymised": "Confirm that {entity} is anonymised",
+        "Found from {floor} (OpenRegister), certain from {certainFrom} (filinq)": "Found from {floor} (OpenRegister), certain from {certainFrom} (filinq)",
+        "This OpenRegister does not make its detection floor configurable; {floor} is its default.": "This OpenRegister does not make its detection floor configurable; {floor} is its default.",
+        "Detection could not read the pages of this document, so it found nothing on them. Read every page yourself.": "Detection could not read the pages of this document, so it found nothing on them. Read every page yourself.",
+        "I read every page of this document by eye": "I read every page of this document by eye",
+        "Reviewed as a PDF converted by {backend}: {name}": "Reviewed as a PDF converted by {backend}: {name}",
+        "Reviewed as a scan with a text layer recognised by OCR ({backend})": "Reviewed as a scan with a text layer recognised by OCR ({backend})",
+        "Reviewed as a scan without a text layer": "Reviewed as a scan without a text layer",
+        "Reviewed as the PDF itself, with its own text layer": "Reviewed as the PDF itself, with its own text layer",
+        "Undecided: {findings}": "Undecided: {findings}",
+        "Detection could not read the pages of this document. Confirm that you read every page by eye before marking it reviewed.": "Detection could not read the pages of this document. Confirm that you read every page by eye before marking it reviewed.",
+        "Decide on every uncertain finding before marking this document reviewed.": "Decide on every uncertain finding before marking this document reviewed.",
+        "Certain from (review workbench)": "Certain from (review workbench)",
+        "A detected finding below this confidence is shown as uncertain and needs an explicit decision before the document can be marked as reviewed. It cannot be lower than the detection floor set in OpenRegister.": "A detected finding below this confidence is shown as uncertain and needs an explicit decision before the document can be marked as reviewed. It cannot be lower than the detection floor set in OpenRegister."
     },
     "nplurals=2; plural=(n != 1);"
 )

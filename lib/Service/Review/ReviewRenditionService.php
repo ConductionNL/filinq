@@ -211,7 +211,12 @@ class ReviewRenditionService {
 				return null;
 			}
 
-			return $this->repository->saveFor(sourceFileId: $sourceId, rendition: $this->prepare(source: $source));
+			$rendition = $this->prepare(source: $source);
+
+			return $this->repository->saveFor(
+				sourceFileId: $sourceId,
+				rendition: $rendition + ['fileName' => $this->nameOf(source: $source, fileId: $rendition['fileId'])]
+			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'[ReviewRenditionService] the review rendition could not be prepared; detection runs on the source',
@@ -414,6 +419,28 @@ class ReviewRenditionService {
 		return $file;
 
 	}//end stillCurrent()
+
+	/**
+	 * The rendition file's name, so the workbench can open it next to its source.
+	 *
+	 * @param File $source The source.
+	 * @param int  $fileId The rendition's file id.
+	 *
+	 * @return string The name; '' when the file cannot be found.
+	 */
+	private function nameOf(File $source, int $fileId): string {
+		if ($fileId === (int) $source->getId()) {
+			return (string) $source->getName();
+		}
+
+		$file = $this->rootFolder->getFirstNodeById($fileId);
+		if (($file instanceof File) === false) {
+			return '';
+		}
+
+		return (string) $file->getName();
+
+	}//end nameOf()
 
 	/**
 	 * Whether converting would replace a PDF next to the source that is not the stored rendition.

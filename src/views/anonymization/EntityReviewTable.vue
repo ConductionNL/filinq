@@ -17,6 +17,25 @@
 				)
 			}}
 		</div>
+		<div
+			v-if="certainFrom !== null"
+			class="threshold-panel"
+			data-testid="review-thresholds">
+			<p>
+				{{
+					t('filinq', 'Found from {floor} (OpenRegister), certain from {certainFrom} (filinq)', {
+						floor: thresholds.floor,
+						certainFrom,
+					})
+				}}
+			</p>
+			<p v-if="thresholds.floorConfigurable === false" class="threshold-panel__note">
+				{{ t('filinq', 'This OpenRegister does not make its detection floor configurable; {floor} is its default.', { floor: thresholds.floor }) }}
+			</p>
+			<p class="threshold-panel__count" data-testid="uncertain-count">
+				{{ n('filinq', '{count} uncertain finding', '{count} uncertain findings', uncertainCount, { count: uncertainCount }) }}
+			</p>
+		</div>
 		<div class="filter-bar">
 			<input
 				v-model="searchQuery"
@@ -31,6 +50,12 @@
 					{{ entityTypeLabel(t) }}
 				</option>
 			</select>
+			<NcCheckboxRadioSwitch
+				v-if="certainFrom !== null"
+				v-model="uncertainOnly"
+				data-testid="uncertain-filter">
+				{{ t('filinq', 'Uncertain findings only') }}
+			</NcCheckboxRadioSwitch>
 		</div>
 		<div class="bulk-actions">
 			<NcButton
@@ -95,7 +120,7 @@
 								})
 							"
 							:checked="item.e.included"
-							@change="$emit('toggle', item.idx)" />
+							@change="onIncludeToggle(item)" />
 					</td>
 					<td>
 						<span class="badge">{{ entityTypeLabel(item.e.type) }}</span>
@@ -117,6 +142,21 @@
 					</td>
 					<td>
 						{{ ((item.e.highestConfidence || 0) * 100).toFixed(1) }}%
+						<span
+							v-if="certainFrom !== null"
+							class="certainty-badge"
+							:class="isUncertain(item.e, certainFrom) ? 'certainty-badge--uncertain' : 'certainty-badge--certain'"
+							:data-testid="'certainty-' + (isUncertain(item.e, certainFrom) ? 'uncertain' : 'certain')">
+							{{ isUncertain(item.e, certainFrom) ? t('filinq', 'Uncertain') : t('filinq', 'Certain') }}
+						</span>
+						<NcButton
+							v-if="isUncertain(item.e, certainFrom) && item.e._explicitDecision !== true && item.e.included"
+							variant="tertiary"
+							:aria-label="t('filinq', 'Confirm that {entity} is anonymised', { entity: item.e.value })"
+							data-testid="confirm-uncertain"
+							@click="confirmIncluded(item)">
+							{{ t('filinq', 'Confirm') }}
+						</NcButton>
 					</td>
 					<td>{{ item.e.fileCount }}</td>
 					<td class="bases-cell">
@@ -189,11 +229,11 @@
 </template>
 
 <script>
-import { translate as t } from '@nextcloud/l10n'
+import { translatePlural as n, translate as t } from '@nextcloud/l10n'
 import { NcButton, NcCheckboxRadioSwitch, NcSelect } from '@nextcloud/vue'
 import ProhibitionBlockedDialog from '../../dialogs/ProhibitionBlockedDialog.vue'
 import { fetchBaseOptions } from '../../services/bases.js'
-import { basesAreProposed, policyBadges } from '../../services/documentReview.js'
+import { basesAreProposed, isUncertain, policyBadges } from '../../services/documentReview.js'
 import { entityTypeLabel } from '../../services/entityTypes.js'
 import { anonymizationStore } from '../../store/store.js'
 
@@ -213,6 +253,10 @@ export default {
 		// operator clicks "Apply dossier grondslagen to visible", every
 		// visible entity's _decisionBases gets set to this list.
 		defaultBases: { type: Array, default: () => [] },
+		// The two confidence numbers (anonymization-review-workbench REQ-DDARW-013):
+		// `{ floor, certainFrom, floorConfigurable }`. Null leaves out the
+		// certain/uncertain split, its badge, filter and counter.
+		thresholds: { type: Object, default: null },
 	},
 
 	emits: [
@@ -222,12 +266,14 @@ export default {
 		'bases-change',
 		'skip-change',
 		'confidence-change',
+		'decide',
 	],
 
 	data() {
 		return {
 			searchQuery: '',
 			typeFilter: '',
+			uncertainOnly: false,
 			sf: 'highestConfidence',
 			sa: false,
 			basesOptions: [],
@@ -238,6 +284,27 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The organisation's certain-from, or null when no thresholds were given.
+		 *
+		 * @return {number|null}
+		 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-5.3
+		 */
+		certainFrom() {
+			const value = this.thresholds?.certainFrom
+			return typeof value === 'number' ? value : null
+		},
+
+		/**
+		 * How many findings are uncertain.
+		 *
+		 * @return {number}
+		 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-5.3
+		 */
+		uncertainCount() {
+			return this.entities.filter((e) => isUncertain(e, this.certainFrom)).length
+		},
+
 		/**
 		 * Count of entities currently included for anonymization.
 		 *
@@ -268,7 +335,8 @@ export default {
 				.filter(
 					({ e }) =>
 						(!q || e.value.toLowerCase().includes(q))
-						&& (!this.typeFilter || e.type === this.typeFilter),
+						&& (!this.typeFilter || e.type === this.typeFilter)
+						&& (!this.uncertainOnly || this.certainFrom === null || isUncertain(e, this.certainFrom)),
 				)
 				.sort((a, b) => {
 					const va = a.e[this.sf]
@@ -290,6 +358,8 @@ export default {
 
 	methods: {
 		t,
+		n,
+		isUncertain,
 		entityTypeLabel,
 		policyBadges,
 		basesAreProposed,
@@ -357,6 +427,30 @@ export default {
 			})
 		},
 
+		/**
+		 * The include checkbox: the reviewer's explicit decision on this finding.
+		 *
+		 * @param {{e: object, idx: number}} item The row.
+		 * @return {void}
+		 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-5.3
+		 */
+		onIncludeToggle(item) {
+			item.e._explicitDecision = true
+			this.$emit('toggle', item.idx)
+		},
+
+		/**
+		 * Keep an uncertain finding anonymised as pre-selected, as an explicit decision.
+		 *
+		 * @param {{e: object, idx: number}} item The row.
+		 * @return {void}
+		 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-5.3
+		 */
+		confirmIncluded(item) {
+			item.e._explicitDecision = true
+			this.$emit('decide', item.idx)
+		},
+
 		// The "included" checkbox is the skip control: unchecking = skip.
 		onIncludedChange(idx, checked) {
 			return this.onSkipChange(idx, !checked)
@@ -398,6 +492,7 @@ export default {
 					return bad
 				}
 				entity._decisionSkip = skip
+				entity._explicitDecision = true
 				entity.skipAnonymization = skip
 				entity.included = !skip
 				entity._patchError = null
@@ -502,6 +597,42 @@ export default {
 
 .policy-badge--standingConsent {
 	border: 2px solid var(--color-primary-element);
+}
+
+.threshold-panel {
+	padding: 8px 12px;
+	margin-bottom: 12px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius-large);
+}
+
+.threshold-panel p {
+	margin: 0;
+}
+
+.threshold-panel__note {
+	color: var(--color-text-maxcontrast);
+	font-size: 0.85em;
+}
+
+.certainty-badge {
+	display: inline-block;
+	margin-inline-start: 6px;
+	padding: 0 6px;
+	border-radius: var(--border-radius-pill);
+	font-size: 0.85em;
+	/* Main text on the main background keeps AA contrast in both themes;
+	 * the state is told by the border and the word, not by colour alone. */
+	background: var(--color-main-background);
+	color: var(--color-main-text);
+}
+
+.certainty-badge--uncertain {
+	border: 2px solid var(--color-warning);
+}
+
+.certainty-badge--certain {
+	border: 1px solid var(--color-border);
 }
 
 .proposed-text {

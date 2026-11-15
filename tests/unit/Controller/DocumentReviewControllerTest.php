@@ -323,7 +323,8 @@ class DocumentReviewControllerTest extends TestCase {
 		$this->assertSame([['relationId' => 2, 'entityId' => 11, 'confidence' => 0.65]], $refused->getData()['undecidedFindings']);
 		$this->assertSame([], $this->gateMarks);
 
-		$this->gateRelations[5][1]['decision'] = 'decision-1';
-		$this->assertSame(201, $controller->check(fileId: 5)->getStatus());
+		// The reviewer included it in the workbench; a non-numeric id is ignored.
+		$this->assertSame(201, $controller->check(fileId: 5, note: '', byEye: false, decided: ['2', 'x'])->getStatus());
+		$this->assertTrue($controller->show(fileId: 5)->getData()['checked']);
 	}//end testAnUndecidedUncertainFindingBlocksTheCheck()
 }//end class

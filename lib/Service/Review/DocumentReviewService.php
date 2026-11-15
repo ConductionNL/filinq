@@ -216,6 +216,8 @@ class DocumentReviewService {
 	 * @param string $note   The reviewer's note, may be empty.
 	 * @param bool   $byEye  The reviewer confirms every page was read by eye; required when the
 	 *                       rendition has no text layer.
+	 * @param array<int|string> $decided The relation ids of the uncertain findings the reviewer decided
+	 *                                 (included or skipped) in the workbench.
 	 *
 	 * @return array<string, mixed> The status after the check, as {@see status}.
 	 *
@@ -229,10 +231,10 @@ class DocumentReviewService {
 	 *
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) The confirmation is the reviewer's own yes or no.
 	 */
-	public function check(int $fileId, string $userId, string $note = '', bool $byEye = false): array {
+	public function check(int $fileId, string $userId, string $note = '', bool $byEye = false, array $decided = []): array {
 		$rendition = $this->renditions->findFor(sourceFileId: $fileId);
 		$decisions = $this->decisions(fileId: $fileId, certainFrom: $this->thresholds->certainFrom());
-		$this->assertCheckable(rendition: $rendition, decisions: $decisions, byEye: $byEye);
+		$this->assertCheckable(rendition: $rendition, decisions: $decisions, byEye: $byEye, decided: $decided);
 
 		$mark = [
 			'fileId' => $fileId,
@@ -272,6 +274,7 @@ class DocumentReviewService {
 	 * @param array<string, mixed>|null $rendition The current rendition.
 	 * @param array<string, mixed>|null $decisions The file's decisions, as {@see decisions}.
 	 * @param bool                      $byEye     The by-eye confirmation.
+	 * @param array<int|string>         $decided   The relation ids the reviewer decided in the workbench.
 	 *
 	 * @return void
 	 *
@@ -282,7 +285,7 @@ class DocumentReviewService {
 	 *
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) The confirmation is the reviewer's own yes or no.
 	 */
-	private function assertCheckable(?array $rendition, ?array $decisions, bool $byEye): void {
+	private function assertCheckable(?array $rendition, ?array $decisions, bool $byEye, array $decided): void {
 		$unreadable = (($rendition['textLayer'] ?? '') === self::LAYER_NONE);
 		if ($unreadable === true && $byEye === false) {
 			throw new DocumentReviewRefusedException(
@@ -298,11 +301,20 @@ class DocumentReviewService {
 			);
 		}
 
-		if ($decisions['undecidedUncertain'] !== []) {
+		// An uncertain finding counts as decided when OpenRegister holds a decision
+		// for it, or when the reviewer included or skipped it in the workbench.
+		$decidedIds = array_map('intval', $decided);
+		$undecided = array_values(
+			array_filter(
+				$decisions['undecidedUncertain'],
+				static fn (array $finding): bool => in_array($finding['relationId'], $decidedIds, true) === false
+			)
+		);
+		if ($undecided !== []) {
 			throw new DocumentReviewRefusedException(
 				reason: 'uncertain_undecided',
 				message: 'Decide on every uncertain finding before marking this document reviewed.',
-				details: ['undecidedFindings' => $decisions['undecidedUncertain']]
+				details: ['undecidedFindings' => $undecided]
 			);
 		}
 

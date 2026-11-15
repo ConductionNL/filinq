@@ -43,12 +43,107 @@ export async function fetchReview(fileId) {
  *
  * @param {number} fileId The document.
  * @param {string} [note] The reviewer's note.
+ * @param {object} [options] What the reviewer confirms with the mark.
+ * @param {boolean} [options.byEye] Every page was read by eye (needed without a text layer).
+ * @param {Array<number>} [options.decided] Relation ids of the uncertain findings the reviewer decided.
  * @return {Promise<object>} The status after the check.
  * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-3.4
+ * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-5.3
  */
-export async function checkReview(fileId, note = '') {
-	const response = await axios.post(reviewUrl(fileId, '/check'), { note })
+export async function checkReview(fileId, note = '', options = {}) {
+	const body = { note }
+	if (options.byEye === true) {
+		body.byEye = true
+	}
+	if (Array.isArray(options.decided) && options.decided.length > 0) {
+		body.decided = options.decided
+	}
+	const response = await axios.post(reviewUrl(fileId, '/check'), body)
 	return response.data
+}
+
+/**
+ * Whether a finding is uncertain: detected (not added by hand) with a confidence below certain-from.
+ *
+ * @param {object} entity A review row.
+ * @param {number|null|undefined} certainFrom The organisation's certain-from; anything but a number means no split.
+ * @return {boolean} True when uncertain.
+ * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-5.3
+ */
+export function isUncertain(entity, certainFrom) {
+	if (typeof certainFrom !== 'number' || !entity) {
+		return false
+	}
+	if ((entity.detectionMethod ?? entity.method) === 'manual') {
+		return false
+	}
+	return Number(entity.highestConfidence ?? entity.confidence ?? 0) < certainFrom
+}
+
+/**
+ * The relation ids of the uncertain findings the reviewer included or skipped in the workbench.
+ *
+ * @param {Array<object>} entities The review rows.
+ * @param {number|null|undefined} certainFrom The organisation's certain-from.
+ * @return {Array<number>} The relation ids.
+ * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-5.3
+ */
+export function decidedUncertainRelationIds(entities, certainFrom) {
+	const ids = []
+	for (const entity of Array.isArray(entities) ? entities : []) {
+		if (entity?._explicitDecision !== true || !isUncertain(entity, certainFrom)) {
+			continue
+		}
+		const relationIds = Array.isArray(entity.relationIds) && entity.relationIds.length > 0
+			? entity.relationIds
+			: (entity.relationId !== null && entity.relationId !== undefined ? [entity.relationId] : [])
+		ids.push(...relationIds.map(Number))
+	}
+	return ids
+}
+
+/**
+ * The values of the findings a refused check names, for the reviewer.
+ *
+ * @param {Array<object>} entities The review rows.
+ * @param {Array<{relationId: number}>} findings The undecided findings the server named.
+ * @return {Array<string>} The values, in the server's order, without repeats.
+ * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-5.3
+ */
+export function findingValues(entities, findings) {
+	const values = []
+	for (const finding of Array.isArray(findings) ? findings : []) {
+		const entity = (Array.isArray(entities) ? entities : []).find((e) =>
+			(Array.isArray(e?.relationIds) && e.relationIds.map(Number).includes(Number(finding.relationId)))
+			|| Number(e?.relationId) === Number(finding.relationId))
+		const value = entity ? String(entity.value ?? '') : '#' + finding.relationId
+		if (!values.includes(value)) {
+			values.push(value)
+		}
+	}
+	return values
+}
+
+/**
+ * The file the workbench shows as the original: the converted review rendition
+ * next to its source, or the source itself.
+ *
+ * @param {{fileId: number, fileName: string, mimeType: string, path: string}} original The source's pane.
+ * @param {object|null} rendition The review rendition from the status.
+ * @return {{fileId: number, fileName: string, mimeType: string, path: string}} The pane.
+ * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-5.1
+ */
+export function renditionPane(original, rendition) {
+	if (!rendition || rendition.kind !== 'converted' || !rendition.fileName || !original?.path) {
+		return original
+	}
+	const folder = original.path.slice(0, original.path.lastIndexOf('/'))
+	return {
+		fileId: Number(rendition.fileId),
+		fileName: String(rendition.fileName),
+		mimeType: 'application/pdf',
+		path: folder + '/' + rendition.fileName,
+	}
 }
 
 /**

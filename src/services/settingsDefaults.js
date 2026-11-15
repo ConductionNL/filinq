@@ -33,6 +33,8 @@ export function defaultSettings() {
 		signing_guardian_consent_age: 16,
 		'filinq.anonymisation.default_output_format': 'pdf-only',
 		'anonymisation.output_subfolder_name': 'anonymised',
+		// Review workbench: a detected finding below it is uncertain.
+		'filinq.review.certain_from': 0.85,
 		// files-confidential-labels — off by default (design.md D3).
 		'filinq.confidentiality.prioritise_analysis': false,
 		'filinq.confidentiality.label_vocabulary': {

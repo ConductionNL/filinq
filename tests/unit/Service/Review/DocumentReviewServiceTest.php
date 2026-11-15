@@ -666,6 +666,18 @@ class DocumentReviewServiceTest extends TestCase {
 
 		$this->assertSame([], $this->saved);
 
+		// Naming another finding as decided does not cover this one.
+		try {
+			$service->check(fileId: 40, userId: 'u', decided: [7, 9]);
+			$this->fail('expected a refusal');
+		} catch (DocumentReviewRefusedException $e) {
+			$this->assertSame('uncertain_undecided', $e->getReason());
+		}
+
+		// Decided in the workbench: the check holds.
+		$this->assertTrue($service->check(fileId: 40, userId: 'u', decided: ['8'])['checked']);
+
+		// Decided in OpenRegister: the check holds without the workbench naming it.
 		$this->relations[40][1]['decision'] = 'decision-uuid-1';
 		$this->assertTrue($service->check(fileId: 40, userId: 'u')['checked']);
 	}//end testAnUndecidedUncertainFindingBlocksTheCheck()

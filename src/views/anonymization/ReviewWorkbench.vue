@@ -30,10 +30,21 @@
 			<p v-if="review && review.review" class="review-workbench__by">
 				{{ t('filinq', 'Last marked by {user} on {date}', { user: review.review.checkedBy, date: review.review.checkedOn }) }}
 			</p>
+			<p v-if="rendition" class="review-workbench__rendition" data-testid="review-rendition">
+				{{ renditionText }}
+			</p>
+			<template v-if="noTextLayer && state !== 'reviewed'">
+				<p class="review-workbench__unreadable" role="status" data-testid="no-text-layer">
+					{{ t('filinq', 'Detection could not read the pages of this document, so it found nothing on them. Read every page yourself.') }}
+				</p>
+				<NcCheckboxRadioSwitch v-model="byEye" data-testid="by-eye">
+					{{ t('filinq', 'I read every page of this document by eye') }}
+				</NcCheckboxRadioSwitch>
+			</template>
 			<NcButton
 				v-if="state !== 'reviewed'"
 				variant="primary"
-				:disabled="busy || !entry || entry.status !== 'extracted'"
+				:disabled="busy || !entry || (entry.status !== 'extracted' && !noTextLayer) || (noTextLayer && !byEye)"
 				data-testid="mark-reviewed"
 				@click="markReviewed">
 				{{ state === 'stale' ? t('filinq', 'Review again and mark as reviewed') : t('filinq', 'Mark as reviewed') }}
@@ -58,7 +69,7 @@
 				@mouseup="captureSelection"
 				@keyup="captureSelection">
 				<DocumentCompare
-					:original="original"
+					:original="originalPane"
 					:delivered="anonymized"
 					:labels="{ original: t('filinq', 'Original'), delivered: t('filinq', 'Anonymised') }"
 					:pendingText="t('filinq', 'Anonymisation has not been committed for this document yet.')" />
@@ -82,6 +93,7 @@
 					v-else-if="entry"
 					:entities="entry.entities || []"
 					:fileCount="1"
+					:thresholds="thresholds"
 					@toggle="onToggle"
 					@bulkSelect="onBulk($event, true)"
 					@bulkDeselect="onBulk($event, false)"
@@ -113,7 +125,7 @@
 import axios from '@nextcloud/axios'
 import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
-import { NcButton } from '@nextcloud/vue'
+import { NcButton, NcCheckboxRadioSwitch } from '@nextcloud/vue'
 import DocumentCompare from '../../components/compare/DocumentCompare.vue'
 import AddManualEntityModal from '../../dialogs/AddManualEntityModal.vue'
 import EntityReviewTable from './EntityReviewTable.vue'
@@ -121,8 +133,11 @@ import { fetchBaseOptions } from '../../services/bases.js'
 import {
 	anonymizedFileOf,
 	checkReview,
+	decidedUncertainRelationIds,
 	fetchAnonymizationLink,
 	fetchReview,
+	findingValues,
+	renditionPane,
 	reviewState,
 	selectedTextIn,
 	uncheckReview,
@@ -138,7 +153,7 @@ const REFRESH_DELAY_MS = 800
 export default {
 	name: 'ReviewWorkbench',
 
-	components: { AddManualEntityModal, DocumentCompare, EntityReviewTable, NcButton },
+	components: { AddManualEntityModal, DocumentCompare, EntityReviewTable, NcButton, NcCheckboxRadioSwitch },
 
 	data() {
 		return {
@@ -153,6 +168,7 @@ export default {
 			basesOptions: [],
 			proposalMapping: {},
 			refreshTimer: null,
+			byEye: false,
 		}
 	},
 
@@ -180,6 +196,66 @@ export default {
 				fileName: String(query.name || this.link?.sourceFileName || this.entry?.name || ''),
 				mimeType: String(query.mime || ''),
 				path: String(query.path || this.link?.sourceFilePath || this.entry?.filePath || ''),
+			}
+		},
+
+		/**
+		 * The review rendition the server prepared, or null.
+		 *
+		 * @return {object|null}
+		 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-5.1
+		 */
+		rendition() {
+			return this.review?.rendition || null
+		},
+
+		/**
+		 * Whether detection could not read the rendition's pages.
+		 *
+		 * @return {boolean}
+		 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-5.2
+		 */
+		noTextLayer() {
+			return this.rendition?.textLayer === 'none'
+		},
+
+		/**
+		 * The detection floor and certain-from, from the review status.
+		 *
+		 * @return {object|null}
+		 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-5.3
+		 */
+		thresholds() {
+			return this.review?.thresholds || null
+		},
+
+		/**
+		 * The original's pane as reviewed: the converted rendition when there is one.
+		 *
+		 * @return {object}
+		 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-5.1
+		 */
+		originalPane() {
+			return renditionPane(this.original, this.rendition)
+		},
+
+		/**
+		 * What the rendition line says: how the reviewed PDF was made and its text layer.
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-5.1
+		 */
+		renditionText() {
+			const r = this.rendition || {}
+			switch (r.kind) {
+			case 'converted':
+				return t('filinq', 'Reviewed as a PDF converted by {backend}: {name}', { backend: r.backend || '?', name: r.fileName || '' })
+			case 'ocr-text-layer':
+				return r.textLayer === 'ocr'
+					? t('filinq', 'Reviewed as a scan with a text layer recognised by OCR ({backend})', { backend: r.backend || '?' })
+					: t('filinq', 'Reviewed as a scan without a text layer')
+			default:
+				return t('filinq', 'Reviewed as the PDF itself, with its own text layer')
 			}
 		},
 
@@ -369,16 +445,36 @@ export default {
 			this.busy = true
 			this.error = ''
 			try {
-				this.review = await checkReview(this.fileId)
+				this.review = await checkReview(this.fileId, '', {
+					byEye: this.noTextLayer && this.byEye,
+					decided: decidedUncertainRelationIds(this.entry?.entities, this.thresholds?.certainFrom),
+				})
 				await anonymizationStore.markEntryChecked(this.entry)
 				if (this.entry?.reviewError) {
 					this.error = this.entry.reviewError
 				}
 			} catch (err) {
-				this.error = err?.response?.data?.error || err?.message || ''
+				this.error = this.refusalText(err)
 			} finally {
 				this.busy = false
 			}
+		},
+
+		/**
+		 * The message of a refused check; an undecided uncertain finding is named.
+		 *
+		 * @param {Error} err The failure.
+		 * @return {string}
+		 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-5.3
+		 */
+		refusalText(err) {
+			const data = err?.response?.data || {}
+			const message = data.error || err?.message || ''
+			if (data.reason !== 'uncertain_undecided') {
+				return message
+			}
+			const names = findingValues(this.entry?.entities, data.undecidedFindings)
+			return message + ' ' + t('filinq', 'Undecided: {findings}', { findings: names.join(', ') })
 		},
 
 		/**
@@ -428,6 +524,17 @@ export default {
 	margin-inline-start: 8px;
 	font-weight: normal;
 	color: var(--color-text-maxcontrast);
+}
+
+.review-workbench__rendition {
+	margin: 0;
+	color: var(--color-text-maxcontrast);
+}
+
+.review-workbench__unreadable {
+	margin: 0;
+	padding-inline-start: 8px;
+	border-inline-start: 3px solid var(--color-warning);
 }
 
 .review-workbench__rules {

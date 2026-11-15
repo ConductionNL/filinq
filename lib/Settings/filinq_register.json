@@ -12195,6 +12195,11 @@
                         "description": "The Nextcloud file id of the rendition: the source itself for a PDF or a scan, the converted PDF otherwise.",
                         "type": "integer"
                     },
+                    "fileName": {
+                        "title": "Rendition file name",
+                        "description": "The rendition file's name; it sits next to its source.",
+                        "type": "string"
+                    },
                     "sha256": {
                         "title": "SHA-256",
                         "description": "The sha256 of the rendition's bytes when it was prepared.",

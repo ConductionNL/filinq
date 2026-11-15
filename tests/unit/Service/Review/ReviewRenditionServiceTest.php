@@ -287,11 +287,11 @@ class ReviewRenditionServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testRecordStoresTheRendition(): void {
-		$pdf = $this->file(id: 40, mime: 'application/pdf', content: '%PDF text');
+		$pdf = $this->file(id: 40, mime: 'application/pdf', content: '%PDF text', name: 'besluit.pdf');
 		$this->extracted[40] = 'text';
 		$this->repository->method('findFor')->with(40)->willReturn(null);
 		$this->repository->expects($this->once())->method('saveFor')
-			->with(40, $this->callback(static fn (array $r): bool => $r['kind'] === 'native-pdf' && $r['fileId'] === 40))
+			->with(40, $this->callback(static fn (array $r): bool => $r['kind'] === 'native-pdf' && $r['fileId'] === 40 && $r['fileName'] === 'besluit.pdf'))
 			->willReturn(['uuid' => 'r-1', 'sourceFileId' => 40, 'kind' => 'native-pdf']);
 		$this->rootFolder->method('getFirstNodeById')->with(40)->willReturn($pdf);
 
@@ -324,14 +324,14 @@ class ReviewRenditionServiceTest extends TestCase {
 		$parent = $this->createMock(Folder::class);
 		$docx = $this->file(id: 10, mime: 'application/msword', content: 'doc', name: 'besluit.doc', parent: $parent, mtime: 300);
 		$old = $this->file(id: 11, mime: 'application/pdf', content: '%PDF', mtime: 200);
-		$new = $this->file(id: 12, mime: 'application/pdf', content: '%PDF new', mtime: 301);
+		$new = $this->file(id: 12, mime: 'application/pdf', content: '%PDF new', name: 'besluit.pdf', mtime: 301);
 		$this->repository->method('findFor')->willReturn(['sourceFileId' => 10, 'fileId' => 11, 'sha256' => hash('sha256', '%PDF'), 'kind' => 'converted']);
-		$this->rootFolder->method('getFirstNodeById')->with(11)->willReturn($old);
+		$this->rootFolder->method('getFirstNodeById')->willReturnMap([[11, $old], [12, $new]]);
 		$parent->method('nodeExists')->with('besluit.pdf')->willReturn(true);
 		$parent->method('get')->with('besluit.pdf')->willReturn($old);
 		$this->conversion->expects($this->once())->method('convertToPdfReporting')->willReturn(['file' => $new, 'backend' => 'phpword']);
 		$this->repository->expects($this->once())->method('saveFor')
-			->with(10, $this->callback(static fn (array $r): bool => $r['fileId'] === 12 && $r['backend'] === 'phpword'))
+			->with(10, $this->callback(static fn (array $r): bool => $r['fileId'] === 12 && $r['backend'] === 'phpword' && $r['fileName'] === 'besluit.pdf'))
 			->willReturnArgument(1);
 
 		$this->assertSame(12, $this->service->record(source: $docx)['fileId']);
