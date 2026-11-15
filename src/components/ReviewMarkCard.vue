@@ -3,11 +3,16 @@
   SPDX-License-Identifier: EUPL-1.2
 -->
 <template>
-	<section class="review-mark" :aria-label="t('filinq', 'Check before anonymising')">
+	<section
+		class="review-mark"
+		:aria-label="t('filinq', 'Check before anonymising')">
 		<h3 class="review-mark__title">
 			{{ t('filinq', 'Check before anonymising') }}
 		</h3>
-		<p class="review-mark__state" :class="{ 'review-mark__state--done': checked }" aria-live="polite">
+		<p
+			class="review-mark__state"
+			:class="{ 'review-mark__state--done': checked }"
+			aria-live="polite">
 			<CheckDecagram v-if="checked" :size="16" aria-hidden="true" />
 			{{ stateLabel }}
 		</p>
@@ -49,7 +54,7 @@ import CheckDecagram from 'vue-material-design-icons/CheckDecagram.vue'
  * offers the reviewer the one action that records it. The parent owns the
  * call; this component only asks for it.
  *
- * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
+ * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
  */
 export default {
 	name: 'ReviewMarkCard',
@@ -93,7 +98,7 @@ export default {
 		 * Who checked and when, or that nobody did.
 		 *
 		 * @return {string}
-		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
 		 */
 		stateLabel() {
 			if (!this.checked || !this.mark) {
@@ -114,7 +119,7 @@ export default {
 		 *
 		 * @param {string} iso The moment.
 		 * @return {string}
-		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
 		 */
 		formatMoment(iso) {
 			const date = new Date(iso)

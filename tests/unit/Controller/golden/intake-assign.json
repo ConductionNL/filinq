@@ -1,0 +1,3132 @@
+{
+    "valid": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 200,
+            "data": {
+                "via": "assignWithAttachments",
+                "uuid": "doc-1",
+                "target": {
+                    "register": "zaken",
+                    "schema": "zaak",
+                    "id": "z-9",
+                    "declaringApp": "dossiq",
+                    "typeReference": "zaaktype-1"
+                }
+            }
+        },
+        "calls": [
+            {
+                "method": "assignWithAttachments",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "zaken",
+                        "schema": "zaak",
+                        "id": "z-9",
+                        "declaringApp": "dossiq",
+                        "typeReference": "zaaktype-1"
+                    }
+                }
+            }
+        ]
+    },
+    "valid anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 401,
+            "data": {
+                "error": "You must be logged in to use the intake inbox."
+            }
+        },
+        "calls": []
+    },
+    "only uuid": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 200,
+            "data": {
+                "via": "assign",
+                "uuid": "doc-1",
+                "target": {
+                    "register": "",
+                    "schema": "",
+                    "id": "",
+                    "declaringApp": "",
+                    "typeReference": ""
+                }
+            }
+        },
+        "calls": [
+            {
+                "method": "assign",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "",
+                        "schema": "",
+                        "id": "",
+                        "declaringApp": "",
+                        "typeReference": ""
+                    }
+                }
+            }
+        ]
+    },
+    "no uuid": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "no uuid anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "int uuid": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "refused 403": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 403,
+            "data": {
+                "error": "Not yours"
+            }
+        },
+        "calls": [
+            {
+                "method": "assignWithAttachments",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "zaken",
+                        "schema": "zaak",
+                        "id": "z-9",
+                        "declaringApp": "dossiq",
+                        "typeReference": "zaaktype-1"
+                    }
+                }
+            }
+        ]
+    },
+    "refused 409": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 409,
+            "data": {
+                "error": "Already filed"
+            }
+        },
+        "calls": [
+            {
+                "method": "assignWithAttachments",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "zaken",
+                        "schema": "zaak",
+                        "id": "z-9",
+                        "declaringApp": "dossiq",
+                        "typeReference": "zaaktype-1"
+                    }
+                }
+            }
+        ]
+    },
+    "runtime failure": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 500,
+            "data": {
+                "error": "Store down"
+            }
+        },
+        "calls": [
+            {
+                "method": "assignWithAttachments",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "zaken",
+                        "schema": "zaak",
+                        "id": "z-9",
+                        "declaringApp": "dossiq",
+                        "typeReference": "zaaktype-1"
+                    }
+                }
+            }
+        ]
+    },
+    "object missing": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 500,
+            "data": {
+                "error": "Object not found"
+            }
+        },
+        "calls": [
+            {
+                "method": "assignWithAttachments",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "zaken",
+                        "schema": "zaak",
+                        "id": "z-9",
+                        "declaringApp": "dossiq",
+                        "typeReference": "zaaktype-1"
+                    }
+                }
+            }
+        ]
+    },
+    "refused no bijlagen": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 409,
+            "data": {
+                "error": "Already filed"
+            }
+        },
+        "calls": [
+            {
+                "method": "assign",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "zaken",
+                        "schema": "zaak",
+                        "id": "z-9",
+                        "declaringApp": "dossiq",
+                        "typeReference": "zaaktype-1"
+                    }
+                }
+            }
+        ]
+    },
+    "forged identity": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 200,
+            "data": {
+                "via": "assignWithAttachments",
+                "uuid": "doc-1",
+                "target": {
+                    "register": "zaken",
+                    "schema": "zaak",
+                    "id": "z-9",
+                    "declaringApp": "dossiq",
+                    "typeReference": "zaaktype-1"
+                }
+            }
+        },
+        "calls": [
+            {
+                "method": "assignWithAttachments",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "zaken",
+                        "schema": "zaak",
+                        "id": "z-9",
+                        "declaringApp": "dossiq",
+                        "typeReference": "zaaktype-1"
+                    }
+                }
+            }
+        ]
+    },
+    "forged identity anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 401,
+            "data": {
+                "error": "You must be logged in to use the intake inbox."
+            }
+        },
+        "calls": []
+    },
+    "register missing": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 200,
+            "data": {
+                "via": "assignWithAttachments",
+                "uuid": "doc-1",
+                "target": {
+                    "register": "",
+                    "schema": "zaak",
+                    "id": "z-9",
+                    "declaringApp": "dossiq",
+                    "typeReference": "zaaktype-1"
+                }
+            }
+        },
+        "calls": [
+            {
+                "method": "assignWithAttachments",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "",
+                        "schema": "zaak",
+                        "id": "z-9",
+                        "declaringApp": "dossiq",
+                        "typeReference": "zaaktype-1"
+                    }
+                }
+            }
+        ]
+    },
+    "register missing anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 401,
+            "data": {
+                "error": "You must be logged in to use the intake inbox."
+            }
+        },
+        "calls": []
+    },
+    "register null": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 200,
+            "data": {
+                "via": "assignWithAttachments",
+                "uuid": "doc-1",
+                "target": {
+                    "register": "",
+                    "schema": "zaak",
+                    "id": "z-9",
+                    "declaringApp": "dossiq",
+                    "typeReference": "zaaktype-1"
+                }
+            }
+        },
+        "calls": [
+            {
+                "method": "assignWithAttachments",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "",
+                        "schema": "zaak",
+                        "id": "z-9",
+                        "declaringApp": "dossiq",
+                        "typeReference": "zaaktype-1"
+                    }
+                }
+            }
+        ]
+    },
+    "register null anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 401,
+            "data": {
+                "error": "You must be logged in to use the intake inbox."
+            }
+        },
+        "calls": []
+    },
+    "register empty": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 200,
+            "data": {
+                "via": "assignWithAttachments",
+                "uuid": "doc-1",
+                "target": {
+                    "register": "",
+                    "schema": "zaak",
+                    "id": "z-9",
+                    "declaringApp": "dossiq",
+                    "typeReference": "zaaktype-1"
+                }
+            }
+        },
+        "calls": [
+            {
+                "method": "assignWithAttachments",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "",
+                        "schema": "zaak",
+                        "id": "z-9",
+                        "declaringApp": "dossiq",
+                        "typeReference": "zaaktype-1"
+                    }
+                }
+            }
+        ]
+    },
+    "register empty anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 401,
+            "data": {
+                "error": "You must be logged in to use the intake inbox."
+            }
+        },
+        "calls": []
+    },
+    "register text": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 200,
+            "data": {
+                "via": "assignWithAttachments",
+                "uuid": "doc-1",
+                "target": {
+                    "register": "abc",
+                    "schema": "zaak",
+                    "id": "z-9",
+                    "declaringApp": "dossiq",
+                    "typeReference": "zaaktype-1"
+                }
+            }
+        },
+        "calls": [
+            {
+                "method": "assignWithAttachments",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "abc",
+                        "schema": "zaak",
+                        "id": "z-9",
+                        "declaringApp": "dossiq",
+                        "typeReference": "zaaktype-1"
+                    }
+                }
+            }
+        ]
+    },
+    "register text anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 401,
+            "data": {
+                "error": "You must be logged in to use the intake inbox."
+            }
+        },
+        "calls": []
+    },
+    "register false": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 200,
+            "data": {
+                "via": "assignWithAttachments",
+                "uuid": "doc-1",
+                "target": {
+                    "register": "false",
+                    "schema": "zaak",
+                    "id": "z-9",
+                    "declaringApp": "dossiq",
+                    "typeReference": "zaaktype-1"
+                }
+            }
+        },
+        "calls": [
+            {
+                "method": "assignWithAttachments",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "false",
+                        "schema": "zaak",
+                        "id": "z-9",
+                        "declaringApp": "dossiq",
+                        "typeReference": "zaaktype-1"
+                    }
+                }
+            }
+        ]
+    },
+    "register false anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 401,
+            "data": {
+                "error": "You must be logged in to use the intake inbox."
+            }
+        },
+        "calls": []
+    },
+    "register true": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 200,
+            "data": {
+                "via": "assignWithAttachments",
+                "uuid": "doc-1",
+                "target": {
+                    "register": "true",
+                    "schema": "zaak",
+                    "id": "z-9",
+                    "declaringApp": "dossiq",
+                    "typeReference": "zaaktype-1"
+                }
+            }
+        },
+        "calls": [
+            {
+                "method": "assignWithAttachments",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "true",
+                        "schema": "zaak",
+                        "id": "z-9",
+                        "declaringApp": "dossiq",
+                        "typeReference": "zaaktype-1"
+                    }
+                }
+            }
+        ]
+    },
+    "register true anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 401,
+            "data": {
+                "error": "You must be logged in to use the intake inbox."
+            }
+        },
+        "calls": []
+    },
+    "register zeroText": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 200,
+            "data": {
+                "via": "assignWithAttachments",
+                "uuid": "doc-1",
+                "target": {
+                    "register": "0",
+                    "schema": "zaak",
+                    "id": "z-9",
+                    "declaringApp": "dossiq",
+                    "typeReference": "zaaktype-1"
+                }
+            }
+        },
+        "calls": [
+            {
+                "method": "assignWithAttachments",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "0",
+                        "schema": "zaak",
+                        "id": "z-9",
+                        "declaringApp": "dossiq",
+                        "typeReference": "zaaktype-1"
+                    }
+                }
+            }
+        ]
+    },
+    "register zeroText anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 401,
+            "data": {
+                "error": "You must be logged in to use the intake inbox."
+            }
+        },
+        "calls": []
+    },
+    "register oneText": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 200,
+            "data": {
+                "via": "assignWithAttachments",
+                "uuid": "doc-1",
+                "target": {
+                    "register": "1",
+                    "schema": "zaak",
+                    "id": "z-9",
+                    "declaringApp": "dossiq",
+                    "typeReference": "zaaktype-1"
+                }
+            }
+        },
+        "calls": [
+            {
+                "method": "assignWithAttachments",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "1",
+                        "schema": "zaak",
+                        "id": "z-9",
+                        "declaringApp": "dossiq",
+                        "typeReference": "zaaktype-1"
+                    }
+                }
+            }
+        ]
+    },
+    "register oneText anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 401,
+            "data": {
+                "error": "You must be logged in to use the intake inbox."
+            }
+        },
+        "calls": []
+    },
+    "register zero": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "register zero anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "register one": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "register one anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "register float": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "register float anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "register boolFalse": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "register boolFalse anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "register boolTrue": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "register boolTrue anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "register list": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "register list anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "register emptyList": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "register emptyList anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "schema missing": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 200,
+            "data": {
+                "via": "assignWithAttachments",
+                "uuid": "doc-1",
+                "target": {
+                    "register": "zaken",
+                    "schema": "",
+                    "id": "z-9",
+                    "declaringApp": "dossiq",
+                    "typeReference": "zaaktype-1"
+                }
+            }
+        },
+        "calls": [
+            {
+                "method": "assignWithAttachments",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "zaken",
+                        "schema": "",
+                        "id": "z-9",
+                        "declaringApp": "dossiq",
+                        "typeReference": "zaaktype-1"
+                    }
+                }
+            }
+        ]
+    },
+    "schema missing anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 401,
+            "data": {
+                "error": "You must be logged in to use the intake inbox."
+            }
+        },
+        "calls": []
+    },
+    "schema null": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 200,
+            "data": {
+                "via": "assignWithAttachments",
+                "uuid": "doc-1",
+                "target": {
+                    "register": "zaken",
+                    "schema": "",
+                    "id": "z-9",
+                    "declaringApp": "dossiq",
+                    "typeReference": "zaaktype-1"
+                }
+            }
+        },
+        "calls": [
+            {
+                "method": "assignWithAttachments",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "zaken",
+                        "schema": "",
+                        "id": "z-9",
+                        "declaringApp": "dossiq",
+                        "typeReference": "zaaktype-1"
+                    }
+                }
+            }
+        ]
+    },
+    "schema null anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 401,
+            "data": {
+                "error": "You must be logged in to use the intake inbox."
+            }
+        },
+        "calls": []
+    },
+    "schema empty": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 200,
+            "data": {
+                "via": "assignWithAttachments",
+                "uuid": "doc-1",
+                "target": {
+                    "register": "zaken",
+                    "schema": "",
+                    "id": "z-9",
+                    "declaringApp": "dossiq",
+                    "typeReference": "zaaktype-1"
+                }
+            }
+        },
+        "calls": [
+            {
+                "method": "assignWithAttachments",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "zaken",
+                        "schema": "",
+                        "id": "z-9",
+                        "declaringApp": "dossiq",
+                        "typeReference": "zaaktype-1"
+                    }
+                }
+            }
+        ]
+    },
+    "schema empty anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 401,
+            "data": {
+                "error": "You must be logged in to use the intake inbox."
+            }
+        },
+        "calls": []
+    },
+    "schema text": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 200,
+            "data": {
+                "via": "assignWithAttachments",
+                "uuid": "doc-1",
+                "target": {
+                    "register": "zaken",
+                    "schema": "abc",
+                    "id": "z-9",
+                    "declaringApp": "dossiq",
+                    "typeReference": "zaaktype-1"
+                }
+            }
+        },
+        "calls": [
+            {
+                "method": "assignWithAttachments",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "zaken",
+                        "schema": "abc",
+                        "id": "z-9",
+                        "declaringApp": "dossiq",
+                        "typeReference": "zaaktype-1"
+                    }
+                }
+            }
+        ]
+    },
+    "schema text anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 401,
+            "data": {
+                "error": "You must be logged in to use the intake inbox."
+            }
+        },
+        "calls": []
+    },
+    "schema false": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 200,
+            "data": {
+                "via": "assignWithAttachments",
+                "uuid": "doc-1",
+                "target": {
+                    "register": "zaken",
+                    "schema": "false",
+                    "id": "z-9",
+                    "declaringApp": "dossiq",
+                    "typeReference": "zaaktype-1"
+                }
+            }
+        },
+        "calls": [
+            {
+                "method": "assignWithAttachments",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "zaken",
+                        "schema": "false",
+                        "id": "z-9",
+                        "declaringApp": "dossiq",
+                        "typeReference": "zaaktype-1"
+                    }
+                }
+            }
+        ]
+    },
+    "schema false anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 401,
+            "data": {
+                "error": "You must be logged in to use the intake inbox."
+            }
+        },
+        "calls": []
+    },
+    "schema true": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 200,
+            "data": {
+                "via": "assignWithAttachments",
+                "uuid": "doc-1",
+                "target": {
+                    "register": "zaken",
+                    "schema": "true",
+                    "id": "z-9",
+                    "declaringApp": "dossiq",
+                    "typeReference": "zaaktype-1"
+                }
+            }
+        },
+        "calls": [
+            {
+                "method": "assignWithAttachments",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "zaken",
+                        "schema": "true",
+                        "id": "z-9",
+                        "declaringApp": "dossiq",
+                        "typeReference": "zaaktype-1"
+                    }
+                }
+            }
+        ]
+    },
+    "schema true anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 401,
+            "data": {
+                "error": "You must be logged in to use the intake inbox."
+            }
+        },
+        "calls": []
+    },
+    "schema zeroText": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 200,
+            "data": {
+                "via": "assignWithAttachments",
+                "uuid": "doc-1",
+                "target": {
+                    "register": "zaken",
+                    "schema": "0",
+                    "id": "z-9",
+                    "declaringApp": "dossiq",
+                    "typeReference": "zaaktype-1"
+                }
+            }
+        },
+        "calls": [
+            {
+                "method": "assignWithAttachments",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "zaken",
+                        "schema": "0",
+                        "id": "z-9",
+                        "declaringApp": "dossiq",
+                        "typeReference": "zaaktype-1"
+                    }
+                }
+            }
+        ]
+    },
+    "schema zeroText anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 401,
+            "data": {
+                "error": "You must be logged in to use the intake inbox."
+            }
+        },
+        "calls": []
+    },
+    "schema oneText": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 200,
+            "data": {
+                "via": "assignWithAttachments",
+                "uuid": "doc-1",
+                "target": {
+                    "register": "zaken",
+                    "schema": "1",
+                    "id": "z-9",
+                    "declaringApp": "dossiq",
+                    "typeReference": "zaaktype-1"
+                }
+            }
+        },
+        "calls": [
+            {
+                "method": "assignWithAttachments",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "zaken",
+                        "schema": "1",
+                        "id": "z-9",
+                        "declaringApp": "dossiq",
+                        "typeReference": "zaaktype-1"
+                    }
+                }
+            }
+        ]
+    },
+    "schema oneText anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 401,
+            "data": {
+                "error": "You must be logged in to use the intake inbox."
+            }
+        },
+        "calls": []
+    },
+    "schema zero": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "schema zero anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "schema one": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "schema one anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "schema float": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "schema float anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "schema boolFalse": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "schema boolFalse anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "schema boolTrue": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "schema boolTrue anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "schema list": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "schema list anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "schema emptyList": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "schema emptyList anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "id missing": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 200,
+            "data": {
+                "via": "assignWithAttachments",
+                "uuid": "doc-1",
+                "target": {
+                    "register": "zaken",
+                    "schema": "zaak",
+                    "id": "",
+                    "declaringApp": "dossiq",
+                    "typeReference": "zaaktype-1"
+                }
+            }
+        },
+        "calls": [
+            {
+                "method": "assignWithAttachments",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "zaken",
+                        "schema": "zaak",
+                        "id": "",
+                        "declaringApp": "dossiq",
+                        "typeReference": "zaaktype-1"
+                    }
+                }
+            }
+        ]
+    },
+    "id missing anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 401,
+            "data": {
+                "error": "You must be logged in to use the intake inbox."
+            }
+        },
+        "calls": []
+    },
+    "id null": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 200,
+            "data": {
+                "via": "assignWithAttachments",
+                "uuid": "doc-1",
+                "target": {
+                    "register": "zaken",
+                    "schema": "zaak",
+                    "id": "",
+                    "declaringApp": "dossiq",
+                    "typeReference": "zaaktype-1"
+                }
+            }
+        },
+        "calls": [
+            {
+                "method": "assignWithAttachments",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "zaken",
+                        "schema": "zaak",
+                        "id": "",
+                        "declaringApp": "dossiq",
+                        "typeReference": "zaaktype-1"
+                    }
+                }
+            }
+        ]
+    },
+    "id null anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 401,
+            "data": {
+                "error": "You must be logged in to use the intake inbox."
+            }
+        },
+        "calls": []
+    },
+    "id empty": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 200,
+            "data": {
+                "via": "assignWithAttachments",
+                "uuid": "doc-1",
+                "target": {
+                    "register": "zaken",
+                    "schema": "zaak",
+                    "id": "",
+                    "declaringApp": "dossiq",
+                    "typeReference": "zaaktype-1"
+                }
+            }
+        },
+        "calls": [
+            {
+                "method": "assignWithAttachments",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "zaken",
+                        "schema": "zaak",
+                        "id": "",
+                        "declaringApp": "dossiq",
+                        "typeReference": "zaaktype-1"
+                    }
+                }
+            }
+        ]
+    },
+    "id empty anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 401,
+            "data": {
+                "error": "You must be logged in to use the intake inbox."
+            }
+        },
+        "calls": []
+    },
+    "id text": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 200,
+            "data": {
+                "via": "assignWithAttachments",
+                "uuid": "doc-1",
+                "target": {
+                    "register": "zaken",
+                    "schema": "zaak",
+                    "id": "abc",
+                    "declaringApp": "dossiq",
+                    "typeReference": "zaaktype-1"
+                }
+            }
+        },
+        "calls": [
+            {
+                "method": "assignWithAttachments",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "zaken",
+                        "schema": "zaak",
+                        "id": "abc",
+                        "declaringApp": "dossiq",
+                        "typeReference": "zaaktype-1"
+                    }
+                }
+            }
+        ]
+    },
+    "id text anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 401,
+            "data": {
+                "error": "You must be logged in to use the intake inbox."
+            }
+        },
+        "calls": []
+    },
+    "id false": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 200,
+            "data": {
+                "via": "assignWithAttachments",
+                "uuid": "doc-1",
+                "target": {
+                    "register": "zaken",
+                    "schema": "zaak",
+                    "id": "false",
+                    "declaringApp": "dossiq",
+                    "typeReference": "zaaktype-1"
+                }
+            }
+        },
+        "calls": [
+            {
+                "method": "assignWithAttachments",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "zaken",
+                        "schema": "zaak",
+                        "id": "false",
+                        "declaringApp": "dossiq",
+                        "typeReference": "zaaktype-1"
+                    }
+                }
+            }
+        ]
+    },
+    "id false anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 401,
+            "data": {
+                "error": "You must be logged in to use the intake inbox."
+            }
+        },
+        "calls": []
+    },
+    "id true": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 200,
+            "data": {
+                "via": "assignWithAttachments",
+                "uuid": "doc-1",
+                "target": {
+                    "register": "zaken",
+                    "schema": "zaak",
+                    "id": "true",
+                    "declaringApp": "dossiq",
+                    "typeReference": "zaaktype-1"
+                }
+            }
+        },
+        "calls": [
+            {
+                "method": "assignWithAttachments",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "zaken",
+                        "schema": "zaak",
+                        "id": "true",
+                        "declaringApp": "dossiq",
+                        "typeReference": "zaaktype-1"
+                    }
+                }
+            }
+        ]
+    },
+    "id true anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 401,
+            "data": {
+                "error": "You must be logged in to use the intake inbox."
+            }
+        },
+        "calls": []
+    },
+    "id zeroText": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 200,
+            "data": {
+                "via": "assignWithAttachments",
+                "uuid": "doc-1",
+                "target": {
+                    "register": "zaken",
+                    "schema": "zaak",
+                    "id": "0",
+                    "declaringApp": "dossiq",
+                    "typeReference": "zaaktype-1"
+                }
+            }
+        },
+        "calls": [
+            {
+                "method": "assignWithAttachments",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "zaken",
+                        "schema": "zaak",
+                        "id": "0",
+                        "declaringApp": "dossiq",
+                        "typeReference": "zaaktype-1"
+                    }
+                }
+            }
+        ]
+    },
+    "id zeroText anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 401,
+            "data": {
+                "error": "You must be logged in to use the intake inbox."
+            }
+        },
+        "calls": []
+    },
+    "id oneText": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 200,
+            "data": {
+                "via": "assignWithAttachments",
+                "uuid": "doc-1",
+                "target": {
+                    "register": "zaken",
+                    "schema": "zaak",
+                    "id": "1",
+                    "declaringApp": "dossiq",
+                    "typeReference": "zaaktype-1"
+                }
+            }
+        },
+        "calls": [
+            {
+                "method": "assignWithAttachments",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "zaken",
+                        "schema": "zaak",
+                        "id": "1",
+                        "declaringApp": "dossiq",
+                        "typeReference": "zaaktype-1"
+                    }
+                }
+            }
+        ]
+    },
+    "id oneText anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 401,
+            "data": {
+                "error": "You must be logged in to use the intake inbox."
+            }
+        },
+        "calls": []
+    },
+    "id zero": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "id zero anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "id one": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "id one anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "id float": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "id float anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "id boolFalse": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "id boolFalse anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "id boolTrue": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "id boolTrue anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "id list": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "id list anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "id emptyList": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "id emptyList anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "declaringApp missing": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 200,
+            "data": {
+                "via": "assignWithAttachments",
+                "uuid": "doc-1",
+                "target": {
+                    "register": "zaken",
+                    "schema": "zaak",
+                    "id": "z-9",
+                    "declaringApp": "",
+                    "typeReference": "zaaktype-1"
+                }
+            }
+        },
+        "calls": [
+            {
+                "method": "assignWithAttachments",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "zaken",
+                        "schema": "zaak",
+                        "id": "z-9",
+                        "declaringApp": "",
+                        "typeReference": "zaaktype-1"
+                    }
+                }
+            }
+        ]
+    },
+    "declaringApp missing anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 401,
+            "data": {
+                "error": "You must be logged in to use the intake inbox."
+            }
+        },
+        "calls": []
+    },
+    "declaringApp null": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 200,
+            "data": {
+                "via": "assignWithAttachments",
+                "uuid": "doc-1",
+                "target": {
+                    "register": "zaken",
+                    "schema": "zaak",
+                    "id": "z-9",
+                    "declaringApp": "",
+                    "typeReference": "zaaktype-1"
+                }
+            }
+        },
+        "calls": [
+            {
+                "method": "assignWithAttachments",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "zaken",
+                        "schema": "zaak",
+                        "id": "z-9",
+                        "declaringApp": "",
+                        "typeReference": "zaaktype-1"
+                    }
+                }
+            }
+        ]
+    },
+    "declaringApp null anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 401,
+            "data": {
+                "error": "You must be logged in to use the intake inbox."
+            }
+        },
+        "calls": []
+    },
+    "declaringApp empty": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 200,
+            "data": {
+                "via": "assignWithAttachments",
+                "uuid": "doc-1",
+                "target": {
+                    "register": "zaken",
+                    "schema": "zaak",
+                    "id": "z-9",
+                    "declaringApp": "",
+                    "typeReference": "zaaktype-1"
+                }
+            }
+        },
+        "calls": [
+            {
+                "method": "assignWithAttachments",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "zaken",
+                        "schema": "zaak",
+                        "id": "z-9",
+                        "declaringApp": "",
+                        "typeReference": "zaaktype-1"
+                    }
+                }
+            }
+        ]
+    },
+    "declaringApp empty anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 401,
+            "data": {
+                "error": "You must be logged in to use the intake inbox."
+            }
+        },
+        "calls": []
+    },
+    "declaringApp text": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 200,
+            "data": {
+                "via": "assignWithAttachments",
+                "uuid": "doc-1",
+                "target": {
+                    "register": "zaken",
+                    "schema": "zaak",
+                    "id": "z-9",
+                    "declaringApp": "abc",
+                    "typeReference": "zaaktype-1"
+                }
+            }
+        },
+        "calls": [
+            {
+                "method": "assignWithAttachments",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "zaken",
+                        "schema": "zaak",
+                        "id": "z-9",
+                        "declaringApp": "abc",
+                        "typeReference": "zaaktype-1"
+                    }
+                }
+            }
+        ]
+    },
+    "declaringApp text anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 401,
+            "data": {
+                "error": "You must be logged in to use the intake inbox."
+            }
+        },
+        "calls": []
+    },
+    "declaringApp false": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 200,
+            "data": {
+                "via": "assignWithAttachments",
+                "uuid": "doc-1",
+                "target": {
+                    "register": "zaken",
+                    "schema": "zaak",
+                    "id": "z-9",
+                    "declaringApp": "false",
+                    "typeReference": "zaaktype-1"
+                }
+            }
+        },
+        "calls": [
+            {
+                "method": "assignWithAttachments",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "zaken",
+                        "schema": "zaak",
+                        "id": "z-9",
+                        "declaringApp": "false",
+                        "typeReference": "zaaktype-1"
+                    }
+                }
+            }
+        ]
+    },
+    "declaringApp false anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 401,
+            "data": {
+                "error": "You must be logged in to use the intake inbox."
+            }
+        },
+        "calls": []
+    },
+    "declaringApp true": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 200,
+            "data": {
+                "via": "assignWithAttachments",
+                "uuid": "doc-1",
+                "target": {
+                    "register": "zaken",
+                    "schema": "zaak",
+                    "id": "z-9",
+                    "declaringApp": "true",
+                    "typeReference": "zaaktype-1"
+                }
+            }
+        },
+        "calls": [
+            {
+                "method": "assignWithAttachments",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "zaken",
+                        "schema": "zaak",
+                        "id": "z-9",
+                        "declaringApp": "true",
+                        "typeReference": "zaaktype-1"
+                    }
+                }
+            }
+        ]
+    },
+    "declaringApp true anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 401,
+            "data": {
+                "error": "You must be logged in to use the intake inbox."
+            }
+        },
+        "calls": []
+    },
+    "declaringApp zeroText": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 200,
+            "data": {
+                "via": "assignWithAttachments",
+                "uuid": "doc-1",
+                "target": {
+                    "register": "zaken",
+                    "schema": "zaak",
+                    "id": "z-9",
+                    "declaringApp": "0",
+                    "typeReference": "zaaktype-1"
+                }
+            }
+        },
+        "calls": [
+            {
+                "method": "assignWithAttachments",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "zaken",
+                        "schema": "zaak",
+                        "id": "z-9",
+                        "declaringApp": "0",
+                        "typeReference": "zaaktype-1"
+                    }
+                }
+            }
+        ]
+    },
+    "declaringApp zeroText anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 401,
+            "data": {
+                "error": "You must be logged in to use the intake inbox."
+            }
+        },
+        "calls": []
+    },
+    "declaringApp oneText": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 200,
+            "data": {
+                "via": "assignWithAttachments",
+                "uuid": "doc-1",
+                "target": {
+                    "register": "zaken",
+                    "schema": "zaak",
+                    "id": "z-9",
+                    "declaringApp": "1",
+                    "typeReference": "zaaktype-1"
+                }
+            }
+        },
+        "calls": [
+            {
+                "method": "assignWithAttachments",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "zaken",
+                        "schema": "zaak",
+                        "id": "z-9",
+                        "declaringApp": "1",
+                        "typeReference": "zaaktype-1"
+                    }
+                }
+            }
+        ]
+    },
+    "declaringApp oneText anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 401,
+            "data": {
+                "error": "You must be logged in to use the intake inbox."
+            }
+        },
+        "calls": []
+    },
+    "declaringApp zero": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "declaringApp zero anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "declaringApp one": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "declaringApp one anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "declaringApp float": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "declaringApp float anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "declaringApp boolFalse": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "declaringApp boolFalse anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "declaringApp boolTrue": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "declaringApp boolTrue anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "declaringApp list": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "declaringApp list anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "declaringApp emptyList": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "declaringApp emptyList anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "typeReference missing": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 200,
+            "data": {
+                "via": "assignWithAttachments",
+                "uuid": "doc-1",
+                "target": {
+                    "register": "zaken",
+                    "schema": "zaak",
+                    "id": "z-9",
+                    "declaringApp": "dossiq",
+                    "typeReference": ""
+                }
+            }
+        },
+        "calls": [
+            {
+                "method": "assignWithAttachments",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "zaken",
+                        "schema": "zaak",
+                        "id": "z-9",
+                        "declaringApp": "dossiq",
+                        "typeReference": ""
+                    }
+                }
+            }
+        ]
+    },
+    "typeReference missing anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 401,
+            "data": {
+                "error": "You must be logged in to use the intake inbox."
+            }
+        },
+        "calls": []
+    },
+    "typeReference null": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 200,
+            "data": {
+                "via": "assignWithAttachments",
+                "uuid": "doc-1",
+                "target": {
+                    "register": "zaken",
+                    "schema": "zaak",
+                    "id": "z-9",
+                    "declaringApp": "dossiq",
+                    "typeReference": ""
+                }
+            }
+        },
+        "calls": [
+            {
+                "method": "assignWithAttachments",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "zaken",
+                        "schema": "zaak",
+                        "id": "z-9",
+                        "declaringApp": "dossiq",
+                        "typeReference": ""
+                    }
+                }
+            }
+        ]
+    },
+    "typeReference null anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 401,
+            "data": {
+                "error": "You must be logged in to use the intake inbox."
+            }
+        },
+        "calls": []
+    },
+    "typeReference empty": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 200,
+            "data": {
+                "via": "assignWithAttachments",
+                "uuid": "doc-1",
+                "target": {
+                    "register": "zaken",
+                    "schema": "zaak",
+                    "id": "z-9",
+                    "declaringApp": "dossiq",
+                    "typeReference": ""
+                }
+            }
+        },
+        "calls": [
+            {
+                "method": "assignWithAttachments",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "zaken",
+                        "schema": "zaak",
+                        "id": "z-9",
+                        "declaringApp": "dossiq",
+                        "typeReference": ""
+                    }
+                }
+            }
+        ]
+    },
+    "typeReference empty anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 401,
+            "data": {
+                "error": "You must be logged in to use the intake inbox."
+            }
+        },
+        "calls": []
+    },
+    "typeReference text": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 200,
+            "data": {
+                "via": "assignWithAttachments",
+                "uuid": "doc-1",
+                "target": {
+                    "register": "zaken",
+                    "schema": "zaak",
+                    "id": "z-9",
+                    "declaringApp": "dossiq",
+                    "typeReference": "abc"
+                }
+            }
+        },
+        "calls": [
+            {
+                "method": "assignWithAttachments",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "zaken",
+                        "schema": "zaak",
+                        "id": "z-9",
+                        "declaringApp": "dossiq",
+                        "typeReference": "abc"
+                    }
+                }
+            }
+        ]
+    },
+    "typeReference text anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 401,
+            "data": {
+                "error": "You must be logged in to use the intake inbox."
+            }
+        },
+        "calls": []
+    },
+    "typeReference false": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 200,
+            "data": {
+                "via": "assignWithAttachments",
+                "uuid": "doc-1",
+                "target": {
+                    "register": "zaken",
+                    "schema": "zaak",
+                    "id": "z-9",
+                    "declaringApp": "dossiq",
+                    "typeReference": "false"
+                }
+            }
+        },
+        "calls": [
+            {
+                "method": "assignWithAttachments",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "zaken",
+                        "schema": "zaak",
+                        "id": "z-9",
+                        "declaringApp": "dossiq",
+                        "typeReference": "false"
+                    }
+                }
+            }
+        ]
+    },
+    "typeReference false anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 401,
+            "data": {
+                "error": "You must be logged in to use the intake inbox."
+            }
+        },
+        "calls": []
+    },
+    "typeReference true": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 200,
+            "data": {
+                "via": "assignWithAttachments",
+                "uuid": "doc-1",
+                "target": {
+                    "register": "zaken",
+                    "schema": "zaak",
+                    "id": "z-9",
+                    "declaringApp": "dossiq",
+                    "typeReference": "true"
+                }
+            }
+        },
+        "calls": [
+            {
+                "method": "assignWithAttachments",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "zaken",
+                        "schema": "zaak",
+                        "id": "z-9",
+                        "declaringApp": "dossiq",
+                        "typeReference": "true"
+                    }
+                }
+            }
+        ]
+    },
+    "typeReference true anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 401,
+            "data": {
+                "error": "You must be logged in to use the intake inbox."
+            }
+        },
+        "calls": []
+    },
+    "typeReference zeroText": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 200,
+            "data": {
+                "via": "assignWithAttachments",
+                "uuid": "doc-1",
+                "target": {
+                    "register": "zaken",
+                    "schema": "zaak",
+                    "id": "z-9",
+                    "declaringApp": "dossiq",
+                    "typeReference": "0"
+                }
+            }
+        },
+        "calls": [
+            {
+                "method": "assignWithAttachments",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "zaken",
+                        "schema": "zaak",
+                        "id": "z-9",
+                        "declaringApp": "dossiq",
+                        "typeReference": "0"
+                    }
+                }
+            }
+        ]
+    },
+    "typeReference zeroText anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 401,
+            "data": {
+                "error": "You must be logged in to use the intake inbox."
+            }
+        },
+        "calls": []
+    },
+    "typeReference oneText": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 200,
+            "data": {
+                "via": "assignWithAttachments",
+                "uuid": "doc-1",
+                "target": {
+                    "register": "zaken",
+                    "schema": "zaak",
+                    "id": "z-9",
+                    "declaringApp": "dossiq",
+                    "typeReference": "1"
+                }
+            }
+        },
+        "calls": [
+            {
+                "method": "assignWithAttachments",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "zaken",
+                        "schema": "zaak",
+                        "id": "z-9",
+                        "declaringApp": "dossiq",
+                        "typeReference": "1"
+                    }
+                }
+            }
+        ]
+    },
+    "typeReference oneText anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 401,
+            "data": {
+                "error": "You must be logged in to use the intake inbox."
+            }
+        },
+        "calls": []
+    },
+    "typeReference zero": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "typeReference zero anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "typeReference one": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "typeReference one anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "typeReference float": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "typeReference float anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "typeReference boolFalse": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "typeReference boolFalse anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "typeReference boolTrue": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "typeReference boolTrue anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "typeReference list": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "typeReference list anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "typeReference emptyList": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "typeReference emptyList anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\Response",
+            "status": 400,
+            "data": null
+        },
+        "calls": []
+    },
+    "withAttachments missing": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 200,
+            "data": {
+                "via": "assign",
+                "uuid": "doc-1",
+                "target": {
+                    "register": "zaken",
+                    "schema": "zaak",
+                    "id": "z-9",
+                    "declaringApp": "dossiq",
+                    "typeReference": "zaaktype-1"
+                }
+            }
+        },
+        "calls": [
+            {
+                "method": "assign",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "zaken",
+                        "schema": "zaak",
+                        "id": "z-9",
+                        "declaringApp": "dossiq",
+                        "typeReference": "zaaktype-1"
+                    }
+                }
+            }
+        ]
+    },
+    "withAttachments missing anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 401,
+            "data": {
+                "error": "You must be logged in to use the intake inbox."
+            }
+        },
+        "calls": []
+    },
+    "withAttachments null": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 200,
+            "data": {
+                "via": "assign",
+                "uuid": "doc-1",
+                "target": {
+                    "register": "zaken",
+                    "schema": "zaak",
+                    "id": "z-9",
+                    "declaringApp": "dossiq",
+                    "typeReference": "zaaktype-1"
+                }
+            }
+        },
+        "calls": [
+            {
+                "method": "assign",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "zaken",
+                        "schema": "zaak",
+                        "id": "z-9",
+                        "declaringApp": "dossiq",
+                        "typeReference": "zaaktype-1"
+                    }
+                }
+            }
+        ]
+    },
+    "withAttachments null anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 401,
+            "data": {
+                "error": "You must be logged in to use the intake inbox."
+            }
+        },
+        "calls": []
+    },
+    "withAttachments empty": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 200,
+            "data": {
+                "via": "assign",
+                "uuid": "doc-1",
+                "target": {
+                    "register": "zaken",
+                    "schema": "zaak",
+                    "id": "z-9",
+                    "declaringApp": "dossiq",
+                    "typeReference": "zaaktype-1"
+                }
+            }
+        },
+        "calls": [
+            {
+                "method": "assign",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "zaken",
+                        "schema": "zaak",
+                        "id": "z-9",
+                        "declaringApp": "dossiq",
+                        "typeReference": "zaaktype-1"
+                    }
+                }
+            }
+        ]
+    },
+    "withAttachments empty anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 401,
+            "data": {
+                "error": "You must be logged in to use the intake inbox."
+            }
+        },
+        "calls": []
+    },
+    "withAttachments text": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 200,
+            "data": {
+                "via": "assignWithAttachments",
+                "uuid": "doc-1",
+                "target": {
+                    "register": "zaken",
+                    "schema": "zaak",
+                    "id": "z-9",
+                    "declaringApp": "dossiq",
+                    "typeReference": "zaaktype-1"
+                }
+            }
+        },
+        "calls": [
+            {
+                "method": "assignWithAttachments",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "zaken",
+                        "schema": "zaak",
+                        "id": "z-9",
+                        "declaringApp": "dossiq",
+                        "typeReference": "zaaktype-1"
+                    }
+                }
+            }
+        ]
+    },
+    "withAttachments text anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 401,
+            "data": {
+                "error": "You must be logged in to use the intake inbox."
+            }
+        },
+        "calls": []
+    },
+    "withAttachments false": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 200,
+            "data": {
+                "via": "assign",
+                "uuid": "doc-1",
+                "target": {
+                    "register": "zaken",
+                    "schema": "zaak",
+                    "id": "z-9",
+                    "declaringApp": "dossiq",
+                    "typeReference": "zaaktype-1"
+                }
+            }
+        },
+        "calls": [
+            {
+                "method": "assign",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "zaken",
+                        "schema": "zaak",
+                        "id": "z-9",
+                        "declaringApp": "dossiq",
+                        "typeReference": "zaaktype-1"
+                    }
+                }
+            }
+        ]
+    },
+    "withAttachments false anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 401,
+            "data": {
+                "error": "You must be logged in to use the intake inbox."
+            }
+        },
+        "calls": []
+    },
+    "withAttachments true": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 200,
+            "data": {
+                "via": "assignWithAttachments",
+                "uuid": "doc-1",
+                "target": {
+                    "register": "zaken",
+                    "schema": "zaak",
+                    "id": "z-9",
+                    "declaringApp": "dossiq",
+                    "typeReference": "zaaktype-1"
+                }
+            }
+        },
+        "calls": [
+            {
+                "method": "assignWithAttachments",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "zaken",
+                        "schema": "zaak",
+                        "id": "z-9",
+                        "declaringApp": "dossiq",
+                        "typeReference": "zaaktype-1"
+                    }
+                }
+            }
+        ]
+    },
+    "withAttachments true anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 401,
+            "data": {
+                "error": "You must be logged in to use the intake inbox."
+            }
+        },
+        "calls": []
+    },
+    "withAttachments zeroText": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 200,
+            "data": {
+                "via": "assign",
+                "uuid": "doc-1",
+                "target": {
+                    "register": "zaken",
+                    "schema": "zaak",
+                    "id": "z-9",
+                    "declaringApp": "dossiq",
+                    "typeReference": "zaaktype-1"
+                }
+            }
+        },
+        "calls": [
+            {
+                "method": "assign",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "zaken",
+                        "schema": "zaak",
+                        "id": "z-9",
+                        "declaringApp": "dossiq",
+                        "typeReference": "zaaktype-1"
+                    }
+                }
+            }
+        ]
+    },
+    "withAttachments zeroText anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 401,
+            "data": {
+                "error": "You must be logged in to use the intake inbox."
+            }
+        },
+        "calls": []
+    },
+    "withAttachments oneText": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 200,
+            "data": {
+                "via": "assignWithAttachments",
+                "uuid": "doc-1",
+                "target": {
+                    "register": "zaken",
+                    "schema": "zaak",
+                    "id": "z-9",
+                    "declaringApp": "dossiq",
+                    "typeReference": "zaaktype-1"
+                }
+            }
+        },
+        "calls": [
+            {
+                "method": "assignWithAttachments",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "zaken",
+                        "schema": "zaak",
+                        "id": "z-9",
+                        "declaringApp": "dossiq",
+                        "typeReference": "zaaktype-1"
+                    }
+                }
+            }
+        ]
+    },
+    "withAttachments oneText anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 401,
+            "data": {
+                "error": "You must be logged in to use the intake inbox."
+            }
+        },
+        "calls": []
+    },
+    "withAttachments zero": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 200,
+            "data": {
+                "via": "assign",
+                "uuid": "doc-1",
+                "target": {
+                    "register": "zaken",
+                    "schema": "zaak",
+                    "id": "z-9",
+                    "declaringApp": "dossiq",
+                    "typeReference": "zaaktype-1"
+                }
+            }
+        },
+        "calls": [
+            {
+                "method": "assign",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "zaken",
+                        "schema": "zaak",
+                        "id": "z-9",
+                        "declaringApp": "dossiq",
+                        "typeReference": "zaaktype-1"
+                    }
+                }
+            }
+        ]
+    },
+    "withAttachments zero anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 401,
+            "data": {
+                "error": "You must be logged in to use the intake inbox."
+            }
+        },
+        "calls": []
+    },
+    "withAttachments one": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 200,
+            "data": {
+                "via": "assignWithAttachments",
+                "uuid": "doc-1",
+                "target": {
+                    "register": "zaken",
+                    "schema": "zaak",
+                    "id": "z-9",
+                    "declaringApp": "dossiq",
+                    "typeReference": "zaaktype-1"
+                }
+            }
+        },
+        "calls": [
+            {
+                "method": "assignWithAttachments",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "zaken",
+                        "schema": "zaak",
+                        "id": "z-9",
+                        "declaringApp": "dossiq",
+                        "typeReference": "zaaktype-1"
+                    }
+                }
+            }
+        ]
+    },
+    "withAttachments one anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 401,
+            "data": {
+                "error": "You must be logged in to use the intake inbox."
+            }
+        },
+        "calls": []
+    },
+    "withAttachments float": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 200,
+            "data": {
+                "via": "assignWithAttachments",
+                "uuid": "doc-1",
+                "target": {
+                    "register": "zaken",
+                    "schema": "zaak",
+                    "id": "z-9",
+                    "declaringApp": "dossiq",
+                    "typeReference": "zaaktype-1"
+                }
+            }
+        },
+        "calls": [
+            {
+                "method": "assignWithAttachments",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "zaken",
+                        "schema": "zaak",
+                        "id": "z-9",
+                        "declaringApp": "dossiq",
+                        "typeReference": "zaaktype-1"
+                    }
+                }
+            }
+        ]
+    },
+    "withAttachments float anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 401,
+            "data": {
+                "error": "You must be logged in to use the intake inbox."
+            }
+        },
+        "calls": []
+    },
+    "withAttachments boolFalse": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 200,
+            "data": {
+                "via": "assign",
+                "uuid": "doc-1",
+                "target": {
+                    "register": "zaken",
+                    "schema": "zaak",
+                    "id": "z-9",
+                    "declaringApp": "dossiq",
+                    "typeReference": "zaaktype-1"
+                }
+            }
+        },
+        "calls": [
+            {
+                "method": "assign",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "zaken",
+                        "schema": "zaak",
+                        "id": "z-9",
+                        "declaringApp": "dossiq",
+                        "typeReference": "zaaktype-1"
+                    }
+                }
+            }
+        ]
+    },
+    "withAttachments boolFalse anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 401,
+            "data": {
+                "error": "You must be logged in to use the intake inbox."
+            }
+        },
+        "calls": []
+    },
+    "withAttachments boolTrue": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 200,
+            "data": {
+                "via": "assignWithAttachments",
+                "uuid": "doc-1",
+                "target": {
+                    "register": "zaken",
+                    "schema": "zaak",
+                    "id": "z-9",
+                    "declaringApp": "dossiq",
+                    "typeReference": "zaaktype-1"
+                }
+            }
+        },
+        "calls": [
+            {
+                "method": "assignWithAttachments",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "zaken",
+                        "schema": "zaak",
+                        "id": "z-9",
+                        "declaringApp": "dossiq",
+                        "typeReference": "zaaktype-1"
+                    }
+                }
+            }
+        ]
+    },
+    "withAttachments boolTrue anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 401,
+            "data": {
+                "error": "You must be logged in to use the intake inbox."
+            }
+        },
+        "calls": []
+    },
+    "withAttachments list": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 200,
+            "data": {
+                "via": "assignWithAttachments",
+                "uuid": "doc-1",
+                "target": {
+                    "register": "zaken",
+                    "schema": "zaak",
+                    "id": "z-9",
+                    "declaringApp": "dossiq",
+                    "typeReference": "zaaktype-1"
+                }
+            }
+        },
+        "calls": [
+            {
+                "method": "assignWithAttachments",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "zaken",
+                        "schema": "zaak",
+                        "id": "z-9",
+                        "declaringApp": "dossiq",
+                        "typeReference": "zaaktype-1"
+                    }
+                }
+            }
+        ]
+    },
+    "withAttachments list anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 401,
+            "data": {
+                "error": "You must be logged in to use the intake inbox."
+            }
+        },
+        "calls": []
+    },
+    "withAttachments emptyList": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 200,
+            "data": {
+                "via": "assign",
+                "uuid": "doc-1",
+                "target": {
+                    "register": "zaken",
+                    "schema": "zaak",
+                    "id": "z-9",
+                    "declaringApp": "dossiq",
+                    "typeReference": "zaaktype-1"
+                }
+            }
+        },
+        "calls": [
+            {
+                "method": "assign",
+                "args": {
+                    "uuid": "doc-1",
+                    "target": {
+                        "register": "zaken",
+                        "schema": "zaak",
+                        "id": "z-9",
+                        "declaringApp": "dossiq",
+                        "typeReference": "zaaktype-1"
+                    }
+                }
+            }
+        ]
+    },
+    "withAttachments emptyList anonymous": {
+        "response": {
+            "class": "OCP\\AppFramework\\Http\\JSONResponse",
+            "status": 401,
+            "data": {
+                "error": "You must be logged in to use the intake inbox."
+            }
+        },
+        "calls": []
+    }
+}

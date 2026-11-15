@@ -21,7 +21,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Notification;
 
 use OCA\Filinq\Kernel\AppIdentity;
-use OCA\Filinq\Service\LegalHold\LegalHoldNotifications;
+use OCA\Filinq\Kernel\Contracts\LegalHoldNotificationsInterface;
 use OCP\IURLGenerator;
 use OCP\L10N\IFactory;
 use OCP\Notification\INotification;
@@ -83,7 +83,7 @@ class LegalHoldNotifier implements INotifier {
 	public function prepare(INotification $notification, string $languageCode): INotification {
 		$subject = $notification->getSubject();
 		if ($notification->getApp() !== AppIdentity::APP_ID
-			|| in_array($subject, [LegalHoldNotifications::SUBJECT_PLACED, LegalHoldNotifications::SUBJECT_RELEASED], true) === false
+			|| in_array($subject, [LegalHoldNotificationsInterface::SUBJECT_PLACED, LegalHoldNotificationsInterface::SUBJECT_RELEASED], true) === false
 		) {
 			throw new UnknownNotificationException();
 		}
@@ -91,7 +91,7 @@ class LegalHoldNotifier implements INotifier {
 		$l10n = $this->l10nFactory->get(AppIdentity::APP_ID, $languageCode);
 		$name = (string) ($notification->getSubjectParameters()['name'] ?? '');
 		$text = $l10n->t('Legal hold "%s" is released: records in it may be destroyed or deleted again when their term allows.', [$name]);
-		if ($subject === LegalHoldNotifications::SUBJECT_PLACED) {
+		if ($subject === LegalHoldNotificationsInterface::SUBJECT_PLACED) {
 			$text = $l10n->t('Legal hold "%s" freezes records of yours: they cannot be destroyed or deleted until the hold is released.', [$name]);
 		}
 

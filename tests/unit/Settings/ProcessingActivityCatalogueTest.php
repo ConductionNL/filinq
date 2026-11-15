@@ -4,6 +4,9 @@
  * Unit tests for the AVG Art. 30 processing-activity catalogue annotations
  * added to `filinq_register.json` by the `processing-activity-export` change.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Filinq is a THIN CONSUMER of OpenRegister's platform processing-activity
  * register (OR-PA-1..9): it declares its four processing activities as
  * `x-openregister-processing` catalogue annotations and opts the carrying

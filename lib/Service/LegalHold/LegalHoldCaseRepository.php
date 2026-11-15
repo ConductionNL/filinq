@@ -22,6 +22,7 @@ namespace OCA\Filinq\Service\LegalHold;
 
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\IntakeRepository;
+use OCA\Filinq\Service\ReadsStoredObjectRows;
 use RuntimeException;
 use Throwable;
 
@@ -32,6 +33,7 @@ use Throwable;
  * false`; LegalHoldCaseService calls this only after LegalHoldAuthority.
  */
 class LegalHoldCaseRepository {
+	use ReadsStoredObjectRows;
 
 	/**
 	 * The schema the cases live in.
@@ -107,7 +109,7 @@ class LegalHoldCaseRepository {
 
 		$cases = [];
 		foreach ((array) $results as $result) {
-			$case = $this->normalise(row: $result);
+			$case = ($this->storedEntityFields(row: $result) + ['uuid' => '']);
 			foreach ($filters as $field => $value) {
 				if ((string) ($case[$field] ?? '') !== (string) $value) {
 					continue 2;
@@ -155,7 +157,7 @@ class LegalHoldCaseRepository {
 			throw new RuntimeException(message: 'The hold case could not be saved: ' . $e->getMessage(), code: 0, previous: $e);
 		}
 
-		$saved = $this->normalise(row: $stored);
+		$saved = ($this->storedEntityFields(row: $stored) + ['uuid' => '']);
 		if ($saved['uuid'] === '') {
 			throw new RuntimeException(message: 'OpenRegister stored the hold case without a uuid.');
 		}
@@ -163,37 +165,4 @@ class LegalHoldCaseRepository {
 		return array_merge($case, $saved);
 
 	}//end save()
-
-	/**
-	 * Flatten an OpenRegister row to its fields plus `uuid`.
-	 *
-	 * @param mixed $row A search or save result.
-	 *
-	 * @return array<string, mixed> The fields.
-	 */
-	private function normalise(mixed $row): array {
-		if (is_object($row) === true && method_exists($row, 'getObject') === true && method_exists($row, 'getUuid') === true) {
-			return array_merge((array) $row->getObject(), ['uuid' => (string) $row->getUuid()]);
-		}
-
-		$data = $row;
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			$data = $row->jsonSerialize();
-		}
-
-		if (is_array($data) === false) {
-			return ['uuid' => ''];
-		}
-
-		$fields = $data;
-		if (isset($data['object']) === true && is_array($data['object']) === true) {
-			$fields = $data['object'];
-		}
-
-		unset($fields['@self']);
-		$fields['uuid'] = (string) ($fields['uuid'] ?? ($data['uuid'] ?? ($data['@self']['id'] ?? ($data['id'] ?? ''))));
-
-		return $fields;
-
-	}//end normalise()
 }//end class

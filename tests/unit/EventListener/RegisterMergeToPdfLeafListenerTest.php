@@ -23,7 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Tests\Unit\EventListener;
 
-use OCA\Filinq\AppInfo\IntegrationLeafRegistrar;
+use OCA\Filinq\EventListener\IntegrationLeafRegistrar;
 use OCA\Filinq\EventListener\RegisterMergeToPdfLeafListener;
 use OCA\OpenRegister\Event\RegisterLeafProvidersEvent;
 use OCA\OpenRegister\Service\Integration\LeafDescriptor;

@@ -15,11 +15,15 @@
  * @link https://www.filinq.app
  *
  * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-2
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\DocumentController;
+use OCA\Filinq\Controller\Support\ControllerFeedback;
 use OCA\Filinq\Exception\ConversionFailedException;
 use OCA\Filinq\Service\DocumentService;
 use OCP\AppFramework\Http\DataDownloadResponse;
@@ -125,8 +129,7 @@ class DocumentControllerTest extends TestCase {
 			$this->request,
 			$this->documentSvc,
 			$this->userSession,
-			$this->logger,
-			$this->l10n
+			new ControllerFeedback(l10n: $this->l10n, logger: $this->logger)
 		);
 
 	}//end setUp()
@@ -204,7 +207,7 @@ class DocumentControllerTest extends TestCase {
 		$user->method('getUID')->willReturn('clerk');
 		$session = $this->createMock(IUserSession::class);
 		$session->method('getUser')->willReturn($user);
-		$controller = new DocumentController('filinq', $this->request, $this->documentSvc, $session, $this->logger, $this->l10n, $producer);
+		$controller = new DocumentController('filinq', $this->request, $this->documentSvc, $session,new ControllerFeedback(l10n: $this->l10n, logger: $this->logger), $producer);
 
 		$result = $controller->generate();
 
@@ -492,7 +495,7 @@ class DocumentControllerTest extends TestCase {
 	/**
 	 * The merge preview answers with the preview, its fields and whether all are filled.
 	 *
-	 * @spec openspec/changes/template-merge-preview/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 *
 	 * @return void
 	 */
@@ -708,8 +711,7 @@ class DocumentControllerTest extends TestCase {
 			$this->request,
 			$this->documentSvc,
 			$this->userSession,
-			$this->logger,
-			$this->l10n
+			new ControllerFeedback(l10n: $this->l10n, logger: $this->logger)
 		);
 
 		$result = $controller->generate();
@@ -794,12 +796,11 @@ class DocumentControllerTest extends TestCase {
 		$documents->method('generateDocument')->willReturn($result);
 
 		return new DocumentController(
+			feedback: new ControllerFeedback(l10n: $this->l10n, logger: $this->createMock(originalClassName: LoggerInterface::class)),
 			appName: 'filinq',
 			request: $request,
 			documentSvc: $documents,
-			userSession: $this->userSession,
-			logger: $this->createMock(originalClassName: LoggerInterface::class),
-			l10n: $this->l10n
+			userSession: $this->userSession
 		);
 
 	}//end controllerAnswering()
@@ -816,12 +817,11 @@ class DocumentControllerTest extends TestCase {
 		$this->documentSvc->expects($this->never())->method($this->anything());
 
 		$controller = new DocumentController(
+			feedback: new ControllerFeedback(l10n: $this->l10n, logger: $this->logger),
 			appName: 'filinq',
 			request: $this->request,
 			documentSvc: $this->documentSvc,
-			userSession: $session,
-			logger: $this->logger,
-			l10n: $this->l10n
+			userSession: $session
 		);
 
 		$this->assertSame(expected: 401, actual: $controller->preview()->getStatus());
@@ -899,12 +899,11 @@ class DocumentControllerTest extends TestCase {
 				['options', [], []],
 			]);
 		$controller = new DocumentController(
+			feedback: new ControllerFeedback(l10n: $this->l10n, logger: $this->logger),
 			appName: 'filinq',
 			request: $request,
 			documentSvc: $this->documentSvc,
-			userSession: $this->userSession,
-			logger: $this->logger,
-			l10n: $this->l10n
+			userSession: $this->userSession
 		);
 		$this->assertSame(expected: 400, actual: $controller->generateBulk()->getStatus());
 
@@ -923,5 +922,25 @@ class DocumentControllerTest extends TestCase {
 		$this->assertSame(expected: ['results' => [], 'total' => 2], actual: $result->getData());
 
 	}//end testGenerateBulkNeedsATemplateAndAnswers200ForASmallBatch()
+
+	/**
+	 * A failing bulk generation is answered through the shared failure handler.
+	 *
+	 * @return void
+	 */
+	public function testGenerateBulkFailureKeepsItsHttpCode(): void {
+		$this->request->method('getParam')
+			->willReturnMap([
+				['templateId', null, 'tmpl-1'],
+				['objectIds', [], ['obj-1']],
+				['options', [], []],
+			]);
+		$this->documentSvc->method('generateBulk')->willThrowException(new \Exception('template gone', 404));
+
+		$result = $this->controller->generateBulk();
+		$this->assertSame(expected: 404, actual: $result->getStatus());
+		$this->assertSame(expected: ['error' => 'template gone'], actual: $result->getData());
+
+	}//end testGenerateBulkFailureKeepsItsHttpCode()
 
 }//end class

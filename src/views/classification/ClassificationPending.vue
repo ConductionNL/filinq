@@ -24,16 +24,8 @@ a rejection changes nothing. Only files the reader can open are listed.
 			:objects="rows"
 			:columns="tableColumns"
 			:loading="loading"
-			:selectable="false"
+			v-bind="$options.listOnlyIndexPage"
 			:showAdd="false"
-			:showEditAction="false"
-			:showCopyAction="false"
-			:showDeleteAction="false"
-			:showMassImport="false"
-			:showMassExport="false"
-			:showMassCopy="false"
-			:showMassDelete="false"
-			:showViewToggle="false"
 			rowKey="uuid"
 			:emptyText="
 				t(
@@ -122,6 +114,7 @@ import { showError, showSuccess } from '@nextcloud/dialogs'
 import { translate as t } from '@nextcloud/l10n'
 import { NcButton } from '@nextcloud/vue'
 import ClassificationCorrectModal from '../../modals/ClassificationCorrectModal.vue'
+import { LIST_ONLY_INDEX_PAGE } from '../../constants/indexPage.js'
 import {
 	confidenceText,
 	confirm,
@@ -136,6 +129,7 @@ import {
 
 export default {
 	name: 'ClassificationPending',
+	listOnlyIndexPage: LIST_ONLY_INDEX_PAGE,
 	components: {
 		ClassificationCorrectModal,
 		CnIndexPage,

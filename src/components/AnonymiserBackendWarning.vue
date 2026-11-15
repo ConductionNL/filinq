@@ -106,6 +106,7 @@ SPDX-License-Identifier: EUPL-1.2
 </template>
 
 <script>
+import { getRequestToken } from '@nextcloud/auth'
 import { showError } from '@nextcloud/dialogs'
 import { NcButton, NcNoteCard } from '@nextcloud/vue'
 import { isRefusing } from '../services/anonymiserBackendState.js'
@@ -282,7 +283,7 @@ export default {
 			try {
 				const response = await fetch(
 					'/index.php/apps/filinq/api/admin/anonymiser-warning/dismiss',
-					{ method: 'POST' },
+					{ method: 'POST', headers: { requesttoken: getRequestToken() } },
 				)
 				if (response.ok === false) {
 					throw new Error('HTTP ' + response.status)

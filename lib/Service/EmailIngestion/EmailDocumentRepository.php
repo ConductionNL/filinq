@@ -27,14 +27,16 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\EmailIngestion;
 
+use OCA\Filinq\Kernel\Contracts\EmailDocumentRepositoryInterface;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
+use OCA\Filinq\Service\ReadsStoredObjectRows;
 
 /**
  * Email documents in OpenRegister.
  */
-class EmailDocumentRepository {
+class EmailDocumentRepository implements EmailDocumentRepositoryInterface {
 
-	public const SCHEMA = 'emailDocument';
+	use ReadsStoredObjectRows;
 
 	private const REGISTER = 'filinq';
 
@@ -179,21 +181,10 @@ class EmailDocumentRepository {
 	 * @return array<string, mixed> The fields.
 	 */
 	private function normalise(mixed $row): array {
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			$row = $row->jsonSerialize();
-		}
-
-		if (is_array($row) === false) {
+		$fields = $this->storedFields(row: $row);
+		if ($fields === []) {
 			return ['uuid' => ''];
 		}
-
-		$fields = $row;
-		if (isset($row['object']) === true && is_array($row['object']) === true) {
-			$fields = $row['object'];
-		}
-
-		unset($fields['@self']);
-		$fields['uuid'] = (string) ($fields['uuid'] ?? ($row['uuid'] ?? ($row['@self']['id'] ?? ($row['id'] ?? ''))));
 
 		return $fields;
 

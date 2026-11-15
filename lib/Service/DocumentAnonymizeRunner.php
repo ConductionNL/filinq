@@ -34,6 +34,8 @@ namespace OCA\Filinq\Service;
 
 use Exception;
 use OCA\Filinq\Exception\ConversionFailedException;
+use OCA\Filinq\Service\Support\AnonymisationRecords;
+use OCA\Filinq\Service\Support\AnonymisedOutputs;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -46,25 +48,62 @@ use Psr\Log\LoggerInterface;
  * @link     https://www.filinq.app
  *
  * @spec openspec/specs/anonymization/spec.md
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The thirteenth type is the
+ * EmlAnonymizeRequest value object the EML branch hands its source, entities
+ * and scope over in.
  */
 class DocumentAnonymizeRunner {
+	/**
+	 * The EML anonymise + PDF/A-3b assembly path.
+	 *
+	 * @var EmlAnonymizationService
+	 */
+	private readonly EmlAnonymizationService $emlAnonymizer;
+
+	/**
+	 * The PDF-conversion gate on the anonymised.
+	 *
+	 * @var AnonymisedPdfOutputService
+	 */
+	private readonly AnonymisedPdfOutputService $pdfOutput;
+
+	/**
+	 * Renders and attaches the per-document.
+	 *
+	 * @var GrondslagenSummaryAttacher
+	 */
+	private readonly GrondslagenSummaryAttacher $summaryAttacher;
+
+	/**
+	 * Replacement statistics for a run.
+	 *
+	 * @var ReplacementVerificationService
+	 */
+	private readonly ReplacementVerificationService $replacementVerifier;
+
+	/**
+	 * Post-run persistence: anonymisation link +.
+	 *
+	 * @var AnonymizationPersistenceService
+	 */
+	private readonly AnonymizationPersistenceService $persistence;
+
+	/**
+	 * The verdict, the anonymisation link and the.
+	 *
+	 * @var AnonymisationRunRecords
+	 */
+	private readonly AnonymisationRunRecords $runRecords;
+
 	/**
 	 * Constructor for DocumentAnonymizeRunner
 	 *
 	 * @param LoggerInterface $logger Logger for error reporting.
 	 * @param OpenRegisterServiceLocator $locator Resolver for OpenRegister services and mappers.
 	 * @param EntityDetectionService $entityDetection Entity mapping / result parsing service.
-	 * @param EmlAnonymizationService $emlAnonymizer The EML anonymise + PDF/A-3b assembly path.
-	 * @param AnonymisedPdfOutputService $pdfOutput The PDF-conversion gate on the anonymised
-	 *                                              intermediate (cascade + rollback + pdf-only
-	 *                                              cleanup).
-	 * @param ReplacementVerificationService $replacementVerifier Replacement statistics for a run.
-	 * @param AnonymizationPersistenceService $persistence Post-run persistence: anonymisation link +
-	 *                                                     publication consents.
-	 * @param GrondslagenSummaryAttacher $summaryAttacher Renders and attaches the per-document
-	 *                                                    grondslagen summary.
-	 * @param AnonymisationRunRecords $runRecords The verdict, the anonymisation link and the
-	 *                                            reversible-pseudonymisation key of a finished run.
+	 * @param AnonymisedOutputs $outputs The anonymised email, PDF and summary outputs
+	 * @param AnonymisationRecords $records The replacement check, persistence and run records
 	 *
 	 * @return void
 	 *
@@ -74,13 +113,15 @@ class DocumentAnonymizeRunner {
 		private readonly LoggerInterface $logger,
 		private readonly OpenRegisterServiceLocator $locator,
 		private readonly EntityDetectionService $entityDetection,
-		private readonly EmlAnonymizationService $emlAnonymizer,
-		private readonly AnonymisedPdfOutputService $pdfOutput,
-		private readonly ReplacementVerificationService $replacementVerifier,
-		private readonly AnonymizationPersistenceService $persistence,
-		private readonly GrondslagenSummaryAttacher $summaryAttacher,
-		private readonly AnonymisationRunRecords $runRecords,
+		AnonymisedOutputs $outputs,
+		AnonymisationRecords $records,
 	) {
+		$this->replacementVerifier = $records->verifier;
+		$this->persistence = $records->persistence;
+		$this->runRecords = $records->runs;
+		$this->emlAnonymizer = $outputs->eml;
+		$this->pdfOutput = $outputs->pdf;
+		$this->summaryAttacher = $outputs->summary;
 
 	}//end __construct()
 
@@ -151,12 +192,8 @@ class DocumentAnonymizeRunner {
 			// path below. See EmlAnonymizationService.
 			if ($this->emlAnonymizer->isEmlInput(node: $node) === true) {
 				$eml = $this->emlAnonymizer->anonymize(
-					fileId: $fileId,
-					node: $node,
-					fileService: $fileService,
-					mappedEntities: $mappedEntities,
-					scope: $options['scope'],
-					dossierKey: $options['dossierKey']
+					request: new EmlAnonymizeRequest(fileId: $fileId, node: $node, mappedEntities: $mappedEntities, options: $options),
+					fileService: $fileService
 				);
 
 				$context['anonymisedNode'] = $eml['node'];

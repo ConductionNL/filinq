@@ -23,6 +23,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\EntitySearch;
 
 use OCA\Filinq\Exception\EntitySearchRefusedException;
+use OCA\Filinq\Kernel\EntitySearchQuery;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\IntakeRepository;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -83,11 +84,9 @@ class EntitySearchLog {
 	/**
 	 * Log a search.
 	 *
-	 * @param string $userId   The searcher.
-	 * @param string $query    The query, of which only the digest is kept.
-	 * @param string $type     The type filter.
-	 * @param string $category The category filter.
-	 * @param int    $results  How many entities matched.
+	 * @param string            $userId  The searcher.
+	 * @param EntitySearchQuery $query   The query; of its text only the digest is kept.
+	 * @param int               $results How many entities matched.
 	 *
 	 * @return array<string, mixed> The row as written.
 	 *
@@ -95,13 +94,13 @@ class EntitySearchLog {
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-entity-search/tasks.md#task-2.4
 	 */
-	public function search(string $userId, string $query, string $type, string $category, int $results): array {
+	public function search(string $userId, EntitySearchQuery $query, int $results): array {
 		return $this->write(
 			row: [
 				'action' => 'search',
-				'queryDigest' => self::digest(query: $query),
-				'typeFilter' => mb_substr($type, 0, 64),
-				'categoryFilter' => mb_substr($category, 0, 64),
+				'queryDigest' => self::digest(query: $query->text),
+				'typeFilter' => mb_substr($query->type, 0, 64),
+				'categoryFilter' => mb_substr($query->category, 0, 64),
 				'resultCount' => $results,
 				'performedBy' => $userId,
 			]

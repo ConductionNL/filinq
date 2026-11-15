@@ -24,8 +24,10 @@ namespace OCA\Filinq\Controller;
 
 use Exception;
 use InvalidArgumentException;
+use OCA\Filinq\Kernel\AppIdentity;
 use OCA\Filinq\Kernel\Contracts\SigningFolderServiceInterface;
-use OCA\Filinq\Service\SigningMandateService;
+use OCA\Filinq\Kernel\Contracts\SigningMandateServiceInterface;
+use OCA\Filinq\Service\ReadsCurrentUserId;
 use OCA\Filinq\Settings\FilinqAdmin;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -49,14 +51,14 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
  */
 class SigningFolderController extends Controller {
+	use ReadsCurrentUserId;
 
 	/**
 	 * Constructor.
 	 *
-	 * @param string $appName App name.
 	 * @param IRequest $request Request object.
 	 * @param SigningFolderServiceInterface $folderService The folder query and the pass.
-	 * @param SigningMandateService $mandateService The mandate declarations.
+	 * @param SigningMandateServiceInterface $mandateService The mandate declarations.
 	 * @param IUserSession $userSession User session.
 	 * @param LoggerInterface $logger Logger.
 	 * @param IL10N $l10n Localisation.
@@ -64,15 +66,14 @@ class SigningFolderController extends Controller {
 	 * @return void
 	 */
 	public function __construct(
-		string $appName,
 		IRequest $request,
 		private readonly SigningFolderServiceInterface $folderService,
-		private readonly SigningMandateService $mandateService,
+		private readonly SigningMandateServiceInterface $mandateService,
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
 		private readonly IL10N $l10n,
 	) {
-		parent::__construct(appName: $appName, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 
 	}//end __construct()
 
@@ -211,23 +212,6 @@ class SigningFolderController extends Controller {
 		}
 
 	}//end withdrawMandate()
-
-	/**
-	 * The calling user, or '' when there is none.
-	 *
-	 * @return string
-	 *
-	 * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
-	 */
-	private function currentUserId(): string {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return '';
-		}
-
-		return $user->getUID();
-
-	}//end currentUserId()
 
 	/**
 	 * One generic error body, with the detail in the log.

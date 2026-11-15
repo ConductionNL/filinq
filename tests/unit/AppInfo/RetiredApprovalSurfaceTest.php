@@ -29,7 +29,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Tests\Unit\AppInfo;
 
-use OCA\Filinq\AppInfo\SigningEventRegistrar;
+use OCA\Filinq\EventListener\SigningEventRegistrar;
 use PHPUnit\Framework\TestCase;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -38,7 +38,7 @@ use SplFileInfo;
 /**
  * Tests that the retired approval surface is gone and stays gone.
  *
- * @covers \OCA\Filinq\AppInfo\SigningEventRegistrar
+ * @covers \OCA\Filinq\EventListener\SigningEventRegistrar
  *
  * @category Tests
  * @package  OCA\Filinq\Tests\Unit\AppInfo

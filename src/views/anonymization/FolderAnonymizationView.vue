@@ -1,3 +1,7 @@
+<!--
+  - SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
 <template>
 	<div class="folder-anonymization">
 		<h2>{{ t('filinq', 'Folder Analysis & Anonymization') }}</h2>
@@ -115,7 +119,7 @@
 					<div
 						v-if="store.dossier.bases && store.dossier.bases.length"
 						class="muted">
-						{{ t('filinq', 'Grondslagen') }}:
+						{{ t('filinq', 'Legal bases') }}:
 						{{ store.dossier.bases.join(', ') }}
 					</div>
 				</NcNoteCard>
@@ -183,7 +187,9 @@
 					)
 				}}
 			</NcNoteCard>
-			<section class="folder-review" :aria-label="t('filinq', 'Check per file')">
+			<section
+				class="folder-review"
+				:aria-label="t('filinq', 'Check per file')">
 				<h4>{{ t('filinq', 'Check per file') }}</h4>
 				<p class="muted">
 					{{
@@ -202,16 +208,25 @@
 						<span
 							v-if="isReviewed(f)"
 							class="folder-review__state folder-review__state--done">
-							{{ t('filinq', 'Checked by {user}', { user: f.reviewMark.checkedBy }) }}
+							{{
+								t('filinq', 'Checked by {user}', {
+									user: f.reviewMark.checkedBy,
+								})
+							}}
 						</span>
 						<NcButton
 							v-else
 							variant="secondary"
-							:disabled="!!f.reviewing || store.selectedEntityCount === 0"
+							:disabled="
+								!!f.reviewing || store.selectedEntityCount === 0
+							"
 							@click="store.markFileChecked(f)">
 							{{ t('filinq', 'Mark as checked') }}
 						</NcButton>
-						<span v-if="f.reviewError" class="folder-review__error" role="alert">
+						<span
+							v-if="f.reviewError"
+							class="folder-review__error"
+							role="alert">
 							{{ f.reviewError }}
 						</span>
 					</li>
@@ -223,7 +238,10 @@
 			<div class="action-bar">
 				<NcButton
 					variant="primary"
-					:disabled="store.selectedEntityCount === 0 || store.reviewedFiles.length === 0"
+					:disabled="
+						store.selectedEntityCount === 0
+						|| store.reviewedFiles.length === 0
+					"
 					@click="store.anonymizeFolder()">
 					{{
 						n(
@@ -369,7 +387,7 @@ export default {
 		 * The analysed files that can be checked: extraction succeeded.
 		 *
 		 * @return {Array<object>}
-		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
 		 */
 		reviewableFiles() {
 			return this.store.files.filter((f) => f.status === 'extracted')
@@ -385,7 +403,7 @@ export default {
 		 *
 		 * @param {object} file A file of the batch.
 		 * @return {boolean}
-		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
 		 */
 		isReviewed(file) {
 			return this.store.reviewedFiles.includes(file)

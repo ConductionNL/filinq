@@ -28,8 +28,8 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
-use OCA\Filinq\Service\Classification\ClassificationDecisionService;
-use OCA\Filinq\Service\Classification\ClassificationRefused;
+use OCA\Filinq\Kernel\Contracts\ClassificationDecisionServiceInterface;
+use OCA\Filinq\Exception\ClassificationRefused;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -51,7 +51,7 @@ class ClassificationController extends Controller {
 	 *
 	 * @param string                        $appName     The app id.
 	 * @param IRequest                      $request     The request.
-	 * @param ClassificationDecisionService $decisions   Lists and decides suggestions.
+	 * @param ClassificationDecisionServiceInterface $decisions   Lists and decides suggestions.
 	 * @param IUserSession                  $userSession The session.
 	 * @param LoggerInterface               $logger      The logger.
 	 *
@@ -60,7 +60,7 @@ class ClassificationController extends Controller {
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly ClassificationDecisionService $decisions,
+		private readonly ClassificationDecisionServiceInterface $decisions,
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
 	) {

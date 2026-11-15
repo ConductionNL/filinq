@@ -24,16 +24,8 @@ by hand. Admins only, like the api/email-ingestion routes behind it.
 			:objects="visibleRows"
 			:columns="tableColumns"
 			:loading="loading"
-			:selectable="false"
+			v-bind="$options.listOnlyIndexPage"
 			:showAdd="false"
-			:showEditAction="false"
-			:showCopyAction="false"
-			:showDeleteAction="false"
-			:showMassImport="false"
-			:showMassExport="false"
-			:showMassCopy="false"
-			:showMassDelete="false"
-			:showViewToggle="false"
 			rowKey="uuid"
 			:emptyText="
 				t(
@@ -118,6 +110,7 @@ import { CnIndexPage, CnStatusBadge } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { translate as t } from '@nextcloud/l10n'
 import { NcButton, NcSelect } from '@nextcloud/vue'
+import { LIST_ONLY_INDEX_PAGE } from '../../constants/indexPage.js'
 import {
 	failureText,
 	inThread,
@@ -130,6 +123,7 @@ import {
 
 export default {
 	name: 'EmailIngestion',
+	listOnlyIndexPage: LIST_ONLY_INDEX_PAGE,
 	components: {
 		CnIndexPage,
 		CnStatusBadge,

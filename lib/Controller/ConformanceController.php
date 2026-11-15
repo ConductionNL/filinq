@@ -26,7 +26,8 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use OCA\Filinq\Exception\VeraPdfException;
-use OCA\Filinq\Service\VeraPdf\ConformanceService;
+use OCA\Filinq\Kernel\AppIdentity;
+use OCA\Filinq\Kernel\Contracts\ConformanceServiceInterface;
 use OCA\Filinq\Settings\FilinqAdmin;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -49,9 +50,8 @@ class ConformanceController extends Controller {
 	/**
 	 * Constructor.
 	 *
-	 * @param string             $appName     The app id.
 	 * @param IRequest           $request     The request.
-	 * @param ConformanceService $conformance The conformance check.
+	 * @param ConformanceServiceInterface $conformance The conformance check.
 	 * @param IRootFolder        $rootFolder  The file tree.
 	 * @param IUserSession       $userSession The session.
 	 * @param IL10N              $l10n        Translations.
@@ -60,15 +60,14 @@ class ConformanceController extends Controller {
 	 * @return void
 	 */
 	public function __construct(
-		string $appName,
 		IRequest $request,
-		private readonly ConformanceService $conformance,
+		private readonly ConformanceServiceInterface $conformance,
 		private readonly IRootFolder $rootFolder,
 		private readonly IUserSession $userSession,
 		private readonly IL10N $l10n,
 		private readonly LoggerInterface $logger,
 	) {
-		parent::__construct(appName: $appName, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 
 	}//end __construct()
 
@@ -143,7 +142,7 @@ class ConformanceController extends Controller {
 		}
 
 		try {
-			$report = $this->conformance->checkFile(file: $file, trigger: ConformanceService::TRIGGER_MANUAL);
+			$report = $this->conformance->checkFile(file: $file, trigger: ConformanceServiceInterface::TRIGGER_MANUAL);
 		} catch (VeraPdfException $e) {
 			$this->logger->warning(
 				message: '[ConformanceController] no verdict',

@@ -15,6 +15,9 @@
  * @link https://www.filinq.app
  *
  * @spec openspec/specs/document-creatie-sjablonen/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\Filinq\Tests\Unit\Settings;
@@ -126,7 +129,8 @@ class DocumentProductionSchemaTest extends TestCase {
 		// the next. 1.4.0 since `multi-format-output` (`outputs`). 1.5.0 since
 		// `generated-document-names-its-template-version` (optional templateVersion).
 		// 1.6.0 since `guided-document-wizard` (optional wizardContext).
-		$this->assertSame('1.6.0', $document['version']);
+		// 1.7.0 since `generate-store-in-case-system` (optional caseSystemDeliveryId).
+		$this->assertSame('1.7.0', $document['version']);
 		$this->assertArrayHasKey(
 			'documentDueForReview',
 			$document['x-openregister-notifications'],

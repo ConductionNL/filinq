@@ -294,4 +294,40 @@ class MpdfBackendTest extends TestCase {
 		$this->backend->convert(source: $source);
 
 	}//end testConvertThrowsWhenPdfServiceFails()
+
+	/**
+	 * A rendering failure is logged once and carries one attempt record and its cause.
+	 *
+	 * @return void
+	 */
+	public function testARenderingFailureIsLoggedAndRecorded(): void {
+		$source = $this->createMock(originalClassName: File::class);
+		$source->method('getName')->willReturn('notes.md');
+		$source->method('getContent')->willReturn('# hi');
+		$source->method('getPath')->willReturn('/u/admin/notes.md');
+		$cause = new RuntimeException('mPDF OOM');
+		$this->pdfService
+			->expects($this->once())
+			->method('generatePdfFromHtml')
+			->with($this->stringContains('<pre style='), $this->equalTo(['pdfa' => true, 'format' => 'A4', 'title' => 'notes']))
+			->willThrowException($cause);
+		$this->logger->expects($this->once())->method('error')->with(
+			'[mpdf] PDF rendering failed',
+			['source' => '/u/admin/notes.md', 'exception' => RuntimeException::class, 'message' => 'mPDF OOM']
+		);
+
+		try {
+			$this->backend->convert(source: $source);
+			$this->fail('expected a conversion failure');
+		} catch (ConversionFailedException $e) {
+			$this->assertSame('mpdf rendering threw: mPDF OOM', $e->getMessage());
+			$this->assertSame(422, $e->getCode());
+			$this->assertSame($cause, $e->getPrevious());
+			$this->assertSame(
+				[['name' => 'mpdf', 'available' => true, 'supports' => true, 'reason' => 'mpdf render exception: mPDF OOM']],
+				$e->getAttempts()
+			);
+		}
+
+	}//end testARenderingFailureIsLoggedAndRecorded()
 }//end class

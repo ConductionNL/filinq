@@ -1,3 +1,7 @@
+/**
+ * SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
 /* eslint-disable no-console */
 import { getCurrentUser } from '@nextcloud/auth'
 import axios from '@nextcloud/axios'
@@ -32,6 +36,7 @@ import { generateRemoteUrl, generateUrl } from '@nextcloud/router'
  * is done reviewing.
  */
 import { defineStore } from 'pinia'
+import { applyDetectionNotice } from '../../services/detectionProvider.js'
 import { extractDocumentText } from '../../services/fileViewerService.js'
 import { applyOcrFlags } from '../../services/ocr.js'
 import {
@@ -163,6 +168,72 @@ function encodePath(path) {
 }
 
 /**
+ * The fields every queue entry starts with, in one shape: a fresh id, the
+ * given name, status, file and dossier, no entities yet and no result.
+ *
+ * @param {{name: string, status: string, fileId: number|null, filePath: string|null, dossier: string|null}} start Where the entry starts.
+ * @return {object}
+ */
+function queueEntry(start) {
+	return {
+		id: `file-${++fileCounter}`,
+		name: start.name,
+		status: start.status,
+		error: null,
+		fileId: start.fileId,
+		filePath: start.filePath,
+		entities: [],
+		entityCount: 0,
+		replacementCount: 0,
+		anonymizedFileId: null,
+		anonymizedFileName: null,
+		anonymizedFilePath: null,
+		dossier: start.dossier,
+		// Read-only files_confidential sensitivity signal (files-confidential-labels).
+		// Both stay null until an extract response resolves a label.
+		confidentialityLabel: null,
+		confidentialityLevel: null,
+	}
+}
+
+/**
+ * Upload the entry's file into /DocuDesk/ and note where it landed.
+ *
+ * @param {object} entry Queue entry with its source `_file`.
+ * @return {Promise<void>}
+ */
+async function uploadToDocuDesk(entry) {
+	entry.status = 'uploading'
+	const formData = new FormData()
+	formData.append('file', entry._file)
+	const uploadResponse = await axios.post(
+		generateUrl('/apps/filinq/api/anonymization/upload'),
+		formData,
+		{ headers: { 'Content-Type': 'multipart/form-data' } },
+	)
+	entry.fileId = uploadResponse.data.fileId
+	entry.filePath = uploadResponse.data.filePath
+	delete entry._file
+}
+
+/**
+ * Run entity extraction on the entry's file and seed per-row review state
+ * on every detected entity, in the shape `EntityReviewTable` expects. The
+ * grouped rows are counted, not the raw append-bug rows.
+ *
+ * @param {object} entry Queue entry with a file id.
+ * @return {Promise<{found: number, unseen: boolean}>} What the extraction found.
+ */
+async function extractEntities(entry) {
+	const extractResponse = await axios.post(
+		generateUrl(
+			`/apps/filinq/api/anonymization/extract/${entry.fileId}`,
+		),
+	)
+	return applyExtractResponse(entry, extractResponse.data)
+}
+
+/**
  * Build a fresh queue entry. Shared between addFiles + addFilesAsDossier
  * so the entry shape stays a single source of truth.
  *
@@ -172,23 +243,7 @@ function encodePath(path) {
  */
 function makeEntry(file, dossier) {
 	return {
-		id: `file-${++fileCounter}`,
-		name: file.name,
-		status: 'queued',
-		error: null,
-		fileId: null,
-		filePath: null,
-		entities: [],
-		entityCount: 0,
-		replacementCount: 0,
-		anonymizedFileId: null,
-		anonymizedFileName: null,
-		anonymizedFilePath: null,
-		dossier,
-		// Read-only files_confidential sensitivity signal (files-confidential-labels).
-		// Both stay null until an extract response resolves a label.
-		confidentialityLabel: null,
-		confidentialityLevel: null,
+		...queueEntry({ name: file.name, status: 'queued', fileId: null, filePath: null, dossier }),
 		_file: file,
 	}
 }
@@ -207,25 +262,13 @@ function makeEntry(file, dossier) {
  * @return {object}
  */
 function makeSyntheticEntry(fileMeta) {
-	const dossier = inferDossier(fileMeta.path)
-	return {
-		id: `file-${++fileCounter}`,
+	return queueEntry({
 		name: fileMeta.fileName,
 		status: 'extracting',
-		error: null,
 		fileId: fileMeta.fileId,
 		filePath: fileMeta.path,
-		entities: [],
-		entityCount: 0,
-		replacementCount: 0,
-		anonymizedFileId: null,
-		anonymizedFileName: null,
-		anonymizedFilePath: null,
-		dossier,
-		// Read-only files_confidential sensitivity signal (files-confidential-labels).
-		confidentialityLabel: null,
-		confidentialityLevel: null,
-	}
+		dossier: inferDossier(fileMeta.path),
+	})
 }
 
 /**
@@ -241,6 +284,167 @@ function inferDossier(path) {
 	}
 	const m = path.match(/\/DocuDesk\/([^/]+)\/[^/]+$/)
 	return m ? m[1] : null
+}
+
+/**
+ * The read-only review entry of an anonymised file, before its entities are
+ * known: no entities, the replacement count and source of its link.
+ *
+ * @param {object} fileMeta File descriptor (fileId, fileName, path).
+ * @param {object|null} link The file's `anonymizationLink`, if any.
+ * @return {object}
+ */
+function anonymizedEntry(fileMeta, link) {
+	return {
+		id: `file-${++fileCounter}`,
+		name: fileMeta.fileName,
+		status: 'completed',
+		viewMode: 'anonymized',
+		error: null,
+		fileId: fileMeta.fileId,
+		filePath: fileMeta.path,
+		entities: [],
+		entityCount: 0,
+		replacementCount: link?.replacementCount ?? 0,
+		anonymizedFileId: null,
+		anonymizedFileName: null,
+		anonymizedFilePath: null,
+		...linkedSource(link),
+		dossier: inferDossier(fileMeta.path),
+	}
+}
+
+/**
+ * Entry field name → `anonymizationLink` field it is read from.
+ *
+ * @type {Object<string, string>}
+ */
+const LINKED_SOURCE_FIELDS = {
+	sourceFileId: 'sourceFileId',
+	sourceFileName: 'sourceFileName',
+	sourceFilePath: 'sourceFilePath',
+	anonymizationLinkId: 'id',
+	runCount: 'runCount',
+}
+
+/**
+ * The source mapping (feat #107) an entry takes from its link, null per
+ * field when no link was recorded.
+ *
+ * @param {object|null} link The file's `anonymizationLink`, if any.
+ * @return {object}
+ */
+function linkedSource(link) {
+	return Object.fromEntries(
+		Object.entries(LINKED_SOURCE_FIELDS).map(([key, field]) => [
+			key,
+			link?.[field] ?? null,
+		]),
+	)
+}
+
+/**
+ * The replacement count of an anonymised file: the link's count when it
+ * records one, else the occurrences of its resolved placeholders.
+ *
+ * @param {object|null} link The file's `anonymizationLink`, if any.
+ * @param {Array<object>} entities The resolved placeholder rows.
+ * @return {number}
+ */
+function replacementCountOf(link, entities) {
+	return link?.replacementCount ?? entities.reduce((sum, e) => sum + e.count, 0)
+}
+
+/**
+ * The text of an anonymised file, or '' when it cannot be read.
+ *
+ * @param {object} fileMeta File descriptor (path, mimeType, fileName).
+ * @return {Promise<string>}
+ */
+async function readAnonymizedText(fileMeta) {
+	try {
+		return await extractDocumentText({
+			path: fileMeta.path,
+			mimeType: fileMeta.mimeType,
+			fileName: fileMeta.fileName,
+		})
+	} catch (err) {
+		console.error(`Failed to read text for ${fileMeta.fileName}:`, err)
+		return ''
+	}
+}
+
+/**
+ * The distinct bases across an entity's relations.
+ *
+ * @param {object|undefined} body The entity endpoint's response body.
+ * @return {Array<string>}
+ */
+function relationBases(body) {
+	const relations = Array.isArray(body?.relations) ? body.relations : []
+	return [
+		...new Set(
+			relations.flatMap((rel) => (Array.isArray(rel.bases) ? rel.bases : [])),
+		),
+	]
+}
+
+/**
+ * Why a placeholder's entity could not be resolved.
+ *
+ * @param {Error} err The lookup failure.
+ * @return {string}
+ */
+function resolveErrorText(err) {
+	return err.response?.status === 404
+		? 'Entity no longer exists'
+		: err.response?.data?.message || err.message
+}
+
+/**
+ * The fields a resolved entity fills in on its placeholder row.
+ *
+ * @param {{type: string}} ph The placeholder.
+ * @param {object|undefined} body The entity endpoint's response body.
+ * @return {{type: string, value: (string|null), confidence: (number|null), bases: Array<string>}}
+ */
+function resolvedFields(ph, body) {
+	const data = body?.data || {}
+	return {
+		type: data.type || ph.type,
+		value: data.value ?? null,
+		confidence: data.confidence ?? null,
+		bases: relationBases(body),
+	}
+}
+
+/**
+ * Resolve one `[<TYPE>: <id>]` placeholder to its source entity. A failed
+ * lookup (deleted entity, permission) degrades to a placeholder-only row
+ * rather than dropping the occurrence.
+ *
+ * @param {{entityId: number, type: string, count: number}} ph The placeholder.
+ * @return {Promise<object>} The review row.
+ */
+async function resolvePlaceholder(ph) {
+	const row = {
+		type: ph.type,
+		value: null,
+		confidence: null,
+		entityId: ph.entityId,
+		count: ph.count,
+		bases: [],
+		placeholder: `[${ph.type}: ${ph.entityId}]`,
+		_resolveError: null,
+	}
+	try {
+		const r = await axios.get(
+			generateUrl(`/apps/openregister/api/entities/${ph.entityId}`),
+		)
+		return { ...row, ...resolvedFields(ph, r.data) }
+	} catch (err) {
+		return { ...row, _resolveError: resolveErrorText(err) }
+	}
 }
 
 /**
@@ -263,62 +467,162 @@ function inferDossier(path) {
 function decorateEntities(entities) {
 	const byKey = new Map()
 	for (const e of entities || []) {
-		const type = e.type ?? 'UNKNOWN'
-		const value = e.value ?? ''
-		const key = `${type}\u0000${value}`
-		const relationId = e.relationId ?? null
+		const row = entityReviewRow(e)
+		const key = `${row.type}\u0000${row.value}`
 		const existing = byKey.get(key)
 		if (existing) {
-			// Duplicate row from the append bug: merge into the first card.
-			if (
-				relationId != null
-				&& existing.relationIds.includes(relationId) === false
-			) {
-				existing.relationIds.push(relationId)
-			}
-			existing.count += 1
-			existing.highestConfidence = Math.max(
-				existing.highestConfidence,
-				e.confidence ?? 0,
-			)
-			existing.confidence = existing.highestConfidence
-			// Adopt grondslagen / skip metadata from whichever row carries it.
-			if (
-				(existing.bases == null || existing.bases.length === 0)
-				&& Array.isArray(e.bases)
-				&& e.bases.length > 0
-			) {
-				existing.bases = [...e.bases]
-				existing._decisionBases = [...e.bases]
-			}
-			if (e.skipAnonymization) {
-				existing.skipAnonymization = true
-				existing._decisionSkip = true
-				existing.included = false
-			}
-			continue
+			mergeDuplicateEntity(existing, e)
+		} else {
+			byKey.set(key, row)
 		}
-		byKey.set(key, {
-			...e,
-			type,
-			value,
-			included: !e.skipAnonymization,
-			confidence: e.confidence ?? 0,
-			highestConfidence: e.confidence ?? 0,
-			fileCount: 1,
-			count: 1,
-			relationId,
-			relationIds: relationId != null ? [relationId] : [],
-			bases: Array.isArray(e.bases) ? [...e.bases] : (e.bases ?? null),
-			// Read-only prohibition hint from the extract response: null, or
-			// { ruleId, ruleName, highConfidence }. Drives the skip-toggle lock.
-			prohibitionMatch: e.prohibitionMatch ?? null,
-			_decisionBases: Array.isArray(e.bases) ? [...e.bases] : [],
-			_decisionSkip: !!e.skipAnonymization,
-			_patchError: null,
-		})
 	}
 	return Array.from(byKey.values())
+}
+
+/**
+ * The review row for the first raw row of a `(type, value)` group.
+ *
+ * @param {object} e Raw entity row.
+ * @return {object}
+ */
+function entityReviewRow(e) {
+	const relationId = e.relationId ?? null
+	return {
+		...e,
+		type: e.type ?? 'UNKNOWN',
+		value: e.value ?? '',
+		included: !e.skipAnonymization,
+		confidence: e.confidence ?? 0,
+		highestConfidence: e.confidence ?? 0,
+		fileCount: 1,
+		count: 1,
+		relationId,
+		relationIds: relationId != null ? [relationId] : [],
+		...rowBases(e),
+		// Read-only prohibition hint from the extract response: null, or
+		// { ruleId, ruleName, highConfidence }. Drives the skip-toggle lock.
+		prohibitionMatch: e.prohibitionMatch ?? null,
+		_decisionSkip: !!e.skipAnonymization,
+		_patchError: null,
+	}
+}
+
+/**
+ * The grondslagen of a first raw row: as shown, and as the starting decision.
+ *
+ * @param {object} e Raw entity row.
+ * @return {{bases: (Array<string>|null), _decisionBases: Array<string>}}
+ */
+function rowBases(e) {
+	if (Array.isArray(e.bases)) {
+		return { bases: [...e.bases], _decisionBases: [...e.bases] }
+	}
+	return { bases: e.bases ?? null, _decisionBases: [] }
+}
+
+/**
+ * Merge a duplicate raw row (from the append bug) into the first card of
+ * its `(type, value)` group.
+ *
+ * @param {object} existing The group's review row.
+ * @param {object} e The duplicate raw row.
+ * @return {void}
+ */
+function mergeDuplicateEntity(existing, e) {
+	const relationId = e.relationId ?? null
+	if (relationId != null && existing.relationIds.includes(relationId) === false) {
+		existing.relationIds.push(relationId)
+	}
+	existing.count += 1
+	existing.highestConfidence = Math.max(
+		existing.highestConfidence,
+		e.confidence ?? 0,
+	)
+	existing.confidence = existing.highestConfidence
+	adoptRowMetadata(existing, e)
+}
+
+/**
+ * Adopt grondslagen and skip metadata from a duplicate row that carries it.
+ *
+ * @param {object} existing The group's review row.
+ * @param {object} e The duplicate raw row.
+ * @return {void}
+ */
+function adoptRowMetadata(existing, e) {
+	if (
+		(existing.bases == null || existing.bases.length === 0)
+		&& Array.isArray(e.bases)
+		&& e.bases.length > 0
+	) {
+		existing.bases = [...e.bases]
+		existing._decisionBases = [...e.bases]
+	}
+	if (e.skipAnonymization) {
+		existing.skipAnonymization = true
+		existing._decisionSkip = true
+		existing.included = false
+	}
+}
+
+/**
+ * The review decisions on a list of rows, keyed by `(type, value)`.
+ *
+ * @param {Array<object>} entities Review rows.
+ * @return {Map<string, {bases: Array<string>, skip: boolean}>}
+ */
+function decisionsByValue(entities) {
+	const decisions = new Map()
+	for (const e of entities || []) {
+		decisions.set(`${e.type}\u0000${e.value}`, {
+			bases: Array.isArray(e._decisionBases) ? [...e._decisionBases] : [],
+			skip: !!e._decisionSkip,
+		})
+	}
+	return decisions
+}
+
+/**
+ * Carry earlier decisions over to freshly extracted rows with the same
+ * `(type, value)`; new rows keep the extract defaults.
+ *
+ * @param {Array<object>} entities Fresh review rows, changed in place.
+ * @param {Map<string, {bases: Array<string>, skip: boolean}>} decisions Earlier decisions.
+ * @return {void}
+ */
+function restoreDecisions(entities, decisions) {
+	for (const e of entities) {
+		const prior = decisions.get(`${e.type}\u0000${e.value}`)
+		if (prior) {
+			e._decisionBases = prior.bases
+			e._decisionSkip = prior.skip
+		}
+	}
+}
+
+/**
+ * Put an extract response's entities, confidentiality label, detection
+ * engine and OCR warning on a queue entry.
+ *
+ * @param {object} entry Queue entry.
+ * @param {object} data Extract endpoint response body.
+ * @return {{found: number, unseen: boolean}} The raw entity count, and
+ *         whether detection did not see the document.
+ */
+function applyExtractResponse(entry, data) {
+	const entities = data.entities || []
+	entry.entities = decorateEntities(entities)
+	entry.entityCount = entry.entities.length
+	// Read-only files_confidential signal, present only when the backend
+	// resolved a matching label (files-confidential-labels).
+	entry.confidentialityLabel = data.confidentialityLabel ?? null
+	entry.confidentialityLevel = data.confidentialityLevel ?? null
+	// Which engine produced the entities, and the warning when the
+	// organisation's language model could not run (llm-entity-detection-provider).
+	applyDetectionNotice(entry, data)
+	// A scan detection could not read is not "nothing to anonymise".
+	const unseen = applyOcrFlags(entry, data)
+	return { found: entities.length, unseen }
 }
 
 /**
@@ -345,6 +649,73 @@ function parseFileIdFromPropfind(xmlText) {
 	} catch {
 		return null
 	}
+}
+
+/**
+ * The trimmed name of a dossier folder.
+ *
+ * @param {string|null} folderName Folder name under /DocuDesk/.
+ * @return {string}
+ * @throws {Error} When the name is empty.
+ */
+function dossierFolderName(folderName) {
+	const cleanName = (folderName || '').trim()
+	if (!cleanName) {
+		throw new Error('Folder name is required')
+	}
+	return cleanName
+}
+
+/**
+ * Read a /DocuDesk/ folder's Nextcloud node id through a PROPFIND.
+ *
+ * @param {string} folderName Folder name under /DocuDesk/.
+ * @return {Promise<number>}
+ * @throws {Error} When the request fails or the answer holds no id.
+ */
+async function readFolderId(folderName) {
+	const response = await axios({
+		method: 'PROPFIND',
+		url: `${davBaseUrl()}/DocuDesk/${encodePath(folderName)}/`,
+		headers: { Depth: '0', 'Content-Type': 'application/xml' },
+		data: `<?xml version="1.0"?>
+						<d:propfind xmlns:d="DAV:" xmlns:oc="http://owncloud.org/ns">
+							<d:prop>
+								<oc:fileid />
+							</d:prop>
+						</d:propfind>`,
+	})
+	const folderId = parseFileIdFromPropfind(response.data)
+	if (folderId === null) {
+		throw new Error(`Failed to read folder id for ${folderName}`)
+	}
+	return folderId
+}
+
+/**
+ * The bases a new dossier starts with: the given ones, else
+ * `persoonsgegevens`.
+ *
+ * @param {Array<string>|undefined} bases The requested bases.
+ * @return {Array<string>}
+ */
+function dossierBases(bases) {
+	return Array.isArray(bases) && bases.length > 0 ? bases : ['persoonsgegevens']
+}
+
+/**
+ * The UUID of a created OpenRegister object.
+ *
+ * @param {object|null} data The create response body.
+ * @return {string}
+ * @throws {Error} When the response carries no UUID.
+ */
+function createdUuid(data) {
+	const uuid = data?.['@self']?.id ?? data?.id ?? null
+	if (uuid === null) {
+		throw new Error('Dossier created but no UUID returned')
+	}
+	return uuid
 }
 
 /**
@@ -479,10 +850,64 @@ function entryPayload(entry) {
  *
  * @param {object} entry Queue entry.
  * @return {boolean}
- * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
+ * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
  */
 export function entryIsChecked(entry) {
 	return !!entry && reviewIsCurrent(entry.reviewMark, entryPayload(entry))
+}
+
+/**
+ * A fresh batch progress record.
+ *
+ * @param {number} total The number of entries the batch runs.
+ * @param {Array<{fileId: number, name: string}>} unreviewed The entries it skips.
+ * @return {{running: boolean, total: number, done: number, failed: number, unreviewed: Array<object>}}
+ */
+function batchProgress(total, unreviewed) {
+	return { running: true, total, done: 0, failed: 0, unreviewed }
+}
+
+/**
+ * The extracted entries a batch covers, split into the ones a person
+ * checked and the ones left unreviewed.
+ *
+ * @param {Array<object>} files The queue.
+ * @param {Array<number|string>|undefined} fileIds Scope the batch to these file ids.
+ * @return {{targets: Array<object>, unreviewed: Array<{fileId: number, name: string}>}}
+ */
+function batchTargets(files, fileIds) {
+	const scope = fileIds ? new Set(fileIds.map(Number)) : null
+	// Snapshot the targets up-front: anonymiseEntry mutates each
+	// entry's status to 'completed'/'error', so iterating live
+	// would be order-sensitive.
+	const inScope = files.filter(
+		(entry) =>
+			entry.status === 'extracted'
+			&& (!scope || scope.has(Number(entry.fileId))),
+	)
+	// Only what a person checked is written; the rest is reported.
+	return {
+		targets: inScope.filter((entry) => entryIsChecked(entry)),
+		unreviewed: inScope
+			.filter((entry) => !entryIsChecked(entry))
+			.map((entry) => ({ fileId: entry.fileId, name: entry.name })),
+	}
+}
+
+/**
+ * Count a batch entry's outcome. anonymiseEntry can mark 'error' without
+ * throwing on partial failures, so the entry's own status decides.
+ *
+ * @param {object} batch The batch progress record.
+ * @param {object} entry The entry that ran.
+ * @return {void}
+ */
+function countOutcome(batch, entry) {
+	if (entry.status === 'error') {
+		batch.failed++
+	} else {
+		batch.done++
+	}
 }
 
 /**
@@ -770,12 +1195,10 @@ export const useAnonymizationStore = defineStore('anonymization', {
 		 * @param {string} folderName Dossier folder name under /DocuDesk/.
 		 * @return {Promise<void>}
 		 * @throws {Error} If the folder name is empty or folder creation fails.
+		 * @spec openspec/specs/dossier-register/spec.md#requirement-dossier-objects-bind-to-a-nextcloud-folder-via-selffolder
 		 */
 		async addFilesAsDossier(fileList, folderName) {
-			const cleanName = (folderName || '').trim()
-			if (!cleanName) {
-				throw new Error('Folder name is required')
-			}
+			const cleanName = dossierFolderName(folderName)
 
 			try {
 				await this.createDossierFolder(cleanName)
@@ -870,17 +1293,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 		async uploadAndExtract(entry) {
 			try {
 				// Step 1: upload. Always lands in /DocuDesk/ root first.
-				entry.status = 'uploading'
-				const formData = new FormData()
-				formData.append('file', entry._file)
-				const uploadResponse = await axios.post(
-					generateUrl('/apps/filinq/api/anonymization/upload'),
-					formData,
-					{ headers: { 'Content-Type': 'multipart/form-data' } },
-				)
-				entry.fileId = uploadResponse.data.fileId
-				entry.filePath = uploadResponse.data.filePath
-				delete entry._file
+				await uploadToDocuDesk(entry)
 
 				// Step 1b: MOVE into the dossier folder when applicable.
 				// The fileId is preserved by MOVE, so later pipeline
@@ -891,41 +1304,11 @@ export const useAnonymizationStore = defineStore('anonymization', {
 					entry.filePath = `/DocuDesk/${entry.dossier}/${entry.name}`
 				}
 
-				// Step 2: extract.
+				// Step 2: extract. Nothing to anonymise skips review and
+				// marks the entry done.
 				entry.status = 'extracting'
-				const extractResponse = await axios.post(
-					generateUrl(
-						`/apps/filinq/api/anonymization/extract/${entry.fileId}`,
-					),
-				)
-				const entities = extractResponse.data.entities || []
-
-				// Seed per-row review state on every detected entity.
-				// `decorateEntities` adds the extra fields (`included`,
-				// `highestConfidence`, `fileCount`, `relationIds`) that
-				// `EntityReviewTable` expects — see helpers at the top of
-				// this file. Same shape is used by `ensureExtracted` so the
-				// sidebar can read entities regardless of how the file
-				// entered the queue. It also de-duplicates the append-bug
-				// rows, so count the grouped result, not the raw rows.
-				entry.entities = decorateEntities(entities)
-				entry.entityCount = entry.entities.length
-				// Read-only files_confidential signal — present only when the
-				// backend resolved a matching label (files-confidential-labels).
-				entry.confidentialityLabel =
-					extractResponse.data.confidentialityLabel ?? null
-				entry.confidentialityLevel =
-					extractResponse.data.confidentialityLevel ?? null
-				// A scan detection could not read is not "nothing to anonymise".
-				const unseen = applyOcrFlags(entry, extractResponse.data)
-
-				if (entities.length === 0 && !unseen) {
-					// Nothing to anonymise; skip review and mark done.
-					entry.status = 'completed'
-					return
-				}
-
-				entry.status = 'extracted'
+				const { found, unseen } = await extractEntities(entry)
+				entry.status = found === 0 && !unseen ? 'completed' : 'extracted'
 			} catch (err) {
 				console.error(`Failed to upload/extract ${entry.name}:`, err)
 				entry.error = err.response?.data?.error || err.message
@@ -991,7 +1374,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 		 *
 		 * @param {object} entry Queue entry in the `extracted` state.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
 		 */
 		async markEntryChecked(entry) {
 			if (!entry || entry.status !== 'extracted') {
@@ -1026,74 +1409,49 @@ export const useAnonymizationStore = defineStore('anonymization', {
 		 *   before anonymising — covers dossier files the user never opened,
 		 *   which are otherwise missing from the queue.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
 		 */
 		async anonymiseAllExtracted(options = {}) {
 			const { fileIds, files, ...entryOptions } = options
 
+			await this._extractListed(files)
+			const { targets, unreviewed } = batchTargets(this.files, fileIds)
+			this.batch = batchProgress(targets.length, unreviewed)
+			try {
+				for (const entry of targets) {
+					// anonymiseEntry already sets entry.status = 'error';
+					// swallow so one bad file doesn't abort the batch.
+					await this.anonymiseEntry(entry, entryOptions).catch((err) =>
+						console.error(
+							`Batch anonymise failed for ${entry.name}:`,
+							err,
+						),
+					)
+					countOutcome(this.batch, entry)
+				}
+			} finally {
+				this.batch.running = false
+			}
+		},
+
+		/**
+		 * Extract the listed files of a dossier batch before it runs.
+		 *
+		 * @param {Array<object>|undefined} files File descriptors to extract.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 */
+		async _extractListed(files) {
 			// Dossier batch: the listing may contain files the user never
 			// opened in the viewer, so they were never lazily extracted and
 			// aren't in the queue yet. Extract them first — otherwise the
 			// run silently skips every un-opened file. ensureExtracted is a
 			// no-op for files already in the queue, so this is idempotent.
 			if (Array.isArray(files) && files.length > 0) {
-				this.batch = {
-					running: true,
-					total: 0,
-					done: 0,
-					failed: 0,
-					unreviewed: [],
-				}
+				this.batch = batchProgress(0, [])
 				for (const meta of files) {
 					await this.ensureExtracted(meta)
 				}
-			}
-
-			const scope = fileIds ? new Set(fileIds.map(Number)) : null
-
-			// Snapshot the targets up-front: anonymiseEntry mutates each
-			// entry's status to 'completed'/'error', so iterating live
-			// would be order-sensitive.
-			const inScope = this.files.filter(
-				(entry) =>
-					entry.status === 'extracted'
-					&& (!scope || scope.has(Number(entry.fileId))),
-			)
-			// Only what a person checked is written; the rest is reported.
-			const targets = inScope.filter((entry) => entryIsChecked(entry))
-			const unreviewed = inScope
-				.filter((entry) => !entryIsChecked(entry))
-				.map((entry) => ({ fileId: entry.fileId, name: entry.name }))
-
-			this.batch = {
-				running: true,
-				total: targets.length,
-				done: 0,
-				failed: 0,
-				unreviewed,
-			}
-			try {
-				for (const entry of targets) {
-					try {
-						await this.anonymiseEntry(entry, entryOptions)
-					} catch (err) {
-						// anonymiseEntry already sets entry.status = 'error';
-						// swallow so one bad file doesn't abort the batch.
-						console.error(
-							`Batch anonymise failed for ${entry.name}:`,
-							err,
-						)
-					}
-					// Classify by the entry's own outcome — anonymiseEntry
-					// can mark 'error' without throwing on partial failures.
-					if (entry.status === 'error') {
-						this.batch.failed++
-					} else {
-						this.batch.done++
-					}
-				}
-			} finally {
-				this.batch.running = false
 			}
 		},
 
@@ -1127,21 +1485,8 @@ export const useAnonymizationStore = defineStore('anonymization', {
 			this.files.push(entry)
 
 			try {
-				const extractResponse = await axios.post(
-					generateUrl(
-						`/apps/filinq/api/anonymization/extract/${entry.fileId}`,
-					),
-				)
-				const entities = extractResponse.data.entities || []
-				entry.entities = decorateEntities(entities)
-				entry.entityCount = entry.entities.length
-				entry.confidentialityLabel =
-					extractResponse.data.confidentialityLabel ?? null
-				entry.confidentialityLevel =
-					extractResponse.data.confidentialityLevel ?? null
-				const unseen = applyOcrFlags(entry, extractResponse.data)
-				entry.status =
-					entities.length === 0 && !unseen ? 'completed' : 'extracted'
+				const { found, unseen } = await extractEntities(entry)
+				entry.status = found === 0 && !unseen ? 'completed' : 'extracted'
 			} catch (err) {
 				console.error(`Failed to load entities for ${entry.name}:`, err)
 				entry.error = err.response?.data?.error || err.message
@@ -1173,14 +1518,8 @@ export const useAnonymizationStore = defineStore('anonymization', {
 					generateUrl(`/apps/filinq/api/anonymization/extract/${fileId}`),
 					{ force: true },
 				)
-				const entities = res.data.entities || []
-				entry.entities = decorateEntities(entities)
-				entry.entityCount = entry.entities.length
-				entry.confidentialityLabel = res.data.confidentialityLabel ?? null
-				entry.confidentialityLevel = res.data.confidentialityLevel ?? null
-				const unseen = applyOcrFlags(entry, res.data)
-				entry.status =
-					entities.length === 0 && !unseen ? 'completed' : 'extracted'
+				const { found, unseen } = applyExtractResponse(entry, res.data)
+				entry.status = found === 0 && !unseen ? 'completed' : 'extracted'
 			} catch (err) {
 				entry.error = err.response?.data?.error || err.message
 				entry.status = 'error'
@@ -1221,43 +1560,15 @@ export const useAnonymizationStore = defineStore('anonymization', {
 			// Snapshot prior decisions before re-extraction overwrites the
 			// entity list, so grounds / skip choices the user already made
 			// survive the re-run.
-			const priorDecisions = new Map()
-			for (const e of entry.entities || []) {
-				priorDecisions.set(`${e.type}\u0000${e.value}`, {
-					bases: Array.isArray(e._decisionBases)
-						? [...e._decisionBases]
-						: [],
-					skip: !!e._decisionSkip,
-				})
-			}
+			const priorDecisions = decisionsByValue(entry.entities)
 
 			entry.status = 'extracting'
 			entry.error = null
 			try {
-				const extractResponse = await axios.post(
-					generateUrl(
-						`/apps/filinq/api/anonymization/extract/${entry.fileId}`,
-					),
-				)
-				const entities = decorateEntities(
-					extractResponse.data.entities || [],
-				)
-				for (const e of entities) {
-					const prior = priorDecisions.get(`${e.type}\u0000${e.value}`)
-					if (prior) {
-						e._decisionBases = prior.bases
-						e._decisionSkip = prior.skip
-					}
-				}
-				entry.entities = entities
-				entry.entityCount = entities.length
+				await extractEntities(entry)
+				restoreDecisions(entry.entities, priorDecisions)
 				// A new detection run needs a new check.
 				entry.reviewMark = null
-				entry.confidentialityLabel =
-					extractResponse.data.confidentialityLabel ?? null
-				entry.confidentialityLevel =
-					extractResponse.data.confidentialityLevel ?? null
-				applyOcrFlags(entry, extractResponse.data)
 				// Drop the read-only anonymised view so the editable review
 				// list + "Anonymize" button take over. Keep anonymizedFile*
 				// so the viewer toggle can still show the current result until
@@ -1269,7 +1580,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 				// batch footer (which otherwise shadows the single-file button).
 				// Cleared once the re-run completes in `anonymiseEntry`.
 				entry.reanonymize = true
-				entry.status = entities.length === 0 ? 'completed' : 'extracted'
+				entry.status = entry.entityCount === 0 ? 'completed' : 'extracted'
 			} catch (err) {
 				console.error(`Failed to re-extract ${entry.name}:`, err)
 				entry.error = err.response?.data?.error || err.message
@@ -1358,116 +1669,49 @@ export const useAnonymizationStore = defineStore('anonymization', {
 		 *   already in the queue (e.g. a just-finished run) without creating a
 		 *   duplicate card.
 		 * @return {Promise<object|null>} The review entry, or null when not anonymised.
+		 * @spec openspec/specs/anonymization-link/spec.md
 		 */
 		async loadAnonymizedEntities(fileMeta, { push = true } = {}) {
 			// Authoritative signal: the source↔anonymised DB mapping. A hit
 			// means this file IS an anonymised output regardless of whether
-			// its text yields parseable placeholders.
+			// its text yields parseable placeholders, or any text at all.
 			const link = await this.findAnonymizationLink(fileMeta.fileId)
-
-			let text = ''
-			try {
-				text = await extractDocumentText({
-					path: fileMeta.path,
-					mimeType: fileMeta.mimeType,
-					fileName: fileMeta.fileName,
-				})
-			} catch (err) {
-				console.error(`Failed to read text for ${fileMeta.fileName}:`, err)
-				// A linked file is still anonymised even if its text is
-				// unreadable — fall through to the source-entity resolution.
-				if (!link) {
-					return null
-				}
-			}
-
-			const placeholders = parsePlaceholders(text)
-			if (placeholders.length === 0 && !link) {
-				return null
-			}
+			const placeholders = parsePlaceholders(
+				await readAnonymizedText(fileMeta),
+			)
 
 			// No parseable placeholders but a DB link exists (e.g. redacted
 			// PDF): resolve the removed entities from the linked source file
 			// and map them onto the anonymised-card shape.
 			if (placeholders.length === 0) {
-				return this.buildLinkedAnonymizedEntry(fileMeta, link, { push })
+				return link
+					? this.buildLinkedAnonymizedEntry(fileMeta, link, { push })
+					: null
 			}
-
-			// Resolve every distinct entity id in parallel. A failed lookup
-			// (deleted entity, permission) degrades to a placeholder-only
-			// row rather than dropping the occurrence entirely.
-			const resolved = await Promise.all(
-				placeholders.map(async (ph) => {
-					try {
-						const r = await axios.get(
-							generateUrl(
-								`/apps/openregister/api/entities/${ph.entityId}`,
-							),
-						)
-						const data = r.data?.data || {}
-						const relations = Array.isArray(r.data?.relations)
-							? r.data.relations
-							: []
-						// Collect bases across this entity's relations.
-						const bases = relations.flatMap((rel) =>
-							Array.isArray(rel.bases) ? rel.bases : [],
-						)
-						return {
-							type: data.type || ph.type,
-							value: data.value ?? null,
-							confidence: data.confidence ?? null,
-							entityId: ph.entityId,
-							count: ph.count,
-							bases: [...new Set(bases)],
-							placeholder: `[${ph.type}: ${ph.entityId}]`,
-							_resolveError: null,
-						}
-					} catch (err) {
-						return {
-							type: ph.type,
-							value: null,
-							confidence: null,
-							entityId: ph.entityId,
-							count: ph.count,
-							bases: [],
-							placeholder: `[${ph.type}: ${ph.entityId}]`,
-							_resolveError:
-								err.response?.status === 404
-									? 'Entity no longer exists'
-									: err.response?.data?.message || err.message,
-						}
-					}
-				}),
-			)
 
 			// Collapse rows duplicated by the extract-append bug so the same
 			// removed value is shown once (see entity-double-extract TODO).
-			const deduped = dedupeAnonEntities(resolved)
-
+			const deduped = dedupeAnonEntities(
+				await Promise.all(placeholders.map(resolvePlaceholder)),
+			)
 			const entry = {
-				id: `file-${++fileCounter}`,
-				name: fileMeta.fileName,
-				status: 'completed',
-				viewMode: 'anonymized',
-				error: null,
-				fileId: fileMeta.fileId,
-				filePath: fileMeta.path,
+				...anonymizedEntry(fileMeta, link),
 				entities: deduped,
 				entityCount: deduped.length,
-				replacementCount:
-					link?.replacementCount
-					?? deduped.reduce((sum, e) => sum + e.count, 0),
-				anonymizedFileId: null,
-				anonymizedFileName: null,
-				anonymizedFilePath: null,
-				// Source mapping (feat #107) when a link was recorded.
-				sourceFileId: link?.sourceFileId ?? null,
-				sourceFileName: link?.sourceFileName ?? null,
-				sourceFilePath: link?.sourceFilePath ?? null,
-				anonymizationLinkId: link?.id ?? null,
-				runCount: link?.runCount ?? null,
-				dossier: inferDossier(fileMeta.path),
+				replacementCount: replacementCountOf(link, deduped),
 			}
+			return this._queueAnonymized(entry, push)
+		},
+
+		/**
+		 * Append a read-only anonymised entry to the queue when asked to.
+		 *
+		 * @param {object} entry The entry.
+		 * @param {boolean} push Whether to append it.
+		 * @return {object} The entry.
+		 * @spec openspec/specs/anonymization-link/spec.md
+		 */
+		_queueAnonymized(entry, push) {
 			if (push) {
 				this.files.push(entry)
 			}
@@ -1497,36 +1741,16 @@ export const useAnonymizationStore = defineStore('anonymization', {
 		 *   Pass false to reuse the resolution for an existing entry without
 		 *   creating a duplicate card.
 		 * @return {object} The read-only summary entry.
+		 * @spec openspec/specs/anonymization-link/spec.md
 		 */
 		buildLinkedAnonymizedEntry(fileMeta, link, { push = true } = {}) {
 			const entry = {
-				id: `file-${++fileCounter}`,
-				name: fileMeta.fileName,
-				status: 'completed',
-				viewMode: 'anonymized',
-				error: null,
-				fileId: fileMeta.fileId,
-				filePath: fileMeta.path,
-				entities: [],
-				entityCount: 0,
-				replacementCount: link?.replacementCount ?? 0,
+				...anonymizedEntry(fileMeta, link),
 				// No readable placeholders → the detailed list can't be shown
 				// without a (mutating) re-extract. The sidebar renders a note.
 				detailUnavailable: true,
-				anonymizedFileId: null,
-				anonymizedFileName: null,
-				anonymizedFilePath: null,
-				sourceFileId: link?.sourceFileId ?? null,
-				sourceFileName: link?.sourceFileName ?? null,
-				sourceFilePath: link?.sourceFilePath ?? null,
-				anonymizationLinkId: link?.id ?? null,
-				runCount: link?.runCount ?? null,
-				dossier: inferDossier(fileMeta.path),
 			}
-			if (push) {
-				this.files.push(entry)
-			}
-			return entry
+			return this._queueAnonymized(entry, push)
 		},
 
 		/**
@@ -1553,55 +1777,24 @@ export const useAnonymizationStore = defineStore('anonymization', {
 		 * @spec openspec/specs/dossier-register/spec.md#requirement-dossier-objects-bind-to-a-nextcloud-folder-via-selffolder
 		 */
 		async bindDossier(folderName, options = {}) {
-			const cleanName = (folderName || '').trim()
-			if (!cleanName) {
-				throw new Error('Folder name is required')
-			}
-
+			const cleanName = dossierFolderName(folderName)
 			const cached = this.dossiers.find((d) => d.folderName === cleanName)
 			if (cached) {
 				return cached
 			}
 
-			// Step 1 — PROPFIND for the folder's NC node id.
-			const propfindUrl = `${davBaseUrl()}/DocuDesk/${encodePath(cleanName)}/`
-			const propfindResponse = await axios({
-				method: 'PROPFIND',
-				url: propfindUrl,
-				headers: { Depth: '0', 'Content-Type': 'application/xml' },
-				data: `<?xml version="1.0"?>
-						<d:propfind xmlns:d="DAV:" xmlns:oc="http://owncloud.org/ns">
-							<d:prop>
-								<oc:fileid />
-							</d:prop>
-						</d:propfind>`,
-			})
-			const folderId = parseFileIdFromPropfind(propfindResponse.data)
-			if (folderId === null) {
-				throw new Error(`Failed to read folder id for ${cleanName}`)
-			}
-
-			// Step 2 — create the OR dossier object.
-			const bases =
-				Array.isArray(options.bases) && options.bases.length > 0
-					? options.bases
-					: ['persoonsgegevens']
-			const payload = {
-				name: cleanName,
-				description: options.description ?? '',
-				bases,
-				'@self': { folder: String(folderId) },
-			}
-
+			const folderId = await readFolderId(cleanName)
+			const bases = dossierBases(options.bases)
 			const createResponse = await axios.post(
 				generateUrl('/apps/openregister/api/objects/filinq/dossier'),
-				payload,
+				{
+					name: cleanName,
+					description: options.description ?? '',
+					bases,
+					'@self': { folder: String(folderId) },
+				},
 			)
-			const uuid =
-				createResponse.data?.['@self']?.id ?? createResponse.data?.id ?? null
-			if (uuid === null) {
-				throw new Error('Dossier created but no UUID returned')
-			}
+			const uuid = createdUuid(createResponse.data)
 
 			const record = {
 				folderName: cleanName,
@@ -1865,7 +2058,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 		/**
 		 * Reset the queue, processing flag and dossier records completely.
 		 *
-		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
 		 */
 		reset() {
 			this.files = []

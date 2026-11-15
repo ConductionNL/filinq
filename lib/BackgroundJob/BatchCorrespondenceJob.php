@@ -139,35 +139,15 @@ class BatchCorrespondenceJob extends QueuedJob {
 	 * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-batch-correspondence-generation
 	 */
 	private function generateFor(array $job, mixed $recipientId): array {
-		$dataRefs = [
-			[
-				'register' => $job['options']['register'] ?? '',
-				'schema' => $job['options']['schema'] ?? '',
-				'id' => $recipientId,
-			],
-		];
-
 		try {
 			$this->corrSvc->generate(
 				templateId: $job['templateId'],
-				dataRefs: $dataRefs,
+				dataRefs: $this->dataRefsFor(job: $job, recipientId: $recipientId),
 				options: $job['options']
 			);
 		} catch (Exception $e) {
-			$this->logger->warning(
-				message: 'Batch correspondence failed for recipient: ' . $e->getMessage(),
-				context: [
-					'jobId' => $job['jobId'],
-					'recipientId' => $recipientId,
-				]
-			);
-
-			return [
-				'recipientId' => $recipientId,
-				'status' => 'error',
-				'error' => $e->getMessage(),
-			];
-		}//end try
+			return $this->failureEntry(exception: $e, context: ['jobId' => $job['jobId'], 'recipientId' => $recipientId]);
+		}
 
 		return [
 			'recipientId' => $recipientId,
@@ -175,6 +155,47 @@ class BatchCorrespondenceJob extends QueuedJob {
 		];
 
 	}//end generateFor()
+
+	/**
+	 * The data reference of one recipient: the job's register and schema, or empty ones.
+	 *
+	 * @param array<string, mixed> $job         The job: jobId, templateId and options.
+	 * @param mixed                $recipientId The recipient's object id.
+	 *
+	 * @return array<int, array<string, mixed>> The data references.
+	 */
+	private function dataRefsFor(array $job, mixed $recipientId): array {
+		return [
+			[
+				'register' => $job['options']['register'] ?? '',
+				'schema' => $job['options']['schema'] ?? '',
+				'id' => $recipientId,
+			],
+		];
+
+	}//end dataRefsFor()
+
+	/**
+	 * Log a failed recipient and return its error entry.
+	 *
+	 * @param Exception                               $exception The failure.
+	 * @param array{jobId: mixed, recipientId: mixed} $context   The job and the recipient, as the log line names them.
+	 *
+	 * @return array<string, mixed> The error entry.
+	 */
+	private function failureEntry(Exception $exception, array $context): array {
+		$this->logger->warning(
+			message: 'Batch correspondence failed for recipient: ' . $exception->getMessage(),
+			context: $context
+		);
+
+		return [
+			'recipientId' => $context['recipientId'],
+			'status' => 'error',
+			'error' => $exception->getMessage(),
+		];
+
+	}//end failureEntry()
 
 	/**
 	 * Store the job's progress, keeping the owner so the ownership check holds.

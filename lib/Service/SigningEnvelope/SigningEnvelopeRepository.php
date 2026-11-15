@@ -25,6 +25,7 @@ namespace OCA\Filinq\Service\SigningEnvelope;
 
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\IntakeRepository;
+use OCA\Filinq\Service\ReadsStoredObjectRows;
 use RuntimeException;
 use Throwable;
 
@@ -46,6 +47,7 @@ use Throwable;
  * @spec openspec/specs/bulk-signing-field-builder/spec.md#requirement-batch-envelope-and-placement-data-live-in-the-signing-register-req-ddbsf-001
  */
 class SigningEnvelopeRepository {
+	use ReadsStoredObjectRows;
 
 	/**
 	 * Schema slug.
@@ -95,7 +97,7 @@ class SigningEnvelopeRepository {
 			throw new RuntimeException(message: 'Could not store the envelope: ' . $e->getMessage(), code: 0, previous: $e);
 		}
 
-		$normalised = $this->normalise(row: $stored);
+		$normalised = $this->storedFields(row: $stored);
 		if (($normalised['uuid'] ?? '') === '') {
 			$normalised['uuid'] = $uuid;
 		}
@@ -135,7 +137,7 @@ class SigningEnvelopeRepository {
 			return null;
 		}
 
-		return $this->normalise(row: $object);
+		return $this->storedFields(row: $object);
 
 	}//end find()
 
@@ -170,7 +172,7 @@ class SigningEnvelopeRepository {
 
 		$envelopes = [];
 		foreach ((array) $results as $result) {
-			$envelope = $this->normalise(row: $result);
+			$envelope = $this->storedFields(row: $result);
 			// The filter is the search's; the owner check is ours.
 			if ($initiator === null || ($envelope['initiatorUserId'] ?? '') === $initiator) {
 				$envelopes[] = $envelope;
@@ -185,33 +187,4 @@ class SigningEnvelopeRepository {
 		return $envelopes;
 
 	}//end list()
-
-	/**
-	 * Flatten an OpenRegister object into its fields plus `uuid`.
-	 *
-	 * @param mixed $row An ObjectEntity or array
-	 *
-	 * @return array
-	 */
-	private function normalise(mixed $row): array {
-		$data = $row;
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			$data = $row->jsonSerialize();
-		}
-
-		if (is_array($data) === false) {
-			return [];
-		}
-
-		$fields = $data;
-		if (isset($data['object']) === true && is_array($data['object']) === true) {
-			$fields = $data['object'];
-		}
-
-		unset($fields['@self']);
-		$fields['uuid'] = (string) ($fields['uuid'] ?? ($data['uuid'] ?? ($data['@self']['id'] ?? ($data['id'] ?? ''))));
-
-		return $fields;
-
-	}//end normalise()
 }//end class

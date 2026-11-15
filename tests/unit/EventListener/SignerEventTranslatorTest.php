@@ -30,8 +30,9 @@ use OCA\Filinq\Event\SignerStepApprovedEvent;
 use OCA\Filinq\Event\SignerStepPendingEvent;
 use OCA\Filinq\Event\SignerStepRejectedEvent;
 use OCA\Filinq\EventListener\SignerEventTranslator;
-use OCA\Filinq\Service\Signing\SigningProviderFactory;
-use OCA\Filinq\Service\Signing\SigningProviderInterface;
+use OCA\Filinq\EventListener\SignerStepDecision;
+use OCA\Filinq\EventListener\SignerStepTask;
+use OCA\Filinq\Kernel\Contracts\ActiveSigningProviderInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventDispatcher;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -48,6 +49,9 @@ use RuntimeException;
  * @uses \OCA\Filinq\Event\SignerStepApprovedEvent
  * @uses \OCA\Filinq\Event\SignerStepRejectedEvent
  * @uses \OCA\Filinq\Event\SignerChainCompletedEvent
+ * @uses \OCA\Filinq\EventListener\SignerStepDecision
+ * @uses \OCA\Filinq\EventListener\SignerStepTask
+ * @uses   \OCA\Filinq\Event\SignerStepDecisionEvent
  *
  * @category Tests
  * @package  OCA\Filinq\Tests\Unit\EventListener
@@ -60,9 +64,9 @@ final class SignerEventTranslatorTest extends TestCase {
 	/**
 	 * Provider factory mock.
 	 *
-	 * @var SigningProviderFactory&MockObject
+	 * @var ActiveSigningProviderInterface&MockObject
 	 */
-	private SigningProviderFactory $providerFactory;
+	private ActiveSigningProviderInterface $providerFactory;
 
 	/**
 	 * Dispatcher mock.
@@ -93,7 +97,7 @@ final class SignerEventTranslatorTest extends TestCase {
 	protected function setUp(): void {
 		parent::setUp();
 
-		$this->providerFactory = $this->createMock(SigningProviderFactory::class);
+		$this->providerFactory = $this->createMock(ActiveSigningProviderInterface::class);
 		$this->dispatcher = $this->createMock(IEventDispatcher::class);
 		$this->logger = $this->createMock(LoggerInterface::class);
 
@@ -112,11 +116,9 @@ final class SignerEventTranslatorTest extends TestCase {
 	 * @return void
 	 */
 	public function testOnPositionEnabledDispatchesPendingAndResolvesProvider(): void {
-		$provider = $this->createMock(SigningProviderInterface::class);
-		$provider->method('getIdentifier')->willReturn('native');
 		$this->providerFactory->expects($this->once())
-			->method('getActiveProvider')
-			->willReturn($provider);
+			->method('getActiveProviderIdentifier')
+			->willReturn('native');
 
 		$this->dispatcher->expects($this->once())
 			->method('dispatchTyped')
@@ -152,7 +154,7 @@ final class SignerEventTranslatorTest extends TestCase {
 	 * @return void
 	 */
 	public function testProviderResolutionFailureIsLoggedNotThrown(): void {
-		$this->providerFactory->method('getActiveProvider')
+		$this->providerFactory->method('getActiveProviderIdentifier')
 			->willThrowException(new RuntimeException('no provider configured'));
 		$this->logger->expects($this->once())->method('error');
 		$this->dispatcher->expects($this->once())
@@ -190,13 +192,8 @@ final class SignerEventTranslatorTest extends TestCase {
 			);
 
 		$this->translator->onTaskDecided(
-			sequenceUuid: 'seq-1',
-			taskUuid: 'task-1',
-			position: 1,
-			userId: 'alice',
-			comment: 'akkoord',
-			objectUuid: 'sign-req-1',
-			isRejecting: false
+			task: new SignerStepTask(sequenceUuid: 'seq-1', taskUuid: 'task-1', position: 1, objectUuid: 'sign-req-1'),
+			decision: new SignerStepDecision(userId: 'alice', comment: 'akkoord', isRejecting: false, isApproving: true)
 		);
 
 	}//end testApprovingDecisionDispatchesApproved()
@@ -222,16 +219,37 @@ final class SignerEventTranslatorTest extends TestCase {
 			);
 
 		$this->translator->onTaskDecided(
-			sequenceUuid: 'seq-1',
-			taskUuid: 'task-1',
-			position: 1,
-			userId: 'alice',
-			comment: 'niet akkoord',
-			objectUuid: 'sign-req-1',
-			isRejecting: true
+			task: new SignerStepTask(sequenceUuid: 'seq-1', taskUuid: 'task-1', position: 1, objectUuid: 'sign-req-1'),
+			decision: new SignerStepDecision(userId: 'alice', comment: 'niet akkoord', isRejecting: true, isApproving: false)
 		);
 
 	}//end testRejectingDecisionDispatchesRejected()
+
+	/**
+	 * A decision that neither approves nor rejects, or approves without a
+	 * signer, dispatches nothing and warns.
+	 *
+	 * @return void
+	 */
+	public function testUndecidedOrUnsignedDecisionDispatchesNothing(): void {
+		$this->dispatcher->expects($this->never())->method('dispatchTyped');
+		$this->logger->expects($this->exactly(3))->method('warning');
+
+		$task = new SignerStepTask(sequenceUuid: 'seq-1', taskUuid: 'task-1', position: 1, objectUuid: 'sign-req-1');
+		$this->translator->onTaskDecided(
+			task: $task,
+			decision: new SignerStepDecision(userId: 'alice', comment: null, isRejecting: false, isApproving: false)
+		);
+		$this->translator->onTaskDecided(
+			task: $task,
+			decision: new SignerStepDecision(userId: null, comment: null, isRejecting: false, isApproving: true)
+		);
+		$this->translator->onTaskDecided(
+			task: $task,
+			decision: new SignerStepDecision(userId: '', comment: null, isRejecting: false, isApproving: true)
+		);
+
+	}//end testUndecidedOrUnsignedDecisionDispatchesNothing()
 
 	/**
 	 * Sequence completion dispatches the chain-completed event verbatim.

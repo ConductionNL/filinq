@@ -19,6 +19,9 @@
  * @link https://www.filinq.app
  *
  * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -26,6 +29,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use Exception;
+use OCA\Filinq\Controller\Support\ControllerFeedback;
 use OCA\Filinq\Exception\ErrorDetailsInterface;
 use OCA\Filinq\Kernel\Contracts\DocumentServiceInterface;
 use OCA\Filinq\Kernel\Contracts\MultiFormatOutputProducerInterface;
@@ -34,10 +38,8 @@ use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\Response;
-use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUserSession;
-use Psr\Log\LoggerInterface;
 
 /**
  * Controller for document generation endpoints
@@ -51,6 +53,7 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
  */
 class DocumentController extends Controller {
+	use AnswersNotAuthenticated;
 
 	/**
 	 * File extension and content type per download format; anything else downloads as PDF.
@@ -69,8 +72,7 @@ class DocumentController extends Controller {
 	 * @param IRequest $request The request object
 	 * @param DocumentServiceInterface $documentSvc Document generation service
 	 * @param IUserSession $userSession User session for authentication
-	 * @param LoggerInterface $logger Logger for error reporting
-	 * @param IL10N $l10n The localization service
+	 * @param ControllerFeedback $feedback Translations for the answers and the failure log.
 	 * @param MultiFormatOutputProducerInterface|null $multiFormat Answers a request with options.formats
 	 *
 	 * @return void
@@ -80,8 +82,7 @@ class DocumentController extends Controller {
 		IRequest $request,
 		private readonly DocumentServiceInterface $documentSvc,
 		private readonly IUserSession $userSession,
-		private readonly LoggerInterface $logger,
-		private readonly IL10N $l10n,
+		private readonly ControllerFeedback $feedback,
 		private readonly ?MultiFormatOutputProducerInterface $multiFormat = null,
 	) {
 		parent::__construct(appName: $appName, request: $request);
@@ -124,10 +125,7 @@ class DocumentController extends Controller {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Not authenticated')],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: $this->feedback->l10n->t('Not authenticated'));
 			}
 
 			$params = $this->parseGenerateParams();
@@ -138,33 +136,44 @@ class DocumentController extends Controller {
 			$params['options']['userId'] = $user->getUID();
 			$params['options']['filename'] = $params['filename'];
 
-			if (array_key_exists('formats', $params['options']) === true && $this->multiFormat !== null) {
-				$result = $this->multiFormat->generate(
-					templateId: $params['templateId'],
-					dataRefs: $params['dataRefs'],
-					options: $params['options']
-				);
-				return new JSONResponse(
-					data: ['outputs' => $result['outputs'], 'metadata' => $result['metadata'], 'warnings' => $result['warnings']],
-					statusCode: Http::STATUS_OK
-				);
-			}
-
-			$result = $this->documentSvc->generateDocument(
-				templateId: $params['templateId'],
-				dataRefs: $params['dataRefs'],
-				options: $params['options']
-			);
-
-			return $this->buildDocumentResponse(
-				result: $result,
-				filename: $params['filename']
-			);
+			return $this->produce(params: $params);
 		} catch (Exception $e) {
 			return $this->handleException(exception: $e);
 		}//end try
 
 	}//end generate()
+
+	/**
+	 * Render the parsed request: several formats through the multi-format producer when it is there, else one document.
+	 *
+	 * @param array{templateId: mixed, dataRefs: array, options: array, filename: mixed} $params The parsed request, options stamped.
+	 *
+	 * @return DataDownloadResponse|JSONResponse The document or its manifest.
+	 *
+	 * @throws Exception When rendering fails.
+	 */
+	private function produce(array $params): DataDownloadResponse|JSONResponse {
+		if (array_key_exists('formats', $params['options']) === true && $this->multiFormat !== null) {
+			$result = $this->multiFormat->generate(
+				templateId: $params['templateId'],
+				dataRefs: $params['dataRefs'],
+				options: $params['options']
+			);
+			return new JSONResponse(
+				data: ['outputs' => $result['outputs'], 'metadata' => $result['metadata'], 'warnings' => $result['warnings']],
+				statusCode: Http::STATUS_OK
+			);
+		}
+
+		$result = $this->documentSvc->generateDocument(
+			templateId: $params['templateId'],
+			dataRefs: $params['dataRefs'],
+			options: $params['options']
+		);
+
+		return $this->buildDocumentResponse(result: $result, filename: $params['filename']);
+
+	}//end produce()
 
 	/**
 	 * Generate an HTML preview of a template without final output.
@@ -195,49 +204,28 @@ class DocumentController extends Controller {
 	 */
 	public function preview(): JSONResponse {
 		try {
-			$user = $this->userSession->getUser();
-			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Not authenticated')],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+			if ($this->userSession->getUser() === null) {
+				return $this->notAuthenticated(message: $this->feedback->l10n->t('Not authenticated'));
 			}
 
-			$templateId = $this->request->getParam('templateId');
-			if (empty($templateId) === true) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('templateId is required')],
-					statusCode: Http::STATUS_BAD_REQUEST
-				);
-			}
-
-			$dataRefs = $this->request->getParam('dataRefs', []);
-			if (is_array($dataRefs) === false) {
-				$dataRefs = [];
-			}
-
-			$options = $this->request->getParam('options', []);
-			if (is_array($options) === false) {
-				$options = [];
+			$params = $this->parseGenerateParams();
+			if ($params instanceof JSONResponse) {
+				return $params;
 			}
 
 			$result = $this->documentSvc->generatePreview(
-				templateId: $templateId,
-				dataRefs: $dataRefs,
-				options: $options
+				templateId: $params['templateId'],
+				dataRefs: $params['dataRefs'],
+				options: $params['options']
 			);
 
 			return new JSONResponse(
-				data: [
-					'html' => $result['html'],
-					'warnings' => $result['warnings'],
-				],
+				data: ['html' => $result['html'], 'warnings' => $result['warnings']],
 				statusCode: Http::STATUS_OK
 			);
 		} catch (Exception $e) {
 			return $this->handleException(exception: $e);
-		}//end try
-
+		}
 	}//end preview()
 
 	/**
@@ -253,7 +241,7 @@ class DocumentController extends Controller {
 	 *
 	 * @NoAdminRequired
 	 *
-	 * @spec openspec/changes/template-merge-preview/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 *
 	 * @no-admin-idor-exempt object access runs under OpenRegister's RBAC, as
 	 * for preview(): no `_rbac: false` on this path, so an id belonging to
@@ -261,44 +249,26 @@ class DocumentController extends Controller {
 	 */
 	public function mergePreview(): JSONResponse {
 		try {
-			$user = $this->userSession->getUser();
-			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Not authenticated')],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+			if ($this->userSession->getUser() === null) {
+				return $this->notAuthenticated(message: $this->feedback->l10n->t('Not authenticated'));
 			}
 
-			$templateId = $this->request->getParam('templateId');
-			if (empty($templateId) === true) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('templateId is required')],
-					statusCode: Http::STATUS_BAD_REQUEST
-				);
-			}
-
-			$dataRefs = $this->request->getParam('dataRefs', []);
-			if (is_array($dataRefs) === false) {
-				$dataRefs = [];
-			}
-
-			$options = $this->request->getParam('options', []);
-			if (is_array($options) === false) {
-				$options = [];
+			$params = $this->parseGenerateParams();
+			if ($params instanceof JSONResponse) {
+				return $params;
 			}
 
 			return new JSONResponse(
 				data: $this->documentSvc->generateMergePreview(
-					templateId: $templateId,
-					dataRefs: $dataRefs,
-					options: $options
+					templateId: $params['templateId'],
+					dataRefs: $params['dataRefs'],
+					options: $params['options']
 				),
 				statusCode: Http::STATUS_OK
 			);
 		} catch (Exception $e) {
 			return $this->handleException(exception: $e);
-		}//end try
-
+		}
 	}//end mergePreview()
 
 	/**
@@ -330,52 +300,87 @@ class DocumentController extends Controller {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Not authenticated')],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: $this->feedback->l10n->t('Not authenticated'));
 			}
 
-			$templateId = $this->request->getParam('templateId');
-			$objectIds = $this->request->getParam('objectIds', []);
-			$options = $this->request->getParam('options', []);
-
-			if (empty($templateId) === true) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('templateId is required')],
-					statusCode: Http::STATUS_BAD_REQUEST
-				);
+			$refusal = $this->bulkRefusal();
+			if ($refusal !== null) {
+				return $refusal;
 			}
 
-			if (empty($objectIds) === true || is_array($objectIds) === false) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('objectIds is required and must be an array')],
-					statusCode: Http::STATUS_BAD_REQUEST
-				);
-			}
-
-			if (is_array($options) === false) {
-				$options = [];
-			}
-
+			$options = $this->arrayParam(name: 'options');
 			$options['userId'] = $user->getUID();
 
-			$result = $this->documentSvc->generateBulk(
-				templateId: $templateId,
-				objectIds: $objectIds,
-				options: $options
+			return $this->bulkResponse(
+				result: $this->documentSvc->generateBulk(
+					templateId: $this->request->getParam('templateId'),
+					objectIds: $this->request->getParam('objectIds', []),
+					options: $options
+				)
 			);
-
-			if (isset($result['jobId']) === true) {
-				return new JSONResponse(data: $result, statusCode: Http::STATUS_ACCEPTED);
-			}
-
-			return new JSONResponse(data: $result, statusCode: Http::STATUS_OK);
 		} catch (Exception $e) {
 			return $this->handleException(exception: $e);
 		}//end try
 
 	}//end generateBulk()
+
+	/**
+	 * The 400 answer for a bulk request without a template or without a list of object ids, or null when it has both.
+	 *
+	 * @return JSONResponse|null The refusal.
+	 */
+	private function bulkRefusal(): ?JSONResponse {
+		if (empty($this->request->getParam('templateId')) === true) {
+			return new JSONResponse(
+				data: ['error' => $this->feedback->l10n->t('templateId is required')],
+				statusCode: Http::STATUS_BAD_REQUEST
+			);
+		}
+
+		$objectIds = $this->request->getParam('objectIds', []);
+		if (empty($objectIds) === true || is_array($objectIds) === false) {
+			return new JSONResponse(
+				data: ['error' => $this->feedback->l10n->t('objectIds is required and must be an array')],
+				statusCode: Http::STATUS_BAD_REQUEST
+			);
+		}
+
+		return null;
+
+	}//end bulkRefusal()
+
+	/**
+	 * Answer a bulk run: 202 when it was queued as a job, else 200.
+	 *
+	 * @param array<string, mixed> $result The bulk service's answer.
+	 *
+	 * @return JSONResponse The response.
+	 */
+	private function bulkResponse(array $result): JSONResponse {
+		if (isset($result['jobId']) === true) {
+			return new JSONResponse(data: $result, statusCode: Http::STATUS_ACCEPTED);
+		}
+
+		return new JSONResponse(data: $result, statusCode: Http::STATUS_OK);
+
+	}//end bulkResponse()
+
+	/**
+	 * A request parameter that must be an array, or an empty array otherwise.
+	 *
+	 * @param string $name The parameter name.
+	 *
+	 * @return array<array-key, mixed> The parameter value.
+	 */
+	private function arrayParam(string $name): array {
+		$value = $this->request->getParam($name, []);
+		if (is_array($value) === false) {
+			return [];
+		}
+
+		return $value;
+
+	}//end arrayParam()
 
 	/**
 	 * Get the status of an async bulk document generation job.
@@ -395,17 +400,14 @@ class DocumentController extends Controller {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Not authenticated')],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: $this->feedback->l10n->t('Not authenticated'));
 			}
 
 			$status = $this->documentSvc->getJobStatus(jobId: $jobId);
 
 			if ($status === null) {
 				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Job not found')],
+					data: ['error' => $this->feedback->l10n->t('Job not found')],
 					statusCode: Http::STATUS_NOT_FOUND
 				);
 			}
@@ -413,7 +415,7 @@ class DocumentController extends Controller {
 			$jobUserId = (string)($status['options']['userId'] ?? '');
 			if ($jobUserId !== '' && $jobUserId !== $user->getUID()) {
 				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Access denied')],
+					data: ['error' => $this->feedback->l10n->t('Access denied')],
 					statusCode: Http::STATUS_FORBIDDEN
 				);
 			}
@@ -434,23 +436,15 @@ class DocumentController extends Controller {
 	 */
 	private function parseGenerateParams(): array|JSONResponse {
 		$templateId = $this->request->getParam('templateId');
-		$dataRefs = $this->request->getParam('dataRefs', []);
-		$options = $this->request->getParam('options', []);
+		$dataRefs = $this->arrayParam(name: 'dataRefs');
+		$options = $this->arrayParam(name: 'options');
 		$filename = $this->request->getParam('filename', 'document');
 
 		if (empty($templateId) === true) {
 			return new JSONResponse(
-				data: ['error' => $this->l10n->t('templateId is required')],
+				data: ['error' => $this->feedback->l10n->t('templateId is required')],
 				statusCode: Http::STATUS_BAD_REQUEST
 			);
-		}
-
-		if (is_array($dataRefs) === false) {
-			$dataRefs = [];
-		}
-
-		if (is_array($options) === false) {
-			$options = [];
 		}
 
 		return [
@@ -580,7 +574,7 @@ class DocumentController extends Controller {
 			$statusCode = $code;
 		}
 
-		$this->logger->error(
+		$this->feedback->logger->error(
 			message: 'Document generation failed: ' . $exception->getMessage(),
 			context: ['exception' => $exception]
 		);

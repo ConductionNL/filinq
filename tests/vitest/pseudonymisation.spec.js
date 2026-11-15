@@ -152,7 +152,9 @@ describe('the restore dialog and the anonymise choice', () => {
 	it('keeps irreversible as the default and sends reversible only when chosen', () => {
 		expect(sidebar).toContain("anonymiseMode: 'irreversible'")
 		expect(store).toContain('if (options.reversible === true) {')
-		expect(store).toContain('applyAnonymizeResult(entry, anonymizeResponse.data)')
+		expect(store).toContain(
+			'applyAnonymizeResult(entry, anonymizeResponse.data)',
+		)
 		expect(store).toMatch(
 			/entry\.pseudonymisation =\s+data\.pseudonymisation \|\| null/,
 		)

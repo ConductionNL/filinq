@@ -15,6 +15,9 @@
  * @link https://www.filinq.app
  *
  * @spec openspec/specs/document-creatie-sjablonen/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\Filinq\Tests\Unit\Service;
@@ -23,6 +26,8 @@ use OCA\Filinq\Service\CaseArchiveService;
 use OCA\Filinq\Service\CaseArchiveWriter;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\FlatFileListService;
+use OCA\Filinq\Service\OpenRegisterServiceLocator;
+use OCA\Filinq\Service\ReadableFileResolver;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\Files\File;
 use OCP\Files\Folder;
@@ -145,7 +150,20 @@ class CaseArchiveServiceTest extends TestCase {
 
 		// The real writer over a fake Files area: the archive this test reads
 		// back is the one the production code wrote.
-		$writer = new CaseArchiveWriter($this->rootFolder(), $temp, $this->createMock(LoggerInterface::class));
+		$root    = $this->rootFolder();
+		$locator = $this->createMock(originalClassName: OpenRegisterServiceLocator::class);
+		$locator->method('get')->willThrowException(exception: new RuntimeException(message: 'OpenRegister is not available.'));
+		$writer = new CaseArchiveWriter(
+			rootFolder: $root,
+			tempManager: $temp,
+			logger: $this->createMock(originalClassName: LoggerInterface::class),
+			files: new ReadableFileResolver(
+				rootFolder: $root,
+				userSession: $session,
+				locator: $locator,
+				logger: $this->createMock(originalClassName: LoggerInterface::class)
+			)
+		);
 
 		return new CaseArchiveService(
 			$files,

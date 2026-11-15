@@ -11,6 +11,9 @@
  * @link     https://www.filinq.app
  *
  * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-4.1
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -18,6 +21,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\OcrController;
+use OCA\Filinq\Controller\Support\OcrServices;
 use OCA\Filinq\Service\OcrService;
 use OCA\Filinq\Tests\Unit\Service\Ocr\OcrDoubles;
 use OCP\Files\File;
@@ -174,10 +178,8 @@ class OcrControllerTest extends TestCase {
 		$repository = $this->ocrResultRepository();
 
 		return new OcrController(
-			'filinq',
 			$request,
-			$this->ocrRunServiceOver(ocr: $ocr, repository: $repository),
-			$repository,
+			new OcrServices(runs: $this->ocrRunServiceOver(ocr: $ocr, repository: $repository), results: $repository),
 			$root,
 			$session,
 			$l10n,

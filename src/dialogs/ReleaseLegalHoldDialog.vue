@@ -30,23 +30,21 @@ SPDX-License-Identifier: EUPL-1.2
 			</NcNoteCard>
 		</template>
 		<template #actions>
-			<NcButton :disabled="busy" @click="$emit('close')">
-				{{ t('filinq', 'Cancel') }}
-			</NcButton>
-			<NcButton
+			<CnDialogActions
 				variant="warning"
-				:disabled="busy || reason.trim() === ''"
-				data-testid="legal-hold-release-confirm"
-				@click="onConfirm">
-				{{ t('filinq', 'Release') }}
-			</NcButton>
+				:saving="busy"
+				:canSubmit="reason.trim() !== ''"
+				:confirmLabel="t('filinq', 'Release')"
+				@cancel="$emit('close')"
+				@submit="onConfirm" />
 		</template>
 	</NcDialog>
 </template>
 
 <script>
+import { CnDialogActions } from '@conduction/nextcloud-vue'
 import { translate as t } from '@nextcloud/l10n'
-import { NcButton, NcDialog, NcNoteCard, NcTextArea } from '@nextcloud/vue'
+import { NcDialog, NcNoteCard, NcTextArea } from '@nextcloud/vue'
 import { releaseCase } from '../services/legalHolds.js'
 
 /**
@@ -57,7 +55,7 @@ import { releaseCase } from '../services/legalHolds.js'
  */
 export default {
 	name: 'ReleaseLegalHoldDialog',
-	components: { NcButton, NcDialog, NcNoteCard, NcTextArea },
+	components: { CnDialogActions, NcDialog, NcNoteCard, NcTextArea },
 	props: {
 		/** The case uuid. */
 		holdId: { type: String, required: true },

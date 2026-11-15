@@ -1,0 +1,512 @@
+{
+    "append names the session user": [
+        {
+            "IAppManager::getInstalledApps": []
+        },
+        {
+            "ContainerInterface::get": {
+                "id": "OCA\\OpenRegister\\Db\\EntityRelationMapper"
+            }
+        },
+        {
+            "LoggerInterface::warning": {
+                "message": "LegalBasesSummaryService: EntityRelationMapper unavailable",
+                "context": {
+                    "error": "not registered: OCA\\OpenRegister\\Db\\EntityRelationMapper"
+                }
+            }
+        },
+        {
+            "LoggerInterface::warning": {
+                "message": "LegalBasesSummaryService: EntityRelationMapper unavailable; producing empty entity set",
+                "context": {
+                    "fileId": 12
+                }
+            }
+        },
+        {
+            "IUserSession::getUser": []
+        },
+        {
+            "IUser::getDisplayName": []
+        },
+        {
+            "File::getName": []
+        },
+        {
+            "GrondslagenPdfWriter::renderPerDocumentPdf": {
+                "data": {
+                    "document": {
+                        "filename": "besluit.pdf",
+                        "anonymisedAt": "<time>",
+                        "operator": "Bob Archivaris",
+                        "tool": "OpenAnonymiser via OpenRegister"
+                    },
+                    "entities": [],
+                    "totals": {
+                        "entityCount": 0,
+                        "distinctEntityCount": 0,
+                        "distinctBasesCount": 0
+                    },
+                    "bases": []
+                },
+                "sourceFileId": 12
+            }
+        },
+        {
+            "GrondslagenPdfWriter::appendToPdf": {
+                "anonymisedFile": "double File",
+                "summaryBytes": "document-pdf"
+            }
+        },
+        {
+            "File::getId": []
+        },
+        {
+            "LoggerInterface::info": {
+                "message": "LegalBasesSummaryService: appended summary to anonymised PDF",
+                "context": {
+                    "fileId": 77,
+                    "sourceFileId": 12
+                }
+            }
+        },
+        {
+            "result": "double File"
+        }
+    ],
+    "authorise a readable dossier": [
+        {
+            "IAppManager::getInstalledApps": []
+        },
+        {
+            "ContainerInterface::get": {
+                "id": "OCA\\OpenRegister\\Service\\ObjectService"
+            }
+        },
+        {
+            "ObjectService::find": {
+                "id": "d-1",
+                "register": "filinq",
+                "schema": "dossier"
+            }
+        },
+        {
+            "result": null
+        }
+    ],
+    "authorise an unknown dossier": [
+        {
+            "IAppManager::getInstalledApps": []
+        },
+        {
+            "ContainerInterface::get": {
+                "id": "OCA\\OpenRegister\\Service\\ObjectService"
+            }
+        },
+        {
+            "ObjectService::find": {
+                "id": "d-404",
+                "register": "filinq",
+                "schema": "dossier"
+            }
+        },
+        {
+            "threw": [
+                "RuntimeException",
+                "Access denied or dossier not found: d-404",
+                403
+            ]
+        }
+    ],
+    "authorise without OpenRegister": [
+        {
+            "IAppManager::getInstalledApps": []
+        },
+        {
+            "threw": [
+                "RuntimeException",
+                "Access denied: OpenRegister ObjectService unavailable.",
+                403
+            ]
+        }
+    ],
+    "beside file names the session user": [
+        {
+            "IAppManager::getInstalledApps": []
+        },
+        {
+            "ContainerInterface::get": {
+                "id": "OCA\\OpenRegister\\Db\\EntityRelationMapper"
+            }
+        },
+        {
+            "LoggerInterface::warning": {
+                "message": "LegalBasesSummaryService: EntityRelationMapper unavailable",
+                "context": {
+                    "error": "not registered: OCA\\OpenRegister\\Db\\EntityRelationMapper"
+                }
+            }
+        },
+        {
+            "LoggerInterface::warning": {
+                "message": "LegalBasesSummaryService: EntityRelationMapper unavailable; producing empty entity set",
+                "context": {
+                    "fileId": 12
+                }
+            }
+        },
+        {
+            "IUserSession::getUser": []
+        },
+        {
+            "IUser::getDisplayName": []
+        },
+        {
+            "File::getName": []
+        },
+        {
+            "GrondslagenPdfWriter::renderPerDocumentPdf": {
+                "data": {
+                    "document": {
+                        "filename": "besluit.pdf",
+                        "anonymisedAt": "<time>",
+                        "operator": "Alice Archivaris",
+                        "tool": "OpenAnonymiser via OpenRegister"
+                    },
+                    "entities": [],
+                    "totals": {
+                        "entityCount": 0,
+                        "distinctEntityCount": 0,
+                        "distinctBasesCount": 0
+                    },
+                    "bases": []
+                },
+                "sourceFileId": 12
+            }
+        },
+        {
+            "File::getName": []
+        },
+        {
+            "GrondslagenPdfWriter::writeBesideFile": {
+                "anonymisedFile": "double File",
+                "summaryFileName": "besluit_grondslagen.pdf",
+                "summaryBytes": "document-pdf"
+            }
+        },
+        {
+            "File::getId": []
+        },
+        {
+            "File::getPath": []
+        },
+        {
+            "LoggerInterface::info": {
+                "message": "LegalBasesSummaryService: wrote beside-file summary",
+                "context": {
+                    "fileId": 78,
+                    "path": "/alice/files/besluit_grondslagen.pdf"
+                }
+            }
+        },
+        {
+            "result": "double File"
+        }
+    ],
+    "beside file without a session user": [
+        {
+            "IAppManager::getInstalledApps": []
+        },
+        {
+            "ContainerInterface::get": {
+                "id": "OCA\\OpenRegister\\Db\\EntityRelationMapper"
+            }
+        },
+        {
+            "LoggerInterface::warning": {
+                "message": "LegalBasesSummaryService: EntityRelationMapper unavailable",
+                "context": {
+                    "error": "not registered: OCA\\OpenRegister\\Db\\EntityRelationMapper"
+                }
+            }
+        },
+        {
+            "LoggerInterface::warning": {
+                "message": "LegalBasesSummaryService: EntityRelationMapper unavailable; producing empty entity set",
+                "context": {
+                    "fileId": 12
+                }
+            }
+        },
+        {
+            "IUserSession::getUser": []
+        },
+        {
+            "File::getName": []
+        },
+        {
+            "GrondslagenPdfWriter::renderPerDocumentPdf": {
+                "data": {
+                    "document": {
+                        "filename": "besluit.pdf",
+                        "anonymisedAt": "<time>",
+                        "operator": "system",
+                        "tool": "OpenAnonymiser via OpenRegister"
+                    },
+                    "entities": [],
+                    "totals": {
+                        "entityCount": 0,
+                        "distinctEntityCount": 0,
+                        "distinctBasesCount": 0
+                    },
+                    "bases": []
+                },
+                "sourceFileId": 12
+            }
+        },
+        {
+            "File::getName": []
+        },
+        {
+            "GrondslagenPdfWriter::writeBesideFile": {
+                "anonymisedFile": "double File",
+                "summaryFileName": "besluit_grondslagen.pdf",
+                "summaryBytes": "document-pdf"
+            }
+        },
+        {
+            "File::getId": []
+        },
+        {
+            "File::getPath": []
+        },
+        {
+            "LoggerInterface::info": {
+                "message": "LegalBasesSummaryService: wrote beside-file summary",
+                "context": {
+                    "fileId": 78,
+                    "path": "/alice/files/besluit_grondslagen.pdf"
+                }
+            }
+        },
+        {
+            "result": "double File"
+        }
+    ],
+    "dossier summary for a forged user": [
+        {
+            "IAppManager::getInstalledApps": []
+        },
+        {
+            "ContainerInterface::get": {
+                "id": "OCA\\OpenRegister\\Service\\ObjectService"
+            }
+        },
+        {
+            "ObjectService::find": {
+                "id": "d-1",
+                "register": "filinq",
+                "schema": "dossier",
+                "_rbac": false,
+                "_multitenancy": false
+            }
+        },
+        {
+            "IUserSession::getUser": []
+        },
+        {
+            "IUser::getUID": []
+        },
+        {
+            "IRootFolder::getUserFolder": {
+                "userId": "mallory"
+            }
+        },
+        {
+            "Folder::getById": {
+                "id": 900
+            }
+        },
+        {
+            "IUser::getUID": []
+        },
+        {
+            "threw": [
+                "RuntimeException",
+                "Grondslagen summary: folder node id 900 not found for user mallory",
+                0
+            ]
+        }
+    ],
+    "dossier summary in the session users folder": [
+        {
+            "IAppManager::getInstalledApps": []
+        },
+        {
+            "ContainerInterface::get": {
+                "id": "OCA\\OpenRegister\\Service\\ObjectService"
+            }
+        },
+        {
+            "ObjectService::find": {
+                "id": "d-1",
+                "register": "filinq",
+                "schema": "dossier",
+                "_rbac": false,
+                "_multitenancy": false
+            }
+        },
+        {
+            "IUserSession::getUser": []
+        },
+        {
+            "IUser::getUID": []
+        },
+        {
+            "IRootFolder::getUserFolder": {
+                "userId": "alice"
+            }
+        },
+        {
+            "Folder::getById": {
+                "id": 900
+            }
+        },
+        {
+            "IAppManager::getInstalledApps": []
+        },
+        {
+            "ContainerInterface::get": {
+                "id": "OCA\\OpenRegister\\Db\\EntityRelationMapper"
+            }
+        },
+        {
+            "LoggerInterface::warning": {
+                "message": "LegalBasesSummaryService: EntityRelationMapper unavailable",
+                "context": {
+                    "error": "not registered: OCA\\OpenRegister\\Db\\EntityRelationMapper"
+                }
+            }
+        },
+        {
+            "Folder::getDirectoryListing": []
+        },
+        {
+            "GrondslagenPdfWriter::renderDossierPdf": {
+                "data": {
+                    "dossier": {
+                        "name": "Raadsbesluit",
+                        "description": "Woo-verzoek",
+                        "checkedOn": "yes"
+                    },
+                    "generatedAt": "<time>",
+                    "rows": [],
+                    "totals": {
+                        "documentCount": 0,
+                        "entityCount": 0,
+                        "distinctEntityCount": 0,
+                        "distinctBasesCount": 0
+                    },
+                    "bases": []
+                },
+                "dossierUuid": "d-1"
+            }
+        },
+        {
+            "GrondslagenPdfWriter::saveDossierSummary": {
+                "folder": "double Folder",
+                "pdfBytes": "dossier-pdf"
+            }
+        },
+        {
+            "File::getId": []
+        },
+        {
+            "IAppManager::getInstalledApps": []
+        },
+        {
+            "ContainerInterface::get": {
+                "id": "OCA\\OpenRegister\\Service\\ObjectService"
+            }
+        },
+        {
+            "ObjectService::find": {
+                "id": "d-1",
+                "register": "filinq",
+                "schema": "dossier",
+                "_rbac": false,
+                "_multitenancy": false
+            }
+        },
+        {
+            "ObjectService::saveObject": {
+                "object": {
+                    "name": "Raadsbesluit",
+                    "description": "Woo-verzoek",
+                    "checkedOn": "yes",
+                    "@self": {
+                        "folder": 900
+                    },
+                    "configuration": {
+                        "grondslagen": {
+                            "fileId": 501,
+                            "lastGeneratedAt": "<time>"
+                        }
+                    }
+                },
+                "register": "filinq",
+                "schema": "dossier",
+                "uuid": "d-1",
+                "_rbac": false,
+                "_multitenancy": false
+            }
+        },
+        {
+            "File::getId": []
+        },
+        {
+            "LoggerInterface::info": {
+                "message": "LegalBasesSummaryService: rendered per-dossier summary",
+                "context": {
+                    "dossierUuid": "d-1",
+                    "summaryFileId": 501,
+                    "fileCount": 0,
+                    "totalEntities": 0
+                }
+            }
+        },
+        {
+            "result": "double File"
+        }
+    ],
+    "dossier summary without a session user": [
+        {
+            "IAppManager::getInstalledApps": []
+        },
+        {
+            "ContainerInterface::get": {
+                "id": "OCA\\OpenRegister\\Service\\ObjectService"
+            }
+        },
+        {
+            "ObjectService::find": {
+                "id": "d-1",
+                "register": "filinq",
+                "schema": "dossier",
+                "_rbac": false,
+                "_multitenancy": false
+            }
+        },
+        {
+            "IUserSession::getUser": []
+        },
+        {
+            "threw": [
+                "RuntimeException",
+                "Grondslagen summary: no session user to resolve folder.",
+                0
+            ]
+        }
+    ]
+}

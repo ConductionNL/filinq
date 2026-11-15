@@ -19,7 +19,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-1
  *
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
@@ -30,6 +30,8 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\AnonymizationController;
+use OCA\Filinq\Controller\Support\AnonymizationServices;
+use OCA\Filinq\Service\AnonymizeRequestService;
 use OCA\Filinq\Service\DocumentAnonymizeRunner;
 use OCA\Filinq\Service\FileListingService;
 use OCA\Filinq\Service\Redaction\DetectionRunIdentity;
@@ -203,22 +205,22 @@ class AnonymizationControllerReviewGateTest extends TestCase {
 		$rootFolder = $this->createMock(IRootFolder::class);
 		$rootFolder->method('getUserFolder')->willReturn($folder);
 
+		$logger = new NullLogger();
+		$anonymizationService = $this->makeAnonymizationServiceFrom(
+			deps: [
+				'container' => $container,
+				'anonymizeRunner' => $runner,
+				'reviewGuard' => $this->guardOver(marks: $marks),
+			]
+		);
+
 		return new AnonymizationController(
-			appName: 'filinq',
+			services: new AnonymizationServices(anonymization: $anonymizationService, files: $this->createMock(FileListingService::class)),
 			request: $request,
-			logger: new NullLogger(),
-			anonymizationService: $this->makeAnonymizationServiceFrom(
-				deps: [
-					'container' => $container,
-					'anonymizeRunner' => $runner,
-					'reviewGuard' => $this->guardOver(marks: $marks),
-				]
-			),
-			fileListingService: $this->createMock(FileListingService::class),
+			logger: $logger,
 			l10n: $l10n,
 			appConfig: $this->createMock(IAppConfig::class),
-			userSession: $session,
-			rootFolder: $rootFolder
+			anonymizeRequest: new AnonymizeRequestService(logger: $logger, anonymizationService: $anonymizationService, l10n: $l10n, rootFolder: $rootFolder, userSession: $session)
 		);
 
 	}//end controllerOver()

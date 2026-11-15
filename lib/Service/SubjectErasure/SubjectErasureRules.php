@@ -3,6 +3,9 @@
 /**
  * Erasing a person from the record store, and what refuses.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * WHAT THIS SHARES WITH THE PLATFORM, AND WHERE IT MUST NOT.
  *
  * OpenRegister's `anonymising-as-an-archival-outcome` answers a different
@@ -38,9 +41,6 @@
  * properties. Here the documents remain and only the person comes out of them,
  * and where a version is final the content is superseded rather than edited, so
  * the version record still says what was final and when.
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @category  Service
  * @package   OCA\Filinq\Service\SubjectErasure

@@ -13,12 +13,16 @@
  * @version GIT: <git_id>
  *
  * @link https://www.filinq.app
+ *
+ * SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\Filinq\Tests\Unit\Service;
 
 use Exception;
 use OCA\Filinq\Service\OpenRegisterResolver;
+use OCA\Filinq\Service\Support\OpenRegisterAccess;
 use OCA\Filinq\Service\TemplateService;
 use OCA\Filinq\Service\TemplateVersionService;
 use OCA\OpenRegister\Db\ObjectEntity;
@@ -98,8 +102,7 @@ class TemplateServiceTest extends TestCase {
 			->willReturn([]);
 
 		$this->templateService = new TemplateService(
-			$this->mockContainer,
-			$this->mockAppManager,
+			new OpenRegisterAccess(apps: $this->mockAppManager, container: $this->mockContainer),
 			$this->mockRegisterResolver,
 			$mockVersionService,
 			$mockUserSession,
@@ -140,8 +143,7 @@ class TemplateServiceTest extends TestCase {
 			->willReturn($mockObjectService);
 
 		$this->templateService = new TemplateService(
-			$this->mockContainer,
-			$this->mockAppManager,
+			new OpenRegisterAccess(apps: $this->mockAppManager, container: $this->mockContainer),
 			$this->mockRegisterResolver,
 			$this->createMock(TemplateVersionService::class),
 			$this->createMock(IUserSession::class),
@@ -176,8 +178,7 @@ class TemplateServiceTest extends TestCase {
 			->willReturn($mockObjectService);
 
 		$this->templateService = new TemplateService(
-			$this->mockContainer,
-			$this->mockAppManager,
+			new OpenRegisterAccess(apps: $this->mockAppManager, container: $this->mockContainer),
 			$this->mockRegisterResolver,
 			$mockVersionService,
 			$this->createMock(IUserSession::class),
@@ -477,12 +478,57 @@ class TemplateServiceTest extends TestCase {
 			->method('deleteObject');
 
 		$this->setUpWithOpenRegister($mockObjectService);
+		$this->mockRegisterResolver->method('getRegisterAndSchema')
+			->willReturn(['register' => 'reg-1', 'schema' => 'schema-1']);
 
 		$result = $this->templateService->deleteTemplate('uuid-to-delete');
 
 		$this->assertTrue($result);
 
 	}//end testDeleteTemplateReturnsTrue()
+
+	/**
+	 * deleteTemplate scopes the delete to the template register and schema, so
+	 * it cannot reach an object of another schema.
+	 *
+	 * @return void
+	 */
+	public function testDeleteTemplateIsScopedToTheTemplateSchema(): void {
+		$mockObjectService = $this->createMock(ObjectService::class);
+		$mockObjectService->expects($this->once())
+			->method('deleteObject')
+			->with('uuid-to-delete', 'reg-1', 'schema-1')
+			->willReturn(true);
+
+		$this->setUpWithOpenRegister($mockObjectService);
+		$this->mockRegisterResolver->method('getRegisterAndSchema')
+			->willReturn(['register' => 'reg-1', 'schema' => 'schema-1']);
+
+		$this->assertTrue($this->templateService->deleteTemplate('uuid-to-delete'));
+
+	}//end testDeleteTemplateIsScopedToTheTemplateSchema()
+
+	/**
+	 * An id outside the template schema answers 404, like getTemplate.
+	 *
+	 * @return void
+	 */
+	public function testDeleteTemplateOutsideTheTemplateSchemaIsNotFound(): void {
+		$mockObjectService = $this->createMock(ObjectService::class);
+		$mockObjectService->method('deleteObject')
+			->willThrowException(new \OCP\AppFramework\Db\DoesNotExistException('Object not found'));
+
+		$this->setUpWithOpenRegister($mockObjectService);
+		$this->mockRegisterResolver->method('getRegisterAndSchema')
+			->willReturn(['register' => 'reg-1', 'schema' => 'schema-1']);
+
+		$this->expectException(Exception::class);
+		$this->expectExceptionMessage('Template not found');
+		$this->expectExceptionCode(404);
+
+		$this->templateService->deleteTemplate('uuid-of-another-schema');
+
+	}//end testDeleteTemplateOutsideTheTemplateSchemaIsNotFound()
 
 	/**
 	 * Test getTemplatesByNamespace delegates to getTemplates with namespace filter

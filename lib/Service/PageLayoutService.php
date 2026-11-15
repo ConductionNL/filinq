@@ -88,15 +88,39 @@ class PageLayoutService implements PageLayoutServiceInterface {
 		}
 
 		if ($version !== null) {
-			foreach ($versions as $candidate) {
-				if ((int)($candidate['layoutVersion'] ?? 0) === $version) {
-					return $candidate;
-				}
-			}
-
-			return null;
+			return $this->numbered(versions: $versions, version: $version);
 		}
 
+		return $this->activeOrNewest(versions: $versions);
+
+	}//end resolve()
+
+	/**
+	 * The first stored version carrying a layout version number.
+	 *
+	 * @param array<int, array<string, mixed>> $versions The stored versions.
+	 * @param int $version The version number.
+	 *
+	 * @return array<string, mixed>|null The version, or null when none carries the number.
+	 */
+	private function numbered(array $versions, int $version): ?array {
+		foreach ($versions as $candidate) {
+			if ((int)($candidate['layoutVersion'] ?? 0) === $version) {
+				return $candidate;
+			}
+		}
+
+		return null;
+	}//end numbered()
+
+	/**
+	 * The first active version, or else the first one.
+	 *
+	 * @param array<int, array<string, mixed>> $versions The stored versions, newest first, never empty.
+	 *
+	 * @return array<string, mixed> The version.
+	 */
+	private function activeOrNewest(array $versions): array {
 		foreach ($versions as $candidate) {
 			if (($candidate['active'] ?? false) === true) {
 				return $candidate;
@@ -104,8 +128,7 @@ class PageLayoutService implements PageLayoutServiceInterface {
 		}
 
 		return $versions[0];
-
-	}//end resolve()
+	}//end activeOrNewest()
 
 	/**
 	 * Every layout at its active version, for the admin list.
@@ -320,27 +343,48 @@ class PageLayoutService implements PageLayoutServiceInterface {
 
 		$versions = [];
 		foreach ($results as $result) {
-			$data = $result;
-			if (is_object($result) === true && method_exists($result, 'jsonSerialize') === true) {
-				$data = $result->jsonSerialize();
+			$data = $this->plainRow(row: $result);
+			if (is_array($data) === true) {
+				$versions[] = $this->layoutFields(data: $data);
 			}
-
-			if (is_array($data) === false) {
-				continue;
-			}
-
-			$fields = $data;
-			if (isset($data['object']) === true && is_array($data['object']) === true) {
-				$fields = $data['object'];
-			}
-
-			$fields['uuid'] = (string)($fields['uuid'] ?? ($data['uuid'] ?? ($data['@self']['id'] ?? ($data['id'] ?? ''))));
-			$versions[] = $fields;
 		}
 
 		return $versions;
 
 	}//end search()
+
+	/**
+	 * A search row as its serialized form when it can serialize itself.
+	 *
+	 * @param mixed $row The row.
+	 *
+	 * @return mixed The plain row.
+	 */
+	private function plainRow(mixed $row): mixed {
+		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
+			return $row->jsonSerialize();
+		}
+
+		return $row;
+	}//end plainRow()
+
+	/**
+	 * The layout fields of a plain row, with the uuid the row or its envelope carries.
+	 *
+	 * @param array<string, mixed> $data The plain row.
+	 *
+	 * @return array<string, mixed> The fields.
+	 */
+	private function layoutFields(array $data): array {
+		$fields = $data;
+		if (isset($data['object']) === true && is_array($data['object']) === true) {
+			$fields = $data['object'];
+		}
+
+		$fields['uuid'] = (string)($fields['uuid'] ?? ($data['uuid'] ?? ($data['@self']['id'] ?? ($data['id'] ?? ''))));
+
+		return $fields;
+	}//end layoutFields()
 
 	/**
 	 * Write one layout.

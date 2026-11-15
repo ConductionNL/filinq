@@ -17,14 +17,14 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/dictionary-actions-for-maintainers/specs/custom-dictionary-recognition/spec.md
+ * @spec openspec/specs/custom-dictionary-recognition/spec.md
  */
 
 declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
-use OCA\Filinq\Service\CustomDictionaryAccessGate;
+use OCA\Filinq\Kernel\Contracts\CustomDictionaryAccessGateInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
@@ -45,14 +45,14 @@ class CustomDictionaryCapabilitiesController extends Controller {
 	 *
 	 * @param string                     $appName The app name.
 	 * @param IRequest                   $request The request.
-	 * @param CustomDictionaryAccessGate $gate    The maintainer check the write endpoints use.
+	 * @param CustomDictionaryAccessGateInterface $gate    The maintainer check the write endpoints use.
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly CustomDictionaryAccessGate $gate,
+		private readonly CustomDictionaryAccessGateInterface $gate,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 
@@ -66,7 +66,7 @@ class CustomDictionaryCapabilitiesController extends Controller {
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
 	 *
-	 * @spec openspec/changes/dictionary-actions-for-maintainers/specs/custom-dictionary-recognition/spec.md
+	 * @spec openspec/specs/custom-dictionary-recognition/spec.md
 	 */
 	public function show(): JSONResponse {
 		return new JSONResponse(['canMaintain' => $this->gate->mayMaintain()]);
