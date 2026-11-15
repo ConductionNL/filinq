@@ -11,6 +11,9 @@
  * @link      https://www.filinq.app
  *
  * @spec openspec/changes/archive/2026-09-29-multi-format-output/tasks.md#task-2.3
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -28,6 +31,7 @@ use OCA\Filinq\Service\DocumentRenderPipeline;
 use OCA\Filinq\Service\FormatMatrixService;
 use OCA\Filinq\Service\PdfConversionService;
 use OCA\Filinq\Service\PdfService;
+use OCA\Filinq\Service\Support\PdfRendering;
 use OCA\Filinq\Service\TemplateRenderer;
 use OCA\Filinq\Tests\Unit\Service\Conversion\DiskLikeSofficeRunner;
 use OCP\App\IAppManager;
@@ -85,8 +89,7 @@ class FormatMatrixServiceTest extends TestCase {
 		$appManager->method('getInstalledApps')->willReturn([]);
 
 		return new DocumentRenderPipeline(
-			$this->createMock(TemplateRenderer::class),
-			$this->createMock(PdfService::class),
+			new PdfRendering(renderer: $this->createMock(TemplateRenderer::class), pdf: $this->createMock(PdfService::class)),
 			new DocumentObjectServiceResolver($this->createMock(ContainerInterface::class), $appManager),
 			new NullLogger(),
 			$rasterizer,

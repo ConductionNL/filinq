@@ -35,12 +35,13 @@ use OCA\Filinq\Service\EmailIngestion\EmailIngestionSettings;
 use OCA\Filinq\Service\EmailIngestion\EmailMessageReader;
 use OCA\Filinq\Service\EmailIngestion\EmailThreadHeaders;
 use OCA\Filinq\Service\PdfConversionService;
+use OCA\Filinq\Service\Support\EmailHandling;
 use OCA\OpenRegister\Exception\EmlParseException;
 use OCA\OpenRegister\Service\ObjectService;
-use OCA\OpenRegister\Service\TextExtraction\EmlAttachment;
-use OCA\OpenRegister\Service\TextExtraction\EmlBody;
-use OCA\OpenRegister\Service\TextExtraction\EmlStructure;
-use OCA\OpenRegister\Service\TextExtractionService;
+use OCA\OpenRegister\Files\Service\TextExtraction\EmlAttachment;
+use OCA\OpenRegister\Files\Service\TextExtraction\EmlBody;
+use OCA\OpenRegister\Files\Service\TextExtraction\EmlStructure;
+use OCA\OpenRegister\Files\Service\TextExtractionService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\Files\File;
 use OCP\Files\Folder;
@@ -122,6 +123,8 @@ class EmailObjectStore extends ObjectService {
 		?string $uuid = null,
 		bool $_rbac = true,
 		bool $_multitenancy = true,
+		bool $_unowned = false,
+		?string $_owner = null,
 	) {
 		if ($register !== 'filinq' || $schema !== 'emailDocument') {
 			throw new RuntimeException('unexpected target ' . $register . '/' . $schema);
@@ -503,10 +506,9 @@ trait EmailInboxWorld {
 		$root = $this->rootFolder();
 
 		return new EmailIngestionService(
+			handling: new EmailHandling(reader: new EmailMessageReader(container: $this->container(), threadHeaders: new EmailThreadHeaders(), logger: $logger), filing: new EmailFiling(dossiers: $this->dossiers(), rootFolder: $root, conversion: $this->conversion(), logger: $logger)),
 			settings: new EmailIngestionSettings(appConfig: $appConfig),
 			repository: new EmailDocumentRepository(objectResolver: $resolver),
-			reader: new EmailMessageReader(container: $this->container(), threadHeaders: new EmailThreadHeaders(), logger: $logger),
-			filing: new EmailFiling(dossiers: $this->dossiers(), rootFolder: $root, conversion: $this->conversion(), logger: $logger),
 			rootFolder: $root,
 			clock: $clock,
 			logger: $logger,

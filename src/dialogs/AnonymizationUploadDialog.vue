@@ -1,7 +1,11 @@
+<!--
+  - SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
 <template>
 	<NcDialog
 		:name="dialogName"
-		:canClose="!submitting"
+		:noClose="submitting"
 		size="normal"
 		@closing="$emit('cancel')">
 		<div class="dossier-dialog">

@@ -43,45 +43,12 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\Intake;
 
+use OCA\Filinq\Kernel\Contracts\IntakeReadingProgressInterface;
+
 /**
  * The reading states an intake document moves through, and what the inbox shows.
  */
-class IntakeReadingProgress {
-
-	/**
-	 * Nothing has been attempted yet.
-	 *
-	 * @var string
-	 */
-	public const QUEUED = 'queued';
-
-	/**
-	 * A job is reading it now.
-	 *
-	 * @var string
-	 */
-	public const READING = 'reading';
-
-	/**
-	 * The text was recognised and written to the searchable content.
-	 *
-	 * @var string
-	 */
-	public const READ = 'read';
-
-	/**
-	 * The reading failed, and says why.
-	 *
-	 * @var string
-	 */
-	public const FAILED = 'failed';
-
-	/**
-	 * Every state, so an inbox can account for each document exactly once.
-	 *
-	 * @var string[]
-	 */
-	public const STATES = [self::QUEUED, self::READING, self::READ, self::FAILED];
+class IntakeReadingProgress implements IntakeReadingProgressInterface {
 
 	/**
 	 * The progress to record when a reading step ends.

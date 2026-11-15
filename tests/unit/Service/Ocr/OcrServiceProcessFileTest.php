@@ -11,6 +11,9 @@
  * @link     https://www.filinq.app
  *
  * @spec openspec/changes/archive/2026-09-29-intake-ocr-on-arrival/tasks.md#task-1.1
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -18,6 +21,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Service\Ocr;
 
 use OCA\Filinq\Service\OcrService;
+use OCA\Filinq\Service\SessionUserFile;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
 use OCP\IAppConfig;
@@ -82,7 +86,7 @@ class OcrServiceProcessFileTest extends TestCase {
 		$config->method('getValueString')->willReturnArgument(2);
 
 		$service = $this->getMockBuilder(OcrService::class)
-			->setConstructorArgs([new NullLogger(), $config, $root, $session])
+			->setConstructorArgs([new NullLogger(), $config, new SessionUserFile($root, $session)])
 			->onlyMethods(['isTesseractAvailable', 'extractTextFromImage', 'extractTextFromPdf'])
 			->getMock();
 		$service->method('isTesseractAvailable')->willReturn(true);

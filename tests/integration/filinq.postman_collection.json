@@ -28,6 +28,10 @@
   {
    "key": "signingId",
    "value": ""
+  },
+  {
+   "key": "signingFileId",
+   "value": ""
   }
  ],
  "auth": {
@@ -102,6 +106,67 @@
      }
     },
     {
+     "name": "upload the document to sign (capture signingFileId)",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "// Signing create resolves documentFileId in the initiator's own folder and",
+         "// answers 403 for an id it cannot read, so the seed needs a real file.",
+         "pm.test('document upload returns 201 or 204', () => pm.expect(pm.response.code).to.be.oneOf([201, 204]));",
+         "const header = pm.response.headers.get('OC-FileId') || '';",
+         "const fileId = String(parseInt(header, 10));",
+         "pm.test('upload answered with a numeric OC-FileId', () => pm.expect(fileId).to.match(/^[1-9][0-9]*$/));",
+         "pm.collectionVariables.set('signingFileId', fileId);"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "PUT",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/pdf"
+       }
+      ],
+      "body": {
+       "mode": "raw",
+       "raw": "%PDF-1.4\n1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj\n2 0 obj << /Type /Pages /Kids [] /Count 0 >> endobj\ntrailer << /Root 1 0 R >>\n%%EOF\n"
+      },
+      "url": {
+       "raw": "{{baseUrl}}/remote.php/dav/files/{{adminUser}}/newman-signing-seed.pdf",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "remote.php",
+        "dav",
+        "files",
+        "{{adminUser}}",
+        "newman-signing-seed.pdf"
+       ]
+      }
+     }
+    },
+    {
      "name": "seed signing request (capture signingId — Entity-vs-array fix)",
      "event": [
       {
@@ -151,7 +216,7 @@
       ],
       "body": {
        "mode": "raw",
-       "raw": "{\"documentFileId\": \"file-newman-seed\", \"documentName\": \"Newman Seed.pdf\", \"signatureLevel\": \"SES\", \"signingMode\": \"sequential\", \"signers\": [{\"userId\": \"admin\", \"displayName\": \"admin\"}]}"
+       "raw": "{\"documentFileId\": \"{{signingFileId}}\", \"documentName\": \"newman-signing-seed.pdf\", \"signatureLevel\": \"SES\", \"signingMode\": \"sequential\", \"signers\": [{\"userId\": \"admin\", \"displayName\": \"admin\"}]}"
       },
       "url": {
        "raw": "{{baseUrl}}/index.php/apps/filinq/api/signing/requests",
@@ -2040,6 +2105,52 @@
         "api",
         "templates",
         "{{templateId}}"
+       ]
+      }
+     }
+    },
+    {
+     "name": "delete the uploaded signing document",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('document delete returns 204', () => pm.response.to.have.status(204));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "DELETE",
+      "header": [],
+      "url": {
+       "raw": "{{baseUrl}}/remote.php/dav/files/{{adminUser}}/newman-signing-seed.pdf",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "remote.php",
+        "dav",
+        "files",
+        "{{adminUser}}",
+        "newman-signing-seed.pdf"
        ]
       }
      }

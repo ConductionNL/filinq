@@ -21,13 +21,16 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
  * @link https://conduction.nl
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
-use OCA\Filinq\AppInfo\Application;
+use OCA\Filinq\Kernel\AppIdentity;
 use OCA\Filinq\Settings\FilinqAdmin;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
@@ -36,9 +39,9 @@ use OCP\AppFramework\Http\JSONResponse;
 use OCP\IAppConfig;
 use OCP\IRequest;
 use Psr\Log\LoggerInterface;
-use OCA\Filinq\Service\DemoDataService;
-use OCA\Filinq\Service\DomainFolderService;
-use OCA\Filinq\Service\ExternalMountValidator;
+use OCA\Filinq\Kernel\Contracts\DemoDataServiceInterface;
+use OCA\Filinq\Kernel\Contracts\DomainFolderServiceInterface;
+use OCA\Filinq\Kernel\Contracts\ExternalMountValidatorInterface;
 
 /**
  * First-time setup wizard endpoints.
@@ -85,8 +88,8 @@ class SetupController extends Controller {
 	 * @param IRequest        $request         The request.
 	 * @param IAppConfig      $appConfig       Records the demo-data decision.
 	 * @param LoggerInterface $logger          Records a failed import.
-	 * @param DemoDataService $demoDataService Imports the shipped demo dataset.
-	 * @param ExternalMountValidator $mountValidator Names what the domain store cannot keep.
+	 * @param DemoDataServiceInterface $demoDataService Imports the shipped demo dataset.
+	 * @param ExternalMountValidatorInterface $mountValidator Names what the domain store cannot keep.
 	 *
 	 * @return void
 	 */
@@ -94,10 +97,10 @@ class SetupController extends Controller {
 		IRequest $request,
 		private readonly IAppConfig $appConfig,
 		private readonly LoggerInterface $logger,
-		private readonly DemoDataService $demoDataService,
-		private readonly ExternalMountValidator $mountValidator,
+		private readonly DemoDataServiceInterface $demoDataService,
+		private readonly ExternalMountValidatorInterface $mountValidator,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 
 	}//end __construct()
 
@@ -114,8 +117,8 @@ class SetupController extends Controller {
 	 */
 	#[AuthorizedAdminSetting(FilinqAdmin::class)]
 	public function status(): JSONResponse {
-		$demoDecided = $this->appConfig->getValueString(Application::APP_ID, self::DEMO_DECIDED_KEY, '') !== '';
-		$picked      = $this->appConfig->getValueString(Application::APP_ID, self::DATASET_KEY, '');
+		$demoDecided = $this->appConfig->getValueString(AppIdentity::APP_ID, self::DEMO_DECIDED_KEY, '') !== '';
+		$picked      = $this->appConfig->getValueString(AppIdentity::APP_ID, self::DATASET_KEY, '');
 
 		return new JSONResponse(
 			data: [
@@ -168,7 +171,7 @@ class SetupController extends Controller {
 	 */
 	private function domainStoreStep(): array {
 		try {
-			$result = $this->mountValidator->validate(path: DomainFolderService::ROOT);
+			$result = $this->mountValidator->validate(path: DomainFolderServiceInterface::ROOT);
 
 			return [
 				'done' => true,
@@ -189,7 +192,7 @@ class SetupController extends Controller {
 				'findings' => [
 					[
 						'requirement' => 'check the store behind the domain folders',
-						'verdict' => ExternalMountValidator::UNKNOWN,
+						'verdict' => ExternalMountValidatorInterface::UNKNOWN,
 						'message' => 'The store behind the domain folders could not be checked: ' . $e->getMessage(),
 					],
 				],
@@ -230,7 +233,7 @@ class SetupController extends Controller {
 		}
 
 		$datasetId = (string)$submitted;
-		$this->appConfig->setValueString(Application::APP_ID, self::DATASET_KEY, $datasetId);
+		$this->appConfig->setValueString(AppIdentity::APP_ID, self::DATASET_KEY, $datasetId);
 
 		return new JSONResponse(data: ['success' => true, 'config' => [self::DATASET_KEY => $datasetId]]);
 
@@ -262,10 +265,7 @@ class SetupController extends Controller {
 		// run-action step; closing only the second leaves the first outstanding,
 		// and CnAppRoot opens the wizard while ANY optional step is outstanding.
 		if ($actionId === 'skip-demo-data') {
-			$this->appConfig->setValueString(Application::APP_ID, self::DATASET_KEY, DemoDataService::NONE_DATASET);
-			$this->appConfig->setValueString(Application::APP_ID, self::DEMO_DECIDED_KEY, 'skipped');
-
-			return new JSONResponse(data: ['success' => true, 'message' => 'No example data was loaded.']);
+			return $this->declineDataset();
 		}
 
 		return new JSONResponse(
@@ -291,7 +291,30 @@ class SetupController extends Controller {
 	 * @spec openspec/changes/wizard-dataset-card-load/specs/first-time-setup/spec.md
 	 */
 	private function loadDataset(string $actionId): JSONResponse {
-		$picked = $this->appConfig->getValueString(Application::APP_ID, self::DATASET_KEY, '');
+		$picked = $this->pickedDataset(actionId: $actionId);
+		if ($picked instanceof JSONResponse) {
+			return $picked;
+		}
+
+		if ($picked === DemoDataServiceInterface::NONE_DATASET) {
+			return $this->declineDataset();
+		}
+
+		return $this->importDataset(dataset: $picked);
+	}//end loadDataset()
+
+	/**
+	 * The dataset to load: the posted one, else the stored pick, else the
+	 * shipped set for the legacy action.
+	 *
+	 * @param string $actionId The action that asked.
+	 *
+	 * @return string|JSONResponse The dataset id, or a 400 refusal.
+	 *
+	 * @spec openspec/changes/wizard-dataset-card-load/specs/first-time-setup/spec.md
+	 */
+	private function pickedDataset(string $actionId): string|JSONResponse {
+		$picked = $this->appConfig->getValueString(AppIdentity::APP_ID, self::DATASET_KEY, '');
 
 		// The card's Load button names its dataset in the body. An older wizard
 		// posts nothing and relies on the choice stored a step earlier. Nothing
@@ -310,7 +333,7 @@ class SetupController extends Controller {
 		// The legacy id carries no answer, so it means the shipped dataset. A
 		// caller that posts it has said which one by posting it.
 		if ($actionId === 'install-demo-data' && $picked === '') {
-			$picked = DemoDataService::DEMO_DATASET;
+			$picked = DemoDataServiceInterface::DEMO_DATASET;
 		}
 
 		// 🔴 NO SILENT DEFAULT. Importing here because the operator clicked Run
@@ -323,19 +346,39 @@ class SetupController extends Controller {
 			);
 		}
 
-		if ($picked === DemoDataService::NONE_DATASET) {
-			$this->appConfig->setValueString(Application::APP_ID, self::DATASET_KEY, DemoDataService::NONE_DATASET);
-			$this->appConfig->setValueString(Application::APP_ID, self::DEMO_DECIDED_KEY, 'skipped');
+		return $picked;
+	}//end pickedDataset()
 
-			return new JSONResponse(data: ['success' => true, 'message' => 'No example data was loaded.']);
-		}
+	/**
+	 * Record that no example data is wanted, which answers both setup steps.
+	 *
+	 * @return JSONResponse `{ success, message }`.
+	 *
+	 * @spec openspec/changes/wizard-dataset-card-load/specs/first-time-setup/spec.md
+	 */
+	private function declineDataset(): JSONResponse {
+		$this->appConfig->setValueString(AppIdentity::APP_ID, self::DATASET_KEY, DemoDataServiceInterface::NONE_DATASET);
+		$this->appConfig->setValueString(AppIdentity::APP_ID, self::DEMO_DECIDED_KEY, 'skipped');
 
+		return new JSONResponse(data: ['success' => true, 'message' => 'No example data was loaded.']);
+	}//end declineDataset()
+
+	/**
+	 * Import a dataset and record it as the choice; a failure stores nothing.
+	 *
+	 * @param string $dataset The dataset id.
+	 *
+	 * @return JSONResponse `{ success, message }`.
+	 *
+	 * @spec openspec/changes/wizard-dataset-card-load/specs/first-time-setup/spec.md
+	 */
+	private function importDataset(string $dataset): JSONResponse {
 		try {
 			$imported = $this->demoDataService->install();
 		} catch (\Throwable $e) {
 			$this->logger->error(
 				'Setup install-demo-data failed: ' . $e->getMessage(),
-				['app' => Application::APP_ID, 'exception' => $e]
+				['app' => AppIdentity::APP_ID, 'exception' => $e]
 			);
 
 			return new JSONResponse(
@@ -345,8 +388,8 @@ class SetupController extends Controller {
 		}
 
 		// Loading IS choosing the set, so the pick is recorded too.
-		$this->appConfig->setValueString(Application::APP_ID, self::DATASET_KEY, $picked);
-		$this->appConfig->setValueString(Application::APP_ID, self::DEMO_DECIDED_KEY, 'installed');
+		$this->appConfig->setValueString(AppIdentity::APP_ID, self::DATASET_KEY, $dataset);
+		$this->appConfig->setValueString(AppIdentity::APP_ID, self::DEMO_DECIDED_KEY, 'installed');
 
 		return new JSONResponse(
 			data: [
@@ -355,7 +398,7 @@ class SetupController extends Controller {
 			]
 		);
 
-	}//end loadDataset()
+	}//end importDataset()
 
 	/**
 	 * Refuse a dataset id no dataset answers to.

@@ -34,10 +34,12 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\InboundClassificationServiceInterface;
 use OCA\Filinq\Service\Classification\ClassificationResultRepository;
 use OCA\Filinq\Service\Classification\ClassificationSources;
 use OCA\Filinq\Service\Classification\CorrespondentRanker;
 use OCA\Filinq\Service\Classification\DossierMatcher;
+use OCA\Filinq\Service\Support\ClassificationMatchers;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 
@@ -46,21 +48,27 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/inbound-auto-classification/tasks.md#2-2
  */
-class InboundClassificationService {
+class InboundClassificationService implements InboundClassificationServiceInterface {
 
 	/**
-	 * The admin toggle; on unless set to "0".
+	 * Picks a correspondent from detected entities.
 	 *
-	 * @var string
+	 * @var CorrespondentRanker
 	 */
-	public const TOGGLE = 'enable_inbound_classification';
+	private readonly CorrespondentRanker $ranker;
+
+	/**
+	 * Exact or prefix dossier match.
+	 *
+	 * @var DossierMatcher
+	 */
+	private readonly DossierMatcher $matcher;
 
 	/**
 	 * Constructor.
 	 *
 	 * @param DocumentTypeClassifier         $classifier The intake-type vocabularies.
-	 * @param CorrespondentRanker            $ranker     Picks a correspondent from detected entities.
-	 * @param DossierMatcher                 $matcher    Exact or prefix dossier match.
+	 * @param ClassificationMatchers $matchers The correspondent ranker and the dossier matcher.
 	 * @param ClassificationResultRepository $results    The classificationResult records.
 	 * @param ClassificationSources          $sources    Detected entities and dossiers.
 	 * @param IAppConfig                     $appConfig  Holds the toggle.
@@ -70,13 +78,14 @@ class InboundClassificationService {
 	 */
 	public function __construct(
 		private readonly DocumentTypeClassifier $classifier,
-		private readonly CorrespondentRanker $ranker,
-		private readonly DossierMatcher $matcher,
+		ClassificationMatchers $matchers,
 		private readonly ClassificationResultRepository $results,
 		private readonly ClassificationSources $sources,
 		private readonly IAppConfig $appConfig,
 		private readonly LoggerInterface $logger,
 	) {
+		$this->ranker = $matchers->ranker;
+		$this->matcher = $matchers->matcher;
 
 	}//end __construct()
 
@@ -130,7 +139,7 @@ class InboundClassificationService {
 			return ['outcome' => 'skipped', 'reason' => 'no_text'];
 		}
 
-		$record = $this->suggestion(objectData: $objectData, objectRef: $objectRef, fileId: $fileId, text: $text, entities: $entities);
+		$record = $this->suggestion(objectData: $objectData, objectRef: $objectRef, entities: $entities);
 		if ($active !== null) {
 			$this->results->save(record: ['status' => 'superseded'] + $active, uuid: (string) $active['uuid']);
 		}
@@ -141,17 +150,17 @@ class InboundClassificationService {
 
 	/**
 	 * Build the suggestion record. Minimal by design: no document text and
-	 * no entity other than the one suggested correspondent's name.
+	 * no entity other than the one suggested correspondent's name. The file
+	 * id and the text are read from the object's fields.
 	 *
 	 * @param array<string, mixed>                  $objectData The object's fields.
 	 * @param array<string, string>                 $objectRef  The object: id, register, schema.
-	 * @param int                                   $fileId     The file id.
-	 * @param string                                $text       The document text.
 	 * @param array<int, array<string, mixed>>|null $entities   The detected entities, null when not known yet.
 	 *
 	 * @return array<string, mixed> The record.
 	 */
-	private function suggestion(array $objectData, array $objectRef, int $fileId, string $text, ?array $entities): array {
+	private function suggestion(array $objectData, array $objectRef, ?array $entities): array {
+		$text = $this->textOf(objectData: $objectData);
 		$type = $this->classifier->classify(text: $text);
 		$correspondent = null;
 		if ($entities !== null) {
@@ -164,7 +173,7 @@ class InboundClassificationService {
 		}
 
 		return [
-			'fileId' => $fileId,
+			'fileId' => $this->fileIdOf(objectData: $objectData),
 			'fileName' => (string) ($objectData['fileName'] ?? ($objectData['name'] ?? '')),
 			'objectId' => (string) ($objectRef['id'] ?? ''),
 			'objectRegister' => (string) ($objectRef['register'] ?? ''),

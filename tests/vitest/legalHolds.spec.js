@@ -110,7 +110,8 @@ describe('the hold register surfaces', () => {
 
 	it('keeps Release off until a reason is typed', () => {
 		const dialog = read('../../src/dialogs/ReleaseLegalHoldDialog.vue')
-		expect(dialog).toMatch(/:disabled="busy \|\| reason\.trim\(\) === ''"/)
+		expect(dialog).toContain(':saving="busy"')
+		expect(dialog).toMatch(/:canSubmit="reason\.trim\(\) !== ''"/)
 	})
 
 	it('switches off removal on a held dossier', () => {

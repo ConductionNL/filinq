@@ -15,29 +15,36 @@
  * @link https://www.filinq.app
  *
  * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\Filinq\Tests\Unit\Service;
 
 use OCA\Filinq\BackgroundJob\IntakeOcrJob;
+use OCA\Filinq\BackgroundJob\JobQueue;
+use OCA\Filinq\Event\IntakeDocumentReceivedEvent;
+use OCA\Filinq\Event\Support\IntakeArrival;
+use OCA\Filinq\Exception\IntakeRefusedException;
+use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\Intake\IntakeOcrQueue;
 use OCA\Filinq\Service\Intake\IntakeReadingProgress;
+use OCA\Filinq\Service\IntakeAuthorizationGate;
+use OCA\Filinq\Service\IntakeDefaultRuleService;
+use OCA\Filinq\Service\IntakeFilePlacement;
+use OCA\Filinq\Service\IntakeRepository;
+use OCA\Filinq\Service\IntakeRoutingService;
+use OCA\Filinq\Service\IntakeService;
+use OCA\Filinq\Service\PartySuggestionService;
+use OCA\Filinq\Service\Support\IntakeFiling;
+use OCA\Filinq\Service\Support\IntakeRouting;
 use OCA\Filinq\Tests\Unit\Service\Ocr\OcrDoubles;
+use OCA\OpenRegister\Service\ObjectService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\IJobList;
 use OCP\Files\IRootFolder;
 use OCP\IAppConfig;
-use OCA\Filinq\Event\IntakeDocumentReceivedEvent;
-use OCA\Filinq\Exception\IntakeRefusedException;
-use OCA\Filinq\Service\DocumentObjectServiceResolver;
-use OCA\Filinq\Service\IntakeAuthorizationGate;
-use OCA\Filinq\Service\IntakeDefaultRuleService;
-use OCA\Filinq\Service\IntakeRoutingService;
-use OCA\Filinq\Service\PartySuggestionService;
-use OCA\Filinq\Service\IntakeFilePlacement;
-use OCA\Filinq\Service\IntakeRepository;
-use OCA\Filinq\Service\IntakeService;
-use OCA\OpenRegister\Service\ObjectService;
 use OCP\IUser;
 use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
@@ -161,6 +168,7 @@ class IntakeServiceTest extends TestCase {
 				return $mayWriteTarget;
 			}
 		);
+		$gate->method('mayFileOnto')->willReturn($mayWriteTarget);
 
 		$placement = $this->createMock(IntakeFilePlacement::class);
 		$placement->method('place')->willReturn($placedAt);
@@ -196,13 +204,10 @@ class IntakeServiceTest extends TestCase {
 		return new IntakeService(
 			$repository,
 			$gate,
-			$placement,
-			$defaults,
-			$routing,
-			$parties,
+			new IntakeFiling(placement: $placement, ocrQueue: $this->ocrQueue(readOnArrival: $readOnArrival, mimeType: $mimeType)),
+			new IntakeRouting(defaults: $defaults, routing: $routing, parties: $parties),
 			$session,
-			$this->createMock(LoggerInterface::class),
-			$this->ocrQueue(readOnArrival: $readOnArrival, mimeType: $mimeType)
+			$this->createMock(LoggerInterface::class)
 		);
 
 	}//end service()
@@ -231,7 +236,7 @@ class IntakeServiceTest extends TestCase {
 		$time = $this->createMock(ITimeFactory::class);
 		$time->method('getDateTime')->willReturn(new \DateTime('2026-09-29T08:00:00+00:00'));
 
-		return new IntakeOcrQueue($config, $this->ocrService(), $root, $jobs, new IntakeReadingProgress(), $time);
+		return new IntakeOcrQueue($config, $this->ocrService(), $root, new JobQueue(jobList: $jobs), new IntakeReadingProgress(), $time);
 
 	}//end ocrQueue()
 
@@ -282,7 +287,7 @@ class IntakeServiceTest extends TestCase {
 			fileName: 'scan-0001.pdf',
 			subject: 'Bezwaarschrift',
 			sender: 'Balie postkamer',
-			sourceRef: 'scanbatch-0001'
+			arrival: new IntakeArrival(sourceRef: 'scanbatch-0001')
 		);
 
 	}//end scanArrives()
@@ -324,7 +329,7 @@ class IntakeServiceTest extends TestCase {
 				fileName: 'scan-0001.pdf',
 				subject: 'Bezwaarschrift',
 				sender: 'Balie postkamer',
-				sourceRef: 'scanbatch-0001'
+				arrival: new IntakeArrival(sourceRef: 'scanbatch-0001')
 			)
 		);
 
@@ -349,7 +354,7 @@ class IntakeServiceTest extends TestCase {
 			event: new IntakeDocumentReceivedEvent(
 				channel: 'scan',
 				fileId: 4711,
-				sourceRef: 'scanbatch-0001'
+				arrival: new IntakeArrival(sourceRef: 'scanbatch-0001')
 			)
 		);
 
@@ -571,12 +576,12 @@ class IntakeServiceTest extends TestCase {
 				fileId: 100,
 				subject: 'Aanvraag',
 				sender: 'jan@voorbeeld.nl',
-				sourceRef: 'mail-1'
+				arrival: new IntakeArrival(sourceRef: 'mail-1')
 			),
 			attachments: [
-				new IntakeDocumentReceivedEvent(channel: 'mail', fileId: 101, sourceRef: 'mail-1-a1'),
-				new IntakeDocumentReceivedEvent(channel: 'mail', fileId: 102, sourceRef: 'mail-1-a2'),
-				new IntakeDocumentReceivedEvent(channel: 'mail', fileId: 103, sourceRef: 'mail-1-a3'),
+				new IntakeDocumentReceivedEvent(channel: 'mail', fileId: 101, arrival: new IntakeArrival(sourceRef: 'mail-1-a1', receivedAt: '2026-10-30T09:00:00+00:00')),
+				new IntakeDocumentReceivedEvent(channel: 'mail', fileId: 102, arrival: new IntakeArrival(sourceRef: 'mail-1-a2')),
+				new IntakeDocumentReceivedEvent(channel: 'mail', fileId: 103, arrival: new IntakeArrival(sourceRef: 'mail-1-a3')),
 			]
 		);
 
@@ -589,6 +594,8 @@ class IntakeServiceTest extends TestCase {
 				'Every attachment names the message it arrived with.'
 			);
 		}
+
+		$this->assertSame('2026-10-30T09:00:00+00:00', $documents[1]['receivedAt'], 'An attachment keeps its own arrival time.');
 
 	}//end testAMessageWithThreeAttachmentsBecomesFourLinkedRecords()
 

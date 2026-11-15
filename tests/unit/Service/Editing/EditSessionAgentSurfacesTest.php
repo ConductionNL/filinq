@@ -22,6 +22,9 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
  * @link https://www.filinq.app
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -29,6 +32,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Service\Editing;
 
 use OCA\Filinq\Service\Editing\AgentArtefactMarker;
+use OCA\Filinq\Service\Editing\AgentFileRequest;
 use OCA\Filinq\Service\Editing\DocumentCodecs;
 use OCA\Filinq\Service\Editing\DocumentGuard;
 use OCA\Filinq\Service\Editing\EditSessionService;
@@ -92,6 +96,13 @@ class EditSessionAgentSurfacesTest extends TestCase {
 	 * @var string
 	 */
 	private string $written = '';
+
+	/**
+	 * The artefact marker a test wants to observe; a bare double otherwise.
+	 *
+	 * @var (MockObject&AgentArtefactMarker)|null
+	 */
+	private $marker = null;
 
 	/**
 	 * The user's folder root.
@@ -304,7 +315,7 @@ class EditSessionAgentSurfacesTest extends TestCase {
 	private function writer(): GuardedWriter {
 		return new GuardedWriter(
 				$this->lockManager,
-				$this->createMock(AgentArtefactMarker::class),
+				($this->marker ?? $this->createMock(AgentArtefactMarker::class)),
 				$this->createMock(LoggerInterface::class),
 				$this->rootFolder
 		);
@@ -421,10 +432,8 @@ class EditSessionAgentSurfacesTest extends TestCase {
 		$this->attach('rates.ods', $this->ods());
 
 		$result = $this->service()->editSpreadsheetForAgent(
-			uid: self::UID,
-			fileId: self::FILE_ID,
-			edits: [['cell' => 'Sheet1!A2', 'value' => '110']],
-			version: $this->attachedVersion()
+			request: new AgentFileRequest(uid: self::UID, fileId: self::FILE_ID, version: $this->attachedVersion()),
+			edits: [['cell' => 'Sheet1!A2', 'value' => '110']]
 		);
 
 		$this->assertArrayHasKey('staleDependents', $result);
@@ -448,10 +457,8 @@ class EditSessionAgentSurfacesTest extends TestCase {
 		$this->expectExceptionMessageMatches('/version is required/i');
 
 		$this->service()->editSpreadsheetForAgent(
-			uid: self::UID,
-			fileId: self::FILE_ID,
-			edits: [['cell' => 'Sheet1!A2', 'value' => '110']],
-			version: ''
+			request: new AgentFileRequest(uid: self::UID, fileId: self::FILE_ID, version: ''),
+			edits: [['cell' => 'Sheet1!A2', 'value' => '110']]
 		);
 
 	}//end testASpreadsheetWriteWithoutAVersionIsRefused()
@@ -471,10 +478,8 @@ class EditSessionAgentSurfacesTest extends TestCase {
 
 		try {
 			$this->service()->editSpreadsheetForAgent(
-				uid: self::UID,
-				fileId: self::FILE_ID,
-				edits: [['cell' => 'Sheet1!A2', 'value' => '110']],
-				version: $this->attachedVersion()
+				request: new AgentFileRequest(uid: self::UID, fileId: self::FILE_ID, version: $this->attachedVersion()),
+				edits: [['cell' => 'Sheet1!A2', 'value' => '110']]
 			);
 			$this->fail('a document out for signature must not be editable');
 		} catch (RuntimeException $e) {
@@ -525,10 +530,8 @@ class EditSessionAgentSurfacesTest extends TestCase {
 		$this->attach('deck.odp', $this->odp());
 
 		$this->service()->editPresentationForAgent(
-			uid: self::UID,
-			fileId: self::FILE_ID,
-			edits: [['slide' => 'Intro', 'shape' => 'Title', 'text' => 'Welcome back']],
-			version: $this->attachedVersion()
+			request: new AgentFileRequest(uid: self::UID, fileId: self::FILE_ID, version: $this->attachedVersion()),
+			edits: [['slide' => 'Intro', 'shape' => 'Title', 'text' => 'Welcome back']]
 		);
 
 		$this->assertNotSame('', $this->written, 'the write must actually reach the file');
@@ -547,10 +550,8 @@ class EditSessionAgentSurfacesTest extends TestCase {
 		$this->expectExceptionMessageMatches('/version is required/i');
 
 		$this->service()->editPresentationForAgent(
-			uid: self::UID,
-			fileId: self::FILE_ID,
-			edits: [['slide' => 'Intro', 'shape' => 'Title', 'text' => 'Welcome back']],
-			version: ''
+			request: new AgentFileRequest(uid: self::UID, fileId: self::FILE_ID, version: ''),
+			edits: [['slide' => 'Intro', 'shape' => 'Title', 'text' => 'Welcome back']]
 		);
 
 	}//end testAPresentationWriteWithoutAVersionIsRefused()
@@ -581,10 +582,8 @@ class EditSessionAgentSurfacesTest extends TestCase {
 		$this->attach('letter.docx', $this->docx());
 
 		$this->service()->setMetadataForAgent(
-			uid: self::UID,
-			fileId: self::FILE_ID,
-			values: ['title' => 'Revised quarterly report'],
-			version: $this->attachedVersion()
+			request: new AgentFileRequest(uid: self::UID, fileId: self::FILE_ID, version: $this->attachedVersion()),
+			values: ['title' => 'Revised quarterly report']
 		);
 
 		// ⚠️ Read the PART back, not the package bytes. A package is compressed,
@@ -612,10 +611,8 @@ class EditSessionAgentSurfacesTest extends TestCase {
 
 		try {
 			$this->service()->setMetadataForAgent(
-				uid: self::UID,
-				fileId: self::FILE_ID,
-				values: ['title' => 'Revised quarterly report'],
-				version: $this->attachedVersion()
+				request: new AgentFileRequest(uid: self::UID, fileId: self::FILE_ID, version: $this->attachedVersion()),
+				values: ['title' => 'Revised quarterly report']
 			);
 			$this->fail('a guarded document must refuse a metadata write');
 		} catch (RuntimeException $e) {
@@ -624,6 +621,52 @@ class EditSessionAgentSurfacesTest extends TestCase {
 		}
 
 	}//end testAGuardedDocumentRefusesAMetadataWrite()
+
+	/**
+	 * 🔴 A metadata write on a version that moved is refused, and nothing is
+	 * written: the same precondition as a body edit, verified rather than
+	 * assumed from the shared write path.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/document-rich-editing/tasks.md
+	 */
+	public function testAMetadataWriteOnAStaleVersionIsRefused(): void {
+		$this->attach('letter.docx', $this->docx());
+
+		try {
+			$this->service()->setMetadataForAgent(
+				request: new AgentFileRequest(uid: self::UID, fileId: self::FILE_ID, version: 'a-stale-version'),
+				values: ['title' => 'Revised quarterly report']
+			);
+			$this->fail('a stale version must refuse a metadata write');
+		} catch (RuntimeException $e) {
+			$this->assertMatchesRegularExpression('/changed since you read it/', $e->getMessage());
+			$this->assertSame('', $this->written, 'a refused metadata write must leave the file untouched');
+		}
+
+	}//end testAMetadataWriteOnAStaleVersionIsRefused()
+
+	/**
+	 * A metadata write tags the file "Agent authored", exactly like a body edit.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/document-rich-editing/tasks.md
+	 */
+	public function testAMetadataWriteTagsTheFileAgentAuthored(): void {
+		$this->attach('letter.docx', $this->docx());
+		$this->marker = $this->createMock(AgentArtefactMarker::class);
+		$this->marker->expects($this->once())->method('mark')->with(self::FILE_ID)->willReturn(true);
+
+		$this->service()->setMetadataForAgent(
+			request: new AgentFileRequest(uid: self::UID, fileId: self::FILE_ID, version: $this->attachedVersion()),
+			values: ['keywords' => 'finance, q3']
+		);
+
+		$this->assertStringContainsString('finance, q3', $this->partOf(package: $this->written, part: 'docProps/core.xml'));
+
+	}//end testAMetadataWriteTagsTheFileAgentAuthored()
 
 	/**
 	 * An unknown output mode is refused by name.
@@ -637,11 +680,8 @@ class EditSessionAgentSurfacesTest extends TestCase {
 		$this->expectExceptionMessageMatches('/Unknown output mode "sideways"/');
 
 		$this->service()->setMetadataForAgent(
-			uid: self::UID,
-			fileId: self::FILE_ID,
-			values: ['title' => 'Anything'],
-			version: $this->attachedVersion(),
-			requestedMode: 'sideways'
+			request: new AgentFileRequest(uid: self::UID, fileId: self::FILE_ID, version: $this->attachedVersion(), requestedMode: 'sideways'),
+			values: ['title' => 'Anything']
 		);
 
 	}//end testAnUnknownOutputModeIsRefusedByName()
@@ -659,15 +699,13 @@ class EditSessionAgentSurfacesTest extends TestCase {
 		$this->attach('letter.docx', $this->docx());
 
 		$this->service()->embedChartForAgent(
-			uid: self::UID,
-			fileId: self::FILE_ID,
+			request: new AgentFileRequest(uid: self::UID, fileId: self::FILE_ID, version: $this->attachedVersion()),
 			chart: [
 				'type' => 'bar',
 				'title' => 'Revenue',
 				'categories' => ['Q1', 'Q2'],
 				'series' => [['name' => 'Revenue', 'values' => [10, 20]]],
-			],
-			version: $this->attachedVersion()
+			]
 		);
 
 		$this->assertNotSame('', $this->written, 'the chart write must reach the file');
@@ -686,10 +724,8 @@ class EditSessionAgentSurfacesTest extends TestCase {
 		$this->expectExceptionMessageMatches('/version is required/i');
 
 		$this->service()->embedChartForAgent(
-			uid: self::UID,
-			fileId: self::FILE_ID,
-			chart: ['type' => 'bar', 'categories' => ['Q1'], 'series' => [['name' => 'R', 'values' => [1]]]],
-			version: ''
+			request: new AgentFileRequest(uid: self::UID, fileId: self::FILE_ID, version: ''),
+			chart: ['type' => 'bar', 'categories' => ['Q1'], 'series' => [['name' => 'R', 'values' => [1]]]]
 		);
 
 	}//end testAChartEmbedWithoutAVersionIsRefused()

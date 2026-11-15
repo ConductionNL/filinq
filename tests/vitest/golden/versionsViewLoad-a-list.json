@@ -1,0 +1,27 @@
+{
+	"calls": [
+		[
+			"listVersions",
+			7
+		],
+		[
+			"readFinalState",
+			7
+		]
+	],
+	"loading": false,
+	"error": "",
+	"unavailable": false,
+	"versions": [
+		{
+			"id": 1
+		},
+		{
+			"id": 2
+		}
+	],
+	"finalState": {
+		"final": true,
+		"version": 2
+	}
+}

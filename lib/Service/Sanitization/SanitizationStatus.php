@@ -25,13 +25,14 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\Sanitization;
 
 use InvalidArgumentException;
+use OCA\Filinq\Kernel\Contracts\SanitizationStatusInterface;
 use OCP\Files\IRootFolder;
 use Throwable;
 
 /**
  * Reads the sanitization records of one file.
  */
-class SanitizationStatus {
+class SanitizationStatus implements SanitizationStatusInterface {
 
 	/**
 	 * Constructor.

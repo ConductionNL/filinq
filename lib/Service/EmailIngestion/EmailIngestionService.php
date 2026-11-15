@@ -31,6 +31,8 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\EmailIngestion;
 
 use InvalidArgumentException;
+use OCA\Filinq\Kernel\Contracts\EmailIngestionServiceInterface;
+use OCA\Filinq\Service\Support\EmailHandling;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\Files\File;
 use OCP\Files\Folder;
@@ -41,19 +43,7 @@ use Throwable;
 /**
  * Watched-folder email ingestion.
  */
-class EmailIngestionService {
-
-	public const REASON_UNSUPPORTED_FORMAT = 'unsupported-format';
-
-	public const REASON_UNPARSEABLE = 'unparseable';
-
-	public const REASON_NO_DOSSIER_FOLDER = 'dossier-folder-unavailable';
-
-	public const REASON_FILING_FAILED = 'filing-failed';
-
-	public const SOURCE_WATCHED_FOLDER = 'watched-folder';
-
-	public const SOURCE_MANUAL = 'manual';
+class EmailIngestionService implements EmailIngestionServiceInterface {
 
 	private const EXTENSIONS = ['eml', 'msg'];
 
@@ -62,8 +52,7 @@ class EmailIngestionService {
 	 *
 	 * @param EmailIngestionSettings  $settings   The inbox mapping.
 	 * @param EmailDocumentRepository $repository The records.
-	 * @param EmailMessageReader      $reader     Envelope and thread fields.
-	 * @param EmailFiling             $filing     Move and convert.
+	 * @param EmailHandling $handling The message reader and the filing.
 	 * @param IRootFolder             $rootFolder Resolves the inboxes without a user session.
 	 * @param ITimeFactory            $clock      The clock.
 	 * @param LoggerInterface         $logger     The logger.
@@ -73,8 +62,7 @@ class EmailIngestionService {
 	public function __construct(
 		private readonly EmailIngestionSettings $settings,
 		private readonly EmailDocumentRepository $repository,
-		private readonly EmailMessageReader $reader,
-		private readonly EmailFiling $filing,
+		private readonly EmailHandling $handling,
 		private readonly IRootFolder $rootFolder,
 		private readonly ITimeFactory $clock,
 		private readonly LoggerInterface $logger,
@@ -136,12 +124,12 @@ class EmailIngestionService {
 			return $record;
 		}
 
-		$email = $this->filing->fileById(fileId: (string) ($record['sourceFileRef'] ?? ''));
+		$email = $this->handling->filing->fileById(fileId: (string) ($record['sourceFileRef'] ?? ''));
 		if ($email === null) {
 			throw new InvalidArgumentException('file_gone', 404);
 		}
 
-		$pdf = $this->filing->convert(email: $email);
+		$pdf = $this->handling->filing->convert(email: $email);
 		if ($pdf === '') {
 			return $record;
 		}
@@ -196,7 +184,7 @@ class EmailIngestionService {
 		$record = [
 			'sourceFileRef' => (string) $email->getId(),
 			'dossierRef' => $dossierRef,
-			'contentHash' => $this->reader->contentHash(file: $email),
+			'contentHash' => $this->handling->reader->contentHash(file: $email),
 			'ingestSource' => $source,
 			'ingestedAt' => $this->now(),
 		];
@@ -206,7 +194,7 @@ class EmailIngestionService {
 				throw new EmailNotFiled(self::REASON_UNSUPPORTED_FORMAT);
 			}
 
-			$record += $this->reader->read(file: $email);
+			$record += $this->handling->reader->read(file: $email);
 			$duplicate = $this->repository->findFiledDuplicate(
 				dossierRef: $dossierRef,
 				contentHash: $record['contentHash'],
@@ -217,13 +205,13 @@ class EmailIngestionService {
 				return 'duplicates';
 			}
 
-			$filed = $this->filing->file(email: $email, dossierRef: $dossierRef);
+			$filed = $this->handling->filing->file(email: $email, dossierRef: $dossierRef);
 		} catch (EmailNotFiled $e) {
 			return $this->fail(record: $record, reason: $e->getMessage());
 		}
 
 		$record['sourceFileRef'] = (string) $filed->getId();
-		$pdf = $this->filing->convert(email: $filed);
+		$pdf = $this->handling->filing->convert(email: $filed);
 		if ($pdf !== '') {
 			$record['pdfFileRef'] = $pdf;
 		}

@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\Contract;
 
 use DateTimeImmutable;
+use OCA\Filinq\Kernel\Contracts\ContractDatesInterface;
 
 /**
  * Pure date rules of a contract.
@@ -37,7 +38,7 @@ use DateTimeImmutable;
  *
  * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/specs/contract-lifecycle-management/spec.md#requirement-contract-is-a-first-class-openregister-object-req-ddclm-001
  */
-class ContractDates {
+class ContractDates implements ContractDatesInterface {
 
 	/**
 	 * The contract with its notice deadline filled in, when it was empty and

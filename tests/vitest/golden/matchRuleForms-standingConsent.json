@@ -1,0 +1,558 @@
+{
+	"props": {
+		"open": {
+			"type": "Boolean",
+			"required": true
+		},
+		"editingRecord": {
+			"type": "Object",
+			"default": null
+		},
+		"saving": {
+			"type": "Boolean",
+			"default": false
+		},
+		"formError": {
+			"type": "String",
+			"default": ""
+		},
+		"surface": {
+			"type": "String",
+			"required": true
+		}
+	},
+	"emits": [
+		"update:open",
+		"submit",
+		"cancel"
+	],
+	"initial": {
+		"form": {
+			"entityText": " ",
+			"entityType": "PERSON",
+			"consentMethod": "",
+			"consentDocument": "",
+			"consentScope": "",
+			"legalBasis": "",
+			"validFrom": "",
+			"validUntil": "",
+			"active": true,
+			"matchRules": [],
+			"consentStatus": "consent_given",
+			"publicationDecision": "publish_with_consent",
+			"notificationStatus": "skipped",
+			"primaryName": " "
+		},
+		"editing": false,
+		"dialogTitle": "[Add standing consent]",
+		"canSubmit": false,
+		"onlyNameRules": false,
+		"emitted": []
+	},
+	"choices": {
+		"matchTypeOptions": [
+			"exact",
+			"normalized",
+			"bsn",
+			"kvk"
+		],
+		"entityTypeOptions": [
+			"PERSON",
+			"ORGANIZATION",
+			"OTHER"
+		],
+		"severityOptions": "(none)",
+		"consentMethodOptions": [
+			"paper",
+			"digital_signature",
+			"verbal_recorded",
+			"opt_in_form"
+		]
+	},
+	"closedWatch": {
+		"form": {
+			"entityText": " ",
+			"entityType": "PERSON",
+			"consentMethod": "",
+			"consentDocument": "",
+			"consentScope": "",
+			"legalBasis": "",
+			"validFrom": "",
+			"validUntil": "",
+			"active": true,
+			"matchRules": [],
+			"consentStatus": "consent_given",
+			"publicationDecision": "publish_with_consent",
+			"notificationStatus": "skipped",
+			"primaryName": " "
+		},
+		"editing": false,
+		"dialogTitle": "[Add standing consent]",
+		"canSubmit": false,
+		"onlyNameRules": false,
+		"emitted": []
+	},
+	"openedBlank": {
+		"form": {
+			"entityText": "X",
+			"entityType": "PERSON",
+			"consentMethod": "",
+			"consentDocument": "",
+			"consentScope": "",
+			"legalBasis": "",
+			"validFrom": "",
+			"validUntil": "",
+			"active": true,
+			"matchRules": [
+				{
+					"type": "exact",
+					"value": "Jan"
+				}
+			],
+			"consentStatus": "consent_given",
+			"publicationDecision": "publish_with_consent",
+			"notificationStatus": "skipped",
+			"primaryName": "X",
+			"reason": ""
+		},
+		"editing": false,
+		"dialogTitle": "[Add standing consent]",
+		"canSubmit": false,
+		"onlyNameRules": false,
+		"emitted": []
+	},
+	"namedNoRules": {
+		"form": {
+			"entityText": "X",
+			"entityType": "PERSON",
+			"consentMethod": "",
+			"consentDocument": "",
+			"consentScope": "",
+			"legalBasis": "",
+			"validFrom": "",
+			"validUntil": "",
+			"active": true,
+			"matchRules": [
+				{
+					"type": "exact",
+					"value": "Jan"
+				}
+			],
+			"consentStatus": "consent_given",
+			"publicationDecision": "publish_with_consent",
+			"notificationStatus": "skipped",
+			"primaryName": "X",
+			"reason": ""
+		},
+		"editing": false,
+		"dialogTitle": "[Add standing consent]",
+		"canSubmit": false,
+		"onlyNameRules": false,
+		"emitted": []
+	},
+	"oneEmptyRule": {
+		"form": {
+			"entityText": "X",
+			"entityType": "PERSON",
+			"consentMethod": "",
+			"consentDocument": "",
+			"consentScope": "",
+			"legalBasis": "",
+			"validFrom": "",
+			"validUntil": "",
+			"active": true,
+			"matchRules": [
+				{
+					"type": "exact",
+					"value": "Jan"
+				}
+			],
+			"consentStatus": "consent_given",
+			"publicationDecision": "publish_with_consent",
+			"notificationStatus": "skipped",
+			"primaryName": "X",
+			"reason": ""
+		},
+		"editing": false,
+		"dialogTitle": "[Add standing consent]",
+		"canSubmit": false,
+		"onlyNameRules": false,
+		"emitted": []
+	},
+	"oneNameRule": {
+		"form": {
+			"entityText": "X",
+			"entityType": "PERSON",
+			"consentMethod": "",
+			"consentDocument": "",
+			"consentScope": "",
+			"legalBasis": "",
+			"validFrom": "",
+			"validUntil": "",
+			"active": true,
+			"matchRules": [
+				{
+					"type": "exact",
+					"value": "Jan"
+				}
+			],
+			"consentStatus": "consent_given",
+			"publicationDecision": "publish_with_consent",
+			"notificationStatus": "skipped",
+			"primaryName": "X",
+			"reason": ""
+		},
+		"editing": false,
+		"dialogTitle": "[Add standing consent]",
+		"canSubmit": true,
+		"onlyNameRules": false,
+		"emitted": []
+	},
+	"twoRules": {
+		"form": {
+			"entityText": "X",
+			"entityType": "PERSON",
+			"consentMethod": "",
+			"consentDocument": "",
+			"consentScope": "",
+			"legalBasis": "",
+			"validFrom": "",
+			"validUntil": "",
+			"active": true,
+			"matchRules": [
+				{
+					"type": "exact",
+					"value": "Jan"
+				}
+			],
+			"consentStatus": "consent_given",
+			"publicationDecision": "publish_with_consent",
+			"notificationStatus": "skipped",
+			"primaryName": "X",
+			"reason": ""
+		},
+		"editing": false,
+		"dialogTitle": "[Add standing consent]",
+		"canSubmit": true,
+		"onlyNameRules": false,
+		"emitted": []
+	},
+	"untypedRule": {
+		"form": {
+			"entityText": "X",
+			"entityType": "PERSON",
+			"consentMethod": "",
+			"consentDocument": "",
+			"consentScope": "",
+			"legalBasis": "",
+			"validFrom": "",
+			"validUntil": "",
+			"active": true,
+			"matchRules": [
+				{
+					"type": "exact",
+					"value": "Jan"
+				}
+			],
+			"consentStatus": "consent_given",
+			"publicationDecision": "publish_with_consent",
+			"notificationStatus": "skipped",
+			"primaryName": "X",
+			"reason": ""
+		},
+		"editing": false,
+		"dialogTitle": "[Add standing consent]",
+		"canSubmit": false,
+		"onlyNameRules": false,
+		"emitted": []
+	},
+	"removed": {
+		"form": {
+			"entityText": "X",
+			"entityType": "PERSON",
+			"consentMethod": "",
+			"consentDocument": "",
+			"consentScope": "",
+			"legalBasis": "",
+			"validFrom": "",
+			"validUntil": "",
+			"active": true,
+			"matchRules": [
+				{
+					"type": "exact",
+					"value": "Jan"
+				}
+			],
+			"consentStatus": "consent_given",
+			"publicationDecision": "publish_with_consent",
+			"notificationStatus": "skipped",
+			"primaryName": "X",
+			"reason": ""
+		},
+		"editing": false,
+		"dialogTitle": "[Add standing consent]",
+		"canSubmit": true,
+		"onlyNameRules": false,
+		"emitted": []
+	},
+	"missingSecondField": {
+		"form": {
+			"entityText": "X",
+			"entityType": "PERSON",
+			"consentMethod": "",
+			"consentDocument": "",
+			"consentScope": "",
+			"legalBasis": "",
+			"validFrom": "",
+			"validUntil": "",
+			"active": true,
+			"matchRules": [
+				{
+					"type": "exact",
+					"value": "Jan"
+				}
+			],
+			"consentStatus": "consent_given",
+			"publicationDecision": "publish_with_consent",
+			"notificationStatus": "skipped",
+			"primaryName": "X",
+			"reason": ""
+		},
+		"editing": false,
+		"dialogTitle": "[Add standing consent]",
+		"canSubmit": false,
+		"onlyNameRules": false,
+		"emitted": []
+	},
+	"submitted": {
+		"form": {
+			"entityText": "X",
+			"entityType": "PERSON",
+			"consentMethod": "",
+			"consentDocument": "",
+			"consentScope": "",
+			"legalBasis": "",
+			"validFrom": "",
+			"validUntil": "",
+			"active": true,
+			"matchRules": [
+				{
+					"type": "exact",
+					"value": "Jan"
+				}
+			],
+			"consentStatus": "consent_given",
+			"publicationDecision": "publish_with_consent",
+			"notificationStatus": "skipped",
+			"primaryName": "X",
+			"reason": ""
+		},
+		"editing": false,
+		"dialogTitle": "[Add standing consent]",
+		"canSubmit": false,
+		"onlyNameRules": false,
+		"emitted": [
+			[
+				"submit",
+				{
+					"entityText": "X",
+					"entityType": "PERSON",
+					"consentMethod": "",
+					"consentDocument": "",
+					"consentScope": "",
+					"legalBasis": "",
+					"validFrom": "",
+					"validUntil": "",
+					"active": true,
+					"matchRules": [
+						{
+							"type": "exact",
+							"value": "changed after submit"
+						}
+					],
+					"consentStatus": "consent_given",
+					"publicationDecision": "publish_with_consent",
+					"notificationStatus": "skipped",
+					"primaryName": "X",
+					"reason": ""
+				}
+			]
+		]
+	},
+	"cancelled": {
+		"form": {
+			"entityText": "X",
+			"entityType": "PERSON",
+			"consentMethod": "",
+			"consentDocument": "",
+			"consentScope": "",
+			"legalBasis": "",
+			"validFrom": "",
+			"validUntil": "",
+			"active": true,
+			"matchRules": [
+				{
+					"type": "exact",
+					"value": "Jan"
+				}
+			],
+			"consentStatus": "consent_given",
+			"publicationDecision": "publish_with_consent",
+			"notificationStatus": "skipped",
+			"primaryName": "X",
+			"reason": ""
+		},
+		"editing": false,
+		"dialogTitle": "[Add standing consent]",
+		"canSubmit": false,
+		"onlyNameRules": false,
+		"emitted": [
+			[
+				"update:open",
+				false
+			],
+			[
+				"cancel"
+			]
+		]
+	},
+	"editOpened": {
+		"form": {
+			"entityText": "Jan",
+			"entityType": "PERSON",
+			"consentMethod": "paper",
+			"consentDocument": "",
+			"consentScope": "",
+			"legalBasis": "",
+			"validFrom": "",
+			"validUntil": "",
+			"active": false,
+			"matchRules": [
+				{
+					"type": "bsn",
+					"value": "edited"
+				},
+				{
+					"type": "exact",
+					"value": "Jan"
+				}
+			],
+			"consentStatus": "consent_given",
+			"publicationDecision": "publish_with_consent",
+			"notificationStatus": "skipped",
+			"primaryName": "Jan",
+			"reason": "court order",
+			"severity": "high"
+		},
+		"editing": true,
+		"dialogTitle": "[Edit standing consent]",
+		"canSubmit": true,
+		"onlyNameRules": false,
+		"emitted": [],
+		"source": {
+			"entityText": "Jan",
+			"primaryName": "Jan",
+			"reason": "court order",
+			"consentMethod": "paper",
+			"severity": "high",
+			"active": false,
+			"matchRules": [
+				{
+					"type": "bsn",
+					"value": "123"
+				},
+				{
+					"type": "exact",
+					"value": "Jan"
+				}
+			]
+		}
+	},
+	"editSubmitted": {
+		"form": {
+			"entityText": "Jan",
+			"entityType": "PERSON",
+			"consentMethod": "paper",
+			"consentDocument": "",
+			"consentScope": "",
+			"legalBasis": "",
+			"validFrom": "",
+			"validUntil": "",
+			"active": false,
+			"matchRules": [
+				{
+					"type": "bsn",
+					"value": "edited"
+				},
+				{
+					"type": "exact",
+					"value": "Jan"
+				}
+			],
+			"consentStatus": "consent_given",
+			"publicationDecision": "publish_with_consent",
+			"notificationStatus": "skipped",
+			"primaryName": "Jan",
+			"reason": "court order",
+			"severity": "high"
+		},
+		"editing": true,
+		"dialogTitle": "[Edit standing consent]",
+		"canSubmit": true,
+		"onlyNameRules": false,
+		"emitted": [
+			[
+				"submit",
+				{
+					"entityText": "Jan",
+					"entityType": "PERSON",
+					"consentMethod": "paper",
+					"consentDocument": "",
+					"consentScope": "",
+					"legalBasis": "",
+					"validFrom": "",
+					"validUntil": "",
+					"active": false,
+					"matchRules": [
+						{
+							"type": "bsn",
+							"value": "edited"
+						},
+						{
+							"type": "exact",
+							"value": "Jan"
+						}
+					],
+					"consentStatus": "consent_given",
+					"publicationDecision": "publish_with_consent",
+					"notificationStatus": "skipped",
+					"primaryName": "Jan",
+					"reason": "court order",
+					"severity": "high"
+				}
+			]
+		]
+	},
+	"editNoRules": {
+		"form": {
+			"entityText": "",
+			"entityType": "PERSON",
+			"consentMethod": "",
+			"consentDocument": "",
+			"consentScope": "",
+			"legalBasis": "",
+			"validFrom": "",
+			"validUntil": "",
+			"active": true,
+			"matchRules": [],
+			"consentStatus": "consent_given",
+			"publicationDecision": "publish_with_consent",
+			"notificationStatus": "skipped"
+		},
+		"editing": true,
+		"dialogTitle": "[Edit standing consent]",
+		"canSubmit": false,
+		"onlyNameRules": false,
+		"emitted": []
+	}
+}

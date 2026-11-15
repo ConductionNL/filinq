@@ -15,6 +15,9 @@
  *
  * @spec openspec/changes/archive/2026-09-29-anonymisation-fails-closed-without-a-detector/tasks.md#task-2
  * @spec openspec/changes/archive/2026-09-29-anonymisation-fails-closed-without-a-detector/tasks.md#task-3
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -24,6 +27,7 @@ namespace OCA\Filinq\Tests\Unit\Service;
 use OCA\Filinq\Exception\DetectionUnavailableException;
 use OCA\Filinq\Service\AnonymiserBackendStateClient;
 use OCA\Filinq\Service\AnonymizationService;
+use OCA\Filinq\Service\AnonymizeOptions;
 use OCA\Filinq\Service\DocumentAnonymizeRunner;
 use OCA\OpenRegister\Service\Anonymisation\BackendState;
 use PHPUnit\Framework\TestCase;
@@ -153,6 +157,136 @@ class AnonymizationServiceDetectorTest extends TestCase {
 		$this->assertSame('redacted', $result['detection']['outcome']);
 
 	}//end testARedactingRunNamesItsBackend()
+
+	/**
+	 * Both entry points hand the runner the file, the entities and exactly these run options.
+	 *
+	 * @return void
+	 */
+	public function testBothEntryPointsHandTheRunnerTheRunOptions(): void {
+		$calls  = [];
+		$runner = $this->getMockBuilder(DocumentAnonymizeRunner::class)
+			->disableOriginalConstructor()
+			->onlyMethods(['run'])
+			->getMock();
+		$runner->method('run')->willReturnCallback(
+			static function (int $fileId, array $entities, array $options) use (&$calls): array {
+				$calls[] = [$fileId, $entities, $options];
+				return ['anonymizedFileId' => 99];
+			}
+		);
+		$service = $this->serviceOver(
+			state: DetectionStates::orState(enabled: true, active: 'presidio', effective: 'presidio', available: ['presidio' => true]),
+			runner: $runner
+		);
+
+		$service->anonymizeDocument(
+			42,
+			self::FOUR,
+			(new AnonymizeOptions())
+				->withOutputFormat(outputFormat: 'pdf')
+				->withConsents(unredactedEntities: [['text' => 'u']], overrides: [])
+				->withUserId(userId: 'alice')
+				->withScope(scope: 'dossier', dossierKey: 'dk-1')
+				->reversible()
+		);
+		$service->anonymizeDocumentWithBasisSummary(fileId: 43, entities: [], options: (new AnonymizeOptions())->withUserId(userId: 'bob'));
+
+		$this->assertSame(
+			[
+				[
+					42,
+					self::FOUR,
+					[
+						'appendBasisSummary' => false,
+						'outputFormat' => 'pdf',
+						'unredactedEntities' => [['text' => 'u']],
+						'scope' => 'dossier',
+						'dossierKey' => 'dk-1',
+						'reversible' => true,
+						'userId' => 'alice',
+					],
+				],
+				[
+					43,
+					[],
+					[
+						'appendBasisSummary' => true,
+						'outputFormat' => 'pdf-only',
+						'unredactedEntities' => [],
+						'scope' => 'document',
+						'dossierKey' => null,
+						'reversible' => false,
+						'userId' => 'bob',
+					],
+				],
+			],
+			$calls
+		);
+
+	}//end testBothEntryPointsHandTheRunnerTheRunOptions()
+
+	/**
+	 * The entry point hands its overrides and acting user to the prohibition gate: the released match is audited for that user.
+	 *
+	 * @return void
+	 */
+	public function testTheGateReceivesTheOverridesAndTheActingUser(): void {
+		$audits  = [];
+		$matcher = $this->createMock(\OCA\Filinq\Service\PolicyMatchService::class);
+		$matcher->method('matchProhibitionHint')->willReturn(['ruleId' => 'R-X', 'ruleName' => 'Undercover']);
+		$mapper = $this->createMock(\OCA\OpenRegister\Db\EntityRelationMapper::class);
+		$mapper->method('findEntitiesForFile')->willReturn(
+			[['relation_id' => 7, 'entity_id' => 42, 'entity_value' => 'Jansen', 'entity_type' => 'PERSON', 'confidence' => 0.5]]
+		);
+		$objects = $this->createMock(\OCA\OpenRegister\Service\ObjectService::class);
+		$objects->method('saveObject')->willReturnCallback(
+			static function (array $object = []) use (&$audits): array {
+				$audits[] = $object;
+				return $object;
+			}
+		);
+		$container = $this->createMock(\Psr\Container\ContainerInterface::class);
+		$container->method('get')->willReturnCallback(
+			static fn (string $id): mixed => match ($id) {
+				'OCA\Filinq\Service\PolicyMatchService' => $matcher,
+				'OCA\OpenRegister\Db\EntityRelationMapper' => $mapper,
+				'OCA\OpenRegister\Service\ObjectService' => $objects,
+				default => null,
+			}
+		);
+		$apps = $this->createMock(\OCP\App\IAppManager::class);
+		$apps->method('getInstalledApps')->willReturn(['openregister']);
+		$config = $this->createMock(\OCP\IAppConfig::class);
+		$config->method('getValueFloat')->willReturnArgument(2);
+		$config->method('getValueBool')->willReturnArgument(2);
+		$config->method('getValueString')->willReturnArgument(2);
+
+		$service = $this->makeAnonymizationServiceFrom(
+			deps: [
+				'container' => $container,
+				'appManager' => $apps,
+				'appConfig' => $config,
+				'anonymizeRunner' => $this->runnerThatWrites(),
+				'backendState' => DetectionStates::clientOver(
+					DetectionStates::orState(enabled: true, active: 'presidio', effective: 'presidio', available: ['presidio' => true])
+				),
+			]
+		);
+
+		$service->anonymizeDocument(
+			fileId: 99,
+			entities: [],
+			options: (new AnonymizeOptions())
+				->withConsents(unredactedEntities: [], overrides: [['ruleId' => 'R-X', 'entityId' => 42, 'reason' => 'approved']])
+				->withUserId(userId: 'anna')
+		);
+
+		$this->assertCount(1, $audits);
+		$this->assertSame('anna', $audits[0]['acknowledgedBy']);
+		$this->assertSame('R-X', $audits[0]['ruleId']);
+
+	}//end testTheGateReceivesTheOverridesAndTheActingUser()
 
 	/**
 	 * Build the service over a given OpenRegister state.

@@ -25,7 +25,9 @@ namespace OCA\Filinq\EventListener;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use Throwable;
 
 /**
  * Refuses an update that changes a registration number already issued.
@@ -73,10 +75,12 @@ class DocumentRegistrationWriteGuard implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param LoggerInterface $logger Structured logger.
+	 * @param LoggerInterface    $logger    Structured logger.
+	 * @param ContainerInterface $container Resolves OpenRegister's SchemaMapper lazily.
 	 */
 	public function __construct(
 		private readonly LoggerInterface $logger,
+		private readonly ContainerInterface $container,
 	) {
 	}//end __construct()
 
@@ -92,37 +96,79 @@ class DocumentRegistrationWriteGuard implements IEventListener {
 			return;
 		}
 
-		$new = $event->getNewObject();
-		$old = $event->getOldObject();
-
-		if ($old === null) {
-			// A create, not an update. There is nothing to move yet.
+		$was = $this->movedNumber(event: $event);
+		if ($was === null) {
 			return;
 		}
 
-		if ($this->isRegistration(schema: (string)$new->getSchema()) === false
-			&& $this->isRegistration(schema: (string)$old->getSchema()) === false
-		) {
-			return;
+		$this->refuse(event: $event, was: $was);
+	}//end handle()
+
+	/**
+	 * The issued number an update would move, or null when it moves none.
+	 *
+	 * @param ObjectUpdatingEvent $event The pre-write event.
+	 *
+	 * @return string|null The number already issued, when the update changes it.
+	 */
+	private function movedNumber(ObjectUpdatingEvent $event): ?string {
+		$old = $event->getOldObject();
+		if ($old === null) {
+			// A create, not an update. There is nothing to move yet.
+			return null;
 		}
 
 		$was = $this->numberOf(object: $old);
-		$now = $this->numberOf(object: $new);
-
 		if ($was === '') {
 			// Nothing was issued yet, so the first number may still land. This
 			// is the ordinary case: the platform writes the number on create,
 			// and an object saved before it had one may legitimately gain one.
-			return;
+			return null;
 		}
 
-		if ($was === $now) {
-			return;
+		if ($was === $this->numberOf(object: $event->getNewObject())) {
+			return null;
 		}
 
+		// Checked last: it can cost a schema lookup, so only a moved number pays it.
+		if ($this->concernsRegistration(new: $event->getNewObject(), old: $old) === false) {
+			return null;
+		}
+
+		return $was;
+	}//end movedNumber()
+
+	/**
+	 * Whether either side of the update is a post-register entry.
+	 *
+	 * @param object $new The incoming object.
+	 * @param object $old The stored object.
+	 *
+	 * @return bool Whether the guard applies.
+	 */
+	private function concernsRegistration(object $new, object $old): bool {
+		$newSchema = (string)$new->getSchema();
+		$oldSchema = (string)$old->getSchema();
+		if ($this->isRegistration(schema: $newSchema) === true) {
+			return true;
+		}
+
+		return $oldSchema !== $newSchema && $this->isRegistration(schema: $oldSchema);
+	}//end concernsRegistration()
+
+	/**
+	 * Log the refused move and stop the write with a message naming the way forward.
+	 *
+	 * @param ObjectUpdatingEvent $event The pre-write event.
+	 * @param string $was The number already issued.
+	 *
+	 * @return void
+	 */
+	private function refuse(ObjectUpdatingEvent $event, string $was): void {
+		$new = $event->getNewObject();
 		$this->logger->warning(
 			'filinq.post-register.number-change-refused',
-			['was' => $was, 'now' => $now, 'uuid' => (string)$new->getUuid()]
+			['was' => $was, 'now' => $this->numberOf(object: $new), 'uuid' => (string)$new->getUuid()]
 		);
 
 		$event->setErrors(
@@ -138,22 +184,52 @@ class DocumentRegistrationWriteGuard implements IEventListener {
 			]
 		);
 		$event->stopPropagation();
-	}//end handle()
+	}//end refuse()
 
 	/**
 	 * Whether this is a post-register entry.
 	 *
-	 * 🔑 MATCHED ON THE SLUG, WHICH IS WHAT THE EVENT CARRIES. The schema id is
-	 * numeric and differs per instance, so comparing against one would make the
-	 * guard silently inert everywhere but the instance it was written on.
+	 * 🔑 THE EVENT CARRIES THE SCHEMA ID, NOT THE SLUG. OpenRegister's save and
+	 * load paths set `schema` to the numeric id, and that id differs per
+	 * instance, so an id is resolved to its slug before comparing. A slug is
+	 * still accepted as is.
 	 *
 	 * @param string $schema The schema reference on the object.
 	 *
 	 * @return bool Whether the guard applies.
 	 */
 	private function isRegistration(string $schema): bool {
-		return (strtolower($schema) === strtolower(self::SCHEMA));
+		if (strtolower($schema) === strtolower(self::SCHEMA)) {
+			return true;
+		}
+
+		if ($schema === '') {
+			return false;
+		}
+
+		return strtolower($this->slugOf(schema: $schema)) === strtolower(self::SCHEMA);
 	}//end isRegistration()
+
+	/**
+	 * The slug of a schema reference, or '' when it cannot be resolved.
+	 *
+	 * @param string $schema The schema id or slug.
+	 *
+	 * @return string The slug.
+	 */
+	private function slugOf(string $schema): string {
+		try {
+			$found = $this->container->get('OCA\OpenRegister\Db\SchemaMapper')
+				->find(id: $schema, _rbac: false, _multitenancy: false);
+			return (string)$found->getSlug();
+		} catch (Throwable $failure) {
+			$this->logger->warning(
+				'filinq.post-register.schema-unresolved',
+				['schema' => $schema, 'error' => $failure->getMessage()]
+			);
+			return '';
+		}
+	}//end slugOf()
 
 	/**
 	 * The registration number an object carries, or ''.

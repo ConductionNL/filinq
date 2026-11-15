@@ -4,7 +4,7 @@
  * Whether the failure notification reaches anybody, said where a person is.
  *
  * 🔴 THE ANNOTATION ALONE WOULD HAVE REACHED NOBODY. The rule addresses
- * docudesk-woo-officers, and every declared group in this fleet ships EMPTY on
+ * filinq-woo-officers, and every declared group in this fleet ships EMPTY on
  * purpose. OpenRegister now records a rule that resolved to nobody, once per
  * run, at warning level — but a log line is not a person, and the person who
  * needs to know is the registrar who will never be told a scan failed. They are
@@ -86,7 +86,7 @@ class IntakeNotificationReachTest extends TestCase {
 		foreach ([0, 5] as $failures) {
 			$shown = $this->reach->describe(failureCount: $failures, groupMembers: 0);
 
-			$this->assertStringContainsString('docudesk-woo-officers', $shown['warning'], (string)$failures);
+			$this->assertStringContainsString('filinq-woo-officers', $shown['warning'], (string)$failures);
 		}
 	}//end testTheWarningNamesTheGroupToAddPeopleTo()
 

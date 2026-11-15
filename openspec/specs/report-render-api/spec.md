@@ -47,8 +47,13 @@ Both render endpoints SHALL authenticate the caller via a static bearer token co
 - **THEN** the response status is 400 with a JSON error naming the missing field
 
 #### Scenario: No storage user available is rejected
-- **WHEN** the request omits `userId` and no `filinq.report_render_storage_user` default is configured
-- **THEN** the response status is 400 with a JSON error naming the missing field
+- **WHEN** no `filinq.report_render_storage_user` is configured
+- **THEN** the response status is 400 with a JSON error naming the missing setting
+
+#### Scenario: The request does not choose the storage user
+- **WHEN** the request carries `userId`, at the top level or inside `options`
+- **THEN** the response status is 400 and nothing is rendered or stored
+- **AND** output is only ever stored for `filinq.report_render_storage_user`
 
 ### Requirement: Print-quality output option (REQ-RRA-02)
 

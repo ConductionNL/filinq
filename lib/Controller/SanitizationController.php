@@ -25,8 +25,8 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use InvalidArgumentException;
-use OCA\Filinq\Service\Sanitization\DocumentSanitizationService;
-use OCA\Filinq\Service\Sanitization\SanitizationStatus;
+use OCA\Filinq\Kernel\Contracts\DocumentSanitizationServiceInterface;
+use OCA\Filinq\Kernel\Contracts\SanitizationStatusInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -46,8 +46,8 @@ class SanitizationController extends Controller {
 	 *
 	 * @param string                      $appName     The app id.
 	 * @param IRequest                    $request     The request.
-	 * @param DocumentSanitizationService $sanitizer   The sanitization.
-	 * @param SanitizationStatus          $status      What earlier runs did.
+	 * @param DocumentSanitizationServiceInterface $sanitizer   The sanitization.
+	 * @param SanitizationStatusInterface          $status      What earlier runs did.
 	 * @param IUserSession                $userSession The caller.
 	 * @param LoggerInterface             $logger      The logger.
 	 *
@@ -56,8 +56,8 @@ class SanitizationController extends Controller {
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly DocumentSanitizationService $sanitizer,
-		private readonly SanitizationStatus $status,
+		private readonly DocumentSanitizationServiceInterface $sanitizer,
+		private readonly SanitizationStatusInterface $status,
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
 	) {

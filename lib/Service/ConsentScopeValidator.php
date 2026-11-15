@@ -60,19 +60,10 @@ class ConsentScopeValidator {
 	 *
 	 * Mirrored from PolicyCrudService to keep the validator self-contained.
 	 *
-	 * ⚠️ STILL `docudesk-`, DELIBERATELY, ACROSS THE FILINQ RENAME. This is a
-	 * Nextcloud GROUP ID, provisioned by OpenRegister from the declaration in
-	 * `lib/Settings/filinq_register.json` and populated by admins afterwards.
-	 * OpenRegister provisions a declared group CREATE-ONLY, so renaming the id
-	 * makes it create a NEW, EMPTY group; the existing one keeps every member
-	 * and nothing reads it any more. An empty group denies everyone except
-	 * admins and object owners, so the visible symptom is standing-consent
-	 * writes starting to 403 for exactly the people who were granted them —
-	 * with no error at provisioning time and nothing in the log. Same failure
-	 * shape as renaming an OpenRegister register slug. Renaming the group needs
-	 * its own membership migration, not a token substitution.
+	 * The move from `docudesk-*` is carried by the RenameRoleGroups repair
+	 * step, which copies every member into the new group.
 	 */
-	private const STANDING_CONSENT_GROUP = 'docudesk-standing-consent-admins';
+	private const STANDING_CONSENT_GROUP = 'filinq-standing-consent-admins';
 
 	/**
 	 * Constructor.

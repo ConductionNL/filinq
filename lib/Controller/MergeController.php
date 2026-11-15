@@ -30,8 +30,8 @@ namespace OCA\Filinq\Controller;
 
 use OCA\Filinq\Exception\MergeJobStoreUnreadableException;
 use OCA\Filinq\Exception\MergeRefusedException;
-use OCA\Filinq\Service\DocumentMergeService;
-use OCA\Filinq\Service\MergeJobRepository;
+use OCA\Filinq\Kernel\Contracts\DocumentMergeServiceInterface;
+use OCA\Filinq\Kernel\Contracts\MergeJobRepositoryInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -73,8 +73,8 @@ class MergeController extends Controller {
 	 *
 	 * @param string $appName The app name.
 	 * @param IRequest $request The request.
-	 * @param DocumentMergeService $merges The merge itself.
-	 * @param MergeJobRepository $jobs The job store.
+	 * @param DocumentMergeServiceInterface $merges The merge itself.
+	 * @param MergeJobRepositoryInterface $jobs The job store.
 	 * @param IAppConfig $config App configuration, for the threshold.
 	 * @param IUserSession $userSession The current session.
 	 *
@@ -83,8 +83,8 @@ class MergeController extends Controller {
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly DocumentMergeService $merges,
-		private readonly MergeJobRepository $jobs,
+		private readonly DocumentMergeServiceInterface $merges,
+		private readonly MergeJobRepositoryInterface $jobs,
 		private readonly IAppConfig $config,
 		private readonly IUserSession $userSession,
 	) {

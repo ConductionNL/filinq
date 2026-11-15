@@ -26,8 +26,8 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\BackgroundJob;
 
-use OCA\Filinq\Service\EmailIngestion\EmailIngestionService;
-use OCA\Filinq\Service\EmailIngestion\EmailIngestionSettings;
+use OCA\Filinq\Kernel\Contracts\EmailIngestionServiceInterface;
+use OCA\Filinq\Kernel\Contracts\EmailIngestionSettingsInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use Psr\Log\LoggerInterface;
@@ -41,16 +41,16 @@ class EmailIngestionJob extends TimedJob {
 	 * Constructor.
 	 *
 	 * @param ITimeFactory           $clock     The clock.
-	 * @param EmailIngestionService  $ingestion The ingestion.
-	 * @param EmailIngestionSettings $settings  The per-tick budget.
+	 * @param EmailIngestionServiceInterface  $ingestion The ingestion.
+	 * @param EmailIngestionSettingsInterface $settings  The per-tick budget.
 	 * @param LoggerInterface        $logger    The logger.
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		ITimeFactory $clock,
-		private readonly EmailIngestionService $ingestion,
-		private readonly EmailIngestionSettings $settings,
+		private readonly EmailIngestionServiceInterface $ingestion,
+		private readonly EmailIngestionSettingsInterface $settings,
 		private readonly LoggerInterface $logger,
 	) {
 		parent::__construct(time: $clock);

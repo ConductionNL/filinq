@@ -1,3 +1,7 @@
+<!--
+  - SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
 <script setup>
 import { translate as t } from '@nextcloud/l10n'
 import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
@@ -62,6 +66,13 @@ import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
 							">
 							{{ ocrBadgeFor(row) }}
 						</span>
+						<span
+							v-if="caseSystemFiles[String(row.fileId)]"
+							class="my-documents-case-system-badge"
+							data-testid="my-documents-case-system-badge"
+							:title="t('filinq', 'The case system holds this document')">
+							{{ t('filinq', 'In the case system') }}
+						</span>
 					</div>
 				</template>
 
@@ -75,13 +86,19 @@ import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
 					<span
 						v-if="!row.isFolder"
 						class="my-documents-status"
-						:class="{ 'my-documents-status--checked': !!reviewMarks[String(row.fileId)] }"
+						:class="{
+							'my-documents-status--checked':
+								!!reviewMarks[String(row.fileId)],
+						}"
 						:title="statusTitle(row)">
 						<CheckDecagram
 							v-if="reviewMarks[String(row.fileId)]"
 							:size="16"
 							class="my-documents-status__icon" />
-						<EyeOffOutline v-else :size="16" class="my-documents-status__icon" />
+						<EyeOffOutline
+							v-else
+							:size="16"
+							class="my-documents-status__icon" />
 						{{ statusLabel(row) }}
 					</span>
 				</template>
@@ -240,33 +257,41 @@ import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
 			:status="validation.status"
 			:findings="validation.findings"
 			@close="validation.show = false"
-			@ocr="onOcrRequested" />
+			@ocr="onOcrRequested"
+			@removePassword="openPasswordDialog" />
+		<PdfPasswordModal
+			:show="unlock.show"
+			:fileId="validation.fileId"
+			@close="unlock.show = false"
+			@unlocked="onUnlocked" />
 
 		<!--
 			Delete confirmation, single row and bulk. Replaces window.confirm():
 			executeDelete()/executeBulkDelete() run only from @confirm, so
 			nothing is removed without an explicit confirmation.
 		-->
-		<ConfirmActionDialog
+		<CnConfirmDialog
 			v-if="deleteTarget"
-			:name="t('filinq', 'Delete document')"
+			:dialogTitle="t('filinq', 'Delete document')"
 			:message="deleteMessage"
-			:busy="deleting"
+			:confirmLabel="t('filinq', 'Delete')"
+			variant="error"
 			@confirm="executeDelete"
-			@cancel="cancelDelete" />
+			@close="cancelDelete" />
 
-		<ConfirmActionDialog
+		<CnConfirmDialog
 			v-if="bulkDeleteNames.length > 0"
-			:name="t('filinq', 'Delete selected items')"
+			:dialogTitle="t('filinq', 'Delete selected items')"
 			:message="bulkDeleteMessage"
-			:busy="deleting"
+			:confirmLabel="t('filinq', 'Delete')"
+			variant="error"
 			@confirm="executeBulkDelete"
-			@cancel="cancelBulkDelete" />
+			@close="cancelBulkDelete" />
 	</div>
 </template>
 
 <script>
-import { CnStatusBadge } from '@conduction/nextcloud-vue'
+import { CnConfirmDialog, CnStatusBadge } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
 import { NcActionButton, NcActions } from '@nextcloud/vue'
@@ -289,17 +314,13 @@ import DdIcon from '../../components/DdIcon.vue'
 import DdIndexPage from '../../components/DdIndexPage.vue'
 import DdPageHeader from '../../components/DdPageHeader.vue'
 import DdSearchBar from '../../components/DdSearchBar.vue'
-import ConfirmActionDialog from '../../dialogs/ConfirmActionDialog.vue'
+import PdfPasswordModal from '../../modals/PdfPasswordModal.vue'
 import SanitizationReportModal from '../../modals/SanitizationReportModal.vue'
 import ValidationResultModal from '../../modals/ValidationResultModal.vue'
 import FileViewerPage from '../fileViewer/FileViewerPage.vue'
-import {
-	fetchOcrStatus,
-	isOcrCandidate,
-	ocrBadgeLabel,
-	ocrErrorMessage,
-	runOcr,
-} from '../../services/ocr.js'
+import { ocrRun } from '../../mixins/ocrRun.js'
+import { fetchCaseSystemFiles } from '../../services/caseSystemFiles.js'
+import { fetchOcrStatus, isOcrCandidate, ocrBadgeLabel } from '../../services/ocr.js'
 import { fetchReviewMarks } from '../../services/reviewMark.js'
 import { sanitizeFile } from '../../services/sanitization.js'
 import { validateFile } from '../../services/validationService.js'
@@ -337,10 +358,11 @@ export default {
 		DdDocumentCard,
 		DdIcon,
 		FileViewerPage,
+		PdfPasswordModal,
 		ValidationResultModal,
 		SanitizationReportModal,
 		BroomIcon,
-		ConfirmActionDialog,
+		CnConfirmDialog,
 		DotsHorizontal,
 		Eye,
 		// TODO: re-enable with the Status column (see import above).
@@ -356,6 +378,8 @@ export default {
 		CheckboxMultipleMarkedOutline,
 		FilterOutline,
 	},
+
+	mixins: [ocrRun],
 
 	data() {
 		return {
@@ -381,6 +405,9 @@ export default {
 				fileId: null,
 			},
 
+			// The password dialog opened from a locked PDF's finding.
+			unlock: { show: false },
+
 			kindColorMap: {
 				[t('filinq', 'Concept')]: 'warning',
 				[t('filinq', 'Anonymized')]: 'success',
@@ -388,7 +415,6 @@ export default {
 
 			deleteTarget: null, // row awaiting delete confirmation, or null
 			bulkDeleteNames: [], // file names awaiting bulk-delete confirmation
-			deleting: false,
 
 			// OCR (ocr-trigger-surface): whether it can run here, the last
 			// result per file id, and which files are running now.
@@ -396,6 +422,7 @@ export default {
 			ocrResults: {},
 			// The latest review mark per file id on this page.
 			reviewMarks: {},
+			caseSystemFiles: {},
 			ocrRunning: {},
 		}
 	},
@@ -500,6 +527,7 @@ export default {
 			handler(rows) {
 				this.loadOcrStatus(rows)
 				this.loadReviewMarks(rows)
+				this.loadCaseSystemFiles(rows)
 			},
 		},
 	},
@@ -572,24 +600,12 @@ export default {
 		async runOcrOn(row) {
 			this.ocrRunning = { ...this.ocrRunning, [row.fileId]: true }
 			try {
-				const result = await runOcr(row.fileId)
-				if (result.ocrProcessed) {
+				const result = await this.runOcrAndReport(row.fileId)
+				if (result) {
 					this.ocrResults = {
 						...this.ocrResults,
 						[String(row.fileId)]: result,
 					}
-					showSuccess(
-						t('filinq', 'OCR read {length} characters.', {
-							length: result.textLength,
-						}),
-					)
-				} else {
-					showError(ocrErrorMessage(result))
-				}
-			} catch (error) {
-				showError(ocrErrorMessage(error))
-				if ([409, 503].includes(error?.response?.status)) {
-					this.ocrAvailable = false
 				}
 			} finally {
 				this.ocrRunning = { ...this.ocrRunning, [row.fileId]: false }
@@ -709,7 +725,6 @@ export default {
 		async executeBulkDelete() {
 			const names = this.bulkDeleteNames
 			if (names.length === 0) return
-			this.deleting = true
 			try {
 				const failed = await myDocumentsStore.deleteDocuments(names)
 				if (failed.length > 0) {
@@ -731,7 +746,6 @@ export default {
 			} finally {
 				this.selectedIds = []
 				this.bulkDeleteNames = []
-				this.deleting = false
 			}
 		},
 
@@ -831,7 +845,6 @@ export default {
 		async executeDelete() {
 			const row = this.deleteTarget
 			if (!row) return
-			this.deleting = true
 			try {
 				await myDocumentsStore.deleteDocument(row.fileName)
 				showSuccess(
@@ -848,7 +861,6 @@ export default {
 				)
 			} finally {
 				this.deleteTarget = null
-				this.deleting = false
 			}
 		},
 
@@ -952,6 +964,33 @@ export default {
 		},
 
 		/**
+		 * Open the password dialog for the locked PDF of the validation result.
+		 *
+		 * @return {void}
+		 * @spec openspec/changes/intake-pdf-password-removal/tasks.md#2-screens
+		 */
+		openPasswordDialog() {
+			this.unlock.show = true
+		},
+
+		/**
+		 * A locked PDF was unlocked into a copy: show the copy's own findings and
+		 * reload the list so the copy appears beside the original.
+		 *
+		 * @param {object} copy The copy: fileId, name, validationStatus, validationFindings.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/intake-pdf-password-removal/tasks.md#2-screens
+		 */
+		async onUnlocked(copy) {
+			this.validation.fileId = copy.fileId
+			this.validation.status = copy.validationStatus || ''
+			this.validation.findings = copy.validationFindings || []
+			this.validation.show = true
+			showSuccess(t('filinq', 'Unlocked copy saved as {name}', { name: copy.name || '' }))
+			await myDocumentsStore.fetchDocuments()
+		},
+
+		/**
 		 * Handle an OCR cross-link from a text-layer-missing finding.
 		 *
 		 * @return {void}
@@ -1046,7 +1085,7 @@ export default {
 		 *
 		 * @param {Array<object>} rows The rows on the page.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-5
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-5
 		 */
 		async loadReviewMarks(rows) {
 			const ids = (rows || [])
@@ -1064,11 +1103,33 @@ export default {
 		},
 
 		/**
+		 * Read which documents on this page are in the case system, in one request.
+		 *
+		 * @param {Array<object>} rows The rows on the page.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-deliverys-outcome-is-visible-and-a-failure-can-be-retried-req-gsc-003
+		 */
+		async loadCaseSystemFiles(rows) {
+			const ids = (rows || [])
+				.filter((row) => !row.isFolder && row.fileId)
+				.map((row) => row.fileId)
+			if (ids.length === 0) {
+				return
+			}
+			try {
+				const delivered = await fetchCaseSystemFiles(ids)
+				this.caseSystemFiles = { ...this.caseSystemFiles, ...delivered }
+			} catch {
+				// No answer: no badge. The list itself still shows.
+			}
+		},
+
+		/**
 		 * Whether a person checked the document's findings.
 		 *
 		 * @param {object} row The row.
 		 * @return {string}
-		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-5
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-5
 		 */
 		statusLabel(row) {
 			return this.reviewMarks[String(row.fileId)]
@@ -1081,7 +1142,7 @@ export default {
 		 *
 		 * @param {object} row The row.
 		 * @return {string}
-		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-5
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-5
 		 */
 		statusTitle(row) {
 			const mark = this.reviewMarks[String(row.fileId)]
@@ -1190,6 +1251,16 @@ export default {
 	.my-documents-name__icon {
 		transition: none;
 	}
+}
+
+.my-documents-case-system-badge {
+	margin-inline-start: 8px;
+	padding: 0 6px;
+	border-radius: var(--border-radius-pill);
+	border: 1px solid var(--color-success);
+	background: var(--color-main-background);
+	color: var(--color-success-text);
+	font-size: 0.85em;
 }
 
 .my-documents-ocr-badge {

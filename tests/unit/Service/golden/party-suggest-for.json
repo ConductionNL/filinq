@@ -1,0 +1,167 @@
+{
+    "a full block": {
+        "result": [
+            {
+                "party": {
+                    "name": "Anna de Vries",
+                    "address": "Markt 1",
+                    "email": "anna@example.nl",
+                    "telephone": "0612345678"
+                },
+                "confidence": 1.0,
+                "confidenceMeaning": "share of name, address, email and telephone the document actually carried",
+                "sourceSpan": {
+                    "name": "Anna de Vries",
+                    "address": "Markt 1",
+                    "email": "anna@example.nl",
+                    "telephone": "0612345678"
+                },
+                "source": "entity-detection",
+                "written": false
+            }
+        ],
+        "asked": [
+            12
+        ],
+        "logs": []
+    },
+    "a name only": {
+        "result": [
+            {
+                "party": {
+                    "name": "Anna"
+                },
+                "confidence": 0.25,
+                "confidenceMeaning": "share of name, address, email and telephone the document actually carried",
+                "sourceSpan": {
+                    "name": "Anna"
+                },
+                "source": "entity-detection",
+                "written": false
+            }
+        ],
+        "asked": [
+            12
+        ],
+        "logs": []
+    },
+    "the first of each field": {
+        "result": [
+            {
+                "party": {
+                    "name": "Anna",
+                    "email": "b@example.nl"
+                },
+                "confidence": 0.5,
+                "confidenceMeaning": "share of name, address, email and telephone the document actually carried",
+                "sourceSpan": {
+                    "name": "Anna",
+                    "email": "b@example.nl"
+                },
+                "source": "entity-detection",
+                "written": false
+            }
+        ],
+        "asked": [
+            12
+        ],
+        "logs": []
+    },
+    "a blank first value": {
+        "result": [
+            {
+                "party": {
+                    "name": "Bert"
+                },
+                "confidence": 0.25,
+                "confidenceMeaning": "share of name, address, email and telephone the document actually carried",
+                "sourceSpan": {
+                    "name": "Bert"
+                },
+                "source": "entity-detection",
+                "written": false
+            }
+        ],
+        "asked": [
+            12
+        ],
+        "logs": []
+    },
+    "unknown types": {
+        "result": [],
+        "asked": [
+            12
+        ],
+        "logs": []
+    },
+    "no entities": {
+        "result": [],
+        "asked": [
+            12
+        ],
+        "logs": []
+    },
+    "objects without getters": {
+        "result": [],
+        "asked": [
+            12
+        ],
+        "logs": []
+    },
+    "no mapper": {
+        "result": [],
+        "asked": [],
+        "logs": []
+    },
+    "the read fails": {
+        "result": [],
+        "asked": [
+            12
+        ],
+        "logs": [
+            [
+                "warning",
+                "[PartySuggestionService] could not read the entities of this file",
+                {
+                    "file": "PartySuggestionService.php",
+                    "fileId": 12,
+                    "error": "database gone"
+                }
+            ]
+        ]
+    },
+    "file id zero": {
+        "result": [],
+        "asked": [],
+        "logs": []
+    },
+    "a negative file id": {
+        "result": [],
+        "asked": [],
+        "logs": []
+    },
+    "three of four": {
+        "result": [
+            {
+                "party": {
+                    "email": "a@example.nl",
+                    "telephone": "010",
+                    "address": "Dorp"
+                },
+                "confidence": 0.75,
+                "confidenceMeaning": "share of name, address, email and telephone the document actually carried",
+                "sourceSpan": {
+                    "email": "a@example.nl",
+                    "telephone": "010",
+                    "address": "Dorp"
+                },
+                "source": "entity-detection",
+                "written": false
+            }
+        ],
+        "asked": [
+            5
+        ],
+        "logs": []
+    }
+}

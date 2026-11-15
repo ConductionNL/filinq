@@ -41,6 +41,8 @@ use OCA\Filinq\Service\SigningEnvelope\SigningEnvelopeRollUp;
 use OCA\Filinq\Service\SigningEnvelope\SigningEnvelopeService;
 use OCA\Filinq\Service\SigningRequestValidator;
 use OCA\Filinq\Service\SigningService;
+use OCA\Filinq\Service\Support\SigningGuards;
+use OCA\Filinq\Service\Support\SigningOutputs;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Files\IRootFolder;
@@ -118,6 +120,8 @@ class EnvelopeObjectStore extends ObjectService {
 		?string $uuid = null,
 		bool $_rbac = true,
 		bool $_multitenancy = true,
+		bool $_unowned = false,
+		?string $_owner = null,
 	) {
 		$this->saves[] = [$schema, $object];
 		$id = (string) ($uuid ?? ($object['id'] ?? ''));
@@ -261,23 +265,27 @@ class SigningEnvelopeServiceTest extends TestCase {
 
 		$this->signing = new SigningService(
 			settingsService: $settings,
-			auditService: $this->createMock(SigningAuditService::class),
-			artifactProducer: new SignedArtifactProducer(
+			actorResolver: new SigningActorResolver(settingsService: $settings, config: $config, userSession: $userSession, request: $request),
+			guards: new SigningGuards(
+				validator: new SigningRequestValidator(providerFactory: $providerFactory),
+				consentGuard: new GuardianConsentGuard(settingsService: $settings),
+				assuranceGate: $this->assuranceGate(userSession: $userSession)
+			),
+			outputs: new SigningOutputs(
+				auditService: $this->createMock(SigningAuditService::class),
+				artifactProducer: new SignedArtifactProducer(
 				providerFactory: $providerFactory,
 				userSession: $userSession,
 				request: $request,
-				rootFolder: $this->createMock(IRootFolder::class),
+				rootFolder: $this->initiatorFolder(),
 				finalDocuments: $this->createMock(FinalDocumentService::class)
 			),
-			validator: new SigningRequestValidator(providerFactory: $providerFactory),
-			actorResolver: new SigningActorResolver(settingsService: $settings, config: $config, userSession: $userSession, request: $request),
-			emitter: new SigningConclusionEmitter(
+				emitter: new SigningConclusionEmitter(
 				eventDispatcher: $this->createMock(IEventDispatcher::class),
 				logger: $this->createMock(LoggerInterface::class),
 				eventFactory: new SigningConcludedEventFactory()
-			),
-			consentGuard: new GuardianConsentGuard(settingsService: $settings),
-			assuranceGate: $this->assuranceGate(userSession: $userSession)
+			)
+			)
 		);
 
 		$resolver = $this->createMock(DocumentObjectServiceResolver::class);
@@ -289,6 +297,28 @@ class SigningEnvelopeServiceTest extends TestCase {
 		);
 
 	}//end setUp()
+
+	/**
+	 * A root folder in which the initiator can open every numeric file id.
+	 *
+	 * @return IRootFolder
+	 */
+	private function initiatorFolder(): IRootFolder {
+		$names = ['11' => 'contract.pdf', '12' => 'geheimhouding.pdf', '13' => 'reglement.pdf', '99' => 'los.pdf'];
+		$folder = $this->createMock(originalClassName: \OCP\Files\Folder::class);
+		$folder->method('getById')->willReturnCallback(
+			function (int $id) use ($names): array {
+				$file = $this->createMock(originalClassName: \OCP\Files\File::class);
+				$file->method('getId')->willReturn($id);
+				$file->method('getName')->willReturn(($names[(string)$id] ?? 'document.pdf'));
+				return [$file];
+			}
+		);
+		$root = $this->createMock(originalClassName: IRootFolder::class);
+		$root->method('getUserFolder')->willReturn($folder);
+
+		return $root;
+	}//end initiatorFolder()
 
 	/**
 	 * An envelope of three documents for Bob and Carol.

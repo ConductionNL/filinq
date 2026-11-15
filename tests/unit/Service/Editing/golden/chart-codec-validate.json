@@ -1,0 +1,196 @@
+{
+    "a bar chart": {
+        "chart": {
+            "type": "bar",
+            "title": "Aanvragen",
+            "categories": [
+                "2024",
+                "2025"
+            ],
+            "series": [
+                {
+                    "name": "Woo",
+                    "values": [
+                        3.0,
+                        4.5
+                    ]
+                }
+            ]
+        }
+    },
+    "an upper-case type": {
+        "chart": {
+            "type": "line",
+            "title": "",
+            "categories": [
+                "2024",
+                "2025"
+            ],
+            "series": [
+                {
+                    "name": "Series 1",
+                    "values": [
+                        1.0,
+                        2.0
+                    ]
+                },
+                {
+                    "name": "7",
+                    "values": [
+                        1.0,
+                        2.0
+                    ]
+                }
+            ]
+        }
+    },
+    "a pie chart": {
+        "chart": {
+            "type": "pie",
+            "title": "",
+            "categories": [
+                "x"
+            ],
+            "series": [
+                {
+                    "name": "Deel",
+                    "values": [
+                        1.0
+                    ]
+                }
+            ]
+        }
+    },
+    "a pie with two series": {
+        "error": "A pie chart can only show one series."
+    },
+    "a line with two series": {
+        "chart": {
+            "type": "line",
+            "title": "",
+            "categories": [
+                "x"
+            ],
+            "series": [
+                {
+                    "name": "Series 1",
+                    "values": [
+                        1.0
+                    ]
+                },
+                {
+                    "name": "Series 2",
+                    "values": [
+                        2.0
+                    ]
+                }
+            ]
+        }
+    },
+    "no type": {
+        "error": "Unknown chart type \"\". Supported: bar, line, pie."
+    },
+    "an unknown type": {
+        "error": "Unknown chart type \"radar\". Supported: bar, line, pie."
+    },
+    "no categories": {
+        "error": "A chart needs at least one category."
+    },
+    "empty categories": {
+        "error": "A chart needs at least one category."
+    },
+    "a single category string": {
+        "chart": {
+            "type": "bar",
+            "title": "",
+            "categories": [
+                "alles"
+            ],
+            "series": [
+                {
+                    "name": "Series 1",
+                    "values": [
+                        5.0
+                    ]
+                }
+            ]
+        }
+    },
+    "keyed categories": {
+        "chart": {
+            "type": "bar",
+            "title": "",
+            "categories": [
+                "x",
+                "2"
+            ],
+            "series": [
+                {
+                    "name": "Series 1",
+                    "values": [
+                        1.0,
+                        2.0
+                    ]
+                }
+            ]
+        }
+    },
+    "no series": {
+        "error": "A chart needs at least one series."
+    },
+    "empty series": {
+        "error": "A chart needs at least one series."
+    },
+    "a series too short": {
+        "error": "Series 2 has 1 value(s) but there are 2 categories. Every series must carry exactly one value per category."
+    },
+    "a series too long": {
+        "error": "Series 1 has 3 value(s) but there are 2 categories. Every series must carry exactly one value per category."
+    },
+    "a series without values": {
+        "error": "Series 1 has 0 value(s) but there are 2 categories. Every series must carry exactly one value per category."
+    },
+    "a series that is a scalar": {
+        "error": "Series 1 has 0 value(s) but there are 1 categories. Every series must carry exactly one value per category."
+    },
+    "keyed series": {
+        "chart": {
+            "type": "bar",
+            "title": "",
+            "categories": [
+                "x"
+            ],
+            "series": [
+                {
+                    "name": "Series 1",
+                    "values": [
+                        1.0
+                    ]
+                },
+                {
+                    "name": "Series 2",
+                    "values": [
+                        2.0
+                    ]
+                }
+            ]
+        }
+    },
+    "a numeric title": {
+        "chart": {
+            "type": "bar",
+            "title": "2026",
+            "categories": [
+                "x"
+            ],
+            "series": [
+                {
+                    "name": "Series 1",
+                    "values": [
+                        1.0
+                    ]
+                }
+            ]
+        }
+    }
+}

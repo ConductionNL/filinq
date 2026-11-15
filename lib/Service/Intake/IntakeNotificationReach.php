@@ -4,7 +4,7 @@
  * Whether anybody is actually going to be told, said on the screen an operator opens.
  *
  * 🔴 THE ANNOTATION ALONE WOULD HAVE BEEN A FIX THAT REACHES NOBODY. The rule
- * addresses `docudesk-woo-officers`, and every declared group in this fleet
+ * addresses `filinq-woo-officers`, and every declared group in this fleet
  * ships EMPTY on purpose — an empty group denies everyone except admins and
  * object owners, which is the right default. OpenRegister now records a rule
  * that resolved to nobody, once per run, at warning level.
@@ -42,24 +42,12 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\Intake;
 
+use OCA\Filinq\Kernel\Contracts\IntakeNotificationReachInterface;
+
 /**
  * Says, on the inbox, whether the failure notification can reach anybody.
  */
-class IntakeNotificationReach {
-
-	/**
-	 * The rule declared on `intakeDocument`.
-	 *
-	 * @var string
-	 */
-	public const RULE = 'readingFailed';
-
-	/**
-	 * The group the rule addresses.
-	 *
-	 * @var string
-	 */
-	public const GROUP = 'docudesk-woo-officers';
+class IntakeNotificationReach implements IntakeNotificationReachInterface {
 
 	/**
 	 * What the inbox shows about who will be told.

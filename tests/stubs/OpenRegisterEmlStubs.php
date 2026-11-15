@@ -30,14 +30,14 @@ class EmlParseException extends Exception {
 }//end class
 }
 
-namespace OCA\OpenRegister\Service\TextExtraction {
+namespace OCA\OpenRegister\Files\Service\TextExtraction {
 use JsonSerializable;
 
 /**
  * A parsed email: headers, body and attachments.
  *
  * @category Service
- * @package  OCA\OpenRegister\Service\TextExtraction
+ * @package  OCA\OpenRegister\Files\Service\TextExtraction
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://OpenRegister.app
@@ -76,7 +76,7 @@ final class EmlStructure implements JsonSerializable {
  * The body of a parsed email.
  *
  * @category Service
- * @package  OCA\OpenRegister\Service\TextExtraction
+ * @package  OCA\OpenRegister\Files\Service\TextExtraction
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://OpenRegister.app
@@ -112,7 +112,7 @@ final class EmlBody implements JsonSerializable {
  * One attachment of a parsed email.
  *
  * @category Service
- * @package  OCA\OpenRegister\Service\TextExtraction
+ * @package  OCA\OpenRegister\Files\Service\TextExtraction
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://OpenRegister.app

@@ -29,7 +29,7 @@ namespace OCA\Filinq\Controller;
 
 use Exception;
 use OCA\Filinq\Exception\PolicyRejectedException;
-use OCA\Filinq\Service\ConsentCrudService;
+use OCA\Filinq\Kernel\Contracts\ConsentCrudServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -51,13 +51,21 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/specs/consent-endpoint-hardening/spec.md
  */
 class ConsentController extends Controller {
+	use AnswersNotAuthenticated;
+
+	/**
+	 * Groups that handle consent records, besides admins.
+	 *
+	 * @var list<string>
+	 */
+	private const OFFICER_GROUPS = ['filinq-woo-officers', 'filinq-policy-admins'];
 	/**
 	 * Constructor for ConsentController
 	 *
 	 * @param string $appName The application name
 	 * @param IRequest $request The request object
 	 * @param LoggerInterface $logger Logger for error reporting
-	 * @param ConsentCrudService $crudService CRUD service for consent records
+	 * @param ConsentCrudServiceInterface $crudService CRUD service for consent records
 	 * @param IL10N $l10n The localization service
 	 * @param IUserSession $userSession User session for authentication
 	 * @param IGroupManager $groupManager Group manager for admin checks
@@ -68,7 +76,7 @@ class ConsentController extends Controller {
 		string $appName,
 		IRequest $request,
 		private readonly LoggerInterface $logger,
-		private readonly ConsentCrudService $crudService,
+		private readonly ConsentCrudServiceInterface $crudService,
 		private readonly IL10N $l10n,
 		private readonly IUserSession $userSession,
 		private readonly IGroupManager $groupManager,
@@ -95,7 +103,7 @@ class ConsentController extends Controller {
 			return false;
 		}
 
-		if ($this->groupManager->isAdmin($user->getUID()) === true) {
+		if ($this->isConsentOfficer(uid: $user->getUID()) === true) {
 			return true;
 		}
 
@@ -106,6 +114,33 @@ class ConsentController extends Controller {
 
 		return $owner !== null && (string)$owner === $user->getUID();
 	}//end canAccessConsent()
+
+	/**
+	 * Whether the user handles consent: an admin, a consent officer or a policy admin.
+	 *
+	 * Only they may change a consent record; the person who opened a request
+	 * may read it but not record its outcome.
+	 *
+	 * @param string $uid The user.
+	 *
+	 * @return bool True when the user may change any consent record.
+	 *
+	 * @spec openspec/specs/consent-management/spec.md
+	 */
+	private function isConsentOfficer(string $uid): bool {
+		if ($this->groupManager->isAdmin($uid) === true) {
+			return true;
+		}
+
+		foreach (self::OFFICER_GROUPS as $group) {
+			if ($this->groupManager->isInGroup($uid, $group) === true) {
+				return true;
+			}
+		}
+
+		return false;
+
+	}//end isConsentOfficer()
 
 	/**
 	 * Build an error JSON response with logging
@@ -155,6 +190,59 @@ class ConsentController extends Controller {
 	}//end notConfiguredResponse()
 
 	/**
+	 * The signed-in caller with the consent register configuration, or the
+	 * refusal: 401 when nobody is signed in (before the configuration is
+	 * read), 400 when the configuration is missing.
+	 *
+	 * @return array{user: \OCP\IUser, config: array}|JSONResponse
+	 */
+	private function signedInConsentRequest(): array|JSONResponse {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
+		}
+
+		$config = $this->crudService->getConsentConfig();
+		if ($config === null) {
+			return $this->notConfiguredResponse();
+		}
+
+		return ['user' => $user, 'config' => $config];
+
+	}//end signedInConsentRequest()
+
+	/**
+	 * The owner a consent list is scoped to: the caller, or nobody (every
+	 * record) for a consent officer.
+	 *
+	 * @param string $uid The signed-in caller.
+	 *
+	 * @return string|null The owner uid, or null for an officer.
+	 */
+	private function ownerFilter(string $uid): ?string {
+		if ($this->isConsentOfficer(uid: $uid) === true) {
+			return null;
+		}
+
+		return $uid;
+
+	}//end ownerFilter()
+
+	/**
+	 * The 404 for a consent record that does not exist or that the caller may
+	 * not see; both answer the same so existence cannot be probed.
+	 *
+	 * @return JSONResponse
+	 */
+	private function consentNotFound(): JSONResponse {
+		return new JSONResponse(
+			['error' => $this->l10n->t('Consent record not found')],
+			404
+		);
+
+	}//end consentNotFound()
+
+	/**
 	 * List consent records
 	 *
 	 * @return JSONResponse JSON response with list of consent records
@@ -166,38 +254,20 @@ class ConsentController extends Controller {
 	 */
 	public function index(): JSONResponse {
 		try {
-			$user = $this->userSession->getUser();
-			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Not authenticated')],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+			$request = $this->signedInConsentRequest();
+			if ($request instanceof JSONResponse) {
+				return $request;
 			}
 
-			$config = $this->crudService->getConsentConfig();
-			if ($config === null) {
-				return $this->notConfiguredResponse();
-			}
-
-			// $user is the SAME object the guard above rejected when null — it is
-			// bound once at the top of this method now, rather than fetched a
-			// second time and re-checked. The old `$user !== null` here carried a
-			// comment saying it existed only to "appease Psalm"; binding once
-			// makes the non-null provable to every analyser and drops a redundant
-			// session lookup.
-			$uid = $user->getUID();
-			$isAdmin = ($this->groupManager->isAdmin($uid) === true);
-
-			$filterUid = $uid;
-			if ($isAdmin === true) {
-				$filterUid = null;
-			}
-
+			// The caller is bound once by the guard, rather than fetched a
+			// second time and re-checked, so the non-null is provable to every
+			// analyser and no second session lookup is made.
+			$config = $request['config'];
 			return new JSONResponse(
 				$this->crudService->listConsents(
 					$config['register'],
 					$config['schema'],
-					$filterUid
+					$this->ownerFilter(uid: $request['user']->getUID())
 				)
 			);
 		} catch (Exception $e) {
@@ -280,10 +350,7 @@ class ConsentController extends Controller {
 	public function create(): JSONResponse {
 		try {
 			if ($this->userSession->getUser() === null) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Not authenticated')],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 			}
 
 			$data = $this->request->getParams();
@@ -336,33 +403,22 @@ class ConsentController extends Controller {
 	 */
 	public function show(string $id): JSONResponse {
 		try {
-			if ($this->userSession->getUser() === null) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Not authenticated')],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+			$request = $this->signedInConsentRequest();
+			if ($request instanceof JSONResponse) {
+				return $request;
 			}
 
-			$config = $this->crudService->getConsentConfig();
-			if ($config === null) {
-				return $this->notConfiguredResponse();
-			}
+			$config = $request['config'];
 
 			$consent = $this->crudService->getConsent($id, $config['register'], $config['schema']);
 			if ($consent === null) {
-				return new JSONResponse(
-					['error' => $this->l10n->t('Consent record not found')],
-					404
-				);
+				return $this->consentNotFound();
 			}
 
 			// Per-object ownership guard (security finding #283): return 404
 			// (not 403) so non-owners cannot probe for record existence.
 			if ($this->canAccessConsent(consent: $consent) === false) {
-				return new JSONResponse(
-					['error' => $this->l10n->t('Consent record not found')],
-					404
-				);
+				return $this->consentNotFound();
 			}
 
 			return new JSONResponse($consent);
@@ -385,25 +441,24 @@ class ConsentController extends Controller {
 	 */
 	public function update(string $id): JSONResponse {
 		try {
-			if ($this->userSession->getUser() === null) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Not authenticated')],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+			$request = $this->signedInConsentRequest();
+			if ($request instanceof JSONResponse) {
+				return $request;
 			}
 
-			$config = $this->crudService->getConsentConfig();
-			if ($config === null) {
-				return $this->notConfiguredResponse();
-			}
+			$config = $request['config'];
 
 			// Per-object ownership guard (security finding #283): a non-owner
 			// must not be able to overwrite another user's consent record.
 			$existing = $this->crudService->getConsent($id, $config['register'], $config['schema']);
 			if ($existing === null || $this->canAccessConsent(consent: $existing) === false) {
+				return $this->consentNotFound();
+			}
+
+			if ($this->isConsentOfficer(uid: $this->userSession->getUser()->getUID()) === false) {
 				return new JSONResponse(
-					['error' => $this->l10n->t('Consent record not found')],
-					404
+					['error' => $this->l10n->t('Only a consent officer can record the outcome of a consent request.')],
+					Http::STATUS_FORBIDDEN
 				);
 			}
 
@@ -419,16 +474,36 @@ class ConsentController extends Controller {
 			);
 
 			return new JSONResponse($result);
-		} catch (\OCP\AppFramework\OCS\OCSForbiddenException $e) {
+		} catch (Exception $e) {
+			return $this->updateFailed(exception: $e);
+		}//end try
+
+	}//end update()
+
+	/**
+	 * Answer a failed consent update by the kind of failure.
+	 *
+	 * @param Exception $exception The failure.
+	 *
+	 * @return JSONResponse 400 for an undeclared status move or missing evidence, 403 for a
+	 *                      standing consent the caller may not change, otherwise the logged error.
+	 *
+	 * @spec openspec/specs/consent-management/spec.md
+	 */
+	private function updateFailed(Exception $exception): JSONResponse {
+		if ($exception instanceof \InvalidArgumentException) {
+			return new JSONResponse(['error' => $exception->getMessage()], Http::STATUS_BAD_REQUEST);
+		}
+
+		if ($exception instanceof \OCP\AppFramework\OCS\OCSForbiddenException) {
 			return new JSONResponse(
 				['error' => $this->l10n->t('You are not allowed to revoke or modify standing consents.')],
 				Http::STATUS_FORBIDDEN
 			);
-		} catch (Exception $e) {
-			return $this->errorResponse(message: 'Failed to update consent', exception: $e);
-		}//end try
+		}
 
-	}//end update()
+		return $this->errorResponse(message: 'Failed to update consent', exception: $exception);
+	}//end updateFailed()
 
 	/**
 	 * Get all consent records for a specific document
@@ -444,34 +519,19 @@ class ConsentController extends Controller {
 	 */
 	public function byDocument(string $documentId): JSONResponse {
 		try {
-			$user = $this->userSession->getUser();
-			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Not authenticated')],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+			$request = $this->signedInConsentRequest();
+			if ($request instanceof JSONResponse) {
+				return $request;
 			}
 
-			$config = $this->crudService->getConsentConfig();
-			if ($config === null) {
-				return $this->notConfiguredResponse();
-			}
-
-			// Same as index(): bound once by the guard above, so no second
+			// Same as index(): bound once by the guard, so no second
 			// getUser() and no re-check.
-			$uid = $user->getUID();
-			$isAdmin = ($this->groupManager->isAdmin($uid) === true);
-
-			$filterUid = $uid;
-			if ($isAdmin === true) {
-				$filterUid = null;
-			}
-
+			$config = $request['config'];
 			$consents = $this->crudService->getConsentsByDocument(
 				$documentId,
 				$config['register'],
 				$config['schema'],
-				$filterUid
+				$this->ownerFilter(uid: $request['user']->getUID())
 			);
 
 			return new JSONResponse($consents);

@@ -31,8 +31,7 @@ phpmetrics/
 # Claude Code
 /.claude/
 /CLAUDE.md
-# SBOM is published as release asset (see SECURITY.md), not stored in repo
-sbom.cdx.json
+# Intermediate SBOM files. The merged sbom.cdx.json at the root is committed.
 bom-php.cdx.json
 bom-npm.cdx.json
 # Playwright (journeydoc / ADR-030)
@@ -62,3 +61,6 @@ Thumbs.db
 .stale/
 /.e2e-state/
 .phpunit.cache
+
+# Agent work files. They belong in an issue or a PR, not in the tree.
+/task-audit.json

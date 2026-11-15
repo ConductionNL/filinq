@@ -3,6 +3,9 @@
 /**
  * Filinq Metrics Engine Factory
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Builds OpenRegister's AppHost `MetricsEngine` explicitly from the server
  * container. OpenRegister's own MetricsEngine factory is registered under the
  * `openregister` app container and is not visible here, so the engine and each
@@ -27,9 +30,6 @@
  * @link      https://www.filinq.app
  *
  * @spec openspec/specs/adopt-apphost/spec.md
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);

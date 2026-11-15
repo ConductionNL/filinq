@@ -12,7 +12,9 @@
 			class="filinq-documents-leaf__state filinq-documents-leaf__state--error">
 			{{ t('filinq', 'The documents could not be loaded') }}
 		</p>
-		<p v-else-if="rows.length === 0 && !carded" class="filinq-documents-leaf__state">
+		<p
+			v-else-if="rows.length === 0 && !carded"
+			class="filinq-documents-leaf__state">
 			{{ t('filinq', 'No documents yet') }}
 		</p>
 		<ul v-else-if="rows.length > 0" class="filinq-documents-leaf__list">
@@ -36,6 +38,8 @@
 <script>
 import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
+import { documentLinkRows } from './documentLinkRows.js'
+import { hostObjectLeaf } from './hostObjectLeaf.js'
 import { leafReportMixin } from './leafReport.js'
 
 /**
@@ -49,15 +53,8 @@ import { leafReportMixin } from './leafReport.js'
 export default {
 	name: 'CnFilinqDocumentsWidget',
 
+	extends: hostObjectLeaf,
 	mixins: [leafReportMixin],
-	props: {
-		/** The host object's register slug. */
-		register: { type: String, default: '' },
-		/** The host object's schema slug. */
-		schema: { type: String, default: '' },
-		/** The host object's id. */
-		objectId: { type: String, default: '' },
-	},
 
 	data() {
 		return {
@@ -72,14 +69,14 @@ export default {
 		 * What this leaf reports to a carding host or a "linked" card.
 		 *
 		 * @return {object} The report.
-		 * @spec openspec/changes/leaves-library-card/specs/leaves-library-card/spec.md#requirement-the-documents-leaf-reports-to-the-library-card-and-the-linked-card
+		 * @spec openspec/specs/leaves-library-card/spec.md#requirement-the-documents-leaf-reports-to-the-library-card-and-the-linked-card
 		 */
 		leafReport() {
 			return {
 				count: this.rows.length,
 				emptyLabel: t('filinq', 'No documents yet'),
 				noun: t('filinq', 'documents'),
-				rows: this.rows.map((row) => ({ label: row.name, href: this.fileLink(row), icon: 'FileDocumentOutline' })),
+				rows: documentLinkRows(this.rows),
 			}
 		},
 	},
@@ -108,60 +105,8 @@ export default {
 		 *
 		 * @spec openspec/changes/leaf-integrations/specs/document-register/spec.md
 		 */
-		async load() {
-			// Without an object there is nothing to list, and asking anyway
-			// would return the caller's whole document set, which is not what
-			// a per-object leaf means.
-			if (this.objectId === '') {
-				this.loading = false
-				return
-			}
-
-			const query = new URLSearchParams({
-				register: this.register,
-				schema: this.schema,
-				id: this.objectId,
-			})
-
-			try {
-				const response = await fetch(
-					generateUrl('/apps/filinq/api/case-documents/files')
-						+ '?'
-						+ query.toString(),
-					{
-						headers: {
-							requesttoken: this.requestToken(),
-							Accept: 'application/json',
-						},
-					},
-				)
-				if (response.ok === false) {
-					this.error = true
-					return
-				}
-				const body = await response.json()
-				this.rows = Array.isArray(body.results) ? body.results : []
-			} catch {
-				this.error = true
-			} finally {
-				this.loading = false
-			}
-		},
-
-		/**
-		 * The current page's request token.
-		 *
-		 * Read from the DOM rather than from `@nextcloud/auth`, because this
-		 * component renders inside ANOTHER app's page and must not assume the
-		 * host bundled the same helper.
-		 *
-		 * @return {string} The token, or an empty string when there is none.
-		 *
-		 * @spec openspec/changes/leaf-integrations/specs/document-register/spec.md
-		 */
-		requestToken() {
-			const head = document.getElementsByTagName('head')[0]
-			return (head && head.getAttribute('data-requesttoken')) || ''
+		load() {
+			return this.loadHostRows('/apps/filinq/api/case-documents/files')
 		},
 	},
 }

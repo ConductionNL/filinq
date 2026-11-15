@@ -19,6 +19,10 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\Signing;
 
+use OCA\Filinq\Kernel\Contracts\LibreSignCompletionInterface;
+use OCA\Filinq\Kernel\SigningAuditActor;
+use OCA\Filinq\Kernel\SigningAuditEvent;
+use OCA\Filinq\Kernel\SigningAuditSubject;
 use OCA\Filinq\Service\SettingsService;
 use OCA\Filinq\Service\SignedArtifactProducer;
 use OCA\Filinq\Service\SigningAuditService;
@@ -43,8 +47,12 @@ use Throwable;
  * @link     https://www.filinq.app
  *
  * @spec openspec/specs/libresign-signing-provider/spec.md
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Three of its types are the
+ * audit event's value objects (SigningAuditEvent, SigningAuditSubject,
+ * SigningAuditActor): the completion writes one audit entry per concluded request.
  */
-class LibreSignCompletion {
+class LibreSignCompletion implements LibreSignCompletionInterface {
 
 	/**
 	 * Constructor
@@ -93,7 +101,8 @@ class LibreSignCompletion {
 		$concluded = 0;
 		foreach (['PENDING', 'IN_PROGRESS'] as $status) {
 			$found = $objects->findAll(
-				['filters' => ['register' => $binding['register'], 'schema' => $binding['schema'], 'status' => $status]]
+				['filters' => ['register' => $binding['register'], 'schema' => $binding['schema'], 'status' => $status]],
+				_rbac: false
 			);
 			foreach ($found as $result) {
 				$request = $this->toArray(result: $result);
@@ -132,7 +141,7 @@ class LibreSignCompletion {
 
 		if ($state['status'] === 'CANCELLED') {
 			$request['status'] = 'CANCELLED';
-			$objects->saveObject(object: $request, register: $binding['register'], schema: $binding['schema']);
+			$objects->saveObject(object: $request, register: $binding['register'], schema: $binding['schema'], _rbac: false);
 			$this->record(request: $request, action: 'CANCELLED', metadata: $metadata);
 			$this->emitter->emitIfDelegated(request: $request, status: 'cancelled');
 			return 1;
@@ -146,14 +155,14 @@ class LibreSignCompletion {
 		if ($request['status'] === 'PENDING') {
 			$request['status'] = 'IN_PROGRESS';
 			$request = $this->toArray(
-				result: $objects->saveObject(object: $request, register: $binding['register'], schema: $binding['schema'])
+				result: $objects->saveObject(object: $request, register: $binding['register'], schema: $binding['schema'], _rbac: false)
 			);
 		}
 
 		$reference = $this->producer->produce(request: $request);
 		$request['status'] = 'COMPLETED';
 		$request['signedDocumentRef'] = $reference;
-		$objects->saveObject(object: $request, register: $binding['register'], schema: $binding['schema']);
+		$objects->saveObject(object: $request, register: $binding['register'], schema: $binding['schema'], _rbac: false);
 		$this->record(request: $request, action: 'COMPLETED', metadata: $metadata);
 		$this->emitter->emitIfDelegated(request: $request, status: 'signed', signedDocumentRef: $reference);
 
@@ -172,14 +181,16 @@ class LibreSignCompletion {
 	 */
 	private function record(array $request, string $action, array $metadata): void {
 		$this->audit->logEvent(
-			signingRequestId: (string)($request['id'] ?? $request['uuid'] ?? ''),
-			action: $action,
-			actorUserId: 'system',
-			actorDisplayName: 'LibreSign',
-			ipAddress: '127.0.0.1',
-			signatureLevel: (string)($request['signatureLevel'] ?? ''),
-			provider: LibreSignProvider::IDENTIFIER,
-			metadata: $metadata
+			event: new SigningAuditEvent(
+				request: new SigningAuditSubject(
+					id: (string)($request['id'] ?? $request['uuid'] ?? ''),
+					signatureLevel: (string)($request['signatureLevel'] ?? ''),
+					provider: LibreSignProvider::IDENTIFIER
+				),
+				action: $action,
+				actor: new SigningAuditActor(userId: 'system', displayName: 'LibreSign', ipAddress: '127.0.0.1'),
+				metadata: $metadata
+			)
 		);
 
 	}//end record()

@@ -25,6 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\PrintJobFileStoreInterface;
 use OCP\Files\IAppData;
 use OCP\Files\NotFoundException;
 use OCP\Files\SimpleFS\ISimpleFolder;
@@ -41,12 +42,7 @@ use ZipArchive;
  *
  * @spec openspec/specs/print-preview/spec.md
  */
-class PrintJobFileStore {
-
-	/**
-	 * The app data folder holding every print job PDF.
-	 */
-	public const FOLDER = 'print-jobs';
+class PrintJobFileStore implements PrintJobFileStoreInterface {
 
 	/**
 	 * Constructor.

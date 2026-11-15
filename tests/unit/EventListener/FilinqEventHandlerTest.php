@@ -29,6 +29,8 @@ namespace OCA\Filinq\Tests\Unit\EventListener;
 
 use OCA\Filinq\EventListener\EnrichmentRunner;
 use OCA\Filinq\EventListener\FilinqEventHandler;
+use OCA\Filinq\EventListener\ObjectEventServices;
+use OCA\Filinq\Kernel\Contracts\LegalBasesSummaryServiceInterface;
 use OCA\Filinq\Service\LegalBasesSummaryService;
 use OCA\Filinq\Service\MetadataService;
 use OCA\Filinq\Service\PolicyRetroactiveService;
@@ -117,6 +119,21 @@ class FilinqEventHandlerTest extends TestCase {
 		);
 
 	}//end setUp()
+
+	/**
+	 * The services the handler is called with.
+	 *
+	 * @return ObjectEventServices
+	 */
+	private function services(): ObjectEventServices {
+		return new ObjectEventServices(
+			metadataService: $this->metadataService,
+			settingsService: $this->settingsService,
+			logger: $this->logger,
+			retroactive: $this->retroactive
+		);
+
+	}//end services()
 
 	/**
 	 * Build an ObjectEntity carrying the supplied payload.
@@ -220,10 +237,7 @@ class FilinqEventHandlerTest extends TestCase {
 
 		$this->handler->handleObjectCreated(
 			new ObjectCreatedEvent(null),
-			$this->metadataService,
-			$this->settingsService,
-			$this->logger,
-			$this->retroactive
+			$this->services()
 		);
 
 	}//end testHandleObjectCreatedWithNullObjectWarnsAndSkips()
@@ -240,9 +254,9 @@ class FilinqEventHandlerTest extends TestCase {
 			->method('enrichObject')
 			->with(
 				$this->identicalTo($object),
-				$this->identicalTo($this->metadataService),
-				$this->identicalTo($this->settingsService),
-				$this->identicalTo($this->logger),
+				$this->callback(fn (ObjectEventServices $services): bool => $services->metadataService === $this->metadataService
+					&& $services->settingsService === $this->settingsService
+					&& $services->logger === $this->logger),
 				$this->identicalTo('new object')
 			);
 		$this->retroactive->expects($this->never())->method('applyProhibitionMutation');
@@ -251,10 +265,7 @@ class FilinqEventHandlerTest extends TestCase {
 
 		$this->handler->handleObjectCreated(
 			new ObjectCreatedEvent($object),
-			$this->metadataService,
-			$this->settingsService,
-			$this->logger,
-			$this->retroactive
+			$this->services()
 		);
 
 	}//end testHandleObjectCreatedEnrichesPlainObject()
@@ -281,10 +292,7 @@ class FilinqEventHandlerTest extends TestCase {
 
 		$this->handler->handleObjectCreated(
 			new ObjectCreatedEvent($this->makeObject($payload)),
-			$this->metadataService,
-			$this->settingsService,
-			$this->logger,
-			$this->retroactive
+			$this->services()
 		);
 
 	}//end testHandleObjectCreatedDispatchesProhibitionMutation()
@@ -302,10 +310,7 @@ class FilinqEventHandlerTest extends TestCase {
 
 		$this->handler->handleObjectCreated(
 			new ObjectCreatedEvent($this->makeObject($this->prohibitionPayload())),
-			$this->metadataService,
-			$this->settingsService,
-			$this->logger,
-			$this->retroactive
+			$this->services()
 		);
 
 	}//end testProhibitionResolvingNoRecordsLogsNothing()
@@ -323,10 +328,7 @@ class FilinqEventHandlerTest extends TestCase {
 
 		$this->handler->handleObjectCreated(
 			new ObjectCreatedEvent($this->makeObject($payload)),
-			$this->metadataService,
-			$this->settingsService,
-			$this->logger,
-			$this->retroactive
+			$this->services()
 		);
 
 	}//end testStandingConsentDispatchesStandingConsentMutation()
@@ -351,10 +353,7 @@ class FilinqEventHandlerTest extends TestCase {
 
 		$this->handler->handleObjectCreated(
 			new ObjectCreatedEvent($this->makeObject($payload)),
-			$this->metadataService,
-			$this->settingsService,
-			$this->logger,
-			$this->retroactive
+			$this->services()
 		);
 
 	}//end testDocumentScopedConsentIsARetroactiveNoOp()
@@ -387,10 +386,7 @@ class FilinqEventHandlerTest extends TestCase {
 
 		$this->handler->handleObjectCreated(
 			new ObjectCreatedEvent($this->makeObject($payload)),
-			$this->metadataService,
-			$this->settingsService,
-			$this->logger,
-			$this->retroactive
+			$this->services()
 		);
 
 	}//end testPayloadsFailingTheProhibitionSignatureAreNotDispatched()
@@ -425,10 +421,7 @@ class FilinqEventHandlerTest extends TestCase {
 
 		$this->handler->handleObjectCreated(
 			new ObjectCreatedEvent($this->makeObject($payload)),
-			$this->metadataService,
-			$this->settingsService,
-			$this->logger,
-			$this->retroactive
+			$this->services()
 		);
 
 	}//end testLegalAuthorityAloneIdentifiesAProhibition()
@@ -454,10 +447,7 @@ class FilinqEventHandlerTest extends TestCase {
 
 		$this->handler->handleObjectCreated(
 			new ObjectCreatedEvent($this->makeObject($payload)),
-			$this->metadataService,
-			$this->settingsService,
-			$this->logger,
-			$this->retroactive
+			$this->services()
 		);
 
 	}//end testConsentStatusOutranksTheProhibitionSignature()
@@ -481,10 +471,7 @@ class FilinqEventHandlerTest extends TestCase {
 
 		$this->handler->handleObjectCreated(
 			new ObjectCreatedEvent($this->makeObject($this->prohibitionPayload())),
-			$this->metadataService,
-			$this->settingsService,
-			$this->logger,
-			$this->retroactive
+			$this->services()
 		);
 
 	}//end testRetroactiveFailureIsLoggedAndEnrichmentStillRuns()
@@ -502,10 +489,7 @@ class FilinqEventHandlerTest extends TestCase {
 
 		$this->handler->handleObjectUpdated(
 			new ObjectUpdatedEvent(null, $this->makeObject(['title' => 'old'])),
-			$this->metadataService,
-			$this->settingsService,
-			$this->logger,
-			$this->retroactive
+			$this->services()
 		);
 
 	}//end testHandleObjectUpdatedWithNullObjectWarnsAndSkips()
@@ -529,10 +513,7 @@ class FilinqEventHandlerTest extends TestCase {
 
 		$this->handler->handleObjectUpdated(
 			new ObjectUpdatedEvent($this->makeObject($payload), $this->makeObject($old)),
-			$this->metadataService,
-			$this->settingsService,
-			$this->logger,
-			$this->retroactive
+			$this->services()
 		);
 
 	}//end testHandleObjectUpdatedSkipsEnrichmentWhenContentIsUnchanged()
@@ -556,10 +537,7 @@ class FilinqEventHandlerTest extends TestCase {
 
 		$this->handler->handleObjectUpdated(
 			new ObjectUpdatedEvent($this->makeObject($payload), $this->makeObject($old)),
-			$this->metadataService,
-			$this->settingsService,
-			$this->logger,
-			$this->retroactive
+			$this->services()
 		);
 
 	}//end testAnUnchangedUpdateIsStillOfferedToClassification()
@@ -584,18 +562,15 @@ class FilinqEventHandlerTest extends TestCase {
 			->method('enrichObject')
 			->with(
 				$this->identicalTo($newObject),
-				$this->identicalTo($this->metadataService),
-				$this->identicalTo($this->settingsService),
-				$this->identicalTo($this->logger),
+				$this->callback(fn (ObjectEventServices $services): bool => $services->metadataService === $this->metadataService
+					&& $services->settingsService === $this->settingsService
+					&& $services->logger === $this->logger),
 				$this->identicalTo('updated object')
 			);
 
 		$this->handler->handleObjectUpdated(
 			new ObjectUpdatedEvent($newObject, $this->makeObject($old)),
-			$this->metadataService,
-			$this->settingsService,
-			$this->logger,
-			$this->retroactive
+			$this->services()
 		);
 
 	}//end testHandleObjectUpdatedEnrichesWhenAContentFieldChanges()
@@ -627,10 +602,7 @@ class FilinqEventHandlerTest extends TestCase {
 
 		$this->handler->handleObjectUpdated(
 			new ObjectUpdatedEvent($this->makeObject(['title' => 'New']), null),
-			$this->metadataService,
-			$this->settingsService,
-			$this->logger,
-			$this->retroactive
+			$this->services()
 		);
 
 	}//end testHandleObjectUpdatedTreatsAMissingOldObjectAsEmpty()
@@ -656,10 +628,7 @@ class FilinqEventHandlerTest extends TestCase {
 
 		$this->handler->handleObjectUpdated(
 			new ObjectUpdatedEvent($this->makeObject($payload), $this->makeObject($payload)),
-			$this->metadataService,
-			$this->settingsService,
-			$this->logger,
-			$this->retroactive
+			$this->services()
 		);
 
 	}//end testHandleObjectUpdatedDispatchesProhibitionWithUpdatedReason()
@@ -674,17 +643,14 @@ class FilinqEventHandlerTest extends TestCase {
 		$summaryService->expects($this->once())
 			->method('renderDossierSummary')
 			->with($this->identicalTo('dossier-uuid'));
-		$this->installContainer(LegalBasesSummaryService::class, $summaryService);
+		$this->installContainer(LegalBasesSummaryServiceInterface::class, $summaryService);
 
 		$this->handler->handleObjectUpdated(
 			new ObjectUpdatedEvent(
 				$this->makeObject($this->dossierPayload()),
 				$this->makeObject($this->dossierPayload('2026-01-01T00:00:00+00:00'))
 			),
-			$this->metadataService,
-			$this->settingsService,
-			$this->logger,
-			$this->retroactive
+			$this->services()
 		);
 
 	}//end testDossierCheckedOnChangeTriggersSummaryRegen()
@@ -697,7 +663,7 @@ class FilinqEventHandlerTest extends TestCase {
 	public function testRegenSkippedWhenAutoRegenOnReviewIsDisabled(): void {
 		$summaryService = $this->createMock(originalClassName: LegalBasesSummaryService::class);
 		$summaryService->expects($this->never())->method('renderDossierSummary');
-		$this->installContainer(LegalBasesSummaryService::class, $summaryService);
+		$this->installContainer(LegalBasesSummaryServiceInterface::class, $summaryService);
 
 		$payload = $this->dossierPayload(
 			extra: ['configuration' => ['grondslagen' => ['autoRegenOnReview' => false]]]
@@ -705,10 +671,7 @@ class FilinqEventHandlerTest extends TestCase {
 
 		$this->handler->handleObjectUpdated(
 			new ObjectUpdatedEvent($this->makeObject($payload), $this->makeObject($this->dossierPayload('2026-01-01'))),
-			$this->metadataService,
-			$this->settingsService,
-			$this->logger,
-			$this->retroactive
+			$this->services()
 		);
 
 	}//end testRegenSkippedWhenAutoRegenOnReviewIsDisabled()
@@ -728,17 +691,14 @@ class FilinqEventHandlerTest extends TestCase {
 	public function testAutoRegenDefaultsToEnabled(array $extra): void {
 		$summaryService = $this->createMock(originalClassName: LegalBasesSummaryService::class);
 		$summaryService->expects($this->once())->method('renderDossierSummary');
-		$this->installContainer(LegalBasesSummaryService::class, $summaryService);
+		$this->installContainer(LegalBasesSummaryServiceInterface::class, $summaryService);
 
 		$this->handler->handleObjectUpdated(
 			new ObjectUpdatedEvent(
 				$this->makeObject($this->dossierPayload(extra: $extra)),
 				$this->makeObject($this->dossierPayload('2026-01-01'))
 			),
-			$this->metadataService,
-			$this->settingsService,
-			$this->logger,
-			$this->retroactive
+			$this->services()
 		);
 
 	}//end testAutoRegenDefaultsToEnabled()
@@ -774,17 +734,14 @@ class FilinqEventHandlerTest extends TestCase {
 	): void {
 		$summaryService = $this->createMock(originalClassName: LegalBasesSummaryService::class);
 		$summaryService->expects($this->never())->method('renderDossierSummary');
-		$this->installContainer(LegalBasesSummaryService::class, $summaryService);
+		$this->installContainer(LegalBasesSummaryServiceInterface::class, $summaryService);
 
 		$this->handler->handleObjectUpdated(
 			new ObjectUpdatedEvent(
 				$this->makeObject($this->dossierPayload($newCheckedOn)),
 				$this->makeObject($this->dossierPayload($oldCheckedOn))
 			),
-			$this->metadataService,
-			$this->settingsService,
-			$this->logger,
-			$this->retroactive
+			$this->services()
 		);
 
 	}//end testRegenSkippedWhenCheckedOnDidNotChangeToAValue()
@@ -813,14 +770,11 @@ class FilinqEventHandlerTest extends TestCase {
 	public function testRegenSkippedForNonDossierShapes(array $payload): void {
 		$summaryService = $this->createMock(originalClassName: LegalBasesSummaryService::class);
 		$summaryService->expects($this->never())->method('renderDossierSummary');
-		$this->installContainer(LegalBasesSummaryService::class, $summaryService);
+		$this->installContainer(LegalBasesSummaryServiceInterface::class, $summaryService);
 
 		$this->handler->handleObjectUpdated(
 			new ObjectUpdatedEvent($this->makeObject($payload), $this->makeObject([])),
-			$this->metadataService,
-			$this->settingsService,
-			$this->logger,
-			$this->retroactive
+			$this->services()
 		);
 
 	}//end testRegenSkippedForNonDossierShapes()
@@ -853,7 +807,7 @@ class FilinqEventHandlerTest extends TestCase {
 		$summaryService->expects($this->once())
 			->method('renderDossierSummary')
 			->with($this->identicalTo($expected));
-		$this->installContainer(LegalBasesSummaryService::class, $summaryService);
+		$this->installContainer(LegalBasesSummaryServiceInterface::class, $summaryService);
 
 		$payload = [
 			'name' => 'Dossier A',
@@ -866,10 +820,7 @@ class FilinqEventHandlerTest extends TestCase {
 				$this->makeObject(array_merge($payload, $extra)),
 				$this->makeObject([])
 			),
-			$this->metadataService,
-			$this->settingsService,
-			$this->logger,
-			$this->retroactive
+			$this->services()
 		);
 
 	}//end testDossierUuidIsResolvedThroughItsFallbacks()
@@ -896,7 +847,7 @@ class FilinqEventHandlerTest extends TestCase {
 	public function testDossierWithoutAUuidWarnsAndSkipsRegen(): void {
 		$summaryService = $this->createMock(originalClassName: LegalBasesSummaryService::class);
 		$summaryService->expects($this->never())->method('renderDossierSummary');
-		$this->installContainer(LegalBasesSummaryService::class, $summaryService);
+		$this->installContainer(LegalBasesSummaryServiceInterface::class, $summaryService);
 
 		$this->logger->expects($this->once())
 			->method('warning')
@@ -906,10 +857,7 @@ class FilinqEventHandlerTest extends TestCase {
 
 		$this->handler->handleObjectUpdated(
 			new ObjectUpdatedEvent($this->makeObject($payload), $this->makeObject([])),
-			$this->metadataService,
-			$this->settingsService,
-			$this->logger,
-			$this->retroactive
+			$this->services()
 		);
 
 	}//end testDossierWithoutAUuidWarnsAndSkipsRegen()
@@ -924,7 +872,7 @@ class FilinqEventHandlerTest extends TestCase {
 		$summaryService->expects($this->once())
 			->method('renderDossierSummary')
 			->willThrowException(new \RuntimeException('render failed'));
-		$this->installContainer(LegalBasesSummaryService::class, $summaryService);
+		$this->installContainer(LegalBasesSummaryServiceInterface::class, $summaryService);
 
 		$this->logger->expects($this->once())
 			->method('warning')
@@ -942,10 +890,7 @@ class FilinqEventHandlerTest extends TestCase {
 				$this->makeObject($new),
 				$this->makeObject($this->dossierPayload('2026-01-01'))
 			),
-			$this->metadataService,
-			$this->settingsService,
-			$this->logger,
-			$this->retroactive
+			$this->services()
 		);
 
 	}//end testRegenFailureIsLoggedAndTheUpdateStillEnriches()
@@ -964,8 +909,7 @@ class FilinqEventHandlerTest extends TestCase {
 
 		$this->handler->handleObjectDeleted(
 			new ObjectDeletedEvent(null),
-			$this->logger,
-			$this->retroactive
+			$this->services()
 		);
 
 	}//end testHandleObjectDeletedWithNullObjectWarnsAndSkips()
@@ -994,8 +938,7 @@ class FilinqEventHandlerTest extends TestCase {
 			new ObjectDeletedEvent(
 				$this->makeObject(['title' => 'gone'], 'uuid-9', 'register-9', 'schema-9')
 			),
-			$this->logger,
-			$this->retroactive
+			$this->services()
 		);
 
 	}//end testHandleObjectDeletedLogsTheObjectContext()
@@ -1019,8 +962,7 @@ class FilinqEventHandlerTest extends TestCase {
 
 		$this->handler->handleObjectDeleted(
 			new ObjectDeletedEvent($this->makeObject($payload)),
-			$this->logger,
-			$this->retroactive
+			$this->services()
 		);
 
 	}//end testDeletingAPolicyRuleAppliesRuleRemoval()
@@ -1051,8 +993,7 @@ class FilinqEventHandlerTest extends TestCase {
 
 		$this->handler->handleObjectDeleted(
 			new ObjectDeletedEvent($this->makeObject(['consentStatus' => 'granted', 'scope' => 'document'])),
-			$this->logger,
-			$this->retroactive
+			$this->services()
 		);
 
 	}//end testDeletingADocumentConsentIsARetroactiveNoOp()
@@ -1075,8 +1016,7 @@ class FilinqEventHandlerTest extends TestCase {
 
 		$this->handler->handleObjectDeleted(
 			new ObjectDeletedEvent($this->makeObject(['matchRules' => [['f' => 'a']], 'reason' => 'Privacy'])),
-			$this->logger,
-			$this->retroactive
+			$this->services()
 		);
 
 	}//end testFailingRuleRemovalOnDeleteIsLogged()

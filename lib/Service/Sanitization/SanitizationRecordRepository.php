@@ -56,7 +56,13 @@ class SanitizationRecordRepository {
 	 * @spec openspec/changes/document-sanitization/tasks.md#3-1
 	 */
 	public function save(array $record): array {
-		$stored = $this->objectResolver->resolve()->saveObject(object: $record, register: 'filinq', schema: self::SCHEMA);
+		$stored = $this->objectResolver->resolve()->saveObject(
+			object: $record,
+			register: 'filinq',
+			schema: self::SCHEMA,
+			_rbac: false,
+			_unowned: true
+		);
 
 		return $this->normalise(row: $stored);
 

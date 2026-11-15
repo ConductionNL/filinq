@@ -1,0 +1,216 @@
+{
+    "a clean report": [
+        {
+            "ConformanceService::isAvailable": []
+        },
+        {
+            "ConformanceService::checkFile": {
+                "file": "double File",
+                "trigger": "validation"
+            }
+        },
+        {
+            "result": []
+        }
+    ],
+    "both checks off": [
+        {
+            "result": []
+        }
+    ],
+    "both findings": [
+        {
+            "ConformanceService::isAvailable": []
+        },
+        {
+            "ConformanceService::checkFile": {
+                "file": "double File",
+                "trigger": "validation"
+            }
+        },
+        {
+            "result": [
+                {
+                    "checkId": "pdfa-conformance-failed",
+                    "category": "archival",
+                    "severity": "blocking",
+                    "message": "The PDF does not meet PDF/A-{flavour}: {failedRuleCount} rules fail, such as {rules}.",
+                    "params": {
+                        "flavour": "3b",
+                        "failedRuleCount": 4,
+                        "rules": "6.1.2, 6.2.11, 6.3.5"
+                    },
+                    "guidance": "reexport"
+                },
+                {
+                    "checkId": "pdfa-font-not-embedded",
+                    "category": "archival",
+                    "severity": "warning",
+                    "message": "Fonts used but not embedded: {fonts}. An e-depot rejects this PDF.",
+                    "params": {
+                        "fonts": "Arial, Calibri"
+                    },
+                    "guidance": "reexport"
+                }
+            ]
+        }
+    ],
+    "conformance only": [
+        {
+            "ConformanceService::isAvailable": []
+        },
+        {
+            "ConformanceService::checkFile": {
+                "file": "double File",
+                "trigger": "validation"
+            }
+        },
+        {
+            "result": [
+                {
+                    "checkId": "pdfa-conformance-failed",
+                    "category": "archival",
+                    "severity": "warning",
+                    "message": "The PDF does not meet PDF/A-{flavour}: {failedRuleCount} rules fail, such as {rules}.",
+                    "params": {
+                        "flavour": "3b",
+                        "failedRuleCount": 4,
+                        "rules": "6.1.2, 6.2.11, 6.3.5"
+                    },
+                    "guidance": "reexport"
+                }
+            ]
+        }
+    ],
+    "fonts only": [
+        {
+            "ConformanceService::isAvailable": []
+        },
+        {
+            "ConformanceService::checkFile": {
+                "file": "double File",
+                "trigger": "validation"
+            }
+        },
+        {
+            "result": [
+                {
+                    "checkId": "pdfa-font-not-embedded",
+                    "category": "archival",
+                    "severity": "blocking",
+                    "message": "Fonts used but not embedded: {fonts}. An e-depot rejects this PDF.",
+                    "params": {
+                        "fonts": "Arial, Calibri"
+                    },
+                    "guidance": "reexport"
+                }
+            ]
+        }
+    ],
+    "no validator": [
+        {
+            "result": [
+                {
+                    "checkId": "archival-validator-unavailable",
+                    "category": "archival",
+                    "severity": "warning",
+                    "message": "The PDF/A validator is not available, so this PDF was not checked against PDF/A.",
+                    "params": []
+                }
+            ]
+        }
+    ],
+    "not a PDF": [
+        {
+            "result": []
+        }
+    ],
+    "one rule fails, without guidance": [
+        {
+            "ConformanceService::isAvailable": []
+        },
+        {
+            "ConformanceService::checkFile": {
+                "file": "double File",
+                "trigger": "validation"
+            }
+        },
+        {
+            "result": [
+                {
+                    "checkId": "pdfa-conformance-failed",
+                    "category": "archival",
+                    "severity": "warning",
+                    "message": "The PDF does not meet PDF/A-{flavour}: {failedRuleCount} rules fail, such as {rules}.",
+                    "params": {
+                        "flavour": "3b",
+                        "failedRuleCount": 1,
+                        "rules": "6.1.2"
+                    }
+                }
+            ]
+        }
+    ],
+    "only fonts fail, without guidance": [
+        {
+            "ConformanceService::isAvailable": []
+        },
+        {
+            "ConformanceService::checkFile": {
+                "file": "double File",
+                "trigger": "validation"
+            }
+        },
+        {
+            "result": [
+                {
+                    "checkId": "pdfa-font-not-embedded",
+                    "category": "archival",
+                    "severity": "warning",
+                    "message": "Fonts used but not embedded: {fonts}. An e-depot rejects this PDF.",
+                    "params": {
+                        "fonts": "Arial"
+                    }
+                }
+            ]
+        }
+    ],
+    "validator fails": [
+        {
+            "ConformanceService::isAvailable": []
+        },
+        {
+            "ConformanceService::checkFile": {
+                "file": "double File",
+                "trigger": "validation"
+            }
+        },
+        {
+            "result": [
+                {
+                    "checkId": "archival-validator-unavailable",
+                    "category": "archival",
+                    "severity": "warning",
+                    "message": "The PDF/A validator is not available, so this PDF was not checked against PDF/A.",
+                    "params": []
+                }
+            ]
+        }
+    ],
+    "validator switched off": [
+        {
+            "ConformanceService::isAvailable": []
+        },
+        {
+            "result": [
+                {
+                    "checkId": "archival-validator-unavailable",
+                    "category": "archival",
+                    "severity": "warning",
+                    "message": "The PDF/A validator is not available, so this PDF was not checked against PDF/A.",
+                    "params": []
+                }
+            ]
+        }
+    ]
+}

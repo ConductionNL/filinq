@@ -28,6 +28,8 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use Exception;
+use OCA\Filinq\Kernel\Contracts\MultiFormatOutputProducerInterface;
+use OCA\Filinq\Service\Support\DocumentOutput;
 use OCP\IURLGenerator;
 use Throwable;
 
@@ -42,13 +44,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  */
-class MultiFormatOutputProducer {
-	/**
-	 * The formats generation can make.
-	 *
-	 * @var string[]
-	 */
-	public const FORMATS = ['pdf', 'odf', 'docx', 'html'];
+class MultiFormatOutputProducer implements MultiFormatOutputProducerInterface {
 
 	/**
 	 * File extension per output format.
@@ -63,13 +59,26 @@ class MultiFormatOutputProducer {
 	];
 
 	/**
+	 * Files each output in the user's Files.
+	 *
+	 * @var DocumentStorageService
+	 */
+	private readonly DocumentStorageService $storage;
+
+	/**
+	 * Writes the one generatedDocument entry.
+	 *
+	 * @var GeneratedDocumentLogger
+	 */
+	private readonly GeneratedDocumentLogger $auditLog;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param DocumentService                    $documents      Renders the template (its preview path: the same render, no audit entry).
 	 * @param TemplateService                    $templates      Reads the template.
 	 * @param DocumentRenderPipeline             $renderPipeline Converts the rendered HTML per format.
-	 * @param DocumentStorageService             $storage        Files each output in the user's Files.
-	 * @param GeneratedDocumentLogger            $auditLog       Writes the one generatedDocument entry.
+	 * @param DocumentOutput $output The document store and the generation log.
 	 * @param PlainLanguageRenditionService|null $plainRendition Tells whether the template has a plain-language counterpart.
 	 * @param IURLGenerator|null                 $urls           Makes the download URLs absolute.
 	 */
@@ -77,11 +86,12 @@ class MultiFormatOutputProducer {
 		private readonly DocumentService $documents,
 		private readonly TemplateService $templates,
 		private readonly DocumentRenderPipeline $renderPipeline,
-		private readonly DocumentStorageService $storage,
-		private readonly GeneratedDocumentLogger $auditLog,
+		DocumentOutput $output,
 		private readonly ?PlainLanguageRenditionService $plainRendition = null,
 		private readonly ?IURLGenerator $urls = null,
 	) {
+		$this->storage = $output->storage;
+		$this->auditLog = $output->log;
 
 	}//end __construct()
 
@@ -106,20 +116,7 @@ class MultiFormatOutputProducer {
 	 */
 	public function generate(string $templateId, array $dataRefs, array $options): array {
 		$formats = $this->requestedFormats(options: $options);
-		$userId = (string) ($options['userId'] ?? '');
-		if ($userId === '') {
-			throw new Exception(message: 'options.userId is required to store generated documents in Files', code: 400);
-		}
-
-		if (isset($options['wizardContext']) === true) {
-			// A wizard run is checked and recorded by DocumentService::generateDocument(); this path would skip both.
-			throw new Exception(message: 'options.wizardContext cannot be combined with options.formats yet; use options.format', code: 400);
-		}
-
-		if (isset($options['templateVersion']) === true) {
-			// The formats share one head render; a pin it ignored would claim a version it did not render.
-			throw new Exception(message: 'options.templateVersion cannot be combined with options.formats yet; use options.format', code: 400);
-		}
+		$this->refuseUnsupportedOptions(options: $options);
 
 		$template = $this->templates->getTemplate(id: $templateId);
 		if ($this->plainRendition?->counterpartOf(template: $template) !== null) {
@@ -138,30 +135,25 @@ class MultiFormatOutputProducer {
 			$basename = 'document';
 		}
 
+		$job = new MultiFormatJob(template: $template + ['id' => $templateId], dataRefs: $dataRefs, formats: $formats, options: $options);
 		$produced = $this->produce(
-			html: $render['html'],
-			formats: $formats,
-			pdfOptions: $pdfOptions,
-			userId: $userId,
-			targetPath: $this->documents->buildOutputTargetPath(
-				templateId: $templateId,
-				explicitTargetPath: ($options['output']['targetPath'] ?? null),
-				template: $template
-			),
-			basename: $basename
+			job: $job,
+			rendering: [
+				'html' => $render['html'],
+				'pdfOptions' => $pdfOptions,
+				'targetPath' => $this->documents->buildOutputTargetPath(
+					templateId: $templateId,
+					explicitTargetPath: ($options['output']['targetPath'] ?? null),
+					template: $template
+				),
+				'basename' => $basename,
+			]
 		);
 		$warnings = array_values(array_unique(array_merge($render['warnings'], $produced['warnings'])));
 
 		return [
 			'outputs' => array_map(fn (array $output): array => $this->manifestEntry(output: $output), $produced['outputs']),
-			'metadata' => $this->record(
-				template: $template + ['id' => $templateId],
-				dataRefs: $dataRefs,
-				formats: $formats,
-				outputs: $produced['outputs'],
-				warnings: $warnings,
-				options: $options
-			),
+			'metadata' => $this->record(job: $job, produced: ['outputs' => $produced['outputs'], 'warnings' => $warnings]),
 			'warnings' => $warnings,
 		];
 
@@ -183,11 +175,42 @@ class MultiFormatOutputProducer {
 			throw new Exception(message: 'Use options.format or options.formats, not both', code: 400);
 		}
 
+		$formats = $this->formatList(options: $options);
+		$this->assertKnownFormats(formats: $formats);
+
+		return array_values(array_unique($formats));
+
+	}//end requestedFormats()
+
+	/**
+	 * The `formats` option, refused unless it is a non-empty list.
+	 *
+	 * @param array $options The generation options.
+	 *
+	 * @return array<int, mixed> The listed formats, not yet checked.
+	 *
+	 * @throws Exception 400 when `formats` is missing, empty or not a list.
+	 */
+	private function formatList(array $options): array {
 		$formats = ($options['formats'] ?? null);
 		if (is_array($formats) === false || $formats === [] || array_is_list($formats) === false) {
 			throw new Exception(message: 'options.formats must be a non-empty list of formats', code: 400);
 		}
 
+		return $formats;
+
+	}//end formatList()
+
+	/**
+	 * Refuse the first format that is not one of FORMATS.
+	 *
+	 * @param array<int, mixed> $formats The listed formats.
+	 *
+	 * @return void
+	 *
+	 * @throws Exception 400 naming the first unknown format.
+	 */
+	private function assertKnownFormats(array $formats): void {
 		foreach ($formats as $format) {
 			if (in_array($format, self::FORMATS, true) === false) {
 				throw new Exception(
@@ -197,41 +220,56 @@ class MultiFormatOutputProducer {
 			}
 		}
 
-		return array_values(array_unique($formats));
+	}//end assertKnownFormats()
 
-	}//end requestedFormats()
+	/**
+	 * Refuse the options a multi-format job cannot honour yet.
+	 *
+	 * @param array $options The generation options.
+	 *
+	 * @return void
+	 *
+	 * @throws Exception 400 without a user, with a wizard context or with a pinned template version.
+	 */
+	private function refuseUnsupportedOptions(array $options): void {
+		if ((string) ($options['userId'] ?? '') === '') {
+			throw new Exception(message: 'options.userId is required to store generated documents in Files', code: 400);
+		}
+
+		if (isset($options['wizardContext']) === true) {
+			// A wizard run is checked and recorded by DocumentService::generateDocument(); this path would skip both.
+			throw new Exception(message: 'options.wizardContext cannot be combined with options.formats yet; use options.format', code: 400);
+		}
+
+		if (isset($options['templateVersion']) === true) {
+			// The formats share one head render; a pin it ignored would claim a version it did not render.
+			throw new Exception(message: 'options.templateVersion cannot be combined with options.formats yet; use options.format', code: 400);
+		}
+
+	}//end refuseUnsupportedOptions()
 
 	/**
 	 * Convert the rendered HTML to every format and file each result.
 	 *
-	 * @param string   $html       The rendered HTML (the one render).
-	 * @param string[] $formats    The formats.
-	 * @param array    $pdfOptions The PDF options for the pdf output.
-	 * @param string   $userId     Whose Files the outputs go in.
-	 * @param string   $targetPath The folder, relative to the user's Files.
-	 * @param string   $basename   The file name without extension.
+	 * @param MultiFormatJob $job       The formats and whose Files the outputs go in.
+	 * @param array{html: string, pdfOptions: array, targetPath: string, basename: string} $rendering The rendered
+	 *        HTML (the one render), the PDF options, the folder relative to the user's Files and the file name
+	 *        without extension.
 	 *
 	 * @return array{outputs: array<int, array<string, mixed>>, warnings: string[]}
 	 */
-	private function produce(
-		string $html,
-		array $formats,
-		array $pdfOptions,
-		string $userId,
-		string $targetPath,
-		string $basename,
-	): array {
+	private function produce(MultiFormatJob $job, array $rendering): array {
 		$outputs = [];
 		$warnings = [];
-		foreach ($formats as $format) {
+		foreach ($job->formats as $format) {
 			$output = ['format' => $format, 'status' => 'generated', 'fileId' => null, 'fileName' => null, 'path' => null, 'size' => null];
 			try {
-				$content = $this->renderPipeline->produceOutput(htmlContent: $html, format: $format, pdfOptions: $pdfOptions);
+				$content = $this->renderPipeline->produceOutput(htmlContent: $rendering['html'], format: $format, pdfOptions: $rendering['pdfOptions']);
 				$warnings = array_merge($warnings, $this->renderPipeline->getLastOutputWarnings());
 				$stored = $this->storage->store(
-					userId: $userId,
-					targetPath: $targetPath,
-					filename: $basename . self::EXTENSIONS[$format],
+					userId: $job->userId(),
+					targetPath: $rendering['targetPath'],
+					filename: $rendering['basename'] . self::EXTENSIONS[$format],
 					content: $content
 				);
 				$output['fileId'] = $stored['fileId'];
@@ -287,39 +325,38 @@ class MultiFormatOutputProducer {
 	 * `format` is the first format asked for, `fileId`/`filePath` the first
 	 * file made; `outputs` carries every format, failed ones included.
 	 *
-	 * @param array    $template The template, with its id.
-	 * @param array    $dataRefs The data references.
-	 * @param string[] $formats  The formats.
-	 * @param array    $outputs  The outputs.
-	 * @param string[] $warnings The warnings.
-	 * @param array    $options  The options (userId, caseId).
+	 * @param MultiFormatJob $job The template, data references, formats and options (userId, caseId).
+	 * @param array{outputs: array<int, array<string, mixed>>, warnings: string[]} $produced The outputs and the warnings.
 	 *
 	 * @return array The entry.
 	 */
-	private function record(array $template, array $dataRefs, array $formats, array $outputs, array $warnings, array $options): array {
-		$made = array_values(array_filter($outputs, static fn (array $output): bool => $output['status'] === 'generated'));
+	private function record(MultiFormatJob $job, array $produced): array {
+		$template = $job->template;
+		$made = array_values(array_filter($produced['outputs'], static fn (array $output): bool => $output['status'] === 'generated'));
 		$lines = array_map(
 			static fn (array $output): array => array_filter(
 				['format' => $output['format'], 'fileId' => $output['fileId'], 'status' => $output['status'], 'error' => ($output['error'] ?? null)],
 				static fn ($value): bool => $value !== null
 			),
-			$outputs
+			$produced['outputs']
 		);
 
 		return $this->auditLog->log(
-			template: ['id' => $template['id'], 'version' => ($template['version'] ?? null), 'name' => (string) ($template['name'] ?? '')],
-			dataRefs: $dataRefs,
-			format: $formats[0],
+			generation: new DocumentGenerationRecord(
+				template: ['id' => $template['id'], 'version' => ($template['version'] ?? null), 'name' => (string) ($template['name'] ?? '')],
+				dataRefs: $job->dataRefs,
+				format: $job->formats[0],
+				userId: $job->userId(),
+				extra: ['outputs' => $lines]
+			),
 			outcome: [
 				'status' => 'generated',
-				'warnings' => $warnings,
-				'caseId' => ($options['caseId'] ?? null),
+				'warnings' => $produced['warnings'],
+				'caseId' => ($job->options['caseId'] ?? null),
 				'errorMessage' => null,
 				'fileId' => ($made[0]['fileId'] ?? null),
 				'filePath' => ($made[0]['path'] ?? null),
-			],
-			userId: (string) $options['userId'],
-			extra: ['outputs' => $lines]
+			]
 		);
 
 	}//end record()

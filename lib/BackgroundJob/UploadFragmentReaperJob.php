@@ -22,7 +22,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\BackgroundJob;
 
-use OCA\Filinq\Service\UploadFragmentReaper;
+use OCA\Filinq\Kernel\Contracts\UploadFragmentReaperInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use OCP\Files\Folder;
@@ -92,7 +92,7 @@ class UploadFragmentReaperJob extends TimedJob {
 	 * Collaborators.
 	 *
 	 * @param ITimeFactory         $time        The clock the scheduler reads.
-	 * @param UploadFragmentReaper $reaper      Sweeps one tree.
+	 * @param UploadFragmentReaperInterface $reaper      Sweeps one tree.
 	 * @param IRootFolder          $rootFolder  The file tree.
 	 * @param IUserManager         $userManager Every user with a folder.
 	 * @param IAppConfig           $config      Where the age is declared.
@@ -102,7 +102,7 @@ class UploadFragmentReaperJob extends TimedJob {
 	 */
 	public function __construct(
 		ITimeFactory $time,
-		private readonly UploadFragmentReaper $reaper,
+		private readonly UploadFragmentReaperInterface $reaper,
 		private readonly IRootFolder $rootFolder,
 		private readonly IUserManager $userManager,
 		private readonly IAppConfig $config,

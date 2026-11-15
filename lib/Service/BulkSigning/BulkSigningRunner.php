@@ -26,6 +26,7 @@ namespace OCA\Filinq\Service\BulkSigning;
 
 use DateTimeImmutable;
 use DateTimeInterface;
+use OCA\Filinq\Kernel\Contracts\BulkSigningRunnerInterface;
 use OCA\Filinq\Service\SigningService;
 use OCP\IUserManager;
 use OCP\IUserSession;
@@ -49,7 +50,7 @@ use Throwable;
  *
  * @spec openspec/specs/bulk-signing-field-builder/spec.md#requirement-bulk-send-validates-first-then-creates-isolated-ordinary-requests-req-ddbsf-002
  */
-class BulkSigningRunner {
+class BulkSigningRunner implements BulkSigningRunnerInterface {
 
 	/**
 	 * Constructor.

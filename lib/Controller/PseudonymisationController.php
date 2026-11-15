@@ -27,7 +27,8 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use OCA\Filinq\Exception\PseudonymRestoreRefusedException;
-use OCA\Filinq\Service\Pseudonymisation\PseudonymRestoreService;
+use OCA\Filinq\Kernel\Contracts\PseudonymRestoreServiceInterface;
+use OCA\Filinq\Service\ReadsCurrentUserId;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -46,6 +47,8 @@ use OCP\IUserSession;
  * @link     https://www.filinq.app
  */
 class PseudonymisationController extends Controller {
+
+	use ReadsCurrentUserId;
 
 	/**
 	 * HTTP status per refusal. A caller outside the allowed groups gets the same
@@ -68,14 +71,14 @@ class PseudonymisationController extends Controller {
 	 *
 	 * @param string $appName The app name.
 	 * @param IRequest $request The request.
-	 * @param PseudonymRestoreService $restores Status and restore.
+	 * @param PseudonymRestoreServiceInterface $restores Status and restore.
 	 * @param IUserSession $userSession The signed-in user.
 	 * @param IL10N $l10n Translations.
 	 */
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly PseudonymRestoreService $restores,
+		private readonly PseudonymRestoreServiceInterface $restores,
 		private readonly IUserSession $userSession,
 		private readonly IL10N $l10n,
 	) {
@@ -97,7 +100,7 @@ class PseudonymisationController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function status(int $fileId): JSONResponse {
-		$status = $this->restores->status(anonymizedFileId: $fileId, userId: $this->userId());
+		$status = $this->restores->status(anonymizedFileId: $fileId, userId: $this->currentUserId());
 		if ($status === null) {
 			return new JSONResponse(['error' => $this->l10n->t('Document not found')], Http::STATUS_NOT_FOUND);
 		}
@@ -121,7 +124,7 @@ class PseudonymisationController extends Controller {
 	#[NoAdminRequired]
 	public function restore(string $linkId): JSONResponse {
 		try {
-			$result = $this->restores->restore(linkId: $linkId, userId: $this->userId());
+			$result = $this->restores->restore(linkId: $linkId, userId: $this->currentUserId());
 		} catch (PseudonymRestoreRefusedException $refusal) {
 			return $this->refused(refusal: $refusal);
 		}
@@ -129,21 +132,6 @@ class PseudonymisationController extends Controller {
 		return new JSONResponse($result);
 
 	}//end restore()
-
-	/**
-	 * The signed-in user id, '' when nobody is signed in.
-	 *
-	 * @return string The user id.
-	 */
-	private function userId(): string {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return '';
-		}
-
-		return $user->getUID();
-
-	}//end userId()
 
 	/**
 	 * The response for a refusal: a neutral message and the reason code.

@@ -1,0 +1,63 @@
+{
+    "answer": {
+        "documents": [
+            {
+                "fileId": 11,
+                "name": "elf.pdf",
+                "path": "/plain/elf.pdf",
+                "dossier": null,
+                "anonymisation": {
+                    "state": "anonymised",
+                    "counterpartFileId": 30
+                },
+                "riskLevel": "high",
+                "occurrences": [
+                    {
+                        "confidence": 0.97,
+                        "anonymized": false,
+                        "detectionMethod": "presidio"
+                    },
+                    {
+                        "confidence": 0.0,
+                        "anonymized": false,
+                        "detectionMethod": ""
+                    }
+                ]
+            },
+            {
+                "fileId": 30,
+                "name": "dertig.pdf",
+                "path": "/A/sub/dertig.pdf",
+                "dossier": {
+                    "uuid": "dossier-a",
+                    "name": "Dossier A"
+                },
+                "anonymisation": {
+                    "state": "derivative",
+                    "counterpartFileId": null
+                },
+                "riskLevel": "unknown",
+                "occurrences": [
+                    {
+                        "confidence": 0.5,
+                        "anonymized": true,
+                        "detectionMethod": "regex"
+                    }
+                ]
+            }
+        ],
+        "noAccess": 3,
+        "other": [
+            {
+                "kind": "object",
+                "count": 2
+            },
+            {
+                "kind": "email",
+                "count": 2
+            }
+        ],
+        "occurrenceCount": 10
+    },
+    "dossierReads": 1
+}

@@ -33,6 +33,7 @@ namespace OCA\Filinq\Service;
 
 use Exception;
 use InvalidArgumentException;
+use OCA\Filinq\Kernel\Contracts\PolicyCrudServiceInterface;
 use OCP\IGroupManager;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
@@ -47,72 +48,7 @@ use RuntimeException;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  */
-class PolicyCrudService {
-
-	/**
-	 * Register slug shared by both policy surfaces.
-	 *
-	 * `filinq`, not `consent`: this app declares ONE register holding all 23
-	 * schemas. The five it used to declare are retired.
-	 */
-	public const REGISTER = 'filinq';
-
-	/**
-	 * Schema slug for the deny-list surface.
-	 */
-	public const SCHEMA_PROHIBITION = 'publicationProhibition';
-
-	/**
-	 * Schema slug shared between standing consents and per-document records.
-	 */
-	public const SCHEMA_CONSENT = 'publicationConsent';
-
-	/**
-	 * Policy surface selector for the entity-level deny-list.
-	 *
-	 * Used as the `$surface` argument to {@see self::requirePolicyPermission()}.
-	 */
-	public const SURFACE_PROHIBITION = 'prohibition';
-
-	/**
-	 * Policy surface selector for standing consents (scope=entity records).
-	 *
-	 * Used as the `$surface` argument to {@see self::requirePolicyPermission()}.
-	 */
-	public const SURFACE_STANDING_CONSENT = 'standingConsent';
-
-	/**
-	 * Group whose members may create/update/delete standing-consent records.
-	 *
-	 * Enforced at service level per spec §RBAC scenario "Standing-consent
-	 * write requires standing-consent permission" — the underlying
-	 * publicationConsent schema's RBAC cannot discriminate by `scope`, so the
-	 * scope-aware gate lives here.
-	 *
-	 * ⚠️ STILL `docudesk-`, DELIBERATELY, ACROSS THE FILINQ RENAME — see
-	 * PROHIBITION_GROUP below for the full reasoning; it applies to every
-	 * `docudesk-*` group id this app declares.
-	 */
-	public const STANDING_CONSENT_GROUP = 'docudesk-standing-consent-admins';
-
-	/**
-	 * Group whose members may create/update/delete publication-prohibition
-	 * records. Prohibitions are operator-level blocking rules that override
-	 * the standard anonymise flow, so write authorisation requires either
-	 * admin role or membership in this group — never any authenticated user.
-	 *
-	 * ⚠️ STILL `docudesk-`, DELIBERATELY, ACROSS THE FILINQ RENAME. This is a
-	 * Nextcloud GROUP ID, declared in `lib/Settings/filinq_register.json` and
-	 * provisioned by OpenRegister CREATE-ONLY, then populated by admins.
-	 * Renaming the id therefore creates a NEW, EMPTY group while the existing
-	 * one keeps every member and nothing reads it any more. An empty group
-	 * denies everyone except admins and object owners, so the symptom is
-	 * prohibition writes starting to 403 for exactly the operators who were
-	 * granted them — no error at provisioning time, nothing in the log. Same
-	 * failure shape as renaming an OpenRegister register slug. Renaming these
-	 * groups needs its own membership migration, not a token substitution.
-	 */
-	public const PROHIBITION_GROUP = 'docudesk-prohibition-admins';
+class PolicyCrudService implements PolicyCrudServiceInterface {
 
 	/**
 	 * Constructor.
@@ -122,6 +58,7 @@ class PolicyCrudService {
 	 * @param IGroupManager $groupManager Group membership check.
 	 * @param IUserSession $userSession Current-user lookup.
 	 * @param LoggerInterface $logger Structured logger.
+	 * @param PolicyMatchService|null $matcher The rule matcher whose cache a rule write drops.
 	 *
 	 * @return void
 	 */
@@ -131,6 +68,7 @@ class PolicyCrudService {
 		private readonly IGroupManager $groupManager,
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
+		private readonly ?PolicyMatchService $matcher = null,
 	) {
 
 	}//end __construct()
@@ -229,13 +167,12 @@ class PolicyCrudService {
 	public function createProhibition(array $data): array {
 		$this->assertProhibitionPermission(action: 'create');
 
-		$payload = $this->stripFrameworkParams(data: $data);
+		$payload = self::withBases(data: $this->stripFrameworkParams(data: $data));
 
 		// Defaults the spec requires the record to carry.
 		$payload['active'] = ($payload['active'] ?? true);
 
-		return $this->saveObject(
-			register: self::REGISTER,
+		return $this->saveRule(
 			schema: self::SCHEMA_PROHIBITION,
 			data: $payload
 		);
@@ -255,9 +192,8 @@ class PolicyCrudService {
 	public function updateProhibition(string $uuid, array $data): array {
 		$this->assertProhibitionPermission(action: 'update');
 
-		$payload = $this->stripFrameworkParams(data: $data);
-		return $this->saveObject(
-			register: self::REGISTER,
+		$payload = self::withBases(data: $this->stripFrameworkParams(data: $data));
+		return $this->saveRule(
 			schema: self::SCHEMA_PROHIBITION,
 			data: $payload,
 			uuid: $uuid
@@ -304,6 +240,7 @@ class PolicyCrudService {
 			_rbac: false,
 			_multitenancy: false
 		);
+		$this->matcher?->invalidateCache();
 
 	}//end deleteProhibition()
 
@@ -322,14 +259,13 @@ class PolicyCrudService {
 	public function createStandingConsent(array $data): array {
 		$this->assertStandingConsentPermission(action: 'create');
 
-		$payload = $this->stripFrameworkParams(data: $data);
+		$payload = self::withBases(data: $this->stripFrameworkParams(data: $data));
 		$payload['scope'] = 'entity';
 		$payload['active'] = ($payload['active'] ?? true);
 
 		$this->consentService->validatePublicationConsentData(data: $payload);
 
-		return $this->saveObject(
-			register: self::REGISTER,
+		return $this->saveRule(
 			schema: self::SCHEMA_CONSENT,
 			data: $payload
 		);
@@ -354,13 +290,12 @@ class PolicyCrudService {
 			throw new Exception('Standing consent not found: ' . $uuid);
 		}
 
-		$payload = array_merge($existing, $this->stripFrameworkParams(data: $data));
+		$payload = array_merge($existing, self::withBases(data: $this->stripFrameworkParams(data: $data)));
 		$payload['scope'] = 'entity';
 
 		$this->consentService->validatePublicationConsentData(data: $payload);
 
-		return $this->saveObject(
-			register: self::REGISTER,
+		return $this->saveRule(
 			schema: self::SCHEMA_CONSENT,
 			data: $payload,
 			uuid: $uuid
@@ -400,6 +335,7 @@ class PolicyCrudService {
 			_rbac: false,
 			_multitenancy: false
 		);
+		$this->matcher?->invalidateCache();
 
 	}//end deleteStandingConsent()
 
@@ -447,7 +383,7 @@ class PolicyCrudService {
 	 * permission". A consent-officer with normal `publicationConsent` write
 	 * permission may write `scope: "document"` records, but writes to
 	 * `scope: "entity"` require explicit membership in
-	 * `docudesk-standing-consent-admins`.
+	 * `filinq-standing-consent-admins`.
 	 *
 	 * Admin users bypass this gate (NC convention — they implicitly belong to
 	 * every privileged group).
@@ -521,6 +457,69 @@ class PolicyCrudService {
 		);
 
 	}//end assertProhibitionPermission()
+
+	/**
+	 * A rule payload with its `bases` as a list of grondslag slugs: trimmed,
+	 * without blanks or repeats. A payload without `bases` is left as it is.
+	 *
+	 * @param array<string, mixed> $data The rule payload.
+	 *
+	 * @return array<string, mixed> The payload.
+	 *
+	 * @throws InvalidArgumentException When `bases` is not a list of strings.
+	 *
+	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-2.2
+	 */
+	public static function withBases(array $data): array {
+		if (array_key_exists('bases', $data) === false) {
+			return $data;
+		}
+
+		$bases = $data['bases'];
+		if ($bases === null) {
+			$bases = [];
+		}
+
+		if (is_array($bases) === false || array_is_list($bases) === false) {
+			throw new InvalidArgumentException('bases must be a list of grondslag slugs');
+		}
+
+		$slugs = [];
+		foreach ($bases as $base) {
+			if (is_string($base) === false) {
+				throw new InvalidArgumentException('bases must be a list of grondslag slugs');
+			}
+
+			$slug = trim($base);
+			if ($slug !== '' && in_array($slug, $slugs, true) === false) {
+				$slugs[] = $slug;
+			}
+		}
+
+		$data['bases'] = $slugs;
+		return $data;
+	}//end withBases()
+
+	/**
+	 * Save a prohibition or standing consent and drop the matcher's cached
+	 * rules, so the next match reads the rule as written.
+	 *
+	 * @param string               $schema Schema slug.
+	 * @param array<string, mixed> $data   The rule payload.
+	 * @param string|null          $uuid   The rule's uuid on an update.
+	 *
+	 * @return array<string, mixed> The saved rule.
+	 *
+	 * @throws Exception On write failure.
+	 *
+	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-2.2
+	 */
+	private function saveRule(string $schema, array $data, ?string $uuid = null): array {
+		$saved = $this->saveObject(register: self::REGISTER, schema: $schema, data: $data, uuid: $uuid);
+		$this->matcher?->invalidateCache();
+
+		return $saved;
+	}//end saveRule()
 
 	/**
 	 * Strip framework-injected request params before persistence.

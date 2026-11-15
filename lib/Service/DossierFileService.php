@@ -3,6 +3,9 @@
 /**
  * Dossier File Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Everything the dossier surface does to the FILESYSTEM: the home folder it
  * creates, renames and lists, and the file nodes it resolves, tests for
  * membership and trashes.
@@ -29,9 +32,6 @@
  * @link      https://www.filinq.app
  *
  * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -89,45 +89,75 @@ class DossierFileService {
 		}
 
 		try {
-			$userFolder = $this->rootFolder->getUserFolder($user->getUID());
-			// Ensure-then-read, rather than if/else or a ternary: phpmd rejects
-			// the else and phpcs rejects the inline if, and this reads better
-			// than either.
-			if ($userFolder->nodeExists('Filinq') === false) {
-				$userFolder->newFolder('Filinq');
-			}
+			$parent = $this->filinqFolder(userFolder: $this->rootFolder->getUserFolder($user->getUID()));
 
-			$parent = $userFolder->get('Filinq');
-
-			if (($parent instanceof Folder) === false) {
-				throw new RuntimeException('Filinq is not a folder.', 500);
-			}
-
-			$safe = $this->safeFolderName(name: $name);
-
-			if ($parent->nodeExists($safe) === false) {
-				return $parent->newFolder($safe);
-			}
-
-			// `get()` answers a Node, and a FILE can carry this name — a user
-			// who saved "Mijn dossier" into Filinq/ occupies it. Returning that
-			// against a `: Folder` signature is a TypeError, which the catch
-			// below rewrites into "Could not create the dossier folder", naming
-			// the wrong cause. Say what is actually in the way.
-			$existing = $parent->get($safe);
-			if (($existing instanceof Folder) === false) {
-				throw new RuntimeException(
-					'Filinq/' . $safe . ' already exists and is a file, not a folder.',
-					500
-				);
-			}
-
-			return $existing;
+			return $this->dossierFolderIn(parent: $parent, name: $name);
 		} catch (Throwable $e) {
 			throw new RuntimeException('Could not create the dossier folder: ' . $e->getMessage(), 500, $e);
 		}
 
 	}//end createHomeFolder()
+
+	/**
+	 * The user's Filinq folder, created when it is not there yet.
+	 *
+	 * @param Folder $userFolder The user's home folder.
+	 *
+	 * @return Folder The Filinq folder.
+	 *
+	 * @throws RuntimeException When a file, not a folder, carries the name.
+	 */
+	private function filinqFolder(Folder $userFolder): Folder {
+		// Ensure-then-read, rather than if/else or a ternary: phpmd rejects
+		// the else and phpcs rejects the inline if, and this reads better
+		// than either.
+		if ($userFolder->nodeExists('Filinq') === false) {
+			$userFolder->newFolder('Filinq');
+		}
+
+		$parent = $userFolder->get('Filinq');
+
+		if (($parent instanceof Folder) === false) {
+			throw new RuntimeException('Filinq is not a folder.', 500);
+		}
+
+		return $parent;
+
+	}//end filinqFolder()
+
+	/**
+	 * The dossier folder inside the Filinq folder, created when it is not there yet.
+	 *
+	 * @param Folder $parent The Filinq folder.
+	 * @param string $name   The dossier name.
+	 *
+	 * @return Folder The dossier folder.
+	 *
+	 * @throws RuntimeException When a file, not a folder, carries the name.
+	 */
+	private function dossierFolderIn(Folder $parent, string $name): Folder {
+		$safe = $this->safeFolderName(name: $name);
+
+		if ($parent->nodeExists($safe) === false) {
+			return $parent->newFolder($safe);
+		}
+
+		// `get()` answers a Node, and a FILE can carry this name — a user
+		// who saved "Mijn dossier" into Filinq/ occupies it. Returning that
+		// against a `: Folder` signature is a TypeError, which the catch
+		// in createHomeFolder() rewrites into "Could not create the dossier
+		// folder", naming the wrong cause. Say what is actually in the way.
+		$existing = $parent->get($safe);
+		if (($existing instanceof Folder) === false) {
+			throw new RuntimeException(
+				'Filinq/' . $safe . ' already exists and is a file, not a folder.',
+				500
+			);
+		}
+
+		return $existing;
+
+	}//end dossierFolderIn()
 
 	/**
 	 * Rename the bound home folder to match the dossier, best-effort.
@@ -209,11 +239,7 @@ class DossierFileService {
 	 */
 	public function homeFolder(object $object, array $payload): ?Folder {
 		try {
-			$ref = ($payload['@self']['folder'] ?? null);
-			if ($ref === null && method_exists($object, 'getFolder') === true) {
-				$ref = $object->getFolder();
-			}
-
+			$ref = $this->folderRefOf(object: $object, payload: $payload);
 			if ($ref === null || $ref === '') {
 				return null;
 			}
@@ -224,6 +250,24 @@ class DossierFileService {
 		}
 
 	}//end homeFolder()
+
+	/**
+	 * The folder reference of a dossier: from its `@self` block, otherwise from the object.
+	 *
+	 * @param object               $object  The dossier object.
+	 * @param array<string, mixed> $payload Its payload.
+	 *
+	 * @return mixed The reference, or null when neither carries one.
+	 */
+	private function folderRefOf(object $object, array $payload): mixed {
+		$ref = ($payload['@self']['folder'] ?? null);
+		if ($ref === null && method_exists($object, 'getFolder') === true) {
+			return $object->getFolder();
+		}
+
+		return $ref;
+
+	}//end folderRefOf()
 
 	/**
 	 * List the files in a folder under the caller's view.

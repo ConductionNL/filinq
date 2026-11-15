@@ -15,11 +15,15 @@
  * @link https://www.filinq.app
  *
  * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-2
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\DocumentController;
+use OCA\Filinq\Controller\Support\ControllerFeedback;
 use OCA\Filinq\Exception\ConversionFailedException;
 use OCA\Filinq\Service\DocumentService;
 use OCP\AppFramework\Http\DataDownloadResponse;
@@ -125,8 +129,7 @@ class DocumentControllerTest extends TestCase {
 			$this->request,
 			$this->documentSvc,
 			$this->userSession,
-			$this->logger,
-			$this->l10n
+			new ControllerFeedback(l10n: $this->l10n, logger: $this->logger)
 		);
 
 	}//end setUp()
@@ -204,7 +207,7 @@ class DocumentControllerTest extends TestCase {
 		$user->method('getUID')->willReturn('clerk');
 		$session = $this->createMock(IUserSession::class);
 		$session->method('getUser')->willReturn($user);
-		$controller = new DocumentController('filinq', $this->request, $this->documentSvc, $session, $this->logger, $this->l10n, $producer);
+		$controller = new DocumentController('filinq', $this->request, $this->documentSvc, $session,new ControllerFeedback(l10n: $this->l10n, logger: $this->logger), $producer);
 
 		$result = $controller->generate();
 
@@ -490,6 +493,43 @@ class DocumentControllerTest extends TestCase {
 	}//end testPreviewReturnsHtmlAndWarnings()
 
 	/**
+	 * The merge preview answers with the preview, its fields and whether all are filled.
+	 *
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
+	 *
+	 * @return void
+	 */
+	public function testMergePreviewReturnsTheFields(): void {
+		$this->request->method('getParam')
+			->willReturnMap([
+				['templateId', null, 'tmpl-1'],
+				['dataRefs', [], [['register' => 'pipelinq', 'schema' => 'client', 'id' => 'c1']]],
+				['options', [], []],
+			]);
+		$fields = [['path' => 'aanhef', 'label' => 'Aanhef', 'source' => '', 'value' => 'Geachte heer,', 'filled' => true]];
+		$this->documentSvc->expects($this->once())->method('generateMergePreview')
+			->with('tmpl-1', [['register' => 'pipelinq', 'schema' => 'client', 'id' => 'c1']], [])
+			->willReturn(['html' => '<p>x</p>', 'warnings' => [], 'fields' => $fields, 'complete' => true]);
+
+		$result = $this->controller->mergePreview();
+
+		$this->assertSame(expected: 200, actual: $result->getStatus());
+		$this->assertSame(expected: $fields, actual: $result->getData()['fields']);
+		$this->assertTrue(condition: $result->getData()['complete']);
+	}//end testMergePreviewReturnsTheFields()
+
+	/**
+	 * Without a template id the merge preview is refused.
+	 *
+	 * @return void
+	 */
+	public function testMergePreviewNeedsATemplate(): void {
+		$this->request->method('getParam')->willReturnMap([['templateId', null, null]]);
+
+		$this->assertSame(expected: 400, actual: $this->controller->mergePreview()->getStatus());
+	}//end testMergePreviewNeedsATemplate()
+
+	/**
 	 * Test that preview() forwards options.listRefs through to
 	 * DocumentService::generatePreview() unchanged.
 	 *
@@ -671,8 +711,7 @@ class DocumentControllerTest extends TestCase {
 			$this->request,
 			$this->documentSvc,
 			$this->userSession,
-			$this->logger,
-			$this->l10n
+			new ControllerFeedback(l10n: $this->l10n, logger: $this->logger)
 		);
 
 		$result = $controller->generate();
@@ -681,4 +720,227 @@ class DocumentControllerTest extends TestCase {
 		$this->assertEquals(401, $result->getStatus());
 
 	}//end testGenerateReturns401WhenNotAuthenticated()
+	/**
+	 * Characterization: the download name and type for an unknown format, a
+	 * path-like filename and an empty one, and the storage headers on an HTML
+	 * answer in both mode.
+	 *
+	 * @return void
+	 */
+	public function testDocumentResponseNamesTypesAndHeaders(): void {
+		$cases = [
+			'unknown format downloads as pdf' => ['xyz', 'map/brief.txt', 'application/pdf', 'brief.pdf'],
+			'empty filename is document' => ['odf', '', 'application/vnd.oasis.opendocument.text', 'document.odt'],
+		];
+		foreach ($cases as $label => [$format, $filename, $type, $name]) {
+			$controller = $this->controllerAnswering(
+				filename: $filename,
+				result: ['content' => 'bytes', 'format' => $format, 'metadata' => [], 'warnings' => [], 'output' => ['mode' => 'return']]
+			);
+			$result     = $controller->generate();
+			$this->assertInstanceOf(expected: DataDownloadResponse::class, actual: $result, message: $label);
+			$this->assertSame(expected: $type, actual: $result->getHeaders()['Content-Type'], message: $label);
+			$this->assertStringContainsString(needle: '"' . $name . '"', haystack: $result->getHeaders()['Content-Disposition'], message: $label);
+			$this->assertArrayNotHasKey(key: 'X-Docudesk-File-Id', array: $result->getHeaders(), message: $label);
+		}
+
+		$controller = $this->controllerAnswering(
+			filename: 'brief',
+			result: [
+				'content' => '<p>x</p>',
+				'format' => 'html',
+				'metadata' => ['id' => 'm'],
+				'warnings' => ['w'],
+				'output' => ['mode' => 'both', 'fileId' => 9, 'path' => '/u/files/brief.html'],
+			]
+		);
+		$result     = $controller->generate();
+		$this->assertInstanceOf(expected: JSONResponse::class, actual: $result);
+		$this->assertSame(
+			expected: ['content' => '<p>x</p>', 'format' => 'html', 'metadata' => ['id' => 'm'], 'warnings' => ['w']],
+			actual: $result->getData()
+		);
+		$this->assertSame(expected: '9', actual: $result->getHeaders()['X-Docudesk-File-Id']);
+		$this->assertSame(expected: '/u/files/brief.html', actual: $result->getHeaders()['X-Docudesk-File-Path']);
+
+		$controller = $this->controllerAnswering(
+			filename: 'brief',
+			result: ['content' => 'x', 'format' => 'pdf', 'metadata' => [], 'warnings' => [], 'output' => ['mode' => 'files', 'fileId' => 3]]
+		);
+		$this->assertSame(
+			expected: ['fileId' => 3, 'path' => null, 'name' => null, 'size' => null, 'format' => 'pdf'],
+			actual: $controller->generate()->getData()
+		);
+
+	}//end testDocumentResponseNamesTypesAndHeaders()
+
+	/**
+	 * A controller whose generation answers the given result.
+	 *
+	 * @param string               $filename The requested filename.
+	 * @param array<string, mixed> $result   The generation result.
+	 *
+	 * @return DocumentController
+	 */
+	private function controllerAnswering(string $filename, array $result): DocumentController {
+		$request = $this->createMock(originalClassName: IRequest::class);
+		$request->method('getParam')->willReturnMap(
+			[
+				['templateId', null, 'tmpl-1'],
+				['dataRefs', [], []],
+				['options', [], []],
+				['filename', 'document', $filename],
+			]
+		);
+		$documents = $this->createMock(originalClassName: DocumentService::class);
+		$documents->method('generateDocument')->willReturn($result);
+
+		return new DocumentController(
+			feedback: new ControllerFeedback(l10n: $this->l10n, logger: $this->createMock(originalClassName: LoggerInterface::class)),
+			appName: 'filinq',
+			request: $request,
+			documentSvc: $documents,
+			userSession: $this->userSession
+		);
+
+	}//end controllerAnswering()
+
+
+	/**
+	 * Every endpoint refuses a caller without a session.
+	 *
+	 * @return void
+	 */
+	public function testEveryEndpointAnswers401WithoutASession(): void {
+		$session = $this->createMock(originalClassName: IUserSession::class);
+		$session->method('getUser')->willReturn(null);
+		$this->documentSvc->expects($this->never())->method($this->anything());
+
+		$controller = new DocumentController(
+			feedback: new ControllerFeedback(l10n: $this->l10n, logger: $this->logger),
+			appName: 'filinq',
+			request: $this->request,
+			documentSvc: $this->documentSvc,
+			userSession: $session
+		);
+
+		$this->assertSame(expected: 401, actual: $controller->preview()->getStatus());
+		$this->assertSame(expected: 401, actual: $controller->mergePreview()->getStatus());
+		$this->assertSame(expected: 401, actual: $controller->generateBulk()->getStatus());
+		$this->assertSame(expected: 401, actual: $controller->jobStatus(jobId: 'job-1')->getStatus());
+
+	}//end testEveryEndpointAnswers401WithoutASession()
+
+	/**
+	 * Data references and options that are not arrays are read as empty.
+	 *
+	 * @return void
+	 */
+	public function testNonArrayDataRefsAndOptionsAreReadAsEmpty(): void {
+		$this->request->method('getParam')
+			->willReturnMap([
+				['templateId', null, 'tmpl-1'],
+				['dataRefs', [], 'not-a-list'],
+				['options', [], 'not-a-map'],
+				['filename', 'document', 'document'],
+			]);
+		$this->documentSvc->expects($this->once())->method('generatePreview')
+			->with('tmpl-1', [], [])
+			->willReturn(['html' => '<p>x</p>', 'warnings' => []]);
+		$this->documentSvc->expects($this->once())->method('generateMergePreview')
+			->with('tmpl-1', [], [])
+			->willReturn(['html' => '<p>x</p>', 'fields' => []]);
+		$this->documentSvc->expects($this->once())->method('generateDocument')
+			->with('tmpl-1', [], ['userId' => 'test-user', 'filename' => 'document'])
+			->willReturn(['content' => '<p>x</p>', 'format' => 'html', 'metadata' => [], 'warnings' => []]);
+
+		$this->assertSame(expected: 200, actual: $this->controller->preview()->getStatus());
+		$this->assertSame(expected: 200, actual: $this->controller->mergePreview()->getStatus());
+		$this->assertSame(expected: 200, actual: $this->controller->generate()->getStatus());
+
+	}//end testNonArrayDataRefsAndOptionsAreReadAsEmpty()
+
+	/**
+	 * A service failure becomes an error response carrying the exception's HTTP code.
+	 *
+	 * @return void
+	 */
+	public function testServiceFailuresBecomeErrorResponses(): void {
+		$this->request->method('getParam')
+			->willReturnMap([
+				['templateId', null, 'tmpl-1'],
+				['dataRefs', [], []],
+				['options', [], []],
+			]);
+		$this->documentSvc->method('generatePreview')->willThrowException(new \Exception('Template not found', 404));
+		$this->documentSvc->method('generateMergePreview')->willThrowException(new \Exception('Template broken'));
+		$this->documentSvc->method('getJobStatus')->willThrowException(new \Exception('Job store down', 503));
+
+		$preview = $this->controller->preview();
+		$this->assertSame(expected: 404, actual: $preview->getStatus());
+		$this->assertSame(expected: ['error' => 'Template not found'], actual: $preview->getData());
+		$this->assertSame(expected: 500, actual: $this->controller->mergePreview()->getStatus());
+		$this->assertSame(expected: 503, actual: $this->controller->jobStatus(jobId: 'job-1')->getStatus());
+
+	}//end testServiceFailuresBecomeErrorResponses()
+
+	/**
+	 * A bulk request without a template is refused; one with non-array options
+	 * runs synchronously for the caller and a small batch answers 200.
+	 *
+	 * @return void
+	 */
+	public function testGenerateBulkNeedsATemplateAndAnswers200ForASmallBatch(): void {
+		$request = $this->createMock(originalClassName: IRequest::class);
+		$request->method('getParam')
+			->willReturnMap([
+				['templateId', null, null],
+				['objectIds', [], ['obj-1']],
+				['options', [], []],
+			]);
+		$controller = new DocumentController(
+			feedback: new ControllerFeedback(l10n: $this->l10n, logger: $this->logger),
+			appName: 'filinq',
+			request: $request,
+			documentSvc: $this->documentSvc,
+			userSession: $this->userSession
+		);
+		$this->assertSame(expected: 400, actual: $controller->generateBulk()->getStatus());
+
+		$this->request->method('getParam')
+			->willReturnMap([
+				['templateId', null, 'tmpl-1'],
+				['objectIds', [], ['obj-1', 'obj-2']],
+				['options', [], 'not-a-map'],
+			]);
+		$this->documentSvc->expects($this->once())->method('generateBulk')
+			->with('tmpl-1', ['obj-1', 'obj-2'], ['userId' => 'test-user'])
+			->willReturn(['results' => [], 'total' => 2]);
+
+		$result = $this->controller->generateBulk();
+		$this->assertSame(expected: 200, actual: $result->getStatus());
+		$this->assertSame(expected: ['results' => [], 'total' => 2], actual: $result->getData());
+
+	}//end testGenerateBulkNeedsATemplateAndAnswers200ForASmallBatch()
+
+	/**
+	 * A failing bulk generation is answered through the shared failure handler.
+	 *
+	 * @return void
+	 */
+	public function testGenerateBulkFailureKeepsItsHttpCode(): void {
+		$this->request->method('getParam')
+			->willReturnMap([
+				['templateId', null, 'tmpl-1'],
+				['objectIds', [], ['obj-1']],
+				['options', [], []],
+			]);
+		$this->documentSvc->method('generateBulk')->willThrowException(new \Exception('template gone', 404));
+
+		$result = $this->controller->generateBulk();
+		$this->assertSame(expected: 404, actual: $result->getStatus());
+		$this->assertSame(expected: ['error' => 'template gone'], actual: $result->getData());
+
+	}//end testGenerateBulkFailureKeepsItsHttpCode()
+
 }//end class

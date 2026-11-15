@@ -29,6 +29,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\Sanitization;
 
 use InvalidArgumentException;
+use OCA\Filinq\Kernel\Contracts\DocumentSanitizationServiceInterface;
 use OCA\Filinq\Service\OpenRegisterServiceLocator;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
@@ -38,12 +39,7 @@ use Throwable;
 /**
  * Sanitizes one document into a derivative and records the run.
  */
-class DocumentSanitizationService {
-
-	/**
-	 * OpenRegister's office sanitizer.
-	 */
-	public const OFFICE_ENGINE = 'OCA\OpenRegister\Service\File\OfficeDocumentSanitizer';
+class DocumentSanitizationService implements DocumentSanitizationServiceInterface {
 
 	/**
 	 * Constructor.

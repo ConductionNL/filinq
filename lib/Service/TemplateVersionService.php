@@ -26,6 +26,8 @@ namespace OCA\Filinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use Exception;
+use OCA\Filinq\Kernel\Contracts\TemplateServiceInterface;
+use OCA\Filinq\Kernel\Contracts\TemplateVersionServiceInterface;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
@@ -39,7 +41,7 @@ use RuntimeException;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  */
-class TemplateVersionService {
+class TemplateVersionService implements TemplateVersionServiceInterface {
 	/**
 	 * Constructor for TemplateVersionService
 	 *
@@ -65,16 +67,7 @@ class TemplateVersionService {
 	 * @throws \RuntimeException If OpenRegister is not available
 	 */
 	private function getObjectService(): \OCA\OpenRegister\Service\ObjectService {
-		if (in_array(
-			needle: 'openregister',
-			haystack: $this->appManager->getInstalledApps(),
-			strict: true
-		) === true
-		) {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-		}
-
-		throw new RuntimeException(message: 'OpenRegister service is not available.');
+		return (new DocumentObjectServiceResolver(container: $this->container, appManager: $this->appManager))->resolve();
 	}//end getObjectService()
 
 	/**
@@ -356,7 +349,7 @@ class TemplateVersionService {
 	 * @param string $templateId The UUID of the template to restore
 	 * @param string $versionId The UUID of the version to restore to
 	 * @param string $editor The Nextcloud user ID performing the restore
-	 * @param TemplateService $service The template service for updating the template
+	 * @param TemplateServiceInterface $service The template service for updating the template
 	 *
 	 * @return array The restored template object
 	 *
@@ -368,7 +361,7 @@ class TemplateVersionService {
 		string $templateId,
 		string $versionId,
 		string $editor,
-		TemplateService $service,
+		TemplateServiceInterface $service,
 	): array {
 		$targetVersion = $this->getVersion(versionId: $versionId);
 		$currentState = $service->getTemplate(id: $templateId);

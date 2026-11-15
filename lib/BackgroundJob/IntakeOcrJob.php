@@ -25,9 +25,9 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\BackgroundJob;
 
-use OCA\Filinq\Service\Intake\IntakeReadingProgress;
-use OCA\Filinq\Service\IntakeRepository;
-use OCA\Filinq\Service\OcrService;
+use OCA\Filinq\Kernel\Contracts\IntakeReadingProgressInterface;
+use OCA\Filinq\Kernel\Contracts\IntakeRepositoryInterface;
+use OCA\Filinq\Kernel\Contracts\OcrServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\QueuedJob;
 use OCP\Files\File;
@@ -59,18 +59,18 @@ class IntakeOcrJob extends QueuedJob {
 	 * Constructor.
 	 *
 	 * @param ITimeFactory $clock The clock.
-	 * @param IntakeRepository $repository The intake documents.
-	 * @param OcrService $ocr The Tesseract engine and the admin's OCR settings.
+	 * @param IntakeRepositoryInterface $repository The intake documents.
+	 * @param OcrServiceInterface $ocr The Tesseract engine and the admin's OCR settings.
 	 * @param IRootFolder $rootFolder Resolves the file without a user session.
-	 * @param IntakeReadingProgress $progress The reading states.
+	 * @param IntakeReadingProgressInterface $progress The reading states.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		private readonly ITimeFactory $clock,
-		private readonly IntakeRepository $repository,
-		private readonly OcrService $ocr,
+		private readonly IntakeRepositoryInterface $repository,
+		private readonly OcrServiceInterface $ocr,
 		private readonly IRootFolder $rootFolder,
-		private readonly IntakeReadingProgress $progress,
+		private readonly IntakeReadingProgressInterface $progress,
 		private readonly LoggerInterface $logger,
 	) {
 		parent::__construct(time: $clock);
@@ -94,16 +94,16 @@ class IntakeOcrJob extends QueuedJob {
 			return;
 		}
 
-		$document = $this->record(uuid: $uuid, document: $document, state: IntakeReadingProgress::READING);
+		$document = $this->record(uuid: $uuid, document: $document, state: IntakeReadingProgressInterface::READING);
 
 		[$text, $reason] = $this->read(fileId: (int) ($argument['fileId'] ?? ($document['file'] ?? 0)));
 		if ($reason !== '') {
-			$this->record(uuid: $uuid, document: $document, state: IntakeReadingProgress::FAILED, error: $reason);
+			$this->record(uuid: $uuid, document: $document, state: IntakeReadingProgressInterface::FAILED, error: $reason);
 			return;
 		}
 
 		$document['contentText'] = mb_substr($text, 0, self::MAX_TEXT);
-		$this->record(uuid: $uuid, document: $document, state: IntakeReadingProgress::READ);
+		$this->record(uuid: $uuid, document: $document, state: IntakeReadingProgressInterface::READ);
 
 	}//end run()
 

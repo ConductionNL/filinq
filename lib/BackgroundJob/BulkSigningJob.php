@@ -23,7 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\BackgroundJob;
 
-use OCA\Filinq\Service\BulkSigning\BulkSigningRunner;
+use OCA\Filinq\Kernel\Contracts\BulkSigningRunnerInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\QueuedJob;
 
@@ -44,13 +44,13 @@ class BulkSigningJob extends QueuedJob {
 	 * Constructor.
 	 *
 	 * @param ITimeFactory      $time   Time factory
-	 * @param BulkSigningRunner $runner Creates the requests
+	 * @param BulkSigningRunnerInterface $runner Creates the requests
 	 *
 	 * @spec openspec/specs/bulk-signing-field-builder/spec.md#requirement-bulk-send-validates-first-then-creates-isolated-ordinary-requests-req-ddbsf-002
 	 */
 	public function __construct(
 		ITimeFactory $time,
-		private readonly BulkSigningRunner $runner,
+		private readonly BulkSigningRunnerInterface $runner,
 	) {
 		parent::__construct(time: $time);
 

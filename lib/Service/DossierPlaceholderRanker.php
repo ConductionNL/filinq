@@ -24,6 +24,9 @@
  * @link      https://www.filinq.app
  *
  * @spec openspec/specs/anonymisation-grondslagen-summary/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -56,7 +59,7 @@ class DossierPlaceholderRanker {
 	 *
 	 * @var string
 	 */
-	private const PLACEHOLDER_TRANSLATOR_CLASS = '\OCA\OpenRegister\Service\File\PlaceholderIdTranslator';
+	private const PLACEHOLDER_TRANSLATOR_CLASS = '\OCA\OpenRegister\Files\Service\File\PlaceholderIdTranslator';
 
 	/**
 	 * Folder names holding redacted OUTPUT, excluded from the source-file walk.

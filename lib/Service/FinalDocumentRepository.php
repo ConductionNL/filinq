@@ -31,6 +31,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use OCP\AppFramework\Db\DoesNotExistException;
+use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
@@ -66,6 +67,13 @@ class FinalDocumentRepository {
 	public const SCHEMA = 'documentVersion';
 
 	/**
+	 * The schema holding the dossiers.
+	 *
+	 * @var string
+	 */
+	public const DOSSIER_SCHEMA = 'dossier';
+
+	/**
 	 * The final state. Terminal: there is no transition out of it.
 	 *
 	 * @var string
@@ -84,12 +92,16 @@ class FinalDocumentRepository {
 	 *
 	 * @param DocumentObjectServiceResolver $objectResolver Resolver for OpenRegister's ObjectService.
 	 * @param LoggerInterface $logger Logger for diagnostics.
+	 * @param TemplateLanguageService|null $languages The reader's language; without it only plain dossier names are read.
+	 * @param IUserSession|null $userSession The reader.
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		private readonly DocumentObjectServiceResolver $objectResolver,
 		private readonly LoggerInterface $logger,
+		private readonly ?TemplateLanguageService $languages=null,
+		private readonly ?IUserSession $userSession=null,
 	) {
 
 	}//end __construct()
@@ -234,6 +246,95 @@ class FinalDocumentRepository {
 	}//end findByCreator()
 
 	/**
+	 * The dossier each file belongs to, by file id.
+	 *
+	 * A dossier's members are the files in its own folder (`@self.files`) and
+	 * the file references in `documents`. A file in more than one dossier is
+	 * named by the first one read. An unreadable register answers an empty map:
+	 * the files are then listed on their own, which is what they were before.
+	 *
+	 * @return array<int, array{id: string, name: string}> The dossier by file id.
+	 *
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
+	 */
+	public function dossiersByFile(): array {
+		return $this->dossierIndex()->byFile();
+
+	}//end dossiersByFile()
+
+	/**
+	 * Every dossier the caller may read, as an index by member file and by folder.
+	 *
+	 * @return DossierFileIndex The index, empty when the dossiers cannot be read.
+	 *
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
+	 */
+	public function dossierIndex(): DossierFileIndex {
+		try {
+			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
+				registerSlug: self::REGISTER,
+				schemaSlug: self::DOSSIER_SCHEMA,
+				filters: []
+			);
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				message: '[FinalDocumentRepository] could not read the dossiers',
+				context: ['file' => __FILE__, 'line' => __LINE__, 'error' => $e->getMessage()]
+			);
+
+			return new DossierFileIndex();
+		}
+
+		$index = new DossierFileIndex();
+		foreach ((array) $results as $result) {
+			$data = $result;
+			if (is_object($result) === true && method_exists($result, 'jsonSerialize') === true) {
+				$data = $result->jsonSerialize();
+			}
+
+			$fields = $this->normalise(row: $result);
+			$name   = $this->dossierName(name: $fields['name'] ?? null);
+
+			if (is_array($data) === false || $name === '') {
+				continue;
+			}
+
+			$self = (array) ($data['@self'] ?? []);
+			$index->add(
+				dossier: ['id' => (string) $fields['uuid'], 'name' => $name],
+				members: array_merge((array) ($self['files'] ?? []), (array) ($fields['documents'] ?? [])),
+				folder: (int) ($self['folder'] ?? 0)
+			);
+		}
+
+		return $index;
+
+	}//end dossierIndex()
+
+	/**
+	 * A dossier's display name: a plain name, or a translatable name resolved
+	 * in the reader's language. A translatable name needs the language service.
+	 *
+	 * @param mixed $name The stored name.
+	 *
+	 * @return string The name, '' when there is none to show.
+	 */
+	private function dossierName(mixed $name): string {
+		if (is_string($name) === true) {
+			return $name;
+		}
+
+		if (is_array($name) === false || $this->languages === null) {
+			return '';
+		}
+
+		$language = $this->languages->resolveUserLanguage(user: $this->userSession?->getUser());
+
+		return (string) $this->languages->resolveFieldValue(fieldValue: $name, preferredLanguage: $language)['value'];
+
+	}//end dossierName()
+
+	/**
 	 * Every document record linked to one domain.
 	 *
 	 * 🔴 The domain filter is applied in the READING, not in the query.
@@ -249,13 +350,8 @@ class FinalDocumentRepository {
 	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	public function findByDomain(array $domain): array {
-		$reference = [
-			'register' => (string)($domain['register'] ?? ''),
-			'schema' => (string)($domain['schema'] ?? ''),
-			'id' => (string)($domain['id'] ?? ''),
-		];
-
-		if ($reference['register'] === '' || $reference['schema'] === '' || $reference['id'] === '') {
+		$reference = new DomainReference(domain: $domain);
+		if ($reference->isComplete() === false) {
 			return [];
 		}
 
@@ -283,7 +379,7 @@ class FinalDocumentRepository {
 		$records = [];
 		foreach ($results as $result) {
 			$record = $this->normalise(row: $result);
-			if ($this->sitsIn(record: $record, reference: $reference) === true) {
+			if ($reference->isNamedBy(record: $record) === true) {
 				$records[] = $record;
 			}
 		}
@@ -291,61 +387,6 @@ class FinalDocumentRepository {
 		return $records;
 
 	}//end findByDomain()
-
-	/**
-	 * Whether one record names the given domain among its own.
-	 *
-	 * A domain is matched on all three of register, schema and id. Matching on
-	 * fewer would put a record in a domain it only half belongs to, and the
-	 * domains are what decides who may read it.
-	 *
-	 * @param array<string, mixed> $record The record.
-	 * @param array<string, string> $reference The domain, as register, schema and id.
-	 *
-	 * @return bool True when the record names it.
-	 *
-	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
-	 */
-	private function sitsIn(array $record, array $reference): bool {
-		$domains = ($record['domains'] ?? []);
-		if (is_array($domains) === false) {
-			return false;
-		}
-
-		foreach ($domains as $candidate) {
-			if (is_array($candidate) === false) {
-				continue;
-			}
-
-			if ($this->sameDomain(candidate: $candidate, reference: $reference) === true) {
-				return true;
-			}
-		}
-
-		return false;
-
-	}//end sitsIn()
-
-	/**
-	 * Whether one domain entry is the domain asked for.
-	 *
-	 * @param array<string, mixed> $candidate The entry on the record.
-	 * @param array<string, string> $reference The domain asked for.
-	 *
-	 * @return bool True when all three fields match.
-	 *
-	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
-	 */
-	private function sameDomain(array $candidate, array $reference): bool {
-		foreach ($reference as $key => $value) {
-			if ((string)($candidate[$key] ?? '') !== $value) {
-				return false;
-			}
-		}
-
-		return true;
-
-	}//end sameDomain()
 
 	/**
 	 * Find one record by its uuid.
@@ -404,17 +445,14 @@ class FinalDocumentRepository {
 		unset($record['uuid']);
 
 		try {
-			$objectService = $this->objectResolver->resolve();
-			$arguments = [
-				'object'   => $record,
-				'register' => self::REGISTER,
-				'schema'   => self::SCHEMA,
-			];
-			if ($uuid !== null) {
-				$arguments['uuid'] = $uuid;
-			}
-
-			$stored = $objectService->saveObject(...$arguments);
+			$stored = $this->objectResolver->resolve()->saveObject(
+				object: $record,
+				register: self::REGISTER,
+				schema: self::SCHEMA,
+				uuid: $uuid,
+				_rbac: false,
+				_unowned: true
+			);
 		} catch (Throwable $e) {
 			$this->logger->error(
 				message: '[FinalDocumentRepository] could not store a finalisation record',
@@ -451,30 +489,7 @@ class FinalDocumentRepository {
 	 * @spec exclude Shape adapter over an OpenRegister response; no behaviour of its own.
 	 */
 	private function normalise(mixed $row): array {
-		$data = $row;
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			$data = $row->jsonSerialize();
-		}
-
-		if (is_array($data) === false) {
-			return [];
-		}
-
-		$self = [];
-		if (isset($data['@self']) === true && is_array($data['@self']) === true) {
-			$self = $data['@self'];
-		}
-
-		$fields = $data;
-		if (isset($data['object']) === true && is_array($data['object']) === true) {
-			$fields = $data['object'];
-		}
-
-		$uuid = (string)($fields['uuid'] ?? ($data['uuid'] ?? ($self['uuid'] ?? ($data['id'] ?? ''))));
-
-		$fields['uuid'] = $uuid;
-
-		return $fields;
+		return (new StoredRecordFields())->read(row: $row);
 
 	}//end normalise()
 }//end class

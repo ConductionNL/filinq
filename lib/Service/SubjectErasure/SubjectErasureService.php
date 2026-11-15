@@ -24,6 +24,7 @@ use DateInterval;
 use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\Filinq\Exception\SubjectErasureRefusedException;
+use OCA\Filinq\Kernel\Contracts\SubjectErasureServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 
 /**
@@ -32,14 +33,7 @@ use OCP\AppFramework\Utility\ITimeFactory;
  * file: the preview is computed, stored as counts on the request, and shown.
  * SubjectErasureRun does the writing.
  */
-class SubjectErasureService {
-
-	/**
-	 * States from which a preview may be (re)built.
-	 *
-	 * @var string[]
-	 */
-	public const PREVIEWABLE = ['received', 'previewed', 'partially_completed'];
+class SubjectErasureService implements SubjectErasureServiceInterface {
 
 	/**
 	 * Constructor.

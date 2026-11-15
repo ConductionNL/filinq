@@ -11,6 +11,9 @@
  * @link      https://www.filinq.app
  *
  * @spec openspec/changes/document-sanitization/tasks.md#3-3
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -34,6 +37,8 @@ use OCA\Filinq\Service\RedactionAccessibilityService;
 use OCA\Filinq\Service\ReplacementVerificationService;
 use OCA\Filinq\Service\Sanitization\AnonymisationSanitizationRecorder;
 use OCA\Filinq\Service\Sanitization\SanitizationRecordRepository;
+use OCA\Filinq\Service\Support\AnonymisationRecords;
+use OCA\Filinq\Service\Support\AnonymisedOutputs;
 use OCP\Files\File;
 use OCP\IAppConfig;
 use Opis\JsonSchema\Errors\ErrorFormatter;
@@ -92,8 +97,8 @@ class DocumentAnonymizeRunnerSanitizationTest extends TestCase {
 			 *
 			 * @return \JsonSerializable|null
 			 */
-			public function getLastSanitizationReport(): ?\OCA\OpenRegister\Service\File\SanitizationReport {
-				return $this->report === null ? null : new \OCA\OpenRegister\Service\File\SanitizationReport(commentsRemoved: 3, metadataFieldsScrubbed: 5);
+			public function getLastSanitizationReport(): ?\OCA\OpenRegister\Files\Service\File\SanitizationReport {
+				return $this->report === null ? null : new \OCA\OpenRegister\Files\Service\File\SanitizationReport(commentsRemoved: 3, metadataFieldsScrubbed: 5);
 			}
 
 			public function getLastStructurePreservation(): ?\JsonSerializable {
@@ -174,21 +179,17 @@ class DocumentAnonymizeRunnerSanitizationTest extends TestCase {
 		);
 
 		return new DocumentAnonymizeRunner(
-			logger: $logger,
-			locator: $locator,
-			entityDetection: new EntityDetectionService(new AnonymizationResultParser()),
-			emlAnonymizer: $eml,
-			pdfOutput: $pdf,
-			replacementVerifier: new ReplacementVerificationService(logger: $logger),
-			persistence: $persistence,
-			summaryAttacher: $this->createMock(GrondslagenSummaryAttacher::class),
-			runRecords: new AnonymisationRunRecords(
+			records: new AnonymisationRecords(verifier: new ReplacementVerificationService(logger: $logger), persistence: $persistence, runs: new AnonymisationRunRecords(
 				verdicts: $verdicts,
 				persistence: $persistence,
 				keys: new PseudonymMapRecorder(new PseudonymPairs(), $this->mapService(container: $container), $persistence, $locator, $logger),
 				accessibility: new RedactionAccessibilityService($appConfig),
 				sanitization: new AnonymisationSanitizationRecorder(records: $this->sanitizationRecords(), logger: $logger)
-			)
+			)),
+			outputs: new AnonymisedOutputs(eml: $eml, pdf: $pdf, summary: $this->createMock(GrondslagenSummaryAttacher::class)),
+			logger: $logger,
+			locator: $locator,
+			entityDetection: new EntityDetectionService(new AnonymizationResultParser())
 		);
 
 	}//end runner()

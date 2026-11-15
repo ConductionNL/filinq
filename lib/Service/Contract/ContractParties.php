@@ -25,12 +25,13 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\Contract;
 
+use OCA\Filinq\Kernel\Contracts\ContractPartiesInterface;
 use OCP\Contacts\IManager;
 
 /**
  * Resolves contract parties against the address books the caller can read.
  */
-class ContractParties {
+class ContractParties implements ContractPartiesInterface {
 
 	/**
 	 * The prefix of a contact reference.

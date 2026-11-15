@@ -111,6 +111,8 @@ class WizardObjectStore extends ObjectService {
 		?string $uuid = null,
 		bool $_rbac = true,
 		bool $_multitenancy = true,
+		bool $_unowned = false,
+		?string $_owner = null,
 	) {
 		if ($register !== 'filinq' || $schema !== 'wizardDefinition') {
 			throw new RuntimeException('unexpected target ' . $register . '/' . $schema);

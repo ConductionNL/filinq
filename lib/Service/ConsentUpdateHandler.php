@@ -16,12 +16,16 @@
  *
  * @spec openspec/specs/consent-management/spec.md
  * @spec openspec/specs/consent-management/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use DateTimeImmutable;
 use Exception;
 use InvalidArgumentException;
 use OCP\App\IAppManager;
@@ -40,11 +44,22 @@ use RuntimeException;
  */
 class ConsentUpdateHandler {
 	/**
+	 * Fields the server alone owns; a caller may echo them but never change them.
+	 *
+	 * @var string[]
+	 */
+	private const SERVER_OWNED_FIELDS = [
+		'policyMatch',
+		'matchKind',
+	];
+
+	/**
 	 * Constructor for ConsentUpdateHandler
 	 *
 	 * @param LoggerInterface $logger Logger for error reporting
 	 * @param ContainerInterface $container Container for dependency injection
 	 * @param IAppManager $appManager App manager interface
+	 * @param ConsentStatusEvents $statusEvents Declared status moves, recorded as events
 	 *
 	 * @return void
 	 */
@@ -52,6 +67,7 @@ class ConsentUpdateHandler {
 		private readonly LoggerInterface $logger,
 		private readonly ContainerInterface $container,
 		private readonly IAppManager $appManager,
+		private readonly ConsentStatusEvents $statusEvents = new ConsentStatusEvents(),
 	) {
 
 	}//end __construct()
@@ -74,23 +90,17 @@ class ConsentUpdateHandler {
 	/**
 	 * Update consent status for a consent record
 	 *
-	 * @param string $consentId The consent object UUID
-	 * @param string $register The register ID
-	 * @param string $schema The schema ID
-	 * @param array<string, mixed> $data The data to update
+	 * @param RegisterObjectRef   $consent Where the consent record lives
+	 * @param ConsentStatusChange $change  The proposed update and who makes it
 	 *
 	 * @return array<string, mixed> The updated consent record
 	 *
+	 * @throws InvalidArgumentException With code 400 for an undeclared status move or missing evidence
 	 * @throws Exception If update fails
 	 *
 	 * @spec openspec/specs/consent-management/spec.md
 	 */
-	public function updateConsentStatus(
-		string $consentId,
-		string $register,
-		string $schema,
-		array $data,
-	): array {
+	public function updateConsentStatus(RegisterObjectRef $consent, ConsentStatusChange $change): array {
 		try {
 			$objectService = $this->getObjectService();
 
@@ -99,77 +109,117 @@ class ConsentUpdateHandler {
 			// authenticated user to overwrite consent records owned by
 			// other users.
 			$object = $objectService->find(
-				id: $consentId,
-				register: $register,
-				schema: $schema
+				id: $consent->id,
+				register: $consent->register,
+				schema: $consent->schema,
+				_rbac: false
 			);
 
 			if ($object === null) {
-				throw new Exception('Consent record not found: ' . $consentId);
+				throw new Exception('Consent record not found: ' . $consent->id);
 			}
 
-			// Whitelist the fields a consent update may mutate so callers
-			// cannot rewrite arbitrary consent attributes (e.g. documentId,
-			// entityText) or inject extra keys (security finding #283).
-			$mutableFields = [
-				'notificationStatus',
-				'consentStatus',
-				'publicationDecision',
-				'objectionReason',
-				'objectionDeadline',
-			];
-			$allowedData = array_intersect_key($data, array_flip($mutableFields));
-
 			$existing = $object->getObject();
-
-			// Server-controlled-fields immutability gate: this always-on
-			// guard runs AHEAD of the policy-pre-emption lock so a PATCH that
-			// fabricates or swaps `policyMatch` / `matchKind` is rejected on
-			// BOTH the matched and unmatched branches (PR #147 sixth-pass).
-			// We pass the FULL inbound $data here (not the mutable-field
-			// whitelist) because server-controlled fields are deliberately
-			// absent from $mutableFields — checking the whitelist would never
-			// see the injection attempt.
-			$this->guardServerControlledFields(existing: $existing, data: $data);
-
-			// Policy pre-emption lock: records bound to a prohibition /
-			// standing-consent match must not have their transition fields
-			// overridden by operators (restored after 917b80e7 wiped it).
-			$this->guardPolicyPreemptedTransition(existing: $existing, data: $allowedData);
-
-			$consentData = array_merge($existing, $allowedData);
+			$allowedData = $this->consentChanges(existing: $existing, change: $change);
 
 			$savedObject = $objectService->saveObject(
-				object: $consentData,
-				register: $register,
-				schema: $schema
+				object: array_merge($existing, $allowedData),
+				register: $consent->register,
+				schema: $consent->schema,
+				_rbac: false
 			);
 
 			$this->logger->info(
 				'Consent status updated',
 				[
-					'consentId' => $consentId,
+					'consentId' => $consent->id,
 					'updatedKeys' => array_keys($allowedData),
 				]
 			);
 
 			return $savedObject->getObject();
+		} catch (InvalidArgumentException $e) {
+			throw $e;
 		} catch (Exception $e) {
-			$this->logger->error(
-				'Failed to update consent status: ' . $e->getMessage(),
-				[
-					'consentId' => $consentId,
-					'exception' => $e,
-				]
-			);
-			throw new Exception(
-				'Failed to update consent status: ' . $e->getMessage(),
-				0,
-				$e
-			);
+			throw $this->updateFailure(error: $e, consentId: $consent->id);
 		}//end try
 
 	}//end updateConsentStatus()
+
+	/**
+	 * The fields an update may change, past the guards and with its status events.
+	 *
+	 * @param array<string, mixed> $existing The record's current data.
+	 * @param ConsentStatusChange  $change   The proposed update and who makes it.
+	 *
+	 * @return array<string, mixed> The changes to merge into the record.
+	 *
+	 * @throws InvalidArgumentException With code 400 for a guarded field, an undeclared status move or missing evidence.
+	 *
+	 * @spec openspec/specs/consent-management/spec.md
+	 */
+	private function consentChanges(array $existing, ConsentStatusChange $change): array {
+		$data = $change->data;
+
+		// Whitelist the fields a consent update may mutate so callers
+		// cannot rewrite arbitrary consent attributes (e.g. documentId,
+		// entityText) or inject extra keys (security finding #283).
+		$mutableFields = [
+			'notificationStatus',
+			'consentStatus',
+			'publicationDecision',
+			'objectionReason',
+			'objectionDeadline',
+		];
+		$allowedData = array_intersect_key($data, array_flip($mutableFields));
+
+		// Server-controlled-fields immutability gate: this always-on
+		// guard runs AHEAD of the policy-pre-emption lock so a PATCH that
+		// fabricates or swaps `policyMatch` / `matchKind` is rejected on
+		// BOTH the matched and unmatched branches (PR #147 sixth-pass).
+		// We pass the FULL inbound $data here (not the mutable-field
+		// whitelist) because server-controlled fields are deliberately
+		// absent from $mutableFields — checking the whitelist would never
+		// see the injection attempt.
+		$this->guardServerControlledFields(existing: $existing, data: $data);
+
+		// Policy pre-emption lock: records bound to a prohibition /
+		// standing-consent match must not have their transition fields
+		// overridden by operators (restored after 917b80e7 wiped it).
+		$this->guardPolicyPreemptedTransition(existing: $existing, data: $allowedData);
+
+		return $this->statusEvents->apply(
+			existing: $existing,
+			changes: $allowedData,
+			actor: $change->actor,
+			evidence: (string) ($data['evidence'] ?? ''),
+			now: new DateTimeImmutable()
+		);
+	}//end consentChanges()
+
+	/**
+	 * Log a failed consent update and wrap it.
+	 *
+	 * @param Exception $error     What went wrong.
+	 * @param string    $consentId The consent object UUID.
+	 *
+	 * @return Exception The wrapped failure, for the caller to throw.
+	 */
+	private function updateFailure(Exception $error, string $consentId): Exception {
+		$this->logger->error(
+			'Failed to update consent status: ' . $error->getMessage(),
+			[
+				'consentId' => $consentId,
+				'exception' => $error,
+			]
+		);
+
+		return new Exception(
+			'Failed to update consent status: ' . $error->getMessage(),
+			0,
+			$error
+		);
+	}//end updateFailure()
 
 	/**
 	 * Reject any caller mutation of server-controlled consent fields.
@@ -197,43 +247,67 @@ class ConsentUpdateHandler {
 		// yet carry them. This guard is always-on and runs ahead of the
 		// policy-pre-emption lock so it cannot be bypassed by either the
 		// matched or the unmatched branch (PR #147 sixth-pass).
-		$serverOwnedFields = [
-			'policyMatch',
-			'matchKind',
-		];
+		$field = $this->changedServerField(existing: $existing, data: $data);
+		if ($field === null) {
+			return;
+		}
 
-		foreach ($serverOwnedFields as $field) {
+		throw new InvalidArgumentException(
+			message: sprintf(
+				'%s is server-controlled and cannot be modified by the caller.',
+				$field
+			)
+		);
+
+	}//end guardServerControlledFields()
+
+	/**
+	 * The first server-owned field the update would change.
+	 *
+	 * @param array<string, mixed> $existing The record's current data.
+	 * @param array<string, mixed> $data     The proposed update.
+	 *
+	 * @return string|null The field, or null when the update leaves them all as they are.
+	 */
+	private function changedServerField(array $existing, array $data): ?string {
+		foreach (self::SERVER_OWNED_FIELDS as $field) {
 			if (array_key_exists($field, $data) === false) {
 				continue;
 			}
 
-			$proposed = $data[$field];
-			$current = ($existing[$field] ?? null);
-
-			// Equal values are a no-op for an immutable field — allow them so
-			// idempotent clients that echo the full record state still work.
-			if ($proposed === $current) {
+			if ($this->isUnchangedServerValue(proposed: $data[$field], current: ($existing[$field] ?? null)) === true) {
 				continue;
 			}
 
-			// Tolerate loose scalar equality (e.g. "" vs null) so a client
-			// re-sending an empty marker against an unset field is not
-			// rejected, while a genuine value change still trips.
-			if (($proposed === null || $proposed === '')
-				&& ($current === null || $current === '')
-			) {
-				continue;
-			}
+			return $field;
+		}
 
-			throw new InvalidArgumentException(
-				message: sprintf(
-					'%s is server-controlled and cannot be modified by the caller.',
-					$field
-				)
-			);
-		}//end foreach
+		return null;
 
-	}//end guardServerControlledFields()
+	}//end changedServerField()
+
+	/**
+	 * Whether a proposed value for a server-owned field leaves it as it is.
+	 *
+	 * @param mixed $proposed The value the caller sent.
+	 * @param mixed $current  The value the record carries.
+	 *
+	 * @return bool True when the update does not change the field.
+	 */
+	private function isUnchangedServerValue(mixed $proposed, mixed $current): bool {
+		// Equal values are a no-op for an immutable field — allow them so
+		// idempotent clients that echo the full record state still work.
+		if ($proposed === $current) {
+			return true;
+		}
+
+		// Tolerate loose scalar equality (e.g. "" vs null) so a client
+		// re-sending an empty marker against an unset field is not
+		// rejected, while a genuine value change still trips.
+		return ($proposed === null || $proposed === '')
+			&& ($current === null || $current === '');
+
+	}//end isUnchangedServerValue()
 
 	/**
 	 * Reject `consentStatus` changes on records pre-empted by a policy.
@@ -258,17 +332,80 @@ class ConsentUpdateHandler {
 	 * @throws InvalidArgumentException When the update would change consentStatus on a policy-pre-empted record.
 	 */
 	private function guardPolicyPreemptedTransition(array $existing, array $data): void {
-		$existingMatch = ($existing['policyMatch'] ?? null);
-		if ($existingMatch === null || $existingMatch === '') {
+		$rejectedField = $this->rejectedPreemptedField(existing: $existing, data: $data);
+		if ($rejectedField === null) {
 			return;
 		}
 
-		// Guard the two operator-controlled transition fields. The
-		// prohibition lock applies to BOTH `consentStatus` AND
-		// `publicationDecision` — a record that's been pre-empted by a
-		// policy match must not be coaxed into "publish" via either
-		// field. Without this both-fields check, a PATCH carrying only
-		// `publicationDecision: "publish"` would bypass the lock.
+		throw new InvalidArgumentException(
+			message: sprintf(
+				'%s "%s" rejected on policy-pre-empted record (policyMatch=%s, current=%s).',
+				$rejectedField,
+				(string)$data[$rejectedField],
+				(string)$existing['policyMatch'],
+				(string)($existing[$rejectedField] ?? '')
+			)
+		);
+
+	}//end guardPolicyPreemptedTransition()
+
+	/**
+	 * The transition field an update may not change on a policy-pre-empted record.
+	 *
+	 * @param array<string, mixed> $existing The record's current data.
+	 * @param array<string, mixed> $data     The proposed update.
+	 *
+	 * @return string|null The refused field, or null when the record is not pre-empted or the update is allowed.
+	 */
+	private function rejectedPreemptedField(array $existing, array $data): ?string {
+		if ($this->isPolicyPreempted(existing: $existing) === false) {
+			return null;
+		}
+
+		[$statusChanged, $decisionChanged] = $this->transitionChanges(existing: $existing, data: $data);
+
+		if ($this->isStandingConsentOverride(
+			existing: $existing,
+			statusChanged: $statusChanged,
+			decisionChanged: $decisionChanged
+		) === true
+		) {
+			return null;
+		}
+
+		return $this->changedTransitionField(statusChanged: $statusChanged, decisionChanged: $decisionChanged);
+
+	}//end rejectedPreemptedField()
+
+	/**
+	 * Whether a policy pre-empted the record.
+	 *
+	 * @param array<string, mixed> $existing The record's current data.
+	 *
+	 * @return bool True when the record carries a policy match.
+	 */
+	private function isPolicyPreempted(array $existing): bool {
+		$existingMatch = ($existing['policyMatch'] ?? null);
+
+		return $existingMatch !== null && $existingMatch !== '';
+
+	}//end isPolicyPreempted()
+
+	/**
+	 * Whether the update changes `consentStatus` and `publicationDecision`.
+	 *
+	 * The prohibition lock applies to BOTH `consentStatus` AND
+	 * `publicationDecision` — a record that's been pre-empted by a policy
+	 * match must not be coaxed into "publish" via either field. Without this
+	 * both-fields check, a PATCH carrying only `publicationDecision: "publish"`
+	 * would bypass the lock.
+	 *
+	 * @param array<string, mixed> $existing The record's current data.
+	 * @param array<string, mixed> $data     The proposed update.
+	 *
+	 * @return array{0: bool, 1: bool} Whether the status and the decision change.
+	 */
+	private function transitionChanges(array $existing, array $data): array {
 		$statusChanged = $this->isTransitionFieldChanged(
 			existing: $existing,
 			data: $data,
@@ -280,38 +417,30 @@ class ConsentUpdateHandler {
 			field: 'publicationDecision'
 		);
 
-		if ($this->isStandingConsentOverride(
-			existing: $existing,
-			statusChanged: $statusChanged,
-			decisionChanged: $decisionChanged
-		) === true
-		) {
-			return;
-		}
+		return [$statusChanged, $decisionChanged];
 
-		if ($statusChanged === false && $decisionChanged === false) {
-			return;
-		}
+	}//end transitionChanges()
 
-		$rejectedField = 'publicationDecision';
+	/**
+	 * The field to refuse: the status when it changes, otherwise the decision when it changes.
+	 *
+	 * @param bool $statusChanged   Whether `consentStatus` changes.
+	 * @param bool $decisionChanged Whether `publicationDecision` changes.
+	 *
+	 * @return string|null The field, or null when neither changes.
+	 */
+	private function changedTransitionField(bool $statusChanged, bool $decisionChanged): ?string {
 		if ($statusChanged === true) {
-			$rejectedField = 'consentStatus';
+			return 'consentStatus';
 		}
 
-		$rejectedValue = (string)$data[$rejectedField];
-		$currentValue = (string)($existing[$rejectedField] ?? '');
+		if ($decisionChanged === true) {
+			return 'publicationDecision';
+		}
 
-		throw new InvalidArgumentException(
-			message: sprintf(
-				'%s "%s" rejected on policy-pre-empted record (policyMatch=%s, current=%s).',
-				$rejectedField,
-				$rejectedValue,
-				(string)$existingMatch,
-				$currentValue
-			)
-		);
+		return null;
 
-	}//end guardPolicyPreemptedTransition()
+	}//end changedTransitionField()
 
 	/**
 	 * Determine whether an update actually changes a transition field.
