@@ -535,11 +535,20 @@ class PortalContributionProvider {
 	}//end signerSigningRequestsCollection()
 
 	/**
-	 * The sign and decline acts: id, label, endpoint, method and minimum trust.
+	 * The sign, decline and viewDocument acts: id, label, endpoint, method,
+	 * minimum trust and the body fields portaliq forwards.
 	 *
-	 * @return array<int, array<string, string>> The two acts.
+	 * `fields` is the whitelist portaliq rebuilds the forwarded body from:
+	 * the signing dialog sends `consent`, the decline dialog `reason`, and
+	 * viewing the document sends nothing but the row. `viewDocument` is a row
+	 * action too, so portaliq's signing dialog can fetch the document of the
+	 * row being signed and show it before the resident signs (portaliq
+	 * REQ-SGN-004); the portal shows it inside that dialog, not as a button.
+	 *
+	 * @return array<int, array<string, mixed>> The three acts.
 	 *
 	 * @spec openspec/specs/portal-signing-surface/spec.md
+	 * @spec openspec/specs/portal-signing-actions/spec.md
 	 */
 	private function signingActs(): array {
 		return [
@@ -549,6 +558,7 @@ class PortalContributionProvider {
 				'endpoint' => self::SIGN_ENDPOINT,
 				'method' => 'POST',
 				'minTrust' => self::SIGNING_MIN_TRUST,
+				'fields' => ['consent'],
 			],
 			[
 				'id' => 'decline',
@@ -556,6 +566,15 @@ class PortalContributionProvider {
 				'endpoint' => self::DECLINE_ENDPOINT,
 				'method' => 'POST',
 				'minTrust' => self::SIGNING_MIN_TRUST,
+				'fields' => ['reason'],
+			],
+			[
+				'id' => 'viewDocument',
+				'label' => $this->translate(text: 'View document'),
+				'endpoint' => self::VIEW_DOCUMENT_ENDPOINT,
+				'method' => 'GET',
+				'minTrust' => self::SIGNING_MIN_TRUST,
+				'fields' => [],
 			],
 		];
 
@@ -571,7 +590,7 @@ class PortalContributionProvider {
 	 * `PortalSigningReceiverController` +
 	 * `Portal\PortalAssertionVerifier`.
 	 *
-	 * `sign` and `decline` are endpoint ROW actions in portaliq's
+	 * All three are endpoint ROW actions in portaliq's
 	 * contract (portaliq#804 / #833): `rowField` is the body key the
 	 * portal stamps the proven row's id under, and `scopeClaim` rides
 	 * in the signed X-Portal-Subject assertion. The receiver reads
@@ -587,14 +606,6 @@ class PortalContributionProvider {
 		foreach ($this->signingActs() as $act) {
 			$actions[] = $act + ['rowField' => 'signingRequestId', 'scopeClaim' => 'signerEmail'];
 		}
-
-		$actions[] = [
-			'id' => 'viewDocument',
-			'label' => $this->translate(text: 'View document'),
-			'endpoint' => self::VIEW_DOCUMENT_ENDPOINT,
-			'method' => 'GET',
-			'minTrust' => self::SIGNING_MIN_TRUST,
-		];
 
 		return $actions;
 
