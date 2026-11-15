@@ -5,7 +5,8 @@
  *
  * Every stored reference to one of filinq's 19 old Woo `base` slugs (a
  * dossier's `bases`, a publication consent or prohibition rule's `bases`, and
- * the entity-type mapping in `filinq.grondslagen.entity_type_bases`) is
+ * the entity-type mapping in `filinq.grondslagen.entity_type_bases`, and the
+ * `bases` of every recorded entity relation) is
  * rewritten to the dossiq refusal ground code the legacy map gives it. A slug
  * the map marks `unmapped` is never guessed: the reference stays and the
  * report names the object and the slug. Nothing is deleted, and a second run
@@ -37,6 +38,7 @@ use OCA\Filinq\Service\LegalBasisProposalService;
 use OCP\IAppConfig;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -67,6 +69,7 @@ class RepointWooGrounds implements IRepairStep {
 	 * @param WooGroundsLegacyMap     $legacy     The old slug to code map.
 	 * @param IAppConfig              $appConfig  Holds the entity-type mapping.
 	 * @param LoggerInterface         $logger     Names an object that could not be written.
+	 * @param ContainerInterface|null $container  Reaches OpenRegister's entity relations.
 	 */
 	public function __construct(
 		private readonly DossierObjectRepository $repository,
@@ -74,6 +77,7 @@ class RepointWooGrounds implements IRepairStep {
 		private readonly WooGroundsLegacyMap $legacy,
 		private readonly IAppConfig $appConfig,
 		private readonly LoggerInterface $logger,
+		private readonly ?ContainerInterface $container = null,
 	) {
 	}//end __construct()
 
@@ -118,6 +122,7 @@ class RepointWooGrounds implements IRepairStep {
 		}
 
 		$report = $this->repointMapping(report: $report);
+		$report = $this->repointRelations(report: $report, output: $output);
 
 		$output->info('RepointWooGrounds: re-pointed ' . $report['rewritten'] . ' references, left ' . count($report['left']) . '.');
 		foreach ($report['left'] as $left) {
@@ -230,6 +235,93 @@ class RepointWooGrounds implements IRepairStep {
 
 		return true;
 	}//end save()
+
+	/**
+	 * The page size of the entity relation walk.
+	 */
+	private const RELATION_PAGE = 500;
+
+	/**
+	 * Re-point the `bases` of every entity relation that carries them.
+	 *
+	 * Reads OpenRegister's relations page by page in id order and writes a
+	 * changed list through its audited decision-metadata path. An OpenRegister
+	 * without the paged read leaves the relations as they are and says so;
+	 * their old slugs keep their labels through the legacy map.
+	 *
+	 * @param array{rewritten: int, left: list<string>} $report The report so far.
+	 * @param IOutput                                   $output The upgrade output.
+	 *
+	 * @return array{rewritten: int, left: list<string>} The report.
+	 *
+	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
+	 */
+	private function repointRelations(array $report, IOutput $output): array {
+		$mapper = null;
+		try {
+			$mapper = $this->container?->get('OCA\\OpenRegister\\Db\\EntityRelationMapper');
+		} catch (Throwable $e) {
+			$mapper = null;
+		}
+
+		if (is_object($mapper) === false || method_exists($mapper, 'findWithBases') === false) {
+			$output->info('RepointWooGrounds: this OpenRegister cannot list entity relations with grounds; their grounds were left as they are.');
+			return $report;
+		}
+
+		$afterId = 0;
+		do {
+			$relations = $mapper->findWithBases(afterId: $afterId, limit: self::RELATION_PAGE);
+			$lastId = $afterId;
+			foreach ($relations as $relation) {
+				$lastId = max($lastId, (int)$relation->getId());
+				$report = $this->repointRelation(mapper: $mapper, relation: $relation, report: $report);
+			}
+
+			$fullPage = (count($relations) === self::RELATION_PAGE);
+			$advanced = ($lastId > $afterId);
+			$afterId = $lastId;
+		} while ($fullPage === true && $advanced === true);
+
+		return $report;
+	}//end repointRelations()
+
+	/**
+	 * Re-point one entity relation's `bases`.
+	 *
+	 * @param object                                    $mapper   OpenRegister's EntityRelationMapper.
+	 * @param object                                    $relation The relation.
+	 * @param array{rewritten: int, left: list<string>} $report   The report so far.
+	 *
+	 * @return array{rewritten: int, left: list<string>} The report.
+	 */
+	private function repointRelation(object $mapper, object $relation, array $report): array {
+		$bases = $relation->getBases();
+		if (is_array($bases) === false) {
+			return $report;
+		}
+
+		$result = $this->repoint(bases: $bases);
+		foreach ($result['left'] as $slug) {
+			$report['left'][] = 'entity relation ' . (string)$relation->getId() . ' (' . $slug . ')';
+		}
+
+		if ($result['bases'] === $bases) {
+			return $report;
+		}
+
+		try {
+			$mapper->updateDecisionMetadata(relation: $relation, fields: ['bases' => $result['bases']]);
+			$report['rewritten']++;
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'Filinq: the grounds of an entity relation could not be re-pointed',
+				['relationId' => $relation->getId(), 'reason' => $e->getMessage()]
+			);
+		}
+
+		return $report;
+	}//end repointRelation()
 
 	/**
 	 * Re-point the entity-type mapping in app config.

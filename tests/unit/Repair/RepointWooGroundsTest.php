@@ -27,6 +27,7 @@ use OCA\Filinq\Service\Grounds\WooGroundsLegacyMap;
 use OCP\IAppConfig;
 use OCP\Migration\IOutput;
 use PHPUnit\Framework\TestCase;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 
@@ -120,10 +121,12 @@ class RepointWooGroundsTest extends TestCase {
 	 *
 	 * @param object|null              $objectService The object service, null without OpenRegister.
 	 * @param WooGroundsLegacyMap|null $legacy        The map; the shipped one when null.
+	 * @param object|null              $relations     OpenRegister's EntityRelationMapper, null when the container has none.
+	 * @param LoggerInterface|null     $logger        The logger.
 	 *
 	 * @return RepointWooGrounds
 	 */
-	private function repair(?object $objectService, ?WooGroundsLegacyMap $legacy = null): RepointWooGrounds {
+	private function repair(?object $objectService, ?WooGroundsLegacyMap $legacy = null, ?object $relations = null, ?LoggerInterface $logger = null): RepointWooGrounds {
 		$repository = $this->createMock(DossierObjectRepository::class);
 		$repository->method('objectService')->willReturn($objectService);
 
@@ -136,7 +139,18 @@ class RepointWooGroundsTest extends TestCase {
 			}
 		);
 
-		return new RepointWooGrounds($repository, new DossierObjectReader(), ($legacy ?? new WooGroundsLegacyMap()), $appConfig, $this->createMock(LoggerInterface::class));
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->willReturnCallback(
+			static function (string $id) use ($relations): object {
+				if ($id !== 'OCA\\OpenRegister\\Db\\EntityRelationMapper' || $relations === null) {
+					throw new RuntimeException('not registered: ' . $id);
+				}
+
+				return $relations;
+			}
+		);
+
+		return new RepointWooGrounds($repository, new DossierObjectReader(), ($legacy ?? new WooGroundsLegacyMap()), $appConfig, ($logger ?? $this->createMock(LoggerInterface::class)), $container);
 
 	}//end repair()
 
@@ -252,4 +266,177 @@ class RepointWooGroundsTest extends TestCase {
 		$this->assertSame([['warning', 'RepointWooGrounds: the legacy map cannot be read, nothing was changed: gone']], $this->lines);
 
 	}//end testAnUnreadableMapChangesNothing()
+	/**
+	 * A fake EntityRelationMapper over relations as [id => bases], paged like
+	 * findWithBases() and recording every decision-metadata write.
+	 *
+	 * @param array<int, mixed> $relations Bases per relation id.
+	 * @param array<int, true>  $failing   Relation ids whose write throws.
+	 *
+	 * @return object
+	 */
+	private static function relationMapper(array $relations, array $failing = []): object {
+		return new class($relations, $failing) {
+			/**
+			 * The reads, as [afterId, limit].
+			 *
+			 * @var list<array{0: int, 1: int}>
+			 */
+			public array $reads = [];
+
+			/**
+			 * The writes, as [id, fields].
+			 *
+			 * @var list<array{0: int, 1: array<string, mixed>}>
+			 */
+			public array $writes = [];
+
+			/**
+			 * Constructor.
+			 *
+			 * @param array<int, mixed> $relations Bases per relation id.
+			 * @param array<int, true>  $failing   Relation ids whose write throws.
+			 */
+			public function __construct(public array $relations, private array $failing) {
+			}
+
+			/**
+			 * One page of relations with bases after a cursor.
+			 *
+			 * @param int $afterId The cursor.
+			 * @param int $limit   The page size.
+			 *
+			 * @return list<object>
+			 */
+			public function findWithBases(int $afterId = 0, int $limit = 500): array {
+				$this->reads[] = [$afterId, $limit];
+				$page = [];
+				foreach ($this->relations as $id => $bases) {
+					if ($id > $afterId && $bases !== null && count($page) < $limit) {
+						$page[] = new class($id, $bases) {
+							/**
+							 * Constructor.
+							 *
+							 * @param int   $id    The id.
+							 * @param mixed $bases The bases.
+							 */
+							public function __construct(private int $id, private mixed $bases) {
+							}
+
+							/**
+							 * The id.
+							 *
+							 * @return int
+							 */
+							public function getId(): int {
+								return $this->id;
+							}
+
+							/**
+							 * The bases.
+							 *
+							 * @return mixed
+							 */
+							public function getBases(): mixed {
+								return $this->bases;
+							}
+						};
+					}
+				}
+
+				return $page;
+			}
+
+			/**
+			 * Store new decision fields.
+			 *
+			 * @param mixed                $edit     Unused.
+			 * @param array<string, mixed> $fields   The fields.
+			 * @param mixed                $actingUser Unused.
+			 * @param object|null          $relation The relation.
+			 *
+			 * @return object
+			 */
+			public function updateDecisionMetadata(mixed $edit = null, ?array $fields = null, mixed $actingUser = null, ?object $relation = null): object {
+				$id = $relation->getId();
+				if (isset($this->failing[$id]) === true) {
+					throw new RuntimeException('write refused');
+				}
+
+				$this->writes[] = [$id, $fields];
+				$this->relations[$id] = $fields['bases'];
+				return $relation;
+			}
+		};
+	}//end relationMapper()
+
+	/**
+	 * Entity relations citing an old slug hold the code afterwards, an
+	 * unmapped one is reported, and a second run writes nothing.
+	 *
+	 * @return void
+	 */
+	public function testEntityRelationGroundsAreRewritten(): void {
+		$relations = self::relationMapper([3 => ['art-5-1-2-e', '5.1.4'], 4 => ['art-5-1-5'], 5 => ['5.1.1.e'], 6 => 'not a list']);
+		$repair = $this->repair(null, self::mapWithAnUnmappedSlug(), $relations);
+
+		$repair->run($this->upgradeOutput());
+
+		$this->assertSame([[3, ['bases' => ['5.1.2.e', '5.1.4']]]], $relations->writes);
+		$this->assertContains(['info', 'RepointWooGrounds: re-pointed 1 references, left 1.'], $this->lines);
+		$this->assertContains(['warning', 'RepointWooGrounds: entity relation 4 (art-5-1-5) has no one-to-one dossiq code and was left as it is.'], $this->lines);
+		$this->assertSame([[0, 500]], $relations->reads);
+
+		$repair->run($this->upgradeOutput());
+		$this->assertCount(1, $relations->writes);
+	}//end testEntityRelationGroundsAreRewritten()
+
+	/**
+	 * The walk reads page after page with the last id it saw until a short page.
+	 *
+	 * @return void
+	 */
+	public function testTheRelationWalkPagesThroughEveryRelation(): void {
+		$bases = array_fill(1, 1001, ['5.1.4']);
+		$bases[1001] = ['art-5-1-2-e'];
+		$relations = self::relationMapper($bases);
+
+		$this->repair(null, null, $relations)->run($this->upgradeOutput());
+
+		$this->assertSame([[0, 500], [500, 500], [1000, 500]], $relations->reads);
+		$this->assertSame([[1001, ['bases' => ['5.1.2.e']]]], $relations->writes);
+	}//end testTheRelationWalkPagesThroughEveryRelation()
+
+	/**
+	 * A refused write is logged and the walk goes on.
+	 *
+	 * @return void
+	 */
+	public function testARefusedRelationWriteIsLogged(): void {
+		$relations = self::relationMapper([1 => ['art-5-1-2-e'], 2 => ['art-5-1-1-a']], [1 => true]);
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())->method('warning')->with(
+			'Filinq: the grounds of an entity relation could not be re-pointed',
+			['relationId' => 1, 'reason' => 'write refused']
+		);
+
+		$this->repair(null, null, $relations, $logger)->run($this->upgradeOutput());
+
+		$this->assertSame([2], array_column($relations->writes, 0));
+		$this->assertContains(['info', 'RepointWooGrounds: re-pointed 1 references, left 0.'], $this->lines);
+	}//end testARefusedRelationWriteIsLogged()
+
+	/**
+	 * An OpenRegister without the paged read, or none at all, leaves the relations and says so.
+	 *
+	 * @return void
+	 */
+	public function testAnOpenRegisterWithoutThePagedReadLeavesTheRelations(): void {
+		$this->repair(null, null, new class {
+		})->run($this->upgradeOutput());
+		$this->repair(null)->run($this->upgradeOutput());
+
+		$notice = ['info', 'RepointWooGrounds: this OpenRegister cannot list entity relations with grounds; their grounds were left as they are.'];
+		$this->assertSame(2, count(array_filter($this->lines, static fn (array $line): bool => $line === $notice)));
+	}//end testAnOpenRegisterWithoutThePagedReadLeavesTheRelations()
 }//end class

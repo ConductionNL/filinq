@@ -40,13 +40,17 @@ objects stay readable.
 On upgrade, the repair step **Re-point stored Woo grounds to the dossiq
 refusal ground codes** rewrites every stored reference to an old slug to its
 code (`art-5-1-2-e` becomes `5.1.2.e`): on dossiers, on publication consent
-and prohibition rules, and in the proposed basis per entity type. It uses a
+and prohibition rules, in the proposed basis per entity type, and on the
+grounds recorded for detected entities. It uses a
 fixed one-to-one mapping and never guesses: a slug without a one-to-one code
 is left as it is, and the upgrade log names the object and the slug. Running
 it again changes nothing, and it deletes nothing.
 
-The bases on detected entities are not rewritten yet; they keep showing the
-right label, because filinq reads an old slug through the same mapping.
+The grounds of detected entities are rewritten through OpenRegister's audited
+decision path, page by page. An OpenRegister that cannot yet list entity
+relations with grounds leaves them as they are and says so in the upgrade
+log; they keep showing the right label, because filinq reads an old slug
+through the same mapping.
 
 ## Related
 
