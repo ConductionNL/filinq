@@ -119,18 +119,19 @@ class ObjectEventRegistrarTest extends TestCase {
 			->willReturnCallback(static function (string $event, string $listener) use (&$added): void {
 				$added[] = [$event, $listener];
 			});
-		$container = $this->createMock(ContainerInterface::class);
-		$container->expects(self::once())->method('get')->with(IEventDispatcher::class)->willReturn($dispatcher);
-
 		$warnings = [];
 		$logger = $this->createMock(LoggerInterface::class);
 		$logger->expects(self::exactly(3))->method('warning')
 			->willReturnCallback(static function (string $message, array $context) use (&$warnings): void {
 				$warnings[] = [$message, $context];
 			});
-		$server = $this->createMock(ContainerInterface::class);
-		$server->method('get')->with(LoggerInterface::class)->willReturn($logger);
-		\OC::$server = $server;
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->willReturnMap(
+			[
+				[IEventDispatcher::class, $dispatcher],
+				[LoggerInterface::class, $logger],
+			]
+		);
 
 		(new ObjectEventRegistrar())->boot($container, 'filinq');
 

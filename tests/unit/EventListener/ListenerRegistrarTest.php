@@ -130,10 +130,12 @@ class ListenerRegistrarTest extends TestCase {
 				$added[] = [$event, $listener];
 			});
 		$container = $this->createMock(ContainerInterface::class);
-		$container->expects(self::once())->method('get')->with(IEventDispatcher::class)->willReturn($dispatcher);
-		$server = $this->createMock(ContainerInterface::class);
-		$server->method('get')->with(LoggerInterface::class)->willReturn($this->createMock(LoggerInterface::class));
-		\OC::$server = $server;
+		$container->method('get')->willReturnMap(
+			[
+				[IEventDispatcher::class, $dispatcher],
+				[LoggerInterface::class, $this->createMock(LoggerInterface::class)],
+			]
+		);
 
 		(new ListenerRegistrar())->boot($container, 'filinq');
 

@@ -30,7 +30,6 @@ use OCA\OpenRegister\Event\ObjectDeletedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use OCP\EventDispatcher\IEventDispatcher;
-use OCP\Server;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -179,7 +178,8 @@ class ObjectEventRegistrar {
 			listener: DossierCheckedOnListener::class,
 			registers: ['filinq'],
 			schemas: ['dossier'],
-			appName: $appName
+			appName: $appName,
+			container: $container
 		);
 
 		// Outward document events (connect-document-webhooks): a completed
@@ -194,7 +194,8 @@ class ObjectEventRegistrar {
 			listener: $translator,
 			registers: ['filinq'],
 			schemas: ['signingRequest'],
-			appName: $appName
+			appName: $appName,
+			container: $container
 		);
 		$this->registerFilteredObjectListener(
 			dispatcher: $dispatcher,
@@ -202,7 +203,8 @@ class ObjectEventRegistrar {
 			listener: $translator,
 			registers: ['filinq'],
 			schemas: ['anonymizationLink', 'generatedDocument', 'documentRegistration'],
-			appName: $appName
+			appName: $appName,
+			container: $container
 		);
 
 		$this->declareWebhookEvents(dispatcher: $dispatcher);
@@ -269,6 +271,7 @@ class ObjectEventRegistrar {
 	 * @param array<int,string> $registers Register slugs the listener reacts to.
 	 * @param array<int,string> $schemas Schema slugs the listener reacts to.
 	 * @param string $appName The filinq app id, for log context.
+	 * @param ContainerInterface $container The server container, for the fallback's logger.
 	 *
 	 * @return void
 	 */
@@ -279,6 +282,7 @@ class ObjectEventRegistrar {
 		array $registers,
 		array $schemas,
 		string $appName,
+		ContainerInterface $container,
 	): void {
 		$subscription = '\\OCA\\OpenRegister\\Event\\ObjectEventSubscription';
 		if (class_exists($subscription) === true) {
@@ -294,7 +298,7 @@ class ObjectEventRegistrar {
 
 		// Loud on purpose. This fallback is correct but UNFILTERED, and while it
 		// was silent it was indistinguishable from a working narrowing.
-		Server::get(LoggerInterface::class)->warning(
+		$container->get(LoggerInterface::class)->warning(
 			'OpenRegister ObjectEventSubscription unavailable: ' . $listener
 			. ' fell back to an UNFILTERED registration for ' . $event
 			. ' and will be invoked on every object write instance-wide.',
