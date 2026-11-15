@@ -130,7 +130,8 @@ class DocumentProductionSchemaTest extends TestCase {
 		// `generated-document-names-its-template-version` (optional templateVersion).
 		// 1.6.0 since `guided-document-wizard` (optional wizardContext).
 		// 1.7.0 since `generate-store-in-case-system` (optional caseSystemDeliveryId).
-		$this->assertSame('1.7.0', $document['version']);
+		// 1.8.0 since `template-library-leaf` (optional sourceObject).
+		$this->assertSame('1.8.0', $document['version']);
 		$this->assertArrayHasKey(
 			'documentDueForReview',
 			$document['x-openregister-notifications'],

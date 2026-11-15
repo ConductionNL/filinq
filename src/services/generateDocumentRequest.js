@@ -12,7 +12,9 @@
 /**
  * The body `POST /apps/filinq/api/documents/generate` reads for one template
  * on one host object. The document is stored (`output.mode: files`) rather
- * than downloaded, so it stays with the object.
+ * than downloaded, so it stays with the object: the host is named as the
+ * `sourceObject`, which the server records on the generated document and
+ * uses to file it in the host's folder.
  *
  * @param {object} args The template and the host object.
  * @param {{id: string, name: string}} args.template The chosen template.
@@ -21,12 +23,14 @@
  * @return {object} The request body.
  *
  * @spec openspec/changes/template-library-leaf/tasks.md#task-2.2
+ * @spec openspec/changes/template-library-leaf/tasks.md#task-2.3
  */
 export function buildGenerateRequest({ template, host }) {
+	const ref = { register: host.register, schema: host.schema, id: host.objectId }
 	return {
 		templateId: template.id,
-		dataRefs: [{ register: host.register, schema: host.schema, id: host.objectId }],
-		options: { output: { mode: 'files' } },
+		dataRefs: [ref],
+		options: { output: { mode: 'files' }, sourceObject: { ...ref } },
 		filename: (template.name || '').trim() || 'document',
 	}
 }

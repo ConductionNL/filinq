@@ -21,13 +21,19 @@ vi.mock('@nextcloud/router', () => ({ generateUrl: (url) => '/index.php' + url }
 const HOST = { register: 'dossiq', schema: 'case', objectId: 'c-1' }
 
 describe('generateDocumentRequest', () => {
-	it('binds the template to the host object and stores the result', () => {
+	it('binds the template to the host object, names it as the source and stores the result', () => {
 		expect(buildGenerateRequest({ template: { id: 't-1', name: ' Besluit ' }, host: HOST })).toEqual({
 			templateId: 't-1',
 			dataRefs: [{ register: 'dossiq', schema: 'case', id: 'c-1' }],
-			options: { output: { mode: 'files' } },
+			options: { output: { mode: 'files' }, sourceObject: { register: 'dossiq', schema: 'case', id: 'c-1' } },
 			filename: 'Besluit',
 		})
+	})
+
+	it('names a source object the server finds among the data references', () => {
+		const body = buildGenerateRequest({ template: { id: 't-1', name: 'Besluit' }, host: HOST })
+		expect(body.dataRefs).toContainEqual(body.options.sourceObject)
+		expect(body.options.sourceObject).not.toBe(body.dataRefs[0])
 	})
 
 	it('names a template without a name "document"', () => {
