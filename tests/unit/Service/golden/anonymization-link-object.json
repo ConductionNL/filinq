@@ -747,5 +747,38 @@
             "outputFormat": "pdf"
         },
         "linkId": "saved-1"
+    },
+    "a review rendition": {
+        "search": {
+            "registerSlug": "filinq",
+            "schemaSlug": "anonymizationLink",
+            "filters": {
+                "sourceFileId": 7
+            }
+        },
+        "saved": {
+            "@self": {
+                "register": "filinq",
+                "schema": "anonymizationLink"
+            },
+            "sourceFileId": 7,
+            "runCount": 1,
+            "anonymizedFileId": 12,
+            "anonymizedFileName": "brief_anonymized.pdf",
+            "anonymizedFilePath": "/u/files/brief_anonymized.pdf",
+            "status": "anonymized",
+            "replacementCount": 4,
+            "anonymizedAt": "<timestamp>",
+            "outputFormat": "pdf",
+            "reviewRendition": {
+                "fileId": 11,
+                "sha256": "a1",
+                "kind": "converted",
+                "backend": "libreoffice",
+                "textLayer": "native",
+                "preparedAt": "2026-11-15T10:00:00+00:00"
+            }
+        },
+        "linkId": "saved-1"
     }
 }

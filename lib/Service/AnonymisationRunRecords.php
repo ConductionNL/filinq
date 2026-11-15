@@ -22,6 +22,7 @@ namespace OCA\Filinq\Service;
 
 use OCA\Filinq\Service\Pseudonymisation\PseudonymMapRecorder;
 use OCA\Filinq\Service\Redaction\RedactionVerdictRecorder;
+use OCA\Filinq\Service\Review\ReviewRenditionRepository;
 use OCA\Filinq\Service\Sanitization\AnonymisationSanitizationRecorder;
 
 /**
@@ -44,6 +45,7 @@ class AnonymisationRunRecords {
 	 *                                                     the tag structure, and what it kept.
 	 * @param AnonymisationSanitizationRecorder|null $sanitization Keeps what OpenRegister's office
 	 *                                                     sanitiser removed during the run.
+	 * @param ReviewRenditionRepository|null $renditions The source's review rendition, copied onto the link.
 	 *
 	 * @return void
 	 */
@@ -53,6 +55,7 @@ class AnonymisationRunRecords {
 		private readonly PseudonymMapRecorder $keys,
 		private readonly ?RedactionAccessibilityService $accessibility = null,
 		private readonly ?AnonymisationSanitizationRecorder $sanitization = null,
+		private readonly ?ReviewRenditionRepository $renditions = null,
 	) {
 
 	}//end __construct()
@@ -91,6 +94,12 @@ class AnonymisationRunRecords {
 
 		if (empty($resultInfo['anonymizedFileId']) === true) {
 			return $resultInfo;
+		}
+
+		// The rendition the review ran on, so the link says what was reviewed (REQ-DDARW-012).
+		$rendition = $this->renditionOf(fileId: (int) $context['fileId']);
+		if ($rendition !== null) {
+			$resultInfo['reviewRendition'] = $rendition;
 		}
 
 		$resultInfo = $this->persistence->recordAnonymizationLink(
@@ -133,4 +142,26 @@ class AnonymisationRunRecords {
 		return $this->accessibility?->preserveRequested();
 
 	}//end preserveStructure()
+
+	/**
+	 * The six rendition fields of a source, or null when none was prepared.
+	 *
+	 * @param int $fileId The source file id.
+	 *
+	 * @return array<string, mixed>|null The rendition.
+	 *
+	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-5.1
+	 */
+	private function renditionOf(int $fileId): ?array {
+		$stored = $this->renditions?->findFor(sourceFileId: $fileId);
+		if ($stored === null) {
+			return null;
+		}
+
+		return array_intersect_key(
+			$stored,
+			array_flip(['fileId', 'sha256', 'kind', 'backend', 'textLayer', 'preparedAt'])
+		);
+
+	}//end renditionOf()
 }//end class

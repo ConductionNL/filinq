@@ -47,6 +47,7 @@ use OCA\Filinq\Service\Detection\DetectionProviderResolver;
 use OCA\Filinq\Service\Detection\DetectionRequest;
 use OCA\Filinq\Service\Ocr\OcrExtractionFallback;
 use OCA\Filinq\Service\Redaction\RedactionOutputGuard;
+use OCA\Filinq\Service\Review\ReviewRenditionService;
 use OCA\OpenRegister\Mcp\Attribute\McpTool;
 use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
@@ -129,6 +130,8 @@ class AnonymizationService implements AnonymizationServiceInterface {
 	 * @param DetectionProviderResolver|null $detectionResolver The organisation's detection
 	 *                                                          provider; null leaves OpenRegister's
 	 *                                                          detection as the only one.
+	 * @param ReviewRenditionService|null $renditions The review rendition detection runs on;
+	 *                                                null leaves detection on the source only.
 	 *
 	 * @return void
 	 *
@@ -148,6 +151,7 @@ class AnonymizationService implements AnonymizationServiceInterface {
 		private readonly AnonymiserBackendStateClient $backendState,
 		private readonly OcrExtractionFallback $ocrFallback,
 		private readonly ?DetectionProviderResolver $detectionResolver=null,
+		private readonly ?ReviewRenditionService $renditions=null,
 	) {
 
 	}//end __construct()
@@ -389,6 +393,11 @@ class AnonymizationService implements AnonymizationServiceInterface {
 			force: $force
 		);
 
+		// The review rendition (REQ-DDARW-012): the one PDF the reviewer sees.
+		// A converted rendition's text replaces the source's own for detection,
+		// so every finding sits on the pages under review.
+		$renditionFields = $this->prepareRendition(fileId: $fileId, textExtractor: $textExtractor, entityTypes: $entityTypes);
+
 		$this->logger->debug(
 			'Text extracted from file',
 			['fileId' => $fileId, 'entityTypes' => $entityTypes]
@@ -414,9 +423,38 @@ class AnonymizationService implements AnonymizationServiceInterface {
 		return array_merge(
 			$this->buildExtractionResult(fileId: $fileId, detected: $detected),
 			$ocrFields,
+			$renditionFields,
 			$providerFields
 		);
 	}//end extractAndDetect()
+
+	/**
+	 * Prepare the file's review rendition and run detection on it when it is a converted PDF.
+	 *
+	 * @param int                     $fileId        The source file.
+	 * @param object                  $textExtractor OpenRegister's TextExtractionService.
+	 * @param array<int, string>|null $entityTypes   The enabled entity types, null for all.
+	 *
+	 * @return array<string, mixed> `reviewRendition` (null when none could be made); empty when no
+	 *                              rendition service is wired.
+	 *
+	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-5.1
+	 */
+	private function prepareRendition(int $fileId, object $textExtractor, ?array $entityTypes): array {
+		if ($this->renditions === null) {
+			return [];
+		}
+
+		$rendition = $this->renditions->recordFor(fileId: $fileId);
+		$this->renditions->detectOnRendition(
+			sourceFileId: $fileId,
+			rendition: $rendition,
+			textExtractor: $textExtractor,
+			entityTypes: $entityTypes
+		);
+
+		return ['reviewRendition' => $rendition];
+	}//end prepareRendition()
 
 	/**
 	 * Run the organisation's detection provider and return the payload fields naming it.

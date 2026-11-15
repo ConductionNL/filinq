@@ -28,6 +28,7 @@ use OCA\Filinq\Controller\DocumentReviewController;
 use OCA\Filinq\Exception\DocumentReviewRefusedException;
 use OCA\Filinq\Kernel\Contracts\AnonymizeRequestServiceInterface;
 use OCA\Filinq\Service\Review\DocumentReviewService;
+use OCA\Filinq\Tests\Unit\Support\BuildsInMemoryReviewGate;
 use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUser;
@@ -42,10 +43,13 @@ use RuntimeException;
  *
  * @covers \OCA\Filinq\Controller\DocumentReviewController
  * @uses   \OCA\Filinq\Exception\DocumentReviewRefusedException
+ * @uses   \OCA\Filinq\Service\Review\DocumentReviewService
+ * @uses   \OCA\Filinq\Service\Review\CertaintyThresholds
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
 class DocumentReviewControllerTest extends TestCase {
+	use BuildsInMemoryReviewGate;
 
 	/**
 	 * @var DocumentReviewService&MockObject
@@ -218,4 +222,108 @@ class DocumentReviewControllerTest extends TestCase {
 			$this->assertSame(500, $this->controller->{$method}(fileId: 5)->getStatus(), $method);
 		}
 	}//end testFailuresAreServerErrors()
+
+	/**
+	 * The controller over the real review gate, for a user who may open every file.
+	 *
+	 * @return DocumentReviewController The controller.
+	 */
+	private function overTheRealGate(): DocumentReviewController {
+		$access = $this->createMock(AnonymizeRequestServiceInterface::class);
+		$access->method('verifyFileAccess')->willReturn(null);
+		$l10n = $this->createMock(IL10N::class);
+		$l10n->method('t')->willReturnArgument(0);
+
+		return new DocumentReviewController(
+			appName: 'filinq',
+			request: $this->createMock(IRequest::class),
+			reviews: $this->inMemoryReviewGate(),
+			userSession: $this->session,
+			access: $access,
+			l10n: $l10n,
+			logger: $this->createMock(LoggerInterface::class)
+		);
+	}//end overTheRealGate()
+
+	/**
+	 * A check made on one rendition does not hold once another rendition is current.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-5.2
+	 */
+	public function testACheckOnAnotherRenditionDoesNotHold(): void {
+		$this->gateRelations[5] = [['id' => 1, 'entityId' => 10, 'skipAnonymization' => false, 'confidence' => 0.99, 'detectionMethod' => 'presidio']];
+		$this->gateRenditions[5] = ['sourceFileId' => 5, 'fileId' => 6, 'sha256' => 'a1', 'kind' => 'converted', 'backend' => 'libreoffice', 'textLayer' => 'native'];
+		$controller = $this->overTheRealGate();
+
+		$checked = $controller->check(fileId: 5);
+		$this->assertSame(201, $checked->getStatus());
+		$this->assertTrue($checked->getData()['checked']);
+		$this->assertSame('a1', $this->gateMarks[5]['renditionSha256']);
+
+		$this->gateRenditions[5]['sha256'] = 'b2';
+		$status = $controller->show(fileId: 5)->getData();
+
+		$this->assertFalse($status['checked']);
+		$this->assertTrue($status['stale']);
+		$this->assertSame('b2', $status['rendition']['sha256']);
+	}//end testACheckOnAnotherRenditionDoesNotHold()
+
+	/**
+	 * Without a text layer the check is refused until the reviewer confirms reading by eye.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-5.2
+	 */
+	public function testNoTextLayerNeedsTheByEyeConfirmation(): void {
+		$this->gateRenditions[5] = ['sourceFileId' => 5, 'fileId' => 5, 'sha256' => 'c3', 'kind' => 'ocr-text-layer', 'backend' => '', 'textLayer' => 'none'];
+		$controller = $this->overTheRealGate();
+
+		$refused = $controller->check(fileId: 5);
+		$this->assertSame(409, $refused->getStatus());
+		$this->assertSame('no_text_layer', $refused->getData()['reason']);
+		$this->assertSame(
+			'Detection could not read the pages of this document. Confirm that you read every page by eye before marking it reviewed.',
+			$refused->getData()['error']
+		);
+		$this->assertSame([], $this->gateMarks);
+
+		$checked = $controller->check(fileId: 5, note: '', byEye: true);
+		$this->assertSame(201, $checked->getStatus());
+		$this->assertTrue($this->gateMarks[5]['readByEye']);
+		$this->assertTrue($checked->getData()['checked']);
+	}//end testNoTextLayerNeedsTheByEyeConfirmation()
+
+	/**
+	 * An undecided uncertain finding blocks the check and is named; once decided, the check holds.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-5.3
+	 */
+	public function testAnUndecidedUncertainFindingBlocksTheCheck(): void {
+		$this->gateFloor = 0.6;
+		$this->gateCertainFrom = '0.9';
+		$this->gateRelations[5] = [
+			['id' => 1, 'entityId' => 10, 'skipAnonymization' => false, 'confidence' => 0.95, 'detectionMethod' => 'presidio'],
+			['id' => 2, 'entityId' => 11, 'skipAnonymization' => false, 'confidence' => 0.65, 'detectionMethod' => 'presidio'],
+		];
+		$controller = $this->overTheRealGate();
+
+		$status = $controller->show(fileId: 5)->getData();
+		$this->assertSame(0.6, $status['thresholds']['floor']);
+		$this->assertSame(0.9, $status['thresholds']['certainFrom']);
+		$this->assertSame(1, $status['uncertainCount']);
+
+		$refused = $controller->check(fileId: 5);
+		$this->assertSame(409, $refused->getStatus());
+		$this->assertSame('uncertain_undecided', $refused->getData()['reason']);
+		$this->assertSame([['relationId' => 2, 'entityId' => 11, 'confidence' => 0.65]], $refused->getData()['undecidedFindings']);
+		$this->assertSame([], $this->gateMarks);
+
+		$this->gateRelations[5][1]['decision'] = 'decision-1';
+		$this->assertSame(201, $controller->check(fileId: 5)->getStatus());
+	}//end testAnUndecidedUncertainFindingBlocksTheCheck()
 }//end class

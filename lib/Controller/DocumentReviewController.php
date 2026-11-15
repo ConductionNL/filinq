@@ -113,17 +113,22 @@ class DocumentReviewController extends Controller {
 	 *
 	 * @param int    $fileId The document.
 	 * @param string $note   The reviewer's note.
+	 * @param bool   $byEye  The reviewer confirms every page was read by eye (needed without a text layer).
 	 *
 	 * @return JSONResponse The status after the check, or the refusal.
 	 *
 	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-2.3
+	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-5.2
+	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-5.3
 	 *
 	 * @no-admin-idor-exempt AnonymizeRequestService::verifyFileAccess() refuses a file outside the
 	 * caller's user folder before anything is written, and the mark is saved with OpenRegister RBAC on
 	 * (documentReview create: filinq-woo-officers, filinq-policy-admins).
+	 *
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) The confirmation is the reviewer's own yes or no.
 	 */
 	#[NoAdminRequired]
-	public function check(int $fileId, string $note = ''): JSONResponse {
+	public function check(int $fileId, string $note = '', bool $byEye = false): JSONResponse {
 		$refusal = $this->refusal(fileId: $fileId);
 		if ($refusal !== null) {
 			return $refusal;
@@ -133,14 +138,15 @@ class DocumentReviewController extends Controller {
 			$status = $this->reviews->check(
 				fileId: $fileId,
 				userId: (string)$this->userSession->getUser()?->getUID(),
-				note: trim($note)
+				note: trim($note),
+				byEye: $byEye
 			);
 		} catch (DocumentReviewRefusedException $e) {
 			return new JSONResponse(
 				data: [
-					'error' => $this->l10n->t('This document has no extracted findings yet; run detection before marking it reviewed.'),
+					'error' => $this->refusalMessage(reason: $e->getReason()),
 					'reason' => $e->getReason(),
-				],
+				] + $e->getDetails(),
 				statusCode: Http::STATUS_CONFLICT
 			);
 		} catch (Throwable $e) {
@@ -178,6 +184,24 @@ class DocumentReviewController extends Controller {
 		}
 
 	}//end uncheck()
+
+	/**
+	 * The reviewer's message for a refused check.
+	 *
+	 * @param string $reason The refusal's reason.
+	 *
+	 * @return string The translated message.
+	 */
+	private function refusalMessage(string $reason): string {
+		return match ($reason) {
+			'no_text_layer' => $this->l10n->t(
+				'Detection could not read the pages of this document. Confirm that you read every page by eye before marking it reviewed.'
+			),
+			'uncertain_undecided' => $this->l10n->t('Decide on every uncertain finding before marking this document reviewed.'),
+			default => $this->l10n->t('This document has no extracted findings yet; run detection before marking it reviewed.'),
+		};
+
+	}//end refusalMessage()
 
 	/**
 	 * The 401 or 404 that stops a request, or null to go on.

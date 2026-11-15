@@ -298,6 +298,10 @@ require_once __DIR__ . '/unit/Support/NextcloudDispatch.php';
 // "helper class under tests/unit that PSR-4 cannot resolve" situation as above.
 require_once __DIR__ . '/unit/Support/RecordsCalls.php';
 
+// A real review gate over in-memory doubles (anonymization-review-workbench 5.2).
+// Same "helper class under tests/unit that PSR-4 cannot resolve" situation as above.
+require_once __DIR__ . '/unit/Support/BuildsInMemoryReviewGate.php';
+
 // Subject erasure doubles (erase-a-person-while-the-records-stay); same
 // "helper class under tests/unit that PSR-4 cannot resolve" situation as above.
 require_once __DIR__ . '/unit/Service/SubjectErasure/SubjectErasureDoubles.php';

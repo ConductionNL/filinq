@@ -111,15 +111,16 @@ class PseudonymMapSchemaTest extends TestCase {
 	public function testTheLinkOnlyGainsAPointer(): void {
 		$link = $this->descriptor()['components']['schemas']['anonymizationLink'];
 
-		// 1.4.0 since the link became server-only (authorization only, no new property).
-		$this->assertSame(expected: '1.4.0', actual: $link['version']);
+		// 1.4.0 since the link became server-only (authorization only, no new property);
+		// 1.5.0 adds the review rendition the run was reviewed on (anonymization-review-workbench 5.1).
+		$this->assertSame(expected: '1.5.0', actual: $link['version']);
 		$this->assertSame(['sourceFileId', 'anonymizedFileId'], $link['required']);
 		$this->assertSame(
 			[
 				'sourceFileId', 'sourceFileName', 'sourceFilePath', 'anonymizedFileId', 'anonymizedFileName', 'anonymizedFilePath',
 				'outputFormat', 'status', 'replacementCount', 'runCount', 'anonymizedAt', 'anonymizedBy', 'verificationVerdict',
 				'verificationOutputMode', 'verificationRoutes', 'verificationLeakRoutes', 'verifiedAt', 'mappingRef',
-				'structurePreservation',
+				'structurePreservation', 'reviewRendition',
 			],
 			array_keys($link['properties'])
 		);

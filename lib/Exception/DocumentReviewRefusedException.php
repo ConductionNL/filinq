@@ -40,12 +40,14 @@ class DocumentReviewRefusedException extends RuntimeException {
 	 *
 	 * @param string $reason  Machine-readable reason, e.g. `not_extracted`.
 	 * @param string $message What the reviewer should do about it.
+	 * @param array<string, mixed> $details What the refusal is about, e.g. the undecided findings.
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		private readonly string $reason,
 		string $message,
+		private readonly array $details = [],
 	) {
 		parent::__construct(message: $message);
 
@@ -62,4 +64,16 @@ class DocumentReviewRefusedException extends RuntimeException {
 		return $this->reason;
 
 	}//end getReason()
+
+	/**
+	 * What the refusal is about, for the answer's body; empty when there is nothing to add.
+	 *
+	 * @return array<string, mixed> The details.
+	 *
+	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-5.3
+	 */
+	public function getDetails(): array {
+		return $this->details;
+
+	}//end getDetails()
 }//end class

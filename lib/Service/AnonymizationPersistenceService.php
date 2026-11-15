@@ -296,7 +296,8 @@ class AnonymizationPersistenceService {
 		);
 
 		// Tag counts and loss reasons only, never an entity value; absent when the run recorded none.
-		return array_merge($object, array_intersect_key($resultInfo, ['structurePreservation' => true]));
+		// The review rendition names the reviewed PDF (REQ-DDARW-012); absent when none was prepared.
+		return array_merge($object, array_intersect_key($resultInfo, ['structurePreservation' => true, 'reviewRendition' => true]));
 	}//end buildLinkObject()
 
 	/**

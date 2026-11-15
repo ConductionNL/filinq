@@ -40,8 +40,11 @@ use OCA\Filinq\Kernel\Contracts\FolderBatchServiceInterface;
 use OCA\Filinq\Service\AnonymizationService;
 use OCA\Filinq\Service\FileListingService;
 use OCA\Filinq\Service\OpenRegisterServiceLocator;
+use OCA\Filinq\Service\Review\CertaintyThresholds;
 use OCA\Filinq\Service\Review\DocumentReviewRepository;
 use OCA\Filinq\Service\Review\DocumentReviewService;
+use OCA\Filinq\Service\Review\ReviewRenditionRepository;
+use OCA\Filinq\Tests\Unit\Support\BuildsInMemoryReviewGate;
 use OCP\IAppConfig;
 use OCP\IL10N;
 use OCP\IRequest;
@@ -61,10 +64,12 @@ use Psr\Log\LoggerInterface;
  * @uses   \OCA\Filinq\Kernel\AnonymizeCall
  * @uses   \OCA\Filinq\Controller\Support\CheckedGateReport
  * @uses   \OCA\Filinq\Service\Review\DocumentReviewService
+ * @uses   \OCA\Filinq\Service\Review\CertaintyThresholds
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
 class CheckedGateTest extends TestCase {
+	use BuildsInMemoryReviewGate;
 
 	/**
 	 * A gate verdict.
@@ -151,6 +156,8 @@ class CheckedGateTest extends TestCase {
 					$this->createMock(IAppConfig::class),
 					$this->createMock(LoggerInterface::class),
 					$l10n,
+					$this->createMock(ReviewRenditionRepository::class),
+					$this->createMock(CertaintyThresholds::class),
 				]
 			)
 			->onlyMethods(['gate'])
@@ -350,4 +357,26 @@ class CheckedGateTest extends TestCase {
 		$this->assertStringContainsString('has not been marked as reviewed', $single->getData()['error']);
 		$this->assertStringContainsString('Nothing was anonymised.', $batch->getData()['error']);
 	}//end testTheRefusalsCarryTheirMessages()
+
+	/**
+	 * The single-file commit runs on the rendition the check was made on and is refused on another.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-5.2
+	 */
+	public function testTheSinglePathHonoursTheRendition(): void {
+		$this->gateRelations[42] = [['id' => 1, 'entityId' => 10, 'skipAnonymization' => false, 'confidence' => 0.99, 'detectionMethod' => 'presidio']];
+		$this->gateRenditions[42] = ['sourceFileId' => 42, 'fileId' => 43, 'sha256' => 'a1', 'kind' => 'converted', 'textLayer' => 'native'];
+		$reviews = $this->inMemoryReviewGate();
+		$reviews->check(fileId: 42, userId: 'w.devries');
+
+		$this->assertSame(200, $this->single(reviews: $reviews, runs: true)->anonymize(fileId: 42)->getStatus());
+
+		$this->gateRenditions[42]['sha256'] = 'a2';
+		$response = $this->single(reviews: $reviews, runs: false)->anonymize(fileId: 42);
+
+		$this->assertSame(409, $response->getStatus());
+		$this->assertSame('document_not_reviewed', $response->getData()['reason']);
+	}//end testTheSinglePathHonoursTheRendition()
 }//end class

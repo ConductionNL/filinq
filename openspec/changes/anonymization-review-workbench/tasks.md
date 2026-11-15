@@ -52,12 +52,12 @@ REQ-ADI-007. Every test named here fails on `development` today: no rendition se
 `reviewRendition` on the link, no `certain_from` setting. Acceptance lines are plain bullets so the
 checkbox cap of 20 holds.
 
-- [ ] 5.1 The review rendition (REQ-DDARW-012). Files: `lib/Service/Review/ReviewRenditionService.php` (`prepare(File $source): array` with the six keys), `lib/Settings/filinq_register.json` (`anonymizationLink.reviewRendition`, `documentReview.renditionSha256`; register version bump), the detection entry point in `AnonymizationService` (detect on the rendition).
+- [x] 5.1 The review rendition (REQ-DDARW-012). Files: `lib/Service/Review/ReviewRenditionService.php` (`prepare(File $source): array` with the six keys), `lib/Settings/filinq_register.json` (`anonymizationLink.reviewRendition`, `documentReview.renditionSha256`; register version bump), the detection entry point in `AnonymizationService` (detect on the rendition).
   - GIVEN a `.docx` WHEN prepared THEN kind `converted`, the backend from `convertToPdfReporting()`, `textLayer` `native`.
   - GIVEN a scan and OCR WHEN prepared THEN kind `ocr-text-layer`, `textLayer` `ocr`; without OCR THEN `textLayer` `none`.
   - GIVEN a PDF with text WHEN prepared THEN kind `native-pdf` and no conversion call.
   - Test: PHPUnit `ReviewRenditionServiceTest::testAWordFileIsConverted`, `::testAScanGetsAnOcrTextLayer`, `::testNoOcrMeansNoTextLayer`, `::testANativePdfIsUsedAsItIs`. Show `testAWordFileIsConverted` failing on `development` first; paste the line in the PR body.
-- [ ] 5.2 The check holds for one rendition (REQ-DDARW-012). Files: `lib/Controller/DocumentReviewController.php`, `lib/Controller/AnonymizationController.php`, `lib/Controller/BatchAnonymizationController.php`.
+- [x] 5.2 The check holds for one rendition (REQ-DDARW-012). Files: `lib/Controller/DocumentReviewController.php`, `lib/Controller/AnonymizationController.php`, `lib/Controller/BatchAnonymizationController.php`.
   - GIVEN a check on sha256 A and a current rendition B WHEN the commit runs THEN refused, through the same gate as REQ-DDARW-008, on the single and the batch path.
   - GIVEN `textLayer` `none` WHEN checked without the by-eye confirmation THEN refused.
   - Test: PHPUnit `DocumentReviewControllerTest::testACheckOnAnotherRenditionDoesNotHold`, `::testNoTextLayerNeedsTheByEyeConfirmation`; `BatchAnonymizationControllerTest::testTheBatchPathHonoursTheRendition`. The batch test is the caller-side wiring proof: a gate on one path only is the defect this line prevents.

@@ -23,7 +23,10 @@ namespace OCA\Filinq\Tests\Unit\Service;
 use OCA\Filinq\Service\LegalBasisProposalService;
 use OCA\Filinq\Service\OcrService;
 use OCA\Filinq\Service\OpenRegisterAvailabilityService;
+use OCA\Filinq\Service\OpenRegisterServiceLocator;
 use OCA\Filinq\Service\RegisterDiscoveryService;
+use OCA\Filinq\Service\Review\CertaintyThresholds;
+use OCA\Filinq\Service\Review\ReviewSettingsRules;
 use OCA\Filinq\Service\SettingsInitializer;
 use OCA\Filinq\Service\SettingsService;
 use OCA\Filinq\Service\Support\RegisterSetup;
@@ -313,6 +316,85 @@ class SettingsServiceTest extends TestCase {
 		}
 
 	}//end testAnUnknownCheckedGateModeIsRefused()
+
+	/**
+	 * The settings service with the review thresholds over OpenRegister's floor.
+	 *
+	 * @param float $floor OpenRegister's detection floor.
+	 *
+	 * @return SettingsService The service.
+	 */
+	private function withThresholds(float $floor): SettingsService {
+		$handler = new class ($floor) {
+			/**
+			 * Constructor.
+			 *
+			 * @param float $floor The floor.
+			 */
+			public function __construct(private float $floor) {
+			}
+
+			/**
+			 * The floor.
+			 *
+			 * @return float The floor.
+			 */
+			public function confidenceThreshold(): float {
+				return $this->floor;
+			}
+		};
+		$locator = $this->createMock(OpenRegisterServiceLocator::class);
+		$locator->method('get')->with('OCA\OpenRegister\Service\Settings\FileSettingsHandler')->willReturn($handler);
+
+		return new SettingsService(
+			$this->mockConfig,
+			$this->mockLogger,
+			new RegisterSetup(discovery: $this->mockDiscoveryService, initializer: $this->mockInitializer),
+			$this->mockOcrService,
+			$this->mockBasisProposal,
+			$this->mockOpenRegister,
+			new ReviewSettingsRules(thresholds: new CertaintyThresholds(appConfig: $this->mockConfig, locator: $locator, logger: $this->mockLogger))
+		);
+	}//end withThresholds()
+
+	/**
+	 * Certain-from below OpenRegister's floor is refused naming the floor, and nothing is written.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-5.3
+	 */
+	public function testCertainFromBelowTheFloorIsRefused(): void {
+		$this->mockConfig->expects($this->never())->method('setValueString');
+
+		try {
+			$this->withThresholds(floor: 0.6)->updateSettings(['signing_provider' => 'native', 'filinq.review.certain_from' => 0.5]);
+			$this->fail('A certain-from below the floor was accepted.');
+		} catch (RuntimeException $e) {
+			$this->assertSame(400, $e->getCode());
+			$this->assertSame('Certain-from cannot be below the detection floor of 0.6 set in OpenRegister.', $e->getMessage());
+		}
+	}//end testCertainFromBelowTheFloorIsRefused()
+
+	/**
+	 * Certain-from at or above the floor is written.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-5.3
+	 */
+	public function testCertainFromAtOrAboveTheFloorIsWritten(): void {
+		$this->mockConfig->expects($this->once())->method('setValueString')
+			->with('filinq', 'filinq.review.certain_from', '0.9');
+		$this->mockConfig->method('getValueString')->willReturnCallback(
+			static fn (string $app, string $key, string $default = ''): string => ($key === 'filinq.review.certain_from' ? '0.9' : $default)
+		);
+
+		$result = $this->withThresholds(floor: 0.6)->updateSettings(['filinq.review.certain_from' => 0.9]);
+
+		$this->assertSame('0.9', $result['filinq.review.certain_from']);
+		$this->assertSame(0.9, $this->withThresholds(floor: 0.6)->getFeatureToggles()['filinq.review.certain_from']);
+	}//end testCertainFromAtOrAboveTheFloorIsWritten()
 
 	/**
 	 * A traversal attempt is refused before anything is written, naming the characters.

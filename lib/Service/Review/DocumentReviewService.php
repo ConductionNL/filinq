@@ -90,6 +90,13 @@ class DocumentReviewService {
 	private const METHOD_MANUAL = 'manual';
 
 	/**
+	 * The text layer of a rendition detection could not read (ReviewRenditionService::LAYER_NONE).
+	 *
+	 * @var string
+	 */
+	private const LAYER_NONE = 'none';
+
+	/**
 	 * The relation mapper OpenRegister exposes.
 	 *
 	 * @var string
@@ -104,6 +111,8 @@ class DocumentReviewService {
 	 * @param IAppConfig                 $appConfig  App config (gate mode).
 	 * @param LoggerInterface            $logger     Logger for diagnostics.
 	 * @param IL10N                      $l10n       Translator for the refusal message.
+	 * @param ReviewRenditionRepository  $renditions The current review rendition per source.
+	 * @param CertaintyThresholds        $thresholds The detection floor and certain-from.
 	 *
 	 * @return void
 	 */
@@ -113,6 +122,8 @@ class DocumentReviewService {
 		private readonly IAppConfig $appConfig,
 		private readonly LoggerInterface $logger,
 		private readonly IL10N $l10n,
+		private readonly ReviewRenditionRepository $renditions,
+		private readonly CertaintyThresholds $thresholds,
 	) {
 
 	}//end __construct()
@@ -140,18 +151,25 @@ class DocumentReviewService {
 	 * @param int $fileId The Nextcloud file id.
 	 *
 	 * @return array{fileId: int, checked: bool, stale: bool, extracted: bool, entityCount: int,
-	 *               manualEntityCount: int, review: array<string, mixed>|null}
-	 *         `checked` is true only while a mark exists and its fingerprint still matches;
-	 *         `stale` is true when a mark exists but the decisions changed after it.
+	 *               manualEntityCount: int, review: array<string, mixed>|null,
+	 *               rendition: array<string, mixed>|null, thresholds: array<string, mixed>,
+	 *               uncertainCount: int, undecidedUncertain: list<array<string, mixed>>}
+	 *         `checked` is true only while a mark exists, its fingerprint still matches and it
+	 *         was made on the current rendition; `stale` is true when a mark exists but no longer holds.
 	 *
 	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-2.3
+	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-5.2
+	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-5.3
 	 */
 	public function status(int $fileId): array {
-		$decisions = $this->decisions(fileId: $fileId);
+		$thresholds = $this->thresholds->read();
+		$decisions = $this->decisions(fileId: $fileId, certainFrom: $thresholds['certainFrom']);
 		$review = $this->repository->findFor(fileId: $fileId);
+		$rendition = $this->renditions->findFor(sourceFileId: $fileId);
 		$holds = ($review !== null
 			&& $decisions !== null
-			&& hash_equals((string)($review['decisionFingerprint'] ?? ''), $decisions['fingerprint']) === true);
+			&& hash_equals((string)($review['decisionFingerprint'] ?? ''), $decisions['fingerprint']) === true
+			&& $this->sameRendition(review: $review, rendition: $rendition) === true);
 
 		return [
 			'fileId' => $fileId,
@@ -161,9 +179,31 @@ class DocumentReviewService {
 			'entityCount' => ($decisions['count'] ?? 0),
 			'manualEntityCount' => ($decisions['manual'] ?? 0),
 			'review' => $review,
+			'rendition' => $rendition,
+			'thresholds' => $thresholds,
+			'uncertainCount' => ($decisions['uncertain'] ?? 0),
+			'undecidedUncertain' => ($decisions['undecidedUncertain'] ?? []),
 		];
 
 	}//end status()
+
+	/**
+	 * Whether a mark was made on the rendition that is current now.
+	 *
+	 * A mark made before any rendition existed holds while there still is none;
+	 * once one exists, only a mark on its sha256 holds.
+	 *
+	 * @param array<string, mixed>      $review    The mark.
+	 * @param array<string, mixed>|null $rendition The current rendition.
+	 *
+	 * @return bool True when they match.
+	 *
+	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-5.2
+	 */
+	private function sameRendition(array $review, ?array $rendition): bool {
+		return hash_equals((string)($rendition['sha256'] ?? ''), (string)($review['renditionSha256'] ?? ''));
+
+	}//end sameRendition()
 
 	/**
 	 * Mark one file checked by a user, replacing any earlier mark.
@@ -174,21 +214,25 @@ class DocumentReviewService {
 	 * @param int    $fileId The Nextcloud file id.
 	 * @param string $userId The reviewer.
 	 * @param string $note   The reviewer's note, may be empty.
+	 * @param bool   $byEye  The reviewer confirms every page was read by eye; required when the
+	 *                       rendition has no text layer.
 	 *
 	 * @return array<string, mixed> The status after the check, as {@see status}.
 	 *
-	 * @throws DocumentReviewRefusedException When extraction has not completed for the file.
+	 * @throws DocumentReviewRefusedException When extraction has not completed for the file, the
+	 *                                        rendition has no text layer and the by-eye confirmation
+	 *                                        is missing, or an uncertain finding is undecided.
 	 *
 	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-2.3
+	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-5.2
+	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-5.3
+	 *
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) The confirmation is the reviewer's own yes or no.
 	 */
-	public function check(int $fileId, string $userId, string $note = ''): array {
-		$decisions = $this->decisions(fileId: $fileId);
-		if ($decisions === null || $decisions['count'] === 0) {
-			throw new DocumentReviewRefusedException(
-				reason: 'not_extracted',
-				message: 'This document has no extracted findings yet; run detection before marking it reviewed.'
-			);
-		}
+	public function check(int $fileId, string $userId, string $note = '', bool $byEye = false): array {
+		$rendition = $this->renditions->findFor(sourceFileId: $fileId);
+		$decisions = $this->decisions(fileId: $fileId, certainFrom: $this->thresholds->certainFrom());
+		$this->assertCheckable(rendition: $rendition, decisions: $decisions, byEye: $byEye);
 
 		$mark = [
 			'fileId' => $fileId,
@@ -198,6 +242,14 @@ class DocumentReviewService {
 			'manualEntityCount' => $decisions['manual'],
 			'decisionFingerprint' => $decisions['fingerprint'],
 		];
+		if ($rendition !== null) {
+			$mark['renditionSha256'] = (string)($rendition['sha256'] ?? '');
+		}
+
+		if ($byEye === true) {
+			$mark['readByEye'] = true;
+		}
+
 		if ($note !== '') {
 			$mark['note'] = $note;
 		}
@@ -210,6 +262,51 @@ class DocumentReviewService {
 		return $this->status(fileId: $fileId);
 
 	}//end check()
+
+	/**
+	 * Refuse a check that cannot hold: nothing to review, unread pages, or an undecided uncertain finding.
+	 *
+	 * A rendition without a text layer has no findings because detection could
+	 * not read it, so it needs the by-eye confirmation instead of findings.
+	 *
+	 * @param array<string, mixed>|null $rendition The current rendition.
+	 * @param array<string, mixed>|null $decisions The file's decisions, as {@see decisions}.
+	 * @param bool                      $byEye     The by-eye confirmation.
+	 *
+	 * @return void
+	 *
+	 * @throws DocumentReviewRefusedException With the reason of the refusal.
+	 *
+	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-5.2
+	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-5.3
+	 *
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) The confirmation is the reviewer's own yes or no.
+	 */
+	private function assertCheckable(?array $rendition, ?array $decisions, bool $byEye): void {
+		$unreadable = (($rendition['textLayer'] ?? '') === self::LAYER_NONE);
+		if ($unreadable === true && $byEye === false) {
+			throw new DocumentReviewRefusedException(
+				reason: 'no_text_layer',
+				message: 'Detection could not read the pages of this document. Confirm that you read every page by eye before marking it reviewed.'
+			);
+		}
+
+		if ($decisions === null || ($decisions['count'] === 0 && $unreadable === false)) {
+			throw new DocumentReviewRefusedException(
+				reason: 'not_extracted',
+				message: 'This document has no extracted findings yet; run detection before marking it reviewed.'
+			);
+		}
+
+		if ($decisions['undecidedUncertain'] !== []) {
+			throw new DocumentReviewRefusedException(
+				reason: 'uncertain_undecided',
+				message: 'Decide on every uncertain finding before marking this document reviewed.',
+				details: ['undecidedFindings' => $decisions['undecidedUncertain']]
+			);
+		}
+
+	}//end assertCheckable()
 
 	/**
 	 * Remove a file's mark; a file without one is left as it is.
@@ -322,15 +419,19 @@ class DocumentReviewService {
 	}//end batchFiles()
 
 	/**
-	 * The file's entity decisions: their count, manual count and fingerprint.
+	 * The file's entity decisions: their count, manual count, fingerprint and uncertain findings.
 	 *
-	 * @param int $fileId The Nextcloud file id.
+	 * @param int   $fileId      The Nextcloud file id.
+	 * @param float $certainFrom A detected finding below it is uncertain.
 	 *
-	 * @return array{count: int, manual: int, fingerprint: string}|null Null when the relations cannot be read.
+	 * @return array{count: int, manual: int, fingerprint: string, uncertain: int,
+	 *               undecidedUncertain: list<array{relationId: int, entityId: int, confidence: float}>}|null
+	 *         Null when the relations cannot be read.
 	 *
 	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-2.3
+	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-5.3
 	 */
-	private function decisions(int $fileId): ?array {
+	private function decisions(int $fileId, float $certainFrom): ?array {
 		try {
 			$relations = $this->locator->get(className: self::RELATION_MAPPER)->findByFileId($fileId);
 		} catch (Throwable $e) {
@@ -343,6 +444,8 @@ class DocumentReviewService {
 
 		$rows = [];
 		$manual = 0;
+		$uncertain = 0;
+		$undecided = [];
 		foreach ((array)$relations as $relation) {
 			$data = $this->rowOf(relation: $relation);
 			if ($data === null) {
@@ -354,14 +457,29 @@ class DocumentReviewService {
 			}
 
 			$rows[] = $this->decisionOf(data: $data);
-		}
+			if ($this->thresholds->isUncertain(relation: $data, certainFrom: $certainFrom) === false) {
+				continue;
+			}
+
+			$uncertain++;
+			if ((string)($data['decision'] ?? $data['decisionUuid'] ?? '') === '') {
+				$undecided[] = [
+					'relationId' => (int)($data['id'] ?? $data['relation_id'] ?? 0),
+					'entityId' => (int)($data['entityId'] ?? $data['entity_id'] ?? 0),
+					'confidence' => (float)($data['confidence'] ?? 0.0),
+				];
+			}
+		}//end foreach
 
 		usort($rows, static fn (array $a, array $b): int => $a[0] <=> $b[0]);
+		usort($undecided, static fn (array $a, array $b): int => $a['relationId'] <=> $b['relationId']);
 
 		return [
 			'count' => count($rows),
 			'manual' => $manual,
 			'fingerprint' => hash('sha256', (string)json_encode($rows)),
+			'uncertain' => $uncertain,
+			'undecidedUncertain' => $undecided,
 		];
 
 	}//end decisions()

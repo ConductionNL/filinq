@@ -26,8 +26,10 @@ namespace OCA\Filinq\Tests\Unit\Service\Review;
 
 use OCA\Filinq\Exception\DocumentReviewRefusedException;
 use OCA\Filinq\Service\OpenRegisterServiceLocator;
+use OCA\Filinq\Service\Review\CertaintyThresholds;
 use OCA\Filinq\Service\Review\DocumentReviewRepository;
 use OCA\Filinq\Service\Review\DocumentReviewService;
+use OCA\Filinq\Service\Review\ReviewRenditionRepository;
 use OCP\IAppConfig;
 use OCP\IL10N;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -40,10 +42,32 @@ use RuntimeException;
  *
  * @covers \OCA\Filinq\Service\Review\DocumentReviewService
  * @uses   \OCA\Filinq\Exception\DocumentReviewRefusedException
+ * @uses   \OCA\Filinq\Service\Review\CertaintyThresholds
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
 class DocumentReviewServiceTest extends TestCase {
+
+	/**
+	 * The current review rendition, per source file id.
+	 *
+	 * @var array<int, array<string, mixed>>
+	 */
+	private array $renditions = [];
+
+	/**
+	 * The stored certain-from; 0 makes no finding uncertain.
+	 *
+	 * @var string
+	 */
+	private string $certainFrom = '0';
+
+	/**
+	 * OpenRegister's detection floor.
+	 *
+	 * @var float
+	 */
+	public float $floor = 0.5;
 
 	/**
 	 * The relations the mapper returns, per file id.
@@ -157,14 +181,52 @@ class DocumentReviewServiceTest extends TestCase {
 			}
 		);
 
+		$renditions = $this->createMock(ReviewRenditionRepository::class);
+		$renditions->method('findFor')->willReturnCallback(fn (int $sourceFileId): ?array => ($this->renditions[$sourceFileId] ?? null));
+
 		return new DocumentReviewService(
 			repository: $repository,
 			locator: $locator,
 			appConfig: $config,
 			logger: $this->createMock(LoggerInterface::class),
-			l10n: $this->l10n()
+			l10n: $this->l10n(),
+			renditions: $renditions,
+			thresholds: $this->thresholds()
 		);
 	}//end service()
+
+	/**
+	 * The real thresholds over a stored certain-from and OpenRegister's floor.
+	 *
+	 * @return CertaintyThresholds The thresholds.
+	 */
+	private function thresholds(): CertaintyThresholds {
+		$test = $this;
+		$handler = new class ($test) {
+			/**
+			 * Constructor.
+			 *
+			 * @param DocumentReviewServiceTest $test The test holding the floor.
+			 */
+			public function __construct(private DocumentReviewServiceTest $test) {
+			}
+
+			/**
+			 * The floor.
+			 *
+			 * @return float The floor.
+			 */
+			public function confidenceThreshold(): float {
+				return $this->test->floor;
+			}
+		};
+		$locator = $this->createMock(OpenRegisterServiceLocator::class);
+		$locator->method('get')->with('OCA\OpenRegister\Service\Settings\FileSettingsHandler')->willReturn($handler);
+		$config = $this->createMock(IAppConfig::class);
+		$config->method('getValueString')->with('filinq', 'filinq.review.certain_from')->willReturnCallback(fn (): string => $this->certainFrom);
+
+		return new CertaintyThresholds(appConfig: $config, locator: $locator, logger: $this->createMock(LoggerInterface::class));
+	}//end thresholds()
 
 	/**
 	 * A translator that returns the source string.
@@ -486,4 +548,152 @@ class DocumentReviewServiceTest extends TestCase {
 		);
 		$this->assertSame([], $service->batchFiles(batch: null));
 	}//end testBatchFiles()
+
+	/**
+	 * A check stores the rendition's sha256 and holds only while that rendition is current.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-5.2
+	 */
+	public function testACheckHoldsOnlyForTheRenditionItWasMadeOn(): void {
+		$this->renditions[10] = ['sourceFileId' => 10, 'fileId' => 11, 'sha256' => 'a1', 'kind' => 'converted', 'textLayer' => 'native'];
+		$service = $this->service();
+
+		$status = $service->check(fileId: 10, userId: 'u');
+		$this->assertSame('a1', $this->saved[0]['renditionSha256']);
+		$this->assertArrayNotHasKey('readByEye', $this->saved[0]);
+		$this->assertTrue($status['checked']);
+		$this->assertSame('a1', $status['rendition']['sha256']);
+
+		$this->renditions[10]['sha256'] = 'b2';
+		$status = $service->status(fileId: 10);
+		$this->assertFalse($status['checked']);
+		$this->assertTrue($status['stale']);
+
+		$gate = $service->commitGate(files: [['fileId' => 10]], reason: DocumentReviewService::REASON_DOCUMENT);
+		$this->assertSame(409, $gate['refusal']['status']);
+		$this->assertSame([['fileId' => 10, 'fileName' => '']], $gate['refusal']['body']['uncheckedFiles']);
+	}//end testACheckHoldsOnlyForTheRenditionItWasMadeOn()
+
+	/**
+	 * A mark made before any rendition existed stops holding once one is prepared.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-5.2
+	 */
+	public function testARenditionPreparedAfterTheCheckVoidsIt(): void {
+		$service = $this->service();
+		$this->assertTrue($service->check(fileId: 10, userId: 'u')['checked']);
+		$this->assertArrayNotHasKey('renditionSha256', $this->saved[0]);
+
+		$this->renditions[10] = ['sourceFileId' => 10, 'fileId' => 10, 'sha256' => 'c3', 'kind' => 'native-pdf', 'textLayer' => 'native'];
+		$this->assertFalse($service->status(fileId: 10)['checked']);
+	}//end testARenditionPreparedAfterTheCheckVoidsIt()
+
+	/**
+	 * Without a text layer the check needs the by-eye confirmation, and then needs no findings.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-5.2
+	 */
+	public function testNoTextLayerNeedsTheByEyeConfirmation(): void {
+		$this->renditions[30] = ['sourceFileId' => 30, 'fileId' => 30, 'sha256' => 'd4', 'kind' => 'ocr-text-layer', 'textLayer' => 'none'];
+		$service = $this->service();
+
+		try {
+			$service->check(fileId: 30, userId: 'u');
+			$this->fail('expected a refusal');
+		} catch (DocumentReviewRefusedException $e) {
+			$this->assertSame('no_text_layer', $e->getReason());
+		}
+
+		$this->assertSame([], $this->saved);
+
+		$status = $service->check(fileId: 30, userId: 'u', byEye: true);
+		$this->assertTrue($this->saved[0]['readByEye']);
+		$this->assertSame('d4', $this->saved[0]['renditionSha256']);
+		$this->assertSame(0, $this->saved[0]['entityCountAtCheck']);
+		$this->assertTrue($status['checked']);
+	}//end testNoTextLayerNeedsTheByEyeConfirmation()
+
+	/**
+	 * The by-eye confirmation does not stand in for findings on a readable rendition.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-5.2
+	 */
+	public function testByEyeDoesNotExcuseAReadableDocumentWithoutFindings(): void {
+		$this->renditions[99] = ['sourceFileId' => 99, 'fileId' => 99, 'sha256' => 'e5', 'kind' => 'native-pdf', 'textLayer' => 'native'];
+
+		try {
+			$this->service()->check(fileId: 99, userId: 'u', byEye: true);
+			$this->fail('expected a refusal');
+		} catch (DocumentReviewRefusedException $e) {
+			$this->assertSame('not_extracted', $e->getReason());
+		}
+	}//end testByEyeDoesNotExcuseAReadableDocumentWithoutFindings()
+
+	/**
+	 * An undecided uncertain finding blocks the check, naming it; deciding it lets the check through.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-5.3
+	 */
+	public function testAnUndecidedUncertainFindingBlocksTheCheck(): void {
+		$this->certainFrom = '0.9';
+		$this->relations[40] = [
+			['id' => 7, 'entityId' => 70, 'skipAnonymization' => false, 'confidence' => 0.95, 'detectionMethod' => 'presidio'],
+			['id' => 8, 'entityId' => 71, 'skipAnonymization' => false, 'confidence' => 0.65, 'detectionMethod' => 'presidio', 'decision' => null],
+			['id' => 9, 'entityId' => 72, 'skipAnonymization' => false, 'confidence' => 0.1, 'detectionMethod' => 'manual'],
+		];
+		$service = $this->service();
+
+		try {
+			$service->check(fileId: 40, userId: 'u');
+			$this->fail('expected a refusal');
+		} catch (DocumentReviewRefusedException $e) {
+			$this->assertSame('uncertain_undecided', $e->getReason());
+			$this->assertSame(
+				['undecidedFindings' => [['relationId' => 8, 'entityId' => 71, 'confidence' => 0.65]]],
+				$e->getDetails()
+			);
+		}
+
+		$this->assertSame([], $this->saved);
+
+		$this->relations[40][1]['decision'] = 'decision-uuid-1';
+		$this->assertTrue($service->check(fileId: 40, userId: 'u')['checked']);
+	}//end testAnUndecidedUncertainFindingBlocksTheCheck()
+
+	/**
+	 * The status shows both numbers, the uncertain count and the undecided findings.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-5.3
+	 */
+	public function testTheStatusShowsBothThresholdsAndTheUncertainFindings(): void {
+		$this->floor = 0.6;
+		$this->certainFrom = '0.9';
+		$this->relations[40] = [
+			['id' => 7, 'entityId' => 70, 'confidence' => 0.95, 'detectionMethod' => 'presidio'],
+			['id' => 8, 'entityId' => 71, 'confidence' => 0.65, 'detectionMethod' => 'presidio', 'decision' => 'd-1'],
+			['id' => 6, 'entityId' => 69, 'confidence' => 0.7, 'detectionMethod' => 'presidio'],
+		];
+
+		$status = $this->service()->status(fileId: 40);
+
+		$this->assertSame(
+			['floor' => 0.6, 'floorSource' => 'openregister', 'floorConfigurable' => true, 'certainFrom' => 0.9, 'certainFromSource' => 'filinq'],
+			$status['thresholds']
+		);
+		$this->assertSame(2, $status['uncertainCount']);
+		$this->assertSame([['relationId' => 6, 'entityId' => 69, 'confidence' => 0.7]], $status['undecidedUncertain']);
+		$this->assertNull($status['rendition']);
+	}//end testTheStatusShowsBothThresholdsAndTheUncertainFindings()
 }//end class

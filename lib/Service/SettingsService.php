@@ -32,7 +32,7 @@ namespace OCA\Filinq\Service;
 
 use Exception;
 use OCA\Filinq\Kernel\Contracts\SettingsServiceInterface;
-use OCA\Filinq\Service\Review\CheckedGateModeRule;
+use OCA\Filinq\Service\Review\ReviewSettingsRules;
 use OCA\Filinq\Service\Support\RegisterSetup;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -82,6 +82,7 @@ class SettingsService implements SettingsServiceInterface {
 		'signing_guardian_consent_age'               => ['16', 'text'],
 		'filinq.anonymisation.default_output_format' => ['pdf-only', 'text'],
 		'filinq.review.checked_gate'                 => ['enforced', 'text'],
+		'filinq.review.certain_from'                 => ['0.85', 'float'],
 	];
 
 	/**
@@ -100,6 +101,7 @@ class SettingsService implements SettingsServiceInterface {
 	 * @param OcrService $ocrService OCR service for Tesseract status
 	 * @param LegalBasisProposalService $legalBasisProposal Grondslag-per-entity-type proposal service
 	 * @param OpenRegisterAvailabilityService $openRegister OpenRegister availability resolver
+	 * @param ReviewSettingsRules|null $reviewRules The review workbench's save rules (gate mode, certain-from).
 	 *
 	 * @return void
 	 *
@@ -112,6 +114,7 @@ class SettingsService implements SettingsServiceInterface {
 		private readonly OcrService $ocrService,
 		private readonly LegalBasisProposalService $legalBasisProposal,
 		private readonly OpenRegisterAvailabilityService $openRegister,
+		private readonly ?ReviewSettingsRules $reviewRules = null,
 	) {
 		$this->appName = 'filinq';
 
@@ -271,13 +274,14 @@ class SettingsService implements SettingsServiceInterface {
 	 * @param string                       $key  The app config key.
 	 * @param array{0: string, 1: string} $spec The default and the kind.
 	 *
-	 * @return int|bool|string The typed value.
+	 * @return int|float|bool|string The typed value.
 	 */
-	private function toggleValue(string $key, array $spec): int|bool|string {
+	private function toggleValue(string $key, array $spec): int|float|bool|string {
 		$raw = $this->config->getValueString($this->appName, $key, $spec[0]);
 
 		return match ($spec[1]) {
 			'int' => (int)$raw,
+			'float' => (float)$raw,
 			'on' => $raw === '1',
 			'notOff' => $raw !== '0',
 			default => $raw,
@@ -465,6 +469,8 @@ class SettingsService implements SettingsServiceInterface {
 		self::SUBFOLDER_KEY,
 		// Review workbench checked gate: `enforced` (default) or `advisory`.
 		'filinq.review.checked_gate',
+		// Review workbench certain-from: a detected finding below it is uncertain.
+		'filinq.review.certain_from',
 	];
 
 	/**
@@ -486,7 +492,7 @@ class SettingsService implements SettingsServiceInterface {
 	 */
 	public function updateSettings(array $data): array {
 		$this->assertValidSubfolderName(data: $data);
-		(new CheckedGateModeRule())->assertValid(data: $data);
+		($this->reviewRules ?? new ReviewSettingsRules())->assertValid(data: $data);
 
 		try {
 			foreach ($data as $key => $value) {
