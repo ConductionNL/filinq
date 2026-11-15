@@ -144,6 +144,8 @@ class SigningServiceActingUserTraceTest extends TestCase {
 				'getFeatureToggles'             => ['signing_request_expiry_days' => 14, 'signing_default_level' => 'AdES', 'signing_provider' => 'native'],
 				'resolveSigningRequestBinding'  => ['register' => 'filinq', 'schema' => 'signingRequest'],
 				'resolveSignerRecordBinding'    => ['register' => 'filinq', 'schema' => 'signerRecord'],
+				// No lifecycle engine: the cancel trace records the save it falls back to.
+				'getTransitionEngine'           => null,
 			]
 		);
 		$owners   = ['s-1' => 'alice', 's-2' => 'mallory'];
