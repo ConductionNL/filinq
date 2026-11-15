@@ -1,0 +1,219 @@
+[
+	{},
+	{},
+	{
+		"documentType": "invoice"
+	},
+	{
+		"documentType": "letter"
+	},
+	{},
+	{
+		"correspondent": {
+			"name": "ACME",
+			"entityType": "PERSON"
+		}
+	},
+	{
+		"correspondent": {
+			"name": "ACME",
+			"entityType": "PERSON"
+		}
+	},
+	{
+		"correspondent": {
+			"name": "Piet",
+			"entityType": "PERSON"
+		}
+	},
+	{},
+	{},
+	{},
+	{},
+	{
+		"correspondent": {
+			"name": "Jan",
+			"entityType": "PERSON"
+		}
+	},
+	{
+		"dossier": "d-1"
+	},
+	{
+		"dossier": "d-2"
+	},
+	{},
+	{},
+	{},
+	{
+		"documentType": "memo",
+		"correspondent": {
+			"name": "X",
+			"entityType": "PERSON"
+		},
+		"dossier": "d-3"
+	},
+	{},
+	{},
+	{},
+	{
+		"documentType": "letter"
+	},
+	{},
+	{},
+	{},
+	{
+		"correspondent": {
+			"name": "Piet",
+			"entityType": "ORGANIZATION"
+		}
+	},
+	{
+		"correspondent": null
+	},
+	{
+		"correspondent": null
+	},
+	{
+		"correspondent": null
+	},
+	{
+		"correspondent": null
+	},
+	{
+		"correspondent": {
+			"name": "Jan",
+			"entityType": "ORGANIZATION"
+		}
+	},
+	{},
+	{
+		"dossier": "d-2"
+	},
+	{
+		"dossier": null
+	},
+	{
+		"dossier": null
+	},
+	{
+		"dossier": null
+	},
+	{
+		"documentType": "memo",
+		"correspondent": {
+			"name": "X",
+			"entityType": "ORGANIZATION"
+		},
+		"dossier": "d-3"
+	},
+	{},
+	{},
+	{
+		"documentType": "invoice"
+	},
+	{},
+	{},
+	{
+		"correspondent": {
+			"name": "ACME",
+			"entityType": "PERSON"
+		}
+	},
+	{
+		"correspondent": {
+			"name": "ACME",
+			"entityType": "PERSON"
+		}
+	},
+	{
+		"correspondent": {
+			"name": "Piet",
+			"entityType": "PERSON"
+		}
+	},
+	{
+		"correspondent": null
+	},
+	{
+		"correspondent": null
+	},
+	{
+		"correspondent": null
+	},
+	{
+		"correspondent": null
+	},
+	{},
+	{
+		"dossier": "d-1"
+	},
+	{
+		"dossier": "d-2"
+	},
+	{},
+	{},
+	{},
+	{
+		"documentType": "memo",
+		"correspondent": {
+			"name": "X",
+			"entityType": "PERSON"
+		},
+		"dossier": "d-3"
+	},
+	{},
+	{},
+	{
+		"documentType": "invoice"
+	},
+	{
+		"documentType": "letter"
+	},
+	{},
+	{
+		"correspondent": {
+			"name": "ACME",
+			"entityType": "PERSON"
+		}
+	},
+	{
+		"correspondent": {
+			"name": "ACME",
+			"entityType": "PERSON"
+		}
+	},
+	{
+		"correspondent": {
+			"name": "Piet",
+			"entityType": "PERSON"
+		}
+	},
+	{},
+	{},
+	{},
+	{},
+	{
+		"correspondent": {
+			"name": "Jan",
+			"entityType": "PERSON"
+		}
+	},
+	{
+		"dossier": "d-1"
+	},
+	{
+		"dossier": "d-2"
+	},
+	{},
+	{},
+	{},
+	{
+		"documentType": "memo",
+		"correspondent": {
+			"name": "X",
+			"entityType": "PERSON"
+		},
+		"dossier": "d-3"
+	}
+]

@@ -3,6 +3,9 @@
 /**
  * Filinq Dashboard Controller.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * SPA host: renders the SPA from `templates/index.php` and serves the Vue
  * history-mode catch-all. Behaviourally identical to the OpenRegister AppHost
  * `GenericDashboardController` it used to subclass, but implemented locally and
@@ -28,9 +31,6 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * SPDX-License-Identifier: EUPL-1.2
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- *
  * @link https://filinq.conduction.nl
  */
 
@@ -38,7 +38,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
-use OCA\Filinq\AppInfo\Application;
+use OCA\Filinq\Kernel\AppIdentity;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
@@ -60,7 +60,7 @@ class DashboardController extends Controller {
 	 * @param IRequest $request HTTP request.
 	 */
 	public function __construct(IRequest $request) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 
 	}//end __construct()
 

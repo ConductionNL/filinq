@@ -1,0 +1,306 @@
+{
+    "plain rows": {
+        "versions": [
+            {
+                "uuid": "b",
+                "layoutVersion": 2
+            },
+            {
+                "uuid": "a",
+                "layoutVersion": 1
+            }
+        ],
+        "calls": [
+            [
+                "filinq",
+                "pageLayout",
+                {
+                    "name": "brief"
+                },
+                true,
+                true
+            ]
+        ],
+        "logs": []
+    },
+    "serializable rows": {
+        "versions": [
+            {
+                "layoutVersion": 4,
+                "uuid": "d"
+            },
+            {
+                "uuid": "c",
+                "layoutVersion": 1
+            }
+        ],
+        "calls": [
+            [
+                "filinq",
+                "pageLayout",
+                {
+                    "name": "brief"
+                },
+                true,
+                true
+            ]
+        ],
+        "logs": []
+    },
+    "a wrapped object": {
+        "versions": [
+            {
+                "name": "brief",
+                "layoutVersion": 2,
+                "uuid": "f"
+            }
+        ],
+        "calls": [
+            [
+                "filinq",
+                "pageLayout",
+                {
+                    "name": "brief"
+                },
+                true,
+                true
+            ]
+        ],
+        "logs": []
+    },
+    "an object field that is not an array": {
+        "versions": [
+            {
+                "object": "brief",
+                "id": "g",
+                "uuid": "g"
+            }
+        ],
+        "calls": [
+            [
+                "filinq",
+                "pageLayout",
+                {
+                    "name": "brief"
+                },
+                true,
+                true
+            ]
+        ],
+        "logs": []
+    },
+    "uuid from @self": {
+        "versions": [
+            {
+                "layoutVersion": 1,
+                "uuid": "h"
+            }
+        ],
+        "calls": [
+            [
+                "filinq",
+                "pageLayout",
+                {
+                    "name": "brief"
+                },
+                true,
+                true
+            ]
+        ],
+        "logs": []
+    },
+    "uuid from id": {
+        "versions": [
+            {
+                "layoutVersion": 1,
+                "id": 7,
+                "uuid": "7"
+            }
+        ],
+        "calls": [
+            [
+                "filinq",
+                "pageLayout",
+                {
+                    "name": "brief"
+                },
+                true,
+                true
+            ]
+        ],
+        "logs": []
+    },
+    "the field uuid wins": {
+        "versions": [
+            {
+                "uuid": "j"
+            }
+        ],
+        "calls": [
+            [
+                "filinq",
+                "pageLayout",
+                {
+                    "name": "brief"
+                },
+                true,
+                true
+            ]
+        ],
+        "logs": []
+    },
+    "the outer uuid": {
+        "versions": [
+            {
+                "x": 1,
+                "uuid": "l"
+            }
+        ],
+        "calls": [
+            [
+                "filinq",
+                "pageLayout",
+                {
+                    "name": "brief"
+                },
+                true,
+                true
+            ]
+        ],
+        "logs": []
+    },
+    "no id at all": {
+        "versions": [
+            {
+                "layoutVersion": 1,
+                "uuid": ""
+            }
+        ],
+        "calls": [
+            [
+                "filinq",
+                "pageLayout",
+                {
+                    "name": "brief"
+                },
+                true,
+                true
+            ]
+        ],
+        "logs": []
+    },
+    "rows that are not arrays": {
+        "versions": [
+            {
+                "uuid": "n"
+            }
+        ],
+        "calls": [
+            [
+                "filinq",
+                "pageLayout",
+                {
+                    "name": "brief"
+                },
+                true,
+                true
+            ]
+        ],
+        "logs": []
+    },
+    "a serializable row that serializes to a scalar": {
+        "versions": [
+            {
+                "uuid": "o"
+            }
+        ],
+        "calls": [
+            [
+                "filinq",
+                "pageLayout",
+                {
+                    "name": "brief"
+                },
+                true,
+                true
+            ]
+        ],
+        "logs": []
+    },
+    "an object without jsonSerialize": {
+        "versions": [
+            {
+                "uuid": "p"
+            }
+        ],
+        "calls": [
+            [
+                "filinq",
+                "pageLayout",
+                {
+                    "name": "brief"
+                },
+                true,
+                true
+            ]
+        ],
+        "logs": []
+    },
+    "no rows": {
+        "versions": [],
+        "calls": [
+            [
+                "filinq",
+                "pageLayout",
+                {
+                    "name": "brief"
+                },
+                true,
+                true
+            ]
+        ],
+        "logs": []
+    },
+    "a scalar answer": {
+        "versions": [],
+        "calls": [
+            [
+                "filinq",
+                "pageLayout",
+                {
+                    "name": "brief"
+                },
+                true,
+                true
+            ]
+        ],
+        "logs": []
+    },
+    "the search fails": {
+        "versions": [],
+        "calls": [
+            [
+                "filinq",
+                "pageLayout",
+                {
+                    "name": "brief"
+                },
+                true,
+                true
+            ]
+        ],
+        "logs": [
+            [
+                "warning",
+                "[PageLayoutService] could not read the page layouts",
+                {
+                    "file": "PageLayoutService.php",
+                    "filters": {
+                        "name": "brief"
+                    },
+                    "error": "index gone"
+                }
+            ]
+        ]
+    }
+}

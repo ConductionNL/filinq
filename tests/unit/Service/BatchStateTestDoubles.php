@@ -3,6 +3,9 @@
 /**
  * Test doubles for the anonymization batch-state store
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Two fakes that carry real behaviour rather than recorded expectations:
  *
  * - {@see NullCacheFake} reproduces `OC\Memcache\NullCache` — the cache class
@@ -37,9 +40,6 @@
  * @version GIT: <git_id>
  *
  * @link https://www.filinq.app
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -305,6 +305,8 @@ class InMemoryObjectServiceFake extends ObjectService {
 		string $schema = '',
 		bool $_rbac = true,
 		bool $_multitenancy = true,
+		bool $_render = true,
+		bool $_audit = true,
 	) {
 		$key = $this->key(register: $register, schema: $schema, uuid: $id);
 		if (array_key_exists($key, $this->stored) === false) {
@@ -333,6 +335,8 @@ class InMemoryObjectServiceFake extends ObjectService {
 		?string $uuid = null,
 		bool $_rbac = true,
 		bool $_multitenancy = true,
+		bool $_unowned = false,
+		?string $_owner = null,
 	) {
 		$this->saveCalls[] = [
 			'register' => $register,
@@ -446,6 +450,8 @@ class FixedResultObjectServiceFake extends ObjectService {
 		string $schema = '',
 		bool $_rbac = true,
 		bool $_multitenancy = true,
+		bool $_render = true,
+		bool $_audit = true,
 	) {
 		$this->findCalls++;
 		return $this->result;
@@ -498,6 +504,8 @@ class RefusingObjectServiceFake extends ObjectService {
 		?string $uuid = null,
 		bool $_rbac = true,
 		bool $_multitenancy = true,
+		bool $_unowned = false,
+		?string $_owner = null,
 	) {
 		throw new RuntimeException('ValidationException: property status is not one of the declared values');
 	}//end saveObject()

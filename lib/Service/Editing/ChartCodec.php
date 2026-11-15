@@ -186,16 +186,7 @@ class ChartCodec {
 		array $chart,
 		?string $afterAnchor = null,
 	): array {
-		if ($this->supports(extension: $extension) === false) {
-			throw new RuntimeException(
-				sprintf(
-					'Charts can only be embedded in .docx files, not "%s". An ODF chart is an embedded object '
-					. 'with its own manifest entry, which is a different construction and is not implemented.',
-					$extension
-				)
-			);
-		}
-
+		$this->requireDocx(extension: $extension);
 		$chart = $this->validate(chart: $chart);
 
 		$documentXml = $this->io->readPart(packageBytes: $packageBytes, part: 'word/document.xml');
@@ -204,51 +195,59 @@ class ChartCodec {
 		$index = $this->nextChartIndex(packageBytes: $packageBytes);
 		$chartPart = sprintf('word/charts/chart%d.xml', $index);
 		$relId = $this->nextRelationshipId(relsXml: $relsXml);
+		$relationships = $this->withRelationship(xml: $relsXml, relId: $relId, target: sprintf('charts/chart%d.xml', $index));
+		$drawing = $this->withDrawing(xml: $documentXml, relId: $relId, title: $chart['title'], afterAnchor: $afterAnchor);
 
 		// Order matters only in that every write must land; each writePart returns
 		// new bytes, so they are threaded rather than applied to the original.
-		$bytes = $this->io->writePart(
-			packageBytes: $packageBytes,
-			part: $chartPart,
-			xml: $this->buildChartXml(chart: $chart)
-		);
+		$bytes = $this->io->writePart(packageBytes: $packageBytes, part: $chartPart, xml: $this->buildChartXml(chart: $chart));
+		$bytes = $this->withChartContentType(packageBytes: $bytes, chartPart: $chartPart);
+		$bytes = $this->io->writePart(packageBytes: $bytes, part: 'word/_rels/document.xml.rels', xml: $relationships);
+		$bytes = $this->io->writePart(packageBytes: $bytes, part: 'word/document.xml', xml: $drawing);
 
-		$bytes = $this->io->writePart(
-			packageBytes: $bytes,
-			part: '[Content_Types].xml',
-			xml: $this->withContentTypeOverride(
-				xml: $this->io->readPart(packageBytes: $bytes, part: '[Content_Types].xml'),
-				partName: '/' . $chartPart
-			)
-		);
-
-		$bytes = $this->io->writePart(
-			packageBytes: $bytes,
-			part: 'word/_rels/document.xml.rels',
-			xml: $this->withRelationship(
-				xml: $relsXml,
-				relId: $relId,
-				target: sprintf('charts/chart%d.xml', $index)
-			)
-		);
-
-		$bytes = $this->io->writePart(
-			packageBytes: $bytes,
-			part: 'word/document.xml',
-			xml: $this->withDrawing(
-				xml: $documentXml,
-				relId: $relId,
-				title: $chart['title'],
-				afterAnchor: $afterAnchor
-			)
-		);
-
-		return [
-			'bytes' => $bytes,
-			'chartPart' => $chartPart,
-			'relationshipId' => $relId,
-		];
+		return ['bytes' => $bytes, 'chartPart' => $chartPart, 'relationshipId' => $relId];
 	}//end embedChart()
+
+	/**
+	 * Refuse any package that is not a .docx.
+	 *
+	 * @param string $extension The file extension.
+	 *
+	 * @return void
+	 *
+	 * @throws RuntimeException When the format is not .docx.
+	 */
+	private function requireDocx(string $extension): void {
+		if ($this->supports(extension: $extension) === true) {
+			return;
+		}
+
+		throw new RuntimeException(
+			sprintf(
+				'Charts can only be embedded in .docx files, not "%s". An ODF chart is an embedded object '
+				. 'with its own manifest entry, which is a different construction and is not implemented.',
+				$extension
+			)
+		);
+	}//end requireDocx()
+
+	/**
+	 * Declare the chart part's content type in `[Content_Types].xml`.
+	 *
+	 * @param string $packageBytes The package bytes.
+	 * @param string $chartPart The chart part, such as `word/charts/chart1.xml`.
+	 *
+	 * @return string The new package bytes.
+	 */
+	private function withChartContentType(string $packageBytes, string $chartPart): string {
+		$types = $this->io->readPart(packageBytes: $packageBytes, part: '[Content_Types].xml');
+
+		return $this->io->writePart(
+			packageBytes: $packageBytes,
+			part: '[Content_Types].xml',
+			xml: $this->withContentTypeOverride(xml: $types, partName: '/' . $chartPart)
+		);
+	}//end withChartContentType()
 
 	/**
 	 * Validate and normalise a chart definition.
@@ -265,47 +264,14 @@ class ChartCodec {
 	 * @throws RuntimeException When the definition is unusable.
 	 */
 	private function validate(array $chart): array {
-		$type = strtolower((string)($chart['type'] ?? ''));
-		if (isset(self::TYPES[$type]) === false) {
-			throw new RuntimeException(
-				sprintf('Unknown chart type "%s". Supported: %s.', $type, implode(', ', array_keys(self::TYPES)))
-			);
-		}
-
-		$categories = array_values((array)($chart['categories'] ?? []));
-		if ($categories === []) {
-			throw new RuntimeException('A chart needs at least one category.');
-		}
-
-		$rawSeries = array_values((array)($chart['series'] ?? []));
-		if ($rawSeries === []) {
-			throw new RuntimeException('A chart needs at least one series.');
-		}
-
+		$type = $this->validatedType(chart: $chart);
+		$categories = $this->nonEmptyList(value: $chart['categories'] ?? [], message: 'A chart needs at least one category.');
+		$rawSeries = $this->nonEmptyList(value: $chart['series'] ?? [], message: 'A chart needs at least one series.');
 		if ($type === 'pie' && count($rawSeries) > 1) {
 			throw new RuntimeException('A pie chart can only show one series.');
 		}
 
-		$series = [];
-		foreach ($rawSeries as $position => $entry) {
-			$values = array_values((array)(((array)$entry)['values'] ?? []));
-			if (count($values) !== count($categories)) {
-				throw new RuntimeException(
-					sprintf(
-						'Series %d has %d value(s) but there are %d categories. '
-						. 'Every series must carry exactly one value per category.',
-						((int)$position + 1),
-						count($values),
-						count($categories)
-					)
-				);
-			}
-
-			$series[] = [
-				'name' => (string)(((array)$entry)['name'] ?? sprintf('Series %d', ((int)$position + 1))),
-				'values' => array_map(static fn ($value): float => (float)$value, $values),
-			];
-		}
+		$series = $this->validatedSeries(rawSeries: $rawSeries, categoryCount: count($categories));
 
 		return [
 			'type' => $type,
@@ -314,6 +280,81 @@ class ChartCodec {
 			'series' => $series,
 		];
 	}//end validate()
+
+	/**
+	 * The chart type, lower-cased, when this codec can build it.
+	 *
+	 * @param array $chart The chart definition.
+	 *
+	 * @return string The type.
+	 *
+	 * @throws RuntimeException When the type is missing or unknown.
+	 */
+	private function validatedType(array $chart): string {
+		$type = strtolower((string)($chart['type'] ?? ''));
+		if (isset(self::TYPES[$type]) === false) {
+			throw new RuntimeException(
+				sprintf('Unknown chart type "%s". Supported: %s.', $type, implode(', ', array_keys(self::TYPES)))
+			);
+		}
+
+		return $type;
+	}//end validatedType()
+
+	/**
+	 * A value as a list, refused when it is empty.
+	 *
+	 * @param mixed $value The raw value; a scalar becomes a one-entry list.
+	 * @param string $message The refusal for an empty list.
+	 *
+	 * @return array<int, mixed> The list.
+	 *
+	 * @throws RuntimeException When the list is empty.
+	 */
+	private function nonEmptyList(mixed $value, string $message): array {
+		$list = array_values((array)$value);
+		if ($list === []) {
+			throw new RuntimeException($message);
+		}
+
+		return $list;
+	}//end nonEmptyList()
+
+	/**
+	 * Every series with its name and float values, each carrying one value per category.
+	 *
+	 * @param array<int, mixed> $rawSeries The raw series.
+	 * @param int $categoryCount The number of categories.
+	 *
+	 * @return array<int, array{name: string, values: array<int, float>}> The series.
+	 *
+	 * @throws RuntimeException When a series has a different number of values.
+	 */
+	private function validatedSeries(array $rawSeries, int $categoryCount): array {
+		$series = [];
+		foreach ($rawSeries as $position => $entry) {
+			$entry = (array)$entry;
+			$values = array_values((array)($entry['values'] ?? []));
+			if (count($values) !== $categoryCount) {
+				throw new RuntimeException(
+					sprintf(
+						'Series %d has %d value(s) but there are %d categories. '
+						. 'Every series must carry exactly one value per category.',
+						((int)$position + 1),
+						count($values),
+						$categoryCount
+					)
+				);
+			}
+
+			$series[] = [
+				'name' => (string)($entry['name'] ?? sprintf('Series %d', ((int)$position + 1))),
+				'values' => array_map(static fn ($value): float => (float)$value, $values),
+			];
+		}
+
+		return $series;
+	}//end validatedSeries()
 
 	/**
 	 * Build the chart part XML.

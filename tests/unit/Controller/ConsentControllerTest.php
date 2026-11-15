@@ -374,31 +374,72 @@ class ConsentControllerTest extends TestCase {
 	}//end testUpdateReturns404ForNonOwner()
 
 	/**
-	 * Test update succeeds for the record owner
+	 * The person who opened a consent request may read it, but not record its outcome.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/specs/consent-management/spec.md
 	 */
-	public function testUpdateSucceedsForOwner(): void {
+	public function testUpdateIsRefusedForTheOwnerWhoIsNoOfficer(): void {
 		$this->mockCrudService->method('getConsentConfig')
 			->willReturn(['register' => 'reg-1', 'schema' => 'sch-1']);
 		$this->mockCrudService->method('getConsent')
-			->willReturn(
-				[
-					'id' => 'uuid-1',
-					'@self' => ['owner' => 'owner'],
-				]
-			);
-		$this->mockCrudService->method('updateConsentStatus')
-			->willReturn(['id' => 'uuid-1', 'consentStatus' => 'granted']);
+			->willReturn(['id' => 'uuid-1', '@self' => ['owner' => 'owner']]);
+		$this->mockCrudService->expects($this->never())->method('updateConsentStatus');
 		$this->mockRequest->method('getParams')
-			->willReturn(['consentStatus' => 'granted']);
+			->willReturn(['consentStatus' => 'consent_given', 'evidence' => 'I said so']);
 
-		$result = $this->controller->update('uuid-1');
+		$this->assertSame(expected: 403, actual: $this->controller->update(id: 'uuid-1')->getStatus());
+		$this->assertSame(expected: 200, actual: $this->controller->show(id: 'uuid-1')->getStatus());
 
-		$this->assertInstanceOf(JSONResponse::class, $result);
-		$this->assertEquals(200, $result->getStatus());
+	}//end testUpdateIsRefusedForTheOwnerWhoIsNoOfficer()
 
-	}//end testUpdateSucceedsForOwner()
+	/**
+	 * A consent officer may record the outcome of any consent request.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/consent-management/spec.md
+	 */
+	public function testUpdateSucceedsForAConsentOfficer(): void {
+		$this->mockGroupManager->method('isInGroup')
+			->willReturnCallback(static fn (string $uid, string $group): bool => $group === 'filinq-woo-officers');
+		$this->mockCrudService->method('getConsentConfig')
+			->willReturn(['register' => 'reg-1', 'schema' => 'sch-1']);
+		$this->mockCrudService->method('getConsent')
+			->willReturn(['id' => 'uuid-1', '@self' => ['owner' => 'somebody-else']]);
+		$this->mockCrudService->method('updateConsentStatus')
+			->willReturn(['id' => 'uuid-1', 'consentStatus' => 'consent_given']);
+		$this->mockRequest->method('getParams')
+			->willReturn(['consentStatus' => 'consent_given', 'evidence' => 'Signed form received by post']);
+
+		$this->assertSame(expected: 200, actual: $this->controller->update(id: 'uuid-1')->getStatus());
+
+	}//end testUpdateSucceedsForAConsentOfficer()
+
+	/**
+	 * A refused status move answers 400 with the reason.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/consent-management/spec.md
+	 */
+	public function testARefusedMoveAnswers400WithTheReason(): void {
+		$this->mockGroupManager->method('isInGroup')->willReturn(true);
+		$this->mockCrudService->method('getConsentConfig')
+			->willReturn(['register' => 'reg-1', 'schema' => 'sch-1']);
+		$this->mockCrudService->method('getConsent')
+			->willReturn(['id' => 'uuid-1', '@self' => ['owner' => 'owner']]);
+		$this->mockCrudService->method('updateConsentStatus')
+			->willThrowException(new \InvalidArgumentException('Recording consent_given needs evidence.', 400));
+		$this->mockRequest->method('getParams')->willReturn(['consentStatus' => 'consent_given']);
+
+		$response = $this->controller->update(id: 'uuid-1');
+
+		$this->assertSame(expected: 400, actual: $response->getStatus());
+		$this->assertSame(expected: 'Recording consent_given needs evidence.', actual: $response->getData()['error']);
+
+	}//end testARefusedMoveAnswers400WithTheReason()
 
 	/**
 	 * Oracle-free error response (signing-trust-rebuild REQ-DDSTR-009, closing

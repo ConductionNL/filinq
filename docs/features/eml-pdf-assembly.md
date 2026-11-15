@@ -83,12 +83,12 @@ to `eml/email_envelope_en.twig`.
 
 ## Verifying the output
 
-The assembled PDF is PDF/A-3b. To verify:
+The assembled PDF is PDF/A-3b. With veraPDF installed on the server, Filinq
+checks every conversion itself and shows the result in the document's
+**PDF/A report** (see [PDF/A validation with veraPDF](verapdf-validation.md)).
+To inspect a file by hand:
 
 ```bash
-# Conformance check (verapdf must be installed).
-verapdf --format text --validate-profile 3b /path/to/out.pdf
-
 # Extract every embedded attachment back out.
 pdfdetach -saveall /path/to/out.pdf -o /tmp/extracted
 

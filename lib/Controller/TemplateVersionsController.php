@@ -27,8 +27,8 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use Exception;
-use OCA\Filinq\Service\TemplateService;
-use OCA\Filinq\Service\TemplateVersionService;
+use OCA\Filinq\Kernel\Contracts\TemplateServiceInterface;
+use OCA\Filinq\Kernel\Contracts\TemplateVersionServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -45,14 +45,16 @@ use OCP\IUserSession;
  * @link     https://www.filinq.app
  */
 class TemplateVersionsController extends Controller {
+	use AnswersNotAuthenticated;
+
 	/**
 	 * Constructor for TemplateVersionsController
 	 *
 	 * @param string $appName The application name
 	 * @param IRequest $request The request object
-	 * @param TemplateService $templateService Service for template operations
+	 * @param TemplateServiceInterface $templateService Service for template operations
 	 * @param TemplateRequestHandler $requestHandler Request param parser and error handler
-	 * @param TemplateVersionService $versionService Service for version operations
+	 * @param TemplateVersionServiceInterface $versionService Service for version operations
 	 * @param IUserSession $userSession User session for current user
 	 *
 	 * @return void
@@ -60,9 +62,9 @@ class TemplateVersionsController extends Controller {
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly TemplateService $templateService,
+		private readonly TemplateServiceInterface $templateService,
 		private readonly TemplateRequestHandler $requestHandler,
-		private readonly TemplateVersionService $versionService,
+		private readonly TemplateVersionServiceInterface $versionService,
 		private readonly IUserSession $userSession,
 	) {
 		parent::__construct(appName: $appName, request: $request);
@@ -80,15 +82,16 @@ class TemplateVersionsController extends Controller {
 	 * @NoCSRFRequired
 	 *
 	 * @spec openspec/specs/template-management/spec.md
+	 *
+	 * @no-admin-idor-exempt reads go through OpenRegister with RBAC and multitenancy on
+	 * (TemplateVersionService::getVersions()), and the templateVersion schema grants read to authenticated
+	 * users.
 	 */
 	public function versions(string $id): JSONResponse {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => 'Not authenticated'],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: 'Not authenticated');
 			}
 
 			$limit = (int)$this->request->getParam('_limit', '20');
@@ -121,10 +124,7 @@ class TemplateVersionsController extends Controller {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => 'Not authenticated'],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: 'Not authenticated');
 			}
 
 			$result = $this->versionService->restoreVersion(
@@ -153,15 +153,16 @@ class TemplateVersionsController extends Controller {
 	 * @NoCSRFRequired
 	 *
 	 * @spec openspec/specs/template-management/spec.md
+	 *
+	 * @no-admin-idor-exempt reads go through OpenRegister with RBAC and multitenancy on
+	 * (TemplateVersionService::getVersion()), and the templateVersion schema grants read to authenticated
+	 * users.
 	 */
 	public function diffVersions(): JSONResponse {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => 'Not authenticated'],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: 'Not authenticated');
 			}
 
 			$from = $this->request->getParam('from', '');

@@ -1,0 +1,486 @@
+[
+	{
+		"name": "no name",
+		"first": {
+			"error": "Folder name is required"
+		},
+		"again": {
+			"error": "Folder name is required"
+		},
+		"same": false,
+		"dossiers": [],
+		"calls": []
+	},
+	{
+		"name": "blank name",
+		"first": {
+			"error": "Folder name is required"
+		},
+		"again": {
+			"error": "Folder name is required"
+		},
+		"same": false,
+		"dossiers": [],
+		"calls": []
+	},
+	{
+		"name": "folder lookup fails",
+		"first": {
+			"error": "dav"
+		},
+		"again": {
+			"error": "dav"
+		},
+		"same": false,
+		"dossiers": [],
+		"calls": [
+			[
+				"PROPFIND",
+				"http://localhost/remote.php/dav/files/admin/DocuDesk/Dos/",
+				{
+					"Depth": "0",
+					"Content-Type": "application/xml"
+				},
+				"<?xml version=\"1.0\"?>\n\t\t\t\t\t\t<d:propfind xmlns:d=\"DAV:\" xmlns:oc=\"http://owncloud.org/ns\">\n\t\t\t\t\t\t\t<d:prop>\n\t\t\t\t\t\t\t\t<oc:fileid />\n\t\t\t\t\t\t\t</d:prop>\n\t\t\t\t\t\t</d:propfind>"
+			],
+			[
+				"PROPFIND",
+				"http://localhost/remote.php/dav/files/admin/DocuDesk/Dos/",
+				{
+					"Depth": "0",
+					"Content-Type": "application/xml"
+				},
+				"<?xml version=\"1.0\"?>\n\t\t\t\t\t\t<d:propfind xmlns:d=\"DAV:\" xmlns:oc=\"http://owncloud.org/ns\">\n\t\t\t\t\t\t\t<d:prop>\n\t\t\t\t\t\t\t\t<oc:fileid />\n\t\t\t\t\t\t\t</d:prop>\n\t\t\t\t\t\t</d:propfind>"
+			]
+		]
+	},
+	{
+		"name": "folder without id",
+		"first": {
+			"error": "Failed to read folder id for Dos"
+		},
+		"again": {
+			"error": "Failed to read folder id for Dos"
+		},
+		"same": false,
+		"dossiers": [],
+		"calls": [
+			[
+				"PROPFIND",
+				"http://localhost/remote.php/dav/files/admin/DocuDesk/Dos/",
+				{
+					"Depth": "0",
+					"Content-Type": "application/xml"
+				},
+				"<?xml version=\"1.0\"?>\n\t\t\t\t\t\t<d:propfind xmlns:d=\"DAV:\" xmlns:oc=\"http://owncloud.org/ns\">\n\t\t\t\t\t\t\t<d:prop>\n\t\t\t\t\t\t\t\t<oc:fileid />\n\t\t\t\t\t\t\t</d:prop>\n\t\t\t\t\t\t</d:propfind>"
+			],
+			[
+				"PROPFIND",
+				"http://localhost/remote.php/dav/files/admin/DocuDesk/Dos/",
+				{
+					"Depth": "0",
+					"Content-Type": "application/xml"
+				},
+				"<?xml version=\"1.0\"?>\n\t\t\t\t\t\t<d:propfind xmlns:d=\"DAV:\" xmlns:oc=\"http://owncloud.org/ns\">\n\t\t\t\t\t\t\t<d:prop>\n\t\t\t\t\t\t\t\t<oc:fileid />\n\t\t\t\t\t\t\t</d:prop>\n\t\t\t\t\t\t</d:propfind>"
+			]
+		]
+	},
+	{
+		"name": "folder answer empty",
+		"first": {
+			"error": "Failed to read folder id for Dos"
+		},
+		"again": {
+			"error": "Failed to read folder id for Dos"
+		},
+		"same": false,
+		"dossiers": [],
+		"calls": [
+			[
+				"PROPFIND",
+				"http://localhost/remote.php/dav/files/admin/DocuDesk/Dos/",
+				{
+					"Depth": "0",
+					"Content-Type": "application/xml"
+				},
+				"<?xml version=\"1.0\"?>\n\t\t\t\t\t\t<d:propfind xmlns:d=\"DAV:\" xmlns:oc=\"http://owncloud.org/ns\">\n\t\t\t\t\t\t\t<d:prop>\n\t\t\t\t\t\t\t\t<oc:fileid />\n\t\t\t\t\t\t\t</d:prop>\n\t\t\t\t\t\t</d:propfind>"
+			],
+			[
+				"PROPFIND",
+				"http://localhost/remote.php/dav/files/admin/DocuDesk/Dos/",
+				{
+					"Depth": "0",
+					"Content-Type": "application/xml"
+				},
+				"<?xml version=\"1.0\"?>\n\t\t\t\t\t\t<d:propfind xmlns:d=\"DAV:\" xmlns:oc=\"http://owncloud.org/ns\">\n\t\t\t\t\t\t\t<d:prop>\n\t\t\t\t\t\t\t\t<oc:fileid />\n\t\t\t\t\t\t\t</d:prop>\n\t\t\t\t\t\t</d:propfind>"
+			]
+		]
+	},
+	{
+		"name": "self id, own bases",
+		"first": {
+			"result": {
+				"folderName": "Mijn dossier/é",
+				"folderId": 321,
+				"uuid": "self-uuid",
+				"name": "Mijn dossier/é",
+				"bases": [
+					"a",
+					"b"
+				]
+			}
+		},
+		"again": {
+			"result": {
+				"folderName": "Mijn dossier/é",
+				"folderId": 321,
+				"uuid": "self-uuid",
+				"name": "Mijn dossier/é",
+				"bases": [
+					"a",
+					"b"
+				]
+			}
+		},
+		"same": false,
+		"dossiers": [
+			{
+				"folderName": "Mijn dossier/é",
+				"folderId": 321,
+				"uuid": "self-uuid",
+				"name": "Mijn dossier/é",
+				"bases": [
+					"a",
+					"b"
+				]
+			}
+		],
+		"calls": [
+			[
+				"PROPFIND",
+				"http://localhost/remote.php/dav/files/admin/DocuDesk/Mijn%20dossier/%C3%A9/",
+				{
+					"Depth": "0",
+					"Content-Type": "application/xml"
+				},
+				"<?xml version=\"1.0\"?>\n\t\t\t\t\t\t<d:propfind xmlns:d=\"DAV:\" xmlns:oc=\"http://owncloud.org/ns\">\n\t\t\t\t\t\t\t<d:prop>\n\t\t\t\t\t\t\t\t<oc:fileid />\n\t\t\t\t\t\t\t</d:prop>\n\t\t\t\t\t\t</d:propfind>"
+			],
+			[
+				"POST",
+				"/index.php/apps/openregister/api/objects/filinq/dossier",
+				{
+					"name": "Mijn dossier/é",
+					"description": "Omschrijving",
+					"bases": [
+						"a",
+						"b"
+					],
+					"@self": {
+						"folder": "321"
+					}
+				}
+			]
+		]
+	},
+	{
+		"name": "plain id, empty bases",
+		"first": {
+			"result": {
+				"folderName": "Dos",
+				"folderId": 321,
+				"uuid": "plain",
+				"name": "Dos",
+				"bases": [
+					"persoonsgegevens"
+				]
+			}
+		},
+		"again": {
+			"result": {
+				"folderName": "Dos",
+				"folderId": 321,
+				"uuid": "plain",
+				"name": "Dos",
+				"bases": [
+					"persoonsgegevens"
+				]
+			}
+		},
+		"same": false,
+		"dossiers": [
+			{
+				"folderName": "Dos",
+				"folderId": 321,
+				"uuid": "plain",
+				"name": "Dos",
+				"bases": [
+					"persoonsgegevens"
+				]
+			}
+		],
+		"calls": [
+			[
+				"PROPFIND",
+				"http://localhost/remote.php/dav/files/admin/DocuDesk/Dos/",
+				{
+					"Depth": "0",
+					"Content-Type": "application/xml"
+				},
+				"<?xml version=\"1.0\"?>\n\t\t\t\t\t\t<d:propfind xmlns:d=\"DAV:\" xmlns:oc=\"http://owncloud.org/ns\">\n\t\t\t\t\t\t\t<d:prop>\n\t\t\t\t\t\t\t\t<oc:fileid />\n\t\t\t\t\t\t\t</d:prop>\n\t\t\t\t\t\t</d:propfind>"
+			],
+			[
+				"POST",
+				"/index.php/apps/openregister/api/objects/filinq/dossier",
+				{
+					"name": "Dos",
+					"description": "",
+					"bases": [
+						"persoonsgegevens"
+					],
+					"@self": {
+						"folder": "321"
+					}
+				}
+			]
+		]
+	},
+	{
+		"name": "bases not a list",
+		"first": {
+			"result": {
+				"folderName": "Dos",
+				"folderId": 321,
+				"uuid": 0,
+				"name": "Dos",
+				"bases": [
+					"persoonsgegevens"
+				]
+			}
+		},
+		"again": {
+			"result": {
+				"folderName": "Dos",
+				"folderId": 321,
+				"uuid": 0,
+				"name": "Dos",
+				"bases": [
+					"persoonsgegevens"
+				]
+			}
+		},
+		"same": false,
+		"dossiers": [
+			{
+				"folderName": "Dos",
+				"folderId": 321,
+				"uuid": 0,
+				"name": "Dos",
+				"bases": [
+					"persoonsgegevens"
+				]
+			}
+		],
+		"calls": [
+			[
+				"PROPFIND",
+				"http://localhost/remote.php/dav/files/admin/DocuDesk/Dos/",
+				{
+					"Depth": "0",
+					"Content-Type": "application/xml"
+				},
+				"<?xml version=\"1.0\"?>\n\t\t\t\t\t\t<d:propfind xmlns:d=\"DAV:\" xmlns:oc=\"http://owncloud.org/ns\">\n\t\t\t\t\t\t\t<d:prop>\n\t\t\t\t\t\t\t\t<oc:fileid />\n\t\t\t\t\t\t\t</d:prop>\n\t\t\t\t\t\t</d:propfind>"
+			],
+			[
+				"POST",
+				"/index.php/apps/openregister/api/objects/filinq/dossier",
+				{
+					"name": "Dos",
+					"description": "",
+					"bases": [
+						"persoonsgegevens"
+					],
+					"@self": {
+						"folder": "321"
+					}
+				}
+			]
+		]
+	},
+	{
+		"name": "no uuid",
+		"first": {
+			"error": "Dossier created but no UUID returned"
+		},
+		"again": {
+			"error": "Dossier created but no UUID returned"
+		},
+		"same": false,
+		"dossiers": [],
+		"calls": [
+			[
+				"PROPFIND",
+				"http://localhost/remote.php/dav/files/admin/DocuDesk/Dos/",
+				{
+					"Depth": "0",
+					"Content-Type": "application/xml"
+				},
+				"<?xml version=\"1.0\"?>\n\t\t\t\t\t\t<d:propfind xmlns:d=\"DAV:\" xmlns:oc=\"http://owncloud.org/ns\">\n\t\t\t\t\t\t\t<d:prop>\n\t\t\t\t\t\t\t\t<oc:fileid />\n\t\t\t\t\t\t\t</d:prop>\n\t\t\t\t\t\t</d:propfind>"
+			],
+			[
+				"POST",
+				"/index.php/apps/openregister/api/objects/filinq/dossier",
+				{
+					"name": "Dos",
+					"description": "",
+					"bases": [
+						"persoonsgegevens"
+					],
+					"@self": {
+						"folder": "321"
+					}
+				}
+			],
+			[
+				"PROPFIND",
+				"http://localhost/remote.php/dav/files/admin/DocuDesk/Dos/",
+				{
+					"Depth": "0",
+					"Content-Type": "application/xml"
+				},
+				"<?xml version=\"1.0\"?>\n\t\t\t\t\t\t<d:propfind xmlns:d=\"DAV:\" xmlns:oc=\"http://owncloud.org/ns\">\n\t\t\t\t\t\t\t<d:prop>\n\t\t\t\t\t\t\t\t<oc:fileid />\n\t\t\t\t\t\t\t</d:prop>\n\t\t\t\t\t\t</d:propfind>"
+			],
+			[
+				"POST",
+				"/index.php/apps/openregister/api/objects/filinq/dossier",
+				{
+					"name": "Dos",
+					"description": "",
+					"bases": [
+						"persoonsgegevens"
+					],
+					"@self": {
+						"folder": "321"
+					}
+				}
+			]
+		]
+	},
+	{
+		"name": "empty answer",
+		"first": {
+			"error": "Dossier created but no UUID returned"
+		},
+		"again": {
+			"error": "Dossier created but no UUID returned"
+		},
+		"same": false,
+		"dossiers": [],
+		"calls": [
+			[
+				"PROPFIND",
+				"http://localhost/remote.php/dav/files/admin/DocuDesk/Dos/",
+				{
+					"Depth": "0",
+					"Content-Type": "application/xml"
+				},
+				"<?xml version=\"1.0\"?>\n\t\t\t\t\t\t<d:propfind xmlns:d=\"DAV:\" xmlns:oc=\"http://owncloud.org/ns\">\n\t\t\t\t\t\t\t<d:prop>\n\t\t\t\t\t\t\t\t<oc:fileid />\n\t\t\t\t\t\t\t</d:prop>\n\t\t\t\t\t\t</d:propfind>"
+			],
+			[
+				"POST",
+				"/index.php/apps/openregister/api/objects/filinq/dossier",
+				{
+					"name": "Dos",
+					"description": "",
+					"bases": [
+						"persoonsgegevens"
+					],
+					"@self": {
+						"folder": "321"
+					}
+				}
+			],
+			[
+				"PROPFIND",
+				"http://localhost/remote.php/dav/files/admin/DocuDesk/Dos/",
+				{
+					"Depth": "0",
+					"Content-Type": "application/xml"
+				},
+				"<?xml version=\"1.0\"?>\n\t\t\t\t\t\t<d:propfind xmlns:d=\"DAV:\" xmlns:oc=\"http://owncloud.org/ns\">\n\t\t\t\t\t\t\t<d:prop>\n\t\t\t\t\t\t\t\t<oc:fileid />\n\t\t\t\t\t\t\t</d:prop>\n\t\t\t\t\t\t</d:propfind>"
+			],
+			[
+				"POST",
+				"/index.php/apps/openregister/api/objects/filinq/dossier",
+				{
+					"name": "Dos",
+					"description": "",
+					"bases": [
+						"persoonsgegevens"
+					],
+					"@self": {
+						"folder": "321"
+					}
+				}
+			]
+		]
+	},
+	{
+		"name": "create fails",
+		"first": {
+			"error": "create"
+		},
+		"again": {
+			"error": "create"
+		},
+		"same": false,
+		"dossiers": [],
+		"calls": [
+			[
+				"PROPFIND",
+				"http://localhost/remote.php/dav/files/admin/DocuDesk/Dos/",
+				{
+					"Depth": "0",
+					"Content-Type": "application/xml"
+				},
+				"<?xml version=\"1.0\"?>\n\t\t\t\t\t\t<d:propfind xmlns:d=\"DAV:\" xmlns:oc=\"http://owncloud.org/ns\">\n\t\t\t\t\t\t\t<d:prop>\n\t\t\t\t\t\t\t\t<oc:fileid />\n\t\t\t\t\t\t\t</d:prop>\n\t\t\t\t\t\t</d:propfind>"
+			],
+			[
+				"POST",
+				"/index.php/apps/openregister/api/objects/filinq/dossier",
+				{
+					"name": "Dos",
+					"description": "",
+					"bases": [
+						"persoonsgegevens"
+					],
+					"@self": {
+						"folder": "321"
+					}
+				}
+			],
+			[
+				"PROPFIND",
+				"http://localhost/remote.php/dav/files/admin/DocuDesk/Dos/",
+				{
+					"Depth": "0",
+					"Content-Type": "application/xml"
+				},
+				"<?xml version=\"1.0\"?>\n\t\t\t\t\t\t<d:propfind xmlns:d=\"DAV:\" xmlns:oc=\"http://owncloud.org/ns\">\n\t\t\t\t\t\t\t<d:prop>\n\t\t\t\t\t\t\t\t<oc:fileid />\n\t\t\t\t\t\t\t</d:prop>\n\t\t\t\t\t\t</d:propfind>"
+			],
+			[
+				"POST",
+				"/index.php/apps/openregister/api/objects/filinq/dossier",
+				{
+					"name": "Dos",
+					"description": "",
+					"bases": [
+						"persoonsgegevens"
+					],
+					"@self": {
+						"folder": "321"
+					}
+				}
+			]
+		]
+	}
+]

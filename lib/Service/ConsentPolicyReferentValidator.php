@@ -160,74 +160,85 @@ class ConsentPolicyReferentValidator {
 	 */
 	private function assertPolicyMatchReferentValid(string $uuid): void {
 		try {
-			$objectService = $this->getObjectService();
-
-			$prohibitionHits = $objectService->findAll(
-				config: [
-					'filters' => [
-						'register' => 'filinq',
-						'schema' => 'publicationProhibition',
-						'uuid' => $uuid,
-					],
-					'limit' => 1,
-				],
-				_rbac: false
-			);
-			if ($this->resultExtractor->firstRow(result: $prohibitionHits) !== null) {
-				return;
-			}
-
-			$consentHits = $objectService->findAll(
-				config: [
-					'filters' => [
-						'register' => 'filinq',
-						'schema' => 'publicationConsent',
-						'uuid' => $uuid,
-					],
-					'limit' => 1,
-				],
-				_rbac: false
-			);
-
-			$consentObject = $this->resultExtractor->firstRow(result: $consentHits);
-			if ($consentObject === null) {
-				$msg = 'policyMatch UUID "%s" does not resolve to a known prohibition or entity-scope publicationConsent record.';
-				throw new InvalidArgumentException(message: sprintf($msg, $uuid));
-			}
-
-			$referentScope = (string)($consentObject['scope'] ?? 'document');
-			if ($referentScope !== 'entity') {
-				throw new InvalidArgumentException(
-					message: sprintf(
-						'policyMatch points at a publicationConsent with scope=%s; only entity-scope records are permitted.',
-						$referentScope
-					)
-				);
-			}
+			$this->assertReferentPermitted(uuid: $uuid);
 		} catch (InvalidArgumentException $e) {
 			throw $e;
 		} catch (Exception $e) {
-			// Treat lookup failure as a hard error rather than a silent
-			// pass — a write referencing a `policyMatch` we cannot
-			// validate must not be persisted, even if the underlying
-			// ObjectService threw an infrastructure error. Surfacing
-			// the failure (mapped to HTTP 5xx by the controller) is
-			// strictly safer than masking it with a warning log.
-			$this->logger->error(
-				'ConsentService: policyMatch referent lookup failed — rejecting write',
-				['policyMatch' => $uuid, 'error' => $e->getMessage()]
-			);
-			throw new InvalidArgumentException(
-				message: sprintf(
-					'policyMatch UUID "%s" could not be validated against the policy registry: %s',
-					$uuid,
-					$e->getMessage()
-				),
-				previous: $e
-			);
-		}//end try
+			throw $this->lookupFailure(uuid: $uuid, error: $e);
+		}
 
 	}//end assertPolicyMatchReferentValid()
+
+	/**
+	 * Resolve the referent and reject it unless it is a prohibition or an
+	 * entity-scope publicationConsent.
+	 *
+	 * @param string $uuid The candidate UUID.
+	 *
+	 * @return void
+	 *
+	 * @throws InvalidArgumentException If the referent is unknown or not entity-scope.
+	 * @throws Exception When the lookup itself fails.
+	 */
+	private function assertReferentPermitted(string $uuid): void {
+		if ($this->findReferent(schema: 'publicationProhibition', uuid: $uuid) !== null) {
+			return;
+		}
+
+		$consentObject = $this->findReferent(schema: 'publicationConsent', uuid: $uuid);
+		if ($consentObject === null) {
+			$msg = 'policyMatch UUID "%s" does not resolve to a known prohibition or entity-scope publicationConsent record.';
+			throw new InvalidArgumentException(message: sprintf($msg, $uuid));
+		}
+
+		$referentScope = (string)($consentObject['scope'] ?? 'document');
+		if ($referentScope !== 'entity') {
+			$msg = 'policyMatch points at a publicationConsent with scope=%s; only entity-scope records are permitted.';
+			throw new InvalidArgumentException(message: sprintf($msg, $referentScope));
+		}
+
+	}//end assertReferentPermitted()
+
+	/**
+	 * Look up one filinq record of the given schema by UUID, without RBAC.
+	 *
+	 * @param string $schema The schema slug.
+	 * @param string $uuid The record UUID.
+	 *
+	 * @return array<string, mixed>|null The record, or null when there is none.
+	 */
+	private function findReferent(string $schema, string $uuid): ?array {
+		$hits = $this->getObjectService()->findAll(
+			config: [
+				'filters' => ['register' => 'filinq', 'schema' => $schema, 'uuid' => $uuid],
+				'limit' => 1,
+			],
+			_rbac: false
+		);
+
+		return $this->resultExtractor->firstRow(result: $hits);
+	}//end findReferent()
+
+	/**
+	 * Log a failed referent lookup and turn it into a rejection.
+	 *
+	 * A write referencing a policyMatch that cannot be validated must not be
+	 * persisted, so an infrastructure error is a hard rejection, not a pass.
+	 *
+	 * @param string $uuid The candidate UUID.
+	 * @param Exception $error The lookup failure.
+	 *
+	 * @return InvalidArgumentException The rejection to throw.
+	 */
+	private function lookupFailure(string $uuid, Exception $error): InvalidArgumentException {
+		$this->logger->error(
+			'ConsentService: policyMatch referent lookup failed — rejecting write',
+			['policyMatch' => $uuid, 'error' => $error->getMessage()]
+		);
+
+		$msg = 'policyMatch UUID "%s" could not be validated against the policy registry: %s';
+		return new InvalidArgumentException(message: sprintf($msg, $uuid, $error->getMessage()), previous: $error);
+	}//end lookupFailure()
 
 	/**
 	 * Get the ObjectService from OpenRegister.

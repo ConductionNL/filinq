@@ -38,6 +38,11 @@ parameters:
         # FilinqScannableServices entirely. The stub also type-checks the named
         # arguments every #[McpTool] declaration passes.
         - tests/stubs/openregister-mcp.stub.php
+        # OpenRegister's flow-node contract, for the same reason: the
+        # filinq.generate-document node implements IFlowNode (and its config
+        # keys, config form and taxonomy companions), so the stub is what lets
+        # PHPStan check the node against the real interface shape.
+        - tests/stubs/openregister-flow.stub.php
 
     ignoreErrors:
         # @template-implements IEventListener<OCA\OpenRegister\Event\*> in listeners:

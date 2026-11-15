@@ -12,7 +12,7 @@
 <template>
 	<CnAppRoot
 		:aiCompanion="true"
-		:manifest="manifest"
+		:manifest="shellManifest"
 		:customComponents="customComponents"
 		:pageTypes="pageTypes"
 		:registry="registry"
@@ -26,6 +26,10 @@
 		-->
 		<template #sidebar="{ pageSidebarComponent }">
 			<SideBars />
+			<!-- The registry-driven object sidebar of a custom record page
+			     (Mail, Calendar, Contacts, Deck, Files leaves). CnAppRoot would
+			     hoist it itself, but not while this slot is filled. -->
+			<RecordLeafSidebar />
 			<!-- The manifest page's own sidebar (pages[].sidebarComponent). Passed in
 			     as a slot prop because filling this slot suppresses CnAppRoot's
 			     fallback, which is what hid the flow sidebar. -->
@@ -43,7 +47,9 @@ import { CnAppRoot } from '@conduction/nextcloud-vue'
 import { translate as ncT } from '@nextcloud/l10n'
 import Dialogs from './dialogs/Dialogs.vue'
 import Modals from './modals/Modals.vue'
+import RecordLeafSidebar from './sidebars/RecordLeafSidebar.vue'
 import SideBars from './sidebars/SideBars.vue'
+import { mayUseEntitySearch } from './services/entitySearch.js'
 
 export default {
 	name: 'App',
@@ -53,6 +59,7 @@ export default {
 		Modals,
 		Dialogs,
 		SideBars,
+		RecordLeafSidebar,
 	},
 
 	props: {
@@ -96,6 +103,25 @@ export default {
 		},
 	},
 
+	data() {
+		return {
+			/**
+			 * The manifest with the runtime facts menu entries test in
+			 * `visibleIf`. `entitySearch.allowed` stays false until the server
+			 * says yes, so the entry never shows to someone the gate refuses.
+			 *
+			 * @spec openspec/changes/archive/2026-09-29-entity-search/tasks.md#task-3.1
+			 */
+			shellManifest: {
+				...this.manifest,
+				runtime: {
+					...(this.manifest.runtime || {}),
+					entitySearch: { allowed: false },
+				},
+			},
+		}
+	},
+
 	computed: {
 		/**
 		 * Current user's Nextcloud permission set, passed to the app shell.
@@ -105,6 +131,10 @@ export default {
 		permissions() {
 			return window.OC?.currentUser?.permissions ?? []
 		},
+	},
+
+	async mounted() {
+		this.shellManifest.runtime.entitySearch.allowed = await mayUseEntitySearch()
 	},
 
 	methods: {

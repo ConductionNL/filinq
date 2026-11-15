@@ -34,6 +34,8 @@ namespace OCA\Filinq\Service;
 
 use Exception;
 use OCA\Filinq\Exception\ConversionFailedException;
+use OCA\Filinq\Service\Support\AnonymisationRecords;
+use OCA\Filinq\Service\Support\AnonymisedOutputs;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -46,36 +48,80 @@ use Psr\Log\LoggerInterface;
  * @link     https://www.filinq.app
  *
  * @spec openspec/specs/anonymization/spec.md
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The thirteenth type is the
+ * EmlAnonymizeRequest value object the EML branch hands its source, entities
+ * and scope over in.
  */
 class DocumentAnonymizeRunner {
+	/**
+	 * The EML anonymise + PDF/A-3b assembly path.
+	 *
+	 * @var EmlAnonymizationService
+	 */
+	private readonly EmlAnonymizationService $emlAnonymizer;
+
+	/**
+	 * The PDF-conversion gate on the anonymised.
+	 *
+	 * @var AnonymisedPdfOutputService
+	 */
+	private readonly AnonymisedPdfOutputService $pdfOutput;
+
+	/**
+	 * Renders and attaches the per-document.
+	 *
+	 * @var GrondslagenSummaryAttacher
+	 */
+	private readonly GrondslagenSummaryAttacher $summaryAttacher;
+
+	/**
+	 * Replacement statistics for a run.
+	 *
+	 * @var ReplacementVerificationService
+	 */
+	private readonly ReplacementVerificationService $replacementVerifier;
+
+	/**
+	 * Post-run persistence: anonymisation link +.
+	 *
+	 * @var AnonymizationPersistenceService
+	 */
+	private readonly AnonymizationPersistenceService $persistence;
+
+	/**
+	 * The verdict, the anonymisation link and the.
+	 *
+	 * @var AnonymisationRunRecords
+	 */
+	private readonly AnonymisationRunRecords $runRecords;
+
 	/**
 	 * Constructor for DocumentAnonymizeRunner
 	 *
 	 * @param LoggerInterface $logger Logger for error reporting.
 	 * @param OpenRegisterServiceLocator $locator Resolver for OpenRegister services and mappers.
 	 * @param EntityDetectionService $entityDetection Entity mapping / result parsing service.
-	 * @param EmlAnonymizationService $emlAnonymizer The EML anonymise + PDF/A-3b assembly path.
-	 * @param AnonymisedPdfOutputService $pdfOutput The PDF-conversion gate on the anonymised
-	 *                                              intermediate (cascade + rollback + pdf-only
-	 *                                              cleanup).
-	 * @param ReplacementVerificationService $replacementVerifier Replacement statistics for a run.
-	 * @param AnonymizationPersistenceService $persistence Post-run persistence: anonymisation link +
-	 *                                                     publication consents.
-	 * @param GrondslagenSummaryAttacher $summaryAttacher Renders and attaches the per-document
-	 *                                                    grondslagen summary.
+	 * @param AnonymisedOutputs $outputs The anonymised email, PDF and summary outputs
+	 * @param AnonymisationRecords $records The replacement check, persistence and run records
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-2.2
 	 */
 	public function __construct(
 		private readonly LoggerInterface $logger,
 		private readonly OpenRegisterServiceLocator $locator,
 		private readonly EntityDetectionService $entityDetection,
-		private readonly EmlAnonymizationService $emlAnonymizer,
-		private readonly AnonymisedPdfOutputService $pdfOutput,
-		private readonly ReplacementVerificationService $replacementVerifier,
-		private readonly AnonymizationPersistenceService $persistence,
-		private readonly GrondslagenSummaryAttacher $summaryAttacher,
+		AnonymisedOutputs $outputs,
+		AnonymisationRecords $records,
 	) {
+		$this->replacementVerifier = $records->verifier;
+		$this->persistence = $records->persistence;
+		$this->runRecords = $records->runs;
+		$this->emlAnonymizer = $outputs->eml;
+		$this->pdfOutput = $outputs->pdf;
+		$this->summaryAttacher = $outputs->summary;
 
 	}//end __construct()
 
@@ -121,6 +167,7 @@ class DocumentAnonymizeRunner {
 	 * @spec openspec/specs/anonymization/spec.md
 	 * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-2
 	 * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-3
+	 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-2.2
 	 */
 	public function run(int $fileId, array $entities, array $options): array {
 		try {
@@ -132,6 +179,11 @@ class DocumentAnonymizeRunner {
 				'appendBasisSummary' => $options['appendBasisSummary'],
 				'sourceNode' => $node,
 				'fileId' => $fileId,
+				'redactedValues' => $mappedEntities,
+				'outputMode' => (string)($options['outputFormat'] ?? ''),
+				'reversible' => (($options['reversible'] ?? false) === true),
+				'scope' => (string)($options['scope'] ?? 'document'),
+				'userId' => (string)($options['userId'] ?? ''),
 			];
 
 			// EML branch (eml-pdf-assembly): OR's anonymizeDocument() THROWS on
@@ -140,12 +192,8 @@ class DocumentAnonymizeRunner {
 			// path below. See EmlAnonymizationService.
 			if ($this->emlAnonymizer->isEmlInput(node: $node) === true) {
 				$eml = $this->emlAnonymizer->anonymize(
-					fileId: $fileId,
-					node: $node,
-					fileService: $fileService,
-					mappedEntities: $mappedEntities,
-					scope: $options['scope'],
-					dossierKey: $options['dossierKey']
+					request: new EmlAnonymizeRequest(fileId: $fileId, node: $node, mappedEntities: $mappedEntities, options: $options),
+					fileService: $fileService
 				);
 
 				$context['anonymisedNode'] = $eml['node'];
@@ -208,12 +256,18 @@ class DocumentAnonymizeRunner {
 		$fileId = $context['fileId'];
 		$originalText = $this->replacementVerifier->readNodeText(node: $node);
 
+		// The fifth argument asks OpenRegister to keep the tag structure; an
+		// OpenRegister without it ignores the extra argument and reports nothing,
+		// which reads as unknown.
 		$result = $fileService->anonymizeDocument(
 			$node,
 			$mappedEntities,
 			$options['scope'],
-			$options['dossierKey']
+			$options['dossierKey'],
+			$this->runRecords->preserveStructure()
 		);
+		$context['structureReport'] = $this->locator->lastStructurePreservation(fileService: $fileService);
+		$context['sanitizationReport'] = $this->locator->lastSanitizationReport(fileService: $fileService);
 
 		$residualEntities = $this->locator->lastResidualEntities(fileService: $fileService);
 		$context['placeholderMap'] = $this->locator->lastPlaceholderMap(fileService: $fileService);
@@ -306,6 +360,7 @@ class DocumentAnonymizeRunner {
 	 * @return array<string, mixed> The finalised result info.
 	 *
 	 * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-2.2
 	 */
 	private function finaliseResult(array $resultInfo, array $context): array {
 		if ($context['appendBasisSummary'] === true) {
@@ -317,14 +372,8 @@ class DocumentAnonymizeRunner {
 			);
 		}
 
-		if (empty($resultInfo['anonymizedFileId']) === false) {
-			$resultInfo = $this->persistence->recordAnonymizationLink(
-				fileId: $context['fileId'],
-				sourceNode: $context['sourceNode'],
-				resultInfo: $resultInfo
-			);
-		}
-
-		return $resultInfo;
+		// LAST, after the summary: the verdict is about the bytes actually
+		// written, and the link and the key follow it (AnonymisationRunRecords).
+		return $this->runRecords->record(resultInfo: $resultInfo, context: $context);
 	}//end finaliseResult()
 }//end class

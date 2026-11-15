@@ -35,6 +35,7 @@ namespace OCA\Filinq\Tests\Unit\Service;
 use OCA\Filinq\Service\BasesResolverService;
 use OCA\Filinq\Service\EntityConsolidationService;
 use OCA\Filinq\Service\PolicyMatchService;
+use OCA\Filinq\Service\Support\OpenRegisterAccess;
 use OCA\Filinq\Service\WooProfileService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -133,10 +134,9 @@ class EntityConsolidationProhibitionTest extends TestCase {
 		$this->container->method('get')->willReturn($mockMapper);
 
 		return new EntityConsolidationService(
+			openRegister: new OpenRegisterAccess(apps: $this->appManager, container: $this->container),
 			logger: $this->logger,
 			wooProfile: $this->wooProfile,
-			appManager: $this->appManager,
-			container: $this->container,
 			policyMatch: $policyMatch,
 			basesResolver: $basesResolver,
 			appConfig: $this->appConfig
@@ -170,10 +170,9 @@ class EntityConsolidationProhibitionTest extends TestCase {
 		$this->container->method('get')->willReturn($mockMapper);
 
 		return new EntityConsolidationService(
+			openRegister: new OpenRegisterAccess(apps: $this->appManager, container: $this->container),
 			logger: $this->logger,
 			wooProfile: $this->wooProfile,
-			appManager: $this->appManager,
-			container: $this->container,
 			policyMatch: $policyMatch,
 			basesResolver: $basesResolver,
 			appConfig: $this->appConfig

@@ -32,6 +32,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Service\Signing\FieldPlacementCheck;
 use OCA\Filinq\Service\Signing\SigningProviderFactory;
 use RuntimeException;
 
@@ -51,11 +52,13 @@ class SigningRequestValidator {
 	 * Constructor.
 	 *
 	 * @param SigningProviderFactory $providerFactory Provider factory (strict resolution).
+	 * @param FieldPlacementCheck    $placementCheck  The field placement rules and page check.
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		private readonly SigningProviderFactory $providerFactory,
+		private readonly FieldPlacementCheck $placementCheck = new FieldPlacementCheck(),
 	) {
 
 	}//end __construct()
@@ -89,6 +92,38 @@ class SigningRequestValidator {
 		}
 
 	}//end validateRequestData()
+
+	/**
+	 * Validate that a request names at least one signer who can be reached.
+	 *
+	 * A signer is reachable through a Nextcloud user id or an e-mail address;
+	 * a name alone reaches nobody. Every entry must be reachable, and there
+	 * must be at least one, so a request can never be stored as PENDING with
+	 * nobody able to sign it (issue #1209, REQ-SAO-001).
+	 *
+	 * @param array<int|string, mixed> $signers The `signers` entries of the request.
+	 *
+	 * @return void
+	 *
+	 * @throws RuntimeException With code 400 when no signer, or an unreachable one, is given.
+	 *
+	 * @spec openspec/changes/signing-accept-only-recipient/specs/signing-accept-only/spec.md
+	 */
+	public function validateSigners(array $signers): void {
+		if ($signers === []) {
+			throw new RuntimeException('A signing request needs at least one signer', 400);
+		}
+
+		foreach ($signers as $signer) {
+			$signer = (array) $signer;
+			$userId = trim((string) ($signer['userId'] ?? ''));
+			$email  = trim((string) ($signer['email'] ?? ''));
+			if ($userId === '' && $email === '') {
+				throw new RuntimeException('Every signer needs a user or an e-mail address', 400);
+			}
+		}
+
+	}//end validateSigners()
 
 	/**
 	 * Validate that the requested provider actually supports the requested level.
@@ -126,4 +161,27 @@ class SigningRequestValidator {
 		}
 
 	}//end validateProviderLevelPair()
+
+	/**
+	 * Check a new request's field placements and put them on the request.
+	 *
+	 * @param array<string, mixed>   $request  The request about to be stored.
+	 * @param array<string, mixed>   $data     What the caller sent: `fieldPlacements` and `signers`.
+	 * @param SignedArtifactProducer $producer Reads the document's bytes, only when there are placements.
+	 *
+	 * @return array<string, mixed> The request, with `fieldPlacements` when there are any.
+	 *
+	 * @throws RuntimeException 400 when a placement breaks a rule, names a page the document lacks, or the provider cannot carry placements.
+	 *
+	 * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.1
+	 */
+	public function withPlacements(array $request, array $data, SignedArtifactProducer $producer): array {
+		return $this->placementCheck->apply(
+			request: $request,
+			placements: ($data['fieldPlacements'] ?? null),
+			signerCount: count((array) ($data['signers'] ?? [])),
+			producer: $producer
+		);
+
+	}//end withPlacements()
 }//end class

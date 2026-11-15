@@ -1,0 +1,188 @@
+<?php
+
+/**
+ * Flat File List Service
+ *
+ * Answers "what files are on this case", where the record list answers "what
+ * documents does this case have". Two questions, one store: both read the same
+ * document records, and neither replaces the other.
+ *
+ * Each file names the record it belongs to, because a flat list whose rows do
+ * not say where they came from moves the work of finding the record from the
+ * list to the reader.
+ *
+ * @category  Service
+ * @package   OCA\Filinq\Service
+ * @author    Conduction B.V. <info@conduction.nl>
+ * @copyright 2026 Conduction B.V.
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @version   GIT: <git_id>
+ * @link      https://www.filinq.app
+ *
+ * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+
+declare(strict_types=1);
+
+namespace OCA\Filinq\Service;
+
+use OCA\Filinq\Kernel\Contracts\FlatFileListServiceInterface;
+use OCP\Files\Node;
+use Throwable;
+
+/**
+ * Lists every file on every document record of one object.
+ *
+ * @category Service
+ * @package  OCA\Filinq\Service
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.filinq.app
+ *
+ * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
+ */
+class FlatFileListService implements FlatFileListServiceInterface {
+
+	/**
+	 * Constructor.
+	 *
+	 * @param FinalDocumentRepository $repository The document record store.
+	 * @param ReadableFileResolver $files The file behind an id, as the reader may read it.
+	 *
+	 * @return void
+	 */
+	public function __construct(
+		private readonly FinalDocumentRepository $repository,
+		private readonly ReadableFileResolver $files,
+	) {
+
+	}//end __construct()
+
+	/**
+	 * Every file on one object, one page of it.
+	 *
+	 * @param array<string, mixed> $domain The object, as register, schema and id.
+	 * @param int $page The page to read, from 1.
+	 * @param int $limit How many rows a page holds.
+	 * @param string $search A name filter, matched case-insensitively on the file name.
+	 *
+	 * @return array{results: array<int, array<string, mixed>>, total: int, page: int, pages: int} The page.
+	 *
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
+	 */
+	public function listFor(array $domain, int $page = 1, int $limit = 50, string $search = ''): array {
+		$rows     = [];
+		$dossiers = null;
+		foreach ($this->repository->findByDomain(domain: $domain) as $record) {
+			$dossiers ??= $this->repository->dossierIndex();
+			$row        = $this->row(record: $record, dossiers: $dossiers);
+			if ($row === null) {
+				continue;
+			}
+
+			if ($search !== '' && stripos((string)$row['name'], $search) === false) {
+				continue;
+			}
+
+			$rows[] = $row;
+		}
+
+		usort(
+			$rows,
+			static fn (array $left, array $right): int => strcasecmp((string)$left['name'], (string)$right['name'])
+		);
+
+		$total = count($rows);
+		$limit = max(1, $limit);
+		$pages = (int)ceil(($total / $limit));
+		$page = max(1, $page);
+
+		return [
+			'results' => array_slice($rows, (($page - 1) * $limit), $limit),
+			'total' => $total,
+			'page' => $page,
+			'pages' => $pages,
+		];
+
+	}//end listFor()
+
+	/**
+	 * Every document record of one object, readable file or not.
+	 *
+	 * The flat list leaves out a record whose file this reader cannot see,
+	 * which is right for a list. A MANIFEST needs the other half: it has to say
+	 * that something was left out, or a filtered bundle is indistinguishable
+	 * from a complete one.
+	 *
+	 * @param array<string, mixed> $domain The object, as register, schema and id.
+	 *
+	 * @return array<int, array<string, mixed>> The records.
+	 *
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
+	 */
+	public function recordsFor(array $domain): array {
+		return $this->repository->findByDomain(domain: $domain);
+
+	}//end recordsFor()
+
+	/**
+	 * One row of the flat list: the file, and the record it belongs to.
+	 *
+	 * A record whose file the reader cannot see is LEFT OUT rather than listed
+	 * as a name with nothing behind it. A file in an object's folder is seen
+	 * through the read right on that object (ReadableFileResolver).
+	 *
+	 * @param array<string, mixed> $record The document record.
+	 * @param DossierFileIndex|null $dossiers The dossiers, by member file and by folder.
+	 *
+	 * @return array<string, mixed>|null The row, or null when there is no readable file; `dossier` names the dossier the file is in, or is null.
+	 *
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
+	 */
+	private function row(array $record, ?DossierFileIndex $dossiers=null): ?array {
+		$fileId = (int)($record['fileId'] ?? 0);
+		if ($fileId <= 0) {
+			return null;
+		}
+
+		$node = $this->files->node(fileId: $fileId);
+		if ($node === null) {
+			return null;
+		}
+
+		return [
+			'fileId' => $fileId,
+			'name' => $node->getName(),
+			'path' => $node->getPath(),
+			'size' => $node->getSize(),
+			'mtime' => $node->getMTime(),
+			'mimetype' => $node->getMimetype(),
+			'record' => [
+				'uuid' => (string)($record['uuid'] ?? ''),
+				'name' => (string)($record['documentName'] ?? $node->getName()),
+				'status' => (string)($record['status'] ?? ''),
+			],
+			'dossier' => $dossiers?->dossierOf(fileId: $fileId, folderId: $this->folderOf(node: $node)),
+		];
+
+	}//end row()
+
+	/**
+	 * The id of the folder a file is in, 0 when it has none to give.
+	 *
+	 * @param Node $node The file.
+	 *
+	 * @return int
+	 */
+	private function folderOf(Node $node): int {
+		try {
+			return (int) $node->getParent()->getId();
+		} catch (Throwable) {
+			return 0;
+		}
+
+	}//end folderOf()
+}//end class

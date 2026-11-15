@@ -1,0 +1,615 @@
+{
+    "a file id under file, name fallback": [
+        {
+            "IAppConfig::getValueString": {
+                "app": "filinq",
+                "key": "enable_inbound_classification",
+                "default": "1"
+            }
+        },
+        {
+            "ClassificationResultRepository::activeFor": {
+                "fileId": 9
+            }
+        },
+        {
+            "ClassificationSources::entitiesFor": {
+                "fileId": 9
+            }
+        },
+        {
+            "DocumentTypeClassifier::classify": {
+                "text": "Geachte heer"
+            }
+        },
+        {
+            "CorrespondentRanker::rank": {
+                "rows": [
+                    {
+                        "type": "PERSON",
+                        "text": "Jan Jansen"
+                    }
+                ]
+            }
+        },
+        {
+            "ClassificationSources::dossiers": []
+        },
+        {
+            "DossierMatcher::match": {
+                "dossiers": [
+                    {
+                        "id": "d-1"
+                    }
+                ],
+                "correspondent": "Jan Jansen",
+                "text": "Zaak Z-12\nGeachte heer"
+            }
+        },
+        {
+            "ClassificationResultRepository::save": {
+                "record": {
+                    "fileId": 9,
+                    "fileName": "brief.pdf",
+                    "objectId": "o-1",
+                    "objectRegister": "filinq",
+                    "objectSchema": "intakeDocument",
+                    "suggestedDocumentType": "brief",
+                    "documentTypeConfidence": 0.6,
+                    "method": "mixed",
+                    "suggestedCorrespondent": {
+                        "name": "Jan Jansen",
+                        "confidence": 0.8
+                    },
+                    "correspondentPending": false,
+                    "suggestedDossier": "d-1",
+                    "status": "suggested"
+                }
+            }
+        },
+        {
+            "result": {
+                "outcome": "suggested",
+                "record": {
+                    "fileId": 9,
+                    "fileName": "brief.pdf",
+                    "objectId": "o-1",
+                    "objectRegister": "filinq",
+                    "objectSchema": "intakeDocument",
+                    "suggestedDocumentType": "brief",
+                    "documentTypeConfidence": 0.6,
+                    "method": "mixed",
+                    "suggestedCorrespondent": {
+                        "name": "Jan Jansen",
+                        "confidence": 0.8
+                    },
+                    "correspondentPending": false,
+                    "suggestedDossier": "d-1",
+                    "status": "suggested",
+                    "uuid": "new"
+                }
+            }
+        }
+    ],
+    "a new inbound document with entities": [
+        {
+            "IAppConfig::getValueString": {
+                "app": "filinq",
+                "key": "enable_inbound_classification",
+                "default": "1"
+            }
+        },
+        {
+            "ClassificationResultRepository::activeFor": {
+                "fileId": 17
+            }
+        },
+        {
+            "ClassificationSources::entitiesFor": {
+                "fileId": 17
+            }
+        },
+        {
+            "DocumentTypeClassifier::classify": {
+                "text": "Geachte heer"
+            }
+        },
+        {
+            "CorrespondentRanker::rank": {
+                "rows": [
+                    {
+                        "type": "PERSON",
+                        "text": "Jan Jansen"
+                    }
+                ]
+            }
+        },
+        {
+            "ClassificationSources::dossiers": []
+        },
+        {
+            "DossierMatcher::match": {
+                "dossiers": [
+                    {
+                        "id": "d-1"
+                    }
+                ],
+                "correspondent": "Jan Jansen",
+                "text": "Zaak Z-12\nGeachte heer"
+            }
+        },
+        {
+            "ClassificationResultRepository::save": {
+                "record": {
+                    "fileId": 17,
+                    "fileName": "brief.pdf",
+                    "objectId": "o-1",
+                    "objectRegister": "filinq",
+                    "objectSchema": "intakeDocument",
+                    "suggestedDocumentType": "brief",
+                    "documentTypeConfidence": 0.6,
+                    "method": "mixed",
+                    "suggestedCorrespondent": {
+                        "name": "Jan Jansen",
+                        "confidence": 0.8
+                    },
+                    "correspondentPending": false,
+                    "suggestedDossier": "d-1",
+                    "status": "suggested"
+                }
+            }
+        },
+        {
+            "result": {
+                "outcome": "suggested",
+                "record": {
+                    "fileId": 17,
+                    "fileName": "brief.pdf",
+                    "objectId": "o-1",
+                    "objectRegister": "filinq",
+                    "objectSchema": "intakeDocument",
+                    "suggestedDocumentType": "brief",
+                    "documentTypeConfidence": 0.6,
+                    "method": "mixed",
+                    "suggestedCorrespondent": {
+                        "name": "Jan Jansen",
+                        "confidence": 0.8
+                    },
+                    "correspondentPending": false,
+                    "suggestedDossier": "d-1",
+                    "status": "suggested",
+                    "uuid": "new"
+                }
+            }
+        }
+    ],
+    "a pending suggestion is superseded": [
+        {
+            "IAppConfig::getValueString": {
+                "app": "filinq",
+                "key": "enable_inbound_classification",
+                "default": "1"
+            }
+        },
+        {
+            "ClassificationResultRepository::activeFor": {
+                "fileId": 17
+            }
+        },
+        {
+            "ClassificationSources::entitiesFor": {
+                "fileId": 17
+            }
+        },
+        {
+            "DocumentTypeClassifier::classify": {
+                "text": "Geachte heer"
+            }
+        },
+        {
+            "CorrespondentRanker::rank": {
+                "rows": [
+                    {
+                        "type": "PERSON",
+                        "text": "Jan Jansen"
+                    }
+                ]
+            }
+        },
+        {
+            "ClassificationSources::dossiers": []
+        },
+        {
+            "DossierMatcher::match": {
+                "dossiers": [
+                    {
+                        "id": "d-1"
+                    }
+                ],
+                "correspondent": "Jan Jansen",
+                "text": "Zaak Z-12\nGeachte heer"
+            }
+        },
+        {
+            "ClassificationResultRepository::save": {
+                "record": {
+                    "status": "superseded",
+                    "uuid": "a-1",
+                    "correspondentPending": true
+                },
+                "uuid": "a-1"
+            }
+        },
+        {
+            "ClassificationResultRepository::save": {
+                "record": {
+                    "fileId": 17,
+                    "fileName": "brief.pdf",
+                    "objectId": "o-1",
+                    "objectRegister": "filinq",
+                    "objectSchema": "intakeDocument",
+                    "suggestedDocumentType": "brief",
+                    "documentTypeConfidence": 0.6,
+                    "method": "mixed",
+                    "suggestedCorrespondent": {
+                        "name": "Jan Jansen",
+                        "confidence": 0.8
+                    },
+                    "correspondentPending": false,
+                    "suggestedDossier": "d-1",
+                    "status": "suggested"
+                }
+            }
+        },
+        {
+            "result": {
+                "outcome": "suggested",
+                "record": {
+                    "fileId": 17,
+                    "fileName": "brief.pdf",
+                    "objectId": "o-1",
+                    "objectRegister": "filinq",
+                    "objectSchema": "intakeDocument",
+                    "suggestedDocumentType": "brief",
+                    "documentTypeConfidence": 0.6,
+                    "method": "mixed",
+                    "suggestedCorrespondent": {
+                        "name": "Jan Jansen",
+                        "confidence": 0.8
+                    },
+                    "correspondentPending": false,
+                    "suggestedDossier": "d-1",
+                    "status": "suggested",
+                    "uuid": "new"
+                }
+            }
+        }
+    ],
+    "an active suggestion stays": [
+        {
+            "IAppConfig::getValueString": {
+                "app": "filinq",
+                "key": "enable_inbound_classification",
+                "default": "1"
+            }
+        },
+        {
+            "ClassificationResultRepository::activeFor": {
+                "fileId": 17
+            }
+        },
+        {
+            "ClassificationSources::entitiesFor": {
+                "fileId": 17
+            }
+        },
+        {
+            "result": {
+                "outcome": "skipped",
+                "reason": "already_classified"
+            }
+        }
+    ],
+    "entities not known yet": [
+        {
+            "IAppConfig::getValueString": {
+                "app": "filinq",
+                "key": "enable_inbound_classification",
+                "default": "1"
+            }
+        },
+        {
+            "ClassificationResultRepository::activeFor": {
+                "fileId": 17
+            }
+        },
+        {
+            "ClassificationSources::entitiesFor": {
+                "fileId": 17
+            }
+        },
+        {
+            "DocumentTypeClassifier::classify": {
+                "text": "Geachte heer"
+            }
+        },
+        {
+            "ClassificationSources::dossiers": []
+        },
+        {
+            "DossierMatcher::match": {
+                "dossiers": [
+                    {
+                        "id": "d-1"
+                    }
+                ],
+                "correspondent": null,
+                "text": "Zaak Z-12\nGeachte heer"
+            }
+        },
+        {
+            "ClassificationResultRepository::save": {
+                "record": {
+                    "fileId": 17,
+                    "fileName": "brief.pdf",
+                    "objectId": "o-1",
+                    "objectRegister": "filinq",
+                    "objectSchema": "intakeDocument",
+                    "suggestedDocumentType": "brief",
+                    "documentTypeConfidence": 0.6,
+                    "method": "rules",
+                    "suggestedCorrespondent": null,
+                    "correspondentPending": true,
+                    "suggestedDossier": "d-1",
+                    "status": "suggested"
+                }
+            }
+        },
+        {
+            "result": {
+                "outcome": "suggested",
+                "record": {
+                    "fileId": 17,
+                    "fileName": "brief.pdf",
+                    "objectId": "o-1",
+                    "objectRegister": "filinq",
+                    "objectSchema": "intakeDocument",
+                    "suggestedDocumentType": "brief",
+                    "documentTypeConfidence": 0.6,
+                    "method": "rules",
+                    "suggestedCorrespondent": null,
+                    "correspondentPending": true,
+                    "suggestedDossier": "d-1",
+                    "status": "suggested",
+                    "uuid": "new"
+                }
+            }
+        }
+    ],
+    "no correspondent ranked": [
+        {
+            "IAppConfig::getValueString": {
+                "app": "filinq",
+                "key": "enable_inbound_classification",
+                "default": "1"
+            }
+        },
+        {
+            "ClassificationResultRepository::activeFor": {
+                "fileId": 17
+            }
+        },
+        {
+            "ClassificationSources::entitiesFor": {
+                "fileId": 17
+            }
+        },
+        {
+            "DocumentTypeClassifier::classify": {
+                "text": "Geachte heer"
+            }
+        },
+        {
+            "CorrespondentRanker::rank": {
+                "rows": [
+                    {
+                        "type": "PERSON",
+                        "text": "Jan Jansen"
+                    }
+                ]
+            }
+        },
+        {
+            "ClassificationSources::dossiers": []
+        },
+        {
+            "DossierMatcher::match": {
+                "dossiers": [
+                    {
+                        "id": "d-1"
+                    }
+                ],
+                "correspondent": null,
+                "text": "Zaak Z-12\nGeachte heer"
+            }
+        },
+        {
+            "ClassificationResultRepository::save": {
+                "record": {
+                    "fileId": 17,
+                    "fileName": "brief.pdf",
+                    "objectId": "o-1",
+                    "objectRegister": "filinq",
+                    "objectSchema": "intakeDocument",
+                    "suggestedDocumentType": "brief",
+                    "documentTypeConfidence": 0.6,
+                    "method": "rules",
+                    "suggestedCorrespondent": null,
+                    "correspondentPending": false,
+                    "suggestedDossier": "d-1",
+                    "status": "suggested"
+                }
+            }
+        },
+        {
+            "result": {
+                "outcome": "suggested",
+                "record": {
+                    "fileId": 17,
+                    "fileName": "brief.pdf",
+                    "objectId": "o-1",
+                    "objectRegister": "filinq",
+                    "objectSchema": "intakeDocument",
+                    "suggestedDocumentType": "brief",
+                    "documentTypeConfidence": 0.6,
+                    "method": "rules",
+                    "suggestedCorrespondent": null,
+                    "correspondentPending": false,
+                    "suggestedDossier": "d-1",
+                    "status": "suggested",
+                    "uuid": "new"
+                }
+            }
+        }
+    ],
+    "no file": [
+        {
+            "IAppConfig::getValueString": {
+                "app": "filinq",
+                "key": "enable_inbound_classification",
+                "default": "1"
+            }
+        },
+        {
+            "result": {
+                "outcome": "skipped",
+                "reason": "no_file"
+            }
+        }
+    ],
+    "no text": [
+        {
+            "IAppConfig::getValueString": {
+                "app": "filinq",
+                "key": "enable_inbound_classification",
+                "default": "1"
+            }
+        },
+        {
+            "ClassificationResultRepository::activeFor": {
+                "fileId": 17
+            }
+        },
+        {
+            "ClassificationSources::entitiesFor": {
+                "fileId": 17
+            }
+        },
+        {
+            "LoggerInterface::info": {
+                "message": "[Classification] skipped a document without text",
+                "context": {
+                    "fileId": 17,
+                    "objectId": "o-1"
+                }
+            }
+        },
+        {
+            "result": {
+                "outcome": "skipped",
+                "reason": "no_text"
+            }
+        }
+    ],
+    "not inbound": [
+        {
+            "IAppConfig::getValueString": {
+                "app": "filinq",
+                "key": "enable_inbound_classification",
+                "default": "1"
+            }
+        },
+        {
+            "result": {
+                "outcome": "skipped",
+                "reason": "not_inbound"
+            }
+        }
+    ],
+    "the subject is the only text": [
+        {
+            "IAppConfig::getValueString": {
+                "app": "filinq",
+                "key": "enable_inbound_classification",
+                "default": "1"
+            }
+        },
+        {
+            "ClassificationResultRepository::activeFor": {
+                "fileId": 17
+            }
+        },
+        {
+            "ClassificationSources::entitiesFor": {
+                "fileId": 17
+            }
+        },
+        {
+            "DocumentTypeClassifier::classify": {
+                "text": "Zaak Z-12"
+            }
+        },
+        {
+            "ClassificationSources::dossiers": []
+        },
+        {
+            "DossierMatcher::match": {
+                "dossiers": [
+                    {
+                        "id": "d-1"
+                    }
+                ],
+                "correspondent": null,
+                "text": "Zaak Z-12"
+            }
+        },
+        {
+            "ClassificationResultRepository::save": {
+                "record": {
+                    "fileId": 17,
+                    "fileName": "brief.pdf",
+                    "objectId": "o-1",
+                    "objectRegister": "filinq",
+                    "objectSchema": "intakeDocument",
+                    "suggestedDocumentType": "brief",
+                    "documentTypeConfidence": 0.6,
+                    "method": "rules",
+                    "suggestedCorrespondent": null,
+                    "correspondentPending": true,
+                    "suggestedDossier": "d-1",
+                    "status": "suggested"
+                }
+            }
+        },
+        {
+            "result": {
+                "outcome": "suggested",
+                "record": {
+                    "fileId": 17,
+                    "fileName": "brief.pdf",
+                    "objectId": "o-1",
+                    "objectRegister": "filinq",
+                    "objectSchema": "intakeDocument",
+                    "suggestedDocumentType": "brief",
+                    "documentTypeConfidence": 0.6,
+                    "method": "rules",
+                    "suggestedCorrespondent": null,
+                    "correspondentPending": true,
+                    "suggestedDossier": "d-1",
+                    "status": "suggested",
+                    "uuid": "new"
+                }
+            }
+        }
+    ]
+}

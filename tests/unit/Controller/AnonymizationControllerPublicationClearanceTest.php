@@ -23,8 +23,11 @@
 namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\AnonymizationController;
+use OCA\Filinq\Controller\Support\AnonymizationServices;
 use OCA\Filinq\Service\AnonymizationService;
+use OCA\Filinq\Service\AnonymizeRequestService;
 use OCA\Filinq\Service\FileListingService;
+use OCA\Filinq\Tests\Unit\Service\ReadsAnonymizeOptions;
 use OCP\Files\File;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
@@ -51,6 +54,8 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-6
  */
 class AnonymizationControllerPublicationClearanceTest extends TestCase {
+	use ReadsAnonymizeOptions;
+
 
 	/**
 	 * Mock HTTP request object.
@@ -139,15 +144,12 @@ class AnonymizationControllerPublicationClearanceTest extends TestCase {
 		$this->mockRootFolder->method('getUserFolder')->willReturn($mockFolder);
 
 		$this->controller = new AnonymizationController(
-			appName: 'filinq',
+			services: new AnonymizationServices(anonymization: $this->mockAnonService, files: $this->mockFileService),
 			request: $this->mockRequest,
 			logger: $this->mockLogger,
-			anonymizationService: $this->mockAnonService,
-			fileListingService: $this->mockFileService,
 			l10n: $this->mockL10n,
 			appConfig: $this->createMock(\OCP\IAppConfig::class),
-			userSession: $this->mockUserSession,
-			rootFolder: $this->mockRootFolder
+			anonymizeRequest: new AnonymizeRequestService(logger: $this->mockLogger, anonymizationService: $this->mockAnonService, l10n: $this->mockL10n, rootFolder: $this->mockRootFolder, userSession: $this->mockUserSession)
 		);
 
 	}//end setUp()
@@ -391,14 +393,18 @@ class AnonymizationControllerPublicationClearanceTest extends TestCase {
 		$this->mockAnonService->expects($this->once())
 			->method('anonymizeDocument')
 			->with(
-				fileId: 10,
-				entities: $entities,
-				outputFormat: 'pdf-only',
-				unredactedEntities: [],
-				overrides: [],
-				userId: 'test-user',
-				scope: 'document',
-				dossierKey: null
+				10,
+				$entities,
+				$this->optionsWith(
+					[
+						'outputFormat' => 'pdf-only',
+						'unredactedEntities' => [],
+						'overrides' => [],
+						'userId' => 'test-user',
+						'scope' => 'document',
+						'dossierKey' => null,
+					]
+				)
 			)
 			->willReturn(['replacementCount' => 1, 'anonymizedFileId' => 'f-10']);
 

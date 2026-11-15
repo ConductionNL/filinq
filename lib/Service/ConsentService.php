@@ -3,6 +3,9 @@
 /**
  * Consent Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Service for managing GDPR publication consent tracking.
  * Handles creating consent records for entities detected in documents.
  * Delegates deadline checking to ObjectionDeadlineChecker, update/query
@@ -42,8 +45,12 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use DateTimeImmutable;
 use Exception;
 use OCA\Filinq\Exception\PolicyRejectedException;
+use OCA\Filinq\Kernel\ConsentUpdate;
+use OCA\Filinq\Kernel\Contracts\ConsentServiceInterface;
+use OCA\Filinq\Service\Publication\ConsentClearance;
 use OCP\IUser;
 use Psr\Log\LoggerInterface;
 
@@ -58,8 +65,13 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/consent-management/spec.md
  * @spec openspec/changes/consent-create-idempotency-and-notes/tasks.md#task-1
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The thirteenth to fifteenth
+ * classes are ConsentUpdate, RegisterObjectRef and ConsentStatusChange: the
+ * contract takes an update and the acting user, and this class turns them into
+ * the handler's two values.
  */
-class ConsentService {
+class ConsentService implements ConsentServiceInterface {
 	/**
 	 * Constructor for ConsentService
 	 *
@@ -138,65 +150,96 @@ class ConsentService {
 		string $schema,
 		array $extra = [],
 	): array {
+		$context = $this->buildRequestContext(
+			documentId: $documentId,
+			entityType: $entityType,
+			entityText: $entityText,
+			extra: $extra
+		) + ['register' => $register, 'schema' => $schema];
+
+		return $this->requestConsent(context: $context);
+
+	}//end createConsentRequest()
+
+	/**
+	 * Record the consent a request context asks for, logging and wrapping any failure but a policy refusal.
+	 *
+	 * @param array<string, mixed> $context The consent-request context, with the register and schema.
+	 *
+	 * @return array<string, mixed> The created or updated consent record (includes `wasUpdated`).
+	 *
+	 * @throws PolicyRejectedException If a prohibition rule matches the entity.
+	 * @throws Exception If consent creation/update fails.
+	 */
+	private function requestConsent(array $context): array {
 		try {
-			$this->recordWriter->requireOpenRegister();
-
-			$context = $this->buildRequestContext(
-				documentId: $documentId,
-				entityType: $entityType,
-				entityText: $entityText,
-				extra: $extra
-			);
-
-			// Policy check — prohibition match blocks the entire request.
-			$policyResult = $this->policyMatcher->match(
-				entityText: $entityText,
-				entityType: $entityType
-			);
-			if ($policyResult !== null && $policyResult['kind'] === PolicyMatchService::KIND_PROHIBITION) {
-				throw new PolicyRejectedException(
-					ruleUuid: (string)$policyResult['uuid'],
-					ruleName: (string)$policyResult['primaryName']
-				);
-			}
-
-			$context = $this->withPolicyMatch(context: $context, policyResult: $policyResult);
-
-			// Idempotency lookup — find an existing scope=document record.
-			$existing = $this->recordWriter->findExistingConsent(
-				documentId: $documentId,
-				entityKey: $context['entityKey'],
-				entityText: $entityText,
-				register: $register,
-				schema: $schema
-			);
-
-			if ($existing !== null) {
-				return $this->recordWriter->updateExistingConsent(
-					existing: $existing,
-					context: $context,
-					register: $register,
-					schema: $schema
-				);
-			}
-
-			return $this->recordWriter->createNewConsent(
-				context: $context,
-				register: $register,
-				schema: $schema
-			);
+			return $this->recordConsent(context: $context);
 		} catch (PolicyRejectedException $e) {
 			// Re-throw without wrapping so callers can catch the typed exception.
 			throw $e;
 		} catch (Exception $e) {
 			$this->logger->error(
 				message: 'Failed to create consent request: ' . $e->getMessage(),
-				context: ['documentId' => $documentId, 'exception' => $e]
+				context: ['documentId' => $context['documentId'], 'exception' => $e]
 			);
 			throw new Exception(message: 'Failed to create consent request: ' . $e->getMessage(), code: 0, previous: $e);
 		}//end try
 
-	}//end createConsentRequest()
+	}//end requestConsent()
+
+	/**
+	 * Check the policy, then write the consent record: an update when one exists, a new record otherwise.
+	 *
+	 * @param array<string, mixed> $context The consent-request context, with the register and schema.
+	 *
+	 * @return array<string, mixed> The created or updated consent record.
+	 *
+	 * @throws PolicyRejectedException If a prohibition rule matches the entity.
+	 * @throws Exception If OpenRegister is unavailable or the lookup or write fails.
+	 */
+	private function recordConsent(array $context): array {
+		$this->recordWriter->requireOpenRegister();
+
+		// Policy check — prohibition match blocks the entire request.
+		$policyResult = $this->refuseProhibitedEntity(context: $context);
+
+		$context = $this->withPolicyMatch(context: $context, policyResult: $policyResult);
+
+		// Idempotency lookup — find an existing scope=document record.
+		$existing = $this->recordWriter->findExistingConsent(context: $context);
+
+		if ($existing !== null) {
+			return $this->recordWriter->updateExistingConsent(existing: $existing, context: $context);
+		}
+
+		return $this->recordWriter->createNewConsent(context: $context);
+
+	}//end recordConsent()
+
+	/**
+	 * Match the request's entity against the policy rules, refusing it when a prohibition matches.
+	 *
+	 * @param array<string, mixed> $context The consent-request context.
+	 *
+	 * @return array<string, mixed>|null The matcher's result for any other match, or null.
+	 *
+	 * @throws PolicyRejectedException If a prohibition rule matches the entity.
+	 */
+	private function refuseProhibitedEntity(array $context): ?array {
+		$policyResult = $this->policyMatcher->match(
+			entityText: $context['entityText'],
+			entityType: $context['entityType']
+		);
+		if ($policyResult !== null && $policyResult['kind'] === PolicyMatchService::KIND_PROHIBITION) {
+			throw new PolicyRejectedException(
+				ruleUuid: (string)$policyResult['uuid'],
+				ruleName: (string)$policyResult['primaryName']
+			);
+		}
+
+		return $policyResult;
+
+	}//end refuseProhibitedEntity()
 
 	/**
 	 * Build the consent-request context from the caller's inputs.
@@ -218,19 +261,12 @@ class ConsentService {
 		string $entityText,
 		array $extra,
 	): array {
-		$publicationBases = [];
-		if (is_array($extra['publicationBases'] ?? null) === true) {
-			$publicationBases = array_values(
-				array_filter(array_map('strval', $extra['publicationBases']))
-			);
-		}
-
 		return [
 			'documentId' => $documentId,
 			'entityType' => $entityType,
 			'entityText' => $entityText,
 			'entityKey' => $this->optionalString(extra: $extra, key: 'entityKey'),
-			'publicationBases' => $publicationBases,
+			'publicationBases' => $this->publicationBasesOf(extra: $extra),
 			'contactEmail' => $this->optionalString(extra: $extra, key: 'contactEmail'),
 			'contactAddress' => $this->optionalString(extra: $extra, key: 'contactAddress'),
 			'policyMatchUuid' => null,
@@ -239,6 +275,24 @@ class ConsentService {
 		];
 
 	}//end buildRequestContext()
+
+	/**
+	 * The publication bases in the `$extra` bag, as a list of non-empty strings.
+	 *
+	 * @param array<string, mixed> $extra The caller-supplied extra data.
+	 *
+	 * @return array<int, string> The bases; empty when the bag carries none.
+	 */
+	private function publicationBasesOf(array $extra): array {
+		$publicationBases = [];
+		if (is_array($extra['publicationBases'] ?? null) === true) {
+			$publicationBases = array_values(
+				array_filter(array_map('strval', $extra['publicationBases']))
+			);
+		}
+
+		return $publicationBases;
+	}//end publicationBasesOf()
 
 	/**
 	 * Read an optional string entry from the `$extra` bag.
@@ -287,10 +341,7 @@ class ConsentService {
 	/**
 	 * Validate and update a consent record, enforcing policy-transition rules
 	 *
-	 * @param string $consentId The consent object UUID
-	 * @param string $register The register ID
-	 * @param string $schema The schema ID
-	 * @param array<string, mixed> $data The update payload
+	 * @param ConsentUpdate $update The consent record and the update payload
 	 * @param IUser|null $user The acting user, or null for system context
 	 *
 	 * @return array<string, mixed> The updated consent record
@@ -301,17 +352,11 @@ class ConsentService {
 	 * @spec openspec/changes/publication-consent-policy-fields/tasks.md#task-7
 	 * @spec openspec/changes/publication-consent-policy-fields/tasks.md#task-8
 	 */
-	public function validateAndUpdateConsent(
-		string $consentId,
-		string $register,
-		string $schema,
-		array $data,
-		?IUser $user = null,
-	): array {
+	public function validateAndUpdateConsent(ConsentUpdate $update, ?IUser $user = null): array {
 		$existing = $this->recordWriter->loadConsentRecord(
-			consentId: $consentId,
-			register: $register,
-			schema: $schema
+			consentId: $update->consentId,
+			register: $update->register,
+			schema: $update->schema
 		);
 
 		// Standing-consent (scope=entity) records carry policy-level
@@ -327,13 +372,14 @@ class ConsentService {
 			$this->scopeValidator->requireStandingConsentAdminGroup(user: $user);
 		}
 
-		$this->scopeValidator->validateTransition(existing: $existing, update: $data);
+		$this->scopeValidator->validateTransition(existing: $existing, update: $update->data);
 
 		return $this->updateConsentStatus(
-			consentId: $consentId,
-			register: $register,
-			schema: $schema,
-			data: $data
+			consentId: $update->consentId,
+			register: $update->register,
+			schema: $update->schema,
+			data: $update->data,
+			actor: (string) $user?->getUID()
 		);
 
 	}//end validateAndUpdateConsent()
@@ -345,6 +391,7 @@ class ConsentService {
 	 * @param string $register The register ID
 	 * @param string $schema The schema ID
 	 * @param array<string, mixed> $data The data to update
+	 * @param string $actor The user making the change, recorded on each status event
 	 *
 	 * @return array<string, mixed> The updated consent record
 	 *
@@ -357,12 +404,11 @@ class ConsentService {
 		string $register,
 		string $schema,
 		array $data,
+		string $actor = '',
 	): array {
 		return $this->updateHandler->updateConsentStatus(
-			consentId: $consentId,
-			register: $register,
-			schema: $schema,
-			data: $data
+			consent: new RegisterObjectRef(id: $consentId, register: $register, schema: $schema),
+			change: new ConsentStatusChange(data: $data, actor: $actor)
 		);
 
 	}//end updateConsentStatus()
@@ -437,4 +483,26 @@ class ConsentService {
 		$this->recordWriter->validatePublicationConsentData(data: $data);
 
 	}//end validatePublicationConsentData()
+	/**
+	 * Whether a document's consent requests allow publication. Reads only.
+	 *
+	 * Reads every record for the document, not only the caller's: the verdict
+	 * names record ids and never personal data, and a clearance that skipped
+	 * someone else's objection would clear too much.
+	 *
+	 * @param string            $documentId The document
+	 * @param string            $register   The consent register
+	 * @param string            $schema     The consent schema
+	 * @param DateTimeImmutable $now        The moment deadlines are judged at
+	 *
+	 * @return array{clear: bool, reasons: list<string>} The verdict.
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-2.1
+	 */
+	public function isDocumentConsentClear(string $documentId, string $register, string $schema, DateTimeImmutable $now): array {
+		$consents = $this->updateHandler->getConsentsByDocument(documentId: $documentId, register: $register, schema: $schema);
+
+		return (new ConsentClearance())->evaluate(consents: $consents, now: $now);
+
+	}//end isDocumentConsentClear()
 }//end class

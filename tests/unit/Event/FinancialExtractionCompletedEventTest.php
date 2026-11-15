@@ -21,6 +21,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Event;
 
 use OCA\Filinq\Event\FinancialExtractionCompletedEvent;
+use OCA\Filinq\Event\Support\RequestOrigin;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -37,9 +38,8 @@ class FinancialExtractionCompletedEventTest extends TestCase {
 		$fields = ['supplierName' => 'Hostbaar B.V.', 'totalIncl' => 121.00];
 
 		$event = new FinancialExtractionCompletedEvent(
+			origin: new RequestOrigin(requestedBy: 'annemarie', sourceApp: 'shillinq'),
 			documentUri: 'openregister://document/file/1',
-			requestedBy: 'annemarie',
-			sourceApp: 'shillinq',
 			docType: 'supplier-invoice',
 			fields: $fields,
 			fieldConfidence: ['supplierName' => 0.82, 'totalIncl' => 0.97],
@@ -63,9 +63,8 @@ class FinancialExtractionCompletedEventTest extends TestCase {
 	 */
 	public function testToPayloadBuildsCanonicalShape(): void {
 		$event = new FinancialExtractionCompletedEvent(
+			origin: new RequestOrigin(requestedBy: 'bob', sourceApp: 'shillinq'),
 			documentUri: 'nc://file/42',
-			requestedBy: 'bob',
-			sourceApp: 'shillinq',
 			docType: 'receipt',
 			fields: ['totalIncl' => 18.50],
 			fieldConfidence: ['totalIncl' => 0.71],

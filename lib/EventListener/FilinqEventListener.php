@@ -22,12 +22,9 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\EventListener;
 
-use OCA\Filinq\Service\MetadataService;
-use OCA\Filinq\Service\PolicyRetroactiveService;
-use OCA\Filinq\Service\SettingsService;
-use OCA\OpenRegister\Event\ObjectCreatedEvent;
-use OCA\OpenRegister\Event\ObjectDeletedEvent;
-use OCA\OpenRegister\Event\ObjectUpdatedEvent;
+use OCA\Filinq\Kernel\Contracts\MetadataServiceInterface;
+use OCA\Filinq\Kernel\Contracts\PolicyRetroactiveServiceInterface;
+use OCA\Filinq\Kernel\Contracts\SettingsServiceInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use Psr\Container\ContainerInterface;
@@ -64,9 +61,12 @@ class FilinqEventListener implements IEventListener {
 	public function handle(Event $event): void {
 		try {
 			$logger = $this->container->get(LoggerInterface::class);
-			$metadataService = $this->container->get(MetadataService::class);
-			$settingsService = $this->container->get(SettingsService::class);
-			$retroactive = $this->container->get(PolicyRetroactiveService::class);
+			$services = new ObjectEventServices(
+				metadataService: $this->container->get(MetadataServiceInterface::class),
+				settingsService: $this->container->get(SettingsServiceInterface::class),
+				logger: $logger,
+				retroactive: $this->container->get(PolicyRetroactiveServiceInterface::class)
+			);
 			$eventHandler = new FilinqEventHandler(container: $this->container);
 
 			$logger->info(
@@ -77,14 +77,7 @@ class FilinqEventListener implements IEventListener {
 				]
 			);
 
-			$this->dispatchEvent(
-				event: $event,
-				metadataService: $metadataService,
-				settingsService: $settingsService,
-				logger: $logger,
-				eventHandler: $eventHandler,
-				retroactive: $retroactive
-			);
+			$eventHandler->dispatch(event: $event, services: $services);
 
 			// Validation verdict fallback (document-validation-checks): until
 			// OR's ADR-031 calculation runtime invokes DocumentValidationService
@@ -93,7 +86,7 @@ class FilinqEventListener implements IEventListener {
 			// DocumentValidationService, all orchestration in ValidationRunner.
 			(new ValidationRunner(container: $this->container))->runFallbackForEvent(
 				event: $event,
-				metadataService: $metadataService,
+				metadataService: $services->metadataService,
 				logger: $logger
 			);
 		} catch (\Throwable $e) {
@@ -110,64 +103,6 @@ class FilinqEventListener implements IEventListener {
 		}//end try
 
 	}//end handle()
-
-	/**
-	 * Dispatch the event to the appropriate handler
-	 *
-	 * @param Event $event The event to dispatch
-	 * @param MetadataService $metadataService The metadata service
-	 * @param SettingsService $settingsService The settings service
-	 * @param LoggerInterface $logger The logger instance
-	 * @param FilinqEventHandler $eventHandler The event handler
-	 * @param PolicyRetroactiveService $retroactive Retroactive policy applicator.
-	 *
-	 * @return void
-	 *
-	 * @psalm-suppress TypeDoesNotContainType OpenRegister is an optional dep; event classes may not be loaded.
-	 */
-	private function dispatchEvent(
-		Event $event,
-		MetadataService $metadataService,
-		SettingsService $settingsService,
-		LoggerInterface $logger,
-		FilinqEventHandler $eventHandler,
-		PolicyRetroactiveService $retroactive,
-	): void {
-		if ($event instanceof ObjectCreatedEvent) {
-			$eventHandler->handleObjectCreated(
-				$event,
-				$metadataService,
-				$settingsService,
-				$logger,
-				$retroactive
-			);
-			return;
-		}
-
-		if ($event instanceof ObjectUpdatedEvent) {
-			$eventHandler->handleObjectUpdated(
-				$event,
-				$metadataService,
-				$settingsService,
-				$logger,
-				$retroactive
-			);
-			return;
-		}
-
-		if ($event instanceof ObjectDeletedEvent) {
-			$eventHandler->handleObjectDeleted($event, $logger, $retroactive);
-			return;
-		}
-
-		$logger->debug(
-			'Filinq: Ignoring unhandled event type',
-			[
-				'eventType' => get_class($event),
-			]
-		);
-
-	}//end dispatchEvent()
 
 	/**
 	 * Log an error from the event handler

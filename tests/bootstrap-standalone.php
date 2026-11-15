@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+
 define('PHPUNIT_RUN', 1);
 require_once __DIR__ . '/../vendor/autoload.php';
 

@@ -7,11 +7,8 @@
  *     that a document with zero verifiable signatures is never reported as
  *     valid (previously returned true).
  *
- * L1: stripAssertionMac() must use preg_replace with preg_quote so that a MAC
- *     value that contains regex metacharacters is treated as a literal string
- *     (previously used str_replace which cannot handle regex patterns, but
- *     the intent was to strip literal occurrences — using preg_replace with
- *     preg_quote is the correct approach for safety and explicitness).
+ * L1: the MAC is recomputed over the canonical document bytes as they are, so
+ *     bytes added to a signed document fail verification, whatever they hold.
  *
  * @category Tests
  * @package  OCA\Filinq\Tests\Unit\Service
@@ -369,47 +366,178 @@ class SigningVerificationServiceTest extends TestCase {
 	}//end testExternalSignatureIsUnverifiableNotInvalid()
 
 	/**
-	 * stripAssertionMac() removes a plain MAC value from the content (finding L1).
+	 * Bytes added to a signed document fail verification, also when they are
+	 * the asserted MAC itself (finding L1).
 	 *
 	 * @return void
 	 */
-	public function testStripAssertionMacRemovesLiteralMac(): void {
-		$ref = new ReflectionClass($this->service);
-		$method = $ref->getMethod('stripAssertionMac');
-		$method->setAccessible(true);
+	public function testAddedMacBytesFailVerification(): void {
+		$secret = 'e2e-verification-secret';
+		$this->mockConfig->method('getValueString')->willReturnCallback(
+			function (string $app, string $key, string $default = '') use ($secret): string {
+				return $key === 'signing_verification_secret' ? $secret : $default;
+			}
+		);
 
-		$mac = 'abc123def456';
-		$content = 'prefix ' . $mac . ' suffix';
+		[$signed, $assertion] = $this->buildV2SignedArtifact(secret: $secret);
+		$tampered = str_replace('government besluit content', 'government besluit content' . $assertion['mac'], $signed);
 
-		$result = $method->invoke($this->service, $content, $mac);
+		$this->assertNotSame($signed, $tampered);
+		$result = $this->extract($tampered);
 
-		$this->assertStringNotContainsString($mac, $result);
-		$this->assertStringContainsString('prefix', $result);
-		$this->assertStringContainsString('suffix', $result);
+		$this->assertSame('invalid', $result[0]['status']);
+		$this->assertFalse($result[0]['valid']);
 
-	}//end testStripAssertionMacRemovesLiteralMac()
+	}//end testAddedMacBytesFailVerification()
+
 
 	/**
-	 * stripAssertionMac() handles MAC values that contain regex metacharacters
-	 * (finding L1 — preg_quote ensures literal matching).
+	 * A verified result says what was checked, against which key, and what
+	 * that PROVES.
+	 *
+	 * 🔴 The sentence has to include what a green tick does NOT mean. A MAC
+	 * this server can recompute proves the server produced the artifact and
+	 * that the bytes have not changed; it does not prove who the signer is,
+	 * and it is not a qualified electronic signature. A verification screen
+	 * that leaves that out is one somebody will rely on in a dispute.
 	 *
 	 * @return void
 	 */
-	public function testStripAssertionMacHandlesRegexMetacharacters(): void {
-		$ref = new ReflectionClass($this->service);
-		$method = $ref->getMethod('stripAssertionMac');
+	public function testAVerifiedResultSaysWhatItProvesAndWhatItDoesNot(): void {
+		$secret = 'e2e-verification-secret';
+		$this->mockConfig->method('getValueString')->willReturnCallback(
+			function (string $app, string $key, string $default = '') use ($secret): string {
+				return $key === 'signing_verification_secret' ? $secret : $default;
+			}
+		);
+
+		[$signed] = $this->buildV2SignedArtifact(secret: $secret);
+		$result = $this->extract($signed);
+
+		$this->assertSame('verified', $result[0]['status']);
+		$this->assertSame('the document bytes and the assertion fields', $result[0]['checked']);
+		$this->assertStringContainsString('have not changed', $result[0]['means']);
+		$this->assertStringContainsString('does not prove who the signer is', $result[0]['means']);
+		$this->assertStringContainsString('not a qualified electronic signature', $result[0]['means']);
+	}//end testAVerifiedResultSaysWhatItProvesAndWhatItDoesNot()
+
+	/**
+	 * The key a check ran against is NAMED, and it is not the secret.
+	 *
+	 * "Verified" is meaningless without saying against what: an instance whose
+	 * secret was rotated reports `invalid` for every older artifact, and with
+	 * no key id that reads as mass tampering.
+	 *
+	 * @return void
+	 */
+	public function testTheKeyIsNamedAndTheNameIsNotTheSecret(): void {
+		$secret = 'e2e-verification-secret';
+		$this->mockConfig->method('getValueString')->willReturnCallback(
+			function (string $app, string $key, string $default = '') use ($secret): string {
+				return $key === 'signing_verification_secret' ? $secret : $default;
+			}
+		);
+
+		[$signed] = $this->buildV2SignedArtifact(secret: $secret);
+		$keyId = $this->extract($signed)[0]['keyId'];
+
+		$this->assertIsString($keyId);
+		$this->assertNotSame('', $keyId);
+		$this->assertStringNotContainsString($secret, $keyId, 'the key id must not carry the secret');
+		$this->assertStringNotContainsString($keyId, $secret);
+	}//end testTheKeyIsNamedAndTheNameIsNotTheSecret()
+
+	/**
+	 * A rotated secret gets a different key id, which is the whole reason the
+	 * id is there: it turns "everything is suddenly invalid" into "these were
+	 * signed with the previous key".
+	 *
+	 * @return void
+	 */
+	public function testARotatedSecretGetsADifferentKeyId(): void {
+		$first = $this->keyIdFor(secret: 'secret-one');
+		$second = $this->keyIdFor(secret: 'secret-two');
+
+		$this->assertNotSame($first, $second);
+		$this->assertSame($first, $this->keyIdFor(secret: 'secret-one'), 'and the same key always gets the same id');
+	}//end testARotatedSecretGetsADifferentKeyId()
+
+	/**
+	 * An instance with no key says so, and says that it is not evidence of
+	 * anything being wrong.
+	 *
+	 * @return void
+	 */
+	public function testNoConfiguredKeyIsNotEvidenceOfTampering(): void {
+		$this->mockConfig->method('getValueString')->willReturnCallback(
+			static function (string $app, string $key, string $default = ''): string {
+				return $default;
+			}
+		);
+
+		[$signed] = $this->buildV2SignedArtifact(secret: 'whatever-signed-it');
+		$result = $this->extract($signed);
+
+		$this->assertSame('unverifiable', $result[0]['status']);
+		$this->assertNull($result[0]['keyId'], 'there was no key, so none is named');
+		$this->assertSame('nothing', $result[0]['checked']);
+		$this->assertStringContainsString('not evidence that anything is wrong', $result[0]['means']);
+	}//end testNoConfiguredKeyIsNotEvidenceOfTampering()
+
+	/**
+	 * A tampered document says what changed and what else could explain it,
+	 * rather than a slug.
+	 *
+	 * @return void
+	 */
+	public function testATamperedDocumentSaysWhatThatMeans(): void {
+		$secret = 'e2e-verification-secret';
+		$this->mockConfig->method('getValueString')->willReturnCallback(
+			function (string $app, string $key, string $default = '') use ($secret): string {
+				return $key === 'signing_verification_secret' ? $secret : $default;
+			}
+		);
+
+		[$signed, $genuine] = $this->buildV2SignedArtifact(secret: $secret);
+		$forged = $genuine;
+		$forged['signer'] = 'Mallory (attacker)';
+		$signed = preg_replace(
+			'/\/DocuDesk-Signature\s*\([^)]*\)/',
+			'/DocuDesk-Signature(' . base64_encode((string)json_encode($forged)) . ')',
+			$signed
+		);
+
+		$result = $this->extract((string)$signed);
+
+		$this->assertSame('invalid', $result[0]['status']);
+		$this->assertStringContainsString('changed after this server signed it', $result[0]['means']);
+		$this->assertStringContainsString('different key', $result[0]['means'], 'the other explanation is named too');
+	}//end testATamperedDocumentSaysWhatThatMeans()
+
+	/**
+	 * Run extractSignatures() over a document.
+	 *
+	 * @param string $signed The signed bytes.
+	 *
+	 * @return array<int, array<string, mixed>> The signatures.
+	 */
+	private function extract(string $signed): array {
+		$method = (new ReflectionClass($this->service))->getMethod('extractSignatures');
 		$method->setAccessible(true);
+		return $method->invoke($this->service, $signed);
+	}//end extract()
 
-		// A MAC that happens to contain characters special to regex.
-		$mac = 'a.b+c(d)e$f';
-		$content = 'before' . $mac . 'after';
-
-		// Must not throw a regex error and must strip the literal text.
-		$result = $method->invoke($this->service, $content, $mac);
-
-		$this->assertStringNotContainsString($mac, $result);
-		$this->assertSame('beforeafter', $result);
-
-	}//end testStripAssertionMacHandlesRegexMetacharacters()
+	/**
+	 * The key id a given secret produces.
+	 *
+	 * @param string $secret The secret.
+	 *
+	 * @return string|null The key id.
+	 */
+	private function keyIdFor(string $secret): ?string {
+		$method = (new ReflectionClass($this->service))->getMethod('keyId');
+		$method->setAccessible(true);
+		return $method->invoke($this->service, $secret);
+	}//end keyIdFor()
 
 }//end class

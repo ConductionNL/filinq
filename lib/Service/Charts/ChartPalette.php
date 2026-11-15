@@ -15,7 +15,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/template-charts/specs/template-charts/spec.md
+ * @spec openspec/specs/template-charts/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -34,7 +34,7 @@ namespace OCA\Filinq\Service\Charts;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/template-charts/tasks.md#task-1.1
+ * @spec openspec/changes/archive/2026-09-28-template-charts/tasks.md#task-1.1
  */
 class ChartPalette {
 
@@ -64,7 +64,7 @@ class ChartPalette {
 	 *
 	 * @return string[] Ordered list of hex colors.
 	 *
-	 * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-003
+	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-001
 	 */
 	public function resolve(array $options): array {
 		$override = $this->explicitOverride(options: $options);
@@ -198,21 +198,20 @@ class ChartPalette {
 			$s = $d / (2 - $max - $min);
 		}
 
-		return [$this->hueOf(rf: $rf, gf: $gf, bf: $bf, max: $max, d: $d), $s, $l];
+		return [$this->hueOf(channels: [$rf, $gf, $bf]), $s, $l];
 	}//end rgbToHsl()
 
 	/**
 	 * Compute the hue (0-360°) of a color from its normalized channels.
 	 *
-	 * @param float $rf Red channel (0-1).
-	 * @param float $gf Green channel (0-1).
-	 * @param float $bf Blue channel (0-1).
-	 * @param float $max The largest of the three channels.
-	 * @param float $d The channel range (max - min), guaranteed non-zero.
+	 * @param array{0: float, 1: float, 2: float} $channels Red, green and blue (0-1), not all equal.
 	 *
 	 * @return float Hue in degrees.
 	 */
-	private function hueOf(float $rf, float $gf, float $bf, float $max, float $d): float {
+	private function hueOf(array $channels): float {
+		[$rf, $gf, $bf] = $channels;
+		$max = max($channels);
+		$d   = ($max - min($channels));
 		switch ($max) {
 			case $rf:
 				$h = fmod((($gf - $bf) / $d), 6);
@@ -249,12 +248,33 @@ class ChartPalette {
 
 		[$r, $g, $b] = $this->hueSextant(h: $h, c: $c, x: $x);
 
-		$rHex = str_pad(dechex((int)round(($r + $m) * 255)), 2, '0', STR_PAD_LEFT);
-		$gHex = str_pad(dechex((int)round(($g + $m) * 255)), 2, '0', STR_PAD_LEFT);
-		$bHex = str_pad(dechex((int)round(($b + $m) * 255)), 2, '0', STR_PAD_LEFT);
+		$rHex = str_pad(dechex($this->toByte(unit: $r + $m)), 2, '0', STR_PAD_LEFT);
+		$gHex = str_pad(dechex($this->toByte(unit: $g + $m)), 2, '0', STR_PAD_LEFT);
+		$bHex = str_pad(dechex($this->toByte(unit: $b + $m)), 2, '0', STR_PAD_LEFT);
 
 		return '#' . strtoupper($rHex . $gHex . $bHex);
 	}//end hslToHex()
+
+	/**
+	 * Scale a [0, 1] value to a 0-255 channel, halves rounded up.
+	 *
+	 * The product is first rounded to 15 significant digits, so float noise such as
+	 * 83.49999999999999 gives the same channel on every PHP version: PHP 8.3's round()
+	 * did this pre-rounding itself, PHP 8.4's round() does not.
+	 *
+	 * @param float $unit The value, normalised to [0, 1].
+	 *
+	 * @return int The channel value.
+	 */
+	private function toByte(float $unit): int {
+		$value = ($unit * 255);
+		if (abs($value) < 1.0E-9) {
+			return 0;
+		}
+
+		$scale = (10 ** (14 - (int)floor(log10(abs($value)))));
+		return (int)round(round($value * $scale) / $scale);
+	}//end toByte()
 
 	/**
 	 * Map a hue (0-360°) to its `[r, g, b]` sextant using the chroma/second
