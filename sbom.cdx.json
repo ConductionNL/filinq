@@ -1055,10 +1055,10 @@
       ]
     },
     {
-      "bom-ref": "symfony/polyfill-mbstring-1.38.2.0",
+      "bom-ref": "symfony/polyfill-mbstring-1.43.3.0",
       "type": "library",
       "name": "polyfill-mbstring",
-      "version": "v1.38.2",
+      "version": "v1.43.3",
       "group": "symfony",
       "description": "Symfony polyfill for the Mbstring extension",
       "author": "Nicolas Grekas, Symfony Community",
@@ -1069,17 +1069,17 @@
           }
         }
       ],
-      "purl": "pkg:composer/symfony/polyfill-mbstring@v1.38.2",
+      "purl": "pkg:composer/symfony/polyfill-mbstring@v1.43.3",
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://api.github.com/repos/symfony/polyfill-mbstring/zipball/d3d318bad5e7a1bfbd026009c8bfb8d8f99ae6b6",
-          "comment": "dist reference: d3d318bad5e7a1bfbd026009c8bfb8d8f99ae6b6"
+          "url": "https://api.github.com/repos/symfony/polyfill-mbstring/zipball/122889ed24dc000165bcbfd77ec412f15cbdfc6a",
+          "comment": "dist reference: 122889ed24dc000165bcbfd77ec412f15cbdfc6a"
         },
         {
           "type": "vcs",
           "url": "https://github.com/symfony/polyfill-mbstring.git",
-          "comment": "source reference: d3d318bad5e7a1bfbd026009c8bfb8d8f99ae6b6"
+          "comment": "source reference: 122889ed24dc000165bcbfd77ec412f15cbdfc6a"
         },
         {
           "type": "website",
@@ -1088,18 +1088,18 @@
         },
         {
           "type": "vcs",
-          "url": "https://github.com/symfony/polyfill-mbstring/tree/v1.38.2",
+          "url": "https://github.com/symfony/polyfill-mbstring/tree/v1.43.3",
           "comment": "as detected from Composer manifest 'support.source'"
         }
       ],
       "properties": [
         {
           "name": "cdx:composer:package:distReference",
-          "value": "d3d318bad5e7a1bfbd026009c8bfb8d8f99ae6b6"
+          "value": "122889ed24dc000165bcbfd77ec412f15cbdfc6a"
         },
         {
           "name": "cdx:composer:package:sourceReference",
-          "value": "d3d318bad5e7a1bfbd026009c8bfb8d8f99ae6b6"
+          "value": "122889ed24dc000165bcbfd77ec412f15cbdfc6a"
         },
         {
           "name": "cdx:composer:package:type",
@@ -1214,10 +1214,10 @@
       ]
     },
     {
-      "bom-ref": "symfony/yaml-6.4.48.0",
+      "bom-ref": "symfony/yaml-6.4.49.0",
       "type": "library",
       "name": "yaml",
-      "version": "v6.4.48",
+      "version": "v6.4.49",
       "group": "symfony",
       "description": "Loads and dumps YAML files",
       "author": "Fabien Potencier, Symfony Community",
@@ -1228,17 +1228,17 @@
           }
         }
       ],
-      "purl": "pkg:composer/symfony/yaml@v6.4.48",
+      "purl": "pkg:composer/symfony/yaml@v6.4.49",
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://api.github.com/repos/symfony/yaml/zipball/91288fddb497a598b564343ea663ea272370a7dc",
-          "comment": "dist reference: 91288fddb497a598b564343ea663ea272370a7dc"
+          "url": "https://api.github.com/repos/symfony/yaml/zipball/bbefb7d9cd1bf804148bd1c306a9acc87f335196",
+          "comment": "dist reference: bbefb7d9cd1bf804148bd1c306a9acc87f335196"
         },
         {
           "type": "vcs",
           "url": "https://github.com/symfony/yaml.git",
-          "comment": "source reference: 91288fddb497a598b564343ea663ea272370a7dc"
+          "comment": "source reference: bbefb7d9cd1bf804148bd1c306a9acc87f335196"
         },
         {
           "type": "website",
@@ -1247,18 +1247,18 @@
         },
         {
           "type": "vcs",
-          "url": "https://github.com/symfony/yaml/tree/v6.4.48",
+          "url": "https://github.com/symfony/yaml/tree/v6.4.49",
           "comment": "as detected from Composer manifest 'support.source'"
         }
       ],
       "properties": [
         {
           "name": "cdx:composer:package:distReference",
-          "value": "91288fddb497a598b564343ea663ea272370a7dc"
+          "value": "bbefb7d9cd1bf804148bd1c306a9acc87f335196"
         },
         {
           "name": "cdx:composer:package:sourceReference",
-          "value": "91288fddb497a598b564343ea663ea272370a7dc"
+          "value": "bbefb7d9cd1bf804148bd1c306a9acc87f335196"
         },
         {
           "name": "cdx:composer:package:type",
@@ -4926,6 +4926,40 @@
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@humanwhocodes/retry"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "nonrecursive-glob-match",
+      "group": "@isaacs",
+      "version": "1.1.0",
+      "bom-ref": "filinq@1.0.0|@isaacs/nonrecursive-glob-match@1.1.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "BlueOak-1.0.0"
+          }
+        }
+      ],
+      "purl": "pkg:npm/%40isaacs/nonrecursive-glob-match@1.1.0",
+      "externalReferences": [
+        {
+          "url": "https://registry.npmjs.org/@isaacs/nonrecursive-glob-match/-/nonrecursive-glob-match-1.1.0.tgz",
+          "type": "distribution",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "18f9bf0dbbe4e512e68519f15c86bb9d3a4ad31b65e04d308f432c96cb8d889d45211394fb6fbd960502fdd805ec4cb84025a17c4b20c6294c44c09d1cf7c37f"
+            }
+          ],
+          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
+        }
+      ],
+      "properties": [
+        {
+          "name": "cdx:npm:package:path",
+          "value": "node_modules/@isaacs/nonrecursive-glob-match"
         }
       ]
     },
@@ -12705,10 +12739,6 @@
       ],
       "properties": [
         {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
           "name": "cdx:npm:package:path",
           "value": "node_modules/balanced-match"
         }
@@ -12947,10 +12977,6 @@
         }
       ],
       "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/brace-expansion"
@@ -28476,24 +28502,24 @@
         {
           "type": "library",
           "name": "minimatch",
-          "version": "9.0.9",
-          "bom-ref": "filinq@1.0.0|webdav@5.11.0|minimatch@9.0.9",
+          "version": "11.0.8",
+          "bom-ref": "filinq@1.0.0|webdav@5.11.0|minimatch@11.0.8",
           "licenses": [
             {
               "license": {
-                "id": "ISC"
+                "id": "BlueOak-1.0.0"
               }
             }
           ],
-          "purl": "pkg:npm/minimatch@9.0.9",
+          "purl": "pkg:npm/minimatch@11.0.8",
           "externalReferences": [
             {
-              "url": "https://registry.npmjs.org/minimatch/-/minimatch-9.0.9.tgz",
+              "url": "https://registry.npmjs.org/minimatch/-/minimatch-11.0.8.tgz",
               "type": "distribution",
               "hashes": [
                 {
                   "alg": "SHA-512",
-                  "content": "381c0137d00be1daa61139694b6cdab31faf4de59c956ce46e57d993b2930398f78de38e373fed4429d9a26532bcd83cdf02f966ff52b3a1cc2570202fc47662"
+                  "content": "9c542e6124d5ac6bf2b15069b39221fb405d9d814dfc28f70bcd7aafafa9ef22be147ad52c61383b837d005c3292b94d96f3361d8b7e45a775522ae8ea1f3c22"
                 }
               ],
               "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -28503,72 +28529,6 @@
             {
               "name": "cdx:npm:package:path",
               "value": "node_modules/webdav/node_modules/minimatch"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "brace-expansion",
-          "version": "2.1.8",
-          "bom-ref": "filinq@1.0.0|webdav@5.11.0|brace-expansion@2.1.8",
-          "licenses": [
-            {
-              "license": {
-                "id": "MIT"
-              }
-            }
-          ],
-          "purl": "pkg:npm/brace-expansion@2.1.8",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/brace-expansion/-/brace-expansion-2.1.8.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "067943cc3610a29953b194af3e2f3a08dce66dc6f4ed7f2e7d1f1f935ce2bda8842655c9922ab5310c830959a559cb166e3e9a597a879ebc307af6eb9bf49a8a"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/webdav/node_modules/brace-expansion"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "balanced-match",
-          "version": "1.0.2",
-          "bom-ref": "filinq@1.0.0|webdav@5.11.0|balanced-match@1.0.2",
-          "licenses": [
-            {
-              "license": {
-                "id": "MIT"
-              }
-            }
-          ],
-          "purl": "pkg:npm/balanced-match@1.0.2",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/balanced-match/-/balanced-match-1.0.2.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "de849e50ed13315ebb84dd4099b5ec2b8c9aa94eed8e21e56f144364ea47d0a5bdf82797e1b440697d009f1b74b71d8cae94695b041a3f02252121098585393f"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/webdav/node_modules/balanced-match"
             }
           ]
         }
@@ -29046,7 +29006,7 @@
       "ref": "symfony/polyfill-ctype-1.37.0.0"
     },
     {
-      "ref": "symfony/polyfill-mbstring-1.38.2.0"
+      "ref": "symfony/polyfill-mbstring-1.43.3.0"
     },
     {
       "ref": "symfony/polyfill-uuid-1.37.0.0"
@@ -29058,7 +29018,7 @@
       ]
     },
     {
-      "ref": "symfony/yaml-6.4.48.0",
+      "ref": "symfony/yaml-6.4.49.0",
       "dependsOn": [
         "symfony/deprecation-contracts-3.7.1.0",
         "symfony/polyfill-ctype-1.37.0.0"
@@ -29154,7 +29114,7 @@
       "dependsOn": [
         "symfony/deprecation-contracts-3.7.1.0",
         "symfony/polyfill-ctype-1.37.0.0",
-        "symfony/polyfill-mbstring-1.38.2.0"
+        "symfony/polyfill-mbstring-1.43.3.0"
       ]
     },
     {
@@ -29167,7 +29127,7 @@
         "psr/log-3.0.2.0",
         "setasign/fpdf-1.9.0.0",
         "symfony/uid-6.4.32.0",
-        "symfony/yaml-6.4.48.0",
+        "symfony/yaml-6.4.49.0",
         "tecnickcom/tc-lib-pdf-8.82.2.0",
         "thiagoalessio/tesseract_ocr-2.13.0.0",
         "twig/twig-3.28.0.0"
