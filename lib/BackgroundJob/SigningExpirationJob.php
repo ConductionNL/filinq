@@ -35,6 +35,8 @@ use OCA\Filinq\Kernel\Contracts\SigningServiceInterface;
 use OCA\Filinq\Kernel\SigningAuditActor;
 use OCA\Filinq\Kernel\SigningAuditEvent;
 use OCA\Filinq\Kernel\SigningAuditSubject;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use OCP\IAppConfig;
@@ -215,7 +217,11 @@ class SigningExpirationJob extends TimedJob {
 		}
 
 		$request['status'] = 'EXPIRED';
-		$sweep['objectService']->saveObject(object: $request, register: $sweep['register'], schema: $sweep['schema'], _rbac: false);
+		$sweep['objectService']->saveObject(
+			object: $request,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $sweep['register'], schema: $sweep['schema'])),
+			_rbac: false
+		);
 
 		// Cross-app delegated-signing contract (filinq-signing-events): an
 		// expired request is terminal — emit SigningConcludedEvent

@@ -24,6 +24,9 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use OCA\Filinq\Kernel\Contracts\ScanBatchRepositoryInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
@@ -82,7 +85,13 @@ class ScanBatchRepository implements ScanBatchRepositoryInterface {
 				$arguments['uuid'] = $uuid;
 			}
 
-			$stored = $this->objectResolver->resolve()->saveObject(...$arguments);
+			$stored = $this->objectResolver->resolve()->saveObject(
+				object: $arguments['object'],
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: ($arguments['register'] ?? null), schema: ($arguments['schema'] ?? null)),
+					uuid: $arguments['uuid'] ?? null
+				)
+			);
 		} catch (Throwable $e) {
 			throw new RuntimeException(
 				message: 'Could not store the scan batch: ' . $e->getMessage(),
@@ -117,8 +126,7 @@ class ScanBatchRepository implements ScanBatchRepositoryInterface {
 		try {
 			$object = $this->objectResolver->resolve()->find(
 				id: $uuid,
-				register: IntakeRepository::REGISTER,
-				schema: ScanBatchService::SCHEMA
+				options: new ObjectFindOptions(register: IntakeRepository::REGISTER, schema: ScanBatchService::SCHEMA)
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
