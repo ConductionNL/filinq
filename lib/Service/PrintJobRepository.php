@@ -25,6 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\PrintJobRepositoryInterface;
 use RuntimeException;
 use Throwable;
 
@@ -39,12 +40,8 @@ use Throwable;
  *
  * @spec openspec/specs/print-preview/spec.md
  */
-class PrintJobRepository {
-
-	/**
-	 * The schema slug of a print job.
-	 */
-	public const SCHEMA = 'printJob';
+class PrintJobRepository implements PrintJobRepositoryInterface {
+	use ReadsStoredObjectRows;
 
 	/**
 	 * Constructor.
@@ -74,17 +71,19 @@ class PrintJobRepository {
 	public function save(array $job, ?string $uuid = null): array {
 		unset($job['uuid']);
 
-		$arguments = [
-			'object' => $job,
-			'register' => IntakeRepository::REGISTER,
-			'schema' => self::SCHEMA,
-		];
-		if ($uuid !== null && $uuid !== '') {
-			$arguments['uuid'] = $uuid;
+		if ($uuid === '') {
+			$uuid = null;
 		}
 
 		try {
-			$stored = $this->objectResolver->resolve()->saveObject(...$arguments);
+			$stored = $this->objectResolver->resolve()->saveObject(
+				object: $job,
+				register: IntakeRepository::REGISTER,
+				schema: self::SCHEMA,
+				uuid: $uuid,
+				_rbac: false,
+				_unowned: true
+			);
 		} catch (Throwable $e) {
 			throw new RuntimeException(
 				message: 'Could not store the print job: ' . $e->getMessage(),
@@ -93,7 +92,7 @@ class PrintJobRepository {
 			);
 		}
 
-		$normalised = $this->normalise(row: $stored);
+		$normalised = $this->storedFields(row: $stored);
 		if (($normalised['uuid'] ?? '') === '' && $uuid !== null) {
 			$normalised['uuid'] = $uuid;
 		}
@@ -122,7 +121,8 @@ class PrintJobRepository {
 			$object = $this->objectResolver->resolve()->find(
 				id: $uuid,
 				register: IntakeRepository::REGISTER,
-				schema: self::SCHEMA
+				schema: self::SCHEMA,
+				_rbac: false
 			);
 		} catch (Throwable $e) {
 			throw new RuntimeException(
@@ -136,7 +136,7 @@ class PrintJobRepository {
 			return null;
 		}
 
-		return $this->normalise(row: $object);
+		return $this->storedFields(row: $object);
 
 	}//end find()
 
@@ -162,7 +162,8 @@ class PrintJobRepository {
 			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
 				registerSlug: IntakeRepository::REGISTER,
 				schemaSlug: self::SCHEMA,
-				filters: ['requestedBy' => $userId]
+				filters: ['requestedBy' => $userId],
+				_rbac: false
 			);
 		} catch (Throwable $e) {
 			throw new RuntimeException(
@@ -174,7 +175,7 @@ class PrintJobRepository {
 
 		$jobs = [];
 		foreach ((array) $results as $result) {
-			$job = $this->normalise(row: $result);
+			$job = $this->storedFields(row: $result);
 			// The filter is the search's; the owner check is ours, so a search
 			// that ignored the filter still lists nobody else's job.
 			if (($job['requestedBy'] ?? '') === $userId) {
@@ -190,35 +191,4 @@ class PrintJobRepository {
 		return $jobs;
 
 	}//end findForUser()
-
-	/**
-	 * Read one OpenRegister row into the flat shape this app uses.
-	 *
-	 * @param mixed $row The row
-	 *
-	 * @return array<string, mixed> The job.
-	 *
-	 * @spec exclude Shape adapter over an OpenRegister response.
-	 */
-	private function normalise(mixed $row): array {
-		$data = $row;
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			$data = $row->jsonSerialize();
-		}
-
-		if (is_array($data) === false) {
-			return [];
-		}
-
-		$fields = $data;
-		if (isset($data['object']) === true && is_array($data['object']) === true) {
-			$fields = $data['object'];
-		}
-
-		unset($fields['@self']);
-		$fields['uuid'] = (string) ($fields['uuid'] ?? ($data['uuid'] ?? ($data['@self']['id'] ?? ($data['id'] ?? ''))));
-
-		return $fields;
-
-	}//end normalise()
 }//end class

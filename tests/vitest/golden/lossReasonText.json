@@ -1,0 +1,77 @@
+[
+	{
+		"reason": "engine-cannot-reauthor-structtree",
+		"type": "string",
+		"out": "The redaction engine cannot rebuild the tag structure"
+	},
+	{
+		"reason": "marked-content-correspondence-broken",
+		"type": "string",
+		"out": "The tags no longer point at the right text"
+	},
+	{
+		"reason": "structtreeroot-dropped-on-rebuild",
+		"type": "string",
+		"out": "The tag structure was dropped when the file was rebuilt"
+	},
+	{
+		"reason": "input-not-tagged",
+		"type": "string",
+		"out": "The original had no tags to keep"
+	},
+	{
+		"reason": "page-structure-not-preservable",
+		"type": "string",
+		"out": "The page structure could not be kept"
+	},
+	{
+		"reason": "verapdf-not-pdfua",
+		"type": "string",
+		"out": "veraPDF found that the copy no longer meets PDF/UA"
+	},
+	{
+		"reason": "some-new-reason",
+		"type": "string",
+		"out": "some-new-reason"
+	},
+	{
+		"reason": "",
+		"type": "string",
+		"out": ""
+	},
+	{
+		"reason": "toString",
+		"type": "string",
+		"out": "toString"
+	},
+	{
+		"reason": "constructor",
+		"type": "string",
+		"out": "constructor"
+	},
+	{
+		"reason": "__proto__",
+		"type": "string",
+		"out": "__proto__"
+	},
+	{
+		"reason": "hasOwnProperty",
+		"type": "string",
+		"out": "hasOwnProperty"
+	},
+	{
+		"reason": "undefined",
+		"type": "undefined",
+		"out": null
+	},
+	{
+		"reason": "null",
+		"type": "object",
+		"out": null
+	},
+	{
+		"reason": "42",
+		"type": "number",
+		"out": 42
+	}
+]

@@ -11,6 +11,9 @@
  * @link      https://www.filinq.app
  *
  * @spec openspec/changes/archive/2026-09-29-accessible-redaction-output/tasks.md#task-4.1
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -32,6 +35,8 @@ use OCA\Filinq\Service\Pseudonymisation\PseudonymPairs;
 use OCA\Filinq\Service\Redaction\RedactionVerdictRecorder;
 use OCA\Filinq\Service\RedactionAccessibilityService;
 use OCA\Filinq\Service\ReplacementVerificationService;
+use OCA\Filinq\Service\Support\AnonymisationRecords;
+use OCA\Filinq\Service\Support\AnonymisedOutputs;
 use OCP\Files\File;
 use OCP\IAppConfig;
 use Opis\JsonSchema\Errors\ErrorFormatter;
@@ -168,20 +173,16 @@ class DocumentAnonymizeRunnerAccessibilityTest extends TestCase {
 		);
 
 		return new DocumentAnonymizeRunner(
-			logger: $logger,
-			locator: $locator,
-			entityDetection: new EntityDetectionService(new AnonymizationResultParser()),
-			emlAnonymizer: $eml,
-			pdfOutput: $pdf,
-			replacementVerifier: new ReplacementVerificationService(logger: $logger),
-			persistence: $persistence,
-			summaryAttacher: $this->createMock(GrondslagenSummaryAttacher::class),
-			runRecords: new AnonymisationRunRecords(
+			records: new AnonymisationRecords(verifier: new ReplacementVerificationService(logger: $logger), persistence: $persistence, runs: new AnonymisationRunRecords(
 				verdicts: $verdicts,
 				persistence: $persistence,
 				keys: new PseudonymMapRecorder(new PseudonymPairs(), $this->mapService(container: $container), $persistence, $locator, $logger),
 				accessibility: new RedactionAccessibilityService($appConfig)
-			)
+			)),
+			outputs: new AnonymisedOutputs(eml: $eml, pdf: $pdf, summary: $this->createMock(GrondslagenSummaryAttacher::class)),
+			logger: $logger,
+			locator: $locator,
+			entityDetection: new EntityDetectionService(new AnonymizationResultParser())
 		);
 
 	}//end runner()

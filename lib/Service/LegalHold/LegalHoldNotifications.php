@@ -20,7 +20,8 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\LegalHold;
 
-use OCA\Filinq\AppInfo\Application;
+use OCA\Filinq\Kernel\AppIdentity;
+use OCA\Filinq\Kernel\Contracts\LegalHoldNotificationsInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IUserManager;
 use OCP\Notification\IManager;
@@ -34,21 +35,7 @@ use Throwable;
  * scope, a list the x-openregister-notifications `field` recipient cannot
  * express (it takes one user id).
  */
-class LegalHoldNotifications {
-
-	/**
-	 * Subject of the notification on placement.
-	 *
-	 * @var string
-	 */
-	public const SUBJECT_PLACED = 'legal_hold_placed';
-
-	/**
-	 * Subject of the notification on release.
-	 *
-	 * @var string
-	 */
-	public const SUBJECT_RELEASED = 'legal_hold_released';
+class LegalHoldNotifications implements LegalHoldNotificationsInterface {
 
 	/**
 	 * Constructor.
@@ -89,7 +76,7 @@ class LegalHoldNotifications {
 
 			try {
 				$notification = $this->notifications->createNotification();
-				$notification->setApp(Application::APP_ID)
+				$notification->setApp(AppIdentity::APP_ID)
 					->setUser($userId)
 					->setDateTime($this->time->getDateTime())
 					->setObject('legalHoldCase', (string) $case['uuid'])

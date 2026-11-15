@@ -2,7 +2,11 @@
 
 /**
  * Unit tests for the `unified-search-provider` change: the searchable ⟺
- * deep-link invariant on `filinq_register.json` + `src/manifest.json`.
+ * deep-link invariant on `filinq_register.json` + `src/manifest.json` (with its
+ * `src/manifest.d/` fragments).
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  *
  * Filinq registers NO `OCP\Search\IProvider` of its own — it contributes to
  * OpenRegister's shared `openregister_objects` Unified Search provider (ADR-022)
@@ -69,6 +73,17 @@ class UnifiedSearchConsistencyTest extends TestCase {
 		$this->assertIsArray($register, 'filinq_register.json must be valid JSON');
 		$this->assertIsArray($manifest, 'src/manifest.json must be valid JSON');
 
+		// The SPA merges the src/manifest.d/ fragments (ADR-037) onto the
+		// base in file-name order; their pages are part of the manifest.
+		$fragments = glob(__DIR__ . '/../../../src/manifest.d/*.json');
+		$this->assertIsArray(actual: $fragments, message: 'src/manifest.d must be listable');
+		sort($fragments);
+		foreach ($fragments as $file) {
+			$fragment = json_decode((string) file_get_contents($file), true);
+			$this->assertIsArray(actual: $fragment, message: basename($file) . ' must be valid JSON');
+			$manifest['pages'] = array_merge(($manifest['pages'] ?? []), ($fragment['pages'] ?? []));
+		}
+
 		$this->register = $register;
 		$this->manifest = $manifest;
 
@@ -127,13 +142,17 @@ class UnifiedSearchConsistencyTest extends TestCase {
 	 * `read` (register v7.9.0). Widening this list again is the same decision
 	 * and deserves the same thought.
 	 *
+	 * `documentContract` became navigable with its contract page
+	 * (contract-lifecycle-management, 2026-09-30). Its schema grants read to
+	 * `filinq-contract-managers` only, so search answers nobody else.
+	 *
 	 * @return void
 	 */
 	public function testOnlyNavigableSchemasAreSearchable(): void {
 		$searchable = $this->searchableSchemas();
 		sort($searchable);
 		$this->assertSame(
-			['customDictionary', 'dossier', 'publicationConsent', 'signingRequest', 'template'],
+			['customDictionary', 'documentContract', 'dossier', 'publicationConsent', 'signingRequest', 'template'],
 			$searchable,
 			'Only navigable schemas may be searchable — every other schema must be '
 			. 'searchable:false to avoid dead Unified Search results'

@@ -1,0 +1,43 @@
+{
+	"labels": [
+		[
+			"open",
+			"[t] Open"
+		],
+		[
+			"in-review",
+			"[t] In review"
+		],
+		[
+			"processed",
+			"[t] Processed"
+		],
+		[
+			"published",
+			"[t] Published"
+		],
+		[
+			"closed",
+			"[t] Closed"
+		],
+		[
+			"",
+			"[t] Open"
+		],
+		[
+			"undefined",
+			"[t] Open"
+		],
+		[
+			"archived",
+			"[t] Open"
+		]
+	],
+	"colors": {
+		"[t] Open": "default",
+		"[t] In review": "warning",
+		"[t] Processed": "primary",
+		"[t] Published": "success",
+		"[t] Closed": "default"
+	}
+}

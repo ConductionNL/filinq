@@ -25,15 +25,18 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
-use OCA\Filinq\Service\Redaction\DownloadAgreementGate;
-use OCA\Filinq\Service\Redaction\PublicationListComposer;
-use OCA\Filinq\Service\Redaction\RedactionOutputGuard;
+use OCA\Filinq\Kernel\Contracts\AnonymizeRequestServiceInterface;
+use OCA\Filinq\Kernel\Contracts\DownloadAgreementGateInterface;
+use OCA\Filinq\Kernel\Contracts\PublicationListComposerInterface;
+use OCA\Filinq\Kernel\Contracts\RedactionOutputGuardInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUserSession;
+use Psr\Log\LoggerInterface;
 use Throwable;
 
 /**
@@ -48,26 +51,38 @@ use Throwable;
  * @spec openspec/changes/redaction-and-what-leaves-the-building/specs/redaction-output-guarantee/spec.md
  */
 class RedactionOutputController extends Controller {
+	use AnswersNotAuthenticated;
+
+	/**
+	 * How many documents one status read may ask about.
+	 */
+	private const MAX_STATUS_IDS = 100;
 
 	/**
 	 * Constructor.
 	 *
 	 * @param string                  $appName     The app name.
 	 * @param IRequest                $request     The request.
-	 * @param RedactionOutputGuard    $guard       The human review gate.
-	 * @param PublicationListComposer $composer    The publication list.
-	 * @param DownloadAgreementGate   $agreements  The download conditions.
+	 * @param RedactionOutputGuardInterface    $guard       The human review gate.
+	 * @param PublicationListComposerInterface $composer    The publication list.
+	 * @param DownloadAgreementGateInterface   $agreements  The download conditions.
 	 * @param IUserSession            $userSession The current session.
+	 * @param AnonymizeRequestServiceInterface $access      The per-file access check.
+	 * @param IL10N                   $l10n        The translator.
+	 * @param LoggerInterface         $logger      The logger.
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly RedactionOutputGuard $guard,
-		private readonly PublicationListComposer $composer,
-		private readonly DownloadAgreementGate $agreements,
+		private readonly RedactionOutputGuardInterface $guard,
+		private readonly PublicationListComposerInterface $composer,
+		private readonly DownloadAgreementGateInterface $agreements,
 		private readonly IUserSession $userSession,
+		private readonly AnonymizeRequestServiceInterface $access,
+		private readonly IL10N $l10n,
+		private readonly LoggerInterface $logger,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 
@@ -87,15 +102,25 @@ class RedactionOutputController extends Controller {
 	 * @return JSONResponse The stored mark, or the refusal.
 	 *
 	 * @spec openspec/changes/redaction-and-what-leaves-the-building/specs/redaction-output-guarantee/spec.md
+	 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-2
+	 *
+	 * @no-admin-idor-exempt AnonymizeRequestService::verifyFileAccess() refuses a file outside the
+	 * caller's user folder before anything is written, and the mark is saved with OpenRegister RBAC on
+	 * (redactionReviewMark create: filinq-woo-officers, filinq-policy-admins).
 	 */
 	#[NoAdminRequired]
 	public function markChecked(int $fileId, array $entities = [], string $note = ''): JSONResponse {
 		$user = $this->userSession->getUser();
 		if ($user === null) {
 			return new JSONResponse(
-				data: ['error' => 'A check is signed by a person, and this request has none.'],
+				data: ['error' => $this->l10n->t('A check is signed by a person, and this request has none.')],
 				statusCode: Http::STATUS_UNAUTHORIZED
 			);
+		}
+
+		$denied = $this->access->verifyFileAccess(fileId: $fileId);
+		if ($denied !== null) {
+			return new JSONResponse(data: $denied['body'], statusCode: $denied['status']);
 		}
 
 		try {
@@ -106,8 +131,12 @@ class RedactionOutputController extends Controller {
 				note: $note
 			);
 		} catch (Throwable $e) {
+			$this->logger->error(
+				'The review mark could not be recorded',
+				['fileId' => $fileId, 'exception' => $e]
+			);
 			return new JSONResponse(
-				data: ['error' => $e->getMessage()],
+				data: ['error' => $this->l10n->t('The check could not be recorded, so the document is still not checked. Try again.')],
 				statusCode: Http::STATUS_INTERNAL_SERVER_ERROR
 			);
 		}
@@ -115,6 +144,46 @@ class RedactionOutputController extends Controller {
 		return new JSONResponse(data: $mark);
 
 	}//end markChecked()
+
+	/**
+	 * The latest review mark of each listed document the caller can open.
+	 *
+	 * A document the caller cannot open is left out, the same as one nobody
+	 * checked, so the answer says nothing about files outside their reach.
+	 *
+	 * @param string $fileIds Comma separated file ids.
+	 *
+	 * @return JSONResponse `{marks: {fileId: {checkedBy, checkedAt, entityCount}}}`.
+	 *
+	 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-3
+	 *
+	 * @no-admin-idor-exempt every requested id passes AnonymizeRequestService::verifyFileAccess() (the
+	 * caller's user folder) before its mark is read; ids the caller cannot read are dropped.
+	 */
+	#[NoAdminRequired]
+	public function checkedStatus(string $fileIds = ''): JSONResponse {
+		if ($this->userSession->getUser() === null) {
+			return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
+		}
+
+		$ids = array_values(array_unique(array_filter(array_map('intval', explode(',', $fileIds)))));
+		if (count($ids) > self::MAX_STATUS_IDS) {
+			return new JSONResponse(
+				data: ['error' => $this->l10n->t('Ask about at most %s documents at a time.', [self::MAX_STATUS_IDS])],
+				statusCode: Http::STATUS_BAD_REQUEST
+			);
+		}
+
+		$readable = array_values(
+			array_filter(
+				$ids,
+				fn (int $id): bool => $this->access->verifyFileAccess(fileId: $id) === null
+			)
+		);
+
+		return new JSONResponse(data: ['marks' => $this->guard->marksFor(fileIds: $readable)]);
+
+	}//end checkedStatus()
 
 	/**
 	 * Compose a publication list over one saved view.
@@ -125,6 +194,9 @@ class RedactionOutputController extends Controller {
 	 * @return JSONResponse The list, or what is not ready.
 	 *
 	 * @spec openspec/changes/redaction-and-what-leaves-the-building/specs/redaction-output-guarantee/spec.md
+	 *
+	 * @no-admin-idor-exempt the view is resolved by OpenRegister ViewService::find() with the session user
+	 * as owner (own or public views only), and its records are read with RBAC on (SavedViewReader).
 	 */
 	#[NoAdminRequired]
 	public function composeList(string $view, string $title = ''): JSONResponse {
@@ -146,6 +218,9 @@ class RedactionOutputController extends Controller {
 	 * @return JSONResponse The decision and the terms.
 	 *
 	 * @spec openspec/changes/redaction-and-what-leaves-the-building/specs/redaction-output-guarantee/spec.md
+	 *
+	 * @no-admin-idor-exempt caller-scoped. The acceptance is looked up for the session user only
+	 * (personAsking()), and the terms come from the downloadAgreement schema with OpenRegister RBAC on.
 	 */
 	#[NoAdminRequired]
 	public function agreement(string $document): JSONResponse {
@@ -164,6 +239,9 @@ class RedactionOutputController extends Controller {
 	 * @return JSONResponse The decision.
 	 *
 	 * @spec openspec/changes/redaction-and-what-leaves-the-building/specs/redaction-output-guarantee/spec.md
+	 *
+	 * @no-admin-idor-exempt caller-scoped. It records an acceptance for the session user only
+	 * (personAsking()) and cannot act for anybody else.
 	 */
 	#[NoAdminRequired]
 	public function acceptAgreement(string $document, string $version): JSONResponse {

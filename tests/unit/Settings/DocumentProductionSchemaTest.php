@@ -15,6 +15,9 @@
  * @link https://www.filinq.app
  *
  * @spec openspec/specs/document-creatie-sjablonen/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\Filinq\Tests\Unit\Settings;
@@ -123,8 +126,11 @@ class DocumentProductionSchemaTest extends TestCase {
 		// purpose — an importer will skip a schema whose `properties`,
 		// `required` and `authorization` are all unchanged, so a number that
 		// never moves is how a property edit lands on one instance and not on
-		// the next. 1.4.0 since `multi-format-output` (`outputs`).
-		$this->assertSame('1.4.0', $document['version']);
+		// the next. 1.4.0 since `multi-format-output` (`outputs`). 1.5.0 since
+		// `generated-document-names-its-template-version` (optional templateVersion).
+		// 1.6.0 since `guided-document-wizard` (optional wizardContext).
+		// 1.7.0 since `generate-store-in-case-system` (optional caseSystemDeliveryId).
+		$this->assertSame('1.7.0', $document['version']);
 		$this->assertArrayHasKey(
 			'documentDueForReview',
 			$document['x-openregister-notifications'],
@@ -154,9 +160,10 @@ class DocumentProductionSchemaTest extends TestCase {
 		$this->assertIsArray($declaration, 'a template must be able to declare a plain-language counterpart.');
 		// 1.4.0 since filinq-configurable-report-templates, which added `slug`
 		// and `tenantId`; 1.4.1 since both moved inside `properties` (see
-		// SchemaSlugIntegrityTest). An importer skips an unchanged version, so
-		// this pin moves whenever the schema actually does.
-		$this->assertSame('1.4.1', $schemas['template']['version']);
+		// SchemaSlugIntegrityTest); 1.5.0 since template-merge-preview added
+		// `mergeFields`. An importer skips an unchanged version, so this pin
+		// moves whenever the schema actually does.
+		$this->assertSame(expected: '1.5.0', actual: $schemas['template']['version']);
 
 		foreach (['templateId', 'requiredStatements', 'source'] as $part) {
 			$this->assertArrayHasKey(

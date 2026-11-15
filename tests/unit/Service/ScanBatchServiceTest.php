@@ -15,6 +15,9 @@
  * @link https://www.filinq.app
  *
  * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\Filinq\Tests\Unit\Service;
@@ -26,6 +29,8 @@ use OCA\Filinq\Service\ScanBatchService;
 use OCA\Filinq\Service\ScanPageReader;
 use OCA\Filinq\Service\SeparatorSheetService;
 use OCP\EventDispatcher\IEventDispatcher;
+use Opis\JsonSchema\Errors\ErrorFormatter;
+use Opis\JsonSchema\Validator;
 use OCP\Files\File;
 use OCP\Files\Folder;
 use PHPUnit\Framework\TestCase;
@@ -103,6 +108,7 @@ class ScanBatchServiceTest extends TestCase {
 		array $texts,
 		bool $readerAvailable = true,
 		array $weights = [],
+		?\Throwable $readFails = null,
 	): ScanBatchService {
 		$pagesByBytes = [];
 		$pages = [];
@@ -114,7 +120,11 @@ class ScanBatchServiceTest extends TestCase {
 
 		$reader = $this->createMock(ScanPageReader::class);
 		$reader->method('isAvailable')->willReturn($readerAvailable);
-		$reader->method('pages')->willReturn($pages);
+		if ($readFails !== null) {
+			$reader->method('pages')->willThrowException($readFails);
+		} else {
+			$reader->method('pages')->willReturn($pages);
+		}
 		$reader->method('text')->willReturnCallback(
 			static fn (string $page): string => (string)($pagesByBytes[$page]['text'] ?? '')
 		);
@@ -470,4 +480,221 @@ class ScanBatchServiceTest extends TestCase {
 		$this->assertSame('scan', $this->dispatched[0]->getChannel());
 
 	}//end testTheSplitterAssignsNothing()
+
+	/**
+	 * Receiving a batch stores one the `scanBatch` schema admits, in `received`,
+	 * with the scanner and the separator mode of its profile.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/scan-intake-with-separator-sheets/tasks.md#task-5.1
+	 */
+	public function testReceiveStoresABatchTheSchemaAdmits(): void {
+		$file = $this->createMock(File::class);
+		$file->method('getId')->willReturn(42);
+
+		$stored = $this->service(texts: [])->receive(file: $file, profile: ['id' => 'postkamer', 'separatorMode' => 'blankPage']);
+
+		$this->assertSame('received', $stored['status']);
+		$this->assertSame(42, $stored['file']);
+		$this->assertSame('postkamer', $stored['scannerId']);
+		$this->assertSame('blankPage', $stored['separatorMode']);
+		$this->assertValidScanBatch(batch: $this->stored[0]);
+
+	}//end testReceiveStoresABatchTheSchemaAdmits()
+
+	/**
+	 * A profile naming no known mode falls back to QR, a value the schema admits.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/scan-intake-with-separator-sheets/tasks.md#task-5.1
+	 */
+	public function testAnUnknownModeIsReceivedAsQr(): void {
+		$file = $this->createMock(File::class);
+		$file->method('getId')->willReturn(7);
+
+		$stored = $this->service(texts: [])->receive(file: $file, profile: ['id' => 'balie', 'separatorMode' => 'barcode']);
+
+		$this->assertSame('qr', $stored['separatorMode']);
+		$this->assertValidScanBatch(batch: $this->stored[0]);
+
+	}//end testAnUnknownModeIsReceivedAsQr()
+
+	/**
+	 * Every batch a split stores, split or failed, is one the schema admits.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/scan-intake-with-separator-sheets/tasks.md#task-5.1
+	 */
+	public function testEveryBatchASplitStoresIsOneTheSchemaAdmits(): void {
+		$this->service(texts: ['een', 'filinq:sep:v1:postkamer', 'twee'])->split(
+			batch: ['uuid' => 'batch-1', 'file' => 42, 'scannerId' => 'postkamer', 'status' => 'received'],
+			profile: ['id' => 'postkamer', 'separatorMode' => 'qr'],
+			file: $this->batchFile(),
+			target: $this->targetFolder()
+		);
+		$this->service(texts: ['een'], readerAvailable: false)->split(
+			batch: ['uuid' => 'batch-2', 'file' => 43, 'scannerId' => 'postkamer', 'status' => 'received'],
+			profile: ['id' => 'postkamer', 'separatorMode' => 'qr'],
+			file: $this->batchFile(),
+			target: $this->targetFolder()
+		);
+
+		$this->assertNotSame([], $this->stored);
+		foreach ($this->stored as $batch) {
+			$this->assertValidScanBatch(batch: $batch);
+		}
+
+	}//end testEveryBatchASplitStoresIsOneTheSchemaAdmits()
+
+	/**
+	 * Validate a stored batch against the real `scanBatch` fragment of the register.
+	 *
+	 * @param array<string, mixed> $batch The batch as it would be saved.
+	 *
+	 * @return void
+	 */
+	private function assertValidScanBatch(array $batch): void {
+		$register = json_decode((string)file_get_contents(__DIR__ . '/../../../lib/Settings/filinq_register.json'));
+		$schema = $register->components->schemas->scanBatch;
+		$properties = new \stdClass();
+		foreach ($schema->properties as $name => $property) {
+			$copy = clone $property;
+			// A boolean `required` on a property is OpenRegister's, not JSON Schema's.
+			unset($copy->required);
+			$properties->{$name} = $copy;
+		}
+
+		$jsonSchema = (object)[
+			'type' => 'object',
+			'required' => $schema->required,
+			'properties' => $properties,
+			'additionalProperties' => false,
+		];
+		unset($batch['uuid']);
+		$result = (new Validator())->validate(json_decode((string)json_encode($batch)), json_encode($jsonSchema));
+		$message = '';
+		if ($result->isValid() === false) {
+			$message = (string)json_encode((new ErrorFormatter())->format($result->error()));
+		}
+
+		$this->assertTrue($result->isValid(), 'scanBatch payload refused: ' . $message);
+
+	}//end assertValidScanBatch()
+
+	/**
+	 * A split stores exactly this batch and announces every segment with
+	 * exactly these values; the profile names the scanner when the batch does not.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 */
+	public function testASplitStoresAndAnnouncesExactlyThis(): void {
+		$service = $this->service(texts: ['een', 'twee', 'filinq:sep:v1:postkamer:2026-0042', 'drie']);
+
+		$batch = $service->split(
+			batch: ['uuid' => 'batch-7', 'status' => 'received'],
+			profile: ['id' => 'balie', 'separatorMode' => 'qr'],
+			file: $this->batchFile(),
+			target: $this->targetFolder()
+		);
+
+		$this->assertSame(
+			[
+				'uuid' => 'batch-7',
+				'status' => 'split',
+				'pageCount' => 4,
+				'segments' => [
+					['fileId' => 9001, 'name' => 'scan-balie-01.pdf', 'firstPage' => 1, 'pages' => 2, 'sourceRef' => ''],
+					['fileId' => 9002, 'name' => 'scan-balie-02.pdf', 'firstPage' => 4, 'pages' => 1, 'sourceRef' => '2026-0042'],
+				],
+			],
+			$batch
+		);
+		$this->assertCount(1, $this->stored);
+		$announced = array_map(
+			static fn (IntakeDocumentReceivedEvent $event): array => [$event->getFileId(), $event->getFileName(), $event->getSubject(), $event->getSender(), $event->getSourceRef()],
+			$this->dispatched
+		);
+		$this->assertSame(
+			[
+				[9001, 'scan-balie-01.pdf', 'scan-balie-01.pdf', 'balie', ''],
+				[9002, 'scan-balie-02.pdf', 'scan-balie-02.pdf', 'balie', '2026-0042'],
+			],
+			$announced
+		);
+
+	}//end testASplitStoresAndAnnouncesExactlyThis()
+
+	/**
+	 * Every way a split fails stores the batch once, failed, with exactly this reason.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 */
+	public function testEveryFailureStoresExactlyThisReason(): void {
+		$cases = [
+			'no reader' => [
+				$this->service(texts: ['een'], readerAvailable: false),
+				['uuid' => 'b', 'status' => 'failed', 'lastError' => 'This instance cannot read text off a scanned page, so the separator sheets in this batch could not be seen. Nothing was delivered.'],
+			],
+			'unreadable' => [
+				$this->service(texts: ['een'], readFails: new \RuntimeException('not a PDF')),
+				['uuid' => 'b', 'status' => 'failed', 'lastError' => 'not a PDF'],
+			],
+			'empty' => [
+				$this->service(texts: []),
+				['uuid' => 'b', 'pageCount' => 0, 'status' => 'failed', 'lastError' => 'The batch holds no pages.'],
+			],
+			'only separators' => [
+				$this->service(texts: ['filinq:sep:v1:postkamer', 'filinq:sep:v1:postkamer']),
+				['uuid' => 'b', 'pageCount' => 2, 'status' => 'failed', 'lastError' => 'Every page in this batch is a separator, so there is nothing between them to deliver.'],
+			],
+		];
+
+		foreach ($cases as $name => [$service, $expected]) {
+			$this->stored = [];
+			$batch = $service->split(batch: ['uuid' => 'b'], profile: ['id' => 'p'], file: $this->batchFile(), target: $this->targetFolder());
+			$this->assertSame($expected, $batch, $name);
+			$this->assertSame([$expected], $this->stored, $name);
+		}
+
+	}//end testEveryFailureStoresExactlyThisReason()
+
+	/**
+	 * A segment that cannot be written fails the batch, naming the segment, and records no segments.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 */
+	public function testASegmentThatCannotBeWrittenFailsTheBatch(): void {
+		$service = $this->service(texts: ['een', 'filinq:sep:v1:postkamer', 'twee']);
+		$folder = $this->createMock(Folder::class);
+		$folder->method('getNonExistingName')->willReturnArgument(0);
+		$calls = 0;
+		$folder->method('newFile')->willReturnCallback(
+			function (string $name) use (&$calls): File {
+				$calls++;
+				if ($calls === 2) {
+					throw new \RuntimeException('disk full');
+				}
+
+				$file = $this->createMock(File::class);
+				$file->method('getId')->willReturn(42);
+
+				return $file;
+			}
+		);
+
+		$batch = $service->split(batch: ['uuid' => 'b', 'scannerId' => 's'], profile: [], file: $this->batchFile(), target: $folder);
+
+		$this->assertSame(['uuid' => 'b', 'scannerId' => 's', 'pageCount' => 3, 'status' => 'failed', 'lastError' => 'Segment 2 could not be written: disk full'], $batch);
+		$this->assertCount(1, $this->dispatched);
+
+	}//end testASegmentThatCannotBeWrittenFailsTheBatch()
 }//end class

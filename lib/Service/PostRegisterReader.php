@@ -22,6 +22,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\PostRegisterReaderInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -44,28 +45,7 @@ use Throwable;
  *
  * @spec openspec/changes/documents-in-and-out-of-the-building/specs/document-register/spec.md
  */
-class PostRegisterReader {
-
-	/**
-	 * The register the entries live in.
-	 */
-	public const REGISTER = 'filinq';
-
-	/**
-	 * The schema the entries live in.
-	 */
-	public const SCHEMA = 'documentRegistration';
-
-	/**
-	 * The direction of a document that came in.
-	 *
-	 * 🔴 THE VALUE IS THE SCHEMA'S, NOT THE PROSE'S. `documentRegistration`
-	 * declares `enum: [inbound, outbound]`, and OpenRegister refuses anything
-	 * else on save, so no row can ever carry `incoming`. Filtering on the word
-	 * the proposal uses returned an empty open-post list on every unit, with
-	 * no error and nothing in the log to say the filter matched nothing.
-	 */
-	public const DIRECTION_INBOUND = 'inbound';
+class PostRegisterReader implements PostRegisterReaderInterface {
 
 	/**
 	 * Collaborators.
@@ -168,6 +148,29 @@ class PostRegisterReader {
 			return [];
 		}
 
+		$open = [];
+		foreach ((array)$this->inboundFor(unitId: $unitId) as $entry) {
+			$entry = $this->plain(row: $entry);
+			if ($entry !== null && $this->isUndischarged(entry: $entry) === true) {
+				$open[] = $entry;
+			}
+		}
+
+		usort($open, [$this, 'oldestFirst']);
+
+		return $open;
+	}//end openPostFor()
+
+	/**
+	 * A unit's inbound registrations, as the register returns them.
+	 *
+	 * @param string $unitId The organisational unit, trimmed.
+	 *
+	 * @return mixed The search result.
+	 *
+	 * @throws Throwable When the register could not be read.
+	 */
+	private function inboundFor(string $unitId): mixed {
 		try {
 			// 🔴 SLUGS GO THROUGH `searchObjectsBySlug`, NEVER `searchObjects`.
 			// Slugs handed to `searchObjects` come back as zero rows and no
@@ -195,31 +198,27 @@ class PostRegisterReader {
 			throw $e;
 		}
 
-		$open = [];
-		foreach ((array)$results as $entry) {
-			$entry = $this->plain(row: $entry);
-			if ($entry === null) {
-				continue;
-			}
+		return $results;
+	}//end inboundFor()
 
-			$uuid = trim((string)($entry['id'] ?? $entry['uuid'] ?? ''));
-			if ($uuid === '') {
-				continue;
-			}
-
-			// A failed read raises inside answersFor() rather than reporting "no
-			// answers", and that raise is deliberately not caught here.
-			if ($this->answersFor(inboundUuid: $uuid) !== []) {
-				continue;
-			}
-
-			$open[] = $entry;
+	/**
+	 * Whether an inbound entry has an id and no outbound answer yet.
+	 *
+	 * A failed read raises inside answersFor() rather than reporting "no
+	 * answers", and that raise is deliberately not caught here.
+	 *
+	 * @param array<string, mixed> $entry The plain entry.
+	 *
+	 * @return bool True when the entry is still open.
+	 */
+	private function isUndischarged(array $entry): bool {
+		$uuid = trim((string)($entry['id'] ?? $entry['uuid'] ?? ''));
+		if ($uuid === '') {
+			return false;
 		}
 
-		usort($open, [$this, 'oldestFirst']);
-
-		return $open;
-	}//end openPostFor()
+		return $this->answersFor(inboundUuid: $uuid) === [];
+	}//end isUndischarged()
 
 	/**
 	 * A unit's series, read from the register and accounted for end to end.

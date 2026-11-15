@@ -39,6 +39,8 @@ $extra = [
         ['name' => 'setup#saveConfig', 'url' => '/api/setup/config',           'verb' => 'POST'],
         ['name' => 'metrics#index', 'url' => 'api/metrics', 'verb' => 'GET'],
         ['name' => 'health#index', 'url' => 'api/health', 'verb' => 'GET'],
+        // The OpenAPI document, public (spec api-contract).
+        ['name' => 'openApi#show', 'url' => '/api/openapi.json', 'verb' => 'GET'],
 
         // Settings routes.
         ['name' => 'settings#index', 'url' => 'api/settings', 'verb' => 'GET'],
@@ -70,6 +72,10 @@ $extra = [
         ['name' => 'version#restore', 'url' => 'api/documents/{fileId}/versions/{versionTimestamp}/restore', 'verb' => 'POST'],
 
         // Final document routes (final-documents-frozen).
+        // intake-pdf-password-removal: unlock a password-protected PDF into a copy beside it.
+        ['name' => 'pdfPassword#remove', 'url' => 'api/documents/{fileId}/remove-password', 'verb' => 'POST', 'requirements' => ['fileId' => '\\d+']],
+        // ...and the same for a waiting intake document, which then names the copy (REQ-PPR-004).
+        ['name' => 'pdfPassword#removeForIntake', 'url' => 'api/intake/documents/{uuid}/remove-password', 'verb' => 'POST'],
         ['name' => 'finalDocument#show', 'url' => 'api/documents/{fileId}/final', 'verb' => 'GET'],
         ['name' => 'finalDocument#finalise', 'url' => 'api/documents/{fileId}/final', 'verb' => 'POST'],
         ['name' => 'finalDocument#correct', 'url' => 'api/documents/{fileId}/final/correction', 'verb' => 'POST'],
@@ -129,6 +135,7 @@ $extra = [
         // What leaves the building: the review mark, the composed publication
         // list and the conditions a gated download waits on
         // (redaction-and-what-leaves-the-building).
+        ['name' => 'redactionOutput#checkedStatus', 'url' => 'api/redaction/documents/checked', 'verb' => 'GET'],
         ['name' => 'redactionOutput#markChecked', 'url' => 'api/redaction/documents/{fileId}/checked', 'verb' => 'POST', 'requirements' => ['fileId' => '\\d+']],
         ['name' => 'redactionOutput#composeList', 'url' => 'api/redaction/publication-list', 'verb' => 'POST'],
         ['name' => 'redactionOutput#agreement', 'url' => 'api/redaction/agreement', 'verb' => 'GET'],
@@ -187,6 +194,9 @@ $extra = [
         // Custom dictionaries — organisation-managed term-list CRUD + import
         // (custom-dictionary-recognition).
         ['name' => 'customDictionary#index', 'url' => 'api/custom-dictionaries', 'verb' => 'GET'],
+        ['name' => 'customDictionaryCapabilities#show', 'url' => 'api/custom-dictionaries/capabilities', 'verb' => 'GET'],
+        // Office suite WOPI availability (office-suite-portability).
+        ['name' => 'officeCapabilities#show', 'url' => 'api/office/capabilities', 'verb' => 'GET'],
         ['name' => 'customDictionary#create', 'url' => 'api/custom-dictionaries', 'verb' => 'POST'],
         ['name' => 'customDictionary#show', 'url' => 'api/custom-dictionaries/{id}', 'verb' => 'GET'],
         ['name' => 'customDictionary#update', 'url' => 'api/custom-dictionaries/{id}', 'verb' => 'PUT'],
@@ -217,6 +227,35 @@ $extra = [
         ['name' => 'pseudonymisation#status', 'url' => 'api/pseudonymisation/status/{fileId}', 'verb' => 'GET', 'requirements' => ['fileId' => '\\d+']],
         ['name' => 'pseudonymisation#restore', 'url' => 'api/pseudonymisation/{linkId}/restore', 'verb' => 'POST'],
         // Legal hold cases (e-discovery-legal-hold): the hold register, gated on hold authority in the service.
+        // Contracts (contract-lifecycle-management): only the actions; CRUD is OpenRegister's object API.
+        ['name' => 'contract#renew', 'url' => 'api/contracts/{id}/renew', 'verb' => 'POST'],
+        ['name' => 'contract#terminate', 'url' => 'api/contracts/{id}/terminate', 'verb' => 'POST'],
+        ['name' => 'contract#suggest', 'url' => 'api/contracts/{id}/suggestions', 'verb' => 'POST'],
+        ['name' => 'contract#decideSuggestion', 'url' => 'api/contracts/{id}/suggestions/{index}', 'verb' => 'PUT', 'requirements' => ['index' => '\\d+']],
+        ['name' => 'contract#linkSigning', 'url' => 'api/contracts/{id}/signing', 'verb' => 'POST'],
+        ['name' => 'contract#parties', 'url' => 'api/contracts/{id}/parties', 'verb' => 'GET'],
+        // Document sanitization: a clean copy beside the file, and what earlier runs removed.
+        ['name' => 'sanitization#sanitize', 'url' => 'api/sanitization/{fileId}', 'verb' => 'POST', 'requirements' => ['fileId' => '\\d+']],
+        ['name' => 'sanitization#status', 'url' => 'api/sanitization/{fileId}', 'verb' => 'GET', 'requirements' => ['fileId' => '\\d+']],
+        // Email ingestion (email-ingestion): the filed and failed emails, a re-scan, a conversion retry and the inbox mapping. Admins only.
+        ['name' => 'emailIngestion#index', 'url' => 'api/email-ingestion', 'verb' => 'GET'],
+        ['name' => 'emailIngestion#scan', 'url' => 'api/email-ingestion/scan', 'verb' => 'POST'],
+        ['name' => 'emailIngestion#settings', 'url' => 'api/email-ingestion/settings', 'verb' => 'GET'],
+        ['name' => 'emailIngestion#updateSettings', 'url' => 'api/email-ingestion/settings', 'verb' => 'PUT'],
+        ['name' => 'emailIngestion#retry', 'url' => 'api/email-ingestion/{uuid}/convert', 'verb' => 'POST'],
+        // Guided document wizard (guided-document-wizard): author the wizard of a template, find the wizards for an object, prefill a run. Generation stays on api/documents/generate.
+        ['name' => 'wizard#index', 'url' => 'api/wizards', 'verb' => 'GET'],
+        ['name' => 'wizard#create', 'url' => 'api/wizards', 'verb' => 'POST'],
+        ['name' => 'wizard#show', 'url' => 'api/wizards/{id}', 'verb' => 'GET'],
+        ['name' => 'wizard#update', 'url' => 'api/wizards/{id}', 'verb' => 'PUT'],
+        ['name' => 'wizard#destroy', 'url' => 'api/wizards/{id}', 'verb' => 'DELETE'],
+        ['name' => 'wizard#prefill', 'url' => 'api/wizards/{id}/prefill', 'verb' => 'POST'],
+        ['name' => 'wizard#forTemplate', 'url' => 'api/templates/{id}/wizard', 'verb' => 'GET'],
+        // Inbound classification (inbound-auto-classification): suggestions wait for a person; only a confirmation changes the document.
+        ['name' => 'classification#pending', 'url' => 'api/classification/pending', 'verb' => 'GET'],
+        ['name' => 'classification#confirm', 'url' => 'api/classification/{fileId}/confirm', 'verb' => 'POST', 'requirements' => ['fileId' => '\\d+']],
+        ['name' => 'classification#reject', 'url' => 'api/classification/{fileId}/reject', 'verb' => 'POST', 'requirements' => ['fileId' => '\\d+']],
+        ['name' => 'classification#show', 'url' => 'api/classification/{fileId}', 'verb' => 'GET', 'requirements' => ['fileId' => '\\d+']],
         ['name' => 'legalHoldCase#index', 'url' => 'api/legal-holds', 'verb' => 'GET'],
         ['name' => 'legalHoldCase#create', 'url' => 'api/legal-holds', 'verb' => 'POST'],
         ['name' => 'legalHoldCase#status', 'url' => 'api/legal-holds/status/{objectId}', 'verb' => 'GET'],
@@ -260,6 +299,7 @@ $extra = [
         ['name' => 'format#instance', 'url' => 'api/documents/formats', 'verb' => 'GET'],
         ['name' => 'format#template', 'url' => 'api/templates/{id}/formats', 'verb' => 'GET'],
         ['name' => 'document#preview', 'url' => 'api/documents/generate/preview', 'verb' => 'POST'],
+        ['name' => 'document#mergePreview', 'url' => 'api/documents/generate/merge-preview', 'verb' => 'POST'],
         ['name' => 'document#generateBulk', 'url' => 'api/documents/generate/bulk', 'verb' => 'POST'],
         ['name' => 'document#jobStatus', 'url' => 'api/documents/jobs/{jobId}', 'verb' => 'GET'],
 
@@ -301,6 +341,18 @@ $extra = [
         ['name' => 'signing#bulkSign', 'url' => 'api/signing/bulk', 'verb' => 'POST'],
         ['name' => 'signing#verify', 'url' => 'api/signing/verify/{fileId}', 'verb' => 'GET'],
         ['name' => 'signing#getAudit', 'url' => 'api/signing/requests/{id}/audit', 'verb' => 'GET'],
+        // Bulk send (bulk-signing-field-builder REQ-DDBSF-002): upload + report, confirm, progress, cancel.
+        ['name' => 'bulkSigning#index', 'url' => 'api/signing/batches', 'verb' => 'GET'],
+        ['name' => 'bulkSigning#create', 'url' => 'api/signing/batches', 'verb' => 'POST'],
+        ['name' => 'bulkSigning#show', 'url' => 'api/signing/batches/{id}', 'verb' => 'GET'],
+        ['name' => 'bulkSigning#confirm', 'url' => 'api/signing/batches/{id}/confirm', 'verb' => 'POST'],
+        ['name' => 'bulkSigning#cancel', 'url' => 'api/signing/batches/{id}/cancel', 'verb' => 'POST'],
+        // Envelopes (bulk-signing-field-builder REQ-DDBSF-004): several documents, one ceremony.
+        ['name' => 'signingEnvelope#index', 'url' => 'api/signing/envelopes', 'verb' => 'GET'],
+        ['name' => 'signingEnvelope#create', 'url' => 'api/signing/envelopes', 'verb' => 'POST'],
+        ['name' => 'signingEnvelope#show', 'url' => 'api/signing/envelopes/{id}', 'verb' => 'GET'],
+        ['name' => 'signingEnvelope#signAll', 'url' => 'api/signing/envelopes/{id}/sign', 'verb' => 'POST'],
+        ['name' => 'signingEnvelope#cancel', 'url' => 'api/signing/envelopes/{id}/cancel', 'verb' => 'POST'],
 
         // Signer identity rails (signer-identity-rails): the step-up start
         // (signing ownership check in the service) and the broker callback
@@ -310,6 +362,22 @@ $extra = [
         ['name' => 'signerIdentity#callback', 'url' => 'api/signing/identity/callback', 'verb' => 'GET'],
         ['name' => 'signerIdentitySettings#index', 'url' => 'api/settings/signer-identity', 'verb' => 'GET'],
         ['name' => 'signerIdentitySettings#update', 'url' => 'api/settings/signer-identity', 'verb' => 'PUT'],
+
+        // Detection provider (llm-entity-detection-provider): per-organisation
+        // provider choice and the local hermiq agentflow. Admin only: the
+        // attribute and an in-method guard both refuse anyone else.
+        ['name' => 'detectionProviderSettings#index', 'url' => 'api/detection-provider/settings', 'verb' => 'GET'],
+        ['name' => 'detectionProviderSettings#update', 'url' => 'api/detection-provider/settings', 'verb' => 'PUT'],
+        ['name' => 'detectionProviderSettings#test', 'url' => 'api/detection-provider/test', 'verb' => 'POST'],
+
+        // Case-system deliveries (generate-store-in-case-system REQ-GSC-003):
+        // the admin bridge panel's destinations and open deliveries, and the
+        // retry that puts a failed delivery back in the queue. Admin only: the
+        // attribute and an in-method guard both refuse anyone else.
+        ['name' => 'caseSystemDelivery#index', 'url' => 'api/bridge/case-system', 'verb' => 'GET'],
+        ['name' => 'caseSystemDelivery#saveDestination', 'url' => 'api/bridge/destinations', 'verb' => 'POST'],
+        ['name' => 'caseSystemDelivery#retry', 'url' => 'api/bridge/deliveries/{id}/retry', 'verb' => 'POST'],
+        ['name' => 'caseSystemFileStatus#index', 'url' => 'api/bridge/case-system/files', 'verb' => 'GET'],
 
         // Signing folder routes (signing-folder-across-cases): everything
         // pending for one signer across every record, and the pass that signs
@@ -362,7 +430,8 @@ $extra = [
 // Preferred path: the OpenRegister AppHost owns the canonical route table.
 // `class_exists()` autoloads without fatalling when the class is unavailable.
 if (class_exists('OCA\OpenRegister\AppHost\Routes') === true) {
-    return \OCA\OpenRegister\AppHost\Routes::standard($extra);
+    // Every unversioned API route is also served under /api/v1/; see ApiPathAliases.
+    return \OCA\Filinq\Middleware\Support\ApiPathAliases::withVersionedAliases(\OCA\OpenRegister\AppHost\Routes::standard($extra));
 }
 
 // Fallback: openregister is not installed. Reproduce `Routes::standard()`
@@ -407,4 +476,4 @@ foreach ($canonicalRoutes as $canonicalRoute) {
 $mergedRoutes   = array_merge($mergedRoutes, $extra);
 $mergedRoutes[] = $catchAllRoute;
 
-return ['routes' => $mergedRoutes];
+return \OCA\Filinq\Middleware\Support\ApiPathAliases::withVersionedAliases(['routes' => $mergedRoutes]);

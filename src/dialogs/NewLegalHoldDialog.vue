@@ -45,30 +45,27 @@ SPDX-License-Identifier: EUPL-1.2
 			</div>
 		</template>
 		<template #actions>
-			<NcButton :disabled="busy" @click="$emit('close')">
-				{{ t('filinq', 'Cancel') }}
-			</NcButton>
-			<NcButton
-				variant="primary"
-				:disabled="busy || !complete"
-				data-testid="legal-hold-create"
-				@click="onCreate">
-				{{ t('filinq', 'Place hold') }}
-			</NcButton>
+			<CnDialogActions
+				:saving="busy"
+				:canSubmit="complete"
+				:confirmLabel="t('filinq', 'Place hold')"
+				@cancel="$emit('close')"
+				@submit="onCreate" />
 		</template>
 	</NcDialog>
 </template>
 
 <script>
+import { CnDialogActions } from '@conduction/nextcloud-vue'
 import { translate as t } from '@nextcloud/l10n'
 import {
-	NcButton,
 	NcDialog,
 	NcNoteCard,
 	NcSelect,
 	NcTextArea,
 	NcTextField,
 } from '@nextcloud/vue'
+import { createDialogSubmit } from '../mixins/createDialogSubmit.js'
 import { createCase, holdTypeOptions, parseRefs } from '../services/legalHolds.js'
 
 /**
@@ -80,7 +77,7 @@ import { createCase, holdTypeOptions, parseRefs } from '../services/legalHolds.j
 export default {
 	name: 'NewLegalHoldDialog',
 	components: {
-		NcButton,
+		CnDialogActions,
 		NcDialog,
 		NcNoteCard,
 		NcSelect,
@@ -88,7 +85,10 @@ export default {
 		NcTextField,
 	},
 
+	mixins: [createDialogSubmit],
+
 	emits: ['close', 'created'],
+
 	data() {
 		const types = holdTypeOptions()
 		return {
@@ -130,10 +130,8 @@ export default {
 		 * @return {Promise<void>}
 		 * @spec openspec/changes/archive/2026-09-29-e-discovery-legal-hold/tasks.md#task-3.1
 		 */
-		async onCreate() {
-			this.busy = true
-			this.error = ''
-			const answer = await createCase({
+		onCreate() {
+			return this.submitCreate(() => createCase({
 				name: this.name.trim(),
 				holdType: this.holdType?.id,
 				reason: this.reason.trim(),
@@ -141,13 +139,7 @@ export default {
 				custodian: this.custodian.trim(),
 				scopeDocuments: parseRefs(this.documents),
 				scopeDossiers: parseRefs(this.dossiers),
-			})
-			this.busy = false
-			if (!answer.ok) {
-				this.error = answer.error
-				return
-			}
-			this.$emit('created', answer.data)
+			}))
 		},
 	},
 }

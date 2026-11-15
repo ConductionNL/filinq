@@ -24,8 +24,10 @@ namespace OCA\Filinq\Controller;
 
 use Exception;
 use InvalidArgumentException;
-use OCA\Filinq\Service\SigningFolderService;
-use OCA\Filinq\Service\SigningMandateService;
+use OCA\Filinq\Kernel\AppIdentity;
+use OCA\Filinq\Kernel\Contracts\SigningFolderServiceInterface;
+use OCA\Filinq\Kernel\Contracts\SigningMandateServiceInterface;
+use OCA\Filinq\Service\ReadsCurrentUserId;
 use OCA\Filinq\Settings\FilinqAdmin;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -46,17 +48,17 @@ use Psr\Log\LoggerInterface;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
+ * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
  */
 class SigningFolderController extends Controller {
+	use ReadsCurrentUserId;
 
 	/**
 	 * Constructor.
 	 *
-	 * @param string $appName App name.
 	 * @param IRequest $request Request object.
-	 * @param SigningFolderService $folderService The folder query and the pass.
-	 * @param SigningMandateService $mandateService The mandate declarations.
+	 * @param SigningFolderServiceInterface $folderService The folder query and the pass.
+	 * @param SigningMandateServiceInterface $mandateService The mandate declarations.
 	 * @param IUserSession $userSession User session.
 	 * @param LoggerInterface $logger Logger.
 	 * @param IL10N $l10n Localisation.
@@ -64,15 +66,14 @@ class SigningFolderController extends Controller {
 	 * @return void
 	 */
 	public function __construct(
-		string $appName,
 		IRequest $request,
-		private readonly SigningFolderService $folderService,
-		private readonly SigningMandateService $mandateService,
+		private readonly SigningFolderServiceInterface $folderService,
+		private readonly SigningMandateServiceInterface $mandateService,
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
 		private readonly IL10N $l10n,
 	) {
-		parent::__construct(appName: $appName, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 
 	}//end __construct()
 
@@ -84,7 +85,7 @@ class SigningFolderController extends Controller {
 	 *
 	 * @return JSONResponse The folder page.
 	 *
-	 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
 	 */
 	#[NoAdminRequired]
 	public function folder(int $limit = 50, int $offset = 0): JSONResponse {
@@ -109,7 +110,7 @@ class SigningFolderController extends Controller {
 	 *
 	 * @return JSONResponse A result per selected document.
 	 *
-	 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
 	 */
 	#[NoAdminRequired]
 	public function signFolder(): JSONResponse {
@@ -144,7 +145,7 @@ class SigningFolderController extends Controller {
 	 *
 	 * @return JSONResponse The declarations, keyed by type reference.
 	 *
-	 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
 	 */
 	#[AuthorizedAdminSetting(FilinqAdmin::class)]
 	public function mandates(): JSONResponse {
@@ -161,7 +162,7 @@ class SigningFolderController extends Controller {
 	 *
 	 * @return JSONResponse The stored declaration.
 	 *
-	 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
 	 */
 	#[AuthorizedAdminSetting(FilinqAdmin::class)]
 	public function declareMandate(): JSONResponse {
@@ -198,7 +199,7 @@ class SigningFolderController extends Controller {
 	 *
 	 * @return JSONResponse Whether a declaration was withdrawn.
 	 *
-	 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
 	 */
 	#[AuthorizedAdminSetting(FilinqAdmin::class)]
 	public function withdrawMandate(string $typeApp, string $typeSchema): JSONResponse {
@@ -213,23 +214,6 @@ class SigningFolderController extends Controller {
 	}//end withdrawMandate()
 
 	/**
-	 * The calling user, or '' when there is none.
-	 *
-	 * @return string
-	 *
-	 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
-	 */
-	private function currentUserId(): string {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return '';
-		}
-
-		return $user->getUID();
-
-	}//end currentUserId()
-
-	/**
 	 * One generic error body, with the detail in the log.
 	 *
 	 * The signing endpoints deliberately never return an exception message:
@@ -241,7 +225,7 @@ class SigningFolderController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
 	 */
 	private function errorResponse(string $message, Exception $exception): JSONResponse {
 		$this->logger->error($message . ': ' . $exception->getMessage(), ['exception' => $exception]);

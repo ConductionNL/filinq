@@ -1,3 +1,7 @@
+<!--
+  - SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
 <template>
 	<div class="file-viewer-page">
 		<DdFileViewerHeader :title="pageTitle">
@@ -101,7 +105,7 @@
 </template>
 
 <script>
-import { showError, showSuccess } from '@nextcloud/dialogs'
+import { showError } from '@nextcloud/dialogs'
 import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
@@ -121,42 +125,25 @@ import TextViewer from '../../components/viewers/TextViewer.vue'
 import WordViewer from '../../components/viewers/WordViewer.vue'
 import AccessibilityPublishWarningModal from '../../modals/AccessibilityPublishWarningModal.vue'
 import ConformanceReportModal from '../../modals/ConformanceReportModal.vue'
-import { emlPreviewUrl } from '../../services/fileViewerService.js'
-import {
-	fetchOcrStatus,
-	isOcrCandidate,
-	ocrBadgeLabel,
-	ocrErrorMessage,
-	runOcr,
-} from '../../services/ocr.js'
+import { ocrRun } from '../../mixins/ocrRun.js'
+import { fetchOcrStatus, isOcrCandidate, ocrBadgeLabel } from '../../services/ocr.js'
 import { startPublication } from '../../services/publications.js'
 import { publicationReadiness } from '../../services/validationService.js'
+import {
+	detectViewer,
+	viewerComponentFor,
+	viewerPropsFor,
+} from '../../services/viewerRouting.js'
 import { fileViewerStore } from '../../store/store.js'
 
 /**
- * Match a file (by MIME + name) to one of the supported in-app viewers.
- *
- * @param {object} file Current file descriptor from the store.
- * @return {string|null} 'pdf' | 'word' | 'odt' | 'text' | 'eml' | null when unsupported.
+ * Header icon per viewer kind; any other kind shows the generic document icon.
  */
-function detectViewer(file) {
-	if (!file) return null
-	const name = (file.fileName || '').toLowerCase()
-	const mime = (file.mimeType || '').toLowerCase()
-	if (mime.includes('pdf') || name.endsWith('.pdf')) return 'pdf'
-	if (
-		mime
-			=== 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-		|| name.endsWith('.docx')
-	)
-		return 'word'
-	if (mime === 'application/vnd.oasis.opendocument.text' || name.endsWith('.odt'))
-		return 'odt'
-	if (mime === 'message/rfc822' || name.endsWith('.eml')) return 'eml'
-	if (mime.startsWith('text/') || name.match(/\.(txt|md|markdown|log|csv)$/))
-		return 'text'
-	return null
-}
+const FILE_TYPE_ICONS = new Map([
+	['pdf', 'FilePdfBox'],
+	['word', 'FileWordBox'],
+	['odt', 'FileWordBox'],
+])
 
 export default {
 	name: 'FileViewerPage',
@@ -180,6 +167,8 @@ export default {
 		OdtViewer,
 		TextViewer,
 	},
+
+	mixins: [ocrRun],
 
 	data() {
 		return {
@@ -261,23 +250,10 @@ export default {
 		 * Map viewer kind to the actual component name.
 		 *
 		 * @return {string|null}
+		 * @spec openspec/changes/archive/2026-10-09-eml-viewer-preview/tasks.md#task-10
 		 */
 		viewerComponent() {
-			switch (this.viewerKind) {
-				case 'pdf':
-					return 'PdfViewer'
-				case 'word':
-					return 'WordViewer'
-				case 'odt':
-					return 'OdtViewer'
-				case 'text':
-					return 'TextViewer'
-				// EML is rendered as a server-side PDF preview via PdfViewer.
-				case 'eml':
-					return 'PdfViewer'
-				default:
-					return null
-			}
+			return viewerComponentFor(this.viewerKind)
 		},
 
 		/**
@@ -286,14 +262,10 @@ export default {
 		 * endpoint (keyed by file id) rather than the WebDAV path.
 		 *
 		 * @return {object}
+		 * @spec openspec/changes/archive/2026-10-09-eml-viewer-preview/tasks.md#task-10
 		 */
 		viewerProps() {
-			const file = fileViewerStore.currentFile
-			if (!file) return {}
-			if (this.viewerKind === 'eml') {
-				return { path: file.path, url: emlPreviewUrl(file.fileId) }
-			}
-			return { path: file.path }
+			return viewerPropsFor(fileViewerStore.currentFile, this.viewerKind)
 		},
 
 		/**
@@ -302,16 +274,7 @@ export default {
 		 * @return {string}
 		 */
 		fileTypeIcon() {
-			switch (this.viewerKind) {
-				case 'pdf':
-					return 'FilePdfBox'
-				case 'word':
-					return 'FileWordBox'
-				case 'odt':
-					return 'FileWordBox'
-				default:
-					return 'FileDocumentOutline'
-			}
+			return FILE_TYPE_ICONS.get(this.viewerKind) ?? 'FileDocumentOutline'
 		},
 
 		/**
@@ -390,21 +353,11 @@ export default {
 		async runOcrNow() {
 			this.ocrRunning = true
 			try {
-				const result = await runOcr(fileViewerStore.currentFile.fileId)
-				if (result.ocrProcessed) {
+				const result = await this.runOcrAndReport(
+					fileViewerStore.currentFile.fileId,
+				)
+				if (result) {
 					this.ocrResult = result
-					showSuccess(
-						t('filinq', 'OCR read {length} characters.', {
-							length: result.textLength,
-						}),
-					)
-				} else {
-					showError(ocrErrorMessage(result))
-				}
-			} catch (error) {
-				showError(ocrErrorMessage(error))
-				if ([409, 503].includes(error?.response?.status)) {
-					this.ocrAvailable = false
 				}
 			} finally {
 				this.ocrRunning = false

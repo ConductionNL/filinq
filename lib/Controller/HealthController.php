@@ -3,6 +3,9 @@
 /**
  * Health Controller — AppHost adopter by COMPOSITION, not inheritance.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * The `health#index` route resolves to this concrete Filinq class carrying
  * the ADR-006 auth posture (#[PublicPage]). The declarative
  * `observability.health` checks from src/manifest.json are still executed by
@@ -30,16 +33,13 @@
  * @link      https://www.filinq.app
  *
  * @spec openspec/specs/adopt-apphost/spec.md
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
-use OCA\Filinq\AppInfo\Application;
+use OCA\Filinq\Kernel\AppIdentity;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
@@ -95,7 +95,7 @@ class HealthController extends Controller {
 		private readonly IConfig $config,
 		private readonly ContainerInterface $container,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 
 	}//end __construct()
 
@@ -125,7 +125,7 @@ class HealthController extends Controller {
 		if ($body === null) {
 			$body = [
 				'status' => 'degraded',
-				'version' => $this->config->getAppValue(Application::APP_ID, 'installed_version', ''),
+				'version' => $this->config->getAppValue(AppIdentity::APP_ID, 'installed_version', ''),
 				'checks' => ['openregister' => 'unavailable'],
 				'cors' => false,
 				'httpStatus' => Http::STATUS_OK,

@@ -1,0 +1,183 @@
+{
+    "an image with text": {
+        "answer": {
+            "text": "Besluit",
+            "confidence": 87.5,
+            "ocrProcessed": true
+        },
+        "folders": [
+            "anna"
+        ],
+        "runs": 1,
+        "logs": []
+    },
+    "an image without text": {
+        "answer": {
+            "text": "",
+            "confidence": 87.5,
+            "ocrProcessed": false
+        },
+        "folders": [
+            "anna"
+        ],
+        "runs": 1,
+        "logs": []
+    },
+    "a pdf": {
+        "answer": {
+            "text": "Tekst",
+            "confidence": 87.5,
+            "ocrProcessed": true
+        },
+        "folders": [
+            "anna"
+        ],
+        "runs": 1,
+        "logs": []
+    },
+    "a text file": {
+        "answer": {
+            "text": "",
+            "confidence": 0.0,
+            "ocrProcessed": false
+        },
+        "folders": [
+            "anna"
+        ],
+        "runs": 0,
+        "logs": []
+    },
+    "OCR read fails": {
+        "answer": {
+            "text": "",
+            "confidence": 0.0,
+            "ocrProcessed": false
+        },
+        "folders": [
+            "anna"
+        ],
+        "runs": 1,
+        "logs": [
+            [
+                "error",
+                "OCR processing failed",
+                {
+                    "fileId": 7,
+                    "exception": "tesseract crashed"
+                }
+            ]
+        ]
+    },
+    "no such file": {
+        "answer": {
+            "text": "",
+            "confidence": 0.0,
+            "ocrProcessed": false
+        },
+        "folders": [
+            "anna"
+        ],
+        "runs": 0,
+        "logs": [
+            [
+                "warning",
+                "File not found for OCR processing",
+                {
+                    "fileId": 7
+                }
+            ]
+        ]
+    },
+    "a folder": {
+        "answer": {
+            "text": "",
+            "confidence": 0.0,
+            "ocrProcessed": false
+        },
+        "folders": [
+            "anna"
+        ],
+        "runs": 0,
+        "logs": [
+            [
+                "warning",
+                "File not found for OCR processing",
+                {
+                    "fileId": 7
+                }
+            ]
+        ]
+    },
+    "nobody logged in": {
+        "answer": {
+            "text": "",
+            "confidence": 0.0,
+            "ocrProcessed": false
+        },
+        "folders": [],
+        "runs": 0,
+        "logs": [
+            [
+                "warning",
+                "File not found for OCR processing",
+                {
+                    "fileId": 7
+                }
+            ]
+        ]
+    },
+    "another user": {
+        "answer": {
+            "text": "",
+            "confidence": 0.0,
+            "ocrProcessed": false
+        },
+        "folders": [
+            "bert"
+        ],
+        "runs": 0,
+        "logs": [
+            [
+                "warning",
+                "File not found for OCR processing",
+                {
+                    "fileId": 7
+                }
+            ]
+        ]
+    },
+    "OCR switched off": {
+        "answer": {
+            "text": "",
+            "confidence": 0.0,
+            "ocrProcessed": false
+        },
+        "folders": [],
+        "runs": 0,
+        "logs": [
+            [
+                "debug",
+                "OCR is disabled, skipping",
+                []
+            ]
+        ]
+    },
+    "no tesseract": {
+        "answer": {
+            "text": "",
+            "confidence": 0.0,
+            "ocrProcessed": false
+        },
+        "folders": [],
+        "runs": 0,
+        "logs": [
+            [
+                "warning",
+                "Tesseract is not installed, OCR unavailable",
+                {
+                    "fileId": 7
+                }
+            ]
+        ]
+    }
+}

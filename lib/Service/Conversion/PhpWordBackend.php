@@ -3,6 +3,9 @@
 /**
  * PhpWord Conversion Backend
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Reads Word-family inputs via PhpOffice\PhpWord, renders them to HTML
  * with PhpWord's HTML writer, then hands that HTML to PdfService for
  * mPDF rendering. Covers DOC (MsDoc, limited fidelity), DOCX (Word2007),
@@ -28,9 +31,6 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -39,10 +39,12 @@ namespace OCA\Filinq\Service\Conversion;
 
 use OCA\Filinq\Exception\ConversionFailedException;
 use OCA\Filinq\Service\PdfService;
+use OCA\Filinq\Service\StripsFileExtension;
 use OCP\Files\File;
 use OCP\IAppConfig;
 use OCP\ITempManager;
 use PhpOffice\PhpWord\IOFactory;
+use PhpOffice\PhpWord\PhpWord;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -62,6 +64,7 @@ use Throwable;
  * @link      https://www.filinq.app
  */
 class PhpWordBackend implements ConversionBackendInterface {
+	use StripsFileExtension;
 
 	/**
 	 * App config key controlling whether this backend is attempted.
@@ -200,22 +203,6 @@ class PhpWordBackend implements ConversionBackendInterface {
 		return $parent->newFile($outputName, $pdfBytes);
 	}//end convert()
 
-	/**
-	 * Return the lowercased extension of $name without the leading dot.
-	 *
-	 * @param string $name File name, with or without an extension.
-	 *
-	 * @return string Lowercased extension, or an empty string when the name
-	 *                carries no dot.
-	 */
-	private function extractExtension(string $name): string {
-		$dotPos = strrpos($name, '.');
-		if ($dotPos === false) {
-			return '';
-		}
-
-		return strtolower(substr($name, ($dotPos + 1)));
-	}//end extractExtension()
 
 	/**
 	 * Map a source extension onto the PhpWord reader that handles it.
@@ -280,17 +267,10 @@ class PhpWordBackend implements ConversionBackendInterface {
 
 		$bytes = $source->getContent();
 		if (is_string($bytes) === false) {
-			throw new ConversionFailedException(
+			throw (new BackendFailure(
 				message: 'PhpWord backend could not read source content.',
-				attempts: [
-					[
-						'name' => $this->name(),
-						'available' => true,
-						'supports' => true,
-						'reason' => 'getContent returned non-string',
-					],
-				]
-			);
+				reason: 'getContent returned non-string'
+			))->exception(backendName: $this->name());
 		}
 
 		file_put_contents($sourceTmp, $bytes);
@@ -312,54 +292,43 @@ class PhpWordBackend implements ConversionBackendInterface {
 		try {
 			$phpWord = $this->phpWordIo->load($sourceTmp, $readerName);
 		} catch (Throwable $e) {
-			throw new ConversionFailedException(
+			throw (new BackendFailure(
 				message: 'PhpWord could not read source (' . $readerName . '): ' . $e->getMessage(),
-				attempts: [
-					[
-						'name' => $this->name(),
-						'available' => true,
-						'supports' => true,
-						'reason' => 'reader load failed: ' . $e->getMessage(),
-					],
-				],
-				previous: $e
-			);
+				reason: 'reader load failed: ' . $e->getMessage()
+			))->exception(backendName: $this->name(), previous: $e);
 		}
 
+		return $this->writeHtml(phpWord: $phpWord);
+	}//end renderHtml()
+
+	/**
+	 * Write the loaded document as HTML without its `@page` rules, refusing empty output.
+	 *
+	 * @param PhpWord $phpWord The loaded document.
+	 *
+	 * @return string HTML document.
+	 *
+	 * @throws ConversionFailedException When the writer throws or writes nothing.
+	 */
+	private function writeHtml(PhpWord $phpWord): string {
 		try {
 			$html = $this->stripAtPageRules(html: $this->phpWordIo->toHtml($phpWord));
 		} catch (Throwable $e) {
-			throw new ConversionFailedException(
+			throw (new BackendFailure(
 				message: 'PhpWord HTML writer failed: ' . $e->getMessage(),
-				attempts: [
-					[
-						'name' => $this->name(),
-						'available' => true,
-						'supports' => true,
-						'reason' => 'HTML writer getContent failed: ' . $e->getMessage(),
-					],
-				],
-				previous: $e
-			);
+				reason: 'HTML writer getContent failed: ' . $e->getMessage()
+			))->exception(backendName: $this->name(), previous: $e);
 		}
 
 		if ($html === '') {
-			throw new ConversionFailedException(
+			throw (new BackendFailure(
 				message: 'PhpWord HTML writer produced empty output.',
-				attempts: [
-					[
-						'name' => $this->name(),
-						'available' => true,
-						'supports' => true,
-						'reason' => 'HTML writer getContent returned empty',
-					],
-				]
-			);
+				reason: 'HTML writer getContent returned empty'
+			))->exception(backendName: $this->name());
 		}
 
 		return $html;
-	}//end renderHtml()
-
+	}//end writeHtml()
 	/**
 	 * Render the HTML intermediate to PDF/A-3b bytes.
 	 *
@@ -437,20 +406,4 @@ class PhpWordBackend implements ConversionBackendInterface {
 	private function stripAtPageRules(string $html): string {
 		return preg_replace('/@page[^{]*\{[^}]*\}/s', '', $html) ?? $html;
 	}//end stripAtPageRules()
-
-	/**
-	 * Return $name without its trailing `.ext`.
-	 *
-	 * @param string $name File name with extension.
-	 *
-	 * @return string
-	 */
-	private function stripExtension(string $name): string {
-		$dotPos = strrpos($name, '.');
-		if ($dotPos === false) {
-			return $name;
-		}
-
-		return substr($name, 0, $dotPos);
-	}//end stripExtension()
 }//end class

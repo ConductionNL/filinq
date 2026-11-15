@@ -25,6 +25,7 @@ namespace OCA\Filinq\Service;
 
 use InvalidArgumentException;
 use JsonException;
+use OCA\Filinq\Kernel\Contracts\SigningMandateServiceInterface;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
 use RuntimeException;
@@ -50,9 +51,9 @@ use RuntimeException;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
+ * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
  */
-class SigningMandateService {
+class SigningMandateService implements SigningMandateServiceInterface {
 
 	/**
 	 * App config key holding the declarations, as a JSON object keyed by type reference.
@@ -87,7 +88,7 @@ class SigningMandateService {
 	 *
 	 * @return string `<app>/<schema>`, or '' when either half is missing.
 	 *
-	 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
 	 */
 	public function typeReference(array $request): string {
 		$app = trim((string)($request['sourceApp'] ?? ''));
@@ -106,7 +107,7 @@ class SigningMandateService {
 	 *
 	 * @return array<string, array{groups: list<string>, rule: string}>
 	 *
-	 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
 	 */
 	public function declarations(): array {
 		$raw = $this->config->getValueString('filinq', self::CONFIG_KEY, '');
@@ -137,7 +138,7 @@ class SigningMandateService {
 	 *
 	 * @return array{groups: list<string>, rule: string}|null
 	 *
-	 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
 	 */
 	public function declarationFor(string $typeReference): ?array {
 		if ($typeReference === '') {
@@ -161,7 +162,7 @@ class SigningMandateService {
 	 *
 	 * @throws InvalidArgumentException When the reference, the groups or the rule is empty.
 	 *
-	 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
 	 */
 	public function declareMandate(string $typeReference, array $groups, string $rule): array {
 		$typeReference = trim($typeReference);
@@ -206,7 +207,7 @@ class SigningMandateService {
 	 *
 	 * @return bool True when a declaration was withdrawn, false when there was none.
 	 *
-	 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
 	 */
 	public function withdrawMandate(string $typeReference): bool {
 		$declarations = $this->declarations();
@@ -229,7 +230,7 @@ class SigningMandateService {
 	 *
 	 * @return bool True when no declaration restricts the type, or the user holds the mandate.
 	 *
-	 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
 	 */
 	public function maySign(array $request, string $userId): bool {
 		$declaration = $this->declarationFor(
@@ -263,7 +264,7 @@ class SigningMandateService {
 	 *
 	 * @throws RuntimeException When the user is outside the declared mandate.
 	 *
-	 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
 	 */
 	public function assertMaySign(array $request, string $userId): void {
 		if ($this->maySign(request: $request, userId: $userId) === true) {
@@ -291,7 +292,7 @@ class SigningMandateService {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
 	 */
 	private function store(array $declarations): void {
 		$this->config->setValueString('filinq', self::CONFIG_KEY, json_encode($declarations));

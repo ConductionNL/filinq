@@ -1,0 +1,241 @@
+{
+    "everything": {
+        "result": {
+            "id": "log-1"
+        },
+        "saved": [
+            {
+                "generatedAt is ISO 8601": true,
+                "templateId": "tpl-1",
+                "templateName": "Brief",
+                "recipientId": "klant-1",
+                "recipientType": "person",
+                "caseReference": "Z-1",
+                "format": "docx",
+                "status": "generated",
+                "generatedBy": "anna",
+                "errorMessage": null,
+                "rest": [
+                    "filinq",
+                    "correspondence",
+                    null,
+                    true,
+                    true,
+                    false,
+                    null
+                ]
+            }
+        ],
+        "logs": []
+    },
+    "no options": {
+        "result": {
+            "id": "log-2"
+        },
+        "saved": [
+            {
+                "generatedAt is ISO 8601": true,
+                "templateId": "tpl-1",
+                "templateName": "Brief",
+                "recipientId": "klant-1",
+                "recipientType": "",
+                "caseReference": "",
+                "format": "pdf",
+                "status": "generated",
+                "generatedBy": "",
+                "errorMessage": null,
+                "rest": [
+                    "filinq",
+                    "correspondence",
+                    null,
+                    true,
+                    true,
+                    false,
+                    null
+                ]
+            }
+        ],
+        "logs": []
+    },
+    "the configured format": {
+        "result": {
+            "id": "log-3"
+        },
+        "saved": [
+            {
+                "generatedAt is ISO 8601": true,
+                "templateId": "tpl-1",
+                "templateName": "Brief",
+                "recipientId": "klant-1",
+                "recipientType": "",
+                "caseReference": "",
+                "format": "odt",
+                "status": "generated",
+                "generatedBy": "",
+                "errorMessage": null,
+                "rest": [
+                    "filinq",
+                    "correspondence",
+                    null,
+                    true,
+                    true,
+                    false,
+                    null
+                ]
+            }
+        ],
+        "logs": []
+    },
+    "no data refs": {
+        "result": {
+            "id": "log-4"
+        },
+        "saved": [
+            {
+                "generatedAt is ISO 8601": true,
+                "templateId": "tpl-1",
+                "templateName": "Brief",
+                "recipientId": "",
+                "recipientType": "person",
+                "caseReference": "Z-1",
+                "format": "docx",
+                "status": "generated",
+                "generatedBy": "anna",
+                "errorMessage": null,
+                "rest": [
+                    "filinq",
+                    "correspondence",
+                    null,
+                    true,
+                    true,
+                    false,
+                    null
+                ]
+            }
+        ],
+        "logs": []
+    },
+    "a first ref without id": {
+        "result": {
+            "id": "log-5"
+        },
+        "saved": [
+            {
+                "generatedAt is ISO 8601": true,
+                "templateId": "tpl-1",
+                "templateName": "Brief",
+                "recipientId": "",
+                "recipientType": "person",
+                "caseReference": "Z-1",
+                "format": "docx",
+                "status": "generated",
+                "generatedBy": "anna",
+                "errorMessage": null,
+                "rest": [
+                    "filinq",
+                    "correspondence",
+                    null,
+                    true,
+                    true,
+                    false,
+                    null
+                ]
+            }
+        ],
+        "logs": []
+    },
+    "a failure": {
+        "result": {
+            "id": "log-6"
+        },
+        "saved": [
+            {
+                "generatedAt is ISO 8601": true,
+                "templateId": "tpl-1",
+                "templateName": "Brief",
+                "recipientId": "klant-1",
+                "recipientType": "person",
+                "caseReference": "Z-1",
+                "format": "docx",
+                "status": "failed",
+                "generatedBy": "anna",
+                "errorMessage": "template gone",
+                "rest": [
+                    "filinq",
+                    "correspondence",
+                    null,
+                    true,
+                    true,
+                    false,
+                    null
+                ]
+            }
+        ],
+        "logs": []
+    },
+    "an entity answer": {
+        "result": {
+            "id": "log-object"
+        },
+        "saved": [
+            {
+                "generatedAt is ISO 8601": true,
+                "templateId": "tpl-1",
+                "templateName": "Brief",
+                "recipientId": "klant-1",
+                "recipientType": "person",
+                "caseReference": "Z-1",
+                "format": "docx",
+                "status": "generated",
+                "generatedBy": "anna",
+                "errorMessage": null,
+                "rest": [
+                    "filinq",
+                    "correspondence",
+                    null,
+                    true,
+                    true,
+                    false,
+                    null
+                ]
+            }
+        ],
+        "logs": []
+    },
+    "the save fails": {
+        "result": [],
+        "saved": [
+            {
+                "generatedAt is ISO 8601": true,
+                "templateId": "tpl-1",
+                "templateName": "Brief",
+                "recipientId": "klant-1",
+                "recipientType": "person",
+                "caseReference": "Z-1",
+                "format": "docx",
+                "status": "generated",
+                "generatedBy": "anna",
+                "errorMessage": null,
+                "rest": [
+                    "filinq",
+                    "correspondence",
+                    null,
+                    true,
+                    true,
+                    false,
+                    null
+                ]
+            }
+        ],
+        "logs": [
+            [
+                "error",
+                "Failed to log correspondence: register offline",
+                {
+                    "templateId": "tpl-1",
+                    "status": "generated"
+                }
+            ]
+        ]
+    }
+}

@@ -58,7 +58,7 @@ class SavedViewReader {
 	 *
 	 * @var string
 	 */
-	private const VIEW_SERVICE = 'OCA\\OpenRegister\\Service\\ViewService';
+	private const VIEW_SERVICE = 'OCA\\OpenRegister\\Search\\Service\\ViewService';
 
 	/**
 	 * Constructor.

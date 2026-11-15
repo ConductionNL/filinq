@@ -91,7 +91,7 @@ Any reference to `admin` / `admin` in this document below refers to the **local 
 - [ ] On **Standing Consents** click *Add*; the create dialog requires `entityText`, `entityType`, `consentMethod`, and at least one match rule
 - [ ] Leaving `validUntil` blank surfaces the **"no expiry" warning** (non-blocking)
 - [ ] Submit without `consentMethod` is rejected with a 400 error
-- [ ] Posting a standing-consent payload as a non-admin user who is NOT in `docudesk-standing-consent-admins` → 403 (use a second test user to confirm)
+- [ ] Posting a standing-consent payload as a non-admin user who is NOT in `filinq-standing-consent-admins` → 403 (use a second test user to confirm)
 
 ### Scope validation (also exercised by Newman)
 

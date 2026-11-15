@@ -3,7 +3,7 @@
   - SPDX-License-Identifier: EUPL-1.2
   -->
 <template>
-	<div class="filinq-documents-leaf">
+	<div v-if="!summarised" class="filinq-documents-leaf">
 		<p v-if="loading" class="filinq-documents-leaf__state">
 			{{ t('filinq', 'Looking up documents') }}
 		</p>
@@ -12,10 +12,12 @@
 			class="filinq-documents-leaf__state filinq-documents-leaf__state--error">
 			{{ t('filinq', 'The documents could not be loaded') }}
 		</p>
-		<p v-else-if="rows.length === 0" class="filinq-documents-leaf__state">
+		<p
+			v-else-if="rows.length === 0 && !carded"
+			class="filinq-documents-leaf__state">
 			{{ t('filinq', 'No documents yet') }}
 		</p>
-		<ul v-else class="filinq-documents-leaf__list">
+		<ul v-else-if="rows.length > 0" class="filinq-documents-leaf__list">
 			<li
 				v-for="row in rows"
 				:key="row.fileId"
@@ -34,7 +36,11 @@
 </template>
 
 <script>
+import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
+import { documentLinkRows } from './documentLinkRows.js'
+import { hostObjectLeaf } from './hostObjectLeaf.js'
+import { leafReportMixin } from './leafReport.js'
 
 /**
  * The documents Filinq holds for one object.
@@ -46,14 +52,9 @@ import { generateUrl } from '@nextcloud/router'
  */
 export default {
 	name: 'CnFilinqDocumentsWidget',
-	props: {
-		/** The host object's register slug. */
-		register: { type: String, default: '' },
-		/** The host object's schema slug. */
-		schema: { type: String, default: '' },
-		/** The host object's id. */
-		objectId: { type: String, default: '' },
-	},
+
+	extends: hostObjectLeaf,
+	mixins: [leafReportMixin],
 
 	data() {
 		return {
@@ -61,6 +62,23 @@ export default {
 			loading: true,
 			error: false,
 		}
+	},
+
+	computed: {
+		/**
+		 * What this leaf reports to a carding host or a "linked" card.
+		 *
+		 * @return {object} The report.
+		 * @spec openspec/specs/leaves-library-card/spec.md#requirement-the-documents-leaf-reports-to-the-library-card-and-the-linked-card
+		 */
+		leafReport() {
+			return {
+				count: this.rows.length,
+				emptyLabel: t('filinq', 'No documents yet'),
+				noun: t('filinq', 'documents'),
+				rows: documentLinkRows(this.rows),
+			}
+		},
 	},
 
 	mounted() {
@@ -87,60 +105,8 @@ export default {
 		 *
 		 * @spec openspec/changes/leaf-integrations/specs/document-register/spec.md
 		 */
-		async load() {
-			// Without an object there is nothing to list, and asking anyway
-			// would return the caller's whole document set, which is not what
-			// a per-object leaf means.
-			if (this.objectId === '') {
-				this.loading = false
-				return
-			}
-
-			const query = new URLSearchParams({
-				register: this.register,
-				schema: this.schema,
-				id: this.objectId,
-			})
-
-			try {
-				const response = await fetch(
-					generateUrl('/apps/filinq/api/case-documents/files')
-						+ '?'
-						+ query.toString(),
-					{
-						headers: {
-							requesttoken: this.requestToken(),
-							Accept: 'application/json',
-						},
-					},
-				)
-				if (response.ok === false) {
-					this.error = true
-					return
-				}
-				const body = await response.json()
-				this.rows = Array.isArray(body.results) ? body.results : []
-			} catch {
-				this.error = true
-			} finally {
-				this.loading = false
-			}
-		},
-
-		/**
-		 * The current page's request token.
-		 *
-		 * Read from the DOM rather than from `@nextcloud/auth`, because this
-		 * component renders inside ANOTHER app's page and must not assume the
-		 * host bundled the same helper.
-		 *
-		 * @return {string} The token, or an empty string when there is none.
-		 *
-		 * @spec openspec/changes/leaf-integrations/specs/document-register/spec.md
-		 */
-		requestToken() {
-			const head = document.getElementsByTagName('head')[0]
-			return (head && head.getAttribute('data-requesttoken')) || ''
+		load() {
+			return this.loadHostRows('/apps/filinq/api/case-documents/files')
 		},
 	},
 }

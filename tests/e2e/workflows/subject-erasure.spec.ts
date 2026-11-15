@@ -203,7 +203,7 @@ test.describe('subject erasure', () => {
 		await page.getByRole('button', { name: 'New erasure request' }).click()
 		await page.getByLabel('Person to remove').fill('Jan Jansen')
 		await page.getByLabel('Legal ground').fill('AVG artikel 17 lid 1 onder a')
-		await page.getByTestId('subject-erasure-create').click()
+		await page.getByTestId('cn-dialog-actions-submit').click()
 
 		const create = sent.find(
 			(call) =>
@@ -273,7 +273,7 @@ test.describe('subject erasure', () => {
 		await api(page, [])
 		await openPreview(page)
 		await page.getByRole('button', { name: 'Erase' }).first().click()
-		await page.getByTestId('subject-erasure-run').click()
+		await page.getByTestId('cn-dialog-actions-submit').click()
 
 		await expect(page.getByText('Not everything was erased.')).toBeVisible()
 		await expect(
@@ -287,7 +287,7 @@ test.describe('subject erasure', () => {
 		await api(page, [], true)
 		await openPreview(page)
 		await page.getByRole('button', { name: 'Erase' }).first().click()
-		await page.getByTestId('subject-erasure-run').click()
+		await page.getByTestId('cn-dialog-actions-submit').click()
 
 		await expect(
 			page.getByText(

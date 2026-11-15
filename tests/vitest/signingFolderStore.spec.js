@@ -6,7 +6,7 @@
  * (src/store/modules/signing.js): reading the folder, what it keeps, and
  * signing a selection in one pass.
  *
- * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
+ * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
  */
 
 import { createPinia, setActivePinia } from 'pinia'

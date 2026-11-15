@@ -25,13 +25,17 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Tests\Unit\Flow;
 
+use OCA\Filinq\Flow\DirectGenerateDocumentNode;
 use OCA\Filinq\Flow\GenerateDocumentNode;
 use OCA\Filinq\Service\DocumentGenerationRequestService;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\DocumentService;
+use OCA\Filinq\Service\Support\TemplateLookup;
 use OCA\Filinq\Service\TemplateRenderer;
 use OCA\Filinq\Service\TemplateService;
 use OCA\Filinq\Service\TemplateSlugResolver;
+use OCA\OpenRegister\Service\Flow\FlowNodeCall;
+use OCA\OpenRegister\Service\Flow\IFlowDirectlyInvokable;
 use OCA\OpenRegister\Service\Flow\IFlowNodeTaxonomy;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\EventDispatcher\IEventDispatcher;
@@ -98,9 +102,8 @@ class GenerateDocumentNodeTest extends TestCase {
 		$session->method('getUser')->willReturn($user);
 
 		$service = new DocumentGenerationRequestService(
+			lookup: new TemplateLookup(templates: $this->createMock(TemplateService::class), slugs: $this->createMock(TemplateSlugResolver::class)),
 			documents: $this->documents,
-			templates: $this->createMock(TemplateService::class),
-			slugs: $this->createMock(TemplateSlugResolver::class),
 			renderer: $this->createMock(TemplateRenderer::class),
 			objectResolver: $resolver,
 			userSession: $session,
@@ -172,11 +175,11 @@ class GenerateDocumentNodeTest extends TestCase {
 			['json' => ['title' => 'B', '@self' => ['id' => 'obj-b', 'register' => '5', 'schema' => '7']]],
 		];
 
-		$out = $this->node->execute(
+		$out = $this->node->execute(new FlowNodeCall(
 			items: $items,
 			config: ['template' => '{{ title }}', 'metadata' => ['classification' => 'openbaar']],
 			context: []
-		);
+		));
 
 		$this->assertCount(2, $out);
 		$this->assertSame([['register' => '5', 'schema' => '7', 'id' => 'obj-a']], $seen[0]['refs']);
@@ -205,7 +208,7 @@ class GenerateDocumentNodeTest extends TestCase {
 			)
 			->willReturn($this->stored(fileId: 7));
 
-		$out = $this->node->execute(
+		$out = $this->node->execute(new FlowNodeCall(
 			items: [['json' => ['id' => 'item-id']]],
 			config: [
 				'template' => 'x',
@@ -216,12 +219,56 @@ class GenerateDocumentNodeTest extends TestCase {
 				'requestingApp' => 'dossiq',
 			],
 			context: []
-		);
+		));
 
 		$this->assertSame(7, $out[0]['json']['besluitDocument']['fileId']);
 		$this->assertSame('dossiq', $out[0]['json']['besluitDocument']['requestingApp']);
 		$this->assertArrayNotHasKey('document', $out[0]['json']);
 	}//end testConfigNamesTheObjectAndTheOutputKey()
+
+	/**
+	 * Run directly on one subject, the document lands on that subject: a
+	 * configured register/schema/objectId cannot point it at another object,
+	 * because the caller was only checked against the subject.
+	 *
+	 * @return void
+	 */
+	public function testADirectRunFilesOnTheSubjectWhateverTheConfigNames(): void {
+		$this->documents->expects($this->once())
+			->method('generateFromTemplate')
+			->with(
+				$this->anything(),
+				$this->anything(),
+				[['register' => '5', 'schema' => '7', 'id' => 'subject-1']],
+				$this->anything()
+			)
+			->willReturn($this->stored(fileId: 9));
+
+		$out = $this->node->execute(new FlowNodeCall(
+			items: [['json' => ['@self' => ['id' => 'subject-1', 'register' => '5', 'schema' => '7']]]],
+			config: ['template' => 'x', 'register' => 'cases', 'schema' => 'case', 'objectId' => 'someone-elses'],
+			context: ['triggeredBy' => GenerateDocumentNode::DIRECT_TRIGGER, 'nodeId' => 'generate']
+		));
+
+		$this->assertSame(9, $out[0]['json']['document']['fileId']);
+	}//end testADirectRunFilesOnTheSubjectWhateverTheConfigNames()
+
+	/**
+	 * The directly invokable variant opts in, and only it does.
+	 *
+	 * @return void
+	 */
+	public function testOnlyTheDirectVariantOptsInToDirectInvocation(): void {
+		$direct = new DirectGenerateDocumentNode(
+			generator: $this->createMock(DocumentGenerationRequestService::class),
+			urls: $this->createMock(IURLGenerator::class),
+			l10n: $this->createMock(IL10N::class)
+		);
+
+		$this->assertInstanceOf(IFlowDirectlyInvokable::class, $direct);
+		$this->assertSame(GenerateDocumentNode::NODE_ID, $direct->getId());
+		$this->assertNotInstanceOf(IFlowDirectlyInvokable::class, $this->node);
+	}//end testOnlyTheDirectVariantOptsInToDirectInvocation()
 
 	/**
 	 * With targetField the next step sees the text this step stored.
@@ -243,11 +290,11 @@ class GenerateDocumentNodeTest extends TestCase {
 			->method('patchObject')
 			->with('obj-1', ['besluit' => 'Toegekend'], '5', '7');
 
-		$out = $this->node->execute(
+		$out = $this->node->execute(new FlowNodeCall(
 			items: [['json' => ['@self' => ['id' => 'obj-1', 'register' => '5', 'schema' => '7']]]],
 			config: ['template' => 'x', 'storeFile' => false, 'targetField' => 'besluit'],
 			context: []
-		);
+		));
 
 		$this->assertSame('Toegekend', $out[0]['json']['besluit']);
 		$this->assertSame('besluit', $out[0]['json']['document']['targetField']);
@@ -265,7 +312,7 @@ class GenerateDocumentNodeTest extends TestCase {
 		$this->expectException(\Exception::class);
 		$this->expectExceptionCode(404);
 
-		$this->node->execute(items: [['json' => ['id' => 'x']]], config: ['templateId' => 'missing'], context: []);
+		$this->node->execute(new FlowNodeCall(items: [['json' => ['id' => 'x']]], config: ['templateId' => 'missing'], context: []));
 	}//end testAFailureThrowsToTheEngine()
 
 	/**
@@ -301,6 +348,64 @@ class GenerateDocumentNodeTest extends TestCase {
 			$this->assertContains($field['type'], ['text', 'textarea', 'number', 'boolean', 'select']);
 		}
 	}//end testEveryFormFieldEditsAKeyTheNodeReads()
+
+	/**
+	 * The editor form, field by field, with every label and help text translated.
+	 *
+	 * @return void
+	 */
+	public function testConfigFormIsPinned(): void {
+		$l10n = $this->createMock(IL10N::class);
+		$l10n->method('t')->willReturnCallback(static fn (string $text): string => '[nl] ' . $text);
+		$node = new GenerateDocumentNode(
+			generator: $this->createMock(DocumentGenerationRequestService::class),
+			urls: $this->createMock(IURLGenerator::class),
+			l10n: $l10n
+		);
+
+		$form = $node->configForm();
+
+		$this->assertSame(
+			['templateId', 'templateSlug', 'templateNamespace', 'template', 'format', 'filename', 'storeFile', 'targetField', 'output'],
+			array_column($form, 'key')
+		);
+		$this->assertSame(['key', 'label', 'type', 'help'], array_keys($form[0]));
+		$this->assertSame('[nl] Template', $form[0]['label']);
+		$this->assertSame('[nl] Without extension. May use item fields, for example {{ identifier }}.', $form[5]['help']);
+		$this->assertSame('02d2184a91085102b5f166729eb228917026646e', sha1(json_encode($form)));
+	}//end testConfigFormIsPinned()
+
+	/**
+	 * The palette shows a translated name and description and the app icon.
+	 *
+	 * @return void
+	 */
+	public function testPaletteTextsAndIcon(): void {
+		$urls = $this->createMock(IURLGenerator::class);
+		$urls->method('imagePath')->with('filinq', 'app.svg')->willReturn('/apps/filinq/img/app.svg');
+		$urls->method('getAbsoluteURL')->willReturnCallback(static fn (string $path): string => 'https://cloud.example' . $path);
+		$node = new GenerateDocumentNode(
+			generator: $this->createMock(DocumentGenerationRequestService::class),
+			urls: $urls,
+			l10n: $this->createMock(IL10N::class)
+		);
+		$this->assertSame('https://cloud.example/apps/filinq/img/app.svg', $node->getIcon());
+
+		$this->assertSame('Generate document', $this->node->getDisplayName());
+		$this->assertSame('Render a Filinq template for each item and file the document with its object.', $this->node->getDescription());
+	}//end testPaletteTextsAndIcon()
+
+	/**
+	 * A blank output key is refused by the request rules before any document is made.
+	 *
+	 * @return void
+	 */
+	public function testABlankOutputKeyIsRefused(): void {
+		$this->documents->expects($this->never())->method('generateFromTemplate');
+		$this->expectException(\UnexpectedValueException::class);
+
+		$this->node->execute(new FlowNodeCall(items: [['json' => ['id' => 'x']]], config: ['template' => 'x', 'output' => '  '], context: []));
+	}//end testABlankOutputKeyIsRefused()
 
 	/**
 	 * Kind and category come from OpenRegister's closed lists.

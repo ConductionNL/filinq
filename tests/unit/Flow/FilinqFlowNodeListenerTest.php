@@ -24,10 +24,12 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Tests\Unit\Flow;
 
+use OCA\Filinq\Flow\DirectGenerateDocumentNode;
 use OCA\Filinq\Flow\FilinqFlowNodeListener;
 use OCA\Filinq\Flow\GenerateDocumentNode;
 use OCA\Filinq\Service\DocumentGenerationRequestService;
 use OCA\OpenRegister\Service\Flow\FlowNodeRegistry;
+use OCA\OpenRegister\Service\Flow\IFlowDirectlyInvokable;
 use OCA\OpenRegister\Service\Flow\RegisterFlowNodesEvent;
 use OCP\EventDispatcher\Event;
 use OCP\IL10N;
@@ -49,7 +51,36 @@ use RuntimeException;
 class FilinqFlowNodeListenerTest extends TestCase {
 
 	/**
-	 * The node lands in the catalogue under filinq.generate-document.
+	 * On an OpenRegister that knows direct invocation, the node registered is
+	 * the variant that opts in to it, under the same id.
+	 *
+	 * @return void
+	 */
+	public function testRegistersTheDirectlyInvokableVariantWhenOpenRegisterKnowsIt(): void {
+		$node = new DirectGenerateDocumentNode(
+			generator: $this->createMock(DocumentGenerationRequestService::class),
+			urls: $this->createMock(IURLGenerator::class),
+			l10n: $this->createMock(IL10N::class)
+		);
+
+		$container = $this->createMock(ContainerInterface::class);
+		$container->expects($this->once())
+			->method('get')
+			->with(DirectGenerateDocumentNode::class)
+			->willReturn($node);
+
+		$registry = new FlowNodeRegistry();
+		$listener = new FilinqFlowNodeListener(container: $container, logger: $this->createMock(LoggerInterface::class));
+		$listener->handle(new RegisterFlowNodesEvent(registry: $registry));
+
+		$this->assertSame($node, $registry->all()['filinq.generate-document']);
+		$this->assertInstanceOf(IFlowDirectlyInvokable::class, $registry->all()['filinq.generate-document']);
+	}//end testRegistersTheDirectlyInvokableVariantWhenOpenRegisterKnowsIt()
+
+	/**
+	 * On an OpenRegister without direct invocation, the plain node lands in
+	 * the catalogue under filinq.generate-document, and the variant whose
+	 * interface does not exist there is never loaded.
 	 *
 	 * @return void
 	 */
@@ -67,7 +98,16 @@ class FilinqFlowNodeListenerTest extends TestCase {
 			->willReturn($node);
 
 		$registry = new FlowNodeRegistry();
-		$listener = new FilinqFlowNodeListener(container: $container, logger: $this->createMock(LoggerInterface::class));
+		$listener = new class(container: $container, logger: $this->createMock(LoggerInterface::class)) extends FilinqFlowNodeListener {
+			/**
+			 * An OpenRegister without the direct-invocation interface.
+			 *
+			 * @return bool
+			 */
+			protected function directInvocationAvailable(): bool {
+				return false;
+			}//end directInvocationAvailable()
+		};
 		$listener->handle(new RegisterFlowNodesEvent(registry: $registry));
 
 		$this->assertSame(['filinq.generate-document'], array_keys($registry->all()));

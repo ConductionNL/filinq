@@ -20,7 +20,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+ * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -30,6 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\IntakeRoutingServiceInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
@@ -43,16 +44,9 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+ * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
  */
-class IntakeRoutingService {
-
-	/**
-	 * The schema holding the declarations.
-	 *
-	 * @var string
-	 */
-	public const SCHEMA = 'intakeRoutingRule';
+class IntakeRoutingService implements IntakeRoutingServiceInterface {
 
 	/**
 	 * Constructor.
@@ -81,7 +75,7 @@ class IntakeRoutingService {
 	 *
 	 * @throws RuntimeException When the write fails.
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	public function declare(
 		string $declaringApp,
@@ -135,7 +129,7 @@ class IntakeRoutingService {
 	 *
 	 * @return array<string, mixed>|null The declaration, or null when there is none.
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	public function find(string $declaringApp, string $typeReference): ?array {
 		if ($declaringApp === '' || $typeReference === '') {
@@ -184,24 +178,49 @@ class IntakeRoutingService {
 	 * @spec exclude Shape adapter over an OpenRegister response.
 	 */
 	private function normalise(mixed $row): ?array {
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			$row = $row->jsonSerialize();
-		}
-
+		$row = $this->plainRow(row: $row);
 		if (is_array($row) === false) {
 			return null;
 		}
 
-		$fields = $row;
-		if (isset($row['object']) === true && is_array($row['object']) === true) {
-			$fields = $row['object'];
-		}
-
+		$fields = $this->fieldsOf(row: $row);
 		$fields['uuid'] = (string)($fields['uuid'] ?? ($row['uuid'] ?? ($row['@self']['id'] ?? ($row['id'] ?? ''))));
 
 		return $fields;
 
 	}//end normalise()
+
+	/**
+	 * The row as it serialises, when it is a serialisable object.
+	 *
+	 * @param mixed $row The stored row.
+	 *
+	 * @return mixed The serialised row, or the row itself.
+	 */
+	private function plainRow(mixed $row): mixed {
+		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
+			return $row->jsonSerialize();
+		}
+
+		return $row;
+
+	}//end plainRow()
+
+	/**
+	 * The routing fields of a row: its wrapped `object` payload when it has one, otherwise the row.
+	 *
+	 * @param array<string, mixed> $row The plain row.
+	 *
+	 * @return array<string, mixed> The fields.
+	 */
+	private function fieldsOf(array $row): array {
+		if (isset($row['object']) === true && is_array($row['object']) === true) {
+			return $row['object'];
+		}
+
+		return $row;
+
+	}//end fieldsOf()
 
 	/**
 	 * Apply the declaration of one record type to a document being filed.
@@ -212,7 +231,7 @@ class IntakeRoutingService {
 	 *
 	 * @return array<string, mixed> The document, routed or deliberately not.
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	public function apply(array $document, string $declaringApp, string $typeReference): array {
 		$declaration = $this->find(declaringApp: $declaringApp, typeReference: $typeReference);

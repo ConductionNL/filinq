@@ -31,17 +31,21 @@ use OCA\Filinq\Exception\PlainRenditionRefusedException;
 use OCA\Filinq\Service\DataResolverService;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\DocumentRenderPipeline;
+use OCA\Filinq\Service\DocumentJobStore;
 use OCA\Filinq\Service\DocumentService;
 use OCA\Filinq\Service\DocumentStorageService;
 use OCA\Filinq\Service\GeneratedDocumentLogger;
 use OCA\Filinq\Service\PdfService;
 use OCA\Filinq\Service\PlainLanguageRenditionService;
 use OCA\Filinq\Service\PlainRenditionAcceptanceGate;
+use OCA\Filinq\Service\Support\DocumentOutput;
+use OCA\Filinq\Service\Support\DocumentProduction;
+use OCA\Filinq\Service\Support\PdfRendering;
+use OCA\Filinq\Service\Support\TemplateSources;
 use OCA\Filinq\Service\TemplateRenderer;
 use OCA\Filinq\Service\TemplateService;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
-use OCP\BackgroundJob\IJobList;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
@@ -54,9 +58,14 @@ use Psr\Log\NullLogger;
  * @uses \OCA\Filinq\Exception\PlainRenditionRefusedException
  * @uses \OCA\Filinq\Service\DocumentObjectServiceResolver
  * @uses \OCA\Filinq\Service\DocumentRenderPipeline
+ * @uses \OCA\Filinq\Service\Support\PdfRendering
  * @uses \OCA\Filinq\Service\GeneratedDocumentLogger
+ * @uses \OCA\Filinq\Service\DocumentGenerationRecord
  * @uses \OCA\Filinq\Service\PlainLanguageRenditionService
  * @uses \OCA\Filinq\Service\PlainRenditionAcceptanceGate
+ * @uses \OCA\Filinq\Service\Support\DocumentOutput
+ * @uses \OCA\Filinq\Service\Support\DocumentProduction
+ * @uses \OCA\Filinq\Service\Support\TemplateSources
  */
 class DocumentServicePlainRenditionTest extends TestCase {
 
@@ -141,20 +150,14 @@ class DocumentServicePlainRenditionTest extends TestCase {
 		$objectResolver = new DocumentObjectServiceResolver($container, $appManager);
 
 		return new DocumentService(
-			$this->templates,
-			$resolver,
-			new DocumentRenderPipeline(
-				$renderer,
-				$this->createMock(PdfService::class),
+			new TemplateSources(templates: $this->templates, data: $resolver),
+			new DocumentProduction(pipeline: new DocumentRenderPipeline(
+				new PdfRendering(renderer: $renderer, pdf: $this->createMock(PdfService::class)),
 				$objectResolver,
 				new NullLogger(),
 				$this->passThroughRasterizer()
-			),
-			$this->storage,
-			new GeneratedDocumentLogger($objectResolver, new NullLogger()),
-			$container,
-			$this->createMock(IJobList::class),
-			new NullLogger(),
+			), jobs: $this->createMock(DocumentJobStore::class)),
+			new DocumentOutput(storage: $this->storage, log: new GeneratedDocumentLogger($objectResolver, new NullLogger())),
 			new PlainLanguageRenditionService(
 				$this->templates,
 				new PlainRenditionAcceptanceGate(),

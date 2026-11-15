@@ -10,10 +10,10 @@ creator so a blocked user knows who to ask.
 
 ## 1. Make the contract honest
 
-- [ ] Change `SigningProviderInterface::cancelSigning()` to void-or-throw
-- [ ] Add a named "cancellation not supported by this provider" exception
-- [ ] Implement `ValidSignProvider::cancelSigning()` against ValidSign's real API, or throw unsupported if it has none
-- [ ] Update `NativeSigningProvider::cancelSigning()` to the new return shape
+- [x] Change `SigningProviderInterface::cancelSigning()` to void-or-throw
+- [x] Add a named "cancellation not supported by this provider" exception
+- [x] Implement `ValidSignProvider::cancelSigning()` against ValidSign's real API, or throw unsupported if it has none
+- [x] Update `NativeSigningProvider::cancelSigning()` to the new return shape
 
 Acceptance criteria:
 - `ValidSignProvider::cancelSigning()` no longer returns success without contacting ValidSign. This is the defect: as written it tells a user their request is withdrawn while signatories can still sign.
@@ -21,12 +21,12 @@ Acceptance criteria:
 
 ## 2. The cancellation service
 
-- [ ] Add `SigningCancellationService` — authorise, resolve, call provider, record, transition
-- [ ] Authorise BEFORE contacting the provider and before resolving the request id
-- [ ] Enforce creator-only: refuse admins and refuse write-access holders, with the refusal naming the creator
-- [ ] Add a test asserting NO configuration option can permit an administrative override
-- [ ] Make an already-cancelled request idempotent, and a completed request a refusal
-- [ ] Check whether the signing request schema carries `x-openregister-lifecycle`; if it does, the transition belongs there (ADR-031), not in a hand-set status field
+- [x] Add `SigningCancellationService` — authorise, resolve, call provider, record, transition
+- [x] Authorise BEFORE contacting the provider and before resolving the request id
+- [x] Enforce creator-only: refuse admins and refuse write-access holders, with the refusal naming the creator
+- [x] Add a test asserting NO configuration option can permit an administrative override (`SigningCancellationServiceTest::testNoConfigurationOptionCanPermitAnAdministrativeOverride`: no config collaborator, no override key under lib/, an administrator refused)
+- [x] Make an already-cancelled request idempotent, and a completed request a refusal
+- [x] Check whether the signing request schema carries `x-openregister-lifecycle`; if it does, the transition belongs there (ADR-031), not in a hand-set status field (it does, with a `cancel` transition: `SigningService::cancelRequest()` now applies it through OpenRegister's `TransitionEngine::transitionAsSystem()`, and falls back to the old save on an OpenRegister without the engine)
 
 Acceptance criteria:
 - An unauthorised caller cannot distinguish "no such request" from "not allowed", so request ids cannot be enumerated from error text.
@@ -34,8 +34,8 @@ Acceptance criteria:
 
 ## 3. Reachability and audit
 
-- [ ] Add the controller method, the route, and the UI action
-- [ ] Record every attempt with actor, request, timestamp and outcome — including failures
+- [x] Add the controller method, the route, and the UI action (`DELETE api/signing/requests/{id}` → `SigningController::cancelRequest()`; a Withdraw request button on SigningRequestDetail for the creator of an open request, confirmed in `src/dialogs/CancelSigningRequestDialog.vue`)
+- [x] Record every attempt with actor, request, timestamp and outcome — including failures
 
 Acceptance criteria:
 - A failed cancellation is recorded as failed and the request is NOT shown as cancelled. That record is what stops someone concluding a document was withdrawn when it was not.
@@ -43,9 +43,9 @@ Acceptance criteria:
 
 ## 4. Verify
 
-- [ ] Unit tests for each requirement, including the provider contract test and the enumeration guard
+- [x] Unit tests for each requirement, including the provider contract test and the enumeration guard (`SigningCancellationServiceTest`, the per-provider cancel tests in `ValidSignProviderTest`, `LibreSignProviderTest` and `NativeSigningProviderSessionTest`, `SigningServiceTest` for the lifecycle move, `src/views/signing/SigningRequestDetail.withdraw.spec.js`)
 - [ ] Playwright E2E: cancel a native signing request, then confirm the signing link refuses a signature
-- [ ] Re-run gate-57 and confirm `cancelSigning` is no longer orphaned on either provider
+- [x] Re-run gate-57 and confirm `cancelSigning` is no longer orphaned on either provider (2026-11-14: not listed; the gate's two remaining findings are `WooProfileService::saveProfileFor`/`removeProfileFor`, outside this change)
 
 Acceptance criteria:
 - The E2E asserts the signing surface REFUSES afterwards, not merely that the status field changed. The status is what the app believes; the refusal is what the signatory experiences.

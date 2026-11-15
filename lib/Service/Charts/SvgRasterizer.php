@@ -120,43 +120,99 @@ class SvgRasterizer {
 			return ['html' => $html, 'warnings' => []];
 		}
 
-		$locked = true;
+		$pass = new ChartPass(locked: $this->acquireConverter(), format: $format);
 		try {
-			$this->locking->acquireLock(self::LOCK_KEY, ILockingProvider::LOCK_EXCLUSIVE);
-		} catch (LockedException $e) {
-			$locked = false;
-			$this->logger->warning('[SvgRasterizer] soffice is busy, charts are not converted', ['exception' => $e]);
-		}
-
-		$warnings = [];
-		try {
-			$result = preg_replace_callback(
-				self::SVG_PATTERN,
-				function (array $match) use ($locked, $format, &$warnings): string {
-					$png = null;
-					if ($locked === true) {
-						$png = $this->toPng(svg: $match[0]);
-					}
-
-					if ($png === null) {
-						$message = $this->markerText(format: $format);
-						$warnings[] = $message;
-						return '<span>[' . htmlspecialchars($message, ENT_QUOTES | ENT_HTML5, 'UTF-8') . ']</span>';
-					}
-
-					return $this->imageTag(svg: $match[0], png: $png);
-				},
-				$html
-			);
+			$result = $this->replaceCharts(html: $html, pass: $pass);
 		} finally {
-			if ($locked === true) {
-				$this->locking->releaseLock(self::LOCK_KEY, ILockingProvider::LOCK_EXCLUSIVE);
-			}
+			$this->releaseConverter(pass: $pass);
 		}
 
-		return ['html' => ($result ?? $html), 'warnings' => $warnings];
+		return ['html' => ($result ?? $html), 'warnings' => $pass->warnings];
 
 	}//end rasterizeInlineSvg()
+
+	/**
+	 * Replace every inline SVG in the HTML, in document order.
+	 *
+	 * @param string    $html The rendered HTML.
+	 * @param ChartPass $pass The pass.
+	 *
+	 * @return string|null The HTML with the charts replaced, or null when the pattern failed.
+	 */
+	private function replaceCharts(string $html, ChartPass $pass): ?string {
+		return preg_replace_callback(
+			self::SVG_PATTERN,
+			fn (array $match): string => $this->replaceChart(svg: $match[0], pass: $pass),
+			$html
+		);
+
+	}//end replaceCharts()
+
+	/**
+	 * Take the host-wide soffice lock, or log that soffice is busy.
+	 *
+	 * @return bool Whether the lock was taken.
+	 */
+	private function acquireConverter(): bool {
+		try {
+			$this->locking->acquireLock(self::LOCK_KEY, ILockingProvider::LOCK_EXCLUSIVE);
+			return true;
+		} catch (LockedException $e) {
+			$this->logger->warning('[SvgRasterizer] soffice is busy, charts are not converted', ['exception' => $e]);
+			return false;
+		}
+
+	}//end acquireConverter()
+
+	/**
+	 * Release the soffice lock when this pass took it.
+	 *
+	 * @param ChartPass $pass The pass.
+	 *
+	 * @return void
+	 */
+	private function releaseConverter(ChartPass $pass): void {
+		if ($pass->locked === true) {
+			$this->locking->releaseLock(self::LOCK_KEY, ILockingProvider::LOCK_EXCLUSIVE);
+		}
+
+	}//end releaseConverter()
+
+	/**
+	 * What takes one chart's place: its PNG, or a marker with a warning.
+	 *
+	 * @param string    $svg  The SVG markup.
+	 * @param ChartPass $pass The pass.
+	 *
+	 * @return string The replacement markup.
+	 */
+	private function replaceChart(string $svg, ChartPass $pass): string {
+		$png = null;
+		if ($pass->locked === true) {
+			$png = $this->toPng(svg: $svg);
+		}
+
+		if ($png === null) {
+			return $this->marker(pass: $pass);
+		}
+
+		return $this->imageTag(svg: $svg, png: $png);
+
+	}//end replaceChart()
+
+	/**
+	 * The visible marker of a chart that was not converted; its warning is added to the pass.
+	 *
+	 * @param ChartPass $pass The pass.
+	 *
+	 * @return string The marker markup.
+	 */
+	private function marker(ChartPass $pass): string {
+		$message = $this->markerText(format: $pass->format);
+		$pass->warnings[] = $message;
+		return '<span>[' . htmlspecialchars($message, ENT_QUOTES | ENT_HTML5, 'UTF-8') . ']</span>';
+
+	}//end marker()
 
 	/**
 	 * Convert one SVG to PNG bytes with soffice.
@@ -166,42 +222,81 @@ class SvgRasterizer {
 	 * @return string|null The PNG bytes, or null when soffice produced none.
 	 */
 	private function toPng(string $svg): ?string {
-		$tmpDir = sys_get_temp_dir() . '/filinq_svg_' . bin2hex(random_bytes(8));
-		mkdir($tmpDir, 0700, true);
-		$input = $tmpDir . '/chart.svg';
-		file_put_contents($input, $svg);
+		$tmpDir = $this->workDirFor(svg: $svg);
 
 		try {
-			$exit = $this->runner->run(
-				argv: [
-					$this->binary(),
-					'-env:UserInstallation=file://' . $tmpDir . '/profile',
-					'--headless',
-					'--norestore',
-					'--convert-to',
-					'png',
-					'--outdir',
-					$tmpDir,
-					$input,
-				],
-				timeout: max(1, (int)$this->appConfig->getValueString('filinq', self::TIMEOUT_KEY, '60')),
-				tmpDir: $tmpDir,
-				backendName: 'svg-rasterizer'
-			);
-			$output = $tmpDir . '/chart.png';
-			if ($exit !== 0 || is_file($output) === false || filesize($output) === 0) {
-				return null;
-			}
-
-			return (string)file_get_contents($output);
+			return $this->convertIn(tmpDir: $tmpDir);
 		} catch (ConversionFailedException $e) {
 			$this->logger->warning('[SvgRasterizer] soffice failed on a chart', ['exception' => $e]);
 			return null;
 		} finally {
 			$this->removeDir(dir: $tmpDir);
-		}//end try
+		}
 
 	}//end toPng()
+
+	/**
+	 * A fresh private work directory holding the SVG as `chart.svg`.
+	 *
+	 * @param string $svg The SVG markup.
+	 *
+	 * @return string The directory.
+	 */
+	private function workDirFor(string $svg): string {
+		$tmpDir = sys_get_temp_dir() . '/filinq_svg_' . bin2hex(random_bytes(8));
+		mkdir($tmpDir, 0700, true);
+		file_put_contents($tmpDir . '/chart.svg', $svg);
+
+		return $tmpDir;
+
+	}//end workDirFor()
+
+	/**
+	 * Run soffice on the work directory's SVG and read the PNG it wrote.
+	 *
+	 * @param string $tmpDir The work directory.
+	 *
+	 * @return string|null The PNG bytes, or null when soffice produced none.
+	 *
+	 * @throws ConversionFailedException When soffice fails or times out.
+	 */
+	private function convertIn(string $tmpDir): ?string {
+		$exit = $this->runner->run(
+			argv: $this->sofficeArguments(tmpDir: $tmpDir),
+			timeout: max(1, (int)$this->appConfig->getValueString('filinq', self::TIMEOUT_KEY, '60')),
+			tmpDir: $tmpDir,
+			backendName: 'svg-rasterizer'
+		);
+		$output = $tmpDir . '/chart.png';
+		if ($exit !== 0 || is_file($output) === false || filesize($output) === 0) {
+			return null;
+		}
+
+		return (string)file_get_contents($output);
+
+	}//end convertIn()
+
+	/**
+	 * The soffice command line: a private profile, headless, SVG to PNG in the work directory.
+	 *
+	 * @param string $tmpDir The work directory.
+	 *
+	 * @return string[] The arguments, the binary first.
+	 */
+	private function sofficeArguments(string $tmpDir): array {
+		return [
+			$this->binary(),
+			'-env:UserInstallation=file://' . $tmpDir . '/profile',
+			'--headless',
+			'--norestore',
+			'--convert-to',
+			'png',
+			'--outdir',
+			$tmpDir,
+			$tmpDir . '/chart.svg',
+		];
+
+	}//end sofficeArguments()
 
 	/**
 	 * The `<img>` that takes the SVG's place, at the SVG's own size.

@@ -3,6 +3,9 @@
 /**
  * Filinq RegisterDocumentsLeafListener.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Contributes the `filinq-documents` leaf to OpenRegister's cross-app leaf
  * catalogue (`RegisterLeafProvidersEvent`, ADR-066), so the documents Filinq
  * holds for an object are visible on that object wherever it is shown, and not
@@ -36,9 +39,6 @@
  *
  * @link https://www.filinq.app
  *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- *
  * @spec openspec/changes/leaf-integrations/specs/document-register/spec.md
  */
 
@@ -46,23 +46,18 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\EventListener;
 
-use OCA\Filinq\AppInfo\Application;
-use OCA\OpenRegister\Event\RegisterLeafProvidersEvent;
+use OCA\Filinq\Kernel\AppIdentity;
+use OCA\OpenRegister\Service\Integration\LeafAvailability;
 use OCA\OpenRegister\Service\Integration\LeafDescriptor;
-use OCP\EventDispatcher\Event;
-use OCP\EventDispatcher\IEventListener;
-use OCP\IL10N;
-use Psr\Log\LoggerInterface;
-use Throwable;
+use OCA\OpenRegister\Service\Integration\LeafIdentity;
+use OCA\OpenRegister\Service\Integration\LeafRendering;
 
 /**
  * Contributes the `filinq-documents` render leaf to OpenRegister.
  *
- * @template-implements IEventListener<Event>
- *
  * @spec openspec/changes/leaf-integrations/specs/document-register/spec.md
  */
-class RegisterDocumentsLeafListener implements IEventListener {
+class RegisterDocumentsLeafListener extends MountedLeafListener {
 
 	/**
 	 * The shared leaf id, equal to the JS `register()` id.
@@ -70,6 +65,13 @@ class RegisterDocumentsLeafListener implements IEventListener {
 	 * @var string
 	 */
 	public const LEAF_ID = 'filinq-documents';
+
+	/**
+	 * The icon, shared with the JS half.
+	 *
+	 * @var string
+	 */
+	public const ICON = 'FileDocumentMultipleOutline';
 
 	/**
 	 * The render surfaces this leaf targets — the SAME set, in the same order,
@@ -88,56 +90,32 @@ class RegisterDocumentsLeafListener implements IEventListener {
 	];
 
 	/**
-	 * Constructor.
+	 * The descriptor this listener contributes, written out in full so the
+	 * integration-parity gate can compare it with the JS half.
 	 *
-	 * @param IL10N           $l10n   Localisation for the human-readable label.
-	 * @param LoggerInterface $logger PSR-3 logger; a throwing listener costs its own leaf only.
-	 */
-	public function __construct(
-		private readonly IL10N $l10n,
-		private readonly LoggerInterface $logger,
-	) {
-	}//end __construct()
-
-	/**
-	 * Contribute the `filinq-documents` leaf descriptor.
-	 *
-	 * @param Event $event The dispatched event.
-	 *
-	 * @return void
+	 * @return LeafDescriptor The leaf.
 	 *
 	 * @spec openspec/changes/leaf-integrations/tasks.md#task-2-1
 	 */
-	public function handle(Event $event): void {
-		if ($event instanceof RegisterLeafProvidersEvent === false) {
-			return;
-		}
-
-		try {
-			$descriptor = new LeafDescriptor(
+	protected function descriptor(): LeafDescriptor {
+		return new LeafDescriptor(
+			identity: new LeafIdentity(
 				id: self::LEAF_ID,
 				label: $this->l10n->t('Documents'),
-				icon: 'FileDocumentMultipleOutline',
-				kinds: [LeafDescriptor::KIND_RENDER_SURFACE],
-				requiredApp: Application::APP_ID,
+				icon: self::ICON,
 				group: 'documents',
+			),
+			kinds: [LeafDescriptor::KIND_RENDER_SURFACE],
+			availability: new LeafAvailability(requiredApp: AppIdentity::APP_ID),
+			// Filinq is Vue 3 and a consuming host may still be Vue 2.7, so
+			// the JS half hands over a bare DOM element and roots its own
+			// app there. The server half MUST name the same mode under the
+			// shared id or the host renders the leaf the wrong way.
+			rendering: new LeafRendering(
 				surfaces: self::SURFACES,
 				referenceType: self::LEAF_ID,
-				// Filinq is Vue 3 and a consuming host may still be Vue 2.7, so
-				// the JS half hands over a bare DOM element and roots its own
-				// app there. The server half MUST name the same mode under the
-				// shared id or the host renders the leaf the wrong way.
 				renderMode: LeafDescriptor::RENDER_MODE_MOUNT,
-			);
-
-			$event->registerLeaf($descriptor, null);
-		} catch (Throwable $e) {
-			// Never take the whole leaf catalogue down: log, and lose this leaf.
-			$this->logger->warning(
-				'Filinq could not register the filinq-documents leaf: ' . $e->getMessage(),
-				['exception' => $e]
-			);
-		}//end try
-
-	}//end handle()
+			),
+		);
+	}//end descriptor()
 }//end class

@@ -1,0 +1,118 @@
+{
+	"set": "zuiddrecht",
+	"$comment": "filinq's part of the Zuiddrecht example set: the dossier 'Fietspad Lindelaan' with three documents (the advice, the council proposal and the residents' complaints list), each a document record on case 2026-0110 'Verlichting fietspad Lindelaan', which portaliq writes. DqZaak's 'Gekoppeld' card lists it as Dossier \"Fietspad Lindelaan\" (3 stukken). The dossier holds the files in its own folder; each record names its file with {{file:dossier-fietspad-lindelaan.n}}, the n-th file the dossier carries (needs OpenRegister's file placeholder, ConductionNL/openregister#4965).",
+	"after": [
+		"portaliq"
+	],
+	"objects": [
+		{
+			"key": "dossier-fietspad-lindelaan",
+			"register": "filinq",
+			"schema": "dossier",
+			"data": {
+				"name": "Fietspad Lindelaan",
+				"description": "Woo-verzoek verlichting fietspad Lindelaan: advies, raadsvoorstel en klachten van bewoners.",
+				"bases": [],
+				"status": "open"
+			},
+			"files": [
+				{
+					"path": "zuiddrecht/fietspad-lindelaan/02-advies-verlichting-fietspad.pdf",
+					"title": "Advies verlichting fietspad"
+				},
+				{
+					"path": "zuiddrecht/fietspad-lindelaan/03-raadsvoorstel-fietspad-lindelaan.pdf",
+					"title": "Raadsvoorstel fietspad Lindelaan"
+				},
+				{
+					"path": "zuiddrecht/fietspad-lindelaan/07-klachtenlijst-bewoners-lindelaan.csv",
+					"title": "Klachtenlijst bewoners Lindelaan"
+				}
+			]
+		},
+		{
+			"key": "document-fietspad-lindelaan-1",
+			"register": "filinq",
+			"schema": "documentVersion",
+			"lookups": {
+				"case": {
+					"register": "dossiq",
+					"schema": "case",
+					"where": {
+						"title": "Verlichting fietspad Lindelaan",
+						"externalReference": "MZ-ZDR-2026-0412"
+					}
+				}
+			},
+			"data": {
+				"fileId": "{{file:dossier-fietspad-lindelaan.0}}",
+				"documentName": "Advies verlichting fietspad",
+				"versionLabel": "1",
+				"status": "draft",
+				"domains": [
+					{
+						"register": "dossiq",
+						"schema": "case",
+						"id": "{{lookup:case}}"
+					}
+				]
+			}
+		},
+		{
+			"key": "document-fietspad-lindelaan-2",
+			"register": "filinq",
+			"schema": "documentVersion",
+			"lookups": {
+				"case": {
+					"register": "dossiq",
+					"schema": "case",
+					"where": {
+						"title": "Verlichting fietspad Lindelaan",
+						"externalReference": "MZ-ZDR-2026-0412"
+					}
+				}
+			},
+			"data": {
+				"fileId": "{{file:dossier-fietspad-lindelaan.1}}",
+				"documentName": "Raadsvoorstel fietspad Lindelaan",
+				"versionLabel": "1",
+				"status": "draft",
+				"domains": [
+					{
+						"register": "dossiq",
+						"schema": "case",
+						"id": "{{lookup:case}}"
+					}
+				]
+			}
+		},
+		{
+			"key": "document-fietspad-lindelaan-3",
+			"register": "filinq",
+			"schema": "documentVersion",
+			"lookups": {
+				"case": {
+					"register": "dossiq",
+					"schema": "case",
+					"where": {
+						"title": "Verlichting fietspad Lindelaan",
+						"externalReference": "MZ-ZDR-2026-0412"
+					}
+				}
+			},
+			"data": {
+				"fileId": "{{file:dossier-fietspad-lindelaan.2}}",
+				"documentName": "Klachtenlijst bewoners Lindelaan",
+				"versionLabel": "1",
+				"status": "draft",
+				"domains": [
+					{
+						"register": "dossiq",
+						"schema": "case",
+						"id": "{{lookup:case}}"
+					}
+				]
+			}
+		}
+	]
+}

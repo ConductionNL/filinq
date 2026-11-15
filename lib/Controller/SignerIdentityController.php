@@ -21,8 +21,8 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
-use OCA\Filinq\AppInfo\Application;
-use OCA\Filinq\Service\SignerAuth\SignerStepUpService;
+use OCA\Filinq\Kernel\AppIdentity;
+use OCA\Filinq\Kernel\Contracts\SignerStepUpServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -57,7 +57,7 @@ class SignerIdentityController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param SignerStepUpService $stepUp The step-up flow.
+	 * @param SignerStepUpServiceInterface $stepUp The step-up flow.
 	 * @param IURLGenerator $urlGenerator Builds the return URL.
 	 * @param LoggerInterface $logger Logs why a step-up failed.
 	 *
@@ -65,11 +65,11 @@ class SignerIdentityController extends Controller {
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly SignerStepUpService $stepUp,
+		private readonly SignerStepUpServiceInterface $stepUp,
 		private readonly IURLGenerator $urlGenerator,
 		private readonly LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 
 	}//end __construct()
 
@@ -84,6 +84,10 @@ class SignerIdentityController extends Controller {
 	 * @return JSONResponse The challenge and the assurance needed, or a generic 404.
 	 *
 	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 *
+	 * @no-admin-idor-exempt SignerStepUpService::start() calls
+	 * SigningActorResolver::loadAuthorisedSigner(), which refuses unless the signer record belongs to the
+	 * request and its userId is the session user.
 	 */
 	#[NoAdminRequired]
 	public function start(string $id): JSONResponse {

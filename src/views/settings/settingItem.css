@@ -1,0 +1,24 @@
+/*
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
+ * One row of the admin settings page: a label, a control and a description.
+ */
+
+.setting-item {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	padding: 8px 0;
+	border-bottom: 1px solid var(--color-border-dark-translucent);
+}
+
+.setting-label {
+	font-weight: bold;
+	color: var(--color-main-text);
+}
+
+.setting-description {
+	color: var(--color-text-lighter);
+	font-size: 0.9em;
+}

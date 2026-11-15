@@ -26,15 +26,16 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
-use OCA\Filinq\Exception\IntakeRefusedException;
-use OCA\Filinq\Service\IntakeDetachmentService;
-use OCA\Filinq\Service\IntakeRoutingService;
-use OCA\Filinq\Service\IntakeService;
-use OCA\Filinq\Service\PartySuggestionService;
+use OCA\Filinq\Controller\Support\IntakeHandling;
+use OCA\Filinq\Kernel\AppIdentity;
+use OCA\Filinq\Kernel\Contracts\IntakeNotificationReachInterface;
+use OCA\Filinq\Kernel\Contracts\PartySuggestionServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\AppFramework\Http\Response;
+use OCP\IGroupManager;
 use OCP\IRequest;
 use OCP\IUserSession;
 use Throwable;
@@ -51,30 +52,30 @@ use Throwable;
  * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
  */
 class IntakeController extends Controller {
+	use AnswersIntakeRefusals;
+	use ReadsTypedRequestParameters;
 
 	/**
 	 * Constructor.
 	 *
-	 * @param string $appName The app name.
 	 * @param IRequest $request The request.
-	 * @param IntakeService $intake The intake inbox.
-	 * @param IntakeDetachmentService $detachment Returns a filed document to the worklist.
-	 * @param IntakeRoutingService $routing What a consuming app declared per record type.
-	 * @param PartySuggestionService $parties Party suggestions and the corrections corpus.
+	 * @param IntakeHandling $handling The inbox, detachment and routing.
+	 * @param PartySuggestionServiceInterface $parties Party suggestions and the corrections corpus.
 	 * @param IUserSession $userSession The current session.
+	 * @param IntakeNotificationReachInterface $reach Whether a failed reading reaches anybody.
+	 * @param IGroupManager $groups Counts the people in the notified group.
 	 *
 	 * @return void
 	 */
 	public function __construct(
-		string $appName,
 		IRequest $request,
-		private readonly IntakeService $intake,
-		private readonly IntakeDetachmentService $detachment,
-		private readonly IntakeRoutingService $routing,
-		private readonly PartySuggestionService $parties,
+		private readonly IntakeHandling $handling,
+		private readonly PartySuggestionServiceInterface $parties,
 		private readonly IUserSession $userSession,
+		private readonly IntakeNotificationReachInterface $reach,
+		private readonly IGroupManager $groups,
 	) {
-		parent::__construct(appName: $appName, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 
 	}//end __construct()
 
@@ -93,10 +94,14 @@ class IntakeController extends Controller {
 		}
 
 		try {
-			$waiting = $this->intake->listWaiting();
+			$waiting = $this->handling->intake->listWaiting();
 
 			return new JSONResponse(
-				data: ['results' => $waiting, 'total' => count($waiting)],
+				data: [
+					'results' => $waiting,
+					'total' => count($waiting),
+					'notificationReach' => $this->notificationReach(waiting: $waiting),
+				],
 				statusCode: Http::STATUS_OK
 			);
 		} catch (Throwable $e) {
@@ -106,60 +111,93 @@ class IntakeController extends Controller {
 	}//end index()
 
 	/**
+	 * Whether the readingFailed notification reaches anybody, said on the inbox.
+	 *
+	 * Counts the failed readings in the worklist and the people in the group the
+	 * rule addresses. A group that does not exist, or a backend that cannot
+	 * count, reaches nobody.
+	 *
+	 * @param array<int, array<string, mixed>> $waiting The waiting documents.
+	 *
+	 * @return array<string, mixed> The reach, the failure count and the group name.
+	 *
+	 * @spec openspec/changes/archive/2026-10-09-intake-failure-reaches-someone/tasks.md#task-3.3
+	 */
+	private function notificationReach(array $waiting): array {
+		$failed = 0;
+		foreach ($waiting as $document) {
+			if (($document['readingState'] ?? null) === 'failed') {
+				$failed++;
+			}
+		}
+
+		$members = 0;
+		$group   = $this->groups->get(IntakeNotificationReachInterface::GROUP);
+		if ($group !== null) {
+			$counted = $group->count();
+			if (is_int($counted) === true) {
+				$members = $counted;
+			}
+		}
+
+		$reach = $this->reach->describe(failureCount: $failed, groupMembers: $members);
+		$reach['failureCount'] = $failed;
+		$reach['group']        = IntakeNotificationReachInterface::GROUP;
+
+		return $reach;
+
+	}//end notificationReach()
+
+	/**
 	 * Assign one waiting document to a record.
 	 *
+	 * The request body names the target: `register`, `schema` and `id`, and
+	 * `declaringApp` and `typeReference` for the app that owns the record type,
+	 * each a string that defaults to ''. `withAttachments` says whether
+	 * everything that arrived with the message goes along; it defaults to
+	 * false. A target value that is not a string answers a bare 400, before
+	 * the session is checked, as the dispatcher does for a typed argument.
+	 *
 	 * @param string $uuid The intake document.
-	 * @param string $register The target register slug.
-	 * @param string $schema The target schema slug.
-	 * @param string $id The target object id.
-	 * @param string $declaringApp App id of the app that owns the record type.
-	 * @param string $typeReference That app's reference for the record type.
-	 * @param bool $withAttachments Whether everything that arrived with the message goes along.
 	 *
-	 * @return JSONResponse The assigned document, or the refusal.
-	 *
-	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) `$withAttachments` is a field
-	 * of the request body, not a mode this code chose. Nextcloud binds a
-	 * controller parameter to the JSON key of the same name, so the SRP split
-	 * phpmd asks for is a split into two ROUTES for one thing a clerk does:
-	 * "file this letter, and the bijlagen that came with it". The service
-	 * behind it carries no flag, see IntakeService::assignWithAttachments().
+	 * @return Response The assigned document, or the refusal.
 	 *
 	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	#[NoAdminRequired]
-	public function assign(
-		string $uuid,
-		string $register = '',
-		string $schema = '',
-		string $id = '',
-		string $declaringApp = '',
-		string $typeReference = '',
-		bool $withAttachments = false,
-	): JSONResponse {
+	public function assign(string $uuid): Response {
+		$body = $this->typedRequestParameters(
+			spec: [
+				'register' => ['string', ''],
+				'schema' => ['string', ''],
+				'id' => ['string', ''],
+				'declaringApp' => ['string', ''],
+				'typeReference' => ['string', ''],
+				'withAttachments' => ['bool', false],
+			]
+		);
+		if ($body === null) {
+			return $this->badRequest();
+		}
+
 		$unauthenticated = $this->requireUser();
 		if ($unauthenticated !== null) {
 			return $unauthenticated;
 		}
 
-		$target = [
-			'register' => $register,
-			'schema' => $schema,
-			'id' => $id,
-			'declaringApp' => $declaringApp,
-			'typeReference' => $typeReference,
-		];
+		$withAttachments = $body['withAttachments'];
+		unset($body['withAttachments']);
 
 		try {
 			if ($withAttachments === true) {
 				return new JSONResponse(
-					data: $this->intake->assignWithAttachments(uuid: $uuid, target: $target),
+					data: $this->handling->intake->assignWithAttachments(uuid: $uuid, target: $body),
 					statusCode: Http::STATUS_OK
 				);
 			}
 
 			return new JSONResponse(
-				data: $this->intake->assign(uuid: $uuid, target: $target),
+				data: $this->handling->intake->assign(uuid: $uuid, target: $body),
 				statusCode: Http::STATUS_OK
 			);
 		} catch (Throwable $e) {
@@ -186,7 +224,7 @@ class IntakeController extends Controller {
 		}
 
 		try {
-			$document = $this->intake->reject(uuid: $uuid, reason: $reason);
+			$document = $this->handling->intake->reject(uuid: $uuid, reason: $reason);
 
 			return new JSONResponse(data: $document, statusCode: Http::STATUS_OK);
 		} catch (Throwable $e) {
@@ -200,7 +238,7 @@ class IntakeController extends Controller {
 	 *
 	 * @return JSONResponse The worklist.
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	#[NoAdminRequired]
 	public function detached(): JSONResponse {
@@ -210,7 +248,7 @@ class IntakeController extends Controller {
 		}
 
 		try {
-			$worklist = $this->intake->listDetached();
+			$worklist = $this->handling->intake->listDetached();
 
 			return new JSONResponse(
 				data: ['results' => $worklist, 'total' => count($worklist)],
@@ -231,7 +269,7 @@ class IntakeController extends Controller {
 	 *
 	 * @return JSONResponse The intake document, now on the worklist.
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	#[NoAdminRequired]
 	public function detach(int $fileId, string $reason = '', string $documentName = ''): JSONResponse {
@@ -241,7 +279,7 @@ class IntakeController extends Controller {
 		}
 
 		try {
-			$document = $this->detachment->detach(
+			$document = $this->handling->detachment->detach(
 				fileId: $fileId,
 				reason: $reason,
 				documentName: $documentName
@@ -265,7 +303,7 @@ class IntakeController extends Controller {
 	 *
 	 * @return JSONResponse The stored correction.
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	#[NoAdminRequired]
 	public function decideParty(
@@ -319,7 +357,7 @@ class IntakeController extends Controller {
 	 * not branch this method at all, so there is no second responsibility here
 	 * to split off.
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	#[NoAdminRequired]
 	public function declareRouting(
@@ -334,7 +372,7 @@ class IntakeController extends Controller {
 		}
 
 		try {
-			$declaration = $this->routing->declare(
+			$declaration = $this->handling->routing->declare(
 				declaringApp: $declaringApp,
 				typeReference: $typeReference,
 				routeTo: $routeTo,
@@ -366,23 +404,4 @@ class IntakeController extends Controller {
 		);
 
 	}//end requireUser()
-
-	/**
-	 * Answer one failure with the status the service gave it.
-	 *
-	 * @param Throwable $error The failure.
-	 *
-	 * @return JSONResponse The refusal.
-	 *
-	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
-	 */
-	private function failure(Throwable $error): JSONResponse {
-		$status = Http::STATUS_INTERNAL_SERVER_ERROR;
-		if ($error instanceof IntakeRefusedException) {
-			$status = $error->getStatus();
-		}
-
-		return new JSONResponse(data: ['error' => $error->getMessage()], statusCode: $status);
-
-	}//end failure()
 }//end class

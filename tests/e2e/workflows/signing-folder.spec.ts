@@ -88,9 +88,9 @@ test.afterAll(async ({ request }) => {
 test('the folder gathers what is pending across cases, soonest deadline first', async ({
 	page,
 }) => {
-	// @e2e openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md#forty-decisions-on-nine-cases-one-folder
+	// @e2e openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md#forty-decisions-on-nine-cases-one-folder
 	// @e2e openspec/specs/document-signing/spec.md#forty-decisions-on-nine-cases-one-folder
-	// @e2e openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md#the-signer-knows-what-they-are-signing
+	// @e2e openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md#the-signer-knows-what-they-are-signing
 	// @e2e openspec/specs/document-signing/spec.md#the-signer-knows-what-they-are-signing
 	const token = await harvestToken(page)
 	await seedRequest(
@@ -125,7 +125,7 @@ test('the folder gathers what is pending across cases, soonest deadline first', 
 })
 
 test('the document is readable without leaving the folder', async ({ page }) => {
-	// @e2e openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md#the-document-is-readable-in-place
+	// @e2e openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md#the-document-is-readable-in-place
 	// @e2e openspec/specs/document-signing/spec.md#the-document-is-readable-in-place
 	await go(page, SigningFolder)
 	const row = page
@@ -141,11 +141,11 @@ test('the document is readable without leaving the folder', async ({ page }) => 
 test('signing a selection takes those documents out of the folder and leaves the rest', async ({
 	page,
 }) => {
-	// @e2e openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md#a-signed-document-leaves-the-folder
+	// @e2e openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md#a-signed-document-leaves-the-folder
 	// @e2e openspec/specs/document-signing/spec.md#a-signed-document-leaves-the-folder
-	// @e2e openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md#thirty-eight-of-forty
+	// @e2e openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md#thirty-eight-of-forty
 	// @e2e openspec/specs/document-signing/spec.md#thirty-eight-of-forty
-	// @e2e openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md#an-interrupted-pass-leaves-nothing-half-done
+	// @e2e openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md#an-interrupted-pass-leaves-nothing-half-done
 	// @e2e openspec/specs/document-signing/spec.md#an-interrupted-pass-leaves-nothing-half-done
 	await go(page, SigningFolder)
 	const row = page
@@ -175,7 +175,7 @@ test('signing a selection takes those documents out of the folder and leaves the
 test('a cancelled request is gone the next time the folder is opened', async ({
 	page,
 }) => {
-	// @e2e openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md#a-cancelled-request-leaves-the-folder-at-once
+	// @e2e openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md#a-cancelled-request-leaves-the-folder-at-once
 	// @e2e openspec/specs/document-signing/spec.md#a-cancelled-request-leaves-the-folder-at-once
 	const token = await harvestToken(page)
 	const id = await seedRequest(
@@ -208,9 +208,9 @@ test('a cancelled request is gone the next time the folder is opened', async ({
 test('a mandate keeps the folder honest, and withdrawing it gives the document back', async ({
 	page,
 }) => {
-	// @e2e openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md#a-mandate-keeps-the-folder-honest
+	// @e2e openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md#a-mandate-keeps-the-folder-honest
 	// @e2e openspec/specs/document-signing/spec.md#a-mandate-keeps-the-folder-honest
-	// @e2e openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md#no-declaration-no-invented-restriction
+	// @e2e openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md#no-declaration-no-invented-restriction
 	// @e2e openspec/specs/document-signing/spec.md#no-declaration-no-invented-restriction
 	const token = await harvestToken(page)
 	await seedRequest(
@@ -261,7 +261,7 @@ test('a mandate keeps the folder honest, and withdrawing it gives the document b
 })
 
 test('nobody gets a folder without being somebody', async ({ baseURL }) => {
-	// @e2e openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md#the-folder-holds-nobody-elses-work
+	// @e2e openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md#the-folder-holds-nobody-elses-work
 	// @e2e openspec/specs/document-signing/spec.md#the-folder-holds-nobody-elses-work
 	const anonymous = await playwrightRequest.newContext({ baseURL })
 	const res = await anonymous.get(`${API}/signing/folder`, {

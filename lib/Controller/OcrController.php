@@ -25,8 +25,9 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
-use OCA\Filinq\Service\Ocr\OcrResultRepository;
-use OCA\Filinq\Service\Ocr\OcrRunService;
+use OCA\Filinq\Controller\Support\OcrServices;
+use OCA\Filinq\Kernel\AppIdentity;
+use OCA\Filinq\Kernel\Contracts\OcrRunServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -56,26 +57,22 @@ class OcrController extends Controller {
 	/**
 	 * Constructor.
 	 *
-	 * @param string $appName The app id.
 	 * @param IRequest $request The request.
-	 * @param OcrRunService $runs Runs OCR and records the result.
-	 * @param OcrResultRepository $results The ocrResult rows.
+	 * @param OcrServices $ocr The OCR runner and the OCR result store.
 	 * @param IRootFolder $rootFolder Resolves files in the caller's own folder.
 	 * @param IUserSession $userSession The caller.
 	 * @param IL10N $l10n Translations.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
-		string $appName,
 		IRequest $request,
-		private readonly OcrRunService $runs,
-		private readonly OcrResultRepository $results,
+		private readonly OcrServices $ocr,
 		private readonly IRootFolder $rootFolder,
 		private readonly IUserSession $userSession,
 		private readonly IL10N $l10n,
 		private readonly LoggerInterface $logger,
 	) {
-		parent::__construct(appName: $appName, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 
 	}//end __construct()
 
@@ -100,7 +97,7 @@ class OcrController extends Controller {
 		}
 
 		try {
-			$outcome = $this->runs->run(file: $file, trigger: 'manual');
+			$outcome = $this->ocr->runs->run(file: $file, trigger: 'manual');
 		} catch (Throwable $e) {
 			$this->logger->error('OCR result could not be stored', ['fileId' => $fileId, 'exception' => $e->getMessage()]);
 			return new JSONResponse(
@@ -133,12 +130,12 @@ class OcrController extends Controller {
 			return $this->notFound();
 		}
 
-		$result = $this->results->findForFile(fileId: $fileId);
+		$result = $this->ocr->results->findForFile(fileId: $fileId);
 		$status = [
 			'fileId' => $fileId,
 			'ocrProcessed' => false,
 			'ocrConfidence' => null,
-			'ocrAvailable' => $this->runs->isCandidate(mimeType: $file->getMimeType()),
+			'ocrAvailable' => $this->ocr->runs->isCandidate(mimeType: $file->getMimeType()),
 			'result' => null,
 		];
 		if ($result !== null) {
@@ -172,13 +169,13 @@ class OcrController extends Controller {
 				continue;
 			}
 
-			$result = $this->results->findForFile(fileId: $fileId);
+			$result = $this->ocr->results->findForFile(fileId: $fileId);
 			if ($result !== null) {
 				$results[(string) $fileId] = $this->publicFields(result: $result);
 			}
 		}
 
-		return new JSONResponse(['capability' => $this->runs->capability(), 'results' => (object) $results]);
+		return new JSONResponse(['capability' => $this->ocr->runs->capability(), 'results' => (object) $results]);
 
 	}//end index()
 
@@ -247,22 +244,22 @@ class OcrController extends Controller {
 	 * A run that did not happen, with the status its reason calls for.
 	 *
 	 * @param int $fileId The file id.
-	 * @param string $reason One of OcrRunService::SKIP_*.
+	 * @param string $reason One of OcrRunServiceInterface::SKIP_*.
 	 *
 	 * @return JSONResponse The refusal.
 	 */
 	private function refused(int $fileId, string $reason): JSONResponse {
 		$answers = [
-			OcrRunService::SKIP_DISABLED => [Http::STATUS_CONFLICT, $this->l10n->t('OCR is switched off by an administrator.')],
-			OcrRunService::SKIP_NO_TESSERACT => [
+			OcrRunServiceInterface::SKIP_DISABLED => [Http::STATUS_CONFLICT, $this->l10n->t('OCR is switched off by an administrator.')],
+			OcrRunServiceInterface::SKIP_NO_TESSERACT => [
 				Http::STATUS_SERVICE_UNAVAILABLE,
 				$this->l10n->t('OCR is not available: Tesseract is not installed on the server.'),
 			],
-			OcrRunService::SKIP_NOT_CANDIDATE => [Http::STATUS_BAD_REQUEST, $this->l10n->t('OCR reads images and PDF files only.')],
-			OcrRunService::SKIP_NO_TEXT => [Http::STATUS_OK, $this->l10n->t('OCR found no text in this file.')],
-			OcrRunService::SKIP_FAILED => [Http::STATUS_INTERNAL_SERVER_ERROR, $this->l10n->t('OCR failed on this file.')],
+			OcrRunServiceInterface::SKIP_NOT_CANDIDATE => [Http::STATUS_BAD_REQUEST, $this->l10n->t('OCR reads images and PDF files only.')],
+			OcrRunServiceInterface::SKIP_NO_TEXT => [Http::STATUS_OK, $this->l10n->t('OCR found no text in this file.')],
+			OcrRunServiceInterface::SKIP_FAILED => [Http::STATUS_INTERNAL_SERVER_ERROR, $this->l10n->t('OCR failed on this file.')],
 		];
-		[$status, $message] = ($answers[$reason] ?? $answers[OcrRunService::SKIP_FAILED]);
+		[$status, $message] = ($answers[$reason] ?? $answers[OcrRunServiceInterface::SKIP_FAILED]);
 
 		return new JSONResponse(
 			['fileId' => $fileId, 'ocrProcessed' => false, 'reason' => $reason, 'error' => $message, 'textLength' => 0],

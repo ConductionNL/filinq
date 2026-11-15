@@ -13,6 +13,21 @@ import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 
 /**
+ * The waiting documents and whether a failed reading reaches anybody.
+ *
+ * @return {Promise<{results: Array, notificationReach: object|null}>} The inbox answer.
+ * @spec openspec/changes/archive/2026-10-09-intake-failure-reaches-someone/tasks.md#task-3.3
+ */
+export async function fetchWaitingInbox() {
+	const url = generateUrl('/apps/filinq/api/intake/documents')
+	const { data } = await axios.get(url)
+	return {
+		results: Array.isArray(data?.results) ? data.results : [],
+		notificationReach: data?.notificationReach ?? null,
+	}
+}
+
+/**
  * Read the documents waiting for a clerk.
  *
  * @return {Promise<object[]>} The waiting documents.
@@ -64,7 +79,7 @@ export async function rejectIntakeDocument(uuid, reason) {
  * Read the documents taken back off a record.
  *
  * @return {Promise<object[]>} The worklist.
- * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+ * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
  */
 export async function listDetachedDocuments() {
 	const url = generateUrl('/apps/filinq/api/intake/detached')
@@ -79,7 +94,7 @@ export async function listDetachedDocuments() {
  * @param {string} reason Why it does not belong there.
  * @param {string} documentName The document name, for a file that never had an intake record.
  * @return {Promise<object>} The intake document, now on the worklist.
- * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+ * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
  */
 export async function detachDocument(fileId, reason, documentName = '') {
 	const url = generateUrl('/apps/filinq/api/intake/documents/detach')
@@ -92,7 +107,7 @@ export async function detachDocument(fileId, reason, documentName = '') {
  *
  * @param {object} decision The decision: sender, decision, suggested, accepted, intakeDocument.
  * @return {Promise<object>} The stored correction.
- * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+ * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
  */
 export async function decidePartySuggestion(decision) {
 	const url = generateUrl('/apps/filinq/api/intake/party-decisions')

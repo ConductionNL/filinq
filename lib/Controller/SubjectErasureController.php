@@ -21,8 +21,10 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use OCA\Filinq\Exception\SubjectErasureRefusedException;
-use OCA\Filinq\Service\SubjectErasure\SubjectErasureRun;
-use OCA\Filinq\Service\SubjectErasure\SubjectErasureService;
+use OCA\Filinq\Kernel\AppIdentity;
+use OCA\Filinq\Kernel\Contracts\SubjectErasureRunInterface;
+use OCA\Filinq\Kernel\Contracts\SubjectErasureServiceInterface;
+use OCA\Filinq\Service\ReadsCurrentUserId;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -39,6 +41,8 @@ use Throwable;
  * `subject_erasure_groups`, fail closed), recording every denial.
  */
 class SubjectErasureController extends Controller {
+
+	use ReadsCurrentUserId;
 
 	/**
 	 * HTTP status per refusal.
@@ -58,10 +62,9 @@ class SubjectErasureController extends Controller {
 	/**
 	 * Constructor.
 	 *
-	 * @param string                $appName     The app name.
 	 * @param IRequest              $request     The request.
-	 * @param SubjectErasureService $requests    The request lifecycle.
-	 * @param SubjectErasureRun     $runs        The run and the certificate.
+	 * @param SubjectErasureServiceInterface $requests    The request lifecycle.
+	 * @param SubjectErasureRunInterface     $runs        The run and the certificate.
 	 * @param IUserSession          $userSession The signed-in user.
 	 * @param IL10N                 $l10n        Translations.
 	 * @param LoggerInterface       $logger      For failures that are not refusals.
@@ -69,15 +72,14 @@ class SubjectErasureController extends Controller {
 	 * @return void
 	 */
 	public function __construct(
-		string $appName,
 		IRequest $request,
-		private readonly SubjectErasureService $requests,
-		private readonly SubjectErasureRun $runs,
+		private readonly SubjectErasureServiceInterface $requests,
+		private readonly SubjectErasureRunInterface $runs,
 		private readonly IUserSession $userSession,
 		private readonly IL10N $l10n,
 		private readonly LoggerInterface $logger,
 	) {
-		parent::__construct(appName: $appName, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 
 	}//end __construct()
 
@@ -90,7 +92,7 @@ class SubjectErasureController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function index(): JSONResponse {
-		return $this->answer(action: fn (): array => ['results' => $this->requests->list(userId: $this->userId())]);
+		return $this->answer(action: fn (): array => ['results' => $this->requests->list(userId: $this->currentUserId())]);
 
 	}//end index()
 
@@ -102,10 +104,14 @@ class SubjectErasureController extends Controller {
 	 * @return JSONResponse The request, or a refusal.
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-2.1
+	 *
+	 * @no-admin-idor-exempt role-guarded one layer down. Every service entry calls
+	 * SubjectErasureAuthority::assertMayErase(), which admits only admins and the configured subject-
+	 * erasure groups.
 	 */
 	#[NoAdminRequired]
 	public function show(string $id): JSONResponse {
-		return $this->answer(action: fn (): array => $this->requests->get(uuid: $id, userId: $this->userId()));
+		return $this->answer(action: fn (): array => $this->requests->get(uuid: $id, userId: $this->currentUserId()));
 
 	}//end show()
 
@@ -119,7 +125,7 @@ class SubjectErasureController extends Controller {
 	#[NoAdminRequired]
 	public function create(): JSONResponse {
 		return $this->answer(
-			action: fn (): array => $this->requests->create(input: $this->request->getParams(), userId: $this->userId()),
+			action: fn (): array => $this->requests->create(input: $this->request->getParams(), userId: $this->currentUserId()),
 			okStatus: Http::STATUS_CREATED
 		);
 
@@ -133,10 +139,14 @@ class SubjectErasureController extends Controller {
 	 * @return JSONResponse The preview, or a refusal.
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-2.1
+	 *
+	 * @no-admin-idor-exempt role-guarded one layer down. Every service entry calls
+	 * SubjectErasureAuthority::assertMayErase(), which admits only admins and the configured subject-
+	 * erasure groups.
 	 */
 	#[NoAdminRequired]
 	public function preview(string $id): JSONResponse {
-		return $this->answer(action: fn (): array => $this->requests->preview(uuid: $id, userId: $this->userId()));
+		return $this->answer(action: fn (): array => $this->requests->preview(uuid: $id, userId: $this->currentUserId()));
 
 	}//end preview()
 
@@ -148,6 +158,10 @@ class SubjectErasureController extends Controller {
 	 * @return JSONResponse The request, or a refusal.
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-2.2
+	 *
+	 * @no-admin-idor-exempt role-guarded one layer down. Every service entry calls
+	 * SubjectErasureAuthority::assertMayErase(), which admits only admins and the configured subject-
+	 * erasure groups.
 	 */
 	#[NoAdminRequired]
 	public function exclude(string $id): JSONResponse {
@@ -155,7 +169,7 @@ class SubjectErasureController extends Controller {
 			action: fn (): array => $this->requests->exclude(
 				uuid: $id,
 				exclusions: (array) $this->request->getParam('exclusions', []),
-				userId: $this->userId()
+				userId: $this->currentUserId()
 			)
 		);
 
@@ -169,10 +183,14 @@ class SubjectErasureController extends Controller {
 	 * @return JSONResponse The request and the certificate, or a refusal.
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-3.1
+	 *
+	 * @no-admin-idor-exempt role-guarded one layer down. Every service entry calls
+	 * SubjectErasureAuthority::assertMayErase(), which admits only admins and the configured subject-
+	 * erasure groups.
 	 */
 	#[NoAdminRequired]
 	public function run(string $id): JSONResponse {
-		return $this->answer(action: fn (): array => $this->runs->run(uuid: $id, userId: $this->userId()));
+		return $this->answer(action: fn (): array => $this->runs->run(uuid: $id, userId: $this->currentUserId()));
 
 	}//end run()
 
@@ -184,10 +202,14 @@ class SubjectErasureController extends Controller {
 	 * @return JSONResponse The certificate, or a refusal.
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-4.2
+	 *
+	 * @no-admin-idor-exempt role-guarded one layer down. Every service entry calls
+	 * SubjectErasureAuthority::assertMayErase(), which admits only admins and the configured subject-
+	 * erasure groups.
 	 */
 	#[NoAdminRequired]
 	public function certificate(string $id): JSONResponse {
-		return $this->answer(action: fn (): array => $this->runs->certificate(uuid: $id, userId: $this->userId()));
+		return $this->answer(action: fn (): array => $this->runs->certificate(uuid: $id, userId: $this->currentUserId()));
 
 	}//end certificate()
 
@@ -243,19 +265,4 @@ class SubjectErasureController extends Controller {
 		);
 
 	}//end refused()
-
-	/**
-	 * The signed-in user's id, '' when nobody is.
-	 *
-	 * @return string The user id.
-	 */
-	private function userId(): string {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return '';
-		}
-
-		return $user->getUID();
-
-	}//end userId()
 }//end class

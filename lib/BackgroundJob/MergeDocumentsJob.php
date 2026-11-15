@@ -32,8 +32,8 @@ declare(strict_types=1);
 namespace OCA\Filinq\BackgroundJob;
 
 use OCA\Filinq\Exception\MergeJobStoreUnreadableException;
-use OCA\Filinq\Service\DocumentMergeService;
-use OCA\Filinq\Service\MergeJobRepository;
+use OCA\Filinq\Kernel\Contracts\DocumentMergeServiceInterface;
+use OCA\Filinq\Kernel\Contracts\MergeJobRepositoryInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use OCP\IUserSession;
@@ -64,8 +64,8 @@ class MergeDocumentsJob extends TimedJob {
 	 * Constructor.
 	 *
 	 * @param ITimeFactory $time The clock the job runner uses.
-	 * @param MergeJobRepository $jobs The job store.
-	 * @param DocumentMergeService $merges The merge itself.
+	 * @param MergeJobRepositoryInterface $jobs The job store.
+	 * @param DocumentMergeServiceInterface $merges The merge itself.
 	 * @param IUserSession $userSession The session the merge runs as.
 	 * @param LoggerInterface $logger Logger for diagnostics.
 	 *
@@ -73,8 +73,8 @@ class MergeDocumentsJob extends TimedJob {
 	 */
 	public function __construct(
 		ITimeFactory $time,
-		private readonly MergeJobRepository $jobs,
-		private readonly DocumentMergeService $merges,
+		private readonly MergeJobRepositoryInterface $jobs,
+		private readonly DocumentMergeServiceInterface $merges,
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
 	) {

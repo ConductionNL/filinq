@@ -44,41 +44,14 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\Redaction;
 
 use OCA\Filinq\Exception\AgreementStoreUnreadableException;
+use OCA\Filinq\Kernel\Contracts\DownloadAgreementGateInterface;
 use OCP\IL10N;
 use RuntimeException;
 
 /**
  * Decides whether a gated file may be served, and records the acceptance.
  */
-class DownloadAgreementGate {
-
-	/**
-	 * Nobody has accepted anything for this file.
-	 *
-	 * @var string
-	 */
-	public const NOT_ACCEPTED = 'not_accepted';
-
-	/**
-	 * An older version was accepted, and the terms have changed since.
-	 *
-	 * @var string
-	 */
-	public const VERSION_MOVED_ON = 'version_moved_on';
-
-	/**
-	 * The acceptance could not be written, so nothing is served.
-	 *
-	 * @var string
-	 */
-	public const NOT_RECORDED = 'not_recorded';
-
-	/**
-	 * The conditions could not be read, so it is not known whether any apply.
-	 *
-	 * @var string
-	 */
-	public const NOT_KNOWN = 'not_known';
+class DownloadAgreementGate implements DownloadAgreementGateInterface {
 
 	/**
 	 * Constructor.
@@ -124,13 +97,26 @@ class DownloadAgreementGate {
 			return ['mayDownload' => true, 'gated' => false];
 		}
 
-		$version = trim((string)($agreement['version'] ?? ''));
 		try {
 			$accepted = $this->agreements->acceptanceOf(document: $document, person: $person);
 		} catch (AgreementStoreUnreadableException $e) {
 			return $this->cannotTell(error: $e);
 		}
 
+		return $this->verdict(agreement: $agreement, accepted: $accepted);
+
+	}//end check()
+
+	/**
+	 * Whether an acceptance covers the terms in force, and what to show when it does not.
+	 *
+	 * @param array<string, mixed>      $agreement The terms in force.
+	 * @param array<string, mixed>|null $accepted  The reader's acceptance, or null.
+	 *
+	 * @return array<string, mixed> `mayDownload`, and the agreement to show when not.
+	 */
+	private function verdict(array $agreement, ?array $accepted): array {
+		$version = trim((string)($agreement['version'] ?? ''));
 		$acceptedVersion = '';
 		if ($accepted !== null) {
 			$acceptedVersion = trim((string)($accepted['acceptedVersion'] ?? ''));
@@ -169,7 +155,7 @@ class DownloadAgreementGate {
 			'acceptedVersion' => $acceptedVersion,
 		];
 
-	}//end check()
+	}//end verdict()
 
 	/**
 	 * Record an acceptance, and say whether the file may now be served.

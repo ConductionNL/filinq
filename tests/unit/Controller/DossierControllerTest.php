@@ -13,6 +13,9 @@
  * @link https://conduction.nl
  *
  * @spec openspec/changes/anonymisation-grondslagen-summary-rendering/tasks.md#task-10
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -122,26 +125,6 @@ class DossierControllerTest extends TestCase {
 	 * @spec openspec/changes/anonymisation-grondslagen-summary-rendering/tasks.md#task-10
 	 */
 	public function testGenerateGrondslagenSummaryReturnsFileMetadataOnSuccess(): void {
-		// PHPUnit 10.5 will not generate a usable double for
-		// `OCP\Files\File`: `getSize($includeMounts = true)` is declared
-		// identically on BOTH ancestor interfaces (`Node` and
-		// `FileInfo`), the doubler treats this as ambiguous and OMITS
-		// the method from the generated mock, so the controller's
-		// `$file->getSize()` call would Error. Hand-rolling an anonymous
-		// `File` implementation is also unworkable because the interface
-		// surface (Node + FileInfo + File) has ~40 methods and
-		// tightly-typed `getParent(): Folder` / `getStorage()` returns.
-		// Skipping with an explicit reason keeps the test green and
-		// documents the gap until upstream OCP stubs declare `getSize`
-		// on exactly one interface OR PHPUnit relaxes the ambiguity
-		// check.
-		$this->markTestSkipped(
-			'Cannot mock OCP\\Files\\File::getSize() — declared in both '
-			. 'Node and FileInfo, omitted by PHPUnit 10.5 doubler. '
-			. 'Controller path covered by the live-environment smoke '
-			. '(GET /api/dossiers/{id}/grondslagen-summary).'
-		);
-		// @phpstan-ignore-next-line dead path after markTestSkipped
 		$user = $this->createMock(IUser::class);
 		$user->method('getUID')->willReturn('alice');
 
@@ -153,6 +136,12 @@ class DossierControllerTest extends TestCase {
 		$file->method('getId')->willReturn(4242);
 		$file->method('getName')->willReturn('grondslagen.pdf');
 		$file->method('getPath')->willReturn('/alice/files/Dossiers/d-1/grondslagen.pdf');
+		$file->method('getSize')->willReturn(12345);
+
+		$this->mockSummaryService
+			->expects($this->once())
+			->method('authorizeAccess')
+			->with(dossierId: 'd-1');
 
 		$this->mockSummaryService
 			->expects($this->once())
@@ -226,4 +215,51 @@ class DossierControllerTest extends TestCase {
 		$this->assertArrayHasKey('error', $response->getData());
 
 	}//end testGenerateGrondslagenSummaryReturns500OnRenderFailure()
+	/**
+	 * A dossier that is unknown or not readable answers 403, not 500: the
+	 * access check refuses before anything renders, and a refusal is not a
+	 * server failure. The Newman case for this route asserts the same over HTTP.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/fix-dossier-grondslagen-route-mismatch/tasks.md#task-R-2.1
+	 */
+	public function testAnUnknownOrUnreadableDossierAnswers403NotA500(): void {
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn('alice');
+		$this->mockUserSession->method('getUser')->willReturn($user);
+
+		$this->mockSummaryService
+			->method('authorizeAccess')
+			->willThrowException(new \RuntimeException('Access denied or dossier not found: nope', 403));
+		$this->mockSummaryService->expects($this->never())->method('renderDossierSummary');
+
+		$response = $this->controller->generateGrondslagenSummary('nope');
+
+		$this->assertSame(403, $response->getStatus());
+		$this->assertArrayHasKey('error', $response->getData());
+
+	}//end testAnUnknownOrUnreadableDossierAnswers403NotA500()
+
+	/**
+	 * OpenRegister's mapper throws DoesNotExistException for an unknown id;
+	 * that is the same refusal, not a server failure.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/fix-dossier-grondslagen-route-mismatch/tasks.md#task-R-2.1
+	 */
+	public function testAMissingDossierFromTheMapperAnswers403(): void {
+		$user = $this->createMock(IUser::class);
+		$this->mockUserSession->method('getUser')->willReturn($user);
+
+		$this->mockSummaryService
+			->method('authorizeAccess')
+			->willThrowException(new \OCP\AppFramework\Db\DoesNotExistException('not found'));
+
+		$response = $this->controller->generateGrondslagenSummary('nope');
+
+		$this->assertSame(403, $response->getStatus());
+
+	}//end testAMissingDossierFromTheMapperAnswers403()
 }//end class

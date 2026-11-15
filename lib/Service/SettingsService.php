@@ -31,6 +31,8 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use Exception;
+use OCA\Filinq\Kernel\Contracts\SettingsServiceInterface;
+use OCA\Filinq\Service\Support\RegisterSetup;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -47,7 +49,38 @@ use RuntimeException;
  * @spec openspec/changes/ocr-document-scanning/tasks.md#task-4.1
  * @spec openspec/changes/files-confidential-labels/specs/files-confidential-labels/spec.md#requirement-optionally-suggest-batchfolder-analysis-priority-req-ddfcl-003
  */
-class SettingsService {
+class SettingsService implements SettingsServiceInterface {
+
+	/**
+	 * The scalar feature toggles, in the order the settings list them:
+	 * key => [default, kind]. Kinds: `int` casts to an integer, `on` is true
+	 * only for '1', `notOff` is true for anything but '0', `text` is the
+	 * stored string.
+	 *
+	 * The guardian consent age (signer-identity-rails REQ-DDSIR-008) defaults
+	 * to 16, the Dutch age of consent. The anonymise output format is the
+	 * tenant-wide default for the anonymise endpoint's `outputFormat`:
+	 * 'pdf-only' converts via the cascade and deletes the native anonymised
+	 * intermediate, 'pdf' converts but keeps it, 'preserve' returns the
+	 * native input format.
+	 *
+	 * @var array<string, array{0: string, 1: string}>
+	 */
+	private const TOGGLE_DEFAULTS = [
+		'publication_objection_period_days'          => ['28', 'int'],
+		'enable_language_detection'                  => ['1', 'on'],
+		'enable_keyword_extraction'                  => ['1', 'on'],
+		'enable_topic_classification'                => ['1', 'on'],
+		'enable_contract_term_extraction'            => ['1', 'on'],
+		'enable_inbound_classification'              => ['1', 'notOff'],
+		'signing_enabled'                            => ['0', 'on'],
+		'signing_provider'                           => ['native', 'text'],
+		'signing_default_level'                      => ['SES', 'text'],
+		'libresign_qualified'                        => ['0', 'on'],
+		'signing_request_expiry_days'                => ['30', 'int'],
+		'signing_guardian_consent_age'               => ['16', 'text'],
+		'filinq.anonymisation.default_output_format' => ['pdf-only', 'text'],
+	];
 
 	/**
 	 * The application name for identification and configuration purposes
@@ -61,11 +94,12 @@ class SettingsService {
 	 *
 	 * @param IAppConfig $config App configuration interface
 	 * @param LoggerInterface $logger Logger interface
-	 * @param RegisterDiscoveryService $discoveryService Register discovery service
-	 * @param SettingsInitializer $initializer Settings initializer
+	 * @param RegisterSetup $registers Register discovery and the settings initializer.
 	 * @param OcrService $ocrService OCR service for Tesseract status
 	 * @param LegalBasisProposalService $legalBasisProposal Grondslag-per-entity-type proposal service
 	 * @param OpenRegisterAvailabilityService $openRegister OpenRegister availability resolver
+	 * @param QpdfDecryptor|null $qpdf The qpdf probe for the admin status line; last and
+	 *                                 nullable so no construction site shifts.
 	 *
 	 * @return void
 	 *
@@ -74,11 +108,11 @@ class SettingsService {
 	public function __construct(
 		private readonly IAppConfig $config,
 		private readonly LoggerInterface $logger,
-		private readonly RegisterDiscoveryService $discoveryService,
-		private readonly SettingsInitializer $initializer,
+		private readonly RegisterSetup $registers,
 		private readonly OcrService $ocrService,
 		private readonly LegalBasisProposalService $legalBasisProposal,
 		private readonly OpenRegisterAvailabilityService $openRegister,
+		private readonly ?QpdfDecryptor $qpdf = null,
 	) {
 		$this->appName = 'filinq';
 
@@ -92,6 +126,17 @@ class SettingsService {
 	private function isOpenRegisterInstalled(): bool {
 		return $this->openRegister->isInstalled();
 	}//end isOpenRegisterInstalled()
+
+	/**
+	 * OpenRegister's lifecycle transition engine, or null when this OpenRegister has none.
+	 *
+	 * @return object|null The engine, exposing `transitionAsSystem()`.
+	 *
+	 * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md#requirement-a-cancelled-request-must-be-visibly-cancelled-and-must-not-be-re-signable
+	 */
+	public function getTransitionEngine(): ?object {
+		return $this->openRegister->getTransitionEngine();
+	}//end getTransitionEngine()
 
 	/**
 	 * Attempts to retrieve the OpenRegister service from the container
@@ -116,7 +161,7 @@ class SettingsService {
 	 * @spec openspec/specs/admin-settings/spec.md
 	 */
 	public function initialize(): array {
-		return $this->initializer->initialize();
+		return $this->registers->initializer->initialize();
 	}//end initialize()
 
 	/**
@@ -171,57 +216,13 @@ class SettingsService {
 	 * @spec openspec/changes/archive/2026-09-29-intake-ocr-on-arrival/tasks.md#task-1.4
 	 */
 	private function loadFeatureToggles(): array {
+		$toggles = [];
+		foreach (self::TOGGLE_DEFAULTS as $key => $spec) {
+			$toggles[$key] = $this->toggleValue(key: $key, spec: $spec);
+		}
+
 		return [
-			'publication_objection_period_days' => (int)$this->config->getValueString(
-				$this->appName,
-				'publication_objection_period_days',
-				'28'
-			),
-			'enable_language_detection' => $this->config->getValueString(
-				$this->appName,
-				'enable_language_detection',
-				'1'
-			) === '1',
-			'enable_keyword_extraction' => $this->config->getValueString(
-				$this->appName,
-				'enable_keyword_extraction',
-				'1'
-			) === '1',
-			'enable_topic_classification' => $this->config->getValueString(
-				$this->appName,
-				'enable_topic_classification',
-				'1'
-			) === '1',
-			'signing_enabled' => $this->config->getValueString(
-				$this->appName,
-				'signing_enabled',
-				'0'
-			) === '1',
-			'signing_provider' => $this->config->getValueString($this->appName, 'signing_provider', 'native'),
-			'signing_default_level' => $this->config->getValueString(
-				$this->appName,
-				'signing_default_level',
-				'SES'
-			),
-			'libresign_qualified' => $this->config->getValueString($this->appName, 'libresign_qualified', '0') === '1',
-			'signing_request_expiry_days' => (int)$this->config->getValueString(
-				$this->appName,
-				'signing_request_expiry_days',
-				'30'
-			),
-			// Guardian consent age (signer-identity-rails REQ-DDSIR-008): default 16, the Dutch age of consent.
-			'signing_guardian_consent_age' => $this->config->getValueString($this->appName, 'signing_guardian_consent_age', '16'),
-			// Anonymise-output-as-pdf-by-default — tenant-wide default
-			// for the anonymise endpoint's `outputFormat` request param.
-			// 'pdf-only' (default) converts via the cascade and deletes the
-			// native anonymised intermediate so only the PDF remains;
-			// 'pdf' converts but keeps the native intermediate too;
-			// 'preserve' returns it in the native input format.
-			'filinq.anonymisation.default_output_format' => $this->config->getValueString(
-				$this->appName,
-				'filinq.anonymisation.default_output_format',
-				'pdf-only'
-			),
+			...$toggles,
 			// OCR document scanning (ocr-document-scanning) and reading on
 			// arrival (intake-ocr-on-arrival).
 			...$this->loadOcrSettings(),
@@ -266,6 +267,26 @@ class SettingsService {
 	}//end loadFeatureToggles()
 
 	/**
+	 * One scalar toggle, read with its default and typed by its kind.
+	 *
+	 * @param string                       $key  The app config key.
+	 * @param array{0: string, 1: string} $spec The default and the kind.
+	 *
+	 * @return int|bool|string The typed value.
+	 */
+	private function toggleValue(string $key, array $spec): int|bool|string {
+		$raw = $this->config->getValueString($this->appName, $key, $spec[0]);
+
+		return match ($spec[1]) {
+			'int' => (int)$raw,
+			'on' => $raw === '1',
+			'notOff' => $raw !== '0',
+			default => $raw,
+		};
+
+	}//end toggleValue()
+
+	/**
 	 * Read the configured confidentiality-label vocabulary for the settings
 	 * UI, falling back to ConfidentialityLabelService's default TSCP/BAILS
 	 * names when unset or unreadable.
@@ -308,6 +329,22 @@ class SettingsService {
 	}//end getOcrStatus()
 
 	/**
+	 * Whether qpdf is installed, for the line beside Tesseract's (REQ-PPR-003).
+	 *
+	 * Without it a password-protected PDF cannot be unlocked, and the page says
+	 * so before a clerk tries.
+	 *
+	 * @return array{available: bool, version: string|null} The qpdf status.
+	 *
+	 * @spec openspec/changes/intake-pdf-password-removal/tasks.md#2-screens
+	 */
+	public function getQpdfStatus(): array {
+		$version = $this->qpdf?->version();
+
+		return ['available' => ($version !== null), 'version' => $version];
+	}//end getQpdfStatus()
+
+	/**
 	 * Retrieve all settings
 	 *
 	 * @return array<string, mixed> The current settings configuration
@@ -328,7 +365,7 @@ class SettingsService {
 		try {
 			if ($this->isOpenRegisterInstalled() === true) {
 				$data['openRegisters'] = true;
-				$data['availableRegisters'] = $this->discoveryService->fetchAvailableRegisters();
+				$data['availableRegisters'] = $this->registers->discovery->fetchAvailableRegisters();
 			}
 		} catch (\RuntimeException $e) {
 			$this->logger->info(
@@ -338,11 +375,14 @@ class SettingsService {
 		}//end try
 
 		try {
-			$data['configuration'] = $this->discoveryService->loadObjectTypeConfiguration(
+			$data['configuration'] = $this->registers->discovery->loadObjectTypeConfiguration(
 				$data['objectTypes']
 			);
 			$data = array_merge($data, $this->loadFeatureToggles());
 			$data['ocrStatus'] = $this->getOcrStatus();
+			$data['qpdfStatus'] = $this->getQpdfStatus();
+			// Where batch and folder anonymisation put redacted copies.
+			$data[self::SUBFOLDER_KEY] = $this->config->getValueString($this->appName, self::SUBFOLDER_KEY, 'anonymised');
 
 			// Data for the grondslag-per-entity-type selector: the curated
 			// entity types and the available `base` records (slug + name).
@@ -397,6 +437,13 @@ class SettingsService {
 	}//end convertValueToString()
 
 	/**
+	 * Config key of the output subfolder name; equals
+	 * OutputLayoutResolver::SUBFOLDER_CONFIG_KEY (pinned by SettingsServiceTest),
+	 * spelled out so this class does not couple to the resolver.
+	 */
+	private const SUBFOLDER_KEY = 'anonymisation.output_subfolder_name';
+
+	/**
 	 * Keys that are permitted to be written via the settings endpoint.
 	 *
 	 * This allowlist prevents any authenticated user (wave-3 C1) from
@@ -417,6 +464,8 @@ class SettingsService {
 		'enable_language_detection',
 		'enable_keyword_extraction',
 		'enable_topic_classification',
+		'enable_contract_term_extraction',
+		'enable_inbound_classification',
 		'signing_enabled',
 		'signing_provider',
 		'signing_default_level',
@@ -431,6 +480,7 @@ class SettingsService {
 		'legal_hold_authority_groups',
 		'filinq.confidentiality.label_vocabulary',
 		'filinq.confidentiality.prioritise_analysis',
+		self::SUBFOLDER_KEY,
 	];
 
 	/**
@@ -445,10 +495,14 @@ class SettingsService {
 	 * @return array<string, mixed> The updated settings configuration
 	 *
 	 * @throws \RuntimeException If settings update fails
+	 * @throws RuntimeException With code 400 when a value is refused; nothing is written then.
 	 *
 	 * @spec openspec/specs/admin-settings/spec.md
+	 * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-2
 	 */
 	public function updateSettings(array $data): array {
+		$this->assertValidSubfolderName(data: $data);
+
 		try {
 			foreach ($data as $key => $value) {
 				if (empty($key) === true) {
@@ -484,6 +538,51 @@ class SettingsService {
 		}//end try
 
 	}//end updateSettings()
+
+	/**
+	 * Refuse an output subfolder name that is not one safe path segment.
+	 *
+	 * Checked before anything is written, so a refused save changes nothing.
+	 * The message names each disallowed character.
+	 *
+	 * @param array<string, mixed> $data The settings data to update.
+	 *
+	 * @return void
+	 *
+	 * @throws RuntimeException With code 400 when the name is empty or holds a disallowed character.
+	 *
+	 * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-2
+	 */
+	private function assertValidSubfolderName(array $data): void {
+		if (array_key_exists(self::SUBFOLDER_KEY, $data) === false) {
+			return;
+		}
+
+		$name = (string)$data[self::SUBFOLDER_KEY];
+		if (preg_match('/^[a-z0-9_-]+$/', $name) === 1) {
+			return;
+		}
+
+		if ($name === '') {
+			throw new RuntimeException('The output subfolder name cannot be empty.', 400);
+		}
+
+		$bad = array_values(
+			array_unique(
+				array_filter(
+					mb_str_split($name),
+					static fn (string $char): bool => preg_match('/^[a-z0-9_-]$/', $char) !== 1
+				)
+			)
+		);
+		$quoted = array_map(static fn (string $char): string => '"' . $char . '"', $bad);
+		throw new RuntimeException(
+			'The output subfolder name may only hold lowercase letters, digits, hyphens and underscores; it contains '
+			. implode(', ', $quoted) . '.',
+			400
+		);
+
+	}//end assertValidSubfolderName()
 
 	/**
 	 * Resolve the signingRequest register/schema binding, or null when unset.

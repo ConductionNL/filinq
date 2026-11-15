@@ -22,9 +22,9 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use InvalidArgumentException;
-use OCA\Filinq\AppInfo\Application;
-use OCA\Filinq\Service\SignerAuth\OidcBrokerProvider;
-use OCA\Filinq\Service\SignerAuth\SignerAuthSettings;
+use OCA\Filinq\Kernel\AppIdentity;
+use OCA\Filinq\Kernel\Contracts\SignerAuthSettingsInterface;
+use OCA\Filinq\Kernel\SignerAcrMapping;
 use OCA\Filinq\Settings\FilinqAdmin;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -53,15 +53,15 @@ class SignerIdentitySettingsController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param SignerAuthSettings $settings The settings.
+	 * @param SignerAuthSettingsInterface $settings The settings.
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly SignerAuthSettings $settings,
+		private readonly SignerAuthSettingsInterface $settings,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 
 	}//end __construct()
 
@@ -103,7 +103,7 @@ class SignerIdentitySettingsController extends Controller {
 	 * @return array<string, mixed>
 	 */
 	private function payload(): array {
-		return $this->settings->toArray() + ['defaultAcrMapping' => OidcBrokerProvider::DEFAULT_ACR_MAPPING];
+		return $this->settings->toArray() + ['defaultAcrMapping' => SignerAcrMapping::DEFAULT];
 
 	}//end payload()
 }//end class

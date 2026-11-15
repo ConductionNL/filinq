@@ -15,6 +15,7 @@
 import AccountCheck from 'vue-material-design-icons/AccountCheck.vue'
 import AccountEdit from 'vue-material-design-icons/AccountEdit.vue'
 import AccountRemove from 'vue-material-design-icons/AccountRemove.vue'
+import AlertCircleOutline from 'vue-material-design-icons/AlertCircleOutline.vue'
 import BookAlphabet from 'vue-material-design-icons/BookAlphabet.vue'
 import BookOpenVariant from 'vue-material-design-icons/BookOpenVariant.vue'
 import BookOpenVariantOutline from 'vue-material-design-icons/BookOpenVariantOutline.vue'
@@ -23,9 +24,12 @@ import CallSplit from 'vue-material-design-icons/CallSplit.vue'
 import Cash from 'vue-material-design-icons/Cash.vue'
 import CertificateOutline from 'vue-material-design-icons/CertificateOutline.vue'
 import ChartBoxOutline from 'vue-material-design-icons/ChartBoxOutline.vue'
+import ChatQuestionOutline from 'vue-material-design-icons/ChatQuestionOutline.vue'
 import CheckDecagram from 'vue-material-design-icons/CheckDecagram.vue'
 import ClipboardCheckOutline from 'vue-material-design-icons/ClipboardCheckOutline.vue'
+import ClockOutline from 'vue-material-design-icons/ClockOutline.vue'
 import Domain from 'vue-material-design-icons/Domain.vue'
+import EmailArrowRightOutline from 'vue-material-design-icons/EmailArrowRightOutline.vue'
 import EmailMultipleOutline from 'vue-material-design-icons/EmailMultipleOutline.vue'
 import EmailOutline from 'vue-material-design-icons/EmailOutline.vue'
 import EyeOffOutline from 'vue-material-design-icons/EyeOffOutline.vue'
@@ -63,6 +67,7 @@ import SignatureFreehand from 'vue-material-design-icons/SignatureFreehand.vue'
 import Sitemap from 'vue-material-design-icons/Sitemap.vue'
 import Stamper from 'vue-material-design-icons/Stamper.vue'
 import StoreOutline from 'vue-material-design-icons/StoreOutline.vue'
+import TagCheckOutline from 'vue-material-design-icons/TagCheckOutline.vue'
 import TagMultiple from 'vue-material-design-icons/TagMultiple.vue'
 import TextBoxOutline from 'vue-material-design-icons/TextBoxOutline.vue'
 import TextRecognition from 'vue-material-design-icons/TextRecognition.vue'
@@ -72,6 +77,7 @@ export default {
 	AccountCheck,
 	AccountEdit,
 	AccountRemove,
+	AlertCircleOutline,
 	BookAlphabet,
 	// Used by the `product` schema's rate card in the register. Unregistered,
 	// it rendered as NOTHING — not a fallback glyph, just an empty cell where
@@ -81,10 +87,13 @@ export default {
 	BookOpenVariantOutline,
 	CertificateOutline,
 	ChartBoxOutline,
+	ChatQuestionOutline,
 	CheckDecagram,
 	ClipboardCheckOutline,
+	ClockOutline,
 	Domain,
 	EmailMultipleOutline,
+	EmailArrowRightOutline,
 	EmailOutline,
 	EyeOffOutline,
 	// The `documentFinalityRule` and `documentVersion` schemas in
@@ -113,6 +122,7 @@ export default {
 	Magnify,
 	Scanner,
 	InboxArrowDown,
+	TagCheckOutline,
 	Stamper,
 	MapMarkerPath,
 	Palette,

@@ -22,6 +22,7 @@ namespace OCA\Filinq\Service\Redaction;
 
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\IntakeRepository;
+use OCA\Filinq\Service\ReadsStoredObjectRows;
 use OCA\OpenRegister\Db\ObjectEntity;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -30,6 +31,7 @@ use Throwable;
  * Reads `anonymizationLink` rows, which pair a source file with its copy.
  */
 class AnonymizationLinkReader {
+	use ReadsStoredObjectRows;
 
 	/**
 	 * The schema these rows live in.
@@ -101,7 +103,7 @@ class AnonymizationLinkReader {
 			return null;
 		}
 
-		return $this->normalise(row: $results[0]);
+		return $this->storedPayload(row: $results[0]);
 
 	}//end forSource()
 
@@ -240,15 +242,8 @@ class AnonymizationLinkReader {
 	 * @spec exclude Shape adapter over an OpenRegister response.
 	 */
 	private function withUuid(mixed $row): array {
-		$link = $this->normalise(row: $row);
-		$uuid = '';
-		if (is_object($row) === true && method_exists($row, 'getUuid') === true) {
-			$uuid = (string) $row->getUuid();
-		}
-
-		if ($uuid === '' && is_array($row) === true) {
-			$uuid = (string) ($row['@self']['id'] ?? ($row['uuid'] ?? ($row['id'] ?? '')));
-		}
+		$link = $this->storedPayload(row: $row);
+		$uuid = $this->rowUuid(row: $row);
 
 		$link['uuid'] = (string) ($link['uuid'] ?? $uuid);
 		if ($link['uuid'] === '') {
@@ -260,29 +255,35 @@ class AnonymizationLinkReader {
 	}//end withUuid()
 
 	/**
-	 * Read one OpenRegister row into the flat shape this app uses.
+	 * The uuid a stored row carries: the entity's, otherwise the array row's ids.
 	 *
-	 * @param mixed $row The row.
+	 * @param mixed $row The stored row.
 	 *
-	 * @return array<string, mixed> The link.
-	 *
-	 * @spec exclude Shape adapter over an OpenRegister response.
+	 * @return string The uuid, or an empty string.
 	 */
-	private function normalise(mixed $row): array {
-		$data = $row;
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			$data = $row->jsonSerialize();
+	private function rowUuid(mixed $row): string {
+		$uuid = $this->entityUuid(row: $row);
+		if ($uuid === '' && is_array($row) === true) {
+			return (string) ($row['@self']['id'] ?? ($row['uuid'] ?? ($row['id'] ?? '')));
 		}
 
-		if (is_array($data) === false) {
-			return [];
+		return $uuid;
+
+	}//end rowUuid()
+
+	/**
+	 * The uuid of an entity row.
+	 *
+	 * @param mixed $row The stored row.
+	 *
+	 * @return string The uuid, or an empty string when the row is no entity.
+	 */
+	private function entityUuid(mixed $row): string {
+		if (is_object($row) === true && method_exists($row, 'getUuid') === true) {
+			return (string) $row->getUuid();
 		}
 
-		if (isset($data['object']) === true && is_array($data['object']) === true) {
-			return $data['object'];
-		}
+		return '';
 
-		return $data;
-
-	}//end normalise()
+	}//end entityUuid()
 }//end class
