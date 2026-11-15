@@ -22,6 +22,7 @@ namespace OCA\Filinq\Tests\Unit\Service;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\SignatureVerificationLinkService;
 use OCA\Filinq\Service\SigningVerificationService;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -91,8 +92,8 @@ class SignatureVerificationLinkServiceTest extends TestCase {
 
 		$saved = null;
 		$this->objects->expects($this->once())->method('saveObject')->willReturnCallback(
-			static function (array $object, string $register, string $schema, ?string $uuid = null, bool $_rbac = true, bool $_multitenancy = true, bool $_unowned = false) use (&$saved): array {
-				$saved = ['object' => $object, 'register' => $register, 'schema' => $schema, 'rbac' => $_rbac, 'unowned' => $_unowned];
+			static function (array $object, ObjectSaveOptions $options, bool $_rbac = true, bool $_multitenancy = true) use (&$saved): array {
+				$saved = ['object' => $object, 'register' => $options->target->register, 'schema' => $options->target->schema, 'rbac' => $_rbac, 'unowned' => $options->actor->unowned];
 				return $object + ['@self' => ['id' => 'uuid-1']];
 			}
 		);

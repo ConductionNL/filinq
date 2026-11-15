@@ -27,6 +27,9 @@ namespace OCA\Filinq\Service;
 
 use DateTimeImmutable;
 use DateTimeInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\SaveActor;
 use RuntimeException;
 use Throwable;
 
@@ -153,10 +156,11 @@ class SignatureVerificationLinkService {
 		try {
 			$stored = $this->objectResolver->resolve()->saveObject(
 				object: $record,
-				register: self::REGISTER,
-				schema: self::SCHEMA,
-				_rbac: false,
-				_unowned: true
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: self::REGISTER, schema: self::SCHEMA),
+					actor: new SaveActor(unowned: true)
+				),
+				_rbac: false
 			);
 		} catch (Throwable $e) {
 			throw new RuntimeException(message: 'Could not store the signature verification record: ' . $e->getMessage(), code: 0, previous: $e);
