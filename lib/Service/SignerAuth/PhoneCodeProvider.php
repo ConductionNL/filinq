@@ -22,6 +22,7 @@ namespace OCA\Filinq\Service\SignerAuth;
 use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\Filinq\Service\SettingsService;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\ICache;
 use OCP\ICacheFactory;
@@ -297,7 +298,11 @@ class PhoneCodeProvider implements SignerAuthenticationProviderInterface {
 			throw new RuntimeException('Signer records are not configured');
 		}
 
-		$record = $objects->find(id: $signerId, register: $binding['register'], schema: $binding['schema'], _rbac: false);
+		$record = $objects->find(
+			id: $signerId,
+			options: new ObjectFindOptions(register: $binding['register'], schema: $binding['schema']),
+			_rbac: false
+		);
 		if (is_object($record) === true && method_exists($record, 'jsonSerialize') === true) {
 			$record = $record->jsonSerialize();
 		}

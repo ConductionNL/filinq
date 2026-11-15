@@ -30,6 +30,7 @@ use OCA\Filinq\Exception\DomainLinkRefusedException;
 use OCA\OpenRegister\Db\AuditTrail\ObjectAuditEvent;
 use OCA\OpenRegister\Db\AuditTrailMapper;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\Files\File;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
@@ -165,7 +166,10 @@ class DocumentCopyService {
 	 */
 	private function readableSource(string $uid, int $fileId, array $source): File {
 		try {
-			$visible = $this->objectResolver->resolve()->find(id: $source['id'], register: $source['register'], schema: $source['schema']);
+			$visible = $this->objectResolver->resolve()->find(
+				id: $source['id'],
+				options: new ObjectFindOptions(register: $source['register'], schema: $source['schema'])
+			);
 			$node = $this->rootFolder->getUserFolder($uid)->getFirstNodeById($fileId);
 		} catch (Throwable) {
 			$visible = null;
@@ -220,7 +224,11 @@ class DocumentCopyService {
 	 */
 	private function audit(array $record, string $action, array $context): void {
 		try {
-			$object = $this->objectResolver->resolve()->find(id: $record['id'], register: $record['register'], schema: $record['schema'], _rbac: false);
+			$object = $this->objectResolver->resolve()->find(
+				id: $record['id'],
+				options: new ObjectFindOptions(register: $record['register'], schema: $record['schema']),
+				_rbac: false
+			);
 			if (($object instanceof ObjectEntity) === false) {
 				$object = new ObjectEntity();
 				$object->setUuid($record['id']);

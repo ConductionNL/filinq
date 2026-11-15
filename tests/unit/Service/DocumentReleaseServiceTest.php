@@ -26,6 +26,7 @@ use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\DocumentReleaseService;
 use OCA\Filinq\Service\FinalDocumentRepository;
 use OCA\Filinq\Service\IntakeAuthorizationGate;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\IUser;
 use OCP\IUserSession;
@@ -78,8 +79,14 @@ class DocumentReleaseServiceTest extends TestCase {
 			static fn (...$arguments): ?array => ($rows[(string)($arguments[0] ?? '')] ?? null)
 		);
 		$objects->method('saveObject')->willReturnCallback(
-			function (array $object, string $register, string $schema, ?string $uuid, bool $_rbac, bool $_multitenancy, bool $_unowned): array {
-				$this->saved[] = ['object' => $object, 'schema' => $schema, 'uuid' => $uuid, '_rbac' => $_rbac, '_unowned' => $_unowned];
+			function (array $object, ObjectSaveOptions $options, bool $_rbac = true, bool $_multitenancy = true): array {
+				$this->saved[] = [
+					'object' => $object,
+					'schema' => $options->target->schema,
+					'uuid' => $options->uuid,
+					'_rbac' => $_rbac,
+					'_unowned' => $options->actor->unowned,
+				];
 
 				return ($object + ['uuid' => ($uuid ?? 'release-new')]);
 			}

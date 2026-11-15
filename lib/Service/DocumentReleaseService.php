@@ -28,6 +28,10 @@ namespace OCA\Filinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\Filinq\Exception\DomainLinkRefusedException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\SaveActor;
 use OCP\IUserSession;
 use RuntimeException;
 use Throwable;
@@ -242,8 +246,7 @@ class DocumentReleaseService {
 		try {
 			$row = $this->objectResolver->resolve()->find(
 				id: $releaseId,
-				register: self::REGISTER,
-				schema: self::SCHEMA,
+				options: new ObjectFindOptions(register: self::REGISTER, schema: self::SCHEMA),
 				_rbac: false
 			);
 		} catch (Throwable $e) {
@@ -277,11 +280,12 @@ class DocumentReleaseService {
 		try {
 			$stored = $this->objectResolver->resolve()->saveObject(
 				object: $release,
-				register: self::REGISTER,
-				schema: self::SCHEMA,
-				uuid: $uuid,
-				_rbac: false,
-				_unowned: true
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: self::REGISTER, schema: self::SCHEMA),
+					uuid: $uuid,
+					actor: new SaveActor(unowned: true)
+				),
+				_rbac: false
 			);
 		} catch (Throwable $e) {
 			throw new RuntimeException(message: 'Could not store the release: ' . $e->getMessage(), code: 0, previous: $e);

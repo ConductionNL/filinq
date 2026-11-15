@@ -28,6 +28,7 @@ use OCA\Filinq\Service\SettingsService;
 use OCA\Filinq\Service\Support\OpenRegisterAccess;
 use OCA\Filinq\Service\TemplateService;
 use OCA\Filinq\Service\TemplateVersionService;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -76,7 +77,7 @@ class TemplatePublishedVersionTest extends TestCase {
 	protected function setUp(): void {
 		$this->objectService = $this->createMock(ObjectService::class);
 		$this->objectService->method('saveObject')->willReturnCallback(
-			function (array $object, string $register, string $schema): array {
+			function (array $object, ObjectSaveOptions $options): array {
 				$this->saved[] = $object;
 
 				return $object;
