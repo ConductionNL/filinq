@@ -143,7 +143,7 @@ class CustomDictionaryServiceMaintenanceTest extends TestCase {
 		);
 		$objectService->method('deleteObject')->willReturnCallback(
 			function (...$args): bool {
-				$this->deleted[] = $args[2] . ':' . $args[0];
+				$this->deleted[] = $args[0]->target->schema . ':' . $args[0]->uuid;
 
 				return true;
 			}

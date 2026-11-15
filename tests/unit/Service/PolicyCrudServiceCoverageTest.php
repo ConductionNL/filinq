@@ -26,6 +26,7 @@ use JsonSerializable;
 use OCA\Filinq\Service\ConsentService;
 use OCA\Filinq\Service\PolicyCrudService;
 use OCA\Filinq\Service\SettingsService;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\IGroupManager;
@@ -447,7 +448,12 @@ class PolicyCrudServiceCoverageTest extends TestCase {
 
 		$this->objectService->expects($this->once())
 			->method('deleteObject')
-			->with('u-3', 'filinq', 'publicationProhibition', false, false);
+			->with($this->callback(
+					callback: static fn ($deletion): bool => $deletion instanceof ObjectDeletion
+							&& $deletion->uuid === 'u-3'
+							&& $deletion->target->register === 'filinq'
+							&& $deletion->target->schema === 'publicationProhibition'
+				), false, false);
 
 		$this->service()->deleteProhibition('u-3');
 
@@ -602,7 +608,12 @@ class PolicyCrudServiceCoverageTest extends TestCase {
 
 		$this->objectService->expects($this->once())
 			->method('deleteObject')
-			->with('sc-2', 'filinq', 'publicationConsent', false, false);
+			->with($this->callback(
+					callback: static fn ($deletion): bool => $deletion instanceof ObjectDeletion
+							&& $deletion->uuid === 'sc-2'
+							&& $deletion->target->register === 'filinq'
+							&& $deletion->target->schema === 'publicationConsent'
+				), false, false);
 
 		$this->service()->deleteStandingConsent('sc-2');
 

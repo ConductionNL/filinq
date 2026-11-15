@@ -24,6 +24,7 @@ namespace OCA\Filinq\Tests\Unit\Service\Wizard;
 
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\Wizard\WizardRepository;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
 use OCA\OpenRegister\Service\ObjectService;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -238,7 +239,10 @@ class WizardRepositoryTest extends TestCase {
 	 * @return void
 	 */
 	public function testDeleteRemovesTheObject(): void {
-		$this->objects->expects($this->once())->method('deleteObject')->with('w-7')->willReturn(true);
+		$this->objects->expects($this->once())->method('deleteObject')->with($this->callback(
+				callback: static fn ($deletion): bool => $deletion instanceof ObjectDeletion
+						&& $deletion->uuid === 'w-7'
+			))->willReturn(true);
 
 		$this->repository->delete(uuid: 'w-7');
 	}//end testDeleteRemovesTheObject()

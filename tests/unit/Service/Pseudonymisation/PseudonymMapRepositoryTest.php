@@ -23,6 +23,7 @@ namespace OCA\Filinq\Tests\Unit\Service\Pseudonymisation;
 use Exception;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\Pseudonymisation\PseudonymMapRepository;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
 use OCA\OpenRegister\Service\ObjectService;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -237,7 +238,11 @@ class PseudonymMapRepositoryTest extends TestCase {
 	public function testDelete(): void {
 		$this->objectService->expects($this->exactly(3))
 			->method('deleteObject')
-			->with($this->anything(), 'filinq', 'pseudonymMap', false)
+			->with($this->callback(
+					callback: static fn ($deletion): bool => $deletion instanceof ObjectDeletion
+							&& $deletion->target->register === 'filinq'
+							&& $deletion->target->schema === 'pseudonymMap'
+				), false)
 			->willReturnOnConsecutiveCalls(true, false, $this->throwException(new Exception('locked')));
 
 		$this->repository->delete('map-1');
