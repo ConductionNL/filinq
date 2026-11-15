@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use Exception;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
 use Throwable;
@@ -176,7 +177,10 @@ class GenerationSourceObject {
 	 */
 	private function hostFolderPath(array $source, string $userId): ?string {
 		try {
-			$found = $this->objects->resolve()->find(id: $source['id'], register: $source['register'], schema: $source['schema']);
+			$found = $this->objects->resolve()->find(
+				id: $source['id'],
+				options: new ObjectFindOptions(register: $source['register'], schema: $source['schema'])
+			);
 			$self  = ((new StoredRecordFields())->read(row: $found)['@self'] ?? []);
 			$folderId = 0;
 			if (is_array($self) === true && is_numeric($self['folder'] ?? null) === true) {

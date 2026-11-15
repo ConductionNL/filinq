@@ -28,6 +28,7 @@ use Exception;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\GenerationSourceObject;
 use OCA\Filinq\Service\StoredRecordFields;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\Files\File;
 use OCP\Files\Folder;
@@ -73,8 +74,8 @@ final class GenerationSourceObjectTest extends TestCase {
 	 */
 	private function service(mixed $stored = ['title' => 'Zaak', '@self' => ['id' => 'c-1', 'folder' => 77]]): GenerationSourceObject {
 		$this->objects = $this->createMock(ObjectService::class);
-		$this->objects->method('find')->willReturnCallback(function (string $id = '', string $register = '', string $schema = '') use ($stored): mixed {
-			$this->finds[] = [$id, $register, $schema];
+		$this->objects->method('find')->willReturnCallback(function (string $id = '', ?ObjectFindOptions $options = null) use ($stored): mixed {
+			$this->finds[] = [$id, (string)($options?->register ?? ''), (string)($options?->schema ?? '')];
 			return $stored;
 		});
 		$resolver = $this->createMock(DocumentObjectServiceResolver::class);
