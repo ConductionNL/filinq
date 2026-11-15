@@ -33,6 +33,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
+use OCA\Filinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * The repository writes to the intake register, reads back the stored
@@ -83,12 +84,12 @@ class BulkSigningBatchRepositoryTest extends TestCase {
 	 */
 	public function testSaveWritesToTheSigningRegisterUnderTheGivenUuid(): void {
 		$this->objects->expects($this->once())->method('saveObject')
-			->with(
-				['title' => 'Verklaring', 'status' => 'ready'],
-				IntakeRepository::REGISTER,
-				'bulkSigningBatch',
-				'batch-7'
-			)
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+				'object' => ['title' => 'Verklaring', 'status' => 'ready'],
+				'register' => IntakeRepository::REGISTER,
+				'schema' => 'bulkSigningBatch',
+				'uuid' => 'batch-7',
+			]))
 			->willReturn(['title' => 'Verklaring', 'status' => 'ready', 'uuid' => 'batch-7']);
 
 		$stored = $this->repository()->save(batch: ['uuid' => 'stale', 'title' => 'Verklaring', 'status' => 'ready'], uuid: 'batch-7');
@@ -106,6 +107,7 @@ class BulkSigningBatchRepositoryTest extends TestCase {
 		$calls = [];
 		$this->objects->method('saveObject')->willReturnCallback(
 			function (...$args) use (&$calls): array {
+				$args = LegacyObjectArgs::positional(method: 'saveObject', args: $args);
 				$calls[] = $args;
 				return ['object' => ['title' => 'New'], '@self' => ['id' => 'fresh-1']];
 			}
@@ -176,7 +178,11 @@ class BulkSigningBatchRepositoryTest extends TestCase {
 	 */
 	public function testFindReturnsNullForAnAbsentBatch(): void {
 		$this->objects->expects($this->once())->method('find')
-			->with('batch-404', IntakeRepository::REGISTER, 'bulkSigningBatch')
+			->with(...LegacyObjectArgs::with(method: 'find', expected: [
+				'id' => 'batch-404',
+				'register' => IntakeRepository::REGISTER,
+				'schema' => 'bulkSigningBatch',
+			]))
 			->willReturn(null);
 
 		$this->assertNull($this->repository()->find(uuid: 'batch-404'));

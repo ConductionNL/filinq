@@ -31,6 +31,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
+use OCA\Filinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Tests for SigningEnvelopeRepository.
@@ -72,7 +73,13 @@ final class SigningEnvelopeRepositoryTest extends TestCase {
 	public function testSaveStripsDerivedFieldsAndReadsThePayload(): void {
 		$this->objects->expects($this->once())
 			->method('saveObject')
-			->with(['title' => 'Contract', 'status' => 'open'], 'filinq', 'signingEnvelope', 'env-1', false)
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+					'object' => ['title' => 'Contract', 'status' => 'open'],
+					'register' => 'filinq',
+					'schema' => 'signingEnvelope',
+					'uuid' => 'env-1',
+					'_rbac' => false,
+				]))
 			->willReturn(['object' => ['title' => 'Contract', 'status' => 'open'], '@self' => ['id' => 'env-1']]);
 
 		$saved = $this->repository->save(envelope: ['uuid' => 'ignored', 'members' => [['id' => 'm']], 'title' => 'Contract', 'status' => 'open'], uuid: 'env-1');
@@ -127,7 +134,12 @@ final class SigningEnvelopeRepositoryTest extends TestCase {
 	public function testFindShortcutsAndMissingRows(): void {
 		$this->objects->expects($this->once())
 			->method('find')
-			->with('env-4', 'filinq', 'signingEnvelope', false)
+			->with(...LegacyObjectArgs::with(method: 'find', expected: [
+					'id' => 'env-4',
+					'register' => 'filinq',
+					'schema' => 'signingEnvelope',
+					'_rbac' => false,
+				]))
 			->willReturn(null);
 
 		self::assertNull($this->repository->find(uuid: ''));

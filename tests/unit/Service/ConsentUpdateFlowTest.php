@@ -34,6 +34,8 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Locks what updateConsentStatus reads, writes, logs and throws.
@@ -60,7 +62,9 @@ class ConsentUpdateFlowTest extends TestCase {
 	private function handler(?array $stored, bool $saveFails=false): ConsentUpdateHandler {
 		$objects = $this->createMock(originalClassName: ObjectService::class);
 		$objects->method('find')->willReturnCallback(
-			function (string $id, string $register, string $schema, bool $_rbac) use ($stored): ?ObjectEntity {
+			function (string $id, ?ObjectFindOptions $options = null, bool $_rbac = true) use ($stored): ?ObjectEntity {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				$this->calls[] = ['find' => [$id, $register, $schema, $_rbac]];
 				if ($stored === null) {
 					return null;
@@ -72,7 +76,10 @@ class ConsentUpdateFlowTest extends TestCase {
 			}
 		);
 		$objects->method('saveObject')->willReturnCallback(
-			function (array $object, string $register, string $schema, ?string $uuid = null, bool $_rbac = true) use ($saveFails): ObjectEntity {
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true) use ($saveFails): ObjectEntity {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				unset($object['statusEvents']);
 				$this->calls[] = ['save' => [$object, $register, $schema, $uuid, $_rbac]];
 				if ($saveFails === true) {

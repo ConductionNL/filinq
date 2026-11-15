@@ -34,6 +34,8 @@ namespace OCA\Filinq\Service;
 use DateTimeImmutable;
 use OCA\Filinq\Exception\DocumentFinalException;
 use OCA\Filinq\Kernel\Contracts\DocumentFinalityRuleServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
@@ -178,7 +180,13 @@ class DocumentFinalityRuleService implements DocumentFinalityRuleServiceInterfac
 				$arguments['uuid'] = $uuid;
 			}
 
-			$stored = $objectService->saveObject(...$arguments);
+			$stored = $objectService->saveObject(
+				object: $arguments['object'],
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: ($arguments['register'] ?? null), schema: ($arguments['schema'] ?? null)),
+					uuid: $arguments['uuid'] ?? null
+				)
+			);
 		} catch (Throwable $e) {
 			throw new RuntimeException(
 				message: 'Could not store the finality declaration: ' . $e->getMessage(),

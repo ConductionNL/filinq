@@ -34,6 +34,10 @@ namespace OCA\Filinq\Service;
 use Exception;
 use InvalidArgumentException;
 use OCA\Filinq\Kernel\Contracts\PolicyCrudServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\IGroupManager;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
@@ -234,9 +238,10 @@ class PolicyCrudService implements PolicyCrudServiceInterface {
 
 		$objectService = $this->settingsService->getObjectService();
 		$objectService->deleteObject(
-			uuid: $uuid,
-			register: self::REGISTER,
-			schema: self::SCHEMA_PROHIBITION
+			new ObjectDeletion(
+				uuid: $uuid,
+				target: new ObjectFindTarget(register: self::REGISTER, schema: self::SCHEMA_PROHIBITION)
+			)
 		);
 		$this->matcher?->invalidateCache();
 
@@ -327,9 +332,10 @@ class PolicyCrudService implements PolicyCrudServiceInterface {
 
 		$objectService = $this->settingsService->getObjectService();
 		$objectService->deleteObject(
-			uuid: $uuid,
-			register: self::REGISTER,
-			schema: self::SCHEMA_CONSENT
+			new ObjectDeletion(
+				uuid: $uuid,
+				target: new ObjectFindTarget(register: self::REGISTER, schema: self::SCHEMA_CONSENT)
+			)
 		);
 		$this->matcher?->invalidateCache();
 
@@ -582,8 +588,7 @@ class PolicyCrudService implements PolicyCrudServiceInterface {
 		$objectService = $this->settingsService->getObjectService();
 		$object = $objectService->find(
 			id: $uuid,
-			register: $register,
-			schema: $schema
+			options: new ObjectFindOptions(register: $register, schema: $schema)
 		);
 
 		if ($object === null) {
@@ -619,9 +624,10 @@ class PolicyCrudService implements PolicyCrudServiceInterface {
 			$objectService = $this->settingsService->getObjectService();
 			$saved = $objectService->saveObject(
 				object: $data,
-				register: $register,
-				schema: $schema,
-				uuid: $uuid
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $register, schema: $schema),
+					uuid: $uuid
+				)
 			);
 			return $saved->getObject();
 		} catch (Exception $e) {

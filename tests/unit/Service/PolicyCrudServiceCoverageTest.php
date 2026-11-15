@@ -35,6 +35,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Filinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * The policy CRUD layer: listing and lookup through OpenRegister's slug-aware
@@ -254,7 +255,13 @@ class PolicyCrudServiceCoverageTest extends TestCase {
 	public function testGetProhibitionSerialisesTheFoundEntity(): void {
 		$this->objectService->expects($this->once())
 			->method('find')
-			->with('u-1', 'filinq', 'publicationProhibition', true, true)
+			->with(...LegacyObjectArgs::with(method: 'find', expected: [
+					'id' => 'u-1',
+					'register' => 'filinq',
+					'schema' => 'publicationProhibition',
+					'_rbac' => true,
+					'_multitenancy' => true,
+				]))
 			->willReturn($this->entity(['id' => 'u-1', 'active' => true]));
 
 		$this->assertSame(['id' => 'u-1', 'active' => true], $this->service()->getProhibition('u-1'));
@@ -291,14 +298,14 @@ class PolicyCrudServiceCoverageTest extends TestCase {
 	 * @return void
 	 */
 	public function testGetStandingConsentAssertsEntityScope(): void {
-		$this->objectService->method('find')->willReturnMap(
+		$this->objectService->method('find')->willReturnCallback(LegacyObjectArgs::returnMap(method: 'find', map: 
 			[
 				['e', 'filinq', 'publicationConsent', true, true, true, true, ['id' => 'e', 'scope' => 'entity']],
 				['d', 'filinq', 'publicationConsent', true, true, true, true, ['id' => 'd', 'scope' => 'document']],
 				['n', 'filinq', 'publicationConsent', true, true, true, true, ['id' => 'n']],
 				['x', 'filinq', 'publicationConsent', true, true, true, true, null],
 			]
-		);
+		));
 
 		$service = $this->service();
 		$this->assertSame(['id' => 'e', 'scope' => 'entity'], $service->getStandingConsent('e'));
@@ -319,14 +326,14 @@ class PolicyCrudServiceCoverageTest extends TestCase {
 
 		$this->objectService->expects($this->once())
 			->method('saveObject')
-			->with(
-				['entityText' => 'Jan', 'active' => true],
-				'filinq',
-				'publicationProhibition',
-				null,
-				true,
-				true
-			)
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+					'object' => ['entityText' => 'Jan', 'active' => true],
+					'register' => 'filinq',
+					'schema' => 'publicationProhibition',
+					'uuid' => null,
+					'_rbac' => true,
+					'_multitenancy' => true,
+				]))
 			->willReturn($this->saved(['id' => 'new', 'entityText' => 'Jan']));
 
 		$result = $this->service()->createProhibition(
@@ -350,7 +357,11 @@ class PolicyCrudServiceCoverageTest extends TestCase {
 
 		$this->objectService->expects($this->once())
 			->method('saveObject')
-			->with(['active' => false], 'filinq', 'publicationProhibition')
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+					'object' => ['active' => false],
+					'register' => 'filinq',
+					'schema' => 'publicationProhibition',
+				]))
 			->willReturn($this->saved(['active' => false]));
 
 		$this->assertSame(['active' => false], $this->service()->createProhibition(['active' => false]));
@@ -401,7 +412,14 @@ class PolicyCrudServiceCoverageTest extends TestCase {
 
 		$this->objectService->expects($this->once())
 			->method('saveObject')
-			->with(['entityText' => 'Piet'], 'filinq', 'publicationProhibition', 'u-9', true, true)
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+					'object' => ['entityText' => 'Piet'],
+					'register' => 'filinq',
+					'schema' => 'publicationProhibition',
+					'uuid' => 'u-9',
+					'_rbac' => true,
+					'_multitenancy' => true,
+				]))
 			->willReturn($this->saved(['id' => 'u-9', 'entityText' => 'Piet']));
 
 		$this->assertSame(
@@ -447,7 +465,13 @@ class PolicyCrudServiceCoverageTest extends TestCase {
 
 		$this->objectService->expects($this->once())
 			->method('deleteObject')
-			->with('u-3', 'filinq', 'publicationProhibition', true, true);
+			->with(...LegacyObjectArgs::with(method: 'deleteObject', expected: [
+					'uuid' => 'u-3',
+					'register' => 'filinq',
+					'schema' => 'publicationProhibition',
+					'_rbac' => true,
+					'_multitenancy' => true,
+				]));
 
 		$this->service()->deleteProhibition('u-3');
 
@@ -484,7 +508,14 @@ class PolicyCrudServiceCoverageTest extends TestCase {
 			->with($expected);
 		$this->objectService->expects($this->once())
 			->method('saveObject')
-			->with($expected, 'filinq', 'publicationConsent', null, true, true)
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+					'object' => $expected,
+					'register' => 'filinq',
+					'schema' => 'publicationConsent',
+					'uuid' => null,
+					'_rbac' => true,
+					'_multitenancy' => true,
+				]))
 			->willReturn($this->saved(['id' => 'sc-1']));
 
 		$this->assertSame(
@@ -557,14 +588,27 @@ class PolicyCrudServiceCoverageTest extends TestCase {
 
 		$this->objectService->expects($this->once())
 			->method('find')
-			->with('sc-1', 'filinq', 'publicationConsent', true, true)
+			->with(...LegacyObjectArgs::with(method: 'find', expected: [
+					'id' => 'sc-1',
+					'register' => 'filinq',
+					'schema' => 'publicationConsent',
+					'_rbac' => true,
+					'_multitenancy' => true,
+				]))
 			->willReturn(['id' => 'sc-1', 'scope' => 'entity', 'consentMethod' => 'mail', 'active' => true]);
 
 		$expected = ['id' => 'sc-1', 'scope' => 'entity', 'consentMethod' => 'phone', 'active' => true];
 		$this->consentService->expects($this->once())->method('validatePublicationConsentData')->with($expected);
 		$this->objectService->expects($this->once())
 			->method('saveObject')
-			->with($expected, 'filinq', 'publicationConsent', 'sc-1', true, true)
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+					'object' => $expected,
+					'register' => 'filinq',
+					'schema' => 'publicationConsent',
+					'uuid' => 'sc-1',
+					'_rbac' => true,
+					'_multitenancy' => true,
+				]))
 			->willReturn($this->saved($expected));
 
 		$this->assertSame(
@@ -602,7 +646,13 @@ class PolicyCrudServiceCoverageTest extends TestCase {
 
 		$this->objectService->expects($this->once())
 			->method('deleteObject')
-			->with('sc-2', 'filinq', 'publicationConsent', true, true);
+			->with(...LegacyObjectArgs::with(method: 'deleteObject', expected: [
+					'uuid' => 'sc-2',
+					'register' => 'filinq',
+					'schema' => 'publicationConsent',
+					'_rbac' => true,
+					'_multitenancy' => true,
+				]));
 
 		$this->service()->deleteStandingConsent('sc-2');
 

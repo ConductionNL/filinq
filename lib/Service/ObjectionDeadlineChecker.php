@@ -27,6 +27,7 @@ namespace OCA\Filinq\Service;
 
 use DateTime;
 use Exception;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -144,8 +145,7 @@ class ObjectionDeadlineChecker {
 
 			$object = $objectService->find(
 				id: $consentId,
-				register: $register,
-				schema: $schema
+				options: new ObjectFindOptions(register: $register, schema: $schema)
 			);
 
 			if ($object === null) {
