@@ -3,6 +3,9 @@
 /**
  * EML PDF Assembly Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Assembles a single PDF/A-3b document from OpenRegister's *redacted*
  * anonymise-EML result (an {@see \OCA\OpenRegister\Service\File\AnonymisedEmlStructure}).
  *

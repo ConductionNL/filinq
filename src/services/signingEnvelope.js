@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+/**
  * Signing envelopes (bulk-signing-field-builder REQ-DDBSF-004/005): several
  * documents signed in one ceremony. Each document stays its own signing
  * request; the envelope groups them.

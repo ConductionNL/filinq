@@ -190,7 +190,7 @@ class EntitySearchServiceTest extends TestCase {
 		$container->method('get')->willReturnCallback(
 			static fn (string $id) => match ($id) {
 				'OCA\OpenRegister\Service\OrganisationService' => $organisations,
-				'OCA\OpenRegister\Service\RiskLevelService' => new class {
+				'OCA\OpenRegister\Files\Service\RiskLevelService' => new class {
 					/**
 					 * The risk level.
 					 *

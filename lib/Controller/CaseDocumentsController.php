@@ -24,6 +24,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
+use OCA\Filinq\Controller\Support\HandlerAnswer;
 use OCA\Filinq\Kernel\Contracts\DocumentDomainServiceInterface;
 use OCA\Filinq\Kernel\Contracts\FlatFileListServiceInterface;
 use OCA\Filinq\Kernel\Contracts\UploadPolicyServiceInterface;
@@ -224,14 +225,7 @@ class CaseDocumentsController extends Controller {
 			return $unauthenticated;
 		}
 
-		try {
-			return new JSONResponse(data: $handler(), statusCode: Http::STATUS_OK);
-		} catch (Throwable $e) {
-			return new JSONResponse(
-				data: ['error' => $e->getMessage()],
-				statusCode: Http::STATUS_BAD_REQUEST
-			);
-		}
+		return (new HandlerAnswer())->answer(handler: $handler);
 
 	}//end domainCall()
 

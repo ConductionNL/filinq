@@ -132,7 +132,7 @@ class AnonymizationServiceProhibitionTest extends TestCase {
 	 * @return void
 	 */
 	private function stubContainerForExtract(?FakePolicyMatchService $policyService, array $rawEntities): void {
-		$mockExtractor = $this->createMock(\OCA\OpenRegister\Service\TextExtractionService::class);
+		$mockExtractor = $this->createMock(\OCA\OpenRegister\Files\Service\TextExtractionService::class);
 
 		$mockMapper = $this->createMock(\OCA\OpenRegister\Db\EntityRelationMapper::class);
 		$mockMapper->method('findEntitiesForFile')->willReturn($rawEntities);
@@ -144,7 +144,7 @@ class AnonymizationServiceProhibitionTest extends TestCase {
 
 		$this->mockContainer->method('get')->willReturnCallback(
 			function (string $class) use ($mockExtractor, $mockMapper, $mockBasis, $policyService) {
-				if ($class === 'OCA\OpenRegister\Service\TextExtractionService') {
+				if ($class === 'OCA\OpenRegister\Files\Service\TextExtractionService') {
 					return $mockExtractor;
 				}
 

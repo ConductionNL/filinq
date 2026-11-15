@@ -1,3 +1,7 @@
+<!--
+  - SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
 <template>
 	<div class="entity-review">
 		<div class="summary-bar">
@@ -73,7 +77,7 @@
 						{{ t('filinq', 'Files') }}
 					</th>
 					<th scope="col" class="bases-col">
-						{{ t('filinq', 'Grondslag (bases)') }}
+						{{ t('filinq', 'Legal basis') }}
 					</th>
 					<th scope="col">
 						{{ t('filinq', 'Skip') }}
@@ -108,7 +112,7 @@
 							label="label"
 							:reduce="(o) => o.value"
 							:multiple="true"
-							:inputLabel="t('filinq', 'Grondslagen')"
+							:inputLabel="t('filinq', 'Legal bases')"
 							:placeholder="t('filinq', 'Pick grondslagen…')"
 							:disabled="
 								!Array.isArray(item.e.relationIds)

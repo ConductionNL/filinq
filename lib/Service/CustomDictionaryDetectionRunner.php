@@ -113,7 +113,7 @@ class CustomDictionaryDetectionRunner {
 				return null;
 			}
 
-			$chunkMapper = $this->getOpenRegisterService(className: 'OCA\OpenRegister\Db\ChunkMapper');
+			$chunkMapper = $this->getOpenRegisterService(className: 'OCA\OpenRegister\Files\Db\ChunkMapper');
 			$chunks = $chunkMapper->findBySource('file', $fileId);
 			if (empty($chunks) === true) {
 				return null;

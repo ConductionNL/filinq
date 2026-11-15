@@ -98,7 +98,7 @@ class AnonymizationServiceConfidentialityTest extends TestCase {
 
 		$this->entityDetection = new EntityDetectionService(new AnonymizationResultParser());
 
-		$mockExtractor = $this->createMock(\OCA\OpenRegister\Service\TextExtractionService::class);
+		$mockExtractor = $this->createMock(\OCA\OpenRegister\Files\Service\TextExtractionService::class);
 		$mockMapper = $this->createMock(\OCA\OpenRegister\Db\EntityRelationMapper::class);
 		$mockMapper->method('findEntitiesForFile')->willReturn(
 			[['entity_type' => 'PERSON', 'entity_value' => 'Jan Janssen', 'confidence' => 0.95]]
@@ -111,7 +111,7 @@ class AnonymizationServiceConfidentialityTest extends TestCase {
 		$this->mockContainer->method('get')->willReturnCallback(
 			function (string $class) use ($mockExtractor, $mockMapper, $mockBasis) {
 				return match ($class) {
-					'OCA\OpenRegister\Service\TextExtractionService' => $mockExtractor,
+					'OCA\OpenRegister\Files\Service\TextExtractionService' => $mockExtractor,
 					'OCA\OpenRegister\Db\EntityRelationMapper' => $mockMapper,
 					'OCA\Filinq\Service\LegalBasisProposalService' => $mockBasis,
 					'OCA\Filinq\Service\PolicyMatchService' => throw new \Exception('PolicyMatchService not registered'),

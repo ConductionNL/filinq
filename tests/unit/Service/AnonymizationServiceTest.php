@@ -1039,7 +1039,7 @@ class AnonymizationServiceTest extends TestCase {
 		$container->method('get')->willReturnCallback(
 			static function (string $class) use ($extractor, $mapper, $basis) {
 				return match ($class) {
-					'OCA\OpenRegister\Service\TextExtractionService' => $extractor,
+					'OCA\OpenRegister\Files\Service\TextExtractionService' => $extractor,
 					'OCA\OpenRegister\Db\EntityRelationMapper' => $mapper,
 					'OCA\Filinq\Service\LegalBasisProposalService' => $basis,
 					default => throw new \RuntimeException('Unknown service: ' . $class),

@@ -1,0 +1,664 @@
+{
+    "in place, lock held": {
+        "outcome": {
+            "result": {
+                "fileId": 42,
+                "name": "report.odt",
+                "path": "/rel/anna/files/report.odt",
+                "outputMode": "inplace",
+                "appliedAnchors": [
+                    "a1"
+                ],
+                "metadataWritten": [
+                    "title"
+                ],
+                "version": "sha256:73485dd42dbc2a8219415055abe66ea406af3d84c673860a517b87fe0fcc1e97",
+                "agentAuthoredTag": "Agent authored",
+                "warnings": []
+            }
+        },
+        "calls": [
+            [
+                "lock",
+                1,
+                "filinq"
+            ],
+            [
+                "transform",
+                "original bytes",
+                "odt"
+            ],
+            [
+                "mark",
+                42
+            ],
+            [
+                "runInScope",
+                1
+            ],
+            [
+                "putContent",
+                42,
+                "edited bytes"
+            ],
+            [
+                "unlock",
+                1
+            ]
+        ],
+        "logs": []
+    },
+    "beside the source": {
+        "outcome": {
+            "result": {
+                "fileId": 43,
+                "name": "report (agent edit).odt",
+                "path": "/rel/anna/files/report (agent edit).odt",
+                "outputMode": "sibling",
+                "appliedAnchors": [
+                    "a1"
+                ],
+                "metadataWritten": [
+                    "title"
+                ],
+                "version": "sha256:73485dd42dbc2a8219415055abe66ea406af3d84c673860a517b87fe0fcc1e97",
+                "agentAuthoredTag": "Agent authored",
+                "warnings": []
+            }
+        },
+        "calls": [
+            [
+                "lock",
+                1,
+                "filinq"
+            ],
+            [
+                "transform",
+                "original bytes",
+                "odt"
+            ],
+            [
+                "getParent"
+            ],
+            [
+                "getNonExistingName",
+                "report (agent edit).odt"
+            ],
+            [
+                "newFile",
+                "report (agent edit).odt"
+            ],
+            [
+                "mark",
+                43
+            ],
+            [
+                "runInScope",
+                1
+            ],
+            [
+                "putContent",
+                43,
+                "edited bytes"
+            ],
+            [
+                "unlock",
+                1
+            ]
+        ],
+        "logs": []
+    },
+    "beside a source without extension": {
+        "outcome": {
+            "result": {
+                "fileId": 43,
+                "name": "report (agent edit)",
+                "path": "/rel/anna/files/report (agent edit)",
+                "outputMode": "sibling",
+                "appliedAnchors": [
+                    "a1"
+                ],
+                "metadataWritten": [
+                    "title"
+                ],
+                "version": "sha256:73485dd42dbc2a8219415055abe66ea406af3d84c673860a517b87fe0fcc1e97",
+                "agentAuthoredTag": "Agent authored",
+                "warnings": []
+            }
+        },
+        "calls": [
+            [
+                "lock",
+                1,
+                "filinq"
+            ],
+            [
+                "transform",
+                "original bytes",
+                ""
+            ],
+            [
+                "getParent"
+            ],
+            [
+                "getNonExistingName",
+                "report (agent edit)"
+            ],
+            [
+                "newFile",
+                "report (agent edit)"
+            ],
+            [
+                "mark",
+                43
+            ],
+            [
+                "runInScope",
+                1
+            ],
+            [
+                "putContent",
+                43,
+                "edited bytes"
+            ],
+            [
+                "unlock",
+                1
+            ]
+        ],
+        "logs": []
+    },
+    "the sibling cannot be created": {
+        "outcome": {
+            "exception": [
+                "RuntimeException",
+                "Could not create a new file beside the original: folder is read-only",
+                "RuntimeException"
+            ]
+        },
+        "calls": [
+            [
+                "lock",
+                1,
+                "filinq"
+            ],
+            [
+                "transform",
+                "original bytes",
+                "odt"
+            ],
+            [
+                "getParent"
+            ],
+            [
+                "getNonExistingName",
+                "report (agent edit).odt"
+            ],
+            [
+                "newFile",
+                "report (agent edit).odt"
+            ],
+            [
+                "unlock",
+                1
+            ]
+        ],
+        "logs": []
+    },
+    "a stale version": {
+        "outcome": {
+            "exception": [
+                "RuntimeException",
+                "This document changed since you read it, so it was not edited. Read it again and re-apply your changes to the current text.",
+                null
+            ]
+        },
+        "calls": [
+            [
+                "lock",
+                1,
+                "filinq"
+            ],
+            [
+                "transform",
+                "original bytes",
+                "odt"
+            ],
+            [
+                "unlock",
+                1
+            ]
+        ],
+        "logs": []
+    },
+    "an etag is never a version": {
+        "outcome": {
+            "exception": [
+                "RuntimeException",
+                "This document changed since you read it, so it was not edited. Read it again and re-apply your changes to the current text.",
+                null
+            ]
+        },
+        "calls": [
+            [
+                "lock",
+                1,
+                "filinq"
+            ],
+            [
+                "transform",
+                "original bytes",
+                "odt"
+            ],
+            [
+                "unlock",
+                1
+            ]
+        ],
+        "logs": []
+    },
+    "another owner holds the lock": {
+        "outcome": {
+            "exception": [
+                "RuntimeException",
+                "\"report.odt\" is currently open for editing by bob, so it was not changed. Try again once it is closed.",
+                "OCP\\Files\\Lock\\OwnerLockedException"
+            ]
+        },
+        "calls": [
+            [
+                "lock",
+                1,
+                "filinq"
+            ]
+        ],
+        "logs": []
+    },
+    "another anonymous owner holds the lock": {
+        "outcome": {
+            "exception": [
+                "RuntimeException",
+                "\"report.odt\" is currently open for editing by someone else, so it was not changed. Try again once it is closed.",
+                "OCP\\Files\\Lock\\OwnerLockedException"
+            ]
+        },
+        "calls": [
+            [
+                "lock",
+                1,
+                "filinq"
+            ]
+        ],
+        "logs": []
+    },
+    "no lock provider": {
+        "outcome": {
+            "result": {
+                "fileId": 42,
+                "name": "report.odt",
+                "path": "/rel/anna/files/report.odt",
+                "outputMode": "inplace",
+                "appliedAnchors": [
+                    "a1"
+                ],
+                "metadataWritten": [
+                    "title"
+                ],
+                "version": "sha256:73485dd42dbc2a8219415055abe66ea406af3d84c673860a517b87fe0fcc1e97",
+                "agentAuthoredTag": "Agent authored",
+                "warnings": [
+                    "No file-lock provider is available on this instance, so a concurrent editing session could not be excluded. The version check still applies."
+                ]
+            }
+        },
+        "calls": [
+            [
+                "lock",
+                1,
+                "filinq"
+            ],
+            [
+                "transform",
+                "original bytes",
+                "odt"
+            ],
+            [
+                "mark",
+                42
+            ],
+            [
+                "runInScope",
+                1
+            ],
+            [
+                "putContent",
+                42,
+                "edited bytes"
+            ]
+        ],
+        "logs": []
+    },
+    "the lock errors": {
+        "outcome": {
+            "result": {
+                "fileId": 42,
+                "name": "report.odt",
+                "path": "/rel/anna/files/report.odt",
+                "outputMode": "inplace",
+                "appliedAnchors": [
+                    "a1"
+                ],
+                "metadataWritten": [
+                    "title"
+                ],
+                "version": "sha256:73485dd42dbc2a8219415055abe66ea406af3d84c673860a517b87fe0fcc1e97",
+                "agentAuthoredTag": "Agent authored",
+                "warnings": [
+                    "No file-lock provider is available on this instance, so a concurrent editing session could not be excluded. The version check still applies."
+                ]
+            }
+        },
+        "calls": [
+            [
+                "lock",
+                1,
+                "filinq"
+            ],
+            [
+                "transform",
+                "original bytes",
+                "odt"
+            ],
+            [
+                "mark",
+                42
+            ],
+            [
+                "runInScope",
+                1
+            ],
+            [
+                "putContent",
+                42,
+                "edited bytes"
+            ]
+        ],
+        "logs": [
+            [
+                "warning",
+                "Filinq could not take an edit lock: lock backend down"
+            ]
+        ]
+    },
+    "the save fails after tagging": {
+        "outcome": {
+            "exception": [
+                "RuntimeException",
+                "Could not save the edited document: disk full",
+                "RuntimeException"
+            ]
+        },
+        "calls": [
+            [
+                "lock",
+                1,
+                "filinq"
+            ],
+            [
+                "transform",
+                "original bytes",
+                "odt"
+            ],
+            [
+                "mark",
+                42
+            ],
+            [
+                "runInScope",
+                1
+            ],
+            [
+                "putContent",
+                42,
+                "edited bytes"
+            ],
+            [
+                "unmark",
+                42
+            ],
+            [
+                "unlock",
+                1
+            ]
+        ],
+        "logs": []
+    },
+    "the save fails on an already tagged file": {
+        "outcome": {
+            "exception": [
+                "RuntimeException",
+                "Could not save the edited document: disk full",
+                "RuntimeException"
+            ]
+        },
+        "calls": [
+            [
+                "lock",
+                1,
+                "filinq"
+            ],
+            [
+                "transform",
+                "original bytes",
+                "odt"
+            ],
+            [
+                "mark",
+                42
+            ],
+            [
+                "runInScope",
+                1
+            ],
+            [
+                "putContent",
+                42,
+                "edited bytes"
+            ],
+            [
+                "unlock",
+                1
+            ]
+        ],
+        "logs": []
+    },
+    "the save fails without a lock provider": {
+        "outcome": {
+            "exception": [
+                "RuntimeException",
+                "Could not save the edited document: disk full",
+                "RuntimeException"
+            ]
+        },
+        "calls": [
+            [
+                "lock",
+                1,
+                "filinq"
+            ],
+            [
+                "transform",
+                "original bytes",
+                "odt"
+            ],
+            [
+                "mark",
+                42
+            ],
+            [
+                "runInScope",
+                1
+            ],
+            [
+                "putContent",
+                42,
+                "edited bytes"
+            ],
+            [
+                "unmark",
+                42
+            ]
+        ],
+        "logs": []
+    },
+    "the transform fails": {
+        "outcome": {
+            "exception": [
+                "RuntimeException",
+                "codec refused",
+                null
+            ]
+        },
+        "calls": [
+            [
+                "lock",
+                1,
+                "filinq"
+            ],
+            [
+                "transform",
+                "original bytes",
+                "odt"
+            ],
+            [
+                "unlock",
+                1
+            ]
+        ],
+        "logs": []
+    },
+    "the unlock fails": {
+        "outcome": {
+            "result": {
+                "fileId": 42,
+                "name": "report.odt",
+                "path": "/rel/anna/files/report.odt",
+                "outputMode": "inplace",
+                "appliedAnchors": [
+                    "a1"
+                ],
+                "metadataWritten": [
+                    "title"
+                ],
+                "version": "sha256:73485dd42dbc2a8219415055abe66ea406af3d84c673860a517b87fe0fcc1e97",
+                "agentAuthoredTag": "Agent authored",
+                "warnings": []
+            }
+        },
+        "calls": [
+            [
+                "lock",
+                1,
+                "filinq"
+            ],
+            [
+                "transform",
+                "original bytes",
+                "odt"
+            ],
+            [
+                "mark",
+                42
+            ],
+            [
+                "runInScope",
+                1
+            ],
+            [
+                "putContent",
+                42,
+                "edited bytes"
+            ],
+            [
+                "unlock",
+                1
+            ]
+        ],
+        "logs": [
+            [
+                "warning",
+                "Filinq could not release an edit lock: unlock refused"
+            ]
+        ]
+    },
+    "the file is unreadable": {
+        "outcome": {
+            "exception": [
+                "RuntimeException",
+                "\"report.odt\" could not be read.",
+                null
+            ]
+        },
+        "calls": [
+            [
+                "lock",
+                1,
+                "filinq"
+            ],
+            [
+                "unlock",
+                1
+            ]
+        ],
+        "logs": []
+    },
+    "the user folder cannot be reached": {
+        "outcome": {
+            "result": {
+                "fileId": 42,
+                "name": "report.odt",
+                "path": "report.odt",
+                "outputMode": "inplace",
+                "appliedAnchors": [
+                    "a1"
+                ],
+                "metadataWritten": [
+                    "title"
+                ],
+                "version": "sha256:73485dd42dbc2a8219415055abe66ea406af3d84c673860a517b87fe0fcc1e97",
+                "agentAuthoredTag": "Agent authored",
+                "warnings": []
+            }
+        },
+        "calls": [
+            [
+                "lock",
+                1,
+                "filinq"
+            ],
+            [
+                "transform",
+                "original bytes",
+                "odt"
+            ],
+            [
+                "mark",
+                42
+            ],
+            [
+                "runInScope",
+                1
+            ],
+            [
+                "putContent",
+                42,
+                "edited bytes"
+            ],
+            [
+                "unlock",
+                1
+            ]
+        ],
+        "logs": []
+    }
+}

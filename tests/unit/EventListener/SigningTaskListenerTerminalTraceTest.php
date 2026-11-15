@@ -44,6 +44,7 @@ use stdClass;
  * @covers \OCA\Filinq\EventListener\SigningTaskListener
  * @uses \OCA\Filinq\EventListener\SignerStepDecision
  * @uses \OCA\Filinq\EventListener\SignerStepTask
+ * @uses \OCA\Filinq\EventListener\SignerApprovals
  */
 class SigningTaskListenerTerminalTraceTest extends TestCase {
 

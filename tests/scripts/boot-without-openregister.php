@@ -3,6 +3,9 @@
 /**
  * Boot proof: the signing wiring loads with the retired approval surface absent.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Run standalone (`php tests/scripts/boot-without-openregister.php`), and by
  * `RetiredApprovalSurfaceTest` as a subprocess. The process autoloads
  * filinq's `lib/` (composer) plus the Nextcloud stubs, and deliberately does
@@ -27,9 +30,6 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @spec openspec/changes/migrate-signing-to-or-tasks/tasks.md#4-2
  */
@@ -91,6 +91,7 @@ $signingSurface = [
 	'OCA\\Filinq\\EventListener\\SigningTaskListener',
 	'OCA\\Filinq\\EventListener\\SignerEventTranslator',
 	'OCA\\Filinq\\EventListener\\SignerSequenceTasks',
+	'OCA\\Filinq\\EventListener\\SignerApprovals',
 	'OCA\\Filinq\\Event\\SignerStepPendingEvent',
 	'OCA\\Filinq\\Event\\SignerStepApprovedEvent',
 	'OCA\\Filinq\\Event\\SignerStepRejectedEvent',
@@ -161,6 +162,8 @@ $generationSurface = [
 	'OCA\\Filinq\\EventListener\\DocumentGenerationRequestedListener',
 	'OCA\\Filinq\\Event\\DocumentGenerationRequestedEvent',
 	'OCA\\Filinq\\Event\\DocumentGeneratedEvent',
+	'OCA\\Filinq\\EventListener\\DocumentStampRequestedListener',
+	'OCA\\Filinq\\Event\\DocumentStampRequestedEvent',
 ];
 foreach ($generationSurface as $surfaceClass) {
 	if (class_exists($surfaceClass) === false) {
@@ -173,6 +176,7 @@ $context->events = [];
 $expectedGeneration = [
 	'OCA\\OpenRegister\\Service\\Flow\\RegisterFlowNodesEvent',
 	'OCA\\Filinq\\Event\\DocumentGenerationRequestedEvent',
+	'OCA\\Filinq\\Event\\DocumentStampRequestedEvent',
 ];
 if ($context->events !== $expectedGeneration) {
 	bootProofFail('unexpected document-generation registrations: ' . implode(', ', $context->events));

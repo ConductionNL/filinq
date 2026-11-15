@@ -46,7 +46,8 @@ use Psr\Log\LoggerInterface;
  *
  * Only ingrid is in the standing-consent group. The forged cases put another
  * user's id into the update payload: the group check and the recorded actor
- * still follow the session user, never the payload.
+ * still follow the session user, never the payload. A payload id never
+ * replaces the consent id the update was addressed to.
  *
  * @covers \OCA\Filinq\Service\ConsentService
  * @covers \OCA\Filinq\Service\ConsentRecordWriter
@@ -80,6 +81,8 @@ class ConsentActingUserTraceTest extends TestCase {
 			'standing consent without a session user'         => [null, 'entity', $standing],
 			'document consent records the session user'       => ['mallory', 'document', ['consentStatus' => 'consent_given', 'actor' => 'ingrid']],
 			'document consent cannot change scope'            => ['ingrid', 'document', ['scope' => 'entity']],
+			'document consent ignores a forged updatedBy'     => ['mallory', 'document', ['consentStatus' => 'consent_given', 'updatedBy' => 'ingrid']],
+			'a payload id does not pick the consent'          => ['ingrid', 'document', ['consentStatus' => 'consent_given', 'id' => 'c-2']],
 		];
 
 	}//end updates()

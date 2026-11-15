@@ -26,6 +26,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use Exception;
+use OCA\Filinq\Kernel\Contracts\DataResolverServiceInterface;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -43,7 +44,7 @@ use RuntimeException;
  *
  * @spec openspec/changes/letter-correspondence-generation/tasks.md#task-2
  */
-class DataResolverService {
+class DataResolverService implements DataResolverServiceInterface {
 
 	/**
 	 * Maximum depth for nested reference resolution
@@ -93,16 +94,7 @@ class DataResolverService {
 	 * @throws RuntimeException If OpenRegister is not available
 	 */
 	private function getObjectService(): \OCA\OpenRegister\Service\ObjectService {
-		if (in_array(
-			needle: 'openregister',
-			haystack: $this->appManager->getInstalledApps(),
-			strict: true
-		) === true
-		) {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-		}
-
-		throw new RuntimeException(message: 'OpenRegister service is not available.');
+		return (new DocumentObjectServiceResolver(container: $this->container, appManager: $this->appManager))->resolve();
 	}//end getObjectService()
 
 	/**

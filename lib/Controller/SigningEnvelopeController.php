@@ -24,6 +24,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
+use OCA\Filinq\Controller\Support\OperationAnswer;
 use OCA\Filinq\Kernel\Contracts\SigningEnvelopeServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -33,7 +34,6 @@ use OCP\IGroupManager;
 use OCP\IRequest;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
-use Throwable;
 
 /**
  * Every endpoint is for a signed-in user. An envelope is readable by its
@@ -190,23 +190,8 @@ class SigningEnvelopeController extends Controller {
 	 * @return JSONResponse
 	 */
 	private function answer(callable $operation, int $status = Http::STATUS_OK): JSONResponse {
-		try {
-			$result = $operation();
-		} catch (Throwable $e) {
-			$code = (int) $e->getCode();
-			if (in_array($code, [Http::STATUS_BAD_REQUEST, Http::STATUS_CONFLICT], true) === true) {
-				return new JSONResponse(data: ['error' => $e->getMessage()], statusCode: $code);
-			}
-
-			$this->logger->error('Envelope request failed: ' . $e->getMessage(), ['exception' => $e]);
-			return new JSONResponse(data: ['error' => 'Envelope request failed'], statusCode: Http::STATUS_INTERNAL_SERVER_ERROR);
-		}
-
-		if ($result === null) {
-			return new JSONResponse(data: ['error' => 'Envelope not found'], statusCode: Http::STATUS_NOT_FOUND);
-		}
-
-		return new JSONResponse(data: $result, statusCode: $status);
+		$answers = new OperationAnswer(logger: $this->logger, failure: 'Envelope request failed', notFound: 'Envelope not found');
+		return $answers->answer(operation: $operation, status: $status);
 
 	}//end answer()
 }//end class

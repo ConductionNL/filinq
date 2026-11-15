@@ -321,6 +321,51 @@
             }
         }
     ],
+    "update: a payload id does not pick the consent": [
+        {
+            "IAppManager::getInstalledApps": []
+        },
+        {
+            "ContainerInterface::get": {
+                "id": "OCA\\OpenRegister\\Service\\ObjectService"
+            }
+        },
+        {
+            "ObjectService::find": {
+                "id": "c-1",
+                "register": "filinq",
+                "schema": "publicationConsent"
+            }
+        },
+        {
+            "IUser::getUID": []
+        },
+        {
+            "ConsentUpdateHandler::updateConsentStatus": {
+                "consent": {
+                    "OCA\\Filinq\\Service\\RegisterObjectRef": {
+                        "id": "c-1",
+                        "register": "filinq",
+                        "schema": "publicationConsent"
+                    }
+                },
+                "change": {
+                    "OCA\\Filinq\\Service\\ConsentStatusChange": {
+                        "data": {
+                            "consentStatus": "consent_given",
+                            "id": "c-2"
+                        },
+                        "actor": "ingrid"
+                    }
+                }
+            }
+        },
+        {
+            "result": {
+                "updated": true
+            }
+        }
+    ],
     "update: document consent cannot change scope": [
         {
             "IAppManager::getInstalledApps": []
@@ -343,6 +388,51 @@
                 "publicationConsent.scope cannot change from \"document\" to \"entity\" after creation.",
                 0
             ]
+        }
+    ],
+    "update: document consent ignores a forged updatedBy": [
+        {
+            "IAppManager::getInstalledApps": []
+        },
+        {
+            "ContainerInterface::get": {
+                "id": "OCA\\OpenRegister\\Service\\ObjectService"
+            }
+        },
+        {
+            "ObjectService::find": {
+                "id": "c-1",
+                "register": "filinq",
+                "schema": "publicationConsent"
+            }
+        },
+        {
+            "IUser::getUID": []
+        },
+        {
+            "ConsentUpdateHandler::updateConsentStatus": {
+                "consent": {
+                    "OCA\\Filinq\\Service\\RegisterObjectRef": {
+                        "id": "c-1",
+                        "register": "filinq",
+                        "schema": "publicationConsent"
+                    }
+                },
+                "change": {
+                    "OCA\\Filinq\\Service\\ConsentStatusChange": {
+                        "data": {
+                            "consentStatus": "consent_given",
+                            "updatedBy": "ingrid"
+                        },
+                        "actor": "mallory"
+                    }
+                }
+            }
+        },
+        {
+            "result": {
+                "updated": true
+            }
         }
     ],
     "update: document consent records the session user": [

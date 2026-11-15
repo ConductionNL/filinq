@@ -616,22 +616,6 @@ class LibreOfficeHeadlessBackend implements ConversionBackendInterface {
 		);
 	}//end outputFailure()
 
-	/**
-	 * Return the lowercased extension of $name without the leading dot.
-	 *
-	 * @param string $name File name, with or without an extension.
-	 *
-	 * @return string Lowercased extension, or an empty string when the name
-	 *                carries no dot.
-	 */
-	private function extractExtension(string $name): string {
-		$dotPos = strrpos($name, '.');
-		if ($dotPos === false) {
-			return '';
-		}
-
-		return strtolower(substr($name, ($dotPos + 1)));
-	}//end extractExtension()
 
 	/**
 	 * Read and resolve the configured soffice binary path.

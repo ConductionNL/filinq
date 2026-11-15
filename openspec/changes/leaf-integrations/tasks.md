@@ -18,7 +18,7 @@
 
 ## 2. Host the leaves on the record surfaces (frontend)
 
-- [ ] 2.1 Ensure the signing-request, consent, correspondence, generated-document, and
+- [x] 2.1 Ensure the signing-request, consent, correspondence, generated-document, and
   dossier detail surfaces mount the registry's enabled leaf tabs/widgets for their object
   (shared registry tab host per ADR-019) — reusing the host wiring from
   `document-detail-leaf-widgets`, not a parallel tab system.
@@ -41,6 +41,19 @@
 - [x] 3.5 CHANGELOG entry.
 
 ## What this change did NOT do, and why
+
+- **2.1 is built now** that `@conduction/nextcloud-vue` (^2.180) ships the
+  registry-driven `CnObjectSidebar` and the shared `objectSidebarState` channel.
+  `ConsentDetail` (a `CnDetailPage`) publishes through its own `sidebar` prop;
+  `DossierDetail` and `SigningRequestDetail` publish through
+  `recordLeafSidebarMixin` (`src/sidebars/recordSidebar.js`) and offer a
+  "Linked apps" toggle; `RecordLeafSidebar` renders the sidebar inside
+  `App.vue`'s `#sidebar` slot, because a filled slot suppresses CnAppRoot's own
+  hoisted one. Correspondence and generated documents have no detail page of
+  their own, so nothing hosts their leaves yet.
+- **2.2 relies on the registry, unverified here**: a leaf is registered only by
+  an installed app, so an absent app's leaf is never offered; the
+  render-without-it check belongs to 3.4, which needs a live instance.
 
 - **2.1 and 2.2 stay open.** Hosting OTHER apps' leaves on Filinq's detail
   surfaces needs the shared registry tab host, and Filinq consumes

@@ -139,7 +139,7 @@ class InboundClassificationService implements InboundClassificationServiceInterf
 			return ['outcome' => 'skipped', 'reason' => 'no_text'];
 		}
 
-		$record = $this->suggestion(objectData: $objectData, objectRef: $objectRef, fileId: $fileId, text: $text, entities: $entities);
+		$record = $this->suggestion(objectData: $objectData, objectRef: $objectRef, entities: $entities);
 		if ($active !== null) {
 			$this->results->save(record: ['status' => 'superseded'] + $active, uuid: (string) $active['uuid']);
 		}
@@ -150,17 +150,17 @@ class InboundClassificationService implements InboundClassificationServiceInterf
 
 	/**
 	 * Build the suggestion record. Minimal by design: no document text and
-	 * no entity other than the one suggested correspondent's name.
+	 * no entity other than the one suggested correspondent's name. The file
+	 * id and the text are read from the object's fields.
 	 *
 	 * @param array<string, mixed>                  $objectData The object's fields.
 	 * @param array<string, string>                 $objectRef  The object: id, register, schema.
-	 * @param int                                   $fileId     The file id.
-	 * @param string                                $text       The document text.
 	 * @param array<int, array<string, mixed>>|null $entities   The detected entities, null when not known yet.
 	 *
 	 * @return array<string, mixed> The record.
 	 */
-	private function suggestion(array $objectData, array $objectRef, int $fileId, string $text, ?array $entities): array {
+	private function suggestion(array $objectData, array $objectRef, ?array $entities): array {
+		$text = $this->textOf(objectData: $objectData);
 		$type = $this->classifier->classify(text: $text);
 		$correspondent = null;
 		if ($entities !== null) {
@@ -173,7 +173,7 @@ class InboundClassificationService implements InboundClassificationServiceInterf
 		}
 
 		return [
-			'fileId' => $fileId,
+			'fileId' => $this->fileIdOf(objectData: $objectData),
 			'fileName' => (string) ($objectData['fileName'] ?? ($objectData['name'] ?? '')),
 			'objectId' => (string) ($objectRef['id'] ?? ''),
 			'objectRegister' => (string) ($objectRef['register'] ?? ''),

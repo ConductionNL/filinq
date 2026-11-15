@@ -4,6 +4,9 @@
  * Regression guard: the per-document anonymise path MUST NOT consume the
  * folder-layout helper that drives the batch-output flow.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * `anonymisation-batch-output-folder-layout` Task 7 + the sibling change
  * `anonymisation-folder-output-folder-layout` Task 5 both call out that the
  * single-file (per-document) anonymise flow stays untouched: it returns the
@@ -26,9 +29,6 @@
  * @version GIT: <git_id>
  *
  * @link https://www.filinq.app
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md
  * @spec openspec/changes/anonymisation-folder-output-folder-layout/tasks.md

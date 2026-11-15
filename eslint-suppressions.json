@@ -279,23 +279,6 @@
       "count": 3
     }
   },
-  "src/views/widgets/AnonymizationDashboardWidget.vue": {
-    "@nextcloud/l10n-enforce-ellipsis": {
-      "count": 3
-    },
-    "@typescript-eslint/no-unused-vars": {
-      "count": 2
-    },
-    "jsdoc/require-param-type": {
-      "count": 8
-    },
-    "no-console": {
-      "count": 1
-    },
-    "vue/prefer-define-options": {
-      "count": 1
-    }
-  },
   "src/views/widgets/FileEntitiesDashboardWidget.vue": {
     "@nextcloud/l10n-enforce-ellipsis": {
       "count": 1

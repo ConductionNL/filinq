@@ -35,6 +35,8 @@ use Psr\Log\NullLogger;
  * @covers \OCA\Filinq\Service\CustomDictionaryDetectionRunner
  * @uses   \OCA\Filinq\Service\CustomDictionaryMatchService
  * @uses   \OCA\Filinq\Service\DictionaryMatchScan
+ * @uses   \OCA\Filinq\Service\ClaimedRanges
+ * @uses   \OCA\Filinq\Service\TermMatchRun
  */
 class CustomDictionaryDetectionGoldenTest extends TestCase {
 
@@ -123,7 +125,7 @@ class CustomDictionaryDetectionGoldenTest extends TestCase {
 		);
 
 		$services = [
-			'OCA\OpenRegister\Db\ChunkMapper' => $this->chunkMapper($chunks),
+			'OCA\OpenRegister\Files\Db\ChunkMapper' => $this->chunkMapper($chunks),
 			'OCA\OpenRegister\Db\EntityRelationMapper' => $this->relationMapper(),
 			'OCA\OpenRegister\Db\GdprEntityMapper' => $this->entityMapper(),
 		];

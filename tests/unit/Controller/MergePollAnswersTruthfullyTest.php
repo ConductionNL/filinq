@@ -3,6 +3,9 @@
 /**
  * A polling caller is never told a queued merge is gone
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * 🔴 THE DEFECT THESE TESTS HOLD DOWN. `MergeJobRepository::find()` caught
  * every Throwable and returned `null`, and `MergeController::show()` reads
  * `null` as "there is no merge with that id" and answers 404. So a register

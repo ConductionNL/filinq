@@ -11,6 +11,9 @@
  * @link      https://www.filinq.app
  *
  * @spec openspec/changes/document-sanitization/tasks.md#3-3
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -94,8 +97,8 @@ class DocumentAnonymizeRunnerSanitizationTest extends TestCase {
 			 *
 			 * @return \JsonSerializable|null
 			 */
-			public function getLastSanitizationReport(): ?\OCA\OpenRegister\Service\File\SanitizationReport {
-				return $this->report === null ? null : new \OCA\OpenRegister\Service\File\SanitizationReport(commentsRemoved: 3, metadataFieldsScrubbed: 5);
+			public function getLastSanitizationReport(): ?\OCA\OpenRegister\Files\Service\File\SanitizationReport {
+				return $this->report === null ? null : new \OCA\OpenRegister\Files\Service\File\SanitizationReport(commentsRemoved: 3, metadataFieldsScrubbed: 5);
 			}
 
 			public function getLastStructurePreservation(): ?\JsonSerializable {

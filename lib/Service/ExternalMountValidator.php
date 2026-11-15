@@ -88,40 +88,46 @@ class ExternalMountValidator implements ExternalMountValidatorInterface {
 	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	public function validate(string $path): array {
-		$findings = [];
-
-		$this->consider(
-			findings: $findings,
-			answer: $this->probe->isWritable(path: $path),
-			requirement: 'store a document at all',
-			cannot: 'This store is read-only, so no document can be filed in this domain.',
-			unknown: 'Whether this store accepts a write could not be found out, so a document may fail to file with no warning.'
-		);
-
-		$this->consider(
-			findings: $findings,
-			answer: $this->probe->supportsPerGroupPermissions(path: $path),
-			requirement: 'reconcile the folder to the domain',
-			cannot: 'This store cannot hold a permission per group, so the nightly reconciliation will report '
-				.'a refusal every night and a group removed from the domain keeps its access.',
-			unknown: 'Whether this store holds a permission per group could not be found out, so reconciliation may silently do nothing.'
-		);
-
-		$this->consider(
-			findings: $findings,
-			answer: $this->probe->supportsVersions(path: $path),
-			requirement: 'keep a version history',
-			cannot: 'This store keeps no version history, so a document corrected here loses what it said before.',
-			unknown: 'Whether this store keeps a version history could not be found out.'
+		$findings = array_merge(
+			$this->finding(
+				answer: $this->probe->isWritable(path: $path),
+				texts: [
+					'requirement' => 'store a document at all',
+					'cannot' => 'This store is read-only, so no document can be filed in this domain.',
+					'unknown' => 'Whether this store accepts a write could not be found out, so a document may fail to file with no warning.',
+				]
+			),
+			$this->finding(
+				answer: $this->probe->supportsPerGroupPermissions(path: $path),
+				texts: [
+					'requirement' => 'reconcile the folder to the domain',
+					'cannot' => 'This store cannot hold a permission per group, so the nightly reconciliation will report '
+						.'a refusal every night and a group removed from the domain keeps its access.',
+					'unknown' => 'Whether this store holds a permission per group could not be found out, so reconciliation may silently do nothing.',
+				]
+			),
+			$this->finding(
+				answer: $this->probe->supportsVersions(path: $path),
+				texts: [
+					'requirement' => 'keep a version history',
+					'cannot' => 'This store keeps no version history, so a document corrected here loses what it said before.',
+					'unknown' => 'Whether this store keeps a version history could not be found out.',
+				]
+			)
 		);
 
 		if ($this->hasUploadPolicy() === true) {
-			$this->consider(
-				findings: $findings,
-				answer: $this->probe->writesPassThroughFilinq(path: $path),
-				requirement: 'enforce the upload policy',
-				cannot: 'Files can reach this store without passing filinq, so the upload policy cannot be enforced on everything that lands here.',
-				unknown: 'Whether every write to this store passes filinq could not be found out, so the upload policy may be enforced on only some of them.'
+			$findings = array_merge(
+				$findings,
+				$this->finding(
+					answer: $this->probe->writesPassThroughFilinq(path: $path),
+					texts: [
+						'requirement' => 'enforce the upload policy',
+						'cannot' => 'Files can reach this store without passing filinq, so the upload policy cannot be enforced on everything that lands here.',
+						'unknown' => 'Whether every write to this store passes filinq could not be found out, so the upload policy may be enforced '
+							.'on only some of them.',
+					]
+				)
 			);
 		}
 
@@ -151,44 +157,29 @@ class ExternalMountValidator implements ExternalMountValidatorInterface {
 	}//end hasUploadPolicy()
 
 	/**
-	 * Turn one three-valued answer into nothing, a cannot, or an unknown.
+	 * Turn one three-valued answer into no finding, a cannot, or an unknown.
 	 *
-	 * @param array<int, array{requirement: string, verdict: string, message: string}> $findings    The findings so far, added to in place.
-	 * @param bool|null                                                                $answer      What the probe said.
-	 * @param string                                                                   $requirement The promise at stake.
-	 * @param string                                                                   $cannot      What to say when the mount cannot.
-	 * @param string                                                                   $unknown     What to say when nobody could find out.
+	 * @param bool|null                                                  $answer What the probe said.
+	 * @param array{requirement: string, cannot: string, unknown: string} $texts  The promise at stake, and what to say when
+	 *                                                                           the mount cannot or nobody could find out.
 	 *
-	 * @return void
+	 * @return array<int, array{requirement: string, verdict: string, message: string}> No finding, or the one finding.
 	 *
 	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
-	private function consider(
-		array &$findings,
-		?bool $answer,
-		string $requirement,
-		string $cannot,
-		string $unknown,
-	): void {
+	private function finding(?bool $answer, array $texts): array {
 		if ($answer === true) {
-			return;
+			return [];
 		}
 
+		$verdict = self::CANNOT;
+		$message = $texts['cannot'];
 		if ($answer === null) {
-			$findings[] = [
-				'requirement' => $requirement,
-				'verdict' => self::UNKNOWN,
-				'message' => $unknown,
-			];
-
-			return;
+			$verdict = self::UNKNOWN;
+			$message = $texts['unknown'];
 		}
 
-		$findings[] = [
-			'requirement' => $requirement,
-			'verdict' => self::CANNOT,
-			'message' => $cannot,
-		];
+		return [['requirement' => $texts['requirement'], 'verdict' => $verdict, 'message' => $message]];
 
-	}//end consider()
+	}//end finding()
 }//end class

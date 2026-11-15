@@ -339,9 +339,6 @@ class SigningVerificationService implements SigningVerificationServiceInterface 
 		// inside the marker payload, so it never appears literally and the hash
 		// stayed self-referential — no writer could satisfy it.
 		$canonical = $this->canonicaliseForAssertion(pdfContent: $pdfContent);
-		// Defensive: also strip any literal occurrence of the mac (a no-op on
-		// the canonical form, retained for the finding #284 fail-closed intent).
-		$canonical = $this->stripAssertionMac(pdfContent: $canonical, mac: $assertion['mac']);
 
 		// V2: the MAC covers the content-hash AND the canonical-JSON of the
 		// assertion fields (minus `mac` itself) — recompute over BOTH parts so
@@ -444,20 +441,6 @@ class SigningVerificationService implements SigningVerificationServiceInterface 
 		) ?? $pdfContent;
 
 	}//end canonicaliseForAssertion()
-
-	/**
-	 * Remove the asserted MAC value from the PDF byte stream before hashing
-	 *
-	 * @param string $pdfContent The full PDF content
-	 * @param string $mac The asserted MAC value to strip
-	 *
-	 * @return string The PDF content with the MAC value removed
-	 */
-	private function stripAssertionMac(string $pdfContent, string $mac): string {
-		// Use preg_replace with a literal match (preg_quote) so that any
-		// special regex characters in the MAC value are treated as plain text.
-		return preg_replace('/' . preg_quote($mac, '/') . '/', '', $pdfContent) ?? $pdfContent;
-	}//end stripAssertionMac()
 
 	/**
 	 * Get the server-held signing secret used to verify assertions.

@@ -34,6 +34,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
+use OCA\Filinq\Controller\Support\OutputFormatChoice;
 use OCA\Filinq\Kernel\Contracts\AnonymizationProfileServiceInterface;
 use OCA\Filinq\Kernel\Contracts\BatchAnonymizeServiceInterface;
 use OCA\Filinq\Kernel\Contracts\BatchExtractionServiceInterface;
@@ -119,21 +120,10 @@ class BatchAnonymizationController extends Controller {
 	}//end __construct()
 
 	/**
-	 * Tenant config key for default outputFormat. Mirrors the constant
-	 * used by AnonymizationController; defined here so both controllers
-	 * stay aligned on the lookup key.
+	 * Supported values for the `outputFormat` request param + tenant
+	 * config, as OutputFormatChoice resolves them.
 	 */
-	private const DEFAULT_OUTPUT_FORMAT_KEY = 'filinq.anonymisation.default_output_format';
-
-	/**
-	 * Supported values for the `outputFormat` request param.
-	 *
-	 * - `pdf-only` (default): convert to PDF and delete the native
-	 *   anonymised intermediate so only the PDF remains.
-	 * - `pdf`: convert to PDF but keep the native intermediate too.
-	 * - `preserve`: skip conversion; native format is the only output.
-	 */
-	private const VALID_OUTPUT_FORMATS = ['pdf-only', 'pdf', 'preserve'];
+	private const VALID_OUTPUT_FORMATS = OutputFormatChoice::VALID_OUTPUT_FORMATS;
 
 	/**
 	 * Accept a multipart upload and create a new anonymization batch.
@@ -492,28 +482,8 @@ class BatchAnonymizationController extends Controller {
 	 * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-anonymization
 	 */
 	private function resolveOutputFormat(array $params): ?string {
-		if (array_key_exists('outputFormat', $params) === true) {
-			$value = $params['outputFormat'];
-			if (is_string($value) === false
-				|| in_array($value, self::VALID_OUTPUT_FORMATS, true) === false
-			) {
-				return null;
-			}
+		return (new OutputFormatChoice(appConfig: $this->appConfig))->resolve(params: $params);
 
-			return $value;
-		}
-
-		$tenantDefault = $this->appConfig->getValueString(
-			'filinq',
-			self::DEFAULT_OUTPUT_FORMAT_KEY,
-			'pdf-only'
-		);
-
-		if (in_array($tenantDefault, self::VALID_OUTPUT_FORMATS, true) === false) {
-			return 'pdf-only';
-		}
-
-		return $tenantDefault;
 	}//end resolveOutputFormat()
 
 	/**

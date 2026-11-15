@@ -3,6 +3,9 @@
 /**
  * Filinq Migrate App Config Keys Repair Step
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V.
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Repair step that carries this app's stored `IAppConfig` values across the
  * `docudesk` -> `filinq` app-id rename.
  *
@@ -50,9 +53,6 @@
  *
  * Registered under BOTH `<install>` and `<post-migration>` in
  * `appinfo/info.xml` — see the ordering comment there.
- *
- * SPDX-License-Identifier: EUPL-1.2
- * SPDX-FileCopyrightText: 2026 Conduction B.V.
  *
  * @category Repair
  * @package  OCA\Filinq\Repair

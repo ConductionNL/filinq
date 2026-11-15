@@ -17,6 +17,9 @@
  * @version GIT: <git_id>
  *
  * @link https://www.filinq.app
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\Filinq\Tests\Unit\Service;
@@ -25,23 +28,20 @@ use OCA\Filinq\Service\EmlPdfAssemblyService;
 use OCA\Filinq\Service\EmlPreviewService;
 use OCP\App\IAppManager;
 use OCP\Files\File;
+use OCA\OpenRegister\Files\Service\TextExtraction\EmlBody;
+use OCA\OpenRegister\Files\Service\TextExtraction\EmlStructure;
+use OCA\OpenRegister\Files\Service\TextExtractionService;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 
 /**
- * OR FileService double exposing getFileById() + anonymizeEmlStructured().
+ * OR FileService double exposing getFileById().
  */
 class FakePreviewOrFileService {
 	/** @var mixed */
 	public mixed $node = null;
-
-	/** @var mixed */
-	public mixed $structure = null;
-
-	/** @var array|null */
-	public ?array $lastEntities = null;
 
 	/**
 	 * @param int $fileId File id.
@@ -51,17 +51,25 @@ class FakePreviewOrFileService {
 	public function getFileById(int $fileId): mixed {
 		return $this->node;
 	}
+}
+
+/**
+ * OR TextExtractionService double: parseEmlStructured() returns a fixed structure.
+ */
+class FakePreviewTextExtraction extends TextExtractionService {
+	/** @var EmlStructure|null */
+	public ?EmlStructure $structure = null;
+
+	/** @var mixed */
+	public mixed $parsed = null;
 
 	/**
-	 * @param mixed $node File node.
-	 * @param array $entities Entities.
-	 * @param string $scope Scope.
-	 * @param mixed $dossierKey Dossier key.
+	 * @param \OCP\Files\File $file The EML file.
 	 *
-	 * @return mixed
+	 * @return EmlStructure
 	 */
-	public function anonymizeEmlStructured(mixed $node, array $entities, string $scope = 'document', mixed $dossierKey = null): mixed {
-		$this->lastEntities = $entities;
+	public function parseEmlStructured(\OCP\Files\File $file): EmlStructure {
+		$this->parsed = $file;
 		return $this->structure;
 	}
 }
@@ -103,33 +111,51 @@ class EmlPreviewServiceTest extends TestCase {
 	}
 
 	/**
-	 * The preview renders via the assembly service and passes an EMPTY entity
-	 * set to OR so nothing is redacted (faithful original preview).
+	 * A container serving the OR FileService and the TextExtractionService.
+	 *
+	 * @param FakePreviewOrFileService       $files  The file service.
+	 * @param FakePreviewTextExtraction|null $parser The EML parser.
+	 *
+	 * @return ContainerInterface
+	 */
+	private function containerWith(FakePreviewOrFileService $files, ?FakePreviewTextExtraction $parser): ContainerInterface {
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->willReturnCallback(
+			fn (string $id) => match ($id) {
+				'OCA\OpenRegister\Service\FileService' => $files,
+				TextExtractionService::class => ($parser ?? throw new RuntimeException('no parser')),
+				default => throw new RuntimeException('Unknown ' . $id),
+			}
+		);
+		return $container;
+	}
+
+	/**
+	 * The preview parses the original through OR's typed EML parser and
+	 * renders that structure unredacted via the assembly service.
 	 *
 	 * @return void
 	 */
-	public function testRendersOriginalWithEmptyEntities(): void {
+	public function testRendersTheParsedOriginal(): void {
 		$node = $this->createMock(File::class);
 		$node->method('getName')->willReturn('message.eml');
 
 		$or = new FakePreviewOrFileService();
 		$or->node = $node;
-		$or->structure = (object)['headers' => [], 'body' => (object)['plain' => null, 'html' => null], 'attachments' => [], 'inlineImages' => []];
-
-		$container = $this->createMock(ContainerInterface::class);
-		$container->method('get')->willReturn($or);
+		$parser = new FakePreviewTextExtraction();
+		$parser->structure = new EmlStructure(headers: [], body: new EmlBody(plainText: 'Hallo', html: null), attachments: []);
 
 		$assembly = $this->createMock(EmlPdfAssemblyService::class);
 		$assembly->expects($this->once())
 			->method('assemble')
-			->with($or->structure, 'message.eml')
+			->with($parser->structure, 'message.eml')
 			->willReturn('%PDF-1.4 preview');
 
-		$result = $this->service($container, $this->appManagerWith(['openregister']), $assembly)
+		$result = $this->service($this->containerWith($or, $parser), $this->appManagerWith(['openregister']), $assembly)
 			->renderOriginalPreview(fileId: 99);
 
 		$this->assertSame('%PDF-1.4 preview', $result);
-		$this->assertSame([], $or->lastEntities, 'preview must pass an empty entity set (no redaction)');
+		$this->assertSame($node, $parser->parsed);
 	}
 
 	/**
@@ -166,38 +192,18 @@ class EmlPreviewServiceTest extends TestCase {
 	}
 
 	/**
-	 * OR lacks the anonymise-EML API → RuntimeException, assembly never invoked.
+	 * OR's EML parser cannot be resolved → RuntimeException, assembly never invoked.
 	 *
 	 * @return void
 	 */
-	public function testThrowsWhenAnonymiseApiAbsent(): void {
-		$node = $this->createMock(File::class);
-		$or = new class($node) {
-			/**
-			 * @param mixed $node Node.
-			 */
-			public function __construct(
-				private mixed $node,
-			) {
-			}
-
-			/**
-			 * @param int $fileId File id.
-			 *
-			 * @return mixed
-			 */
-			public function getFileById(int $fileId): mixed {
-				return $this->node;
-			}
-		};
-
-		$container = $this->createMock(ContainerInterface::class);
-		$container->method('get')->willReturn($or);
+	public function testThrowsWhenTheParserIsUnavailable(): void {
+		$or = new FakePreviewOrFileService();
+		$or->node = $this->createMock(File::class);
 
 		$assembly = $this->createMock(EmlPdfAssemblyService::class);
 		$assembly->expects($this->never())->method('assemble');
 
 		$this->expectException(RuntimeException::class);
-		$this->service($container, $this->appManagerWith(['openregister']), $assembly)->renderOriginalPreview(fileId: 3);
+		$this->service($this->containerWith($or, null), $this->appManagerWith(['openregister']), $assembly)->renderOriginalPreview(fileId: 3);
 	}
 }

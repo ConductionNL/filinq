@@ -1,7 +1,7 @@
 <?php
 
 /**
- * StripsFileExtension — a file name without its last extension.
+ * StripsFileExtension — a file name without its last extension, and that extension.
  *
  * @category  Service
  * @package   OCA\Filinq\Service
@@ -20,7 +20,8 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 /**
- * Strips the last extension from a file name, for naming converted output.
+ * Strips the last extension from a file name, for naming converted output,
+ * and reads that extension, for choosing how to convert it.
  *
  * @category Service
  * @package  OCA\Filinq\Service
@@ -46,4 +47,21 @@ trait StripsFileExtension {
 
 		return substr($name, 0, $dotPos);
 	}//end stripExtension()
+
+	/**
+	 * Return the lowercased extension of $name without the leading dot.
+	 *
+	 * @param string $name File name, with or without an extension.
+	 *
+	 * @return string Lowercased extension, or an empty string when the name
+	 *                carries no dot.
+	 */
+	private function extractExtension(string $name): string {
+		$dotPos = strrpos($name, '.');
+		if ($dotPos === false) {
+			return '';
+		}
+
+		return strtolower(substr($name, ($dotPos + 1)));
+	}//end extractExtension()
 }//end trait

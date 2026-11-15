@@ -27,10 +27,10 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use Exception;
+use OCA\Filinq\Controller\Support\PdfResponses;
 use OCA\Filinq\Controller\Support\PdfServices;
 use OCA\Filinq\Exception\Pdfa3ConversionException;
 use OCP\AppFramework\Controller;
-use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
@@ -175,7 +175,7 @@ class PdfController extends Controller {
 
 		return new JSONResponse(
 			data: ['error' => $exception->getMessage()],
-			statusCode: $this->clampStatusCode(code: (int)$exception->getCode())
+			statusCode: (new PdfResponses())->clampStatusCode(code: (int)$exception->getCode())
 		);
 
 	}//end renderFailed()
@@ -309,14 +309,7 @@ class PdfController extends Controller {
 			context: ['reason' => $exception->getReason()]
 		);
 
-		return new JSONResponse(
-			data: [
-				'error' => $exception->getMessage(),
-				'reason' => $exception->getReason(),
-				'adminHint' => $exception->getAdminHint(),
-			],
-			statusCode: $this->clampStatusCode(code: $exception->getCode())
-		);
+		return (new PdfResponses())->pdfa3Refusal(exception: $exception);
 
 	}//end mapPdfa3ExceptionToResponse()
 
@@ -335,28 +328,10 @@ class PdfController extends Controller {
 
 		return new JSONResponse(
 			data: ['error' => $exception->getMessage()],
-			statusCode: $this->clampStatusCode(code: $exception->getCode())
+			statusCode: (new PdfResponses())->clampStatusCode(code: $exception->getCode())
 		);
 
 	}//end mapGenericExceptionToResponse()
-
-	/**
-	 * Clamp an exception code to a valid HTTP status range, defaulting
-	 * to 500 for anything outside [400, 599].
-	 *
-	 * @param int $code Candidate status code.
-	 *
-	 * @return int Valid HTTP status code.
-	 *
-	 * @psalm-suppress InvalidArgument $statusCode is clamped to int<400, 599>; Psalm wants the literal HTTP status union.
-	 */
-	private function clampStatusCode(int $code): int {
-		if ($code >= 400 && $code < 600) {
-			return $code;
-		}
-
-		return Http::STATUS_INTERNAL_SERVER_ERROR;
-	}//end clampStatusCode()
 
 	/**
 	 * Render the archival PDF/A-3 path: render the Twig template to
@@ -382,16 +357,6 @@ class PdfController extends Controller {
 			options: $params['options']
 		);
 
-		$response = new DataDownloadResponse(
-			data: $result['content'],
-			filename: $params['filename'],
-			contentType: 'application/pdf'
-		);
-		$response->addHeader('X-Docudesk-Pdfa3-Checksum-Sha256', $result['checksumSha256']);
-		$response->addHeader('X-Docudesk-Pdfa3-Pages', (string)$result['pages']);
-		$response->addHeader('X-Docudesk-Pdfa3-Conformance', $result['conformance']);
-		$response->addHeader('X-Docudesk-Pdfa3-Verified', (string)($result['verified'] ?? 'skipped'));
-
-		return $response;
+		return (new PdfResponses())->pdfa3Download(result: $result, filename: $params['filename']);
 	}//end renderArchivalPdfA()
 }//end class
