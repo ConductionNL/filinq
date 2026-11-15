@@ -258,7 +258,7 @@ import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
 			:findings="validation.findings"
 			@close="validation.show = false"
 			@ocr="onOcrRequested"
-			@removePassword="unlock.show = true" />
+			@removePassword="openPasswordDialog" />
 		<PdfPasswordModal
 			:show="unlock.show"
 			:fileId="validation.fileId"
@@ -961,6 +961,16 @@ export default {
 			} finally {
 				this.validation.loading = false
 			}
+		},
+
+		/**
+		 * Open the password dialog for the locked PDF of the validation result.
+		 *
+		 * @return {void}
+		 * @spec openspec/changes/intake-pdf-password-removal/tasks.md#2-screens
+		 */
+		openPasswordDialog() {
+			this.unlock.show = true
 		},
 
 		/**

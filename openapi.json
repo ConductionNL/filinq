@@ -168,6 +168,10 @@
             "description": "Controller for PDF generation endpoints"
         },
         {
+            "name": "pdf-password",
+            "description": "Remove the password of an encrypted PDF into an unlocked copy, for a user's own file or a waiting intake document"
+        },
+        {
             "name": "pdfa3-conversion",
             "description": "Controller for the PDF/A-3 conversion endpoint"
         },
