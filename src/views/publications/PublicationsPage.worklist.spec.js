@@ -47,7 +47,8 @@ describe('the Woo metadata worklist', () => {
 		await listPublications({ incomplete: true })
 
 		expect(axios.get.mock.calls).toEqual([
-			['/apps/filinq/api/publications', { params: {} }],
+			// Without the filter the call is the one it always was.
+			['/apps/filinq/api/publications'],
 			['/apps/filinq/api/publications', { params: { incomplete: 1 } }],
 		])
 	})

@@ -20,8 +20,11 @@ const base = () => generateUrl('/apps/filinq/api/publications')
  * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-3.1
  */
 export async function listPublications(options = {}) {
-	const params = options.incomplete === true ? { incomplete: 1 } : {}
-	return (await axios.get(base(), { params })).data
+	if (options.incomplete !== true) {
+		return (await axios.get(base())).data
+	}
+
+	return (await axios.get(base(), { params: { incomplete: 1 } })).data
 }
 
 /**
