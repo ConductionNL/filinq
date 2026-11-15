@@ -257,7 +257,13 @@ import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
 			:status="validation.status"
 			:findings="validation.findings"
 			@close="validation.show = false"
-			@ocr="onOcrRequested" />
+			@ocr="onOcrRequested"
+			@removePassword="openPasswordDialog" />
+		<PdfPasswordModal
+			:show="unlock.show"
+			:fileId="validation.fileId"
+			@close="unlock.show = false"
+			@unlocked="onUnlocked" />
 
 		<!--
 			Delete confirmation, single row and bulk. Replaces window.confirm():
@@ -313,6 +319,7 @@ import DdPageHeader from '../../components/DdPageHeader.vue'
 import DdSearchBar from '../../components/DdSearchBar.vue'
 import DueForReviewList from '../../components/myDocuments/DueForReviewList.vue'
 import WaitingForMeList from '../../components/myDocuments/WaitingForMeList.vue'
+import PdfPasswordModal from '../../modals/PdfPasswordModal.vue'
 import SanitizationReportModal from '../../modals/SanitizationReportModal.vue'
 import ValidationResultModal from '../../modals/ValidationResultModal.vue'
 import FileViewerPage from '../fileViewer/FileViewerPage.vue'
@@ -358,6 +365,7 @@ export default {
 		DdDocumentCard,
 		DdIcon,
 		FileViewerPage,
+		PdfPasswordModal,
 		ValidationResultModal,
 		SanitizationReportModal,
 		BroomIcon,
@@ -403,6 +411,9 @@ export default {
 				findings: [],
 				fileId: null,
 			},
+
+			// The password dialog opened from a locked PDF's finding.
+			unlock: { show: false },
 
 			kindColorMap: {
 				[t('filinq', 'Concept')]: 'warning',
@@ -957,6 +968,33 @@ export default {
 			} finally {
 				this.validation.loading = false
 			}
+		},
+
+		/**
+		 * Open the password dialog for the locked PDF of the validation result.
+		 *
+		 * @return {void}
+		 * @spec openspec/changes/intake-pdf-password-removal/tasks.md#2-screens
+		 */
+		openPasswordDialog() {
+			this.unlock.show = true
+		},
+
+		/**
+		 * A locked PDF was unlocked into a copy: show the copy's own findings and
+		 * reload the list so the copy appears beside the original.
+		 *
+		 * @param {object} copy The copy: fileId, name, validationStatus, validationFindings.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/intake-pdf-password-removal/tasks.md#2-screens
+		 */
+		async onUnlocked(copy) {
+			this.validation.fileId = copy.fileId
+			this.validation.status = copy.validationStatus || ''
+			this.validation.findings = copy.validationFindings || []
+			this.validation.show = true
+			showSuccess(t('filinq', 'Unlocked copy saved as {name}', { name: copy.name || '' }))
+			await myDocumentsStore.fetchDocuments()
 		},
 
 		/**

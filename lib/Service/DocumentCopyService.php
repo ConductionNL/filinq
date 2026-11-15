@@ -27,6 +27,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use OCA\Filinq\Exception\DomainLinkRefusedException;
+use OCA\OpenRegister\Db\AuditTrail\ObjectAuditEvent;
 use OCA\OpenRegister\Db\AuditTrailMapper;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCP\Files\File;
@@ -225,7 +226,7 @@ class DocumentCopyService {
 				$object->setUuid($record['id']);
 			}
 
-			$this->auditTrail->createAuditTrailEntry(object: $object, action: $action, context: $context);
+			$this->auditTrail->recordObjectEvent(event: new ObjectAuditEvent(object: $object, action: $action, context: $context));
 		} catch (Throwable $e) {
 			$this->logger->error(
 				message: '[DocumentCopyService] the copy is done but its audit entry could not be written',

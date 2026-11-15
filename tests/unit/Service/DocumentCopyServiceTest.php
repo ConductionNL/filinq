@@ -28,6 +28,7 @@ use OCA\Filinq\Service\FinalDocumentRepository;
 use OCA\Filinq\Service\IntakeAuthorizationGate;
 use OCA\Filinq\Service\IntakeFilePlacement;
 use OCA\OpenRegister\Db\AuditTrail;
+use OCA\OpenRegister\Db\AuditTrail\ObjectAuditEvent;
 use OCA\OpenRegister\Db\AuditTrailMapper;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Service\ObjectService;
@@ -157,10 +158,10 @@ class DocumentCopyServiceTest extends TestCase {
 		$session->method('getUser')->willReturn($user);
 
 		$audit = $this->createMock(AuditTrailMapper::class);
-		$audit->method('createAuditTrailEntry')->willReturnCallback(
-			function (ObjectEntity $object, string $action, array $context): AuditTrail {
-				$this->audited[] = $action . ' ' . $object->getUuid();
-				$this->contexts[$action] = $context;
+		$audit->method('recordObjectEvent')->willReturnCallback(
+			function (ObjectAuditEvent $event): AuditTrail {
+				$this->audited[] = $event->action . ' ' . $event->object->getUuid();
+				$this->contexts[$event->action] = $event->context;
 
 				return new AuditTrail();
 			}
