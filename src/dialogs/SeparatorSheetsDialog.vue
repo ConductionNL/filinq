@@ -45,30 +45,27 @@ one PDF with a sheet per case number to put between the documents of a batch.
 				data-testid="separator-case-numbers" />
 		</template>
 		<template #actions>
-			<NcButton @click="$emit('close')">
-				{{ t('filinq', 'Cancel') }}
-			</NcButton>
-			<NcButton
-				variant="primary"
-				:disabled="!canPrint"
-				data-testid="separator-print"
-				@click="print">
-				{{
+			<CnDialogActions
+				:saving="busy"
+				:canSubmit="canPrint"
+				:confirmLabel="
 					n(
 						'filinq',
 						'Print %n sheet',
 						'Print %n sheets',
 						caseNumbers.length,
 					)
-				}}
-			</NcButton>
+				"
+				@cancel="$emit('close')"
+				@submit="print" />
 		</template>
 	</NcDialog>
 </template>
 
 <script>
+import { CnDialogActions } from '@conduction/nextcloud-vue'
 import { translatePlural as n, translate as t } from '@nextcloud/l10n'
-import { NcButton, NcDialog, NcNoteCard, NcSelect, NcTextArea } from '@nextcloud/vue'
+import { NcDialog, NcNoteCard, NcSelect, NcTextArea } from '@nextcloud/vue'
 import {
 	listScanProfiles,
 	parseCaseNumbers,
@@ -77,7 +74,7 @@ import {
 
 export default {
 	name: 'SeparatorSheetsDialog',
-	components: { NcButton, NcDialog, NcNoteCard, NcSelect, NcTextArea },
+	components: { CnDialogActions, NcDialog, NcNoteCard, NcSelect, NcTextArea },
 
 	emits: ['close'],
 

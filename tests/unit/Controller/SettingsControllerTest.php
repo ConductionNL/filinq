@@ -13,11 +13,16 @@
  * @version GIT: <git_id>
  *
  * @link https://www.filinq.app
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\SettingsController;
+use OCA\Filinq\Controller\Support\AppConfiguration;
+use OCA\Filinq\Controller\Support\SettingsBackends;
 use OCA\Filinq\Service\AnonymiserBackendStateClient;
 use OCA\Filinq\Tests\Unit\Service\DetectionStates;
 use OCA\Filinq\Service\SettingsService;
@@ -160,6 +165,50 @@ class SettingsControllerTest extends TestCase {
 	}//end testLoadIsRefusedWithoutASession()
 
 	/**
+	 * A non-admin gets the same 403 from create(), and nothing is written.
+	 *
+	 * @return void
+	 */
+	public function testCreateIsRefusedForANonAdmin(): void {
+		$settingsService = $this->createMock(SettingsService::class);
+		$settingsService->expects($this->never())->method('updateSettings');
+
+		$response = $this->controller(settingsService: $settingsService, isAdmin: false)->create();
+
+		$this->assertSame(403, $response->getStatus());
+		$this->assertSame(['error' => 'Admin privileges required'], $response->getData());
+
+	}//end testCreateIsRefusedForANonAdmin()
+
+	/**
+	 * Without a session create() answers 401 and asks no admin question.
+	 *
+	 * @return void
+	 */
+	public function testCreateIsRefusedWithoutASession(): void {
+		$settingsService = $this->createMock(SettingsService::class);
+		$settingsService->expects($this->never())->method('updateSettings');
+
+		$response = $this->controller(settingsService: $settingsService, user: null)->create();
+
+		$this->assertSame(401, $response->getStatus());
+		$this->assertSame(['error' => 'Not authenticated'], $response->getData());
+
+	}//end testCreateIsRefusedWithoutASession()
+
+	/**
+	 * The 403 body of load() names what is missing.
+	 *
+	 * @return void
+	 */
+	public function testLoadRefusalNamesTheMissingPrivilege(): void {
+		$response = $this->controller(settingsService: $this->createMock(SettingsService::class), isAdmin: false)->load();
+
+		$this->assertSame(['error' => 'Admin privileges required'], $response->getData());
+
+	}//end testLoadRefusalNamesTheMissingPrivilege()
+
+	/**
 	 * The provider picker learns whether LibreSign can sign.
 	 *
 	 * @return void
@@ -262,15 +311,12 @@ class SettingsControllerTest extends TestCase {
 		$request->method('getParams')->willReturn(['grondslag' => 'AVG-6.1.c']);
 
 		return new SettingsController(
-			'filinq',
 			$request,
-			($appManager ?? $this->createMock(IAppManager::class)),
+			new AppConfiguration(apps: ($appManager ?? $this->createMock(IAppManager::class)), config: $this->createMock(IConfig::class)),
 			$groupManager,
 			$userSession,
 			new NullLogger(),
-			$settingsService,
-			($backendClient ?? $this->createMock(AnonymiserBackendStateClient::class)),
-			$this->createMock(IConfig::class)
+			new SettingsBackends(settings: $settingsService, anonymiser: ($backendClient ?? $this->createMock(AnonymiserBackendStateClient::class)))
 		);
 
 	}//end controller()

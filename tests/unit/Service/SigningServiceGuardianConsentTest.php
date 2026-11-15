@@ -28,6 +28,7 @@ require_once __DIR__ . '/SignerAuth/AssuranceGateHarness.php';
 
 use DateTimeImmutable;
 use OCA\Filinq\Event\SigningConcludedEventFactory;
+use OCA\Filinq\Kernel\SigningAuditEvent;
 use OCA\Filinq\Service\FinalDocumentService;
 use OCA\Filinq\Service\SettingsService;
 use OCA\Filinq\Service\SignedArtifactProducer;
@@ -39,6 +40,8 @@ use OCA\Filinq\Service\SigningAuditService;
 use OCA\Filinq\Service\SigningConclusionEmitter;
 use OCA\Filinq\Service\SigningRequestValidator;
 use OCA\Filinq\Service\SigningService;
+use OCA\Filinq\Service\Support\SigningGuards;
+use OCA\Filinq\Service\Support\SigningOutputs;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Files\File;
@@ -204,45 +207,40 @@ class SigningServiceGuardianConsentTest extends TestCase {
 
 		$auditService = $this->createMock(SigningAuditService::class);
 		$auditService->method('logEvent')->willReturnCallback(
-			function (
-				string $signingRequestId,
-				string $action,
-				string $actorUserId = '',
-				string $actorDisplayName = '',
-				string $ipAddress = '',
-				string $signatureLevel = '',
-				string $provider = '',
-				array $metadata = [],
-			): array {
-				$this->audit[] = ['action' => $action, 'metadata' => $metadata];
+			function (SigningAuditEvent $event): array {
+				$this->audit[] = ['action' => $event->action, 'metadata' => $event->metadata];
 				return [];
 			}
 		);
 
 		$this->service = new SigningService(
 			settingsService: $settings,
-			auditService: $auditService,
-			artifactProducer: new SignedArtifactProducer(
-				providerFactory: $providerFactory,
-				userSession: $userSession,
-				request: $request,
-				rootFolder: $rootFolder,
-				finalDocuments: $this->createMock(FinalDocumentService::class)
-			),
-			validator: new SigningRequestValidator(providerFactory: $providerFactory),
 			actorResolver: new SigningActorResolver(
 				settingsService: $settings,
 				config: $config,
 				userSession: $userSession,
 				request: $request
 			),
-			emitter: new SigningConclusionEmitter(
+			guards: new SigningGuards(
+				validator: new SigningRequestValidator(providerFactory: $providerFactory),
+				consentGuard: new GuardianConsentGuard(settingsService: $settings),
+				assuranceGate: $this->assuranceGate(userSession: $userSession)
+			),
+			outputs: new SigningOutputs(
+				auditService: $auditService,
+				artifactProducer: new SignedArtifactProducer(
+				providerFactory: $providerFactory,
+				userSession: $userSession,
+				request: $request,
+				rootFolder: $rootFolder,
+				finalDocuments: $this->createMock(FinalDocumentService::class)
+			),
+				emitter: new SigningConclusionEmitter(
 				eventDispatcher: $this->createMock(IEventDispatcher::class),
 				logger: $this->createMock(LoggerInterface::class),
 				eventFactory: new SigningConcludedEventFactory()
-			),
-			consentGuard: new GuardianConsentGuard(settingsService: $settings),
-			assuranceGate: $this->assuranceGate(userSession: $userSession)
+			)
+			)
 		);
 
 	}//end setUp()

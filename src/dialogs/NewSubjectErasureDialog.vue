@@ -41,29 +41,21 @@ SPDX-License-Identifier: EUPL-1.2
 			</div>
 		</template>
 		<template #actions>
-			<NcButton :disabled="busy" @click="$emit('close')">
-				{{ t('filinq', 'Cancel') }}
-			</NcButton>
-			<NcButton
-				variant="primary"
-				:disabled="busy || !complete"
-				data-testid="subject-erasure-create"
-				@click="onCreate">
-				{{ t('filinq', 'Record request') }}
-			</NcButton>
+			<CnDialogActions
+				:saving="busy"
+				:canSubmit="complete"
+				:confirmLabel="t('filinq', 'Record request')"
+				@cancel="$emit('close')"
+				@submit="onCreate" />
 		</template>
 	</NcDialog>
 </template>
 
 <script>
+import { CnDialogActions } from '@conduction/nextcloud-vue'
 import { translate as t } from '@nextcloud/l10n'
-import {
-	NcButton,
-	NcDialog,
-	NcNoteCard,
-	NcTextArea,
-	NcTextField,
-} from '@nextcloud/vue'
+import { NcDialog, NcNoteCard, NcTextArea, NcTextField } from '@nextcloud/vue'
+import { createDialogSubmit } from '../mixins/createDialogSubmit.js'
 import { createRequest, parseLines } from '../services/subjectErasures.js'
 
 /**
@@ -74,9 +66,11 @@ import { createRequest, parseLines } from '../services/subjectErasures.js'
  */
 export default {
 	name: 'NewSubjectErasureDialog',
-	components: { NcButton, NcDialog, NcNoteCard, NcTextArea, NcTextField },
+	components: { CnDialogActions, NcDialog, NcNoteCard, NcTextArea, NcTextField },
+	mixins: [createDialogSubmit],
 
 	emits: ['close', 'created'],
+
 	data() {
 		return {
 			subject: '',
@@ -108,21 +102,13 @@ export default {
 		 * @return {Promise<void>}
 		 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-5.2
 		 */
-		async onCreate() {
-			this.busy = true
-			this.error = ''
-			const answer = await createRequest({
+		onCreate() {
+			return this.submitCreate(() => createRequest({
 				subject: this.subject.trim(),
 				identifiers: parseLines(this.identifiers),
 				ground: this.ground.trim(),
 				dueAt: this.dueAt,
-			})
-			this.busy = false
-			if (!answer.ok) {
-				this.error = answer.error
-				return
-			}
-			this.$emit('created', answer.data)
+			}))
 		},
 	},
 }

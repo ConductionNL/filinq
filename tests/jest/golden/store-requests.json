@@ -1,0 +1,7176 @@
+{
+	"template.fetchTemplates([{\"type\":\"letter\",\"empty\":\"\",\"none\":null}]) ok": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/templates?type=letter",
+					{
+						"headers": {
+							"Accept-Language": "nl, en;q=0.9"
+						}
+					}
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [],
+		"returned": "(undefined)",
+		"state": {
+			"templates": [
+				{
+					"id": "r1"
+				}
+			],
+			"templateItem": null,
+			"versions": [],
+			"total": 1,
+			"loading": false,
+			"error": null,
+			"selectedLanguage": "nl",
+			"isFallbackLanguage": true,
+			"servedLanguage": "nl"
+		}
+	},
+	"template.fetchTemplates([{\"type\":\"letter\",\"empty\":\"\",\"none\":null}]) serverError": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/templates?type=letter",
+					{
+						"headers": {
+							"Accept-Language": "nl, en;q=0.9"
+						}
+					}
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to fetch templates:",
+				{
+					"thrown": "boom"
+				}
+			]
+		],
+		"returned": "(undefined)",
+		"state": {
+			"templates": [
+				{
+					"id": "t1"
+				},
+				{
+					"id": "t2"
+				}
+			],
+			"templateItem": null,
+			"versions": [],
+			"total": 0,
+			"loading": false,
+			"error": "boom",
+			"selectedLanguage": "nl",
+			"isFallbackLanguage": false,
+			"servedLanguage": null
+		}
+	},
+	"template.fetchTemplates([{\"type\":\"letter\",\"empty\":\"\",\"none\":null}]) plainError": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/templates?type=letter",
+					{
+						"headers": {
+							"Accept-Language": "nl, en;q=0.9"
+						}
+					}
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to fetch templates:",
+				{
+					"thrown": "network down"
+				}
+			]
+		],
+		"returned": "(undefined)",
+		"state": {
+			"templates": [
+				{
+					"id": "t1"
+				},
+				{
+					"id": "t2"
+				}
+			],
+			"templateItem": null,
+			"versions": [],
+			"total": 0,
+			"loading": false,
+			"error": "network down",
+			"selectedLanguage": "nl",
+			"isFallbackLanguage": false,
+			"servedLanguage": null
+		}
+	},
+	"template.fetchTemplates([{\"type\":\"letter\",\"empty\":\"\",\"none\":null}]) emptyStatus": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/templates?type=letter",
+					{
+						"headers": {
+							"Accept-Language": "nl, en;q=0.9"
+						}
+					}
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to fetch templates:",
+				{
+					"thrown": "odd"
+				}
+			]
+		],
+		"returned": "(undefined)",
+		"state": {
+			"templates": [
+				{
+					"id": "t1"
+				},
+				{
+					"id": "t2"
+				}
+			],
+			"templateItem": null,
+			"versions": [],
+			"total": 0,
+			"loading": false,
+			"error": "odd",
+			"selectedLanguage": "nl",
+			"isFallbackLanguage": false,
+			"servedLanguage": null
+		}
+	},
+	"template.fetchTemplates([]) ok": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/templates?",
+					{
+						"headers": {
+							"Accept-Language": "nl, en;q=0.9"
+						}
+					}
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [],
+		"returned": "(undefined)",
+		"state": {
+			"templates": [
+				{
+					"id": "r1"
+				}
+			],
+			"templateItem": null,
+			"versions": [],
+			"total": 1,
+			"loading": false,
+			"error": null,
+			"selectedLanguage": "nl",
+			"isFallbackLanguage": true,
+			"servedLanguage": "nl"
+		}
+	},
+	"template.fetchTemplates([]) serverError": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/templates?",
+					{
+						"headers": {
+							"Accept-Language": "nl, en;q=0.9"
+						}
+					}
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to fetch templates:",
+				{
+					"thrown": "boom"
+				}
+			]
+		],
+		"returned": "(undefined)",
+		"state": {
+			"templates": [
+				{
+					"id": "t1"
+				},
+				{
+					"id": "t2"
+				}
+			],
+			"templateItem": null,
+			"versions": [],
+			"total": 0,
+			"loading": false,
+			"error": "boom",
+			"selectedLanguage": "nl",
+			"isFallbackLanguage": false,
+			"servedLanguage": null
+		}
+	},
+	"template.fetchTemplates([]) plainError": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/templates?",
+					{
+						"headers": {
+							"Accept-Language": "nl, en;q=0.9"
+						}
+					}
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to fetch templates:",
+				{
+					"thrown": "network down"
+				}
+			]
+		],
+		"returned": "(undefined)",
+		"state": {
+			"templates": [
+				{
+					"id": "t1"
+				},
+				{
+					"id": "t2"
+				}
+			],
+			"templateItem": null,
+			"versions": [],
+			"total": 0,
+			"loading": false,
+			"error": "network down",
+			"selectedLanguage": "nl",
+			"isFallbackLanguage": false,
+			"servedLanguage": null
+		}
+	},
+	"template.fetchTemplates([]) emptyStatus": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/templates?",
+					{
+						"headers": {
+							"Accept-Language": "nl, en;q=0.9"
+						}
+					}
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to fetch templates:",
+				{
+					"thrown": "odd"
+				}
+			]
+		],
+		"returned": "(undefined)",
+		"state": {
+			"templates": [
+				{
+					"id": "t1"
+				},
+				{
+					"id": "t2"
+				}
+			],
+			"templateItem": null,
+			"versions": [],
+			"total": 0,
+			"loading": false,
+			"error": "odd",
+			"selectedLanguage": "nl",
+			"isFallbackLanguage": false,
+			"servedLanguage": null
+		}
+	},
+	"template.fetchTemplate([\"t1\"]) ok": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/templates/t1",
+					{
+						"headers": {
+							"Accept-Language": "nl, en;q=0.9"
+						}
+					}
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [],
+		"returned": {
+			"echo": "get",
+			"results": [
+				{
+					"id": "r1"
+				}
+			],
+			"total": 1,
+			"html": "<p/>",
+			"canMaintain": true
+		},
+		"state": {
+			"templates": [
+				{
+					"id": "t1"
+				},
+				{
+					"id": "t2"
+				}
+			],
+			"templateItem": {
+				"echo": "get",
+				"results": [
+					{
+						"id": "r1"
+					}
+				],
+				"total": 1,
+				"html": "<p/>",
+				"canMaintain": true
+			},
+			"versions": [],
+			"total": 0,
+			"loading": false,
+			"error": null,
+			"selectedLanguage": "nl",
+			"isFallbackLanguage": true,
+			"servedLanguage": "nl"
+		}
+	},
+	"template.fetchTemplate([\"t1\"]) serverError": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/templates/t1",
+					{
+						"headers": {
+							"Accept-Language": "nl, en;q=0.9"
+						}
+					}
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to fetch template:",
+				{
+					"thrown": "boom"
+				}
+			]
+		],
+		"returned": null,
+		"state": {
+			"templates": [
+				{
+					"id": "t1"
+				},
+				{
+					"id": "t2"
+				}
+			],
+			"templateItem": null,
+			"versions": [],
+			"total": 0,
+			"loading": false,
+			"error": "boom",
+			"selectedLanguage": "nl",
+			"isFallbackLanguage": false,
+			"servedLanguage": null
+		}
+	},
+	"template.fetchTemplate([\"t1\"]) plainError": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/templates/t1",
+					{
+						"headers": {
+							"Accept-Language": "nl, en;q=0.9"
+						}
+					}
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to fetch template:",
+				{
+					"thrown": "network down"
+				}
+			]
+		],
+		"returned": null,
+		"state": {
+			"templates": [
+				{
+					"id": "t1"
+				},
+				{
+					"id": "t2"
+				}
+			],
+			"templateItem": null,
+			"versions": [],
+			"total": 0,
+			"loading": false,
+			"error": "network down",
+			"selectedLanguage": "nl",
+			"isFallbackLanguage": false,
+			"servedLanguage": null
+		}
+	},
+	"template.fetchTemplate([\"t1\"]) emptyStatus": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/templates/t1",
+					{
+						"headers": {
+							"Accept-Language": "nl, en;q=0.9"
+						}
+					}
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to fetch template:",
+				{
+					"thrown": "odd"
+				}
+			]
+		],
+		"returned": null,
+		"state": {
+			"templates": [
+				{
+					"id": "t1"
+				},
+				{
+					"id": "t2"
+				}
+			],
+			"templateItem": null,
+			"versions": [],
+			"total": 0,
+			"loading": false,
+			"error": "odd",
+			"selectedLanguage": "nl",
+			"isFallbackLanguage": false,
+			"servedLanguage": null
+		}
+	},
+	"template.createTemplate([{\"name\":\"n\"}]) ok": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/templates",
+					{
+						"name": "n"
+					}
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [],
+		"returned": {
+			"echo": "post",
+			"results": [
+				{
+					"id": "r1"
+				}
+			],
+			"total": 1,
+			"html": "<p/>",
+			"canMaintain": true
+		},
+		"state": {
+			"templates": [
+				{
+					"id": "t1"
+				},
+				{
+					"id": "t2"
+				}
+			],
+			"templateItem": {
+				"echo": "post",
+				"results": [
+					{
+						"id": "r1"
+					}
+				],
+				"total": 1,
+				"html": "<p/>",
+				"canMaintain": true
+			},
+			"versions": [],
+			"total": 0,
+			"loading": false,
+			"error": null,
+			"selectedLanguage": "nl",
+			"isFallbackLanguage": false,
+			"servedLanguage": null
+		}
+	},
+	"template.createTemplate([{\"name\":\"n\"}]) serverError": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/templates",
+					{
+						"name": "n"
+					}
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to create template:",
+				{
+					"thrown": "boom"
+				}
+			]
+		],
+		"returned": null,
+		"state": {
+			"templates": [
+				{
+					"id": "t1"
+				},
+				{
+					"id": "t2"
+				}
+			],
+			"templateItem": null,
+			"versions": [],
+			"total": 0,
+			"loading": false,
+			"error": "boom",
+			"selectedLanguage": "nl",
+			"isFallbackLanguage": false,
+			"servedLanguage": null
+		}
+	},
+	"template.createTemplate([{\"name\":\"n\"}]) plainError": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/templates",
+					{
+						"name": "n"
+					}
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to create template:",
+				{
+					"thrown": "network down"
+				}
+			]
+		],
+		"returned": null,
+		"state": {
+			"templates": [
+				{
+					"id": "t1"
+				},
+				{
+					"id": "t2"
+				}
+			],
+			"templateItem": null,
+			"versions": [],
+			"total": 0,
+			"loading": false,
+			"error": "network down",
+			"selectedLanguage": "nl",
+			"isFallbackLanguage": false,
+			"servedLanguage": null
+		}
+	},
+	"template.createTemplate([{\"name\":\"n\"}]) emptyStatus": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/templates",
+					{
+						"name": "n"
+					}
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to create template:",
+				{
+					"thrown": "odd"
+				}
+			]
+		],
+		"returned": null,
+		"state": {
+			"templates": [
+				{
+					"id": "t1"
+				},
+				{
+					"id": "t2"
+				}
+			],
+			"templateItem": null,
+			"versions": [],
+			"total": 0,
+			"loading": false,
+			"error": "odd",
+			"selectedLanguage": "nl",
+			"isFallbackLanguage": false,
+			"servedLanguage": null
+		}
+	},
+	"template.updateTemplate([\"t1\",{\"name\":\"n\"}]) ok": {
+		"calls": [
+			{
+				"method": "put",
+				"args": [
+					"url:/apps/filinq/api/templates/t1",
+					{
+						"name": "n"
+					}
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [],
+		"returned": {
+			"echo": "put",
+			"results": [
+				{
+					"id": "r1"
+				}
+			],
+			"total": 1,
+			"html": "<p/>",
+			"canMaintain": true
+		},
+		"state": {
+			"templates": [
+				{
+					"id": "t1"
+				},
+				{
+					"id": "t2"
+				}
+			],
+			"templateItem": {
+				"echo": "put",
+				"results": [
+					{
+						"id": "r1"
+					}
+				],
+				"total": 1,
+				"html": "<p/>",
+				"canMaintain": true
+			},
+			"versions": [],
+			"total": 0,
+			"loading": false,
+			"error": null,
+			"selectedLanguage": "nl",
+			"isFallbackLanguage": false,
+			"servedLanguage": null
+		}
+	},
+	"template.updateTemplate([\"t1\",{\"name\":\"n\"}]) serverError": {
+		"calls": [
+			{
+				"method": "put",
+				"args": [
+					"url:/apps/filinq/api/templates/t1",
+					{
+						"name": "n"
+					}
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to update template:",
+				{
+					"thrown": "boom"
+				}
+			]
+		],
+		"returned": null,
+		"state": {
+			"templates": [
+				{
+					"id": "t1"
+				},
+				{
+					"id": "t2"
+				}
+			],
+			"templateItem": null,
+			"versions": [],
+			"total": 0,
+			"loading": false,
+			"error": "boom",
+			"selectedLanguage": "nl",
+			"isFallbackLanguage": false,
+			"servedLanguage": null
+		}
+	},
+	"template.updateTemplate([\"t1\",{\"name\":\"n\"}]) plainError": {
+		"calls": [
+			{
+				"method": "put",
+				"args": [
+					"url:/apps/filinq/api/templates/t1",
+					{
+						"name": "n"
+					}
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to update template:",
+				{
+					"thrown": "network down"
+				}
+			]
+		],
+		"returned": null,
+		"state": {
+			"templates": [
+				{
+					"id": "t1"
+				},
+				{
+					"id": "t2"
+				}
+			],
+			"templateItem": null,
+			"versions": [],
+			"total": 0,
+			"loading": false,
+			"error": "network down",
+			"selectedLanguage": "nl",
+			"isFallbackLanguage": false,
+			"servedLanguage": null
+		}
+	},
+	"template.updateTemplate([\"t1\",{\"name\":\"n\"}]) emptyStatus": {
+		"calls": [
+			{
+				"method": "put",
+				"args": [
+					"url:/apps/filinq/api/templates/t1",
+					{
+						"name": "n"
+					}
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to update template:",
+				{
+					"thrown": "odd"
+				}
+			]
+		],
+		"returned": null,
+		"state": {
+			"templates": [
+				{
+					"id": "t1"
+				},
+				{
+					"id": "t2"
+				}
+			],
+			"templateItem": null,
+			"versions": [],
+			"total": 0,
+			"loading": false,
+			"error": "odd",
+			"selectedLanguage": "nl",
+			"isFallbackLanguage": false,
+			"servedLanguage": null
+		}
+	},
+	"template.deleteTemplate([\"t1\"]) ok": {
+		"calls": [
+			{
+				"method": "delete",
+				"args": [
+					"url:/apps/filinq/api/templates/t1"
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [],
+		"returned": true,
+		"state": {
+			"templates": [
+				{
+					"id": "t2"
+				}
+			],
+			"templateItem": null,
+			"versions": [],
+			"total": 0,
+			"loading": false,
+			"error": null,
+			"selectedLanguage": "nl",
+			"isFallbackLanguage": false,
+			"servedLanguage": null
+		}
+	},
+	"template.deleteTemplate([\"t1\"]) serverError": {
+		"calls": [
+			{
+				"method": "delete",
+				"args": [
+					"url:/apps/filinq/api/templates/t1"
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to delete template:",
+				{
+					"thrown": "boom"
+				}
+			]
+		],
+		"returned": false,
+		"state": {
+			"templates": [
+				{
+					"id": "t1"
+				},
+				{
+					"id": "t2"
+				}
+			],
+			"templateItem": null,
+			"versions": [],
+			"total": 0,
+			"loading": false,
+			"error": "boom",
+			"selectedLanguage": "nl",
+			"isFallbackLanguage": false,
+			"servedLanguage": null
+		}
+	},
+	"template.deleteTemplate([\"t1\"]) plainError": {
+		"calls": [
+			{
+				"method": "delete",
+				"args": [
+					"url:/apps/filinq/api/templates/t1"
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to delete template:",
+				{
+					"thrown": "network down"
+				}
+			]
+		],
+		"returned": false,
+		"state": {
+			"templates": [
+				{
+					"id": "t1"
+				},
+				{
+					"id": "t2"
+				}
+			],
+			"templateItem": null,
+			"versions": [],
+			"total": 0,
+			"loading": false,
+			"error": "network down",
+			"selectedLanguage": "nl",
+			"isFallbackLanguage": false,
+			"servedLanguage": null
+		}
+	},
+	"template.deleteTemplate([\"t1\"]) emptyStatus": {
+		"calls": [
+			{
+				"method": "delete",
+				"args": [
+					"url:/apps/filinq/api/templates/t1"
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to delete template:",
+				{
+					"thrown": "odd"
+				}
+			]
+		],
+		"returned": false,
+		"state": {
+			"templates": [
+				{
+					"id": "t1"
+				},
+				{
+					"id": "t2"
+				}
+			],
+			"templateItem": null,
+			"versions": [],
+			"total": 0,
+			"loading": false,
+			"error": "odd",
+			"selectedLanguage": "nl",
+			"isFallbackLanguage": false,
+			"servedLanguage": null
+		}
+	},
+	"template.duplicateTemplate([\"t2\"]) ok": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/templates/t2/duplicate"
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [],
+		"returned": {
+			"echo": "post",
+			"results": [
+				{
+					"id": "r1"
+				}
+			],
+			"total": 1,
+			"html": "<p/>",
+			"canMaintain": true
+		},
+		"state": {
+			"templates": [
+				{
+					"id": "t1"
+				},
+				{
+					"id": "t2"
+				}
+			],
+			"templateItem": null,
+			"versions": [],
+			"total": 0,
+			"loading": false,
+			"error": null,
+			"selectedLanguage": "nl",
+			"isFallbackLanguage": false,
+			"servedLanguage": null
+		}
+	},
+	"template.duplicateTemplate([\"t2\"]) serverError": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/templates/t2/duplicate"
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to duplicate template:",
+				{
+					"thrown": "boom"
+				}
+			]
+		],
+		"returned": null,
+		"state": {
+			"templates": [
+				{
+					"id": "t1"
+				},
+				{
+					"id": "t2"
+				}
+			],
+			"templateItem": null,
+			"versions": [],
+			"total": 0,
+			"loading": false,
+			"error": "boom",
+			"selectedLanguage": "nl",
+			"isFallbackLanguage": false,
+			"servedLanguage": null
+		}
+	},
+	"template.duplicateTemplate([\"t2\"]) plainError": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/templates/t2/duplicate"
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to duplicate template:",
+				{
+					"thrown": "network down"
+				}
+			]
+		],
+		"returned": null,
+		"state": {
+			"templates": [
+				{
+					"id": "t1"
+				},
+				{
+					"id": "t2"
+				}
+			],
+			"templateItem": null,
+			"versions": [],
+			"total": 0,
+			"loading": false,
+			"error": "network down",
+			"selectedLanguage": "nl",
+			"isFallbackLanguage": false,
+			"servedLanguage": null
+		}
+	},
+	"template.duplicateTemplate([\"t2\"]) emptyStatus": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/templates/t2/duplicate"
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to duplicate template:",
+				{
+					"thrown": "odd"
+				}
+			]
+		],
+		"returned": null,
+		"state": {
+			"templates": [
+				{
+					"id": "t1"
+				},
+				{
+					"id": "t2"
+				}
+			],
+			"templateItem": null,
+			"versions": [],
+			"total": 0,
+			"loading": false,
+			"error": "odd",
+			"selectedLanguage": "nl",
+			"isFallbackLanguage": false,
+			"servedLanguage": null
+		}
+	},
+	"template.fetchVersions([\"t1\"]) ok": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/templates/t1/versions"
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [],
+		"returned": {
+			"echo": "get",
+			"results": [
+				{
+					"id": "r1"
+				}
+			],
+			"total": 1,
+			"html": "<p/>",
+			"canMaintain": true
+		},
+		"state": {
+			"templates": [
+				{
+					"id": "t1"
+				},
+				{
+					"id": "t2"
+				}
+			],
+			"templateItem": null,
+			"versions": [
+				{
+					"id": "r1"
+				}
+			],
+			"total": 0,
+			"loading": false,
+			"error": null,
+			"selectedLanguage": "nl",
+			"isFallbackLanguage": false,
+			"servedLanguage": null
+		}
+	},
+	"template.fetchVersions([\"t1\"]) serverError": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/templates/t1/versions"
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to fetch versions:",
+				{
+					"thrown": "boom"
+				}
+			]
+		],
+		"returned": null,
+		"state": {
+			"templates": [
+				{
+					"id": "t1"
+				},
+				{
+					"id": "t2"
+				}
+			],
+			"templateItem": null,
+			"versions": [],
+			"total": 0,
+			"loading": false,
+			"error": "boom",
+			"selectedLanguage": "nl",
+			"isFallbackLanguage": false,
+			"servedLanguage": null
+		}
+	},
+	"template.fetchVersions([\"t1\"]) plainError": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/templates/t1/versions"
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to fetch versions:",
+				{
+					"thrown": "network down"
+				}
+			]
+		],
+		"returned": null,
+		"state": {
+			"templates": [
+				{
+					"id": "t1"
+				},
+				{
+					"id": "t2"
+				}
+			],
+			"templateItem": null,
+			"versions": [],
+			"total": 0,
+			"loading": false,
+			"error": "network down",
+			"selectedLanguage": "nl",
+			"isFallbackLanguage": false,
+			"servedLanguage": null
+		}
+	},
+	"template.fetchVersions([\"t1\"]) emptyStatus": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/templates/t1/versions"
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to fetch versions:",
+				{
+					"thrown": "odd"
+				}
+			]
+		],
+		"returned": null,
+		"state": {
+			"templates": [
+				{
+					"id": "t1"
+				},
+				{
+					"id": "t2"
+				}
+			],
+			"templateItem": null,
+			"versions": [],
+			"total": 0,
+			"loading": false,
+			"error": "odd",
+			"selectedLanguage": "nl",
+			"isFallbackLanguage": false,
+			"servedLanguage": null
+		}
+	},
+	"template.restoreVersion([\"t1\",\"v1\"]) ok": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/templates/t1/versions/v1/restore"
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [],
+		"returned": {
+			"echo": "post",
+			"results": [
+				{
+					"id": "r1"
+				}
+			],
+			"total": 1,
+			"html": "<p/>",
+			"canMaintain": true
+		},
+		"state": {
+			"templates": [
+				{
+					"id": "t1"
+				},
+				{
+					"id": "t2"
+				}
+			],
+			"templateItem": {
+				"echo": "post",
+				"results": [
+					{
+						"id": "r1"
+					}
+				],
+				"total": 1,
+				"html": "<p/>",
+				"canMaintain": true
+			},
+			"versions": [],
+			"total": 0,
+			"loading": false,
+			"error": null,
+			"selectedLanguage": "nl",
+			"isFallbackLanguage": false,
+			"servedLanguage": null
+		}
+	},
+	"template.restoreVersion([\"t1\",\"v1\"]) serverError": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/templates/t1/versions/v1/restore"
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to restore version:",
+				{
+					"thrown": "boom"
+				}
+			]
+		],
+		"returned": null,
+		"state": {
+			"templates": [
+				{
+					"id": "t1"
+				},
+				{
+					"id": "t2"
+				}
+			],
+			"templateItem": null,
+			"versions": [],
+			"total": 0,
+			"loading": false,
+			"error": "boom",
+			"selectedLanguage": "nl",
+			"isFallbackLanguage": false,
+			"servedLanguage": null
+		}
+	},
+	"template.restoreVersion([\"t1\",\"v1\"]) plainError": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/templates/t1/versions/v1/restore"
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to restore version:",
+				{
+					"thrown": "network down"
+				}
+			]
+		],
+		"returned": null,
+		"state": {
+			"templates": [
+				{
+					"id": "t1"
+				},
+				{
+					"id": "t2"
+				}
+			],
+			"templateItem": null,
+			"versions": [],
+			"total": 0,
+			"loading": false,
+			"error": "network down",
+			"selectedLanguage": "nl",
+			"isFallbackLanguage": false,
+			"servedLanguage": null
+		}
+	},
+	"template.restoreVersion([\"t1\",\"v1\"]) emptyStatus": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/templates/t1/versions/v1/restore"
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to restore version:",
+				{
+					"thrown": "odd"
+				}
+			]
+		],
+		"returned": null,
+		"state": {
+			"templates": [
+				{
+					"id": "t1"
+				},
+				{
+					"id": "t2"
+				}
+			],
+			"templateItem": null,
+			"versions": [],
+			"total": 0,
+			"loading": false,
+			"error": "odd",
+			"selectedLanguage": "nl",
+			"isFallbackLanguage": false,
+			"servedLanguage": null
+		}
+	},
+	"template.previewTemplate([\"<p>{{x}}</p>\",{\"x\":1}]) ok": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/templates/preview",
+					{
+						"content": "<p>{{x}}</p>",
+						"data": {
+							"x": 1
+						}
+					}
+				],
+				"seen": {
+					"loading": false,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [],
+		"returned": {
+			"html": "<p/>",
+			"lint": []
+		},
+		"state": {
+			"templates": [
+				{
+					"id": "t1"
+				},
+				{
+					"id": "t2"
+				}
+			],
+			"templateItem": null,
+			"versions": [],
+			"total": 0,
+			"loading": false,
+			"error": null,
+			"selectedLanguage": "nl",
+			"isFallbackLanguage": false,
+			"servedLanguage": null
+		}
+	},
+	"template.previewTemplate([\"<p>{{x}}</p>\",{\"x\":1}]) serverError": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/templates/preview",
+					{
+						"content": "<p>{{x}}</p>",
+						"data": {
+							"x": 1
+						}
+					}
+				],
+				"seen": {
+					"loading": false,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to preview template:",
+				{
+					"thrown": "boom"
+				}
+			]
+		],
+		"returned": null,
+		"state": {
+			"templates": [
+				{
+					"id": "t1"
+				},
+				{
+					"id": "t2"
+				}
+			],
+			"templateItem": null,
+			"versions": [],
+			"total": 0,
+			"loading": false,
+			"error": "boom",
+			"selectedLanguage": "nl",
+			"isFallbackLanguage": false,
+			"servedLanguage": null
+		}
+	},
+	"template.previewTemplate([\"<p>{{x}}</p>\",{\"x\":1}]) plainError": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/templates/preview",
+					{
+						"content": "<p>{{x}}</p>",
+						"data": {
+							"x": 1
+						}
+					}
+				],
+				"seen": {
+					"loading": false,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to preview template:",
+				{
+					"thrown": "network down"
+				}
+			]
+		],
+		"returned": null,
+		"state": {
+			"templates": [
+				{
+					"id": "t1"
+				},
+				{
+					"id": "t2"
+				}
+			],
+			"templateItem": null,
+			"versions": [],
+			"total": 0,
+			"loading": false,
+			"error": "network down",
+			"selectedLanguage": "nl",
+			"isFallbackLanguage": false,
+			"servedLanguage": null
+		}
+	},
+	"template.previewTemplate([\"<p>{{x}}</p>\",{\"x\":1}]) emptyStatus": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/templates/preview",
+					{
+						"content": "<p>{{x}}</p>",
+						"data": {
+							"x": 1
+						}
+					}
+				],
+				"seen": {
+					"loading": false,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to preview template:",
+				{
+					"thrown": "odd"
+				}
+			]
+		],
+		"returned": null,
+		"state": {
+			"templates": [
+				{
+					"id": "t1"
+				},
+				{
+					"id": "t2"
+				}
+			],
+			"templateItem": null,
+			"versions": [],
+			"total": 0,
+			"loading": false,
+			"error": "odd",
+			"selectedLanguage": "nl",
+			"isFallbackLanguage": false,
+			"servedLanguage": null
+		}
+	},
+	"template.previewTemplate([\"<p/>\"]) ok": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/templates/preview",
+					{
+						"content": "<p/>",
+						"data": {}
+					}
+				],
+				"seen": {
+					"loading": false,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [],
+		"returned": {
+			"html": "<p/>",
+			"lint": []
+		},
+		"state": {
+			"templates": [
+				{
+					"id": "t1"
+				},
+				{
+					"id": "t2"
+				}
+			],
+			"templateItem": null,
+			"versions": [],
+			"total": 0,
+			"loading": false,
+			"error": null,
+			"selectedLanguage": "nl",
+			"isFallbackLanguage": false,
+			"servedLanguage": null
+		}
+	},
+	"template.previewTemplate([\"<p/>\"]) serverError": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/templates/preview",
+					{
+						"content": "<p/>",
+						"data": {}
+					}
+				],
+				"seen": {
+					"loading": false,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to preview template:",
+				{
+					"thrown": "boom"
+				}
+			]
+		],
+		"returned": null,
+		"state": {
+			"templates": [
+				{
+					"id": "t1"
+				},
+				{
+					"id": "t2"
+				}
+			],
+			"templateItem": null,
+			"versions": [],
+			"total": 0,
+			"loading": false,
+			"error": "boom",
+			"selectedLanguage": "nl",
+			"isFallbackLanguage": false,
+			"servedLanguage": null
+		}
+	},
+	"template.previewTemplate([\"<p/>\"]) plainError": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/templates/preview",
+					{
+						"content": "<p/>",
+						"data": {}
+					}
+				],
+				"seen": {
+					"loading": false,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to preview template:",
+				{
+					"thrown": "network down"
+				}
+			]
+		],
+		"returned": null,
+		"state": {
+			"templates": [
+				{
+					"id": "t1"
+				},
+				{
+					"id": "t2"
+				}
+			],
+			"templateItem": null,
+			"versions": [],
+			"total": 0,
+			"loading": false,
+			"error": "network down",
+			"selectedLanguage": "nl",
+			"isFallbackLanguage": false,
+			"servedLanguage": null
+		}
+	},
+	"template.previewTemplate([\"<p/>\"]) emptyStatus": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/templates/preview",
+					{
+						"content": "<p/>",
+						"data": {}
+					}
+				],
+				"seen": {
+					"loading": false,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to preview template:",
+				{
+					"thrown": "odd"
+				}
+			]
+		],
+		"returned": null,
+		"state": {
+			"templates": [
+				{
+					"id": "t1"
+				},
+				{
+					"id": "t2"
+				}
+			],
+			"templateItem": null,
+			"versions": [],
+			"total": 0,
+			"loading": false,
+			"error": "odd",
+			"selectedLanguage": "nl",
+			"isFallbackLanguage": false,
+			"servedLanguage": null
+		}
+	},
+	"template.acquireLock([\"t1\"]) ok": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/templates/t1/lock"
+				],
+				"seen": {
+					"loading": false,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [],
+		"returned": {
+			"echo": "post",
+			"results": [
+				{
+					"id": "r1"
+				}
+			],
+			"total": 1,
+			"html": "<p/>",
+			"canMaintain": true
+		},
+		"state": {
+			"templates": [
+				{
+					"id": "t1"
+				},
+				{
+					"id": "t2"
+				}
+			],
+			"templateItem": null,
+			"versions": [],
+			"total": 0,
+			"loading": false,
+			"error": null,
+			"selectedLanguage": "nl",
+			"isFallbackLanguage": false,
+			"servedLanguage": null
+		}
+	},
+	"template.acquireLock([\"t1\"]) serverError": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/templates/t1/lock"
+				],
+				"seen": {
+					"loading": false,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to acquire lock:",
+				{
+					"thrown": "boom"
+				}
+			]
+		],
+		"returned": null,
+		"state": {
+			"templates": [
+				{
+					"id": "t1"
+				},
+				{
+					"id": "t2"
+				}
+			],
+			"templateItem": null,
+			"versions": [],
+			"total": 0,
+			"loading": false,
+			"error": "refused by server",
+			"selectedLanguage": "nl",
+			"isFallbackLanguage": false,
+			"servedLanguage": null
+		}
+	},
+	"template.acquireLock([\"t1\"]) plainError": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/templates/t1/lock"
+				],
+				"seen": {
+					"loading": false,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to acquire lock:",
+				{
+					"thrown": "network down"
+				}
+			]
+		],
+		"returned": null,
+		"state": {
+			"templates": [
+				{
+					"id": "t1"
+				},
+				{
+					"id": "t2"
+				}
+			],
+			"templateItem": null,
+			"versions": [],
+			"total": 0,
+			"loading": false,
+			"error": "network down",
+			"selectedLanguage": "nl",
+			"isFallbackLanguage": false,
+			"servedLanguage": null
+		}
+	},
+	"template.acquireLock([\"t1\"]) emptyStatus": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/templates/t1/lock"
+				],
+				"seen": {
+					"loading": false,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to acquire lock:",
+				{
+					"thrown": "odd"
+				}
+			]
+		],
+		"returned": null,
+		"state": {
+			"templates": [
+				{
+					"id": "t1"
+				},
+				{
+					"id": "t2"
+				}
+			],
+			"templateItem": null,
+			"versions": [],
+			"total": 0,
+			"loading": false,
+			"error": "odd",
+			"selectedLanguage": "nl",
+			"isFallbackLanguage": false,
+			"servedLanguage": null
+		}
+	},
+	"template.releaseLock([\"t1\"]) ok": {
+		"calls": [
+			{
+				"method": "delete",
+				"args": [
+					"url:/apps/filinq/api/templates/t1/lock"
+				],
+				"seen": {
+					"loading": false,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [],
+		"returned": {
+			"echo": "delete",
+			"results": [
+				{
+					"id": "r1"
+				}
+			],
+			"total": 1,
+			"html": "<p/>",
+			"canMaintain": true
+		},
+		"state": {
+			"templates": [
+				{
+					"id": "t1"
+				},
+				{
+					"id": "t2"
+				}
+			],
+			"templateItem": null,
+			"versions": [],
+			"total": 0,
+			"loading": false,
+			"error": null,
+			"selectedLanguage": "nl",
+			"isFallbackLanguage": false,
+			"servedLanguage": null
+		}
+	},
+	"template.releaseLock([\"t1\"]) serverError": {
+		"calls": [
+			{
+				"method": "delete",
+				"args": [
+					"url:/apps/filinq/api/templates/t1/lock"
+				],
+				"seen": {
+					"loading": false,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to release lock:",
+				{
+					"thrown": "boom"
+				}
+			]
+		],
+		"returned": null,
+		"state": {
+			"templates": [
+				{
+					"id": "t1"
+				},
+				{
+					"id": "t2"
+				}
+			],
+			"templateItem": null,
+			"versions": [],
+			"total": 0,
+			"loading": false,
+			"error": "boom",
+			"selectedLanguage": "nl",
+			"isFallbackLanguage": false,
+			"servedLanguage": null
+		}
+	},
+	"template.releaseLock([\"t1\"]) plainError": {
+		"calls": [
+			{
+				"method": "delete",
+				"args": [
+					"url:/apps/filinq/api/templates/t1/lock"
+				],
+				"seen": {
+					"loading": false,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to release lock:",
+				{
+					"thrown": "network down"
+				}
+			]
+		],
+		"returned": null,
+		"state": {
+			"templates": [
+				{
+					"id": "t1"
+				},
+				{
+					"id": "t2"
+				}
+			],
+			"templateItem": null,
+			"versions": [],
+			"total": 0,
+			"loading": false,
+			"error": "network down",
+			"selectedLanguage": "nl",
+			"isFallbackLanguage": false,
+			"servedLanguage": null
+		}
+	},
+	"template.releaseLock([\"t1\"]) emptyStatus": {
+		"calls": [
+			{
+				"method": "delete",
+				"args": [
+					"url:/apps/filinq/api/templates/t1/lock"
+				],
+				"seen": {
+					"loading": false,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to release lock:",
+				{
+					"thrown": "odd"
+				}
+			]
+		],
+		"returned": null,
+		"state": {
+			"templates": [
+				{
+					"id": "t1"
+				},
+				{
+					"id": "t2"
+				}
+			],
+			"templateItem": null,
+			"versions": [],
+			"total": 0,
+			"loading": false,
+			"error": "odd",
+			"selectedLanguage": "nl",
+			"isFallbackLanguage": false,
+			"servedLanguage": null
+		}
+	},
+	"prohibition.fetchProhibitions([]) ok": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/policy/prohibitions"
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [],
+		"returned": "(undefined)",
+		"state": {
+			"prohibitions": {
+				"echo": "get",
+				"results": [
+					{
+						"id": "r1"
+					}
+				],
+				"total": 1,
+				"html": "<p/>",
+				"canMaintain": true
+			},
+			"prohibitionItem": null,
+			"loading": false,
+			"error": null
+		}
+	},
+	"prohibition.fetchProhibitions([]) serverError": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/policy/prohibitions"
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to fetch prohibitions:",
+				{
+					"thrown": "boom"
+				}
+			]
+		],
+		"returned": "(undefined)",
+		"state": {
+			"prohibitions": [
+				{
+					"id": "p1"
+				},
+				{
+					"@self": {
+						"id": "p2"
+					}
+				},
+				{
+					"uuid": "p3"
+				}
+			],
+			"prohibitionItem": null,
+			"loading": false,
+			"error": "refused by server"
+		}
+	},
+	"prohibition.fetchProhibitions([]) plainError": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/policy/prohibitions"
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to fetch prohibitions:",
+				{
+					"thrown": "network down"
+				}
+			]
+		],
+		"returned": "(undefined)",
+		"state": {
+			"prohibitions": [
+				{
+					"id": "p1"
+				},
+				{
+					"@self": {
+						"id": "p2"
+					}
+				},
+				{
+					"uuid": "p3"
+				}
+			],
+			"prohibitionItem": null,
+			"loading": false,
+			"error": "network down"
+		}
+	},
+	"prohibition.fetchProhibitions([]) emptyStatus": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/policy/prohibitions"
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to fetch prohibitions:",
+				{
+					"thrown": "odd"
+				}
+			]
+		],
+		"returned": "(undefined)",
+		"state": {
+			"prohibitions": [
+				{
+					"id": "p1"
+				},
+				{
+					"@self": {
+						"id": "p2"
+					}
+				},
+				{
+					"uuid": "p3"
+				}
+			],
+			"prohibitionItem": null,
+			"loading": false,
+			"error": "odd"
+		}
+	},
+	"prohibition.fetchProhibition([\"p1\"]) ok": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/policy/prohibitions/p1"
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [],
+		"returned": {
+			"echo": "get",
+			"results": [
+				{
+					"id": "r1"
+				}
+			],
+			"total": 1,
+			"html": "<p/>",
+			"canMaintain": true
+		},
+		"state": {
+			"prohibitions": [
+				{
+					"id": "p1"
+				},
+				{
+					"@self": {
+						"id": "p2"
+					}
+				},
+				{
+					"uuid": "p3"
+				}
+			],
+			"prohibitionItem": {
+				"echo": "get",
+				"results": [
+					{
+						"id": "r1"
+					}
+				],
+				"total": 1,
+				"html": "<p/>",
+				"canMaintain": true
+			},
+			"loading": false,
+			"error": null
+		}
+	},
+	"prohibition.fetchProhibition([\"p1\"]) serverError": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/policy/prohibitions/p1"
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to fetch prohibition:",
+				{
+					"thrown": "boom"
+				}
+			]
+		],
+		"returned": null,
+		"state": {
+			"prohibitions": [
+				{
+					"id": "p1"
+				},
+				{
+					"@self": {
+						"id": "p2"
+					}
+				},
+				{
+					"uuid": "p3"
+				}
+			],
+			"prohibitionItem": null,
+			"loading": false,
+			"error": "refused by server"
+		}
+	},
+	"prohibition.fetchProhibition([\"p1\"]) plainError": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/policy/prohibitions/p1"
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to fetch prohibition:",
+				{
+					"thrown": "network down"
+				}
+			]
+		],
+		"returned": null,
+		"state": {
+			"prohibitions": [
+				{
+					"id": "p1"
+				},
+				{
+					"@self": {
+						"id": "p2"
+					}
+				},
+				{
+					"uuid": "p3"
+				}
+			],
+			"prohibitionItem": null,
+			"loading": false,
+			"error": "network down"
+		}
+	},
+	"prohibition.fetchProhibition([\"p1\"]) emptyStatus": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/policy/prohibitions/p1"
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to fetch prohibition:",
+				{
+					"thrown": "odd"
+				}
+			]
+		],
+		"returned": null,
+		"state": {
+			"prohibitions": [
+				{
+					"id": "p1"
+				},
+				{
+					"@self": {
+						"id": "p2"
+					}
+				},
+				{
+					"uuid": "p3"
+				}
+			],
+			"prohibitionItem": null,
+			"loading": false,
+			"error": "odd"
+		}
+	},
+	"prohibition.createProhibition([{\"name\":\"n\"}]) ok": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/policy/prohibitions",
+					{
+						"name": "n"
+					}
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [],
+		"returned": {
+			"echo": "post",
+			"results": [
+				{
+					"id": "r1"
+				}
+			],
+			"total": 1,
+			"html": "<p/>",
+			"canMaintain": true
+		},
+		"state": {
+			"prohibitions": [
+				{
+					"id": "p1"
+				},
+				{
+					"@self": {
+						"id": "p2"
+					}
+				},
+				{
+					"uuid": "p3"
+				},
+				{
+					"echo": "post",
+					"results": [
+						{
+							"id": "r1"
+						}
+					],
+					"total": 1,
+					"html": "<p/>",
+					"canMaintain": true
+				}
+			],
+			"prohibitionItem": null,
+			"loading": false,
+			"error": null
+		}
+	},
+	"prohibition.createProhibition([{\"name\":\"n\"}]) serverError": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/policy/prohibitions",
+					{
+						"name": "n"
+					}
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to create prohibition:",
+				{
+					"thrown": "boom"
+				}
+			]
+		],
+		"threw": {
+			"thrown": "boom"
+		},
+		"state": {
+			"prohibitions": [
+				{
+					"id": "p1"
+				},
+				{
+					"@self": {
+						"id": "p2"
+					}
+				},
+				{
+					"uuid": "p3"
+				}
+			],
+			"prohibitionItem": null,
+			"loading": false,
+			"error": "refused by server"
+		}
+	},
+	"prohibition.createProhibition([{\"name\":\"n\"}]) plainError": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/policy/prohibitions",
+					{
+						"name": "n"
+					}
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to create prohibition:",
+				{
+					"thrown": "network down"
+				}
+			]
+		],
+		"threw": {
+			"thrown": "network down"
+		},
+		"state": {
+			"prohibitions": [
+				{
+					"id": "p1"
+				},
+				{
+					"@self": {
+						"id": "p2"
+					}
+				},
+				{
+					"uuid": "p3"
+				}
+			],
+			"prohibitionItem": null,
+			"loading": false,
+			"error": "network down"
+		}
+	},
+	"prohibition.createProhibition([{\"name\":\"n\"}]) emptyStatus": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/policy/prohibitions",
+					{
+						"name": "n"
+					}
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to create prohibition:",
+				{
+					"thrown": "odd"
+				}
+			]
+		],
+		"threw": {
+			"thrown": "odd"
+		},
+		"state": {
+			"prohibitions": [
+				{
+					"id": "p1"
+				},
+				{
+					"@self": {
+						"id": "p2"
+					}
+				},
+				{
+					"uuid": "p3"
+				}
+			],
+			"prohibitionItem": null,
+			"loading": false,
+			"error": "odd"
+		}
+	},
+	"prohibition.updateProhibition([\"p2\",{\"name\":\"n\"}]) ok": {
+		"calls": [
+			{
+				"method": "put",
+				"args": [
+					"url:/apps/filinq/api/policy/prohibitions/p2",
+					{
+						"name": "n"
+					}
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [],
+		"returned": {
+			"echo": "put",
+			"results": [
+				{
+					"id": "r1"
+				}
+			],
+			"total": 1,
+			"html": "<p/>",
+			"canMaintain": true
+		},
+		"state": {
+			"prohibitions": [
+				{
+					"id": "p1"
+				},
+				{
+					"echo": "put",
+					"results": [
+						{
+							"id": "r1"
+						}
+					],
+					"total": 1,
+					"html": "<p/>",
+					"canMaintain": true
+				},
+				{
+					"uuid": "p3"
+				}
+			],
+			"prohibitionItem": {
+				"echo": "put",
+				"results": [
+					{
+						"id": "r1"
+					}
+				],
+				"total": 1,
+				"html": "<p/>",
+				"canMaintain": true
+			},
+			"loading": false,
+			"error": null
+		}
+	},
+	"prohibition.updateProhibition([\"p2\",{\"name\":\"n\"}]) serverError": {
+		"calls": [
+			{
+				"method": "put",
+				"args": [
+					"url:/apps/filinq/api/policy/prohibitions/p2",
+					{
+						"name": "n"
+					}
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to update prohibition:",
+				{
+					"thrown": "boom"
+				}
+			]
+		],
+		"threw": {
+			"thrown": "boom"
+		},
+		"state": {
+			"prohibitions": [
+				{
+					"id": "p1"
+				},
+				{
+					"@self": {
+						"id": "p2"
+					}
+				},
+				{
+					"uuid": "p3"
+				}
+			],
+			"prohibitionItem": null,
+			"loading": false,
+			"error": "refused by server"
+		}
+	},
+	"prohibition.updateProhibition([\"p2\",{\"name\":\"n\"}]) plainError": {
+		"calls": [
+			{
+				"method": "put",
+				"args": [
+					"url:/apps/filinq/api/policy/prohibitions/p2",
+					{
+						"name": "n"
+					}
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to update prohibition:",
+				{
+					"thrown": "network down"
+				}
+			]
+		],
+		"threw": {
+			"thrown": "network down"
+		},
+		"state": {
+			"prohibitions": [
+				{
+					"id": "p1"
+				},
+				{
+					"@self": {
+						"id": "p2"
+					}
+				},
+				{
+					"uuid": "p3"
+				}
+			],
+			"prohibitionItem": null,
+			"loading": false,
+			"error": "network down"
+		}
+	},
+	"prohibition.updateProhibition([\"p2\",{\"name\":\"n\"}]) emptyStatus": {
+		"calls": [
+			{
+				"method": "put",
+				"args": [
+					"url:/apps/filinq/api/policy/prohibitions/p2",
+					{
+						"name": "n"
+					}
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to update prohibition:",
+				{
+					"thrown": "odd"
+				}
+			]
+		],
+		"threw": {
+			"thrown": "odd"
+		},
+		"state": {
+			"prohibitions": [
+				{
+					"id": "p1"
+				},
+				{
+					"@self": {
+						"id": "p2"
+					}
+				},
+				{
+					"uuid": "p3"
+				}
+			],
+			"prohibitionItem": null,
+			"loading": false,
+			"error": "odd"
+		}
+	},
+	"prohibition.updateProhibition([\"p9\",{\"name\":\"n\"}]) ok": {
+		"calls": [
+			{
+				"method": "put",
+				"args": [
+					"url:/apps/filinq/api/policy/prohibitions/p9",
+					{
+						"name": "n"
+					}
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [],
+		"returned": {
+			"echo": "put",
+			"results": [
+				{
+					"id": "r1"
+				}
+			],
+			"total": 1,
+			"html": "<p/>",
+			"canMaintain": true
+		},
+		"state": {
+			"prohibitions": [
+				{
+					"id": "p1"
+				},
+				{
+					"@self": {
+						"id": "p2"
+					}
+				},
+				{
+					"uuid": "p3"
+				}
+			],
+			"prohibitionItem": {
+				"echo": "put",
+				"results": [
+					{
+						"id": "r1"
+					}
+				],
+				"total": 1,
+				"html": "<p/>",
+				"canMaintain": true
+			},
+			"loading": false,
+			"error": null
+		}
+	},
+	"prohibition.updateProhibition([\"p9\",{\"name\":\"n\"}]) serverError": {
+		"calls": [
+			{
+				"method": "put",
+				"args": [
+					"url:/apps/filinq/api/policy/prohibitions/p9",
+					{
+						"name": "n"
+					}
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to update prohibition:",
+				{
+					"thrown": "boom"
+				}
+			]
+		],
+		"threw": {
+			"thrown": "boom"
+		},
+		"state": {
+			"prohibitions": [
+				{
+					"id": "p1"
+				},
+				{
+					"@self": {
+						"id": "p2"
+					}
+				},
+				{
+					"uuid": "p3"
+				}
+			],
+			"prohibitionItem": null,
+			"loading": false,
+			"error": "refused by server"
+		}
+	},
+	"prohibition.updateProhibition([\"p9\",{\"name\":\"n\"}]) plainError": {
+		"calls": [
+			{
+				"method": "put",
+				"args": [
+					"url:/apps/filinq/api/policy/prohibitions/p9",
+					{
+						"name": "n"
+					}
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to update prohibition:",
+				{
+					"thrown": "network down"
+				}
+			]
+		],
+		"threw": {
+			"thrown": "network down"
+		},
+		"state": {
+			"prohibitions": [
+				{
+					"id": "p1"
+				},
+				{
+					"@self": {
+						"id": "p2"
+					}
+				},
+				{
+					"uuid": "p3"
+				}
+			],
+			"prohibitionItem": null,
+			"loading": false,
+			"error": "network down"
+		}
+	},
+	"prohibition.updateProhibition([\"p9\",{\"name\":\"n\"}]) emptyStatus": {
+		"calls": [
+			{
+				"method": "put",
+				"args": [
+					"url:/apps/filinq/api/policy/prohibitions/p9",
+					{
+						"name": "n"
+					}
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to update prohibition:",
+				{
+					"thrown": "odd"
+				}
+			]
+		],
+		"threw": {
+			"thrown": "odd"
+		},
+		"state": {
+			"prohibitions": [
+				{
+					"id": "p1"
+				},
+				{
+					"@self": {
+						"id": "p2"
+					}
+				},
+				{
+					"uuid": "p3"
+				}
+			],
+			"prohibitionItem": null,
+			"loading": false,
+			"error": "odd"
+		}
+	},
+	"prohibition.deleteProhibition([\"p3\"]) ok": {
+		"calls": [
+			{
+				"method": "delete",
+				"args": [
+					"url:/apps/filinq/api/policy/prohibitions/p3"
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [],
+		"returned": "(undefined)",
+		"state": {
+			"prohibitions": [
+				{
+					"id": "p1"
+				},
+				{
+					"@self": {
+						"id": "p2"
+					}
+				}
+			],
+			"prohibitionItem": null,
+			"loading": false,
+			"error": null
+		}
+	},
+	"prohibition.deleteProhibition([\"p3\"]) serverError": {
+		"calls": [
+			{
+				"method": "delete",
+				"args": [
+					"url:/apps/filinq/api/policy/prohibitions/p3"
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to delete prohibition:",
+				{
+					"thrown": "boom"
+				}
+			]
+		],
+		"threw": {
+			"thrown": "boom"
+		},
+		"state": {
+			"prohibitions": [
+				{
+					"id": "p1"
+				},
+				{
+					"@self": {
+						"id": "p2"
+					}
+				},
+				{
+					"uuid": "p3"
+				}
+			],
+			"prohibitionItem": null,
+			"loading": false,
+			"error": "refused by server"
+		}
+	},
+	"prohibition.deleteProhibition([\"p3\"]) plainError": {
+		"calls": [
+			{
+				"method": "delete",
+				"args": [
+					"url:/apps/filinq/api/policy/prohibitions/p3"
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to delete prohibition:",
+				{
+					"thrown": "network down"
+				}
+			]
+		],
+		"threw": {
+			"thrown": "network down"
+		},
+		"state": {
+			"prohibitions": [
+				{
+					"id": "p1"
+				},
+				{
+					"@self": {
+						"id": "p2"
+					}
+				},
+				{
+					"uuid": "p3"
+				}
+			],
+			"prohibitionItem": null,
+			"loading": false,
+			"error": "network down"
+		}
+	},
+	"prohibition.deleteProhibition([\"p3\"]) emptyStatus": {
+		"calls": [
+			{
+				"method": "delete",
+				"args": [
+					"url:/apps/filinq/api/policy/prohibitions/p3"
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": "(none)",
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to delete prohibition:",
+				{
+					"thrown": "odd"
+				}
+			]
+		],
+		"threw": {
+			"thrown": "odd"
+		},
+		"state": {
+			"prohibitions": [
+				{
+					"id": "p1"
+				},
+				{
+					"@self": {
+						"id": "p2"
+					}
+				},
+				{
+					"uuid": "p3"
+				}
+			],
+			"prohibitionItem": null,
+			"loading": false,
+			"error": "odd"
+		}
+	},
+	"customDictionary.fetchCapabilities([]) ok": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/custom-dictionaries/capabilities"
+				],
+				"seen": {
+					"loading": false,
+					"termsLoading": false,
+					"error": "stale"
+				}
+			}
+		],
+		"logged": [],
+		"returned": "(undefined)",
+		"state": {
+			"dictionaries": [
+				{
+					"id": "d1"
+				},
+				{
+					"@self": {
+						"id": "d2"
+					}
+				}
+			],
+			"dictionaryItem": null,
+			"terms": [
+				{
+					"id": "x1"
+				},
+				{
+					"uuid": "x2"
+				}
+			],
+			"loading": false,
+			"termsLoading": false,
+			"error": "stale",
+			"importResult": null,
+			"canMaintain": true
+		}
+	},
+	"customDictionary.fetchCapabilities([]) serverError": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/custom-dictionaries/capabilities"
+				],
+				"seen": {
+					"loading": false,
+					"termsLoading": false,
+					"error": "stale"
+				}
+			}
+		],
+		"logged": [],
+		"returned": "(undefined)",
+		"state": {
+			"dictionaries": [
+				{
+					"id": "d1"
+				},
+				{
+					"@self": {
+						"id": "d2"
+					}
+				}
+			],
+			"dictionaryItem": null,
+			"terms": [
+				{
+					"id": "x1"
+				},
+				{
+					"uuid": "x2"
+				}
+			],
+			"loading": false,
+			"termsLoading": false,
+			"error": "stale",
+			"importResult": null,
+			"canMaintain": false
+		}
+	},
+	"customDictionary.fetchCapabilities([]) plainError": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/custom-dictionaries/capabilities"
+				],
+				"seen": {
+					"loading": false,
+					"termsLoading": false,
+					"error": "stale"
+				}
+			}
+		],
+		"logged": [],
+		"returned": "(undefined)",
+		"state": {
+			"dictionaries": [
+				{
+					"id": "d1"
+				},
+				{
+					"@self": {
+						"id": "d2"
+					}
+				}
+			],
+			"dictionaryItem": null,
+			"terms": [
+				{
+					"id": "x1"
+				},
+				{
+					"uuid": "x2"
+				}
+			],
+			"loading": false,
+			"termsLoading": false,
+			"error": "stale",
+			"importResult": null,
+			"canMaintain": false
+		}
+	},
+	"customDictionary.fetchCapabilities([]) emptyStatus": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/custom-dictionaries/capabilities"
+				],
+				"seen": {
+					"loading": false,
+					"termsLoading": false,
+					"error": "stale"
+				}
+			}
+		],
+		"logged": [],
+		"returned": "(undefined)",
+		"state": {
+			"dictionaries": [
+				{
+					"id": "d1"
+				},
+				{
+					"@self": {
+						"id": "d2"
+					}
+				}
+			],
+			"dictionaryItem": null,
+			"terms": [
+				{
+					"id": "x1"
+				},
+				{
+					"uuid": "x2"
+				}
+			],
+			"loading": false,
+			"termsLoading": false,
+			"error": "stale",
+			"importResult": null,
+			"canMaintain": false
+		}
+	},
+	"customDictionary.fetchDictionaries([]) ok": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/custom-dictionaries"
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": false,
+					"error": null
+				}
+			}
+		],
+		"logged": [],
+		"returned": "(undefined)",
+		"state": {
+			"dictionaries": {
+				"echo": "get",
+				"results": [
+					{
+						"id": "r1"
+					}
+				],
+				"total": 1,
+				"html": "<p/>",
+				"canMaintain": true
+			},
+			"dictionaryItem": null,
+			"terms": [
+				{
+					"id": "x1"
+				},
+				{
+					"uuid": "x2"
+				}
+			],
+			"loading": false,
+			"termsLoading": false,
+			"error": null,
+			"importResult": null,
+			"canMaintain": false
+		}
+	},
+	"customDictionary.fetchDictionaries([]) serverError": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/custom-dictionaries"
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": false,
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to fetch custom dictionaries:",
+				{
+					"thrown": "boom"
+				}
+			]
+		],
+		"returned": "(undefined)",
+		"state": {
+			"dictionaries": [
+				{
+					"id": "d1"
+				},
+				{
+					"@self": {
+						"id": "d2"
+					}
+				}
+			],
+			"dictionaryItem": null,
+			"terms": [
+				{
+					"id": "x1"
+				},
+				{
+					"uuid": "x2"
+				}
+			],
+			"loading": false,
+			"termsLoading": false,
+			"error": "refused by server",
+			"importResult": null,
+			"canMaintain": false
+		}
+	},
+	"customDictionary.fetchDictionaries([]) plainError": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/custom-dictionaries"
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": false,
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to fetch custom dictionaries:",
+				{
+					"thrown": "network down"
+				}
+			]
+		],
+		"returned": "(undefined)",
+		"state": {
+			"dictionaries": [
+				{
+					"id": "d1"
+				},
+				{
+					"@self": {
+						"id": "d2"
+					}
+				}
+			],
+			"dictionaryItem": null,
+			"terms": [
+				{
+					"id": "x1"
+				},
+				{
+					"uuid": "x2"
+				}
+			],
+			"loading": false,
+			"termsLoading": false,
+			"error": "network down",
+			"importResult": null,
+			"canMaintain": false
+		}
+	},
+	"customDictionary.fetchDictionaries([]) emptyStatus": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/custom-dictionaries"
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": false,
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to fetch custom dictionaries:",
+				{
+					"thrown": "odd"
+				}
+			]
+		],
+		"returned": "(undefined)",
+		"state": {
+			"dictionaries": [
+				{
+					"id": "d1"
+				},
+				{
+					"@self": {
+						"id": "d2"
+					}
+				}
+			],
+			"dictionaryItem": null,
+			"terms": [
+				{
+					"id": "x1"
+				},
+				{
+					"uuid": "x2"
+				}
+			],
+			"loading": false,
+			"termsLoading": false,
+			"error": "odd",
+			"importResult": null,
+			"canMaintain": false
+		}
+	},
+	"customDictionary.fetchDictionary([\"d1\"]) ok": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/custom-dictionaries/d1"
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": false,
+					"error": null
+				}
+			}
+		],
+		"logged": [],
+		"returned": {
+			"echo": "get",
+			"results": [
+				{
+					"id": "r1"
+				}
+			],
+			"total": 1,
+			"html": "<p/>",
+			"canMaintain": true
+		},
+		"state": {
+			"dictionaries": [
+				{
+					"id": "d1"
+				},
+				{
+					"@self": {
+						"id": "d2"
+					}
+				}
+			],
+			"dictionaryItem": {
+				"echo": "get",
+				"results": [
+					{
+						"id": "r1"
+					}
+				],
+				"total": 1,
+				"html": "<p/>",
+				"canMaintain": true
+			},
+			"terms": [
+				{
+					"id": "x1"
+				},
+				{
+					"uuid": "x2"
+				}
+			],
+			"loading": false,
+			"termsLoading": false,
+			"error": null,
+			"importResult": null,
+			"canMaintain": false
+		}
+	},
+	"customDictionary.fetchDictionary([\"d1\"]) serverError": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/custom-dictionaries/d1"
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": false,
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to fetch custom dictionary:",
+				{
+					"thrown": "boom"
+				}
+			]
+		],
+		"returned": null,
+		"state": {
+			"dictionaries": [
+				{
+					"id": "d1"
+				},
+				{
+					"@self": {
+						"id": "d2"
+					}
+				}
+			],
+			"dictionaryItem": null,
+			"terms": [
+				{
+					"id": "x1"
+				},
+				{
+					"uuid": "x2"
+				}
+			],
+			"loading": false,
+			"termsLoading": false,
+			"error": "refused by server",
+			"importResult": null,
+			"canMaintain": false
+		}
+	},
+	"customDictionary.fetchDictionary([\"d1\"]) plainError": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/custom-dictionaries/d1"
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": false,
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to fetch custom dictionary:",
+				{
+					"thrown": "network down"
+				}
+			]
+		],
+		"returned": null,
+		"state": {
+			"dictionaries": [
+				{
+					"id": "d1"
+				},
+				{
+					"@self": {
+						"id": "d2"
+					}
+				}
+			],
+			"dictionaryItem": null,
+			"terms": [
+				{
+					"id": "x1"
+				},
+				{
+					"uuid": "x2"
+				}
+			],
+			"loading": false,
+			"termsLoading": false,
+			"error": "network down",
+			"importResult": null,
+			"canMaintain": false
+		}
+	},
+	"customDictionary.fetchDictionary([\"d1\"]) emptyStatus": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/custom-dictionaries/d1"
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": false,
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to fetch custom dictionary:",
+				{
+					"thrown": "odd"
+				}
+			]
+		],
+		"returned": null,
+		"state": {
+			"dictionaries": [
+				{
+					"id": "d1"
+				},
+				{
+					"@self": {
+						"id": "d2"
+					}
+				}
+			],
+			"dictionaryItem": null,
+			"terms": [
+				{
+					"id": "x1"
+				},
+				{
+					"uuid": "x2"
+				}
+			],
+			"loading": false,
+			"termsLoading": false,
+			"error": "odd",
+			"importResult": null,
+			"canMaintain": false
+		}
+	},
+	"customDictionary.createDictionary([{\"name\":\"n\"}]) ok": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/custom-dictionaries",
+					{
+						"name": "n"
+					}
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": false,
+					"error": null
+				}
+			}
+		],
+		"logged": [],
+		"returned": {
+			"echo": "post",
+			"results": [
+				{
+					"id": "r1"
+				}
+			],
+			"total": 1,
+			"html": "<p/>",
+			"canMaintain": true
+		},
+		"state": {
+			"dictionaries": [
+				{
+					"id": "d1"
+				},
+				{
+					"@self": {
+						"id": "d2"
+					}
+				},
+				{
+					"echo": "post",
+					"results": [
+						{
+							"id": "r1"
+						}
+					],
+					"total": 1,
+					"html": "<p/>",
+					"canMaintain": true
+				}
+			],
+			"dictionaryItem": null,
+			"terms": [
+				{
+					"id": "x1"
+				},
+				{
+					"uuid": "x2"
+				}
+			],
+			"loading": false,
+			"termsLoading": false,
+			"error": null,
+			"importResult": null,
+			"canMaintain": false
+		}
+	},
+	"customDictionary.createDictionary([{\"name\":\"n\"}]) serverError": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/custom-dictionaries",
+					{
+						"name": "n"
+					}
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": false,
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to create custom dictionary:",
+				{
+					"thrown": "boom"
+				}
+			]
+		],
+		"threw": {
+			"thrown": "boom"
+		},
+		"state": {
+			"dictionaries": [
+				{
+					"id": "d1"
+				},
+				{
+					"@self": {
+						"id": "d2"
+					}
+				}
+			],
+			"dictionaryItem": null,
+			"terms": [
+				{
+					"id": "x1"
+				},
+				{
+					"uuid": "x2"
+				}
+			],
+			"loading": false,
+			"termsLoading": false,
+			"error": "refused by server",
+			"importResult": null,
+			"canMaintain": false
+		}
+	},
+	"customDictionary.createDictionary([{\"name\":\"n\"}]) plainError": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/custom-dictionaries",
+					{
+						"name": "n"
+					}
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": false,
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to create custom dictionary:",
+				{
+					"thrown": "network down"
+				}
+			]
+		],
+		"threw": {
+			"thrown": "network down"
+		},
+		"state": {
+			"dictionaries": [
+				{
+					"id": "d1"
+				},
+				{
+					"@self": {
+						"id": "d2"
+					}
+				}
+			],
+			"dictionaryItem": null,
+			"terms": [
+				{
+					"id": "x1"
+				},
+				{
+					"uuid": "x2"
+				}
+			],
+			"loading": false,
+			"termsLoading": false,
+			"error": "network down",
+			"importResult": null,
+			"canMaintain": false
+		}
+	},
+	"customDictionary.createDictionary([{\"name\":\"n\"}]) emptyStatus": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/custom-dictionaries",
+					{
+						"name": "n"
+					}
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": false,
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to create custom dictionary:",
+				{
+					"thrown": "odd"
+				}
+			]
+		],
+		"threw": {
+			"thrown": "odd"
+		},
+		"state": {
+			"dictionaries": [
+				{
+					"id": "d1"
+				},
+				{
+					"@self": {
+						"id": "d2"
+					}
+				}
+			],
+			"dictionaryItem": null,
+			"terms": [
+				{
+					"id": "x1"
+				},
+				{
+					"uuid": "x2"
+				}
+			],
+			"loading": false,
+			"termsLoading": false,
+			"error": "odd",
+			"importResult": null,
+			"canMaintain": false
+		}
+	},
+	"customDictionary.updateDictionary([\"d2\",{\"name\":\"n\"}]) ok": {
+		"calls": [
+			{
+				"method": "put",
+				"args": [
+					"url:/apps/filinq/api/custom-dictionaries/d2",
+					{
+						"name": "n"
+					}
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": false,
+					"error": null
+				}
+			}
+		],
+		"logged": [],
+		"returned": {
+			"echo": "put",
+			"results": [
+				{
+					"id": "r1"
+				}
+			],
+			"total": 1,
+			"html": "<p/>",
+			"canMaintain": true
+		},
+		"state": {
+			"dictionaries": [
+				{
+					"id": "d1"
+				},
+				{
+					"echo": "put",
+					"results": [
+						{
+							"id": "r1"
+						}
+					],
+					"total": 1,
+					"html": "<p/>",
+					"canMaintain": true
+				}
+			],
+			"dictionaryItem": {
+				"echo": "put",
+				"results": [
+					{
+						"id": "r1"
+					}
+				],
+				"total": 1,
+				"html": "<p/>",
+				"canMaintain": true
+			},
+			"terms": [
+				{
+					"id": "x1"
+				},
+				{
+					"uuid": "x2"
+				}
+			],
+			"loading": false,
+			"termsLoading": false,
+			"error": null,
+			"importResult": null,
+			"canMaintain": false
+		}
+	},
+	"customDictionary.updateDictionary([\"d2\",{\"name\":\"n\"}]) serverError": {
+		"calls": [
+			{
+				"method": "put",
+				"args": [
+					"url:/apps/filinq/api/custom-dictionaries/d2",
+					{
+						"name": "n"
+					}
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": false,
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to update custom dictionary:",
+				{
+					"thrown": "boom"
+				}
+			]
+		],
+		"threw": {
+			"thrown": "boom"
+		},
+		"state": {
+			"dictionaries": [
+				{
+					"id": "d1"
+				},
+				{
+					"@self": {
+						"id": "d2"
+					}
+				}
+			],
+			"dictionaryItem": null,
+			"terms": [
+				{
+					"id": "x1"
+				},
+				{
+					"uuid": "x2"
+				}
+			],
+			"loading": false,
+			"termsLoading": false,
+			"error": "refused by server",
+			"importResult": null,
+			"canMaintain": false
+		}
+	},
+	"customDictionary.updateDictionary([\"d2\",{\"name\":\"n\"}]) plainError": {
+		"calls": [
+			{
+				"method": "put",
+				"args": [
+					"url:/apps/filinq/api/custom-dictionaries/d2",
+					{
+						"name": "n"
+					}
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": false,
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to update custom dictionary:",
+				{
+					"thrown": "network down"
+				}
+			]
+		],
+		"threw": {
+			"thrown": "network down"
+		},
+		"state": {
+			"dictionaries": [
+				{
+					"id": "d1"
+				},
+				{
+					"@self": {
+						"id": "d2"
+					}
+				}
+			],
+			"dictionaryItem": null,
+			"terms": [
+				{
+					"id": "x1"
+				},
+				{
+					"uuid": "x2"
+				}
+			],
+			"loading": false,
+			"termsLoading": false,
+			"error": "network down",
+			"importResult": null,
+			"canMaintain": false
+		}
+	},
+	"customDictionary.updateDictionary([\"d2\",{\"name\":\"n\"}]) emptyStatus": {
+		"calls": [
+			{
+				"method": "put",
+				"args": [
+					"url:/apps/filinq/api/custom-dictionaries/d2",
+					{
+						"name": "n"
+					}
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": false,
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to update custom dictionary:",
+				{
+					"thrown": "odd"
+				}
+			]
+		],
+		"threw": {
+			"thrown": "odd"
+		},
+		"state": {
+			"dictionaries": [
+				{
+					"id": "d1"
+				},
+				{
+					"@self": {
+						"id": "d2"
+					}
+				}
+			],
+			"dictionaryItem": null,
+			"terms": [
+				{
+					"id": "x1"
+				},
+				{
+					"uuid": "x2"
+				}
+			],
+			"loading": false,
+			"termsLoading": false,
+			"error": "odd",
+			"importResult": null,
+			"canMaintain": false
+		}
+	},
+	"customDictionary.updateDictionary([\"d9\",{\"name\":\"n\"}]) ok": {
+		"calls": [
+			{
+				"method": "put",
+				"args": [
+					"url:/apps/filinq/api/custom-dictionaries/d9",
+					{
+						"name": "n"
+					}
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": false,
+					"error": null
+				}
+			}
+		],
+		"logged": [],
+		"returned": {
+			"echo": "put",
+			"results": [
+				{
+					"id": "r1"
+				}
+			],
+			"total": 1,
+			"html": "<p/>",
+			"canMaintain": true
+		},
+		"state": {
+			"dictionaries": [
+				{
+					"id": "d1"
+				},
+				{
+					"@self": {
+						"id": "d2"
+					}
+				}
+			],
+			"dictionaryItem": {
+				"echo": "put",
+				"results": [
+					{
+						"id": "r1"
+					}
+				],
+				"total": 1,
+				"html": "<p/>",
+				"canMaintain": true
+			},
+			"terms": [
+				{
+					"id": "x1"
+				},
+				{
+					"uuid": "x2"
+				}
+			],
+			"loading": false,
+			"termsLoading": false,
+			"error": null,
+			"importResult": null,
+			"canMaintain": false
+		}
+	},
+	"customDictionary.updateDictionary([\"d9\",{\"name\":\"n\"}]) serverError": {
+		"calls": [
+			{
+				"method": "put",
+				"args": [
+					"url:/apps/filinq/api/custom-dictionaries/d9",
+					{
+						"name": "n"
+					}
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": false,
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to update custom dictionary:",
+				{
+					"thrown": "boom"
+				}
+			]
+		],
+		"threw": {
+			"thrown": "boom"
+		},
+		"state": {
+			"dictionaries": [
+				{
+					"id": "d1"
+				},
+				{
+					"@self": {
+						"id": "d2"
+					}
+				}
+			],
+			"dictionaryItem": null,
+			"terms": [
+				{
+					"id": "x1"
+				},
+				{
+					"uuid": "x2"
+				}
+			],
+			"loading": false,
+			"termsLoading": false,
+			"error": "refused by server",
+			"importResult": null,
+			"canMaintain": false
+		}
+	},
+	"customDictionary.updateDictionary([\"d9\",{\"name\":\"n\"}]) plainError": {
+		"calls": [
+			{
+				"method": "put",
+				"args": [
+					"url:/apps/filinq/api/custom-dictionaries/d9",
+					{
+						"name": "n"
+					}
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": false,
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to update custom dictionary:",
+				{
+					"thrown": "network down"
+				}
+			]
+		],
+		"threw": {
+			"thrown": "network down"
+		},
+		"state": {
+			"dictionaries": [
+				{
+					"id": "d1"
+				},
+				{
+					"@self": {
+						"id": "d2"
+					}
+				}
+			],
+			"dictionaryItem": null,
+			"terms": [
+				{
+					"id": "x1"
+				},
+				{
+					"uuid": "x2"
+				}
+			],
+			"loading": false,
+			"termsLoading": false,
+			"error": "network down",
+			"importResult": null,
+			"canMaintain": false
+		}
+	},
+	"customDictionary.updateDictionary([\"d9\",{\"name\":\"n\"}]) emptyStatus": {
+		"calls": [
+			{
+				"method": "put",
+				"args": [
+					"url:/apps/filinq/api/custom-dictionaries/d9",
+					{
+						"name": "n"
+					}
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": false,
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to update custom dictionary:",
+				{
+					"thrown": "odd"
+				}
+			]
+		],
+		"threw": {
+			"thrown": "odd"
+		},
+		"state": {
+			"dictionaries": [
+				{
+					"id": "d1"
+				},
+				{
+					"@self": {
+						"id": "d2"
+					}
+				}
+			],
+			"dictionaryItem": null,
+			"terms": [
+				{
+					"id": "x1"
+				},
+				{
+					"uuid": "x2"
+				}
+			],
+			"loading": false,
+			"termsLoading": false,
+			"error": "odd",
+			"importResult": null,
+			"canMaintain": false
+		}
+	},
+	"customDictionary.deleteDictionary([\"d1\"]) ok": {
+		"calls": [
+			{
+				"method": "delete",
+				"args": [
+					"url:/apps/filinq/api/custom-dictionaries/d1"
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": false,
+					"error": null
+				}
+			}
+		],
+		"logged": [],
+		"returned": "(undefined)",
+		"state": {
+			"dictionaries": [
+				{
+					"@self": {
+						"id": "d2"
+					}
+				}
+			],
+			"dictionaryItem": null,
+			"terms": [
+				{
+					"id": "x1"
+				},
+				{
+					"uuid": "x2"
+				}
+			],
+			"loading": false,
+			"termsLoading": false,
+			"error": null,
+			"importResult": null,
+			"canMaintain": false
+		}
+	},
+	"customDictionary.deleteDictionary([\"d1\"]) serverError": {
+		"calls": [
+			{
+				"method": "delete",
+				"args": [
+					"url:/apps/filinq/api/custom-dictionaries/d1"
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": false,
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to delete custom dictionary:",
+				{
+					"thrown": "boom"
+				}
+			]
+		],
+		"threw": {
+			"thrown": "boom"
+		},
+		"state": {
+			"dictionaries": [
+				{
+					"id": "d1"
+				},
+				{
+					"@self": {
+						"id": "d2"
+					}
+				}
+			],
+			"dictionaryItem": null,
+			"terms": [
+				{
+					"id": "x1"
+				},
+				{
+					"uuid": "x2"
+				}
+			],
+			"loading": false,
+			"termsLoading": false,
+			"error": "refused by server",
+			"importResult": null,
+			"canMaintain": false
+		}
+	},
+	"customDictionary.deleteDictionary([\"d1\"]) plainError": {
+		"calls": [
+			{
+				"method": "delete",
+				"args": [
+					"url:/apps/filinq/api/custom-dictionaries/d1"
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": false,
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to delete custom dictionary:",
+				{
+					"thrown": "network down"
+				}
+			]
+		],
+		"threw": {
+			"thrown": "network down"
+		},
+		"state": {
+			"dictionaries": [
+				{
+					"id": "d1"
+				},
+				{
+					"@self": {
+						"id": "d2"
+					}
+				}
+			],
+			"dictionaryItem": null,
+			"terms": [
+				{
+					"id": "x1"
+				},
+				{
+					"uuid": "x2"
+				}
+			],
+			"loading": false,
+			"termsLoading": false,
+			"error": "network down",
+			"importResult": null,
+			"canMaintain": false
+		}
+	},
+	"customDictionary.deleteDictionary([\"d1\"]) emptyStatus": {
+		"calls": [
+			{
+				"method": "delete",
+				"args": [
+					"url:/apps/filinq/api/custom-dictionaries/d1"
+				],
+				"seen": {
+					"loading": true,
+					"termsLoading": false,
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to delete custom dictionary:",
+				{
+					"thrown": "odd"
+				}
+			]
+		],
+		"threw": {
+			"thrown": "odd"
+		},
+		"state": {
+			"dictionaries": [
+				{
+					"id": "d1"
+				},
+				{
+					"@self": {
+						"id": "d2"
+					}
+				}
+			],
+			"dictionaryItem": null,
+			"terms": [
+				{
+					"id": "x1"
+				},
+				{
+					"uuid": "x2"
+				}
+			],
+			"loading": false,
+			"termsLoading": false,
+			"error": "odd",
+			"importResult": null,
+			"canMaintain": false
+		}
+	},
+	"customDictionary.fetchTerms([\"d1\"]) ok": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/custom-dictionaries/d1/terms"
+				],
+				"seen": {
+					"loading": false,
+					"termsLoading": true,
+					"error": null
+				}
+			}
+		],
+		"logged": [],
+		"returned": {
+			"echo": "get",
+			"results": [
+				{
+					"id": "r1"
+				}
+			],
+			"total": 1,
+			"html": "<p/>",
+			"canMaintain": true
+		},
+		"state": {
+			"dictionaries": [
+				{
+					"id": "d1"
+				},
+				{
+					"@self": {
+						"id": "d2"
+					}
+				}
+			],
+			"dictionaryItem": null,
+			"terms": {
+				"echo": "get",
+				"results": [
+					{
+						"id": "r1"
+					}
+				],
+				"total": 1,
+				"html": "<p/>",
+				"canMaintain": true
+			},
+			"loading": false,
+			"termsLoading": false,
+			"error": null,
+			"importResult": null,
+			"canMaintain": false
+		}
+	},
+	"customDictionary.fetchTerms([\"d1\"]) serverError": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/custom-dictionaries/d1/terms"
+				],
+				"seen": {
+					"loading": false,
+					"termsLoading": true,
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to fetch terms:",
+				{
+					"thrown": "boom"
+				}
+			]
+		],
+		"returned": [],
+		"state": {
+			"dictionaries": [
+				{
+					"id": "d1"
+				},
+				{
+					"@self": {
+						"id": "d2"
+					}
+				}
+			],
+			"dictionaryItem": null,
+			"terms": [
+				{
+					"id": "x1"
+				},
+				{
+					"uuid": "x2"
+				}
+			],
+			"loading": false,
+			"termsLoading": false,
+			"error": "refused by server",
+			"importResult": null,
+			"canMaintain": false
+		}
+	},
+	"customDictionary.fetchTerms([\"d1\"]) plainError": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/custom-dictionaries/d1/terms"
+				],
+				"seen": {
+					"loading": false,
+					"termsLoading": true,
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to fetch terms:",
+				{
+					"thrown": "network down"
+				}
+			]
+		],
+		"returned": [],
+		"state": {
+			"dictionaries": [
+				{
+					"id": "d1"
+				},
+				{
+					"@self": {
+						"id": "d2"
+					}
+				}
+			],
+			"dictionaryItem": null,
+			"terms": [
+				{
+					"id": "x1"
+				},
+				{
+					"uuid": "x2"
+				}
+			],
+			"loading": false,
+			"termsLoading": false,
+			"error": "network down",
+			"importResult": null,
+			"canMaintain": false
+		}
+	},
+	"customDictionary.fetchTerms([\"d1\"]) emptyStatus": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/custom-dictionaries/d1/terms"
+				],
+				"seen": {
+					"loading": false,
+					"termsLoading": true,
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to fetch terms:",
+				{
+					"thrown": "odd"
+				}
+			]
+		],
+		"returned": [],
+		"state": {
+			"dictionaries": [
+				{
+					"id": "d1"
+				},
+				{
+					"@self": {
+						"id": "d2"
+					}
+				}
+			],
+			"dictionaryItem": null,
+			"terms": [
+				{
+					"id": "x1"
+				},
+				{
+					"uuid": "x2"
+				}
+			],
+			"loading": false,
+			"termsLoading": false,
+			"error": "odd",
+			"importResult": null,
+			"canMaintain": false
+		}
+	},
+	"customDictionary.createTerm([\"d1\",{\"term\":\"x\"}]) ok": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/custom-dictionaries/d1/terms",
+					{
+						"term": "x"
+					}
+				],
+				"seen": {
+					"loading": false,
+					"termsLoading": false,
+					"error": "stale"
+				}
+			}
+		],
+		"logged": [],
+		"returned": {
+			"echo": "post",
+			"results": [
+				{
+					"id": "r1"
+				}
+			],
+			"total": 1,
+			"html": "<p/>",
+			"canMaintain": true
+		},
+		"state": {
+			"dictionaries": [
+				{
+					"id": "d1"
+				},
+				{
+					"@self": {
+						"id": "d2"
+					}
+				}
+			],
+			"dictionaryItem": null,
+			"terms": [
+				{
+					"id": "x1"
+				},
+				{
+					"uuid": "x2"
+				},
+				{
+					"echo": "post",
+					"results": [
+						{
+							"id": "r1"
+						}
+					],
+					"total": 1,
+					"html": "<p/>",
+					"canMaintain": true
+				}
+			],
+			"loading": false,
+			"termsLoading": false,
+			"error": "stale",
+			"importResult": null,
+			"canMaintain": false
+		}
+	},
+	"customDictionary.createTerm([\"d1\",{\"term\":\"x\"}]) serverError": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/custom-dictionaries/d1/terms",
+					{
+						"term": "x"
+					}
+				],
+				"seen": {
+					"loading": false,
+					"termsLoading": false,
+					"error": "stale"
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to create term:",
+				{
+					"thrown": "boom"
+				}
+			]
+		],
+		"threw": {
+			"thrown": "boom"
+		},
+		"state": {
+			"dictionaries": [
+				{
+					"id": "d1"
+				},
+				{
+					"@self": {
+						"id": "d2"
+					}
+				}
+			],
+			"dictionaryItem": null,
+			"terms": [
+				{
+					"id": "x1"
+				},
+				{
+					"uuid": "x2"
+				}
+			],
+			"loading": false,
+			"termsLoading": false,
+			"error": "refused by server",
+			"importResult": null,
+			"canMaintain": false
+		}
+	},
+	"customDictionary.createTerm([\"d1\",{\"term\":\"x\"}]) plainError": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/custom-dictionaries/d1/terms",
+					{
+						"term": "x"
+					}
+				],
+				"seen": {
+					"loading": false,
+					"termsLoading": false,
+					"error": "stale"
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to create term:",
+				{
+					"thrown": "network down"
+				}
+			]
+		],
+		"threw": {
+			"thrown": "network down"
+		},
+		"state": {
+			"dictionaries": [
+				{
+					"id": "d1"
+				},
+				{
+					"@self": {
+						"id": "d2"
+					}
+				}
+			],
+			"dictionaryItem": null,
+			"terms": [
+				{
+					"id": "x1"
+				},
+				{
+					"uuid": "x2"
+				}
+			],
+			"loading": false,
+			"termsLoading": false,
+			"error": "network down",
+			"importResult": null,
+			"canMaintain": false
+		}
+	},
+	"customDictionary.createTerm([\"d1\",{\"term\":\"x\"}]) emptyStatus": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/custom-dictionaries/d1/terms",
+					{
+						"term": "x"
+					}
+				],
+				"seen": {
+					"loading": false,
+					"termsLoading": false,
+					"error": "stale"
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to create term:",
+				{
+					"thrown": "odd"
+				}
+			]
+		],
+		"threw": {
+			"thrown": "odd"
+		},
+		"state": {
+			"dictionaries": [
+				{
+					"id": "d1"
+				},
+				{
+					"@self": {
+						"id": "d2"
+					}
+				}
+			],
+			"dictionaryItem": null,
+			"terms": [
+				{
+					"id": "x1"
+				},
+				{
+					"uuid": "x2"
+				}
+			],
+			"loading": false,
+			"termsLoading": false,
+			"error": "odd",
+			"importResult": null,
+			"canMaintain": false
+		}
+	},
+	"customDictionary.deleteTerm([\"d1\",\"x2\"]) ok": {
+		"calls": [
+			{
+				"method": "delete",
+				"args": [
+					"url:/apps/filinq/api/custom-dictionaries/d1/terms/x2"
+				],
+				"seen": {
+					"loading": false,
+					"termsLoading": false,
+					"error": "stale"
+				}
+			}
+		],
+		"logged": [],
+		"returned": "(undefined)",
+		"state": {
+			"dictionaries": [
+				{
+					"id": "d1"
+				},
+				{
+					"@self": {
+						"id": "d2"
+					}
+				}
+			],
+			"dictionaryItem": null,
+			"terms": [
+				{
+					"id": "x1"
+				}
+			],
+			"loading": false,
+			"termsLoading": false,
+			"error": "stale",
+			"importResult": null,
+			"canMaintain": false
+		}
+	},
+	"customDictionary.deleteTerm([\"d1\",\"x2\"]) serverError": {
+		"calls": [
+			{
+				"method": "delete",
+				"args": [
+					"url:/apps/filinq/api/custom-dictionaries/d1/terms/x2"
+				],
+				"seen": {
+					"loading": false,
+					"termsLoading": false,
+					"error": "stale"
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to delete term:",
+				{
+					"thrown": "boom"
+				}
+			]
+		],
+		"threw": {
+			"thrown": "boom"
+		},
+		"state": {
+			"dictionaries": [
+				{
+					"id": "d1"
+				},
+				{
+					"@self": {
+						"id": "d2"
+					}
+				}
+			],
+			"dictionaryItem": null,
+			"terms": [
+				{
+					"id": "x1"
+				},
+				{
+					"uuid": "x2"
+				}
+			],
+			"loading": false,
+			"termsLoading": false,
+			"error": "refused by server",
+			"importResult": null,
+			"canMaintain": false
+		}
+	},
+	"customDictionary.deleteTerm([\"d1\",\"x2\"]) plainError": {
+		"calls": [
+			{
+				"method": "delete",
+				"args": [
+					"url:/apps/filinq/api/custom-dictionaries/d1/terms/x2"
+				],
+				"seen": {
+					"loading": false,
+					"termsLoading": false,
+					"error": "stale"
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to delete term:",
+				{
+					"thrown": "network down"
+				}
+			]
+		],
+		"threw": {
+			"thrown": "network down"
+		},
+		"state": {
+			"dictionaries": [
+				{
+					"id": "d1"
+				},
+				{
+					"@self": {
+						"id": "d2"
+					}
+				}
+			],
+			"dictionaryItem": null,
+			"terms": [
+				{
+					"id": "x1"
+				},
+				{
+					"uuid": "x2"
+				}
+			],
+			"loading": false,
+			"termsLoading": false,
+			"error": "network down",
+			"importResult": null,
+			"canMaintain": false
+		}
+	},
+	"customDictionary.deleteTerm([\"d1\",\"x2\"]) emptyStatus": {
+		"calls": [
+			{
+				"method": "delete",
+				"args": [
+					"url:/apps/filinq/api/custom-dictionaries/d1/terms/x2"
+				],
+				"seen": {
+					"loading": false,
+					"termsLoading": false,
+					"error": "stale"
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to delete term:",
+				{
+					"thrown": "odd"
+				}
+			]
+		],
+		"threw": {
+			"thrown": "odd"
+		},
+		"state": {
+			"dictionaries": [
+				{
+					"id": "d1"
+				},
+				{
+					"@self": {
+						"id": "d2"
+					}
+				}
+			],
+			"dictionaryItem": null,
+			"terms": [
+				{
+					"id": "x1"
+				},
+				{
+					"uuid": "x2"
+				}
+			],
+			"loading": false,
+			"termsLoading": false,
+			"error": "odd",
+			"importResult": null,
+			"canMaintain": false
+		}
+	},
+	"customDictionary.importTerms([\"d1\",{\"content\":\"a\\nb\"}]) ok": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/custom-dictionaries/d1/import",
+					{
+						"content": "a\nb",
+						"format": "newline"
+					}
+				],
+				"seen": {
+					"loading": false,
+					"termsLoading": false,
+					"error": null
+				}
+			},
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/custom-dictionaries/d1/terms"
+				],
+				"seen": {
+					"loading": false,
+					"termsLoading": true,
+					"error": null
+				}
+			}
+		],
+		"logged": [],
+		"returned": {
+			"echo": "post",
+			"results": [
+				{
+					"id": "r1"
+				}
+			],
+			"total": 1,
+			"html": "<p/>",
+			"canMaintain": true
+		},
+		"state": {
+			"dictionaries": [
+				{
+					"id": "d1"
+				},
+				{
+					"@self": {
+						"id": "d2"
+					}
+				}
+			],
+			"dictionaryItem": null,
+			"terms": {
+				"echo": "get",
+				"results": [
+					{
+						"id": "r1"
+					}
+				],
+				"total": 1,
+				"html": "<p/>",
+				"canMaintain": true
+			},
+			"loading": false,
+			"termsLoading": false,
+			"error": null,
+			"importResult": {
+				"echo": "post",
+				"results": [
+					{
+						"id": "r1"
+					}
+				],
+				"total": 1,
+				"html": "<p/>",
+				"canMaintain": true
+			},
+			"canMaintain": false
+		}
+	},
+	"customDictionary.importTerms([\"d1\",{\"content\":\"a\\nb\"}]) serverError": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/custom-dictionaries/d1/import",
+					{
+						"content": "a\nb",
+						"format": "newline"
+					}
+				],
+				"seen": {
+					"loading": false,
+					"termsLoading": false,
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to import terms:",
+				{
+					"thrown": "boom"
+				}
+			]
+		],
+		"threw": {
+			"thrown": "boom"
+		},
+		"state": {
+			"dictionaries": [
+				{
+					"id": "d1"
+				},
+				{
+					"@self": {
+						"id": "d2"
+					}
+				}
+			],
+			"dictionaryItem": null,
+			"terms": [
+				{
+					"id": "x1"
+				},
+				{
+					"uuid": "x2"
+				}
+			],
+			"loading": false,
+			"termsLoading": false,
+			"error": "refused by server",
+			"importResult": null,
+			"canMaintain": false
+		}
+	},
+	"customDictionary.importTerms([\"d1\",{\"content\":\"a\\nb\"}]) plainError": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/custom-dictionaries/d1/import",
+					{
+						"content": "a\nb",
+						"format": "newline"
+					}
+				],
+				"seen": {
+					"loading": false,
+					"termsLoading": false,
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to import terms:",
+				{
+					"thrown": "network down"
+				}
+			]
+		],
+		"threw": {
+			"thrown": "network down"
+		},
+		"state": {
+			"dictionaries": [
+				{
+					"id": "d1"
+				},
+				{
+					"@self": {
+						"id": "d2"
+					}
+				}
+			],
+			"dictionaryItem": null,
+			"terms": [
+				{
+					"id": "x1"
+				},
+				{
+					"uuid": "x2"
+				}
+			],
+			"loading": false,
+			"termsLoading": false,
+			"error": "network down",
+			"importResult": null,
+			"canMaintain": false
+		}
+	},
+	"customDictionary.importTerms([\"d1\",{\"content\":\"a\\nb\"}]) emptyStatus": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/custom-dictionaries/d1/import",
+					{
+						"content": "a\nb",
+						"format": "newline"
+					}
+				],
+				"seen": {
+					"loading": false,
+					"termsLoading": false,
+					"error": null
+				}
+			}
+		],
+		"logged": [
+			[
+				"Failed to import terms:",
+				{
+					"thrown": "odd"
+				}
+			]
+		],
+		"threw": {
+			"thrown": "odd"
+		},
+		"state": {
+			"dictionaries": [
+				{
+					"id": "d1"
+				},
+				{
+					"@self": {
+						"id": "d2"
+					}
+				}
+			],
+			"dictionaryItem": null,
+			"terms": [
+				{
+					"id": "x1"
+				},
+				{
+					"uuid": "x2"
+				}
+			],
+			"loading": false,
+			"termsLoading": false,
+			"error": "odd",
+			"importResult": null,
+			"canMaintain": false
+		}
+	},
+	"classification.listPending([]) ok": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/classification/pending"
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": {
+			"ok": true,
+			"data": {
+				"echo": "get",
+				"results": [
+					{
+						"id": "r1"
+					}
+				],
+				"total": 1,
+				"html": "<p/>",
+				"canMaintain": true
+			}
+		}
+	},
+	"classification.listPending([]) serverError": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/classification/pending"
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": {
+			"ok": false,
+			"status": 409,
+			"error": "refused by server"
+		}
+	},
+	"classification.listPending([]) plainError": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/classification/pending"
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": {
+			"ok": false,
+			"status": 0,
+			"error": ""
+		}
+	},
+	"classification.listPending([]) emptyStatus": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/classification/pending"
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": {
+			"ok": false,
+			"status": 0,
+			"error": ""
+		}
+	},
+	"classification.loadForFile([\"7\"]) ok": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/classification/7"
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": {
+			"ok": true,
+			"data": {
+				"echo": "get",
+				"results": [
+					{
+						"id": "r1"
+					}
+				],
+				"total": 1,
+				"html": "<p/>",
+				"canMaintain": true
+			}
+		}
+	},
+	"classification.loadForFile([\"7\"]) serverError": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/classification/7"
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": {
+			"ok": false,
+			"status": 409,
+			"error": "refused by server"
+		}
+	},
+	"classification.loadForFile([\"7\"]) plainError": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/classification/7"
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": {
+			"ok": false,
+			"status": 0,
+			"error": ""
+		}
+	},
+	"classification.loadForFile([\"7\"]) emptyStatus": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/classification/7"
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": {
+			"ok": false,
+			"status": 0,
+			"error": ""
+		}
+	},
+	"classification.confirm([7,{\"type\":\"invoice\"}]) ok": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/classification/7/confirm",
+					{
+						"type": "invoice"
+					}
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": {
+			"ok": true,
+			"data": {
+				"echo": "post",
+				"results": [
+					{
+						"id": "r1"
+					}
+				],
+				"total": 1,
+				"html": "<p/>",
+				"canMaintain": true
+			}
+		}
+	},
+	"classification.confirm([7,{\"type\":\"invoice\"}]) serverError": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/classification/7/confirm",
+					{
+						"type": "invoice"
+					}
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": {
+			"ok": false,
+			"status": 409,
+			"error": "refused by server"
+		}
+	},
+	"classification.confirm([7,{\"type\":\"invoice\"}]) plainError": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/classification/7/confirm",
+					{
+						"type": "invoice"
+					}
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": {
+			"ok": false,
+			"status": 0,
+			"error": ""
+		}
+	},
+	"classification.confirm([7,{\"type\":\"invoice\"}]) emptyStatus": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/classification/7/confirm",
+					{
+						"type": "invoice"
+					}
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": {
+			"ok": false,
+			"status": 0,
+			"error": ""
+		}
+	},
+	"classification.reject([7]) ok": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/classification/7/reject"
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": {
+			"ok": true,
+			"data": {
+				"echo": "post",
+				"results": [
+					{
+						"id": "r1"
+					}
+				],
+				"total": 1,
+				"html": "<p/>",
+				"canMaintain": true
+			}
+		}
+	},
+	"classification.reject([7]) serverError": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/classification/7/reject"
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": {
+			"ok": false,
+			"status": 409,
+			"error": "refused by server"
+		}
+	},
+	"classification.reject([7]) plainError": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/classification/7/reject"
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": {
+			"ok": false,
+			"status": 0,
+			"error": ""
+		}
+	},
+	"classification.reject([7]) emptyStatus": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/classification/7/reject"
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": {
+			"ok": false,
+			"status": 0,
+			"error": ""
+		}
+	},
+	"classification.dossierOptions([]) ok": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/dossiers"
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": [
+			{
+				"id": "r1",
+				"label": "r1"
+			}
+		]
+	},
+	"classification.dossierOptions([]) serverError": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/dossiers"
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": []
+	},
+	"classification.dossierOptions([]) plainError": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/dossiers"
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": []
+	},
+	"classification.dossierOptions([]) emptyStatus": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/dossiers"
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": []
+	},
+	"emailIngestion.listEmails([{\"status\":\"failed\",\"dossier\":\"\"}]) ok": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/email-ingestion",
+					{
+						"params": {
+							"status": "failed"
+						}
+					}
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": {
+			"ok": true,
+			"data": {
+				"echo": "get",
+				"results": [
+					{
+						"id": "r1"
+					}
+				],
+				"total": 1,
+				"html": "<p/>",
+				"canMaintain": true
+			}
+		}
+	},
+	"emailIngestion.listEmails([{\"status\":\"failed\",\"dossier\":\"\"}]) serverError": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/email-ingestion",
+					{
+						"params": {
+							"status": "failed"
+						}
+					}
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": {
+			"ok": false,
+			"status": 409,
+			"error": "refused by server"
+		}
+	},
+	"emailIngestion.listEmails([{\"status\":\"failed\",\"dossier\":\"\"}]) plainError": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/email-ingestion",
+					{
+						"params": {
+							"status": "failed"
+						}
+					}
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": {
+			"ok": false,
+			"status": 0,
+			"error": ""
+		}
+	},
+	"emailIngestion.listEmails([{\"status\":\"failed\",\"dossier\":\"\"}]) emptyStatus": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/email-ingestion",
+					{
+						"params": {
+							"status": "failed"
+						}
+					}
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": {
+			"ok": false,
+			"status": 0,
+			"error": ""
+		}
+	},
+	"emailIngestion.rescan([]) ok": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/email-ingestion/scan"
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": {
+			"ok": true,
+			"data": {
+				"echo": "post",
+				"results": [
+					{
+						"id": "r1"
+					}
+				],
+				"total": 1,
+				"html": "<p/>",
+				"canMaintain": true
+			}
+		}
+	},
+	"emailIngestion.rescan([]) serverError": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/email-ingestion/scan"
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": {
+			"ok": false,
+			"status": 409,
+			"error": "refused by server"
+		}
+	},
+	"emailIngestion.rescan([]) plainError": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/email-ingestion/scan"
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": {
+			"ok": false,
+			"status": 0,
+			"error": ""
+		}
+	},
+	"emailIngestion.rescan([]) emptyStatus": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/email-ingestion/scan"
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": {
+			"ok": false,
+			"status": 0,
+			"error": ""
+		}
+	},
+	"emailIngestion.retryConversion([\"u1\"]) ok": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/email-ingestion/u1/convert"
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": {
+			"ok": true,
+			"data": {
+				"echo": "post",
+				"results": [
+					{
+						"id": "r1"
+					}
+				],
+				"total": 1,
+				"html": "<p/>",
+				"canMaintain": true
+			}
+		}
+	},
+	"emailIngestion.retryConversion([\"u1\"]) serverError": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/email-ingestion/u1/convert"
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": {
+			"ok": false,
+			"status": 409,
+			"error": "refused by server"
+		}
+	},
+	"emailIngestion.retryConversion([\"u1\"]) plainError": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/email-ingestion/u1/convert"
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": {
+			"ok": false,
+			"status": 0,
+			"error": ""
+		}
+	},
+	"emailIngestion.retryConversion([\"u1\"]) emptyStatus": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/email-ingestion/u1/convert"
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": {
+			"ok": false,
+			"status": 0,
+			"error": ""
+		}
+	},
+	"emailIngestion.loadSettings([]) ok": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/email-ingestion/settings"
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": {
+			"ok": true,
+			"data": {
+				"echo": "get",
+				"results": [
+					{
+						"id": "r1"
+					}
+				],
+				"total": 1,
+				"html": "<p/>",
+				"canMaintain": true
+			}
+		}
+	},
+	"emailIngestion.loadSettings([]) serverError": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/email-ingestion/settings"
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": {
+			"ok": false,
+			"status": 409,
+			"error": "refused by server"
+		}
+	},
+	"emailIngestion.loadSettings([]) plainError": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/email-ingestion/settings"
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": {
+			"ok": false,
+			"status": 0,
+			"error": ""
+		}
+	},
+	"emailIngestion.loadSettings([]) emptyStatus": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/email-ingestion/settings"
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": {
+			"ok": false,
+			"status": 0,
+			"error": ""
+		}
+	},
+	"emailIngestion.saveSettings([[{\"mailbox\":\"m\"}],5]) ok": {
+		"calls": [
+			{
+				"method": "put",
+				"args": [
+					"url:/apps/filinq/api/email-ingestion/settings",
+					{
+						"inboxes": [
+							{
+								"folderId": null,
+								"dossierRef": ""
+							}
+						],
+						"filesPerTick": 5
+					}
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": {
+			"ok": true,
+			"data": {
+				"echo": "put",
+				"results": [
+					{
+						"id": "r1"
+					}
+				],
+				"total": 1,
+				"html": "<p/>",
+				"canMaintain": true
+			}
+		}
+	},
+	"emailIngestion.saveSettings([[{\"mailbox\":\"m\"}],5]) serverError": {
+		"calls": [
+			{
+				"method": "put",
+				"args": [
+					"url:/apps/filinq/api/email-ingestion/settings",
+					{
+						"inboxes": [
+							{
+								"folderId": null,
+								"dossierRef": ""
+							}
+						],
+						"filesPerTick": 5
+					}
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": {
+			"ok": false,
+			"status": 409,
+			"error": "refused by server"
+		}
+	},
+	"emailIngestion.saveSettings([[{\"mailbox\":\"m\"}],5]) plainError": {
+		"calls": [
+			{
+				"method": "put",
+				"args": [
+					"url:/apps/filinq/api/email-ingestion/settings",
+					{
+						"inboxes": [
+							{
+								"folderId": null,
+								"dossierRef": ""
+							}
+						],
+						"filesPerTick": 5
+					}
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": {
+			"ok": false,
+			"status": 0,
+			"error": ""
+		}
+	},
+	"emailIngestion.saveSettings([[{\"mailbox\":\"m\"}],5]) emptyStatus": {
+		"calls": [
+			{
+				"method": "put",
+				"args": [
+					"url:/apps/filinq/api/email-ingestion/settings",
+					{
+						"inboxes": [
+							{
+								"folderId": null,
+								"dossierRef": ""
+							}
+						],
+						"filesPerTick": 5
+					}
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": {
+			"ok": false,
+			"status": 0,
+			"error": ""
+		}
+	},
+	"wizard.loadTemplateWizard([\"t1\"]) ok": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/templates/t1/wizard"
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": {
+			"ok": true,
+			"data": {
+				"echo": "get",
+				"results": [
+					{
+						"id": "r1"
+					}
+				],
+				"total": 1,
+				"html": "<p/>",
+				"canMaintain": true
+			}
+		}
+	},
+	"wizard.loadTemplateWizard([\"t1\"]) serverError": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/templates/t1/wizard"
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": {
+			"ok": false,
+			"status": 409,
+			"error": "refused by server",
+			"errors": {
+				"a": "bad"
+			}
+		}
+	},
+	"wizard.loadTemplateWizard([\"t1\"]) plainError": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/templates/t1/wizard"
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": {
+			"ok": false,
+			"status": 0,
+			"error": "",
+			"errors": {}
+		}
+	},
+	"wizard.loadTemplateWizard([\"t1\"]) emptyStatus": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/templates/t1/wizard"
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": {
+			"ok": false,
+			"status": 0,
+			"error": "",
+			"errors": {}
+		}
+	},
+	"wizard.saveWizard([{\"uuid\":\"w1\",\"questions\":[]}]) ok": {
+		"calls": [
+			{
+				"method": "put",
+				"args": [
+					"url:/apps/filinq/api/wizards/w1",
+					{
+						"questions": []
+					}
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": {
+			"ok": true,
+			"data": {
+				"echo": "put",
+				"results": [
+					{
+						"id": "r1"
+					}
+				],
+				"total": 1,
+				"html": "<p/>",
+				"canMaintain": true
+			}
+		}
+	},
+	"wizard.saveWizard([{\"uuid\":\"w1\",\"questions\":[]}]) serverError": {
+		"calls": [
+			{
+				"method": "put",
+				"args": [
+					"url:/apps/filinq/api/wizards/w1",
+					{
+						"questions": []
+					}
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": {
+			"ok": false,
+			"status": 409,
+			"error": "refused by server",
+			"errors": {
+				"a": "bad"
+			}
+		}
+	},
+	"wizard.saveWizard([{\"uuid\":\"w1\",\"questions\":[]}]) plainError": {
+		"calls": [
+			{
+				"method": "put",
+				"args": [
+					"url:/apps/filinq/api/wizards/w1",
+					{
+						"questions": []
+					}
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": {
+			"ok": false,
+			"status": 0,
+			"error": "",
+			"errors": {}
+		}
+	},
+	"wizard.saveWizard([{\"uuid\":\"w1\",\"questions\":[]}]) emptyStatus": {
+		"calls": [
+			{
+				"method": "put",
+				"args": [
+					"url:/apps/filinq/api/wizards/w1",
+					{
+						"questions": []
+					}
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": {
+			"ok": false,
+			"status": 0,
+			"error": "",
+			"errors": {}
+		}
+	},
+	"wizard.saveWizard([{\"questions\":[]}]) ok": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/wizards",
+					{
+						"questions": []
+					}
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": {
+			"ok": true,
+			"data": {
+				"echo": "post",
+				"results": [
+					{
+						"id": "r1"
+					}
+				],
+				"total": 1,
+				"html": "<p/>",
+				"canMaintain": true
+			}
+		}
+	},
+	"wizard.saveWizard([{\"questions\":[]}]) serverError": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/wizards",
+					{
+						"questions": []
+					}
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": {
+			"ok": false,
+			"status": 409,
+			"error": "refused by server",
+			"errors": {
+				"a": "bad"
+			}
+		}
+	},
+	"wizard.saveWizard([{\"questions\":[]}]) plainError": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/wizards",
+					{
+						"questions": []
+					}
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": {
+			"ok": false,
+			"status": 0,
+			"error": "",
+			"errors": {}
+		}
+	},
+	"wizard.saveWizard([{\"questions\":[]}]) emptyStatus": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/wizards",
+					{
+						"questions": []
+					}
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": {
+			"ok": false,
+			"status": 0,
+			"error": "",
+			"errors": {}
+		}
+	},
+	"wizard.deleteWizard([\"w1\"]) ok": {
+		"calls": [
+			{
+				"method": "delete",
+				"args": [
+					"url:/apps/filinq/api/wizards/w1"
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": {
+			"ok": true,
+			"data": {
+				"echo": "delete",
+				"results": [
+					{
+						"id": "r1"
+					}
+				],
+				"total": 1,
+				"html": "<p/>",
+				"canMaintain": true
+			}
+		}
+	},
+	"wizard.deleteWizard([\"w1\"]) serverError": {
+		"calls": [
+			{
+				"method": "delete",
+				"args": [
+					"url:/apps/filinq/api/wizards/w1"
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": {
+			"ok": false,
+			"status": 409,
+			"error": "refused by server",
+			"errors": {
+				"a": "bad"
+			}
+		}
+	},
+	"wizard.deleteWizard([\"w1\"]) plainError": {
+		"calls": [
+			{
+				"method": "delete",
+				"args": [
+					"url:/apps/filinq/api/wizards/w1"
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": {
+			"ok": false,
+			"status": 0,
+			"error": "",
+			"errors": {}
+		}
+	},
+	"wizard.deleteWizard([\"w1\"]) emptyStatus": {
+		"calls": [
+			{
+				"method": "delete",
+				"args": [
+					"url:/apps/filinq/api/wizards/w1"
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": {
+			"ok": false,
+			"status": 0,
+			"error": "",
+			"errors": {}
+		}
+	},
+	"wizard.listWizardsFor([\"r\",\"s\"]) ok": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/wizards",
+					{
+						"params": {
+							"register": "r",
+							"schema": "s"
+						}
+					}
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": {
+			"ok": true,
+			"data": {
+				"echo": "get",
+				"results": [
+					{
+						"id": "r1"
+					}
+				],
+				"total": 1,
+				"html": "<p/>",
+				"canMaintain": true
+			}
+		}
+	},
+	"wizard.listWizardsFor([\"r\",\"s\"]) serverError": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/wizards",
+					{
+						"params": {
+							"register": "r",
+							"schema": "s"
+						}
+					}
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": {
+			"ok": false,
+			"status": 409,
+			"error": "refused by server",
+			"errors": {
+				"a": "bad"
+			}
+		}
+	},
+	"wizard.listWizardsFor([\"r\",\"s\"]) plainError": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/wizards",
+					{
+						"params": {
+							"register": "r",
+							"schema": "s"
+						}
+					}
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": {
+			"ok": false,
+			"status": 0,
+			"error": "",
+			"errors": {}
+		}
+	},
+	"wizard.listWizardsFor([\"r\",\"s\"]) emptyStatus": {
+		"calls": [
+			{
+				"method": "get",
+				"args": [
+					"url:/apps/filinq/api/wizards",
+					{
+						"params": {
+							"register": "r",
+							"schema": "s"
+						}
+					}
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": {
+			"ok": false,
+			"status": 0,
+			"error": "",
+			"errors": {}
+		}
+	},
+	"wizard.prefillWizard([\"w1\",{\"a\":1}]) ok": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/wizards/w1/prefill",
+					{
+						"a": 1
+					}
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": {
+			"ok": true,
+			"data": {
+				"echo": "post",
+				"results": [
+					{
+						"id": "r1"
+					}
+				],
+				"total": 1,
+				"html": "<p/>",
+				"canMaintain": true
+			}
+		}
+	},
+	"wizard.prefillWizard([\"w1\",{\"a\":1}]) serverError": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/wizards/w1/prefill",
+					{
+						"a": 1
+					}
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": {
+			"ok": false,
+			"status": 409,
+			"error": "refused by server",
+			"errors": {
+				"a": "bad"
+			}
+		}
+	},
+	"wizard.prefillWizard([\"w1\",{\"a\":1}]) plainError": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/wizards/w1/prefill",
+					{
+						"a": 1
+					}
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": {
+			"ok": false,
+			"status": 0,
+			"error": "",
+			"errors": {}
+		}
+	},
+	"wizard.prefillWizard([\"w1\",{\"a\":1}]) emptyStatus": {
+		"calls": [
+			{
+				"method": "post",
+				"args": [
+					"url:/apps/filinq/api/wizards/w1/prefill",
+					{
+						"a": 1
+					}
+				],
+				"seen": null
+			}
+		],
+		"logged": [],
+		"returned": {
+			"ok": false,
+			"status": 0,
+			"error": "",
+			"errors": {}
+		}
+	}
+}

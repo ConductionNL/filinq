@@ -28,6 +28,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use DateTimeImmutable;
+use OCA\Filinq\Kernel\Contracts\FinalDocumentUnfreezeServiceInterface;
 use OCP\IGroupManager;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
@@ -44,18 +45,7 @@ use RuntimeException;
  *
  * @spec openspec/changes/final-documents-frozen/specs/document-versions/spec.md
  */
-class FinalDocumentUnfreezeService {
-
-	/**
-	 * The named right that unfreezing needs.
-	 *
-	 * One of the `filinq-*` role groups (`filinq-policy-admins`,
-	 * `filinq-signing-admins`); RenameRoleGroups carries the members of the
-	 * old `docudesk-*` group over.
-	 *
-	 * @var string
-	 */
-	public const UNFREEZE_GROUP = 'filinq-final-document-admins';
+class FinalDocumentUnfreezeService implements FinalDocumentUnfreezeServiceInterface {
 
 	/**
 	 * Constructor.

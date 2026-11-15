@@ -21,7 +21,8 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use OCA\Filinq\Exception\LegalHoldRefusedException;
-use OCA\Filinq\Service\LegalHold\LegalHoldCaseService;
+use OCA\Filinq\Kernel\Contracts\LegalHoldCaseServiceInterface;
+use OCA\Filinq\Service\ReadsCurrentUserId;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -39,6 +40,8 @@ use Throwable;
  * which answers anyone who can read the record, without naming the matter.
  */
 class LegalHoldCaseController extends Controller {
+
+	use ReadsCurrentUserId;
 
 	/**
 	 * HTTP status per refusal.
@@ -58,7 +61,7 @@ class LegalHoldCaseController extends Controller {
 	 *
 	 * @param string               $appName     The app name.
 	 * @param IRequest             $request     The request.
-	 * @param LegalHoldCaseService $holds       The hold cases.
+	 * @param LegalHoldCaseServiceInterface $holds       The hold cases.
 	 * @param IUserSession         $userSession The signed-in user.
 	 * @param IL10N                $l10n        Translations.
 	 * @param LoggerInterface      $logger      For failures that are not refusals.
@@ -68,7 +71,7 @@ class LegalHoldCaseController extends Controller {
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly LegalHoldCaseService $holds,
+		private readonly LegalHoldCaseServiceInterface $holds,
 		private readonly IUserSession $userSession,
 		private readonly IL10N $l10n,
 		private readonly LoggerInterface $logger,
@@ -94,7 +97,7 @@ class LegalHoldCaseController extends Controller {
 						'holdType' => (string) $this->request->getParam('holdType', ''),
 						'custodian' => (string) $this->request->getParam('custodian', ''),
 					],
-					userId: $this->userId()
+					userId: $this->currentUserId()
 				),
 			]
 		);
@@ -109,10 +112,14 @@ class LegalHoldCaseController extends Controller {
 	 * @return JSONResponse The case, or a refusal.
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-e-discovery-legal-hold/tasks.md#task-3.1
+	 *
+	 * @no-admin-idor-exempt role-guarded one layer down. LegalHoldCaseService::get() calls
+	 * LegalHoldAuthority::assertAuthority(), which admits only admins and the configured legal-hold
+	 * groups.
 	 */
 	#[NoAdminRequired]
 	public function show(string $id): JSONResponse {
-		return $this->answer(action: fn (): array => $this->holds->get(uuid: $id, userId: $this->userId()));
+		return $this->answer(action: fn (): array => $this->holds->get(uuid: $id, userId: $this->currentUserId()));
 
 	}//end show()
 
@@ -126,7 +133,7 @@ class LegalHoldCaseController extends Controller {
 	#[NoAdminRequired]
 	public function create(): JSONResponse {
 		return $this->answer(
-			action: fn (): array => $this->holds->place(input: $this->request->getParams(), userId: $this->userId()),
+			action: fn (): array => $this->holds->place(input: $this->request->getParams(), userId: $this->currentUserId()),
 			okStatus: Http::STATUS_CREATED
 		);
 
@@ -140,10 +147,14 @@ class LegalHoldCaseController extends Controller {
 	 * @return JSONResponse The case, or a refusal.
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-e-discovery-legal-hold/tasks.md#task-2.4
+	 *
+	 * @no-admin-idor-exempt role-guarded one layer down. LegalHoldCaseService::addScope() calls
+	 * LegalHoldAuthority::assertAuthority(), which admits only admins and the configured legal-hold
+	 * groups.
 	 */
 	#[NoAdminRequired]
 	public function addScope(string $id): JSONResponse {
-		return $this->answer(action: fn (): array => $this->holds->addScope(uuid: $id, input: $this->request->getParams(), userId: $this->userId()));
+		return $this->answer(action: fn (): array => $this->holds->addScope(uuid: $id, input: $this->request->getParams(), userId: $this->currentUserId()));
 
 	}//end addScope()
 
@@ -155,10 +166,14 @@ class LegalHoldCaseController extends Controller {
 	 * @return JSONResponse The case, or a refusal.
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-e-discovery-legal-hold/tasks.md#task-2.4
+	 *
+	 * @no-admin-idor-exempt role-guarded one layer down. LegalHoldCaseService::retry() calls
+	 * LegalHoldAuthority::assertAuthority(), which admits only admins and the configured legal-hold
+	 * groups.
 	 */
 	#[NoAdminRequired]
 	public function retry(string $id): JSONResponse {
-		return $this->answer(action: fn (): array => $this->holds->retry(uuid: $id, userId: $this->userId()));
+		return $this->answer(action: fn (): array => $this->holds->retry(uuid: $id, userId: $this->currentUserId()));
 
 	}//end retry()
 
@@ -170,6 +185,10 @@ class LegalHoldCaseController extends Controller {
 	 * @return JSONResponse The released case, or a refusal.
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-e-discovery-legal-hold/tasks.md#task-2.4
+	 *
+	 * @no-admin-idor-exempt role-guarded one layer down. LegalHoldCaseService::release() calls
+	 * LegalHoldAuthority::assertAuthority(), which admits only admins and the configured legal-hold
+	 * groups.
 	 */
 	#[NoAdminRequired]
 	public function release(string $id): JSONResponse {
@@ -177,7 +196,7 @@ class LegalHoldCaseController extends Controller {
 			action: fn (): array => $this->holds->release(
 				uuid: $id,
 				releaseReason: (string) $this->request->getParam('releaseReason', ''),
-				userId: $this->userId()
+				userId: $this->currentUserId()
 			)
 		);
 
@@ -191,10 +210,14 @@ class LegalHoldCaseController extends Controller {
 	 * @return JSONResponse {held, cases}, or 404 when the caller cannot read the record.
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-e-discovery-legal-hold/tasks.md#task-3.2
+	 *
+	 * @no-admin-idor-exempt LegalHoldCaseService::statusFor() reads the record with OpenRegister RBAC on
+	 * (LegalHoldRecordFreeze::heldAsSeenBy()) and lists covering cases only for a caller with legal-hold
+	 * authority.
 	 */
 	#[NoAdminRequired]
 	public function status(string $objectId): JSONResponse {
-		return $this->answer(action: fn (): array => $this->holds->statusFor(ref: $objectId, userId: $this->userId()));
+		return $this->answer(action: fn (): array => $this->holds->statusFor(ref: $objectId, userId: $this->currentUserId()));
 
 	}//end status()
 
@@ -243,19 +266,4 @@ class LegalHoldCaseController extends Controller {
 		);
 
 	}//end refused()
-
-	/**
-	 * The signed-in user's id, '' when nobody is.
-	 *
-	 * @return string The user id.
-	 */
-	private function userId(): string {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return '';
-		}
-
-		return $user->getUID();
-
-	}//end userId()
 }//end class

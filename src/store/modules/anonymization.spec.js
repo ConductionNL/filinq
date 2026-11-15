@@ -1,3 +1,7 @@
+/**
+ * SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
 import axios from '@nextcloud/axios'
 import { createPinia, setActivePinia } from 'pinia'
 import { reviewSignature } from '../../services/reviewMark.js'
@@ -278,7 +282,10 @@ describe('anonymiseEntry: the human check comes first', () => {
 		entry.reviewMark = null
 		axios.post
 			.mockResolvedValueOnce({
-				data: { checkedBy: 'ingrid', checkedAt: '2026-10-16T10:00:00+00:00' },
+				data: {
+					checkedBy: 'ingrid',
+					checkedAt: '2026-10-16T10:00:00+00:00',
+				},
 			})
 			.mockResolvedValueOnce({ data: { anonymizedFileId: 99 } })
 
@@ -333,7 +340,9 @@ describe('anonymiseEntry: the human check comes first', () => {
 		const entry = makeEntry()
 		entry.reviewMark = null
 		const failure = new Error('boom')
-		failure.response = { data: { error: 'De controle kon niet worden vastgelegd' } }
+		failure.response = {
+			data: { error: 'De controle kon niet worden vastgelegd' },
+		}
 		axios.post.mockRejectedValueOnce(failure)
 
 		await store.markEntryChecked(entry)
@@ -563,7 +572,11 @@ describe('addManualEntity: characterization of the review row', () => {
 		const store = useAnonymizationStore()
 		const entry = { fileId: 42, entities: [] }
 
-		await store.addManualEntity(entry, { value: 'x', type: 'PERSON', bases: ['b1'] })
+		await store.addManualEntity(entry, {
+			value: 'x',
+			type: 'PERSON',
+			bases: ['b1'],
+		})
 
 		expect(entry.entities[0].bases).toEqual([])
 		expect(entry.entities[0]._decisionBases).toEqual(['b1'])
@@ -577,9 +590,17 @@ describe('addManualEntity: characterization of the review row', () => {
 			store.addManualEntity({ entities: [] }, { value: 'x', type: 'PERSON' }),
 		).rejects.toMatchObject({ message: 'Entry has no fileId yet.', status: 0 })
 		await expect(
-			store.addManualEntity({ fileId: 1, entities: [] }, { value: '   ', type: 'PERSON' }),
-		).rejects.toMatchObject({ message: 'A value and a type are required.', status: 0 })
-		await expect(store.addManualEntity({ fileId: 1, entities: [] })).rejects.toMatchObject({
+			store.addManualEntity(
+				{ fileId: 1, entities: [] },
+				{ value: '   ', type: 'PERSON' },
+			),
+		).rejects.toMatchObject({
+			message: 'A value and a type are required.',
+			status: 0,
+		})
+		await expect(
+			store.addManualEntity({ fileId: 1, entities: [] }),
+		).rejects.toMatchObject({
 			message: 'A value and a type are required.',
 		})
 	})
@@ -964,6 +985,49 @@ describe('reanalyseEntry — a scan detection could not read', () => {
 	})
 })
 
+describe('reanalyseEntry: which detection engine ran', () => {
+	// @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-3.2
+	beforeEach(() => {
+		setActivePinia(createPinia())
+		jest.clearAllMocks()
+	})
+
+	it('puts a fallback warning on the entry so the review names the engine', async () => {
+		const store = useAnonymizationStore()
+		const entry = makeEntry()
+		store.files = [entry]
+		axios.post.mockResolvedValue({
+			data: {
+				entities: [],
+				detectionProvider: 'default',
+				detectionFellBack: true,
+				detectionWarning: 'LLM detection unavailable.',
+			},
+		})
+
+		await store.reanalyseEntry(42)
+
+		expect(entry.detectionProvider).toBe('default')
+		expect(entry.detectionFellBack).toBe(true)
+		expect(entry.detectionWarning).toBe('LLM detection unavailable.')
+	})
+
+	it('records a language-model run without a warning', async () => {
+		const store = useAnonymizationStore()
+		const entry = makeEntry()
+		store.files = [entry]
+		axios.post.mockResolvedValue({
+			data: { entities: [], detectionProvider: 'llm', detectionFellBack: false, detectionWarning: null },
+		})
+
+		await store.reanalyseEntry(42)
+
+		expect(entry.detectionProvider).toBe('llm')
+		expect(entry.detectionFellBack).toBe(false)
+		expect(entry.detectionWarning).toBeNull()
+	})
+})
+
 describe('anonymiseEntry: characterization of the full run', () => {
 	beforeEach(() => {
 		setActivePinia(createPinia())
@@ -988,7 +1052,11 @@ describe('anonymiseEntry: characterization of the full run', () => {
 		axios.patch.mockResolvedValue({ data: {} })
 		axios.post.mockResolvedValue({ data: { anonymizedFileId: 99 } })
 		const store = useAnonymizationStore()
-		const entry = makeEntry({ relationIds: [], relationId: 7, _decisionSkip: true })
+		const entry = makeEntry({
+			relationIds: [],
+			relationId: 7,
+			_decisionSkip: true,
+		})
 
 		await store.anonymiseEntry(entry)
 
@@ -1019,7 +1087,11 @@ describe('anonymiseEntry: characterization of the full run', () => {
 	it('skips the patch for an entity without any relation id', async () => {
 		axios.post.mockResolvedValue({ data: { anonymizedFileId: 99 } })
 		const store = useAnonymizationStore()
-		const entry = makeEntry({ relationIds: undefined, relationId: null, _decisionSkip: true })
+		const entry = makeEntry({
+			relationIds: undefined,
+			relationId: null,
+			_decisionSkip: true,
+		})
 
 		await store.anonymiseEntry(entry)
 
@@ -1132,7 +1204,9 @@ describe('anonymiseEntry: characterization of the full run', () => {
 		axios.post.mockResolvedValue({ data: { anonymizedFileId: 99 } })
 		const store = useAnonymizationStore()
 		const resolved = [{ type: 'PERSON', value: '[Persoon: 1]' }]
-		store.loadAnonymizedEntities = jest.fn().mockResolvedValue({ entities: resolved })
+		store.loadAnonymizedEntities = jest
+			.fn()
+			.mockResolvedValue({ entities: resolved })
 		const entry = makeEntry()
 
 		await store.anonymiseEntry(entry)
@@ -1143,7 +1217,9 @@ describe('anonymiseEntry: characterization of the full run', () => {
 	it('stays completed when resolving the placeholders fails', async () => {
 		axios.post.mockResolvedValue({ data: { anonymizedFileId: 99 } })
 		const store = useAnonymizationStore()
-		store.loadAnonymizedEntities = jest.fn().mockRejectedValue(new Error('parse'))
+		store.loadAnonymizedEntities = jest
+			.fn()
+			.mockRejectedValue(new Error('parse'))
 		const spy = jest.spyOn(console, 'error').mockImplementation(() => {})
 		const entry = makeEntry()
 

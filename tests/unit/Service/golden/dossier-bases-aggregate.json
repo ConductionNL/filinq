@@ -1,0 +1,125 @@
+{
+    "no files": {
+        "rows": [],
+        "totals": {
+            "documentCount": 0,
+            "entityCount": 0,
+            "distinctEntityCount": 0,
+            "distinctBasesCount": 0
+        }
+    },
+    "a file without entities": {
+        "rows": [],
+        "totals": {
+            "documentCount": 1,
+            "entityCount": 0,
+            "distinctEntityCount": 0,
+            "distinctBasesCount": 0
+        }
+    },
+    "one person in two files": {
+        "rows": [
+            {
+                "placeholder": "[PERSOON 2]",
+                "count": 4,
+                "filename": "a.pdf, b.pdf",
+                "fileCount": 2,
+                "baseLabels": [
+                    "Privacy",
+                    "Bedrijfsgegevens"
+                ],
+                "basesText": "Privacy, Bedrijfsgegevens",
+                "entityType": "PERSON",
+                "entityId": 2
+            }
+        ],
+        "totals": {
+            "documentCount": 2,
+            "entityCount": 4,
+            "distinctEntityCount": 1,
+            "distinctBasesCount": 2
+        }
+    },
+    "ids that sort numerically": {
+        "rows": [
+            {
+                "placeholder": "[DATUM 1]",
+                "count": 2,
+                "filename": "x.pdf",
+                "fileCount": 1,
+                "baseLabels": [],
+                "basesText": "",
+                "entityType": "DATE",
+                "entityId": 1
+            },
+            {
+                "placeholder": "[PERSOON 10]",
+                "count": 1,
+                "filename": "x.pdf",
+                "fileCount": 1,
+                "baseLabels": [],
+                "basesText": "",
+                "entityType": "PERSON",
+                "entityId": 10
+            },
+            {
+                "placeholder": "[PERSOON 2]",
+                "count": 4,
+                "filename": "x.pdf",
+                "fileCount": 1,
+                "baseLabels": [],
+                "basesText": "",
+                "entityType": "PERSON",
+                "entityId": 2
+            }
+        ],
+        "totals": {
+            "documentCount": 1,
+            "entityCount": 7,
+            "distinctEntityCount": 3,
+            "distinctBasesCount": 0
+        }
+    },
+    "a file without a name": {
+        "rows": [
+            {
+                "placeholder": "[PERSOON 2]",
+                "count": 6,
+                "filename": "",
+                "fileCount": 0,
+                "baseLabels": [
+                    "Privacy"
+                ],
+                "basesText": "Privacy",
+                "entityType": "PERSON",
+                "entityId": 2
+            }
+        ],
+        "totals": {
+            "documentCount": 2,
+            "entityCount": 6,
+            "distinctEntityCount": 1,
+            "distinctBasesCount": 1
+        }
+    },
+    "an entity without type or id": {
+        "rows": [
+            {
+                "placeholder": "",
+                "count": 1,
+                "filename": "c.pdf",
+                "fileCount": 1,
+                "baseLabels": [],
+                "basesText": "",
+                "entityType": "",
+                "entityId": 0
+            }
+        ],
+        "totals": {
+            "documentCount": 1,
+            "entityCount": 1,
+            "distinctEntityCount": 1,
+            "distinctBasesCount": 1
+        }
+    }
+}

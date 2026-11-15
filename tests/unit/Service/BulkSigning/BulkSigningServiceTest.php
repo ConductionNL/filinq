@@ -25,6 +25,7 @@ namespace OCA\Filinq\Tests\Unit\Service\BulkSigning;
 require_once __DIR__ . '/BulkSigningDoubles.php';
 
 use OCA\Filinq\BackgroundJob\BulkSigningJob;
+use OCA\Filinq\BackgroundJob\JobQueue;
 use OCA\Filinq\Service\BulkSigning\BulkSigningRecipientParser;
 use OCA\Filinq\Service\BulkSigning\BulkSigningRowValidator;
 use OCA\Filinq\Service\BulkSigning\BulkSigningRunner;
@@ -125,7 +126,7 @@ class BulkSigningServiceTest extends TestCase {
 			requestValidator: new SigningRequestValidator(providerFactory: $this->providerFactory()),
 			settings: $settings,
 			repository: $this->batchRepository(),
-			jobList: $this->jobs,
+			jobList: new JobQueue(jobList: $this->jobs),
 			signing: $this->signing
 		);
 
@@ -511,4 +512,60 @@ class BulkSigningServiceTest extends TestCase {
 		$this->assertSame(['read' => [], 'create' => ['authenticated'], 'update' => [], 'delete' => []], $schema['authorization']);
 
 	}//end testEveryPayloadWrittenValidatesAgainstTheRegisterSchema()
+
+	/**
+	 * A batch without a title is named after its document.
+	 *
+	 * @return void
+	 */
+	public function testAnUntitledBatchIsNamedAfterItsDocument(): void {
+		$settings = array_merge(self::SETTINGS, ['title' => '   ']);
+
+		$batch = $this->service()->createBatch(settings: $settings, content: "userId\nan\n", filename: 'x.csv', userId: 'alice');
+
+		$this->assertSame('verklaring.pdf', $batch['title']);
+
+	}//end testAnUntitledBatchIsNamedAfterItsDocument()
+
+	/**
+	 * An unknown batch reads as null, for an admin too.
+	 *
+	 * @return void
+	 */
+	public function testAnUnknownBatchReadsAsNull(): void {
+		$this->assertNull($this->service()->get(id: 'batch-404', userId: 'root', isAdmin: true));
+
+	}//end testAnUnknownBatchReadsAsNull()
+
+	/**
+	 * An admin lists every initiator's batches; an initiator only their own.
+	 *
+	 * @return void
+	 */
+	public function testAnAdminListsEveryInitiatorsBatches(): void {
+		$service = $this->service();
+		$service->createBatch(settings: self::SETTINGS, content: "userId\nan\n", filename: 'x.csv', userId: 'alice');
+		$service->createBatch(settings: self::SETTINGS, content: "userId\nalice\n", filename: 'y.csv', userId: 'an');
+
+		$creators = array_column($service->listFor(userId: 'root', isAdmin: true), 'createdBy');
+		sort($creators);
+		$this->assertSame(['alice', 'an'], $creators);
+		$this->assertSame(['an'], array_column($service->listFor(userId: 'an', isAdmin: false), 'createdBy'));
+
+	}//end testAnAdminListsEveryInitiatorsBatches()
+
+	/**
+	 * Completed, completed-with-errors and cancelled are final; everything else is not.
+	 *
+	 * @return void
+	 */
+	public function testOnlyEndStatesAreFinished(): void {
+		$this->assertTrue(BulkSigningService::isFinished(['status' => 'completed']));
+		$this->assertTrue(BulkSigningService::isFinished(['status' => 'completed_with_errors']));
+		$this->assertTrue(BulkSigningService::isFinished(['status' => 'cancelled']));
+		$this->assertFalse(BulkSigningService::isFinished(['status' => 'ready']));
+		$this->assertFalse(BulkSigningService::isFinished(['status' => 'creating']));
+		$this->assertFalse(BulkSigningService::isFinished([]));
+
+	}//end testOnlyEndStatesAreFinished()
 }//end class

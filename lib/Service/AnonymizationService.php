@@ -43,10 +43,15 @@ use OCA\Filinq\Exception\DetectionUnavailableException;
 use OCA\Filinq\Exception\ProhibitionGateException;
 use OCA\Filinq\Exception\RedactionNotReviewedException;
 use OCA\Filinq\Kernel\Contracts\AnonymizationServiceInterface;
+use OCA\Filinq\Service\Detection\DetectionProviderResolver;
+use OCA\Filinq\Service\Detection\DetectionRequest;
 use OCA\Filinq\Service\Ocr\OcrExtractionFallback;
 use OCA\Filinq\Service\Redaction\RedactionOutputGuard;
+use OCA\OpenRegister\Mcp\Attribute\McpTool;
+use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use Throwable;
 
 /**
  * Service for orchestrating the document anonymization pipeline
@@ -72,6 +77,21 @@ use Psr\Log\LoggerInterface;
  * a bag would hide which of them a given instance actually needs.
  */
 class AnonymizationService implements AnonymizationServiceInterface {
+
+	/**
+	 * The trigger an agent's intake run is attributed to, next to `manual` and `flow`.
+	 *
+	 * @var string
+	 */
+	public const MCP_TRIGGER = 'mcp';
+
+	/**
+	 * The reason an agent's intake is refused when a publication prohibition applies.
+	 *
+	 * @var string
+	 */
+	public const PROHIBITION_REASON = 'A publication prohibition applies to this document. '
+		. 'The detection is in the review queue; a person decides there.';
 	/**
 	 * Constructor for AnonymizationService
 	 *
@@ -106,6 +126,9 @@ class AnonymizationService implements AnonymizationServiceInterface {
 	 *                                                   once per run: no live detector, no file.
 	 * @param OcrExtractionFallback $ocrFallback Runs OCR on a scan OpenRegister extracted no
 	 *                                           text from, and flags what detection missed.
+	 * @param DetectionProviderResolver|null $detectionResolver The organisation's detection
+	 *                                                          provider; null leaves OpenRegister's
+	 *                                                          detection as the only one.
 	 *
 	 * @return void
 	 *
@@ -124,6 +147,7 @@ class AnonymizationService implements AnonymizationServiceInterface {
 		private readonly RedactionOutputGuard $reviewGuard,
 		private readonly AnonymiserBackendStateClient $backendState,
 		private readonly OcrExtractionFallback $ocrFallback,
+		private readonly ?DetectionProviderResolver $detectionResolver=null,
 	) {
 
 	}//end __construct()
@@ -152,6 +176,111 @@ class AnonymizationService implements AnonymizationServiceInterface {
 	public function extractAndDetectEntities(int $fileId): array {
 		return $this->runExtraction(fileId: $fileId, options: ['force' => false]);
 	}//end extractAndDetectEntities()
+
+	#[McpTool(
+		name: 'anonymizeDocument',
+		subject: 'document',
+		action: 'anonymize',
+		description: 'Start anonymisation of one document: detect the personal data in it and put it '
+			. 'in the review queue, where a person decides what is redacted. Takes only the file id. '
+			. 'It never produces the anonymised copy and never marks the document reviewed; it answers '
+			. 'with the number of entities found per type, never their values. A publication '
+			. 'prohibition on the document is answered as refused, with the reason.',
+		readOnlyHint: false,
+		destructiveHint: false,
+		idempotentHint: false,
+		scope: 'create'
+	)]
+	/**
+	 * Anonymisation intake for an agent: detection and review-queue routing only.
+	 *
+	 * The file id is the whole input: no entity list, no override and no
+	 * output choice, so nothing an agent sends can steer what is redacted or
+	 * lift a gate. The run never writes an anonymised copy, never marks the
+	 * review and never changes the source file. The answer holds counts and
+	 * statuses only, never an entity value. A file the caller may not read
+	 * answers not_found, like one that does not exist.
+	 *
+	 * @param int $fileId The Nextcloud file id.
+	 *
+	 * @return array<string, mixed> `status`, `entityCounts`, `reviewRequired`, and `refusedReason` when refused.
+	 *
+	 * @spec openspec/changes/mcp-generation-tools/tasks.md#task-1.3
+	 */
+	public function anonymizeViaAgent(int $fileId): array {
+		$uid = $this->agentUid();
+		if ($uid === '' || $this->container->get(ReadableFileResolver::class)->node(fileId: $fileId) === null) {
+			return ['status' => 'not_found', 'entityCounts' => [], 'reviewRequired' => false];
+		}
+
+		$this->logger->info(
+			'Filinq: anonymisation intake started',
+			['fileId' => $fileId, 'triggeredBy' => self::MCP_TRIGGER, 'uid' => $uid]
+		);
+
+		try {
+			$detected = $this->extractAndDetectEntities(fileId: $fileId);
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'Filinq: anonymisation intake failed',
+				['fileId' => $fileId, 'triggeredBy' => self::MCP_TRIGGER, 'uid' => $uid, 'exception' => $e->getMessage()]
+			);
+			return ['status' => 'failed', 'entityCounts' => [], 'reviewRequired' => false];
+		}
+
+		$counts = FileEntityStatsService::countByType(entities: (array)($detected['entities'] ?? []));
+
+		if ($this->prohibited(fileId: $fileId) === true) {
+			return [
+				'status' => 'refused',
+				'entityCounts' => $counts,
+				'reviewRequired' => true,
+				'refusedReason' => self::PROHIBITION_REASON,
+			];
+		}
+
+		return ['status' => 'review_required', 'entityCounts' => $counts, 'reviewRequired' => true];
+
+	}//end anonymizeViaAgent()
+
+	/**
+	 * Whether an absolute publication prohibition applies to the file. A gate
+	 * that cannot be asked counts as applying: the agent path fails closed.
+	 *
+	 * @param int $fileId The file.
+	 *
+	 * @return bool True when the prohibition gate refuses the file.
+	 *
+	 * @spec openspec/changes/mcp-generation-tools/tasks.md#task-1.3
+	 */
+	private function prohibited(int $fileId): bool {
+		try {
+			return $this->absoluteProhibitionViolations(fileId: $fileId) !== [];
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'Filinq: the prohibition gate could not be asked; the agent intake is refused',
+				['fileId' => $fileId, 'exception' => $e->getMessage()]
+			);
+			return true;
+		}
+
+	}//end prohibited()
+
+	/**
+	 * The user the agent acts for, or an empty string without one.
+	 *
+	 * @return string The user id.
+	 *
+	 * @spec openspec/changes/mcp-generation-tools/tasks.md#task-1.3
+	 */
+	private function agentUid(): string {
+		try {
+			return (string)($this->container->get(IUserSession::class)->getUser()?->getUID() ?? '');
+		} catch (Throwable $e) {
+			return '';
+		}
+
+	}//end agentUid()
 
 	/**
 	 * Force a fresh extraction + detection even when the file is unchanged.
@@ -207,84 +336,8 @@ class AnonymizationService implements AnonymizationServiceInterface {
 	 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-2.3
 	 */
 	private function runExtraction(int $fileId, array $options): array {
-		$force = $options['force'];
-
 		try {
-			$textExtractor = $this->locator->get(
-				className: 'OCA\OpenRegister\Service\TextExtractionService'
-			);
-
-			// Resolve Filinq's grondslag service up front (via the container,
-			// string class name, to keep this class's coupling in check). It
-			// also owns the operator's enabled-entity-type selection, used to
-			// scope automatic detection just below.
-			$legalBasisProposal = $this->container->get('OCA\Filinq\Service\LegalBasisProposalService');
-
-			// Scope automatic detection to the enabled entity types (null = all
-			// types). Manual entities are added through a separate path, so a
-			// manually-added type is still anonymised even when its automatic
-			// detection is disabled here.
-			$entityTypes = $legalBasisProposal->getEntityTypeWhitelist();
-			$textExtractor->extractFile($fileId, $force, $entityTypes);
-
-			// OpenRegister does no OCR, so a scan comes back without text and
-			// would read as "nothing to redact". The fallback runs OCR for it
-			// and says on the result when detection could not see the scan.
-			$ocrFields = $this->ocrFallback->afterExtraction(
-				fileId: $fileId,
-				textExtractor: $textExtractor,
-				force: $force
-			);
-
-			$this->logger->debug(
-				'Text extracted from file',
-				['fileId' => $fileId, 'entityTypes' => $entityTypes]
-			);
-
-			// Custom-dictionary pass (custom-dictionary-recognition, design.md
-			// §D3): runs after OR extraction and before the entities are read
-			// back below, so freshly-written CUSTOM_DICTIONARY relations are
-			// included in `$entities`. Best-effort — a failure here is logged
-			// and surfaced as a warning but never blocks OR's own detection.
-			$dictionaryWarning = $this->dictionaryRunner->run(
-				fileId: $fileId,
-				entityTypeWhitelist: $entityTypes
-			);
-
-			$entityRelationMapper = $this->locator->get(
-				className: 'OCA\OpenRegister\Db\EntityRelationMapper'
-			);
-			$entities = $entityRelationMapper->findEntitiesForFile($fileId);
-
-			// Pre-fill a proposed grondslag per entity type onto the
-			// freshly-detected relations (fill-only-when-empty), then enrich
-			// the returned rows with their current bases so the review UI can
-			// show the proposal. $legalBasisProposal was resolved above. Both
-			// calls are internally best-effort and never block detection.
-			$legalBasisProposal->applyProposals(fileId: $fileId);
-			$entities = $legalBasisProposal->enrichEntitiesWithBases(entities: $entities, fileId: $fileId);
-
-			$normalized = $this->entityDetection->normalizeEntities(entities: $entities);
-
-			// Apply publication policy (Robert's policy pass, supersedes the
-			// narrower attachProhibitionMatches): standing-consent winners are
-			// auto-skipped on their relation; prohibition winners get a
-			// read-only `prohibitionMatch` hint for the review UI. Best-effort —
-			// a policy failure never blocks detection.
-			$normalized = $this->prohibitionPolicy->applyPolicyDecisions(
-				entities: $normalized,
-				entityRelationMapper: $entityRelationMapper
-			);
-
-			return array_merge(
-				$this->buildExtractionResult(
-					fileId: $fileId,
-					normalized: $normalized,
-					entityCount: count($entities),
-					dictionaryWarning: $dictionaryWarning
-				),
-				$ocrFields
-			);
+			return $this->extractAndDetect(fileId: $fileId, force: $options['force']);
 		} catch (Exception $e) {
 			$this->logger->error(
 				'Failed to extract and detect entities: ' . $e->getMessage(),
@@ -296,8 +349,132 @@ class AnonymizationService implements AnonymizationServiceInterface {
 				$e
 			);
 		}//end try
-
 	}//end runExtraction()
+
+	/**
+	 * Extract the file's text, run the OCR fallback and the custom-dictionary
+	 * pass, then read the detected entities back.
+	 *
+	 * @param int $fileId The file.
+	 * @param mixed $force Whether to bypass OpenRegister's up-to-date check.
+	 *
+	 * @return array<string, mixed> The extraction result, with any OCR fields.
+	 *
+	 * @throws Exception When a step fails.
+	 */
+	private function extractAndDetect(int $fileId, mixed $force): array {
+		$textExtractor = $this->locator->get(
+			className: 'OCA\OpenRegister\Files\Service\TextExtractionService'
+		);
+
+		// Resolve Filinq's grondslag service up front (via the container,
+		// string class name, to keep this class's coupling in check). It
+		// also owns the operator's enabled-entity-type selection, used to
+		// scope automatic detection just below.
+		$legalBasisProposal = $this->container->get('OCA\Filinq\Service\LegalBasisProposalService');
+
+		// Scope automatic detection to the enabled entity types (null = all
+		// types). Manual entities are added through a separate path, so a
+		// manually-added type is still anonymised even when its automatic
+		// detection is disabled here.
+		$entityTypes = $legalBasisProposal->getEntityTypeWhitelist();
+		(new OpenRegisterTextExtractionCall())->extractFile(extractor: $textExtractor, fileId: $fileId, force: (bool) $force, entityTypes: $entityTypes);
+
+		// OpenRegister does no OCR, so a scan comes back without text and
+		// would read as "nothing to redact". The fallback runs OCR for it
+		// and says on the result when detection could not see the scan.
+		$ocrFields = $this->ocrFallback->afterExtraction(
+			fileId: $fileId,
+			textExtractor: $textExtractor,
+			force: $force
+		);
+
+		$this->logger->debug(
+			'Text extracted from file',
+			['fileId' => $fileId, 'entityTypes' => $entityTypes]
+		);
+
+		// The organisation's detection provider (llm-entity-detection-provider):
+		// OpenRegister's own detection ran during extraction; an organisation on
+		// the LLM provider gets its entities added here, or an explicit fallback
+		// warning when it could not run. Before the read-back below, so the LLM
+		// relations are included.
+		$providerFields = $this->runDetectionProvider(
+			request: new DetectionRequest(fileId: $fileId, entityTypes: $entityTypes, force: (bool) $force)
+		);
+
+		// Custom-dictionary pass (custom-dictionary-recognition, design.md
+		// §D3): runs after OR extraction and before the entities are read
+		// back below, so freshly-written CUSTOM_DICTIONARY relations are
+		// included. Best-effort — a failure here is logged and surfaced as a
+		// warning but never blocks OR's own detection.
+		$detected = ['customDictionaryWarning' => $this->dictionaryRunner->run(fileId: $fileId, entityTypeWhitelist: $entityTypes)];
+		$detected += $this->detectedEntities(fileId: $fileId, legalBasisProposal: $legalBasisProposal);
+
+		return array_merge(
+			$this->buildExtractionResult(fileId: $fileId, detected: $detected),
+			$ocrFields,
+			$providerFields
+		);
+	}//end extractAndDetect()
+
+	/**
+	 * Run the organisation's detection provider and return the payload fields naming it.
+	 *
+	 * @param DetectionRequest $request The file, the enabled entity types and whether this is a re-analysis.
+	 *
+	 * @return array<string, mixed> `detectionProvider`, `detectionFellBack`, `detectionWarning`;
+	 *                              empty when no resolver is wired.
+	 *
+	 * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-3.2
+	 */
+	private function runDetectionProvider(DetectionRequest $request): array {
+		if ($this->detectionResolver === null) {
+			return [];
+		}
+
+		return $this->detectionResolver->runForActiveOrganisation(request: $request)->toPayload();
+	}//end runDetectionProvider()
+
+	/**
+	 * Read the file's detected entities back, with proposed bases and the
+	 * publication policy applied.
+	 *
+	 * @param int $fileId The file.
+	 * @param object $legalBasisProposal The grondslag service.
+	 *
+	 * @return array{entities: array<int, mixed>, entityCount: int} The normalised entities and the raw count.
+	 *
+	 * @throws Exception When a step fails.
+	 */
+	private function detectedEntities(int $fileId, object $legalBasisProposal): array {
+		$entityRelationMapper = $this->locator->get(
+			className: 'OCA\OpenRegister\Db\EntityRelationMapper'
+		);
+		$entities = $entityRelationMapper->findEntitiesForFile($fileId);
+
+		// Pre-fill a proposed grondslag per entity type onto the
+		// freshly-detected relations (fill-only-when-empty), then enrich
+		// the returned rows with their current bases so the review UI can
+		// show the proposal. Both calls are internally best-effort and never
+		// block detection.
+		$legalBasisProposal->applyProposals(fileId: $fileId);
+		$entities = $legalBasisProposal->enrichEntitiesWithBases(entities: $entities, fileId: $fileId);
+
+		$normalized = $this->entityDetection->normalizeEntities(entities: $entities);
+
+		// Apply publication policy (Robert's policy pass, supersedes the
+		// narrower attachProhibitionMatches): standing-consent winners are
+		// auto-skipped on their relation; prohibition winners get a
+		// read-only `prohibitionMatch` hint for the review UI. Best-effort —
+		// a policy failure never blocks detection.
+		$normalized = $this->prohibitionPolicy->applyPolicyDecisions(
+			entities: $normalized,
+			entityRelationMapper: $entityRelationMapper
+		);
+
+		return ['entities' => $normalized, 'entityCount' => count($entities)];
+	}//end detectedEntities()
 
 	/**
 	 * Assemble the extraction response payload.
@@ -308,21 +485,15 @@ class AnonymizationService implements AnonymizationServiceInterface {
 	 * blocking detection (files-confidential-labels, design.md D2).
 	 *
 	 * @param int $fileId The Nextcloud file ID.
-	 * @param array<int, array<string, mixed>> $normalized Normalized, policy-decorated entities.
-	 * @param int $entityCount Raw detected-entity count.
-	 * @param string|null $dictionaryWarning Warning from the best-effort
-	 *                                       custom-dictionary pass, or null.
+	 * @param array $detected The normalized, policy-decorated `entities`, the raw detected
+	 *                        `entityCount` and the `customDictionaryWarning` from the
+	 *                        best-effort custom-dictionary pass (or null).
 	 *
 	 * @return array<string, mixed> The extraction result payload.
 	 *
 	 * @spec openspec/changes/files-confidential-labels/specs/files-confidential-labels/spec.md#requirement-surface-the-label-in-the-document-report-and-entity-review-context-req-ddfcl-002
 	 */
-	private function buildExtractionResult(
-		int $fileId,
-		array $normalized,
-		int $entityCount,
-		?string $dictionaryWarning,
-	): array {
+	private function buildExtractionResult(int $fileId, array $detected): array {
 		// Development riskLevel feature (RiskLevelService via
 		// FileEntityStatsService) — required by the return payload below.
 		$riskLevelService = $this->fileEntityStats->tryGetRiskLevelService();
@@ -332,10 +503,10 @@ class AnonymizationService implements AnonymizationServiceInterface {
 		);
 
 		$result = [
-			'entities' => $normalized,
-			'entityCount' => $entityCount,
+			'entities' => $detected['entities'],
+			'entityCount' => $detected['entityCount'],
 			'riskLevel' => $riskLevel,
-			'customDictionaryWarning' => $dictionaryWarning,
+			'customDictionaryWarning' => $detected['customDictionaryWarning'],
 		];
 
 		// Read-only sensitivity signal from files_confidential (or null when the
@@ -471,29 +642,13 @@ class AnonymizationService implements AnonymizationServiceInterface {
 	 *
 	 * @param int $fileId The Nextcloud file ID
 	 * @param array<array<string, mixed>> $entities The entities to anonymize
-	 * @param string $outputFormat Output format: 'pdf-only' (default), 'pdf'
-	 *                             or 'preserve'
-	 * @param array<int, array<string, mixed>> $unredactedEntities Entities to publish unredacted with consent
-	 *                                                             creation
-	 * @param array<int, array<string, mixed>> $overrides Acknowledged override entries {ruleId,
-	 *                                                    entityId, reason?} that release
-	 *                                                    low-confidence prohibition matches.
-	 * @param string $userId UID of the acting user (for override audit
-	 *                       entries).
-	 * @param string $scope Placeholder-numbering scope forwarded to
-	 *                      OpenRegister: 'document' (default) or
-	 *                      'dossier' (consistent numbering across the
-	 *                      dossier folder).
-	 * @param string|null $dossierKey Stable folder id for the dossier when
-	 *                                $scope='dossier'; null lets OpenRegister
-	 *                                fall back to the file's parent folder.
-	 * @param bool $reversible Keep an encrypted key so the placeholders can be turned
-	 *                         back into names later. False, the default, keeps nothing.
+	 * @param AnonymizeOptions|null $options Output format, consents, overrides, acting user,
+	 *                                       placeholder scope and reversibility; null for the defaults.
 	 *
 	 * @return array<string, mixed> Anonymization result with optional warning/createdConsents fields
 	 *
 	 * @throws Exception If anonymization fails.
-	 * @throws ConversionFailedException When `$outputFormat` requests a PDF and the cascade could
+	 * @throws ConversionFailedException When the output format requests a PDF and the cascade could
 	 *                                   not convert the anonymised intermediate. The intermediate
 	 *                                   is deleted (best-effort) before the exception propagates.
 	 * @throws ProhibitionGateException When the prohibition gate fires (high-confidence matches
@@ -507,36 +662,9 @@ class AnonymizationService implements AnonymizationServiceInterface {
 	 * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-3
 	 * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-4
 	 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-2.2
-	 *
-	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) `$reversible` is a request field the
-	 *     caller passes through; it selects no branch here, the runner records it.
 	 */
-	public function anonymizeDocument(
-		int $fileId,
-		array $entities,
-		string $outputFormat = 'pdf-only',
-		array $unredactedEntities = [],
-		array $overrides = [],
-		string $userId = '',
-		string $scope = 'document',
-		?string $dossierKey = null,
-		bool $reversible = false,
-	): array {
-		return $this->runAnonymize(
-			fileId: $fileId,
-			entities: $entities,
-			userId: $userId,
-			overrides: $overrides,
-			options: [
-				'appendBasisSummary' => false,
-				'outputFormat' => $outputFormat,
-				'unredactedEntities' => $unredactedEntities,
-				'scope' => $scope,
-				'dossierKey' => $dossierKey,
-				'reversible' => $reversible,
-				'userId' => $userId,
-			]
-		);
+	public function anonymizeDocument(int $fileId, array $entities, ?AnonymizeOptions $options = null): array {
+		return $this->runAnonymize(run: ($options ?? new AnonymizeOptions())->runFor(fileId: $fileId, entities: $entities));
 
 	}//end anonymizeDocument()
 
@@ -552,18 +680,8 @@ class AnonymizationService implements AnonymizationServiceInterface {
 	 *
 	 * @param int $fileId The Nextcloud file ID
 	 * @param array<array<string, mixed>> $entities The entities to anonymize
-	 * @param string $outputFormat Output format: 'pdf-only' (default), 'pdf'
-	 *                             or 'preserve'
-	 * @param array<int, array<string, mixed>> $unredactedEntities Entities to publish unredacted with consent
-	 *                                                             creation
-	 * @param array<int, array<string, mixed>> $overrides Acknowledged override entries {ruleId,
-	 *                                                    entityId, reason?}.
-	 * @param string $userId UID of the acting user.
-	 * @param string $scope Placeholder-numbering scope forwarded to
-	 *                      OpenRegister.
-	 * @param string|null $dossierKey Stable folder id for the dossier.
-	 * @param bool $reversible Keep an encrypted key so the placeholders can be turned
-	 *                         back into names later. False, the default, keeps nothing.
+	 * @param AnonymizeOptions|null $options Output format, consents, overrides, acting user,
+	 *                                       placeholder scope and reversibility; null for the defaults.
 	 *
 	 * @return array<string, mixed> Anonymization result with optional
 	 *                              warning/summaryFileId/createdConsents fields
@@ -577,36 +695,9 @@ class AnonymizationService implements AnonymizationServiceInterface {
 	 * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-2
 	 * @spec openspec/specs/anonymization/spec.md
 	 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-2.2
-	 *
-	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) `$reversible` is a request field the
-	 *     caller passes through; it selects no branch here, the runner records it.
 	 */
-	public function anonymizeDocumentWithBasisSummary(
-		int $fileId,
-		array $entities,
-		string $outputFormat = 'pdf-only',
-		array $unredactedEntities = [],
-		array $overrides = [],
-		string $userId = '',
-		string $scope = 'document',
-		?string $dossierKey = null,
-		bool $reversible = false,
-	): array {
-		return $this->runAnonymize(
-			fileId: $fileId,
-			entities: $entities,
-			userId: $userId,
-			overrides: $overrides,
-			options: [
-				'appendBasisSummary' => true,
-				'outputFormat' => $outputFormat,
-				'unredactedEntities' => $unredactedEntities,
-				'scope' => $scope,
-				'dossierKey' => $dossierKey,
-				'reversible' => $reversible,
-				'userId' => $userId,
-			]
-		);
+	public function anonymizeDocumentWithBasisSummary(int $fileId, array $entities, ?AnonymizeOptions $options = null): array {
+		return $this->runAnonymize(run: ($options ?? new AnonymizeOptions())->summaryRunFor(fileId: $fileId, entities: $entities));
 
 	}//end anonymizeDocumentWithBasisSummary()
 
@@ -616,13 +707,7 @@ class AnonymizationService implements AnonymizationServiceInterface {
 	 * The prohibition gate runs BEFORE any OpenRegister interaction; the pipeline
 	 * itself is owned by DocumentAnonymizeRunner.
 	 *
-	 * @param int $fileId The Nextcloud file ID.
-	 * @param array<array<string, mixed>> $entities The entities to anonymize.
-	 * @param string $userId UID of the acting user.
-	 * @param array<int, array<string, mixed>> $overrides Acknowledged override entries.
-	 * @param array<string, mixed> $options Run options forwarded to the runner
-	 *                                      (appendBasisSummary, outputFormat,
-	 *                                      unredactedEntities, scope, dossierKey).
+	 * @param AnonymizeRun $run The file, entities, overrides and run options (the acting user among them).
 	 *
 	 * @return array<string, mixed> The anonymisation result.
 	 *
@@ -637,20 +722,17 @@ class AnonymizationService implements AnonymizationServiceInterface {
 	 * @spec openspec/changes/redaction-and-what-leaves-the-building/specs/redaction-output-guarantee/spec.md
 	 * @spec openspec/changes/archive/2026-09-29-anonymisation-fails-closed-without-a-detector/tasks.md#task-2
 	 */
-	private function runAnonymize(
-		int $fileId,
-		array $entities,
-		string $userId,
-		array $overrides,
-		array $options,
-	): array {
+	private function runAnonymize(AnonymizeRun $run): array {
+		$fileId = $run->fileId;
+		$entities = $run->entities;
+
 		// Prohibition gate — runs BEFORE any OR interaction.
 		// Throws ProhibitionGateException when gate fires; passes through otherwise.
 		$this->runProhibitionGate(
 			fileId: $fileId,
 			requestEntities: $entities,
-			overrides: $overrides,
-			userId: $userId
+			overrides: $run->overrides,
+			userId: $run->userId()
 		);
 
 		// 🔴 THE HUMAN GATE, IN THE SERVICE RATHER THAN ON THE SCREEN. Both
@@ -670,7 +752,7 @@ class AnonymizationService implements AnonymizationServiceInterface {
 		$result = $this->anonymizeRunner->run(
 			fileId: $fileId,
 			entities: $entities,
-			options: $options
+			options: $run->options
 		);
 
 		$redacted = count($entities);

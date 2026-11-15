@@ -1,0 +1,158 @@
+{
+	"all": [
+		{
+			"fileId": 6,
+			"fileName": "D2",
+			"path": "/DocuDesk/D2",
+			"mimeType": "httpd/unix-directory",
+			"fileSize": 0,
+			"modified": 1704448800,
+			"isFolder": true,
+			"isAnonymized": false
+		},
+		{
+			"fileId": 4,
+			"fileName": "y_anonymized.docx",
+			"path": "/DocuDesk/y_anonymized.docx",
+			"mimeType": "application/octet-stream",
+			"fileSize": 0,
+			"modified": 1704362400,
+			"isFolder": false,
+			"isAnonymized": true
+		},
+		{
+			"fileId": 2,
+			"fileName": "x_anonymized.pdf",
+			"path": "/DocuDesk/D1/x_anonymized.pdf",
+			"mimeType": "application/pdf",
+			"fileSize": 9,
+			"modified": 1704189600,
+			"isFolder": false,
+			"isAnonymized": true
+		},
+		{
+			"fileId": 1,
+			"fileName": "D1",
+			"path": "/DocuDesk/D1",
+			"mimeType": "httpd/unix-directory",
+			"fileSize": 0,
+			"modified": 1704103200,
+			"isFolder": true,
+			"isAnonymized": false
+		},
+		{
+			"fileId": 5,
+			"fileName": "z_anonymized b.txt",
+			"path": "/elsewhere/z_anonymized b.txt",
+			"mimeType": "application/octet-stream",
+			"fileSize": 0,
+			"modified": null,
+			"isFolder": false,
+			"isAnonymized": true
+		}
+	],
+	"two": [
+		{
+			"fileId": 6,
+			"fileName": "D2",
+			"path": "/DocuDesk/D2",
+			"mimeType": "httpd/unix-directory",
+			"fileSize": 0,
+			"modified": 1704448800,
+			"isFolder": true,
+			"isAnonymized": false
+		},
+		{
+			"fileId": 4,
+			"fileName": "y_anonymized.docx",
+			"path": "/DocuDesk/y_anonymized.docx",
+			"mimeType": "application/octet-stream",
+			"fileSize": 0,
+			"modified": 1704362400,
+			"isFolder": false,
+			"isAnonymized": true
+		}
+	],
+	"byDefault": [
+		{
+			"fileId": 6,
+			"fileName": "D2",
+			"path": "/DocuDesk/D2",
+			"mimeType": "httpd/unix-directory",
+			"fileSize": 0,
+			"modified": 1704448800,
+			"isFolder": true,
+			"isAnonymized": false
+		},
+		{
+			"fileId": 4,
+			"fileName": "y_anonymized.docx",
+			"path": "/DocuDesk/y_anonymized.docx",
+			"mimeType": "application/octet-stream",
+			"fileSize": 0,
+			"modified": 1704362400,
+			"isFolder": false,
+			"isAnonymized": true
+		},
+		{
+			"fileId": 2,
+			"fileName": "x_anonymized.pdf",
+			"path": "/DocuDesk/D1/x_anonymized.pdf",
+			"mimeType": "application/pdf",
+			"fileSize": 9,
+			"modified": 1704189600,
+			"isFolder": false,
+			"isAnonymized": true
+		},
+		{
+			"fileId": 1,
+			"fileName": "D1",
+			"path": "/DocuDesk/D1",
+			"mimeType": "httpd/unix-directory",
+			"fileSize": 0,
+			"modified": 1704103200,
+			"isFolder": true,
+			"isAnonymized": false
+		}
+	],
+	"missing": [],
+	"denied": "denied",
+	"noUser": "User not authenticated",
+	"calls": [
+		{
+			"method": "PROPFIND",
+			"url": "http://localhost/remote.php/dav/files/admin/DocuDesk",
+			"depth": "infinity",
+			"body": "<?xml version=\"1.0\"?> <d:propfind xmlns:d=\"DAV:\" xmlns:oc=\"http://owncloud.org/ns\" xmlns:nc=\"http://nextcloud.org/ns\"> <d:prop> <d:resourcetype /> <d:getcontenttype /> <d:getcontentlength /> <d:getlastmodified /> <oc:fileid /> </d:prop> </d:propfind>",
+			"params": null
+		},
+		{
+			"method": "PROPFIND",
+			"url": "http://localhost/remote.php/dav/files/admin/DocuDesk",
+			"depth": "infinity",
+			"body": "<?xml version=\"1.0\"?> <d:propfind xmlns:d=\"DAV:\" xmlns:oc=\"http://owncloud.org/ns\" xmlns:nc=\"http://nextcloud.org/ns\"> <d:prop> <d:resourcetype /> <d:getcontenttype /> <d:getcontentlength /> <d:getlastmodified /> <oc:fileid /> </d:prop> </d:propfind>",
+			"params": null
+		},
+		{
+			"method": "PROPFIND",
+			"url": "http://localhost/remote.php/dav/files/admin/DocuDesk",
+			"depth": "infinity",
+			"body": "<?xml version=\"1.0\"?> <d:propfind xmlns:d=\"DAV:\" xmlns:oc=\"http://owncloud.org/ns\" xmlns:nc=\"http://nextcloud.org/ns\"> <d:prop> <d:resourcetype /> <d:getcontenttype /> <d:getcontentlength /> <d:getlastmodified /> <oc:fileid /> </d:prop> </d:propfind>",
+			"params": null
+		},
+		{
+			"method": "PROPFIND",
+			"url": "http://localhost/remote.php/dav/files/admin/DocuDesk",
+			"depth": "infinity",
+			"body": "<?xml version=\"1.0\"?> <d:propfind xmlns:d=\"DAV:\" xmlns:oc=\"http://owncloud.org/ns\" xmlns:nc=\"http://nextcloud.org/ns\"> <d:prop> <d:resourcetype /> <d:getcontenttype /> <d:getcontentlength /> <d:getlastmodified /> <oc:fileid /> </d:prop> </d:propfind>",
+			"params": null
+		},
+		{
+			"method": "PROPFIND",
+			"url": "http://localhost/remote.php/dav/files/admin/DocuDesk",
+			"depth": "infinity",
+			"body": "<?xml version=\"1.0\"?> <d:propfind xmlns:d=\"DAV:\" xmlns:oc=\"http://owncloud.org/ns\" xmlns:nc=\"http://nextcloud.org/ns\"> <d:prop> <d:resourcetype /> <d:getcontenttype /> <d:getcontentlength /> <d:getlastmodified /> <oc:fileid /> </d:prop> </d:propfind>",
+			"params": null
+		}
+	]
+}

@@ -30,6 +30,9 @@ use OCA\Filinq\Service\Signing\LibreSignProvider;
 use OCA\Filinq\Service\Signing\SigningProviderFactory;
 use OCA\Filinq\Service\SigningAuditService;
 use OCA\Filinq\Service\SigningConclusionEmitter;
+use OCA\OpenRegister\Db\AuditTrail;
+use OCA\OpenRegister\Db\AuditTrailMapper;
+use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Files\File;
@@ -133,21 +136,23 @@ class LibreSignCompletionTest extends TestCase {
 		);
 
 		$audit = $this->createMock(SigningAuditService::class);
-		$audit->method('logEvent')->willReturnCallback(
-			function (
-				string $signingRequestId,
-				string $action,
-				string $actorUserId,
-				string $actorDisplayName,
-				string $ipAddress,
-				string $signatureLevel = '',
-				string $provider = '',
-				array $metadata = []
-			): array {
-				unset($actorUserId, $actorDisplayName, $ipAddress, $signatureLevel);
-				$this->audited[] = ['id' => $signingRequestId, 'action' => $action, 'provider' => $provider, 'metadata' => $metadata];
-				return [];
+		$trail = $this->createMock(AuditTrail::class);
+		$trail->method('jsonSerialize')->willReturn([]);
+		$mapper = $this->createMock(AuditTrailMapper::class);
+		$mapper->method('createAuditTrailEntry')->willReturnCallback(
+			function (ObjectEntity $object, string $action, array $context) use ($trail): AuditTrail {
+				$this->audited[] = ['action' => $action, 'context' => $context];
+				return $trail;
 			}
+		);
+		$realAudit = new SigningAuditService(
+			auditTrailMapper: $mapper,
+			logger: new NullLogger(),
+			settingsService: $this->createMock(SettingsService::class),
+			config: $this->createMock(IAppConfig::class)
+		);
+		$audit->method('logEvent')->willReturnCallback(
+			static fn (...$arguments): array => $realAudit->logEvent(...$arguments)
 		);
 
 		return new LibreSignCompletion(
@@ -199,8 +204,14 @@ class LibreSignCompletionTest extends TestCase {
 		$this->assertSame(['IN_PROGRESS', 'COMPLETED'], array_column($this->saved, 'status'));
 		$this->assertStringStartsWith('42:signed:', $this->saved[1]['signedDocumentRef']);
 		$this->assertSame('req-libresign', $this->saved[1]['id']);
-		$this->assertSame('COMPLETED', $this->audited[0]['action']);
-		$this->assertSame('ls-1', $this->audited[0]['metadata']['externalId']);
+		$this->assertSame('docudesk.signing.COMPLETED', $this->audited[0]['action']);
+		$context = $this->audited[0]['context'];
+		$this->assertSame('ls-1', $context['extra']['externalId']);
+		unset($context['extra']);
+		$this->assertSame(
+			['signRequestId' => 'req-libresign', 'actorUserId' => 'system', 'actorDisplayName' => 'LibreSign', 'ipAddress' => '127.0.0.1', 'signatureLevel' => 'AdES', 'provider' => 'libresign'],
+			$context
+		);
 
 	}//end testACompletedLibreSignSignatureIsStoredAndAudited()
 
@@ -227,7 +238,7 @@ class LibreSignCompletionTest extends TestCase {
 		$this->assertSame(1, $this->completion(6, [$this->request()])->syncAll());
 
 		$this->assertSame(['CANCELLED'], array_column($this->saved, 'status'));
-		$this->assertSame('CANCELLED', $this->audited[0]['action']);
+		$this->assertSame('docudesk.signing.CANCELLED', $this->audited[0]['action']);
 		$this->assertSame('%PDF-original', $this->document);
 
 	}//end testARequestCancelledInLibreSignIsCancelled()

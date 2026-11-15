@@ -20,11 +20,10 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\SubjectErasure;
 
-use OCA\Filinq\Kernel\AppIdentity;
+use OCA\Filinq\Service\AdmitsConfiguredGroups;
 use OCA\Filinq\Exception\SubjectErasureRefusedException;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
-use Throwable;
 
 /**
  * Admins, plus the groups in `subject_erasure_groups`. This setting is the one
@@ -37,6 +36,7 @@ use Throwable;
  * included: a broken setting must never widen who may erase.
  */
 class SubjectErasureAuthority {
+	use AdmitsConfiguredGroups;
 
 	/**
 	 * The app setting that names the erasure groups.
@@ -79,7 +79,7 @@ class SubjectErasureAuthority {
 	 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-4.1
 	 */
 	public function assertMayErase(string $userId): void {
-		$groups = $this->groups();
+		$groups = $this->configuredGroups(key: self::CONFIG_KEY, default: self::DEFAULT_GROUPS);
 		if ($groups === null) {
 			throw new SubjectErasureRefusedException(
 				reason: SubjectErasureRefusedException::REASON_CONFIG_UNREADABLE,
@@ -91,14 +91,8 @@ class SubjectErasureAuthority {
 			throw new SubjectErasureRefusedException(reason: SubjectErasureRefusedException::REASON_NOT_ALLOWED, message: 'Only a signed-in user may erase.');
 		}
 
-		if ($this->groupManager->isAdmin($userId) === true) {
+		if ($this->isAdminOrMember(userId: $userId, groups: $groups) === true) {
 			return;
-		}
-
-		foreach ($groups as $group) {
-			if ($this->groupManager->isInGroup($userId, $group) === true) {
-				return;
-			}
 		}
 
 		throw new SubjectErasureRefusedException(
@@ -107,36 +101,4 @@ class SubjectErasureAuthority {
 		);
 
 	}//end assertMayErase()
-
-	/**
-	 * The configured groups, or null when the setting does not parse.
-	 *
-	 * @return array<int, string>|null The groups.
-	 */
-	private function groups(): ?array {
-		try {
-			$raw = $this->appConfig->getValueString(AppIdentity::APP_ID, self::CONFIG_KEY, self::DEFAULT_GROUPS);
-			$decoded = json_decode(json: $raw, associative: true, flags: JSON_THROW_ON_ERROR);
-		} catch (Throwable) {
-			return null;
-		}
-
-		if (is_array($decoded) === false || array_is_list($decoded) === false) {
-			return null;
-		}
-
-		$groups = [];
-		foreach ($decoded as $group) {
-			if (is_string($group) === false) {
-				return null;
-			}
-
-			if (trim($group) !== '') {
-				$groups[] = trim($group);
-			}
-		}
-
-		return $groups;
-
-	}//end groups()
 }//end class

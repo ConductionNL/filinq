@@ -23,6 +23,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\Pdfa3ConversionController;
+use OCA\Filinq\Controller\Support\ControllerFeedback;
 use OCA\Filinq\Exception\Pdfa3ConversionException;
 use OCA\Filinq\Service\Pdfa3ConversionService;
 use OCP\AppFramework\Http\DataDownloadResponse;
@@ -103,10 +104,9 @@ class Pdfa3ConversionControllerTest extends TestCase {
 		$this->controller = new Pdfa3ConversionController(
 			'filinq',
 			$this->mockRequest,
-			$mockLogger,
+			new ControllerFeedback(l10n: $mockL10n, logger: $mockLogger),
 			$this->mockService,
 			$this->mockRootFolder,
-			$mockL10n,
 			$this->mockUserSession
 		);
 
@@ -232,6 +232,38 @@ class Pdfa3ConversionControllerTest extends TestCase {
 		$this->assertNotEmpty($result->getData()['adminHint']);
 
 	}//end testConvertMapsPdfa3ExceptionToTypedErrorResponse()
+
+	/**
+	 * Test convert answers a refusal whose code is outside the HTTP error
+	 * range with 500, carrying the exact message, reason and admin hint.
+	 *
+	 * @return void
+	 */
+	public function testConvertClampsAnOutOfRangeRefusalTo500(): void {
+		$this->mockRequest->method('getParam')
+			->willReturnMap(
+				[
+					['fileId', 0, 42],
+					['metadata', [], []],
+					['attachments', [], []],
+					['filename', 'document-pdfa3.pdf', 'document-pdfa3.pdf'],
+				]
+			);
+
+		$mockUserFolder = $this->createMock(Folder::class);
+		$mockUserFolder->method('getById')->with(42)->willReturn([$this->createMock(File::class)]);
+		$this->mockRootFolder->method('getUserFolder')->with('testuser')->willReturn($mockUserFolder);
+
+		$this->mockService->method('convertExistingPdf')->willThrowException(
+			new Pdfa3ConversionException(reason: 'render_failed', message: 'x', adminHint: 'h', code: 600)
+		);
+
+		$result = $this->controller->convert();
+
+		$this->assertSame(500, $result->getStatus());
+		$this->assertSame(['error' => 'x', 'reason' => 'render_failed', 'adminHint' => 'h'], $result->getData());
+
+	}//end testConvertClampsAnOutOfRangeRefusalTo500()
 	/**
 	 * Test convert returns 401 when nobody is signed in.
 	 *
@@ -243,12 +275,11 @@ class Pdfa3ConversionControllerTest extends TestCase {
 		$l10n = $this->createMock(originalClassName: IL10N::class);
 		$l10n->method('t')->willReturnArgument(0);
 		$controller = new Pdfa3ConversionController(
+			feedback: new ControllerFeedback(l10n: $l10n, logger: $this->createMock(originalClassName: LoggerInterface::class)),
 			appName: 'filinq',
 			request: $this->mockRequest,
-			logger: $this->createMock(originalClassName: LoggerInterface::class),
 			service: $this->mockService,
 			rootFolder: $this->mockRootFolder,
-			l10n: $l10n,
 			userSession: $session
 		);
 

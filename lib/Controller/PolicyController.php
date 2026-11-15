@@ -25,6 +25,7 @@ namespace OCA\Filinq\Controller;
 
 use Exception;
 use InvalidArgumentException;
+use OCA\Filinq\Controller\Support\ServerErrorAnswer;
 use OCA\Filinq\Kernel\Contracts\PolicyCrudServiceInterface;
 use OCA\OpenRegister\Exception\ArchivalImmutableException;
 use OCP\AppFramework\Controller;
@@ -45,6 +46,7 @@ use Psr\Log\LoggerInterface;
  * @link     https://www.filinq.app
  */
 class PolicyController extends Controller {
+	use AnswersNotAuthenticated;
 	/**
 	 * Constructor.
 	 *
@@ -74,17 +76,16 @@ class PolicyController extends Controller {
 	 *
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
+	 *
+	 * @spec openspec/specs/entity-publication-policies/spec.md
 	 */
 	public function indexProhibitions(): JSONResponse {
 		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+			return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 		}
 
 		try {
-			$this->crudService->requirePolicyPermission(
-				surface: PolicyCrudServiceInterface::SURFACE_PROHIBITION,
-				action: 'read'
-			);
+			$this->requireProhibitionPermission(action: 'read');
 			return new JSONResponse($this->crudService->listProhibitions());
 		} catch (Exception $e) {
 			return $this->error(message: 'Failed to list prohibitions: ', exception: $e);
@@ -101,17 +102,16 @@ class PolicyController extends Controller {
 	 *
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
+	 *
+	 * @spec openspec/specs/entity-publication-policies/spec.md
 	 */
 	public function showProhibition(string $id): JSONResponse {
 		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+			return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 		}
 
 		try {
-			$this->crudService->requirePolicyPermission(
-				surface: PolicyCrudServiceInterface::SURFACE_PROHIBITION,
-				action: 'read'
-			);
+			$this->requireProhibitionPermission(action: 'read');
 			$record = $this->crudService->getProhibition(uuid: $id);
 			if ($record === null) {
 				return new JSONResponse(['error' => $this->l10n->t('Prohibition not found')], 404);
@@ -130,17 +130,16 @@ class PolicyController extends Controller {
 	 * @return JSONResponse
 	 *
 	 * @NoAdminRequired
+	 *
+	 * @spec openspec/specs/entity-publication-policies/spec.md
 	 */
 	public function createProhibition(): JSONResponse {
 		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+			return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 		}
 
 		try {
-			$this->crudService->requirePolicyPermission(
-				surface: PolicyCrudServiceInterface::SURFACE_PROHIBITION,
-				action: 'create'
-			);
+			$this->requireProhibitionPermission(action: 'create');
 			$data = $this->request->getParams();
 			return new JSONResponse($this->crudService->createProhibition(data: $data), 201);
 		} catch (InvalidArgumentException $e) {
@@ -159,17 +158,16 @@ class PolicyController extends Controller {
 	 * @return JSONResponse
 	 *
 	 * @NoAdminRequired
+	 *
+	 * @spec openspec/specs/entity-publication-policies/spec.md
 	 */
 	public function updateProhibition(string $id): JSONResponse {
 		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+			return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 		}
 
 		try {
-			$this->crudService->requirePolicyPermission(
-				surface: PolicyCrudServiceInterface::SURFACE_PROHIBITION,
-				action: 'update'
-			);
+			$this->requireProhibitionPermission(action: 'update');
 			$data = $this->request->getParams();
 			return new JSONResponse($this->crudService->updateProhibition(uuid: $id, data: $data));
 		} catch (InvalidArgumentException $e) {
@@ -208,14 +206,11 @@ class PolicyController extends Controller {
 	 */
 	public function deleteProhibition(string $id): JSONResponse {
 		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+			return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 		}
 
 		try {
-			$this->crudService->requirePolicyPermission(
-				surface: PolicyCrudServiceInterface::SURFACE_PROHIBITION,
-				action: 'delete'
-			);
+			$this->requireProhibitionPermission(action: 'delete');
 			$this->crudService->deleteProhibition(uuid: $id);
 			return new JSONResponse(['deleted' => $id]);
 		} catch (ArchivalImmutableException $e) {
@@ -260,6 +255,22 @@ class PolicyController extends Controller {
 	}//end retentionProtectedResponse()
 
 	/**
+	 * Require the caller's permission for this verb on the prohibition surface;
+	 * throws when it is refused, before the action does anything.
+	 *
+	 * @param string $action The verb: read, create, update or delete.
+	 *
+	 * @return void
+	 */
+	private function requireProhibitionPermission(string $action): void {
+		$this->crudService->requirePolicyPermission(
+			surface: PolicyCrudServiceInterface::SURFACE_PROHIBITION,
+			action: $action
+		);
+
+	}//end requireProhibitionPermission()
+
+	/**
 	 * Wrap an exception into a 500 JSON response and log it.
 	 *
 	 * @param string $message Log prefix and user-facing prefix.
@@ -268,14 +279,7 @@ class PolicyController extends Controller {
 	 * @return JSONResponse
 	 */
 	private function error(string $message, Exception $exception): JSONResponse {
-		$this->logger->error(
-			$message . $exception->getMessage(),
-			['exception' => $exception]
-		);
-		return new JSONResponse(
-			['error' => $this->l10n->t($message . '%s', [$exception->getMessage()])],
-			500
-		);
+		return (new ServerErrorAnswer(logger: $this->logger, l10n: $this->l10n))->answer(message: $message, exception: $exception);
 
 	}//end error()
 }//end class

@@ -29,6 +29,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\IntakeController;
+use OCA\Filinq\Controller\Support\IntakeHandling;
 use OCA\Filinq\Exception\IntakeRefusedException;
 use OCA\Filinq\Service\Intake\IntakeNotificationReach;
 use OCA\Filinq\Service\IntakeDetachmentService;
@@ -165,11 +166,8 @@ class IntakeControllerContractTest extends TestCase {
 		}
 
 		return new IntakeController(
-			'filinq',
 			$this->createMock(IRequest::class),
-			$this->intake,
-			$this->createMock(IntakeDetachmentService::class),
-			$this->routing,
+			new IntakeHandling(intake: $this->intake, detachment: $this->createMock(IntakeDetachmentService::class), routing: $this->routing),
 			$this->parties,
 			$session,
 			new IntakeNotificationReach(),

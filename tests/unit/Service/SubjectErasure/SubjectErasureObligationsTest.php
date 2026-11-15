@@ -195,4 +195,19 @@ class SubjectErasureObligationsTest extends TestCase {
 		$this->assertFalse($this->assessed(fileIds: [13])['13']['legal_hold']);
 
 	}//end testAReleasedEntryHoldsNothing()
+
+	/**
+	 * A held entry whose record no longer exists holds no file.
+	 *
+	 * @return void
+	 */
+	public function testAHeldEntryWithoutItsRecordHoldsNothing(): void {
+		$this->holdCase(fanOut: [['ref' => self::CASE_RECORD, 'kind' => 'dossier', 'record' => 'held', 'file' => 'locked']]);
+
+		$documents = $this->assessed(fileIds: [11, 13]);
+
+		$this->assertFalse($documents['11']['legal_hold']);
+		$this->assertFalse($documents['13']['legal_hold']);
+
+	}//end testAHeldEntryWithoutItsRecordHoldsNothing()
 }//end class

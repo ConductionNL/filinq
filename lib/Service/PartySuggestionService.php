@@ -3,6 +3,9 @@
 /**
  * Party Suggestion Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Reads the name and address block out of an arriving document and OFFERS a
  * party. It never writes one. A party record written from a guess is a record
  * nobody chose, and no screen afterwards says which parties were guessed and
@@ -26,9 +29,6 @@
  * @link      https://www.filinq.app
  *
  * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -54,6 +54,7 @@ use Throwable;
  * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
  */
 class PartySuggestionService implements PartySuggestionServiceInterface {
+	use ReadsCurrentUserId;
 
 	/**
 	 * The entity types a party is read out of, in the order they are asked for.
@@ -100,32 +101,7 @@ class PartySuggestionService implements PartySuggestionServiceInterface {
 			return [];
 		}
 
-		$mapper = $this->entities->tryGetEntityRelationMapper();
-		if ($mapper === null) {
-			return [];
-		}
-
-		try {
-			$relations = $mapper->findEntitiesForFile($fileId);
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				message: '[PartySuggestionService] could not read the entities of this file',
-				context: ['file' => __FILE__, 'line' => __LINE__, 'fileId' => $fileId, 'error' => $e->getMessage()]
-			);
-
-			return [];
-		}
-
-		$party = [];
-		foreach ($relations as $relation) {
-			$field = $this->fieldOf(relation: $relation);
-			if ($field === null || isset($party[$field['name']]) === true) {
-				continue;
-			}
-
-			$party[$field['name']] = $field['value'];
-		}
-
+		$party = $this->partyFields(relations: $this->relationsOf(fileId: $fileId));
 		$spans = $party;
 
 		if ($party === []) {
@@ -144,6 +120,54 @@ class PartySuggestionService implements PartySuggestionServiceInterface {
 		];
 
 	}//end suggestFor()
+
+	/**
+	 * The entities detected on a file, or none when they cannot be read.
+	 *
+	 * @param int $fileId The Nextcloud file id.
+	 *
+	 * @return iterable<mixed> The entity relations.
+	 */
+	private function relationsOf(int $fileId): iterable {
+		$mapper = $this->entities->tryGetEntityRelationMapper();
+		if ($mapper === null) {
+			return [];
+		}
+
+		try {
+			return $mapper->findEntitiesForFile($fileId);
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				message: '[PartySuggestionService] could not read the entities of this file',
+				context: ['file' => __FILE__, 'line' => __LINE__, 'fileId' => $fileId, 'error' => $e->getMessage()]
+			);
+
+			return [];
+		}
+
+	}//end relationsOf()
+
+	/**
+	 * The party fields the relations fill, the first usable value of each.
+	 *
+	 * @param iterable<mixed> $relations The entity relations.
+	 *
+	 * @return array<string, string> Field name to value.
+	 */
+	private function partyFields(iterable $relations): array {
+		$party = [];
+		foreach ($relations as $relation) {
+			$field = $this->fieldOf(relation: $relation);
+			if ($field === null || isset($party[$field['name']]) === true) {
+				continue;
+			}
+
+			$party[$field['name']] = $field['value'];
+		}
+
+		return $party;
+
+	}//end partyFields()
 
 	/**
 	 * The party field one detected entity fills, and with what.
@@ -228,21 +252,4 @@ class PartySuggestionService implements PartySuggestionServiceInterface {
 		return $correction;
 
 	}//end recordDecision()
-
-	/**
-	 * The user id of the person at the keyboard.
-	 *
-	 * @return string The user id, or an empty string when there is no session.
-	 *
-	 * @spec exclude Session accessor with no behaviour of its own.
-	 */
-	private function currentUserId(): string {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return '';
-		}
-
-		return $user->getUID();
-
-	}//end currentUserId()
 }//end class

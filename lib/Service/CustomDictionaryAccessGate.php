@@ -28,6 +28,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\CustomDictionaryAccessGateInterface;
 use OCP\App\IAppManager;
 use OCP\IGroupManager;
 use OCP\IUserSession;
@@ -47,14 +48,7 @@ use Throwable;
  *
  * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
  */
-class CustomDictionaryAccessGate {
-
-	/**
-	 * The group that maintains custom dictionaries, as the schema names it.
-	 *
-	 * @var string
-	 */
-	public const MAINTAINER_GROUP = 'filinq-policy-admins';
+class CustomDictionaryAccessGate implements CustomDictionaryAccessGateInterface {
 
 	/**
 	 * OpenRegister's app id, used for the install-presence check.
@@ -99,7 +93,7 @@ class CustomDictionaryAccessGate {
 	 *
 	 * @return bool True for an admin or a member of the maintainer group.
 	 *
-	 * @spec openspec/changes/dictionary-actions-for-maintainers/specs/custom-dictionary-recognition/spec.md
+	 * @spec openspec/specs/custom-dictionary-recognition/spec.md
 	 */
 	public function mayMaintain(): bool {
 		try {

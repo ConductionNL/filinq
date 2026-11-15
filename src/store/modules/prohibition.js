@@ -1,4 +1,7 @@
-/* eslint-disable no-console */
+/**
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 /**
@@ -9,6 +12,7 @@ import { generateUrl } from '@nextcloud/router'
  * mirror each other.
  */
 import { defineStore } from 'pinia'
+import { storeRequest } from '../storeRequest.js'
 
 const baseUrl = '/apps/filinq/api/policy/prohibitions'
 
@@ -29,89 +33,114 @@ export const useProhibitionStore = defineStore('prohibition', {
 		}),
 	},
 	actions: {
-		async fetchProhibitions() {
-			this.loading = true
-			this.error = null
-			try {
-				const response = await axios.get(generateUrl(baseUrl))
-				this.prohibitions = response.data
-			} catch (err) {
-				console.error('Failed to fetch prohibitions:', err)
-				this.error = err.response?.data?.error || err.message
-			} finally {
-				this.loading = false
-			}
+		/**
+		 * Load every prohibition rule into the store.
+		 *
+		 * @return {Promise} Resolves when the list is loaded.
+		 *
+		 * @spec openspec/specs/anonymisation-prohibition-gate/spec.md
+		 */
+		fetchProhibitions() {
+			return storeRequest(this, {
+				failure: 'Failed to fetch prohibitions:',
+				serverError: true,
+				run: async () => {
+					const response = await axios.get(generateUrl(baseUrl))
+					this.prohibitions = response.data
+				},
+			})
 		},
-		async fetchProhibition(id) {
-			this.loading = true
-			this.error = null
-			try {
-				const response = await axios.get(generateUrl(`${baseUrl}/${id}`))
-				this.prohibitionItem = response.data
-				return response.data
-			} catch (err) {
-				console.error('Failed to fetch prohibition:', err)
-				this.error = err.response?.data?.error || err.message
-				return null
-			} finally {
-				this.loading = false
-			}
+		/**
+		 * Load one prohibition rule and select it.
+		 *
+		 * @param {string} id The rule id.
+		 * @return {Promise} The rule, or null when it could not be read.
+		 *
+		 * @spec openspec/specs/anonymisation-prohibition-gate/spec.md
+		 */
+		fetchProhibition(id) {
+			return storeRequest(this, {
+				failure: 'Failed to fetch prohibition:',
+				fallback: null,
+				serverError: true,
+				run: async () => {
+					const response = await axios.get(generateUrl(`${baseUrl}/${id}`))
+					this.prohibitionItem = response.data
+					return response.data
+				},
+			})
 		},
-		async createProhibition(data) {
-			this.loading = true
-			this.error = null
-			try {
-				const response = await axios.post(generateUrl(baseUrl), data)
-				this.prohibitions.push(response.data)
-				return response.data
-			} catch (err) {
-				console.error('Failed to create prohibition:', err)
-				this.error = err.response?.data?.error || err.message
-				throw err
-			} finally {
-				this.loading = false
-			}
+		/**
+		 * Create a prohibition rule and add it to the list.
+		 *
+		 * @param {object} data The new rule.
+		 * @return {Promise} The created rule.
+		 *
+		 * @spec openspec/specs/anonymisation-prohibition-gate/spec.md
+		 */
+		createProhibition(data) {
+			return storeRequest(this, {
+				failure: 'Failed to create prohibition:',
+				rethrow: true,
+				serverError: true,
+				run: async () => {
+					const response = await axios.post(generateUrl(baseUrl), data)
+					this.prohibitions.push(response.data)
+					return response.data
+				},
+			})
 		},
-		async updateProhibition(id, data) {
-			this.loading = true
-			this.error = null
-			try {
-				const response = await axios.put(
-					generateUrl(`${baseUrl}/${id}`),
-					data,
-				)
-				const idx = this.prohibitions.findIndex(
-					(p) => (p['@self']?.id || p.id || p.uuid) === id,
-				)
-				if (idx !== -1) {
-					this.prohibitions[idx] = response.data
-				}
+		/**
+		 * Update a prohibition rule in the list and in the selection.
+		 *
+		 * @param {string} id The rule id.
+		 * @param {object} data The changed fields.
+		 * @return {Promise} The updated rule.
+		 *
+		 * @spec openspec/specs/anonymisation-prohibition-gate/spec.md
+		 */
+		updateProhibition(id, data) {
+			return storeRequest(this, {
+				failure: 'Failed to update prohibition:',
+				rethrow: true,
+				serverError: true,
+				run: async () => {
+					const response = await axios.put(
+						generateUrl(`${baseUrl}/${id}`),
+						data,
+					)
+					const idx = this.prohibitions.findIndex(
+						(p) => (p['@self']?.id || p.id || p.uuid) === id,
+					)
+					if (idx !== -1) {
+						this.prohibitions[idx] = response.data
+					}
 
-				this.prohibitionItem = response.data
-				return response.data
-			} catch (err) {
-				console.error('Failed to update prohibition:', err)
-				this.error = err.response?.data?.error || err.message
-				throw err
-			} finally {
-				this.loading = false
-			}
+					this.prohibitionItem = response.data
+					return response.data
+				},
+			})
 		},
-		async deleteProhibition(id) {
-			this.loading = true
-			this.error = null
-			try {
-				await axios.delete(generateUrl(`${baseUrl}/${id}`))
-				this.prohibitions = this.prohibitions.filter(
-					(p) => (p['@self']?.id || p.id || p.uuid) !== id,
-				)
-			} catch (err) {
-				console.error('Failed to delete prohibition:', err)
-				this.error = err.response?.data?.error || err.message
-				throw err
-			} finally {
-				this.loading = false
-			}
+		/**
+		 * Delete a prohibition rule and drop it from the list.
+		 *
+		 * @param {string} id The rule id.
+		 * @return {Promise} Resolves when the rule is gone.
+		 *
+		 * @spec openspec/specs/anonymisation-prohibition-gate/spec.md
+		 */
+		deleteProhibition(id) {
+			return storeRequest(this, {
+				failure: 'Failed to delete prohibition:',
+				rethrow: true,
+				serverError: true,
+				run: async () => {
+					await axios.delete(generateUrl(`${baseUrl}/${id}`))
+					this.prohibitions = this.prohibitions.filter(
+						(p) => (p['@self']?.id || p.id || p.uuid) !== id,
+					)
+				},
+			})
 		},
 		setProhibitionItem(item) {
 			this.prohibitionItem = item

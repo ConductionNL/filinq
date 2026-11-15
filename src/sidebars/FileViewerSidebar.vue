@@ -1,3 +1,7 @@
+<!--
+  - SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
 <script setup>
 import { translatePlural as n, translate as t } from '@nextcloud/l10n'
 import { computed } from 'vue'
@@ -239,7 +243,7 @@ const documentRecordId = computed(() =>
 					label="label"
 					:reduce="(o) => o.value"
 					:multiple="true"
-					:inputLabel="t('filinq', 'Grondslagen')"
+					:inputLabel="t('filinq', 'Legal bases')"
 					:placeholder="t('filinq', 'Pick grondslagen…')" />
 				<NcNoteCard v-if="saveError" type="error">
 					{{ saveError }}
@@ -278,6 +282,22 @@ const documentRecordId = computed(() =>
 			     whichever review state is currently showing. -->
 			<!-- A scan detection could not read (ocr-trigger-surface): an empty
 			     entity list here does not mean the document is clean. -->
+			<!-- The organisation's language model could not run, so the default
+			     detection produced these entities (llm-entity-detection-provider). -->
+			<NcNoteCard
+				v-if="entry && entry.detectionFellBack"
+				type="warning"
+				class="detection-fallback-warning"
+				data-testid="detection-fallback-warning">
+				{{ entry.detectionWarning }}
+			</NcNoteCard>
+			<p
+				v-else-if="entry && entry.detectionProvider === 'llm'"
+				class="detection-provider-note"
+				data-testid="detection-provider-note">
+				{{ t('filinq', 'These entities were found by the local language model.') }}
+			</p>
+
 			<NcNoteCard
 				v-if="entry && entry.ocrWarning"
 				type="warning"
@@ -579,7 +599,6 @@ const documentRecordId = computed(() =>
 
 <script>
 import axios from '@nextcloud/axios'
-import { generateRemoteUrl } from '@nextcloud/router'
 import {
 	NcAppSidebar,
 	NcButton,
@@ -606,6 +625,7 @@ import { ENTITY_TYPES, entityTypeLabel } from '../services/entityTypes.js'
 import { fetchPseudonymStatus, keyWarning } from '../services/pseudonymisation.js'
 import { accessibilityNote } from '../services/redactionAccessibility.js'
 import { reportRows } from '../services/sanitization.js'
+import { encodedWebdavDownloadUrl } from '../services/storagePathUrls.js'
 import { entryIsChecked } from '../store/modules/anonymization.js'
 
 export default {
@@ -865,7 +885,7 @@ export default {
 		 * files (see `pendingSourceFiles`) whose findings a person checked.
 		 *
 		 * @return {number}
-		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
 		 */
 		batchCount() {
 			return this.reviewedPendingFiles.length
@@ -876,7 +896,7 @@ export default {
 		 * checked or not. Keeps the dossier footer on screen.
 		 *
 		 * @return {number}
-		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
 		 */
 		pendingCount() {
 			return this.pendingSourceFiles.length
@@ -886,7 +906,7 @@ export default {
 		 * Pending dossier files whose findings a person checked as they are now.
 		 *
 		 * @return {Array<object>}
-		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
 		 */
 		reviewedPendingFiles() {
 			return this.pendingSourceFiles.filter((d) =>
@@ -898,7 +918,7 @@ export default {
 		 * Pending dossier files nobody checked yet. The batch leaves them alone.
 		 *
 		 * @return {Array<object>}
-		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
 		 */
 		unreviewedPendingFiles() {
 			return this.pendingSourceFiles.filter(
@@ -910,7 +930,7 @@ export default {
 		 * Whether a person checked the open file's findings as they are now.
 		 *
 		 * @return {boolean}
-		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
 		 */
 		entryChecked() {
 			return entryIsChecked(this.entry)
@@ -920,14 +940,16 @@ export default {
 		 * Why the open file cannot be anonymised yet, or empty.
 		 *
 		 * @return {string}
-		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
 		 */
 		reviewMessage() {
 			if (this.entry?.reviewError) {
 				return this.entry.reviewError
 			}
 			if (this.entry?.reviewRequired && !this.entryChecked) {
-				return this.entry.error || t('filinq', 'Check the detected data first')
+				return (
+					this.entry.error || t('filinq', 'Check the detected data first')
+				)
 			}
 			return ''
 		},
@@ -1377,24 +1399,10 @@ export default {
 		 * WebDAV download URL for the anonymised result, when available.
 		 *
 		 * @return {string}
+		 * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-anonymization
 		 */
 		downloadUrl() {
-			const path = this.entry?.anonymizedFilePath
-			if (!path) {
-				return ''
-			}
-			const parts = path.split('/')
-			const filesIndex = parts.indexOf('files')
-			if (filesIndex >= 0) {
-				// Encode each segment so a dossier/file name containing `?`,
-				// `#` or `&` doesn't corrupt the download URL.
-				const relativePath = parts
-					.slice(filesIndex + 1)
-					.map(encodeURIComponent)
-					.join('/')
-				return generateRemoteUrl('webdav') + '/' + relativePath
-			}
-			return generateRemoteUrl('webdav')
+			return encodedWebdavDownloadUrl(this.entry?.anonymizedFilePath)
 		},
 	},
 
@@ -1547,7 +1555,7 @@ export default {
 		 * Record the reviewer's check of the open file's findings.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
 		 */
 		async onMarkChecked() {
 			if (!this.entry) {
@@ -1625,7 +1633,7 @@ export default {
 		 * identically.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
 		 */
 		async anonymizeAll() {
 			// Scope the run to the dossier's pending source files and pass full
@@ -1662,23 +1670,10 @@ export default {
 		 *
 		 * @param {string} anonymizedFilePath Absolute storage path of the result.
 		 * @return {string} The WebDAV URL, or '' when no path is given.
+		 * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-anonymization
 		 */
 		downloadUrlFor(anonymizedFilePath) {
-			if (!anonymizedFilePath) {
-				return ''
-			}
-			const parts = anonymizedFilePath.split('/')
-			const filesIndex = parts.indexOf('files')
-			if (filesIndex >= 0) {
-				// Encode each segment so a dossier/file name containing `?`,
-				// `#` or `&` doesn't corrupt the download URL.
-				const relativePath = parts
-					.slice(filesIndex + 1)
-					.map(encodeURIComponent)
-					.join('/')
-				return generateRemoteUrl('webdav') + '/' + relativePath
-			}
-			return generateRemoteUrl('webdav')
+			return encodedWebdavDownloadUrl(anonymizedFilePath)
 		},
 
 		/**
@@ -1990,6 +1985,13 @@ export default {
  * the two read-only signals read consistently. */
 .confidentiality-chip-row {
 	padding: 4px 12px 0;
+}
+
+/* Which engine found the entities, when it is the language model. */
+.detection-provider-note {
+	margin: 4px 12px 0;
+	color: var(--color-text-maxcontrast);
+	font-size: var(--font-size-small, 13px);
 }
 
 .confidentiality-chip {

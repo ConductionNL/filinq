@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+
 namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\SetupController;
@@ -394,7 +399,8 @@ class SetupControllerTest extends TestCase {
 		// wizard would never offer it again, and nothing would have been
 		// imported.
 		$this->appConfig->expects($this->never())->method('setValueString');
-		$this->logger->expects($this->once())->method('error');
+		$this->logger->expects($this->once())->method('error')
+			->with('Setup install-demo-data failed: OpenRegister is not installed.', $this->callback(static fn (array $context): bool => $context['app'] === 'filinq' && $context['exception'] instanceof RuntimeException));
 
 		$response = $this->controller->runAction('load-demo-data');
 

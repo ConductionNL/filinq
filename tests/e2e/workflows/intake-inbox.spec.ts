@@ -175,7 +175,7 @@ test.describe('The intake inbox', () => {
 			.getByTestId('final-reason-input')
 			.locator('input')
 			.fill('Hoort bij een andere gemeente')
-		await page.getByTestId('final-reason-confirm').click()
+		await page.getByTestId('cn-dialog-actions-submit').click()
 
 		await expect(row).toHaveCount(0, { timeout: 15000 })
 

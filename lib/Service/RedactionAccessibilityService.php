@@ -108,29 +108,17 @@ class RedactionAccessibilityService {
 	 * @spec openspec/changes/archive/2026-09-29-accessible-redaction-output/tasks.md#task-2.4
 	 */
 	public function assess(?array $report, ?string $pdfBytes = null): array {
-		if ($report === null || is_bool($report['preserved'] ?? null) === false) {
+		if ($this->claimsAnOutcome(report: $report) === false) {
 			return ['state' => 'unknown'];
 		}
 
-		$outcome = [
-			'state' => 'degraded',
-			'requested' => (($report['requested'] ?? false) === true),
-			'preserved' => $report['preserved'],
-			'tagCountBefore' => max(0, (int) ($report['tagCountBefore'] ?? 0)),
-			'tagCountAfter' => max(0, (int) ($report['tagCountAfter'] ?? 0)),
-			'lossReasons' => array_values(array_map('strval', (array) ($report['lossReasons'] ?? []))),
-		];
-
+		$outcome = $this->outcomeOf(report: $report);
 		if ($outcome['preserved'] === true) {
 			$outcome['state'] = 'preserved';
 			return $this->verify(outcome: $outcome, pdfBytes: $pdfBytes);
 		}
 
-		if (array_intersect($outcome['lossReasons'], self::NOTHING_TO_KEEP) !== [] || $outcome['tagCountBefore'] === 0) {
-			$outcome['state'] = 'not-applicable';
-		}
-
-		return $outcome;
+		return $this->withNothingToKeep(outcome: $outcome);
 
 	}//end assess()
 
@@ -145,20 +133,7 @@ class RedactionAccessibilityService {
 	 * @spec openspec/changes/archive/2026-09-29-accessible-redaction-output/tasks.md#task-2.4
 	 */
 	public function assessOutput(?array $report, mixed $output): array {
-		$bytes = null;
-		try {
-			if (is_object($output) === true
-				&& method_exists($output, 'getName') === true
-				&& str_ends_with(strtolower((string) $output->getName()), '.pdf') === true
-				&& method_exists($output, 'getContent') === true
-			) {
-				$bytes = (string) $output->getContent();
-			}
-		} catch (Throwable $e) {
-			$bytes = null;
-		}
-
-		return $this->assess(report: $report, pdfBytes: $bytes);
+		return $this->assess(report: $report, pdfBytes: $this->pdfBytesOf(output: $output));
 
 	}//end assessOutput()
 
@@ -178,19 +153,127 @@ class RedactionAccessibilityService {
 	 */
 	public function gate(?string $state, string $overrideReason = ''): array {
 		$mode = $this->appConfig->getValueString('filinq', self::CFG_GATE, 'warn');
-		$lost = in_array($state ?? 'unknown', ['degraded', 'unknown'], true);
-		if ($lost === false || $mode === 'off') {
+		if ($this->isLost(state: $state) === false || $mode === 'off') {
 			return ['clear' => true, 'warning' => null];
 		}
 
 		$warning = 'The redacted copy lost its accessibility (' . ($state ?? 'unknown') . '): screen readers may not read it';
-		if ($mode === 'block' && trim($overrideReason) === '') {
+		if ($this->blocksPublication(mode: $mode, overrideReason: $overrideReason) === true) {
 			return ['clear' => false, 'warning' => $warning . '. Record a reason to publish it anyway'];
 		}
 
 		return ['clear' => true, 'warning' => $warning];
 
 	}//end gate()
+
+	/**
+	 * Whether a report claims anything: it exists and says whether the structure was kept.
+	 *
+	 * @param array<string, mixed>|null $report OpenRegister's structure report.
+	 *
+	 * @return bool
+	 *
+	 * @phpstan-assert-if-true array<string, mixed> $report
+	 */
+	private function claimsAnOutcome(?array $report): bool {
+		return $report !== null && is_bool($report['preserved'] ?? null) === true;
+
+	}//end claimsAnOutcome()
+
+	/**
+	 * The recorded outcome of a report that makes a claim, as `degraded` until shown otherwise.
+	 *
+	 * @param array<string, mixed> $report OpenRegister's structure report.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function outcomeOf(array $report): array {
+		return [
+			'state' => 'degraded',
+			'requested' => (($report['requested'] ?? false) === true),
+			'preserved' => $report['preserved'],
+			'tagCountBefore' => max(0, (int) ($report['tagCountBefore'] ?? 0)),
+			'tagCountAfter' => max(0, (int) ($report['tagCountAfter'] ?? 0)),
+			'lossReasons' => array_values(array_map('strval', (array) ($report['lossReasons'] ?? []))),
+		];
+
+	}//end outcomeOf()
+
+	/**
+	 * Mark a lost structure `not-applicable` when there was no structure to keep.
+	 *
+	 * @param array<string, mixed> $outcome The outcome so far.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function withNothingToKeep(array $outcome): array {
+		if (array_intersect($outcome['lossReasons'], self::NOTHING_TO_KEEP) !== [] || $outcome['tagCountBefore'] === 0) {
+			$outcome['state'] = 'not-applicable';
+		}
+
+		return $outcome;
+
+	}//end withNothingToKeep()
+
+	/**
+	 * The bytes of a redacted file node when it is a PDF.
+	 *
+	 * @param mixed $output The redacted copy's node.
+	 *
+	 * @return string|null The PDF bytes, or null when it is no readable PDF.
+	 */
+	private function pdfBytesOf(mixed $output): ?string {
+		try {
+			if ($this->isPdfNode(output: $output) === true) {
+				return (string) $output->getContent();
+			}
+		} catch (Throwable $e) {
+			return null;
+		}
+
+		return null;
+
+	}//end pdfBytesOf()
+
+	/**
+	 * Whether a node is named like a PDF and can hand over its content.
+	 *
+	 * @param mixed $output The redacted copy's node.
+	 *
+	 * @return bool
+	 */
+	private function isPdfNode(mixed $output): bool {
+		return is_object($output) === true
+			&& method_exists($output, 'getName') === true
+			&& str_ends_with(strtolower((string) $output->getName()), '.pdf') === true
+			&& method_exists($output, 'getContent') === true;
+
+	}//end isPdfNode()
+
+	/**
+	 * Whether a copy in this state counts as having lost its structure; unknown does.
+	 *
+	 * @param string|null $state The copy's state, null when no redaction recorded one.
+	 *
+	 * @return bool
+	 */
+	private function isLost(?string $state): bool {
+		return in_array($state ?? 'unknown', ['degraded', 'unknown'], true);
+
+	}//end isLost()
+
+	/**
+	 * Whether the gate stops a lost copy: in `block` mode, until a reason is recorded.
+	 *
+	 * @param string $mode           The gate mode.
+	 * @param string $overrideReason The recorded override reason.
+	 *
+	 * @return bool
+	 */
+	private function blocksPublication(string $mode, string $overrideReason): bool {
+		return $mode === 'block' && trim($overrideReason) === '';
+
+	}//end blocksPublication()
 
 	/**
 	 * Check a preserved claim with veraPDF, when it can run.
@@ -201,14 +284,7 @@ class RedactionAccessibilityService {
 	 * @return array<string, mixed>
 	 */
 	private function verify(array $outcome, ?string $pdfBytes): array {
-		if ($pdfBytes === null || $this->veraPdf === null || $this->veraPdf->isAvailable() === false) {
-			return $outcome;
-		}
-
-		// Only a copy that claims PDF/UA can be held to it: an untagged-then-
-		// tagged source that never claimed PDF/UA would fail for reasons the
-		// redaction did not cause.
-		if (str_contains($pdfBytes, 'pdfuaid:part') === false) {
+		if ($this->canVerify(pdfBytes: $pdfBytes) === false) {
 			return $outcome;
 		}
 
@@ -218,6 +294,41 @@ class RedactionAccessibilityService {
 			return $outcome;
 		}
 
+		return $this->withVerdict(outcome: $outcome, verdict: $verdict);
+
+	}//end verify()
+
+	/**
+	 * Whether veraPDF can hold this copy to PDF/UA-1.
+	 *
+	 * It needs the bytes and an installed veraPDF, and only a copy that claims
+	 * PDF/UA can be held to it: an untagged-then-tagged source that never
+	 * claimed PDF/UA would fail for reasons the redaction did not cause.
+	 *
+	 * @param string|null $pdfBytes The redacted PDF.
+	 *
+	 * @return bool
+	 *
+	 * @phpstan-assert-if-true string $pdfBytes
+	 * @phpstan-assert-if-true !null $this->veraPdf
+	 */
+	private function canVerify(?string $pdfBytes): bool {
+		return $pdfBytes !== null
+			&& $this->veraPdf !== null
+			&& $this->veraPdf->isAvailable() === true
+			&& str_contains($pdfBytes, 'pdfuaid:part') === true;
+
+	}//end canVerify()
+
+	/**
+	 * Record veraPDF's verdict; a failed check turns the copy `degraded`.
+	 *
+	 * @param array<string, mixed> $outcome The outcome so far.
+	 * @param array<string, mixed> $verdict veraPDF's verdict.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function withVerdict(array $outcome, array $verdict): array {
 		$outcome['veraPdfVerified'] = ($verdict['compliant'] === true);
 		if ($outcome['veraPdfVerified'] === false) {
 			$outcome['state'] = 'degraded';
@@ -226,5 +337,5 @@ class RedactionAccessibilityService {
 
 		return $outcome;
 
-	}//end verify()
+	}//end withVerdict()
 }//end class

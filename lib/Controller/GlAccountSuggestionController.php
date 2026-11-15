@@ -25,9 +25,9 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use Exception;
+use OCA\Filinq\Controller\Support\TranslatedErrorAnswer;
 use OCA\Filinq\Kernel\Contracts\GlAccountSuggestionServiceInterface;
 use OCP\AppFramework\Controller;
-use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
 use OCP\IRequest;
@@ -46,6 +46,8 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/specs/ai-gl-account-suggestion/spec.md
  */
 class GlAccountSuggestionController extends Controller {
+	use AnswersNotAuthenticated;
+
 	/**
 	 * Constructor.
 	 *
@@ -90,10 +92,7 @@ class GlAccountSuggestionController extends Controller {
 	public function suggestAccount(string $id): JSONResponse {
 		$user = $this->userSession->getUser();
 		if ($user === null) {
-			return new JSONResponse(
-				data: ['error' => $this->l10n->t('Not authenticated')],
-				statusCode: Http::STATUS_UNAUTHORIZED
-			);
+			return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 		}
 
 		try {
@@ -128,17 +127,7 @@ class GlAccountSuggestionController extends Controller {
 	 * @return JSONResponse The error response.
 	 */
 	private function errorResponse(string $message, Exception $exception): JSONResponse {
-		$this->logger->error($message . ': ' . $exception->getMessage(), ['exception' => $exception]);
-
-		$statusCode = Http::STATUS_INTERNAL_SERVER_ERROR;
-		if ($exception->getCode() >= 400 && $exception->getCode() < 600) {
-			$statusCode = $exception->getCode();
-		}
-
-		return new JSONResponse(
-			['error' => $this->l10n->t($message)],
-			$statusCode
-		);
+		return (new TranslatedErrorAnswer(logger: $this->logger, l10n: $this->l10n))->answer(message: $message, exception: $exception);
 
 	}//end errorResponse()
 }//end class

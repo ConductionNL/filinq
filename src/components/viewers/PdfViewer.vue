@@ -1,13 +1,17 @@
+<!--
+  - SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
 <template>
 	<div
 		class="pdf-viewer"
 		:class="{ 'dd-marking-cursor': isAddMode }"
 		@mouseup="captureSelection">
-		<div v-if="loading" class="pdf-viewer__loading">
+		<div v-if="loading" class="pdf-viewer__loading dd-doc-viewer__state">
 			<NcLoadingIcon :size="48" />
 			<span>{{ t('filinq', 'Loading document…') }}</span>
 		</div>
-		<div v-else-if="error" class="pdf-viewer__error">
+		<div v-else-if="error" class="pdf-viewer__error dd-doc-viewer__state">
 			{{ error }}
 		</div>
 		<div v-else class="pdf-viewer__pages">
@@ -23,12 +27,12 @@
 <script>
 import { translate as t } from '@nextcloud/l10n'
 import { NcLoadingIcon } from '@nextcloud/vue'
+import { documentViewer, entityHighlighting } from '../../mixins/documentViewer.js'
 import {
 	fetchFileAsArrayBuffer,
 	fetchUrlAsArrayBuffer,
 } from '../../services/fileViewerService.js'
 import { applyDomHighlights } from '../../services/highlightDom.js'
-import { fileViewerStore } from '../../store/store.js'
 
 let pdfjsLibPromise = null
 
@@ -59,20 +63,7 @@ export default {
 		NcLoadingIcon,
 	},
 
-	props: {
-		path: {
-			type: String,
-			required: true,
-		},
-
-		// Optional: fetch the PDF bytes from this URL instead of deriving a
-		// WebDAV URL from `path`. Used for server-rendered content that isn't a
-		// plain file — e.g. the EML original preview endpoint.
-		url: {
-			type: String,
-			default: '',
-		},
-	},
+	mixins: [documentViewer, entityHighlighting],
 
 	data() {
 		return {
@@ -82,61 +73,6 @@ export default {
 			pdfDoc: null,
 			pageRefs: {},
 		}
-	},
-
-	computed: {
-		/**
-		 * Entities the sidebar asked to mark in the document. Read through a
-		 * computed (not a store string-path) so the watcher fires reliably.
-		 *
-		 * @return {Array<{value: string, type: string}>}
-		 */
-		highlightEntities() {
-			return fileViewerStore.highlightEntities || []
-		},
-
-		/**
-		 * Pending selection to mark distinctly — only while in add mode.
-		 *
-		 * @return {string}
-		 */
-		pendingValue() {
-			return fileViewerStore.addMode ? fileViewerStore.selection || '' : ''
-		},
-
-		/**
-		 * Whether the viewer is in add mode — drives the marking (highlighter)
-		 * cursor so it is obvious the user can select text to add an entity.
-		 *
-		 * @return {boolean}
-		 */
-		isAddMode() {
-			return fileViewerStore.addMode
-		},
-	},
-
-	watch: {
-		path: {
-			immediate: true,
-			handler() {
-				this.load()
-			},
-		},
-
-		url() {
-			this.load()
-		},
-
-		highlightEntities: {
-			deep: true,
-			handler() {
-				this.scheduleHighlights()
-			},
-		},
-
-		pendingValue() {
-			this.scheduleHighlights()
-		},
 	},
 
 	beforeUnmount() {
@@ -219,7 +155,7 @@ export default {
 			wrapper.style.width = `${viewport.width}px`
 			wrapper.style.height = `${viewport.height}px`
 
-			wrapper.innerHTML = ''
+			wrapper.replaceChildren()
 			wrapper.appendChild(canvas)
 
 			await page.render({ canvasContext: ctx, viewport }).promise
@@ -293,18 +229,11 @@ export default {
 		applyHighlightsTo(layer) {
 			applyDomHighlights(layer, this.highlightEntities, this.pendingValue)
 		},
-
-		/**
-		 * Push the current text selection into the viewer store so the
-		 * "add selection as entity" flow can pick it up.
-		 */
-		captureSelection() {
-			const text = window.getSelection()?.toString() || ''
-			fileViewerStore.setSelection(text)
-		},
 	},
 }
 </script>
+
+<style scoped src="./documentViewer.css"></style>
 
 <style scoped>
 .pdf-viewer {
@@ -315,16 +244,6 @@ export default {
 	padding: 16px;
 	background: var(--color-background-dark);
 	min-height: 100%;
-}
-
-.pdf-viewer__loading,
-.pdf-viewer__error {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	gap: 8px;
-	padding: 32px;
-	color: var(--color-text-maxcontrast);
 }
 
 .pdf-viewer__pages {

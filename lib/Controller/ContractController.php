@@ -28,11 +28,11 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use InvalidArgumentException;
-use OCA\Filinq\Service\Contract\ContractNotFoundException;
-use OCA\Filinq\Service\Contract\ContractParties;
-use OCA\Filinq\Service\Contract\ContractService;
-use OCA\Filinq\Service\Contract\ContractSigningLink;
-use OCA\Filinq\Service\Contract\ContractTermSuggestionService;
+use OCA\Filinq\Controller\Support\ContractTerms;
+use OCA\Filinq\Kernel\AppIdentity;
+use OCA\Filinq\Exception\ContractNotFoundException;
+use OCA\Filinq\Kernel\Contracts\ContractServiceInterface;
+use OCA\Filinq\Kernel\Contracts\ContractSigningLinkInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -58,28 +58,24 @@ class ContractController extends Controller {
 	/**
 	 * Constructor.
 	 *
-	 * @param string                        $appName     The app id.
 	 * @param IRequest                      $request     The request.
-	 * @param ContractService               $contracts   The contract actions.
-	 * @param ContractTermSuggestionService $suggestions The key-term suggestions.
+	 * @param ContractServiceInterface               $contracts   The contract actions.
+	 * @param ContractTerms $terms Term suggestions and the parties.
 	 * @param IUserSession                  $userSession The session.
 	 * @param LoggerInterface               $logger      The logger.
-	 * @param ContractSigningLink           $signingLink The signing request link.
-	 * @param ContractParties               $parties     The parties, from their contacts.
+	 * @param ContractSigningLinkInterface           $signingLink The signing request link.
 	 *
 	 * @return void
 	 */
 	public function __construct(
-		string $appName,
 		IRequest $request,
-		private readonly ContractService $contracts,
-		private readonly ContractTermSuggestionService $suggestions,
+		private readonly ContractServiceInterface $contracts,
+		private readonly ContractTerms $terms,
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
-		private readonly ContractSigningLink $signingLink,
-		private readonly ContractParties $parties,
+		private readonly ContractSigningLinkInterface $signingLink,
 	) {
-		parent::__construct(appName: $appName, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 
 	}//end __construct()
 
@@ -135,7 +131,7 @@ class ContractController extends Controller {
 
 		return $this->run(
 			id: $id,
-			action: fn (): array => $this->suggestions->suggest(contract: $this->contracts->requireReadable(uuid: $id), userId: $userId)
+			action: fn (): array => $this->terms->suggestions->suggest(contract: $this->contracts->requireReadable(uuid: $id), userId: $userId)
 		);
 
 	}//end suggest()
@@ -193,7 +189,7 @@ class ContractController extends Controller {
 	public function parties(string $id): JSONResponse {
 		return $this->run(
 			id: $id,
-			action: fn (): array => $this->parties->resolve(contract: $this->contracts->requireReadable(uuid: $id))
+			action: fn (): array => $this->terms->parties->resolve(contract: $this->contracts->requireReadable(uuid: $id))
 		);
 
 	}//end parties()

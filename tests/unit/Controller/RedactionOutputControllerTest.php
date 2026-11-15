@@ -281,7 +281,7 @@ class RedactionOutputControllerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-2
 	 */
 	public function testACheckIsSignedByTheSessionUser(): void {
 		$entities = [['type' => 'PERSON', 'value' => 'Jan de Wit']];
@@ -303,7 +303,7 @@ class RedactionOutputControllerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-2
 	 */
 	public function testAFileTheCallerCannotOpenIsNotMarked(): void {
 		$guard = $this->guard();
@@ -320,7 +320,7 @@ class RedactionOutputControllerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-2
 	 */
 	public function testAMarkThatCannotBeStoredSaysSo(): void {
 		$guard = $this->guard();
@@ -338,7 +338,7 @@ class RedactionOutputControllerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-3
+	 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-3
 	 */
 	public function testTheStatusLeavesOutFilesTheCallerCannotOpen(): void {
 		$guard = $this->guard();
@@ -359,7 +359,7 @@ class RedactionOutputControllerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-3
+	 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-3
 	 */
 	public function testTheStatusNeedsASession(): void {
 		$guard = $this->guard();

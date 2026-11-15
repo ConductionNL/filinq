@@ -3,6 +3,9 @@
 /**
  * Batch State Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Persists anonymization batch state in OpenRegister, with Nextcloud's
  * distributed cache in front of it as a read fast path. Each batch is keyed by
  * UUID; the cached copy is refreshed on every read so an active batch never
@@ -28,9 +31,6 @@
  *
  * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-creation-via-multi-file-upload
  * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-status-endpoint
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);

@@ -13,6 +13,9 @@
  * @version GIT: <git_id>
  *
  * @link https://www.filinq.app
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\Filinq\Tests\Unit\Service;
@@ -82,6 +85,20 @@ class TextAnalysisServiceTest extends TestCase {
 		$this->assertNotContains('a', $result);
 
 	}//end testExtractKeywordsRemovesStopWords()
+
+	/**
+	 * Test keyword extraction drops every English and Dutch stop word, and
+	 * keeps words that only look common.
+	 *
+	 * @return void
+	 */
+	public function testExtractKeywordsDropsTheWholeStopList(): void {
+		$stop = 'the be to of and a in that have it de het een en van is zijn op voor met for not on with he as you do at';
+		$result = $this->service->extractKeywords($stop . ' archive archive was');
+
+		$this->assertSame(['archive', 'was'], $result);
+
+	}//end testExtractKeywordsDropsTheWholeStopList()
 
 	/**
 	 * Test keyword extraction limits to 10 results

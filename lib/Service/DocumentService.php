@@ -24,6 +24,9 @@
  * @link https://www.filinq.app
  *
  * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -32,6 +35,9 @@ namespace OCA\Filinq\Service;
 
 use Exception;
 use OCA\Filinq\Kernel\Contracts\DocumentServiceInterface;
+use OCA\Filinq\Service\Support\DocumentOutput;
+use OCA\Filinq\Service\Support\DocumentProduction;
+use OCA\Filinq\Service\Support\TemplateSources;
 use OCA\Filinq\Service\Wizard\WizardGenerationGate;
 
 /**
@@ -102,28 +108,24 @@ class DocumentService implements DocumentServiceInterface {
 	/**
 	 * Constructor for DocumentService.
 	 *
-	 * @param TemplateService $templateService Service for template CRUD
-	 * @param DataResolverService $dataResolver Service for OpenRegister data resolution
-	 * @param DocumentRenderPipeline $renderPipeline Huisstijl + Twig rendering and output production
-	 * @param DocumentStorageService $storageService Service for storing output in Files
-	 * @param GeneratedDocumentLogger $documentLogger Audit-trail writer for generated documents
-	 * @param DocumentJobStore $jobs Status records and queueing of async bulk jobs
+	 * @param TemplateSources $sources The template and data sources
+	 * @param DocumentProduction $production The render pipeline and the job store
+	 * @param DocumentOutput $output Where generated documents are stored and logged
 	 * @param PlainLanguageRenditionService|null $plainRendition The plain-language counterpart, when a template declares one
 	 * @param WizardGenerationGate|null $wizardGate Checks a wizard run before it renders (options.wizardContext)
 	 * @param TemplateMergeFieldService|null $mergeFields Names the fields a template fills, for the merge preview
+	 * @param CaseSystemDeliveryService|null $caseSystem Records a stored document's delivery to the case system
 	 *
 	 * @return void
 	 */
 	public function __construct(
-		private readonly TemplateService $templateService,
-		private readonly DataResolverService $dataResolver,
-		private readonly DocumentRenderPipeline $renderPipeline,
-		private readonly DocumentStorageService $storageService,
-		private readonly GeneratedDocumentLogger $documentLogger,
-		private readonly DocumentJobStore $jobs,
+		private readonly TemplateSources $sources,
+		private readonly DocumentProduction $production,
+		private readonly DocumentOutput $output,
 		private readonly ?PlainLanguageRenditionService $plainRendition = null,
 		private readonly ?WizardGenerationGate $wizardGate = null,
 		private readonly ?TemplateMergeFieldService $mergeFields = null,
+		private readonly ?CaseSystemDeliveryService $caseSystem = null,
 	) {
 
 	}//end __construct()
@@ -145,7 +147,9 @@ class DocumentService implements DocumentServiceInterface {
 	 *                       order?, as?}, ...] — each resolves to an array
 	 *                       of objects under the Twig context key 'as'
 	 *                       (default: schema + '_list')
-	 *                       output: {mode?: return|files|both, targetPath?}
+	 *                       output: {mode?: return|files|both, targetPath?, caseSystem?}
+	 *                       — caseSystem names a case-system destination for the
+	 *                       stored document and needs mode files or both
 	 *                       — defaults to mode 'return' (byte-identical to
 	 *                       this method's behaviour before output support
 	 *                       existed)
@@ -180,10 +184,10 @@ class DocumentService implements DocumentServiceInterface {
 
 		$template = null;
 		if (isset($options['templateVersion']) === true) {
-			$template = $this->templateService->getTemplateAtVersion(id: $templateId, version: (int) $options['templateVersion']);
+			$template = $this->sources->templates->getTemplateAtVersion(id: $templateId, version: (int) $options['templateVersion']);
 		}
 
-		$template ??= $this->templateService->getTemplate(id: $templateId);
+		$template ??= $this->sources->templates->getTemplate(id: $templateId);
 
 		if (isset($options['wizardContext']) === true && $this->wizardGate !== null) {
 			// A wizard run: the answers are checked against the stored wizard before
@@ -244,6 +248,7 @@ class DocumentService implements DocumentServiceInterface {
 		];
 		$this->validateFormat(format: $run['format']);
 		$run['outputMode'] = $this->resolveOutputMode(options: $options);
+		CaseSystemDeliveryService::assertStoredMode(options: $options, mode: $run['outputMode']);
 
 		$resolved = $this->resolveTemplateData(run: $run);
 
@@ -270,6 +275,7 @@ class DocumentService implements DocumentServiceInterface {
 			'warnings' => array_merge($stored['warnings'], $plain['warnings']),
 		];
 		$outcome['metadata'] = $this->logGenerated(run: $run, outcome: $outcome);
+		$outcome = $this->deliverToCaseSystem(run: $run, outcome: $outcome);
 
 		return $this->generationResult(run: $run, outcome: $outcome);
 
@@ -285,7 +291,7 @@ class DocumentService implements DocumentServiceInterface {
 	 * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
 	 */
 	private function resolveTemplateData(array $run): array {
-		$resolution = $this->dataResolver->resolve(
+		$resolution = $this->sources->data->resolve(
 			dataRefs: $run['dataRefs'],
 			listRefs: ($run['options']['listRefs'] ?? []),
 			adHocData: ($run['options']['adHocData'] ?? [])
@@ -312,14 +318,14 @@ class DocumentService implements DocumentServiceInterface {
 	 * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
 	 */
 	private function renderDocument(array $run, array $resolved): array {
-		$huisstijl    = $this->renderPipeline->loadHuisstijl(huisstijlId: ($run['options']['huisstijlId'] ?? null));
-		$pdfOptions   = $this->renderPipeline->buildPdfOptions(template: $run['template'], huisstijl: $huisstijl, options: $run['options']);
-		$renderResult = $this->renderPipeline->renderWithHuisstijl(
+		$huisstijl    = $this->production->pipeline->loadHuisstijl(huisstijlId: ($run['options']['huisstijlId'] ?? null));
+		$pdfOptions   = $this->production->pipeline->buildPdfOptions(template: $run['template'], huisstijl: $huisstijl, options: $run['options']);
+		$renderResult = $this->production->pipeline->renderWithHuisstijl(
 			templateContent: $run['template']['content'],
 			data: $resolved['data'],
 			huisstijl: $huisstijl
 		);
-		$content      = $this->renderPipeline->produceOutput(
+		$content      = $this->production->pipeline->produceOutput(
 			htmlContent: $renderResult['html'],
 			format: $run['format'],
 			pdfOptions: $pdfOptions
@@ -331,7 +337,7 @@ class DocumentService implements DocumentServiceInterface {
 			'pdfOptions' => $pdfOptions,
 			'html' => $renderResult['html'],
 			'content' => $content,
-			'warnings' => array_merge($resolved['warnings'], $renderResult['warnings'], $this->renderPipeline->getLastOutputWarnings()),
+			'warnings' => array_merge($resolved['warnings'], $renderResult['warnings'], $this->production->pipeline->getLastOutputWarnings()),
 		];
 	}//end renderDocument()
 
@@ -346,14 +352,18 @@ class DocumentService implements DocumentServiceInterface {
 	 * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
 	 */
 	private function logGenerated(array $run, array $outcome): array {
-		return $this->documentLogger->log(
-			template: [
-				'id' => $run['templateId'],
-				'version' => ($run['template']['version'] ?? null),
-				'name' => ($run['template']['name'] ?? ''),
-			],
-			dataRefs: $run['dataRefs'],
-			format: $run['format'],
+		return $this->output->log->log(
+			generation: new DocumentGenerationRecord(
+				template: [
+					'id' => $run['templateId'],
+					'version' => ($run['template']['version'] ?? null),
+					'name' => ($run['template']['name'] ?? ''),
+				],
+				dataRefs: $run['dataRefs'],
+				format: $run['format'],
+				userId: (string)($run['options']['userId'] ?? ''),
+				extra: array_merge($run['recordFields'], $outcome['plain']['record'])
+			),
 			outcome: [
 				'status' => 'generated',
 				'warnings' => $outcome['warnings'],
@@ -361,11 +371,39 @@ class DocumentService implements DocumentServiceInterface {
 				'errorMessage' => null,
 				'fileId' => $outcome['stored']['fileId'],
 				'filePath' => $outcome['stored']['path'],
-			],
-			userId: (string)($run['options']['userId'] ?? ''),
-			extra: array_merge($run['recordFields'], $outcome['plain']['record'])
+			]
 		);
 	}//end logGenerated()
+
+	/**
+	 * Hand a stored document to the case system when a destination applies (REQ-GSC-002).
+	 *
+	 * Only a filed document is delivered; recording the delivery never fails
+	 * the generation, it adds a warning instead (design D3, D4).
+	 *
+	 * @param array<string, mixed> $run     The generation run.
+	 * @param array<string, mixed> $outcome The filed documents, the audit entry and the warnings.
+	 *
+	 * @return array<string, mixed> The outcome with the linked audit entry and any delivery warning.
+	 *
+	 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-stored-document-gets-a-delivery-for-its-destination-req-gsc-002
+	 */
+	private function deliverToCaseSystem(array $run, array $outcome): array {
+		if ($this->caseSystem === null || $run['outputMode'] === 'return') {
+			return $outcome;
+		}
+
+		$sent = $this->caseSystem->recordGeneration(
+			template: ['id' => $run['templateId'], 'namespace' => ($run['template']['namespace'] ?? '')],
+			document: $outcome['metadata'],
+			generation: ['stored' => $outcome['stored'], 'options' => $run['options'], 'format' => $run['format']]
+		);
+
+		$outcome['metadata'] = $sent['document'];
+		$outcome['warnings'] = array_merge($outcome['warnings'], $sent['warnings']);
+
+		return $outcome;
+	}//end deliverToCaseSystem()
 
 	/**
 	 * The answer of a generation: the bytes, the audit entry and where the output went.
@@ -396,7 +434,7 @@ class DocumentService implements DocumentServiceInterface {
 				'name' => $stored['name'],
 				'size' => $stored['size'],
 			],
-		] + $this->renderPipeline->describeOutput(content: $content, format: $run['format']);
+		] + $this->production->pipeline->describeOutput(content: $content, format: $run['format']);
 	}//end generationResult()
 
 
@@ -426,8 +464,8 @@ class DocumentService implements DocumentServiceInterface {
 		array $dataRefs,
 		array $options = [],
 	): array {
-		$template = $this->templateService->getTemplate(id: $templateId);
-		$preview = $this->renderPreview(template: $template, dataRefs: $dataRefs, options: $options);
+		$template = $this->sources->templates->getTemplate(id: $templateId);
+		$preview = $this->renderPreview(run: ['template' => $template, 'dataRefs' => $dataRefs, 'options' => $options]);
 
 		return [
 			'html' => $preview['html'],
@@ -452,15 +490,15 @@ class DocumentService implements DocumentServiceInterface {
 	 *
 	 * @throws Exception If rendering fails
 	 *
-	 * @spec openspec/changes/template-merge-preview/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function generateMergePreview(
 		string $templateId,
 		array $dataRefs,
 		array $options = [],
 	): array {
-		$template = $this->templateService->getTemplate(id: $templateId);
-		$preview = $this->renderPreview(template: $template, dataRefs: $dataRefs, options: $options);
+		$template = $this->sources->templates->getTemplate(id: $templateId);
+		$preview = $this->renderPreview(run: ['template' => $template, 'dataRefs' => $dataRefs, 'options' => $options]);
 		$mergeFields = ($this->mergeFields ?? new TemplateMergeFieldService());
 		$merge = $mergeFields->resolve(template: $template, data: $preview['data']);
 
@@ -476,39 +514,28 @@ class DocumentService implements DocumentServiceInterface {
 	/**
 	 * Resolve a template's data and render it with the house style, without output.
 	 *
-	 * @param array $template The template.
-	 * @param array $dataRefs Data references: [{register, schema, id}, ...]
-	 * @param array $options  Options: huisstijlId, adHocData, listRefs.
+	 * @param array<string, mixed> $run The preview run: template, dataRefs
+	 *                                  ([{register, schema, id}, ...]) and options
+	 *                                  (huisstijlId, adHocData, listRefs).
 	 *
 	 * @return array{html: string, warnings: string[], data: array}
 	 *
 	 * @throws Exception If rendering fails
 	 */
-	private function renderPreview(array $template, array $dataRefs, array $options): array {
-		$resolution = $this->dataResolver->resolve(
-			dataRefs: $dataRefs,
-			listRefs: ($options['listRefs'] ?? []),
-			adHocData: ($options['adHocData'] ?? [])
-		);
-		$data = $resolution['data'];
-		$warnings = $resolution['warnings'];
+	private function renderPreview(array $run): array {
+		$resolved = $this->resolveTemplateData(run: $run);
 
-		foreach ($resolution['errors'] as $error) {
-			$ref = $error['register'] . '/' . $error['schema'] . '/' . $error['id'];
-			$warnings[] = "Data resolution failed for {$ref}: {$error['message']}";
-		}
-
-		$huisstijl = $this->renderPipeline->loadHuisstijl(huisstijlId: ($options['huisstijlId'] ?? null));
-		$renderResult = $this->renderPipeline->renderWithHuisstijl(
-			templateContent: $template['content'],
-			data: $data,
+		$huisstijl = $this->production->pipeline->loadHuisstijl(huisstijlId: ($run['options']['huisstijlId'] ?? null));
+		$renderResult = $this->production->pipeline->renderWithHuisstijl(
+			templateContent: $run['template']['content'],
+			data: $resolved['data'],
 			huisstijl: $huisstijl
 		);
 
 		return [
 			'html' => $renderResult['html'],
-			'warnings' => array_merge($warnings, $renderResult['warnings']),
-			'data' => $data,
+			'warnings' => array_merge($resolved['warnings'], $renderResult['warnings']),
+			'data' => $resolved['data'],
 		];
 
 	}//end renderPreview()
@@ -559,17 +586,13 @@ class DocumentService implements DocumentServiceInterface {
 		$count = count($objectIds);
 
 		if ($count <= self::SYNC_BATCH_LIMIT) {
-			$bulk = new SyncBulkGeneration(documents: $this, documentLogger: $this->documentLogger);
+			$bulk = new SyncBulkGeneration(documents: $this, documentLogger: $this->output->log);
 			return $bulk->run(templateId: $templateId, objectIds: $objectIds, options: $options);
 		}
 
 		$this->validateAsyncOutputMode(options: $options);
 
-		return $this->dispatchBulkJob(
-			templateId: $templateId,
-			objectIds: $objectIds,
-			options: $options
-		);
+		return $this->dispatchBulkJob(run: ['templateId' => $templateId, 'objectIds' => $objectIds, 'options' => $options]);
 
 	}//end generateBulk()
 
@@ -610,7 +633,7 @@ class DocumentService implements DocumentServiceInterface {
 	 * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
 	 */
 	public function getJobStatus(string $jobId): ?array {
-		return $this->jobs->get(jobId: $jobId);
+		return $this->production->jobs->get(jobId: $jobId);
 
 	}//end getJobStatus()
 
@@ -625,7 +648,7 @@ class DocumentService implements DocumentServiceInterface {
 	 * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
 	 */
 	public function updateJobStatus(string $jobId, array $status): void {
-		$this->jobs->put(jobId: $jobId, status: $status);
+		$this->production->jobs->put(jobId: $jobId, status: $status);
 
 	}//end updateJobStatus()
 
@@ -702,7 +725,7 @@ class DocumentService implements DocumentServiceInterface {
 
 		if ($template === null) {
 			try {
-				$template = $this->templateService->getTemplate(id: $templateId);
+				$template = $this->sources->templates->getTemplate(id: $templateId);
 			} catch (Exception $e) {
 				$template = [];
 			}
@@ -797,13 +820,13 @@ class DocumentService implements DocumentServiceInterface {
 			return ['rendition' => null, 'record' => [], 'warnings' => []];
 		}
 
-		$rendered = $this->renderPipeline->renderWithHuisstijl(
+		$rendered = $this->production->pipeline->renderWithHuisstijl(
 			templateContent: $plan['content'],
 			data: $formal['data'],
 			huisstijl: $formal['huisstijl']
 		);
 
-		$content = $this->renderPipeline->produceOutput(
+		$content = $this->production->pipeline->produceOutput(
 			htmlContent: $rendered['html'],
 			format: $run['format'],
 			pdfOptions: $formal['pdfOptions']
@@ -816,7 +839,7 @@ class DocumentService implements DocumentServiceInterface {
 		] + $run;
 		$stored   = $this->storeOutputIfRequested(
 			run: $plainRun,
-			output: ['content' => $content, 'warnings' => $this->renderPipeline->getLastOutputWarnings()]
+			output: ['content' => $content, 'warnings' => $this->production->pipeline->getLastOutputWarnings()]
 		);
 
 		$record = $this->plainRendition->recordFields(
@@ -857,60 +880,99 @@ class DocumentService implements DocumentServiceInterface {
 	 * @spec exclude Private helper of generateDocument(); the storing rule is specified there.
 	 */
 	private function storeOutputIfRequested(array $run, array $output): array {
-		$result = [
-			'fileId' => null,
-			'path' => null,
-			'name' => null,
-			'size' => null,
-			'warnings' => $output['warnings'],
-		];
-
 		if ($run['outputMode'] === 'return') {
-			return $result;
+			return $this->storedOutput(stored: [], warnings: $output['warnings']);
 		}
 
-		$options = $run['options'];
-		$userId = (string)($options['userId'] ?? '');
-		if ($userId === '') {
-			throw new Exception(
-				message: 'options.userId is required to store generated documents in Files',
-				code: 400
-			);
-		}
-
-		$targetPath = $this->buildOutputTargetPath(
-			templateId: $run['templateId'],
-			explicitTargetPath: ($options['output']['targetPath'] ?? null),
-			template: $run['template']
-		);
-		$filename = $this->buildOutputFilename(
-			filename: ($options['filename'] ?? 'document'),
-			format: $run['format']
-		);
-
-		try {
-			$stored = $this->storageService->store(
-				userId: $userId,
-				targetPath: $targetPath,
-				filename: $filename,
-				content: $output['content']
-			);
-			$result['fileId'] = $stored['fileId'];
-			$result['path'] = $stored['path'];
-			$result['name'] = $stored['name'];
-			$result['size'] = $stored['size'];
-		} catch (Exception $e) {
-			$isStorageFailure = ($e->getCode() === DocumentStorageService::ERROR_CODE_STORAGE_FAILURE);
-			if ($run['outputMode'] === 'both' && $isStorageFailure === true) {
-				$result['warnings'][] = 'Document generated but could not be stored in Files: ' . $e->getMessage();
-				return $result;
-			}
-
-			throw $e;
-		}//end try
-
-		return $result;
+		return $this->fileOutput(run: $run, output: $output);
 	}//end storeOutputIfRequested()
+
+	/**
+	 * File the rendered bytes for the run's user; mode `both` turns a storage failure into a warning.
+	 *
+	 * @param array<string, mixed> $run The generation run.
+	 * @param array<string, mixed> $output The rendered bytes (`content`) and the warnings collected so far.
+	 *
+	 * @return array{fileId: ?int, path: ?string, name: ?string, size: ?int, warnings: array<int, string>}
+	 *         What was filed, or nulls when a tolerated storage failure left it unfiled.
+	 *
+	 * @throws Exception 400 without a user, or the storage failure when the mode does not tolerate it.
+	 */
+	private function fileOutput(array $run, array $output): array {
+		$target = $this->storeTarget(run: $run);
+		try {
+			$stored = $this->output->storage->store(...$target, content: $output['content']);
+		} catch (Exception $e) {
+			$this->rethrowUnlessTolerated(run: $run, failure: $e);
+			$stored = [];
+			$output['warnings'][] = 'Document generated but could not be stored in Files: ' . $e->getMessage();
+		}
+
+		return $this->storedOutput(stored: $stored, warnings: $output['warnings']);
+	}//end fileOutput()
+
+	/**
+	 * Who the bytes are filed for, and where: refused before anything is stored when there is no user.
+	 *
+	 * @param array<string, mixed> $run The generation run: templateId, template, format and options
+	 *                                  (carrying `userId`, `filename` and `output.targetPath`).
+	 *
+	 * @return array{userId: string, targetPath: string, filename: string} The store arguments.
+	 *
+	 * @throws Exception 400 when options.userId is missing or empty.
+	 */
+	private function storeTarget(array $run): array {
+		$userId = (string)($run['options']['userId'] ?? '');
+		if ($userId === '') {
+			throw new Exception(message: 'options.userId is required to store generated documents in Files', code: 400);
+		}
+
+		return [
+			'userId' => $userId,
+			'targetPath' => $this->buildOutputTargetPath(
+				templateId: $run['templateId'],
+				explicitTargetPath: ($run['options']['output']['targetPath'] ?? null),
+				template: $run['template']
+			),
+			'filename' => $this->buildOutputFilename(filename: ($run['options']['filename'] ?? 'document'), format: $run['format']),
+		];
+	}//end storeTarget()
+
+	/**
+	 * Rethrow a storage failure unless mode `both` tolerates it: only a storage failure, never a refused path.
+	 *
+	 * @param array<string, mixed> $run The generation run.
+	 * @param Exception $failure What storing threw.
+	 *
+	 * @return void
+	 *
+	 * @throws Exception The failure, when it is not tolerated.
+	 */
+	private function rethrowUnlessTolerated(array $run, Exception $failure): void {
+		if ($run['outputMode'] === 'both' && $failure->getCode() === DocumentStorageService::ERROR_CODE_STORAGE_FAILURE) {
+			return;
+		}
+
+		throw $failure;
+	}//end rethrowUnlessTolerated()
+
+	/**
+	 * The stored-output shape: the filed refs, or nulls when nothing was filed.
+	 *
+	 * @param array<string, mixed> $stored What the storage service returned, or [].
+	 * @param array<int, string> $warnings The warnings collected so far.
+	 *
+	 * @return array{fileId: ?int, path: ?string, name: ?string, size: ?int, warnings: array<int, string>}
+	 */
+	private function storedOutput(array $stored, array $warnings): array {
+		return [
+			'fileId' => ($stored['fileId'] ?? null),
+			'path' => ($stored['path'] ?? null),
+			'name' => ($stored['name'] ?? null),
+			'size' => ($stored['size'] ?? null),
+			'warnings' => $warnings,
+		];
+	}//end storedOutput()
 
 	/**
 	 * Dispatch an async bulk generation background job.
@@ -923,53 +985,51 @@ class DocumentService implements DocumentServiceInterface {
 	 * fixed path, so a large batch's outputs land in one folder instead of
 	 * spraying across the destination.
 	 *
-	 * @param string $templateId The template UUID
-	 * @param array $objectIds Array of object UUIDs
-	 * @param array $options Generation options (options.output.mode is
-	 *                       already validated to be 'files' by the caller)
+	 * @param array<string, mixed> $run The bulk run: templateId, objectIds and options
+	 *                                  (options.output.mode is already validated
+	 *                                  to be 'files' by the caller).
 	 *
 	 * @return array{jobId: string, status: string, total: int}
 	 *
 	 * @spec openspec/changes/document-output-destinations-and-bulk-retention/specs/document-creatie-sjablonen/spec.md#req-ddob-006
 	 */
-	private function dispatchBulkJob(
-		string $templateId,
-		array $objectIds,
-		array $options,
-	): array {
-		$jobId = $this->jobs->newId();
-
-		$baseTargetPath = $this->buildOutputTargetPath(
-			templateId: $templateId,
-			explicitTargetPath: ($options['output']['targetPath'] ?? null)
-		);
-		$options['output']['targetPath'] = $baseTargetPath . '/' . $jobId;
-
-		$initialStatus = [
+	private function dispatchBulkJob(array $run): array {
+		$jobId = $this->production->jobs->newId();
+		$argument = [
 			'jobId' => $jobId,
-			'status' => 'queued',
-			'total' => count($objectIds),
-			'completed' => 0,
-			'errors' => 0,
-			'results' => [],
-			'options' => $options,
+			'templateId' => $run['templateId'],
+			'objectIds' => $run['objectIds'],
+			'options' => $this->perJobOptions(run: $run, jobId: $jobId),
 		];
-		$this->jobs->enqueue(
-			jobId: $jobId,
-			status: $initialStatus,
-			argument: [
-				'jobId' => $jobId,
-				'templateId' => $templateId,
-				'objectIds' => $objectIds,
-				'options' => $options,
-			]
-		);
+
+		$this->production->jobs->enqueue(jobId: $jobId, status: (new BulkJobStatus())->queued(argument: $argument), argument: $argument);
 
 		return [
 			'jobId' => $jobId,
 			'status' => 'queued',
-			'total' => count($objectIds),
+			'total' => count($run['objectIds']),
 		];
 
 	}//end dispatchBulkJob()
+
+	/**
+	 * The bulk run's options with the output target path fixed to the job's own folder.
+	 *
+	 * @param array<string, mixed> $run   The bulk run: templateId, objectIds and options.
+	 * @param string               $jobId The job id.
+	 *
+	 * @return array<string, mixed> The options every per-object generation of the job uses.
+	 */
+	private function perJobOptions(array $run, string $jobId): array {
+		$options = $run['options'];
+		$baseTargetPath = $this->buildOutputTargetPath(
+			templateId: $run['templateId'],
+			explicitTargetPath: ($options['output']['targetPath'] ?? null)
+		);
+		$options['output']['targetPath'] = $baseTargetPath . '/' . $jobId;
+
+		return $options;
+
+	}//end perJobOptions()
+
 }//end class

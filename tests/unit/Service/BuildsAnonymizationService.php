@@ -56,6 +56,8 @@ use OCA\Filinq\Service\Redaction\RedactionVerdictRecorder;
 use OCA\Filinq\Service\Redaction\RedactionOutputGuard;
 use OCA\Filinq\Service\RelationSkipDecisionService;
 use OCA\Filinq\Service\ReplacementVerificationService;
+use OCA\Filinq\Service\Support\AnonymisationRecords;
+use OCA\Filinq\Service\Support\AnonymisedOutputs;
 use OCP\App\IAppManager;
 use OCP\Files\IRootFolder;
 use OCP\IAppConfig;
@@ -126,25 +128,7 @@ trait BuildsAnonymizationService {
 				consentService: ($deps['consentService'] ?? $this->createMock(ConsentService::class))
 			);
 			$anonymizeRunner = new DocumentAnonymizeRunner(
-				logger: $logger,
-				locator: $locator,
-				entityDetection: $entityDetection,
-				emlAnonymizer: new EmlAnonymizationService(
-					logger: $logger,
-					entityDetection: $entityDetection,
-					emlAssembly: ($deps['emlAssembly'] ?? $this->createMock(EmlPdfAssemblyService::class))
-				),
-				pdfOutput: new AnonymisedPdfOutputService(
-					logger: $logger,
-					pdfConversion: ($deps['pdfConversion'] ?? $this->createMock(PdfConversionService::class))
-				),
-				replacementVerifier: new ReplacementVerificationService(logger: $logger),
-				persistence: $persistence,
-				summaryAttacher: new GrondslagenSummaryAttacher(
-					logger: $logger,
-					grondslagenSummary: ($deps['grondslagenSummary'] ?? $this->createMock(LegalBasesSummaryService::class))
-				),
-				runRecords: new AnonymisationRunRecords(
+				records: new AnonymisationRecords(verifier: new ReplacementVerificationService(logger: $logger), persistence: $persistence, runs: new AnonymisationRunRecords(
 					verdicts: new RedactionVerdictRecorder(
 						verifier: new RedactionIrreversibilityVerifier(),
 						logger: $logger
@@ -157,7 +141,21 @@ trait BuildsAnonymizationService {
 						locator: $locator,
 						logger: $logger
 					)
-				)
+				)),
+				outputs: new AnonymisedOutputs(eml: new EmlAnonymizationService(
+					logger: $logger,
+					entityDetection: $entityDetection,
+					emlAssembly: ($deps['emlAssembly'] ?? $this->createMock(EmlPdfAssemblyService::class))
+				), pdf: new AnonymisedPdfOutputService(
+					logger: $logger,
+					pdfConversion: ($deps['pdfConversion'] ?? $this->createMock(PdfConversionService::class))
+				), summary: new GrondslagenSummaryAttacher(
+					logger: $logger,
+					grondslagenSummary: ($deps['grondslagenSummary'] ?? $this->createMock(LegalBasesSummaryService::class))
+				)),
+				logger: $logger,
+				locator: $locator,
+				entityDetection: $entityDetection
 			);
 		}
 

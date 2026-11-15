@@ -24,10 +24,13 @@ namespace OCA\Filinq\Tests\Unit\Settings;
 
 require_once __DIR__ . '/../Service/PrintJobDoubles.php';
 
+use OCA\Filinq\BackgroundJob\JobQueue;
+use OCA\Filinq\Kernel\PrintJobRequest;
 use OCA\Filinq\Repair\MigratePrintJobsOutOfAppConfig;
 use OCA\Filinq\Service\DataResolverService;
 use OCA\Filinq\Service\PdfService;
 use OCA\Filinq\Service\PrintJobService;
+use OCA\Filinq\Service\Support\TemplateSources;
 use OCA\Filinq\Service\TemplateService;
 use OCA\Filinq\Tests\Unit\Service\PrintJobDoubles;
 use OCP\BackgroundJob\IJobList;
@@ -156,17 +159,16 @@ class PrintJobSchemaTest extends TestCase {
 		$templates->method('getTemplate')->willReturn(['id' => 't', 'name' => 'Brief', 'content' => '']);
 		$service = new PrintJobService(
 			$pdf,
-			$templates,
-			$this->createMock(DataResolverService::class),
+			new TemplateSources(templates: $templates, data: $this->createMock(DataResolverService::class)),
 			$this->printJobRepository(),
 			$this->printJobFileStore(),
-			$this->createMock(IJobList::class),
+			new JobQueue(jobList: $this->createMock(IJobList::class)),
 			$this->createMock(LoggerInterface::class)
 		);
 
-		$job = $service->createBatchJob(templateId: 't', items: [['data' => ['naam' => 'a']], ['data' => ['naam' => 'kapot']]], userId: 'u', options: ['duplex' => true]);
+		$job = $service->createBatchJob(request: new PrintJobRequest(templateId: 't', options: ['duplex' => true]), items: [['data' => ['naam' => 'a']], ['data' => ['naam' => 'kapot']]], userId: 'u');
 		$service->recordExternalStatus(job: $service->getJob($job['jobId']), externalStatus: 'printed', details: 'done');
-		$service->createBatchJob(templateId: 't', items: array_fill(0, 12, ['data' => []]), userId: 'u');
+		$service->createBatchJob(request: new PrintJobRequest(templateId: 't'), items: array_fill(0, 12, ['data' => []]), userId: 'u');
 
 		$this->assertGreaterThanOrEqual(4, count($this->written));
 		foreach ($this->written as $payload) {

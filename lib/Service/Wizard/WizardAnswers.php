@@ -99,30 +99,23 @@ class WizardAnswers {
 	 */
 	public function translate(array $wizard, array $answers): array {
 		$questions = $this->questions(wizard: $wizard);
-		$visible = array_flip($this->conditions->visibleKeys(questions: $questions, answers: $answers));
+		$kept = $this->keptAnswers(questions: $questions, answers: $answers);
 		$dataRefs = [];
 		$adHocData = [];
-		$kept = [];
 		foreach ($questions as $question) {
 			$key = (string) ($question['key'] ?? '');
-			$answer = ($answers[$key] ?? null);
-			if (isset($visible[$key]) === false || $this->conditions->isAnswered(answer: $answer) === false) {
+			if (array_key_exists($key, $kept) === false) {
 				continue;
 			}
 
-			$kept[$key] = $answer;
 			if (($question['type'] ?? '') === 'registerObject') {
-				$dataRefs[] = [
-					'register' => (string) ($question['register'] ?? ''),
-					'schema' => (string) ($question['schema'] ?? ''),
-					'id' => (string) $answer,
-				];
+				$dataRefs[] = $this->dataRefOf(question: $question, answer: $kept[$key]);
 				continue;
 			}
 
 			$path = trim((string) ($question['mapsTo'] ?? ''));
 			if ($path !== '') {
-				$this->setPath(data: $adHocData, path: $path, value: $answer);
+				$this->setPath(data: $adHocData, path: $path, value: $kept[$key]);
 			}
 		}//end foreach
 
@@ -137,6 +130,44 @@ class WizardAnswers {
 		];
 
 	}//end translate()
+
+	/**
+	 * The answers of the visible, answered questions, by key, in question order.
+	 *
+	 * @param array<int, array<string, mixed>> $questions The questions.
+	 * @param array<string, mixed> $answers The answers by question key.
+	 *
+	 * @return array<string, mixed> The kept answers.
+	 */
+	private function keptAnswers(array $questions, array $answers): array {
+		$visible = array_flip($this->conditions->visibleKeys(questions: $questions, answers: $answers));
+		$kept = [];
+		foreach ($questions as $question) {
+			$key = (string) ($question['key'] ?? '');
+			$answer = ($answers[$key] ?? null);
+			if (isset($visible[$key]) === true && $this->conditions->isAnswered(answer: $answer) === true) {
+				$kept[$key] = $answer;
+			}
+		}
+
+		return $kept;
+	}//end keptAnswers()
+
+	/**
+	 * The dataRef a registerObject question's answer names.
+	 *
+	 * @param array<string, mixed> $question The question.
+	 * @param mixed $answer The answer: the object id.
+	 *
+	 * @return array<string, string> The dataRef.
+	 */
+	private function dataRefOf(array $question, mixed $answer): array {
+		return [
+			'register' => (string) ($question['register'] ?? ''),
+			'schema' => (string) ($question['schema'] ?? ''),
+			'id' => (string) $answer,
+		];
+	}//end dataRefOf()
 
 	/**
 	 * The suggested answer of one question, or null.
