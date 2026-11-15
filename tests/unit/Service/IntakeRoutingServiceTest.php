@@ -28,6 +28,7 @@ use OCA\OpenRegister\Service\ObjectService;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Filinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Asserts that routing is the consumer's declaration applied, never a default
@@ -82,6 +83,7 @@ class IntakeRoutingServiceTest extends TestCase {
 		);
 		$objectService->method('saveObject')->willReturnCallback(
 			function (...$arguments): array {
+				$arguments = LegacyObjectArgs::positional(method: 'saveObject', args: $arguments);
 				$this->written[] = ($arguments[0] ?? []);
 
 				return ($arguments[0] ?? []);

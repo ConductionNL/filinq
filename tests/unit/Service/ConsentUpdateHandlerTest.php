@@ -28,6 +28,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Unit tests for ConsentUpdateHandler
@@ -418,7 +419,10 @@ class ConsentUpdateHandlerTest extends TestCase {
 		$objects = $this->createMock(originalClassName: \OCA\OpenRegister\Service\ObjectService::class);
 		$objects->method('find')->willReturn($stored);
 		$objects->method('saveObject')->willReturnCallback(
-			function (array $object = [], string $register = '', string $schema = '', ?string $uuid = null, bool $_rbac = true) use (&$saved) {
+			function (array $object = [], ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true) use (&$saved) {
+				$register = $options->target->register ?? '';
+				$schema = $options->target->schema ?? '';
+				$uuid = $options->uuid;
 				$saved[] = ['object' => $object, 'rbac' => $_rbac];
 				$entity = new \OCA\OpenRegister\Db\ObjectEntity();
 				$entity->setObject($object);
