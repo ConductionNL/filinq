@@ -48,6 +48,8 @@ use Opis\JsonSchema\Validator;
 use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Shared set-up for LegalHoldCaseServiceTest, LegalHoldCaseControllerTest and LegalHoldCaseSchemaTest.
@@ -211,7 +213,10 @@ trait LegalHoldDoubles {
 			}
 		);
 		$objects->method('saveObject')->willReturnCallback(
-			function (array $object = [], string $register = '', string $schema = '', ?string $uuid = null, bool $_rbac = true): array {
+			function (array $object = [], ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true): array {
+				$register = $options->target->register ?? '';
+				$schema = $options->target->schema ?? '';
+				$uuid = $options->uuid;
 				if ($schema !== 'legalHoldCase' || $_rbac !== false) {
 					throw new RuntimeException('Hold cases are written past RBAC only.');
 				}
@@ -228,7 +233,10 @@ trait LegalHoldDoubles {
 			}
 		);
 		$objects->method('find')->willReturnCallback(
-			function (string $id = '', string $register = '', string $schema = '', bool $_rbac = true, bool $_multitenancy = true, bool $_render = true) {
+			function (string $id = '', ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true) {
+				$register = $options?->register ?? '';
+				$schema = $options?->schema ?? '';
+				$_render = $options?->render ?? true;
 				if ($_render !== false) {
 					throw new RuntimeException('Records are read unrendered, so the retention block is there.');
 				}

@@ -27,6 +27,9 @@ namespace OCA\Filinq\Service;
 
 use OCA\Filinq\Exception\MergeJobStoreUnreadableException;
 use OCA\Filinq\Kernel\Contracts\MergeJobRepositoryInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
@@ -116,8 +119,10 @@ class MergeJobRepository implements MergeJobRepositoryInterface {
 		try {
 			$object = $this->objectResolver->resolve()->find(
 				id: $uuid,
-				register: IntakeRepository::REGISTER,
-				schema: DocumentMergeService::SCHEMA
+				options: new ObjectFindOptions(
+					register: IntakeRepository::REGISTER,
+					schema: DocumentMergeService::SCHEMA
+				)
 			);
 		} catch (Throwable $e) {
 			// 🔴 A FAILED READ IS NOT "NO SUCH MERGE". Returning null here is
@@ -220,7 +225,13 @@ class MergeJobRepository implements MergeJobRepositoryInterface {
 				$arguments['uuid'] = $uuid;
 			}
 
-			$stored = $this->objectResolver->resolve()->saveObject(...$arguments);
+			$stored = $this->objectResolver->resolve()->saveObject(
+				object: $arguments['object'],
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: ($arguments['register'] ?? null), schema: ($arguments['schema'] ?? null)),
+					uuid: $arguments['uuid'] ?? null
+				)
+			);
 		} catch (Throwable $e) {
 			throw new RuntimeException(
 				message: 'Could not store the merge job: ' . $e->getMessage(),

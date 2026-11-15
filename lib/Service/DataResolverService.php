@@ -27,6 +27,7 @@ namespace OCA\Filinq\Service;
 
 use Exception;
 use OCA\Filinq\Kernel\Contracts\DataResolverServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -267,8 +268,7 @@ class DataResolverService implements DataResolverServiceInterface {
 	private function findReferenced(array $ref): array {
 		$result = $this->getObjectService()->find(
 			id: $ref['id'],
-			register: $ref['register'],
-			schema: $ref['schema']
+			options: new ObjectFindOptions(register: $ref['register'], schema: $ref['schema'])
 		);
 
 		if (empty($result) === true) {

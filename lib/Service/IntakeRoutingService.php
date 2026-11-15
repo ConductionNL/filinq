@@ -31,6 +31,8 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use OCA\Filinq\Kernel\Contracts\IntakeRoutingServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
@@ -108,7 +110,13 @@ class IntakeRoutingService implements IntakeRoutingServiceInterface {
 				$arguments['uuid'] = (string)$existing['uuid'];
 			}
 
-			$this->objectResolver->resolve()->saveObject(...$arguments);
+			$this->objectResolver->resolve()->saveObject(
+				object: $arguments['object'],
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: ($arguments['register'] ?? null), schema: ($arguments['schema'] ?? null)),
+					uuid: $arguments['uuid'] ?? null
+				)
+			);
 		} catch (Throwable $e) {
 			throw new RuntimeException(
 				message: 'Could not store the routing declaration: ' . $e->getMessage(),
