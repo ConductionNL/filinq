@@ -2934,7 +2934,14 @@ OC.L10N.register(
         "The test arrived": "The test arrived",
         "The test did not arrive": "The test did not arrive",
         "Type a name and a URL and pick at least one event": "Type a name and a URL and pick at least one event",
-        "Type a secret so the receiver can check each delivery": "Type a secret so the receiver can check each delivery"
+        "Type a secret so the receiver can check each delivery": "Type a secret so the receiver can check each delivery",
+        "Choose a template": "Choose a template",
+        "Generated {name}": "Generated {name}",
+        "Generating": "Generating",
+        "Looking up templates": "Looking up templates",
+        "No templates apply to this item": "No templates apply to this item",
+        "The document could not be generated": "The document could not be generated",
+        "The templates could not be loaded": "The templates could not be loaded"
     },
     "nplurals=2; plural=(n != 1);"
 )

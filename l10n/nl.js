@@ -3065,7 +3065,14 @@ OC.L10N.register(
         "The test arrived": "De test is aangekomen",
         "The test did not arrive": "De test is niet aangekomen",
         "Type a name and a URL and pick at least one event": "Typ een naam en een URL en kies minstens één gebeurtenis",
-        "Type a secret so the receiver can check each delivery": "Typ een geheim zodat de ontvanger elke bezorging kan controleren"
+        "Type a secret so the receiver can check each delivery": "Typ een geheim zodat de ontvanger elke bezorging kan controleren",
+        "Choose a template": "Kies een sjabloon",
+        "Generated {name}": "{name} is gegenereerd",
+        "Generating": "Bezig met genereren",
+        "Looking up templates": "Sjablonen worden opgezocht",
+        "No templates apply to this item": "Er zijn geen sjablonen voor dit item",
+        "The document could not be generated": "Het document kon niet worden gegenereerd",
+        "The templates could not be loaded": "De sjablonen konden niet worden geladen"
     },
     "nplurals=2; plural=(n != 1);"
 )
