@@ -151,20 +151,25 @@ export const useSigningStore = defineStore('signing', {
 			}
 		},
 		/**
-		 * Cancel a signing request.
+		 * Withdraw a signing request. Only its creator may; a refusal carries
+		 * the server's own message, which names the creator.
 		 *
-		 * @param requestId
-		 * @spec openspec/changes/digital-signing-integration/tasks.md#8-1
+		 * @param {string} requestId The request id.
+		 * @return {Promise<boolean>} True when the request was withdrawn.
+		 * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md
 		 */
 		async cancelRequest(requestId) {
 			this.loading = true
+			this.error = null
 			try {
 				await axios.delete(
 					generateUrl(`/apps/filinq/api/signing/requests/${requestId}`),
 				)
+				return true
 			} catch (err) {
 				console.error('Failed to cancel signing request:', err)
-				this.error = err.message
+				this.error = err?.response?.data?.error || err.message
+				return false
 			} finally {
 				this.loading = false
 			}

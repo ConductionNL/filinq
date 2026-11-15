@@ -26,6 +26,7 @@ require_once __DIR__ . '/ImagickPdfDoubles.php';
 
 use Exception;
 use OCA\Filinq\Service\OcrService;
+use OCA\Filinq\Service\SessionUserFile;
 use OCP\Files\IRootFolder;
 use OCP\IAppConfig;
 use OCP\IUserSession;
@@ -112,8 +113,7 @@ class OcrPdfExtractionTraceTest extends TestCase {
 		$service = new class (
 			$logger,
 			$this->createMock(IAppConfig::class),
-			$this->createMock(IRootFolder::class),
-			$this->createMock(IUserSession::class)
+			new SessionUserFile($this->createMock(IRootFolder::class), $this->createMock(IUserSession::class))
 		) extends OcrService {
 			/**
 			 * Whether Tesseract answers as available.
@@ -188,8 +188,7 @@ class OcrPdfExtractionTraceTest extends TestCase {
 		$service = new class (
 			$logger,
 			$this->createMock(IAppConfig::class),
-			$this->createMock(IRootFolder::class),
-			$this->createMock(IUserSession::class)
+			new SessionUserFile($this->createMock(IRootFolder::class), $this->createMock(IUserSession::class))
 		) extends OcrService {
 			/**
 			 * Tesseract is absent.

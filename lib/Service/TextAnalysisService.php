@@ -40,31 +40,14 @@ namespace OCA\Filinq\Service;
 class TextAnalysisService {
 
 	/**
-	 * Words too common in Dutch and English to be keywords.
+	 * Words too common in Dutch and English to be keywords: the words the
+	 * language classifier counts, plus a few more.
 	 *
 	 * @var array<int, string>
 	 */
 	private const STOP_WORDS = [
-		'the',
-		'be',
-		'to',
-		'of',
-		'and',
-		'a',
-		'in',
-		'that',
-		'have',
-		'it',
-		'de',
-		'het',
-		'een',
-		'en',
-		'van',
-		'is',
-		'zijn',
-		'op',
-		'voor',
-		'met',
+		...LanguageClassifier::ENGLISH_WORDS,
+		...LanguageClassifier::DUTCH_WORDS,
 		'for',
 		'not',
 		'on',

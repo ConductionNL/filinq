@@ -13,7 +13,7 @@
 
 ## 3. Project service
 
-- [ ] 3.1 Add `lib/Service/DigitisationProjectService.php` with the sampling draw (D4) (REQ-PAD-004). Verify: PHPUnit with a seeded random source for 0, 10 and 100 percent.
+- [x] 3.1 Add `lib/Service/DigitisationProjectService.php` with the sampling draw (D4) (REQ-PAD-004). Verify: PHPUnit with a seeded random source for 0, 10 and 100 percent. — As built: `afterScan()` answers what to write on the original; nothing calls it yet (2.2 wires it into the split).
 - [ ] 3.2 CSV box list import through openregister's object import with a failure list (D5) (REQ-PAD-001). Verify: PHPUnit imports a fixture CSV with one bad row.
 
 ## 4. Screens

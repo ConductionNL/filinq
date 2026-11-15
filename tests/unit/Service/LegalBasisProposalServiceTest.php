@@ -460,4 +460,146 @@ class LegalBasisProposalServiceTest extends TestCase {
 
 	}//end testWhitelistNullOnMalformedOrEmptySelection()
 
+	/**
+	 * Build a service around a mapper, with the given mapping JSON and logger.
+	 *
+	 * @param EntityRelationMapper|null $mapper  The mapper the container answers, or null for none.
+	 * @param string                    $mapping Raw JSON for the mapping config key.
+	 * @param LoggerInterface|null      $logger  The logger, or a silent mock.
+	 *
+	 * @return LegalBasisProposalService The service under test.
+	 */
+	private function serviceWithMapper(?EntityRelationMapper $mapper, string $mapping, ?LoggerInterface $logger = null): LegalBasisProposalService {
+		$config = $this->createMock(IAppConfig::class);
+		$config->method('getValueString')->willReturn($mapping);
+
+		$appManager = $this->createMock(IAppManager::class);
+		$installed = [];
+		if ($mapper !== null) {
+			$installed = ['openregister'];
+		}
+
+		$appManager->method('getInstalledApps')->willReturn($installed);
+
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->willReturn($mapper);
+
+		return new LegalBasisProposalService($config, $appManager, $container, $logger ?? $this->createMock(LoggerInterface::class));
+
+	}//end serviceWithMapper()
+
+	/**
+	 * Numeric type keys and a mapping that is not an object are dropped.
+	 *
+	 * @return void
+	 */
+	public function testGetMappingDropsNumericKeysAndScalars(): void {
+		$this->assertSame([], $this->makeService('["a"]')->getMapping());
+		$this->assertSame([], $this->makeService('"x"')->getMapping());
+		$this->assertSame(['EMAIL' => ['b', 'c']], $this->makeService('{"0":["a"],"EMAIL":[null,"b",true,"c"]}')->getMapping());
+
+	}//end testGetMappingDropsNumericKeysAndScalars()
+
+	/**
+	 * Without OpenRegister nothing is proposed, and a failed detection lookup is logged and proposes nothing.
+	 *
+	 * @return void
+	 */
+	public function testApplyProposalsWithoutMapperOrDetections(): void {
+		$this->assertSame(0, $this->serviceWithMapper(null, '{"PERSON":["a"]}')->applyProposals(7));
+
+		$mapper = $this->createMock(EntityRelationMapper::class);
+		$mapper->method('findEntitiesForFile')->with(7)->willThrowException(new \Exception('down'));
+		$mapper->expects($this->never())->method('find');
+
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())->method('warning')->with(
+			'LegalBasisProposalService: could not load detections for proposal',
+			['fileId' => 7, 'error' => 'down']
+		);
+
+		$this->assertSame(0, $this->serviceWithMapper($mapper, '{"PERSON":["a"]}', $logger)->applyProposals(7));
+
+	}//end testApplyProposalsWithoutMapperOrDetections()
+
+	/**
+	 * Camel-case rows and object rows are read; rows without a type or relation id are skipped;
+	 * a failing relation is logged and the others are still filled.
+	 *
+	 * @return void
+	 */
+	public function testApplyProposalsReadsEveryRowShapeAndSurvivesAFailure(): void {
+		$empty = new EntityRelation();
+		$empty->setBases([]);
+		$filled = new EntityRelation();
+		$filled->setBases(null);
+
+		$mapper = $this->createMock(EntityRelationMapper::class);
+		$mapper->method('findEntitiesForFile')->willReturn(
+			[
+				['relationId' => 1, 'entityType' => 'PERSON'],
+				(object) ['relation_id' => 2, 'entity_type' => 'PERSON'],
+				['relation_id' => 0, 'entity_type' => 'PERSON'],
+				['relation_id' => 4, 'entity_type' => ''],
+				['relation_id' => 5, 'entity_type' => 'PERSON'],
+			]
+		);
+		$mapper->method('find')->willReturnCallback(
+			static function (int $id) use ($empty, $filled) {
+				if ($id === 5) {
+					throw new \Exception('gone');
+				}
+
+				if ($id === 1) {
+					return $empty;
+				}
+
+				return $filled;
+			}
+		);
+		$mapper->expects($this->exactly(2))->method('updateDecisionMetadata')->willReturnArgument(0);
+
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())->method('warning')->with(
+			'LegalBasisProposalService: failed to pre-fill bases',
+			['fileId' => 9, 'relationId' => 5, 'error' => 'gone']
+		);
+
+		$this->assertSame(2, $this->serviceWithMapper($mapper, '{"PERSON":["a","b"]}', $logger)->applyProposals(9));
+
+	}//end testApplyProposalsReadsEveryRowShapeAndSurvivesAFailure()
+
+	/**
+	 * Enrichment leaves the rows alone without OpenRegister or when the lookup fails, and only
+	 * touches rows whose relation id is known.
+	 *
+	 * @return void
+	 */
+	public function testEnrichEntitiesWithBasesEdgeCases(): void {
+		$rows = [['relation_id' => 1], (object) ['relationId' => 2], ['relation_id' => 3], ['entity_type' => 'X']];
+		$this->assertSame($rows, $this->serviceWithMapper(null, '{}')->enrichEntitiesWithBases($rows, 7));
+
+		$failing = $this->createMock(EntityRelationMapper::class);
+		$failing->method('findByFileId')->willThrowException(new \Exception('down'));
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())->method('warning')->with(
+			'LegalBasisProposalService: could not load bases for enrichment',
+			['fileId' => 7, 'error' => 'down']
+		);
+		$this->assertSame($rows, $this->serviceWithMapper($failing, '{}', $logger)->enrichEntitiesWithBases($rows, 7));
+
+		$rel1 = new EntityRelation();
+		$rel1->setId(1);
+		$rel1->setBases(['a']);
+		$rel2 = new EntityRelation();
+		$rel2->setId(2);
+		$rel2->setBases(['b']);
+		$mapper = $this->createMock(EntityRelationMapper::class);
+		$mapper->method('findByFileId')->willReturn([$rel1, $rel2]);
+
+		$out = $this->serviceWithMapper($mapper, '{}')->enrichEntitiesWithBases($rows, 7);
+		$expected = [['relation_id' => 1, 'bases' => ['a']], ['relationId' => 2, 'bases' => ['b']], ['relation_id' => 3], ['entity_type' => 'X']];
+		$this->assertSame($expected, $out);
+
+	}//end testEnrichEntitiesWithBasesEdgeCases()
 }//end class

@@ -80,6 +80,13 @@ interface IRequest {
 	public function getPathInfo(): string|false;
 
 	/**
+	 * Get the request URI, front controller and query string included.
+	 *
+	 * @return string
+	 */
+	public function getRequestUri(): string;
+
+	/**
 	 * Get the HTTP method of the request.
 	 *
 	 * @return string

@@ -708,11 +708,17 @@
 
 		<!-- Signer identity rails (signer-identity-rails): its own admin endpoint -->
 		<SignerIdentitySettings v-if="isAdmin" />
+		<CaseSystemDeliverySettings v-if="isAdmin" />
+
+		<DocumentWebhooksSection v-if="isAdmin" />
 
 		<EmailIngestionSettings v-if="isAdmin" />
 
 		<!-- Page layouts (documents-from-a-template REQ-DFT-01): their own endpoints -->
 		<PageLayoutSettings v-if="isAdmin" />
+
+		<!-- Entity detection provider (llm-entity-detection-provider): its own admin endpoint -->
+		<DetectionProviderSettings v-if="isAdmin" />
 
 		<!-- AVG Art. 30 processing-activity register (provided by OpenRegister) -->
 		<NcSettingsSection
@@ -861,6 +867,7 @@
 
 <script>
 import { CnAdminSettingsShell } from '@conduction/nextcloud-vue'
+import { getRequestToken } from '@nextcloud/auth'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import {
 	NcButton,
@@ -877,6 +884,9 @@ import OpenInNew from 'vue-material-design-icons/OpenInNew.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import Restart from 'vue-material-design-icons/Restart.vue'
 import AnonymiserBackendWarning from '../../components/AnonymiserBackendWarning.vue'
+import CaseSystemDeliverySettings from './CaseSystemDeliverySettings.vue'
+import DetectionProviderSettings from './DetectionProviderSettings.vue'
+import DocumentWebhooksSection from './DocumentWebhooksSection.vue'
 import EmailIngestionSettings from './EmailIngestionSettings.vue'
 import EntityTypeSelector from './EntityTypeSelector.vue'
 import PageLayoutSettings from './PageLayoutSettings.vue'
@@ -992,6 +1002,7 @@ function signingActivity() {
 export default {
 	name: 'Settings',
 	components: {
+		DocumentWebhooksSection,
 		NcSettingsSection,
 		NcNoteCard,
 		NcSelect,
@@ -1007,10 +1018,12 @@ export default {
 		FileExportOutline,
 		AccountSearchOutline,
 		EntityTypeSelector,
+		DetectionProviderSettings,
 		EmailIngestionSettings,
 		PageLayoutSettings,
 		SettingSwitchRow,
 		SignerIdentitySettings,
+		CaseSystemDeliverySettings,
 	},
 
 	data() {
@@ -1372,7 +1385,7 @@ export default {
 
 			fetch('/index.php/apps/filinq/api/settings', {
 				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
+				headers: { requesttoken: getRequestToken(), 'Content-Type': 'application/json' },
 				body: JSON.stringify(payload),
 			})
 				.then((response) => response.json())
@@ -1495,7 +1508,7 @@ export default {
 
 			fetch('/index.php/apps/filinq/api/settings', {
 				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
+				headers: { requesttoken: getRequestToken(), 'Content-Type': 'application/json' },
 				body: JSON.stringify(payload),
 			})
 				.then(async (response) => {
@@ -1581,7 +1594,7 @@ export default {
 			try {
 				const response = await fetch(
 					'/index.php/apps/filinq/api/admin/anonymiser-warning/reset',
-					{ method: 'POST' },
+					{ method: 'POST', headers: { requesttoken: getRequestToken() } },
 				)
 				if (response.ok === false) {
 					throw new Error('HTTP ' + response.status)

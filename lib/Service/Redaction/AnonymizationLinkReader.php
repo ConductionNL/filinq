@@ -243,14 +243,7 @@ class AnonymizationLinkReader {
 	 */
 	private function withUuid(mixed $row): array {
 		$link = $this->storedPayload(row: $row);
-		$uuid = '';
-		if (is_object($row) === true && method_exists($row, 'getUuid') === true) {
-			$uuid = (string) $row->getUuid();
-		}
-
-		if ($uuid === '' && is_array($row) === true) {
-			$uuid = (string) ($row['@self']['id'] ?? ($row['uuid'] ?? ($row['id'] ?? '')));
-		}
+		$uuid = $this->rowUuid(row: $row);
 
 		$link['uuid'] = (string) ($link['uuid'] ?? $uuid);
 		if ($link['uuid'] === '') {
@@ -260,4 +253,37 @@ class AnonymizationLinkReader {
 		return $link;
 
 	}//end withUuid()
+
+	/**
+	 * The uuid a stored row carries: the entity's, otherwise the array row's ids.
+	 *
+	 * @param mixed $row The stored row.
+	 *
+	 * @return string The uuid, or an empty string.
+	 */
+	private function rowUuid(mixed $row): string {
+		$uuid = $this->entityUuid(row: $row);
+		if ($uuid === '' && is_array($row) === true) {
+			return (string) ($row['@self']['id'] ?? ($row['uuid'] ?? ($row['id'] ?? '')));
+		}
+
+		return $uuid;
+
+	}//end rowUuid()
+
+	/**
+	 * The uuid of an entity row.
+	 *
+	 * @param mixed $row The stored row.
+	 *
+	 * @return string The uuid, or an empty string when the row is no entity.
+	 */
+	private function entityUuid(mixed $row): string {
+		if (is_object($row) === true && method_exists($row, 'getUuid') === true) {
+			return (string) $row->getUuid();
+		}
+
+		return '';
+
+	}//end entityUuid()
 }//end class

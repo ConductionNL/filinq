@@ -247,30 +247,7 @@ class LegalBasisProposalService {
 	 */
 	public function getMapping(): array {
 		$raw = $this->config->getValueString(self::APP_ID, self::CONFIG_KEY, '{}');
-		$decoded = json_decode($raw, true);
-		if (is_array($decoded) === false) {
-			return [];
-		}
-
-		$mapping = [];
-		foreach ($decoded as $type => $slugs) {
-			if (is_string($type) === false || is_array($slugs) === false) {
-				continue;
-			}
-
-			$clean = [];
-			foreach ($slugs as $slug) {
-				if (is_string($slug) === true && $slug !== '') {
-					$clean[] = $slug;
-				}
-			}
-
-			if (count($clean) > 0) {
-				$mapping[$type] = $clean;
-			}
-		}//end foreach
-
-		return $mapping;
+		return (new BasisMappingReader())->fromJson(raw: $raw);
 	}//end getMapping()
 
 	/**
@@ -302,38 +279,64 @@ class LegalBasisProposalService {
 	 * @spec openspec/changes/propose-grondslag-per-entity-type/specs/grondslag-proposal/spec.md#requirement-proposed-grondslag-pre-filled-at-detection-time
 	 */
 	public function applyProposals(int $fileId): int {
-		$mapping = $this->getMapping();
-		if (count($mapping) === 0) {
-			return 0;
-		}
-
-		$mapper = $this->baseCatalog->resolve(className: 'OCA\\OpenRegister\\Db\\EntityRelationMapper');
-		if ($mapper === null) {
+		$run = $this->proposalRun(fileId: $fileId);
+		if ($run === null) {
 			return 0;
 		}
 
 		$filled = 0;
-		try {
-			$detections = $mapper->findEntitiesForFile($fileId);
-		} catch (Exception $e) {
-			$this->logger->warning(
-				'LegalBasisProposalService: could not load detections for proposal',
-				['fileId' => $fileId, 'error' => $e->getMessage()]
-			);
-			return 0;
-		}
-
-		foreach ($detections as $detection) {
-			$filled += $this->proposeForDetection(
-				mapper: $mapper,
-				mapping: $mapping,
-				detection: $detection,
-				fileId: $fileId
-			);
+		foreach ($this->detectionsFor(run: $run) as $detection) {
+			$filled += $this->proposeForDetection(run: $run, detection: $detection);
 		}
 
 		return $filled;
 	}//end applyProposals()
+
+	/**
+	 * Start a proposal pass for a file, when there is a mapping and OpenRegister is available.
+	 *
+	 * @param int $fileId Nextcloud file id whose relations were just detected.
+	 *
+	 * @return BasisProposalRun|null The pass, or null when there is nothing to propose.
+	 */
+	private function proposalRun(int $fileId): ?BasisProposalRun {
+		$mapping = $this->getMapping();
+		if (count($mapping) === 0) {
+			return null;
+		}
+
+		$mapper = $this->baseCatalog->resolve(className: 'OCA\\OpenRegister\\Db\\EntityRelationMapper');
+		if ($mapper === null) {
+			return null;
+		}
+
+		$run = new BasisProposalRun();
+		$run->mapper = $mapper;
+		$run->mapping = $mapping;
+		$run->fileId = $fileId;
+		return $run;
+
+	}//end proposalRun()
+
+	/**
+	 * Load the detections of the run's file; none when the lookup fails.
+	 *
+	 * @param BasisProposalRun $run The proposal pass.
+	 *
+	 * @return iterable<mixed> The detection rows from findEntitiesForFile.
+	 */
+	private function detectionsFor(BasisProposalRun $run): iterable {
+		try {
+			return $run->mapper->findEntitiesForFile($run->fileId);
+		} catch (Exception $e) {
+			$this->logger->warning(
+				'LegalBasisProposalService: could not load detections for proposal',
+				['fileId' => $run->fileId, 'error' => $e->getMessage()]
+			);
+			return [];
+		}
+
+	}//end detectionsFor()
 
 	/**
 	 * Pre-fill the proposed bases for a single detection, when applicable.
@@ -341,43 +344,90 @@ class LegalBasisProposalService {
 	 * Returns 1 when a proposal was written, 0 otherwise (unmapped type,
 	 * missing relation id, already-filled relation, or a best-effort failure).
 	 *
-	 * @param mixed $mapper The EntityRelationMapper.
-	 * @param array<string, array<int, string>> $mapping Entity-type → base-slug[] mapping.
-	 * @param mixed $detection One detection row from findEntitiesForFile.
-	 * @param int $fileId File id (for log context).
+	 * @param BasisProposalRun $run       The proposal pass.
+	 * @param mixed            $detection One detection row from findEntitiesForFile.
 	 *
 	 * @return int 1 if a proposal was written, 0 otherwise.
 	 */
-	private function proposeForDetection(mixed $mapper, array $mapping, mixed $detection, int $fileId): int {
+	private function proposeForDetection(BasisProposalRun $run, mixed $detection): int {
 		$row = (array)$detection;
-		$type = (string)($row['entity_type'] ?? $row['entityType'] ?? '');
-		$relationId = (int)($row['relation_id'] ?? $row['relationId'] ?? 0);
-		if ($type === '' || $relationId === 0 || isset($mapping[$type]) === false) {
+		if ($this->isProposable(row: $row, mapping: $run->mapping) === false) {
 			return 0;
 		}
 
 		try {
-			$relation = $mapper->find($relationId);
-			$existing = $relation->getBases();
-			if ($existing !== null && count($existing) > 0) {
-				// Non-clobber: never overwrite an operator (or prior) decision.
-				return 0;
-			}
-
-			$mapper->updateDecisionMetadata(
-				relation: $relation,
-				fields: ['bases' => array_values($mapping[$type])]
-			);
-			return 1;
+			return $this->fillEmptyBases(run: $run, row: $row);
 		} catch (Exception $e) {
 			$this->logger->warning(
 				'LegalBasisProposalService: failed to pre-fill bases',
-				['fileId' => $fileId, 'relationId' => $relationId, 'error' => $e->getMessage()]
+				['fileId' => $run->fileId, 'relationId' => $this->relationIdOf(row: $row), 'error' => $e->getMessage()]
 			);
 			return 0;
-		}//end try
+		}
 
 	}//end proposeForDetection()
+
+	/**
+	 * Whether a detection row has a type, a relation id and a mapping for its type.
+	 *
+	 * @param array<mixed>                      $row     The detection row.
+	 * @param array<string, array<int, string>> $mapping Entity-type → base-slug[] mapping.
+	 *
+	 * @return bool True when a proposal may be written for it.
+	 */
+	private function isProposable(array $row, array $mapping): bool {
+		$type = $this->entityTypeOf(row: $row);
+		return $type !== '' && $this->relationIdOf(row: $row) !== 0 && isset($mapping[$type]) === true;
+
+	}//end isProposable()
+
+	/**
+	 * Write the mapped bases onto the row's relation unless it already has some.
+	 *
+	 * @param BasisProposalRun $run The proposal pass.
+	 * @param array<mixed>     $row The detection row.
+	 *
+	 * @return int 1 if a proposal was written, 0 when the relation already has bases.
+	 */
+	private function fillEmptyBases(BasisProposalRun $run, array $row): int {
+		$relation = $run->mapper->find($this->relationIdOf(row: $row));
+		$existing = $relation->getBases();
+		if ($existing !== null && count($existing) > 0) {
+			// Non-clobber: never overwrite an operator (or prior) decision.
+			return 0;
+		}
+
+		$run->mapper->updateDecisionMetadata(
+			relation: $relation,
+			fields: ['bases' => array_values($run->mapping[$this->entityTypeOf(row: $row)])]
+		);
+		return 1;
+
+	}//end fillEmptyBases()
+
+	/**
+	 * The entity type of a detection row, snake or camel case.
+	 *
+	 * @param array<mixed> $row The detection row.
+	 *
+	 * @return string The type, or '' when it has none.
+	 */
+	private function entityTypeOf(array $row): string {
+		return (string)($row['entity_type'] ?? $row['entityType'] ?? '');
+
+	}//end entityTypeOf()
+
+	/**
+	 * The relation id of a detection row, snake or camel case.
+	 *
+	 * @param array<mixed> $row The detection row.
+	 *
+	 * @return int The relation id, or 0 when it has none.
+	 */
+	private function relationIdOf(array $row): int {
+		return (int)($row['relation_id'] ?? $row['relationId'] ?? 0);
+
+	}//end relationIdOf()
 
 	/**
 	 * Merge each relation's current `bases` into the detection rows.
@@ -401,22 +451,65 @@ class LegalBasisProposalService {
 			return $entities;
 		}
 
+		$basesByRelation = $this->knownBases(mapper: $mapper, fileId: $fileId);
+		if ($basesByRelation === null) {
+			return $entities;
+		}
+
+		return $this->withBases(entities: $entities, basesByRelation: $basesByRelation);
+	}//end enrichEntitiesWithBases()
+
+	/**
+	 * The current bases of every relation of a file, or null (logged) when the lookup fails.
+	 *
+	 * @param mixed $mapper The EntityRelationMapper.
+	 * @param int   $fileId File whose relations supply the bases.
+	 *
+	 * @return array<int, mixed>|null Bases per relation id, or null on failure.
+	 */
+	private function knownBases(mixed $mapper, int $fileId): ?array {
 		try {
-			$basesByRelation = [];
-			foreach ($mapper->findByFileId($fileId) as $relation) {
-				$basesByRelation[(int)$relation->getId()] = $relation->getBases();
-			}
+			return $this->basesByRelation(mapper: $mapper, fileId: $fileId);
 		} catch (Exception $e) {
 			$this->logger->warning(
 				'LegalBasisProposalService: could not load bases for enrichment',
 				['fileId' => $fileId, 'error' => $e->getMessage()]
 			);
-			return $entities;
+			return null;
 		}
 
+	}//end knownBases()
+
+	/**
+	 * The current bases of every relation of a file, by relation id.
+	 *
+	 * @param mixed $mapper The EntityRelationMapper.
+	 * @param int   $fileId File whose relations supply the bases.
+	 *
+	 * @return array<int, mixed> Bases per relation id.
+	 */
+	private function basesByRelation(mixed $mapper, int $fileId): array {
+		$basesByRelation = [];
+		foreach ($mapper->findByFileId($fileId) as $relation) {
+			$basesByRelation[(int)$relation->getId()] = $relation->getBases();
+		}
+
+		return $basesByRelation;
+
+	}//end basesByRelation()
+
+	/**
+	 * Put the known bases on every detection row whose relation id is in the map.
+	 *
+	 * @param array<int, mixed> $entities        Detection rows (each carrying relation_id).
+	 * @param array<int, mixed> $basesByRelation Bases per relation id.
+	 *
+	 * @return array<int, mixed> The detection rows with a `bases` key where known.
+	 */
+	private function withBases(array $entities, array $basesByRelation): array {
 		foreach ($entities as $index => $row) {
 			$data = (array)$row;
-			$relationId = (int)($data['relation_id'] ?? $data['relationId'] ?? 0);
+			$relationId = $this->relationIdOf(row: $data);
 			if ($relationId !== 0 && array_key_exists($relationId, $basesByRelation) === true) {
 				$data['bases'] = $basesByRelation[$relationId];
 				$entities[$index] = $data;
@@ -424,5 +517,6 @@ class LegalBasisProposalService {
 		}
 
 		return $entities;
-	}//end enrichEntitiesWithBases()
+
+	}//end withBases()
 }//end class

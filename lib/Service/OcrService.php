@@ -37,9 +37,7 @@ use Exception;
 use Imagick;
 use OCA\Filinq\Kernel\Contracts\OcrServiceInterface;
 use OCP\Files\File;
-use OCP\Files\IRootFolder;
 use OCP\IAppConfig;
-use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 use thiagoalessio\TesseractOCR\TesseractOCR;
 
@@ -120,16 +118,14 @@ class OcrService implements OcrServiceInterface {
 	 *
 	 * @param LoggerInterface $logger Logger for error reporting
 	 * @param IAppConfig $config App configuration interface
-	 * @param IRootFolder $rootFolder Root folder for file access
-	 * @param IUserSession $userSession User session for current user
+	 * @param SessionUserFile $userFiles The signed-in user's own files
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		private readonly LoggerInterface $logger,
 		private readonly IAppConfig $config,
-		private readonly IRootFolder $rootFolder,
-		private readonly IUserSession $userSession,
+		private readonly SessionUserFile $userFiles,
 	) {
 		$this->tesseract = new TesseractCommand(logger: $logger);
 
@@ -629,24 +625,8 @@ class OcrService implements OcrServiceInterface {
 	 * @return File|null The file or null if not found
 	 */
 	private function getFileById(int $fileId): ?File {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return null;
-		}
+		return $this->userFiles->find(fileId: $fileId);
 
-		$userFolder = $this->rootFolder->getUserFolder($user->getUID());
-		$nodes = $userFolder->getById($fileId);
-
-		if (empty($nodes) === true) {
-			return null;
-		}
-
-		$node = $nodes[0];
-		if ($node instanceof File === false) {
-			return null;
-		}
-
-		return $node;
 	}//end getFileById()
 
 	/**

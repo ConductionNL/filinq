@@ -25,3 +25,24 @@ Rows: `tpl-test` (filinq matrix)
 - WHEN the author fills in sample data and chooses preview
 - THEN the preview shows the draft filled with that data
 - @e2e exclude specification only; the change that builds it adds the Playwright test
+
+### Requirement: Only the editors of a template change it (REQ-SCR-019)
+
+The template schema MUST say who may use a template and who may change it. Every signed-in user MAY read a template and generate a document from it. Only members of the template editors group MAY change or delete a template, and OpenRegister MUST refuse the change for anyone else before it is written.
+
+Rows: `tpl-access` (filinq matrix)
+
+#### Scenario: A handler generates from a template but cannot change it
+
+- GIVEN a handler who is not in the template editors group
+- WHEN they generate a letter from the template "Ontvangstbevestiging bezwaar"
+- THEN the letter is generated
+- AND when they save a change to that template, the save is refused and the template is unchanged
+- @e2e exclude enforced by OpenRegister's schema authorisation; covered by the authorisation-coverage PHPUnit test on the register
+
+#### Scenario: A template editor changes the template
+
+- GIVEN a member of the template editors group
+- WHEN they save a change to the same template
+- THEN the template holds the change and a new version is kept
+- @e2e exclude enforced by OpenRegister's schema authorisation; covered by the authorisation-coverage PHPUnit test on the register
